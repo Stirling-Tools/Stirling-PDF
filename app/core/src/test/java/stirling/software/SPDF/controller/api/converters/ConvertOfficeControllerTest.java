@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -13,11 +12,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -28,7 +25,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -40,28 +36,18 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.SPDF.service.OfficeToPdfService;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CustomHtmlSanitizer;
-import stirling.software.common.util.ExceptionUtils.ToolRequiredException;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.ProcessExecutor.Processes;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.ZipBombGuard;
 
-/**
- * Unit tests for {@link ConvertOfficeController}. The external LibreOffice/unoconvert boundary is
- * mocked via mockStatic(ProcessExecutor) so no real process is spawned.
- */
+/** Unit tests for {@link ConvertOfficeController}; the in-process converter is mocked. */
 @DisplayName("ConvertOfficeController tests")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -70,41 +56,21 @@ class ConvertOfficeControllerTest {
     @TempDir Path tempDir;
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private CustomHtmlSanitizer customHtmlSanitizer;
     @Mock private OfficeDocumentSanitizer officeDocumentSanitizer;
-    @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private TempFileManager tempFileManager;
-    @Mock private OfficeConversionService officeConversionService;
     @Mock private OfficeToPdfService officeToPdfService;
 
     private ConvertOfficeController controller;
 
-    private ConvertOfficeController newController() {
-        return new ConvertOfficeController(
-                pdfDocumentFactory,
-                runtimePathConfig,
-                customHtmlSanitizer,
-                officeDocumentSanitizer,
-                endpointConfiguration,
-                tempFileManager,
-                officeConversionService,
-                officeToPdfService);
-    }
-
     @BeforeEach
     void setUp() {
-        controller = newController();
-        lenient().when(runtimePathConfig.getSOfficePath()).thenReturn("soffice");
-        lenient().when(runtimePathConfig.getUnoConvertPath()).thenReturn("unoconvert");
-        lenient().when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
+        controller =
+                new ConvertOfficeController(
+                        pdfDocumentFactory,
+                        officeDocumentSanitizer,
+                        tempFileManager,
+                        officeToPdfService);
     }
-
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    // ---- reflection helper for the private convertToPdf-supporting methods --------------------
 
     @SuppressWarnings("unchecked")
     private <T> T invokeInstance(String methodName, Object... args) throws Exception {
@@ -134,16 +100,36 @@ class ConvertOfficeControllerTest {
                 content);
     }
 
-    /**
-     * Configures the static ProcessExecutor so the LibreOffice/uno call returns rc and writes a pdf
-     * to the outdir if requested.
-     */
-    private ProcessExecutorResult mockExecutor(MockedStatic<ProcessExecutor> pe, int rc) {
-        ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
-        pe.when(() -> ProcessExecutor.getInstance(Processes.LIBRE_OFFICE)).thenReturn(executor);
-        ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
-        when(result.getRc()).thenReturn(rc);
-        return result;
+    private void writesPdf(String text) throws IOException {
+        Mockito.doAnswer(
+                        inv -> {
+                            Files.writeString(inv.getArgument(1), text);
+                            return null;
+                        })
+                .when(officeToPdfService)
+                .convert(any(Path.class), any(Path.class));
+    }
+
+    private void sanitizerPassesThrough(String extension) throws IOException {
+        when(officeDocumentSanitizer.isSanitizableExtension(extension)).thenReturn(true);
+        when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                .thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    private static Set<Path> officeWorkDirs() throws IOException {
+        try (var dirs =
+                Files.newDirectoryStream(
+                        Path.of(System.getProperty("java.io.tmpdir")), "office2pdf_*")) {
+            Set<Path> found = new HashSet<>();
+            dirs.forEach(found::add);
+            return found;
+        }
+    }
+
+    private static void deleteWorkdir(File producedPdf) throws IOException {
+        if (producedPdf != null && producedPdf.getParentFile() != null) {
+            org.apache.commons.io.FileUtils.deleteDirectory(producedPdf.getParentFile());
+        }
     }
 
     @Nested
@@ -182,7 +168,7 @@ class ConvertOfficeControllerTest {
         }
 
         @Test
-        @DisplayName("unsupported/invalid extension throws invalid-extension exception")
+        @DisplayName("invalid extension throws invalid-extension exception")
         void invalidExtension() {
             MockMultipartFile file =
                     new MockMultipartFile(
@@ -193,6 +179,22 @@ class ConvertOfficeControllerTest {
             assertThatThrownBy(() -> controller.convertToPdf(file))
                     .isInstanceOf(IllegalArgumentException.class);
         }
+
+        @Test
+        @DisplayName("a format the converter does not read is refused before any work")
+        void unsupportedFormat() throws Exception {
+            MockMultipartFile file =
+                    new MockMultipartFile(
+                            "fileInput", "letter.wpd", "application/octet-stream", "x".getBytes());
+            Set<Path> before = officeWorkDirs();
+
+            assertThatThrownBy(() -> controller.convertToPdf(file))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("wpd");
+            Mockito.verify(officeToPdfService, Mockito.never())
+                    .convert(any(Path.class), any(Path.class));
+            assertThat(officeWorkDirs()).isEqualTo(before);
+        }
     }
 
     @Nested
@@ -200,19 +202,10 @@ class ConvertOfficeControllerTest {
     class InProcess {
 
         @Test
-        @DisplayName("converts handled formats without LibreOffice")
+        @DisplayName("converts after sanitizing, without starting any process")
         void convertsInProcess() throws Exception {
-            when(officeToPdfService.handles("docx", null)).thenReturn(true);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
-            Mockito.doAnswer(
-                            inv -> {
-                                Files.writeString(inv.getArgument(1), "%PDF in process");
-                                return null;
-                            })
-                    .when(officeToPdfService)
-                    .convert(any(Path.class), any(Path.class));
+            sanitizerPassesThrough("docx");
+            writesPdf("%PDF in process");
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 File pdf = controller.convertToPdf(docxFile("real-docx".getBytes()));
@@ -225,35 +218,17 @@ class ConvertOfficeControllerTest {
         }
 
         @Test
-        @DisplayName("a file the sanitizer refuses reaches neither converter")
+        @DisplayName("a file the sanitizer refuses never reaches the converter")
         void refusedBySanitizer() throws Exception {
-            when(officeToPdfService.handles("docx", null)).thenReturn(true);
             when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
             when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
                     .thenThrow(new ZipBombGuard.ZipBombException("too big"));
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
-                        .isInstanceOf(ZipBombGuard.ZipBombException.class);
-                pe.verifyNoInteractions();
-                Mockito.verify(officeToPdfService, Mockito.never())
-                        .convert(any(Path.class), any(Path.class));
-            }
-        }
-
-        @Test
-        @DisplayName("a file the sanitizer refuses on the LibreOffice path leaves no work dir")
-        void refusedBySanitizerLeavesNoWorkDir() throws Exception {
-            when(officeToPdfService.handles("docx", null)).thenReturn(false);
-            when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenThrow(new IOException("part could not be sanitized"));
             Set<Path> before = officeWorkDirs();
 
             assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
-                    .isInstanceOf(IOException.class);
-
+                    .isInstanceOf(ZipBombGuard.ZipBombException.class);
+            Mockito.verify(officeToPdfService, Mockito.never())
+                    .convert(any(Path.class), any(Path.class));
             assertThat(officeWorkDirs()).isEqualTo(before);
         }
 
@@ -265,10 +240,6 @@ class ConvertOfficeControllerTest {
                     .thenThrow(new SecurityException("unsafe entry"));
             Set<Path> before = officeWorkDirs();
 
-            when(officeToPdfService.handles("docx", null)).thenReturn(false);
-            assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
-                    .isInstanceOf(SecurityException.class);
-            when(officeToPdfService.handles("docx", null)).thenReturn(true);
             assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
                     .isInstanceOf(SecurityException.class);
 
@@ -276,274 +247,19 @@ class ConvertOfficeControllerTest {
         }
 
         @Test
-        @DisplayName("a failed LibreOffice run leaves no work dir")
-        void failedLibreOfficeRunLeavesNoWorkDir() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
+        @DisplayName("a converter failure propagates and leaves no work dir")
+        void converterFailurePropagates() throws Exception {
+            sanitizerPassesThrough("docx");
+            Mockito.doThrow(new IOException("unreadable"))
+                    .when(officeToPdfService)
+                    .convert(any(Path.class), any(Path.class));
             Set<Path> before = officeWorkDirs();
 
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 3);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(result);
-
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
-                        .isInstanceOf(IllegalStateException.class);
-            }
+            assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
+                    .isInstanceOf(IOException.class)
+                    .hasMessage("unreadable");
 
             assertThat(officeWorkDirs()).isEqualTo(before);
-        }
-
-        private Set<Path> officeWorkDirs() throws IOException {
-            try (var dirs =
-                    Files.newDirectoryStream(
-                            Path.of(System.getProperty("java.io.tmpdir")), "office2pdf_*")) {
-                Set<Path> found = new HashSet<>();
-                dirs.forEach(found::add);
-                return found;
-            }
-        }
-
-        @Test
-        @DisplayName("retries with LibreOffice when the in-process conversion fails")
-        void fallsBackToLibreOffice() throws Exception {
-            when(officeToPdfService.handles("docx", null)).thenReturn(true);
-            Mockito.doThrow(new IOException("unreadable"))
-                    .when(officeToPdfService)
-                    .convert(any(Path.class), any(Path.class));
-            when(officeToPdfService.canFallBack(any())).thenReturn(true);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 0);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> command = inv.getArgument(0);
-                                    Path out =
-                                            Path.of(command.getLast()).resolveSibling("report.pdf");
-                                    Files.writeString(out, "%PDF soffice");
-                                    return result;
-                                });
-
-                File pdf = controller.convertToPdf(docxFile("real-docx".getBytes()));
-
-                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF soffice");
-                deleteWorkdir(pdf);
-            }
-        }
-
-        @Test
-        @DisplayName("rethrows when LibreOffice cannot take over")
-        void noFallback() throws Exception {
-            when(officeToPdfService.handles("docx", null)).thenReturn(true);
-            Mockito.doThrow(new IOException("unreadable"))
-                    .when(officeToPdfService)
-                    .convert(any(Path.class), any(Path.class));
-            when(officeToPdfService.canFallBack(any())).thenReturn(false);
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
-                        .isInstanceOf(IOException.class)
-                        .hasMessage("unreadable");
-                pe.verifyNoInteractions();
-            }
-        }
-
-        @Test
-        @DisplayName("asks for LibreOffice for formats only it converts")
-        void libreOfficeRequired() {
-            when(officeConversionService.libreOfficeAvailable()).thenReturn(false);
-            MockMultipartFile html =
-                    new MockMultipartFile(
-                            "fileInput", "page.html", "text/html", "<p>hi</p>".getBytes());
-
-            assertThatThrownBy(() -> controller.convertToPdf(html))
-                    .isInstanceOf(ToolRequiredException.class)
-                    .hasMessageContaining(".html");
-        }
-    }
-
-    @Nested
-    @DisplayName("convertToPdf conversion paths")
-    class ConversionPaths {
-
-        @Test
-        @DisplayName("uses unoconvert when available and returns produced pdf")
-        void unoconvertSuccess() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(true);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 0);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                ArgumentCaptor<List<String>> cmd = ArgumentCaptor.forClass(List.class);
-                when(executor.runCommandWithOutputHandling(cmd.capture()))
-                        .thenAnswer(
-                                inv -> {
-                                    // unoconvert writes directly to the output path (last arg)
-                                    List<String> command = inv.getArgument(0);
-                                    Path out = Path.of(command.getLast());
-                                    Files.writeString(out, "%PDF-1.4 produced");
-                                    return result;
-                                });
-
-                File pdf = controller.convertToPdf(docxFile("real-docx".getBytes()));
-
-                assertThat(pdf).exists();
-                assertThat(Files.size(pdf.toPath())).isGreaterThan(0L);
-                assertThat(cmd.getValue().get(0)).isEqualTo("unoconvert");
-                // sanitizer must have been consulted for the docx
-                Mockito.verify(officeDocumentSanitizer).sanitize(any(byte[].class), anyString());
-
-                deleteWorkdir(pdf);
-            }
-        }
-
-        @Test
-        @DisplayName("falls back to soffice when unoconvert is unavailable")
-        void sofficeFallbackWhenUnoUnavailable() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 0);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                ArgumentCaptor<List<String>> cmd = ArgumentCaptor.forClass(List.class);
-                when(executor.runCommandWithOutputHandling(cmd.capture()))
-                        .thenAnswer(
-                                inv -> {
-                                    // soffice writes <basename>.pdf into the --outdir (workDir)
-                                    List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.getLast());
-                                    Path out = inputPath.getParent().resolve("report.pdf");
-                                    Files.writeString(out, "%PDF soffice");
-                                    return result;
-                                });
-
-                File pdf = controller.convertToPdf(docxFile("real-docx".getBytes()));
-
-                assertThat(pdf).exists();
-                assertThat(cmd.getValue().get(0)).isEqualTo("soffice");
-                assertThat(cmd.getValue()).contains("--headless", "--convert-to", "pdf");
-
-                deleteWorkdir(pdf);
-            }
-        }
-
-        @Test
-        @DisplayName("non-zero exit code throws IllegalStateException")
-        void nonZeroExit() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 3);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(result);
-
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("exit 3");
-            }
-        }
-
-        @Test
-        @DisplayName("no produced pdf (rc 0 but no file) throws IllegalStateException")
-        void noProducedPdf() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 0);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                // rc 0 but nothing written to workDir -> "No PDF produced."
-                when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(result);
-
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
-                        .isInstanceOf(IllegalStateException.class);
-            }
-        }
-
-        @Test
-        @DisplayName("empty produced pdf throws IllegalStateException")
-        void emptyProducedPdf() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 0);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.getLast());
-                                    Path out = inputPath.getParent().resolve("report.pdf");
-                                    Files.write(out, new byte[0]);
-                                    return result;
-                                });
-
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("empty");
-            }
-        }
-
-        @Test
-        @DisplayName("html input is routed through the html sanitizer")
-        void htmlSanitized() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
-            when(customHtmlSanitizer.sanitize(anyString())).thenReturn("<html>clean</html>");
-
-            MockMultipartFile html =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "page.html",
-                            "text/html",
-                            "<html><body>hi</body></html>".getBytes(StandardCharsets.UTF_8));
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 0);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.getLast());
-                                    Path out = inputPath.getParent().resolve("page.pdf");
-                                    Files.writeString(out, "%PDF html");
-                                    return result;
-                                });
-
-                File pdf = controller.convertToPdf(html);
-
-                assertThat(pdf).exists();
-                Mockito.verify(customHtmlSanitizer).sanitize(anyString());
-                Mockito.verifyNoInteractions(officeDocumentSanitizer);
-
-                deleteWorkdir(pdf);
-            }
         }
     }
 
@@ -554,11 +270,8 @@ class ConvertOfficeControllerTest {
         @Test
         @DisplayName("happy path loads, saves and cleans up the work directory")
         void happyPath() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
+            sanitizerPassesThrough("docx");
+            writesPdf("%PDF produced");
 
             File tempOutFile = Files.createTempFile(tempDir, "out", ".pdf").toFile();
             TempFile tempOut = mock(TempFile.class);
@@ -572,24 +285,12 @@ class ConvertOfficeControllerTest {
             GeneralFile generalFile = new GeneralFile();
             generalFile.setFileInput(docxFile("docx-bytes".getBytes()));
 
-            ResponseEntity<Resource> expected = streamingOk("pdf".getBytes());
+            ResponseEntity<Resource> expected =
+                    ResponseEntity.ok(new ByteArrayResource(new byte[0]));
+            Set<Path> before = officeWorkDirs();
 
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class)) {
-
-                ProcessExecutorResult result = mockExecutor(pe, 0);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.getLast());
-                                    Path out = inputPath.getParent().resolve("report.pdf");
-                                    Files.writeString(out, "%PDF produced");
-                                    return result;
-                                });
-
                 gu.when(() -> GeneralUtils.generateFilename("report.docx", ".pdf"))
                         .thenReturn("report.pdf");
                 wr.when(
@@ -598,52 +299,34 @@ class ConvertOfficeControllerTest {
                                                 any(TempFile.class), eq("report.pdf")))
                         .thenReturn(expected);
 
-                ResponseEntity<Resource> response = controller.processFileToPDF(generalFile, null);
+                ResponseEntity<Resource> response = controller.processFileToPDF(generalFile);
 
                 assertThat(response).isSameAs(expected);
-                wr.verify(
-                        () ->
-                                WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class), eq("report.pdf")));
             }
 
+            assertThat(officeWorkDirs()).isEqualTo(before);
             doc.close();
         }
 
         @Test
         @DisplayName("conversion failure propagates and does not return a response")
         void conversionFailurePropagates() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
-            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
-            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
-                    .thenAnswer(inv -> inv.getArgument(0));
+            sanitizerPassesThrough("docx");
+            Mockito.doThrow(new IOException("broken"))
+                    .when(officeToPdfService)
+                    .convert(any(Path.class), any(Path.class));
 
             GeneralFile generalFile = new GeneralFile();
             generalFile.setFileInput(docxFile("docx".getBytes()));
 
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 1);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(result);
-
-                assertThatThrownBy(() -> controller.processFileToPDF(generalFile, null))
-                        .isInstanceOf(IllegalStateException.class);
-
-                // a failed conversion never reaches the document factory
-                Mockito.verifyNoInteractions(pdfDocumentFactory);
-            }
-        }
-    }
-
-    private static void deleteWorkdir(File producedPdf) throws IOException {
-        if (producedPdf != null && producedPdf.getParentFile() != null) {
-            org.apache.commons.io.FileUtils.deleteDirectory(producedPdf.getParentFile());
+            assertThatThrownBy(() -> controller.processFileToPDF(generalFile))
+                    .isInstanceOf(IOException.class);
+            Mockito.verifyNoInteractions(pdfDocumentFactory);
         }
     }
 
     @Nested
-    @DisplayName("Legacy binary Office routing")
+    @DisplayName("Legacy binary Office files")
     class LegacyBinary {
 
         private static final byte[] OLE2 = {
@@ -660,121 +343,43 @@ class ConvertOfficeControllerTest {
             0,
             0
         };
-        private static final byte[] OOXML = {'P', 'K', 0x03, 0x04, 0, 0, 0, 0};
-
-        private MockMultipartFile docFile(byte[] content) {
-            return new MockMultipartFile("fileInput", "report.doc", "application/msword", content);
-        }
-
-        private File runLibreOffice(MockedStatic<ProcessExecutor> pe, MockMultipartFile file)
-                throws Exception {
-            ProcessExecutorResult result = mockExecutor(pe, 0);
-            ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-            when(executor.runCommandWithOutputHandling(any()))
-                    .thenAnswer(
-                            inv -> {
-                                List<String> command = inv.getArgument(0);
-                                Path out = Path.of(command.getLast()).resolveSibling("report.pdf");
-                                Files.writeString(out, "%PDF soffice");
-                                return result;
-                            });
-            return controller.convertToPdf(file, true);
-        }
 
         @Test
-        @DisplayName("an OLE2 .doc goes to LibreOffice even when in-process is selected")
-        void ole2GoesToLibreOffice() throws Exception {
-            when(officeToPdfService.handles("doc", true)).thenReturn(true);
-            when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                File pdf = runLibreOffice(pe, docFile(OLE2));
-
-                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF soffice");
-                Mockito.verify(officeToPdfService, Mockito.never())
-                        .convert(any(Path.class), any(Path.class));
-                deleteWorkdir(pdf);
-            }
-        }
-
-        @Test
-        @DisplayName("a renamed OLE2 file is routed by signature and skips the ZIP sanitizer")
-        void ole2RoutedBySignature() throws Exception {
-            when(officeToPdfService.handles("xlsx", true)).thenReturn(true);
-            when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
-            // The .xlsx name would otherwise select the ZIP sanitizer, which cannot read OLE2.
+        @DisplayName("a renamed OLE2 file is copied as-is, skipping the ZIP sanitizer")
+        void ole2SkipsSanitizer() throws Exception {
             when(officeDocumentSanitizer.isSanitizableExtension("xlsx")).thenReturn(true);
             MockMultipartFile renamed =
                     new MockMultipartFile("fileInput", "book.xlsx", "application/msword", OLE2);
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 0);
-                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                inv -> {
-                                    Path out =
-                                            Path.of(((List<String>) inv.getArgument(0)).getLast())
-                                                    .resolveSibling("book.pdf");
-                                    assertThat(Files.readAllBytes(out.resolveSibling("book.xlsx")))
-                                            .isEqualTo(OLE2);
-                                    Files.writeString(out, "%PDF soffice");
-                                    return result;
-                                });
-
-                File pdf = controller.convertToPdf(renamed, true);
-
-                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF soffice");
-                Mockito.verify(officeToPdfService, Mockito.never())
-                        .convert(any(Path.class), any(Path.class));
-                Mockito.verify(officeDocumentSanitizer, Mockito.never())
-                        .sanitize(any(byte[].class), anyString());
-                deleteWorkdir(pdf);
-            }
-        }
-
-        @Test
-        @DisplayName("an OOXML upload still converts in process")
-        void ooxmlStaysInProcess() throws Exception {
-            when(officeToPdfService.handles("doc", true)).thenReturn(true);
-            when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
             Mockito.doAnswer(
                             inv -> {
+                                Path in = inv.getArgument(0);
+                                assertThat(Files.readAllBytes(in)).isEqualTo(OLE2);
                                 Files.writeString(inv.getArgument(1), "%PDF in process");
                                 return null;
                             })
                     .when(officeToPdfService)
                     .convert(any(Path.class), any(Path.class));
 
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                File pdf = controller.convertToPdf(docFile(OOXML), true);
+            File pdf = controller.convertToPdf(renamed);
 
-                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF in process");
-                pe.verifyNoInteractions();
-                deleteWorkdir(pdf);
-            }
+            assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF in process");
+            Mockito.verify(officeDocumentSanitizer, Mockito.never())
+                    .sanitize(any(byte[].class), anyString());
+            deleteWorkdir(pdf);
         }
 
         @Test
-        @DisplayName("without LibreOffice an OLE2 file still uses the in-process converter")
-        void ole2UsesInProcessWithoutLibreOffice() throws Exception {
-            when(officeToPdfService.handles("doc", true)).thenReturn(true);
-            when(officeConversionService.libreOfficeAvailable()).thenReturn(false);
-            Mockito.doAnswer(
-                            inv -> {
-                                Files.writeString(inv.getArgument(1), "%PDF in process");
-                                return null;
-                            })
-                    .when(officeToPdfService)
-                    .convert(any(Path.class), any(Path.class));
+        @DisplayName("an OLE2 .doc converts in process")
+        void ole2ConvertsInProcess() throws Exception {
+            writesPdf("%PDF in process");
 
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                File pdf = controller.convertToPdf(docFile(OLE2), true);
+            File pdf =
+                    controller.convertToPdf(
+                            new MockMultipartFile(
+                                    "fileInput", "report.doc", "application/msword", OLE2));
 
-                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF in process");
-                pe.verifyNoInteractions();
-                deleteWorkdir(pdf);
-            }
+            assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF in process");
+            deleteWorkdir(pdf);
         }
     }
 }

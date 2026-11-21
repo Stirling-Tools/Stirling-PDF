@@ -470,7 +470,6 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         "text/html",
       );
 
-      // Set up HTML conversion parameters
       act(() => {
         paramsResult.current.analyzeFileTypes([htmlFile]);
         paramsResult.current.updateParameter("htmlOptions", {

@@ -14,6 +14,7 @@ bootRun {
 dependencies {
     implementation project(':common')
     implementation 'org.apache.httpcomponents.client5:httpclient5'
+    implementation "com.stirling:stirling-office-convert-lineart:$officeConvertVersion"
     api "com.google.guava:guava:${guavaVersion}"
 
     api 'org.springframework:spring-jdbc'

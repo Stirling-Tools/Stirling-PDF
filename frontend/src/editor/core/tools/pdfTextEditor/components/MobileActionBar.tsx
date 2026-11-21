@@ -129,16 +129,14 @@ export function MobileActionBar({
               icon="type"
               label={t("pdfTextEditor.mobile.addText", "Text")}
               pressed={addTextArmed}
-              onClick={() => store.setMode(addTextArmed ? "select" : "addText")}
+              onClick={() => store.toggleMode("addText")}
               data-testid="pdf-editor-add-text"
             />
             <BarButton
               icon="table"
               label={t("pdfTextEditor.sidebar.table", "Table")}
               pressed={addTableArmed}
-              onClick={() =>
-                store.setMode(addTableArmed ? "select" : "addTable")
-              }
+              onClick={() => store.toggleMode("addTable")}
               data-testid="pdf-editor-add-table"
             />
             <BarButton
@@ -152,7 +150,7 @@ export function MobileActionBar({
               icon="search"
               label={t("pdfTextEditor.mobile.find", "Find")}
               pressed={findOpen}
-              onClick={() => store.setFindOpen(!findOpen)}
+              onClick={() => store.toggleFindOpen()}
               data-testid="pdf-editor-open-find"
             />
             <ZoomMenu />

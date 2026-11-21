@@ -1,10 +1,12 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import {
-  canToggleItalic,
   fallbackFamilyFor,
   fallbackFontIdFor,
-  italicCapability,
 } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import {
+  canRestyle,
+  restyledFace,
+} from "@editor/tools/pdfTextEditor/util/fontFaces";
 import {
   resetFontCompletions,
   resolveOriginalFonts,
@@ -78,54 +80,106 @@ beforeEach(() => {
   stubQueryLocalFonts(null);
 });
 
-describe("italicCapability", () => {
+const NO_DOCUMENT = { documentFamilies: [] };
+
+describe("restyledFace for italic", () => {
   it("flips a base-14 family in place", () => {
-    expect(italicCapability("base14:Helvetica", true, null)).toEqual({
-      family: "Helvetica-Oblique",
-      source: "base14",
-    });
-    expect(italicCapability("base14:Times-BoldItalic", false, null)).toEqual({
-      family: "Times-Bold",
-      source: "base14",
-    });
+    expect(
+      restyledFace(
+        "base14:Helvetica",
+        { italic: true },
+        { ...NO_DOCUMENT, externalFonts: null },
+      ),
+    ).toBe("Helvetica-Oblique");
+    expect(
+      restyledFace(
+        "base14:Times-BoldItalic",
+        { italic: false },
+        { ...NO_DOCUMENT, externalFonts: null },
+      ),
+    ).toBe("Times-Bold");
   });
 
   it("refuses an embedded family with no device fonts loaded", () => {
-    expect(italicCapability("pdf:4242:Calibri", true, null).family).toBeNull();
+    expect(
+      restyledFace(
+        "pdf:4242:Calibri",
+        { italic: true },
+        { ...NO_DOCUMENT, externalFonts: null },
+      ),
+    ).toBeNull();
   });
 
   it("refuses a subset family whose installed face has no italic cut", () => {
     expect(
-      italicCapability("pdf:4242:Stencil", true, STENCIL).family,
+      restyledFace(
+        "pdf:4242:Stencil",
+        { italic: true },
+        { ...NO_DOCUMENT, externalFonts: STENCIL },
+      ),
     ).toBeNull();
   });
 
   it("uses the installed italic cut of the run's own family", () => {
-    expect(italicCapability("pdf:4242:Calibri", true, CALIBRI)).toEqual({
-      family: "Calibri Italic",
-      source: "device",
-    });
+    expect(
+      restyledFace(
+        "pdf:4242:Calibri",
+        { italic: true },
+        { ...NO_DOCUMENT, externalFonts: CALIBRI },
+      ),
+    ).toBe("Calibri Italic");
   });
 
   it("never substitutes a different typeface", () => {
     // The whole point: Calibri does not become Helvetica just to look slanted.
-    const cap = italicCapability("pdf:4242:Calibri", true, STENCIL);
-    expect(cap.family).toBeNull();
-    expect(cap.source).toBeNull();
+    expect(
+      restyledFace(
+        "pdf:4242:Calibri",
+        { italic: true },
+        { ...NO_DOCUMENT, externalFonts: STENCIL },
+      ),
+    ).toBeNull();
+  });
+
+  it("is read from the font list asked with, so a new list is asked afresh", () => {
+    const ask = (fonts: LocalFont[]) =>
+      restyledFace(
+        "pdf:4242:Calibri",
+        { italic: true },
+        { ...NO_DOCUMENT, externalFonts: fonts },
+      );
+    expect(ask(STENCIL)).toBeNull();
+    expect(ask(STENCIL)).toBeNull();
+    expect(ask(CALIBRI)).toBe("Calibri Italic");
+    expect(ask(CALIBRI)).toBe("Calibri Italic");
   });
 });
 
-describe("canToggleItalic", () => {
+describe("canRestyle to italic", () => {
   it("is false for an empty selection", () => {
-    expect(canToggleItalic([], CALIBRI)).toBe(false);
+    expect(
+      canRestyle(
+        [],
+        { italic: true },
+        { documentFamilies: [], externalFonts: CALIBRI },
+      ),
+    ).toBe(false);
   });
 
   it("needs EVERY run to be capable", () => {
     expect(
-      canToggleItalic(["base14:Helvetica", "base14:Times-Roman"], null),
+      canRestyle(
+        ["base14:Helvetica", "base14:Times-Roman"],
+        { italic: true },
+        { documentFamilies: [], externalFonts: null },
+      ),
     ).toBe(true);
     expect(
-      canToggleItalic(["base14:Helvetica", "pdf:1:Stencil"], STENCIL),
+      canRestyle(
+        ["base14:Helvetica", "pdf:1:Stencil"],
+        { italic: true },
+        { documentFamilies: [], externalFonts: STENCIL },
+      ),
     ).toBe(false);
   });
 });

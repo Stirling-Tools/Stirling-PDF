@@ -114,7 +114,7 @@ export const useConfigNavSections = (
         label: t("settings.connectedAccounts.title", "Connected accounts"),
         description: t(
           "settings.connectedAccounts.description",
-          "Your own OneDrive, SharePoint and Google Drive, for your pipelines.",
+          "Your own OneDrive, SharePoint and Google Drive, for opening files and for your pipelines.",
         ),
         icon: "cloud",
         component: <ConnectedAccountsSection />,
@@ -146,7 +146,7 @@ export const useConfigNavSections = (
               "admin.settings.general.description",
               "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
             ),
-            icon: "settings",
+            icon: "server",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminSystemSection />

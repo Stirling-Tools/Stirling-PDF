@@ -16,7 +16,10 @@ const PortalApp = HAS_PORTAL
     })
   : null;
 
-/** The Enterprise page reads like a website, so it carries none of the app's chrome. */
+/**
+ * The Enterprise page reads like a website, so it carries none of the app's chrome. Self-hosted
+ * builds forward it to the hosted page.
+ */
 const EnterpriseApp = HAS_PORTAL
   ? lazy(async () => {
       const m = await import("@processor/EnterpriseApp");

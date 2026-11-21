@@ -1,3 +1,4 @@
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type {
   CharcodeResolver,
   CharcodeResolveResult,
@@ -12,6 +13,7 @@ import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 /** Strategy 1: parse the embedded font's cmap table. */
 
@@ -86,7 +88,7 @@ function getOrBuildCmap(
 /** Build + cache a font's cmap. */
 export function primeFontGlyphMap(
   font: number,
-  module: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  module: WrappedPdfiumModule,
 ): void {
   if (!font) return;
   getOrBuildCmap(font, { module, pagePtr: 0, docPtr: 0 });
@@ -127,10 +129,7 @@ function buildCmap(
 }
 
 /** Copy a font's embedded program bytes out of the WASM heap (null = none). */
-function readFontData(
-  font: number,
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-): Uint8Array | null {
+function readFontData(font: number, m: WrappedPdfiumModule): Uint8Array | null {
   const fontMod = m as unknown as FontDataModule;
   if (!fontMod.FPDFFont_GetFontData) return null;
 
@@ -327,6 +326,7 @@ export function resetCmapCache(): void {
   cmapCache.clear();
   fontShaCache.clear();
 }
+clearOnDocumentClose(resetCmapCache);
 
 /** Test-only alias for {@link resetCmapCache}. */
 export function _clearCmapCacheForTests(): void {

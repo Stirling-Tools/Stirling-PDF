@@ -1,13 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -21,23 +13,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.OutputFormat;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
 import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
-import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
 import stirling.software.officeconvert.EbookOptions;
 
 @ConvertApi
@@ -45,52 +29,9 @@ import stirling.software.officeconvert.EbookOptions;
 @Slf4j
 public class ConvertPDFToEpubController {
 
-    private static final String CALIBRE_GROUP = "Calibre";
     private static final String DEFAULT_EXTENSION = "pdf";
-    private static final String FILTERED_CSS =
-            "font-family,color,background-color,margin-left,margin-right";
-    private static final String SMART_CHAPTER_EXPRESSION =
-            "//h:*[re:test(., '\\s*Chapter\\s+', 'i')]";
 
-    private final TempFileManager tempFileManager;
-    private final EndpointConfiguration endpointConfiguration;
-    private final RuntimePathConfig runtimePathConfig;
     private final OfficeConversionService officeConversionService;
-
-    private List<String> buildCalibreCommand(
-            Path inputPath, Path outputPath, boolean detectChapters, TargetDevice targetDevice) {
-        List<String> command = new ArrayList<>();
-        command.add(runtimePathConfig.getCalibrePath());
-        command.add(inputPath.toString());
-        command.add(outputPath.toString());
-
-        // Calibre's own engine reads pdftohtml's XML output, so no Qt WebEngine is involved in
-        // parsing. Header and footer detection is off: it fails on some short documents.
-        command.add("--pdf-engine");
-        command.add("calibre");
-        command.add("--pdf-header-skip");
-        command.add("0");
-        command.add("--pdf-footer-skip");
-        command.add("0");
-
-        // Golden defaults
-        command.add("--enable-heuristics");
-        command.add("--insert-blank-line");
-        command.add("--filter-css");
-        command.add(FILTERED_CSS);
-
-        if (detectChapters) {
-            command.add("--chapter");
-            command.add(SMART_CHAPTER_EXPRESSION);
-        }
-
-        if (targetDevice != null) {
-            command.add("--output-profile");
-            command.add(targetDevice.getCalibreProfile());
-        }
-
-        return command;
-    }
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -100,17 +41,9 @@ public class ConvertPDFToEpubController {
     @Operation(
             summary = "Convert PDF to EPUB/AZW3",
             description =
-                    "Convert a PDF file to an EPUB or AZW3 ebook using Calibre or Stirling Office Convert.")
+                    "Convert a PDF file to an EPUB or AZW3 ebook using Stirling Office Convert.")
     public ResponseEntity<Resource> convertPdfToEpub(
             @ModelAttribute ConvertPdfToEpubRequest request) throws Exception {
-
-        boolean officeConvert =
-                officeConversionService.replacesLibreOffice(request.getUseStirlingOfficeConvert());
-        if (!officeConvert && !endpointConfiguration.isGroupEnabled(CALIBRE_GROUP)) {
-            throw new IllegalStateException(
-                    "Calibre support is disabled. Enable the Calibre group or install Calibre to use"
-                            + " this feature.");
-        }
 
         MultipartFile inputFile = request.getFileInput();
         if (inputFile == null || inputFile.isEmpty()) {
@@ -139,100 +72,17 @@ public class ConvertPDFToEpubController {
             throw new IllegalArgumentException("Input file must be a PDF");
         }
 
-        if (officeConvert) {
-            EbookOptions ebook =
-                    EbookOptions.defaults()
-                            .chapters(detectChapters)
-                            .device(
-                                    targetDevice == TargetDevice.KINDLE_EINK_TEXT
-                                            ? EbookOptions.Device.KINDLE
-                                            : EbookOptions.Device.TABLET);
-            return officeConversionService.convert(
-                    inputFile,
-                    outputFormat.getExtension(),
-                    MediaType.valueOf(outputFormat.getMediaType()),
-                    officeConversionService.settings().ebook(ebook));
-        }
-
-        String baseName = FilenameUtils.getBaseName(originalFilename);
-        if (baseName == null || baseName.isBlank()) {
-            baseName = "document";
-        }
-
-        Path workingDirectory = null;
-        Path inputPath = null;
-        Path outputPath = null;
-
-        try {
-            workingDirectory = tempFileManager.createTempDirectory();
-            inputPath = workingDirectory.resolve(baseName + "." + DEFAULT_EXTENSION);
-            outputPath = workingDirectory.resolve(baseName + "." + outputFormat.getExtension());
-
-            try (InputStream inputStream = inputFile.getInputStream()) {
-                Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            List<String> command =
-                    buildCalibreCommand(inputPath, outputPath, detectChapters, targetDevice);
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                            .runCommandWithOutputHandling(command, workingDirectory.toFile());
-
-            if (result == null) {
-                throw new IllegalStateException("Calibre conversion returned no result");
-            }
-
-            if (result.getRc() != 0) {
-                throw new IllegalStateException("Calibre conversion failed");
-            }
-
-            if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
-                throw new IllegalStateException(
-                        "Calibre did not produce a " + outputFormat.name() + " output");
-            }
-
-            String outputFilename =
-                    GeneralUtils.generateFilename(
-                            originalFilename, "." + outputFormat.getExtension());
-
-            MediaType mediaType = MediaType.valueOf(outputFormat.getMediaType());
-            TempFile tempOut =
-                    tempFileManager.createManagedTempFile("." + outputFormat.getExtension());
-            try {
-                Files.copy(outputPath, tempOut.getPath(), StandardCopyOption.REPLACE_EXISTING);
-            } catch (Exception e) {
-                tempOut.close();
-                throw e;
-            }
-            return WebResponseUtils.fileToWebResponse(tempOut, outputFilename, mediaType);
-        } finally {
-            cleanupTempFiles(workingDirectory, inputPath, outputPath);
-        }
-    }
-
-    private void cleanupTempFiles(Path workingDirectory, Path inputPath, Path outputPath) {
-        if (workingDirectory == null) {
-            return;
-        }
-        List<Path> pathsToDelete = new ArrayList<>();
-        if (inputPath != null) {
-            pathsToDelete.add(inputPath);
-        }
-        if (outputPath != null) {
-            pathsToDelete.add(outputPath);
-        }
-        for (Path path : pathsToDelete) {
-            try {
-                Files.deleteIfExists(path);
-            } catch (IOException e) {
-                log.warn("Failed to delete temporary file: {}", path, e);
-            }
-        }
-
-        try {
-            tempFileManager.deleteTempDirectory(workingDirectory);
-        } catch (Exception e) {
-            log.warn("Failed to delete temporary directory: {}", workingDirectory, e);
-        }
+        EbookOptions ebook =
+                EbookOptions.defaults()
+                        .chapters(detectChapters)
+                        .device(
+                                targetDevice == TargetDevice.KINDLE_EINK_TEXT
+                                        ? EbookOptions.Device.KINDLE
+                                        : EbookOptions.Device.TABLET);
+        return officeConversionService.convert(
+                inputFile,
+                outputFormat.getExtension(),
+                MediaType.valueOf(outputFormat.getMediaType()),
+                officeConversionService.settings().ebook(ebook));
     }
 }

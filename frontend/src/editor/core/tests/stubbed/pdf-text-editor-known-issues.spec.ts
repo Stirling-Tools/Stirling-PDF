@@ -9,6 +9,7 @@ import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
 import {
   downloadBytes,
+  reopenSavedBytes,
   saveAndDownload,
 } from "@editor/tests/stubbed/saveHelpers";
 
@@ -275,15 +276,7 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
     // it is dropped and the save-risk modal always gates the save.
     const saved = await downloadBytes(await saveAndDownload(page, true));
 
-    await openInTextEditor(page, {
-      name: "emoji-round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: saved,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p1-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await reopenSavedBytes(page, saved, "emoji-round-trip.pdf", 1);
 
     const reopened = await page.evaluate(() => {
       const s = (window as unknown as EditorTestWindow).__editor_store;

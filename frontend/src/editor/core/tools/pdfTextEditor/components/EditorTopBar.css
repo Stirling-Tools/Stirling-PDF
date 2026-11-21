@@ -36,6 +36,13 @@
   padding-bottom: 0.125rem;
 }
 
+.pdf-editor-topbar__format {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
 .pdf-editor-topbar__file {
   display: flex;
   align-items: center;

@@ -3,6 +3,7 @@ import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 // The overlay used to collapse every document font to one of three generic CSS
 // stacks, so editing text visibly changed its shape. PDFium will hand back the
@@ -155,3 +156,4 @@ export function resetEmbeddedFaces(): void {
   faceBytesHeld = 0;
   generation++;
 }
+clearOnDocumentClose(resetEmbeddedFaces);

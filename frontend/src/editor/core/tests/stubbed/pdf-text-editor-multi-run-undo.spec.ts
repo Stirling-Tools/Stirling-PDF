@@ -112,13 +112,13 @@ test.describe("PDF text editor - a restyle of many runs is one undo step", () =>
 
     const picker = page.getByTestId("pdf-editor-font-family");
     await picker.click();
-    await page.getByRole("option", { name: "Helvetica", exact: true }).click();
+    await page.getByRole("option", { name: "Times", exact: true }).click();
     await page.waitForTimeout(2500);
 
     // Sanity: the change has to have landed, or the undo assertion is vacuous.
     const changed = await runsInModel(page);
     expect(
-      changed.filter((r) => /helvetica/i.test(r.fontId)).length,
+      changed.filter((r) => /times/i.test(r.fontId)).length,
       "the font change did not apply",
     ).toBeGreaterThan(1);
 
