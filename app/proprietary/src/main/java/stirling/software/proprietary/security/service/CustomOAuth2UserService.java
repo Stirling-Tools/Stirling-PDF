@@ -89,9 +89,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                                     + internalUsername
                                     + " has been locked due to too many failed login attempts.");
                 }
-                if (userService.hasPassword(usernameAttributeKey)) {
-                    throw new IllegalArgumentException("Password must not be null");
-                }
             }
 
             // Return a new OidcUser with adjusted attributes

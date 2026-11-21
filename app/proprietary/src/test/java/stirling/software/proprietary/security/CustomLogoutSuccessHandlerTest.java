@@ -49,6 +49,47 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
+    void sessionlessErrorRedirectLandsOnLoginPage() throws IOException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        String loginPath = "/login?errorOAuth=userAlreadyExistsWeb";
+
+        when(response.isCommitted()).thenReturn(false);
+        when(jwtService.extractToken(request)).thenReturn(null);
+        when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn("true");
+        when(request.getContextPath()).thenReturn("");
+        when(response.encodeRedirectURL(loginPath)).thenReturn(loginPath);
+        when(securityProperties.getOauth2())
+                .thenReturn(mock(ApplicationProperties.Security.OAUTH2.class));
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
+
+        verify(response).sendRedirect(loginPath);
+    }
+
+    @Test
+    void sessionlessErrorRedirectLandsOnSeparateFrontendWhenRedirectBaseUrlSet()
+            throws IOException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        ApplicationProperties.Security.OAUTH2 oauth =
+                mock(ApplicationProperties.Security.OAUTH2.class);
+        applicationProperties.getSystem().setFrontendUrl("https://app.example.com");
+        String loginUrl = "https://app.example.com/login?errorOAuth=userAlreadyExistsWeb";
+
+        when(response.isCommitted()).thenReturn(false);
+        when(jwtService.extractToken(request)).thenReturn(null);
+        when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn("true");
+        when(response.encodeRedirectURL(loginUrl)).thenReturn(loginUrl);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
+        when(oauth.getRedirectBaseUrl()).thenReturn("https://api.example.com");
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
+
+        verify(response).sendRedirect(loginUrl);
+    }
+
+    @Test
     void testSuccessfulLogoutViaJWT() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
