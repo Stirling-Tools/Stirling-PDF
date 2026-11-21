@@ -85,7 +85,6 @@ export default defineConfig({
           dedupe: MANTINE_PACKAGES,
           alias: [CORE_TOAST_ALIAS],
         },
-        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "core",
           ...TEST_DEFAULTS,
@@ -96,7 +95,9 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./src/editor/core/setupTests.ts"],
           // Transformed rather than externalized, so the font fallback patch applies.
-          server: { deps: { inline: [/@embedpdf\/engines/] } },
+          server: {
+            deps: { inline: [...MANTINE_PACKAGES, /@embedpdf\/engines/] },
+          },
         },
         plugins: [
           embedpdfFontFallbackPlugin(),
@@ -117,9 +118,9 @@ export default defineConfig({
           dedupe: MANTINE_PACKAGES,
           alias: [CORE_TOAST_ALIAS],
         },
-        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "processor",
+          server: { deps: { inline: MANTINE_PACKAGES } },
           ...TEST_DEFAULTS,
           testTimeout: 60000,
           hookTimeout: 60000,
@@ -148,9 +149,9 @@ export default defineConfig({
           dedupe: MANTINE_PACKAGES,
           alias: [CORE_TOAST_ALIAS],
         },
-        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "proprietary",
+          server: { deps: { inline: MANTINE_PACKAGES } },
           ...TEST_DEFAULTS,
           testTimeout: 60000,
           hookTimeout: 60000,
@@ -177,9 +178,9 @@ export default defineConfig({
           dedupe: MANTINE_PACKAGES,
           alias: [CORE_TOAST_ALIAS],
         },
-        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "desktop",
+          server: { deps: { inline: MANTINE_PACKAGES } },
           ...TEST_DEFAULTS,
           testTimeout: 60000,
           hookTimeout: 60000,
@@ -206,9 +207,9 @@ export default defineConfig({
           dedupe: MANTINE_PACKAGES,
           alias: [CORE_TOAST_ALIAS],
         },
-        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "saas",
+          server: { deps: { inline: MANTINE_PACKAGES } },
           ...TEST_DEFAULTS,
           testTimeout: 60000,
           hookTimeout: 60000,

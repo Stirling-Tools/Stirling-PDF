@@ -4,7 +4,8 @@ import i18n from "i18next";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, defaultValue?: string) => defaultValue ?? key,
+    t: (key: string, defaultValue?: unknown) =>
+      typeof defaultValue === "string" ? defaultValue : key,
     i18n: { changeLanguage: vi.fn() },
   }),
   initReactI18next: { type: "3rdParty", init: vi.fn() },
