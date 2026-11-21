@@ -29,11 +29,11 @@ export const useMergeTips = (): TooltipContent => {
       {
         title: t(
           "merge.generateTableOfContentsPage.tooltip.title",
-          "Generate Table of Contents Page",
+          "Contents Page",
         ),
         description: t(
           "merge.generateTableOfContentsPage.tooltip.description",
-          "Automatically creates a table of contents page with links to each individual document within the merged PDF.",
+          "Inserts a page at the start of the merged PDF that lists every file and the page it starts on.",
         ),
       },
     ],
