@@ -49,7 +49,12 @@ const PageLayout = (props: BaseToolProps) => {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
     },
-    preview: <PageLayoutPreview parameters={base.params.parameters} />,
+    preview: (
+      <PageLayoutPreview
+        parameters={base.params.parameters}
+        file={base.selectedFiles[0]}
+      />
+    ),
     steps: [
       {
         title: t("pageLayout.steps.layout", "Layout settings"),
