@@ -146,6 +146,8 @@ const EmbedPdfViewerContent = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  // The pages' scrollbar, which the page bar stops short of to centre on them.
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const registeredPageTool = useViewerPageTool();
 
   const {
@@ -2022,6 +2024,7 @@ const EmbedPdfViewerContent = ({
               key={currentFileRootId || "no-file"}
               shouldSkipBytes={shouldSkipBytes}
               onPageLayout={handleViewerPageLayout}
+              onScrollbarWidthChange={setScrollbarWidth}
               onDocumentSwapped={handleDocumentSwapped}
               onDocumentSwapFailed={handleDocumentSwapFailed}
               onDocumentReady={documentReady}
@@ -2128,7 +2131,10 @@ const EmbedPdfViewerContent = ({
             // floating card rather than one welded to the viewport edge.
             bottom: "0.5rem",
             left: 0,
-            right: 0,
+            // Clear of the open side panels and the pages' scrollbar, so it
+            // centres on the pages.
+            right: `calc(${totalRightMargin}rem + ${scrollbarWidth}px)`,
+            transition: "right 0.3s ease",
             zIndex: 50,
             display: "flex",
             justifyContent: "center",
