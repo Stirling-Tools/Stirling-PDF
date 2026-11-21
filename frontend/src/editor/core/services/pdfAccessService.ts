@@ -386,7 +386,15 @@ function runInspection(
         }
       } else if ("done" in data) {
         finish(reusable());
-      } else fail(Object.assign(new Error(data.error), { code: data.code }));
+      } else
+        fail(
+          Object.assign(
+            new Error(
+              data.detail ? `${data.error} (${data.detail})` : data.error,
+            ),
+            { code: data.code },
+          ),
+        );
     };
     const queued = {
       size: file.size,

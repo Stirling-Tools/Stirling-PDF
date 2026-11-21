@@ -67,6 +67,12 @@ function resolveDroppedPaths(files: File[]): Promise<(string | null)[]> {
   ).catch(() => []);
 }
 
+const droppedFiles = new WeakSet<File>();
+
+export function isDroppedFile(file: File): boolean {
+  return droppedFiles.has(file);
+}
+
 /** Captures drop provenance before UI handlers run. Cleanup removes the app-wide listener. */
 export function captureDroppedFilePaths(): () => void {
   const onDrop = (event: DragEvent) => {
@@ -82,6 +88,7 @@ export function captureDroppedFilePaths(): () => void {
       ),
     );
     files.forEach((file, index) => {
+      droppedFiles.add(file);
       pendingFilePathMappings.set(
         file,
         paths.then((paths) => paths[index] || undefined),
