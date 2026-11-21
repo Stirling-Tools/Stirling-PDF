@@ -39,6 +39,11 @@ public class TocFontResolver {
         return load(FONT_DEFAULT);
     }
 
+    /**
+     * Splits {@code text} into single-font runs in visual order (right-to-left passages reversed),
+     * ready to draw left to right as-is. Characters no bundled font covers become {@code ?}. The
+     * fonts are loaded into the constructor's document, so draw the runs only there.
+     */
     public List<TextRun> toRuns(String text) throws IOException {
         List<TextRun> runs = new ArrayList<>();
         if (text == null || text.isEmpty()) {
@@ -69,8 +74,12 @@ public class TocFontResolver {
         return runs;
     }
 
+    /**
+     * Like {@link #toRuns}, but cut short with a trailing "…" until the runs fit {@code maxWidth}.
+     * If even "…" alone is too wide, it is returned anyway.
+     */
     public List<TextRun> fitToWidth(String text, float fontSize, float maxWidth)
-            throws IOException {
+        throws IOException {
         List<TextRun> runs = toRuns(text);
         if (width(runs, fontSize) <= maxWidth) {
             return runs;
@@ -131,11 +140,9 @@ public class TocFontResolver {
         String character = Character.toString(codePoint);
         Character.UnicodeScript script = Character.UnicodeScript.of(codePoint);
         boolean neutral =
-                script == Character.UnicodeScript.COMMON
-                        || script == Character.UnicodeScript.INHERITED;
-        if (neutral
-                && current != null
-                && TextEncodingHelper.canEncodeCharacters(current, character)) {
+            script == Character.UnicodeScript.COMMON
+                || script == Character.UnicodeScript.INHERITED;
+        if (neutral && TextEncodingHelper.canEncodeCharacters(current, character)) {
             return current;
         }
         PDFont candidate = load(pathFor(codePoint, script));
@@ -174,6 +181,6 @@ public class TocFontResolver {
     private static boolean isCjkPunctuation(int codePoint) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
         return block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
-                || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS;
+            || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS;
     }
 }
