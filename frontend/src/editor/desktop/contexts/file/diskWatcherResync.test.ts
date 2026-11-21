@@ -218,6 +218,18 @@ describe("an open file whose original goes away", () => {
     expect(h.updates).toEqual([]);
   });
 
+  test("is not detached when our own save starts while it is re-checked", async () => {
+    vi.mocked(getDiskFileState).mockImplementation(async () => {
+      beginSelfWrite(PATH);
+      return GONE;
+    });
+    const h = harness(stub(), DISK_BYTES);
+
+    await h.run();
+
+    expect(h.updates).toEqual([]);
+  });
+
   test("on a volume that went offline is marked, then cleared on return", async () => {
     vi.mocked(getDiskFileState).mockResolvedValueOnce({
       availability: "unavailable",

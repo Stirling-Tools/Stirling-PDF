@@ -255,8 +255,11 @@ async function checkOriginal(
   }
 
   if (state.availability === "gone") {
-    // A pass that listed the stubs before an earlier detach rendered.
-    if (port.getStub(fileId)?.localFilePath !== path) return null;
+    // A save may have started during the wait, or an earlier pass detached the
+    // record after this pass listed the stubs.
+    if (isSelfWrite(path) || port.getStub(fileId)?.localFilePath !== path) {
+      return null;
+    }
     // Never delete what is on screen: cutting the link leaves the document
     // intact and makes the next save ask for somewhere to put it.
     port.updateStub(fileId, detachedFields(path));
