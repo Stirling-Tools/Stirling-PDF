@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -59,6 +62,7 @@ class MergeControllerMoreTest {
     private CustomPDFDocumentFactory pdfDocumentFactory;
     private TempFileManager tempFileManager;
     private MergeController mergeController;
+    private static final Pattern TOC_ENTRY = Pattern.compile("(file-\\d+)[\\s.]+(\\d+)");
 
     @BeforeEach
     void setUp() {
@@ -147,6 +151,18 @@ class MergeControllerMoreTest {
         }
         assertThat(out.length).isGreaterThan(0);
         return Loader.loadPDF(out);
+    }
+
+    private static List<String> tocEntries(PDDocument document, int page) throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setStartPage(page);
+        stripper.setEndPage(page);
+        Matcher matcher = TOC_ENTRY.matcher(stripper.getText(document));
+        List<String> entries = new ArrayList<>();
+        while (matcher.find()) {
+            entries.add(matcher.group(1) + "=" + matcher.group(2));
+        }
+        return entries;
     }
 
     @Nested
@@ -469,19 +485,34 @@ class MergeControllerMoreTest {
     }
 
     @Test
-    @DisplayName("merges 33 files, the toc should be 2 files long")
+    @DisplayName("33 files spill onto a second contents page with correct entries")
     void tocPageSpillsOntoSecondPage() throws IOException {
-        MockMultipartFile[] files = new MockMultipartFile[MergeController.ENTRIES_PER_TOC_PAGE + 1];
+        int perPage = MergeController.ENTRIES_PER_TOC_PAGE;
+        int fileCount = perPage + 1;
+        int tocPages = 2;
 
-        for (int i = 0; i < files.length; i++) {
-            files[i] = pdf("a.pdf", 1);
+        MockMultipartFile[] files = new MockMultipartFile[fileCount];
+        List<String> expectedEntries = new ArrayList<>(fileCount);
+        int nextStartPage = tocPages + 1;
+        for (int i = 0; i < fileCount; i++) {
+            String title = String.format(Locale.ROOT, "file-%02d", i + 1);
+            int pages = 1 + i % 2;
+            files[i] = pdf(title + ".pdf", pages);
+            expectedEntries.add(title + "=" + nextStartPage);
+            nextStartPage += pages;
         }
+        int expectedTotalPages = nextStartPage - 1;
 
         ResponseEntity<Resource> response =
                 mergeController.mergePdfs(
                         request(files, "orderProvided", false, false, true), null);
+
         try (PDDocument result = readResponse(response)) {
-            assertThat(result.getNumberOfPages()).isEqualTo(files.length + 2);
+            assertThat(result.getNumberOfPages()).isEqualTo(expectedTotalPages);
+            assertThat(tocEntries(result, 1))
+                    .containsExactlyElementsOf(expectedEntries.subList(0, perPage));
+            assertThat(tocEntries(result, 2))
+                    .containsExactlyElementsOf(expectedEntries.subList(perPage, fileCount));
         }
     }
 
