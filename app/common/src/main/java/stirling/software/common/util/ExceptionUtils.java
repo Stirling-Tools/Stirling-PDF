@@ -8,8 +8,11 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -320,8 +323,16 @@ public class ExceptionUtils {
      * @return PdfEncryptionException with user-friendly message
      */
     public static PdfEncryptionException createPdfEncryptionException(Exception cause) {
+        return createPdfEncryptionException(null, cause);
+    }
+
+    public static PdfEncryptionException createPdfEncryptionException(
+            String context, Exception cause) {
         requireNonNull(cause, "cause");
         String message = getMessage(ErrorCode.PDF_ENCRYPTION);
+        if (context != null && !context.isEmpty()) {
+            message = message + " (" + context + ")";
+        }
         return new PdfEncryptionException(message, cause, ErrorCode.PDF_ENCRYPTION.getCode());
     }
 
@@ -332,8 +343,23 @@ public class ExceptionUtils {
      * @return PdfPasswordException with user-friendly message
      */
     public static PdfPasswordException createPdfPasswordException(Exception cause) {
+        return createPdfPasswordException(null, cause);
+    }
+
+    /**
+     * Create a PdfPasswordException naming what could not be opened, so a multi-file operation can
+     * say which input needs unlocking rather than failing anonymously.
+     *
+     * @param context the affected file(s), or null for the bare message
+     * @param cause the original exception
+     * @return PdfPasswordException with user-friendly message
+     */
+    public static PdfPasswordException createPdfPasswordException(String context, Exception cause) {
         requireNonNull(cause, "cause");
         String message = getMessage(ErrorCode.PDF_PASSWORD);
+        if (context != null && !context.isEmpty()) {
+            message = message + " (" + context + ")";
+        }
         return new PdfPasswordException(message, cause, ErrorCode.PDF_PASSWORD.getCode());
     }
 
@@ -939,6 +965,12 @@ public class ExceptionUtils {
         return new ToolFailedException(message, cause, ErrorCode.PDFA_CONVERSION_FAILED.getCode());
     }
 
+    public static ToolFailedException createConversionIncompleteException(String fileName) {
+        requireNonNull(fileName, "fileName");
+        String message = getMessage(ErrorCode.CONVERSION_INCOMPLETE, fileName);
+        return new ToolFailedException(message, null, ErrorCode.CONVERSION_INCOMPLETE.getCode());
+    }
+
     public static StepConfigurationException createInvalidArgumentException(
             String argumentName, String value) {
         requireNonNull(argumentName, "argumentName");
@@ -1088,10 +1120,12 @@ public class ExceptionUtils {
     public static IOException handlePdfException(IOException e, String context) {
         requireNonNull(e, "exception");
 
-        // Most specific first: corruption's patterns cover almost anything PDFBox gives up on,
-        // so testing it earlier reported every document that would not decrypt as damaged.
+        if (e instanceof BaseAppException) {
+            return e;
+        }
+
         if (isPasswordError(e)) {
-            return createPdfPasswordException(e);
+            return createPdfPasswordException(context, e);
         }
 
         if (isEncryptionError(e)) {
@@ -1326,7 +1360,9 @@ public class ExceptionUtils {
         DECODED_STREAM_TOO_LARGE(
                 "E087",
                 "error.decodedStreamTooLarge",
-                "Part of this document decompresses to more than this server''s limit of {0} MB.");
+                "Part of this document decompresses to more than this server''s limit of {0} MB."),
+        CONVERSION_INCOMPLETE(
+                "E088", "error.conversionIncomplete", "Only part of {0} could be converted");
 
         private final String code;
         private final String messageKey;
@@ -1574,13 +1610,22 @@ public class ExceptionUtils {
     /**
      * Check if an exception indicates a PDF encryption/decryption error.
      *
+     * <p>For failures outside a known PDF operation, first require {@link
+     * PdfErrorUtils#hasPdfContext(Throwable)}; crypto messages alone do not identify the format.
+     *
      * @param e the exception to check
      * @return true if it's an encryption error, false otherwise
      */
-    public static boolean isEncryptionError(IOException e) {
-        String message = e.getMessage();
-        if (message == null) return false;
+    public static boolean isEncryptionError(Throwable e) {
+        return anyCauseMatches(
+                e,
+                cause ->
+                        cause instanceof PdfEncryptionException
+                                || (cause.getMessage() != null
+                                        && isEncryptionMessage(cause.getMessage())));
+    }
 
+    private static boolean isEncryptionMessage(String message) {
         return message.contains("BadPaddingException")
                 || message.contains("Given final block not properly padded")
                 || message.contains("AES initialization vector not fully read")
@@ -1588,18 +1633,51 @@ public class ExceptionUtils {
     }
 
     /**
-     * Check if an exception indicates a PDF password error.
+     * Check if an exception indicates a PDF password error. The whole cause chain is inspected, so
+     * a wrapper carrying a fixed message does not hide the underlying reason.
+     *
+     * <p>For failures outside a known PDF operation, first require {@link
+     * PdfErrorUtils#hasPdfContext(Throwable)}; password messages alone do not identify the format.
      *
      * @param e the exception to check
      * @return true if it's a password error, false otherwise
      */
-    public static boolean isPasswordError(IOException e) {
-        String message = e.getMessage();
-        if (message == null) return false;
+    public static boolean isPasswordError(Throwable e) {
+        return anyCauseMatches(
+                e,
+                cause ->
+                        cause instanceof PdfPasswordException
+                                || cause instanceof InvalidPasswordException
+                                || cause
+                                        instanceof
+                                        stirling.software.jpdfium.exception.PdfPasswordException
+                                || (cause.getMessage() != null
+                                        && isPasswordMessage(cause.getMessage())));
+    }
 
+    private static boolean isPasswordMessage(String message) {
         return message.contains("password is incorrect")
                 || message.contains("Password is not provided")
-                || message.contains("PDF contains an encryption dictionary");
+                || message.contains("PDF contains an encryption dictionary")
+                // JPDFium's wording when a document needs a password to open.
+                || message.contains("Password required/incorrect");
+    }
+
+    /** Bounds the cause walk so a self-referencing or cyclic chain cannot spin. */
+    private static final int MAX_CAUSE_DEPTH = 10;
+
+    private static boolean anyCauseMatches(Throwable throwable, Predicate<Throwable> matcher) {
+        Throwable current = throwable;
+        for (int depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
+            if (matcher.test(current)) {
+                return true;
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     /** Exception thrown when EML file format is invalid. */
