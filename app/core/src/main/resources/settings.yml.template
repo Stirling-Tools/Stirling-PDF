@@ -1,4 +1,4 @@
-#############################################################################################################
+﻿#############################################################################################################
 #                                         Welcome to settings file from                                     #
 #                      ____ _____ ___ ____  _     ___ _   _  ____       ____  ____  _____                   #
 #                     / ___|_   _|_ _|  _ \| |   |_ _| \ | |/ ___|     |  _ \|  _ \|  ___|                  #
@@ -359,6 +359,11 @@ toolRecommendations:
 # Automatically Generated Settings (Do Not Edit Directly)
 # Generated on first boot and written back here. In a cluster EVERY node must carry the SAME key and
 # UUID (env: AUTOMATICALLYGENERATED_KEY / AUTOMATICALLYGENERATED_UUID) or nodes cannot read each other's data.
+# SECURITY NOTE: `key` is a secret (AES key for stored metadata) and `UUID` is an identifier; treat
+# both as sensitive and do not commit real values. Any environment variable can instead be provided
+# via the docker-secrets `_FILE` convention: set `<NAME>_FILE` to a file path and the file's content
+# (with one trailing newline stripped) is used as the value of `<NAME>`, e.g.
+# SECURITY_INITIALLOGIN_PASSWORD_FILE=/run/secrets/login_password.
 AutomaticallyGenerated:
   key: example # AES key for stored metadata. Differs per node = one node cannot decrypt another's rows.
   UUID: example # Part of the licence-seat HMAC. Differs per node = peers reject each other's seat count.
@@ -545,3 +550,4 @@ cluster:
       maxWaitMillis: 2000 # Must be > 0: negative blocks forever, 0 fails the borrow instantly.
       timeBetweenEvictionRunsMillis: 30000 # Idle-evictor interval; minIdle only applies while it runs.
       testOnBorrow: true # Local isOpen() check only, no round trip.
+
