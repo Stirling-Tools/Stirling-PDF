@@ -13,6 +13,7 @@ bootRun {
 }
 dependencies {
     implementation project(':common')
+    implementation 'org.apache.httpcomponents.client5:httpclient5'
     api "com.google.guava:guava:${guavaVersion}"
 
     api 'org.springframework:spring-jdbc'

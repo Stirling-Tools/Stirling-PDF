@@ -112,6 +112,7 @@ export function useSuperSearchGates(): SuperSearchGates | null {
             portalAccessible,
             isAnonymous: authState.isAnonymous,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
+            mcpEnabled: config.mcpEnabled ?? false,
           }
         : null,
     [authState.isAdmin, authState.isAnonymous, portalAccessible, config],
@@ -333,6 +334,7 @@ export function rankSettingsResults(
     // The processor's own sections mirror its nav builder's portalAccess gate.
     if (s.requiresPortalAccess && gates?.portalAccessible !== true)
       return false;
+    if (s.requiresMcp && gates?.mcpEnabled !== true) return false;
     return true;
   });
   // Row context: the display label of the section the row lives in.

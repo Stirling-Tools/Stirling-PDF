@@ -28,14 +28,17 @@ public class StirlingMiscTool extends AbstractCategoryTool {
 
     @Override
     public String title() {
-        return "PDF utilities";
+        return "Compress, OCR and tidy PDFs";
     }
 
     @Override
     public String description() {
-        return "Miscellaneous PDF operations: compress, OCR, stamp / watermark, edit metadata,"
-                + " flatten, repair, and similar utilities. Call stirling_describe_operation with"
-                + " the chosen op to get its parameters schema before invoking this tool.";
+        return "Other PDF tools: fill in and read form fields, compress, OCR, stamps, page"
+                + " numbers, images, attachments and portfolios, metadata, comments, flatten,"
+                + " repair, auto-rotate, remove blank pages and similar utilities. Watermarks are"
+                + " in stirling_security."
+                + " Each operation lists its parameters in the 'operation' field; call"
+                + " stirling_describe_operation when an option you need is not shown.";
     }
 
     @Override

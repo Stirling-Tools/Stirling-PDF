@@ -52,6 +52,7 @@ export default defineConfig({
       "@mantine/core",
       "@supabase/supabase-js",
       "axios",
+      "posthog-js",
     ],
   },
   test: {
