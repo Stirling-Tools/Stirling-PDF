@@ -1,0 +1,165 @@
+package stirling.software.SPDF.config;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
+
+import stirling.software.common.model.ApplicationProperties;
+
+/**
+ * Guards the CORS scoping invariant: preflight (OPTIONS) requests to API endpoints are answered
+ * with {@code Access-Control-Allow-Origin}, while static assets must never carry CORS headers (they
+ * fragment CDN and browser caches per origin, and intermediaries strip them on cache hits).
+ */
+@WebMvcTest(
+        controllers = CorsPreflightIntegrationTest.CorsProbeController.class,
+        useDefaultFilters = false)
+@AutoConfigureMockMvc(addFilters = false)
+@Import({WebMvcConfig.class, CorsPreflightIntegrationTest.MockInterceptorsConfig.class})
+class CorsPreflightIntegrationTest {
+
+    private static final String ORIGIN = "https://app.example.com";
+    private static final String DESKTOP_ORIGIN = "tauri://localhost";
+
+    @Autowired private MockMvc mockMvc;
+
+    /** Supplies WebMvcConfig's constructor dependencies without dragging in the app context. */
+    @Configuration
+    static class MockInterceptorsConfig {
+
+        @Bean
+        EndpointInterceptor endpointInterceptor() throws Exception {
+            EndpointInterceptor mock = Mockito.mock(EndpointInterceptor.class);
+            Mockito.when(mock.preHandle(Mockito.any(), Mockito.any(), Mockito.any()))
+                    .thenReturn(true);
+            return mock;
+        }
+
+        @Bean
+        PdfMetricsInterceptor pdfMetricsInterceptor() throws Exception {
+            PdfMetricsInterceptor mock = Mockito.mock(PdfMetricsInterceptor.class);
+            Mockito.when(mock.preHandle(Mockito.any(), Mockito.any(), Mockito.any()))
+                    .thenReturn(true);
+            return mock;
+        }
+
+        @Bean
+        ApplicationProperties applicationProperties() {
+            return new ApplicationProperties();
+        }
+    }
+
+    @RestController
+    @RequestMapping("/api/v1/cors-probe")
+    static class CorsProbeController {
+
+        @GetMapping
+        String probe() {
+            return "ok";
+        }
+    }
+
+    @Test
+    @DisplayName("preflight to an API endpoint returns Access-Control-Allow-Origin")
+    void preflightOnApiReturnsCorsHeaders() throws Exception {
+        mockMvc.perform(
+                        options("/api/v1/cors-probe")
+                                .header("Origin", ORIGIN)
+                                .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", ORIGIN))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    }
+
+    @Test
+    @DisplayName("preflight to a static asset never returns CORS headers")
+    void preflightOnAssetOmitsCorsHeaders() throws Exception {
+        mockMvc.perform(
+                        options("/assets/cors-probe.js")
+                                .header("Origin", ORIGIN)
+                                .header("Access-Control-Request-Method", "GET"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+
+    @Test
+    @DisplayName("desktop webview can fetch PDFium fallback fonts cross-origin")
+    void fontRequestFromDesktopOriginReturnsCorsHeaders() throws Exception {
+        mockMvc.perform(get("/fonts/NotoSans-Regular.ttf").header("Origin", DESKTOP_ORIGIN))
+                .andExpect(header().string("Access-Control-Allow-Origin", DESKTOP_ORIGIN));
+    }
+
+    @Test
+    @DisplayName("other static assets stay out of the cross-origin allowlist")
+    void imageRequestOmitsCorsHeaders() throws Exception {
+        mockMvc.perform(get("/images/logo.svg").header("Origin", ORIGIN))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+
+    @Test
+    @DisplayName("error dispatch from an API request stays readable by cross-origin clients")
+    void errorDispatchReturnsCorsHeaders() throws Exception {
+        mockMvc.perform(
+                        get("/error")
+                                .header("Origin", DESKTOP_ORIGIN)
+                                .with(
+                                        req -> {
+                                            req.setDispatcherType(DispatcherType.ERROR);
+                                            req.setAttribute(
+                                                    RequestDispatcher.ERROR_REQUEST_URI,
+                                                    "/api/v1/cors-probe");
+                                            return req;
+                                        }))
+                .andExpect(header().string("Access-Control-Allow-Origin", DESKTOP_ORIGIN));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "/mcp",
+                "/mcp/messages",
+                "/.well-known/oauth-protected-resource",
+                "/.well-known/oauth-protected-resource/mcp",
+                "/logout"
+            })
+    @DisplayName("preflight to MCP, OAuth metadata, and logout paths returns CORS headers")
+    void preflightOnMcpOauthMetadataAndLogoutReturnsCorsHeaders(String path) throws Exception {
+        mockMvc.perform(
+                        options(path)
+                                .header("Origin", DESKTOP_ORIGIN)
+                                .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", DESKTOP_ORIGIN))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/oauth2/authorization/github", "/login/oauth2/code/github"})
+    @DisplayName("preflight to browser OAuth login and callback paths omits CORS headers")
+    void preflightOnBrowserOAuthFlowsOmitsCorsHeaders(String path) throws Exception {
+        mockMvc.perform(
+                        options(path)
+                                .header("Origin", ORIGIN)
+                                .header("Access-Control-Request-Method", "GET"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+}

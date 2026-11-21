@@ -135,6 +135,17 @@ class SecurityConfigurationTest {
         }
 
         @Test
+        @DisplayName("corsConfigurationSource registers the paths the desktop webview calls")
+        void corsCoversDesktopCalledPaths() {
+            UrlBasedCorsConfigurationSource source =
+                    (UrlBasedCorsConfigurationSource) newConfig(true).corsConfigurationSource();
+
+            assertThat(source.getCorsConfigurations())
+                    .containsKeys("/fonts/**", "/error", "/logout")
+                    .doesNotContainKey("/assets/**");
+        }
+
+        @Test
         @DisplayName("daoAuthenticationProvider is built with the configured password encoder")
         void daoAuthenticationProvider() {
             DaoAuthenticationProvider provider = newConfig(true).daoAuthenticationProvider();
@@ -164,7 +175,9 @@ class SecurityConfigurationTest {
         }
 
         private CorsConfiguration configFor(CorsConfigurationSource source) {
-            return ((UrlBasedCorsConfigurationSource) source).getCorsConfigurations().get("/**");
+            return ((UrlBasedCorsConfigurationSource) source)
+                    .getCorsConfigurations()
+                    .get("/api/**");
         }
     }
 
