@@ -8,6 +8,13 @@
       "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
     },
     {
+      "moduleName": "@azure/msal-browser",
+      "moduleUrl": "https://github.com/AzureAD/microsoft-authentication-library-for-js",
+      "moduleVersion": "5.24.0",
+      "moduleLicense": "MIT",
+      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+    },
+    {
       "moduleName": "@cantoo/pdf-lib",
       "moduleUrl": "https://github.com/cantoo-scribe/pdf-lib",
       "moduleVersion": "2.8.2",
