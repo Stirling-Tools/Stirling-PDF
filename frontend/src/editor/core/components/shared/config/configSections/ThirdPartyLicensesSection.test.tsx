@@ -1,0 +1,138 @@
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
+import { FrontendThirdPartyLicensesSection } from "@editor/components/shared/config/configSections/ThirdPartyLicensesSection";
+import {
+  dedupeDependencies,
+  resolveLicenseDisplay,
+} from "@editor/components/shared/config/configSections/licenseDisplay";
+import frontendLicenses from "../../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- row expectations must follow the generated asset
+
+const expectedRows = dedupeDependencies(
+  (frontendLicenses as { dependencies?: [] }).dependencies ?? [],
+);
+
+const viewport = vi.hoisted(() => ({ phone: false }));
+
+vi.mock("@editor/hooks/useIsMobile", () => ({
+  useIsPhone: () => viewport.phone,
+}));
+
+vi.mock("@editor/services/apiClient", () => ({
+  default: { get: vi.fn() },
+}));
+
+// jsdom reports no scroll geometry, so the real virtualizer renders nothing.
+// Returning every item keeps the layout branch under test fully mounted.
+vi.mock("@tanstack/react-virtual", () => ({
+  useVirtualizer: (options: {
+    count: number;
+    getItemKey: (i: number) => string;
+  }) => {
+    const items = Array.from({ length: options.count }, (_, index) => ({
+      index,
+      start: index,
+      end: index + 1,
+      size: 1,
+      key: options.getItemKey(index),
+    }));
+    return {
+      getVirtualItems: () => items,
+      getTotalSize: () => options.count,
+      measureElement: () => {},
+    };
+  },
+}));
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, fallback?: string) =>
+      typeof fallback === "string" ? fallback : key,
+  }),
+}));
+
+function renderSection() {
+  return render(
+    <MantineProvider>
+      <FrontendThirdPartyLicensesSection />
+    </MantineProvider>,
+  );
+}
+
+function requireFirstRow() {
+  const row = expectedRows[0];
+  if (!row) {
+    throw new Error("3rdPartyLicenses.json has no rows");
+  }
+  return row;
+}
+
+describe("third-party licenses layout", () => {
+  it("renders the three-column table on wide viewports", () => {
+    viewport.phone = false;
+    const { container } = renderSection();
+
+    expect(screen.getByRole("table")).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: "Module" })).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: "Version" })).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: "License" })).toBeTruthy();
+    expect(
+      container.querySelectorAll("tbody tr[data-index]").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("drops the table for a card list on phones", () => {
+    viewport.phone = true;
+    const { container } = renderSection();
+
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.getByPlaceholderText("Search dependencies")).toBeTruthy();
+    const cards = container.querySelectorAll("div[data-index]");
+    // Expected rows follow the generated asset, so a dependency change cannot
+    // fail this test without any code change.
+    expect(cards.length).toBe(expectedRows.length);
+    // Each card carries the module, its version and the resolved license label.
+    const first = requireFirstRow();
+    expect(cards[0].textContent).toContain(first.moduleName);
+    expect(cards[0].textContent).toContain(first.moduleVersion);
+    expect(cards[0].textContent).toContain(
+      resolveLicenseDisplay(first.moduleLicense, first.moduleName).short,
+    );
+  });
+
+  it("clears the search from the field when nothing matches", () => {
+    viewport.phone = false;
+    renderSection();
+
+    const search = screen.getByPlaceholderText(
+      "Search dependencies",
+    ) as HTMLInputElement;
+    expect(screen.queryByRole("button", { name: "Clear search" })).toBeNull();
+
+    fireEvent.change(search, { target: { value: "zzz-no-such-dependency" } });
+
+    expect(screen.getByText("No matching dependencies.")).toBeTruthy();
+    const clear = screen.getByRole("button", { name: "Clear search" });
+    // The reset lives in the field, not as a button under the empty state.
+    expect(search.parentElement?.contains(clear)).toBe(true);
+
+    fireEvent.click(clear);
+
+    expect(search.value).toBe("");
+    expect(screen.queryByText("No matching dependencies.")).toBeNull();
+  });
+
+  it("widens and wraps the version column instead of clipping it", () => {
+    viewport.phone = false;
+    const { container } = renderSection();
+
+    const versionHeader = screen.getByRole("columnheader", { name: "Version" });
+    expect(versionHeader.style.width).toBe("20%");
+    const versionCell = container.querySelector(
+      "tbody tr[data-index] td:nth-child(2)",
+    );
+    expect(versionCell?.firstElementChild?.getAttribute("style")).toContain(
+      "overflow-wrap: anywhere",
+    );
+  });
+});

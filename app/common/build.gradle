@@ -15,6 +15,8 @@ dependencies {
     api 'com.posthog.java:posthog:1.2.0'
     api "org.apache.commons:commons-lang3:${commonsLang3}"
     api 'com.drewnoakes:metadata-extractor:2.21.0' // Image metadata extractor
+    // In-process HTML to PDF for FileToPdf
+    implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
@@ -23,7 +25,7 @@ dependencies {
     api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.1.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
     api 'org.simplejavamail:simple-java-mail:9.3.9'
     // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)

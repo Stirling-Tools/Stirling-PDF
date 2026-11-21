@@ -20,11 +20,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils.NothingToExtractException;
 import stirling.software.common.util.GeneralUtils;
@@ -36,14 +38,16 @@ class ConvertPDFToExcelControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
-    @Mock private OfficeConversionService officeConversionService;
+
+    // Real converter: these documents are built in memory, so it runs quickly in process.
+    @Spy
+    private OfficeConversionService officeConversionService =
+            new OfficeConversionService(new ApplicationProperties(), null, null);
 
     @InjectMocks private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        // These cover the legacy converters; Stirling Office Convert has its own tests.
-        lenient().when(officeConversionService.legacy(null)).thenReturn(true);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -59,7 +63,7 @@ class ConvertPDFToExcelControllerTest {
     }
 
     @Test
-    void pdfToExcel_noTablesRefuses() throws Exception {
+    void pdfToExcel_noTablesReturnsNoContent() throws Exception {
         MockMultipartFile pdfFile =
                 new MockMultipartFile(
                         "fileInput", "data.pdf", "application/pdf", "pdf-content".getBytes());
@@ -68,7 +72,7 @@ class ConvertPDFToExcelControllerTest {
         request.setFileInput(pdfFile);
         request.setPageNumbers("all");
 
-        // Create a real empty PDDocument for tabula to process
+        // Create a real empty PDDocument to convert
         PDDocument emptyDoc = new PDDocument();
         emptyDoc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
 
@@ -84,13 +88,8 @@ class ConvertPDFToExcelControllerTest {
                                             Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
-            assertThrows(
-                    NothingToExtractException.class, () -> controller.pdfToExcel(request, null));
+            assertThrows(NothingToExtractException.class, () -> controller.pdfToExcel(request));
         }
-    }
-
-    private static void assertTrue(boolean condition) {
-        if (!condition) throw new AssertionError();
     }
 
     @Test

@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.policy.UnreadableRowLog;
+
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -22,6 +24,7 @@ public class JpaSourceStore implements SourceStore {
 
     private final SourceRepository repository;
     private final ObjectMapper objectMapper;
+    private final UnreadableRowLog unreadableRows = new UnreadableRowLog(log, "policy source");
 
     @Override
     public Source save(Source source) {
@@ -82,15 +85,12 @@ public class JpaSourceStore implements SourceStore {
     // One unreadable row must never abort a bulk read or crash startup.
     private Optional<Source> toSource(SourceEntity entity) {
         try {
-            return Optional.of(objectMapper.readValue(entity.getSourceJson(), Source.class));
+            Source source = objectMapper.readValue(entity.getSourceJson(), Source.class);
+            Optional<Source> result = Optional.of(source);
+            unreadableRows.readable(entity.getId());
+            return result;
         } catch (Exception e) {
-            log.error(
-                    "Skipping unreadable policy source id={} name={}: stored JSON could not be"
-                            + " parsed ({}). Likely written by a different app version or"
-                            + " encryption key.",
-                    entity.getId(),
-                    entity.getName(),
-                    e.getMessage());
+            unreadableRows.skipped(entity.getId(), entity.getName(), entity.getSourceJson(), e);
             return Optional.empty();
         }
     }

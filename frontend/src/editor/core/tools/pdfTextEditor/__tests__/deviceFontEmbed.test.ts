@@ -17,6 +17,7 @@ import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { assembleSfnt } from "@editor/tools/pdfTextEditor/util/sfnt";
 
 type QueryStub = () => Promise<unknown[]>;
 
@@ -61,8 +62,11 @@ function plainFont(family: string, style: string): LocalFont {
   };
 }
 
-/** Not a real font file: parseTrueTypeCmap gives up, so coverage fails open. */
-const FAKE_FONT_BYTES = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+/** TrueType outlines but no cmap, so coverage fails open. */
+const FAKE_FONT_BYTES = assembleSfnt(
+  0x00010000,
+  new Map([["glyf", new Uint8Array(4)]]),
+);
 
 interface FakeModuleOptions {
   loadFont?: (
@@ -158,6 +162,7 @@ function fakeHarness(options: FakeModuleOptions = {}): FakeHarness {
       .FPDFPageObj_CreateTextObj;
   }
   const ownedFonts = new Map<string, FontRef>();
+  const embeddedFontFiles: Uint8Array[] = [];
   const doc = {
     module,
     docPtr: 7,
@@ -165,6 +170,11 @@ function fakeHarness(options: FakeModuleOptions = {}): FakeHarness {
       ownedFonts.set(font.id, font);
     },
     ownedFont: (id: string) => ownedFonts.get(id),
+    findOwnedFont: (matches: (font: FontRef) => boolean) =>
+      [...ownedFonts.values()].find(matches),
+    recordEmbeddedFontFile: (bytes: Uint8Array) =>
+      embeddedFontFiles.push(bytes),
+    embeddedFontFiles: () => embeddedFontFiles,
   } as unknown as EditorDocument;
   const page = new Page({ index: 0, pagePtr: 3, width: 200, height: 200 });
   return { doc, page, calls, ownedFonts };
@@ -231,6 +241,24 @@ describe("pickLocalFontFace", () => {
     expect(pickLocalFontFace(withBlack, "Arial Black")?.family).toBe(
       "Arial Black",
     );
+  });
+
+  it("finds the cuts of a family whose own name contains a style word", () => {
+    const named = [
+      plainFont("Times New Roman", "Regular"),
+      plainFont("Times New Roman", "Bold"),
+      plainFont("Times New Roman", "Italic"),
+      plainFont("Book Antiqua", "Regular"),
+      plainFont("Book Antiqua", "Bold"),
+    ];
+    expect(pickLocalFontFace(named, "Times New Roman Bold")?.style).toBe(
+      "Bold",
+    );
+    expect(pickLocalFontFace(named, "Times New Roman Italic")?.style).toBe(
+      "Italic",
+    );
+    expect(pickLocalFontFace(named, "Book Antiqua Bold")?.style).toBe("Bold");
+    expect(pickLocalFontFace(named, "Book Antiqua")?.style).toBe("Regular");
   });
 
   it("returns null when nothing matches", () => {
@@ -346,6 +374,7 @@ describe("loadDeviceFontInto", () => {
     expect(loadDeviceFontInto(harness.doc, "Segoe UI")).toBe(900);
     expect(harness.calls.loadFont).toBe(1);
     expect(isDeviceFontEmbedded(harness.doc, "Segoe UI")).toBe(true);
+    expect(harness.doc.embeddedFontFiles()).toHaveLength(1);
   });
 
   it("embeds separately per document", async () => {

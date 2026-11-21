@@ -1,29 +1,6 @@
 @convert
 Feature: Convert API Validation (additional endpoints)
 
-    @ghostscript @positive
-    Scenario Outline: Convert PDF to vector format
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 1 pages with random text
-        And the request data includes
-            | parameter    | value    |
-            | outputFormat | <format> |
-        When I send the API request to the endpoint "/api/v1/convert/pdf/vector"
-        Then the response status code should be 200
-        And the response file should have size greater than 0
-        And the response file should have extension "<extension>"
-
-        @pdf-to-eps
-        Examples:
-            | format | extension |
-            | eps    | .eps      |
-
-        Examples:
-            | format | extension |
-            | ps     | .ps       |
-            | pcl    | .pcl      |
-            | xps    | .xps      |
-
     @image @positive @pdf-to-cbz
     Scenario: Convert PDF to CBZ with default DPI
         Given I generate a PDF file as "fileInput"
@@ -57,7 +34,7 @@ Feature: Convert API Validation (additional endpoints)
         And the response file should have size greater than 0
         And the response file should have extension ".cbz"
 
-    @calibre @positive @pdf-to-epub
+    @positive @pdf-to-epub
     Scenario: Convert PDF to EPUB format
         Given I generate a PDF file as "fileInput"
         And the pdf contains 3 pages with random text
@@ -70,7 +47,7 @@ Feature: Convert API Validation (additional endpoints)
         And the response file should have size greater than 0
         And the response file should have extension ".epub"
 
-    @calibre @positive @pdf-to-epub
+    @positive @pdf-to-epub
     Scenario: Convert PDF to AZW3 format
         Given I generate a PDF file as "fileInput"
         And the pdf contains 3 pages with random text
@@ -83,7 +60,7 @@ Feature: Convert API Validation (additional endpoints)
         And the response file should have size greater than 0
         And the response file should have extension ".azw3"
 
-    @calibre @positive @pdf-to-epub
+    @positive @pdf-to-epub
     Scenario: Convert PDF to EPUB with chapter detection
         Given I generate a PDF file as "fileInput"
         And the pdf contains 5 pages with random text

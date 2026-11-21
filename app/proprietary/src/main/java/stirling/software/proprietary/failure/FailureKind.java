@@ -168,7 +168,7 @@ public enum FailureKind {
             FailureScope.SERVER,
             // E080 (MD5 unavailable) is deliberately not claimed: its one thrower has no throws
             // clause and its caller swallows it for a fallback hash, so it cannot reach a run.
-            errorCodes("E042", "E062", "E063", "E064", "E082"),
+            errorCodes("E042", "E062", "E063", "E064"),
             fallback("This server is missing software the step needs, so it could not be run."),
             // Nothing for an owner to press: their document is fine, and a retry fails the same
             // way until someone installs the binary.
@@ -209,9 +209,9 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
-     * A tool the step shells out to ran and did not deliver: OCRmyPDF or qpdf exited non-zero,
-     * LibreOffice produced no PDF/A, the redaction engine could not verify its own result. E051 is
-     * also the bucket unrecognised Ghostscript output falls into, so it carries killed processes
+     * A tool the step shells out to ran and did not deliver: OCRmyPDF or qpdf exited non-zero, the
+     * PDF/A converter produced no file, the redaction engine could not verify its own result. E051
+     * is also the bucket unrecognised Ghostscript output falls into, so it carries killed processes
      * and full disks too; the retry offered first clears those.
      */
     STEP_TOOL_FAILED(
