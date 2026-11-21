@@ -74,6 +74,35 @@ async function openEntryMenu(page: Page, entryTitle: RegExp): Promise<void> {
   }
 }
 
+async function pickBuilderTool(page: Page, toolName: string): Promise<void> {
+  const emptySlots = page.getByPlaceholder(/Select a tool/i);
+  const remaining = (await emptySlots.count()) - 1;
+  const input = emptySlots.first();
+  await input.click();
+  await input.fill(toolName);
+  await page
+    .getByRole("button", { name: new RegExp(`^${toolName}`, "i") })
+    .first()
+    .click();
+  await expect(emptySlots).toHaveCount(remaining);
+}
+
+async function openBuilderWith(
+  page: Page,
+  name: string,
+  tools: [string, string],
+): Promise<void> {
+  await ensureOnSelection(page);
+  await page
+    .getByText(/Create New Automation/i)
+    .first()
+    .click();
+  await page.getByLabel(/Automation Name/i).fill(name);
+  for (const tool of tools) {
+    await pickBuilderTool(page, tool);
+  }
+}
+
 test.describe("11. Automation Page", () => {
   test.beforeEach(async ({ page }) => {
     await gotoAutomate(page);
@@ -175,6 +204,43 @@ test.describe("11. Automation Page", () => {
       // Same disabled-when-invalid contract as Save — no name + no tool.
       await expect(exportAutomate).toBeDisabled();
       await expect(exportFolderScan).toBeDisabled();
+    });
+  });
+
+  test.describe("11.2.1 Automation - Steps ready on their defaults", () => {
+    test("saves Flatten then Compress without opening either step", async ({
+      page,
+    }) => {
+      await openBuilderWith(page, "Flatten then Compress", [
+        "Flatten",
+        "Compress",
+      ]);
+
+      await expect(page.getByText("! Not Configured")).toHaveCount(0);
+      const saveBtn = page
+        .getByRole("button", { name: /Save Automation/i })
+        .first();
+      await expect(saveBtn).toBeEnabled();
+      await saveBtn.click();
+
+      await expect(page.getByText("Saved").first()).toBeVisible();
+      await expect(
+        page.getByText("Flatten then Compress").first(),
+      ).toBeVisible();
+    });
+
+    test("Add Password still needs its settings before saving", async ({
+      page,
+    }) => {
+      await openBuilderWith(page, "Protect then Flatten", [
+        "Add Password",
+        "Flatten",
+      ]);
+
+      await expect(page.getByText("! Not Configured")).toHaveCount(1);
+      await expect(
+        page.getByRole("button", { name: /Save Automation/i }).first(),
+      ).toBeDisabled();
     });
   });
 
