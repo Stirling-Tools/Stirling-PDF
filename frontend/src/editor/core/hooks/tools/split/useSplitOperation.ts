@@ -21,6 +21,7 @@ import {
   type SplitMethod,
 } from "@editor/constants/splitConstants";
 import { useToolResources } from "@editor/hooks/tools/shared/useToolResources";
+import { zipFileService } from "@editor/services/zipFileService";
 
 // Split routes to a different endpoint per method. This map is the single source
 // of truth: getSplitEndpoint returns from it, and the mapper types below are
@@ -187,17 +188,36 @@ export const splitOperationConfig = defineSingleFileTool({
   defaultParameters,
 });
 
+/**
+ * Route a split response by signature: merged section output is a single PDF,
+ * everything else is a ZIP. Without the check a merged PDF is renamed
+ * `result.zip` by ZIP extraction and cannot be opened by any unzip tool.
+ */
+export const splitResponseToFiles = async (
+  blob: Blob,
+  originalFiles: File[],
+  extractZipFiles: (blob: Blob) => Promise<File[]>,
+): Promise<File[]> => {
+  if (await zipFileService.isZipResponse(blob, blob.type)) {
+    return extractZipFiles(blob);
+  }
+
+  const originalName = originalFiles[0]?.name ?? "document.pdf";
+  const baseName = originalName.replace(/\.pdf$/i, "");
+  return [
+    new File([blob], `${baseName}_split.pdf`, { type: "application/pdf" }),
+  ];
+};
+
 export const useSplitOperation = () => {
   const { t } = useTranslation();
   const { extractZipFiles } = useToolResources();
 
-  // Custom response handler that extracts ZIP files
+  // Custom response handler that routes ZIP output and merged PDF output.
   // Can't add to exported config because it requires access to the zip code so must be part of the hook
   const responseHandler = useCallback(
-    async (blob: Blob, _originalFiles: File[]): Promise<File[]> => {
-      // Split operations return ZIP files with multiple PDF pages
-      return await extractZipFiles(blob);
-    },
+    (blob: Blob, originalFiles: File[]): Promise<File[]> =>
+      splitResponseToFiles(blob, originalFiles, extractZipFiles),
     [extractZipFiles],
   );
 
