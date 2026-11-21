@@ -57,7 +57,7 @@ public class ToSinglePageController {
             float totalHeight = 0;
             float maxWidth = 0;
             for (PDPage page : sourceDocument.getPages()) {
-                PDRectangle pageSize = page.getMediaBox();
+                PDRectangle pageSize = displayedSize(page);
                 totalHeight += pageSize.getHeight();
                 maxWidth = Math.max(maxWidth, pageSize.getWidth());
             }
@@ -79,15 +79,18 @@ public class ToSinglePageController {
 
                 int pageIndex = 0;
                 for (PDPage page : sourceDocument.getPages()) {
-                    PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
+                    PDRectangle pageSize = displayedSize(page);
+                    PDFormXObject form =
+                            importUpright(layerUtility, sourceDocument, page, pageIndex);
                     if (form != null) {
                         AffineTransform af =
                                 AffineTransform.getTranslateInstance(
-                                        0, yOffset - page.getMediaBox().getHeight());
+                                        0, yOffset - pageSize.getHeight());
+                        af.concatenate(rotationTransform(page));
                         String defaultLayerName = "Layer" + pageIndex;
                         layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
                     }
-                    yOffset -= page.getMediaBox().getHeight();
+                    yOffset -= pageSize.getHeight();
                     pageIndex++;
                 }
 
@@ -98,5 +101,48 @@ public class ToSinglePageController {
                         tempFileManager);
             }
         }
+    }
+
+    private static PDRectangle displayedSize(PDPage page) {
+        PDRectangle cropBox = page.getCropBox();
+        int rotation = page.getRotation();
+        return rotation == 90 || rotation == 270
+                ? new PDRectangle(cropBox.getHeight(), cropBox.getWidth())
+                : new PDRectangle(cropBox.getWidth(), cropBox.getHeight());
+    }
+
+    /**
+     * Imports the page as a form that holds its crop box, upright, with the crop box's lower-left
+     * corner at the origin. LayerUtility.importPageAsForm squeezes a rotated page into its
+     * unrotated size and offsets a crop box that differs from the media box, so the page is
+     * imported with no rotation and its media box set to its crop box, and both are restored
+     * afterwards.
+     */
+    private static PDFormXObject importUpright(
+            LayerUtility layerUtility, PDDocument document, PDPage page, int pageIndex)
+            throws IOException {
+        int rotation = page.getRotation();
+        PDRectangle mediaBox = page.getMediaBox();
+        page.setMediaBox(page.getCropBox());
+        page.setRotation(0);
+        try {
+            return layerUtility.importPageAsForm(document, pageIndex);
+        } finally {
+            page.setRotation(rotation);
+            page.setMediaBox(mediaBox);
+        }
+    }
+
+    /** Turns a form from {@link #importUpright} the way the page's rotation displays it. */
+    private static AffineTransform rotationTransform(PDPage page) {
+        PDRectangle cropBox = page.getCropBox();
+        float width = cropBox.getWidth();
+        float height = cropBox.getHeight();
+        return switch (page.getRotation()) {
+            case 90 -> new AffineTransform(0, -1, 1, 0, 0, width);
+            case 180 -> new AffineTransform(-1, 0, 0, -1, width, height);
+            case 270 -> new AffineTransform(0, 1, -1, 0, height, 0);
+            default -> new AffineTransform();
+        };
     }
 }
