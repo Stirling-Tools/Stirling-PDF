@@ -38,13 +38,25 @@ const MergeSettings: React.FC<MergeSettingsProps> = ({
 
       <Checkbox
         label={t(
-          "merge.generateTableOfContents.label",
-          "Generate table of contents in the merged file?",
+          "merge.generateBookmarks.label",
+          "Add a bookmark for each file",
         )}
-        checked={parameters.generateTableOfContents}
+        checked={parameters.generateBookmarks}
+        onChange={(event) =>
+          onParameterChange("generateBookmarks", event.currentTarget.checked)
+        }
+        disabled={disabled}
+      />
+
+      <Checkbox
+        label={t(
+          "merge.generateTableOfContentsPage.label",
+          "Add a contents page listing each file",
+        )}
+        checked={parameters.generateTableOfContentsPage}
         onChange={(event) =>
           onParameterChange(
-            "generateTableOfContents",
+            "generateTableOfContentsPage",
             event.currentTarget.checked,
           )
         }

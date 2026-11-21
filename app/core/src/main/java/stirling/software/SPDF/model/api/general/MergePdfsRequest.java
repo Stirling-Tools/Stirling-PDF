@@ -38,7 +38,20 @@ public class MergePdfsRequest extends MultiplePDFFiles {
                     "Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "false")
-    private boolean generateToc = false;
+    private boolean generateBookmarks = false;
+
+    @Schema(
+            description =
+                    "Flag indicating whether to generate a table of contents page for the merged PDF. If true, the table of contents page will be generated as the first page of the document.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "false")
+    private boolean generateTocPage = false;
+
+    @Schema(
+        description =
+            "Deprecated. Use generateBookmarks instead. Still accepted so that existing requests keep generating bookmarks.",
+        requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private Boolean generateToc;
 
     @Schema(
             description =

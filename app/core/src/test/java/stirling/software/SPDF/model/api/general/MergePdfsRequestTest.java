@@ -28,7 +28,7 @@ class MergePdfsRequestTest {
             MergePdfsRequest req = new MergePdfsRequest();
 
             assertThat(req.getSortType()).isEqualTo("orderProvided");
-            assertThat(req.isGenerateToc()).isFalse();
+            assertThat(req.isGenerateBookmarks()).isFalse();
             assertThat(req.getRemoveCertSign()).isTrue();
             assertThat(req.getClientFileIds()).isNull();
             assertThat(req.getFileInput()).isNull();
@@ -47,13 +47,13 @@ class MergePdfsRequestTest {
             req.setFileInput(f);
             req.setSortType("byFileName");
             req.setRemoveCertSign(true);
-            req.setGenerateToc(true);
+            req.setGenerateBookmarks(true);
             req.setClientFileIds("[\"x\",\"y\"]");
 
             assertThat(req.getFileInput()).isSameAs(f);
             assertThat(req.getSortType()).isEqualTo("byFileName");
             assertThat(req.getRemoveCertSign()).isTrue();
-            assertThat(req.isGenerateToc()).isTrue();
+            assertThat(req.isGenerateBookmarks()).isTrue();
             assertThat(req.getClientFileIds()).isEqualTo("[\"x\",\"y\"]");
         }
     }
