@@ -128,13 +128,16 @@ export function Pipelines() {
     const entry = catalogueData.catalogue.find(
       (e) => e.category.id === setupId,
     );
-    if (entry && !entry.category.comingSoon) {
+    // A template the AI engine gates waits for config: it must not open
+    // before we know the engine is on.
+    if (entry?.category.requiresAiEngine && aiEngineLoading) return;
+    if (entry && !entry.category.comingSoon && !isLocked(entry)) {
       setWizard(entry);
     }
     const next = new URLSearchParams(searchParams);
     next.delete("setup");
     setSearchParams(next, { replace: true });
-  }, [searchParams, catalogueData, setSearchParams]);
+  }, [searchParams, catalogueData, setSearchParams, aiEngineLoading, isLocked]);
 
   /** The current settings as a full pipeline record, for save or hand-off. */
   function draftFromResult(entry: CatalogueEntry, result: PolicySetupResult) {
