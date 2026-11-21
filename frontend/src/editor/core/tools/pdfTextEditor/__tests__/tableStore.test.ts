@@ -28,6 +28,7 @@ async function makeStore() {
   page.tables = [model];
   const doc = {
     pageCount: 1,
+    displayOrder: () => [0],
     page: () => page,
     loadedPages: () => [page],
     documentLanguage: () => null,

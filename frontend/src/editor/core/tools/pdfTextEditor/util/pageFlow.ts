@@ -25,17 +25,13 @@ import {
   focusRunWhenPainted,
   holdKeystrokes,
 } from "@editor/tools/pdfTextEditor/util/dom";
-import i18n from "i18next";
-import { alert } from "@editor/components/toast";
+import { pageChangeCommand } from "@editor/tools/pdfTextEditor/util/documentChanges";
 
-// The bottom margin text flows at, as a share of the page height, never less than half an inch.
 const BOTTOM_MARGIN_SHARE = 0.06;
 const MIN_MARGIN_PT = 36;
 const MAX_TOP_MARGIN_PT = 96;
-// How far below the baseline a line's descenders reach, in ems.
 const DESCENT_EM = 0.25;
 
-/** The lowest a line's descenders may sit before the line belongs on the next page. */
 export function bottomLimit(page: Page): number {
   const { cropBottom, cropHeight } = page.display;
   return cropBottom + Math.max(MIN_MARGIN_PT, cropHeight * BOTTOM_MARGIN_SHARE);
@@ -49,7 +45,6 @@ function baselinesOf(run: TextRun): number[] {
     : [run.matrix.f];
 }
 
-/** The lowest point of the run's last line. */
 export function runBottom(run: TextRun): number {
   return Math.min(...baselinesOf(run)) - run.fontSize * DESCENT_EM;
 }
@@ -59,8 +54,6 @@ interface Split {
   overflow: string;
 }
 
-// The lines that still fit above the margin, and the rest as one paragraph
-// text: soft wraps become spaces so the next page re-wraps them.
 function splitAtMargin(page: Page, run: TextRun): Split | null {
   const limit = bottomLimit(page);
   const baselines = baselinesOf(run);
@@ -81,8 +74,6 @@ function splitAtMargin(page: Page, run: TextRun): Split | null {
   return { keep: lines.slice(0, first).join("\n"), overflow };
 }
 
-// Flowed lines are placed in raw page space, which a turned page shows
-// sideways.
 function takesFlow(page: Page): boolean {
   return isBlank(page) && page.display.rotate === 0;
 }
@@ -104,19 +95,11 @@ function topMargin(page: Page): number {
   return Math.min(MAX_TOP_MARGIN_PT, Math.max(MIN_MARGIN_PT, top - highest));
 }
 
-// The overflow is drawn with a standard font, which a device family is not.
 function base14Family({ fontId }: TextRun): string {
   if (fontId.startsWith("base14:")) return fontId.slice("base14:".length);
   return isDeviceFontId(fontId) ? "Helvetica" : helveticaVariantFor(fontId);
 }
 
-/**
- * When an edit pushed run `runId`'s last line past the bottom margin, moves
- * the lines that no longer fit to the top of the next page: a blank one
- * that follows, else a new page added after this one. The move is one undo
- * step and the caret follows the text. "moved" when lines went to the next
- * page, "waiting" when they stay until a page is added for them.
- */
 export function flowPastBottom(
   store: EditorStore,
   pageIndex: number,
@@ -127,98 +110,127 @@ export function flowPastBottom(
   const page = doc?.page(pageIndex);
   const run = page?.findRun(runId);
   if (!doc || !page || !run || run.locked) return "none";
-  const { crossedRuns, pendingPageAdds } = flowState(doc);
-  if (pendingPageAdds.has(runId)) {
-    addPageWhenIdle(store, doc, pageIndex, runId);
-    return "waiting";
-  }
+  const { crossedRuns } = flowState(doc);
   const limit = bottomLimit(page);
   if (runBottom(run) >= limit) {
     crossedRuns.delete(runId);
     return "none";
   }
-  // Only text an edit carried past the margin flows: a footer the page already
-  // drew there stays put.
   if (bottomBefore >= limit) crossedRuns.add(runId);
   if (!crossedRuns.has(runId)) return "none";
   const split = splitAtMargin(page, run);
   if (!split) return "none";
 
-  const nextIndex = pageIndex + 1;
-  if (nextIndex < doc.pageCount) ensurePageRead(store, nextIndex);
-  const next = nextIndex < doc.pageCount ? doc.page(nextIndex) : null;
-  if (!next || !takesFlow(next)) {
-    addPageWhenIdle(store, doc, pageIndex, runId);
-    return "waiting";
+  const nextIndex = doc.nextPage(pageIndex);
+  if (nextIndex !== null) ensurePageRead(store, nextIndex);
+  const following = nextIndex !== null ? doc.page(nextIndex) : null;
+  const continued = following && continuationOn(doc, following, runId);
+  if (following && continued) {
+    crossedRuns.delete(runId);
+    return prependOverflow(store, page, run, following, continued, split)
+      ? "moved"
+      : "none";
   }
-  crossedRuns.delete(runId);
-  return moveOverflow(store, page, run, next, split) ? "moved" : "none";
+  if (following && takesFlow(following)) {
+    crossedRuns.delete(runId);
+    return flowInto(store, page, run, following, split);
+  }
+  if (!canAddPages(doc)) return "none";
+  const outcome: { result: FlowResult } = { result: "none" };
+  store.batchNow(() => {
+    const { command, focusPage } = pageChangeCommand(doc, {
+      kind: "addPage",
+      after: pageIndex,
+    });
+    store.dispatch(command);
+    ensurePageRead(store, focusPage);
+    outcome.result = flowInto(store, page, run, doc.page(focusPage), split);
+  });
+  if (outcome.result === "moved") crossedRuns.delete(runId);
+  return outcome.result;
 }
 
-export type FlowResult = "moved" | "waiting" | "none";
+function flowInto(
+  store: EditorStore,
+  page: Page,
+  run: TextRun,
+  next: Page,
+  split: Split,
+): FlowResult {
+  const inserted = moveOverflow(store, page, run, next, split);
+  if (!inserted) return "none";
+  flowState(store.document!).continuations.set(run.id, {
+    pageIndex: next.index,
+    runId: inserted,
+  });
+  return "moved";
+}
+
+function continuationOn(
+  doc: EditorDocument,
+  next: Page,
+  runId: string,
+): TextRun | null {
+  const known = flowState(doc).continuations.get(runId);
+  if (!known || known.pageIndex !== next.index) return null;
+  return next.findRun(known.runId) ?? null;
+}
+
+function prependOverflow(
+  store: EditorStore,
+  page: Page,
+  run: TextRun,
+  next: Page,
+  continued: TextRun,
+  split: Split,
+): boolean {
+  const bottomBefore = runBottom(continued);
+  store.batchNow(() => {
+    store.dispatch(
+      new EditTextCommand({
+        pageIndex: page.index,
+        runId: run.id,
+        nextText: split.keep,
+        explicit: true,
+      }),
+    );
+    store.dispatch(
+      new EditTextCommand({
+        pageIndex: next.index,
+        runId: continued.id,
+        nextText: `${split.overflow} ${continued.text}`,
+        explicit: true,
+      }),
+    );
+  });
+  const heldKeys = holdKeystrokes();
+  store.selection.selectOne(continued.id);
+  currentEditorSession()?.revealPage(next.index);
+  focusRunWhenPainted(continued.id, true, heldKeys, split.overflow.length);
+  flowPastBottom(store, next.index, continued.id, bottomBefore);
+  return true;
+}
+
+export type FlowResult = "moved" | "none";
 
 interface FlowState {
-  /** Runs an edit has carried past the bottom margin that have not flowed yet. */
   crossedRuns: Set<string>;
-  pendingPageAdds: Map<string, ReturnType<typeof setTimeout>>;
+  continuations: Map<string, { pageIndex: number; runId: string }>;
 }
 
-// Per document: read-back run ids repeat from one document to the next.
 const flowStates = new WeakMap<EditorDocument, FlowState>();
 
 function flowState(doc: EditorDocument): FlowState {
   let state = flowStates.get(doc);
   if (!state) {
-    state = { crossedRuns: new Set(), pendingPageAdds: new Map() };
+    state = { crossedRuns: new Set(), continuations: new Map() };
     flowStates.set(doc, state);
   }
   return state;
 }
 
-// A signed, encrypted or XFA document refuses page changes; text past the
-// margin there stays where it is typed rather than raising that refusal.
 function canAddPages(doc: EditorDocument): boolean {
-  return !locksPages(detectSaveRisks(doc));
-}
-
-// Adding a page reopens the document, which holds typing until it has, so it
-// waits for a pause in the typing that needs it.
-const PAGE_ADD_IDLE_MS = 900;
-
-function addPageWhenIdle(
-  store: EditorStore,
-  doc: EditorDocument,
-  pageIndex: number,
-  runId: string,
-) {
-  const { pendingPageAdds } = flowState(doc);
-  clearTimeout(pendingPageAdds.get(runId));
-  pendingPageAdds.set(
-    runId,
-    setTimeout(() => {
-      pendingPageAdds.delete(runId);
-      if (store.document !== doc || !canAddPages(doc)) return;
-      const page = doc.page(pageIndex);
-      const run = page?.findRun(runId);
-      const split = page && run ? splitAtMargin(page, run) : null;
-      const session = currentEditorSession();
-      if (!split || !session) return;
-      // The saved file keeps the overflowing lines; once it reopens with the
-      // new blank page after this one, the same run flows into it.
-      const firstOverflowLine = split.overflow.split("\n")[0];
-      const typedMeanwhile = holdKeystrokes();
-      void session
-        .changeDocument({ kind: "addPage", after: pageIndex })
-        .finally(() =>
-          flowAfterReload(
-            store,
-            pageIndex,
-            firstOverflowLine,
-            typedMeanwhile(),
-          ),
-        );
-    }, PAGE_ADD_IDLE_MS),
-  );
+  return !doc.saving && !locksPages(detectSaveRisks(doc));
 }
 
 function moveOverflow(
@@ -227,9 +239,8 @@ function moveOverflow(
   run: TextRun,
   next: Page,
   split: Split,
-  typedMeanwhile = "",
-): boolean {
-  const width = run.wrapWidthPt ?? run.bounds.width;
+): string | null {
+  const width = run.wrapWidthPt ?? 0;
   const x =
     (run.paragraphLineSlots[0]?.matrixE ?? run.bounds.x) -
     page.display.cropLeft +
@@ -300,67 +311,12 @@ function moveOverflow(
         }),
       );
   });
-  if (!insertedId) {
-    keepTyping(run.id, typedMeanwhile);
-    return false;
-  }
+  if (!insertedId) return null;
+  const heldKeys = holdKeystrokes();
   store.selection.selectOne(insertedId);
   currentEditorSession()?.revealPage(next.index);
-  focusRunWhenPainted(insertedId, true, typedMeanwhile);
-  return true;
-}
-
-function flowAfterReload(
-  store: EditorStore,
-  pageIndex: number,
-  firstLine: string,
-  typedMeanwhile: string,
-) {
-  const doc = store.document;
-  if (!doc) return keepTyping(null, typedMeanwhile);
-  ensurePageRead(store, pageIndex);
-  const page = doc.page(pageIndex);
-  const limit = bottomLimit(page);
-  const run = page.runs.find(
-    (candidate) =>
-      runBottom(candidate) < limit &&
-      Math.max(...baselinesOf(candidate)) > limit &&
-      paragraphsOf(candidate).some((line) => line.includes(firstLine)),
-  );
-  if (!run || pageIndex + 1 >= doc.pageCount)
-    return keepTyping(run?.id ?? null, typedMeanwhile);
-  ensurePageRead(store, pageIndex + 1);
-  const next = doc.page(pageIndex + 1);
-  const split = splitAtMargin(page, run);
-  if (split && takesFlow(next))
-    moveOverflow(store, page, run, next, split, typedMeanwhile);
-  else keepTyping(run.id, typedMeanwhile);
-}
-
-function paragraphsOf(run: TextRun): string[] {
-  const soft = softStartsOf(run);
-  return run.text
-    .split("\n")
-    .map((line, i) => (i > 0 && soft[i] ? ` ${line}` : `\n${line}`))
-    .join("")
-    .split("\n");
-}
-
-function keepTyping(runId: string | null, typed: string): void {
-  if (!typed) return;
-  if (runId) {
-    focusRunWhenPainted(runId, true, typed);
-    return;
-  }
-  alert({
-    alertType: "warning",
-    title: i18n.t(
-      "pdfTextEditor.pages.typingNotPlaced",
-      "Some text typed while the page was being added couldn't be placed: {{text}}",
-      { text: typed },
-    ),
-    expandable: false,
-  });
+  focusRunWhenPainted(insertedId, true, heldKeys);
+  return insertedId;
 }
 
 export async function flowingSelection<T>(

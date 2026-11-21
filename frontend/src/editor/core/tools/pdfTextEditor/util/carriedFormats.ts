@@ -3,6 +3,7 @@ import type {
   TextAlign,
 } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 import { measureObjBoundsPt } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
@@ -31,11 +32,6 @@ export interface CarriedFormat {
 
 export type CarriedFormats = Map<number, CarriedFormat[]>;
 
-export type PageShift =
-  | { inserted: number; copyOf?: number }
-  | { deleted: number }
-  | null;
-
 const NEAR_PT = 2;
 const carried = new WeakMap<EditorDocument, CarriedFormats>();
 
@@ -61,37 +57,6 @@ export function captureFormats(doc: EditorDocument): CarriedFormats {
     if (list.length > 0) formats.set(page.index, list);
   }
   return formats;
-}
-
-export function undoneShift(shift: PageShift): PageShift {
-  if (!shift) return null;
-  return "inserted" in shift
-    ? { deleted: shift.inserted }
-    : { inserted: shift.deleted };
-}
-
-function shiftedIndex(index: number, shift: PageShift): number | null {
-  if (!shift) return index;
-  if ("inserted" in shift) return index >= shift.inserted ? index + 1 : index;
-  if (index === shift.deleted) return null;
-  return index > shift.deleted ? index - 1 : index;
-}
-
-export function shiftFormats(
-  formats: CarriedFormats,
-  shift: PageShift,
-): CarriedFormats {
-  const out: CarriedFormats = new Map();
-  for (const [index, list] of formats) {
-    const next = shiftedIndex(index, shift);
-    if (next !== null) out.set(next, list);
-  }
-  const copied =
-    shift && "copyOf" in shift && shift.copyOf !== undefined
-      ? formats.get(shift.copyOf)
-      : undefined;
-  if (copied && shift && "inserted" in shift) out.set(shift.inserted, copied);
-  return out;
 }
 
 export function carryFormats(doc: EditorDocument, formats: CarriedFormats) {
@@ -181,13 +146,35 @@ function rulesUnder(
   return matched;
 }
 
+function rejoined(
+  doc: EditorDocument,
+  page: Page,
+  runs: TextRun[],
+  format: CarriedFormat,
+): TextRun[] {
+  if (runs.length < 2 || runs.length !== format.lines.length) return runs;
+  const merge = new MergeRunsCommand({
+    pageIndex: page.index,
+    runIds: runs.map((run) => run.id),
+  });
+  try {
+    merge.apply(doc);
+  } catch {
+    return runs;
+  }
+  const rep = merge.representativeRunId
+    ? page.findRun(merge.representativeRunId)
+    : null;
+  return rep ? [rep] : runs;
+}
+
 export function restoreCarriedFormats(doc: EditorDocument, page: Page): void {
   const list = carried.get(doc)?.get(page.index);
   if (!list) return;
   carried.get(doc)!.delete(page.index);
   const taken = new Set<number>();
   for (const format of list) {
-    const runs = runsFor(page, format);
+    const runs = rejoined(doc, page, runsFor(page, format), format);
     for (const run of runs) {
       run.align = format.align;
       run.alignFrame = format.alignFrame;

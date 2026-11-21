@@ -2,7 +2,6 @@ import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
-/** Sets the distance between a paragraph's baselines to `factor` times its type size and re-lines it at its current width. */
 export class SetLineSpacingCommand implements Command {
   readonly type = "set-line-spacing";
   private readonly pageIndex: number;
@@ -28,7 +27,9 @@ export class SetLineSpacingCommand implements Command {
       maxWidthPt: run.wrapWidthPt ?? run.bounds.width + 0.5,
       explicit: true,
     });
+    const userWidth = run.wrapWidthPt;
     this.reflow.apply(doc);
+    run.wrapWidthPt = userWidth;
   }
 
   revert(doc: EditorDocument): void {

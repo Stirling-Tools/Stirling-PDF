@@ -29,6 +29,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   charcodesResolveFully,
+  faceDrawsAll,
   objectTexts,
   collectContainersByPtr,
   contentIndices,
@@ -2106,7 +2107,6 @@ export class EditTextCommand implements Command {
     });
   }
 
-  /** The burst's edits when `moveGroup` would take `group` in one move; null when it would step through it. */
   private groupedEdits(
     doc: EditorDocument,
     group: readonly Command[],
@@ -2372,7 +2372,7 @@ function editedFontSpans(
 ): FontSpan[] | undefined {
   const m = doc.module;
   return sourceFontSpans(m, pieces, prevText, nextText, (font, text) =>
-    charcodesResolveFully(m, font, text, page.pagePtr, doc.docPtr),
+    faceDrawsAll(m, font, text, page.pagePtr, doc.docPtr),
   )?.map((span) => ({
     ...span,
     fallbackFamily: deviceFamilyOf(doc, span.fontPtr) ?? span.fallbackFamily,

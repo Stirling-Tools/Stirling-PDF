@@ -2,6 +2,7 @@ import {
   assertFilesNotBlocked,
   policySourceIds,
 } from "@editor/services/policyFileGuard";
+import { editorPageLayout } from "@editor/tools/pdfTextEditor/util/editorPageLayout";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -71,28 +72,16 @@ import {
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { useScanPrefit } from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
-import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
+import { visiblePageIndex } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import {
-  applyDocumentChange,
   DocumentChangeRefused,
-  type ChangedDocument,
+  pageChangeCommand,
   type DocumentChange,
 } from "@editor/tools/pdfTextEditor/util/documentChanges";
-import { alert } from "@editor/components/toast";
-import type { RestorePoint } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import {
-  captureFormats,
-  shiftFormats,
-  undoneShift,
-} from "@editor/tools/pdfTextEditor/util/carriedFormats";
-
-// Undo past a page or field change keeps the whole file from before it.
-const MAX_RESTORE_BYTES = 64 * 1024 * 1024;
-
 const INSERTED_IMAGE_RATIO = 0.4;
 
 export default function PdfTextEditor(_props: BaseToolProps) {
@@ -418,11 +407,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [store],
   );
 
+  const pageLayout = useMemo(() => editorPageLayout(store), [store]);
   useRegisterViewerPageTool(
     useMemo(
       () => ({
         fileId: sourceFileId,
         PageLayer: ViewerEditLayer,
+        pageLayout,
         Toolbar: ViewerEditToolbar,
         // Small screens trade the viewer's page bar for the editing actions,
         // once there is a document to act on.
@@ -436,6 +427,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         isMobile,
         state.hasDocument,
         sourceFileId,
+        pageLayout,
         discardEdits,
         saveBeforeLeaving,
         toggleFind,
@@ -443,202 +435,53 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     ),
   );
 
-  const editsToRedo = useCallback(async (): Promise<Uint8Array | null> => {
-    const doc = store.document;
-    if (!doc || !store.history.canRedo) return null;
-    let redone = 0;
-    while (store.history.canRedo) {
-      store.redo();
-      redone++;
-    }
-    const bytes = new Uint8Array(await (await exportToBlob(doc)).arrayBuffer());
-    for (let i = 0; i < redone; i++) store.undo();
-    return bytes;
-  }, [store]);
-
-  // Reopens the document from what `produce` makes of its saved bytes. Pages
-  // and form fields live outside the editor's model, so they change in the
-  // file; the undo history then starts again, with a restore point that
-  // reopens the bytes from before, unless `kind` is that undo itself.
-  const reopenWith = useCallback(
-    async (
-      produce: (saved: Uint8Array) => Promise<ChangedDocument>,
-      kind: "change" | "undo" | "redo",
-    ): Promise<boolean> => {
+  const changeDocument = useCallback(
+    async (change: DocumentChange) => {
       const doc = store.document;
-      if (!doc || savingRef.current || store.getState().loading) return false;
+      if (!doc || store.getState().loading) return;
       await store.settleRedraws();
-      if (store.document !== doc) return false;
-      if (kind === "change" && !(await confirmRisks(doc))) return false;
-      if (store.document !== doc || savingRef.current) return false;
-      const sourceId = sourceFileIdRef.current;
-      const isCurrent = () =>
-        store.document === doc && sourceFileIdRef.current === sourceId;
-      savingRef.current = true;
-      store.setError(null);
+      if (store.document !== doc) return;
       try {
-        assertFilesNotBlocked([sourceId ?? undefined]);
-        const access = getPdfAccess(sourceId);
+        const access = getPdfAccess(sourceFileIdRef.current);
         assertPdfSessionEditable(access);
-        // Rewriting the file around a signature, an encryption dictionary or
-        // an XFA form breaks what each of them guarantees.
         if (access?.encrypted || locksPages(detectSaveRisks(doc)))
           throw new Error(
             t(
               "pdfTextEditor.pages.protected",
-              "Pages and form fields can't be changed in a signed, encrypted or XFA PDF.",
+              "Pages can't be changed in a signed, encrypted or XFA PDF.",
             ),
           );
-        // The box being typed in commits on blur; typing after that would
-        // land in the document about to be replaced.
-        if (document.activeElement instanceof HTMLElement)
-          document.activeElement.blur();
-        store.setReopening(true);
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        const formats = captureFormats(doc);
-        const before = new Uint8Array(
-          await (await exportToBlob(doc)).arrayBuffer(),
-        );
-        const changed = await produce(before);
-        if (!isCurrent()) return false;
-        const stored = await applyToWorkbench(
-          new Blob([changed.bytes as BlobPart], { type: "application/pdf" }),
-          openedFileName?.trim() || "edited.pdf",
-          "pdfTextEditor",
-          isCurrent,
-        );
-        // The write-back swaps the source file id, so only the document is compared.
-        if (!stored || store.document !== doc) return false;
-        const points = store.takeRestorePoints();
-        const loading = load(stored);
-        const token = store.currentLoadToken;
-        const carried = shiftFormats(formats, changed.pageShift ?? null);
-        for (const [index, list] of changed.restoredFormats ?? [])
-          carried.set(index, list);
-        store.carryFormatsInto(token, carried);
-        const installed = await loading;
-        if (
-          !installed &&
-          store.isCurrentLoad(token) &&
-          store.document === doc
-        ) {
-          store.clearDocument();
-          store.setError(
-            t(
-              "pdfTextEditor.pages.reopenFailed",
-              "The changed PDF was saved but couldn't be opened again. Open it from the file list to keep editing.",
-            ),
-          );
-          return false;
-        }
-        if (
-          !mountedRef.current ||
-          !store.isCurrentLoad(token) ||
-          !store.document
-        ) {
-          // Still the document the points lead back from: keep them.
-          if (store.document === doc) store.putRestorePoints(points);
-          return false;
-        }
-        store.putRestorePoints(points);
-        if (kind === "change") store.dropRedoPoints();
-        pinWorkbench();
-        scrollActions.scrollToPage(
-          Math.min(changed.focusPage, store.document.pageCount - 1) + 1,
-        );
-        if (kind !== "undo") {
-          if (before.length <= MAX_RESTORE_BYTES) {
-            const focusPage = changed.focusPage;
-            const shift = changed.pageShift ?? null;
-            const deleted = shift && "deleted" in shift ? shift.deleted : null;
-            const deletedPageFormats = new Map(
-              deleted !== null && formats.has(deleted)
-                ? [[deleted, formats.get(deleted)!]]
-                : [],
-            );
-            const point: RestorePoint = {
-              undo: async () => {
-                const redone = await editsToRedo();
-                if (redone)
-                  point.redo = () =>
-                    reopenWithRef.current(
-                      async () => ({
-                        bytes: redone,
-                        focusPage,
-                        pageShift: changed.pageShift,
-                      }),
-                      "redo",
-                    );
-                return reopenWithRef.current(
-                  async () => ({
-                    bytes: before,
-                    focusPage,
-                    pageShift: undoneShift(changed.pageShift ?? null),
-                    restoredFormats: deletedPageFormats,
-                  }),
-                  "undo",
-                );
-              },
-              redo: () => reopenWithRef.current(produce, "redo"),
-            };
-            store.pushRestorePoint(point);
-          } else {
-            store.putRestorePoints({ undo: [], redo: [] });
-            alert({
-              alertType: "warning",
-              title: t(
-                "pdfTextEditor.pages.tooLargeToUndo",
-                "This PDF is too large to keep a copy for Undo, so this change can't be undone.",
-              ),
-              expandable: false,
-            });
-          }
-        }
-        return true;
       } catch (err) {
+        store.setError(err instanceof Error ? err.message : String(err));
+        return;
+      }
+      try {
+        const { command, focusPage } = pageChangeCommand(doc, change);
+        if (change.kind === "deletePage") store.selection.clear();
+        store.dispatch(command);
+        const position = doc.positionOf(focusPage);
+        if (position >= 0) scrollActions.scrollToPage(position + 1);
+      } catch (err) {
+        if (!(err instanceof DocumentChangeRefused)) console.error(err);
         store.setError(
           err instanceof DocumentChangeRefused
-            ? err.reason === "lastPage"
+            ? err.reason === "saving"
               ? t(
+                  "pdfTextEditor.pages.saving",
+                  "Wait for the save to finish, then change the pages.",
+                )
+              : t(
                   "pdfTextEditor.pages.lastPage",
                   "A PDF needs at least one page.",
                 )
-              : t(
-                  "pdfTextEditor.pages.signatureRefused",
-                  "A signature field can't be added to this PDF.",
-                )
-            : err instanceof Error
-              ? err.message
-              : String(err),
+            : t(
+                "pdfTextEditor.pages.failed",
+                "The pages couldn't be changed. Your edits are unchanged.",
+              ),
         );
-        return false;
-      } finally {
-        store.setReopening(false);
-        doneSaving();
       }
     },
-    [
-      store,
-      t,
-      openedFileName,
-      applyToWorkbench,
-      load,
-      pinWorkbench,
-      scrollActions,
-      doneSaving,
-      confirmRisks,
-      editsToRedo,
-    ],
-  );
-
-  const reopenWithRef = useRef(reopenWith);
-  reopenWithRef.current = reopenWith;
-
-  const changeDocument = useCallback(
-    async (change: DocumentChange) => {
-      await reopenWith((saved) => applyDocumentChange(saved, change), "change");
-    },
-    [reopenWith],
+    [store, t, scrollActions],
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
@@ -697,7 +540,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       if (store.document !== doc) return;
       // Insert onto the page currently in view, read from fresh store state.
       const pages = store.getState().pages;
-      const visibleIndex = visiblePageNumber();
+      const visibleIndex = visiblePageIndex();
       const page = pages.find((p) => p.pageIndex === visibleIndex) ?? pages[0];
       if (!page) return;
       const rect = centredImageRect(
@@ -760,7 +603,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         ? text.replace(/\r\n?/g, "\n").trim()
         : text.replace(/\r\n?/g, "\n");
       if (!normalised) return;
-      const pageIndex = visiblePageNumber();
+      const pageIndex = visiblePageIndex();
       const page = doc.page(pageIndex);
       // Position roughly at the page centre, biased toward the upper third so
       // multi-line paste has room to flow downward.
@@ -902,6 +745,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       ?.click();
   }, []);
 
+  const openTool = useCallback(
+    (tool: ToolId) => {
+      if (!sourceFileId) return;
+      setSelectedFiles([sourceFileId]);
+      handleToolSelect(tool);
+    },
+    [sourceFileId, setSelectedFiles, handleToolSelect],
+  );
+
   useEffect(() => {
     setEditorSession({
       fileName: openedFileName,
@@ -909,11 +761,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       download: handleDownload,
       pickImage: openImagePicker,
       // The viewer mounts only the pages near the viewport.
-      revealPage: (pageIndex) => scrollActions.scrollToPage(pageIndex + 1),
+      revealPage: (pageIndex) => {
+        const position = store.document?.positionOf(pageIndex) ?? -1;
+        if (position >= 0) scrollActions.scrollToPage(position + 1);
+      },
       changeDocument,
+      openTool,
       pageSize: (pageIndex) => {
         const doc = store.document;
-        if (!doc || pageIndex >= doc.pageCount) return null;
+        if (!doc || doc.positionOf(pageIndex) < 0) return null;
         const { cropWidth, cropHeight, rotate } = doc.page(pageIndex).display;
         return rotate % 180 === 0
           ? { width: cropWidth, height: cropHeight }
@@ -928,6 +784,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     handleDownload,
     openImagePicker,
     changeDocument,
+    openTool,
     store,
   ]);
 
@@ -961,11 +818,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const onRunOcr = useCallback(() => {
     if (!savingRef.current && !applying) void runOcr();
   }, [applying, runOcr]);
-  const removePassword = useCallback(() => {
-    if (!sourceFileId) return;
-    setSelectedFiles([sourceFileId]);
-    handleToolSelect("removePassword");
-  }, [sourceFileId, setSelectedFiles, handleToolSelect]);
+  const removePassword = useCallback(
+    () => openTool("removePassword"),
+    [openTool],
+  );
   const onOpenFind = useCallback(() => {
     if (store.toggleFindOpen()) pinWorkbench();
   }, [store, pinWorkbench]);

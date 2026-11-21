@@ -7,6 +7,8 @@ import type {
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   charcodesResolveFully,
+  faceDrawsAll,
+  faceDrawsChar,
   collectContainersByPtr,
   contentIndices,
   cssFontSpecFor,
@@ -27,6 +29,7 @@ import {
   fallbackFontIdFor,
 } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { writeUtf16 } from "@editor/services/pdfiumService";
+import { documentFontHandle } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   sliceTags,
   uniformTags,
@@ -1019,13 +1022,7 @@ export function applyPartialEditPlan(
     return touching;
   };
   const drawsAll = (font: number, text: string): boolean =>
-    charcodesResolveFully(
-      m,
-      font,
-      text.replace(/\s+/g, ""),
-      page.pagePtr,
-      doc.docPtr,
-    );
+    faceDrawsAll(m, font, text.replace(/\s+/g, ""), page.pagePtr, doc.docPtr);
   const lineStart =
     run.containerPtr === 0
       ? Math.min(
@@ -1068,11 +1065,18 @@ export function applyPartialEditPlan(
       }
     }
   }
+  const runFont = documentFontHandle(run.fontId);
   let allInsertCharsAreSafe = true;
   for (const op of plan.ops) {
     if (op.type === "insert" && op.text) {
       for (const ch of op.text) {
-        if (!survivingChars.has(ch)) {
+        if (
+          !survivingChars.has(ch) &&
+          !(
+            /\S/.test(ch) &&
+            faceDrawsChar(m, runFont, ch, page.pagePtr, doc.docPtr)
+          )
+        ) {
           allInsertCharsAreSafe = false;
           break;
         }
@@ -2211,8 +2215,7 @@ export function applyParagraphEditPlan(
         slot,
         planEntry.prevLine,
         lineText,
-        (font, text) =>
-          charcodesResolveFully(m, font, text, page.pagePtr, doc.docPtr),
+        (font, text) => faceDrawsAll(m, font, text, page.pagePtr, doc.docPtr),
       );
       for (const ptr of slot.mergedFromPtrs) {
         if (!ptr) continue;

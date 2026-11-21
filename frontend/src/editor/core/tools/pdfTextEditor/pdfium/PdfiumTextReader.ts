@@ -1,4 +1,5 @@
 import { claimFormNodes } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { noteFontStrokes } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
 import {
   readPageGlyphs,
   type PageGlyphs,
@@ -50,6 +51,10 @@ import {
   readTagMarks,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { restoreCarriedFormats } from "@editor/tools/pdfTextEditor/util/carriedFormats";
+import {
+  nameUnnamedFonts,
+  unnamedFontName,
+} from "@editor/tools/pdfTextEditor/pdfium/unnamedFontNames";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;
@@ -75,6 +80,8 @@ export class PdfiumTextReader {
     mode: GroupingMode = "auto",
   ): void {
     if (page.loaded) return;
+    const fontOrder = doc.claimUnnamedFontOrder(page.index);
+    if (fontOrder) nameUnnamedFonts(doc.module, page.pagePtr, fontOrder);
     doc.claimArtifactMarks(page.index);
     claimFormNodes(doc, page);
     const m = doc.module;
@@ -1157,8 +1164,13 @@ function readFontFamily(
   // still names the face, and that name is what decides the fallback's
   // serif/sans class - calling it "Unknown" silently substituted Helvetica
   // into serif documents.
-  const nameRaw = familyRaw ?? baseRaw;
-  if (nameRaw == null) return { family: "Unknown", subset: false };
+  const nameRaw = familyRaw ?? baseRaw ?? null;
+  if (nameRaw == null) {
+    const described = unnamedFontName(fontPtr);
+    return described
+      ? { family: described.replace(SUBSET_TAG_RE, ""), subset: false }
+      : { family: "Unknown", subset: false };
+  }
   const tagged = SUBSET_TAG_RE.test(nameRaw);
   const family = tagged ? nameRaw.slice(7) : nameRaw;
   if (tagged) return { family, subset: true };
@@ -1231,6 +1243,7 @@ function readTextRun(
     }
 
     const { stroke, strokeWidth } = readStroke(m, objPtr, renderMode);
+    if (fontPtr) noteFontStrokes(m, fontPtr, `${fontId}:${family}`);
 
     return new TextRun({
       id,

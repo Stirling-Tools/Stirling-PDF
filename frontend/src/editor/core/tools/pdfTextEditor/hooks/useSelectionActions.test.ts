@@ -52,6 +52,8 @@ vi.mock("@editor/tools/pdfTextEditor/commands/CompositeCommand", () => ({
 }));
 
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
+import { FAUX_BOLD_EM } from "@editor/tools/pdfTextEditor/util/fauxBold";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
   SERVER_FONTS_URL,
@@ -116,6 +118,10 @@ interface FakeRun {
   locked: boolean;
   textReadOnly?: boolean;
   fill: { r: number; g: number; b: number; a: number };
+  fontSize: number;
+  renderMode?: number;
+  stroke?: { r: number; g: number; b: number; a: number };
+  strokeWidth?: number;
 }
 
 function run(id: string, fontId: string, text = "Hello"): FakeRun {
@@ -126,6 +132,7 @@ function run(id: string, fontId: string, text = "Hello"): FakeRun {
     text,
     locked: false,
     fill: { r: 0, g: 0, b: 0, a: 255 },
+    fontSize: 12,
   };
 }
 
@@ -859,13 +866,42 @@ describe("useSelectionActions font changes", () => {
     expect(dispatchedChanges(dispatch)).toEqual(["a:pdf:8:Calibri"]);
   });
 
-  it("makes no bold up for a family that has no bold face, and says so", async () => {
+  it("draws a bold in the text's own ink for a family that has no bold face", async () => {
     documentFont(7, "ABCDEF+Garamond", 0);
     const { store, dispatch } = fakeStore([run("a", "pdf:7:Garamond")], ["a"]);
 
-    expect(await actionsFor(store).toggleBold()).toBe("styleUnavailable");
+    expect(await actionsFor(store).toggleBold()).toBeNull();
 
-    expect(dispatch).not.toHaveBeenCalled();
+    const outline = dispatch.mock.calls
+      .map(([cmd]) => cmd)
+      .find((cmd) => cmd instanceof SetTextOutlineCommand);
+    expect(outline).toMatchObject({
+      runId: "a",
+      nextStroke: { r: 0, g: 0, b: 0, a: 255 },
+      nextWidth: 12 * FAUX_BOLD_EM,
+    });
+  });
+
+  it("takes a drawn bold off again rather than looking for a regular face", async () => {
+    documentFont(7, "ABCDEF+Garamond", 0);
+    const fauxBold = {
+      ...run("a", "pdf:7:Garamond"),
+      renderMode: 2,
+      stroke: { r: 0, g: 0, b: 0, a: 255 },
+      strokeWidth: 12 * FAUX_BOLD_EM,
+    };
+    const { store, dispatch } = fakeStore([fauxBold], ["a"]);
+
+    expect(await actionsFor(store).toggleBold()).toBeNull();
+
+    const outline = dispatch.mock.calls
+      .map(([cmd]) => cmd)
+      .find((cmd) => cmd instanceof SetTextOutlineCommand);
+    expect(outline).toMatchObject({
+      runId: "a",
+      nextStroke: null,
+      nextWidth: 0,
+    });
   });
 
   it("warns that letters the bold face lacks are drawn in the closest match", async () => {

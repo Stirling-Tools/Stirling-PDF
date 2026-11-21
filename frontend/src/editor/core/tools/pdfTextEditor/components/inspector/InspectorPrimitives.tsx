@@ -137,10 +137,22 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
  * Geometry edits dispatch undoable commands, so re-emitting the value the
  * field already shows would cost a spurious undo step on every blur.
  */
+export type LengthUnit = "mm" | "in";
+
+const POINTS_PER: Record<LengthUnit, number> = { mm: 72 / 25.4, in: 72 };
+const DECIMALS: Record<LengthUnit, number> = { mm: 1, in: 2 };
+const INCH_REGIONS = new Set(["US", "LR", "MM"]);
+
+export function lengthUnitFor(locale: string): LengthUnit {
+  const region = locale.split(/[-_]/)[1]?.toUpperCase();
+  return region && INCH_REGIONS.has(region) ? "in" : "mm";
+}
+
 export function PointsInput({
   value,
   onCommit,
   label,
+  unit,
   testId,
   min,
   disabled,
@@ -148,26 +160,30 @@ export function PointsInput({
   value: number;
   onCommit: (next: number) => void;
   label: string;
+  unit: LengthUnit;
   testId?: string;
   min?: number;
   disabled?: boolean;
 }) {
+  const perUnit = POINTS_PER[unit];
+  const decimals = DECIMALS[unit];
+  const shown = Number((value / perUnit).toFixed(decimals));
   return (
     <NumberInput
       size="xs"
-      min={min}
-      decimalScale={1}
+      min={min === undefined ? undefined : min / perUnit}
+      decimalScale={decimals}
       fixedDecimalScale
-      step={1}
-      value={Number(value.toFixed(1))}
+      step={unit === "in" ? 0.1 : 1}
+      suffix={` ${unit}`}
+      value={shown}
       disabled={disabled}
       aria-label={label}
       data-testid={testId}
       onChange={(next) => {
         const n = typeof next === "number" ? next : Number(next);
-        if (!Number.isFinite(n)) return;
-        if (Math.abs(n - value) < 0.05) return;
-        onCommit(n);
+        if (!Number.isFinite(n) || n === shown) return;
+        onCommit(n * perUnit);
       }}
     />
   );

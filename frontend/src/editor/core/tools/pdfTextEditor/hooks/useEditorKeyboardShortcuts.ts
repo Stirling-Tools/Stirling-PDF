@@ -4,7 +4,7 @@ import {
   isFocusInContentEditable,
   isFocusInFormField,
   isModalOpen,
-  visiblePageNumber,
+  visiblePageIndex,
 } from "@editor/tools/pdfTextEditor/util/dom";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import type { TextAlign } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
@@ -30,7 +30,6 @@ interface KeyboardShortcutCallbacks {
   onToggleList: (kind: ListKind) => void;
 }
 
-// Ctrl/Cmd+Shift with these keys, as word processors bind them; e.code, as Shift changes e.key.
 const ALIGN_KEYS: Record<string, TextAlign> = {
   KeyL: "left",
   KeyE: "center",
@@ -71,7 +70,6 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       const key = e.key.toLowerCase();
       if (key !== "s" && isModalOpen()) return;
       const hasRuns = store.selection.value.runIds.length > 0;
-      // AltGr arrives as Ctrl+Alt on Windows: Polish AltGr+Shift+L types Ł.
       const typesCharacter = e.altKey;
       if (e.shiftKey && hasRuns && !typesCharacter && !isFocusInFormField()) {
         const align = ALIGN_KEYS[e.code];
@@ -204,21 +202,22 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       if (e.key !== "PageDown" && e.key !== "PageUp" && !isHome && !isEnd) {
         return;
       }
-      const { pageCount } = store.getState();
-      if (pageCount === 0) return;
+      const order = store.getState().pages.map((page) => page.pageIndex);
+      if (order.length === 0) return;
       // The viewer mounts only the pages near the viewport, so it does the
       // navigating.
       const session = currentEditorSession();
       if (!session) return;
-      const current = visiblePageNumber();
+      const current = Math.max(0, order.indexOf(visiblePageIndex()));
       let target = current;
-      if (e.key === "PageDown") target = Math.min(pageCount - 1, current + 1);
+      if (e.key === "PageDown")
+        target = Math.min(order.length - 1, current + 1);
       else if (e.key === "PageUp") target = Math.max(0, current - 1);
       else if (isHome) target = 0;
-      else if (isEnd) target = pageCount - 1;
+      else if (isEnd) target = order.length - 1;
       if (target === current) return;
       e.preventDefault();
-      session.revealPage(target);
+      session.revealPage(order[target]);
     }
 
     window.addEventListener("keydown", onMetaKey);

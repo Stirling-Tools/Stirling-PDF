@@ -48,7 +48,6 @@ const INSET_EDGE_SLACK_PT = 0.5;
 const STACK_LONE_ROWS_MIN = 2;
 const STACK_OFFSET_SPREAD_EM = 0.25;
 const STACK_OFFSET_SAMPLES_MIN = 3;
-// Type that grows partway down a column heads a new section; a table's cells keep one size under the header row.
 const SECTION_HEADING_SCALE = 1.15;
 
 export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {

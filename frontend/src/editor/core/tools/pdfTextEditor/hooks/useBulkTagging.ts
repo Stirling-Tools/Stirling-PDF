@@ -101,7 +101,7 @@ export async function tagAllPages(store: EditorStore): Promise<void> {
         const { display, runs, images } = doc.page(pageIndex);
         return { pageIndex, display, runs, images };
       }),
-      doc.pageCount,
+      doc.displayOrder().length,
     );
     for (const [done, pageIndex] of pageIndices.entries()) {
       const current = pageIndices.length + done;

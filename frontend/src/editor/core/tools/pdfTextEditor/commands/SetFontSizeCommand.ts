@@ -1,4 +1,9 @@
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
+import {
+  fauxBoldWidth,
+  isFauxBold,
+} from "@editor/tools/pdfTextEditor/util/fauxBold";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
@@ -15,6 +20,7 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 
 /** Scale a text run so its effective on-page size matches `nextSize`. */
 export class SetFontSizeCommand implements Command {
+  private outline: SetTextOutlineCommand | null = null;
   readonly type = "set-font-size";
   private readonly pageIndex: number;
   private readonly runId: string;
@@ -57,6 +63,7 @@ export class SetFontSizeCommand implements Command {
     if (this.prevSize === null) {
       this.prevSize = run.fontSize;
     }
+    const bold = isFauxBold(run);
     const ratio = this.nextSize / Math.max(0.01, run.fontSize);
     if (this.rewrap) this.rewrap.apply(doc);
     else if (ratio > 1) this.rewrap = wrapToFitGrown(doc, page, run, ratio);
@@ -81,6 +88,15 @@ export class SetFontSizeCommand implements Command {
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
+    this.outline = bold
+      ? new SetTextOutlineCommand({
+          pageIndex: this.pageIndex,
+          runId: this.runId,
+          stroke: { ...run.fill, a: 255 },
+          width: fauxBoldWidth(run.fontSize),
+        })
+      : null;
+    this.outline?.apply(doc);
   }
 
   revert(doc: EditorDocument): void {
@@ -93,6 +109,8 @@ export class SetFontSizeCommand implements Command {
       return;
     }
     if (this.prevSize === null) return;
+    this.outline?.revert(doc);
+    this.outline = null;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || !run.pdfiumObjPtr) return;

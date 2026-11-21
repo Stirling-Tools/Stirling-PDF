@@ -40,7 +40,6 @@ export function ViewerEditLayer({
   // A new or closed document replaces every snapshot, so `store.document`
   // below stays current.
   const page = useEditorState(store, (s) => s.pages[pageIndex]);
-  const reopening = useEditorState(store, (s) => s.reopening);
   const document = store.document;
   const [paintedFor, setPaintedFor] = useState<EditorDocument | null>(null);
   const onPainted = useCallback(() => setPaintedFor(document), [document]);
@@ -60,8 +59,6 @@ export function ViewerEditLayer({
   if (!document || !page || !fits) return null;
   return (
     <div
-      inert={reopening}
-      aria-busy={reopening || undefined}
       style={{
         position: "absolute",
         left: (width - displayWidth) / 2,

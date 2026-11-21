@@ -1,4 +1,4 @@
-import { ColorInput, Menu, Tooltip } from "@mantine/core";
+import { Menu, Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -16,27 +16,12 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
     onDelete,
     hasRunSelection,
     hasImageSelection,
-    shapeColour,
-    onSetShapeColour,
   } = controller;
   // Lock and arrange act on text and images only; shapes can just be deleted.
   const arrangeable = hasRunSelection || hasImageSelection;
 
   return (
     <>
-      {shapeColour !== null && (
-        <ColorInput
-          size="xs"
-          w={74}
-          withEyeDropper={false}
-          styles={{ input: { color: "transparent" } }}
-          value={shapeColour}
-          onChangeEnd={onSetShapeColour}
-          aria-label={t("pdfTextEditor.shape.colour", "Shape colour")}
-          data-testid="pdf-editor-shape-colour"
-          style={NO_SHRINK}
-        />
-      )}
       <Tooltip
         label={
           selectionAllLocked

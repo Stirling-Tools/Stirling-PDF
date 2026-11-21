@@ -104,12 +104,10 @@ export class HistoryStack {
     this.redoStack.length = 0;
   }
 
-  /** A mark for `mergeSince`: how many steps have been started so far. */
   get mark(): number {
     return this.stepsAdded;
   }
 
-  /** Fold every step started after `mark` into one; counted, so the oldest steps dropping off a full stack do not shift it. */
   mergeSince(mark: number): void {
     const started = Math.min(this.stepsAdded - mark, this.undoStack.length);
     if (started <= 0) return;
@@ -121,12 +119,10 @@ export class HistoryStack {
     this.lastCoalesceKey = null;
   }
 
-  /** The coalesce key of the step on top of the undo stack. */
   get lastKey(): string | null {
     return this.lastCoalesceKey;
   }
 
-  /** Apply `cmd` as part of the step on top of the undo stack, so one undo takes both back. */
   attachToLast(cmd: Command, doc: EditorDocument): void {
     try {
       cmd.apply(doc);

@@ -2061,6 +2061,11 @@ const EmbedPdfViewerContent = ({
                   ? pageTool.PageLayer
                   : null
               }
+              pageLayout={
+                pageTool && pageTool.fileId === currentFileStableId
+                  ? (pageTool.pageLayout ?? null)
+                  : null
+              }
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
               annotationApiRef={annotationApiRef}

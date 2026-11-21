@@ -1,4 +1,5 @@
-import { memo, useEffect } from "react";
+import { memo, useCallback, useEffect } from "react";
+import { setFormatFolded } from "@editor/tools/pdfTextEditor/hooks/useFormatFolded";
 import { useEditorStoreView } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import { useEditorSelection } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
@@ -75,6 +76,10 @@ const TopBar = memo(function TopBar({
   mobile,
 }: BarProps & { mobile: boolean }) {
   const controller = useToolbarController(store, state, selection);
+  const onFormatFolded = useCallback(
+    (folded: boolean) => setFormatFolded(store, folded),
+    [store],
+  );
   if (mobile)
     return (
       <MobileEditorTopBar
@@ -88,16 +93,14 @@ const TopBar = memo(function TopBar({
       controller={controller}
       hasDocument={state.hasDocument}
       dirty={state.dirty}
-      reopening={state.reopening}
       addTextArmed={state.mode === "addText"}
       addTableArmed={state.mode === "addTable"}
       onToggleAddTable={() => store.toggleMode("addTable")}
       onToggleAddText={() => store.toggleMode("addText")}
-      mode={state.mode}
-      onToggleMode={(mode) => store.toggleMode(mode)}
       findOpen={state.findOpen}
       onToggleFind={() => store.toggleFindOpen()}
       onShowHelp={() => store.setHelpOpen(true)}
+      onFormatFolded={onFormatFolded}
     />
   );
 });

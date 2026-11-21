@@ -44,6 +44,16 @@ import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevice
 import { useEditorState } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
+interface TextBoxDraft {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+const MIN_TEXT_BOX_PX = 16;
+const NEW_TEXT_LINE_PX = 16;
+
 interface PageViewProps {
   document: EditorDocument;
   /** Store, for the table overlay's dispatch/selection. */
@@ -78,12 +88,6 @@ interface PageViewProps {
     dx: number,
     dy: number,
   ) => void;
-  /** Fires when a drawn shape's corner grip is released; bounds in raw PDF points. */
-  onReshape?: (
-    pageIndex: number,
-    shapeId: string,
-    bounds: { x: number; y: number; width: number; height: number },
-  ) => void;
   onEditRun: (pageIndex: number, runId: string, nextText: string) => void;
   /** The characters selected inside a run's box, while it has focus. */
   onSelectRunText?: (runId: string, range: TextRange | null) => void;
@@ -113,6 +117,12 @@ interface PageViewProps {
   onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
   onPageClick?: (pageIndex: number, pageX: number, pageY: number) => void;
+  onDrawTextBox?: (
+    pageIndex: number,
+    x: number,
+    top: number,
+    widthPt: number,
+  ) => void;
   /** Fires when an image's drag OR resize completes. */
   onTransformImage?: (
     pageIndex: number,
@@ -158,7 +168,6 @@ export const PageView = memo(function PageView({
   onSelectShape,
   onSelectFormField,
   onMoveShape,
-  onReshape,
   onEditRun,
   onSelectRunText,
   selectedTextRange,
@@ -167,6 +176,7 @@ export const PageView = memo(function PageView({
   onMeasureRun,
   onResizeRun,
   onPageClick,
+  onDrawTextBox,
   onTransformImage,
   onFirstVisible,
   onFirstRendered,
@@ -208,6 +218,9 @@ export const PageView = memo(function PageView({
   const firstRenderedDocRef = useRef<typeof document | null>(null);
   const [gripLayer, setGripLayer] = useState<HTMLDivElement | null>(null);
   const placing = useEditorState(store, (s) => s.mode !== "select");
+  const addingText = useEditorState(store, (s) => s.mode === "addText");
+  const [textBoxDraft, setTextBoxDraft] = useState<TextBoxDraft | null>(null);
+  const drewTextBoxRef = useRef(false);
   const firstPaintedDocRef = useRef<typeof document | null>(null);
   const [paintedRevision, setPaintedRevision] = useState(-1);
   // Read by the render effect, which must not re-run when it changes.
@@ -413,6 +426,19 @@ export const PageView = memo(function PageView({
     return repaints;
   }
 
+  function cssPoint(e: {
+    clientX: number;
+    clientY: number;
+    currentTarget: Element;
+  }) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function toPdf(cssX: number, cssY: number) {
+    return transform.invert(cssX / cssScale, page.height - cssY / cssScale);
+  }
+
   return (
     <Box
       // Fills the viewer's page box and stays transparent until painted, so
@@ -422,20 +448,66 @@ export const PageView = memo(function PageView({
       className={privateContentClassName}
       style={{ inset: 0 }}
       data-testid={`pdf-editor-page-${page.pageIndex}`}
+      onPointerDown={(e) => {
+        drewTextBoxRef.current = false;
+        if (!addingText || !onDrawTextBox || e.button !== 0) return;
+        if (page.display.rotate % 4 !== 0) return;
+        const at = cssPoint(e);
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setTextBoxDraft({ x0: at.x, y0: at.y, x1: at.x, y1: at.y });
+      }}
+      onPointerMove={(e) => {
+        if (!textBoxDraft) return;
+        const at = cssPoint(e);
+        setTextBoxDraft({ ...textBoxDraft, x1: at.x, y1: at.y });
+      }}
+      onPointerUp={(e) => {
+        const draft = textBoxDraft;
+        if (!draft) return;
+        setTextBoxDraft(null);
+        const at = cssPoint(e);
+        if (Math.abs(at.x - draft.x0) < MIN_TEXT_BOX_PX || !onDrawTextBox)
+          return;
+        drewTextBoxRef.current = true;
+        const a = toPdf(Math.min(draft.x0, at.x), Math.min(draft.y0, at.y));
+        const b = toPdf(Math.max(draft.x0, at.x), Math.min(draft.y0, at.y));
+        onDrawTextBox(
+          page.pageIndex,
+          Math.min(a.x, b.x),
+          Math.max(a.y, b.y),
+          Math.abs(b.x - a.x),
+        );
+      }}
+      onPointerCancel={() => setTextBoxDraft(null)}
       onClick={(e) => {
+        if (drewTextBoxRef.current) {
+          drewTextBoxRef.current = false;
+          return;
+        }
         if (!onPageClick) return;
-        // Convert from CSS pixel coords (origin upper-left) into PDF
-        // page-space coords (origin lower-left, points).
-        const rect = e.currentTarget.getBoundingClientRect();
-        const cssX = e.clientX - rect.left;
-        const cssY = e.clientY - rect.top;
-        // CSS px -> display-PDF.
-        const xd = cssX / cssScale;
-        const yd = page.height - cssY / cssScale;
-        const p = transform.invert(xd, yd);
+        const at = cssPoint(e);
+        const p = toPdf(at.x, at.y);
         onPageClick(page.pageIndex, p.x, p.y);
       }}
     >
+      {textBoxDraft && (
+        <Box
+          pos="absolute"
+          data-testid="pdf-editor-text-box-draft"
+          style={{
+            left: Math.min(textBoxDraft.x0, textBoxDraft.x1),
+            top: Math.min(textBoxDraft.y0, textBoxDraft.y1),
+            width: Math.abs(textBoxDraft.x1 - textBoxDraft.x0),
+            height: Math.max(
+              Math.abs(textBoxDraft.y1 - textBoxDraft.y0),
+              NEW_TEXT_LINE_PX * cssScale,
+            ),
+            border: "1px dashed var(--c-primary)",
+            pointerEvents: "none",
+            zIndex: 5,
+          }}
+        />
+      )}
       <canvas
         ref={canvasRef}
         // Lets a rebuild sample the scan's own colours off the rendered page.
@@ -521,11 +593,6 @@ export const PageView = memo(function PageView({
             selected={selectedShapeIds.includes(shape.id)}
             onSelect={(extend) => onSelectShape(shape.id, extend)}
             onMove={(dx, dy) => onMoveShape?.(page.pageIndex, shape.id, dx, dy)}
-            onResize={
-              onReshape && !placing
-                ? (bounds) => onReshape(page.pageIndex, shape.id, bounds)
-                : undefined
-            }
           />
         ))}
         {page.images.map((image) => (

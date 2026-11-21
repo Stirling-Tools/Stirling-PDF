@@ -15,7 +15,6 @@ export function listIndentFor(
   return Math.max(0, ...[...markers].map((m) => widthOf(`${m}x`) - base));
 }
 
-/** False for text whose first line carries no list marker, which is most text: the full check walks every line. */
 export function startsWithListMarker(line: string): boolean {
   return LIST_MARKER.test(line);
 }
@@ -24,7 +23,6 @@ export function mayBeList(text: string): boolean {
   return MARKER_AT_LINE_START.test(text);
 }
 
-/** The list the run's every paragraph is marked as, or null when they are not all marked alike. */
 export function listKindOf(
   text: string,
   softStarts: readonly boolean[],
@@ -36,7 +34,6 @@ export function listKindOf(
   return null;
 }
 
-/** `text` with each paragraph marked as `kind`, or unmarked when it already is. */
 export function toggledListText(
   text: string,
   softStarts: readonly boolean[],
@@ -63,27 +60,16 @@ function paragraphStarts(text: string, softStarts: readonly boolean[]) {
 }
 
 export interface TextSplice {
-  /** The characters of the typed text to replace, as code units. */
   start: number;
   end: number;
   insert: string;
 }
 
 export interface ListEdit {
-  /** In order through the text, none crossing a line break. */
   splices: TextSplice[];
-  /** Where the caret goes afterwards, in the text the edits leave. */
   caret: number;
 }
 
-/**
- * When `next` is `previous` with Enter pressed in a list item, the edit a word
- * processor would make: the new line becomes the next item and the numbered
- * items below it are renumbered, or, when the item left behind was empty, the
- * list ends there. `softStarts` flags `previous`'s wrapped lines, so a wrapped
- * item still counts as one; `caret` (into `next`) tells Enter at a line's end
- * from Enter on the empty line after it. Null for any other edit.
- */
 export function continueList(
   previous: string,
   next: string,
@@ -106,8 +92,6 @@ export function continueList(
         (after[i - 1] === before[i - 1] ||
           after[i - 1] + after[i] === before[i - 1]),
     );
-  // Around an empty line, Enter at the end of one line and Enter on the next
-  // leave the same text; only the caret tells them apart.
   let added =
     caret === null
       ? (candidates[0] ?? -1)
@@ -116,8 +100,6 @@ export function continueList(
         ) ?? -1);
   if (added <= 0 || LIST_MARKER.test(after[added])) return null;
   let split = after[added - 1] !== before[added - 1];
-  // Enter at the start of a wrapped line and Enter at the end of the line it
-  // wraps from are the same keystroke.
   if (
     split &&
     after[added - 1] === "" &&
@@ -134,8 +116,6 @@ export function continueList(
   if (!split && itemLine === added - 1 && item[3].trim() === "") {
     if (after[added] !== "") return null;
     const emptied = startOf(added - 1);
-    // Taken with the line break before it, so the caret stays on the fresh
-    // line: Firefox merges the lines a deletion past a line break joins.
     if (added - 1 > 0)
       return {
         splices: [
@@ -152,8 +132,6 @@ export function continueList(
       caret: emptied,
     };
   }
-  // Enter where the item wrapped leaves an empty line before the wrapped
-  // rest; that rest becomes the new item instead.
   const atWrap = after[added] === "" && softStarts[added] === true;
   const newLine = atWrap ? added + 1 : added;
   const splices: TextSplice[] = atWrap

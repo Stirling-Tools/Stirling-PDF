@@ -933,7 +933,7 @@ function cannotRestyleMessage(): string {
 function missingGlyphsMessage(): string {
   return i18n.t(
     "pdfTextEditor.fontPicker.missingGlyphs",
-    "This font is missing some of the selected characters, and they could not be kept in their current font. The text was left unchanged.",
+    "Some of these characters aren't in that font, so the text keeps its current font.",
   );
 }
 

@@ -94,13 +94,13 @@ describe("analyzePageFonts", () => {
     expect(fonts.every((f) => f.status !== "standard")).toBe(true);
   });
 
-  it("de-duplicates the same font across pages and records page numbers", () => {
+  it("de-duplicates the same font across pages and records the page numbers shown", () => {
     const fonts = analyzePageFonts([
       mkPage(0, [mkRun("a", "pdf:5:LMRoman12", false)]),
       mkPage(2, [mkRun("b", "pdf:5:LMRoman12", false)]),
     ]);
     expect(fonts).toHaveLength(1);
-    expect(fonts[0].pages).toEqual([1, 3]);
+    expect(fonts[0].pages).toEqual([1, 2]);
   });
 
   it("names a run drawn in a server or device face by its family", () => {

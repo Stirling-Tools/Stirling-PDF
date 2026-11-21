@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import {
   canResizeRun,
@@ -19,6 +20,7 @@ import type {
 
 export interface SingleSelectionGeometry {
   bounds: PageRect;
+  display: DisplayTransformData;
   setX: (next: number) => void;
   setY: (next: number) => void;
   setWidth?: (next: number) => void;
@@ -87,6 +89,7 @@ export function useSelectionGeometry(
         return {
           single: {
             bounds,
+            display: page.display,
             setX: (next) =>
               store.dispatch(
                 new MoveTextRunCommand({
@@ -143,6 +146,7 @@ export function useSelectionGeometry(
         return {
           single: {
             bounds,
+            display: page.display,
             setX: (next) => set({ x: next }),
             setY: (next) => set({ y: next }),
             setWidth: (next) => set({ width: Math.max(1, next) }),

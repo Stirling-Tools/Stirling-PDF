@@ -67,7 +67,7 @@ const ITALIC_TEXTS: ToggleTexts = {
   ],
   unavailable: [
     "pdfTextEditor.toolbar.italicUnavailable",
-    "This font has no italic version. Load your device fonts or pick another font family.",
+    "No italic in this font. Pick another font family, or use your device fonts.",
   ],
 };
 

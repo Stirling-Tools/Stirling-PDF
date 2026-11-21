@@ -1,15 +1,9 @@
-import {
-  fieldKindOf,
-  shapeKindOf,
-} from "@editor/tools/pdfTextEditor/store/insertModes";
-import { FIELD_SIZES } from "@editor/tools/pdfTextEditor/util/formFieldChanges";
 import { continueList } from "@editor/tools/pdfTextEditor/util/listText";
 import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import {
   flowPastBottom,
   runBottom,
 } from "@editor/tools/pdfTextEditor/util/pageFlow";
-import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import i18n from "i18next";
 import { alert } from "@editor/components/toast";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
@@ -32,12 +26,9 @@ import {
   focusedRunCaret,
   focusRunWhenPainted,
 } from "@editor/tools/pdfTextEditor/util/dom";
-import {
-  InsertShapeCommand,
-  ReshapeCommand,
-} from "@editor/tools/pdfTextEditor/commands/shapeCommands";
 
 const cache = new WeakMap<EditorStore, PageViewHandlers>();
+const NEW_TEXT_SIZE = 12;
 
 /**
  * The page views' handlers, made once per store: PageView is memoised, so a
@@ -70,14 +61,6 @@ function createHandlers(store: EditorStore) {
       if (extend) store.selection.toggleShape(shapeId);
       else store.selection.selectShape(shapeId);
     },
-    onReshape: (
-      pageIndex: number,
-      shapeId: string,
-      bounds: { x: number; y: number; width: number; height: number },
-    ) => {
-      store.dispatch(new ReshapeCommand({ pageIndex, shapeId, bounds }));
-      store.selection.selectShape(shapeId);
-    },
     onMoveShape: (
       pageIndex: number,
       shapeId: string,
@@ -102,10 +85,6 @@ function createHandlers(store: EditorStore) {
         : null;
       store.dispatch(new EditTextCommand({ pageIndex, runId, nextText }));
       const flowed = flowPastBottom(store, pageIndex, runId, bottomBefore);
-      // Typed into the box, so its next input event carries the marker
-      // through this same path; set in the model alone, the next keystroke
-      // would write the box's text back over it. A line that flowed to the
-      // next page is no longer in this box.
       if (list && flowed !== "moved") editFocusedRun(runId, list, nextText);
       const doc = store.document;
       const run = doc?.page(pageIndex).findRun(runId);
@@ -175,38 +154,6 @@ function createHandlers(store: EditorStore) {
         store.setMode("select");
         return;
       }
-      const shapeKind = shapeKindOf(mode);
-      if (shapeKind) {
-        const cmd = new InsertShapeCommand({
-          pageIndex,
-          kind: shapeKind,
-          x: pageX,
-          y: pageY,
-        });
-        store.dispatch(cmd);
-        if (cmd.insertedShapeId)
-          store.selection.selectShape(cmd.insertedShapeId);
-        store.setMode("select");
-        return;
-      }
-      const fieldKind = fieldKindOf(mode);
-      if (fieldKind) {
-        store.setMode("select");
-        const { width, height } = FIELD_SIZES[fieldKind];
-        const crop = store.document?.page(pageIndex).display;
-        void currentEditorSession()?.changeDocument({
-          kind: "addField",
-          page: pageIndex,
-          field: fieldKind,
-          x: crop
-            ? Math.max(crop.cropLeft, Math.min(pageX, crop.cropRight - width))
-            : pageX,
-          y: crop
-            ? Math.min(crop.cropTop, Math.max(pageY, crop.cropBottom + height))
-            : pageY,
-        });
-        return;
-      }
       if (mode !== "addText") return;
       const cmd = new InsertTextCommand({
         pageIndex,
@@ -219,6 +166,40 @@ function createHandlers(store: EditorStore) {
       if (cmd.insertedRunId) {
         store.selection.selectOne(cmd.insertedRunId);
         focusRunWhenPainted(cmd.insertedRunId);
+      }
+      store.setMode("select");
+    },
+    onDrawTextBox: (
+      pageIndex: number,
+      x: number,
+      top: number,
+      widthPt: number,
+    ) => {
+      let inserted: string | null = null;
+      store.batchNow(() => {
+        const cmd = new InsertTextCommand({
+          pageIndex,
+          x,
+          y: top - NEW_TEXT_SIZE,
+          text: "New text",
+          fontSize: NEW_TEXT_SIZE,
+          placeholder: true,
+        });
+        store.dispatch(cmd);
+        inserted = cmd.insertedRunId;
+        if (inserted)
+          store.dispatch(
+            new ReflowWrapCommand({
+              pageIndex,
+              runId: inserted,
+              maxWidthPt: widthPt,
+              explicit: true,
+            }),
+          );
+      });
+      if (inserted) {
+        store.selection.selectOne(inserted);
+        focusRunWhenPainted(inserted);
       }
       store.setMode("select");
     },

@@ -30,7 +30,7 @@ export function isModalOpen(): boolean {
 }
 
 // The page index of the page nearest the viewport centre.
-export function visiblePageNumber(): number {
+export function visiblePageIndex(): number {
   const pages = pageElements();
   if (pages.length === 0) return 0;
   const midY = window.innerHeight / 2;
@@ -73,20 +73,18 @@ function runBox(runId: string): HTMLElement | null {
   );
 }
 
-/**
- * Focuses run `runId`'s box once the page has painted it, with all its text
- * selected so typing replaces a run just inserted, or with the caret at the end.
- */
 export function focusRunWhenPainted(
   runId: string,
   caretAtEnd = false,
-  typeAfter = "",
+  heldKeys?: () => string,
+  caretOffset?: number,
 ): void {
   let frames = 0;
   const attempt = () => {
     const el = runBox(runId);
     if (!el) {
       if (++frames < FOCUS_WAIT_FRAMES) requestAnimationFrame(attempt);
+      else heldKeys?.();
       return;
     }
     el.focus({ preventScroll: true });
@@ -96,7 +94,8 @@ export function focusRunWhenPainted(
     const sel = window.getSelection();
     sel?.removeAllRanges();
     sel?.addRange(range);
-    typeKeys(typeAfter);
+    if (caretOffset !== undefined) restoreCaretOffset(el, caretOffset);
+    typeKeys(heldKeys?.() ?? "");
   };
   requestAnimationFrame(attempt);
 }
@@ -129,13 +128,11 @@ export function holdKeystrokes(): () => string {
   };
 }
 
-/** The caret's offset into the focused run `runId`'s text, or null when that run's box does not have focus. */
 export function focusedRunCaret(runId: string): number | null {
   const el = runBox(runId);
   return el && document.activeElement === el ? plainCaretOffset(el) : null;
 }
 
-/** Applies `edit`'s splices to the focused run `runId`'s text, while it still reads `typed`, as typing would, then puts the caret at `edit.caret`. */
 export function editFocusedRun(
   runId: string,
   edit: ListEdit,
@@ -144,11 +141,9 @@ export function editFocusedRun(
   requestAnimationFrame(() => {
     const el = runBox(runId);
     if (!el || document.activeElement !== el) return;
-    // Its offsets are into `typed`: a keystroke since then has moved them.
     if (readOverlayText(el).replace(/\u00A0/g, " ") !== typed) return;
     const selection = window.getSelection();
     if (!selection) return;
-    // Last first, so each splice's offsets still hold when it is applied.
     for (const splice of [...edit.splices].reverse()) {
       const range = plainDomRange(el, splice);
       if (!range) return;

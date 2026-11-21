@@ -939,13 +939,15 @@ export function TextRunOverlay({
   // the box reaches the page edge or the text set beside it, never narrower
   // than the run already is.
   const pageCap = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
-  const growCap = Math.min(
-    pageCap,
-    Math.max(
-      growEdgeRoomPx(growEdge, run, transform, scale, left),
-      originalBoundsWidthRef.current * scale,
-    ),
-  );
+  const growCap = run.wrapWidthPt
+    ? Math.min(pageCap, run.wrapWidthPt * scale)
+    : Math.min(
+        pageCap,
+        Math.max(
+          growEdgeRoomPx(growEdge, run, transform, scale, left),
+          originalBoundsWidthRef.current * scale,
+        ),
+      );
   // Wrapping cannot break inside a word, so a box narrower than the longest one
   // hides its tail however the lines are broken - 707px of a held-down key
   // measured invisible, with the caret out there past the box edge.

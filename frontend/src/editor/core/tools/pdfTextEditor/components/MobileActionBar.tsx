@@ -17,7 +17,6 @@ import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSessio
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { PagesMenu } from "@editor/tools/pdfTextEditor/components/toolbar/PageMenu";
-import { InsertMenuItems } from "@editor/tools/pdfTextEditor/components/toolbar/InsertMenu";
 import "@editor/tools/pdfTextEditor/components/MobileEditor.css";
 
 interface Props {
@@ -44,15 +43,10 @@ export function MobileActionBar({ store, controller, mode, findOpen }: Props) {
                   "pdfTextEditor.sidebar.clickPageToAddTable",
                   "Click page to add a table",
                 )
-              : !addTextArmed
-                ? t(
-                    "pdfTextEditor.mobile.tapToPlaceShape",
-                    "Tap the page where it should go",
-                  )
-                : t(
-                    "pdfTextEditor.mobile.tapToPlace",
-                    "Tap the page where the text should go",
-                  )}
+              : t(
+                  "pdfTextEditor.mobile.tapToPlace",
+                  "Tap the page where the text should go",
+                )}
           </span>
           <BarButton
             icon="x"
@@ -163,11 +157,6 @@ export function MobileActionBar({ store, controller, mode, findOpen }: Props) {
                 >
                   {t("pdfTextEditor.mobile.addImage", "Image")}
                 </Menu.Item>
-                <Menu.Divider />
-                <InsertMenuItems
-                  mode={mode}
-                  onToggleMode={(next) => store.toggleMode(next)}
-                />
               </Menu.Dropdown>
             </Menu>
             <PagesMenu

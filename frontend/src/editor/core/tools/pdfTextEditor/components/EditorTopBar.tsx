@@ -1,12 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "@editor/ui/Icon";
-import { Group, Menu, Popover, Tooltip } from "@mantine/core";
+import { Menu, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
@@ -19,88 +13,23 @@ import {
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useElementWidth } from "@editor/tools/pdfTextEditor/hooks/useElementWidth";
 import { modShortcut } from "@editor/utils/hotkeys";
-import { offsetClearing } from "@editor/tools/pdfTextEditor/util/clearingOffset";
-import {
-  fieldKindOf,
-  shapeKindOf,
-} from "@editor/tools/pdfTextEditor/store/insertModes";
-import { Spinner } from "@editor/ui/Spinner";
-import type { InteractionMode } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
   PageMenuItems,
   PagesMenu,
   usePageSetup,
 } from "@editor/tools/pdfTextEditor/components/toolbar/PageMenu";
-import {
-  InsertMenu,
-  InsertMenuItems,
-} from "@editor/tools/pdfTextEditor/components/toolbar/InsertMenu";
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
-const COMPACT_BELOW_PX = 900;
-const FORMAT_MENU_GAP = 8;
-
-function FormatMenu({ controller }: { controller: Controller }) {
-  const { t } = useTranslation();
-  const [offset, setOffset] = useState(FORMAT_MENU_GAP);
-  const targetRef = useRef<HTMLButtonElement | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const { selectedRunIds } = controller;
-
-  // The dropdown hangs over the top of the page, where the line being formatted often sits.
-  const clearSelectedText = useCallback(() => {
-    requestAnimationFrame(() => {
-      const anchor = targetRef.current?.getBoundingClientRect();
-      const dropdown = dropdownRef.current?.getBoundingClientRect();
-      if (!anchor || !dropdown) return;
-      const selected = selectedRunIds.flatMap((id) => {
-        const el = document.querySelector(`[data-run-id="${CSS.escape(id)}"]`);
-        return el ? [el.getBoundingClientRect()] : [];
-      });
-      setOffset(
-        offsetClearing(
-          anchor.bottom,
-          {
-            left: anchor.left,
-            right: anchor.left + dropdown.width,
-            height: dropdown.height,
-          },
-          selected,
-          FORMAT_MENU_GAP,
-          window.innerHeight,
-        ),
-      );
-    });
-  }, [selectedRunIds]);
-
-  return (
-    <Popover
-      position="bottom-start"
-      withinPortal
-      shadow="md"
-      offset={offset}
-      onOpen={clearSelectedText}
-      onClose={() => setOffset(FORMAT_MENU_GAP)}
-    >
-      <Popover.Target>
-        <Button
-          ref={targetRef}
-          size="sm"
-          variant="tertiary"
-          accent="neutral"
-          aria-label={t("pdfTextEditor.toolbar.formatting", "Text formatting")}
-          data-testid="pdf-editor-format-menu"
-          style={NO_SHRINK}
-          leftSection={<Icon name="case-sensitive" size={20} />}
-        />
-      </Popover.Target>
-      <Popover.Dropdown ref={dropdownRef}>
-        <Group gap="xs" wrap="wrap" maw={320}>
-          <FormatGroup controller={controller} inPopover />
-        </Group>
-      </Popover.Dropdown>
-    </Popover>
+const COMPACT_BELOW_PX = 640;
+function showFormattingPanel() {
+  const section = document.querySelector<HTMLElement>(
+    '[data-testid="pdf-editor-format-section"]',
   );
+  if (!section) return;
+  section.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  section.querySelector<HTMLElement>("input, button")?.focus({
+    preventScroll: true,
+  });
 }
 
 interface EditorTopBarProps {
@@ -109,15 +38,12 @@ interface EditorTopBarProps {
   onToggleAddText: () => void;
   addTableArmed: boolean;
   onToggleAddTable: () => void;
-  mode: InteractionMode;
-  onToggleMode: (mode: InteractionMode) => void;
   findOpen: boolean;
   onToggleFind: () => void;
   onShowHelp: () => void;
   hasDocument: boolean;
   dirty: boolean;
-  /** A page or form field change is being saved and the document reopened. */
-  reopening?: boolean;
+  onFormatFolded?: (folded: boolean) => void;
 }
 
 export function EditorTopBar({
@@ -126,14 +52,12 @@ export function EditorTopBar({
   onToggleAddText,
   addTableArmed,
   onToggleAddTable,
-  mode,
-  onToggleMode,
   findOpen,
   onToggleFind,
   onShowHelp,
   hasDocument,
   dirty,
-  reopening = false,
+  onFormatFolded,
 }: EditorTopBarProps) {
   const { t } = useTranslation();
   const session = useEditorSession();
@@ -181,6 +105,11 @@ export function EditorTopBar({
     formatShape,
   ]);
 
+  useLayoutEffect(() => {
+    onFormatFolded?.(foldFormat);
+  }, [foldFormat, onFormatFolded]);
+  useEffect(() => () => onFormatFolded?.(false), [onFormatFolded]);
+
   const addTextLabel = addTextArmed
     ? t("pdfTextEditor.sidebar.clickPageToAddText", "Click page to add text")
     : t("pdfTextEditor.sidebar.addText", "Add text");
@@ -201,29 +130,8 @@ export function EditorTopBar({
       data-compact={compact ? "true" : "false"}
       ref={barRef}
     >
-      {reopening && (
-        <div
-          className="pdf-editor-topbar__busy"
-          data-testid="pdf-editor-reopening"
-        >
-          <Spinner size="sm" />
-          <span>{t("pdfTextEditor.pages.updating", "Updating the PDF…")}</span>
-        </div>
-      )}
-      {!reopening && (shapeKindOf(mode) ?? fieldKindOf(mode)) && (
-        <div
-          className="pdf-editor-topbar__busy"
-          role="status"
-          data-testid="pdf-editor-place-hint"
-        >
-          {t(
-            "pdfTextEditor.toolbar.placeHint",
-            "Click the page to place it · Esc to cancel",
-          )}
-        </div>
-      )}
       {/* The viewer's own bar names the file; this only flags unsaved edits. */}
-      {dirty && !reopening && (
+      {dirty && (
         <div className="pdf-editor-topbar__lead">
           <span
             className="pdf-editor-topbar__dirty"
@@ -315,7 +223,6 @@ export function EditorTopBar({
               >
                 {addImageLabel}
               </Menu.Item>
-              <InsertMenuItems mode={mode} onToggleMode={onToggleMode} />
               <Menu.Divider />
               <PageMenuItems onPageSetup={pageSetup.open} />
               <Menu.Divider />
@@ -340,7 +247,7 @@ export function EditorTopBar({
             <Tooltip
               label={t(
                 "pdfTextEditor.toolbar.addTextTooltip",
-                "Add a text box - then click the page",
+                "Add a text box - click the page, or drag to set its width",
               )}
             >
               <Button
@@ -388,11 +295,6 @@ export function EditorTopBar({
                 style={NO_SHRINK}
               />
             </Tooltip>
-            <InsertMenu
-              mode={mode}
-              onToggleMode={onToggleMode}
-              disabled={!hasDocument}
-            />
             <PagesMenu disabled={!hasDocument} />
             <Tooltip
               label={t("pdfTextEditor.settings.findTooltip", {
@@ -426,13 +328,38 @@ export function EditorTopBar({
                   under macOS's hidden scrollbars, so anything past the edge
                   is invisible rather than visibly clipped. */}
             <ObjectGroup controller={controller} />
-            <ToolbarSeparator />
-            {foldFormat ? (
-              <FormatMenu controller={controller} />
-            ) : (
-              <div className="pdf-editor-topbar__format" ref={setFormatGroup}>
-                <FormatGroup controller={controller} />
-              </div>
+            {!foldFormat && (
+              <>
+                <ToolbarSeparator />
+                <div className="pdf-editor-topbar__format" ref={setFormatGroup}>
+                  <FormatGroup controller={controller} />
+                </div>
+              </>
+            )}
+            {foldFormat && controller.hasRunSelection && (
+              <>
+                <ToolbarSeparator />
+                <Tooltip
+                  label={t(
+                    "pdfTextEditor.toolbar.formattingInPanel",
+                    "Text formatting is in the panel on the right",
+                  )}
+                >
+                  <Button
+                    size="sm"
+                    variant="tertiary"
+                    accent="neutral"
+                    aria-label={t(
+                      "pdfTextEditor.toolbar.formattingInPanel",
+                      "Text formatting is in the panel on the right",
+                    )}
+                    data-testid="pdf-editor-format-jump"
+                    style={NO_SHRINK}
+                    leftSection={<Icon name="case-sensitive" size={20} />}
+                    onClick={showFormattingPanel}
+                  />
+                </Tooltip>
+              </>
             )}
           </>
         )}

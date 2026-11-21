@@ -123,7 +123,7 @@ function isStandard14(fontId: string): boolean {
 // fonts with an editability status.
 export function analyzePageFonts(pages: PageSnapshot[]): PageFont[] {
   const map = new Map<string, PageFont>();
-  for (const page of pages) {
+  for (const [position, page] of pages.entries()) {
     for (const run of page.runs) {
       const name = stripSubsetTag(familyOf(run.fontId)) || "Unknown font";
       let status: FontStatus;
@@ -138,7 +138,7 @@ export function analyzePageFonts(pages: PageSnapshot[]): PageFont[] {
         status = "embedded";
       }
       const key = `${name}|${status}`;
-      const pageNo = page.pageIndex + 1;
+      const pageNo = position + 1;
       const existing = map.get(key);
       if (existing) {
         if (!existing.pages.includes(pageNo)) existing.pages.push(pageNo);

@@ -68,6 +68,17 @@ import {
   insertPageObjectAt,
 } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
+import {
+  forgetEmitted,
+  isSubstitute,
+  noteEmitted,
+  noteSubstitute,
+} from "@editor/tools/pdfTextEditor/util/substitutedGlyphs";
+import {
+  sameFaceFontForChar,
+  sameFaceFontsFor,
+  sameFaceFontsForChar,
+} from "@editor/tools/pdfTextEditor/charcode/sameFaceFonts";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.
@@ -77,6 +88,7 @@ export function removeAndDestroyObject(
   ptr: number,
 ): void {
   if (!ptr) return;
+  forgetEmitted(ptr);
   try {
     m.FPDFPage_RemoveObject(pagePtr, ptr);
   } catch {
@@ -254,6 +266,33 @@ export function charcodesResolveFully(
     else return false;
   }
   return true;
+}
+
+export function faceDrawsAll(
+  m: WrappedPdfiumModule,
+  fontPtr: number,
+  text: string,
+  pagePtr: number,
+  docPtr: number,
+): boolean {
+  if (charcodesResolveFully(m, fontPtr, text, pagePtr, docPtr)) return true;
+  const visible = text.replace(/\s+/g, "");
+  return (
+    visible.length > 0 &&
+    sameFaceFontsFor(visible, fontPtr, { module: m, pagePtr, docPtr }) !== null
+  );
+}
+
+export function faceDrawsChar(
+  m: WrappedPdfiumModule,
+  fontPtr: number,
+  ch: string,
+  pagePtr: number,
+  docPtr: number,
+): boolean {
+  return (
+    sameFaceFontForChar(ch, fontPtr, { module: m, pagePtr, docPtr }) !== null
+  );
 }
 
 /** True when `fontPtr` has no glyph of its own for one of `text`'s letters, as {@link lettersWithoutGlyph} judges it. */
@@ -850,6 +889,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // re-apply the source run's ink state - new objects default to a flat fill.
     applyInkState(m, ptrs, opts);
     applyTagMarks(m, opts.doc.docPtr, ptrs, tagMarks);
+    noteEmitted(ptrs);
     return ptrs;
   };
 
@@ -860,7 +900,124 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       (ch) => onPageAdvanceEm(m, opts.page.pagePtr, font, ch) !== null,
     );
 
+  const resolverCtx = {
+    module: m,
+    pagePtr: opts.page.pagePtr,
+    docPtr: opts.doc.docPtr,
+  };
+  const faceAdvancePt = (font: number, ch: string): number => {
+    const em =
+      onPageAdvanceEm(m, opts.page.pagePtr, font, ch) ??
+      onPageAdvanceEm(m, opts.page.pagePtr, opts.originalFontPtr, ch);
+    return em != null ? em * size : measureAdvancePt(ch, family, size);
+  };
+  const drawsAs = (ptr: number, ch: string): boolean =>
+    readBackTextObj(m, opts.page.pagePtr, ptr)?.trim() === ch;
+  const emitFaceChar = (font: number, ch: string, x: number): number => {
+    const ptr = m2.FPDFPageObj_CreateTextObj!(opts.doc.docPtr, font, size);
+    if (!ptr) return 0;
+    applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
+    setTextOn(m, ptr, ch);
+    if (drawsAs(ptr, ch)) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: getActiveCharcodeStrategy(),
+        text: ch,
+        fontPtr: font,
+        resolved: [],
+        missing: [ch],
+        note: "same-face font drew it with SetText",
+        outcome: "partial-coverage-fallback",
+      });
+      perCharBranchPtrs.add(ptr);
+      return ptr;
+    }
+    const resolved = tryResolveCharcodes(
+      font,
+      ch,
+      resolverCtx,
+      !!opts.originalFontSubset,
+    );
+    const codes = resolved?.result;
+    if (
+      !resolved ||
+      !codes ||
+      codes.coverage !== 1 ||
+      codes.charcodes.length !== 1 ||
+      !setCharcodesOn(m, ptr, codes.charcodes) ||
+      !drawsAs(ptr, ch)
+    ) {
+      removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+      return 0;
+    }
+    emitCharcodeEvent({
+      timestamp: 0,
+      strategy: resolved.strategy,
+      text: ch,
+      fontPtr: font,
+      resolved: [...codes.charcodes],
+      missing: [],
+      note: "same-face font drew it by charcode",
+      outcome: "charcodes-ok",
+    });
+    perCharBranchPtrs.add(ptr);
+    return ptr;
+  };
+  const emitAcrossFaces = (
+    text: string,
+    x: number,
+  ): { ptrs: number[]; texts: string[] } | null => {
+    if (!canReuse || opts.rotation || !text || /\s/.test(text)) return null;
+    const candidates = [...text].map((ch) =>
+      sameFaceFontsForChar(ch, opts.originalFontPtr, resolverCtx),
+    );
+    if (candidates.some((fonts) => fonts.length === 0)) return null;
+    const ptrs: number[] = [];
+    const texts: string[] = [];
+    let cursor = x;
+    for (const [i, ch] of [...text].entries()) {
+      let ptr = 0;
+      let font = 0;
+      for (const candidate of candidates[i]) {
+        ptr = emitFaceChar(candidate, ch, cursor);
+        font = candidate;
+        if (ptr) break;
+      }
+      if (!ptr) {
+        for (const drawn of ptrs)
+          removeAndDestroyObject(m, opts.page.pagePtr, drawn);
+        return null;
+      }
+      ptrs.push(ptr);
+      texts.push(ch);
+      cursor += faceAdvancePt(font, ch) + (opts.charSpacingPt ?? 0);
+    }
+    return { ptrs, texts };
+  };
+  const emitWordInFace = (
+    text: string,
+    x: number,
+  ): { ptrs: number[]; texts: string[] } => {
+    const wholeFontDraws = fontDraws(opts.originalFontPtr, text);
+    const acrossFirst = wholeFontDraws ? null : emitAcrossFaces(text, x);
+    if (acrossFirst) return acrossFirst;
+    const ptr = emitWord(text, x);
+    if (wholeFontDraws && (!ptr || isSubstitute(ptr))) {
+      const across = emitAcrossFaces(text, x);
+      if (across) {
+        removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+        return across;
+      }
+    }
+    return ptr ? { ptrs: [ptr], texts: [text] } : { ptrs: [], texts: [] };
+  };
+
   const emitBase14 = (text: string, x: number): number => {
+    const ptr = emitSubstitute(text, x);
+    noteSubstitute(ptr);
+    return ptr;
+  };
+  const emitSubstitute = (text: string, x: number): number => {
     // base-14 can only render WinAnsi; drop the rest so PDFium never emits
     // U+00FF tofu.
     const base14Text = sanitizeForBase14(text);
@@ -1063,7 +1220,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // A guessed code that reads back as another character drew that character. A font that reads back nothing has no mapping to judge by.
   function readsBackAs(ptr: number, text: string): boolean {
     const got = readBackTextObj(m, opts.page.pagePtr, ptr);
-    if (got === null || got.trim() === "") return true;
+    if (got === null || got === "") return true;
     return got.trim() === text.trim();
   }
 
@@ -1214,6 +1371,13 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     Math.abs(spacingPt) > 0.05 &&
     [...opts.text].length > 1
   ) {
+    const acrossFaces = fontDraws(opts.originalFontPtr, opts.text)
+      ? null
+      : emitAcrossFaces(opts.text, opts.x);
+    if (acrossFaces) {
+      opts.outTexts?.push(...acrossFaces.texts);
+      return withRotation(acrossFaces.ptrs);
+    }
     const ptrs: number[] = [];
     let cursor = opts.x;
     // One face for the whole word: letters the source font has would otherwise keep it while the rest fall back.
@@ -1244,9 +1408,9 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // Fast path: no whitespace at all → one text object holds the whole word.
   // A turned line stays one object too: words drawn apart along a turned baseline read back as separate lines.
   if (!hasAnyWhitespace || opts.oneObject || opts.rotation) {
-    const ptr = emitWord(opts.text, opts.x);
-    if (ptr) opts.outTexts?.push(opts.text);
-    return withRotation(ptr ? [ptr] : []);
+    const drawn = emitWordInFace(opts.text, opts.x);
+    opts.outTexts?.push(...drawn.texts);
+    return withRotation(drawn.ptrs);
   }
 
   // Per-chunk emit (split on ANY whitespace run).

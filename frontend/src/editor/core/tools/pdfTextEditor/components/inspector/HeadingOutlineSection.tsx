@@ -99,7 +99,7 @@ function OutlineRow({
       : t(
           "pdfTextEditor.inspector.accessibility.outline.onPage",
           "Heading on page {{page}}",
-          { page: entry.pageIndex + 1 },
+          { page: entry.pageNumber },
         ));
   return (
     <Box

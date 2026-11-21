@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -6,6 +7,7 @@ import { Icon } from "@editor/ui/Icon";
 import {
   Field,
   PointsInput,
+  lengthUnitFor,
   Section,
   SectionLabel,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
@@ -17,6 +19,7 @@ import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { FormFieldAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/FormFieldAccessibilitySection";
 import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
 import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
+import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
 import { ScanFontMatchRow } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
 
@@ -29,6 +32,7 @@ interface Props {
   /** Font status for the selected runs, e.g. "Embedded · full alphabet". */
   fontNote: string | null;
   scanFontMatch?: ScanFontMatch | null;
+  showFormatting?: boolean;
   canGroup: boolean;
   canUngroup: boolean;
   onGroup: () => void;
@@ -38,10 +42,8 @@ interface Props {
 /**
  * Properties of whatever is selected right now.
  *
- * Deliberately NOT the whole of the selection's UI: character formatting and
- * the arrange/lock/delete verbs sit in the canvas toolbar, where document
- * editors have always put them. What lands here is what needs a label and a
- * number - geometry and paragraph structure.
+ * Character formatting moves here only when the canvas toolbar is too narrow
+ * for it; the arrange/lock/delete verbs stay in the toolbar.
  */
 export function SelectionInspector({
   controller,
@@ -49,6 +51,7 @@ export function SelectionInspector({
   geometry,
   fontNote,
   scanFontMatch,
+  showFormatting = false,
   canGroup,
   canUngroup,
   onGroup,
@@ -69,6 +72,9 @@ export function SelectionInspector({
         fontNote={hasRunSelection ? fontNote : null}
       />
       {scanFontMatch?.canShow && <ScanFontMatchRow match={scanFontMatch} />}
+      {hasRunSelection && showFormatting && (
+        <TextFormatSection controller={controller} />
+      )}
       {runCount + imageCount > 0 && (
         <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
       )}
@@ -113,6 +119,22 @@ export function SelectionInspector({
         />
       )}
     </Stack>
+  );
+}
+
+function TextFormatSection({
+  controller,
+}: {
+  controller: InspectorController;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Section testId="pdf-editor-format-section">
+      <SectionLabel>{t("pdfTextEditor.inspector.text", "Text")}</SectionLabel>
+      <Group gap="xs" wrap="wrap">
+        <FormatGroup controller={controller} />
+      </Group>
+    </Section>
   );
 }
 
@@ -207,12 +229,12 @@ function ParagraphSection({
             canGroup
               ? t("pdfTextEditor.sidebar.groupTooltip", {
                   defaultValue:
-                    "Merge selected runs into one paragraph ({{shortcut}})",
+                    "Join the selected text into one paragraph ({{shortcut}})",
                   shortcut: modShortcut("M"),
                 })
               : t(
                   "pdfTextEditor.sidebar.groupTooltipDisabled",
-                  "Select 2+ runs to merge",
+                  "Select two or more pieces of text to join",
                 )
           }
         >
@@ -225,7 +247,7 @@ function ParagraphSection({
             disabled={!canGroup}
             data-testid="pdf-editor-group"
           >
-            {t("pdfTextEditor.sidebar.group", "Group")}
+            {t("pdfTextEditor.sidebar.group", "Join paragraph")}
           </Button>
         </Tooltip>
         <Tooltip
@@ -233,11 +255,11 @@ function ParagraphSection({
             canUngroup
               ? t(
                   "pdfTextEditor.sidebar.ungroupTooltip",
-                  "Split this paragraph into one run per line",
+                  "Split this paragraph into separate lines",
                 )
               : t(
                   "pdfTextEditor.sidebar.ungroupTooltipDisabled",
-                  "Select a multi-line paragraph to ungroup",
+                  "Select a paragraph of several lines to split",
                 )
           }
         >
@@ -250,7 +272,7 @@ function ParagraphSection({
             disabled={!canUngroup}
             data-testid="pdf-editor-ungroup"
           >
-            {t("pdfTextEditor.sidebar.ungroup", "Ungroup")}
+            {t("pdfTextEditor.sidebar.ungroup", "Split into lines")}
           </Button>
         </Tooltip>
       </Group>
@@ -258,7 +280,6 @@ function ParagraphSection({
   );
 }
 
-/** Position and size, in PDF points, for a single selected object. */
 function GeometrySection({
   geometry,
   isImage,
@@ -282,7 +303,23 @@ function GeometrySection({
       </Section>
     );
   }
-  const { bounds, setX, setY, setWidth, setHeight } = geometry.single;
+  const { bounds, display, setX, setY, setWidth, setHeight } = geometry.single;
+  const unit = lengthUnitFor(navigator.language);
+  const transform = DisplayTransform.fromData(display);
+  const corners = [
+    [bounds.x, bounds.y],
+    [bounds.x + bounds.width, bounds.y],
+    [bounds.x, bounds.y + bounds.height],
+    [bounds.x + bounds.width, bounds.y + bounds.height],
+  ].map(([x, y]) => transform.apply(x, y));
+  const left = Math.min(...corners.map((c) => c.x));
+  const top = transform.displayHeight - Math.max(...corners.map((c) => c.y));
+  const moveTo = (nextLeft: number, nextTop: number) => {
+    const from = transform.invert(left, transform.displayHeight - top);
+    const to = transform.invert(nextLeft, transform.displayHeight - nextTop);
+    if (Math.abs(to.x - from.x) > 1e-3) setX(bounds.x + to.x - from.x);
+    if (Math.abs(to.y - from.y) > 1e-3) setY(bounds.y + to.y - from.y);
+  };
   return (
     <Section testId="pdf-editor-geometry-section">
       <SectionLabel>
@@ -292,16 +329,18 @@ function GeometrySection({
         <Group gap="xs" wrap="nowrap" align="flex-end">
           <Field label={t("pdfTextEditor.inspector.x", "X")}>
             <PointsInput
-              value={bounds.x}
-              onCommit={setX}
+              unit={unit}
+              value={left}
+              onCommit={(next) => moveTo(next, top)}
               label={t("pdfTextEditor.inspector.x", "X")}
               testId="pdf-editor-pos-x"
             />
           </Field>
           <Field label={t("pdfTextEditor.inspector.y", "Y")}>
             <PointsInput
-              value={bounds.y}
-              onCommit={setY}
+              unit={unit}
+              value={top}
+              onCommit={(next) => moveTo(left, next)}
               label={t("pdfTextEditor.inspector.y", "Y")}
               testId="pdf-editor-pos-y"
             />
@@ -320,6 +359,7 @@ function GeometrySection({
             }
           >
             <PointsInput
+              unit={unit}
               value={bounds.width}
               onCommit={setWidth ?? (() => undefined)}
               min={1}
@@ -340,6 +380,7 @@ function GeometrySection({
             }
           >
             <PointsInput
+              unit={unit}
               value={bounds.height}
               onCommit={setHeight ?? (() => undefined)}
               min={1}

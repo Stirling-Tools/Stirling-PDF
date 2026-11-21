@@ -35,7 +35,6 @@ export class InsertTextCommand implements Command {
     y: number;
     text?: string;
     placeholder?: boolean;
-    /** A base-14 PostScript name. */
     family?: string;
     fontSize?: number;
     fill?: RGBA;

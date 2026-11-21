@@ -9,6 +9,7 @@ import {
 import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import type { ScanEditState } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { furnitureOf } from "@editor/tools/pdfTextEditor/model/artifactKind";
+import { drawsSubstitutes } from "@editor/tools/pdfTextEditor/util/substitutedGlyphs";
 import {
   ARTIFACT_TAG,
   innermostMcid,
@@ -146,9 +147,7 @@ export class TextRun {
    * text rarely fills its box, so the box would shrink back to the ink.
    */
   wrapWidthPt: number | null;
-  /** Stand-in text the editor wrote for the user to replace; the run is a placeholder while its text still reads so. */
   placeholderText: string | null;
-  /** How the lines sit in `alignFrame`; null leaves them where they were drawn. */
   align: TextAlign | null;
   alignFrame: AlignFrame | null;
   underline: boolean;
@@ -277,7 +276,16 @@ export class TextRun {
       furniture:
         furnitureOf(artifactMark(this.tagMarks)?.artifact) ?? undefined,
       inForm: this.containerPtr !== 0 || undefined,
+      substitutedGlyphs: drawsSubstitutes(this.drawnPtrs()),
     };
+  }
+
+  private *drawnPtrs(): Generator<number> {
+    yield this.pdfiumObjPtr;
+    yield* this.mergedFromPtrs;
+    yield* this.paragraphMemberPtrs;
+    yield* this.paragraphLeafPtrs;
+    for (const slot of this.paragraphLineSlots) yield* slot.mergedFromPtrs;
   }
 
   private lineBaselines(): number[] | undefined {

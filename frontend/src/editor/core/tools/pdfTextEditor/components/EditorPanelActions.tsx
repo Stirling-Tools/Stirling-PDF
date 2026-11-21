@@ -13,6 +13,8 @@ interface Props {
   onShowHelp: () => void;
 }
 
+const NO_SHRINK_BUTTON = { flexShrink: 0 };
+
 export const EditorPanelActions = memo(function EditorPanelActions({
   compact,
   onSave,
@@ -63,9 +65,11 @@ export const EditorPanelActions = memo(function EditorPanelActions({
             accent="neutral"
             onClick={onDownload}
             data-testid="pdf-editor-download"
-            aria-label={t("pdfTextEditor.download", "Download")}
-            leftSection={<Icon name="download" size={20} />}
-          />
+            leftSection={<Icon name="download" size={18} />}
+            style={NO_SHRINK_BUTTON}
+          >
+            {t("pdfTextEditor.download", "Download")}
+          </Button>
         </Tooltip>
         {compact && (
           <>

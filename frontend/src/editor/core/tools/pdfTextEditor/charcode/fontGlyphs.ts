@@ -27,14 +27,32 @@ const SCRATCH_GRID = 16;
 const SCRATCH_STEP_PT = 30;
 
 const outlines = new Map<number, Map<string, string | null>>();
+const strokelessFonts = new Set<string>();
 const missingOutlines = new Map<number, string | null>();
 const codeTexts = new Map<number, Map<string, number>>();
 
 /** Font pointers are reused across documents, so every document starts empty. */
 export function resetFontGlyphs(): void {
   outlines.clear();
+  strokelessFonts.clear();
   missingOutlines.clear();
   codeTexts.clear();
+}
+
+export function noteFontStrokes(
+  m: WrappedPdfiumModule,
+  font: number,
+  fontId: string,
+): void {
+  if (strokelessFonts.has(fontId) || !m.FPDFFont_GetIsEmbedded(font)) return;
+  const length = scratchPtr(m, SCRATCH.glyphPoint, 8);
+  m.pdfium.setValue(length, 0, "i32");
+  if (!m.FPDFFont_GetFontData(font, 0, 0, length)) return;
+  if (m.pdfium.getValue(length, "i32") === 0) strokelessFonts.add(fontId);
+}
+
+export function ignoresTextStroke(fontId: string): boolean {
+  return strokelessFonts.has(fontId);
 }
 
 function outlineOf(

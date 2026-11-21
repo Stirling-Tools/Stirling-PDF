@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useFormatFolded } from "@editor/tools/pdfTextEditor/hooks/useFormatFolded";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -77,6 +78,7 @@ export const EditorSidebar = memo(function EditorSidebar({
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
+  const formatFolded = useFormatFolded(store);
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
@@ -167,6 +169,7 @@ export const EditorSidebar = memo(function EditorSidebar({
                 geometry={geometry}
                 fontNote={fontNote}
                 scanFontMatch={scanFontMatch}
+                showFormatting={formatFolded}
                 canGroup={canGroup}
                 canUngroup={canUngroup}
                 onGroup={onGroup}

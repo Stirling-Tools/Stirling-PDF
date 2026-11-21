@@ -23,7 +23,6 @@ export interface AlignFrame {
   right: number;
 }
 
-// Underline thickness and drop below the baseline, as fractions of the type size.
 const UNDERLINE_THICKNESS_EM = 0.06;
 const UNDERLINE_DROP_EM = 0.12;
 const MIN_SHIFT_PT = 0.05;
@@ -37,7 +36,6 @@ interface LineBox {
   baseline: number;
 }
 
-/** True for editable text sitting upright on an unrotated page: alignment and underlines are laid out along the page's x axis. */
 export function formatsUpright(
   run: { locked?: boolean; textReadOnly?: boolean; matrix: Affine },
   pageRotate: number,
@@ -82,9 +80,6 @@ function startsListItem(run: TextRun, line: LineBox): boolean {
   return startsWithListMarker(text);
 }
 
-// The measure the run's lines align within: the box the user set, else the
-// paragraph's widest line, else for a single line the page between margins
-// as wide as the line's own left one, so a title centres on the page.
 function frameFor(page: Page, run: TextRun, lines: LineBox[]): AlignFrame {
   const left = Math.min(...lines.map((l) => l.left));
   const right = Math.max(...lines.map((l) => l.right));
@@ -114,7 +109,6 @@ function signatureOf(m: WrappedPdfiumModule, run: TextRun): string {
   return `${run.align ?? ""}|${run.listIndent}|${run.underline ? "u" : ""}|${r},${g},${b},${a}|${run.text}|${lines}`;
 }
 
-/** Set how a run's lines align and whether they are underlined; the page's format sync then lays them out. */
 export class SetParagraphFormatCommand implements Command {
   readonly type = "set-paragraph-format";
   private readonly pageIndex: number;
@@ -135,7 +129,6 @@ export class SetParagraphFormatCommand implements Command {
     runIds: string[];
     align?: TextAlign;
     underline?: boolean;
-    /** How far a list item's wrapped lines sit in from its marker, in points; 0 for none. */
     listIndent?: number;
   }) {
     this.pageIndex = opts.pageIndex;
@@ -162,7 +155,6 @@ export class SetParagraphFormatCommand implements Command {
         listIndent: run.listIndent,
       });
       if (this.listIndent !== undefined) {
-        // Lines a list indented need laying back flush once it goes.
         if (this.listIndent === 0 && run.listIndent > 0 && !run.align)
           run.align = "left";
         run.listIndent = this.listIndent;
@@ -194,21 +186,12 @@ export class SetParagraphFormatCommand implements Command {
   }
 }
 
-// Recorded by run and line, not by object: an undo or redo of the typing
-// around it can redraw the line in new objects, so the move back finds the
-// line's objects as they are then.
 interface LineShift {
   runId: string;
   slot: number | null;
   dx: number;
 }
 
-/**
- * Lays out every formatted run on one page to match its format: lines moved
- * to their alignment, underlines redrawn under the lines where they now are.
- * The store attaches it to the step whose change put a run out of format, so
- * a typed character and the re-centring it caused undo together.
- */
 export class SyncParagraphFormatCommand implements Command {
   readonly type = "sync-paragraph-format";
   readonly followsPrevious = true;
@@ -226,7 +209,6 @@ export class SyncParagraphFormatCommand implements Command {
     this.followsKey = opts.followsKey;
   }
 
-  /** True when some formatted run on the page no longer matches its format. */
   static needed(doc: EditorDocument, pageIndex: number): boolean {
     const page = doc.page(pageIndex);
     for (const runId of page.paragraphFormats) {
@@ -249,9 +231,6 @@ export class SyncParagraphFormatCommand implements Command {
     this.layOut(doc, false);
   }
 
-  // `followMoves` reads lines shifted together as the run having been moved;
-  // after a group's undo or redo they shifted because their objects were
-  // redrawn, and are laid out where their format puts them.
   private layOut(doc: EditorDocument, followMoves: boolean): void {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
@@ -316,8 +295,6 @@ export class SyncParagraphFormatCommand implements Command {
     return this.followsKey;
   }
 
-  // Every line shifted by one offset with the text unchanged is the run being
-  // moved: the measure it aligns in goes with it, so the move stands.
   private followMove(page: Page, run: TextRun, lines: LineBox[]): void {
     const before = page.formatLayouts.get(run.id);
     const frame = run.alignFrame;
@@ -333,8 +310,6 @@ export class SyncParagraphFormatCommand implements Command {
     run.alignFrame = { left: frame.left + dx, right: frame.right + dx };
   }
 
-  // Moves each line to its alignment within the frame; a list item left
-  // aligned also sets its wrapped lines in past the marker.
   private layoutLines(doc: EditorDocument, page: Page, run: TextRun): void {
     const align = run.align ?? "left";
     const hanging = align === "left" ? run.listIndent : 0;
@@ -389,8 +364,6 @@ export class SyncParagraphFormatCommand implements Command {
   }
 }
 
-// A whole single-line run moves as a run, so a scanned one is redrawn and its
-// model follows; a paragraph line moves its own objects.
 function moveLine(
   doc: EditorDocument,
   page: Page,
@@ -441,7 +414,6 @@ function shiftLine(
 
 export type TextStyleName = "title" | "heading1" | "heading2" | "body";
 
-/** The size, weight and structure element each text style gives a run. */
 export const TEXT_STYLES: Record<
   TextStyleName,
   { size: number; bold: boolean; tag: "Title" | "H1" | "H2" | "P" }

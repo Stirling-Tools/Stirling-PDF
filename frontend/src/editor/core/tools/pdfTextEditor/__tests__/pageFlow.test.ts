@@ -170,6 +170,25 @@ test("text never flows onto a turned page, which would show it sideways", async 
       nextText: "Line one\nLine two",
     }),
   );
-  expect(flowPastBottom(store, 0, runId, before)).toBe("waiting");
-  expect(store.document!.page(1).runs).toHaveLength(0);
+  expect(flowPastBottom(store, 0, runId, before)).toBe("moved");
+  const edited = store.document!;
+  expect(edited.page(1).runs).toHaveLength(0);
+  expect(edited.displayOrder()).toEqual([0, 2, 1]);
+  expect(edited.page(2).runs.map((run) => run.text)).toEqual(["Line two"]);
+});
+
+test("lines that flow again from the same paragraph join its continuation, not a new page", async () => {
+  const { store, runId } = await typedNearBottom();
+  expect(edit(store, runId, "Line one\nLine two")).toBe("moved");
+  const doc = store.document!;
+  const order = [...doc.displayOrder()];
+  const continuation = doc.page(1).runs.map((run) => run.text);
+  expect(continuation).toEqual(["Line two"]);
+
+  expect(edit(store, runId, "Line one\nLine one and a half")).toBe("moved");
+  expect(doc.displayOrder()).toEqual(order);
+  expect(doc.page(0).findRun(runId)?.text).toBe("Line one");
+  expect(doc.page(1).runs.map((run) => run.text)).toEqual([
+    "Line one and a half Line two",
+  ]);
 });

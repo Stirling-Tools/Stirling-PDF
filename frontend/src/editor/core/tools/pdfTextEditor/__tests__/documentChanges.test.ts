@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
@@ -9,14 +11,14 @@ import {
   PDFDocument,
   PDFName,
   PDFNumber,
-  PDFRawStream,
   StandardFonts,
 } from "@cantoo/pdf-lib";
 import {
-  applyDocumentChange,
   DocumentChangeRefused,
+  pageChangeCommand,
+  type DocumentChange,
 } from "@editor/tools/pdfTextEditor/util/documentChanges";
-import { FIELD_SIZES } from "@editor/tools/pdfTextEditor/util/formFieldChanges";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import {
@@ -38,6 +40,21 @@ async function pdfOf(pages: Array<[number, number]>) {
 
 async function open(bytes: Uint8Array) {
   return PDFDocument.load(bytes);
+}
+
+async function saved(doc: EditorDocument) {
+  return new Uint8Array(await (await exportToBlob(doc)).arrayBuffer());
+}
+
+async function applyDocumentChange(bytes: Uint8Array, change: DocumentChange) {
+  const doc = await EditorDocument.open(bytes);
+  try {
+    const { command, focusPage } = pageChangeCommand(doc, change);
+    command.apply(doc);
+    return { bytes: await saved(doc), focusPage: doc.positionOf(focusPage) };
+  } finally {
+    doc.dispose();
+  }
 }
 
 describe("page changes", () => {
@@ -128,6 +145,68 @@ describe("page changes", () => {
     expect(changed.focusPage).toBe(1);
   });
 
+  test("undo takes a page change back without reopening the document", async () => {
+    const doc = await EditorDocument.open(
+      await pdfOf([
+        [595, 842],
+        [842, 595],
+      ]),
+    );
+    try {
+      const changes: DocumentChange[] = [
+        { kind: "addPage", after: 0 },
+        { kind: "duplicatePage", page: 1 },
+        { kind: "deletePage", page: 0 },
+        {
+          kind: "pageSetup",
+          pages: "all",
+          size: "LETTER",
+          orientation: "portrait",
+        },
+      ];
+      for (const change of changes) {
+        const { command } = pageChangeCommand(doc, change);
+        command.apply(doc);
+        command.revert(doc);
+      }
+      expect(doc.displayOrder()).toEqual([0, 1]);
+      const out = await open(await saved(doc));
+      expect(out.getPages().map((page) => page.getSize())).toEqual([
+        { width: 595, height: 842 },
+        { width: 842, height: 595 },
+      ]);
+    } finally {
+      doc.dispose();
+    }
+  });
+
+  test("saves the pages in the order shown, without the ones deleted", async () => {
+    const doc = await EditorDocument.open(
+      await pdfOf([
+        [595, 842],
+        [842, 595],
+        [400, 300],
+      ]),
+    );
+    try {
+      for (const change of [
+        { kind: "deletePage", page: 1 },
+        { kind: "duplicatePage", page: 2 },
+        { kind: "addPage", after: 0 },
+      ] satisfies DocumentChange[])
+        pageChangeCommand(doc, change).command.apply(doc);
+      const out = await open(await saved(doc));
+      expect(out.getPages().map((page) => page.getSize())).toEqual([
+        { width: 595, height: 842 },
+        { width: 595, height: 842 },
+        { width: 400, height: 300 },
+        { width: 400, height: 300 },
+      ]);
+    } finally {
+      doc.dispose();
+    }
+  });
+
   test("refuses to delete the last page with a reason the caller can name", async () => {
     await expect(
       applyDocumentChange(await pdfOf([[595, 842]]), {
@@ -138,75 +217,8 @@ describe("page changes", () => {
   });
 });
 
-describe("form fields", () => {
-  test.each(["text", "checkbox", "signature"] as const)(
-    "adds a %s field with its top-left corner where the page was clicked",
-    async (field) => {
-      const once = await applyDocumentChange(await pdfOf([[595, 842]]), {
-        kind: "addField",
-        page: 0,
-        field,
-        x: 100,
-        y: 700,
-      });
-      const twice = await applyDocumentChange(once.bytes, {
-        kind: "addField",
-        page: 0,
-        field,
-        x: 100,
-        y: 600,
-      });
-      const fields = (await open(twice.bytes)).getForm().getFields();
-      expect(fields.map((f) => f.getName())).toHaveLength(2);
-      expect(new Set(fields.map((f) => f.getName())).size).toBe(2);
-      const [first] = fields[0].acroField.getWidgets();
-      const rect = first.getRectangle();
-      const { width, height } = FIELD_SIZES[field];
-      expect(rect.x + rect.width / 2).toBeCloseTo(100 + width / 2);
-      expect(rect.y + rect.height / 2).toBeCloseTo(700 - height / 2);
-    },
-  );
-});
-
 const fixture = async (name: string) =>
   new Uint8Array(await readFile(path.join(FIXTURES, name)));
-
-test.each([
-  "form-fields-sample.pdf",
-  "form-compressed-catalog.pdf",
-  "tagged-sample.pdf",
-])(
-  "%s takes every field kind next to the fields it already has",
-  async (name) => {
-    let bytes: Uint8Array = await fixture(name);
-    const before = (await PDFDocument.load(bytes)).getForm().getFields().length;
-    for (const field of ["text", "checkbox", "signature"] as const)
-      bytes = (
-        await applyDocumentChange(bytes, {
-          kind: "addField",
-          page: 0,
-          field,
-          x: 40,
-          y: 120,
-        })
-      ).bytes;
-    const names = (await PDFDocument.load(bytes))
-      .getForm()
-      .getFields()
-      .map((f) => f.getName());
-    expect(names).toHaveLength(before + 3);
-    expect(new Set(names).size).toBe(names.length);
-    const reopened = await EditorDocument.open(bytes);
-    try {
-      PdfiumTextReader.populate(reopened, reopened.page(0));
-      expect(
-        reopened.page(0).annotations.filter((a) => a.kind === "widget").length,
-      ).toBeGreaterThanOrEqual(3);
-    } finally {
-      reopened.dispose();
-    }
-  },
-);
 
 test("a duplicated tagged page leaves the copy out of the structure tree", async () => {
   const bytes = await fixture("tagged-sample.pdf");
@@ -303,30 +315,6 @@ test("page setup sizes a quarter-turned page by the shape it is shown in", async
   expect([Math.round(height), Math.round(width)]).toEqual([595, 842]);
 });
 
-test.each(["text", "signature"] as const)(
-  "a new %s field never takes a name the form already has, however it is written",
-  async (field) => {
-    const source = await PDFDocument.create();
-    const page = source.addPage([400, 300]);
-    const form = source.getForm();
-    form.createTextField("Text1").addToPage(page, { x: 10, y: 10 });
-    form.createTextField("Signature1").addToPage(page, { x: 10, y: 60 });
-    const changed = await applyDocumentChange(await source.save(), {
-      kind: "addField",
-      page: 0,
-      field,
-      x: 100,
-      y: 200,
-    });
-    const names = (await PDFDocument.load(changed.bytes))
-      .getForm()
-      .getFields()
-      .map((f) => f.getName());
-    expect(names).toHaveLength(3);
-    expect(new Set(names).size).toBe(3);
-  },
-);
-
 test("page setup keeps the visible top when the boxes are inherited or cropped", async () => {
   const source = await PDFDocument.create();
   const font = await source.embedFont(StandardFonts.Helvetica);
@@ -386,41 +374,6 @@ test("page setup leaves every annotation coordinate on the content it marks", as
   expect(shift).toBeCloseTo(0, 0);
 });
 
-test.each(["text", "checkbox"] as const)(
-  "a new %s field is drawn as a printable box other viewers can fill",
-  async (field) => {
-    const changed = await applyDocumentChange(await pdfOf([[595, 842]]), {
-      kind: "addField",
-      page: 0,
-      field,
-      x: 100,
-      y: 700,
-    });
-    const doc = await PDFDocument.load(changed.bytes);
-    const [widget] = doc.getForm().getFields()[0].acroField.getWidgets();
-    expect(widget.getFlags() & 4).toBe(4);
-    const border = widget
-      .getOrCreateAppearanceCharacteristics()
-      .getBorderColor();
-    expect(border?.map((c) => Math.round(c * 255))).toEqual([115, 115, 128]);
-    if (field === "text")
-      expect(
-        widget.getDefaultAppearance() ??
-          doc.getForm().getFields()[0].acroField.getDefaultAppearance(),
-      ).toMatch(/Tf/);
-    const normal = doc.context
-      .lookup(widget.dict.get(PDFName.of("AP")), PDFDict)
-      .get(PDFName.of("N"));
-    const resolved = doc.context.lookup(normal);
-    const stream =
-      resolved instanceof PDFRawStream
-        ? resolved
-        : doc.context.lookup((resolved as PDFDict).values()[0]);
-    if (!(stream instanceof PDFRawStream)) throw new Error("no appearance");
-    expect(stream.getContents().length).toBeGreaterThan(0);
-  },
-);
-
 test("page setup moves the trim, bleed and art boxes to the new paper", async () => {
   const source = await PDFDocument.create();
   const page = source.addPage([612, 792]);
@@ -437,4 +390,88 @@ test("page setup moves the trim, bleed and art boxes to the new paper", async ()
   expect(out.getTrimBox()).toEqual(media);
   expect(out.getBleedBox()).toEqual(media);
   expect(out.node.get(PDFName.of("ArtBox"))).toBeUndefined();
+});
+
+test("refuses a page change while a save is running", async () => {
+  const doc = await EditorDocument.open(
+    await pdfOf([
+      [595, 842],
+      [595, 842],
+    ]),
+  );
+  try {
+    const saving = saved(doc);
+    expect(() =>
+      pageChangeCommand(doc, { kind: "deletePage", page: 1 }),
+    ).toThrow(DocumentChangeRefused);
+    expect((await open(await saving)).getPageCount()).toBe(2);
+    expect(() =>
+      pageChangeCommand(doc, { kind: "deletePage", page: 1 }),
+    ).not.toThrow();
+  } finally {
+    doc.dispose();
+  }
+});
+
+test("editing a duplicated tagged page leaves the original page's tags alone", async () => {
+  const bytes = await fixture("tagged-sample.pdf");
+  const before = await readFileStructure(bytes);
+  const doc = await EditorDocument.open(bytes);
+  try {
+    const { command, focusPage } = pageChangeCommand(doc, {
+      kind: "duplicatePage",
+      page: 0,
+    });
+    command.apply(doc);
+    const copy = doc.page(focusPage);
+    PdfiumTextReader.populate(doc, copy);
+    const run = copy.runs.find((r) => r.text.startsWith("Quarterly"))!;
+    new EditTextCommand({
+      pageIndex: focusPage,
+      runId: run.id,
+      nextText: "Copied report",
+    }).apply(doc);
+    const out = await saved(doc);
+    const pages = await PDFDocument.load(out);
+    expect(
+      pages.getPage(1).node.get(PDFName.of("StructParents")),
+    ).toBeUndefined();
+    const after = await readFileStructure(out);
+    expect(
+      after?.blocks.filter((b) => b.pageIndex === 0).map((b) => b.type),
+    ).toEqual(
+      before?.blocks.filter((b) => b.pageIndex === 0).map((b) => b.type),
+    );
+  } finally {
+    doc.dispose();
+  }
+});
+
+test("undoing page setup restores a page whose boxes it inherited", async () => {
+  const source = await PDFDocument.create();
+  source.addPage([612, 1000]);
+  source.getPage(0).node.delete(PDFName.of("MediaBox"));
+  source.catalog
+    .lookup(PDFName.of("Pages"), PDFDict)
+    .set(PDFName.of("MediaBox"), source.context.obj([0, 0, 612, 1000]));
+  const doc = await EditorDocument.open(await source.save());
+  try {
+    const { command } = pageChangeCommand(doc, {
+      kind: "pageSetup",
+      pages: "all",
+      size: "A5",
+      orientation: "portrait",
+    });
+    command.apply(doc);
+    expect(Math.round(doc.page(0).height)).not.toBe(1000);
+    command.revert(doc);
+    expect([
+      Math.round(doc.page(0).width),
+      Math.round(doc.page(0).height),
+    ]).toEqual([612, 1000]);
+    const out = await open(await saved(doc));
+    expect(out.getPage(0).getSize()).toEqual({ width: 612, height: 1000 });
+  } finally {
+    doc.dispose();
+  }
 });

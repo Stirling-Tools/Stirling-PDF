@@ -22,19 +22,19 @@ const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
   ],
   noGlyphs: [
     "pdfTextEditor.fontPicker.noGlyphs",
-    "This font has no characters for the selected text. The text was left unchanged.",
+    "That font can't show this text. Try another font.",
   ],
   missingGlyphs: [
     "pdfTextEditor.fontPicker.missingGlyphs",
-    "This font is missing some of the selected characters, and they could not be kept in their current font. The text was left unchanged.",
+    "Some of these characters aren't in that font, so the text keeps its current font.",
   ],
   documentFontCannotDraw: [
     "pdfTextEditor.fontPicker.documentFontCannotDraw",
-    "The editor can't draw this text in the document's own font, so it was left in its current font.",
+    "This text can't be redrawn in the document's own font, so it keeps its current font.",
   ],
   someLeftUnchanged: [
     "pdfTextEditor.fontPicker.someLeftUnchanged",
-    "This font does not have the characters for some of the selected text. That text was left unchanged.",
+    "Some of the text isn't in that font, so that part keeps its current font.",
   ],
   closestMatch: [
     "pdfTextEditor.fontPicker.closestMatch",
@@ -42,11 +42,11 @@ const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
   ],
   styleUnavailable: [
     "pdfTextEditor.fontPicker.styleUnavailable",
-    "The selected text has no version of its font in that style, so it was left unchanged.",
+    "This font doesn't come in that style. Try another font family.",
   ],
   styleSkipped: [
     "pdfTextEditor.fontPicker.styleSkipped",
-    "Some of the selected text has no version of its font in that style, so it was left unchanged.",
+    "Some of the text's fonts don't come in that style, so that part stays as it was.",
   ],
   partOfRunUnsupported: [
     "pdfTextEditor.fontPicker.partOfRunUnsupported",

@@ -4267,9 +4267,9 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");
     expect(mid.merged).toBe(0);
-    // The family pick and the Bold toggle are one undo step each.
-    for (let step = 0; step < 2; step++)
-      await page.getByTestId("pdf-editor-undo").click();
+    // The family pick is one undo step; the tagline is already semibold, so
+    // the Bold toggle changes nothing and adds none.
+    await page.getByTestId("pdf-editor-undo").click();
     await expect
       .poll(async () => (await readRun(page, id))?.fontId)
       .toBe(before.fontId);
@@ -4355,14 +4355,14 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");
     expect(mid.merged).toBe(0);
-    expect(mid.fontId).toBe("base14:Times-Roman");
+    expect(mid.fontId).toBe("base14:Times-Bold");
     // Swap back to Helvetica.
     await selectFontFamily(page, "Helvetica");
     await page.waitForTimeout(300);
     const after = await readRun(page, id);
     if (!after) throw new Error("after read failed");
     expect(after.merged).toBe(0);
-    expect(after.fontId).toBe("base14:Helvetica");
+    expect(after.fontId).toBe("base14:Helvetica-Bold");
   });
 });
 

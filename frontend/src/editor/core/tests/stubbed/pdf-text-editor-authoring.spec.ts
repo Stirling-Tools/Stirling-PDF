@@ -7,6 +7,10 @@ const PARAGRAPH_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/paragraph-sample.pdf",
 );
+const EMPTY_SIGNATURE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/signature-empty-field.pdf",
+);
 const FORM_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/form-fields-sample.pdf",
@@ -95,6 +99,37 @@ test.describe("PDF text editor: writing a new document", () => {
     await expect(box).toBeFocused();
     await page.keyboard.type("Dear Sam");
     await expect(box).toHaveText("Dear Sam");
+  });
+
+  test("dragging out a text box sets its width, and typing wraps inside it", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const fresh = page.locator('[data-testid^="pdf-editor-run-p0-new-"]');
+    await page.getByTestId("pdf-editor-add-text").click();
+    const area = (await page.getByTestId("pdf-editor-page-0").boundingBox())!;
+    const scale = await page.evaluate(() => {
+      const store = (window as unknown as AuthoringWindow).__editor_store;
+      return store.doc.page(0).width;
+    });
+    const cssPerPt = area.width / scale;
+    await page.mouse.move(area.x + 100, area.y + 300);
+    await page.mouse.down();
+    await page.mouse.move(area.x + 220, area.y + 305, { steps: 4 });
+    await expect(page.getByTestId("pdf-editor-text-box-draft")).toBeVisible();
+    await page.mouse.move(area.x + 300, area.y + 310, { steps: 4 });
+    await page.mouse.up();
+    await expect(fresh).toHaveCount(1, { timeout: 10_000 });
+    await expect(fresh).toBeFocused();
+
+    await page.keyboard.type(
+      "A box drawn to a set width keeps every line of this sentence inside it",
+    );
+    await blurPage(page);
+    const run = await runOnPage(page, "^A box drawn");
+    expect(run.baselines.length).toBeGreaterThan(1);
+    expect(run.left).toBeCloseTo(100 / cssPerPt, 0);
+    expect(run.right - run.left).toBeLessThanOrEqual(200 / cssPerPt + 1);
   });
 
   test("clicking a placeholder selects all of it, and typed text is edited in place", async ({
@@ -523,118 +558,10 @@ test.describe("PDF text editor: new text on any page", () => {
   });
 });
 
-interface ShapeState {
-  id: string;
-  x: number;
-  top: number;
-  width: number;
-  height: number;
-  fill: { r: number; g: number; b: number } | null;
-}
-
-function drawnShapes(page: Page): Promise<ShapeState[]> {
-  return page.evaluate(() => {
-    const store = (
-      window as unknown as {
-        __editor_store: {
-          doc: {
-            page(index: number): {
-              shapes: Array<{
-                id: string;
-                bounds: { x: number; y: number; width: number; height: number };
-                drawn: {
-                  fill: { r: number; g: number; b: number } | null;
-                } | null;
-              }>;
-            };
-          };
-        };
-      }
-    ).__editor_store;
-    return store.doc
-      .page(0)
-      .shapes.filter((s) => s.drawn)
-      .map((s) => ({
-        id: s.id,
-        x: s.bounds.x,
-        top: s.bounds.y + s.bounds.height,
-        width: s.bounds.width,
-        height: s.bounds.height,
-        fill: s.drawn?.fill ?? null,
-      }));
-  });
-}
-
-test.describe("PDF text editor: shapes", () => {
-  test("a filled box is drawn where the page is clicked, then resized, recoloured and undone", async ({
-    page,
-  }) => {
-    await openEditor(page, PARAGRAPH_PDF);
-    await page.getByTestId("pdf-editor-insert").click();
-    await page.getByTestId("pdf-editor-add-shape-box").click();
-    await page
-      .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 150, y: 150 } });
-
-    await expect.poll(async () => (await drawnShapes(page)).length).toBe(1);
-    const [box] = await drawnShapes(page);
-    expect([box.width, box.height]).toEqual([160, 100]);
-    const shown = (await page.getByTestId("pdf-editor-page-0").boundingBox())!;
-    const scale = shown.width / (await docShape(page))!.width;
-    expect(box.x).toBeCloseTo(150 / scale, 0);
-    expect(box.top).toBeCloseTo(
-      (await docShape(page))!.height - 150 / scale,
-      0,
-    );
-
-    const grip = page.getByTestId(`pdf-editor-shape-resize-${box.id}`);
-    await expect(grip).toBeVisible();
-    const at = await grip.boundingBox();
-    if (!at) throw new Error("no resize grip");
-    await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(at.x + 60, at.y + 30, { steps: 5 });
-    await page.mouse.up();
-    await expect
-      .poll(async () => (await drawnShapes(page))[0].width)
-      .toBeGreaterThan(160);
-
-    const colour = page.getByTestId("pdf-editor-shape-colour");
-    await colour.fill("#c02020"); // theme-allow-color test input for the picker, not a UI colour
-    await colour.press("Enter");
-    await expect
-      .poll(async () => (await drawnShapes(page))[0].fill?.r)
-      .toBe(192);
-
-    const resized = (await drawnShapes(page))[0].width;
-    await page.getByTestId("pdf-editor-undo").click();
-    await expect
-      .poll(async () => (await drawnShapes(page))[0].fill)
-      .toEqual(box.fill);
-    expect((await drawnShapes(page))[0].width).toBe(resized);
-    await page.getByTestId("pdf-editor-undo").click();
-    await expect.poll(async () => (await drawnShapes(page))[0].width).toBe(160);
-  });
-
-  test("a line is a thin rule a page click away", async ({ page }) => {
-    await openEditor(page, PARAGRAPH_PDF);
-    await page.getByTestId("pdf-editor-insert").click();
-    await page.getByTestId("pdf-editor-add-shape-line").click();
-    await page
-      .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 150, y: 330 } });
-    await expect
-      .poll(async () =>
-        (await drawnShapes(page)).map((s) => [s.width, s.height]),
-      )
-      .toEqual([[200, 1]]);
-  });
-});
-
 interface DocWindow {
   __editor_store: {
     doc: {
-      pageCount: number;
+      displayOrder(): number[];
       page(index: number): {
         width: number;
         height: number;
@@ -652,9 +579,9 @@ function docShape(page: Page) {
   return page.evaluate(() => {
     const doc = (window as unknown as DocWindow).__editor_store.doc;
     if (!doc) return null;
-    const first = doc.page(0);
+    const first = doc.page(doc.displayOrder()[0]);
     return {
-      pages: doc.pageCount,
+      pages: doc.displayOrder().length,
       width: Math.round(first.width),
       height: Math.round(first.height),
       widgets: first.annotations.filter((a) => a.kind === "widget").length,
@@ -742,8 +669,9 @@ test.describe("PDF text editor: pages and form fields", () => {
     const edits = await page.evaluate(
       () => (window as unknown as DocWindow).__editor_store.history.mark,
     );
-    for (let i = 0; i < edits; i++) await undo.click();
+    for (let i = 1; i < edits; i++) await undo.click();
     expect(await pageTexts(page, 0)).not.toContain("After the page");
+    expect((await docShape(page))?.pages).toBe(2);
     await expect(undo).toBeEnabled();
     await undo.click();
     await expect
@@ -803,11 +731,12 @@ test.describe("PDF text editor: pages and form fields", () => {
             0,
           ),
           aligned: lines.every((r) => r.align === "center"),
+          paragraphs: lines.length,
         };
       });
     await expect
       .poll(formats)
-      .toEqual({ rules: para.baselines.length, aligned: true });
+      .toEqual({ rules: para.baselines.length, aligned: true, paragraphs: 1 });
 
     await pageAction(page, "pdf-editor-page-add");
     await expect
@@ -815,7 +744,7 @@ test.describe("PDF text editor: pages and form fields", () => {
       .toBe(2);
     await expect
       .poll(formats, { timeout: 15_000 })
-      .toEqual({ rules: para.baselines.length, aligned: true });
+      .toEqual({ rules: para.baselines.length, aligned: true, paragraphs: 1 });
   });
 
   test("Undo puts the page back to the size it was before page setup", async ({
@@ -858,44 +787,12 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("an unsigned signature field does not stop later page changes", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
-    await page.getByTestId("pdf-editor-insert").click();
-    await page.getByTestId("pdf-editor-add-field-signature").click();
-    await page
-      .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 150, y: 330 } });
-    await expect
-      .poll(async () => (await docShape(page))?.widgets, { timeout: 30_000 })
-      .toBe(1);
-
+    await openEditor(page, EMPTY_SIGNATURE_PDF);
+    const pages = (await docShape(page))!.pages;
     await pageAction(page, "pdf-editor-page-add");
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
-      .toBe(2);
-  });
-
-  test("a text field is placed where the page is clicked", async ({ page }) => {
-    await openEditor(page, PARAGRAPH_PDF);
-    await page.getByTestId("pdf-editor-insert").click();
-    await page.getByTestId("pdf-editor-add-field-text").click();
-    await page
-      .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 150, y: 150 } });
-    await expect
-      .poll(async () => (await docShape(page))?.widgets, { timeout: 30_000 })
-      .toBe(1);
-    const shown = (await page.getByTestId("pdf-editor-page-0").boundingBox())!;
-    const { width, height } = (await docShape(page))!;
-    const scale = shown.width / width;
-    const field = await page.evaluate(
-      () =>
-        (window as unknown as DocWindow).__editor_store
-          .doc!.page(0)
-          .annotations.find((a) => a.kind === "widget")!.rect,
-    );
-    expect([field.width, field.height]).toEqual([180, 22]);
-    expect(field.x).toBeCloseTo(150 / scale, 0);
-    expect(field.y + field.height).toBeCloseTo(height - 150 / scale, 0);
+      .toBe(pages + 1);
   });
 });
 
@@ -934,40 +831,20 @@ test.describe("PDF text editor: text that reaches the bottom of the page", () =>
       .toBe(true);
   });
 
-  test("keys typed while the page is being added still land in the text", async ({
+  test("typing carries straight on once a line has flowed onto a new page", async ({
     page,
   }) => {
     await openEditor(page, PARAGRAPH_PDF);
+    await page.evaluate(() => {
+      (
+        window as unknown as { __editor_store: { doc: { __opened?: boolean } } }
+      ).__editor_store.doc.__opened = true;
+    });
     await addTextAt(page, 60, 380);
     await page.keyboard.type("Line one");
     await page.keyboard.press("Enter");
     await page.keyboard.type("Line two");
-    await page.evaluate(
-      () =>
-        new Promise<void>((resolve) => {
-          const store = (
-            window as unknown as {
-              __editor_store: {
-                getState(): { reopening: boolean };
-                subscribe(listener: () => void): () => void;
-              };
-            }
-          ).__editor_store;
-          const typeDuringReopen = () => {
-            for (const key of " more")
-              document.body.dispatchEvent(
-                new KeyboardEvent("keydown", { key, bubbles: true }),
-              );
-            resolve();
-          };
-          if (store.getState().reopening) return typeDuringReopen();
-          const stop = store.subscribe(() => {
-            if (!store.getState().reopening) return;
-            stop();
-            typeDuringReopen();
-          });
-        }),
-    );
+    await page.keyboard.type(" more");
 
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
@@ -977,9 +854,21 @@ test.describe("PDF text editor: text that reaches the bottom of the page", () =>
         timeout: 15_000,
       })
       .toBe("Line two more");
+    expect(
+      await page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              __editor_store: { doc: { __opened?: boolean } };
+            }
+          ).__editor_store.doc.__opened,
+      ),
+    ).toBe(true);
   });
 
-  test("adds a page for the text once the typing pauses", async ({ page }) => {
+  test("adds a page for the text as soon as it runs off the page", async ({
+    page,
+  }) => {
     await openEditor(page, PARAGRAPH_PDF);
     await addTextAt(page, 60, 380);
     await page.keyboard.type("Line one");
@@ -1028,7 +917,7 @@ function pageSizes(page: Page) {
   return page.evaluate(() => {
     const doc = (window as unknown as DocWindow).__editor_store.doc;
     if (!doc) return [];
-    return Array.from({ length: doc.pageCount }, (_, i) => {
+    return doc.displayOrder().map((i) => {
       const p = doc.page(i);
       return [Math.round(p.width), Math.round(p.height)];
     });
@@ -1064,7 +953,7 @@ test.describe("PDF text editor: page actions on a longer document", () => {
 });
 
 test.describe("PDF text editor: saving a written document", () => {
-  test("a page, a field and new text all survive Save without an error", async ({
+  test("a page and new text both survive Save without an error", async ({
     page,
   }) => {
     await openEditor(page, PARAGRAPH_PDF);
@@ -1072,15 +961,6 @@ test.describe("PDF text editor: saving a written document", () => {
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
       .toBe(2);
-    await page.getByTestId("pdf-editor-insert").click();
-    await page.getByTestId("pdf-editor-add-field-checkbox").click();
-    await page
-      .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 150, y: 330 } });
-    await expect
-      .poll(async () => (await docShape(page))?.widgets, { timeout: 30_000 })
-      .toBe(1);
-
     await addTextAt(page, 120, 380);
     await page.keyboard.type("Signed off");
     await blurPage(page);
@@ -1098,12 +978,12 @@ test.describe("PDF text editor: saving a written document", () => {
       const doc = store.doc!;
       return {
         error: store.getState().error,
-        pages: doc.pageCount,
+        pages: doc.displayOrder().length,
         widgets: doc.page(0).annotations.filter((a) => a.kind === "widget")
           .length,
       };
     });
-    expect(after).toEqual({ error: null, pages: 2, widgets: 1 });
+    expect(after).toMatchObject({ error: null, pages: 2 });
 
     const download = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
@@ -1117,7 +997,7 @@ test.describe("PDF text editor: saving a written document", () => {
     });
     await expect
       .poll(async () => docShape(page), { timeout: 30_000 })
-      .toMatchObject({ pages: 2, widgets: 1 });
+      .toMatchObject({ pages: 2 });
     await expect
       .poll(async () => pageTexts(page, 0), { timeout: 30_000 })
       .toContain("Signed off");

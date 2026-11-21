@@ -122,7 +122,7 @@ test.describe("PDF text editor - font capability gating", () => {
     expect(
       tips,
       "a disabled control with no explanation just looks broken",
-    ).toContain("no italic version");
+    ).toContain("No italic in this font");
   });
 
   test("italic never swaps an embedded font for Helvetica", async ({

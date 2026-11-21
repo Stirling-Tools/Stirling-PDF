@@ -22,7 +22,6 @@ import { getFormFillFileId } from "@editor/types/fileContext";
 interface FormSaveBarProps {
   /** The current file being viewed */
   file: File | Blob | null;
-  /** A tool on screen saves this file its own way (form filling, the text editor), so the bar stays hidden rather than offer a second save. */
   hiddenByTool: boolean;
   /** Callback when form changes are applied (should reload PDF with filled values) */
   onApply?: (filledBlob: Blob) => Promise<void>;

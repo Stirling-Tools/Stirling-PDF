@@ -1,4 +1,10 @@
 import { useCallback, useRef } from "react";
+import { ignoresTextStroke } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
+import { BOLD_WEIGHT } from "@editor/tools/pdfTextEditor/util/faceNames";
+import {
+  fauxBoldWidth,
+  isFauxBold,
+} from "@editor/tools/pdfTextEditor/util/fauxBold";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
 import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
@@ -78,6 +84,21 @@ import {
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
 import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
+
+function styleWithFauxBold(fontId: string, run: TextRun): FaceStyle {
+  const style = faceStyleOf(fontId);
+  return isFauxBold(run) ? { ...style, weight: BOLD_WEIGHT } : style;
+}
+
+function canFauxBold(request: StyleRequest, run: TextRun): boolean {
+  return (
+    "bold" in request &&
+    request.bold &&
+    (run.renderMode ?? 0) === 0 &&
+    !run.textReadOnly &&
+    !ignoresTextStroke(run.fontId)
+  );
+}
 
 /** The fields the selection actions read off a run they are about to change. */
 interface SelectedRun {
@@ -681,16 +702,22 @@ export function useSelectionActions(store: EditorStore) {
         runs.push({ run, fit: { page, run: run as TextRun } });
       }, true);
       if (!doc || runs.length === 0) return null;
-      const wanted = request(runs.map(({ run }) => faceStyleOf(run.fontId)));
+      const wanted = request(
+        runs.map(({ run, fit }) => styleWithFauxBold(run.fontId, fit.run)),
+      );
       let leftAsIs = 0;
       const targets: Array<FamilyChange & { fit: ScanFitTarget }> = [];
+      const outlined: Array<{ fit: ScanFitTarget; bold: boolean }> = [];
       for (const { run, fit } of runs) {
+        if ("bold" in wanted && isFauxBold(fit.run)) {
+          if (!wanted.bold) outlined.push({ fit, bold: false });
+          continue;
+        }
         const face = restyledFace(run.fontId, wanted, sources);
         if (face === undefined) continue;
-        // No real face in that style. Leave it alone: swapping the document's
-        // own font for Helvetica-Oblique is not making it italic.
         if (face === null) {
-          leftAsIs++;
+          if (canFauxBold(wanted, fit.run)) outlined.push({ fit, bold: true });
+          else leftAsIs++;
           continue;
         }
         targets.push({
@@ -716,6 +743,25 @@ export function useSelectionActions(store: EditorStore) {
         }
         ready.push(target);
       }
+      if (outlined.length > 0)
+        await dispatchAfterScanFit(
+          outlined.map(({ fit }) => fit),
+          () => {
+            const live = liveRuns(store);
+            return outlined.flatMap(({ fit, bold }) => {
+              const run = live.get(fit.run.id);
+              if (!run || run.locked) return [];
+              return [
+                new SetTextOutlineCommand({
+                  pageIndex: run.pageIndex,
+                  runId: run.id,
+                  stroke: bold ? { ...run.fill, a: 255 } : null,
+                  width: bold ? fauxBoldWidth(run.fontSize) : 0,
+                }),
+              ];
+            });
+          },
+        );
       const outcome = await dispatchFamilyChanges(
         stillApplies,
         ready,
@@ -735,6 +781,7 @@ export function useSelectionActions(store: EditorStore) {
       claimFontChange,
       dispatchFamilyChanges,
       restyleSelectedPart,
+      dispatchAfterScanFit,
     ],
   );
 
@@ -927,8 +974,6 @@ export function useSelectionActions(store: EditorStore) {
 
   const toggleList = useCallback(
     (kind: ListKind) => {
-      // A box with focus keeps painting what was typed in it, so the markers
-      // would not show and the next keystroke would write the old text back.
       if (isFocusInContentEditable())
         (document.activeElement as HTMLElement).blur();
       void dispatchPerRun((run) => {

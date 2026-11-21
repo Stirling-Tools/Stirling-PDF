@@ -72,16 +72,23 @@ const FORMAT_CONTROLS = [
   "pdf-editor-change-case",
 ];
 
-/** The formatting controls a user cannot see: past the toolbar's edge, or missing from the formatting menu. */
+/** The formatting controls a user cannot see: past the toolbar's edge, or missing from the inspector that takes them when it folds. */
 async function unreachableControls(page: Page): Promise<string[]> {
-  const menu = page.getByTestId("pdf-editor-format-menu");
-  if ((await menu.count()) > 0) {
-    const family = page.getByTestId("pdf-editor-font-family");
-    if (!(await family.isVisible())) await menu.click();
-    await family.waitFor({ state: "visible" });
+  const section = page.getByTestId("pdf-editor-format-section");
+  if ((await section.count()) > 0) {
     const missing: string[] = [];
-    for (const id of FORMAT_CONTROLS)
-      if (!(await page.getByTestId(id).isVisible())) missing.push(id);
+    for (const id of FORMAT_CONTROLS) {
+      const control = section.getByTestId(id);
+      if ((await control.count()) === 0) {
+        missing.push(id);
+        continue;
+      }
+      const shown = await control
+        .scrollIntoViewIfNeeded({ timeout: 1_000 })
+        .then(() => control.isVisible())
+        .catch(() => false);
+      if (!shown) missing.push(id);
+    }
     return missing;
   }
   return page.evaluate((ids) => {
@@ -221,18 +228,23 @@ test.describe("PDF text editor - Bold toggle", () => {
     );
   });
 
-  test("Bold is off with a reason for a font that has no bold face", async ({
+  test("Bold draws a bold for a font that has no bold face, and takes it off again", async ({
     page,
   }) => {
     await openEditor(page, COLOURED_PDF);
-    await runBox(page, await runId(page, "הטלפון")).click();
+    const line = await runId(page, "הטלפון");
+    const font = await fontIdOf(page, line);
+    await runBox(page, line).click();
 
     const bold = page.getByTestId("pdf-editor-bold");
-    await expect(bold).toBeDisabled();
-    await bold.hover();
-    await expect(page.getByRole("tooltip")).toContainText(
-      "No bold version of this font",
-    );
+    await expect(bold).toBeEnabled();
+    await bold.click();
+    await expect(bold).toHaveAttribute("aria-pressed", "true");
+    expect(await fontIdOf(page, line)).toBe(font);
+
+    await bold.click();
+    await expect(bold).toHaveAttribute("aria-pressed", "false");
+    expect(await fontIdOf(page, line)).toBe(font);
   });
 
   test("Bold onto a subset that lacks some letters draws them in the closest match and says so", async ({
@@ -323,7 +335,7 @@ test.describe("PDF text editor - formatting popovers stay open", () => {
     await expect(page.getByTestId("pdf-editor-colour")).toBeVisible();
     // Narrower than the open colour field needs, wider than the closed one.
     await fitInlineWithSlack(page, 12);
-    await expect(page.getByTestId("pdf-editor-format-menu")).toHaveCount(0);
+    await expect(page.getByTestId("pdf-editor-format-section")).toHaveCount(0);
     await expect(page.getByTestId("pdf-editor-change-case")).toBeInViewport({
       ratio: 1,
     });
@@ -348,16 +360,10 @@ test.describe("PDF text editor - formatting popovers stay open", () => {
       const body = await runId(page, "Revenue grew");
       await pickServerFamily(page, body);
       await page.setViewportSize({ width, height: 1000 });
-      const menu = page.getByTestId("pdf-editor-format-menu");
-      await expect(
-        page.getByTestId("pdf-editor-font-weight").or(menu),
-      ).toBeVisible();
       const bold = page.getByTestId("pdf-editor-bold");
-      // Folded, the controls show once the formatting menu has opened.
       const openFormatting = () =>
         expect(async () => {
-          if ((await menu.count()) > 0 && !(await bold.isVisible()))
-            await menu.click();
+          await bold.scrollIntoViewIfNeeded({ timeout: 2_000 });
           await expect(bold).toBeVisible({ timeout: 2_000 });
         }).toPass();
 

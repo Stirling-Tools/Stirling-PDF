@@ -14,18 +14,10 @@ interface ShapeHandleProps {
   onSelect: (extend: boolean) => void;
   /** Fires when a drag completes. dx/dy are raw PDF points. */
   onMove: (dx: number, dy: number) => void;
-  /** Fires when the corner grip of a shape drawn this session is released; bounds in raw PDF points. */
-  onResize?: (bounds: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }) => void;
 }
 
 /** A hairline rule is a fraction of a pixel tall; this keeps it grabbable. */
 const MIN_HIT_PX = 8;
-const RESIZE_GRIP_PX = 10;
 /** Below this the press was a click, not a drag. */
 const DRAG_THRESHOLD_PX = 3;
 
@@ -38,14 +30,13 @@ export function ShapeHandle({
   selected,
   onSelect,
   onMove,
-  onResize,
 }: ShapeHandleProps) {
   const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null,
   );
-  const [grow, setGrow] = useState<{ x: number; y: number } | null>(null);
+  const originRef = useRef<{ x: number; y: number } | null>(null);
   // Detaches an in-flight drag's window listeners. A page re-read can unmount
   // the handle mid-drag, and a listener left behind would move a stale shape.
   const endDragRef = useRef<(() => void) | null>(null);
@@ -88,47 +79,39 @@ export function ShapeHandle({
       onSelect(false);
       return;
     }
-    followPointer(e, setDragOffset, (dx, dy) => {
-      if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) {
-        onSelect(false);
-        return;
-      }
-      const v = transform.invertVector(dx / scale, -dy / scale);
-      onMove(v.x, v.y);
-    });
-  }
-
-  // Tracks one pointer, showing its offset from the press as it moves, and
-  // hands the final offset in CSS pixels to `release`.
-  function followPointer(
-    e: React.PointerEvent<HTMLDivElement>,
-    show: (offset: { x: number; y: number } | null) => void,
-    release: (dx: number, dy: number) => void,
-  ) {
+    originRef.current = { x: e.clientX, y: e.clientY };
+    setDragOffset({ x: 0, y: 0 });
     const pointerId = e.pointerId;
-    const offsetOf = (ev: { clientX: number; clientY: number }) => ({
-      x: ev.clientX - e.clientX,
-      y: ev.clientY - e.clientY,
-    });
-    show({ x: 0, y: 0 });
     const onPointerMove = (ev: PointerEvent) => {
-      if (ev.pointerId === pointerId) show(offsetOf(ev));
+      if (ev.pointerId !== pointerId) return;
+      const origin = originRef.current;
+      if (!origin) return;
+      setDragOffset({ x: ev.clientX - origin.x, y: ev.clientY - origin.y });
     };
     const endDrag = () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerCancel);
       endDragRef.current = null;
-      show(null);
+      originRef.current = null;
+      setDragOffset(null);
     };
     const onPointerCancel = (ev: PointerEvent) => {
       if (ev.pointerId === pointerId) endDrag();
     };
     const onPointerUp = (ev: PointerEvent) => {
       if (ev.pointerId !== pointerId) return;
+      const origin = originRef.current;
       endDrag();
-      const { x, y } = offsetOf(ev);
-      release(x, y);
+      if (!origin) return;
+      const cssDx = ev.clientX - origin.x;
+      const cssDy = ev.clientY - origin.y;
+      if (Math.hypot(cssDx, cssDy) < DRAG_THRESHOLD_PX) {
+        onSelect(false);
+        return;
+      }
+      const v = transform.invertVector(cssDx / scale, -cssDy / scale);
+      onMove(v.x, v.y);
     };
     endDragRef.current = endDrag;
     window.addEventListener("pointermove", onPointerMove);
@@ -137,24 +120,6 @@ export function ShapeHandle({
   }
 
   const dragging = dragOffset !== null;
-  const resizable =
-    selected && !!shape.drawn && !!onResize && transform.rotate === 0;
-
-  function onGripDown(e: React.PointerEvent<HTMLDivElement>) {
-    if (e.button !== 0 || !onResize || endDragRef.current) return;
-    e.stopPropagation();
-    e.preventDefault();
-    followPointer(e, setGrow, (dx, dy) => {
-      if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
-      onResize({
-        x: b.x,
-        y: b.y - dy / scale,
-        width: b.width + dx / scale,
-        height: b.height + dy / scale,
-      });
-    });
-  }
-
   return (
     <div
       data-testid={`pdf-editor-shape-${shape.id}`}
@@ -173,8 +138,8 @@ export function ShapeHandle({
         position: "absolute",
         left,
         top,
-        width: width + (grow?.x ?? 0),
-        height: height + (grow?.y ?? 0),
+        width,
+        height,
         transform: dragOffset
           ? `translate(${dragOffset.x}px, ${dragOffset.y}px)`
           : undefined,
@@ -189,25 +154,6 @@ export function ShapeHandle({
         cursor: !shape.movable ? "pointer" : dragging ? "grabbing" : "move",
         pointerEvents: "auto",
       }}
-    >
-      {resizable && (
-        <div
-          role="presentation"
-          data-testid={`pdf-editor-shape-resize-${shape.id}`}
-          onPointerDown={onGripDown}
-          style={{
-            position: "absolute",
-            right: -RESIZE_GRIP_PX / 2,
-            bottom: -RESIZE_GRIP_PX / 2,
-            width: RESIZE_GRIP_PX,
-            height: RESIZE_GRIP_PX,
-            background: "var(--c-surface)",
-            border: "1px solid var(--c-primary)",
-            borderRadius: 2,
-            cursor: "nwse-resize",
-          }}
-        />
-      )}
-    </div>
+    />
   );
 }

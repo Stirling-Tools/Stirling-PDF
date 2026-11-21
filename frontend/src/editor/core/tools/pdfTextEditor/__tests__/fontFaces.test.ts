@@ -14,10 +14,12 @@ import {
   type FaceSources,
 } from "@editor/tools/pdfTextEditor/util/fontFaces";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
+import { FAUX_BOLD_EM } from "@editor/tools/pdfTextEditor/util/fauxBold";
 import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type {
   PageSnapshot,
   SelectionState,
+  TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 
 // Names as pdffonts lists them in the test fixtures and the regression corpus.
@@ -244,7 +246,7 @@ describe("restyledFace", () => {
   });
 });
 
-function run(id: string, fontId: string) {
+function run(id: string, fontId: string): TextRunSnapshot {
   return {
     id,
     pageIndex: 0,
@@ -258,7 +260,7 @@ function run(id: string, fontId: string) {
   };
 }
 
-function toolbarFor(runs: ReturnType<typeof run>[], selected: string[]) {
+function toolbarFor(runs: TextRunSnapshot[], selected: string[]) {
   const pages = [{ pageIndex: 0, runs, images: [] } as unknown as PageSnapshot];
   return deriveToolbarState(pages, {
     runIds: selected,
@@ -276,8 +278,39 @@ describe("toolbar bold state", () => {
     expect(state.canBold).toBe(true);
   });
 
-  it("disables bold for a family with no bold face", () => {
+  it("offers a drawn bold for a family with no bold face", () => {
     const state = toolbarFor([run("a", "pdf:1:Garamond")], ["a"]);
+    expect(state.canBold).toBe(true);
+  });
+
+  it("shows a drawn bold as bold", () => {
+    const state = toolbarFor(
+      [
+        {
+          ...run("a", "pdf:1:Garamond"),
+          renderMode: 2,
+          stroke: { r: 0, g: 0, b: 0, a: 255 },
+          strokeWidth: 12 * FAUX_BOLD_EM,
+        },
+      ],
+      ["a"],
+    );
+    expect(state.bold).toBe(true);
+    expect(state.canBold).toBe(true);
+  });
+
+  it("offers no drawn bold over text that is already outlined", () => {
+    const state = toolbarFor(
+      [
+        {
+          ...run("a", "pdf:1:Garamond"),
+          renderMode: 2,
+          stroke: { r: 255, g: 0, b: 0, a: 255 },
+          strokeWidth: 1,
+        },
+      ],
+      ["a"],
+    );
     expect(state.canBold).toBe(false);
   });
 
@@ -297,7 +330,7 @@ describe("toolbar bold state", () => {
     expect(state.canBold).toBe(true);
   });
 
-  it("says Bold is off for want of a bold italic face, not of a bold one", () => {
+  it("draws a bold over an italic whose family has no bold italic face", () => {
     const state = toolbarFor(
       [
         run("a", "pdf:1:Georgia-Italic"),
@@ -306,12 +339,8 @@ describe("toolbar bold state", () => {
       ],
       ["a"],
     );
-    expect(state.canBold).toBe(false);
-    expect(state.boldNeedsBoldItalic).toBe(true);
-    expect(
-      toolbarFor([run("a", "pdf:1:Garamond-Italic")], ["a"])
-        .boldNeedsBoldItalic,
-    ).toBe(false);
+    expect(state.canBold).toBe(true);
+    expect(state.boldNeedsBoldItalic).toBe(false);
   });
 
   it("says Italic is off for want of a bold italic face, not of an italic one", () => {

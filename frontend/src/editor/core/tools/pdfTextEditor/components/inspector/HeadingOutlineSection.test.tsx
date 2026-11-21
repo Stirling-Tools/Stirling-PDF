@@ -27,6 +27,7 @@ const entry = (
   type: `H${level}` as OutlineEntry["type"],
   level,
   pageIndex: 1,
+  pageNumber: 2,
   run: text === null ? null : ({ id: text, text } as TextRunSnapshot),
   range: null,
   issue,

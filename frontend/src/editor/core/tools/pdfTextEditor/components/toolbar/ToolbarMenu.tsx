@@ -9,20 +9,15 @@ interface ToolbarMenuProps {
   icon: IconName;
   testId: string;
   children: ReactNode;
-  /** Shown on hover in place of the label, e.g. why the button is disabled. */
   tooltip?: string;
   size?: "sm" | "xl";
   disabled?: boolean;
-  /** Filled while what the menu sets is on. */
   pressed?: boolean;
-  /** Inside a popover the dropdown must not portal out, or clicking it closes the popover. */
   inPopover?: boolean;
   position?: "bottom-start" | "top";
-  /** Opens the menu in place of the icon button. */
   target?: ReactElement;
 }
 
-/** A toolbar icon button that opens a menu of `children`. */
 export function ToolbarMenu({
   label,
   icon,

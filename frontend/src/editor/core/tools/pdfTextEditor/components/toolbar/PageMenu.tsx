@@ -11,7 +11,7 @@ import {
   useEditorState,
   useSharedEditorStore,
 } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
-import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
+import { visiblePageIndex } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   DocumentChange,
   PageOrientation,
@@ -22,7 +22,6 @@ import "@editor/tools/pdfTextEditor/components/toolbar/PageMenu.css";
 
 const PAGE_SIZES: PageSizeName[] = ["A4", "LETTER", "LEGAL", "A5", "A3"];
 
-// Within a point either way, a page is the named size: producers round them differently.
 const SIZE_TOLERANCE_PT = 2;
 
 function namedSize(width: number, height: number): PageSizeName | null {
@@ -60,7 +59,6 @@ const PAGE_ACTIONS: Array<{
   },
 ];
 
-/** Add, duplicate and delete the page in view, and open page setup, as items of a menu the caller owns. */
 export function PageMenuItems({ onPageSetup }: { onPageSetup: () => void }) {
   const { t } = useTranslation();
   const change = useEditorSession()?.changeDocument;
@@ -72,16 +70,14 @@ export function PageMenuItems({ onPageSetup }: { onPageSetup: () => void }) {
   };
   return (
     <>
-      <Menu.Label>
-        {t("pdfTextEditor.pages.label", "Page · saves your edits first")}
-      </Menu.Label>
+      <Menu.Label>{t("pdfTextEditor.pages.label", "Page")}</Menu.Label>
       {PAGE_ACTIONS.map((action) => (
         <Menu.Item
           key={action.id}
           leftSection={<Icon name={action.icon} size={18} />}
           disabled={!change || (action.id === "delete" && pageCount <= 1)}
           color={action.id === "delete" ? "red" : undefined}
-          onClick={() => void change?.(action.change(visiblePageNumber()))}
+          onClick={() => void change?.(action.change(visiblePageIndex()))}
           data-testid={`pdf-editor-page-${action.id}`}
         >
           {labels[action.id]}
@@ -99,7 +95,6 @@ export function PageMenuItems({ onPageSetup }: { onPageSetup: () => void }) {
   );
 }
 
-/** Page setup's open handler and its dialog, for a menu that holds PageMenuItems. */
 export function usePageSetup(): { open: () => void; modal: ReactElement } {
   const [open, setOpen] = useState(false);
   return {
@@ -108,7 +103,6 @@ export function usePageSetup(): { open: () => void; modal: ReactElement } {
   };
 }
 
-/** The Pages menu, opened from `target` (the toolbar button by default). */
 export function PagesMenu({
   disabled = false,
   target,
@@ -162,7 +156,6 @@ function Choice<T extends string>({
   );
 }
 
-/** Choose a page size and orientation for the page in view or the whole document. */
 function PageSetupModal({
   open,
   onClose,
@@ -179,7 +172,7 @@ function PageSetupModal({
   useEffect(() => {
     if (!open) return;
     setScope("page");
-    const current = session?.pageSize(visiblePageNumber());
+    const current = session?.pageSize(visiblePageIndex());
     if (!current) return;
     setOrientation(current.width > current.height ? "landscape" : "portrait");
     const named = namedSize(current.width, current.height);
@@ -198,8 +191,8 @@ function PageSetupModal({
     onClose();
     void session?.changeDocument({
       kind: "pageSetup",
-      pages: scope === "all" ? "all" : visiblePageNumber(),
-      inView: visiblePageNumber(),
+      pages: scope === "all" ? "all" : visiblePageIndex(),
+      inView: visiblePageIndex(),
       size,
       orientation,
     });

@@ -76,6 +76,7 @@ export interface TextRunSnapshot {
   documentFontId?: string;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
+  substitutedGlyphs?: boolean;
   /** Invisible text with nothing drawn behind it: hidden text, not an OCR layer over a scan. */
   hiddenText?: boolean;
   /** Outline colour, when the run's render mode strokes its glyphs. */
@@ -100,7 +101,6 @@ export interface TextRunSnapshot {
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
-  /** Text the editor wrote for the user to type over; a click selects all of it. */
   placeholder?: boolean;
   align?: "left" | "center" | "right";
   underline?: boolean;
@@ -223,19 +223,6 @@ export interface ShapeObjectSnapshot {
   bounds: PageRect;
   /** False inside a form XObject, whose children PDFium cannot re-save moved. */
   movable: boolean;
-  /** Set for a shape drawn in this session, which can be resized and recoloured. */
-  drawn?: DrawnShape;
-}
-
-export type ShapeKind = "line" | "rectangle" | "box";
-
-export interface DrawnShape {
-  kind: ShapeKind;
-  /** Outline colour; null draws no outline. */
-  stroke: RGBA | null;
-  /** Fill colour; null leaves the inside clear. */
-  fill: RGBA | null;
-  strokeWidth: number;
 }
 
 export interface PageSnapshot {

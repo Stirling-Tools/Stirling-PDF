@@ -60,6 +60,7 @@ export function PdfViewerToolbar({
   );
 
   const [zoomLevel, setZoomLevel] = useState(() => zoomState.level);
+  const [pageTotal, setPageTotal] = useState(() => scrollState.totalPages);
   const [spreadMode, setSpreadMode] = useState(spreadState.spreadMode);
   const isDualPageActive = spreadMode !== SpreadMode.None;
   const isCoverPageActive = spreadMode === SpreadMode.Even;
@@ -67,8 +68,9 @@ export function PdfViewerToolbar({
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
     const unregister = registerImmediateScrollUpdate(
-      (currentPage, _totalPages) => {
+      (currentPage, totalPages) => {
         setPageInput(currentPage);
+        setPageTotal(totalPages);
       },
     );
     return () => {
@@ -175,7 +177,7 @@ export function PdfViewerToolbar({
 
   const totalPagesDigits = Math.max(
     MIN_PAGE_DIGITS,
-    (scrollState.totalPages || 1).toString().length,
+    (pageTotal || 1).toString().length,
   );
   const inputWidth = Math.max(
     MIN_INPUT_WIDTH_PX,
@@ -232,12 +234,12 @@ export function PdfViewerToolbar({
         onChange={(value) => {
           const page = Number(value);
           setPageInput(page);
-          if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
+          if (!isNaN(page) && page >= 1 && page <= pageTotal) {
             handlePageNavigation(page);
           }
         }}
         min={1}
-        max={scrollState.totalPages}
+        max={pageTotal}
         hideControls
         size="xs"
         styles={{
@@ -260,7 +262,7 @@ export function PdfViewerToolbar({
           color: "var(--c-text-subtle)",
         }}
       >
-        / {scrollState.totalPages}
+        / {pageTotal}
       </span>
 
       {/* Next Page Button */}

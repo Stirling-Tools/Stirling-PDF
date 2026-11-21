@@ -1,4 +1,6 @@
 import { isBoldWeight } from "@editor/tools/pdfTextEditor/util/faceNames";
+import { ignoresTextStroke } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
+import { isFauxBold } from "@editor/tools/pdfTextEditor/util/fauxBold";
 import {
   canRestyle,
   faceStyleOf,
@@ -15,6 +17,7 @@ import type {
   PageSnapshot,
   RGBA,
   SelectionState,
+  TextRunSnapshot,
   ToolbarState,
 } from "@editor/tools/pdfTextEditor/types";
 
@@ -91,9 +94,18 @@ export function deriveToolbarState(
     ? [...new Set(rangeFontIds)]
     : [...new Set(selected.map((r) => r.fontId))];
   const styles = fontIds.map(faceStyleOf);
-  const allBold = styles.every((style) => isBoldWeight(style.weight));
+  const boldRun = (run: TextRunSnapshot) =>
+    isFauxBold(run) || isBoldWeight(faceStyleOf(run.fontId).weight);
+  const fauxBold = !inRange && selected.some(isFauxBold);
+  const allBold = fauxBold
+    ? selected.every(boldRun)
+    : styles.every((style) => isBoldWeight(style.weight));
   const allItalic = styles.every((style) => style.italic);
-  const sameBold = allBold || styles.every((s) => !isBoldWeight(s.weight));
+  const sameBold =
+    allBold ||
+    (fauxBold
+      ? !selected.some(boldRun)
+      : styles.every((s) => !isBoldWeight(s.weight)));
   const sameItalic = allItalic || styles.every((style) => !style.italic);
   const sameWeight = styles.every((s) => s.weight === styles[0].weight);
   const sources: FaceSources = {
@@ -106,7 +118,15 @@ export function deriveToolbarState(
     ),
     externalFonts: localFonts,
   };
-  const canBold = canRestyle(fontIds, { bold: !allBold }, sources);
+  const canBold =
+    canRestyle(fontIds, { bold: !allBold }, sources) ||
+    (!inRange &&
+      !allBold &&
+      selected.every(
+        (run) =>
+          ((run.renderMode ?? 0) === 0 && !ignoresTextStroke(run.fontId)) ||
+          boldRun(run),
+      ));
   const canItalic = canRestyle(fontIds, { italic: !allItalic }, sources);
   const lacksOnlyBoldItalic = (request: ToggleRequest) =>
     fontIds.every((id) => familyHasStyle(id, request, sources));

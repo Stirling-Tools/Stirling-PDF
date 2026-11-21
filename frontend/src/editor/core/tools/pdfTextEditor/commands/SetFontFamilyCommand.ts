@@ -177,7 +177,6 @@ export class SetFontFamilyCommand implements Command {
     const losesText =
       losesLetters(dropped) && losesLetters(this.newlyDropped(doc, dropped));
     if (created.length === 0 || notInTarget || losesText) {
-      // Nothing usable emitted (e.g. all-whitespace dropped), or a letter the run drew went undrawn - restore and bail.
       for (const ptr of created) removeAndDestroyObject(m, page.pagePtr, ptr);
       this.reinsertOriginals(m, page);
       restoreRun(run, this.prev);
@@ -462,7 +461,6 @@ function familyDraws(
 const NEEDS_SHAPING =
   /\p{M}|\u200c|\u200d|[\u1100-\u11ff]|\p{Script=Arabic}|\p{Script=Syriac}|\p{Script=Nko}|\p{Script=Mandaic}|\p{Script=Mongolian}|\p{Script=Phags_Pa}|\p{Script=Adlam}/u;
 export const ATTACHES_TO_PREVIOUS = /\p{M}|\u200c|\u200d/u;
-/** Format characters draw nothing, so losing one loses no letter. */
 const DRAWS_NOTHING = /\p{Cf}/u;
 
 export function isSubsetFont(m: WrappedPdfiumModule, font: number): boolean {

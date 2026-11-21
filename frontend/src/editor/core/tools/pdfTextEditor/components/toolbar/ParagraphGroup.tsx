@@ -53,7 +53,6 @@ function cannotFormat(t: TFunction): string {
   );
 }
 
-/** Title, heading and body presets for the selected text. */
 export function TextStyleMenu({
   controller,
   buttonSize,
@@ -92,7 +91,6 @@ export function TextStyleMenu({
   );
 }
 
-/** Underlines the selected text. */
 export function UnderlineToggle({
   controller,
   buttonSize,
@@ -124,7 +122,6 @@ export function UnderlineToggle({
   );
 }
 
-/** Alignment, lists and line spacing for the selected paragraphs. */
 export function ParagraphControls({
   controller,
   buttonSize,

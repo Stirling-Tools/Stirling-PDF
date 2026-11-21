@@ -62,11 +62,6 @@ import {
 import { readImageObjectPixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
 import { flowingSelection } from "@editor/tools/pdfTextEditor/util/pageFlow";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
-import { ReshapeCommand } from "@editor/tools/pdfTextEditor/commands/shapeCommands";
-import {
-  parseCssColor,
-  toCssHex,
-} from "@editor/tools/pdfTextEditor/model/Color";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   formatsUpright,
@@ -531,8 +526,6 @@ export function useToolbarController(
     const run = state.pages
       .flatMap((p) => p.runs)
       .find((r) => r.id === selection.runIds[0]);
-    // Gates on slots, as onAlign does: line count enabled the item for
-    // paragraphs it then refused.
     return !!run && (run.paragraphSlotCount ?? 0) >= 2 && !run.textReadOnly;
   }, [state.pages, selection]);
 
@@ -565,46 +558,6 @@ export function useToolbarController(
       canFormat,
     };
   }, [state.pages, selection.runIds]);
-
-  const drawnShapes = useMemo(() => {
-    const ids = new Set(selection.shapeIds);
-    return state.pages.flatMap((p) =>
-      p.shapes.flatMap((shape) =>
-        ids.has(shape.id) && shape.drawn
-          ? [{ ...shape, drawn: shape.drawn }]
-          : [],
-      ),
-    );
-  }, [state.pages, selection.shapeIds]);
-
-  const shapeColour = useMemo(() => {
-    const first = drawnShapes[0]?.drawn;
-    const colour =
-      first && (first.kind === "rectangle" ? first.stroke : first.fill);
-    return colour ? toCssHex(colour) : null;
-  }, [drawnShapes]);
-
-  const onSetShapeColour = useCallback(
-    (hex: string) => {
-      const colour = parseCssColor(hex);
-      if (!colour) return;
-      const paint = { ...colour, a: 255 };
-      const commands = drawnShapes.map(
-        (shape) =>
-          new ReshapeCommand({
-            pageIndex: shape.pageIndex,
-            shapeId: shape.id,
-            ...(shape.drawn.kind === "rectangle"
-              ? { stroke: paint }
-              : { fill: paint }),
-          }),
-      );
-      if (commands.length === 1) store.dispatch(commands[0]);
-      else if (commands.length > 1)
-        store.dispatch(new CompositeCommand(commands));
-    },
-    [store, drawnShapes],
-  );
 
   const onChangeFontSize = useCallback(
     (size: number) => flowingSelection(store, () => sel.changeFontSize(size)),
@@ -697,8 +650,6 @@ export function useToolbarController(
     onRedo: () => store.redo(),
     paragraph,
     onApplyTextStyle,
-    shapeColour,
-    onSetShapeColour,
     onSetAlign: sel.setAlign,
     onToggleUnderline: sel.toggleUnderline,
     onSetLineSpacing: sel.setLineSpacing,
