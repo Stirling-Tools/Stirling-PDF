@@ -12,7 +12,6 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,7 +44,6 @@ public class GeneralUtils {
     private static final BigDecimal KIB = BigDecimal.valueOf(1024L);
     private static final BigDecimal LONG_MAX_DECIMAL = BigDecimal.valueOf(Long.MAX_VALUE);
 
-    private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
                     "OCR images.json",
@@ -54,11 +52,7 @@ public class GeneralUtils {
                     "split-rotate-auto-rename.json");
 
     private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
-    private final String PYTHON_SCRIPTS_DIR = "python";
 
-    // Extracted once per run. Rewriting a script while another request is exec-ing it
-    // races wherever rename is not atomic, such as 9p or NFS bind mounts.
-    private final Map<String, byte[]> BUNDLED_SCRIPTS = new ConcurrentHashMap<>();
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
     // Valid size units used for convertSizeToBytes validation and parsing
     private final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
@@ -1127,82 +1121,6 @@ public class GeneralUtils {
                 throw new IOException("Resource not found: " + res.getPath());
             }
             copyResourceToFile(res, target);
-        }
-    }
-
-    /*
-     * Extracts the specified Python script from the classpath to the installation path. Validates
-     * name and copies file atomically when possible, overwriting existing.
-     *
-     * <p>Existing files will be overwritten atomically (when supported).
-     *
-     * @param scriptName the name of the script to extract
-     * @return the path to the extracted script
-     * @throws IllegalArgumentException if the script name is invalid or not allowed
-     * @throws IOException if an I/O error occurs
-     */
-    public Path extractScript(String scriptName) throws IOException {
-        // Validate input
-        if (scriptName == null || scriptName.trim().isEmpty()) {
-            throw new IllegalArgumentException("scriptName must not be null or empty");
-        }
-        if (scriptName.contains("..") || scriptName.contains("/")) {
-            throw new IllegalArgumentException(
-                    "scriptName must not contain path traversal characters");
-        }
-        if (!Path.of(scriptName).getFileName().toString().equals(scriptName)) {
-            throw new IllegalArgumentException(
-                    "scriptName must not contain path traversal characters");
-        }
-
-        if (!DEFAULT_VALID_SCRIPTS.contains(scriptName)) {
-            throw new IllegalArgumentException("scriptName must be 'png_to_webp.py'");
-        }
-
-        Path scriptsDir = Path.of(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
-        Path target = scriptsDir.resolve(scriptName);
-
-        ClassPathResource res =
-                new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
-        byte[] bundled = bundledScript(scriptName, res);
-        if (holdsBundledScript(target, bundled)) {
-            return target;
-        }
-
-        synchronized (BUNDLED_SCRIPTS) {
-            if (holdsBundledScript(target, bundled)) {
-                return target;
-            }
-            Files.createDirectories(scriptsDir);
-            copyResourceToFile(res, target);
-            return target;
-        }
-    }
-
-    private byte[] bundledScript(String scriptName, ClassPathResource res) throws IOException {
-        byte[] cached = BUNDLED_SCRIPTS.get(scriptName);
-        if (cached != null) {
-            return cached;
-        }
-        if (!res.exists()) {
-            log.error("Resource not found: {}", res.getPath());
-            throw new IOException("Resource not found: " + res.getPath());
-        }
-        byte[] contents;
-        try (InputStream in = res.getInputStream()) {
-            contents = in.readAllBytes();
-        }
-        BUNDLED_SCRIPTS.putIfAbsent(scriptName, contents);
-        return BUNDLED_SCRIPTS.get(scriptName);
-    }
-
-    private boolean holdsBundledScript(Path target, byte[] bundled) {
-        try {
-            return Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)
-                    && Files.size(target) == bundled.length
-                    && Arrays.equals(Files.readAllBytes(target), bundled);
-        } catch (IOException e) {
-            return false;
         }
     }
 

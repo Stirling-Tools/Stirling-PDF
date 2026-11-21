@@ -186,6 +186,36 @@ Feature: API Validation
             | jpg    |
             | gif    |
 
+    @image @positive
+    Scenario: Convert selected PDF pages to WebP images
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 3 pages with random text
+        And the request data includes
+            | parameter        | value    |
+            | dpi              | 72       |
+            | imageFormat      | webp     |
+            | singleOrMultiple | multiple |
+            | pageNumbers      | 1,3      |
+        When I send the API request to the endpoint "/api/v1/convert/pdf/img"
+        Then the response status code should be 200
+        And the response file should have extension ".zip"
+        And the response ZIP should contain 2 files
+        And every file in the response ZIP should be a WebP image named "*.webp"
+
+    @image @positive
+    Scenario: Convert a PDF to a single WebP image
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages with random text
+        And the request data includes
+            | parameter        | value  |
+            | dpi              | 72     |
+            | imageFormat      | webp   |
+            | singleOrMultiple | single |
+        When I send the API request to the endpoint "/api/v1/convert/pdf/img"
+        Then the response status code should be 200
+        And the response file should have extension ".webp"
+        And the response file should be a WebP image
+
     @libre @positive @topdf
     Scenario Outline: Convert PDF to various types
         Given I use an example file at "exampleFiles/example<extension>" as parameter "fileInput"

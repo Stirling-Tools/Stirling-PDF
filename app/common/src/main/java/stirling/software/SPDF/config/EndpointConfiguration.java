@@ -654,6 +654,7 @@ public class EndpointConfiguration {
                 || "Javascript".equals(group)
                 || LINE_ART.equals(group)
                 || "rar".equals(group)
+                || "cwebp".equals(group)
                 || "FFmpeg".equals(group)
                 || "veraPDF".equals(group);
     }

@@ -789,6 +789,21 @@ def step_check_response_zip_file_count(context, file_count):
     ), f"Expected {file_count} files but got {actual_file_count} files"
 
 
+@then('every file in the response ZIP should be a WebP image named "*{extension}"')
+def step_check_response_zip_webp_entries(context, extension):
+    with zipfile.ZipFile(io.BytesIO(context.response.content)) as zip_file:
+        for name in zip_file.namelist():
+            assert name.endswith(extension), f"{name} does not end with {extension}"
+            header = zip_file.read(name)[:12]
+            assert header[:4] == b"RIFF" and header[8:12] == b"WEBP", f"{name} is not WebP"
+
+
+@then("the response file should be a WebP image")
+def step_check_response_webp(context):
+    header = context.response.content[:12]
+    assert header[:4] == b"RIFF" and header[8:12] == b"WEBP", "response is not WebP"
+
+
 @then(
     "the response ZIP file should contain {doc_count:d} documents each having {pages_per_doc:d} pages"
 )

@@ -162,9 +162,9 @@ class ExceptionUtilsTest {
         }
 
         @Test
-        void testCreatePythonRequiredForWebpException() {
-            IOException ex = ExceptionUtils.createPythonRequiredForWebpException();
-            assertTrue(ex.getMessage().contains("Python"));
+        void testCreateWebpEncoderRequiredException() {
+            IOException ex = ExceptionUtils.createWebpEncoderRequiredException();
+            assertTrue(ex.getMessage().contains("cwebp"));
             assertTrue(ex.getMessage().contains("WebP conversion"));
         }
     }
