@@ -869,7 +869,7 @@ public class ConvertPDFToPDFA {
                             .maxPages(maxConversionPages));
         } catch (IOException e) {
             requirePageCountWithinLimit(inputPath);
-            throw e;
+            throw ExceptionUtils.handlePdfException(e);
         }
         return Files.readAllBytes(output);
     }

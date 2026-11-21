@@ -320,18 +320,29 @@ class ConvertPDFToOfficeMoreTest {
         }
 
         @Test
-        @DisplayName("word endpoint rejects xml and Word 97-2003 .doc")
-        void wordEndpointRejectsXmlAndDoc() throws Exception {
-            for (String format : new String[] {"xml", "doc"}) {
-                PdfToWordRequest request = new PdfToWordRequest();
-                request.setFileInput(pdfFile());
-                request.setOutputFormat(format);
+        @DisplayName("word endpoint rejects xml")
+        void wordEndpointRejectsXml() throws Exception {
+            PdfToWordRequest request = new PdfToWordRequest();
+            request.setFileInput(pdfFile());
+            request.setOutputFormat("xml");
 
-                assertEquals(
-                        HttpStatus.BAD_REQUEST,
-                        controller.processPdfToWord(request).getStatusCode(),
-                        format);
-            }
+            assertEquals(
+                    HttpStatus.BAD_REQUEST, controller.processPdfToWord(request).getStatusCode());
+        }
+
+        @Test
+        @DisplayName("word endpoint explains that .doc output is gone")
+        void wordEndpointExplainsDoc() {
+            PdfToWordRequest request = new PdfToWordRequest();
+            request.setFileInput(pdfFile());
+            request.setOutputFormat("doc");
+
+            IllegalArgumentException e =
+                    org.junit.jupiter.api.Assertions.assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.processPdfToWord(request));
+            org.junit.jupiter.api.Assertions.assertTrue(
+                    e.getMessage().contains("use docx or odt"), e.getMessage());
         }
     }
 
