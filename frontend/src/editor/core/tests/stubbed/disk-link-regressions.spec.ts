@@ -91,6 +91,44 @@ async function conflictInPageEditor(page: Page) {
   ).toBeVisible({ timeout: 20_000 });
 }
 
+const TOUCHED_MTIME = 1_900_000_000_000;
+
+/** What sync clients and indexers do: a new mtime, the same bytes. */
+async function touchOnDisk(page: Page, p: string) {
+  await page.evaluate(
+    ({ path, mtime }) => {
+      const w = window as unknown as {
+        __disk: Record<string, { modifiedMs: number }>;
+        __saveDisk: () => void;
+      };
+      w.__disk[path].modifiedMs = mtime;
+      w.__saveDisk();
+    },
+    { path: p, mtime: TOUCHED_MTIME },
+  );
+}
+
+/** The stored record's disk baseline mtime, which an open re-stamps once it
+ *  has settled what disk holds. */
+function storedModifiedMs(page: Page) {
+  return page.evaluate(async (id) => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const req = indexedDB.open("stirling-pdf-files");
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    const record = await new Promise<
+      { diskSyncedModifiedMs?: number } | undefined
+    >((resolve, reject) => {
+      const req = db.transaction(["files"]).objectStore("files").get(id);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    db.close();
+    return record?.diskSyncedModifiedMs;
+  }, "f-report");
+}
+
 /** The viewer's own page count. Not the mounted [data-page-index] elements:
  *  the viewer virtualises, so those count what is scrolled into view. */
 function viewerPageCount(page: Page, pages: number) {
@@ -311,6 +349,44 @@ test.describe("an external edit never silently costs the user work", () => {
     await expect(
       page.getByRole("img", { name: /Not on disk/i }).first(),
     ).toBeVisible({ timeout: 20_000 });
+  });
+
+  test("a stored file whose disk copy only moved its timestamp opens quietly", async ({
+    page,
+  }) => {
+    await installTauri(page);
+    await gotoFiles(page);
+    await stage(page, onDisk(), [report()]);
+    await dismissModals(page);
+    await requireDiskLinking(page);
+    await touchOnDisk(page, REPORT);
+    await openCard(page, "quarterly-report.pdf");
+
+    await expect(viewerPageCount(page, 1)).toBeVisible({ timeout: 30_000 });
+    await expect
+      .poll(() => storedModifiedMs(page), { timeout: 20_000 })
+      .toBe(TOUCHED_MTIME);
+    await expect(page.getByText(/Updated from disk/i)).toHaveCount(0);
+  });
+
+  test("an unsaved version disk still holds opens without a conflict after a touch", async ({
+    page,
+  }) => {
+    await installTauri(page);
+    await gotoFiles(page);
+    await stage(page, onDisk(), [report({ isDirty: true })]);
+    await dismissModals(page);
+    await requireDiskLinking(page);
+    await touchOnDisk(page, REPORT);
+    await openCard(page, "quarterly-report.pdf");
+
+    await expect(viewerPageCount(page, 1)).toBeVisible({ timeout: 30_000 });
+    await expect
+      .poll(() => storedModifiedMs(page), { timeout: 20_000 })
+      .toBe(TOUCHED_MTIME);
+    await expect(
+      page.getByRole("button", { name: /Keep my changes/i }),
+    ).toHaveCount(0);
   });
 
   test("a conflict raised at open time still shows the stored document", async ({
