@@ -90,6 +90,17 @@ vi.mock("@editor/portal/views/Usage", () => ({
   },
 }));
 
+const keyLinked = { is: false };
+vi.mock("@editor/portal/hooks/useKeyLinked", () => ({
+  useKeyLinked: () => keyLinked.is,
+}));
+vi.mock("@editor/portal/components/billing/CloudManagedPlanView", () => ({
+  CloudManagedPlanView: ({
+    licenseSection,
+  }: {
+    licenseSection?: ReactNode;
+  }) => <div data-testid="cloud-managed">{licenseSection}</div>,
+}));
 vi.mock("@editor/portal/components/billing/FreeTierPlanView", () => ({
   FreeTierPlanView: ({ licenseSection }: { licenseSection?: ReactNode }) => (
     <div data-testid="free-tier">{licenseSection}</div>
@@ -125,6 +136,7 @@ describe("PortalBillingGate — self-hosted", () => {
     owner.is = true;
     owner.loading = false;
     link.is = false;
+    keyLinked.is = false;
     connect.mockReset();
     applyLinkFacts.mockReset();
     gate.gated = false;
@@ -178,6 +190,26 @@ describe("PortalBillingGate — self-hosted", () => {
     renderGate();
     expect(screen.queryByTestId("usage")).toBeNull();
     expect(applyLinkFacts).not.toHaveBeenCalled();
+  });
+
+  it("shows a key-linked server its read-only plan, never the cloud wallet", () => {
+    link.is = true;
+    keyLinked.is = true;
+    renderGate();
+    expect(screen.getByTestId("cloud-managed")).toBeInTheDocument();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    // The wallet is what reports the tier on the full page; it must not be loaded here.
+    expect(applyLinkFacts).not.toHaveBeenCalled();
+  });
+
+  it("names the spent link key rather than an empty license", () => {
+    config.isAdmin = true;
+    link.is = true;
+    keyLinked.is = true;
+    license.licenseInfo.licenseKey = null;
+    renderGate();
+    expect(screen.getByText("Linked with a link key")).toBeInTheDocument();
+    expect(screen.queryByText("No license installed")).toBeNull();
   });
 
   it("asks for nothing on the way in", () => {

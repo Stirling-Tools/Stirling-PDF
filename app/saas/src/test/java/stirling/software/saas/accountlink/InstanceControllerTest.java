@@ -95,6 +95,7 @@ class InstanceControllerTest {
         assertThat(body).isNotNull();
         assertThat(body.subscribed()).isTrue();
         assertThat(body.freeRemainingUnits()).isEqualTo(120L);
+        assertThat(body.freeAllowanceUnits()).isEqualTo(500L);
         assertThat(body.periodSpendUnits()).isEqualTo(90L);
         assertThat(body.periodCapUnits()).isEqualTo(1250L);
         // WARNED is still within budget for the gate's purposes → coarse OK.

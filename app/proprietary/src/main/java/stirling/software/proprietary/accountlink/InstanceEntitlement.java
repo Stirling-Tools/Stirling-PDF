@@ -23,6 +23,7 @@ import stirling.software.proprietary.billing.UnitCalcPolicy;
  * @param periodEnd exclusive end of the current billing period; {@code null} if not supplied
  * @param automationStepLimit successful sub-steps covered by one automation charge; non-positive
  *     values use the shared billing default
+ * @param freeAllowanceUnits free grant size per period; {@code null} from an older SaaS
  */
 public record InstanceEntitlement(
         boolean subscribed,
@@ -36,7 +37,37 @@ public record InstanceEntitlement(
         Integer licensedUsers,
         int automationStepLimit,
         long prepaidRemainingUnits,
-        Integer fleetUserLimit) {
+        Integer fleetUserLimit,
+        Long freeAllowanceUnits) {
+
+    public InstanceEntitlement(
+            boolean subscribed,
+            long freeRemainingUnits,
+            long periodSpendUnits,
+            Long periodCapUnits,
+            EntitlementState state,
+            UnitCalcPolicy unitCalcPolicy,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd,
+            Integer licensedUsers,
+            int automationStepLimit,
+            long prepaidRemainingUnits,
+            Integer fleetUserLimit) {
+        this(
+                subscribed,
+                freeRemainingUnits,
+                periodSpendUnits,
+                periodCapUnits,
+                state,
+                unitCalcPolicy,
+                periodStart,
+                periodEnd,
+                licensedUsers,
+                automationStepLimit,
+                prepaidRemainingUnits,
+                fleetUserLimit,
+                null);
+    }
 
     public InstanceEntitlement(
             boolean subscribed,
@@ -62,6 +93,7 @@ public record InstanceEntitlement(
                 licensedUsers,
                 automationStepLimit,
                 prepaidRemainingUnits,
+                null,
                 null);
     }
 
@@ -88,6 +120,7 @@ public record InstanceEntitlement(
                 licensedUsers,
                 automationStepLimit,
                 0L,
+                null,
                 null);
     }
 

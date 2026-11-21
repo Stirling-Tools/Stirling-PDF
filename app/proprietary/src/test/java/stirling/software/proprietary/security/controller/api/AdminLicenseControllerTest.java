@@ -113,6 +113,17 @@ class AdminLicenseControllerTest {
         }
 
         @Test
+        @DisplayName("a Stirling Cloud link key is refused and never saved")
+        void linkKey_isRefusedAndNeverSaved() {
+            ResponseEntity<Map<String, Object>> response =
+                    controller.saveLicenseKey(Map.of("licenseKey", " stlk_abc.def "));
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(body(response)).containsEntry("code", "LINK_KEY");
+            org.mockito.Mockito.verifyNoInteractions(licenseKeyChecker);
+        }
+
+        @Test
         @DisplayName("valid license key activates and returns licenseType")
         void validKey_activates() throws IOException {
             applicationProperties.getPremium().setMaxUsers(10);

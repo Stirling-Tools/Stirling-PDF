@@ -233,6 +233,62 @@ class AccountLinkClientTest {
                 claimOutcome(200, "{\"status\":\"confirmed\",\"teamId\":7}"));
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void redeemKeySendsOnlyTheKeyAndNameAndGrantsTheCredential() throws Exception {
+        var requests = ArgumentCaptor.forClass(HttpRequest.class);
+        HttpResponse<String> resp =
+                response(
+                        200,
+                        "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":7,\"appUrl\":\"https://cloud.example/app\"}");
+        when(httpClient.send(requests.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+
+        AccountLinkClient.ConnectClaimResult result = client.redeemKey("stlk_k.s", "pdf.acme");
+
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.GRANTED, result.outcome());
+        assertEquals("dev-1", result.deviceId());
+        assertEquals("sec-1", result.deviceSecret());
+        assertEquals(7L, result.teamId());
+        assertEquals("https://cloud.example/app", result.appUrl());
+        HttpRequest request = requests.getValue();
+        assertEquals("/api/v1/account-link/keys/redeem", request.uri().getPath());
+        assertEquals(java.util.Optional.empty(), request.headers().firstValue("X-Device-Secret"));
+        assertEquals(java.util.Optional.empty(), request.headers().firstValue("Authorization"));
+    }
+
+    @Test
+    void redeemKeyTreatsOnlyA400AsAVerdictOnTheKey() throws Exception {
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.REJECTED, redeemOutcome(400, "{}"));
+        // An older SaaS without the endpoint, an auth proxy or an outage leaves the key unspent.
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, redeemOutcome(404, ""));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, redeemOutcome(401, ""));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, redeemOutcome(503, ""));
+        assertEquals(
+                AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE,
+                redeemOutcome(200, "<html>not json</html>"));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, redeemOutcome(200, "{}"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void redeemKeyIsUnavailableWhenSaasCannotBeReached() throws Exception {
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
+                .thenThrow(new ConnectException("refused"));
+
+        assertEquals(
+                AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE,
+                client.redeemKey("stlk_k.s", null).outcome());
+    }
+
+    @SuppressWarnings("unchecked")
+    private AccountLinkClient.ConnectClaimOutcome redeemOutcome(int status, String body)
+            throws Exception {
+        HttpResponse<String> resp = response(status, body);
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+        return client.redeemKey("stlk_k.s", null).outcome();
+    }
+
     @SuppressWarnings("unchecked")
     private AccountLinkClient.ConnectClaimOutcome claimOutcome(int status, String body)
             throws Exception {
@@ -262,6 +318,8 @@ class AccountLinkClientTest {
         assertEquals(100L, e.periodCapUnits());
         assertEquals(EntitlementState.OK, e.state());
         assertEquals(10, e.automationStepLimit());
+        // An older cloud sends no free allowance; the server shows it as unknown, not zero.
+        assertNull(e.freeAllowanceUnits());
 
         HttpRequest sent = captor.getValue();
         assertEquals("dev-1", sent.headers().firstValue("X-Device-Id").orElse(null));
@@ -437,12 +495,17 @@ class AccountLinkClientTest {
 
     @Test
     void dailySeatHeartbeatParsesLocalAllowance() throws Exception {
-        var reply = response(200, "{\"state\":\"OK\",\"licensedUsers\":100,\"fleetUserLimit\":17}");
+        var reply =
+                response(
+                        200,
+                        "{\"state\":\"OK\",\"licensedUsers\":100,\"fleetUserLimit\":17,"
+                                + "\"freeAllowanceUnits\":500}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(reply);
         var result = client.reportUsage("dev-1", "sec-1", 0, null, 0, 0, 0, 7);
         assertNotNull(result);
         assertEquals(100, result.licensedUsers());
         assertEquals(17, result.fleetUserLimit());
+        assertEquals(500L, result.freeAllowanceUnits());
         var request = ArgumentCaptor.forClass(HttpRequest.class);
         org.mockito.Mockito.verify(httpClient)
                 .send(request.capture(), any(HttpResponse.BodyHandler.class));

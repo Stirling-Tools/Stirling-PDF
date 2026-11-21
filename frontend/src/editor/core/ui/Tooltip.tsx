@@ -27,6 +27,8 @@ export interface TooltipProps {
    */
   children: ReactElement;
   className?: string;
+  /** For a trigger inside a layer that sits above the default tooltip layer. */
+  zIndex?: number;
 }
 
 /**
@@ -44,6 +46,7 @@ export function Tooltip({
   placement = "top",
   children,
   className,
+  zIndex,
 }: TooltipProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -144,6 +147,7 @@ export function Tooltip({
                 top: pos?.top ?? 0,
                 left: pos?.left ?? 0,
                 visibility: pos ? "visible" : "hidden",
+                zIndex,
               }}
             >
               {content}

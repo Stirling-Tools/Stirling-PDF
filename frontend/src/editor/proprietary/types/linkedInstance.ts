@@ -9,4 +9,6 @@ export interface LinkedInstanceRow {
   revoked: boolean;
   seatCount?: number | null;
   seatsReportedAt?: string | null;
+  /** Linked by redeeming a key made in Stirling Cloud rather than by signing in on the server. */
+  linkedWithKey?: boolean;
 }

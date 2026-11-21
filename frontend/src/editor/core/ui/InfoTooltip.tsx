@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Icon } from "@editor/ui/Icon";
-import { Tooltip, type FloatingPosition } from "@mantine/core";
+import { Tooltip, type TooltipPlacement } from "@editor/ui/Tooltip";
 import { useTranslation } from "react-i18next";
 import "@editor/ui/InfoTooltip.css";
 
@@ -10,7 +10,7 @@ export interface InfoTooltipProps {
   /** Accessible name for the button. Defaults to the label when it's a string. */
   ariaLabel?: string;
   /** Which side the tooltip opens on. Default "top". */
-  position?: FloatingPosition;
+  position?: TooltipPlacement;
   /** For use over a layer that sits above the default tooltip layer. */
   zIndex?: number;
 }
@@ -28,15 +28,7 @@ export function InfoTooltip({
 }: InfoTooltipProps) {
   const { t } = useTranslation();
   return (
-    <Tooltip
-      label={label}
-      multiline
-      w={260}
-      withArrow
-      position={position}
-      zIndex={zIndex}
-      events={{ hover: true, focus: true, touch: true }}
-    >
+    <Tooltip content={label} placement={position} zIndex={zIndex}>
       <button
         type="button"
         className="sui-info"

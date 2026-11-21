@@ -6,13 +6,17 @@ import LicenseKeySection from "@editor/components/shared/config/configSections/p
 import { KvRow } from "@editor/billing/KvRow";
 import { Banner, Button, Spinner } from "@editor/ui";
 import { Modal } from "@editor/ui/Modal";
+import { useAccountLinkOptional } from "@editor/portal/contexts/AccountLinkContext";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { useKeyLinked } from "@editor/portal/hooks/useKeyLinked";
 
 /** The caller must restrict this server-local license surface to administrators. */
 export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
   const { t } = useTranslation();
   const { licenseInfo, loading, error, refetchLicense } = useLicense();
   const { error: configError, refetch: refetchConfig } = useAppConfig();
+  const accountLink = useAccountLinkOptional();
+  const keyLinked = useKeyLinked();
   const [dialog, setDialog] = useState<"view" | "update" | null>(null);
   const storedKey = licenseInfo?.licenseKey?.trim();
   const licenseKey =
@@ -65,6 +69,8 @@ export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
             ) : (
               "••••••••••••••••"
             )
+          ) : keyLinked ? (
+            t("portal.billing.license.linkKey", "Linked with a link key")
           ) : (
             t("portal.billing.license.empty", "No license installed")
           )
@@ -123,6 +129,11 @@ export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
             }
             onSaved={() => {
               setDialog(null);
+              onSaved();
+            }}
+            onLinked={() => {
+              setDialog(null);
+              void accountLink?.refresh();
               onSaved();
             }}
           />
