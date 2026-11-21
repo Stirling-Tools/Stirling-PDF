@@ -21,18 +21,46 @@ if (!existsSync(join(jreDir, "release"))) {
   process.exit(1);
 }
 
-const platforms = existsSync(sourceRoot) ? readdirSync(sourceRoot) : [];
-if (platforms.length === 0) {
+const extracted = existsSync(sourceRoot) ? readdirSync(sourceRoot) : [];
+if (extracted.length === 0) {
   console.error(
     `No JPDFium natives in ${sourceRoot}; run :common:stageJpdfiumNatives.`,
   );
   process.exit(1);
 }
-const windowsPlatforms = platforms.filter((p) => p.startsWith("windows-"));
-if (windowsPlatforms.length > 1) {
-  console.error(
-    `Only one Windows platform fits in one JRE, got ${windowsPlatforms.join(", ")}.`,
-  );
+
+// jlink's release file has no OS_ARCH, so read the machine type from java.exe's PE header.
+function windowsJrePlatform() {
+  const javaExe = join(jreDir, "bin", "java.exe");
+  if (!existsSync(javaExe)) {
+    return null;
+  }
+  const header = readFileSync(javaExe);
+  const machine = header.readUInt16LE(header.readUInt32LE(0x3c) + 4);
+  const platform = { 0x8664: "windows-x64", 0xaa64: "windows-arm64" }[machine];
+  if (!platform) {
+    console.error(
+      `Unsupported java.exe machine type 0x${machine.toString(16)}.`,
+    );
+    process.exit(1);
+  }
+  return platform;
+}
+
+const jreWindowsPlatform = windowsJrePlatform();
+const platforms = extracted.filter((platform) => {
+  if (!platform.startsWith("windows-") || platform === jreWindowsPlatform) {
+    return true;
+  }
+  console.log(`Skipping ${platform}: it does not match this JRE`);
+  return false;
+});
+if (
+  jreWindowsPlatform &&
+  extracted.some((p) => p.startsWith("windows-")) &&
+  !platforms.includes(jreWindowsPlatform)
+) {
+  console.error(`No JPDFium natives for this ${jreWindowsPlatform} JRE.`);
   process.exit(1);
 }
 
@@ -51,16 +79,18 @@ function stageIntoJreBin(platformDir, libs) {
       rmSync(join(binDir, name), { force: true });
     }
   }
-  const staged = [];
-  for (const lib of libs) {
-    if (existsSync(join(binDir, lib))) {
+  const staged = libs.filter((lib) => {
+    const ownedByJre = existsSync(join(binDir, lib));
+    if (ownedByJre) {
       console.log(`Keeping the JRE's own ${lib}`);
-      continue;
     }
-    cpSync(join(platformDir, lib), join(binDir, lib));
-    staged.push(lib);
-  }
+    return !ownedByJre;
+  });
+  // Written first so an interrupted copy can't leave DLLs a rerun mistakes for the JRE's own.
   writeFileSync(manifest, staged.join("\n") + "\n");
+  for (const lib of staged) {
+    cpSync(join(platformDir, lib), join(binDir, lib));
+  }
   return binDir;
 }
 
