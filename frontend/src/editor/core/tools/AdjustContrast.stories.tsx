@@ -39,7 +39,7 @@ async function setSlider(panel: PanelQueries, label: string, value: number) {
 }
 
 async function openAdjustColors(context: PlayContext) {
-  await openStep(context, "Adjust Colors");
+  await openStep(context, "Colors");
   return waitForPanelText(context, "Red");
 }
 
@@ -57,8 +57,8 @@ async function waitForPreview({ canvasElement }: PlayContext) {
 
 export const Panel: Story = {
   play: async (context) => {
-    const panel = await waitForPanelText(context, "Contrast:");
-    for (const label of ["Contrast:", "Brightness:", "Saturation:"])
+    const panel = await waitForPanelText(context, "Contrast");
+    for (const label of ["Contrast", "Brightness", "Saturation"])
       await expect(panel.getByRole("slider", { name: label })).toHaveAttribute(
         "aria-valuenow",
         "100",
@@ -70,10 +70,10 @@ export const Panel: Story = {
 
 export const BasicAdjustments: Story = {
   play: async (context) => {
-    const panel = await waitForPanelText(context, "Contrast:");
-    await setSlider(panel, "Contrast:", 140);
-    await setSlider(panel, "Brightness:", 85);
-    await setSlider(panel, "Saturation:", 60);
+    const panel = await waitForPanelText(context, "Contrast");
+    await setSlider(panel, "Contrast", 140);
+    await setSlider(panel, "Brightness", 85);
+    await setSlider(panel, "Saturation", 60);
     await waitForPreview(context);
   },
 };
@@ -86,7 +86,7 @@ export const AdjustColorsStep: Story = {
         "aria-valuenow",
         "100",
       );
-    await expect(panel.queryByRole("slider", { name: "Contrast:" })).toBeNull();
+    await expect(panel.queryByRole("slider", { name: "Contrast" })).toBeNull();
   },
 };
 
@@ -113,7 +113,7 @@ export const NoFiles: Story = {
   args: { files: [] },
   play: async (context) => {
     const panel = await waitForPanelText(context, "Basic Adjustments");
-    await expect(panel.queryByRole("slider", { name: "Contrast:" })).toBeNull();
+    await expect(panel.queryByRole("slider", { name: "Contrast" })).toBeNull();
     await expect(panel.queryByText("Preview")).toBeNull();
   },
 };
@@ -128,7 +128,7 @@ export const Results: Story = {
     await runToResults(context);
     await expect(
       bodyOf(context).queryByRole("slider", {
-        name: "Contrast:",
+        name: "Contrast",
       }),
     ).toBeNull();
   },

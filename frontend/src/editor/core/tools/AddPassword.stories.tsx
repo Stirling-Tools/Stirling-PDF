@@ -6,8 +6,8 @@ import {
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  choose,
   findEnabled,
-  openSelect,
   openStep,
   openTooltip,
   panelOf,
@@ -38,17 +38,6 @@ async function enterOpeningPassword(context: PlayContext, password: string) {
   return panel;
 }
 
-async function openAdvanced(context: PlayContext) {
-  const panel = await openStep(context, "Advanced");
-  const keyLength = await panel.findByRole(
-    "textbox",
-    { name: "Encryption Key Length" },
-    STAGE_TIMEOUT,
-  );
-  await waitFor(() => expect(keyLength).toBeVisible());
-  return keyLength;
-}
-
 async function openRestrictions(context: PlayContext) {
   await openStep(context, "Restrict actions");
   await findEnabled(context, "checkbox", "Prevent printing");
@@ -68,21 +57,14 @@ export const Panel: Story = {};
 export const OpeningPasswordEntered: Story = {
   play: async (context) => {
     await enterOpeningPassword(context, "secret");
-    await findEnabled(context, "button", /^Save protection/);
+    await findEnabled(context, "button", /^Add Password/);
   },
 };
 
-export const EncryptionKeyLength: Story = {
+export const EncryptionStrengthChanged: Story = {
   play: async (context) => {
-    await openAdvanced(context);
-  },
-};
-
-export const EncryptionKeyLengthMenu: Story = {
-  play: async (context) => {
-    await openAdvanced(context);
-    const options = await openSelect(context, "Encryption Key Length");
-    await expect(options.getAllByRole("option")).toHaveLength(3);
+    const panel = await choose(context, "256-bit");
+    await expect(panel.getAllByRole("radio")).toHaveLength(3);
   },
 };
 
@@ -98,7 +80,7 @@ export const ActionsRestricted: Story = {
     await enterOpeningPassword(context, "secret");
     const ownerPassword = await restrictPrinting(context);
     await userEvent.type(ownerPassword, "different");
-    await findEnabled(context, "button", /^Save protection/);
+    await findEnabled(context, "button", /^Add Password/);
   },
 };
 
@@ -133,6 +115,10 @@ export const NoFiles: Story = {
 
 export const PasswordToOpenTooltip: Story = {
   play: openTooltip({ step: "Password to open" }),
+};
+
+export const EncryptionStrengthTooltip: Story = {
+  play: openTooltip({ info: "More information" }),
 };
 
 export const RestrictActionsTooltip: Story = {

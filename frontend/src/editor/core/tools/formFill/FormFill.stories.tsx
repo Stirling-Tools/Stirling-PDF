@@ -3,6 +3,7 @@ import { delay, http, HttpResponse, type RequestHandler } from "msw";
 import { expect, userEvent, waitFor } from "storybook/test";
 import {
   appConfig,
+  endpointUnavailable,
   fixtureResponse,
   onViewer,
   toolPanelMeta,
@@ -49,8 +50,46 @@ export const SignedPdfLocked: Story = {
 export const CreateMode: Story = {
   play: async (context) => {
     await choose(context, "Create");
-    await waitForPanelText(context, "No fields drawn yet.");
+    const panel = await waitForPanelText(context, "No fields drawn yet.");
+    await expect(
+      panel.getByRole("button", { name: "Auto-detect fields" }),
+    ).toBeEnabled();
   },
+};
+
+async function autoDetectButton(context: PlayContext) {
+  const panel = await panelOf(context);
+  return panel.findByRole(
+    "button",
+    { name: "Auto-detect fields" },
+    STAGE_TIMEOUT,
+  );
+}
+
+async function waitUntilAutoDetectUnavailable(context: PlayContext) {
+  const button = await autoDetectButton(context);
+  await waitFor(() => expect(button).toBeDisabled(), STAGE_TIMEOUT);
+}
+
+const autoDetectUnavailable = toolPanelServer(
+  ...endpointUnavailable("form-detection"),
+);
+
+export const AutoDetectUnavailable: Story = {
+  parameters: autoDetectUnavailable,
+  play: waitUntilAutoDetectUnavailable,
+};
+
+export const AutoDetectUnavailableTooltip: Story = {
+  parameters: autoDetectUnavailable,
+  play: openTooltip(
+    // A disabled button takes no pointer events; its tooltip hangs on the wrapper.
+    {
+      element: async (context) =>
+        (await autoDetectButton(context)).parentElement!,
+    },
+    { after: waitUntilAutoDetectUnavailable },
+  ),
 };
 
 export const CreateModeArmed: Story = {
@@ -465,7 +504,7 @@ export const ModifyRadioGroup: Story = {
   ...inModifyMode,
   play: async (context) => {
     const panel = await editingField("contactMethod")(context);
-    await panel.findByText("Use Option size");
+    await expect(panel.getByRole("textbox", { name: /^W/ })).toBeDisabled();
   },
 };
 
@@ -488,55 +527,85 @@ export const ModifySignatureField: Story = {
   play: editingField("applicantSignature"),
 };
 
-function labelTooltip(fieldName: string, label: string): Story {
+function fieldInfoTooltip(fieldName: string, info: string | RegExp): Story {
   return {
     ...inModifyMode,
-    play: openTooltip({ text: label }, { after: editingField(fieldName) }),
+    play: openTooltip({ info }, { after: editingField(fieldName) }),
   };
 }
 
-/**
- * A switch's help tooltip hangs on its input, which Mantine stretches invisibly
- * over the track, so the pointer reaches it on the track rather than the label.
- */
-function switchTooltip(fieldName: string, name: string): Story {
-  return {
-    ...inModifyMode,
-    play: openTooltip(
-      {
-        element: async (context) =>
-          (await panelOf(context)).findByRole("switch", {
-            name,
-          }),
-      },
-      { after: editingField(fieldName) },
-    ),
-  };
-}
-
-export const FieldNameTooltip = labelTooltip("fullName", "Field name");
-export const LabelTooltip = labelTooltip("fullName", "Label");
-export const TypeTooltip = labelTooltip("fullName", "Type");
-export const DefaultValueTooltip = labelTooltip("fullName", "Default value");
-export const FieldTooltipTooltip = labelTooltip("fullName", "Tooltip");
-export const FontSizeTooltip = labelTooltip("fullName", "Font size");
-export const MaxLengthTooltip = labelTooltip("fullName", "Max length (comb)");
-export const MultiLineTooltip = switchTooltip("fullName", "Multi-line");
-export const RequiredTooltip = switchTooltip("fullName", "Required");
-export const ReadOnlyTooltip = switchTooltip("fullName", "Read-only");
-export const OptionsTooltip = labelTooltip("interests", "Options");
-export const MultipleSelectionTooltip = switchTooltip(
+export const FieldNameTooltip = fieldInfoTooltip(
+  "fullName",
+  /^The field's internal name/,
+);
+export const LabelTooltip = fieldInfoTooltip(
+  "fullName",
+  /^The wording shown to whoever fills the form/,
+);
+export const TypeTooltip = fieldInfoTooltip(
+  "fullName",
+  /^What kind of field this is/,
+);
+export const DefaultValueTooltip = fieldInfoTooltip(
+  "fullName",
+  /^What the field contains before anyone fills it in/,
+);
+export const FieldTooltipTooltip = fieldInfoTooltip(
+  "fullName",
+  "The hint shown when someone hovers the field in a PDF reader.",
+);
+export const FontSizeTooltip = fieldInfoTooltip(
+  "fullName",
+  /^Text size inside the field/,
+);
+export const MaxLengthTooltip = fieldInfoTooltip(
+  "fullName",
+  /^Caps how many characters fit/,
+);
+export const MultiLineTooltip = fieldInfoTooltip(
+  "fullName",
+  /^Allows more than one line of text/,
+);
+export const RequiredTooltip = fieldInfoTooltip(
+  "fullName",
+  "The form cannot be submitted until this field is filled in.",
+);
+export const ReadOnlyTooltip = fieldInfoTooltip(
+  "fullName",
+  "Shows a value but stops anyone editing it.",
+);
+export const OptionsTooltip = fieldInfoTooltip(
   "interests",
-  "Allow multiple selection",
+  /^The choices offered in the list/,
 );
-export const OptionSizeTooltip = labelTooltip("contactMethod", "Option size");
-export const OptionSpacingTooltip = labelTooltip(
+export const MultipleSelectionTooltip = fieldInfoTooltip(
+  "interests",
+  "Lets more than one option be chosen at once.",
+);
+export const OptionSizeTooltip = fieldInfoTooltip(
   "contactMethod",
-  "Option spacing",
+  /^Width and height of each button/,
 );
-export const ButtonCaptionTooltip = labelTooltip("submit", "Button caption");
-export const ButtonActionTooltip = labelTooltip("submit", "Button action");
-export const ButtonUrlTooltip = labelTooltip("submit", "URL");
+export const OptionSpacingTooltip = fieldInfoTooltip(
+  "contactMethod",
+  /^Gap between buttons/,
+);
+export const GroupWidthTooltip = fieldInfoTooltip(
+  "contactMethod",
+  "Use Option size",
+);
+export const ButtonCaptionTooltip = fieldInfoTooltip(
+  "submit",
+  "The text printed on the button face.",
+);
+export const ButtonActionTooltip = fieldInfoTooltip(
+  "submit",
+  "What the button does when clicked.",
+);
+export const ButtonUrlTooltip = fieldInfoTooltip(
+  "submit",
+  "The address the button opens or submits to.",
+);
 
 function drawField(type: string) {
   return async (context: PlayContext) => {

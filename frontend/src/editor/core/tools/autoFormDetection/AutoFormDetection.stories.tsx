@@ -9,12 +9,12 @@ import {
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
   choose,
+  findEnabled,
   openTooltip,
   panelOf,
   type PlayContext,
   runTool,
   STAGE_TIMEOUT,
-  untilPanelShows,
   waitForPanelText,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 import type { DetectionSummary } from "@editor/services/formDetection/progress";
@@ -43,15 +43,22 @@ function detectsUntil(text: string): Play {
   };
 }
 
-function withSensitivity(option: string, hint: string): Play {
-  return async (context) => {
+const BALANCED_HINT = "Recommended for most forms.";
+const STRICT_HINT =
+  "Only very confident matches - fewer fields, fewer mistakes.";
+const THOROUGH_HINT = "Finds more fields, but may add some where none belong.";
+
+function withSensitivity(option: string, hint: string) {
+  return async (context: PlayContext): Promise<void> => {
     await choose(context, option);
-    await waitForPanelText(context, hint);
+    await findEnabled(context, "button", hint);
   };
 }
 
 export const Panel: Story = {
-  play: untilPanelShows("Recommended for most forms."),
+  play: async (context) => {
+    await findEnabled(context, "button", BALANCED_HINT);
+  },
 };
 
 export const NoFiles: Story = {
@@ -63,17 +70,29 @@ export const NoFilesTooltip: Story = {
   play: openTooltip({ runButton: true }),
 };
 
+export const BalancedSensitivityTooltip: Story = {
+  play: openTooltip({ info: BALANCED_HINT }),
+};
+
 export const StrictSensitivity: Story = {
-  play: withSensitivity(
-    "Strict",
-    "Only very confident matches - fewer fields, fewer mistakes.",
+  play: withSensitivity("Strict", STRICT_HINT),
+};
+
+export const StrictSensitivityTooltip: Story = {
+  play: openTooltip(
+    { info: STRICT_HINT },
+    { after: withSensitivity("Strict", STRICT_HINT) },
   ),
 };
 
 export const ThoroughSensitivity: Story = {
-  play: withSensitivity(
-    "Thorough",
-    "Finds more fields, but may add some where none belong.",
+  play: withSensitivity("Thorough", THOROUGH_HINT),
+};
+
+export const ThoroughSensitivityTooltip: Story = {
+  play: openTooltip(
+    { info: THOROUGH_HINT },
+    { after: withSensitivity("Thorough", THOROUGH_HINT) },
   ),
 };
 

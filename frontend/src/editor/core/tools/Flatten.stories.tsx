@@ -55,8 +55,18 @@ export const NoFiles: Story = {
   args: { files: [] },
 };
 
-export const FlattenOptionsTooltip: Story = {
-  play: openTooltip({ step: "Flatten Options" }),
+export const SettingsTooltip: Story = {
+  play: openTooltip({ step: "Settings" }),
+};
+
+export const FlattenOnlyFormsTooltip: Story = {
+  play: openTooltip({ info: /^Only flatten form fields/ }),
+};
+
+export const RenderingDpiTooltip: Story = {
+  play: openTooltip({
+    info: /^Optional\. Leave blank to use the system default/,
+  }),
 };
 
 export const NoFilesTooltip: Story = {

@@ -2,6 +2,7 @@ import type { StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import {
   fixtureResponse,
+  knownA11yIssues,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
@@ -32,9 +33,17 @@ const OPTIONS = [
 
 const CHECKED_BY_DEFAULT = OPTIONS.slice(0, 2);
 
+// The "Select at least one element to remove." warning is amber text at 3.05:1
+// on the panel background, under the 4.5:1 body-text minimum.
+const nothingSelectedContrast = knownA11yIssues("color-contrast");
+
 async function clearSelection(context: PlayContext) {
   for (const name of CHECKED_BY_DEFAULT)
     await toggle(context, "checkbox", name);
+  const panel = await panelOf(context);
+  await expect(
+    panel.getByText("Select at least one element to remove."),
+  ).toBeVisible();
 }
 
 export const Panel: Story = {};
@@ -50,11 +59,43 @@ export const EverythingSelected: Story = {
 };
 
 export const NothingSelected: Story = {
+  parameters: nothingSelectedContrast,
   play: clearSelection,
 };
 
 export const NothingSelectedTooltip: Story = {
+  parameters: nothingSelectedContrast,
   play: openTooltip({ runButton: true }, { after: clearSelection }),
+};
+
+export const RemoveJavaScriptTooltip: Story = {
+  play: openTooltip({
+    info: "Remove JavaScript actions and scripts from the PDF",
+  }),
+};
+
+export const RemoveEmbeddedFilesTooltip: Story = {
+  play: openTooltip({ info: "Remove any files embedded within the PDF" }),
+};
+
+export const RemoveXmpMetadataTooltip: Story = {
+  play: openTooltip({ info: "Remove XMP metadata from the PDF" }),
+};
+
+export const RemoveDocumentMetadataTooltip: Story = {
+  play: openTooltip({
+    info: "Remove document information metadata (title, author, etc.)",
+  }),
+};
+
+export const RemoveLinksTooltip: Story = {
+  play: openTooltip({
+    info: "Remove external links and launch actions from the PDF",
+  }),
+};
+
+export const RemoveFontsTooltip: Story = {
+  play: openTooltip({ info: "Remove embedded fonts from the PDF" }),
 };
 
 export const NoFiles: Story = {

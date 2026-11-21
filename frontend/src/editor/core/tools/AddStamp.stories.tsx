@@ -1,5 +1,5 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { expect, userEvent } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import {
   fixtureResponse,
   knownA11yIssues,
@@ -7,6 +7,7 @@ import {
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  bodyOf,
   choose,
   findEnabled,
   openColorPicker,
@@ -33,24 +34,26 @@ type Story = StoryObj<typeof meta>;
 
 const POSITION_STEP = "Position & Formatting";
 
+/** A field's accessible name also carries its (i)'s text, so match the label as a prefix. */
+const PAGES_TO_STAMP = /^Pages to Stamp/;
+const STAMP_TEXT = /^Stamp Text/;
+const QR_CONTENT = /^QR Code Content/;
+
 async function enterStampText(context: PlayContext, text = "APPROVED") {
-  await userEvent.type(
-    await findEnabled(context, "textbox", "Stamp Text"),
-    text,
-  );
+  await userEvent.type(await findEnabled(context, "textbox", STAMP_TEXT), text);
   await waitForPanelText(context, "Preview:");
 }
 
-async function expandVariables(context: PlayContext) {
+async function pinDynamicVariables(context: PlayContext) {
   await userEvent.click(
-    await findEnabled(context, "button", /Dynamic Variables/),
+    await findEnabled(context, "button", "Dynamic Variables"),
   );
-  return waitForPanelText(context, "Page Information");
+  return within(await bodyOf(context).findByRole("tooltip", {}, STAGE_TIMEOUT));
 }
 
 async function chooseQr(context: PlayContext) {
   await choose(context, "QR Code");
-  return findEnabled(context, "textbox", "QR Code Content");
+  return findEnabled(context, "textbox", QR_CONTENT);
 }
 
 async function enterQrContent(context: PlayContext) {
@@ -73,7 +76,7 @@ async function uploadStampImage(context: PlayContext) {
 async function openPositionStep(context: PlayContext) {
   await openStep(context, POSITION_STEP);
   return (await panelOf(context)).findByRole(
-    "button",
+    "radio",
     { name: "Rotation" },
     STAGE_TIMEOUT,
   );
@@ -82,11 +85,6 @@ async function openPositionStep(context: PlayContext) {
 async function textPositionStep(context: PlayContext) {
   await enterStampText(context);
   await openPositionStep(context);
-}
-
-async function selectPill(context: PlayContext, name: string) {
-  await textPositionStep(context);
-  await userEvent.click(await findEnabled(context, "button", name));
 }
 
 export const Panel: Story = {};
@@ -102,12 +100,12 @@ export const StampTextRequiredTooltip: Story = {
 export const PageSelection: Story = {
   args: { files: ["multi-page-sample.pdf"] },
   play: async (context) => {
-    await typeInto(
-      context,
-      "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)",
-      "1,3-5",
-    );
+    await typeInto(context, PAGES_TO_STAMP, "1,3-5");
   },
+};
+
+export const PagesToStampTooltip: Story = {
+  play: openTooltip({ info: /^Comma-separated page numbers or ranges/ }),
 };
 
 export const StampTextEntered: Story = {
@@ -132,13 +130,17 @@ export const TemplateChosen: Story = {
 };
 
 export const DynamicVariables: Story = {
-  play: expandVariables,
+  play: openTooltip({ info: "Dynamic Variables" }),
 };
 
 export const VariableInserted: Story = {
+  // A pinned tooltip's title is white on the primary blue, at 3.67:1.
+  parameters: knownA11yIssues("color-contrast"),
   play: async (context) => {
-    const panel = await expandVariables(context);
-    await userEvent.click(panel.getByRole("button", { name: "@page_number" }));
+    const variables = await pinDynamicVariables(context);
+    await userEvent.click(
+      variables.getByRole("button", { name: "@page_number" }),
+    );
     await waitForPanelText(context, "Preview:");
   },
 };
@@ -169,6 +171,10 @@ export const QrCodeContentTooLong: Story = {
       "Too long to fit in a QR code. Shorten the content.",
     );
   },
+};
+
+export const QrCodeContentTooltip: Story = {
+  play: openTooltip({ info: /^Text or link to encode/ }, { after: chooseQr }),
 };
 
 export const ImageStamp: Story = {
@@ -209,13 +215,19 @@ export const QuickPositionChosen: Story = {
 export const RotationSetting: Story = {
   // The step's number fields have no label, its slider thumbs no name.
   parameters: knownA11yIssues("aria-input-field-name", "label"),
-  play: (context) => selectPill(context, "Rotation"),
+  play: async (context) => {
+    await textPositionStep(context);
+    await choose(context, "Rotation");
+  },
 };
 
 export const OpacitySetting: Story = {
   // The step's number fields have no label, its slider thumbs no name.
   parameters: knownA11yIssues("aria-input-field-name", "label"),
-  play: (context) => selectPill(context, "Opacity"),
+  play: async (context) => {
+    await textPositionStep(context);
+    await choose(context, "Opacity");
+  },
 };
 
 export const TextColorPicker: Story = {
@@ -272,24 +284,6 @@ export const QrCodePositionAndFormatting: Story = {
     await openPositionStep(context);
     await waitForPanelText(context, "QR Code Size");
   },
-};
-
-export const RotationTooltip: Story = {
-  // The step's number fields have no label, its slider thumbs no name.
-  parameters: knownA11yIssues("aria-input-field-name", "label"),
-  play: openTooltip({ info: "Rotation" }, { after: textPositionStep }),
-};
-
-export const OpacityTooltip: Story = {
-  // The step's number fields have no label, its slider thumbs no name.
-  parameters: knownA11yIssues("aria-input-field-name", "label"),
-  play: openTooltip({ info: "Opacity" }, { after: textPositionStep }),
-};
-
-export const SizeTooltip: Story = {
-  // The step's number fields have no label, its slider thumbs no name.
-  parameters: knownA11yIssues("aria-input-field-name", "label"),
-  play: openTooltip({ info: "Font/Image Size" }, { after: textPositionStep }),
 };
 
 export const Results: Story = {
