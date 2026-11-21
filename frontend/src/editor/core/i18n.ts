@@ -1,5 +1,5 @@
 import i18n from "i18next";
-import * as reactI18next from "react-i18next";
+import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import TomlBackend from "@editor/i18n/tomlBackend";
 import {
@@ -24,64 +24,54 @@ export {
   toUnderscoreLanguages,
 };
 
-const i18nInstance = i18n.use(TomlBackend).use(LanguageDetector);
+i18n
+  .use(TomlBackend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    fallbackLng: "en-US",
+    supportedLngs: Object.keys(supportedLanguages),
+    load: "currentOnly",
+    nonExplicitSupportedLngs: false,
+    debug: process.env.NODE_ENV === "development",
 
-// Some focused tests mock react-i18next with only the hooks they exercise.
-// Vitest throws when a missing named export is read from an automock, so read
-// the optional integration plugin defensively.
-try {
-  const initReactI18next = reactI18next.initReactI18next;
-  if (initReactI18next) {
-    i18nInstance.use(initReactI18next);
-  }
-} catch {
-  // The React plugin is optional for i18next's core initialization.
-}
+    // Ensure synchronous loading to prevent timing issues
+    initAsync: false,
 
-i18nInstance.init({
-  fallbackLng: "en-US",
-  supportedLngs: Object.keys(supportedLanguages),
-  load: "currentOnly",
-  nonExplicitSupportedLngs: false,
-  debug: process.env.NODE_ENV === "development",
-
-  // Ensure synchronous loading to prevent timing issues
-  initAsync: false,
-
-  interpolation: {
-    escapeValue: false, // React already escapes values
-  },
-
-  backend: {
-    loadPath: (lngs: string[], namespaces: string[]) => {
-      const lng = lngs[0];
-      const basePath = import.meta.env.BASE_URL || "/";
-      const cleanBasePath = basePath.endsWith("/")
-        ? basePath.slice(0, -1)
-        : basePath;
-      return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.toml`;
+    interpolation: {
+      escapeValue: false, // React already escapes values
     },
-  },
 
-  detection: {
-    order: ["localStorage", "navigator", "htmlTag"],
-    caches: [], // Don't cache auto-detected language - only cache when user manually selects
-    convertDetectedLanguage: (lng: string) => {
-      // Map bare en to en-US
-      const normalized = normalizeLanguageCode(lng);
-      return normalized === "en" ? "en-US" : normalized;
+    backend: {
+      loadPath: (lngs: string[], namespaces: string[]) => {
+        const lng = lngs[0];
+        const basePath = import.meta.env.BASE_URL || "/";
+        const cleanBasePath = basePath.endsWith("/")
+          ? basePath.slice(0, -1)
+          : basePath;
+        return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.toml`;
+      },
     },
-  },
 
-  react: {
-    useSuspense: true, // Enable suspense to prevent premature rendering
-    bindI18n: "languageChanged loaded",
-    bindI18nStore: "added removed",
-    transEmptyNodeValue: "", // Return empty string for missing keys instead of key name
-    transSupportBasicHtmlNodes: true,
-    transKeepBasicHtmlNodesFor: ["br", "strong", "i", "p"],
-  },
-});
+    detection: {
+      order: ["localStorage", "navigator", "htmlTag"],
+      caches: [], // Don't cache auto-detected language - only cache when user manually selects
+      convertDetectedLanguage: (lng: string) => {
+        // Map bare en to en-US
+        const normalized = normalizeLanguageCode(lng);
+        return normalized === "en" ? "en-US" : normalized;
+      },
+    },
+
+    react: {
+      useSuspense: true, // Enable suspense to prevent premature rendering
+      bindI18n: "languageChanged loaded",
+      bindI18nStore: "added removed",
+      transEmptyNodeValue: "", // Return empty string for missing keys instead of key name
+      transSupportBasicHtmlNodes: true,
+      transKeepBasicHtmlNodesFor: ["br", "strong", "i", "p"],
+    },
+  });
 
 // Set document direction based on language
 i18n.on("languageChanged", (lng) => {
