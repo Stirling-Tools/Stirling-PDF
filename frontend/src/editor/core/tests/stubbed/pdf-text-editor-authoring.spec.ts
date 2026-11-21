@@ -589,7 +589,7 @@ test.describe("PDF text editor: shapes", () => {
       .toBeGreaterThan(160);
 
     const colour = page.getByTestId("pdf-editor-shape-colour");
-    await colour.fill("#c02020");
+    await colour.fill("#c02020"); // theme-allow-color test input for the picker, not a UI colour
     await colour.press("Enter");
     await expect
       .poll(async () => (await drawnShapes(page))[0].fill?.r)
