@@ -647,18 +647,16 @@ description = "Maximális DPI a képfeldolgozáshoz (0 = korlátlan)"
 label = "Maximális DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Munkamenet-korlátok és időkorlátok beállítása minden folyamat-végrehajtóra"
 ghostscript = "Ghostscript"
 installApp = "Alkalmazás telepítése"
 label = "Folyamat-végrehajtó korlátok"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF HTML-re"
+officeConvert = "Office-konverzió"
+officeConvertSessionLimit = "Párhuzamos konverziók maximális száma; 0 esetén a korlát a CPU-k és a memória alapján kerül meghatározásra"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Párhuzamos példányok maximális száma"
@@ -667,10 +665,6 @@ label = "Munkamenet-korlát"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maximális futási idő"
 label = "Időkorlát (perc)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "A Stirling Office Convert béta verzióban van. Jobb konverziókat kínál, gyorsabban és kevesebb memóriahasználattal, mint a LibreOffice."
-label = "Új Stirling Office konverzió használata"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Ideiglenes fájltárolás és takarítási viselkedés konfigurálása"
@@ -688,11 +682,6 @@ label = "Tisztítási intervallum (perc)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "A szélesebb rendszer ideiglenes könyvtár tisztítása (körültekintően használja)"
 label = "Rendszer ideiglenes tár tisztítása"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Könyvtár a LibreOffice ideiglenes fájljaihoz (hagyja üresen az alapértelmezettért: baseTmpDir/libreoffice)"
-label = "LibreOffice ideiglenes könyvtár"
-placeholder = "Alapértelmezett: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximális kor órában, ami után az ideiglenes fájlok törlésre kerülnek"
@@ -1300,17 +1289,6 @@ label = "Alapértelmezett előállító"
 [admin.settings.general.customPaths]
 description = "Egyéni fájlrendszer-útvonalak konfigurálása a pipeline feldolgozáshoz és külső eszközökhöz"
 label = "Egyéni elérési utak"
-
-[admin.settings.general.customPaths.operations]
-label = "Külső eszközök útvonalai"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Elérési út a LibreOffice unoconverthez dokumentumkonverziókhoz (hagyja üresen az alapértelmezettért: /opt/venv/bin/unoconvert)"
-label = "Unoconvert futtatható állomány"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "A WeasyPrint futtatható állomány elérési útja HTML–PDF átalakításhoz (hagyja üresen az alapértelmezettért: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint futtatható állomány"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline könyvtárak"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Dokumentum címe"
 pdfUaTitleHelp = "Az olvasó ezt jeleníti meg a fájlnév helyett. Ha üresen marad, az első címsor lesz használva."
 selectSourceFormatFirst = "Először válasszon forrásformátumot"
 settings = "Beállítások"
+signInToUse = "Jelentkezz be a használathoz"
 single = "Egyetlen"
 sourceFormatPlaceholder = "Forrásformátum"
-stirlingOfficeConvert = "Stirling Office Convert használata (béta)"
-stirlingOfficeConvertDescription = "Jobb, gyorsabb konverziók kevesebb memóriahasználattal. Kapcsolja ki a standard konverter használatához."
 strictMode = "Szigorú mód"
 strictModeDesc = "Hiba, ha a konverzió nem tökéletes (VeraPDF ellenőrzést használ)"
 svgPdfOptions = "SVG PDF-be beállítások"
@@ -4419,8 +4396,6 @@ webOptions = "Web to PDF beállítások"
 zoomLevel = "Nagyítási szint"
 
 [convert.ebookOptions]
-embedAllFonts = "Összes betűtípus beágyazása"
-embedAllFontsDesc = "Az e-könyv összes betűtípusának beágyazása a létrehozott PDF-be"
 includePageNumbers = "Oldalszámok hozzáadása"
 includePageNumbersDesc = "Oldalszámok hozzáadása a létrehozott PDF-hez"
 includeTableOfContents = "Tartalomjegyzék hozzáadása"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Dekoratív kép"
 description = "Kép leírása"
 descriptionInfo = "A képernyőolvasók ezt olvassák fel a kép helyett."
 encrypted = "A címkék nem szerkeszthetők titkosított fájlban"
+figureDescription = "Ábra leírása"
+figureDescriptionInfo = "A képernyőolvasók ezt olvassák fel az ábra helyett."
 formFieldDescription = "Mezőleírás"
+formulaDescription = "Képlet leírása"
+formulaDescriptionInfo = "A képernyőolvasók ezt olvassák fel a képlet helyett. Úgy fogalmazd meg, ahogy kimondanád, például: \"x négyzet plusz egy\"."
 heading = "Akadálymentesség"
 innerTagLabel = "Címke {{number}}"
 innerTags = "Címkék ebben a szövegben"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Hiányzó leírások"
 mixedContent = "Az ábra más tartalmat is tartalmaz"
 mixedTags = "Vegyes"
 needsDescriptionBadge = "Nincs leírás"
-nextImage = "Következő kép"
+nextToReview = "Következő ellenőrizendő"
 notFigure = "A szöveg részeként címkézve"
 removeTag = "Címke eltávolítása"
 saveFailed = "Az akadálymentességi módosításokat nem sikerült menteni, ezért a fájl nem lett mentve. Vonja vissza őket, és próbálja újra."
@@ -9661,10 +9640,6 @@ signInToStart = "Jelentkezzen be a próbaverzió indításához"
 stage = "{{current}} / {{total}} szakasz"
 stagesLabel = "Előrehaladás"
 
-[portal.enterprise.connect]
-ownerOnly = "Csak ennek a szervernek a tulajdonosa csatlakoztathatja. Kérje meg, hogy nyissa meg ezt az oldalt."
-unavailable = "Ennél a szervernél ki van kapcsolva a Stirling-fiókhoz csatlakozás. Foglaljon egy hívást, és együtt beállítjuk a próbaverziót."
-
 [portal.enterprise.landing]
 lede = "Próbálja ki 14 napig ingyen, majd itt állítsa össze az ajánlatát és írja alá a megállapodást. Nincs szükség kártyára."
 tickAgreement = "Egyetlen megállapodás fedi az MSA-t, rendeléslapot, EULA-t és DPA-t"
@@ -11283,11 +11258,6 @@ downloadOffline = "Offline licenc letöltése (.lic)"
 hint = "Illessze be ezt a kulcsot egy self-hosted példányba az aktiváláshoz, vagy őrizze meg a nyilvántartásához. Tartsa biztonságban."
 label = "Az Ön licenckulcsa"
 trialFileHint = "Ez az Ön próba licencfájlja. Miután a megállapodás létrejött, térjen vissza, és töltse le újra — az online licenckulccsal ellentétben a .lic fájl nem frissül magától."
-
-[portal.procurement.link]
-cta = "Fiók összekapcsolása"
-description = "A beszerzés az összekapcsolt Stirling-fiókján fut: így hozzuk létre a próbaidőszakot, árazzuk be az ajánlatát és indítjuk el a számlázást. A kezdéshez kapcsoljon össze egy fiókot."
-title = "Kapcsolja össze fiókját a kezdéshez"
 
 [portal.procurement.live]
 description = "Az előfizetése aktív, és a licence ki lett állítva. A csapata létrehozva, és a számlázás elindult."
@@ -14260,7 +14230,6 @@ toggleDetails = "Részletek váltása"
 
 [tool]
 endpointUnavailable = "Ez az eszköz nem érhető el a szerverén."
-endpointUnavailableClickable = "Ebben a módban nem érhető el. Kattintson a bejelentkezéshez."
 filesLoading = "A fájlok még töltődnek, kérjük, várjon."
 filesLoadingProgress = "{{loaded}} / {{total}} fájl töltődik..."
 invalidParams = "Töltse ki a kötelező beállításokat."
@@ -14268,6 +14237,8 @@ noFiles = "Adjon hozzá egy fájlt a kezdéshez."
 scopeFiles = "fájlok"
 scopeThisFile = "ez a fájl"
 selectFilesHint = "Válasszon fájlokat az Aktív fájlok között az eszköz futtatásához"
+signInRequired = "Ehhez Stirling-fiók szükséges. Jelentkezz be a folytatáshoz."
+signInToUse = "Jelentkezz be a használathoz"
 singleFileScope = "Csak erre alkalmazva: {{fileName}}"
 viewerMode = "Válts a fájlszerkesztőre több fájl hozzáadásához."
 
