@@ -43,6 +43,46 @@ class OfficeToPdfServiceTest {
     }
 
     @Test
+    void damagedInputIsABadRequestWithoutTheExceptionName() throws Exception {
+        var options = service.options();
+        try (MockedStatic<OfficeToPdf> engine = mockStatic(OfficeToPdf.class)) {
+            engine.when(() -> OfficeToPdf.convert(input, output, options))
+                    .thenThrow(new java.util.zip.ZipException("zip END header not found"));
+
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> service.convert(input, output, options));
+            assertThat(e.getMessage())
+                    .isEqualTo("The file could not be read: it is damaged or incomplete");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "true, unsupported",
+        "true, zip",
+        "true, eof",
+        "true, notOffice",
+        "false, timeout",
+        "false, disk"
+    })
+    void onlyUnreadableInputCountsAsTheCallersFault(boolean expected, String kind) {
+        java.io.IOException e =
+                switch (kind) {
+                    case "unsupported" ->
+                            new stirling.software.officeconvert.UnsupportedFormatException("x");
+                    case "zip" -> new java.util.zip.ZipException("x");
+                    case "eof" -> new java.io.EOFException("x");
+                    case "notOffice" ->
+                            new java.io.IOException("The file is not an Office document: x");
+                    case "timeout" -> new java.io.InterruptedIOException("The file is not x");
+                    default -> new java.io.IOException("No space left on device");
+                };
+        assertThat(OfficeToPdfService.unreadableInput(e)).isEqualTo(expected);
+    }
+
+    @Test
     void truncatedOutputNamesTheReason() throws Exception {
         var options = service.options();
         try (MockedStatic<OfficeToPdf> engine = mockStatic(OfficeToPdf.class)) {

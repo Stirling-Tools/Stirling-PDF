@@ -1,10 +1,13 @@
 package stirling.software.SPDF.service;
 
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.stream.Collectors;
+import java.util.zip.ZipException;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -19,6 +22,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.officeconvert.UnsupportedFormatException;
 import stirling.software.officeconvert.memory.Admission;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
 import stirling.software.officeconvert.topdf.io.PoiXml;
@@ -118,7 +122,13 @@ public class OfficeToPdfService {
 
     private void convert(Path in, Path out, OfficeToPdf.Options options, String name)
             throws IOException {
-        OfficeToPdf.Result result = OfficeToPdf.convert(in, out, options);
+        OfficeToPdf.Result result;
+        try {
+            result = OfficeToPdf.convert(in, out, options);
+        } catch (IOException e) {
+            rejectUnreadable(e);
+            throw e;
+        }
         log.debug(
                 "Converted {} to PDF in process: {} pages, {} warnings",
                 in.getFileName(),
@@ -144,5 +154,27 @@ public class OfficeToPdfService {
                     name,
                     reasons);
         }
+    }
+
+    public static void rejectUnreadable(IOException e) {
+        if (unreadableInput(e)) {
+            String reason =
+                    e instanceof EOFException || e instanceof ZipException
+                            ? "it is damaged or incomplete"
+                            : e.getMessage();
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.conversionUnreadable", "The file could not be read: {0}", reason);
+        }
+    }
+
+    static boolean unreadableInput(IOException e) {
+        if (e instanceof InterruptedIOException) {
+            return false;
+        }
+        String message = e.getMessage();
+        return e instanceof UnsupportedFormatException
+                || e instanceof ZipException
+                || e instanceof EOFException
+                || message != null && message.startsWith("The file is not");
     }
 }
