@@ -48,9 +48,9 @@ public class MergePdfsRequest extends MultiplePDFFiles {
     private boolean generateTocPage = false;
 
     @Schema(
-        description =
-            "Deprecated. Use generateBookmarks instead. Still accepted so that existing requests keep generating bookmarks.",
-        requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            description =
+                    "Deprecated. Use generateBookmarks instead. Still accepted so that existing requests keep generating bookmarks.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private Boolean generateToc;
 
     @Schema(

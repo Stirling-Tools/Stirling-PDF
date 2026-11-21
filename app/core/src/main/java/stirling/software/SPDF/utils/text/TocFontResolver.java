@@ -79,7 +79,7 @@ public class TocFontResolver {
      * If even "…" alone is too wide, it is returned anyway.
      */
     public List<TextRun> fitToWidth(String text, float fontSize, float maxWidth)
-        throws IOException {
+            throws IOException {
         List<TextRun> runs = toRuns(text);
         if (width(runs, fontSize) <= maxWidth) {
             return runs;
@@ -140,8 +140,8 @@ public class TocFontResolver {
         String character = Character.toString(codePoint);
         Character.UnicodeScript script = Character.UnicodeScript.of(codePoint);
         boolean neutral =
-            script == Character.UnicodeScript.COMMON
-                || script == Character.UnicodeScript.INHERITED;
+                script == Character.UnicodeScript.COMMON
+                        || script == Character.UnicodeScript.INHERITED;
         if (neutral && TextEncodingHelper.canEncodeCharacters(current, character)) {
             return current;
         }
@@ -181,6 +181,6 @@ public class TocFontResolver {
     private static boolean isCjkPunctuation(int codePoint) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
         return block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
-            || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS;
+                || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS;
     }
 }

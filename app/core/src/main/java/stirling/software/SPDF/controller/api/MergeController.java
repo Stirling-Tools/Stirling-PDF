@@ -248,7 +248,8 @@ public class MergeController {
         TempFile outputTempFile = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
-        boolean generateBookmarks = request.isGenerateBookmarks() || Boolean.TRUE.equals(request.getGenerateToc());
+        boolean generateBookmarks =
+                request.isGenerateBookmarks() || Boolean.TRUE.equals(request.getGenerateToc());
         boolean generateTocPage = request.isGenerateTocPage();
 
         MultipartFile[] files = request.getFileInput();
