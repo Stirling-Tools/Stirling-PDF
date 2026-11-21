@@ -76,6 +76,7 @@ import { useActiveUrlSource } from "@editor/components/viewer/useActiveUrlSource
 import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
+import { RenderFormsBridge } from "@editor/components/viewer/RenderFormsBridge";
 import { SelectionAPIBridge } from "@editor/components/viewer/SelectionAPIBridge";
 import { PanAPIBridge } from "@editor/components/viewer/PanAPIBridge";
 import { SpreadAPIBridge } from "@editor/components/viewer/SpreadAPIBridge";
@@ -160,6 +161,8 @@ interface LocalEmbedPDFProps {
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
   enableFormFill?: boolean;
+  /** True while the PDF access check is running, so form rendering is not yet decided. */
+  pdfAccessPending?: boolean;
   /** Structural create/modify overlays only mount while the Form tool owns the viewer. */
   formEditingActive?: boolean;
   /** A tool's layer that replaces each page's own, or null for the viewer's layers. */
@@ -940,6 +943,7 @@ export function LocalEmbedPDF({
   enableAnnotations = false,
   enableRedaction = false,
   enableFormFill = false,
+  pdfAccessPending = false,
   formEditingActive = false,
   pageLayer = null,
   isManualRedactionMode = false,
@@ -1362,6 +1366,9 @@ export function LocalEmbedPDF({
     annotationAnchorsByIdRef.current.clear();
   }, [fileStableKey]);
 
+  // Null while access is pending, so a new version keeps the last known setting.
+  const renderWithForms = pdfAccessPending ? null : !enableFormFill;
+
   // The registry is built from the viewer's first source; later bytes arrive
   // through DocumentSwapBridge, so no replacement may change that identity.
   // Create plugins configuration
@@ -1398,8 +1405,8 @@ export function LocalEmbedPDF({
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: !enableFormFill,
-        // The overlay owns appearances in every mode, so access changes never rebuild the registry.
+        // RenderFormsBridge syncs withForms at runtime, so access changes never rebuild the registry.
+        withForms: renderWithForms ?? false,
         withAnnotations: false,
       }),
 
@@ -1736,6 +1743,7 @@ export function LocalEmbedPDF({
             restorePending={restorePending}
             onEvent={onRestoreEvent}
           />
+          <RenderFormsBridge withForms={renderWithForms} />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
           <SelectionAPIBridge
