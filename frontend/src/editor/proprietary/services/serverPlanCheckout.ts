@@ -6,7 +6,7 @@ import { getAccessToken } from "@editor/auth/session";
 const loadSupabaseClient = () => import("@editor/services/supabaseClient");
 
 /**
- * A Team-plan checkout, sized in user blocks rather than seats.
+ * A Team-plan checkout, sized in the selected price's user blocks.
  *
  * {@link uiMode} follows the instance's own protocol: Stripe's embedded iframe needs a secure
  * context, so a plain-HTTP instance asks for `"hosted"` and supplies the two return URLs.
@@ -116,6 +116,41 @@ export interface PendingTeamChange {
   quantity: number;
   effectiveAt: number;
   interval: string | null;
+  userBlockSize?: number;
+}
+
+/** Capacity outside the new subscription is retained when its quantity changes. */
+export interface TeamCheckoutCapacity {
+  freeUsers: number;
+  legacyUsers: number;
+  quantity: number;
+  maxQuantity: number;
+}
+
+/** Reads the billing leader's existing holdings before pricing additional capacity. */
+export async function getTeamCheckoutCapacity(): Promise<TeamCheckoutCapacity> {
+  const { supabase } = await loadSupabaseClient();
+  const token = await getAccessToken();
+  if (!supabase || !token) throw new Error("Sign in to manage your Team plan");
+  const { data, error } = await supabase.functions.invoke<TeamCheckoutCapacity>(
+    "team-subscription-change",
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      body: { action: "capacity" },
+    },
+  );
+  if (
+    error ||
+    !data ||
+    ![data.freeUsers, data.legacyUsers, data.quantity].every(
+      (n) => Number.isSafeInteger(n) && n >= 0,
+    ) ||
+    !Number.isSafeInteger(data.maxQuantity) ||
+    data.maxQuantity < 1
+  ) {
+    throw new Error("Could not load Team capacity. Refresh and try again.");
+  }
+  return data;
 }
 
 /** Reads or cancels a future Team change; the Edge function verifies the billing leader. */

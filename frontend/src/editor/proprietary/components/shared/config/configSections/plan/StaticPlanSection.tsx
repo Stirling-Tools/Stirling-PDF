@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Card, Text, Stack, Collapse, Divider, Tooltip } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { USERS_PER_BLOCK } from "@editor/components/shared/stripeCheckout/utils/capacity";
 import { alert } from "@editor/components/toast";
 import { LicenseInfo, mapLicenseToTier } from "@editor/services/licenseService";
 import {
@@ -44,6 +43,14 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
     plan: "server" | "enterprise",
     upgrade: boolean,
   ) => {
+    if (plan === "server") {
+      window.open(
+        `${import.meta.env.VITE_SAAS_FRONTEND_URL}/team`,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      return;
+    }
     // Prevent Free → Enterprise (must have Server first)
     const currentTier = mapLicenseToTier(currentLicenseInfo || null);
     if (currentTier === "free" && plan === "enterprise") {
@@ -100,9 +107,10 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
       popular: false,
       highlights: planHighlights.SERVER_MONTHLY,
       features: planFeatures.SERVER,
-      maxUsers: t("plan.team.maxUsers", "{{users}} users", {
-        users: USERS_PER_BLOCK,
-      }),
+      maxUsers: t(
+        "plan.team.individualUsers",
+        "5 free users, then $1 per user/month",
+      ),
     },
     {
       id: "enterprise",

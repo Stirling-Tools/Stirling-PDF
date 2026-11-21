@@ -10,6 +10,14 @@ const updateSeats = vi.hoisted(() => ({
 const license = vi.hoisted(() => ({
   value: undefined as { licenseInfo: LicenseInfo | null } | undefined,
 }));
+const checkout = vi.hoisted(() => ({
+  value: undefined as
+    | { openCheckout: ReturnType<typeof vi.fn>; isLoading: boolean }
+    | undefined,
+}));
+vi.mock("@editor/contexts/CheckoutContext", () => ({
+  useCheckoutOptional: () => checkout.value,
+}));
 
 vi.mock("@editor/contexts/UpdateSeatsContext", () => ({
   useOptionalUpdateSeats: () => updateSeats.value,
@@ -24,6 +32,7 @@ const provider = { openUpdateSeats: vi.fn(async () => {}), isLoading: false };
 
 function withLicence(info: Partial<LicenseInfo>) {
   updateSeats.value = provider;
+  checkout.value = { openCheckout: vi.fn(), isLoading: false };
   license.value = {
     licenseInfo: {
       licenseType: "SERVER",
@@ -43,7 +52,8 @@ describe("self-hosted seat management", () => {
 
     const onChanged = vi.fn();
     result.current.open(onChanged);
-    expect(provider.openUpdateSeats).toHaveBeenCalledWith({
+    expect(checkout.value!.openCheckout).toHaveBeenCalledWith("server", {
+      combinedChoose: true,
       onSuccess: onChanged,
     });
   });
@@ -55,11 +65,11 @@ describe("self-hosted seat management", () => {
     ).toBe(true);
   });
 
-  // A free licence is capped, not extendable: the route off it is an upgrade.
-  it("withholds it on a free licence", () => {
+  it("offers Team checkout on a free licence", () => {
     expect(
-      withLicence({ licenseType: "NORMAL", maxUsers: 5 }).current.available,
-    ).toBe(false);
+      withLicence({ licenseType: "NORMAL", maxUsers: 5, enabled: false })
+        .current.available,
+    ).toBe(true);
   });
 
   it("withholds it on a disabled licence", () => {
@@ -76,6 +86,7 @@ describe("self-hosted seat management", () => {
   it("withholds it, without throwing, when no seat provider is mounted", () => {
     const result = withLicence({});
     updateSeats.value = undefined;
+    checkout.value = undefined;
     const { result: noProvider } = renderHook(() => useSeatManagement());
     expect(result.current.available).toBe(true);
     expect(noProvider.current.available).toBe(false);

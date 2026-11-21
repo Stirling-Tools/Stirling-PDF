@@ -35,7 +35,7 @@ describe("TeamPlanRow", () => {
     expect(screen.getByText("Users")).toBeInTheDocument();
     expect(screen.getByText("34 of 100 users")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Add capacity" }),
+      screen.getByRole("button", { name: "Add seats" }),
     ).toBeInTheDocument();
     expect(container.querySelector(".billing-meter--paid")).not.toBeNull();
   });
@@ -69,8 +69,7 @@ describe("TeamPlanRow", () => {
     expect(free.container.querySelector(".billing-meter--warn")).toBeNull();
   });
 
-  it("prices Team only when the plan identity above does not", () => {
-    // Team alone: the identity reads "Team, up to 100 users" and carries no price, so the row does.
+  it("describes purchased capacity without assuming the customer's price", () => {
     const alone = render(
       <TeamPlanRow
         wallet={w(
@@ -79,7 +78,9 @@ describe("TeamPlanRow", () => {
         )}
       />,
     );
-    expect(screen.getByText("$99/mo per 100 users")).toBeInTheDocument();
+    expect(
+      screen.getByText("Free allowance plus purchased seats"),
+    ).toBeInTheDocument();
     alone.unmount();
 
     // With the Processor the identity already carries the base, so the row must not re-price it.
@@ -107,7 +108,7 @@ describe("TeamPlanRow", () => {
       />,
     );
     expect(
-      screen.getByText("The Team plan covers 100 users"),
+      screen.getByText("Add users for $1 per user/month"),
     ).toBeInTheDocument();
     cloud.unmount();
 

@@ -90,7 +90,7 @@ describe("local licence entitlements", () => {
         expect(screen.getByText("37 of 200 users")).toBeInTheDocument(),
       );
       expect(screen.queryByText("Server")).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
+      fireEvent.click(screen.getByRole("button", { name: "Add seats" }));
       expect(addCapacity).toHaveBeenCalledOnce();
       expect(state.licenseInfo.licenseType).toBe("SERVER");
       expect(state.fetchUsers).toHaveBeenCalled();

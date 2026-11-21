@@ -9,7 +9,7 @@ vi.mock("@editor/services/apiClient", () => ({ default: {} }));
 import licenseService from "@editor/services/licenseService";
 
 it.each([
-  ["usd", 9900, "$", 99],
+  ["usd", 100, "$", 1],
   ["jpy", 15000, "JPY", 15000],
   ["cad", 13900, "CAD", 139],
 ])(
@@ -18,8 +18,10 @@ it.each([
     invoke.mockResolvedValue({
       data: {
         prices: {
-          "selfhosted:team:monthly": { unit_amount: amount, currency },
-          "selfhosted:team:yearly": { unit_amount: amount * 10, currency },
+          "selfhosted:team:monthly": { unit_amount: amount * 100, currency },
+          "selfhosted:team:yearly": { unit_amount: amount * 1000, currency },
+          "selfhosted:teamseat:monthly": { unit_amount: amount, currency },
+          "selfhosted:teamseat:yearly": { unit_amount: amount * 10, currency },
         },
         missing: [],
       },
@@ -37,8 +39,14 @@ it.each([
       "gbp",
     );
     expect(
-      result.plans.find((p) => p.id === "selfhosted:team:monthly"),
-    ).toMatchObject({ currency: symbol, price: expected });
+      result.plans.find((p) => p.id === "selfhosted:teamseat:monthly"),
+    ).toMatchObject({ currency: symbol, price: expected, userBlockSize: 1 });
+    expect(
+      result.plans.find((p) => p.id === "selfhosted:enterprise:monthly"),
+    ).toMatchObject({
+      lookupKey: "selfhosted:team:monthly",
+      price: expected * 100,
+    });
   },
 );
 
@@ -46,8 +54,8 @@ it("looks up only Team prices so Enterprise currency support cannot force a USD 
   invoke.mockResolvedValue({
     data: {
       prices: {
-        "selfhosted:team:monthly": { unit_amount: 15000, currency: "aud" },
-        "selfhosted:team:yearly": { unit_amount: 150000, currency: "aud" },
+        "selfhosted:teamseat:monthly": { unit_amount: 15000, currency: "aud" },
+        "selfhosted:teamseat:yearly": { unit_amount: 150000, currency: "aud" },
       },
       missing: [],
     },
@@ -68,17 +76,20 @@ it("looks up only Team prices so Enterprise currency support cannot force a USD 
   );
   expect(invoke).toHaveBeenLastCalledWith("stripe-price-lookup", {
     body: {
-      lookup_keys: ["selfhosted:team:monthly", "selfhosted:team:yearly"],
+      lookup_keys: [
+        "selfhosted:teamseat:monthly",
+        "selfhosted:teamseat:yearly",
+      ],
       currency: "aud",
     },
   });
   expect(
-    result.plans.find((p) => p.id === "selfhosted:team:monthly"),
+    result.plans.find((p) => p.id === "selfhosted:teamseat:monthly"),
   ).toMatchObject({ currency: "AUD", price: 150 });
   expect(result.plans.map((plan) => plan.id)).toEqual([
     "free",
-    "selfhosted:team:monthly",
-    "selfhosted:team:yearly",
+    "selfhosted:teamseat:monthly",
+    "selfhosted:teamseat:yearly",
   ]);
   expect(
     licenseService.groupPlansByTier(result.plans).map((group) => group.tier),

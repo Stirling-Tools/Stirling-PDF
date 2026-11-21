@@ -3,25 +3,23 @@ import { useState } from "react";
 import { CapacityStage } from "@editor/components/shared/stripeCheckout/stages/CapacityStage";
 import { PlanTier } from "@editor/services/licenseService";
 
-/**
- * The capacity step of the Stripe checkout, between billing period and payment. Only the Team tier
- * reaches it: the buyer picks users, and the plan is priced per block of 100.
- */
 const yearlyPlan: PlanTier = {
   id: "server-yearly",
   name: "Team",
-  price: 990,
+  price: 10,
+  userBlockSize: 1,
   currency: "$",
   period: "/year",
   features: [],
   highlights: [],
-  lookupKey: "selfhosted:team:yearly",
+  lookupKey: "selfhosted:teamseat:yearly",
 };
 
 const monthlyPlan: PlanTier = {
   ...yearlyPlan,
   id: "server-monthly",
-  price: 99,
+  price: 1,
+  lookupKey: "selfhosted:teamseat:monthly",
   period: "/month",
 };
 
@@ -30,6 +28,12 @@ const meta = {
   component: CapacityStage,
   args: {
     selectedPlan: yearlyPlan,
+    capacity: {
+      freeUsers: 5,
+      legacyUsers: 0,
+      quantity: 0,
+      maxQuantity: 999999,
+    },
     serverQuantity: 1,
     setServerQuantity: () => {},
     onContinue: () => {},
@@ -50,31 +54,35 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A fresh purchase: the smallest block, 100 users. */
-export const SingleBlock: Story = {};
+export const SingleSeat: Story = {};
 
-/** 300 users on the monthly plan, so the total is three block prices. */
-export const ThreeBlocksMonthly: Story = {
-  args: { selectedPlan: monthlyPlan, serverQuantity: 3 },
+export const SevenSeatsMonthly: Story = {
+  args: { selectedPlan: monthlyPlan, serverQuantity: 7 },
 };
 
-/**
- * An installation already running 240 users cannot buy cover for fewer than 300. Reducing capacity
- * is a renewal conversation, not something checkout does by stranding accounts.
- */
+export const LegacyBlockTopUp: Story = {
+  args: {
+    selectedPlan: monthlyPlan,
+    serverQuantity: 7,
+    currentLimit: 105,
+    capacity: {
+      freeUsers: 5,
+      legacyUsers: 100,
+      quantity: 0,
+      maxQuantity: 999999,
+    },
+  },
+};
+
 export const ConstrainedByCurrentUsers: Story = {
-  args: { serverQuantity: 3, currentUsers: 240 },
+  args: { serverQuantity: 7, currentUsers: 12 },
 };
 
 /** Below the minimum the continue button is blocked and the reason is stated. */
 export const BelowCurrentUsage: Story = {
-  args: { serverQuantity: 1, currentUsers: 240 },
+  args: { serverQuantity: 1, currentUsers: 12 },
 };
 
-/**
- * At the self-serve maximum the enterprise quote is offered beside the purchase. It is an option,
- * never a wall: self-serve checkout still completes.
- */
 export const OffersEnterpriseQuote: Story = {
-  args: { serverQuantity: 5, onContactSales: () => {} },
+  args: { serverQuantity: 995, onContactSales: () => {} },
 };

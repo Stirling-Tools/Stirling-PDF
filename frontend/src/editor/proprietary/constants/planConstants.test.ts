@@ -32,6 +32,8 @@ describe("self-hosted authentication entitlements", () => {
     expect(result.current.FREE).toEqual(
       expect.arrayContaining(["SSO (OAuth2/OIDC)", "Up to 5 users"]),
     );
-    expect(result.current.SERVER_MONTHLY).toContain("100 users included");
+    expect(result.current.SERVER_MONTHLY).toContain(
+      "Free allowance plus individual paid seats",
+    );
   });
 });

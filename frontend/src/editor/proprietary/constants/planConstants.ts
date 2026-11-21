@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { PlanFeature } from "@editor/types/license";
-import { USERS_PER_BLOCK } from "@editor/components/shared/stripeCheckout/utils/capacity";
 
 /**
  * Shared plan feature definitions for Stirling PDF Self-Hosted
@@ -53,8 +52,7 @@ export const usePlanFeatures = (): PlanFeaturesMap => {
     const upToFiveUsers = t("plan.features.upToFiveUsers", "Up to 5 users");
     const usersIncluded = t(
       "plan.features.usersIncluded",
-      "{{users}} users included",
-      { users: USERS_PER_BLOCK },
+      "Free allowance plus individual paid seats",
     );
     const googleDriveIntegration = t(
       "plan.features.googleDriveIntegration",
@@ -157,8 +155,7 @@ export const usePlanHighlights = (): PlanHighlightsMap => {
     );
     const usersIncluded = t(
       "plan.highlights.usersIncluded",
-      "{{users}} users included",
-      { users: USERS_PER_BLOCK },
+      "Free allowance plus individual paid seats",
     );
     const advancedIntegrations = t(
       "plan.highlights.advancedIntegrations",

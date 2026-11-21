@@ -9,6 +9,13 @@ import {
 } from "@editor/components/shared/stripeCheckout/utils/capacity";
 
 describe("usersForBlocks", () => {
+  it("adds the free allowance and legacy blocks once to individual seats", () => {
+    expect(usersForBlocks(1, 1, 5)).toBe(6);
+    expect(usersForBlocks(7, 1, 105)).toBe(112);
+    expect(blocksForUsers(112, 1, 105)).toBe(7);
+    expect(blocksForUsers(106, 1, 105)).toBe(1);
+    expect(shouldOfferEnterprise(25, 1, 5)).toBe(false);
+  });
   it("multiplies blocks by the block size", () => {
     expect(usersForBlocks(1)).toBe(USERS_PER_BLOCK);
     expect(usersForBlocks(3)).toBe(USERS_PER_BLOCK * 3);
