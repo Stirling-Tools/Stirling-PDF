@@ -86,16 +86,14 @@ public class AnalysisController {
             properties.put("keywords", info.getKeywords());
             properties.put("creator", info.getCreator());
             properties.put("producer", info.getProducer());
-            properties.put(
-                    "creationDate",
-                    info.getCreationDate() != null ? info.getCreationDate().toString() : null);
-            properties.put(
-                    "modificationDate",
-                    info.getModificationDate() != null
-                            ? info.getModificationDate().toString()
-                            : null);
+            properties.put("creationDate", toIsoInstant(info.getCreationDate()));
+            properties.put("modificationDate", toIsoInstant(info.getModificationDate()));
             return ResponseEntity.ok(properties);
         }
+    }
+
+    private static String toIsoInstant(Calendar calendar) {
+        return calendar == null ? null : calendar.toInstant().toString();
     }
 
     @AutoJobPostMapping(

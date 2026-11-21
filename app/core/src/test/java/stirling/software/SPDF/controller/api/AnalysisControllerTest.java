@@ -156,6 +156,45 @@ class AnalysisControllerTest {
         assertThat(body.get("title")).isNull();
     }
 
+    @Test
+    void getDocumentProperties_returnsDatesAsIso8601Instants() throws IOException {
+        PDFFile request = createRequest();
+        PDDocument doc = mock(PDDocument.class);
+        PDDocumentInformation info = new PDDocumentInformation();
+        Calendar created = new GregorianCalendar(TimeZone.getTimeZone("GMT+05:30"));
+        created.clear();
+        created.set(2024, Calendar.MARCH, 5, 14, 30, 15);
+        Calendar modified = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        modified.clear();
+        modified.set(2025, Calendar.JANUARY, 2, 3, 4, 5);
+        info.setCreationDate(created);
+        info.setModificationDate(modified);
+        when(pdfDocumentFactory.load(mockFile, true)).thenReturn(doc);
+        when(doc.getDocumentInformation()).thenReturn(info);
+
+        ResponseEntity<?> response = analysisController.getDocumentProperties(request);
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> body = (Map<String, String>) response.getBody();
+        assertThat(body).containsEntry("creationDate", "2024-03-05T09:00:15Z");
+        assertThat(body).containsEntry("modificationDate", "2025-01-02T03:04:05Z");
+    }
+
+    @Test
+    void getDocumentProperties_missingDatesStayNull() throws IOException {
+        PDFFile request = createRequest();
+        PDDocument doc = mock(PDDocument.class);
+        when(pdfDocumentFactory.load(mockFile, true)).thenReturn(doc);
+        when(doc.getDocumentInformation()).thenReturn(new PDDocumentInformation());
+
+        ResponseEntity<?> response = analysisController.getDocumentProperties(request);
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> body = (Map<String, String>) response.getBody();
+        assertThat(body).containsEntry("creationDate", null);
+        assertThat(body).containsEntry("modificationDate", null);
+    }
+
     // --- getPageDimensions ---
 
     @Test
