@@ -151,7 +151,8 @@ export function endSelfWrite(path: string): void {
   selfWrites.delete(path);
 }
 
-function isSelfWrite(path: string): boolean {
+/** Whether we are writing this path ourselves, so its disk state is ours. */
+export function isSelfWrite(path: string): boolean {
   const until = selfWrites.get(path);
   if (until == null) return false;
   // A save that never re-baselined must not blind us forever.
@@ -206,8 +207,8 @@ export async function syncLinkedFileFromDisk(
   const keepOurs = stub.isDirty || hasUnsavedWork;
   // Sync clients, indexers and DMS check-outs rewrite the timestamp without
   // touching the content, so a change is only real once the bytes say so.
-  // Sized against the copies held rather than the baseline: a check queued
-  // behind a reload sees the stub before that reload's baseline lands.
+  // Only a held copy the size of disk can match it; the baseline describes
+  // disk, not any copy.
   const held = heldCopies
     ? (await fetchHeldCopies(heldCopies)).filter(
         (copy) => copy.size === state.size,

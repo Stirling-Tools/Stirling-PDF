@@ -11,6 +11,7 @@ import {
   diskBaseline,
   loadDiskVersion,
   refreshDiskBaselineAfterSave,
+  isSelfWrite,
   notifyFileVanished,
   notifyDiskReloaded,
   notifyDiskTooLarge,
@@ -33,11 +34,13 @@ import { hasUnsavedWork } from "@editor/services/unsavedWork";
 export type { OpenDecision, ReconcilePort };
 
 // Desktop side of the reconcile seam: here a stored record is a cache of a file
-// on disk, so every read re-checks disk and the workbench is told what changed.
+// on disk. Opening a record re-checks its content against disk; while a file is
+// open, only the loss of its original is tracked.
 
 const MAX_VERSION_HOPS = 50;
+const GONE_RECHECK_MS = 500;
 
-/** Copies disk may still hold: the bytes on screen, and those of the newest
+/** Copies disk may still hold: the record's own bytes, and those of the newest
  *  version on the same path that no in-app edit has changed. A tool output is
  *  dirty, so the walk skips it to the version it was derived from; an undo
  *  marks a restored version dirty even when its bytes are what disk holds. */
@@ -46,9 +49,10 @@ function heldCopies(
   port: ReconcilePort,
 ): () => Promise<Blob[]> {
   return async () => {
-    const open = port.getFile(stub.id);
+    const own =
+      port.getFile(stub.id) ?? (await fileStorage.getStirlingFile(stub.id));
     const clean = await lastCleanCopy(stub, port);
-    return [open, clean].filter(
+    return [own, clean].filter(
       (copy, i, all): copy is Blob => copy != null && all.indexOf(copy) === i,
     );
   };
@@ -76,22 +80,28 @@ async function lastCleanCopy(
   return null;
 }
 
-/** Open files already told they are too large to re-read unasked. */
-const tooLargeNotified = new Set<FileId>();
-
-/** Take the disk version of a conflicted file, discarding the unsaved in-app
- *  edits shadowing it. Only reachable from the conflict modal's action. */
+/** Take the disk version, discarding any unsaved in-app edits shadowing it.
+ *  Only reachable from an action the user chose: the conflict modal, or the
+ *  too-large notice raised at open. */
 async function useDiskVersion(
   stub: StirlingFileStub,
   port: ReconcilePort,
 ): Promise<void> {
-  tooLargeNotified.delete(stub.id);
   const loaded = await loadDiskVersion(stub);
   if (!loaded) return;
   const { file, state } = loaded;
   const reloadedAt = Date.now();
   port.putFile(stub.id, file);
-  await persistDiskUpdate(stub.id, file, state, reloadedAt);
+  // The new bytes are already on screen, so a failed store must not leave the
+  // stub and page data describing the old ones.
+  try {
+    await persistDiskUpdate(stub.id, file, state, reloadedAt);
+  } catch (error) {
+    console.error(
+      `[Reconcile] Failed to store disk version of ${stub.id}:`,
+      error,
+    );
+  }
   // Must follow putFile: the workbench drops updates for a file it cannot find.
   port.updateStub(stub.id, pickedUpFields(file, state, reloadedAt));
   // pickedUpFields cleared the cached page data; without this the editors lay
@@ -267,100 +277,55 @@ export async function reconcileBeforeOpen(
   return { updates };
 }
 
-/** Re-check one open record against disk. Returns it when its original is gone,
- *  so the caller can report a whole batch's losses in one toast. */
+/** Re-check one open record's disk original. Returns it when the original is
+ *  gone, so the caller can report a whole batch's losses in one toast.
+ *
+ *  Only whether the file is still there is checked. What is on screen is never
+ *  replaced or questioned while it is open: a reload resets the viewer and any
+ *  editor state the app cannot count as unsaved, and sync clients and indexers
+ *  touch files constantly. An edit made elsewhere is picked up the next time
+ *  the file is opened. */
 async function resyncRecord(
   stub: StirlingFileStub,
   port: ReconcilePort,
 ): Promise<StirlingFileStub | null> {
   const fileId = stub.id;
-  const outcome = await syncLinkedFileFromDisk(
-    stub,
-    hasUnsavedWork(),
-    heldCopies(stub, port),
-  );
-  if (outcome.status !== "too-large") tooLargeNotified.delete(fileId);
+  const path = stub.localFilePath;
+  // Our own save can leave the path briefly empty or locked.
+  if (!path || isSelfWrite(path)) return null;
+  let state = await getDiskFileState(path);
 
-  if (outcome.status === "missing") {
+  if (state.availability === "gone") {
+    // Editors and sync clients that delete the original before moving the new
+    // file in leave the path empty for a moment; detaching is not undone.
+    await new Promise((resolve) => setTimeout(resolve, GONE_RECHECK_MS));
+    state = await getDiskFileState(path);
+  }
+
+  if (state.availability === "gone") {
+    // A pass queued behind the one that detached it started from a snapshot
+    // taken before that detach rendered.
+    if (port.getStub(fileId)?.localFilePath !== path) return null;
     // Never delete what is on screen: cutting the link leaves the document
     // intact and makes the next save ask for somewhere to put it.
-    port.updateStub(fileId, detachedFields(stub.localFilePath));
+    port.updateStub(fileId, detachedFields(path));
     return stub;
   }
 
-  if (outcome.status === "unavailable") {
-    port.updateStub(fileId, { diskUnavailableReason: outcome.reason });
+  if (state.availability === "unavailable") {
+    port.updateStub(fileId, { diskUnavailableReason: state.reason });
     return null;
   }
 
   if (stub.diskUnavailableReason) {
     port.updateStub(fileId, { diskUnavailableReason: undefined });
   }
-
-  // Nothing to reconcile: the change on disk is the child that superseded this
-  // version, and its bytes are not ours to replace.
-  if (outcome.status === "superseded") return null;
-
-  if (outcome.status === "touched") {
-    port.updateStub(fileId, diskBaseline(outcome.state));
-    return null;
-  }
-
-  if (outcome.status === "too-large") {
-    // The baseline stays un-stamped, so every later event lands here again.
-    if (tooLargeNotified.has(fileId)) return null;
-    tooLargeNotified.add(fileId);
-    notifyDiskTooLarge(stub.name, () => void useDiskVersion(stub, port));
-    return null;
-  }
-
-  if (outcome.status === "conflict") {
-    // Already flagged; re-toasting on every write the other app makes would be
-    // unusable.
-    if (stub.diskConflictAt) return null;
-    port.updateStub(fileId, { diskConflictAt: Date.now() });
-    requestDiskConflictChoice({
-      fileId,
-      name: stub.name,
-      onUseDisk: () => void useDiskVersion(stub, port),
-    });
-    return null;
-  }
-
-  if (outcome.status === "updated") {
-    // The stat, the read and this commit are all awaited, so the decision was
-    // made against a snapshot. Re-check before overwriting the user's bytes.
-    const latest = port.getStub(fileId);
-    if (
-      !latest ||
-      latest.isDirty ||
-      hasUnsavedWork() ||
-      latest.localFilePath !== stub.localFilePath
-    ) {
-      return null;
-    }
-    const { file, state } = outcome;
-    const reloadedAt = Date.now();
-    port.putFile(fileId, file);
-    // The new bytes are already on screen, so a failed store must not leave
-    // the stub and page data describing the old ones: the next check would
-    // find disk matching what is held and never finish the reload.
-    try {
-      await persistDiskUpdate(fileId, file, state, reloadedAt);
-    } catch (error) {
-      console.error(`[Reconcile] Failed to store reload of ${fileId}:`, error);
-    }
-    port.updateStub(fileId, pickedUpFields(file, state, reloadedAt));
-    port.reprocessFile(fileId);
-    notifyDiskReloaded(stub.name);
-  }
-
   return null;
 }
 
-// The watcher and the focus re-check fire together when the user edits a file
-// elsewhere and switches back. Run concurrently, both read disk before either
-// stamps the new baseline, and the document is reloaded twice.
+// The watcher and the focus re-check fire together when the user changes a
+// file elsewhere and switches back; one pass at a time, so the same loss is
+// not detached and reported by two passes at once.
 const queuedPaths = new Set<string>();
 let queuedPort: ReconcilePort | undefined;
 let draining: Promise<void> | undefined;
@@ -439,7 +404,6 @@ export function noteFileSaved(
   // A save just made disk and app agree, so re-baseline against the file we
   // wrote. Without this the next open reads it back as an external change.
   if (updates.isDirty !== false || !updates.localFilePath) return;
-  tooLargeNotified.delete(fileId);
   void refreshDiskBaselineAfterSave(fileId, updates.localFilePath)
     .then((baseline) => {
       if (baseline) applyUpdates(baseline);
@@ -453,5 +417,4 @@ export function forgetFile(fileId: FileId): void {
   // A queued conflict for a file that is gone would name it in a blocking modal
   // whose Use-disk button then no-ops against the workbench's own guard.
   cancelDiskConflict(fileId);
-  tooLargeNotified.delete(fileId);
 }
