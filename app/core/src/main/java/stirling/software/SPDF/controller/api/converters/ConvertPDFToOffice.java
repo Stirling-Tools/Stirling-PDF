@@ -35,6 +35,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOCase;
 import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -120,6 +121,11 @@ public class ConvertPDFToOffice {
             throws IOException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
+        if ("doc".equalsIgnoreCase(outputFormat)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.docOutputUnsupported",
+                    "PDF to .doc is no longer supported; use docx or odt");
+        }
         return convert(
                 inputFile, outputFormat, Set.of("docx", "odt"), MediaType.APPLICATION_OCTET_STREAM);
     }

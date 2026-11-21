@@ -98,8 +98,14 @@ public class ConvertOfficeController {
         // OLE2 binaries are copied as-is: the ZIP sanitizer cannot read a compound file.
         if (!isLegacyBinaryOffice(inputFile)
                 && officeDocumentSanitizer.isSanitizableExtension(extension)) {
-            Files.write(
-                    inputPath, officeDocumentSanitizer.sanitize(inputFile.getBytes(), extension));
+            byte[] sanitized;
+            try {
+                sanitized = officeDocumentSanitizer.sanitize(inputFile.getBytes(), extension);
+            } catch (IOException e) {
+                OfficeToPdfService.rejectUnreadable(e);
+                throw e;
+            }
+            Files.write(inputPath, sanitized);
         } else {
             try (InputStream in = inputFile.getInputStream()) {
                 Files.copy(in, inputPath, StandardCopyOption.REPLACE_EXISTING);

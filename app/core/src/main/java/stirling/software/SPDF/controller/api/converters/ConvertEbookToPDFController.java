@@ -110,9 +110,15 @@ public class ConvertEbookToPDFController {
         try {
 
             if (officeDocumentSanitizer.isSanitizableExtension(lowerExtension)) {
-                Files.write(
-                        inputPath,
-                        officeDocumentSanitizer.sanitize(inputFile.getBytes(), lowerExtension));
+                byte[] sanitized;
+                try {
+                    sanitized =
+                            officeDocumentSanitizer.sanitize(inputFile.getBytes(), lowerExtension);
+                } catch (IOException e) {
+                    OfficeToPdfService.rejectUnreadable(e);
+                    throw e;
+                }
+                Files.write(inputPath, sanitized);
             } else {
                 try (InputStream inputStream = inputFile.getInputStream()) {
                     Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
