@@ -647,18 +647,16 @@ description = "ഇമേജ് പ്രോസസ്സിംഗിനുള്�
 label = "പരമാവധി DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "ഓരോ പ്രോസസ് എക്സിക്യൂട്ടർക്കുമുള്ള സെഷൻ പരിധികളും ടൈംഔട്ടുകളും ക്രമീകരിക്കുക"
 ghostscript = "Ghostscript"
 installApp = "ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക"
 label = "പ്രോസസ് എക്സിക്യൂട്ടർ പരിധികൾ"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "Office പരിവർത്തനം"
+officeConvertSessionLimit = "ഏകകാല പരിവർത്തനങ്ങളുടെ പരമാവധി എണ്ണം; 0 നൽകിയാൽ CPU-കളുടെയും മെമ്മറിയുടെയും അടിസ്ഥാനത്തിൽ ഒരു പരിധി നിശ്ചയിക്കും"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "സമകാലിക ഇൻസ്റ്റൻസുകളുടെ പരമാവധി എണ്ണം"
@@ -667,10 +665,6 @@ label = "സെഷൻ പരിധി"
 [admin.settings.advanced.processExecutor.timeout]
 description = "പരമാവധി നിർവഹണ സമയം"
 label = "ടൈംഔട്ട് (മിനിറ്റ്)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert ബീറ്റയിലാണ്. LibreOffice-നെക്കാൾ വേഗത്തിലും കുറഞ്ഞ മെമ്മറിയിലും മികച്ച പരിവർത്തനങ്ങൾ ഇത് നൽകുന്നു."
-label = "പുതിയ Stirling Office പരിവർത്തനം ഉപയോഗിക്കുക"
 
 [admin.settings.advanced.tempFileManagement]
 description = "താൽക്കാലിക ഫയൽ സംഭരണവും ക്ലീൻ‌അപ്പ് പെരുമാറ്റവും ക്രമീകരിക്കുക"
@@ -688,11 +682,6 @@ label = "ക്ലീൻ‌അപ്പ് ഇടവേള (മിനിറ്�
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "വിശാലമായ സിസ്റ്റം ടെംപ് ഡയറക്ടറിയും ക്ലീൻ ചെയ്യണോ (ജാഗ്രതയോടെ ഉപയോഗിക്കുക)"
 label = "സിസ്റ്റം ടെംപ് ക്ലീൻ ചെയ്യുക"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice ടെംപ് ഫയലുകൾക്കായുള്ള ഡയറക്ടറി (ഡീഫാൾട്ട് ഉപയോഗിക്കാൻ ശൂന്യം വിടുക: baseTmpDir/libreoffice)"
-label = "LibreOffice ടെംപ് ഡയറക്ടറി"
-placeholder = "സ്വതേ: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "ടെംപ് ഫയലുകൾ ക്ലീൻ ചെയ്യുന്നതിന് മുമ്പുള്ള പരമാവധി മണിക്കൂറുകൾ"
@@ -1300,17 +1289,6 @@ label = "ഡീഫാൾട്ട് നിർമ്മാതാവ്"
 [admin.settings.general.customPaths]
 description = "പൈപ്പ്‌ലൈൻ പ്രോസസിംഗിനും പുറം ടൂളുകൾക്കും വേണ്ടി കസ്റ്റം ഫയൽ സിസ്റ്റം പാതകൾ ക്രമീകരിക്കുക"
 label = "കസ്റ്റം പാതകൾ"
-
-[admin.settings.general.customPaths.operations]
-label = "ബാഹ്യ ടൂൾ പാതകൾ"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "ഡോക്യുമെന്റ് കൺവർഷനുകൾക്കായുള്ള LibreOffice unoconvert-ന്റെ പാത (ഡീഫാൾട്ട് ഉപയോഗിക്കാൻ ശൂന്യം വിടുക: /opt/venv/bin/unoconvert)"
-label = "Unoconvert എക്സിക്യൂട്ടബിൾ"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTML-നെ PDF ആക്കുന്നതിനുള്ള WeasyPrint എക്സിക്യൂട്ടബിൾയുടെ പാത (ഡീഫാൾട്ട് ഉപയോഗിക്കാൻ ശൂന്യം വിടുക: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint എക്സിക്യൂട്ടബിൾ"
 
 [admin.settings.general.customPaths.pipeline]
 label = "പൈപ്പ്‌ലൈൻ ഡയറക്ടറികൾ"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "ഡോക്യുമെന്റ് ശീർഷകം"
 pdfUaTitleHelp = "Filename-ന് പകരം reader കാണിക്കുന്നത്. ശൂന്യമാക്കിയാൽ, ആദ്യ heading ഉപയോഗിക്കും."
 selectSourceFormatFirst = "ആദ്യം source format തിരഞ്ഞെടുക്കുക"
 settings = "ക്രമീകരണങ്ങൾ"
+signInToUse = "ഉപയോഗിക്കാൻ സൈൻ ഇൻ ചെയ്യുക"
 single = "ഒറ്റ"
 sourceFormatPlaceholder = "ഉറവിട ഫോർമാറ്റ്"
-stirlingOfficeConvert = "Stirling Office Convert (ബീറ്റ) ഉപയോഗിക്കുക"
-stirlingOfficeConvertDescription = "കുറഞ്ഞ മെമ്മറിയിൽ മികച്ചതും വേഗത്തിലുള്ളതുമായ പരിവർത്തനങ്ങൾ. സാധാരണ കൺവെർട്ടർ ഉപയോഗിക്കാൻ ഓഫാക്കുക."
 strictMode = "കർശന മോഡ്"
 strictModeDesc = "Conversion perfect അല്ലെങ്കിൽ error (VeraPDF verification ഉപയോഗിക്കുന്നു)"
 svgPdfOptions = "SVG to PDF ഓപ്ഷനുകൾ"
@@ -4419,8 +4396,6 @@ webOptions = "വെബ് ടു PDF ഓപ്ഷനുകൾ"
 zoomLevel = "സൂം ലെവൽ"
 
 [convert.ebookOptions]
-embedAllFonts = "എല്ലാ ഫോണ്ടുകളും ഉൾസേർക്കുക"
-embedAllFontsDesc = "eBook ലെയുള്ള എല്ലാ ഫോണ്ടുകളും സൃഷ്ടിക്കുന്ന PDF-ലേക്ക് ഉൾപ്പെടുത്തുക"
 includePageNumbers = "പേജ് നമ്പറുകൾ ഉൾപ്പെടുത്തുക"
 includePageNumbersDesc = "സൃഷ്ടിച്ച PDF-ൽ പേജ് നമ്പറുകൾ ചേർക്കുക"
 includeTableOfContents = "വിഷയ സൂചി ഉൾപ്പെടുത്തുക"
@@ -7830,7 +7805,11 @@ decorativeLabel = "അലങ്കാര ചിത്രം"
 description = "ചിത്ര വിവരണം"
 descriptionInfo = "സ്ക്രീൻ റീഡറുകൾ ചിത്രത്തിന് പകരം ഇത് വായിക്കും."
 encrypted = "എൻക്രിപ്റ്റ് ചെയ്ത ഫയലിൽ ടാഗുകൾ എഡിറ്റ് ചെയ്യാൻ കഴിയില്ല"
+figureDescription = "ചിത്രത്തിന്റെ വിവരണം"
+figureDescriptionInfo = "സ്ക്രീൻ റീഡറുകൾ ചിത്രത്തിനുപകരം ഇത് വായിക്കും."
 formFieldDescription = "ഫീൽഡ് വിവരണം"
+formulaDescription = "സൂത്രത്തിന്റെ വിവരണം"
+formulaDescriptionInfo = "സ്ക്രീൻ റീഡറുകൾ സൂത്രത്തിനുപകരം ഇത് വായിക്കും. നിങ്ങൾ ശബ്ദമായി പറയുന്നതുപോലെ എഴുതുക; ഉദാഹരണത്തിന്, “x ന്റെ വർഗം പ്ലസ് ഒന്ന്”."
 heading = "പ്രവേശനക്ഷമത"
 innerTagLabel = "ടാഗ് {{number}}"
 innerTags = "ഈ ടെക്സ്റ്റിലുള്ള ടാഗുകൾ"
@@ -7842,7 +7821,7 @@ missingDescriptions = "വിവരണങ്ങൾ ഇല്ല"
 mixedContent = "ഫിഗറിൽ മറ്റ് ഉള്ളടക്കം ഉൾപ്പെടുന്നു"
 mixedTags = "മിശ്രിതം"
 needsDescriptionBadge = "വിവരണം ഇല്ല"
-nextImage = "അടുത്ത ചിത്രം"
+nextToReview = "അവലോകനത്തിനുള്ള അടുത്തത്"
 notFigure = "ടെക്സ്റ്റിന്റെ ഭാഗമായി ടാഗ് ചെയ്തിരിക്കുന്നു"
 removeTag = "ടാഗ് നീക്കം ചെയ്യുക"
 saveFailed = "നിങ്ങളുടെ പ്രവേശനക്ഷമത മാറ്റങ്ങൾ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല, അതിനാൽ ഫയൽ സംരക്ഷിച്ചില്ല. അവ പഴയപടിയാക്കി വീണ്ടും ശ്രമിക്കുക."
@@ -9661,10 +9640,6 @@ signInToStart = "ട്രയൽ ആരംഭിക്കാൻ സൈൻ ഇൻ
 stage = "ഘട്ടം {{current}} / {{total}}"
 stagesLabel = "പുരോഗതി"
 
-[portal.enterprise.connect]
-ownerOnly = "ഈ സെർവറിന്റെ ഉടമയ്ക്കേ ഇത് കണക്റ്റ് ചെയ്യാൻ കഴിയൂ. അവർക്ക് ഈ പേജ് തുറക്കാൻ പറയുക."
-unavailable = "ഈ സെർവറിൽ Stirling അക്കൗണ്ടിലേക്കുള്ള കണക്റ്റ് ഓഫ് ചെയ്തിരിക്കുന്നു. ഒരു കോൾ ബുക്ക് ചെയ്യൂ; ഞങ്ങൾ നിങ്ങളോടൊപ്പം ട്രയൽ സജ്ജമാക്കാം."
-
 [portal.enterprise.landing]
 lede = "14 ദിവസത്തേക്ക് സൗജന്യമായി പരീക്ഷിക്കുക, പിന്നെ നിങ്ങളുടെ ക്വോട്ട് നിർമ്മിച്ച് കരാർ ഇവിടെ ഒപ്പിടുക. കാർഡ് ആവശ്യമില്ല."
 tickAgreement = "MSA, order form, EULA, DPA എന്നിവ ഉൾക്കൊള്ളുന്ന ഒരു ഏക കരാർ"
@@ -11283,11 +11258,6 @@ downloadOffline = "Offline ലൈസൻസ് (.lic) ഡൗൺലോഡ് ച�
 hint = "ഇത് activate ചെയ്യാൻ ഈ key self-hosted instance-ൽ ഒട്ടിക്കുക, അല്ലെങ്കിൽ നിങ്ങളുടെ രേഖകൾക്കായി സൂക്ഷിക്കുക. സുരക്ഷിതമായി സൂക്ഷിക്കുക."
 label = "നിങ്ങളുടെ ലൈസൻസ് key"
 trialFileHint = "ഇത് നിങ്ങളുടെ trial licence file ആണ്. നിങ്ങളുടെ agreement പ്രാബല്യത്തിൽ വന്നാൽ, തിരികെ വന്ന് ഇത് വീണ്ടും ഡൗൺലോഡ് ചെയ്യുക — online licence key-നെ പോലെ അല്ല, .lic file സ്വയം update ചെയ്യില്ല."
-
-[portal.procurement.link]
-cta = "അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
-description = "പ്രോക്യൂർമെന്റ് നിങ്ങളുടെ linked Stirling account-ൽ പ്രവർത്തിക്കുന്നു: trial provision ചെയ്യാനും, നിങ്ങളുടെ ക്വോട്ട് വിലയിടാനും, billing ആരംഭിക്കാനുമുള്ള മാർഗമാണ് ഇത്. ആരംഭിക്കാൻ ഒരു അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക."
-title = "ആരംഭിക്കാൻ നിങ്ങളുടെ അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
 
 [portal.procurement.live]
 description = "നിങ്ങളുടെ subscription സജീവമാണ്, ലൈസൻസ് issue ചെയ്തിരിക്കുന്നു. നിങ്ങളുടെ ടീം provision ചെയ്തിട്ടുണ്ട്, billing ആരംഭിച്ചു."
@@ -14260,7 +14230,6 @@ toggleDetails = "വിശദാംശങ്ങൾ ടോഗിൾ ചെയ്�
 
 [tool]
 endpointUnavailable = "ഈ ഉപകരണം നിങ്ങളുടെ സെർവറിൽ ലഭ്യമല്ല."
-endpointUnavailableClickable = "ഈ മോഡിൽ ലഭ്യമല്ല. സൈൻ ഇൻ ചെയ്യാൻ ക്ലിക് ചെയ്യുക."
 filesLoading = "ഫയലുകൾ ഇപ്പോഴും ലോഡ് ചെയ്യുന്നു, ദയവായി കാത്തിരിക്കുക."
 filesLoadingProgress = "{{loaded}} / {{total}} ഫയലുകൾ ലോഡ് ചെയ്യുന്നു..."
 invalidParams = "ആവശ്യമായ സജ്ജീകരണങ്ങൾ പൂരിപ്പിക്കുക."
@@ -14268,6 +14237,8 @@ noFiles = "ആരംഭിക്കാൻ ഒരു ഫയൽ ചേർക്ക
 scopeFiles = "ഫയലുകൾ"
 scopeThisFile = "ഈ ഫയൽ"
 selectFilesHint = "ഈ ടൂൾ പ്രവർത്തിപ്പിക്കാൻ Active Files-ൽ ഫയലുകൾ തിരഞ്ഞെടുക്കുക"
+signInRequired = "ഇതിന് ഒരു Stirling അക്കൗണ്ട് ആവശ്യമാണ്. തുടരാൻ സൈൻ ഇൻ ചെയ്യുക."
+signInToUse = "ഉപയോഗിക്കാൻ സൈൻ ഇൻ ചെയ്യുക"
 singleFileScope = "ഇത് ബാധകമാകുന്നത് {{fileName}}-ൽ മാത്രം"
 viewerMode = "ഒന്നിലധികം ഫയലുകൾ ചേർക്കാൻ file editor-ലേക്ക് മാറുക."
 
