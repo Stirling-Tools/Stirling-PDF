@@ -5,5 +5,6 @@
 target/
 /gen/schemas
 /runtime/
+/tessdata/
 
 **/stirling_thumbnail_handler.dll
