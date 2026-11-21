@@ -53,16 +53,23 @@ export async function sameBytes(a: Blob, b: Blob): Promise<boolean> {
   return true;
 }
 
+async function fetchLastRead(
+  lastReadCopy: () => Promise<Blob | null>,
+): Promise<Blob | null> {
+  try {
+    return await lastReadCopy();
+  } catch (error) {
+    console.warn("[diskFileSync] Could not find the last disk copy:", error);
+    return null;
+  }
+}
+
 // WebKit can lose a stored blob's backing store, so reading the held copy may
 // reject. Unreadable means unproven: the change is treated as real, and the
 // reload then replaces the dead copy.
-async function matchesLastRead(
-  lastReadCopy: () => Promise<Blob | null>,
-  file: File,
-): Promise<boolean> {
+async function matchesLastRead(held: Blob, file: File): Promise<boolean> {
   try {
-    const held = await lastReadCopy();
-    return held != null && (await sameBytes(held, file));
+    return await sameBytes(held, file);
   } catch (error) {
     console.warn("[diskFileSync] Could not read the last disk copy:", error);
     return false;
@@ -196,9 +203,11 @@ export async function syncLinkedFileFromDisk(
   if (stub.isLeaf === false) return { status: "superseded" };
   const keepOurs = stub.isDirty || hasUnsavedWork;
   // Sync clients, indexers and DMS check-outs rewrite the timestamp without
-  // touching the content, so a same-size change is only real once the bytes
-  // say so.
-  const mayBeTouch = lastReadCopy != null && state.size === stub.diskSyncedSize;
+  // touching the content, so a change is only real once the bytes say so.
+  // Sized against the copy held rather than the baseline: a check queued
+  // behind a reload sees the stub before that reload's baseline lands.
+  const held = lastReadCopy ? await fetchLastRead(lastReadCopy) : null;
+  const mayBeTouch = held != null && held.size === state.size;
   if (keepOurs && !mayBeTouch) return { status: "conflict" };
   if (state.size > AUTO_RELOAD_MAX_BYTES) {
     return keepOurs
@@ -226,7 +235,7 @@ export async function syncLinkedFileFromDisk(
     type: stub.type || "application/pdf",
     lastModified: state.modifiedMs || Date.now(),
   });
-  if (mayBeTouch && (await matchesLastRead(lastReadCopy, file))) {
+  if (held && mayBeTouch && (await matchesLastRead(held, file))) {
     return { status: "touched", state };
   }
   if (keepOurs) return { status: "conflict" };

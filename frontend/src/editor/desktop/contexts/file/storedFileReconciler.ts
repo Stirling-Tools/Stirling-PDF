@@ -331,7 +331,38 @@ async function resyncRecord(
   return null;
 }
 
-export async function reconcileOpenFiles(
+// The watcher and the focus re-check fire together when the user edits a file
+// elsewhere and switches back. Run concurrently, both read disk before either
+// stamps the new baseline, and the document is reloaded twice.
+const queuedPaths = new Set<string>();
+let queuedPort: ReconcilePort | undefined;
+let draining: Promise<void> | undefined;
+
+/** Re-check the open records linked to these paths. Calls made while a check
+ *  is running are merged into one more pass that starts after it. */
+export function reconcileOpenFiles(
+  locations: string[],
+  port: ReconcilePort,
+): Promise<void> {
+  for (const location of locations) queuedPaths.add(location);
+  queuedPort = port;
+  draining ??= drainReconciles();
+  return draining;
+}
+
+async function drainReconciles(): Promise<void> {
+  try {
+    while (queuedPaths.size > 0 && queuedPort) {
+      const paths = [...queuedPaths];
+      queuedPaths.clear();
+      await reconcilePaths(paths, queuedPort);
+    }
+  } finally {
+    draining = undefined;
+  }
+}
+
+async function reconcilePaths(
   locations: string[],
   port: ReconcilePort,
 ): Promise<void> {
