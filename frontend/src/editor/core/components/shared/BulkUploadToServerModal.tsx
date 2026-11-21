@@ -11,6 +11,7 @@ import { uploadHistoryChains } from "@editor/services/serverStorageUpload";
 import { fileStorage } from "@editor/services/fileStorage";
 import { useFileActions } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface BulkUploadToServerModalProps {
   opened: boolean;
@@ -132,7 +133,7 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
           })}
         </Text>
         {displayNames.length > 0 && (
-          <Text size="xs" c="dimmed">
+          <Text size="xs" c="dimmed" className={privateContentClassName}>
             {displayNames.join(", ")}
             {fileNames.length > displayNames.length
               ? t("storageUpload.more", " +{{count}} more", {

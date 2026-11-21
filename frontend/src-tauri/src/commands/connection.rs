@@ -16,6 +16,7 @@ const REQUIRE_SIGN_IN_KEY: &str = "require_sign_in";
 const CLOUD_ONLY_KEY: &str = "cloud_only";
 const LOCAL_PROCESSING_ONLY_KEY: &str = "local_processing_only";
 const LOGIN_AGREEMENT_KEY: &str = "login_agreement_enabled";
+const BLOCK_SIGNED_PDF_EDITS_KEY: &str = "block_signed_pdf_edits";
 pub(crate) const UPDATE_MODE_KEY: &str = "update_mode";
 /// When `true` the update mode was written by a provisioning file and cannot
 /// be changed from the UI. Only another provisioning file (from MDM) can
@@ -27,25 +28,21 @@ const PROVISIONING_FILE_NAME: &str = "stirling-provisioning.json";
 
 /// How the desktop auto-updater should behave on startup.
 ///
-/// * `Prompt`   – default. Show the update popup when a new version is available
-///               and let the user decide whether to install.
-/// * `Auto`     – silently download and install updates on startup, then restart.
-///               Intended for managed deployments (Intune/MDM) where the user
-///               cannot (or should not) be prompted.
-/// * `Disabled` – never check for updates, never show the update UI. Administrators
-///                are expected to push updates through their normal packaging flow.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// * `Prompt` – default. Show the update popup when a new version is available
+///   and let the user decide whether to install.
+/// * `Auto` – silently download and install updates on startup, then restart.
+///   Intended for managed deployments (Intune/MDM) where the user cannot
+///   (or should not) be prompted.
+/// * `Disabled` – never check for updates, never show the update UI.
+///   Administrators are expected to push updates through their normal
+///   packaging flow.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum UpdateMode {
+    #[default]
     Prompt,
     Auto,
     Disabled,
-}
-
-impl Default for UpdateMode {
-    fn default() -> Self {
-        UpdateMode::Prompt
-    }
 }
 
 /// Current update mode plus whether the UI is allowed to change it. Returned
@@ -218,6 +215,7 @@ struct ProvisioningConfig {
     cloud_only: Option<bool>,
     local_processing_only: Option<bool>,
     login_agreement_enabled: Option<bool>,
+    block_signed_pdf_edits: Option<bool>,
     /// Optional headless-install update policy (`"prompt"`, `"auto"`, `"disabled"`).
     /// When omitted the existing stored mode is left unchanged.
     update_mode: Option<UpdateMode>,
@@ -373,6 +371,20 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         ));
     }
 
+    if let Some(block_signed_pdf_edits) = parsed.block_signed_pdf_edits {
+        if let Ok(store) = app_handle.store(STORE_FILE) {
+            store.set(
+                BLOCK_SIGNED_PDF_EDITS_KEY,
+                serde_json::json!(block_signed_pdf_edits),
+            );
+            let _ = store.save();
+        }
+        add_log(format!(
+            "🧩 Provisioned signed PDF edit blocking = {}",
+            block_signed_pdf_edits
+        ));
+    }
+
     let server_url = parsed
         .server_url
         .map(|value| value.trim().to_string())
@@ -387,6 +399,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         && parsed.require_sign_in.is_none()
         && parsed.cloud_only.is_none()
         && parsed.local_processing_only.is_none()
+        && parsed.block_signed_pdf_edits.is_none()
     {
         add_log(
             "⚠️ Provisioning file has no actionable fields (serverUrl/updateMode/loginAgreement); skipping apply"
@@ -449,7 +462,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
     if let Some(mode) = parsed.update_mode {
         store.set(
             UPDATE_MODE_KEY,
-            serde_json::to_value(&mode)
+            serde_json::to_value(mode)
                 .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
         );
         // Only lock the UI when the provisioning file came from a path that
@@ -534,6 +547,15 @@ pub fn login_agreement_enabled(app_handle: &AppHandle) -> bool {
         .unwrap_or(false)
 }
 
+pub fn block_signed_pdf_edits(app_handle: &AppHandle) -> bool {
+    app_handle
+        .store(STORE_FILE)
+        .ok()
+        .and_then(|store| store.get(BLOCK_SIGNED_PDF_EDITS_KEY))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
+}
+
 #[tauri::command]
 pub async fn is_first_launch(app_handle: AppHandle) -> Result<bool, String> {
     let store = app_handle
@@ -607,7 +629,7 @@ pub async fn set_update_mode(app_handle: AppHandle, mode: UpdateMode) -> Result<
 
     store.set(
         UPDATE_MODE_KEY,
-        serde_json::to_value(&mode)
+        serde_json::to_value(mode)
             .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
     );
     store

@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -277,11 +278,13 @@ public class AutoSplitPdfController {
     @MultiFileResponse
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
-            summary = "Auto split PDF pages into separate documents",
+            summary = "Split a PDF at Stirling QR-code divider pages",
             description =
-                    "This endpoint accepts a PDF file, scans each page for a specific QR code, and"
-                            + " splits the document at the QR code boundaries. The output is a zip file"
-                            + " containing each separate PDF document.")
+                    "Splits at each divider page and returns a zip of the parts. Divider"
+                            + " pages are dropped except a divider on page 1, which is retained."
+                            + " duplexMode=true also drops each divider's back page, including"
+                            + " when the divider is retained. With no dividers you get one file; use split-pages or"
+                            + " split-by-size-or-count instead.")
     public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
@@ -295,7 +298,8 @@ public class AutoSplitPdfController {
 
         List<PDDocument> splitDocuments = new ArrayList<>();
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        try (InputStream in = file.getInputStream();
+                PDDocument document = pdfDocumentFactory.load(in)) {
             int totalPages = document.getNumberOfPages();
             log.info("PDF loaded, totalPages={}", totalPages);
 

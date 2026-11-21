@@ -73,7 +73,7 @@ public class RemoveCertSignController {
             // Return the modified PDF as a response
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_unsigned.pdf"),
+                    GeneralUtils.generateFilename(pdf.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }

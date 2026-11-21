@@ -14,13 +14,21 @@ import stirling.software.common.model.api.PDFFile;
 public class MetadataRequest extends PDFFile {
 
     @Schema(
-            description = "Delete all metadata if set to true",
+            description = "True removes all metadata, including XMP, and ignores the other fields",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean deleteAll = false;
 
     @Schema(
-            description = "The author of the document. Omit to remove it.",
+            description =
+                    "True keeps the current value of every standard field left out, instead of"
+                            + " removing it",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private Boolean keepOmitted = false;
+
+    @Schema(
+            description = "The author of the document. Omit to remove it unless keepOmitted=true.",
             example = "author",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String author;
@@ -28,20 +36,21 @@ public class MetadataRequest extends PDFFile {
     @Schema(
             description =
                     "The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to"
-                            + " remove it.",
+                            + " remove it unless keepOmitted=true.",
             pattern = "yyyy/MM/dd HH:mm:ss",
             example = "2023/10/01 12:00:00",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String creationDate;
 
     @Schema(
-            description = "The creator of the document. Omit to remove it.",
+            description = "The creator of the document. Omit to remove it unless keepOmitted=true.",
             example = "creator",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String creator;
 
     @Schema(
-            description = "The keywords for the document. Omit to remove it.",
+            description =
+                    "The keywords for the document. Omit to remove it unless keepOmitted=true.",
             example = "keywords",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String keywords;
@@ -49,41 +58,43 @@ public class MetadataRequest extends PDFFile {
     @Schema(
             description =
                     "The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to"
-                            + " remove it.",
+                            + " remove it unless keepOmitted=true.",
             pattern = "yyyy/MM/dd HH:mm:ss",
             example = "2023/10/01 12:00:00",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String modificationDate;
 
     @Schema(
-            description = "The producer of the document. Omit to remove it.",
+            description =
+                    "The producer of the document. Omit to remove it unless keepOmitted=true.",
             example = "producer",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String producer;
 
     @Schema(
-            description = "The subject of the document. Omit to remove it.",
+            description = "The subject of the document. Omit to remove it unless keepOmitted=true.",
             example = "subject",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String subject;
 
     @Schema(
-            description = "The title of the document. Omit to remove it.",
+            description = "The title of the document. Omit to remove it unless keepOmitted=true.",
             example = "title",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String title;
 
     @Schema(
             description =
-                    "The trapped status of the document. Omit to remove it, which readers treat"
-                            + " as Unknown.",
+                    "The trapped status of the document. Omit to remove it unless keepOmitted=true;"
+                            + " readers treat a missing value as Unknown.",
             allowableValues = {"True", "False", "Unknown"},
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String trapped;
 
     @Schema(
             description =
-                    "Map list of key and value of custom parameters. Note these must start with"
-                            + " customKey and customValue if they are non-standard")
+                    "Custom metadata to add or update, e.g. {\"Department\":\"Finance\"}."
+                            + " Existing custom keys are kept. customKeyN/customValueN pairs also"
+                            + " work.")
     private Map<String, String> allRequestParams;
 }

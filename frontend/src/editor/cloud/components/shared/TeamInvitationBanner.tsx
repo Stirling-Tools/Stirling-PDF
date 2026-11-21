@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { AppBanner } from "@editor/components/shared/AppBanner";
 import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * SaaS-web team invitation banner. Shown at the top of the app when the
@@ -67,9 +68,11 @@ export function TeamInvitationBanner() {
       fw={500}
       style={{ color: "rgba(255, 255, 255, 0.95)" }}
     >
-      <strong>{invitation.inviterEmail}</strong>{" "}
+      <strong className={privateContentClassName}>
+        {invitation.inviterEmail}
+      </strong>{" "}
       {t("team.invitationBanner.message", "has invited you to join")}{" "}
-      <strong>{invitation.teamName}</strong>
+      <strong className={privateContentClassName}>{invitation.teamName}</strong>
     </Text>
   );
 

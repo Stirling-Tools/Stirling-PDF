@@ -55,8 +55,8 @@ fn check_default_windows() -> Result<bool, String> {
         COINIT_APARTMENTTHREADED,
     };
     use windows::Win32::UI::Shell::{
-        IApplicationAssociationRegistration, ApplicationAssociationRegistration,
-        ASSOCIATIONTYPE, ASSOCIATIONLEVEL,
+        ApplicationAssociationRegistration, IApplicationAssociationRegistration, ASSOCIATIONLEVEL,
+        ASSOCIATIONTYPE,
     };
 
     unsafe {
@@ -69,22 +69,27 @@ fn check_default_windows() -> Result<bool, String> {
 
         let result = (|| -> Result<bool, String> {
             // Create the IApplicationAssociationRegistration instance
-            let reg: IApplicationAssociationRegistration =
-                CoCreateInstance(&ApplicationAssociationRegistration, None, CLSCTX_INPROC_SERVER)
-                    .map_err(|e| format!("Failed to create COM instance: {}", e))?;
+            let reg: IApplicationAssociationRegistration = CoCreateInstance(
+                &ApplicationAssociationRegistration,
+                None,
+                CLSCTX_INPROC_SERVER,
+            )
+            .map_err(|e| format!("Failed to create COM instance: {}", e))?;
 
             // Query the current default handler for .pdf extension
             let extension = HSTRING::from(".pdf");
 
-            let default_app = reg.QueryCurrentDefault(
-                &extension,
-                ASSOCIATIONTYPE(0), // AT_FILEEXTENSION
-                ASSOCIATIONLEVEL(1), // AL_EFFECTIVE - gets the effective default (user or machine level)
-            )
-            .map_err(|e| format!("Failed to query current default: {}", e))?;
+            let default_app = reg
+                .QueryCurrentDefault(
+                    &extension,
+                    ASSOCIATIONTYPE(0),  // AT_FILEEXTENSION
+                    ASSOCIATIONLEVEL(1), // AL_EFFECTIVE - gets the effective default (user or machine level)
+                )
+                .map_err(|e| format!("Failed to query current default: {}", e))?;
 
             // Convert PWSTR to String
-            let default_str = default_app.to_string()
+            let default_str = default_app
+                .to_string()
                 .map_err(|e| format!("Failed to convert default app string: {}", e))?;
 
             add_log(format!("Windows PDF handler ProgID: {}", default_str));
@@ -148,7 +153,8 @@ fn check_default_macos() -> Result<bool, String> {
     unsafe {
         // Query the default handler for "com.adobe.pdf" (PDF UTI - standard macOS identifier)
         let pdf_uti = CFString::new("com.adobe.pdf");
-        let handler_ref = LSCopyDefaultRoleHandlerForContentType(pdf_uti.as_concrete_TypeRef(), K_LS_ROLES_ALL);
+        let handler_ref =
+            LSCopyDefaultRoleHandlerForContentType(pdf_uti.as_concrete_TypeRef(), K_LS_ROLES_ALL);
 
         if handler_ref.is_null() {
             add_log("No default PDF handler found".to_string());

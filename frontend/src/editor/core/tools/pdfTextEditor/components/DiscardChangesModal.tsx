@@ -1,6 +1,8 @@
+import { memo } from "react";
 import { Group, Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Props {
   incomingFileName: string | null;
@@ -8,7 +10,7 @@ interface Props {
   onCancel: () => void;
 }
 
-export function DiscardChangesModal({
+export const DiscardChangesModal = memo(function DiscardChangesModal({
   incomingFileName,
   onConfirm,
   onCancel,
@@ -23,7 +25,7 @@ export function DiscardChangesModal({
       data-testid="pdf-editor-discard-modal"
     >
       <Stack gap="md">
-        <Text size="sm">
+        <Text size="sm" className={privateContentClassName}>
           {t(
             "pdfTextEditor.discard.body",
             "Opening {{name}} closes the document you are editing. Your unsaved changes will be lost.",
@@ -57,4 +59,4 @@ export function DiscardChangesModal({
       </Stack>
     </Modal>
   );
-}
+});

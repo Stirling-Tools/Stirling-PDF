@@ -1,6 +1,7 @@
 import type React from "react";
 import {
   Select as MantineSelect,
+  type OptionsFilter,
   type SelectProps as MantineSelectProps,
 } from "@mantine/core";
 import { useInputAria } from "@editor/ui/ariaForwarding";
@@ -17,23 +18,38 @@ const SUI_INPUT_VARS = {
   "--input-height-md": "2.25rem",
 } as React.CSSProperties;
 
+// On the input, not the wrapper: Mantine sets --input-color on the input itself.
+const MUTED_INPUT = { color: "var(--c-text-muted)" };
+
 export interface SelectOption {
   value: string;
   label: string;
   disabled?: boolean;
 }
 
+/** Options listed under a heading. */
+export interface SelectOptionGroup {
+  group: string;
+  options: SelectOption[];
+}
+
 export type SelectSize = "sm" | "md";
 
 export interface SelectProps {
   // Data
-  options: SelectOption[];
+  options: SelectOption[] | SelectOptionGroup[];
   value?: string | null;
   onChange?: (value: string | null) => void;
   defaultValue?: string;
 
   // Behaviour
   searchable?: boolean;
+  /** Called with the text typed into a searchable select. */
+  onSearchChange?: (search: string) => void;
+  /** Which options a search shows; by default those whose label contains it. */
+  filter?: OptionsFilter;
+  /** False keeps picking the selected option from clearing it. */
+  allowDeselect?: boolean;
   clearable?: boolean;
   placeholder?: string;
   nothingFoundMessage?: React.ReactNode;
@@ -58,6 +74,8 @@ export interface SelectProps {
   // SUI — invalid applies error styling; FormField renders the message itself.
   inputSize?: SelectSize;
   invalid?: boolean;
+  /** Shows the value in the muted text colour, for a value the field has by default. */
+  muted?: boolean;
 }
 
 type PassthroughProps = Omit<
@@ -67,6 +85,9 @@ type PassthroughProps = Omit<
     | "onChange"
     | "defaultValue"
     | "searchable"
+    | "onSearchChange"
+    | "filter"
+    | "allowDeselect"
     | "clearable"
     | "placeholder"
     | "nothingFoundMessage"
@@ -95,11 +116,15 @@ type PassthroughProps = Omit<
 export function Select({
   inputSize = "md",
   invalid,
+  muted,
   options,
   value,
   onChange,
   defaultValue,
   searchable,
+  onSearchChange,
+  filter,
+  allowDeselect,
   clearable,
   placeholder,
   nothingFoundMessage,
@@ -123,6 +148,9 @@ export function Select({
     onChange,
     defaultValue,
     searchable,
+    onSearchChange,
+    filter,
+    allowDeselect,
     clearable,
     placeholder,
     nothingFoundMessage,
@@ -142,7 +170,11 @@ export function Select({
 
   return (
     <MantineSelect
-      data={options}
+      data={options.map((option) =>
+        "group" in option
+          ? { group: option.group, items: option.options }
+          : option,
+      )}
       size={inputSize}
       // Boolean error applies invalid styling without rendering Mantine's own
       // message element — FormField owns the visible error text.
@@ -154,7 +186,10 @@ export function Select({
         wrapper: "sui-mantine-wrapper",
         dropdown: "sui-mantine-dropdown",
       }}
-      styles={{ wrapper: SUI_INPUT_VARS }}
+      styles={{
+        wrapper: SUI_INPUT_VARS,
+        input: muted ? MUTED_INPUT : undefined,
+      }}
       {...passthroughProps}
     />
   );

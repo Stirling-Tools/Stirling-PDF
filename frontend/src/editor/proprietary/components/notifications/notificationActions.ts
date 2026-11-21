@@ -114,7 +114,9 @@ export function useNotificationActions(): ClientActionRegistry {
         .getState()
         .files.ids.some((id) => (id as string) === fileId);
       if (!alreadyOpen) {
-        await fileContext.actions.addStirlingFileStubs([stub]);
+        await fileContext.actions.addStirlingFileStubs([stub], {
+          selectFiles: true,
+        });
       }
       viewer.setActiveFileId(fileId);
       // The viewer is what scopes a tool to one document; every other view hands it all of them.

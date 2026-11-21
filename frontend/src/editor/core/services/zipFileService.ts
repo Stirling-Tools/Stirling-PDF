@@ -6,6 +6,7 @@ import {
 } from "@editor/types/fileContext";
 import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
 import { fileStorage } from "@editor/services/fileStorage";
+import { splitFileName } from "@editor/utils/fileUtils";
 
 // Undocumented interface in JSZip for JSZipObject._data
 interface CompressedObject {
@@ -32,6 +33,17 @@ function loadJSZip(): Promise<typeof JSZipClass> {
       throw cause;
     });
   return jsZipPromise;
+}
+
+/** Results can share a name, and a second zip entry with it would replace the first. */
+function uniqueEntryName(name: string, usedNames: Set<string>): string {
+  const [base, extension] = splitFileName(name);
+  let candidate = name;
+  for (let n = 1; usedNames.has(candidate); n++) {
+    candidate = `${base} (${n})${extension}`;
+  }
+  usedNames.add(candidate);
+  return candidate;
 }
 
 export interface ZipExtractionResult {
@@ -182,10 +194,10 @@ export class ZipFileService {
       const JSZip = await loadJSZip();
       const zip = new JSZip();
 
-      // Add each file to the ZIP
+      const usedNames = new Set<string>();
       for (const file of files) {
         const content = await file.arrayBuffer();
-        zip.file(file.name, content);
+        zip.file(uniqueEntryName(file.name, usedNames), content);
       }
 
       // Generate ZIP blob
@@ -466,9 +478,10 @@ export class ZipFileService {
         const JSZip = await loadJSZip();
         const zip = new JSZip();
         const zipContents = await zip.loadAsync(zipBlob);
-        const fileCount = Object.values(zipContents.files).filter(
-          (entry) => !entry.dir,
-        ).length;
+        let fileCount = 0;
+        for (const key in zipContents.files) {
+          if (!zipContents.files[key].dir) fileCount++;
+        }
         return { shouldExtract: true, fileCount };
       }
 
@@ -483,9 +496,10 @@ export class ZipFileService {
       const zipContents = await zip.loadAsync(zipBlob);
 
       // Count non-directory entries
-      const fileCount = Object.values(zipContents.files).filter(
-        (entry) => !entry.dir,
-      ).length;
+      let fileCount = 0;
+      for (const key in zipContents.files) {
+        if (!zipContents.files[key].dir) fileCount++;
+      }
 
       // Only extract if within limit
       return {

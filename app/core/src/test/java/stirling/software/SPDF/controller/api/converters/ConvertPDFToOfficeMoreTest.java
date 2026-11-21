@@ -419,7 +419,8 @@ class ConvertPDFToOfficeMoreTest {
                 assertThrows(
                         ToolRequiredException.class,
                         () -> controller.processPdfToPresentation(presentation, false));
-                assertThrows(ToolRequiredException.class, () -> controller.processPdfToXML(xml));
+                assertThrows(
+                        ToolRequiredException.class, () -> controller.processPdfToXML(xml, null));
                 mockedFactory.verifyNoInteractions();
             }
         }
@@ -438,7 +439,7 @@ class ConvertPDFToOfficeMoreTest {
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
                 stubLibreOfficeWritesOutput(mockedFactory, "xml");
 
-                ResponseEntity<Resource> response = controller.processPdfToXML(file);
+                ResponseEntity<Resource> response = controller.processPdfToXML(file, null);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
@@ -451,7 +452,7 @@ class ConvertPDFToOfficeMoreTest {
             PDFFile file = new PDFFile();
             file.setFileInput(nonPdfFile());
 
-            ResponseEntity<Resource> response = controller.processPdfToXML(file);
+            ResponseEntity<Resource> response = controller.processPdfToXML(file, null);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         }

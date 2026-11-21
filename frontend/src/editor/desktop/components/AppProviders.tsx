@@ -16,7 +16,6 @@ import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
 import { ToolActionsContext } from "@editor/contexts/ToolActionsContext";
 import { useFirstLaunchCheck } from "@editor/hooks/useFirstLaunchCheck";
 import { useBackendInitializer } from "@editor/hooks/useBackendInitializer";
-import { DESKTOP_DEFAULT_APP_CONFIG } from "@editor/config/defaultAppConfig";
 import {
   connectionModeService,
   JWT_EXPIRED_PROMPTED_KEY,
@@ -34,26 +33,17 @@ import UpdateModal from "@editor-core/components/shared/UpdateModal";
 import { useDesktopUpdatePopup } from "@editor/hooks/useDesktopUpdatePopup";
 import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
-// Common tool endpoints to preload for faster first-use
-const COMMON_TOOL_ENDPOINTS = [
-  "/api/v1/misc/compress-pdf",
-  "/api/v1/general/merge-pdfs",
-  "/api/v1/general/split-pages",
-  "/api/v1/convert/pdf/img",
-  "/api/v1/convert/img/pdf",
-  "/api/v1/general/rotate-pdf",
-  "/api/v1/misc/add-watermark",
-  "/api/v1/security/add-password",
-  "/api/v1/security/remove-password",
-  "/api/v1/general/extract-pages",
-];
-
 /**
  * Desktop application providers
  * Wraps proprietary providers and adds desktop-specific configuration
- * - Enables retry logic for app config (needed for Tauri mode when backend is starting)
  * - Shows setup wizard on first launch
  */
+const signInActions = {
+  onEndpointUnavailableClick: () =>
+    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
+};
+const NO_TOOL_ACTIONS = {};
+
 export function AppProviders({ children }: { children: ReactNode }) {
   const localOnly = useLocalProcessingOnly();
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
@@ -201,13 +191,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
             (cfg.lock_connection_mode && cfg.server_config?.url)
           ) {
             // Preserve the managed connection; DesktopAccessGate controls access to local tools.
-            await tauriBackendService.startBackend().catch(console.error);
+            void tauriBackendService.startBackend().catch(console.error);
             setConnectionMode(cfg.mode);
           } else {
             // Normal first launch — auto-enter local mode.
             // The onboarding carousel + sign-in slide will be shown inside the main app.
             await connectionModeService.switchToLocal();
-            await tauriBackendService.startBackend();
+            void tauriBackendService.startBackend().catch(console.error);
             setConnectionMode("local");
           }
         })
@@ -262,13 +252,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // tauriBackendService.isOnline now always reflects the local backend.
       // Wait for it to be healthy before preloading in both modes.
       if (!tauriBackendService.isOnline) return;
-      console.debug(
-        "[AppProviders] Preloading common tool endpoints for local backend",
-      );
-      void endpointAvailabilityService.preloadEndpoints(
-        COMMON_TOOL_ENDPOINTS,
-        backendUrl,
-      );
+      console.debug("[AppProviders] Preloading local backend capabilities");
+      endpointAvailabilityService.preloadLocalCapabilities(backendUrl);
     };
 
     const unsubscribe = tauriBackendService.subscribeToStatus(() =>
@@ -343,17 +328,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   if (!authChecked) {
     return (
-      <ProprietaryAppProviders
-        appConfigRetryOptions={{
-          maxRetries: 5,
-          initialDelay: 1000,
-        }}
-        appConfigProviderProps={{
-          initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-          bootstrapMode: "non-blocking",
-          autoFetch: false,
-        }}
-      >
+      <ProprietaryAppProviders>
         {/* Also here: the auth check below switches mode pre-authChecked. */}
         <DesktopQueryCacheReset />
         {/* The title-bar strip (window controls) comes from AppFrame, which wraps
@@ -366,22 +341,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   // Normal app flow
   return (
-    <ProprietaryAppProviders
-      appConfigRetryOptions={{
-        maxRetries: 5,
-        initialDelay: 1000,
-      }}
-      appConfigProviderProps={{
-        initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-        bootstrapMode: "non-blocking",
-        autoFetch: false,
-      }}
-    >
+    <ProprietaryAppProviders>
       <ToolActionsContext.Provider
-        value={{
-          onEndpointUnavailableClick: () =>
-            window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
-        }}
+        value={connectionMode === "local" ? signInActions : NO_TOOL_ACTIONS}
       >
         <DesktopQueryCacheReset />
         <DesktopAccessGate onConfigLoaded={initializeConnectionMode}>

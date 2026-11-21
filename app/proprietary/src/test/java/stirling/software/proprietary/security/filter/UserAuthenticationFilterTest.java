@@ -232,8 +232,8 @@ class UserAuthenticationFilterTest {
             request.setRequestURI("/api/v1/auth/me");
             User user = enabledUser("blocked");
             setAuthentication(user, "blocked");
-            when(userService.usernameExistsIgnoreCase("blocked")).thenReturn(true);
-            when(userService.isUserDisabled("blocked")).thenReturn(true);
+            user.setEnabled(false);
+            when(userService.findByUsernameIgnoreCase("blocked")).thenReturn(Optional.of(user));
             when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
                     .thenReturn(List.of());
 
@@ -250,8 +250,7 @@ class UserAuthenticationFilterTest {
             request.setRequestURI("/api/v1/auth/me");
             User user = enabledUser("ghost");
             setAuthentication(user, "ghost");
-            when(userService.usernameExistsIgnoreCase("ghost")).thenReturn(false);
-            when(userService.isUserDisabled("ghost")).thenReturn(false);
+            when(userService.findByUsernameIgnoreCase("ghost")).thenReturn(Optional.empty());
             when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
                     .thenReturn(List.of());
 

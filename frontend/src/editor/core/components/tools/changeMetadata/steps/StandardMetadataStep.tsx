@@ -1,6 +1,7 @@
 import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface StandardMetadataStepProps {
   parameters: ChangeMetadataParameters;
@@ -24,6 +25,7 @@ const StandardMetadataStep = ({
         label={t("changeMetadata.title.label", "Title")}
         placeholder={t("changeMetadata.title.placeholder", "Document title")}
         value={parameters.title}
+        className={privateContentClassName}
         onChange={(e) => onParameterChange("title", e.target.value)}
         disabled={disabled}
       />
@@ -32,6 +34,7 @@ const StandardMetadataStep = ({
         label={t("changeMetadata.author.label", "Author")}
         placeholder={t("changeMetadata.author.placeholder", "Document author")}
         value={parameters.author}
+        className={privateContentClassName}
         onChange={(e) => onParameterChange("author", e.target.value)}
         disabled={disabled}
       />
@@ -43,6 +46,7 @@ const StandardMetadataStep = ({
           "Document subject",
         )}
         value={parameters.subject}
+        className={privateContentClassName}
         onChange={(e) => onParameterChange("subject", e.target.value)}
         disabled={disabled}
       />
@@ -54,6 +58,7 @@ const StandardMetadataStep = ({
           "Document keywords",
         )}
         value={parameters.keywords}
+        className={privateContentClassName}
         onChange={(e) => onParameterChange("keywords", e.target.value)}
         disabled={disabled}
       />
@@ -65,6 +70,7 @@ const StandardMetadataStep = ({
           "Document creator",
         )}
         value={parameters.creator}
+        className={privateContentClassName}
         onChange={(e) => onParameterChange("creator", e.target.value)}
         disabled={disabled}
       />
@@ -76,6 +82,7 @@ const StandardMetadataStep = ({
           "Document producer",
         )}
         value={parameters.producer}
+        className={privateContentClassName}
         onChange={(e) => onParameterChange("producer", e.target.value)}
         disabled={disabled}
       />

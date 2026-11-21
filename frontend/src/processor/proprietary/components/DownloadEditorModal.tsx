@@ -46,6 +46,8 @@ const ICONS: Record<OptionId, IconName> = {
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Leaves out self-hosting, for people whose server is already chosen (Stirling Cloud). */
+  desktopOnly?: boolean;
 }
 
 function openUrl(url: string) {
@@ -59,7 +61,11 @@ function openUrl(url: string) {
  * — marks the getting-started "Download the editor" step complete (via
  * {@link markEditorInstalled}); nothing else is persisted.
  */
-export function DownloadEditorModal({ open, onClose }: Props) {
+export function DownloadEditorModal({
+  open,
+  onClose,
+  desktopOnly = false,
+}: Props) {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<OptionId | null>(null);
   const [dockerVariant, setDockerVariant] = useState<DockerVariant>("latest");
@@ -246,7 +252,9 @@ export function DownloadEditorModal({ open, onClose }: Props) {
       subtitle={
         detail
           ? t(`portal.home.download.${selected}.detailBody`)
-          : t("portal.home.download.body")
+          : desktopOnly
+            ? t("portal.home.download.bodyDesktop")
+            : t("portal.home.download.body")
       }
       footer={
         detail ? (
@@ -279,10 +287,14 @@ export function DownloadEditorModal({ open, onClose }: Props) {
             {t("portal.home.download.sectionDesktop")}
           </p>
           {DESKTOP.map(renderRow)}
-          <p className="portal-install__section">
-            {t("portal.home.download.sectionSelfHosted")}
-          </p>
-          {SELF_HOSTED.map(renderRow)}
+          {!desktopOnly && (
+            <>
+              <p className="portal-install__section">
+                {t("portal.home.download.sectionSelfHosted")}
+              </p>
+              {SELF_HOSTED.map(renderRow)}
+            </>
+          )}
         </div>
       )}
     </Modal>

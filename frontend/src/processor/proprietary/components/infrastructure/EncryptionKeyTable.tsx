@@ -107,6 +107,7 @@ export function EncryptionKeyTable({
     column.muted({
       key: "lastChange",
       header: t("portal.infrastructure.encryption.keys.columns.lastChange"),
+      privateContent: true,
       get: (row) => lastChange(row),
     }),
     column.actions({

@@ -6,7 +6,7 @@ import {
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
-type StringGetter = (el: number, buf: number, len: number) => number;
+type StringGetter = (handle: number, buf: number, len: number) => number;
 
 /** Bound on tree depth: a cyclic /K would otherwise recurse forever. */
 const MAX_DEPTH = 64;
@@ -44,6 +44,7 @@ export function readPageStructure(
         ...role,
         alt: readString(m, el, m.FPDF_StructElement_GetAltText),
         actualText: readString(m, el, m.FPDF_StructElement_GetActualText),
+        lang: readString(m, el, m.FPDF_StructElement_GetLang) || null,
         mcids,
         // PDFium does not expose the kids' kinds; the fallback is read-only anyway.
         onlyMarkedContent: false,
@@ -68,17 +69,20 @@ export function readPageStructure(
   return out;
 }
 
-/** Null when the entry is absent, which PDFium reports as length 0. */
-function readString(
+/**
+ * A string PDFium copies out as UTF-16LE through a (handle, buffer, length)
+ * getter. Null when the entry is absent, which PDFium reports as length 0.
+ */
+export function readString(
   m: WrappedPdfiumModule,
-  el: number,
+  handle: number,
   get: StringGetter,
 ): string | null {
-  const len = get(el, 0, 0);
+  const len = get(handle, 0, 0);
   if (len <= 0) return null;
   const buf = m.pdfium.wasmExports.malloc(len);
   try {
-    get(el, buf, len);
+    get(handle, buf, len);
     return readUtf16(m, buf, len);
   } finally {
     m.pdfium.wasmExports.free(buf);

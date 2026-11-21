@@ -18,6 +18,7 @@ import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { McpAuthData } from "@editor/components/shared/config/configSections/server/serverSettings";
 import type { McpCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Parse a comma/space/newline separated list into a string[]. */
 function parseOpList(raw: string): string[] {
@@ -128,6 +129,7 @@ export function McpCard({
           {authMode === "oauth" && (
             <>
               <TextInput
+                className={privateContentClassName}
                 label={
                   <Group gap="xs">
                     <span>
@@ -152,6 +154,7 @@ export function McpCard({
               />
 
               <TextInput
+                className={privateContentClassName}
                 label={
                   <Group gap="xs">
                     <span>
@@ -173,6 +176,7 @@ export function McpCard({
               />
 
               <TextInput
+                className={privateContentClassName}
                 label={
                   <Group gap="xs">
                     <span>
@@ -201,6 +205,7 @@ export function McpCard({
               />
 
               <TextInput
+                className={privateContentClassName}
                 label={
                   <Group gap="xs">
                     <span>

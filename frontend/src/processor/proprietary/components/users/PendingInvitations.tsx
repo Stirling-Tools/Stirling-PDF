@@ -39,6 +39,7 @@ export function PendingInvitations({
       column.entity({
         key: "invitee",
         header: t("users.invites.columns.invitee", "Invitee"),
+        privateContent: true,
         icon: (inv) => <Avatar name={inv.email} size="sm" tone="neutral" />,
         primary: (inv) => inv.email,
         note: (inv) =>

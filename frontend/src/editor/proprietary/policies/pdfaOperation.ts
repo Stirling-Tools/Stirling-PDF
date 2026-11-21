@@ -1,10 +1,11 @@
 /**
  * Policy-facing binding for the PDF/A endpoint. The Convert tool's config spans every conversion;
- * a policy step needs only these two parameters, typed against the generated request model.
+ * a policy step uses archival profiles and the converter choice from the generated request model.
  */
 
 import type { BidirectionalToolConfig } from "@editor/hooks/tools/shared/toolOperationDescriptor";
 import type { ToolApiParams, ToolEndpoint } from "@editor/types/toolApiTypes";
+import { parseOfficeEngineChoice } from "@editor/utils/convertUtils";
 
 const ENDPOINT = "/api/v1/convert/pdf/pdfa" satisfies ToolEndpoint;
 type PdfaApiParams = ToolApiParams[typeof ENDPOINT];
@@ -23,6 +24,7 @@ export type PdfaOutputFormat = (typeof PDFA_OUTPUT_FORMATS)[number];
 
 export interface PdfaPolicyParameters {
   outputFormat: PdfaOutputFormat;
+  useStirlingOfficeConvert?: PdfaApiParams["useStirlingOfficeConvert"];
 }
 
 /** PDF/A-2b: the widest-supported archival profile, and what most retention policies ask for. */
@@ -49,10 +51,17 @@ export const pdfaOperationConfig: BidirectionalToolConfig<
   // an uncoded 400 rather than the gate's classified failure.
   toApiParams: (parameters: PdfaPolicyParameters): PdfaApiParams => ({
     outputFormat: parameters.outputFormat,
+    ...(parameters.useStirlingOfficeConvert !== undefined
+      ? { useStirlingOfficeConvert: parameters.useStirlingOfficeConvert }
+      : {}),
   }),
   // A stored step may name a profile this policy UI no longer offers (or nothing at all); clamp to
   // a known archival profile rather than re-sending a value the picker cannot render.
-  fromApiParams: (apiParams: PdfaApiParams): Partial<PdfaPolicyParameters> => ({
-    outputFormat: toOutputFormat(apiParams.outputFormat),
-  }),
+  fromApiParams: (apiParams: PdfaApiParams): Partial<PdfaPolicyParameters> => {
+    const choice = parseOfficeEngineChoice(apiParams.useStirlingOfficeConvert);
+    return {
+      outputFormat: toOutputFormat(apiParams.outputFormat),
+      ...(choice !== undefined ? { useStirlingOfficeConvert: choice } : {}),
+    };
+  },
 };

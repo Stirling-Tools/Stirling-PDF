@@ -21,6 +21,7 @@ import {
   triggerDownload,
   type ShowJsToken,
 } from "@editor/components/tools/showJS/utils";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ScriptData {
   scriptText: string;
@@ -151,7 +152,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               onChange={(e) => setQuery(e.currentTarget.value)}
               size="xs"
               placeholder={t("search.placeholder", "Enter search term...")}
-              className="showjs-search-input"
+              className={`showjs-search-input ${privateContentClassName}`}
             />
             <Text size="xs" c="dimmed">
               {matches.length ? `${active + 1}/${matches.length}` : "0/0"}
@@ -204,7 +205,10 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
         </div>
         <ScrollArea className="showjs-scrollarea" offsetScrollbars>
           <div ref={scrollAreaInnerRef} className="showjs-inner">
-            <div ref={codeRef} className="showjs-code">
+            <div
+              ref={codeRef}
+              className={`showjs-code ${privateContentClassName}`}
+            >
               {lines.map((tokens, ln) => {
                 if (isHidden(ln)) return null;
                 const end = startToEnd.get(ln);

@@ -8,6 +8,7 @@ import {
 } from "@editor/ui/DataTableFilterBar";
 import { Icon } from "@editor/ui/Icon";
 import { Input } from "@editor/ui/Input";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import type { StatusTone } from "@editor/ui/StatusBadge";
 import {
@@ -103,6 +104,7 @@ export function SigningSessionsTable({
           value === "mine"
             ? t("signWorkspace.createdByMe", "Created by me")
             : value.slice(5),
+        privateContent: true,
       },
       {
         key: "status",
@@ -132,6 +134,7 @@ export function SigningSessionsTable({
       key: "document",
       header: t("signWorkspace.document", "Document"),
       sortable: true,
+      privateContent: true,
       primary: (item) => item.documentName,
       icon: () => <Icon name="file-text" size={18} />,
       unreadLabel: (item) =>
@@ -146,6 +149,7 @@ export function SigningSessionsTable({
       key: "owner",
       header: t("signWorkspace.owner", "Owner"),
       sortable: true,
+      privateContent: true,
       get: owner,
     }),
     column.badge<SigningItem>({
@@ -204,7 +208,7 @@ export function SigningSessionsTable({
     <div className="signing-workspace__content">
       <div className="signing-workspace__list-heading">
         <Input
-          className="signing-workspace__search"
+          className={`signing-workspace__search ${privateContentClassName}`}
           inputSize="sm"
           leadingIcon={<Icon name="search" size={16} />}
           value={filters.filterBar.search?.value ?? ""}

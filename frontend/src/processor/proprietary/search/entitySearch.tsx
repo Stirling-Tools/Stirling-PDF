@@ -249,6 +249,7 @@ export function rankPortalPipelineResults(
       group: "portal-pipelines",
       title: item.name,
       subtitle: item.trigger,
+      privateContent: true,
       icon: <Icon name="workflow" size={18} />,
       score,
       onSelect: () => openPipeline(item.id),
@@ -290,6 +291,7 @@ export function buildProcessorEntityGroups(
           group: "portal-users",
           title: item.name,
           subtitle: item.email,
+          privateContent: true,
           icon: <Icon name="users" size={18} />,
           score,
           onSelect: () =>
@@ -360,6 +362,7 @@ export function buildProcessorEntityGroups(
           group: "portal-sources",
           title: item.name,
           subtitle: item.type,
+          privateContent: true,
           icon: <Icon name="plug" size={18} />,
           score,
           onSelect: () =>
