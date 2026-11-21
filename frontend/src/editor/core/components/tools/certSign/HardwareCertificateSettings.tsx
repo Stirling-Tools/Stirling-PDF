@@ -10,6 +10,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import {
@@ -294,40 +295,24 @@ const HardwareCertificateSettings = ({
   return (
     <Stack gap="md">
       {supported.windows && supported.pkcs11 && (
-        <div style={{ display: "flex", gap: "4px" }}>
-          <Button
-            variant={isWindowsStore ? "primary" : "secondary"}
-            accent={isWindowsStore ? "success" : "default"}
-            onClick={() => selectKind("WINDOWS_STORE")}
-            disabled={disabled || loading}
-            style={{
-              flex: 1,
-              fontSize: "11px",
-              minHeight: 40,
-              height: "auto",
-              whiteSpace: "normal",
-              lineHeight: 1.15,
-            }}
-          >
-            {t("certSign.format.windowsStore", "Windows certificate store")}
-          </Button>
-          <Button
-            variant={!isWindowsStore ? "primary" : "secondary"}
-            accent={!isWindowsStore ? "success" : "default"}
-            onClick={() => selectKind("PKCS11")}
-            disabled={disabled || loading}
-            style={{
-              flex: 1,
-              fontSize: "11px",
-              minHeight: 40,
-              height: "auto",
-              whiteSpace: "normal",
-              lineHeight: 1.15,
-            }}
-          >
-            {t("certSign.format.pkcs11", "USB Token")}
-          </Button>
-        </div>
+        <ButtonSelector
+          value={isWindowsStore ? "WINDOWS_STORE" : "PKCS11"}
+          onChange={selectKind}
+          options={[
+            {
+              value: "WINDOWS_STORE",
+              label: t(
+                "certSign.format.windowsStore",
+                "Windows certificate store",
+              ),
+            },
+            {
+              value: "PKCS11",
+              label: t("certSign.format.pkcs11", "USB Token"),
+            },
+          ]}
+          disabled={disabled || loading}
+        />
       )}
       {isWindowsStore ? (
         <>

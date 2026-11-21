@@ -318,7 +318,10 @@ export async function selectOption(
   return panel;
 }
 
-/** Opens a panel menu from its trigger button and resolves with the open menu. */
+/**
+ * Opens a panel menu from its trigger button and resolves with the open menu
+ * once its fade-in has finished, so its items already pass toBeVisible.
+ */
 export async function openMenu(
   context: PlayContext,
   trigger: string | RegExp,
@@ -331,11 +334,11 @@ export async function openMenu(
   );
   await waitFor(() => expect(button).toBeEnabled(), STAGE_TIMEOUT);
   await userEvent.click(button);
-  return within(context.canvasElement.ownerDocument.body).findByRole(
-    "menu",
-    {},
-    STAGE_TIMEOUT,
-  );
+  const menu = await within(
+    context.canvasElement.ownerDocument.body,
+  ).findByRole("menu", {}, STAGE_TIMEOUT);
+  await waitFor(() => expect(menu).toBeVisible(), STAGE_TIMEOUT);
+  return menu;
 }
 
 /** A point on a page element, as fractions of its width and height from its top left. */
@@ -503,17 +506,21 @@ export async function unlockEncryptedPdf(
 
 /**
  * A step title can share its text with the tool header or the run button; only
- * the step's title is followed by the info icon its tooltip opens from.
+ * the step's title is followed by the info icon its tooltip opens from, drawn
+ * either bare or wrapped in `.sui-info`.
  */
 function findStepTitle(panel: PanelQueries, title: string) {
   return waitFor(() => {
     const stepTitle = panel
       .getAllByText(title, { exact: true })
-      .find(
-        (element: HTMLElement) =>
-          element.nextElementSibling instanceof SVGElement &&
-          !element.closest("button"),
-      );
+      .find((element: HTMLElement) => {
+        const icon = element.nextElementSibling;
+        return (
+          (icon instanceof SVGElement ||
+            !!icon?.classList.contains("sui-info")) &&
+          !element.closest("button")
+        );
+      });
     expect(stepTitle).toBeDefined();
     return stepTitle!;
   }, STAGE_TIMEOUT);

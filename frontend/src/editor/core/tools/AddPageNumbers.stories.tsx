@@ -12,7 +12,6 @@ import {
   openTooltip,
   type PlayContext,
   runToResults,
-  type TooltipTrigger,
   typeInto,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 
@@ -24,23 +23,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** A field's accessible name also carries its (i)'s text, so match the label as a prefix. */
+const PAGES_TO_NUMBER = /^Pages to Number/;
+const STARTING_NUMBER = /^Starting Number/;
+const MARGIN = /^Margin/;
+const FONT_SIZE = /^Font Size/;
+const ZERO_PAD = /^Zero-pad Width/;
+const FONT_NAME = /^Font Name/;
+const CUSTOM_TEXT_FORMAT = /^Custom Text Format/;
+
 async function openCustomize(context: PlayContext) {
-  await openStep(context, "Customize Appearance");
-  await findEnabled(context, "textbox", "Font Size");
+  await openStep(context, "Appearance");
+  await findEnabled(context, "textbox", FONT_SIZE);
 }
 
-async function openCustomizeSelect(context: PlayContext, label: string) {
+async function openCustomizeSelect(context: PlayContext, label: RegExp) {
   await openCustomize(context);
   return openSelect(context, label);
 }
-
-/** Each field's tooltip hangs on its input, not on its label. */
-function fieldTooltip(label: string | RegExp): TooltipTrigger {
-  return { element: (context) => findEnabled(context, "textbox", label) };
-}
-
-/** The label spells "Zero-pad" with a non-breaking hyphen. */
-const ZERO_PAD = /^Zero.pad Width \(Bates Stamping\)$/;
 
 export const Panel: Story = {};
 
@@ -62,8 +62,8 @@ export const PositionChosen: Story = {
 export const PagesAndStartingNumber: Story = {
   args: { files: ["multi-page-sample.pdf"] },
   play: async (context) => {
-    await typeInto(context, "Pages to Number", "2,4-5");
-    await typeInto(context, "Starting Number", "10");
+    await typeInto(context, PAGES_TO_NUMBER, "2,4-5");
+    await typeInto(context, STARTING_NUMBER, "10");
   },
 };
 
@@ -73,14 +73,14 @@ export const CustomizeAppearance: Story = {
 
 export const MarginSizeMenu: Story = {
   play: async (context) => {
-    const options = await openCustomizeSelect(context, "Margin Size");
+    const options = await openCustomizeSelect(context, MARGIN);
     await expect(options.getAllByRole("option")).toHaveLength(4);
   },
 };
 
 export const FontNameMenu: Story = {
   play: async (context) => {
-    const options = await openCustomizeSelect(context, "Font Name");
+    const options = await openCustomizeSelect(context, FONT_NAME);
     await expect(options.getAllByRole("option")).toHaveLength(3);
   },
 };
@@ -88,9 +88,9 @@ export const FontNameMenu: Story = {
 export const CustomTextFormat: Story = {
   play: async (context) => {
     await openCustomize(context);
-    await typeInto(context, "Font Size", "18");
+    await typeInto(context, FONT_SIZE, "18");
     await typeInto(context, ZERO_PAD, "3");
-    await typeInto(context, "Custom Text Format", "Page {{n}");
+    await typeInto(context, CUSTOM_TEXT_FORMAT, "Page {{n}");
   },
 };
 
@@ -100,42 +100,53 @@ export const InvalidFontSizeTooltip: Story = {
     {
       after: async (context) => {
         await openCustomize(context);
-        await typeInto(context, "Font Size", "0");
+        await typeInto(context, FONT_SIZE, "0");
       },
     },
   ),
 };
 
 export const PagesToNumberTooltip: Story = {
-  play: openTooltip(fieldTooltip("Pages to Number")),
+  play: openTooltip({ info: /^Comma-separated page numbers or ranges/ }),
 };
 
 export const StartingNumberTooltip: Story = {
-  play: openTooltip(fieldTooltip("Starting Number")),
+  play: openTooltip({ info: /^The first number to display/ }),
 };
 
 export const MarginSizeTooltip: Story = {
-  play: openTooltip(fieldTooltip("Margin Size"), { after: openCustomize }),
+  play: openTooltip(
+    { info: /^Distance between the page number/ },
+    { after: openCustomize },
+  ),
 };
 
 export const FontSizeTooltip: Story = {
-  play: openTooltip(fieldTooltip("Font Size"), { after: openCustomize }),
+  play: openTooltip(
+    { info: /^Size of the page number text/ },
+    { after: openCustomize },
+  ),
 };
 
 export const ZeroPadWidthTooltip: Story = {
-  play: openTooltip(fieldTooltip(ZERO_PAD), {
-    after: openCustomize,
-  }),
+  play: openTooltip(
+    { info: /\(Bates Stamp\) page numbers/ },
+    { after: openCustomize },
+  ),
 };
 
 export const FontNameTooltip: Story = {
-  play: openTooltip(fieldTooltip("Font Name"), { after: openCustomize }),
+  play: openTooltip(
+    { info: /^Font family for the page numbers/ },
+    { after: openCustomize },
+  ),
 };
 
 export const CustomTextFormatTooltip: Story = {
-  play: openTooltip(fieldTooltip("Custom Text Format"), {
-    after: openCustomize,
-  }),
+  play: openTooltip(
+    { info: /^Optional custom format for page numbers/ },
+    { after: openCustomize },
+  ),
 };
 
 export const Results: Story = {

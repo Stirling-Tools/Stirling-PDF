@@ -103,8 +103,6 @@ export const ColorPicker: Story = {
 };
 
 export const FontLanguageMenu: Story = {
-  // The Font/Language listbox has no accessible name.
-  parameters: knownA11yIssues("aria-input-field-name"),
   play: async (context) => {
     await openTextStyle(context);
     const options = await openSelect(context, "Font/Language");

@@ -149,7 +149,7 @@ export const ByPageDividerDuplex: Story = {
     await expect(
       panel.getByRole("link", { name: /Auto Splitter Divider/ }),
     ).toBeVisible();
-    await toggle(context, "checkbox", "Duplex Mode (Front and back scanning)");
+    await toggle(context, "checkbox", "Duplex mode");
   },
 };
 

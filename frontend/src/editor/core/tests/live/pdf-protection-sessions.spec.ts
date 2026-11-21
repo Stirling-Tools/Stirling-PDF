@@ -210,7 +210,7 @@ test("removing all protection can be cancelled, then opening-only protection can
   await page.getByLabel("Password to open", { exact: true }).fill(reader);
   const protection = page.waitForResponse("**/api/v1/security/add-password");
   await page
-    .getByRole("button", { name: /^Save protection(?: \(this file\))?$/ })
+    .getByRole("button", { name: /^Add Password(?: \(this file\))?$/ })
     .click();
   const protectedResponse = await protection;
   expect(protectedResponse.ok()).toBe(true);

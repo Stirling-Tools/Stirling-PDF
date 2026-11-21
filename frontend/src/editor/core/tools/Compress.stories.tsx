@@ -47,6 +47,8 @@ const SEVERAL_FILES = {
   workbench: "fileEditor",
 } as const;
 
+const LINE_ART_INFO = /^Uses ImageMagick to reduce pages/;
+
 const WITH_IMAGE_MAGICK = imageMagickEnabled(true);
 const WITHOUT_IMAGE_MAGICK = imageMagickEnabled(false);
 
@@ -119,7 +121,7 @@ export const Panel: Story = {
         await findEnabled(context, "checkbox", option),
       ).not.toBeChecked();
     await expect(
-      panel.getByText(/^Uses ImageMagick to reduce pages/),
+      panel.getByRole("button", { name: LINE_ART_INFO }),
     ).toBeVisible();
   },
 };
@@ -208,6 +210,11 @@ export const LineArtAdjusted: Story = {
   },
 };
 
+export const LineArtTooltip: Story = {
+  parameters: WITH_IMAGE_MAGICK,
+  play: openTooltip({ info: LINE_ART_INFO }),
+};
+
 export const LineArtUnavailable: Story = {
   parameters: WITHOUT_IMAGE_MAGICK,
   play: async (context) => {
@@ -218,7 +225,9 @@ export const LineArtUnavailable: Story = {
       STAGE_TIMEOUT,
     );
     await waitFor(() => expect(lineArt).toBeDisabled(), STAGE_TIMEOUT);
-    await expect(panel.queryByText(/^Uses ImageMagick/)).toBeNull();
+    await expect(
+      panel.queryByRole("button", { name: LINE_ART_INFO }),
+    ).toBeNull();
   },
 };
 

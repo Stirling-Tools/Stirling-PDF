@@ -7,12 +7,10 @@ import {
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
   choose,
-  openSelect,
   openStep,
   openTooltip,
   type PlayContext,
   runToResults,
-  selectOption,
   STAGE_TIMEOUT,
   toggle,
   typeInto,
@@ -27,12 +25,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const ADVANCED = "Advanced settings";
-const MARGINS = "Margins and borders";
+const ADVANCED = "Advanced";
+const MARGINS = "Margins & Borders";
 
 async function openAdvanced(context: PlayContext) {
   await openStep(context, ADVANCED);
-  return waitForPanelText(context, "Orientation:");
+  return waitForPanelText(context, "Reading Direction");
 }
 
 async function openMargins(context: PlayContext) {
@@ -67,16 +65,9 @@ async function innerMarginTooLarge(context: PlayContext) {
 
 export const Panel: Story = {};
 
-export const PagesPerSheetOptions: Story = {
-  play: async (context) => {
-    const options = await openSelect(context, "Pages per sheet:");
-    await expect(options.getByRole("option", { name: "16" })).toBeVisible();
-  },
-};
-
 export const NinePagesPerSheet: Story = {
   play: async (context) => {
-    await selectOption(context, "Pages per sheet:", "9");
+    await choose(context, "9");
     await waitForPanelText(
       context,
       "Place 9 pages on a single sheet (3 × 3 grid).",
@@ -102,9 +93,7 @@ export const AdvancedSettings: Story = {
 export const AdvancedSettingsChanged: Story = {
   play: async (context) => {
     await openAdvanced(context);
-    await selectOption(context, "Orientation:", "Landscape");
-    await selectOption(context, "Page arrangement:", "By Rows");
-    await selectOption(context, "Reading Direction:", "Right to Left");
+    await choose(context, "Landscape", "By Rows", "Right to Left");
   },
 };
 
@@ -115,7 +104,7 @@ export const MarginsAndBorders: Story = {
 export const Borders: Story = {
   play: async (context) => {
     await openMargins(context);
-    await toggle(context, "switch", "Add Borders");
+    await toggle(context, "checkbox", "Add Borders");
     await typeInto(context, "Border Thickness", "3");
   },
 };
@@ -133,7 +122,7 @@ export const MarginsTooLargeTooltip: Story = {
 };
 
 export const LayoutSettingsTooltip: Story = {
-  play: openTooltip({ step: "Layout settings" }),
+  play: openTooltip({ step: "Layout" }),
 };
 
 export const AdvancedSettingsTooltip: Story = {

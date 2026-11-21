@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent, TooltipTip } from "@editor/types/tips";
+import { SidebarTooltipContent, TooltipTip } from "@editor/types/tips";
 
 // Shared tooltip content to reduce duplication
 const useSharedWatermarkContent = () => {
@@ -60,7 +60,7 @@ const useSharedWatermarkContent = () => {
   return { languageSupportTip, appearanceTip, spacingTip };
 };
 
-export const useWatermarkTypeTips = (): TooltipContent => {
+export const useWatermarkTypeTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -121,7 +121,7 @@ export const useWatermarkTypeTips = (): TooltipContent => {
   };
 };
 
-export const useWatermarkWordingTips = (): TooltipContent => {
+export const useWatermarkWordingTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -154,7 +154,7 @@ export const useWatermarkWordingTips = (): TooltipContent => {
   };
 };
 
-export const useWatermarkTextStyleTips = (): TooltipContent => {
+export const useWatermarkTextStyleTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
   const { languageSupportTip } = useSharedWatermarkContent();
 
@@ -189,7 +189,7 @@ export const useWatermarkTextStyleTips = (): TooltipContent => {
   };
 };
 
-export const useWatermarkFileTips = (): TooltipContent => {
+export const useWatermarkFileTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -246,7 +246,7 @@ export const useWatermarkFileTips = (): TooltipContent => {
   };
 };
 
-export const useWatermarkFormattingTips = (): TooltipContent => {
+export const useWatermarkFormattingTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
   const { appearanceTip, spacingTip } = useSharedWatermarkContent();
 

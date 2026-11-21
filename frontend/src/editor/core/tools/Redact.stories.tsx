@@ -71,9 +71,6 @@ export const Panel: Story = {};
 export const WordsAdded: Story = {
   play: async (context) => {
     const panel = await addWords(context, "Confidential", "Top-Secret");
-    await expect(
-      panel.queryByText("Examples: Confidential, Top-Secret"),
-    ).toBeNull();
     const run = panel.getByRole("button", { name: /^Redact/ });
     await waitFor(() => expect(run).toBeEnabled(), STAGE_TIMEOUT);
   },
@@ -156,16 +153,35 @@ export const RedactionSettingsTooltip: Story = {
   play: openTooltip({ step: "Redaction Settings" }),
 };
 
+export const WordsToRedactTooltip: Story = {
+  play: openTooltip({ info: "Examples: Confidential, Top-Secret" }),
+};
+
 export const AdvancedTooltip: Story = {
   // The tooltip's body scrolls but cannot take keyboard focus.
   parameters: knownA11yIssues("scrollable-region-focusable"),
   play: openTooltip({ step: "Advanced" }, { after: openAdvanced }),
 };
 
+export const ConvertToImageTooltip: Story = {
+  play: openTooltip(
+    { info: /^Converts the PDF to an image-based PDF/ },
+    { after: openAdvanced },
+  ),
+};
+
 export const ManualRedactionControlsTooltip: Story = {
   ...onViewer(),
   play: openTooltip(
     { step: "Manual Redaction Controls" },
+    { after: findManualColour },
+  ),
+};
+
+export const RedactionToolsTooltip: Story = {
+  ...onViewer(),
+  play: openTooltip(
+    { info: /^Select text or draw areas on the PDF/ },
     { after: findManualColour },
   ),
 };

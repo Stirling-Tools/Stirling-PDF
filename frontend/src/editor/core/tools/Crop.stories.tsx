@@ -145,6 +145,13 @@ export const SelectCropAreaTooltip: Story = {
   play: openTooltip({ step: "Select Crop Area" }),
 };
 
+export const PagesToCropTooltip: Story = {
+  play: openTooltip(
+    { info: /^Crop the selected area on specific pages/ },
+    { after: waitForCropArea },
+  ),
+};
+
 export const Results: Story = {
   parameters: toolPanelServer(
     fixtureResponse("/api/v1/general/crop", "sample.pdf"),

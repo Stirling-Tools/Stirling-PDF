@@ -5,11 +5,9 @@ import { BaseToolProps } from "@editor/types/tool";
 
 import { useAutoRenameParameters } from "@editor/hooks/tools/autoRename/useAutoRenameParameters";
 import { useAutoRenameOperation } from "@editor/hooks/tools/autoRename/useAutoRenameOperation";
-import { useAutoRenameTips } from "@editor/components/tooltips/useAutoRenameTips";
 
 const AutoRename = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const autoRenameTips = useAutoRenameTips();
 
   const base = useBaseTool(
     "auto-rename-pdf-file",
@@ -23,14 +21,7 @@ const AutoRename = (props: BaseToolProps) => {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
     },
-    steps: [
-      {
-        title: t("auto-rename.settings.title", "About"),
-        isCollapsed: false,
-        tooltip: autoRenameTips,
-        content: null,
-      },
-    ],
+    steps: [],
     executeButton: {
       text: t("auto-rename.submit", "Auto Rename"),
       isVisible: !base.hasResults,

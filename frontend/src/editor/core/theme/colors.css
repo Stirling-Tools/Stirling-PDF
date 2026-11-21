@@ -154,7 +154,7 @@ html[data-app-theme="midnight"] {
   --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-650);
   --c-surface-sunken: var(--p-c-100f0e);
-  --c-input-bg: var(--c-surface);
+  --c-input-bg: var(--c-surface-raised);
   --c-modal-surface: var(--c-surface);
   --c-hover: var(--p-gray-800);
   --c-active: var(--p-gray-800);
@@ -367,7 +367,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   );
   /* Neutral recess (see light): no accent mix, so the sunken well stays a plain near-black. */
   --c-surface-sunken: var(--p-c-100f0e);
-  --c-input-bg: var(--c-surface);
+  --c-input-bg: var(--c-surface-raised);
   --c-hover: color-mix(in srgb, var(--c-primary) 12%, var(--p-zinc-750));
   --c-active: color-mix(in srgb, var(--c-primary) 15%, var(--p-zinc-700));
   --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-c-28282d));
@@ -431,7 +431,7 @@ html[data-app-theme="custom"][data-accent="default"][data-mantine-color-scheme="
   --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-775);
   --c-surface-sunken: var(--p-c-100f0e);
-  --c-input-bg: var(--c-surface);
+  --c-input-bg: var(--c-surface-raised);
   --c-hover: var(--p-zinc-750);
   --c-active: var(--p-zinc-700);
   --c-border: var(--p-c-28282d);

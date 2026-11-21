@@ -10,6 +10,7 @@ import {
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
   bodyOf,
+  choose,
   findEnabled,
   openSelect,
   openTooltip,
@@ -131,22 +132,22 @@ async function press(context: PlayContext, name: string) {
 }
 
 async function uploadP12(context: PlayContext) {
-  await press(context, "PKCS12");
+  await choose(context, "PKCS12");
   const panel = await uploadToPanel(context, "valid-test.p12");
   await panel.findByLabelText("Certificate Password", undefined, STAGE_TIMEOUT);
-  await panel.findByRole("button", { name: "Visible" }, STAGE_TIMEOUT);
+  await panel.findByRole("radio", { name: "Visible" }, STAGE_TIMEOUT);
   return panel;
 }
 
 async function showVisibleSignature(context: PlayContext) {
   await uploadP12(context);
-  const panel = await press(context, "Visible");
+  const panel = await choose(context, "Visible");
   await panel.findByText("Signature Details", undefined, STAGE_TIMEOUT);
   return panel;
 }
 
 async function pickPem(context: PlayContext) {
-  const panel = await press(context, "PEM");
+  const panel = await choose(context, "PEM");
   await panel.findByRole(
     "button",
     { name: "Choose Private Key File" },
@@ -172,7 +173,7 @@ async function sign(context: PlayContext) {
 }
 
 async function chooseDevice(context: PlayContext) {
-  return press(context, "This device");
+  return choose(context, "This device");
 }
 
 async function windowsCertificateSelected(context: PlayContext) {
@@ -187,7 +188,7 @@ async function windowsCertificateSelected(context: PlayContext) {
 
 async function chooseUsbToken(context: PlayContext) {
   await chooseDevice(context);
-  const panel = await press(context, "USB Token");
+  const panel = await choose(context, "USB Token");
   await panel.findByLabelText("Token PIN", undefined, STAGE_TIMEOUT);
   return panel;
 }
@@ -209,34 +210,34 @@ export const CertificateRequiredTooltip: Story = {
   play: openTooltip({ runButton: true }),
 };
 
-export const CertificateFormatTooltip: Story = {
-  play: openTooltip({ step: "Certificate Format" }),
+export const CertificateTooltip: Story = {
+  play: openTooltip({ step: "Certificate" }),
 };
 
 export const Pkcs12Format: Story = {
   play: async (context) => {
-    const panel = await press(context, "PKCS12");
+    const panel = await choose(context, "PKCS12");
     await panel.findByRole("button", { name: "Choose PKCS12 File" });
   },
 };
 
 export const PfxFormat: Story = {
   play: async (context) => {
-    const panel = await press(context, "PFX");
+    const panel = await choose(context, "PFX");
     await panel.findByRole("button", { name: "Choose PFX File" });
   },
 };
 
 export const JksFormat: Story = {
   play: async (context) => {
-    const panel = await press(context, "JKS");
+    const panel = await choose(context, "JKS");
     await panel.findByRole("button", { name: "Choose JKS File" });
   },
 };
 
 export const JksUploaded: Story = {
   play: async (context) => {
-    await press(context, "JKS");
+    await choose(context, "JKS");
     const panel = await uploadToPanel(context, "valid-test.jks");
     await panel.findByLabelText(
       "Certificate Password",
@@ -296,7 +297,7 @@ export const VisibleSignatureDetails: Story = {
     const page = panel.getByLabelText("Page Number");
     await userEvent.clear(page);
     await userEvent.type(page, "2");
-    await press(context, "No Logo");
+    await choose(context, "No Logo");
     await waitFor(() => expect(page).toHaveValue("2"));
   },
 };
@@ -315,9 +316,9 @@ export const ServerCertificateSource: Story = {
   parameters: toolPanelServer(serverCertificateOnly),
   play: async (context) => {
     const panel = await panelOf(context);
-    await panel.findByRole("button", { name: "Server" }, STAGE_TIMEOUT);
+    await panel.findByRole("radio", { name: "Server" }, STAGE_TIMEOUT);
     await expect(
-      panel.queryByRole("button", { name: "This device" }),
+      panel.queryByRole("radio", { name: "This device" }),
     ).toBeNull();
   },
 };
@@ -325,11 +326,11 @@ export const ServerCertificateSource: Story = {
 export const ServerCertificate: Story = {
   parameters: toolPanelServer(serverCertificateOnly),
   play: async (context) => {
-    const panel = await press(context, "Server");
+    const panel = await choose(context, "Server");
     await waitFor(() =>
-      expect(panel.queryByText("Certificate Format")).toBeNull(),
+      expect(panel.queryByRole("radio", { name: "PKCS12" })).toBeNull(),
     );
-    await panel.findByRole("button", { name: "Visible" }, STAGE_TIMEOUT);
+    await panel.findByRole("radio", { name: "Visible" }, STAGE_TIMEOUT);
   },
 };
 
@@ -337,7 +338,7 @@ export const CertificateSources: Story = {
   parameters: withDevice(),
   play: async (context) => {
     const panel = await panelOf(context);
-    await panel.findByRole("button", { name: "This device" }, STAGE_TIMEOUT);
+    await panel.findByRole("radio", { name: "This device" }, STAGE_TIMEOUT);
   },
 };
 
@@ -360,9 +361,9 @@ export const DeviceCapabilitiesLoading: Story = {
         ).toBeVisible(),
       STAGE_TIMEOUT,
     );
-    await expect(panel.queryByText("Certificate Format")).toBeNull();
+    await expect(panel.queryByRole("radio", { name: "PKCS12" })).toBeNull();
     await expect(panel.queryByLabelText("Token PIN")).toBeNull();
-    await expect(panel.queryByRole("button", { name: "USB Token" })).toBeNull();
+    await expect(panel.queryByRole("radio", { name: "USB Token" })).toBeNull();
   },
 };
 
@@ -483,7 +484,7 @@ export const UsbTokenCertificateMenu: Story = {
       menu.getByRole("option", { name: /^Jane Signer \(token\)/ }),
     );
     const panel = await panelOf(context);
-    await panel.findByRole("button", { name: "Visible" }, STAGE_TIMEOUT);
+    await panel.findByRole("radio", { name: "Visible" }, STAGE_TIMEOUT);
   },
 };
 
@@ -510,6 +511,6 @@ export const DeviceWithoutWindowsStore: Story = {
   play: async (context) => {
     const panel = await chooseDevice(context);
     await panel.findByLabelText("Token PIN", undefined, STAGE_TIMEOUT);
-    await expect(panel.queryByRole("button", { name: "USB Token" })).toBeNull();
+    await expect(panel.queryByRole("radio", { name: "USB Token" })).toBeNull();
   },
 };

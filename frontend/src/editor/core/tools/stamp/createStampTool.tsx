@@ -322,6 +322,21 @@ export const createStampTool = (config: StampToolConfig) => {
           title: translateTool("steps.configure", "Configure Stamp"),
           isCollapsed: false,
           onCollapsedClick: undefined,
+          tooltip:
+            settingsPanel === "wallet"
+              ? undefined
+              : {
+                  header: {
+                    title: translateTool(
+                      "step.createTitle",
+                      "Creating Your Stamp",
+                    ),
+                  },
+                  content: translateTool(
+                    "step.createDesc",
+                    "Choose how you want to create the signature",
+                  ),
+                },
           content: renderSettings(),
         });
 

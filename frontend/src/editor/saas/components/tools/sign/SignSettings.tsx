@@ -42,6 +42,7 @@ import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { buildSignaturePreview } from "@editor/utils/signaturePreview";
 
 import { Icon, type IconName } from "@editor/ui/Icon";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 type SignatureDrafts = {
   canvas?: string;
@@ -1260,12 +1261,6 @@ const SignSettings = ({
   return (
     <Stack>
       <Stack gap="sm">
-        <Text size="sm" c="dimmed">
-          {translate(
-            "step.createDesc",
-            "Choose how you want to create the signature",
-          )}
-        </Text>
         {canDrawOnPhone && (
           <>
             <Button
@@ -1298,12 +1293,17 @@ const SignSettings = ({
       <Divider />
 
       <Stack gap="sm">
-        <Text fw={600} size="md">
-          {translate("step.place", "Place & save")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {translate("step.placeDesc", "Position the signature on your PDF")}
-        </Text>
+        <Group gap={4} wrap="nowrap">
+          <Text fw={600} size="md">
+            {translate("step.place", "Place & save")}
+          </Text>
+          <ToolInfoTooltip
+            label={translate(
+              "step.placeDesc",
+              "Position the signature on your PDF",
+            )}
+          />
+        </Group>
 
         <Group gap="xs" wrap="nowrap" align="center">
           <DrawingControls

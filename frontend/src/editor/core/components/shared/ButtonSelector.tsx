@@ -1,19 +1,24 @@
+import type { ReactNode } from "react";
 import { Stack, Text, Tooltip } from "@mantine/core";
 import FitText from "@editor/components/shared/FitText";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import classes from "@editor/components/shared/ButtonSelector.module.css";
 
 export interface ButtonOption<T> {
   value: T;
   label: string;
   disabled?: boolean;
   tooltip?: string; // Tooltip shown on hover (useful for explaining why option is disabled)
+  /** Stacks the icon over the label; give every option one, or the segments misalign. */
+  icon?: IconName;
 }
 
 interface ButtonSelectorProps<T> {
   value: T | undefined;
   onChange: (value: T) => void;
   options: ButtonOption<T>[];
-  label?: string;
+  label?: ReactNode;
   disabled?: boolean;
   fullWidth?: boolean;
   textClassName?: string;
@@ -29,15 +34,23 @@ const ButtonSelector = <T extends string | number>({
   textClassName,
 }: ButtonSelectorProps<T>) => {
   const selectedValue = value === undefined ? "" : String(value);
+  const withIcons = options.some((option) => option.icon);
 
   const segmentedOptions = options.map((option) => {
     const isDisabled = disabled || option.disabled;
-    const fitText = (
+    const fitText = withIcons ? (
+      <span className={classes.iconLabel}>
+        {option.icon && <Icon name={option.icon} size={18} />}
+        <span className={classes.iconLabelText} title={option.label}>
+          {option.label}
+        </span>
+      </span>
+    ) : (
       <FitText
         text={option.label}
         lines={1}
-        minimumFontScale={0.5}
-        fontSize={10}
+        minimumFontScale={0.6}
+        fontSize={14}
         className={textClassName}
       />
     );
@@ -65,13 +78,13 @@ const ButtonSelector = <T extends string | number>({
 
   return (
     <Stack gap="var(--mantine-spacing-sm)">
-      {/* Label (if it exists) */}
       {label && (
         <Text
           style={{
             fontSize: "var(--mantine-font-size-sm)",
             lineHeight: "var(--mantine-line-height-sm)",
             fontWeight: "var(--font-weight-medium)",
+            color: "var(--c-text-muted)",
           }}
         >
           {label}
@@ -79,6 +92,9 @@ const ButtonSelector = <T extends string | number>({
       )}
 
       <SegmentedControl
+        className={
+          withIcons ? `${classes.fitted} ${classes.withIcons}` : classes.fitted
+        }
         options={segmentedOptions}
         value={selectedValue}
         onChange={handleChange}

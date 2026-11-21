@@ -217,6 +217,14 @@ export const ConvertToPdfA3b: Story = {
   },
 };
 
+export const ConvertToPdfA3bTooltip: Story = {
+  parameters: attachmentsInDocument([]),
+  play: openTooltip(
+    { info: /^PDF\/A-3b is an archival format/ },
+    { after: findEmptyList },
+  ),
+};
+
 export const NoFiles: Story = {
   args: { files: [] },
   parameters: attachmentsInDocument([]),

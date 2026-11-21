@@ -70,7 +70,7 @@ const AdjustContrast = (props: BaseToolProps) => {
         ),
       },
       {
-        title: t("adjustContrast.adjustColors", "Adjust Colors"),
+        title: t("adjustContrast.adjustColors", "Colors"),
         isCollapsed: accordion.getCollapsedState(Step.COLORS),
         onCollapsedClick: () => accordion.handleStepToggle(Step.COLORS),
         content: (
@@ -114,7 +114,7 @@ const AdjustContrast = (props: BaseToolProps) => {
       </div>
     ),
     executeButton: {
-      text: t("adjustContrast.confirm", "Confirm"),
+      text: t("adjustContrast.confirm", "Apply Adjustments"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,

@@ -146,12 +146,6 @@ function onCanvas(files?: readonly FixtureName[]) {
   } as const;
 }
 
-/** A hint the inspector shows as a `?` beside a field label. */
-function hint(name: string | RegExp) {
-  return async (context: PlayContext) =>
-    bodyOf(context).findByRole("img", { name }, STAGE_TIMEOUT);
-}
-
 async function nudgeUp(context: PlayContext, label: string) {
   const panel = await panelOf(context);
   const input = panel.getByRole("textbox", { name: label });
@@ -251,15 +245,27 @@ export const DocumentAdvancedSettings: Story = {
   parameters: knownA11yIssues("color-contrast"),
   play: async (context) => {
     const panel = await openAdvancedSettings(context);
-    await expect(
-      panel.getByText(/^Groups equal-spaced lines into paragraphs/),
-    ).toBeVisible();
-    await expect(
-      panel.getByText(/^Grow widens a box as you type/),
-    ).toBeVisible();
     await expect(panel.getByRole("radio", { name: "Auto" })).toBeChecked();
     await expect(panel.getByRole("radio", { name: "Grow" })).toBeChecked();
   },
+};
+
+export const TextGroupingTooltip: Story = {
+  // The inspector's "Missing:" font text fails contrast.
+  parameters: knownA11yIssues("color-contrast"),
+  play: openTooltip(
+    { info: /^Groups equal-spaced lines into paragraphs/ },
+    { after: openAdvancedSettings },
+  ),
+};
+
+export const TextBoxWidthTooltip: Story = {
+  // The inspector's "Missing:" font text fails contrast.
+  parameters: knownA11yIssues("color-contrast"),
+  play: openTooltip(
+    { info: /^Grow widens a box as you type/ },
+    { after: openAdvancedSettings },
+  ),
 };
 
 export const LineGrouping: Story = {
@@ -388,7 +394,7 @@ export const DownloadTooltip: Story = {
 export const TextWidthTooltip: Story = {
   ...onCanvas(),
   play: openTooltip(
-    { element: hint("Text re-wraps to fit the width.") },
+    { info: "Text re-wraps to fit the width." },
     { after: selectText },
   ),
 };
@@ -396,7 +402,7 @@ export const TextWidthTooltip: Story = {
 export const TextHeightTooltip: Story = {
   ...onCanvas(),
   play: openTooltip(
-    { element: hint(/^A text box's height follows its type size/) },
+    { info: /^A text box's height follows its type size/ },
     { after: selectText },
   ),
 };

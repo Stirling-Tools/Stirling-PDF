@@ -30,7 +30,7 @@ const STEPS = {
   deleteAll: "Remove Existing Metadata",
   standard: "Standard Fields",
   dates: "Date Fields",
-  advanced: "Advanced Options",
+  advanced: "Advanced",
 } as const;
 
 /** sample.pdf's own Title, which the panel reads into its fields. */
@@ -184,9 +184,6 @@ async function retype(input: HTMLElement, text: string) {
 export const CustomField: Story = {
   play: async (context) => {
     const panel = await addCustomField(context, "Department", "Legal");
-    await expect(
-      panel.getByText("Add custom metadata fields to the document"),
-    ).toBeVisible();
     await expect(panel.getByRole("button", { name: "Remove" })).toBeVisible();
   },
 };
@@ -205,6 +202,13 @@ export const DateFieldsTooltip: Story = {
 
 export const AdvancedOptionsTooltip: Story = {
   play: openTooltip({ text: STEPS.advanced }, { after: openAdvancedOptions }),
+};
+
+export const CustomMetadataTooltip: Story = {
+  play: openTooltip(
+    { info: "Add custom metadata fields to the document" },
+    { after: openAdvancedOptions },
+  ),
 };
 
 export const NoFiles: Story = {

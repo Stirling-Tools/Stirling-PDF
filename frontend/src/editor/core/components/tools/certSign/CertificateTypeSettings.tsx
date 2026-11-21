@@ -1,9 +1,11 @@
-import { Button } from "@editor/ui/Button";
 import { useEffect } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import ButtonSelector, {
+  type ButtonOption,
+} from "@editor/components/shared/ButtonSelector";
 
 interface CertificateTypeSettingsProps {
   parameters: CertSignParameters;
@@ -13,13 +15,6 @@ interface CertificateTypeSettingsProps {
   ) => void;
   disabled?: boolean;
 }
-
-const sourceButtonStyle = {
-  flex: 1,
-  height: "auto",
-  minHeight: "44px",
-  fontSize: "11px",
-} as const;
 
 const CertificateTypeSettings = ({
   parameters,
@@ -88,42 +83,39 @@ const CertificateTypeSettings = ({
     );
   }
 
+  const sourceOptions: ButtonOption<CertSignParameters["signMode"]>[] = [
+    { value: "MANUAL", label: t("certSign.source.upload", "Upload") },
+    ...(isServerCertificateEnabled
+      ? [
+          {
+            value: "AUTO" as const,
+            label: t("certSign.source.server", "Server"),
+          },
+        ]
+      : []),
+    ...(isHardwareAvailable
+      ? [
+          {
+            value: "DEVICE" as const,
+            label: t("certSign.source.device", "This device"),
+          },
+        ]
+      : []),
+  ];
+
+  const selectSource = (mode: CertSignParameters["signMode"]) => {
+    if (mode === "AUTO") selectServer();
+    else if (mode === "DEVICE") selectDevice();
+    else selectUpload();
+  };
+
   return (
-    <Stack gap="md">
-      <div style={{ display: "flex", gap: "4px" }}>
-        <Button
-          variant={parameters.signMode === "MANUAL" ? "primary" : "secondary"}
-          accent={parameters.signMode === "MANUAL" ? "default" : "neutral"}
-          onClick={selectUpload}
-          disabled={disabled}
-          style={sourceButtonStyle}
-        >
-          {t("certSign.source.upload", "Upload")}
-        </Button>
-        {isServerCertificateEnabled && (
-          <Button
-            variant={parameters.signMode === "AUTO" ? "primary" : "secondary"}
-            accent={parameters.signMode === "AUTO" ? "default" : "neutral"}
-            onClick={selectServer}
-            disabled={disabled}
-            style={sourceButtonStyle}
-          >
-            {t("certSign.source.server", "Server")}
-          </Button>
-        )}
-        {isHardwareAvailable && (
-          <Button
-            variant={parameters.signMode === "DEVICE" ? "primary" : "secondary"}
-            accent={parameters.signMode === "DEVICE" ? "default" : "neutral"}
-            onClick={selectDevice}
-            disabled={disabled}
-            style={sourceButtonStyle}
-          >
-            {t("certSign.source.device", "This device")}
-          </Button>
-        )}
-      </div>
-    </Stack>
+    <ButtonSelector
+      value={parameters.signMode}
+      onChange={selectSource}
+      options={sourceOptions}
+      disabled={disabled}
+    />
   );
 };
 

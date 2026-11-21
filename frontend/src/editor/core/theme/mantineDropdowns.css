@@ -1,0 +1,16 @@
+/* Menu items and combobox options use the app's body text colour, with their icons
+ * inheriting it, instead of Mantine's pure-black --mantine-color-text. Menu items read
+ * --menu-item-color first so a destructive item's color="red" still wins.
+ * Specificity: these beat Mantine's single-class item and option rules. */
+:root[data-mantine-color-scheme] .mantine-Menu-item {
+  color: var(--menu-item-color, var(--c-text));
+}
+
+:root[data-mantine-color-scheme] .mantine-Menu-itemSection,
+:root[data-mantine-color-scheme] .mantine-Combobox-option {
+  color: inherit;
+}
+
+:root[data-mantine-color-scheme] .mantine-Combobox-dropdown {
+  color: var(--c-text);
+}

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useDeleteAllTips = (): TooltipContent => {
+export const useDeleteAllTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -22,7 +22,7 @@ export const useDeleteAllTips = (): TooltipContent => {
   };
 };
 
-export const useStandardMetadataTips = (): TooltipContent => {
+export const useStandardMetadataTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -65,7 +65,7 @@ export const useStandardMetadataTips = (): TooltipContent => {
   };
 };
 
-export const useDocumentDatesTips = (): TooltipContent => {
+export const useDocumentDatesTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -93,7 +93,7 @@ export const useDocumentDatesTips = (): TooltipContent => {
   };
 };
 
-export const useAdvancedOptionsTips = (): TooltipContent => {
+export const useAdvancedOptionsTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
