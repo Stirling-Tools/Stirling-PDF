@@ -10,4 +10,5 @@ public class Dependency {
     private String moduleLicense;
     private String moduleLicenseUrl;
     private String moduleLicenseText;
+    private String moduleNoticeText;
 }

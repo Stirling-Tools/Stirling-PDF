@@ -285,45 +285,46 @@ export function resolveModuleLicenseUrl(
 }
 
 // Project homepages for entries carrying neither a module nor a license URL,
-// keyed by the exact native notice title (or Maven coordinate).
+// keyed by the stable component name (or Maven coordinate). Native notice
+// titles append a parenthetical qualifier that changes between JPDFium
+// releases, so the lookup below also strips that suffix.
 const MODULE_HOMEPAGES: Record<string, string> = {
   PDFium: "https://pdfium.googlesource.com/pdfium/",
   QPDF: "https://github.com/qpdf/qpdf",
   libvips: "https://github.com/libvips/libvips",
   "GLib / GObject": "https://docs.gtk.org/glib/",
   libheif: "https://github.com/strukturag/libheif",
-  "libjxl (JPEG XL reference implementation)":
-    "https://github.com/libjxl/libjxl",
+  libjxl: "https://github.com/libjxl/libjxl",
   libwebp: "https://developers.google.com/speed/webp",
   "libjpeg-turbo": "https://libjpeg-turbo.org/",
   libpng: "http://www.libpng.org/",
   libtiff: "http://www.libtiff.org/",
   FreeType: "https://freetype.org/",
   HarfBuzz: "https://harfbuzz.github.io/",
-  "Little CMS (lcms2)": "https://www.littlecms.com/",
-  "ICU (International Components for Unicode)": "https://icu.unicode.org/",
+  "Little CMS": "https://www.littlecms.com/",
+  ICU: "https://icu.unicode.org/",
   zlib: "https://zlib.net/",
   zstd: "https://facebook.github.io/zstd/",
-  "libde265 (H.265/HEVC decoder, used for HEIC decoding)":
-    "https://github.com/strukturag/libde265",
-  "Kvazaar (H.265/HEVC encoder, used for HEIC encoding on Linux/macOS)":
-    "https://github.com/ultravideo/Kvazaar",
-  "OpenJPEG (JPEG 2000 codec, used for JPEG2000-in-HEIF)":
-    "https://www.openjpeg.org/",
+  libde265: "https://github.com/strukturag/libde265",
+  Kvazaar: "https://github.com/ultravideo/Kvazaar",
+  OpenJPEG: "https://www.openjpeg.org/",
   "com.github.jai-imageio:jai-imageio-core":
     "https://github.com/jai-imageio/jai-imageio-core",
   "com.github.jai-imageio:jai-imageio-jpeg2000":
     "https://github.com/jai-imageio/jai-imageio-jpeg2000",
 };
 
+function withoutComponentSuffix(moduleName: string): string {
+  return moduleName.replace(/\s*\(.*$/, "").trim();
+}
+
 export function resolveModuleUrl(dependency: Dependency): string | undefined {
-  return (
-    dependency.moduleUrl ||
-    (dependency.moduleName
-      ? MODULE_HOMEPAGES[dependency.moduleName]
-      : undefined) ||
-    dependency.moduleLicenseUrl
-  );
+  const moduleName = dependency.moduleName;
+  const homepage = moduleName
+    ? MODULE_HOMEPAGES[moduleName] ||
+      MODULE_HOMEPAGES[withoutComponentSuffix(moduleName)]
+    : undefined;
+  return dependency.moduleUrl || homepage || dependency.moduleLicenseUrl;
 }
 
 export interface DependencyRow extends Dependency {
@@ -333,8 +334,9 @@ export interface DependencyRow extends Dependency {
 // The license report lists one row per resolved artifact, so the same module
 // shows up at several versions; a notice names each module once per license.
 // Versions aggregate only within records that already agree on everything else:
-// a version is never borrowed onto a row carrying a different license text, and
-// a textless record keeps its own versions instead of inventing a relationship.
+// a version is never borrowed onto a row carrying different license or notice
+// text, and a textless record keeps its own versions instead of inventing a
+// relationship.
 export function dedupeDependencies(
   dependencies: Dependency[],
 ): DependencyRow[] {
@@ -362,16 +364,23 @@ export function dedupeDependencies(
     const textSlots = new Map<string, VersionSlot>();
     let bare: VersionSlot | undefined;
     for (const dependency of group) {
-      const slot = dependency.moduleLicenseText
+      const hasText = Boolean(
+        dependency.moduleLicenseText || dependency.moduleNoticeText,
+      );
+      const textKey = [
+        dependency.moduleLicenseText || "",
+        dependency.moduleNoticeText || "",
+      ].join("\u0000");
+      const slot = hasText
         ? (() => {
-            const existing = textSlots.get(dependency.moduleLicenseText);
+            const existing = textSlots.get(textKey);
             if (existing) return existing;
             const created: VersionSlot = {
               row: dependency,
               versions: [],
               seen: new Set(),
             };
-            textSlots.set(dependency.moduleLicenseText, created);
+            textSlots.set(textKey, created);
             return created;
           })()
         : (bare ??= { row: dependency, versions: [], seen: new Set() });
