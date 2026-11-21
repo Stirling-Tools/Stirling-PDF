@@ -30,7 +30,8 @@ function createPlugin() {
 describe("setRenderWithForms", () => {
   it("changes what the render plugin passes to the engine", () => {
     const { plugin, engine } = createPlugin();
-    const render = () => plugin.provides().renderPage({ pageIndex: 0 });
+    const render = () =>
+      plugin.provides().renderPage({ pageIndex: 0, options: {} });
 
     render();
     expect(engine.renderPage.mock.calls[0][2].withForms).toBe(true);

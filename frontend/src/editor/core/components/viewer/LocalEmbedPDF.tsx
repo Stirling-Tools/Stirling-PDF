@@ -444,6 +444,8 @@ interface PageLayerOptions {
   fileId?: string | null;
   pdfRenderMode: PdfRenderMode;
   enableFormFill: boolean;
+  /** The page bitmap already includes form widgets, signatures among them. */
+  formsInBitmap: boolean;
   formEditingActive: boolean;
   pageLayer: ComponentType<ViewerPageLayerProps> | null;
   enableAnnotations: boolean;
@@ -647,6 +649,7 @@ function PageLayers({
   fileId,
   pdfRenderMode,
   enableFormFill,
+  formsInBitmap,
   formEditingActive,
   pageLayer: PageLayer,
   enableAnnotations,
@@ -688,6 +691,7 @@ function PageLayers({
           pdfSource={file}
           pageWidth={width}
           pageHeight={height}
+          appearanceInBitmap={formsInBitmap}
         />
       )}
       <AnnotationEditingLayers
@@ -1368,6 +1372,11 @@ export function LocalEmbedPDF({
 
   // Null while access is pending, so a new version keeps the last known setting.
   const renderWithForms = pdfAccessPending ? null : !enableFormFill;
+  // What the bitmap holds right now: the last decided value, kept through a pending check.
+  const [formsInBitmap, setFormsInBitmap] = useState(renderWithForms ?? false);
+  if (renderWithForms !== null && renderWithForms !== formsInBitmap) {
+    setFormsInBitmap(renderWithForms);
+  }
 
   // The registry is built from the viewer's first source; later bytes arrive
   // through DocumentSwapBridge, so no replacement may change that identity.
@@ -1681,6 +1690,7 @@ export function LocalEmbedPDF({
     fileId,
     pdfRenderMode,
     enableFormFill,
+    formsInBitmap,
     formEditingActive,
     pageLayer,
     enableAnnotations: true,
