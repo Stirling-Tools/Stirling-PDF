@@ -4,12 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -298,5 +302,124 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
                             anyString(), anyString(), anyString(), anyBoolean(), any());
             verifyNoInteractions(jwtService);
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                "false, false, false, '', oAuth2AutoCreateDisabled",
+                "true, false, false, '', oAuth2AutoCreateDisabled",
+                "true, true, false, '', oAuth2AdminBlockedUser",
+                "true, true, true, '', maxUsersReached",
+                "false, false, false, tauri:state:nonce, oAuth2AutoCreateDisabled",
+                "true, false, false, tauri:state:nonce, oAuth2AutoCreateDisabled",
+                "true, true, false, tauri:state:nonce, oAuth2AdminBlockedUser",
+                "true, true, true, tauri:state:nonce, maxUsersReached",
+                "true, false, false, tauri:state:nonce+value, oAuth2AutoCreateDisabled",
+                "true, false, false, tauri:state://evil.example/?next=%2F%2Fevil&x=1#fragment, oAuth2AutoCreateDisabled"
+            },
+            emptyValue = "")
+    void newUserIsSentToLoginErrorBeforeSavedRequest(
+            boolean savedRequest,
+            boolean blockRegistration,
+            boolean exceedsLimit,
+            String state,
+            String expectedError)
+            throws Exception {
+        UserService userService = mock(UserService.class);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2 = properties.getSecurity().getOauth2();
+        oauth2.setAutoCreateUser(false);
+        oauth2.setBlockRegistration(blockRegistration);
+        when(userService.usernameExistsIgnoreCase("user")).thenReturn(false);
+        when(licenseSettingsService.wouldExceedLimit(1)).thenReturn(exceedsLimit);
+
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        mock(LoginAttemptService.class),
+                        oauth2,
+                        userService,
+                        jwtService,
+                        licenseSettingsService,
+                        properties);
+        DefaultOAuth2User principal =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        Map.of("sub", "provider-sub", "name", "user"),
+                        "name");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "google");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("/stirling");
+        if (!state.isEmpty()) {
+            request.setParameter("state", state);
+        }
+        if (savedRequest) {
+            SavedRequest saved = mock(SavedRequest.class);
+            lenient()
+                    .when(saved.getRedirectUrl())
+                    .thenReturn("http://localhost:8080/stirling/protected");
+            request.getSession().setAttribute("SPRING_SECURITY_SAVED_REQUEST", saved);
+        }
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        URI redirect = URI.create(response.getRedirectedUrl());
+        assertEquals(null, redirect.getScheme());
+        assertEquals(null, redirect.getRawAuthority());
+        assertEquals(null, redirect.getFragment());
+        assertEquals("/stirling/logout", redirect.getPath());
+        String[] query = redirect.getRawQuery().split("&");
+        assertEquals(expectedError + "=true", query[0]);
+        if (!state.isEmpty()) {
+            assertEquals(2, query.length);
+            assertEquals("state=" + state, URLDecoder.decode(query[1], StandardCharsets.UTF_8));
+        } else {
+            assertEquals(1, query.length);
+        }
+        verify(userService, never())
+                .processSSOPostLogin(anyString(), anyString(), anyString(), anyBoolean(), any());
+        verifyNoInteractions(jwtService);
+    }
+
+    @Test
+    void existingSsoUserCanFollowSavedRequestWithAutoCreateDisabled() throws Exception {
+        UserService userService = mock(UserService.class);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2 = properties.getSecurity().getOauth2();
+        oauth2.setAutoCreateUser(false);
+        oauth2.setBlockRegistration(true);
+        when(userService.usernameExistsIgnoreCase("user")).thenReturn(true);
+        when(userService.isSsoAuthenticationTypeByUsername("user")).thenReturn(true);
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        mock(LoginAttemptService.class),
+                        oauth2,
+                        userService,
+                        jwtService,
+                        mock(UserLicenseSettingsService.class),
+                        properties);
+        DefaultOAuth2User principal =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        Map.of("sub", "provider-sub", "name", "user"),
+                        "name");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "google");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("/stirling");
+        SavedRequest saved = mock(SavedRequest.class);
+        when(saved.getRedirectUrl()).thenReturn("http://localhost:8080/stirling/protected");
+        request.getSession().setAttribute("SPRING_SECURITY_SAVED_REQUEST", saved);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        assertEquals("http://localhost:8080/stirling/protected", response.getRedirectedUrl());
+        verifyNoInteractions(jwtService);
     }
 }
