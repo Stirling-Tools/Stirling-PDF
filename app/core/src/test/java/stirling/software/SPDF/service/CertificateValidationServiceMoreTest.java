@@ -532,6 +532,59 @@ class CertificateValidationServiceMoreTest {
         }
 
         @Test
+        @DisplayName("parseLotlForTslLocations skips pointers to the PDF copy of a TSL")
+        void parseLotlSkipsPdfPointers() throws Exception {
+            String ns = "http://uri.etsi.org/02231/v2#";
+            String additionalNs = "http://uri.etsi.org/02231/v2/additionaltypes#";
+            String lotl =
+                    "<TrustServiceStatusList xmlns=\""
+                            + ns
+                            + "\" xmlns:ns3=\""
+                            + additionalNs
+                            + "\"><SchemeInformation><PointersToOtherTSL>"
+                            + "<OtherTSLPointer><TSLLocation>https://a.test/tsl.pdf</TSLLocation>"
+                            + "<AdditionalInformation><OtherInformation>"
+                            + "<ns3:MimeType>application/pdf</ns3:MimeType>"
+                            + "</OtherInformation></AdditionalInformation></OtherTSLPointer>"
+                            + "<OtherTSLPointer><TSLLocation>https://a.test/tsl.xml</TSLLocation>"
+                            + "<AdditionalInformation><OtherInformation>"
+                            + "<ns3:MimeType>application/vnd.etsi.tsl+xml</ns3:MimeType>"
+                            + "</OtherInformation></AdditionalInformation></OtherTSLPointer>"
+                            + "</PointersToOtherTSL></SchemeInformation></TrustServiceStatusList>";
+            List<String> urls =
+                    invokePrivate(
+                            svc,
+                            "parseLotlForTslLocations",
+                            new Class<?>[] {byte[].class},
+                            (Object) lotl.getBytes(StandardCharsets.UTF_8));
+            assertThat(urls).containsExactly("https://a.test/tsl.xml");
+        }
+
+        @Test
+        @DisplayName("parseTslAndAddCas imports a qualified CA in the eIDAS granted status")
+        void parseTslImportsGrantedCa() throws Exception {
+            String ns = "http://uri.etsi.org/02231/v2#";
+            String tsl =
+                    "<TrustServiceStatusList xmlns=\""
+                            + ns
+                            + "\"><TSPService><ServiceInformation>"
+                            + "<ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>"
+                            + "<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>"
+                            + "<ServiceDigitalIdentity><DigitalId>"
+                            + certXmlElement("X509Certificate", realCertDer)
+                            + "</DigitalId></ServiceDigitalIdentity>"
+                            + "</ServiceInformation></TSPService></TrustServiceStatusList>";
+            int added =
+                    invokePrivate(
+                            svc,
+                            "parseTslAndAddCas",
+                            new Class<?>[] {byte[].class, String.class},
+                            tsl.getBytes(StandardCharsets.UTF_8),
+                            "https://source.test/tsl.xml");
+            assertThat(added).isEqualTo(1);
+        }
+
+        @Test
         @DisplayName("parseTslAndAddCas imports a qualified, active CA certificate")
         void parseTslImportsQualifiedActiveCa() throws Exception {
             String ns = "http://uri.etsi.org/02231/v2#";
@@ -605,7 +658,7 @@ class CertificateValidationServiceMoreTest {
         }
 
         @Test
-        @DisplayName("isActiveStatus accepts supervised/accredited and rejects withdrawn")
+        @DisplayName("isActiveStatus accepts supervised/accredited/granted and rejects withdrawn")
         void isActiveStatusBranches() throws Exception {
             boolean supervised =
                     invokePrivate(
@@ -625,8 +678,15 @@ class CertificateValidationServiceMoreTest {
                             "isActiveStatus",
                             new Class<?>[] {String.class},
                             "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn");
+            boolean granted =
+                    invokePrivate(
+                            svc,
+                            "isActiveStatus",
+                            new Class<?>[] {String.class},
+                            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted");
             assertThat(supervised).isTrue();
             assertThat(accredited).isTrue();
+            assertThat(granted).isTrue();
             assertThat(withdrawn).isFalse();
         }
 
