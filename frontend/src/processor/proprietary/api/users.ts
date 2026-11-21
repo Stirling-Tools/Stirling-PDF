@@ -134,6 +134,8 @@ export interface UsersSummary {
 }
 
 export interface UsersResponse {
+  /** Company-managed membership uses SSO admission instead of invitations or self-removal. */
+  companySsoRequired?: boolean;
   summary: UsersSummary;
   members: Member[];
   roles: Role[];
