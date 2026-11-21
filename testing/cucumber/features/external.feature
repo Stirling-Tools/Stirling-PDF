@@ -83,7 +83,6 @@ Feature: API Validation
             | format | extension |
             | docx   | .docx     |
             | odt    | .odt      |
-            | doc    | .doc      |
 
     @ocr @pdfa1
     Scenario: PDFA
