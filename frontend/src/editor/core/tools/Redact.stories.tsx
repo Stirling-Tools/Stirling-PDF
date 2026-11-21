@@ -99,7 +99,7 @@ export const AdvancedSettingsChanged: Story = {
     const panel = await openAdvanced(context);
     const colour = panel.getByRole("textbox", { name: "Box Color" });
     await userEvent.clear(colour);
-    await userEvent.type(colour, "#c0392b");
+    await userEvent.type(colour, "#c0392b"); // theme-allow-color a user-picked colour the tool sends to the server
     const padding = panel.getByRole("textbox", {
       name: "Custom Extra Padding",
     });

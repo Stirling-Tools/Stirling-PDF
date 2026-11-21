@@ -156,11 +156,9 @@ const serveFormFields = http.post(FIELDS_ENDPOINT, () =>
   HttpResponse.json(FORM_FIELDS),
 );
 
-const withFormFields = formOnViewer([serveFormFields]);
-
-// Modify mode labels each field on the page with a translucent chip whose white
-// text falls below AA contrast once the page has drawn behind it.
-const inModifyMode = formOnViewer([serveFormFields], "color-contrast");
+// Create and Modify modes label each field on the page with a translucent chip
+// whose white text falls below AA contrast once the page has drawn behind it.
+const withFieldChips = formOnViewer([serveFormFields], "color-contrast");
 
 // Fill mode's progress bar has no accessible name.
 const inFillModeWithFields = formOnViewer(
@@ -278,12 +276,12 @@ async function firstButton(context: PlayContext, name: string) {
 }
 
 export const ModifyModeWithFields: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: fieldsLoadedIn("Modify"),
 };
 
 export const ModifyPageCollapsed: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     const panel = await fieldsLoadedIn("Modify")(context);
     const row = panel.getByTestId("form-modify-row-fullName");
@@ -293,7 +291,7 @@ export const ModifyPageCollapsed: Story = {
 };
 
 export const GoToPageTooltip: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: openTooltip(
     { element: (context) => firstButton(context, "Go to this page") },
     { after: fieldsLoadedIn("Modify") },
@@ -301,7 +299,7 @@ export const GoToPageTooltip: Story = {
 };
 
 export const DeleteFieldTooltip: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: openTooltip(
     { element: (context) => firstButton(context, "Delete") },
     { after: fieldsLoadedIn("Modify") },
@@ -315,7 +313,7 @@ async function deleteFirstField(context: PlayContext) {
 }
 
 export const FieldMarkedForDeletion: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     await deleteFirstField(context);
     await waitForPanelText(context, "Save 1 change(s)");
@@ -323,7 +321,7 @@ export const FieldMarkedForDeletion: Story = {
 };
 
 export const RestoreFieldTooltip: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: openTooltip(
     { element: (context) => firstButton(context, "Restore") },
     { after: deleteFirstField },
@@ -349,7 +347,7 @@ export const SaveFailed: Story = {
         ),
       ),
     ],
-    // The field chips' contrast, as in inModifyMode.
+    // The field chips' contrast, as in withFieldChips.
     "color-contrast",
   ),
   play: async (context) => {
@@ -375,7 +373,7 @@ export const SomeEditsSkipped: Story = {
         "X-Stirling-Skipped-Field-Edits-Total": "3",
       }),
     ],
-    // The field chips' contrast, as in inModifyMode.
+    // The field chips' contrast, as in withFieldChips.
     "color-contrast",
   ),
   play: async (context) => {
@@ -394,12 +392,12 @@ function editingField(name: string) {
 }
 
 export const ModifyTextField: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: editingField("fullName"),
 };
 
 export const ModifyTextFieldEdited: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     const panel = await editingField("fullName")(context);
     await userEvent.type(
@@ -417,7 +415,7 @@ export const ModifyTextFieldEdited: Story = {
 };
 
 export const ModifyTypeMenu: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     await editingField("fullName")(context);
     const options = await openSelect(context, "Type");
@@ -426,22 +424,22 @@ export const ModifyTypeMenu: Story = {
 };
 
 export const ModifyCheckboxField: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: editingField("subscribe"),
 };
 
 export const ModifyDropdownField: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: editingField("country"),
 };
 
 export const ModifyListField: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: editingField("interests"),
 };
 
 export const ModifyListOptionAdded: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     const panel = await editingField("interests")(context);
     await userEvent.click(panel.getByRole("button", { name: "Add option" }));
@@ -450,7 +448,7 @@ export const ModifyListOptionAdded: Story = {
 };
 
 export const ModifyListNoOptions: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     const panel = await editingField("interests")(context);
     const removeButtons = () =>
@@ -462,7 +460,7 @@ export const ModifyListNoOptions: Story = {
 };
 
 export const ModifyRadioGroup: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     const panel = await editingField("contactMethod")(context);
     await panel.findByText("Use Option size");
@@ -470,12 +468,12 @@ export const ModifyRadioGroup: Story = {
 };
 
 export const ModifyButtonField: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: editingField("submit"),
 };
 
 export const ModifyButtonActionMenu: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     await editingField("submit")(context);
     const options = await openSelect(context, "Button action");
@@ -484,13 +482,13 @@ export const ModifyButtonActionMenu: Story = {
 };
 
 export const ModifySignatureField: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: editingField("applicantSignature"),
 };
 
 function labelTooltip(fieldName: string, label: string): Story {
   return {
-    ...inModifyMode,
+    ...withFieldChips,
     play: openTooltip({ text: label }, { after: editingField(fieldName) }),
   };
 }
@@ -501,7 +499,7 @@ function labelTooltip(fieldName: string, label: string): Story {
  */
 function switchTooltip(fieldName: string, name: string): Story {
   return {
-    ...inModifyMode,
+    ...withFieldChips,
     play: openTooltip(
       {
         element: async (context) =>
@@ -556,42 +554,42 @@ function drawField(type: string) {
 const drawTextField = drawField("Text");
 
 export const PendingTextField: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: drawTextField,
 };
 
 export const PendingCheckboxField: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: drawField("Checkbox"),
 };
 
 export const PendingDropdownField: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: drawField("Dropdown"),
 };
 
 export const PendingListField: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: drawField("List box"),
 };
 
 export const PendingRadioGroup: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: drawField("Radio"),
 };
 
 export const PendingButtonField: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: drawField("Button"),
 };
 
 export const PendingSignatureField: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: drawField("Signature"),
 };
 
 export const PendingFieldsInModify: Story = {
-  ...inModifyMode,
+  ...withFieldChips,
   play: async (context) => {
     await drawTextField(context);
     const panel = await choose(context, "Modify");
@@ -600,16 +598,16 @@ export const PendingFieldsInModify: Story = {
 };
 
 export const PendingFieldGoToTooltip: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: openTooltip({ info: "Go to this field" }, { after: drawTextField }),
 };
 
 export const PendingFieldRemoveTooltip: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: openTooltip({ info: "Remove field" }, { after: drawTextField }),
 };
 
 export const HoldToPreviewTooltip: Story = {
-  ...withFormFields,
+  ...withFieldChips,
   play: openTooltip({ text: "Hold to preview" }, { after: drawTextField }),
 };

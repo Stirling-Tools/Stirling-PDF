@@ -148,9 +148,13 @@ export const TrappedStatusOptions: Story = {
 };
 
 // The panel replaces every field with the PDF's own metadata each time a read
-// of the file lands, and several reads can be in flight, so an entry added
-// early is lost: add again until one survives.
-async function addCustomField(context: PlayContext) {
+// of the file lands, and several reads can be in flight, so an entry added or
+// typed early is lost: repeat until the entry holds both values.
+async function addCustomField(
+  context: PlayContext,
+  key: string,
+  value: string,
+): Promise<PanelQueries> {
   const panel = await openAdvancedOptions(context);
   const add = await panel.findByRole(
     "button",
@@ -158,25 +162,28 @@ async function addCustomField(context: PlayContext) {
     STAGE_TIMEOUT,
   );
   await waitFor(async () => {
-    if (
-      !panel.queryByPlaceholderText("Custom key") &&
-      !add.hasAttribute("disabled")
-    ) {
-      await userEvent.click(add);
+    const keyInput = panel.queryByPlaceholderText("Custom key");
+    if (!keyInput) {
+      if (!add.hasAttribute("disabled")) await userEvent.click(add);
+    } else {
+      await retype(keyInput, key);
+      await retype(panel.getByPlaceholderText("Custom value"), value);
     }
-    expect(panel.getByPlaceholderText("Custom key")).toBeVisible();
+    expect(panel.getByPlaceholderText("Custom key")).toHaveValue(key);
+    expect(panel.getByPlaceholderText("Custom value")).toHaveValue(value);
   }, STAGE_TIMEOUT);
   return panel;
 }
 
+async function retype(input: HTMLElement, text: string) {
+  if (input instanceof HTMLInputElement && input.value === text) return;
+  await userEvent.clear(input);
+  await userEvent.type(input, text);
+}
+
 export const CustomField: Story = {
   play: async (context) => {
-    const panel = await addCustomField(context);
-    await userEvent.type(
-      panel.getByPlaceholderText("Custom key"),
-      "Department",
-    );
-    await userEvent.type(panel.getByPlaceholderText("Custom value"), "Legal");
+    const panel = await addCustomField(context, "Department", "Legal");
     await expect(
       panel.getByText("Add custom metadata fields to the document"),
     ).toBeVisible();
