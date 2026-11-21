@@ -124,7 +124,46 @@ test("saving protection opens the result as a reader and changing permissions pr
     page.getByRole("button", { name: "Print PDF", exact: true }),
   ).toBeEnabled();
 });
-test("a protected merge is rejected before asking for passwords or processing files", async ({
+test("identically protected PDFs merge and keep their protection", async ({
+  page,
+}) => {
+  await page.goto("/merge");
+  await page
+    .getByTestId("file-input")
+    .setInputFiles(
+      ["a", "b"].map((x) =>
+        path.join(fixtures, `owner-only-unrestricted-${x}.pdf`),
+      ),
+    );
+  const merged = page.waitForResponse(
+    "**/api/v1/security/restore-pdf-protection",
+  );
+  await page
+    .getByRole("button", { name: "Merge (2 files)", exact: true })
+    .click();
+  const response = await merged;
+  expect(response.ok()).toBe(true);
+  expect(await inspect(page, await response.body())).toMatchObject({
+    encrypted: true,
+    requiresOpeningPassword: false,
+    canAssemble: true,
+    canPrintFaithful: true,
+    encryptionRevision: 3,
+    pageCount: 2,
+  });
+  // The output carries the first input's owner password, not the second's.
+  const body = await response.body();
+  expect(
+    (await inspect(page, body, "statement-owner-a")).ownerAuthenticated,
+  ).toBe(true);
+  const second = await inspect(page, body, "statement-owner-b").catch(
+    () => undefined,
+  );
+  expect(second?.ownerAuthenticated).not.toBe(true);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("a merge of differently protected PDFs is rejected before asking for passwords or processing files", async ({
   page,
 }) => {
   let operations = 0;
@@ -132,13 +171,12 @@ test("a protected merge is rejected before asking for passwords or processing fi
     if (/\/(prepare-pdf-session|merge-pdfs)$/.test(request.url())) operations++;
   });
   await page.goto("/merge");
-  const buffer = fs.readFileSync(
-    path.join(fixtures, "owner-only-restricted.pdf"),
-  );
-  await page.getByTestId("file-input").setInputFiles([
-    { name: "first.pdf", mimeType: "application/pdf", buffer },
-    { name: "second.pdf", mimeType: "application/pdf", buffer },
-  ]);
+  await page
+    .getByTestId("file-input")
+    .setInputFiles([
+      path.join(fixtures, "owner-only-unrestricted-a.pdf"),
+      path.join(fixtures, "owner-only-restricted.pdf"),
+    ]);
   await page
     .getByRole("button", { name: "Merge (2 files)", exact: true })
     .click();

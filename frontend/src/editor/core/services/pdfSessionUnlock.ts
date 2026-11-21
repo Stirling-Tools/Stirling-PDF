@@ -23,6 +23,7 @@ import {
 } from "@editor/services/pdfPermissions";
 import { isDamagedPdfError } from "@editor/utils/pdfDamage";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
+import { readCipherProfile } from "@editor/utils/pdfCipherProfile";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
@@ -200,6 +201,44 @@ async function ensureAccessUnlessDamaged(
   }
 }
 
+/** Combined output copies one input's protection, so every protected input must share it. */
+async function hasMixedProtection(files: readonly File[]): Promise<boolean> {
+  if (files.length < 2) return false;
+  const [first, ...rest] = files.map((file) => getPdfAccess(file));
+  const settingsDiffer = rest.some(
+    (access) =>
+      !first ||
+      !access ||
+      access.permissions !== first.permissions ||
+      access.encryptionRevision !== first.encryptionRevision ||
+      access.password !== first.password ||
+      Boolean(access.requiresOpeningPassword) !==
+        Boolean(first.requiresOpeningPassword),
+  );
+  if (settingsDiffer) return true;
+  if (!(await shareOpeningPassword(files))) return true;
+  const [cipher, ...others] = await Promise.all(files.map(readCipherProfile));
+  return !cipher || others.some((other) => other !== cipher);
+}
+
+async function shareOpeningPassword(files: readonly File[]): Promise<boolean> {
+  const accesses = files.map((file) => getPdfAccess(file)!);
+  if (!accesses[0].requiresOpeningPassword) return true;
+  const known = new Set(
+    accesses.flatMap((access) =>
+      access.openingPassword === undefined ? [] : [access.openingPassword],
+    ),
+  );
+  if (known.size !== 1) return false;
+  const [openingPassword] = known;
+  for (const [index, file] of files.entries()) {
+    if (accesses[index].openingPassword !== undefined) continue;
+    const opened = await inspectForPasswordTool(file, openingPassword);
+    if (!opened || opened.ownerAuthenticated) return false;
+  }
+  return true;
+}
+
 /** Checks the whole selection before processing; encryption hints request authentication but never grant access. */
 export async function preflightPdfOperation(
   files: readonly StirlingFile[],
@@ -246,7 +285,7 @@ export async function preflightPdfOperation(
       );
     protectedFiles.push(file);
   }
-  if (combinesFiles && protectedFiles.length > 1)
+  if (combinesFiles && (await hasMixedProtection(protectedFiles)))
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.mixedProtection",
@@ -382,7 +421,7 @@ async function protectPdfOutput(
   return file;
 }
 
-/** Restore protection before results reach downloads or storage, including every PDF in a ZIP; mixed protected inputs are unsupported. */
+/** Restore protection before results reach downloads or storage, including every PDF in a ZIP; inputs with differing protection are unsupported. */
 export async function protectUnlockedResults(
   outputs: File[],
   inputs: readonly File[],
@@ -393,11 +432,15 @@ export async function protectUnlockedResults(
     endpoint === "/api/v1/security/add-password"
   )
     return outputs;
-  if (inputs.filter((file) => getPdfAccess(file)?.encrypted).length > 1)
+  if (
+    await hasMixedProtection(
+      inputs.filter((file) => getPdfAccess(file)?.encrypted),
+    )
+  )
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.mixedProtection",
-        "Combining multiple protected documents requires choosing an output protection policy. Process them separately for now.",
+        "These PDFs have separate protection settings. Process them individually.",
       ),
     );
   const source = inputs.find((file) => getPdfAccess(file)?.encrypted);
