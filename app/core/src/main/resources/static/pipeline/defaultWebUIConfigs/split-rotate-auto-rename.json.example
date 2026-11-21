@@ -1,13 +1,15 @@
 {
-  "name": "split-rotate-auto-rename",
+  "name": "Split into quarters, rotate and rename",
   "pipeline": [
     {
       "operation": "/api/v1/general/split-pdf-by-sections",
       "parameters": {
-        "horizontalDivisions": 2,
-        "verticalDivisions": 2,
-        "fileInput": "automated",
-        "merge": false
+        "method": "bySections",
+        "hDiv": "2",
+        "vDiv": "2",
+        "merge": false,
+        "splitMode": "SPLIT_ALL",
+        "fileInput": "automated"
       }
     },
     {
