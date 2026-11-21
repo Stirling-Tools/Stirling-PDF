@@ -4403,6 +4403,7 @@ pdfUaTitle = "दस्तावेज़ शीर्षक"
 pdfUaTitleHelp = "Reader द्वारा filename के बजाय दिखाया जाता है। खाली छोड़ने पर, first heading उपयोग होती है।"
 selectSourceFormatFirst = "पहले source format चुनें"
 settings = "सेटिंग्स"
+signInToUse = "Sign in to use"
 single = "एकल"
 sourceFormatPlaceholder = "स्रोत फ़ॉर्मेट"
 stirlingOfficeConvert = "Stirling Office Convert (बीटा) का उपयोग करें"
@@ -7830,7 +7831,11 @@ decorativeLabel = "सजावटी छवि"
 description = "छवि का विवरण"
 descriptionInfo = "स्क्रीन रीडर छवि की जगह इसे पढ़ते हैं।"
 encrypted = "एन्क्रिप्टेड फ़ाइल में टैग संपादित नहीं किए जा सकते"
+figureDescription = "Figure description"
+figureDescriptionInfo = "Screen readers read this out in place of the figure."
 formFieldDescription = "फ़ील्ड विवरण"
+formulaDescription = "Formula description"
+formulaDescriptionInfo = "Screen readers read this out in place of the formula. Say it as you would aloud, such as \"x squared plus one\"."
 heading = "सुलभता"
 innerTagLabel = "टैग {{number}}"
 innerTags = "इस टेक्स्ट में टैग"
@@ -7842,7 +7847,7 @@ missingDescriptions = "विवरण अनुपस्थित हैं"
 mixedContent = "चित्र में अन्य सामग्री शामिल है"
 mixedTags = "मिश्रित"
 needsDescriptionBadge = "कोई विवरण नहीं"
-nextImage = "अगली छवि"
+nextToReview = "Next to review"
 notFigure = "टेक्स्ट के भाग के रूप में टैग किया गया"
 removeTag = "टैग हटाएँ"
 saveFailed = "आपके सुलभता बदलाव सहेजे नहीं जा सके, इसलिए फ़ाइल सहेजी नहीं गई। उन्हें पूर्ववत करें और फिर से प्रयास करें।"
@@ -9661,10 +9666,6 @@ signInToStart = "ट्रायल शुरू करने के लिए �
 stage = "चरण {{current}} / {{total}}"
 stagesLabel = "प्रगति"
 
-[portal.enterprise.connect]
-ownerOnly = "केवल इस सर्वर’s मालिक इसे कनेक्ट कर सकता है। उनसे यह पेज खोलने के लिए कहें।"
-unavailable = "इस सर्वर पर Stirling खाते से कनेक्ट करना बंद है। एक कॉल बुक करें और हम आपके साथ आपका ट्रायल सेट करेंगे।"
-
 [portal.enterprise.landing]
 lede = "14 दिन निःशुल्क आज़माएँ, फिर यहीं अपना कोट बनाएं और समझौते पर हस्ताक्षर करें। कार्ड की आवश्यकता नहीं।"
 tickAgreement = "एक ही समझौता जिसमें MSA, ऑर्डर फॉर्म, EULA और DPA सम्मिलित हैं"
@@ -11283,11 +11284,6 @@ downloadOffline = "Offline licence डाउनलोड करें (.lic)"
 hint = "इसे activate करने के लिए इस key को self-hosted instance में paste करें, या अपने records के लिए रखें। इसे सुरक्षित रखें।"
 label = "आपकी licence key"
 trialFileHint = "यह आपकी trial licence file है। आपका agreement लागू होने के बाद, वापस आएँ और इसे फिर से डाउनलोड करें — online licence key के विपरीत, .lic file अपने आप update नहीं होगी।"
-
-[portal.procurement.link]
-cta = "Account लिंक करें"
-description = "Procurement आपके linked Stirling account पर चलता है: इसी से हम trial provision करते हैं, आपके quote की कीमत तय करते हैं, और billing शुरू करते हैं। शुरू करने के लिए account लिंक करें।"
-title = "शुरू करने के लिए अपना account लिंक करें"
 
 [portal.procurement.live]
 description = "आपकी subscription सक्रिय है और आपका licence जारी कर दिया गया है। आपकी टीम provisioned है और billing शुरू हो गई है।"
@@ -14260,7 +14256,6 @@ toggleDetails = "विवरण दिखाएँ/छिपाएँ"
 
 [tool]
 endpointUnavailable = "यह टूल आपके सर्वर पर उपलब्ध नहीं है।"
-endpointUnavailableClickable = "इस मोड में उपलब्ध नहीं है। साइन इन करने के लिए क्लिक करें।"
 filesLoading = "फ़ाइलें अभी भी लोड हो रही हैं, कृपया प्रतीक्षा करें।"
 filesLoadingProgress = "{{loaded}} / {{total}} फ़ाइलें लोड हो रही हैं..."
 invalidParams = "आवश्यक सेटिंग्स भरें।"
@@ -14268,6 +14263,8 @@ noFiles = "शुरू करने के लिए एक फ़ाइल ज
 scopeFiles = "फ़ाइलें"
 scopeThisFile = "यह फ़ाइल"
 selectFilesHint = "यह उपकरण चलाने के लिए Active Files में फ़ाइलें चुनें"
+signInRequired = "This needs a Stirling account. Sign in to continue."
+signInToUse = "Sign in to use"
 singleFileScope = "केवल इस पर लागू: {{fileName}}"
 viewerMode = "कई फ़ाइलें जोड़ने के लिए फ़ाइल एडिटर पर स्विच करें।"
 

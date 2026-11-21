@@ -4403,6 +4403,7 @@ pdfUaTitle = "ཡིག་ཆའི་ཁ་བྱང"
 pdfUaTitleHelp = "ཀློག་ཆས་ཀྱིས་ཡིག་ཆའི་མིང་གི་ཚབ་ཏུ་སྟོན། སྟོང་པར་བཞག་ན་ཁ་བྱང་དང་པོ་སྤྱོད།"
 selectSourceFormatFirst = "སྔོན་ལ་ཁུངས་ཀྱི་རྣམ་གཞག་འདེམས"
 settings = "སྒྲིག་སྟངས།"
+signInToUse = "Sign in to use"
 single = "ཁེར་ཧྲེང"
 sourceFormatPlaceholder = "འབྱུང་ཁུངས་རྣམ་གྲངས།"
 stirlingOfficeConvert = "Stirling Office Convert (beta) སྤྱོད།"
@@ -7830,7 +7831,11 @@ decorativeLabel = "མཛེས་བཟོའི་པར་རིས"
 description = "པར་རིས་འགྲེལ་བཤད"
 descriptionInfo = "བརྙན་ཡོལ་ཀློག་ཆས་ཀྱིས་འདི་པར་རིས་ཀྱི་ཚབ་ཏུ་ཀློག"
 encrypted = "གསང་སྡོམ་བྱས་པའི་ཡིག་ཆའི་ནང་མཚོན་རྟགས་རྩོམ་སྒྲིག་མི་ཐུབ"
+figureDescription = "Figure description"
+figureDescriptionInfo = "Screen readers read this out in place of the figure."
 formFieldDescription = "ཡིག་སྒམ་འགྲེལ་བཤད"
+formulaDescription = "Formula description"
+formulaDescriptionInfo = "Screen readers read this out in place of the formula. Say it as you would aloud, such as \"x squared plus one\"."
 heading = "འཛུལ་སྤྱོད་སྟབས་བདེ"
 innerTagLabel = "མཚོན་རྟགས་ {{number}}"
 innerTags = "ཡི་གེ་འདིའི་ནང་གི་མཚོན་རྟགས"
@@ -7842,7 +7847,7 @@ missingDescriptions = "འགྲེལ་བཤད་ཆད་པ"
 mixedContent = "པར་རིས་ནང་ནང་དོན་གཞན་འདུས་ཡོད"
 mixedTags = "མཉམ་སྦྲེལ"
 needsDescriptionBadge = "འགྲེལ་བཤད་མེད"
-nextImage = "པར་རིས་རྗེས་མ"
+nextToReview = "Next to review"
 notFigure = "ཡི་གེའི་ཆ་ཤས་སུ་མཚོན་རྟགས་བཏགས་ཡོད"
 removeTag = "མཚོན་རྟགས་སུབ"
 saveFailed = "ཁྱེད་ཀྱི་འཛུལ་སྤྱོད་སྟབས་བདེའི་བཟོ་བཅོས་ཉར་ཚགས་མ་ཐུབ་པས། ཡིག་ཆ་ཉར་ཚགས་མ་བྱས། དེ་དག་ཕྱིར་བཤོལ་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
@@ -9661,10 +9666,6 @@ signInToStart = "ཚོད་ལེན་འགོ་འཛུགས་བྱེ
 stage = "རིམ་པ {{current}}/{{total}}"
 stagesLabel = "རྒྱུན་སྒྲིག"
 
-[portal.enterprise.connect]
-ownerOnly = "སར་བར་འདིའི་བདག་པོ་ཁོ་ནས་འབྲེལ་ཐུབ། ཁོང་ལ་ཤོག་ངོས་འདི་ཁ་ཕྱེ་རོགས།"
-unavailable = "སར་བར་འདིར Stirling རྩིས་ཐོ་ལ་འབྲེལ་བྱེད་མི་ཆོག གླེང་མོལ་བཀོལ་ནས་ང་ཚོས་ཁྱེད་ཀྱི་ཚོད་ལེན་གོ་སྒྲིག་བྱས་རྒྱུ་ཡོད།"
-
 [portal.enterprise.landing]
 lede = "མར་འདེབས་མེད་པར་ 14 ཉིན་སོང་མ་སྒྲིག་ཚོད་ལེན་བྱེད། དེའི་རྗེས་ཁྱེད་ཀྱི་ཐོག་འདེབས་བཟོ་ནས་གན་འཛིན་འཇུག"
 tickAgreement = "MSA, order form, EULA, DPA ཡོངས་ཁྱབ་གཅིག་པའི་གན་འཛིན་གཅིག"
@@ -11283,11 +11284,6 @@ downloadOffline = "དྲ་མེད་ཆོག་མཆན་ཕབ་ལེ�
 hint = "ལྡེ་མིག་འདི་རང་སྐྱོང་དཔེ་མཚོན་ནང་སྦྱར་ནས་ནུས་སློང་བྱེད་ཆོག ཡང་ན་ཁྱེད་ཀྱི་ཟིན་ཐོའི་ཆེད་ཉར་ཆོག དེ་བདེ་འཇགས་སུ་ཉར་རོགས།"
 label = "ཁྱེད་ཀྱི་ཆོག་མཆན་ལྡེ་མིག"
 trialFileHint = "འདི་ནི་ཁྱེད་ཀྱི་ཚོད་སྤྱོད་ཆོག་མཆན་ཡིག་ཆ་ཡིན། གྲོས་མཐུན་གཏན་འཁེལ་བྱས་རྗེས། ཕྱིར་ལོག་ནས་ཡང་བསྐྱར་ཕབ་ལེན་བྱོས — དྲ་ཐོག་ཆོག་མཆན་ལྡེ་མིག་དང་མི་འདྲ་བར། .lic ཡིག་ཆ་རང་འགུལ་གྱིས་གསར་སྒྱུར་མི་བྱེད།"
-
-[portal.procurement.link]
-cta = "རྩིས་ཐོ་འབྲེལ་མཐུད"
-description = "ཉོ་སྒྲུབ་ནི་ཁྱེད་ཀྱི་འབྲེལ་མཐུད་བྱས་པའི Stirling རྩིས་ཐོ་ཐོག་འགྲོ་སྐྱོང་བྱེད། འདིས་ང་ཚོས་ཚོད་སྤྱོད་སྤྲོད་པ། གོང་འབོལ་རིན་གོང་རྩིས་པ། དང་རྩིས་བསྡུ་འགོ་འཛུགས་པའི་ཐབས་ཡིན། འགོ་འཛུགས་ཆེད་རྩིས་ཐོ་ཞིག་འབྲེལ་མཐུད་བྱོས།"
-title = "འགོ་འཛུགས་ཆེད་ཁྱེད་ཀྱི་རྩིས་ཐོ་འབྲེལ་མཐུད་བྱོས"
 
 [portal.procurement.live]
 description = "ཁྱེད་ཀྱི་མངགས་ཉོ་འགུལ་སྤྱོད་ནང་ཡོད་ཅིང་ཆོག་མཆན་སྤྲད་ཟིན། ཁྱེད་ཀྱི་ཚོགས་པ་སྤྲོད་སྒྲིག་བྱས་ཟིན་ཞིང་རྩིས་བསྡུ་འགོ་ཚུགས་ཟིན།"
@@ -14260,7 +14256,6 @@ toggleDetails = "ཞིབ་ཕྲ་བརྗེ"
 
 [tool]
 endpointUnavailable = "ལག་ཆ་འདི་ཁྱེད་ཀྱི་ཞབས་ཞུ་ནས་མི་འཐོབ།"
-endpointUnavailableClickable = "ཐབས་ལམ་འདིར་མི་འཐོབ། མནན་ནས་ནང་འཇུག་བྱོས།"
 filesLoading = "ཡིག་ཆ་ད་དུང་འཇུག་བཞིན་ཡོད། སྒུག་རོགས།"
 filesLoadingProgress = "{{loaded}} / {{total}} ཡིག་ཆ་འཇུག་བཞིན..."
 invalidParams = "དགོས་མཁོའི་སྒྲིག་འགོད་ལེན་བསྐྱེད།"
@@ -14268,6 +14263,8 @@ noFiles = "འགོ་འཛུགས་བྱ་ཆེད་ཡིག་ཆ་
 scopeFiles = "ཡིག་ཆ་ཚོ"
 scopeThisFile = "ཡིག་ཆ་འདི་"
 selectFilesHint = "ལག་ཆ་འདི་སྒྲུབ་བར Active Files ནས་ཡིག་ཆ་སེལ།"
+signInRequired = "This needs a Stirling account. Sign in to continue."
+signInToUse = "Sign in to use"
 singleFileScope = "འཇུག་སྤྱོད་: {{fileName}} ཁོ་ན"
 viewerMode = "ཡིག་ཆ་མང་པོ་སྣོན་པར་ཡིག་ཆ editor ལ་བརྗེ།"
 

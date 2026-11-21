@@ -4403,6 +4403,7 @@ pdfUaTitle = "ชื่อเอกสาร"
 pdfUaTitleHelp = "แสดงโดย reader แทนชื่อไฟล์ หากเว้นว่าง จะใช้หัวข้อแรก"
 selectSourceFormatFirst = "เลือก format ต้นทางก่อน"
 settings = "การตั้งค่า"
+signInToUse = "Sign in to use"
 single = "เดี่ยว"
 sourceFormatPlaceholder = "รูปแบบต้นทาง"
 stirlingOfficeConvert = "ใช้ Stirling Office Convert (เบต้า)"
@@ -7830,7 +7831,11 @@ decorativeLabel = "รูปภาพตกแต่ง"
 description = "คำอธิบายรูปภาพ"
 descriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนรูปภาพ"
 encrypted = "ไม่สามารถแก้ไขแท็กในไฟล์ที่เข้ารหัสได้"
+figureDescription = "Figure description"
+figureDescriptionInfo = "Screen readers read this out in place of the figure."
 formFieldDescription = "คำอธิบายฟิลด์"
+formulaDescription = "Formula description"
+formulaDescriptionInfo = "Screen readers read this out in place of the formula. Say it as you would aloud, such as \"x squared plus one\"."
 heading = "การช่วยสำหรับการเข้าถึง"
 innerTagLabel = "แท็ก {{number}}"
 innerTags = "แท็กในข้อความนี้"
@@ -7842,7 +7847,7 @@ missingDescriptions = "ไม่มีคำอธิบาย"
 mixedContent = "ภาพประกอบมีเนื้อหาอื่นรวมอยู่ด้วย"
 mixedTags = "ผสม"
 needsDescriptionBadge = "ไม่มีคำอธิบาย"
-nextImage = "รูปภาพถัดไป"
+nextToReview = "Next to review"
 notFigure = "ถูกแท็กเป็นส่วนหนึ่งของข้อความ"
 removeTag = "ลบแท็ก"
 saveFailed = "ไม่สามารถบันทึกการเปลี่ยนแปลงการช่วยสำหรับการเข้าถึงของคุณได้ จึงไม่ได้บันทึกไฟล์ ย้อนกลับการเปลี่ยนแปลงแล้วลองอีกครั้ง"
@@ -9661,10 +9666,6 @@ signInToStart = "ลงชื่อเข้าใช้เพื่อเริ
 stage = "ขั้นตอนที่ {{current}} จาก {{total}}"
 stagesLabel = "ความคืบหน้า"
 
-[portal.enterprise.connect]
-ownerOnly = "มีเพียงเจ้าของเซิร์ฟเวอร์นี้เท่านั้นที่สามารถเชื่อมต่อได้ ขอให้พวกเขาเปิดหน้านี้."
-unavailable = "ปิดการเชื่อมต่อกับบัญชี Stirling บนเซิร์ฟเวอร์นี้ นัดคุยกับเรา และเราจะตั้งค่าการทดลองใช้ฟรีให้คุณ."
-
 [portal.enterprise.landing]
 lede = "ทดลองใช้ฟรี 14 วัน จากนั้นสร้างใบเสนอราคาและลงนามข้อตกลงได้ที่นี่ ไม่ต้องใช้บัตร."
 tickAgreement = "สัญญาเดียวครอบคลุม MSA แบบฟอร์มคำสั่งซื้อ EULA และ DPA"
@@ -11283,11 +11284,6 @@ downloadOffline = "ดาวน์โหลด licence ออฟไลน์ (.l
 hint = "วางคีย์นี้ลงใน instance แบบ self-hosted เพื่อเปิดใช้งาน หรือเก็บไว้เป็นบันทึกของคุณ เก็บรักษาให้ปลอดภัย"
 label = "คีย์ licence ของคุณ"
 trialFileHint = "นี่คือไฟล์ใบอนุญาตทดลองใช้ของคุณ เมื่อข้อตกลงของคุณพร้อมแล้ว ให้กลับมาดาวน์โหลดอีกครั้ง — ไฟล์ .lic จะไม่อัปเดตเอง ต่างจากคีย์ใบอนุญาตออนไลน์"
-
-[portal.procurement.link]
-cta = "เชื่อมโยงบัญชี"
-description = "การจัดซื้อทำงานบนบัญชี Stirling ที่เชื่อมโยงของคุณ: นี่คือวิธีที่เราจัดเตรียม trial, ตั้งราคาใบเสนอราคา และเริ่มการเรียกเก็บเงิน เชื่อมโยงบัญชีเพื่อเริ่มต้น"
-title = "เชื่อมโยงบัญชีของคุณเพื่อเริ่มต้น"
 
 [portal.procurement.live]
 description = "การสมัครใช้งานของคุณใช้งานอยู่และ licence ของคุณออกแล้ว ทีมของคุณได้รับการจัดเตรียมแล้วและการเรียกเก็บเงินได้เริ่มต้นแล้ว"
@@ -14260,7 +14256,6 @@ toggleDetails = "สลับรายละเอียด"
 
 [tool]
 endpointUnavailable = "เครื่องมือนี้ไม่พร้อมใช้งานบนเซิร์ฟเวอร์ของคุณ"
-endpointUnavailableClickable = "ไม่พร้อมใช้งานในโหมดนี้ คลิกเพื่อลงชื่อเข้าใช้"
 filesLoading = "ไฟล์กำลังโหลดอยู่ โปรดรอ."
 filesLoadingProgress = "{{loaded}} / {{total}} ไฟล์กำลังโหลด..."
 invalidParams = "กรอกการตั้งค่าที่จำเป็นให้ครบถ้วน"
@@ -14268,6 +14263,8 @@ noFiles = "เพิ่มไฟล์เพื่อเริ่มต้น"
 scopeFiles = "ไฟล์"
 scopeThisFile = "ไฟล์นี้"
 selectFilesHint = "เลือกไฟล์ในไฟล์ที่ใช้งานเพื่อเรียกใช้เครื่องมือนี้"
+signInRequired = "This needs a Stirling account. Sign in to continue."
+signInToUse = "Sign in to use"
 singleFileScope = "ใช้เฉพาะกับ: {{fileName}}"
 viewerMode = "สลับไปที่ file editor เพื่อเพิ่มหลายไฟล์"
 

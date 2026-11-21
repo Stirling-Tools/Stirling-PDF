@@ -4403,6 +4403,7 @@ pdfUaTitle = "ഡോക്യുമെന്റ് ശീർഷകം"
 pdfUaTitleHelp = "Filename-ന് പകരം reader കാണിക്കുന്നത്. ശൂന്യമാക്കിയാൽ, ആദ്യ heading ഉപയോഗിക്കും."
 selectSourceFormatFirst = "ആദ്യം source format തിരഞ്ഞെടുക്കുക"
 settings = "ക്രമീകരണങ്ങൾ"
+signInToUse = "Sign in to use"
 single = "ഒറ്റ"
 sourceFormatPlaceholder = "ഉറവിട ഫോർമാറ്റ്"
 stirlingOfficeConvert = "Stirling Office Convert (ബീറ്റ) ഉപയോഗിക്കുക"
@@ -7830,7 +7831,11 @@ decorativeLabel = "അലങ്കാര ചിത്രം"
 description = "ചിത്ര വിവരണം"
 descriptionInfo = "സ്ക്രീൻ റീഡറുകൾ ചിത്രത്തിന് പകരം ഇത് വായിക്കും."
 encrypted = "എൻക്രിപ്റ്റ് ചെയ്ത ഫയലിൽ ടാഗുകൾ എഡിറ്റ് ചെയ്യാൻ കഴിയില്ല"
+figureDescription = "Figure description"
+figureDescriptionInfo = "Screen readers read this out in place of the figure."
 formFieldDescription = "ഫീൽഡ് വിവരണം"
+formulaDescription = "Formula description"
+formulaDescriptionInfo = "Screen readers read this out in place of the formula. Say it as you would aloud, such as \"x squared plus one\"."
 heading = "പ്രവേശനക്ഷമത"
 innerTagLabel = "ടാഗ് {{number}}"
 innerTags = "ഈ ടെക്സ്റ്റിലുള്ള ടാഗുകൾ"
@@ -7842,7 +7847,7 @@ missingDescriptions = "വിവരണങ്ങൾ ഇല്ല"
 mixedContent = "ഫിഗറിൽ മറ്റ് ഉള്ളടക്കം ഉൾപ്പെടുന്നു"
 mixedTags = "മിശ്രിതം"
 needsDescriptionBadge = "വിവരണം ഇല്ല"
-nextImage = "അടുത്ത ചിത്രം"
+nextToReview = "Next to review"
 notFigure = "ടെക്സ്റ്റിന്റെ ഭാഗമായി ടാഗ് ചെയ്തിരിക്കുന്നു"
 removeTag = "ടാഗ് നീക്കം ചെയ്യുക"
 saveFailed = "നിങ്ങളുടെ പ്രവേശനക്ഷമത മാറ്റങ്ങൾ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല, അതിനാൽ ഫയൽ സംരക്ഷിച്ചില്ല. അവ പഴയപടിയാക്കി വീണ്ടും ശ്രമിക്കുക."
@@ -9661,10 +9666,6 @@ signInToStart = "ട്രയൽ ആരംഭിക്കാൻ സൈൻ ഇൻ
 stage = "ഘട്ടം {{current}} / {{total}}"
 stagesLabel = "പുരോഗതി"
 
-[portal.enterprise.connect]
-ownerOnly = "ഈ സെർവറിന്റെ ഉടമയ്ക്കേ ഇത് കണക്റ്റ് ചെയ്യാൻ കഴിയൂ. അവർക്ക് ഈ പേജ് തുറക്കാൻ പറയുക."
-unavailable = "ഈ സെർവറിൽ Stirling അക്കൗണ്ടിലേക്കുള്ള കണക്റ്റ് ഓഫ് ചെയ്തിരിക്കുന്നു. ഒരു കോൾ ബുക്ക് ചെയ്യൂ; ഞങ്ങൾ നിങ്ങളോടൊപ്പം ട്രയൽ സജ്ജമാക്കാം."
-
 [portal.enterprise.landing]
 lede = "14 ദിവസത്തേക്ക് സൗജന്യമായി പരീക്ഷിക്കുക, പിന്നെ നിങ്ങളുടെ ക്വോട്ട് നിർമ്മിച്ച് കരാർ ഇവിടെ ഒപ്പിടുക. കാർഡ് ആവശ്യമില്ല."
 tickAgreement = "MSA, order form, EULA, DPA എന്നിവ ഉൾക്കൊള്ളുന്ന ഒരു ഏക കരാർ"
@@ -11283,11 +11284,6 @@ downloadOffline = "Offline ലൈസൻസ് (.lic) ഡൗൺലോഡ് ച�
 hint = "ഇത് activate ചെയ്യാൻ ഈ key self-hosted instance-ൽ ഒട്ടിക്കുക, അല്ലെങ്കിൽ നിങ്ങളുടെ രേഖകൾക്കായി സൂക്ഷിക്കുക. സുരക്ഷിതമായി സൂക്ഷിക്കുക."
 label = "നിങ്ങളുടെ ലൈസൻസ് key"
 trialFileHint = "ഇത് നിങ്ങളുടെ trial licence file ആണ്. നിങ്ങളുടെ agreement പ്രാബല്യത്തിൽ വന്നാൽ, തിരികെ വന്ന് ഇത് വീണ്ടും ഡൗൺലോഡ് ചെയ്യുക — online licence key-നെ പോലെ അല്ല, .lic file സ്വയം update ചെയ്യില്ല."
-
-[portal.procurement.link]
-cta = "അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
-description = "പ്രോക്യൂർമെന്റ് നിങ്ങളുടെ linked Stirling account-ൽ പ്രവർത്തിക്കുന്നു: trial provision ചെയ്യാനും, നിങ്ങളുടെ ക്വോട്ട് വിലയിടാനും, billing ആരംഭിക്കാനുമുള്ള മാർഗമാണ് ഇത്. ആരംഭിക്കാൻ ഒരു അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക."
-title = "ആരംഭിക്കാൻ നിങ്ങളുടെ അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
 
 [portal.procurement.live]
 description = "നിങ്ങളുടെ subscription സജീവമാണ്, ലൈസൻസ് issue ചെയ്തിരിക്കുന്നു. നിങ്ങളുടെ ടീം provision ചെയ്തിട്ടുണ്ട്, billing ആരംഭിച്ചു."
@@ -14260,7 +14256,6 @@ toggleDetails = "വിശദാംശങ്ങൾ ടോഗിൾ ചെയ്�
 
 [tool]
 endpointUnavailable = "ഈ ഉപകരണം നിങ്ങളുടെ സെർവറിൽ ലഭ്യമല്ല."
-endpointUnavailableClickable = "ഈ മോഡിൽ ലഭ്യമല്ല. സൈൻ ഇൻ ചെയ്യാൻ ക്ലിക് ചെയ്യുക."
 filesLoading = "ഫയലുകൾ ഇപ്പോഴും ലോഡ് ചെയ്യുന്നു, ദയവായി കാത്തിരിക്കുക."
 filesLoadingProgress = "{{loaded}} / {{total}} ഫയലുകൾ ലോഡ് ചെയ്യുന്നു..."
 invalidParams = "ആവശ്യമായ സജ്ജീകരണങ്ങൾ പൂരിപ്പിക്കുക."
@@ -14268,6 +14263,8 @@ noFiles = "ആരംഭിക്കാൻ ഒരു ഫയൽ ചേർക്ക
 scopeFiles = "ഫയലുകൾ"
 scopeThisFile = "ഈ ഫയൽ"
 selectFilesHint = "ഈ ടൂൾ പ്രവർത്തിപ്പിക്കാൻ Active Files-ൽ ഫയലുകൾ തിരഞ്ഞെടുക്കുക"
+signInRequired = "This needs a Stirling account. Sign in to continue."
+signInToUse = "Sign in to use"
 singleFileScope = "ഇത് ബാധകമാകുന്നത് {{fileName}}-ൽ മാത്രം"
 viewerMode = "ഒന്നിലധികം ഫയലുകൾ ചേർക്കാൻ file editor-ലേക്ക് മാറുക."
 
