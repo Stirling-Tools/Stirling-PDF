@@ -153,11 +153,13 @@ async function scanPage(page: Page, pageIdx: number): Promise<PageScan | null> {
     const store = (
       window as unknown as {
         __editor_store: {
-          doc: { loadedPages: () => Array<{ width: number }> };
+          doc: { loadedPages: () => Array<{ index: number; width: number }> };
         };
       }
     ).__editor_store;
-    const pdfWidth = store.doc.loadedPages()[idx]?.width ?? canvas.width;
+    const pdfWidth =
+      store.doc.loadedPages().find((p) => p.index === idx)?.width ??
+      canvas.width;
     return {
       cw: canvas.width,
       ch: canvas.height,
@@ -183,6 +185,7 @@ async function runAnchors(page: Page, pageIdx: number): Promise<RunAnchor[]> {
         __editor_store: {
           doc: {
             loadedPages: () => Array<{
+              index: number;
               width: number;
               height: number;
               display: {
@@ -199,7 +202,7 @@ async function runAnchors(page: Page, pageIdx: number): Promise<RunAnchor[]> {
         };
       }
     ).__editor_store;
-    const pg = store.doc.loadedPages()[idx];
+    const pg = store.doc.loadedPages().find((p) => p.index === idx);
     if (!pg) return [];
     const canvas = document
       .querySelector<HTMLElement>(`[data-testid="pdf-editor-page-${idx}"]`)
@@ -546,11 +549,16 @@ test("each page /Rotate lays the red TOP EDGE band along the display edge it nam
           window as unknown as {
             __editor_store: {
               doc: {
-                loadedPages: () => Array<{ display: { rotate: number } }>;
+                loadedPages: () => Array<{
+                  index: number;
+                  display: { rotate: number };
+                }>;
               };
             };
           }
-        ).__editor_store.doc.loadedPages()[i].display.rotate,
+        ).__editor_store.doc
+          .loadedPages()
+          .find((p) => p.index === i)!.display.rotate,
       idx,
     );
     expect(declared, `page ${idx} declares ${rotate} quarter turns`).toBe(

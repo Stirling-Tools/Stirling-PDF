@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import {
   FPDF_ERR_PASSWORD,
@@ -30,6 +31,59 @@ export function useDocumentLoader(store: EditorStore) {
   );
 }
 
+// Opening every page just to size its placeholder parses each one; a long document then waits on all of them.
+function unreadSnapshot(doc: EditorDocument, pageIndex: number): PageSnapshot {
+  const { width, height } = doc.pageSize(pageIndex);
+  return {
+    pageIndex,
+    width,
+    height,
+    dirty: false,
+    revision: 0,
+    runs: [],
+    images: [],
+    shapes: [],
+    display: DisplayTransform.identity(width, height).toData(),
+  };
+}
+
+/** A read page's snapshot; the placeholder before it carried no crop or rotation. */
+function readSnapshot(
+  previous: PageSnapshot,
+  page: ReturnType<EditorDocument["page"]>,
+): PageSnapshot {
+  return {
+    ...previous,
+    width: page.width,
+    height: page.height,
+    display: page.display.toData(),
+    revision: page.revision,
+    runs: page.runs.map((r) => r.snapshot()),
+    images: page.images.map((img) => img.snapshot()),
+    shapes: page.shapes.map((shape) => shape.snapshot()),
+    annotations: page.annotations,
+    rules: page.rules,
+  };
+}
+
+// Bounded: a page that never paints (hidden tab, render failure) must not hold back its text.
+const FIRST_PAINT_WAIT_MS = 1500;
+
+function firstPagePainted(store: EditorStore): Promise<void> {
+  return new Promise((resolve) => {
+    if (store.getState().firstPageRendered) return resolve();
+    const timer = setTimeout(done, FIRST_PAINT_WAIT_MS);
+    const unsubscribe = store.subscribe((state) => {
+      if (state.firstPageRendered) done();
+    });
+    function done() {
+      clearTimeout(timer);
+      unsubscribe();
+      resolve();
+    }
+  });
+}
+
 /**
  * Resolves true when the document on screen as this call settles is the one it
  * opened from `file`, even if a newer load has started but not yet replaced it.
@@ -43,6 +97,7 @@ export async function loadDocument(
   password?: string,
 ): Promise<boolean> {
   let installed: EditorDocument | null = null;
+  let ownsLoading = true;
   const documentPassword = password ?? getPdfAccess(file)?.password;
   const token = store.beginLoad();
   store.setLoading(true);
@@ -90,55 +145,27 @@ export async function loadDocument(
     installed = doc;
 
     const total = doc.pageCount;
-    const eager = Math.min(EAGER_PAGE_LIMIT, total);
-    const snapshots: PageSnapshot[] = [];
-    for (let i = 0; i < eager; i++) {
-      store.setProgress({
-        stage: `Reading page ${i + 1} of ${total}`,
-        current: i,
-        total,
-      });
+    store.publishPages(
+      Array.from({ length: total }, (_, i) => unreadSnapshot(doc, i)),
+    );
+    store.setLoading(false);
+    store.setProgress(null);
+    // From here another operation (bulk tagging) may own the loading flag.
+    ownsLoading = false;
+    // The first page's bitmap is what the user waits for; reading text first would queue it behind every eager page.
+    await firstPagePainted(store);
+    let any = false;
+    for (let i = 0; i < Math.min(EAGER_PAGE_LIMIT, total); i++) {
+      // One page per task: the paint that resolved the wait is still finishing in this one.
       await yieldToBrowser();
-      // The check + synchronous read below run in one tick, so a
-      // superseding load can only interpose here.
-      if (!store.isCurrentLoad(token)) return store.document === doc;
-      const page = doc.page(i);
-      PdfiumTextReader.populate(doc, page, store.groupingMode);
-      snapshots.push({
-        pageIndex: i,
-        width: page.width,
-        height: page.height,
-        dirty: false,
-        revision: page.revision,
-        runs: page.runs.map((r) => r.snapshot()),
-        images: page.images.map((img) => img.snapshot()),
-        shapes: page.shapes.map((shape) => shape.snapshot()),
-        annotations: page.annotations,
-        rules: page.rules,
-        display: page.display.toData(),
-      });
+      if (!store.isCurrentLoad(token)) {
+        // A failed newer load leaves this document installed; its read pages still need publishing.
+        if (any && store.document === doc) publishAllPages(store);
+        return store.document === doc;
+      }
+      any = readPage(store, doc, i) || any;
     }
-    for (let i = eager; i < total; i++) {
-      const page = doc.page(i);
-      snapshots.push({
-        pageIndex: i,
-        width: page.width,
-        height: page.height,
-        dirty: false,
-        revision: 0,
-        runs: [],
-        images: [],
-        shapes: [],
-        display: page.display.toData(),
-      });
-    }
-    if (!store.isCurrentLoad(token)) return store.document === doc;
-    store.publishPages(snapshots);
-    store.setProgress({
-      stage: "Ready",
-      current: total,
-      total,
-    });
+    if (any && store.isCurrentLoad(token)) publishAllPages(store);
   } catch (err) {
     if (store.isCurrentLoad(token)) {
       // A password-protected PDF isn't a hard error.
@@ -150,7 +177,7 @@ export async function loadDocument(
     }
   } finally {
     // Only the winning load owns the loading/progress UI state.
-    if (store.isCurrentLoad(token)) {
+    if (ownsLoading && store.isCurrentLoad(token)) {
       store.setLoading(false);
       store.setProgress(null);
     }
@@ -224,17 +251,10 @@ function readPage(
 export function publishAllPages(store: EditorStore): void {
   const doc = store.document;
   if (!doc) return;
+  const opened = new Map(doc.loadedPages().map((page) => [page.index, page]));
   const next = store.getState().pages.map((p) => {
-    const page = doc.page(p.pageIndex);
-    return {
-      ...p,
-      revision: page.revision,
-      runs: page.runs.map((r) => r.snapshot()),
-      images: page.images.map((img) => img.snapshot()),
-      shapes: page.shapes.map((shape) => shape.snapshot()),
-      annotations: page.annotations,
-      rules: page.rules,
-    };
+    const page = opened.get(p.pageIndex);
+    return page ? readSnapshot(p, page) : p;
   });
   store.publishPages(next);
 }
@@ -252,19 +272,8 @@ export function ensurePageRead(store: EditorStore, pageIndex: number): void {
     store.setError(err instanceof Error ? err.message : String(err));
     return;
   }
-  const state = store.getState();
-  const next = state.pages.map((p) =>
-    p.pageIndex === pageIndex
-      ? {
-          ...p,
-          revision: page.revision,
-          runs: page.runs.map((r) => r.snapshot()),
-          images: page.images.map((img) => img.snapshot()),
-          shapes: page.shapes.map((shape) => shape.snapshot()),
-          annotations: page.annotations,
-          rules: page.rules,
-        }
-      : p,
-  );
+  const next = store
+    .getState()
+    .pages.map((p) => (p.pageIndex === pageIndex ? readSnapshot(p, page) : p));
   store.publishPages(next);
 }

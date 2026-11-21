@@ -1,3 +1,4 @@
+import { getPdfiumModule } from "@editor/services/pdfiumService";
 import {
   assertFilesNotBlocked,
   policySourceIds,
@@ -76,6 +77,7 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 
+const PDFIUM_WARM_TIMEOUT_MS = 2000;
 const INSERTED_IMAGE_RATIO = 0.4;
 
 export default function PdfTextEditor(_props: BaseToolProps) {
@@ -172,6 +174,16 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   }, []);
 
   useScanPrefit(store, state);
+  // Fetching and compiling PDFium otherwise happens after a file is picked, ahead of its first page.
+  useEffect(() => {
+    const warm = () => void getPdfiumModule().catch(() => undefined);
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(warm, { timeout: PDFIUM_WARM_TIMEOUT_MS });
+      return () => cancelIdleCallback(id);
+    }
+    const timer = window.setTimeout(warm, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const sel = useSelectionActions(store);
   const warnAboutFontChange = useFontChangeWarning();

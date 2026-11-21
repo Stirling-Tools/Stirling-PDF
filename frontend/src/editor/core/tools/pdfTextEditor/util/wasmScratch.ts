@@ -36,6 +36,7 @@ function key(): ScratchKey {
 
 /** Every scratch buffer in the editor, one slot per purpose. */
 export const SCRATCH = {
+  pageSize: key(),
   readerCharRect: key(),
   readerCharX: key(),
   readerCharY: key(),
