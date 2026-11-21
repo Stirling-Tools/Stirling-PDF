@@ -710,7 +710,12 @@ public class CustomPDFDocumentFactory {
                 if (!success) Files.deleteIfExists(tmp);
             }
         }
-        return Loader.loadPDF(bytes, password, null, null, cache);
+        try {
+            return Loader.loadPDF(bytes, password, null, null, cache);
+        } catch (IOException e) {
+            ExceptionUtils.logException("PDF loading from bytes with password", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
     }
 
     private PDDocument maybePostProcess(PDDocument doc, boolean readOnly) throws IOException {
