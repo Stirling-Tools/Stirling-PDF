@@ -65,6 +65,7 @@ import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { assertEditorOcrAllowed } from "@editor/tools/pdfTextEditor/util/ocrProtection";
 import {
   detectSaveRisks,
+  locksPages,
   hasSaveRisks,
   type SaveRisks,
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
@@ -75,6 +76,21 @@ import type {
   GroupingMode,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
+import {
+  applyDocumentChange,
+  DocumentChangeRefused,
+  type ChangedDocument,
+  type DocumentChange,
+} from "@editor/tools/pdfTextEditor/util/documentChanges";
+import { alert } from "@editor/components/toast";
+import {
+  captureFormats,
+  shiftFormats,
+  undoneShift,
+} from "@editor/tools/pdfTextEditor/util/carriedFormats";
+
+// Undo past a page or field change keeps the whole file from before it.
+const MAX_RESTORE_BYTES = 64 * 1024 * 1024;
 
 const INSERTED_IMAGE_RATIO = 0.4;
 
@@ -178,6 +194,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   // Guards against re-entrant saves while a (synchronous) serialize runs.
   const savingRef = useRef(false);
+  const afterSavingRef = useRef<Array<() => void>>([]);
+  const doneSaving = useCallback(() => {
+    savingRef.current = false;
+    for (const resume of afterSavingRef.current.splice(0)) resume();
+  }, []);
   // Pending save-risk warning (signatures/XFA) shown before the actual save.
   const [saveRisks, setSaveRisks] = useState<SaveRisks | null>(null);
   // docPtr the user already acknowledged risks for, so we don't re-nag.
@@ -321,10 +342,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         // must not believe a broken save succeeded.
         store.setError(err instanceof Error ? err.message : String(err));
       } finally {
-        savingRef.current = false;
+        doneSaving();
       }
     },
-    [store, openedFileName, applyToWorkbench],
+    [store, openedFileName, applyToWorkbench, doneSaving],
   );
 
   // Which action the risk modal is currently gating.
@@ -332,8 +353,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   const runSave = useCallback(
     async (download: boolean) => {
+      while (savingRef.current)
+        await new Promise<void>((resume) =>
+          afterSavingRef.current.push(resume),
+        );
       const doc = store.document;
-      if (!doc || savingRef.current || store.getState().loading) return;
+      if (!doc || store.getState().loading) return;
       const risks = unackedRisks(doc);
       if (risks) {
         pendingDownloadRef.current = download;
@@ -357,20 +382,26 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [],
   );
 
-  const saveBeforeLeaving = useCallback(async () => {
-    const doc = store.document;
-    const risks = doc && unackedRisks(doc);
-    if (risks) {
-      const save = await new Promise<boolean>((resolve) => {
+  const confirmRisks = useCallback(
+    (doc: EditorDocument) => {
+      const risks = unackedRisks(doc);
+      if (!risks) return Promise.resolve(true);
+      return new Promise<boolean>((resolve) => {
         riskAnswerRef.current = resolve;
         setSaveRisks(risks);
       });
-      if (!save) throw new Error("Save cancelled at the risk warning");
-    }
+    },
+    [unackedRisks],
+  );
+
+  const saveBeforeLeaving = useCallback(async () => {
+    const doc = store.document;
+    if (doc && !(await confirmRisks(doc)))
+      throw new Error("Save cancelled at the risk warning");
     await doSave(false);
     // doSave reports its failures in the editor; the prompt must stay open.
     if (store.getState().dirty) throw new Error("Edits not saved");
-  }, [store, doSave, unackedRisks]);
+  }, [store, doSave, confirmRisks]);
 
   const handleCancelSaveRisk = useCallback(() => {
     setSaveRisks(null);
@@ -406,6 +437,148 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         toggleFind,
       ],
     ),
+  );
+
+  // Reopens the document from what `produce` makes of its saved bytes. Pages
+  // and form fields live outside the editor's model, so they change in the
+  // file; the undo history then starts again, with a restore point that
+  // reopens the bytes from before, unless `kind` is that undo itself.
+  const reopenWith = useCallback(
+    async (
+      produce: (saved: Uint8Array) => Promise<ChangedDocument>,
+      kind: "change" | "undo" | "redo",
+    ): Promise<boolean> => {
+      const doc = store.document;
+      if (!doc || savingRef.current || store.getState().loading) return false;
+      if (kind === "change" && !(await confirmRisks(doc))) return false;
+      if (store.document !== doc || savingRef.current) return false;
+      const sourceId = sourceFileIdRef.current;
+      const isCurrent = () =>
+        store.document === doc && sourceFileIdRef.current === sourceId;
+      savingRef.current = true;
+      store.setError(null);
+      try {
+        assertFilesNotBlocked([sourceId ?? undefined]);
+        const access = getPdfAccess(sourceId);
+        assertPdfSessionEditable(access);
+        // Rewriting the file around a signature, an encryption dictionary or
+        // an XFA form breaks what each of them guarantees.
+        if (access?.encrypted || locksPages(detectSaveRisks(doc)))
+          throw new Error(
+            t(
+              "pdfTextEditor.pages.protected",
+              "Pages and form fields can't be changed in a signed, encrypted or XFA PDF.",
+            ),
+          );
+        // The box being typed in commits on blur; typing after that would
+        // land in the document about to be replaced.
+        if (document.activeElement instanceof HTMLElement)
+          document.activeElement.blur();
+        store.setReopening(true);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        const formats = captureFormats(doc);
+        const before = new Uint8Array(
+          await (await exportToBlob(doc)).arrayBuffer(),
+        );
+        const changed = await produce(before);
+        if (!isCurrent()) return false;
+        const stored = await applyToWorkbench(
+          new Blob([changed.bytes as BlobPart], { type: "application/pdf" }),
+          openedFileName?.trim() || "edited.pdf",
+          "pdfTextEditor",
+          isCurrent,
+        );
+        // The write-back swaps the source file id, so only the document is compared.
+        if (!stored || store.document !== doc) return false;
+        const points = store.takeRestorePoints();
+        const loading = load(stored);
+        const token = store.currentLoadToken;
+        store.carryFormatsInto(
+          token,
+          shiftFormats(formats, changed.pageShift ?? null),
+        );
+        await loading;
+        if (
+          !mountedRef.current ||
+          !store.isCurrentLoad(token) ||
+          !store.document
+        ) {
+          // Still the document the points lead back from: keep them.
+          if (store.document === doc) store.putRestorePoints(points);
+          return false;
+        }
+        store.putRestorePoints(points);
+        if (kind === "change") store.dropRedoPoints();
+        pinWorkbench();
+        scrollActions.scrollToPage(changed.focusPage + 1);
+        if (kind !== "undo") {
+          if (before.length <= MAX_RESTORE_BYTES) {
+            const focusPage = changed.focusPage;
+            store.pushRestorePoint({
+              undo: () =>
+                reopenWithRef.current(
+                  async () => ({
+                    bytes: before,
+                    focusPage,
+                    pageShift: undoneShift(changed.pageShift ?? null),
+                  }),
+                  "undo",
+                ),
+              redo: () => reopenWithRef.current(produce, "redo"),
+            });
+          } else
+            alert({
+              alertType: "warning",
+              title: t(
+                "pdfTextEditor.pages.tooLargeToUndo",
+                "This PDF is too large to keep a copy for Undo, so this change can't be undone.",
+              ),
+              expandable: false,
+            });
+        }
+        return true;
+      } catch (err) {
+        store.setError(
+          err instanceof DocumentChangeRefused
+            ? err.reason === "lastPage"
+              ? t(
+                  "pdfTextEditor.pages.lastPage",
+                  "A PDF needs at least one page.",
+                )
+              : t(
+                  "pdfTextEditor.pages.signatureRefused",
+                  "A signature field can't be added to this PDF.",
+                )
+            : err instanceof Error
+              ? err.message
+              : String(err),
+        );
+        return false;
+      } finally {
+        store.setReopening(false);
+        doneSaving();
+      }
+    },
+    [
+      store,
+      t,
+      openedFileName,
+      applyToWorkbench,
+      load,
+      pinWorkbench,
+      scrollActions,
+      doneSaving,
+      confirmRisks,
+    ],
+  );
+  const reopenWithRef = useRef(reopenWith);
+  reopenWithRef.current = reopenWith;
+
+  const changeDocument = useCallback(
+    async (change: DocumentChange) => {
+      await reopenWith((saved) => applyDocumentChange(saved, change), "change");
+    },
+    [reopenWith],
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
@@ -651,6 +824,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       () => void warnAboutFontChange(sel.toggleItalic),
       [warnAboutFontChange, sel.toggleItalic],
     ),
+    onToggleUnderline: sel.toggleUnderline,
+    onSetAlign: sel.setAlign,
+    onToggleList: sel.toggleList,
   });
 
   useEditorClipboard({
@@ -674,6 +850,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       pickImage: openImagePicker,
       // The viewer mounts only the pages near the viewport.
       revealPage: (pageIndex) => scrollActions.scrollToPage(pageIndex + 1),
+      changeDocument,
+      pageSize: (pageIndex) => {
+        const doc = store.document;
+        if (!doc || pageIndex >= doc.pageCount) return null;
+        const { cropWidth, cropHeight, rotate } = doc.page(pageIndex).display;
+        return rotate % 180 === 0
+          ? { width: cropWidth, height: cropHeight }
+          : { width: cropHeight, height: cropWidth };
+      },
     });
     return () => setEditorSession(null);
   }, [
@@ -682,6 +867,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     handleSave,
     handleDownload,
     openImagePicker,
+    changeDocument,
+    store,
   ]);
 
   const handleSubmitPassword = useCallback(

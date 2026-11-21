@@ -1,3 +1,14 @@
+import {
+  fieldKindOf,
+  shapeKindOf,
+} from "@editor/tools/pdfTextEditor/store/insertModes";
+import { continueList } from "@editor/tools/pdfTextEditor/util/listText";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
+import {
+  flowPastBottom,
+  runBottom,
+} from "@editor/tools/pdfTextEditor/util/pageFlow";
+import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import i18n from "i18next";
 import { alert } from "@editor/components/toast";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
@@ -15,6 +26,15 @@ import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTex
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
 import type { TextRange } from "@editor/tools/pdfTextEditor/types";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import {
+  editFocusedRun,
+  focusedRunCaret,
+  focusRunWhenPainted,
+} from "@editor/tools/pdfTextEditor/util/dom";
+import {
+  InsertShapeCommand,
+  ReshapeCommand,
+} from "@editor/tools/pdfTextEditor/commands/shapeCommands";
 
 const cache = new WeakMap<EditorStore, PageViewHandlers>();
 
@@ -49,6 +69,14 @@ function createHandlers(store: EditorStore) {
       if (extend) store.selection.toggleShape(shapeId);
       else store.selection.selectShape(shapeId);
     },
+    onReshape: (
+      pageIndex: number,
+      shapeId: string,
+      bounds: { x: number; y: number; width: number; height: number },
+    ) => {
+      store.dispatch(new ReshapeCommand({ pageIndex, shapeId, bounds }));
+      store.selection.selectShape(shapeId);
+    },
     onMoveShape: (
       pageIndex: number,
       shapeId: string,
@@ -62,7 +90,22 @@ function createHandlers(store: EditorStore) {
       // contentEditable can fire several input events per keystroke burst.
       const current = store.document?.page(pageIndex).findRun(runId);
       if (current && current.text === nextText) return;
+      const bottomBefore = current ? runBottom(current) : -Infinity;
+      const list = current
+        ? continueList(
+            current.text,
+            nextText,
+            softStartsOf(current),
+            focusedRunCaret(runId),
+          )
+        : null;
       store.dispatch(new EditTextCommand({ pageIndex, runId, nextText }));
+      const flowed = flowPastBottom(store, pageIndex, runId, bottomBefore);
+      // Typed into the box, so its next input event carries the marker
+      // through this same path; set in the model alone, the next keystroke
+      // would write the box's text back over it. A line that flowed to the
+      // next page is no longer in this box.
+      if (list && !flowed) editFocusedRun(runId, list, nextText);
       const doc = store.document;
       const run = doc?.page(pageIndex).findRun(runId);
       if (doc && run && scanBlockOffInk(doc, run))
@@ -98,6 +141,7 @@ function createHandlers(store: EditorStore) {
           );
         return page.findRun(runId)?.text ?? wrapped;
       }
+      const bottomBefore = runBottom(run);
       const reflow = new ReflowWrapCommand({
         pageIndex,
         runId,
@@ -106,6 +150,7 @@ function createHandlers(store: EditorStore) {
       });
       store.dispatch(reflow);
       if (reflow.refusedForSpaceBelow) return null;
+      flowPastBottom(store, pageIndex, runId, bottomBefore);
       return page.findRun(runId)?.text ?? run.text;
     },
     onResizeRun: (pageIndex: number, runId: string, widthPt: number) => {
@@ -129,15 +174,45 @@ function createHandlers(store: EditorStore) {
         store.setMode("select");
         return;
       }
+      const shapeKind = shapeKindOf(mode);
+      if (shapeKind) {
+        const cmd = new InsertShapeCommand({
+          pageIndex,
+          kind: shapeKind,
+          x: pageX,
+          y: pageY,
+        });
+        store.dispatch(cmd);
+        if (cmd.insertedShapeId)
+          store.selection.selectShape(cmd.insertedShapeId);
+        store.setMode("select");
+        return;
+      }
+      const fieldKind = fieldKindOf(mode);
+      if (fieldKind) {
+        store.setMode("select");
+        void currentEditorSession()?.changeDocument({
+          kind: "addField",
+          page: pageIndex,
+          field: fieldKind,
+          x: pageX,
+          y: pageY,
+        });
+        return;
+      }
       if (mode !== "addText") return;
       const cmd = new InsertTextCommand({
         pageIndex,
         x: pageX,
         y: pageY,
         text: "New text",
+        placeholder: true,
       });
       store.dispatch(cmd);
-      if (cmd.insertedRunId) store.selection.selectOne(cmd.insertedRunId);
+      if (cmd.insertedRunId) {
+        store.selection.selectOne(cmd.insertedRunId);
+        focusRunWhenPainted(cmd.insertedRunId);
+      }
       store.setMode("select");
     },
     onTransformImage: (

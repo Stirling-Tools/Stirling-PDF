@@ -7,6 +7,8 @@ import {
   visiblePageNumber,
 } from "@editor/tools/pdfTextEditor/util/dom";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import type { TextAlign } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import type { ListKind } from "@editor/tools/pdfTextEditor/util/listText";
 
 interface KeyboardShortcutCallbacks {
   store: EditorStore;
@@ -23,7 +25,21 @@ interface KeyboardShortcutCallbacks {
   onMergeSelection: () => void;
   onToggleBold: () => void;
   onToggleItalic: () => void;
+  onToggleUnderline: () => void;
+  onSetAlign: (align: TextAlign) => void;
+  onToggleList: (kind: ListKind) => void;
 }
+
+// Ctrl/Cmd+Shift with these keys, as word processors bind them; e.code, as Shift changes e.key.
+const ALIGN_KEYS: Record<string, TextAlign> = {
+  KeyL: "left",
+  KeyE: "center",
+  KeyR: "right",
+};
+const LIST_KEYS: Record<string, ListKind> = {
+  Digit8: "bullet",
+  Digit7: "number",
+};
 
 /** Bind every editor-level keyboard shortcut to `window` for the session. */
 export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
@@ -42,6 +58,9 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onMergeSelection,
     onToggleBold,
     onToggleItalic,
+    onToggleUnderline,
+    onSetAlign,
+    onToggleList,
   } = cbs;
 
   useEffect(() => {
@@ -51,6 +70,19 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
       const key = e.key.toLowerCase();
       if (key !== "s" && isModalOpen()) return;
+      const hasRuns = store.selection.value.runIds.length > 0;
+      // AltGr arrives as Ctrl+Alt on Windows: Polish AltGr+Shift+L types Ł.
+      const typesCharacter = e.altKey;
+      if (e.shiftKey && hasRuns && !typesCharacter && !isFocusInFormField()) {
+        const align = ALIGN_KEYS[e.code];
+        const list = LIST_KEYS[e.code];
+        if (align || list) {
+          e.preventDefault();
+          if (align) onSetAlign(align);
+          else onToggleList(list);
+          return;
+        }
+      }
       switch (key) {
         case "z":
           // Form fields (Find/Replace/password) keep their NATIVE undo.
@@ -111,6 +143,11 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           e.preventDefault();
           if (key === "b") onToggleBold();
           else onToggleItalic();
+          return;
+        case "u":
+          if (isFocusInFormField() || !hasRuns || typesCharacter) return;
+          e.preventDefault();
+          onToggleUnderline();
           return;
         case "m":
           if (store.selection.value.runIds.length < 2) return;
@@ -207,5 +244,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onMergeSelection,
     onToggleBold,
     onToggleItalic,
+    onToggleUnderline,
+    onSetAlign,
+    onToggleList,
   ]);
 }

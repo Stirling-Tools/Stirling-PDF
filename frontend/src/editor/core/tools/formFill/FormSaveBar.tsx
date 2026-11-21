@@ -22,8 +22,8 @@ import { getFormFillFileId } from "@editor/types/fileContext";
 interface FormSaveBarProps {
   /** The current file being viewed */
   file: File | Blob | null;
-  /** Whether the formFill tool is active (bar is hidden when tool panel is showing) */
-  isFormFillToolActive: boolean;
+  /** A tool on screen saves this file its own way (form filling, the text editor), so the bar stays hidden rather than offer a second save. */
+  hiddenByTool: boolean;
   /** Callback when form changes are applied (should reload PDF with filled values) */
   onApply?: (filledBlob: Blob) => Promise<void>;
   /** Disable download while an ingestion-time policy run is in flight. */
@@ -32,7 +32,7 @@ interface FormSaveBarProps {
 
 export function FormSaveBar({
   file,
-  isFormFillToolActive,
+  hiddenByTool,
   onApply,
   policyEnforcing = false,
 }: FormSaveBarProps) {
@@ -90,14 +90,14 @@ export function FormSaveBar({
   }, [file, saving, applying, submitForm]);
 
   // Don't show when:
-  // - formFill tool is active (it has its own save panel)
+  // - a tool with its own save is open
   // - no form fields found
   // - still loading
   // - user dismissed the bar
   const hasFields = fields.some(
     (f) => f.type !== "signature" && f.type !== "button",
   );
-  const visible = !isFormFillToolActive && hasFields && !loading && !dismissed;
+  const visible = !hiddenByTool && hasFields && !loading && !dismissed;
 
   return (
     <Transition mounted={visible} transition="slide-down" duration={300}>

@@ -16,6 +16,13 @@ vi.mock("@editor/tools/pdfTextEditor/commands/runTags", () => ({
 vi.mock("@editor/tools/pdfTextEditor/commands/scanTextEdit", () => ({
   setScanOverride: () => null,
 }));
+vi.mock(
+  "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand",
+  async (orig) => ({
+    ...(await orig<object>()),
+    wrapAtPageEdge: () => null,
+  }),
+);
 vi.mock("@editor/tools/pdfTextEditor/util/deviceFontEmbed", () => ({
   deviceFontEmitCount: () => 0,
 }));

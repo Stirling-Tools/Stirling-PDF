@@ -100,6 +100,11 @@ export interface TextRunSnapshot {
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
+  /** Text the editor wrote for the user to type over; a click selects all of it. */
+  placeholder?: boolean;
+  align?: "left" | "center" | "right";
+  underline?: boolean;
+  listKind?: "bullet" | "number";
   /** The text cannot be changed, though the run can still be selected, moved and deleted: the reader could not tell the order its line was drawn in. */
   textReadOnly?: boolean;
   /** Box width the user set by resize, in PDF points; absent = follow the ink. */
@@ -218,6 +223,19 @@ export interface ShapeObjectSnapshot {
   bounds: PageRect;
   /** False inside a form XObject, whose children PDFium cannot re-save moved. */
   movable: boolean;
+  /** Set for a shape drawn in this session, which can be resized and recoloured. */
+  drawn?: DrawnShape;
+}
+
+export type ShapeKind = "line" | "rectangle" | "box";
+
+export interface DrawnShape {
+  kind: ShapeKind;
+  /** Outline colour; null draws no outline. */
+  stroke: RGBA | null;
+  /** Fill colour; null leaves the inside clear. */
+  fill: RGBA | null;
+  strokeWidth: number;
 }
 
 export interface PageSnapshot {

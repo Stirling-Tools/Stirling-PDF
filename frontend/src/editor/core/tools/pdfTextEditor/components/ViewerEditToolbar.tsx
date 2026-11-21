@@ -88,10 +88,13 @@ const TopBar = memo(function TopBar({
       controller={controller}
       hasDocument={state.hasDocument}
       dirty={state.dirty}
+      reopening={state.reopening}
       addTextArmed={state.mode === "addText"}
       addTableArmed={state.mode === "addTable"}
       onToggleAddTable={() => store.toggleMode("addTable")}
       onToggleAddText={() => store.toggleMode("addText")}
+      mode={state.mode}
+      onToggleMode={(mode) => store.toggleMode(mode)}
       findOpen={state.findOpen}
       onToggleFind={() => store.toggleFindOpen()}
       onShowHelp={() => store.setHelpOpen(true)}
@@ -120,8 +123,7 @@ const ActionBar = memo(function ActionBar({
     <MobileActionBar
       store={store}
       controller={controller}
-      addTextArmed={state.mode === "addText"}
-      addTableArmed={state.mode === "addTable"}
+      mode={state.mode}
       findOpen={state.findOpen}
     />
   );

@@ -39,6 +39,8 @@ test.describe("PDF text editor - tables", () => {
           "true",
         );
         await page.getByTestId("pdf-editor-overflow-menu").click();
+      } else {
+        await page.getByTestId("pdf-editor-insert").click();
       }
       await page.getByTestId("pdf-editor-add-table").click();
       await page.waitForFunction(

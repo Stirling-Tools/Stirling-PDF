@@ -50,6 +50,11 @@ import {
   scriptFacesCover,
   takeUndrawnScriptText,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import { SyncParagraphFormatCommand } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import {
+  carryFormats,
+  type CarriedFormats,
+} from "@editor/tools/pdfTextEditor/util/carriedFormats";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
@@ -68,7 +73,30 @@ function resetCharcodeCaches(): void {
   resetDocumentFontStyles();
 }
 
-export type InteractionMode = "select" | "addText" | "addTable";
+// Each one holds a whole copy of the document's bytes.
+const MAX_RESTORE_POINTS = 5;
+
+/** A page or field change made by reopening the document: `undo` reopens it as it was before, `redo` makes the change again; each resolves false when it could not. */
+export interface RestorePoint {
+  undo: () => Promise<boolean>;
+  redo: () => Promise<boolean>;
+}
+
+export interface RestorePoints {
+  undo: RestorePoint[];
+  redo: RestorePoint[];
+}
+
+export type InteractionMode =
+  | "select"
+  | "addText"
+  | "addTable"
+  | "addLine"
+  | "addRectangle"
+  | "addBox"
+  | "addTextField"
+  | "addCheckbox"
+  | "addSignatureField";
 
 export interface LoadProgress {
   /** Stage description shown in the loader: "Reading file", "Parsing PDF", "Loading page 3/60", etc. */
@@ -91,6 +119,8 @@ export interface EditorViewState {
   languagesInUse: string[];
   /** Async lifecycle markers. */
   loading: boolean;
+  /** Saving and reopening after a page or form field change; edits wait until it reopens. */
+  reopening: boolean;
   /** True once the first page's bitmap has actually painted in PageView. */
   firstPageRendered: boolean;
   /** Detailed progress for the loading state. */
@@ -129,6 +159,7 @@ const INITIAL: EditorViewState = {
   documentLanguage: null,
   languagesInUse: [],
   loading: false,
+  reopening: false,
   firstPageRendered: false,
   progress: null,
   error: null,
@@ -146,6 +177,10 @@ const INITIAL: EditorViewState = {
 // into PDFium directly - they dispatch commands.
 export class EditorStore {
   readonly history: HistoryStack;
+  private restorePoints: RestorePoint[] = [];
+  private redoPoints: RestorePoint[] = [];
+  private carry: { token: number; formats: CarriedFormats } | null = null;
+  private batching = 0;
   readonly selection: Selection;
   /**
    * The workbench file the document was opened from and the name it saves
@@ -309,6 +344,10 @@ export class EditorStore {
     // Flushes first: the rebuilt runs must reflect the user's current edits.
     this.repopulateAllPages(doc, mode);
     this.history.clear();
+    // The edits since the last page change are baked in now; going back past
+    // that change would drop them.
+    this.restorePoints = [];
+    this.redoPoints = [];
     this.savedTop = null;
     this.bakedDirty = wasDirty;
     this.selection.clear();
@@ -344,7 +383,16 @@ export class EditorStore {
     return this.loadToken === token;
   }
 
+  carryFormatsInto(token: number, formats: CarriedFormats): void {
+    this.carry = { token, formats };
+  }
+
   async setDocument(doc: EditorDocument): Promise<void> {
+    if (this.carry?.token === this.loadToken)
+      carryFormats(doc, this.carry.formats);
+    this.carry = null;
+    this.restorePoints = [];
+    this.redoPoints = [];
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.doc = doc;
@@ -464,9 +512,47 @@ export class EditorStore {
     this.patch({ dirty: this.isDirty() });
   }
 
+  setReopening(reopening: boolean): void {
+    if (this.state.reopening !== reopening) this.patch({ reopening });
+  }
+
+  /** Run `changes`, which dispatches several commands at once, as one undo step. */
+  batchNow(changes: () => void): void {
+    const mark = this.history.mark;
+    try {
+      changes();
+    } finally {
+      this.endBatch(mark);
+    }
+  }
+
+  /** Run `changes`, which may dispatch several commands, as one undo step. */
+  async batch(changes: () => Promise<unknown>): Promise<void> {
+    const mark = this.history.mark;
+    this.batching++;
+    try {
+      await changes();
+    } finally {
+      this.batching--;
+      this.endBatch(mark);
+    }
+  }
+
+  private endBatch(mark: number): void {
+    this.history.mergeSince(mark);
+    this.patch({ dirty: this.isDirty() });
+  }
+
+  // Null while loading or reopening, when a long operation is mid-way through
+  // the document, and mid-batch, whose step an undo or redo would fold in.
+  private get historyDoc(): EditorDocument | null {
+    const busy = this.state.loading || this.state.reopening || this.batching;
+    return busy ? null : this.doc;
+  }
+
   /** Apply a command via the history stack, re-snapshot, and notify. */
   dispatch(cmd: Command): void {
-    if (!this.doc) return;
+    if (!this.doc || this.state.reopening) return;
     const before = cmd.repaintArea?.(this.doc) ?? null;
     const fromRevision = before ? this.doc.page(before.pageIndex).revision : -1;
     takeUndrawnScriptText();
@@ -484,7 +570,16 @@ export class EditorStore {
       this.recoverFromBrokenStep(err);
       return;
     }
-    if (before) noteRepaintArea(this.doc, cmd, before, fromRevision);
+    this.dropRedoPoints();
+    let reformatted = false;
+    try {
+      reformatted = this.syncParagraphFormats();
+    } catch (err) {
+      this.recoverFromBrokenStep(err);
+      return;
+    }
+    if (before && !reformatted)
+      noteRepaintArea(this.doc, cmd, before, fromRevision);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
@@ -492,7 +587,27 @@ export class EditorStore {
     if (undrawn) void this.redrawOnceScriptFontsLoad(cmd, undrawn);
   }
 
-  /** Redraw `cmd` and every step after it once fonts for `undrawn`'s scripts are in, so typed text its emit dropped appears. */
+  /** Lays out runs an edit put out of their alignment or underline, inside the edit's undo step; true when any moved. */
+  private syncParagraphFormats(): boolean {
+    const doc = this.doc;
+    if (!doc) return false;
+    let synced = false;
+    for (const page of doc.loadedPages()) {
+      if (page.paragraphFormats.size === 0) continue;
+      if (!SyncParagraphFormatCommand.needed(doc, page.index)) continue;
+      this.history.attachToLast(
+        new SyncParagraphFormatCommand({
+          pageIndex: page.index,
+          followsKey: this.history.lastKey,
+        }),
+        doc,
+      );
+      synced = true;
+    }
+    return synced;
+  }
+
+  /** Redraw `cmd` and every step after it once fonts for some of `undrawn`'s scripts are in, so the typed text they draw appears. */
   private async redrawOnceScriptFontsLoad(
     cmd: Command,
     undrawn: string,
@@ -500,14 +615,17 @@ export class EditorStore {
     const doc = this.doc;
     await loadScriptScanFaces(scanScriptsOf(undrawn)).catch(() => undefined);
     if (this.doc !== doc || !doc || this.state.loading) return;
-    if (!scriptFacesCover(undrawn)) return;
+    const drawable = [...undrawn]
+      .filter((ch) => /\S/.test(ch) && scriptFacesCover(ch))
+      .join("");
+    if (!drawable) return;
     try {
       if (!this.history.replayFrom(cmd, doc)) return;
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
     }
-    forgetDroppedChars(undrawn);
+    forgetDroppedChars(drawable);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
   }
@@ -613,12 +731,67 @@ export class EditorStore {
     });
   }
 
-  // Ignored while loading: a long operation is mid-way through the document,
-  // and an undo would revert under it.
+  /** True when Undo has a step to take: an edit, or a page or field change to go back on. */
+  get canUndo(): boolean {
+    return this.history.canUndo || this.restorePoints.length > 0;
+  }
+
+  get canRedo(): boolean {
+    return this.history.canRedo || this.redoPoints.length > 0;
+  }
+
+  /**
+   * Make Undo, once the edits after it are undone, go back on a change that
+   * reopened the document: `restore` reopens the document as it was before,
+   * resolving false when it could not. The oldest points drop off past the limit.
+   */
+  pushRestorePoint(restore: RestorePoint): void {
+    this.restorePoints.push(restore);
+    if (this.restorePoints.length > MAX_RESTORE_POINTS)
+      this.restorePoints.shift();
+    this.notify();
+  }
+
+  /** Hand the restore points over: the document they lead back from is about to be replaced by its continuation. */
+  takeRestorePoints(): RestorePoints {
+    const points = { undo: this.restorePoints, redo: this.redoPoints };
+    this.restorePoints = [];
+    this.redoPoints = [];
+    return points;
+  }
+
+  /** Give the document that continues the last one its restore points. */
+  putRestorePoints(points: RestorePoints): void {
+    this.restorePoints = [...points.undo];
+    this.redoPoints = [...points.redo];
+    this.notify();
+  }
+
+  dropRedoPoints(): void {
+    if (this.redoPoints.length === 0) return;
+    this.redoPoints = [];
+    this.notify();
+  }
+
   undo(): void {
-    if (!this.doc || this.state.loading) return;
+    const doc = this.historyDoc;
+    if (!doc) return;
+    if (!this.history.canUndo) {
+      const restore = this.restorePoints.pop();
+      if (!restore) return;
+      this.notify();
+      void restore.undo().then((done) => {
+        // Only back onto the document it leads back from: another file opened
+        // meanwhile must never be overwritten with this one's bytes.
+        if (done) {
+          this.redoPoints.push(restore);
+          this.notify();
+        } else if (this.doc === doc) this.pushRestorePoint(restore);
+      });
+      return;
+    }
     try {
-      this.history.undo(this.doc);
+      this.history.undo(doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
@@ -628,9 +801,22 @@ export class EditorStore {
   }
 
   redo(): void {
-    if (!this.doc || this.state.loading) return;
+    const doc = this.historyDoc;
+    if (!doc) return;
+    if (!this.history.canRedo) {
+      const point = this.redoPoints.pop();
+      if (!point) return;
+      this.notify();
+      void point.redo().then((done) => {
+        if (!done && this.doc === doc) {
+          this.redoPoints.push(point);
+          this.notify();
+        }
+      });
+      return;
+    }
     try {
-      this.history.redo(this.doc);
+      this.history.redo(doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
@@ -656,6 +842,8 @@ export class EditorStore {
     this.repopulateAllPages(doc, this.state.groupingMode);
     // Rebuilt runs get fresh ids, so no existing history entry can apply.
     this.history.clear();
+    this.restorePoints = [];
+    this.redoPoints = [];
     this.savedTop = null;
     this.bakedDirty = true;
     this.selection.clear();
@@ -673,6 +861,7 @@ export class EditorStore {
       page.setImages([]);
       page.tables = [];
       page.setShapes([]);
+      page.forgetParagraphFormats();
       PdfiumTextReader.populate(doc, page, mode);
     }
   }

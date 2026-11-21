@@ -1,4 +1,5 @@
 import type {
+  DrawnShape,
   PageRect,
   ShapeObjectSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
@@ -11,11 +12,13 @@ export class ShapeObject {
   /** Owning form XObject, or 0 when the shape sits on the page. */
   containerPtr: number;
   bounds: PageRect;
+  drawn: DrawnShape | null;
 
   constructor(
-    init: Omit<ShapeObjectSnapshot, "movable"> & {
+    init: Omit<ShapeObjectSnapshot, "movable" | "drawn"> & {
       pdfiumObjPtr: number;
       containerPtr: number;
+      drawn?: DrawnShape;
     },
   ) {
     this.id = init.id;
@@ -23,6 +26,7 @@ export class ShapeObject {
     this.pdfiumObjPtr = init.pdfiumObjPtr;
     this.containerPtr = init.containerPtr;
     this.bounds = init.bounds;
+    this.drawn = init.drawn ?? null;
   }
 
   snapshot(): ShapeObjectSnapshot {
@@ -31,6 +35,7 @@ export class ShapeObject {
       pageIndex: this.pageIndex,
       bounds: { ...this.bounds },
       movable: this.containerPtr === 0,
+      drawn: this.drawn ? { ...this.drawn } : undefined,
     };
   }
 }

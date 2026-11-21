@@ -10,6 +10,8 @@ import {
   setScanOverride,
   type ScanOverride,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 
 /** Scale a text run so its effective on-page size matches `nextSize`. */
 export class SetFontSizeCommand implements Command {
@@ -21,6 +23,7 @@ export class SetFontSizeCommand implements Command {
   /** Set when the run was scanned text, resized by redrawing it. */
   private scanPrev: ScanOverride | null = null;
   private scanTarget: number | null = null;
+  private rewrap: ReflowWrapCommand | null = null;
 
   constructor(opts: { pageIndex: number; runId: string; nextSize: number }) {
     this.pageIndex = opts.pageIndex;
@@ -55,6 +58,8 @@ export class SetFontSizeCommand implements Command {
       this.prevSize = run.fontSize;
     }
     const ratio = this.nextSize / Math.max(0.01, run.fontSize);
+    if (this.rewrap) this.rewrap.apply(doc);
+    else if (ratio > 1) this.rewrap = wrapToFitGrown(doc, page, run, ratio);
     // Scale about the run's own baseline anchor, NOT the page origin - scaling
     // about moves the glyphs diagonally and the move persists on save.
     this.scaleAllPtrs(
@@ -106,6 +111,7 @@ export class SetFontSizeCommand implements Command {
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
+    this.rewrap?.revert(doc);
   }
 
   private scaleAllPtrs(
@@ -197,4 +203,23 @@ function scaleMatrix(
     e: m.e,
     f: m.f,
   };
+}
+
+function wrapToFitGrown(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  ratio: number,
+): ReflowWrapCommand | null {
+  const right = page.display.cropRight;
+  const room = right - run.bounds.x;
+  if (run.bounds.width * ratio <= room + 0.5) return null;
+  if (room < run.fontSize * ratio * 2) return null;
+  const reflow = new ReflowWrapCommand({
+    pageIndex: page.index,
+    runId: run.id,
+    maxWidthPt: room / ratio,
+  });
+  reflow.apply(doc);
+  return reflow;
 }

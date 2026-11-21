@@ -1,0 +1,176 @@
+import type {
+  AlignFrame,
+  TextAlign,
+} from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import { measureObjBoundsPt } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+
+interface Box {
+  left: number;
+  bottom: number;
+  right: number;
+  top: number;
+}
+
+interface CarriedLine {
+  text: string;
+  baseline: number;
+}
+
+export interface CarriedFormat {
+  lines: CarriedLine[];
+  align: TextAlign | null;
+  alignFrame: AlignFrame | null;
+  underline: boolean;
+  listIndent: number;
+  rules: Box[];
+}
+
+export type CarriedFormats = Map<number, CarriedFormat[]>;
+
+export type PageShift = { inserted: number } | { deleted: number } | null;
+
+const NEAR_PT = 2;
+const carried = new WeakMap<EditorDocument, CarriedFormats>();
+
+export function captureFormats(doc: EditorDocument): CarriedFormats {
+  const formats: CarriedFormats = new Map();
+  for (const page of doc.loadedPages()) {
+    const list: CarriedFormat[] = [];
+    for (const runId of page.paragraphFormats) {
+      const run = page.findRun(runId);
+      if (!run) continue;
+      list.push({
+        lines: linesOf(run),
+        align: run.align,
+        alignFrame: run.alignFrame,
+        underline: run.underline,
+        listIndent: run.listIndent,
+        rules: (page.underlines.get(runId) ?? []).flatMap((ptr) => {
+          const box = measureObjBoundsPt(doc.module, [ptr]);
+          return box ? [box] : [];
+        }),
+      });
+    }
+    if (list.length > 0) formats.set(page.index, list);
+  }
+  return formats;
+}
+
+export function undoneShift(shift: PageShift): PageShift {
+  if (!shift) return null;
+  return "inserted" in shift
+    ? { deleted: shift.inserted }
+    : { inserted: shift.deleted };
+}
+
+function shiftedIndex(index: number, shift: PageShift): number | null {
+  if (!shift) return index;
+  if ("inserted" in shift) return index >= shift.inserted ? index + 1 : index;
+  if (index === shift.deleted) return null;
+  return index > shift.deleted ? index - 1 : index;
+}
+
+export function shiftFormats(
+  formats: CarriedFormats,
+  shift: PageShift,
+): CarriedFormats {
+  const out: CarriedFormats = new Map();
+  for (const [index, list] of formats) {
+    const next = shiftedIndex(index, shift);
+    if (next !== null) out.set(next, list);
+  }
+  return out;
+}
+
+export function carryFormats(doc: EditorDocument, formats: CarriedFormats) {
+  if (formats.size > 0) carried.set(doc, formats);
+}
+
+const words = (text: string) => text.replace(/\s+/g, " ").trim();
+
+function sameBox(a: Box, b: Box): boolean {
+  return (
+    Math.abs(a.left - b.left) < NEAR_PT &&
+    Math.abs(a.bottom - b.bottom) < NEAR_PT &&
+    Math.abs(a.right - b.right) < NEAR_PT &&
+    Math.abs(a.top - b.top) < NEAR_PT
+  );
+}
+
+function linesOf(run: TextRun): CarriedLine[] {
+  const slots = run.paragraphLineSlots;
+  if (slots.length === 0)
+    return [{ text: words(run.text), baseline: run.matrix.f }];
+  return slots.map((slot) => ({
+    text: words(run.text.slice(Math.max(0, slot.startChar), slot.endChar)),
+    baseline: slot.baselineY,
+  }));
+}
+
+function sameLines(a: CarriedLine[], b: CarriedLine[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every(
+      (line, i) =>
+        line.text === b[i].text &&
+        Math.abs(line.baseline - b[i].baseline) < NEAR_PT,
+    )
+  );
+}
+
+function runsFor(page: Page, format: CarriedFormat): TextRun[] {
+  const free = page.runs.filter((r) => !page.paragraphFormats.has(r.id));
+  const whole = free.find((r) => sameLines(linesOf(r), format.lines));
+  if (whole) return [whole];
+  return format.lines.flatMap((line) => {
+    const run = free.find((r) => sameLines(linesOf(r), [line]));
+    return run ? [run] : [];
+  });
+}
+
+function rulesUnder(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  rules: Box[],
+  taken: Set<number>,
+): number[] {
+  const baselines = linesOf(run).map((line) => line.baseline);
+  const wanted = rules.filter((rule) =>
+    baselines.some(
+      (b) => rule.top <= b + NEAR_PT && rule.top >= b - run.fontSize,
+    ),
+  );
+  return page.shapes
+    .filter((shape) => {
+      if (taken.has(shape.pdfiumObjPtr)) return false;
+      const box = measureObjBoundsPt(doc.module, [shape.pdfiumObjPtr]);
+      return box !== null && wanted.some((rule) => sameBox(box, rule));
+    })
+    .map((shape) => shape.pdfiumObjPtr);
+}
+
+export function restoreCarriedFormats(doc: EditorDocument, page: Page): void {
+  const list = carried.get(doc)?.get(page.index);
+  if (!list) return;
+  carried.get(doc)!.delete(page.index);
+  const taken = new Set<number>();
+  for (const format of list) {
+    const runs = runsFor(page, format);
+    for (const run of runs) {
+      run.align = format.align;
+      run.alignFrame = format.alignFrame;
+      run.underline = format.underline;
+      run.listIndent = runs.length === 1 ? format.listIndent : 0;
+      page.paragraphFormats.add(run.id);
+      const ptrs = rulesUnder(doc, page, run, format.rules, taken);
+      for (const ptr of ptrs) taken.add(ptr);
+      if (ptrs.length > 0) page.underlines.set(run.id, ptrs);
+    }
+  }
+  if (taken.size > 0)
+    page.setShapes(page.shapes.filter((s) => !taken.has(s.pdfiumObjPtr)));
+}

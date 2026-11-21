@@ -11,7 +11,6 @@ import {
   test,
   vi,
 } from "vitest";
-import { AlignParagraphLinesCommand } from "@editor/tools/pdfTextEditor/commands/AlignParagraphLinesCommand";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
@@ -19,6 +18,7 @@ import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/Duplic
 import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import { SetParagraphFormatCommand } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
@@ -217,10 +217,10 @@ describe("a line the editor cannot redraw as it is drawn", () => {
 
     expect(() =>
       history.execute(
-        new AlignParagraphLinesCommand({
+        new SetParagraphFormatCommand({
           pageIndex: 0,
-          runId: paragraph.id,
-          mode: "right",
+          runIds: [paragraph.id],
+          align: "right",
         }),
         doc,
       ),

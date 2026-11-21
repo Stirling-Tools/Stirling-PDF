@@ -38,6 +38,14 @@ function controller(
     onChangeOutline: vi.fn(),
     onToggleItalic: vi.fn(),
     onChangeCase: vi.fn(),
+    paragraph: {
+      align: null,
+      underline: false,
+      list: null,
+      lineSpacing: null,
+      canSpace: false,
+      canFormat: true,
+    },
   } as unknown as Controller;
 }
 

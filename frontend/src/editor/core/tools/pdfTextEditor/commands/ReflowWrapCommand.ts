@@ -14,7 +14,11 @@ import type {
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@editor/services/pdfiumService";
-import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  collectMemberPtrs,
+  measureObjSpanPt,
+  rotationFromMatrix,
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
@@ -35,6 +39,12 @@ import {
   groupWords,
   type Word as GenericWord,
 } from "@editor/tools/pdfTextEditor/util/wordGrouping";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { joinSoftLines } from "@editor/tools/pdfTextEditor/commands/scanLayout";
+import {
+  lineWidthIn,
+  wrapEachLine,
+} from "@editor/tools/pdfTextEditor/util/wrapText";
 
 /** Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`. */
 
@@ -90,6 +100,10 @@ export class ReflowWrapCommand implements Command {
   /** Per-object translation applied, so revert can undo it exactly. */
   private moves: Array<{ ptr: number; dx: number; dy: number }> = [];
   private prev: RunSnapshot | null = null;
+  private textWrap: {
+    edit: EditTextCommand;
+    wrapWidthPt: number | null;
+  } | null = null;
   // The runs below the lines this reflow added or removed moved, chosen on the first apply so a redo moves the same ones.
   private pushes: MoveTextRunCommand[] | null = null;
   private pushRecords: {
@@ -153,24 +167,18 @@ export class ReflowWrapCommand implements Command {
     } finally {
       m.FPDFText_ClosePage(textPage);
     }
-    if (leaves.length === 0) return;
-    // The reflow lines objects up left to right and rebuilds the text in that
-    // order. A line that does not read in that order, such as right-to-left
-    // text or marks drawn apart from their letters, would come back scrambled.
-    if (!readsInObjectOrder(leaves, run.text)) return;
-
     const fontSize = run.fontSize > 0 ? run.fontSize : 12;
     const lineHeight =
       run.paragraphLineHeight > 0 ? run.paragraphLineHeight : fontSize * 1.2;
-    const startX = Math.min(...leaves.map((l) => l.x));
-    const topBaseline = Math.max(...leaves.map((l) => l.baseline));
+    const startX =
+      leaves.length > 0 ? Math.min(...leaves.map((l) => l.x)) : run.bounds.x;
     // Clamp the wrap width to the page measured from OUR OWN left edge - but
     // to the edge itself, with no margin held back. The caller's width is the
     // box the paragraph was already laid out in, so shaving a font-size margin
     // off it wraps at LESS than the document's own measure and every line
     // loses its last word: "...carry out various" drops "various" onto a line
     // of its own, on lines the user never touched.
-    const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
+    const rawRightEdge = page.display.cropRight;
     const minWidth = fontSize * MIN_WRAP_WIDTH_EM;
     const requested = this.explicit
       ? Math.max(this.maxWidthPt, minWidth)
@@ -179,6 +187,15 @@ export class ReflowWrapCommand implements Command {
       requested,
       Math.max(minWidth, rawRightEdge - startX),
     );
+    if (onlyRetypingWraps(leaves, maxWidth)) {
+      this.wrapByRetyping(doc, page, run, maxWidth);
+      return;
+    }
+    // The reflow lines objects up left to right and rebuilds the text in that
+    // order. A line that does not read in that order, such as right-to-left
+    // text or marks drawn apart from their letters, would come back scrambled.
+    if (!readsInObjectOrder(leaves, run.text)) return;
+    const topBaseline = Math.max(...leaves.map((l) => l.baseline));
 
     // Reflow is only NEEDED when some line actually overflows the wrap width.
     if (!this.explicit) {
@@ -391,7 +408,41 @@ export class ReflowWrapCommand implements Command {
     } else this.pushes = [];
   }
 
+  private wrapByRetyping(
+    doc: EditorDocument,
+    page: Page,
+    run: TextRun,
+    maxWidth: number,
+  ): void {
+    if (!this.textWrap) {
+      const width = lineWidthIn(doc, page, run);
+      const fits = (line: string) =>
+        line === "" || width(line) <= maxWidth + 0.5;
+      const wrapped = wrapEachLine(
+        joinSoftLines(run.text, softStartsOf(run), fits),
+        fits,
+      );
+      if (wrapped === run.text) return;
+      this.textWrap = {
+        edit: new EditTextCommand({
+          pageIndex: this.pageIndex,
+          runId: this.runId,
+          nextText: wrapped,
+        }),
+        wrapWidthPt: run.wrapWidthPt,
+      };
+    }
+    this.textWrap.edit.apply(doc);
+    if (this.explicit) run.wrapWidthPt = maxWidth;
+  }
+
   revert(doc: EditorDocument): void {
+    if (this.textWrap) {
+      this.textWrap.edit.revert(doc);
+      const run = doc.page(this.pageIndex).findRun(this.runId);
+      if (run) run.wrapWidthPt = this.textWrap.wrapWidthPt;
+      return;
+    }
     if (!this.applied || !this.prev) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
@@ -433,6 +484,24 @@ export class ReflowWrapCommand implements Command {
   coalesceIgnoresTimeWindow(): boolean {
     return true;
   }
+}
+
+export function wrapAtPageEdge(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+): ReflowWrapCommand | null {
+  if (rotationFromMatrix(run.matrix)) return null;
+  const ink = measureObjSpanPt(doc.module, collectMemberPtrs(run));
+  const right = page.display.cropRight;
+  if (!ink || ink.right <= right + 0.5) return null;
+  const reflow = new ReflowWrapCommand({
+    pageIndex: page.index,
+    runId: run.id,
+    maxWidthPt: right - ink.left,
+  });
+  reflow.apply(doc);
+  return reflow;
 }
 
 const TEXT_OVERLAP_EM = 0.25;
@@ -479,6 +548,16 @@ function extractLeaves(
     return a.x - b.x;
   });
   return leaves;
+}
+
+function onlyRetypingWraps(leaves: Leaf[], maxWidth: number): boolean {
+  return (
+    leaves.length === 0 ||
+    leaves.some(
+      (leaf) =>
+        leaf.right - leaf.x > maxWidth + 0.5 && /\S\s+\S/.test(leaf.text),
+    )
+  );
 }
 
 function readsInObjectOrder(leaves: Leaf[], text: string): boolean {

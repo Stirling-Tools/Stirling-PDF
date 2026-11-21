@@ -32,6 +32,7 @@ import {
   assertIncrementalAppend,
   assertSavedPdf,
 } from "@editor/tools/pdfTextEditor/util/savedBytes";
+import { signedSignatureCount } from "@editor/tools/pdfTextEditor/util/documentRisks";
 
 /** Serialize the editor document to a Blob. */
 export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
@@ -224,9 +225,5 @@ function documentIsPristine(doc: EditorDocument): boolean {
 }
 
 function documentIsSigned(doc: EditorDocument): boolean {
-  try {
-    return doc.module.FPDF_GetSignatureCount(doc.docPtr) > 0;
-  } catch {
-    return false;
-  }
+  return signedSignatureCount(doc) > 0;
 }

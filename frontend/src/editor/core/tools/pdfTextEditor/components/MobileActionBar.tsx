@@ -9,34 +9,34 @@ import { useTranslation } from "react-i18next";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { ArrangeMenuItems } from "@editor/tools/pdfTextEditor/components/toolbar/ObjectGroup";
 import type { Controller } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
-import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type {
+  EditorStore,
+  InteractionMode,
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
+import { PagesMenu } from "@editor/tools/pdfTextEditor/components/toolbar/PageMenu";
+import { InsertMenuItems } from "@editor/tools/pdfTextEditor/components/toolbar/InsertMenu";
 import "@editor/tools/pdfTextEditor/components/MobileEditor.css";
 
 interface Props {
   store: EditorStore;
   controller: Controller;
-  addTextArmed: boolean;
-  addTableArmed: boolean;
+  mode: InteractionMode;
   findOpen: boolean;
 }
 
-export function MobileActionBar({
-  store,
-  controller,
-  addTextArmed,
-  addTableArmed,
-  findOpen,
-}: Props) {
+export function MobileActionBar({ store, controller, mode, findOpen }: Props) {
   const { t } = useTranslation();
   const session = useEditorSession();
   const hasSelection = controller.selectionCount > 0;
+  const addTextArmed = mode === "addText";
+  const addTableArmed = mode === "addTable";
 
   return (
     <>
-      {(addTextArmed || addTableArmed) && (
+      {mode !== "select" && (
         <div className="pdf-editor-mbar__hint" role="status">
           <span>
             {addTableArmed
@@ -44,10 +44,15 @@ export function MobileActionBar({
                   "pdfTextEditor.sidebar.clickPageToAddTable",
                   "Click page to add a table",
                 )
-              : t(
-                  "pdfTextEditor.mobile.tapToPlace",
-                  "Tap the page where the text should go",
-                )}
+              : !addTextArmed
+                ? t(
+                    "pdfTextEditor.mobile.tapToPlaceShape",
+                    "Tap the page where it should go",
+                  )
+                : t(
+                    "pdfTextEditor.mobile.tapToPlace",
+                    "Tap the page where the text should go",
+                  )}
           </span>
           <BarButton
             icon="x"
@@ -132,19 +137,48 @@ export function MobileActionBar({
               onClick={() => store.toggleMode("addText")}
               data-testid="pdf-editor-add-text"
             />
-            <BarButton
-              icon="table"
-              label={t("pdfTextEditor.sidebar.table", "Table")}
-              pressed={addTableArmed}
-              onClick={() => store.toggleMode("addTable")}
-              data-testid="pdf-editor-add-table"
-            />
-            <BarButton
-              icon="image-plus"
-              label={t("pdfTextEditor.mobile.addImage", "Image")}
-              disabled={!session}
-              onClick={() => session?.pickImage()}
-              data-testid="pdf-editor-add-image"
+            <Menu shadow="md" position="top">
+              <Menu.Target>
+                <BarButton
+                  icon="shapes"
+                  label={t("pdfTextEditor.mobile.insert", "Insert")}
+                  pressed={mode !== "select" && !addTextArmed}
+                  data-testid="pdf-editor-insert"
+                />
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<Icon name="table" size={18} />}
+                  onClick={() => store.toggleMode("addTable")}
+                  aria-pressed={addTableArmed}
+                  data-testid="pdf-editor-add-table"
+                >
+                  {t("pdfTextEditor.sidebar.table", "Table")}
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<Icon name="image-plus" size={18} />}
+                  disabled={!session}
+                  onClick={() => session?.pickImage()}
+                  data-testid="pdf-editor-add-image"
+                >
+                  {t("pdfTextEditor.mobile.addImage", "Image")}
+                </Menu.Item>
+                <Menu.Divider />
+                <InsertMenuItems
+                  mode={mode}
+                  onToggleMode={(next) => store.toggleMode(next)}
+                />
+              </Menu.Dropdown>
+            </Menu>
+            <PagesMenu
+              position="top"
+              target={
+                <BarButton
+                  icon="files"
+                  label={t("pdfTextEditor.pages.menu", "Pages")}
+                  data-testid="pdf-editor-pages"
+                />
+              }
             />
             <BarButton
               icon="search"

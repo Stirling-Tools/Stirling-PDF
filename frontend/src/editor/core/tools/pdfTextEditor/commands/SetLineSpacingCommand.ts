@@ -1,0 +1,40 @@
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+
+/** Sets the distance between a paragraph's baselines to `factor` times its type size and re-lines it at its current width. */
+export class SetLineSpacingCommand implements Command {
+  readonly type = "set-line-spacing";
+  private readonly pageIndex: number;
+  private readonly runId: string;
+  private readonly factor: number;
+  private prevLineHeight = 0;
+  private reflow: ReflowWrapCommand | null = null;
+
+  constructor(opts: { pageIndex: number; runId: string; factor: number }) {
+    this.pageIndex = opts.pageIndex;
+    this.runId = opts.runId;
+    this.factor = opts.factor;
+  }
+
+  apply(doc: EditorDocument): void {
+    const run = doc.page(this.pageIndex).findRun(this.runId);
+    if (!run || run.fontSize <= 0) return;
+    this.prevLineHeight = run.paragraphLineHeight;
+    run.paragraphLineHeight = run.fontSize * this.factor;
+    this.reflow = new ReflowWrapCommand({
+      pageIndex: this.pageIndex,
+      runId: this.runId,
+      maxWidthPt: run.wrapWidthPt ?? run.bounds.width + 0.5,
+      explicit: true,
+    });
+    this.reflow.apply(doc);
+  }
+
+  revert(doc: EditorDocument): void {
+    this.reflow?.revert(doc);
+    this.reflow = null;
+    const run = doc.page(this.pageIndex).findRun(this.runId);
+    if (run) run.paragraphLineHeight = this.prevLineHeight;
+  }
+}

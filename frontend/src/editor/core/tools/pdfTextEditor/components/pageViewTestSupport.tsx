@@ -49,6 +49,8 @@ export function stubDocument(live: Page): EditorDocument {
 
 const STUB_STORE = {
   setPageNearViewport: () => {},
+  getState: () => ({ mode: "select" }),
+  subscribe: () => () => {},
 } as unknown as EditorStore;
 
 /** PageView over `page` at scale 1 in Grow, with nothing selected and no-op handlers. */

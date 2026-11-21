@@ -308,6 +308,12 @@ import Tag from "lucide-static/icons/tag.svg?react";
 import Tags from "lucide-static/icons/tags.svg?react";
 import Terminal from "lucide-static/icons/terminal.svg?react";
 import TextAlignCenter from "lucide-static/icons/text-align-center.svg?react";
+import ListOrderedIcon from "lucide-static/icons/list-ordered.svg?react";
+import HeadingIcon from "lucide-static/icons/heading.svg?react";
+import TextCursorInputIcon from "lucide-static/icons/text-cursor-input.svg?react";
+import FileMinusIcon from "lucide-static/icons/file-minus.svg?react";
+import FileSlidersIcon from "lucide-static/icons/file-sliders.svg?react";
+import BetweenHorizontalEndIcon from "lucide-static/icons/between-horizontal-end.svg?react";
 import TextAlignEnd from "lucide-static/icons/text-align-end.svg?react";
 import TextAlignStart from "lucide-static/icons/text-align-start.svg?react";
 import TextWrap from "lucide-static/icons/text-wrap.svg?react";
@@ -743,6 +749,15 @@ export const ICONS = {
   tags: { Component: Tags, kind: "lucide" },
   terminal: { Component: Terminal, kind: "lucide" },
   "text-align-center": { Component: TextAlignCenter, kind: "lucide" },
+  "list-ordered": { Component: ListOrderedIcon, kind: "lucide" },
+  heading: { Component: HeadingIcon, kind: "lucide" },
+  "text-cursor-input": { Component: TextCursorInputIcon, kind: "lucide" },
+  "file-minus": { Component: FileMinusIcon, kind: "lucide" },
+  "file-sliders": { Component: FileSlidersIcon, kind: "lucide" },
+  "between-horizontal-end": {
+    Component: BetweenHorizontalEndIcon,
+    kind: "lucide",
+  },
   "text-align-end": { Component: TextAlignEnd, kind: "lucide" },
   "text-align-start": { Component: TextAlignStart, kind: "lucide" },
   "text-wrap": { Component: TextWrap, kind: "lucide" },

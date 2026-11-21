@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import type { DocumentChange } from "@editor/tools/pdfTextEditor/util/documentChanges";
 
 export interface EditorSession {
   fileName: string | null;
@@ -7,6 +8,14 @@ export interface EditorSession {
   pickImage: () => void;
   /** Brings a page on screen, mounted or not. */
   revealPage: (pageIndex: number) => void;
+  /**
+   * Saves the edits so far, makes `change` to the saved file and reopens it:
+   * pages and form fields live outside the editor's model. The undo history
+   * starts again from the changed file.
+   */
+  changeDocument: (change: DocumentChange) => Promise<void>;
+  /** Page `pageIndex`'s size in points as displayed, or null when no document is open. */
+  pageSize: (pageIndex: number) => { width: number; height: number } | null;
 }
 
 let current: EditorSession | null = null;

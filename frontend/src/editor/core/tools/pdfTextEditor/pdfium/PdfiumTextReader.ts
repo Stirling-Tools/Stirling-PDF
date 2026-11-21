@@ -49,6 +49,7 @@ import {
   innermostMcid,
   readTagMarks,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { restoreCarriedFormats } from "@editor/tools/pdfTextEditor/util/carriedFormats";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;
@@ -125,6 +126,7 @@ export class PdfiumTextReader {
         ...fills,
       ]);
       groupAndMeasure(doc, page, mode, textPagePtr, companions);
+      restoreCarriedFormats(doc, page);
     } finally {
       closeTextPage(m, textPagePtr);
     }

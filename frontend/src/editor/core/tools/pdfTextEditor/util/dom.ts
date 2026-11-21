@@ -1,4 +1,11 @@
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import {
+  plainDomRange,
+  readOverlayText,
+  plainCaretOffset,
+  restoreCaretOffset,
+} from "@editor/tools/pdfTextEditor/util/overlayPainter";
+import type { ListEdit } from "@editor/tools/pdfTextEditor/util/listText";
 
 /** True when focus is in a typing surface (contenteditable, input, etc). */
 export function isFocusInContentEditable(): boolean {
@@ -56,4 +63,119 @@ function pageElements(): HTMLElement[] {
 export function revealOnPage(el: Element | null, pageIndex: number): void {
   if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
   else currentEditorSession()?.revealPage(pageIndex);
+}
+
+const FOCUS_WAIT_FRAMES = 30;
+
+function runBox(runId: string): HTMLElement | null {
+  return document.querySelector<HTMLElement>(
+    `[data-run-id="${CSS.escape(runId)}"]`,
+  );
+}
+
+/**
+ * Focuses run `runId`'s box once the page has painted it, with all its text
+ * selected so typing replaces a run just inserted, or with the caret at the end.
+ */
+export function focusRunWhenPainted(
+  runId: string,
+  caretAtEnd = false,
+  typeAfter = "",
+): void {
+  let frames = 0;
+  const attempt = () => {
+    const el = runBox(runId);
+    if (!el) {
+      if (++frames < FOCUS_WAIT_FRAMES) requestAnimationFrame(attempt);
+      return;
+    }
+    el.focus({ preventScroll: true });
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    if (caretAtEnd) range.collapse(false);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    typeKeys(typeAfter);
+  };
+  requestAnimationFrame(attempt);
+}
+
+function typeKeys(text: string): void {
+  text.split("\n").forEach((line, i) => {
+    if (i > 0) document.execCommand("insertParagraph");
+    if (line) document.execCommand("insertText", false, line);
+  });
+}
+
+export function holdKeystrokes(): () => string {
+  let typed = "";
+  const onKey = (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length === 1) typed += e.key;
+    else if (e.key === "Enter") typed += "\n";
+    else if (e.key === "Backspace") typed = typed.slice(0, -1);
+    else return;
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  window.addEventListener("keydown", onKey, true);
+  return () => {
+    window.removeEventListener("keydown", onKey, true);
+    return typed;
+  };
+}
+
+/** The caret's offset into the focused run `runId`'s text, or null when that run's box does not have focus. */
+export function focusedRunCaret(runId: string): number | null {
+  const el = runBox(runId);
+  return el && document.activeElement === el ? plainCaretOffset(el) : null;
+}
+
+/** Applies `edit`'s splices to the focused run `runId`'s text, while it still reads `typed`, as typing would, then puts the caret at `edit.caret`. */
+export function editFocusedRun(
+  runId: string,
+  edit: ListEdit,
+  typed: string,
+): void {
+  requestAnimationFrame(() => {
+    const el = runBox(runId);
+    if (!el || document.activeElement !== el) return;
+    // Its offsets are into `typed`: a keystroke since then has moved them.
+    if (readOverlayText(el).replace(/\u00A0/g, " ") !== typed) return;
+    const selection = window.getSelection();
+    if (!selection) return;
+    // Last first, so each splice's offsets still hold when it is applied.
+    for (const splice of [...edit.splices].reverse()) {
+      const range = plainDomRange(el, splice);
+      if (!range) return;
+      selection.removeAllRanges();
+      selection.addRange(range);
+      if (splice.insert)
+        document.execCommand("insertText", false, splice.insert);
+      else document.execCommand("delete");
+    }
+    restoreCaretOffset(el, edit.caret);
+  });
+}
+
+export function moveToLineEdge(e: {
+  key: string;
+  shiftKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  altKey: boolean;
+  preventDefault(): void;
+}): boolean {
+  if (e.key !== "Home" && e.key !== "End") return false;
+  if (e.ctrlKey || e.metaKey || e.altKey) return false;
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return false;
+  e.preventDefault();
+  sel.modify(
+    e.shiftKey ? "extend" : "move",
+    e.key === "Home" ? "backward" : "forward",
+    "lineboundary",
+  );
+  return true;
 }

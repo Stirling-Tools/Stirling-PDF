@@ -89,6 +89,7 @@ interface ImageHandleProps {
   scale: number;
   selected: boolean;
   onSelect: () => void;
+  passesClicks?: boolean;
   onTransformCommit: (next: PageRect) => void;
   /** Why the image needs the user's attention, if it does. */
   attention?: ImageAttention | null;
@@ -116,6 +117,7 @@ export function ImageHandle({
   scale,
   selected,
   onSelect,
+  passesClicks = false,
   onTransformCommit,
   attention = null,
   readPixels,
@@ -378,7 +380,7 @@ export function ImageHandle({
           selected || dragging ? "rgba(44,123,229,0.08)" : "transparent",
         cursor: locked ? "default" : "move",
         // No explicit zIndex - text overlays paint on top via DOM order.
-        pointerEvents: "auto",
+        pointerEvents: passesClicks ? "none" : "auto",
       }}
       onPointerDown={(e: React.PointerEvent) => {
         // Locked images are inert - the press belongs to the stage.

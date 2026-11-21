@@ -1,4 +1,4 @@
-import { Menu, Tooltip } from "@mantine/core";
+import { ColorInput, Menu, Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -6,6 +6,7 @@ import {
   NO_SHRINK,
   type Controller,
 } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
+import { ToolbarMenu } from "@editor/tools/pdfTextEditor/components/toolbar/ToolbarMenu";
 
 export function ObjectGroup({ controller }: { controller: Controller }) {
   const { t } = useTranslation();
@@ -15,12 +16,27 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
     onDelete,
     hasRunSelection,
     hasImageSelection,
+    shapeColour,
+    onSetShapeColour,
   } = controller;
   // Lock and arrange act on text and images only; shapes can just be deleted.
   const arrangeable = hasRunSelection || hasImageSelection;
 
   return (
     <>
+      {shapeColour !== null && (
+        <ColorInput
+          size="xs"
+          w={74}
+          withEyeDropper={false}
+          styles={{ input: { color: "transparent" } }}
+          value={shapeColour}
+          onChangeEnd={onSetShapeColour}
+          aria-label={t("pdfTextEditor.shape.colour", "Shape colour")}
+          data-testid="pdf-editor-shape-colour"
+          style={NO_SHRINK}
+        />
+      )}
       <Tooltip
         label={
           selectionAllLocked
@@ -73,25 +89,14 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
           leftSection={<Icon name="trash" size={20} />}
         />
       </Tooltip>
-      <Menu shadow="md" position="bottom-start" withinPortal closeOnItemClick>
-        <Menu.Target>
-          <Button
-            size="sm"
-            disabled={!arrangeable}
-            variant="secondary"
-            accent="neutral"
-            leftSection={<Icon name="layers" size={20} />}
-            rightSection={<Icon name="chevron-down" size={20} />}
-            data-testid="pdf-editor-arrange-menu"
-            style={NO_SHRINK}
-          >
-            {t("pdfTextEditor.toolbar.arrange", "Arrange")}
-          </Button>
-        </Menu.Target>
-        <Menu.Dropdown>
-          <ArrangeMenuItems controller={controller} />
-        </Menu.Dropdown>
-      </Menu>
+      <ToolbarMenu
+        label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
+        icon="layers"
+        testId="pdf-editor-arrange-menu"
+        disabled={!arrangeable}
+      >
+        <ArrangeMenuItems controller={controller} />
+      </ToolbarMenu>
     </>
   );
 }

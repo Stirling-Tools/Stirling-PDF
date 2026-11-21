@@ -20,6 +20,21 @@ import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSessio
 import { useElementWidth } from "@editor/tools/pdfTextEditor/hooks/useElementWidth";
 import { modShortcut } from "@editor/utils/hotkeys";
 import { offsetClearing } from "@editor/tools/pdfTextEditor/util/clearingOffset";
+import {
+  fieldKindOf,
+  shapeKindOf,
+} from "@editor/tools/pdfTextEditor/store/insertModes";
+import { Spinner } from "@editor/ui/Spinner";
+import type { InteractionMode } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import {
+  PageMenuItems,
+  PagesMenu,
+  usePageSetup,
+} from "@editor/tools/pdfTextEditor/components/toolbar/PageMenu";
+import {
+  InsertMenu,
+  InsertMenuItems,
+} from "@editor/tools/pdfTextEditor/components/toolbar/InsertMenu";
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 const COMPACT_BELOW_PX = 900;
@@ -94,11 +109,15 @@ interface EditorTopBarProps {
   onToggleAddText: () => void;
   addTableArmed: boolean;
   onToggleAddTable: () => void;
+  mode: InteractionMode;
+  onToggleMode: (mode: InteractionMode) => void;
   findOpen: boolean;
   onToggleFind: () => void;
   onShowHelp: () => void;
   hasDocument: boolean;
   dirty: boolean;
+  /** A page or form field change is being saved and the document reopened. */
+  reopening?: boolean;
 }
 
 export function EditorTopBar({
@@ -107,15 +126,19 @@ export function EditorTopBar({
   onToggleAddText,
   addTableArmed,
   onToggleAddTable,
+  mode,
+  onToggleMode,
   findOpen,
   onToggleFind,
   onShowHelp,
   hasDocument,
   dirty,
+  reopening = false,
 }: EditorTopBarProps) {
   const { t } = useTranslation();
   const session = useEditorSession();
   const hasSelection = controller.selectionCount > 0;
+  const pageSetup = usePageSetup();
   const barRef = useRef<HTMLDivElement | null>(null);
   const barWidth = useElementWidth(barRef);
   const compact = barWidth !== null && barWidth < COMPACT_BELOW_PX;
@@ -178,8 +201,29 @@ export function EditorTopBar({
       data-compact={compact ? "true" : "false"}
       ref={barRef}
     >
+      {reopening && (
+        <div
+          className="pdf-editor-topbar__busy"
+          data-testid="pdf-editor-reopening"
+        >
+          <Spinner size="sm" />
+          <span>{t("pdfTextEditor.pages.updating", "Updating the PDF…")}</span>
+        </div>
+      )}
+      {!reopening && (shapeKindOf(mode) ?? fieldKindOf(mode)) && (
+        <div
+          className="pdf-editor-topbar__busy"
+          role="status"
+          data-testid="pdf-editor-place-hint"
+        >
+          {t(
+            "pdfTextEditor.toolbar.placeHint",
+            "Click the page to place it · Esc to cancel",
+          )}
+        </div>
+      )}
       {/* The viewer's own bar names the file; this only flags unsaved edits. */}
-      {dirty && (
+      {dirty && !reopening && (
         <div className="pdf-editor-topbar__lead">
           <span
             className="pdf-editor-topbar__dirty"
@@ -271,6 +315,9 @@ export function EditorTopBar({
               >
                 {addImageLabel}
               </Menu.Item>
+              <InsertMenuItems mode={mode} onToggleMode={onToggleMode} />
+              <Menu.Divider />
+              <PageMenuItems onPageSetup={pageSetup.open} />
               <Menu.Divider />
               <Menu.Item
                 leftSection={<Icon name="search" size={20} />}
@@ -339,10 +386,14 @@ export function EditorTopBar({
                 aria-label={t("pdfTextEditor.sidebar.addImage", "Add image")}
                 data-testid="pdf-editor-add-image"
                 style={NO_SHRINK}
-              >
-                {t("pdfTextEditor.sidebar.image", "Image")}
-              </Button>
+              />
             </Tooltip>
+            <InsertMenu
+              mode={mode}
+              onToggleMode={onToggleMode}
+              disabled={!hasDocument}
+            />
+            <PagesMenu disabled={!hasDocument} />
             <Tooltip
               label={t("pdfTextEditor.settings.findTooltip", {
                 defaultValue: "Find ({{shortcut}})",
@@ -408,6 +459,7 @@ export function EditorTopBar({
           </Tooltip>
         )}
       </div>
+      {pageSetup.modal}
     </div>
   );
 }

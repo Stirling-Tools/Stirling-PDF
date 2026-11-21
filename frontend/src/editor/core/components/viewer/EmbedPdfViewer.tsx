@@ -2087,7 +2087,9 @@ const EmbedPdfViewerContent = ({
             {/* Floating save bar for form-filled PDFs (like Chrome/Firefox PDF viewers) */}
             <FormSaveBar
               file={currentFile ?? null}
-              isFormFillToolActive={isFormFillToolActive}
+              hiddenByTool={
+                isFormFillToolActive || selectedTool === "pdfTextEditor"
+              }
               onApply={handleFormApply}
               policyEnforcing={policyEnforcing}
             />

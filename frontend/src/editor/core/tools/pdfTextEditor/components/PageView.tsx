@@ -41,6 +41,7 @@ import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/Annota
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
+import { useEditorState } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface PageViewProps {
@@ -76,6 +77,12 @@ interface PageViewProps {
     shapeId: string,
     dx: number,
     dy: number,
+  ) => void;
+  /** Fires when a drawn shape's corner grip is released; bounds in raw PDF points. */
+  onReshape?: (
+    pageIndex: number,
+    shapeId: string,
+    bounds: { x: number; y: number; width: number; height: number },
   ) => void;
   onEditRun: (pageIndex: number, runId: string, nextText: string) => void;
   /** The characters selected inside a run's box, while it has focus. */
@@ -151,6 +158,7 @@ export const PageView = memo(function PageView({
   onSelectShape,
   onSelectFormField,
   onMoveShape,
+  onReshape,
   onEditRun,
   onSelectRunText,
   selectedTextRange,
@@ -199,6 +207,7 @@ export const PageView = memo(function PageView({
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
   const [gripLayer, setGripLayer] = useState<HTMLDivElement | null>(null);
+  const placing = useEditorState(store, (s) => s.mode !== "select");
   const firstPaintedDocRef = useRef<typeof document | null>(null);
   const [paintedRevision, setPaintedRevision] = useState(-1);
   // Read by the render effect, which must not re-run when it changes.
@@ -512,6 +521,11 @@ export const PageView = memo(function PageView({
             selected={selectedShapeIds.includes(shape.id)}
             onSelect={(extend) => onSelectShape(shape.id, extend)}
             onMove={(dx, dy) => onMoveShape?.(page.pageIndex, shape.id, dx, dy)}
+            onResize={
+              onReshape
+                ? (bounds) => onReshape(page.pageIndex, shape.id, bounds)
+                : undefined
+            }
           />
         ))}
         {page.images.map((image) => (
@@ -523,6 +537,7 @@ export const PageView = memo(function PageView({
             scale={cssScale}
             selected={selectedImageIds.includes(image.id)}
             onSelect={() => onSelectImage(image.id)}
+            passesClicks={placing}
             onTransformCommit={(next) =>
               onTransformImage?.(page.pageIndex, image.id, next)
             }

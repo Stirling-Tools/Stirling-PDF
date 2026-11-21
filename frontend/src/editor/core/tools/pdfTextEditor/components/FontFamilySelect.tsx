@@ -320,7 +320,7 @@ export function FontFamilySelect({
       gap="xs"
       align="center"
       wrap="nowrap"
-      style={touch ? { flex: "1 1 100%" } : undefined}
+      style={touch ? { flex: "1 1 calc(100% - 3.5rem)" } : undefined}
     >
       <Select
         size={touch ? "lg" : "xs"}

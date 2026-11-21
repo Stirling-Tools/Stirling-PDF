@@ -72,6 +72,7 @@ import {
 import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import type { GrowEdge } from "@editor/tools/pdfTextEditor/util/growEdge";
+import { moveToLineEdge } from "@editor/tools/pdfTextEditor/util/dom";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const SETTLE_MS = 400;
@@ -159,6 +160,14 @@ function contrastingMaskFor(fill: {
   // ITU-R BT.601 luma; 0 = black, 255 = white.
   const luma = (fill.r * 299 + fill.g * 587 + fill.b * 114) / 1000;
   return luma > 160 ? "rgba(30, 30, 30, 0.85)" : "rgba(255, 255, 255, 0.9)";
+}
+
+function selectAllText(el: HTMLElement): void {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(range);
 }
 
 // Put the caret at the end of the LAST painted line block rather than at the
@@ -1381,6 +1390,7 @@ export function TextRunOverlay({
         // block it sits beside before the input applies.
         const sel = window.getSelection();
         if (sel) normalizeContainerCaret(e.currentTarget, sel);
+        moveToLineEdge(e);
       }}
       onPaste={(e) => {
         // Paste as PLAIN TEXT.
@@ -1405,6 +1415,13 @@ export function TextRunOverlay({
         if (e.shiftKey) {
           e.preventDefault();
           onSelect(true);
+          return;
+        }
+        if (run.placeholder) {
+          e.preventDefault();
+          e.currentTarget.focus({ preventScroll: true });
+          selectAllText(e.currentTarget);
+          onSelect(false);
           return;
         }
         const caret = caretBesideLines(e.currentTarget, e.clientX, e.clientY);
@@ -1442,7 +1459,8 @@ export function TextRunOverlay({
           sel &&
           !(sel.rangeCount > 0 && el.contains(sel.anchorNode))
         ) {
-          caretToEnd(el, sel);
+          if (run.placeholder) selectAllText(el);
+          else caretToEnd(el, sel);
         }
       }}
       onBlur={(e) => {

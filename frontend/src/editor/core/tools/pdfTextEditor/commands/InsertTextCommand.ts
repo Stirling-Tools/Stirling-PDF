@@ -2,6 +2,7 @@ import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { BLACK } from "@editor/tools/pdfTextEditor/model/Color";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
   counterPageRotation,
@@ -21,6 +22,10 @@ export class InsertTextCommand implements Command {
   private readonly x: number;
   private readonly y: number;
   private readonly text: string;
+  private readonly placeholder: boolean;
+  private readonly family: string;
+  private readonly size: number;
+  private readonly fill: RGBA;
   private createdRunId: string | null;
   private createdObjPtr: number;
 
@@ -29,11 +34,20 @@ export class InsertTextCommand implements Command {
     x: number;
     y: number;
     text?: string;
+    placeholder?: boolean;
+    /** A base-14 PostScript name. */
+    family?: string;
+    fontSize?: number;
+    fill?: RGBA;
   }) {
     this.pageIndex = opts.pageIndex;
     this.x = opts.x;
     this.y = opts.y;
     this.text = opts.text ?? "Text";
+    this.placeholder = opts.placeholder ?? false;
+    this.family = opts.family ?? DEFAULT_FAMILY;
+    this.size = opts.fontSize ?? DEFAULT_SIZE;
+    this.fill = opts.fill ?? BLACK;
     this.createdRunId = null;
     this.createdObjPtr = 0;
   }
@@ -55,18 +69,14 @@ export class InsertTextCommand implements Command {
         doc,
         page,
         this.text,
-        DEFAULT_SIZE,
-        BLACK,
+        this.size,
+        this.fill,
         this.x,
         this.y,
       );
     }
     if (!objPtr) {
-      objPtr = m.FPDFPageObj_NewTextObj(
-        doc.docPtr,
-        DEFAULT_FAMILY,
-        DEFAULT_SIZE,
-      );
+      objPtr = m.FPDFPageObj_NewTextObj(doc.docPtr, this.family, this.size);
       if (!objPtr) return;
       const textPtr = writeUtf16(m, sanitized);
       try {
@@ -74,7 +84,13 @@ export class InsertTextCommand implements Command {
       } finally {
         m.pdfium.wasmExports.free(textPtr);
       }
-      m.FPDFPageObj_SetFillColor(objPtr, BLACK.r, BLACK.g, BLACK.b, BLACK.a);
+      m.FPDFPageObj_SetFillColor(
+        objPtr,
+        this.fill.r,
+        this.fill.g,
+        this.fill.b,
+        this.fill.a,
+      );
       m.FPDFPageObj_Transform(objPtr, 1, 0, 0, 1, this.x, this.y);
       m.FPDFPage_InsertObject(page.pagePtr, objPtr);
     }
@@ -104,16 +120,17 @@ export class InsertTextCommand implements Command {
       bounds: {
         x: this.x,
         y: this.y,
-        width: this.text.length * DEFAULT_SIZE * 0.6,
-        height: DEFAULT_SIZE * 1.2,
+        width: this.text.length * this.size * 0.6,
+        height: this.size * 1.2,
       },
       matrix,
       text: this.text,
-      fontId: `base14:${DEFAULT_FAMILY}`,
-      fontSize: DEFAULT_SIZE,
-      fill: { ...BLACK },
+      fontId: `base14:${this.family}`,
+      fontSize: this.size,
+      fill: { ...this.fill },
       fontSubset: false,
     });
+    if (this.placeholder) run.placeholderText = this.text;
     page.setRuns([...page.runs, run]);
     page.markDirty();
     page.markNeedsGenerate();

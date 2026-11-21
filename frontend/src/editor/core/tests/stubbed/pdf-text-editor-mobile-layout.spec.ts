@@ -224,6 +224,40 @@ test.describe("PDF text editor - phone layout", () => {
     }
   });
 
+  for (const width of [360, 390]) {
+    test(`every action bar control fits a ${width}px screen`, async ({
+      page,
+    }) => {
+      test.setTimeout(120_000);
+      await page.setViewportSize({ width, height: 800 });
+      await openEditor(page);
+      const bar = page.getByTestId("pdf-editor-mobile-actionbar");
+      await expect(bar).toHaveAttribute("data-context", "idle");
+      expect(
+        await bar.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+      ).toBe(true);
+      const labels = bar.locator(".pdf-editor-mbar__label");
+      for (let i = 0; i < (await labels.count()); i++)
+        expect(
+          await labels
+            .nth(i)
+            .evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+        ).toBe(true);
+    });
+  }
+
+  test("the insert menu adds a table and an image", async ({ page }) => {
+    test.setTimeout(120_000);
+    await openEditor(page);
+    await page.getByTestId("pdf-editor-insert").tap();
+    await expect(page.getByTestId("pdf-editor-add-image")).toBeVisible();
+    await page.getByTestId("pdf-editor-add-table").tap();
+    await expect(page.getByTestId("pdf-editor-insert")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   test("the action bar zooms the viewer", async ({ page }) => {
     test.setTimeout(120_000);
     await openEditor(page);

@@ -22,6 +22,11 @@ import {
   NO_SHRINK,
   type Controller,
 } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
+import {
+  ParagraphControls,
+  TextStyleMenu,
+  UnderlineToggle,
+} from "@editor/tools/pdfTextEditor/components/toolbar/ParagraphGroup";
 
 const WEIGHT_NAMES: Record<number, [string, string]> = {
   100: ["pdfTextEditor.fontPicker.weightThin", "Thin"],
@@ -156,8 +161,16 @@ export function FormatGroup({
             : texts.unavailable),
     );
 
+  const paragraphProps = {
+    controller,
+    buttonSize,
+    inPopover,
+    disabled: selectionTextReadOnly,
+  } as const;
+
   return (
     <>
+      <TextStyleMenu {...paragraphProps} />
       <FontFamilySelect
         value={fontFamily}
         fontId={scanFont === undefined ? state.fontFamily : null}
@@ -383,6 +396,7 @@ export function FormatGroup({
           leftSection={<Icon name="italic" size={20} />}
         />
       </Tooltip>
+      <UnderlineToggle {...paragraphProps} />
       <Menu shadow="md" position="bottom-start" withinPortal={!inPopover}>
         <Menu.Target>
           <Tooltip
@@ -433,6 +447,7 @@ export function FormatGroup({
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
+      <ParagraphControls {...paragraphProps} />
     </>
   );
 }

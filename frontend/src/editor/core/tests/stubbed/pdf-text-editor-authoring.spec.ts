@@ -1,0 +1,1036 @@
+import type { Page } from "@playwright/test";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import path from "path";
+
+const PARAGRAPH_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/paragraph-sample.pdf",
+);
+const FORM_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/form-fields-sample.pdf",
+);
+
+async function openEditor(page: Page, file: string) {
+  await openInTextEditor(page, file);
+  await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+    timeout: 60_000,
+  });
+}
+
+interface AuthoringRun {
+  id: string;
+  text: string;
+  fontSize: number;
+  fontId: string;
+  bounds: { x: number; width: number };
+  paragraphLineSlots: Array<{ baselineY: number }>;
+}
+
+interface AuthoringWindow {
+  __editor_store: {
+    doc: {
+      page(index: number): {
+        width: number;
+        runs: AuthoringRun[];
+        underlines: Map<string, number[]>;
+      };
+    };
+    selection: { selectOne(runId: string): void };
+  };
+}
+
+function runOnPage(page: Page, match: string) {
+  return page.evaluate((source) => {
+    const store = (window as unknown as AuthoringWindow).__editor_store;
+    const p = store.doc.page(0);
+    const run = p.runs.find((r) => new RegExp(source).test(r.text));
+    if (!run) throw new Error(`no run matching ${source}`);
+    return {
+      id: run.id,
+      text: run.text,
+      fontSize: run.fontSize,
+      fontId: run.fontId,
+      left: run.bounds.x,
+      right: run.bounds.x + run.bounds.width,
+      pageWidth: p.width,
+      baselines: run.paragraphLineSlots.map((s) => s.baselineY),
+      underlines: p.underlines.get(run.id)?.length ?? 0,
+    };
+  }, match);
+}
+
+async function selectRun(page: Page, runId: string) {
+  await page.evaluate((id) => {
+    (window as unknown as AuthoringWindow).__editor_store.selection.selectOne(
+      id,
+    );
+  }, runId);
+  await expect(page.getByTestId("pdf-editor-underline")).toBeVisible();
+}
+
+async function blurPage(page: Page) {
+  await page
+    .getByTestId("pdf-editor-page-0")
+    .click({ position: { x: 500, y: 420 } });
+}
+
+async function addTextAt(page: Page, x: number, y: number) {
+  const fresh = page.locator('[data-testid^="pdf-editor-run-p0-new-"]');
+  const before = await fresh.count();
+  await page.getByTestId("pdf-editor-add-text").click();
+  await page.getByTestId("pdf-editor-page-0").click({ position: { x, y } });
+  await expect(fresh).toHaveCount(before + 1, { timeout: 10_000 });
+  return fresh.last();
+}
+
+test.describe("PDF text editor: writing a new document", () => {
+  test("a new text box takes typing straight over its placeholder", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const box = await addTextAt(page, 120, 300);
+
+    await expect(box).toBeFocused();
+    await page.keyboard.type("Dear Sam");
+    await expect(box).toHaveText("Dear Sam");
+  });
+
+  test("clicking a placeholder selects all of it, and typed text is edited in place", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const box = await addTextAt(page, 120, 300);
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 500, y: 420 } });
+    await expect(box).not.toBeFocused();
+
+    await box.click();
+    await page.keyboard.type("Invoice");
+    await expect(box).toHaveText("Invoice");
+
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 500, y: 420 } });
+    const size = await box.boundingBox();
+    await box.click({ position: { x: (size?.width ?? 40) - 1, y: 4 } });
+    await page.keyboard.type(" 42");
+    await expect(box).toHaveText("Invoice 42");
+  });
+});
+
+test.describe("PDF text editor: paragraph formatting", () => {
+  test("centring a title keeps it centred on the page as it is retyped, and undo puts it back", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const box = await addTextAt(page, 120, 300);
+    await page.keyboard.type("Report title");
+    await blurPage(page);
+    const before = await runOnPage(page, "^Report title$");
+
+    await selectRun(page, before.id);
+    await page.getByTestId("pdf-editor-text-align").click();
+    await page.getByTestId("pdf-editor-text-align-center").click();
+    await expect
+      .poll(async () => {
+        const run = await runOnPage(page, "^Report title$");
+        return Math.abs((run.left + run.right) / 2 - run.pageWidth / 2);
+      })
+      .toBeLessThan(1.5);
+
+    const size = await box.boundingBox();
+    await box.click({ position: { x: (size?.width ?? 40) - 1, y: 4 } });
+    await page.keyboard.type(" for 2026");
+    await blurPage(page);
+    await expect
+      .poll(async () => {
+        const run = await runOnPage(page, "^Report title for 2026$");
+        return Math.abs((run.left + run.right) / 2 - run.pageWidth / 2);
+      })
+      .toBeLessThan(1.5);
+
+    await page.getByTestId("pdf-editor-undo").click();
+    await page.getByTestId("pdf-editor-undo").click();
+    await expect
+      .poll(async () => (await runOnPage(page, "^Report title$")).left)
+      .toBeCloseTo(before.left, 0);
+  });
+
+  test("a centred title can still be dragged to a new place", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const box = await addTextAt(page, 120, 300);
+    await page.keyboard.type("Moving title");
+    await blurPage(page);
+    const run = await runOnPage(page, "^Moving title$");
+    await selectRun(page, run.id);
+    await page.getByTestId("pdf-editor-text-align").click();
+    await page.getByTestId("pdf-editor-text-align-center").click();
+    await expect
+      .poll(async () => {
+        const r = await runOnPage(page, "^Moving title$");
+        return Math.abs((r.left + r.right) / 2 - r.pageWidth / 2);
+      })
+      .toBeLessThan(1.5);
+    const centred = await runOnPage(page, "^Moving title$");
+
+    const at = await box.boundingBox();
+    if (!at) throw new Error("no title box");
+    await page.keyboard.down("Control");
+    await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(at.x + at.width / 2 + 90, at.y + at.height / 2, {
+      steps: 8,
+    });
+    await page.mouse.up();
+    await page.keyboard.up("Control");
+
+    await expect
+      .poll(
+        async () =>
+          (await runOnPage(page, "^Moving title$")).left - centred.left,
+      )
+      .toBeGreaterThan(40);
+  });
+
+  test("Ctrl+U and Ctrl+Shift+E format the box being typed in", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const box = await addTextAt(page, 120, 300);
+    await page.keyboard.type("Shortcut title");
+    await page.keyboard.press("ControlOrMeta+u");
+    await page.keyboard.press("ControlOrMeta+Shift+E");
+    await expect
+      .poll(async () => {
+        const run = await runOnPage(page, "^Shortcut title$");
+        return [
+          run.underlines,
+          Math.abs((run.left + run.right) / 2 - run.pageWidth / 2) < 1.5,
+        ];
+      })
+      .toEqual([1, true]);
+    await expect(box.locator("u")).toHaveCount(0);
+  });
+
+  test("Enter continues a bulleted list, and Enter on an empty bullet ends it", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await addTextAt(page, 120, 250);
+    await page.keyboard.type("Apples");
+    await page.keyboard.press("ControlOrMeta+Shift+Digit8");
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("• Apples");
+
+    const box = page
+      .locator('[data-testid^="pdf-editor-run-p0-new-"]')
+      .filter({ hasText: "Apples" });
+    const at = await box.boundingBox();
+    if (!at) throw new Error("no list box");
+    await box.click({ position: { x: at.width - 1, y: at.height / 2 } });
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Pears", { delay: 30 });
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("• Apples\n• Pears");
+
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Done", { delay: 30 });
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("• Apples\n• Pears\nDone");
+  });
+
+  test("Enter after ending a list adds a plain blank line, not a bullet", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await addTextAt(page, 120, 250);
+    await page.keyboard.type("Apples");
+    await page.keyboard.press("ControlOrMeta+Shift+Digit8");
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("• Apples");
+    const box = page
+      .locator('[data-testid^="pdf-editor-run-p0-new-"]')
+      .filter({ hasText: "Apples" });
+    const at = await box.boundingBox();
+    if (!at) throw new Error("no list box");
+    await box.click({ position: { x: at.width - 1, y: at.height / 2 } });
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Enter");
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("• Apples\n");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Done", { delay: 30 });
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("• Apples\n\nDone");
+  });
+
+  test("Enter inside a numbered list renumbers the items after it", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await addTextAt(page, 120, 250);
+    await page.keyboard.type("Apples");
+    await page.keyboard.press("ControlOrMeta+Shift+Digit7");
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("1. Apples");
+
+    const box = page
+      .locator('[data-testid^="pdf-editor-run-p0-new-"]')
+      .filter({ hasText: "Apples" });
+    let at = await box.boundingBox();
+    if (!at) throw new Error("no list box");
+    await box.click({ position: { x: at.width - 1, y: at.height / 2 } });
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Pears", { delay: 30 });
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("1. Apples\n2. Pears");
+
+    at = await box.boundingBox();
+    if (!at) throw new Error("no list box");
+    await box.click({ position: { x: at.width - 1, y: at.height / 4 } });
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Kiwis", { delay: 30 });
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("1. Apples\n2. Kiwis\n3. Pears");
+  });
+
+  test("Enter after the wrapped line of a bulleted item starts the next bullet", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const para = await runOnPage(page, "^First line");
+    await selectRun(page, para.id);
+    await page.getByTestId("pdf-editor-list").click();
+    await page.getByTestId("pdf-editor-list-bullet").click();
+    await expect
+      .poll(async () => (await runOnPage(page, "First line")).text)
+      .toMatch(/^• First line/);
+    const bulleted = (await runOnPage(page, "First line")).text;
+    const wrappedEnd = "block.";
+
+    const box = page.locator(`[data-run-id="${para.id}"]`);
+    await box.click();
+    await box.evaluate((el, end) => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const at = node.textContent?.replace(/\u00A0/g, " ").indexOf(end) ?? -1;
+        if (at < 0) continue;
+        const range = document.createRange();
+        range.setStart(node, at + end.length);
+        range.collapse(true);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+        return;
+      }
+      throw new Error("wrapped line not found");
+    }, wrappedEnd);
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Third", { delay: 30 });
+    await expect
+      .poll(async () => (await runOnPage(page, "First line")).text)
+      .toBe(bulleted.replace(wrappedEnd, `${wrappedEnd}\n• Third`));
+  });
+
+  test("Enter inside a bulleted item makes the rest of it the next bullet", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await addTextAt(page, 120, 250);
+    await page.keyboard.type("Apples");
+    await page.keyboard.press("ControlOrMeta+Shift+Digit8");
+    await expect
+      .poll(async () => (await runOnPage(page, "Apples")).text)
+      .toBe("• Apples");
+
+    const box = page
+      .locator('[data-testid^="pdf-editor-run-p0-new-"]')
+      .filter({ hasText: "Apples" });
+    await box.click();
+    await box.evaluate((el) => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const at = node.textContent?.indexOf("les") ?? -1;
+        if (at < 0) continue;
+        const range = document.createRange();
+        range.setStart(node, at);
+        range.collapse(true);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+        return;
+      }
+      throw new Error("item text not found");
+    });
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Pick", { delay: 30 });
+    await expect
+      .poll(async () => (await runOnPage(page, "App")).text)
+      .toBe("• App\n• Pickles");
+  });
+
+  test("underline draws a rule under every line of a paragraph and toggles off", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const para = await runOnPage(page, "^First line");
+    await selectRun(page, para.id);
+
+    await page.getByTestId("pdf-editor-underline").click();
+    await expect
+      .poll(async () => (await runOnPage(page, "^First line")).underlines)
+      .toBe(para.baselines.length);
+    await expect(page.getByTestId("pdf-editor-underline")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    await page.getByTestId("pdf-editor-underline").click();
+    await expect
+      .poll(async () => (await runOnPage(page, "^First line")).underlines)
+      .toBe(0);
+  });
+
+  test("lists mark the paragraph with a bullet or a number, and the same choice again removes it", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const para = await runOnPage(page, "^First line");
+    await selectRun(page, para.id);
+
+    await page.getByTestId("pdf-editor-list").click();
+    await page.getByTestId("pdf-editor-list-bullet").click();
+    await expect
+      .poll(async () => (await runOnPage(page, "First line")).text)
+      .toMatch(/^• First line/);
+
+    await page.getByTestId("pdf-editor-list").click();
+    await page.getByTestId("pdf-editor-list-number").click();
+    await expect
+      .poll(async () => (await runOnPage(page, "First line")).text)
+      .toMatch(/^1\. First line/);
+
+    await page.getByTestId("pdf-editor-list").click();
+    await page.getByTestId("pdf-editor-list-number").click();
+    await expect
+      .poll(async () => (await runOnPage(page, "First line")).text)
+      .toMatch(/^First line/);
+  });
+
+  test("double line spacing sets the paragraph's baselines two type sizes apart", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const para = await runOnPage(page, "^First line");
+    await selectRun(page, para.id);
+
+    await page.getByTestId("pdf-editor-line-spacing").click();
+    await page.getByTestId("pdf-editor-line-spacing-2").click();
+    await expect
+      .poll(async () => {
+        const run = await runOnPage(page, "^First line");
+        return run.baselines[0] - run.baselines[1];
+      })
+      .toBeCloseTo(para.fontSize * 2, 0);
+  });
+
+  test("a text style sets size and weight together, in one undo step", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const para = await runOnPage(page, "^First line");
+    await selectRun(page, para.id);
+
+    await page.getByTestId("pdf-editor-text-style").click();
+    await page.getByTestId("pdf-editor-text-style-heading1").click();
+    await expect
+      .poll(async () => {
+        const run = await runOnPage(page, "^First line");
+        return [run.fontSize, /bold/i.test(run.fontId)];
+      })
+      .toEqual([18, true]);
+
+    await page.getByTestId("pdf-editor-undo").click();
+    await expect
+      .poll(async () => {
+        const run = await runOnPage(page, "^First line");
+        return [run.fontSize, /bold/i.test(run.fontId)];
+      })
+      .toEqual([para.fontSize, false]);
+  });
+});
+
+const SMALL_PAGE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/type3-sample.pdf",
+);
+const SCANNED_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/scanned-ocr-tesseract.pdf",
+);
+
+test.describe("PDF text editor: new text on any page", () => {
+  test("a title too wide for a small page wraps inside it", async ({
+    page,
+  }) => {
+    await openEditor(page, SMALL_PAGE_PDF);
+    const box = await addTextAt(page, 40, 40);
+    await page.keyboard.type("A heading long enough to need two lines");
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 3, y: 3 } });
+    const typed = await runOnPage(page, "^A heading");
+    await selectRun(page, typed.id);
+
+    await page.getByTestId("pdf-editor-text-style").click();
+    await page.getByTestId("pdf-editor-text-style-title").click();
+    await expect
+      .poll(
+        async () =>
+          (await runOnPage(page, "^A heading")).text.split("\n").length,
+      )
+      .toBeGreaterThan(1);
+    const title = await runOnPage(page, "^A heading");
+    expect(title.right).toBeLessThanOrEqual(title.pageWidth + 0.5);
+    await expect(box).toBeVisible();
+  });
+
+  test("text can be added over a picture, such as a scanned page", async ({
+    page,
+  }) => {
+    await openEditor(page, SCANNED_PDF);
+    await addTextAt(page, 60, 60);
+    await page.keyboard.type("Approved");
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 3, y: 3 } });
+    await expect
+      .poll(async () => (await runOnPage(page, "^Approved$")).text)
+      .toBe("Approved");
+  });
+});
+
+interface ShapeState {
+  id: string;
+  width: number;
+  height: number;
+  fill: { r: number; g: number; b: number } | null;
+}
+
+function drawnShapes(page: Page): Promise<ShapeState[]> {
+  return page.evaluate(() => {
+    const store = (
+      window as unknown as {
+        __editor_store: {
+          doc: {
+            page(index: number): {
+              shapes: Array<{
+                id: string;
+                bounds: { width: number; height: number };
+                drawn: {
+                  fill: { r: number; g: number; b: number } | null;
+                } | null;
+              }>;
+            };
+          };
+        };
+      }
+    ).__editor_store;
+    return store.doc
+      .page(0)
+      .shapes.filter((s) => s.drawn)
+      .map((s) => ({
+        id: s.id,
+        width: s.bounds.width,
+        height: s.bounds.height,
+        fill: s.drawn?.fill ?? null,
+      }));
+  });
+}
+
+test.describe("PDF text editor: shapes", () => {
+  test("a filled box is drawn where the page is clicked, then resized, recoloured and undone", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await page.getByTestId("pdf-editor-insert").click();
+    await page.getByTestId("pdf-editor-add-shape-box").click();
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 150, y: 330 } });
+
+    await expect.poll(async () => (await drawnShapes(page)).length).toBe(1);
+    const [box] = await drawnShapes(page);
+    expect([box.width, box.height]).toEqual([160, 100]);
+
+    const grip = page.getByTestId(`pdf-editor-shape-resize-${box.id}`);
+    await expect(grip).toBeVisible();
+    const at = await grip.boundingBox();
+    if (!at) throw new Error("no resize grip");
+    await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 60, at.y + 30, { steps: 5 });
+    await page.mouse.up();
+    await expect
+      .poll(async () => (await drawnShapes(page))[0].width)
+      .toBeGreaterThan(160);
+
+    const colour = page.getByTestId("pdf-editor-shape-colour");
+    await colour.fill("#c02020");
+    await colour.press("Enter");
+    await expect
+      .poll(async () => (await drawnShapes(page))[0].fill?.r)
+      .toBe(192);
+
+    await page.getByTestId("pdf-editor-undo").click();
+    await page.getByTestId("pdf-editor-undo").click();
+    await expect.poll(async () => (await drawnShapes(page))[0].width).toBe(160);
+  });
+
+  test("a line is a thin rule a page click away", async ({ page }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await page.getByTestId("pdf-editor-insert").click();
+    await page.getByTestId("pdf-editor-add-shape-line").click();
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 150, y: 330 } });
+    await expect
+      .poll(async () =>
+        (await drawnShapes(page)).map((s) => [s.width, s.height]),
+      )
+      .toEqual([[200, 1]]);
+  });
+});
+
+interface DocWindow {
+  __editor_store: {
+    doc: {
+      pageCount: number;
+      page(index: number): {
+        width: number;
+        height: number;
+        annotations: Array<{ kind: string }>;
+      };
+    } | null;
+  };
+}
+
+function docShape(page: Page) {
+  return page.evaluate(() => {
+    const doc = (window as unknown as DocWindow).__editor_store.doc;
+    if (!doc) return null;
+    const first = doc.page(0);
+    return {
+      pages: doc.pageCount,
+      width: Math.round(first.width),
+      height: Math.round(first.height),
+      widgets: first.annotations.filter((a) => a.kind === "widget").length,
+    };
+  });
+}
+
+async function pageAction(page: Page, testId: string) {
+  await page.getByTestId("pdf-editor-pages").click();
+  await page.getByTestId(testId).click();
+}
+
+test.describe("PDF text editor: pages and form fields", () => {
+  test("the viewer's fill-and-save bar stays out of the way while the editor is open", async ({
+    page,
+  }) => {
+    await openEditor(page, FORM_PDF);
+    await expect(page.locator("[data-run-id]").first()).toBeVisible();
+    await pageAction(page, "pdf-editor-page-add");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBeGreaterThan(1);
+    await expect(
+      page.getByText("This PDF contains fillable fields"),
+    ).toHaveCount(0);
+  });
+
+  test("pages can be added, duplicated and deleted from the editor", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await expect.poll(async () => (await docShape(page))?.pages).toBe(1);
+
+    await pageAction(page, "pdf-editor-page-add");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await expect(page.getByTestId("pdf-editor-page-1")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await pageAction(page, "pdf-editor-page-duplicate");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(3);
+
+    await pageAction(page, "pdf-editor-page-delete");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+  });
+
+  test("page setup opens on the size and orientation of the page in view", async ({
+    page,
+  }) => {
+    await openEditor(page, MANY_PAGES_PDF);
+    await pageAction(page, "pdf-editor-page-setup");
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.locator('input[value="portrait"]')).toBeChecked();
+    await expect(dialog.locator('input[value="LETTER"]')).toBeChecked();
+    await dialog.getByText("Landscape", { exact: true }).click();
+    await dialog.getByText("This page", { exact: true }).click();
+    await page.getByTestId("pdf-editor-page-setup-apply").click();
+    await expect
+      .poll(async () => (await pageSizes(page))[0], { timeout: 30_000 })
+      .toEqual([792, 612]);
+
+    await pageAction(page, "pdf-editor-page-setup");
+    await expect(dialog.locator('input[value="landscape"]')).toBeChecked();
+  });
+
+  test("Undo takes back a page change after the edits made since", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await pageAction(page, "pdf-editor-page-add");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await addTextAt(page, 120, 380);
+    await page.keyboard.type("After the page");
+    await blurPage(page);
+
+    const undo = page.getByTestId("pdf-editor-undo");
+    await undo.click();
+    await expect
+      .poll(async () => (await pageTexts(page, 0)).includes("After the page"))
+      .toBe(false);
+    await expect(async () => {
+      if ((await docShape(page))?.pages === 2 && (await undo.isEnabled()))
+        await undo.click();
+      expect((await docShape(page))?.pages).toBe(1);
+    }).toPass({ timeout: 30_000 });
+  });
+
+  test("Redo makes an undone page change again", async ({ page }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await pageAction(page, "pdf-editor-page-add");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await page.getByTestId("pdf-editor-undo").click();
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(1);
+    await expect(page.getByTestId("pdf-editor-redo")).toBeEnabled();
+    await page.getByTestId("pdf-editor-redo").click();
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+  });
+
+  test("underline and alignment stay on a paragraph through a page change", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const para = await runOnPage(page, "^First line");
+    await selectRun(page, para.id);
+    await page.getByTestId("pdf-editor-underline").click();
+    await expect
+      .poll(async () => (await runOnPage(page, "^First line")).underlines)
+      .toBe(para.baselines.length);
+
+    await pageAction(page, "pdf-editor-page-add");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await expect
+      .poll(async () => (await runOnPage(page, "^First line")).underlines, {
+        timeout: 15_000,
+      })
+      .toBe(para.baselines.length);
+  });
+
+  test("Undo puts the page back to the size it was before page setup", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    const before = (await pageSizes(page))[0];
+    await pageAction(page, "pdf-editor-page-setup");
+    const dialog = page.getByRole("dialog");
+    await dialog.getByText("A3", { exact: true }).click();
+    await dialog.getByText("Portrait", { exact: true }).click();
+    await page.getByTestId("pdf-editor-page-setup-apply").click();
+    await expect
+      .poll(async () => (await pageSizes(page))[0], { timeout: 30_000 })
+      .toEqual([842, 1191]);
+
+    const undo = page.getByTestId("pdf-editor-undo");
+    await expect(undo).toBeEnabled({ timeout: 30_000 });
+    await undo.click();
+    await expect
+      .poll(async () => (await pageSizes(page))[0], { timeout: 30_000 })
+      .toEqual(before);
+  });
+
+  test("page setup turns every page to landscape Letter", async ({ page }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await pageAction(page, "pdf-editor-page-setup");
+    const dialog = page.getByRole("dialog");
+    await dialog.getByText("Letter", { exact: true }).click();
+    await dialog.getByText("Landscape", { exact: true }).click();
+    await page.getByTestId("pdf-editor-page-setup-apply").click();
+    await expect
+      .poll(
+        async () => {
+          const shape = await docShape(page);
+          return shape && [shape.width, shape.height];
+        },
+        { timeout: 30_000 },
+      )
+      .toEqual([792, 612]);
+  });
+
+  test("an unsigned signature field does not stop later page changes", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await page.getByTestId("pdf-editor-insert").click();
+    await page.getByTestId("pdf-editor-add-field-signature").click();
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 150, y: 330 } });
+    await expect
+      .poll(async () => (await docShape(page))?.widgets, { timeout: 30_000 })
+      .toBe(1);
+
+    await pageAction(page, "pdf-editor-page-add");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+  });
+
+  test("a text field is placed where the page is clicked", async ({ page }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await page.getByTestId("pdf-editor-insert").click();
+    await page.getByTestId("pdf-editor-add-field-text").click();
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 150, y: 330 } });
+    await expect
+      .poll(async () => (await docShape(page))?.widgets, { timeout: 30_000 })
+      .toBe(1);
+  });
+});
+
+function pageTexts(page: Page, index: number) {
+  return page.evaluate((i) => {
+    const store = (window as unknown as AuthoringWindow).__editor_store;
+    return store.doc.page(i).runs.map((r) => r.text);
+  }, index);
+}
+
+test.describe("PDF text editor: text that reaches the bottom of the page", () => {
+  test("flows onto the blank page after it, and typing carries on there", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await pageAction(page, "pdf-editor-page-add");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await page.getByTestId("pdf-editor-page-0").scrollIntoViewIfNeeded();
+
+    await addTextAt(page, 60, 380);
+    await page.keyboard.type("Line one");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Line two", { delay: 40 });
+
+    await expect
+      .poll(async () => (await pageTexts(page, 1)).join("|"), {
+        timeout: 15_000,
+      })
+      .toBe("Line two");
+    await expect
+      .poll(async () =>
+        (await pageTexts(page, 0)).some((t) => t === "Line one"),
+      )
+      .toBe(true);
+  });
+
+  test("keys typed while the page is being added still land in the text", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await addTextAt(page, 60, 380);
+    await page.keyboard.type("Line one");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Line two");
+    await page.waitForFunction(
+      () =>
+        (
+          window as unknown as {
+            __editor_store: { getState(): { reopening: boolean } };
+          }
+        ).__editor_store.getState().reopening,
+      undefined,
+      { polling: "raf", timeout: 15_000 },
+    );
+    await page.keyboard.type(" more");
+
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await expect
+      .poll(async () => (await pageTexts(page, 1)).join("|"), {
+        timeout: 15_000,
+      })
+      .toBe("Line two more");
+  });
+
+  test("adds a page for the text once the typing pauses", async ({ page }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await addTextAt(page, 60, 380);
+    await page.keyboard.type("Line one");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Line two", { delay: 40 });
+
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await expect
+      .poll(async () => (await pageTexts(page, 1)).join("|"), {
+        timeout: 15_000,
+      })
+      .toBe("Line two");
+  });
+
+  test("a title that grows past the bottom carries on onto a new page", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await addTextAt(page, 60, 370);
+    await page.keyboard.type("A closing heading long enough to need lines");
+    await blurPage(page);
+    const typed = await runOnPage(page, "^A closing");
+    await selectRun(page, typed.id);
+
+    await page.getByTestId("pdf-editor-text-style").click();
+    await page.getByTestId("pdf-editor-text-style-title").click();
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await expect
+      .poll(async () => (await pageTexts(page, 1)).join(" "), {
+        timeout: 15_000,
+      })
+      .not.toBe("");
+  });
+});
+
+const MANY_PAGES_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/many-pages-sample.pdf",
+);
+
+function pageSizes(page: Page) {
+  return page.evaluate(() => {
+    const doc = (window as unknown as DocWindow).__editor_store.doc;
+    if (!doc) return [];
+    return Array.from({ length: doc.pageCount }, (_, i) => {
+      const p = doc.page(i);
+      return [Math.round(p.width), Math.round(p.height)];
+    });
+  });
+}
+
+test.describe("PDF text editor: page actions on a longer document", () => {
+  test("acts on the page in view and changes only that page's size when asked", async ({
+    page,
+  }) => {
+    await openEditor(page, MANY_PAGES_PDF);
+    const sizes = await pageSizes(page);
+    expect(sizes.length).toBeGreaterThan(2);
+
+    await page.getByTestId("pdf-editor-page-2").scrollIntoViewIfNeeded();
+    await expect(page.getByTestId("pdf-editor-page-2")).toBeInViewport({
+      ratio: 0.5,
+    });
+    await pageAction(page, "pdf-editor-page-setup");
+    const dialog = page.getByRole("dialog");
+    await dialog.getByText("Landscape", { exact: true }).click();
+    await dialog.getByText("This page", { exact: true }).click();
+    await page.getByTestId("pdf-editor-page-setup-apply").click();
+
+    await expect
+      .poll(async () => (await pageSizes(page))[2], { timeout: 30_000 })
+      .toEqual([792, 612]);
+    const after = await pageSizes(page);
+    expect(after.filter((_size, i) => i !== 2)).toEqual(
+      sizes.filter((_size, i) => i !== 2),
+    );
+  });
+});
+
+test.describe("PDF text editor: saving a written document", () => {
+  test("a page, a field and new text all survive Save without an error", async ({
+    page,
+  }) => {
+    await openEditor(page, PARAGRAPH_PDF);
+    await pageAction(page, "pdf-editor-page-add");
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(2);
+    await page.getByTestId("pdf-editor-insert").click();
+    await page.getByTestId("pdf-editor-add-field-checkbox").click();
+    await page
+      .getByTestId("pdf-editor-page-0")
+      .click({ position: { x: 150, y: 330 } });
+    await expect
+      .poll(async () => (await docShape(page))?.widgets, { timeout: 30_000 })
+      .toBe(1);
+
+    await addTextAt(page, 120, 380);
+    await page.keyboard.type("Signed off");
+    await blurPage(page);
+    await page.getByTestId("pdf-editor-save").click();
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0, {
+      timeout: 30_000,
+    });
+
+    const after = await page.evaluate(() => {
+      const store = (
+        window as unknown as DocWindow & {
+          __editor_store: { getState(): { error: string | null } };
+        }
+      ).__editor_store;
+      const doc = store.doc!;
+      return {
+        error: store.getState().error,
+        pages: doc.pageCount,
+        widgets: doc.page(0).annotations.filter((a) => a.kind === "widget")
+          .length,
+      };
+    });
+    expect(after).toEqual({ error: null, pages: 2, widgets: 1 });
+    expect(await pageTexts(page, 0)).toContain("Signed off");
+  });
+});

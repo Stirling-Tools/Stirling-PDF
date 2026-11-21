@@ -61,6 +61,14 @@ export class DisplayTransform implements DisplayTransformData {
   readonly displayHeight: number;
   readonly isIdentity: boolean;
 
+  get cropRight(): number {
+    return this.cropLeft + this.cropWidth;
+  }
+
+  get cropTop(): number {
+    return this.cropBottom + this.cropHeight;
+  }
+
   constructor(d: DisplayTransformData) {
     // Normalise -0 to 0 so identity coefficients compare cleanly (-0 === 0 is
     // true, but Object.is / toEqual distinguish them).

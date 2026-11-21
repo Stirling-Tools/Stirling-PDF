@@ -63,6 +63,21 @@ import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
 import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
+import { lineWidthIn } from "@editor/tools/pdfTextEditor/util/wrapText";
+import { isFocusInContentEditable } from "@editor/tools/pdfTextEditor/util/dom";
+import {
+  SetParagraphFormatCommand,
+  type TextAlign,
+} from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import {
+  listIndentFor,
+  mayBeList,
+  toggledListText,
+  type ListKind,
+} from "@editor/tools/pdfTextEditor/util/listText";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 
 /** The fields the selection actions read off a run they are about to change. */
 interface SelectedRun {
@@ -339,8 +354,8 @@ export function useSelectionActions(store: EditorStore) {
   );
 
   const changeFontSize = useCallback(
-    (size: number) => {
-      void dispatchPerRun(
+    (size: number) =>
+      dispatchPerRun(
         (run) =>
           new SetFontSizeCommand({
             pageIndex: run.pageIndex,
@@ -348,8 +363,7 @@ export function useSelectionActions(store: EditorStore) {
             nextSize: size,
           }),
         true,
-      );
-    },
+      ),
     [dispatchPerRun],
   );
 
@@ -733,6 +747,11 @@ export function useSelectionActions(store: EditorStore) {
     [restyle],
   );
 
+  const setBold = useCallback(
+    (bold: boolean) => restyle(() => ({ bold })),
+    [restyle],
+  );
+
   const toggleItalic = useCallback(
     () =>
       restyle((styles) => ({
@@ -857,13 +876,100 @@ export function useSelectionActions(store: EditorStore) {
     }
   }, [store]);
 
+  const setAlign = useCallback(
+    (align: TextAlign) => {
+      void dispatchPerRun(
+        (run) =>
+          new SetParagraphFormatCommand({
+            pageIndex: run.pageIndex,
+            runIds: [run.id],
+            align,
+          }),
+      );
+    },
+    [dispatchPerRun],
+  );
+
+  const toggleUnderline = useCallback(() => {
+    const live = liveRuns(store);
+    const selected = store.selection.value.runIds.flatMap((id) => {
+      const run = live.get(id);
+      return run ? [run] : [];
+    });
+    const underline = !selected.every((run) => run.underline);
+    void dispatchPerRun(
+      (run) =>
+        new SetParagraphFormatCommand({
+          pageIndex: run.pageIndex,
+          runIds: [run.id],
+          underline,
+        }),
+    );
+  }, [dispatchPerRun, store]);
+
+  const setLineSpacing = useCallback(
+    (factor: number) => {
+      void dispatchPerRun(
+        (run) =>
+          new SetLineSpacingCommand({
+            pageIndex: run.pageIndex,
+            runId: run.id,
+            factor,
+          }),
+        true,
+      );
+    },
+    [dispatchPerRun],
+  );
+
+  const toggleList = useCallback(
+    (kind: ListKind) => {
+      // A box with focus keeps painting what was typed in it, so the markers
+      // would not show and the next keystroke would write the old text back.
+      if (isFocusInContentEditable())
+        (document.activeElement as HTMLElement).blur();
+      void dispatchPerRun((run) => {
+        const live = liveRuns(store).get(run.id);
+        const doc = store.document;
+        if (!live) return null;
+        const nextText = toggledListText(live.text, softStartsOf(live), kind);
+        if (nextText === live.text) return null;
+        return new CompositeCommand([
+          new EditTextCommand({
+            pageIndex: run.pageIndex,
+            runId: run.id,
+            nextText,
+            explicit: true,
+          }),
+          new SetParagraphFormatCommand({
+            pageIndex: run.pageIndex,
+            runIds: [run.id],
+            listIndent:
+              doc && mayBeList(nextText)
+                ? listIndentFor(
+                    nextText,
+                    lineWidthIn(doc, doc.page(run.pageIndex), live),
+                  )
+                : 0,
+          }),
+        ]);
+      }, true);
+    },
+    [dispatchPerRun, store],
+  );
+
   return {
     fittingScan,
+    setAlign,
+    toggleUnderline,
+    setLineSpacing,
+    toggleList,
     changeFontSize,
     changeFill,
     changeOutline,
     changeFontFamily,
     toggleBold,
+    setBold,
     toggleItalic,
     changeFontWeight,
     deleteSelection,

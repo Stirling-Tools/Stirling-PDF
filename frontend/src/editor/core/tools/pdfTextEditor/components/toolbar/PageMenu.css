@@ -1,0 +1,15 @@
+.pdf-editor-page-setup {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.pdf-editor-page-setup__label {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.pdf-editor-page-setup__label:first-child {
+  margin-top: 0;
+}

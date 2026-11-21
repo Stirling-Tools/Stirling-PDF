@@ -25,6 +25,9 @@ function setup() {
     onMergeSelection: vi.fn(),
     onToggleBold: vi.fn(),
     onToggleItalic: vi.fn(),
+    onToggleUnderline: vi.fn(),
+    onSetAlign: vi.fn(),
+    onToggleList: vi.fn(),
   };
   renderHook(() => useEditorKeyboardShortcuts(cbs));
   return cbs;
@@ -129,5 +132,49 @@ describe("Bold and Italic", () => {
     field.focus();
     press("b", { ctrlKey: true });
     expect(cbs.onToggleBold).not.toHaveBeenCalled();
+  });
+});
+
+describe("writing shortcuts", () => {
+  test("Ctrl+U underlines, Ctrl+Shift+L/E/R align and Ctrl+Shift+8/7 make lists", () => {
+    const cbs = setup();
+    press("u", { ctrlKey: true });
+    press("E", { ctrlKey: true, shiftKey: true, code: "KeyE" });
+    press("R", { metaKey: true, shiftKey: true, code: "KeyR" });
+    press("*", { ctrlKey: true, shiftKey: true, code: "Digit8" });
+    press("&", { ctrlKey: true, shiftKey: true, code: "Digit7" });
+    expect(cbs.onToggleUnderline).toHaveBeenCalledTimes(1);
+    expect(cbs.onSetAlign.mock.calls).toEqual([["center"], ["right"]]);
+    expect(cbs.onToggleList.mock.calls).toEqual([["bullet"], ["number"]]);
+  });
+
+  test("they leave the browser alone with nothing selected", () => {
+    const cbs = setup();
+    cbs.store.selection.value.runIds = [];
+    const underline = new KeyboardEvent("keydown", {
+      key: "u",
+      ctrlKey: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(underline);
+    expect(underline.defaultPrevented).toBe(false);
+    expect(cbs.onToggleUnderline).not.toHaveBeenCalled();
+  });
+
+  test("AltGr letters still type: Ctrl+Alt is not a shortcut", () => {
+    const cbs = setup();
+    const altGrL = new KeyboardEvent("keydown", {
+      key: "Ł",
+      code: "KeyL",
+      ctrlKey: true,
+      altKey: true,
+      shiftKey: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(altGrL);
+    press("u", { ctrlKey: true, altKey: true });
+    expect(altGrL.defaultPrevented).toBe(false);
+    expect(cbs.onSetAlign).not.toHaveBeenCalled();
+    expect(cbs.onToggleUnderline).not.toHaveBeenCalled();
   });
 });

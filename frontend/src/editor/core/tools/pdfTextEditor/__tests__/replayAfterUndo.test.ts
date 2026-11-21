@@ -258,10 +258,10 @@ test("deleting a line of an ungrouped paragraph takes every word of it off the p
   const doc = await open();
   const page = doc.page(0);
   const body = page.runs.find((r) => r.text !== HEADING)!;
-  const secondLine = body.text.split("\n")[1];
-  const lines = body.text.split("\n");
   const history = new HistoryStack();
   step(doc, history, family(body.id, "Courier"));
+  const secondLine = body.text.split("\n")[1];
+  const lines = body.text.split("\n");
   const ungroup = new UngroupParagraphCommand({ pageIndex: 0, runId: body.id });
   step(doc, history, ungroup);
   const line = page.runs.find((r) => r.text.trim() === secondLine.trim())!;
@@ -285,7 +285,7 @@ test("deleting a line of an ungrouped paragraph takes every word of it off the p
 
   history.undo(doc);
   history.undo(doc);
-  expect(body.text.split("\n")).toHaveLength(4);
+  expect(body.text.split("\n")).toHaveLength(lines.length);
 });
 
 test("new table cell text is drawn whole or not at all", async () => {

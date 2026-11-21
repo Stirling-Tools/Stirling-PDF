@@ -23,6 +23,7 @@ import {
   scanFaces,
   scanFacesGeneration,
   scanScriptsOf,
+  scriptFaceFamilyFor,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { FONT_DIR } from "@editor/tools/pdfTextEditor/__tests__/scanFixtures";
 
@@ -246,6 +247,24 @@ describe("bundled scan faces across a server reset", () => {
     expect(labels()).toEqual(
       expect.arrayContaining(BUNDLED_SCAN_FONTS.map((spec) => spec.label)),
     );
+  });
+});
+
+describe("symbol scan faces", () => {
+  it("draws a tick in the server's DejaVu Sans", async () => {
+    serve();
+    await loadScriptScanFaces(scanScriptsOf("Done ✓"));
+
+    expect(scriptFaceFamilyFor("✓ → ≤ ★")).toBe("DejaVu Sans");
+    expect(jarFetch).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the app's own DejaVu Sans when the server lists none", async () => {
+    serve(ALL_FAMILIES.filter((family) => family !== "DejaVu Sans"));
+    await loadScriptScanFaces(scanScriptsOf("Done ✓"));
+
+    expect(scriptFaceFamilyFor("✓")).toBe("DejaVu Sans");
+    expect(labels().filter((label) => label === "DejaVu Sans")).toHaveLength(1);
   });
 });
 

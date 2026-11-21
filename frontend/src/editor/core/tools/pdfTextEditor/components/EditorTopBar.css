@@ -84,3 +84,14 @@
     max-width: 8rem;
   }
 }
+
+.pdf-editor-topbar__busy {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}

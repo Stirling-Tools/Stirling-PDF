@@ -48,6 +48,8 @@ const INSET_EDGE_SLACK_PT = 0.5;
 const STACK_LONE_ROWS_MIN = 2;
 const STACK_OFFSET_SPREAD_EM = 0.25;
 const STACK_OFFSET_SAMPLES_MIN = 3;
+// Type that grows partway down a column heads a new section; a table's cells keep one size under the header row.
+const SECTION_HEADING_SCALE = 1.15;
 
 export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
   rowTolFactor: 0.6,
@@ -894,6 +896,12 @@ function buildTable(
   if (!snappedRows.drawn && proseColumns(columns) > PROSE_COLUMNS_MAX)
     return null;
   if (!snappedRows.drawn && sideBySideStacks(block, colEdges)) return null;
+  if (
+    !snappedRows.drawn &&
+    !snappedCols.drawn &&
+    headsSections(block, colEdges)
+  )
+    return null;
 
   const bounds: PageRect = {
     x: colEdges[0],
@@ -926,6 +934,20 @@ function buildTable(
     columnStyles: [],
     headerStyle: null,
   };
+}
+
+function headsSections(block: Row[], colEdges: number[]): boolean {
+  const bodySizes = new Map<number, number[]>();
+  block.slice(1).forEach((row) => {
+    for (const c of row.cands) {
+      const col = edgeIndex(colEdges, c.cx);
+      bodySizes.set(col, [...(bodySizes.get(col) ?? []), c.run.fontSize]);
+    }
+  });
+  return [...bodySizes.values()].some((sizes) => {
+    const usual = median(sizes);
+    return sizes.some((size) => size >= usual * SECTION_HEADING_SCALE);
+  });
 }
 
 function sideBySideStacks(block: Row[], colEdges: number[]): boolean {

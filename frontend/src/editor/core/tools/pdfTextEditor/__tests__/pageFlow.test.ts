@@ -1,0 +1,175 @@
+import { beforeEach, expect, test } from "vitest";
+import { allowConsole } from "@editor/tests/failOnConsole";
+import { degrees, PDFDocument } from "@cantoo/pdf-lib";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
+import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
+import { SetParagraphFormatCommand } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import {
+  bottomLimit,
+  flowPastBottom,
+  runBottom,
+} from "@editor/tools/pdfTextEditor/util/pageFlow";
+import {
+  editorStores,
+  servePdfiumWasm,
+} from "@editor/tools/pdfTextEditor/__tests__/editorStores";
+
+servePdfiumWasm();
+const { storeWith } = editorStores();
+
+// jsdom has no canvas; the overlay's text measurement falls back without one.
+const NO_CANVAS = /HTMLCanvasElement's getContext\(\) method/;
+beforeEach(() => allowConsole.error(NO_CANVAS));
+
+async function twoBlankPages() {
+  const doc = await PDFDocument.create();
+  doc.addPage([400, 300]);
+  doc.addPage([400, 300]);
+  return doc.save();
+}
+
+async function typedNearBottom() {
+  const store = await storeWith(await twoBlankPages());
+  ensurePageRead(store, 1);
+  const insert = new InsertTextCommand({
+    pageIndex: 0,
+    x: 40,
+    y: 50,
+    text: "Line one",
+  });
+  store.dispatch(insert);
+  const runId = insert.insertedRunId!;
+  return { store, runId };
+}
+
+function edit(
+  store: Awaited<ReturnType<typeof typedNearBottom>>["store"],
+  runId: string,
+  text: string,
+) {
+  const run = store.document!.page(0).findRun(runId)!;
+  const before = runBottom(run);
+  store.dispatch(new EditTextCommand({ pageIndex: 0, runId, nextText: text }));
+  return flowPastBottom(store, 0, runId, before);
+}
+
+test("lines typed past the bottom margin move to the top of the blank page after, as one undo step", async () => {
+  const { store, runId } = await typedNearBottom();
+  const page = store.document!.page(0);
+  expect(runBottom(page.findRun(runId)!)).toBeGreaterThan(bottomLimit(page));
+
+  expect(edit(store, runId, "Line one\n")).toBe(false);
+  expect(edit(store, runId, "Line one\nLine two")).toBe(true);
+
+  const next = store.document!.page(1);
+  expect(page.findRun(runId)!.text).toBe("Line one");
+  expect(next.runs.map((r) => r.text)).toEqual(["Line two"]);
+  const moved = next.runs[0];
+  expect(moved.fontSize).toBe(page.findRun(runId)!.fontSize);
+  expect(moved.bounds.y).toBeGreaterThan(next.height / 2);
+
+  store.undo();
+  expect(page.findRun(runId)!.text).toBe("Line one\nLine two");
+  expect(store.document!.page(1).runs).toHaveLength(0);
+});
+
+test("text carried onto the next page keeps its font, alignment and underline", async () => {
+  const { store, runId } = await typedNearBottom();
+  store.dispatch(
+    new SetFontFamilyCommand({
+      pageIndex: 0,
+      runId,
+      nextFamily: "Times-Bold",
+    }),
+  );
+  store.dispatch(
+    new SetParagraphFormatCommand({
+      pageIndex: 0,
+      runIds: [runId],
+      align: "center",
+      underline: true,
+    }),
+  );
+
+  expect(edit(store, runId, "Line one\nLine two")).toBe(true);
+
+  const next = store.document!.page(1);
+  const moved = next.runs[0];
+  expect([moved.fontId, moved.align, moved.underline]).toEqual([
+    "base14:Times-Bold",
+    "center",
+    true,
+  ]);
+  expect(next.underlines.get(moved.id)).toHaveLength(1);
+});
+
+test("text the page already drew below the margin stays put", async () => {
+  const store = await storeWith(await twoBlankPages());
+  ensurePageRead(store, 1);
+  const insert = new InsertTextCommand({
+    pageIndex: 0,
+    x: 40,
+    y: 20,
+    text: "Footer",
+  });
+  store.dispatch(insert);
+  const runId = insert.insertedRunId!;
+  expect(edit(store, runId, "Footer\nPage 1")).toBe(false);
+  expect(store.document!.page(1).runs).toHaveLength(0);
+});
+
+test("text flowing to a page with another origin keeps its distance from the left edge", async () => {
+  const doc = await PDFDocument.create();
+  doc.addPage([400, 300]).setMediaBox(100, 100, 400, 300);
+  doc.addPage([400, 300]);
+  const store = await storeWith(await doc.save());
+  ensurePageRead(store, 1);
+  const insert = new InsertTextCommand({
+    pageIndex: 0,
+    x: 140,
+    y: 150,
+    text: "Line one",
+  });
+  store.dispatch(insert);
+  const runId = insert.insertedRunId!;
+  const run = store.document!.page(0).findRun(runId)!;
+  const before = runBottom(run);
+  store.dispatch(
+    new EditTextCommand({
+      pageIndex: 0,
+      runId,
+      nextText: "Line one\nLine two",
+    }),
+  );
+  expect(flowPastBottom(store, 0, runId, before)).toBe(true);
+  const [moved] = store.document!.page(1).runs;
+  expect(moved.bounds.x).toBeCloseTo(run.bounds.x - 100, 0);
+});
+
+test("text never flows onto a turned page, which would show it sideways", async () => {
+  const doc = await PDFDocument.create();
+  doc.addPage([400, 300]);
+  doc.addPage([400, 300]).setRotation(degrees(90));
+  const store = await storeWith(await doc.save());
+  ensurePageRead(store, 1);
+  const insert = new InsertTextCommand({
+    pageIndex: 0,
+    x: 40,
+    y: 50,
+    text: "Line one",
+  });
+  store.dispatch(insert);
+  const runId = insert.insertedRunId!;
+  const before = runBottom(store.document!.page(0).findRun(runId)!);
+  store.dispatch(
+    new EditTextCommand({
+      pageIndex: 0,
+      runId,
+      nextText: "Line one\nLine two",
+    }),
+  );
+  expect(flowPastBottom(store, 0, runId, before)).toBe(true);
+  expect(store.document!.page(1).runs).toHaveLength(0);
+});

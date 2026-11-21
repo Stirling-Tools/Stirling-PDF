@@ -299,7 +299,7 @@ async function fitInlineWithSlack(page: Page, slack: number) {
   const spare = await page.evaluate(() => {
     const band = document.querySelector(".pdf-editor-topbar__band")!;
     const last = document.querySelector(
-      '[data-testid="pdf-editor-change-case"]',
+      '[data-testid="pdf-editor-line-spacing"]',
     )!;
     return Math.floor(
       band.getBoundingClientRect().right - last.getBoundingClientRect().right,

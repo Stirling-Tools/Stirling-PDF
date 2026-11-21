@@ -57,6 +57,14 @@ export class Page {
    * drawing one that cannot be lifted faithfully (see claimFormNodes).
    */
   formNodes: Map<number, FormNode> | null = null;
+  /** Runs given an alignment or underline this session, which the format sync keeps laid out. */
+  readonly paragraphFormats = new Set<string>();
+  /** The rules drawn as each run's underline, by run id. */
+  readonly underlines = new Map<string, number[]>();
+  /** Each formatted run's layout when it was last laid out, by run id. */
+  readonly formatSignatures = new Map<string, string>();
+  /** Each formatted run's text and line left edges when it was last laid out, by run id. */
+  readonly formatLayouts = new Map<string, { text: string; lefts: number[] }>();
   // Consecutive bounded edits, oldest first: each changed nothing outside its area.
   private repaints: Array<{ from: number; to: number; area: PageRect }> = [];
 
@@ -86,6 +94,18 @@ export class Page {
     this.needsGenerateContent = false;
     this.regenerated = false;
     this.shownInViewer = false;
+  }
+
+  /**
+   * Drop the alignment, underline and list layouts kept for runs, whose ids a
+   * re-read hands to whatever text it finds: the underlines stay on the page
+   * as drawn rules and the lines where they were laid out.
+   */
+  forgetParagraphFormats(): void {
+    this.paragraphFormats.clear();
+    this.underlines.clear();
+    this.formatSignatures.clear();
+    this.formatLayouts.clear();
   }
 
   setRuns(runs: TextRun[]): void {

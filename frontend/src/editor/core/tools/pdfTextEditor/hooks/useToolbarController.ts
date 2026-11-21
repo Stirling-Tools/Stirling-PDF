@@ -39,14 +39,16 @@ import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/Composite
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
 import { SetLockCommand } from "@editor/tools/pdfTextEditor/commands/SetLockCommand";
-import { AlignParagraphLinesCommand } from "@editor/tools/pdfTextEditor/commands/AlignParagraphLinesCommand";
 import {
   TransformImageObjectCommand,
   type ImageTransformMode,
 } from "@editor/tools/pdfTextEditor/commands/TransformImageObjectCommand";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import type {
+  SelectionState,
+  TextRunSnapshot,
+} from "@editor/tools/pdfTextEditor/types";
 import {
   isExternalImageEditSupported,
   startExternalImageEdit,
@@ -58,6 +60,20 @@ import {
   pickImageFile,
 } from "@editor/tools/pdfTextEditor/util/imagePicking";
 import { readImageObjectPixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
+import { flowingSelection } from "@editor/tools/pdfTextEditor/util/pageFlow";
+import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { ReshapeCommand } from "@editor/tools/pdfTextEditor/commands/shapeCommands";
+import {
+  parseCssColor,
+  toCssHex,
+} from "@editor/tools/pdfTextEditor/model/Color";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import {
+  formatsUpright,
+  SetParagraphFormatCommand,
+  TEXT_STYLES,
+  type TextStyleName,
+} from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 
 type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
@@ -76,9 +92,7 @@ function useHistoryFlags(store: EditorStore): {
     [store],
   );
   const read = useCallback(
-    () =>
-      (store.history.canUndo ? CAN_UNDO : 0) |
-      (store.history.canRedo ? CAN_REDO : 0),
+    () => (store.canUndo ? CAN_UNDO : 0) | (store.canRedo ? CAN_REDO : 0),
     [store],
   );
   const flags = useSyncExternalStore(subscribe, read, read);
@@ -184,15 +198,14 @@ export function useToolbarController(
         for (const p of doc.loadedPages()) {
           const run = p.runs.find((r) => r.id === runId);
           if (!run) continue;
-          if (AlignParagraphLinesCommand.canAlign(run)) {
+          if (run.paragraphLineSlots.length >= 2)
             store.dispatch(
-              new AlignParagraphLinesCommand({
+              new SetParagraphFormatCommand({
                 pageIndex: p.index,
-                runId,
-                mode,
+                runIds: [runId],
+                align: mode === "center-h" ? "center" : mode,
               }),
             );
-          }
           return;
         }
       }
@@ -518,10 +531,102 @@ export function useToolbarController(
     const run = state.pages
       .flatMap((p) => p.runs)
       .find((r) => r.id === selection.runIds[0]);
-    // Mirrors AlignParagraphLinesCommand.canAlign, which gates on SLOTS: line
-    // count enabled the item for paragraphs the command then refused.
+    // Gates on slots, as onAlign does: line count enabled the item for
+    // paragraphs it then refused.
     return !!run && (run.paragraphSlotCount ?? 0) >= 2 && !run.textReadOnly;
   }, [state.pages, selection]);
+
+  const paragraph = useMemo(() => {
+    const ids = new Set(selection.runIds);
+    const rotateOf = new Map(
+      state.pages.map((p) => [p.pageIndex, p.display?.rotate ?? 0]),
+    );
+    const runs = state.pages
+      .flatMap((p) => p.runs)
+      .filter((r) => ids.has(r.id));
+    const first = runs[0];
+    const canFormat =
+      runs.length > 0 &&
+      runs.every((r) => formatsUpright(r, rotateOf.get(r.pageIndex) ?? 0));
+    const same = <T>(read: (r: TextRunSnapshot) => T) =>
+      first && runs.every((r) => read(r) === read(first)) ? read(first) : null;
+    const multiLine = runs.some((r) => (r.paragraphSlotCount ?? 0) >= 2);
+    const spacing = same((r) =>
+      r.fontSize > 0 && (r.paragraphLineHeight ?? 0) > 0
+        ? Math.round(((r.paragraphLineHeight ?? 0) / r.fontSize) * 100) / 100
+        : null,
+    );
+    return {
+      align: same((r) => r.align ?? null),
+      underline: runs.length > 0 && runs.every((r) => r.underline),
+      list: same((r) => r.listKind ?? null),
+      lineSpacing: multiLine ? spacing : null,
+      canSpace: multiLine,
+      canFormat,
+    };
+  }, [state.pages, selection.runIds]);
+
+  const drawnShapes = useMemo(() => {
+    const ids = new Set(selection.shapeIds);
+    return state.pages.flatMap((p) =>
+      p.shapes.flatMap((shape) =>
+        ids.has(shape.id) && shape.drawn
+          ? [{ ...shape, drawn: shape.drawn }]
+          : [],
+      ),
+    );
+  }, [state.pages, selection.shapeIds]);
+
+  const shapeColour = useMemo(() => {
+    const first = drawnShapes[0]?.drawn;
+    const colour =
+      first && (first.kind === "rectangle" ? first.stroke : first.fill);
+    return colour ? toCssHex(colour) : null;
+  }, [drawnShapes]);
+
+  const onSetShapeColour = useCallback(
+    (hex: string) => {
+      const colour = parseCssColor(hex);
+      if (!colour) return;
+      const paint = { ...colour, a: 255 };
+      const commands = drawnShapes.map(
+        (shape) =>
+          new ReshapeCommand({
+            pageIndex: shape.pageIndex,
+            shapeId: shape.id,
+            ...(shape.drawn.kind === "rectangle"
+              ? { stroke: paint }
+              : { fill: paint }),
+          }),
+      );
+      if (commands.length === 1) store.dispatch(commands[0]);
+      else if (commands.length > 1)
+        store.dispatch(new CompositeCommand(commands));
+    },
+    [store, drawnShapes],
+  );
+
+  const onChangeFontSize = useCallback(
+    (size: number) => flowingSelection(store, () => sel.changeFontSize(size)),
+    [store, sel],
+  );
+
+  const onApplyTextStyle = useCallback(
+    (name: TextStyleName) => {
+      const style = TEXT_STYLES[name];
+      const setTag = textA11y.setTag;
+      const tagged = ACCESSIBILITY_EDITING && !!textA11y.tag;
+      let failure: FontPickFailure | null = null;
+      return flowingSelection(store, () =>
+        store.batch(async () => {
+          await sel.changeFontSize(style.size);
+          failure = await sel.setBold(style.bold);
+          if (tagged && store.document?.treatAsTagged()) setTag(style.tag);
+        }),
+      ).then(() => failure);
+    },
+    [store, sel, textA11y.setTag, textA11y.tag],
+  );
 
   const selectionTextReadOnly = useMemo(() => {
     const ids = new Set(selection.runIds);
@@ -588,7 +693,15 @@ export function useToolbarController(
     canRedo: history.canRedo,
     onUndo: () => store.undo(),
     onRedo: () => store.redo(),
-    onChangeFontSize: sel.changeFontSize,
+    paragraph,
+    onApplyTextStyle,
+    shapeColour,
+    onSetShapeColour,
+    onSetAlign: sel.setAlign,
+    onToggleUnderline: sel.toggleUnderline,
+    onSetLineSpacing: sel.setLineSpacing,
+    onToggleList: sel.toggleList,
+    onChangeFontSize,
     onChangeFill: sel.changeFill,
     onChangeOutline: sel.changeOutline,
     onChangeFontFamily: sel.changeFontFamily,
