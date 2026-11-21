@@ -60,8 +60,8 @@ test("lines typed past the bottom margin move to the top of the blank page after
   const page = store.document!.page(0);
   expect(runBottom(page.findRun(runId)!)).toBeGreaterThan(bottomLimit(page));
 
-  expect(edit(store, runId, "Line one\n")).toBe(false);
-  expect(edit(store, runId, "Line one\nLine two")).toBe(true);
+  expect(edit(store, runId, "Line one\n")).toBe("none");
+  expect(edit(store, runId, "Line one\nLine two")).toBe("moved");
 
   const next = store.document!.page(1);
   expect(page.findRun(runId)!.text).toBe("Line one");
@@ -93,7 +93,7 @@ test("text carried onto the next page keeps its font, alignment and underline", 
     }),
   );
 
-  expect(edit(store, runId, "Line one\nLine two")).toBe(true);
+  expect(edit(store, runId, "Line one\nLine two")).toBe("moved");
 
   const next = store.document!.page(1);
   const moved = next.runs[0];
@@ -116,7 +116,7 @@ test("text the page already drew below the margin stays put", async () => {
   });
   store.dispatch(insert);
   const runId = insert.insertedRunId!;
-  expect(edit(store, runId, "Footer\nPage 1")).toBe(false);
+  expect(edit(store, runId, "Footer\nPage 1")).toBe("none");
   expect(store.document!.page(1).runs).toHaveLength(0);
 });
 
@@ -143,7 +143,7 @@ test("text flowing to a page with another origin keeps its distance from the lef
       nextText: "Line one\nLine two",
     }),
   );
-  expect(flowPastBottom(store, 0, runId, before)).toBe(true);
+  expect(flowPastBottom(store, 0, runId, before)).toBe("moved");
   const [moved] = store.document!.page(1).runs;
   expect(moved.bounds.x).toBeCloseTo(run.bounds.x - 100, 0);
 });
@@ -170,6 +170,6 @@ test("text never flows onto a turned page, which would show it sideways", async 
       nextText: "Line one\nLine two",
     }),
   );
-  expect(flowPastBottom(store, 0, runId, before)).toBe(true);
+  expect(flowPastBottom(store, 0, runId, before)).toBe("waiting");
   expect(store.document!.page(1).runs).toHaveLength(0);
 });

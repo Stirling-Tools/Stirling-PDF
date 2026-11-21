@@ -83,6 +83,7 @@ import {
   type DocumentChange,
 } from "@editor/tools/pdfTextEditor/util/documentChanges";
 import { alert } from "@editor/components/toast";
+import type { RestorePoint } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
   captureFormats,
   shiftFormats,
@@ -347,27 +348,30 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     },
     [store, openedFileName, applyToWorkbench, doneSaving],
   );
+  const doSaveRef = useRef(doSave);
+  doSaveRef.current = doSave;
 
   // Which action the risk modal is currently gating.
   const pendingDownloadRef = useRef(false);
 
   const runSave = useCallback(
     async (download: boolean) => {
+      const lineage = store.lineage;
       while (savingRef.current)
         await new Promise<void>((resume) =>
           afterSavingRef.current.push(resume),
         );
       const doc = store.document;
-      if (!doc || store.getState().loading) return;
+      if (!doc || store.getState().loading || store.lineage !== lineage) return;
       const risks = unackedRisks(doc);
       if (risks) {
         pendingDownloadRef.current = download;
         setSaveRisks(risks);
         return;
       }
-      await doSave(download);
+      await doSaveRef.current(download);
     },
-    [store, doSave, unackedRisks],
+    [store, unackedRisks],
   );
 
   // Answers a risk warning raised from the app's unsaved-changes prompt.
@@ -439,6 +443,19 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     ),
   );
 
+  const editsToRedo = useCallback(async (): Promise<Uint8Array | null> => {
+    const doc = store.document;
+    if (!doc || !store.history.canRedo) return null;
+    let redone = 0;
+    while (store.history.canRedo) {
+      store.redo();
+      redone++;
+    }
+    const bytes = new Uint8Array(await (await exportToBlob(doc)).arrayBuffer());
+    for (let i = 0; i < redone; i++) store.undo();
+    return bytes;
+  }, [store]);
+
   // Reopens the document from what `produce` makes of its saved bytes. Pages
   // and form fields live outside the editor's model, so they change in the
   // file; the undo history then starts again, with a restore point that
@@ -450,6 +467,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     ): Promise<boolean> => {
       const doc = store.document;
       if (!doc || savingRef.current || store.getState().loading) return false;
+      await store.settleRedraws();
+      if (store.document !== doc) return false;
       if (kind === "change" && !(await confirmRisks(doc))) return false;
       if (store.document !== doc || savingRef.current) return false;
       const sourceId = sourceFileIdRef.current;
@@ -493,11 +512,25 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         const points = store.takeRestorePoints();
         const loading = load(stored);
         const token = store.currentLoadToken;
-        store.carryFormatsInto(
-          token,
-          shiftFormats(formats, changed.pageShift ?? null),
-        );
-        await loading;
+        const carried = shiftFormats(formats, changed.pageShift ?? null);
+        for (const [index, list] of changed.restoredFormats ?? [])
+          carried.set(index, list);
+        store.carryFormatsInto(token, carried);
+        const installed = await loading;
+        if (
+          !installed &&
+          store.isCurrentLoad(token) &&
+          store.document === doc
+        ) {
+          store.clearDocument();
+          store.setError(
+            t(
+              "pdfTextEditor.pages.reopenFailed",
+              "The changed PDF was saved but couldn't be opened again. Open it from the file list to keep editing.",
+            ),
+          );
+          return false;
+        }
         if (
           !mountedRef.current ||
           !store.isCurrentLoad(token) ||
@@ -510,23 +543,47 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         store.putRestorePoints(points);
         if (kind === "change") store.dropRedoPoints();
         pinWorkbench();
-        scrollActions.scrollToPage(changed.focusPage + 1);
+        scrollActions.scrollToPage(
+          Math.min(changed.focusPage, store.document.pageCount - 1) + 1,
+        );
         if (kind !== "undo") {
           if (before.length <= MAX_RESTORE_BYTES) {
             const focusPage = changed.focusPage;
-            store.pushRestorePoint({
-              undo: () =>
-                reopenWithRef.current(
+            const shift = changed.pageShift ?? null;
+            const deleted = shift && "deleted" in shift ? shift.deleted : null;
+            const deletedPageFormats = new Map(
+              deleted !== null && formats.has(deleted)
+                ? [[deleted, formats.get(deleted)!]]
+                : [],
+            );
+            const point: RestorePoint = {
+              undo: async () => {
+                const redone = await editsToRedo();
+                if (redone)
+                  point.redo = () =>
+                    reopenWithRef.current(
+                      async () => ({
+                        bytes: redone,
+                        focusPage,
+                        pageShift: changed.pageShift,
+                      }),
+                      "redo",
+                    );
+                return reopenWithRef.current(
                   async () => ({
                     bytes: before,
                     focusPage,
                     pageShift: undoneShift(changed.pageShift ?? null),
+                    restoredFormats: deletedPageFormats,
                   }),
                   "undo",
-                ),
+                );
+              },
               redo: () => reopenWithRef.current(produce, "redo"),
-            });
-          } else
+            };
+            store.pushRestorePoint(point);
+          } else {
+            store.putRestorePoints({ undo: [], redo: [] });
             alert({
               alertType: "warning",
               title: t(
@@ -535,6 +592,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
               ),
               expandable: false,
             });
+          }
         }
         return true;
       } catch (err) {
@@ -569,8 +627,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       scrollActions,
       doneSaving,
       confirmRisks,
+      editsToRedo,
     ],
   );
+
   const reopenWithRef = useRef(reopenWith);
   reopenWithRef.current = reopenWith;
 

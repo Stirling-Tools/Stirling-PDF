@@ -2,6 +2,7 @@ export type ListKind = "bullet" | "number";
 
 const BULLET = "• ";
 const LIST_MARKER = /^(?:• |\d+\. )/;
+const MARKER_AT_LINE_START = /^(?:• |\d+\. )/m;
 
 export function listIndentFor(
   text: string,
@@ -15,8 +16,12 @@ export function listIndentFor(
 }
 
 /** False for text whose first line carries no list marker, which is most text: the full check walks every line. */
+export function startsWithListMarker(line: string): boolean {
+  return LIST_MARKER.test(line);
+}
+
 export function mayBeList(text: string): boolean {
-  return LIST_MARKER.test(text);
+  return MARKER_AT_LINE_START.test(text);
 }
 
 /** The list the run's every paragraph is marked as, or null when they are not all marked alike. */
@@ -163,11 +168,9 @@ export function continueList(
   });
   if (number !== null)
     for (let i = newLine + 1, n = number + 1; i < after.length; i++) {
+      if (softStarts[i - 1]) continue;
       const old = after[i].match(/^\d+\. /);
-      if (!old) {
-        if (softStarts[i - 1]) continue;
-        break;
-      }
+      if (!old) break;
       const renumbered = `${n++}. `;
       if (old[0] !== renumbered)
         splices.push({

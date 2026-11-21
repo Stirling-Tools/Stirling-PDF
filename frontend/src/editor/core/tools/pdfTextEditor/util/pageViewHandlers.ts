@@ -2,6 +2,7 @@ import {
   fieldKindOf,
   shapeKindOf,
 } from "@editor/tools/pdfTextEditor/store/insertModes";
+import { FIELD_SIZES } from "@editor/tools/pdfTextEditor/util/formFieldChanges";
 import { continueList } from "@editor/tools/pdfTextEditor/util/listText";
 import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import {
@@ -105,7 +106,7 @@ function createHandlers(store: EditorStore) {
       // through this same path; set in the model alone, the next keystroke
       // would write the box's text back over it. A line that flowed to the
       // next page is no longer in this box.
-      if (list && !flowed) editFocusedRun(runId, list, nextText);
+      if (list && flowed !== "moved") editFocusedRun(runId, list, nextText);
       const doc = store.document;
       const run = doc?.page(pageIndex).findRun(runId);
       if (doc && run && scanBlockOffInk(doc, run))
@@ -191,12 +192,18 @@ function createHandlers(store: EditorStore) {
       const fieldKind = fieldKindOf(mode);
       if (fieldKind) {
         store.setMode("select");
+        const { width, height } = FIELD_SIZES[fieldKind];
+        const crop = store.document?.page(pageIndex).display;
         void currentEditorSession()?.changeDocument({
           kind: "addField",
           page: pageIndex,
           field: fieldKind,
-          x: pageX,
-          y: pageY,
+          x: crop
+            ? Math.max(crop.cropLeft, Math.min(pageX, crop.cropRight - width))
+            : pageX,
+          y: crop
+            ? Math.min(crop.cropTop, Math.max(pageY, crop.cropBottom + height))
+            : pageY,
         });
         return;
       }

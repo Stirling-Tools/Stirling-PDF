@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { PDFDocument } from "@cantoo/pdf-lib";
 import {
   InsertShapeCommand,
   ReshapeCommand,
@@ -12,7 +13,7 @@ import {
 } from "@editor/tools/pdfTextEditor/__tests__/editorStores";
 
 servePdfiumWasm();
-const { fixture } = editorStores();
+const { fixture, storeWith } = editorStores();
 
 const PATH_OBJECT = 2;
 
@@ -137,4 +138,24 @@ test("a shape placed by the page's corner is kept on the page", async () => {
   const { bounds } = page.shapes.find((s) => s.id === box.insertedShapeId)!;
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(cropRight);
   expect(bounds.y).toBeGreaterThanOrEqual(cropBottom);
+});
+
+test("a shape larger than a small page is made to fit inside it", async () => {
+  const doc = await PDFDocument.create();
+  doc.addPage([100, 80]);
+  const store = await storeWith(await doc.save());
+  const page = store.document!.page(0);
+  const box = new InsertShapeCommand({
+    pageIndex: 0,
+    kind: "box",
+    x: 10,
+    y: 70,
+  });
+  store.dispatch(box);
+
+  const { bounds } = page.shapes.find((s) => s.id === box.insertedShapeId)!;
+  expect(bounds.width).toBeLessThanOrEqual(100);
+  expect(bounds.height).toBeLessThanOrEqual(80);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.display.cropRight);
+  expect(bounds.y).toBeGreaterThanOrEqual(page.display.cropBottom);
 });

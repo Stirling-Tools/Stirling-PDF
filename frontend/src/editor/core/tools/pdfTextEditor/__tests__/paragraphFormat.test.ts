@@ -11,6 +11,7 @@ import {
   listIndentFor,
   toggledListText,
 } from "@editor/tools/pdfTextEditor/util/listText";
+import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
@@ -116,6 +117,41 @@ describe("paragraph format sync", () => {
       para.paragraphLineSlots[0].mergedFromPtrs,
     )!;
     expect(rule.left).toBeCloseTo(line.left + indent, 0);
+  });
+
+  test("recolouring underlined text recolours its underline", async () => {
+    const store = await fixture("paragraph-sample.pdf");
+    const doc = store.document!;
+    const page = doc.page(0);
+    const para = page.runs.find((r) => r.text.startsWith("First line"))!;
+    store.dispatch(
+      new SetParagraphFormatCommand({
+        pageIndex: 0,
+        runIds: [para.id],
+        underline: true,
+      }),
+    );
+    store.dispatch(
+      new SetColourCommand({
+        pageIndex: 0,
+        runId: para.id,
+        nextFill: { r: 200, g: 0, b: 0, a: 255 },
+      }),
+    );
+    const [rule] = page.underlines.get(para.id)!;
+    const red = doc.module.pdfium.wasmExports.malloc(16);
+    try {
+      doc.module.FPDFPageObj_GetFillColor(
+        rule,
+        red,
+        red + 4,
+        red + 8,
+        red + 12,
+      );
+      expect(doc.module.pdfium.getValue(red, "i32")).toBe(200);
+    } finally {
+      doc.module.pdfium.wasmExports.free(red);
+    }
   });
 
   test("underlines every line and removes the rules when turned off", async () => {
@@ -298,7 +334,7 @@ describe("paragraph format sync", () => {
     expect(ink().left).toBeCloseTo(centred, 0);
   });
 
-  test("a regroup keeps the underline drawn and stops tracking the old run ids", async () => {
+  test("a regroup keeps the underline drawn and tracked by the regrouped lines", async () => {
     const store = await fixture("paragraph-sample.pdf");
     const doc = store.document!;
     const page = doc.page(0);
@@ -320,9 +356,10 @@ describe("paragraph format sync", () => {
     };
     const withRules = paths();
 
+    const rules = page.underlines.get(para.id)!.length;
     store.setGroupingMode("line");
-    expect(page.underlines.size).toBe(0);
-    expect(page.paragraphFormats.size).toBe(0);
+    const tracked = [...page.underlines.values()].flat();
+    expect(tracked).toHaveLength(rules);
     expect(paths()).toBe(withRules);
 
     const first = page.runs[0];

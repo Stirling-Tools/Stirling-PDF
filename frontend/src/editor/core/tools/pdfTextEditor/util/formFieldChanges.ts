@@ -59,7 +59,13 @@ function uniqueName(taken: Set<string>, kind: FormFieldKind): string {
 
 function formEnvironment(m: WrappedPdfiumModule, docPtr: number) {
   const info = m.PDFiumExt_OpenFormFillInfo();
-  const handle = m.PDFiumExt_InitFormFillEnvironment(docPtr, info);
+  let handle: number;
+  try {
+    handle = m.PDFiumExt_InitFormFillEnvironment(docPtr, info);
+  } catch (err) {
+    m.PDFiumExt_CloseFormFillInfo(info);
+    throw err;
+  }
   return {
     handle,
     close: () => {

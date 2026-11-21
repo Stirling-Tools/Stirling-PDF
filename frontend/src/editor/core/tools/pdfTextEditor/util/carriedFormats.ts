@@ -17,6 +17,7 @@ interface Box {
 interface CarriedLine {
   text: string;
   baseline: number;
+  x: number;
 }
 
 export interface CarriedFormat {
@@ -30,13 +31,16 @@ export interface CarriedFormat {
 
 export type CarriedFormats = Map<number, CarriedFormat[]>;
 
-export type PageShift = { inserted: number } | { deleted: number } | null;
+export type PageShift =
+  | { inserted: number; copyOf?: number }
+  | { deleted: number }
+  | null;
 
 const NEAR_PT = 2;
 const carried = new WeakMap<EditorDocument, CarriedFormats>();
 
 export function captureFormats(doc: EditorDocument): CarriedFormats {
-  const formats: CarriedFormats = new Map();
+  const formats: CarriedFormats = new Map(carried.get(doc));
   for (const page of doc.loadedPages()) {
     const list: CarriedFormat[] = [];
     for (const runId of page.paragraphFormats) {
@@ -82,6 +86,11 @@ export function shiftFormats(
     const next = shiftedIndex(index, shift);
     if (next !== null) out.set(next, list);
   }
+  const copied =
+    shift && "copyOf" in shift && shift.copyOf !== undefined
+      ? formats.get(shift.copyOf)
+      : undefined;
+  if (copied && shift && "inserted" in shift) out.set(shift.inserted, copied);
   return out;
 }
 
@@ -100,13 +109,23 @@ function sameBox(a: Box, b: Box): boolean {
   );
 }
 
+function distance(a: Box, b: Box): number {
+  return (
+    Math.abs(a.left - b.left) +
+    Math.abs(a.bottom - b.bottom) +
+    Math.abs(a.right - b.right) +
+    Math.abs(a.top - b.top)
+  );
+}
+
 function linesOf(run: TextRun): CarriedLine[] {
   const slots = run.paragraphLineSlots;
   if (slots.length === 0)
-    return [{ text: words(run.text), baseline: run.matrix.f }];
+    return [{ text: words(run.text), baseline: run.matrix.f, x: run.matrix.e }];
   return slots.map((slot) => ({
     text: words(run.text.slice(Math.max(0, slot.startChar), slot.endChar)),
     baseline: slot.baselineY,
+    x: slot.matrixE,
   }));
 }
 
@@ -116,7 +135,8 @@ function sameLines(a: CarriedLine[], b: CarriedLine[]): boolean {
     a.every(
       (line, i) =>
         line.text === b[i].text &&
-        Math.abs(line.baseline - b[i].baseline) < NEAR_PT,
+        Math.abs(line.baseline - b[i].baseline) < NEAR_PT &&
+        Math.abs(line.x - b[i].x) < NEAR_PT,
     )
   );
 }
@@ -144,13 +164,21 @@ function rulesUnder(
       (b) => rule.top <= b + NEAR_PT && rule.top >= b - run.fontSize,
     ),
   );
-  return page.shapes
-    .filter((shape) => {
-      if (taken.has(shape.pdfiumObjPtr)) return false;
-      const box = measureObjBoundsPt(doc.module, [shape.pdfiumObjPtr]);
-      return box !== null && wanted.some((rule) => sameBox(box, rule));
-    })
-    .map((shape) => shape.pdfiumObjPtr);
+  const boxes = page.shapes.flatMap((shape) => {
+    const box = measureObjBoundsPt(doc.module, [shape.pdfiumObjPtr]);
+    return box ? [{ ptr: shape.pdfiumObjPtr, box }] : [];
+  });
+  const matched: number[] = [];
+  for (const rule of wanted) {
+    const best = boxes
+      .filter(
+        ({ ptr, box }) =>
+          !taken.has(ptr) && !matched.includes(ptr) && sameBox(box, rule),
+      )
+      .sort((a, b) => distance(a.box, rule) - distance(b.box, rule))[0];
+    if (best) matched.push(best.ptr);
+  }
+  return matched;
 }
 
 export function restoreCarriedFormats(doc: EditorDocument, page: Page): void {

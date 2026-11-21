@@ -31,3 +31,27 @@ test("signed documents still count their signatures", async () => {
   expect(signedSignatureCount(await open("signature-one.pdf"))).toBe(1);
   expect(signedSignatureCount(await open("signature-two.pdf"))).toBe(2);
 });
+
+test("a signature that can't be inspected counts as signed", () => {
+  const failing = (module: object) =>
+    ({ module, docPtr: 1 }) as unknown as Parameters<
+      typeof signedSignatureCount
+    >[0];
+  expect(
+    signedSignatureCount(
+      failing({
+        FPDF_GetSignatureCount: () => {
+          throw new Error("unreadable");
+        },
+      }),
+    ),
+  ).toBe(1);
+  expect(
+    signedSignatureCount(
+      failing({
+        FPDF_GetSignatureCount: () => 1,
+        FPDF_GetSignatureObject: () => 0,
+      }),
+    ),
+  ).toBe(1);
+});

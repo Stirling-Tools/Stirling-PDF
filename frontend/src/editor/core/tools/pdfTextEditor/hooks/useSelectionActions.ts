@@ -885,6 +885,7 @@ export function useSelectionActions(store: EditorStore) {
             runIds: [run.id],
             align,
           }),
+        true,
       );
     },
     [dispatchPerRun],
@@ -894,8 +895,9 @@ export function useSelectionActions(store: EditorStore) {
     const live = liveRuns(store);
     const selected = store.selection.value.runIds.flatMap((id) => {
       const run = live.get(id);
-      return run ? [run] : [];
+      return run && !run.locked && !run.textReadOnly ? [run] : [];
     });
+    if (selected.length === 0) return;
     const underline = !selected.every((run) => run.underline);
     void dispatchPerRun(
       (run) =>
@@ -904,6 +906,7 @@ export function useSelectionActions(store: EditorStore) {
           runIds: [run.id],
           underline,
         }),
+      true,
     );
   }, [dispatchPerRun, store]);
 

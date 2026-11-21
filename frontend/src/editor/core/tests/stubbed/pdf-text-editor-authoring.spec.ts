@@ -525,6 +525,8 @@ test.describe("PDF text editor: new text on any page", () => {
 
 interface ShapeState {
   id: string;
+  x: number;
+  top: number;
   width: number;
   height: number;
   fill: { r: number; g: number; b: number } | null;
@@ -539,7 +541,7 @@ function drawnShapes(page: Page): Promise<ShapeState[]> {
             page(index: number): {
               shapes: Array<{
                 id: string;
-                bounds: { width: number; height: number };
+                bounds: { x: number; y: number; width: number; height: number };
                 drawn: {
                   fill: { r: number; g: number; b: number } | null;
                 } | null;
@@ -554,6 +556,8 @@ function drawnShapes(page: Page): Promise<ShapeState[]> {
       .shapes.filter((s) => s.drawn)
       .map((s) => ({
         id: s.id,
+        x: s.bounds.x,
+        top: s.bounds.y + s.bounds.height,
         width: s.bounds.width,
         height: s.bounds.height,
         fill: s.drawn?.fill ?? null,
@@ -570,11 +574,18 @@ test.describe("PDF text editor: shapes", () => {
     await page.getByTestId("pdf-editor-add-shape-box").click();
     await page
       .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 150, y: 330 } });
+      .click({ position: { x: 150, y: 150 } });
 
     await expect.poll(async () => (await drawnShapes(page)).length).toBe(1);
     const [box] = await drawnShapes(page);
     expect([box.width, box.height]).toEqual([160, 100]);
+    const shown = (await page.getByTestId("pdf-editor-page-0").boundingBox())!;
+    const scale = shown.width / (await docShape(page))!.width;
+    expect(box.x).toBeCloseTo(150 / scale, 0);
+    expect(box.top).toBeCloseTo(
+      (await docShape(page))!.height - 150 / scale,
+      0,
+    );
 
     const grip = page.getByTestId(`pdf-editor-shape-resize-${box.id}`);
     await expect(grip).toBeVisible();
@@ -595,7 +606,12 @@ test.describe("PDF text editor: shapes", () => {
       .poll(async () => (await drawnShapes(page))[0].fill?.r)
       .toBe(192);
 
+    const resized = (await drawnShapes(page))[0].width;
     await page.getByTestId("pdf-editor-undo").click();
+    await expect
+      .poll(async () => (await drawnShapes(page))[0].fill)
+      .toEqual(box.fill);
+    expect((await drawnShapes(page))[0].width).toBe(resized);
     await page.getByTestId("pdf-editor-undo").click();
     await expect.poll(async () => (await drawnShapes(page))[0].width).toBe(160);
   });
@@ -622,9 +638,13 @@ interface DocWindow {
       page(index: number): {
         width: number;
         height: number;
-        annotations: Array<{ kind: string }>;
+        annotations: Array<{
+          kind: string;
+          rect: { x: number; y: number; width: number; height: number };
+        }>;
       };
     } | null;
+    history: { mark: number };
   };
 }
 
@@ -719,15 +739,16 @@ test.describe("PDF text editor: pages and form fields", () => {
     await blurPage(page);
 
     const undo = page.getByTestId("pdf-editor-undo");
+    const edits = await page.evaluate(
+      () => (window as unknown as DocWindow).__editor_store.history.mark,
+    );
+    for (let i = 0; i < edits; i++) await undo.click();
+    expect(await pageTexts(page, 0)).not.toContain("After the page");
+    await expect(undo).toBeEnabled();
     await undo.click();
     await expect
-      .poll(async () => (await pageTexts(page, 0)).includes("After the page"))
-      .toBe(false);
-    await expect(async () => {
-      if ((await docShape(page))?.pages === 2 && (await undo.isEnabled()))
-        await undo.click();
-      expect((await docShape(page))?.pages).toBe(1);
-    }).toPass({ timeout: 30_000 });
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(1);
   });
 
   test("Redo makes an undone page change again", async ({ page }) => {
@@ -754,19 +775,47 @@ test.describe("PDF text editor: pages and form fields", () => {
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
     await page.getByTestId("pdf-editor-underline").click();
+    await page.getByTestId("pdf-editor-text-align").click();
+    await page.getByTestId("pdf-editor-text-align-center").click();
+    const formats = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as {
+            __editor_store: {
+              doc: {
+                page(index: number): {
+                  runs: Array<{
+                    id: string;
+                    text: string;
+                    align: string | null;
+                  }>;
+                  underlines: Map<string, number[]>;
+                };
+              };
+            };
+          }
+        ).__editor_store;
+        const first = store.doc.page(0);
+        const lines = first.runs.filter((r) => first.underlines.has(r.id));
+        return {
+          rules: lines.reduce(
+            (n, r) => n + (first.underlines.get(r.id)?.length ?? 0),
+            0,
+          ),
+          aligned: lines.every((r) => r.align === "center"),
+        };
+      });
     await expect
-      .poll(async () => (await runOnPage(page, "^First line")).underlines)
-      .toBe(para.baselines.length);
+      .poll(formats)
+      .toEqual({ rules: para.baselines.length, aligned: true });
 
     await pageAction(page, "pdf-editor-page-add");
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
       .toBe(2);
     await expect
-      .poll(async () => (await runOnPage(page, "^First line")).underlines, {
-        timeout: 15_000,
-      })
-      .toBe(para.baselines.length);
+      .poll(formats, { timeout: 15_000 })
+      .toEqual({ rules: para.baselines.length, aligned: true });
   });
 
   test("Undo puts the page back to the size it was before page setup", async ({
@@ -792,21 +841,18 @@ test.describe("PDF text editor: pages and form fields", () => {
   });
 
   test("page setup turns every page to landscape Letter", async ({ page }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openEditor(page, MANY_PAGES_PDF);
+    const count = (await pageSizes(page)).length;
+    expect(count).toBeGreaterThan(1);
     await pageAction(page, "pdf-editor-page-setup");
     const dialog = page.getByRole("dialog");
     await dialog.getByText("Letter", { exact: true }).click();
     await dialog.getByText("Landscape", { exact: true }).click();
+    await dialog.getByText("All pages", { exact: true }).click();
     await page.getByTestId("pdf-editor-page-setup-apply").click();
     await expect
-      .poll(
-        async () => {
-          const shape = await docShape(page);
-          return shape && [shape.width, shape.height];
-        },
-        { timeout: 30_000 },
-      )
-      .toEqual([792, 612]);
+      .poll(async () => pageSizes(page), { timeout: 30_000 })
+      .toEqual(Array.from({ length: count }, () => [792, 612]));
   });
 
   test("an unsigned signature field does not stop later page changes", async ({
@@ -834,10 +880,22 @@ test.describe("PDF text editor: pages and form fields", () => {
     await page.getByTestId("pdf-editor-add-field-text").click();
     await page
       .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 150, y: 330 } });
+      .click({ position: { x: 150, y: 150 } });
     await expect
       .poll(async () => (await docShape(page))?.widgets, { timeout: 30_000 })
       .toBe(1);
+    const shown = (await page.getByTestId("pdf-editor-page-0").boundingBox())!;
+    const { width, height } = (await docShape(page))!;
+    const scale = shown.width / width;
+    const field = await page.evaluate(
+      () =>
+        (window as unknown as DocWindow).__editor_store
+          .doc!.page(0)
+          .annotations.find((a) => a.kind === "widget")!.rect,
+    );
+    expect([field.width, field.height]).toEqual([180, 22]);
+    expect(field.x).toBeCloseTo(150 / scale, 0);
+    expect(field.y + field.height).toBeCloseTo(height - 150 / scale, 0);
   });
 });
 
@@ -884,17 +942,32 @@ test.describe("PDF text editor: text that reaches the bottom of the page", () =>
     await page.keyboard.type("Line one");
     await page.keyboard.press("Enter");
     await page.keyboard.type("Line two");
-    await page.waitForFunction(
+    await page.evaluate(
       () =>
-        (
-          window as unknown as {
-            __editor_store: { getState(): { reopening: boolean } };
-          }
-        ).__editor_store.getState().reopening,
-      undefined,
-      { polling: "raf", timeout: 15_000 },
+        new Promise<void>((resolve) => {
+          const store = (
+            window as unknown as {
+              __editor_store: {
+                getState(): { reopening: boolean };
+                subscribe(listener: () => void): () => void;
+              };
+            }
+          ).__editor_store;
+          const typeDuringReopen = () => {
+            for (const key of " more")
+              document.body.dispatchEvent(
+                new KeyboardEvent("keydown", { key, bubbles: true }),
+              );
+            resolve();
+          };
+          if (store.getState().reopening) return typeDuringReopen();
+          const stop = store.subscribe(() => {
+            if (!store.getState().reopening) return;
+            stop();
+            typeDuringReopen();
+          });
+        }),
     );
-    await page.keyboard.type(" more");
 
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
@@ -1031,6 +1104,22 @@ test.describe("PDF text editor: saving a written document", () => {
       };
     });
     expect(after).toEqual({ error: null, pages: 2, widgets: 1 });
-    expect(await pageTexts(page, 0)).toContain("Signed off");
+
+    const download = page.waitForEvent("download");
+    await page.getByTestId("pdf-editor-download").click();
+    const saved = await (await download).createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of saved) chunks.push(chunk as Buffer);
+    await openInTextEditor(page, {
+      name: "saved-copy.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.concat(chunks),
+    });
+    await expect
+      .poll(async () => docShape(page), { timeout: 30_000 })
+      .toMatchObject({ pages: 2, widgets: 1 });
+    await expect
+      .poll(async () => pageTexts(page, 0), { timeout: 30_000 })
+      .toContain("Signed off");
   });
 });

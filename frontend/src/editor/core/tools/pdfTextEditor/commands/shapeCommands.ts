@@ -1,6 +1,9 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
-import { pageObjectIndex } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  pageObjectIndex,
+  removeAndDestroyObject,
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
@@ -97,8 +100,10 @@ export class InsertShapeCommand implements Command {
 
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
-    const { width, height, style } = NEW_SHAPES[this.kind];
+    const { style } = NEW_SHAPES[this.kind];
     const { cropLeft, cropBottom, cropRight, cropTop } = page.display;
+    const width = Math.min(NEW_SHAPES[this.kind].width, cropRight - cropLeft);
+    const height = Math.min(NEW_SHAPES[this.kind].height, cropTop - cropBottom);
     const bounds = {
       x: Math.max(cropLeft, Math.min(this.x, cropRight - width)),
       y: Math.max(cropBottom, Math.min(this.y - height, cropTop - height)),
@@ -126,7 +131,7 @@ export class InsertShapeCommand implements Command {
     const shape = this.shape;
     if (!shape) return;
     const page = doc.page(this.pageIndex);
-    doc.module.FPDFPage_RemoveObject(page.pagePtr, shape.pdfiumObjPtr);
+    removeAndDestroyObject(doc.module, page.pagePtr, shape.pdfiumObjPtr);
     page.setShapes(page.shapes.filter((s) => s.id !== shape.id));
     page.markDirty();
     page.markNeedsGenerate();
@@ -211,7 +216,7 @@ export class ReshapeCommand implements Command {
     if (!shape) return;
     const m = doc.module;
     const index = pageObjectIndex(m, page.pagePtr, this.nextPtr);
-    m.FPDFPage_RemoveObject(page.pagePtr, this.nextPtr);
+    removeAndDestroyObject(m, page.pagePtr, this.nextPtr);
     insertPageObjectAt(m, page.pagePtr, prev.ptr, index);
     shape.pdfiumObjPtr = prev.ptr;
     shape.bounds = prev.bounds;

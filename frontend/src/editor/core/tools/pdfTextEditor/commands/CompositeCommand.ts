@@ -20,7 +20,11 @@ export class CompositeCommand implements Command {
   }
 
   includes(cmd: Command): boolean {
-    return this.commands.includes(cmd);
+    return this.commands.some(
+      (child) =>
+        child === cmd ||
+        (child instanceof CompositeCommand && child.includes(cmd)),
+    );
   }
 
   /** The most recent child - used to derive the group's coalesce key. */

@@ -522,7 +522,7 @@ export const PageView = memo(function PageView({
             onSelect={(extend) => onSelectShape(shape.id, extend)}
             onMove={(dx, dy) => onMoveShape?.(page.pageIndex, shape.id, dx, dy)}
             onResize={
-              onReshape
+              onReshape && !placing
                 ? (bounds) => onReshape(page.pageIndex, shape.id, bounds)
                 : undefined
             }

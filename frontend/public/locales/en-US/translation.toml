@@ -7986,9 +7986,6 @@ tapToPlace = "Tap the page where the text should go"
 tapToPlaceShape = "Tap the page where it should go"
 unlock = "Unlock"
 
-[pdfTextEditor.pageView]
-renderFailed = "Failed to render page"
-
 [pdfTextEditor.pages]
 add = "Add a page after this one"
 allPages = "All pages"
@@ -8003,6 +8000,7 @@ menu = "Pages"
 orientation = "Orientation"
 portrait = "Portrait"
 protected = "Pages and form fields can't be changed in a signed, encrypted or XFA PDF."
+reopenFailed = "The changed PDF was saved but couldn't be opened again. Open it from the file list to keep editing."
 setup = "Page size and orientation…"
 setupSubtitle = "Content keeps its place from the top of the page."
 setupTitle = "Page setup"
@@ -8013,7 +8011,11 @@ sizeLegal = "Legal"
 sizeLetter = "Letter"
 thisPage = "This page"
 tooLargeToUndo = "This PDF is too large to keep a copy for Undo, so this change can't be undone."
+typingNotPlaced = "Some text typed while the page was being added couldn't be placed: {{text}}"
 updating = "Updating the PDF…"
+
+[pdfTextEditor.pageView]
+renderFailed = "Failed to render page"
 
 [pdfTextEditor.password]
 incorrect = "Incorrect password - try again."

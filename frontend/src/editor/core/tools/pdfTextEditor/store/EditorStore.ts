@@ -52,6 +52,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { SyncParagraphFormatCommand } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 import {
+  captureFormats,
   carryFormats,
   type CarriedFormats,
 } from "@editor/tools/pdfTextEditor/util/carriedFormats";
@@ -179,6 +180,8 @@ export class EditorStore {
   readonly history: HistoryStack;
   private restorePoints: RestorePoint[] = [];
   private redoPoints: RestorePoint[] = [];
+  private readonly pendingRedraws = new Set<Promise<void>>();
+  private lineageId = 0;
   private carry: { token: number; formats: CarriedFormats } | null = null;
   private batching = 0;
   readonly selection: Selection;
@@ -342,6 +345,7 @@ export class EditorStore {
     // and is cleared.
     const wasDirty = this.isDirty();
     // Flushes first: the rebuilt runs must reflect the user's current edits.
+    carryFormats(doc, captureFormats(doc));
     this.repopulateAllPages(doc, mode);
     this.history.clear();
     // The edits since the last page change are baked in now; going back past
@@ -387,9 +391,15 @@ export class EditorStore {
     this.carry = { token, formats };
   }
 
+  /** Changes when a different file opens, but not when a page or field change reopens the same one. */
+  get lineage(): number {
+    return this.lineageId;
+  }
+
   async setDocument(doc: EditorDocument): Promise<void> {
     if (this.carry?.token === this.loadToken)
       carryFormats(doc, this.carry.formats);
+    else this.lineageId++;
     this.carry = null;
     this.restorePoints = [];
     this.redoPoints = [];
@@ -422,6 +432,7 @@ export class EditorStore {
   clearDocument(): void {
     this.loadToken++;
     this.disposeDocumentIfAny();
+    this.forgetRestoreData();
     resetCharcodeCaches();
     this.history.clear();
     this.savedTop = null;
@@ -508,6 +519,7 @@ export class EditorStore {
   recordApplied(cmd: Command): void {
     if (!this.doc) return;
     this.history.record(cmd);
+    this.dropRedoPoints();
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
   }
@@ -584,7 +596,11 @@ export class EditorStore {
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
     const undrawn = takeUndrawnScriptText();
-    if (undrawn) void this.redrawOnceScriptFontsLoad(cmd, undrawn);
+    if (undrawn) {
+      const redraw = this.redrawOnceScriptFontsLoad(cmd, undrawn);
+      this.pendingRedraws.add(redraw);
+      void redraw.finally(() => this.pendingRedraws.delete(redraw));
+    }
   }
 
   /** Lays out runs an edit put out of their alignment or underline, inside the edit's undo step; true when any moved. */
@@ -614,7 +630,8 @@ export class EditorStore {
   ): Promise<void> {
     const doc = this.doc;
     await loadScriptScanFaces(scanScriptsOf(undrawn)).catch(() => undefined);
-    if (this.doc !== doc || !doc || this.state.loading) return;
+    if (this.doc !== doc || !doc || this.state.loading || this.state.reopening)
+      return;
     const drawable = [...undrawn]
       .filter((ch) => /\S/.test(ch) && scriptFacesCover(ch))
       .join("");
@@ -736,6 +753,11 @@ export class EditorStore {
     return this.history.canUndo || this.restorePoints.length > 0;
   }
 
+  /** Resolves once text waiting on a script font has been redrawn or given up on. */
+  settleRedraws(): Promise<void> {
+    return Promise.all(this.pendingRedraws).then(() => undefined);
+  }
+
   get canRedo(): boolean {
     return this.history.canRedo || this.redoPoints.length > 0;
   }
@@ -839,6 +861,7 @@ export class EditorStore {
       });
       return;
     }
+    carryFormats(doc, captureFormats(doc));
     this.repopulateAllPages(doc, this.state.groupingMode);
     // Rebuilt runs get fresh ids, so no existing history entry can apply.
     this.history.clear();
@@ -953,7 +976,14 @@ export class EditorStore {
   dispose(): void {
     this.loadToken++;
     this.disposeDocumentIfAny();
+    this.forgetRestoreData();
     this.listeners.clear();
+  }
+
+  private forgetRestoreData(): void {
+    this.restorePoints = [];
+    this.redoPoints = [];
+    this.carry = null;
   }
 }
 

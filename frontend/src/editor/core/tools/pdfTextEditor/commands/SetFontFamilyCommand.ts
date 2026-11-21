@@ -258,10 +258,8 @@ export class SetFontFamilyCommand implements Command {
   private newlyDropped(doc: EditorDocument, dropped: string[]): string[] {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run) return dropped;
-    const family = isDocumentFontId(run.fontId)
-      ? run.fontId
-      : familyOf(run.fontId);
+    if (!run || isDocumentFontId(run.fontId)) return dropped;
+    const family = familyOf(run.fontId);
     if (family === this.nextFamily) return dropped;
     const current = new SetFontFamilyCommand({
       pageIndex: this.pageIndex,

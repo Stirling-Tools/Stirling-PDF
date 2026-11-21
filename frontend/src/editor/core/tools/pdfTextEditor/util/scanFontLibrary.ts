@@ -600,6 +600,7 @@ async function loadBundledScript(script: ScriptFonts): Promise<boolean> {
   const spec = BUNDLED_SCAN_FONTS.find((f) => f.family === script.bundled);
   if (!spec) return false;
   if (scriptFaces.some((face) => face.family === spec.family)) return true;
+  const started = serverFontsGeneration();
   const face = await loadFace(
     {
       label: spec.label,
@@ -609,7 +610,7 @@ async function loadBundledScript(script: ScriptFonts): Promise<boolean> {
     },
     bundledFontBytes(spec),
   );
-  if (face === null) return false;
+  if (started !== serverFontsGeneration() || face === null) return false;
   if (face === "unusable") return true;
   if (!scriptFaces.some((f) => f.family === face.family)) {
     scriptFaces = [...scriptFaces, face];

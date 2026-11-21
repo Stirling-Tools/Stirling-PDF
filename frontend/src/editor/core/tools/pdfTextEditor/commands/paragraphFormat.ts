@@ -1,6 +1,6 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { Affine } from "@editor/tools/pdfTextEditor/types";
-import { mayBeList } from "@editor/tools/pdfTextEditor/util/listText";
+import { startsWithListMarker } from "@editor/tools/pdfTextEditor/util/listText";
 import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
@@ -79,7 +79,7 @@ function startsListItem(run: TextRun, line: LineBox): boolean {
   if (run.listIndent <= 0) return false;
   const slot = line.slot === null ? null : run.paragraphLineSlots[line.slot];
   const text = slot ? run.text.slice(Math.max(0, slot.startChar)) : run.text;
-  return mayBeList(text);
+  return startsWithListMarker(text);
 }
 
 // The measure the run's lines align within: the box the user set, else the
@@ -110,7 +110,8 @@ function signatureOf(m: WrappedPdfiumModule, run: TextRun): string {
         `${l.left.toFixed(2)},${l.right.toFixed(2)},${l.baseline.toFixed(2)}`,
     )
     .join(";");
-  return `${run.align ?? ""}|${run.listIndent}|${run.underline ? "u" : ""}|${run.text}|${lines}`;
+  const { r, g, b, a } = run.fill;
+  return `${run.align ?? ""}|${run.listIndent}|${run.underline ? "u" : ""}|${r},${g},${b},${a}|${run.text}|${lines}`;
 }
 
 /** Set how a run's lines align and whether they are underlined; the page's format sync then lays them out. */

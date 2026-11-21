@@ -619,7 +619,9 @@ export function useToolbarController(
       let failure: FontPickFailure | null = null;
       return flowingSelection(store, () =>
         store.batch(async () => {
+          const selection = store.selection.value;
           await sel.changeFontSize(style.size);
+          store.selection.set(selection);
           failure = await sel.setBold(style.bold);
           if (tagged && store.document?.treatAsTagged()) setTag(style.tag);
         }),

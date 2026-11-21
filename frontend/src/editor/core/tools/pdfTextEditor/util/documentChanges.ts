@@ -22,7 +22,10 @@ import {
   withPage,
 } from "@editor/tools/pdfTextEditor/util/pdfiumCopy";
 import { PAGE_SIZES } from "@editor/constants/pageSizeConstants";
-import type { PageShift } from "@editor/tools/pdfTextEditor/util/carriedFormats";
+import type {
+  CarriedFormats,
+  PageShift,
+} from "@editor/tools/pdfTextEditor/util/carriedFormats";
 
 export type PageSizeName = keyof typeof PAGE_SIZES;
 export type PageOrientation = "portrait" | "landscape";
@@ -49,6 +52,7 @@ export type DocumentChange =
 export interface ChangedDocument {
   bytes: Uint8Array;
   pageShift?: PageShift;
+  restoredFormats?: CarriedFormats;
   /** The page the change is about, to show once the document reloads. */
   focusPage: number;
 }
@@ -173,7 +177,8 @@ async function makeChange(
 
 function pageShiftOf(change: DocumentChange): PageShift {
   if (change.kind === "addPage") return { inserted: change.after + 1 };
-  if (change.kind === "duplicatePage") return { inserted: change.page + 1 };
+  if (change.kind === "duplicatePage")
+    return { inserted: change.page + 1, copyOf: change.page };
   if (change.kind === "deletePage") return { deleted: change.page };
   return null;
 }

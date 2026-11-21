@@ -106,9 +106,9 @@ describe("detectSaveRisks", () => {
     expect(line).toContain("(+3 more)");
   });
 
-  it("clamps negative signature counts and survives a missing API", () => {
-    expect(detectSaveRisks(mkDoc({ signatures: -1 })).signatures).toBe(0);
-    expect(detectSaveRisks(mkDoc({ throwOnSig: true })).signatures).toBe(0);
+  it("treats a signature count it cannot read as signed", () => {
+    expect(detectSaveRisks(mkDoc({ signatures: -1 })).signatures).toBe(1);
+    expect(detectSaveRisks(mkDoc({ throwOnSig: true })).signatures).toBe(1);
   });
 
   it("combines both risks", () => {

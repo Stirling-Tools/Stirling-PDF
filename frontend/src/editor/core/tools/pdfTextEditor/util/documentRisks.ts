@@ -13,22 +13,29 @@ export interface SaveRisks {
 
 /**
  * Signatures that sign something. PDFium also counts a signature field no one
- * has signed yet, which has nothing to keep verifiable.
+ * has signed yet, which has nothing to keep verifiable. One that cannot be
+ * read is counted as signed, so a failed inspection never unlocks a signed file.
  */
 export function signedSignatureCount(doc: EditorDocument): number {
   const m = doc.module;
+  let count: number;
   try {
-    const count = m.FPDF_GetSignatureCount(doc.docPtr);
-    let signed = 0;
-    for (let i = 0; i < count; i++) {
-      const signature = m.FPDF_GetSignatureObject(doc.docPtr, i);
-      if (signature && m.FPDFSignatureObj_GetContents(signature, 0, 0) > 0)
-        signed++;
-    }
-    return signed;
+    count = m.FPDF_GetSignatureCount(doc.docPtr);
   } catch {
-    return 0;
+    return 1;
   }
+  if (count < 0) return 1;
+  let signed = 0;
+  for (let i = 0; i < count; i++) {
+    try {
+      const signature = m.FPDF_GetSignatureObject(doc.docPtr, i);
+      if (!signature || m.FPDFSignatureObj_GetContents(signature, 0, 0) !== 0)
+        signed++;
+    } catch {
+      signed++;
+    }
+  }
+  return signed;
 }
 
 /** True when changing pages or form fields would break a signature, the encryption or an XFA form. */

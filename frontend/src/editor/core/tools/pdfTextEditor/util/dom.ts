@@ -112,6 +112,9 @@ export function holdKeystrokes(): () => string {
   let typed = "";
   const onKey = (e: KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const target = e.target instanceof HTMLElement ? e.target : null;
+    if (target && target !== document.body && !target.closest("[data-run-id]"))
+      return;
     if (e.key.length === 1) typed += e.key;
     else if (e.key === "Enter") typed += "\n";
     else if (e.key === "Backspace") typed = typed.slice(0, -1);

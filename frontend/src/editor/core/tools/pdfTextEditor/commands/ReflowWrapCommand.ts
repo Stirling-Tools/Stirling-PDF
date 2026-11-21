@@ -101,7 +101,7 @@ export class ReflowWrapCommand implements Command {
   private moves: Array<{ ptr: number; dx: number; dy: number }> = [];
   private prev: RunSnapshot | null = null;
   private textWrap: {
-    edit: EditTextCommand;
+    edit: EditTextCommand | null;
     wrapWidthPt: number | null;
   } | null = null;
   // The runs below the lines this reflow added or removed moved, chosen on the first apply so a redo moves the same ones.
@@ -422,23 +422,38 @@ export class ReflowWrapCommand implements Command {
         joinSoftLines(run.text, softStartsOf(run), fits),
         fits,
       );
-      if (wrapped === run.text) return;
+      if (wrapped === run.text && !this.explicit) return;
       this.textWrap = {
-        edit: new EditTextCommand({
-          pageIndex: this.pageIndex,
-          runId: this.runId,
-          nextText: wrapped,
-        }),
+        edit:
+          wrapped === run.text
+            ? null
+            : new EditTextCommand({
+                pageIndex: this.pageIndex,
+                runId: this.runId,
+                nextText: wrapped,
+              }),
         wrapWidthPt: run.wrapWidthPt,
       };
     }
-    this.textWrap.edit.apply(doc);
+    const before = snapshotRun(run);
+    this.textWrap.edit?.apply(doc);
+    if (this.keepClearBelow && this.textWrap.edit) {
+      this.prev = before;
+      const blocked = this.landsOnUnmoved(page, run);
+      this.prev = null;
+      if (blocked) {
+        this.textWrap.edit.revert(doc);
+        this.textWrap = null;
+        this.refused = true;
+        return;
+      }
+    }
     if (this.explicit) run.wrapWidthPt = maxWidth;
   }
 
   revert(doc: EditorDocument): void {
     if (this.textWrap) {
-      this.textWrap.edit.revert(doc);
+      this.textWrap.edit?.revert(doc);
       const run = doc.page(this.pageIndex).findRun(this.runId);
       if (run) run.wrapWidthPt = this.textWrap.wrapWidthPt;
       return;
