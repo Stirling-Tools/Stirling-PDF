@@ -6,7 +6,8 @@
       "@editor/*": [
         "./src/editor/cloud/*",
         "./src/editor/proprietary/*",
-        "./src/editor/core/*"
+        "./src/editor/core/*",
+        "./src/editor/desktop/*"
       ],
       "@editor/portal/*": [
         "./src/editor/cloud/portal/*",
@@ -17,7 +18,8 @@
       "@processor/*": ["./src/processor/proprietary/*"],
       "@editor-cloud/*": ["./src/editor/cloud/*"],
       "@editor-proprietary/*": ["./src/editor/proprietary/*"],
-      "@editor-core/*": ["./src/editor/core/*"]
+      "@editor-core/*": ["./src/editor/core/*"],
+      "@editor-test/*": ["./src/editor/test/*"]
     }
   }
 }

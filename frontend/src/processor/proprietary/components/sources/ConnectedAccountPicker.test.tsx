@@ -4,7 +4,8 @@ import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import { ConnectedAccountPicker } from "@processor/components/sources/ConnectedAccountPicker";
 import { PopupBlockedError } from "@editor/services/connectedAccountsService";
 
-vi.mock("react-i18next", () => ({
+vi.mock("react-i18next", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-i18next")>()),
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 

@@ -14,7 +14,8 @@ import { UIProvider } from "@processor/contexts/UIContext";
 import { ReviewQueue } from "@processor/components/documents/ReviewQueue";
 
 // Deterministic i18n: keys returned verbatim.
-vi.mock("react-i18next", () => ({
+vi.mock("react-i18next", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-i18next")>()),
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: { changeLanguage: vi.fn() },

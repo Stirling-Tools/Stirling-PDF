@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { AuthService } from "@editor/services/authService";
 import { AxiosError } from "axios";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
 const state = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -106,6 +107,7 @@ it("revalidates when the connection mode changes even at the same URL", async ()
 it.each([undefined, 408, 429, 503])(
   "retains an unexpired verified session after a transient refresh failure (%s)",
   async (status) => {
+    allowConsole.error(/\[Desktop AuthService\] Supabase token refresh failed/);
     const service = new AuthService();
     expect(await service.hasManagedSession()).toBe(true);
     state.post.mockRejectedValue(
@@ -122,6 +124,7 @@ it.each([undefined, 408, 429, 503])(
 );
 
 it("revokes an expired session even when refresh is rate limited", async () => {
+  allowConsole.error(/\[Desktop AuthService\] Supabase token refresh failed/);
   state.invoke.mockResolvedValue(token(-60));
   const service = new AuthService();
   state.post.mockRejectedValue(

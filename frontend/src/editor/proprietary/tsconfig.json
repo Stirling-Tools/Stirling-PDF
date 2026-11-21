@@ -9,7 +9,8 @@
         "../../processor/proprietary/*"
       ],
       "@processor/*": ["../../processor/proprietary/*"],
-      "@editor-core/*": ["../../editor/core/*"]
+      "@editor-core/*": ["../../editor/core/*"],
+      "@editor-test/*": ["../../editor/test/*"]
     }
   },
   "include": [

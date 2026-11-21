@@ -1,0 +1,146 @@
+import "@testing-library/jest-dom/vitest";
+import { vi } from "vitest";
+import "@editor/utils/engineShims";
+
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn().mockResolvedValue({
+    mode: "saas",
+    server_config: null,
+    lock_connection_mode: false,
+  }),
+  isTauri: () => false,
+}));
+
+// Component tests do not start the bundled desktop backend. Provide the
+// stable local endpoint that the production service would expose so unrelated
+// UI tests do not fail while trying to build API URLs.
+vi.mock("@editor/services/tauriBackendService", () => ({
+  tauriBackendService: {
+    isOnline: true,
+    isBackendRunning: () => true,
+    getBackendStatus: () => "healthy",
+    getBackendPort: () => 8080,
+    getBackendUrl: () => "http://localhost:8080",
+    subscribeToStatus: () => () => {},
+    checkBackendHealth: vi.fn().mockResolvedValue(true),
+    initializeExternalBackend: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
+if (typeof HTMLCanvasElement !== "undefined") {
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+    value: vi.fn(() => null),
+    writable: true,
+    configurable: true,
+  });
+}
+
+class LocalStorageMock implements Storage {
+  private store: Record<string, string> = {};
+  get length(): number {
+    return Object.keys(this.store).length;
+  }
+  clear(): void {
+    this.store = {};
+  }
+  getItem(key: string): string | null {
+    return this.store[key] ?? null;
+  }
+  key(index: number): string | null {
+    return Object.keys(this.store)[index] ?? null;
+  }
+  removeItem(key: string): void {
+    delete this.store[key];
+  }
+  setItem(key: string, value: string): void {
+    this.store[key] = value;
+  }
+}
+
+Object.defineProperty(globalThis, "localStorage", {
+  value: new LocalStorageMock(),
+  writable: true,
+});
+global.URL.createObjectURL = vi.fn(() => "mocked-url");
+global.URL.revokeObjectURL = vi.fn();
+if (typeof File !== "undefined" && !File.prototype.arrayBuffer)
+  File.prototype.arrayBuffer = () => Promise.resolve(new ArrayBuffer(8));
+if (typeof Blob !== "undefined" && !Blob.prototype.arrayBuffer)
+  Blob.prototype.arrayBuffer = () => Promise.resolve(new ArrayBuffer(8));
+
+let testUuidCounter = 0;
+
+Object.defineProperty(globalThis, "crypto", {
+  value: {
+    subtle: { digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)) },
+    getRandomValues: vi.fn((array: Uint8Array) => array),
+    randomUUID: vi.fn(
+      () =>
+        `00000000-0000-4000-8000-${String(++testUuidCounter).padStart(12, "0")}`,
+    ),
+  },
+  writable: true,
+  configurable: true,
+});
+global.Worker = vi.fn().mockImplementation(function () {
+  return {
+    postMessage: vi.fn(),
+    terminate: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    onmessage: null,
+    onerror: null,
+  };
+});
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
+});
+global.IntersectionObserver = vi.fn().mockImplementation(function () {
+  return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
+});
+Object.defineProperty(globalThis, "matchMedia", {
+  writable: true,
+  value: vi.fn((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+if (typeof globalThis.DOMMatrix === "undefined") {
+  class DOMMatrixStub {
+    a = 1;
+    b = 0;
+    c = 0;
+    d = 1;
+    e = 0;
+    f = 0;
+    multiplySelf(): this {
+      return this;
+    }
+    translateSelf(): this {
+      return this;
+    }
+    scaleSelf(): this {
+      return this;
+    }
+    rotateSelf(): this {
+      return this;
+    }
+    inverse(): this {
+      return this;
+    }
+  }
+  Object.defineProperty(globalThis, "DOMMatrix", {
+    value: DOMMatrixStub,
+    writable: false,
+    configurable: true,
+  });
+}
+
+vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });

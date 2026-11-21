@@ -65,7 +65,7 @@ vi.mock("@editor/hooks/useIsMobile", () => ({
 
 const renderToolbar = () =>
   render(
-    <MantineProvider>
+    <MantineProvider env="test">
       <PdfViewerToolbar />
     </MantineProvider>,
   );

@@ -578,7 +578,10 @@ function languageControl(
   inherited: string | null,
   own: string | null,
 ): TextLanguageControl & { onSet: ReturnType<typeof vi.fn> } {
-  return { language: { own, inherited }, onSet: vi.fn() };
+  return {
+    language: { own, inherited },
+    onSet: vi.fn<(lang: string | null) => void>(),
+  };
 }
 
 function innerControl(
@@ -620,7 +623,7 @@ function innerControl(
     onSet: vi.fn(),
     newTagTypes: null,
     onTagSelection: vi.fn(),
-    onSetLanguage: vi.fn(),
+    onSetLanguage: vi.fn<(index: number, lang: string | null) => void>(),
     onLanguageSelection: null,
     onSetLinkDescription: vi.fn(),
     ...overrides,

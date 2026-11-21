@@ -60,6 +60,7 @@ vi.mock("react-i18next", () => ({
       ),
     i18n: { language: "en-US" },
   }),
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
 }));
 
 import { SaasSessionRequiredError } from "@editor/portal/auth/portalSaasSession";
