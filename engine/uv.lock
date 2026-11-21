@@ -319,7 +319,7 @@ wheels = [
 
 [[package]]
 name = "datamodel-code-generator"
-version = "0.64.0"
+version = "0.96.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argcomplete" },
@@ -330,10 +330,11 @@ dependencies = [
     { name = "jinja2" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/d2/86c94a2836ed42231653a7ddaefa0a5bc23418167a876bba7376c96b3a35/datamodel_code_generator-0.64.0.tar.gz", hash = "sha256:9c592900a00b20e416494273c22435f5a9aef6ea8c7b9190747522a60497a1cb", size = 1316440, upload-time = "2026-06-14T17:24:50.528Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/5c/76a04752c0690bbce18fd29150e2902b708354573230b824ed829b75f1e3/datamodel_code_generator-0.96.0.tar.gz", hash = "sha256:2f5ac503a569bdc545ea557e3e414b18516e907597fc9fd4568b6ff24f77fef3", size = 9817537, upload-time = "2026-11-13T20:52:40.589Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/94/71338e2f0146ac10747a5537b3a1e45256e66b7c229869eb0ee787111b41/datamodel_code_generator-0.64.0-py3-none-any.whl", hash = "sha256:b7cd8bd41a312aa997aec6150670bad781847c5b674f17e4d70e78208a0fb990", size = 374698, upload-time = "2026-06-14T17:24:48.809Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/7c/75dbba69f175f2b5cb25850db4e829f65936269ec77b0bca23ea0296c4d2/datamodel_code_generator-0.96.0-py3-none-any.whl", hash = "sha256:e20cef521142283c4bc0fd695d44379dcd912475e654a9a2d3003064da9f14f1", size = 2450399, upload-time = "2026-11-13T20:52:37.906Z" },
 ]
 
 [package.optional-dependencies]
@@ -473,7 +474,7 @@ engine = [
 ]
 engine-dev = [
     { name = "anyio", specifier = ">=4.14.2" },
-    { name = "datamodel-code-generator", extras = ["ruff"], specifier = "==0.64.0" },
+    { name = "datamodel-code-generator", extras = ["ruff"], specifier = "==0.96.0" },
     { name = "pyrefly", specifier = "==1.4.1" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "referencing", specifier = ">=0.37.0" },
