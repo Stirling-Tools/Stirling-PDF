@@ -7,7 +7,7 @@ import {
 } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 const meta = {
-  title: "Tools/AddWatermark/AddWatermarkSingleStepSettings",
+  title: "Tools/Add Watermark/Parts/AddWatermarkSingleStepSettings",
   component: AddWatermarkSingleStepSettings,
   parameters: { layout: "padded" },
   args: {

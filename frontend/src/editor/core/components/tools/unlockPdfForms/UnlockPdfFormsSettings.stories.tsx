@@ -5,7 +5,7 @@ import { UnlockPdfFormsParameters } from "@editor/hooks/tools/unlockPdfForms/use
 const defaultParameters: UnlockPdfFormsParameters = {};
 
 const meta = {
-  title: "Tools/UnlockPdfForms/UnlockPdfFormsSettings",
+  title: "Tools/Unlock PDF Forms/Parts/UnlockPdfFormsSettings",
   component: UnlockPdfFormsSettings,
 } satisfies Meta<typeof UnlockPdfFormsSettings>;
 export default meta;

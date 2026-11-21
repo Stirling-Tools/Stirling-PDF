@@ -32,7 +32,7 @@ const baseSignature: SignatureValidationSignature = {
 };
 
 const meta = {
-  title: "Tools/ValidateSignature/SignatureStatusBadge",
+  title: "Tools/Validate PDF Signature/Parts/SignatureStatusBadge",
   component: SignatureStatusBadge,
 } satisfies Meta<typeof SignatureStatusBadge>;
 export default meta;
