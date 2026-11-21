@@ -225,6 +225,7 @@ function HeaderControl({
       variant="tertiary"
       accent="neutral"
       size="md"
+      data-testid="onboarding-header-control"
       aria-label={
         forward
           ? t("onboarding.buttons.continue", "Continue")
