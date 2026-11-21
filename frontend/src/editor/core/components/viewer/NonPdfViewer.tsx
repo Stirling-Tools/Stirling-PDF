@@ -84,7 +84,6 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
               {isConvertAvailable && (
                 <Button
                   variant="secondary"
-                  accent="warning"
                   leftSection={<Icon name="file-pdf" />}
                   onClick={handleConvertToPdf}
                 >
