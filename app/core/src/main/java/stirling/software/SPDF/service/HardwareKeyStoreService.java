@@ -324,7 +324,10 @@ public class HardwareKeyStoreService {
             // counter twice per attempt and can lock the token. Only rebuild on provider/init
             // failures (e.g. token removed/re-inserted leaving a stale provider).
             if (isAuthFailure(e)) {
-                throw e;
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.pkcs11PinRejected",
+                        "The token rejected the PIN. Check it before trying again: repeated wrong"
+                                + " PINs lock the token.");
             }
             pkcs11Providers.remove(cacheKey, provider);
             Provider fresh =
