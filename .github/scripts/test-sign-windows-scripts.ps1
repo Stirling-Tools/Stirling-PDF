@@ -47,7 +47,7 @@ function New-Unsigned([string]$relative) {
   $path
 }
 function Invoke-Sign([string]$file) {
-  pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-file.ps1") $file
+  pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-file.ps1") $file | Out-Host
   $LASTEXITCODE
 }
 function Get-Calls { @(Get-Content -LiteralPath "$work\smctl-calls.txt" -ErrorAction SilentlyContinue).Count }
@@ -92,11 +92,11 @@ Remove-Item Env:\FAKE_SMCTL_NO_OP
 $tree = Join-Path $work "tree"
 New-Item -ItemType Directory -Force -Path "$tree\bin\server" | Out-Null
 Copy-Item $template "$tree\bin\a.dll"; Copy-Item $template "$tree\bin\server\b.dll"; Copy-Item $template "$tree\bin\c.exe"
-pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-runtime.ps1") -Root $tree -VerifyOnly
+pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-runtime.ps1") -Root $tree -VerifyOnly | Out-Host
 Check "verify-only fails on an unsigned tree" ($LASTEXITCODE -ne 0)
-pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-runtime.ps1") -Root $tree
+pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-runtime.ps1") -Root $tree | Out-Host
 $signed = $LASTEXITCODE
-pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-runtime.ps1") -Root $tree -VerifyOnly
+pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-runtime.ps1") -Root $tree -VerifyOnly | Out-Host
 Check "runtime script signs a tree and verify-only then passes" ($signed -eq 0 -and $LASTEXITCODE -eq 0)
 
 Remove-Item -LiteralPath $cert.PSPath
