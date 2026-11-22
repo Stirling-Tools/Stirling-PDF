@@ -93,7 +93,6 @@ export function useWorkbenchSave(): WorkbenchSave {
           await saver.saveStoredFile(stub, selectors.getFile(stub.id));
           return;
         }
-        viewerContext?.flushBeforeExport?.();
         const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
         if (!buffer) return;
         if (stub) {
@@ -206,7 +205,6 @@ export function useWorkbenchSave(): WorkbenchSave {
   const viewerFileFor = useCallback(
     async (stub: StirlingFileStub): Promise<File | undefined> => {
       if (currentView !== "viewer") return undefined;
-      viewerContext?.flushBeforeExport?.();
       const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
       return buffer ? enforcedViewerFile(buffer, stub) : undefined;
     },

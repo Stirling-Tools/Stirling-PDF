@@ -770,6 +770,8 @@ interface EditingReply {
   cardKey: string;
   replyId: string;
   draft: string;
+  /** Reply text when editing began, to tell a real change from an opened editor. */
+  original: string;
 }
 
 interface CommentActions {
@@ -1083,7 +1085,7 @@ export function CommentsSidebar({
     scrollActions,
     getZoomState,
     toggleCommentsSidebar,
-    registerBeforeExport,
+    registerUnsentEditsCheck,
   } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
@@ -1485,35 +1487,30 @@ export function CommentsSidebar({
     [provides, displayName, navActions],
   );
 
-  // Text typed but not yet sent would otherwise be dropped from the saved PDF.
-  const flushDraftsRef = useRef<() => void>(() => {});
-  flushDraftsRef.current = () => {
-    if (readOnly) return;
-    for (const [page, entries] of Object.entries(byPage)) {
-      const pageIndex = Number(page);
-      for (const entry of entries) {
-        const ann = entry.annotation.object;
-        const cardKey = `${pageIndex}_${ann.id}`;
-        const draft = draftContents[cardKey];
-        if (draft?.trim() && !getCommentDisplayContent(entry).trim()) {
-          handleSendMainComment(pageIndex, ann.id, draft);
-        }
-        if (replyDrafts[`${cardKey}_reply`]?.trim()) {
-          handleSendReply(pageIndex, ann.id, ann.rect);
-        }
-        if (editingReply?.cardKey === cardKey) {
-          handleSaveReplyEdit(
-            pageIndex,
-            editingReply.replyId,
-            editingReply.draft,
-          );
-        }
-      }
+  // Typed but unsent text counts as unsaved so leaving the file warns first.
+  const hasUnsentDraftsRef = useRef<() => boolean>(() => false);
+  hasUnsentDraftsRef.current = () => {
+    if (readOnly) return false;
+    if (
+      editingReply &&
+      editingReply.draft.trim() !== editingReply.original.trim()
+    ) {
+      return true;
     }
+    return Object.entries(byPage).some(([page, entries]) =>
+      entries.some((entry) => {
+        const cardKey = `${page}_${entry.annotation.object.id}`;
+        const draft = draftContents[cardKey]?.trim();
+        if (draft && draft !== getCommentDisplayContent(entry).trim()) {
+          return true;
+        }
+        return !!replyDrafts[`${cardKey}_reply`]?.trim();
+      }),
+    );
   };
   useEffect(
-    () => registerBeforeExport?.(() => flushDraftsRef.current()),
-    [registerBeforeExport],
+    () => registerUnsentEditsCheck?.(() => hasUnsentDraftsRef.current()),
+    [registerUnsentEditsCheck],
   );
 
   const handleAddComment = useCallback(() => {
@@ -1568,6 +1565,7 @@ export function CommentsSidebar({
         cardKey: `${pageIndex}_${parentId}`,
         replyId,
         draft: contents,
+        original: contents,
       }),
     changeReplyEdit: (draft) =>
       setEditingReply((prev) => prev && { ...prev, draft }),

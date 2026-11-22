@@ -177,7 +177,7 @@ const EmbedPdfViewerContent = ({
     selectionActions,
     setApplyChanges,
     applyChanges: viewerApplyChanges,
-    flushBeforeExport,
+    hasUnsentEdits,
     pdfRenderMode,
     cyclePdfRenderMode,
     setActiveFileIndex: _setActiveFileIndex,
@@ -1106,7 +1106,10 @@ const EmbedPdfViewerContent = ({
       const hasAppliedRedactions = redactionsApplied;
 
       return (
-        hasAnnotationChanges || hasPendingRedactions || hasAppliedRedactions
+        hasAnnotationChanges ||
+        hasPendingRedactions ||
+        hasAppliedRedactions ||
+        hasUnsentEdits()
       );
     };
 
@@ -1117,6 +1120,7 @@ const EmbedPdfViewerContent = ({
     };
   }, [
     historyApiRef,
+    hasUnsentEdits,
     previewFile,
     isFormFillToolActive,
     registerUnsavedChangesChecker,
@@ -1138,7 +1142,6 @@ const EmbedPdfViewerContent = ({
       console.log(
         "[Viewer] Applying changes - exporting PDF with annotations/redactions",
       );
-      flushBeforeExport();
 
       // Step 0: Commit any pending redactions before export
       const hadPendingRedactions =
@@ -1243,7 +1246,6 @@ const EmbedPdfViewerContent = ({
     currentFile,
     activeFiles,
     exportActions,
-    flushBeforeExport,
     applySignaturesRef,
     actions,
     selectors,
