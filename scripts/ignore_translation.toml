@@ -15,7 +15,6 @@ ignore = [
 
 [bo_CN]
 ignore = [
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
@@ -57,14 +56,10 @@ ignore = [
     'AddStampRequest.position',
     'adjustPageScale.pageSize.legal',
     'adjustPageScale.pageSize.letter',
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
-    'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.saml2.label',
     'admin.settings.database.port.label',
@@ -85,11 +80,6 @@ ignore = [
     'cookieBanner.services.scarf',
     'crop.autoCrop',
     'details',
-    'fileManager.fileFormat',
-    'fileManager.fileName',
-    'fileManager.fileVersion',
-    'fileManager.googleDrive',
-    'fileManager.googleDriveShort',
     'footer.discord',
     'footer.issues',
     'getPdfInfo.downloads',
@@ -104,7 +94,6 @@ ignore = [
     'home.devApi.title',
     'language.direction',
     'legal.impressum',
-    'pdfTextEditor.options.advanced.title',
     'pipeline.title',
     'plan.enterprise.name',
     'plan.pro.name',
@@ -112,7 +101,6 @@ ignore = [
     'pro',
     'settings.connection.mode.saas',
     'settings.connection.server',
-    'settings.licensingAnalytics.audit',
     'settings.licensingAnalytics.plan',
     'settings.workspace.teams',
     'sign.saved.type.text',
@@ -135,15 +123,6 @@ ignore = [
     'validateSignature.report.downloads',
     'watermark.type.1',
     'watermark.watermarkType.text',
-    'workspace.people.actions.upgrade',
-    'workspace.people.addMember.usernamePlaceholder',
-    'workspace.people.admin',
-    'workspace.people.emailInvite.emailsPlaceholder',
-    'workspace.people.inviteLink.emailPlaceholder',
-    'workspace.people.inviteMode.link',
-    'workspace.people.team',
-    'workspace.teams.system',
-    'workspace.teams.title',
 ]
 
 [el_GR]
@@ -155,14 +134,11 @@ ignore = [
 ignore = [
     'adjustPageScale.pageSize.legal',
     'admin.error',
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.connections.mobileScanner.pageFormatA4',
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.pageFormatA4',
@@ -276,13 +252,10 @@ ignore = [
 
 [ga_IE]
 ignore = [
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.saml2.label',
     'admin.settings.database.port.label',
@@ -443,14 +416,10 @@ ignore = [
 
 [tr_TR]
 ignore = [
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
-    'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.ai.status.cloud.hostLabel',
     'admin.settings.ai.status.cloud.name',
     'admin.settings.connections.mobileScanner.pageFormatA4',
@@ -488,7 +457,7 @@ ignore = [
     'cookieBanner.services.scarf',
     'fileSelected',
     'fileSelectorPicker.sort.nameLabel',
-    'fileSidebar.googleDrive',
+    "filesPage.origin.oneDrive",
     'footer.discord',
     'footer.issues',
     'formFill.editor.actionUrl',
@@ -700,14 +669,11 @@ ignore = [
 
 [zh_TW]
 ignore = [
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.connections.mobileScanner.pageFormatA4',
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.pageFormatA4',

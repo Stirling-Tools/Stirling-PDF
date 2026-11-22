@@ -647,18 +647,16 @@ description = "DPI สูงสุดสำหรับการประมว�
 label = "DPI สูงสุด"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "กำหนดขีดจำกัดเซสชันและระยะหมดเวลาสำหรับตัวประมวลผลแต่ละตัว"
 ghostscript = "Ghostscript"
 installApp = "ติดตั้งแอป"
 label = "ข้อจำกัดของตัวประมวลผลกระบวนการ"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "การแปลงไฟล์ Office"
+officeConvertSessionLimit = "จำนวนการแปลงพร้อมกันสูงสุด; 0 จะเลือกขีดจำกัดตาม CPU และหน่วยความจำ"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "จำนวนอินสแตนซ์พร้อมกันสูงสุด"
@@ -667,10 +665,6 @@ label = "ขีดจำกัดเซสชัน"
 [admin.settings.advanced.processExecutor.timeout]
 description = "เวลาในการทำงานสูงสุด"
 label = "ระยะหมดเวลา (นาที)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert อยู่ในเวอร์ชันเบต้า ให้การแปลงที่ดีกว่า เร็วกว่า และใช้หน่วยความจำน้อยกว่า LibreOffice"
-label = "ใช้การแปลง Stirling Office แบบใหม่"
 
 [admin.settings.advanced.tempFileManagement]
 description = "กำหนดค่าการจัดเก็บไฟล์ชั่วคราวและพฤติกรรมการล้างไฟล์"
@@ -688,11 +682,6 @@ label = "ช่วงเวลาการล้าง (นาที)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "จะทำความสะอาดไดเรกทอรีชั่วคราวของระบบในวงกว้างหรือไม่ (ใช้ด้วยความระมัดระวัง)"
 label = "ล้างไดเรกทอรีชั่วคราวของระบบ"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "ไดเรกทอรีสำหรับไฟล์ชั่วคราวของ LibreOffice (ปล่อยว่างเพื่อค่าเริ่มต้น: baseTmpDir/libreoffice)"
-label = "ไดเรกทอรีชั่วคราวของ LibreOffice"
-placeholder = "ค่าเริ่มต้น: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "อายุสูงสุดเป็นชั่วโมงก่อนที่จะล้างไฟล์ชั่วคราว"
@@ -1300,17 +1289,6 @@ label = "ผู้ผลิตเริ่มต้น"
 [admin.settings.general.customPaths]
 description = "กำหนดค่าพาธระบบไฟล์แบบกำหนดเองสำหรับการประมวลผล Pipeline และเครื่องมือภายนอก"
 label = "พาธแบบกำหนดเอง"
-
-[admin.settings.general.customPaths.operations]
-label = "พาธเครื่องมือภายนอก"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "พาธไปยัง LibreOffice unoconvert สำหรับการแปลงเอกสาร (ปล่อยว่างเพื่อค่าเริ่มต้น: /opt/venv/bin/unoconvert)"
-label = "ไฟล์ปฏิบัติการ Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "พาธไปยังไฟล์ปฏิบัติการ WeasyPrint สำหรับแปลง HTML เป็น PDF (ปล่อยว่างเพื่อค่าเริ่มต้น: /opt/venv/bin/weasyprint)"
-label = "ไฟล์ปฏิบัติการ WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "ไดเรกทอรี Pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "ชื่อเอกสาร"
 pdfUaTitleHelp = "แสดงโดย reader แทนชื่อไฟล์ หากเว้นว่าง จะใช้หัวข้อแรก"
 selectSourceFormatFirst = "เลือก format ต้นทางก่อน"
 settings = "การตั้งค่า"
+signInToUse = "ลงชื่อเข้าใช้เพื่อใช้งาน"
 single = "เดี่ยว"
 sourceFormatPlaceholder = "รูปแบบต้นทาง"
-stirlingOfficeConvert = "ใช้ Stirling Office Convert (เบต้า)"
-stirlingOfficeConvertDescription = "การแปลงที่ดีกว่า เร็วกว่า และใช้หน่วยความจำน้อยลง ปิดใช้งานเพื่อใช้ตัวแปลงมาตรฐาน"
 strictMode = "โหมดเข้มงวด"
 strictModeDesc = "เกิดข้อผิดพลาดหากการแปลงไม่สมบูรณ์แบบ (ใช้การตรวจสอบ VeraPDF)"
 svgPdfOptions = "ตัวเลือก SVG to PDF"
@@ -4419,8 +4396,6 @@ webOptions = "ตัวเลือก Web เป็น PDF"
 zoomLevel = "ระดับการซูม"
 
 [convert.ebookOptions]
-embedAllFonts = "ฝังแบบอักษรทั้งหมด"
-embedAllFontsDesc = "ฝังแบบอักษรทั้งหมดจาก eBook ลงใน PDF ที่สร้าง"
 includePageNumbers = "ใส่หมายเลขหน้า"
 includePageNumbersDesc = "เพิ่มหมายเลขหน้าลงใน PDF ที่สร้าง"
 includeTableOfContents = "รวมสารบัญ"
@@ -7830,7 +7805,11 @@ decorativeLabel = "รูปภาพตกแต่ง"
 description = "คำอธิบายรูปภาพ"
 descriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนรูปภาพ"
 encrypted = "ไม่สามารถแก้ไขแท็กในไฟล์ที่เข้ารหัสได้"
+figureDescription = "คำอธิบายรูปภาพ"
+figureDescriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนรูปภาพ."
 formFieldDescription = "คำอธิบายฟิลด์"
+formulaDescription = "คำอธิบายสูตร"
+formulaDescriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนสูตร บรรยายตามที่คุณจะพูดออกเสียง เช่น \"x กำลังสองบวกหนึ่ง\"."
 heading = "การช่วยสำหรับการเข้าถึง"
 innerTagLabel = "แท็ก {{number}}"
 innerTags = "แท็กในข้อความนี้"
@@ -7842,7 +7821,7 @@ missingDescriptions = "ไม่มีคำอธิบาย"
 mixedContent = "ภาพประกอบมีเนื้อหาอื่นรวมอยู่ด้วย"
 mixedTags = "ผสม"
 needsDescriptionBadge = "ไม่มีคำอธิบาย"
-nextImage = "รูปภาพถัดไป"
+nextToReview = "ถัดไปเพื่อตรวจทาน"
 notFigure = "ถูกแท็กเป็นส่วนหนึ่งของข้อความ"
 removeTag = "ลบแท็ก"
 saveFailed = "ไม่สามารถบันทึกการเปลี่ยนแปลงการช่วยสำหรับการเข้าถึงของคุณได้ จึงไม่ได้บันทึกไฟล์ ย้อนกลับการเปลี่ยนแปลงแล้วลองอีกครั้ง"
@@ -9661,10 +9640,6 @@ signInToStart = "ลงชื่อเข้าใช้เพื่อเริ
 stage = "ขั้นตอนที่ {{current}} จาก {{total}}"
 stagesLabel = "ความคืบหน้า"
 
-[portal.enterprise.connect]
-ownerOnly = "มีเพียงเจ้าของเซิร์ฟเวอร์นี้เท่านั้นที่สามารถเชื่อมต่อได้ ขอให้พวกเขาเปิดหน้านี้."
-unavailable = "ปิดการเชื่อมต่อกับบัญชี Stirling บนเซิร์ฟเวอร์นี้ นัดคุยกับเรา และเราจะตั้งค่าการทดลองใช้ฟรีให้คุณ."
-
 [portal.enterprise.landing]
 lede = "ทดลองใช้ฟรี 14 วัน จากนั้นสร้างใบเสนอราคาและลงนามข้อตกลงได้ที่นี่ ไม่ต้องใช้บัตร."
 tickAgreement = "สัญญาเดียวครอบคลุม MSA แบบฟอร์มคำสั่งซื้อ EULA และ DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "ดาวน์โหลด licence ออฟไลน์ (.l
 hint = "วางคีย์นี้ลงใน instance แบบ self-hosted เพื่อเปิดใช้งาน หรือเก็บไว้เป็นบันทึกของคุณ เก็บรักษาให้ปลอดภัย"
 label = "คีย์ licence ของคุณ"
 trialFileHint = "นี่คือไฟล์ใบอนุญาตทดลองใช้ของคุณ เมื่อข้อตกลงของคุณพร้อมแล้ว ให้กลับมาดาวน์โหลดอีกครั้ง — ไฟล์ .lic จะไม่อัปเดตเอง ต่างจากคีย์ใบอนุญาตออนไลน์"
-
-[portal.procurement.link]
-cta = "เชื่อมโยงบัญชี"
-description = "การจัดซื้อทำงานบนบัญชี Stirling ที่เชื่อมโยงของคุณ: นี่คือวิธีที่เราจัดเตรียม trial, ตั้งราคาใบเสนอราคา และเริ่มการเรียกเก็บเงิน เชื่อมโยงบัญชีเพื่อเริ่มต้น"
-title = "เชื่อมโยงบัญชีของคุณเพื่อเริ่มต้น"
 
 [portal.procurement.live]
 description = "การสมัครใช้งานของคุณใช้งานอยู่และ licence ของคุณออกแล้ว ทีมของคุณได้รับการจัดเตรียมแล้วและการเรียกเก็บเงินได้เริ่มต้นแล้ว"
@@ -14260,7 +14230,6 @@ toggleDetails = "สลับรายละเอียด"
 
 [tool]
 endpointUnavailable = "เครื่องมือนี้ไม่พร้อมใช้งานบนเซิร์ฟเวอร์ของคุณ"
-endpointUnavailableClickable = "ไม่พร้อมใช้งานในโหมดนี้ คลิกเพื่อลงชื่อเข้าใช้"
 filesLoading = "ไฟล์กำลังโหลดอยู่ โปรดรอ."
 filesLoadingProgress = "{{loaded}} / {{total}} ไฟล์กำลังโหลด..."
 invalidParams = "กรอกการตั้งค่าที่จำเป็นให้ครบถ้วน"
@@ -14268,6 +14237,8 @@ noFiles = "เพิ่มไฟล์เพื่อเริ่มต้น"
 scopeFiles = "ไฟล์"
 scopeThisFile = "ไฟล์นี้"
 selectFilesHint = "เลือกไฟล์ในไฟล์ที่ใช้งานเพื่อเรียกใช้เครื่องมือนี้"
+signInRequired = "จำเป็นต้องมีบัญชี Stirling ลงชื่อเข้าใช้เพื่อดำเนินการต่อ"
+signInToUse = "ลงชื่อเข้าใช้เพื่อใช้งาน"
 singleFileScope = "ใช้เฉพาะกับ: {{fileName}}"
 viewerMode = "สลับไปที่ file editor เพื่อเพิ่มหลายไฟล์"
 

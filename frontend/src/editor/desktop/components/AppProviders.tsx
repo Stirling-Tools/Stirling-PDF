@@ -33,25 +33,17 @@ import UpdateModal from "@editor-core/components/shared/UpdateModal";
 import { useDesktopUpdatePopup } from "@editor/hooks/useDesktopUpdatePopup";
 import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
-// Common tool endpoints to preload for faster first-use
-const COMMON_TOOL_ENDPOINTS = [
-  "/api/v1/misc/compress-pdf",
-  "/api/v1/general/merge-pdfs",
-  "/api/v1/general/split-pages",
-  "/api/v1/convert/pdf/img",
-  "/api/v1/convert/img/pdf",
-  "/api/v1/general/rotate-pdf",
-  "/api/v1/misc/add-watermark",
-  "/api/v1/security/add-password",
-  "/api/v1/security/remove-password",
-  "/api/v1/general/extract-pages",
-];
-
 /**
  * Desktop application providers
  * Wraps proprietary providers and adds desktop-specific configuration
  * - Shows setup wizard on first launch
  */
+const signInActions = {
+  onEndpointUnavailableClick: () =>
+    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
+};
+const NO_TOOL_ACTIONS = {};
+
 export function AppProviders({ children }: { children: ReactNode }) {
   const localOnly = useLocalProcessingOnly();
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
@@ -260,13 +252,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // tauriBackendService.isOnline now always reflects the local backend.
       // Wait for it to be healthy before preloading in both modes.
       if (!tauriBackendService.isOnline) return;
-      console.debug(
-        "[AppProviders] Preloading common tool endpoints for local backend",
-      );
-      void endpointAvailabilityService.preloadEndpoints(
-        COMMON_TOOL_ENDPOINTS,
-        backendUrl,
-      );
+      console.debug("[AppProviders] Preloading local backend capabilities");
+      endpointAvailabilityService.preloadLocalCapabilities(backendUrl);
     };
 
     const unsubscribe = tauriBackendService.subscribeToStatus(() =>
@@ -356,10 +343,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ProprietaryAppProviders>
       <ToolActionsContext.Provider
-        value={{
-          onEndpointUnavailableClick: () =>
-            window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
-        }}
+        value={connectionMode === "local" ? signInActions : NO_TOOL_ACTIONS}
       >
         <DesktopQueryCacheReset />
         <DesktopAccessGate onConfigLoaded={initializeConnectionMode}>

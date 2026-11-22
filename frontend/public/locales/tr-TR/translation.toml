@@ -647,18 +647,16 @@ description = "Görüntü işleme için maksimum DPI (0 = sınırsız)"
 label = "Maksimum DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Her süreç yürütücüsü için oturum sınırlarını ve zaman aşımlarını yapılandırın"
 ghostscript = "Ghostscript"
 installApp = "Uygulamayı Yükle"
 label = "Süreç Yürütücü Sınırları"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF’den HTML’ye"
+officeConvert = "Office dönüştürme"
+officeConvertSessionLimit = "Maksimum eşzamanlı dönüştürme sayısı; 0, CPU sayısı ve belleğe göre bir sınır seçer"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Eşzamanlı en fazla örnek sayısı"
@@ -667,10 +665,6 @@ label = "Oturum Sınırı"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Azami yürütme süresi"
 label = "Zaman Aşımı (dakika)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert beta aşamasındadır. LibreOffice'e göre daha iyi, daha hızlı ve daha az bellek kullanan dönüşümler sunar."
-label = "Yeni Stirling Office dönüşümünü kullan"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Geçici dosya depolama ve temizleme davranışını yapılandırın"
@@ -688,11 +682,6 @@ label = "Temizleme Aralığı (dakika)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Daha geniş sistem geçici dizininin temizlenip temizlenmeyeceği (dikkatle kullanın)"
 label = "Sistem Geçici Dizinini Temizle"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice geçici dosyaları için dizin (varsayılan için boş bırakın: baseTmpDir/libreoffice)"
-label = "LibreOffice Geçici Dizini"
-placeholder = "Varsayılan: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Geçici dosyaların temizlenmesinden önceki maksimum saat"
@@ -1300,17 +1289,6 @@ label = "Varsayılan Üretici"
 [admin.settings.general.customPaths]
 description = "Ardışık düzen işlemesi ve harici araçlar için özel dosya sistemi yollarını yapılandırın"
 label = "Özel Yollar"
-
-[admin.settings.general.customPaths.operations]
-label = "Harici Araç Yolları"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Belge dönüştürmeleri için LibreOffice unoconvert yolunu belirtin (varsayılan için boş bırakın: /opt/venv/bin/unoconvert)"
-label = "Unoconvert Çalıştırılabilir Dosyası"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTML’den PDF’ye dönüştürme için WeasyPrint çalıştırılabilir dosyasının yolu (varsayılan için boş bırakın: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint Çalıştırılabilir Dosyası"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Ardışık Düzen Dizinleri"
@@ -4314,7 +4292,7 @@ connectFailed = "Hesap bağlanamadı. Sunucunun uygulama kaydının ayarlı oldu
 disconnect = "Bağlantıyı kes"
 google = "Google Drive"
 intro = "Kendi hesaplarınızı bir kez bağlayın. Ardışık düzenleriniz sonra onlar üzerinden sizin adınıza okuyup kaydedebilir."
-microsoft = "Microsoft (OneDrive & SharePoint)"
+microsoft = "Microsoft (OneDrive ve SharePoint)"
 needsReconnect = "Stirling bu hesaba artık ulaşamıyor, bu yüzden bunu kullanan ardışık düzenler duraklatıldı."
 none = "Yöneticiniz bağlı hesapları açmadı."
 personal = "Kişisel hesap"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Belge başlığı"
 pdfUaTitleHelp = "Okuyucu tarafından dosya adı yerine gösterilir. Boş bırakılırsa ilk başlık kullanılır."
 selectSourceFormatFirst = "Önce bir kaynak biçim seçin"
 settings = "Ayarlar"
+signInToUse = "Kullanmak için oturum açın"
 single = "Tek"
 sourceFormatPlaceholder = "Kaynak biçim"
-stirlingOfficeConvert = "Stirling Office Convert'i kullan (beta)"
-stirlingOfficeConvertDescription = "Daha az bellekle daha iyi ve daha hızlı dönüşümler. Standart dönüştürücüyü kullanmak için kapatın."
 strictMode = "Katı Mod"
 strictModeDesc = "Dönüştürme mükemmel değilse hata ver (VeraPDF doğrulaması kullanır)"
 svgPdfOptions = "SVG'den PDF'ye Seçenekleri"
@@ -4419,8 +4396,6 @@ webOptions = "Web'den PDF'e Seçenekleri"
 zoomLevel = "Yakınlaştırma Düzeyi"
 
 [convert.ebookOptions]
-embedAllFonts = "Tüm yazı tiplerini göm"
-embedAllFontsDesc = "eBook'taki tüm yazı tiplerini oluşturulan PDF'ye göm"
 includePageNumbers = "Sayfa numaralarını ekle"
 includePageNumbersDesc = "Oluşturulan PDF'ye sayfa numaraları ekle"
 includeTableOfContents = "İçindekiler tablosunu ekle"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Dekoratif görsel"
 description = "Görsel açıklaması"
 descriptionInfo = "Ekran okuyucular bunu görselin yerine okur."
 encrypted = "Şifrelenmiş bir dosyada etiketler düzenlenemez"
+figureDescription = "Şekil açıklaması"
+figureDescriptionInfo = "Ekran okuyucular bunu şeklin yerine okur."
 formFieldDescription = "Alan açıklaması"
+formulaDescription = "Formül açıklaması"
+formulaDescriptionInfo = "Ekran okuyucular bunu formülün yerine okur. Bunu yüksek sesle söyler gibi yazın; örneğin \"x kare artı bir\"."
 heading = "Erişilebilirlik"
 innerTagLabel = "Etiket {{number}}"
 innerTags = "Bu metindeki etiketler"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Eksik açıklamalar"
 mixedContent = "Şekil başka içerik içeriyor"
 mixedTags = "Karışık"
 needsDescriptionBadge = "Açıklama yok"
-nextImage = "Sonraki görsel"
+nextToReview = "İnceleme için sonraki"
 notFigure = "Metnin parçası olarak etiketlendi"
 removeTag = "Etiketi kaldır"
 saveFailed = "Erişilebilirlik değişiklikleriniz kaydedilemedi, bu nedenle dosya kaydedilmedi. Bunları geri alın ve tekrar deneyin."
@@ -9661,10 +9640,6 @@ signInToStart = "Denemenizi başlatmak için oturum açın"
 stage = "Aşama {{current}} / {{total}}"
 stagesLabel = "İlerleme"
 
-[portal.enterprise.connect]
-ownerOnly = "Yalnızca bu sunucunun sahibi bağlayabilir. Onlardan bu sayfayı açmalarını isteyin."
-unavailable = "Bu sunucuda bir Stirling hesabına bağlanma kapalı. Bir görüşme ayarlayın; denemenizi sizinle birlikte kurarız."
-
 [portal.enterprise.landing]
 lede = "14 gün ücretsiz deneyin, sonra teklifinizi oluşturup anlaşmanızı burada imzalayın. Kart gerekmez."
 tickAgreement = "MSA, sipariş formu, EULA ve DPA'yı kapsayan tek anlaşma"
@@ -11284,11 +11259,6 @@ hint = "Etkinleştirmek için bu anahtarı kendi sunucunuzda barındırılan bir
 label = "Lisans anahtarınız"
 trialFileHint = "Bu, deneme lisans dosyanızdır. Sözleşmeniz yürürlüğe girdikten sonra geri dönüp tekrar indirin — çevrimiçi lisans anahtarının aksine, .lic dosyası kendiliğinden güncellenmez."
 
-[portal.procurement.link]
-cta = "Hesabı bağla"
-description = "Satın alma, bağlı Stirling hesabınızda çalışır: denemeyi hazırlama, teklifinizi fiyatlandırma ve faturalandırmayı başlatma şeklimiz budur. Başlamak için bir hesap bağlayın."
-title = "Başlamak için hesabınızı bağlayın"
-
 [portal.procurement.live]
 description = "Aboneliğiniz aktif ve lisansınız verildi. Ekibiniz hazırlandı ve faturalandırma başladı."
 title = "Stirling Enterprise'ta yayındasınız"
@@ -12819,7 +12789,7 @@ new = "Yeni parola"
 [serverSetup.signIn]
 clientId = "İstemci kimliği"
 clientSecret = "İstemci sırrı"
-issuer = "Issuer URL"
+issuer = "Sağlayıcı URL'si"
 label = "Şununla oturum aç"
 oidc = "Diğer OpenID Connect"
 password = "Kullanıcı adı ve parola"
@@ -14260,7 +14230,6 @@ toggleDetails = "Ayrıntıları göster/gizle"
 
 [tool]
 endpointUnavailable = "Bu araç sunucunuzda kullanılamıyor."
-endpointUnavailableClickable = "Bu modda kullanılamaz. Oturum açmak için tıklayın."
 filesLoading = "Dosyalar hâlâ yükleniyor, lütfen bekleyin."
 filesLoadingProgress = "{{loaded}} / {{total}} dosya yükleniyor..."
 invalidParams = "Gerekli ayarları doldurun."
@@ -14268,6 +14237,8 @@ noFiles = "Başlamak için bir dosya ekleyin."
 scopeFiles = "dosyalar"
 scopeThisFile = "bu dosya"
 selectFilesHint = "Bu aracı çalıştırmak için Etkin Dosyalar içinden dosyaları seçin"
+signInRequired = "Bunun için bir Stirling hesabı gerekir. Devam etmek için oturum açın."
+signInToUse = "Kullanmak için oturum açın"
 singleFileScope = "Yalnızca şu dosyaya uygulanıyor: {{fileName}}"
 viewerMode = "Birden fazla dosya eklemek için dosya düzenleyiciye geçin."
 

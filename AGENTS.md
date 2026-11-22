@@ -404,7 +404,7 @@ return useToolOperation({
 - **Frontend**: React-based SPA in `/frontend` directory
   - **File Storage**: IndexedDB for client-side file persistence and thumbnails
   - **Internationalization**: JSON-based translations (converted from backend .properties)
-- **PDF Processing**: PDFBox for core PDF operations, LibreOffice for conversions, PDF.js for client-side rendering
+- **PDF Processing**: PDFBox for core PDF operations, Stirling Office Convert for conversions, PDF.js for client-side rendering
 - **Security**: Spring Security with optional authentication (controlled by `DOCKER_ENABLE_SECURITY`)
 - **Configuration**: YAML-based configuration with environment variable overrides
 
