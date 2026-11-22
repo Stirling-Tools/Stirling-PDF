@@ -132,3 +132,25 @@ test("a line starting with a stand-in word reopens at the size of its own letter
     saved.page(0).runs.find((r) => r.text.startsWith("Quiz Editing"))?.fontSize,
   ).toBe(run.fontSize);
 });
+
+test("words typed across the gap between two drawn pieces keep the space between them", async () => {
+  const { doc, run } = await subsetSample();
+  new EditTextCommand({
+    pageIndex: 0,
+    runId: run.id,
+    nextText: `${run.text} several more`,
+  }).apply(doc);
+  const typed = doc.page(0).findRun(run.id)!.text;
+  new EditTextCommand({
+    pageIndex: 0,
+    runId: run.id,
+    nextText: typed
+      .replace("must", "muqst")
+      .replace("cleanly", "cleaZnly Mixwordz")
+      .replace("several", "sev QQ eral"),
+  }).apply(doc);
+
+  const drawn = letterHeights(doc, run.id).map((h) => h.text);
+  expect(drawn).toEqual(expect.arrayContaining(["Mixwordz", "sev"]));
+  expect(drawn.join(" ")).not.toContain("Mixwordzsev");
+});

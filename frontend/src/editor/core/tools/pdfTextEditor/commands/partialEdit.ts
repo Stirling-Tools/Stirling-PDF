@@ -566,6 +566,8 @@ export function planPartialEdit(
   let lastEmittedBIdx = -1;
   // Ghost whitespace chars sitting right before the pending insert.
   let insertLeadingGhosts = 0;
+  // Skipped whitespace inside a pending insert: dropping it would join the words either side.
+  let heldInsertSpace = "";
   // Mixed sub-runs we've already emitted a single "modify" op for, so a
   // later surviving char from the same sub-run doesn't emit a second.
   const modifiedSubRuns = new Set<number>();
@@ -580,6 +582,7 @@ export function planPartialEdit(
       startBIdx: insertStartBIdx,
     });
     insertBuf = "";
+    heldInsertSpace = "";
     insertAnchorSubRun = undefined;
     insertLeadingGhosts = 0;
   }
@@ -635,9 +638,11 @@ export function planPartialEdit(
       const subRunIdx = charToSubRun[a];
       // Ghost char (LineGrouper-synthesised whitespace, not part of any PDFium
       // text object).
-      if (subRunIdx === -1) continue;
-      // Whitespace-only survivor of a now-deleted sub-run: drop, never keep its ptr.
-      if (subRunStatus[subRunIdx] === "all-deleted") continue;
+      if (subRunIdx === -1 || subRunStatus[subRunIdx] === "all-deleted") {
+        // Whitespace-only survivor of a now-deleted sub-run: never keep its ptr.
+        if (insertBuf.length > 0) heldInsertSpace += nextText[b];
+        continue;
+      }
       // Surviving chars of a mixed sub-run keep their ORIGINAL embedded font:
       // we SetText the surviving substring back onto the existing.
       if (mixedSubRuns.has(subRunIdx)) {
@@ -688,7 +693,8 @@ export function planPartialEdit(
         // spaces this insert must sit AFTER (not on top of).
         insertLeadingGhosts = Math.max(0, b - lastEmittedBIdx - 1);
       }
-      insertBuf += nextText[b];
+      insertBuf += heldInsertSpace + nextText[b];
+      heldInsertSpace = "";
       lastEmittedBIdx = b;
     }
   }

@@ -125,3 +125,17 @@ test("Bold on draws the whole line in one lookalike when the bold subset lacks l
   expect(fonts(store, line)).toEqual(["Helvetica-Bold"]);
   expect(drawnText(store, line)).toBe("Totalduetodaybycard");
 });
+
+test("Bold on a line whose symbols the bold face lacks bolds every letter without a notice", async () => {
+  const store = await fixture("mixed-style-sample.pdf");
+  const line = store.document!.page(0).runs.find((r) => r.text.includes("≥"))!;
+  store.selection.selectOne(line.id);
+
+  expect(await toggleBold(store)).toBeNull();
+
+  const letters = pieces(store, line.text).filter((p) =>
+    /\p{L}/u.test(p.split("@")[0]),
+  );
+  expect(letters.length).toBeGreaterThan(0);
+  for (const piece of letters) expect(piece).toMatch(/Bold/);
+});

@@ -311,7 +311,8 @@ export class SetFontFamilyCommand implements Command {
   /**
    * How much of the run's visible text the next font has glyphs for: the rest
    * is drawn in the closest font that has them, and none means the change
-   * would not put the run in that font at all.
+   * would not put the run in that font at all. Only a missing letter or digit
+   * makes it "some": a symbol from another font is not a visible mismatch.
    */
   coverage(doc: EditorDocument): "all" | "some" | "none" {
     const page = doc.page(this.pageIndex);
@@ -322,9 +323,9 @@ export class SetFontFamilyCommand implements Command {
     const visible = [...run.text].filter(
       (ch) => !/\s/.test(ch) && !DRAWS_NOTHING.test(ch),
     );
-    const drawn = visible.filter(draws).length;
-    if (drawn === visible.length) return "all";
-    return drawn === 0 ? "none" : "some";
+    const missing = visible.filter((ch) => !draws(ch));
+    if (missing.length === visible.length && visible.length > 0) return "none";
+    return missing.some((ch) => /[\p{L}\p{N}]/u.test(ch)) ? "some" : "all";
   }
 
   /** Whether the next font has a glyph for a character; null when that cannot be known. */

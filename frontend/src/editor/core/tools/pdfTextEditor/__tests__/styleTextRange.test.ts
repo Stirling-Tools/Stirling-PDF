@@ -325,12 +325,12 @@ test("a selected word the bold subset lacks letters of is bolded whole in one lo
   expect(run.text).toContain("a unique posi-");
 });
 
-test("a quote mark the bold subset lacks abuts the bold letters around it and reads as one word, on the page and after a save", async () => {
+test("a quote mark the bold subset lacks abuts the bold letters around it without a notice and reads as one word, on the page and after a save", async () => {
   const store = await fixture("mushroom-life.pdf");
   const run = runStarting(store, "Mushrooms represent");
   selectText(store, run, "represent one of nature’s");
 
-  expect(await perform(store, (a) => a.toggleBold())).toBe("closestMatch");
+  expect(await perform(store, (a) => a.toggleBold())).toBeNull();
 
   const seams = seamsIn(store, run, "nature’s");
   expect(seams.length).toBeGreaterThan(0);
