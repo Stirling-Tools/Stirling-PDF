@@ -21,6 +21,7 @@ import {
   Pkcs11LibraryInfo,
 } from "@editor/services/hardwareSigningService";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { serverErrorReason } from "@editor/services/errorUtils";
 
 interface HardwareCertificateSettingsProps {
   parameters: CertSignParameters;
@@ -215,14 +216,10 @@ const HardwareCertificateSettings = ({
         : listWindowsCertificates;
     list()
       .then(applyCerts)
-      .catch((e) => {
-        const err = e as {
-          response?: { data?: { message?: string } };
-          message?: string;
-        };
+      .catch(async (e) => {
         setError(
-          err?.response?.data?.message ||
-            err?.message ||
+          (await serverErrorReason(e)) ||
+            (e as { message?: string })?.message ||
             (osStoreKind === "MACOS_KEYCHAIN"
               ? t(
                   "certSign.hardware.macLoadError",
@@ -269,14 +266,10 @@ const HardwareCertificateSettings = ({
       pin: parameters.password,
     })
       .then(applyCerts)
-      .catch((e) => {
-        const err = e as {
-          response?: { data?: { message?: string } };
-          message?: string;
-        };
+      .catch(async (e) => {
         setError(
-          err?.response?.data?.message ||
-            err?.message ||
+          (await serverErrorReason(e)) ||
+            (e as { message?: string })?.message ||
             t(
               "certSign.hardware.pkcs11LoadError",
               "Could not read certificates from the token. Check the PIN and driver.",
