@@ -83,6 +83,18 @@ import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
+/** Waits out the margin transition (0.3s) before refitting, so it fits the final width. */
+const FIT_WIDTH_SETTLE_MS = 350;
+
+/** The widest page the viewer has mounted in `area`, in CSS pixels; 0 when none. */
+function widestPage(area: HTMLElement): number {
+  let widest = 0;
+  for (const page of area.querySelectorAll("[data-page-index]")) {
+    widest = Math.max(widest, page.getBoundingClientRect().width);
+  }
+  return widest;
+}
+
 export interface EmbedPdfViewerProps {
   onClose?: () => void;
   previewFile?: File | null;
@@ -1912,6 +1924,35 @@ const EmbedPdfViewerContent = ({
     fetchFormFields,
     isCurrentFileEncrypted,
   ]);
+
+  const hasPages = !!effectiveFile;
+  // A sidebar or a page tool's column narrows the pages area without a window resize.
+  // Refit when fitting to width, or when the page no longer fits: the narrowed area
+  // would otherwise cut it off. A zoom chosen afterwards is left alone.
+  useEffect(() => {
+    const area = pdfContainerRef.current;
+    if (!area) return;
+    let width = area.clientWidth;
+    let settle: number | undefined;
+    const observer = new ResizeObserver(() => {
+      if (Math.abs(area.clientWidth - width) < 1) return;
+      width = area.clientWidth;
+      window.clearTimeout(settle);
+      settle = window.setTimeout(() => {
+        const { level } = getZoomState();
+        const fitting =
+          level === ZoomMode.FitWidth || level === ZoomMode.Automatic;
+        if (fitting || widestPage(area) > area.clientWidth) {
+          zoomActions.requestZoom(ZoomMode.FitWidth);
+        }
+      }, FIT_WIDTH_SETTLE_MS);
+    });
+    observer.observe(area);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(settle);
+    };
+  }, [hasPages, getZoomState, zoomActions]);
 
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 15;
