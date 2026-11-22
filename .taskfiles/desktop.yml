@@ -266,6 +266,10 @@ tasks:
       # `ForEach-Object { .IsReadOnly = }`, which fails on every file.
       - cmd: powershell -NoProfile -Command 'Get-ChildItem -Recurse -File runtime/jre | ForEach-Object { $_.IsReadOnly = $false }'
         platforms: [windows]
+      - cmd: |
+          JDK_HOME="${JAVA_HOME:-$(dirname "$(dirname "$(command -v jlink)")")}"
+          node ../scripts/use-vendor-signed-jdk-binaries.mjs runtime/jre "$JDK_HOME"
+        platforms: [windows]
     status:
       - test -f runtime/jre/release
 
