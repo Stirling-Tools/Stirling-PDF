@@ -249,6 +249,19 @@ jobs:
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:prepare
 
+      - name: Check the bundled runtime loads JPDFium
+        if: startsWith(matrix.platform, 'windows')
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP "jpdfium-load-check"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Set-Content -LiteralPath "$dir\LoadJpdfium.java" -Value 'public class LoadJpdfium { public static void main(String[] args) { System.load(args[0]); System.out.println("Loaded " + args[0]); } }'
+          & "$env:JAVA_HOME\bin\javac" -d $dir "$dir\LoadJpdfium.java"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $bin = (Resolve-Path ./frontend/src-tauri/runtime/jre/bin).Path
+          & "$bin\java.exe" --enable-native-access=ALL-UNNAMED -cp $dir LoadJpdfium "$bin\jpdfium.dll"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
