@@ -571,6 +571,7 @@ export function wrapToWidthBefore(
   page: Page,
   run: TextRun,
   before: { width: number; lines: number },
+  pullUp = true,
 ): ReflowWrapCommand | null {
   if (before.lines < 2 || rotationFromMatrix(run.matrix))
     return wrapAtPageEdge(doc, page, run);
@@ -578,7 +579,7 @@ export function wrapToWidthBefore(
     pageIndex: page.index,
     runId: run.id,
     maxWidthPt: run.wrapWidthPt ?? before.width,
-    pullUp: true,
+    pullUp,
   });
   reflow.apply(doc);
   return reflow;

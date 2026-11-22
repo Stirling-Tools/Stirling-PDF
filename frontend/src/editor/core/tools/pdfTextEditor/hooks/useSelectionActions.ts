@@ -1,3 +1,4 @@
+import { wholeFaceLookalike } from "@editor/tools/pdfTextEditor/util/wholeFaceLookalike";
 import { useCallback, useRef } from "react";
 import { ignoresTextStroke } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
 import { BOLD_WEIGHT } from "@editor/tools/pdfTextEditor/util/faceNames";
@@ -171,6 +172,7 @@ interface FamilyChange {
   runId: string;
   family: string;
   text: string;
+  restyle?: boolean;
 }
 
 /** How many runs a font change reached, how many it left as they were and why, and how many of the changed ones the new font lacks letters of. */
@@ -257,6 +259,7 @@ function familyCommand(change: FamilyChange): SetFontFamilyCommand {
     pageIndex: change.pageIndex,
     runId: change.runId,
     nextFamily: change.family,
+    keepLineStarts: change.restyle,
   });
 }
 
@@ -284,6 +287,23 @@ async function loadScriptFacesFor(
   const scripts = scanScriptsOf(lost);
   if (scripts.length > 0)
     await loadScriptScanFaces(scripts).catch(() => undefined);
+}
+
+/** Moves every run headed for a document face to one lookalike when the face lacks letters of any of them, so runs restyled together match. */
+function moveToLookalikeWhereFaceLacks(
+  doc: EditorDocument,
+  targets: Array<FamilyChange & { fit: ScanFitTarget }>,
+): void {
+  for (const face of new Set(targets.map((t) => t.family))) {
+    const sharing = targets.filter((t) => t.family === face);
+    const lookalike = wholeFaceLookalike(
+      doc,
+      sharing[0].fit.page,
+      face,
+      sharing.map((t) => t.text).join(" "),
+    );
+    if (lookalike) for (const target of sharing) target.family = lookalike;
+  }
 }
 
 function faceSources(doc: EditorDocument | null): FaceSources {
@@ -735,11 +755,17 @@ export function useSelectionActions(store: EditorStore) {
       const doc = store.document;
       const sources = faceSources(doc);
       const part = selectedPartOfRun(doc, store.selection.value);
-      if (part)
+      if (part) {
+        const selected = part.run.text.slice(part.range.start, part.range.end);
         return restyleSelectedPart(part, (fontIds) => {
           const wanted = request(fontIds.map(faceStyleOf));
-          return (fontId) => restyledFace(fontId, wanted, sources);
+          return (fontId) => {
+            const face = restyledFace(fontId, wanted, sources);
+            if (!face || !doc) return face;
+            return wholeFaceLookalike(doc, part.page, face, selected) ?? face;
+          };
         });
+      }
       const runs: Array<{ run: SelectedRun; fit: ScanFitTarget }> = [];
       forEachSelectedRun((run, page) => {
         runs.push({ run, fit: { page, run: run as TextRun } });
@@ -775,9 +801,11 @@ export function useSelectionActions(store: EditorStore) {
           runId: run.id,
           family: face,
           text: run.text,
+          restyle: true,
           fit,
         });
       }
+      moveToLookalikeWhereFaceLacks(doc, targets);
       const stillApplies = claimFontChange(
         targets.map((target) => target.fit.run),
       );

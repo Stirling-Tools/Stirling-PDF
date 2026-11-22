@@ -3,14 +3,21 @@ import path from "node:path";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { get, losesText, lacksLetters, notRestored, loadScriptScanFaces } =
-  vi.hoisted(() => ({
-    get: vi.fn(),
-    losesText: new Set<string>(),
-    lacksLetters: new Set<string>(),
-    notRestored: new Set<string>(),
-    loadScriptScanFaces: vi.fn(async (_scripts: readonly string[]) => {}),
-  }));
+const {
+  get,
+  losesText,
+  lacksLetters,
+  notRestored,
+  loadScriptScanFaces,
+  lookalikes,
+} = vi.hoisted(() => ({
+  get: vi.fn(),
+  lookalikes: new Map<string, string>(),
+  losesText: new Set<string>(),
+  lacksLetters: new Set<string>(),
+  notRestored: new Set<string>(),
+  loadScriptScanFaces: vi.fn(async (_scripts: readonly string[]) => {}),
+}));
 vi.mock(
   "@editor/tools/pdfTextEditor/util/scanFontLibrary",
   async (importOriginal) => ({
@@ -19,6 +26,10 @@ vi.mock(
   }),
 );
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+vi.mock("@editor/tools/pdfTextEditor/util/wholeFaceLookalike", () => ({
+  wholeFaceLookalike: (_doc: unknown, _page: unknown, face: string) =>
+    lookalikes.get(face) ?? null,
+}));
 vi.mock("@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand", () => ({
   SetFontFamilyCommand: class {
     constructor(readonly opts: { runId: string; nextFamily: string }) {}
@@ -190,7 +201,7 @@ function fakeStore(
 }
 
 interface Recorded {
-  opts?: { runId: string; nextFamily: string };
+  opts?: { runId: string; nextFamily: string; keepLineStarts?: boolean };
   commands?: Recorded[];
 }
 
@@ -200,6 +211,12 @@ function dispatchedChanges(dispatch: ReturnType<typeof vi.fn>): string[] {
   return dispatch.mock.calls
     .flatMap(([cmd]) => flatten(cmd as Recorded))
     .map((cmd) => `${cmd.opts?.runId}:${cmd.opts?.nextFamily}`);
+}
+
+function lineStartsKept(dispatch: ReturnType<typeof vi.fn>): boolean[] {
+  return dispatch.mock.calls.map(
+    ([cmd]) => !!(cmd as Recorded).opts?.keepLineStarts,
+  );
 }
 
 function serveFaces(serve: (id: string) => Promise<{ data: ArrayBuffer }>) {
@@ -866,6 +883,46 @@ describe("useSelectionActions font changes", () => {
 
     expect(get).not.toHaveBeenCalled();
     expect(dispatchedChanges(dispatch)).toEqual(["a:pdf:8:Calibri"]);
+  });
+
+  it("moves every run headed for a bold subset that lacks letters to one lookalike", async () => {
+    documentFont(7, "ABCDEF+Calibri", 0);
+    documentFont(8, "GHIJKL+Calibri-Bold", 0);
+    lookalikes.set("pdf:8:Calibri", "Helvetica-Bold");
+    const { store, dispatch } = fakeStore(
+      [
+        run("a", "pdf:7:Calibri"),
+        run("b", "pdf:8:Calibri"),
+        run("c", "pdf:7:Calibri"),
+      ],
+      ["a", "c"],
+    );
+
+    try {
+      expect(await actionsFor(store).toggleBold()).toBeNull();
+    } finally {
+      lookalikes.clear();
+    }
+
+    expect(dispatchedChanges(dispatch)).toEqual([
+      "a:Helvetica-Bold",
+      "c:Helvetica-Bold",
+    ]);
+  });
+
+  it("leaves a paragraph's line starts alone on a bold toggle but lets a font pick reflow it", async () => {
+    documentFont(7, "ABCDEF+Calibri", 0);
+    documentFont(8, "GHIJKL+Calibri-Bold", 0);
+    const bolded = fakeStore(
+      [run("a", "pdf:7:Calibri"), run("b", "pdf:8:Calibri")],
+      ["a"],
+    );
+    await actionsFor(bolded.store).toggleBold();
+    const picked = fakeStore([run("a", "base14:Helvetica")], ["a"]);
+    await actionsFor(picked.store).changeFontFamily("Times-Roman");
+
+    expect(lineStartsKept(bolded.dispatch)).toEqual([true]);
+    expect(lineStartsKept(picked.dispatch)).toEqual([false]);
   });
 
   it("draws a bold in the text's own ink for a family that has no bold face", async () => {

@@ -1,3 +1,4 @@
+import { documentFontHandle } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { slantOf } from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import {
@@ -1355,6 +1356,7 @@ export class EditTextCommand implements Command {
             ...inkFromRun(run),
             tags: rem.tags,
             originalFontPtr: 0,
+            matchFontPtr: documentFontHandle(run.fontId),
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
           });
@@ -1649,6 +1651,7 @@ export class EditTextCommand implements Command {
         // The run's own font, not a base-14 stand-in: re-emitting an embedded
         // face as Helvetica is what made undo look like it changed the font.
         originalFontPtr: this.prevFontPtr,
+        matchFontPtr: documentFontHandle(run.fontId),
         charSpacingPt: line.charSpacingPt,
         fallbackFamily: revertFallback,
         // Keep the run's original orientation - without this, undoing an
@@ -1819,6 +1822,7 @@ export class EditTextCommand implements Command {
           tags: sliceTags(nextTags, cursor, cursor + text.length),
           fontSpans: lineSpans,
           originalFontPtr: lineSpans?.[0]?.fontPtr || reuseFontPtr,
+          matchFontPtr: documentFontHandle(run.fontId),
           originalFontSubset: run.fontSubset,
           originalFontForCoveredWords: reuseFontPtr !== 0,
           charSpacingPt: run.charSpacingPt,
@@ -1980,6 +1984,7 @@ export class EditTextCommand implements Command {
           ...inkFromRun(run),
           tags: sliceTags(nextTags, cursor, cursor + text.length),
           originalFontPtr: 0,
+          matchFontPtr: documentFontHandle(run.fontId),
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
           outTexts: emittedTexts,
@@ -2079,6 +2084,7 @@ export class EditTextCommand implements Command {
             ...inkFromRun(run),
             tags: sr.tags,
             originalFontPtr: 0,
+            matchFontPtr: documentFontHandle(run.fontId),
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
           });

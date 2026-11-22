@@ -125,6 +125,29 @@ function glyphOf(m: WrappedPdfiumModule, font: number, ch: string): Glyph {
   return outline === missingOutlineOf(m, font) ? "box" : "outline";
 }
 
+const FLAT_LOWERCASE = "xzvwunmr";
+const PLAUSIBLE_X_HEIGHT_EM = { min: 0.3, max: 0.8 };
+
+function outlineTop(outline: string): number {
+  return Math.max(
+    ...outline.split(";").map((point) => Number(point.split(" ")[2])),
+  );
+}
+
+/** The height of `font`'s lower-case letters in ems, read from the first flat-topped letter it has a glyph for; null when it has none. */
+export function xHeightEm(m: WrappedPdfiumModule, font: number): number | null {
+  if (!font) return null;
+  const box = missingOutlineOf(m, font);
+  for (const ch of FLAT_LOWERCASE) {
+    const outline = outlineOf(m, font, ch);
+    if (!outline || outline === box) continue;
+    const em = outlineTop(outline);
+    if (em > PLAUSIBLE_X_HEIGHT_EM.min && em < PLAUSIBLE_X_HEIGHT_EM.max)
+      return em;
+  }
+  return null;
+}
+
 /**
  * The letters of `text` that `font` has no glyph of their own for: each is drawn as
  * the font's missing-glyph box, or has no outline where another letter of `text` has

@@ -597,29 +597,63 @@ function groupBaselineBands(
   }
 }
 
-/** Each line's fonts, as the share of its letters each draws, so one odd piece at its start does not stand for the whole line. */
+/** Each line's fonts, as the share of its letters each draws and the size it draws them at, so one odd piece at its start does not stand for the whole line. */
 export function lineFontIds(
   groups: readonly LineGroupInfo[],
-): Map<TextRun, Map<string, number>> {
-  const out = new Map<TextRun, Map<string, number>>();
+): Map<TextRun, Map<string, LineFontShare>> {
+  const out = new Map<TextRun, Map<string, LineFontShare>>();
   for (const { representative, members } of groups) {
-    const fontOf = new Map(members.map((m) => [m.pdfiumObjPtr, m.fontId]));
-    const letters = new Map<string, number>();
+    const memberOf = new Map(members.map((m) => [m.pdfiumObjPtr, m]));
+    const letters = new Map<string, LineFontShare>();
     let total = 0;
     representative.mergedFromPtrs.forEach((ptr, i) => {
-      const fontId = fontOf.get(ptr) ?? representative.fontId;
+      const member = memberOf.get(ptr);
+      const fontId = member?.fontId ?? representative.fontId;
       const count = (representative.mergedFromTexts[i] ?? "").replace(
         /\s+/g,
         "",
       ).length;
-      letters.set(fontId, (letters.get(fontId) ?? 0) + count);
+      const known = letters.get(fontId);
+      letters.set(fontId, {
+        share: (known?.share ?? 0) + count,
+        size: known?.size ?? member?.fontSize ?? representative.fontSize,
+      });
       total += count;
     });
-    for (const [fontId, count] of letters)
-      letters.set(fontId, total > 0 ? count / total : 1);
+    for (const [fontId, font] of letters)
+      letters.set(fontId, {
+        ...font,
+        share: total > 0 ? font.share / total : 1,
+      });
     out.set(representative, letters);
   }
   return out;
+}
+
+export interface LineFontShare {
+  share: number;
+  size: number;
+}
+
+// A stand-in face for letters a subset lacks is drawn up to this much larger or smaller so its lower-case letters match; a piece further off is set at a size of its own.
+const STAND_IN_SIZE_RATIO = 1.25;
+
+/** The size most of a line's letters are drawn at, where the first piece is a stand-in drawn a little larger or smaller. */
+function dominantSize(members: readonly TextRun[], first: number): number {
+  const letters = new Map<number, number>();
+  for (const member of members)
+    letters.set(
+      member.fontSize,
+      (letters.get(member.fontSize) ?? 0) +
+        member.text.replace(/\s+/g, "").length,
+    );
+  const [size] = [...letters].reduce((best, entry) =>
+    entry[1] > best[1] ? entry : best,
+  );
+  const ratio = size / first;
+  return ratio <= STAND_IN_SIZE_RATIO && ratio >= 1 / STAND_IN_SIZE_RATIO
+    ? size
+    : first;
 }
 
 export class LineGrouper {
@@ -662,6 +696,12 @@ export class LineGrouper {
     // Mutate the representative's text/bounds to reflect the merged group and
     // remember the underlying object pointers so ReplaceLineGroupCommand can.
     for (const group of groups) {
+      // OCR sizes each word by its own height, so its lines keep the first word's.
+      if (textLayer(group.representative.renderMode) === 0)
+        group.representative.fontSize = dominantSize(
+          group.members,
+          group.representative.fontSize,
+        );
       const mixed = readMixedLine(group.members, drawn.glyphs, spaceAdvance);
       if (mixed) {
         const text = group.members.find((member) => !isBulletLead(member));

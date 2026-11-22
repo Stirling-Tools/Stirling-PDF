@@ -80,6 +80,7 @@ export class SetFontFamilyCommand implements Command {
   private readonly pageIndex: number;
   private readonly runId: string;
   private readonly nextFamily: string;
+  private readonly keepLineStarts: boolean;
   private rewrap: ReflowWrapCommand | null = null;
   /** Set when the run was scanned text, re-set by redrawing it. */
   private scanPrev: ScanOverride | null = null;
@@ -92,10 +93,17 @@ export class SetFontFamilyCommand implements Command {
   /** Every object this command created (removed on revert). */
   private createdPtrs: number[];
 
-  constructor(opts: { pageIndex: number; runId: string; nextFamily: string }) {
+  constructor(opts: {
+    pageIndex: number;
+    runId: string;
+    nextFamily: string;
+    /** Only push down words that no longer fit, as a bold or italic toggle should, rather than reflow the paragraph. */
+    keepLineStarts?: boolean;
+  }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.nextFamily = opts.nextFamily;
+    this.keepLineStarts = opts.keepLineStarts ?? false;
     this.prev = null;
     this.prevMemberPtrs = [];
     this.prevContentOrder = [];
@@ -234,7 +242,13 @@ export class SetFontFamilyCommand implements Command {
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
-    this.rewrap = wrapToWidthBefore(doc, page, run, laidOut);
+    this.rewrap = wrapToWidthBefore(
+      doc,
+      page,
+      run,
+      laidOut,
+      !this.keepLineStarts,
+    );
   }
 
   wouldLoseText(doc: EditorDocument): boolean {

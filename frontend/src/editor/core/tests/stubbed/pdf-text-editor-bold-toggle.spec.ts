@@ -247,20 +247,19 @@ test.describe("PDF text editor - Bold toggle", () => {
     expect(await fontIdOf(page, line)).toBe(font);
   });
 
-  test("Bold onto a subset that lacks some letters draws them in the closest match and says so", async ({
+  test("Bold onto a subset that lacks some letters draws the whole line in one lookalike bold", async ({
     page,
   }) => {
     await openEditor(page, COLOURED_PDF);
     const line = await runId(page, "Total due today");
-    const before = await fontIdOf(page, line);
     await runBox(page, line).click();
 
     await page.getByTestId("pdf-editor-bold").click();
 
+    await expect.poll(() => fontIdOf(page, line)).toMatch(/Helvetica-Bold$/);
     await expect(
       page.getByText(/drawn in the closest matching font/),
-    ).toBeVisible();
-    await expect.poll(() => fontIdOf(page, line)).not.toBe(before);
+    ).toHaveCount(0);
     expect((await runs(page)).find((r) => r.id === line)?.text).toBe(
       "Total due today  by card",
     );

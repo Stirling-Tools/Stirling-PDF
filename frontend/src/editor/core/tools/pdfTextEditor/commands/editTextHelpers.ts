@@ -26,6 +26,10 @@ import {
   ligatureCodes,
   resetFontGlyphs,
 } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
+import {
+  fallbackSizeMatching,
+  standInSizeMatching,
+} from "@editor/tools/pdfTextEditor/util/fallbackSize";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import {
   deviceFamilyOf,
@@ -424,6 +428,8 @@ interface CreatedTextOptions {
   originalFontSubset?: boolean;
   /** Base-14 family used when `originalFontPtr` is zero. Defaults to Helvetica. */
   fallbackFamily?: string;
+  /** The document font whose lower-case height the fallback is sized to, when `originalFontPtr` is zero. */
+  matchFontPtr?: number;
   /** The source run's PDF text render mode (Tr). */
   renderMode?: number;
   /** Glyph outline colour; only paints under a stroking render mode. */
@@ -897,6 +903,18 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   const family = opts.fallbackFamily ?? "Helvetica";
   const m2 = m as unknown as CreateTextObjModule;
   const canReuse = opts.originalFontPtr !== 0 && !!m2.FPDFPageObj_CreateTextObj;
+  const standIn =
+    !!opts.matchFontPtr &&
+    opts.originalFontPtr !== 0 &&
+    opts.originalFontPtr !== opts.matchFontPtr &&
+    (!!opts.doc.ownedFontAt(opts.originalFontPtr) ||
+      !m.FPDFFont_GetIsEmbedded(opts.originalFontPtr));
+  const sizeMatchFont = standIn
+    ? opts.matchFontPtr!
+    : opts.originalFontPtr || (opts.matchFontPtr ?? 0);
+  const reuseSize = standIn
+    ? standInSizeMatching(m, opts.matchFontPtr!, opts.originalFontPtr, size)
+    : size;
 
   // Words are laid out horizontally from (opts.x, opts.y).
   const withRotation = (ptrs: number[]): number[] => {
@@ -1044,14 +1062,22 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // U+00FF tofu.
     const base14Text = sanitizeForBase14(text);
     const newBase14 = (): number => {
-      const ptr = m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
+      const ptr = m.FPDFPageObj_NewTextObj(
+        opts.doc.docPtr,
+        family,
+        fallbackSizeMatching(m, sizeMatchFont, family, size),
+      );
       if (ptr) return ptr;
       // PDFium only knows the standard font names, so any other family fails
       // here. Substituting is what editors do; returning 0 would drop the text.
       const substitute = nearestStandardFont(family);
       return substitute === family
         ? 0
-        : m.FPDFPageObj_NewTextObj(opts.doc.docPtr, substitute, size);
+        : m.FPDFPageObj_NewTextObj(
+            opts.doc.docPtr,
+            substitute,
+            fallbackSizeMatching(m, sizeMatchFont, substitute, size),
+          );
     };
     // A pre-warmed device font emits with its REAL face. Standard names skip
     // this and a cold cache returns 0, so existing emits are unchanged.
@@ -1061,7 +1087,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         opts.page,
         family,
         text,
-        size,
+        fallbackSizeMatching(m, sizeMatchFont, family, size),
         opts.fill,
         x,
         opts.y,
@@ -1135,7 +1161,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     const ptr = m2.FPDFPageObj_CreateTextObj!(
       opts.doc.docPtr,
       opts.originalFontPtr,
-      size,
+      reuseSize,
     );
     if (!ptr) return emitBase14(text, x);
     // Reuse path: resolve real font charcodes so the embedded subset font
@@ -1252,7 +1278,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     const ptr = m2.FPDFPageObj_CreateTextObj!(
       opts.doc.docPtr,
       opts.originalFontPtr,
-      size,
+      reuseSize,
     );
     if (!ptr) return 0;
     setTextOn(m, ptr, text);
@@ -1446,6 +1472,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     opts.x +
     (chunks.leadingGapPt ?? 0) +
     spacing * (chunks.leadingGapChars ?? 0);
+  // A reader counts the spaces in a gap by the size of the word before it, which a stand-in face may be drawn larger or smaller at.
+  let gapScale = 1;
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
       // Recurse per word.
@@ -1468,11 +1496,12 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       const advanced = rightEdge > cursor ? rightEdge - cursor : 0;
       cursor += advanced >= metric * 0.35 ? advanced : metric;
       ptrs.push(...wordPtrs);
+      gapScale = (objFontSizePt(m, wordPtrs.at(-1)!) ?? size) / size;
     }
     // Word gaps stretch with the run's letter-spacing too: the source layout
     // applies Tc after the glyph preceding the gap AND after each space.
     cursor +=
-      chunk.gapAfterPt +
+      chunk.gapAfterPt * gapScale +
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
   }
   return withRotation(ptrs);

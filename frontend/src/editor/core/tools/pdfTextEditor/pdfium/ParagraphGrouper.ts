@@ -1,3 +1,4 @@
+import type { LineFontShare } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import {
   RENDER_MODE_INVISIBLE,
   textLayer,
@@ -35,8 +36,8 @@ const COLUMN_LEFT_TOLERANCE = 14;
 const CELL_MAX_WORDS = 3;
 const CELL_MAX_CHARS = 24;
 
-/** Each line's fonts, as the share of its letters each draws. */
-type LineFonts = ReadonlyMap<TextRun, ReadonlyMap<string, number>>;
+/** Each line's fonts, as the share of its letters each draws and its size. */
+type LineFonts = ReadonlyMap<TextRun, ReadonlyMap<string, LineFontShare>>;
 /** A document font's own face name, or null when it has none. */
 type FaceOf = (fontId: string) => string | null;
 
@@ -304,11 +305,14 @@ function lineFontKeys(
   const shares = lineFonts.get(run);
   if (!shares || shares.size === 0)
     return new Set([fontKey(run.fontId, run.fontSize, faceOf)]);
-  const most = Math.max(...shares.values());
+  const most = Math.max(...[...shares.values()].map((font) => font.share));
   return new Set(
     [...shares]
-      .filter(([, share]) => share >= SHARED_FONT_MIN_SHARE || share === most)
-      .map(([fontId]) => fontKey(fontId, run.fontSize, faceOf)),
+      .filter(
+        ([, font]) =>
+          font.share >= SHARED_FONT_MIN_SHARE || font.share === most,
+      )
+      .map(([fontId, font]) => fontKey(fontId, font.size, faceOf)),
   );
 }
 
