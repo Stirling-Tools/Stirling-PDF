@@ -15,6 +15,7 @@ import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignPara
 import {
   getHardwareSigningCapabilities,
   HardwareCertificateInfo,
+  listMacKeychainCertificates,
   listPkcs11Certificates,
   listWindowsCertificates,
   Pkcs11LibraryInfo,
@@ -32,13 +33,17 @@ interface HardwareCertificateSettingsProps {
 
 const CUSTOM_LIBRARY_VALUE = "__custom__";
 
+type OsStoreKind = "WINDOWS_STORE" | "MACOS_KEYCHAIN";
+
 const HardwareCertificateSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
 }: HardwareCertificateSettingsProps) => {
   const { t } = useTranslation();
-  const isWindowsStore = parameters.certType === "WINDOWS_STORE";
+  const isOsStore =
+    parameters.certType === "WINDOWS_STORE" ||
+    parameters.certType === "MACOS_KEYCHAIN";
 
   const [certs, setCerts] = useState<HardwareCertificateInfo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,10 +52,19 @@ const HardwareCertificateSettings = ({
   const [libraries, setLibraries] = useState<Pkcs11LibraryInfo[]>([]);
   const [librarySelection, setLibrarySelection] = useState<string>("");
   const [customLibrary, setCustomLibrary] = useState<string>("");
-  const [supported, setSupported] = useState({ windows: true, pkcs11: true });
+  const [supported, setSupported] = useState({
+    windows: true,
+    mac: false,
+    pkcs11: true,
+  });
+  const osStoreKind: OsStoreKind | null = supported.windows
+    ? "WINDOWS_STORE"
+    : supported.mac
+      ? "MACOS_KEYCHAIN"
+      : null;
   const [capsReady, setCapsReady] = useState(false);
 
-  const selectKind = (kind: "WINDOWS_STORE" | "PKCS11") => {
+  const selectKind = (kind: OsStoreKind | "PKCS11") => {
     if (parameters.certType === kind) {
       return;
     }
@@ -135,14 +149,21 @@ const HardwareCertificateSettings = ({
         }
         setSupported({
           windows: caps.windowsStoreSupported,
+          mac: caps.macKeychainSupported,
           pkcs11: caps.pkcs11Supported,
         });
-        // Non-Windows (mac/Linux) has no Windows store; default the device to the USB-token path.
+        // Swap an OS-store choice for this platform's store, or the USB-token path on Linux.
+        const platformStore: OsStoreKind | null = caps.windowsStoreSupported
+          ? "WINDOWS_STORE"
+          : caps.macKeychainSupported
+            ? "MACOS_KEYCHAIN"
+            : null;
         if (
-          !caps.windowsStoreSupported &&
-          parameters.certType === "WINDOWS_STORE"
+          (parameters.certType === "WINDOWS_STORE" ||
+            parameters.certType === "MACOS_KEYCHAIN") &&
+          parameters.certType !== platformStore
         ) {
-          onParameterChange("certType", "PKCS11");
+          onParameterChange("certType", platformStore ?? "PKCS11");
         }
         setCapsReady(true);
         setLibraries(caps.detectedLibraries);
@@ -175,10 +196,14 @@ const HardwareCertificateSettings = ({
     };
   }, []);
 
-  const loadWindowsCerts = useCallback(() => {
+  const loadOsStoreCerts = useCallback(() => {
     setLoading(true);
     setError(null);
-    listWindowsCertificates()
+    const list =
+      osStoreKind === "MACOS_KEYCHAIN"
+        ? listMacKeychainCertificates
+        : listWindowsCertificates;
+    list()
       .then(applyCerts)
       .catch((e) => {
         const err = e as {
@@ -188,22 +213,27 @@ const HardwareCertificateSettings = ({
         setError(
           err?.response?.data?.message ||
             err?.message ||
-            t(
-              "certSign.hardware.windowsLoadError",
-              "Could not read the Windows certificate store",
-            ),
+            (osStoreKind === "MACOS_KEYCHAIN"
+              ? t(
+                  "certSign.hardware.macLoadError",
+                  "Could not read the macOS keychain",
+                )
+              : t(
+                  "certSign.hardware.windowsLoadError",
+                  "Could not read the Windows certificate store",
+                )),
         );
       })
       .finally(() => setLoading(false));
-  }, [applyCerts, t]);
+  }, [applyCerts, osStoreKind, t]);
 
-  // Windows store certificates can be enumerated without a PIN, so load eagerly -
-  // but only once capabilities confirm the store exists (avoids a spurious call on mac/Linux).
+  // OS store certificates can be enumerated without a PIN, so load eagerly -
+  // but only once capabilities confirm which store this platform has.
   useEffect(() => {
-    if (capsReady && isWindowsStore && supported.windows) {
-      loadWindowsCerts();
+    if (capsReady && isOsStore && osStoreKind === parameters.certType) {
+      loadOsStoreCerts();
     }
-  }, [isWindowsStore, supported.windows, capsReady]);
+  }, [isOsStore, osStoreKind, parameters.certType, capsReady]);
 
   const onLibraryChange = (value: string | null) => {
     const selection = value ?? "";
@@ -293,12 +323,12 @@ const HardwareCertificateSettings = ({
 
   return (
     <Stack gap="md">
-      {supported.windows && supported.pkcs11 && (
+      {osStoreKind && supported.pkcs11 && (
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={isWindowsStore ? "primary" : "secondary"}
-            accent={isWindowsStore ? "success" : "default"}
-            onClick={() => selectKind("WINDOWS_STORE")}
+            variant={isOsStore ? "primary" : "secondary"}
+            accent={isOsStore ? "success" : "default"}
+            onClick={() => selectKind(osStoreKind)}
             disabled={disabled || loading}
             style={{
               flex: 1,
@@ -309,11 +339,13 @@ const HardwareCertificateSettings = ({
               lineHeight: 1.15,
             }}
           >
-            {t("certSign.format.windowsStore", "Windows certificate store")}
+            {osStoreKind === "MACOS_KEYCHAIN"
+              ? t("certSign.format.macKeychain", "macOS Keychain / smart card")
+              : t("certSign.format.windowsStore", "Windows certificate store")}
           </Button>
           <Button
-            variant={!isWindowsStore ? "primary" : "secondary"}
-            accent={!isWindowsStore ? "success" : "default"}
+            variant={!isOsStore ? "primary" : "secondary"}
+            accent={!isOsStore ? "success" : "default"}
             onClick={() => selectKind("PKCS11")}
             disabled={disabled || loading}
             style={{
@@ -329,13 +361,18 @@ const HardwareCertificateSettings = ({
           </Button>
         </div>
       )}
-      {isWindowsStore ? (
+      {isOsStore ? (
         <>
           <Text size="sm" c="dimmed">
-            {t(
-              "certSign.hardware.windowsHint",
-              "Pick a certificate from your Windows store. Signing uses the key on your card/token - Windows will prompt for the PIN.",
-            )}
+            {osStoreKind === "MACOS_KEYCHAIN"
+              ? t(
+                  "certSign.hardware.macHint",
+                  "Pick a certificate from your keychain or an inserted smart card or YubiKey. macOS will prompt for the PIN.",
+                )
+              : t(
+                  "certSign.hardware.windowsHint",
+                  "Pick a certificate from your Windows store. Signing uses the key on your card/token - Windows will prompt for the PIN.",
+                )}
           </Text>
           <Group gap="xs" align="flex-end">
             <Select
@@ -361,7 +398,7 @@ const HardwareCertificateSettings = ({
             />
             <Button
               variant="secondary"
-              onClick={loadWindowsCerts}
+              onClick={loadOsStoreCerts}
               disabled={disabled || loading}
             >
               {t("certSign.hardware.refresh", "Refresh")}

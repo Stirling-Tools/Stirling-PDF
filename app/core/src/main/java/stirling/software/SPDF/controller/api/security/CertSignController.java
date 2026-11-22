@@ -201,8 +201,8 @@ public class CertSignController {
                             + " SERVER signs with this server's own certificate, so no file or"
                             + " password is needed, and the signer shown is the server's"
                             + " organisation rather than the user. PEM, PKCS12/PFX and JKS sign"
-                            + " with an uploaded certificate and key; WINDOWS_STORE and PKCS11 work"
-                            + " only in the desktop app. Make signing the last change to the file:"
+                            + " with an uploaded certificate and key; WINDOWS_STORE, MACOS_KEYCHAIN and"
+                            + " PKCS11 work only in the desktop app. Make signing the last change to the file:"
                             + " any later edit (compress, watermark, add a password, flatten and"
                             + " so on) invalidates the signature. Set showSignature to add a"
                             + " visible signature box on pageNumber.")
@@ -295,6 +295,13 @@ public class CertSignController {
                 signingProvider = hardwareKeyStoreService.windowsProvider();
                 // PIN is prompted by the Windows CSP / token middleware, not passed here.
                 keystorePassword = password;
+                break;
+            case "MACOS_KEYCHAIN":
+                hardwareKeyStoreService.assertLocalDesktop(httpRequest);
+                ks = hardwareKeyStoreService.loadMacKeychain();
+                signingProvider = hardwareKeyStoreService.macKeychainProvider();
+                // macOS prompts for the card PIN or keychain access itself.
+                keystorePassword = null;
                 break;
             case "PKCS11":
                 hardwareKeyStoreService.assertLocalDesktop(httpRequest);

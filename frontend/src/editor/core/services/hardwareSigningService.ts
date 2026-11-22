@@ -1,9 +1,9 @@
 import apiClient from "@editor/services/apiClient";
 
-/** A signing certificate held on a hardware source (Windows store or PKCS#11 token). */
+/** A signing certificate held on a hardware source (OS certificate store or PKCS#11 token). */
 export interface HardwareCertificateInfo {
   alias: string;
-  source: "WINDOWS_STORE" | "PKCS11";
+  source: "WINDOWS_STORE" | "MACOS_KEYCHAIN" | "PKCS11";
   subject: string;
   issuer: string;
   subjectCommonName: string;
@@ -25,6 +25,7 @@ export interface HardwareSigningCapabilities {
   desktop: boolean;
   osName: string;
   windowsStoreSupported: boolean;
+  macKeychainSupported: boolean;
   pkcs11Supported: boolean;
   detectedLibraries: Pkcs11LibraryInfo[];
 }
@@ -43,6 +44,15 @@ export async function listWindowsCertificates(): Promise<
 > {
   const response = await apiClient.get<HardwareCertificateInfo[]>(
     `${BASE}/windows-certificates`,
+  );
+  return response.data;
+}
+
+export async function listMacKeychainCertificates(): Promise<
+  HardwareCertificateInfo[]
+> {
+  const response = await apiClient.get<HardwareCertificateInfo[]>(
+    `${BASE}/macos-certificates`,
   );
   return response.data;
 }

@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities.Pkcs11LibraryInfo;
+import stirling.software.SPDF.service.macos.MacKeychainProvider;
 import stirling.software.common.util.ExceptionUtils;
 
 /**
@@ -54,6 +55,7 @@ public class HardwareKeyStoreService {
 
     public static final String SOURCE_WINDOWS_STORE = "WINDOWS_STORE";
     public static final String SOURCE_PKCS11 = "PKCS11";
+    public static final String SOURCE_MACOS_KEYCHAIN = "MACOS_KEYCHAIN";
 
     private static final String WINDOWS_KEYSTORE_TYPE = "Windows-MY";
     private static final String MSCAPI_PROVIDER = "SunMSCAPI";
@@ -95,6 +97,10 @@ public class HardwareKeyStoreService {
 
     private boolean windowsStoreSupported() {
         return isWindows() && Security.getProvider(MSCAPI_PROVIDER) != null;
+    }
+
+    private boolean macKeychainSupported() {
+        return MacKeychainProvider.isSupported();
     }
 
     private boolean pkcs11Supported() {
@@ -144,12 +150,13 @@ public class HardwareKeyStoreService {
     public HardwareSigningCapabilities capabilities() {
         boolean desktop = isDesktop();
         if (!desktop) {
-            return new HardwareSigningCapabilities(false, "", false, false, List.of());
+            return new HardwareSigningCapabilities(false, "", false, false, false, List.of());
         }
         return new HardwareSigningCapabilities(
                 true,
                 System.getProperty("os.name", ""),
                 windowsStoreSupported(),
+                macKeychainSupported(),
                 pkcs11Supported(),
                 detectPkcs11Libraries());
     }
@@ -183,6 +190,7 @@ public class HardwareKeyStoreService {
                     "OpenSC",
                     List.of(
                             "/Library/OpenSC/lib/opensc-pkcs11.so",
+                            "/opt/homebrew/lib/opensc-pkcs11.so",
                             "/usr/local/lib/opensc-pkcs11.so"));
             candidates.put(
                     "YubiKey (ykcs11)",
@@ -272,6 +280,30 @@ public class HardwareKeyStoreService {
 
     public List<HardwareCertificateInfo> listWindowsCertificates() throws Exception {
         return listSigningCertificates(loadWindowsKeyStore(), SOURCE_WINDOWS_STORE);
+    }
+
+    // ---------------------------------------------------------------------
+    // macOS keychain (includes smart cards and YubiKeys via CryptoTokenKit)
+    // ---------------------------------------------------------------------
+
+    public KeyStore loadMacKeychain() throws Exception {
+        if (!macKeychainSupported()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.macKeychainUnavailable",
+                    "The macOS keychain is not available on this platform");
+        }
+        KeyStore ks =
+                KeyStore.getInstance(MacKeychainProvider.KEYSTORE_TYPE, MacKeychainProvider.get());
+        ks.load(null, null);
+        return ks;
+    }
+
+    public Provider macKeychainProvider() {
+        return MacKeychainProvider.get();
+    }
+
+    public List<HardwareCertificateInfo> listMacKeychainCertificates() throws Exception {
+        return listSigningCertificates(loadMacKeychain(), SOURCE_MACOS_KEYCHAIN);
     }
 
     // ---------------------------------------------------------------------

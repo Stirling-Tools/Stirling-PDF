@@ -62,9 +62,10 @@ const CertificateTypeSettings = ({
 
   const selectDevice = () => {
     onParameterChange("signMode", "DEVICE");
-    // Default to the Windows store; the device step lets the user switch to a token.
+    // Default to the OS store; the device step swaps in this platform's store or a token.
     if (
       parameters.certType !== "WINDOWS_STORE" &&
+      parameters.certType !== "MACOS_KEYCHAIN" &&
       parameters.certType !== "PKCS11"
     ) {
       onParameterChange("certType", "WINDOWS_STORE");

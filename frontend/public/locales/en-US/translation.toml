@@ -2974,6 +2974,7 @@ failed = "An error occurred while processing signatures."
 [certSign.format]
 pkcs11 = "USB Token"
 windowsStore = "Windows certificate store"
+macKeychain = "macOS Keychain / smart card"
 
 [certSign.hardware]
 certificate = "Certificate"
@@ -2997,6 +2998,8 @@ selectDriver = "Select driver"
 slot = "Slot (optional)"
 windowsHint = "Pick a certificate from your Windows certificate store. Signing uses the key on your card/token - Windows will prompt for the PIN."
 windowsLoadError = "Could not read the Windows certificate store"
+macHint = "Pick a certificate from your keychain or an inserted smart card or YubiKey. macOS will prompt for the PIN."
+macLoadError = "Could not read the macOS keychain"
 
 [certSign.sessions]
 deleted = "Session deleted"

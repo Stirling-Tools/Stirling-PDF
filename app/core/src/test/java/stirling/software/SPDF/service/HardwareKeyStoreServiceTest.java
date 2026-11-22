@@ -58,6 +58,7 @@ class HardwareKeyStoreServiceTest {
         HardwareSigningCapabilities caps = service("Server-jar").capabilities();
         assertFalse(caps.desktop());
         assertFalse(caps.windowsStoreSupported());
+        assertFalse(caps.macKeychainSupported());
         assertFalse(caps.pkcs11Supported());
         assertTrue(caps.detectedLibraries().isEmpty());
     }
