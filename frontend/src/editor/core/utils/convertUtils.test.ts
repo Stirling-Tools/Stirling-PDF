@@ -9,7 +9,6 @@ import {
   getEndpointUrl,
   isConversionSupported,
   isImageFormat,
-  usesOfficeEngine,
 } from "@editor/utils/convertUtils";
 
 describe("convertUtils", () => {
@@ -346,14 +345,6 @@ describe("convertUtils", () => {
       expect(isImageFormat(longExtension)).toBe(false);
       expect(getEndpointName("pdf", longExtension)).toBe("");
       expect(getEndpointName(longExtension, "pdf")).toBe("file-to-pdf"); // Fallback to file to pdf
-    });
-  });
-
-  describe("usesOfficeEngine", () => {
-    test("offers the engine choice for text and RTF output", () => {
-      expect(usesOfficeEngine("pdf", "txt")).toBe(true);
-      expect(usesOfficeEngine("pdf", "rtf")).toBe(true);
-      expect(usesOfficeEngine("pdf", "xml")).toBe(true);
     });
   });
 });

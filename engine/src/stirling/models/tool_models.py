@@ -413,7 +413,7 @@ class CbzToPdfParams(ApiModel):
 
 class LineArtEdgeLevel(IntEnum):
     """
-    Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
+    Edge detection strength to use for line art conversion (1-3): the radius of the edge filter applied before thresholding.
     """
 
     integer_1 = 1
@@ -449,11 +449,11 @@ class CompressPdfParams(ApiModel):
     )
     grayscale: bool = Field(False, description="Whether to convert the PDF to grayscale. Default is false.")
     line_art: bool = Field(
-        False, description="Whether to convert images to high-contrast line art using ImageMagick. Default is false."
+        False, description="Whether to convert images to high-contrast black and white line art. Default is false."
     )
     line_art_edge_level: LineArtEdgeLevel = Field(
         LineArtEdgeLevel.integer_1,
-        description="Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.",
+        description="Edge detection strength to use for line art conversion (1-3): the radius of the edge filter applied before thresholding.",
     )
     line_art_threshold: float = Field(55, description="Threshold to use for line art conversion (0-100).")
     linearize: bool = Field(False, description="Whether to linearize the PDF for faster web viewing. Default is false.")
@@ -501,15 +501,6 @@ class DeleteAttachmentParams(ApiModel):
     attachment_name: str = Field(..., description="The name of the attachment to delete")
 
 
-class EmbedAllFonts(Enum):
-    """
-    Embed all fonts from the eBook into the generated PDF
-    """
-
-    boolean_true = True
-    boolean_false = False
-
-
 class IncludePageNumbers(Enum):
     """
     Add page numbers to the generated PDF
@@ -539,12 +530,9 @@ class OptimizeForEbook(Enum):
 
 class EbookToPdfParams(ApiModel):
     """
-    This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX) to PDF using Calibre or Stirling Office Convert. Input:EBOOK Output:PDF Type:SISO
+    This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX) to PDF using Stirling Office Convert. Input:EBOOK Output:PDF Type:SISO
     """
 
-    embed_all_fonts: EmbedAllFonts = Field(
-        EmbedAllFonts.boolean_false, description="Embed all fonts from the eBook into the generated PDF"
-    )
     include_page_numbers: IncludePageNumbers = Field(
         IncludePageNumbers.boolean_false, description="Add page numbers to the generated PDF"
     )
@@ -554,9 +542,6 @@ class EbookToPdfParams(ApiModel):
     optimize_for_ebook: OptimizeForEbook = Field(
         OptimizeForEbook.boolean_false,
         description="Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)",
-    )
-    use_stirling_office_convert: bool | None = Field(
-        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
     )
 
 
@@ -599,9 +584,6 @@ class EmlToPdfParams(ApiModel):
         examples=[10],
         ge=1,
         le=100,
-    )
-    use_stirling_office_convert: bool | None = Field(
-        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
     )
 
 
@@ -651,10 +633,8 @@ class ExtractSingleAttachmentParams(ApiModel):
 
 class FileToPdfParams(ApiModel):
     """
-    Converts Word, Excel, PowerPoint, OpenDocument, RTF, CSV and text files with LibreOffice, or Stirling Office Convert when useStirlingOfficeConvert=true or the admin setting is on. For web pages use html-to-pdf. Input:ANY Output:PDF Type:SISO
+    Converts Word, Excel, PowerPoint, OpenDocument, RTF, CSV and text files with Stirling Office Convert. For web pages use html-to-pdf. Input:ANY Output:PDF Type:SISO
     """
-
-    use_stirling_office_convert: bool | None = None
 
 
 class FlattenParams(ApiModel):
@@ -681,9 +661,6 @@ class HtmlToPdfParams(ApiModel):
     This endpoint takes an HTML or ZIP file input and converts it to a PDF format. Input:HTML/ZIP Output:PDF Type:SISO
     """
 
-    use_stirling_office_convert: bool | None = Field(
-        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
-    )
     zoom: float = Field(1, description="Zoom level for displaying the website. Default is '1'.")
 
 
@@ -738,8 +715,6 @@ class MarkdownToPdfParams(ApiModel):
     """
     This endpoint takes a Markdown file or ZIP (containing Markdown + images) input, converts it to HTML, and then to PDF format. Input:MARKDOWN/ZIP Output:PDF Type:SISO
     """
-
-    use_stirling_office_convert: bool | None = None
 
 
 class SortType(StrEnum):
@@ -981,7 +956,7 @@ class TargetDevice(StrEnum):
 
 class PdfToEpubParams(ApiModel):
     """
-    Convert a PDF file to an EPUB or AZW3 ebook using Calibre or Stirling Office Convert. Input:PDF Output:EBOOK Type:SISO
+    Convert a PDF file to an EPUB or AZW3 ebook using Stirling Office Convert. Input:PDF Output:EBOOK Type:SISO
     """
 
     detect_chapters: DetectChapters = Field(
@@ -991,17 +966,12 @@ class PdfToEpubParams(ApiModel):
     target_device: TargetDevice = Field(
         TargetDevice.tablet_phone_images, description="Choose an output profile optimized for the reader device."
     )
-    use_stirling_office_convert: bool | None = Field(
-        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
-    )
 
 
 class PdfToHtmlParams(ApiModel):
     """
     This endpoint converts a PDF file to HTML format. Input:PDF Output:ZIP Type:SISO
     """
-
-    use_stirling_office_convert: bool | None = None
 
 
 class ImageFormat(StrEnum):
@@ -1049,8 +1019,6 @@ class PdfToMarkdownParams(ApiModel):
     This endpoint converts a PDF file to Markdown format. Input:PDF Output:MARKDOWN Type:SISO
     """
 
-    use_stirling_office_convert: bool | None = None
-
 
 class OutputFormat1(StrEnum):
     """
@@ -1071,7 +1039,7 @@ class OutputFormat1(StrEnum):
 
 class PdfToPdfaParams(ApiModel):
     """
-    This endpoint converts a PDF file to PDF/A using Stirling Office Convert, or to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO
+    This endpoint converts a PDF file to PDF/A using Stirling Office Convert, or to PDF/X using Ghostscript. PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO
     """
 
     output_format: OutputFormat1 = Field(
@@ -1084,9 +1052,6 @@ class PdfToPdfaParams(ApiModel):
     )
     strict: bool | None = Field(
         None, description="If true, the conversion will fail if the output is not perfectly compliant"
-    )
-    use_stirling_office_convert: bool | None = Field(
-        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
     )
 
 
@@ -1106,7 +1071,6 @@ class PdfToPresentationParams(ApiModel):
     """
 
     output_format: OutputFormat2 = Field(..., description="The output Presentation format")
-    use_stirling_office_convert: bool | None = None
 
 
 class PdfToSinglePageParams(ApiModel):
@@ -1130,7 +1094,6 @@ class PdfToTextParams(ApiModel):
     """
 
     output_format: OutputFormat3 = Field(..., description="The output Text or RTF format")
-    use_stirling_office_convert: bool | None = None
 
 
 class ExistingTags(StrEnum):
@@ -1201,7 +1164,6 @@ class OutputFormat4(StrEnum):
     The output Word document format
     """
 
-    doc = "doc"
     docx = "docx"
     odt = "odt"
 
@@ -1212,7 +1174,6 @@ class PdfToWordParams(ApiModel):
     """
 
     output_format: OutputFormat4 = Field(..., description="The output Word document format")
-    use_stirling_office_convert: bool | None = None
 
 
 class PdfToXlsxParams(ApiModel):
@@ -1224,15 +1185,12 @@ class PdfToXlsxParams(ApiModel):
         "all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
-    use_stirling_office_convert: bool | None = None
 
 
 class PdfToXmlParams(ApiModel):
     """
     This endpoint converts a PDF file to an XML file. Input:PDF Output:XML Type:SISO
     """
-
-    use_stirling_office_convert: bool | None = None
 
 
 class CustomMode(StrEnum):

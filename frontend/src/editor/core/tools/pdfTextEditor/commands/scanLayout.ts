@@ -35,6 +35,8 @@ export interface LayoutInput {
   ) => number;
   /** Redraw every word as text (a restyle), instead of keeping the scan. */
   redraw: boolean;
+  /** Text already drawn on a line that is not part of this block, which typed text must not land on. */
+  obstacles?: Array<{ line: number; x: number; right: number }>;
 }
 
 export interface PlacedWord {
@@ -167,10 +169,14 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     // A line starts where it always did, so deleting its first word pulls
     // the rest left rather than leaving a hole.
     const scannedLead = anchor && anchor.line === line ? (anchor.lead ?? 0) : 0;
-    const x =
-      (pen === null ? lineStart(line) : pen() + gap(prev, anchor)) +
-      Math.max(0, pending.lead - scannedLead) * input.space;
     const text = pending.text;
+    const width = input.textWidth(text, anchor, dels);
+    const x = clearOfObstacles(
+      line,
+      (pen === null ? lineStart(line) : pen() + gap(prev, anchor)) +
+        Math.max(0, pending.lead - scannedLead) * input.space,
+      width,
+    );
     layout.typed.push({
       text,
       x,
@@ -181,12 +187,20 @@ export function layoutScanEdit(input: LayoutInput): Layout {
         !!anchor && anchor.line === line && Math.abs(x - anchor.x) < 0.5,
       replaced: dels,
     });
-    const end = x + input.textWidth(text, anchor, dels);
+    const end = x + width;
     pen = () => end;
     prev = anchor;
     lastKept = null;
     dels = [];
     pending = null;
+  };
+
+  const clearOfObstacles = (line: number, x: number, width: number) => {
+    let at = x;
+    for (const o of [...(input.obstacles ?? [])].sort((a, b) => a.x - b.x))
+      if (o.line === line && o.right > at && o.x < at + width)
+        at = o.right + input.space;
+    return at;
   };
 
   const flowStart = (w: LayoutWord, line: number): number => {
@@ -263,6 +277,45 @@ export function rewrapLines(
       if (joins) chars[end] = " ";
       chars[at] = "\n";
       end = at;
+    }
+    start = end + 1;
+  }
+  return chars.join("");
+}
+
+/** `text` with the breaks `soft` flags (one flag per line) pulled up while the line above still `fits`, swapping only spaces and line breaks so offsets hold. */
+export function joinSoftLines(
+  text: string,
+  soft: readonly boolean[],
+  fits: (line: string) => boolean,
+): string {
+  const chars = [...text];
+  if (chars.length !== text.length) return text;
+  const softAt = new Set<number>();
+  let line = 0;
+  chars.forEach((ch, i) => {
+    if (ch === "\n" && soft[++line]) softAt.add(i);
+  });
+  let start = 0;
+  while (start < chars.length) {
+    let end = chars.indexOf("\n", start);
+    if (end < 0) end = chars.length;
+    while (softAt.has(end)) {
+      const nextEnd = chars.indexOf("\n", end + 1);
+      const lineEnd = nextEnd < 0 ? chars.length : nextEnd;
+      let wordEnd = end + 1;
+      while (wordEnd < lineEnd && chars[wordEnd] === " ") wordEnd++;
+      if (wordEnd === lineEnd) break;
+      while (wordEnd < lineEnd && chars[wordEnd] !== " ") wordEnd++;
+      const joined = chars.slice(start, wordEnd).join("").replaceAll("\n", " ");
+      if (!fits(joined.trim())) break;
+      chars[end] = " ";
+      softAt.delete(end);
+      if (chars.slice(wordEnd, lineEnd).some((ch) => ch !== " ")) {
+        chars[wordEnd] = "\n";
+        softAt.add(wordEnd);
+        end = wordEnd;
+      } else end = lineEnd;
     }
     start = end + 1;
   }

@@ -86,6 +86,31 @@ beforeEach(() => {
 });
 
 describe("resolveOriginalFonts", () => {
+  it("reads no further font once the document has closed", async () => {
+    await install([
+      face(
+        "Liberation Sans",
+        "Regular",
+        "LiberationSans",
+        "LiberationSans-Regular.ttf",
+      ),
+    ]);
+    const m = documentNaming("ABCDEF+LiberationSans");
+    const readName = vi.spyOn(m, "FPDFFont_GetBaseFontName");
+    let checks = 0;
+    const openForOneCheck = () => checks++ < 1;
+
+    await resolveOriginalFonts(
+      m,
+      ["pdf:21:Liberation Sans", "pdf:22:Liberation Sans"],
+      openForOneCheck,
+    );
+
+    expect(readName.mock.calls.some(([handle]) => Number(handle) === 22)).toBe(
+      false,
+    );
+  });
+
   it("completes a subset from the installed font its glyphs agree with", async () => {
     await install([
       face(

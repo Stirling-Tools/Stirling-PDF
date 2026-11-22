@@ -136,9 +136,6 @@ services:
       # Disable OAuth (SAML only)
       SECURITY_OAUTH2_ENABLED: "false"
 
-      # LibreOffice settings
-      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "true"
-      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "1"
 
       # Permissions
       PUID: 1002

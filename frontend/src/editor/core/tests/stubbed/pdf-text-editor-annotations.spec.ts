@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // The canvas renders with FPDF_ANNOT but the editor model walks page objects
@@ -11,13 +12,7 @@ const ANNOT_PDF = path.join(
 
 test.describe("PDF text editor - annotation-backed text is marked, not silently inert", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(ANNOT_PDF);
+    await openInTextEditor(page, ANNOT_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
