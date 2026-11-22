@@ -338,3 +338,7 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem 0.75rem 1.5rem;
 }
+
+.a11y-area__fix {
+  padding: 0 var(--space-1) var(--space-1);
+}

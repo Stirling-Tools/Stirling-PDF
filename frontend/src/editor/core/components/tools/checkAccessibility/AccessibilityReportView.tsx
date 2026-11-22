@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@editor/ui/Card";
 import type { IconName } from "@editor/ui/Icon";
@@ -38,6 +38,8 @@ interface AccessibilityReportViewProps {
   manualTicked: ReadonlySet<number>;
   onToggleManual: (index: number) => void;
   onSetAllManual: (done: boolean) => void;
+  /** Sets the document language, under the Language area. */
+  languageFix?: ReactNode;
 }
 
 export function AccessibilityReportView({
@@ -45,6 +47,7 @@ export function AccessibilityReportView({
   manualTicked,
   onToggleManual,
   onSetAllManual,
+  languageFix,
 }: AccessibilityReportViewProps) {
   const { t } = useTranslation();
   const { result, areas, basics, checks } = useMemo(
@@ -94,6 +97,7 @@ export function AccessibilityReportView({
               area={area}
               profile={report.profile}
               note={area.id === "altText" ? figures : null}
+              fix={area.id === "language" ? languageFix : undefined}
             />
           ))}
           {basics.map((basic) => (

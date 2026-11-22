@@ -8,6 +8,7 @@ import { Spinner } from "@editor/ui/Spinner";
 import { downloadFile } from "@editor/services/downloadService";
 import { ToolPanelFooter } from "@editor/components/tools/ToolPanelFooter";
 import { AccessibilityReportView } from "@editor/components/tools/checkAccessibility/AccessibilityReportView";
+import { ReportLanguageField } from "@editor/components/tools/checkAccessibility/ReportLanguageField";
 import type { CheckAccessibilityOperationHook } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityOperation";
 import { createAccessibilityReportPdf } from "@editor/hooks/tools/checkAccessibility/accessibilityReportPdf";
 import { assessAccessibilityReport } from "@editor/utils/accessibilityAssessment";
@@ -168,6 +169,15 @@ export function AccessibilityResults({
             key={selected.fileId}
             report={selected.report}
             manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
+            languageFix={
+              reviewAvailable && (
+                <ReportLanguageField
+                  fileId={selected.fileId}
+                  report={selected.report}
+                  onOpenInReview={() => openInReview(null)}
+                />
+              )
+            }
             onToggleManual={(index) => toggleManual(selected.fileId, index)}
             onSetAllManual={(done) =>
               setManualTicks((current) => ({
