@@ -324,19 +324,30 @@ public class HardwareKeyStoreService {
             // counter twice per attempt and can lock the token. Only rebuild on provider/init
             // failures (e.g. token removed/re-inserted leaving a stale provider).
             if (isAuthFailure(e)) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.pkcs11PinRejected",
-                        "The token rejected the PIN. Check it before trying again: repeated wrong"
-                                + " PINs lock the token.");
+                throw pinRejected();
             }
             pkcs11Providers.remove(cacheKey, provider);
             Provider fresh =
                     pkcs11Providers.computeIfAbsent(
                             cacheKey, k -> buildPkcs11Provider(libraryPath, slot));
             KeyStore ks = KeyStore.getInstance("PKCS11", fresh);
-            ks.load(null, pin);
+            try {
+                ks.load(null, pin);
+            } catch (Exception retryFailure) {
+                if (isAuthFailure(retryFailure)) {
+                    throw pinRejected();
+                }
+                throw retryFailure;
+            }
             return new Pkcs11Session(ks, fresh);
         }
+    }
+
+    private static IllegalArgumentException pinRejected() {
+        return ExceptionUtils.createIllegalArgumentException(
+                "error.pkcs11PinRejected",
+                "The token rejected the PIN. Check it before trying again: repeated wrong PINs"
+                        + " lock the token.");
     }
 
     /** True when the failure is a bad/locked PIN rather than a provider/init/device problem. */
