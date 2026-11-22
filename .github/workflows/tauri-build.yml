@@ -371,16 +371,15 @@ jobs:
       - name: Configure Windows code signing
         if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: bash
-        env:
-          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
+          SIGN_SCRIPT="${GITHUB_WORKSPACE//\\//}/.github/scripts/sign-windows-file.ps1"
           cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
                 "signCommand": {
-                  "cmd": "smctl",
-                  "args": ["sign", "--keypair-alias", "${KEYPAIR_ALIAS}", "--input", "%1", "--verbose"]
+                  "cmd": "pwsh",
+                  "args": ["-NoProfile", "-NonInteractive", "-File", "${SIGN_SCRIPT}", "%1"]
                 }
               }
             }
@@ -391,6 +390,11 @@ jobs:
         if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: pwsh
         run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre
+
+      - name: Sign MSI provisioning binaries
+        if: ${{ inputs.sign && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/windows/wix
 
       - name: Import release GPG signing key (Linux)
         if: inputs.sign && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
@@ -572,6 +576,11 @@ jobs:
         if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: pwsh
         run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre -VerifyOnly
+
+      - name: Verify MSI provisioning binary signatures
+        if: ${{ inputs.sign && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/windows/wix -VerifyOnly
 
       # Verify the MSI AND the inner exe extracted from it are signed.
       # The inner exe is what gets installed on users' machines and what AV scans.
