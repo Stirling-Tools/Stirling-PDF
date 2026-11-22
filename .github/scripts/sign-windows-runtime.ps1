@@ -1,0 +1,47 @@
+param(
+  [Parameter(Mandatory = $true)][string]$Root,
+  [switch]$VerifyOnly
+)
+
+$ErrorActionPreference = "Stop"
+
+$binaries = @(Get-ChildItem -LiteralPath $Root -Recurse -File |
+  Where-Object { $_.Extension -in @(".dll", ".exe") })
+if ($binaries.Count -eq 0) { throw "No .dll or .exe files found under $Root" }
+
+function Test-Signed([string]$path) {
+  (Get-AuthenticodeSignature -LiteralPath $path).Status -eq "Valid"
+}
+
+if ($VerifyOnly) {
+  $unsigned = @($binaries | Where-Object { -not (Test-Signed $_.FullName) })
+  foreach ($file in $unsigned) { Write-Host "[ERROR] Not signed: $($file.FullName)" }
+  if ($unsigned.Count -gt 0) { exit 1 }
+  Write-Host "[SUCCESS] All $($binaries.Count) runtime binaries under $Root are signed"
+  exit 0
+}
+
+$alias = $env:SM_KEYPAIR_ALIAS
+if (-not $alias) { throw "SM_KEYPAIR_ALIAS is not set" }
+
+$work = Join-Path $env:RUNNER_TEMP "runtime-presign"
+New-Item -ItemType Directory -Force -Path $work | Out-Null
+
+$signed = 0
+$index = 0
+foreach ($file in $binaries) {
+  if (Test-Signed $file.FullName) { continue }
+  $index++
+  $temp = Join-Path $work ("binary{0}{1}" -f $index, $file.Extension)
+  Copy-Item -LiteralPath $file.FullName -Destination $temp -Force
+  Write-Host "Signing $($file.FullName)"
+  & smctl sign --keypair-alias $alias --input $temp --verbose
+  if ($LASTEXITCODE -ne 0) { throw "smctl sign exited $LASTEXITCODE for $($file.FullName)" }
+  if (-not (Test-Signed $temp)) { throw "smctl reported success but $($file.FullName) is not signed" }
+  Copy-Item -LiteralPath $temp -Destination $file.FullName -Force
+  Remove-Item -LiteralPath $temp -Force
+  if (-not (Test-Signed $file.FullName)) { throw "Signature lost copying back $($file.FullName)" }
+  $signed++
+}
+
+Write-Host "[SUCCESS] Signed $signed of $($binaries.Count) runtime binaries under $Root"
