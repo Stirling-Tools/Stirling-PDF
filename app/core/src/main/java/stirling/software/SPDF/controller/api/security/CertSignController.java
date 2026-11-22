@@ -74,6 +74,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
@@ -125,6 +126,23 @@ public class CertSignController {
         this.serverCertificateService = serverCertificateService;
         this.tempFileManager = tempFileManager;
         this.hardwareKeyStoreService = hardwareKeyStoreService;
+    }
+
+    @GetMapping("/cert-sign/server-certificate")
+    @Operation(
+            summary = "Describe the server signing certificate",
+            description =
+                    "The identity that signing with certType=SERVER uses: name, issuer and validity."
+                            + " 404 when no server certificate is available.")
+    public ResponseEntity<HardwareCertificateInfo> getServerCertificate() throws Exception {
+        if (serverCertificateService == null
+                || !serverCertificateService.isEnabled()
+                || !serverCertificateService.hasServerCertificate()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(
+                HardwareKeyStoreService.toInfo(
+                        "server", serverCertificateService.getServerCertificate(), "SERVER"));
     }
 
     /**

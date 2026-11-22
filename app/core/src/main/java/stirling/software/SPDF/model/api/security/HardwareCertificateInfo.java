@@ -1,10 +1,9 @@
 package stirling.software.SPDF.model.api.security;
 
 /**
- * Metadata for a single signing certificate discovered on a hardware source (Windows certificate
- * store or a PKCS#11 token). Returned to the desktop frontend so the user can pick which
- * certificate to sign with. Never carries private key material - signing always happens on the
- * token / OS.
+ * Metadata for one signing certificate: a hardware one (Windows store, macOS Keychain or a PKCS#11
+ * token) the user can pick, or the server certificate shown for information. Never carries private
+ * key material.
  */
 public record HardwareCertificateInfo(
         String alias,

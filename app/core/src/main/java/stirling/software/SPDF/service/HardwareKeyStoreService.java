@@ -460,7 +460,8 @@ public class HardwareKeyStoreService {
         return keyUsage == null || keyUsage[0] || keyUsage[1]; // digitalSignature, nonRepudiation
     }
 
-    private static HardwareCertificateInfo toInfo(
+    /** Summarises {@code cert} for display; nothing in the result is secret. */
+    public static HardwareCertificateInfo toInfo(
             String alias, X509Certificate cert, String source) {
         java.util.Date now = new java.util.Date();
         return new HardwareCertificateInfo(
