@@ -1083,6 +1083,7 @@ export function CommentsSidebar({
     scrollActions,
     getZoomState,
     toggleCommentsSidebar,
+    registerBeforeExport,
   } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
@@ -1482,6 +1483,37 @@ export function CommentsSidebar({
       setEditingReply(null);
     },
     [provides, displayName, navActions],
+  );
+
+  // Text typed but not yet sent would otherwise be dropped from the saved PDF.
+  const flushDraftsRef = useRef<() => void>(() => {});
+  flushDraftsRef.current = () => {
+    if (readOnly) return;
+    for (const [page, entries] of Object.entries(byPage)) {
+      const pageIndex = Number(page);
+      for (const entry of entries) {
+        const ann = entry.annotation.object;
+        const cardKey = `${pageIndex}_${ann.id}`;
+        const draft = draftContents[cardKey];
+        if (draft?.trim() && !getCommentDisplayContent(entry).trim()) {
+          handleSendMainComment(pageIndex, ann.id, draft);
+        }
+        if (replyDrafts[`${cardKey}_reply`]?.trim()) {
+          handleSendReply(pageIndex, ann.id, ann.rect);
+        }
+        if (editingReply?.cardKey === cardKey) {
+          handleSaveReplyEdit(
+            pageIndex,
+            editingReply.replyId,
+            editingReply.draft,
+          );
+        }
+      }
+    }
+  };
+  useEffect(
+    () => registerBeforeExport?.(() => flushDraftsRef.current()),
+    [registerBeforeExport],
   );
 
   const handleAddComment = useCallback(() => {

@@ -173,6 +173,17 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const beforeExportRef = useRef(new Set<() => void>());
+  const registerBeforeExport = useCallback((fn: () => void) => {
+    beforeExportRef.current.add(fn);
+    return () => {
+      beforeExportRef.current.delete(fn);
+    };
+  }, []);
+  const flushBeforeExport = useCallback(() => {
+    beforeExportRef.current.forEach((fn) => fn());
+  }, []);
+
   const {
     register: registerImmediateZoomUpdate,
     trigger: triggerImmediateZoomInternal,
@@ -561,6 +572,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       // Apply changes
       applyChanges,
       setApplyChanges,
+      registerBeforeExport,
+      flushBeforeExport,
 
       // PDF page rendering mode
       pdfRenderMode,
@@ -623,6 +636,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       registerBridge,
       applyChanges,
       setApplyChanges,
+      registerBeforeExport,
+      flushBeforeExport,
       pdfRenderMode,
       cyclePdfRenderMode,
     ],

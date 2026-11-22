@@ -177,6 +177,7 @@ const EmbedPdfViewerContent = ({
     selectionActions,
     setApplyChanges,
     applyChanges: viewerApplyChanges,
+    flushBeforeExport,
     pdfRenderMode,
     cyclePdfRenderMode,
     setActiveFileIndex: _setActiveFileIndex,
@@ -1137,6 +1138,7 @@ const EmbedPdfViewerContent = ({
       console.log(
         "[Viewer] Applying changes - exporting PDF with annotations/redactions",
       );
+      flushBeforeExport();
 
       // Step 0: Commit any pending redactions before export
       const hadPendingRedactions =
@@ -1241,6 +1243,7 @@ const EmbedPdfViewerContent = ({
     currentFile,
     activeFiles,
     exportActions,
+    flushBeforeExport,
     applySignaturesRef,
     actions,
     selectors,

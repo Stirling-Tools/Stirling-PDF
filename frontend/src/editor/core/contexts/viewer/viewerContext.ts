@@ -161,6 +161,10 @@ export interface ViewerContextType {
   applyChanges: (() => Promise<void>) | null;
   setApplyChanges: (fn: (() => Promise<void>) | null) => void;
 
+  /** Registers `fn` to commit unsent edits before a save exports; returns an unregister. */
+  registerBeforeExport: (fn: () => void) => () => void;
+  flushBeforeExport: () => void;
+
   // PDF page color rendering mode (viewer-only, never modifies the PDF)
   pdfRenderMode: PdfRenderMode;
   cyclePdfRenderMode: () => void;
