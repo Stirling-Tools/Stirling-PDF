@@ -3038,6 +3038,8 @@ title = "Rule of thumb"
 device = "This device"
 noOtherSources = "No other certificate sources are available."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Certificate source"
 upload = "Upload"
 

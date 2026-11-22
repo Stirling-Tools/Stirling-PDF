@@ -53,17 +53,8 @@ const sameIdentity = (a: HardwareCertificateInfo, b: HardwareCertificateInfo) =>
   a.issuerCommonName === b.issuerCommonName &&
   a.notAfter === b.notAfter;
 
-const DigitalIdList = ({
-  certs,
-  selectedAlias,
-  onSelect,
-  loading,
-  disabled,
-  onRefresh,
-}: DigitalIdListProps) => {
+const useDigitalIdDetails = () => {
   const { t, i18n } = useTranslation();
-  const [showUnusable, setShowUnusable] = useState(false);
-
   const formatDate = (iso?: string) => {
     if (!iso) return "";
     const date = new Date(iso);
@@ -73,17 +64,10 @@ const DigitalIdList = ({
     }).format(date);
   };
 
-  const sorted = [...certs].sort(
-    (a, b) =>
-      Number(isGuidish(a.subjectCommonName) && isGuidish(a.alias)) -
-        Number(isGuidish(b.subjectCommonName) && isGuidish(b.alias)) ||
-      digitalIdName(a).localeCompare(digitalIdName(b)),
-  );
-  const usable = sorted.filter(isUsableDigitalId);
-  const unusable = sorted.filter((c) => !isUsableDigitalId(c));
-  const allUnusable = usable.length === 0 && unusable.length > 0;
-
-  const details = (cert: HardwareCertificateInfo) => {
+  return (
+    cert: HardwareCertificateInfo,
+    siblings: HardwareCertificateInfo[] = [],
+  ) => {
     const parts: string[] = [];
     if (
       cert.issuerCommonName &&
@@ -114,7 +98,7 @@ const DigitalIdList = ({
     }
     if (
       cert.serialNumber &&
-      certs.some((o) => o !== cert && sameIdentity(o, cert))
+      siblings.some((o) => o !== cert && sameIdentity(o, cert))
     ) {
       parts.push(
         t("certSign.hardware.serial", "Serial …{{serial}}", {
@@ -124,6 +108,50 @@ const DigitalIdList = ({
     }
     return parts.join(" · ");
   };
+};
+
+/** A read-only card for one digital ID, styled like the entries of the list. */
+export const DigitalIdSummary = ({
+  cert,
+}: {
+  cert: HardwareCertificateInfo;
+}) => {
+  const describe = useDigitalIdDetails();
+  return (
+    <div className="digital-id-card">
+      <Stack gap={0} className={privateContentClassName}>
+        <Text className="digital-id-name">{digitalIdName(cert)}</Text>
+        <Text size="xs" c="dimmed">
+          {describe(cert)}
+        </Text>
+      </Stack>
+    </div>
+  );
+};
+
+const DigitalIdList = ({
+  certs,
+  selectedAlias,
+  onSelect,
+  loading,
+  disabled,
+  onRefresh,
+}: DigitalIdListProps) => {
+  const { t } = useTranslation();
+  const describe = useDigitalIdDetails();
+  const [showUnusable, setShowUnusable] = useState(false);
+
+  const sorted = [...certs].sort(
+    (a, b) =>
+      Number(isGuidish(a.subjectCommonName) && isGuidish(a.alias)) -
+        Number(isGuidish(b.subjectCommonName) && isGuidish(b.alias)) ||
+      digitalIdName(a).localeCompare(digitalIdName(b)),
+  );
+  const usable = sorted.filter(isUsableDigitalId);
+  const unusable = sorted.filter((c) => !isUsableDigitalId(c));
+  const allUnusable = usable.length === 0 && unusable.length > 0;
+
+  const details = (cert: HardwareCertificateInfo) => describe(cert, certs);
 
   const card = (cert: HardwareCertificateInfo) => {
     const blocked = !isUsableDigitalId(cert);

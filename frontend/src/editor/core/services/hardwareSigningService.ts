@@ -1,9 +1,9 @@
 import apiClient from "@editor/services/apiClient";
 
-/** A signing certificate held on a hardware source (OS certificate store or PKCS#11 token). */
+/** A signing certificate: one held on a hardware source, or the server's own. */
 export interface HardwareCertificateInfo {
   alias: string;
-  source: "WINDOWS_STORE" | "MACOS_KEYCHAIN" | "PKCS11";
+  source: "WINDOWS_STORE" | "MACOS_KEYCHAIN" | "PKCS11" | "SERVER";
   subject: string;
   issuer: string;
   subjectCommonName: string;
@@ -31,8 +31,9 @@ export interface HardwareSigningCapabilities {
 }
 
 const BASE = "/api/v1/security/cert-sign/hardware";
-// Routes discovery like signing itself: to the bundled backend that holds the keys.
-const ROUTING = { endpointName: "cert-sign" };
+// Routes discovery like signing itself: to the bundled backend that holds the keys. Callers
+// show failures inline, so the global error toast would only repeat them.
+const ROUTING = { endpointName: "cert-sign", suppressErrorToast: true };
 
 export async function getHardwareSigningCapabilities(): Promise<HardwareSigningCapabilities> {
   const response = await apiClient.get<HardwareSigningCapabilities>(
@@ -77,4 +78,17 @@ export async function listPkcs11Certificates(params: {
     ROUTING,
   );
   return response.data;
+}
+
+/** The certificate server-side signing uses, or null when the server has none to offer. */
+export async function getServerSigningCertificate(): Promise<HardwareCertificateInfo | null> {
+  try {
+    const response = await apiClient.get<HardwareCertificateInfo>(
+      "/api/v1/security/cert-sign/server-certificate",
+      ROUTING,
+    );
+    return response.data;
+  } catch {
+    return null;
+  }
 }
