@@ -196,15 +196,44 @@ jobs:
           path: ./jar-dist/*.jar
           retention-days: 1
 
+  fetch-signature-store:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
+      - name: Download saved Windows signatures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p signature-store
+          if gh release view windows-signature-store --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release download windows-signature-store --repo "$GITHUB_REPOSITORY" --pattern '*.sig' --dir signature-store --clobber || true
+          fi
+          echo "$(find signature-store -name '*.sig' | wc -l) saved signatures"
+
+      - name: Share saved Windows signatures with the build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-signature-store
+          path: signature-store
+          if-no-files-found: ignore
+          retention-days: 1
+
   build:
     environment: release-signing
-    needs: determine-matrix
+    needs: [determine-matrix, fetch-signature-store]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     runs-on: ${{ matrix.platform }}
     env:
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
+      SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
     steps:
       - name: Harden Runner
@@ -447,6 +476,21 @@ jobs:
           EOF
           cat ./frontend/src-tauri/tauri.windows.conf.json
 
+      - name: Restore saved Windows signatures
+        if: ${{ startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: windows-signature-store
+          path: ${{ runner.temp }}/signature-store
+
+      - name: Point signing at the saved signatures
+        if: ${{ startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
+        shell: bash
+        run: |
+          echo "WINDOWS_SIGNATURE_STORE=$RUNNER_TEMP/signature-store" >> "$GITHUB_ENV"
+          echo "WINDOWS_SIGNATURE_STORE_NEW=$RUNNER_TEMP/signature-store-new" >> "$GITHUB_ENV"
+
       - name: Sign bundled runtime binaries
         if: ${{ startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
         shell: pwsh
@@ -565,6 +609,15 @@ jobs:
             gpg --batch --yes --delete-secret-keys "$RELEASE_GPG_FINGERPRINT" || true
             gpg --batch --yes --delete-keys "$RELEASE_GPG_FINGERPRINT" || true
           fi
+
+      - name: Keep new Windows signatures
+        if: ${{ always() && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-signatures-new-${{ matrix.name }}
+          path: ${{ runner.temp }}/signature-store-new
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Verify bundled runtime signatures
         if: ${{ startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
@@ -746,6 +799,41 @@ jobs:
             security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
           fi
         continue-on-error: true
+
+  save-signature-store:
+    needs: build
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
+      - name: Collect new Windows signatures
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          pattern: windows-signatures-new-*
+          merge-multiple: true
+          path: signatures-new
+
+      - name: Save new Windows signatures for later releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(signatures-new/*.sig)
+          if [ ${#files[@]} -eq 0 ]; then echo "No new signatures"; exit 0; fi
+          if ! gh release view windows-signature-store --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create windows-signature-store --repo "$GITHUB_REPOSITORY" --draft \
+              --title "Windows signature store" \
+              --notes "Authenticode signatures keyed by the SHA-256 Authenticode digest of the unsigned file, reused by release builds. Not a release."
+          fi
+          gh release upload windows-signature-store "${files[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Saved ${#files[@]} signatures"
 
   collect-and-release:
     needs: [determine-matrix, build, build-jars]

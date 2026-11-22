@@ -23,7 +23,7 @@ $fakeSmctl = Join-Path $fakeBin "smctl.ps1"
 `$target = `$args[[Array]::IndexOf(`$args, '--input') + 1]
 Add-Content -LiteralPath '$work\smctl-calls.txt' -Value `$target
 if (`$env:FAKE_SMCTL_NO_OP -eq '1') { exit 0 }
-& '$($signtool.FullName)' sign /fd SHA256 /f '$pfx' /p '$password' `$target | Out-Null
+& '$($signtool.FullName)' sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /f '$pfx' /p '$password' `$target | Out-Null
 exit `$LASTEXITCODE
 "@ | Set-Content -LiteralPath $fakeSmctl
 Set-Content -LiteralPath (Join-Path $fakeBin "smctl.cmd") -Value "@pwsh -NoProfile -File `"$fakeSmctl`" %*"
@@ -98,6 +98,62 @@ pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-runtime.
 $signed = $LASTEXITCODE
 pwsh -NoProfile -NonInteractive -File (Join-Path $scripts "sign-windows-runtime.ps1") -Root $tree -VerifyOnly | Out-Host
 Check "runtime script signs a tree and verify-only then passes" ($signed -eq 0 -and $LASTEXITCODE -eq 0)
+
+$env:WINDOWS_SIGNATURE_STORE = Join-Path $work "store"
+$env:WINDOWS_SIGNATURE_STORE_NEW = Join-Path $work "store-new"
+$env:SM_CODE_SIGNING_CERT_SHA1_HASH = $cert.Thumbprint
+
+$first = New-Unsigned "reuse\first\jpdfium.dll"
+$callsBefore = Get-Calls
+$firstExit = Invoke-Sign $first
+Check "signs and saves a signature on a store miss" ($firstExit -eq 0 -and (Status $first) -eq "Valid" -and (Get-Calls) -eq $callsBefore + 1 -and @(Get-ChildItem $env:WINDOWS_SIGNATURE_STORE_NEW -Filter *.sig).Count -eq 1)
+
+$second = New-Unsigned "reuse\second\jpdfium.dll"
+$callsBefore = Get-Calls
+$secondExit = Invoke-Sign $second
+Check "reuses the saved signature for identical bytes without calling smctl" ($secondExit -eq 0 -and (Status $second) -eq "Valid" -and (Get-Calls) -eq $callsBefore)
+Check "reused file is byte-identical to the freshly signed one" ((Get-FileHash $first).Hash -eq (Get-FileHash $second).Hash)
+
+$otherSource = Join-Path $work "Other.cs"
+Set-Content -LiteralPath $otherSource -Value "public static class Other { public static int Value() { return 2; } }"
+$otherTemplate = Join-Path $work "other.dll"
+Add-Type -TypeDefinition (Get-Content -Raw $otherSource) -OutputAssembly $otherTemplate -OutputType Library
+$otherFirst = Join-Path $work "reuse\other-first.dll"
+Copy-Item $otherTemplate $otherFirst
+$storedBefore = @(Get-ChildItem $env:WINDOWS_SIGNATURE_STORE -Filter *.sig | ForEach-Object Name)
+Invoke-Sign $otherFirst | Out-Null
+$otherSig = Get-ChildItem $env:WINDOWS_SIGNATURE_STORE -Filter *.sig | Where-Object Name -notin $storedBefore
+Check "saves one signature for the second file" (@($otherSig).Count -eq 1)
+Copy-Item (Join-Path $env:WINDOWS_SIGNATURE_STORE $storedBefore[0]) $otherSig.FullName -Force
+$otherSecond = Join-Path $work "reuse\other-second.dll"
+Copy-Item $otherTemplate $otherSecond
+$callsBefore = Get-Calls
+$poisonExit = Invoke-Sign $otherSecond
+Check "rejects a saved signature that belongs to different bytes and signs afresh" ($poisonExit -eq 0 -and (Status $otherSecond) -eq "Valid" -and (Get-Calls) -eq $callsBefore + 1)
+
+$env:SM_CODE_SIGNING_CERT_SHA1_HASH = "0000000000000000000000000000000000000000"
+$third = New-Unsigned "reuse\third\jpdfium.dll"
+$callsBefore = Get-Calls
+$thirdExit = Invoke-Sign $third
+Check "does not reuse a signature from a different certificate" ($thirdExit -eq 0 -and (Status $third) -eq "Valid" -and (Get-Calls) -eq $callsBefore + 1)
+$env:SM_CODE_SIGNING_CERT_SHA1_HASH = $cert.Thumbprint
+
+function New-Dangling([string]$relative) {
+  $path = New-Unsigned $relative
+  $raw = [IO.File]::ReadAllBytes($path)
+  [BitConverter]::GetBytes([uint32]$raw.Length).CopyTo($raw, $entry)
+  [BitConverter]::GetBytes([uint32]9000).CopyTo($raw, $entry + 4)
+  [IO.File]::WriteAllBytes($path, $raw)
+  $path
+}
+$danglingFirst = New-Dangling "reuse\dangling-first\msvcp140_atomic_wait.dll"
+Invoke-Sign $danglingFirst | Out-Null
+$danglingSecond = New-Dangling "reuse\dangling-second\msvcp140_atomic_wait.dll"
+$callsBefore = Get-Calls
+$danglingExit = Invoke-Sign $danglingSecond
+Check "reuses a signature for a file with a dangling certificate table" ($danglingExit -eq 0 -and (Status $danglingSecond) -eq "Valid" -and (Get-Calls) -eq $callsBefore)
+
+Remove-Item Env:\WINDOWS_SIGNATURE_STORE, Env:\WINDOWS_SIGNATURE_STORE_NEW, Env:\SM_CODE_SIGNING_CERT_SHA1_HASH
 
 Remove-Item -LiteralPath $cert.PSPath
 Get-ChildItem Cert:\LocalMachine\Root | Where-Object Thumbprint -eq $cert.Thumbprint | Remove-Item
