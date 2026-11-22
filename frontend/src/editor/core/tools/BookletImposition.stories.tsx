@@ -1,5 +1,5 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor } from "storybook/test";
+import { expect } from "storybook/test";
 import {
   fixtureResponse,
   knownA11yIssues,
@@ -24,8 +24,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const DOUBLE_SIDED = "Double-sided printing";
+const FLIP_ON_SHORT_EDGE = "Flip on short edge (automatic duplex only)";
+
 async function manualDuplex(context: PlayContext) {
-  await toggle(context, "checkbox", "Double-sided printing");
+  await toggle(context, "checkbox", DOUBLE_SIDED);
   return waitForPanelText(context, "Manual Duplex Mode");
 }
 
@@ -34,56 +37,32 @@ async function secondPass(context: PlayContext) {
   await choose(context, "2nd Pass");
 }
 
-async function openAdvanced(context: PlayContext) {
-  const panel = await waitForPanelText(context, "Advanced Options");
-  const header = panel.getByRole("button", { name: "Advanced Options" });
-  await userEvent.click(header);
-  await waitFor(() => expect(header).toHaveAttribute("aria-expanded", "true"));
-  return panel;
-}
-
-async function manualDuplexAdvanced(context: PlayContext) {
-  await manualDuplex(context);
-  return openAdvanced(context);
-}
-
 export const Panel: Story = {};
 
 export const ManualDuplexFirstPass: Story = {
-  play: manualDuplex,
+  play: async (context) => {
+    const panel = await manualDuplex(context);
+    await expect(
+      panel.getByRole("checkbox", { name: FLIP_ON_SHORT_EDGE }),
+    ).toBeDisabled();
+  },
 };
 
 export const ManualDuplexSecondPass: Story = {
   play: secondPass,
 };
 
-export const AdvancedOptions: Story = {
-  play: openAdvanced,
-};
-
-export const AdvancedOptionsAllOn: Story = {
+export const AllOptionsOn: Story = {
   play: async (context) => {
-    await openAdvanced(context);
     for (const name of [
       "Right-to-left binding",
       "Add borders around pages",
       "Add gutter margin",
-      "Flip on short edge (automatic duplex only)",
+      FLIP_ON_SHORT_EDGE,
     ])
       await toggle(context, "checkbox", name);
-    const gutter = await typeInto(context, "Gutter size (points)", "24");
-    await expect(gutter).toHaveValue("24");
-  },
-};
-
-export const AdvancedOptionsManualDuplex: Story = {
-  play: async (context) => {
-    const panel = await manualDuplexAdvanced(context);
-    await expect(
-      panel.getByRole("checkbox", {
-        name: "Flip on short edge (automatic duplex only)",
-      }),
-    ).toBeDisabled();
+    const gutter = await typeInto(context, "Gutter size", "24");
+    await expect(gutter).toHaveValue("24 pt");
   },
 };
 
@@ -116,34 +95,25 @@ export const SecondPassTooltip: Story = {
 };
 
 export const RightToLeftBindingTooltip: Story = {
-  play: openTooltip({ info: /^For Arabic, Hebrew/ }, { after: openAdvanced }),
+  play: openTooltip({ info: /^For Arabic, Hebrew/ }),
 };
 
 export const AddBordersTooltip: Story = {
-  play: openTooltip(
-    { info: /^Adds borders around each page section/ },
-    { after: openAdvanced },
-  ),
+  play: openTooltip({ info: /^Adds borders around each page section/ }),
 };
 
 export const GutterMarginTooltip: Story = {
-  play: openTooltip(
-    { info: /^Adds inner margin space for binding/ },
-    { after: openAdvanced },
-  ),
+  play: openTooltip({ info: /^Adds inner margin space for binding/ }),
 };
 
 export const FlipOnShortEdgeTooltip: Story = {
-  play: openTooltip(
-    { info: /^Enable for short-edge duplex printing/ },
-    { after: openAdvanced },
-  ),
+  play: openTooltip({ info: /^Enable for short-edge duplex printing/ }),
 };
 
 export const FlipOnShortEdgeManualDuplexTooltip: Story = {
   play: openTooltip(
     { info: /^Not needed in manual mode/ },
-    { after: manualDuplexAdvanced },
+    { after: manualDuplex },
   ),
 };
 

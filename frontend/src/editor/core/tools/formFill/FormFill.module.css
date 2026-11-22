@@ -333,3 +333,49 @@
   color: var(--c-text-subtle);
   max-width: 200px;
 }
+
+/* Tinted with the shared AI accent (sui-acc-ai on the element) so it reads as the
+   same AI feature as the AI buttons elsewhere. */
+.autoDetectCta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--_bd);
+  border-radius: var(--radius-md);
+  background: var(--_tint);
+  text-align: start;
+}
+
+.autoDetectCta > :last-child {
+  grid-column: 1 / -1;
+}
+
+.autoDetectCta > :last-child,
+.autoDetectCta > :last-child > button {
+  width: 100%;
+}
+
+.autoDetectIcon {
+  display: inline-flex;
+  color: var(--_text);
+}
+
+.autoDetectText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0_5);
+  min-width: 0;
+}
+
+.autoDetectTitle {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.autoDetectBody {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--c-text-muted);
+}

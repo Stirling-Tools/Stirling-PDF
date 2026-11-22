@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Stack } from "@mantine/core";
 import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import CertificateTypeSettings from "@editor/components/tools/certSign/CertificateTypeSettings";
@@ -101,36 +102,25 @@ const CertSign = (props: BaseToolProps) => {
       ...(base.params.parameters.signMode === "MANUAL"
         ? [
             {
-              title: t("certSign.certTypeStep.stepTitle", "Certificate Format"),
+              title: t("certSign.certTypeStep.stepTitle", "Certificate"),
               isCollapsed: base.settingsCollapsed,
               onCollapsedClick: base.settingsCollapsed
                 ? base.handleSettingsReset
                 : undefined,
               tooltip: certTypeTips,
               content: (
-                <CertificateFormatSettings
-                  parameters={base.params.parameters}
-                  onParameterChange={base.params.updateParameter}
-                  disabled={base.endpointLoading}
-                />
-              ),
-            },
-          ]
-        : []),
-      ...(base.params.parameters.signMode === "MANUAL"
-        ? [
-            {
-              title: t("certSign.certFiles.stepTitle", "Certificate Files"),
-              isCollapsed: base.settingsCollapsed,
-              onCollapsedClick: base.settingsCollapsed
-                ? base.handleSettingsReset
-                : undefined,
-              content: (
-                <CertificateFilesSettings
-                  parameters={base.params.parameters}
-                  onParameterChange={base.params.updateParameter}
-                  disabled={base.endpointLoading}
-                />
+                <Stack gap="md">
+                  <CertificateFormatSettings
+                    parameters={base.params.parameters}
+                    onParameterChange={base.params.updateParameter}
+                    disabled={base.endpointLoading}
+                  />
+                  <CertificateFilesSettings
+                    parameters={base.params.parameters}
+                    onParameterChange={base.params.updateParameter}
+                    disabled={base.endpointLoading}
+                  />
+                </Stack>
               ),
             },
           ]

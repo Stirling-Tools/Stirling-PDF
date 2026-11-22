@@ -49,6 +49,10 @@ export const SortDescendingByDate: Story = {
   },
 };
 
+export const SortFilesTooltip: Story = {
+  play: openTooltip({ step: "Sort Files" }),
+};
+
 export const BothSettingsOn: Story = {
   play: async (context) => {
     for (const name of [

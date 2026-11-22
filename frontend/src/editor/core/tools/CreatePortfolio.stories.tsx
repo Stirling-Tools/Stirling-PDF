@@ -45,6 +45,10 @@ export const PortfolioSettingsTooltip: Story = {
   play: openTooltip({ step: "Portfolio Settings" }),
 };
 
+export const CoverTitleTooltip: Story = {
+  play: openTooltip({ info: /^Every selected file is kept whole/ }),
+};
+
 export const OneFile: Story = {
   args: { files: ["sample.pdf"] },
 };

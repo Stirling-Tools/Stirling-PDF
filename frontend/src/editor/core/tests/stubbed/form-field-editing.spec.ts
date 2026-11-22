@@ -479,7 +479,7 @@ test.describe("Form field editor", () => {
     await openFormTool(page);
     await selectMode(page, "Modify");
     await page.getByTestId("form-modify-row-firstName").click();
-    await page.getByLabel("Label", { exact: true }).fill("Given name");
+    await page.getByLabel(/^Label/).fill("Given name");
     await selectMode(page, "Create");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByTestId("form-create-commit")).toContainText("1");
@@ -516,7 +516,7 @@ test.describe("Form field editor", () => {
     await openFormTool(page);
     await selectMode(page, "Modify");
     await page.getByTestId("form-modify-row-firstName").click();
-    await page.getByLabel("Label", { exact: true }).fill("Keep this draft");
+    await page.getByLabel(/^Label/).fill("Keep this draft");
     await selectMode(page, "Fill");
     await page.getByTestId("unsaved-save").click();
     await expect(
@@ -524,9 +524,7 @@ test.describe("Form field editor", () => {
         .getByText("Field could not be saved", { exact: true })
         .and(page.locator(":not(.toast-body)")),
     ).toBeVisible();
-    await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
-      "Keep this draft",
-    );
+    await expect(page.getByLabel(/^Label/)).toHaveValue("Keep this draft");
     await expect(page.getByTestId("form-modify-commit")).toBeEnabled();
     await selectMode(page, "Fill");
     await page.getByTestId("unsaved-discard").click();
@@ -572,7 +570,7 @@ test.describe("Form field editor", () => {
     await openFormTool(page);
     await selectMode(page, "Modify");
     await page.getByTestId("form-modify-row-firstName").click();
-    await page.getByLabel("Label", { exact: true }).fill("Fresh label");
+    await page.getByLabel(/^Label/).fill("Fresh label");
     let release!: () => void;
     const ready = new Promise<void>((resolve) => {
       release = resolve;
@@ -620,7 +618,7 @@ test.describe("Form field editor", () => {
       .click();
     await selectMode(page, "Modify");
     await page.getByTestId("form-modify-row-firstName").click();
-    await page.getByLabel("Label", { exact: true }).fill("Second document");
+    await page.getByLabel(/^Label/).fill("Second document");
     await page.getByTestId("form-modify-commit").click();
     await expect.poll(() => captured["edit-fields"]).toBeTruthy();
     expect((await readEditBatch(page)).modify).toEqual([
@@ -642,9 +640,7 @@ test.describe("Form field editor", () => {
     await openFormTool(page);
     await selectMode(page, "Modify");
     await page.getByTestId("form-modify-row-firstName").click();
-    await page
-      .getByLabel("Label", { exact: true })
-      .fill("Saved before leaving");
+    await page.getByLabel(/^Label/).fill("Saved before leaving");
     await page
       .getByRole("button", { name: "Back to all tools", exact: true })
       .click();

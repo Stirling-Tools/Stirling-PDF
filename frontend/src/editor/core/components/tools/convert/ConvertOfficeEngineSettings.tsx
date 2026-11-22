@@ -1,7 +1,8 @@
-import { Switch } from "@mantine/core";
+import { Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useOfficeConversionDefault } from "@editor/hooks/useOfficeConversionDefault";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface ConvertOfficeEngineSettingsProps {
   parameters: Pick<ConvertParameters, "useStirlingOfficeConvert">;
@@ -22,15 +23,14 @@ const ConvertOfficeEngineSettings = ({
   const checked = parameters.useStirlingOfficeConvert ?? serverDefault;
 
   return (
-    <Switch
+    <Checkbox
       data-testid="stirling-office-convert-switch"
-      label={t(
-        "convert.stirlingOfficeConvert",
-        "Use Stirling Office Convert (beta)",
-      )}
-      description={t(
-        "convert.stirlingOfficeConvertDescription",
-        "Better, faster conversions with less memory. Turn off to use the standard converter.",
+      {...infoLabelProps(
+        t("convert.stirlingOfficeConvert", "Use Stirling Office Convert"),
+        t(
+          "convert.stirlingOfficeConvertDescription",
+          "Beta. Better, faster conversions with less memory. Turn off to use the standard converter.",
+        ),
       )}
       checked={checked}
       onChange={(event) =>

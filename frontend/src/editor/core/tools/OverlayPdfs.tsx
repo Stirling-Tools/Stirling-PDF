@@ -41,7 +41,7 @@ const OverlayPdfs = (props: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t("overlay-pdfs.submit", "Overlay and Review"),
+      text: t("overlay-pdfs.submit", "Overlay PDFs"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,

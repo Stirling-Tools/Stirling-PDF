@@ -31,7 +31,7 @@ const adminTsaServers = toolPanelServer(
   }),
 );
 
-const TSA_SERVER = /^Select a TSA server/;
+const TSA_SERVER = /^Timestamp server/;
 
 export const Panel: Story = {
   play: async (context) => {
@@ -43,6 +43,10 @@ export const Panel: Story = {
 
 export const NoFiles: Story = {
   args: { files: [] },
+};
+
+export const TimestampServerTooltip: Story = {
+  play: openTooltip({ info: /^Only a SHA-256 hash of your document/ }),
 };
 
 export const TsaServerMenu: Story = {

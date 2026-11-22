@@ -87,7 +87,7 @@ const ChangeMetadata = (props: BaseToolProps) => {
   });
 
   const createAdvancedOptionsStep = () => ({
-    title: t("changeMetadata.advanced.title", "Advanced Options"),
+    title: t("changeMetadata.advanced.title", "Advanced"),
     isCollapsed: accordion.getCollapsedState(MetadataStep.ADVANCED_OPTIONS),
     onCollapsedClick: () =>
       accordion.handleStepToggle(MetadataStep.ADVANCED_OPTIONS),

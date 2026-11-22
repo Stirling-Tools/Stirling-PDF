@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "@editor/ui/Checkbox";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import { FormField } from "@editor/ui/FormField";
 import { Input } from "@editor/ui/Input";
 import { Select } from "@editor/ui/Select";
@@ -43,14 +44,19 @@ export function toSaveChoice(
   };
 }
 
+function libraryFullWarning(
+  t: TFunction,
+  limits: SaveLibraryLimits,
+): string | undefined {
+  if (limits.canSave) return undefined;
+  return t(
+    "sign.wallet.create.full",
+    "Your library is full ({{max}} signatures). Delete one to save more.",
+    { max: limits.maxLimit },
+  );
+}
+
 function saveHint(t: TFunction, limits: SaveLibraryLimits): string {
-  if (!limits.canSave) {
-    return t(
-      "sign.wallet.create.full",
-      "Your library is full ({{max}} signatures). Delete one to save more.",
-      { max: limits.maxLimit },
-    );
-  }
   if (limits.browserStorage) {
     return t(
       "sign.wallet.create.saveBrowserHint",
@@ -83,8 +89,11 @@ export function SaveSignatureOptions({
   return (
     <div className={styles.box}>
       <Checkbox
-        label={t("sign.wallet.create.save", "Save to my signatures")}
-        description={saveHint(t, { ...limits, canSave })}
+        {...infoLabelProps(
+          t("sign.wallet.create.save", "Save to my signatures"),
+          canSave ? saveHint(t, limits) : undefined,
+        )}
+        description={libraryFullWarning(t, { ...limits, canSave })}
         checked={saving}
         disabled={!canSave}
         onChange={(event) => update({ enabled: event.currentTarget.checked })}

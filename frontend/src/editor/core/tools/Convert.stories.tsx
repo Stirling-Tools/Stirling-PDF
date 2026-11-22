@@ -5,7 +5,6 @@ import {
   appConfig,
   endpointUnavailable,
   fixtureResponse,
-  knownA11yIssues,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
@@ -34,8 +33,8 @@ type Story = StoryObj<typeof meta>;
 
 type FormatDropdown = "convert-from-dropdown" | "convert-to-dropdown";
 
-/** The switch's label wraps its description, so its accessible name starts with this. */
-const OFFICE_CONVERT = /^Use Stirling Office Convert \(beta\)/;
+/** The checkbox's label holds its (i), so its accessible name starts with this. */
+const OFFICE_CONVERT = /^Use Stirling Office Convert/;
 
 async function openFormatMenu(
   context: PlayContext,
@@ -94,17 +93,17 @@ async function expectSection(
   return section;
 }
 
-async function expectOfficeSwitch(
+async function expectOfficeConvert(
   panel: PanelQueries,
   checked: boolean,
 ): Promise<void> {
-  const officeSwitch = await panel.findByRole(
-    "switch",
+  const officeConvert = await panel.findByRole(
+    "checkbox",
     { name: OFFICE_CONVERT },
     STAGE_TIMEOUT,
   );
-  if (checked) await expect(officeSwitch).toBeChecked();
-  else await expect(officeSwitch).not.toBeChecked();
+  if (checked) await expect(officeConvert).toBeChecked();
+  else await expect(officeConvert).not.toBeChecked();
 }
 
 /** The file editor works on every selected file; the viewer only on the one it shows. */
@@ -128,9 +127,9 @@ export const NoFiles: Story = {
       "convert-from-dropdown",
       "Source format",
     );
-    await expect(
-      panel.getByRole("button", { name: /Choose a source format first/ }),
-    ).toBeDisabled();
+    const target = panel.getByRole("button", { name: "Convert to" });
+    await expect(target).toBeDisabled();
+    await expect(target).toHaveTextContent("Choose a source format first");
   },
 };
 
@@ -220,14 +219,14 @@ export const PdfToImageOutputOptions: Story = {
 
 export const PdfToWord: Story = {
   play: async (context) => {
-    await expectOfficeSwitch(await convertTo("docx")(context), false);
+    await expectOfficeConvert(await convertTo("docx")(context), false);
   },
 };
 
 export const StirlingOfficeConvertOn: Story = {
   play: async (context) => {
     await convertTo("docx")(context);
-    await toggle(context, "switch", OFFICE_CONVERT);
+    await toggle(context, "checkbox", OFFICE_CONVERT);
   },
 };
 
@@ -235,8 +234,13 @@ export const StirlingOfficeConvertServerDefault: Story = {
   args: { files: ["sample.docx"] },
   parameters: toolPanelServer(appConfig({ stirlingOfficeConversion: true })),
   play: async (context) => {
-    await expectOfficeSwitch(await panelOf(context), true);
+    await expectOfficeConvert(await panelOf(context), true);
   },
+};
+
+export const StirlingOfficeConvertTooltip: Story = {
+  args: { files: ["sample.docx"] },
+  play: openTooltip({ info: /^Beta\. Better, faster conversions/ }),
 };
 
 export const PdfToPdfA: Story = {
@@ -250,8 +254,6 @@ export const PdfToPdfA: Story = {
 };
 
 export const PdfAOutputFormats: Story = {
-  // The Output Format listbox has no accessible name.
-  parameters: knownA11yIssues("aria-input-field-name"),
   play: async (context) => {
     await convertTo("pdfa")(context);
     const formats = await openSelect(context, /^Output Format/);
@@ -260,11 +262,7 @@ export const PdfAOutputFormats: Story = {
 };
 
 export const PdfAOutputFormatsWithoutTagging: Story = {
-  parameters: {
-    ...toolPanelServer(...endpointUnavailable("pdf-to-ua")),
-    // The Output Format listbox has no accessible name.
-    ...knownA11yIssues("aria-input-field-name"),
-  },
+  parameters: toolPanelServer(...endpointUnavailable("pdf-to-ua")),
   play: async (context) => {
     await convertTo("pdfa")(context);
     const formats = await openSelect(context, /^Output Format/);
@@ -273,6 +271,20 @@ export const PdfAOutputFormatsWithoutTagging: Story = {
       formats.queryByRole("option", { name: /accessible/ }),
     ).toBeNull();
   },
+};
+
+export const PdfAOutputFormatTooltip: Story = {
+  play: openTooltip(
+    { info: /^PDF\/A-1b is more compatible/ },
+    { after: convertTo("pdfa") },
+  ),
+};
+
+export const PdfAStrictModeTooltip: Story = {
+  play: openTooltip(
+    { info: /^Error if conversion is not perfect/ },
+    { after: convertTo("pdfa") },
+  ),
 };
 
 export const PdfToPdfASigned: Story = {
@@ -296,13 +308,13 @@ export const PdfToPdfX: Story = {
       "Document (PDF/X)",
     );
     await expect(panel.queryByTestId("pdfa-settings")).toBeNull();
-    await expect(panel.queryByRole("switch")).toBeNull();
+    await expect(
+      panel.queryByRole("checkbox", { name: OFFICE_CONVERT }),
+    ).toBeNull();
   },
 };
 
 export const PdfToPdfUa: Story = {
-  // The PDF/UA conformance level Select has no label.
-  parameters: knownA11yIssues("label"),
   play: async (context) => {
     const panel = await convertTo("pdfua")(context);
     await expectSection(panel, "pdfua-settings");
@@ -313,30 +325,15 @@ export const PdfToPdfUa: Story = {
 };
 
 export const PdfUaConformanceLevels: Story = {
-  // The conformance level Select has no label, so neither has its listbox.
-  parameters: knownA11yIssues("label", "aria-input-field-name"),
   play: async (context) => {
-    const panel = await convertTo("pdfua")(context);
-    // With no accessible name the Select is found by its test id.
-    const levels = await panel.findByTestId(
-      "pdfua-profile-select",
-      undefined,
-      STAGE_TIMEOUT,
-    );
-    await waitFor(() => expect(levels).toBeEnabled(), STAGE_TIMEOUT);
-    await userEvent.click(levels);
-    await bodyOf(context).findByRole(
-      "option",
-      { name: "PDF/UA-2 (PDF 2.0)" },
-      STAGE_TIMEOUT,
-    );
+    await convertTo("pdfua")(context);
+    const levels = await openSelect(context, "Conformance level");
+    await levels.findByRole("option", { name: "PDF/UA-2 (PDF 2.0)" });
   },
 };
 
 export const PdfToPdfUaSigned: Story = {
   args: { files: ["signed-sample.pdf"] },
-  // The PDF/UA conformance level Select has no label.
-  parameters: knownA11yIssues("label"),
   play: async (context) => {
     const panel = await convertTo("pdfua")(context);
     await panel.findByText(
@@ -349,12 +346,38 @@ export const PdfToPdfUaSigned: Story = {
 
 export const PdfToPdfUaMultipleFiles: Story = {
   args: inFileEditor(["sample.pdf", "multi-page-sample.pdf"]),
-  // The PDF/UA conformance level Select has no label.
-  parameters: knownA11yIssues("label"),
   play: async (context) => {
     const panel = await convertTo("pdfua")(context);
     await expectSection(panel, "pdfua-alt-text-single-file-only");
   },
+};
+
+export const PdfUaLanguageTooltip: Story = {
+  play: openTooltip(
+    { info: /^A BCP-47 tag such as en-US/ },
+    { after: convertTo("pdfua") },
+  ),
+};
+
+export const PdfUaOverrideLanguageTooltip: Story = {
+  play: openTooltip(
+    { info: /^Only tick this if the language above is right/ },
+    { after: convertTo("pdfua") },
+  ),
+};
+
+export const PdfUaTitleTooltip: Story = {
+  play: openTooltip(
+    { info: /^Shown by a reader instead of the filename/ },
+    { after: convertTo("pdfua") },
+  ),
+};
+
+export const PdfUaEmbedFontsTooltip: Story = {
+  play: openTooltip(
+    { info: /^PDF\/UA requires every font to be embedded/ },
+    { after: convertTo("pdfua") },
+  ),
 };
 
 const ACCESSIBILITY_REPORT = "*/api/v1/security/accessibility-report";
@@ -381,14 +404,10 @@ async function findImages(context: PlayContext): Promise<PanelQueries> {
 }
 
 export const PdfToPdfUaImageDescriptions: Story = {
-  parameters: {
-    ...figuresNeedingDescription([
-      { key: "0:0", page: 1, kind: "Figure" },
-      { key: "1:0", page: 2, kind: "Figure" },
-    ]),
-    // The PDF/UA conformance level Select has no label.
-    ...knownA11yIssues("label"),
-  },
+  parameters: figuresNeedingDescription([
+    { key: "0:0", page: 1, kind: "Figure" },
+    { key: "1:0", page: 2, kind: "Figure" },
+  ]),
   play: async (context) => {
     const panel = await findImages(context);
     const description = await panel.findByTestId(
@@ -402,11 +421,7 @@ export const PdfToPdfUaImageDescriptions: Story = {
 };
 
 export const PdfToPdfUaNoImagesMissingDescriptions: Story = {
-  parameters: {
-    ...figuresNeedingDescription([]),
-    // The PDF/UA conformance level Select has no label.
-    ...knownA11yIssues("label"),
-  },
+  parameters: figuresNeedingDescription([]),
   play: async (context) => {
     const panel = await findImages(context);
     await panel.findByTestId("pdfua-no-figures", undefined, STAGE_TIMEOUT);
@@ -414,15 +429,11 @@ export const PdfToPdfUaNoImagesMissingDescriptions: Story = {
 };
 
 export const PdfToPdfUaImageScanFailed: Story = {
-  parameters: {
-    ...toolPanelServer(
-      http.post(ACCESSIBILITY_REPORT, () =>
-        HttpResponse.json({ error: "Scan failed" }, { status: 500 }),
-      ),
+  parameters: toolPanelServer(
+    http.post(ACCESSIBILITY_REPORT, () =>
+      HttpResponse.json({ error: "Scan failed" }, { status: 500 }),
     ),
-    // The PDF/UA conformance level Select has no label.
-    ...knownA11yIssues("label"),
-  },
+  ),
   play: async (context) => {
     const panel = await findImages(context);
     await panel.findByText(
@@ -452,7 +463,7 @@ export const PdfToEpub: Story = {
     await expect(
       panel.getByRole("checkbox", { name: /^Detect chapters/ }),
     ).toBeChecked();
-    await expectOfficeSwitch(panel, false);
+    await expectOfficeConvert(panel, false);
   },
 };
 
@@ -474,16 +485,37 @@ export const PdfToAzw3: Story = {
   },
 };
 
+export const EpubDetectChaptersTooltip: Story = {
+  play: openTooltip(
+    { info: /^Detect headings that look like chapters/ },
+    { after: convertTo("epub") },
+  ),
+};
+
+export const EpubTargetDeviceTooltip: Story = {
+  play: openTooltip(
+    { info: /^Choose an output profile/ },
+    { after: convertTo("epub") },
+  ),
+};
+
+export const EpubOutputFormatTooltip: Story = {
+  play: openTooltip(
+    { info: /^Choose the output format for the ebook/ },
+    { after: convertTo("epub") },
+  ),
+};
+
 export const ImageToPdf: Story = {
   args: { files: ["sample.png"] },
   play: async (context) => {
     const panel = await panelOf(context);
     await expectSection(panel, "pdf-options-section");
     await expect(
-      panel.getByRole("switch", { name: /^Auto Rotate/ }),
+      panel.getByRole("checkbox", { name: /^Auto Rotate/ }),
     ).toBeChecked();
     await expect(
-      panel.getByRole("switch", { name: /^Combine Images/ }),
+      panel.getByRole("checkbox", { name: /^Combine Images/ }),
     ).toBeChecked();
   },
 };
@@ -499,8 +531,18 @@ export const ImageToPdfFitOptions: Story = {
 export const ImageToPdfSeparateFiles: Story = {
   args: { files: ["sample.png"] },
   play: async (context) => {
-    await toggle(context, "switch", /^Combine Images/);
+    await toggle(context, "checkbox", /^Combine Images/);
   },
+};
+
+export const ImageAutoRotateTooltip: Story = {
+  args: { files: ["sample.png"] },
+  play: openTooltip({ info: /^Automatically rotate images/ }),
+};
+
+export const ImageCombineTooltip: Story = {
+  args: { files: ["sample.png"] },
+  play: openTooltip({ info: /^Combine all images into one PDF/ }),
 };
 
 export const MultipleImagesToPdf: Story = {
@@ -523,7 +565,7 @@ export const MixedFilesToPdf: Story = {
       "convert-from-dropdown",
       "Multiple Files (Any)",
     );
-    await expectOfficeSwitch(panel, false);
+    await expectOfficeConvert(panel, false);
   },
 };
 
@@ -533,22 +575,32 @@ export const SvgToPdf: Story = {
     const panel = await panelOf(context);
     await expectSection(panel, "svg-pdf-options-section");
     await expect(
-      panel.getByRole("switch", { name: /^Combine SVGs into single PDF/ }),
+      panel.getByRole("checkbox", { name: /^Combine SVGs into single PDF/ }),
     ).toBeChecked();
   },
+};
+
+export const SvgVectorTooltip: Story = {
+  args: { files: ["sample.svg"] },
+  play: openTooltip({ info: /^SVG files are rendered as vector graphics/ }),
+};
+
+export const SvgCombineTooltip: Story = {
+  args: { files: ["sample.svg"] },
+  play: openTooltip({ info: /^Combine all SVG files into one PDF/ }),
 };
 
 export const OfficeToPdf: Story = {
   args: { files: ["sample.docx"] },
   play: async (context) => {
-    await expectOfficeSwitch(await panelOf(context), false);
+    await expectOfficeConvert(await panelOf(context), false);
   },
 };
 
 export const MarkdownToPdf: Story = {
   args: { files: ["sample.md"] },
   play: async (context) => {
-    await expectOfficeSwitch(await panelOf(context), false);
+    await expectOfficeConvert(await panelOf(context), false);
   },
 };
 
@@ -558,14 +610,14 @@ export const HtmlToPdf: Story = {
     const panel = await panelOf(context);
     await expectSection(panel, "web-settings");
     await expect(panel.getByTestId("zoom-level-input")).toHaveValue("1");
-    await expectOfficeSwitch(panel, false);
+    await expectOfficeConvert(panel, false);
   },
 };
 
 export const HtmlToPdfWithStirlingOfficeConvert: Story = {
   args: { files: ["sample.html"] },
   play: async (context) => {
-    const panel = await toggle(context, "switch", OFFICE_CONVERT);
+    const panel = await toggle(context, "checkbox", OFFICE_CONVERT);
     await waitFor(() => expect(panel.queryByTestId("web-settings")).toBeNull());
   },
 };
@@ -576,7 +628,7 @@ export const EmailToPdf: Story = {
     const panel = await panelOf(context);
     await expectSection(panel, "email-settings");
     await expectSection(panel, "max-attachment-size-input");
-    await expectOfficeSwitch(panel, false);
+    await expectOfficeConvert(panel, false);
   },
 };
 
@@ -603,7 +655,9 @@ export const EmailToHtml: Story = {
       "Download HTML intermediate file instead of PDF",
     );
     await waitFor(() =>
-      expect(panel.queryByRole("switch", { name: OFFICE_CONVERT })).toBeNull(),
+      expect(
+        panel.queryByRole("checkbox", { name: OFFICE_CONVERT }),
+      ).toBeNull(),
     );
   },
 };
@@ -619,6 +673,8 @@ export const EmailWithAllRecipients: Story = {
   },
 };
 
+const OPTIMIZE_FOR_EBOOK_INFO = /^Uses Ghostscript to reduce file size/;
+
 export const CbzToPdf: Story = {
   args: { files: ["sample.cbz"] },
   play: async (context) => {
@@ -626,11 +682,24 @@ export const CbzToPdf: Story = {
   },
 };
 
+export const CbzOptimizeForEbookTooltip: Story = {
+  args: { files: ["sample.cbz"] },
+  play: openTooltip({ info: OPTIMIZE_FOR_EBOOK_INFO }),
+};
+
 export const CbrToPdf: Story = {
   args: { files: [] },
   play: async (context) => {
     await expectSection(await convertFrom("cbr")(context), "cbr-settings");
   },
+};
+
+export const CbrOptimizeForEbookTooltip: Story = {
+  args: { files: [] },
+  play: openTooltip(
+    { info: OPTIMIZE_FOR_EBOOK_INFO },
+    { after: convertFrom("cbr") },
+  ),
 };
 
 export const EbookToPdf: Story = {
@@ -646,8 +715,28 @@ export const EbookToPdf: Story = {
       await expect(
         await panel.findByRole("checkbox", { name: option }, STAGE_TIMEOUT),
       ).not.toBeChecked();
-    await expectOfficeSwitch(panel, false);
+    await expectOfficeConvert(panel, false);
   },
+};
+
+export const EbookEmbedFontsTooltip: Story = {
+  args: { files: ["sample.epub"] },
+  play: openTooltip({ info: /^Embed all fonts from the eBook/ }),
+};
+
+export const EbookTableOfContentsTooltip: Story = {
+  args: { files: ["sample.epub"] },
+  play: openTooltip({ info: /^Add a generated table of contents/ }),
+};
+
+export const EbookPageNumbersTooltip: Story = {
+  args: { files: ["sample.epub"] },
+  play: openTooltip({ info: /^Add page numbers to the generated PDF/ }),
+};
+
+export const EbookOptimizeTooltip: Story = {
+  args: { files: ["sample.epub"] },
+  play: openTooltip({ info: /^Optimize the PDF for eBook reading/ }),
 };
 
 export const UnlistedFileTypeToPdf: Story = {

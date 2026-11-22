@@ -1,6 +1,6 @@
 import type { StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
 import {
   knownA11yIssues,
   toolPanelMeta,
@@ -10,8 +10,10 @@ import {
   bodyOf,
   choose,
   findEnabled,
+  openSelect,
   openTooltip,
   type PlayContext,
+  selectOption,
   STAGE_TIMEOUT,
   waitForPanelText,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
@@ -28,27 +30,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/**
- * The mode Select has no accessible name, so it is found by the value it
- * shows rather than through openSelect.
- */
-async function openOverlayModes(context: PlayContext) {
-  const panel = await waitForPanelText(context, "Select Overlay Mode");
-  const mode = panel.getByDisplayValue("Sequential Overlay");
-  await waitFor(() => expect(mode).toBeEnabled(), STAGE_TIMEOUT);
-  await userEvent.click(mode);
-  return within(await bodyOf(context).findByRole("listbox", {}, STAGE_TIMEOUT));
-}
+const OVERLAY_MODE = "Overlay Mode";
 
 function pickOverlayMode(mode: string) {
-  return async (context: PlayContext) => {
-    const modes = await openOverlayModes(context);
-    await userEvent.click(modes.getByRole("option", { name: mode }));
-    const panel = await waitForPanelText(context, "Select Overlay Mode");
-    await expect(panel.getByDisplayValue(mode)).toBeVisible();
-    return panel;
-  };
+  return (context: PlayContext) => selectOption(context, OVERLAY_MODE, mode);
 }
+
+const fixedRepeat = pickOverlayMode("Fixed Repeat Overlay");
 
 /** The Files modal lists the server's processing folders beside the library. */
 const noProcessingFolders = http.get("*/api/v1/processing-folders", () =>
@@ -88,16 +76,11 @@ async function addOverlayFile(context: PlayContext) {
   return waitForPanelText(context, "sample.pdf");
 }
 
-export const Panel: Story = {
-  // The overlay mode Select has no label.
-  parameters: knownA11yIssues("label"),
-};
+export const Panel: Story = {};
 
 export const OverlayModeOptions: Story = {
-  // The mode Select has no label, and so neither has its listbox.
-  parameters: knownA11yIssues("label", "aria-input-field-name"),
   play: async (context) => {
-    const modes = await openOverlayModes(context);
+    const modes = await openSelect(context, OVERLAY_MODE);
     await expect(
       modes.getByRole("option", { name: "Fixed Repeat Overlay" }),
     ).toBeVisible();
@@ -105,34 +88,24 @@ export const OverlayModeOptions: Story = {
 };
 
 export const InterleavedOverlay: Story = {
-  // The overlay mode Select has no label.
-  parameters: knownA11yIssues("label"),
   play: pickOverlayMode("Interleaved Overlay"),
 };
 
 export const FixedRepeatOverlay: Story = {
-  // The overlay mode Select has no label.
-  parameters: knownA11yIssues("label"),
   play: async (context) => {
-    await pickOverlayMode("Fixed Repeat Overlay")(context);
+    await fixedRepeat(context);
     await waitForPanelText(context, "Add overlay files to configure counts");
   },
 };
 
 export const BackgroundPosition: Story = {
-  // The overlay mode Select has no label.
-  parameters: knownA11yIssues("label"),
   play: async (context) => {
     await choose(context, "Background");
   },
 };
 
 export const OverlayFilesAdded: Story = {
-  parameters: {
-    ...toolPanelServer(noProcessingFolders),
-    // The overlay mode Select has no label.
-    ...knownA11yIssues("label"),
-  },
+  parameters: toolPanelServer(noProcessingFolders),
   play: async (context) => {
     const panel = await addOverlayFile(context);
     await expect(panel.getByRole("button", { name: "Remove" })).toBeVisible();
@@ -143,25 +116,41 @@ export const OverlayFilesAdded: Story = {
 export const FixedRepeatWithCounts: Story = {
   parameters: {
     ...toolPanelServer(noProcessingFolders),
-    // The mode Select and each file's count field have no label.
+    // Each file's count field has no label.
     ...knownA11yIssues("label"),
   },
   play: async (context) => {
-    await pickOverlayMode("Fixed Repeat Overlay")(context);
+    await fixedRepeat(context);
     const panel = await addOverlayFile(context);
     await expect(panel.getByText("Count for file 1")).toBeVisible();
   },
 };
 
 export const SettingsTooltip: Story = {
-  // The mode Select has no label; the tooltip's body scrolls but cannot take
-  // keyboard focus.
-  parameters: knownA11yIssues("label", "scrollable-region-focusable"),
+  // The tooltip's body scrolls but cannot take keyboard focus.
+  parameters: knownA11yIssues("scrollable-region-focusable"),
   play: openTooltip({ step: "Settings" }),
 };
 
+export const OverlayModeTooltip: Story = {
+  play: openTooltip({ info: /^Choose how to distribute overlay pages/ }),
+};
+
+export const OverlayPositionTooltip: Story = {
+  play: openTooltip({ info: /^Foreground places the overlay on top/ }),
+};
+
+export const OverlayCountsTooltip: Story = {
+  play: openTooltip(
+    { info: /^Provide a positive number for each overlay file/ },
+    { after: fixedRepeat },
+  ),
+};
+
+export const OverlayFilesTooltip: Story = {
+  play: openTooltip({ info: /^Select one or more PDFs to overlay/ }),
+};
+
 export const OverlayFilesRequiredTooltip: Story = {
-  // The overlay mode Select has no label.
-  parameters: knownA11yIssues("label"),
   play: openTooltip({ runButton: true }),
 };

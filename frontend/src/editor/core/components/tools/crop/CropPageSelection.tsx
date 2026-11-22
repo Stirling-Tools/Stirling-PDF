@@ -2,6 +2,7 @@ import { Stack, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 import { validatePageNumbers } from "@editor/utils/pageSelection";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface CropPageSelectionProps {
   value: string;
@@ -29,10 +30,12 @@ const CropPageSelection = ({
   return (
     <Stack gap="xs">
       <TextInput
-        label={t("crop.pageNumbers.label", "Pages to Crop")}
-        description={t(
-          "crop.pageNumbers.description",
-          "Crop the selected area on specific pages, or 'all' for every page.",
+        {...infoLabelProps(
+          t("crop.pageNumbers.label", "Pages to Crop"),
+          t(
+            "crop.pageNumbers.description",
+            "Crop the selected area on specific pages, or 'all' for every page.",
+          ),
         )}
         value={value}
         onChange={(event) => onChange(event.currentTarget.value)}

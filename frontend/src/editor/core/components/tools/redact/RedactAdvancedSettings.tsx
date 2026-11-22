@@ -2,6 +2,7 @@ import { Stack, NumberInput, ColorInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface RedactAdvancedSettingsProps {
   parameters: RedactParameters;
@@ -82,9 +83,12 @@ const RedactAdvancedSettings = ({
 
       {/* Convert PDF to PDF-Image */}
       <Checkbox
-        label={t(
-          "redact.auto.convertPDFToImageLabel",
-          "Convert PDF to PDF-Image (Used to remove text behind the box)",
+        {...infoLabelProps(
+          t("redact.auto.convertPDFToImageLabel", "Convert PDF to PDF-Image"),
+          t(
+            "redact.tooltip.advanced.convert.text",
+            "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable.",
+          ),
         )}
         checked={parameters.convertPDFToImage}
         onChange={(e) =>

@@ -28,32 +28,34 @@ const ENDPOINT = "/api/v1/misc/extract-image-scans";
 
 const FIELDS = [
   {
-    label: "Angle Threshold:",
+    label: /^Angle Threshold/,
     value: "10",
-    description: /^Tilt \(in degrees\) needed/,
+    info: /^Tilt \(in degrees\) needed/,
   },
   {
-    label: "Tolerance:",
+    label: /^Tolerance/,
     value: "30",
-    description: /^How closely a color must match/,
+    info: /^How closely a color must match/,
   },
   {
-    label: "Minimum Area:",
+    label: /^Minimum Area/,
     value: "10000",
-    description: /^Smallest photo size/,
+    info: /^Smallest photo size/,
   },
   {
-    label: "Minimum Contour Area:",
+    label: /^Minimum Contour Area/,
     value: "500",
-    description: /^Smallest edge\/shape/,
+    info: /^Smallest edge\/shape/,
   },
-  { label: "Border Size:", value: "1", description: /^Extra padding/ },
-];
+  { label: /^Border Size/, value: "1", info: /^Extra padding/ },
+] as const;
+
+const [ANGLE, TOLERANCE, MIN_AREA, MIN_CONTOUR_AREA, BORDER_SIZE] = FIELDS;
 
 /** Types into a settings field and leaves it, which is when the panel commits it. */
 async function enterSetting(
   context: PlayContext,
-  label: string,
+  label: RegExp,
   value: string,
 ) {
   const input = await typeInto(context, label, value);
@@ -63,26 +65,26 @@ async function enterSetting(
 
 export const Panel: Story = {
   play: async (context) => {
-    const panel = await waitForPanelText(context, "Angle Threshold:");
-    for (const { label, value, description } of FIELDS) {
+    const panel = await waitForPanelText(context, "Angle Threshold");
+    for (const { label, value, info } of FIELDS) {
       await expect(panel.getByRole("textbox", { name: label })).toHaveValue(
         value,
       );
-      await expect(panel.getByText(description)).toBeVisible();
+      await expect(panel.getByRole("button", { name: info })).toBeVisible();
     }
   },
 };
 
 export const CustomSettings: Story = {
   play: async (context) => {
-    for (const [label, value] of [
-      ["Angle Threshold:", "5"],
-      ["Tolerance:", "45"],
-      ["Minimum Area:", "15000"],
-      ["Minimum Contour Area:", "1500"],
-      ["Border Size:", "8"],
+    for (const [field, value] of [
+      [ANGLE, "5"],
+      [TOLERANCE, "45"],
+      [MIN_AREA, "15000"],
+      [MIN_CONTOUR_AREA, "1500"],
+      [BORDER_SIZE, "8"],
     ] as const) {
-      const input = await enterSetting(context, label, value);
+      const input = await enterSetting(context, field.label, value);
       await waitFor(() => expect(input).toHaveValue(value));
     }
   },
@@ -103,7 +105,7 @@ export const ZeroBorderSize: Story = {
   parameters: recordsBorderSize,
   play: async (context) => {
     sentBorderSize = null;
-    const input = await enterSetting(context, "Border Size:", "0");
+    const input = await enterSetting(context, BORDER_SIZE.label, "0");
     await expect(input).toHaveValue("0");
     await runToResults(context);
     await expect(sentBorderSize).toBe("1");
@@ -114,6 +116,26 @@ export const SettingsTooltip: Story = {
   // The tooltip's body scrolls but cannot take keyboard focus.
   parameters: knownA11yIssues("scrollable-region-focusable"),
   play: openTooltip({ step: "Settings" }),
+};
+
+export const AngleThresholdTooltip: Story = {
+  play: openTooltip({ info: ANGLE.info }),
+};
+
+export const ToleranceTooltip: Story = {
+  play: openTooltip({ info: TOLERANCE.info }),
+};
+
+export const MinimumAreaTooltip: Story = {
+  play: openTooltip({ info: MIN_AREA.info }),
+};
+
+export const MinimumContourAreaTooltip: Story = {
+  play: openTooltip({ info: MIN_CONTOUR_AREA.info }),
+};
+
+export const BorderSizeTooltip: Story = {
+  play: openTooltip({ info: BORDER_SIZE.info }),
 };
 
 export const NoFiles: Story = {

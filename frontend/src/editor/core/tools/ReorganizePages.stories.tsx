@@ -24,15 +24,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const PAGE_ORDER = /^Custom Page Order \(Enter a comma-separated list/;
+/** A labelled field's accessible name also carries its (i)'s text, so names match on their start. */
+const PAGE_ORDER = /^Page Order/;
 
-const MODE = "Organization mode";
+const MODE = /^Organization mode/;
 
-/** Resolves once the picked mode's description shows. */
+/** Resolves once the mode's (i) carries the picked mode's description. */
 function pickMode(mode: string, description: string | RegExp) {
   return async (context: PlayContext) => {
     const panel = await selectOption(context, MODE, mode);
-    await expect(await panel.findByText(description)).toBeVisible();
+    await expect(
+      await panel.findByRole("button", { name: description }),
+    ).toBeInTheDocument();
     return panel;
   };
 }
@@ -48,6 +51,29 @@ function presetMode(mode: string, description: string | RegExp): Story {
   };
 }
 
+function modeTooltip(mode: string, description: string | RegExp): Story {
+  return {
+    play: openTooltip(
+      { info: description },
+      { after: pickMode(mode, description) },
+    ),
+  };
+}
+
+const DESCRIPTIONS = {
+  custom: /^Use a custom sequence of page numbers/,
+  reverse: /^Flip the document so the last page/,
+  duplex: /^Interleave fronts/,
+  booklet: /^Arrange pages for booklet printing/,
+  sideStitch: /^Arrange pages for side.stitch booklet/,
+  oddEvenSplit: /all odd pages first, then all even pages/,
+  oddEvenMerge: /^Interleave the pages of the first and second half/,
+  duplicate: /^Duplicate each page according to the custom order count/,
+  removeFirst: "Remove the first page from the document.",
+  removeLast: "Remove the last page from the document.",
+  removeFirstAndLast: "Remove both the first and last pages from the document.",
+} as const;
+
 export const Panel: Story = {};
 
 export const ModeOptions: Story = {
@@ -57,6 +83,14 @@ export const ModeOptions: Story = {
     const modes = await openSelect(context, MODE);
     await expect(modes.getAllByRole("option")).toHaveLength(11);
   },
+};
+
+export const OrganizationModeTooltip: Story = {
+  play: openTooltip({ info: DESCRIPTIONS.custom }),
+};
+
+export const PageOrderTooltip: Story = {
+  play: openTooltip({ info: /^A comma-separated list of page numbers/ }),
 };
 
 export const CustomPageOrderEntered: Story = {
@@ -70,53 +104,33 @@ export const PageOrderRequiredTooltip: Story = {
   play: openTooltip({ runButton: true }),
 };
 
-export const ReverseOrder = presetMode(
-  "Reverse Order",
-  /^Flip the document so the last page/,
-);
-
-export const DuplexSort = presetMode("Duplex Sort", /^Interleave fronts/);
-
-export const BookletSort = presetMode(
-  "Booklet Sort",
-  /^Arrange pages for booklet printing/,
-);
-
+export const ReverseOrder = presetMode("Reverse Order", DESCRIPTIONS.reverse);
+export const DuplexSort = presetMode("Duplex Sort", DESCRIPTIONS.duplex);
+export const BookletSort = presetMode("Booklet Sort", DESCRIPTIONS.booklet);
 export const SideStitchBookletSort = presetMode(
   "Side Stitch Booklet Sort",
-  /^Arrange pages for side.stitch booklet/,
+  DESCRIPTIONS.sideStitch,
 );
-
 export const OddEvenSplit = presetMode(
   "Odd-Even Split",
-  /all odd pages first, then all even pages/,
+  DESCRIPTIONS.oddEvenSplit,
 );
-
 export const OddEvenMerge = presetMode(
   "Odd-Even Merge",
-  /^Interleave the pages of the first and second half/,
+  DESCRIPTIONS.oddEvenMerge,
 );
-
-export const RemoveFirst = presetMode(
-  "Remove First",
-  "Remove the first page from the document.",
-);
-
-export const RemoveLast = presetMode(
-  "Remove Last",
-  "Remove the last page from the document.",
-);
-
+export const RemoveFirst = presetMode("Remove First", DESCRIPTIONS.removeFirst);
+export const RemoveLast = presetMode("Remove Last", DESCRIPTIONS.removeLast);
 export const RemoveFirstAndLast = presetMode(
   "Remove First and Last",
-  "Remove both the first and last pages from the document.",
+  DESCRIPTIONS.removeFirstAndLast,
 );
 
 export const DuplicateAllPages: Story = {
   play: async (context) => {
     const panel = await pickMode(
       "Duplicate all pages",
-      /^Duplicate each page according to the custom order count/,
+      DESCRIPTIONS.duplicate,
     )(context);
     await expect(
       panel.getByRole("textbox", { name: PAGE_ORDER }),
@@ -124,12 +138,53 @@ export const DuplicateAllPages: Story = {
   },
 };
 
+export const ReverseOrderTooltip = modeTooltip(
+  "Reverse Order",
+  DESCRIPTIONS.reverse,
+);
+export const DuplexSortTooltip = modeTooltip(
+  "Duplex Sort",
+  DESCRIPTIONS.duplex,
+);
+export const BookletSortTooltip = modeTooltip(
+  "Booklet Sort",
+  DESCRIPTIONS.booklet,
+);
+export const SideStitchBookletSortTooltip = modeTooltip(
+  "Side Stitch Booklet Sort",
+  DESCRIPTIONS.sideStitch,
+);
+export const OddEvenSplitTooltip = modeTooltip(
+  "Odd-Even Split",
+  DESCRIPTIONS.oddEvenSplit,
+);
+export const OddEvenMergeTooltip = modeTooltip(
+  "Odd-Even Merge",
+  DESCRIPTIONS.oddEvenMerge,
+);
+export const RemoveFirstTooltip = modeTooltip(
+  "Remove First",
+  DESCRIPTIONS.removeFirst,
+);
+export const RemoveLastTooltip = modeTooltip(
+  "Remove Last",
+  DESCRIPTIONS.removeLast,
+);
+export const RemoveFirstAndLastTooltip = modeTooltip(
+  "Remove First and Last",
+  DESCRIPTIONS.removeFirstAndLast,
+);
+export const DuplicateAllPagesTooltip = modeTooltip(
+  "Duplicate all pages",
+  DESCRIPTIONS.duplicate,
+);
+
 export const Results: Story = {
   parameters: toolPanelServer(
     fixtureResponse("/api/v1/general/rearrange-pages", "sample.pdf"),
   ),
   play: async (context) => {
-    await pickMode("Reverse Order", /^Flip the document/)(context);
+    await pickMode("Reverse Order", DESCRIPTIONS.reverse)(context);
     await runToResults(context);
   },
 };

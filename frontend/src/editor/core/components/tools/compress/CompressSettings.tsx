@@ -3,7 +3,6 @@ import {
   Text,
   NumberInput,
   Select,
-  Divider,
   Checkbox,
   Slider,
   Tooltip,
@@ -20,6 +19,7 @@ import {
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { useGroupEnabled } from "@editor/hooks/useGroupEnabled";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
@@ -43,8 +43,6 @@ const CompressSettings = ({
 
   return (
     <Stack gap="md">
-      <Divider ml="-md"></Divider>
-      {/* Compression Method */}
       <ButtonSelector
         label={t("compress.method.title", "Compression Method")}
         value={parameters.compressionMethod}
@@ -62,7 +60,6 @@ const CompressSettings = ({
       {/* Quality Adjustment */}
       {parameters.compressionMethod === "quality" && (
         <Stack gap="md">
-          <Divider />
           <SliderWithInput
             label={t(
               "compress.tooltip.qualityAdjustment.title",
@@ -96,8 +93,6 @@ const CompressSettings = ({
           </Text>
         </Stack>
       )}
-
-      <Divider />
 
       {/* File Size Input */}
       {parameters.compressionMethod === "filesize" && (
@@ -196,18 +191,15 @@ const CompressSettings = ({
                 onParameterChange("lineArt", event.currentTarget.checked)
               }
               disabled={disabled || imageMagickAvailable === false}
-              label={t(
-                "compress.lineArt.label",
-                "Convert images to line art (bilevel)",
-              )}
-              description={
+              {...infoLabelProps(
+                t("compress.lineArt.label", "Convert images to line art"),
                 imageMagickAvailable !== false
                   ? t(
                       "compress.lineArt.description",
                       "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.",
                     )
-                  : undefined
-              }
+                  : undefined,
+              )}
               style={{
                 pointerEvents:
                   imageMagickAvailable === false ? "none" : undefined,

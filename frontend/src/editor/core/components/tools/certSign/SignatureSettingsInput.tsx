@@ -6,7 +6,7 @@ import {
   Switch,
   Group,
 } from "@mantine/core";
-import { Button } from "@editor/ui/Button";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/ui/Tooltip";
@@ -65,44 +65,21 @@ const SignatureSettingsInput = ({
         </Tooltip>
       </Group>
 
-      <div style={{ display: "flex", gap: "4px" }}>
-        <Button
-          accent={!value.showSignature ? "default" : "neutral"}
-          variant={!value.showSignature ? "primary" : "secondary"}
-          onClick={() => handleChange("showSignature", false)}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            height: "auto",
-            minHeight: "40px",
-            fontSize: "11px",
-          }}
-        >
-          <div
-            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
-          >
-            {t("certSign.appearance.invisible", "Invisible")}
-          </div>
-        </Button>
-        <Button
-          accent={value.showSignature ? "default" : "neutral"}
-          variant={value.showSignature ? "primary" : "secondary"}
-          onClick={() => handleChange("showSignature", true)}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            height: "auto",
-            minHeight: "40px",
-            fontSize: "11px",
-          }}
-        >
-          <div
-            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
-          >
-            {t("certSign.appearance.visible", "Visible")}
-          </div>
-        </Button>
-      </div>
+      <ButtonSelector
+        value={value.showSignature ? "visible" : "invisible"}
+        onChange={(next) => handleChange("showSignature", next === "visible")}
+        options={[
+          {
+            value: "invisible",
+            label: t("certSign.appearance.invisible", "Invisible"),
+          },
+          {
+            value: "visible",
+            label: t("certSign.appearance.visible", "Visible"),
+          },
+        ]}
+        disabled={disabled}
+      />
 
       {value.showSignature && (
         <Stack gap="sm">

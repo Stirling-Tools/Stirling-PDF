@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
+import { Group } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 import { INK_COLORS } from "@editor/components/tools/sign/createSignature/signatureStyles";
@@ -60,24 +62,32 @@ export function UploadCleanupOptions({
 
   return (
     <div className={styles.options}>
-      <ToggleSwitch
-        checked={value.removeBackground}
-        onChange={(removeBackground) => update({ removeBackground })}
-        label={t("sign.wallet.upload.removeBackground", "Remove background")}
-        description={t(
-          "sign.wallet.upload.removeBackgroundHint",
-          "White paper becomes transparent",
-        )}
-      />
-      <ToggleSwitch
-        checked={value.trim}
-        onChange={(trim) => update({ trim })}
-        label={t("sign.wallet.upload.trim", "Trim to signature")}
-        description={t(
-          "sign.wallet.upload.trimHint",
-          "Crops the empty space around it",
-        )}
-      />
+      <Group gap={4} wrap="nowrap">
+        <ToggleSwitch
+          checked={value.removeBackground}
+          onChange={(removeBackground) => update({ removeBackground })}
+          label={t("sign.wallet.upload.removeBackground", "Remove background")}
+        />
+        <ToolInfoTooltip
+          label={t(
+            "sign.wallet.upload.removeBackgroundHint",
+            "White paper becomes transparent",
+          )}
+        />
+      </Group>
+      <Group gap={4} wrap="nowrap">
+        <ToggleSwitch
+          checked={value.trim}
+          onChange={(trim) => update({ trim })}
+          label={t("sign.wallet.upload.trim", "Trim to signature")}
+        />
+        <ToolInfoTooltip
+          label={t(
+            "sign.wallet.upload.trimHint",
+            "Crops the empty space around it",
+          )}
+        />
+      </Group>
       <div className={styles.option}>
         <ControlLabel>{t("sign.wallet.upload.ink", "Ink color")}</ControlLabel>
         <SegmentedControl

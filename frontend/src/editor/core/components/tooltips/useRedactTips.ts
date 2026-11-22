@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useRedactModeTips = (): TooltipContent => {
+export const useRedactModeTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -27,7 +27,7 @@ export const useRedactModeTips = (): TooltipContent => {
   };
 };
 
-export const useRedactWordsTips = (): TooltipContent => {
+export const useRedactWordsTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -61,7 +61,7 @@ export const useRedactWordsTips = (): TooltipContent => {
   };
 };
 
-export const useRedactAdvancedTips = (): TooltipContent => {
+export const useRedactAdvancedTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -130,7 +130,7 @@ export const useRedactAdvancedTips = (): TooltipContent => {
   };
 };
 
-export const useRedactManualTips = (): TooltipContent => {
+export const useRedactManualTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
