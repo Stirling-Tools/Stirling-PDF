@@ -31,10 +31,13 @@ export interface HardwareSigningCapabilities {
 }
 
 const BASE = "/api/v1/security/cert-sign/hardware";
+// Routes discovery like signing itself: to the bundled backend that holds the keys.
+const ROUTING = { endpointName: "cert-sign" };
 
 export async function getHardwareSigningCapabilities(): Promise<HardwareSigningCapabilities> {
   const response = await apiClient.get<HardwareSigningCapabilities>(
     `${BASE}/capabilities`,
+    ROUTING,
   );
   return response.data;
 }
@@ -44,6 +47,7 @@ export async function listWindowsCertificates(): Promise<
 > {
   const response = await apiClient.get<HardwareCertificateInfo[]>(
     `${BASE}/windows-certificates`,
+    ROUTING,
   );
   return response.data;
 }
@@ -53,6 +57,7 @@ export async function listMacKeychainCertificates(): Promise<
 > {
   const response = await apiClient.get<HardwareCertificateInfo[]>(
     `${BASE}/macos-certificates`,
+    ROUTING,
   );
   return response.data;
 }
@@ -69,6 +74,7 @@ export async function listPkcs11Certificates(params: {
       slot: params.slot ?? null,
       pin: params.pin,
     },
+    ROUTING,
   );
   return response.data;
 }
