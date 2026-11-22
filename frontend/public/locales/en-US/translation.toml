@@ -2972,9 +2972,9 @@ stepTitle = "This device"
 failed = "An error occurred while processing signatures."
 
 [certSign.format]
+macKeychain = "macOS Keychain / smart card"
 pkcs11 = "USB Token"
 windowsStore = "Windows certificate store"
-macKeychain = "macOS Keychain / smart card"
 
 [certSign.hardware]
 certificate = "Certificate"
@@ -2986,6 +2986,8 @@ expired = "expired"
 expires = "expires"
 listCerts = "List certificates"
 loading = "Reading certificates…"
+macHint = "Pick a certificate from your keychain or an inserted smart card or YubiKey. macOS will prompt for the PIN."
+macLoadError = "Could not read the macOS keychain"
 noCerts = "No signing certificates found"
 noDriver = "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC), then reopen this - or enter the driver path manually below."
 notYetValid = "not yet valid"
@@ -2998,8 +3000,6 @@ selectDriver = "Select driver"
 slot = "Slot (optional)"
 windowsHint = "Pick a certificate from your Windows certificate store. Signing uses the key on your card/token - Windows will prompt for the PIN."
 windowsLoadError = "Could not read the Windows certificate store"
-macHint = "Pick a certificate from your keychain or an inserted smart card or YubiKey. macOS will prompt for the PIN."
-macLoadError = "Could not read the macOS keychain"
 
 [certSign.sessions]
 deleted = "Session deleted"
