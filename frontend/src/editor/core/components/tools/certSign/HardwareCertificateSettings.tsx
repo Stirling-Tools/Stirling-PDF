@@ -164,6 +164,7 @@ const HardwareCertificateSettings = ({
           parameters.certType !== platformStore
         ) {
           onParameterChange("certType", platformStore ?? "PKCS11");
+          onParameterChange("alias", undefined);
         }
         setCapsReady(true);
         setLibraries(caps.detectedLibraries);
@@ -188,7 +189,16 @@ const HardwareCertificateSettings = ({
         if (cancelled) {
           return;
         }
-        /* capabilities are best-effort; the user can still type a path */
+        // Capabilities are best-effort: without them no OS store can be assumed, so fall
+        // back to the token path, where the user can still type a driver path.
+        setSupported({ windows: false, mac: false, pkcs11: true });
+        if (
+          parameters.certType === "WINDOWS_STORE" ||
+          parameters.certType === "MACOS_KEYCHAIN"
+        ) {
+          onParameterChange("certType", "PKCS11");
+          onParameterChange("alias", undefined);
+        }
         setCapsReady(true);
       });
     return () => {

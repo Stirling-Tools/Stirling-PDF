@@ -11,10 +11,12 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
+import java.security.PKCS12Attribute;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -80,6 +82,26 @@ class OsTrustStoreTest {
                 new java.security.cert.Certificate[] {selfSigned});
 
         assertThat(OsTrustStore.trustedCertificates(store)).containsExactly(root);
+    }
+
+    @Test
+    void rootsTrustedForOtherPurposesOnlyAreNotAnchors() {
+        assertThat(OsTrustStore.trustedForSigning(Set.of(usage("1.2.840.113635.100.1.3"))))
+                .as("SSL only")
+                .isFalse();
+        assertThat(
+                        OsTrustStore.trustedForSigning(
+                                Set.of(usage("[1.2.840.113635.100.1.3, 1.2.840.113635.100.1.8]"))))
+                .as("SSL and S/MIME")
+                .isTrue();
+        assertThat(OsTrustStore.trustedForSigning(Set.of(usage("2.5.29.37.0"))))
+                .as("any purpose")
+                .isTrue();
+        assertThat(OsTrustStore.trustedForSigning(Set.of())).as("no purpose limit").isTrue();
+    }
+
+    private static KeyStore.Entry.Attribute usage(String value) {
+        return new PKCS12Attribute(OsTrustStore.TRUSTED_KEY_USAGE, value);
     }
 
     @Test

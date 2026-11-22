@@ -60,6 +60,10 @@ final class MacSecurity {
     private final MethodHandle secIdentityCopyPrivateKey;
     private final MethodHandle secCertificateCopyData;
     private final MethodHandle secKeyCreateSignature;
+    private final MethodHandle secPolicyCreateBasicX509;
+    private final MethodHandle secTrustCreateWithCertificates;
+    private final MethodHandle secTrustEvaluateWithError;
+    private final MethodHandle secTrustCopyCertificateChain;
 
     /** A keychain identity: its certificate and a retained native reference used for signing. */
     record Identity(byte[] certificateDer, MemorySegment ref) {}
@@ -121,6 +125,23 @@ final class MacSecurity {
                         linker,
                         "SecKeyCreateSignature",
                         FunctionDescriptor.of(ADDRESS, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
+        secPolicyCreateBasicX509 =
+                sec(linker, "SecPolicyCreateBasicX509", FunctionDescriptor.of(ADDRESS));
+        secTrustCreateWithCertificates =
+                sec(
+                        linker,
+                        "SecTrustCreateWithCertificates",
+                        FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+        secTrustEvaluateWithError =
+                sec(
+                        linker,
+                        "SecTrustEvaluateWithError",
+                        FunctionDescriptor.of(JAVA_BYTE, ADDRESS, ADDRESS));
+        secTrustCopyCertificateChain =
+                sec(
+                        linker,
+                        "SecTrustCopyCertificateChain",
+                        FunctionDescriptor.of(ADDRESS, ADDRESS));
     }
 
     static boolean isMacOs() {
@@ -241,6 +262,65 @@ final class MacSecurity {
             }
         } finally {
             release(cert);
+        }
+    }
+
+    /**
+     * The identity's certificate chain as macOS builds it, leaf first: intermediates come from the
+     * keychains, the token and, where the certificate names one, its issuer URL. Whether the chain
+     * is trusted is ignored here; validation decides that. Falls back to the leaf alone.
+     */
+    List<byte[]> certificateChain(MemorySegment identity) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment certOut = arena.allocate(ADDRESS);
+            if ((int) secIdentityCopyCertificate.invokeExact(identity, certOut) != 0) {
+                return List.of();
+            }
+            MemorySegment cert = certOut.get(ADDRESS, 0);
+            MemorySegment policy = (MemorySegment) secPolicyCreateBasicX509.invokeExact();
+            MemorySegment trustOut = arena.allocate(ADDRESS);
+            try {
+                int status =
+                        (int) secTrustCreateWithCertificates.invokeExact(cert, policy, trustOut);
+                if (status != 0) {
+                    return List.of(certificateOf(arena, identity));
+                }
+                MemorySegment trust = trustOut.get(ADDRESS, 0);
+                try {
+                    byte ignored =
+                            (byte) secTrustEvaluateWithError.invokeExact(trust, MemorySegment.NULL);
+                    MemorySegment chain =
+                            (MemorySegment) secTrustCopyCertificateChain.invokeExact(trust);
+                    if (chain.equals(MemorySegment.NULL)) {
+                        return List.of(certificateOf(arena, identity));
+                    }
+                    try {
+                        List<byte[]> ders = new ArrayList<>();
+                        long count = (long) cfArrayGetCount.invokeExact(chain);
+                        for (long i = 0; i < count; i++) {
+                            MemorySegment link =
+                                    (MemorySegment) cfArrayGetValueAtIndex.invokeExact(chain, i);
+                            MemorySegment data =
+                                    (MemorySegment) secCertificateCopyData.invokeExact(link);
+                            try {
+                                ders.add(bytes(data));
+                            } finally {
+                                release(data);
+                            }
+                        }
+                        return ders;
+                    } finally {
+                        release(chain);
+                    }
+                } finally {
+                    release(trust);
+                }
+            } finally {
+                release(policy);
+                release(cert);
+            }
+        } catch (Throwable t) {
+            return List.of();
         }
     }
 

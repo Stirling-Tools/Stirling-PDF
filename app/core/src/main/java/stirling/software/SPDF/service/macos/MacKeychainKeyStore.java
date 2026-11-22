@@ -10,11 +10,13 @@ import java.security.MessageDigest;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,10 +70,33 @@ public final class MacKeychainKeyStore extends KeyStoreSpi {
         return entry == null ? null : entry.key();
     }
 
+    /**
+     * Leaf first, then whatever intermediates macOS can find, so a signature issued under an
+     * intermediate CA validates for a recipient who holds only the root. Built per call because it
+     * may fetch an issuer over the network.
+     */
     @Override
     public Certificate[] engineGetCertificateChain(String alias) {
         Entry entry = entries.get(alias);
-        return entry == null ? null : new Certificate[] {entry.certificate()};
+        if (entry == null) {
+            return null;
+        }
+        MacSecurity security = MacSecurity.get();
+        List<byte[]> ders =
+                security == null ? List.of() : security.certificateChain(entry.key().identity());
+        try {
+            CertificateFactory factory = CertificateFactory.getInstance("X.509");
+            List<Certificate> chain = new ArrayList<>();
+            for (byte[] der : ders) {
+                chain.add(factory.generateCertificate(new ByteArrayInputStream(der)));
+            }
+            if (!chain.isEmpty() && chain.get(0).equals(entry.certificate())) {
+                return chain.toArray(new Certificate[0]);
+            }
+        } catch (Exception e) {
+            // An unparsable chain still leaves the leaf, which is enough to sign.
+        }
+        return new Certificate[] {entry.certificate()};
     }
 
     @Override

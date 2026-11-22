@@ -8,9 +8,11 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,6 +38,12 @@ final class OsTrustStore {
                     Path.of("/etc/pki/tls/certs/ca-bundle.crt"),
                     Path.of("/etc/ssl/ca-bundle.pem"),
                     Path.of("/etc/ssl/cert.pem"));
+
+    static final String TRUSTED_KEY_USAGE = "2.16.840.1.113894.746875.1.1";
+
+    /** Any purpose, Apple's basic X.509 policy, and Apple's S/MIME (document signing) policy. */
+    static final Set<String> SIGNING_TRUST_PURPOSES =
+            Set.of("2.5.29.37.0", "1.2.840.113635.100.1.2", "1.2.840.113635.100.1.8");
 
     private OsTrustStore() {}
 
@@ -69,17 +77,34 @@ final class OsTrustStore {
     /**
      * Only trusted-certificate entries. Key entries are the user's own identities: the macOS user
      * keychain lists them alongside its trusted roots, and trusting them would make any self-signed
-     * identity validate.
+     * identity validate. A root whose trust is limited to other purposes, such as SSL only, is
+     * dropped too.
      */
     static List<X509Certificate> trustedCertificates(KeyStore store) throws Exception {
         List<X509Certificate> certs = new ArrayList<>();
         for (String alias : Collections.list(store.aliases())) {
             if (store.isCertificateEntry(alias)
-                    && store.getCertificate(alias) instanceof X509Certificate x509) {
+                    && store.getEntry(alias, null) instanceof KeyStore.TrustedCertificateEntry entry
+                    && entry.getTrustedCertificate() instanceof X509Certificate x509
+                    && trustedForSigning(entry.getAttributes())) {
                 certs.add(x509);
             }
         }
         return certs;
+    }
+
+    /**
+     * macOS trust settings arrive as the JDK's trusted-key-usage attribute: a policy OID, or a
+     * bracketed list of them. No attribute means the store sets no purpose limit.
+     */
+    static boolean trustedForSigning(Set<KeyStore.Entry.Attribute> attributes) {
+        for (KeyStore.Entry.Attribute attribute : attributes) {
+            if (TRUSTED_KEY_USAGE.equals(attribute.getName())) {
+                String value = attribute.getValue().replaceAll("[\\[\\]\\s]", "");
+                return Arrays.stream(value.split(",")).anyMatch(SIGNING_TRUST_PURPOSES::contains);
+            }
+        }
+        return true;
     }
 
     static List<X509Certificate> fromFirstBundle(List<Path> bundles) {
