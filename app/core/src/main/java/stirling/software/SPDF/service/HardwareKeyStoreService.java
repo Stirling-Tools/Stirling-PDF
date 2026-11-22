@@ -443,11 +443,21 @@ public class HardwareKeyStoreService {
                 continue; // only entries we can sign with
             }
             Certificate cert = ks.getCertificate(alias);
-            if (cert instanceof X509Certificate x509) {
+            if (cert instanceof X509Certificate x509 && canSign(x509)) {
                 certs.add(toInfo(alias, x509, source));
             }
         }
         return certs;
+    }
+
+    /**
+     * Whether a certificate's key usage permits signing. A CAC/PIV card carries an encryption-only
+     * certificate beside the signing one, under the same name, issuer and expiry; offering it makes
+     * the two indistinguishable and its signature invalid.
+     */
+    static boolean canSign(X509Certificate cert) {
+        boolean[] keyUsage = cert.getKeyUsage();
+        return keyUsage == null || keyUsage[0] || keyUsage[1]; // digitalSignature, nonRepudiation
     }
 
     private static HardwareCertificateInfo toInfo(

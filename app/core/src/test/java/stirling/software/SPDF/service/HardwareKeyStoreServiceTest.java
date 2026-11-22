@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.cert.X509Certificate;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -143,5 +144,30 @@ class HardwareKeyStoreServiceTest {
                 System.setProperty(PKCS11_PROP, previous);
             }
         }
+    }
+
+    @Test
+    void offersCertificatesWhoseKeyUsageAllowsSigning() {
+        assertTrue(HardwareKeyStoreService.canSign(withKeyUsage(null)));
+        assertTrue(HardwareKeyStoreService.canSign(withKeyUsage(usage(0))));
+        assertTrue(HardwareKeyStoreService.canSign(withKeyUsage(usage(1))));
+    }
+
+    @Test
+    void hidesEncryptionOnlyCertificates() {
+        assertFalse(HardwareKeyStoreService.canSign(withKeyUsage(usage(2))));
+        assertFalse(HardwareKeyStoreService.canSign(withKeyUsage(usage(3))));
+    }
+
+    private static boolean[] usage(int bit) {
+        boolean[] keyUsage = new boolean[9];
+        keyUsage[bit] = true;
+        return keyUsage;
+    }
+
+    private static X509Certificate withKeyUsage(boolean[] keyUsage) {
+        X509Certificate cert = mock(X509Certificate.class);
+        when(cert.getKeyUsage()).thenReturn(keyUsage);
+        return cert;
     }
 }
