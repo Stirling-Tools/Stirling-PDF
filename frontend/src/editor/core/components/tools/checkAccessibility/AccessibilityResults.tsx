@@ -106,13 +106,13 @@ export function AccessibilityResults({
   }
 
   const openInReview = (
-    target: AccessibilityFixTarget,
+    target: AccessibilityFixTarget | null,
     page?: number,
     autoTag = false,
   ) => {
     reviewMode.set({
       reviewing: true,
-      startAt: {
+      startAt: target && {
         fileId: selected.fileId,
         pageIndex: (page ?? 1) - 1,
         target,

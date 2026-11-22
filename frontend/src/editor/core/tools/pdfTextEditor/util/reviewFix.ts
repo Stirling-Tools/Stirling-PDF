@@ -27,27 +27,29 @@ const FOCUSABLE = [
   "[tabindex]",
 ];
 const FLASH_CLASS = "review-fix-flash";
+/** Read pages this long before letting the browser paint and take input. */
+const SCAN_SLICE_MS = 50;
 
 /**
  * Selects what `target` fixes from `pageIndex` on, or opens its inspector tab, then
  * focuses the control marked `data-fix-target`. With nothing left, shows the page.
  */
-export function goToFix(
+export async function goToFix(
   store: EditorStore,
   pageIndex: number,
   target: AccessibilityFixTarget,
-): void {
-  const control = select(store, pageIndex, target);
+): Promise<void> {
+  const control = await select(store, pageIndex, target);
   if (control) focusFixControl(control);
   else currentEditorSession()?.revealPage(pageIndex);
 }
 
 /** Selects what `target` fixes, returning the control to focus; null when nothing from `pageIndex` on needs it. */
-function select(
+async function select(
   store: EditorStore,
   pageIndex: number,
   target: AccessibilityFixTarget,
-): AccessibilityFixTarget | null {
+): Promise<AccessibilityFixTarget | null> {
   switch (target) {
     case "untagged":
     case "image": {
@@ -56,7 +58,7 @@ function select(
           ? (item: ReviewItem) =>
               item.kind === "image" && item.status === "todo"
           : (item: ReviewItem) => item.status === "todo";
-      return selectFirst(store, pageIndex, matches) ? target : null;
+      return (await selectFirst(store, pageIndex, matches)) ? target : null;
     }
     case "heading":
       return selectFlaggedHeading(store, pageIndex) ? target : null;
@@ -69,16 +71,26 @@ function select(
   }
 }
 
-/** Reads pages one at a time from `pageIndex`, selecting the first item `matches`. */
-function selectFirst(
+/**
+ * Reads pages one at a time from `pageIndex`, selecting the first item `matches`.
+ * Yields to the browser between slices: on a long file with nothing to match it
+ * reads every page. False when nothing matches or another document opens.
+ */
+async function selectFirst(
   store: EditorStore,
   pageIndex: number,
   matches: (item: ReviewItem) => boolean,
-): boolean {
+): Promise<boolean> {
   const doc = store.document;
   if (!doc) return false;
   const pageCount = store.getState().pages.length;
+  let sliceStart = performance.now();
   for (let index = pageIndex; index < pageCount; index++) {
+    if (performance.now() - sliceStart > SCAN_SLICE_MS) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (store.document !== doc) return false;
+      sliceStart = performance.now();
+    }
     ensurePageRead(store, index);
     const page = store.getState().pages[index];
     const item = page && reviewItems(doc, [page]).find(matches);

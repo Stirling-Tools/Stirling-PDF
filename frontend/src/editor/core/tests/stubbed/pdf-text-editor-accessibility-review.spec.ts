@@ -21,6 +21,7 @@ interface EditorWindow {
       documentLanguage: () => string | null;
       structure: (pageIndex: number) => {
         alt: (mcid: number) => string | null;
+        decorative: (mcid: number) => boolean;
         links: () => { annotation: number; holder: string | null }[];
         linkContents: (annotation: number) => string | null;
         setLinkContents: (annotation: number, contents: string | null) => void;
@@ -29,7 +30,7 @@ interface EditorWindow {
     state: {
       pages: {
         runs: { id: string; text: string }[];
-        images: { id: string; mcid?: number }[];
+        images: { id: string; mcid?: number; artifact?: boolean }[];
       }[];
     };
   };
@@ -191,5 +192,39 @@ test.describe("PDF accessibility review", () => {
       annotation,
     );
     expect(described).toMatch(/appendix/i);
+  });
+
+  test("marks an image decorative in the review, and the save keeps it", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    const card = page.getByTestId("pdf-editor-quick-tag");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+
+    const image = await page.evaluate(FIRST_IMAGE);
+    await page.getByTestId(`pdf-editor-image-${image.id}`).click();
+    const decorative = () =>
+      page.evaluate(() => {
+        const store = (window as unknown as EditorWindow).__editor_store;
+        const first = store.state.pages[0]?.images[0];
+        if (!first) return null;
+        return (
+          !!first.artifact ||
+          (first.mcid !== undefined &&
+            store.document.structure(0).decorative(first.mcid))
+        );
+      });
+    expect(await decorative()).toBe(false);
+    await card.getByRole("button", { name: "It's decorative" }).click();
+    await expect.poll(decorative).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await page.getByTestId("viewer-edit-text").click();
+    await expect(card).toBeHidden();
+    await saveAndReopen(page);
+
+    await expect.poll(decorative, { timeout: 30_000 }).toBe(true);
   });
 });

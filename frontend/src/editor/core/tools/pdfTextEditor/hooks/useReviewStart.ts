@@ -49,7 +49,7 @@ export function useReviewStart({
         goToFix(store, startAt.pageIndex, startAt.target),
       );
     } else {
-      goToFix(store, startAt.pageIndex, startAt.target);
+      void goToFix(store, startAt.pageIndex, startAt.target);
     }
   }, [startAt, sourceFileId, ready, session, store, setActiveFileId]);
 

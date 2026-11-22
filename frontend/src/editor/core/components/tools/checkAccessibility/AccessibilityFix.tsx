@@ -12,9 +12,12 @@ import {
   type AccessibilityFixTarget,
 } from "@editor/utils/accessibilityFixes";
 
-/** Opens the checked file in the review at `target`, from a 1-based page (or the first). */
+/**
+ * Opens the checked file in the review at `target`, from a 1-based page (or the
+ * first). A null target opens the file without looking for anything to fix.
+ */
 export type AccessibilityFixFn = (
-  target: AccessibilityFixTarget,
+  target: AccessibilityFixTarget | null,
   page?: number,
 ) => void;
 
@@ -36,7 +39,8 @@ export function FixInDocumentButton({ passing }: { passing: boolean }) {
       fullWidth
       variant="primary"
       leftSection={<Icon name="universal-access" size={16} />}
-      onClick={() => fix("untagged")}
+      // A passing file has nothing to find, and looking reads every page first.
+      onClick={() => fix(passing ? null : "untagged")}
       data-testid="a11y-fix-in-document"
     >
       {passing
