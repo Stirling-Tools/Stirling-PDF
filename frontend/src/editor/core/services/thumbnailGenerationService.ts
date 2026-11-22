@@ -204,8 +204,6 @@ export class ThumbnailGenerationService {
     const allResults: ThumbnailResult[] = [];
     const batchSize = 3;
     for (let i = 0; i < pageNumbers.length; i += batchSize) {
-      // A batch posted after forgetFile would reopen the document it released.
-      if (this.forgetGenerations.get(fileId) !== generation) break;
       const batch = pageNumbers.slice(i, i + batchSize);
       const rendered = await renderPagesInWorker(
         fileId,
@@ -215,6 +213,9 @@ export class ThumbnailGenerationService {
         scale,
         { applyRotation: false, format: "jpeg", quality },
       );
+      // After forgetFile, results would re-cache what it dropped, and another
+      // batch would reopen the document it released.
+      if (this.forgetGenerations.get(fileId) !== generation) return [];
       const results = rendered.map(
         ({ pageNumber, thumbnail, error }): ThumbnailResult =>
           thumbnail

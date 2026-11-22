@@ -62,7 +62,7 @@ describe("page thumbnails when the render worker cannot start", () => {
 });
 
 describe("page thumbnails for a file forgotten mid-render", () => {
-  it("post no further batches, which would reopen the released document", async () => {
+  it("post no further batches and publish nothing, which would re-cache what was dropped", async () => {
     const service = new ThumbnailGenerationService();
     renderPagesInWorker.mockReset();
     renderPagesInWorker.mockImplementation(
@@ -77,12 +77,17 @@ describe("page thumbnails for a file forgotten mid-render", () => {
       },
     );
 
-    await service.generateThumbnails(
+    const onProgress = vi.fn();
+    const results = await service.generateThumbnails(
       "f" as FileId,
       new ArrayBuffer(8),
       [1, 2, 3, 4, 5, 6, 7],
+      {},
+      onProgress,
     );
 
     expect(renderPagesInWorker).toHaveBeenCalledTimes(1);
+    expect(onProgress).not.toHaveBeenCalled();
+    expect(results).toEqual([]);
   });
 });
