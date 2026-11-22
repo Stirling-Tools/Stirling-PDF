@@ -21,6 +21,7 @@ vi.mock(
   async (orig) => ({
     ...(await orig<object>()),
     wrapAtPageEdge: () => null,
+    wrapToWidthBefore: () => null,
   }),
 );
 vi.mock("@editor/tools/pdfTextEditor/util/deviceFontEmbed", () => ({

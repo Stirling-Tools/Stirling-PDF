@@ -2398,7 +2398,7 @@ function spansByLine(spans: readonly FontSpan[], text: string): FontSpan[][] {
 }
 
 // Reconstruct `paragraphLineSlots` from the data the overlay loop just emitted.
-function buildSlotsFromOverlayEmit(
+export function buildSlotsFromOverlayEmit(
   m: WrappedPdfiumModule,
   run: TextRun,
   perLineEmits: Array<{

@@ -5,6 +5,7 @@ import {
   fauxBoldWidth,
   isFauxBold,
 } from "@editor/tools/pdfTextEditor/util/fauxBold";
+import { KeepWidthCommand } from "@editor/tools/pdfTextEditor/commands/KeepWidthCommand";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
 import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
@@ -76,12 +77,17 @@ import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFit
 import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
 import { lineWidthIn } from "@editor/tools/pdfTextEditor/util/wrapText";
-import { isFocusInContentEditable } from "@editor/tools/pdfTextEditor/util/dom";
+import {
+  focusedRunCaret,
+  focusRunWhenPainted,
+  isFocusInContentEditable,
+} from "@editor/tools/pdfTextEditor/util/dom";
 import {
   SetParagraphFormatCommand,
   type TextAlign,
 } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 import {
+  caretAfterListToggle,
   listIndentFor,
   mayBeList,
   toggledListText,
@@ -1036,9 +1042,12 @@ export function useSelectionActions(store: EditorStore) {
 
   const toggleList = useCallback(
     (kind: ListKind) => {
+      const editing = editedRunId();
+      const caret = editing ? focusedRunCaret(editing) : null;
+      const textBefore = editing ? liveRuns(store).get(editing)?.text : null;
       if (isFocusInContentEditable())
         (document.activeElement as HTMLElement).blur();
-      void dispatchPerRun((run) => {
+      const listed = dispatchPerRun((run) => {
         const live = liveRuns(store).get(run.id);
         const doc = store.document;
         if (!live) return null;
@@ -1063,8 +1072,26 @@ export function useSelectionActions(store: EditorStore) {
                 : 0,
           }),
         ]);
-        return keptOblique(run, list);
+        return new KeepWidthCommand(keptOblique(run, list), {
+          pageIndex: run.pageIndex,
+          runId: run.id,
+        });
       }, true);
+      if (!editing || textBefore == null) return;
+      void listed.then(() => {
+        const textAfter = liveRuns(store).get(editing)?.text;
+        if (textAfter == null) return;
+        const offset =
+          caret === null
+            ? null
+            : caretAfterListToggle(textBefore, textAfter, caret);
+        focusRunWhenPainted(
+          editing,
+          offset === null,
+          undefined,
+          offset ?? undefined,
+        );
+      });
     },
     [dispatchPerRun, store],
   );
@@ -1088,4 +1115,12 @@ export function useSelectionActions(store: EditorStore) {
     replaceImageById,
     duplicateFirstSelected,
   };
+}
+
+function editedRunId(): string | null {
+  if (!isFocusInContentEditable()) return null;
+  const box = (document.activeElement as HTMLElement).closest<HTMLElement>(
+    "[data-run-id]",
+  );
+  return box?.dataset.runId ?? null;
 }

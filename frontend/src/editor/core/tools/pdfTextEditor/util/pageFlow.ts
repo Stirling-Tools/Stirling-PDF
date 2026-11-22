@@ -10,7 +10,6 @@ import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoa
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
-import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
   familyOf,
@@ -205,8 +204,13 @@ function prependOverflow(
   });
   const heldKeys = holdKeystrokes();
   store.selection.selectOne(continued.id);
-  currentEditorSession()?.revealPage(next.index);
-  focusRunWhenPainted(continued.id, true, heldKeys, split.overflow.length);
+  focusRunWhenPainted(
+    continued.id,
+    true,
+    heldKeys,
+    split.overflow.length,
+    next.index,
+  );
   flowPastBottom(store, next.index, continued.id, bottomBefore);
   return true;
 }
@@ -314,8 +318,7 @@ function moveOverflow(
   if (!insertedId) return null;
   const heldKeys = holdKeystrokes();
   store.selection.selectOne(insertedId);
-  currentEditorSession()?.revealPage(next.index);
-  focusRunWhenPainted(insertedId, true, heldKeys);
+  focusRunWhenPainted(insertedId, true, heldKeys, undefined, next.index);
   return insertedId;
 }
 

@@ -34,6 +34,7 @@ import {
   ChangeZOrderCommand,
   type ZOrderMode,
 } from "@editor/tools/pdfTextEditor/commands/ChangeZOrderCommand";
+import { KeepWidthCommand } from "@editor/tools/pdfTextEditor/commands/KeepWidthCommand";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
@@ -431,18 +432,21 @@ export function useToolbarController(
       };
       // One composite = one undo step for the whole selection, and locked
       // runs are exempt like every other bulk mutation.
-      const cmds: EditTextCommand[] = [];
+      const cmds: KeepWidthCommand[] = [];
       for (const p of doc.loadedPages()) {
         for (const r of p.runs) {
           if (!selIds.has(r.id) || r.locked || r.textReadOnly) continue;
           const next = transform(r.text);
           if (next === r.text) continue;
           cmds.push(
-            new EditTextCommand({
-              pageIndex: p.index,
-              runId: r.id,
-              nextText: next,
-            }),
+            new KeepWidthCommand(
+              new EditTextCommand({
+                pageIndex: p.index,
+                runId: r.id,
+                nextText: next,
+              }),
+              { pageIndex: p.index, runId: r.id },
+            ),
           );
         }
       }

@@ -11,6 +11,7 @@ const BOX_ESTIMATE_EM = 0.5;
 // The room a line keeps under it, where the document gave it at least that: lines that only just clear each other read as touching.
 const CLEARANCE_EM = 0.1;
 const AMONG_LINES_SHARE = 0.5;
+const ATTACHED_EM = 0.6;
 
 const top = (run: TextRun) => run.bounds.y + run.bounds.height;
 
@@ -93,7 +94,30 @@ export function runsPushedBelow(
     }
   }
   const runIds = withRunsLandedOn(page, edited, pushed, drop);
-  return runIds ? { runIds, dy: -drop } : none;
+  if (!runIds || drawnWith(page, edited, runIds)) return none;
+  return { runIds, dy: -drop };
+}
+
+function drawnWith(page: Page, edited: TextRun, runIds: string[]): boolean {
+  const graphics = [...page.rules, ...page.fills].filter(
+    (g) => !touches(g, edited.bounds, 0),
+  );
+  if (graphics.length === 0) return false;
+  const moving = new Set(runIds);
+  return page.runs.some(
+    (run) =>
+      moving.has(run.id) &&
+      graphics.some((g) => touches(g, run.bounds, run.fontSize * ATTACHED_EM)),
+  );
+}
+
+function touches(a: PageRect, b: PageRect, reach: number): boolean {
+  return (
+    a.x <= b.x + b.width + reach &&
+    a.x + a.width >= b.x - reach &&
+    a.y <= b.y + b.height + reach &&
+    a.y + a.height >= b.y - reach
+  );
 }
 
 // How much of their height two boxes share, where they share any width.

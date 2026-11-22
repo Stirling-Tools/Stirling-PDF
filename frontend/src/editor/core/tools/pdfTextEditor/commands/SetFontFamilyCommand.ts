@@ -1,3 +1,4 @@
+import { buildSlotsFromOverlayEmit } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
 import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
@@ -56,7 +57,8 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   ReflowWrapCommand,
-  wrapAtPageEdge,
+  layoutBefore,
+  wrapToWidthBefore,
 } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 
 interface LineToEmit {
@@ -124,6 +126,7 @@ export class SetFontFamilyCommand implements Command {
 
     // Read on every apply: redoing an earlier step draws the run in new objects.
     this.prev = snapshotRun(run);
+    const laidOut = layoutBefore(run);
     this.prevMemberPtrs = collectMemberPtrs(run).slice();
     this.prevContentOrder = [
       ...contentIndices(m, page.pagePtr, this.prevMemberPtrs),
@@ -213,7 +216,10 @@ export class SetFontFamilyCommand implements Command {
     run.mergedFromTexts = [];
     run.mergedFromBounds = [];
     run.mergedFromCharStarts = [];
-    run.paragraphLineSlots = [];
+    run.paragraphLineSlots =
+      emitted.length > 1
+        ? buildSlotsFromOverlayEmit(m, run, emitted, run.fontId)
+        : [];
     // Track every per-word leaf so later recolour/resize/move hit all words,
     // not just the anchor. Line height stays paragraph-only (>1 line).
     run.paragraphMemberPtrs = lineAnchors;
@@ -228,7 +234,7 @@ export class SetFontFamilyCommand implements Command {
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
-    this.rewrap = wrapAtPageEdge(doc, page, run);
+    this.rewrap = wrapToWidthBefore(doc, page, run, laidOut);
   }
 
   wouldLoseText(doc: EditorDocument): boolean {

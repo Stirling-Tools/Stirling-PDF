@@ -29,6 +29,7 @@ import {
   drawnEndPt,
   emitTextLine,
   inkFromRun,
+  leanObject,
   measureObjSpanPt,
   objectTexts,
   removeAndDestroyObject,
@@ -51,6 +52,7 @@ import {
   joinsAt,
   shapeArabic,
 } from "@editor/tools/pdfTextEditor/util/arabicShaping";
+import { slantOf } from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import { isRtlBase, visualOrder } from "@editor/tools/pdfTextEditor/util/bidi";
 import { fallbackFamilyFor } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
@@ -890,6 +892,7 @@ export function applyBidiLineEdit(
     }
   }
   for (const ptr of plan.removePtrs) removeTextObject(m, page, ptr, 0);
+  const slant = slantOf(run.matrix);
 
   const widthOf = (item: Item): number =>
     item.kind === "space"
@@ -929,6 +932,7 @@ export function applyBidiLineEdit(
             pen - parkedX,
             line.baseline - from,
           );
+        if (slant) for (const ptr of ptrs) leanObject(m, ptr, slant);
         const span = measureObjSpanPt(m, ptrs);
         if (ptrs.length > 0)
           pieces.push({

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  caretAfterListToggle,
   listIndentFor,
   continueList,
   listKindOf,
@@ -194,5 +195,21 @@ describe("list gates", () => {
   test("a list after leading blank lines still counts as a list", () => {
     expect(mayBeList("\n• A")).toBe(true);
     expect(mayBeList("Plain\ntext")).toBe(false);
+  });
+});
+
+describe("caret after a list toggle", () => {
+  test("stays on the same letter once the marker is added or removed", () => {
+    expect(caretAfterListToggle("Apples\nPears", "• Apples\n• Pears", 3)).toBe(
+      5,
+    );
+    expect(caretAfterListToggle("Apples\nPears", "• Apples\n• Pears", 9)).toBe(
+      13,
+    );
+    expect(caretAfterListToggle("• Apples", "Apples", 5)).toBe(3);
+  });
+
+  test("leaves a caret at the end to land at the end", () => {
+    expect(caretAfterListToggle("Apples", "• Apples", 6)).toBeNull();
   });
 });

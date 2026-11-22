@@ -25,6 +25,8 @@ function page(runs: TextRun[], cellRuns: (string | null)[][] = []): Page {
   return {
     runs,
     findRun: (id: string) => runs.find((r) => r.id === id),
+    rules: [],
+    fills: [],
     tables: cellRuns.length
       ? [
           {

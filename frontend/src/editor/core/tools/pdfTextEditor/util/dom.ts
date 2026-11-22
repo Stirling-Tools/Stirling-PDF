@@ -66,6 +66,8 @@ export function revealOnPage(el: Element | null, pageIndex: number): void {
 }
 
 const FOCUS_WAIT_FRAMES = 30;
+const REVEAL_WAIT_FRAMES = 120;
+const REVEAL_EVERY_FRAMES = 6;
 
 function runBox(runId: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(
@@ -78,12 +80,17 @@ export function focusRunWhenPainted(
   caretAtEnd = false,
   heldKeys?: () => string,
   caretOffset?: number,
+  revealOnPage?: number,
 ): void {
   let frames = 0;
   const attempt = () => {
     const el = runBox(runId);
     if (!el) {
-      if (++frames < FOCUS_WAIT_FRAMES) requestAnimationFrame(attempt);
+      if (revealOnPage !== undefined && frames % REVEAL_EVERY_FRAMES === 0)
+        currentEditorSession()?.revealPage(revealOnPage);
+      const limit =
+        revealOnPage === undefined ? FOCUS_WAIT_FRAMES : REVEAL_WAIT_FRAMES;
+      if (++frames < limit) requestAnimationFrame(attempt);
       else heldKeys?.();
       return;
     }
@@ -96,8 +103,58 @@ export function focusRunWhenPainted(
     sel?.addRange(range);
     if (caretOffset !== undefined) restoreCaretOffset(el, caretOffset);
     typeKeys(heldKeys?.() ?? "");
+    if (revealOnPage !== undefined) keepCaretInView(el, REVEAL_MARGIN_PX);
   };
   requestAnimationFrame(attempt);
+}
+
+const CARET_MARGIN_PX = 16;
+const REVEAL_MARGIN_PX = 120;
+
+export function keepCaretInView(
+  box: HTMLElement,
+  margin = CARET_MARGIN_PX,
+): void {
+  const scroller = scrollParent(box);
+  if (!scroller) return;
+  const caret = caretRect(box);
+  const view = scroller.getBoundingClientRect();
+  const bottom = Math.min(view.bottom, coveredFrom(scroller, caret, view));
+  const room = Math.max(margin, caret.height * 1.5);
+  if (caret.bottom > bottom - room)
+    scroller.scrollTop += caret.bottom - (bottom - room);
+  else if (caret.top < view.top + margin)
+    scroller.scrollTop -= view.top + margin - caret.top;
+}
+
+function scrollParent(el: HTMLElement): HTMLElement | null {
+  let node = el.parentElement;
+  while (node && !/(auto|scroll)/.test(getComputedStyle(node).overflowY))
+    node = node.parentElement;
+  return node;
+}
+
+function caretRect(box: HTMLElement): DOMRect {
+  const sel = window.getSelection();
+  if (sel?.rangeCount && box.contains(sel.anchorNode)) {
+    const range = sel.getRangeAt(0);
+    const rect = range.getClientRects()[0] ?? range.getBoundingClientRect();
+    if (rect.height) return rect;
+  }
+  return box.getBoundingClientRect();
+}
+
+function coveredFrom(
+  scroller: HTMLElement,
+  caret: DOMRect,
+  view: DOMRect,
+): number {
+  const x = Math.min(Math.max(caret.left + 1, view.left + 1), view.right - 1);
+  const y = Math.min(caret.top + caret.height / 2, view.bottom - 1);
+  const hit = document.elementFromPoint(x, y);
+  return hit && !scroller.contains(hit)
+    ? hit.getBoundingClientRect().top
+    : view.bottom;
 }
 
 function typeKeys(text: string): void {

@@ -465,7 +465,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
       .toMatch(/^First line/);
   });
 
-  test("double line spacing sets the paragraph's baselines two type sizes apart", async ({
+  test("double line spacing sets the paragraph's baselines two single lines apart", async ({
     page,
   }) => {
     await openEditor(page, PARAGRAPH_PDF);
@@ -479,7 +479,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
         const run = await runOnPage(page, "^First line");
         return run.baselines[0] - run.baselines[1];
       })
-      .toBeCloseTo(para.fontSize * 2, 0);
+      .toBeCloseTo(para.fontSize * 1.2 * 2, 0);
   });
 
   test("a text style sets size and weight together, in one undo step", async ({

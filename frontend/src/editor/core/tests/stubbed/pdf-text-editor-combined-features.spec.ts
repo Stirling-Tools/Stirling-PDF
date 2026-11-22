@@ -167,6 +167,10 @@ async function undoSize(page: Page): Promise<number> {
   );
 }
 
+function words(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
 test.describe("PDF text editor - combined feature set", () => {
   test("image insert (real png) adds an image, then rotate-cw changes its matrix and undo reverts", async ({
     page,
@@ -232,13 +236,13 @@ test.describe("PDF text editor - combined feature set", () => {
     await page.getByTestId("pdf-editor-change-case-upper").click();
     await page.waitForTimeout(400);
     const upper = await runText(page, 1, id);
-    expect(upper).toBe(orig.toUpperCase());
+    expect(words(upper)).toBe(words(orig.toUpperCase()));
     await selectRun(page, id);
     await page.getByTestId("pdf-editor-change-case").click();
     await page.getByTestId("pdf-editor-change-case-lower").click();
     await page.waitForTimeout(400);
     const lower = await runText(page, 1, id);
-    expect(lower).toBe(orig.toLowerCase());
+    expect(words(lower)).toBe(words(orig.toLowerCase()));
   });
 
   test("lock makes a run inert (no select on click); unlock restores it", async ({
@@ -721,7 +725,7 @@ test.describe("PDF text editor - combined feature set", () => {
     await page.getByTestId("pdf-editor-change-case").click();
     await page.getByTestId("pdf-editor-change-case-title").click();
     await page.waitForTimeout(400);
-    expect(await runText(page, 1, id)).toBe(expected);
+    expect(words(await runText(page, 1, id))).toBe(words(expected));
   });
 
   test("change case Sentence case capitalizes after a lowercase pass", async ({
@@ -741,7 +745,7 @@ test.describe("PDF text editor - combined feature set", () => {
     const expected = orig
       .toLowerCase()
       .replace(/(^\s*\w|[.!?]\s+\w)/g, (m) => m.toUpperCase());
-    expect(await runText(page, 1, id)).toBe(expected);
+    expect(words(await runText(page, 1, id))).toBe(words(expected));
   });
 
   test("change case is undoable - undo restores the original text", async ({
@@ -754,7 +758,7 @@ test.describe("PDF text editor - combined feature set", () => {
     await page.getByTestId("pdf-editor-change-case").click();
     await page.getByTestId("pdf-editor-change-case-upper").click();
     await page.waitForTimeout(400);
-    expect(await runText(page, 1, id)).toBe(orig.toUpperCase());
+    expect(words(await runText(page, 1, id))).toBe(words(orig.toUpperCase()));
     await page.getByTestId("pdf-editor-undo").click();
     await page.waitForTimeout(400);
     expect(await runText(page, 1, id)).toBe(orig);

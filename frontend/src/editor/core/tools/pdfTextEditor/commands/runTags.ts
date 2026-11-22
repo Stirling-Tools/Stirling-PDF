@@ -116,6 +116,7 @@ export function editedTags(
 ): TextTags {
   const spans = taggedSpans(prev, prevText.length);
   if (spans.length <= 1) return uniformTags(spans[0]?.tags ?? fallback);
+  if (sameLettersRecased(prevText, nextText)) return prev;
   const { start, prevEnd, nextEnd } = diffSpan(prevText, nextText);
   const inserted =
     nextEnd > start
@@ -133,6 +134,13 @@ export function editedTags(
     nextEnd,
     sliceTags(prev, prevEnd, Infinity),
   );
+}
+
+function sameLettersRecased(prevText: string, nextText: string): boolean {
+  if (prevText.length !== nextText.length) return false;
+  for (let i = 0; i < prevText.length; i++)
+    if (prevText[i].toLowerCase() !== nextText[i].toLowerCase()) return false;
+  return true;
 }
 
 function insertedTags(

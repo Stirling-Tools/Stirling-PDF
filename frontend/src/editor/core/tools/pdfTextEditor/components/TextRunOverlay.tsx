@@ -72,7 +72,10 @@ import {
 import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import type { GrowEdge } from "@editor/tools/pdfTextEditor/util/growEdge";
-import { moveToLineEdge } from "@editor/tools/pdfTextEditor/util/dom";
+import {
+  keepCaretInView,
+  moveToLineEdge,
+} from "@editor/tools/pdfTextEditor/util/dom";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const SETTLE_MS = 400;
@@ -1568,6 +1571,9 @@ export function TextRunOverlay({
         // Always read hard breaks only - never synthesise newlines from browser
         // soft-wraps.
         commitTypedText(el, readOverlayText(el));
+        requestAnimationFrame(() => {
+          if (document.activeElement === el) keepCaretInView(el);
+        });
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={leaveHover}

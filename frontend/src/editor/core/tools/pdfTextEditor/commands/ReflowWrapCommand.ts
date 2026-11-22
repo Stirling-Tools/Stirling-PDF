@@ -97,6 +97,7 @@ export class ReflowWrapCommand implements Command {
   private readonly maxWidthPt: number;
   private readonly explicit: boolean;
   private readonly keepClearBelow: boolean;
+  private readonly relayout: boolean;
   private readonly pullUp: boolean;
   private applied = false;
   private refused = false;
@@ -135,6 +136,7 @@ export class ReflowWrapCommand implements Command {
     explicit?: boolean;
     keepClearBelow?: boolean;
     pullUp?: boolean;
+    relayout?: boolean;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
@@ -142,6 +144,7 @@ export class ReflowWrapCommand implements Command {
     this.explicit = opts.explicit ?? false;
     this.keepClearBelow = opts.keepClearBelow ?? false;
     this.pullUp = opts.pullUp ?? false;
+    this.relayout = opts.relayout ?? false;
   }
 
   get refusedForSpaceBelow(): boolean {
@@ -266,7 +269,13 @@ export class ReflowWrapCommand implements Command {
       });
     };
     // A live wrap runs only when a line overflows the width, or with pullUp when a line's first word now fits on the line above.
-    if (!this.explicit && !overflows && !(this.pullUp && pullsUp())) return;
+    if (
+      !this.explicit &&
+      !this.relayout &&
+      !overflows &&
+      !(this.pullUp && pullsUp())
+    )
+      return;
 
     this.prev = snapshotRun(run);
 
@@ -294,7 +303,7 @@ export class ReflowWrapCommand implements Command {
       const keepsLineStart =
         !this.explicit &&
         previous !== null &&
-        Math.abs(previous.dy) <= 0.001 &&
+        (this.relayout || Math.abs(previous.dy) <= 0.001) &&
         Math.abs(previous.baseline - w.baseline) > 2;
       const slack = !keepsLineStart ? 0 : this.pullUp ? pullUpSlack : Infinity;
       const width = w.right - w.x;
@@ -460,7 +469,7 @@ export class ReflowWrapCommand implements Command {
         joinSoftLines(run.text, softStartsOf(run), fits),
         fits,
       );
-      if (wrapped === run.text && !this.explicit) return;
+      if (wrapped === run.text && !this.explicit && !this.relayout) return;
       this.textWrap = {
         edit:
           wrapped === run.text
@@ -557,7 +566,30 @@ export function wrapAtPageEdge(
   return reflow;
 }
 
+export function wrapToWidthBefore(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  before: { width: number; lines: number },
+): ReflowWrapCommand | null {
+  if (before.lines < 2 || rotationFromMatrix(run.matrix))
+    return wrapAtPageEdge(doc, page, run);
+  const reflow = new ReflowWrapCommand({
+    pageIndex: page.index,
+    runId: run.id,
+    maxWidthPt: run.wrapWidthPt ?? before.width,
+    pullUp: true,
+  });
+  reflow.apply(doc);
+  return reflow;
+}
+
+export function layoutBefore(run: TextRun): { width: number; lines: number } {
+  return { width: run.bounds.width, lines: lineCount(run.text) };
+}
+
 const TEXT_OVERLAP_EM = 0.25;
+const BOX_ASCENT_EM = 0.95;
 
 function lineCount(text: string): number {
   return text.split(/\r?\n/).length;
@@ -776,11 +808,13 @@ function rebuildRunFromLines(
   }
 
   run.matrix = { ...run.matrix, e: startX, f: topBaseline };
+  const bottom =
+    topBaseline - (lines.length - 1) * lineHeight - fontSize * 0.25;
   run.bounds = {
     x: startX,
-    y: topBaseline - (lines.length - 1) * lineHeight - fontSize * 0.25,
+    y: bottom,
     width: Math.max(0, maxRight - startX),
-    height: lines.length * lineHeight + fontSize * 0.25,
+    height: topBaseline + fontSize * BOX_ASCENT_EM - bottom,
   };
 }
 

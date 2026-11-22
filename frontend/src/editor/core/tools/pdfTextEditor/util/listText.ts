@@ -164,3 +164,25 @@ export function continueList(
       : startOf(added) + marker.length + (split ? 0 : after[added].length),
   };
 }
+
+export function caretAfterListToggle(
+  before: string,
+  after: string,
+  caret: number,
+): number | null {
+  const oldLines = before.split("\n");
+  const newLines = after.split("\n");
+  if (caret >= before.length || oldLines.length !== newLines.length)
+    return null;
+  let start = 0;
+  let line = 0;
+  while (line < oldLines.length - 1 && caret > start + oldLines[line].length) {
+    start += oldLines[line].length + 1;
+    line += 1;
+  }
+  const newStart = newLines
+    .slice(0, line)
+    .reduce((sum, text) => sum + text.length + 1, 0);
+  const shift = newLines[line].length - oldLines[line].length;
+  return Math.max(newStart, newStart + caret - start + shift);
+}

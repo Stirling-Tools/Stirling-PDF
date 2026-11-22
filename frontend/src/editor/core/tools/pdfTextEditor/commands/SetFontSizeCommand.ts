@@ -229,8 +229,10 @@ function wrapToFitGrown(
   run: TextRun,
   ratio: number,
 ): ReflowWrapCommand | null {
-  const right = page.display.cropRight;
-  const room = right - run.bounds.x;
+  const toPageEdge = page.display.cropRight - run.bounds.x;
+  const room = run.text.includes("\n")
+    ? Math.min(toPageEdge, run.wrapWidthPt ?? run.bounds.width)
+    : toPageEdge;
   if (run.bounds.width * ratio <= room + 0.5) return null;
   if (room < run.fontSize * ratio * 2) return null;
   const reflow = new ReflowWrapCommand({

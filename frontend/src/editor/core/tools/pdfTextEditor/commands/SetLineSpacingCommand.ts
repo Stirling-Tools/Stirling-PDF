@@ -2,6 +2,8 @@ import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
+const SINGLE_LINE_EM = 1.2;
+
 export class SetLineSpacingCommand implements Command {
   readonly type = "set-line-spacing";
   private readonly pageIndex: number;
@@ -20,12 +22,12 @@ export class SetLineSpacingCommand implements Command {
     const run = doc.page(this.pageIndex).findRun(this.runId);
     if (!run || run.fontSize <= 0) return;
     this.prevLineHeight = run.paragraphLineHeight;
-    run.paragraphLineHeight = run.fontSize * this.factor;
+    run.paragraphLineHeight = run.fontSize * SINGLE_LINE_EM * this.factor;
     this.reflow = new ReflowWrapCommand({
       pageIndex: this.pageIndex,
       runId: this.runId,
       maxWidthPt: run.wrapWidthPt ?? run.bounds.width + 0.5,
-      explicit: true,
+      relayout: true,
     });
     const userWidth = run.wrapWidthPt;
     this.reflow.apply(doc);

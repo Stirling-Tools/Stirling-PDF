@@ -849,7 +849,11 @@ export function counterPageRotation(
   }
 }
 
-function leanObject(m: WrappedPdfiumModule, ptr: number, slant: number): void {
+export function leanObject(
+  m: WrappedPdfiumModule,
+  ptr: number,
+  slant: number,
+): void {
   const buf = scratchPtr(m, SCRATCH.emitMatrix, 24);
   if (!m.FPDFPageObj_GetMatrix(ptr, buf)) return;
   const [a, b, c, d] = [0, 1, 2, 3].map((i) =>

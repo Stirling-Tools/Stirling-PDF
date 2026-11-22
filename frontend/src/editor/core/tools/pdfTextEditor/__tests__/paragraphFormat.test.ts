@@ -14,6 +14,9 @@ import {
 import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
+import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
@@ -287,7 +290,7 @@ describe("paragraph format sync", () => {
     store.dispatch(
       new SetLineSpacingCommand({ pageIndex: 0, runId: para.id, factor: 2 }),
     );
-    expect(gap()).toBeCloseTo(para.fontSize * 2, 0);
+    expect(gap()).toBeCloseTo(para.fontSize * 1.2 * 2, 0);
     store.undo();
     expect(gap()).toBeCloseTo(before, 1);
   });
@@ -500,3 +503,34 @@ async function burstInFormattedParagraph() {
   expect(centres()).toEqual(centredBefore);
   expect(rules()).toBe(para.paragraphLineSlots.length);
 }
+
+test("line spacing keeps every line's first word at the start of its line", async () => {
+  const store = await fixture("two-column-sample.pdf");
+  const page = store.document!.page(1);
+  PdfiumTextReader.populate(store.document!, page);
+  const para = page.runs.find((r) => r.text.startsWith("Name:"))!;
+  const lineStarts = () =>
+    para.text.split("\n").map((line) => line.split(/\s+/)[0]);
+  store.dispatch(
+    new SetFontFamilyCommand({
+      pageIndex: 1,
+      runId: para.id,
+      nextFamily: "Helvetica-BoldOblique",
+    }),
+  );
+  store.dispatch(
+    new SetFontSizeCommand({ pageIndex: 1, runId: para.id, nextSize: 16 }),
+  );
+  store.dispatch(
+    new SetParagraphFormatCommand({
+      pageIndex: 1,
+      runIds: [para.id],
+      align: "center",
+    }),
+  );
+  const before = lineStarts();
+  store.dispatch(
+    new SetLineSpacingCommand({ pageIndex: 1, runId: para.id, factor: 1.5 }),
+  );
+  expect(lineStarts()).toEqual(before);
+});
