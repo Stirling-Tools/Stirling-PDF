@@ -13,6 +13,21 @@ function Test-Signed([string]$path) {
   (Get-AuthenticodeSignature -LiteralPath $path).Status -eq "Valid"
 }
 
+function Clear-DanglingCertificateTable([string]$path) {
+  $bytes = [IO.File]::ReadAllBytes($path)
+  $pe = [BitConverter]::ToInt32($bytes, 0x3c)
+  $optional = $pe + 24
+  $magic = [BitConverter]::ToUInt16($bytes, $optional)
+  $directories = $optional + $(if ($magic -eq 0x20b) { 112 } else { 96 })
+  $entry = $directories + 4 * 8
+  $offset = [BitConverter]::ToUInt32($bytes, $entry)
+  $size = [BitConverter]::ToUInt32($bytes, $entry + 4)
+  if ($size -eq 0 -or ([long]$offset + $size) -le $bytes.Length) { return }
+  Write-Host "Clearing certificate table that points past the end of the file ($offset+$size > $($bytes.Length))"
+  [Array]::Clear($bytes, $entry, 8)
+  [IO.File]::WriteAllBytes($path, $bytes)
+}
+
 if ($VerifyOnly) {
   $unsigned = @($binaries | Where-Object { -not (Test-Signed $_.FullName) })
   foreach ($file in $unsigned) { Write-Host "[ERROR] Not signed: $($file.FullName)" }
@@ -34,6 +49,7 @@ foreach ($file in $binaries) {
   $index++
   $temp = Join-Path $work ("binary{0}{1}" -f $index, $file.Extension)
   Copy-Item -LiteralPath $file.FullName -Destination $temp -Force
+  Clear-DanglingCertificateTable $temp
   Write-Host "Signing $($file.FullName)"
   & smctl sign --keypair-alias $alias --input $temp --verbose
   if ($LASTEXITCODE -ne 0) { throw "smctl sign exited $LASTEXITCODE for $($file.FullName)" }
