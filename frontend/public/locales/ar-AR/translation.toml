@@ -647,18 +647,16 @@ description = "الحد الأقصى لـ DPI لمعالجة الصور (0 = غ�
 label = "الحد الأقصى لـ DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "تهيئة حدود الجلسات والمهلات لكل منفّذ عمليات"
 ghostscript = "Ghostscript"
 installApp = "تثبيت التطبيق"
 label = "حدود منفّذ العمليات"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF إلى HTML"
+officeConvert = "تحويل Office"
+officeConvertSessionLimit = "الحد الأقصى لعمليات التحويل المتزامنة؛ القيمة 0 تختار حدًا استنادًا إلى وحدات المعالجة المركزية والذاكرة"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "الحد الأقصى لعدد المثيلات المتزامنة"
@@ -667,10 +665,6 @@ label = "حدّ الجلسات"
 [admin.settings.advanced.processExecutor.timeout]
 description = "الحد الأقصى لوقت التنفيذ"
 label = "المهلة (بالدقائق)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert في إصدار تجريبي. يوفّر تحويلات أفضل وأسرع وباستخدام ذاكرة أقل من LibreOffice."
-label = "استخدام تحويل Stirling Office الجديد"
 
 [admin.settings.advanced.tempFileManagement]
 description = "تهيئة تخزين الملفات المؤقتة وسلوك التنظيف"
@@ -688,11 +682,6 @@ label = "فاصل التنظيف (دقائق)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "ما إذا كان سيتم تنظيف الدليل المؤقت الأوسع للنظام (يُستخدم بحذر)"
 label = "تنظيف ملفات النظام المؤقتة"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "دليل ملفات LibreOffice المؤقتة (اتركه فارغًا للإعداد الافتراضي: baseTmpDir/libreoffice)"
-label = "دليل LibreOffice للملفات المؤقتة"
-placeholder = "الافتراضي: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "الحد الأقصى للعمر بالساعات قبل تنظيف الملفات المؤقتة"
@@ -1300,17 +1289,6 @@ label = "المنتِج الافتراضي"
 [admin.settings.general.customPaths]
 description = "تهيئة مسارات مخصصة لنظام الملفات لمعالجة خط الأنابيب والأدوات الخارجية"
 label = "مسارات مخصصة"
-
-[admin.settings.general.customPaths.operations]
-label = "مسارات الأدوات الخارجية"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "المسار إلى LibreOffice unoconvert لتحويل المستندات (اتركه فارغًا للإعداد الافتراضي: /opt/venv/bin/unoconvert)"
-label = "ملف unoconvert التنفيذي"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "المسار إلى ملف WeasyPrint التنفيذي لتحويل HTML إلى PDF (اتركه فارغًا للإعداد الافتراضي: /opt/venv/bin/weasyprint)"
-label = "ملف WeasyPrint التنفيذي"
 
 [admin.settings.general.customPaths.pipeline]
 label = "دلائل خط الأنابيب"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "عنوان المستند"
 pdfUaTitleHelp = "يعرضه القارئ بدلًا من اسم الملف. إذا تُرك فارغًا، يتم استخدام العنوان الأول."
 selectSourceFormatFirst = "اختر تنسيق المصدر أولًا"
 settings = "إعدادات"
+signInToUse = "سجّل الدخول لاستخدامه"
 single = "مفرد"
 sourceFormatPlaceholder = "صيغة المصدر"
-stirlingOfficeConvert = "استخدام Stirling Office Convert (إصدار تجريبي)"
-stirlingOfficeConvertDescription = "تحويلات أفضل وأسرع باستخدام ذاكرة أقل. عطّله لاستخدام المحوّل القياسي."
 strictMode = "الوضع الصارم"
 strictModeDesc = "خطأ إذا لم تكن عملية التحويل مثالية (يستخدم تحقق VeraPDF)"
 svgPdfOptions = "خيارات SVG إلى PDF"
@@ -4419,8 +4396,6 @@ webOptions = "خيارات الويب إلى PDF"
 zoomLevel = "مستوى التكبير"
 
 [convert.ebookOptions]
-embedAllFonts = "تضمين جميع الخطوط"
-embedAllFontsDesc = "تضمين كل الخطوط من الكتاب الإلكتروني في ملف PDF المُنشأ"
 includePageNumbers = "تضمين أرقام الصفحات"
 includePageNumbersDesc = "إضافة أرقام صفحات إلى ملف PDF المُنشأ"
 includeTableOfContents = "تضمين جدول المحتويات"
@@ -7830,7 +7805,11 @@ decorativeLabel = "صورة زخرفية"
 description = "وصف الصورة"
 descriptionInfo = "تقرأ قارئات الشاشة هذا الوصف بدلًا من الصورة."
 encrypted = "لا يمكن تحرير الوسوم في ملف مشفّر"
+figureDescription = "وصف الشكل"
+figureDescriptionInfo = "تقرأ برامج قراءة الشاشة هذا بدلًا من الشكل."
 formFieldDescription = "وصف الحقل"
+formulaDescription = "وصف المعادلة"
+formulaDescriptionInfo = "تقرأ برامج قراءة الشاشة هذا بدلًا من المعادلة. انطقها كما لو كنت تقولها بصوت عالٍ، مثل \"x تربيع زائد واحد\"."
 heading = "إمكانية الوصول"
 innerTagLabel = "الوسم {{number}}"
 innerTags = "الوسوم في هذا النص"
@@ -7842,7 +7821,7 @@ missingDescriptions = "أوصاف مفقودة"
 mixedContent = "يتضمن الشكل محتوى آخر"
 mixedTags = "مختلط"
 needsDescriptionBadge = "لا يوجد وصف"
-nextImage = "الصورة التالية"
+nextToReview = "التالي للمراجعة"
 notFigure = "موسوم كجزء من النص"
 removeTag = "إزالة الوسم"
 saveFailed = "تعذّر حفظ تغييرات إمكانية الوصول، لذا لم يتم حفظ الملف. تراجع عنها وحاول مرة أخرى."
@@ -9661,10 +9640,6 @@ signInToStart = "سجّل الدخول لبدء تجربتك"
 stage = "المرحلة {{current}} من {{total}}"
 stagesLabel = "التقدم"
 
-[portal.enterprise.connect]
-ownerOnly = "يمكن لمالك هذا الخادم فقط ربطه. اطلب منه فتح هذه الصفحة."
-unavailable = "تم إيقاف ربط حساب Stirling على هذا الخادم. احجز مكالمة وسنُعدّ تجربتك معك."
-
 [portal.enterprise.landing]
 lede = "جرّبه مجانًا لمدة 14 يومًا، ثم ابنِ عرض سعرك ووقّع اتفاقيتك هنا. لا حاجة لبطاقة."
 tickAgreement = "اتفاقية واحدة تغطي MSA ونموذج الطلب وEULA وDPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "تنزيل ترخيص Offline (.lic)"
 hint = "الصق هذا المفتاح في مثيل self-hosted لتفعيله، أو احتفظ به لسجلاتك. حافظ عليه آمنًا."
 label = "مفتاح الترخيص الخاص بك"
 trialFileHint = "هذا ملف الترخيص التجريبي الخاص بك. بمجرد اكتمال اتفاقيتك، عُد ونزّله مرة أخرى — فعلى عكس مفتاح الترخيص عبر الإنترنت، لن يتم تحديث ملف .lic من تلقاء نفسه."
-
-[portal.procurement.link]
-cta = "ربط الحساب"
-description = "تعمل المشتريات على حساب Stirling المرتبط لديك: فهو الطريقة التي نوفر بها التجربة، ونسعّر عرضك، ونبدأ الفوترة. اربط حسابًا للبدء."
-title = "اربط حسابك للبدء"
 
 [portal.procurement.live]
 description = "اشتراكك نشط وتم إصدار ترخيصك. تم توفير فريقك وبدأت الفوترة."
@@ -14260,7 +14230,6 @@ toggleDetails = "تبديل التفاصيل"
 
 [tool]
 endpointUnavailable = "هذه الأداة غير متاحة على خادمك."
-endpointUnavailableClickable = "غير متاح في هذا الوضع. انقر لتسجيل الدخول."
 filesLoading = "لا تزال الملفات قيد التحميل، يرجى الانتظار."
 filesLoadingProgress = "{{loaded}} / {{total}} ملفات قيد التحميل..."
 invalidParams = "املأ الإعدادات المطلوبة."
@@ -14268,6 +14237,8 @@ noFiles = "أضف ملفًا للبدء."
 scopeFiles = "ملفات"
 scopeThisFile = "هذا الملف"
 selectFilesHint = "حدد الملفات في الملفات النشطة لتشغيل هذه الأداة"
+signInRequired = "هذا يتطلب حساب Stirling. سجّل الدخول للمتابعة."
+signInToUse = "سجّل الدخول لاستخدامه"
 singleFileScope = "سيطبق فقط على: {{fileName}}"
 viewerMode = "انتقل إلى محرر الملفات لإضافة ملفات متعددة."
 

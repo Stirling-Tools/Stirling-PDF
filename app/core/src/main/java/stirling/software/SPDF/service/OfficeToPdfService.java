@@ -1,9 +1,13 @@
 package stirling.software.SPDF.service;
 
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.stream.Collectors;
+import java.util.zip.ZipException;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -15,28 +19,37 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.officeconvert.UnsupportedFormatException;
 import stirling.software.officeconvert.memory.Admission;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
 import stirling.software.officeconvert.topdf.io.PoiXml;
 
-/** Office to PDF in process through Stirling Office Convert, with LibreOffice as the fallback. */
+/** Office to PDF in process through Stirling Office Convert. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OfficeToPdfService {
 
-    private final OfficeConversionService officeConversionService;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
 
     /** Packages may use their own assets; local files and network resources remain inaccessible. */
     public byte[] convertHtml(byte[] html, boolean packaged) throws IOException {
+        return convertHtml(html, packaged, 1f);
+    }
+
+    public byte[] convertHtml(byte[] html, boolean packaged, float zoom) throws IOException {
         try (TempFile in = new TempFile(tempFileManager, packaged ? ".zip" : ".html");
                 TempFile out = new TempFile(tempFileManager, ".pdf")) {
             Files.write(in.getPath(), html);
-            convert(in.getPath(), out.getPath(), options().allowPackages(packaged));
+            convert(
+                    in.getPath(),
+                    out.getPath(),
+                    options().allowPackages(packaged).zoom(zoom),
+                    "the document");
             return Files.readAllBytes(out.getPath());
         }
     }
@@ -47,32 +60,47 @@ public class OfficeToPdfService {
         PoiXml.raiseProcessLimits();
     }
 
+    /**
+     * Office Convert's single queue serves every conversion module, so one setting caps them all.
+     */
+    @PostConstruct
+    void applySessionLimit() {
+        int limit =
+                Math.max(
+                        0,
+                        applicationProperties
+                                .getProcessExecutor()
+                                .getSessionLimit()
+                                .getOfficeConvertSessionLimit());
+        Admission.Limits defaults = Admission.Limits.defaults();
+        Admission.configure(
+                new Admission.Limits(
+                        defaults.memoryBudgetPercent(),
+                        limit,
+                        defaults.maxWait(),
+                        defaults.refuseOversize(),
+                        defaults.readmitStopped()));
+    }
+
     /** Loads the converter and scans fonts off the request path, so a first conversion is fast. */
     @EventListener(ApplicationReadyEvent.class)
     public void warmUp() {
-        if (officeConversionService.replacesLibreOffice()) {
-            Thread.ofPlatform()
-                    .name("office-to-pdf-warm-up")
-                    .daemon()
-                    .start(
-                            () ->
-                                    // PPTX is left out: POI logs errors for the warm-up deck.
-                                    OfficeToPdf.warmUp(
-                                            OfficeToPdf.Format.DOCX, OfficeToPdf.Format.XLSX));
-        }
+        Thread.ofPlatform()
+                .name("office-to-pdf-warm-up")
+                .daemon()
+                .start(
+                        () ->
+                                // PPTX is left out: POI logs errors for the warm-up deck.
+                                OfficeToPdf.warmUp(
+                                        OfficeToPdf.Format.DOCX, OfficeToPdf.Format.XLSX));
     }
 
-    /** Whether files with this extension convert in process rather than with LibreOffice. */
-    public boolean handles(String extension) {
-        return handles(extension, null);
+    /** Whether Stirling Office Convert reads files with this extension. */
+    public static boolean handles(String extension) {
+        return OfficeToPdf.Format.recognises(Path.of("file." + extension));
     }
 
-    public boolean handles(String extension, Boolean choice) {
-        return officeConversionService.replacesLibreOffice(choice)
-                && OfficeToPdf.Format.recognises(Path.of("file." + extension));
-    }
-
-    /** Uses the server timeout and rejects incomplete output even without a fallback installed. */
+    /** Uses the server timeout and rejects incomplete output. */
     public void convert(Path in, Path out) throws IOException {
         convert(in, out, options());
     }
@@ -83,35 +111,70 @@ public class OfficeToPdfService {
                 applicationProperties
                         .getProcessExecutor()
                         .getTimeoutMinutes()
-                        .getLibreOfficeTimeoutMinutes();
+                        .getOfficeConvertTimeoutMinutes();
         return OfficeToPdf.Options.defaults().timeout(Duration.ofMinutes(minutes));
     }
 
-    /** Rejects incomplete or page-limited output; callers may retry with another converter. */
+    /** Rejects incomplete or page-limited output. */
     public void convert(Path in, Path out, OfficeToPdf.Options options) throws IOException {
-        OfficeToPdf.Result result = OfficeToPdf.convert(in, out, options);
+        convert(in, out, options, in.getFileName().toString());
+    }
+
+    private void convert(Path in, Path out, OfficeToPdf.Options options, String name)
+            throws IOException {
+        OfficeToPdf.Result result;
+        try {
+            result = OfficeToPdf.convert(in, out, options);
+        } catch (IOException e) {
+            rejectUnreadable(e);
+            throw e;
+        }
         log.debug(
                 "Converted {} to PDF in process: {} pages, {} warnings",
                 in.getFileName(),
                 result.pages(),
                 result.warnings().size());
-        if (result.truncated() || result.pageLimitReached()) {
-            throw new IOException("Only part of " + in.getFileName() + " could be converted");
+        if (result.pageLimitReached()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.conversionPageLimit",
+                    "Converting {0} would produce more than {1} pages, the most one conversion"
+                            + " can produce. Split it into smaller files and convert each one.",
+                    name,
+                    options.maxPages());
+        }
+        if (result.truncated()) {
+            String reasons =
+                    result.warnings().stream()
+                            .filter(warning -> warning.contains("converted"))
+                            .map(warning -> warning.endsWith(".") ? warning : warning + ".")
+                            .collect(Collectors.joining(" "));
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.conversionIncomplete",
+                    "Only part of {0} could be converted. {1}",
+                    name,
+                    reasons);
         }
     }
 
-    /** A timeout or a memory stop would only repeat, more slowly, in LibreOffice. */
-    public boolean canFallBack(Throwable failure) {
-        if (!officeConversionService.libreOfficeAvailable()) {
+    public static void rejectUnreadable(IOException e) {
+        if (unreadableInput(e)) {
+            String reason =
+                    e instanceof EOFException || e instanceof ZipException
+                            ? "it is damaged or incomplete"
+                            : e.getMessage();
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.conversionUnreadable", "The file could not be read: {0}", reason);
+        }
+    }
+
+    static boolean unreadableInput(IOException e) {
+        if (e instanceof InterruptedIOException) {
             return false;
         }
-        for (Throwable t = failure; t != null; t = t.getCause()) {
-            if (t instanceof OfficeToPdf.TimedOut
-                    || t instanceof Admission.Stopped
-                    || t instanceof OutOfMemoryError) {
-                return false;
-            }
-        }
-        return true;
+        String message = e.getMessage();
+        return e instanceof UnsupportedFormatException
+                || e instanceof ZipException
+                || e instanceof EOFException
+                || message != null && message.startsWith("The file is not");
     }
 }

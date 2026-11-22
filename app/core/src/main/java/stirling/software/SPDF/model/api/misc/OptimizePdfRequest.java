@@ -52,7 +52,8 @@ public class OptimizePdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Whether to convert images to high-contrast line art using ImageMagick. Default is false.",
+                    "Whether to convert images to high-contrast black and white line art. Default is"
+                            + " false.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "false")
     private Boolean lineArt = false;
@@ -65,8 +66,8 @@ public class OptimizePdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Edge detection strength to use for line art conversion (1-3). This maps to"
-                            + " ImageMagick's -edge radius.",
+                    "Edge detection strength to use for line art conversion (1-3): the radius of the"
+                            + " edge filter applied before thresholding.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "1",
             allowableValues = {"1", "2", "3"})
