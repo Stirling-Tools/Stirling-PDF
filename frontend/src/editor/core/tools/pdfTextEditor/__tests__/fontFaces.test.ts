@@ -343,17 +343,13 @@ describe("toolbar bold state", () => {
     expect(state.boldNeedsBoldItalic).toBe(false);
   });
 
-  it("says Italic is off for want of a bold italic face, not of an italic one", () => {
+  it("leans a bold whose family has no bold italic face", () => {
     const state = toolbarFor(
       [run("a", "pdf:1:Georgia-Bold"), run("b", "pdf:2:Georgia-Italic")],
       ["a"],
     );
-    expect(state.canItalic).toBe(false);
-    expect(state.italicNeedsBoldItalic).toBe(true);
-    expect(
-      toolbarFor([run("a", "pdf:1:Garamond-Bold")], ["a"])
-        .italicNeedsBoldItalic,
-    ).toBe(false);
+    expect(state.canItalic).toBe(true);
+    expect(state.italicNeedsBoldItalic).toBe(false);
   });
 
   it("lists the weights of a family with more than regular and bold", () => {

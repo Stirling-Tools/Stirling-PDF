@@ -119,6 +119,7 @@ interface FakeRun {
   textReadOnly?: boolean;
   fill: { r: number; g: number; b: number; a: number };
   fontSize: number;
+  matrix: { a: number; b: number; c: number; d: number; e: number; f: number };
   renderMode?: number;
   stroke?: { r: number; g: number; b: number; a: number };
   strokeWidth?: number;
@@ -133,6 +134,7 @@ function run(id: string, fontId: string, text = "Hello"): FakeRun {
     locked: false,
     fill: { r: 0, g: 0, b: 0, a: 255 },
     fontSize: 12,
+    matrix: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
   };
 }
 

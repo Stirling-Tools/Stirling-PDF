@@ -108,6 +108,7 @@ function createHandlers(store: EditorStore) {
       runId: string,
       maxWidthPt: number,
       keepClearBelow?: boolean,
+      pullUp?: boolean,
     ): string | null | undefined => {
       const doc = store.document;
       const page = doc?.page(pageIndex);
@@ -127,6 +128,7 @@ function createHandlers(store: EditorStore) {
         runId,
         maxWidthPt,
         keepClearBelow,
+        pullUp,
       });
       store.dispatch(reflow);
       if (reflow.refusedForSpaceBelow) return null;

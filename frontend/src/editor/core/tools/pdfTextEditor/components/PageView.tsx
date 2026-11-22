@@ -110,6 +110,7 @@ interface PageViewProps {
     runId: string,
     maxWidthPt: number,
     keepClearBelow?: boolean,
+    pullUp?: boolean,
   ) => string | null | void;
   /** The run with the engine's pen positions for its current text, read now. */
   onMeasureRun?: (pageIndex: number, runId: string) => TextRunSnapshot | null;
@@ -652,8 +653,14 @@ export const PageView = memo(function PageView({
                 : null
             }
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
-            onWrap={(maxWidthPt, keepClearBelow) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt, keepClearBelow)
+            onWrap={(maxWidthPt, keepClearBelow, pullUp) =>
+              onWrapRun?.(
+                page.pageIndex,
+                run.id,
+                maxWidthPt,
+                keepClearBelow,
+                pullUp,
+              )
             }
             onMeasure={
               onMeasureRun

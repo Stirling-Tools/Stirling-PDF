@@ -74,3 +74,79 @@ test("a reflow between keystrokes keeps every letter typed since the last one", 
   history.redo(doc);
   expect(heading.text.replace(/\s+/g, " ")).toBe(typed);
 });
+
+test("typing on past the box edge never pulls a wrapped word back up onto the line above", async () => {
+  const { doc, heading } = await open();
+  const history = new HistoryStack();
+  const width = heading.bounds.width;
+  const typed =
+    " and this sentence keeps going far beyond the right edge of the page";
+  let finished: string[] = [];
+  for (const ch of typed) {
+    history.execute(
+      new EditTextCommand({
+        pageIndex: 0,
+        runId: heading.id,
+        nextText: heading.text + ch,
+      }),
+      doc,
+    );
+    history.execute(
+      new ReflowWrapCommand({
+        pageIndex: 0,
+        runId: heading.id,
+        maxWidthPt: width,
+      }),
+      doc,
+    );
+    const lines = heading.text.split("\n").map((line) => line.trim());
+    expect(lines.slice(0, finished.length)).toEqual(finished);
+    finished = lines.slice(0, -1);
+  }
+  expect(heading.text.split("\n").length).toBeGreaterThan(2);
+});
+
+async function wrappedParagraph() {
+  const { doc, heading } = await open();
+  const history = new HistoryStack();
+  const width = heading.bounds.width;
+  const edit = (nextText: string, pullUp = false) => {
+    history.execute(
+      new EditTextCommand({ pageIndex: 0, runId: heading.id, nextText }),
+      doc,
+    );
+    history.execute(
+      new ReflowWrapCommand({
+        pageIndex: 0,
+        runId: heading.id,
+        maxWidthPt: width,
+        pullUp,
+      }),
+      doc,
+    );
+  };
+  for (const ch of " and this sentence keeps going far beyond the")
+    edit(heading.text + ch);
+  expect(heading.text.split("\n")).toHaveLength(4);
+  expect(heading.text.split("\n")[1].trim()).toBe("and this sentence");
+  return { heading, edit };
+}
+
+for (const oneKeyAtATime of [true, false])
+  test(`deleting ${oneKeyAtATime ? "letters one key at a time" : "a selected word"} from the first line pulls the next line's first word up once it fits`, async () => {
+    const { heading, edit } = await wrappedParagraph();
+    const at = heading.text.indexOf("bigger ");
+    const cut = "bigger ".length;
+    for (let n = oneKeyAtATime ? 1 : cut; n <= cut; n++)
+      edit(
+        heading.text.slice(0, at) +
+          heading.text.slice(at + (oneKeyAtATime ? 1 : cut)),
+        true,
+      );
+
+    const lines = heading.text.split("\n").map((line) => line.trim());
+    expect(lines[0]).toBe("Heading in a size and");
+    expect(lines.join(" ")).toBe(
+      "Heading in a size and this sentence keeps going far beyond the",
+    );
+  });

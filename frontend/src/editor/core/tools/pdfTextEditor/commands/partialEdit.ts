@@ -18,6 +18,7 @@ import {
   type FontSpan,
   inkFromRun,
   isVerifiedPerCharPtr,
+  drawnEndPt,
   measureObjRightEdgePt,
   measureObjSpanPt,
   moveObjectLeftEdgeTo,
@@ -42,6 +43,7 @@ import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import { deviceFamilyOf } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import { setCharcodesOn } from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
+import { slantOf } from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import { ligatureCodes } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
 import {
   SCRATCH,
@@ -1088,14 +1090,38 @@ export function applyPartialEditPlan(
   // Strategy: walk ops in order.
   let firstX = startX;
   let lastEnd = startX;
+  let lastPenEnd = (): number => startX;
   // Bounds stop at the last glyph's ink, so the trailing space must be added back.
   let spacesAtEnd = "";
   const trailingSpaces = (text: string) => /\s*$/.exec(text)?.[0] ?? "";
-  function extendLastEnd(right: number, text: string): void {
+  function extendLastEnd(
+    right: number,
+    text: string,
+    penEnd: () => number = () => right,
+  ): void {
     if (right < lastEnd) return;
     lastEnd = right;
+    lastPenEnd = penEnd;
     spacesAtEnd = trailingSpaces(text);
   }
+  const penEndOf = (
+    ptrs: readonly number[],
+    texts: readonly string[],
+    inkRight: number,
+  ): number => {
+    try {
+      return drawnEndPt(m, ptrs, texts, run.fontSize) + run.charSpacingPt;
+    } catch {
+      return inkRight;
+    }
+  };
+  const penStartOf = (ptr: number, inkLeft: number): number => {
+    if ((containerOf.get(ptr) ?? run.containerPtr) !== 0) return inkLeft;
+    const matrix = readMatrix(m, ptr);
+    if (!matrix) return inkLeft;
+    const bearing = inkLeft - matrix[4];
+    return Math.abs(bearing) < run.fontSize * 0.5 ? matrix[4] : inkLeft;
+  };
   // Tc stretches spaces too, matching the gaps emitTextLine draws.
   const whitespaceAdvancePt = (text: string) =>
     text
@@ -1176,12 +1202,17 @@ export function applyPartialEditPlan(
 
   const insertAnchorX = (
     origBounds: { x: number } | null,
-    beforeBounds: { x: number } | null,
+    beforeIdx: number | undefined,
     leadingGap: number,
   ): number => {
     if (origBounds) return origBounds.x + offset;
-    if (beforeBounds) return beforeBounds.x + offset;
-    return lastEnd + leadingGap + whitespaceAdvancePt(spacesAtEnd);
+    const beforeBounds =
+      beforeIdx !== undefined ? plan.prevMergedFromBounds[beforeIdx] : null;
+    if (beforeBounds)
+      return (
+        penStartOf(plan.prevMergedFromPtrs[beforeIdx!], beforeBounds.x) + offset
+      );
+    return lastPenEnd() + leadingGap + whitespaceAdvancePt(spacesAtEnd);
   };
 
   const offsetAfterInsert = (
@@ -1192,6 +1223,7 @@ export function applyPartialEditPlan(
       text: string;
       anchorX: number;
       rightEdge: number;
+      penEnd: number;
       width: number;
       leadingGap: number;
       hasInk: boolean;
@@ -1217,16 +1249,20 @@ export function applyPartialEditPlan(
               following.startBIdx,
             )
           : "";
-      return insert.width + whitespaceAdvancePt(between);
+      return (
+        insert.penEnd -
+        insert.anchorX +
+        whitespaceAdvancePt(trailingSpaces(insert.text)) +
+        whitespaceAdvancePt(between)
+      );
     }
-    // Keep the old gap from the new text's end: ink width drifts a side bearing per key.
     const followX = followingX(opIndex);
     if (followX === null || !insert.hasInk)
       // The ghost-space gap also pushes everything after this insert right.
       return insert.leadingGap + insert.width;
     const gap = Math.max(0, followX - insert.anchorX);
     const trailingAdvance = whitespaceAdvancePt(trailingSpaces(insert.text));
-    return insert.rightEdge + trailingAdvance + gap - followX;
+    return insert.penEnd + trailingAdvance + gap - followX;
   };
 
   for (const [opIndex, op] of plan.ops.entries()) {
@@ -1249,7 +1285,7 @@ export function applyPartialEditPlan(
       newMergedFromTexts.push(text);
       newMergedFromBounds.push({ x: newX, right: newRight });
       newMergedFromCharStarts.push(op.startBIdx);
-      extendLastEnd(newRight, text);
+      extendLastEnd(newRight, text, () => penEndOf([ptr], [text], newRight));
       for (const rider of ridersOf(plan.prevMergedFromTexts, op.subRunIdx)) {
         const riderPtr = plan.prevMergedFromPtrs[rider];
         const riderBounds = plan.prevMergedFromBounds[rider];
@@ -1311,6 +1347,7 @@ export function applyPartialEditPlan(
           x: newX,
           y: emitY,
           fontSize: run.fontSize,
+          slant: slantOf(run.matrix),
           fill: fillOf(op.subRunIdx),
           ...inkFromRun(run),
           tags: uniformTags(modTags),
@@ -1362,7 +1399,9 @@ export function applyPartialEditPlan(
         newMergedFromTexts.push(modText);
         newMergedFromBounds.push({ x: newX, right: newRight });
         newMergedFromCharStarts.push(op.startBIdx);
-        extendLastEnd(newRight, modText);
+        extendLastEnd(newRight, modText, () =>
+          penEndOf([ptr], [modText], newRight),
+        );
         // Subsequent sub-runs shift by the width delta (surviving text is
         // usually narrower than the original).
         offset += newRight - newX - origWidth;
@@ -1392,7 +1431,7 @@ export function applyPartialEditPlan(
       // Anchor priority: * anchorSubRunIdx: emit at the replaced sub-run's x.
       const leadingGap =
         (op.leadingGhostCount ?? 0) * Math.max(1, run.fontSize) * 0.25;
-      const anchorX = insertAnchorX(origBounds, beforeBounds, leadingGap);
+      const anchorX = insertAnchorX(origBounds, beforeIdx, leadingGap);
 
       // A redrawn piece keeps its own face (bold, italic, a symbol font) for every
       // word it can draw, and a fallback of its style for the rest.
@@ -1432,6 +1471,7 @@ export function applyPartialEditPlan(
         x: anchorX,
         y: emitY,
         fontSize: run.fontSize,
+        slant: slantOf(run.matrix),
         fill: insertFill,
         ...inkFromRun(run),
         tags: insertTags,
@@ -1477,6 +1517,7 @@ export function applyPartialEditPlan(
           x: anchorX,
           y: emitY,
           fontSize: run.fontSize,
+          slant: slantOf(run.matrix),
           fill: insertFill,
           ...inkFromRun(run),
           tags: insertTags,
@@ -1560,11 +1601,13 @@ export function applyPartialEditPlan(
           charCursor += sliceText.length;
         }
       }
-      extendLastEnd(realRightEdge, insertText);
+      const penEnd = penEndOf(ptrs, emittedTexts, realRightEdge);
+      extendLastEnd(realRightEdge, insertText, () => penEnd);
       offset += offsetAfterInsert(opIndex, origBounds, beforeBounds, {
         text: insertText,
         anchorX,
         rightEdge: realRightEdge,
+        penEnd,
         width: measuredWidth,
         leadingGap,
         hasInk: nonWhitespaceLen > 0,
@@ -1649,6 +1692,7 @@ export function revertPartialEditPlan(
       x: bounds.x,
       y: prev.baselineY,
       fontSize: run.fontSize,
+      slant: slantOf(run.matrix),
       fill: prev.fills[i] ?? run.fill,
       ...inkFromRun(run),
       tags: tagsOf(start, start + text.length),
@@ -2236,6 +2280,7 @@ export function applyParagraphEditPlan(
           x: leftX,
           y: slot.baselineY,
           fontSize: slot.fontSize,
+          slant: slantOf(run.matrix),
           fill: run.fill,
           ...inkFromRun(run),
           tags: lineTags,

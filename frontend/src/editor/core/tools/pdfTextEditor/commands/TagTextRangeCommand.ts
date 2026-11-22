@@ -395,9 +395,16 @@ function verifyTexts(
     page.pagePtr,
     objects.map((o) => o.ptr),
   );
-  if (held.some((text, i) => text !== objects[i].text)) {
+  if (held.some((text, i) => !drawsListedText(text, objects[i]))) {
     throw new Error("The text the editor shows is not the text drawn");
   }
+}
+
+function drawsListedText(held: string | null, object: CutObject): boolean {
+  if (held === object.text) return true;
+  if (held === null) return false;
+  const next = object.leaf?.list.texts[object.leaf.index + 1] ?? "";
+  return /^\s+$/.test(next) && held.trimEnd() === object.text;
 }
 
 /** Where each object draws each character of its text a glyph draws. */

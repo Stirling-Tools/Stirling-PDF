@@ -9,6 +9,7 @@ import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextR
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { lookalikeFamilyFor } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 
 const SAMPLE = path.join(
   import.meta.dirname,
@@ -101,6 +102,7 @@ interface DrawnChar {
   x: number;
   y: number;
   font: number;
+  obj: number;
 }
 
 function drawnChars(doc: EditorDocument): DrawnChar[] {
@@ -118,6 +120,7 @@ function drawnChars(doc: EditorDocument): DrawnChar[] {
         x: m.pdfium.getValue(xy, "double"),
         y: m.pdfium.getValue(xy + 8, "double"),
         font: m.FPDFTextObj_GetFont(m.FPDFText_GetTextObject(textPage, i)),
+        obj: m.FPDFText_GetTextObject(textPage, i),
       });
     }
   } finally {
@@ -151,6 +154,92 @@ function retype(history: HistoryStack, doc: EditorDocument) {
     doc,
   );
 }
+
+function inkOf(
+  doc: EditorDocument,
+  page: Page,
+  scale: number,
+  obj: number,
+): number {
+  const m = doc.module;
+  const width = Math.round(page.width * scale);
+  const height = Math.round(page.height * scale);
+  const box = m.pdfium.wasmExports.malloc(16);
+  const bitmap = m.FPDFBitmap_Create(width, height, 1);
+  try {
+    m.FPDFPageObj_GetBounds(obj, box, box + 4, box + 8, box + 12);
+    const [left, bottom, right, top] = [0, 4, 8, 12].map((o) =>
+      m.pdfium.getValue(box + o, "float"),
+    );
+    m.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, 0xffffffff);
+    m.FPDF_RenderPageBitmap(bitmap, page.pagePtr, 0, 0, width, height, 0, 0x10);
+    const stride = m.FPDFBitmap_GetStride(bitmap);
+    const pixels = new Uint8Array(
+      (m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory }).memory
+        .buffer,
+      m.FPDFBitmap_GetBuffer(bitmap),
+      stride * height,
+    );
+    let ink = 0;
+    for (
+      let y = Math.floor((page.height - top) * scale);
+      y < Math.ceil((page.height - bottom) * scale);
+      y++
+    )
+      for (let x = Math.floor(left * scale); x < Math.ceil(right * scale); x++)
+        ink += 255 - pixels[y * stride + x * 4];
+    return ink;
+  } finally {
+    m.FPDFBitmap_Destroy(bitmap);
+    m.pdfium.wasmExports.free(box);
+  }
+}
+
+function typeKeyByKey(history: HistoryStack, doc: EditorDocument) {
+  const run = paragraph(doc);
+  const original = run.text;
+  const at = original.lastIndexOf(OLD_END) + "and ".length;
+  const typed = "much ";
+  for (let n = 1; n <= typed.length; n++)
+    history.execute(
+      new EditTextCommand({
+        pageIndex: PAGE,
+        runId: run.id,
+        nextText:
+          original.slice(0, at) + typed.slice(0, n) + original.slice(at),
+      }),
+      doc,
+    );
+}
+
+test("letters typed one key at a time onto a word sit where the whole word typed at once would", async () => {
+  const doc = await open();
+  const moreAt = drawnWord(doc, "more.")![0].x;
+  typeKeyByKey(new HistoryStack(), doc);
+  const whole = await open();
+  retype(new HistoryStack(), whole);
+
+  expect(paragraph(doc).text).toContain(NEW_END);
+  const typed = drawnWord(doc, "muchmore.")!.map(({ x }) => x);
+  const atOnce = drawnWord(whole, "muchmore.")!.map(({ x }) => x);
+  expect(typed[0]).toBeCloseTo(moreAt, 1);
+  for (let i = 1; i < 4; i++)
+    expect(typed[i] - typed[i - 1]).toBeCloseTo(atOnce[i] - atOnce[i - 1], 1);
+  expect(typed[4] - typed[3]).toBeCloseTo(atOnce[4] - atOnce[3], 0);
+});
+
+test("a letter typed in the document's own glyphs draws as dark as the same letter already there", async () => {
+  const doc = await open();
+  typeKeyByKey(new HistoryStack(), doc);
+  const page = doc.page(PAGE);
+  const typedM = drawnWord(doc, "much")![0];
+  const ownM = drawnWord(doc, "more.")![0];
+  for (const scale of [1, 1.5, 2]) {
+    const ratio =
+      inkOf(doc, page, scale, typedM.obj) / inkOf(doc, page, scale, ownM.obj);
+    expect(Math.abs(ratio - 1)).toBeLessThan(0.02);
+  }
+});
 
 test("an unnamed Type 3 paragraph font is named by its descriptor", async () => {
   const doc = await open();

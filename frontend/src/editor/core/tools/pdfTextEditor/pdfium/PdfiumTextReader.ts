@@ -21,6 +21,7 @@ import {
   LineGrouper,
   lineFontIds,
   type BlockKey,
+  type SpaceObject,
 } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
 import { PdfiumAnnotationReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
@@ -94,6 +95,7 @@ export class PdfiumTextReader {
     const fills: PageRuleSnapshot[] = [];
     const shapes: ShapeObject[] = [];
     const companions = new Map<number, number[]>();
+    const spaces = new Map<number, SpaceObject[]>();
 
     // ONE text page for the whole walk: FPDFText_LoadPage runs full page text
     // extraction, so opening it per text object made population O.
@@ -117,6 +119,7 @@ export class PdfiumTextReader {
         IDENTITY,
         textPagePtr,
         companions,
+        spaces,
       );
 
       page.setRuns(runs);
@@ -132,7 +135,7 @@ export class PdfiumTextReader {
         ...shapes.map((shape) => shape.bounds),
         ...fills,
       ]);
-      groupAndMeasure(doc, page, mode, textPagePtr, companions);
+      groupAndMeasure(doc, page, mode, textPagePtr, companions, spaces);
       restoreCarriedFormats(doc, page);
     } finally {
       closeTextPage(m, textPagePtr);
@@ -212,6 +215,7 @@ function groupAndMeasure(
   mode: GroupingMode,
   textPagePtr: number,
   companions: ReadonlyMap<number, readonly number[]>,
+  spaces: ReadonlyMap<number, readonly SpaceObject[]> = new Map(),
 ): void {
   // LineGrouper always runs (merges per-glyph/per-word source objects into
   // one line).
@@ -226,6 +230,7 @@ function groupAndMeasure(
         ? glyphsWithCompanions(doc.module, page, textPagePtr, companions)
         : null,
       companions,
+      spaces,
     },
   );
   if (mode === "auto") {
@@ -651,6 +656,7 @@ function walkObjects(
   transform: Affine,
   textPagePtr: number,
   companions: Map<number, number[]>,
+  spaces: Map<number, SpaceObject[]>,
 ): void {
   const MAX_DEPTH = 4;
   const formModule = m as PdfiumWithForms;
@@ -661,6 +667,7 @@ function walkObjects(
   const topLevelContainerPtr =
     path.length === 0 ? 0 : m.FPDFPage_GetObject(pagePtr, path[0]);
   const span = new ActualTextSpan(companions);
+  let spaceOwner: TextRun | null = null;
   for (let i = 0; i < count; i++) {
     const objPtr =
       path.length === 0
@@ -685,6 +692,16 @@ function walkObjects(
         run?.text ?? null,
         (ptr) => readTextObjString(m, textPagePtr, ptr) === "",
       );
+      const space =
+        !run && spaceOwner
+          ? spaceAfter(m, textPagePtr, objPtr, transform, spaceOwner)
+          : null;
+      if (space) {
+        const owner = spaceOwner!.pdfiumObjPtr;
+        spaces.set(owner, [...(spaces.get(owner) ?? []), space]);
+        continue;
+      }
+      spaceOwner = run && !repeatsSpanText ? run : null;
       if (run && !repeatsSpanText) {
         run.containerPtr = containerPtr;
         run.topLevelContainerPtr = topLevelContainerPtr;
@@ -752,10 +769,31 @@ function walkObjects(
           childTransform,
           textPagePtr,
           companions,
+          spaces,
         );
       }
     }
   }
+}
+
+function spaceAfter(
+  m: WrappedPdfiumModule,
+  textPagePtr: number,
+  objPtr: number,
+  transform: Affine,
+  owner: TextRun,
+): SpaceObject | null {
+  const text = readTextObjString(m, textPagePtr, objPtr);
+  if (!text || text.trim().length > 0) return null;
+  const local = readMatrix(m, objPtr);
+  const origin = isIdentity(transform)
+    ? local
+    : composeAffine(transform, local);
+  const onBaseline =
+    Math.abs(origin.f - owner.matrix.f) <= owner.fontSize * 0.25;
+  return onBaseline && origin.e >= owner.bounds.x
+    ? { ptr: objPtr, x: origin.e }
+    : null;
 }
 
 /**

@@ -274,3 +274,104 @@ test.describe("Typing past the box edge wraps on the crossing keystroke", () => 
     }
   }
 });
+
+async function modelText(page: Page, testId: string): Promise<string> {
+  return page.evaluate((id) => {
+    const runId = document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!
+      .dataset.runId;
+    return (window as unknown as EditorWindow).__editor_store.state.pages
+      .flatMap((p) => p.runs)
+      .find((r) => r.id === runId)!.text;
+  }, testId);
+}
+
+async function selectInBox(
+  page: Page,
+  testId: string,
+  word: string,
+  collapse: "start" | "end" | "none",
+): Promise<void> {
+  await page.evaluate(
+    ({ id, word, collapse }) => {
+      const el = document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const nodes: Text[] = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+      const whole = nodes.map((n) => n.data).join("");
+      const at = whole.indexOf(word);
+      const point = (offset: number): [Text, number] => {
+        for (const n of nodes) {
+          if (offset <= n.data.length) return [n, offset];
+          offset -= n.data.length;
+        }
+        throw new Error("offset past the text");
+      };
+      if (at >= 0) {
+        const range = document.createRange();
+        range.setStart(...point(at));
+        range.setEnd(...point(at + word.length));
+        if (collapse !== "none") range.collapse(collapse === "start");
+        const selection = window.getSelection()!;
+        selection.removeAllRanges();
+        selection.addRange(range);
+        return;
+      }
+      throw new Error(`"${word}" is not in the box`);
+    },
+    { id: testId, word, collapse },
+  );
+}
+
+function textBeforeCaret(page: Page, testId: string): Promise<string> {
+  return page.evaluate((id) => {
+    const el = document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
+    const selection = window.getSelection()!;
+    const range = document.createRange();
+    range.setStart(el, 0);
+    range.setEnd(selection.focusNode!, selection.focusOffset);
+    return range.toString();
+  }, testId);
+}
+
+test.describe("Deleting from a wrapped line pulls the next line's first word up", () => {
+  test.setTimeout(120_000);
+
+  async function wrappedHeading(page: Page): Promise<string> {
+    await open(page, "wrap");
+    const testId = await focusEndOfHeading(page);
+    await page.keyboard.type(
+      " and this sentence keeps going far beyond the right edge",
+      { delay: 25 },
+    );
+    await expect
+      .poll(async () => (await modelText(page, testId)).split("\n").length)
+      .toBeGreaterThanOrEqual(3);
+    const lines = (await modelText(page, testId)).split("\n");
+    expect(lines[0].trim()).toBe("Heading in a bigger size");
+    expect(lines[1].trim()).toMatch(/^and /);
+    return testId;
+  }
+
+  test("Backspace at the end of the first line", async ({ page }) => {
+    const testId = await wrappedHeading(page);
+    await selectInBox(page, testId, "bigger size", "end");
+    for (let i = 0; i < "er size".length; i++)
+      await page.keyboard.press("Backspace", { delay: 25 });
+
+    await expect
+      .poll(async () => (await modelText(page, testId)).split("\n")[0].trim())
+      .toBe("Heading in a bigg and");
+    expect(await textBeforeCaret(page, testId)).toBe("Heading in a bigg");
+  });
+
+  test("deleting a selected word on the first line", async ({ page }) => {
+    const testId = await wrappedHeading(page);
+    await selectInBox(page, testId, "bigger ", "none");
+    await page.keyboard.press("Backspace");
+
+    await expect
+      .poll(async () => (await modelText(page, testId)).split("\n")[0].trim())
+      .toBe("Heading in a size and");
+    expect(await textBeforeCaret(page, testId)).toBe("Heading in a ");
+  });
+});

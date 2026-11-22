@@ -2120,11 +2120,10 @@ test.describe("PDF text editor - whitespace preservation", () => {
         .join("\n");
     });
     const debugSnippet = allText.slice(0, 500);
-    // The inserted "aaa" must appear near "Acrob".
     expect(
       allText,
-      `reopened did not contain "Acrob...aaa". snippet: ${debugSnippet}`,
-    ).toMatch(/Acrob[\s ]{0,3}a{3,}/);
+      `reopened did not contain "Acrobaaaat Alternativ". snippet: ${debugSnippet}`,
+    ).toMatch(/Acrobaaaat Alternativ/);
     // Both halves of the tagline must survive the round-trip.
     expect(
       allText.indexOf("Adobe"),

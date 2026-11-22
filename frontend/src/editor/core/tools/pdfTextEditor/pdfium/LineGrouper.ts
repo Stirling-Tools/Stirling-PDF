@@ -38,6 +38,12 @@ export interface DrawnPage {
   glyphs: PageGlyphs | null;
   /** The objects that draw the rest of an object's glyph cluster and hold no text of their own, by that object. */
   companions: ReadonlyMap<number, readonly number[]>;
+  spaces?: ReadonlyMap<number, readonly SpaceObject[]>;
+}
+
+export interface SpaceObject {
+  ptr: number;
+  x: number;
 }
 
 const NOTHING_DRAWN: DrawnPage = { glyphs: null, companions: new Map() };
@@ -277,6 +283,39 @@ function addCompanions(
       i + 1,
       0,
       ...own.map(() => ({ ...run.mergedFromBounds[i] })),
+    );
+  }
+}
+
+function addSpacePieces(
+  run: TextRun,
+  spaces: ReadonlyMap<number, readonly SpaceObject[]>,
+): void {
+  if (spaces.size === 0) return;
+  const listed = new Set(run.mergedFromPtrs);
+  for (let i = run.mergedFromPtrs.length - 1; i >= 0; i--) {
+    const own = spaces
+      .get(run.mergedFromPtrs[i])
+      ?.filter(({ ptr }) => !listed.has(ptr));
+    if (!own?.length) continue;
+    const text = run.mergedFromTexts[i];
+    const trailing = /\s*$/.exec(text)?.[0] ?? "";
+    const split = own.slice(0, trailing.length);
+    if (split.length === 0 || split.length === text.length) continue;
+    const kept = text.slice(0, text.length - split.length);
+    const at = run.mergedFromCharStarts[i] + kept.length;
+    run.mergedFromTexts[i] = kept;
+    run.mergedFromPtrs.splice(i + 1, 0, ...split.map(({ ptr }) => ptr));
+    run.mergedFromTexts.splice(
+      i + 1,
+      0,
+      ...split.map((_, k) => text[kept.length + k]),
+    );
+    run.mergedFromCharStarts.splice(i + 1, 0, ...split.map((_, k) => at + k));
+    run.mergedFromBounds.splice(
+      i + 1,
+      0,
+      ...split.map(({ x }) => ({ x, right: x })),
     );
   }
 }
@@ -727,8 +766,10 @@ export class LineGrouper {
       group.representative.readingOrderUnsure =
         hasRtl(joined) && KEEPS_OWN_ORDER.test(joined);
     }
-    for (const group of groups)
+    for (const group of groups) {
       addCompanions(group.representative, drawn.companions);
+      if (drawn.spaces) addSpacePieces(group.representative, drawn.spaces);
+    }
 
     // Replace the page's runs with just the representatives.
     page.setRuns(groups.map((g) => g.representative));

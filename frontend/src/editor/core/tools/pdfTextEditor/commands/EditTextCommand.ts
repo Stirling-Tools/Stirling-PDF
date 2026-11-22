@@ -1,4 +1,5 @@
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { slantOf } from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import {
   softStartsFor,
   softStartsOf,
@@ -1349,6 +1350,7 @@ export class EditTextCommand implements Command {
             x: rem.x,
             y: rem.y,
             fontSize: rem.fontSize,
+            slant: slantOf(run.matrix),
             fill: run.fill,
             ...inkFromRun(run),
             tags: rem.tags,
@@ -1642,6 +1644,7 @@ export class EditTextCommand implements Command {
         x: line.x,
         y: line.y,
         fontSize: line.fontSize,
+        slant: slantOf(run.matrix),
         fill: line.fill,
         // The run's own font, not a base-14 stand-in: re-emitting an embedded
         // face as Helvetica is what made undo look like it changed the font.
@@ -1810,6 +1813,7 @@ export class EditTextCommand implements Command {
           x: lineX,
           y,
           fontSize: run.fontSize,
+          slant: slantOf(run.matrix),
           fill: lineSpans?.[0]?.fill ?? run.fill,
           ...inkFromRun(run),
           tags: sliceTags(nextTags, cursor, cursor + text.length),
@@ -1971,6 +1975,7 @@ export class EditTextCommand implements Command {
           x: leftX,
           y,
           fontSize: run.fontSize,
+          slant: slantOf(run.matrix),
           fill: run.fill,
           ...inkFromRun(run),
           tags: sliceTags(nextTags, cursor, cursor + text.length),
@@ -2069,6 +2074,7 @@ export class EditTextCommand implements Command {
             x: sr.x,
             y: line.baselineY,
             fontSize: line.fontSize,
+            slant: slantOf(run.matrix),
             fill: run.fill,
             ...inkFromRun(run),
             tags: sr.tags,

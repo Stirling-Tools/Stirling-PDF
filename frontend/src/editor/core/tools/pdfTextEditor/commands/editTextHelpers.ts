@@ -2,6 +2,10 @@ import {
   drawnCodePoint,
   drawnText,
 } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
+import {
+  slantOf,
+  withSlant,
+} from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import { readUtf16 } from "@editor/services/pdfiumService";
 import type {
   ParagraphLineSlot,
@@ -427,6 +431,7 @@ interface CreatedTextOptions {
   strokeWidth?: number;
   /** The run's on-page rotation (normalised cos/sin of its text matrix). */
   rotation?: { cos: number; sin: number };
+  slant?: number;
   // Required so every emit decides: a re-emit of existing text passes that
   // text's tags, new content passes none. Each stretch with tags of its own
   // is drawn as objects of its own.
@@ -844,6 +849,18 @@ export function counterPageRotation(
   }
 }
 
+function leanObject(m: WrappedPdfiumModule, ptr: number, slant: number): void {
+  const buf = scratchPtr(m, SCRATCH.emitMatrix, 24);
+  if (!m.FPDFPageObj_GetMatrix(ptr, buf)) return;
+  const [a, b, c, d] = [0, 1, 2, 3].map((i) =>
+    m.pdfium.getValue(buf + i * 4, "float"),
+  );
+  const leaned = withSlant({ a, b, c, d }, slant);
+  m.pdfium.setValue(buf + 8, leaned.c, "float");
+  m.pdfium.setValue(buf + 12, leaned.d, "float");
+  m.FPDFPageObj_SetMatrix(ptr, buf);
+}
+
 /** Rotate a page object about (ax, ay). Identity (no-op) when cos=1, sin=0. */
 export function rotateObjectAbout(
   m: WrappedPdfiumModule,
@@ -885,6 +902,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         if (p) rotateObjectAbout(m, p, opts.x, opts.y, rot.cos, rot.sin);
       }
     }
+    if (opts.slant) for (const p of ptrs) if (p) leanObject(m, p, opts.slant);
     // Every successful emit funnels through here, so this is the one place to
     // re-apply the source run's ink state - new objects default to a flat fill.
     applyInkState(m, ptrs, opts);
@@ -1827,6 +1845,13 @@ function glyphAdvancePt(
   return total;
 }
 
+function objFontSizePt(m: WrappedPdfiumModule, objPtr: number): number | null {
+  const sizePtr = scratchPtr(m, SCRATCH.emitGlyphWidth, 4);
+  if (!m.FPDFTextObj_GetFontSize(objPtr, sizePtr)) return null;
+  const size = m.pdfium.getValue(sizePtr, "float");
+  return size > 0 ? size : null;
+}
+
 /**
  * Where the next text drawn after `ptrs` should start: each object's origin plus
  * its font's advances, or its ink edge when the font cannot say. Ink alone stops
@@ -1845,12 +1870,16 @@ export function drawnEndPt(
     const ink = measureObjRightEdgePt(m, ptr);
     let right = ink;
     const text = texts.length === ptrs.length ? texts[i].trimEnd() : "";
-    const glyphs = text ? glyphAdvancePt(m, ptr, text, size) : null;
+    const glyphs = text
+      ? glyphAdvancePt(m, ptr, text, objFontSizePt(m, ptr) ?? size)
+      : null;
     if (glyphs !== null && m.FPDFPageObj_GetMatrix(ptr, matrix)) {
-      const scale = m.pdfium.getValue(matrix, "float");
-      const fromGlyphs =
-        m.pdfium.getValue(matrix + 16, "float") + glyphs * scale;
-      if (fromGlyphs >= ink - 0.5 && fromGlyphs <= ink + size * 0.5)
+      const [a, b, c, d] = [0, 1, 2, 3].map((k) =>
+        m.pdfium.getValue(matrix + k * 4, "float"),
+      );
+      const fromGlyphs = m.pdfium.getValue(matrix + 16, "float") + glyphs * a;
+      const lean = Math.abs(slantOf({ a, b, c, d })) * size;
+      if (fromGlyphs >= ink - 0.5 - lean && fromGlyphs <= ink + size * 0.5)
         right = fromGlyphs;
     }
     end = Math.max(end, right);
@@ -2149,6 +2178,7 @@ export function emitRunLines(opts: {
       fallbackFamily: wholeLine?.fallbackFamily ?? opts.fallbackFamily,
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
+      slant: slantOf(opts.run.matrix),
       tags,
       fontSpans,
     });

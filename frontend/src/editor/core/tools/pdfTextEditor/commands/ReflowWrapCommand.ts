@@ -66,6 +66,8 @@ type Word = GenericWord<Leaf>;
  */
 export const MIN_WRAP_WIDTH_EM = 4;
 
+const PULL_UP_SLACK_EM = 0.25;
+
 interface RunSnapshot {
   text: string;
   matrixE: number;
@@ -95,6 +97,7 @@ export class ReflowWrapCommand implements Command {
   private readonly maxWidthPt: number;
   private readonly explicit: boolean;
   private readonly keepClearBelow: boolean;
+  private readonly pullUp: boolean;
   private applied = false;
   private refused = false;
   /** Per-object translation applied, so revert can undo it exactly. */
@@ -121,6 +124,9 @@ export class ReflowWrapCommand implements Command {
    * would land on something the push cannot move out of the way: a line,
    * fill, shape or image, or text that is locked, rotated, scanned, in a
    * table or would leave the page. `refusedForSpaceBelow` then reads true.
+   *
+   * Without `explicit`, a word that starts a line stays there; `pullUp` lets
+   * it rejoin the line above once it fits there, as after a deletion.
    */
   constructor(opts: {
     pageIndex: number;
@@ -128,12 +134,14 @@ export class ReflowWrapCommand implements Command {
     maxWidthPt: number;
     explicit?: boolean;
     keepClearBelow?: boolean;
+    pullUp?: boolean;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.maxWidthPt = opts.maxWidthPt;
     this.explicit = opts.explicit ?? false;
     this.keepClearBelow = opts.keepClearBelow ?? false;
+    this.pullUp = opts.pullUp ?? false;
   }
 
   get refusedForSpaceBelow(): boolean {
@@ -197,7 +205,7 @@ export class ReflowWrapCommand implements Command {
     if (!readsInObjectOrder(leaves, run.text)) return;
     const topBaseline = Math.max(...leaves.map((l) => l.baseline));
 
-    // Reflow is only NEEDED when some line actually overflows the wrap width.
+    let overflows = false;
     if (!this.explicit) {
       const rightByLine = new Map<number, number>();
       for (const l of leaves) {
@@ -205,14 +213,12 @@ export class ReflowWrapCommand implements Command {
         const prev = rightByLine.get(key);
         if (prev === undefined || l.right > prev) rightByLine.set(key, l.right);
       }
-      let overflows = false;
       for (const right of rightByLine.values()) {
         if (right - startX > maxWidth + 0.5) {
           overflows = true;
           break;
         }
       }
-      if (!overflows) return;
     }
 
     const words = groupWords(leaves, fontSize);
@@ -237,6 +243,30 @@ export class ReflowWrapCommand implements Command {
       return gap > 0 ? gap : spaceWidth;
     };
     const hardBreaks = hardBreakNonWsCounts(run.text, softStartsOf(run));
+    const pullUpSlack = fontSize * PULL_UP_SLACK_EM;
+    const startsOwnLine = (index: number): boolean =>
+      index > 0 &&
+      Math.abs(words[index - 1].baseline - words[index].baseline) > 2;
+    const pullsUp = (): boolean => {
+      let nonWs = 0;
+      return words.some((w, index) => {
+        const softStart = startsOwnLine(index) && !hardBreaks.has(nonWs);
+        nonWs += w.glyphs.reduce(
+          (n, g) => n + g.text.replace(/\s+/g, "").length,
+          0,
+        );
+        return (
+          softStart &&
+          words[index - 1].right +
+            gapAfter(index - 1) +
+            (w.right - w.x) +
+            pullUpSlack <=
+            startX + maxWidth
+        );
+      });
+    };
+    // A live wrap runs only when a line overflows the width, or with pullUp when a line's first word now fits on the line above.
+    if (!this.explicit && !overflows && !(this.pullUp && pullsUp())) return;
 
     this.prev = snapshotRun(run);
 
@@ -258,8 +288,15 @@ export class ReflowWrapCommand implements Command {
     let cursorX = startX;
     let lineIdx = lines.length - 1;
     let cumNonWs = 0;
+    let previous: { baseline: number; dy: number } | null = null;
     for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
       const w = words[wordIndex];
+      const keepsLineStart =
+        !this.explicit &&
+        previous !== null &&
+        Math.abs(previous.dy) <= 0.001 &&
+        Math.abs(previous.baseline - w.baseline) > 2;
+      const slack = !keepsLineStart ? 0 : this.pullUp ? pullUpSlack : Infinity;
       const width = w.right - w.x;
       const wordNonWs = w.glyphs.reduce(
         (n, g) => n + g.text.replace(/\s+/g, "").length,
@@ -271,7 +308,7 @@ export class ReflowWrapCommand implements Command {
       // (a standalone space object) must not re-apply the same break.
       if (hardBreakHere) hardBreaks.delete(cumNonWs);
       const widthBreak =
-        cursorX > startX && cursorX + width > startX + maxWidth;
+        cursorX > startX && cursorX + width + slack > startX + maxWidth;
       if (hardBreakHere || widthBreak) {
         // k consecutive newlines = k-1 blank lines + 1 content line; emit
         // empties so an intentional blank line survives reflow.
@@ -289,6 +326,7 @@ export class ReflowWrapCommand implements Command {
       const targetBaseline = virtualTop - lineIdx * lineHeight;
       const dx = targetX - w.x;
       const dy = targetBaseline - w.baseline;
+      previous = { baseline: w.baseline, dy };
       if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
         for (const g of w.glyphs) {
           try {

@@ -1,6 +1,7 @@
 import { isBoldWeight } from "@editor/tools/pdfTextEditor/util/faceNames";
 import { ignoresTextStroke } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
 import { isFauxBold } from "@editor/tools/pdfTextEditor/util/fauxBold";
+import { isFauxItalic } from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import {
   canRestyle,
   faceStyleOf,
@@ -12,6 +13,7 @@ import {
   type FaceSources,
   type ToggleRequest,
 } from "@editor/tools/pdfTextEditor/util/fontFaces";
+import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type {
   PageSnapshot,
@@ -100,13 +102,22 @@ export function deriveToolbarState(
   const allBold = fauxBold
     ? selected.every(boldRun)
     : styles.every((style) => isBoldWeight(style.weight));
-  const allItalic = styles.every((style) => style.italic);
+  const italicRun = (run: TextRunSnapshot) =>
+    isFauxItalic(run) || faceStyleOf(run.fontId).italic;
+  const fauxItalic = !inRange && selected.some(isFauxItalic);
+  const allItalic = fauxItalic
+    ? selected.every(italicRun)
+    : styles.every((style) => style.italic);
   const sameBold =
     allBold ||
     (fauxBold
       ? !selected.some(boldRun)
       : styles.every((s) => !isBoldWeight(s.weight)));
-  const sameItalic = allItalic || styles.every((style) => !style.italic);
+  const sameItalic =
+    allItalic ||
+    (fauxItalic
+      ? !selected.some(italicRun)
+      : styles.every((style) => !style.italic));
   const sameWeight = styles.every((s) => s.weight === styles[0].weight);
   const sources: FaceSources = {
     documentFamilies: knownDocumentFamilies(
@@ -127,7 +138,13 @@ export function deriveToolbarState(
           ((run.renderMode ?? 0) === 0 && !ignoresTextStroke(run.fontId)) ||
           boldRun(run),
       ));
-  const canItalic = canRestyle(fontIds, { italic: !allItalic }, sources);
+  const canItalic =
+    canRestyle(fontIds, { italic: !allItalic }, sources) ||
+    (!inRange &&
+      !allItalic &&
+      selected.every(
+        (run) => (!isScanRun(run) && !run.textReadOnly) || italicRun(run),
+      ));
   const lacksOnlyBoldItalic = (request: ToggleRequest) =>
     fontIds.every((id) => familyHasStyle(id, request, sources));
   const family = sameFamily ? familiesOfFont(fontId, sources)[0] : null;
