@@ -17,8 +17,13 @@ import {
 import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useRedaction } from "@editor/contexts/RedactionContext";
-import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import {
+  useNavigationActions,
+  useNavigationGuard,
+  useNavigationState,
+} from "@editor/contexts/NavigationContext";
+import { useSetViewerTextTarget } from "@editor/contexts/viewer/ViewerPageTool";
 import {
   defaultParameters,
   RedactParameters,
@@ -63,7 +68,16 @@ function TextSelectionMenuInner({
   const { provides: selection } = useSelectionCapability();
   const { provides: annotationProvides } = useAnnotation(documentId ?? "");
 
-  const { handleToolSelectForced, setLeftPanelView } = useToolWorkflow();
+  const {
+    handleToolSelect,
+    handleToolSelectForced,
+    setLeftPanelView,
+    toolAvailability,
+    toolRegistry,
+  } = useToolWorkflow();
+  const { requestNavigation } = useNavigationGuard();
+  const { selectedTool } = useNavigationState();
+  const setTextTarget = useSetViewerTextTarget();
   const {
     setRedactionMode,
     activateRedact,
@@ -73,7 +87,7 @@ function TextSelectionMenuInner({
     manualRedactColor,
   } = useRedaction();
   const { actions: navActions } = useNavigationActions();
-  const { selectionActions } = useViewer();
+  const { selectionActions, activeFileId } = useViewer();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{
@@ -270,6 +284,49 @@ function TextSelectionMenuInner({
       readOnly,
     ],
   );
+
+  const canEditText =
+    !readOnly &&
+    activeFileId != null &&
+    selectedTool !== "pdfTextEditor" &&
+    toolRegistry.pdfTextEditor != null &&
+    toolAvailability.pdfTextEditor?.available !== false;
+
+  // Opens the text editor with the selected text selected in it.
+  const handleEditText = useCallback(() => {
+    if (!documentId || !selection || !activeFileId) return;
+    const fileId = activeFileId;
+    const first = selection.getFormattedSelection(documentId)[0];
+    if (!first) return;
+    const open = (text: string) => {
+      selection.clear(documentId);
+      requestNavigation(() => {
+        setTextTarget({
+          fileId,
+          pageIndex: first.pageIndex,
+          text,
+          rect: {
+            x: first.rect.origin.x,
+            y: first.rect.origin.y,
+            width: first.rect.size.width,
+            height: first.rect.size.height,
+          },
+        });
+        handleToolSelect("pdfTextEditor");
+      });
+    };
+    selection.getSelectedText(documentId).wait(
+      (texts) => open(texts[0] ?? ""),
+      () => open(""),
+    );
+  }, [
+    documentId,
+    selection,
+    requestNavigation,
+    setTextTarget,
+    activeFileId,
+    handleToolSelect,
+  ]);
 
   const canReadAloud =
     typeof window !== "undefined" && "speechSynthesis" in window;
@@ -518,6 +575,23 @@ function TextSelectionMenuInner({
                 </button>
               </Tooltip>
             </>
+          )}
+
+          {canEditText && (
+            <Tooltip label={t("viewer.editText", "Edit text")} withArrow>
+              <button
+                type="button"
+                className="embedpdf-text-selection-btn"
+                onClick={handleEditText}
+                onPointerEnter={() =>
+                  void toolRegistry.pdfTextEditor?.preload?.()
+                }
+                aria-label={t("viewer.editText", "Edit text")}
+                data-testid="text-selection-edit-text"
+              >
+                <Icon name="square-pen" size={20} />
+              </button>
+            </Tooltip>
           )}
 
           {canReadAloud && (

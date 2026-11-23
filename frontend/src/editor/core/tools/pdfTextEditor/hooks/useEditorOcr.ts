@@ -130,9 +130,9 @@ export function useEditorOcr({
             "No OCR languages are installed on the server.",
           ),
         );
-      const { blob, filename } = await exportToBlob(doc, fileName);
+      const blob = await exportToBlob(doc);
       if (!isCurrent()) return;
-      const input = new File([blob], fileName ?? filename, {
+      const input = new File([blob], fileName ?? "edited.pdf", {
         type: "application/pdf",
       });
       assertFilesNotBlocked([fileId ?? undefined]);

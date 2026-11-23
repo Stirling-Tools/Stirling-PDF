@@ -36,38 +36,25 @@
   border-color: var(--primary-color, var(--c-primary));
 }
 
-/* Close button */
-.tooltip-pin-button {
+/* Negative block margins keep the header at its text height; the inline-end
+   margin lines the glyph's ink up with the logo's inset on the other side. */
+.tooltip-close {
+  flex-shrink: 0;
+  margin: -0.375rem -0.6875rem -0.375rem 0;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+
+.tooltip-close:hover {
+  opacity: 1;
+}
+
+.tooltip-close-floating {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  font-size: 0.875rem;
-  background: var(--c-surface-raised);
-  padding: 0.25rem;
-  border-radius: 0.25rem;
-  border: 0.0625rem solid var(--c-border);
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+  margin: 0;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.5rem;
-  min-height: 1.5rem;
-}
-
-.tooltip-pin-button:hover {
-  background-color: var(--c-danger) !important;
-  border-color: var(--c-danger) !important;
-}
-
-.tooltip-pin-button:focus,
-.tooltip-pin-button:focus-visible {
-  outline: none;
-  border-color: var(--c-border) !important;
-  background-color: var(--c-surface-raised) !important;
 }
 
 /* Tooltip Header */

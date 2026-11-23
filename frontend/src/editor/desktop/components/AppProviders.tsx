@@ -11,10 +11,11 @@ import { ToolActionsContext } from "@editor/contexts/ToolActionsContext";
 import { SaaSTeamProvider } from "@editor/contexts/SaaSTeamContext";
 import { useDesktopSession } from "@editor/components/DesktopSession";
 
-const toolActions = {
+const signInActions = {
   onEndpointUnavailableClick: () =>
     window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
 };
+const NO_TOOL_ACTIONS = {};
 
 /**
  * The editor's providers on desktop. The connection and backend lifecycle both
@@ -26,7 +27,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <ProprietaryAppProviders>
-      <ToolActionsContext.Provider value={toolActions}>
+      <ToolActionsContext.Provider
+        value={connectionMode === "local" ? signInActions : NO_TOOL_ACTIONS}
+      >
         <SaaSTeamProvider key={appKey}>
           <DesktopBannerInitializer />
           <SaveShortcutListener />

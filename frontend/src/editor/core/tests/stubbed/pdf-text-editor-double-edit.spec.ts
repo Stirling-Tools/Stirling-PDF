@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Editing a document twice is not the same as editing it once. The second edit
@@ -117,9 +118,7 @@ async function saveAndReopen(
     };
     w.__prev_document = w.__editor_store?.document;
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(saved);
+  await openInTextEditor(page, saved);
   await page.waitForFunction(
     () => {
       const w = window as unknown as {
@@ -145,15 +144,10 @@ test.describe("PDF text editor - a second edit is as safe as the first", () => {
   for (const c of CASES) {
     test(c.name, async ({ page }) => {
       test.setTimeout(240_000);
-      await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-      await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-        timeout: 15_000,
-      });
-      await page
-        .locator('[data-testid="pdf-editor-file-input"]')
-        .setInputFiles(
-          path.join(import.meta.dirname, "../test-fixtures", c.file),
-        );
+      await openInTextEditor(
+        page,
+        path.join(import.meta.dirname, "../test-fixtures", c.file),
+      );
       await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
         timeout: 30_000,
       });

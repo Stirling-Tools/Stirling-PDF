@@ -11,6 +11,7 @@ import {
   type CloudProvider,
   type ConnectedAccount,
 } from "@editor/services/connectedAccountsService";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const PROVIDERS: { id: CloudProvider; icon: "onedrive" | "googledrive" }[] = [
   { id: "microsoft", icon: "onedrive" },
@@ -57,7 +58,7 @@ export default function ConnectedAccountsSection() {
       <Text size="sm" c="dimmed">
         {t(
           "connectedAccounts.intro",
-          "Connect your own accounts once. Your pipelines can then read from and save to them as you.",
+          "Connect your own accounts once. The editor can then open files from them without signing in again, and your pipelines can read from and save to them as you.",
         )}
       </Text>
       {error && (
@@ -127,10 +128,14 @@ export default function ConnectedAccountsSection() {
         onClose={() => setPendingDisconnect(null)}
         width="sm"
         zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-        title={t("connectedAccounts.disconnectConfirm.title", {
-          defaultValue: "Disconnect {{account}}?",
-          account: pendingDisconnect ? accountLabel(pendingDisconnect) : "",
-        })}
+        title={
+          <span className={privateContentClassName}>
+            {t("connectedAccounts.disconnectConfirm.title", {
+              defaultValue: "Disconnect {{account}}?",
+              account: pendingDisconnect ? accountLabel(pendingDisconnect) : "",
+            })}
+          </span>
+        }
         footer={
           <Group justify="flex-end" gap="sm">
             <Button
@@ -160,7 +165,7 @@ export default function ConnectedAccountsSection() {
         <Text size="sm">
           {t(
             "connectedAccounts.disconnectConfirm.body",
-            "Sources and pipelines that use this account will stop until you connect it again.",
+            "Sources and pipelines that use this account will stop. After you connect it again, update their account settings to use the new connection.",
           )}
         </Text>
       </Modal>
@@ -191,7 +196,11 @@ function AccountRow({
     >
       <Stack gap={4} style={{ flex: "1 1 16rem", minWidth: 0 }}>
         <Group gap="xs">
-          <Text size="sm" style={{ overflowWrap: "anywhere" }}>
+          <Text
+            size="sm"
+            className={privateContentClassName}
+            style={{ overflowWrap: "anywhere" }}
+          >
             {accountLabel(account)}
           </Text>
           <StatusBadge tone={needsReconnect ? "danger" : "success"} size="sm">

@@ -22,11 +22,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
-import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.model.tool.ToolFormat;
@@ -44,10 +42,8 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertEmlToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final RuntimePathConfig runtimePathConfig;
     private final TempFileManager tempFileManager;
     private final CustomHtmlSanitizer customHtmlSanitizer;
-    private final OfficeConversionService officeConversionService;
     private final OfficeToPdfService officeToPdfService;
 
     @AutoJobPostMapping(
@@ -118,25 +114,14 @@ public class ConvertEmlToPDF {
 
             try {
                 byte[] pdfBytes =
-                        officeConversionService.replacesLibreOffice(
-                                        request.getUseStirlingOfficeConvert())
-                                ? EmlToPdf.convertEmlToPdf(
-                                        request,
-                                        fileBytes,
-                                        pdfDocumentFactory,
-                                        customHtmlSanitizer,
-                                        html ->
-                                                officeToPdfService.convertHtml(
-                                                        html.getBytes(StandardCharsets.UTF_8),
-                                                        false))
-                                : EmlToPdf.convertEmlToPdf(
-                                        runtimePathConfig.getWeasyPrintPath(),
-                                        request,
-                                        fileBytes,
-                                        originalFilename,
-                                        pdfDocumentFactory,
-                                        tempFileManager,
-                                        customHtmlSanitizer);
+                        EmlToPdf.convertEmlToPdf(
+                                request,
+                                fileBytes,
+                                pdfDocumentFactory,
+                                customHtmlSanitizer,
+                                html ->
+                                        officeToPdfService.convertHtml(
+                                                html.getBytes(StandardCharsets.UTF_8), false));
 
                 if (pdfBytes == null || pdfBytes.length == 0) {
                     log.error("PDF conversion failed - empty output for {}", originalFilename);
@@ -161,12 +146,11 @@ public class ConvertEmlToPDF {
                         HttpStatus.INTERNAL_SERVER_ERROR, "Conversion was interrupted");
             } catch (IllegalArgumentException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
-                log.error(
-                        "Email to PDF conversion failed for {}: {}",
+                log.warn(
+                        "Email to PDF conversion rejected for {}: {}",
                         originalFilename,
-                        errorMessage,
-                        e);
-                return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorMessage);
+                        errorMessage);
+                return errorResponse(HttpStatus.BAD_REQUEST, errorMessage);
             } catch (IOException | RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error(
@@ -204,11 +188,6 @@ public class ConvertEmlToPDF {
                             + " file ("
                             + safeFilename
                             + ").";
-        } else if (exceptionMessage != null && exceptionMessage.contains("WeasyPrint")) {
-            errorMessage =
-                    "PDF generation failed for "
-                            + safeFilename
-                            + ". This may be due to complex email formatting.";
         } else {
             errorMessage = "Conversion failed for " + safeFilename + ": " + safeExceptionMessage;
         }

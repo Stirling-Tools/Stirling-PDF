@@ -1,4 +1,5 @@
 import { inspectPdfProtection as inspect } from "@editor/tests/helpers/pdf-protection";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import { test, expect } from "@editor/tests/helpers/test-base";
 import {
   liveApiHeaders,
@@ -269,7 +270,7 @@ test("text editing bypass retains encryption and the original credentials in the
   );
   const originalAccess = await inspect(page, original);
   await page.goto("/pdf-text-editor");
-  await page.getByTestId("pdf-editor-file-input").setInputFiles({
+  await openInTextEditor(page, {
     name: "restricted.pdf",
     mimeType: "application/pdf",
     buffer: original,

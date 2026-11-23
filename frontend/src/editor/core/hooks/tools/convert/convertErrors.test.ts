@@ -19,7 +19,6 @@ const parameters = {
   ...defaultParameters,
   fromExtension: "epub",
   toExtension: "pdf",
-  useStirlingOfficeConvert: true,
 };
 const ebook = (name: string) =>
   new File(["ebook"], name, { type: "application/epub+zip" });
