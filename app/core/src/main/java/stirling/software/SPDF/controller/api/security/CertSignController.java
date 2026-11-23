@@ -347,24 +347,31 @@ public class CertSignController {
         }
 
         char[] pin = keystorePassword != null ? keystorePassword.toCharArray() : null;
-        CreateSignature createSignature =
-                new CreateSignature(ks, pin, request.getAlias(), signingProvider);
-        TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
-        try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
-            sign(
-                    pdfDocumentFactory,
-                    pdf,
-                    os,
-                    createSignature,
-                    showSignature,
-                    pageNumber,
-                    name,
-                    location,
-                    reason,
-                    showLogo);
-        } catch (IOException | RuntimeException e) {
-            signedOut.close();
-            throw e;
+        TempFile signedOut;
+        try {
+            String alias =
+                    HardwareKeyStoreService.isHardwareSource(certType)
+                            ? hardwareKeyStoreService.resolveSigningAlias(
+                                    ks, request.getAlias(), certType)
+                            : request.getAlias();
+            CreateSignature createSignature = new CreateSignature(ks, pin, alias, signingProvider);
+            signedOut = tempFileManager.createManagedTempFile(".pdf");
+            try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
+                sign(
+                        pdfDocumentFactory,
+                        pdf,
+                        os,
+                        createSignature,
+                        showSignature,
+                        pageNumber,
+                        name,
+                        location,
+                        reason,
+                        showLogo);
+            } catch (IOException | RuntimeException e) {
+                signedOut.close();
+                throw e;
+            }
         } finally {
             // Clear the PIN copy and log out the token session once signing is done.
             if (pin != null) {

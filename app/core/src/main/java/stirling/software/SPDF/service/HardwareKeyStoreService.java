@@ -5,13 +5,13 @@ import java.net.NetworkInterface;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.Provider;
 import java.security.Security;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -436,18 +436,61 @@ public class HardwareKeyStoreService {
     private List<HardwareCertificateInfo> listSigningCertificates(KeyStore ks, String source)
             throws Exception {
         List<HardwareCertificateInfo> certs = new ArrayList<>();
-        Enumeration<String> aliases = ks.aliases();
-        while (aliases.hasMoreElements()) {
-            String alias = aliases.nextElement();
-            if (!ks.isKeyEntry(alias)) {
-                continue; // only entries we can sign with
-            }
-            Certificate cert = ks.getCertificate(alias);
-            if (cert instanceof X509Certificate x509 && canSign(x509)) {
-                certs.add(toInfo(alias, x509, source));
-            }
+        for (String alias : signingAliases(ks)) {
+            certs.add(toInfo(alias, (X509Certificate) ks.getCertificate(alias), source));
         }
         return certs;
+    }
+
+    private static List<String> signingAliases(KeyStore ks) throws KeyStoreException {
+        List<String> aliases = new ArrayList<>();
+        for (String alias : Collections.list(ks.aliases())) {
+            if (isSigningEntry(ks, alias)) {
+                aliases.add(alias);
+            }
+        }
+        return aliases;
+    }
+
+    private static boolean isSigningEntry(KeyStore ks, String alias) throws KeyStoreException {
+        return ks.isKeyEntry(alias)
+                && ks.getCertificate(alias) instanceof X509Certificate x509
+                && canSign(x509);
+    }
+
+    /**
+     * The alias to sign with from a hardware {@code source}, refusing rather than guessing. The
+     * Windows store and macOS keychain hold unrelated identities (code signing, VPN, Wi-Fi), so
+     * they need an explicit alias; a PKCS#11 token holding exactly one signing certificate may omit
+     * it. The alias must name a key entry whose certificate may sign.
+     *
+     * @throws IllegalArgumentException when no alias can be chosen, or it names no usable entry
+     */
+    public String resolveSigningAlias(KeyStore ks, String requestedAlias, String source)
+            throws KeyStoreException {
+        if (requestedAlias == null || requestedAlias.isBlank()) {
+            if (SOURCE_PKCS11.equals(source)) {
+                List<String> candidates = signingAliases(ks);
+                if (candidates.size() == 1) {
+                    return candidates.get(0);
+                }
+            }
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.hardwareAliasRequired", "Choose which certificate to sign with");
+        }
+        if (!isSigningEntry(ks, requestedAlias)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.hardwareAliasNotUsable",
+                    "No certificate on this device can sign as {0}",
+                    requestedAlias);
+        }
+        return requestedAlias;
+    }
+
+    public static boolean isHardwareSource(String certType) {
+        return SOURCE_WINDOWS_STORE.equals(certType)
+                || SOURCE_MACOS_KEYCHAIN.equals(certType)
+                || SOURCE_PKCS11.equals(certType);
     }
 
     /**
