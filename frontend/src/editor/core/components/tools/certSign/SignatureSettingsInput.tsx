@@ -11,6 +11,7 @@ import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/ui/Tooltip";
 import { useTranslation } from "react-i18next";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 export interface SignatureSettings {
   showSignature?: boolean;
@@ -85,7 +86,13 @@ const SignatureSettingsInput = ({
       {value.showSignature && (
         <Stack gap="sm">
           <TextInput
-            label={t("certSign.reason", "Reason")}
+            {...infoLabelProps(
+              t("certSign.reason", "Reason"),
+              t(
+                "certSign.reasonInfo",
+                'Why you are signing, such as "Approval". Stored in the signature\'s details.',
+              ),
+            )}
             value={value.reason || ""}
             onChange={(event) =>
               handleChange("reason", event.currentTarget.value)
@@ -94,7 +101,13 @@ const SignatureSettingsInput = ({
             size="xs"
           />
           <TextInput
-            label={t("certSign.location", "Location")}
+            {...infoLabelProps(
+              t("certSign.location", "Location"),
+              t(
+                "certSign.locationInfo",
+                'Where you signed, such as "London Office". Stored in the signature\'s details; it does not move the signature on the page.',
+              ),
+            )}
             value={value.location || ""}
             onChange={(event) =>
               handleChange("location", event.currentTarget.value)
@@ -103,7 +116,13 @@ const SignatureSettingsInput = ({
             size="xs"
           />
           <NumberInput
-            label={t("certSign.pageNumber", "Page Number")}
+            {...infoLabelProps(
+              t("certSign.pageNumber", "Page Number"),
+              t(
+                "certSign.pageNumberInfo",
+                "The page the visible signature is drawn on. The first page is 1.",
+              ),
+            )}
             value={value.pageNumber || 1}
             onChange={(val) =>
               handleChange("pageNumber", typeof val === "number" ? val : 1)

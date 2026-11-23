@@ -43,15 +43,6 @@ async function enterStampText(context: PlayContext, text = "APPROVED") {
   await waitForPanelText(context, "Preview:");
 }
 
-async function expandDynamicVariables(context: PlayContext) {
-  await userEvent.click(
-    await findEnabled(context, "button", "Dynamic Variables"),
-  );
-  const panel = await panelOf(context);
-  await panel.findByRole("button", { name: "@page_number" }, STAGE_TIMEOUT);
-  return panel;
-}
-
 async function chooseQr(context: PlayContext) {
   await choose(context, "QR Code");
   return findEnabled(context, "textbox", QR_CONTENT);
@@ -131,23 +122,7 @@ export const TemplateChosen: Story = {
 };
 
 export const StampTextTooltip: Story = {
-  play: openTooltip({ info: /^Use dynamic variables below/ }),
-};
-
-export const DynamicVariables: Story = {
-  play: async (context) => {
-    await expandDynamicVariables(context);
-  },
-};
-
-export const VariableInserted: Story = {
-  play: async (context) => {
-    const variables = await expandDynamicVariables(context);
-    await userEvent.click(
-      variables.getByRole("button", { name: "@page_number" }),
-    );
-    await waitForPanelText(context, "Preview:");
-  },
+  play: openTooltip({ info: /^Printed on every stamped page/ }),
 };
 
 export const AlphabetMenu: Story = {

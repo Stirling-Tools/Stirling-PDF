@@ -8,6 +8,9 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Icon } from "@editor/ui/Icon";
+import type { SidebarTooltipContent } from "@editor/types/tips";
 import classes from "@editor/components/tools/shared/infoLabel.module.css";
 
 /**
@@ -22,13 +25,23 @@ import classes from "@editor/components/tools/shared/infoLabel.module.css";
  * text, and the (i) button, named "About <label>", is drawn beside the label but
  * kept out of both the `<label>` and the description, since anything inside them
  * would be read as part of the name or the description.
+ *
+ * `sidebar` swaps the (i)'s small tooltip for the sidebar one the tool steps use,
+ * for a field whose help is too long for a tooltip; `info` stays its short
+ * accessible description.
  */
 export function infoLabelProps(
   label: ReactNode,
   info?: ReactNode,
+  sidebar?: SidebarTooltipContent,
 ): { label: ReactNode; description?: ReactNode } {
   if (!info) return { label };
-  return { label, description: <InfoDescription label={label} info={info} /> };
+  return {
+    label,
+    description: (
+      <InfoDescription label={label} info={info} sidebar={sidebar} />
+    ),
+  };
 }
 
 function inlineInputControl(node: HTMLElement | null): HTMLInputElement | null {
@@ -65,9 +78,11 @@ function addDescribedBy(control: HTMLElement, id: string): () => void {
 function InfoDescription({
   label,
   info,
+  sidebar,
 }: {
   label: ReactNode;
   info: ReactNode;
+  sidebar?: SidebarTooltipContent;
 }) {
   const { t } = useTranslation();
   const textId = useId();
@@ -103,7 +118,25 @@ function InfoDescription({
       </span>
       {buttonSlot &&
         createPortal(
-          <ToolInfoTooltip label={info} ariaLabel={buttonName} />,
+          sidebar ? (
+            <Tooltip
+              sidebarTooltip
+              pinOnClick
+              header={sidebar.header}
+              tips={sidebar.tips}
+              content={sidebar.content}
+            >
+              <button
+                type="button"
+                className="sui-info"
+                aria-label={buttonName}
+              >
+                <Icon name="info" size={14} strokeWidth={2} />
+              </button>
+            </Tooltip>
+          ) : (
+            <ToolInfoTooltip label={info} ariaLabel={buttonName} />
+          ),
           buttonSlot,
         )}
     </>
