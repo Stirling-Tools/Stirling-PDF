@@ -69,6 +69,7 @@ export function useViewerWorkbenchBarButtons(
     clearToolSelection,
     setLeftPanelView,
     setReaderMode,
+    readerMode,
     toolRegistry,
   } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
@@ -211,6 +212,16 @@ export function useViewerWorkbenchBarButtons(
     const pageSection = isPhone ? ("top" as const) : ("page-bar" as const);
     const pageTooltip = isPhone ? tooltipPosition : ("top" as const);
     const pageButtonSize = isPhone ? undefined : ("sm" as const);
+    // Reading mode's rail draws search and read aloud itself. A second copy in
+    // the page bar would share their open state, and each popover's outside
+    // click would close the other's.
+    const railOwned = readerMode && !isPhone;
+    const railSection = railOwned ? ("top" as const) : pageSection;
+    const popoverPosition = isPhone
+      ? ("bottom-end" as const)
+      : railOwned
+        ? ("left-start" as const)
+        : ("top" as const);
     const panelToggle = (
       id: string,
       icon: IconName,
@@ -247,11 +258,11 @@ export function useViewerWorkbenchBarButtons(
         id: "viewer-search",
         tooltip: searchLabel,
         ariaLabel: searchLabel,
-        section: pageSection,
+        section: railSection,
         order: 10,
         render: ({ disabled }) => (
           <Popover
-            position={isPhone ? "bottom-end" : "top"}
+            position={popoverPosition}
             withArrow
             shadow="md"
             offset={8}
@@ -341,12 +352,12 @@ export function useViewerWorkbenchBarButtons(
         id: "viewer-read-aloud",
         tooltip: readAloudLabel,
         ariaLabel: readAloudLabel,
-        section: pageSection,
+        section: railSection,
         order: 16,
         active: isReadingAloud,
         render: ({ disabled }) => (
           <Popover
-            position={isPhone ? "bottom-end" : "top"}
+            position={popoverPosition}
             withArrow
             shadow="md"
             offset={8}
@@ -655,6 +666,7 @@ export function useViewerWorkbenchBarButtons(
     isCommentsSidebarVisible,
     toggleCommentsSidebar,
     isPhone,
+    readerMode,
     pageViewLabel,
     annotationVisibilityLabel,
     preloadTextEditor,
