@@ -27,6 +27,8 @@ import { handlers } from "@processor/mocks/handlers";
 // oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
 import { mockDesktopIpc } from "./desktopIpc";
 // oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import { flavorHandlers, startFlavor } from "./flavorSetup";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
 import {
   installStorybookFilePicker,
   withStorybookFilePicker,
@@ -104,7 +106,7 @@ if (!i18next.isInitialized) {
 }
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
-initialize({ onUnhandledRequest: "bypass" }, handlers);
+initialize({ onUnhandledRequest: "bypass" }, [...handlers, ...flavorHandlers]);
 
 installStorybookFilePicker();
 
@@ -114,6 +116,8 @@ if (import.meta.env.STORYBOOK_FLAVOR === "desktop") {
   // welcome flow over everything on a fresh profile, which every story run is.
   sessionStorage.setItem("onboarding::bypass-all", "true");
 }
+
+startFlavor();
 
 // PortalApp wraps the app in a QueryClientProvider, so any component reaching a
 // shared query hook throws "No QueryClient set" without one here. `retry: false`

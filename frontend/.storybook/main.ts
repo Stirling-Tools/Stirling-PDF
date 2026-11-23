@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
+import type { Plugin } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "../scripts/icons/svgrOptions.mts";
@@ -8,6 +9,19 @@ import { iconSvgr } from "../scripts/icons/svgrOptions.mts";
 import { usedIconsPlugin } from "../scripts/icons/usedIcons.vite.mts";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { flavor, flavorBuild, notInFlavorTag } from "./flavor";
+
+/** Swaps the preview's per-build setup module for the desktop one. */
+function desktopFlavorSetup(): Plugin {
+  return {
+    name: "storybook-desktop-flavor-setup",
+    enforce: "pre",
+    resolveId(source, importer) {
+      if (source === "./flavorSetup" && importer?.includes("/.storybook/"))
+        return resolve(__dirname, "flavorSetup.desktop.ts");
+      return null;
+    },
+  };
+}
 
 /** Built per pass: the main bundle and the worker bundle each need their own. */
 const editorPathAliases = () =>
@@ -85,6 +99,7 @@ const config: StorybookConfig = {
     });
     config.plugins.push(iconSvgr());
     config.plugins.push(editorPathAliases());
+    if (flavor === "desktop") config.plugins.push(desktopFlavorSetup());
     // Scanned at startup rather than committed, so the gallery's "in use" view cannot go stale.
     config.plugins.push(usedIconsPlugin(resolve(__dirname, "../src")));
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`, so
