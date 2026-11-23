@@ -478,9 +478,9 @@ public class ProcurementService {
      * version. Does not itself accept the quote into a subscription — the caller proceeds to accept
      * as before.
      *
-     * <p>Deliberately not {@code @Transactional}: rendering the PDF shells out to WeasyPrint, and
-     * holding the deal's row lock across an external process buys nothing here. The only write is a
-     * single insert, which {@code save} makes atomic on its own.
+     * <p>Deliberately not {@code @Transactional}: rendering the PDF is slow, and holding the deal's
+     * row lock across it buys nothing here. The only write is a single insert, which {@code save}
+     * makes atomic on its own.
      */
     public ProcurementAgreementSignature signAgreement(
             Long teamId, AgreementSigning signing, String signerIp) {
