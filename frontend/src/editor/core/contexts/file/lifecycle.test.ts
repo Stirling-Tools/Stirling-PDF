@@ -8,6 +8,7 @@ import {
   getPdfAccess,
   rememberPdfAccess,
 } from "@editor/services/pdfAccessService";
+import { thumbnailGenerationService } from "@editor/services/thumbnailGenerationService";
 
 describe("FileLifecycleManager", () => {
   afterEach(clearPdfAccess);
@@ -29,6 +30,19 @@ describe("FileLifecycleManager", () => {
 
     expect(URL.revokeObjectURL).toHaveBeenCalledWith(blobUrl);
     expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops each file's thumbnails and open documents when closing all files", () => {
+    const filesRef = {
+      current: new Map<FileId, File>([
+        ["file-1" as FileId, new File(["a"], "a.pdf")],
+        ["file-2" as FileId, new File(["b"], "b.pdf")],
+      ]),
+    };
+    const forget = vi.spyOn(thumbnailGenerationService, "forgetFile");
+    new FileLifecycleManager(filesRef, vi.fn()).cleanupAllFiles();
+    expect(forget.mock.calls).toEqual([["file-1"], ["file-2"]]);
+    forget.mockRestore();
   });
 
   it("renames the held File so tools name their output after the new name", () => {
