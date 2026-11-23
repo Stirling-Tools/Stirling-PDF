@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.awt.Color;
-import java.awt.color.ColorSpace;
 import java.awt.color.ICC_Profile;
 import java.io.*;
 import java.nio.file.Files;
@@ -33,36 +32,24 @@ import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecifica
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType1CFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.encoding.SymbolEncoding;
+import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
-import org.apache.pdfbox.preflight.Format;
-import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
-import org.apache.pdfbox.pdmodel.font.encoding.SymbolEncoding;
-import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
-import org.apache.pdfbox.pdmodel.graphics.PDXObject;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import stirling.software.common.util.ImageMemoryLimit;
-import stirling.software.common.util.misc.CmykGhostscriptFallback;
-import stirling.software.common.util.misc.CmykProfileResolver;
-import stirling.software.jpdfium.PdfDocument;
-import stirling.software.jpdfium.PdfPage;
-import stirling.software.jpdfium.doc.PdfXConverter;
-import stirling.software.jpdfium.doc.PdfXOptions;
-import stirling.software.jpdfium.doc.PdfXStandard;
-import stirling.software.jpdfium.exception.JPDFiumException;
-import stirling.software.jpdfium.model.FlattenMode;
-import stirling.software.jpdfium.model.PageSize;
-import stirling.software.jpdfium.model.SaveOptions;
+import org.apache.pdfbox.preflight.Format;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -89,11 +76,23 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.misc.CmykGhostscriptFallback;
+import stirling.software.common.util.misc.CmykProfileResolver;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.doc.PdfXConverter;
+import stirling.software.jpdfium.doc.PdfXOptions;
+import stirling.software.jpdfium.doc.PdfXStandard;
+import stirling.software.jpdfium.exception.JPDFiumException;
+import stirling.software.jpdfium.model.FlattenMode;
+import stirling.software.jpdfium.model.PageSize;
+import stirling.software.jpdfium.model.SaveOptions;
 import stirling.software.officeconvert.pdfa.PdfALevel;
 import stirling.software.officeconvert.pdfa.PdfToPdfA;
 
@@ -2078,5 +2077,4 @@ public class ConvertPDFToPDFA {
     private interface DocumentSanitizer {
         void sanitize(PDDocument doc) throws IOException;
     }
-
 }

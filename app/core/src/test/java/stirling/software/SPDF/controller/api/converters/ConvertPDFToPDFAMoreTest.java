@@ -71,7 +71,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
-import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -889,5 +888,4 @@ class ConvertPDFToPDFAMoreTest {
             }
         }
     }
-
 }
