@@ -14,6 +14,7 @@
 /dist
 /dist-portal
 /storybook-static
+/storybook-static-*
 
 /editor/build
 /dist

@@ -244,16 +244,31 @@ tasks:
 
 
   storybook:
-    desc: "Start Storybook dev server"
+    desc: "Start Storybook dev server for one app build (FLAVOR=proprietary|core|saas|desktop)"
+    summary: |
+      Renders the stories through one app build's own layers, so the same story
+      shows that build's real components. Each build has its own port, so all
+      four can run side by side: proprietary 6006, core 6007, saas 6008,
+      desktop 6009. Pass PORT to override.
+        task frontend:storybook FLAVOR=saas
     deps: [prepare]
+    vars:
+      FLAVOR: '{{.FLAVOR | default "proprietary"}}'
+      PORT: '{{.PORT | default (eq .FLAVOR "core" | ternary "6007" (eq .FLAVOR "saas" | ternary "6008" (eq .FLAVOR "desktop" | ternary "6009" "6006")))}}'
+    env:
+      STORYBOOK_FLAVOR: '{{.FLAVOR}}'
     cmds:
-      - npx storybook dev -p 6006 {{.CLI_ARGS}}
+      - npx storybook dev -p {{.PORT}} {{.CLI_ARGS}}
 
   storybook:build:
-    desc: "Build static Storybook"
+    desc: "Build static Storybook for one app build (FLAVOR=proprietary|core|saas|desktop)"
     deps: [prepare]
+    vars:
+      FLAVOR: '{{.FLAVOR | default "proprietary"}}'
+    env:
+      STORYBOOK_FLAVOR: '{{.FLAVOR}}'
     cmds:
-      - npx storybook build {{.CLI_ARGS}}
+      - npx storybook build {{if ne .FLAVOR "proprietary"}}-o storybook-static-{{.FLAVOR}} {{end}}{{.CLI_ARGS}}
 
   storybook:browser:
     internal: true
@@ -264,12 +279,61 @@ tasks:
       - npx playwright install chromium
 
   storybook:test:
-    desc: "Scan every story in real Chromium: it must render and pass axe"
+    desc: "Scan every story in real Chromium: it must render and pass axe (FLAVOR picks the app build)"
     deps: [prepare, storybook:browser]
+    vars:
+      FLAVOR: '{{.FLAVOR | default "proprietary"}}'
+    env:
+      STORYBOOK_FLAVOR: '{{.FLAVOR}}'
     cmds:
       # Runs each story as a browser test. Pass a filter through, e.g.
       #   task frontend:storybook:test -- Button
       - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
+
+  storybook:setups:
+    desc: "Run the stories in the core, SaaS and desktop builds"
+    summary: |
+      The proprietary build is what storybook:test and the a11y gate already
+      run. This runs the same stories through each other build, plus each
+      build's own stories, so a panel that breaks in only one build fails. One
+      build failing still runs the next. FLAVORS narrows the builds; arguments
+      pass through to vitest, e.g.
+        task frontend:storybook:setups FLAVORS=desktop -- --shard=1/2
+    deps: [prepare, storybook:browser]
+    vars:
+      FLAVORS: '{{.FLAVORS | default "core saas desktop"}}'
+    cmds:
+      - cmd: |
+          rc=0
+          for flavor in {{.FLAVORS}}; do
+            STORYBOOK_FLAVOR=$flavor npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}} || rc=1
+          done
+          exit $rc
+
+  storybook:setups:changed:
+    desc: "Run the stories this branch affects in the core, SaaS and desktop builds (default base origin/main)"
+    summary: |
+      What pull requests run per build: the stories storybook:a11y:changed
+      picks, each in the core, SaaS and desktop builds. A build that does not
+      index a changed story skips it. Pass a base ref through CLI_ARGS, e.g.
+        task frontend:storybook:setups:changed FLAVORS=saas -- origin/release
+    deps: [prepare, storybook:browser]
+    vars:
+      FLAVORS: '{{.FLAVORS | default "core saas desktop"}}'
+      BASE: '{{.CLI_ARGS | default "origin/main"}}'
+      CHANGED:
+        sh: node .storybook/a11y-changed.mjs {{.BASE}}
+    cmds:
+      - cmd: |
+          if [ -z '{{.CHANGED}}' ]; then
+            echo "setups: no story files affected vs {{.BASE}} — nothing to check"
+            exit 0
+          fi
+          rc=0
+          for flavor in {{.FLAVORS}}; do
+            STORYBOOK_FLAVOR=$flavor npx vitest run --config .storybook/vitest.config.ts --passWithNoTests {{.CHANGED}} || rc=1
+          done
+          exit $rc
 
   storybook:a11y:light:
     desc: "a11y gate over every story in light mode"

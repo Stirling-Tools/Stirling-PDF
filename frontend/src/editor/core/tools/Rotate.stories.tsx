@@ -24,6 +24,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** The desktop app labels the result's Download button "Save". */
+const DOWNLOADS_RESULT = ["not-in-desktop"];
+
 async function expectPreviewAngle(context: PlayContext, degrees: number) {
   const panel = await waitForToolPanel(context);
   // The preview exposes its angle only as an inline transform.
@@ -93,11 +96,13 @@ const rotatedSample = toolPanelServer(
 );
 
 export const Results: Story = {
+  tags: DOWNLOADS_RESULT,
   parameters: rotatedSample,
   play: rotateAndRun,
 };
 
 export const ResultsReopenSettings: Story = {
+  tags: DOWNLOADS_RESULT,
   parameters: rotatedSample,
   play: async (context) => {
     await rotateAndRun(context);

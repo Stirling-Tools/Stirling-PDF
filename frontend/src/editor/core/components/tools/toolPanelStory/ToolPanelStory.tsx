@@ -22,6 +22,11 @@ import { clearWorkbenchSession } from "@editor/services/workbenchSession";
 import { fileStorage } from "@editor/services/fileStorage";
 import { automationStorage } from "@editor/services/automationStorage";
 import { ensureLocalPdfAccess } from "@editor/services/pdfAccessService";
+import { usePublishToolEndpoints } from "@editor/components/tools/toolPanelStory/serverEndpoints";
+import {
+  FreshLaunch,
+  forgetEarlierStories,
+} from "@editor/components/tools/toolPanelStory/freshLaunch";
 // The editor's App loads Tailwind and Storybook's preview does not; without it
 // the Workbench's flex column collapses and the viewer lays out no pages.
 import "@editor/styles/tailwind.css";
@@ -56,10 +61,14 @@ export interface ToolPanelStoryProps {
  * after that is reached the way a user reaches it, from the story's play.
  */
 export function ToolPanelStory(props: ToolPanelStoryProps) {
+  // Once per story, before the providers below mount and read any cache.
+  useState(forgetEarlierStories);
   if (!useEmptyWorkbench()) return null;
   return (
     <PlatformProviders>
       <AppProviders>
+        <ToolEndpointsPublisher />
+        <FreshLaunch />
         <StagedTool {...props}>
           {props.filesModal ? (
             <FilesPageProvider>
@@ -105,6 +114,11 @@ async function clearSavedAutomations(): Promise<void> {
       automationStorage.deleteAutomation(automation.id),
     ),
   );
+}
+
+function ToolEndpointsPublisher() {
+  usePublishToolEndpoints();
+  return null;
 }
 
 function HeldWorkbench({ workbench }: { workbench: WorkbenchType }) {

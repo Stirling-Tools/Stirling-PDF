@@ -24,6 +24,8 @@ import { PreferencesProvider } from "@editor-core/contexts/PreferencesContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
 import { handlers } from "@processor/mocks/handlers";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import { mockDesktopIpc } from "./desktopIpc";
 import { configureSupabase } from "@editor-proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -98,6 +100,13 @@ if (!i18next.isInitialized) {
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
+
+if (import.meta.env.STORYBOOK_FLAVOR === "desktop") {
+  mockDesktopIpc();
+  // The app's own onboarding bypass (?bypassOnboarding=true). Desktop shows its
+  // welcome flow over everything on a fresh profile, which every story run is.
+  sessionStorage.setItem("onboarding::bypass-all", "true");
+}
 
 // PortalApp wraps the app in a QueryClientProvider, so any component reaching a
 // shared query hook throws "No QueryClient set" without one here. `retry: false`

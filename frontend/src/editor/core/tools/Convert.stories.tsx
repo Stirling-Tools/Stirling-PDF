@@ -145,7 +145,14 @@ export const SourceFormatMenu: Story = {
   },
 };
 
+/**
+ * Conversions that need an account in the desktop app's local mode, where
+ * choosing one asks the user to sign in instead (Tools/Convert/Desktop).
+ */
+const NEEDS_ACCOUNT_ON_DESKTOP = ["not-in-desktop"];
+
 export const SourceFormatUnavailable: Story = {
+  tags: NEEDS_ACCOUNT_ON_DESKTOP,
   parameters: toolPanelServer(...endpointUnavailable("file-to-pdf")),
   play: async (context) => {
     const body = await openFormatMenu(context, "convert-from-dropdown");
@@ -757,16 +764,19 @@ async function runConversion(context: PlayContext): Promise<void> {
 }
 
 export const ConversionResults: Story = {
+  tags: NEEDS_ACCOUNT_ON_DESKTOP,
   parameters: convertsToPdfA,
   play: runConversion,
 };
 
 export const UndoConversionTooltip: Story = {
+  tags: NEEDS_ACCOUNT_ON_DESKTOP,
   parameters: convertsToPdfA,
   play: openTooltip({ info: "Undo" }, { after: runConversion }),
 };
 
 export const ConversionFailed: Story = {
+  tags: NEEDS_ACCOUNT_ON_DESKTOP,
   parameters: toolPanelServer(
     http.post("*/api/v1/convert/pdf/pdfa", () =>
       HttpResponse.json({ error: "Conversion failed" }, { status: 500 }),

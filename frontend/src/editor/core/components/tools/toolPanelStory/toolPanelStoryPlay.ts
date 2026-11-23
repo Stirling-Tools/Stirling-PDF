@@ -121,7 +121,10 @@ export async function choose(
   return panel;
 }
 
-async function findRunButton(context: PlayContext): Promise<HTMLElement> {
+/** The tool's run button, whatever the tool labels it. */
+export async function findRunButton(
+  context: PlayContext,
+): Promise<HTMLElement> {
   const panel = await waitForToolPanel(context);
   return waitFor(() => {
     const button = panel.querySelector<HTMLElement>('[data-tour="run-button"]');

@@ -64,7 +64,15 @@ const openImportMenu = (context: PlayContext) =>
 // The open menu holds a focusable div that is not a menuitem.
 const menuA11yIssue = knownA11yIssues("aria-required-children");
 
+/**
+ * Stories that read the selected PDF's bookmarks. The desktop app refuses that
+ * request in local mode: its router keys it as `extract-bookmarks`, which the
+ * bundled backend's endpoint list never contains.
+ */
+const READS_BOOKMARKS = ["broken-in-desktop"];
+
 export const Panel: Story = {
+  tags: READS_BOOKMARKS,
   parameters: withOutline,
   play: async (context) => {
     await waitForOutline(context);
@@ -79,6 +87,7 @@ export const Panel: Story = {
 };
 
 export const LoadingBookmarks: Story = {
+  tags: READS_BOOKMARKS,
   parameters: toolPanelServer(
     http.post(EXTRACT_ENDPOINT, async () => {
       await delay("infinite");
@@ -100,6 +109,7 @@ export const LoadingBookmarks: Story = {
 };
 
 export const NoBookmarks: Story = {
+  tags: READS_BOOKMARKS,
   parameters: toolPanelServer(extractedBookmarks([])),
   play: async (context) => {
     const panel = await waitForPanelText(
@@ -148,6 +158,7 @@ export const NoFileImportMenu: Story = {
 };
 
 export const ImportMenu: Story = {
+  tags: READS_BOOKMARKS,
   parameters: { ...withOutline, ...menuA11yIssue },
   play: async (context) => {
     await waitForOutline(context);
@@ -162,6 +173,7 @@ export const ImportMenu: Story = {
 };
 
 export const ExportMenu: Story = {
+  tags: READS_BOOKMARKS,
   parameters: { ...withOutline, ...menuA11yIssue },
   play: async (context) => {
     await waitForOutline(context);
@@ -172,6 +184,7 @@ export const ExportMenu: Story = {
 };
 
 export const ReplaceExistingOff: Story = {
+  tags: READS_BOOKMARKS,
   parameters: withOutline,
   play: async (context) => {
     await waitForOutline(context);
@@ -180,6 +193,7 @@ export const ReplaceExistingOff: Story = {
 };
 
 export const LoadedFromSelectedPdf: Story = {
+  tags: READS_BOOKMARKS,
   parameters: withOutline,
   play: async (context) => {
     await waitForOutline(context);
@@ -207,6 +221,7 @@ async function importJson(context: PlayContext, contents: string) {
 }
 
 export const ImportedJson: Story = {
+  tags: READS_BOOKMARKS,
   parameters: toolPanelServer(extractedBookmarks([])),
   play: async (context) => {
     await waitForPanelText(
@@ -224,6 +239,7 @@ export const ImportedJson: Story = {
 };
 
 export const ImportedInvalidJson: Story = {
+  tags: READS_BOOKMARKS,
   parameters: withOutline,
   play: async (context) => {
     await waitForOutline(context);
@@ -237,11 +253,13 @@ export const ImportedInvalidJson: Story = {
 };
 
 export const BookmarksAndOutlineTooltip: Story = {
+  tags: READS_BOOKMARKS,
   parameters: withOutline,
   play: openTooltip({ step: "Bookmarks & outline" }, { after: waitForOutline }),
 };
 
 export const ReplaceExistingTooltip: Story = {
+  tags: READS_BOOKMARKS,
   parameters: withOutline,
   play: openTooltip(
     { info: /new outline is appended/ },
@@ -250,6 +268,7 @@ export const ReplaceExistingTooltip: Story = {
 };
 
 export const Results: Story = {
+  tags: READS_BOOKMARKS,
   args: { showWorkbench: true },
   parameters: {
     ...toolPanelServer(

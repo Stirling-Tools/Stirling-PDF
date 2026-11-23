@@ -25,6 +25,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Stories that run an automation, which the desktop app allows only when
+ * signed in to a server: in local mode the run button asks the user to sign in.
+ */
+const RUNS_AN_AUTOMATION = ["not-in-desktop"];
+
 const CREATE_NEW = "Create New Automation";
 const SUGGESTED = "Secure PDF Ingestion";
 const SAVED = {
@@ -345,6 +351,7 @@ export const RunWithoutFiles: Story = {
 };
 
 export const RunInProgress: Story = {
+  tags: RUNS_AN_AUTOMATION,
   // AutomationRun's Progress bar has no accessible name.
   parameters: {
     ...knownA11yIssues("aria-progressbar-name"),
@@ -367,6 +374,7 @@ export const RunInProgress: Story = {
 };
 
 export const StepFailed: Story = {
+  tags: RUNS_AN_AUTOMATION,
   parameters: toolPanelServer(
     http.post(`*${REPAIR_ENDPOINT}`, () =>
       HttpResponse.json({ error: "Repair failed" }, { status: 500 }),
@@ -383,11 +391,13 @@ const repairsToSample = toolPanelServer(
 );
 
 export const AutomationResults: Story = {
+  tags: RUNS_AN_AUTOMATION,
   parameters: repairsToSample,
   play: runAutomationToResults,
 };
 
 export const UndoOperationTooltip: Story = {
+  tags: RUNS_AN_AUTOMATION,
   parameters: repairsToSample,
   play: openTooltip({ info: "Undo" }, { after: runAutomationToResults }),
 };

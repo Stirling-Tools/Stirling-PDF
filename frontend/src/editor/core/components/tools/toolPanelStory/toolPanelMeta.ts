@@ -5,6 +5,7 @@ import {
   type ToolPanelStoryProps,
 } from "@editor/components/tools/toolPanelStory/ToolPanelStory";
 import { waitForToolPanel } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
+import { endpointsAvailability } from "@editor/components/tools/toolPanelStory/serverEndpoints";
 import {
   loadFixture,
   type FixtureName,
@@ -12,14 +13,25 @@ import {
 import type { ToolId } from "@editor/types/toolId";
 
 /**
- * A server that has every tool endpoint on. Without an answer the panel holds
- * its settings disabled while it waits, so a capture would show greyed
- * controls and a click would be dropped.
+ * A started server's app-config: the AI engine on, and the backend's
+ * dependencies ready, which the desktop build waits for before it runs a tool.
  */
-const ENDPOINTS_ENABLED = [
+const SERVER_APP_CONFIG = { aiEngineEnabled: true, dependenciesReady: true };
+
+/**
+ * A server that has every tool endpoint on and the AI engine enabled. Without
+ * an answer the panel holds its settings disabled while it waits, so a capture
+ * would show greyed controls and a click would be dropped. Matched at any
+ * origin: the desktop build reaches its bundled backend at 127.0.0.1, and treats
+ * the backend as down until app-config answers.
+ */
+const DEFAULT_SERVER = [
+  http.get("*/api/v1/config/app-config", () =>
+    HttpResponse.json(SERVER_APP_CONFIG),
+  ),
   http.get("*/api/v1/config/endpoint-enabled", () => HttpResponse.json(true)),
-  http.get("*/api/v1/config/endpoints-availability", () =>
-    HttpResponse.json({}),
+  http.get("*/api/v1/config/endpoints-availability", async () =>
+    HttpResponse.json(await endpointsAvailability()),
   ),
 ];
 
@@ -30,7 +42,7 @@ const ENDPOINTS_ENABLED = [
  * defaults so they win over them.
  */
 export function toolPanelServer(...handlers: RequestHandler[]) {
-  return { msw: { handlers: [...handlers, ...ENDPOINTS_ENABLED] } };
+  return { msw: { handlers: [...handlers, ...DEFAULT_SERVER] } };
 }
 
 /**
@@ -44,21 +56,19 @@ export function endpointUnavailable(endpoint: string): RequestHandler[] {
         new URL(request.url).searchParams.get("endpoint") !== endpoint,
       ),
     ),
-    http.get("*/api/v1/config/endpoints-availability", () =>
-      HttpResponse.json({
-        [endpoint]: { enabled: false, reason: "DEPENDENCY" },
-      }),
+    http.get("*/api/v1/config/endpoints-availability", async () =>
+      HttpResponse.json(await endpointsAvailability(endpoint)),
     ),
   ];
 }
 
 /**
  * The server's app-config with `flags` on, for settings a server flag reveals.
- * Keeps the AI engine on, as the default Storybook server has it.
+ * Keeps the rest of the default server's app-config.
  */
 export function appConfig(flags: Readonly<Record<string, unknown>>) {
   return http.get("*/api/v1/config/app-config", () =>
-    HttpResponse.json({ aiEngineEnabled: true, ...flags }),
+    HttpResponse.json({ ...SERVER_APP_CONFIG, ...flags }),
   );
 }
 

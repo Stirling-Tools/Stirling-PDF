@@ -28,6 +28,19 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+/**
+ * The server's own error message. The desktop app's HTTP client hands the
+ * error body on as an unparsed string, which the panel cannot read the message
+ * from.
+ */
+const SHOWS_SERVER_ERROR = ["broken-in-desktop"];
+
+/**
+ * An unavailable detector. The desktop app in local mode offers to sign in
+ * instead of disabling the run button.
+ */
+const OFFERS_SIGN_IN_ON_DESKTOP = ["not-in-desktop"];
 type Play = NonNullable<Story["play"]>;
 
 function detectionResponse(summary: DetectionSummary) {
@@ -147,6 +160,7 @@ export const ResultsWithoutSummary: Story = {
 };
 
 export const DetectionFailed: Story = {
+  tags: SHOWS_SERVER_ERROR,
   parameters: toolPanelServer(
     http.post(`*${DETECT_ENDPOINT}`, () =>
       HttpResponse.json(null, { status: 500 }),
@@ -167,11 +181,13 @@ async function waitUntilUnavailable(context: PlayContext): Promise<void> {
 }
 
 export const Unavailable: Story = {
+  tags: OFFERS_SIGN_IN_ON_DESKTOP,
   play: waitUntilUnavailable,
   parameters: toolPanelServer(...endpointUnavailable("form-detection")),
 };
 
 export const UnavailableTooltip: Story = {
+  tags: OFFERS_SIGN_IN_ON_DESKTOP,
   parameters: Unavailable.parameters,
   play: openTooltip({ runButton: true }, { after: waitUntilUnavailable }),
 };

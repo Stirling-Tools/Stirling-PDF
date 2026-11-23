@@ -87,6 +87,12 @@ function signaturesResponse(signatures: SavedSignature[]) {
   );
 }
 
+/**
+ * Stories reading the server's signature library. SaaS keeps signatures in the
+ * browser instead, which Tools/Sign/SaaS shows.
+ */
+const SERVER_LIBRARY = ["not-in-saas"];
+
 const noSavedSignatures = toolPanelServer(signaturesResponse([]));
 const savedSignatures = toolPanelServer(signaturesResponse(SAVED_SIGNATURES));
 const savedSignaturesAsAdmin = toolPanelServer(
@@ -233,6 +239,7 @@ export const DraftExistsWarning: Story = {
 };
 
 export const LibraryFull: Story = {
+  tags: SERVER_LIBRARY,
   parameters: toolPanelServer(
     signaturesResponse(
       Array.from({ length: 20 }, (_, index) =>
@@ -245,6 +252,7 @@ export const LibraryFull: Story = {
 
 export const SavedSignatures: Story = {
   parameters: savedSignatures,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     const panel = await waitForPanelText(context, "Company stamp");
     await panel.findByText("Pick a signature to place it");
@@ -254,6 +262,7 @@ export const SavedSignatures: Story = {
 
 export const NewSignature: Story = {
   parameters: savedSignatures,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     await waitForPanelText(context, "Company stamp");
     await userEvent.click(
@@ -269,6 +278,7 @@ export const NewSignature: Story = {
 
 export const SignatureMenu: Story = {
   parameters: savedSignatures,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     const menu = await openSignatureMenu(context, "My signature");
     await menu.findByRole("menuitem", { name: "Rename" });
@@ -277,6 +287,7 @@ export const SignatureMenu: Story = {
 
 export const SharedSignatureMenu: Story = {
   parameters: savedSignatures,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     const menu = await openSignatureMenu(context, "Company stamp");
     await expect(menu.queryByRole("menuitem", { name: "Delete" })).toBeNull();
@@ -285,6 +296,7 @@ export const SharedSignatureMenu: Story = {
 
 export const AdminSignatureMenu: Story = {
   parameters: savedSignaturesAsAdmin,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     const menu = await openSignatureMenu(context, "My signature");
     await menu.findByRole(
@@ -297,6 +309,7 @@ export const AdminSignatureMenu: Story = {
 
 export const AdminSharedSignatureMenu: Story = {
   parameters: savedSignaturesAsAdmin,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     const menu = await openSignatureMenu(context, "Company stamp");
     await menu.findByRole("menuitem", { name: "Delete" }, STAGE_TIMEOUT);
@@ -305,6 +318,7 @@ export const AdminSharedSignatureMenu: Story = {
 
 export const RenameSignature: Story = {
   parameters: savedSignatures,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     await chooseFromSignatureMenu(context, "My signature", "Rename");
     await bodyOf(context).findByRole("dialog", {}, STAGE_TIMEOUT);
@@ -313,6 +327,7 @@ export const RenameSignature: Story = {
 
 export const DeleteSignature: Story = {
   parameters: savedSignatures,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     await chooseFromSignatureMenu(context, "My signature", "Delete");
     await bodyOf(context).findByRole("dialog", {}, STAGE_TIMEOUT);
@@ -321,6 +336,7 @@ export const DeleteSignature: Story = {
 
 export const DefaultSignature: Story = {
   parameters: savedSignatures,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     await chooseFromSignatureMenu(context, "Initials", "Make default");
     const panel = await panelOf(context);
@@ -330,6 +346,7 @@ export const DefaultSignature: Story = {
 
 export const DefaultSignatureArmed: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   beforeEach: () => {
     window.localStorage.setItem(DEFAULT_SIGNATURE_KEY, "personal-2");
   },
@@ -338,11 +355,13 @@ export const DefaultSignatureArmed: Story = {
 
 export const PlacingSignature: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   play: armSignature,
 };
 
 export const PlacingSignatureMenu: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     await armSignature(context);
     const menu = await openSignatureMenu(context, "My signature");
@@ -352,6 +371,7 @@ export const PlacingSignatureMenu: Story = {
 
 export const PlacementStopped: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     await armSignature(context);
     await userEvent.click(await findEnabled(context, "button", "Stop"));
@@ -361,6 +381,7 @@ export const PlacementStopped: Story = {
 
 export const SignaturePlaced: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     await placeSignature(context);
     await findEnabled(context, "button", "Apply 1 signature");
@@ -369,11 +390,13 @@ export const SignaturePlaced: Story = {
 
 export const PlacementUndone: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   play: placeAndUndoSignature,
 };
 
 export const PlacedSignatureRemoved: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   play: async (context) => {
     await placeSignature(context);
     await userEvent.click(await findEnabled(context, "button", /^Remove /));
@@ -383,15 +406,19 @@ export const PlacedSignatureRemoved: Story = {
 
 export const UndoTooltip: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   play: openTooltip({ info: "Undo" }, { after: placeSignature }),
 };
 
 export const RedoTooltip: Story = {
   ...savedSignaturesOnViewer,
+  tags: SERVER_LIBRARY,
   play: openTooltip({ info: "Redo" }, { after: placeAndUndoSignature }),
 };
 
+/** Group signing needs a signed-in self-hosted server on desktop. */
 export const RequestSignatures: Story = {
+  tags: ["not-in-desktop"],
   parameters: toolPanelServer(
     signaturesResponse([]),
     appConfig({ storageGroupSigningEnabled: true }),

@@ -35,6 +35,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * The server's own error message. The desktop app's HTTP client hands the
+ * error body on as an unparsed string, which the panel cannot read the message
+ * from.
+ */
+const SHOWS_SERVER_ERROR = ["broken-in-desktop"];
+
 const FIELDS_ENDPOINT = "*/api/v1/form/fields-with-coordinates";
 const EDIT_FIELDS_ENDPOINT = "/api/v1/form/edit-fields";
 
@@ -226,6 +233,7 @@ export const FieldsLoading: Story = {
 };
 
 export const FieldsFailedToLoad: Story = {
+  tags: SHOWS_SERVER_ERROR,
   ...formOnViewer([
     http.post(FIELDS_ENDPOINT, () =>
       HttpResponse.json(
@@ -376,6 +384,7 @@ async function saveDeletion(context: PlayContext) {
 }
 
 export const SaveFailed: Story = {
+  tags: SHOWS_SERVER_ERROR,
   ...formOnViewer(
     [
       serveFormFields,

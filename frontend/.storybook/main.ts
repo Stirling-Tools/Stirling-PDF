@@ -6,6 +6,16 @@ import { iconSvgr } from "../scripts/icons/svgrOptions.mts";
 // By path, not @editor/*: this file runs in node, before the aliases exist.
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
 import { usedIconsPlugin } from "../scripts/icons/usedIcons.vite.mts";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { flavor, flavorBuild, notInFlavorTag } from "./flavor";
+
+/** Built per pass: the main bundle and the worker bundle each need their own. */
+const editorPathAliases = () =>
+  tsconfigPaths({
+    projects: flavorBuild.projects.map((project) =>
+      resolve(__dirname, "..", project),
+    ),
+  });
 
 /**
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the
@@ -15,31 +25,9 @@ import { usedIconsPlugin } from "../scripts/icons/usedIcons.vite.mts";
  * the portal layer at src/processor/proprietary/). MDX docs pages live in
  * src/processor/proprietary/docs/.
  */
-/**
- * Editor stories import via `@editor/*` (proprietary→core fallback), `@editor-core/*` and
- * `@editor-proprietary/*`. Resolve them exactly the way the editor's own build does -
- * through vite-tsconfig-paths against the proprietary vite tsconfig - so the
- * shared Storybook can host editor components without duplicating the alias map
- * here. Built per pass: the main bundle and the worker bundle each need their own.
- *
- * The plugin picks the first project whose include/exclude covers the importing
- * file. The proprietary project excludes src/desktop and src/cloud, so both fall
- * through to the desktop project and get the desktop→cloud→proprietary→core
- * cascade their own imports need; every other file still resolves as before.
- */
-const editorPathAliases = () =>
-  tsconfigPaths({
-    projects: [
-      resolve(__dirname, "../tsconfig.proprietary.vite.json"),
-      resolve(__dirname, "../tsconfig.desktop.vite.json"),
-    ],
-  });
-
 const config: StorybookConfig = {
-  stories: [
-    "../src/processor/proprietary/**/*.mdx",
-    "../src/**/*.stories.@(ts|tsx)",
-  ],
+  stories: flavorBuild.stories.map((glob) => `../${glob}`),
+  tags: { [notInFlavorTag]: { excludeFromSidebar: true } },
   addons: [
     "@storybook/addon-themes",
     "@storybook/addon-a11y",
@@ -69,6 +57,9 @@ const config: StorybookConfig = {
         "billingSupabaseClient.ts",
       ),
       "@processor": resolve(__dirname, "../src/processor/proprietary"),
+      ...(flavor === "desktop" && {
+        "@tauri-apps/plugin-http": resolve(__dirname, "tauriHttp.ts"),
+      }),
       // Direct layer aliases so .storybook config files (preview.tsx), which sit
       // outside src/ and so aren't covered by tsconfigPaths, can import layer
       // modules (e.g. the auth supabase client that moved into proprietary).
@@ -111,12 +102,18 @@ const config: StorybookConfig = {
     // real portal/editor build (those load env from their own roots).
     config.define = {
       ...(config.define ?? {}),
+      // Read by preview.tsx for the flavour's own runtime setup (desktop's IPC mock).
+      "import.meta.env.STORYBOOK_FLAVOR": JSON.stringify(flavor),
       "import.meta.env.VITE_SAAS_API_URL": JSON.stringify("http://saas.mock"),
-      // Keep the Supabase auth env empty so ensureSaasSupabase() is a no-op and
-      // never replaces the mock SaaS client stubbed in preview.tsx.
-      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(""),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY":
-        JSON.stringify(""),
+      // Empty outside SaaS so ensureSaasSupabase() is a no-op and never replaces
+      // the mock SaaS client stubbed in preview.tsx. The SaaS build's own client
+      // refuses to load without both, so it gets the mock origin MSW answers.
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+        flavor === "saas" ? "http://saas.mock" : "",
+      ),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY": JSON.stringify(
+        flavor === "saas" ? "storybook-anon-key" : "",
+      ),
     };
     return config;
   },

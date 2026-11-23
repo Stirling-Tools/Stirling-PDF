@@ -126,6 +126,14 @@ const signsSample = toolPanelServer(
   fixtureResponse("/api/v1/security/cert-sign", "signed-sample.pdf"),
 );
 
+/**
+ * Stories that list this device's certificates. The desktop app refuses those
+ * requests in local mode: its router keys them as
+ * `cert-sign/hardware/<action>`, which the bundled backend's endpoint list
+ * never contains, so it asks for an account instead.
+ */
+const DEVICE_CERTIFICATES = ["broken-in-desktop"];
+
 async function press(context: PlayContext, name: string) {
   await userEvent.click(await findEnabled(context, "button", name));
   return panelOf(context);
@@ -348,6 +356,7 @@ export const CertificateSourceTooltip: Story = {
 };
 
 export const DeviceCapabilitiesLoading: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice({ capabilitiesResponse: neverAnswers }),
   play: async (context) => {
     const panel = await chooseDevice(context);
@@ -368,6 +377,7 @@ export const DeviceCapabilitiesLoading: Story = {
 };
 
 export const WindowsCertificateStore: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice(),
   play: async (context) => {
     await windowsCertificateSelected(context);
@@ -375,6 +385,7 @@ export const WindowsCertificateStore: Story = {
 };
 
 export const WindowsCertificateMenu: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: {
     ...withDevice(),
     // Certificate labels are wider than the listbox, which then scrolls
@@ -391,6 +402,7 @@ export const WindowsCertificateMenu: Story = {
 };
 
 export const WindowsCertificatesLoading: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice({ windowsCertificates: neverAnswers }),
   play: async (context) => {
     const panel = await chooseDevice(context);
@@ -399,6 +411,7 @@ export const WindowsCertificatesLoading: Story = {
 };
 
 export const WindowsCertificateStoreEmpty: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: {
     ...withDevice({ windowsCertificates: () => HttpResponse.json([]) }),
     // The empty Select still draws a listbox, holding only its message.
@@ -416,6 +429,7 @@ export const WindowsCertificateStoreEmpty: Story = {
 };
 
 export const WindowsCertificateStoreError: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice({
     windowsCertificates: hardwareError("Access to the store was denied"),
   }),
@@ -430,6 +444,7 @@ export const WindowsCertificateStoreError: Story = {
 };
 
 export const UsbToken: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice(),
   play: async (context) => {
     const panel = await chooseUsbToken(context);
@@ -438,6 +453,7 @@ export const UsbToken: Story = {
 };
 
 export const UsbTokenDriverMenu: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice(),
   play: async (context) => {
     await chooseUsbToken(context);
@@ -447,6 +463,7 @@ export const UsbTokenDriverMenu: Story = {
 };
 
 export const UsbTokenCustomDriver: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice(),
   play: async (context) => {
     await chooseUsbToken(context);
@@ -463,6 +480,7 @@ export const UsbTokenCustomDriver: Story = {
 };
 
 export const UsbTokenCertificates: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice(),
   play: async (context) => {
     const panel = await listTokenCertificates(context);
@@ -476,6 +494,7 @@ export const UsbTokenCertificates: Story = {
 };
 
 export const UsbTokenCertificateMenu: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice(),
   play: async (context) => {
     await listTokenCertificates(context);
@@ -489,6 +508,7 @@ export const UsbTokenCertificateMenu: Story = {
 };
 
 export const UsbTokenListError: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice({
     tokenCertificates: hardwareError("CKR_PIN_INCORRECT"),
   }),
@@ -499,6 +519,7 @@ export const UsbTokenListError: Story = {
 };
 
 export const UsbTokenNoDriverDetected: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice({ detectedLibraries: [] }),
   play: async (context) => {
     const panel = await chooseUsbToken(context);
@@ -507,6 +528,7 @@ export const UsbTokenNoDriverDetected: Story = {
 };
 
 export const DeviceWithoutWindowsStore: Story = {
+  tags: DEVICE_CERTIFICATES,
   parameters: withDevice({ windowsStoreSupported: false }),
   play: async (context) => {
     const panel = await chooseDevice(context);

@@ -100,8 +100,15 @@ const recordsBorderSize = toolPanelServer(
   }),
 );
 
+/**
+ * Runs the split, which needs an account in the desktop app's local mode: the
+ * run button asks the user to sign in instead.
+ */
+const NEEDS_ACCOUNT_ON_DESKTOP = ["not-in-desktop"];
+
 /** The field reads 0, but the settings take 0 as empty and send the default. */
 export const ZeroBorderSize: Story = {
+  tags: NEEDS_ACCOUNT_ON_DESKTOP,
   parameters: recordsBorderSize,
   play: async (context) => {
     sentBorderSize = null;
@@ -148,6 +155,7 @@ export const NoFilesTooltip: Story = {
 };
 
 export const Results: Story = {
+  tags: NEEDS_ACCOUNT_ON_DESKTOP,
   parameters: toolPanelServer(fixtureResponse(ENDPOINT, "sample.png")),
   play: runToResults,
 };
