@@ -80,6 +80,11 @@ import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext"
 import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
+import {
+  PAGES_PAST_INSET_ATTR,
+  usePagesPastInset,
+} from "@editor/components/viewer/usePagesPastInset";
+import "@editor/components/viewer/viewerPages.css";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -1936,13 +1941,14 @@ const EmbedPdfViewerContent = ({
     let settle: number | undefined;
     const observer = new ResizeObserver(() => {
       if (Math.abs(area.clientWidth - width) < 1) return;
+      const narrowed = area.clientWidth < width;
       width = area.clientWidth;
       window.clearTimeout(settle);
       settle = window.setTimeout(() => {
         const { level } = getZoomState();
         const fitting =
           level === ZoomMode.FitWidth || level === ZoomMode.Automatic;
-        if (fitting || widestPage(area) > area.clientWidth) {
+        if (fitting || (narrowed && widestPage(area) > area.clientWidth)) {
           zoomActions.requestZoom(ZoomMode.FitWidth);
         }
       }, FIT_WIDTH_SETTLE_MS);
@@ -1956,13 +1962,20 @@ const EmbedPdfViewerContent = ({
 
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 15;
-  const totalRightMargin =
+  const sidebarsMarginRem =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
     (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
     (isLayerSidebarVisible ? sidebarWidthRem : 0) +
-    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0) +
-    (pageTool?.rightInsetRem ?? 0);
+    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
+  const rightInsetRem = pageTool?.rightInsetRem ?? 0;
+  const pagesPastInset = usePagesPastInset(
+    pdfContainerRef,
+    rightInsetRem,
+    sidebarsMarginRem,
+  );
+  const totalRightMargin =
+    sidebarsMarginRem + (pagesPastInset ? 0 : rightInsetRem);
 
   return (
     <Box
@@ -2050,14 +2063,17 @@ const EmbedPdfViewerContent = ({
           <Box
             ref={pdfContainerRef}
             data-viewer-pages
+            {...{ [PAGES_PAST_INSET_ATTR]: pagesPastInset || undefined }}
             style={{
+              ["--viewer-right-inset" as string]: `${rightInsetRem}rem`,
               position: "relative",
               flex: 1,
               overflow: "hidden",
               minHeight: 0,
               minWidth: 0,
               marginRight: `${totalRightMargin}rem`,
-              transition: "margin-right 0.3s ease",
+              // The card in the inset tracks this box's edge; animating the margin would slide it.
+              transition: rightInsetRem ? undefined : "margin-right 0.3s ease",
             }}
           >
             <LocalEmbedPDF

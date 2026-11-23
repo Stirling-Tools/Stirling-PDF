@@ -47,6 +47,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/reviewCardScroll";
 import type { ReviewItem } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
 import { ReviewChecklist } from "@editor/tools/pdfTextEditor/components/review/ReviewChecklist";
+import { PAGES_PAST_INSET_ATTR } from "@editor/components/viewer/usePagesPastInset";
 import "@editor/tools/pdfTextEditor/components/review/review.css";
 
 const CARD_WIDTH = 300;
@@ -117,7 +118,7 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
   );
 
   if (!frame || top === null) return null;
-  const { viewer, pagesRight } = frame;
+  const { viewer, columnLeft } = frame;
   const minTop = viewer.top + GAP_PX;
   const maxTop = Math.max(minTop, viewer.bottom - cardHeight - GAP_PX);
   const cardTop = Math.min(Math.max(top, minTop), maxTop);
@@ -127,7 +128,7 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
       className="review-card"
       ref={measureCard}
       style={{
-        left: Math.min(pagesRight ?? viewer.right, viewer.right) + GAP_PX,
+        left: columnLeft + GAP_PX,
         top: cardTop,
         width: CARD_WIDTH,
         maxHeight: viewer.height - GAP_PX * 2,
@@ -407,8 +408,8 @@ function useTagKeys(
 interface ViewerFrame {
   /** The pages' scroller on screen. */
   viewer: DOMRect;
-  /** The right edge of the widest mounted page; null before any has laid out. */
-  pagesRight: number | null;
+  /** Where the card's column starts: beside the pages, or inside the viewer while they run under it. */
+  columnLeft: number;
 }
 
 /**
@@ -436,7 +437,13 @@ function useViewerFrame(): ViewerFrame | null {
           if (rect.width > 0)
             pagesRight = Math.max(pagesRight ?? rect.right, rect.right);
         }
-        const next = { viewer: viewer.getBoundingClientRect(), pagesRight };
+        const rect = viewer.getBoundingClientRect();
+        const columnLeft = viewer.hasAttribute(PAGES_PAST_INSET_ATTR)
+          ? rect.right -
+            REVIEW_COLUMN_REM *
+              parseFloat(getComputedStyle(document.documentElement).fontSize)
+          : Math.min(pagesRight ?? rect.right, rect.right);
+        const next = { viewer: rect, columnLeft };
         setFrame((prev) => (sameFrame(prev, next) ? prev : next));
       });
     };
@@ -461,7 +468,7 @@ function useViewerFrame(): ViewerFrame | null {
 function sameFrame(a: ViewerFrame | null, b: ViewerFrame): boolean {
   if (!a) return false;
   return (
-    a.pagesRight === b.pagesRight &&
+    a.columnLeft === b.columnLeft &&
     a.viewer.left === b.viewer.left &&
     a.viewer.top === b.viewer.top &&
     a.viewer.right === b.viewer.right &&
