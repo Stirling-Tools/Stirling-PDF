@@ -31,21 +31,33 @@ export function currentEdition(): ProcessorEdition | null {
   return editionForMode(connectionModeService.getCachedMode());
 }
 
-export const ProcessorEditionContext = createContext<ProcessorEdition | null>(
-  null,
-);
+/** Undefined outside a ProcessorEditionBoundary; the boundary provides null in local mode. */
+export const ProcessorEditionContext = createContext<
+  ProcessorEdition | null | undefined
+>(undefined);
 
-/** The enclosing {@link ProcessorEditionBoundary}'s edition, else the cached mode's. */
+/**
+ * The enclosing {@link ProcessorEditionBoundary}'s edition. Outside one, a
+ * mode switch would swap a mounted component's implementation and change its
+ * hook order, so dev and test builds report it (the tests fail on console
+ * errors) and production falls back to the cached mode.
+ */
 export function useProcessorEdition(): ProcessorEdition | null {
-  return useContext(ProcessorEditionContext) ?? currentEdition();
+  const edition = useContext(ProcessorEditionContext);
+  if (edition !== undefined) return edition;
+  if (import.meta.env.DEV) {
+    console.error(
+      "[processor] An edition hook or component rendered outside ProcessorEditionBoundary. Render it under DesktopProcessor or a PortalSettingsSectionHost.",
+    );
+  }
+  return currentEdition();
 }
 
 /**
  * One hook seam with an implementation per edition. Only safe inside a
  * ProcessorEditionBoundary: the boundary remounts its subtree whenever the
  * edition changes, so a mounted component never switches implementation, which
- * would change its hook order. Outside one (local mode) the base implementation
- * runs.
+ * would change its hook order. In local mode the base implementation runs.
  */
 export function editionHook<A extends unknown[], R>(
   cloud: (...args: A) => R,
@@ -64,23 +76,6 @@ export function editionFunction<A extends unknown[], R>(
 ): (...args: A) => R {
   return (...args: A): R =>
     currentEdition() === "cloud" ? cloud(...args) : server(...args);
-}
-
-/**
- * {@link editionFunction} for a seam that is an object of methods or flags.
- * Every property read (including spreads) is forwarded to the current
- * edition's object, so callers that read it at render or call time follow the
- * connection; a value captured at module load would not.
- */
-export function editionObject<T extends object>(cloud: T, server: T): T {
-  const pick = (): T => (currentEdition() === "cloud" ? cloud : server);
-  return new Proxy(server, {
-    get: (_target, key) => Reflect.get(pick(), key),
-    has: (_target, key) => Reflect.has(pick(), key),
-    ownKeys: () => Reflect.ownKeys(pick()),
-    getOwnPropertyDescriptor: (_target, key) =>
-      Reflect.getOwnPropertyDescriptor(pick(), key),
-  });
 }
 
 /** {@link editionHook} for a component seam. Switching the component type
