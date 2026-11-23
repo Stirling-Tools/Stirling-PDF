@@ -31,11 +31,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function imageMagickEnabled(enabled: boolean, ...handlers: RequestHandler[]) {
+function lineArtEnabled(enabled: boolean, ...handlers: RequestHandler[]) {
   return toolPanelServer(
     ...handlers,
     http.get("*/api/v1/config/group-enabled", ({ request }) =>
-      new URL(request.url).searchParams.get("group") === "ImageMagick"
+      new URL(request.url).searchParams.get("group") === "LineArt"
         ? HttpResponse.json(enabled)
         : undefined,
     ),
@@ -47,13 +47,13 @@ const SEVERAL_FILES = {
   workbench: "fileEditor",
 } as const;
 
-const LINE_ART_INFO = /^Uses ImageMagick to reduce pages/;
+const LINE_ART_INFO = /^Reduces images to high-contrast black and white/;
 
-const WITH_IMAGE_MAGICK = imageMagickEnabled(true);
-const WITHOUT_IMAGE_MAGICK = imageMagickEnabled(false);
+const WITH_LINE_ART = lineArtEnabled(true);
+const WITHOUT_LINE_ART = lineArtEnabled(false);
 
 function compressesTo(fixture: FixtureName) {
-  return imageMagickEnabled(
+  return lineArtEnabled(
     true,
     fixtureResponse("/api/v1/misc/compress-pdf", fixture),
   );
@@ -105,7 +105,7 @@ const runWithNoReduction = runUntilNotice(
 );
 
 export const Panel: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: async (context) => {
     const panel = await waitForPanelText(
       context,
@@ -127,7 +127,7 @@ export const Panel: Story = {
 };
 
 export const LowCompressionLevel: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: setCompressionLevel(
     2,
     /^Lower values preserve quality but result in larger files/,
@@ -135,12 +135,12 @@ export const LowCompressionLevel: Story = {
 };
 
 export const HighCompressionLevel: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: setCompressionLevel(9, /^Higher values reduce file size significantly/),
 };
 
 export const FileSizeMethod: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: async (context) => {
     const panel = await chooseFileSize(context);
     await expect(panel.getByRole("textbox", { name: "Size unit" })).toHaveValue(
@@ -151,12 +151,12 @@ export const FileSizeMethod: Story = {
 };
 
 export const FileSizeRequiredTooltip: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: openTooltip({ runButton: true }, { after: chooseFileSize }),
 };
 
 export const FileSizeEntered: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: async (context) => {
     await enterFileSize(context);
     await findEnabled(context, "button", /^Compress/);
@@ -164,7 +164,7 @@ export const FileSizeEntered: Story = {
 };
 
 export const SizeUnitOptions: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: async (context) => {
     const units = await openSizeUnits(context);
     await expect(units.getByRole("option", { name: "KB" })).toBeVisible();
@@ -172,7 +172,7 @@ export const SizeUnitOptions: Story = {
 };
 
 export const SizeInKilobytes: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: async (context) => {
     await enterFileSize(context);
     await selectOption(context, "Size unit", "KB");
@@ -180,7 +180,7 @@ export const SizeInKilobytes: Story = {
 };
 
 export const GrayscaleAndLinearize: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: async (context) => {
     await toggle(context, "checkbox", "Apply Grayscale for Compression");
     await toggle(context, "checkbox", "Linearize PDF for fast web viewing");
@@ -188,7 +188,7 @@ export const GrayscaleAndLinearize: Story = {
 };
 
 export const LineArt: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: async (context) => {
     const panel = await tickLineArt(context);
     await expect(
@@ -199,7 +199,7 @@ export const LineArt: Story = {
 };
 
 export const LineArtAdjusted: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: async (context) => {
     const panel = await tickLineArt(context);
     const detail = panel.getByRole("slider", { name: "Detail level" });
@@ -211,12 +211,12 @@ export const LineArtAdjusted: Story = {
 };
 
 export const LineArtTooltip: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: openTooltip({ info: LINE_ART_INFO }),
 };
 
 export const LineArtUnavailable: Story = {
-  parameters: WITHOUT_IMAGE_MAGICK,
+  parameters: WITHOUT_LINE_ART,
   play: async (context) => {
     const panel = await panelOf(context);
     const lineArt = await panel.findByRole(
@@ -232,7 +232,7 @@ export const LineArtUnavailable: Story = {
 };
 
 export const LineArtUnavailableTooltip: Story = {
-  parameters: WITHOUT_IMAGE_MAGICK,
+  parameters: WITHOUT_LINE_ART,
   play: openTooltip({
     element: async (context) => {
       const panel = await panelOf(context);
@@ -252,18 +252,18 @@ export const LineArtUnavailableTooltip: Story = {
 };
 
 export const SettingsTooltip: Story = {
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: openTooltip({ step: "Settings" }),
 };
 
 export const NoFiles: Story = {
   args: { files: [] },
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
 };
 
 export const NoFilesTooltip: Story = {
   args: { files: [] },
-  parameters: WITH_IMAGE_MAGICK,
+  parameters: WITH_LINE_ART,
   play: openTooltip({ runButton: true }),
 };
 
