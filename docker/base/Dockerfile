@@ -110,7 +110,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-freefont-ttf fonts-terminus \
       # Python runtime
       python3 python3-packaging \
-      libxml2 libxslt1.1 \
+      libxml2-16 libxslt1.1 \
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
