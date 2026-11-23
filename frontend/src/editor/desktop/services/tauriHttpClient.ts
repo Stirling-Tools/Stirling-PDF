@@ -259,8 +259,6 @@ class TauriHttpClient {
       }
     }
 
-    // Set once the rejection chain has run, so the catch below never runs it again.
-    let rejectionHandled = false;
     try {
       // Convert withCredentials to fetch API's credentials option
       const credentials: RequestCredentials = finalConfig.withCredentials
@@ -409,8 +407,18 @@ class TauriHttpClient {
           errorResponse,
         );
 
-        rejectionHandled = true;
-        return await this.settleRejection<T>(error);
+        // Run error interceptors
+        let finalError: unknown = error;
+        for (const handler of this.interceptors.response.handlers) {
+          if (handler.rejected) {
+            try {
+              finalError = await Promise.resolve(handler.rejected(finalError));
+            } catch (e) {
+              finalError = e;
+            }
+          }
+        }
+        throw finalError;
       }
 
       // Parse response body for successful responses
@@ -458,10 +466,7 @@ class TauriHttpClient {
       return finalResponse;
     } catch (error: unknown) {
       // If it's already a TauriHttpError with interceptors run, re-throw
-      if (
-        rejectionHandled ||
-        (error && typeof error === "object" && "isAxiosError" in error)
-      ) {
+      if (error && typeof error === "object" && "isAxiosError" in error) {
         throw error;
       }
 
@@ -544,28 +549,19 @@ class TauriHttpClient {
         error,
       );
 
-      return await this.settleRejection<T>(httpError);
-    }
-  }
-
-  /**
-   * The rejection chain, run the way axios runs it: each handler gets the error
-   * and either throws (passing it on) or returns, which recovers the request with
-   * its value as the response - the 401 handler's retried request, for one.
-   */
-  private async settleRejection<T>(
-    error: unknown,
-  ): Promise<TauriHttpResponse<T>> {
-    let rejection: unknown = error;
-    for (const handler of this.interceptors.response.handlers) {
-      if (!handler.rejected) continue;
-      try {
-        return await Promise.resolve(handler.rejected(rejection));
-      } catch (e) {
-        rejection = e;
+      // Run error interceptors
+      let finalError: unknown = httpError;
+      for (const handler of this.interceptors.response.handlers) {
+        if (handler.rejected) {
+          try {
+            finalError = await Promise.resolve(handler.rejected(finalError));
+          } catch (e) {
+            finalError = e;
+          }
+        }
       }
+      throw finalError;
     }
-    throw rejection;
   }
 
   async request<T = any>(
