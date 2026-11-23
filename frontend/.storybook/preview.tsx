@@ -260,9 +260,25 @@ const preview: Preview = {
   // the run. Unset — the Storybook UI — falls back to the toolbar default.
   initialGlobals: {
     theme: import.meta.env.VITE_SCAN_THEME === "dark" ? "dark" : "light",
+    // Stories open at the size the story tests render at. The editor switches
+    // to its narrow layout at 1024px and below, and a preview squeezed beside
+    // the sidebar and addons panel is often that narrow, so stories written
+    // against the desktop layout would wait out their timeouts there.
+    viewport: { value: "testRunner", isRotated: false },
   },
   parameters: {
     layout: "padded",
+    viewport: {
+      options: {
+        // The size the story test runner renders every story at (the vitest
+        // plugin's default), so a story looks here as it does there.
+        testRunner: {
+          name: "Story tests (1200 × 900)",
+          styles: { width: "1200px", height: "900px" },
+          type: "desktop",
+        },
+      },
+    },
     options: {
       // Alphabetical, so each tool's Panel sits above its Parts; parts no one
       // tool owns go last within Tools. Stories keep their order in the file.
