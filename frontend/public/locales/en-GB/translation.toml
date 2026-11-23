@@ -175,12 +175,8 @@ tags = "embed,attach,include,attachments,attach files,embed files,include files,
 failed = "An error occurred while adding attachments to the PDF."
 
 [AddAttachmentsRequest]
-addMoreFiles = "Add more files..."
 attachments = "Select Attachments"
 info = "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel."
-placeholder = "Choose files..."
-removeFile = "Remove file"
-selectedFiles = "Selected Files"
 submit = "Add Attachments"
 
 [AddAttachmentsRequest.error]
@@ -303,7 +299,6 @@ title = "Page Number Results"
 
 [addPassword]
 desc = "Encrypt your PDF document with a password."
-submit = "Encrypt"
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Add Password"
 
@@ -315,17 +310,6 @@ label = "Encryption Key Length"
 
 [addPassword.error]
 failed = "An error occurred while encrypting the PDF."
-
-[addPassword.passwords]
-stepTitle = "Passwords & Encryption"
-
-[addPassword.passwords.owner]
-label = "Owner Password"
-placeholder = "Enter owner password"
-
-[addPassword.passwords.user]
-label = "User Password"
-placeholder = "Enter user password"
 
 [addPassword.results]
 title = "Encrypted PDFs"
@@ -650,18 +634,14 @@ description = "Maximum DPI for image processing (0 = unlimited)"
 label = "Maximum DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configure session limits and timeouts for each process executor"
 ghostscript = "Ghostscript"
 installApp = "Install App"
 label = "Process Executor Limits"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
 pythonOpenCv = "Python"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maximum concurrent instances"
@@ -687,11 +667,6 @@ label = "Cleanup Interval (minutes)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Whether to clean broader system temp directory (use with caution)"
 label = "Cleanup System Temp"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
-label = "LibreOffice Temp Directory"
-placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximum age in hours before temp files are cleaned up"
@@ -1248,12 +1223,6 @@ description = "Directories that folder sources and folder outputs are allowed to
 securityNote = "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory, server file storage and the pipeline watched folders are always off-limits, and folder access is always disabled in hosted (SaaS) mode."
 title = "Folder Access"
 
-[admin.settings.folderAccess.implied]
-description = "These Stirling-managed directories are always permitted and can't be changed here."
-serverStorage = "Server file storage"
-title = "Always allowed"
-watchedFolder = "Pipeline watched folder"
-
 [admin.settings.folderAccess.roots]
 add = "Add"
 empty = "No folders allowed. Folder sources and outputs are currently disabled."
@@ -1304,17 +1273,6 @@ label = "Default Producer"
 [admin.settings.general.customPaths]
 description = "Configure custom file system paths for pipeline processing and external tools"
 label = "Custom Paths"
-
-[admin.settings.general.customPaths.operations]
-label = "External Tool Paths"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
-label = "Unoconvert Executable"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint Executable"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline Directories"
@@ -1819,7 +1777,6 @@ label = "Enable Share Links"
 
 [admin.settings.storage.signing.enabled]
 description = "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled."
-label = "Enable Group Signing (Alpha)"
 
 [admin.settings.telegram]
 description = "Configure Telegram bot connectivity, access controls, and feedback behaviour."
@@ -1939,9 +1896,6 @@ wrapUp = "That's the admin tour! You've seen the enterprise features that make S
 admin = "Admin"
 title = "User Control Settings"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabic"
 chinese = "Chinese (Simplified)"
@@ -2040,7 +1994,6 @@ dismiss = "Dismiss"
 
 [attachments]
 convertToPdfA3b = "Convert to PDF/A-3b"
-convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
 convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
 convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
 convertToPdfA3bTooltipTitle = "What it does"
@@ -2724,7 +2677,6 @@ reason = "Reason"
 serverCertMessage = "Using server certificate - no files or password required"
 showLogo = "Show Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signatures"
-signed = "Signed"
 tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto"
 title = "Certificate Signing"
 viewed = "Viewed"
@@ -2806,7 +2758,6 @@ includeSummaryPageHelp = "A summary page will be added at the end with all signa
 [certSign.collab.sessionDetail]
 addParticipants = "Add Participants"
 addParticipantsError = "Failed to add participants"
-backToList = "Back to Sessions"
 deleteConfirm = "Are you sure? This cannot be undone."
 deleteError = "Failed to delete session"
 deleteSession = "Delete Session"
@@ -2815,14 +2766,11 @@ finalizeError = "Failed to finalise session"
 loadPdfError = "Failed to load signed PDF"
 loadSignedPdf = "Load Signed PDF into Active Files"
 messageLabel = "Message"
-owner = "Owner"
 participantRemoved = "Participant removed"
 participants = "Participants"
 participantsAdded = "Participants added successfully"
-removeParticipant = "Remove"
 removeParticipantError = "Failed to remove participant"
 selectUsers = "Select users..."
-sessionInfo = "Session Info"
 
 [certSign.collab.sessionList]
 active = "Active"
@@ -2835,8 +2783,6 @@ title = "Signature Appearance"
 [certSign.collab.signRequest]
 addedToFiles = "Document added to active files"
 addToFiles = "Add to Active Files"
-advancedSettings = "Advanced Settings"
-backToList = "Back to Sign Requests"
 certificateChoice = "Select a certificate to sign with"
 changeSignature = "Change signature"
 clearSignature = "Clear Signature"
@@ -2856,7 +2802,6 @@ invalidFileType = "Please select an image file"
 location = "Location (Optional)"
 locationPlaceholder = "Where are you signing from?"
 noCertificate = "Please select a certificate file"
-noSignatures = "Please place at least one signature on the PDF"
 p12File = "P12/PFX Certificate File"
 password = "Certificate Password"
 penColor = "Pen Colour"
@@ -2874,7 +2819,6 @@ signatureText = "Signature Text"
 signatureTextPlaceholder = "Enter your name..."
 signatureTypeLabel = "Signature Type"
 signButton = "Sign Document"
-signingTitle = "Signing"
 textColor = "Text Colour"
 typeSignature = "Type your name to create a signature"
 uploadCert = "Upload a certificate"
@@ -2948,7 +2892,6 @@ visible = "Visible"
 yourSignatures = "Your Signatures ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Add Users"
 loadError = "Failed to load users"
 noTeam = "No Team"
 noUsers = "No other users found."
@@ -3039,7 +2982,6 @@ ssoManaged = "Your account is managed by your identity provider."
 title = "Change Credentials"
 
 [changeMetadata]
-filenamePrefix = "metadata"
 submit = "Change"
 tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
@@ -3194,21 +3136,11 @@ text = "Compatible PDF applications honour these permissions. Keep a separate pe
 [chat.actions]
 copy = "Copy message"
 
-[chat.emptyState]
-text = "Ask a question about your documents or get help with PDF tools."
-
-[chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
-
 [chat.header]
-agentMenu = "Stirling agent options"
-assistant = "AI Assistant"
 clearChat = "Clear chat"
 
 [chat.input]
 disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
-placeholder = "What do you want to do?"
 send = "Send message"
 
 [chat.progress]
@@ -3239,9 +3171,7 @@ convertMany = "Convert these documents to PDF"
 convertOne = "Convert this document to PDF"
 heading = "Get started"
 mergeMany = "Merge these {{count}} documents into 1"
-moreFiles = "+{{count}} more"
 openFromComputer = "Open from computer"
-removeFile = "Remove {{name}}"
 splitOne = "Split this document"
 
 [chat.responses]
@@ -3253,11 +3183,6 @@ not_found = "I couldn't find the requested information."
 processing = "Processing ({{outcome}})..."
 unsupported_capability = "Unsupported capability: {{capability}}"
 usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
-
-[chat.toolsUsed]
-summary_one = "Ran 1 tool"
-summary_other = "Ran {{count}} tools"
-unknownTool = "Unknown tool"
 
 [classification.families]
 correspondence = "Correspondence"
@@ -4117,8 +4042,6 @@ webOptions = "Web to PDF Options"
 zoomLevel = "Zoom Level"
 
 [convert.ebookOptions]
-embedAllFonts = "Embed all fonts"
-embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
 includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"
@@ -4456,15 +4379,9 @@ description = "Select the Edit Table of Contents tool to load its workspace."
 title = "Open the tool to start editing"
 
 [encryptedPdfUnlock]
-description = "This PDF is password protected. Enter the password so you can continue working with it."
-emptyResponse = "Password removal did not produce a file."
 incorrectPassword = "Incorrect password"
 missingFile = "The selected file is no longer available."
 required = "Enter the password to continue."
-skip = "Skip for now"
-successBody = "Password removed successfully."
-successBodyWithName = "Password removed from {{fileName}}"
-successTitle = "Password removed"
 title = "Enter PDF password"
 unlock = "Unlock"
 unlockAll = "Use for all ({{count}})"
@@ -4532,9 +4449,7 @@ viewInViewer = "View in Viewer"
 closeFile = "Close file"
 
 [fileEditor]
-addFiles = "Add Files"
 closedFile = "Closed {{name}}"
-couldNotSave = "Could not save {{name}}"
 filesAdded_one = "Added {{count}} file"
 filesAdded_other = "Added {{count}} files"
 filesReordered_one = "File reordered"
@@ -4664,7 +4579,6 @@ dataLostBody = "Couldn't find this file's contents. Add it again to keep working
 dataLostTitle = "File data is unavailable"
 downloadFailed = "Download failed"
 dropHint = "Open files to get started"
-dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "Expand sidebar"
 googleDrive = "Open from Google Drive"
@@ -5165,9 +5079,7 @@ skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Unsaved changes"
 
 [formFill.create]
-commit = "Add {{count}} field(s) to PDF"
 empty = "No fields drawn yet."
-failed = "Failed to add fields"
 goToField = "Go to this field"
 hint = "Pick a field type, then draw it on the page."
 placing = "Draw a {{type}} field on the page. Press Esc to stop."
@@ -5241,7 +5153,6 @@ modify = "Modify"
 commit = "Save {{count}} change(s)"
 delete = "Delete"
 empty = "This PDF has no form fields yet."
-failed = "Failed to save changes"
 groupSizeHint = "Use Option size"
 hint = "Select a field to edit its properties, drag it on the page, or delete it."
 restore = "Restore"
@@ -5364,9 +5275,6 @@ multimedia = "Multimedia"
 
 [groupSigning.steps]
 back = "Back"
-completed = "Completed"
-current = "Current"
-stepLabel = "Step {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Continue"
@@ -5374,7 +5282,6 @@ invisible = "Signatures will be invisible (metadata only)"
 locationLabel = "Location:"
 preview = "Preview"
 reasonLabel = "Reason:"
-title = "Configure Signature Settings"
 visible = "Signatures will be visible on page {{page}}"
 
 [groupSigning.steps.review]
@@ -5393,7 +5300,6 @@ reason = "Reason:"
 send = "Send Signing Requests"
 signatureSettings = "Signature Settings"
 title = "Review Session Details"
-titleShort = "Review & Send"
 visibility = "Visibility:"
 visible = "Visible on page {{page}}"
 
@@ -5401,7 +5307,6 @@ visible = "Visible on page {{page}}"
 continue = "Continue"
 noFile = "Please select a single PDF file from your active files to create a signing session."
 selectedFile = "Selected document"
-title = "Select Document"
 
 [groupSigning.steps.selectParticipants]
 continue = "Continue"
@@ -5409,7 +5314,6 @@ count_one = "{{count}} participant selected"
 count_other = "{{count}} participants selected"
 label = "Select participants"
 placeholder = "Choose participants to sign..."
-title = "Choose Participants"
 
 [groupSigning.tooltip]
 header = "About Group Signing"
@@ -5647,11 +5551,6 @@ desc = "Merge multiple pages of a PDF document into a single page"
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "Multi-Page Layout"
 
-[home.pdfCommentAgent]
-desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
-tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
-title = "Add AI comments"
-
 [home.pdfOrganiser]
 tags = "organise,rearrange,reorder,arrange pages,sort,move pages,delete pages,remove pages,page management,page organiser,resequence"
 title = "Organise"
@@ -5742,7 +5641,6 @@ tags = "detect,split,photos,auto detect,detect photos,split photos,separate phot
 title = "Detect & Split Scanned Photos"
 
 [home.sharedSign]
-desc = "Request signatures from others and track signing sessions"
 title = "Shared Signing"
 
 [home.showJS]
@@ -6509,35 +6407,8 @@ yourCloudAccess = "You'll become a team member and lose owner access."
 deselectAll = "None"
 selectAll = "Check All"
 
-[pageEditor]
-dragPreviewAlt = "Dragging"
-filePosition = "Position {{position}}"
-pageLabel = "Page {{page}}"
-title = "Page Editor"
-
-[pageEditor.actions]
-deletePage = "Delete page"
-insertFileAfter = "Insert file after"
-moveLeft = "Move left"
-moveRight = "Move right"
-rotateLeft = "Rotate left"
-rotateRight = "Rotate right"
-splitAfter = "Split after"
-
-[pageEditor.emptyState]
-body = "Add files to start editing pages"
-title = "No PDF files loaded"
-
-[pageEditor.fileDropdown]
-addFile = "Add file"
-selectedCount = "{{selected}}/{{total}} files selected"
-untitled = "Untitled"
-
 [pageEditor.toolbar]
-delete = "Delete Selected"
 redo = "Redo"
-rotateLeft = "Rotate Selected Left"
-rotateRight = "Rotate Selected Right"
 undo = "Undo"
 
 [pageExtracter]
@@ -6994,7 +6865,6 @@ perYear = "/yr"
 reductionNote = "The lower capacity starts at your next renewal. Until then, you can use your current allowance. Existing users stay; new users are blocked if you are over capacity when the change takes effect."
 renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
 reviewChange = "Review change in Stripe"
-roundsTo = "rounds to {{users}}"
 subheading = "Covers everyone you invite, in blocks of {{users}} users."
 subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
 usersLabel = "Users"
@@ -7029,24 +6899,6 @@ totalSeats_other = "Total ({{count}} seats)"
 
 [payment.upgradeTeam]
 title = "Get Stirling Team"
-
-[pdfCommentAgent]
-submit = "Generate comments"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Please describe what the AI should comment on"
-failed = "Failed to generate comments"
-tooLong = "Prompt is too long (maximum {{max}} characters)"
-
-[pdfCommentAgent.prompt]
-label = "What should the AI comment on?"
-placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
-
-[pdfCommentAgent.results]
-title = "Commented PDF"
-
-[pdfCommentAgent.settings]
-title = "Comment instructions"
 
 [pdfOrganiser]
 placeholder = "(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)"
@@ -7088,7 +6940,6 @@ saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 unsaved = "(unsaved)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Annotation text - not page text, so it can't be edited here"
@@ -7101,10 +6952,6 @@ cancel = "Cancel"
 confirm = "Discard and open"
 hint = "Cancel, then Save PDF to keep them in your workspace first."
 title = "Discard unsaved changes?"
-
-[pdfTextEditor.drop]
-hint = "Releases on the editor stage replace any open document."
-title = "Drop a PDF to open"
 
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
@@ -7239,7 +7086,6 @@ done = "Done"
 download = "Save and download"
 find = "Find"
 lock = "Lock"
-openPdf = "Open a PDF"
 panelHint = "Editing happens in the Workspace view. Tap text on the page to change it."
 save = "Save"
 style = "Style"
@@ -7247,17 +7093,11 @@ tapToPlace = "Tap the page where the text should go"
 unlock = "Unlock"
 
 [pdfTextEditor.pageView]
-pageNumber = "Page {{page}}"
 renderFailed = "Failed to render page"
 
 [pdfTextEditor.password]
-cancel = "Cancel"
 incorrect = "Incorrect password - try again."
 label = "Password"
-open = "Open"
-protected = "This PDF is password-protected."
-protectedNamed = "\"{{fileName}}\" is password-protected."
-title = "Password required"
 
 [pdfTextEditor.rulers]
 guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
@@ -7288,7 +7128,6 @@ addTable = "Add table"
 addText = "Add text"
 clickPageToAddTable = "Click page to add a table"
 clickPageToAddText = "Click page to add text"
-document = "Document"
 group = "Group"
 groupingAuto = "Auto"
 groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
@@ -7316,13 +7155,6 @@ auto = "Automatic"
 enable = "Check spelling as you type"
 language = "Dictionary language"
 
-[pdfTextEditor.stage]
-loadingDocument = "Loading document"
-loadingProgress = "Loading progress"
-noDocument = "No document loaded."
-pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
-renderingPreview = "Rendering preview"
-
 [pdfTextEditor.table]
 addColumn = "Add column"
 addRow = "Add row"
@@ -7331,7 +7163,6 @@ deleteColumn = "Delete column"
 deleteRow = "Delete row"
 done = "Done"
 doneHint = "Stop editing this as a table"
-edit = "Edit"
 editHint = "Edit as a table - type in cells, add or remove rows and columns"
 move = "Move"
 moveTable = "Drag to move the whole table"
@@ -7406,13 +7237,6 @@ title = "Preview Variance"
 [pdfTextEditor.tooltip.textFocus]
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
-
-[pdfTextEditor.zoom]
-fit = "Fit"
-fitToWidth = "Fit to width"
-in = "Zoom in"
-out = "Zoom out"
-reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDF to CSV"
@@ -7658,8 +7482,6 @@ triggerImport = "Runs on import"
 [policies.enforcement]
 applying = "Applying {{names}}"
 applyingProgress = "Applying {{names}} ({{done}} of {{total}})"
-exportFailureBody = "Security policies couldn't be applied. Files were exported as-is."
-exportFailureTitle = "Exported without enforcement"
 failureBody = "Some policies couldn't be applied to {{failures}} of {{total}} file(s)."
 failureTitle = "Exported without full enforcement"
 printPolicyAppliedBody = "This PDF was updated to meet a policy. Review the changes, then print again."
@@ -7975,9 +7797,6 @@ limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
 limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
 [portal.billing.chip]
-invoices = "Invoices"
-nav = "Sections"
-payment = "Payment"
 plan = "Plan"
 procurement = "Procurement"
 usage = "Usage"
@@ -9021,7 +8840,6 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Native builds for your distribution."
-guideBtn = "View Linux install options"
 note = "64-bit x86 builds. AppImage runs on most other distros."
 tagline = "Native desktop app for your distro"
 title = "Linux"
@@ -10144,7 +9962,6 @@ cloud = "Drive · Box · S3"
 email = "Email intake"
 
 [portal.procurement]
-subtitle = "Get your team evaluated, contracted and onboarded. Every document in one place."
 title = "Procurement"
 
 [portal.procurement.agreement]
@@ -10162,7 +9979,6 @@ loadError = "Could not load the agreement. Please try again."
 loading = "Loading the agreement..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "Request changes"
-scrollHint = "Scroll to review"
 signatory = "Signatory name"
 signatoryPlaceholder = "Full name"
 signatoryTitle = "Signatory title"
@@ -10210,7 +10026,6 @@ qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
 region = "County / region"
 regionPlaceholder = "Greater London"
-running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
 s1Sub = "Your team, and the PDFs you expect to run each year."
 s1Title = "How much will you process?"
 s2Sub = "Longer terms discount the rate; your service level sets support."
@@ -10275,15 +10090,12 @@ title = "Something went wrong"
 [portal.procurement.hero]
 barAria = "Stage {{current}} of {{total}}"
 ctaAgreement = "Review & sign agreement"
-ctaExploring = "Set up your trial"
 ctaQuote = "Review your quote"
 ctaReviewQuote = "Review quote"
 ctaTrial = "Build your quote"
-documents = "Documents"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Invite teammates"
-licenseKey = "Licence key"
 liveSub = "Your organisation is provisioned and your licence is active."
 liveTitle = "You are live on Stirling Enterprise"
 next = "Next: {{stage}}"
@@ -10332,19 +10144,10 @@ downloadError = "Could not generate the offline licence file just yet — please
 downloadOffline = "Download offline licence (.lic)"
 hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
 label = "Your licence key"
-subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
-title = "Your licence key"
 trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
-
-[portal.procurement.link]
-cta = "Link account"
-description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote and start billing. Link an account to start."
-eyebrow = "Enterprise"
-title = "Link your account to begin"
 
 [portal.procurement.live]
 description = "Your subscription is active and your licence is issued. Your team is provisioned and billing has started."
-eyebrow = "Live"
 title = "You're live on Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10352,10 +10155,7 @@ downloadError = "Could not download the quote PDF just yet — please try again 
 
 [portal.procurement.payment]
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
-downloadAgreement = "Download signed agreement"
 downloadInvoice = "Download invoice"
-eyebrow = "Payment"
-title = "Subscription created"
 viewInvoice = "View & pay invoice"
 
 [portal.procurement.review]
@@ -10407,7 +10207,6 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Extending adds 7 days and notifies your solutions engineer."
 bodyMaxed = "You have used all your extensions — talk to your solutions engineer if you need more time."
-cancel = "Cancel trial"
 extend = "Extend 7 days"
 maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."
@@ -11254,7 +11053,6 @@ text = "Specify which pages to remove from your PDF. You can select individual p
 title = "Page Selection"
 
 [removePassword]
-desc = "Remove password protection from your PDF document."
 submit = "Remove Password"
 tags = "secure,Decrypt,security,unpassword,delete password"
 title = "Remove Password"
@@ -11265,13 +11063,9 @@ failed = "An error occurred while removing the password from the PDF."
 [removePassword.password]
 label = "Current Password"
 placeholder = "Enter current password"
-stepTitle = "Remove Password"
 
 [removePassword.results]
 title = "Updated PDFs"
-
-[removePassword.tooltip]
-description = "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
 
 [reorganizePages]
 submit = "Reorganize Pages"
@@ -11972,26 +11766,13 @@ description = "Enter the full URL of your self-hosted Stirling PDF server"
 label = "Server URL"
 
 [sharedSign]
-backToSessions = "Back to sessions"
-createdOn = "Created {{date}}"
 disabledBody = "Collaborative signing isn't enabled on this server."
-disabledTitle = "Not enabled"
-due = "Due {{date}}"
 filterDeclined = "Declined"
-filterMine = "Mine"
 filterOverdue = "Overdue"
 filterSigned = "Signed"
-fromOwner = "From {{owner}}"
-newRequest = "Request signatures"
-signedCount = "{{signed}}/{{total}} signed"
-
-[sharedSign.empty]
-active = "No pending sign requests or active sessions"
-completed = "No completed sessions"
 
 [sharedSign.tab]
 active = "Active"
-completed = "Completed"
 
 [showJS]
 done = "JavaScript extracted"
@@ -12344,7 +12125,6 @@ title = "Signature Visibility"
 [signRequest]
 declined = "Sign request declined"
 fetchFailed = "Failed to load sign request"
-signed = "Document signed successfully"
 
 [signSession]
 created = "Signing request sent"
@@ -12644,7 +12424,6 @@ noLinks = "No active share links yet."
 noSharedUsers = "No users have access yet."
 openInApp = "Open in Stirling PDF"
 ownerLabel = "Owner"
-ownerUnknown = "Unknown"
 removeLink = "Remove link"
 removeUser = "Remove"
 requiresLogin = "This shared file requires login."
@@ -12824,7 +12603,6 @@ toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "This tool is unavailable on your server."
-endpointUnavailableClickable = "Not available in this mode. Click to sign in."
 filesLoading = "Files are still loading, please wait."
 filesLoadingProgress = "{{loaded}} / {{total}} files loading..."
 invalidParams = "Fill in the required settings."
@@ -13664,16 +13442,12 @@ annotations = "Annotations"
 applyRedactionsFirst = "Apply redactions first"
 closeAll = "Close All Files"
 closePdf = "Close PDF"
-deleteSelected = "Delete Selected Pages"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
 exitRedaction = "Exit Redaction Mode"
-exportAll = "Export PDF"
-exportSelected = "Export Selected Pages"
 formFill = "Fill Form"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"
-multiTool = "Multi-Tool"
 panMode = "Pan Mode"
 print = "Print PDF"
 readAloud = "Read Aloud"
@@ -13687,7 +13461,6 @@ rulerSettings = "Scale Settings"
 save = "Save"
 saveAll = "Save All"
 saveAs = "Save As"
-saveChanges = "Save Changes"
 search = "Search PDF"
 selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
