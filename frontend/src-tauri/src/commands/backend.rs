@@ -80,11 +80,22 @@ fn check_backend_status() -> Result<(), String> {
     Ok(())
 }
 
+// Named so a card PIN prompt reads "Stirling PDF", not "java". Must match
+// frontend/scripts/stage-mac-launcher.mjs, which builds it.
+const MAC_LAUNCHER_NAME: &str = "Stirling PDF";
+
 // Find the bundled JRE and return the java executable path
 fn find_bundled_jre(resource_dir: &Path) -> Result<PathBuf, String> {
     let jre_dir = resource_dir.join("runtime").join("jre");
+    let mac_launcher = jre_dir
+        .join(format!("{MAC_LAUNCHER_NAME}.app"))
+        .join("Contents")
+        .join("MacOS")
+        .join(MAC_LAUNCHER_NAME);
     let java_executable = if cfg!(windows) {
         jre_dir.join("bin").join("java.exe")
+    } else if cfg!(target_os = "macos") && mac_launcher.is_file() {
+        mac_launcher
     } else {
         jre_dir.join("bin").join("java")
     };
@@ -111,11 +122,10 @@ fn jpdfium_native_dir(java_path: &Path) -> Option<PathBuf> {
         "x86_64" => "x64",
         other => other,
     };
-    let dir = java_path
-        .parent()?
-        .parent()?
-        .join("natives")
-        .join(format!("{os}-{arch}"));
+    let jre = java_path
+        .ancestors()
+        .find(|dir| dir.join("release").is_file())?;
+    let dir = jre.join("natives").join(format!("{os}-{arch}"));
     dir.join(bridge).is_file().then_some(dir)
 }
 
@@ -861,6 +871,13 @@ mod tests {
         let jre =
             std::env::temp_dir().join(format!("stirling-jpdfium-natives-{}", std::process::id()));
         let java = jre.join("bin").join("java");
+        let mac_launcher = jre
+            .join("Stirling PDF.app")
+            .join("Contents")
+            .join("MacOS")
+            .join("Stirling PDF");
+        std::fs::create_dir_all(&jre).unwrap();
+        std::fs::write(jre.join("release"), b"").unwrap();
         assert_eq!(super::jpdfium_native_dir(&java), None);
 
         let arch = if cfg!(target_arch = "aarch64") {
@@ -877,7 +894,8 @@ mod tests {
         std::fs::create_dir_all(&natives).unwrap();
         std::fs::write(natives.join(bridge), b"").unwrap();
 
-        assert_eq!(super::jpdfium_native_dir(&java), Some(natives));
+        assert_eq!(super::jpdfium_native_dir(&java), Some(natives.clone()));
+        assert_eq!(super::jpdfium_native_dir(&mac_launcher), Some(natives));
         let _ = std::fs::remove_dir_all(&jre);
     }
 }
