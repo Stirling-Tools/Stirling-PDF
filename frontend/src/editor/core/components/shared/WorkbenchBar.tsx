@@ -507,6 +507,36 @@ export default function WorkbenchBar({
     );
   };
 
+  // The edge groups and the centred lanes. A desktop row holds them in one
+  // element its layout can rearrange; a phone's row scrolls them as one strip.
+  const lanes = (
+    <>
+      {!isMobile && (
+        <div className="workbench-bar-row-start">
+          {rowStartButtons.map(renderRowButton)}
+        </div>
+      )}
+      <div className="workbench-bar-center-scroll">
+        {/* A phone's row scrolls, so its edge controls scroll with it. */}
+        {isMobile && rowStartButtons.map(renderRowButton)}
+        {sectionsWithButtons.map(
+          ({ section, buttons: sectionButtons }, idx) => (
+            <React.Fragment key={section}>
+              {idx > 0 && <div className="workbench-bar-divider" />}
+              {sectionButtons.map(renderRowButton)}
+            </React.Fragment>
+          ),
+        )}
+        {isMobile && rowEndButtons.map(renderRowButton)}
+      </div>
+      {!isMobile && (
+        <div className="workbench-bar-row-end">
+          {rowEndButtons.map(renderRowButton)}
+        </div>
+      )}
+    </>
+  );
+
   // Tool buttons - second row, only rendered when buttons exist.
   const toolRow =
     sectionsWithButtons.length > 0 ? (
@@ -517,29 +547,7 @@ export default function WorkbenchBar({
             : ""
         }`}
       >
-        {!isMobile && (
-          <div className="workbench-bar-row-start">
-            {rowStartButtons.map(renderRowButton)}
-          </div>
-        )}
-        <div className="workbench-bar-center-scroll">
-          {/* A phone's row scrolls, so its edge controls scroll with it. */}
-          {isMobile && rowStartButtons.map(renderRowButton)}
-          {sectionsWithButtons.map(
-            ({ section, buttons: sectionButtons }, idx) => (
-              <React.Fragment key={section}>
-                {idx > 0 && <div className="workbench-bar-divider" />}
-                {sectionButtons.map(renderRowButton)}
-              </React.Fragment>
-            ),
-          )}
-          {isMobile && rowEndButtons.map(renderRowButton)}
-        </div>
-        {!isMobile && (
-          <div className="workbench-bar-row-end">
-            {rowEndButtons.map(renderRowButton)}
-          </div>
-        )}
+        {isMobile ? lanes : <div className="workbench-bar-lanes">{lanes}</div>}
         <WorkbenchBarToolbarHandle
           isMobile={isMobile}
           expanded={mobileToolsExpanded}

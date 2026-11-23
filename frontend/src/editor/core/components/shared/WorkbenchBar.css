@@ -229,9 +229,21 @@
   min-width: 0;
   max-width: calc(100% + 16px);
   margin-inline: -8px;
-  /* Edge groups in equal outer columns keep the lanes centred on the row
-     while there is room, and push the lanes aside rather than overlap them
-     when there is not. */
+  display: flex;
+  align-items: center;
+  /* The extra 8px each side absorbs the negative margin. */
+  padding: 4px 14px;
+  /* Lets the row's controls fit themselves to its width. */
+  container: workbench-tool-row / inline-size;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+/* Edge groups in equal outer columns keep the lanes centred on the row
+   while there is room, and push the lanes aside rather than overlap them
+   when there is not. */
+.workbench-bar-lanes {
+  flex: 1 1 auto;
+  min-width: 0;
   display: grid;
   grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(
       max-content,
@@ -239,11 +251,24 @@
     );
   align-items: center;
   column-gap: 8px;
-  /* The extra 8px each side absorbs the negative margin. */
-  padding: 4px 14px;
-  /* Lets the row's controls fit themselves to its width. */
-  container: workbench-tool-row / inline-size;
-  border-top: 1px solid var(--c-border-subtle);
+}
+
+/* Once the labels drop to icons (the same width as ViewerBarControls.css),
+   every icon, edge groups included, is spread evenly across the row. */
+@container workbench-tool-row (max-width: 820px) {
+  .workbench-bar-lanes {
+    display: flex;
+    justify-content: space-between;
+    column-gap: 2px;
+  }
+  .workbench-bar-lanes > .workbench-bar-row-start,
+  .workbench-bar-lanes > .workbench-bar-center-scroll,
+  .workbench-bar-lanes > .workbench-bar-row-end {
+    display: contents;
+  }
+  .workbench-bar-lanes .workbench-bar-divider {
+    display: none;
+  }
 }
 
 .workbench-bar-center-scroll {
