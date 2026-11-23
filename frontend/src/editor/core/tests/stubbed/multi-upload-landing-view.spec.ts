@@ -41,6 +41,39 @@ test("several files from the landing page open in Active Files", async ({
   expect(viewerOpened).toBe(false);
 });
 
+// Locked PDFs join the workbench only once unlocked, after the upload itself
+// has finished, so these arrive one at a time however many were picked.
+for (const [label, files] of [
+  ["one of them needs", ["encrypted-annotations.pdf", "sample.pdf"]],
+  ["all of them need", ["encrypted-annotations.pdf", "encrypted-links.pdf"]],
+] as const) {
+  test(`several files open in Active Files when ${label} a password`, async ({
+    page,
+  }) => {
+    const locked = files.filter((f) => f.startsWith("encrypted")).length;
+    await landingInput(page).setInputFiles(
+      files.map((f) => path.join(FIXTURES, f)),
+    );
+    for (let i = 0; i < locked; i++) {
+      const password = page
+        .getByRole("dialog")
+        .locator('input[type="password"]');
+      await expect(password).toBeVisible({ timeout: 30_000 });
+      await password.fill("annotation-test");
+      await password.press("Enter");
+      await expect(password).toBeHidden({ timeout: 30_000 });
+    }
+
+    await expect(page.locator(".file-sidebar-file-item")).toHaveCount(
+      files.length,
+      { timeout: 15_000 },
+    );
+    await expect(
+      page.getByRole("radio", { name: /Active Files/i }),
+    ).toBeChecked();
+  });
+}
+
 test("one file from the landing page opens in the viewer", async ({ page }) => {
   await landingInput(page).setInputFiles(SAMPLES[0]);
   await expect(page.getByRole("radio", { name: /Viewer/i })).toBeChecked({

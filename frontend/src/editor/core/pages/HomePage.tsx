@@ -338,20 +338,36 @@ export default function HomePage() {
   // Startup/open transition behavior:
   // - opening exactly 1 file from empty -> viewer (unless already in fileEditor)
   // - opening 2+ files from empty -> fileEditor
-  // Files from one upload are published one at a time, so a multi-file import
-  // is judged once it finishes, against the count from before it started.
-  const importingSeveral = useBulkAddProgress().total > 1;
+  // Files from one upload are published one at a time, and locked PDFs only
+  // once unlocked, so the published count can't tell one file from several.
+  // The upload's own size decides instead, and the view waits for it to end.
+  const importTotal = useBulkAddProgress().total;
+  const importingSeveral = importTotal > 1;
+  const severalIntoEmptyRef = useRef(false);
+  useEffect(() => {
+    if (importTotal === 0) return;
+    severalIntoEmptyRef.current =
+      importTotal > 1 && prevFileCountRef.current === 0;
+  }, [importTotal]);
   useEffect(() => {
     if (importingSeveral) return;
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
-    const action = getStartupNavigationAction(
+    let action = getStartupNavigationAction(
       prevCount,
       currentCount,
       selectedToolKey,
       navigationState.workbench,
     );
+    if (
+      action?.workbench === "viewer" &&
+      prevCount === 0 &&
+      severalIntoEmptyRef.current
+    ) {
+      action = { workbench: "fileEditor" };
+    }
+    if (currentCount > 0) severalIntoEmptyRef.current = false;
 
     // A session restore fills an empty workbench too, but it already knows which view the user
     // left - so it wins over this heuristic rather than being overwritten by it.
