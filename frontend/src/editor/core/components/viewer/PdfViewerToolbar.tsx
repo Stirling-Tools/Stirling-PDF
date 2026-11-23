@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useRef } from "react";
+import { Fragment, useId, useState, useEffect, useRef } from "react";
 import { Paper, Group, Menu, NumberInput, TextInput } from "@mantine/core";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,10 @@ import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import "@editor/components/viewer/PdfViewerToolbar.css";
+import {
+  SelectedNote,
+  toggleProps,
+} from "@editor/components/viewer/ViewerBarControls";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
@@ -156,11 +160,20 @@ export function PdfViewerToolbar({
   // The menu shows a folded tool that is on, as the tool's own button would.
   const activeFoldedTool = foldingButtons.find((button) => button.active);
   const toolsLabel = t("viewer.tools", "Tools");
+  const selectedNoteId = useId();
 
   // A page tool edits pages upright, so the view stays unrotated while it is open.
   const rotateDisabled = useViewerPageTool() != null;
   const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
   const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
+  const rotations = [
+    ["rotate-ccw", rotateLeftLabel, () => rotationActions.rotateBackward()],
+    ["rotate-cw", rotateRightLabel, () => rotationActions.rotateForward()],
+  ] as const;
+  // Rotation joins the Tools menu when the bar narrows, so it stays reachable.
+  const rotateClass = firstFoldingId
+    ? "pdf-viewer-toolbar__tool--folds"
+    : "pdf-viewer-toolbar-wide-only";
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
@@ -361,29 +374,16 @@ export function PdfViewerToolbar({
 
       {/* Hairline between the groups, as the rails divide theirs. */}
       {!isPhone && (
-        <div className="pdf-viewer-toolbar__divider pdf-viewer-toolbar-wide-only" />
+        <div className={`pdf-viewer-toolbar__divider ${rotateClass}`} />
       )}
 
       {!isPhone &&
-        (
-          [
-            [
-              "rotate-ccw",
-              rotateLeftLabel,
-              () => rotationActions.rotateBackward(),
-            ],
-            [
-              "rotate-cw",
-              rotateRightLabel,
-              () => rotationActions.rotateForward(),
-            ],
-          ] as const
-        ).map(([icon, label, rotate]) => (
+        rotations.map(([icon, label, rotate]) => (
           <Tooltip key={icon} content={label} position="top" arrow>
             <ActionIcon
               variant="tertiary"
               size={buttonSize}
-              className="pdf-viewer-toolbar-wide-only"
+              className={rotateClass}
               onClick={() => rotate()}
               disabled={rotateDisabled}
               style={{ minWidth: buttonMinWidth }}
@@ -422,16 +422,15 @@ export function PdfViewerToolbar({
                         </ActionIcon>
                       </Menu.Target>
                       <Menu.Dropdown>
+                        <SelectedNote id={selectedNoteId} />
                         {foldingButtons.map((tool) => (
                           <Menu.Item
                             key={tool.id}
                             leftSection={tool.icon}
-                            rightSection={
-                              tool.active ? (
-                                <Icon name="check" size="1rem" />
-                              ) : null
-                            }
-                            data-checked={tool.active || undefined}
+                            {...toggleProps(
+                              Boolean(tool.active),
+                              selectedNoteId,
+                            )}
                             disabled={Boolean(
                               tool.disabled ||
                               allButtonsDisabled ||
@@ -440,6 +439,17 @@ export function PdfViewerToolbar({
                             onClick={() => actions[tool.id]?.()}
                           >
                             {tool.ariaLabel}
+                          </Menu.Item>
+                        ))}
+                        <Menu.Divider />
+                        {rotations.map(([icon, label, rotate]) => (
+                          <Menu.Item
+                            key={icon}
+                            leftSection={<Icon name={icon} size={18} />}
+                            disabled={rotateDisabled}
+                            onClick={() => rotate()}
+                          >
+                            {label}
                           </Menu.Item>
                         ))}
                       </Menu.Dropdown>

@@ -5,6 +5,7 @@ import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { Tooltip, type TooltipProps } from "@editor/components/shared/Tooltip";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { useTranslation } from "react-i18next";
 import "@editor/components/viewer/ViewerBarControls.css";
 
 interface BarButtonProps {
@@ -167,7 +168,25 @@ export function BarMenu({
   );
 }
 
-/** Trailing slot for a toggle in a menu: a tick while it is on. */
-export function toggleMark(on: boolean) {
-  return on ? <Icon name="check" size="1rem" /> : null;
+/**
+ * Props for a toggle in a menu: a tick while it is on, and a description
+ * pointing at a SelectedNote, since Mantine's menu items keep the plain
+ * menuitem role and so cannot carry aria-checked.
+ */
+export function toggleProps(on: boolean, selectedNoteId: string) {
+  return {
+    rightSection: on ? <Icon name="check" size="1rem" /> : null,
+    "data-checked": on || undefined,
+    "aria-describedby": on ? selectedNoteId : undefined,
+  };
+}
+
+/** The hidden "Selected" text the menu's toggles that are on point to. */
+export function SelectedNote({ id }: { id: string }) {
+  const { t } = useTranslation();
+  return (
+    <span id={id} hidden>
+      {t("viewer.menuSelected", "Selected")}
+    </span>
+  );
 }

@@ -29,6 +29,10 @@ test("ctrl + zooms the document after a click on the pages, and not after one on
       if (event.key === "=") seen.push(event.defaultPrevented);
     });
   });
+  const keysSeen = () =>
+    page.evaluate(
+      () => (window as unknown as { zoomKeys: boolean[] }).zoomKeys.length,
+    );
   const lastKeyTaken = () =>
     page.evaluate(() => {
       const seen = (window as unknown as { zoomKeys: boolean[] }).zoomKeys;
@@ -47,8 +51,9 @@ test("ctrl + zooms the document after a click on the pages, and not after one on
 
   await page.locator(".pdf-viewer-toolbar").click({ position: { x: 5, y: 5 } });
   before = await zoom.inputValue();
+  const seenBefore = await keysSeen();
   await page.keyboard.press("Control+Equal");
-  await page.waitForTimeout(500);
+  await expect.poll(keysSeen).toBe(seenBefore + 1);
   await expect(zoom).toHaveValue(before);
   expect(await lastKeyTaken()).toBe(false);
 });

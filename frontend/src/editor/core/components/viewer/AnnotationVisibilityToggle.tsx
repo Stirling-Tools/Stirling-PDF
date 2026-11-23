@@ -5,7 +5,7 @@ import { useSignature } from "@editor/contexts/SignatureContext";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 
 /** Tools that place marks on the pages, which must stay visible meanwhile. */
-const DRAWING_TOOLS = new Set(["sign", "addImage", "addText"]);
+const DRAWING_TOOLS = new Set(["sign", "addImage", "addText", "annotate"]);
 
 /** Shows or hides the document's annotations, in the viewer only. */
 export function AnnotationVisibilityToggle({

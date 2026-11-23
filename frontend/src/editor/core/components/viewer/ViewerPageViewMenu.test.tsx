@@ -113,10 +113,10 @@ describe("ViewerPageViewMenu", () => {
     await openMenu();
     expect(
       await screen.findByRole("menuitem", { name: "viewer.fitWidth" }),
-    ).toHaveAttribute("data-checked", "true");
+    ).toHaveAccessibleDescription("viewer.menuSelected");
     expect(
       await screen.findByRole("menuitem", { name: "viewer.fitPage" }),
-    ).not.toHaveAttribute("data-checked");
+    ).not.toHaveAccessibleDescription();
   });
 
   it("switches to two pages", async () => {

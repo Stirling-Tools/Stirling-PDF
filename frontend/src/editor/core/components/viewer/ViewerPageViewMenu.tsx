@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
@@ -7,7 +7,8 @@ import { Icon, type IconName } from "@editor/ui/Icon";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   BarMenu,
-  toggleMark,
+  toggleProps,
+  SelectedNote,
 } from "@editor/components/viewer/ViewerBarControls";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 import type {
@@ -72,6 +73,8 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
     ["sepia", t("workbenchBar.pageColourSepia", "Sepia")],
   ];
 
+  const selectedNoteId = useId();
+
   return (
     <BarMenu
       icon="columns-2"
@@ -79,11 +82,11 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
       disabled={disabled}
       testId="viewer-page-view-menu"
     >
+      <SelectedNote id={selectedNoteId} />
       <Menu.Label>{t("workbenchBar.pageLayout", "Layout")}</Menu.Label>
       <Menu.Item
         leftSection={<Icon name="file-text" size="1rem" />}
-        rightSection={toggleMark(!isDualPage)}
-        data-checked={!isDualPage || undefined}
+        {...toggleProps(!isDualPage, selectedNoteId)}
         disabled={singlePageOnly}
         onClick={() => isDualPage && spreadActions.toggleSpreadMode()}
       >
@@ -91,8 +94,7 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
       </Menu.Item>
       <Menu.Item
         leftSection={<Icon name="columns-2" size="1rem" />}
-        rightSection={toggleMark(isDualPage)}
-        data-checked={isDualPage || undefined}
+        {...toggleProps(isDualPage, selectedNoteId)}
         disabled={singlePageOnly}
         onClick={() => !isDualPage && spreadActions.toggleSpreadMode()}
       >
@@ -101,8 +103,7 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
       {/* From one page at a time, this goes straight to pairs with the cover alone. */}
       <Menu.Item
         leftSection={<Icon name="book" size="1rem" />}
-        rightSection={toggleMark(isCoverPage)}
-        data-checked={isCoverPage || undefined}
+        {...toggleProps(isCoverPage, selectedNoteId)}
         disabled={singlePageOnly}
         onClick={() =>
           spreadActions.setSpreadMode(
@@ -118,8 +119,10 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
         <Menu.Item
           key={setting}
           leftSection={<Icon name={icon} size="1rem" />}
-          rightSection={toggleMark(preferences.defaultViewerZoom === setting)}
-          data-checked={preferences.defaultViewerZoom === setting || undefined}
+          {...toggleProps(
+            preferences.defaultViewerZoom === setting,
+            selectedNoteId,
+          )}
           onClick={() => chooseDefaultZoom(setting, level)}
         >
           {label}
@@ -135,8 +138,7 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
               className={`viewer-page-colour-swatch viewer-page-colour-swatch--${mode}`}
             />
           }
-          rightSection={toggleMark(pdfRenderMode === mode)}
-          data-checked={pdfRenderMode === mode || undefined}
+          {...toggleProps(pdfRenderMode === mode, selectedNoteId)}
           onClick={() => setPdfRenderMode(mode)}
         >
           {label}

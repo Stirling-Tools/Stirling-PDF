@@ -5348,7 +5348,7 @@ title = "You're using Stirling PDF as a guest!"
 [home.addAttachments]
 desc = "Add or remove embedded files (attachments) to/from a PDF"
 tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
-title = "Manage Attachments"
+title = "Add Attachments"
 
 [home.addImage]
 desc = "Adds a image onto a set location on the PDF"
@@ -5505,7 +5505,7 @@ title = "Flatten"
 
 [home.formFill]
 desc = "Fill PDF form fields interactively with a visual editor"
-title = "Form Editor"
+title = "Fill Form"
 
 [home.getPdfInfo]
 desc = "Grabs any and all information possible on PDFs"
@@ -13445,7 +13445,7 @@ closePdf = "Close PDF"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
 exitRedaction = "Exit Redaction Mode"
-formFill = "Form Editor"
+formFill = "Fill Form"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"
 panMode = "Pan Mode"

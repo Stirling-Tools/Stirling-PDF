@@ -32,6 +32,10 @@ test("a narrow page bar folds its tools into a menu and stays on one row", async
   expect(await oneRow()).toBe(true);
 
   await menu.click();
+  // Rotation folds in with the tools rather than leaving the narrow bar.
+  await expect(
+    page.getByRole("menuitem", { name: "Rotate Left" }),
+  ).toBeVisible();
   await page.getByRole("menuitem", { name: "Pan Mode" }).click();
   await expect(
     page.getByRole("menuitem", { name: "Pan Mode" }),

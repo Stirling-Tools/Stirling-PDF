@@ -5,7 +5,8 @@ import { userEvent, within } from "storybook/test";
 import {
   BarButton,
   BarMenu,
-  toggleMark,
+  toggleProps,
+  SelectedNote,
 } from "@editor/components/viewer/ViewerBarControls";
 
 /** The tool row's size container; its labels drop to icons at 820px or less. */
@@ -70,9 +71,14 @@ export const Menu_: Story = {
   render: () => (
     <div style={{ minHeight: "12rem" }}>
       <BarMenu icon="columns-2" label="View">
+        <SelectedNote id="story-selected" />
         <Menu.Label>Layout</Menu.Label>
-        <Menu.Item rightSection={toggleMark(true)}>Single page</Menu.Item>
-        <Menu.Item rightSection={toggleMark(false)}>Dual page</Menu.Item>
+        <Menu.Item {...toggleProps(true, "story-selected")}>
+          Single page
+        </Menu.Item>
+        <Menu.Item {...toggleProps(false, "story-selected")}>
+          Dual page
+        </Menu.Item>
       </BarMenu>
     </div>
   ),

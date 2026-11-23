@@ -539,7 +539,9 @@ export default function WorkbenchBar({
 
   // Tool buttons - second row, only rendered when buttons exist.
   const toolRow =
-    sectionsWithButtons.length > 0 ? (
+    sectionsWithButtons.length > 0 ||
+    rowStartButtons.length > 0 ||
+    rowEndButtons.length > 0 ? (
       <div
         className={`workbench-bar-center${
           isMobile && mobileToolsExpanded
