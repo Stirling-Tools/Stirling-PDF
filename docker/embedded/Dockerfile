@@ -165,7 +165,7 @@ ENV VERSION_TAG=$VERSION_TAG \
 
 # Metadata labels
 LABEL org.opencontainers.image.title="Stirling-PDF" \
-      org.opencontainers.image.description="Full version with Calibre, LibreOffice, Tesseract, OCRmyPDF" \
+      org.opencontainers.image.description="Full version with Tesseract, OCRmyPDF" \
       org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="Stirling-Tools" \

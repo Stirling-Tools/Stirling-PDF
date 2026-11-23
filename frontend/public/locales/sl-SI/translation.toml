@@ -647,18 +647,16 @@ description = "Največji DPI za obdelavo slik (0 = neomejeno)"
 label = "Največji DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Konfigurirajte omejitve sej in časovne omejitve za posamezen izvajalnik procesov"
 ghostscript = "Ghostscript"
 installApp = "Namesti aplikacijo"
 label = "Omejitve izvajalnika procesov"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF v HTML"
+officeConvert = "Pretvorba Office"
+officeConvertSessionLimit = "Največje število sočasnih pretvorb; 0 izbere omejitev glede na CPU-je in pomnilnik"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Največje število sočasnih instanc"
@@ -667,10 +665,6 @@ label = "Omejitev sej"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Najdaljši čas izvajanja"
 label = "Časovna omejitev (minute)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert je v različici beta. Omogoča boljše pretvorbe, hitreje in z manj pomnilnika kot LibreOffice."
-label = "Uporabi novo pretvorbo Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Konfigurirajte shranjevanje in vedenje čiščenja začasnih datotek"
@@ -688,11 +682,6 @@ label = "Interval čiščenja (minute)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Ali naj se čisti širši sistemski začasni imenik (uporabljajte previdno)"
 label = "Čiščenje sistemskega začasnega imenika"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Imenik za začasne datoteke LibreOffice (pustite prazno za privzeto: baseTmpDir/libreoffice)"
-label = "Začasni imenik LibreOffice"
-placeholder = "Privzeto: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Največja starost v urah pred čiščenjem začasnih datotek"
@@ -1300,17 +1289,6 @@ label = "Privzeti proizvajalec"
 [admin.settings.general.customPaths]
 description = "Konfigurirajte poti datotečnega sistema po meri za obdelavo pipeline in zunanja orodja"
 label = "Poti po meri"
-
-[admin.settings.general.customPaths.operations]
-label = "Poti zunanjih orodij"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Pot do LibreOffice unoconvert za pretvorbe dokumentov (pustite prazno za privzeto: /opt/venv/bin/unoconvert)"
-label = "Izvedljiva datoteka Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Pot do izvedljive datoteke WeasyPrint za pretvorbo HTML v PDF (pustite prazno za privzeto: /opt/venv/bin/weasyprint)"
-label = "Izvedljiva datoteka WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Imeniki pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Naslov dokumenta"
 pdfUaTitleHelp = "Bralnik ga prikaže namesto imena datoteke. Če ostane prazno, se uporabi prvi naslov."
 selectSourceFormatFirst = "Najprej izberite izvorni format"
 settings = "Nastavitve"
+signInToUse = "Prijavite se za uporabo"
 single = "Posamezna"
 sourceFormatPlaceholder = "Izvorni format"
-stirlingOfficeConvert = "Uporabi Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Boljše in hitrejše pretvorbe z manj pomnilnika. Izklopite, da uporabite standardni pretvornik."
 strictMode = "Strogi način"
 strictModeDesc = "Napaka, če pretvorba ni popolna (uporablja preverjanje VeraPDF)"
 svgPdfOptions = "Možnosti SVG v PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Možnosti Splet v PDF"
 zoomLevel = "Raven povečave"
 
 [convert.ebookOptions]
-embedAllFonts = "Vdelaj vse pisave"
-embedAllFontsDesc = "Vdelaj vse pisave iz e-knjige v ustvarjeni PDF"
 includePageNumbers = "Vključi številke strani"
 includePageNumbersDesc = "Dodaj številke strani v ustvarjeni PDF"
 includeTableOfContents = "Vključi kazalo"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Dekorativna slika"
 description = "Opis slike"
 descriptionInfo = "Bralniki zaslona to preberejo namesto slike."
 encrypted = "Oznak ni mogoče urejati v šifrirani datoteki"
+figureDescription = "Opis slike"
+figureDescriptionInfo = "Bralniki zaslona to preberejo namesto slike."
 formFieldDescription = "Opis polja"
+formulaDescription = "Opis formule"
+formulaDescriptionInfo = "Bralniki zaslona to preberejo namesto formule. Povejte, kot bi povedali na glas, npr. \"x na kvadrat plus ena\"."
 heading = "Dostopnost"
 innerTagLabel = "Oznaka {{number}}"
 innerTags = "Oznake v tem besedilu"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Manjkajoči opisi"
 mixedContent = "Slika vključuje drugo vsebino"
 mixedTags = "Mešano"
 needsDescriptionBadge = "Brez opisa"
-nextImage = "Naslednja slika"
+nextToReview = "Naslednje za pregled"
 notFigure = "Označeno kot del besedila"
 removeTag = "Odstrani oznako"
 saveFailed = "Vaših sprememb dostopnosti ni bilo mogoče shraniti, zato datoteka ni bila shranjena. Razveljavite jih in poskusite znova."
@@ -9661,10 +9640,6 @@ signInToStart = "Prijavite se za začetek preizkusa"
 stage = "Faza {{current}} od {{total}}"
 stagesLabel = "Napredek"
 
-[portal.enterprise.connect]
-ownerOnly = "Samo lastnik tega strežnika ga lahko poveže. Prosite ga, naj odpre to stran."
-unavailable = "Povezovanje s Stirling računom je na tem strežniku izklopljeno. Rezervirajte klic in skupaj bomo nastavili vaš preizkus."
-
 [portal.enterprise.landing]
 lede = "Preizkusite brezplačno 14 dni, nato tukaj pripravite ponudbo in podpišite pogodbo. Kartica ni potrebna."
 tickAgreement = "En sporazum, ki pokriva MSA, naročilnico, EULA in DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Prenesi offline licenco (.lic)"
 hint = "Prilepite ta ključ v samogostujočo instanco, da jo aktivirate, ali ga shranite za svojo evidenco. Varno ga hranite."
 label = "Vaš licenčni ključ"
 trialFileHint = "To je vaša preskusna licenčna datoteka. Ko je vaša pogodba sklenjena, se vrnite in jo znova prenesite — za razliko od spletnega licenčnega ključa se datoteka .lic ne posodobi sama."
-
-[portal.procurement.link]
-cta = "Poveži račun"
-description = "Nabava teče na vašem povezanem računu Stirling: tako pripravimo preizkus, določimo ceno ponudbe in začnemo zaračunavanje. Za začetek povežite račun."
-title = "Za začetek povežite svoj račun"
 
 [portal.procurement.live]
 description = "Vaša naročnina je aktivna in vaša licenca je izdana. Vaša ekipa je pripravljena in zaračunavanje se je začelo."
@@ -14260,7 +14230,6 @@ toggleDetails = "Preklopi podrobnosti"
 
 [tool]
 endpointUnavailable = "To orodje na vašem strežniku ni na voljo."
-endpointUnavailableClickable = "V tem načinu ni na voljo. Kliknite za prijavo."
 filesLoading = "Datoteke se še nalagajo, prosimo počakajte."
 filesLoadingProgress = "{{loaded}} / {{total}} datotek se nalaga..."
 invalidParams = "Izpolnite zahtevane nastavitve."
@@ -14268,6 +14237,8 @@ noFiles = "Za začetek dodajte datoteko."
 scopeFiles = "datoteke"
 scopeThisFile = "ta datoteka"
 selectFilesHint = "V razdelku Aktivne datoteke izberite datoteke za zagon tega orodja"
+signInRequired = "Za to potrebujete račun Stirling. Prijavite se za nadaljevanje."
+signInToUse = "Prijavite se za uporabo"
 singleFileScope = "Se uporablja samo za: {{fileName}}"
 viewerMode = "Preklopite na urejevalnik datotek, da dodate več datotek."
 

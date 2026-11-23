@@ -647,18 +647,16 @@ description = "DPI maksimum untuk pemrosesan gambar (0 = tanpa batas)"
 label = "DPI Maksimum"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Konfigurasikan batas sesi dan batas waktu untuk setiap eksekutor proses"
 ghostscript = "Ghostscript"
 installApp = "Instal Aplikasi"
 label = "Batas Eksekutor Proses"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF ke HTML"
+officeConvert = "Konversi Office"
+officeConvertSessionLimit = "Jumlah maksimum konversi serentak; 0 memilih batas berdasarkan CPU dan memori"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Instans bersamaan maksimum"
@@ -667,10 +665,6 @@ label = "Batas Sesi"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Waktu eksekusi maksimum"
 label = "Batas Waktu (menit)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert masih dalam versi beta. Menawarkan konversi yang lebih baik, lebih cepat, dan menggunakan lebih sedikit memori dibandingkan LibreOffice."
-label = "Gunakan konversi Stirling Office yang baru"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Konfigurasikan penyimpanan file sementara dan perilaku pembersihan"
@@ -688,11 +682,6 @@ label = "Interval Pembersihan (menit)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Apakah akan membersihkan direktori temp sistem yang lebih luas (gunakan dengan hati-hati)"
 label = "Bersihkan Temp Sistem"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Direktori untuk file temp LibreOffice (biarkan kosong untuk default: baseTmpDir/libreoffice)"
-label = "Direktori Temp LibreOffice"
-placeholder = "Bawaan: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Usia maksimum dalam jam sebelum file temp dibersihkan"
@@ -1300,17 +1289,6 @@ label = "Produser Bawaan"
 [admin.settings.general.customPaths]
 description = "Konfigurasikan jalur sistem file kustom untuk pemrosesan pipeline dan alat eksternal"
 label = "Jalur Kustom"
-
-[admin.settings.general.customPaths.operations]
-label = "Jalur Alat Eksternal"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Path ke LibreOffice unoconvert untuk konversi dokumen (biarkan kosong untuk default: /opt/venv/bin/unoconvert)"
-label = "Eksekutabel Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Path ke eksekutabel WeasyPrint untuk konversi HTML ke PDF (biarkan kosong untuk default: /opt/venv/bin/weasyprint)"
-label = "Eksekutabel WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Direktori Pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Judul dokumen"
 pdfUaTitleHelp = "Ditampilkan oleh pembaca sebagai pengganti nama file. Jika dibiarkan kosong, heading pertama digunakan."
 selectSourceFormatFirst = "Pilih format sumber terlebih dahulu"
 settings = "Pengaturan"
+signInToUse = "Masuk untuk menggunakan"
 single = "Tunggal"
 sourceFormatPlaceholder = "Format sumber"
-stirlingOfficeConvert = "Gunakan Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Konversi yang lebih baik dan lebih cepat dengan lebih sedikit memori. Nonaktifkan untuk menggunakan konverter standar."
 strictMode = "Mode Ketat"
 strictModeDesc = "Kesalahan jika konversi tidak sempurna (menggunakan verifikasi VeraPDF)"
 svgPdfOptions = "Opsi SVG ke PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Opsi Web ke PDF"
 zoomLevel = "Tingkat Zoom"
 
 [convert.ebookOptions]
-embedAllFonts = "Sematkan semua font"
-embedAllFontsDesc = "Sematkan semua font dari eBook ke PDF yang dihasilkan"
 includePageNumbers = "Sertakan nomor halaman"
 includePageNumbersDesc = "Tambahkan nomor halaman ke PDF yang dihasilkan"
 includeTableOfContents = "Sertakan daftar isi"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Gambar dekoratif"
 description = "Deskripsi gambar"
 descriptionInfo = "Pembaca layar membacakan ini sebagai pengganti gambar."
 encrypted = "Tag tidak dapat diedit dalam file terenkripsi"
+figureDescription = "Deskripsi gambar"
+figureDescriptionInfo = "Pembaca layar membacakan ini sebagai pengganti gambar."
 formFieldDescription = "Deskripsi bidang"
+formulaDescription = "Deskripsi rumus"
+formulaDescriptionInfo = "Pembaca layar membacakan ini sebagai pengganti rumus. Ucapkan seperti saat diucapkan lantang, misalnya \"x kuadrat ditambah satu\"."
 heading = "Aksesibilitas"
 innerTagLabel = "Tag {{number}}"
 innerTags = "Tag dalam teks ini"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Deskripsi hilang"
 mixedContent = "Gambar menyertakan konten lain"
 mixedTags = "Campuran"
 needsDescriptionBadge = "Tidak ada deskripsi"
-nextImage = "Gambar berikutnya"
+nextToReview = "Berikutnya untuk ditinjau"
 notFigure = "Ditandai sebagai bagian dari teks"
 removeTag = "Hapus tag"
 saveFailed = "Perubahan aksesibilitas Anda tidak dapat disimpan, sehingga file tidak disimpan. Urungkan perubahan tersebut dan coba lagi."
@@ -9661,10 +9640,6 @@ signInToStart = "Masuk untuk memulai uji coba Anda"
 stage = "Tahap {{current}} dari {{total}}"
 stagesLabel = "Kemajuan"
 
-[portal.enterprise.connect]
-ownerOnly = "Hanya pemilik server ini yang dapat menghubungkannya. Minta mereka membuka halaman ini."
-unavailable = "Menghubungkan ke akun Stirling dinonaktifkan di server ini. Pesan panggilan dan kami akan menyiapkan uji coba Anda bersama Anda."
-
 [portal.enterprise.landing]
 lede = "Coba gratis selama 14 hari, lalu buat penawaran Anda dan tanda tangani perjanjian Anda di sini. Tidak memerlukan kartu."
 tickAgreement = "Satu perjanjian mencakup MSA, formulir pemesanan, EULA, dan DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Download lisensi offline (.lic)"
 hint = "Tempel kunci ini ke instance self-hosted untuk mengaktifkannya, atau simpan untuk catatan Anda. Jaga tetap aman."
 label = "Kunci lisensi Anda"
 trialFileHint = "Ini adalah file lisensi uji coba Anda. Setelah perjanjian Anda siap, kembali dan unduh lagi — tidak seperti key lisensi online, file .lic tidak akan diperbarui sendiri."
-
-[portal.procurement.link]
-cta = "Tautkan akun"
-description = "Pengadaan berjalan pada akun Stirling tertaut Anda: begitulah cara kami memprovision uji coba, memberi harga penawaran, dan memulai penagihan. Tautkan akun untuk memulai."
-title = "Tautkan akun Anda untuk memulai"
 
 [portal.procurement.live]
 description = "Langganan Anda aktif dan lisensi Anda telah diterbitkan. Tim Anda telah diprovision dan penagihan telah dimulai."
@@ -14260,7 +14230,6 @@ toggleDetails = "Alihkan detail"
 
 [tool]
 endpointUnavailable = "Alat ini tidak tersedia di server Anda."
-endpointUnavailableClickable = "Tidak tersedia dalam mode ini. Klik untuk masuk."
 filesLoading = "File masih dimuat, harap tunggu."
 filesLoadingProgress = "{{loaded}} / {{total}} file sedang dimuat..."
 invalidParams = "Isi pengaturan yang diperlukan."
@@ -14268,6 +14237,8 @@ noFiles = "Tambahkan berkas untuk memulai."
 scopeFiles = "file"
 scopeThisFile = "file ini"
 selectFilesHint = "Pilih file di File Aktif untuk menjalankan alat ini"
+signInRequired = "Ini memerlukan akun Stirling. Masuk untuk melanjutkan."
+signInToUse = "Masuk untuk menggunakan"
 singleFileScope = "Hanya diterapkan pada: {{fileName}}"
 viewerMode = "Beralih ke editor file untuk menambahkan beberapa file."
 

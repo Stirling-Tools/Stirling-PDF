@@ -2055,6 +2055,7 @@ const EmbedPdfViewerContent = ({
               enableFormFill={
                 shouldEnableFormFill && !pdfEditingLocked(pdfAccess)
               }
+              pdfAccessPending={!pdfAccess}
               formEditingActive={isFormFillToolActive}
               pageLayer={
                 pageTool && pageTool.fileId === currentFileStableId

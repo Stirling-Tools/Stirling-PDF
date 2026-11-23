@@ -76,6 +76,7 @@ import { useActiveUrlSource } from "@editor/components/viewer/useActiveUrlSource
 import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
+import { RenderFormsBridge } from "@editor/components/viewer/RenderFormsBridge";
 import { SelectionAPIBridge } from "@editor/components/viewer/SelectionAPIBridge";
 import { PanAPIBridge } from "@editor/components/viewer/PanAPIBridge";
 import { SpreadAPIBridge } from "@editor/components/viewer/SpreadAPIBridge";
@@ -167,6 +168,8 @@ interface LocalEmbedPDFProps {
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
   enableFormFill?: boolean;
+  /** True while the PDF access check is running, so form rendering is not yet decided. */
+  pdfAccessPending?: boolean;
   /** Structural create/modify overlays only mount while the Form tool owns the viewer. */
   formEditingActive?: boolean;
   /** A tool's layer that replaces each page's own, or null for the viewer's layers. */
@@ -449,6 +452,8 @@ interface PageLayerOptions {
   fileId?: string | null;
   pdfRenderMode: PdfRenderMode;
   enableFormFill: boolean;
+  /** The page bitmap already includes form widgets, signatures among them. */
+  formsInBitmap: boolean;
   formEditingActive: boolean;
   pageLayer: ComponentType<ViewerPageLayerProps> | null;
   toolOwnsPages: boolean;
@@ -563,11 +568,13 @@ function FormFillLayers({
   enabled,
   editing,
   file,
+  renderFilter,
   ...page
 }: FormFieldLayersProps & {
   enabled: boolean;
   editing: boolean;
   file?: File | Blob;
+  renderFilter?: string;
 }) {
   if (!enabled) return null;
   return (
@@ -579,6 +586,7 @@ function FormFillLayers({
           pdfSource={file}
           pageWidth={page.width}
           pageHeight={page.height}
+          renderFilter={renderFilter}
         />
       )}
       {/* FormFieldOverlay for interactive form filling */}
@@ -588,6 +596,7 @@ function FormFillLayers({
         pageWidth={page.width}
         pageHeight={page.height}
         fileId={page.fileId}
+        renderFilter={renderFilter}
       />
       <FormFieldEditingOverlays active={editing} {...page} />
     </>
@@ -653,6 +662,7 @@ function PageLayers({
   fileId,
   pdfRenderMode,
   enableFormFill,
+  formsInBitmap,
   formEditingActive,
   pageLayer: PageLayer,
   toolOwnsPages,
@@ -686,6 +696,7 @@ function PageLayers({
         width={width}
         height={height}
         fileId={fileId}
+        renderFilter={PDF_RENDER_FILTERS[pdfRenderMode]}
       />
       {/* SignatureFieldOverlay: bitmaps of digital-signature appearances */}
       {file && (
@@ -695,6 +706,8 @@ function PageLayers({
           pdfSource={file}
           pageWidth={width}
           pageHeight={height}
+          appearanceInBitmap={formsInBitmap}
+          renderFilter={PDF_RENDER_FILTERS[pdfRenderMode]}
         />
       )}
       <AnnotationEditingLayers
@@ -952,6 +965,7 @@ export function LocalEmbedPDF({
   enableAnnotations = false,
   enableRedaction = false,
   enableFormFill = false,
+  pdfAccessPending = false,
   formEditingActive = false,
   pageLayer = null,
   pageLayout = null,
@@ -1376,6 +1390,14 @@ export function LocalEmbedPDF({
     annotationAnchorsByIdRef.current.clear();
   }, [fileStableKey]);
 
+  // Null while access is pending, so a new version keeps the last known setting.
+  const renderWithForms = pdfAccessPending ? null : !enableFormFill;
+  // What the bitmap holds right now: the last decided value, kept through a pending check.
+  const [formsInBitmap, setFormsInBitmap] = useState(renderWithForms ?? false);
+  if (renderWithForms !== null && renderWithForms !== formsInBitmap) {
+    setFormsInBitmap(renderWithForms);
+  }
+
   // The registry is built from the viewer's first source; later bytes arrive
   // through DocumentSwapBridge, so no replacement may change that identity.
   // Create plugins configuration
@@ -1412,8 +1434,8 @@ export function LocalEmbedPDF({
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: !enableFormFill,
-        // The overlay owns appearances in every mode, so access changes never rebuild the registry.
+        // RenderFormsBridge syncs withForms at runtime, so access changes never rebuild the registry.
+        withForms: renderWithForms ?? false,
         withAnnotations: false,
       }),
 
@@ -1688,6 +1710,7 @@ export function LocalEmbedPDF({
     fileId,
     pdfRenderMode,
     enableFormFill,
+    formsInBitmap,
     formEditingActive,
     pageLayer,
     toolOwnsPages,
@@ -1751,6 +1774,7 @@ export function LocalEmbedPDF({
             restorePending={restorePending}
             onEvent={onRestoreEvent}
           />
+          <RenderFormsBridge withForms={renderWithForms} />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
           <SelectionAPIBridge
