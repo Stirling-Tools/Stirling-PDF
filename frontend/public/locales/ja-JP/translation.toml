@@ -647,18 +647,16 @@ description = "画像処理の最大 DPI（0 = 無制限）"
 label = "最大 DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "各プロセス実行器のセッション上限とタイムアウトを設定"
 ghostscript = "Ghostscript"
 installApp = "アプリをインストール"
 label = "プロセス実行制限"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "Office 変換"
+officeConvertSessionLimit = "同時変換の最大数。0 にすると CPU とメモリに基づき上限を自動設定します"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "最大同時実行数"
@@ -667,10 +665,6 @@ label = "セッション上限"
 [admin.settings.advanced.processExecutor.timeout]
 description = "最大実行時間"
 label = "タイムアウト（分）"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert はベータ版です。LibreOffice よりも少ないメモリで、より高速かつ高品質な変換を提供します。"
-label = "新しい Stirling Office 変換を使用"
 
 [admin.settings.advanced.tempFileManagement]
 description = "一時ファイルの保存場所とクリーンアップ動作を構成"
@@ -688,11 +682,6 @@ label = "クリーンアップ間隔（分）"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "より広範なシステム一時ディレクトリをクリーンアップするか（注意して使用）"
 label = "システムの一時領域をクリーンアップ"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice の一時ファイル用ディレクトリ（空欄で既定: baseTmpDir/libreoffice）"
-label = "LibreOffice 一時ディレクトリ"
-placeholder = "既定: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "一時ファイルをクリーンアップするまでの最大経過時間（時間）"
@@ -1300,17 +1289,6 @@ label = "既定のプロデューサー"
 [admin.settings.general.customPaths]
 description = "パイプライン処理や外部ツール用のカスタムファイルシステムパスを構成"
 label = "カスタムパス"
-
-[admin.settings.general.customPaths.operations]
-label = "外部ツールのパス"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "ドキュメント変換用 LibreOffice unoconvert のパス（空欄で既定: /opt/venv/bin/unoconvert）"
-label = "Unoconvert 実行ファイル"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTML から PDF 変換用 WeasyPrint 実行ファイルのパス（空欄で既定: /opt/venv/bin/weasyprint）"
-label = "WeasyPrint 実行ファイル"
 
 [admin.settings.general.customPaths.pipeline]
 label = "パイプラインディレクトリ"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "ドキュメントタイトル"
 pdfUaTitleHelp = "ファイル名の代わりにリーダーに表示されます。空白の場合、最初の見出しが使用されます。"
 selectSourceFormatFirst = "先にソース形式を選択してください"
 settings = "設定"
+signInToUse = "使用するにはサインインしてください"
 single = "単一"
 sourceFormatPlaceholder = "変換元形式"
-stirlingOfficeConvert = "Stirling Office Convert（ベータ版）を使用"
-stirlingOfficeConvertDescription = "少ないメモリで、より高品質かつ高速に変換します。標準コンバーターを使用するにはオフにしてください。"
 strictMode = "厳格モード"
 strictModeDesc = "変換が完全でない場合はエラーにします（VeraPDF 検証を使用）"
 svgPdfOptions = "SVG から PDF のオプション"
@@ -4419,8 +4396,6 @@ webOptions = "Web → PDF オプション"
 zoomLevel = "ズームレベル"
 
 [convert.ebookOptions]
-embedAllFonts = "すべてのフォントを埋め込む"
-embedAllFontsDesc = "eBook のすべてのフォントを生成される PDF に埋め込みます"
 includePageNumbers = "ページ番号を含める"
 includePageNumbersDesc = "生成される PDF にページ番号を追加"
 includeTableOfContents = "目次を含める"
@@ -7830,7 +7805,11 @@ decorativeLabel = "装飾用画像"
 description = "画像の説明"
 descriptionInfo = "スクリーンリーダーは画像の代わりにこれを読み上げます。"
 encrypted = "暗号化されたファイルではタグを編集できません"
+figureDescription = "図の説明"
+figureDescriptionInfo = "スクリーンリーダーは図の代わりにこれを読み上げます。"
 formFieldDescription = "フィールドの説明"
+formulaDescription = "数式の説明"
+formulaDescriptionInfo = "スクリーンリーダーは数式の代わりにこれを読み上げます。例えば「x の二乗プラス 1」のように、口頭で言う形で記述してください。"
 heading = "アクセシビリティ"
 innerTagLabel = "タグ {{number}}"
 innerTags = "このテキスト内のタグ"
@@ -7842,7 +7821,7 @@ missingDescriptions = "説明がありません"
 mixedContent = "図に他のコンテンツが含まれています"
 mixedTags = "混在"
 needsDescriptionBadge = "説明なし"
-nextImage = "次の画像"
+nextToReview = "次のレビュー対象へ"
 notFigure = "テキストの一部としてタグ付け済み"
 removeTag = "タグを削除"
 saveFailed = "アクセシビリティの変更を保存できなかったため、ファイルは保存されませんでした。変更を元に戻して、もう一度お試しください。"
@@ -9661,10 +9640,6 @@ signInToStart = "トライアルを開始するにはサインインしてくだ
 stage = "ステージ {{current}} / {{total}}"
 stagesLabel = "進捗"
 
-[portal.enterprise.connect]
-ownerOnly = "このサーバーの所有者のみが接続できます。所有者にこのページを開くよう依頼してください。"
-unavailable = "このサーバーでは Stirling アカウントへの接続がオフになっています。通話をご予約いただければ、トライアルの設定をお手伝いします。"
-
 [portal.enterprise.landing]
 lede = "14 日間無料でお試し後、ここで見積り作成と契約締結ができます。カード不要。"
 tickAgreement = "MSA、注文書、EULA、DPA をまとめた 1 通の契約"
@@ -11283,11 +11258,6 @@ downloadOffline = "オフラインライセンス (.lic) をダウンロード"
 hint = "このキーをセルフホストインスタンスに貼り付けて有効化するか、記録用に保管してください。安全に保管してください。"
 label = "ライセンスキー"
 trialFileHint = "これはトライアルライセンスファイルです。契約が成立したら、戻ってもう一度ダウンロードしてください。オンラインライセンスキーとは異なり、.lic ファイルは自動更新されません。"
-
-[portal.procurement.link]
-cta = "アカウントをリンク"
-description = "調達はリンクされた Stirling アカウントで実行されます。トライアルのプロビジョニング、見積もり価格の算出、請求の開始に使用します。開始するにはアカウントをリンクしてください。"
-title = "開始するにはアカウントをリンク"
 
 [portal.procurement.live]
 description = "サブスクリプションがアクティブで、ライセンスが発行されています。チームはプロビジョニング済みで、請求も開始されています。"
@@ -14260,7 +14230,6 @@ toggleDetails = "詳細を切り替え"
 
 [tool]
 endpointUnavailable = "このツールはサーバーで利用できません。"
-endpointUnavailableClickable = "このモードでは利用できません。クリックしてサインイン。"
 filesLoading = "ファイルを読み込み中です。しばらくお待ちください。"
 filesLoadingProgress = "{{loaded}} / {{total}} 件のファイルを読み込み中..."
 invalidParams = "必須の設定を入力してください。"
@@ -14268,6 +14237,8 @@ noFiles = "開始するにはファイルを追加してください。"
 scopeFiles = "ファイル"
 scopeThisFile = "このファイル"
 selectFilesHint = "このツールを実行するには、アクティブなファイルでファイルを選択してください"
+signInRequired = "Stirling アカウントが必要です。続行するにはサインインしてください。"
+signInToUse = "使用するにはサインインしてください"
 singleFileScope = "適用対象: {{fileName}} のみ"
 viewerMode = "複数のファイルを追加するにはファイルエディターに切り替えてください。"
 

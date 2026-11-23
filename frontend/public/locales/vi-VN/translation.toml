@@ -647,18 +647,16 @@ description = "DPI tối đa cho xử lý hình ảnh (0 = không giới hạn)"
 label = "DPI tối đa"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Cấu hình giới hạn phiên và thời gian chờ cho mỗi trình thực thi"
 ghostscript = "Ghostscript"
 installApp = "Cài đặt ứng dụng"
 label = "Giới hạn trình thực thi tiến trình"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF sang HTML"
+officeConvert = "Chuyển đổi Office"
+officeConvertSessionLimit = "Số chuyển đổi đồng thời tối đa; 0 sẽ tự chọn giới hạn dựa trên CPU và bộ nhớ"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Số phiên đồng thời tối đa"
@@ -667,10 +665,6 @@ label = "Giới hạn phiên"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Thời gian thực thi tối đa"
 label = "Thời gian chờ (phút)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert đang ở beta. Công cụ này cung cấp khả năng chuyển đổi tốt hơn, nhanh hơn và dùng ít bộ nhớ hơn LibreOffice."
-label = "Sử dụng chuyển đổi Stirling Office mới"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Cấu hình lưu trữ tạm thời và hành vi dọn dẹp"
@@ -688,11 +682,6 @@ label = "Chu kỳ dọn dẹp (phút)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Có dọn dẹp thư mục tạm hệ thống rộng hơn hay không (thận trọng khi dùng)"
 label = "Dọn thư mục tạm hệ thống"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Thư mục cho tệp tạm của LibreOffice (để trống dùng mặc định: baseTmpDir/libreoffice)"
-label = "Thư mục tạm LibreOffice"
-placeholder = "Mặc định: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Số giờ tối đa trước khi tệp tạm được dọn dẹp"
@@ -1300,17 +1289,6 @@ label = "Nhà sản xuất mặc định"
 [admin.settings.general.customPaths]
 description = "Cấu hình đường dẫn hệ thống tệp tùy chỉnh cho xử lý pipeline và công cụ bên ngoài"
 label = "Đường dẫn tùy chỉnh"
-
-[admin.settings.general.customPaths.operations]
-label = "Đường dẫn công cụ bên ngoài"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Đường dẫn đến LibreOffice unoconvert để chuyển đổi tài liệu (để trống dùng mặc định: /opt/venv/bin/unoconvert)"
-label = "Tệp thực thi Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Đường dẫn đến tệp thực thi WeasyPrint để chuyển HTML sang PDF (để trống dùng mặc định: /opt/venv/bin/weasyprint)"
-label = "Tệp thực thi WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Thư mục Pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Tiêu đề tài liệu"
 pdfUaTitleHelp = "Được trình đọc hiển thị thay cho tên tệp. Nếu để trống, tiêu đề đầu tiên sẽ được dùng."
 selectSourceFormatFirst = "Trước tiên hãy chọn định dạng nguồn"
 settings = "Cài đặt"
+signInToUse = "Đăng nhập để sử dụng"
 single = "Một tệp"
 sourceFormatPlaceholder = "Định dạng nguồn"
-stirlingOfficeConvert = "Sử dụng Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Chuyển đổi tốt hơn, nhanh hơn với ít bộ nhớ hơn. Tắt để sử dụng trình chuyển đổi tiêu chuẩn."
 strictMode = "Chế độ nghiêm ngặt"
 strictModeDesc = "Báo lỗi nếu chuyển đổi không hoàn hảo (dùng xác minh VeraPDF)"
 svgPdfOptions = "Tùy chọn SVG sang PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Tùy chọn Web sang PDF"
 zoomLevel = "Mức thu phóng"
 
 [convert.ebookOptions]
-embedAllFonts = "Nhúng tất cả phông chữ"
-embedAllFontsDesc = "Nhúng mọi phông chữ từ eBook vào PDF được tạo"
 includePageNumbers = "Bao gồm số trang"
 includePageNumbersDesc = "Thêm số trang vào PDF được tạo"
 includeTableOfContents = "Bao gồm mục lục"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Hình ảnh trang trí"
 description = "Mô tả hình ảnh"
 descriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho hình ảnh."
 encrypted = "Không thể chỉnh sửa thẻ trong tệp được mã hóa"
+figureDescription = "Mô tả hình ảnh"
+figureDescriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho hình."
 formFieldDescription = "Mô tả trường"
+formulaDescription = "Mô tả công thức"
+formulaDescriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho công thức. Hãy viết như cách bạn sẽ đọc to, ví dụ: \"x bình phương cộng một\"."
 heading = "Trợ năng"
 innerTagLabel = "Thẻ {{number}}"
 innerTags = "Thẻ trong văn bản này"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Thiếu mô tả"
 mixedContent = "Hình bao gồm nội dung khác"
 mixedTags = "Hỗn hợp"
 needsDescriptionBadge = "Không có mô tả"
-nextImage = "Hình ảnh tiếp theo"
+nextToReview = "Tiếp theo cần xem lại"
 notFigure = "Được gắn thẻ là một phần của văn bản"
 removeTag = "Xóa thẻ"
 saveFailed = "Không thể lưu các thay đổi trợ năng của bạn, vì vậy tệp chưa được lưu. Hãy hoàn tác chúng và thử lại."
@@ -9661,10 +9640,6 @@ signInToStart = "Đăng nhập để bắt đầu dùng thử"
 stage = "Giai đoạn {{current}} trên {{total}}"
 stagesLabel = "Tiến độ"
 
-[portal.enterprise.connect]
-ownerOnly = "Chỉ chủ sở hữu máy chủ này mới có thể kết nối. Hãy nhờ họ mở trang này."
-unavailable = "Kết nối tới tài khoản Stirling đã tắt trên máy chủ này. Hãy đặt lịch gọi và chúng tôi sẽ thiết lập bản dùng thử cùng bạn."
-
 [portal.enterprise.landing]
 lede = "Dùng thử miễn phí 14 ngày, sau đó tạo báo giá và ký thỏa thuận tại đây. Không cần thẻ."
 tickAgreement = "Một thỏa thuận bao gồm MSA, đơn đặt hàng, EULA và DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Tải xuống giấy phép offline (.lic)"
 hint = "Dán khóa này vào một phiên bản tự host để kích hoạt, hoặc lưu lại cho hồ sơ của bạn. Hãy giữ an toàn."
 label = "Khóa giấy phép của bạn"
 trialFileHint = "Đây là file giấy phép dùng thử của bạn. Khi thỏa thuận của bạn đã hoàn tất, hãy quay lại và tải xuống lần nữa — khác với khóa giấy phép trực tuyến, file .lic sẽ không tự cập nhật."
-
-[portal.procurement.link]
-cta = "Liên kết tài khoản"
-description = "Mua sắm chạy trên tài khoản Stirling được liên kết của bạn: đó là cách chúng tôi cấp phát bản dùng thử, định giá báo giá và bắt đầu lập hóa đơn. Liên kết một tài khoản để bắt đầu."
-title = "Liên kết tài khoản của bạn để bắt đầu"
 
 [portal.procurement.live]
 description = "Đăng ký của bạn đang hoạt động và giấy phép của bạn đã được cấp. Đội ngũ của bạn đã được cấp phát và việc lập hóa đơn đã bắt đầu."
@@ -14260,7 +14230,6 @@ toggleDetails = "Hiện/ẩn chi tiết"
 
 [tool]
 endpointUnavailable = "Công cụ này không khả dụng trên máy chủ của bạn."
-endpointUnavailableClickable = "Không khả dụng ở chế độ này. Nhấp để đăng nhập."
 filesLoading = "Các tệp vẫn đang tải, vui lòng đợi."
 filesLoadingProgress = "{{loaded}} / {{total}} tệp đang tải..."
 invalidParams = "Điền các cài đặt bắt buộc."
@@ -14268,6 +14237,8 @@ noFiles = "Thêm tệp để bắt đầu."
 scopeFiles = "tệp"
 scopeThisFile = "tệp này"
 selectFilesHint = "Chọn tệp trong Tệp đang hoạt động để chạy công cụ này"
+signInRequired = "Tính năng này cần tài khoản Stirling. Đăng nhập để tiếp tục."
+signInToUse = "Đăng nhập để sử dụng"
 singleFileScope = "Chỉ áp dụng cho: {{fileName}}"
 viewerMode = "Chuyển sang trình chỉnh sửa tệp để thêm nhiều tệp."
 
