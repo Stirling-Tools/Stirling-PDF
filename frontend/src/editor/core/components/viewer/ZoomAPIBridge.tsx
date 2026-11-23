@@ -22,6 +22,8 @@ import {
 } from "@editor/utils/viewerZoom";
 import { getFirstPageAspectRatioFromStub } from "@editor/utils/pageMetadata";
 import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 import {
   preferencesService,
   type ViewerZoomSetting,
@@ -83,6 +85,11 @@ function ZoomAPIBridgeInner({
     (activeId ? fileStubs.find((s) => s.id === activeId) : undefined) ??
     fileStubs[0];
   const activeFileRootId = activeStub?.originalFileId || activeStub?.id;
+  // A document opened into a page tool on a small screen starts at full
+  // width, where its content is large enough to work on.
+  const isMobile = useIsMobile();
+  const pageToolActive = useViewerPageTool() != null;
+  const fitForPageTool = isMobile && pageToolActive;
 
   const hasSetInitialZoom = useRef(
     !!activeFileRootId && activeFileRootId === lastAutoZoomedRootIdRef.current,
@@ -245,6 +252,11 @@ function ZoomAPIBridgeInner({
         return;
       }
 
+      if (fitForPageTool) {
+        applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
+        return;
+      }
+
       // Check user preference for default viewer zoom
       const zoomPref: ViewerZoomSetting =
         preferencesService.getPreference("defaultViewerZoom");
@@ -310,6 +322,7 @@ function ZoomAPIBridgeInner({
     spreadMode,
     triggerImmediateZoomUpdate,
     explicitFitRef,
+    fitForPageTool,
   ]);
 
   // Subscribe to zoom changes - use ref to avoid re-subscribing when zoom reference changes

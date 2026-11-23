@@ -6,6 +6,7 @@ import {
   type ButtonAccent,
 } from "@editor/ui/Button";
 import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Icon } from "@editor/ui/Icon";
 import { useBackendHealth } from "@editor/hooks/useBackendHealth";
 import { CloudBadge } from "@editor/components/shared/CloudBadge";
 import type { ExecuteDisabledReason } from "@editor/hooks/tools/shared/toolOperationTypes";
@@ -74,15 +75,10 @@ const OperationButton = ({
   const combinedDisabled = effectiveDisabled || blockedByBackend;
 
   const reasonTooltip: Record<NonNullable<ExecuteDisabledReason>, string> = {
-    endpointUnavailable: onEndpointUnavailableClick
-      ? t(
-          "tool.endpointUnavailableClickable",
-          "Not available in this mode. Click to sign in.",
-        )
-      : t(
-          "tool.endpointUnavailable",
-          "This tool is unavailable on your server.",
-        ),
+    endpointUnavailable: t(
+      "tool.endpointUnavailable",
+      "This tool is unavailable on your server.",
+    ),
     filesLoading: t(
       "tool.filesLoading",
       "Files are still loading, please wait.",
@@ -101,6 +97,34 @@ const OperationButton = ({
     : disabledReason
       ? (reasonTooltip[disabledReason] ?? null)
       : null;
+
+  if (disabledReason === "endpointUnavailable" && onEndpointUnavailableClick) {
+    return (
+      <Tooltip
+        content={t(
+          "tool.signInRequired",
+          "This needs a Stirling account. Sign in to continue.",
+        )}
+        position="top"
+        arrow
+      >
+        <Box mx="md" mt={mt} data-testid="sign-in-required">
+          <Button
+            type="button"
+            fullWidth
+            variant="primary"
+            leftSection={<Icon name="log-in" size="1rem" />}
+            onClick={onEndpointUnavailableClick}
+            data-testid={dataTestId}
+            data-tour={dataTour}
+            style={{ minHeight: "2.5rem", height: "auto" }}
+          >
+            {t("tool.signInToUse", "Sign in to use")}
+          </Button>
+        </Box>
+      </Tooltip>
+    );
+  }
 
   const sharedVariant: ButtonVariant =
     operationButtonVariantMap[variant] ?? "primary";
@@ -141,24 +165,9 @@ const OperationButton = ({
   if (tooltipLabel) {
     // Disabled buttons suppress pointer events at the browser level, so the Tooltip's
     // cloneElement handlers would never fire. Wrap in a Box to capture them instead.
-    // When endpointUnavailable and a click handler is provided (desktop), the Box
-    // also acts as the click target to open the sign-in / connect modal.
-    const boxClickHandler =
-      disabledReason === "endpointUnavailable"
-        ? onEndpointUnavailableClick
-        : undefined;
     return (
       <Tooltip content={tooltipLabel} position="top" arrow>
-        <Box
-          mr="md"
-          ml="md"
-          mt={mt}
-          style={{
-            display: "block",
-            cursor: boxClickHandler ? "pointer" : undefined,
-          }}
-          onClick={boxClickHandler}
-        >
+        <Box mr="md" ml="md" mt={mt} style={{ display: "block" }}>
           {button}
         </Box>
       </Tooltip>

@@ -143,7 +143,7 @@ export function AccessibilityResults({
         />
       )}
 
-      {!isLoading && (
+      {!isLoading && selected.report && (
         <ToolPanelFooter>
           <div className="a11y-download">
             {downloadFailed && (

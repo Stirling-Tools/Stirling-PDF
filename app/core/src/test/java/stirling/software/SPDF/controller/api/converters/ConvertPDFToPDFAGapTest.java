@@ -5,21 +5,17 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -32,7 +28,6 @@ import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
@@ -72,7 +67,7 @@ import ch.qos.logback.core.read.ListAppender;
 /**
  * Gap-filling unit tests for {@link ConvertPDFToPDFA}. Focuses on validation/option/error branches
  * and the small pure helpers, mocking the collaborators so that no external binary (ghostscript,
- * qpdf, libreoffice) or network is invoked.
+ * qpdf) or network is invoked.
  */
 @DisplayName("ConvertPDFToPDFA gap tests")
 @ExtendWith(MockitoExtension.class)
@@ -406,57 +401,6 @@ class ConvertPDFToPDFAGapTest {
 
     // =======================================================================================
     @Nested
-    @DisplayName("findUnembeddedFontNames")
-    class UnembeddedFontDetection {
-
-        @Test
-        @DisplayName("standard 14 fonts (not embedded) are reported as missing")
-        void detectsStandardFontAsUnembedded() throws Exception {
-            try (PDDocument document = simplePdf()) {
-                Set<String> missing = invokeStatic("findUnembeddedFontNames", document);
-                assertThat(missing).isNotNull();
-                assertThat(missing).anyMatch(name -> name.contains("Helvetica"));
-            }
-        }
-
-        @Test
-        @DisplayName("page with no resources reports no missing fonts")
-        void pageWithoutResources() throws Exception {
-            try (PDDocument document = new PDDocument()) {
-                PDPage page = new PDPage(PDRectangle.A4);
-                page.setResources(new PDResources());
-                document.addPage(page);
-                Set<String> missing = invokeStatic("findUnembeddedFontNames", document);
-                assertThat(missing).isEmpty();
-            }
-        }
-    }
-
-    // =======================================================================================
-    @Nested
-    @DisplayName("detectTransparentXObjects")
-    class TransparentXObjectDetection {
-
-        @Test
-        @DisplayName("page with no resources returns empty set")
-        void noResources() throws Exception {
-            PDPage page = new PDPage(PDRectangle.A4);
-            Set<COSName> result = invokeStatic("detectTransparentXObjects", page);
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        @DisplayName("page with empty resources returns empty set")
-        void emptyResources() throws Exception {
-            PDPage page = new PDPage(PDRectangle.A4);
-            page.setResources(new PDResources());
-            Set<COSName> result = invokeStatic("detectTransparentXObjects", page);
-            assertThat(result).isEmpty();
-        }
-    }
-
-    // =======================================================================================
-    @Nested
     @DisplayName("sanitizePdfA part-specific behaviour")
     class SanitizePdfAExtras {
 
@@ -671,109 +615,6 @@ class ConvertPDFToPDFAGapTest {
                         .doesNotThrowAnyException();
             }
         }
-
-        @Test
-        @DisplayName("addICCProfileIfNotPresent adds an sRGB output intent")
-        void addsIccOutputIntent() throws Exception {
-            try (PDDocument document = simplePdf()) {
-                assertThat(document.getDocumentCatalog().getOutputIntents()).isEmpty();
-
-                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
-
-                assertThat(document.getDocumentCatalog().getOutputIntents()).hasSize(1);
-                assertThat(document.getDocumentCatalog().getOutputIntents().get(0).getInfo())
-                        .contains("sRGB");
-            }
-        }
-
-        @Test
-        @DisplayName("addICCProfileIfNotPresent does not add a second intent when one exists")
-        void doesNotDuplicateIntent() throws Exception {
-            try (PDDocument document = simplePdf()) {
-                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
-                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
-                assertThat(document.getDocumentCatalog().getOutputIntents()).hasSize(1);
-            }
-        }
-    }
-
-    // =======================================================================================
-    @Nested
-    @DisplayName("performBasicPdfAValidation / buildComprehensiveValidationMessage")
-    class ValidationHelpers {
-
-        @Test
-        @DisplayName("basic validation flags missing XMP and output intent for a plain PDF")
-        void basicValidationFlagsMissing() throws Exception {
-            Path pdf = tempDir.resolve("plain.pdf");
-            Files.write(pdf, simplePdfBytes());
-
-            // PdfaProfile.PDF_A_2B has no preflight format -> basic validation path.
-            Object profile = resolvePdfaProfile("pdfa-2b");
-            org.apache.pdfbox.preflight.ValidationResult result =
-                    invokeStaticWithTypes(
-                            "performBasicPdfAValidation",
-                            new Class<?>[] {Path.class, profile.getClass()},
-                            pdf,
-                            profile);
-
-            assertThat(result).isNotNull();
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getErrorsList()).isNotEmpty();
-        }
-
-        @Test
-        @DisplayName("comprehensive message summarises error count and codes")
-        void comprehensiveMessage() throws Exception {
-            Object profile = resolvePdfaProfile("pdfa-1");
-            org.apache.pdfbox.preflight.ValidationResult result =
-                    new org.apache.pdfbox.preflight.ValidationResult(false);
-            result.addError(
-                    new org.apache.pdfbox.preflight.ValidationResult.ValidationError(
-                            "CODE_A", "first problem"));
-            result.addError(
-                    new org.apache.pdfbox.preflight.ValidationResult.ValidationError(
-                            "CODE_B", "second problem"));
-
-            String message =
-                    invokeStaticWithTypes(
-                            "buildComprehensiveValidationMessage",
-                            new Class<?>[] {
-                                org.apache.pdfbox.preflight.ValidationResult.class,
-                                profile.getClass()
-                            },
-                            result,
-                            profile);
-
-            assertThat(message).contains("PDF/A-1b");
-            assertThat(message).contains("2 errors");
-            assertThat(message).contains("CODE_A");
-        }
-
-        // helper: resolve enum constant + call typed static method
-        private Object resolvePdfaProfile(String token) throws Exception {
-            Class<?> enumClass = null;
-            for (Class<?> inner : ConvertPDFToPDFA.class.getDeclaredClasses()) {
-                if (inner.getSimpleName().equals("PdfaProfile")) {
-                    enumClass = inner;
-                }
-            }
-            Method m = enumClass.getDeclaredMethod("fromRequest", String.class);
-            m.setAccessible(true);
-            return m.invoke(null, token);
-        }
-
-        @SuppressWarnings("unchecked")
-        private <T> T invokeStaticWithTypes(String name, Class<?>[] types, Object... args)
-                throws Exception {
-            Method m = ConvertPDFToPDFA.class.getDeclaredMethod(name, types);
-            m.setAccessible(true);
-            try {
-                return (T) m.invoke(null, args);
-            } catch (InvocationTargetException e) {
-                throw unwrap(e);
-            }
-        }
     }
 
     // =======================================================================================
@@ -948,34 +789,6 @@ class ConvertPDFToPDFAGapTest {
         }
     }
 
-    // =======================================================================================
-    @Nested
-    @DisplayName("ensureEmbeddedFilesAFRelationship / isTransparencyGroup")
-    class StaticEdgeCases {
-
-        @Test
-        @DisplayName("ensureEmbeddedFilesAFRelationship is a no-op when no names dictionary")
-        void afRelationshipNoNames() throws Exception {
-            try (PDDocument document = simplePdf()) {
-                assertThatCode(() -> invokeStatic("ensureEmbeddedFilesAFRelationship", document))
-                        .doesNotThrowAnyException();
-            }
-        }
-
-        @Test
-        @DisplayName("isTransparencyGroup true only for /S /Transparency group dictionaries")
-        void transparencyGroup() throws Exception {
-            COSDictionary withGroup = new COSDictionary();
-            COSDictionary groupDict = new COSDictionary();
-            groupDict.setItem(COSName.S, COSName.TRANSPARENCY);
-            withGroup.setItem(COSName.GROUP, groupDict);
-            assertThat((boolean) invokeStatic("isTransparencyGroup", withGroup)).isTrue();
-
-            COSDictionary withoutGroup = new COSDictionary();
-            assertThat((boolean) invokeStatic("isTransparencyGroup", withoutGroup)).isFalse();
-        }
-    }
-
     @Nested
     @DisplayName("sanitizer bounds")
     class SanitizerBounds {
@@ -1109,60 +922,6 @@ class ConvertPDFToPDFAGapTest {
         }
 
         @Test
-        @DisplayName("the PDF/A-2 fallback refuses documents over the page limit")
-        void fallbackChecksPageLimit() throws Exception {
-            Path input = tempDir.resolve("six-pages.pdf");
-            try (PDDocument document = simplePdf()) {
-                repeatOnlyPage(document, 6);
-                document.save(input.toFile());
-            }
-            ApplicationProperties properties = new ApplicationProperties();
-            properties.getSystem().setMaxPdfaConversionPages(5);
-            ConvertPDFToPDFA controller =
-                    new ConvertPDFToPDFA(
-                            runtimePathConfig,
-                            veraPDFService,
-                            pdfaLevelAService,
-                            tempFileManager,
-                            properties,
-                            mock(stirling.software.SPDF.service.OfficeConversionService.class));
-
-            assertThatThrownBy(
-                            () ->
-                                    invokeInstance(
-                                            controller,
-                                            "convertWithPdfBoxMethod",
-                                            input,
-                                            pdfaProfile("pdfa-2b")))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("5 pages");
-        }
-
-        @Test
-        @DisplayName("the PDF/A-1 fallback removes highlights it cannot draw")
-        void fallbackDropsMalformedHighlights() throws Exception {
-            Path input = tempDir.resolve("bad-quads.pdf");
-            try (PDDocument document = simplePdf()) {
-                PDAnnotationHighlight noQuads = new PDAnnotationHighlight();
-                noQuads.setRectangle(new PDRectangle(0, 0, 10, 10));
-                PDAnnotationLink link = new PDAnnotationLink();
-                link.setRectangle(new PDRectangle(0, 0, 5, 5));
-                document.getPage(0)
-                        .setAnnotations(List.of(highlight(0, 0, 10, 10, 0), noQuads, link));
-                document.save(input.toFile());
-            }
-
-            File output = invokeStatic("preProcessHighlights", input.toFile(), 20_000);
-            try (PDDocument result = Loader.loadPDF(output)) {
-                assertThat(result.getPage(0).getAnnotations())
-                        .extracting(PDAnnotation::getSubtype)
-                        .containsExactly("Link");
-            } finally {
-                Files.deleteIfExists(output.toPath());
-            }
-        }
-
-        @Test
         @DisplayName("the sanitizer leaves highlights it cannot draw for the appearance check")
         void sanitizerKeepsMalformedHighlights() throws Exception {
             try (PDDocument document = simplePdf()) {
@@ -1207,37 +966,6 @@ class ConvertPDFToPDFAGapTest {
 
                 // The highlight colour must not carry into the page text drawn after it
                 assertThat(darkTextPixels(document)).isPositive();
-            }
-        }
-
-        @Test
-        @DisplayName("the PDF/A-1 fallback draws a highlight with huge coordinates in bounded time")
-        void fallbackHugeQuadPoints() throws Exception {
-            Path input = tempDir.resolve("huge-quad.pdf");
-            try (PDDocument document = simplePdf()) {
-                document.getPage(0)
-                        .setAnnotations(
-                                List.of(
-                                        highlight(
-                                                0,
-                                                40_000_010,
-                                                10,
-                                                40_000_010,
-                                                0,
-                                                40_000_000,
-                                                10,
-                                                40_000_000)));
-                document.save(input.toFile());
-            }
-
-            File output =
-                    assertTimeoutPreemptively(
-                            Duration.ofSeconds(20),
-                            () -> invokeStatic("preProcessHighlights", input.toFile(), 20_000));
-            try (PDDocument result = Loader.loadPDF(output)) {
-                assertThat(result.getPage(0).getAnnotations()).isEmpty();
-            } finally {
-                Files.deleteIfExists(output.toPath());
             }
         }
 

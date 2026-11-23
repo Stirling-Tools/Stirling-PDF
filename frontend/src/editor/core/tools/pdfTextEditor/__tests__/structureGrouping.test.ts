@@ -19,7 +19,7 @@ import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes"
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
-import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlockCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
@@ -419,7 +419,7 @@ describe("Chrome-style tagging", () => {
   test("retags the heading through the NonStruct holding its text", async () => {
     const { doc, run } = await openChrome();
     new HistoryStack().execute(
-      new RetagTextCommand({
+      new RetagBlockCommand({
         pageIndex: 0,
         mcid: run("Introduction").snapshot().mcid!,
         type: "H2",
