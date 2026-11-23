@@ -116,6 +116,7 @@ export function LandingActions({
       {createPdf.dialogs}
       <input
         ref={fileInputRef}
+        data-testid="landing-file-input"
         type="file"
         multiple
         onChange={onFileSelect}

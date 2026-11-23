@@ -10,7 +10,7 @@ const THREE_PAGE_PDF = path.join(
 async function loadViewer(page: Page) {
   await page.goto("/editor");
   await page
-    .locator('input[type="file"]')
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
     .first()
     .setInputFiles(THREE_PAGE_PDF);
   await expect

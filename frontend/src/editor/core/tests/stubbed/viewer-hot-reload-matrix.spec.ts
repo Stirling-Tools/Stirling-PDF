@@ -26,7 +26,10 @@ async function loadFixture(
   pages = 1,
 ) {
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(fixture);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(fixture);
   await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
     timeout: 30_000,
   });
