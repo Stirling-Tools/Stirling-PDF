@@ -46,7 +46,7 @@ const SanitizeSettings = ({
       ))}
 
       {!validateSanitizeParameters(parameters) && (
-        <Text role="alert" size="sm" c="var(--c-warning)">
+        <Text role="alert" size="sm" c="var(--c-warning-text)">
           {t(
             "sanitize.options.noneSelected",
             "Select at least one element to remove.",

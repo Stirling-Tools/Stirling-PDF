@@ -15,7 +15,8 @@ const FIXTURE_URLS = import.meta.glob<string>(
     "../src/editor/core/tests/test-fixtures/**/*.{pdf,png,jpg,jpeg,gif,bmp,tiff,webp,svg}",
     "../src/editor/core/tests/test-fixtures/**/*.{docx,doc,xlsx,pptx,odt,odp,rtf,txt,csv,xml,html,htm,md}",
     "../src/editor/core/tests/test-fixtures/**/*.{eml,msg,epub,cbz,fb2,zip,json}",
-    "../src/editor/core/tests/test-fixtures/**/*.{p12,pfx,jks,keystore,pem,der,crt,cer,key}",
+    "../src/editor/core/tests/test-fixtures/**/*.{p12,pfx,jks,keystore,der,cer,key}",
+    "../src/editor/core/tests/test-fixtures/**/*.{pem,crt}.txt",
     "!**/README.md",
   ],
   { query: "?url", import: "default", eager: true },
@@ -64,6 +65,14 @@ const MIME_TYPES: Readonly<Record<string, string>> = {
   cer: "application/x-x509-ca-cert",
 };
 
+/**
+ * Vite refuses to serve `*.pem` and `*.crt` (`server.fs.deny`), so those
+ * fixtures are stored with a `.txt` suffix; they load under their real name.
+ */
+function fixtureName(fileName: string): string {
+  return fileName.replace(/\.(pem|crt)\.txt$/, ".$1");
+}
+
 interface StorybookFixture {
   name: string;
   url: string;
@@ -72,7 +81,7 @@ interface StorybookFixture {
 
 const FIXTURES: StorybookFixture[] = Object.entries(FIXTURE_URLS)
   .map(([path, url]) => {
-    const name = path.slice(path.lastIndexOf("/") + 1);
+    const name = fixtureName(path.slice(path.lastIndexOf("/") + 1));
     const extension = name.slice(name.lastIndexOf(".") + 1).toLowerCase();
     return {
       name,

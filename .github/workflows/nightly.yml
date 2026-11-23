@@ -37,7 +37,7 @@ jobs:
         theme: [light, dark]
         # One slice of the story set per entry, each on its own runner; add an
         # entry when the slowest leg passes about 15 minutes.
-        shard: ["1/4", "2/4", "3/4", "4/4"]
+        shard: ["1/8", "2/8", "3/8", "4/8", "5/8", "6/8", "7/8", "8/8"]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d
@@ -90,7 +90,7 @@ jobs:
       fail-fast: false
       matrix:
         flavor: [core, saas, desktop]
-        shard: ["1/2", "2/2"]
+        shard: ["1/4", "2/4", "3/4", "4/4"]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d
@@ -120,7 +120,16 @@ jobs:
           version: 3.54.0
 
       - name: Every story (${{ matrix.flavor }} build, ${{ matrix.shard }})
-        run: task frontend:storybook:setups FLAVORS=${{ matrix.flavor }} -- --shard=${{ matrix.shard }}
+        run: task frontend:storybook:setups FLAVORS=${{ matrix.flavor }} REPORT=${{ strategy.job-index }} -- --shard=${{ matrix.shard }}
+      - name: Upload story report
+        # Names each failing story and its error; the job log is truncated.
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stories-nightly-${{ matrix.flavor }}-${{ strategy.job-index }}-${{ github.run_id }}
+          path: frontend/storybook-setups-report/
+          retention-days: 7
+          if-no-files-found: ignore
 
   # Builds all desktop platforms on a schedule so the Rust dependency cache is
   # written on main, where PR and merge-queue tauri builds can restore it.

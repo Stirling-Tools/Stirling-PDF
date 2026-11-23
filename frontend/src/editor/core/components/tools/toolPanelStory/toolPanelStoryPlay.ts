@@ -539,9 +539,39 @@ async function findTrigger(
     return (await findRunButton(context)).parentElement!;
   const panel = within(await waitForToolPanel(context));
   if ("step" in trigger) return findStepTitle(panel, trigger.step);
-  if ("info" in trigger)
-    return panel.findByRole("button", { name: trigger.info }, STAGE_TIMEOUT);
+  if ("info" in trigger) return findInfoButton(panel, trigger.info);
   return panel.findByText(trigger.text, undefined, STAGE_TIMEOUT);
+}
+
+function matchesText(text: string, expected: string | RegExp): boolean {
+  return typeof expected === "string"
+    ? text.trim() === expected
+    : expected.test(text.trim());
+}
+
+/**
+ * The (i) whose explanation is `info`. A field's (i) is named after the field
+ * ("About Page Order") and its explanation is the field's description, read from
+ * the element just before the button; any other (i) is named by its text.
+ */
+function findInfoButton(
+  panel: PanelQueries,
+  info: string | RegExp,
+): Promise<HTMLElement> {
+  return waitFor(() => {
+    const named = panel.queryAllByRole("button", { name: info });
+    if (named[0]) return named[0];
+    const field = panel
+      .queryAllByRole("button", { name: /^About / })
+      .find((button: HTMLElement) =>
+        matchesText(
+          button.parentElement?.previousElementSibling?.textContent ?? "",
+          info,
+        ),
+      );
+    if (!field) throw new Error(`No (i) explains ${String(info)}`);
+    return field;
+  }, STAGE_TIMEOUT);
 }
 
 /**

@@ -2458,6 +2458,7 @@ tags = "pdf,split,document,organization"
 [autoSplitPDF]
 dividerDownload2 = "Download 'Auto Splitter Divider (with instructions).pdf'"
 duplexMode = "Duplex mode"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-based,separate,scan-segment,organize"
 title = "Auto Split PDF"
 
@@ -3854,6 +3855,7 @@ title = "Choose color"
 transparent = "Transparent"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Actions"
 back = "Back"
 cancel = "Cancel"

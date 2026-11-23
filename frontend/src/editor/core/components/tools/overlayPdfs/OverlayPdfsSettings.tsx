@@ -160,25 +160,28 @@ export default function OverlayPdfsSettings({
         >
           {parameters.overlayFiles?.length > 0 ? (
             <Stack gap="xs">
-              {parameters.overlayFiles.map((_, index) => (
-                <Group key={index} gap="xs" wrap="nowrap">
-                  <Text size="sm" className={styles.countLabel}>
-                    {t("overlay-pdfs.counts.item", "Count for file")}{" "}
-                    {index + 1}
-                  </Text>
-                  <NumberInput
-                    min={1}
-                    step={1}
-                    value={parameters.counts[index] ?? 1}
-                    onChange={(value) => {
-                      const next = [...(parameters.counts || [])];
-                      next[index] = Number(value) || 1;
-                      onParameterChange("counts", next);
-                    }}
-                    disabled={disabled}
-                  />
-                </Group>
-              ))}
+              {parameters.overlayFiles.map((_, index) => {
+                const countLabel = `${t("overlay-pdfs.counts.item", "Count for file")} ${index + 1}`;
+                return (
+                  <Group key={index} gap="xs" wrap="nowrap">
+                    <Text size="sm" className={styles.countLabel} aria-hidden>
+                      {countLabel}
+                    </Text>
+                    <NumberInput
+                      aria-label={countLabel}
+                      min={1}
+                      step={1}
+                      value={parameters.counts[index] ?? 1}
+                      onChange={(value) => {
+                        const next = [...(parameters.counts || [])];
+                        next[index] = Number(value) || 1;
+                        onParameterChange("counts", next);
+                      }}
+                      disabled={disabled}
+                    />
+                  </Group>
+                );
+              })}
             </Stack>
           ) : (
             <Text size="sm" c="dimmed">

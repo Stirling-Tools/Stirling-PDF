@@ -28,7 +28,9 @@ import { join } from "node:path";
 
 const OUT = ".a11y-scan";
 const CHUNK = 20;
-const BATCH_TIMEOUT_MS = 300_000;
+// The heaviest batches (twenty tool-panel story files, 40-70 stories each)
+// run past five minutes on a CI runner; a killed batch leaves no report.
+const BATCH_TIMEOUT_MS = 600_000;
 
 const git = (...args) =>
   execFileSync("git", args, { encoding: "utf8" })

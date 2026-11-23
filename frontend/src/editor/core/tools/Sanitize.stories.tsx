@@ -2,7 +2,6 @@ import type { StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import {
   fixtureResponse,
-  knownA11yIssues,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
@@ -33,10 +32,6 @@ const OPTIONS = [
 
 const CHECKED_BY_DEFAULT = OPTIONS.slice(0, 2);
 
-// The "Select at least one element to remove." warning is amber text at 3.05:1
-// on the panel background, under the 4.5:1 body-text minimum.
-const nothingSelectedContrast = knownA11yIssues("color-contrast");
-
 async function clearSelection(context: PlayContext) {
   for (const name of CHECKED_BY_DEFAULT)
     await toggle(context, "checkbox", name);
@@ -59,12 +54,10 @@ export const EverythingSelected: Story = {
 };
 
 export const NothingSelected: Story = {
-  parameters: nothingSelectedContrast,
   play: clearSelection,
 };
 
 export const NothingSelectedTooltip: Story = {
-  parameters: nothingSelectedContrast,
   play: openTooltip({ runButton: true }, { after: clearSelection }),
 };
 

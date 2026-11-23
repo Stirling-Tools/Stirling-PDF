@@ -20,8 +20,8 @@ import sampleCbz from "@editor/tests/test-fixtures/sample.cbz?url";
 import sampleEpub from "@editor/tests/test-fixtures/sample.epub?url";
 import validP12 from "@editor/tests/test-fixtures/certs/valid-test.p12?url";
 import validJks from "@editor/tests/test-fixtures/certs/valid-test.jks?url";
-import validKeyPem from "@editor/tests/test-fixtures/certs/valid-test-key.pem?url";
-import validCertPem from "@editor/tests/test-fixtures/certs/valid-test-cert.pem?url";
+import validKeyPem from "@editor/tests/test-fixtures/certs/valid-test-key.pem.txt?url";
+import validCertPem from "@editor/tests/test-fixtures/certs/valid-test-cert.pem.txt?url";
 
 /**
  * Real files the tool-panel stories load, so a panel reads them exactly as it

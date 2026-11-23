@@ -134,8 +134,6 @@ export const DynamicVariables: Story = {
 };
 
 export const VariableInserted: Story = {
-  // A pinned tooltip's title is white on the primary blue, at 3.67:1.
-  parameters: knownA11yIssues("color-contrast"),
   play: async (context) => {
     const variables = await pinDynamicVariables(context);
     await userEvent.click(

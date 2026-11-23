@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Stack, Text, Tooltip } from "@mantine/core";
+import { useId, type ReactNode } from "react";
+import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import FitText from "@editor/components/shared/FitText";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
@@ -18,7 +18,10 @@ interface ButtonSelectorProps<T> {
   value: T | undefined;
   onChange: (value: T) => void;
   options: ButtonOption<T>[];
+  /** Names the segmented group. */
   label?: ReactNode;
+  /** Drawn beside the label and read as the group's description, e.g. an (i). */
+  description?: ReactNode;
   disabled?: boolean;
   fullWidth?: boolean;
   textClassName?: string;
@@ -29,10 +32,13 @@ const ButtonSelector = <T extends string | number>({
   onChange,
   options,
   label = undefined,
+  description,
   disabled = false,
   fullWidth = true,
   textClassName,
 }: ButtonSelectorProps<T>) => {
+  const labelId = useId();
+  const descriptionId = useId();
   const selectedValue = value === undefined ? "" : String(value);
   const withIcons = options.some((option) => option.icon);
 
@@ -79,16 +85,24 @@ const ButtonSelector = <T extends string | number>({
   return (
     <Stack gap="var(--mantine-spacing-sm)">
       {label && (
-        <Text
-          style={{
-            fontSize: "var(--mantine-font-size-sm)",
-            lineHeight: "var(--mantine-line-height-sm)",
-            fontWeight: "var(--font-weight-medium)",
-            color: "var(--c-text-muted)",
-          }}
-        >
-          {label}
-        </Text>
+        <Group gap={0} wrap="nowrap">
+          <Text
+            id={labelId}
+            style={{
+              fontSize: "var(--mantine-font-size-sm)",
+              lineHeight: "var(--mantine-line-height-sm)",
+              fontWeight: "var(--font-weight-medium)",
+              color: "var(--c-text-muted)",
+            }}
+          >
+            {label}
+          </Text>
+          {description && (
+            <span id={descriptionId} style={{ display: "inline-flex" }}>
+              {description}
+            </span>
+          )}
+        </Group>
       )}
 
       <SegmentedControl
@@ -99,6 +113,8 @@ const ButtonSelector = <T extends string | number>({
         value={selectedValue}
         onChange={handleChange}
         fullWidth={fullWidth}
+        ariaLabelledBy={label ? labelId : undefined}
+        ariaDescribedBy={label && description ? descriptionId : undefined}
       />
     </Stack>
   );

@@ -114,11 +114,7 @@ export const OverlayFilesAdded: Story = {
 };
 
 export const FixedRepeatWithCounts: Story = {
-  parameters: {
-    ...toolPanelServer(noProcessingFolders),
-    // Each file's count field has no label.
-    ...knownA11yIssues("label"),
-  },
+  parameters: toolPanelServer(noProcessingFolders),
   play: async (context) => {
     await fixedRepeat(context);
     const panel = await addOverlayFile(context);

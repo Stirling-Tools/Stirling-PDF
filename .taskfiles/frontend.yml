@@ -296,17 +296,23 @@ tasks:
       The proprietary build is what storybook:test and the a11y gate already
       run. This runs the same stories through each other build, plus each
       build's own stories, so a panel that breaks in only one build fails. One
-      build failing still runs the next. FLAVORS narrows the builds; arguments
-      pass through to vitest, e.g.
+      build failing still runs the next. Each build writes a JSON report to
+      storybook-setups-report/. FLAVORS narrows the builds; arguments pass
+      through to vitest, e.g.
         task frontend:storybook:setups FLAVORS=desktop -- --shard=1/2
     deps: [prepare, storybook:browser]
     vars:
       FLAVORS: '{{.FLAVORS | default "core saas desktop"}}'
+      REPORT: '{{.REPORT | default "all"}}'
     cmds:
       - cmd: |
           rc=0
+          mkdir -p storybook-setups-report
           for flavor in {{.FLAVORS}}; do
-            STORYBOOK_FLAVOR=$flavor npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}} || rc=1
+            STORYBOOK_FLAVOR=$flavor npx vitest run --config .storybook/vitest.config.ts \
+              --reporter=default --reporter=json \
+              --outputFile.json=storybook-setups-report/$flavor-{{.REPORT}}.json \
+              {{.CLI_ARGS}} || rc=1
           done
           exit $rc
 
@@ -315,12 +321,15 @@ tasks:
     summary: |
       What pull requests run per build: the stories storybook:a11y:changed
       picks, each in the core, SaaS and desktop builds. A build that does not
-      index a changed story skips it. Pass a base ref through CLI_ARGS, e.g.
-        task frontend:storybook:setups:changed FLAVORS=saas -- origin/release
+      index a changed story skips it. SHARD splits the run (vitest's
+      --shard), and each build writes a JSON report to storybook-setups-report/.
+      Pass a base ref through CLI_ARGS, e.g.
+        task frontend:storybook:setups:changed FLAVORS=saas SHARD=1/2 -- origin/release
     deps: [prepare, storybook:browser]
     vars:
       FLAVORS: '{{.FLAVORS | default "core saas desktop"}}'
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
+      SHARD: '{{.SHARD | default ""}}'
       CHANGED:
         sh: node .storybook/a11y-changed.mjs {{.BASE}}
     cmds:
@@ -330,8 +339,12 @@ tasks:
             exit 0
           fi
           rc=0
+          mkdir -p storybook-setups-report
           for flavor in {{.FLAVORS}}; do
-            STORYBOOK_FLAVOR=$flavor npx vitest run --config .storybook/vitest.config.ts --passWithNoTests {{.CHANGED}} || rc=1
+            STORYBOOK_FLAVOR=$flavor npx vitest run --config .storybook/vitest.config.ts --passWithNoTests \
+              --reporter=default --reporter=json \
+              --outputFile.json=storybook-setups-report/$flavor-changed{{if .SHARD}}-{{.SHARD | replace "/" "of"}}{{end}}.json \
+              {{if .SHARD}}--shard={{.SHARD}}{{end}} {{.CHANGED}} || rc=1
           done
           exit $rc
 
@@ -382,6 +395,7 @@ tasks:
         vars:
           THEMES: light
           BASE: '{{.CLI_ARGS | default "origin/main"}}'
+          SHARD: '{{.SHARD | default ""}}'
 
   storybook:a11y:changed:dark:
     desc: "a11y gate over the stories this branch affects in dark mode (default base origin/main)"
@@ -390,6 +404,7 @@ tasks:
         vars:
           THEMES: dark
           BASE: '{{.CLI_ARGS | default "origin/main"}}'
+          SHARD: '{{.SHARD | default ""}}'
 
   storybook:a11y:changed:themes:
     internal: true
@@ -405,7 +420,7 @@ tasks:
           fi
           rc=0
           for theme in {{.THEMES}}; do
-            task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:$theme -- {{.CHANGED}} || rc=1
+            task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:$theme -- {{.CHANGED}} {{if .SHARD}}--shard={{.SHARD}}{{end}} || rc=1
           done
           exit $rc
 

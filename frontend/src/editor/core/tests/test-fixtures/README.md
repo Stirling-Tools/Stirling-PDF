@@ -159,19 +159,23 @@ When updating the convert tool with new formats:
 2. Update the test files list above
 3. Update the test cases to include the new formats
 
+## PEM and CRT fixtures
+
+`certs/valid-test-key.pem.txt`, `certs/valid-test-cert.pem.txt` and `certs/valid-test-cert.crt.txt` carry a `.txt` suffix because Vite's dev server refuses to serve `*.pem` and `*.crt` files (`server.fs.deny`), which Storybook and its tests load through. Stories and the Storybook file chooser hand them to panels under their real names.
+
 ## One fixture per accepted file type
 
 Storybook offers these files when a file input is clicked (`.storybook/storybookFilePicker.ts`), so every type a tool accepts has at least one real file:
 
 - `sample.odt`, `sample.odp`, `sample.rtf`, `sample.msg` and `sample-html.zip` are copies of `testing/cucumber/exampleFiles/example.*` and `example_html.zip`.
 - `certs/valid-test.pfx` and `certs/valid-test.keystore` are copies of `valid-test.p12` and `valid-test.jks` under the extensions the certificate inputs also accept (same password, `testpass`).
-- `certs/valid-test-cert.der`, `.crt` and `.cer`, and `certs/valid-test.key`, are `valid-test-cert.pem` and `valid-test-key.pem` in the other encodings those inputs take, so the key and certificate still match:
+- `certs/valid-test-cert.der`, `.crt.txt` and `.cer`, and `certs/valid-test.key`, are the PEM certificate and key in the other encodings those inputs take, so the key and certificate still match:
 
   ```sh
-  openssl x509 -in valid-test-cert.pem -outform der -out valid-test-cert.der
-  openssl x509 -in valid-test-cert.pem -outform der -out valid-test-cert.cer
-  cp valid-test-cert.pem valid-test-cert.crt
-  cp valid-test-key.pem valid-test.key
+  openssl x509 -in valid-test-cert.pem.txt -outform der -out valid-test-cert.der
+  openssl x509 -in valid-test-cert.pem.txt -outform der -out valid-test-cert.cer
+  cp valid-test-cert.pem.txt valid-test-cert.crt.txt
+  cp valid-test-key.pem.txt valid-test.key
   ```
 
 - `sample.gif`, `sample.bmp`, `sample.tiff` and `sample.webp` are `sample.png` re-encoded (`sips -s format gif|bmp|tiff`, Pillow for WebP; BMP and TIFF scaled to 200 px wide).

@@ -1,3 +1,4 @@
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import {
   Stack,
   TextInput,
@@ -219,9 +220,12 @@ const SplitSettings = ({
       </Anchor>
 
       <Checkbox
-        label={t(
-          "autoSplitPDF.duplexMode",
-          "Duplex Mode (Front and back scanning)",
+        {...infoLabelProps(
+          t("autoSplitPDF.duplexMode", "Duplex mode"),
+          t(
+            "autoSplitPDF.duplexModeDesc",
+            "Turn on when the pages were scanned front and back.",
+          ),
         )}
         checked={parameters.duplexMode}
         onChange={(e) =>
