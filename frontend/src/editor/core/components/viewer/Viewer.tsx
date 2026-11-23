@@ -30,11 +30,8 @@ type SignatureOverlayPassThrough = Pick<
 
 const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
   const { files: activeFiles } = useAllFiles();
-  const {
-    activeFileId,
-    isAttachmentSidebarVisible,
-    toggleAttachmentSidebar,
-  } = useViewer();
+  const { activeFileId, isAttachmentSidebarVisible, toggleAttachmentSidebar } =
+    useViewer();
 
   // Determine the active file — previewFile takes priority, then look up by stable ID
   const activeFile = useMemo(() => {

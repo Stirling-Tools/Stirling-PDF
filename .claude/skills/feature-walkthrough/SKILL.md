@@ -42,7 +42,7 @@ vs `main`. Flags: `--html` (also emit a rendered HTML twin), `--no-screens`.
 ### 2. Trace the flow end-to-end
 Follow one real path from user action to result. For a typical PDF tool that's:
 UI control → `useToolOperation` hook → `POST /api/v1/...` → Spring controller →
-service (PDFBox / LibreOffice / engine call) → response → review panel → download.
+service (PDFBox / Office Convert / engine call) → response → review panel → download.
 Read the actual files so the narrative is true to the code, and collect the exact
 file:line anchors you'll cite.
 

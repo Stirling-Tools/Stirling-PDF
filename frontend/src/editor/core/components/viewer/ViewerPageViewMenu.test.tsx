@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
@@ -21,6 +21,10 @@ const viewer = vi.hoisted(() => {
     notifyZoom: (level: ZoomLevel) => {
       state.level = level;
       for (const listener of [...zoomListeners]) listener(100);
+    },
+    notifySpread: (mode: string) => {
+      state.spreadMode = mode;
+      for (const listener of [...spreadListeners]) listener(mode);
     },
     value: {
       getScrollState: () => ({ currentPage: 1, totalPages: 3 }),
@@ -121,6 +125,17 @@ describe("ViewerPageViewMenu", () => {
       await screen.findByRole("menuitem", { name: "viewer.dualPageView" }),
     );
     expect(viewer.value.spreadActions.toggleSpreadMode).toHaveBeenCalledOnce();
+  });
+
+  it("follows spread changes the document reports", async () => {
+    await openMenu();
+    act(() => viewer.notifySpread(SpreadMode.Even));
+    expect(
+      await screen.findByRole("menuitem", { name: "viewer.dualPageView" }),
+    ).toHaveAttribute("data-checked", "true");
+    expect(
+      await screen.findByRole("menuitem", { name: "viewer.coverPageView" }),
+    ).toHaveAttribute("data-checked", "true");
   });
 
   it("offers the cover page from one page at a time, going to pairs", async () => {
