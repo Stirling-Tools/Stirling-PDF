@@ -59,13 +59,13 @@
 }
 
 .viewer-page-colour-swatch--normal {
-  background: var(--p-white);
+  background: var(--c-page-colour-normal);
 }
 
 .viewer-page-colour-swatch--dark {
-  background: var(--p-black);
+  background: var(--c-page-colour-dark);
 }
 
 .viewer-page-colour-swatch--sepia {
-  background: var(--p-page-sepia);
+  background: var(--c-page-colour-sepia);
 }
