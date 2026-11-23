@@ -8,16 +8,6 @@ on:
         required: false
         type: boolean
         default: true
-      build_unoserver:
-        description: "Build & push the standalone stirling-unoserver image."
-        required: false
-        type: boolean
-        default: true
-      force_unoserver_rebuild:
-        description: "Rebuild stirling-unoserver even if its source hash is unchanged."
-        required: false
-        type: boolean
-        default: false
       build_engine:
         description: "Build & push the standalone stirling-engine image."
         required: false
@@ -59,11 +49,10 @@ jobs:
     # On push events these stay 'true'; on workflow_dispatch they follow the inputs.
     env:
       RUN_MAIN_APP: ${{ github.event_name != 'workflow_dispatch' || inputs.build_main_app }}
-      RUN_UNOSERVER: ${{ github.event_name != 'workflow_dispatch' || inputs.build_unoserver }}
       RUN_ENGINE: ${{ github.event_name != 'workflow_dispatch' || inputs.build_engine }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -100,24 +89,24 @@ jobs:
 
       - name: Install cosign
         if: github.ref == 'refs/heads/release'
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
         with:
           cosign-release: "v2.4.1"
 
       - name: Install cosign
         if: github.ref == 'refs/heads/release'
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
         with:
           cosign-release: "v2.4.1"
 
       - name: Login to Docker Hub
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -268,144 +257,7 @@ jobs:
             cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
           done
 
-      # Standalone unoserver image — versioned independently via
-      # docker/unoserver/VERSION. release: publish <version>+latest
-      # only when the version is new. main/testMain: republish :alpha only
-      # when the source hash differs from the published image's annotation.
-      - name: Read unoserver image version
-        id: unoserverVersion
-        if: env.RUN_UNOSERVER == 'true'
-        run: |
-          version=$(tr -d '[:space:]' < docker/unoserver/VERSION)
-          if [ -z "$version" ]; then
-            echo "docker/unoserver/VERSION is empty"; exit 1
-          fi
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "Unoserver image version (from file): ${version}"
-
-      - name: Compute unoserver image source hash
-        id: unoserverHash
-        if: env.RUN_UNOSERVER == 'true'
-        run: |
-          set -eu
-          hash=$(cat \
-            docker/unoserver/Dockerfile \
-            docker/unoserver/entrypoint.sh \
-            docker/unoserver/healthcheck.sh \
-            docker/unoserver/fonts.conf \
-            docker/unoserver/VERSION \
-            docker/base/lo-sandbox.c \
-            docker/base/stirling-hardening.xcd \
-            docker/base/unoserver-pipe-transport.py \
-            | sha256sum | cut -d' ' -f1)
-          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
-          echo "Unoserver source hash: ${hash}"
-
-      - name: Decide whether to publish unoserver image
-        id: unoserverDecision
-        if: env.RUN_UNOSERVER == 'true'
-        env:
-          UNOSERVER_VERSION: ${{ steps.unoserverVersion.outputs.version }}
-          UNOSERVER_HASH: ${{ steps.unoserverHash.outputs.hash }}
-          UNOSERVER_IMAGE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-unoserver
-          UNOSERVER_HASH_ANNOTATION: org.stirlingpdf.unoserver-source-hash
-          FORCE_REBUILD: ${{ inputs.force_unoserver_rebuild }}
-          GH_REF: ${{ github.ref }}
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          set -eu
-          mode="skip"
-          tags=""
-
-          read_published_hash() {
-            local ref="$1"
-            docker buildx imagetools inspect "$ref" --raw 2>/dev/null \
-              | jq -r --arg key "$UNOSERVER_HASH_ANNOTATION" \
-                  '.annotations[$key] // empty' \
-              2>/dev/null || true
-          }
-
-          # Manual dispatch from any branch routes to the :alpha publish path.
-          EFFECTIVE_REF="$GH_REF"
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            EFFECTIVE_REF="refs/heads/testMain"
-          fi
-
-          case "$EFFECTIVE_REF" in
-            refs/heads/release)
-              if [ "${FORCE_REBUILD}" = "true" ]; then
-                echo "force_unoserver_rebuild=true — building stable regardless"
-                mode="stable"
-                tags="${UNOSERVER_IMAGE}:${UNOSERVER_VERSION},${UNOSERVER_IMAGE}:latest"
-              elif docker manifest inspect "${UNOSERVER_IMAGE}:${UNOSERVER_VERSION}" >/dev/null 2>&1; then
-                echo "stirling-unoserver:${UNOSERVER_VERSION} already on GHCR — skipping"
-              else
-                echo "stirling-unoserver:${UNOSERVER_VERSION} is new — will publish"
-                mode="stable"
-                tags="${UNOSERVER_IMAGE}:${UNOSERVER_VERSION},${UNOSERVER_IMAGE}:latest"
-              fi
-              ;;
-            refs/heads/main|refs/heads/testMain)
-              published_hash=$(read_published_hash "${UNOSERVER_IMAGE}:alpha")
-              if [ "${FORCE_REBUILD}" = "true" ]; then
-                echo "force_unoserver_rebuild=true — rebuilding :alpha regardless"
-                mode="alpha"
-                tags="${UNOSERVER_IMAGE}:alpha"
-              elif [ -n "$published_hash" ] && [ "$published_hash" = "$UNOSERVER_HASH" ]; then
-                echo "Published :alpha source hash matches (${published_hash}) — skipping"
-              else
-                if [ -z "$published_hash" ]; then
-                  echo ":alpha has no source-hash annotation (first publish or pre-tracking image) — will publish"
-                else
-                  echo "Source hash changed (was ${published_hash}, now ${UNOSERVER_HASH}) — will publish"
-                fi
-                mode="alpha"
-                tags="${UNOSERVER_IMAGE}:alpha"
-              fi
-              ;;
-            *)
-              echo "Branch ${GH_REF} does not publish unoserver image"
-              ;;
-          esac
-          echo "mode=${mode}" >> "$GITHUB_OUTPUT"
-          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push unoserver image
-        id: build-push-unoserver
-        if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./docker/unoserver/Dockerfile
-          push: true
-          cache-from: type=gha,scope=stirling-unoserver
-          cache-to: type=gha,mode=max,scope=stirling-unoserver
-          tags: ${{ steps.unoserverDecision.outputs.tags }}
-          # Manifest annotation read by the decision step above to detect drift.
-          annotations: |
-            index:org.stirlingpdf.unoserver-source-hash=${{ steps.unoserverHash.outputs.hash }}
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
-
-      - name: Sign unoserver image
-        if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode == 'stable'
-        env:
-          DIGEST: ${{ steps.build-push-unoserver.outputs.digest }}
-          TAGS: ${{ steps.unoserverDecision.outputs.tags }}
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-        run: |
-          if [ -n "$COSIGN_PRIVATE_KEY" ]; then
-            echo "$TAGS" | tr ',' '\n' | while read -r tag; do
-              cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
-            done
-          else
-            echo "Warning: COSIGN_PRIVATE_KEY not set, skipping unoserver image signing"
-          fi
-
-      # Standalone AI engine image, same shape as the unoserver image above.
+      # Standalone AI engine image, versioned and published by source hash.
       - name: Compute engine image source hash
         id: engineHash
         if: env.RUN_ENGINE == 'true'

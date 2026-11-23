@@ -1,9 +1,16 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  type ComponentProps,
+} from "react";
 import { Slider, Popover, Select } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@editor/i18n";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
@@ -57,8 +64,15 @@ export function useViewerWorkbenchBarButtons(
     sidebarRefs,
     12,
   );
-  const { handleToolSelect, handleToolSelectForced, handleBackToTools } =
-    useToolWorkflow();
+  const {
+    handleToolSelect,
+    handleToolSelectForced,
+    handleBackToTools,
+    clearToolSelection,
+    setLeftPanelView,
+    setReaderMode,
+    toolRegistry,
+  } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
@@ -84,7 +98,6 @@ export function useViewerWorkbenchBarButtons(
   // mirror drifts the moment the address changes without a popstate.
   const isAnnotationsActive = selectedTool === "annotate";
 
-  const searchLabel = t("workbenchBar.search", "Search PDF");
   const panLabel = t("workbenchBar.panMode", "Pan Mode");
   const applyRedactionsLabel = t(
     "workbenchBar.applyRedactionsFirst",
@@ -109,12 +122,45 @@ export function useViewerWorkbenchBarButtons(
     "Exit annotation mode",
   );
   const formFillLabel = t("workbenchBar.formFill", "Form Editor");
+  const editTextLabel = t("workbenchBar.editText", "Edit Text");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
   const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
   const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
+  const isTextEditActive = selectedTool === "pdfTextEditor";
+  const pageTool = useViewerPageTool();
+  const pageToolActive = pageTool != null;
+  // While a page tool with its own find is open, the search button opens that.
+  const searchLabel = pageTool?.onToggleFind
+    ? t("workbenchBar.findReplace", "Find & replace")
+    : t("workbenchBar.search", "Search PDF");
+
+  // The text editor owns the pages while it is open, so a viewer tool that
+  // works on them closes it first, behind the unsaved-edits prompt. Leaving
+  // without a second guard: the prompt has already settled the edits.
+  const leaveTextEditThen = useCallback(
+    (action: () => void) => {
+      if (!isTextEditActive) {
+        action();
+        return;
+      }
+      requestNavigation(() => {
+        setLeftPanelView("toolPicker");
+        setReaderMode(false);
+        clearToolSelection();
+        action();
+      });
+    },
+    [
+      isTextEditActive,
+      requestNavigation,
+      setLeftPanelView,
+      setReaderMode,
+      clearToolSelection,
+    ],
+  );
 
   const handleStartScaleCalibration = useCallback(() => {
     startScaleCalibration?.();
@@ -191,7 +237,13 @@ export function useViewerWorkbenchBarButtons(
                     className="workbench-bar-action-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
-                    onClick={viewer.searchInterfaceActions.toggle}
+                    onClick={() =>
+                      pageTool?.onToggleFind
+                        ? pageTool.onToggleFind()
+                        : leaveTextEditThen(
+                            viewer.searchInterfaceActions.toggle,
+                          )
+                    }
                   >
                     <Icon name="file-search" size="1.25rem" />
                   </ActionIcon>
@@ -225,10 +277,11 @@ export function useViewerWorkbenchBarButtons(
         active: isPanning,
         disabled:
           !isPanning && pendingCount > 0 && redactionActiveType !== null,
-        onClick: () => {
-          viewer.panActions.togglePan();
-          if (!isPanning && isRulerActive) setIsRulerActive?.(false);
-        },
+        onClick: () =>
+          leaveTextEditThen(() => {
+            viewer.panActions.togglePan();
+            if (!isPanning && isRulerActive) setIsRulerActive?.(false);
+          }),
       },
       {
         id: "viewer-ruler",
@@ -238,13 +291,14 @@ export function useViewerWorkbenchBarButtons(
         section: "top" as const,
         order: 25,
         active: Boolean(isRulerActive),
-        onClick: () => {
-          const next = !isRulerActive;
-          setIsRulerActive?.(next);
-          if (next && isPanning) {
-            viewer.panActions.disablePan();
-          }
-        },
+        onClick: () =>
+          leaveTextEditThen(() => {
+            const next = !isRulerActive;
+            setIsRulerActive?.(next);
+            if (next && isPanning) {
+              viewer.panActions.disablePan();
+            }
+          }),
       },
       // Ruler scale settings button - only visible when ruler is active
       ...(isRulerActive
@@ -279,6 +333,7 @@ export function useViewerWorkbenchBarButtons(
         ariaLabel: rotateLeftLabel,
         section: "top" as const,
         order: 30,
+        disabled: pageToolActive,
         onClick: () => {
           viewer.rotationActions.rotateBackward();
         },
@@ -290,6 +345,7 @@ export function useViewerWorkbenchBarButtons(
         ariaLabel: rotateRightLabel,
         section: "top" as const,
         order: 40,
+        disabled: pageToolActive,
         onClick: () => {
           viewer.rotationActions.rotateForward();
         },
@@ -518,31 +574,41 @@ export function useViewerWorkbenchBarButtons(
         section: "top" as const,
         order: 62,
         render: ({ disabled }) => (
-          <Tooltip
-            content={formFillLabel}
-            position={tooltipPosition}
-            offset={12}
-            arrow
-            portalTarget={document.body}
-          >
-            <ActionIcon
-              variant={isFormFillActive ? "primary" : "tertiary"}
-              className="workbench-bar-action-icon"
-              onClick={() => {
-                if (disabled) return;
-                if (isFormFillActive) {
-                  handleBackToTools();
-                } else {
-                  handleToolSelect("formFill");
-                }
-              }}
-              disabled={disabled}
-              aria-pressed={isFormFillActive}
-              aria-label={formFillLabel}
-            >
-              <Icon name="type" size={"1rem"} />
-            </ActionIcon>
-          </Tooltip>
+          <ToolModeToggle
+            label={formFillLabel}
+            icon="type"
+            active={isFormFillActive}
+            disabled={disabled}
+            tooltipPosition={tooltipPosition}
+            onToggle={() =>
+              isFormFillActive
+                ? handleBackToTools()
+                : handleToolSelect("formFill")
+            }
+          />
+        ),
+      },
+      {
+        id: "viewer-edit-text",
+        tooltip: editTextLabel,
+        ariaLabel: editTextLabel,
+        section: "top" as const,
+        order: 63,
+        render: ({ disabled }) => (
+          <ToolModeToggle
+            label={editTextLabel}
+            icon="square-pen"
+            active={isTextEditActive}
+            disabled={disabled}
+            tooltipPosition={tooltipPosition}
+            onToggle={() =>
+              isTextEditActive
+                ? handleBackToTools()
+                : handleToolSelect("pdfTextEditor")
+            }
+            onIntent={() => void toolRegistry.pdfTextEditor?.preload?.()}
+            testId="viewer-edit-text"
+          />
         ),
       },
     ];
@@ -581,6 +647,12 @@ export function useViewerWorkbenchBarButtons(
     redactionActiveType,
     formFillLabel,
     isFormFillActive,
+    editTextLabel,
+    isTextEditActive,
+    toolRegistry,
+    pageTool,
+    pageToolActive,
+    leaveTextEditThen,
     rulerLabel,
     rulerSettingsLabel,
     isRulerActive,
@@ -606,4 +678,52 @@ export function useViewerWorkbenchBarButtons(
   ]);
 
   useWorkbenchBarButtons(viewerButtons);
+}
+
+/** A bar button that enters a tool which works on the viewer's pages, or leaves it. */
+function ToolModeToggle({
+  label,
+  icon,
+  active,
+  disabled,
+  tooltipPosition,
+  onToggle,
+  onIntent,
+  testId,
+}: {
+  label: string;
+  icon: ComponentProps<typeof Icon>["name"];
+  active: boolean;
+  disabled?: boolean;
+  tooltipPosition: ComponentProps<typeof Tooltip>["position"];
+  onToggle: () => void;
+  /** The pointer or focus arrived: a click may follow, so start loading the tool. */
+  onIntent?: () => void;
+  testId?: string;
+}) {
+  return (
+    <Tooltip
+      content={label}
+      position={tooltipPosition}
+      offset={12}
+      arrow
+      portalTarget={document.body}
+    >
+      <ActionIcon
+        variant={active ? "primary" : "tertiary"}
+        className="workbench-bar-action-icon"
+        onClick={() => {
+          if (!disabled) onToggle();
+        }}
+        onPointerEnter={onIntent}
+        onFocus={onIntent}
+        disabled={disabled}
+        aria-pressed={active}
+        aria-label={label}
+        data-testid={testId}
+      >
+        <Icon name={icon} size="1rem" />
+      </ActionIcon>
+    </Tooltip>
+  );
 }

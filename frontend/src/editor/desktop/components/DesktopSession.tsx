@@ -26,20 +26,6 @@ import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonito
 import { authService } from "@editor/services/authService";
 import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 
-// Common tool endpoints to preload for faster first-use
-const COMMON_TOOL_ENDPOINTS = [
-  "/api/v1/misc/compress-pdf",
-  "/api/v1/general/merge-pdfs",
-  "/api/v1/general/split-pages",
-  "/api/v1/convert/pdf/img",
-  "/api/v1/convert/img/pdf",
-  "/api/v1/general/rotate-pdf",
-  "/api/v1/misc/add-watermark",
-  "/api/v1/security/add-password",
-  "/api/v1/security/remove-password",
-  "/api/v1/general/extract-pages",
-];
-
 type ConnectionMode = "saas" | "selfhosted" | "local";
 
 interface DesktopSession {
@@ -276,13 +262,8 @@ export function DesktopSessionProvider({ children }: { children: ReactNode }) {
       // tauriBackendService.isOnline now always reflects the local backend.
       // Wait for it to be healthy before preloading in both modes.
       if (!tauriBackendService.isOnline) return;
-      console.debug(
-        "[DesktopSession] Preloading common tool endpoints for local backend",
-      );
-      void endpointAvailabilityService.preloadEndpoints(
-        COMMON_TOOL_ENDPOINTS,
-        backendUrl,
-      );
+      console.debug("[DesktopSession] Preloading local backend capabilities");
+      endpointAvailabilityService.preloadLocalCapabilities(backendUrl);
     };
 
     const unsubscribe = tauriBackendService.subscribeToStatus(() =>
