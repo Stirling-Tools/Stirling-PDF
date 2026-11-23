@@ -31,9 +31,17 @@ export interface HardwareSigningCapabilities {
 
 const BASE = "/api/v1/security/cert-sign/hardware";
 
+/**
+ * The backend lists these routes under the certificate-signing endpoint. Without
+ * the key, desktop routing looks up `cert-sign/hardware/<action>`, finds no such
+ * local endpoint and asks for an account instead of using the bundled backend.
+ */
+const CERT_SIGN_ENDPOINT = { endpointName: "cert-sign" };
+
 export async function getHardwareSigningCapabilities(): Promise<HardwareSigningCapabilities> {
   const response = await apiClient.get<HardwareSigningCapabilities>(
     `${BASE}/capabilities`,
+    CERT_SIGN_ENDPOINT,
   );
   return response.data;
 }
@@ -43,6 +51,7 @@ export async function listWindowsCertificates(): Promise<
 > {
   const response = await apiClient.get<HardwareCertificateInfo[]>(
     `${BASE}/windows-certificates`,
+    CERT_SIGN_ENDPOINT,
   );
   return response.data;
 }
@@ -59,6 +68,7 @@ export async function listPkcs11Certificates(params: {
       slot: params.slot ?? null,
       pin: params.pin,
     },
+    CERT_SIGN_ENDPOINT,
   );
   return response.data;
 }

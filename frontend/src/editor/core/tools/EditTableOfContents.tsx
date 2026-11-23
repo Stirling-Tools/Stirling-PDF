@@ -32,9 +32,13 @@ const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
   const formData = new FormData();
   formData.append("file", file);
 
+  // The backend lists bookmark extraction under this tool's endpoint; without
+  // the key, desktop routing finds no local `extract-bookmarks` endpoint and
+  // asks for an account instead of using the bundled backend.
   const response = await apiClient.post(
     "/api/v1/general/extract-bookmarks",
     formData,
+    { endpointName: "edit-table-of-contents" },
   );
 
   return response.data as BookmarkPayload[];
