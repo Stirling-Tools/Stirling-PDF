@@ -19,9 +19,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -77,6 +74,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
+import stirling.software.SPDF.pdf.signature.SignatureTextWriter;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -541,7 +539,7 @@ public class CertSignController {
                 PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
-                PDFont font = new PDType1Font(FontName.TIMES_BOLD);
+                SignatureTextWriter text = new SignatureTextWriter(doc);
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
                 PDAppearanceDictionary appearance = new PDAppearanceDictionary();
@@ -568,7 +566,6 @@ public class CertSignController {
                     float fontSize = 10;
                     float leading = fontSize * 1.5f;
                     cs.beginText();
-                    cs.setFont(font, fontSize);
                     cs.setNonStrokingColor(Color.black);
                     cs.newLineAtOffset(fontSize, height - leading);
                     cs.setLeading(leading);
@@ -586,12 +583,12 @@ public class CertSignController {
                     String date = signature.getSignDate().getTime().toString();
                     String reason = signature.getReason();
 
-                    cs.showText("Signed by " + name);
+                    text.showText(cs, "Signed by " + name, fontSize);
                     cs.newLine();
-                    cs.showText(date);
+                    text.showText(cs, date, fontSize);
                     if (StringUtils.isNotBlank(reason)) {
                         cs.newLine();
-                        cs.showText(reason);
+                        text.showText(cs, reason, fontSize);
                     }
 
                     cs.endText();

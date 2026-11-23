@@ -562,6 +562,20 @@ class CertSignControllerTest {
         assertTrue(drainBody(response).length > 0);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"CN=山田 太郎", "CN=Иван Петров", "O=東京"})
+    void visibleSignatureShowsNamesOutsideWesternEuropeanScripts(String subject) throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest(unencryptedPemPair(subject));
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+        request.setReason("承認 · Утверждено");
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertTrue(drainBody(response).length > 0);
+    }
+
     @Test
     void visibleSignatureOnAPageThatDoesNotExistIsAClearError() throws Exception {
         SignPDFWithCertRequest request = unencryptedPemRequest();
