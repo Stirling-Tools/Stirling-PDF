@@ -1,8 +1,10 @@
-import { Group, Input, Stack, Text } from "@mantine/core";
+import { Input, Stack, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import FileUploadButton from "@editor/components/shared/FileUploadButton";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
+import classes from "@editor/components/tools/validateSignature/ValidateSignatureSettings.module.css";
 import { ValidateSignatureParameters } from "@editor/hooks/tools/validateSignature/useValidateSignatureParameters";
 
 interface ValidateSignatureSettingsProps {
@@ -37,7 +39,7 @@ const ValidateSignatureSettings = ({
       )}
     >
       <Stack gap="xs" mt={4}>
-        <Group align="center" gap="sm" wrap="nowrap">
+        <div className={classes.certRow}>
           <FileUploadButton
             file={certFile ?? undefined}
             onChange={handleCertFileChange}
@@ -47,20 +49,32 @@ const ValidateSignatureSettings = ({
           />
           {certFile && (
             <Button
-              variant="tertiary"
+              variant="secondary"
+              px="none"
+              className={classes.remove}
               onClick={() => handleCertFileChange(null)}
               disabled={disabled}
+              aria-label={t(
+                "validateSignature.settings.removeCert",
+                "Remove certificate",
+              )}
             >
-              {t("sign.clear", "Clear")}
+              <Icon name="x" size={16} />
             </Button>
           )}
-        </Group>
-
-        {certFile && (
-          <Text size="xs" c="dimmed">
-            {t("size", "Size")}: {Math.round(certFile.size / 1024)} KB
-          </Text>
-        )}
+        </div>
+        <Text size="xs" style={{ color: "var(--c-text-muted)" }}>
+          {certFile
+            ? t(
+                "validateSignature.settings.certOnly",
+                "Signatures are checked against this certificate only ({{size}} KB).",
+                { size: Math.round(certFile.size / 1024) },
+              )
+            : t(
+                "validateSignature.settings.noCert",
+                "No trusted certificate. Signatures are checked against the server's trusted certificates.",
+              )}
+        </Text>
       </Stack>
     </Input.Wrapper>
   );

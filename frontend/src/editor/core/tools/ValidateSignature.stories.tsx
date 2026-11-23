@@ -60,7 +60,11 @@ const validSignature = validatesAs([SIGNATURE]);
 
 async function uploadTrustedCertificate(context: PlayContext) {
   const panel = await uploadToPanel(context, "valid-test-cert.pem");
-  await panel.findByText(/^Size: \d+ KB$/, undefined, STAGE_TIMEOUT);
+  await panel.findByText(
+    /^Signatures are checked against this certificate only/,
+    undefined,
+    STAGE_TIMEOUT,
+  );
   return panel;
 }
 
@@ -104,8 +108,10 @@ export const TrustedCertificateUploaded: Story = {
 export const TrustedCertificateCleared: Story = {
   play: async (context) => {
     const panel = await uploadTrustedCertificate(context);
-    await userEvent.click(panel.getByRole("button", { name: "Clear" }));
-    await waitFor(() => expect(panel.queryByText(/^Size:/)).toBeNull());
+    await userEvent.click(
+      panel.getByRole("button", { name: "Remove certificate" }),
+    );
+    await panel.findByText(/^No trusted certificate/, undefined, STAGE_TIMEOUT);
   },
 };
 

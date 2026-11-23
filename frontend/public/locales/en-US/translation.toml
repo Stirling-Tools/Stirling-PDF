@@ -14726,6 +14726,9 @@ signatureDate = "Signature Date"
 
 [validateSignature.settings]
 certHint = "Upload a trusted X.509 certificate to validate against a custom trust source."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Settings"
 
 [validateSignature.signature]

@@ -1,0 +1,22 @@
+/* Laid out like the Get all info on PDF report: the canvas behind, each section
+   a raised page. Keep the page's surface and shadow in sync with
+   .simulated-page in validateSignature/reportView/styles.css. */
+.workbench {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--c-bg);
+  padding: 32px 24px 48px;
+}
+
+.page {
+  background-color: var(--c-surface-raised);
+  border-radius: 12px;
+  padding: 32px 40px;
+  color: var(--c-text);
+  box-shadow: 0 12px 32px color-mix(in srgb, black 12%, transparent);
+}
+
+[data-mantine-color-scheme="dark"] .page {
+  box-shadow: 0 12px 32px var(--shadow-color);
+}
