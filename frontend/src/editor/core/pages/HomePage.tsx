@@ -70,6 +70,7 @@ import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@editor/hooks/useLibraryRefresh";
 import { useAuth } from "@editor/auth/UseSession";
 import { canPickDirectory } from "@editor/services/directoryPicker";
+import { useBulkAddProgress } from "@editor/services/bulkAddProgress";
 import { useLibraryUpload } from "@editor/components/filesPage/useLibraryUpload";
 import { useProcessingFolderCreation } from "@editor/hooks/useProcessingFolderCreation";
 import { consumeProcessingFolderCreationRequest } from "@editor/utils/pendingProcessingFolderCreation";
@@ -337,7 +338,11 @@ export default function HomePage() {
   // Startup/open transition behavior:
   // - opening exactly 1 file from empty -> viewer (unless already in fileEditor)
   // - opening 2+ files from empty -> fileEditor
+  // Files from one upload are published one at a time, so a multi-file import
+  // is judged once it finishes, against the count from before it started.
+  const importingSeveral = useBulkAddProgress().total > 1;
   useEffect(() => {
+    if (importingSeveral) return;
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
@@ -362,6 +367,7 @@ export default function HomePage() {
 
     prevFileCountRef.current = currentCount;
   }, [
+    importingSeveral,
     activeFiles.length,
     actions,
     setActiveFileIndex,
