@@ -65,7 +65,6 @@ public class TempFileCleanupServiceTest {
         when(applicationProperties.getSystem()).thenReturn(system);
         when(system.getTempFileManagement()).thenReturn(tempFileManagement);
         when(tempFileManagement.getBaseTmpDir()).thenReturn(customTempDir.toString());
-        when(tempFileManagement.getLibreofficeDir()).thenReturn(libreOfficeTempDir.toString());
         when(tempFileManagement.getSystemTempDir()).thenReturn(systemTempDir.toString());
         when(tempFileManagement.isStartupCleanup()).thenReturn(false);
         when(tempFileManagement.isCleanupSystemTemp()).thenReturn(false);
