@@ -1,3 +1,10 @@
+import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
+import type { LinkAnnotation } from "@editor/tools/pdfTextEditor/model/LinkAnnotation";
+import {
+  PageFormFields,
+  type FieldTooltips,
+} from "@editor/tools/pdfTextEditor/model/PageFormFields";
+import type { WidgetAnnotation } from "@editor/tools/pdfTextEditor/model/WidgetAnnotation";
 import type {
   StructureRole,
   StructureType,
@@ -113,16 +120,26 @@ export interface StructureElementEdit {
   alt: string | null;
   /** Turn the element's content into an artifact and drop the element. */
   decorative: boolean;
+  /** The page furniture the artifact is, when `decorative`; absent for a plain one. */
+  furniture?: Furniture;
 }
 
 /**
  * Types whose /Alt stands in for the content. On any other element it would
  * replace text a reader speaks, so a description there is refused.
  */
-const DESCRIBABLE_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
+export const DESCRIBABLE_TYPES = [
   "Figure",
   "Formula",
-]);
+] as const satisfies readonly StructureType[];
+
+export type DescribableType = (typeof DESCRIBABLE_TYPES)[number];
+
+export function isDescribableType(
+  type: StructureType | null,
+): type is DescribableType {
+  return DESCRIBABLE_TYPES.some((describable) => describable === type);
+}
 
 /** Why the save cannot write descriptions for a page. */
 export type ReadOnlyReason = "encrypted" | "unreadable";
@@ -130,8 +147,16 @@ export type ReadOnlyReason = "encrypted" | "unreadable";
 /** Why content cannot take a description. */
 export type DescriptionBlocker = "untagged" | "not-figure" | ReadOnlyReason;
 
-/** Why content cannot be marked decorative. */
-export type DecorativeBlocker = DescriptionBlocker | "mixed-content";
+/**
+ * Why content cannot be marked decorative. "not-content" is an element that
+ * is neither a figure nor a block of text, such as a list item, whose
+ * structure would be left broken without it.
+ */
+export type DecorativeBlocker =
+  | "untagged"
+  | "not-content"
+  | "mixed-content"
+  | ReadOnlyReason;
 
 /** What a whole element's text can be retagged as. Lbl and Span only tag part of one (TEXT_RANGE_TYPES). */
 export const TEXT_BLOCK_TYPES = [
@@ -145,6 +170,7 @@ export const TEXT_BLOCK_TYPES = [
   "Quote",
   "Note",
   "Code",
+  "Formula",
 ] as const satisfies readonly StructureType[];
 
 /**
@@ -185,6 +211,12 @@ export type RetagBlocker = "untagged" | "not-text" | ReadOnlyReason;
 /** The type the session has retagged a block as, by block key; null when it has not. */
 export type RetagLookup = (key: string) => StructureType | null;
 
+/**
+ * The description of one of the file's blocks as the session has it, by
+ * block key; undefined when the document knows no such block.
+ */
+export type DescriptionLookup = (key: string) => string | null | undefined;
+
 type AddedStructureElement = StructureElement & { type: StructureType };
 
 /**
@@ -209,7 +241,7 @@ export interface ContentCut {
 }
 
 /** The MCIDs a cut gave to the content it was cut from. */
-function givenMcids(cut: ContentCut): number[] {
+export function givenMcids(cut: ContentCut): number[] {
   return [cut.before, cut.after].filter(
     (mcid): mcid is number => mcid !== null && !cut.from.includes(mcid),
   );
@@ -262,11 +294,31 @@ export interface ElementLanguageEdit {
   lang: string | null;
 }
 
+/** The page's annotations the save can give an element. */
+export interface PageAnnotations {
+  links: readonly LinkAnnotation[];
+  widgets: readonly WidgetAnnotation[];
+}
+
+const NO_ANNOTATIONS: PageAnnotations = { links: [], widgets: [] };
+
+/** A change to one of the page's link annotations, for the save (see AnnotationEdit). */
+export interface LinkEdit {
+  annotation: number;
+  /** The MCID of the Link element to give it to; absent leaves it as the file has it. */
+  mcid?: number;
+  /** The /Contents to save, null for none; absent leaves the file's. */
+  contents?: string | null;
+}
+
 /**
  * The structure elements of one page plus the session's unsaved edits to
  * them, and the elements it adds. Edits are keyed by element rather than MCID,
- * so an element that owns several MCIDs has one description however it was
- * addressed.
+ * so an element that owns several MCIDs has one edit however it was
+ * addressed. A description belongs to the block, not to the element owning
+ * the content: the document holds the file's blocks' (DescriptionLookup), as
+ * a block can span pages and own no content itself; the page holds those of
+ * the blocks it adds.
  */
 export class PageStructure {
   readonly elements: readonly StructureElement[];
@@ -297,26 +349,45 @@ export class PageStructure {
    * block can span pages.
    */
   private readonly langs = new Map<string, string | null>();
+  private readonly linkAnnotations: ReadonlyMap<number, LinkAnnotation>;
+  /** The MCID of the element the session gives each link annotation to, by annotation. */
+  private readonly linkHolders = new Map<number, number>();
+  /** The session's /Contents for link annotations, by annotation. */
+  private readonly linkContentsEdits = new Map<number, string | null>();
 
   /** Why the save cannot write descriptions for this page, or null when it can. */
   readonly readOnly: ReadOnlyReason | null;
+  readonly formFields: PageFormFields;
   /**
    * The length of the page's ParentTree array, so the first MCID it has no
    * slot for; null when the page has no array to add an element to.
    */
   private readonly slotCount: number | null;
   private readonly retaggedAs: RetagLookup;
+  private readonly describedAs: DescriptionLookup;
 
   constructor(
     elements: readonly StructureElement[],
     readOnly: ReadOnlyReason | null = null,
     slotCount: number | null = null,
     retaggedAs: RetagLookup = () => null,
+    annotations: PageAnnotations = NO_ANNOTATIONS,
+    fieldTooltips?: FieldTooltips,
+    describedAs: DescriptionLookup = () => undefined,
   ) {
     this.elements = elements;
     this.readOnly = readOnly;
     this.slotCount = slotCount;
     this.retaggedAs = retaggedAs;
+    this.describedAs = describedAs;
+    this.linkAnnotations = new Map(
+      annotations.links.map((link) => [link.annotation, link]),
+    );
+    this.formFields = new PageFormFields(
+      annotations.widgets,
+      readOnly,
+      fieldTooltips,
+    );
     this.fileElements = new Set(elements);
     for (const el of elements) {
       for (const mcid of el.mcids) this.byMcid.set(mcid, el);
@@ -364,22 +435,54 @@ export class PageStructure {
     return this.readOnly;
   }
 
-  /** Why the content `mcid` marks cannot take a description, or null when it can. */
+  /**
+   * Why the block the content `mcid` marks belongs to cannot take a
+   * description, or null when it can.
+   */
   cannotDescribe(mcid: number): DescriptionBlocker | null {
+    const block = this.block(mcid);
+    if (!block) return "untagged";
+    if (this.readOnly) return this.readOnly;
+    return isDescribableType(block.type) ? null : "not-figure";
+  }
+
+  /**
+   * The figure or formula type of the block the content `mcid` marks belongs
+   * to, as the session has it; null when it is neither.
+   */
+  describableType(mcid: number): DescribableType | null {
+    const type = this.block(mcid)?.type ?? null;
+    return isDescribableType(type) ? type : null;
+  }
+
+  /**
+   * Why the content `mcid` marks cannot be marked decorative, or null when it
+   * can: a figure or formula, or one of the file's blocks of text, owning
+   * nothing but marked content.
+   */
+  cannotMarkDecorative(mcid: number): DecorativeBlocker | null {
     const el = this.element(mcid);
     if (!el) return "untagged";
     if (this.readOnly) return this.readOnly;
-    if (el.type === null || !DESCRIBABLE_TYPES.has(el.type)) {
-      return "not-figure";
+    if (!isDescribableType(el.type) && !this.isFileTextBlock(el)) {
+      return "not-content";
     }
-    return null;
+    return el.onlyMarkedContent && !this.hasCutsFrom(el)
+      ? null
+      : "mixed-content";
   }
 
-  /** Why the content `mcid` marks cannot be marked decorative, or null when it can. */
-  cannotMarkDecorative(mcid: number): DecorativeBlocker | null {
-    const blocker = this.cannotDescribe(mcid);
-    if (blocker) return blocker;
-    return this.element(mcid)!.onlyMarkedContent ? null : "mixed-content";
+  private isFileTextBlock(el: StructureElement): boolean {
+    return (
+      this.fileElements.has(el) &&
+      el.key === el.block.key &&
+      this.cannotRetag(el.mcids[0]) === null
+    );
+  }
+
+  /** True when the session cut text out of `el`, which then still reads as part of it. */
+  private hasCutsFrom(el: StructureElement): boolean {
+    return [...this.cuts.values()].some(({ owner }) => owner === el);
   }
 
   /** True when the session has marked the element owning `mcid` decorative. */
@@ -387,10 +490,28 @@ export class PageStructure {
     return this.editFor(mcid)?.decorative ?? false;
   }
 
-  /** The description as it will be saved: the session's edit, else the file's. */
+  /** The page furniture the session marked the element owning `mcid` as; null when none. */
+  furniture(mcid: number): Furniture | null {
+    const edit = this.editFor(mcid);
+    return (edit?.decorative && edit.furniture) || null;
+  }
+
+  /**
+   * The description of the block the content `mcid` marks belongs to, as it
+   * will be saved: the session's edit, else the file's.
+   */
   alt(mcid: number): string | null {
-    const el = this.element(mcid);
-    if (!el) return null;
+    const key = this.element(mcid)?.block.key;
+    if (key === undefined) return null;
+    const added = this.addedBlockMcid(key);
+    if (added !== null) return this.ownAlt(this.added.get(added)!);
+    const described = this.describedAs(key);
+    if (described !== undefined) return described;
+    const own = this.elements.find((el) => el.key === key);
+    return own ? this.ownAlt(own) : null;
+  }
+
+  private ownAlt(el: StructureElement): string | null {
     const edit = this.edits.get(el);
     return edit ? edit.alt : el.alt;
   }
@@ -401,20 +522,45 @@ export class PageStructure {
     return el ? (this.edits.get(el) ?? null) : null;
   }
 
-  /** Set the description, keeping any decorative mark. Throws as setEdit does. */
+  /**
+   * Set the description of the element added for `mcid`. Throws when none
+   * was added: the document holds the file's blocks' descriptions.
+   */
   setAlt(mcid: number, alt: string | null): void {
-    this.setEdit(mcid, { mcid, alt, decorative: this.decorative(mcid) });
+    if (!this.added.has(mcid)) throw new Error(`MCID ${mcid} was not added`);
+    const edit = this.editFor(mcid);
+    this.setEdit(mcid, {
+      mcid,
+      alt,
+      decorative: edit?.decorative ?? false,
+      ...(edit?.furniture && { furniture: edit.furniture }),
+    });
   }
 
   /**
-   * Mark or unmark decorative, keeping the description. Throws as setEdit
-   * does, and for an added element, whose content is retagged instead.
+   * Mark or unmark decorative, as `furniture` or a plain artifact, keeping
+   * the description. Throws as setEdit does, and for an added element, whose
+   * content is retagged instead.
    */
-  setDecorative(mcid: number, decorative: boolean): void {
+  setDecorative(
+    mcid: number,
+    decorative: boolean,
+    furniture: Furniture | null = null,
+  ): void {
     if (this.added.has(mcid)) {
       throw new Error(`MCID ${mcid} is an added element`);
     }
-    this.setEdit(mcid, { mcid, alt: this.alt(mcid), decorative });
+    // Unmarking leaves no edit: the description is the document's, not the mark's.
+    if (!decorative) {
+      this.setEdit(mcid, null);
+      return;
+    }
+    this.setEdit(mcid, {
+      mcid,
+      alt: this.alt(mcid),
+      decorative,
+      ...(furniture && { furniture }),
+    });
   }
 
   /** Throws when no element owns `mcid`: a command must not record an edit the save cannot address. */
@@ -525,6 +671,28 @@ export class PageStructure {
     return element;
   }
 
+  /**
+   * The element the session added for untagged content `mcid` marks, where
+   * nothing else depends on it: not cut from another element's text, and
+   * with no text cut from it. Null otherwise.
+   */
+  standaloneAdded(mcid: number): AddedElement | null {
+    const element = this.added.get(mcid);
+    if (!element || this.cuts.has(mcid) || this.hasCutsFrom(element)) {
+      return null;
+    }
+    return this.addedElement(mcid);
+  }
+
+  /** Put back an element removeElement dropped, as standaloneAdded read it. */
+  restoreElement(element: AddedElement): void {
+    this.addElement(element.mcid, element.type, element.follows);
+    if (element.lang !== null) {
+      this.langs.set(addedKey(element.mcid), element.lang);
+    }
+    if (element.alt !== null) this.setAlt(element.mcid, element.alt);
+  }
+
   /** Drop an added element, its description and language, and the cut it was made by. */
   removeElement(mcid: number): void {
     const element = this.added.get(mcid);
@@ -548,13 +716,16 @@ export class PageStructure {
 
   /** Elements cut from others' text, in the order they were cut. */
   cutElements(): CutElement[] {
-    return [...this.cuts].map(([mcid, { cut }]) => ({
-      mcid,
-      type: this.added.get(mcid)?.type ?? null,
-      alt: this.alt(mcid),
-      lang: this.langs.get(addedKey(mcid)) ?? null,
-      cut,
-    }));
+    return [...this.cuts].map(([mcid, { cut }]) => {
+      const element = this.added.get(mcid);
+      return {
+        mcid,
+        type: element?.type ?? null,
+        alt: element ? this.ownAlt(element) : null,
+        lang: this.langs.get(addedKey(mcid)) ?? null,
+        cut,
+      };
+    });
   }
 
   /** True when the element is a block of text, which a block cut out of it can split. */
@@ -696,7 +867,7 @@ export class PageStructure {
     const element: AddedElement = {
       mcid,
       type: this.added.get(mcid)!.type,
-      alt: this.alt(mcid),
+      alt: this.ownAlt(this.added.get(mcid)!),
       lang: this.langs.get(addedKey(mcid)) ?? null,
     };
     if (this.follows.has(mcid)) element.follows = this.follows.get(mcid)!;
@@ -747,6 +918,11 @@ export class PageStructure {
     return null;
   }
 
+  /** Whether any of this page's content belongs to block `key`. */
+  holdsBlock(key: string): boolean {
+    return this.elements.some((el) => el.block.key === key);
+  }
+
   /** The MCID of the element the session added that is block `key`; null for a block the file has. */
   addedBlockMcid(key: string): number | null {
     for (const [mcid, element] of this.added) {
@@ -772,6 +948,99 @@ export class PageStructure {
 
   private isStandIn(el: StructureElement): boolean {
     return this.standIns.get(el.key) === el;
+  }
+
+  /** The page's link annotations the save can give an element. */
+  links(): LinkAnnotation[] {
+    return [...this.linkAnnotations.values()];
+  }
+
+  /**
+   * True when an element holds link `annotation`: the file's, or a Link the
+   * session gave it to. One that has stopped being a Link no longer holds it.
+   */
+  linkHeld(annotation: number): boolean {
+    const link = this.linkAnnotations.get(annotation);
+    return link?.holder != null || this.sessionLinkHolder(annotation) !== null;
+  }
+
+  /**
+   * Give link `annotation` to the Link element owning `mcid`, or take it back
+   * with null. Throws for a page whose save cannot write it, an annotation
+   * the page does not have or the file already gives an element, and an
+   * MCID no Link owns.
+   */
+  holdLink(annotation: number, mcid: number | null): void {
+    const link = this.editableLink(annotation);
+    if (link.holder !== null) {
+      throw new Error(`Link ${annotation} already has an element`);
+    }
+    if (mcid === null) {
+      this.linkHolders.delete(annotation);
+      return;
+    }
+    if (this.element(mcid)?.type !== "Link") {
+      throw new Error(`No Link owns MCID ${mcid}`);
+    }
+    this.linkHolders.set(annotation, mcid);
+  }
+
+  /** The link annotations element `key` holds, as the session has it. */
+  linksHeldBy(key: string): number[] {
+    return this.links().flatMap(({ annotation, holder }) => {
+      const held = holder ?? this.sessionLinkHolder(annotation)?.key;
+      return held === key ? [annotation] : [];
+    });
+  }
+
+  /** The link's /Contents as it will be saved: the session's, else the file's. Throws as holdLink does for an unknown annotation. */
+  linkContents(annotation: number): string | null {
+    if (this.linkContentsEdits.has(annotation)) {
+      return this.linkContentsEdits.get(annotation)!;
+    }
+    return this.knownLink(annotation).contents;
+  }
+
+  /** Set or, with null, remove the link's /Contents. Throws for a page whose save cannot write it, or an unknown annotation. */
+  setLinkContents(annotation: number, contents: string | null): void {
+    const link = this.editableLink(annotation);
+    if (contents === link.contents) this.linkContentsEdits.delete(annotation);
+    else this.linkContentsEdits.set(annotation, contents);
+  }
+
+  /** Changes to the page's link annotations, for the save. */
+  linkEdits(): LinkEdit[] {
+    return this.links().flatMap(({ annotation }) => {
+      const held = this.sessionLinkHolder(annotation) !== null;
+      const described = this.linkContentsEdits.has(annotation);
+      if (!held && !described) return [];
+      return [
+        {
+          annotation,
+          ...(held && { mcid: this.linkHolders.get(annotation)! }),
+          ...(described && {
+            contents: this.linkContentsEdits.get(annotation)!,
+          }),
+        },
+      ];
+    });
+  }
+
+  private sessionLinkHolder(annotation: number): StructureElement | null {
+    const mcid = this.linkHolders.get(annotation);
+    const el = mcid === undefined ? null : this.element(mcid);
+    return el?.type === "Link" ? el : null;
+  }
+
+  private editableLink(annotation: number): LinkAnnotation {
+    if (this.readOnly) throw new Error(`The page is ${this.readOnly}`);
+    return this.knownLink(annotation);
+  }
+
+  private knownLink(annotation: number): LinkAnnotation {
+    const link = this.linkAnnotations.get(annotation);
+    if (!link) throw new Error(`No link annotation ${annotation} on the page`);
+    return link;
   }
 }
 

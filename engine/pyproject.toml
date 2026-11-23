@@ -9,7 +9,7 @@ dependencies = []
 # Runtime dependencies for the AI document engine service.
 engine = [
     "cryptography>=50.0.2",
-    "fastapi>=0.141.1",
+    "fastapi>=0.162.2",
     "opentelemetry-sdk>=1.45.2",
     "pgvector>=0.5.0",
     "posthog>=7.53.0",
@@ -19,7 +19,7 @@ engine = [
     # Explicit extras: the `pydantic-ai` meta-package pulls all 20 providers (~230MB).
     # No `voyageai` extra either; stirling.documents.voyage speaks its API directly.
     "pydantic-ai-slim[anthropic,openai]>=1.107.9,<2.0.0",
-    "pydantic-settings>=2.15.0",
+    "pydantic-settings>=2.16.2",
     "python-dotenv>=1.2.3",
     # Lets the image's init script read aiEngine.enabled from settings.yml before starting us.
     "pyyaml>=6.0.3",
@@ -30,7 +30,7 @@ engine = [
 engine-dev = [
     "anyio>=4.14.2",
     "datamodel-code-generator[ruff]==0.64.0",
-    "pyright>=1.1.411",
+    "pyrefly==1.4.1",
     "pytest>=9.1.1",
     "referencing>=0.37.0",
     "ruff==0.15.5",
@@ -52,14 +52,12 @@ tools = [
     "brotli>=1.2.1",
     "deep-translator>=1.11.4",
     "defusedxml>=0.7.1",
-    "fpdf2>=2.8.9",
+    "fpdf2>=2.9.0",
     "openai>=3.19.2",
     "requests>=2.34.2",
     "tomli-w>=1.2.0",
     "tomlkit>=0.15.2",
     "urllib3>=2.8.0",
-    "unoserver>=3.7",
-    "weasyprint>=70.0",
 ]
 # Release-signature verification dependencies.
 updater-signatures = [
@@ -104,15 +102,6 @@ select = [
 [tool.ruff.lint.isort]
 known-first-party = ["stirling", "tests"]
 
-[tool.pyright]
-pythonVersion = "3.13"
-reportImportCycles = "warning"
-reportUnnecessaryCast = "warning"
-reportUnnecessaryTypeIgnoreComment = "warning"
-reportUnusedImport = "warning"
-reportUnknownParameterType = "warning"
-reportDeprecated = "warning"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # ``tests`` is on the path so test modules can import shared helpers (e.g.
@@ -121,3 +110,23 @@ pythonpath = ["src", "tests"]
 # Use importlib import mode so test directories don't need __init__.py files
 # and duplicate basenames (e.g. multiple test_routes.py) collect cleanly.
 addopts = "--import-mode=importlib"
+
+[tool.pyrefly]
+python-version = "3.13.0"
+search-path = [
+    "src",
+    "tests",
+]
+# Disallow `type: ignore` comments to encourage accurate error codes to be used in ignore comments
+# Pyrefly won't flag `type: ignore [wrong-code]`, but it will flag `pyrefly: ignore [wrong-code]`
+enabled-ignores = ["pyrefly"]
+min-severity = "warn"
+
+[tool.pyrefly.errors]
+deprecated = "warn"
+implicit-any = "warn"
+redundant-cast = "warn"
+unused-ignore = "warn"
+# TODO: Add equivalents to:
+#  - reportImportCycles
+#  - reportUnusedImport

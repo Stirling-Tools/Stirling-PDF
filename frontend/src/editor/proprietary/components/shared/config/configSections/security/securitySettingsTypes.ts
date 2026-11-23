@@ -4,6 +4,7 @@
 export interface SecuritySettingsData {
   enableLogin?: boolean;
   honorOwnerPasswords?: boolean;
+  blockSignedPdfEdits?: boolean;
   loginMethod?: string;
   loginAttemptCount?: number;
   loginResetTimeMinutes?: number;
@@ -111,6 +112,7 @@ export interface MicrosoftSettings {
   tenant?: string;
   clientSecret?: string;
   allowAccountConnections?: boolean;
+  allowEditorSaves?: boolean;
 }
 
 export interface OAuth2GenericSettings {

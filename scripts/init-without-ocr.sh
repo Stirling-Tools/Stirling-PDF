@@ -38,30 +38,24 @@ _python_site_dir() {
   fi
 }
 
-# LD_LIBRARY_PATH: arch-specific system libs + LibreOffice
+# LD_LIBRARY_PATH: arch-specific system libs
 case "$(uname -m)" in
   x86_64)  [ -d /usr/lib/x86_64-linux-gnu ] && export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
   aarch64) [ -d /usr/lib/aarch64-linux-gnu ] && export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
 esac
-[ -d /usr/lib/libreoffice/program ] && export LD_LIBRARY_PATH="/usr/lib/libreoffice/program${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
-# Reduce soffice.bin RSS by avoiding unnecessary subsystems.
-export SAL_USE_VCLPLUGIN=svp           # Null rendering plugin — avoids loading X11 toolkit (~40 MB)
-export SAL_DISABLE_PRINTERLIST=1       # Skip printer enumeration
-export OOO_FORCE_DESKTOP=none          # No desktop frame
-export SAL_LOG="-WARN-INFO"            # Minimal logging
 export MALLOC_ARENA_MAX=2              # Limit glibc arena fragmentation (saves 20-80 MB RSS)
 export DBUS_SESSION_BUS_ADDRESS=/dev/null  # Avoid D-Bus overhead
 
 # Python venv PATH + PYTHONPATH
-for _venv_bin in /opt/venv/bin /opt/unoserver-venv/bin; do
+for _venv_bin in /opt/venv/bin; do
   PATH="$(_append_env_path "$_venv_bin" "$PATH")"
 done
 export PATH
 unset _venv_bin
 
 _py_entries=()
-for _venv in /opt/venv /opt/unoserver-venv; do
+for _venv in /opt/venv; do
   [ -d "$_venv" ] || continue
   _site="$(_python_site_dir "$_venv")"
   [ -n "${_site:-}" ] && _py_entries+=("$_site")
@@ -91,17 +85,13 @@ print_versions() {
   log "--- Binary Versions ---"
   command_exists java && java -version 2>&1 | head -n 1 | log
   command_exists qpdf && qpdf --version | head -n 1 | log
-  command_exists magick && magick --version | head -n 1 | log
   # Use python to get versions of pip-installed tools to be sure
   command_exists ocrmypdf && ocrmypdf --version 2>&1 | head -n 1 | printf "ocrmypdf %s\n" "$(cat)" | log
-  command_exists soffice && soffice --version | head -n 1 | log
-  command_exists unoserver && unoserver --version 2>&1 | head -n 1 | log
   command_exists tesseract && tesseract --version | head -n 1 | log
   command_exists gs && gs --version | printf "Ghostscript %s\n" "$(cat)" | log
   # ffmpeg disabled due to raised CVEs
   # command_exists ffmpeg && ffmpeg -version | head -n 1 | log
   command_exists pdfinfo && pdfinfo -v 2>&1 | head -n 1 | log
-  command_exists fontforge && fontforge --version 2>/dev/null | grep -m 1 '^fontforge ' | log
   command_exists unpaper && unpaper --version 2>&1 | head -n 1 | sed 's/^/unpaper /' | log
   command_exists ebook-convert && ebook-convert --version 2>&1 | head -n 1 | log
   log "-----------------------"
@@ -119,17 +109,6 @@ cleanup() {
     kill -TERM "$AOT_GEN_PID" 2>/dev/null || true
     wait "$AOT_GEN_PID" 2>/dev/null || true
   fi
-
-  # Kill on-demand manager if running
-  if [ -n "${DEMAND_MANAGER_PID:-}" ] && kill -0 "$DEMAND_MANAGER_PID" 2>/dev/null; then
-    kill -TERM "$DEMAND_MANAGER_PID" 2>/dev/null || true
-    wait "$DEMAND_MANAGER_PID" 2>/dev/null || true
-  fi
-
-  # Signal unoserver instances to shut down
-  for pid in "${UNOSERVER_PIDS[@]:-}"; do
-    [ -n "$pid" ] && kill -TERM "$pid" 2>/dev/null || true
-  done
 
   # Signal Java to shut down gracefully, Spring Boot handles SIGTERM cleanly
   if [ -n "${JAVA_PID:-}" ] && kill -0 "$JAVA_PID" 2>/dev/null; then
@@ -157,89 +136,6 @@ trap cleanup EXIT
 
 print_versions
 
-run_with_timeout() {
-  local secs=$1; shift
-  if command_exists timeout; then
-    timeout "${secs}s" "$@"
-  else
-    "$@"
-  fi
-}
-
-tcp_port_check() {
-  local host=$1
-  local port=$2
-  local timeout_secs=${3:-5}
-
-  # Try nc first (most portable)
-  if command_exists nc; then
-    run_with_timeout "$timeout_secs" nc -z "$host" "$port" 2>/dev/null
-    return $?
-  fi
-
-  # Fallback to /dev/tcp (bash-specific)
-  if [ -n "${BASH_VERSION:-}" ] && command_exists bash; then
-    run_with_timeout "$timeout_secs" bash -c "exec 3<>/dev/tcp/${host}/${port}" 2>/dev/null
-    local result=$?
-    exec 3>&- 2>/dev/null || true
-    return $result
-  fi
-
-  # No TCP check method available; caller uses ==2 to fall back to PID-only logic
-  return 2
-}
-
-check_unoserver_port_ready() {
-  local port=$1
-  local silent=${2:-}
-
-  # Try unoping first (best - checks actual server health)
-  if [ -n "${UNOPING_BIN:-}" ]; then
-    if run_as_runtime_user_with_timeout 5 "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
-      return 0
-    fi
-    if [ "$silent" != "silent" ]; then
-      log "unoserver health check failed (unoping) for port ${port}, trying TCP fallback"
-    fi
-  fi
-
-  # Fallback to TCP port check (verifies service is listening)
-  tcp_port_check "127.0.0.1" "$port" 5
-  local tcp_rc=$?
-  if [ $tcp_rc -eq 0 ]; then
-    return 0
-  elif [ $tcp_rc -eq 2 ]; then
-    if [ "$silent" != "silent" ]; then
-      log "No TCP check available; falling back to PID-only for port ${port}"
-    fi
-    return 0
-  else
-    if [ "$silent" != "silent" ]; then
-      log "unoserver TCP check failed for port ${port}"
-    fi
-  fi
-
-  return 1
-}
-
-check_unoserver_ready() {
-  local silent=${1:-}
-  if [ "${#UNOSERVER_PORTS[@]}" -eq 0 ]; then
-    log "Skipping unoserver readiness check (no local ports started)"
-    return 0
-  fi
-  for port in "${UNOSERVER_PORTS[@]}"; do
-    if ! check_unoserver_port_ready "$port" "$silent"; then
-      return 1
-    fi
-  done
-  return 0
-}
-
-UNOSERVER_PIDS=()
-UNOSERVER_PORTS=()
-UNOSERVER_UNO_PORTS=()
-
 CURRENT_USER="$(id -un)"
 CURRENT_UID="$(id -u)"
 SWITCH_USER_WARNING_EMITTED=false
@@ -266,490 +162,7 @@ run_as_runtime_user() {
   fi
 }
 
-OFFICE_USER="${STIRLING_OFFICE_USER:-stirlingofficeuser}"
-OFFICE_SANDBOX_HOME="/var/lib/libreoffice-sandbox"
-OFFICE_USER_AVAILABLE=false
-# LibreOffice's own temp and XDG dirs. The inherited TMPDIR/SAL_TMP/XDG_RUNTIME_DIR point into
-# the runtime user's shared dirs, which the office user cannot write (every store then fails
-# with Io Write 16) and which the sandbox no longer grants. Set by prepare_office_dirs.
-OFFICE_TMP=""
-OFFICE_XDG=""
-
-resolve_office_user() {
-  if ! id -u "$OFFICE_USER" >/dev/null 2>&1; then
-    log "Office sandbox user ${OFFICE_USER} not present; LibreOffice will share the runtime user"
-    return
-  fi
-  if [ "$(id -u "$OFFICE_USER")" = "$(id -u "$RUNTIME_USER" 2>/dev/null || echo -1)" ]; then
-    log "WARNING: ${OFFICE_USER} and ${RUNTIME_USER} resolve to the same uid; LibreOffice privilege separation is disabled. Choose a PUID other than $(id -u "$OFFICE_USER")."
-    return
-  fi
-  if [ "$CURRENT_UID" -ne 0 ] || ! command_exists setpriv; then
-    log "Cannot switch to ${OFFICE_USER} (not root or setpriv missing); LibreOffice will share the runtime user"
-    return
-  fi
-  OFFICE_USER_AVAILABLE=true
-}
-
-run_as_office_user() {
-  if [ "$OFFICE_USER_AVAILABLE" != true ]; then
-    run_as_runtime_user env \
-      TMPDIR="$OFFICE_TMP" TMP="$OFFICE_TMP" TEMP="$OFFICE_TMP" SAL_TMP="$OFFICE_TMP" \
-      XDG_RUNTIME_DIR="$OFFICE_XDG" \
-      "$@"
-    return
-  fi
-  env HOME="$OFFICE_SANDBOX_HOME" \
-      USER="$OFFICE_USER" \
-      LOGNAME="$OFFICE_USER" \
-      TMPDIR="$OFFICE_TMP" \
-      TMP="$OFFICE_TMP" \
-      TEMP="$OFFICE_TMP" \
-      SAL_TMP="$OFFICE_TMP" \
-      XDG_RUNTIME_DIR="$OFFICE_XDG" \
-    setpriv --reuid="$OFFICE_USER" --regid="$(id -gn "$OFFICE_USER")" --init-groups -- "$@"
-}
-
-# The sandbox grants /tmp as socket-only, so LibreOffice can bind its IPC pipes there but
-# cannot unlink them. A pipe left by a killed instance would make the restart's bind fail;
-# a pipe file with no bound socket in /proc/net/unix is stale and safe to remove.
-clear_stale_office_pipes() {
-  local pipe
-  for pipe in /tmp/OSL_PIPE_*; do
-    [ -S "$pipe" ] || continue
-    if ! grep -qF " $pipe" /proc/net/unix 2>/dev/null; then
-      rm -f "$pipe" 2>/dev/null || true
-    fi
-  done
-}
-
-# Read-only paths come from lo-sandbox's built-in default unless STIRLING_LO_ALLOW_RO is set.
-# Java narrows RW/SOCK further per job for the soffice commands it runs itself.
-export_office_sandbox_policy() {
-  local profile_root=$1
-  local rw="/dev:${profile_root}:${OFFICE_TMP}:${OFFICE_XDG}"
-  [ "$OFFICE_USER_AVAILABLE" = true ] && rw="${rw}:${OFFICE_SANDBOX_HOME}"
-  export STIRLING_LO_SANDBOX="${STIRLING_LO_SANDBOX:-enforce}"
-  export STIRLING_LO_ALLOW_RW="${STIRLING_LO_ALLOW_RW:-${rw}}"
-  export STIRLING_LO_ALLOW_SOCK="${STIRLING_LO_ALLOW_SOCK:-/tmp}"
-  OFFICE_SANDBOX_DESC="mode=${STIRLING_LO_SANDBOX} user=$([ "$OFFICE_USER_AVAILABLE" = true ] && echo "$OFFICE_USER" || echo "$RUNTIME_USER")"
-  check_office_sandbox
-}
-
-# enforce mode degrades silently to a stderr line per launch when the kernel lacks Landlock
-# or seccomp (old kernels, gVisor, QEMU user emulation); report it once, loudly, at startup.
-check_office_sandbox() {
-  local soffice out rc
-  soffice="$(command -v soffice || true)"
-  [ -n "$soffice" ] || return 0
-  if [ ! -x /usr/local/lib/stirling/lo-sandbox ]; then
-    log "WARNING: LibreOffice sandbox launcher is not in this image; LibreOffice runs unconfined"
-    return 0
-  fi
-  [ "$STIRLING_LO_SANDBOX" = off ] && { log "WARNING: LibreOffice sandbox disabled (STIRLING_LO_SANDBOX=off)"; return 0; }
-  rc=0
-  out="$("$soffice" --stirling-sandbox-check 2>&1)" || rc=$?
-  out="$(printf '%s' "$out" | tr '\n' ' ')"
-  if [ "$rc" -eq 125 ]; then
-    log "ERROR: LibreOffice sandbox required but unavailable; office conversions will fail: ${out}"
-  elif [ "$rc" -ne 0 ] || ! printf '%s' "$out" | grep -q 'lo-sandbox: landlock ABI'; then
-    log "ERROR: LibreOffice sandbox self-check failed (exit ${rc}): ${out}"
-  elif printf '%s' "$out" | grep -qE 'landlock unavailable|seccomp unavailable'; then
-    log "WARNING: LibreOffice sandbox is only partially active on this kernel: ${out}. Set STIRLING_LO_SANDBOX=required to refuse to run LibreOffice unconfined."
-  elif printf '%s' "$out" | grep -q 'scoping unavailable'; then
-    # Normal on kernels before 6.12; only matters if STIRLING_LO_SANDBOX=required is wanted
-    log "LibreOffice sandbox active (${OFFICE_SANDBOX_DESC}, $(printf '%s' "$out" | grep -o 'landlock ABI [0-9]*, seccomp [a-z]*' || echo "$out"); signal/socket scoping needs Linux 6.12+)"
-  else
-    log "LibreOffice sandbox active (${OFFICE_SANDBOX_DESC}, ${out})"
-  fi
-}
-
-# A profile from an init-only soffice run, made before any document is opened. Java copies its
-# extension registry into fresh per-job profiles so LibreOffice does not relaunch on first start,
-# which fails under the sandbox; it is root-owned so no LibreOffice process can change it later.
-OFFICE_PROFILE_TEMPLATE=/var/lib/libreoffice-template
-
-create_office_profile_template() {
-  local build="${OFFICE_PROFILE_TEMPLATE}.new"
-  [ "$CURRENT_UID" -eq 0 ] || return 0
-  rm -rf "$build" "$OFFICE_PROFILE_TEMPLATE"
-  mkdir -p "$build/tmp"
-  if [ "$OFFICE_USER_AVAILABLE" = true ]; then
-    chown -R "$OFFICE_USER" "$build"
-  else
-    chown -R "$RUNTIME_USER" "$build"
-  fi
-  run_as_office_user env HOME="$build" TMPDIR="$build/tmp" TMP="$build/tmp" TEMP="$build/tmp" \
-      SAL_TMP="$build/tmp" XDG_RUNTIME_DIR="$build/tmp" STIRLING_LO_ALLOW_RW="/dev:${build}" \
-      timeout 120 soffice --headless --norestore --terminate_after_init \
-      "-env:UserInstallation=file://${build}" >/dev/null 2>&1 || true
-  clear_stale_office_pipes
-  if [ -d "$build/user/extensions" ]; then
-    rm -rf "$build/tmp"
-    chown -R root:root "$build"
-    chmod -R a+rX,go-w "$build"
-    mv "$build" "$OFFICE_PROFILE_TEMPLATE"
-  else
-    log "WARNING: could not create the LibreOffice profile template; direct soffice jobs will retry their first run"
-    rm -rf "$build"
-  fi
-}
-
-run_as_runtime_user_with_timeout() {
-  local secs=$1; shift
-  if command_exists timeout; then
-    run_as_runtime_user timeout "${secs}s" "$@"
-  else
-    run_as_runtime_user "$@"
-  fi
-}
-
 CONFIG_FILE=${CONFIG_FILE:-/configs/settings.yml}
-
-read_setting_value() {
-  local key=$1
-  if [ ! -f "$CONFIG_FILE" ]; then
-    return
-  fi
-  awk -F: -v key="$key" '
-    $1 ~ "^[[:space:]]*"key"[[:space:]]*$" {
-      val=$2
-      sub(/#.*/, "", val)
-      gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
-      gsub(/^["'"'"']|["'"'"']$/, "", val)
-      print val
-      exit
-    }
-  ' "$CONFIG_FILE"
-}
-
-get_unoserver_auto() {
-  if [ -n "${PROCESS_EXECUTOR_AUTO_UNO_SERVER:-}" ]; then
-    echo "$PROCESS_EXECUTOR_AUTO_UNO_SERVER"
-    return
-  fi
-  if [ -n "${UNO_SERVER_AUTO:-}" ]; then
-    echo "$UNO_SERVER_AUTO"
-    return
-  fi
-  read_setting_value "autoUnoServer"
-}
-
-get_unoserver_count() {
-  if [ -n "${PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT:-}" ]; then
-    echo "$PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT"
-    return
-  fi
-  if [ -n "${UNO_SERVER_COUNT:-}" ]; then
-    echo "$UNO_SERVER_COUNT"
-    return
-  fi
-  read_setting_value "libreOfficeSessionLimit"
-}
-
-# Mirror libreOfficetimeoutMinutes so Java and unoserver agree.
-get_unoserver_conversion_timeout_seconds() {
-  local minutes=""
-  if [ -n "${PROCESS_EXECUTOR_TIMEOUT_MINUTES_LIBRE_OFFICETIMEOUT_MINUTES:-}" ]; then
-    minutes="$PROCESS_EXECUTOR_TIMEOUT_MINUTES_LIBRE_OFFICETIMEOUT_MINUTES"
-  elif [ -n "${UNO_SERVER_CONVERSION_TIMEOUT_MINUTES:-}" ]; then
-    minutes="$UNO_SERVER_CONVERSION_TIMEOUT_MINUTES"
-  else
-    minutes="$(read_setting_value "libreOfficetimeoutMinutes")"
-  fi
-  case "$minutes" in
-    ''|*[!0-9]*) minutes=30 ;;
-  esac
-  if [ "$minutes" -le 0 ]; then
-    minutes=30
-  fi
-  echo $((minutes * 60))
-}
-
-start_unoserver_instance() {
-  local port=$1
-  local uno_port=$2
-  local conversion_timeout
-  conversion_timeout="$(get_unoserver_conversion_timeout_seconds)"
-  # Per-instance profile dir avoids LibreOffice lock-file contention.
-  local profile_dir="${LIBREOFFICE_PROFILE}/instance_${port}"
-  run_as_office_user mkdir -p "$profile_dir"
-  # The watchdog only signals unoserver's direct children, so a soffice.bin reparented to init
-  # can outlive a restart and keep the instance's pipe bound; the new instance then cannot start.
-  local leftover="-env:UserInstallation=file://${profile_dir}"
-  if pkill -KILL -f -- "$leftover" 2>/dev/null; then
-    for _ in 1 2 3 4 5; do pgrep -f -- "$leftover" >/dev/null 2>&1 || break; sleep 1; done
-  fi
-  clear_stale_office_pipes
-  # A fresh profile makes soffice initialise it and relaunch under an IPC pipe the sandbox will not
-  # let it unlink, so unoserver's own first soffice would die; initialise the profile up front.
-  if [ ! -d "${profile_dir}/user" ]; then
-    run_as_office_user timeout 120 soffice --headless --norestore --terminate_after_init \
-      "$leftover" >/dev/null 2>&1 || true
-    clear_stale_office_pipes
-  fi
-  # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
-  run_as_office_user "$UNOSERVER_BIN" \
-    --interface 127.0.0.1 \
-    --port "$port" \
-    --uno-port "$uno_port" \
-    --user-installation "$profile_dir" \
-    --conversion-timeout "$conversion_timeout" \
-    2> >(grep --line-buffered -v "POST /RPC2" >&2) \
-    &
-  LAST_UNOSERVER_PID=$!
-  UNOSERVER_STARTED_AT[$port]=$(date +%s)
-}
-
-# unoserver waits a few seconds before binding its port, so a health check right after a
-# (re)start sees a starting instance as dead and kills it again.
-UNOSERVER_START_GRACE_SECONDS=30
-declare -A UNOSERVER_STARTED_AT=()
-
-unoserver_starting() {
-  local started=${UNOSERVER_STARTED_AT[$1]:-0}
-  [ $(( $(date +%s) - started )) -lt "$UNOSERVER_START_GRACE_SECONDS" ]
-}
-
-# Stop an unoserver instance and its soffice children. Child PIDs are captured
-# before signalling the parent so the PPID relationship is still visible; the
-# saved PIDs get SIGKILL after the grace period because the parent may already
-# have exited and reparented them.
-stop_unoserver_instance() {
-  local pid=${1:-}
-  if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
-    return 0
-  fi
-  log "Stopping unoserver pid ${pid}"
-  local child_pids
-  child_pids=$(pgrep -P "$pid" 2>/dev/null || true)
-  pkill -TERM -P "$pid" 2>/dev/null || true
-  kill -TERM "$pid" 2>/dev/null || true
-  sleep 3
-  if [ -n "$child_pids" ]; then
-    # The expansion carries several PIDs on purpose.
-    # shellcheck disable=SC2086
-    kill -KILL $child_pids 2>/dev/null || true
-  fi
-  kill -KILL "$pid" 2>/dev/null || true
-}
-
-start_unoserver_watchdog() {
-  local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
-  case "$interval" in
-    ''|*[!0-9]*) interval=30 ;;
-  esac
-  (
-    while true; do
-      local i=0
-      while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
-        local pid=${UNOSERVER_PIDS[i]}
-        local port=${UNOSERVER_PORTS[i]}
-        local uno_port=${UNOSERVER_UNO_PORTS[i]}
-        local needs_restart=false
-
-        # Check PID and Health
-        if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
-          log "unoserver PID ${pid} not found for port ${port}"
-          needs_restart=true
-        elif ! unoserver_starting "$port" && ! check_unoserver_port_ready "$port"; then
-          needs_restart=true
-        fi
-
-        if [ "$needs_restart" = true ]; then
-          log "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
-          stop_unoserver_instance "$pid"
-          start_unoserver_instance "$port" "$uno_port"
-          UNOSERVER_PIDS[i]=$LAST_UNOSERVER_PID
-        fi
-        i=$((i + 1))
-      done
-      sleep "$interval"
-    done
-  ) &
-}
-
-# Start the unoserver pool eagerly (legacy always-on mode).
-start_unoserver_pool_eager() {
-  local auto
-  auto="$(get_unoserver_auto)"
-  auto="${auto,,}"
-  if [ -z "$auto" ]; then
-    auto="true"
-  fi
-  if [ "$auto" != "true" ]; then
-    log "Skipping local unoserver pool (autoUnoServer=$auto)"
-    return 0
-  fi
-
-  local count
-  count="$(get_unoserver_count)"
-  case "$count" in
-    ''|*[!0-9]*) count=1 ;;
-  esac
-  if [ "$count" -le 0 ]; then
-    count=1
-  fi
-
-  local i=0
-  while [ "$i" -lt "$count" ]; do
-    local port=$((2003 + (i * 2)))
-    local uno_port=$((2004 + (i * 2)))
-    log "Starting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
-    UNOSERVER_PORTS+=("$port")
-    UNOSERVER_UNO_PORTS+=("$uno_port")
-    start_unoserver_instance "$port" "$uno_port"
-    UNOSERVER_PIDS+=("$LAST_UNOSERVER_PID")
-    i=$((i + 1))
-  done
-
-  # Small delay to let servers bind
-  sleep 2
-}
-
-# ---------- On-demand unoserver management ----------
-# When UNO_DEMAND_ENABLED=true, unoserver + soffice are only started
-# when a conversion is needed and stopped after an idle timeout.
-# This saves ~200-350 MB idle memory.
-UNO_DEMAND_FILE="/tmp/uno-last-used"
-UNO_POOL_RUNNING=false
-
-# Start the unoserver pool on-demand (called from the demand manager).
-start_unoserver_pool_now() {
-  if [ "$UNO_POOL_RUNNING" = true ]; then
-    return 0
-  fi
-
-  local count
-  count="$(get_unoserver_count)"
-  case "$count" in
-    ''|*[!0-9]*) count=1 ;;
-  esac
-  if [ "$count" -le 0 ]; then
-    count=1
-  fi
-
-  UNOSERVER_PIDS=()
-  UNOSERVER_PORTS=()
-  UNOSERVER_UNO_PORTS=()
-
-  local i=0
-  while [ "$i" -lt "$count" ]; do
-    local port=$((2003 + (i * 2)))
-    local uno_port=$((2004 + (i * 2)))
-    log "Starting unoserver on-demand on 127.0.0.1:${port} (uno-port ${uno_port})"
-    UNOSERVER_PORTS+=("$port")
-    UNOSERVER_UNO_PORTS+=("$uno_port")
-    start_unoserver_instance "$port" "$uno_port"
-    UNOSERVER_PIDS+=("$LAST_UNOSERVER_PID")
-    i=$((i + 1))
-  done
-
-  # Wait for readiness
-  local ready=false
-  for _ in {1..30}; do
-    if check_unoserver_ready "silent"; then
-      ready=true
-      break
-    fi
-    sleep 1
-  done
-
-  if [ "$ready" = true ]; then
-    log "unoserver pool started on-demand and ready"
-  else
-    log "WARNING: unoserver started but not ready after 30s"
-  fi
-  UNO_POOL_RUNNING=true
-}
-
-# Stop all unoserver instances to reclaim memory. Runs even when the
-# pool flag was never set, so a partially started pool still gets cleaned.
-stop_unoserver_pool_now() {
-  for pid in "${UNOSERVER_PIDS[@]:-}"; do
-    stop_unoserver_instance "$pid"
-  done
-
-  UNOSERVER_PIDS=()
-  UNOSERVER_PORTS=()
-  UNOSERVER_UNO_PORTS=()
-  if [ "$UNO_POOL_RUNNING" = true ]; then
-    log "unoserver pool stopped, memory reclaimed"
-  fi
-  UNO_POOL_RUNNING=false
-}
-
-# Demand manager: background loop that watches for conversion demand and manages idle timeout.
-start_unoserver_demand_manager() {
-  local idle_timeout=${UNO_IDLE_TIMEOUT_SECONDS:-120}
-  case "$idle_timeout" in
-    ''|*[!0-9]*) idle_timeout=120 ;;
-  esac
-  local check_interval=5
-
-  # This loop runs in a background subshell, so the parent's cleanup cannot see
-  # its UNOSERVER_PIDS; clean the tree up from here.
-  manager_cleanup() {
-    trap - TERM INT EXIT
-    stop_unoserver_pool_now
-  }
-  trap 'manager_cleanup; exit 0' TERM INT
-  trap manager_cleanup EXIT
-
-
-  # Ensure demand file does not exist at startup
-  rm -f "$UNO_DEMAND_FILE"
-
-  while true; do
-    if [ -f "$UNO_DEMAND_FILE" ]; then
-      # Demand detected — ensure pool is running
-      if [ "$UNO_POOL_RUNNING" = false ]; then
-        log "unoserver demand detected, starting pool"
-        start_unoserver_pool_now
-      fi
-
-      # Check idle time
-      local last_used_epoch
-      last_used_epoch=$(cat "$UNO_DEMAND_FILE" 2>/dev/null || echo "0")
-      local now_epoch
-      now_epoch=$(date +%s)
-      local idle_secs=$(( now_epoch - last_used_epoch ))
-
-      if [ "$idle_secs" -ge "$idle_timeout" ] && [ "$UNO_POOL_RUNNING" = true ]; then
-        log "unoserver idle for ${idle_secs}s (timeout=${idle_timeout}s)"
-        stop_unoserver_pool_now
-        rm -f "$UNO_DEMAND_FILE"
-      fi
-    elif [ "$UNO_POOL_RUNNING" = true ]; then
-      # Demand file removed but pool still running — stop it
-      stop_unoserver_pool_now
-    fi
-
-    # Also health-check running instances
-    if [ "$UNO_POOL_RUNNING" = true ]; then
-      local i=0
-      while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
-        local pid=${UNOSERVER_PIDS[i]}
-        local port=${UNOSERVER_PORTS[i]}
-        local uno_port=${UNOSERVER_UNO_PORTS[i]}
-
-        if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
-          log "unoserver PID ${pid} died for port ${port}, restarting"
-          start_unoserver_instance "$port" "$uno_port"
-          UNOSERVER_PIDS[i]=$LAST_UNOSERVER_PID
-        elif ! unoserver_starting "$port" && ! check_unoserver_port_ready "$port" "silent"; then
-          log "unoserver port ${port} unhealthy, restarting"
-          stop_unoserver_instance "$pid"
-          start_unoserver_instance "$port" "$uno_port"
-          UNOSERVER_PIDS[i]=$LAST_UNOSERVER_PID
-        fi
-        i=$((i + 1))
-      done
-    fi
-
-    sleep "$check_interval"
-  done
-}
 
 # ---------- VERSION_TAG ----------
 # Load VERSION_TAG from file if not provided via environment.
@@ -836,7 +249,7 @@ compute_dynamic_memory() {
     DYNAMIC_MAX_RAM_PCT=70
     DYNAMIC_MAX_METASPACE=512
   else
-    # Large memory (>4GB): cap at 70% to leave room for off-heap (LibreOffice, Calibre, etc.)
+    # Large memory (>4GB): cap at 70% to leave room for off-heap (Ghostscript, etc.)
     DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=70
     DYNAMIC_MAX_METASPACE=768
@@ -1101,7 +514,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     JAVA_BASE_OPTS="${STRIPPED_JVM_OPTS} -XX:ConcGCThreads=${CONC_GC_THREADS}"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -XX:-UseBASE64Intrinsics -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
@@ -1229,11 +642,6 @@ fi
 chmod 700 "${XDG_RUNTIME_DIR}" 2>/dev/null || true
 
 # ---------- Optional ----------
-# Disable advanced HTML operations if required.
-if [[ "${INSTALL_BOOK_AND_ADVANCED_HTML_OPS:-false}" == "true" && "${FAT_DOCKER:-true}" != "true" ]]; then
-  log "issue with calibre in current version, feature currently disabled on Stirling-PDF"
-fi
-
 # Download security JAR in non-fat builds.
 if [[ "${FAT_DOCKER:-true}" != "true" && -x /scripts/download-security-jar.sh ]]; then
   /scripts/download-security-jar.sh || true
@@ -1289,8 +697,7 @@ for dir in "${CRITICAL_DIRS[@]}"; do
 done
 
 # ---------- Private work areas ----------
-# STIRLING_TEMPDIR is user-set; a shared dir such as /tmp must keep its sticky bit and owner,
-# or the office user can no longer bind LibreOffice's IPC pipes there.
+# STIRLING_TEMPDIR is user-set; a shared dir such as /tmp must keep its sticky bit and owner.
 STIRLING_FILE_STORE="${STIRLING_TEMPDIR:-/tmp/stirling-files}"
 for private_dir in /tmp/stirling-pdf "$STIRLING_FILE_STORE"; do
   case "$(realpath -m "$private_dir" 2>/dev/null || printf '%s' "$private_dir")" in
@@ -1306,56 +713,8 @@ for private_dir in /tmp/stirling-pdf "$STIRLING_FILE_STORE"; do
   fi
 done
 
-# ---------- unoserver ----------
-# LibreOffice renders headless (SAL_USE_VCLPLUGIN=svp), so no X server is started: one running
-# as root with access control off would be reachable from the sandbox through its socket.
-# Detect whether on-demand mode is enabled.
-UNO_DEMAND_ENABLED="${UNO_DEMAND_ENABLED:-true}"
-UNO_DEMAND_ENABLED="${UNO_DEMAND_ENABLED,,}"
-
-UNOSERVER_BIN="$(command -v unoserver || true)"
-UNOCONVERT_BIN="$(command -v unoconvert || true)"
-UNOPING_BIN="$(command -v unoping || true)"
-
-if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
-  resolve_office_user
-  if [ "$OFFICE_USER_AVAILABLE" = true ]; then
-    LIBREOFFICE_PROFILE="${OFFICE_SANDBOX_HOME}/profiles"
-    OFFICE_TMP="${OFFICE_SANDBOX_HOME}/tmp"
-    OFFICE_XDG="${OFFICE_SANDBOX_HOME}/xdg"
-    mkdir -p "$LIBREOFFICE_PROFILE" "$OFFICE_TMP" "$OFFICE_XDG"
-    chown -R "$OFFICE_USER:$(id -gn "$OFFICE_USER")" "$OFFICE_SANDBOX_HOME" 2>/dev/null || true
-    chmod 700 "$OFFICE_SANDBOX_HOME" "$OFFICE_TMP" "$OFFICE_XDG" 2>/dev/null || true
-  else
-    LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
-    OFFICE_TMP="${LIBREOFFICE_PROFILE}/tmp"
-    OFFICE_XDG="${LIBREOFFICE_PROFILE}/xdg"
-    run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE" "$OFFICE_TMP" "$OFFICE_XDG"
-    run_as_runtime_user chmod 700 "$OFFICE_TMP" "$OFFICE_XDG" 2>/dev/null || true
-  fi
-  export_office_sandbox_policy "$LIBREOFFICE_PROFILE"
-  export STIRLING_LO_PROFILE_TEMPLATE="$OFFICE_PROFILE_TEMPLATE"
-  create_office_profile_template &
-
-  if [ "$UNO_DEMAND_ENABLED" = "true" ]; then
-    # ---------- On-demand mode ----------
-    # Do NOT start unoserver or soffice yet.
-    # The demand manager will start them lazily when a conversion request arrives
-    # and stop them after an idle timeout to reclaim ~200-350 MB RSS.
-    log "unoserver on-demand: starts on first conversion, stops after ${UNO_IDLE_TIMEOUT_SECONDS:-120}s idle"
-    start_unoserver_demand_manager &
-    DEMAND_MANAGER_PID=$!
-  else
-    # ---------- Legacy always-on mode ----------
-    start_unoserver_pool_eager
-    log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE), Java starting in parallel"
-  fi
-else
-  log "unoserver/unoconvert not installed; skipping UNO setup"
-fi
-
 # ---------- Java ----------
-# Start Stirling PDF Java application immediately (parallel with unoserver startup).
+# Start Stirling PDF Java application.
 log "Starting Stirling PDF"
 JAVA_CMD=(
   java
@@ -1414,7 +773,7 @@ elif [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
     --workers "${STIRLING_ENGINE_WORKERS:-2}"
     --app-dir "$STIRLING_ENGINE_HOME/src"
   )
-  # init.sh exports PYTHONPATH for unoserver's 3.12 venv; inheriting it breaks the 3.13 engine.
+  # init.sh exports PYTHONPATH for the 3.12 tool venv; inheriting it breaks the 3.13 engine.
   if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
     env -u PYTHONPATH "${ENGINE_CMD[@]}" &
   elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
@@ -1444,26 +803,6 @@ else
 fi
 
 JAVA_PID=$!
-
-# ---------- Unoserver Readiness + Watchdog (legacy always-on mode only) ----------
-if [ "$UNO_DEMAND_ENABLED" != "true" ] && [ "${#UNOSERVER_PORTS[@]}" -gt 0 ]; then
-  log "Waiting for unoserver (Java already starting in parallel)..."
-  UNOSERVER_READY=false
-  for _ in {1..30}; do
-    if check_unoserver_ready "silent"; then
-      log "unoserver is ready!"
-      UNOSERVER_READY=true
-      break
-    fi
-    sleep 1
-  done
-
-  start_unoserver_watchdog
-
-  if [ "$UNOSERVER_READY" = false ] && ! check_unoserver_ready; then
-    log "WARNING: unoserver not ready after 30s. Watchdog will manage restarts. Document conversion may be temporarily unavailable."
-  fi
-fi
 
 # ---------- Background AOT Cache Generation ----------
 # On first boot (no valid cache), generate the AOT cache in the background so the app

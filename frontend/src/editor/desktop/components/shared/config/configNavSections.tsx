@@ -93,7 +93,7 @@ export const useConfigNavSections = (
           "settings.connection.description",
           "Work locally on this machine or connect the app to a Stirling server.",
         ),
-        icon: "cloud",
+        icon: "plug",
         component: <ConnectionSettings />,
       },
     ],
