@@ -170,10 +170,10 @@ test("a rotated document saves annotations without reopening", async ({
     .toBe(pageCount);
 
   // Nothing was reopened, so no restore may hold the zoom readout.
-  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  const zoomBefore = await page.getByTestId("viewer-zoom-input").inputValue();
   await page.getByRole("button", { name: "Zoom In" }).first().click();
   await expect
-    .poll(async () => page.getByText(/%$/).first().textContent(), {
+    .poll(async () => page.getByTestId("viewer-zoom-input").inputValue(), {
       timeout: 5_000,
     })
     .not.toBe(zoomBefore);
@@ -194,7 +194,7 @@ test("rotated and landscape pages reload a tool output in place", async ({
   await mockCompress(page, ROTATED_PAGES_PDF);
   await openCompressPanel(page);
   const topBefore = await pageTopOf(page, 1);
-  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  const zoomBefore = await page.getByTestId("viewer-zoom-input").inputValue();
   await applyCompress(page);
 
   await expect
@@ -206,7 +206,7 @@ test("rotated and landscape pages reload a tool output in place", async ({
     })
     .toBeLessThanOrEqual(3);
   await expect
-    .poll(async () => page.getByText(/%$/).first().textContent(), {
+    .poll(async () => page.getByTestId("viewer-zoom-input").inputValue(), {
       timeout: 15_000,
     })
     .toBe(zoomBefore);
@@ -233,7 +233,7 @@ test("dual page view survives a save and a tool output", async ({
     await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   }
   const topBefore = await pageTopOf(page, 0);
-  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  const zoomBefore = await page.getByTestId("viewer-zoom-input").inputValue();
   await applyCompress(page);
 
   await expect
@@ -247,7 +247,9 @@ test("dual page view survives a save and a tool output", async ({
       timeout: 15_000,
     })
     .toBeLessThanOrEqual(3);
-  await expect(page.getByText(/%$/).first()).toHaveText(zoomBefore ?? "");
+  await expect(page.getByTestId("viewer-zoom-input")).toHaveValue(
+    zoomBefore ?? "",
+  );
 });
 
 for (const dualRotated of [false, true]) {
@@ -267,20 +269,24 @@ for (const dualRotated of [false, true]) {
         })
         .toBe(true);
     }
-    const zoom = page.getByText(/%$/).first();
-    const initialZoom = await zoom.textContent();
+    const zoom = page.getByTestId("viewer-zoom-input");
+    const initialZoom = await zoom.inputValue();
     await page.getByRole("button", { name: "Zoom In" }).first().click();
-    await expect(zoom).not.toHaveText(initialZoom ?? "");
+    await expect(zoom).not.toHaveValue(initialZoom);
     await page.getByRole("button", { name: "Last Page" }).first().click();
-    const pageInput = page.locator(".pdf-viewer-toolbar").getByRole("textbox");
+    // The page bar's other text box is the zoom.
+    const pageInput = page
+      .locator(".pdf-viewer-toolbar")
+      .getByRole("textbox")
+      .and(page.locator(':not([data-testid="viewer-zoom-input"])'));
     await expect(pageInput).toHaveValue("3");
     await expect(page.locator('[data-page-index="2"]')).toBeInViewport();
-    const zoomBefore = await zoom.textContent();
+    const zoomBefore = await zoom.inputValue();
 
     await applyCompress(page);
 
     await expect(page.locator("[data-page-index]")).toHaveCount(2);
-    await expect(zoom).toHaveText(zoomBefore ?? "");
+    await expect(zoom).toHaveValue(zoomBefore);
     await expect(page.locator('[data-page-index="1"]')).toBeInViewport();
     if (dualRotated) {
       await expectPageViewChecked(page, "Dual Page View");
@@ -331,22 +337,10 @@ test("a tool output keeps the page width and zoom readout steady", async ({
       // carried zoom lands, and hidden layout is not a visible flash.
       if (pageEl && isRendered(pageEl))
         state.widths.push(Math.round(pageEl.getBoundingClientRect().width));
-      const indicator = Array.from(
-        document.querySelectorAll<HTMLElement>("span,div,input"),
-      ).find((el) =>
-        /^\d+%$/.test(
-          (el.textContent ?? el.getAttribute("value") ?? "").trim(),
-        ),
+      const indicator = document.querySelector<HTMLInputElement>(
+        '[data-testid="viewer-zoom-input"]',
       );
-      if (indicator) {
-        state.indicators.push(
-          (
-            indicator.textContent ??
-            indicator.getAttribute("value") ??
-            ""
-          ).trim(),
-        );
-      }
+      if (indicator) state.indicators.push(indicator.value);
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -392,13 +386,13 @@ test("a manual zoom survives a save and a tool output", async ({ page }) => {
   await page.waitForTimeout(600);
   await page.getByRole("button", { name: "Zoom In" }).first().click();
   await page.waitForTimeout(400);
-  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  const zoomBefore = await page.getByTestId("viewer-zoom-input").inputValue();
   await page.mouse.wheel(0, 160);
   await page.waitForTimeout(400);
 
   await saveChanges(page);
   await expect
-    .poll(async () => page.getByText(/%$/).first().textContent(), {
+    .poll(async () => page.getByTestId("viewer-zoom-input").inputValue(), {
       timeout: 15_000,
     })
     .toBe(zoomBefore);
@@ -413,7 +407,7 @@ test("a manual zoom survives a save and a tool output", async ({ page }) => {
   // The manual zoom is carried across the reload. The page the tool panel
   // leaves the viewer on is not asserted here; the rotated case covers that.
   await expect
-    .poll(async () => page.getByText(/%$/).first().textContent(), {
+    .poll(async () => page.getByTestId("viewer-zoom-input").inputValue(), {
       timeout: 15_000,
     })
     .toBe(zoomBefore);
@@ -574,7 +568,7 @@ test("a form apply reloads the new value and keeps the position", async ({
 
   // Filling can scroll the field into view, so the baseline is read once the
   // edit is done, right before the apply.
-  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  const zoomBefore = await page.getByTestId("viewer-zoom-input").inputValue();
   const pageTopBefore = await pageTopOf(page, 0);
   const apply = page.getByRole("button", { name: "Apply Changes" }).first();
   await apply.click();
@@ -584,7 +578,7 @@ test("a form apply reloads the new value and keeps the position", async ({
   // apply does not rescale the page or move the reader.
   await expect(field).toHaveValue("updated value", { timeout: 20_000 });
   await expect
-    .poll(async () => page.getByText(/%$/).first().textContent(), {
+    .poll(async () => page.getByTestId("viewer-zoom-input").inputValue(), {
       timeout: 15_000,
     })
     .toBe(zoomBefore);

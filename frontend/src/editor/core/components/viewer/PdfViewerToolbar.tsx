@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
+import { useState, useEffect, useRef } from "react";
+import { Paper, Group, Menu, NumberInput, TextInput } from "@mantine/core";
+import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
@@ -8,13 +9,93 @@ import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import "@editor/components/viewer/PdfViewerToolbar.css";
-import { Icon } from "@editor/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import {
+  defaultZoomLevel,
+  MAX_ZOOM_PERCENT,
+  MIN_ZOOM_PERCENT,
+} from "@editor/components/viewer/defaultZoom";
 
 // Sizing constants for the page number input
 const MIN_PAGE_DIGITS = 2;
 const MIN_INPUT_WIDTH_PX = 48;
 const BASE_INPUT_WIDTH_PX = 32;
 const PX_PER_DIGIT = 8;
+
+/**
+ * The current zoom as an editable percentage. Typing replaces it on Enter or
+ * on leaving the box; Escape puts the current zoom back.
+ */
+function ZoomPercentInput({
+  percent,
+  onCommit,
+  label,
+}: {
+  percent: number;
+  onCommit: (percent: number) => void;
+  label: string;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  // Enter and Escape blur before the cleared draft renders; that blur must
+  // not commit again.
+  const discardRef = useRef(false);
+  const commit = () => {
+    if (discardRef.current) {
+      discardRef.current = false;
+      return;
+    }
+    if (draft === null) return;
+    const typed = Number.parseFloat(draft.replace("%", ""));
+    if (Number.isFinite(typed)) {
+      onCommit(
+        Math.min(
+          Math.max(Math.round(typed), MIN_ZOOM_PERCENT),
+          MAX_ZOOM_PERCENT,
+        ),
+      );
+    }
+    setDraft(null);
+  };
+  return (
+    <TextInput
+      value={draft ?? `${percent}%`}
+      onFocus={(e) => {
+        // Same text as shown, so the selection survives the re-render and
+        // typing replaces it.
+        setDraft(`${percent}%`);
+        e.currentTarget.select();
+      }}
+      onChange={(e) => setDraft(e.currentTarget.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          commit();
+          discardRef.current = true;
+          e.currentTarget.blur();
+        } else if (e.key === "Escape") {
+          discardRef.current = true;
+          setDraft(null);
+          e.currentTarget.blur();
+        }
+      }}
+      aria-label={label}
+      inputMode="decimal"
+      size="xs"
+      data-testid="viewer-zoom-input"
+      styles={{
+        input: {
+          width: "3.75rem",
+          textAlign: "center",
+          fontWeight: 500,
+          fontSize: 13,
+          paddingLeft: 4,
+          paddingRight: 4,
+        },
+      }}
+    />
+  );
+}
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -45,6 +126,24 @@ export function PdfViewerToolbar({
     registerImmediateScrollUpdate,
   } = useViewer();
   const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
+  const { preferences } = usePreferences();
+  // Resetting returns to the zoom documents open at, as set in the View menu.
+  const resetZoomLevel = defaultZoomLevel(preferences.defaultViewerZoom);
+  const [resetZoomIcon, resetZoomLabel]: [IconName, string] =
+    resetZoomLevel === ZoomMode.FitPage
+      ? ["scan", t("viewer.resetZoomFitPage", "Reset zoom: fit to page")]
+      : resetZoomLevel === ZoomMode.FitWidth
+        ? [
+            "arrow-left-right",
+            t("viewer.resetZoomFitWidth", "Reset zoom: fit to width"),
+          ]
+        : [
+            "scan",
+            t("viewer.resetZoomPercent", "Reset zoom: {{percent}}%", {
+              percent: Math.round(Number(resetZoomLevel) * 100),
+            }),
+          ];
+  const handleResetZoom = () => zoomActions.requestZoom(resetZoomLevel);
   // Viewer controls registered for this bar rather than the top one.
   const pageBarButtons = buttons.filter(
     (button) => button.section === "page-bar" && (button.visible ?? true),
@@ -304,7 +403,7 @@ export function PdfViewerToolbar({
         </>
       )}
 
-      {/* Desktop zoom controls (slider + buttons) */}
+      {/* Desktop zoom controls */}
       {!isPhone && (
         <Group gap={4} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
           <div className="pdf-viewer-toolbar__divider" />
@@ -316,20 +415,10 @@ export function PdfViewerToolbar({
           >
             <Icon name="zoom-out" size={18} />
           </ActionIcon>
-          <Slider
-            className="pdf-viewer-toolbar-zoom-slider"
-            value={Math.min(Math.max(displayZoomPercent, 20), 500)}
-            min={20}
-            max={500}
-            step={5}
-            onChange={(val) => zoomActions.setZoomLevel?.(val / 100)}
-            size="xs"
-            styles={{
-              root: { minWidth: "6rem", width: "6rem", flexShrink: 0 },
-              thumb: { width: 12, height: 12 },
-              track: { height: 2 },
-            }}
-            label={null}
+          <ZoomPercentInput
+            percent={displayZoomPercent}
+            onCommit={(percent) => zoomActions.setZoomLevel?.(percent / 100)}
+            label={t("viewer.zoomLevel", "Zoom level")}
           />
           <ActionIcon
             variant="tertiary"
@@ -339,16 +428,17 @@ export function PdfViewerToolbar({
           >
             <Icon name="zoom-in" size={18} />
           </ActionIcon>
-          <span
-            style={{
-              minWidth: "2.5rem",
-              textAlign: "center",
-              fontSize: 12,
-              color: "var(--c-text-subtle)",
-            }}
-          >
-            {displayZoomPercent}%
-          </span>
+          <Tooltip content={resetZoomLabel} position="top" arrow>
+            <ActionIcon
+              variant="tertiary"
+              size={buttonSize}
+              onClick={handleResetZoom}
+              aria-label={resetZoomLabel}
+              data-testid="viewer-reset-zoom"
+            >
+              <Icon name={resetZoomIcon} size={18} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       )}
 
@@ -401,6 +491,12 @@ export function PdfViewerToolbar({
               onClick={handleZoomIn}
             >
               {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name={resetZoomIcon} size={18} />}
+              onClick={handleResetZoom}
+            >
+              {resetZoomLabel}
             </Menu.Item>
             <Menu.Divider />
             <Menu.Label>{t("viewer.rotate", "Rotate")}</Menu.Label>

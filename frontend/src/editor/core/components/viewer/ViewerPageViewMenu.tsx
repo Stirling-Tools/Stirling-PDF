@@ -3,27 +3,28 @@ import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { SpreadMode } from "@embedpdf/plugin-spread/react";
-import { Icon } from "@editor/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   BarMenu,
   toggleMark,
 } from "@editor/components/viewer/ViewerBarControls";
-import type { PdfRenderMode } from "@editor/services/preferencesService";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import type {
+  PdfRenderMode,
+  ViewerZoomSetting,
+} from "@editor/services/preferencesService";
 
 /** How the pages are shown: one or two at a time, fitted how, in what colours. */
 export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
   const { t } = useTranslation();
   const {
     getScrollState,
-    getZoomState,
     getSpreadState,
     zoomActions,
     spreadActions,
-    zoomRestorePendingRef,
-    zoomRestoreSettledTick,
-    registerImmediateZoomUpdate,
     registerImmediateSpreadUpdate,
+    registerImmediateScrollUpdate,
     pdfRenderMode,
     setPdfRenderMode,
   } = useViewer();
@@ -38,23 +39,33 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
   const isDualPage = spreadMode !== SpreadMode.None;
   const isCoverPage = spreadMode === SpreadMode.Even;
 
-  // A carried zoom's fit pass is intermediate, so the fit mode holds until its
-  // settled tick re-syncs from the live state.
-  const [zoomLevel, setZoomLevel] = useState(() => getZoomState().level);
-  useEffect(() => {
-    if (!zoomRestorePendingRef.current) setZoomLevel(getZoomState().level);
-    return registerImmediateZoomUpdate(() => {
-      if (zoomRestorePendingRef.current) return;
-      setZoomLevel(getZoomState().level);
-    });
-  }, [
-    registerImmediateZoomUpdate,
-    getZoomState,
-    zoomRestorePendingRef,
-    zoomRestoreSettledTick,
-  ]);
+  // The fit documents open at, and the page bar's reset returns to; choosing
+  // one also applies it now.
+  const { preferences, updatePreference } = usePreferences();
+  const chooseDefaultZoom = (setting: ViewerZoomSetting, level: ZoomMode) => {
+    updatePreference("defaultViewerZoom", setting);
+    zoomActions.requestZoom(level);
+  };
+  const fits: [ViewerZoomSetting, ZoomMode, IconName, string][] = [
+    [
+      "fitWidth",
+      ZoomMode.FitWidth,
+      "arrow-left-right",
+      t("viewer.fitWidth", "Fit to width"),
+    ],
+    ["fitPage", ZoomMode.FitPage, "scan", t("viewer.fitPage", "Fit to page")],
+  ];
 
-  const singlePageOnly = getScrollState().totalPages <= 1;
+  const [totalPages, setTotalPages] = useState(
+    () => getScrollState().totalPages,
+  );
+  useEffect(() => {
+    setTotalPages(getScrollState().totalPages);
+    return registerImmediateScrollUpdate((_page, total) =>
+      setTotalPages(total),
+    );
+  }, [registerImmediateScrollUpdate, getScrollState]);
+  const singlePageOnly = totalPages <= 1;
   const colours: [PdfRenderMode, string][] = [
     ["normal", t("workbenchBar.pageColourNormal", "Normal")],
     ["dark", t("workbenchBar.pageColourDark", "Dark")],
@@ -102,23 +113,18 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
         {t("viewer.coverPageView", "Show Cover Page Separately")}
       </Menu.Item>
       <Menu.Divider />
-      <Menu.Label>{t("workbenchBar.pageFit", "Fit")}</Menu.Label>
-      <Menu.Item
-        leftSection={<Icon name="arrow-left-right" size="1rem" />}
-        rightSection={toggleMark(zoomLevel === ZoomMode.FitWidth)}
-        data-checked={zoomLevel === ZoomMode.FitWidth || undefined}
-        onClick={() => zoomActions.requestZoom(ZoomMode.FitWidth)}
-      >
-        {t("viewer.fitWidth", "Fit to width")}
-      </Menu.Item>
-      <Menu.Item
-        leftSection={<Icon name="scan" size="1rem" />}
-        rightSection={toggleMark(zoomLevel === ZoomMode.FitPage)}
-        data-checked={zoomLevel === ZoomMode.FitPage || undefined}
-        onClick={() => zoomActions.requestZoom(ZoomMode.FitPage)}
-      >
-        {t("viewer.fitPage", "Fit to page")}
-      </Menu.Item>
+      <Menu.Label>{t("workbenchBar.defaultZoom", "Default zoom")}</Menu.Label>
+      {fits.map(([setting, level, icon, label]) => (
+        <Menu.Item
+          key={setting}
+          leftSection={<Icon name={icon} size="1rem" />}
+          rightSection={toggleMark(preferences.defaultViewerZoom === setting)}
+          data-checked={preferences.defaultViewerZoom === setting || undefined}
+          onClick={() => chooseDefaultZoom(setting, level)}
+        >
+          {label}
+        </Menu.Item>
+      ))}
       <Menu.Divider />
       <Menu.Label>{t("workbenchBar.pageColours", "Page colours")}</Menu.Label>
       {colours.map(([mode, label]) => (

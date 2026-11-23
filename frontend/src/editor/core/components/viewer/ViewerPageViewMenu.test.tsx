@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
@@ -36,6 +36,7 @@ const viewer = vi.hoisted(() => {
           zoomListeners.delete(listener);
         };
       },
+      registerImmediateScrollUpdate: () => () => {},
       registerImmediateSpreadUpdate: (listener: (mode: string) => void) => {
         spreadListeners.add(listener);
         return () => {
@@ -50,6 +51,13 @@ const viewer = vi.hoisted(() => {
 
 vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => viewer.value,
+}));
+const prefs = vi.hoisted(() => ({
+  preferences: { defaultViewerZoom: "auto" },
+  updatePreference: vi.fn(),
+}));
+vi.mock("@editor/contexts/PreferencesContext", () => ({
+  usePreferences: () => prefs,
 }));
 vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsMobile: () => false,
@@ -78,33 +86,33 @@ describe("ViewerPageViewMenu", () => {
   beforeEach(() => {
     viewer.state.level = 1;
     viewer.state.spreadMode = SpreadMode.None;
+    prefs.preferences.defaultViewerZoom = "auto";
     vi.clearAllMocks();
   });
 
-  it("requests the plugin's fit modes", async () => {
+  it("saves the chosen fit as the default zoom and applies it", async () => {
     const user = await openMenu();
     await user.click(
-      await screen.findByRole("menuitem", { name: "viewer.fitWidth" }),
+      await screen.findByRole("menuitem", { name: "viewer.fitPage" }),
+    );
+    expect(prefs.updatePreference).toHaveBeenCalledWith(
+      "defaultViewerZoom",
+      "fitPage",
     );
     expect(viewer.value.zoomActions.requestZoom).toHaveBeenCalledWith(
-      ZoomMode.FitWidth,
+      ZoomMode.FitPage,
     );
   });
 
-  it("ticks the fit mode the plugin reports", async () => {
+  it("ticks the saved default zoom", async () => {
+    prefs.preferences.defaultViewerZoom = "fitWidth";
     await openMenu();
-    const fitWidth = await screen.findByRole("menuitem", {
-      name: "viewer.fitWidth",
-    });
-    const fitPage = await screen.findByRole("menuitem", {
-      name: "viewer.fitPage",
-    });
-    expect(fitWidth).not.toHaveAttribute("data-checked");
-
-    // Same percent either way: the level alone has to move the tick.
-    act(() => viewer.notifyZoom(ZoomMode.FitPage));
-    expect(fitPage).toHaveAttribute("data-checked", "true");
-    expect(fitWidth).not.toHaveAttribute("data-checked");
+    expect(
+      await screen.findByRole("menuitem", { name: "viewer.fitWidth" }),
+    ).toHaveAttribute("data-checked", "true");
+    expect(
+      await screen.findByRole("menuitem", { name: "viewer.fitPage" }),
+    ).not.toHaveAttribute("data-checked");
   });
 
   it("switches to two pages", async () => {

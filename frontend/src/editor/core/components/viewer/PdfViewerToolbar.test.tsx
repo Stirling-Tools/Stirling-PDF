@@ -2,11 +2,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import type { ZoomLevel } from "@embedpdf/plugin-zoom";
+import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
 
 const device = vi.hoisted(() => ({ isPhone: false }));
+const prefs = vi.hoisted(() => ({ defaultViewerZoom: "fitWidth" as string }));
 const pageTool = vi.hoisted(() => ({ open: false }));
 
 // Built once: the toolbar's effects depend on the identity of these values.
@@ -63,6 +65,9 @@ vi.mock("@editor/contexts/WorkbenchBarContext", () => ({
     actions: bar.actions,
     allButtonsDisabled: false,
   }),
+}));
+vi.mock("@editor/contexts/PreferencesContext", () => ({
+  usePreferences: () => ({ preferences: prefs, updatePreference: vi.fn() }),
 }));
 vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsPhone: () => device.isPhone,
@@ -140,5 +145,54 @@ describe("PdfViewerToolbar registered controls", () => {
     expect(screen.getByRole("button", { name: "Page tool" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Hidden tool" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Top tool" })).toBeNull();
+  });
+});
+
+describe("PdfViewerToolbar zoom controls", () => {
+  beforeEach(() => {
+    device.isPhone = false;
+    prefs.defaultViewerZoom = "fitWidth";
+    viewer.zoom.percent = 100;
+    vi.clearAllMocks();
+  });
+
+  it("zooms to a typed percentage on Enter", async () => {
+    const user = userEvent.setup();
+    renderToolbar();
+    const input = screen.getByTestId("viewer-zoom-input");
+    await user.click(input);
+    await user.keyboard("150{Enter}");
+    expect(viewer.value.zoomActions.setZoomLevel).toHaveBeenCalledOnce();
+    expect(viewer.value.zoomActions.setZoomLevel).toHaveBeenCalledWith(1.5);
+  });
+
+  it("holds a typed zoom to the supported range", async () => {
+    const user = userEvent.setup();
+    renderToolbar();
+    await user.click(screen.getByTestId("viewer-zoom-input"));
+    await user.keyboard("5000{Enter}");
+    expect(viewer.value.zoomActions.setZoomLevel).toHaveBeenCalledWith(5);
+  });
+
+  it("leaves the zoom alone on Escape or on text that is not a number", async () => {
+    const user = userEvent.setup();
+    renderToolbar();
+    const input = screen.getByTestId("viewer-zoom-input");
+    await user.click(input);
+    await user.keyboard("150{Escape}");
+    await user.click(input);
+    await user.keyboard("abc{Enter}");
+    expect(viewer.value.zoomActions.setZoomLevel).not.toHaveBeenCalled();
+    expect(input).toHaveValue("100%");
+  });
+
+  it("resets to the saved default fit", async () => {
+    const user = userEvent.setup();
+    prefs.defaultViewerZoom = "fitPage";
+    renderToolbar();
+    await user.click(screen.getByTestId("viewer-reset-zoom"));
+    expect(viewer.value.zoomActions.requestZoom).toHaveBeenCalledWith(
+      ZoomMode.FitPage,
+    );
   });
 });

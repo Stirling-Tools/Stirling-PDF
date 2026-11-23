@@ -237,7 +237,7 @@ test("saving annotations keeps the live document mounted", async ({ page }) => {
   await page.waitForTimeout(800);
   await page.getByRole("button", { name: "Zoom In" }).first().click();
   await page.waitForTimeout(500);
-  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  const zoomBefore = await page.getByTestId("viewer-zoom-input").inputValue();
   await page.mouse.wheel(0, 320);
   await page.waitForTimeout(400);
   const pageTop = (index: number) =>
@@ -305,7 +305,7 @@ test("saving annotations keeps the live document mounted", async ({ page }) => {
     })
     .toBe(true);
   await expect
-    .poll(async () => page.getByText(/%$/).first().textContent(), {
+    .poll(async () => page.getByTestId("viewer-zoom-input").inputValue(), {
       timeout: 10_000,
     })
     .toBe(zoomBefore);

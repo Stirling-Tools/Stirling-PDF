@@ -16,12 +16,6 @@
   animation: pdf-viewer-toolbar-in 280ms ease both;
 }
 
-@container (max-width: 38rem) {
-  .pdf-viewer-toolbar-zoom-slider {
-    display: none;
-  }
-}
-
 @container (max-width: 34rem) {
   .pdf-viewer-toolbar-wide-only {
     display: none;
