@@ -11,6 +11,9 @@ import { LicenseProvider } from "@editor/contexts/LicenseContext";
 const meta = {
   title: "Shared/ManageBillingButton",
   component: ManageBillingButton,
+  // It manages a self-hosted server's license; SaaS bills through cloud plans
+  // and the desktop app has no server license.
+  tags: ["not-in-saas", "not-in-desktop"],
   parameters: {
     layout: "centered",
     msw: {

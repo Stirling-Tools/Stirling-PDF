@@ -550,28 +550,45 @@ function matchesText(text: string, expected: string | RegExp): boolean {
 }
 
 /**
- * The (i) whose explanation is `info`. A field's (i) is named after the field
- * ("About Page Order") and its explanation is the field's description, read from
- * the element just before the button; any other (i) is named by its text.
+ * The (i) whose explanation is `info`, or null. A field's (i) is named after the
+ * field ("About Page Order") and its explanation is the field's description,
+ * read from the element just before the button; any other (i) is named by its
+ * text.
  */
-function findInfoButton(
+export function queryInfoButton(
   panel: PanelQueries,
   info: string | RegExp,
-): Promise<HTMLElement> {
-  return waitFor(() => {
-    const named = panel.queryAllByRole("button", { name: info });
-    if (named[0]) return named[0];
-    const field = panel
+): HTMLElement | null {
+  const named = panel.queryAllByRole("button", { name: info });
+  if (named[0]) return named[0];
+  return (
+    panel
       .queryAllByRole("button", { name: /^About / })
       .find((button: HTMLElement) =>
         matchesText(
           button.parentElement?.previousElementSibling?.textContent ?? "",
           info,
         ),
-      );
-    if (!field) throw new Error(`No (i) explains ${String(info)}`);
-    return field;
-  }, STAGE_TIMEOUT);
+      ) ?? null
+  );
+}
+
+/** {@link queryInfoButton}, throwing when no (i) explains `info`. */
+export function getInfoButton(
+  panel: PanelQueries,
+  info: string | RegExp,
+): HTMLElement {
+  const button = queryInfoButton(panel, info);
+  if (!button) throw new Error(`No (i) explains ${String(info)}`);
+  return button;
+}
+
+/** {@link getInfoButton}, waiting for the (i) to appear. */
+export function findInfoButton(
+  panel: PanelQueries,
+  info: string | RegExp,
+): Promise<HTMLElement> {
+  return waitFor(() => getInfoButton(panel, info), STAGE_TIMEOUT);
 }
 
 /**

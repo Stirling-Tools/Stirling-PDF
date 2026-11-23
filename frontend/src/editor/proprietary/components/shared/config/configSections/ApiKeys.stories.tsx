@@ -15,7 +15,7 @@ const meta: Meta<typeof ApiKeys> = {
     layout: "padded",
     msw: {
       handlers: [
-        http.post("/api/v1/user/get-api-key", () =>
+        http.post("*/api/v1/user/get-api-key", () =>
           HttpResponse.json("demo-storybook-api-key-000000000000"),
         ),
       ],
@@ -32,7 +32,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("/api/v1/user/get-api-key", async () => {
+        http.post("*/api/v1/user/get-api-key", async () => {
           await delay("infinite");
           return HttpResponse.json(null);
         }),
@@ -46,7 +46,7 @@ export const LoadError: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("/api/v1/user/get-api-key", () =>
+        http.post("*/api/v1/user/get-api-key", () =>
           HttpResponse.json(null, { status: 500 }),
         ),
       ],

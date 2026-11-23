@@ -8,6 +8,7 @@ import {
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  getInfoButton,
   openTooltip,
   type PlayContext,
   runToResults,
@@ -70,7 +71,7 @@ export const Panel: Story = {
       await expect(panel.getByRole("textbox", { name: label })).toHaveValue(
         value,
       );
-      await expect(panel.getByRole("button", { name: info })).toBeVisible();
+      await expect(getInfoButton(panel, info)).toBeVisible();
     }
   },
 };

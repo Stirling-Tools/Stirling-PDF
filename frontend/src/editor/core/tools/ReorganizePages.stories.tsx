@@ -8,6 +8,7 @@ import {
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
   findEnabled,
+  findInfoButton,
   openSelect,
   openTooltip,
   type PlayContext,
@@ -33,9 +34,7 @@ const MODE = /^Organization mode/;
 function pickMode(mode: string, description: string | RegExp) {
   return async (context: PlayContext) => {
     const panel = await selectOption(context, MODE, mode);
-    await expect(
-      await panel.findByRole("button", { name: description }),
-    ).toBeInTheDocument();
+    await expect(await findInfoButton(panel, description)).toBeInTheDocument();
     return panel;
   };
 }

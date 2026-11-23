@@ -118,7 +118,7 @@ export const PasswordToOpenTooltip: Story = {
 };
 
 export const EncryptionStrengthTooltip: Story = {
-  play: openTooltip({ info: "More information" }),
+  play: openTooltip({ info: "About Encryption Strength" }),
 };
 
 export const RestrictActionsTooltip: Story = {

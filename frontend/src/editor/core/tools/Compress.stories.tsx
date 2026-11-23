@@ -9,10 +9,12 @@ import {
 import {
   choose,
   findEnabled,
+  getInfoButton,
   openSelect,
   openTooltip,
   panelOf,
   type PlayContext,
+  queryInfoButton,
   runTool,
   runToResults,
   selectOption,
@@ -120,9 +122,7 @@ export const Panel: Story = {
       await expect(
         await findEnabled(context, "checkbox", option),
       ).not.toBeChecked();
-    await expect(
-      panel.getByRole("button", { name: LINE_ART_INFO }),
-    ).toBeVisible();
+    await expect(getInfoButton(panel, LINE_ART_INFO)).toBeVisible();
   },
 };
 
@@ -225,9 +225,7 @@ export const LineArtUnavailable: Story = {
       STAGE_TIMEOUT,
     );
     await waitFor(() => expect(lineArt).toBeDisabled(), STAGE_TIMEOUT);
-    await expect(
-      panel.queryByRole("button", { name: LINE_ART_INFO }),
-    ).toBeNull();
+    await expect(queryInfoButton(panel, LINE_ART_INFO)).toBeNull();
   },
 };
 

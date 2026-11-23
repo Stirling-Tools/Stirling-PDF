@@ -41,6 +41,8 @@ html[data-app-theme="light"] {
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+  /* Danger as text: --c-danger is tuned for icons and borders (3:1). */
+  --c-danger-text: var(--p-red-700);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-600);
   /* Warning as text: --c-warning is tuned for icons and borders (3:1). */
@@ -184,6 +186,7 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
+  --c-danger-text: var(--p-red-400);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
   --c-warning-text: var(--p-amber-400);
@@ -383,6 +386,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
+  --c-danger-text: var(--p-red-400);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
   --c-warning-text: var(--p-amber-400);
