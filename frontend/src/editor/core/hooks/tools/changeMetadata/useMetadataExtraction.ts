@@ -15,11 +15,17 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
   const [hasExtractedMetadata, setHasExtractedMetadata] = useState(false);
   const previousFileCountRef = useRef(0);
+  // Set when an extraction starts, not when it lands: the effect below re-runs
+  // on every render while the first read is in flight, and each extra read
+  // that lands late rewrites the parameters, which clears a finished run's
+  // results.
+  const extractionStartedRef = useRef(false);
 
   // Reset extraction state only when files are cleared (length goes to 0)
   useEffect(() => {
     if (previousFileCountRef.current > 0 && selectedFiles.length === 0) {
       setHasExtractedMetadata(false);
+      extractionStartedRef.current = false;
     }
     previousFileCountRef.current = selectedFiles.length;
   }, [selectedFiles]);
@@ -32,10 +38,11 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
       }
       const firstFile = selectedFiles[0];
 
-      if (hasExtractedMetadata) {
+      if (hasExtractedMetadata || extractionStartedRef.current) {
         return;
       }
 
+      extractionStartedRef.current = true;
       setIsExtractingMetadata(true);
 
       const result = await extractPDFMetadata(firstFile);
