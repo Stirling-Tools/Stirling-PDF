@@ -118,11 +118,7 @@ const DigitalIdLocation = ({ cert }: { cert: HardwareCertificateInfo }) => {
     : t("certSign.hardware.onDevice", "Stored on this device");
   return (
     <span className="digital-id-location" title={label}>
-      <Icon
-        name={cert.onToken ? "usb" : "laptop"}
-        size={12}
-        aria-label={label}
-      />
+      <Icon name={cert.onToken ? "usb" : "laptop"} size={12} title={label} />
     </span>
   );
 };

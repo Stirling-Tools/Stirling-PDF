@@ -449,7 +449,6 @@ public class HardwareKeyStoreService {
 
     private static Boolean onToken(KeyStore ks, String alias, String source) throws Exception {
         return switch (source) {
-            case SOURCE_PKCS11 -> true;
             case SOURCE_MACOS_KEYCHAIN -> MacKeychainProvider.isOnToken(ks.getKey(alias, null));
             default -> null;
         };
