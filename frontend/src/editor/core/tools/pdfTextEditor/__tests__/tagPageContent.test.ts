@@ -330,6 +330,155 @@ describe("tagAllPages", () => {
     store.dispose();
   });
 
+  test("tags text set larger or bolder than the body as headings, levelled by style, even set tight on its paragraph", async () => {
+    const show = (font: string, size: number, y: number, text: string) =>
+      `BT /${font} ${size} Tf 72 ${y} Td (${text}) Tj ET`;
+    const body =
+      "Sales rose in every region over the quarter, led by the north";
+    const store = await storeFor(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+          {
+            num: 3,
+            body:
+              "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+              "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
+          },
+          {
+            num: 4,
+            body: streamBody(
+              "",
+              [
+                show("F1", 24, 720, "Quarterly report"),
+                show("F2", 11, 660, "Results"),
+                show("F1", 11, 646, body),
+                show("F2", 11, 600, "Outlook"),
+                show("F1", 11, 586, body.replace("north", "south")),
+              ].join("\n"),
+            ),
+          },
+          {
+            num: 5,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+          },
+          {
+            num: 6,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+          },
+        ],
+        1,
+      ),
+    );
+    await tagAllPages(store);
+    expect(tagsShown(store.document!, 0)).toEqual(
+      new Map([
+        ["Quarterly report", "H1"],
+        ["Results", "H2"],
+        [body, "P"],
+        ["Outlook", "H2"],
+        [body.replace("north", "south"), "P"],
+      ]),
+    );
+    store.dispose();
+  });
+
+  test("never skips a heading level in the order the structure tree reads, which is drawing order", async () => {
+    const show = (font: string, size: number, y: number, text: string) =>
+      `BT /${font} ${size} Tf 72 ${y} Td (${text}) Tj ET`;
+    const body =
+      "Sales rose in every region over the quarter, led by the north";
+    const store = await storeFor(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+          {
+            num: 3,
+            body:
+              "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+              "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
+          },
+          {
+            num: 4,
+            body: streamBody(
+              "",
+              [
+                show("F2", 11, 660, "Results"),
+                show("F1", 24, 720, "Quarterly report"),
+                show("F1", 11, 646, body),
+                show("F2", 11, 600, "Outlook"),
+                show("F1", 11, 586, body.replace("north", "south")),
+              ].join("\n"),
+            ),
+          },
+          {
+            num: 5,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+          },
+          {
+            num: 6,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+          },
+        ],
+        1,
+      ),
+    );
+    await tagAllPages(store);
+    const shown = tagsShown(store.document!, 0);
+    expect(
+      ["Results", "Quarterly report", "Outlook"].map((text) => shown.get(text)),
+    ).toEqual(["H1", "H1", "H2"]);
+    store.dispose();
+  });
+
+  test("caps heading levels across pages, and undoes and redoes them as one step", async () => {
+    const store = await storeFor(
+      linesPdf([
+        [line("F2", 11, 720, "Summary"), line("F1", 11, 700, BODY_LINE)],
+        [
+          line("F1", 24, 720, "Annual report"),
+          line("F2", 11, 660, "Outlook"),
+          line("F1", 11, 640, BODY_LINE),
+        ],
+      ]),
+    );
+    const doc = store.document!;
+    await tagAllPages(store);
+    const levels = () => [
+      tagsShown(doc, 0).get("Summary"),
+      tagsShown(doc, 1).get("Annual report"),
+      tagsShown(doc, 1).get("Outlook"),
+    ];
+    expect(levels()).toEqual(["H1", "H1", "H2"]);
+
+    store.undo();
+    expect(hasUntaggedContent(doc, 1)).toBe(true);
+    store.redo();
+    expect(levels()).toEqual(["H1", "H1", "H2"]);
+    store.dispose();
+  });
+
+  test("tags a file that has tags already as paragraphs only", async () => {
+    const store = await storeFor(
+      linesPdf([
+        [line("F1", 11, 700, BODY_LINE)],
+        [
+          line("F1", 24, 720, "Annual report"),
+          line("F2", 11, 660, "Outlook"),
+          line("F1", 11, 640, BODY_LINE),
+        ],
+      ]),
+    );
+    const doc = store.document!;
+    PdfiumTextReader.populate(doc, doc.page(0));
+    store.history.execute(new TagPageContentCommand({ pageIndex: 0 }), doc);
+    await tagAllPages(store);
+    expect(new Set(tagsShown(doc, 1).values())).toEqual(new Set(["P"]));
+    store.dispose();
+  });
+
   test("records nothing when nothing is untagged", async () => {
     const store = await storeFor(pagePdf(COLUMNS));
     await tagAllPages(store);
@@ -413,6 +562,46 @@ function furnishedPdf(count: number, watermark?: "text" | "image"): Uint8Array {
 }
 
 /** How each run on the page is tagged, by its text. */
+const BODY_LINE =
+  "Sales rose in every region over the quarter, led by the north";
+
+/** Text drawn in a font of `linesPdf`'s: F1 Helvetica, F2 Helvetica-Bold. */
+function line(font: "F1" | "F2", size: number, y: number, text: string) {
+  return `BT /${font} ${size} Tf 72 ${y} Td (${text}) Tj ET`;
+}
+
+/** A PDF of Letter pages, each drawing its `line`s in order. */
+function linesPdf(pages: readonly string[][]): Uint8Array {
+  const fonts = 3 + pages.length * 2;
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      {
+        num: 2,
+        body: `<< /Type /Pages /Kids [${pages.map((_, i) => `${3 + i * 2} 0 R`).join(" ")}] /Count ${pages.length} >>`,
+      },
+      ...pages.flatMap((lines, i) => [
+        {
+          num: 3 + i * 2,
+          body:
+            `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${4 + i * 2} 0 R ` +
+            `/Resources << /Font << /F1 ${fonts} 0 R /F2 ${fonts + 1} 0 R >> >> >>`,
+        },
+        { num: 4 + i * 2, body: streamBody("", lines.join("\n")) },
+      ]),
+      {
+        num: fonts,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: fonts + 1,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+      },
+    ],
+    1,
+  );
+}
+
 function tagsShown(doc: EditorDocument, pageIndex: number) {
   return new Map(
     doc.page(pageIndex).runs.map((run) => {
