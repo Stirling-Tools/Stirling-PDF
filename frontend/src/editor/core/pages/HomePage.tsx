@@ -71,6 +71,10 @@ import { useLibraryRefresh } from "@editor/hooks/useLibraryRefresh";
 import { useAuth } from "@editor/auth/UseSession";
 import { canPickDirectory } from "@editor/services/directoryPicker";
 import { useBulkAddProgress } from "@editor/services/bulkAddProgress";
+import {
+  hasPendingUnlocks,
+  subscribeToPendingUnlocks,
+} from "@editor/services/pendingUnlocks";
 import { useLibraryUpload } from "@editor/components/filesPage/useLibraryUpload";
 import { useProcessingFolderCreation } from "@editor/hooks/useProcessingFolderCreation";
 import { consumeProcessingFolderCreationRequest } from "@editor/utils/pendingProcessingFolderCreation";
@@ -349,6 +353,14 @@ export default function HomePage() {
     severalIntoEmptyRef.current =
       importTotal > 1 && prevFileCountRef.current === 0;
   }, [importTotal]);
+  // Skipping every prompt leaves nothing of the upload to open.
+  useEffect(
+    () =>
+      subscribeToPendingUnlocks(() => {
+        if (!hasPendingUnlocks()) severalIntoEmptyRef.current = false;
+      }),
+    [],
+  );
   useEffect(() => {
     if (importingSeveral) return;
     const prevCount = prevFileCountRef.current;
@@ -367,7 +379,9 @@ export default function HomePage() {
     ) {
       action = { workbench: "fileEditor" };
     }
-    if (currentCount > 0) severalIntoEmptyRef.current = false;
+    if (currentCount > 0 || !hasPendingUnlocks()) {
+      severalIntoEmptyRef.current = false;
+    }
 
     // A session restore fills an empty workbench too, but it already knows which view the user
     // left - so it wins over this heuristic rather than being overwritten by it.

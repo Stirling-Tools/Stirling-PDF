@@ -74,6 +74,44 @@ for (const [label, files] of [
   });
 }
 
+test("skipping every password leaves a later single file to open in the viewer", async ({
+  page,
+}) => {
+  // Put sample.pdf in Recents, then take it off the workbench again.
+  await landingInput(page).setInputFiles(SAMPLES[0]);
+  const sample = page.locator(".file-sidebar-file-item", {
+    hasText: "sample.pdf",
+  });
+  await expect(sample).toBeVisible({ timeout: 15_000 });
+  await sample.click();
+  await expect(landingInput(page)).toBeAttached({ timeout: 15_000 });
+
+  const locked = ["encrypted-annotations.pdf", "encrypted-links.pdf"];
+  await landingInput(page).setInputFiles(
+    locked.map((f) => path.join(FIXTURES, f)),
+  );
+  // The prompts follow one another, so each is told apart by its file name.
+  for (let i = 0; i < locked.length; i++) {
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible({ timeout: 30_000 });
+    const text = (await dialog.textContent()) ?? "";
+    const prompt = dialog.filter({
+      hasText: locked.find((f) => text.includes(f)),
+    });
+    await prompt.getByRole("button", { name: "Close" }).click();
+    await expect(prompt).toBeHidden({ timeout: 15_000 });
+  }
+  await expect(page.getByRole("dialog")).toBeHidden({ timeout: 15_000 });
+
+  await sample.click();
+  await expect(page.getByRole("radio", { name: /Viewer/i })).toBeChecked({
+    timeout: 15_000,
+  });
+  await expect(page.locator("[data-page-index]").first()).toBeVisible({
+    timeout: 30_000,
+  });
+});
+
 test("one file from the landing page opens in the viewer", async ({ page }) => {
   await landingInput(page).setInputFiles(SAMPLES[0]);
   await expect(page.getByRole("radio", { name: /Viewer/i })).toBeChecked({
