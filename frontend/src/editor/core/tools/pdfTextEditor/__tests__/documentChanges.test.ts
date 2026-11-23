@@ -1,5 +1,9 @@
 // @vitest-environment node
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import {
+  SetParagraphFormatCommand,
+  SyncParagraphFormatCommand,
+} from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -471,6 +475,47 @@ test("undoing page setup restores a page whose boxes it inherited", async () => 
     ]).toEqual([612, 1000]);
     const out = await open(await saved(doc));
     expect(out.getPage(0).getSize()).toEqual({ width: 612, height: 1000 });
+  } finally {
+    doc.dispose();
+  }
+});
+
+test("duplicating a page carries editable underline ownership to its copy", async () => {
+  const doc = await EditorDocument.open(await fixture("paragraph-sample.pdf"));
+  try {
+    const source = doc.page(0);
+    PdfiumTextReader.populate(doc, source);
+    const run = source.runs.find((candidate) =>
+      candidate.text.startsWith("First line"),
+    )!;
+    new SetParagraphFormatCommand({
+      pageIndex: 0,
+      runIds: [run.id],
+      align: "center",
+      underline: true,
+    }).apply(doc);
+    new SyncParagraphFormatCommand({ pageIndex: 0 }).apply(doc);
+    const sourceRules = [...source.underlines.get(run.id)!];
+    const { command, focusPage } = pageChangeCommand(doc, {
+      kind: "duplicatePage",
+      page: 0,
+    });
+    command.apply(doc);
+    const copy = doc.page(focusPage);
+    PdfiumTextReader.populate(doc, copy);
+    const copiedRun = copy.runs.find((candidate) => candidate.underline)!;
+    expect(copiedRun).toBeDefined();
+    expect(copiedRun.align).toBe("center");
+    expect(copy.underlines.get(copiedRun.id)).toHaveLength(sourceRules.length);
+    new SetParagraphFormatCommand({
+      pageIndex: focusPage,
+      runIds: [copiedRun.id],
+      underline: false,
+    }).apply(doc);
+    new SyncParagraphFormatCommand({ pageIndex: focusPage }).apply(doc);
+    expect(copy.underlines.has(copiedRun.id)).toBe(false);
+    expect(source.underlines.get(run.id)).toEqual(sourceRules);
+    expect(run.underline).toBe(true);
   } finally {
     doc.dispose();
   }

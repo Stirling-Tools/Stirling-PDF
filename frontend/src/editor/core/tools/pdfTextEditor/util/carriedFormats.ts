@@ -63,6 +63,18 @@ export function carryFormats(doc: EditorDocument, formats: CarriedFormats) {
   if (formats.size > 0) carried.set(doc, formats);
 }
 
+export function carryCopiedPageFormats(
+  doc: EditorDocument,
+  sourceIndex: number,
+  copyIndex: number,
+): void {
+  const formats = captureFormats(doc).get(sourceIndex);
+  if (!formats) return;
+  const pending = new Map(carried.get(doc));
+  pending.set(copyIndex, formats);
+  carryFormats(doc, pending);
+}
+
 const words = (text: string) => text.replace(/\s+/g, " ").trim();
 
 function sameBox(a: Box, b: Box): boolean {

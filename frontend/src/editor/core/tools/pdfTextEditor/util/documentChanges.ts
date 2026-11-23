@@ -10,6 +10,7 @@ import {
   withFloats,
 } from "@editor/tools/pdfTextEditor/util/pdfiumCopy";
 import { PAGE_SIZES } from "@editor/constants/pageSizeConstants";
+import { carryCopiedPageFormats } from "@editor/tools/pdfTextEditor/util/carriedFormats";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -67,6 +68,7 @@ export function pageChangeCommand(
       if (source.dirty) source.markNeedsGenerate();
       source.flushGenerate(m);
       const index = doc.appendCopyFrom(doc.docPtr, change.page);
+      carryCopiedPageFormats(doc, change.page, index);
       return {
         command: new PageOrderCommand(
           insertedAfter(order, change.page, index),
