@@ -57,7 +57,7 @@ export const certSignToApiParams = (
 };
 
 // Name, reason and location go into the signature dictionary, so they are sent
-// for invisible signatures too; page and logo only affect the visible stamp.
+// for invisible signatures too; placement and logo only affect the visible stamp.
 const withSignatureAppearance = (
   apiParams: CertSignApiParams,
   parameters: CertSignParameters,
@@ -67,8 +67,18 @@ const withSignatureAppearance = (
   if (parameters.name) apiParams.name = parameters.name;
   if (parameters.showSignature) {
     apiParams.showSignature = true;
-    apiParams.pageNumber = parameters.pageNumber;
     apiParams.showLogo = parameters.showLogo;
+    if (parameters.fieldName) {
+      apiParams.fieldName = parameters.fieldName;
+    } else {
+      apiParams.pageNumber = parameters.pageNumber;
+      if (parameters.stampBox) {
+        apiParams.x = parameters.stampBox.x;
+        apiParams.y = parameters.stampBox.y;
+        apiParams.width = parameters.stampBox.width;
+        apiParams.height = parameters.stampBox.height;
+      }
+    }
   }
   return apiParams;
 };
@@ -123,6 +133,20 @@ export const certSignFromApiParams = (
     result.pageNumber = apiParams.pageNumber;
   }
   if (apiParams.showLogo !== undefined) result.showLogo = apiParams.showLogo;
+  if (apiParams.fieldName !== undefined) result.fieldName = apiParams.fieldName;
+  if (
+    apiParams.x !== undefined &&
+    apiParams.y !== undefined &&
+    apiParams.width !== undefined &&
+    apiParams.height !== undefined
+  ) {
+    result.stampBox = {
+      x: apiParams.x,
+      y: apiParams.y,
+      width: apiParams.width,
+      height: apiParams.height,
+    };
+  }
 
   return result;
 };

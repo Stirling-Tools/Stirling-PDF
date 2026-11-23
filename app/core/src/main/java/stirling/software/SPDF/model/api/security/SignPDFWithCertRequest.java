@@ -108,9 +108,35 @@ public class SignPDFWithCertRequest extends PDFFile {
     @Schema(
             description =
                     "Page (1-based) for the visible signature. Only used when showSignature is"
-                            + " true.",
+                            + " true and fieldName is not set.",
             defaultValue = "1")
     private Integer pageNumber = 1;
+
+    @Schema(
+            description =
+                    "Left edge of the visible signature box in PDF points, in the page's own"
+                            + " coordinate space (origin bottom-left, before page rotation, crop"
+                            + " box offset included). Give x, y, width and height together; when"
+                            + " all are omitted the box sits 36pt in from the bottom-right corner"
+                            + " of the visible page. The box must lie inside the page's crop box.")
+    private Float x;
+
+    @Schema(description = "Bottom edge of the visible signature box in PDF points; see x.")
+    private Float y;
+
+    @Schema(description = "Width of the visible signature box in PDF points; see x.")
+    private Float width;
+
+    @Schema(description = "Height of the visible signature box in PDF points; see x.")
+    private Float height;
+
+    @Schema(
+            description =
+                    "Fully qualified name of an empty signature field to sign into. The"
+                            + " signature takes that field's page and box: pageNumber is ignored"
+                            + " and x/y/width/height must be left out. Needs showSignature."
+                            + " Rejected when the field does not exist or is already signed.")
+    private String fieldName;
 
     @Schema(
             description = "Whether to visually show a signature logo along with the signature",

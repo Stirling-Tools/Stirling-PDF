@@ -9,6 +9,7 @@ import HardwareCertificateSettings from "@editor/components/tools/certSign/Hardw
 import SignatureAppearanceSettings from "@editor/components/tools/certSign/SignatureAppearanceSettings";
 import { useCertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { useCertSignOperation } from "@editor/hooks/tools/certSign/useCertSignOperation";
+import { useCertSignStampPlacement } from "@editor/hooks/tools/certSign/useCertSignStampPlacement";
 import { useCertificateTypeTips } from "@editor/components/tooltips/useCertificateTypeTips";
 import { useSignatureAppearanceTips } from "@editor/components/tooltips/useSignatureAppearanceTips";
 import { useSignModeTips } from "@editor/components/tooltips/useSignModeTips";
@@ -43,6 +44,15 @@ const CertSign = (props: BaseToolProps) => {
     base.params.parameters.signMode,
     base.params.updateParameter,
   ]);
+
+  const singleFile =
+    base.selectedFiles.length === 1 ? base.selectedFiles[0] : null;
+  const stampPlacement = useCertSignStampPlacement({
+    file: singleFile,
+    parameters: base.params.parameters,
+    onParameterChange: base.params.updateParameter,
+    active: !base.hasResults,
+  });
 
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
@@ -167,6 +177,7 @@ const CertSign = (props: BaseToolProps) => {
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}
+            placement={singleFile ? stampPlacement : undefined}
           />
         ),
       },

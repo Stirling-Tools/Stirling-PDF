@@ -1427,6 +1427,14 @@ export interface SignPDFWithCertRequest {
     | "WINDOWS_STORE"
     | "MACOS_KEYCHAIN"
     | "PKCS11";
+  /**
+   * Fully qualified name of an empty signature field to sign into. The signature takes that field's page and box: pageNumber is ignored and x/y/width/height must be left out. Needs showSignature. Rejected when the field does not exist or is already signed.
+   */
+  fieldName?: string;
+  /**
+   * Height of the visible signature box in PDF points; see x.
+   */
+  height?: number;
   jksFile?: File;
   /**
    * The location where the PDF is signed. Omitted from the signature when not set
@@ -1438,7 +1446,7 @@ export interface SignPDFWithCertRequest {
   name?: string;
   p12File?: File;
   /**
-   * Page (1-based) for the visible signature. Only used when showSignature is true.
+   * Page (1-based) for the visible signature. Only used when showSignature is true and fieldName is not set.
    */
   pageNumber?: number;
   /**
@@ -1466,6 +1474,18 @@ export interface SignPDFWithCertRequest {
    * Add a visible signature box on pageNumber showing the certificate's name, the date and the reason (if set).
    */
   showSignature?: boolean;
+  /**
+   * Width of the visible signature box in PDF points; see x.
+   */
+  width?: number;
+  /**
+   * Left edge of the visible signature box in PDF points, in the page's own coordinate space (origin bottom-left, before page rotation, crop box offset included). Give x, y, width and height together; when all are omitted the box sits 36pt in from the bottom-right corner of the visible page. The box must lie inside the page's crop box.
+   */
+  x?: number;
+  /**
+   * Bottom edge of the visible signature box in PDF points; see x.
+   */
+  y?: number;
 }
 export interface SignatureValidationRequest {
   certFile?: File;

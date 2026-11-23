@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { buildCertSignFormData } from "@editor/hooks/tools/certSign/useCertSignOperation";
+import {
+  buildCertSignFormData,
+  certSignFromApiParams,
+  certSignToApiParams,
+} from "@editor/hooks/tools/certSign/useCertSignOperation";
 import {
   CertSignParameters,
   defaultParameters,
@@ -121,5 +125,95 @@ describe("buildCertSignFormData - signature details", () => {
     expect(formData.get("name")).toBeNull();
     expect(formData.get("reason")).toBeNull();
     expect(formData.get("location")).toBeNull();
+  });
+});
+
+describe("buildCertSignFormData - stamp placement", () => {
+  const box = { x: 120.5, y: 300, width: 220, height: 60 };
+
+  test("a chosen signature field is sent instead of a page or box", () => {
+    const formData = buildCertSignFormData(
+      params({
+        signMode: "AUTO",
+        showSignature: true,
+        pageNumber: 3,
+        fieldName: "Approver",
+        stampBox: box,
+      }),
+      pdf(),
+    );
+
+    expect(formData.get("fieldName")).toBe("Approver");
+    expect(formData.get("pageNumber")).toBeNull();
+    expect(formData.get("x")).toBeNull();
+    expect(formData.get("width")).toBeNull();
+  });
+
+  test("a placed box is sent with the page it sits on", () => {
+    const formData = buildCertSignFormData(
+      params({
+        signMode: "AUTO",
+        showSignature: true,
+        pageNumber: 2,
+        stampBox: box,
+      }),
+      pdf(),
+    );
+
+    expect(formData.get("pageNumber")).toBe("2");
+    expect(formData.get("x")).toBe("120.5");
+    expect(formData.get("y")).toBe("300");
+    expect(formData.get("width")).toBe("220");
+    expect(formData.get("height")).toBe("60");
+    expect(formData.get("fieldName")).toBeNull();
+  });
+
+  test("with nothing placed only the page is sent, so the server uses its default corner", () => {
+    const formData = buildCertSignFormData(
+      params({ signMode: "AUTO", showSignature: true, pageNumber: 4 }),
+      pdf(),
+    );
+
+    expect(formData.get("showSignature")).toBe("true");
+    expect(formData.get("pageNumber")).toBe("4");
+    expect(formData.get("x")).toBeNull();
+    expect(formData.get("fieldName")).toBeNull();
+  });
+
+  test("an invisible signature sends no placement", () => {
+    const formData = buildCertSignFormData(
+      params({
+        signMode: "AUTO",
+        showSignature: false,
+        fieldName: "Approver",
+        stampBox: box,
+      }),
+      pdf(),
+    );
+
+    expect(formData.get("fieldName")).toBeNull();
+    expect(formData.get("x")).toBeNull();
+  });
+
+  test("placement round-trips through the request model", () => {
+    const placed = params({
+      signMode: "AUTO",
+      showSignature: true,
+      pageNumber: 2,
+      stampBox: box,
+    });
+    expect(certSignFromApiParams(certSignToApiParams(placed))).toMatchObject({
+      pageNumber: 2,
+      stampBox: box,
+    });
+
+    const inField = params({
+      signMode: "AUTO",
+      showSignature: true,
+      fieldName: "Approver",
+    });
+    const restored = certSignFromApiParams(certSignToApiParams(inField));
+    expect(restored.fieldName).toBe("Approver");
+    expect(restored.stampBox).toBeUndefined();
   });
 });

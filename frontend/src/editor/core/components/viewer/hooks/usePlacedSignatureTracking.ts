@@ -34,13 +34,21 @@ export function nextPlacedSignatures(
   if (event.type === "delete") {
     return placed.filter((entry) => entry.id !== event.annotation.id);
   }
+  if (event.type === "update") {
+    const { rect } = event.patch;
+    const { id } = event.annotation;
+    if (!rect || !placed.some((entry) => entry.id === id)) return placed;
+    return placed.map((entry) =>
+      entry.id === id ? { ...entry, rect } : entry,
+    );
+  }
   if (event.type !== "create" || !isSignatureStamp(event.annotation))
     return placed;
-  const { id } = event.annotation;
+  const { id, rect } = event.annotation;
   if (placed.some((entry) => entry.id === id)) return placed;
   return [
     ...placed,
-    { id, pageIndex: event.pageIndex, imageSrc: imageFor(id) },
+    { id, pageIndex: event.pageIndex, imageSrc: imageFor(id), rect },
   ];
 }
 
@@ -67,6 +75,7 @@ export function usePlacedSignatureTracking() {
           id: object.id,
           pageIndex: object.pageIndex,
           imageSrc: getImageData(object.id),
+          rect: object.rect,
         }));
       placedRef.current = next;
       setPlacedSignatures(next);

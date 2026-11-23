@@ -2748,6 +2748,21 @@ optionalTitle = "Signature details (optional)"
 signerName = "Signer name"
 signerNamePlaceholder = "Uses the name on the certificate"
 
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+defaultCorner = "Not placed yet: the signature goes in the bottom-right corner of the page below."
+elsewhere = "Somewhere else on the page"
+fieldOnPage = "Signature field on page {{page}}"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+preview = "Digital signature"
+previewNamed = "Signed by {{name}}"
+useCorner = "Use default corner"
+where = "Where to sign"
+
 [certSign.appearance.tooltip.header]
 title = "About Signature Appearance"
 
@@ -2761,7 +2776,7 @@ title = "Invisible Signatures"
 [certSign.appearance.tooltip.visible]
 bullet1 = "Shows signer name and date on the document"
 bullet2 = "Can include reason and location for signing"
-bullet3 = "Choose which page to place the signature"
+bullet3 = "Sign into an empty signature field, or place and size the box on the page"
 bullet4 = "Optional logo can be included"
 text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
 title = "Visible Signatures"

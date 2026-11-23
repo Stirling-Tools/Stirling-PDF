@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.beans.PropertyEditorSupport;
 import java.io.*;
 import java.nio.file.Files;
@@ -9,10 +10,12 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -31,7 +34,6 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-import org.apache.pdfbox.util.Matrix;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -74,6 +76,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
+import stirling.software.SPDF.pdf.signature.SignatureStampPlacement;
 import stirling.software.SPDF.pdf.signature.SignatureTextWriter;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
@@ -143,9 +146,38 @@ public class CertSignController {
                         "server", serverCertificateService.getServerCertificate(), "SERVER", null));
     }
 
+    public static void sign(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            MultipartFile input,
+            OutputStream output,
+            CreateSignature instance,
+            Boolean showSignature,
+            Integer pageNumber,
+            String name,
+            String location,
+            String reason,
+            Boolean showLogo)
+            throws IOException {
+        sign(
+                pdfDocumentFactory,
+                input,
+                output,
+                instance,
+                showSignature,
+                pageNumber,
+                null,
+                null,
+                name,
+                location,
+                reason,
+                showLogo);
+    }
+
     /**
      * Signs {@code input} into {@code output}. Failures propagate: {@code output} may hold partial
      * bytes afterwards, and catching them here would let the endpoint answer 200 with an empty PDF.
+     * {@code pageNumber} is 0-based; {@code box} and {@code fieldName} place the visible signature
+     * as {@link SignatureStampPlacement#resolve} describes.
      */
     public static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
@@ -154,6 +186,8 @@ public class CertSignController {
             CreateSignature instance,
             Boolean showSignature,
             Integer pageNumber,
+            SignatureStampPlacement.Box box,
+            String fieldName,
             String name,
             String location,
             String reason,
@@ -168,11 +202,16 @@ public class CertSignController {
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
             if (Boolean.TRUE.equals(showSignature)) {
-                int pageIndex = resolveSignaturePage(pageNumber, doc.getNumberOfPages());
+                SignatureStampPlacement placement =
+                        SignatureStampPlacement.resolve(doc, pageNumber, box, fieldName);
+                if (placement.field() != null) {
+                    // addSignature signs into the existing field whose /V is this signature.
+                    placement.field().getCOSObject().setItem(COSName.V, signature);
+                }
                 try (SignatureOptions signatureOptions = new SignatureOptions()) {
                     signatureOptions.setVisualSignature(
-                            instance.createVisibleSignature(doc, signature, pageIndex, showLogo));
-                    signatureOptions.setPage(pageIndex);
+                            instance.createVisibleSignature(doc, signature, placement, showLogo));
+                    signatureOptions.setPage(placement.pageIndex());
 
                     doc.addSignature(signature, instance, signatureOptions);
                     doc.saveIncremental(output);
@@ -182,21 +221,6 @@ public class CertSignController {
                 doc.saveIncremental(output);
             }
         }
-    }
-
-    // pageNumber is 0-based here and null means the first page, as the UI shows it.
-    private static int resolveSignaturePage(Integer pageNumber, int pageCount) {
-        int pageIndex = pageNumber == null ? 0 : pageNumber;
-        if (pageIndex < 0 || pageIndex >= pageCount) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidArgument",
-                    "Invalid argument: {0}",
-                    "pageNumber "
-                            + (pageIndex + 1)
-                            + " - the visible signature needs a page from 1 to "
-                            + pageCount);
-        }
-        return pageIndex;
     }
 
     @AutoJobPostMapping(
@@ -221,7 +245,9 @@ public class CertSignController {
                             + " PKCS11 work only in the desktop app. Make signing the last change to the file:"
                             + " any later edit (compress, watermark, add a password, flatten and"
                             + " so on) invalidates the signature. Set showSignature to add a"
-                            + " visible signature box on pageNumber.")
+                            + " visible signature box: into an empty signature field with"
+                            + " fieldName, at x/y/width/height on pageNumber, or by default 36pt"
+                            + " in from the bottom-right corner of pageNumber.")
     public ResponseEntity<Resource> signPDFWithCert(
             @ModelAttribute SignPDFWithCertRequest request, HttpServletRequest httpRequest)
             throws Exception {
@@ -239,6 +265,18 @@ public class CertSignController {
         // Convert 1-indexed page number (user input) to 0-indexed page number (API requirement)
         Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
         Boolean showLogo = request.getShowLogo();
+        SignatureStampPlacement.Box box =
+                SignatureStampPlacement.Box.of(
+                        request.getX(), request.getY(), request.getWidth(), request.getHeight());
+        String fieldName = request.getFieldName();
+        if (!Boolean.TRUE.equals(showSignature)
+                && (box != null || StringUtils.isNotBlank(fieldName))) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "showSignature - x, y, width, height and fieldName place the visible"
+                            + " signature, so they need showSignature=true");
+        }
 
         if (StringUtils.isBlank(certType)) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -362,6 +400,8 @@ public class CertSignController {
                         createSignature,
                         showSignature,
                         pageNumber,
+                        box,
+                        fieldName,
                         name,
                         location,
                         reason,
@@ -475,6 +515,11 @@ public class CertSignController {
     }
 
     public static class CreateSignature extends CreateSignatureBase {
+        private static final float LEADING = 1.5f;
+        private static final float ASCENT = 0.75f;
+        private static final float PADDING_SCALE = 0.04f;
+        private static final float LOGO_SCALE = 0.82f;
+
         File logoFile;
 
         public CreateSignature(KeyStore keystore, char[] pin)
@@ -510,11 +555,14 @@ public class CertSignController {
         }
 
         public InputStream createVisibleSignature(
-                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
+                PDDocument srcDoc,
+                PDSignature signature,
+                SignatureStampPlacement placement,
+                Boolean showLogo)
                 throws IOException {
             // modified from org.apache.pdfbox.examples.signature.CreateVisibleSignature2
             try (PDDocument doc = new PDDocument()) {
-                PDPage page = new PDPage(srcDoc.getPage(pageNumber).getMediaBox());
+                PDPage page = new PDPage(srcDoc.getPage(placement.pageIndex()).getMediaBox());
                 doc.addPage(page);
                 PDAcroForm acroForm = new PDAcroForm(doc);
                 doc.getDocumentCatalog().setAcroForm(acroForm);
@@ -526,9 +574,7 @@ public class CertSignController {
                 acroForm.getCOSObject().setDirect(true);
                 acroFormFields.add(signatureField);
 
-                PDRectangle rect = new PDRectangle(0, 0, 200, 50);
-
-                widget.setRectangle(rect);
+                widget.setRectangle(placement.rectangle());
 
                 // from PDVisualSigBuilder.createHolderForm()
                 PDStream stream = new PDStream(doc);
@@ -536,9 +582,15 @@ public class CertSignController {
                 PDResources res = new PDResources();
                 form.setResources(res);
                 form.setFormType(1);
-                PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
-                float height = bbox.getHeight();
-                form.setBBox(bbox);
+                float width = placement.visibleWidth();
+                float height = placement.visibleHeight();
+                form.setBBox(new PDRectangle(width, height));
+                // The appearance is drawn upright in a box the reader's size, then turned back by
+                // the page's /Rotate so it reads upright once the viewer rotates the page.
+                if (placement.rotation() != 0) {
+                    form.setMatrix(
+                            AffineTransform.getQuadrantRotateInstance(placement.rotation() / 90));
+                }
                 SignatureTextWriter text = new SignatureTextWriter(doc);
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
@@ -555,42 +607,42 @@ public class CertSignController {
                         extState.setBlendMode(BlendMode.MULTIPLY);
                         extState.setNonStrokingAlphaConstant(0.5f);
                         cs.setGraphicsStateParameters(extState);
-                        cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
                         PDImageXObject img =
                                 PDImageXObject.createFromFileByExtension(logoFile, doc);
-                        cs.drawImage(img, 100, 0);
+                        float logoSize = Math.min(width, height) * LOGO_SCALE;
+                        cs.drawImage(
+                                img,
+                                width * PADDING_SCALE,
+                                (height - logoSize) / 2,
+                                logoSize,
+                                logoSize);
                         cs.restoreGraphicsState();
                     }
 
-                    // show text
-                    float fontSize = 10;
-                    float leading = fontSize * 1.5f;
+                    List<String> lines = stampLines(signature);
+                    float padding = width * PADDING_SCALE;
+                    float widest = 0;
+                    for (String line : lines) {
+                        widest = Math.max(widest, text.width(line, 1));
+                    }
+                    float fontSize = height / (lines.size() * LEADING + 0.5f);
+                    if (widest > 0) {
+                        fontSize = Math.min(fontSize, (width - 2 * padding) / widest);
+                    }
+                    float leading = fontSize * LEADING;
+                    float block = fontSize + (lines.size() - 1) * leading;
+                    float firstBaseline = (height + block) / 2 - fontSize * ASCENT;
+
                     cs.beginText();
                     cs.setNonStrokingColor(Color.black);
-                    cs.newLineAtOffset(fontSize, height - leading);
+                    cs.newLineAtOffset(padding, firstBaseline);
                     cs.setLeading(leading);
-
-                    X509Certificate cert = (X509Certificate) getCertificateChain()[0];
-
-                    // https://stackoverflow.com/questions/2914521/
-                    X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN[] cns = x500Name.getRDNs(BCStyle.CN);
-                    String name =
-                            cns.length > 0
-                                    ? IETFUtils.valueToString(cns[0].getFirst().getValue())
-                                    : cert.getSubjectX500Principal().getName();
-
-                    String date = signature.getSignDate().getTime().toString();
-                    String reason = signature.getReason();
-
-                    text.showText(cs, "Signed by " + name, fontSize);
-                    cs.newLine();
-                    text.showText(cs, date, fontSize);
-                    if (StringUtils.isNotBlank(reason)) {
-                        cs.newLine();
-                        text.showText(cs, reason, fontSize);
+                    for (int index = 0; index < lines.size(); index++) {
+                        if (index > 0) {
+                            cs.newLine();
+                        }
+                        text.showText(cs, lines.get(index), fontSize);
                     }
-
                     cs.endText();
                 }
 
@@ -598,6 +650,26 @@ public class CertSignController {
                 doc.save(baos);
                 return new ByteArrayInputStream(baos.toByteArray());
             }
+        }
+
+        private List<String> stampLines(PDSignature signature) {
+            X509Certificate cert = (X509Certificate) getCertificateChain()[0];
+
+            // https://stackoverflow.com/questions/2914521/
+            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+            RDN[] cns = x500Name.getRDNs(BCStyle.CN);
+            String name =
+                    cns.length > 0
+                            ? IETFUtils.valueToString(cns[0].getFirst().getValue())
+                            : cert.getSubjectX500Principal().getName();
+
+            List<String> lines = new ArrayList<>();
+            lines.add("Signed by " + name);
+            lines.add(signature.getSignDate().getTime().toString());
+            if (StringUtils.isNotBlank(signature.getReason())) {
+                lines.add(signature.getReason());
+            }
+            return lines;
         }
     }
 }

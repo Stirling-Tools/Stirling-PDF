@@ -1,4 +1,5 @@
 import { BaseParameters } from "@editor/types/parameters";
+import type { PdfBox } from "@editor/services/signatureFieldLayout";
 import {
   useBaseParameters,
   BaseParametersHook,
@@ -38,6 +39,10 @@ export interface CertSignParameters extends BaseParameters {
   name: string;
   pageNumber: number;
   showLogo: boolean;
+  /** An empty signature field to sign into; it brings its own page and box. */
+  fieldName?: string;
+  /** Box on pageNumber in PDF user space; unset leaves the server's default corner. */
+  stampBox?: PdfBox;
 }
 
 export const defaultParameters: CertSignParameters = {

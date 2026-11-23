@@ -84,6 +84,14 @@ public final class SignatureTextWriter {
         }
     }
 
+    public float width(String text, float fontSize) throws IOException {
+        float units = 0;
+        for (Run run : runs(text)) {
+            units += run.face().font(document).getStringWidth(run.text());
+        }
+        return units / 1000 * fontSize;
+    }
+
     private List<Run> runs(String text) throws IOException {
         List<Run> runs = new ArrayList<>();
         Face current = null;

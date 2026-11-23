@@ -559,8 +559,10 @@ const EmbedPdfViewerContent = ({
   // Form fill context
   const { fetchFields: fetchFormFields, setProviderMode } = useFormFill();
 
+  const placesSignatureStamps =
+    selectedTool === "sign" || selectedTool === "certSign";
   const isInAnnotationTool =
-    selectedTool === "sign" ||
+    placesSignatureStamps ||
     selectedTool === "addText" ||
     selectedTool === "addImage" ||
     selectedTool === "annotate";
@@ -644,7 +646,7 @@ const EmbedPdfViewerContent = ({
     null,
   );
   useEffect(() => {
-    if (selectedTool !== "sign") {
+    if (!placesSignatureStamps) {
       setSignatureLineZoom(null);
       return;
     }
@@ -653,7 +655,7 @@ const EmbedPdfViewerContent = ({
       setSignatureLineZoom(Math.max(percent / 100, 0.01));
     });
     return () => unregister?.();
-  }, [selectedTool, getZoomState, registerImmediateZoomUpdate]);
+  }, [placesSignatureStamps, getZoomState, registerImmediateZoomUpdate]);
 
   // Determine which file to display — use activeFileId (stable) not activeFileIndex (shifts on removal)
   const currentFile = React.useMemo(() => {
