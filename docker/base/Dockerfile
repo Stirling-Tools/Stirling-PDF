@@ -69,7 +69,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     /opt/venv/bin/pip install --no-cache-dir --no-binary=lxml --force-reinstall \
       "lxml==${LXML_VERSION}" && \
     /opt/venv/bin/python -c \
-      "from lxml import etree; assert etree.LIBXML_VERSION == (2, 9, 14), etree.LIBXML_VERSION"
+      "from lxml import etree; assert etree.LIBXML_VERSION == (2, 15, 2), etree.LIBXML_VERSION"
 
 RUN find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
