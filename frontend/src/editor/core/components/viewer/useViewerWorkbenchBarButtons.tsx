@@ -490,7 +490,7 @@ export function useViewerWorkbenchBarButtons(
         : []),
       panelToggle(
         "viewer-toggle-sidebar",
-        "panel-right",
+        "list",
         thumbnailsLabel,
         isThumbnailSidebarVisible,
         viewer.toggleThumbnailSidebar,

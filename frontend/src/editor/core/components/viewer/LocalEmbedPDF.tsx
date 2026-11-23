@@ -783,6 +783,8 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
     <ViewerGlobalPointerProvider documentId={documentId}>
       <Viewport
         documentId={documentId}
+        // Marks the pages, as against the viewer's bars and panels.
+        data-viewer-pages=""
         style={{
           backgroundColor: "var(--c-bg)",
           height: "100%",

@@ -35,6 +35,8 @@ import {
   ThumbnailSidebar,
   THUMBNAIL_SIDEBAR_WIDTH_REM,
 } from "@editor/components/viewer/ThumbnailSidebar";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { defaultZoomLevel } from "@editor/components/viewer/defaultZoom";
 import { BookmarkSidebar } from "@editor/components/viewer/BookmarkSidebar";
 import { AttachmentSidebar } from "@editor/components/viewer/AttachmentSidebar";
 import { LayerSidebar } from "@editor/components/viewer/LayerSidebar";
@@ -821,6 +823,27 @@ const EmbedPdfViewerContent = ({
 
   const viewerKeyCommand = useViewerKeyCommand();
 
+  // Ctrl +, - and 0 zoom the document while it has the user's attention: from
+  // opening, and after a click on the pages. A click on the bars, panels or
+  // anything else hands them back to the browser, which resizes the whole UI.
+  const keyZoomOnPagesRef = useRef(true);
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      keyZoomOnPagesRef.current = Boolean(
+        target?.closest?.("[data-viewer-pages]"),
+      );
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () =>
+      document.removeEventListener("pointerdown", onPointerDown, true);
+  }, []);
+  const { preferences } = usePreferences();
+  const defaultZoomRef = useRef(
+    defaultZoomLevel(preferences.defaultViewerZoom),
+  );
+  defaultZoomRef.current = defaultZoomLevel(preferences.defaultViewerZoom);
+
   const policyFileBadges = usePolicyFileBadges();
   const policyEnforcing =
     !!activeFileId &&
@@ -874,17 +897,21 @@ const EmbedPdfViewerContent = ({
                 return;
               case "=":
               case "+":
+                if (!keyZoomOnPagesRef.current) return;
                 event.preventDefault();
                 zoomActions.zoomIn();
                 return;
               case "-":
               case "_":
+                if (!keyZoomOnPagesRef.current) return;
                 event.preventDefault();
                 zoomActions.zoomOut();
                 return;
               case "0":
+                // Back to the default zoom, as the page bar's reset is.
+                if (!keyZoomOnPagesRef.current) return;
                 event.preventDefault();
-                zoomActions.requestZoom(ZoomMode.FitWidth);
+                zoomActions.requestZoom(defaultZoomRef.current);
                 return;
             }
           }
