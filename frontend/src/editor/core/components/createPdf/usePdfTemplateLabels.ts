@@ -31,19 +31,31 @@ const PAGE_SIZE_NAMES: Record<NewPdfPageSize, string> = {
 export function usePdfTemplateLabels() {
   const { t } = useTranslation();
   const templateName = useCallback(
-    (template: PdfTemplate) => t(`createPdf.templates.names.${template.id}`, template.title),
+    (template: PdfTemplate) =>
+      t(`createPdf.templates.names.${template.id}`, template.title),
     [t],
   );
   const categoryName = useCallback(
     (category: PdfTemplateCategory | "all") =>
       category === "all"
         ? t("createPdf.templates.all", "All templates")
-        : t(`createPdf.templates.categories.${category}`, CATEGORY_NAMES[category]),
+        : t(
+            `createPdf.templates.categories.${category}`,
+            CATEGORY_NAMES[category],
+          ),
     [t],
   );
-  const pageSizeName = useCallback((size: NewPdfPageSize) => t(`createPdf.pageSizes.${size}`, PAGE_SIZE_NAMES[size]), [t]);
+  const pageSizeName = useCallback(
+    (size: NewPdfPageSize) =>
+      t(`createPdf.pageSizes.${size}`, PAGE_SIZE_NAMES[size]),
+    [t],
+  );
   const orientationName = useCallback(
-    (orientation: NewPdfOrientation) => t(`createPdf.orientations.${orientation}`, ORIENTATION_NAMES[orientation]),
+    (orientation: NewPdfOrientation) =>
+      t(
+        `createPdf.orientations.${orientation}`,
+        ORIENTATION_NAMES[orientation],
+      ),
     [t],
   );
   return { templateName, categoryName, pageSizeName, orientationName };

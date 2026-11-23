@@ -41,11 +41,21 @@ export function useCreatePdf() {
       navigationActions.setWorkbench("viewer");
       handleToolSelect("pdfTextEditor");
     },
-    [addFiles, setSelectedFiles, setActiveFileId, navigationActions, handleToolSelect],
+    [
+      addFiles,
+      setSelectedFiles,
+      setActiveFileId,
+      navigationActions,
+      handleToolSelect,
+    ],
   );
 
   const run = useCallback(
-    async (nextStage: CreatePdfStage, failureTitle: string, build: () => Promise<File>) => {
+    async (
+      nextStage: CreatePdfStage,
+      failureTitle: string,
+      build: () => Promise<File>,
+    ) => {
       setStage(nextStage);
       try {
         await openInTextEditor(await build());
@@ -64,13 +74,18 @@ export function useCreatePdf() {
   );
 
   const createBlank = useCallback(
-    () => run("creating", t("createPdf.failed", "Couldn't create the PDF"), () => createBlankPdf(pageSetup)),
+    () =>
+      run("creating", t("createPdf.failed", "Couldn't create the PDF"), () =>
+        createBlankPdf(pageSetup),
+      ),
     [run, pageSetup, t],
   );
 
   const createFromTemplate = useCallback(
     (template: PdfTemplate) =>
-      run("creating", t("createPdf.failed", "Couldn't create the PDF"), () => createPdfFromTemplate(template, pageSetup)),
+      run("creating", t("createPdf.failed", "Couldn't create the PDF"), () =>
+        createPdfFromTemplate(template, pageSetup),
+      ),
     [run, pageSetup, t],
   );
 
@@ -95,7 +110,12 @@ export function useCreatePdf() {
           );
           const [converted] = files;
           if (!converted) {
-            throw new Error(t("createPdf.convertFailed", "This file couldn't be converted to PDF."));
+            throw new Error(
+              t(
+                "createPdf.convertFailed",
+                "This file couldn't be converted to PDF.",
+              ),
+            );
           }
           return converted;
         },

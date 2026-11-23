@@ -3,18 +3,32 @@ import { PAGE_SIZES } from "@editor/constants/pageSizeConstants";
 
 export type NewPdfPageSize = "A4" | "LETTER" | "LEGAL" | "A5";
 
-export const NEW_PDF_PAGE_SIZES: readonly NewPdfPageSize[] = ["A4", "LETTER", "LEGAL", "A5"];
+export const NEW_PDF_PAGE_SIZES: readonly NewPdfPageSize[] = [
+  "A4",
+  "LETTER",
+  "LEGAL",
+  "A5",
+];
 
 export type NewPdfOrientation = "portrait" | "landscape";
 
-export const NEW_PDF_ORIENTATIONS: readonly NewPdfOrientation[] = ["portrait", "landscape"];
+export const NEW_PDF_ORIENTATIONS: readonly NewPdfOrientation[] = [
+  "portrait",
+  "landscape",
+];
 
 export interface NewPdfPageSetup {
   size: NewPdfPageSize;
   orientation: NewPdfOrientation;
 }
 
-export type PdfTemplateCategory = "paper" | "documents" | "business" | "forms" | "planning" | "design";
+export type PdfTemplateCategory =
+  | "paper"
+  | "documents"
+  | "business"
+  | "forms"
+  | "planning"
+  | "design";
 
 export interface PdfTemplate {
   id: string;
@@ -26,8 +40,8 @@ export interface PdfTemplate {
 
 const LETTER_SIZE_REGIONS = new Set(["US", "CA", "MX", "PH", "CL", "CO"]);
 
-export function defaultPageSizeFor(locale: string): NewPdfPageSize {
-  const region = locale.split(/[-_]/)[1]?.toUpperCase();
+export function defaultPageSizeFor(locale: string | undefined): NewPdfPageSize {
+  const region = locale?.split(/[-_]/)[1]?.toUpperCase();
   return region && LETTER_SIZE_REGIONS.has(region) ? "LETTER" : "A4";
 }
 
@@ -83,7 +97,10 @@ interface Pen {
   region?: Region;
 }
 
-function pageDimensions({ size, orientation }: NewPdfPageSetup): [number, number] {
+function pageDimensions({
+  size,
+  orientation,
+}: NewPdfPageSetup): [number, number] {
   const { width, height } = PAGE_SIZES[size];
   return orientation === "landscape" ? [height, width] : [width, height];
 }
@@ -95,7 +112,10 @@ export async function createBlankPdf(setup: NewPdfPageSetup): Promise<File> {
   return toFile(await doc.save(), "Untitled.pdf");
 }
 
-export async function createPdfFromTemplate(template: PdfTemplate, setup: NewPdfPageSetup): Promise<File> {
+export async function createPdfFromTemplate(
+  template: PdfTemplate,
+  setup: NewPdfPageSetup,
+): Promise<File> {
   const { PDFDocument, StandardFonts, rgb } = await import("@cantoo/pdf-lib");
   const doc = await PDFDocument.create();
   const pen = startPage({
@@ -117,7 +137,9 @@ function toFile(bytes: Uint8Array, name: string): File {
   return new File([bytes as BlobPart], name, { type: "application/pdf" });
 }
 
-function startPage(base: Pick<Pen, "doc" | "regular" | "bold" | "rgb" | "size">): Pen {
+function startPage(
+  base: Pick<Pen, "doc" | "regular" | "bold" | "rgb" | "size">,
+): Pen {
   const [width, height] = base.size;
   const margin = Math.round(Math.min(64, Math.max(36, width * 0.09)));
   return {
@@ -160,7 +182,9 @@ function renderDirective(pen: Pen, directive: string) {
     case "page":
       return Object.assign(pen, startPage(pen), { region: undefined });
     case "space":
-      return void (pen.y -= argument.endsWith("%") ? (pen.size[1] * parseFloat(argument)) / 100 : parseFloat(argument));
+      return void (pen.y -= argument.endsWith("%")
+        ? (pen.size[1] * parseFloat(argument)) / 100
+        : parseFloat(argument));
     case "band":
       return drawBand(pen, argument);
     case "border":
@@ -213,7 +237,8 @@ function blockStyle(line: string): [TextStyle, string, number, number] {
   if (line.startsWith("= ")) return [STYLE.display, line.slice(2), 0, 10];
   if (line.startsWith("# ")) return [STYLE.title, line.slice(2), 0, 8];
   if (line.startsWith("## ")) return [STYLE.heading, line.slice(3), 6, 4];
-  if (line.startsWith("### ")) return [STYLE.label, line.slice(4).toUpperCase(), 4, 4];
+  if (line.startsWith("### "))
+    return [STYLE.label, line.slice(4).toUpperCase(), 4, 4];
   if (line.startsWith("! ")) return [STYLE.strong, line.slice(2), 0, 0];
   if (line.startsWith("~ ")) return [STYLE.muted, line.slice(2), 0, 0];
   return [STYLE.body, line, 0, 2];
@@ -223,10 +248,22 @@ function fontFor(pen: Pen, style: TextStyle) {
   return style.bold ? pen.bold : pen.regular;
 }
 
-function draw(pen: Pen, text: string, style: TextStyle, x: number, width: number, align: Align) {
+function draw(
+  pen: Pen,
+  text: string,
+  style: TextStyle,
+  x: number,
+  width: number,
+  align: Align,
+) {
   const font = fontFor(pen, style);
   const textWidth = font.widthOfTextAtSize(text, style.size);
-  const offset = align === "center" ? (width - textWidth) / 2 : align === "right" ? width - textWidth : 0;
+  const offset =
+    align === "center"
+      ? (width - textWidth) / 2
+      : align === "right"
+        ? width - textWidth
+        : 0;
   pen.page.drawText(text, {
     x: x + offset,
     y: pen.y - style.size,
@@ -267,7 +304,15 @@ function wrap(text: string, font: PDFFont, size: number, width: number) {
   return lines;
 }
 
-function line(pen: Pen, x1: number, y1: number, x2: number, y2: number, colour: Colour, thickness = 0.75) {
+function line(
+  pen: Pen,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  colour: Colour,
+  thickness = 0.75,
+) {
   pen.page.drawLine({
     start: { x: x1, y: y1 },
     end: { x: x2, y: y2 },
@@ -345,7 +390,13 @@ function drawBand(pen: Pen, text: string) {
   const top = atTop ? pageHeight : pen.y;
   const x = pen.region ? pen.x : 0;
   const width = pen.region ? pen.width : pageWidth;
-  pen.page.drawRectangle({ x, y: top - height, width, height, color: pen.rgb(...ACCENT) });
+  pen.page.drawRectangle({
+    x,
+    y: top - height,
+    width,
+    height,
+    color: pen.rgb(...ACCENT),
+  });
   pen.y = top - (height - STYLE.bandTitle.size - (subtitle ? 22 : 0)) / 2;
   draw(pen, title, STYLE.bandTitle, pen.x, pen.width, "left");
   if (subtitle) {
@@ -389,7 +440,12 @@ function drawDots(pen: Pen) {
   const left = pen.x + (pen.width - columns * step) / 2;
   for (let y = pen.y - step / 2; y >= pen.margin; y -= step) {
     for (let column = 0; column <= columns; column++) {
-      pen.page.drawCircle({ x: left + column * step, y, size: 0.8, color: pen.rgb(...RULE) });
+      pen.page.drawCircle({
+        x: left + column * step,
+        y,
+        size: 0.8,
+        color: pen.rgb(...RULE),
+      });
     }
   }
   pen.y = pen.margin;
@@ -403,15 +459,36 @@ function drawBoxes(pen: Pen, spec: string) {
   const height = (pen.y - pen.margin - header) / rows;
   const width = pen.width / headings.length;
   headings.forEach((heading, column) => {
-    draw(pen, heading.toUpperCase(), STYLE.label, pen.x + width * column, width, "center");
+    draw(
+      pen,
+      heading.toUpperCase(),
+      STYLE.label,
+      pen.x + width * column,
+      width,
+      "center",
+    );
   });
   const top = pen.y - header + 4;
   const bottom = top - height * rows;
   for (let row = 0; row <= rows; row++) {
-    line(pen, pen.x, top - height * row, pen.x + pen.width, top - height * row, RULE);
+    line(
+      pen,
+      pen.x,
+      top - height * row,
+      pen.x + pen.width,
+      top - height * row,
+      RULE,
+    );
   }
   for (let column = 0; column <= headings.length; column++) {
-    line(pen, pen.x + width * column, top, pen.x + width * column, bottom, RULE);
+    line(
+      pen,
+      pen.x + width * column,
+      top,
+      pen.x + width * column,
+      bottom,
+      RULE,
+    );
   }
   pen.y = bottom - 8;
 }
@@ -420,7 +497,9 @@ function beginColumns(pen: Pen, percent: number, shaded: boolean) {
   const [, pageHeight] = pen.size;
   const gap = shaded ? pen.margin : 24;
   const restore = { x: pen.x, width: pen.width };
-  const leftWidth = shaded ? (pen.size[0] * percent) / 100 - pen.margin - gap / 2 : (pen.width - gap) * (percent / 100);
+  const leftWidth = shaded
+    ? (pen.size[0] * percent) / 100 - pen.margin - gap / 2
+    : (pen.width - gap) * (percent / 100);
   if (shaded) {
     pen.page.drawRectangle({
       x: 0,
@@ -473,14 +552,20 @@ function columnWidths(count: number, total: number) {
 
 function cellStyle(cell: string, header: boolean): [TextStyle, string] {
   if (header) return [{ ...STYLE.cell, bold: true }, cell];
-  if (cell.startsWith("! ")) return [{ ...STYLE.cell, bold: true }, cell.slice(2)];
-  if (cell.startsWith("~ ")) return [{ ...STYLE.cell, colour: MUTED }, cell.slice(2)];
+  if (cell.startsWith("! "))
+    return [{ ...STYLE.cell, bold: true }, cell.slice(2)];
+  if (cell.startsWith("~ "))
+    return [{ ...STYLE.cell, colour: MUTED }, cell.slice(2)];
   return [STYLE.cell, cell];
 }
 
 function renderTable(pen: Pen, rows: string[]) {
   const isSeparator = (row: string) => /^\|\s*-{3}/.test(row);
-  const count = Math.max(...rows.filter((row) => !isSeparator(row)).map((row) => cellsOf(row).length));
+  const count = Math.max(
+    ...rows
+      .filter((row) => !isSeparator(row))
+      .map((row) => cellsOf(row).length),
+  );
   const widths = columnWidths(count, pen.width);
   rows.forEach((row, index) => {
     if (isSeparator(row)) {

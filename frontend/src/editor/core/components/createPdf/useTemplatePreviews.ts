@@ -1,6 +1,10 @@
 import { useEffect, useState, type RefObject } from "react";
 import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
-import { createPdfFromTemplate, type NewPdfPageSetup, type PdfTemplate } from "@editor/services/createPdf/newPdfDocuments";
+import {
+  createPdfFromTemplate,
+  type NewPdfPageSetup,
+  type PdfTemplate,
+} from "@editor/services/createPdf/newPdfDocuments";
 import type * as TemplateLibrary from "@editor/services/createPdf/pdfTemplates";
 
 const previewCache = new Map<string, Promise<string>>();
@@ -13,7 +17,9 @@ function previewFor(template: PdfTemplate, setup: NewPdfPageSetup) {
   const key = keyOf(template, setup);
   let preview = previewCache.get(key);
   if (!preview) {
-    preview = createPdfFromTemplate(template, setup).then(generateThumbnailForFile);
+    preview = createPdfFromTemplate(template, setup).then(
+      generateThumbnailForFile,
+    );
     preview.catch(() => previewCache.delete(key));
     previewCache.set(key, preview);
   }
@@ -25,7 +31,9 @@ export function useTemplatePreview(
   setup: NewPdfPageSetup,
   target: RefObject<Element | null>,
 ): string | null {
-  const [preview, setPreview] = useState<{ key: string; url: string } | null>(null);
+  const [preview, setPreview] = useState<{ key: string; url: string } | null>(
+    null,
+  );
   const key = keyOf(template, setup);
 
   useEffect(() => {
@@ -54,7 +62,9 @@ export function useTemplatePreview(
   return preview?.key === key ? preview.url : null;
 }
 
-export function usePdfTemplateLibrary(enabled: boolean): typeof TemplateLibrary | null {
+export function usePdfTemplateLibrary(
+  enabled: boolean,
+): typeof TemplateLibrary | null {
   const [library, setLibrary] = useState<typeof TemplateLibrary | null>(null);
 
   useEffect(() => {

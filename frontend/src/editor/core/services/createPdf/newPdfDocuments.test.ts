@@ -7,7 +7,10 @@ import {
   createPdfFromTemplate,
   defaultPageSizeFor,
 } from "@editor/services/createPdf/newPdfDocuments";
-import { PDF_TEMPLATES, PDF_TEMPLATE_CATEGORIES } from "@editor/services/createPdf/pdfTemplates";
+import {
+  PDF_TEMPLATES,
+  PDF_TEMPLATE_CATEGORIES,
+} from "@editor/services/createPdf/pdfTemplates";
 import { PAGE_SIZES } from "@editor/constants/pageSizeConstants";
 
 function readBytes(file: File): Promise<Uint8Array> {
@@ -33,6 +36,9 @@ describe("defaultPageSizeFor", () => {
   ])("%s prints on %s", (locale, size) => {
     expect(defaultPageSizeFor(locale)).toBe(size);
   });
+  it("prints on A4 before a language has loaded", () => {
+    expect(defaultPageSizeFor(undefined)).toBe("A4");
+  });
 });
 
 describe("createBlankPdf", () => {
@@ -46,8 +52,13 @@ describe("createBlankPdf", () => {
   });
 
   it("swaps width and height for landscape", async () => {
-    const doc = await load(await createBlankPdf({ size: "A4", orientation: "landscape" }));
-    expect(doc.getPage(0).getSize()).toEqual({ width: PAGE_SIZES.A4.height, height: PAGE_SIZES.A4.width });
+    const doc = await load(
+      await createBlankPdf({ size: "A4", orientation: "landscape" }),
+    );
+    expect(doc.getPage(0).getSize()).toEqual({
+      width: PAGE_SIZES.A4.height,
+      height: PAGE_SIZES.A4.width,
+    });
   });
 });
 
@@ -63,21 +74,33 @@ describe("PDF_TEMPLATES", () => {
 
 describe("createPdfFromTemplate", () => {
   const cases = PDF_TEMPLATES.flatMap((template) =>
-    NEW_PDF_ORIENTATIONS.map((orientation) => [template.id, orientation, template] as const),
+    NEW_PDF_ORIENTATIONS.map(
+      (orientation) => [template.id, orientation, template] as const,
+    ),
   );
 
-  it.each(cases)("%s fits its pages in %s", async (_id, orientation, template) => {
-    const small = await createPdfFromTemplate(template, { size: "A5", orientation });
-    expect(small.name).toBe(`${template.title}.pdf`);
-    expect((await load(small)).getTitle()).toBe(template.title);
-    const letter = await load(await createPdfFromTemplate(template, { size: "LETTER", orientation }));
-    const expectedPages = template.body.split("@page").length;
-    expect(letter.getPageCount()).toBe(expectedPages);
-    const { width, height } = PAGE_SIZES.LETTER;
-    expect(letter.getPage(0).getSize()).toEqual(
-      orientation === "landscape" ? { width: height, height: width } : { width, height },
-    );
-  });
+  it.each(cases)(
+    "%s fits its pages in %s",
+    async (_id, orientation, template) => {
+      const small = await createPdfFromTemplate(template, {
+        size: "A5",
+        orientation,
+      });
+      expect(small.name).toBe(`${template.title}.pdf`);
+      expect((await load(small)).getTitle()).toBe(template.title);
+      const letter = await load(
+        await createPdfFromTemplate(template, { size: "LETTER", orientation }),
+      );
+      const expectedPages = template.body.split("@page").length;
+      expect(letter.getPageCount()).toBe(expectedPages);
+      const { width, height } = PAGE_SIZES.LETTER;
+      expect(letter.getPage(0).getSize()).toEqual(
+        orientation === "landscape"
+          ? { width: height, height: width }
+          : { width, height },
+      );
+    },
+  );
 
   it("adds a page when the content runs past the bottom margin", async () => {
     const body = Array.from({ length: 80 }, (_, i) => `Line ${i}`).join("\n");

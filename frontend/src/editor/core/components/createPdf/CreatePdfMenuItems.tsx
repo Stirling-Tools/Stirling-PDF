@@ -13,7 +13,14 @@ interface RichMenuItemProps {
   testId?: string;
 }
 
-export function RichMenuItem({ icon, label, description, onClick, disabled, testId }: RichMenuItemProps) {
+export function RichMenuItem({
+  icon,
+  label,
+  description,
+  onClick,
+  disabled,
+  testId,
+}: RichMenuItemProps) {
   return (
     <Menu.Item
       className={styles.item}
@@ -37,7 +44,10 @@ interface CreatePdfMenuItemsProps {
   disabled?: boolean;
 }
 
-export function CreatePdfMenuItems({ items, disabled }: CreatePdfMenuItemsProps) {
+export function CreatePdfMenuItems({
+  items,
+  disabled,
+}: CreatePdfMenuItemsProps) {
   return items.map((item) => (
     <RichMenuItem
       key={item.id}

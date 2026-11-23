@@ -25,7 +25,14 @@ export function useCreatePdfMenu(): {
   busyLabel: string | null;
 } {
   const { t } = useTranslation();
-  const { stage, pageSetup, setPageSetup, createBlank, createFromTemplate, createFromSource } = useCreatePdf();
+  const {
+    stage,
+    pageSetup,
+    setPageSetup,
+    createBlank,
+    createFromTemplate,
+    createFromSource,
+  } = useCreatePdf();
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const sourceInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -65,7 +72,10 @@ export function useCreatePdfMenu(): {
         id: "template",
         icon: "layout-template",
         label: t("createPdf.template", "From a template"),
-        description: t("createPdf.templateDesc", "Letters, invoices, forms, résumés and more"),
+        description: t(
+          "createPdf.templateDesc",
+          "Letters, invoices, forms, résumés and more",
+        ),
         onClick: () => setTemplatesOpen(true),
         testId: "create-pdf-template",
       },
@@ -73,7 +83,10 @@ export function useCreatePdfMenu(): {
         id: "source",
         icon: "file-convert",
         label: t("createPdf.source", "From another file"),
-        description: t("createPdf.sourceDesc", "Convert Word, Excel, images and more"),
+        description: t(
+          "createPdf.sourceDesc",
+          "Convert Word, Excel, images and more",
+        ),
         onClick: () => void pickSource(),
         testId: "create-pdf-source",
       },

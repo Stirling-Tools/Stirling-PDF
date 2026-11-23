@@ -1,4 +1,7 @@
-import type { PdfTemplate, PdfTemplateCategory } from "@editor/services/createPdf/newPdfDocuments";
+import type {
+  PdfTemplate,
+  PdfTemplateCategory,
+} from "@editor/services/createPdf/newPdfDocuments";
 
 export const PDF_TEMPLATE_CATEGORIES: readonly PdfTemplateCategory[] = [
   "paper",
@@ -10,7 +13,13 @@ export const PDF_TEMPLATE_CATEGORIES: readonly PdfTemplateCategory[] = [
 ];
 
 export const PDF_TEMPLATES: readonly PdfTemplate[] = [
-  { id: "blank", category: "paper", title: "Untitled", keywords: "empty new", body: "" },
+  {
+    id: "blank",
+    category: "paper",
+    title: "Untitled",
+    keywords: "empty new",
+    body: "",
+  },
   {
     id: "lined",
     category: "paper",
@@ -30,7 +39,8 @@ export const PDF_TEMPLATES: readonly PdfTemplate[] = [
     id: "letter",
     category: "documents",
     title: "Letter",
-    keywords: "cover letter resignation reference complaint thank you formal business",
+    keywords:
+      "cover letter resignation reference complaint thank you formal business",
     body: `! Your Name
 ~ 123 Street Name, City, Postcode
 ~ you@example.com  ·  +1 555 0100
@@ -185,7 +195,8 @@ Please pay within 30 days to account 12345678, sort code 00-00-00.`,
     id: "form",
     category: "forms",
     title: "Form",
-    keywords: "registration application enrolment contact details questionnaire",
+    keywords:
+      "registration application enrolment contact details questionnaire",
     body: `# Registration form
 ~ Please complete every section in block capitals.
 ## Your details

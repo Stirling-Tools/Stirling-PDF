@@ -13,7 +13,10 @@ import {
   type PdfTemplateCategory,
 } from "@editor/services/createPdf/newPdfDocuments";
 import { usePdfTemplateLabels } from "@editor/components/createPdf/usePdfTemplateLabels";
-import { usePdfTemplateLibrary, useTemplatePreview } from "@editor/components/createPdf/useTemplatePreviews";
+import {
+  usePdfTemplateLibrary,
+  useTemplatePreview,
+} from "@editor/components/createPdf/useTemplatePreviews";
 import styles from "@editor/components/createPdf/CreatePdfTemplateModal.module.css";
 
 const MENU_FOCUS_RETURN_SETTLE_MS = 50;
@@ -36,7 +39,8 @@ export function CreatePdfTemplateModal({
   onSelect,
 }: CreatePdfTemplateModalProps) {
   const { t } = useTranslation();
-  const { templateName, categoryName, pageSizeName, orientationName } = usePdfTemplateLabels();
+  const { templateName, categoryName, pageSizeName, orientationName } =
+    usePdfTemplateLabels();
   const library = usePdfTemplateLibrary(open);
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [query, setQuery] = useState("");
@@ -44,7 +48,10 @@ export function CreatePdfTemplateModal({
 
   useEffect(() => {
     if (!open) return;
-    const timer = window.setTimeout(() => searchRef.current?.focus(), MENU_FOCUS_RETURN_SETTLE_MS);
+    const timer = window.setTimeout(
+      () => searchRef.current?.focus(),
+      MENU_FOCUS_RETURN_SETTLE_MS,
+    );
     return () => window.clearTimeout(timer);
   }, [open]);
 
@@ -55,7 +62,9 @@ export function CreatePdfTemplateModal({
     () =>
       templates.filter((template) =>
         search
-          ? `${templateName(template)} ${template.keywords ?? ""}`.toLowerCase().includes(search)
+          ? `${templateName(template)} ${template.keywords ?? ""}`
+              .toLowerCase()
+              .includes(search)
           : category === "all" || template.category === category,
       ),
     [templates, search, category, templateName],
@@ -67,10 +76,15 @@ export function CreatePdfTemplateModal({
       onClose={onClose}
       width="xl"
       title={t("createPdf.templates.title", "Start from a template")}
-      subtitle={t("createPdf.templates.subtitle", "Pick a layout, then change any text in the editor.")}
+      subtitle={t(
+        "createPdf.templates.subtitle",
+        "Pick a layout, then change any text in the editor.",
+      )}
       footer={
         <div className={styles.footer}>
-          <span className={styles.footerLabel}>{t("createPdf.pageSize", "Page size")}</span>
+          <span className={styles.footerLabel}>
+            {t("createPdf.pageSize", "Page size")}
+          </span>
           <SegmentedControl
             options={NEW_PDF_PAGE_SIZES.map((size) => ({
               value: size,
@@ -86,7 +100,9 @@ export function CreatePdfTemplateModal({
               label: orientationName(orientation),
             }))}
             value={pageSetup.orientation}
-            onChange={(orientation) => onPageSetupChange({ ...pageSetup, orientation })}
+            onChange={(orientation) =>
+              onPageSetupChange({ ...pageSetup, orientation })
+            }
             ariaLabel={t("createPdf.orientation", "Orientation")}
           />
         </div>
@@ -105,7 +121,10 @@ export function CreatePdfTemplateModal({
             data-testid="create-pdf-template-search"
           />
         </div>
-        <nav className={styles.categories} aria-label={t("createPdf.templates.categoriesLabel", "Categories")}>
+        <nav
+          className={styles.categories}
+          aria-label={t("createPdf.templates.categoriesLabel", "Categories")}
+        >
           {(["all", ...categories] as CategoryFilter[]).map((entry) => (
             <button
               key={entry}
@@ -120,18 +139,30 @@ export function CreatePdfTemplateModal({
             >
               <span>{categoryName(entry)}</span>
               <span className={styles.count}>
-                {entry === "all" ? templates.length : templates.filter((item) => item.category === entry).length}
+                {entry === "all"
+                  ? templates.length
+                  : templates.filter((item) => item.category === entry).length}
               </span>
             </button>
           ))}
         </nav>
         {shown.length === 0 && library ? (
-          <p className={styles.empty}>{t("createPdf.templates.noMatch", "No templates match your search.")}</p>
+          <p className={styles.empty}>
+            {t(
+              "createPdf.templates.noMatch",
+              "No templates match your search.",
+            )}
+          </p>
         ) : (
           <ul className={styles.templates} data-testid="create-pdf-templates">
             {shown.map((template) => (
               <li key={template.id}>
-                <TemplateCard template={template} name={templateName(template)} pageSetup={pageSetup} onSelect={onSelect} />
+                <TemplateCard
+                  template={template}
+                  name={templateName(template)}
+                  pageSetup={pageSetup}
+                  onSelect={onSelect}
+                />
               </li>
             ))}
           </ul>
@@ -148,10 +179,16 @@ interface TemplateCardProps {
   onSelect: (template: PdfTemplate) => void;
 }
 
-function TemplateCard({ template, name, pageSetup, onSelect }: TemplateCardProps) {
+function TemplateCard({
+  template,
+  name,
+  pageSetup,
+  onSelect,
+}: TemplateCardProps) {
   const cardRef = useRef<HTMLButtonElement>(null);
   const preview = useTemplatePreview(template, pageSetup, cardRef);
-  const shape = pageSetup.orientation === "landscape" ? styles.landscape : styles.page;
+  const shape =
+    pageSetup.orientation === "landscape" ? styles.landscape : styles.page;
   return (
     <button
       ref={cardRef}
