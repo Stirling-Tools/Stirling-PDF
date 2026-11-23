@@ -49,7 +49,7 @@
   }
 }
 
-/* A page colour choice, previewed in the Page view menu. */
+/* A page colour choice, previewed in the View menu. */
 .viewer-page-colour-swatch {
   display: inline-block;
   width: 1rem;
@@ -59,13 +59,13 @@
 }
 
 .viewer-page-colour-swatch--normal {
-  background: #ffffff;
+  background: var(--p-white);
 }
 
 .viewer-page-colour-swatch--dark {
-  background: #1c1c20;
+  background: var(--p-black);
 }
 
 .viewer-page-colour-swatch--sepia {
-  background: #e8d7b5;
+  background: var(--p-page-sepia);
 }
