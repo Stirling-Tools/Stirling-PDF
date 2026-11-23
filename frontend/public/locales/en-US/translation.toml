@@ -4928,12 +4928,15 @@ closeFile = "Close file"
 
 [fileEditor]
 closedFile = "Closed {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "File reordered"
 filesReordered_other = "{{count}} files reordered"
 loadedFromStorage_one = "Loaded {{count}} file from storage"
 loadedFromStorage_other = "Loaded {{count}} files from storage"
 loadFromStorageFailed = "Failed to load some files from storage"
 pinnedFile = "Pinned {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Saved and closed {{name}}"
 saveFailed = "Save failed"
 unpinnedFile = "Unpinned {{name}}"
@@ -6961,6 +6964,10 @@ yourCloudAccess = "You'll become a team member and lose owner access."
 [pageEdit]
 deselectAll = "None"
 selectAll = "Check All"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Extract Pages"
