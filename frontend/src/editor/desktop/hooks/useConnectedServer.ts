@@ -4,6 +4,7 @@ import {
   connectionModeService,
   type ConnectionMode,
 } from "@editor/services/connectionModeService";
+import { useConnectionMode } from "@editor/hooks/useConnectionMode";
 
 function isServerMode(mode: ConnectionMode | null): boolean {
   return mode === "saas" || mode === "selfhosted";
@@ -18,10 +19,20 @@ export interface ConnectedServerState {
 /** {@link useConnectedServer}, plus whether the answer is known yet: false at first means "not yet". */
 export function useConnectedServerState(): ConnectedServerState {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isServer, setIsServer] = useState<boolean | null>(() => {
-    const cached = connectionModeService.getCachedMode();
-    return cached === null ? null : isServerMode(cached);
-  });
+  const mode = useConnectionMode();
+  // The mode stays null when the saved config cannot be read; settle as not connected then.
+  const [modeUnreadable, setModeUnreadable] = useState(false);
+
+  useEffect(() => {
+    if (mode !== null) return;
+    let active = true;
+    connectionModeService.getCurrentMode().catch(() => {
+      if (active) setModeUnreadable(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [mode]);
 
   useEffect(
     () =>
@@ -39,32 +50,9 @@ export function useConnectedServerState(): ConnectedServerState {
     [],
   );
 
-  useEffect(() => {
-    let current = true;
-    void connectionModeService.getCurrentMode().then(
-      (mode) => {
-        if (current) setIsServer(isServerMode(mode));
-      },
-      // An unreadable config keeps the cached answer, else none; a mode change still updates it.
-      () => {
-        if (current) setIsServer((known) => known ?? false);
-      },
-    );
-    const unsubscribe = connectionModeService.subscribeToModeChanges(
-      (config) => {
-        current = false;
-        setIsServer(isServerMode(config.mode));
-      },
-    );
-    return () => {
-      current = false;
-      unsubscribe();
-    };
-  }, []);
-
   return {
-    connected: isAuthenticated === true && isServer === true,
-    settled: isAuthenticated !== null && isServer !== null,
+    connected: isAuthenticated === true && isServerMode(mode),
+    settled: isAuthenticated !== null && (mode !== null || modeUnreadable),
   };
 }
 

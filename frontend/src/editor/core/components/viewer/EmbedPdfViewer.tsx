@@ -28,7 +28,7 @@ import { useViewer } from "@editor/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@editor/components/viewer/LocalEmbedPDF";
 import { PdfProtectionStatus } from "@editor/components/viewer/PdfProtectionStatus";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
-import { canPrintPdf } from "@editor/services/pdfPermissions";
+import { canPrintPdf, pdfEditingLocked } from "@editor/services/pdfPermissions";
 import { PdfPreviewUnlockGate } from "@editor/components/viewer/PdfPreviewUnlockGate";
 import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
 import { ThumbnailSidebar } from "@editor/components/viewer/ThumbnailSidebar";
@@ -48,6 +48,7 @@ import type {
 } from "@editor/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
 import { rememberPlainPdfExport } from "@editor/services/pdfAccessService";
+import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
 import { hasUnsavedWork } from "@editor/services/unsavedWork";
 import {
   isStirlingFile,
@@ -76,6 +77,9 @@ import { ScaleCalibrationDialog } from "@editor/components/viewer/ScaleCalibrati
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { alert } from "@editor/components/toast";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
+import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -142,6 +146,7 @@ const EmbedPdfViewerContent = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  const registeredPageTool = useViewerPageTool();
 
   const {
     isThumbnailSidebarVisible,
@@ -155,12 +160,13 @@ const EmbedPdfViewerContent = ({
     searchInterfaceActions,
     zoomActions,
     scrollActions,
-    panActions: _panActions,
+    panActions,
     rotationActions,
     getScrollState,
     getSpreadState,
     getZoomState,
     registerImmediateZoomUpdate,
+    registerImmediateRotationUpdate,
     getRotationState,
     zoomRestorePendingRef,
     notifyZoomRestoreSettled,
@@ -541,6 +547,7 @@ const EmbedPdfViewerContent = ({
   } = useNavigationGuard();
 
   const { selectedTool } = useNavigationState();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (selectedTool !== "redact") {
@@ -568,6 +575,9 @@ const EmbedPdfViewerContent = ({
 
   // FormFill tool mode — uses PDFBox backend for full-fidelity form handling
   const isFormFillToolActive = (selectedTool as string) === "formFill";
+
+  const pageTool = previewFile ? null : registeredPageTool;
+  const pageToolActive = pageTool != null;
 
   // Form overlays are shown in BOTH modes:
   // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
@@ -707,6 +717,39 @@ const EmbedPdfViewerContent = ({
     return currentFileId;
   }, [previewFile, currentFile, currentFileId, selectors]);
 
+  // A page tool draws in the page's own orientation, so a view rotation would
+  // leave its layers off the page content. The rotation comes back when the
+  // tool closes, if the same document is still open.
+  const heldRotationRef = useRef<{ rootId: string | null; rotation: number }>(
+    null,
+  );
+  useEffect(() => {
+    if (!pageToolActive) return;
+    heldRotationRef.current ??= {
+      rootId: currentFileRootId ?? null,
+      rotation: getRotationState().rotation,
+    };
+    const straighten = (rotation: number) => {
+      if (rotation !== 0) rotationActions.setRotation(0);
+    };
+    straighten(getRotationState().rotation);
+    return registerImmediateRotationUpdate(straighten);
+  }, [
+    pageToolActive,
+    currentFileRootId,
+    rotationActions,
+    getRotationState,
+    registerImmediateRotationUpdate,
+  ]);
+  useEffect(() => {
+    if (pageToolActive) return;
+    const held = heldRotationRef.current;
+    heldRotationRef.current = null;
+    if (held?.rotation && held.rootId === (currentFileRootId ?? null)) {
+      rotationActions.setRotation(held.rotation);
+    }
+  }, [pageToolActive, currentFileRootId, rotationActions]);
+
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
     if (previewFile) {
@@ -816,6 +859,7 @@ const EmbedPdfViewerContent = ({
                 return;
               case "a":
               case "A":
+                if (pageToolActive) return;
                 // Intercept unconditionally so the browser can't blanket-select the surrounding UI chrome.
                 event.preventDefault();
                 {
@@ -846,8 +890,8 @@ const EmbedPdfViewerContent = ({
 
       // All remaining shortcuts require the viewer to be hovered so they
       // don't conflict with the rest of the UI when the viewer is mounted
-      // but not the active focus target.
-      if (!isViewerHovered) return;
+      // but not the active focus target. A page tool binds its own.
+      if (!isViewerHovered || pageToolActive) return;
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
@@ -931,6 +975,7 @@ const EmbedPdfViewerContent = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [
+    pageToolActive,
     isViewerHovered,
     isSearchInterfaceVisible,
     zoomActions,
@@ -1307,6 +1352,7 @@ const EmbedPdfViewerContent = ({
 
       layerApplyInProgressRef.current = true;
       try {
+        await assertSignedPdfsEditable([currentFile], undefined, true);
         const filename = currentFile.name || "document.pdf";
         const file = new File([modifiedBlob], filename, {
           type: "application/pdf",
@@ -1412,6 +1458,16 @@ const EmbedPdfViewerContent = ({
   // Register navigation warning handlers so the global modal can call our save/discard logic
   useEffect(() => {
     if (previewFile || isFormFillToolActive) return;
+    // The guard holds one set of handlers: while a page tool owns the pages,
+    // its discard is the one that matters.
+    if (pageTool) {
+      const discard = pageTool.onDiscard;
+      registerNavigationWarningHandlers({
+        onApplyAndContinue: pageTool.onSave,
+        onDiscardAndContinue: async () => discard?.(),
+      });
+      return () => unregisterNavigationWarningHandlers();
+    }
 
     registerNavigationWarningHandlers({
       onApplyAndContinue: async () => {
@@ -1434,6 +1490,7 @@ const EmbedPdfViewerContent = ({
   }, [
     previewFile,
     isFormFillToolActive,
+    pageTool,
     applyChanges,
     discardAndSaveApplied,
     registerNavigationWarningHandlers,
@@ -1791,6 +1848,15 @@ const EmbedPdfViewerContent = ({
     rulerOverlayRef,
   });
 
+  // A page tool takes the pages' pointer input and draws its own find, so the
+  // viewer's ruler, pan and search stand down while it is open.
+  useEffect(() => {
+    if (!pageToolActive) return;
+    setIsRulerActive(false);
+    panActions.disablePan();
+    searchInterfaceActions.close();
+  }, [pageToolActive, setIsRulerActive, panActions, searchInterfaceActions]);
+
   // Register workbench bar buttons for the viewer
   useViewerWorkbenchBarButtons(
     isRulerActive,
@@ -1924,9 +1990,24 @@ const EmbedPdfViewerContent = ({
           {currentFile && isStirlingFile(currentFile) && (
             <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
           )}
+          {pageTool ? (
+            <pageTool.Toolbar />
+          ) : (
+            selectedTool === "pdfTextEditor" &&
+            !isMobile &&
+            !previewFile && (
+              // Holds the editor bar's place while the editor loads, so the
+              // bar shows at once and the pages do not shift when it lands.
+              <div
+                className="pdf-editor-topbar pdf-editor-topbar--pending"
+                data-testid="pdf-editor-toolbar-pending"
+              />
+            )
+          )}
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
+            data-viewer-pages
             style={{
               position: "relative",
               flex: 1,
@@ -1964,17 +2045,23 @@ const EmbedPdfViewerContent = ({
                       : undefined
               }
               enableAnnotations={
-                shouldEnableAnnotations && !!pdfAccess && !pdfAccess.encrypted
+                shouldEnableAnnotations && !pdfEditingLocked(pdfAccess)
               }
               isSignMode={selectedTool === "sign"}
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={
-                shouldEnableRedaction && !!pdfAccess && !pdfAccess.encrypted
+                shouldEnableRedaction && !pdfEditingLocked(pdfAccess)
               }
               enableFormFill={
-                shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
+                shouldEnableFormFill && !pdfEditingLocked(pdfAccess)
               }
+              pdfAccessPending={!pdfAccess}
               formEditingActive={isFormFillToolActive}
+              pageLayer={
+                pageTool && pageTool.fileId === currentFileStableId
+                  ? pageTool.PageLayer
+                  : null
+              }
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
               annotationApiRef={annotationApiRef}
@@ -2021,6 +2108,7 @@ const EmbedPdfViewerContent = ({
               onCalibrationMeasure={handleScaleCalibrationMeasurement}
             />
           </Box>
+          {pageTool?.BottomBar && <pageTool.BottomBar />}
           <ScaleCalibrationDialog
             opened={!!scaleCalibrationMeasurement}
             measurement={scaleCalibrationMeasurement}
@@ -2032,7 +2120,7 @@ const EmbedPdfViewerContent = ({
       )}
 
       {/* Bottom Toolbar Overlay */}
-      {effectiveFile && (
+      {effectiveFile && !pageTool?.BottomBar && (
         <div
           className="pdf-viewer-toolbar-dock"
           style={{
@@ -2090,6 +2178,7 @@ const EmbedPdfViewerContent = ({
         documentCacheKey={bookmarkCacheKey}
         onApplyLayers={handleLayerApply}
         onLayersDetected={setHasLayers}
+        readOnly={pdfEditingLocked(pdfAccess)}
       />
     </Box>
   );

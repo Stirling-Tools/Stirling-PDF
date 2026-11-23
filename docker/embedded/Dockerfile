@@ -150,7 +150,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     FORMDETECTION_PREINSTALLEDMODELDIR="/opt/stirling/preinstalled-models" \
     ORT_DISABLE_TELEMETRY=1 \
     STIRLING_AOT_ENABLE="false" \
-    _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1PeriodicGCInterval=10000 -XX:G1PeriodicGCSystemLoadThreshold=0.0 -XX:+G1PeriodicGCInvokesConcurrent -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1PeriodicGCInterval=10000 -XX:G1PeriodicGCSystemLoadThreshold=0.0 -XX:+G1PeriodicGCInvokesConcurrent -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -XX:-UseBASE64Intrinsics -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \
@@ -165,7 +165,7 @@ ENV VERSION_TAG=$VERSION_TAG \
 
 # Metadata labels
 LABEL org.opencontainers.image.title="Stirling-PDF" \
-      org.opencontainers.image.description="Full version with Calibre, LibreOffice, Tesseract, OCRmyPDF" \
+      org.opencontainers.image.description="Full version with Tesseract, OCRmyPDF" \
       org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="Stirling-Tools" \

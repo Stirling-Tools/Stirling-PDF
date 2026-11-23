@@ -122,7 +122,7 @@ async function savedIn(
 }
 
 async function saved(doc: EditorDocument) {
-  const { blob } = await exportToBlob(doc, "tags.pdf");
+  const blob = await exportToBlob(doc);
   const bytes = new Uint8Array(await blob.arrayBuffer());
   return { bytes, structure: (await readFileStructure(bytes))! };
 }
@@ -384,6 +384,22 @@ describe("tags inside a run's text through edits to it", () => {
     const doc = await open();
     const history = new HistoryStack();
     edit(doc, history, "German subsidiaries", "German", "Austrian");
+    history.undo(doc);
+
+    expect(tagsIn(doc, "German subsidiaries")).toMatchObject([
+      { text: "Umsatzerlöse", role: { type: "Span" } },
+    ]);
+    expect(await savedIn(doc, "German subsidiaries", "Span")).toBe(1);
+  });
+
+  test("puts a deleted element back on undoing a burst of edits", async () => {
+    const doc = await open();
+    const history = new HistoryStack();
+    edit(doc, history, "German subsidiaries", "Umsatzerlöse", "");
+    edit(doc, history, "German subsidiaries", "German", "Austrian");
+    expect(history.size().undo).toBe(1);
+    history.undo(doc);
+    history.redo(doc);
     history.undo(doc);
 
     expect(tagsIn(doc, "German subsidiaries")).toMatchObject([
