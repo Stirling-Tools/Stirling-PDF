@@ -16,6 +16,10 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.CMSProcessable;
@@ -35,6 +39,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -291,7 +296,7 @@ public class ValidateSignatureController {
                         }
 
                         // Set basic signature info
-                        result.setSignerName(sig.getName());
+                        result.setSignerName(signerName(sig.getName(), signerCert));
                         // A DocTimeStamp has no /M entry; its date is the TSA's genTime.
                         result.setSignatureDate(
                                 timeStampGenTime != null
@@ -376,5 +381,18 @@ public class ValidateSignatureController {
             out.write(signedContent);
         }
         return java.util.Arrays.equals(digest.getDigest(), info.getMessageImprintDigest());
+    }
+
+    // ISO 32000-1 12.8.1: /Name is only for when the certificate cannot name the signer, so most
+    // signatures leave it out and the certificate's common name is the signer.
+    static String signerName(String signatureName, X509Certificate signerCert) {
+        if (StringUtils.isNotBlank(signatureName)) {
+            return signatureName;
+        }
+        String subject = signerCert.getSubjectX500Principal().getName();
+        RDN[] commonNames = new X500Name(subject).getRDNs(BCStyle.CN);
+        return commonNames.length > 0
+                ? IETFUtils.valueToString(commonNames[0].getFirst().getValue())
+                : subject;
     }
 }

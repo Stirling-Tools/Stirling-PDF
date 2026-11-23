@@ -1,8 +1,10 @@
-import { Stack, Text, TextInput, NumberInput } from "@mantine/core";
-import { Button } from "@editor/ui/Button";
+import { useState } from "react";
+import { Stack, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { Collapsible } from "@editor/ui/Collapsible";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
@@ -19,65 +21,51 @@ const SignatureAppearanceSettings = ({
   disabled = false,
 }: SignatureAppearanceSettingsProps) => {
   const { t } = useTranslation();
+  const [detailsOpen, setDetailsOpen] = useState(
+    Boolean(parameters.reason || parameters.location || parameters.name),
+  );
 
   return (
     <Stack gap="md">
-      {/* Signature Visibility */}
-      <Stack gap="sm">
-        <div style={{ display: "flex", gap: "4px" }}>
-          <Button
-            accent={!parameters.showSignature ? "default" : "neutral"}
-            variant={!parameters.showSignature ? "primary" : "secondary"}
-            onClick={() => onParameterChange("showSignature", false)}
-            disabled={disabled}
-            style={{
-              flex: 1,
-              height: "auto",
-              minHeight: "40px",
-              fontSize: "11px",
-            }}
-          >
-            <div
-              style={{
-                textAlign: "center",
-                lineHeight: "1.1",
-                fontSize: "11px",
-              }}
-            >
-              {t("certSign.appearance.invisible", "Invisible")}
-            </div>
-          </Button>
-          <Button
-            accent={parameters.showSignature ? "default" : "neutral"}
-            variant={parameters.showSignature ? "primary" : "secondary"}
-            onClick={() => onParameterChange("showSignature", true)}
-            disabled={disabled}
-            style={{
-              flex: 1,
-              height: "auto",
-              minHeight: "40px",
-              fontSize: "11px",
-            }}
-          >
-            <div
-              style={{
-                textAlign: "center",
-                lineHeight: "1.1",
-                fontSize: "11px",
-              }}
-            >
-              {t("certSign.appearance.visible", "Visible")}
-            </div>
-          </Button>
-        </div>
-      </Stack>
+      <ToggleSwitch
+        checked={parameters.showSignature}
+        onChange={(checked) => onParameterChange("showSignature", checked)}
+        label={t("certSign.appearance.showOnPage", "Show signature on page")}
+        disabled={disabled}
+      />
 
-      {/* Visible Signature Options */}
       {parameters.showSignature && (
         <Stack gap="sm">
-          <Text size="sm" fw={500}>
-            {t("certSign.appearance.options.title", "Signature Details")}
-          </Text>
+          <NumberInput
+            label={t("certSign.pageNumber", "Page Number")}
+            value={parameters.pageNumber}
+            onChange={(value) =>
+              onParameterChange(
+                "pageNumber",
+                typeof value === "number" ? value : 1,
+              )
+            }
+            min={1}
+            disabled={disabled}
+          />
+          <ToggleSwitch
+            checked={parameters.showLogo}
+            onChange={(checked) => onParameterChange("showLogo", checked)}
+            label={t("certSign.showLogo", "Show Logo")}
+            disabled={disabled}
+          />
+        </Stack>
+      )}
+
+      <Collapsible
+        open={detailsOpen}
+        onToggle={() => setDetailsOpen((open) => !open)}
+        header={t(
+          "certSign.appearance.options.optionalTitle",
+          "Signature details (optional)",
+        )}
+      >
+        <Stack gap="sm" inert={!detailsOpen}>
           <TextInput
             label={t("certSign.reason", "Reason")}
             value={parameters.reason}
@@ -97,7 +85,11 @@ const SignatureAppearanceSettings = ({
             disabled={disabled}
           />
           <TextInput
-            label={t("certSign.name", "Name")}
+            label={t("certSign.appearance.options.signerName", "Signer name")}
+            placeholder={t(
+              "certSign.appearance.options.signerNamePlaceholder",
+              "Uses the name on the certificate",
+            )}
             value={parameters.name}
             className={privateContentClassName}
             onChange={(event) =>
@@ -105,71 +97,8 @@ const SignatureAppearanceSettings = ({
             }
             disabled={disabled}
           />
-          <NumberInput
-            label={t("certSign.pageNumber", "Page Number")}
-            value={parameters.pageNumber}
-            onChange={(value) =>
-              onParameterChange(
-                "pageNumber",
-                typeof value === "number" ? value : 1,
-              )
-            }
-            min={1}
-            disabled={disabled}
-          />
-          <Stack gap="xs">
-            <Text size="sm" fw={500}>
-              {t("certSign.logoTitle", "Logo")}
-            </Text>
-            <div style={{ display: "flex", gap: "4px" }}>
-              <Button
-                accent={!parameters.showLogo ? "default" : "neutral"}
-                variant={!parameters.showLogo ? "primary" : "secondary"}
-                onClick={() => onParameterChange("showLogo", false)}
-                disabled={disabled}
-                style={{
-                  flex: 1,
-                  height: "auto",
-                  minHeight: "40px",
-                  fontSize: "11px",
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: "center",
-                    lineHeight: "1.1",
-                    fontSize: "11px",
-                  }}
-                >
-                  {t("certSign.noLogo", "No Logo")}
-                </div>
-              </Button>
-              <Button
-                accent={parameters.showLogo ? "default" : "neutral"}
-                variant={parameters.showLogo ? "primary" : "secondary"}
-                onClick={() => onParameterChange("showLogo", true)}
-                disabled={disabled}
-                style={{
-                  flex: 1,
-                  height: "auto",
-                  minHeight: "40px",
-                  fontSize: "11px",
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: "center",
-                    lineHeight: "1.1",
-                    fontSize: "11px",
-                  }}
-                >
-                  {t("certSign.showLogo", "Show Logo")}
-                </div>
-              </Button>
-            </div>
-          </Stack>
         </Stack>
-      )}
+      </Collapsible>
     </Stack>
   );
 };

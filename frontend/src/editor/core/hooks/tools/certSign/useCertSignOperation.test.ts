@@ -93,3 +93,33 @@ describe("buildCertSignFormData - hardware cert types", () => {
     expect(formData.get("pkcs11LibraryPath")).toBeNull();
   });
 });
+
+describe("buildCertSignFormData - signature details", () => {
+  test("invisible signature still sends name, reason and location", () => {
+    const formData = buildCertSignFormData(
+      params({
+        signMode: "AUTO",
+        showSignature: false,
+        name: "Jane Signer",
+        reason: "Approval",
+        location: "London",
+      }),
+      pdf(),
+    );
+
+    expect(formData.get("name")).toBe("Jane Signer");
+    expect(formData.get("reason")).toBe("Approval");
+    expect(formData.get("location")).toBe("London");
+    expect(formData.get("showSignature")).toBeNull();
+    expect(formData.get("pageNumber")).toBeNull();
+    expect(formData.get("showLogo")).toBeNull();
+  });
+
+  test("blank details are omitted", () => {
+    const formData = buildCertSignFormData(params({ signMode: "AUTO" }), pdf());
+
+    expect(formData.get("name")).toBeNull();
+    expect(formData.get("reason")).toBeNull();
+    expect(formData.get("location")).toBeNull();
+  });
+});

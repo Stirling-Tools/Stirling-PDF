@@ -56,17 +56,17 @@ export const certSignToApiParams = (
   return withSignatureAppearance(apiParams, parameters);
 };
 
-// Signature appearance fields are only sent when the visible signature is
-// enabled, matching the original form behaviour.
+// Name, reason and location go into the signature dictionary, so they are sent
+// for invisible signatures too; page and logo only affect the visible stamp.
 const withSignatureAppearance = (
   apiParams: CertSignApiParams,
   parameters: CertSignParameters,
 ): CertSignApiParams => {
+  if (parameters.reason) apiParams.reason = parameters.reason;
+  if (parameters.location) apiParams.location = parameters.location;
+  if (parameters.name) apiParams.name = parameters.name;
   if (parameters.showSignature) {
     apiParams.showSignature = true;
-    apiParams.reason = parameters.reason;
-    apiParams.location = parameters.location;
-    apiParams.name = parameters.name;
     apiParams.pageNumber = parameters.pageNumber;
     apiParams.showLogo = parameters.showLogo;
   }
