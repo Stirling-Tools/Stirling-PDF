@@ -352,6 +352,17 @@ export default function HomePage() {
     if (importTotal === 0) return;
     severalIntoEmptyRef.current =
       importTotal > 1 && prevFileCountRef.current === 0;
+    // Switch now: the default view would otherwise show the first file
+    // arriving for as long as the rest take.
+    if (!severalIntoEmptyRef.current || isApplyingRestoredView()) return;
+    const action = getStartupNavigationAction(
+      0,
+      importTotal,
+      selectedToolKey,
+      navigationState.workbench,
+    );
+    if (action) actions.setWorkbench(action.workbench);
+    // Keyed on the upload alone, so switching views mid-upload isn't undone.
   }, [importTotal]);
   // Skipping every prompt leaves nothing of the upload to open.
   useEffect(

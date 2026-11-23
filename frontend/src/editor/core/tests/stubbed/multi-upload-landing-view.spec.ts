@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
@@ -10,8 +11,30 @@ const SAMPLES = [
   path.join(FIXTURES, "compare_sample_b.pdf"),
 ];
 
+// Enough that the upload lasts long enough to show whatever view it passes through.
+const MANY = fs
+  .readdirSync(FIXTURES)
+  .filter(
+    (f) =>
+      f.endsWith(".pdf") &&
+      !/encrypt|corrupt|damaged|owner-only|big-sample|many-pages/.test(f),
+  )
+  .slice(0, 24)
+  .map((f) => path.join(FIXTURES, f));
+
 const landingInput = (page: import("@playwright/test").Page) =>
   page.locator('.landing-actions-enter input[type="file"]');
+
+/** The password prompts follow one another, so each is told apart by its file name. */
+async function nextPrompt(
+  page: import("@playwright/test").Page,
+  names: readonly string[],
+) {
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible({ timeout: 30_000 });
+  const text = (await dialog.textContent()) ?? "";
+  return dialog.filter({ hasText: names.find((f) => text.includes(f)) });
+}
 
 test("several files from the landing page open in Active Files", async ({
   page,
@@ -26,11 +49,10 @@ test("several files from the landing page open in Active Files", async ({
     }).observe(document.body, { subtree: true, childList: true });
   });
 
-  await landingInput(page).setInputFiles(SAMPLES);
-  await expect(page.locator(".file-sidebar-file-item")).toHaveCount(
-    SAMPLES.length,
-    { timeout: 15_000 },
-  );
+  await landingInput(page).setInputFiles(MANY);
+  await expect(page.locator("[data-file-id]")).toHaveCount(MANY.length, {
+    timeout: 60_000,
+  });
 
   await expect(
     page.getByRole("radio", { name: /Active Files/i }),
@@ -50,18 +72,16 @@ for (const [label, files] of [
   test(`several files open in Active Files when ${label} a password`, async ({
     page,
   }) => {
-    const locked = files.filter((f) => f.startsWith("encrypted")).length;
+    const locked = files.filter((f) => f.startsWith("encrypted"));
     await landingInput(page).setInputFiles(
       files.map((f) => path.join(FIXTURES, f)),
     );
-    for (let i = 0; i < locked; i++) {
-      const password = page
-        .getByRole("dialog")
-        .locator('input[type="password"]');
-      await expect(password).toBeVisible({ timeout: 30_000 });
+    for (let i = 0; i < locked.length; i++) {
+      const prompt = await nextPrompt(page, locked);
+      const password = prompt.locator('input[type="password"]');
       await password.fill("annotation-test");
       await password.press("Enter");
-      await expect(password).toBeHidden({ timeout: 30_000 });
+      await expect(prompt).toBeHidden({ timeout: 30_000 });
     }
 
     await expect(page.locator(".file-sidebar-file-item")).toHaveCount(
@@ -90,14 +110,8 @@ test("skipping every password leaves a later single file to open in the viewer",
   await landingInput(page).setInputFiles(
     locked.map((f) => path.join(FIXTURES, f)),
   );
-  // The prompts follow one another, so each is told apart by its file name.
   for (let i = 0; i < locked.length; i++) {
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible({ timeout: 30_000 });
-    const text = (await dialog.textContent()) ?? "";
-    const prompt = dialog.filter({
-      hasText: locked.find((f) => text.includes(f)),
-    });
+    const prompt = await nextPrompt(page, locked);
     await prompt.getByRole("button", { name: "Close" }).click();
     await expect(prompt).toBeHidden({ timeout: 15_000 });
   }

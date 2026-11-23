@@ -652,10 +652,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the user is signed in (guests have no cloud library).
     const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
-    // Only the newest read may publish: coalesced refreshes overlap when a scan
-    // outlasts the window, and a slow one finishing last would otherwise
-    // overwrite the newer library with the state it started from.
+    // Coalesced refreshes overlap when a scan outlasts the window. A read may
+    // publish unless a newer one already has: dropping every superseded read
+    // would leave the list frozen for as long as a long upload keeps them coming.
     const stubsGenRef = useRef(0);
+    const publishedGenRef = useRef(0);
     const refreshStubs = useCallback(async () => {
       const gen = ++stubsGenRef.current;
       // `stubsLoaded` gates the spinner, so the `finally` below must set it on
@@ -668,7 +669,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         // should cost the user their history, not the file they're working on.
         console.error("Failed to read the file library from storage:", error);
       }
-      if (gen !== stubsGenRef.current) return;
+      if (gen <= publishedGenRef.current) return;
+      publishedGenRef.current = gen;
 
       try {
         const idbIds = new Set(stubs.map((s) => s.id as string));
@@ -694,7 +696,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           ),
         );
       } finally {
-        if (gen === stubsGenRef.current) setStubsLoaded(true);
+        setStubsLoaded(true);
       }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
@@ -704,8 +706,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // The hook cancels timers but cannot cancel a started run, so unmount has to
     // invalidate it here or a late scan would publish into a gone tree.
     useEffect(() => {
+      publishedGenRef.current = stubsGenRef.current;
       return () => {
-        stubsGenRef.current++;
+        publishedGenRef.current = Infinity;
       };
     }, []);
 
