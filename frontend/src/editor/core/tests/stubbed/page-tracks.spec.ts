@@ -810,12 +810,30 @@ test.describe("Page Editor tracks", () => {
       page.locator('[data-page-id][data-selected="true"]'),
     ).toHaveCount(3);
 
+    const survivorIds = [
+      await rotatedTiles.nth(1).getAttribute("data-page-id"),
+      await rotatedTiles.nth(3).getAttribute("data-page-id"),
+    ];
+    expect(survivorIds[0]).toBeTruthy();
+    expect(survivorIds[1]).toBeTruthy();
+
     const third = rotatedTiles.nth(2);
     await third.hover();
+    await expect(
+      third.getByRole("button", { name: "Rotate selected pages right" }),
+    ).toBeVisible();
     await third.getByRole("button", { name: "Delete selected pages" }).click();
 
     // The trash sits on one selected page but takes the selection in both files.
     await expect(rotatedTiles).toHaveCount(2);
+    await expect(rotatedTiles.nth(0)).toHaveAttribute(
+      "data-page-id",
+      survivorIds[0] as string,
+    );
+    await expect(rotatedTiles.nth(1)).toHaveAttribute(
+      "data-page-id",
+      survivorIds[1] as string,
+    );
     await expect(sample.locator("[data-page-id]")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Undo" }).click();
@@ -864,6 +882,7 @@ test.describe("Page Editor tracks", () => {
     await tiles.nth(0).click();
     await tiles.nth(2).click();
     await page
+      .locator(".workbench-bar")
       .getByRole("button", { name: "Rotate selected pages right" })
       .click();
 
