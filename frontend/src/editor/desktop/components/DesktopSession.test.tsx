@@ -11,18 +11,20 @@ const state = vi.hoisted(() => ({
   switchToLocal: vi.fn(),
   startBackend: vi.fn(),
   launch: { isFirstLaunch: false, setupComplete: true },
+  authenticated: true,
 }));
 vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: state.getConfig,
     subscribeToModeChanges: () => () => {},
     switchToLocal: state.switchToLocal,
+    getServerConfig: async () => null,
   },
   JWT_EXPIRED_PROMPTED_KEY: "expiry",
 }));
 vi.mock("@editor/services/authService", () => ({
   authService: {
-    isAuthenticated: async () => true,
+    isAuthenticated: async () => state.authenticated,
     subscribeToAuth: () => () => {},
     getAuthToken: async () => null,
     hasManagedSession: async () => false,
@@ -34,6 +36,7 @@ vi.mock("@editor/services/tauriBackendService", () => ({
     isOnline: true,
     subscribeToStatus: () => () => {},
     startBackend: state.startBackend,
+    initializeExternalBackend: async () => undefined,
   },
 }));
 vi.mock("@editor/services/selfHostedServerMonitor", () => ({
@@ -47,6 +50,9 @@ vi.mock("@editor/hooks/useFirstLaunchCheck", () => ({
 }));
 vi.mock("@editor/components/DesktopUpdatePopup", () => ({
   DesktopUpdatePopup: () => null,
+}));
+vi.mock("@editor/hooks/useDesktopUpdatePopup", () => ({
+  useDesktopUpdatePopup: () => ({ state: {}, actions: {} }),
 }));
 vi.mock("@editor/hooks/useBackendInitializer", () => ({
   useBackendInitializer: state.monitor,
@@ -96,7 +102,21 @@ vi.mock("@editor-core/components/startup/StartupPrompts", () => ({
 vi.mock("@editor/components/UsageLimitModalHost", () => ({
   default: () => null,
 }));
-vi.mock("@editor/components/SignInModal", () => ({ SignInModal: () => null }));
+vi.mock("@editor/components/SignInModal", async () => {
+  const { useEffect, useState } = await import("react");
+  const { OPEN_SIGN_IN_EVENT } = await import("@editor/constants/signInEvents");
+  return {
+    SignInModal: () => {
+      const [open, setOpen] = useState(false);
+      useEffect(() => {
+        const show = () => setOpen(true);
+        window.addEventListener(OPEN_SIGN_IN_EVENT, show);
+        return () => window.removeEventListener(OPEN_SIGN_IN_EVENT, show);
+      }, []);
+      return open ? <div>Sign-in prompt</div> : null;
+    },
+  };
+});
 
 it("initializes backend monitoring and endpoint preload after a gate retry recovers configuration", async () => {
   state.getConfig.mockRejectedValue(new Error("Store unavailable"));
@@ -128,4 +148,23 @@ it("shows the app on first launch without waiting for the backend to start", asy
   );
   await screen.findByText("Workbench");
   expect(state.startBackend).toHaveBeenCalled();
+});
+
+it("offers sign-in once an expired session has fallen back to local mode", async () => {
+  state.launch = { isFirstLaunch: false, setupComplete: true };
+  state.authenticated = false;
+  localStorage.removeItem("expiry");
+  state.getConfig.mockResolvedValue({
+    mode: "selfhosted",
+    lock_connection_mode: false,
+    require_sign_in: false,
+  });
+  state.switchToLocal.mockResolvedValue(undefined);
+  render(
+    <DesktopSessionProvider>
+      <AppContentGate>Workbench</AppContentGate>
+    </DesktopSessionProvider>,
+  );
+  await screen.findByText("Sign-in prompt");
+  expect(state.switchToLocal).toHaveBeenCalled();
 });

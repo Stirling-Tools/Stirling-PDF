@@ -8,18 +8,26 @@ import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import { isPortalPath } from "@editor/routes/portalBasename";
 import { fileOpenService } from "@editor/services/fileOpenService";
 import { fileStorage } from "@editor/services/fileStorage";
+import { hasUnsavedCloudChanges } from "@editor/services/oneDriveSave";
+import { filesToSaveOnQuit } from "@editor/hooks/useExitWarning";
 import {
   originalIdOf,
   readWorkbenchSession,
 } from "@editor/services/workbenchSession";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
-/** Open files with edits not yet saved, read from storage since the editor is not mounted. */
+/**
+ * Open files with edits not yet saved, read from storage since the editor is
+ * not mounted: unsaved to disk, or to the cloud drive a file came from.
+ */
 export async function unsavedWorkbenchFiles(): Promise<StirlingFileStub[]> {
   const open = new Set(readWorkbenchSession()?.fileIds ?? []);
   if (open.size === 0) return [];
   const stubs = await fileStorage.getLeafStirlingFileStubs().catch(() => []);
-  return stubs.filter((stub) => open.has(originalIdOf(stub)) && stub.isDirty);
+  return filesToSaveOnQuit(
+    stubs.filter((stub) => open.has(originalIdOf(stub))),
+    hasUnsavedCloudChanges,
+  );
 }
 
 /** Files opened from the OS land in the editor, which takes them off the queue as it mounts. */
