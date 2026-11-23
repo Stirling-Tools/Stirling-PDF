@@ -6,7 +6,7 @@ import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { defineConfig, loadEnv } from "vite";
+import { createLogger, defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption, Rollup } from "vite";
 import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -524,6 +524,29 @@ export default defineConfig(async ({ mode, command }) => {
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  // The backend usually boots after the frontend, and until it does Vite prints
+  // the full AggregateError stack for every proxied request. Report the outage
+  // once instead; any other proxy failure still logs normally.
+  const logger = createLogger();
+  const logError = logger.error;
+  let reportedBackendDown = false;
+  logger.error = (msg, options) => {
+    const code = (options?.error as NodeJS.ErrnoException | undefined)?.code;
+    if (
+      command === "serve" &&
+      msg.includes("http proxy error") &&
+      code === "ECONNREFUSED"
+    ) {
+      if (!reportedBackendDown) {
+        reportedBackendDown = true;
+        logger.warn(
+          `backend unreachable at ${backendUrl}; suppressing proxy connection errors until it starts`,
+        );
+      }
+      return;
+    }
+    logError(msg, options);
+  };
   // Allow host header checks to be configured via env so LAN/reverse-proxy
   // dev setups don't require editing this file for each machine.
   const allowedHostsRaw =
@@ -557,6 +580,7 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
+    customLogger: logger,
     // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
     // different modes re-optimize over each other and the browser 504s on a stale dep
     // hash. Anchored to frontend/ because a relative path resolves against the vite

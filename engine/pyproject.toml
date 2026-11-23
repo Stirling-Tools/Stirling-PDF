@@ -58,8 +58,6 @@ tools = [
     "tomli-w>=1.2.0",
     "tomlkit>=0.15.2",
     "urllib3>=2.8.0",
-    "unoserver>=3.7",
-    "weasyprint>=70.0",
 ]
 # Release-signature verification dependencies.
 updater-signatures = [

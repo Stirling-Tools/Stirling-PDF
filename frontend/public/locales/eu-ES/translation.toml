@@ -647,18 +647,16 @@ description = "Irudien prozesaketarako gehienezko DPI (0 = mugarik ez)"
 label = "Gehienezko DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Konfiguratu saio-mugak eta denbora-mugak prozesu-exekutore bakoitzerako"
 ghostscript = "Ghostscript"
 installApp = "Aplikazioa instalatu"
 label = "Prozesu-exekutorearen mugak"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDFtik HTMLra"
+officeConvert = "Office bihurketa"
+officeConvertSessionLimit = "Aldi bereko bihurketa kopuru maximoa; 0k muga bat hautatzen du CPUen eta memoriaren arabera"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Gehienezko instantzia konkurrenteak"
@@ -667,10 +665,6 @@ label = "Saio-muga"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Gehienezko exekuzio-denbora"
 label = "Denbora-muga (minutuak)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert beta bertsioan dago. LibreOffice baino bihurketa hobeak eta azkarragoak eskaintzen ditu, memoria gutxiagorekin."
-label = "Erabili Stirling Office bihurketa berria"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Konfiguratu aldi baterako fitxategien biltegiratzea eta garbiketaren portaera"
@@ -688,11 +682,6 @@ label = "Garbiketa tartea (minutuak)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Sistema zabalagoko aldi baterako direktorioa garbitu ala ez (kontuz erabili)"
 label = "Sistemako aldi baterakoa garbitu"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice-ren aldi baterako fitxategietarako direktorioa (utzi hutsik lehenetsia erabiltzeko: baseTmpDir/libreoffice)"
-label = "LibreOffice-ren aldi baterako direktorioa"
-placeholder = "Lehenetsia: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Aldi baterako fitxategiak garbitu aurreko gehienezko adina orduetan"
@@ -1300,17 +1289,6 @@ label = "Ekoizle lehenetsia"
 [admin.settings.general.customPaths]
 description = "Konfiguratu fitxategi-sistemako bide pertsonalizatuak pipeline prozesatzeko eta kanpoko tresnetarako"
 label = "Bide pertsonalizatuak"
-
-[admin.settings.general.customPaths.operations]
-label = "Kanpoko tresnen bideak"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Dokumentu-bihurketetarako LibreOffice unoconvert-en bide-izena (utzi hutsik lehenetsia erabiltzeko: /opt/venv/bin/unoconvert)"
-label = "Unoconvert exekutagarria"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTMLtik PDFra bihurtzeko WeasyPrint exekutagarriaren bide-izena (utzi hutsik lehenetsia erabiltzeko: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint exekutagarria"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline direktorioak"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Dokumentuaren izenburua"
 pdfUaTitleHelp = "Irakurle batek fitxategi-izenaren ordez erakutsiko du. Hutsik utziz gero, lehen goiburua erabiliko da."
 selectSourceFormatFirst = "Aukeratu lehenik jatorri-formatu bat"
 settings = "Ezarpenak"
+signInToUse = "Erabiltzeko hasi saioa"
 single = "Bakarra"
 sourceFormatPlaceholder = "Iturburu formatua"
-stirlingOfficeConvert = "Erabili Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Bihurketa hobeak eta azkarragoak, memoria gutxiagorekin. Desaktibatu bihurgailu estandarra erabiltzeko."
 strictMode = "Modu zorrotza"
 strictModeDesc = "Errorea bihurketa perfektua ez bada (VeraPDF egiaztapena erabiltzen du)"
 svgPdfOptions = "SVGtik PDFra aukerak"
@@ -4419,8 +4396,6 @@ webOptions = "Webetik PDFra aukerak"
 zoomLevel = "Zoom maila"
 
 [convert.ebookOptions]
-embedAllFonts = "Txertatu letra-tipo guztiak"
-embedAllFontsDesc = "Txertatu eBookeko letra-tipo guztiak sortutako PDFan"
 includePageNumbers = "Sartu orrialde-zenbakiak"
 includePageNumbersDesc = "Gehitu orrialde-zenbakiak sortutako PDFari"
 includeTableOfContents = "Sartu aurkibidea"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Irudi apaingarria"
 description = "Irudiaren deskribapena"
 descriptionInfo = "Pantaila-irakurgailuek hau irakurtzen dute irudiaren ordez."
 encrypted = "Etiketak ezin dira editatu fitxategi zifratu batean"
+figureDescription = "Irudiaren deskribapena"
+figureDescriptionInfo = "Pantaila-irakurgailuek hau ozen irakurtzen dute irudiaren ordez."
 formFieldDescription = "Eremuaren deskribapena"
+formulaDescription = "Formularen deskribapena"
+formulaDescriptionInfo = "Pantaila-irakurgailuek hau ozen irakurtzen dute formulen ordez. Ahoz esango zenukeen bezala idatzi, adibidez, \"x karratu gehi bat\"."
 heading = "Irisgarritasuna"
 innerTagLabel = "{{number}} etiketa"
 innerTags = "Testu honetako etiketak"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Deskribapenak falta dira"
 mixedContent = "Irudiak beste eduki bat dauka"
 mixedTags = "Nahasia"
 needsDescriptionBadge = "Deskribapenik gabe"
-nextImage = "Hurrengo irudia"
+nextToReview = "Berrikusteko hurrengoa"
 notFigure = "Testuaren zati gisa etiketatuta"
 removeTag = "Kendu etiketa"
 saveFailed = "Zure irisgarritasun-aldaketak ezin izan dira gorde; beraz, fitxategia ez da gorde. Desegin aldaketak eta saiatu berriro."
@@ -9661,10 +9640,6 @@ signInToStart = "Hasi saioa probaldia hasteko"
 stage = "{{current}} / {{total}} etapa"
 stagesLabel = "Aurrerapena"
 
-[portal.enterprise.connect]
-ownerOnly = "Zerbitzari honen jabeak bakarrik konekta dezake. Eskatu orri hau irekitzea."
-unavailable = "Zerbitzari honetan desgaituta dago Stirling kontu batera konektatzea. Erreserbatu dei bat eta zurekin batera konfiguratuko dugu proba."
-
 [portal.enterprise.landing]
 lede = "Probatu doan 14 egunez, gero eraiki zure eskaintza eta sinatu zure akordioa hemen. Ez da txartelik behar."
 tickAgreement = "MSA, eskaera-orria, EULA eta DPA estaltzen dituen akordio bakarra"
@@ -11283,11 +11258,6 @@ downloadOffline = "Deskargatu offline lizentzia (.lic)"
 hint = "Itsatsi gako hau self-hosted instantzia batean aktibatzeko, edo gorde zure erregistroetarako. Gorde seguru."
 label = "Zure lizentzia-gakoa"
 trialFileHint = "Hau zure proba-lizentziaren fitxategia da. Zure akordioa indarrean dagoenean, itzuli eta deskargatu berriro — online lizentzia-gakoa ez bezala, .lic fitxategia ez da berez eguneratuko."
-
-[portal.procurement.link]
-cta = "Lotu kontua"
-description = "Erosketa zure lotutako Stirling kontuan exekutatzen da: horrela hornitzen dugu probaldia, aurrekontuaren prezioa kalkulatzen dugu eta fakturazioa hasten dugu. Lotu kontu bat hasteko."
-title = "Lotu zure kontua hasteko"
 
 [portal.procurement.live]
 description = "Zure harpidetza aktibo dago eta zure lizentzia jaulkita dago. Zure taldea hornituta dago eta fakturazioa hasi da."
@@ -14260,7 +14230,6 @@ toggleDetails = "Txandakatu xehetasunak"
 
 [tool]
 endpointUnavailable = "Tresna hau ez dago erabilgarri zure zerbitzarian."
-endpointUnavailableClickable = "Modu honetan ez dago eskuragarri. Egin klik saioa hasteko."
 filesLoading = "Fitxategiak oraindik kargatzen ari dira, itxaron mesedez."
 filesLoadingProgress = "{{loaded}} / {{total}} fitxategi kargatzen..."
 invalidParams = "Bete beharrezko ezarpenak."
@@ -14268,6 +14237,8 @@ noFiles = "Gehitu fitxategi bat hasteko."
 scopeFiles = "fitxategiak"
 scopeThisFile = "fitxategi hau"
 selectFilesHint = "Tresna hau exekutatzeko, hautatu fitxategiak Fitxategi aktiboetan"
+signInRequired = "Honek Stirling kontua behar du. Jarraitzeko hasi saioa."
+signInToUse = "Erabiltzeko hasi saioa"
 singleFileScope = "Honetara soilik aplikatzen da: {{fileName}}"
 viewerMode = "Aldatu fitxategi-editorea fitxategi anitz gehitzeko."
 

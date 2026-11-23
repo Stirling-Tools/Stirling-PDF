@@ -126,7 +126,7 @@ if [ "$SKIP_BUILD" = false ] || ! ls $JAR_GLOB >/dev/null 2>&1 || [ ! -f "$JRE_J
     echo ""
     echo "=== Building JRE with jlink ==="
     rm -rf "$TAURI_DIR/runtime/jre"
-    MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+    MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.charsets,jdk.localedata"
     jlink \
       --add-modules "$MODULES" \
       --strip-debug \
