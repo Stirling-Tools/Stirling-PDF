@@ -64,6 +64,8 @@ final class MacSecurity {
     private final MethodHandle secTrustCreateWithCertificates;
     private final MethodHandle secTrustEvaluateWithError;
     private final MethodHandle secTrustCopyCertificateChain;
+    private final MethodHandle secTrustGetCertificateCount;
+    private final MethodHandle secTrustGetCertificateAtIndex;
 
     /**
      * A keychain identity: its certificate, a retained native reference used for signing, and
@@ -141,10 +143,27 @@ final class MacSecurity {
                         "SecTrustEvaluateWithError",
                         FunctionDescriptor.of(JAVA_BYTE, ADDRESS, ADDRESS));
         secTrustCopyCertificateChain =
-                sec(
-                        linker,
-                        "SecTrustCopyCertificateChain",
-                        FunctionDescriptor.of(ADDRESS, ADDRESS));
+                security.find("SecTrustCopyCertificateChain")
+                        .map(
+                                address ->
+                                        linker.downcallHandle(
+                                                address, FunctionDescriptor.of(ADDRESS, ADDRESS)))
+                        .orElse(null);
+        if (secTrustCopyCertificateChain == null) {
+            secTrustGetCertificateCount =
+                    sec(
+                            linker,
+                            "SecTrustGetCertificateCount",
+                            FunctionDescriptor.of(JAVA_LONG, ADDRESS));
+            secTrustGetCertificateAtIndex =
+                    sec(
+                            linker,
+                            "SecTrustGetCertificateAtIndex",
+                            FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_LONG));
+        } else {
+            secTrustGetCertificateCount = null;
+            secTrustGetCertificateAtIndex = null;
+        }
     }
 
     static boolean isMacOs() {
@@ -257,12 +276,7 @@ final class MacSecurity {
         }
         MemorySegment cert = certOut.get(ADDRESS, 0);
         try {
-            MemorySegment data = (MemorySegment) secCertificateCopyData.invokeExact(cert);
-            try {
-                return bytes(data);
-            } finally {
-                release(data);
-            }
+            return certificateBytes(cert);
         } finally {
             release(cert);
         }
@@ -286,35 +300,14 @@ final class MacSecurity {
                 int status =
                         (int) secTrustCreateWithCertificates.invokeExact(cert, policy, trustOut);
                 if (status != 0) {
-                    return List.of(certificateOf(arena, identity));
+                    return List.of(certificateBytes(cert));
                 }
                 MemorySegment trust = trustOut.get(ADDRESS, 0);
                 try {
                     byte ignored =
                             (byte) secTrustEvaluateWithError.invokeExact(trust, MemorySegment.NULL);
-                    MemorySegment chain =
-                            (MemorySegment) secTrustCopyCertificateChain.invokeExact(trust);
-                    if (chain.equals(MemorySegment.NULL)) {
-                        return List.of(certificateOf(arena, identity));
-                    }
-                    try {
-                        List<byte[]> ders = new ArrayList<>();
-                        long count = (long) cfArrayGetCount.invokeExact(chain);
-                        for (long i = 0; i < count; i++) {
-                            MemorySegment link =
-                                    (MemorySegment) cfArrayGetValueAtIndex.invokeExact(chain, i);
-                            MemorySegment data =
-                                    (MemorySegment) secCertificateCopyData.invokeExact(link);
-                            try {
-                                ders.add(bytes(data));
-                            } finally {
-                                release(data);
-                            }
-                        }
-                        return ders;
-                    } finally {
-                        release(chain);
-                    }
+                    List<byte[]> chain = trustChain(trust);
+                    return chain.isEmpty() ? List.of(certificateBytes(cert)) : chain;
                 } finally {
                     release(trust);
                 }
@@ -324,6 +317,46 @@ final class MacSecurity {
             }
         } catch (Throwable t) {
             return List.of();
+        }
+    }
+
+    private List<byte[]> trustChain(MemorySegment trust) throws Throwable {
+        List<byte[]> certificates = new ArrayList<>();
+        if (secTrustCopyCertificateChain == null) {
+            // The legacy accessors borrow certificates from the evaluated trust on macOS 11.
+            long count = (long) secTrustGetCertificateCount.invokeExact(trust);
+            for (long i = 0; i < count; i++) {
+                MemorySegment cert =
+                        (MemorySegment) secTrustGetCertificateAtIndex.invokeExact(trust, i);
+                if (cert.equals(MemorySegment.NULL)) {
+                    break;
+                }
+                certificates.add(certificateBytes(cert));
+            }
+            return certificates;
+        }
+        MemorySegment chain = (MemorySegment) secTrustCopyCertificateChain.invokeExact(trust);
+        if (chain.equals(MemorySegment.NULL)) {
+            return certificates;
+        }
+        try {
+            long count = (long) cfArrayGetCount.invokeExact(chain);
+            for (long i = 0; i < count; i++) {
+                MemorySegment cert = (MemorySegment) cfArrayGetValueAtIndex.invokeExact(chain, i);
+                certificates.add(certificateBytes(cert));
+            }
+            return certificates;
+        } finally {
+            release(chain);
+        }
+    }
+
+    private byte[] certificateBytes(MemorySegment cert) throws Throwable {
+        MemorySegment data = (MemorySegment) secCertificateCopyData.invokeExact(cert);
+        try {
+            return bytes(data);
+        } finally {
+            release(data);
         }
     }
 
