@@ -647,18 +647,16 @@ description = "Maximálne DPI pre spracovanie obrázkov (0 = neobmedzené)"
 label = "Maximálne DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Nastavte limity relácií a časové limity pre jednotlivé spúšťače procesov"
 ghostscript = "Ghostscript"
 installApp = "Inštalovať aplikáciu"
 label = "Limity spúšťania procesov"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF na HTML"
+officeConvert = "Konverzia súborov Office"
+officeConvertSessionLimit = "Maximálny počet súbežných konverzií; 0 vyberie limit podľa počtu CPU a pamäte"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maximálny počet súbežných inštancií"
@@ -667,10 +665,6 @@ label = "Limit relácií"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maximálny čas vykonávania"
 label = "Časový limit (minúty)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert je vo verzii beta. Ponúka lepšie a rýchlejšie konverzie s menšou spotrebou pamäte než LibreOffice."
-label = "Použiť novú konverziu Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Nakonfigurujte ukladanie dočasných súborov a správanie čistenia"
@@ -688,11 +682,6 @@ label = "Interval čistenia (minúty)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Či čistiť širší systémový dočasný adresár (používajte opatrne)"
 label = "Čistenie systémového dočasného adresára"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Adresár pre dočasné súbory LibreOffice (ponechajte prázdne pre predvolené: baseTmpDir/libreoffice)"
-label = "Dočasný adresár LibreOffice"
-placeholder = "Predvolené: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximálny vek v hodinách pred vyčistením dočasných súborov"
@@ -1300,17 +1289,6 @@ label = "Predvolený producent"
 [admin.settings.general.customPaths]
 description = "Nakonfigurujte vlastné cesty systému súborov pre spracovanie v pipeline a externé nástroje"
 label = "Vlastné cesty"
-
-[admin.settings.general.customPaths.operations]
-label = "Cesty k externým nástrojom"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Cesta k LibreOffice unoconvert pre konverzie dokumentov (ponechajte prázdne pre predvolené: /opt/venv/bin/unoconvert)"
-label = "Spustiteľný súbor Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Cesta k spustiteľnému súboru WeasyPrint na konverziu HTML do PDF (ponechajte prázdne pre predvolené: /opt/venv/bin/weasyprint)"
-label = "Spustiteľný súbor WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Adresáre pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Názov dokumentu"
 pdfUaTitleHelp = "Zobrazuje sa čítačkou namiesto názvu súboru. Ak necháte prázdne, použije sa prvý nadpis."
 selectSourceFormatFirst = "Najprv vyberte zdrojový formát"
 settings = "Nastavenia"
+signInToUse = "Prihláste sa na používanie"
 single = "Jeden"
 sourceFormatPlaceholder = "Zdrojový formát"
-stirlingOfficeConvert = "Použiť Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Lepšie a rýchlejšie konverzie s menšou spotrebou pamäte. Vypnite, ak chcete použiť štandardný konvertor."
 strictMode = "Prísny režim"
 strictModeDesc = "Chyba, ak konverzia nie je dokonalá (používa overenie VeraPDF)"
 svgPdfOptions = "Možnosti SVG na PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Možnosti Web na PDF"
 zoomLevel = "Úroveň priblíženia"
 
 [convert.ebookOptions]
-embedAllFonts = "Vložiť všetky písma"
-embedAllFontsDesc = "Vložiť všetky písma z eBook do generovaného PDF"
 includePageNumbers = "Zahrnúť čísla strán"
 includePageNumbersDesc = "Pridať čísla strán do generovaného PDF"
 includeTableOfContents = "Zahrnúť obsah"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Dekoratívny obrázok"
 description = "Popis obrázka"
 descriptionInfo = "Čítačky obrazovky to prečítajú namiesto obrázka."
 encrypted = "Značky nemožno upravovať v šifrovanom súbore"
+figureDescription = "Popis obrázka"
+figureDescriptionInfo = "Čítačky obrazovky to prečítajú namiesto obrázka."
 formFieldDescription = "Popis poľa"
+formulaDescription = "Popis vzorca"
+formulaDescriptionInfo = "Čítačky obrazovky to prečítajú namiesto vzorca. Povedzte to tak, ako by ste to vyslovili nahlas, napríklad \"x na druhú plus jedna\"."
 heading = "Prístupnosť"
 innerTagLabel = "Značka {{number}}"
 innerTags = "Značky v tomto texte"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Chýbajúce popisy"
 mixedContent = "Obrázok obsahuje iný obsah"
 mixedTags = "Zmiešané"
 needsDescriptionBadge = "Bez popisu"
-nextImage = "Ďalší obrázok"
+nextToReview = "Ďalšie na kontrolu"
 notFigure = "Označené ako súčasť textu"
 removeTag = "Odstrániť značku"
 saveFailed = "Vaše zmeny prístupnosti sa nepodarilo uložiť, preto súbor nebol uložený. Vráťte ich späť a skúste to znova."
@@ -9661,10 +9640,6 @@ signInToStart = "Prihláste sa a spustite skúšobnú verziu"
 stage = "Fáza {{current}} z {{total}}"
 stagesLabel = "Postup"
 
-[portal.enterprise.connect]
-ownerOnly = "Pripojiť ho môže len vlastník tohto servera. Požiadajte ho, aby otvoril túto stránku."
-unavailable = "Pripojenie k účtu Stirling je na tomto serveri vypnuté. Zarezervujte si hovor a nastavíme vám skúšku spolu."
-
 [portal.enterprise.landing]
 lede = "Vyskúšajte na 14 dní zadarmo, potom si tu zostavte ponuku a podpíšte dohodu. Nie je potrebná karta."
 tickAgreement = "Jedna dohoda pokrývajúca MSA, objednávku, EULA a DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Stiahnuť offline licenciu (.lic)"
 hint = "Vložte tento kľúč do self-hosted inštancie na jej aktiváciu alebo si ho ponechajte pre svoje záznamy. Uchovajte ho bezpečne."
 label = "Váš licenčný kľúč"
 trialFileHint = "Toto je váš súbor skúšobnej licencie. Keď bude vaša zmluva uzavretá, vráťte sa a stiahnite si ho znova — na rozdiel od online licenčného kľúča sa súbor .lic neaktualizuje sám."
-
-[portal.procurement.link]
-cta = "Prepojiť účet"
-description = "Obstarávanie beží na vašom prepojenom účte Stirling: takto zriaďujeme skúšobnú verziu, oceňujeme ponuku a spúšťame fakturáciu. Prepojte účet a začnite."
-title = "Prepojte svoj účet a začnite"
 
 [portal.procurement.live]
 description = "Vaše predplatné je aktívne a licencia je vydaná. Váš tím je zriadený a fakturácia sa začala."
@@ -14260,7 +14230,6 @@ toggleDetails = "Prepnúť podrobnosti"
 
 [tool]
 endpointUnavailable = "Tento nástroj nie je na vašom serveri dostupný."
-endpointUnavailableClickable = "V tomto režime nie je k dispozícii. Kliknite pre prihlásenie."
 filesLoading = "Súbory sa ešte načítavajú, počkajte prosím."
 filesLoadingProgress = "{{loaded}} / {{total}} súborov sa načítava..."
 invalidParams = "Vyplňte povinné nastavenia."
@@ -14268,6 +14237,8 @@ noFiles = "Pridajte súbor a začnite."
 scopeFiles = "súbory"
 scopeThisFile = "tento súbor"
 selectFilesHint = "Na spustenie tohto nástroja vyberte súbory v časti Aktívne súbory"
+signInRequired = "Toto vyžaduje účet Stirling. Prihláste sa, aby ste mohli pokračovať."
+signInToUse = "Prihláste sa na používanie"
 singleFileScope = "Použije sa len na: {{fileName}}"
 viewerMode = "Ak chcete pridať viacero súborov, prepnite sa do editora súborov."
 

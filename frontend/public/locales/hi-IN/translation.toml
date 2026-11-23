@@ -647,18 +647,16 @@ description = "इमेज प्रोसेसिंग के लिए अ�
 label = "अधिकतम DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "प्रत्येक प्रोसेस एक्सीक्यूटर के लिए सेशन सीमाएँ और टाइमआउट कॉन्फ़िगर करें"
 ghostscript = "Ghostscript"
 installApp = "ऐप इंस्टॉल करें"
 label = "प्रोसेस एक्सीक्यूटर सीमाएँ"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "Office रूपांतरण"
+officeConvertSessionLimit = "अधिकतम समकालिक रूपांतरण; 0 पर CPUs और मेमोरी के आधार पर सीमा चुनी जाएगी"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "अधिकतम समवर्ती इंस्टेंस"
@@ -667,10 +665,6 @@ label = "सेशन सीमा"
 [admin.settings.advanced.processExecutor.timeout]
 description = "अधिकतम निष्पादन समय"
 label = "टाइमआउट (मिनट)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert बीटा में है। यह LibreOffice की तुलना में कम मेमोरी में बेहतर और तेज़ कन्वर्ज़न प्रदान करता है।"
-label = "नए Stirling Office कन्वर्ज़न का उपयोग करें"
 
 [admin.settings.advanced.tempFileManagement]
 description = "अस्थायी फ़ाइल स्टोरेज और क्लीनअप व्यवहार कॉन्फ़िगर करें"
@@ -688,11 +682,6 @@ label = "क्लीनअप अंतराल (मिनट)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "विस्तृत सिस्टम टेम्प डायरेक्टरी को साफ़ करना है या नहीं (सावधानी से उपयोग करें)"
 label = "सिस्टम टेम्प क्लीनअप"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice टेम्प फ़ाइलों के लिए डायरेक्टरी (डिफ़ॉल्ट हेतु खाली छोड़ें: baseTmpDir/libreoffice)"
-label = "LibreOffice टेम्प डायरेक्टरी"
-placeholder = "डिफ़ॉल्ट: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "टेम्प फ़ाइलों को क्लीनअप करने से पहले अधिकतम आयु (घंटों में)"
@@ -1300,17 +1289,6 @@ label = "डिफ़ॉल्ट प्रोड्यूसर"
 [admin.settings.general.customPaths]
 description = "पाइपलाइन प्रोसेसिंग और बाह्य टूल्स के लिए कस्टम फ़ाइल सिस्टम पाथ कॉन्फ़िगर करें"
 label = "कस्टम पाथ"
-
-[admin.settings.general.customPaths.operations]
-label = "बाह्य टूल पाथ"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "दस्तावेज़ कन्वर्ज़न के लिए LibreOffice unoconvert का पाथ (डिफ़ॉल्ट हेतु खाली छोड़ें: /opt/venv/bin/unoconvert)"
-label = "Unoconvert एक्ज़िक्यूटेबल"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTML से PDF कन्वर्ज़न के लिए WeasyPrint एक्ज़िक्यूटेबल का पाथ (डिफ़ॉल्ट हेतु खाली छोड़ें: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint एक्ज़िक्यूटेबल"
 
 [admin.settings.general.customPaths.pipeline]
 label = "पाइपलाइन डायरेक्टरीज़"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "दस्तावेज़ शीर्षक"
 pdfUaTitleHelp = "Reader द्वारा filename के बजाय दिखाया जाता है। खाली छोड़ने पर, first heading उपयोग होती है।"
 selectSourceFormatFirst = "पहले source format चुनें"
 settings = "सेटिंग्स"
+signInToUse = "उपयोग करने के लिए साइन इन करें"
 single = "एकल"
 sourceFormatPlaceholder = "स्रोत फ़ॉर्मेट"
-stirlingOfficeConvert = "Stirling Office Convert (बीटा) का उपयोग करें"
-stirlingOfficeConvertDescription = "कम मेमोरी में बेहतर, तेज़ कन्वर्ज़न। मानक कन्वर्टर का उपयोग करने के लिए बंद करें।"
 strictMode = "सख्त मोड"
 strictModeDesc = "यदि conversion perfect नहीं है तो error (VeraPDF verification का उपयोग करता है)"
 svgPdfOptions = "SVG से PDF विकल्प"
@@ -4419,8 +4396,6 @@ webOptions = "Web to PDF विकल्प"
 zoomLevel = "ज़ूम स्तर"
 
 [convert.ebookOptions]
-embedAllFonts = "सभी फ़ॉन्ट एम्बेड करें"
-embedAllFontsDesc = "eBook के सभी फ़ॉन्ट जनरेट की गई PDF में एम्बेड करें"
 includePageNumbers = "पेज नंबर शामिल करें"
 includePageNumbersDesc = "जनरेट की गई PDF में पेज नंबर जोड़ें"
 includeTableOfContents = "विषयसूची शामिल करें"
@@ -7830,7 +7805,11 @@ decorativeLabel = "सजावटी छवि"
 description = "छवि का विवरण"
 descriptionInfo = "स्क्रीन रीडर छवि की जगह इसे पढ़ते हैं।"
 encrypted = "एन्क्रिप्टेड फ़ाइल में टैग संपादित नहीं किए जा सकते"
+figureDescription = "चित्र विवरण"
+figureDescriptionInfo = "स्क्रीन रीडर इसे चित्र के स्थान पर पढ़ते हैं।"
 formFieldDescription = "फ़ील्ड विवरण"
+formulaDescription = "सूत्र विवरण"
+formulaDescriptionInfo = "स्क्रीन रीडर इसे सूत्र के स्थान पर पढ़ते हैं। इसे वैसे ही कहें जैसे आप ज़ोर से कहेंगे, जैसे \"x squared plus one\"."
 heading = "सुलभता"
 innerTagLabel = "टैग {{number}}"
 innerTags = "इस टेक्स्ट में टैग"
@@ -7842,7 +7821,7 @@ missingDescriptions = "विवरण अनुपस्थित हैं"
 mixedContent = "चित्र में अन्य सामग्री शामिल है"
 mixedTags = "मिश्रित"
 needsDescriptionBadge = "कोई विवरण नहीं"
-nextImage = "अगली छवि"
+nextToReview = "समीक्षा के लिए अगला"
 notFigure = "टेक्स्ट के भाग के रूप में टैग किया गया"
 removeTag = "टैग हटाएँ"
 saveFailed = "आपके सुलभता बदलाव सहेजे नहीं जा सके, इसलिए फ़ाइल सहेजी नहीं गई। उन्हें पूर्ववत करें और फिर से प्रयास करें।"
@@ -9661,10 +9640,6 @@ signInToStart = "ट्रायल शुरू करने के लिए �
 stage = "चरण {{current}} / {{total}}"
 stagesLabel = "प्रगति"
 
-[portal.enterprise.connect]
-ownerOnly = "केवल इस सर्वर’s मालिक इसे कनेक्ट कर सकता है। उनसे यह पेज खोलने के लिए कहें।"
-unavailable = "इस सर्वर पर Stirling खाते से कनेक्ट करना बंद है। एक कॉल बुक करें और हम आपके साथ आपका ट्रायल सेट करेंगे।"
-
 [portal.enterprise.landing]
 lede = "14 दिन निःशुल्क आज़माएँ, फिर यहीं अपना कोट बनाएं और समझौते पर हस्ताक्षर करें। कार्ड की आवश्यकता नहीं।"
 tickAgreement = "एक ही समझौता जिसमें MSA, ऑर्डर फॉर्म, EULA और DPA सम्मिलित हैं"
@@ -11283,11 +11258,6 @@ downloadOffline = "Offline licence डाउनलोड करें (.lic)"
 hint = "इसे activate करने के लिए इस key को self-hosted instance में paste करें, या अपने records के लिए रखें। इसे सुरक्षित रखें।"
 label = "आपकी licence key"
 trialFileHint = "यह आपकी trial licence file है। आपका agreement लागू होने के बाद, वापस आएँ और इसे फिर से डाउनलोड करें — online licence key के विपरीत, .lic file अपने आप update नहीं होगी।"
-
-[portal.procurement.link]
-cta = "Account लिंक करें"
-description = "Procurement आपके linked Stirling account पर चलता है: इसी से हम trial provision करते हैं, आपके quote की कीमत तय करते हैं, और billing शुरू करते हैं। शुरू करने के लिए account लिंक करें।"
-title = "शुरू करने के लिए अपना account लिंक करें"
 
 [portal.procurement.live]
 description = "आपकी subscription सक्रिय है और आपका licence जारी कर दिया गया है। आपकी टीम provisioned है और billing शुरू हो गई है।"
@@ -14260,7 +14230,6 @@ toggleDetails = "विवरण दिखाएँ/छिपाएँ"
 
 [tool]
 endpointUnavailable = "यह टूल आपके सर्वर पर उपलब्ध नहीं है।"
-endpointUnavailableClickable = "इस मोड में उपलब्ध नहीं है। साइन इन करने के लिए क्लिक करें।"
 filesLoading = "फ़ाइलें अभी भी लोड हो रही हैं, कृपया प्रतीक्षा करें।"
 filesLoadingProgress = "{{loaded}} / {{total}} फ़ाइलें लोड हो रही हैं..."
 invalidParams = "आवश्यक सेटिंग्स भरें।"
@@ -14268,6 +14237,8 @@ noFiles = "शुरू करने के लिए एक फ़ाइल ज
 scopeFiles = "फ़ाइलें"
 scopeThisFile = "यह फ़ाइल"
 selectFilesHint = "यह उपकरण चलाने के लिए Active Files में फ़ाइलें चुनें"
+signInRequired = "इसके लिए Stirling खाता आवश्यक है। जारी रखने के लिए साइन इन करें।"
+signInToUse = "उपयोग करने के लिए साइन इन करें"
 singleFileScope = "केवल इस पर लागू: {{fileName}}"
 viewerMode = "कई फ़ाइलें जोड़ने के लिए फ़ाइल एडिटर पर स्विच करें।"
 

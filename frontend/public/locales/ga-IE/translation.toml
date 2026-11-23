@@ -647,18 +647,16 @@ description = "DPI uasta le haghaidh próiseála íomhá (0 = gan teorainn)"
 label = "DPI Uasta"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Cumraigh teorainneacha seisiúin agus teorainneacha ama do gach forghníomhaitheoir próisis"
 ghostscript = "Ghostscript"
 installApp = "Suiteáil Aop"
 label = "Teorainneacha Forghníomhaithe Próisis"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF go HTML"
+officeConvert = "Tiontú Office"
+officeConvertSessionLimit = "Uasmhéid na dtiontuithe comhthráthacha; roghnaíonn 0 teorainn bunaithe ar na CPUanna agus ar an gcuimhne"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "OCR Tesseract"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Líon uasta samplaí comhuaineacha"
@@ -667,10 +665,6 @@ label = "Teorainn Seisiúin"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Am reatha uasta"
 label = "Teorainn Ama (nóiméid)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Tá Stirling Office Convert i mbéite. Cuireann sé tiontuithe níos fearr ar fáil, níos tapúla agus le níos lú cuimhne ná LibreOffice."
-label = "Úsáid tiontú nua Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Cumraigh stóráil agus iompar glanta comhad sealadach"
@@ -688,11 +682,6 @@ label = "Eatramh Glanta (nóiméid)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Cé acu a ghlanfar comhadlann shealadach níos leithne an chórais (úsáid go cúramach)"
 label = "Glan Comhadlann Shealadach an Chórais"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Comhadlann do chomhaid shealadacha LibreOffice (fág folamh don réamhshocrú: baseTmpDir/libreoffice)"
-label = "Comhadlann Shealadach LibreOffice"
-placeholder = "Réamhshocrú: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Aois uasta in uaireanta sula nglanfar comhaid shealadacha"
@@ -1300,17 +1289,6 @@ label = "Táirgeoir Réamhshocraithe"
 [admin.settings.general.customPaths]
 description = "Cumraigh conairí comhadchórais saincheaptha le haghaidh próiseála píblíne agus uirlisí seachtracha"
 label = "Conairí Saincheaptha"
-
-[admin.settings.general.customPaths.operations]
-label = "Conairí Uirlisí Seachtracha"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Conair chuig LibreOffice unoconvert le haghaidh tiontaithe doiciméad (fág folamh don réamhshocrú: /opt/venv/bin/unoconvert)"
-label = "Inrite Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Conair chuig inrite WeasyPrint le haghaidh tiontaithe HTML go PDF (fág folamh don réamhshocrú: /opt/venv/bin/weasyprint)"
-label = "Inrite WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Eolairí Píblíne"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Teideal doiciméid"
 pdfUaTitleHelp = "Taispeánann léitheoir é in ionad ainm an chomhaid. Má fhágtar bán é, úsáidtear an chéad cheannteideal."
 selectSourceFormatFirst = "Roghnaigh formáid fhoinse ar dtús"
 settings = "Socruithe"
+signInToUse = "Logáil isteach chun é a úsáid"
 single = "Aonair"
 sourceFormatPlaceholder = "Formáid fhoinseach"
-stirlingOfficeConvert = "Úsáid Stirling Office Convert (béite)"
-stirlingOfficeConvertDescription = "Tiontuithe níos fearr agus níos tapúla le níos lú cuimhne. Múch é chun an tiontaire caighdeánach a úsáid."
 strictMode = "Mód Docht"
 strictModeDesc = "Earráid mura bhfuil an tiontú foirfe (úsáideann sé fíorú VeraPDF)"
 svgPdfOptions = "Roghanna SVG go PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Roghanna Gréasáin go PDF"
 zoomLevel = "Leibhéal Zúmála"
 
 [convert.ebookOptions]
-embedAllFonts = "Leabaigh gach cló"
-embedAllFontsDesc = "Cuir na clónna uile ón ríomhleabhar isteach sa PDF a ghintear"
 includePageNumbers = "Cuir uimhreacha leathanach san áireamh"
 includePageNumbersDesc = "Cuir uimhreacha leathanach leis an PDF ginte"
 includeTableOfContents = "Cuir clár ábhair san áireamh"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Íomhá mhaisiúil"
 description = "Cur síos ar íomhá"
 descriptionInfo = "Léann léitheoirí scáileáin é seo amach in ionad na híomhá."
 encrypted = "Ní féidir clibeanna a chur in eagar i gcomhad criptithe"
+figureDescription = "Cur síos ar an bhfigiúr"
+figureDescriptionInfo = "Léann léitheoirí scáileáin é seo amach in ionad an fhigiúir."
 formFieldDescription = "Cur síos ar an réimse"
+formulaDescription = "Cur síos ar an bhfoirmle"
+formulaDescriptionInfo = "Léann léitheoirí scáileáin é seo amach in ionad na foirmle. Abair mar a déarfá os ard é, mar shampla \"x sa chearn móide a haon\"."
 heading = "Inrochtaineacht"
 innerTagLabel = "Clib {{number}}"
 innerTags = "Clibeanna sa téacs seo"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Cur síos ar iarraidh"
 mixedContent = "Tá ábhar eile san fhíor"
 mixedTags = "Measctha"
 needsDescriptionBadge = "Gan cur síos"
-nextImage = "An chéad íomhá eile"
+nextToReview = "An chéad cheann eile le hathbhreithniú"
 notFigure = "Clibáilte mar chuid den téacs"
 removeTag = "Bain clib"
 saveFailed = "Níorbh fhéidir do chuid athruithe inrochtaineachta a shábháil, mar sin níor sábháladh an comhad. Cealaigh iad agus bain triail eile as."
@@ -9661,10 +9640,6 @@ signInToStart = "Sínigh isteach chun do thriail a thosú"
 stage = "Céim {{current}} as {{total}}"
 stagesLabel = "Dul chun cinn"
 
-[portal.enterprise.connect]
-ownerOnly = "Ní féidir ach le húinéir an fhreastalaí seo é a cheangal. Iarr orthu an leathanach seo a oscailt."
-unavailable = "Tá nascadh le cuntas Stirling múchta ar an bhfreastalaí seo. Cuir glao in áirithe agus socróimid do thriail leat."
-
 [portal.enterprise.landing]
 lede = "Bain triail saor in aisce as ar feadh 14 lá, ansin tóg do luachan agus sínigh d’aontas anseo. Ní theastaíonn cárta."
 tickAgreement = "Comhaontú amháin a chlúdaíonn an MSA, foirm ordaithe, EULA agus DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Íoslódáil ceadúnas as líne (.lic)"
 hint = "Greamaigh an eochair seo isteach in instance self-hosted chun é a ghníomhachtú, nó coinnigh í do do thaifid. Coinnigh slán í."
 label = "D’eochair cheadúnais"
 trialFileHint = "Seo do chomhad ceadúnais trialach. Nuair a bheidh do chomhaontú i bhfeidhm, tar ar ais agus íoslódáil arís é — murab ionann agus an eochair cheadúnais ar líne, ní nuashonróidh an comhad .lic é féin."
-
-[portal.procurement.link]
-cta = "Nasc cuntas"
-description = "Ritheann soláthar ar do chuntas Stirling nasctha: sin mar a sholáthraímid an triail, a phraghsálaimid do luachan, agus a thosaímid billeáil. Nasc cuntas chun tosú."
-title = "Nasc do chuntas chun tosú"
 
 [portal.procurement.live]
 description = "Tá do shíntiús gníomhach agus tá do cheadúnas eisithe. Tá d’fhoireann soláthraithe agus tá billeáil tosaithe."
@@ -14260,7 +14230,6 @@ toggleDetails = "Scoránaigh sonraí"
 
 [tool]
 endpointUnavailable = "Níl an uirlis seo ar fáil ar do fhreastalaí."
-endpointUnavailableClickable = "Níl ar fáil sa mhód seo. Cliceáil chun síniú isteach."
 filesLoading = "Tá comhaid fós á luchtú, fan le do thoil."
 filesLoadingProgress = "{{loaded}} / {{total}} comhad á luchtú..."
 invalidParams = "Líon na socruithe riachtanacha."
@@ -14268,6 +14237,8 @@ noFiles = "Cuir comhad leis chun tosú."
 scopeFiles = "comhaid"
 scopeThisFile = "an comhad seo"
 selectFilesHint = "Roghnaigh comhaid i gComhaid Gníomhacha chun an uirlis seo a rith"
+signInRequired = "Teastaíonn cuntas Stirling leis seo. Logáil isteach chun leanúint ar aghaidh."
+signInToUse = "Logáil isteach chun é a úsáid"
 singleFileScope = "Á chur i bhfeidhm ar: {{fileName}} amháin"
 viewerMode = "Athraigh go dtí eagarthóir na gcomhad chun comhaid iolracha a chur leis."
 
