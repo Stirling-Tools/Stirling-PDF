@@ -352,7 +352,7 @@ title = "Change Permissions"
 
 [addStamp]
 pagePreviewAlt = "Page preview"
-preview = "Preview stamp"
+preview = "Preview Stamp"
 stampPreviewAlt = "Stamp preview"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
@@ -592,7 +592,7 @@ show = "Offline / air-gapped install"
 step1 = "1. Download on a machine with internet:"
 step2 = "2. Check the SHA-256 checksum matches:"
 step3 = "3. Copy it into the model directory on this server:"
-step4 = "4. Set formDetection.activeModelId to the model's ID in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed."
+step4 = "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed."
 
 [admin.formDetection.badge]
 active = "Active"
@@ -4143,7 +4143,7 @@ ebook = "eBook"
 email = "Email"
 file = "File"
 image = "Image"
-multipleFiles = "Multiple files"
+multipleFiles = "Multiple Files"
 presentation = "Presentation"
 spreadsheet = "Spreadsheet"
 text = "Text"
@@ -4249,7 +4249,7 @@ failed = "Failed to crop PDF"
 [crop.pageNumbers]
 description = "Crop the selected area on specific pages, or 'all' for every page."
 error = "Invalid page selection. Use e.g. 1, 3, 5-8 or all."
-label = "Pages to crop"
+label = "Pages to Crop"
 placeholder = "e.g. 1, 3, 5-8 or all"
 
 [crop.preview]
@@ -4570,7 +4570,7 @@ noFiles = "No files available"
 noFilesFound = "No files found matching your search"
 openInFileEditor = "Open in File Editor"
 openInPageEditor = "Open in Page Editor"
-reloadFiles = "Reload files"
+reloadFiles = "Reload Files"
 saveSelected = "Save Files"
 searchFiles = "Search files..."
 share = "Share"
@@ -4580,8 +4580,8 @@ sharedEditNoticeConfirm = "Got it"
 sharedEditNoticeTitle = "Read-only server copy"
 sharedWithYou = "Shared with you"
 showAll = "Show All"
-showAllCount_one = "Show all ({{count}} file)"
-showAllCount_other = "Show all ({{count}} files)"
+showAllCount_one = "Show All ({{count}} file)"
+showAllCount_other = "Show All ({{count}} files)"
 sortBy = "Sort files"
 sortByDate = "Sort by Date"
 sortByName = "Sort by Name"
@@ -5251,13 +5251,13 @@ close = "Close sidebar"
 empty = "No form fields found in this PDF"
 loading = "Loading form fields..."
 pageNumber = "Page {{page}}"
-title = "Form fields"
+title = "Form Fields"
 
 [getPdfInfo]
 downloadJson = "Download JSON"
 downloads = "Downloads"
 indexTitle = "Index"
-noData = "No data"
+noData = "No Data"
 noneDetected = "None detected"
 noResults = "Run the tool to generate a report."
 processing = "Extracting information..."
@@ -5981,7 +5981,7 @@ label = "Sort By"
 sort = "Sort"
 
 [merge.sortFiles]
-title = "Sort files"
+title = "Sort Files"
 
 [merge.tooltip.header]
 title = "Merge Settings Overview"
@@ -6356,7 +6356,7 @@ message = "The application has undergone significant changes recently. Your serv
 roleAdmin = "Admin"
 rolePlaceholder = "Confirm your role"
 roleUser = "User"
-title = "Security check"
+title = "Security Check"
 
 [onboarding.serverLicense]
 freeBody = "Our <strong>Open-Core</strong> licensing includes <strong>OAuth SSO</strong> and up to <strong>{{freeTierLimit}}</strong> users for free. To scale uninterrupted, we recommend the Stirling Team plan - <strong>100 users</strong> for $99/mo."
@@ -7020,9 +7020,9 @@ selectMonthly = "Select Monthly"
 selectYearly = "Select Yearly"
 
 [payment.priceDisplay]
-basePrice = "Base price"
+basePrice = "Base Price"
 perPeriod = "/{{period}}"
-perSeat = "Per seat"
+perSeat = "Per Seat"
 perSeatPeriod = "/seat/{{period}}"
 totalSeats_one = "Total ({{count}} seat)"
 totalSeats_other = "Total ({{count}} seats)"
@@ -10203,7 +10203,7 @@ posture_count = "{{count}} pipelines per PDF"
 posture_essentials = "Essentials"
 posture_essentialsSub = "Classification and sharing"
 posture_governed = "Governed"
-posture_governedSub = "Adds Security and Routing"
+posture_governedSub = "Adds security and routing"
 posture_regulated = "Regulated"
 posture_regulatedSub = "Adds compliance, retention and ingestion"
 qbr = "Quarterly business reviews"
@@ -10642,7 +10642,7 @@ close = "Close"
 
 [portal.usage]
 subtitle = "Your plan, your usage, and every invoice."
-title = "Usage & billing"
+title = "Usage & Billing"
 
 [portal.usage.error]
 loadWallet = "Couldn't load wallet"
@@ -13439,7 +13439,7 @@ title = "Layers"
 [viewer.link]
 delete = "Delete link"
 goTo = "Go to {{label}}"
-open = "Open link"
+open = "Open Link"
 openAria = "Open link"
 page = "Page {{page}}"
 
