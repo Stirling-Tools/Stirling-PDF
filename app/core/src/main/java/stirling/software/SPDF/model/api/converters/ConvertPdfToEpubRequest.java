@@ -30,16 +30,9 @@ public class ConvertPdfToEpubRequest extends PDFFile {
             defaultValue = "EPUB")
     private OutputFormat outputFormat = OutputFormat.EPUB;
 
-    @Getter
     public enum TargetDevice {
-        TABLET_PHONE_IMAGES("tablet"),
-        KINDLE_EINK_TEXT("kindle");
-
-        private final String calibreProfile;
-
-        TargetDevice(String calibreProfile) {
-            this.calibreProfile = calibreProfile;
-        }
+        TABLET_PHONE_IMAGES,
+        KINDLE_EINK_TEXT
     }
 
     @Getter

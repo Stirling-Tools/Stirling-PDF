@@ -1,6 +1,6 @@
 /**
  * Policy-facing binding for the PDF/A endpoint. The Convert tool's config spans every conversion;
- * a policy step needs only these two parameters, typed against the generated request model.
+ * a policy step uses archival profiles from the generated request model.
  */
 
 import type { BidirectionalToolConfig } from "@editor/hooks/tools/shared/toolOperationDescriptor";

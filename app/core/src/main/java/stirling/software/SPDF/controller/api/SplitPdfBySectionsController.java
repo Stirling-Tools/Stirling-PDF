@@ -49,6 +49,9 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class SplitPdfBySectionsController {
 
+    // A merged result keeps every section page in memory until it is saved
+    private static final int MAX_OUTPUT_PAGES = 100_000;
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -80,8 +83,14 @@ public class SplitPdfBySectionsController {
             // Process the PDF based on split parameters
             int horiz = request.getHorizontalDivisions() + 1;
             int verti = request.getVerticalDivisions() + 1;
+            if ((long) pagesToSplit.size() * horiz * verti > MAX_OUTPUT_PAGES) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "the divisions would produce more than " + MAX_OUTPUT_PAGES + " pages");
+            }
             boolean merge = Boolean.TRUE.equals(request.getMerge());
-            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split");
+            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
 
             if (merge) {
                 try (PDDocument mergedDoc =
@@ -165,7 +174,8 @@ public class SplitPdfBySectionsController {
                         log.error("Error creating ZIP file with split PDF sections", e);
                         throw e;
                     }
-                    return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
+                    return WebResponseUtils.zipFileToWebResponse(
+                            zipTempFile, filename + "_split.zip");
                 } catch (Exception ex) {
                     zipTempFile.close();
                     throw ex;
@@ -300,6 +310,7 @@ public class SplitPdfBySectionsController {
                             "page numbers",
                             "custom");
                 }
+                GeneralUtils.requireValidPageSelection(pageNumbers, totalPages);
                 String[] pageOrderArr = pageNumbers.split(",");
                 List<Integer> pageListToSplit =
                         GeneralUtils.parsePageList(pageOrderArr, totalPages, false);

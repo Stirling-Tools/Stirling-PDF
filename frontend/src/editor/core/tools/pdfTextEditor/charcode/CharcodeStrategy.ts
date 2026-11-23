@@ -3,14 +3,12 @@
 export type CharcodeStrategy =
   | "helvetica" // Legacy: always fall back to Helvetica for new chars.
   | "cmap" // Parse the embedded font's cmap table.
-  | "content-stream" // Read raw PDF content streams to extract charcode bytes.
-  | "backend"; // Send to Spring backend, PDFBox encodes server-side.
+  | "content-stream"; // Read raw PDF content streams to extract charcode bytes.
 
 export const CHARCODE_STRATEGIES: readonly CharcodeStrategy[] = [
   "helvetica",
   "cmap",
   "content-stream",
-  "backend",
 ] as const;
 
 const STORAGE_KEY = "pdfTextEditor.charcodeStrategy";
@@ -18,7 +16,7 @@ const URL_PARAM = "charcodeStrategy";
 
 // Resolve the active strategy: URL param wins over localStorage, which wins
 // over the default.
-export const DEFAULT_CHARCODE_STRATEGY: CharcodeStrategy = "backend";
+export const DEFAULT_CHARCODE_STRATEGY: CharcodeStrategy = "content-stream";
 
 export function getActiveCharcodeStrategy(): CharcodeStrategy {
   if (typeof window === "undefined") return DEFAULT_CHARCODE_STRATEGY;
@@ -73,8 +71,8 @@ export interface CharcodeResolver {
   ): CharcodeResolveResult | null;
 }
 
-// Hooks every strategy needs: PDFium module access, the source page handle (for
-// content-stream parsing), and fetch() for backend.
+// Hooks every strategy needs: PDFium module access and the source page handle
+// (for content-stream parsing).
 export interface ResolverContext {
   module: import("@embedpdf/pdfium").WrappedPdfiumModule;
   pagePtr: number;

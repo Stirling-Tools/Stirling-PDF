@@ -1,15 +1,10 @@
 import { type ReactNode } from "react";
-import { AuthProvider } from "@editor/auth";
 import { AuthGate } from "@processor/components/AuthGate";
 
 /**
- * The self-hosted Processor owns its Spring session provider and uses the shared
- * /login route. SaaS overrides this boundary to use the editor's Supabase session.
+ * Gates the self-hosted Processor on the platform's Spring session, using the
+ * shared /login route. SaaS overrides this boundary to gate on the Supabase session.
  */
 export function PortalAuthBoundary({ children }: { children: ReactNode }) {
-  return (
-    <AuthProvider mode="spring">
-      <AuthGate>{children}</AuthGate>
-    </AuthProvider>
-  );
+  return <AuthGate>{children}</AuthGate>;
 }

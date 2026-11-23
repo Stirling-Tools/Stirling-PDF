@@ -1,12 +1,15 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   isLinePainted,
   type PaintLine,
   paintLines,
   paintPlainText,
   plainCaretOffset,
+  plainDomRange,
+  plainSelectionRange,
   readOverlayText,
   refitEditedTokens,
+  repaintKeepingSelection,
   restoreCaretOffset,
 } from "@editor/tools/pdfTextEditor/util/overlayPainter";
 
@@ -156,6 +159,78 @@ describe("caret offsets", () => {
     expect(plainCaretOffset(el)).toBe(5);
   });
 
+  it("round-trips every offset of plain text that spans lines", () => {
+    const el = host();
+    const text = "• First item\n• Second item\nthird";
+    // innerText's own <br>s, which jsdom does not produce for us.
+    el.innerHTML = "• First item<br>• Second item<br>third";
+    expect(readOverlayText(el)).toBe(text);
+    for (let offset = 0; offset <= text.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
+  it.each([
+    ["consecutive breaks", "a<br><br>b", "a\n\nb"],
+    ["a trailing newline", "a<br><br>", "a\n"],
+    ["a trailing filler break", "a<br>", "a"],
+    ["a leading break", "<br>a", "\na"],
+    ["a break nested in a block", "<div>a<span>b<br>c</span></div>", "ab\nc"],
+    [
+      "a stray div after text",
+      "first<br>second<div>typed</div>",
+      "first\nsecond\ntyped",
+    ],
+    [
+      "stray divs around an empty one",
+      "<div>a</div><div><br></div><div>b</div>",
+      "a\n\nb",
+    ],
+    ["a break between two blocks", "<div>a</div><br><div>b</div>", "a\n\nb"],
+    [
+      "two breaks between two blocks",
+      "<div>a</div><br><br><div>b</div>",
+      "a\n\n\nb",
+    ],
+  ])("round-trips every offset through %s", (_shape, html, text) => {
+    const el = host();
+    el.innerHTML = html;
+    expect(readOverlayText(el)).toBe(text);
+    for (let offset = 0; offset <= text.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
+  it("round-trips every offset after a break typed inside a painted line", () => {
+    const el = host();
+    paintLines(el, [line("First item"), line("Second item")], OPTS);
+    // Chrome puts the break inside the token span the caret was in.
+    el.children[0].childNodes[1].appendChild(document.createElement("br"));
+    const model = "First \nitem\nSecond item";
+    expect(readOverlayText(el)).toBe(model);
+    for (let offset = 0; offset <= model.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
+  it("reads a line Backspace merged up as part of the line above", () => {
+    const el = host();
+    const merged = document.createElement("span");
+    merged.textContent = "bullet item";
+    const next = document.createElement("div");
+    next.textContent = "• Second item";
+    el.replaceChildren("• First ", merged, next);
+    const model = "• First bullet item\n• Second item";
+    expect(readOverlayText(el)).toBe(model);
+    for (let offset = 0; offset <= model.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
   it("clamps past the end instead of throwing", () => {
     const el = host();
     paintLines(el, [line("abc")], OPTS);
@@ -246,6 +321,49 @@ describe("readOverlayText - browser-emptied blocks", () => {
     leftover.appendChild(document.createElement("br"));
     emptied.replaceChildren(leftover);
     expect(readOverlayText(el)).toBe("\nleft margin");
+  });
+
+  // WebKit merges a line up into a blank one by moving its text in front of that block's filler <br> and leaving the filler there.
+  it("reads a block whose text is followed by the filler break as one line", () => {
+    const el = host();
+    paintLines(el, [line("first"), line("merged up"), line("last")], OPTS);
+    el.children[1].appendChild(document.createElement("br"));
+    expect(readOverlayText(el)).toBe("first\nmerged up\nlast");
+  });
+
+  it("keeps a real break at the end of a block, which the browser follows with a filler", () => {
+    const el = host();
+    paintLines(el, [line("first"), line("broken"), line("last")], OPTS);
+    el.children[1].append(
+      document.createElement("br"),
+      document.createElement("br"),
+    );
+    expect(readOverlayText(el)).toBe("first\nbroken\n\nlast");
+  });
+
+  it("counts a break just before the caret, inside a block, as a line", () => {
+    const el = host();
+    paintLines(el, [line("one two")], OPTS);
+    const block = el.children[0] as HTMLElement;
+    const after = document.createTextNode("two");
+    block.replaceChildren(
+      document.createTextNode("one"),
+      document.createElement("br"),
+      after,
+    );
+    window.getSelection()!.collapse(after, 0);
+    expect(plainCaretOffset(el)).toBe(4);
+  });
+
+  it("puts a caret at the start of a line WebKit merged up at the start of that line", () => {
+    const el = host();
+    paintLines(el, [line("first"), line("merged up"), line("last")], OPTS);
+    const block = el.children[1] as HTMLElement;
+    block.appendChild(document.createElement("br"));
+    let start: Node = block;
+    while (start.firstChild) start = start.firstChild;
+    window.getSelection()!.collapse(start, 0);
+    expect(plainCaretOffset(el)).toBe("first\n".length);
   });
 
   it("still splits a block that really does hold two lines", () => {
@@ -376,5 +494,92 @@ describe("refitEditedTokens", () => {
     expect(`${span.style.letterSpacing}|${span.style.marginRight}`).toBe(
       before,
     );
+  });
+});
+
+describe("selection ranges", () => {
+  function select(from: [Node, number], to: [Node, number]): void {
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.setBaseAndExtent(from[0], from[1], to[0], to[1]);
+  }
+
+  it("counts the selected characters as the model text does, either way round", () => {
+    const el = host();
+    paintLines(el, [line("Hello world"), line("second line")], OPTS);
+    const first = el.children[0].firstChild!.firstChild!;
+    const second = el.children[1].firstChild!.firstChild!;
+    select([first, 2], [second, 3]);
+    expect(plainSelectionRange(el)).toEqual({ start: 2, end: 15 });
+    select([second, 3], [first, 2]);
+    expect(plainSelectionRange(el)).toEqual({ start: 2, end: 15 });
+  });
+
+  it("reads a caret as no range", () => {
+    const el = host();
+    paintLines(el, [line("Hello")], OPTS);
+    const text = el.children[0].firstChild!.firstChild!;
+    select([text, 2], [text, 2]);
+    expect(plainSelectionRange(el)).toBeNull();
+  });
+
+  it("keeps a selected word selected across a repaint of the same text", () => {
+    const el = host();
+    paintLines(el, [line("Hello brave world")], OPTS);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(plainDomRange(el, { start: 6, end: 11 })!);
+
+    repaintKeepingSelection(el, true, () =>
+      paintLines(el, [line("Hello brave world")], OPTS),
+    );
+
+    expect(plainSelectionRange(el)).toEqual({ start: 6, end: 11 });
+  });
+
+  it("puts a caret back where it was across a repaint", () => {
+    const el = host();
+    paintLines(el, [line("Hello world")], OPTS);
+    restoreCaretOffset(el, 4);
+
+    repaintKeepingSelection(el, true, () => paintPlainText(el, "Hello world"));
+
+    expect(plainCaretOffset(el)).toBe(4);
+    expect(plainSelectionRange(el)).toBeNull();
+  });
+
+  it("leaves the selection alone when the run does not own it", () => {
+    const el = host();
+    paintLines(el, [line("Hello world")], OPTS);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+
+    repaintKeepingSelection(el, false, () => paintPlainText(el, "Hello world"));
+
+    expect(selection.rangeCount).toBe(0);
+  });
+
+  it("does not read the selection for a run that is not taking it back", () => {
+    const el = host();
+    paintLines(el, [line("Hello world")], OPTS);
+    const read = vi.spyOn(window, "getSelection");
+    const paint = vi.fn();
+    try {
+      repaintKeepingSelection(el, false, paint);
+      expect(paint).toHaveBeenCalledTimes(1);
+      expect(read).not.toHaveBeenCalled();
+    } finally {
+      read.mockRestore();
+    }
+  });
+
+  it("maps a range back onto the painted text it was read from", () => {
+    const el = host();
+    paintLines(el, [line("Hello world"), line("second line")], OPTS);
+    const range = plainDomRange(el, { start: 6, end: 18 })!;
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    expect(plainSelectionRange(el)).toEqual({ start: 6, end: 18 });
   });
 });

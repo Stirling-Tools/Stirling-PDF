@@ -25,9 +25,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.tool.ToolFormat;
@@ -52,11 +52,9 @@ public class ConvertMarkdownToPdf {
                     .build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final RuntimePathConfig runtimePathConfig;
 
     private final TempFileManager tempFileManager;
-
-    private final CustomHtmlSanitizer customHtmlSanitizer;
+    private final OfficeToPdfService officeToPdfService;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -137,18 +135,10 @@ public class ConvertMarkdownToPdf {
                 String markdownContent = java.nio.file.Files.readString(markdownFile.toPath());
                 String htmlContent = renderHtml(markdownContent);
 
-                // Create a new ZIP with HTML + images for WeasyPrint
+                // Create a new ZIP with HTML + images for the converter
                 byte[] htmlZipBytes = createHtmlZip(htmlContent, tempDirPath.toFile());
 
-                // Use FileToPdf which already supports ZIP files with images
-                pdfBytes =
-                        FileToPdf.convertHtmlToPdf(
-                                runtimePathConfig.getWeasyPrintPath(),
-                                null,
-                                htmlZipBytes,
-                                "package.zip",
-                                tempFileManager,
-                                customHtmlSanitizer);
+                pdfBytes = officeToPdfService.convertHtml(htmlZipBytes, true);
 
                 outputFilename =
                         GeneralUtils.generateFilename(
@@ -161,13 +151,8 @@ public class ConvertMarkdownToPdf {
                     renderHtml(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
 
             pdfBytes =
-                    FileToPdf.convertHtmlToPdf(
-                            runtimePathConfig.getWeasyPrintPath(),
-                            null,
-                            htmlContent.getBytes(StandardCharsets.UTF_8),
-                            "converted.html",
-                            tempFileManager,
-                            customHtmlSanitizer);
+                    officeToPdfService.convertHtml(
+                            htmlContent.getBytes(StandardCharsets.UTF_8), false);
 
             outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
         }
@@ -266,9 +251,8 @@ class TableAttributeProvider implements AttributeProvider {
     }
 }
 
-// The HTML reaches WeasyPrint with no stylesheet, and its default `white-space: pre` lets a long
-// code line run past the page margin and get clipped. Inline, because the sanitizer strips <style>
-// elements; word-wrap rather than overflow-wrap, because its CSS allowlist drops the latter.
+// The HTML has no stylesheet, and the default `white-space: pre` lets a long code line run past
+// the page margin and get clipped, so code blocks wrap.
 class CodeBlockAttributeProvider implements AttributeProvider {
     @Override
     public void setAttributes(Node node, String tagName, Map<String, String> attributes) {

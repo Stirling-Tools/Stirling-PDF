@@ -30,7 +30,6 @@ import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.DublinCoreSchema;
 import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
-import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -158,111 +157,6 @@ class ConvertPDFToPDFATest {
     }
 
     @Nested
-    @DisplayName("XMP Metadata Operations")
-    class XmpMetadataTests {
-
-        @Test
-        @DisplayName("Should add PDF/A-1 identification schema to XMP metadata")
-        void shouldAddPdfA1IdentificationSchema() throws Exception {
-            PDDocument document = createPdfWithMetadata("Test PDF", "Test Author", "Test Creator");
-
-            invokePrivateMethod("mergeAndAddXmpMetadata", document, 1);
-
-            PDMetadata metadata = document.getDocumentCatalog().getMetadata();
-            assertThat(metadata).isNotNull();
-
-            try (InputStream is = metadata.createInputStream()) {
-                DomXmpParser parser = new DomXmpParser();
-                XMPMetadata xmp = parser.parse(is);
-
-                PDFAIdentificationSchema pdfaSchema =
-                        (PDFAIdentificationSchema) xmp.getSchema(PDFAIdentificationSchema.class);
-                assertThat(pdfaSchema).isNotNull();
-                assertThat(pdfaSchema.getPart()).isEqualTo(1);
-                assertThat(pdfaSchema.getConformance()).isEqualTo("B");
-            }
-
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should add PDF/A-2 identification schema to XMP metadata")
-        void shouldAddPdfA2IdentificationSchema() throws Exception {
-            PDDocument document = createSimplePdf();
-
-            invokePrivateMethod("mergeAndAddXmpMetadata", document, 2);
-
-            PDMetadata metadata = document.getDocumentCatalog().getMetadata();
-            try (InputStream is = metadata.createInputStream()) {
-                DomXmpParser parser = new DomXmpParser();
-                XMPMetadata xmp = parser.parse(is);
-
-                PDFAIdentificationSchema pdfaSchema =
-                        (PDFAIdentificationSchema) xmp.getSchema(PDFAIdentificationSchema.class);
-                assertThat(pdfaSchema.getPart()).isEqualTo(2);
-                assertThat(pdfaSchema.getConformance()).isEqualTo("B");
-            }
-
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should preserve Dublin Core creator information")
-        void shouldPreserveDublinCoreCreatorInformation() throws Exception {
-            PDDocument document =
-                    createPdfWithMetadata("Test PDF", "Test Author", "Original Creator");
-
-            invokePrivateMethod("mergeAndAddXmpMetadata", document, 1);
-
-            PDMetadata metadata = document.getDocumentCatalog().getMetadata();
-            try (InputStream is = metadata.createInputStream()) {
-                DomXmpParser parser = new DomXmpParser();
-                XMPMetadata xmp = parser.parse(is);
-
-                DublinCoreSchema dcSchema = xmp.getDublinCoreSchema();
-                assertThat(dcSchema).isNotNull();
-                assertThat(dcSchema.getCreators()).contains("Original Creator");
-            }
-
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should set creation and modification timestamps")
-        void shouldSetCreationAndModificationTimestamps() throws Exception {
-            PDDocument document = createSimplePdf();
-
-            invokePrivateMethod("mergeAndAddXmpMetadata", document, 1);
-
-            PDDocumentInformation info = document.getDocumentInformation();
-            assertThat(info.getCreationDate()).isNotNull();
-            assertThat(info.getModificationDate()).isNotNull();
-
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should handle existing XMP metadata gracefully")
-        void shouldHandleExistingXmpMetadata() throws Exception {
-            PDDocument document = createPdfWithXmpMetadata(1);
-
-            invokePrivateMethod("mergeAndAddXmpMetadata", document, 2);
-
-            PDMetadata metadata = document.getDocumentCatalog().getMetadata();
-            try (InputStream is = metadata.createInputStream()) {
-                DomXmpParser parser = new DomXmpParser();
-                XMPMetadata xmp = parser.parse(is);
-
-                PDFAIdentificationSchema pdfaSchema =
-                        (PDFAIdentificationSchema) xmp.getSchema(PDFAIdentificationSchema.class);
-                assertThat(pdfaSchema.getPart()).isEqualTo(2);
-            }
-
-            document.close();
-        }
-    }
-
-    @Nested
     @DisplayName("Content Sanitization")
     class ContentSanitizationTests {
 
@@ -341,71 +235,6 @@ class ConvertPDFToPDFATest {
             assertThat(dict.containsKey(COSName.EMBEDDED_FILES)).isFalse();
             assertThat(dict.containsKey(COSName.FILESPEC)).isFalse();
             assertThat(dict.containsKey(COSName.getPDFName("RichMedia"))).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("Transparency Detection")
-    class TransparencyDetectionTests {
-
-        @Test
-        @DisplayName("Should detect SMask transparency")
-        void shouldDetectSMaskTransparency() throws Exception {
-            PDDocument document = createPdfWithTransparency();
-
-            boolean hasTransparency = invokePrivateMethod("hasTransparentImages", document);
-
-            assertThat(hasTransparency).isTrue();
-
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should not detect transparency in opaque images")
-        void shouldNotDetectTransparencyInOpaqueImages() throws Exception {
-            PDDocument document = new PDDocument();
-            PDPage page = new PDPage(PDRectangle.A4);
-            document.addPage(page);
-
-            BufferedImage bufferedImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-            java.awt.Graphics2D g2d = bufferedImage.createGraphics();
-            g2d.setColor(Color.RED);
-            g2d.fillRect(0, 0, 100, 100);
-            g2d.dispose();
-
-            PDImageXObject image = LosslessFactory.createFromImage(document, bufferedImage);
-
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                contentStream.drawImage(image, 100, 600, 100, 100);
-            }
-
-            boolean hasTransparency = invokePrivateMethod("hasTransparentImages", document);
-
-            assertThat(hasTransparency).isFalse();
-
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should detect interpolation flag")
-        void shouldDetectInterpolationFlag() throws Exception {
-            PDDocument document = new PDDocument();
-            PDPage page = new PDPage(PDRectangle.A4);
-            document.addPage(page);
-
-            BufferedImage bufferedImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-            PDImageXObject image = LosslessFactory.createFromImage(document, bufferedImage);
-            image.setInterpolate(true);
-
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                contentStream.drawImage(image, 100, 600);
-            }
-
-            boolean hasTransparency = invokePrivateMethod("hasTransparentImages", document);
-
-            assertThat(hasTransparency).isTrue();
-
-            document.close();
         }
     }
 
@@ -533,18 +362,6 @@ class ConvertPDFToPDFATest {
     @Nested
     @DisplayName("Error Handling")
     class ErrorHandlingTests {
-
-        @Test
-        @DisplayName("Should handle empty PDF document")
-        void shouldHandleEmptyPdfDocument() {
-            PDDocument document = new PDDocument();
-
-            assertDoesNotThrow(
-                    () -> {
-                        invokePrivateMethod("mergeAndAddXmpMetadata", document, 1);
-                        document.close();
-                    });
-        }
 
         @Test
         @DisplayName("Should handle PDF with no resources")

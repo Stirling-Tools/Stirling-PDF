@@ -77,6 +77,34 @@ test.describe("Convert Tool", () => {
     });
   });
 
+  test("sends document conversions without an engine choice", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/convert/pdf/word", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers: {
+          "Content-Disposition": 'attachment; filename="sample.docx"',
+        },
+        body: Buffer.from("PK"),
+      }),
+    );
+    await uploadFile(page, SAMPLE_PDF);
+    await navigateToConvert(page);
+    await selectToFormat(page, "docx");
+    await expect(
+      page.getByTestId("stirling-office-convert-switch"),
+    ).toHaveCount(0);
+    await dismissTourTooltip(page);
+    const request = page.waitForRequest("**/api/v1/convert/pdf/word");
+    await page.getByTestId("convert-button").click();
+    const payload = (await request).postData() ?? "";
+    expect(payload).toMatch(/name="outputFormat"\r\n\r\ndocx/);
+    expect(payload).not.toContain("useStirlingOfficeConvert");
+  });
+
   test("convert button is disabled before a TO format is selected", async ({
     page,
   }) => {
@@ -88,6 +116,47 @@ test.describe("Convert Tool", () => {
     await expect(convertBtn).toBeVisible({ timeout: 3000 });
     await expect(convertBtn).toBeDisabled();
   });
+
+  for (const format of ["eml", "msg"]) {
+    test(`offers Office Convert for ${format.toUpperCase()} while retaining email settings`, async ({
+      page,
+    }) => {
+      await page.route("**/api/v1/convert/eml/pdf", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/pdf",
+          headers: {
+            "Content-Disposition": 'attachment; filename="email.pdf"',
+          },
+          path: SAMPLE_PDF,
+        }),
+      );
+      await page.getByTestId("files-button").click();
+      await page.getByTestId("file-input").setInputFiles(
+        format === "msg"
+          ? path.resolve("../app/common/src/test/resources/eml/example.msg")
+          : {
+              name: "email.eml",
+              mimeType: "message/rfc822",
+              buffer: Buffer.from(
+                "From: sender@example.com\r\nSubject: Email\r\n\r\nEmail content",
+              ),
+            },
+      );
+      await navigateToConvert(page);
+      await selectToFormat(page, "pdf");
+      await expect(page.getByTestId("email-settings")).toBeVisible();
+      await page.getByTestId("include-attachments-checkbox").check();
+      await page.getByTestId("include-all-recipients-checkbox").uncheck();
+      await dismissTourTooltip(page);
+      const request = page.waitForRequest("**/api/v1/convert/eml/pdf");
+      await page.getByTestId("convert-button").click();
+      const payload = (await request).postData() ?? "";
+      expect(payload).toMatch(/name="includeAttachments"\r\n\r\ntrue/);
+      expect(payload).toMatch(/name="includeAllRecipients"\r\n\r\nfalse/);
+      await expect(page.getByTestId("download-result-button")).toBeVisible();
+    });
+  }
 
   test("successful PDF to PNG conversion shows download option", async ({
     page,

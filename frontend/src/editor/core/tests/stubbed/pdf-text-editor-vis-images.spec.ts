@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -227,14 +228,7 @@ async function waitForRepaint(
 }
 
 async function openSample(page: Page): Promise<void> {
-  await page.route("**/encode-charcodes", (route) => route.abort());
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -301,10 +295,6 @@ async function dragMouse(
 }
 
 test.describe("PDF text editor - image objects, validated on the rendered bitmap", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.route("**/encode-charcodes", (route) => route.abort());
-  });
-
   // Catches: a move that updates the overlay/model but leaves the PDFium
   // bitmap stale (ink still in the old box), or a CSS->PDF mapping bug that
   // shifts the ink by a different delta than the overlay.

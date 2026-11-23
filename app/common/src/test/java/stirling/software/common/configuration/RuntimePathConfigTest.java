@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,8 +17,6 @@ import org.junit.jupiter.api.Test;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Operations;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Pipeline;
-import stirling.software.common.model.ApplicationProperties.ProcessExecutor.UnoServerEndpoint;
-import stirling.software.common.util.UnoServerPool;
 
 /**
  * Unit tests for {@link RuntimePathConfig}. All of the resolution logic lives in the constructor,
@@ -274,61 +271,26 @@ class RuntimePathConfigTest {
         @DisplayName("Defaults to bare command names when not running in Docker")
         void defaultOperationPaths() {
             // The test host has no /.dockerenv, so the non-docker defaults apply.
-            RuntimePathConfig config = build(newProperties());
-
-            assertEquals("weasyprint", config.getWeasyPrintPath());
-            assertEquals("unoconvert", config.getUnoConvertPath());
-            assertEquals("ebook-convert", config.getCalibrePath());
-            assertEquals("ocrmypdf", config.getOcrMyPdfPath());
-            assertEquals("soffice", config.getSOfficePath());
+            assertEquals("ocrmypdf", build(newProperties()).getOcrMyPdfPath());
         }
 
         @Test
-        @DisplayName("Custom operation paths override the defaults")
+        @DisplayName("A custom operation path overrides the default")
         void customOperationPaths() {
             ApplicationProperties properties = newProperties();
             Operations operations = properties.getSystem().getCustomPaths().getOperations();
-            operations.setWeasyprint("/opt/custom/weasyprint");
-            operations.setUnoconvert("/opt/custom/unoconvert");
-            operations.setCalibre("/opt/custom/ebook-convert");
             operations.setOcrmypdf("/opt/custom/ocrmypdf");
-            operations.setSoffice("/opt/custom/soffice");
 
-            RuntimePathConfig config = build(properties);
-
-            assertEquals("/opt/custom/weasyprint", config.getWeasyPrintPath());
-            assertEquals("/opt/custom/unoconvert", config.getUnoConvertPath());
-            assertEquals("/opt/custom/ebook-convert", config.getCalibrePath());
-            assertEquals("/opt/custom/ocrmypdf", config.getOcrMyPdfPath());
-            assertEquals("/opt/custom/soffice", config.getSOfficePath());
+            assertEquals("/opt/custom/ocrmypdf", build(properties).getOcrMyPdfPath());
         }
 
         @Test
         @DisplayName("Blank custom operation path falls back to the default")
         void blankOperationPathFallsBack() {
             ApplicationProperties properties = newProperties();
-            properties.getSystem().getCustomPaths().getOperations().setWeasyprint("   ");
+            properties.getSystem().getCustomPaths().getOperations().setOcrmypdf("   ");
 
-            RuntimePathConfig config = build(properties);
-
-            assertEquals("weasyprint", config.getWeasyPrintPath());
-        }
-
-        @Test
-        @DisplayName("A single custom path leaves the other operation paths at defaults")
-        void partialOperationOverride() {
-            ApplicationProperties properties = newProperties();
-            properties
-                    .getSystem()
-                    .getCustomPaths()
-                    .getOperations()
-                    .setSoffice("/usr/local/soffice");
-
-            RuntimePathConfig config = build(properties);
-
-            assertEquals("/usr/local/soffice", config.getSOfficePath());
-            assertEquals("weasyprint", config.getWeasyPrintPath());
-            assertEquals("unoconvert", config.getUnoConvertPath());
+            assertEquals("ocrmypdf", build(properties).getOcrMyPdfPath());
         }
     }
 
@@ -357,132 +319,6 @@ class RuntimePathConfigTest {
             // either of which is non-null.
             assertNotNull(config.getTessDataPath());
             assertFalse(config.getTessDataPath().isEmpty());
-        }
-    }
-
-    @Nested
-    @DisplayName("UNO server endpoint resolution")
-    class UnoServerEndpoints {
-
-        @Test
-        @DisplayName("Auto mode builds one endpoint when session limit is unset (defaults to 1)")
-        void autoSingleEndpointByDefault() {
-            // Default ApplicationProperties: autoUnoServer = true, libreOfficeSessionLimit = 0 ->
-            // 1.
-            RuntimePathConfig config = build(newProperties());
-
-            List<UnoServerEndpoint> endpoints = config.getUnoServerEndpoints();
-            assertEquals(1, endpoints.size());
-            assertEquals("127.0.0.1", endpoints.get(0).getHost());
-            assertEquals(2003, endpoints.get(0).getPort());
-        }
-
-        @Test
-        @DisplayName("Auto mode builds N endpoints on consecutive even ports")
-        void autoMultipleEndpoints() {
-            ApplicationProperties properties = newProperties();
-            properties.getProcessExecutor().getSessionLimit().setLibreOfficeSessionLimit(3);
-
-            RuntimePathConfig config = build(properties);
-
-            List<UnoServerEndpoint> endpoints = config.getUnoServerEndpoints();
-            assertEquals(3, endpoints.size());
-            assertEquals(2003, endpoints.get(0).getPort());
-            assertEquals(2005, endpoints.get(1).getPort());
-            assertEquals(2007, endpoints.get(2).getPort());
-            for (UnoServerEndpoint endpoint : endpoints) {
-                assertEquals("127.0.0.1", endpoint.getHost());
-            }
-        }
-
-        @Test
-        @DisplayName("Auto endpoints count as local, so conversions wake the on-demand pool")
-        void autoEndpointsAreLocalForTheDemandManager() {
-            RuntimePathConfig config = build(newProperties());
-
-            UnoServerPool pool = new UnoServerPool(config.getUnoServerEndpoints());
-
-            assertTrue(pool.hasLocalEndpoints());
-        }
-
-        @Test
-        @DisplayName("Manual mode returns the configured (valid) endpoints")
-        void manualEndpointsAreUsed() {
-            ApplicationProperties properties = newProperties();
-            ApplicationProperties.ProcessExecutor processExecutor = properties.getProcessExecutor();
-            processExecutor.setAutoUnoServer(false);
-
-            UnoServerEndpoint endpoint = new UnoServerEndpoint();
-            endpoint.setHost("10.0.0.5");
-            endpoint.setPort(4000);
-            processExecutor.setUnoServerEndpoints(new ArrayList<>(Arrays.asList(endpoint)));
-
-            RuntimePathConfig config = build(properties);
-
-            List<UnoServerEndpoint> endpoints = config.getUnoServerEndpoints();
-            assertEquals(1, endpoints.size());
-            assertEquals("10.0.0.5", endpoints.get(0).getHost());
-            assertEquals(4000, endpoints.get(0).getPort());
-        }
-
-        @Test
-        @DisplayName("Manual mode filters out endpoints with blank host or non-positive port")
-        void manualEndpointsAreSanitized() {
-            ApplicationProperties properties = newProperties();
-            ApplicationProperties.ProcessExecutor processExecutor = properties.getProcessExecutor();
-            processExecutor.setAutoUnoServer(false);
-
-            UnoServerEndpoint valid = new UnoServerEndpoint();
-            valid.setHost("192.168.1.10");
-            valid.setPort(5000);
-
-            UnoServerEndpoint blankHost = new UnoServerEndpoint();
-            blankHost.setHost("   ");
-            blankHost.setPort(5001);
-
-            UnoServerEndpoint badPort = new UnoServerEndpoint();
-            badPort.setHost("192.168.1.11");
-            badPort.setPort(0);
-
-            processExecutor.setUnoServerEndpoints(
-                    new ArrayList<>(Arrays.asList(valid, blankHost, badPort)));
-
-            RuntimePathConfig config = build(properties);
-
-            List<UnoServerEndpoint> endpoints = config.getUnoServerEndpoints();
-            assertEquals(1, endpoints.size());
-            assertEquals("192.168.1.10", endpoints.get(0).getHost());
-            assertEquals(5000, endpoints.get(0).getPort());
-        }
-
-        @Test
-        @DisplayName("Manual mode with no usable endpoints falls back to a single default endpoint")
-        void manualModeNoEndpointsFallsBackToDefault() {
-            ApplicationProperties properties = newProperties();
-            ApplicationProperties.ProcessExecutor processExecutor = properties.getProcessExecutor();
-            processExecutor.setAutoUnoServer(false);
-            processExecutor.setUnoServerEndpoints(new ArrayList<>());
-
-            RuntimePathConfig config = build(properties);
-
-            List<UnoServerEndpoint> endpoints = config.getUnoServerEndpoints();
-            assertEquals(1, endpoints.size());
-            assertEquals("127.0.0.1", endpoints.get(0).getHost());
-            assertEquals(2003, endpoints.get(0).getPort());
-        }
-
-        @Test
-        @DisplayName("Null processExecutor defaults to a single UNO endpoint")
-        void nullProcessExecutorDefaultsToSingleEndpoint() {
-            ApplicationProperties properties = newProperties();
-            properties.setProcessExecutor(null);
-
-            RuntimePathConfig config = build(properties);
-
-            List<UnoServerEndpoint> endpoints = config.getUnoServerEndpoints();
-            assertEquals(1, endpoints.size());
-            assertEquals("127.0.0.1", endpoints.get(0).getHost());
-            assertEquals(2003, endpoints.get(0).getPort());
         }
     }
 
@@ -518,14 +354,8 @@ class RuntimePathConfigTest {
             assertNotNull(config.getPipelineWatchedFoldersPaths());
             assertNotNull(config.getPipelineFinishedFoldersPath());
             assertNotNull(config.getPipelineDefaultWebUiConfigs());
-            assertNotNull(config.getWeasyPrintPath());
-            assertNotNull(config.getUnoConvertPath());
-            assertNotNull(config.getCalibrePath());
             assertNotNull(config.getOcrMyPdfPath());
-            assertNotNull(config.getSOfficePath());
             assertNotNull(config.getTessDataPath());
-            assertNotNull(config.getUnoServerEndpoints());
-            assertTrue(config.getUnoServerEndpoints().size() >= 1);
         }
     }
 }

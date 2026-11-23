@@ -11,7 +11,12 @@ export type ToastAlertType = "success" | "error" | "warning" | "neutral";
 export interface ToastOptions {
   alertType?: ToastAlertType;
   title: string;
+  /** Set when the title names the user's content, such as a file name, to keep
+   * it out of analytics and feedback captures. */
+  privateTitle?: boolean;
   body?: ReactNode;
+  /** As `privateTitle`, for the body. */
+  privateBody?: boolean;
   buttonText?: string;
   buttonCallback?: () => void;
   isPersistentPopup?: boolean;

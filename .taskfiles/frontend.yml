@@ -305,19 +305,44 @@ tasks:
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
-    vars:
-      BASE: '{{.CLI_ARGS | default "origin/main"}}'
-      CHANGED:
-        sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
     cmds:
+      - task: storybook:a11y:changed:themes
+        vars:
+          THEMES: light dark
+          BASE: '{{.CLI_ARGS | default "origin/main"}}'
+
+  storybook:a11y:changed:light:
+    desc: "a11y gate over the stories this branch affects in light mode (default base origin/main)"
+    cmds:
+      - task: storybook:a11y:changed:themes
+        vars:
+          THEMES: light
+          BASE: '{{.CLI_ARGS | default "origin/main"}}'
+
+  storybook:a11y:changed:dark:
+    desc: "a11y gate over the stories this branch affects in dark mode (default base origin/main)"
+    cmds:
+      - task: storybook:a11y:changed:themes
+        vars:
+          THEMES: dark
+          BASE: '{{.CLI_ARGS | default "origin/main"}}'
+
+  storybook:a11y:changed:themes:
+    internal: true
+    vars:
+      CHANGED:
+        sh: node .storybook/a11y-changed.mjs {{.BASE}}
+    cmds:
+      # One theme failing still runs the next, so a run reports every theme.
       - cmd: |
           if [ -z '{{.CHANGED}}' ]; then
             echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
           rc=0
-          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
-          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          for theme in {{.THEMES}}; do
+            task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:$theme -- {{.CHANGED}} || rc=1
+          done
           exit $rc
 
   storybook:a11y:record:

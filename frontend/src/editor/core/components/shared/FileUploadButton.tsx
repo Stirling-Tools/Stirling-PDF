@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { FilePicker } from "@editor/ui/FilePicker";
 import type { ButtonVariant } from "@editor/ui/Button";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 // Accept both shared DS variants and the legacy Mantine variant names that
 // existing callers still pass, mapping the latter onto the DS equivalents.
@@ -61,7 +62,11 @@ const FileUploadButton = ({
       variant={resolveVariant(variant)}
       fullWidth={fullWidth}
     >
-      {file ? file.name : placeholder || defaultPlaceholder}
+      {file ? (
+        <PrivateContent>{file.name}</PrivateContent>
+      ) : (
+        placeholder || defaultPlaceholder
+      )}
     </FilePicker>
   );
 };

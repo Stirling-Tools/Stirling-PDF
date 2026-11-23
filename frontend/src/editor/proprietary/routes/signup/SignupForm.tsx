@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Checkbox, TextInput, PasswordInput } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { SignupFieldErrors } from "@editor/routes/signup/SignupFormValidation";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SignupFormProps {
   name?: string;
@@ -63,7 +64,10 @@ export default function SignupForm({
               value={name}
               onChange={(e) => setName?.(e.target.value)}
               error={fieldErrors.name}
-              classNames={{ label: "auth-label" }}
+              classNames={{
+                label: "auth-label",
+                input: privateContentClassName,
+              }}
             />
           </div>
         )}
@@ -80,7 +84,7 @@ export default function SignupForm({
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
             error={fieldErrors.email}
-            classNames={{ label: "auth-label" }}
+            classNames={{ label: "auth-label", input: privateContentClassName }}
           />
         </div>
 
@@ -95,7 +99,7 @@ export default function SignupForm({
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
             error={fieldErrors.password}
-            classNames={{ label: "auth-label" }}
+            classNames={{ label: "auth-label", input: privateContentClassName }}
           />
         </div>
 
@@ -124,7 +128,10 @@ export default function SignupForm({
                 e.key === "Enter" && !isSubmitting && onSubmit()
               }
               error={fieldErrors.confirmPassword}
-              classNames={{ label: "auth-label" }}
+              classNames={{
+                label: "auth-label",
+                input: privateContentClassName,
+              }}
             />
           </div>
         </div>

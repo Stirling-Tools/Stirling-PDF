@@ -1,26 +1,50 @@
+import { claimFormNodes } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  readPageGlyphs,
+  type PageGlyphs,
+} from "@editor/tools/pdfTextEditor/pdfium/drawnGlyphs";
+import { readObjectTexts } from "@editor/tools/pdfTextEditor/pdfium/objectTexts";
+import {
+  drawnCodePoint,
+  drawnText,
+} from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import { readImageClip } from "@editor/tools/pdfTextEditor/util/imageClip";
 import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
-import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  LineGrouper,
+  lineFontIds,
+  type BlockKey,
+} from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
 import { PdfiumAnnotationReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
 import { primeFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
-import type {
-  Affine,
-  GroupingMode,
-  PageRect,
-  PageRuleSnapshot,
-  RGBA,
+import {
+  RENDER_MODE_INVISIBLE,
+  type Affine,
+  type GroupingMode,
+  type PageRect,
+  type PageRuleSnapshot,
+  type RGBA,
 } from "@editor/tools/pdfTextEditor/types";
 import { readUtf16 } from "@editor/services/pdfiumService";
+import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
 import { registerEmbeddedFace } from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { noteDocumentFontStyle } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
 import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import {
+  readObjFill,
+  readObjStroke,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import {
   ARTIFACT_TAG,
   innermostMcid,
@@ -32,6 +56,8 @@ const FPDF_PAGEOBJ_TEXT = 1;
 const FPDF_PAGEOBJ_PATH = 2;
 const FPDF_PAGEOBJ_IMAGE = 3;
 const FPDF_PAGEOBJ_FORM = 5;
+
+const OPAQUE_BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
 
 // A ruling line is hairline-thin on one axis and long on the other. Anything
 // squarer is a box, a shading or a glyph-like drawing.
@@ -49,6 +75,8 @@ export class PdfiumTextReader {
     mode: GroupingMode = "auto",
   ): void {
     if (page.loaded) return;
+    doc.claimArtifactMarks(page.index);
+    claimFormNodes(doc, page);
     const m = doc.module;
     const pagePtr = page.pagePtr;
     const count = m.FPDFPage_CountObjects(pagePtr);
@@ -58,6 +86,7 @@ export class PdfiumTextReader {
     const rules: PageRuleSnapshot[] = [];
     const fills: PageRuleSnapshot[] = [];
     const shapes: ShapeObject[] = [];
+    const companions = new Map<number, number[]>();
 
     // ONE text page for the whole walk: FPDFText_LoadPage runs full page text
     // extraction, so opening it per text object made population O.
@@ -80,6 +109,7 @@ export class PdfiumTextReader {
         0,
         IDENTITY,
         textPagePtr,
+        companions,
       );
 
       page.setRuns(runs);
@@ -90,22 +120,59 @@ export class PdfiumTextReader {
       // Annotation text is drawn by FPDF_ANNOT but lives outside the object
       // tree, so record the boxes to explain why it can't be edited.
       PdfiumAnnotationReader.populate(m, page);
-      // LineGrouper always runs (merges per-glyph/per-word source objects into
-      // one line).
-      LineGrouper.apply(page);
-      if (mode === "auto") ParagraphGrouper.apply(page);
-      // Grouping is done.
-      // One walk feeds both: each was reading the same characters with its
-      // own WASM round-trips, doubling the cost of every page read.
-      const geometry = collectCharGeometry(m, page, textPagePtr);
-      if (geometry) {
-        inferRunCharSpacing(page, geometry);
-        captureCharPositions(geometry);
-      }
+      markHiddenText(runs, [
+        ...images.map((image) => image.bounds),
+        ...shapes.map((shape) => shape.bounds),
+        ...fills,
+      ]);
+      groupAndMeasure(doc, page, mode, textPagePtr, companions);
     } finally {
-      m.FPDFText_ClosePage(textPagePtr);
+      closeTextPage(m, textPagePtr);
     }
     page.loaded = true;
+  }
+
+  /**
+   * Read page-level text objects as `populate` reads a page's, grouping them
+   * only with each other. A run is named by the id given its first object
+   * in reading order. Each object's own marks become its tags, so none may
+   * be inside a form XObject.
+   */
+  static readRuns(
+    doc: EditorDocument,
+    page: Page,
+    objects: ReadonlyArray<{ ptr: number; id: string }>,
+    mode: GroupingMode,
+  ): TextRun[] {
+    const m = doc.module;
+    // Grouping replaces a page's runs, so it works on a scratch page.
+    const scratch = new Page({
+      index: page.index,
+      pagePtr: page.pagePtr,
+      width: page.width,
+      height: page.height,
+      display: page.display,
+    });
+    const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
+    try {
+      scratch.setRuns(
+        objects.flatMap(({ ptr, id }) => {
+          const run = readTextRun(m, doc, page, ptr, id, IDENTITY, textPagePtr);
+          if (!run) return [];
+          run.tagMarks = readTagMarks(m, ptr);
+          return [run];
+        }),
+      );
+      markHiddenText(scratch.runs, [
+        ...page.images.map((image) => image.bounds),
+        ...page.shapes.map((shape) => shape.bounds),
+        ...page.fills,
+      ]);
+      groupAndMeasure(doc, scratch, mode, textPagePtr, new Map());
+    } finally {
+      closeTextPage(m, textPagePtr);
+    }
+    return scratch.runs;
   }
 
   // Returns the runs whose captured positions actually moved, so the caller
@@ -122,9 +189,90 @@ export class PdfiumTextReader {
       const geometry = collectCharGeometry(m, page, textPagePtr);
       return geometry ? captureCharPositions(geometry) : new Set();
     } finally {
-      m.FPDFText_ClosePage(textPagePtr);
+      closeTextPage(m, textPagePtr);
     }
   }
+}
+
+/**
+ * Group the page's one-object runs into lines, and in auto mode paragraphs,
+ * then place their glyphs.
+ */
+function groupAndMeasure(
+  doc: EditorDocument,
+  page: Page,
+  mode: GroupingMode,
+  textPagePtr: number,
+  companions: ReadonlyMap<number, readonly number[]>,
+): void {
+  // LineGrouper always runs (merges per-glyph/per-word source objects into
+  // one line).
+  const blockKey = structureBlockKey(doc, page.index);
+  const lines = LineGrouper.apply(
+    page,
+    blockKey,
+    (run) => fontSpaceAdvanceEm(doc.module, run.pdfiumObjPtr),
+    {
+      // Only a page with right-to-left text is read by glyph, so every other page costs no second walk.
+      glyphs: page.runs.some((run) => hasRtl(run.text))
+        ? glyphsWithCompanions(doc.module, page, textPagePtr, companions)
+        : null,
+      companions,
+    },
+  );
+  if (mode === "auto") {
+    const faces = new Map<string, string | null>();
+    ParagraphGrouper.apply(page, blockKey, lineFontIds(lines), (fontId) => {
+      let face = faces.get(fontId);
+      if (face === undefined) {
+        face = faceNameOf(doc.module, fontId);
+        faces.set(fontId, face);
+      }
+      return face;
+    });
+  }
+  // One walk feeds both: each was reading the same characters with its
+  // own WASM round-trips, doubling the cost of every page read.
+  const geometry = collectCharGeometry(doc.module, page, textPagePtr);
+  if (geometry) {
+    inferRunCharSpacing(page, geometry);
+    captureCharPositions(geometry);
+  }
+}
+
+// A glyph cluster drawn by several objects reaches as far as they do: the text page places it by the one object it gives the text to, which can be a vowel mark alone.
+function glyphsWithCompanions(
+  m: WrappedPdfiumModule,
+  page: Page,
+  textPagePtr: number,
+  companions: ReadonlyMap<number, readonly number[]>,
+): PageGlyphs | null {
+  const glyphs = readPageGlyphs(m, textPagePtr);
+  if (!glyphs) return null;
+  for (const run of page.runs) {
+    const own = glyphs.byObject.get(run.pdfiumObjPtr);
+    const rest = companions.get(run.pdfiumObjPtr);
+    if (!rest || own?.length !== 1 || run.containerPtr !== 0) continue;
+    for (const ptr of rest) {
+      const bounds = readBounds(m, ptr);
+      if (!bounds) continue;
+      own[0].left = Math.min(own[0].left, bounds.x);
+      own[0].right = Math.max(own[0].right, bounds.x + bounds.width);
+    }
+  }
+  return glyphs;
+}
+
+function fontSpaceAdvanceEm(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+): number | null {
+  const fontPtr = objPtr ? m.FPDFTextObj_GetFont(objPtr) : 0;
+  if (!fontPtr) return null;
+  const widthPtr = scratchPtr(m, SCRATCH.readerSpaceWidth, 4);
+  // Font size 1 makes PDFium report the width in ems.
+  if (!m.FPDFFont_GetGlyphWidth(fontPtr, 0x20, 1, widthPtr)) return null;
+  return m.pdfium.getValue(widthPtr, "float");
 }
 
 /** Every backing PDFium object pointer mapped to its post-grouping run. */
@@ -182,7 +330,7 @@ function collectCharGeometry(
   const yPtr = scratchPtr(m, SCRATCH.readerCharY, 8);
   const out: CharGeometry[] = [];
   for (let i = 0; i < charCount; i += 1) {
-    const cp = m.FPDFText_GetUnicode(textPagePtr, i);
+    const cp = drawnCodePoint(m.FPDFText_GetUnicode(textPagePtr, i));
     const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
     const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
     const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
@@ -282,10 +430,7 @@ function samePositions(prev: number[] | null, next: number[]): boolean {
 // Record where the engine put every glyph, indexed by code unit of `text`.
 // Both units of a surrogate pair share a value; synthesised spaces stay NaN.
 function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
-  const glyphs = new Map<
-    TextRun,
-    Array<{ cp: number; x: number; end: number }>
-  >();
+  const glyphs = new Map<TextRun, PlacedGlyph[]>();
   for (const g of geometry) {
     if (!g.run || !g.cp || !g.ok) continue;
     if (!Number.isFinite(g.originX) || g.right < g.originX) continue;
@@ -296,7 +441,7 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     }
     // The loose box's right edge is the pen position after the glyph, which
     // is what makes consecutive word boxes tile without drift.
-    list.push({ cp: g.cp, x: g.originX, end: g.right });
+    list.push({ cp: g.cp, x: g.originX, end: g.right, bottom: g.bottom });
   }
 
   const changed = new Set<TextRun>();
@@ -307,7 +452,18 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     if (!scale || Math.abs(run.matrix.b) / scale > 0.02 || run.matrix.a <= 0) {
       continue;
     }
-    const aligned = alignToText(run.text, list);
+    // Text typed into a paragraph, and an edited scan's redrawn words, are new
+    // objects at the end of the page content, so the engine lists them after
+    // lines that read later. Content order stays first choice: reading order
+    // can misjudge lines set close together.
+    const aligned = run.scanEdit?.created.length
+      ? alignToText(run.text, inReadingOrder(list, run.fontSize))
+      : run.text.includes("\n")
+        ? betterAlignment(
+            alignToText(run.text, list),
+            alignToText(run.text, inReadingOrder(list, run.fontSize)),
+          )
+        : alignToText(run.text, list);
     if (!aligned) continue;
     // Same positions under a still-current key is a no-op capture; skipping it
     // keeps untouched runs' snapshots stable across the periodic tick.
@@ -326,12 +482,42 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
   return changed;
 }
 
+export interface PlacedGlyph {
+  cp: number;
+  x: number;
+  end: number;
+  bottom: number;
+}
+
+// Top line first, then left to right; glyph boxes within half a font size share a line.
+export function inReadingOrder(
+  glyphs: PlacedGlyph[],
+  fontSize: number,
+): PlacedGlyph[] {
+  const tolerance = Math.max(1, fontSize * 0.5);
+  const byHeight = [...glyphs].sort((a, b) => b.bottom - a.bottom);
+  const lines: PlacedGlyph[][] = [];
+  for (const glyph of byHeight) {
+    const line = lines[lines.length - 1];
+    if (line && line[0].bottom - glyph.bottom <= tolerance) line.push(glyph);
+    else lines.push([glyph]);
+  }
+  return lines.flatMap((line) => line.sort((a, b) => a.x - b.x));
+}
+
+type Alignment = { starts: number[]; ends: number[]; placed: number };
+
+function betterAlignment(
+  a: Alignment | null,
+  b: Alignment | null,
+): Alignment | null {
+  if (!a || !b) return a ?? b;
+  return b.placed > a.placed ? b : a;
+}
+
 // Line up the engine's glyph list with the run's text - they are not
 // index-for-index, and anything unplaceable is left unknown, not guessed.
-function alignToText(
-  text: string,
-  glyphs: Array<{ cp: number; x: number; end: number }>,
-): { starts: number[]; ends: number[] } | null {
+function alignToText(text: string, glyphs: PlacedGlyph[]): Alignment | null {
   const starts = new Array<number>(text.length).fill(Number.NaN);
   const ends = new Array<number>(text.length).fill(Number.NaN);
   let g = 0;
@@ -366,7 +552,7 @@ function alignToText(
   // A capture that placed almost nothing is not worth trusting.
   const visible = [...text].filter((c) => !/\s/.test(c)).length;
   return placed >= Math.max(1, Math.floor(visible * 0.6))
-    ? { starts, ends }
+    ? { starts, ends, placed }
     : null;
 }
 
@@ -375,6 +561,71 @@ type PdfiumWithForms = WrappedPdfiumModule & {
   FPDFFormObj_CountObjects: (formObj: number) => number;
   FPDFFormObj_GetObject: (formObj: number, index: number) => number;
 };
+
+const ACTUAL_TEXT = "ActualText";
+const FPDF_OBJECT_UNKNOWN = 0;
+
+/** The innermost mark on the object when it replaces the object's text with an ActualText, else 0. */
+function actualTextMark(m: WrappedPdfiumModule, objPtr: number): number {
+  const count = m.FPDFPageObj_CountMarks(objPtr);
+  if (count <= 0) return 0;
+  const mark = m.FPDFPageObj_GetMark(objPtr, count - 1);
+  if (!mark) return 0;
+  return m.FPDFPageObjMark_GetParamValueType(mark, ACTUAL_TEXT) ===
+    FPDF_OBJECT_UNKNOWN
+    ? 0
+    : mark;
+}
+
+/**
+ * The text objects inside one ActualText span, as a walk passes them. PDFium
+ * gives the span's whole text to one of its objects and none to the others,
+ * which would then belong to no run: a letter drawn apart from its vowel mark
+ * stays on the page when its line is moved, deleted or redrawn. It gives the
+ * text to a second object as well when something else on the line sorts
+ * between the two, and read as a run of its own that one would double the
+ * span's letters.
+ */
+class ActualTextSpan {
+  private mark = 0;
+  private owner = 0;
+  private ownerText = "";
+  private rest: number[] = [];
+
+  constructor(private readonly companions: Map<number, number[]>) {}
+
+  /**
+   * Whether the object repeats the text the span's first run already holds, so
+   * it is a companion of that run and not a run itself. `runText` is the text
+   * the object reads as a run, or null when it reads as none.
+   */
+  take(
+    objPtr: number,
+    mark: number,
+    runText: string | null,
+    hasNoText: (objPtr: number) => boolean,
+  ): boolean {
+    if (mark !== this.mark) {
+      this.mark = mark;
+      this.owner = 0;
+      this.ownerText = "";
+      this.rest = [];
+    }
+    if (mark === 0) return false;
+    const first = runText !== null && this.owner === 0;
+    const repeats =
+      runText !== null && !first && runText.trim() === this.ownerText;
+    if (first) {
+      this.owner = objPtr;
+      this.ownerText = runText.trim();
+    } else if (repeats || (runText === null && hasNoText(objPtr))) {
+      this.rest.push(objPtr);
+    }
+    if (this.owner && this.rest.length > 0)
+      this.companions.set(this.owner, this.rest);
+    return repeats;
+  }
+}
 
 function walkObjects(
   m: WrappedPdfiumModule,
@@ -391,6 +642,7 @@ function walkObjects(
   depth: number,
   transform: Affine,
   textPagePtr: number,
+  companions: Map<number, number[]>,
 ): void {
   const MAX_DEPTH = 4;
   const formModule = m as PdfiumWithForms;
@@ -400,6 +652,7 @@ function walkObjects(
     path.length === 0 ? 0 : getFormContainer(m, pagePtr, path);
   const topLevelContainerPtr =
     path.length === 0 ? 0 : m.FPDFPage_GetObject(pagePtr, path[0]);
+  const span = new ActualTextSpan(companions);
   for (let i = 0; i < count; i++) {
     const objPtr =
       path.length === 0
@@ -414,11 +667,17 @@ function walkObjects(
         doc,
         page,
         objPtr,
-        indexId,
+        `p${page.index}-t${indexId}`,
         transform,
         textPagePtr,
       );
-      if (run) {
+      const repeatsSpanText = span.take(
+        objPtr,
+        actualTextMark(m, objPtr),
+        run?.text ?? null,
+        (ptr) => readTextObjString(m, textPagePtr, ptr) === "",
+      );
+      if (run && !repeatsSpanText) {
         run.containerPtr = containerPtr;
         run.topLevelContainerPtr = topLevelContainerPtr;
         // A form's MCIDs resolve against its own /StructParents, not the
@@ -436,10 +695,14 @@ function walkObjects(
       if (path.length <= 1) {
         // PDFium can save shape removals only in page-level forms.
         const indexId = [...path, i].join("-");
-        const shape = readShape(m, page, objPtr, indexId, transform, {
+        const shape = readShape(
+          m,
+          page,
+          objPtr,
+          indexId,
+          transform,
           containerPtr,
-          topLevelContainerPtr,
-        });
+        );
         if (shape) shapes.push(shape);
       }
     } else if (type === FPDF_PAGEOBJ_IMAGE) {
@@ -480,10 +743,30 @@ function walkObjects(
           depth + 1,
           childTransform,
           textPagePtr,
+          companions,
         );
       }
     }
   }
+}
+
+/**
+ * Keys a run by the structure block of its own MCID, keeping artifacts and
+ * untagged text apart from tagged text and from each other. The structure is
+ * read only once a run carries an MCID, so an untagged file pays nothing.
+ */
+function structureBlockKey(doc: EditorDocument, pageIndex: number): BlockKey {
+  let structure: PageStructure | null = null;
+  return (run) => {
+    const mcid = innermostMcid(run.tagMarks);
+    if (mcid !== null) {
+      structure ??= doc.structure(pageIndex);
+      const block = structure.block(mcid);
+      if (block) return `block:${block.key}`;
+    }
+    const artifact = run.tagMarks.some((tag) => tag.name === ARTIFACT_TAG);
+    return artifact ? "artifact" : "untagged";
+  };
 }
 
 /** Identity affine - the page-level transform. */
@@ -644,61 +927,20 @@ function readPaint(m: WrappedPdfiumModule, objPtr: number): RulePaint | null {
     m.pdfium.wasmExports.free(strokePtr);
   }
   if (fillMode === 0 && !stroked) return null;
-  const mod = m as unknown as RulePaintModule;
-  const read = stroked
-    ? mod.FPDFPageObj_GetStrokeColor
-    : mod.FPDFPageObj_GetFillColor;
-  const color = read ? readRGBA(m, objPtr, read) : null;
+  const color = stroked ? readObjStroke(m, objPtr) : readObjFill(m, objPtr);
   return {
     stroked,
     thickness: stroked ? readStrokeWidth(m, objPtr) : 0,
-    color: color ?? { r: 0, g: 0, b: 0, a: 255 },
+    color: color ?? { ...OPAQUE_BLACK },
   };
 }
 
-interface RulePaintModule {
-  FPDFPageObj_GetStrokeColor?: ColorReader;
-  FPDFPageObj_GetFillColor?: ColorReader;
+interface StrokeWidthModule {
   FPDFPageObj_GetStrokeWidth?: (obj: number, w: number) => boolean | number;
 }
 
-type ColorReader = (
-  obj: number,
-  r: number,
-  g: number,
-  b: number,
-  a: number,
-) => boolean | number;
-
-function readRGBA(
-  m: WrappedPdfiumModule,
-  objPtr: number,
-  read: ColorReader,
-): RGBA | null {
-  const r = m.pdfium.wasmExports.malloc(4);
-  const g = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const a = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!read(objPtr, r, g, b, a)) return null;
-    return {
-      r: m.pdfium.getValue(r, "i32") & 0xff,
-      g: m.pdfium.getValue(g, "i32") & 0xff,
-      b: m.pdfium.getValue(b, "i32") & 0xff,
-      a: m.pdfium.getValue(a, "i32") & 0xff,
-    };
-  } catch {
-    return null;
-  } finally {
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(g);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(a);
-  }
-}
-
 function readStrokeWidth(m: WrappedPdfiumModule, objPtr: number): number {
-  const get = (m as unknown as RulePaintModule).FPDFPageObj_GetStrokeWidth;
+  const get = (m as unknown as StrokeWidthModule).FPDFPageObj_GetStrokeWidth;
   if (!get) return 0;
   const w = m.pdfium.wasmExports.malloc(4);
   try {
@@ -816,37 +1058,28 @@ function readMatrix(m: WrappedPdfiumModule, objPtr: number): Affine {
   };
 }
 
-function readFill(m: WrappedPdfiumModule, objPtr: number): RGBA {
-  const buf = scratchPtr(m, SCRATCH.readerFill, 16);
-  const ok = m.FPDFPageObj_GetFillColor(
-    objPtr,
-    buf,
-    buf + 4,
-    buf + 8,
-    buf + 12,
-  );
-  if (!ok) return { r: 0, g: 0, b: 0, a: 255 };
-  return {
-    r: m.pdfium.getValue(buf, "i32") & 0xff,
-    g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
-    b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
-    a: m.pdfium.getValue(buf + 12, "i32") & 0xff,
-  };
-}
-
-interface StrokeReaderModule {
-  FPDFPageObj_GetStrokeColor?: (
-    obj: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number,
-  ) => boolean;
-  FPDFPageObj_GetStrokeWidth?: (obj: number, out: number) => boolean;
-}
-
 /** Render modes that actually put stroke ink on the page. */
 const STROKING_MODES = new Set([1, 2, 5, 6]);
+
+// OCR text over a scan is edited by redrawing the ink behind it, a picture or
+// letters drawn as outlines; invisible text with nothing drawn behind it has no
+// ink to redraw and is edited as text.
+function markHiddenText(
+  runs: readonly TextRun[],
+  drawn: readonly PageRect[],
+): void {
+  for (const run of runs) {
+    if (run.renderMode !== RENDER_MODE_INVISIBLE) continue;
+    const r = run.bounds;
+    run.hiddenText = !drawn.some(
+      (b) =>
+        b.x < r.x + r.width &&
+        b.x + b.width > r.x &&
+        b.y < r.y + r.height &&
+        b.y + b.height > r.y,
+    );
+  }
+}
 
 // Outline colour and width, or null when the object does not stroke. PDFium
 // reports a stroke colour for every text object, so the render mode decides.
@@ -856,34 +1089,17 @@ function readStroke(
   renderMode: number,
 ): { stroke: RGBA | null; strokeWidth: number } {
   if (!STROKING_MODES.has(renderMode)) return { stroke: null, strokeWidth: 0 };
-  const mod = m as unknown as StrokeReaderModule;
-  const getColor = mod.FPDFPageObj_GetStrokeColor;
-  const getWidth = mod.FPDFPageObj_GetStrokeWidth;
-  if (!getColor) return { stroke: null, strokeWidth: 0 };
-  try {
-    const buf = scratchPtr(m, SCRATCH.readerStroke, 20);
-    if (!getColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
-      return { stroke: null, strokeWidth: 0 };
-    }
-    const alpha = m.pdfium.getValue(buf + 12, "i32") & 0xff;
-    let strokeWidth = 0;
-    if (getWidth && getWidth(objPtr, buf + 16)) {
-      const raw = m.pdfium.getValue(buf + 16, "float");
-      if (Number.isFinite(raw) && raw > 0) strokeWidth = raw;
-    }
-    return {
-      stroke: {
-        r: m.pdfium.getValue(buf, "i32") & 0xff,
-        g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
-        b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
-        a: alpha,
-      },
-      strokeWidth,
-    };
-  } catch {
-    // A throwing stroke accessor must not abort the rest of the page.
-    return { stroke: null, strokeWidth: 0 };
-  }
+  const stroke = readObjStroke(m, objPtr);
+  if (!stroke) return { stroke: null, strokeWidth: 0 };
+  return { stroke, strokeWidth: readStrokeWidth(m, objPtr) };
+}
+
+// Per text page, so a page is walked once however many objects are read from it; dropped when the page closes.
+const objectTextsByPage = new Map<number, Map<number, string> | null>();
+
+function closeTextPage(m: WrappedPdfiumModule, textPagePtr: number): void {
+  objectTextsByPage.delete(textPagePtr);
+  m.FPDFText_ClosePage(textPagePtr);
 }
 
 function readTextObjString(
@@ -891,12 +1107,16 @@ function readTextObjString(
   textPagePtr: number,
   objPtr: number,
 ): string {
+  if (!objectTextsByPage.has(textPagePtr))
+    objectTextsByPage.set(textPagePtr, readObjectTexts(m, textPagePtr));
+  const texts = objectTextsByPage.get(textPagePtr);
+  if (texts) return drawnText(texts.get(objPtr) ?? "");
   // First call returns size in bytes for the UTF-16 buffer (including NUL).
   const len = m.FPDFTextObj_GetText(objPtr, textPagePtr, 0, 0);
   if (len <= 2) return "";
   const buf = scratchPtr(m, SCRATCH.readerReadTextA, len);
   m.FPDFTextObj_GetText(objPtr, textPagePtr, buf, len);
-  return readUtf16(m, buf, len);
+  return drawnText(readUtf16(m, buf, len));
 }
 
 /** 6-letter "ABCDEF+" subset tag PDFium prefixes onto subset font names. */
@@ -913,6 +1133,14 @@ function readFontNameVia(
   const buf = scratchPtr(m, SCRATCH.readerReadTextB, len);
   getName(fontPtr, buf, len);
   return m.pdfium.UTF8ToString(buf);
+}
+
+/** The face's /BaseFont without its subset tag ("Georgia-Bold"), or null when the font has none. */
+function faceNameOf(m: WrappedPdfiumModule, fontId: string): string | null {
+  const ptr = Number(/^pdf:(\d+)/.exec(fontId)?.[1]);
+  if (!ptr) return null;
+  const name = readFontNameVia(m, ptr, m.FPDFFont_GetBaseFontName);
+  return name == null ? null : SUBSET_TAG_RE.test(name) ? name.slice(7) : name;
 }
 
 function readFontFamily(
@@ -936,12 +1164,49 @@ function readFontFamily(
   return { family, subset: baseRaw != null && SUBSET_TAG_RE.test(baseRaw) };
 }
 
+/** PDF font flag ForceBold (ISO 32000-1 table 123). */
+const FORCE_BOLD = 1 << 18;
+const BOLD_WEIGHT = 600;
+/** A weight in a style suffix ("Arial-BoldMT", "Lato-Black"), not a family that starts with one ("Blackadder"). */
+const HEAVY_NAME = /[-, _](?:semi|demi|extra|ultra)?(?:bold|black|heavy)/i;
+
+/**
+ * Whether a document font draws bold: by its weight, its ForceBold flag, or a
+ * name such as "Helvetica-Bold", since a standard font the file does not
+ * embed carries no weight and its family name drops the style.
+ */
+function isBoldFont(m: WrappedPdfiumModule, fontPtr: number): boolean {
+  if (!fontPtr) return false;
+  if (m.FPDFFont_GetWeight(fontPtr) >= BOLD_WEIGHT) return true;
+  if (m.FPDFFont_GetFlags(fontPtr) & FORCE_BOLD) return true;
+  const name = readFontNameVia(m, fontPtr, m.FPDFFont_GetBaseFontName);
+  return name !== null && HEAVY_NAME.test(name);
+}
+
+/**
+ * Whether a run draws in a bold face throughout, every text object it was
+ * grouped from included: a paragraph opening on a bold label is not bold.
+ * Each font's weight is read once per returned function.
+ */
+export function boldRuns(m: WrappedPdfiumModule): (run: TextRun) => boolean {
+  const byFont = new Map<number, boolean>();
+  const boldObject = (ptr: number): boolean => {
+    const font = m.FPDFTextObj_GetFont(ptr);
+    if (!byFont.has(font)) byFont.set(font, isBoldFont(m, font));
+    return byFont.get(font)!;
+  };
+  return (run) => {
+    const drawn = collectMemberPtrs(run).filter((ptr) => ptr !== 0);
+    return drawn.length > 0 && drawn.every(boldObject);
+  };
+}
+
 function readTextRun(
   m: WrappedPdfiumModule,
   _doc: EditorDocument,
   page: Page,
   objPtr: number,
-  index: number | string,
+  id: string,
   transform: Affine,
   textPagePtr: number,
 ): TextRun | null {
@@ -955,7 +1220,7 @@ function readTextRun(
     const localBounds = readBounds(m, objPtr);
     if (!localBounds) return null;
     const localMatrix = readMatrix(m, objPtr);
-    const fill = readFill(m, objPtr);
+    const fill = readObjFill(m, objPtr) ?? { ...OPAQUE_BLACK };
 
     // Lift form-local coordinates into page space. For page-level text
     // `transform` is identity and these are no-ops.
@@ -980,8 +1245,9 @@ function readTextRun(
     if (fontPtr) primeFontGlyphMap(fontPtr, m);
     // Make the same face available to the overlay as a CSS FontFace.
     if (fontPtr) registerEmbeddedFace(m, fontPtr);
+    noteDocumentFontStyle(m, fontPtr, family);
     // Treat the PDFium font handle pointer as a unique id within the doc.
-    const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${index}`;
+    const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${id}`;
 
     // Text render mode (PDF Tr): 0 fill (default), 1/2 stroke variants, 3
     // invisible (OCR text layers over scans), 4-7 clipping variants.
@@ -1003,7 +1269,7 @@ function readTextRun(
     const { stroke, strokeWidth } = readStroke(m, objPtr, renderMode);
 
     return new TextRun({
-      id: `p${page.index}-t${index}`,
+      id,
       pageIndex: page.index,
       pdfiumObjPtr: objPtr,
       bounds,
@@ -1033,7 +1299,7 @@ function readShape(
   objPtr: number,
   index: number | string,
   transform: Affine,
-  containers: { containerPtr: number; topLevelContainerPtr: number },
+  containerPtr: number,
 ): ShapeObject | null {
   if (!isPainted(m, objPtr)) return null;
   const localBounds = readBounds(m, objPtr);
@@ -1049,8 +1315,7 @@ function readShape(
     id: `p${page.index}-s${index}`,
     pageIndex: page.index,
     pdfiumObjPtr: objPtr,
-    ...containers,
-    containerTransform: transform,
+    containerPtr,
     bounds,
   });
 }
@@ -1062,17 +1327,9 @@ function isPainted(m: WrappedPdfiumModule, objPtr: number): boolean {
   const fills = m.pdfium.getValue(buf, "i32") !== 0;
   const strokes = m.pdfium.getValue(buf + 4, "i32") !== 0;
   return (
-    (fills && readFill(m, objPtr).a > 0) ||
-    (strokes && readStrokeAlpha(m, objPtr) > 0)
+    (fills && (readObjFill(m, objPtr) ?? OPAQUE_BLACK).a > 0) ||
+    (strokes && (readObjStroke(m, objPtr)?.a ?? 0) > 0)
   );
-}
-
-function readStrokeAlpha(m: WrappedPdfiumModule, objPtr: number): number {
-  const buf = scratchPtr(m, SCRATCH.shapeStrokeAlpha, 16);
-  if (!m.FPDFPageObj_GetStrokeColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
-    return 0;
-  }
-  return m.pdfium.getValue(buf + 12, "i32") & 0xff;
 }
 
 function readImage(
@@ -1098,6 +1355,7 @@ function readImage(
     containerPtr,
     mcid: tags.mcid ?? undefined,
     artifact: tags.artifact || undefined,
+    clip: readImageClip(m, page.pagePtr, objPtr, containerPtr) ?? undefined,
   });
 }
 

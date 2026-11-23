@@ -179,6 +179,18 @@ class GoogleDrivePickerService {
     return this.createPicker(options);
   }
 
+  async openPickerWithToken(
+    accessToken: string,
+    options: PickerOptions = {},
+  ): Promise<File[]> {
+    if (!this.config) {
+      throw new Error("Google Drive service not initialized");
+    }
+    this.accessToken = accessToken;
+    window.gapi.client.setToken({ access_token: accessToken });
+    return this.createPicker(options);
+  }
+
   /**
    * Request access token from Google
    */

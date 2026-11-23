@@ -132,8 +132,7 @@ class RedactControllerMoreTest {
     }
 
     private PDFont helvetica(PDDocument doc) throws IOException {
-        try (InputStream is =
-                getClass().getResourceAsStream("/type3/library/fonts/dejavu/DejaVuSans.ttf")) {
+        try (InputStream is = getClass().getResourceAsStream("/static/fonts/DejaVuSans.ttf")) {
             if (is != null) {
                 return PDType0Font.load(doc, is);
             }
@@ -634,8 +633,8 @@ class RedactControllerMoreTest {
 
             TempFile resultTemp = mock(TempFile.class);
             when(resultTemp.getFile()).thenReturn(outFile);
-            when(redactExecuteService.execute(any(RedactExecuteRequest.class)))
-                    .thenReturn(resultTemp);
+            when(redactExecuteService.executeWithOutcome(any(RedactExecuteRequest.class)))
+                    .thenReturn(new RedactExecuteService.Outcome(resultTemp, 0, false));
 
             RedactExecuteRequest request = new RedactExecuteRequest();
             request.setFileInput(pdfFile(singlePageTextPdf("in")));
@@ -643,7 +642,8 @@ class RedactControllerMoreTest {
             ResponseEntity<Resource> response = controller.executeRedaction(request);
 
             assertThat(response.getStatusCode().value()).isEqualTo(200);
-            verify(redactExecuteService, times(1)).execute(any(RedactExecuteRequest.class));
+            verify(redactExecuteService, times(1))
+                    .executeWithOutcome(any(RedactExecuteRequest.class));
         }
 
         @Test

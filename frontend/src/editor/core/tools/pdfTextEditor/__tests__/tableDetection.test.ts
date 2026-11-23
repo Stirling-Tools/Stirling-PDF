@@ -626,19 +626,25 @@ describe("detectTables", () => {
     const cands = [
       {
         run: run(60, 700, 30, "A"),
+        inset: [],
+        text: "A",
         left: 60,
         right: 90,
         cx: 75,
         cy: 706,
         height: 8,
+        baseline: 700,
       },
       {
         run: run(60, 680, 30, "B"),
+        inset: [],
+        text: "B",
         left: 60,
         right: 90,
         cx: 75,
         cy: 686,
         height: 8,
+        baseline: 680,
       },
     ];
     const banded = bandByRules(cands, pins);
@@ -646,5 +652,262 @@ describe("detectTables", () => {
     expect(banded).toHaveLength(2);
     expect(banded![0].cands).toHaveLength(1);
     expect(banded![1].cands).toHaveLength(1);
+  });
+});
+
+describe("detectTables - letters a line draws as objects of their own", () => {
+  // Three lines of an Arabic paragraph as the reader returns them: [x, y, width, height, baseline, text]. The one-letter runs are letters the producer drew apart from their words, inside the line's extent.
+  const PARAGRAPH: Array<[number, number, number, number, number, string]> = [
+    [276.56, 693.87, 62.06, 1.42, 694.59, "ر    الصفحة 12)."],
+    [328.13, 693.15, 177.86, 9.79, 694.59, "معدل ال مو 75% في عام 2026 وفقاً ("],
+    [519.52, 694.59, 3.29, 4.11, 694.59, "ي"],
+    [510.4, 699.42, 9.4, 1.52, 691.19, "بلغ"],
+    [475, 698.12, 1.5, 1.52, 689.89, "ن"],
+    [
+      217.86,
+      665.27,
+      300.69,
+      1.42,
+      665.99,
+      "وروا الموقع https://www.example.org",
+    ],
+    [520.55, 670.37, 1.5, 1.52, 662.14, "ز"],
+    [222, 669.47, 3.05, 1.57, 661.24, "ت"],
+    [262.45, 668.57, 1.5, 1.52, 660.34, "ن"],
+    [
+      115.31,
+      636.67,
+      363.6,
+      1.42,
+      637.39,
+      "امج LibreOffice Writer أو Word ل   ح",
+    ],
+    [479.45, 642.22, 43.22, 1.52, 633.99, "اس خدم برن"],
+    [256.95, 640.72, 6.3, 1.57, 632.49, "فت"],
+    [510.1, 640.72, 3.05, 1.57, 632.49, "ت"],
+    [119.3, 639.97, 1.5, 1.52, 631.74, "ن"],
+  ];
+  const drawn = ([
+    x,
+    y,
+    width,
+    height,
+    baseline,
+    text,
+  ]: (typeof PARAGRAPH)[0]) =>
+    run(x, y, width, text, {
+      bounds: { x, y, width, height },
+      matrix: { a: 1, b: 0, c: 0, d: 1, e: x, f: baseline },
+      fontSize: 11,
+    });
+
+  it("does not build a table out of a paragraph whose lines hold separately drawn letters", () => {
+    expect(detectTables(PARAGRAPH.map(drawn), 0)).toEqual([]);
+  });
+
+  it("puts a letter drawn inside a cell's text in that cell", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["القطاع", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const sector = table[3];
+    // Low enough on the line to band as a row of its own were it a candidate.
+    const letter = run(70, 677, 3, "ن", {
+      bounds: { x: 70, y: 677, width: 3, height: 1 },
+    });
+
+    const plain = detectTables(table, 0);
+    const tables = detectTables([...table, letter], 0);
+
+    expect(tables).toHaveLength(1);
+    expect(tables[0].colEdges).toEqual(plain[0].colEdges);
+    expect(tables[0].rowEdges).toEqual(plain[0].rowEdges);
+    const cell = tables[0].cells.find((c) => c.row === 1 && c.col === 0);
+    expect(cell?.runIds).toEqual([sector.id, letter.id]);
+  });
+
+  it("leaves a run inside a left-to-right line a candidate of its own", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["Widget", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const mark = run(70, 677, 3, ".", {
+      bounds: { x: 70, y: 677, width: 3, height: 1 },
+      matrix: { a: 1, b: 0, c: 0, d: 1, e: 70, f: 680 },
+    });
+
+    const cells = detectTables([...table, mark], 0)[0].cells;
+
+    expect(cells.find((c) => c.runIds.includes(table[3].id))?.runIds).toEqual([
+      table[3].id,
+    ]);
+    expect(cells.find((c) => c.runIds.includes(mark.id))?.runIds).toEqual([
+      mark.id,
+    ]);
+  });
+
+  it("keeps both of two runs drawn over each other", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["Widget", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const doubled = run(50, 680, 60, "Widget");
+
+    const cell = detectTables([...table, doubled], 0)[0].cells.find(
+      (c) => c.row === 1 && c.col === 0,
+    );
+
+    expect(cell?.runIds).toEqual([table[3].id, doubled.id]);
+  });
+});
+
+describe("detectTables - layouts that only look like a grid", () => {
+  const SENTENCES = [
+    "The committee reviewed every submission before",
+    "the deadline and returned its findings to the",
+    "board, which approved the budget for the year",
+    "after a short discussion of the revised targets",
+    "and the schedule proposed by the finance team.",
+    "Members asked for a summary of the main risks.",
+  ];
+  const ruleAt = (y: number) => ({
+    x: 40,
+    y: y - 0.25,
+    width: 560,
+    height: 0.5,
+  });
+
+  it("does not build a table out of a running watermark", () => {
+    const turned = { a: 0.7, b: 0.7, c: -0.7, d: 0.7 };
+    const runs = grid([50, 200, 350], 700, 40, [
+      ["DRAFT", "DRAFT", "DRAFT"],
+      ["DRAFT", "DRAFT", "DRAFT"],
+      ["DRAFT", "DRAFT", "DRAFT"],
+    ]).map((r) => ({ ...r, matrix: { ...r.matrix, ...turned } }));
+
+    expect(detectTables(runs, 0)).toEqual([]);
+  });
+
+  it("does not build a table out of an upright watermark tiled over body text", () => {
+    const grey = { fill: { r: 200, g: 200, b: 200, a: 255 } };
+    const tiles = grid([60, 250, 440], 720, 110, [
+      ["CONFIDENTIAL", "CONFIDENTIAL", "CONFIDENTIAL"],
+      ["CONFIDENTIAL", "CONFIDENTIAL", "CONFIDENTIAL"],
+      ["CONFIDENTIAL", "CONFIDENTIAL", "CONFIDENTIAL"],
+      ["CONFIDENTIAL", "CONFIDENTIAL", "CONFIDENTIAL"],
+    ]).map((r) => ({ ...r, ...grey, bounds: { ...r.bounds, width: 110 } }));
+    const body = Array.from({ length: 24 }, (_, i) =>
+      run(50, 726 - i * 14, 500, SENTENCES[i % SENTENCES.length]),
+    );
+
+    expect(detectTables([...body, ...tiles], 0)).toEqual([]);
+  });
+
+  it("keeps a table a watermark runs across", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["Widget", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const watermark = run(40, 640, 400, "CONFIDENTIAL", {
+      bounds: { x: 40, y: 640, width: 400, height: 90 },
+      matrix: { a: 30, b: 20, c: -20, d: 30, e: 40, f: 640 },
+    });
+
+    expect(detectTables([...table, watermark], 0)).toHaveLength(1);
+  });
+
+  it("does not take a grid that other page text runs through", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["Widget", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const paragraph = run(
+      40,
+      655,
+      380,
+      "Body text set across the same area as the grid\nand reading straight through it\nline after line",
+      {
+        bounds: { x: 40, y: 655, width: 380, height: 60 },
+        paragraphLineCount: 3,
+      },
+    );
+
+    expect(detectTables([...table, paragraph], 0)).toEqual([]);
+  });
+
+  it("does not treat two columns of running text as a table", () => {
+    const runs = grid(
+      [50, 320],
+      700,
+      16,
+      SENTENCES.map((line, i) => [line, SENTENCES[(i + 3) % 6]]),
+    ).map((r) => ({ ...r, bounds: { ...r.bounds, width: 240 } }));
+
+    expect(detectTables(runs, 0)).toEqual([]);
+  });
+
+  const line = (x: number, y: number, text: string) =>
+    run(x, y, 120, text, { bounds: { x, y, width: 120, height: 6 } });
+
+  it("does not pair two blocks of lines that sit side by side on their own pitches", () => {
+    const left = Array.from({ length: 14 }, (_, i) =>
+      line(50, 700 - i * 11, `Left block line ${i}`),
+    );
+    const right = Array.from({ length: 11 }, (_, i) =>
+      line(320, 702 - i * 14, `Right block line ${i}`),
+    );
+
+    expect(detectTables([...left, ...right], 0)).toEqual([]);
+  });
+
+  it("keeps a table whose cells wrap onto extra lines in either column", () => {
+    const rows: [string, string][] = [
+      ["Item", "Notes"],
+      ["Widget", "Fits the small frame"],
+      ["", "and the large one"],
+      ["Gadget with a", "Ships flat"],
+      ["long name", ""],
+      ["Sprocket", "Spare part"],
+      ["", "for the gadget"],
+      ["Bracket for", "Wall mount"],
+      ["the wall", ""],
+    ];
+    const runs = rows.flatMap(([a, b], i) =>
+      [a && line(50, 700 - i * 11, a), b && line(320, 701 - i * 11, b)].filter(
+        (r): r is TextRunSnapshot => !!r,
+      ),
+    );
+
+    expect(detectTables(runs, 0)).toHaveLength(1);
+  });
+
+  it("keeps a table's edge near its text when its columns sit far apart", () => {
+    const runs = [
+      line(50, 700, "Declared interest"),
+      line(480, 700, "Declared value"),
+      line(50, 690, "in timely delivery"),
+      line(480, 690, "per the consignor"),
+    ];
+    const [table] = detectTables(runs, 0);
+
+    expect(table.colEdges[0]).toBeGreaterThan(30);
+    expect(table.colEdges[table.cols]).toBeLessThan(620);
+  });
+
+  it("keeps a table of long descriptions whose rows the page rules apart", () => {
+    const runs = grid(
+      [50, 320],
+      700,
+      20,
+      SENTENCES.map((line, i) => [line, SENTENCES[(i + 3) % 6]]),
+    ).map((r) => ({ ...r, bounds: { ...r.bounds, width: 240 } }));
+    const rules = [716, ...SENTENCES.map((_, i) => 696 - i * 20)].map(ruleAt);
+
+    expect(detectTables(runs, 0, {}, rules)).toHaveLength(1);
   });
 });

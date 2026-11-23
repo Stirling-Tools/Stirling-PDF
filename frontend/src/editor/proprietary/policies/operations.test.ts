@@ -124,6 +124,24 @@ describe("wire conversion", () => {
 });
 
 describe("compliance steps", () => {
+  test.each([true, false, "true", "false"])(
+    "pdfa drops a stored office choice %s",
+    (choice) => {
+      const step = policyStepFromWire({
+        operation: "/api/v1/convert/pdf/pdfa",
+        parameters: {
+          outputFormat: "pdfa-3b",
+          useStirlingOfficeConvert: choice,
+        },
+      });
+      expect(step?.toolId).toBe("pdfa");
+      if (!step) throw new Error("PDF/A policy step was not recognized");
+      expect(policyStepToWire(step).parameters).toEqual({
+        outputFormat: "pdfa-3b",
+      });
+    },
+  );
+
   test("pdfa sends the archival profile the backend expects", () => {
     const wire = policyStepToWire(
       policyStep("pdfa", { outputFormat: "pdfa-3b" }),

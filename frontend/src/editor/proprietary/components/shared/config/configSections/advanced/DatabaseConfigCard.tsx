@@ -15,6 +15,7 @@ import EditableSecretField from "@editor/components/shared/EditableSecretField";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { DatasourceSettingsData } from "@editor/components/shared/config/configSections/advanced/advancedSettings";
 import type { AdvancedCardProps } from "@editor/components/shared/config/configSections/advanced/advancedCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * The `system.datasource` block, previously its own nav row. The password stays
@@ -66,6 +67,7 @@ export function DatabaseConfigCard({
             <>
               <div>
                 <TextInput
+                  className={privateContentClassName}
                   label={
                     <Group gap="xs">
                       <span>
@@ -133,6 +135,7 @@ export function DatabaseConfigCard({
 
               <div>
                 <TextInput
+                  className={privateContentClassName}
                   label={
                     <Group gap="xs">
                       <span>
@@ -185,6 +188,7 @@ export function DatabaseConfigCard({
 
               <div>
                 <TextInput
+                  className={privateContentClassName}
                   label={
                     <Group gap="xs">
                       <span>
@@ -211,6 +215,7 @@ export function DatabaseConfigCard({
 
               <div>
                 <TextInput
+                  className={privateContentClassName}
                   label={
                     <Group gap="xs">
                       <span>

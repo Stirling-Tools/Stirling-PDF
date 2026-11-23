@@ -24,12 +24,14 @@ public class PDFWithPageNums extends PDFFile {
                             + " format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a"
                             + " constant (e.g., '2n+1', '3n', '6n-5')",
             defaultValue = "all",
-            requiredMode = RequiredMode.REQUIRED)
-    private String pageNumbers;
+            requiredMode = RequiredMode.NOT_REQUIRED)
+    private String pageNumbers = "all";
 
     @Hidden
     public List<Integer> getPageNumbersList(PDDocument doc, boolean oneBased) {
         int pageCount = doc.getNumberOfPages();
-        return GeneralUtils.parsePageList(pageNumbers, pageCount, oneBased);
+        String pages = pageNumbers == null || pageNumbers.isBlank() ? "all" : pageNumbers;
+        GeneralUtils.requireValidPageSelection(pages, pageCount);
+        return GeneralUtils.parsePageList(pages, pageCount, oneBased);
     }
 }

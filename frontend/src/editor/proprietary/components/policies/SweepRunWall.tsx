@@ -9,6 +9,7 @@ import {
   type ProcessingFolderRun,
 } from "@editor/services/processingFolderApi";
 import "@editor/components/policies/SweepRunWall.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
 
@@ -77,7 +78,9 @@ export function SweepRunWall({ cards }: { cards: SweepWallCard[] }) {
           key={card.name}
           className={`sweep-wall__card sweep-wall__card--${card.state}`}
         >
-          <span className="sweep-wall__card-name">{card.name}</span>
+          <span className={`sweep-wall__card-name ${privateContentClassName}`}>
+            {card.name}
+          </span>
           <span className="sweep-wall__card-status">
             {card.state === "running" && (
               <span className="sweep-wall__spin" aria-hidden />

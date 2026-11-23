@@ -1,3 +1,5 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -6,6 +8,7 @@ import {
   applyInkState,
   collectMemberPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { readObjStroke } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import {
   SCRATCH,
   scratchPtr,
@@ -56,22 +59,23 @@ export class SetTextOutlineCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    refuseRedrawOfReadOnlyText(run);
+    liftRunToPage(doc, page, run);
 
-    if (this.prev === null) {
-      const seen = new Set<number>();
-      const members: MemberInk[] = [];
-      for (const ptr of collectMemberPtrs(run)) {
-        if (!ptr || seen.has(ptr)) continue;
-        seen.add(ptr);
-        members.push(readMemberInk(doc, ptr, run));
-      }
-      this.prev = {
-        renderMode: run.renderMode,
-        stroke: run.stroke ? { ...run.stroke } : null,
-        strokeWidth: run.strokeWidth,
-        members,
-      };
+    // Read on every apply: redoing an earlier step draws the run in new objects.
+    const seen = new Set<number>();
+    const members: MemberInk[] = [];
+    for (const ptr of collectMemberPtrs(run)) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      members.push(readMemberInk(doc, ptr, run));
     }
+    this.prev = {
+      renderMode: run.renderMode,
+      stroke: run.stroke ? { ...run.stroke } : null,
+      strokeWidth: run.strokeWidth,
+      members,
+    };
 
     const outlined = this.nextStroke !== null && this.nextWidth > 0;
     // An invisible OCR layer stays invisible, and a clipping mode (4-7) keeps
@@ -112,7 +116,6 @@ export class SetTextOutlineCommand implements Command {
         stroke: member.stroke,
         strokeWidth: member.strokeWidth,
       });
-      if (!member.stroke) clearStroke(doc, member.ptr);
     }
     page.markNeedsGenerate();
   }
@@ -131,7 +134,6 @@ export class SetTextOutlineCommand implements Command {
         stroke: run.stroke,
         strokeWidth: run.strokeWidth,
       });
-      if (!run.stroke) clearStroke(doc, ptr);
     }
     doc.page(this.pageIndex).markNeedsGenerate();
   }
@@ -151,13 +153,6 @@ export class SetTextOutlineCommand implements Command {
 }
 
 interface OutlineModule {
-  FPDFPageObj_GetStrokeColor?: (
-    obj: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number,
-  ) => boolean;
   FPDFPageObj_GetStrokeWidth?: (obj: number, out: number) => boolean;
   FPDFPageObj_SetStrokeColor?: (
     obj: number,
@@ -184,21 +179,9 @@ function readMemberInk(
   } catch {
     /* keep the run-level value */
   }
-  const r = scratchPtr(m, SCRATCH.outlineR, 4);
-  const g = scratchPtr(m, SCRATCH.outlineG, 4);
-  const b = scratchPtr(m, SCRATCH.outlineB, 4);
-  const a = scratchPtr(m, SCRATCH.outlineA, 4);
   const w = scratchPtr(m, SCRATCH.outlineW, 4);
   try {
-    let stroke: RGBA | null = null;
-    if (mod.FPDFPageObj_GetStrokeColor?.(ptr, r, g, b, a)) {
-      stroke = {
-        r: m.pdfium.getValue(r, "i32") & 0xff,
-        g: m.pdfium.getValue(g, "i32") & 0xff,
-        b: m.pdfium.getValue(b, "i32") & 0xff,
-        a: m.pdfium.getValue(a, "i32") & 0xff,
-      };
-    }
+    const stroke = readObjStroke(m, ptr);
     let strokeWidth = 0;
     if (mod.FPDFPageObj_GetStrokeWidth?.(ptr, w)) {
       const raw = m.pdfium.getValue(w, "float");
@@ -207,16 +190,5 @@ function readMemberInk(
     return { ptr, renderMode, stroke, strokeWidth };
   } catch {
     return { ptr, renderMode, stroke: null, strokeWidth: 0 };
-  }
-}
-
-/** A zero-width transparent stroke is how PDFium expresses "no outline". */
-function clearStroke(doc: EditorDocument, ptr: number): void {
-  const mod = doc.module as unknown as OutlineModule;
-  try {
-    mod.FPDFPageObj_SetStrokeWidth?.(ptr, 0);
-    mod.FPDFPageObj_SetStrokeColor?.(ptr, 0, 0, 0, 0);
-  } catch {
-    /* best-effort */
   }
 }

@@ -20,6 +20,7 @@ dependencies {
 
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation 'org.eclipse.jetty.compression:jetty-compression-server'
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation 'org.eclipse.jetty:jetty-alpn-java-server'
     implementation (libs.telegrambots) {
@@ -46,10 +47,12 @@ dependencies {
     implementation libs.commonmark // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation libs.commonmark.ext.gfm.tables
 
-    // Stirling Office Convert: PDF to Office, legacy .ppt output, and Office to PDF without LibreOffice.
+    // Stirling Office Convert: PDF to Office, legacy .ppt output, Office to PDF and PDF/A.
     implementation libs.stirling.office.convert
     implementation libs.stirling.office.convert.legacy
     implementation libs.stirling.office.convert.topdf
+    implementation libs.stirling.office.convert.pdfa
+    implementation libs.stirling.office.convert.optimize
 
     // General PDF dependencies
     implementation libs.pdfbox.preflight
@@ -96,6 +99,7 @@ dependencies {
     runtimeOnly libs.imageio.jpeg
     runtimeOnly libs.imageio.tiff
     runtimeOnly libs.imageio.webp
+    runtimeOnly libs.imageio.pnm
     runtimeOnly libs.imageio.psd
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

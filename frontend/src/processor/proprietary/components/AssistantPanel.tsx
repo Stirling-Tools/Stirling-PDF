@@ -9,6 +9,7 @@ import {
 } from "@processor/api/assistant";
 import { Icon } from "@editor/ui/Icon";
 import "@processor/components/AssistantPanel.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Message {
   id: number;
@@ -133,9 +134,7 @@ export function AssistantPanel() {
         {messages.map((m) => (
           <div
             key={m.id}
-            className={
-              "portal-assistant__bubble portal-assistant__bubble--" + m.role
-            }
+            className={`portal-assistant__bubble portal-assistant__bubble--${m.role} ${privateContentClassName}`}
           >
             {m.text}
           </div>
@@ -167,7 +166,7 @@ export function AssistantPanel() {
           onChange={(e) => setInput(e.target.value)}
           placeholder={t("portal.assistant.inputPlaceholder")}
           aria-label={t("portal.assistant.inputAriaLabel")}
-          className="portal-assistant__input"
+          className={`portal-assistant__input ${privateContentClassName}`}
           disabled={typing}
         />
         <ActionIcon

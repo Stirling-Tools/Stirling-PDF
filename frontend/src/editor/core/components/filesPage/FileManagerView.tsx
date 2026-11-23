@@ -93,6 +93,8 @@ import {
 import { clearFilesPageReturnRoute } from "@editor/components/filesPage/filesPageReturnRoute";
 import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import "@editor/components/filesPage/FilesPage.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export default function FileManagerView() {
   const { t } = useTranslation();
@@ -658,11 +660,12 @@ export default function FileManagerView() {
         );
 
         // Server-only stubs have no bytes in IDB; download + ingest first.
-        const materialized = await materializeServerStubs(toOpen, {
-          addFiles: fileActions.addFilesWithOptions,
-          updateStub: fileActions.updateStirlingFileStub,
-        });
-        if (materialized.length !== toOpen.length) {
+        const { stubs: materialized, successfulSourceCount } =
+          await materializeServerStubs(toOpen, {
+            addFiles: fileActions.addFilesWithOptions,
+            updateStub: fileActions.updateStirlingFileStub,
+          });
+        if (successfulSourceCount !== toOpen.length) {
           // Refresh successful imports even when another file fails.
           await refresh();
           return;
@@ -670,7 +673,7 @@ export default function FileManagerView() {
 
         if (materialized.length > 0) {
           await fileActions.addStirlingFileStubs(materialized, {
-            selectFiles: false,
+            selectFiles: true,
           });
         }
 
@@ -894,11 +897,11 @@ export default function FileManagerView() {
   /** Cloud-only rows hold no bytes; pull them local before acting on them. */
   const localCopyOf = useCallback(
     async (file: StirlingFileStub): Promise<StirlingFileStub | null> => {
-      const [materialized] = await materializeServerStubs([file], {
+      const { stubs } = await materializeServerStubs([file], {
         addFiles: fileActions.addFilesWithOptions,
         updateStub: fileActions.updateStirlingFileStub,
       });
-      return materialized ?? null;
+      return stubs[0] ?? null;
     },
     [fileActions],
   );
@@ -1143,7 +1146,9 @@ export default function FileManagerView() {
             gap: "0.5rem",
           }}
         >
-          <span>{folders.error}</span>
+          <PrivateContent>
+            <span>{folders.error}</span>
+          </PrivateContent>
           <ActionIcon
             size="sm"
             variant="tertiary"
@@ -1681,7 +1686,7 @@ function Breadcrumbs() {
                   key={entry.id ?? "root"}
                   onClick={() => openFolder(entry.id)}
                 >
-                  {entry.name}
+                  <PrivateContent>{entry.name}</PrivateContent>
                 </Menu.Item>
               ))}
             </Menu.Dropdown>
@@ -1700,7 +1705,7 @@ function Breadcrumbs() {
           <React.Fragment key={entry.id ?? "root"}>
             <button
               type="button"
-              className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
+              className={`files-page-breadcrumb${isLast ? " is-current" : ""} ${privateContentClassName}`}
               title={entry.name}
               onClick={() => openFolder(entry.id)}
               {...dropHandlers(entry.id)}

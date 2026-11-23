@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 import { Icon } from "@editor/ui/Icon";
-import { oauthIconName } from "@editor/auth/ui/oauthIcons";
+import { MONOCHROME_MARKS, oauthIconName } from "@editor/auth/ui/oauthIcons";
 
 interface ProviderMarkProps {
   /** Provider icon filename, e.g. "google.svg". */
@@ -31,5 +31,16 @@ export function ProviderMark({
       />
     );
   }
-  return <Icon name={name} className={className} style={style} title={label} />;
+  return (
+    <Icon
+      name={name}
+      className={className}
+      style={
+        MONOCHROME_MARKS.has(name)
+          ? { ...style, color: "var(--c-mark-mono)" }
+          : style
+      }
+      title={label}
+    />
+  );
 }

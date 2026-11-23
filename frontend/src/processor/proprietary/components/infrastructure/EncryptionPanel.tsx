@@ -37,6 +37,7 @@ import { EncryptionMigrationCard } from "@processor/components/infrastructure/En
 import { EncryptionRotationCard } from "@processor/components/infrastructure/EncryptionRotationCard";
 import "@processor/components/infrastructure/infrastructure.css";
 import "@processor/components/infrastructure/EncryptionPanel.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** How often to re-read migration progress while a run is going. */
 const MIGRATION_POLL_MS = 2000;
@@ -396,7 +397,10 @@ export function EncryptionPanel({
                           "portal.infrastructure.encryption.masterKey.fingerprint",
                         )}
                       </span>
-                      <code ref={fingerprintRef}>
+                      <code
+                        ref={fingerprintRef}
+                        className={privateContentClassName}
+                      >
                         {status.masterKeyFingerprint}
                       </code>
                       <InfoHint

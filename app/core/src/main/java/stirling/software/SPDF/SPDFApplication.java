@@ -27,6 +27,7 @@ import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.JpdfiumNativePreloader;
 
 @Slf4j
 @EnableScheduling
@@ -59,6 +60,7 @@ public class SPDFApplication {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        JpdfiumNativePreloader.preloadBundledNatives();
         SpringApplication app = new SpringApplication(SPDFApplication.class);
 
         Properties props = new Properties();
@@ -187,7 +189,6 @@ public class SPDFApplication {
     }
 
     private static void printStartupLogs() {
-        log.info("Stirling-PDF Started.");
         String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
         log.info("Navigate to {}", url);
     }

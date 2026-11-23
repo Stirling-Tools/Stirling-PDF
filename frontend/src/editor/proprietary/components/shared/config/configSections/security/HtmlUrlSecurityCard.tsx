@@ -14,6 +14,7 @@ import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { SecurityCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
 import type { SecuritySettingsData } from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 type UrlSecurity = NonNullable<
   NonNullable<SecuritySettingsData["html"]>["urlSecurity"]
@@ -310,6 +311,7 @@ function DomainListField({
   return (
     <div>
       <Textarea
+        className={privateContentClassName}
         name={name}
         label={
           <UrlSecurityFieldLabel label={label} info={info} pending={pending} />

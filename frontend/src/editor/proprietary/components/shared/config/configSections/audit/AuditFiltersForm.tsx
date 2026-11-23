@@ -5,6 +5,7 @@ import { DateInput } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
 import { AuditFilters } from "@editor/services/auditService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 // Helper to format date as YYYY-MM-DD in local time (avoids DST/UTC issues)
 const formatDateToYMD = (date: Date): string => {
@@ -168,9 +169,11 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
           clearable
           searchable
           disabled={disabled}
+          className={privateContentClassName}
           comboboxProps={{
             withinPortal: true,
             zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+            classNames: { dropdown: privateContentClassName },
           }}
         />
         <DateInput

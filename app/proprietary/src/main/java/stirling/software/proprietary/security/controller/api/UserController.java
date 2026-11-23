@@ -58,6 +58,7 @@ import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.EmailAddresses;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @UserApi
@@ -205,9 +206,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
-        if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+        // Most account lookups match usernames case-insensitively and fail once two rows match,
+        // so a case variant of another account's name (including the internal API user) is taken.
+        if (userService.isUsernameTakenByOtherUser(newUsername, user.getId())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "usernameExists", "message", "Username already exists"));
+                    .body(Map.of("error", "usernameExists", "message", "Username already in use"));
         }
         if (newUsername != null && !newUsername.isEmpty()) {
             try {
@@ -333,6 +336,11 @@ public class UserController {
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
         userService.changePassword(user, newPassword);
+        // The login page signs in with the default login until first login ends; left set, every
+        // visit would count a failed attempt until this account locked.
+        if (Boolean.TRUE.equals(user.getIsFirstLogin())) {
+            userService.changeFirstUse(user, false);
+        }
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
         return ResponseEntity.ok(
@@ -924,8 +932,7 @@ public class UserController {
     private InviteResult processEmailInvite(
             String email, Long teamId, String role, String loginUrl) {
         try {
-            // Validate email format (basic check)
-            if (!email.contains("@") || !email.contains(".")) {
+            if (!EmailAddresses.isValidAccountAddress(email)) {
                 return InviteResult.failure(email + ": Invalid email format");
             }
 

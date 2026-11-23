@@ -35,6 +35,7 @@ import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters"
 import type { BuildToolOptionsExtras } from "@editor/tools/annotate/useAnnotationStyleState";
 
 import { Icon, type IconName } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface StyleState {
   inkColor: string;
   inkWidth: number;
@@ -508,7 +509,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               disabled={false}
             />
             {stampImageData && (
-              <Stack gap="xs">
+              <Stack gap="xs" className={privateContentClassName}>
                 <Text size="xs" c="dimmed">
                   {t("annotation.imagePreview", "Preview")}
                 </Text>

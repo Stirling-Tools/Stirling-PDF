@@ -21,11 +21,11 @@ class PageSizeRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("standardPageSize and inherited comparator null on a fresh instance")
+        @DisplayName("standardPageSize defaults to A4 and inherited comparator is null")
         void defaultValues() {
             PageSizeRequest req = new PageSizeRequest();
 
-            assertThat(req.getStandardPageSize()).isNull();
+            assertThat(req.getStandardPageSize()).isEqualTo("A4");
             assertThat(req.getComparator()).isNull();
         }
     }

@@ -45,7 +45,7 @@ class ConfigInitializerRestartTest {
             assertEquals("true", read(settings, "storage", "enabled"));
             assertEquals("true", read(settings, "storage", "signing", "enabled"));
             assertEquals("local", read(settings, "storage", "provider"));
-            assertEquals("false", read(settings, "storage", "sharing", "enabled"));
+            assertEquals("true", read(settings, "storage", "sharing", "enabled"));
         }
     }
 

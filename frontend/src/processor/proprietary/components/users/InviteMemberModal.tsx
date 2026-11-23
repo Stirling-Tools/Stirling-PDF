@@ -13,6 +13,7 @@ import { errorMessage } from "@processor/api/http";
 import type { Team } from "@processor/api/teams";
 import { useTier } from "@processor/contexts/TierContext";
 import "@processor/views/Users.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface InviteMemberModalProps {
   open: boolean;
@@ -385,6 +386,7 @@ export function InviteMemberModal({
               )}
               value={email}
               invalid={!!emailError}
+              className={privateContentClassName}
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => touch("email")}
             />
@@ -400,6 +402,7 @@ export function InviteMemberModal({
                 placeholder={t("users.invite.usernamePlaceholder", "jsmith")}
                 value={username}
                 invalid={!!usernameError}
+                className={privateContentClassName}
                 onChange={(e) => setUsername(e.target.value)}
                 onBlur={() => touch("username")}
               />

@@ -14,9 +14,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.model.tool.ToolFormat;
@@ -30,11 +30,8 @@ public class ConvertHtmlToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    private final RuntimePathConfig runtimePathConfig;
-
     private final TempFileManager tempFileManager;
-
-    private final CustomHtmlSanitizer customHtmlSanitizer;
+    private final OfficeToPdfService officeToPdfService;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -66,13 +63,8 @@ public class ConvertHtmlToPDF {
         }
 
         byte[] pdfBytes =
-                FileToPdf.convertHtmlToPdf(
-                        runtimePathConfig.getWeasyPrintPath(),
-                        request,
-                        fileInput.getBytes(),
-                        originalFilename,
-                        tempFileManager,
-                        customHtmlSanitizer);
+                officeToPdfService.convertHtml(
+                        fileInput.getBytes(), originalFilename.endsWith(".zip"), request.getZoom());
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 

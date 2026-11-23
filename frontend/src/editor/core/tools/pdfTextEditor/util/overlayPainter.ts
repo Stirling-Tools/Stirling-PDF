@@ -3,6 +3,7 @@ import {
   type TokenFit,
 } from "@editor/tools/pdfTextEditor/util/lineLayout";
 import { measureAdvancePx } from "@editor/tools/pdfTextEditor/util/textMetrics";
+import type { TextRange } from "@editor/tools/pdfTextEditor/types";
 
 export interface PaintToken {
   text: string;
@@ -137,17 +138,23 @@ function predictedAdvance(
   sourceAdvancePx: number,
   opts: PaintOptions,
 ): number | null {
-  if (text === "" || source === "") return null;
-  const sourceNatural = measureAdvancePx(source, opts.font);
-  if (!(sourceNatural > 0) || !(sourceAdvancePx > 0)) return null;
-  const ratio = sourceAdvancePx / sourceNatural;
+  if (text === "") return null;
   const table = opts.advanceEm;
+  const sourceNatural = source ? measureAdvancePx(source, opts.font) : 0;
+  // A line's trailing space token has no advance of its own: the engine trims
+  // it. Letters typed into it are priced from the table alone.
+  const sized = sourceNatural > 0 && sourceAdvancePx > 0;
+  if (!sized && (!table || table.size === 0)) return null;
+  const ratio = sized ? sourceAdvancePx / sourceNatural : 1;
   if (!table || table.size === 0) {
     const natural = measureAdvancePx(text, opts.font);
     return natural > 0 ? natural * ratio : null;
   }
-  let total = 0;
-  for (const ch of text) {
+  // Letters typed after the token still advance the pen the document set its
+  // own letters to, so only what follows them is priced.
+  const kept = sized && text.startsWith(source) ? source.length : 0;
+  let total = kept > 0 ? sourceAdvancePx : 0;
+  for (const ch of text.slice(kept)) {
     const em = table.get(ch);
     total +=
       em === undefined
@@ -171,6 +178,10 @@ export function paintPlainText(el: HTMLElement, text: string): void {
   el.innerText = text;
 }
 
+function isLineBreak(node: Node): node is HTMLElement {
+  return node instanceof HTMLElement && node.tagName === "BR";
+}
+
 /**
  * Lines held by one painted line block.
  *
@@ -186,13 +197,37 @@ export function paintPlainText(el: HTMLElement, text: string): void {
  */
 function blockLines(element: HTMLElement): string[] {
   if ((element.textContent ?? "") === "") return [""];
+  const lines = flowLines(element);
+  // A break that ends a block draws no line of its own: WebKit merges a line up into a blank one by putting its text in front of that block's filler break.
+  if (lines.length > 1 && lines.at(-1) === "" && endsWithBreak(element))
+    lines.pop();
+  return lines;
+}
+
+// Merging two lines with Backspace leaves the lower one as an inline span on the upper one's line, not a line of its own.
+const BLOCK_TAGS =
+  /^(DIV|P|LI|UL|OL|H[1-6]|BLOCKQUOTE|PRE|TABLE|TR|SECTION|ARTICLE)$/;
+
+function isLineElement(node: HTMLElement): boolean {
+  return node.hasAttribute(LINE_ATTR) || BLOCK_TAGS.test(node.tagName);
+}
+
+function endsWithBreak(node: Node): boolean {
+  let last: Node | null = node.lastChild;
+  while (last && last.nodeType !== Node.TEXT_NODE && last.lastChild)
+    last = last.lastChild;
+  return last instanceof HTMLElement && last.tagName === "BR";
+}
+
+/** The text under `element`, split at every <br>. */
+function flowLines(element: HTMLElement): string[] {
   const lines: string[] = [""];
   const walk = (node: Node): void => {
     if (node.nodeType === Node.TEXT_NODE) {
       lines[lines.length - 1] += node.textContent ?? "";
       return;
     }
-    if (node instanceof HTMLElement && node.tagName === "BR") {
+    if (isLineBreak(node)) {
       lines.push("");
       return;
     }
@@ -223,9 +258,16 @@ export function readOverlayText(element: HTMLElement): string {
       continue;
     }
     if (!(node instanceof HTMLElement)) continue;
-    if (node.tagName === "BR") {
+    if (isLineBreak(node)) {
       lines.push("");
       lastWasTrailingBr = true;
+      continue;
+    }
+    if (!isLineElement(node)) {
+      const [first, ...rest] = flowLines(node);
+      lines[lines.length - 1] += first;
+      lines.push(...rest);
+      lastWasTrailingBr = rest.length > 0 && endsWithBreak(node);
       continue;
     }
     // Block children carry whole lines, so the seed is not one of them.
@@ -264,26 +306,59 @@ export function plainCaretOffset(el: HTMLElement): number | null {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return null;
   const { focusNode, focusOffset } = selection;
-  if (!focusNode || !el.contains(focusNode)) return null;
+  return focusNode ? plainOffset(el, focusNode, focusOffset) : null;
+}
+
+/**
+ * The characters of the run's model text the selection covers, counted as
+ * plainCaretOffset counts; null for a caret or a selection that leaves `el`.
+ */
+export function plainSelectionRange(el: HTMLElement): TextRange | null {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+    return null;
+  }
+  const { anchorNode, anchorOffset, focusNode, focusOffset } = selection;
+  if (!anchorNode || !focusNode) return null;
+  const anchor = plainOffset(el, anchorNode, anchorOffset);
+  const focus = plainOffset(el, focusNode, focusOffset);
+  if (anchor === null || focus === null || anchor === focus) return null;
+  return { start: Math.min(anchor, focus), end: Math.max(anchor, focus) };
+}
+
+function plainOffset(
+  el: HTMLElement,
+  node: Node,
+  offset: number,
+): number | null {
+  if (!el.contains(node)) return null;
   const range = document.createRange();
   try {
     range.setStart(el, 0);
-    range.setEnd(focusNode, focusOffset);
+    range.setEnd(node, offset);
   } catch {
     return null;
   }
   const host = document.createElement("div");
   host.appendChild(range.cloneContents());
+  // A <br> just before the caret is a real break, not the trailing filler readOverlayText drops, whether it ends the text or the line the caret is in.
+  const last = host.lastChild;
+  if (last instanceof HTMLElement && isLineElement(last))
+    last.appendChild(document.createTextNode(""));
+  host.appendChild(document.createTextNode(""));
   const chars = readOverlayText(host).length;
   // A caret parked on the container BETWEEN two line children sits at the
   // start of the next line - one past the end of the truncated text. Past the
   // last line child it belongs at that line's end, not on a fresh one.
-  if (focusNode === el) {
-    const idx = Math.min(focusOffset, el.childNodes.length);
+  if (node === el) {
+    const idx = Math.min(offset, el.childNodes.length);
     const children = Array.from(el.childNodes);
     const isLineChild = (n: Node) =>
-      n instanceof HTMLElement && n.tagName !== "BR";
+      n instanceof HTMLElement && !isLineBreak(n);
+    // A <br> just before the caret already opened that line in the truncated text.
+    const afterBreak = idx > 0 && isLineBreak(children[idx - 1]);
     if (
+      !afterBreak &&
       children.slice(0, idx).some(isLineChild) &&
       children.slice(idx).some(isLineChild)
     ) {
@@ -342,39 +417,161 @@ export function normalizeContainerCaret(
 export function restoreCaretOffset(el: HTMLElement, offset: number): void {
   const selection = window.getSelection();
   if (!selection) return;
-  const target = Math.max(0, offset);
+  const at = domPosition(el, offset);
+  setCollapsed(selection, at.node, at.offset);
+}
 
-  const blocks = lineBlocks(el);
-  let scope: HTMLElement = el;
-  let remaining = target;
-  if (blocks.length > 0) {
-    scope = blocks[blocks.length - 1];
-    remaining = (scope.textContent ?? "").length;
-    let before = 0;
-    for (const block of blocks) {
-      const length = (block.textContent ?? "").length;
-      if (target <= before + length) {
-        scope = block;
-        remaining = target - before;
-        break;
-      }
-      before += length + 1;
-    }
+/** Run `paint`, which replaces the run's nodes, then put back the caret or selected range it held when `restore`. */
+export function repaintKeepingSelection(
+  el: HTMLElement,
+  restore: boolean,
+  paint: () => void,
+): void {
+  if (!restore) {
+    paint();
+    return;
   }
+  // Reading the selection lays the page out, so a run that is not taking it back skips the read: a page of 5,000 runs painting in turn spent seconds re-laying itself out.
+  const selected = plainSelectionRange(el);
+  const caret = plainCaretOffset(el);
+  paint();
+  const range = selected && plainDomRange(el, selected);
+  const selection = window.getSelection();
+  if (range && selection) {
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else if (caret !== null) {
+    restoreCaretOffset(el, caret);
+  }
+}
 
-  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
-  let seen = 0;
-  let node = walker.nextNode();
-  while (node) {
-    const length = (node.nodeValue ?? "").length;
-    if (seen + length >= remaining) {
-      setCollapsed(selection, node, remaining - seen);
-      return;
+const TEXT_RANGE_HIGHLIGHT = "pdf-editor-text-range";
+export const FIND_MATCH_HIGHLIGHT = "pdf-editor-find-match";
+
+/**
+ * Paint `range` through the CSS Custom Highlight API, as selected text unless
+ * another highlight `name` is given, until the returned cleanup runs. One range
+ * per name: a later call replaces it. Does nothing where the browser lacks the API.
+ */
+export function canHighlightTextRanges(): boolean {
+  return typeof CSS !== "undefined" && "highlights" in CSS;
+}
+
+export function highlightTextRange(
+  range: Range,
+  name: string = TEXT_RANGE_HIGHLIGHT,
+): () => void {
+  if (!canHighlightTextRanges()) return () => {};
+  const highlight = new Highlight(range);
+  CSS.highlights.set(name, highlight);
+  return () => {
+    if (CSS.highlights.get(name) === highlight) {
+      CSS.highlights.delete(name);
     }
-    seen += length;
-    node = walker.nextNode();
+  };
+}
+
+/**
+ * A DOM range over the characters of the run's model text `range` covers,
+ * counted as plainSelectionRange counts; null when the DOM cannot hold it.
+ */
+export function plainDomRange(el: HTMLElement, range: TextRange): Range | null {
+  const from = domPosition(el, range.start);
+  const to = domPosition(el, range.end);
+  const out = document.createRange();
+  try {
+    out.setStart(from.node, from.offset);
+    out.setEnd(to.node, to.offset);
+  } catch {
+    return null;
   }
-  setCollapsed(selection, scope, 0);
+  return out;
+}
+
+interface DomPoint {
+  node: Node;
+  offset: number;
+}
+
+interface DomCursor {
+  target: number;
+  seen: number;
+  end: DomPoint;
+}
+
+/** Where character `offset` of the run's model text falls in the overlay's DOM, counted as readOverlayText counts. */
+function domPosition(el: HTMLElement, offset: number): DomPoint {
+  const cursor: DomCursor = {
+    target: Math.max(0, offset),
+    seen: 0,
+    end: { node: el, offset: 0 },
+  };
+  const children = Array.from(el.childNodes);
+  const lastContent = children
+    .filter((n) => n.nodeType === Node.TEXT_NODE || n instanceof HTMLElement)
+    .pop();
+  let sawBlock = false;
+  for (const node of children) {
+    let hit: DomPoint | null = null;
+    if (node.nodeType === Node.TEXT_NODE) {
+      hit = passText(cursor, node);
+    } else if (isLineBreak(node)) {
+      if (node === lastContent) break;
+      hit = passLineBreak(cursor, node);
+    } else if (node instanceof HTMLElement && !isLineElement(node)) {
+      hit = passInline(cursor, node);
+    } else if (node instanceof HTMLElement) {
+      hit = passBlock(cursor, node, sawBlock || cursor.seen > 0);
+      sawBlock = true;
+    }
+    if (hit) return hit;
+  }
+  return cursor.end;
+}
+
+function passText(cursor: DomCursor, node: Node): DomPoint | null {
+  const length = (node.nodeValue ?? "").length;
+  if (cursor.target <= cursor.seen + length) {
+    return { node, offset: cursor.target - cursor.seen };
+  }
+  cursor.seen += length;
+  cursor.end = { node, offset: length };
+  return null;
+}
+
+function passLineBreak(cursor: DomCursor, br: HTMLElement): DomPoint | null {
+  const parent = br.parentNode;
+  if (!parent) return null;
+  const index = Array.prototype.indexOf.call(parent.childNodes, br);
+  if (cursor.seen === cursor.target) return { node: parent, offset: index };
+  cursor.seen += 1;
+  cursor.end = { node: parent, offset: index + 1 };
+  return null;
+}
+
+function passBlock(
+  cursor: DomCursor,
+  block: HTMLElement,
+  startsLine: boolean,
+): DomPoint | null {
+  if (startsLine) {
+    if (cursor.seen === cursor.target) return cursor.end;
+    cursor.seen += 1;
+  }
+  cursor.end = { node: block, offset: 0 };
+  if ((block.textContent ?? "") === "") return null;
+  return passInline(cursor, block);
+}
+
+function passInline(cursor: DomCursor, parent: Node): DomPoint | null {
+  for (const node of Array.from(parent.childNodes)) {
+    let hit: DomPoint | null = null;
+    if (node.nodeType === Node.TEXT_NODE) hit = passText(cursor, node);
+    else if (isLineBreak(node)) hit = passLineBreak(cursor, node);
+    else hit = passInline(cursor, node);
+    if (hit) return hit;
+  }
+  return null;
 }
 
 function setCollapsed(selection: Selection, node: Node, offset: number): void {

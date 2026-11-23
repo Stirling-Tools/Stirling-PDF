@@ -1,5 +1,6 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
@@ -20,34 +21,7 @@ test("editing a letter-spaced heading keeps its tracking through save+reopen", a
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(e.message));
 
-  // Serve real charcodes for the standard-14 Helvetica: its charcode IS the
-  // ASCII code, so the per-char backend branch engages like production.
-  await page.route("**/encode-charcodes", async (route: Route) => {
-    let text = "";
-    try {
-      const body = route.request().postDataJSON() as { text?: string };
-      text = body.text ?? "";
-    } catch {
-      /* fall through with empty text */
-    }
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        charcodes: [...text].map((c) => c.codePointAt(0) ?? 0),
-        missing: [],
-        note: "stub ascii",
-      }),
-    });
-  });
-
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 20_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(FIXTURE);
+  await openInTextEditor(page, FIXTURE);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });
@@ -113,7 +87,7 @@ test("editing a letter-spaced heading keeps its tracking through save+reopen", a
   const stream = await dl.createReadStream();
   const chunks: Buffer[] = [];
   for await (const c of stream) chunks.push(c as Buffer);
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+  await openInTextEditor(page, {
     name: "round-trip.pdf",
     mimeType: "application/pdf",
     buffer: Buffer.concat(chunks),

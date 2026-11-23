@@ -31,7 +31,7 @@ describe("convertUtils", () => {
       // PDF to Data formats
       expect(getEndpointName("pdf", "csv")).toBe("pdf-to-csv");
       expect(getEndpointName("pdf", "txt")).toBe("pdf-to-text");
-      expect(getEndpointName("pdf", "rtf")).toBe("pdf-to-text");
+      expect(getEndpointName("pdf", "rtf")).toBe("pdf-to-rtf");
       expect(getEndpointName("pdf", "md")).toBe("pdf-to-markdown");
 
       // PDF to Web formats

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { TextInput, Textarea, Stack, Paper, Text, Group } from "@mantine/core";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Pipeline directories and external tool paths, all under system.customPaths. */
 export function CustomPathsCard({
@@ -103,6 +104,7 @@ export function CustomPathsCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -142,6 +144,7 @@ export function CustomPathsCard({
 
         <div>
           <Textarea
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -201,6 +204,7 @@ export function CustomPathsCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -236,91 +240,6 @@ export function CustomPathsCard({
               })
             }
             placeholder="/pipeline/finishedFolders"
-            disabled={!loginEnabled}
-          />
-        </div>
-
-        <Text fw={500} size="sm" mt="md">
-          {t(
-            "admin.settings.general.customPaths.operations.label",
-            "External Tool Paths",
-          )}
-        </Text>
-
-        <div>
-          <TextInput
-            label={
-              <Group gap="xs">
-                <span>
-                  {t(
-                    "admin.settings.general.customPaths.operations.weasyprint.label",
-                    "WeasyPrint Executable",
-                  )}
-                </span>
-                <PendingBadge
-                  show={isFieldPending("customPaths.operations.weasyprint")}
-                />
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.general.customPaths.operations.weasyprint.description",
-                    "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)",
-                  )}
-                />
-              </Group>
-            }
-            value={settings.customPaths?.operations?.weasyprint || ""}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                customPaths: {
-                  ...settings.customPaths,
-                  operations: {
-                    ...settings.customPaths?.operations,
-                    weasyprint: e.target.value,
-                  },
-                },
-              })
-            }
-            placeholder="/opt/venv/bin/weasyprint"
-            disabled={!loginEnabled}
-          />
-        </div>
-
-        <div>
-          <TextInput
-            label={
-              <Group gap="xs">
-                <span>
-                  {t(
-                    "admin.settings.general.customPaths.operations.unoconvert.label",
-                    "Unoconvert Executable",
-                  )}
-                </span>
-                <PendingBadge
-                  show={isFieldPending("customPaths.operations.unoconvert")}
-                />
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.general.customPaths.operations.unoconvert.description",
-                    "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)",
-                  )}
-                />
-              </Group>
-            }
-            value={settings.customPaths?.operations?.unoconvert || ""}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                customPaths: {
-                  ...settings.customPaths,
-                  operations: {
-                    ...settings.customPaths?.operations,
-                    unoconvert: e.target.value,
-                  },
-                },
-              })
-            }
-            placeholder="/opt/venv/bin/unoconvert"
             disabled={!loginEnabled}
           />
         </div>
