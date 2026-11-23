@@ -13,6 +13,7 @@ import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   RENDER_MODE_INVISIBLE,
   type Affine,
+  type PageRect,
   type RGBA,
 } from "@editor/tools/pdfTextEditor/types";
 import {
@@ -32,13 +33,16 @@ import {
   lineRegion,
   type PlacedWord,
 } from "@editor/tools/pdfTextEditor/commands/scanOffInk";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import {
+  joinSoftLines,
   layoutScanEdit,
   rewrapLines,
   type LayoutWord,
 } from "@editor/tools/pdfTextEditor/commands/scanLayout";
 import {
   emitFillRect,
+  measureObjBoxPt,
   removeAndDestroyObject,
   removeMemberPtrs,
   recordUndrawableChars,
@@ -58,6 +62,7 @@ import {
   preferredScanFace,
   preferredStyle,
   rankStyles,
+  strokeRatioOn,
   withPreferredFace,
   type FitInput,
   type FitWord,
@@ -70,6 +75,7 @@ import {
   drawInFont,
   emitSearchable,
   invisibleText,
+  lettersRight,
   pasteImage,
   wordGap,
   type Canvas,
@@ -155,6 +161,8 @@ export interface ScanEditState {
   undrawableWithFaces?: number;
   /** Styles for text in the block that the scan sets at another size. */
   classes: Array<{ style: ScanStyle; top: number }>;
+  /** Per OCR line, the style of a group of lines whose ink or weight is not the block's; null for lines in the block's look. */
+  lineStyles?: Map<number, ScanStyle | null>;
   face?: Face | null;
   nearbyFace?: Face | null;
   neighbours?: PlacedWord[];
@@ -168,8 +176,11 @@ export interface ScanEditState {
   typedFromScan?: boolean;
 }
 
-export function isScanRun(run: { renderMode?: number }): boolean {
-  return run.renderMode === RENDER_MODE_INVISIBLE;
+export function isScanRun(run: {
+  renderMode?: number;
+  hiddenText?: boolean;
+}): boolean {
+  return run.renderMode === RENDER_MODE_INVISIBLE && !run.hiddenText;
 }
 
 function emptyState(lines: ScanLine[], fontPtr: number): ScanEditState {
@@ -634,15 +645,17 @@ const X_HEIGHT_ONLY = /^[acemnorsuvwxz\s\p{P}]+$/u;
 
 // One style for the whole block, fitted to its longest line, so an edit never
 // switches face or size part way through a sentence. Only text the scan itself
-// sets at another size (a label and its value on one OCR line) gets its own.
+// sets at another size (a label and its value on one OCR line), or lines it
+// sets in another colour or weight, get their own.
 function styleFor(
   doc: EditorDocument,
   page: Page,
   state: ScanEditState,
   span: SpanInk | null,
+  line?: number,
 ): ScanStyle | null {
   return onOriginalScan(doc, page, state, () =>
-    styleOnScan(doc, page, state, span),
+    styleOnScan(doc, page, state, span, line),
   );
 }
 
@@ -651,27 +664,36 @@ function styleOnScan(
   page: Page,
   state: ScanEditState,
   span: SpanInk | null,
+  line: number | undefined,
 ): ScanStyle | null {
   if (undrawableWithFewerFaces(state)) state.block = undefined;
   if (state.block === undefined) {
     state.block = fitBlock(doc, page, state);
+    state.lineStyles = undefined;
     if (state.block === null) state.undrawableWithFaces = scanFacesGeneration();
   }
-  if (state.block && fittedForOtherPreference(doc, state))
+  if (state.block && fittedForOtherPreference(doc, state)) {
     state.block = withPreferredFit(doc, page, state, state.block);
+    state.lineStyles = undefined;
+  }
   const block = state.block;
   const blockStyle = drawnBlockStyle(doc, state);
   if (!block || !blockStyle) return null;
   if (!span) return blockStyle;
   const top = inkTop(span);
   const near = (t: number) => Math.abs(top / t - 1) < 0.25;
-  if (near(block.top)) return blockStyle;
-  if (
-    block.xHeight !== null &&
-    X_HEIGHT_ONLY.test(span.original) &&
-    near(block.xHeight)
-  )
-    return blockStyle;
+  const atBlockSize =
+    near(block.top) ||
+    (block.xHeight !== null &&
+      X_HEIGHT_ONLY.test(span.original) &&
+      near(block.xHeight));
+  if (atBlockSize)
+    return (
+      (line === undefined
+        ? null
+        : lineLookStyle(doc, page, state, line, block.ref, blockStyle)) ??
+      blockStyle
+    );
   const known = state.classes.find((c) => near(c.top));
   if (known) return known.style;
   const ranked = rank(doc, page, state, [span], span);
@@ -680,6 +702,87 @@ function styleOnScan(
     ? ranked[0].style
     : (preferredStyle(doc, ranked) ?? ranked[0].style);
   state.classes.push({ style, top });
+  return style;
+}
+
+// Lines the OCR joined into one paragraph can differ in colour or weight while
+// sharing a size, such as an address over a bold coloured link; each such line
+// takes the look of its own group, fitted to that group's longest line.
+const LOOK_INK_DISTANCE = 96;
+const LOOK_STROKE = Math.log(1.25);
+
+interface LineLook {
+  ink: RGBA;
+  /** -1 lighter strokes than the block's reference line, 1 heavier, 0 alike. */
+  weight: number;
+}
+
+const inkDistance = (a: RGBA, b: RGBA) =>
+  Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b);
+
+const sameLook = (a: LineLook, b: LineLook) =>
+  a.weight === b.weight && inkDistance(a.ink, b.ink) < LOOK_INK_DISTANCE;
+
+// Relative to the reference line: the fitted style need not match even that
+// line's strokes, as on a low-resolution scan no face draws as thin as the scan.
+function lookOf(
+  doc: EditorDocument,
+  page: Page,
+  span: SpanInk,
+  blockStyle: ScanStyle,
+  refRatio: number,
+): LineLook {
+  const stroke = Math.log(
+    strokeRatioOn(doc, page, span, blockStyle) / refRatio,
+  );
+  return {
+    ink: span.ink.fill,
+    weight: Math.abs(stroke) < LOOK_STROKE ? 0 : stroke > 0 ? -1 : 1,
+  };
+}
+
+function lineLookStyle(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  line: number,
+  ref: SpanInk,
+  blockStyle: ScanStyle,
+): ScanStyle | null {
+  const known = (state.lineStyles ??= new Map());
+  if (known.has(line)) return known.get(line) ?? null;
+  const inked = inkedLines(doc, page, state);
+  const own = inked.find((l) => l.li === line);
+  if (inked.length < 2 || !own) {
+    known.set(line, null);
+    return null;
+  }
+  const refRatio = strokeRatioOn(doc, page, ref, blockStyle);
+  const ownLook = lookOf(doc, page, own.ink, blockStyle, refRatio);
+  if (sameLook(ownLook, { ink: ref.ink.fill, weight: 0 })) {
+    known.set(line, null);
+    return null;
+  }
+  const group = inked.filter(
+    (l) =>
+      l === own ||
+      sameLook(lookOf(doc, page, l.ink, blockStyle, refRatio), ownLook),
+  );
+  const longest = group.reduce((p, q) =>
+    q.ink.original.length > p.ink.original.length ? q : p,
+  );
+  const groupRef = referenceSpan(doc, page, state, longest);
+  const ranked = rank(
+    doc,
+    page,
+    state,
+    group.map((l) => l.ink),
+    groupRef,
+  );
+  const style = ranked.length
+    ? (preferredStyle(doc, ranked) ?? ranked[0].style)
+    : null;
+  for (const l of group) known.set(l.li, style);
   return style;
 }
 
@@ -693,14 +796,27 @@ function linePitch(state: ScanEditState, style: ScanStyle): number {
 }
 
 /** Typical gap between neighbouring words in the block. */
+const BOX_TOUCH_EM = 0.1;
+
 function wordSpace(state: ScanEditState, style: ScanStyle): number {
   const gaps = state.lines.flatMap((l) =>
     l.words
       .slice(1)
-      .map((w, i) => w.x - l.words[i].right)
+      .map(
+        (w, i) => w.x - lettersRight({ ...l.words[i], text: boxedText(l, i) }),
+      )
       .filter((g) => g > 0),
   );
   return gaps.length ? median(gaps) : style.fontSize * 0.28;
+}
+
+// A word's text with its trailing space only when its box holds that space,
+// as Tesseract's does: such a box reaches the next word's.
+function boxedText(line: ScanLine, w: number): string {
+  const word = line.words[w];
+  const next = line.words[w + 1];
+  const reaches = next && next.x < word.right + BOX_TOUCH_EM * word.fontSize;
+  return reaches ? word.text : word.text.trimEnd() || word.text;
 }
 
 function fallbackStyle(
@@ -920,7 +1036,8 @@ function editStyles(
     if (known) return known;
     const blockStyle = fitted();
     const own =
-      styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? blockStyle;
+      styleFor(doc, page, state, anchor ? inkOf(anchor) : null, anchor?.line) ??
+      blockStyle;
     const style = withOverride(o, anchorBase(o, own, blockStyle));
     styles.set(anchor, style);
     return style;
@@ -971,6 +1088,39 @@ function scanGlyphSource(
       typed = new Set(chars);
     },
   };
+}
+
+// Visible text of other runs on the block's lines, such as words typed into an earlier save of this scan.
+function drawnTextOnLines(
+  page: Page,
+  run: TextRun,
+  lines: Array<{ baseline: number }>,
+  state: ScanEditState,
+): Array<{ line: number; x: number; right: number }> {
+  const out: Array<{ line: number; x: number; right: number }> = [];
+  for (const other of page.runs) {
+    if (other === run || isScanRun(other) || other.text.trim() === "") continue;
+    const slots = other.paragraphLineSlots.length
+      ? other.paragraphLineSlots
+      : [
+          {
+            baselineY: other.matrix.f,
+            mergedFromBounds: [
+              { x: other.bounds.x, right: other.bounds.x + other.bounds.width },
+            ],
+          },
+        ];
+    for (const slot of slots) {
+      const line = lines.findIndex(
+        (l, li) =>
+          Math.abs(l.baseline - slot.baselineY) <= state.lines[li].height * 0.5,
+      );
+      if (line < 0) continue;
+      for (const b of slot.mergedFromBounds)
+        out.push({ line, x: b.x, right: b.right });
+    }
+  }
+  return out;
 }
 
 function renderUprightScanEdit(
@@ -1059,6 +1209,7 @@ function renderUprightScanEdit(
       text,
       pitch,
       space,
+      obstacles: state.frame ? [] : drawnTextOnLines(page, run, lines, state),
       wordWidth: inkWidth,
       textWidth: (t, anchor, replaced) => {
         if (!shows(t, anchor)) return anchor ? keptWidth(anchor, replaced) : 0;
@@ -1231,7 +1382,7 @@ function renderUprightScanEdit(
     });
     emitSearchable(
       canvas,
-      sw.text.trimEnd() || sw.text,
+      boxedText(state.lines[k.word.line], k.word.index),
       { left: k.x, right: k.x + sw.right - sw.x },
       sw.baseline + k.baseline - lineBase(k.word.line),
       sw.fontSize,
@@ -1295,7 +1446,7 @@ function syncOriginalWords(
       } else if (!gone.has(key) && state.lifted.has(key)) {
         const back = invisibleText(
           canvas,
-          word.text.trimEnd() || word.text,
+          boxedText(line, wi),
           { left: word.x, right: word.right },
           word.baseline,
           word.fontSize,
@@ -1306,6 +1457,37 @@ function syncOriginalWords(
         word.container = 0;
         state.lifted.delete(key);
       }
+    }),
+  );
+  if (state.lifted.size > 0) bringWordsToPage(canvas, state);
+}
+
+// The reader groups lines within one form at a time, so OCR words left in the
+// scan's form beside words this edit drew on the page would read back as two
+// lines, and the paragraph as two runs, once the file is reopened.
+function bringWordsToPage(canvas: Canvas, state: ScanEditState): void {
+  const { doc, page } = canvas;
+  state.lines.forEach((line, li) =>
+    line.words.forEach((word, wi) => {
+      if (word.container === 0 || state.lifted.has(`${li}:${wi}`)) return;
+      removeMemberPtrs(
+        doc.module,
+        page,
+        [word.ptr, ...(word.extraPtrs ?? [])],
+        new Map([[word.ptr, word.container]]),
+        0,
+      );
+      const drawn = invisibleText(
+        canvas,
+        boxedText(line, wi),
+        { left: word.x, right: word.right },
+        word.baseline,
+        word.fontSize,
+        { originalFontPtr: state.fontPtr, family: "Helvetica" },
+      );
+      word.ptr = drawn[0] ?? 0;
+      word.extraPtrs = drawn.slice(1);
+      word.container = 0;
     }),
   );
 }
@@ -1323,6 +1505,38 @@ function attachToRun(run: TextRun, state: ScanEditState): void {
     ...live.flatMap((w) => [w.container, ...(w.extraPtrs ?? []).map(() => 0)]),
     ...state.textPtrs.map(() => 0),
   ];
+}
+
+/** Page-space box around a scanned run's text as last drawn: the OCR words still on the page plus the text the edit emitted. Null for a turned block, whose words are not in page space, or when nothing can be measured. */
+export function scanBlockBounds(
+  doc: EditorDocument,
+  run: TextRun,
+): PageRect | null {
+  const state = run.scanEdit;
+  if (!state || state.frame) return null;
+  const boxes: PageRect[] = state.lines.flatMap((line, li) =>
+    line.words
+      .filter((_, wi) => !state.lifted.has(`${li}:${wi}`))
+      .map((w) => ({
+        x: w.x,
+        y: w.baseline,
+        width: w.right - w.x,
+        height: line.height,
+      })),
+  );
+  for (const ptr of state.textPtrs) {
+    const box = measureObjBoxPt(doc.module, ptr);
+    if (box && box.width > 0) boxes.push(box);
+  }
+  if (boxes.length === 0) return null;
+  const x = Math.min(...boxes.map((b) => b.x));
+  const y = Math.min(...boxes.map((b) => b.y));
+  return {
+    x,
+    y,
+    width: Math.max(...boxes.map((b) => b.x + b.width)) - x,
+    height: Math.max(...boxes.map((b) => b.y + b.height)) - y,
+  };
 }
 
 /** The run's scan-edit state, captured on first use; null when it has none. */
@@ -1351,7 +1565,8 @@ export function wrapScanText(
   const width = (line: string) =>
     spanOf(doc, page, line, style.family, style.fontSize) * style.stretch;
   const fits = (line: string) => line === "" || width(line) <= maxWidthPt;
-  const grown = rewrapLines(run.text, fits, true);
+  const joined = joinSoftLines(run.text, softStartsOf(run), fits);
+  const grown = rewrapLines(joined, fits, true);
   const wrapped = roomBelow(
     page,
     run,
@@ -1360,7 +1575,7 @@ export function wrapScanText(
     grown.split("\n").length,
   )
     ? grown
-    : rewrapLines(run.text, fits, false);
+    : rewrapLines(joined, fits, false);
   // All or nothing: without room for the last line's overflow the text would just stick out on another line.
   const settled = wrapped
     .split("\n")

@@ -512,6 +512,11 @@ submit = "Điều chỉnh tỷ lệ trang"
 tags = "đổi kích thước,chỉnh sửa,kích thước,thích ứng"
 title = "Điều chỉnh tỷ lệ trang"
 
+[adjustPageScale.customSize]
+height = "Chiều cao"
+unit = "Đơn vị"
+width = "Chiều rộng"
+
 [adjustPageScale.error]
 failed = "Đã xảy ra lỗi khi điều chỉnh tỷ lệ trang."
 
@@ -521,6 +526,7 @@ landscape = "Ngang"
 portrait = "Dọc"
 
 [adjustPageScale.pageSize]
+custom = "Tùy chỉnh"
 keep = "Giữ kích thước gốc"
 label = "Kích thước trang đích"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "DPI tối đa cho xử lý hình ảnh (0 = không giới hạn)"
 label = "DPI tối đa"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Cấu hình giới hạn phiên và thời gian chờ cho mỗi trình thực thi"
 ghostscript = "Ghostscript"
 installApp = "Cài đặt ứng dụng"
 label = "Giới hạn trình thực thi tiến trình"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF sang HTML"
+officeConvert = "Chuyển đổi Office"
+officeConvertSessionLimit = "Số chuyển đổi đồng thời tối đa; 0 sẽ tự chọn giới hạn dựa trên CPU và bộ nhớ"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Số phiên đồng thời tối đa"
@@ -661,10 +665,6 @@ label = "Giới hạn phiên"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Thời gian thực thi tối đa"
 label = "Thời gian chờ (phút)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert đang ở beta. Công cụ này cung cấp khả năng chuyển đổi tốt hơn, nhanh hơn và dùng ít bộ nhớ hơn LibreOffice."
-label = "Sử dụng chuyển đổi Stirling Office mới"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Cấu hình lưu trữ tạm thời và hành vi dọn dẹp"
@@ -682,11 +682,6 @@ label = "Chu kỳ dọn dẹp (phút)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Có dọn dẹp thư mục tạm hệ thống rộng hơn hay không (thận trọng khi dùng)"
 label = "Dọn thư mục tạm hệ thống"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Thư mục cho tệp tạm của LibreOffice (để trống dùng mặc định: baseTmpDir/libreoffice)"
-label = "Thư mục tạm LibreOffice"
-placeholder = "Mặc định: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Số giờ tối đa trước khi tệp tạm được dọn dẹp"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Kéo giãn hình ảnh để lấp đầy toàn
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Giữ nguyên (Kích thước gốc)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "Cách thiết lập {{name}}"
 title = "Kết nối"
 unlinkedServices = "Dịch vụ chưa liên kết"
 
@@ -1294,17 +1290,6 @@ label = "Nhà sản xuất mặc định"
 description = "Cấu hình đường dẫn hệ thống tệp tùy chỉnh cho xử lý pipeline và công cụ bên ngoài"
 label = "Đường dẫn tùy chỉnh"
 
-[admin.settings.general.customPaths.operations]
-label = "Đường dẫn công cụ bên ngoài"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Đường dẫn đến LibreOffice unoconvert để chuyển đổi tài liệu (để trống dùng mặc định: /opt/venv/bin/unoconvert)"
-label = "Tệp thực thi Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Đường dẫn đến tệp thực thi WeasyPrint để chuyển HTML sang PDF (để trống dùng mặc định: /opt/venv/bin/weasyprint)"
-label = "Tệp thực thi WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Thư mục Pipeline"
 
@@ -1327,6 +1312,10 @@ label = "Thư mục được theo dõi"
 [admin.settings.general.defaultLocale]
 description = "Ngôn ngữ mặc định cho người dùng mới (ví dụ: en_US, es_ES)"
 label = "Ngôn ngữ mặc định"
+
+[admin.settings.general.enableFeedback]
+description = "Cho phép người dùng gửi phản hồi đến nhóm Stirling"
+label = "Bật phản hồi"
 
 [admin.settings.general.fileUploadLimit]
 description = "Kích thước tải lên tối đa (ví dụ: 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "Sự kiện STANDARD cộng thêm: các cuộc gọi thăm dò liên 
 [admin.settings.security.audit.retentionDays]
 description = "Số ngày giữ log kiểm tra (0 = giữ vô hạn)"
 label = "Giữ nhật ký (ngày)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "PDF đã ký vẫn có thể xem, in, chuyển đổi hoặc ký lại, nhưng không thể thay đổi trong ứng dụng. API và pipeline trên máy chủ không bị ảnh hưởng."
+label = "Chặn thay đổi đối với PDF đã ký"
 
 [admin.settings.security.csrfDisabled]
 description = "Tắt bảo vệ Cross-Site Request Forgery (không khuyến nghị)"
@@ -2969,6 +2962,7 @@ loadError = "Không tải được danh sách người dùng"
 noTeam = "Không có Nhóm"
 noUsers = "Không tìm thấy người dùng nào khác."
 placeholder = "Chọn người dùng..."
+signInRequired = "Đăng nhập để yêu cầu người khác ký."
 you = "{{name}} (Bạn)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "Tài khoản của bạn do nhà cung cấp danh tính quản lý.
 title = "Thay đổi thông tin đăng nhập"
 
 [changeMetadata]
-filenamePrefix = "sieu_du_lieu"
 submit = "Thay đổi"
 tags = "chỉnh sửa,sửa đổi,cập nhật,metadata,thuộc tính,thuộc tính tài liệu,tác giả,tiêu đề,chủ đề,từ khóa,người tạo,nhà sản xuất,thông tin,thông tin tài liệu,thuộc tính tệp"
 
@@ -3265,6 +3258,248 @@ not_found = "Tôi không tìm thấy thông tin yêu cầu."
 processing = "Đang xử lý ({{outcome}})..."
 unsupported_capability = "Khả năng không được hỗ trợ: {{capability}}"
 usage_limit_reached = "Bạn đã đạt giới hạn sử dụng. Kiểm tra các tùy chọn gói của bạn để tiếp tục."
+
+[checkAccessibility]
+aboutRow = "Thông tin về {{label}}"
+checking = "Đang kiểm tra..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Tải báo cáo khả năng truy cập"
+fileFailed = "không thành công"
+pickFile = "Hiển thị kết quả cho"
+submit = "Kiểm tra khả năng truy cập"
+
+[checkAccessibility.category]
+altText = "Văn bản thay thế"
+fonts = "Phông chữ"
+language = "Ngôn ngữ"
+links = "Liên kết & chú thích"
+metadata = "Siêu dữ liệu & cài đặt"
+structure = "Thẻ & cấu trúc"
+
+[checkAccessibility.categoryTip]
+altText = "Hình ảnh cần một mô tả văn bản ngắn để trình đọc màn hình có thể đọc thay thế."
+fonts = "Phông chữ cần được đưa vào tệp, với mọi ký tự liên kết tới văn bản thật, để có thể đọc to và sao chép."
+language = "Trình đọc màn hình cần biết ngôn ngữ của tài liệu để phát âm chính xác."
+links = "Liên kết, bình luận và trường biểu mẫu cần có thẻ và mô tả, cùng thứ tự tab theo trang."
+metadata = "Tiêu đề, khai báo PDF/UA và các cài đặt khác mà công nghệ hỗ trợ đọc từ tệp."
+structure = "Thẻ cho trình đọc màn hình biết từng phần của trang là gì, như tiêu đề, danh sách hoặc bảng, và thứ tự cần đọc."
+
+[checkAccessibility.checks]
+label = "{{passed}} trên {{total}} kiểm tra đạt"
+
+[checkAccessibility.error]
+download = "Không thể tạo báo cáo khả năng truy cập. Hãy thử lại."
+fileTitle = "Không thể kiểm tra tệp này"
+partial = "Một số tệp không thể kiểm tra."
+
+[checkAccessibility.facts]
+declares = "Khai báo PDF/UA"
+displaysTitle = "Hiển thị tiêu đề"
+fonts = "Phông chữ đã nhúng"
+language = "Khai báo ngôn ngữ"
+notEncrypted = "Không mã hóa"
+tagged = "Có thẻ"
+title = "Có tiêu đề"
+
+[checkAccessibility.factTip]
+declares = "Siêu dữ liệu của tệp cho biết nó tuân theo PDF/UA."
+displaysTitle = "Trình đọc PDF sẽ hiển thị tiêu đề, không phải tên tệp, khi mở."
+fonts = "Mọi phông chữ văn bản sử dụng đều được đưa vào tệp."
+language = "Tệp cho biết văn bản của nó thuộc ngôn ngữ nào."
+notEncrypted = "Tệp không được mã hóa. Mã hóa có thể ngăn công nghệ hỗ trợ đọc nó."
+tagged = "Tệp có các thẻ mô tả cấu trúc. Không có chúng, trình đọc màn hình chỉ nhận văn bản thô."
+title = "Tệp có tiêu đề trong siêu dữ liệu."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} hình ảnh cần mô tả (trang {{pages}})"
+summary_other = "{{count}} hình ảnh cần mô tả (trang {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Áp dụng cho"
+clauseValue = "{{spec}} §{{clause}}, kiểm tra {{test}}"
+details = "Chi tiết"
+instances_one = "{{count}} trường hợp"
+instances_other = "{{count}} trường hợp"
+onPages_one = "Trang {{pages}}"
+onPages_other = "Trang {{pages}}"
+onPagesPartial_one = "Trang {{pages}} (danh sách có thể chưa đầy đủ)"
+onPagesPartial_other = "Trang {{pages}} (danh sách có thể chưa đầy đủ)"
+pages = "Trang"
+pagesPartialValue = "{{pages}} (chỉ các lần xuất hiện đầu tiên ghi nhận trang, nên danh sách có thể chưa đầy đủ)"
+requirement = "Yêu cầu"
+rule = "Quy tắc"
+standard = "Tiêu chuẩn"
+where = "Vị trí"
+
+[checkAccessibility.manual]
+clearAll = "Xóa tất cả"
+done = "Xong"
+inProgress = "Đang thực hiện"
+markAllDone = "Đánh dấu tất cả là đã xong"
+tip = "Những việc chỉ con người mới đánh giá được, như thứ tự đọc và việc mô tả hình ảnh có hợp lý hay không. Hãy tích vào từng mục sau khi bạn đã kiểm tra; các mục đã tích sẽ xuất hiện trong báo cáo tải về."
+title = "Kiểm tra thủ công"
+
+[checkAccessibility.objects]
+annotation = "Một chú thích"
+bookmark = "Một dấu trang"
+character = "Một ký tự trong phông chữ"
+contentPiece = "Một phần nội dung trang"
+document = "Tài liệu"
+drawing = "Một bản vẽ"
+figure = "Một hình"
+file = "Chính tệp"
+font = "Một phông chữ"
+form = "Biểu mẫu"
+formField = "Một trường biểu mẫu"
+link = "Một liên kết"
+markedContent = "Nội dung trang đã đánh dấu"
+metadata = "Siêu dữ liệu của tài liệu"
+page = "Một trang"
+properties = "Thuộc tính tài liệu"
+tag = "Một thẻ {{name}}"
+tagTree = "Cây thẻ"
+textPiece = "Một đoạn văn bản"
+translatedMetadata = "Một mục siêu dữ liệu có bản dịch"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (tiếp tục)"
+footer = "Được kiểm tra bằng Stirling PDF"
+page = "Trang {{n}}"
+title = "Báo cáo khả năng truy cập"
+
+[checkAccessibility.result]
+fail = "Không đạt"
+failSummary = "Trình đọc màn hình có thể không đọc được toàn bộ tài liệu này."
+partial = "Một phần"
+partialSummary = "Trình đọc màn hình có thể đọc tài liệu này, nhưng một số kiểm tra không đạt."
+pass = "Đạt"
+passSummary = "Vượt qua mọi kiểm tra PDF/UA tự động."
+
+[checkAccessibility.rules]
+annotationLanguage = "Văn bản bình luận hoặc liên kết không có ngôn ngữ được đặt, nên trình đọc màn hình không biết đọc bằng ngôn ngữ nào. Hãy đặt ngôn ngữ của tài liệu để khắc phục."
+annotationNoDescription = "Bình luận, liên kết hoặc bản vẽ không có mô tả văn bản, nên trình đọc màn hình không có gì để thông báo."
+annotationNotTagged = "Bình luận hoặc bản vẽ không được gắn thẻ là chú thích, nên trình đọc màn hình không thể tiếp cận theo thứ tự đọc."
+artifactInsideTagged = "Một mục được đánh dấu là trang trí nằm trong nội dung có thẻ, nên vừa được đọc vừa bị bỏ qua."
+bookmarkLanguage = "Các dấu trang không có ngôn ngữ được đặt, nên trình đọc màn hình không biết đọc bằng ngôn ngữ nào. Hãy đặt ngôn ngữ của tài liệu để khắc phục."
+conformancePrefix = "Khai báo PDF/UA trong siêu dữ liệu dùng tiền tố sai, nên trình đọc PDF có thể không nhận ra."
+contentLanguage = "Văn bản không có ngôn ngữ được đặt, nên trình đọc màn hình không biết đọc bằng ngôn ngữ nào. Hãy đặt ngôn ngữ của tài liệu để khắc phục."
+customTagNotMapped = "Một thẻ dùng tên tùy chỉnh không liên kết với thẻ tiêu chuẩn, nên trình đọc màn hình không biết đó là gì."
+figureNoAlt = "Một hình ảnh được gắn thẻ là hình nhưng không có mô tả, nên người dùng trình đọc màn hình sẽ không biết nó hiển thị gì."
+fontMissingGlyphs = "Một phông chữ đã đưa vào thiếu một số ký tự mà tài liệu sử dụng."
+fontNotEmbedded = "Một phông chữ không được đưa vào tệp, nên văn bản có thể hiển thị hoặc được đọc khác đi trên máy tính khác."
+formFieldNotTagged = "Một trường biểu mẫu không được gắn thẻ là một phần của biểu mẫu, nên trình đọc màn hình có thể không tìm thấy."
+genericHeading = "Một tiêu đề dùng thẻ H, không có cấp. PDF/UA-2 yêu cầu H1 đến H6 để người dùng trình đọc màn hình biết cách lồng tiêu đề."
+glyphWidths = "Độ rộng ký tự của một phông trong tệp không khớp với chính phông đó, nên văn bản có thể bị dãn cách sai."
+headingSkipped = "Cấp độ tiêu đề bị nhảy cóc, ví dụ từ Tiêu đề 1 sang thẳng Tiêu đề 3, khiến việc di chuyển giữa các tiêu đề gây nhầm lẫn."
+linkNoDescription = "Một liên kết không có mô tả, nên trình đọc màn hình chỉ có thể đọc địa chỉ của nó, hoặc không đọc gì."
+linkNotTagged = "Một liên kết không được gắn thẻ là liên kết, nên trình đọc màn hình sẽ không thông báo đúng."
+metadataLanguage = "Siêu dữ liệu, như tiêu đề, không có ngôn ngữ được đặt, nên trình đọc màn hình không biết đọc bằng ngôn ngữ nào. Hãy đặt ngôn ngữ của tài liệu để khắc phục."
+noConformanceClaim = "Tệp không nêu rằng nó tuân theo PDF/UA. Siêu dữ liệu của nó cần một mục nhận dạng PDF/UA."
+noDocumentTag = "Cây thẻ cần một thẻ Document duy nhất ở trên cùng, với mọi thứ còn lại nằm bên trong."
+noLanguage = "Tài liệu không cho biết ngôn ngữ, nên trình đọc màn hình có thể đọc sai ngôn ngữ."
+noMetadataStream = "Tệp không có siêu dữ liệu XMP, nơi PDF/UA lưu tiêu đề tài liệu và chi tiết tuân thủ."
+noTags = "Tệp hoàn toàn không có thẻ, nên trình đọc màn hình không phân biệt được tiêu đề, đoạn, danh sách hay bảng, cũng như thứ tự đọc đúng."
+notdefGlyph = "Văn bản dùng ký tự giữ chỗ “thiếu ký tự”, hiển thị thành khoảng trống hoặc ô vuông và không thể đọc to."
+noteTag = "Tệp sử dụng thẻ Note, mà PDF/UA-2 thay bằng FENote cho chú thích chân trang và cuối trang."
+noTitle = "Tài liệu không có tiêu đề trong siêu dữ liệu."
+notMarkedTagged = "Tệp không được đánh dấu là có thẻ, nên công nghệ hỗ trợ có thể bỏ qua các thẻ hiện có."
+notPdf2Tags = "PDF/UA-2 cần các thẻ mà tệp PDF 2.0 sử dụng. Những thẻ này trông giống thẻ PDF 1.7, thường nghĩa là tệp được gắn thẻ cho PDF/UA-1."
+noUnicode = "Một số ký tự không thể chuyển thành văn bản có thể đọc, nên trình đọc màn hình và thao tác sao chép dán có thể nhận sai."
+replacementTextLanguage = "Một số văn bản thay thế không có ngôn ngữ được đặt, nên trình đọc màn hình không biết đọc bằng ngôn ngữ nào. Hãy đặt ngôn ngữ của tài liệu để khắc phục."
+standardTagRemapped = "Một thẻ tiêu chuẩn được liên kết sang thẻ tùy chỉnh, nên trình đọc màn hình mất ý nghĩa của nó."
+symbolicEncoding = "Một phông biểu tượng mang bộ mã hóa không phù hợp, nên ký tự của nó có thể hiển thị thành chữ cái sai."
+tabOrder = "Một trang có liên kết hoặc bình luận không đặt thứ tự tab theo tài liệu, nên người dùng bàn phím có thể bị nhảy lung tung trên trang."
+taggedInsideArtifact = "Nội dung có thẻ nằm trong mục được đánh dấu là trang trí, nên trình đọc màn hình có thể bỏ qua."
+titleNotDisplayed = "Trình đọc PDF sẽ hiển thị tên tệp thay vì tiêu đề tài liệu. Cần bật cài đặt “hiển thị tiêu đề tài liệu”."
+untaggedContent = "Một mục trên trang không được gắn thẻ nội dung cũng không được đánh dấu là trang trí, nên trình đọc màn hình không biết có nên đọc. Thường là ảnh nền, đầu trang, chân trang hoặc số trang."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Không có ngôn ngữ cho bình luận hoặc liên kết"
+annotationNoDescription = "Bình luận, liên kết hoặc bản vẽ không có mô tả"
+annotationNotTagged = "Bình luận hoặc bản vẽ không được gắn thẻ"
+artifactInsideTagged = "Trang trí nằm trong nội dung có thẻ"
+bookmarkLanguage = "Không có ngôn ngữ cho dấu trang"
+conformancePrefix = "Khai báo PDF/UA viết không đúng"
+contentLanguage = "Không có ngôn ngữ cho văn bản"
+customTagNotMapped = "Thẻ tùy chỉnh không có ý nghĩa tiêu chuẩn"
+figureNoAlt = "Hình ảnh không có mô tả"
+fontMissingGlyphs = "Phông chữ thiếu ký tự"
+fontNotEmbedded = "Phông chữ không được nhúng"
+formFieldNotTagged = "Trường biểu mẫu không được gắn thẻ"
+genericHeading = "Tiêu đề không có cấp"
+glyphWidths = "Độ rộng ký tự của phông không khớp"
+headingSkipped = "Bỏ qua cấp tiêu đề"
+linkNoDescription = "Liên kết không có mô tả"
+linkNotTagged = "Liên kết không được gắn thẻ"
+metadataLanguage = "Không có ngôn ngữ cho siêu dữ liệu"
+noConformanceClaim = "Không khai báo PDF/UA"
+noDocumentTag = "Cây thẻ không bắt đầu bằng thẻ Document"
+noLanguage = "Không có ngôn ngữ tài liệu"
+noMetadataStream = "Không có siêu dữ liệu XMP"
+noTags = "Không có thẻ"
+notdefGlyph = "Dùng ký tự giữ chỗ thiếu ký tự"
+noteTag = "Sử dụng thẻ Note"
+noTitle = "Không có tiêu đề tài liệu"
+notMarkedTagged = "Không được đánh dấu là có thẻ"
+notPdf2Tags = "Thẻ không phải thẻ PDF 2.0"
+noUnicode = "Ký tự không thể đọc như văn bản"
+replacementTextLanguage = "Không có ngôn ngữ cho văn bản thay thế"
+standardTagRemapped = "Thẻ tiêu chuẩn bị chuyển thành thẻ tùy chỉnh"
+symbolicEncoding = "Phông biểu tượng có mã hóa không đúng"
+tabOrder = "Thứ tự tab không theo tài liệu"
+taggedInsideArtifact = "Nội dung có thẻ bị ẩn như trang trí"
+titleNotDisplayed = "Không hiển thị tiêu đề khi mở"
+untaggedContent = "Nội dung không được gắn thẻ"
+
+[checkAccessibility.score]
+issues_one = "{{count}} vấn đề"
+issues_other = "{{count}} vấn đề"
+noIssues = "Không tìm thấy vấn đề"
+subtitle_one = "{{profile}} - {{count}} trang"
+subtitle_other = "{{profile}} - {{count}} trang"
+
+[checkAccessibility.sections]
+breakdown = "Phân tích"
+
+[checkAccessibility.status]
+checking = "Đang kiểm tra {{current}} trên {{total}}..."
+complete = "Kiểm tra hoàn tất"
+
+[checkAccessibility.steps]
+results = "Kết quả"
+standard = "Tiêu chuẩn"
+
+[checkAccessibility.tooltip.header]
+title = "Tiêu chuẩn cần kiểm tra"
+
+[checkAccessibility.tooltip.ua1]
+text = "Phiên bản đầu tiên của PDF/UA, phát hành năm 2012 dưới tên ISO 14289-1, dành cho tệp PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "Phiên bản mới hơn, phát hành năm 2024 dưới tên ISO 14289-2, dành cho tệp PDF 2.0. Tệp PDF 1.7 kiểm tra theo tiêu chuẩn này sẽ không đạt các quy tắc chỉ áp dụng cho PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Chú thích {{n}}"
+bookmarks = "Dấu trang"
+character = "Một ký tự trong {{font}}"
+contentItem = "Mục nội dung {{n}}"
+drawingStep = "Bước vẽ {{n}}"
+embeddedGraphic = "Đồ họa nhúng"
+font = "Phông chữ {{name}}"
+metadata = "Siêu dữ liệu tài liệu"
+page = "Trang {{n}}"
+piece = "Phần {{n}}"
+tag = "Thẻ {{tag}}"
+tagTree = "Cây thẻ"
+wholeDocument = "Toàn bộ tài liệu"
+
+[checkAccessibility.where.properties]
+author = "Tác giả"
+description = "Mô tả"
+pdfUaPart = "Phần PDF/UA"
+title = "Tiêu đề"
 
 [classification.families]
 correspondence = "Thư từ"
@@ -3729,6 +3964,10 @@ message = "Một hoặc cả hai tài liệu được cung cấp quá lớn đ�
 body = "Các PDF này tổng cộng vượt quá 2.000 trang. Việc xử lý có thể mất vài phút."
 title = "Đang xử lý so sánh lớn"
 
+[compare.mode]
+pixel = "So sánh theo pixel"
+text = "So sánh văn bản"
+
 [compare.no.text]
 message = "Một hoặc cả hai PDF đã chọn không có nội dung văn bản. Vui lòng chọn PDF có văn bản để so sánh."
 
@@ -4046,6 +4285,30 @@ failed = "Không thể gia hạn đăng nhập của bạn. Hãy thử lại, ho
 lead = "Máy chủ này đã được liên kết với tài khoản của bạn. Gia hạn đăng nhập để quay lại thanh toán và mức sử dụng trên máy chủ của bạn."
 title = "Gia hạn đăng nhập máy chủ của bạn"
 
+[connectedAccounts]
+connect = "Kết nối"
+connectAnother = "Kết nối tài khoản khác"
+connectFailed = "Không thể kết nối tài khoản. Kiểm tra cấu hình đăng ký ứng dụng trên máy chủ rồi thử lại."
+disconnect = "Ngắt kết nối"
+google = "Google Drive"
+intro = "Kết nối các tài khoản của bạn một lần. Pipeline của bạn sau đó có thể đọc và lưu vào đó với quyền của bạn."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling không thể truy cập tài khoản này nữa, nên các pipeline sử dụng nó đã tạm dừng."
+none = "Quản trị viên của bạn chưa bật tính năng tài khoản đã kết nối."
+personal = "Tài khoản cá nhân"
+popupBlocked = "Trình duyệt đã chặn cửa sổ đăng nhập. Hãy cho phép pop-up cho trang này rồi thử lại."
+reconnect = "Đăng nhập lại"
+work = "Tài khoản công việc"
+
+[connectedAccounts.disconnectConfirm]
+body = "Nguồn và pipeline dùng tài khoản này sẽ dừng cho đến khi bạn kết nối lại."
+confirm = "Ngắt kết nối"
+title = "Ngắt kết nối {{account}}?"
+
+[connectedAccounts.status]
+connected = "Đã kết nối"
+needsSignIn = "Cần đăng nhập"
+
 [convert]
 autoRotate = "Tự động xoay"
 autoRotateDescription = "Tự động xoay ảnh để vừa hơn với trang PDF"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Tiêu đề tài liệu"
 pdfUaTitleHelp = "Được trình đọc hiển thị thay cho tên tệp. Nếu để trống, tiêu đề đầu tiên sẽ được dùng."
 selectSourceFormatFirst = "Trước tiên hãy chọn định dạng nguồn"
 settings = "Cài đặt"
+signInToUse = "Đăng nhập để sử dụng"
 single = "Một tệp"
 sourceFormatPlaceholder = "Định dạng nguồn"
-stirlingOfficeConvert = "Sử dụng Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Chuyển đổi tốt hơn, nhanh hơn với ít bộ nhớ hơn. Tắt để sử dụng trình chuyển đổi tiêu chuẩn."
 strictMode = "Chế độ nghiêm ngặt"
 strictModeDesc = "Báo lỗi nếu chuyển đổi không hoàn hảo (dùng xác minh VeraPDF)"
 svgPdfOptions = "Tùy chọn SVG sang PDF"
@@ -4134,8 +4396,6 @@ webOptions = "Tùy chọn Web sang PDF"
 zoomLevel = "Mức thu phóng"
 
 [convert.ebookOptions]
-embedAllFonts = "Nhúng tất cả phông chữ"
-embedAllFontsDesc = "Nhúng mọi phông chữ từ eBook vào PDF được tạo"
 includePageNumbers = "Bao gồm số trang"
 includePageNumbersDesc = "Thêm số trang vào PDF được tạo"
 includeTableOfContents = "Bao gồm mục lục"
@@ -4648,6 +4908,17 @@ title = "Cài đặt"
 [extractPages.tooltip]
 description = "Trích xuất các trang đã chọn vào một PDF mới, giữ nguyên thứ tự."
 
+[feedback.page]
+open = "Gửi phản hồi"
+sendMore = "Gửi thêm phản hồi"
+sent = "Cảm ơn phản hồi của bạn"
+title = "Giúp chúng tôi cải thiện Stirling"
+unavailable = "Không thể dùng tính năng phản hồi"
+
+[feedback.tag]
+dismiss = "Ẩn nút phản hồi"
+label = "Phản hồi"
+
 [fileCard]
 openInFileEditor = "Mở trong trình chỉnh sửa tệp"
 viewInViewer = "Xem trong trình xem"
@@ -4657,7 +4928,6 @@ closeFile = "Đóng tệp"
 
 [fileEditor]
 closedFile = "Đã đóng {{name}}"
-couldNotSave = "Không thể lưu {{name}}"
 filesReordered_one = "Tệp đã được sắp xếp lại"
 filesReordered_other = "{{count}} tệp đã được sắp xếp lại"
 loadedFromStorage_one = "Đã tải {{count}} tệp từ bộ nhớ"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "Thư viện PDF"
 myFiles = "Thư viện tệp"
 noFiles = "Chưa có tệp nào"
+oneDrive = "Mở từ OneDrive"
+oneDriveFailed = "Không thể mở OneDrive"
 openFileManager = "Duyệt tất cả tệp & thư mục"
 openFromComputer = "Mở từ máy tính"
 openSettings = "Mở cài đặt"
@@ -4804,6 +5076,17 @@ searchFiles = "Tìm kiếm tệp"
 uploadFailedBody = "Không thể thêm các tệp đã chọn."
 uploadFailedTitle = "Tải lên thất bại"
 viewAll = "Xem tất cả {{count}} tệp"
+
+[fileSidebar.clearRecents]
+body_one = "Xóa 1 tệp khỏi gần đây? Thao tác này không thể hoàn tác."
+body_other = "Xóa {{count}} tệp khỏi gần đây? Thao tác này không thể hoàn tác."
+button = "Xóa mục gần đây"
+confirm = "Xóa mục gần đây"
+error = "Không thể xóa. Hãy thử lại."
+openNote_one = "1 tệp trong số đó đang mở trong khu làm việc."
+openNote_other = "{{count}} tệp trong số đó đang mở trong khu làm việc."
+skipOpen = "Bỏ qua các tệp đang mở"
+title = "Xóa mục gần đây?"
 
 [fileSidebar.fileItem]
 closeViewer = "Đóng trình xem"
@@ -5124,6 +5407,7 @@ diskFileHint = "Được lưu trữ trên máy tính của bạn"
 diskHint = "Tệp trong thư mục đã gắn kết trên ổ đĩa của bạn"
 local = "Cục bộ"
 localHint = "Chưa sao lưu"
+oneDrive = "OneDrive"
 shared = "Được chia sẻ"
 sharedHint = "Được chia sẻ với bạn qua liên kết"
 
@@ -5672,6 +5956,11 @@ title = "Thay đổi Metadata"
 desc = "Thay đổi hạn chế và quyền của tài liệu"
 tags = "quyền,hạn chế,quyền hạn,kiểm soát truy cập,cho phép,từ chối,in,sao chép,chỉnh sửa,sửa quyền,cài đặt bảo mật,quyền người dùng"
 title = "Thay đổi quyền"
+
+[home.checkAccessibility]
+desc = "Chấm điểm một PDF theo PDF/UA và xem điều gì cản trở trình đọc màn hình, mà không thay đổi tệp"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Kiểm tra khả năng truy cập của PDF"
 
 [home.classify]
 desc = "Xác định đây là loại tài liệu nào và gắn thẻ cho nó."
@@ -6521,6 +6810,32 @@ quickAccess = "Bắt đầu tại thanh <strong>Truy cập nhanh</strong> để 
 topBar = "Thanh trên cho phép bạn chuyển giữa <strong>Trình xem</strong>, <strong>Trình chỉnh sửa trang</strong> và <strong>Tệp đang hoạt động</strong>."
 wrapUp = "Đó là những điểm mới trong V2. Mở menu <strong>Hướng dẫn</strong> bất cứ lúc nào để xem lại nội dung này, tour Công cụ hoặc tour Quản trị."
 
+[oneDriveSave]
+chooseFolder = "Chọn một thư mục OneDrive để tải lên"
+conflict = "Tệp này đã thay đổi trên OneDrive kể từ khi phiên bản này được mở hoặc lưu. Hãy lưu phiên bản của bạn thành một bản sao thay thế."
+failedTitle = "Không thể lưu vào OneDrive"
+fromOneDrive = "Từ OneDrive"
+linkNotStored = "Trình duyệt này không thể ghi nhớ liên kết tới tệp OneDrive. Sau khi tải lại, hãy lưu thành bản sao thay thế."
+missing = "Tệp này đã được di chuyển hoặc xóa trong OneDrive. Hãy lưu phiên bản của bạn thành bản sao thay thế."
+open = "Mở trong OneDrive"
+personalUnsupported = "Tải lên OneDrive cần tài khoản Microsoft cơ quan hoặc trường học."
+reconnect = "Kết nối lại"
+replaces = "Thay thế {{name}}"
+saveCopyToOneDrive = "Lưu một bản sao vào OneDrive"
+saved = "Đã lưu vào OneDrive"
+saving = "Đang lưu vào OneDrive..."
+signInToSave = "Đăng nhập vào máy chủ của bạn để lưu vào OneDrive."
+updateOriginal = "Cập nhật trong OneDrive"
+uploadToOneDrive = "Tải lên OneDrive..."
+
+[oneDriveSave.status]
+saved = "Đã lưu vào OneDrive"
+unsaved = "Các thay đổi chưa được lưu vào OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "Cập nhật {{name}} trong OneDrive"
+saveAll = "Cập nhật tất cả trong OneDrive"
+
 [overlay-pdfs]
 desc = "Chồng một PDF lên trên PDF khác"
 submit = "Gửi"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Đặt lại vào ngày mai"
 thisPeriod = "Kỳ thanh toán này"
 
 [payment]
+annually = "Hàng năm"
 billingPeriod = "Kỳ thanh toán"
 cancelTeamChange = "Giữ gói hiện tại"
 canCloseWindow = "Bạn có thể đóng cửa sổ này."
@@ -7157,11 +7473,14 @@ title = "Điều chỉnh gói Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe sẽ hiển thị khoản phí chính xác, mọi khoản tính theo tỷ lệ và ngày thanh toán tiếp theo của bạn trước khi bạn xác nhận. Phương thức thanh toán đã lưu của bạn sẽ được sử dụng nếu có."
+billingLabel = "Thanh toán"
 continue = "Tiếp tục đến thanh toán"
 currencyAtCheckout = "Stripe xác nhận số tiền cuối cùng và đơn vị tiền tệ thanh toán khi thanh toán."
+custom = "Tùy chỉnh"
 customLabel = "Số người dùng"
 dueToday = "Đến hạn hôm nay"
 enterpriseQuote = "Nhận báo giá doanh nghiệp"
+enterUsers = "Nhập số người dùng."
 estimatedTotal = "Tổng ước tính"
 lineItem = "Team · {{price}}{{period}} mỗi {{block}} người dùng"
 minimumForCurrentUsers = "Bạn có {{users}} người dùng, nên gói phải bao phủ ít nhất {{minimum}}."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Các tài khoản hiện có vẫn được giữ ngu
 overCapacityTitle = "Máy chủ của bạn có nhiều người dùng hơn mức gói của bạn bao phủ"
 perMonth = "/tháng"
 perYear = "/năm"
+planName = "Stirling Team"
 reductionNote = "Dung lượng thấp hơn bắt đầu từ lần gia hạn tiếp theo của bạn. Cho đến lúc đó, bạn có thể sử dụng hạn mức hiện tại. Người dùng hiện có vẫn ở lại; người dùng mới bị chặn nếu bạn vượt quá dung lượng khi thay đổi có hiệu lực."
 renewalNote = "Gia hạn với {{total}}{{period}}. Hủy bất cứ lúc nào trong Sử dụng & Thanh toán."
 reviewChange = "Xem lại thay đổi trong Stripe"
-roundsTo = "làm tròn thành {{users}}"
+roundsUp = "Làm tròn lên {{users}} người dùng."
+selfServeLimit = "Tối đa {{users}} người dùng tại đây."
 subheading = "Bao phủ mọi người bạn mời, theo các khối {{users}} người dùng."
 subheadingAdd = "Gói của bạn hiện bao phủ {{current}} người dùng. Chọn tổng mới."
+talkToEnterprise = "Nếu cần nhiều hơn, hãy trao đổi với chúng tôi về Enterprise."
+usersCovered = "người dùng được bao gồm"
 usersLabel = "Người dùng"
 userTotal = "{{users}} người dùng"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Áp dụng thay đổi vào tệp trong không gian làm việc c
 tags = "chỉnh sửa văn bản,sửa văn bản,thay đổi văn bản,chỉnh sửa nội dung,cập nhật văn bản,viết lại,sửa lỗi,sửa đổi,redline,duyệt lại,trình chỉnh sửa văn bản,trình chỉnh sửa nội dung"
 title = "Trình chỉnh sửa văn bản PDF"
 unsaved = "(chưa lưu)"
-workbenchLabel = "Trình chỉnh sửa"
 
 [pdfTextEditor.annotations]
 freetext = "Văn bản chú thích - không phải văn bản trang, nên không thể chỉnh sửa tại đây"
@@ -7261,12 +7583,18 @@ widget = "Trường biểu mẫu - không phải văn bản trang, nên không t
 
 [pdfTextEditor.commands]
 edit = "Chỉnh sửa"
+markTagged = "Đánh dấu là đã gắn thẻ đầy đủ"
+matchScanFont = "Khớp văn bản quét với {{face}}"
 mergeRuns_one = "Gộp {{count}} run vào một đoạn văn"
 mergeRuns_other = "Gộp {{count}} run vào một đoạn văn"
 setColour = "Đặt màu cho {{run}}"
 setOutline = "Đặt viền cho {{run}}"
+tagFormField = "Gắn thẻ trường biểu mẫu"
+tagLink = "Gắn thẻ liên kết"
+tagPageContent = "Tự động gắn thẻ trang"
 typeInto = "Nhập vào {{run}}"
 ungroupParagraph = "Bỏ nhóm đoạn văn {{run}}"
+unmarkTagged = "Đánh dấu là chưa gắn thẻ đầy đủ"
 wrap = "Ngắt dòng {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Hủy thay đổi và mở"
 hint = "Hủy, sau đó Lưu PDF để giữ chúng trong không gian làm việc của bạn trước."
 title = "Hủy các thay đổi chưa lưu?"
 
-[pdfTextEditor.drop]
-hint = "Thả trên vùng chỉnh sửa sẽ thay thế mọi tài liệu đang mở."
-title = "Thả PDF để mở"
-
 [pdfTextEditor.error]
 decodeImage = "Không thể giải mã hình ảnh đã chọn."
+duplicateDropsLetters = "Không thể nhân đôi văn bản này: không có phông chữ nào có thể hiển thị tất cả các chữ cái của nó."
+formLiftChangesDrawing = "Không thể chỉnh sửa mục này: nó được hiển thị như một phần của nhóm có cài đặt cắt xén hoặc đồ họa mà trình chỉnh sửa không thể giữ nguyên khi thay đổi."
 insertImage = "Không thể chèn hình ảnh đã chọn."
+needsShaping = "Trình chỉnh sửa vẫn chưa thể hiển thị đúng các chữ cái nối và dấu nguyên âm của hệ chữ này, nên thay đổi này không được thực hiện."
+replaceClippedImage = "Không thể thay thế hình ảnh này: nó đã bị cắt, và ảnh thay thế sẽ hiển thị các phần mà phần cắt đang ẩn."
+scanOffInk = "Không thể chỉnh sửa văn bản này: các từ nhận dạng không thẳng hàng với bản quét. Hãy chạy OCR lại."
+unsafeRtlEdit = "Không thể thực hiện chỉnh sửa này: trình chỉnh sửa không thể hiển thị lại văn bản từ phải sang trái của dòng này mà không làm thay đổi nó."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "Hình ảnh PNG"
@@ -7304,15 +7634,42 @@ wholeWord = "Toàn bộ từ"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Phông chữ tích hợp"
+closestMatch = "Phông chữ này thiếu một số chữ cái đã chọn, nên chúng được hiển thị bằng phông chữ khớp gần nhất."
 deviceFontsNone = "Không tìm thấy phông chữ thiết bị bổ sung."
 deviceFontsUnavailable = "Phông chữ thiết bị không khả dụng. Phông chữ tích hợp vẫn hoạt động."
 deviceGroup = "Phông chữ thiết bị"
+documentFontCannotDraw = "Trình chỉnh sửa không thể hiển thị văn bản này bằng phông chữ của chính tài liệu, nên nó được giữ nguyên phông hiện tại."
 documentGroup = "Phông chữ tài liệu"
+embeddingForbidden = "Giấy phép của phông này không cho phép nhúng vào PDF. Văn bản được giữ nguyên."
+embedFailed = "Không thể nhúng phông này vào PDF. Văn bản được giữ nguyên."
+includedGroup = "Phông chữ đã đưa vào"
 label = "Họ phông chữ"
+matchedGroup = "Phông chữ khớp"
+missingGlyphs = "Phông chữ này thiếu một số ký tự đã chọn, và chúng không thể được giữ nguyên trong phông chữ hiện tại. Văn bản được giữ nguyên."
 mixed = "Hỗn hợp"
+needsShaping = "Trình chỉnh sửa vẫn chưa thể hiển thị lại đúng các chữ cái nối và dấu nguyên âm của hệ chữ này, nên văn bản đó được giữ nguyên phông hiện tại."
+noGlyphs = "Phông này không có ký tự cho văn bản đã chọn. Văn bản được giữ nguyên."
 noMatch = "Không có phông chữ phù hợp"
+partOfRunUnsupported = "Văn bản này chỉ có thể được thay đổi kiểu như một khối. Hãy chọn cả hộp thay vì chỉ một vài từ."
 placeholder = "Họ phông chữ"
+scannedText = "Văn bản quét"
+serverFontFailed = "Không thể tải phông từ máy chủ đó. Văn bản được giữ nguyên."
+serverGroup = "Phông chữ máy chủ"
+someLeftUnchanged = "Phông chữ này không có ký tự cho một số phần văn bản đã chọn. Phần đó được giữ nguyên."
+styleSkipped = "Một số phần văn bản đã chọn không có phiên bản phông chữ ở kiểu đó, nên được giữ nguyên."
+styleUnavailable = "Văn bản đã chọn không có phiên bản phông chữ ở kiểu đó, nên được giữ nguyên."
 useDeviceFonts = "Sử dụng phông chữ thiết bị"
+weight = "Độ đậm phông chữ"
+weightBlack = "Black"
+weightBold = "Bold"
+weightExtraBold = "Extra bold"
+weightExtraLight = "Extra light"
+weightLight = "Light"
+weightMedium = "Medium"
+weightNumber = "Độ đậm {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Semibold"
+weightThin = "Thin"
 
 [pdfTextEditor.fonts]
 allPresent = "Có đủ tất cả chữ cái & số"
@@ -7357,6 +7714,7 @@ helpDesc = "Trợ giúp này"
 saveDesc = "Lưu vào không gian làm việc của bạn"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Đậm / Nghiêng, cho các từ đã chọn hoặc cả ô"
 deleteDesc = "Xóa phần đã chọn"
 duplicateDesc = "Nhân đôi phần đã chọn"
 groupDesc = "Nhóm các run đã chọn thành một đoạn văn"
@@ -7380,8 +7738,12 @@ zoomDesc = "Phóng to / thu nhỏ"
 
 [pdfTextEditor.inspector]
 document = "Tài liệu"
+fontCompletedClosest = "Phông đã nhúng · các ký tự thiếu được vẽ bằng {{name}}, phông gần khớp nhất hiện có."
+fontCompletedOriginal = "Phông đã nhúng · các ký tự thiếu được vẽ bằng {{name}}, cùng phông."
 fontEmbedded = "Phông chữ nhúng · ký tự mà nó thiếu sẽ dùng Helvetica thay thế."
 fontGap = "{{name}} · thiếu {{glyphs}} - khi nhập các ký tự đó sẽ dùng Helvetica thay thế."
+fontUnknownCoverage = "{{name}} · ký tự thiếu sẽ dùng dự phòng {{fallback}}."
+formField = "Trường biểu mẫu"
 geometry = "Vị trí & kích thước"
 height = "Chiều cao"
 heightHint = "Chiều cao của hộp văn bản theo cỡ chữ và số dòng."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR không khả dụng trên server này."
 oneImage = "Hình ảnh"
 oneShape = "Hình dạng"
 oneText = "Văn bản"
+outlinedTextHint_one = "Văn bản của trang này được hiển thị như các hình dạng, nên không có văn bản để chỉnh sửa. Hãy chạy OCR trước để có thể chỉnh sửa."
+outlinedTextHint_other = "{{count}} trang hiển thị văn bản như các hình dạng, nên không có văn bản để chỉnh sửa. Hãy chạy OCR trước để có thể chỉnh sửa."
 pages = "Trang"
 runOcr = "Chạy OCR"
 scanHint_one = "Trang này là hình ảnh được quét, không có văn bản để chỉnh sửa. Chạy OCR trước để có thể chỉnh sửa văn bản."
 scanHint_other = "{{count}} trang là hình ảnh được quét, không có văn bản để chỉnh sửa. Chạy OCR trước để có thể chỉnh sửa văn bản."
 scannedText = "Văn bản đã quét · các từ đã thay đổi được che và vẽ lại bằng phông chữ phù hợp."
+scannedTextMisaligned = "Văn bản quét · các từ nhận dạng không thẳng hàng với bản quét, nên khối này không thể chỉnh sửa hoặc xóa."
+scannedTextNoFont = "Văn bản quét · chưa thể vẽ các từ gõ bằng hệ chữ này, nên chúng không được giữ lại. Vẫn có thể xóa từ."
+scannedTextOffInk = "Văn bản quét · các từ nhận dạng lệch so với từ đã quét, nên khối này không thể chỉnh sửa. Hãy chạy OCR lại."
 tabDocument = "Tài liệu"
 tabSelected = "Đã chọn"
 textBoxes = "Hộp văn bản"
+unreadPagesHint = "{{count}} trang không có văn bản để chỉnh sửa: một số là ảnh quét và một số hiển thị văn bản như các hình dạng. Hãy chạy OCR trước để có thể chỉnh sửa."
 width = "Chiều rộng"
 widthHint = "Văn bản sẽ tự ngắt dòng để vừa chiều rộng."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Thêm thẻ"
+applyToOtherPages_one = "Áp dụng cho {{count}} trang khác"
+applyToOtherPages_other = "Áp dụng cho {{count}} trang khác"
+artifactGroup = "Trình đọc màn hình bỏ qua"
 artifactText = "Trang trí"
 cannotChange = "Không thể thay đổi trợ năng của hình ảnh này."
+cannotDescribeFormField = "Không thể thay đổi mô tả của trường biểu mẫu này."
+cannotDescribeLink = "Không thể thay đổi mô tả của liên kết này."
 cannotRetag = "Không thể thay đổi thẻ của văn bản này."
+cannotSetDecorative = "Không thể đánh dấu hoặc bỏ đánh dấu là trang trí."
+cannotTagFormField = "Không thể gắn thẻ trường biểu mẫu này."
+cannotTagLink = "Không thể gắn thẻ liên kết này."
+cannotTagPage = "Không thể gắn thẻ nội dung của trang này."
+contentGroup = "Nội dung"
 customTag = "{{role}} (thẻ tùy chỉnh)"
 decorativeInfo = "Trình đọc màn hình bỏ qua hình ảnh trang trí. Dùng cho đường viền, nền và các hình ảnh khác không chứa thông tin."
 decorativeLabel = "Hình ảnh trang trí"
 description = "Mô tả hình ảnh"
 descriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho hình ảnh."
 encrypted = "Không thể chỉnh sửa thẻ trong tệp được mã hóa"
+figureDescription = "Mô tả hình ảnh"
+figureDescriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho hình."
+formFieldDescription = "Mô tả trường"
+formulaDescription = "Mô tả công thức"
+formulaDescriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho công thức. Hãy viết như cách bạn sẽ đọc to, ví dụ: \"x bình phương cộng một\"."
 heading = "Trợ năng"
 innerTagLabel = "Thẻ {{number}}"
 innerTags = "Thẻ trong văn bản này"
+linkDescription = "Mô tả liên kết"
+markedTagged = "Tài liệu đã được gắn thẻ đầy đủ"
+markedTaggedHint = "Báo cho trình đọc PDF dùng các thẻ khả năng truy cập. Đánh dấu khi mọi thứ đã được gắn thẻ."
+markedWithUntagged = "Một số nội dung không có thẻ, nên trình đọc màn hình có thể bỏ qua."
 missingDescriptions = "Thiếu mô tả"
 mixedContent = "Hình bao gồm nội dung khác"
+mixedTags = "Hỗn hợp"
 needsDescriptionBadge = "Không có mô tả"
-nextImage = "Hình ảnh tiếp theo"
+nextToReview = "Tiếp theo cần xem lại"
 notFigure = "Được gắn thẻ là một phần của văn bản"
 removeTag = "Xóa thẻ"
 saveFailed = "Không thể lưu các thay đổi trợ năng của bạn, vì vậy tệp chưa được lưu. Hãy hoàn tác chúng và thử lại."
 selectedText = "Văn bản đã chọn"
+tagFormField = "Gắn thẻ trường biểu mẫu"
+tagging = "Đang gắn thẻ trang"
 tagLabel = "Thẻ"
+tagLinks_one = "Gắn thẻ liên kết"
+tagLinks_other = "Gắn thẻ {{count}} liên kết"
+tagUntagged = "Tự động gắn thẻ tài liệu"
+tagUntaggedHint = "Tự động thêm các thẻ khả năng truy cập trên toàn tài liệu. Kết quả còn thô: hãy kiểm tra lại tiêu đề, danh sách và thứ tự đọc sau đó."
 unknownTag = "Không thể đọc ở đây"
+unmarkedWithTags = "Một số trình xem PDF vẫn sẽ dùng các thẻ và có thể bỏ qua nội dung không có thẻ."
 unreadable = "Không thể chỉnh sửa thẻ của tệp này"
 untaggableImages = "Không thể gắn thẻ ở đây"
 untaggedBadge = "Chưa gắn thẻ"
 untaggedDocument = "Tài liệu không có thẻ"
 untaggedImage = "Không thể gắn thẻ ở đây"
 untaggedImages = "Hình ảnh chưa gắn thẻ"
+untaggedPages = "Các trang cần gắn thẻ"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Chân trang"
+header = "Đầu trang"
+pageNumber = "Số trang"
+watermark = "Hình mờ"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Đề mục không có văn bản"
@@ -7505,6 +7907,23 @@ tableHeader = "Tiêu đề bảng"
 tableRow = "Hàng bảng"
 title = "Tiêu đề"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Tất cả ngôn ngữ"
+cannotSetDocument = "Không thể thay đổi ngôn ngữ của tài liệu này."
+cannotSetText = "Không thể thay đổi ngôn ngữ của văn bản này."
+documentHint = "Ngôn ngữ mà trình đọc màn hình sử dụng, trừ khi một phần văn bản đặt ngôn ngữ riêng."
+documentLabel = "Ngôn ngữ"
+documentLocked = "Không thể thay đổi ngôn ngữ của tài liệu đã mã hóa tại đây."
+inDocument = "Trong tài liệu này"
+innerLabel = "Ngôn ngữ của thẻ {{number}}"
+label = "Ngôn ngữ"
+missing = "Chưa đặt ngôn ngữ. Trình đọc màn hình sẽ đoán và có thể đọc toàn bộ tài liệu bằng giọng sai."
+mixed = "Hỗn hợp"
+noMatch = "Không có ngôn ngữ khớp. Hãy nhập mã của nó, ví dụ mt hoặc en-IE."
+placeholder = "Chọn ngôn ngữ"
+selectedText = "Ngôn ngữ của văn bản đã chọn"
+textHint = "Trình đọc màn hình sẽ đổi giọng và phát âm theo ngôn ngữ này."
+
 [pdfTextEditor.mobile]
 actions = "Hành động trình chỉnh sửa"
 addImage = "Hình ảnh"
@@ -7517,7 +7936,6 @@ done = "Xong"
 download = "Lưu và tải xuống"
 find = "Tìm"
 lock = "Khóa"
-openPdf = "Mở PDF"
 panelHint = "Việc chỉnh sửa diễn ra trong chế độ xem Workspace. Nhấn vào văn bản trên trang để thay đổi."
 save = "Lưu"
 style = "Kiểu"
@@ -7525,7 +7943,6 @@ tapToPlace = "Nhấn vào trang tại nơi văn bản sẽ được đặt"
 unlock = "Mở khóa"
 
 [pdfTextEditor.pageView]
-pageNumber = "Trang {{page}}"
 renderFailed = "Không thể kết xuất trang"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Thước dọc"
 
 [pdfTextEditor.run]
 lockedTitle = "Đã khóa - dùng nút Mở khóa để chỉnh sửa"
+readOnlyOrderTitle = "Không thể chỉnh sửa văn bản của dòng này: nó trộn văn bản từ phải sang trái và từ trái sang phải theo một thứ tự mà trình chỉnh sửa không thể hiển thị lại một cách an toàn"
+resizeHandle = "Kéo để thay đổi độ rộng; văn bản sẽ tự dàn lại"
 
 [pdfTextEditor.saveRisk]
 cancel = "Hủy"
@@ -7548,6 +7967,35 @@ intro = "Lưu bản sao đã chỉnh sửa sẽ thay đổi tệp. Điều đó 
 note = "Các chỉnh sửa của bạn được giữ lại. Các thay đổi liệt kê ở trên là không thể tránh khỏi khi lưu bản sao đã chỉnh sửa."
 saveAnyway = "Vẫn lưu"
 title = "Việc lưu sẽ thay đổi PDF này"
+
+[pdfTextEditor.scanFont]
+approximate = "Khớp gần đúng"
+approximateHint = "Phông gần nhất tìm được có thể không khớp với bản quét."
+change = "Phông trông không đúng?"
+choose = "Chọn phông chữ"
+chooseMissing = "Chọn phông cho văn bản này…"
+compare = "So sánh phông chữ…"
+deviceAllow = "Cho phép truy cập phông để khớp tốt hơn"
+deviceBlocked = "Trình duyệt sẽ không hỏi lại. Để cho phép, nhấp biểu tượng bên trái thanh địa chỉ, bật Fonts rồi thử lại."
+deviceBlockedTitle = "Đã chặn truy cập phông"
+deviceNone = "Không có phông tài liệu thường dùng nào được cài trên máy tính này."
+deviceNote = "Trình duyệt sẽ hỏi trước. Phông vẫn ở trên thiết bị này."
+deviceOn_one = "Cũng so sánh với {{count}} phông trên máy tính này."
+deviceOn_other = "Cũng so sánh với {{count}} phông trên máy tính này."
+deviceReading = "Đang đọc các phông trên máy tính này…"
+deviceRetry = "Thử lại"
+done = "Xong"
+hint = "Chữ bạn gõ được vẽ bằng phông gần nhất tìm được. Chọn phông khác nếu trông giống bản quét hơn."
+hintFromScan = "Chữ bạn gõ được ghép từ các chữ cái trong bản quét. Chọn một phông để vẽ bằng phông đó thay thế."
+hintOthers = "Lựa chọn của bạn cũng áp dụng cho văn bản quét bạn chưa chỉnh sửa."
+matching = "Đang khớp phông…"
+noFont = "Không phông nào hiện có vẽ được hệ chữ này, nên chưa thể vẽ lại văn bản gõ."
+scan = "Bản quét gốc"
+scanAlt = "Dòng đã quét"
+scanNote = "Bản quét thường mờ hơn hoặc đậm hơn so với phông thật. Hãy so sánh hình dáng chữ thay vì độ đậm."
+score = "{{match}}% giống nhau"
+title = "Khớp phông của bản quét"
+unmeasurable = "Bản quét này quá mờ hoặc quá nhỏ để khớp với phông."
 
 [pdfTextEditor.settings]
 advanced = "Nâng cao"
@@ -7564,7 +8012,6 @@ addTable = "Thêm bảng"
 addText = "Thêm văn bản"
 clickPageToAddTable = "Nhấp vào trang để thêm bảng"
 clickPageToAddText = "Nhấp vào trang để thêm văn bản"
-document = "Tài liệu"
 group = "Nhóm"
 groupingAuto = "Tự động"
 groupingAutoHint = "Nhóm các dòng cách đều thành đoạn văn. Thay đổi tùy chọn này sẽ đọc lại tài liệu và xóa lịch sử hoàn tác."
@@ -7593,23 +8040,17 @@ auto = "Tự động"
 enable = "Kiểm tra chính tả khi bạn nhập"
 language = "Ngôn ngữ từ điển"
 
-[pdfTextEditor.stage]
-loadingDocument = "Đang tải tài liệu"
-loadingProgress = "Tiến trình tải"
-noDocument = "Chưa tải tài liệu."
-pickPrompt = "Chọn PDF từ bảng Tệp bên trái để bắt đầu chỉnh sửa."
-renderingPreview = "Đang kết xuất bản xem trước"
-
 [pdfTextEditor.table]
 addColumn = "Thêm cột"
 addRow = "Thêm hàng"
+cellNoGlyphs = "Văn bản này có các ký tự mà phông chữ của bảng không thể hiển thị. Hãy thay đổi hoặc xóa chúng để điền vào ô."
 column = "Cột"
 deleteColumn = "Xóa cột"
 deleteRow = "Xóa hàng"
 done = "Xong"
 doneHint = "Dừng chỉnh sửa mục này dưới dạng bảng"
-edit = "Chỉnh sửa"
 editHint = "Chỉnh sửa dưới dạng bảng - nhập vào ô, thêm hoặc xóa hàng và cột"
+editTable = "Chỉnh sửa bảng"
 move = "Di chuyển"
 moveTable = "Kéo để di chuyển toàn bộ bảng"
 recognizedHint = "Bảng đã nhận dạng - nhấp để chọn toàn bộ văn bản của bảng"
@@ -7630,6 +8071,9 @@ alignMiddle = "Căn giữa dọc"
 alignRight = "Căn phải"
 alignTop = "Căn trên"
 arrange = "Sắp xếp"
+bold = "Đậm"
+boldOnly = "Phông chữ này chỉ có phiên bản đậm"
+boldUnavailable = "Không có phiên bản đậm của phông chữ này"
 bringForward = "Đưa lên trước"
 bringToFront = "Đưa lên trên cùng"
 caseLower = "chữ thường"
@@ -7650,10 +8094,12 @@ fontColour = "Màu phông chữ"
 fontSize = "Cỡ phông chữ"
 formatting = "Định dạng văn bản"
 italic = "In nghiêng"
+italicOnly = "Phông chữ này chỉ có phiên bản nghiêng"
 italicUnavailable = "Phông chữ này không có phiên bản in nghiêng. Tải phông chữ thiết bị của bạn hoặc chọn họ phông chữ khác."
 lock = "Khóa lựa chọn"
 lockTooltip = "Khóa lựa chọn - ngăn chỉnh sửa vô tình"
 more = "Hành động khác"
+noBoldItalic = "Không có phiên bản đậm nghiêng của phông chữ này"
 order = "Thứ tự"
 outlineColour = "Màu viền"
 outlineWidth = "Độ rộng viền (0 = không có)"
@@ -7683,13 +8129,6 @@ title = "Sai lệch khi xem trước"
 [pdfTextEditor.tooltip.textFocus]
 text = "Không gian làm việc này tập trung vào chỉnh sửa văn bản và thay đổi vị trí hình ảnh nhúng. Tác phẩm trang phức tạp, tiện ích biểu mẫu và đồ họa nhiều lớp sẽ được giữ lại khi xuất nhưng không thể chỉnh sửa đầy đủ tại đây."
 title = "Tập trung Văn bản và Hình ảnh"
-
-[pdfTextEditor.zoom]
-fit = "Vừa khít"
-fitToWidth = "Vừa chiều rộng"
-in = "Phóng to"
-out = "Thu nhỏ"
-reset = "Đặt lại zoom về 100%"
 
 [PDFToCSV]
 header = "PDF sang CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Chạy khi nhập"
 [policies.enforcement]
 applying = "Đang áp dụng {{names}}"
 applyingProgress = "Đang áp dụng {{names}} ({{done}} trong {{total}})"
-exportFailureBody = "Không thể áp dụng các chính sách bảo mật. Các tệp đã được xuất nguyên trạng."
-exportFailureTitle = "Đã xuất mà không thực thi"
 failureBody = "Không thể áp dụng một số chính sách cho {{failures}} trong tổng số {{total}} tệp."
 failureTitle = "Đã xuất mà không thực thi đầy đủ"
 printPolicyAppliedBody = "PDF này đã được cập nhật để đáp ứng một chính sách. Hãy xem lại các thay đổi, rồi in lại."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Đăng tin nhắn lên một Google Chat space khi một chính sách chạy."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Tài khoản dịch vụ đọc và ghi Google Drive cho tổ chức."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Dán khóa JSON của tài khoản dịch vụ từ Google Cloud. Khóa sẽ được mã hóa và không hiển thị lại."
+label = "Khóa tài khoản dịch vụ (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Tùy chọn. Với ủy quyền toàn miền, người dùng mà Drive này sẽ hoạt động thay (một người dùng bot riêng sẽ tiếp tục hoạt động khi nhân sự rời đi). Để trống thì chỉ truy cập được Shared drives và thư mục được chia sẻ với tài khoản dịch vụ."
+label = "Hoạt động như người dùng"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Đính kèm tài liệu đã xử lý vào một Jira issue."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Gửi email tài liệu hoặc thông báo khi một chính sách chạy."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Cần quyền ứng dụng Microsoft Graph với sự chấp thuận của quản trị viên."
+label = "ID Ứng dụng (client)"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "ID Thư mục (tenant)"
+placeholder = "contoso.onmicrosoft.com hoặc GUID tenant"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Mật khẩu ứng dụng"
+
+[portal.connections.types.onedrive]
+description = "Đọc và ghi vào OneDrive for Business của một người dùng."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "OneDrive của ai mà kết nối này truy cập. Đăng ký ứng dụng cần quyền ứng dụng Files.ReadWrite.All."
+label = "Chủ sở hữu OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Để trống nếu bạn xác thực bằng private key thay th�
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Tùy chọn. Dán OpenSSH private key để xác thực bằng key thay vì mật khẩu."
 label = "Khóa riêng tư"
+
+[portal.connections.types.sharepoint]
+description = "Đọc và ghi vào thư viện tài liệu của một site SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Tùy chọn. Để trống để dùng thư viện Documents mặc định của site."
+label = "Thư viện tài liệu"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Đăng tin nhắn lên Slack khi một chính sách xử lý tài liệu."
@@ -9142,6 +9624,126 @@ status = "Trạng thái"
 time = "Thời gian"
 user = "Người dùng"
 
+[portal.enterprise]
+backTo = "Quay lại {{stage}}"
+brandTag = "Enterprise"
+callInfo = "Cuộc gọi 15 phút. Mang theo câu hỏi về giá, triển khai hoặc bảo mật, hoặc cùng lên kế hoạch triển khai."
+callTitle = "Trao đổi với kỹ sư giải pháp"
+deployment = "Triển khai"
+footer = "Có câu hỏi về Stirling Enterprise?"
+home = "Đến Stirling"
+member = "Trưởng nhóm của bạn phụ trách thỏa thuận Enterprise. Khi bắt đầu, bạn có thể theo dõi tiến độ tại đây."
+memberDeal = "Trưởng nhóm của bạn phụ trách thỏa thuận này. Bạn có thể theo dõi tiến độ tại đây."
+quotePanel = "Báo giá của bạn"
+signIn = "Đăng nhập"
+signInToStart = "Đăng nhập để bắt đầu dùng thử"
+stage = "Giai đoạn {{current}} trên {{total}}"
+stagesLabel = "Tiến độ"
+
+[portal.enterprise.landing]
+lede = "Dùng thử miễn phí 14 ngày, sau đó tạo báo giá và ký thỏa thuận tại đây. Không cần thẻ."
+tickAgreement = "Một thỏa thuận bao gồm MSA, đơn đặt hàng, EULA và DPA"
+tickCompliance = "SCIM, nơi lưu trữ dữ liệu và SLA thời gian hoạt động"
+tickDeploy = "Chạy trên Stirling Cloud, máy chủ của bạn, hoặc tách mạng hoàn toàn"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Tài liệu giấy phép offline"
+point1 = "Kích hoạt bằng tệp giấy phép hoạt động offline, không phải khóa kiểm tra online"
+point2 = "Cài đặt như tự lưu trữ, từ image bạn mang sang"
+point3 = "Đăng nhập diễn ra bên trong mạng của bạn"
+tagline = "Tự lưu trữ trên mạng không có truy cập internet."
+
+[portal.enterprise.options.cloud]
+more = "Tài liệu Stirling Cloud"
+point1 = "Nhóm của bạn đăng nhập tại stirling.com/app"
+point2 = "Chạy trên AWS, tệp lưu trữ được mã hóa khi lưu trữ"
+point3 = "SSO qua nhà cung cấp định danh của bạn cần tự lưu trữ"
+tagline = "Được lưu trữ sẵn cho bạn, không cần cài đặt."
+
+[portal.enterprise.options.selfhost]
+more = "Tài liệu tự lưu trữ"
+point1 = "Cài đặt bằng Docker, hoặc Helm chart trên Kubernetes"
+point2 = "Tài liệu được xử lý trên hạ tầng của riêng bạn"
+point3 = "SSO với OAuth2, OIDC hoặc SAML"
+tagline = "Trên máy chủ của bạn, on-premises hoặc trong cloud của bạn."
+
+[portal.enterprise.review]
+back = "Quay lại {{stage}}"
+company = "Công ty"
+completed = "Hoàn thành"
+extensions = "Phần mở rộng đã dùng"
+paid = "Đã thanh toán. Hóa đơn của bạn luôn có sẵn tại đây."
+people = "Người dùng"
+started = "Đã bắt đầu"
+trialEnds = "Ngày kết thúc dùng thử"
+trialTitle = "Bản dùng thử của bạn"
+version = "Phiên bản"
+viewInvoice = "Xem hóa đơn"
+
+[portal.enterprise.setup]
+copied = "Đã sao chép"
+copy = "Sao chép"
+markDone = "Đánh dấu “{{step}}” là xong"
+progress = "Đã xong {{done}}/{{total}}"
+subtitle = "Tận dụng tối đa bản dùng thử bằng cách thử theo đúng cách bạn sẽ vận hành."
+subtitleLive = "Các bước cần hoàn tất trước khi triển khai cho mọi người."
+title = "Bắt đầu thiết lập"
+titleLive = "Danh sách kiểm trước khi vận hành chính thức"
+
+[portal.enterprise.setup.firstDocument]
+body = "Tải lên một PDF mà nhóm bạn đang làm việc và thử các công cụ bạn dùng hằng ngày như che nội dung, nén hoặc OCR."
+title = "Xử lý tài liệu đầu tiên"
+
+[portal.enterprise.setup.getApp]
+body = "Cài ứng dụng máy tính cho Windows, Mac hoặc Linux và đăng nhập bằng tài khoản bạn vừa tạo, hoặc dùng trực tiếp từ trình duyệt."
+title = "Tải Stirling"
+
+[portal.enterprise.setup.install]
+body = "Chạy phần này trên máy chủ của bạn. Nó khởi động Stirling với giấy phép đã áp dụng, và image bao gồm OCR và chuyển đổi office. Với đội lớn hơn, hãy dùng Kubernetes."
+title = "Cài đặt và khởi động Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Mời những người sẽ sử dụng vào, để bản dùng thử phản ánh công việc thực tế."
+title = "Mời nhóm của bạn"
+
+[portal.enterprise.setup.licence]
+body = "Mở <code>http://your-server:8080/settings/adminPlan</code>, nơi giấy phép Enterprise của bạn sẽ hiển thị là đang hoạt động. Cài theo cách khác? Thêm khóa dưới <code>premium.key</code> trong <code>settings.yml</code> rồi khởi động lại."
+title = "Kiểm tra giấy phép đang hoạt động"
+
+[portal.enterprise.setup.links]
+browser = "Dùng trong trình duyệt"
+docker = "Hướng dẫn Docker"
+download = "Tải ứng dụng"
+downloadForTeam = "Tải ứng dụng cho nhóm của bạn"
+downloading = "Đang tải..."
+downloadLicence = "Tải tệp giấy phép"
+invite = "Mời đồng đội"
+kubernetes = "Hướng dẫn Kubernetes"
+licence = "Kích hoạt giấy phép"
+ocr = "Ngôn ngữ OCR"
+openApp = "Mở Stirling"
+samlGuide = "Hướng dẫn SAML"
+ssoGuide = "Hướng dẫn SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Kéo full image trên máy có kết nối, mang nó và tệp giấy phép sang, rồi load và khởi động. Full image bổ sung các phông mà máy chủ offline không thể tải."
+title = "Mang Stirling sang và khởi động"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Máy chủ tách mạng không thể truy cập dịch vụ giấy phép của chúng tôi, nên sẽ kiểm tra tệp đã ký này thay thế. Giữ tệp cùng với image bạn mang sang."
+title = "Tải giấy phép offline của bạn"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Tạo tài khoản tại <code>/settings/people</code>, hoặc trỏ Stirling tới nhà cung cấp định danh nội bộ để đăng nhập không rời khỏi mạng của bạn."
+bodySelfHosted = "Tạo tài khoản tại <code>/settings/people</code>, hoặc kết nối nhà cung cấp định danh để nhóm của bạn đăng nhập bằng tài khoản công việc. Họ dùng Stirling trong trình duyệt tại địa chỉ máy chủ của bạn, hoặc trong ứng dụng máy tính trỏ tới đó."
+title = "Thêm người dùng của bạn"
+
+[portal.enterprise.setup.signIn]
+body = "Mở <code>http://your-server:8080</code> và đăng nhập bằng <code>admin</code> / <code>stirling</code>. Bạn sẽ được yêu cầu đặt mật khẩu mới ngay."
+bodyAirgap = "Mở <code>http://your-server:8080</code> và đăng nhập bằng <code>admin</code> / <code>stirling</code>, đặt mật khẩu mới, rồi kiểm tra <code>/settings/adminPlan</code> hiển thị giấy phép của bạn đang hoạt động."
+title = "Đăng nhập với vai trò quản trị viên"
+
 [portal.errorBoundary]
 description = "Chế độ xem này gặp lỗi không mong muốn. Hãy thử lại hoặc chọn phần khác từ thanh bên."
 retry = "Thử lại"
@@ -9293,6 +9895,7 @@ title = "Không có gì để xem xét"
 [portal.home.download]
 back = "Quay lại"
 body = "Tải xuống ứng dụng desktop hoặc tự lưu trữ máy chủ."
+bodyDesktop = "Tải ứng dụng máy tính, rồi đăng nhập bằng tài khoản Stirling của bạn."
 done = "Xong"
 guide = "Mở hướng dẫn {{name}}"
 openInBrowser = "Mở trong trình duyệt thay thế"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Nhận Email"
 
 [portal.procurement]
-subtitle = "Giúp đội ngũ của bạn được đánh giá, ký hợp đồng và triển khai. Mọi tài liệu ở cùng một nơi."
 title = "Mua sắm"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Không thể tải thỏa thuận. Vui lòng thử lại."
 loading = "Đang tải thỏa thuận..."
 ref = "Tham chiếu {{ref}} · {{version}}"
 requestChanges = "Yêu cầu thay đổi"
-scrollHint = "Cuộn để xem lại"
 signatory = "Tên người ký"
 signatoryPlaceholder = "Họ và tên"
 signatoryTitle = "Chức danh người ký"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "ví dụ: General Counsel"
 signError = "Không thể ghi nhận chữ ký của bạn. Vui lòng thử lại."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} một lần"
+addonPerYear = "+{{amount}}/năm"
 addons = "Tiện ích bổ sung"
 addressLine1 = "Địa chỉ dòng 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Địa chỉ dòng 2"
 addressLine2Placeholder = "Suite, tầng, tòa nhà"
 back = "Quay lại"
+belowMinimum = "Báo giá này thấp hơn mức tối thiểu cho một thỏa thuận Enterprise."
 businessName = "Tên doanh nghiệp"
 businessNamePlaceholder = "Công ty của bạn"
 city = "Thành phố"
 cityPlaceholder = "San Francisco"
 completeRequired = "Vui lòng hoàn tất các trường bắt buộc (đánh dấu *) với email hợp lệ trước khi tạo báo giá."
+conflict = "Thỏa thuận này đã thay đổi kể từ khi bạn mở. Hãy đóng trình dựng và tải lại trang để xem trạng thái hiện tại."
 contactEmail = "Email liên hệ"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Tên liên hệ"
 contactNamePlaceholder = "Jane Doe"
 continue = "Tiếp tục"
 done = "Xong"
+editUsage = "Chỉnh sửa mức sử dụng"
 eula = "Tôi đã đọc và đồng ý với Stirling Enterprise EULA. EULA này điều chỉnh thỏa thuận được tạo từ báo giá này."
 generate = "Tạo báo giá"
 indemnification = "Bảo vệ IP nâng cao"
 indemnificationSub = "Mở rộng phạm vi bảo vệ IP của chúng tôi cho các khiếu nại bằng sáng chế. Bồi thường cơ bản về bản quyền, nhãn hiệu và bí mật thương mại được bao gồm miễn phí."
+minimum = "Enterprise yêu cầu chi tiêu tối thiểu hàng năm là {{min}}."
+minimumBelow = "Báo giá này là {{annual}} mỗi năm. Nếu dự kiến dùng nhiều hơn, hãy tăng mức sử dụng ước tính; nếu không, gói Team có thể phù hợp hơn."
+minimumNear = "Enterprise yêu cầu chi tiêu tối thiểu hàng năm là {{min}}. Hãy tăng mức sử dụng ước tính để đạt mức này, hoặc trao đổi với chúng tôi."
+minimumNearTitle = "Bạn còn thiếu {{gap}} mỗi năm để đạt Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Báo giá Enterprise"
 paperFor = "Chuẩn bị cho"
 pdfSize = "Kích thước PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "Được quản lý theo quy định"
 posture_regulatedSub = "Mọi danh mục — Tuân thủ, Lưu giữ, Nạp dữ liệu"
 qbr = "Đánh giá kinh doanh hàng quý"
 qbrSub = "SE của bạn xem xét việc sử dụng và lộ trình mỗi quý"
+raiseUsage = "Tăng mức sử dụng ước tính"
 region = "Tiểu bang / vùng"
 regionPlaceholder = "California"
-running = "{{annual}} / năm · {{years}} năm {{tcv}}"
+runningLabel = "Giá ước tính"
+runningLabelIssued = "Giá báo"
+runningOneYear = "{{annual}} mỗi năm"
+runningTotal = "{{tcv}} tổng trong {{years}} năm"
 s1Sub = "Đội ngũ của bạn và số PDF bạn dự kiến xử lý mỗi năm."
 s1Title = "Bạn sẽ xử lý bao nhiêu?"
 s2Sub = "Thời hạn dài hơn được giảm giá; cấp dịch vụ của bạn xác định hỗ trợ."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "ví dụ: 1.000.000"
 years_one = "{{count}} năm"
 years_other = "{{count}} năm"
 
+[portal.procurement.builder.line]
+deployment = "Triển khai {{deployment}}"
+indemnification = "Bồi thường IP"
+multiYear_one = "Cam kết {{count}} năm"
+multiYear_other = "Cam kết {{count}} năm"
+qbr = "Đánh giá kinh doanh hàng quý"
+seats_one = "{{users}} người dùng đã thỏa thuận + SSO / RBAC / audit"
+seats_other = "{{users}} người dùng đã thỏa thuận + SSO / RBAC / audit"
+seatsUnset = "Người dùng + SSO / RBAC / audit"
+support = "SE / CSM chuyên trách"
+training = "Onboarding & đào tạo"
+usage = "Xử lý PDF — {{volume}} PDF/năm với {{rate}}/PDF (tự động hóa {{posture}})"
+
 [portal.procurement.documents]
 agreement = "Thỏa thuận Enterprise"
 agreementSub = "MSA, Order Form và DPA trong một chữ ký."
@@ -10557,6 +11185,8 @@ invoice = "Hóa đơn"
 invoiceSub = "Hóa đơn đăng ký đầu tiên của bạn."
 laterInvoice = "Có sẵn sau khi bạn chấp nhận"
 laterQuote = "Có sẵn khi báo giá của bạn được phát hành"
+laterSigning = "Khả dụng sau khi thỏa thuận được ký"
+laterTitle = "Các mục tiếp theo trong thỏa thuận của bạn"
 quote = "Báo giá"
 quoteSub = "Báo giá enterprise chi tiết của bạn."
 sla = "Phụ lục SLA"
@@ -10573,15 +11203,12 @@ title = "Đã xảy ra lỗi"
 [portal.procurement.hero]
 barAria = "Giai đoạn {{current}} trong {{total}}"
 ctaAgreement = "Xem lại & ký thỏa thuận"
-ctaExploring = "Thiết lập bản dùng thử của bạn"
 ctaQuote = "Xem lại báo giá của bạn"
 ctaReviewQuote = "Xem lại báo giá"
 ctaTrial = "Tạo báo giá của bạn"
-documents = "Tài liệu"
 eyebrow = "Doanh nghiệp"
 eyebrowCompany = "{{company}} Doanh nghiệp"
 inviteTeammates = "Mời đồng đội"
-licenseKey = "Khóa giấy phép"
 liveSub = "Tổ chức của bạn đã được cấp phát và giấy phép của bạn đang hoạt động."
 liveTitle = "Bạn đang chạy Stirling Enterprise"
 next = "Tiếp theo: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Chưa thể tạo file giấy phép offline — vui lòng thử
 downloadOffline = "Tải xuống giấy phép offline (.lic)"
 hint = "Dán khóa này vào một phiên bản tự host để kích hoạt, hoặc lưu lại cho hồ sơ của bạn. Hãy giữ an toàn."
 label = "Khóa giấy phép của bạn"
-subtitle = "Kích hoạt một phiên bản self-hosted bằng khóa này, hoặc giữ lại để lưu hồ sơ."
-title = "Khóa giấy phép của bạn"
 trialFileHint = "Đây là file giấy phép dùng thử của bạn. Khi thỏa thuận của bạn đã hoàn tất, hãy quay lại và tải xuống lần nữa — khác với khóa giấy phép trực tuyến, file .lic sẽ không tự cập nhật."
-
-[portal.procurement.link]
-cta = "Liên kết tài khoản"
-description = "Mua sắm chạy trên tài khoản Stirling được liên kết của bạn: đó là cách chúng tôi cấp phát bản dùng thử, định giá báo giá và bắt đầu lập hóa đơn. Liên kết một tài khoản để bắt đầu."
-eyebrow = "Doanh nghiệp"
-title = "Liên kết tài khoản của bạn để bắt đầu"
 
 [portal.procurement.live]
 description = "Đăng ký của bạn đang hoạt động và giấy phép của bạn đã được cấp. Đội ngũ của bạn đã được cấp phát và việc lập hóa đơn đã bắt đầu."
-eyebrow = "Hoạt động"
 title = "Bạn đã hoạt động trên Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Chưa thể tải xuống PDF báo giá — vui lòng thử l�
 
 [portal.procurement.payment]
 description = "Báo giá của bạn đã được chấp nhận và giấy phép của bạn đã hoạt động — đội ngũ của bạn có thể bắt đầu ngay. Thanh toán hóa đơn đầu tiên khi bạn sẵn sàng; bạn có thể thanh toán hoặc tải xuống tại đây, không cần email."
-downloadAgreement = "Tải xuống thỏa thuận đã ký"
 downloadInvoice = "Tải xuống hóa đơn"
-eyebrow = "Thanh toán"
-title = "Đã tạo đăng ký"
 viewInvoice = "Xem & thanh toán hóa đơn"
 
 [portal.procurement.review]
 acceptCta = "Chấp nhận báo giá"
 annual = "Phí hằng năm (năm 1)"
 downloadCta = "Tải xuống báo giá"
+oneTime = "một lần"
 poNumber = "Đơn đặt hàng: {{po}}"
 renewal = "Gia hạn ở mức {{amount}}/năm sau thời hạn (+{{pct}}% CPI)"
 tcv = "Thời hạn {{years}} năm, trả trước toàn bộ: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Gia hạn sẽ thêm 7 ngày và thông báo cho kỹ sư giải pháp của bạn."
 bodyMaxed = "Bạn đã dùng hết mọi lần gia hạn — hãy trao đổi với kỹ sư giải pháp nếu bạn cần thêm thời gian."
-cancel = "Hủy dùng thử"
 extend = "Gia hạn 7 ngày"
 maxed = "Đã đạt giới hạn"
 subtitle = "Bản dùng thử miễn phí của bạn kéo dài đến {{date}}. Không cần thẻ."
 title = "Dùng thử Enterprise"
+
+[portal.procurement.validation]
+confirm = "Xác nhận bạn được ủy quyền ký thay mặt tổ chức."
+email = "Nhập địa chỉ email hợp lệ."
+eula = "Đồng ý EULA để tiếp tục."
+required = "Trường này là bắt buộc."
+seats = "Nhập số người sẽ dùng thử."
+volume = "Nhập số lượng PDF bạn dự kiến xử lý mỗi năm."
 
 [portal.review]
 subtitle = "Mọi nội dung từ các lần chạy chính sách và trình chỉnh sửa của nhóm bạn cần bạn chú ý."
@@ -10735,6 +11358,7 @@ subtitle = "Các kết nối đầu vào có thể tái sử dụng để đưa 
 title = "Nguồn"
 
 [portal.sources.actions]
+connectDestination = "Kết nối đích"
 connectSource = "Kết nối nguồn"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Chọn nơi tài liệu đã xử lý sẽ đến. Các trì
 comingSoon = "Sắp ra mắt"
 comingSoonHeading = "Sắp ra mắt"
 create = "Tạo nguồn"
+createDestination = "Tạo đích"
+createDestinationTitle = "Thêm đích"
 createTitle = "Kết nối một nguồn"
 delete = "Xóa"
 editTitle = "Chỉnh sửa nguồn"
@@ -10757,6 +11383,41 @@ save = "Lưu thay đổi"
 description = "Tự động hóa thư mục chỉ có thể dùng các thư mục mà quản trị viên đã cho phép. Thêm thư mục trong cài đặt Quyền truy cập thư mục, rồi thử lại."
 openSettings = "Cài đặt Quyền truy cập thư mục"
 title = "Thư mục này không được phép"
+
+[portal.sources.cloudFields.account]
+connect = "Kết nối tài khoản của bạn"
+connectAnother = "Kết nối tài khoản khác"
+connectFailed = "Không thể kết nối tài khoản. Hãy thử lại hoặc yêu cầu quản trị viên kiểm tra đăng ký ứng dụng."
+label = "Tài khoản"
+placeholder = "Chọn một tài khoản"
+reconnect = "đăng nhập lại"
+unavailable = "Kết nối tài khoản riêng đã tắt trên máy chủ này. Hãy chọn kết nối tổ chức thay thế."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Tài khoản cá nhân đã bị tắt trên máy chủ này."
+helperText = "Tài khoản của bạn truy cập những gì bạn có thể mở và không cần quản trị viên. Kết nối tổ chức tiếp tục hoạt động khi có người rời đi và chỉ truy cập những gì quản trị viên đã thiết lập."
+label = "Đăng nhập với tư cách"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Tài khoản của tôi"
+organisation = "Kết nối tổ chức"
+
+[portal.sources.cloudFields.connection]
+helperText = "Được thiết lập bởi quản trị viên trong mục Tích hợp. Dùng chung cho mọi vị trí sử dụng nó."
+label = "Kết nối tổ chức"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Dán liên kết thư mục hoặc nhập đường dẫn từ đầu My Drive. Để trống cho đầu My Drive. Thư mục phải tồn tại sẵn."
+placeholder = "Liên kết thư mục, hoặc Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Một thư mục trong OneDrive của bạn, hoặc dán liên kết thư mục (Copy link trong OneDrive). Để trống cho đầu OneDrive. Thư mục phải tồn tại sẵn."
+placeholder = "Scans/Inbox, hoặc một liên kết thư mục"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Với tài khoản của bạn, dán liên kết thư mục (Copy link trong SharePoint). Với kết nối tổ chức, dùng một thư mục trong thư viện của tổ chức; để trống cho thư mục gốc của thư viện. Thư mục phải tồn tại sẵn."
+organisationPlaceholder = "Liên kết thư mục, hoặc Scans/Inbox"
+placeholder = "Liên kết thư mục"
 
 [portal.sources.delete]
 body = "Xóa \"{{name}}\"? Không thể hoàn tác. Các chính sách tham chiếu đến nguồn này sẽ cần được cập nhật."
@@ -10821,6 +11482,7 @@ label = "Hộp thư Email"
 [portal.sources.types.folder]
 description = "Theo dõi một thư mục trên server để phát hiện tài liệu mới."
 label = "Thư mục"
+outputDescription = "Lưu kết quả vào một thư mục trên máy chủ."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Đường dẫn tuyệt đối tới thư mục cần theo dõi tệp mới."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Kéo tài liệu từ các thư mục Google Drive được chia sẻ."
 label = "Google Drive"
+outputDescription = "Lưu kết quả vào một thư mục Google Drive."
 
 [portal.sources.types.network]
 description = "Theo dõi một SMB network share để tìm tài liệu mới."
@@ -10867,10 +11530,12 @@ label = "Ổ đĩa mạng"
 [portal.sources.types.onedrive]
 description = "Theo dõi các thư mục OneDrive để tìm tài liệu mới."
 label = "OneDrive"
+outputDescription = "Lưu kết quả vào một thư mục OneDrive."
 
 [portal.sources.types.s3]
 description = "Kéo tài liệu từ Amazon S3 hoặc bucket tương thích S3."
 label = "Amazon S3"
+outputDescription = "Lưu kết quả vào một bucket Amazon S3 hoặc tương thích S3."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Kết nối đã lưu với bucket và thông tin xác thực. Được chia sẻ bởi mọi nguồn và đầu ra quy trình sử dụng nó."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Kéo tài liệu từ các thư viện tài liệu SharePoint."
 label = "SharePoint"
+outputDescription = "Lưu kết quả vào một thư mục trong thư viện tài liệu SharePoint."
 
 [portal.sources.types.unknown]
 label = "Nguồn"
@@ -11074,6 +11740,14 @@ waiting = "Đã xếp hàng ..."
 name = "Google Drive"
 scope = "Nhập tệp"
 
+[provider.googledrive.accountScope]
+description = "drive truy cập mọi tệp (Google phải xác minh ứng dụng công khai cho việc này); drive.file chỉ các tệp người dùng chọn hoặc Stirling tạo"
+label = "Quyền truy cập Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "Một lần đăng nhập cho người chỉnh sửa và các pipeline của họ. Tắt để chỉ cho phép kết nối tổ chức."
+label = "Cho phép mọi người kết nối tài khoản của riêng họ"
+
 [provider.googledrive.apiKey]
 description = "Google API Key cho Google Picker API từ Google Cloud Console"
 label = "Khóa API"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "Google OAuth 2.0 Client ID từ Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "Cho phép mọi người kết nối tài khoản Google cho các pipeline của họ. Thêm Redirect URI bên dưới làm Redirect URI được ủy quyền của OAuth client."
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "Cho phép người dùng nhập tệp trực tiếp từ Google Drive"
 label = "Bật bộ chọn tệp Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "Không thể kết nối tài khoản Google của bạn. Hãy thử lại trong Cài đặt > Tài khoản đã kết nối."
 notConfigured = "Google Drive chưa được cấu hình"
 pickerFailed = "Không thể mở trình chọn Google Drive"
+
+[provider.googledrive.redirectUri]
+description = "Thêm mục này làm Redirect URI được ủy quyền của OAuth client trong Google Cloud Console."
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Tệp & pipeline"
+
+[provider.microsoft.allowAccountConnections]
+description = "Một lần đăng nhập cho người chỉnh sửa và các pipeline của họ. Tắt để chỉ cho phép kết nối tổ chức."
+label = "Cho phép mọi người kết nối tài khoản của riêng họ"
+
+[provider.microsoft.allowEditorSaves]
+description = "Tắt để giữ các chỉnh sửa trong Stirling: các tệp mở từ OneDrive sau đó sẽ được tải xuống thay vì lưu, và máy chủ sẽ từ chối việc lưu vào OneDrive."
+label = "Cho phép trình chỉnh sửa lưu lại vào OneDrive"
+
+[provider.microsoft.clientId]
+description = "Từ một đăng ký ứng dụng Microsoft Entra."
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "Cần cho các tài khoản đã kết nối. Lưu trên máy chủ."
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "Cho phép mọi người dùng OneDrive và SharePoint trong pipeline"
+label = "Bật OneDrive & SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Thêm mục này làm URI chuyển hướng Ứng dụng một trang trên cùng đăng ký ứng dụng, để đăng nhập từ trình chỉnh sửa."
+label = "URI chuyển hướng Ứng dụng một trang"
+
+[provider.microsoft.redirectUri]
+description = "Thêm mục này làm Web redirect URI trong đăng ký ứng dụng Entra."
+label = "Redirect URI"
+
+[provider.microsoft.setupSteps]
+connect = "Lưu, khởi động lại, sau đó kết nối một tài khoản trong Tài khoản đã kết nối."
+permissions = "Thêm các quyền được ủy quyền của Microsoft Graph Files.ReadWrite.All và Files.Read.All, và các quyền được ủy quyền của SharePoint MyFiles.Read và AllSites.Read để tài khoản cơ quan và trường học có thể mở bộ chọn tệp."
+redirects = "Thêm hai URI chuyển hướng bên dưới cho ứng dụng đó: một là Web, một là Ứng dụng một trang."
+register = "Đăng ký một ứng dụng trong Microsoft Entra admin center. Cho phép tài khoản Microsoft cá nhân nếu người dùng sử dụng OneDrive cá nhân."
+secret = "Tạo client secret, rồi dán giá trị của nó và client ID của ứng dụng vào bên dưới."
+
+[provider.microsoft.tenant]
+description = "common cho tài khoản công việc, trường học và cá nhân; organizations cho tài khoản công việc và trường học; hoặc tenant ID để chỉ cho phép một tổ chức"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "OAuth2 Tổng quát"
@@ -11195,6 +11921,19 @@ label = "Phạm vi"
 description = "Trường dùng làm tên người dùng (email, name, given_name, family_name, preferred_username)"
 label = "Dùng làm Tên người dùng"
 
+[provider.onedrive]
+pickerLoading = "Đang kết nối với OneDrive..."
+pickerTitle = "Chọn tệp từ OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Không thể kết nối tài khoản Microsoft của bạn. Hãy thử lại trong Cài đặt > Tài khoản đã kết nối."
+notConfigured = "OneDrive chưa được cấu hình"
+pickerFailed = "Không mở được OneDrive"
+popupBlocked = "Trình duyệt của bạn đã chặn cửa sổ đăng nhập Microsoft. Hãy cho phép cửa sổ bật lên cho trang này rồi thử lại."
+reconnect = "Tài khoản Microsoft của bạn cần đăng nhập lại. Kết nối lại trong Cài đặt > Tài khoản đã kết nối."
+serverError = "OneDrive hoặc máy chủ Stirling gặp sự cố. Hãy thử lại, hoặc hỏi quản trị viên nếu vấn đề tiếp diễn."
+unreachable = "Không thể truy cập OneDrive. Kiểm tra kết nối của bạn và thử lại."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Thông báo"
 processor = "Bộ xử lý"
 reader = "Trình đọc"
 signInToUse = "Đăng nhập để sử dụng tính năng này"
+
+[quickNav.accountMenu]
+localMode = "Chế độ cục bộ"
+server = "Cài đặt máy chủ"
+settings = "Cài đặt"
+signedOut = "Chưa đăng nhập"
+signIn = "Đăng nhập"
 
 [read]
 tags = "xem,mở,hiển thị,đọc,trình xem,trình xem PDF,trình đọc PDF,mở PDF,xem PDF,hiển thị PDF,xem trước,duyệt"
@@ -11811,6 +12557,13 @@ title = "Làm sạch PDF"
 [sanitizePdf]
 tags = "làm sạch,bảo mật,an toàn,loại bỏ mối đe dọa"
 
+[saveFile.menu]
+more = "Thêm tùy chọn lưu"
+saveCopy = "Lưu một bản sao..."
+
+[saveFile.toolbar]
+mixed = "Lưu tất cả"
+
 [scalePages]
 tags = "đổi kích thước,điều chỉnh,tỷ lệ,kích thước trang,đổi kích thước trang,scale page,thay đổi kích thước,điều chỉnh kích thước,phóng to,thu nhỏ trang,vừa với trang,A4,letter size"
 title = "Điều chỉnh tỷ lệ trang"
@@ -11905,6 +12658,162 @@ showTools = "Xem các công cụ không khả dụng ▾"
 title = "Máy chủ Stirling-PDF của bạn không thể truy cập"
 toolNotAvailableLocally = "Máy chủ Stirling-PDF của bạn đang ngoại tuyến và \"{{endpoint}}\" không có sẵn trên backend cục bộ."
 
+[serverSetup]
+back = "Quay lại"
+collapse = "Ẩn cài đặt {{setting}}"
+configured = "Đã cấu hình"
+continue = "Tiếp tục"
+dialogLabel = "Thiết lập máy chủ"
+expand = "Hiển thị cài đặt {{setting}}"
+finishSetup = "Hoàn tất thiết lập"
+loadErrorSubtitle = "Thiết lập cần cài đặt hiện tại của máy chủ để bắt đầu."
+loadErrorTitle = "Không thể tải cài đặt của bạn"
+off = "Tắt"
+on = "Bật"
+save = "Lưu"
+stepCount = "{{current}} trên {{total}}"
+
+[serverSetup.account]
+failed = "Không thể lưu thông tin của bạn. Kiểm tra máy chủ có thể truy cập được và thử lại."
+save = "Lưu và tiếp tục"
+signIn = "Đăng nhập"
+signInAgainSubtitle = "Đăng nhập lại với tên người dùng và mật khẩu mới để tiếp tục."
+signInAgainTitle = "Thông tin của bạn đã được lưu"
+subtitle = "Chọn cách bạn sẽ đăng nhập từ bây giờ."
+title = "Thiết lập tài khoản của bạn"
+updating = "Đang cập nhật"
+updatingSubtitle = "Vui lòng đợi."
+updatingTitle = "Đang cập nhật thông tin của bạn"
+username = "Tên người dùng"
+usernameHelp = "Thứ bạn sẽ dùng để đăng nhập. Có thể dùng địa chỉ email."
+
+[serverSetup.addresses]
+backendUrl = "Địa chỉ máy chủ"
+backendUrlHelp = "Nơi nhà cung cấp đăng nhập chuyển người dùng quay lại. Thường trùng với địa chỉ web."
+frontendUrl = "Địa chỉ web"
+frontendUrlHelp = "Nơi người dùng mở Stirling PDF. Dùng trong email, liên kết chia sẻ và mã QR."
+subtitle = "Cách người dùng và nhà cung cấp đăng nhập truy cập máy chủ này."
+title = "Địa chỉ"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "Để trống để dùng key mà engine AI đã có."
+baseUrl = "Base URL"
+engineUrl = "Địa chỉ engine AI"
+fastModel = "Mô hình nhanh"
+label = "AI tự triển khai"
+provider = "Nhà cung cấp mô hình"
+providerCustom = "Tương thích OpenAI"
+smartModel = "Mô hình đầy đủ"
+stirling = "Stirling AI"
+subtitle = "Hỏi đáp tài liệu, chỉnh sửa tự động và tác nhân AI."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Chấp nhận và tiếp tục"
+acceptFinish = "Chấp nhận và hoàn tất"
+changeLater = "Bạn có thể thay đổi bất kỳ lúc nào trong {{path}}."
+decline = "Từ chối và tiếp tục"
+declineFinish = "Từ chối và hoàn tất"
+learnMore = "Những gì chúng tôi thu thập"
+note = "Chia sẻ dữ liệu sử dụng từ máy chủ này với chúng tôi để giúp cải thiện Stirling PDF. Chúng tôi không bao giờ thu thập tệp hoặc nội dung của chúng."
+title = "Phân tích máy chủ"
+
+[serverSetup.documents]
+label = "Câu hỏi về tài liệu"
+model = "Mô hình nhúng"
+provider = "Nhà cung cấp nhúng"
+providerHelp = "Biến văn bản tài liệu thành chỉ mục tìm kiếm để trả lời câu hỏi."
+
+[serverSetup.email]
+from = "Địa chỉ người gửi"
+host = "Máy chủ SMTP"
+label = "Gửi email"
+password = "Mật khẩu"
+port = "Cổng"
+subtitle = "Cho lời mời, yêu cầu ký và chia sẻ."
+title = "Email"
+username = "Tên người dùng"
+
+[serverSetup.error]
+email = "Nhập địa chỉ email"
+issuerUnreachable = "Không thể truy cập issuer này. Kiểm tra địa chỉ và đảm bảo máy chủ này có thể kết nối tới đó."
+passwordIncorrect = "Mật khẩu không chính xác"
+passwordLength = "Sử dụng ít nhất 8 ký tự"
+passwordMismatch = "Mật khẩu không khớp"
+passwordRejected = "Máy chủ không chấp nhận mật khẩu này. Hãy thử mật khẩu khác."
+passwordUnchanged = "Chọn mật khẩu khác mật khẩu hiện tại"
+port = "Nhập cổng từ 1 đến 65535"
+providerName = "Chỉ dùng chữ cái, số, dấu gạch ngang hoặc gạch dưới"
+required = "Bắt buộc"
+url = "Nhập địa chỉ đầy đủ, bắt đầu bằng http:// hoặc https://"
+username = "Sử dụng 3 đến 50 chữ cái, số hoặc . _ + - @, hoặc một địa chỉ email"
+usernameTaken = "Tên người dùng đó đã được dùng"
+
+[serverSetup.files]
+sharing = "Chia sẻ tệp"
+sharingOffWarning = "Khi tắt chia sẻ, các liên kết chia sẻ hiện có sẽ ngừng hoạt động."
+storage = "Lưu trữ tệp"
+storageOffWarning = "Khi tắt lưu trữ, các tệp người dùng đã lưu trên máy chủ sẽ không còn mở được."
+subtitle = "Quản lý lưu trữ và chia sẻ tệp."
+title = "Tệp"
+
+[serverSetup.finish]
+errorNote = "Kiểm tra máy chủ có thể truy cập và bạn vẫn đang đăng nhập với tư cách quản trị viên."
+errorSubtitle = "Không có gì được khởi động lại."
+errorTitle = "Không thể lưu cài đặt của bạn"
+manualSubtitle = "Máy chủ này không thể tự khởi động lại. Hãy khởi động lại container hoặc dịch vụ của nó để áp dụng."
+manualTitle = "Đã lưu cài đặt"
+restartFailedSubtitle = "Máy chủ không khởi động lại. Hãy khởi động lại container hoặc dịch vụ của nó để áp dụng."
+restartingSubtitle = "Trang này sẽ tải lại khi máy chủ hoạt động trở lại, thường trong vòng một phút."
+restartingTitle = "Đang khởi động lại máy chủ của bạn"
+retry = "Thử lại"
+saving = "Đang lưu"
+savingSubtitle = "Vui lòng đợi."
+savingTitle = "Đang lưu cài đặt của bạn"
+
+[serverSetup.language]
+auto = "Khớp theo từng trình duyệt"
+label = "Ngôn ngữ mặc định"
+subtitle = "Những gì khách truy cập mới thấy đầu tiên."
+title = "Ngôn ngữ"
+
+[serverSetup.mcp]
+label = "Máy chủ MCP"
+
+[serverSetup.password]
+confirm = "Xác nhận mật khẩu mới"
+current = "Mật khẩu hiện tại"
+new = "Mật khẩu mới"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "Đăng nhập bằng"
+oidc = "OpenID Connect khác"
+password = "Tên người dùng và mật khẩu"
+providerName = "Tên nhà cung cấp"
+providerNameHelp = "Hiển thị trên nút đăng nhập, ví dụ okta hoặc entra."
+redirectNote = "Thêm redirect URI này trong nhà cung cấp của bạn:"
+subtitle = "Cách nhóm của bạn đăng nhập."
+title = "Đăng nhập"
+
+[serverSetup.signingIn]
+button = "Đang đăng nhập"
+title = "Đang đăng nhập bằng thông tin xác thực mặc định"
+
+[serverSetup.start]
+custom = "Tùy chỉnh"
+quick = "Bắt đầu nhanh"
+setupLabel = "Thiết lập"
+subtitle = "Thiết lập cho nhóm của bạn trong vài bước."
+title = "Máy chủ của bạn đã sẵn sàng"
+
+[serverSetup.summary]
+subtitle = "Kiểm tra các mục thiết yếu. Mọi thứ khác giữ nguyên mặc định."
+title = "Bắt đầu nhanh"
+
 [session]
 expired = "Phiên của bạn đã hết hạn. Vui lòng làm mới trang và thử lại."
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "Quyền riêng tư"
 storageSharing = "Lưu trữ & Chia sẻ Tệp"
 systemSettings = "Cài đặt hệ thống"
+
+[settings.connectedAccounts]
+description = "OneDrive, SharePoint và Google Drive của riêng bạn cho các pipeline của bạn."
+title = "Tài khoản đã kết nối"
 
 [settings.connectedInstances]
 confirmBody = "Thao tác này thu hồi quyền truy cập của instance vào nhóm của bạn trong Stirling Cloud. Nó không xóa tệp cục bộ hoặc xóa mức sử dụng đã được ghi nhận. Để kết nối lại, hãy làm theo các bước kết nối ban đầu trên instance."
@@ -11992,6 +12905,13 @@ selfhosted = "Tự lưu trữ"
 apiKeys = "Khóa API"
 apiKeysDescription = "Khóa cá nhân để gọi Stirling API từ script và tích hợp."
 title = "Nhà phát triển"
+
+[settings.feedback]
+label = "Phản hồi"
+
+[settings.feedback.send]
+description = "Báo lỗi hoặc đề xuất cải tiến cho nhóm Stirling."
+label = "Gửi phản hồi"
 
 [settings.general]
 autoUnzip = "Tự động giải nén phản hồi API"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Kiểm tra cập nhật"
 currentBackendVersion = "Phiên bản Backend hiện tại"
 currentFrontendVersion = "Phiên bản Frontend hiện tại"
 description = "Kiểm tra cập nhật và xem thông tin phiên bản"
+descriptionManaged = "Xem thông tin phiên bản"
 latestVersion = "Phiên bản mới nhất"
 managedByAdmin = "Được quản trị viên quản lý"
 modeAuto = "Tự động cài đặt bản cập nhật"
@@ -12135,15 +13056,24 @@ title = "Tài liệu pháp lý"
 backendDescription = "Giấy phép cho các phụ thuộc backend được đóng gói với server này."
 backendLabel = "Giấy phép Backend"
 backendTitle = "Giấy phép bên thứ ba Backend"
+clearSearch = "Xóa tìm kiếm"
 empty = "Không tìm thấy phụ thuộc nào."
 frontendDescription = "Giấy phép cho các phụ thuộc frontend được đóng gói vào bản dựng phát hành."
 frontendLabel = "Giấy phép Frontend"
 frontendTitle = "Giấy phép bên thứ ba Frontend"
 license = "Giấy phép"
+licenseAbout = "Giới thiệu"
+licenseAboutCompound = "Giới thiệu {{short}}"
+licenseAboutTitle = "Giới thiệu {{short}}"
 listDescription = "Danh sách được hiển thị trực tiếp trong UI từ gói phát hành hoặc endpoint backend."
 listTitle = "Phụ thuộc được đóng gói"
 loadError = "Không tải được giấy phép bên thứ ba"
 module = "Module"
+noMatch = "Không có phụ thuộc phù hợp."
+searchPlaceholder = "Tìm kiếm phụ thuộc"
+showingCount = "{{count}} phụ thuộc"
+showingCount_one = "{{count}} phụ thuộc"
+showingCount_other = "{{count}} phụ thuộc"
 version = "Phiên bản"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Vui lòng nhập email"
 emptyPassword = "Vui lòng nhập mật khẩu"
 emptyUsername = "Vui lòng nhập tên người dùng"
 oauthFailed = "Đăng nhập OAuth thất bại. Vui lòng thử lại."
+openResetFailed = "Không thể mở trình duyệt của bạn để đặt lại mật khẩu."
 
 [setup.saas]
 title = "Đăng nhập vào Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "Chữ ký ẩn vẫn cung cấp xác thực mật mã"
 description = "Kiểm soát chữ ký có hiển thị trên tài liệu hay được nhúng ẩn."
 title = "Mức hiển thị chữ ký"
 
+[signedPdf]
+editsBlocked = "PDF này đã được ký số và việc thay đổi các PDF đã ký đang bị tắt. Bạn vẫn có thể xem hoặc in, chuyển đổi sang định dạng khác hoặc ký lại."
+editsBlockedStatus = "Đã ký: đã chặn chỉnh sửa"
+editsBlockedTitle = "Không thể thay đổi PDF đã ký"
+
 [signingDetail]
 allSigned = "Mọi người đã ký. Xem lại tài liệu, sau đó hoàn tất."
 awaitingOwner = "Chủ sở hữu sẽ hoàn tất tài liệu khi sẵn sàng."
@@ -13110,7 +14046,6 @@ noLinks = "Chưa có liên kết chia sẻ đang hoạt động."
 noSharedUsers = "Chưa có người dùng nào có quyền truy cập."
 openInApp = "Mở trong Stirling PDF"
 ownerLabel = "Chủ sở hữu"
-ownerUnknown = "Không xác định"
 removeLink = "Xóa liên kết"
 removeUser = "Xóa"
 requiresLogin = "Tệp được chia sẻ này yêu cầu đăng nhập."
@@ -13249,6 +14184,11 @@ remove = "Xóa"
 roleColumn = "Vai trò"
 title = "Thành viên nhóm"
 
+[teamWelcome]
+invite = "Mời mọi người"
+message = "Mời nhóm của bạn để họ bắt đầu làm việc cùng bạn."
+title = "Gói Team của bạn đang hoạt động."
+
 [textAlign]
 center = "Giữa"
 left = "Trái"
@@ -13290,7 +14230,6 @@ toggleDetails = "Hiện/ẩn chi tiết"
 
 [tool]
 endpointUnavailable = "Công cụ này không khả dụng trên máy chủ của bạn."
-endpointUnavailableClickable = "Không khả dụng ở chế độ này. Nhấp để đăng nhập."
 filesLoading = "Các tệp vẫn đang tải, vui lòng đợi."
 filesLoadingProgress = "{{loaded}} / {{total}} tệp đang tải..."
 invalidParams = "Điền các cài đặt bắt buộc."
@@ -13298,6 +14237,8 @@ noFiles = "Thêm tệp để bắt đầu."
 scopeFiles = "tệp"
 scopeThisFile = "tệp này"
 selectFilesHint = "Chọn tệp trong Tệp đang hoạt động để chạy công cụ này"
+signInRequired = "Tính năng này cần tài khoản Stirling. Đăng nhập để tiếp tục."
+signInToUse = "Đăng nhập để sử dụng"
 singleFileScope = "Chỉ áp dụng cho: {{fileName}}"
 viewerMode = "Chuyển sang trình chỉnh sửa tệp để thêm nhiều tệp."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Hiển thị trang bìa riêng"
 disableColorFilter = "Tắt bộ lọc màu"
 documentUpdated = "Tài liệu đã được cập nhật"
 dualPageView = "Chế độ xem hai trang"
+editText = "Chỉnh sửa văn bản"
 enableDarkFilter = "Bật bộ lọc tối"
 enableSepiaFilter = "Bật bộ lọc sepia"
 engineLoadError = "Không thể khởi tạo công cụ xem PDF"
@@ -14158,8 +15100,10 @@ closeAll = "Đóng tất cả tệp"
 closePdf = "Đóng PDF"
 deselectAll = "Bỏ chọn tất cả"
 downloadAll = "Tải xuống tất cả"
+editText = "Chỉnh sửa văn bản"
 exitAnnotations = "Thoát chế độ chú thích"
 exitRedaction = "Thoát chế độ bôi đen"
+findReplace = "Tìm và thay thế"
 formFill = "Trình chỉnh sửa biểu mẫu"
 hideToolbar = "Ẩn thanh công cụ"
 moreActions = "Thêm hành động"

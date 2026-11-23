@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -16,13 +17,7 @@ const ROTATED = path.join(
 );
 
 async function open(page: Page, file: string) {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+  await openInTextEditor(page, file);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
