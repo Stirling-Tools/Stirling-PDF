@@ -102,9 +102,11 @@ vi.mock("@editor/hooks/useSharingEnabled", () => ({
 }));
 vi.mock("@editor/hooks/useGoogleDrivePicker", () => ({
   useGoogleDrivePicker: () => ({
-    isEnabled: false,
+    isEnabled: true,
+    isLoading: false,
     error: state.driveError,
     clearError: state.clearDriveError,
+    openPicker: async () => [],
   }),
 }));
 vi.mock("@editor/hooks/useIsMobile", () => ({

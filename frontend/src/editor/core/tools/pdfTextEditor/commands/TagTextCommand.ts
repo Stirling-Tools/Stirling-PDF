@@ -44,7 +44,7 @@ interface Plan {
  * its place in the tree. Every object backing the run carries the one MCID,
  * and the save's repair gives each sequence PDFium writes for them its own.
  * Text in an element the session added can only become an artifact here:
- * RetagTextCommand changes its type.
+ * RetagBlockCommand changes its type.
  */
 export class TagTextCommand implements Command {
   readonly type = "tag-text";
@@ -120,7 +120,7 @@ function planTagging(
   const from = retaggableText(doc, snapshot);
   const members = collectMemberPtrs(run);
   if (!from || members.includes(0)) return null;
-  // Already so, or a type change RetagTextCommand makes.
+  // Already so, or a type change RetagBlockCommand makes.
   const unchanged =
     typeof as === "string"
       ? from.kind === "added"

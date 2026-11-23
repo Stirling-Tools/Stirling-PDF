@@ -10,6 +10,8 @@ export type AnnotationKind = "freetext" | "widget" | "stamp";
 export interface AnnotationBox {
   id: string;
   kind: AnnotationKind;
+  /** Its index in the page's /Annots, which is how PDFium numbers annotations. */
+  index: number;
   /** Raw PDF page-space rect (y-up), pre-DisplayTransform. */
   rect: { x: number; y: number; width: number; height: number };
 }

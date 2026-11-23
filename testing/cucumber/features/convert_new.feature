@@ -34,7 +34,7 @@ Feature: Convert API Validation (additional endpoints)
         And the response file should have size greater than 0
         And the response file should have extension ".cbz"
 
-    @calibre @positive @pdf-to-epub
+    @positive @pdf-to-epub
     Scenario: Convert PDF to EPUB format
         Given I generate a PDF file as "fileInput"
         And the pdf contains 3 pages with random text
@@ -47,7 +47,7 @@ Feature: Convert API Validation (additional endpoints)
         And the response file should have size greater than 0
         And the response file should have extension ".epub"
 
-    @calibre @positive @pdf-to-epub
+    @positive @pdf-to-epub
     Scenario: Convert PDF to AZW3 format
         Given I generate a PDF file as "fileInput"
         And the pdf contains 3 pages with random text
@@ -60,7 +60,7 @@ Feature: Convert API Validation (additional endpoints)
         And the response file should have size greater than 0
         And the response file should have extension ".azw3"
 
-    @calibre @positive @pdf-to-epub
+    @positive @pdf-to-epub
     Scenario: Convert PDF to EPUB with chapter detection
         Given I generate a PDF file as "fileInput"
         And the pdf contains 5 pages with random text

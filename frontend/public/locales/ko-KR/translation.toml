@@ -512,6 +512,11 @@ submit = "페이지 배율 조정"
 tags = "크기 조정,수정,치수,맞춤"
 title = "페이지 배율 조정"
 
+[adjustPageScale.customSize]
+height = "높이"
+unit = "단위"
+width = "너비"
+
 [adjustPageScale.error]
 failed = "페이지 배율을 조정하는 중 오류가 발생했습니다."
 
@@ -521,6 +526,7 @@ landscape = "가로"
 portrait = "세로"
 
 [adjustPageScale.pageSize]
+custom = "사용자 지정"
 keep = "원본 크기 유지"
 label = "대상 페이지 크기"
 legal = "리갈"
@@ -641,18 +647,16 @@ description = "이미지 처리의 최대 DPI(0 = 무제한)"
 label = "최대 DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "각 프로세스 실행기의 세션 제한 및 시간 제한을 구성합니다"
 ghostscript = "Ghostscript"
 installApp = "앱 설치"
 label = "프로세스 실행기 제한"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "Office 문서 변환"
+officeConvertSessionLimit = "최대 동시 변환 수; 0으로 설정하면 CPU와 메모리를 기준으로 제한을 자동으로 선택합니다"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "최대 동시 인스턴스 수"
@@ -661,10 +665,6 @@ label = "세션 제한"
 [admin.settings.advanced.processExecutor.timeout]
 description = "최대 실행 시간"
 label = "시간 제한(분)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert는 베타 버전입니다. LibreOffice보다 더 적은 메모리로 더 빠르고 향상된 변환을 제공합니다."
-label = "새 Stirling Office 변환 사용"
 
 [admin.settings.advanced.tempFileManagement]
 description = "임시 파일 저장 및 정리 동작을 구성합니다"
@@ -682,11 +682,6 @@ label = "정리 주기(분)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "더 넓은 시스템 임시 디렉터리를 정리할지 여부(주의 필요)"
 label = "시스템 임시 디렉터리 정리"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice 임시 파일 디렉터리(기본값 사용 시 비워두세요: baseTmpDir/libreoffice)"
-label = "LibreOffice 임시 디렉터리"
-placeholder = "기본값: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "임시 파일이 정리되기 전 최대 시간"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "이미지를 페이지 전체에 맞도록 늘�
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "유지(원본 크기)"
 pageFormatLetter = "Letter (8.5×11인치)"
+setupSteps = "{{name}} 설정 방법"
 title = "연결"
 unlinkedServices = "연결되지 않은 서비스"
 
@@ -1294,17 +1290,6 @@ label = "기본 생성 도구"
 description = "파이프라인 처리 및 외부 도구용 사용자 지정 파일 시스템 경로를 구성합니다"
 label = "사용자 지정 경로"
 
-[admin.settings.general.customPaths.operations]
-label = "외부 도구 경로"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "문서 변환을 위한 LibreOffice unoconvert 경로(기본값 사용 시 비워두세요: /opt/venv/bin/unoconvert)"
-label = "Unoconvert 실행 파일"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTML to PDF 변환을 위한 WeasyPrint 실행 파일 경로(기본값 사용 시 비워두세요: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint 실행 파일"
-
 [admin.settings.general.customPaths.pipeline]
 label = "파이프라인 디렉터리"
 
@@ -1327,6 +1312,10 @@ label = "감시 폴더 디렉터리"
 [admin.settings.general.defaultLocale]
 description = "신규 사용자의 기본 언어(예: en_US, es_ES)"
 label = "기본 로케일"
+
+[admin.settings.general.enableFeedback]
+description = "사용자가 Stirling 팀에 피드백을 보낼 수 있도록 허용"
+label = "피드백 사용"
 
 [admin.settings.general.fileUploadLimit]
 description = "최대 파일 업로드 크기(예: 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "STANDARD 이벤트에 추가: 지속 폴링 호출, 모든 GET 요청
 [admin.settings.security.audit.retentionDays]
 description = "감사 로그를 보관할 일수(0 = 무기한 보관)"
 label = "감사 로그 보존 기간(일)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "서명된 PDF는 앱에서 변경할 수 없지만, 보기, 인쇄, 변환 또는 다시 서명은 가능합니다. API 호출과 서버 파이프라인은 영향을 받지 않습니다."
+label = "서명된 PDF 변경 차단"
 
 [admin.settings.security.csrfDisabled]
 description = "교차 사이트 요청 위조 보호를 비활성화합니다(권장하지 않음)"
@@ -2969,6 +2962,7 @@ loadError = "사용자를 불러오지 못했습니다"
 noTeam = "팀 없음"
 noUsers = "다른 사용자를 찾을 수 없습니다."
 placeholder = "사용자 선택..."
+signInRequired = "다른 사람에게 서명을 요청하려면 로그인하세요."
 you = "{{name}} (본인)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "귀하의 계정은 ID 공급자에서 관리됩니다."
 title = "자격 증명 변경"
 
 [changeMetadata]
-filenamePrefix = "메타데이터"
 submit = "변경"
 tags = "편집,수정,업데이트,메타데이터,속성,문서 속성,작성자,제목,주제,키워드,생성자,제작자,정보,문서 정보,파일 속성"
 
@@ -3265,6 +3258,248 @@ not_found = "요청한 정보를 찾을 수 없습니다."
 processing = "처리 중({{outcome}})..."
 unsupported_capability = "지원되지 않는 기능: {{capability}}"
 usage_limit_reached = "사용 한도에 도달했습니다. 계속하려면 플랜 옵션을 확인하세요."
+
+[checkAccessibility]
+aboutRow = "{{label}} 정보"
+checking = "검사 중..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "접근성 보고서 다운로드"
+fileFailed = "실패"
+pickFile = "결과 표시 대상"
+submit = "접근성 검사"
+
+[checkAccessibility.category]
+altText = "대체 텍스트"
+fonts = "글꼴"
+language = "언어"
+links = "링크 및 주석"
+metadata = "메타데이터 및 설정"
+structure = "태그 및 구조"
+
+[checkAccessibility.categoryTip]
+altText = "이미지에는 화면 읽기 프로그램이 대신 읽어 줄 수 있도록 짧은 텍스트 설명이 필요합니다."
+fonts = "글꼴은 파일에 포함되어야 하며, 모든 문자가 실제 텍스트에 연결되어야 텍스트를 소리 내어 읽거나 복사할 수 있습니다."
+language = "화면 읽기 프로그램이 올바르게 발음하려면 문서의 언어를 알아야 합니다."
+links = "링크, 댓글 및 양식 필드는 태그와 설명이 필요하며, 페이지를 따르는 탭 순서가 필요합니다."
+metadata = "보조 기술이 파일에서 읽는 제목, PDF/UA 선언 및 기타 설정입니다."
+structure = "태그는 제목, 목록, 표 등 페이지의 각 부분이 무엇인지와 읽는 순서를 화면 읽기 프로그램에 알려 줍니다."
+
+[checkAccessibility.checks]
+label = "전체 {{total}}개 중 {{passed}}개 검사 통과"
+
+[checkAccessibility.error]
+download = "접근성 보고서를 생성할 수 없습니다. 다시 시도하세요."
+fileTitle = "이 파일을 검사할 수 없습니다"
+partial = "일부 파일을 검사하지 못했습니다."
+
+[checkAccessibility.facts]
+declares = "PDF/UA 선언"
+displaysTitle = "제목 표시"
+fonts = "글꼴 포함"
+language = "언어 선언"
+notEncrypted = "암호화되지 않음"
+tagged = "태그됨"
+title = "제목 있음"
+
+[checkAccessibility.factTip]
+declares = "파일의 메타데이터에 PDF/UA를 따른다고 표시되어 있습니다."
+displaysTitle = "파일을 열면 PDF 리더가 파일 이름이 아니라 제목을 표시합니다."
+fonts = "텍스트가 사용하는 모든 글꼴이 파일에 포함되어 있습니다."
+language = "파일에 텍스트의 언어가 명시되어 있습니다."
+notEncrypted = "파일이 암호화되지 않았습니다. 암호화는 보조 기술의 읽기를 막을 수 있습니다."
+tagged = "파일에 구조를 설명하는 태그가 있습니다. 태그가 없으면 화면 읽기 프로그램은 일반 텍스트만 받습니다."
+title = "파일 메타데이터에 제목이 있습니다."
+
+[checkAccessibility.figures]
+summary_one = "{{count}}개 이미지에 설명이 필요합니다(페이지 {{pages}})"
+summary_other = "{{count}}개 이미지에 설명이 필요합니다(페이지 {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "적용 대상"
+clauseValue = "{{spec}} §{{clause}}, 테스트 {{test}}"
+details = "세부정보"
+instances_one = "발생 {{count}}건"
+instances_other = "발생 {{count}}건"
+onPages_one = "{{pages}}페이지"
+onPages_other = "페이지 {{pages}}"
+onPagesPartial_one = "{{pages}}페이지(목록이 완전하지 않을 수 있음)"
+onPagesPartial_other = "페이지 {{pages}}(목록이 완전하지 않을 수 있음)"
+pages = "페이지"
+pagesPartialValue = "{{pages}}(처음 발생만 페이지가 기록되어 이 목록이 완전하지 않을 수 있습니다)"
+requirement = "요구사항"
+rule = "규칙"
+standard = "표준"
+where = "위치"
+
+[checkAccessibility.manual]
+clearAll = "모두 지우기"
+done = "완료"
+inProgress = "진행 중"
+markAllDone = "모두 완료로 표시"
+tip = "읽기 순서나 이미지 설명의 타당성처럼 사람만 판단할 수 있는 항목입니다. 각 항목을 확인했으면 체크하세요. 체크 내용은 다운로드한 보고서에 포함됩니다."
+title = "수동 검사"
+
+[checkAccessibility.objects]
+annotation = "주석"
+bookmark = "북마크"
+character = "글꼴의 문자 하나"
+contentPiece = "페이지 콘텐츠 일부"
+document = "문서"
+drawing = "그리기"
+figure = "그림"
+file = "파일 자체"
+font = "글꼴"
+form = "양식"
+formField = "양식 필드"
+link = "링크"
+markedContent = "표시된 페이지 콘텐츠"
+metadata = "문서 메타데이터"
+page = "페이지"
+properties = "문서 속성"
+tag = "{{name}} 태그"
+tagTree = "태그 트리"
+textPiece = "텍스트 일부"
+translatedMetadata = "번역이 포함된 메타데이터 항목"
+
+[checkAccessibility.pdf]
+continued = "{{name}}(계속)"
+footer = "Stirling PDF로 검사함"
+page = "{{n}}페이지"
+title = "접근성 보고서"
+
+[checkAccessibility.result]
+fail = "실패"
+failSummary = "화면 읽기 프로그램이 이 문서의 모든 내용을 읽지 못할 수 있습니다."
+partial = "부분"
+partialSummary = "화면 읽기 프로그램이 이 문서를 읽을 수는 있지만 일부 검사가 실패합니다."
+pass = "통과"
+passSummary = "모든 자동 PDF/UA 검사를 통과했습니다."
+
+[checkAccessibility.rules]
+annotationLanguage = "주석 또는 링크 텍스트에 언어가 설정되지 않아 화면 읽기 프로그램이 어떤 언어로 읽어야 하는지 알 수 없습니다. 문서의 언어를 설정하여 해결하세요."
+annotationNoDescription = "주석, 링크 또는 그리기에 텍스트 설명이 없어 화면 읽기 프로그램이 알릴 내용이 없습니다."
+annotationNotTagged = "주석 또는 그리기가 주석으로 태그되지 않아 화면 읽기 프로그램이 읽기 순서에서 접근할 수 없습니다."
+artifactInsideTagged = "장식으로 표시된 항목이 태그된 콘텐츠 내부에 있어, 읽히면서도 건너뛰어집니다."
+bookmarkLanguage = "북마크에 언어가 설정되지 않아 화면 읽기 프로그램이 어떤 언어로 읽어야 하는지 알 수 없습니다. 문서의 언어를 설정하여 해결하세요."
+conformancePrefix = "메타데이터의 PDF/UA 선언이 잘못된 접두사를 사용하여 PDF 리더가 이를 인식하지 못할 수 있습니다."
+contentLanguage = "텍스트에 언어가 설정되지 않아 화면 읽기 프로그램이 어떤 언어로 읽어야 하는지 알 수 없습니다. 문서의 언어를 설정하여 해결하세요."
+customTagNotMapped = "태그가 표준 태그에 연결되지 않은 사용자 지정 이름을 사용하여 화면 읽기 프로그램이 무엇인지 알 수 없습니다."
+figureNoAlt = "이미지가 그림으로 태그되었지만 설명이 없어 화면 읽기 프로그램 사용자가 무엇을 보여주는지 알 수 없습니다."
+fontMissingGlyphs = "포함된 글꼴에 문서에서 사용하는 일부 문자가 없습니다."
+fontNotEmbedded = "글꼴이 파일에 포함되지 않아 다른 컴퓨터에서 텍스트가 다르게 보이거나 다르게 읽힐 수 있습니다."
+formFieldNotTagged = "양식 필드가 양식의 일부로 태그되지 않아 화면 읽기 프로그램이 찾지 못할 수 있습니다."
+genericHeading = "제목이 수준이 없는 H 태그를 사용합니다. PDF/UA-2에는 H1~H6가 필요하여 화면 읽기 프로그램 사용자가 제목의 중첩을 파악할 수 있습니다."
+glyphWidths = "파일의 글꼴 문자 폭이 실제 글꼴과 일치하지 않아 텍스트 간격이 잘못될 수 있습니다."
+headingSkipped = "제목 수준이 한 단계씩 건너뜁니다. 예를 들어 제목 1에서 바로 제목 3으로 넘어가면 제목 간 이동이 혼란스러워집니다."
+linkNoDescription = "링크에 설명이 없어 화면 읽기 프로그램이 주소만 읽거나 아무것도 읽지 못합니다."
+linkNotTagged = "링크가 링크로 태그되지 않아 화면 읽기 프로그램이 링크로 안내하지 않습니다."
+metadataLanguage = "제목 등의 메타데이터에 언어가 설정되지 않아 화면 읽기 프로그램이 어떤 언어로 읽어야 하는지 알 수 없습니다. 문서의 언어를 설정하여 해결하세요."
+noConformanceClaim = "파일이 PDF/UA를 따름을 명시하지 않습니다. 메타데이터에 PDF/UA 식별 항목이 필요합니다."
+noDocumentTag = "태그는 맨 위에 단일 Document 태그가 있고, 나머지는 그 내부에 있어야 합니다."
+noLanguage = "문서가 사용 언어를 명시하지 않아 화면 읽기 프로그램이 잘못된 언어로 읽을 수 있습니다."
+noMetadataStream = "파일에 XMP 메타데이터가 없습니다. 이는 PDF/UA가 문서 제목과 적합성 정보를 저장하는 위치입니다."
+noTags = "파일에 태그가 전혀 없어 화면 읽기 프로그램이 제목, 단락, 목록 또는 표를 구분하거나 올바른 순서로 읽을 수 없습니다."
+notdefGlyph = "텍스트가 \"누락 문자\" 자리표시자를 사용하여 빈칸이나 상자로 표시되고 음성으로 읽을 수 없습니다."
+noteTag = "파일이 Note 태그를 사용합니다. PDF/UA-2에서는 각주와 미주에 FENote를 사용합니다."
+noTitle = "문서 메타데이터에 제목이 없습니다."
+notMarkedTagged = "파일이 태그됨으로 플래그 표시되지 않아 보조 기술이 가진 태그를 무시할 수 있습니다."
+notPdf2Tags = "PDF/UA-2에는 PDF 2.0 파일이 사용하는 태그가 필요합니다. 현재는 PDF 1.7 태그처럼 보여 보통 PDF/UA-1용으로 태그된 파일을 의미합니다."
+noUnicode = "일부 문자를 읽을 수 있는 텍스트로 변환할 수 없어 화면 읽기 프로그램과 복사/붙여넣기가 이를 잘못 처리할 수 있습니다."
+replacementTextLanguage = "일부 대체 텍스트에 언어가 설정되지 않아 화면 읽기 프로그램이 어떤 언어로 읽어야 하는지 알 수 없습니다. 문서의 언어를 설정하여 해결하세요."
+standardTagRemapped = "표준 태그가 사용자 지정 태그에 연결되어 화면 읽기 프로그램이 의미를 잃습니다."
+symbolicEncoding = "기호 글꼴이 사용해서는 안 되는 인코딩을 가지고 있어 문자가 잘못된 글자로 표시될 수 있습니다."
+tabOrder = "링크나 주석이 있는 페이지의 탭 순서가 문서를 따르도록 설정되어 있지 않아 키보드 사용자가 페이지 여기저기를 건너뛸 수 있습니다."
+taggedInsideArtifact = "태그된 콘텐츠가 장식으로 표시된 항목 내부에 있어 화면 읽기 프로그램이 이를 건너뛸 수 있습니다."
+titleNotDisplayed = "PDF 리더가 문서의 제목 대신 파일 이름을 표시합니다. 파일의 \"문서 제목 표시\" 설정을 켜야 합니다."
+untaggedContent = "페이지의 일부가 콘텐츠로 태그되지도, 장식으로 표시되지도 않아 화면 읽기 프로그램이 읽어야 할지 판단할 수 없습니다. 이는 배경 이미지, 머리글, 바닥글 또는 페이지 번호에서 자주 발생합니다."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "주석/링크의 언어 없음"
+annotationNoDescription = "설명 없는 주석/링크/그리기"
+annotationNotTagged = "주석/그리기 미태그"
+artifactInsideTagged = "태그된 콘텐츠 내부의 장식"
+bookmarkLanguage = "북마크의 언어 없음"
+conformancePrefix = "잘못된 PDF/UA 선언"
+contentLanguage = "텍스트의 언어 없음"
+customTagNotMapped = "표준 의미 없는 사용자 지정 태그"
+figureNoAlt = "설명 없는 이미지"
+fontMissingGlyphs = "문자 누락 글꼴"
+fontNotEmbedded = "글꼴 미포함"
+formFieldNotTagged = "양식 필드 미태그"
+genericHeading = "수준 없는 제목"
+glyphWidths = "글꼴 문자 폭 불일치"
+headingSkipped = "제목 수준 건너뜀"
+linkNoDescription = "설명 없는 링크"
+linkNotTagged = "링크 미태그"
+metadataLanguage = "메타데이터의 언어 없음"
+noConformanceClaim = "PDF/UA 미선언"
+noDocumentTag = "Document 태그로 시작하지 않음"
+noLanguage = "문서 언어 없음"
+noMetadataStream = "XMP 메타데이터 없음"
+noTags = "태그 없음"
+notdefGlyph = "누락 문자 자리표시자 사용"
+noteTag = "Note 태그 사용"
+noTitle = "문서 제목 없음"
+notMarkedTagged = "태그됨으로 플래그되지 않음"
+notPdf2Tags = "PDF 2.0 태그가 아님"
+noUnicode = "텍스트로 읽을 수 없는 문자"
+replacementTextLanguage = "대체 텍스트의 언어 없음"
+standardTagRemapped = "표준 태그가 사용자 지정으로 변경"
+symbolicEncoding = "기호 글꼴 인코딩 오류"
+tabOrder = "탭 순서가 문서를 따르지 않음"
+taggedInsideArtifact = "장식으로 숨겨진 태그된 콘텐츠"
+titleNotDisplayed = "열 때 제목이 표시되지 않음"
+untaggedContent = "태그되지 않은 콘텐츠"
+
+[checkAccessibility.score]
+issues_one = "문제 {{count}}개"
+issues_other = "문제 {{count}}개"
+noIssues = "문제가 없습니다"
+subtitle_one = "{{profile}} - {{count}}페이지"
+subtitle_other = "{{profile}} - {{count}}페이지"
+
+[checkAccessibility.sections]
+breakdown = "세부 내역"
+
+[checkAccessibility.status]
+checking = "{{total}}개 중 {{current}}개 검사 중..."
+complete = "검사 완료"
+
+[checkAccessibility.steps]
+results = "결과"
+standard = "표준"
+
+[checkAccessibility.tooltip.header]
+title = "검사할 표준"
+
+[checkAccessibility.tooltip.ua1]
+text = "2012년에 ISO 14289-1로 발표된 첫 번째 PDF/UA 버전으로, PDF 1.7 파일용입니다."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "2024년에 ISO 14289-2로 발표된 최신 버전으로, PDF 2.0 파일용입니다. PDF 1.7 파일을 이에 대해 검사하면 PDF 2.0에만 적용되는 규칙에서 실패합니다."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "주석 {{n}}"
+bookmarks = "북마크"
+character = "{{font}}의 문자 하나"
+contentItem = "콘텐츠 항목 {{n}}"
+drawingStep = "그리기 단계 {{n}}"
+embeddedGraphic = "포함된 그래픽"
+font = "글꼴 {{name}}"
+metadata = "문서 메타데이터"
+page = "{{n}}페이지"
+piece = "조각 {{n}}"
+tag = "{{tag}} 태그"
+tagTree = "태그 트리"
+wholeDocument = "전체 문서"
+
+[checkAccessibility.where.properties]
+author = "작성자"
+description = "설명"
+pdfUaPart = "PDF/UA 파트"
+title = "제목"
 
 [classification.families]
 correspondence = "서신"
@@ -3729,6 +3964,10 @@ message = "제공된 문서 중 하나 이상이 처리하기에 너무 큽니�
 body = "이 PDF들의 총 페이지 수가 2,000장을 초과합니다. 처리에 몇 분이 걸릴 수 있습니다."
 title = "대용량 비교 진행 중"
 
+[compare.mode]
+pixel = "픽셀 비교"
+text = "텍스트 비교"
+
 [compare.no.text]
 message = "선택한 PDF 중 하나 이상에 텍스트 내용이 없습니다. 비교를 위해 텍스트가 있는 PDF를 선택하세요."
 
@@ -4046,6 +4285,30 @@ failed = "로그인을 갱신할 수 없습니다. 다시 시도하거나 이 �
 lead = "이 서버는 이미 계정에 연결되어 있습니다. 서버의 청구 및 사용량으로 돌아가려면 로그인을 갱신하세요."
 title = "서버 로그인 갱신"
 
+[connectedAccounts]
+connect = "연결"
+connectAnother = "다른 계정 연결"
+connectFailed = "계정을 연결할 수 없습니다. 서버의 앱 등록이 설정되었는지 확인한 후 다시 시도하세요."
+disconnect = "연결 해제"
+google = "Google Drive"
+intro = "내 계정을 한 번 연결하세요. 이후 파이프라인이 내 권한으로 읽고 저장할 수 있습니다."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling이 더 이상 이 계정에 접근할 수 없어 이를 사용하는 파이프라인이 일시 중지되었습니다."
+none = "관리자가 연결된 계정을 켜지 않았습니다."
+personal = "개인 계정"
+popupBlocked = "브라우저가 로그인 창을 차단했습니다. 이 사이트의 팝업을 허용한 후 다시 시도하세요."
+reconnect = "다시 로그인"
+work = "업무용 계정"
+
+[connectedAccounts.disconnectConfirm]
+body = "이 계정을 사용하는 소스와 파이프라인은 다시 연결할 때까지 중지됩니다."
+confirm = "연결 해제"
+title = "{{account}} 연결을 해제할까요?"
+
+[connectedAccounts.status]
+connected = "연결됨"
+needsSignIn = "로그인 필요"
+
 [convert]
 autoRotate = "자동 회전"
 autoRotateDescription = "이미지를 자동으로 회전하여 PDF 페이지에 더 잘 맞춥니다"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "문서 제목"
 pdfUaTitleHelp = "파일 이름 대신 리더에 표시됩니다. 비워 두면 첫 번째 제목이 사용됩니다."
 selectSourceFormatFirst = "먼저 소스 형식을 선택하세요"
 settings = "설정"
+signInToUse = "사용하려면 로그인하세요"
 single = "단일"
 sourceFormatPlaceholder = "원본 형식"
-stirlingOfficeConvert = "Stirling Office Convert 사용(베타)"
-stirlingOfficeConvertDescription = "더 적은 메모리로 더 빠르고 향상된 변환을 제공합니다. 표준 변환기를 사용하려면 끄세요."
 strictMode = "엄격 모드"
 strictModeDesc = "변환이 완벽하지 않으면 오류 처리(VeraPDF 검증 사용)"
 svgPdfOptions = "SVG to PDF 옵션"
@@ -4134,8 +4396,6 @@ webOptions = "웹 → PDF 옵션"
 zoomLevel = "확대/축소 수준"
 
 [convert.ebookOptions]
-embedAllFonts = "모든 글꼴 포함"
-embedAllFontsDesc = "eBook의 모든 글꼴을 생성된 PDF에 포함"
 includePageNumbers = "페이지 번호 포함"
 includePageNumbersDesc = "생성된 PDF에 페이지 번호 추가"
 includeTableOfContents = "목차 포함"
@@ -4648,6 +4908,17 @@ title = "설정"
 [extractPages.tooltip]
 description = "선택한 페이지를 순서를 유지한 채 새 PDF로 추출합니다."
 
+[feedback.page]
+open = "피드백 보내기"
+sendMore = "피드백 더 보내기"
+sent = "피드백을 보내주셔서 감사합니다"
+title = "Stirling 개선에 참여해 주세요"
+unavailable = "피드백을 사용할 수 없습니다"
+
+[feedback.tag]
+dismiss = "피드백 버튼 숨기기"
+label = "피드백"
+
 [fileCard]
 openInFileEditor = "파일 편집기에서 열기"
 viewInViewer = "뷰어에서 보기"
@@ -4657,7 +4928,6 @@ closeFile = "파일 닫기"
 
 [fileEditor]
 closedFile = "{{name}} 닫힘"
-couldNotSave = "{{name}}을(를) 저장할 수 없습니다"
 filesReordered_one = "파일 순서가 변경됨"
 filesReordered_other = "파일 {{count}}개의 순서가 변경됨"
 loadedFromStorage_one = "저장소에서 파일 {{count}}개를 불러왔습니다"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "PDF 라이브러리"
 myFiles = "파일 라이브러리"
 noFiles = "아직 파일이 없습니다"
+oneDrive = "OneDrive에서 열기"
+oneDriveFailed = "OneDrive를 열 수 없습니다"
 openFileManager = "모든 파일 및 폴더 찾아보기"
 openFromComputer = "컴퓨터에서 열기"
 openSettings = "설정 열기"
@@ -4804,6 +5076,17 @@ searchFiles = "파일 검색"
 uploadFailedBody = "선택한 파일을 추가할 수 없습니다."
 uploadFailedTitle = "업로드 실패"
 viewAll = "{{count}}개 파일 모두 보기"
+
+[fileSidebar.clearRecents]
+body_one = "최근 항목에서 파일 1개를 지울까요? 실행 취소할 수 없습니다."
+body_other = "최근 항목에서 파일 {{count}}개를 지울까요? 실행 취소할 수 없습니다."
+button = "최근 항목 지우기"
+confirm = "최근 항목 지우기"
+error = "지울 수 없습니다. 다시 시도하세요."
+openNote_one = "그중 1개가 워크벤치에서 열려 있습니다."
+openNote_other = "그중 {{count}}개가 워크벤치에서 열려 있습니다."
+skipOpen = "열린 파일 건너뛰기"
+title = "최근 항목을 지울까요?"
 
 [fileSidebar.fileItem]
 closeViewer = "뷰어 닫기"
@@ -5124,6 +5407,7 @@ diskFileHint = "컴퓨터에 저장됨"
 diskHint = "디스크의 마운트된 폴더에 있는 파일"
 local = "로컬"
 localHint = "백업되지 않음"
+oneDrive = "OneDrive"
 shared = "공유됨"
 sharedHint = "링크로 공유됨"
 
@@ -5672,6 +5956,11 @@ title = "메타데이터 변경"
 desc = "문서 제한 및 권한 변경"
 tags = "권한,제한,권리,접근 제어,허용,거부,인쇄,복사,편집,권한 수정,보안 설정,사용자 권한"
 title = "권한 변경"
+
+[home.checkAccessibility]
+desc = "문서를 변경하지 않고 PDF/UA 점수를 확인하고 화면 읽기 프로그램을 막는 요소를 확인하세요"
+tags = "접근성,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,태그된 PDF,대체 텍스트,접근성 검사기,접근성 보고서,규정 준수,UA"
+title = "PDF 접근성 검사"
 
 [home.classify]
 desc = "이 문서의 종류를 식별하고 태그를 지정합니다."
@@ -6521,6 +6810,32 @@ quickAccess = "Reader, Automate, 내 파일, 모든 둘러보기로 이동하려
 topBar = "상단 바에서 <strong>뷰어</strong>, <strong>페이지 편집기</strong>, <strong>활성 파일</strong> 간 전환할 수 있습니다."
 wrapUp = "이것이 V2의 새로운 점입니다. 언제든지 <strong>둘러보기</strong> 메뉴를 열어 이 둘러보기, 도구 둘러보기, 관리자 둘러보기를 다시 시청하세요."
 
+[oneDriveSave]
+chooseFolder = "업로드할 OneDrive 폴더 선택"
+conflict = "이 파일은 이 버전을 열거나 저장한 이후 OneDrive에서 변경되었습니다. 대신 사본으로 저장하세요."
+failedTitle = "OneDrive에 저장할 수 없습니다"
+fromOneDrive = "OneDrive에서 가져옴"
+linkNotStored = "이 브라우저는 OneDrive 파일 링크를 기억할 수 없습니다. 새로고침 후에는 사본으로 저장하세요."
+missing = "이 파일은 OneDrive에서 이동되었거나 삭제되었습니다. 대신 사본으로 저장하세요."
+open = "OneDrive에서 열기"
+personalUnsupported = "OneDrive로 업로드하려면 회사 또는 학교 Microsoft 계정이 필요합니다."
+reconnect = "다시 연결"
+replaces = "기존 {{name}} 교체"
+saveCopyToOneDrive = "OneDrive에 사본 저장"
+saved = "OneDrive에 저장됨"
+saving = "OneDrive에 저장 중..."
+signInToSave = "OneDrive에 저장하려면 서버에 로그인하세요."
+updateOriginal = "OneDrive에서 업데이트"
+uploadToOneDrive = "OneDrive에 업로드..."
+
+[oneDriveSave.status]
+saved = "OneDrive에 저장됨"
+unsaved = "OneDrive에 아직 저장되지 않은 변경 내용이 있습니다"
+
+[oneDriveSave.toolbar]
+replace = "OneDrive에서 {{name}} 업데이트"
+saveAll = "OneDrive에서 모두 업데이트"
+
 [overlay-pdfs]
 desc = "한 PDF를 다른 PDF 위에 겹쳐 놓기"
 submit = "제출"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "내일 재설정"
 thisPeriod = "현재 청구 기간"
 
 [payment]
+annually = "연간"
 billingPeriod = "청구 기간"
 cancelTeamChange = "현재 플랜 유지"
 canCloseWindow = "이제 이 창을 닫아도 됩니다."
@@ -7157,11 +7473,14 @@ title = "Team 플랜 조정"
 
 [payment.capacityStage]
 adjustmentNote = "확인하기 전에 Stripe에서 정확한 청구 금액, 일할 계산 및 다음 청구일을 표시합니다. 사용 가능한 경우 저장된 결제 수단이 사용됩니다."
+billingLabel = "청구"
 continue = "결제로 계속"
 currencyAtCheckout = "Stripe가 결제 시 최종 금액과 결제 통화를 확인합니다."
+custom = "사용자 지정"
 customLabel = "사용자 수"
 dueToday = "오늘 결제 금액"
 enterpriseQuote = "엔터프라이즈 견적 받기"
+enterUsers = "사용자 수를 입력하세요."
 estimatedTotal = "예상 합계"
 lineItem = "Team · 사용자 {{block}}명당 {{price}}{{period}}"
 minimumForCurrentUsers = "사용자가 {{users}}명이므로 플랜은 최소 {{minimum}}명을 포함해야 합니다."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "기존 계정은 그대로 유지됩니다. 용량을
 overCapacityTitle = "서버의 사용자 수가 플랜에서 허용하는 수보다 많습니다"
 perMonth = "/월"
 perYear = "/년"
+planName = "Stirling Team"
 reductionNote = "더 낮은 용량은 다음 갱신 시 시작됩니다. 그때까지 현재 허용량을 사용할 수 있습니다. 기존 사용자는 유지되며, 변경 적용 시 용량을 초과한 경우 새 사용자는 차단됩니다."
 renewalNote = "{{total}}{{period}}에 갱신됩니다. 사용량 및 청구에서 언제든지 취소할 수 있습니다."
 reviewChange = "Stripe에서 변경 검토"
-roundsTo = "{{users}}명으로 반올림"
+roundsUp = "올림하여 {{users}}명으로 계산됩니다."
+selfServeLimit = "여기서는 최대 {{users}}명까지 가능합니다."
 subheading = "초대한 모든 사용자를 {{users}}명 단위로 포함합니다."
 subheadingAdd = "현재 플랜은 사용자 {{current}}명을 포함합니다. 새 총계를 선택하세요."
+talkToEnterprise = "더 필요하시면 Enterprise에 대해 문의하세요."
+usersCovered = "적용 사용자 수"
 usersLabel = "사용자"
 userTotal = "사용자 {{users}}명"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "작업 공간의 파일에 변경 사항 적용 ({{shortcut}})"
 tags = "텍스트 편집,텍스트 수정,텍스트 변경,콘텐츠 편집,텍스트 업데이트,다시 쓰기,수정,개정,수정 표시,개정,텍스트 편집기,콘텐츠 편집기"
 title = "PDF 텍스트 편집기"
 unsaved = "(저장되지 않음)"
-workbenchLabel = "편집기"
 
 [pdfTextEditor.annotations]
 freetext = "주석 텍스트 - 페이지 텍스트가 아니므로 여기에서 편집할 수 없습니다"
@@ -7261,12 +7583,18 @@ widget = "양식 필드 - 페이지 텍스트가 아니므로 여기에서 편�
 
 [pdfTextEditor.commands]
 edit = "편집"
+markTagged = "완전 태그됨으로 표시"
+matchScanFont = "스캔된 텍스트를 {{face}}와 일치"
 mergeRuns_one = "{{count}}개 run을 단락으로 병합"
 mergeRuns_other = "{{count}}개 run을 단락으로 병합"
 setColour = "{{run}}에 색상 설정"
 setOutline = "{{run}}에 윤곽선 설정"
+tagFormField = "양식 필드 태그 지정"
+tagLink = "링크 태그 지정"
+tagPageContent = "페이지 자동 태그"
 typeInto = "{{run}}에 입력"
 ungroupParagraph = "단락 {{run}} 그룹 해제"
+unmarkTagged = "완전 태그 아님으로 표시"
 wrap = "{{run}} 줄 바꿈"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "버리고 열기"
 hint = "먼저 작업 공간에 보관하려면 취소한 다음 PDF 저장을 누르세요."
 title = "저장되지 않은 변경 사항을 버릴까요?"
 
-[pdfTextEditor.drop]
-hint = "편집기 스테이지에 놓으면 열린 문서가 대체됩니다."
-title = "열려면 PDF를 놓으세요"
-
 [pdfTextEditor.error]
 decodeImage = "선택한 이미지를 디코딩할 수 없습니다."
+duplicateDropsLetters = "이 텍스트를 복제할 수 없습니다: 모든 글자를 그릴 수 있는 사용 가능한 폰트가 없습니다."
+formLiftChangesDrawing = "편집할 수 없습니다: 이 항목은 그룹의 일부로 그려져 있으며, 변경 시 편집기가 유지할 수 없는 클리핑 또는 그래픽 설정을 사용합니다."
 insertImage = "선택한 이미지를 삽입할 수 없습니다."
+needsShaping = "편집기가 아직 이 문자 체계의 이어쓰기 문자와 모음 기호를 올바르게 그릴 수 없어 이 변경을 적용하지 않았습니다."
+replaceClippedImage = "이 이미지를 교체할 수 없습니다: 잘려 있으며, 교체하면 잘려 숨겨진 부분이 보입니다."
+scanOffInk = "이 텍스트는 편집할 수 없습니다: 인식된 단어가 스캔과 맞지 않습니다. OCR을 다시 실행하세요."
+unsafeRtlEdit = "이 편집을 수행할 수 없습니다: 편집기가 이 줄의 오른쪽-왼쪽 텍스트를 변경 없이 다시 그릴 수 없습니다."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG 이미지"
@@ -7304,15 +7634,42 @@ wholeWord = "전체 단어"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "기본 제공 글꼴"
+closestMatch = "이 폰트에는 선택한 일부 글자가 없어, 가장 비슷한 폰트로 표시됩니다."
 deviceFontsNone = "추가 장치 글꼴을 찾을 수 없습니다."
 deviceFontsUnavailable = "장치 글꼴을 사용할 수 없습니다. 기본 제공 글꼴은 계속 작동합니다."
 deviceGroup = "장치 글꼴"
+documentFontCannotDraw = "문서 자체의 폰트로는 이 텍스트를 그릴 수 없어 현재 폰트로 유지되었습니다."
 documentGroup = "문서 글꼴"
+embeddingForbidden = "이 글꼴의 라이선스는 PDF에 포함을 허용하지 않습니다. 텍스트는 변경되지 않았습니다."
+embedFailed = "이 글꼴을 PDF에 포함할 수 없습니다. 텍스트는 변경되지 않았습니다."
+includedGroup = "포함된 글꼴"
 label = "글꼴 모음"
+matchedGroup = "일치한 글꼴"
+missingGlyphs = "이 폰트에 선택한 일부 문자가 있어, 해당 문자를 현재 폰트로 유지할 수 없습니다. 텍스트는 변경되지 않았습니다."
 mixed = "혼합"
+needsShaping = "편집기가 아직 이 문자 체계의 이어쓰기 문자와 모음 기호를 올바르게 다시 그릴 수 없어, 해당 텍스트는 현재 폰트로 유지되었습니다."
+noGlyphs = "이 글꼴에는 선택한 텍스트에 해당하는 문자가 없습니다. 텍스트는 변경되지 않았습니다."
 noMatch = "일치하는 글꼴 없음"
+partOfRunUnsupported = "이 텍스트는 전체로만 다시 스타일을 지정할 수 있습니다. 일부 단어가 아닌 상자를 선택하세요."
 placeholder = "글꼴 모음"
+scannedText = "스캔된 텍스트"
+serverFontFailed = "해당 서버 글꼴을 다운로드할 수 없습니다. 텍스트는 변경되지 않았습니다."
+serverGroup = "서버 글꼴"
+someLeftUnchanged = "이 폰트에는 선택한 텍스트의 일부 문자가 없습니다. 해당 텍스트는 변경되지 않았습니다."
+styleSkipped = "선택한 텍스트 중 일부는 해당 스타일의 폰트 버전이 없어 변경되지 않았습니다."
+styleUnavailable = "선택한 텍스트에는 해당 스타일의 폰트 버전이 없어 변경되지 않았습니다."
 useDeviceFonts = "장치 글꼴 사용"
+weight = "폰트 굵기"
+weightBlack = "Black"
+weightBold = "Bold"
+weightExtraBold = "Extra Bold"
+weightExtraLight = "Extra Light"
+weightLight = "Light"
+weightMedium = "Medium"
+weightNumber = "굵기 {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Semibold"
+weightThin = "Thin"
 
 [pdfTextEditor.fonts]
 allPresent = "모든 문자 및 숫자 있음"
@@ -7357,6 +7714,7 @@ helpDesc = "이 도움말"
 saveDesc = "작업 공간에 저장"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "선택한 단어나 상자 전체에 Bold / Italic 적용"
 deleteDesc = "선택 항목 제거"
 duplicateDesc = "선택 항목 복제"
 groupDesc = "선택한 run을 하나의 단락으로 그룹화"
@@ -7380,8 +7738,12 @@ zoomDesc = "확대 / 축소"
 
 [pdfTextEditor.inspector]
 document = "문서"
+fontCompletedClosest = "포함된 글꼴 · 부족한 문자는 사용 가능한 가장 가까운 {{name}}로 그려집니다."
+fontCompletedOriginal = "포함된 글꼴 · 부족한 문자는 같은 글꼴인 {{name}}로 그려집니다."
 fontEmbedded = "임베드된 글꼴 · 없는 문자는 Helvetica로 대체됩니다."
 fontGap = "{{name}} · {{glyphs}} 누락 - 해당 문자를 입력하면 Helvetica로 대체됩니다."
+fontUnknownCoverage = "{{name}} · 부족한 문자는 {{fallback}}로 대체됩니다."
+formField = "양식 필드"
 geometry = "위치 및 크기"
 height = "높이"
 heightHint = "텍스트 상자의 높이는 글자 크기와 줄 수를 따릅니다."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "이 서버에서는 OCR을 사용할 수 없습니다."
 oneImage = "이미지"
 oneShape = "도형"
 oneText = "텍스트"
+outlinedTextHint_one = "이 페이지의 텍스트는 도형으로 그려져 있어 편집할 텍스트가 없습니다. 먼저 OCR을 실행해 편집 가능하게 하세요."
+outlinedTextHint_other = "{{count}}개 페이지의 텍스트가 도형으로 그려져 있어 편집할 텍스트가 없습니다. 먼저 OCR을 실행해 편집 가능하게 하세요."
 pages = "페이지"
 runOcr = "OCR 실행"
 scanHint_one = "이 페이지는 편집할 텍스트가 없는 스캔 이미지입니다. 먼저 OCR을 실행하여 텍스트를 편집 가능하게 만드세요."
 scanHint_other = "{{count}}페이지는 편집할 텍스트가 없는 스캔 이미지입니다. 먼저 OCR을 실행하여 텍스트를 편집 가능하게 만드세요."
 scannedText = "스캔된 텍스트 · 변경된 단어는 가려지고 일치하는 글꼴로 다시 그려집니다."
+scannedTextMisaligned = "스캔된 텍스트 · 인식된 단어가 스캔과 맞지 않아 이 블록은 편집하거나 삭제할 수 없습니다."
+scannedTextNoFont = "스캔된 텍스트 · 이 스크립트의 입력된 단어는 아직 그릴 수 없어 유지되지 않습니다. 단어 삭제는 가능합니다."
+scannedTextOffInk = "스캔된 텍스트 · 인식된 단어가 스캔된 단어에서 벗어나 있어 이 블록은 편집할 수 없습니다. OCR을 다시 실행하세요."
 tabDocument = "문서"
 tabSelected = "선택됨"
 textBoxes = "텍스트 상자"
+unreadPagesHint = "{{count}}개 페이지에는 편집할 텍스트가 없습니다: 일부는 스캔 이미지이고 일부는 텍스트가 도형으로 그려집니다. 먼저 OCR을 실행해 편집 가능하게 하세요."
 width = "너비"
 widthHint = "텍스트는 너비에 맞게 다시 줄 바꿈됩니다."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "태그 추가"
+applyToOtherPages_one = "다른 {{count}}페이지에 적용"
+applyToOtherPages_other = "다른 {{count}}페이지에 적용"
+artifactGroup = "화면 읽기 프로그램에서 건너뜀"
 artifactText = "장식용"
 cannotChange = "이 이미지의 접근성은 변경할 수 없습니다."
+cannotDescribeFormField = "이 양식 필드의 설명은 변경할 수 없습니다."
+cannotDescribeLink = "이 링크의 설명은 변경할 수 없습니다."
 cannotRetag = "이 텍스트의 태그는 변경할 수 없습니다."
+cannotSetDecorative = "이를 장식으로 표시하거나 해제할 수 없습니다."
+cannotTagFormField = "이 양식 필드는 태그를 지정할 수 없습니다."
+cannotTagLink = "이 링크는 태그를 지정할 수 없습니다."
+cannotTagPage = "이 페이지의 콘텐츠는 태그를 지정할 수 없습니다."
+contentGroup = "콘텐츠"
 customTag = "{{role}} (사용자 지정 태그)"
 decorativeInfo = "스크린 리더는 장식용 이미지를 건너뜁니다. 테두리, 배경 및 정보를 담고 있지 않은 기타 이미지에 사용하세요."
 decorativeLabel = "장식용 이미지"
 description = "이미지 설명"
 descriptionInfo = "스크린 리더가 이미지 대신 이 설명을 읽습니다."
 encrypted = "암호화된 파일에서는 태그를 편집할 수 없습니다"
+figureDescription = "그림 설명"
+figureDescriptionInfo = "스크린 리더가 그림 대신 이 내용을 읽습니다."
+formFieldDescription = "필드 설명"
+formulaDescription = "수식 설명"
+formulaDescriptionInfo = "스크린 리더가 수식 대신 이 내용을 읽습니다. \"x의 제곱 더하기 1\"처럼 말하듯이 작성하세요."
 heading = "접근성"
 innerTagLabel = "태그 {{number}}"
 innerTags = "이 텍스트의 태그"
+linkDescription = "링크 설명"
+markedTagged = "문서가 완전 태그됨"
+markedTaggedHint = "PDF 리더가 접근성 태그를 사용하도록 지시합니다. 모든 항목에 태그를 지정한 후 선택하세요."
+markedWithUntagged = "일부 콘텐츠에 태그가 없어 화면 읽기 프로그램이 건너뛸 수 있습니다."
 missingDescriptions = "누락된 설명"
 mixedContent = "그림에 다른 콘텐츠가 포함되어 있음"
+mixedTags = "혼합"
 needsDescriptionBadge = "설명 없음"
-nextImage = "다음 이미지"
+nextToReview = "검토할 다음 항목"
 notFigure = "텍스트의 일부로 태그됨"
 removeTag = "태그 제거"
 saveFailed = "접근성 변경 사항을 저장할 수 없어 파일이 저장되지 않았습니다. 변경 사항을 실행 취소하고 다시 시도하세요."
 selectedText = "선택한 텍스트"
+tagFormField = "양식 필드 태그 지정"
+tagging = "페이지 태그 지정"
 tagLabel = "태그"
+tagLinks_one = "링크 태그 지정"
+tagLinks_other = "링크 {{count}}개 태그 지정"
+tagUntagged = "문서 자동 태그"
+tagUntaggedHint = "문서 전체에 접근성 태그를 자동으로 추가합니다. 결과는 대략적이므로 이후 제목, 목록 및 읽기 순서를 확인하세요."
 unknownTag = "여기서 읽을 수 없음"
+unmarkedWithTags = "일부 PDF 뷰어는 태그를 그대로 사용하며 태그가 없는 콘텐츠를 건너뛸 수 있습니다."
 unreadable = "이 파일의 태그는 편집할 수 없습니다"
 untaggableImages = "여기서 태그할 수 없음"
 untaggedBadge = "태그되지 않음"
 untaggedDocument = "문서에 태그가 없습니다"
 untaggedImage = "여기서 태그할 수 없음"
 untaggedImages = "태그되지 않은 이미지"
+untaggedPages = "태그 지정할 페이지"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "바닥글"
+header = "머리글"
+pageNumber = "페이지 번호"
+watermark = "워터마크"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "텍스트가 없는 제목"
@@ -7505,6 +7907,23 @@ tableHeader = "표 헤더"
 tableRow = "표 행"
 title = "제목"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "모든 언어"
+cannotSetDocument = "이 문서의 언어는 변경할 수 없습니다."
+cannotSetText = "이 텍스트의 언어는 변경할 수 없습니다."
+documentHint = "일부 텍스트가 자체 언어를 설정하지 않으면 화면 읽기 프로그램이 사용하는 언어입니다."
+documentLabel = "언어"
+documentLocked = "암호화된 문서는 여기서 언어를 변경할 수 없습니다."
+inDocument = "이 문서에 있음"
+innerLabel = "태그 {{number}} 언어"
+label = "언어"
+missing = "언어가 설정되지 않았습니다. 화면 읽기 프로그램이 추측하여 문서 전체를 잘못된 음성으로 읽을 수 있습니다."
+mixed = "혼합"
+noMatch = "일치하는 언어가 없습니다. 대신 mt 또는 en-IE와 같은 코드를 입력하세요."
+placeholder = "언어 선택"
+selectedText = "선택한 텍스트의 언어"
+textHint = "화면 읽기 프로그램이 이 언어에 맞게 음성과 발음을 전환합니다."
+
 [pdfTextEditor.mobile]
 actions = "편집기 작업"
 addImage = "이미지"
@@ -7517,7 +7936,6 @@ done = "완료"
 download = "저장 및 다운로드"
 find = "찾기"
 lock = "잠금"
-openPdf = "PDF 열기"
 panelHint = "편집은 작업 공간 보기에서 이루어집니다. 페이지의 텍스트를 탭하여 변경하세요."
 save = "저장"
 style = "스타일"
@@ -7525,7 +7943,6 @@ tapToPlace = "텍스트를 넣을 페이지 위치를 탭하세요"
 unlock = "잠금 해제"
 
 [pdfTextEditor.pageView]
-pageNumber = "{{page}}페이지"
 renderFailed = "페이지를 렌더링하지 못했습니다"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "세로 눈금자"
 
 [pdfTextEditor.run]
 lockedTitle = "잠김 - 편집하려면 잠금 해제 버튼을 사용하세요"
+readOnlyOrderTitle = "이 줄의 텍스트는 편집할 수 없습니다: 오른쪽-왼쪽과 왼쪽-오른쪽 텍스트가 섞여 있으며, 편집기가 안전하게 다시 그릴 수 없는 순서입니다"
+resizeHandle = "끌어 너비를 변경하면 텍스트가 다시 줄바꿈됩니다."
 
 [pdfTextEditor.saveRisk]
 cancel = "취소"
@@ -7548,6 +7967,35 @@ intro = "편집한 복사본을 저장하면 파일이 변경됩니다. 즉:"
 note = "편집 내용은 유지됩니다. 위에 나열된 변경 사항은 편집한 복사본을 저장할 때 피할 수 없습니다."
 saveAnyway = "그래도 저장"
 title = "저장하면 이 PDF가 변경됩니다"
+
+[pdfTextEditor.scanFont]
+approximate = "유사 일치"
+approximateHint = "가장 가까운 글꼴이 스캔과 정확히 일치하지 않을 수 있습니다."
+change = "글꼴이 달라 보이나요?"
+choose = "글꼴 선택"
+chooseMissing = "이 텍스트에 사용할 글꼴 선택…"
+compare = "글꼴 비교…"
+deviceAllow = "더 나은 매칭을 위해 글꼴 접근을 허용"
+deviceBlocked = "브라우저가 다시 묻지 않습니다. 허용하려면 주소 표시줄 왼쪽의 아이콘을 클릭하고 Fonts를 켠 뒤 다시 시도하세요."
+deviceBlockedTitle = "글꼴 접근이 차단됨"
+deviceNone = "이 컴퓨터에 일반적으로 사용하는 문서 글꼴이 설치되어 있지 않습니다."
+deviceNote = "브라우저가 먼저 요청합니다. 글꼴은 이 장치에만 남습니다."
+deviceOn_one = "이 컴퓨터의 글꼴 {{count}}개와도 비교했습니다."
+deviceOn_other = "이 컴퓨터의 글꼴 {{count}}개와도 비교했습니다."
+deviceReading = "이 컴퓨터의 글꼴을 읽는 중…"
+deviceRetry = "다시 시도"
+done = "완료"
+hint = "입력한 텍스트는 가장 가까운 글꼴로 그려집니다. 스캔과 더 비슷해 보이는 글꼴을 선택하세요."
+hintFromScan = "입력한 텍스트는 스캔에서 찾은 글자로 구성됩니다. 대신 선택한 글꼴로 그리려면 글꼴을 선택하세요."
+hintOthers = "아직 편집하지 않은 스캔된 텍스트에도 선택한 글꼴이 사용됩니다."
+matching = "글꼴 일치 중…"
+noFont = "사용 가능한 글꼴로는 이 스크립트를 그릴 수 없어, 입력한 텍스트를 아직 다시 그릴 수 없습니다."
+scan = "원본 스캔"
+scanAlt = "스캔된 행"
+scanNote = "스캔은 실제 글꼴보다 흐릿하거나 굵어 보이는 경우가 많습니다. 두께보다 글자 모양을 비교하세요."
+score = "{{match}}% 유사"
+title = "스캔된 글꼴 일치"
+unmeasurable = "이 스캔은 너무 흐릿하거나 작아 글꼴을 매칭할 수 없습니다."
 
 [pdfTextEditor.settings]
 advanced = "고급"
@@ -7564,7 +8012,6 @@ addTable = "표 추가"
 addText = "텍스트 추가"
 clickPageToAddTable = "표를 추가하려면 페이지를 클릭하세요"
 clickPageToAddText = "텍스트를 추가하려면 페이지 클릭"
-document = "문서"
 group = "그룹"
 groupingAuto = "자동"
 groupingAutoHint = "간격이 같은 줄을 단락으로 그룹화합니다. 이를 변경하면 문서를 다시 읽고 실행 취소 기록을 지웁니다."
@@ -7593,23 +8040,17 @@ auto = "자동"
 enable = "입력할 때 맞춤법 검사"
 language = "사전 언어"
 
-[pdfTextEditor.stage]
-loadingDocument = "문서 로드 중"
-loadingProgress = "로드 진행률"
-noDocument = "로드된 문서가 없습니다."
-pickPrompt = "편집을 시작하려면 왼쪽 파일 패널에서 PDF를 선택하세요."
-renderingPreview = "미리보기 렌더링 중"
-
 [pdfTextEditor.table]
 addColumn = "열 추가"
 addRow = "행 추가"
+cellNoGlyphs = "이 텍스트에는 표의 폰트로 그릴 수 없는 문자가 있습니다. 셀을 채우려면 변경하거나 제거하세요."
 column = "열"
 deleteColumn = "열 삭제"
 deleteRow = "행 삭제"
 done = "완료"
 doneHint = "이 항목을 표로 편집하는 것을 중지"
-edit = "편집"
 editHint = "표로 편집 - 셀에 입력하고 행과 열을 추가하거나 제거하세요"
+editTable = "표 편집"
 move = "이동"
 moveTable = "전체 표를 이동하려면 드래그하세요"
 recognizedHint = "인식된 표 - 모든 텍스트를 선택하려면 클릭하세요"
@@ -7630,6 +8071,9 @@ alignMiddle = "중간 정렬"
 alignRight = "오른쪽 정렬"
 alignTop = "위쪽 정렬"
 arrange = "배치"
+bold = "Bold"
+boldOnly = "이 폰트에는 Bold 버전만 있습니다"
+boldUnavailable = "이 폰트에는 Bold 버전이 없습니다"
 bringForward = "앞으로 가져오기"
 bringToFront = "맨 앞으로 가져오기"
 caseLower = "소문자"
@@ -7650,10 +8094,12 @@ fontColour = "글꼴 색상"
 fontSize = "글꼴 크기"
 formatting = "텍스트 서식"
 italic = "기울임꼴"
+italicOnly = "이 폰트에는 Italic 버전만 있습니다"
 italicUnavailable = "이 글꼴에는 italic 버전이 없습니다. 장치 글꼴을 로드하거나 다른 글꼴 모음을 선택하세요."
 lock = "선택 항목 잠금"
 lockTooltip = "선택 항목 잠금 - 실수로 편집하는 것을 방지합니다"
 more = "추가 작업"
+noBoldItalic = "이 폰트에는 Bold Italic 버전이 없습니다"
 order = "순서"
 outlineColour = "윤곽선 색상"
 outlineWidth = "윤곽선 너비(0 = 없음)"
@@ -7683,13 +8129,6 @@ title = "미리보기 차이"
 [pdfTextEditor.tooltip.textFocus]
 text = "이 작업 공간은 텍스트 편집과 포함된 이미지 재배치에 중점을 둡니다. 복잡한 페이지 아트워크, 양식 위젯, 레이어드 그래픽은 내보내기를 위해 보존되지만 여기서는 완전히 편집할 수 없습니다."
 title = "텍스트 및 이미지 중심"
-
-[pdfTextEditor.zoom]
-fit = "맞춤"
-fitToWidth = "너비에 맞춤"
-in = "확대"
-out = "축소"
-reset = "Zoom을 100%로 재설정"
 
 [PDFToCSV]
 header = "PDF를 CSV로"
@@ -7935,8 +8374,6 @@ triggerImport = "가져오기 시 실행"
 [policies.enforcement]
 applying = "{{names}} 적용 중"
 applyingProgress = "{{names}} 적용 중 ({{done}}/{{total}})"
-exportFailureBody = "보안 정책을 적용할 수 없습니다. 파일은 있는 그대로 내보냈습니다."
-exportFailureTitle = "정책 적용 없이 내보냄"
 failureBody = "일부 정책을 {{total}}개 파일 중 {{failures}}개에 적용할 수 없습니다."
 failureTitle = "완전한 정책 적용 없이 내보냄"
 printPolicyAppliedBody = "정책을 충족하도록 이 PDF가 업데이트되었습니다. 변경 사항을 확인한 후 다시 인쇄하세요."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "정책이 실행될 때 Google Chat 공간에 메시지를 게시합니다."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "조직의 Google Drive를 읽고 쓰는 서비스 계정입니다."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Google Cloud의 서비스 계정 JSON 키를 붙여넣으세요. 암호화되며 다시 표시되지 않습니다."
+label = "서비스 계정 키 (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "선택 사항. 도메인 전체 위임 시, 이 연결이 대신 사용할 사용자를 지정합니다(전용 봇 사용자는 인원이 떠나도 계속 동작). 비워 두면 서비스 계정과 공유된 드라이브 및 폴더만 접근합니다."
+label = "대신할 사용자"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "처리된 문서를 Jira 이슈에 첨부합니다."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "정책이 실행될 때 문서 또는 알림을 Email로 보냅니다."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "관리자 동의가 필요한 Microsoft Graph 애플리케이션 권한이 필요합니다."
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com 또는 tenant GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "앱 password"
+
+[portal.connections.types.onedrive]
+description = "한 사용자의 OneDrive for Business에서 읽고 쓰기."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "이 연결이 접근하는 OneDrive의 소유자입니다. 앱 등록에 Files.ReadWrite.All 애플리케이션 권한이 필요합니다."
+label = "OneDrive 소유자"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "대신 private key로 인증하는 경우 비워 두세요."
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "선택 사항입니다. password 대신 key로 인증하려면 OpenSSH private key를 붙여넣으세요."
 label = "개인 키"
+
+[portal.connections.types.sharepoint]
+description = "SharePoint 사이트의 문서 라이브러리에서 읽고 쓰기."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "선택 사항. 사이트의 기본 Documents 라이브러리를 사용하려면 비워 두세요."
+label = "문서 라이브러리"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "사이트 URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "정책이 문서를 처리할 때 Slack에 메시지를 게시합니다."
@@ -9142,6 +9624,126 @@ status = "상태"
 time = "시간"
 user = "사용자"
 
+[portal.enterprise]
+backTo = "{{stage}}로 돌아가기"
+brandTag = "Enterprise"
+callInfo = "15분 통화. 요금, 배포 또는 보안에 대한 질문을 가져오거나 함께 롤아웃 계획을 세우세요."
+callTitle = "솔루션 엔지니어와 상담"
+deployment = "배포"
+footer = "Stirling Enterprise에 대해 궁금한 점이 있으신가요?"
+home = "Stirling으로 이동"
+member = "팀 리더가 Enterprise 거래를 진행합니다. 시작되면 여기에서 진행 상황을 확인할 수 있습니다."
+memberDeal = "팀 리더가 이 거래를 진행합니다. 여기에서 진행 상황을 확인할 수 있습니다."
+quotePanel = "견적"
+signIn = "로그인"
+signInToStart = "평가판을 시작하려면 로그인하세요"
+stage = "단계 {{current}}/{{total}}"
+stagesLabel = "진행 상황"
+
+[portal.enterprise.landing]
+lede = "14일 무료로 사용해 보고, 여기에서 견적을 만들고 계약서에 서명하세요. 카드가 필요하지 않습니다."
+tickAgreement = "MSA, 주문서, EULA 및 DPA를 포괄하는 단일 계약"
+tickCompliance = "SCIM, 데이터 거주지 및 가용성 SLA"
+tickDeploy = "Stirling Cloud, 자체 서버 또는 완전 에어갭 환경에서 실행"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "오프라인 라이선스 문서"
+point1 = "온라인에서 확인되는 키가 아닌, 오프라인에서 작동하는 라이선스 파일로 활성화"
+point2 = "가져온 이미지에서 셀프 호스팅과 동일하게 설치"
+point3 = "로그인은 네트워크 내부에만 유지"
+tagline = "인터넷이 없는 네트워크에서 셀프 호스팅."
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud 문서"
+point1 = "팀이 stirling.com/app에서 로그인"
+point2 = "AWS에서 실행되며 저장된 파일은 저장 시 암호화됨"
+point3 = "자체 IdP를 통한 Single sign-on은 셀프 호스팅이 필요합니다"
+tagline = "설치 없이 호스팅 제공."
+
+[portal.enterprise.options.selfhost]
+more = "셀프 호스팅 문서"
+point1 = "Docker 또는 Kubernetes의 Helm 차트로 설치"
+point2 = "문서는 자체 인프라에서 처리"
+point3 = "OAuth2, OIDC 또는 SAML Single sign-on"
+tagline = "온프레미스 또는 자체 클라우드의 자체 서버에서."
+
+[portal.enterprise.review]
+back = "{{stage}}로 돌아가기"
+company = "회사"
+completed = "완료됨"
+extensions = "사용한 확장 기능"
+paid = "결제 완료. 청구서는 여기에서 계속 확인할 수 있습니다."
+people = "인원"
+started = "시작됨"
+trialEnds = "평가판 종료일"
+trialTitle = "내 평가판"
+version = "버전"
+viewInvoice = "청구서 보기"
+
+[portal.enterprise.setup]
+copied = "복사됨"
+copy = "복사"
+markDone = "“{{step}}” 완료로 표시"
+progress = "{{total}}개 중 {{done}}개 완료"
+subtitle = "실제 운영 방식대로 사용해 보며 평가판을 최대한 활용하세요."
+subtitleLive = "모두에게 롤아웃하기 전에 완료해야 할 단계."
+title = "설정 시작"
+titleLive = "Go-live 체크리스트"
+
+[portal.enterprise.setup.firstDocument]
+body = "팀이 사용하는 PDF를 업로드하고 평소에 사용할 도구(가리기, 압축 또는 OCR 등)를 시도해 보세요."
+title = "첫 문서 실행"
+
+[portal.enterprise.setup.getApp]
+body = "Windows, Mac 또는 Linux용 데스크톱 앱을 설치하고 방금 만든 계정으로 로그인하거나, 브라우저에서 바로 사용하세요."
+title = "Stirling 받기"
+
+[portal.enterprise.setup.install]
+body = "서버에서 실행하세요. 라이선스가 적용된 상태로 Stirling이 시작되며, 이미지에는 OCR과 오피스 변환이 포함됩니다. 더 큰 팀은 Kubernetes를 사용하세요."
+title = "Stirling 설치 및 시작"
+
+[portal.enterprise.setup.invite]
+body = "사용할 사람들을 초대해, 평가판이 실제 작업을 반영하도록 하세요."
+title = "팀 초대"
+
+[portal.enterprise.setup.licence]
+body = "<code>http://your-server:8080/settings/adminPlan</code>을 열어 Enterprise 라이선스가 활성으로 표시되는지 확인하세요. 다른 방식으로 설치했나요? <code>settings.yml</code>의 <code>premium.key</code> 아래에 키를 추가하고 다시 시작하세요."
+title = "라이선스가 활성인지 확인"
+
+[portal.enterprise.setup.links]
+browser = "브라우저에서 사용"
+docker = "Docker 가이드"
+download = "앱 다운로드"
+downloadForTeam = "팀용 앱 받기"
+downloading = "다운로드 중..."
+downloadLicence = "라이선스 파일 다운로드"
+invite = "팀원 초대"
+kubernetes = "Kubernetes 가이드"
+licence = "라이선스 활성화"
+ocr = "OCR 언어"
+openApp = "Stirling 열기"
+samlGuide = "SAML 가이드"
+ssoGuide = "SSO 가이드"
+
+[portal.enterprise.setup.offlineInstall]
+body = "연결된 머신에서 전체 이미지를 가져오고, 이를 라이선스 파일과 함께 옮겨 로드 및 시작하세요. 전체 이미지는 오프라인 서버가 다운로드할 수 없는 글꼴을 포함합니다."
+title = "Stirling을 옮겨 시작하기"
+
+[portal.enterprise.setup.offlineLicence]
+body = "에어갭 서버는 우리의 라이선스 서비스에 접속할 수 없으므로, 대신 이 서명된 파일을 확인합니다. 옮길 이미지와 함께 보관하세요."
+title = "오프라인 라이선스 다운로드"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "<code>/settings/people</code>에서 계정을 만들거나, Stirling을 내부 ID 제공자에 연결해 로그인이 네트워크를 벗어나지 않도록 하세요."
+bodySelfHosted = "<code>/settings/people</code>에서 계정을 만들거나 ID 제공자를 연결하여 팀이 업무용 계정으로 로그인하도록 하세요. 팀은 서버 주소의 브라우저에서, 또는 해당 서버를 가리키도록 설정된 데스크톱 앱에서 Stirling을 사용합니다."
+title = "사용자 추가"
+
+[portal.enterprise.setup.signIn]
+body = "<code>http://your-server:8080</code>을 열고 <code>admin</code> / <code>stirling</code>으로 로그인하세요. 바로 새 비밀번호를 선택하라는 메시지가 표시됩니다."
+bodyAirgap = "<code>http://your-server:8080</code>을 열고 <code>admin</code> / <code>stirling</code>으로 로그인한 후 새 비밀번호를 선택하고, <code>/settings/adminPlan</code>에서 라이선스가 활성로 표시되는지 확인하세요."
+title = "관리자 계정으로 로그인"
+
 [portal.errorBoundary]
 description = "이 보기에서 예기치 않은 오류가 발생했습니다. 다시 시도하거나 사이드바에서 다른 섹션을 선택하세요."
 retry = "다시 시도"
@@ -9293,6 +9895,7 @@ title = "검토할 항목 없음"
 [portal.home.download]
 back = "뒤로"
 body = "데스크톱 앱을 다운로드하거나 서버를 자체 호스팅하세요."
+bodyDesktop = "데스크톱 앱을 다운로드한 후 Stirling 계정으로 로그인하세요."
 done = "완료"
 guide = "{{name}} 가이드 열기"
 openInBrowser = "대신 브라우저에서 열기"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Email 수신"
 
 [portal.procurement]
-subtitle = "팀 평가, 계약, 온보딩을 완료하세요. 모든 문서를 한곳에서 관리합니다."
 title = "조달"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "계약서를 불러올 수 없습니다. 다시 시도하세요."
 loading = "계약서를 불러오는 중..."
 ref = "참조 {{ref}} · {{version}}"
 requestChanges = "변경 요청"
-scrollHint = "검토하려면 스크롤"
 signatory = "서명자 이름"
 signatoryPlaceholder = "전체 이름"
 signatoryTitle = "서명자 직함"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "예: General Counsel"
 signError = "서명을 기록할 수 없습니다. 다시 시도하세요."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} 1회"
+addonPerYear = "+{{amount}}/년"
 addons = "추가 기능"
 addressLine1 = "주소 줄 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "주소 줄 2"
 addressLine2Placeholder = "스위트, 층, 건물"
 back = "뒤로"
+belowMinimum = "이 견적은 Enterprise 거래의 최소 규모 미만입니다."
 businessName = "회사명"
 businessNamePlaceholder = "귀사"
 city = "시/군/구"
 cityPlaceholder = "San Francisco"
 completeRequired = "견적을 생성하기 전에 필수 필드(* 표시)를 유효한 이메일과 함께 완료하세요."
+conflict = "이 거래는 열어 놓은 이후 변경되었습니다. 빌더를 닫고 페이지를 새로고침하여 현재 상태를 확인하세요."
 contactEmail = "연락처 이메일"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "연락처 이름"
 contactNamePlaceholder = "Jane Doe"
 continue = "계속"
 done = "완료"
+editUsage = "사용량 편집"
 eula = "Stirling Enterprise EULA를 읽었으며 이에 동의합니다. 이 견적에서 생성되는 계약에 적용됩니다."
 generate = "견적 생성"
 indemnification = "향상된 IP 보호"
 indemnificationSub = "당사의 IP 방어를 특허 청구까지 확장합니다. 기본 저작권, 상표 및 영업비밀 면책은 무료로 포함됩니다."
+minimum = "Enterprise에는 연간 최소 지출 {{min}}이 필요합니다."
+minimumBelow = "이 견적은 연 {{annual}}입니다. 더 많이 사용할 것으로 예상한다면 예상 사용량을 높이세요. 그렇지 않다면 Team 플랜이 더 적합할 수 있습니다."
+minimumNear = "Enterprise에는 연간 최소 지출 {{min}}이 필요합니다. 이에 도달하도록 예상 사용량을 높이거나, 저희와 상의하세요."
+minimumNearTitle = "Enterprise까지 연간 {{gap}} 부족합니다."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise 견적"
 paperFor = "대상"
 pdfSize = "PDF 크기"
@@ -10506,9 +11117,13 @@ posture_regulated = "규제됨"
 posture_regulatedSub = "모든 범주 — 규정 준수, 보존, 수집"
 qbr = "분기별 비즈니스 리뷰"
 qbrSub = "담당 SE가 매 분기 사용량과 로드맵을 검토합니다"
+raiseUsage = "예상 사용량 높이기"
 region = "주 / 지역"
 regionPlaceholder = "California"
-running = "{{annual}} / 년 · {{years}}년 {{tcv}}"
+runningLabel = "예상 가격"
+runningLabelIssued = "견적가"
+runningOneYear = "연 {{annual}}"
+runningTotal = "{{years}}년간 총 {{tcv}}"
 s1Sub = "귀하의 팀과 매년 실행할 것으로 예상되는 PDFs입니다."
 s1Title = "얼마나 처리하시겠습니까?"
 s2Sub = "기간이 길수록 요금 할인이 적용되며, 서비스 수준에 따라 지원이 결정됩니다."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "예: 1,000,000"
 years_one = "{{count}}년"
 years_other = "{{count}}년"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} 배포"
+indemnification = "IP 보상"
+multiYear_one = "{{count}}년 약정"
+multiYear_other = "{{count}}년 약정"
+qbr = "분기별 비즈니스 검토"
+seats_one = "합의 사용자 {{users}}명 + SSO / RBAC / 감사"
+seats_other = "합의 사용자 {{users}}명 + SSO / RBAC / 감사"
+seatsUnset = "사용자 + SSO / RBAC / 감사"
+support = "전담 SE / CSM"
+training = "온보딩 및 교육"
+usage = "PDF 처리 — 연 {{volume}}개 PDF, {{rate}}/PDF ({{posture}} 자동화)"
+
 [portal.procurement.documents]
 agreement = "Enterprise 계약서"
 agreementSub = "MSA, 주문서 및 DPA가 하나의 서명으로 제공됩니다."
@@ -10557,6 +11185,8 @@ invoice = "인보이스"
 invoiceSub = "첫 구독 인보이스입니다."
 laterInvoice = "수락 후 사용 가능"
 laterQuote = "견적이 발행되면 사용 가능"
+laterSigning = "계약서 서명 후 사용 가능"
+laterTitle = "거래 후반 단계"
 quote = "견적"
 quoteSub = "항목별 Enterprise 견적입니다."
 sla = "SLA 별첨"
@@ -10573,15 +11203,12 @@ title = "문제가 발생했습니다"
 [portal.procurement.hero]
 barAria = "{{total}}단계 중 {{current}}단계"
 ctaAgreement = "계약 검토 및 서명"
-ctaExploring = "평가판 설정"
 ctaQuote = "견적 검토"
 ctaReviewQuote = "견적 검토"
 ctaTrial = "견적 만들기"
-documents = "문서"
 eyebrow = "엔터프라이즈"
 eyebrowCompany = "{{company}} 엔터프라이즈"
 inviteTeammates = "팀원 초대"
-licenseKey = "라이선스 키"
 liveSub = "조직이 프로비저닝되었고 라이선스가 활성 상태입니다."
 liveTitle = "Stirling Enterprise에서 라이브 상태입니다"
 next = "다음: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "아직 오프라인 라이선스 파일을 생성할 수 없습
 downloadOffline = "오프라인 라이선스 다운로드(.lic)"
 hint = "이 키를 self-hosted 인스턴스에 붙여넣어 활성화하거나 기록용으로 보관하세요. 안전하게 보관하세요."
 label = "라이선스 키"
-subtitle = "이 키로 셀프 호스팅 인스턴스를 활성화하거나 기록용으로 보관하세요."
-title = "라이선스 키"
 trialFileHint = "이것은 평가판 라이선스 파일입니다. 계약이 완료되면 돌아와 다시 다운로드하세요 — 온라인 라이선스 키와 달리 .lic 파일은 자동으로 업데이트되지 않습니다."
-
-[portal.procurement.link]
-cta = "계정 연결"
-description = "조달은 연결된 Stirling 계정에서 실행됩니다. 이 계정으로 평가판을 프로비저닝하고, 견적 가격을 책정하며, 청구를 시작합니다. 시작하려면 계정을 연결하세요."
-eyebrow = "엔터프라이즈"
-title = "시작하려면 계정을 연결하세요"
 
 [portal.procurement.live]
 description = "구독이 활성화되었으며 라이선스가 발급되었습니다. 팀이 프로비저닝되었고 청구가 시작되었습니다."
-eyebrow = "라이브"
 title = "Stirling Enterprise에서 라이브 상태입니다"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "아직 견적 PDF를 다운로드할 수 없습니다. 잠시 �
 
 [portal.procurement.payment]
 description = "견적이 수락되었고 라이선스가 이미 활성화되어 팀이 바로 시작할 수 있습니다. 준비되면 첫 번째 송장을 결제하세요. 이메일 없이 여기에서 결제하거나 다운로드할 수 있습니다."
-downloadAgreement = "서명된 계약서 다운로드"
 downloadInvoice = "송장 다운로드"
-eyebrow = "결제"
-title = "구독 생성됨"
 viewInvoice = "송장 보기 및 결제"
 
 [portal.procurement.review]
 acceptCta = "견적 수락"
 annual = "연간 요금(1년 차)"
 downloadCta = "견적 다운로드"
+oneTime = "1회"
 poNumber = "구매 주문: {{po}}"
 renewal = "기간 이후 {{amount}}/년으로 갱신(+{{pct}}% CPI)"
 tcv = "{{years}}년 기간, 선불 일시납: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "연장하면 7일이 추가되고 담당 솔루션 엔지니어에게 알림이 전송됩니다."
 bodyMaxed = "모든 연장 횟수를 사용했습니다. 시간이 더 필요하면 담당 솔루션 엔지니어에게 문의하세요."
-cancel = "평가판 취소"
 extend = "7일 연장"
 maxed = "한도 도달"
 subtitle = "무료 평가판은 {{date}}까지 진행됩니다. 카드가 필요하지 않습니다."
 title = "Enterprise 평가판"
+
+[portal.procurement.validation]
+confirm = "조직을 대신해 서명할 권한이 있음을 확인하세요."
+email = "유효한 이메일 주소를 입력하세요."
+eula = "계속하려면 EULA에 동의하세요."
+required = "필수 입력 항목입니다."
+seats = "평가판을 사용할 인원 수를 입력하세요."
+volume = "1년에 처리할 예상 PDF 수를 입력하세요."
 
 [portal.review]
 subtitle = "정책 실행 및 팀 편집기에서 주의가 필요한 모든 항목입니다."
@@ -10735,6 +11358,7 @@ subtitle = "문서를 Stirling으로 공급하는 재사용 가능한 입력 연
 title = "소스"
 
 [portal.sources.actions]
+connectDestination = "대상 연결"
 connectSource = "소스 연결"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "처리된 문서가 이동할 위치를 선택하세요. 회
 comingSoon = "곧 제공 예정"
 comingSoonHeading = "곧 제공 예정"
 create = "소스 생성"
+createDestination = "대상 만들기"
+createDestinationTitle = "대상 추가"
 createTitle = "소스 연결"
 delete = "삭제"
 editTitle = "소스 편집"
@@ -10757,6 +11383,41 @@ save = "변경 사항 저장"
 description = "폴더 자동화는 관리자가 허용한 폴더만 사용할 수 있습니다. 폴더 액세스 설정에서 추가한 다음 다시 시도하세요."
 openSettings = "폴더 액세스 설정"
 title = "이 폴더는 허용되지 않습니다"
+
+[portal.sources.cloudFields.account]
+connect = "내 계정 연결"
+connectAnother = "다른 계정 연결"
+connectFailed = "계정을 연결할 수 없습니다. 다시 시도하거나, 관리자가 앱 등록을 확인하도록 요청하세요."
+label = "계정"
+placeholder = "계정 선택"
+reconnect = "다시 로그인"
+unavailable = "이 서버에서는 개인 계정 연결이 꺼져 있습니다. 대신 조직 연결을 선택하세요."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "이 서버에서는 개인 계정이 꺼져 있습니다."
+helperText = "내 계정은 내가 열 수 있는 것에 접근하며 관리자가 필요 없습니다. 조직 연결은 사람이 떠나도 계속 동작하며, 관리자가 설정한 범위만 접근합니다."
+label = "로그인 방식"
+
+[portal.sources.cloudFields.authMode.options]
+account = "내 계정"
+organisation = "조직 연결"
+
+[portal.sources.cloudFields.connection]
+helperText = "관리자가 통합에서 설정했습니다. 이를 사용하는 모든 위치가 공유합니다."
+label = "조직 연결"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "폴더 링크를 붙여넣거나 내 드라이브 최상위에서의 경로를 입력하세요. 비워두면 내 드라이브 최상위를 사용합니다. 폴더는 미리 존재해야 합니다."
+placeholder = "폴더 링크 또는 Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "OneDrive의 폴더를 지정하거나 폴더 링크(OneDrive에서 링크 복사)를 붙여넣으세요. 비워두면 OneDrive 최상위를 사용합니다. 폴더는 미리 존재해야 합니다."
+placeholder = "Scans/Inbox 또는 폴더 링크"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "개인 계정을 사용하는 경우 폴더 링크(SharePoint에서 링크 복사)를 붙여넣으세요. 조직 연결을 사용하는 경우 해당 라이브러리 안의 폴더를 지정하고, 비워두면 라이브러리 루트를 사용합니다. 폴더는 미리 존재해야 합니다."
+organisationPlaceholder = "폴더 링크 또는 Scans/Inbox"
+placeholder = "폴더 링크"
 
 [portal.sources.delete]
 body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다. 이를 참조하는 정책은 업데이트해야 합니다."
@@ -10821,6 +11482,7 @@ label = "Email 받은편지함"
 [portal.sources.types.folder]
 description = "서버의 디렉터리에서 새 문서를 감시합니다."
 label = "폴더"
+outputDescription = "결과를 서버의 디렉터리에 저장합니다."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "새 파일을 감시할 폴더의 절대 경로입니다."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "공유 Google Drive 폴더에서 문서를 가져옵니다."
 label = "Google Drive"
+outputDescription = "결과를 Google Drive 폴더에 저장합니다."
 
 [portal.sources.types.network]
 description = "새 문서를 위해 SMB 네트워크 공유를 감시합니다."
@@ -10867,10 +11530,12 @@ label = "네트워크 드라이브"
 [portal.sources.types.onedrive]
 description = "새 문서를 위해 OneDrive 폴더를 감시합니다."
 label = "OneDrive"
+outputDescription = "결과를 OneDrive 폴더에 저장합니다."
 
 [portal.sources.types.s3]
 description = "Amazon S3 또는 S3 호환 버킷에서 문서를 가져옵니다."
 label = "Amazon S3"
+outputDescription = "결과를 Amazon S3 또는 S3 호환 버킷에 저장합니다."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "버킷과 자격 증명이 포함된 저장된 연결입니다. 이를 사용하는 모든 소스와 파이프라인 출력에서 공유됩니다."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "SharePoint 문서 라이브러리에서 문서를 가져옵니다."
 label = "SharePoint"
+outputDescription = "결과를 SharePoint 문서 라이브러리 폴더에 저장합니다."
 
 [portal.sources.types.unknown]
 label = "소스"
@@ -11074,6 +11740,14 @@ waiting = "대기 중 ..."
 name = "Google Drive"
 scope = "파일 가져오기"
 
+[provider.googledrive.accountScope]
+description = "drive는 모든 파일에 접근합니다(Google이 공개 앱을 검증해야 함); drive.file은 사용자가 선택했거나 Stirling이 생성한 파일에만 접근합니다"
+label = "Drive 액세스"
+
+[provider.googledrive.allowAccountConnections]
+description = "편집자와 해당 파이프라인에 대해 한 번의 로그인으로 사용합니다. 끄면 조직 연결만 허용합니다."
+label = "사용자가 자신의 계정을 연결하도록 허용"
+
 [provider.googledrive.apiKey]
 description = "Google Cloud Console의 Google Picker API용 Google API 키"
 label = "API 키"
@@ -11086,13 +11760,65 @@ label = "앱 ID"
 description = "Google Cloud Console의 Google OAuth 2.0 클라이언트 ID"
 label = "클라이언트 ID"
 
+[provider.googledrive.clientSecret]
+description = "사용자가 자신의 파이프라인에 Google 계정을 연결할 수 있도록 합니다. 아래 리디렉션 URI를 OAuth 클라이언트의 허용된 리디렉션 URI로 추가하세요."
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "사용자가 Google Drive에서 직접 파일을 가져오도록 허용합니다"
 label = "Google Drive 파일 선택기 사용"
 
 [provider.googledrive.errors]
+connectFailed = "Google 계정에 연결할 수 없습니다. 설정 > 연결된 계정에서 다시 시도하세요."
 notConfigured = "Google Drive가 구성되지 않았습니다"
 pickerFailed = "Google Drive 선택기를 열지 못했습니다"
+
+[provider.googledrive.redirectUri]
+description = "Google Cloud Console에서 OAuth 클라이언트의 허용된 리디렉션 URI로 이 값을 추가하세요."
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "파일 및 파이프라인"
+
+[provider.microsoft.allowAccountConnections]
+description = "편집자와 해당 파이프라인에 대해 한 번의 로그인으로 사용합니다. 끄면 조직 연결만 허용합니다."
+label = "사용자가 자신의 계정을 연결하도록 허용"
+
+[provider.microsoft.allowEditorSaves]
+description = "Stirling에서 편집 내용을 유지하려면 끄세요. OneDrive에서 연 파일은 대신 다운로드되며, 서버는 OneDrive로 저장을 거부합니다."
+label = "편집기가 OneDrive에 다시 저장하도록 허용"
+
+[provider.microsoft.clientId]
+description = "하나의 Microsoft Entra 앱 등록에서 가져옵니다."
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "연결된 계정에 필요합니다. 서버에만 저장됩니다."
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "파이프라인에서 OneDrive와 SharePoint를 사용할 수 있도록 허용"
+label = "OneDrive & SharePoint 활성화"
+
+[provider.microsoft.pickerRedirectUri]
+description = "편집기에서 로그인할 수 있도록, 동일한 앱 등록의 단일 페이지 애플리케이션 리디렉션 URI로 이것을 추가하세요."
+label = "단일 페이지 애플리케이션 리디렉션 URI"
+
+[provider.microsoft.redirectUri]
+description = "Entra 앱 등록의 Web 리디렉션 URI로 추가하세요."
+label = "Redirect URI"
+
+[provider.microsoft.setupSteps]
+connect = "저장하고 재시작한 다음, 설정 > 연결된 계정에서 계정을 연결하세요."
+permissions = "Microsoft Graph 위임 권한 Files.ReadWrite.All 및 Files.Read.All, 그리고 SharePoint 위임 권한 MyFiles.Read 및 AllSites.Read를 추가하여 회사 및 학교 계정이 파일 선택기를 열 수 있게 하세요."
+redirects = "아래의 두 리디렉션 URI를 추가하세요: 하나는 Web, 하나는 Single-page application."
+register = "Microsoft Entra 관리 센터에서 앱을 등록하세요. 개인 OneDrive를 사용하는 사용자가 있다면 개인 Microsoft 계정을 허용하세요."
+secret = "클라이언트 비밀을 만든 다음, 그 값과 앱의 클라이언트 ID를 아래에 붙여넣으세요."
+
+[provider.microsoft.tenant]
+description = "작업, 학교 및 개인 계정에는 common, 작업 및 학교 전용에는 organizations, 또는 특정 조직만 허용하려면 테넌트 ID를 입력합니다"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "일반 OAuth2"
@@ -11195,6 +11921,19 @@ label = "스코프"
 description = "사용자 이름으로 사용할 필드 (email, name, given_name, family_name, preferred_username)"
 label = "사용자 이름으로 사용"
 
+[provider.onedrive]
+pickerLoading = "OneDrive에 연결 중..."
+pickerTitle = "OneDrive에서 파일 선택"
+
+[provider.onedrive.errors]
+connectFailed = "Microsoft 계정에 연결할 수 없습니다. 설정 > 연결된 계정에서 다시 시도하세요."
+notConfigured = "OneDrive가 구성되지 않았습니다"
+pickerFailed = "OneDrive를 열 수 없습니다"
+popupBlocked = "브라우저가 Microsoft 로그인 창을 차단했습니다. 이 사이트의 팝업을 허용한 후 다시 시도하세요."
+reconnect = "Microsoft 계정에 다시 로그인해야 합니다. 설정 > 연결된 계정에서 다시 연결하세요."
+serverError = "OneDrive 또는 Stirling 서버에 문제가 발생했습니다. 다시 시도하거나, 계속되면 관리자에게 문의하세요."
+unreachable = "OneDrive에 연결할 수 없습니다. 연결을 확인하고 다시 시도하세요."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "알림"
 processor = "프로세서"
 reader = "리더"
 signInToUse = "사용하려면 로그인하세요"
+
+[quickNav.accountMenu]
+localMode = "로컬 모드"
+server = "서버 설정"
+settings = "설정"
+signedOut = "로그인되지 않음"
+signIn = "로그인"
 
 [read]
 tags = "보기,열기,표시,읽기,뷰어,PDF 뷰어,PDF 리더,PDF 열기,PDF 보기,PDF 표시,미리보기,탐색"
@@ -11811,6 +12557,13 @@ title = "PDF 정리"
 [sanitizePdf]
 tags = "청소,보안,안전,위협-제거"
 
+[saveFile.menu]
+more = "추가 저장 옵션"
+saveCopy = "사본 저장..."
+
+[saveFile.toolbar]
+mixed = "모두 저장"
+
 [scalePages]
 tags = "크기 조정,조정,배율,페이지 크기,페이지 크기 조정,페이지 배율 조정,크기 변경,크기 조절,확대,페이지 축소,페이지에 맞춤,A4,letter size"
 title = "페이지 크기 조정"
@@ -11905,6 +12658,162 @@ showTools = "사용할 수 없는 도구 보기 ▾"
 title = "Stirling-PDF 서버에 연결할 수 없습니다"
 toolNotAvailableLocally = "Stirling-PDF 서버가 오프라인이며 로컬 백엔드에서 \"{{endpoint}}\"를 사용할 수 없습니다."
 
+[serverSetup]
+back = "뒤로"
+collapse = "{{setting}} 설정 숨기기"
+configured = "구성됨"
+continue = "계속"
+dialogLabel = "서버 설정"
+expand = "{{setting}} 설정 표시"
+finishSetup = "설정 완료"
+loadErrorSubtitle = "설정을 시작하려면 서버의 현재 설정이 필요합니다."
+loadErrorTitle = "설정을 불러올 수 없습니다"
+off = "끔"
+on = "켬"
+save = "저장"
+stepCount = "{{current}}/{{total}}"
+
+[serverSetup.account]
+failed = "정보를 저장할 수 없습니다. 서버에 연결 가능한지 확인하고 다시 시도하세요."
+save = "저장하고 계속"
+signIn = "로그인"
+signInAgainSubtitle = "새 사용자 이름과 비밀번호로 다시 로그인하여 계속 진행하세요."
+signInAgainTitle = "정보가 저장되었습니다"
+subtitle = "앞으로 로그인하는 방식을 선택하세요."
+title = "계정 설정"
+updating = "업데이트 중"
+updatingSubtitle = "잠시만 기다려주세요."
+updatingTitle = "정보 업데이트 중"
+username = "사용자 이름"
+usernameHelp = "로그인할 때 사용할 이름입니다. 이메일 주소도 사용할 수 있습니다."
+
+[serverSetup.addresses]
+backendUrl = "서버 주소"
+backendUrlHelp = "로그인 제공자가 사용자를 다시 보내는 주소입니다. 보통 웹 주소와 같습니다."
+frontendUrl = "웹 주소"
+frontendUrlHelp = "사용자가 Stirling PDF를 여는 주소입니다. 이메일, 공유 링크 및 QR 코드에 사용됩니다."
+subtitle = "사용자와 로그인 제공자가 이 서버에 접근하는 방법입니다."
+title = "주소"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "비워두면 AI 엔진에 이미 설정된 키를 사용합니다."
+baseUrl = "Base URL"
+engineUrl = "AI 엔진 주소"
+fastModel = "빠른 모델"
+label = "자가 호스팅 AI"
+provider = "모델 제공자"
+providerCustom = "OpenAI 호환"
+smartModel = "전체 모델"
+stirling = "Stirling AI"
+subtitle = "문서 질의, 자동 편집 및 AI 에이전트."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "동의하고 계속"
+acceptFinish = "동의하고 완료"
+changeLater = "{{path}}에서 언제든지 변경할 수 있습니다."
+decline = "거부하고 계속"
+declineFinish = "거부하고 완료"
+learnMore = "수집 항목"
+note = "Stirling PDF 개선을 위해 이 서버의 사용 데이터를 당사와 공유합니다. 파일이나 그 내용은 절대 수집하지 않습니다."
+title = "서버 분석"
+
+[serverSetup.documents]
+label = "문서 질의"
+model = "임베딩 모델"
+provider = "임베딩 제공자"
+providerHelp = "문서 텍스트를 질의 응답용 검색 인덱스로 변환합니다."
+
+[serverSetup.email]
+from = "보낸 사람 주소"
+host = "SMTP 호스트"
+label = "이메일 보내기"
+password = "비밀번호"
+port = "포트"
+subtitle = "초대, 서명 요청 및 공유에 사용됩니다."
+title = "이메일"
+username = "사용자 이름"
+
+[serverSetup.error]
+email = "이메일 주소를 입력하세요"
+issuerUnreachable = "해당 Issuer에 연결할 수 없습니다. 주소와 이 서버가 접근 가능한지 확인하세요."
+passwordIncorrect = "비밀번호가 올바르지 않습니다"
+passwordLength = "8자 이상 사용하세요"
+passwordMismatch = "비밀번호가 일치하지 않습니다"
+passwordRejected = "서버에서 이 비밀번호를 허용하지 않았습니다. 다른 비밀번호를 사용하세요."
+passwordUnchanged = "현재와 다른 비밀번호를 선택하세요"
+port = "1~65535 범위의 포트를 입력하세요"
+providerName = "영문자, 숫자, 하이픈 또는 밑줄만 사용할 수 있습니다"
+required = "필수"
+url = "http:// 또는 https://로 시작하는 전체 주소를 입력하세요"
+username = "3~50자의 영문자, 숫자 또는 . _ + - @ 를 사용하거나 이메일 주소를 입력하세요"
+usernameTaken = "이미 사용 중인 사용자 이름입니다"
+
+[serverSetup.files]
+sharing = "파일 공유"
+sharingOffWarning = "공유가 꺼져 있으면 기존 공유 링크는 더 이상 작동하지 않습니다."
+storage = "파일 저장"
+storageOffWarning = "저장이 꺼져 있으면 사용자가 서버에 저장한 파일을 더 이상 열 수 없습니다."
+subtitle = "파일 저장 및 공유를 관리합니다."
+title = "파일"
+
+[serverSetup.finish]
+errorNote = "서버에 연결 가능한지와 여전히 관리자 계정으로 로그인되어 있는지 확인하세요."
+errorSubtitle = "재시작된 항목이 없습니다."
+errorTitle = "설정을 저장할 수 없습니다"
+manualSubtitle = "이 서버는 자체적으로 재시작할 수 없습니다. 적용하려면 컨테이너 또는 서비스를 재시작하세요."
+manualTitle = "설정이 저장되었습니다"
+restartFailedSubtitle = "서버가 재시작되지 않았습니다. 적용하려면 컨테이너 또는 서비스를 재시작하세요."
+restartingSubtitle = "보통 1분 이내에 서버가 돌아오면 이 페이지가 새로고침됩니다."
+restartingTitle = "서버를 재시작하는 중"
+retry = "다시 시도"
+saving = "저장 중"
+savingSubtitle = "잠시만 기다려주세요."
+savingTitle = "설정 저장 중"
+
+[serverSetup.language]
+auto = "각 브라우저와 일치"
+label = "기본 언어"
+subtitle = "새 방문자가 처음 보게 될 언어입니다."
+title = "언어"
+
+[serverSetup.mcp]
+label = "MCP 서버"
+
+[serverSetup.password]
+confirm = "새 비밀번호 확인"
+current = "현재 비밀번호"
+new = "새 비밀번호"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "로그인 방법"
+oidc = "기타 OpenID Connect"
+password = "사용자 이름과 비밀번호"
+providerName = "제공자 이름"
+providerNameHelp = "로그인 버튼에 표시됩니다. 예: okta, entra"
+redirectNote = "제공자에 다음 리디렉션 URI를 추가하세요:"
+subtitle = "팀의 로그인 방법을 설정합니다."
+title = "로그인"
+
+[serverSetup.signingIn]
+button = "로그인 중"
+title = "기본 자격 증명으로 로그인 중"
+
+[serverSetup.start]
+custom = "사용자 지정"
+quick = "빠른 시작"
+setupLabel = "설정"
+subtitle = "몇 단계를 통해 팀용으로 설정하세요."
+title = "서버가 실행 중입니다"
+
+[serverSetup.summary]
+subtitle = "핵심 사항을 확인하세요. 나머지는 기본값으로 유지됩니다."
+title = "빠른 시작"
+
 [session]
 expired = "세션이 만료되었습니다. 페이지를 새로 고침하고 다시 시도하세요."
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "개인정보 보호"
 storageSharing = "파일 저장 및 공유"
 systemSettings = "시스템 설정"
+
+[settings.connectedAccounts]
+description = "파이프라인에서 사용할 본인의 OneDrive, SharePoint 및 Google Drive."
+title = "연결된 계정"
 
 [settings.connectedInstances]
 confirmBody = "이렇게 하면 해당 인스턴스의 Stirling Cloud 내 팀 액세스가 취소됩니다. 로컬 파일을 삭제하거나 이미 기록된 사용량을 제거하지는 않습니다. 다시 연결하려면 인스턴스에서 원래 연결 단계를 따르세요."
@@ -11992,6 +12905,13 @@ selfhosted = "자가 호스팅"
 apiKeys = "API 키"
 apiKeysDescription = "스크립트 및 통합에서 Stirling API를 호출하기 위한 개인 키입니다."
 title = "개발자"
+
+[settings.feedback]
+label = "피드백"
+
+[settings.feedback.send]
+description = "문제를 보고하거나 개선 사항을 Stirling 팀에 제안하세요."
+label = "피드백 보내기"
 
 [settings.general]
 autoUnzip = "API 응답 자동 압축 해제"
@@ -12058,6 +12978,7 @@ checkForUpdates = "업데이트 확인"
 currentBackendVersion = "현재 Backend 버전"
 currentFrontendVersion = "현재 Frontend 버전"
 description = "업데이트 확인 및 버전 정보 보기"
+descriptionManaged = "버전 정보 보기"
 latestVersion = "최신 버전"
 managedByAdmin = "관리자가 관리함"
 modeAuto = "업데이트 자동 설치"
@@ -12135,15 +13056,24 @@ title = "법적 문서"
 backendDescription = "이 서버에 번들로 포함된 backend 종속성의 라이선스입니다."
 backendLabel = "Backend 라이선스"
 backendTitle = "Backend 3rd Party 라이선스"
+clearSearch = "검색 지우기"
 empty = "종속성을 찾을 수 없습니다."
 frontendDescription = "릴리스 빌드에 번들로 포함된 frontend 종속성의 라이선스입니다."
 frontendLabel = "Frontend 라이선스"
 frontendTitle = "Frontend 3rd Party 라이선스"
 license = "라이선스"
+licenseAbout = "정보"
+licenseAboutCompound = "{{short}} 정보"
+licenseAboutTitle = "{{short}} 정보"
 listDescription = "목록은 릴리스 번들 또는 backend 엔드포인트에서 UI에 직접 표시됩니다."
 listTitle = "번들 종속성"
 loadError = "타사 라이선스를 로드하지 못했습니다"
 module = "모듈"
+noMatch = "일치하는 종속성이 없습니다."
+searchPlaceholder = "종속성 검색"
+showingCount = "{{count}}개 종속성"
+showingCount_one = "{{count}}개 종속성"
+showingCount_other = "{{count}}개 종속성"
 version = "버전"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "이메일을 입력하세요"
 emptyPassword = "비밀번호를 입력하세요"
 emptyUsername = "사용자 이름을 입력하세요"
 oauthFailed = "OAuth 로그인에 실패했습니다. 다시 시도하세요."
+openResetFailed = "비밀번호를 재설정하기 위해 브라우저를 열 수 없습니다."
 
 [setup.saas]
 title = "Stirling에 로그인"
@@ -12703,6 +13634,11 @@ bullet3 = "보이지 않는 서명도 암호학적 검증을 제공합니다"
 description = "문서에 서명을 보이게 할지, 보이지 않게 임베드할지 제어합니다."
 title = "서명 표시 여부"
 
+[signedPdf]
+editsBlocked = "이 PDF는 디지털 서명되어 있으며, 서명된 PDF의 변경은 비활성화되어 있습니다. 계속해서 보기, 인쇄, 다른 형식으로 변환 또는 다시 서명할 수는 있습니다."
+editsBlockedStatus = "서명됨: 편집 차단됨"
+editsBlockedTitle = "서명된 PDF는 변경할 수 없습니다"
+
 [signingDetail]
 allSigned = "모든 참여자가 서명했습니다. 문서를 검토한 후 최종 확정하세요."
 awaitingOwner = "소유자가 준비되면 문서를 최종 확정합니다."
@@ -13110,7 +14046,6 @@ noLinks = "활성 공유 링크가 아직 없습니다."
 noSharedUsers = "아직 액세스 권한이 부여된 사용자가 없습니다."
 openInApp = "Stirling PDF에서 열기"
 ownerLabel = "소유자"
-ownerUnknown = "알 수 없음"
 removeLink = "링크 제거"
 removeUser = "제거"
 requiresLogin = "이 공유 파일은 로그인이 필요합니다."
@@ -13249,6 +14184,11 @@ remove = "제거"
 roleColumn = "역할"
 title = "팀원"
 
+[teamWelcome]
+invite = "사람 초대"
+message = "팀원을 초대하여 함께 작업을 시작하세요."
+title = "팀 요금제가 활성화되었습니다."
+
 [textAlign]
 center = "가운데"
 left = "왼쪽"
@@ -13290,7 +14230,6 @@ toggleDetails = "세부정보 전환"
 
 [tool]
 endpointUnavailable = "이 도구는 서버에서 사용할 수 없습니다."
-endpointUnavailableClickable = "이 모드에서는 사용할 수 없습니다. 클릭하여 로그인하세요."
 filesLoading = "파일을 불러오는 중입니다. 잠시만 기다려 주세요."
 filesLoadingProgress = "{{loaded}} / {{total}} 파일 불러오는 중..."
 invalidParams = "필수 설정을 입력하세요."
@@ -13298,6 +14237,8 @@ noFiles = "시작하려면 파일을 추가하세요."
 scopeFiles = "파일"
 scopeThisFile = "이 파일"
 selectFilesHint = "이 도구를 실행하려면 활성 파일에서 파일을 선택하세요."
+signInRequired = "Stirling 계정이 필요합니다. 계속하려면 로그인하세요."
+signInToUse = "사용하려면 로그인하세요"
 singleFileScope = "다음에만 적용: {{fileName}}"
 viewerMode = "여러 파일을 추가하려면 파일 편집기로 전환하세요."
 
@@ -13790,6 +14731,7 @@ coverPageView = "표지 페이지 별도로 표시"
 disableColorFilter = "색상 필터 비활성화"
 documentUpdated = "문서가 업데이트됨"
 dualPageView = "두 페이지 보기"
+editText = "텍스트 편집"
 enableDarkFilter = "다크 필터 활성화"
 enableSepiaFilter = "세피아 필터 활성화"
 engineLoadError = "PDF viewer engine을 초기화하지 못했습니다"
@@ -14158,8 +15100,10 @@ closeAll = "모든 파일 닫기"
 closePdf = "PDF 닫기"
 deselectAll = "모두 선택 해제"
 downloadAll = "모두 다운로드"
+editText = "텍스트 편집"
 exitAnnotations = "주석 모드 종료"
 exitRedaction = "가리기 모드 종료"
+findReplace = "찾기 및 바꾸기"
 formFill = "양식 편집기"
 hideToolbar = "도구 모음 숨기기"
 moreActions = "추가 작업"

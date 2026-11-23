@@ -138,17 +138,23 @@ function predictedAdvance(
   sourceAdvancePx: number,
   opts: PaintOptions,
 ): number | null {
-  if (text === "" || source === "") return null;
-  const sourceNatural = measureAdvancePx(source, opts.font);
-  if (!(sourceNatural > 0) || !(sourceAdvancePx > 0)) return null;
-  const ratio = sourceAdvancePx / sourceNatural;
+  if (text === "") return null;
   const table = opts.advanceEm;
+  const sourceNatural = source ? measureAdvancePx(source, opts.font) : 0;
+  // A line's trailing space token has no advance of its own: the engine trims
+  // it. Letters typed into it are priced from the table alone.
+  const sized = sourceNatural > 0 && sourceAdvancePx > 0;
+  if (!sized && (!table || table.size === 0)) return null;
+  const ratio = sized ? sourceAdvancePx / sourceNatural : 1;
   if (!table || table.size === 0) {
     const natural = measureAdvancePx(text, opts.font);
     return natural > 0 ? natural * ratio : null;
   }
-  let total = 0;
-  for (const ch of text) {
+  // Letters typed after the token still advance the pen the document set its
+  // own letters to, so only what follows them is priced.
+  const kept = sized && text.startsWith(source) ? source.length : 0;
+  let total = kept > 0 ? sourceAdvancePx : 0;
+  for (const ch of text.slice(kept)) {
     const em = table.get(ch);
     total +=
       em === undefined
@@ -191,6 +197,30 @@ function isLineBreak(node: Node): node is HTMLElement {
  */
 function blockLines(element: HTMLElement): string[] {
   if ((element.textContent ?? "") === "") return [""];
+  const lines = flowLines(element);
+  // A break that ends a block draws no line of its own: WebKit merges a line up into a blank one by putting its text in front of that block's filler break.
+  if (lines.length > 1 && lines.at(-1) === "" && endsWithBreak(element))
+    lines.pop();
+  return lines;
+}
+
+// Merging two lines with Backspace leaves the lower one as an inline span on the upper one's line, not a line of its own.
+const BLOCK_TAGS =
+  /^(DIV|P|LI|UL|OL|H[1-6]|BLOCKQUOTE|PRE|TABLE|TR|SECTION|ARTICLE)$/;
+
+function isLineElement(node: HTMLElement): boolean {
+  return node.hasAttribute(LINE_ATTR) || BLOCK_TAGS.test(node.tagName);
+}
+
+function endsWithBreak(node: Node): boolean {
+  let last: Node | null = node.lastChild;
+  while (last && last.nodeType !== Node.TEXT_NODE && last.lastChild)
+    last = last.lastChild;
+  return last instanceof HTMLElement && last.tagName === "BR";
+}
+
+/** The text under `element`, split at every <br>. */
+function flowLines(element: HTMLElement): string[] {
   const lines: string[] = [""];
   const walk = (node: Node): void => {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -231,6 +261,13 @@ export function readOverlayText(element: HTMLElement): string {
     if (isLineBreak(node)) {
       lines.push("");
       lastWasTrailingBr = true;
+      continue;
+    }
+    if (!isLineElement(node)) {
+      const [first, ...rest] = flowLines(node);
+      lines[lines.length - 1] += first;
+      lines.push(...rest);
+      lastWasTrailingBr = rest.length > 0 && endsWithBreak(node);
       continue;
     }
     // Block children carry whole lines, so the seed is not one of them.
@@ -304,7 +341,10 @@ function plainOffset(
   }
   const host = document.createElement("div");
   host.appendChild(range.cloneContents());
-  // A <br> just before the caret is a real break, not the trailing filler readOverlayText drops.
+  // A <br> just before the caret is a real break, not the trailing filler readOverlayText drops, whether it ends the text or the line the caret is in.
+  const last = host.lastChild;
+  if (last instanceof HTMLElement && isLineElement(last))
+    last.appendChild(document.createTextNode(""));
   host.appendChild(document.createTextNode(""));
   const chars = readOverlayText(host).length;
   // A caret parked on the container BETWEEN two line children sits at the
@@ -381,20 +421,52 @@ export function restoreCaretOffset(el: HTMLElement, offset: number): void {
   setCollapsed(selection, at.node, at.offset);
 }
 
+/** Run `paint`, which replaces the run's nodes, then put back the caret or selected range it held when `restore`. */
+export function repaintKeepingSelection(
+  el: HTMLElement,
+  restore: boolean,
+  paint: () => void,
+): void {
+  if (!restore) {
+    paint();
+    return;
+  }
+  // Reading the selection lays the page out, so a run that is not taking it back skips the read: a page of 5,000 runs painting in turn spent seconds re-laying itself out.
+  const selected = plainSelectionRange(el);
+  const caret = plainCaretOffset(el);
+  paint();
+  const range = selected && plainDomRange(el, selected);
+  const selection = window.getSelection();
+  if (range && selection) {
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else if (caret !== null) {
+    restoreCaretOffset(el, caret);
+  }
+}
+
 const TEXT_RANGE_HIGHLIGHT = "pdf-editor-text-range";
+export const FIND_MATCH_HIGHLIGHT = "pdf-editor-find-match";
 
 /**
- * Paint `range` as selected text, through the CSS Custom Highlight API, until
- * the returned cleanup runs. One range at a time: a later call replaces it.
- * Does nothing where the browser lacks the API.
+ * Paint `range` through the CSS Custom Highlight API, as selected text unless
+ * another highlight `name` is given, until the returned cleanup runs. One range
+ * per name: a later call replaces it. Does nothing where the browser lacks the API.
  */
-export function highlightTextRange(range: Range): () => void {
-  if (typeof CSS === "undefined" || !("highlights" in CSS)) return () => {};
+export function canHighlightTextRanges(): boolean {
+  return typeof CSS !== "undefined" && "highlights" in CSS;
+}
+
+export function highlightTextRange(
+  range: Range,
+  name: string = TEXT_RANGE_HIGHLIGHT,
+): () => void {
+  if (!canHighlightTextRanges()) return () => {};
   const highlight = new Highlight(range);
-  CSS.highlights.set(TEXT_RANGE_HIGHLIGHT, highlight);
+  CSS.highlights.set(name, highlight);
   return () => {
-    if (CSS.highlights.get(TEXT_RANGE_HIGHLIGHT) === highlight) {
-      CSS.highlights.delete(TEXT_RANGE_HIGHLIGHT);
+    if (CSS.highlights.get(name) === highlight) {
+      CSS.highlights.delete(name);
     }
   };
 }
@@ -446,6 +518,8 @@ function domPosition(el: HTMLElement, offset: number): DomPoint {
     } else if (isLineBreak(node)) {
       if (node === lastContent) break;
       hit = passLineBreak(cursor, node);
+    } else if (node instanceof HTMLElement && !isLineElement(node)) {
+      hit = passInline(cursor, node);
     } else if (node instanceof HTMLElement) {
       hit = passBlock(cursor, node, sawBlock || cursor.seen > 0);
       sawBlock = true;
