@@ -24,10 +24,10 @@ import org.apache.pdfbox.util.Matrix;
  * List<ImageBox> boxes = locator.getImageBoxes();
  * }</pre>
  *
- * <p>Each {@link ImageBox} carries the 0-based page index and the axis-aligned bounding box {@code
- * (x1, y1, x2, y2)} in PDF user-space coordinates.
+ * <p>Each {@link ImageBox} carries the 0-based page index, the axis-aligned bounding box {@code
+ * (x1, y1, x2, y2)} in PDF user-space coordinates and the image's size in pixels.
  */
-public final class PageImageLocator extends PDFGraphicsStreamEngine {
+public class PageImageLocator extends PDFGraphicsStreamEngine {
 
     /**
      * Bounding box of a raster or vector image found on a PDF page.
@@ -37,8 +37,17 @@ public final class PageImageLocator extends PDFGraphicsStreamEngine {
      * @param y1 bottom edge in PDF user-space
      * @param x2 right edge
      * @param y2 top edge
+     * @param pixelWidth the image's width in pixels
+     * @param pixelHeight the image's height in pixels
      */
-    public record ImageBox(int pageIndex, float x1, float y1, float x2, float y2) {}
+    public record ImageBox(
+            int pageIndex,
+            float x1,
+            float y1,
+            float x2,
+            float y2,
+            int pixelWidth,
+            int pixelHeight) {}
 
     private final int pageIndex;
     private final List<ImageBox> imageBoxes = new ArrayList<>();
@@ -82,7 +91,8 @@ public final class PageImageLocator extends PDFGraphicsStreamEngine {
             y1 = Math.min(y1, y);
             y2 = Math.max(y2, y);
         }
-        imageBoxes.add(new ImageBox(pageIndex, x1, y1, x2, y2));
+        imageBoxes.add(
+                new ImageBox(pageIndex, x1, y1, x2, y2, pdImage.getWidth(), pdImage.getHeight()));
     }
 
     // ---------- required abstract methods (no-op for path operations) ----------

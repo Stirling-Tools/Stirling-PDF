@@ -8,6 +8,7 @@ import static org.bytedeco.leptonica.global.leptonica.pixDestroy;
 import static org.bytedeco.leptonica.global.leptonica.pixFindSkewAndDeskew;
 import static org.bytedeco.leptonica.global.leptonica.pixGetDepth;
 import static org.bytedeco.leptonica.global.leptonica.pixRotateOrth;
+import static org.bytedeco.leptonica.global.leptonica.pixScale;
 import static org.bytedeco.leptonica.global.leptonica.pixSetResolution;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -106,6 +108,9 @@ public class NativeTesseractService {
 
     /** Below this Leptonica's estimate is noise; straightening would only blur the page. */
     private static final float MIN_DESKEW_DEGREES = 0.1f;
+
+    /** ApplicationProperties' own default for system.maxDPI. */
+    private static final int DEFAULT_MAX_DPI = 500;
 
     private static final String JAVACPP_CACHE_DIR = "org.bytedeco.javacpp.cachedir";
 
@@ -315,13 +320,13 @@ public class NativeTesseractService {
         }
         // Force and deskew replace the page with what was OCRed, so colour must survive.
         boolean keepColour = options.force() || options.deskew();
-        Map<Integer, Integer> pageDpis = new HashMap<>();
+        Map<Integer, PagePlan> plans = new HashMap<>();
         long largest = 1;
         for (int index : pages) {
             PDPage page = document.getPage(index);
-            int pageDpi = pageDpi(page, dpi);
-            pageDpis.put(index, pageDpi);
-            largest = Math.max(largest, pixels(page, pageDpi));
+            PagePlan plan = plan(page, dpi, maxDpi(), keepColour);
+            plans.put(index, plan);
+            largest = Math.max(largest, pixels(page, plan.renderDpi()));
         }
         int workers = workerCount(pages.size(), largest, keepColour);
         String language = String.join("+", languages);
@@ -350,7 +355,7 @@ public class NativeTesseractService {
             Renderer renderer = renderer(pdf, document);
             List<Future<PageResult>> futures = new ArrayList<>();
             for (int index : pages) {
-                int pageDpi = pageDpis.get(index);
+                PagePlan plan = plans.get(index);
                 futures.add(
                         pool.submit(
                                 () -> {
@@ -360,8 +365,8 @@ public class NativeTesseractService {
                                         started.add(worker);
                                         local.set(worker);
                                     }
-                                    PIX pix = renderer.render(index, pageDpi, keepColour);
-                                    return worker.process(index, pix, pageDpi, options, workDir);
+                                    PIX pix = renderer.render(index, plan.renderDpi(), keepColour);
+                                    return worker.process(index, pix, plan, options, workDir);
                                 }));
             }
             List<PageResult> results = new ArrayList<>(futures.size());
@@ -461,6 +466,29 @@ public class NativeTesseractService {
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * Resolution for one page: Tesseract reads it at {@code renderDpi}, and a replacement image is
+     * written at {@code outputDpi}, which is never higher.
+     */
+    record PagePlan(int renderDpi, int outputDpi) {}
+
+    /**
+     * Tesseract reads every page at {@code dpi} or more. A page that may be replaced keeps its
+     * scan's own resolution: rendered at that DPI when it is higher (up to {@code maxDpi}) and
+     * written back at it when it is lower. Other pages render and write at {@code dpi}.
+     */
+    static PagePlan plan(PDPage page, int dpi, int maxDpi, boolean replacing) throws IOException {
+        OptionalInt scan = replacing ? OcrPageScan.scanDpi(page) : OptionalInt.empty();
+        int wanted = scan.isPresent() ? Math.max(dpi, Math.min(scan.getAsInt(), maxDpi)) : dpi;
+        int render = pageDpi(page, wanted);
+        return new PagePlan(render, scan.isPresent() ? Math.min(scan.getAsInt(), render) : render);
+    }
+
+    private int maxDpi() {
+        ApplicationProperties.System system = applicationProperties.getSystem();
+        return system != null ? system.getMaxDPI() : DEFAULT_MAX_DPI;
     }
 
     /** The requested DPI, lowered just enough to keep the page under {@link #MAX_PAGE_PIXELS}. */
@@ -599,9 +627,10 @@ public class NativeTesseractService {
             }
         }
 
-        /** Takes ownership of {@code pix}. */
-        PageResult process(int index, PIX pix, int dpi, OcrOptions options, Path workDir)
+        /** Takes ownership of {@code pix}, rendered at {@code plan.renderDpi()}. */
+        PageResult process(int index, PIX pix, PagePlan plan, OcrOptions options, Path workDir)
                 throws IOException {
+            int dpi = plan.renderDpi();
             try {
                 pixSetResolution(pix, dpi, dpi);
                 int rotate = osd != null ? orientationCorrection(pix) : 0;
@@ -646,12 +675,26 @@ public class NativeTesseractService {
                     return new PageResult(index, null, null, null, 0);
                 }
                 OcrPageImages.Encoded replacement =
-                        options.force() || straightened
-                                ? OcrPageImages.encode(OcrPageImages.toImage(pix))
-                                : null;
+                        options.force() || straightened ? replacement(pix, plan) : null;
                 return new PageResult(index, Path.of(base + ".pdf"), text, replacement, rotate);
             } finally {
                 pixDestroy(pix);
+            }
+        }
+
+        /** The page as OCRed, encoded at the plan's output DPI. */
+        private static OcrPageImages.Encoded replacement(PIX pix, PagePlan plan)
+                throws IOException {
+            if (plan.outputDpi() >= plan.renderDpi()) {
+                return OcrPageImages.encode(OcrPageImages.toImage(pix));
+            }
+            float scale = (float) plan.outputDpi() / plan.renderDpi();
+            PIX scaled = pixScale(pix, scale, scale);
+            if (scaled == null) return OcrPageImages.encode(OcrPageImages.toImage(pix));
+            try {
+                return OcrPageImages.encode(OcrPageImages.toImage(scaled));
+            } finally {
+                pixDestroy(scaled);
             }
         }
 

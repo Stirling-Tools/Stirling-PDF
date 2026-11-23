@@ -34,6 +34,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -152,6 +153,45 @@ class NativeTesseractServiceTest {
         assertEquals(300, NativeTesseractService.pageDpi(new PDPage(PDRectangle.LETTER), 300));
     }
 
+    @Test
+    void replacedScansKeepTheirOwnResolution() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage scan100 = scanOnlyPage(doc, 850, 1100);
+            PDPage scan400 = scanOnlyPage(doc, 3400, 4400);
+
+            // Pages that are not replaced render and write at the OCR resolution.
+            assertEquals(
+                    new NativeTesseractService.PagePlan(300, 300),
+                    NativeTesseractService.plan(scan100, 300, 500, false));
+            // A low scan is read at 300 and written back at its own 100.
+            assertEquals(
+                    new NativeTesseractService.PagePlan(300, 100),
+                    NativeTesseractService.plan(scan100, 300, 500, true));
+            // A fine scan is read and written at its own DPI, up to the configured maximum.
+            assertEquals(
+                    new NativeTesseractService.PagePlan(400, 400),
+                    NativeTesseractService.plan(scan400, 300, 500, true));
+            assertEquals(
+                    new NativeTesseractService.PagePlan(350, 350),
+                    NativeTesseractService.plan(scan400, 300, 350, true));
+        }
+    }
+
+    private static PDPage scanOnlyPage(PDDocument doc, int width, int height) throws IOException {
+        PDPage page = new PDPage(PDRectangle.LETTER);
+        doc.addPage(page);
+        try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+            content.drawImage(
+                    LosslessFactory.createFromImage(
+                            doc, new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY)),
+                    0,
+                    0,
+                    PDRectangle.LETTER.getWidth(),
+                    PDRectangle.LETTER.getHeight());
+        }
+        return page;
+    }
+
     /**
      * Runs real recognition, so it needs this platform's natives on the classpath and
      * TESSDATA_PREFIX pointing at a folder with eng.traineddata; otherwise it is skipped.
@@ -231,6 +271,47 @@ class NativeTesseractServiceTest {
 
             assertEquals("[OCR skipped on page 1]", out.sidecar());
             assertEquals(1, occurrences(text(out.reload()), "DIGITAL"));
+        }
+
+        @Test
+        void forceKeepsALowResolutionScanAtItsOwnDpi(@TempDir Path work) throws Exception {
+            Outcome out =
+                    run(lowResolutionScan(100), new OcrOptions(true, false, false, false), work);
+
+            assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
+            try (PDDocument doc = out.reload()) {
+                assertEquals(850, images(doc.getPage(0).getResources()).get(0).getWidth());
+            }
+        }
+
+        /** The paragraph scanned at {@code dpi} in 12 pt type, stored as a JPEG. */
+        private PDDocument lowResolutionScan(int dpi) throws IOException {
+            int width = Math.round(PAGE_WIDTH / 72 * dpi);
+            int height = Math.round(PAGE_HEIGHT / 72 * dpi);
+            BufferedImage scan = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+            Graphics2D g = scan.createGraphics();
+            g.setRenderingHint(
+                    RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, width, height);
+            g.setColor(Color.BLACK);
+            g.setFont(new Font(Font.SERIF, Font.PLAIN, Math.round(12f / 72 * dpi)));
+            for (int i = 0; i < PARAGRAPH.length; i++) {
+                g.drawString(PARAGRAPH[i], dpi, dpi + i * Math.round(dpi * 0.25f));
+            }
+            g.dispose();
+            PDDocument document = new PDDocument();
+            PDPage page = new PDPage(new PDRectangle(PAGE_WIDTH, PAGE_HEIGHT));
+            document.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.drawImage(
+                        JPEGFactory.createFromImage(document, scan, 0.75f, dpi),
+                        0,
+                        0,
+                        PAGE_WIDTH,
+                        PAGE_HEIGHT);
+            }
+            return document;
         }
 
         @Test
