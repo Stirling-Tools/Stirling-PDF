@@ -1,7 +1,6 @@
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "@editor/ui/Checkbox";
-import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import { FormField } from "@editor/ui/FormField";
 import { Input } from "@editor/ui/Input";
 import { Select } from "@editor/ui/Select";
@@ -44,25 +43,27 @@ export function toSaveChoice(
   };
 }
 
-function libraryFullWarning(
-  t: TFunction,
-  limits: SaveLibraryLimits,
-): string | undefined {
-  if (limits.canSave) return undefined;
+function libraryFullWarning(t: TFunction, maxLimit: number): string {
   return t(
     "sign.wallet.create.full",
     "Your library is full ({{max}} signatures). Delete one to save more.",
-    { max: limits.maxLimit },
+    { max: maxLimit },
   );
 }
 
-function saveHint(t: TFunction, limits: SaveLibraryLimits): string {
-  if (limits.browserStorage) {
-    return t(
-      "sign.wallet.create.saveBrowserHint",
-      "Kept in this browser, ready for next time.",
-    );
-  }
+/** Stays visible rather than behind an (i): clearing this browser loses the signature. */
+function browserStorageNotice(
+  t: TFunction,
+  limits: SaveLibraryLimits,
+): string | undefined {
+  if (!limits.browserStorage) return undefined;
+  return t(
+    "sign.wallet.create.saveBrowserHint",
+    "Kept in this browser, ready for next time.",
+  );
+}
+
+function saveHint(t: TFunction): string {
   return t("sign.wallet.create.saveHint", "Ready to reuse next time you sign.");
 }
 
@@ -89,11 +90,13 @@ export function SaveSignatureOptions({
   return (
     <div className={styles.box}>
       <Checkbox
-        {...infoLabelProps(
-          t("sign.wallet.create.save", "Save to my signatures"),
-          canSave ? saveHint(t, limits) : undefined,
-        )}
-        description={libraryFullWarning(t, { ...limits, canSave })}
+        label={t("sign.wallet.create.save", "Save to my signatures")}
+        info={canSave && !limits.browserStorage ? saveHint(t) : undefined}
+        description={
+          canSave
+            ? browserStorageNotice(t, limits)
+            : libraryFullWarning(t, limits.maxLimit)
+        }
         checked={saving}
         disabled={!canSave}
         onChange={(event) => update({ enabled: event.currentTarget.checked })}

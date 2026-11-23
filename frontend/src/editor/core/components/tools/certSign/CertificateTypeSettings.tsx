@@ -111,6 +111,7 @@ const CertificateTypeSettings = ({
 
   return (
     <ButtonSelector
+      ariaLabel={t("certSign.source.stepTitle", "Certificate source")}
       value={parameters.signMode}
       onChange={selectSource}
       options={sourceOptions}

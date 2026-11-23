@@ -100,6 +100,17 @@ const config: StorybookConfig = {
           : undefined;
       return typeof name !== "string" || !APP_BUILD_ONLY.has(name);
     });
+    // The app config's own resolver reads the default build's tsconfig and runs
+    // before ours, so it would resolve `@editor/*` through the wrong cascade.
+    config.plugins = config.plugins.filter(
+      (p) =>
+        !(
+          p &&
+          typeof p === "object" &&
+          "name" in p &&
+          p.name === "vite-tsconfig-paths"
+        ),
+    );
     config.plugins.push(iconSvgr());
     config.plugins.push(editorPathAliases());
     if (flavor === "desktop") config.plugins.push(desktopFlavorSetup());

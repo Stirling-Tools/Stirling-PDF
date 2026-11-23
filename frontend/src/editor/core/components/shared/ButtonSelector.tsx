@@ -22,6 +22,8 @@ interface ButtonSelectorProps<T> {
   label?: ReactNode;
   /** Drawn beside the label and read as the group's description, e.g. an (i). */
   description?: ReactNode;
+  /** Names the group when no `label` is drawn, e.g. when the step title already says it. */
+  ariaLabel?: string;
   disabled?: boolean;
   fullWidth?: boolean;
   textClassName?: string;
@@ -33,6 +35,7 @@ const ButtonSelector = <T extends string | number>({
   options,
   label = undefined,
   description,
+  ariaLabel,
   disabled = false,
   fullWidth = true,
   textClassName,
@@ -113,6 +116,7 @@ const ButtonSelector = <T extends string | number>({
         value={selectedValue}
         onChange={handleChange}
         fullWidth={fullWidth}
+        ariaLabel={label ? undefined : ariaLabel}
         ariaLabelledBy={label ? labelId : undefined}
         ariaDescribedBy={label && description ? descriptionId : undefined}
       />

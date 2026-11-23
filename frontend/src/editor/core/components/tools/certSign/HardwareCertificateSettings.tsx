@@ -296,6 +296,7 @@ const HardwareCertificateSettings = ({
     <Stack gap="md">
       {supported.windows && supported.pkcs11 && (
         <ButtonSelector
+          ariaLabel={t("certSign.hardware.kind", "Certificate store")}
           value={isWindowsStore ? "WINDOWS_STORE" : "PKCS11"}
           onChange={selectKind}
           options={[

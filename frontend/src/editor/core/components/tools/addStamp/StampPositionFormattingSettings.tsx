@@ -82,6 +82,7 @@ const StampPositionFormattingSettings = ({
         </Stack>
       )}
       <ButtonSelector
+        ariaLabel={t("AddStampRequest.adjustSetting", "Setting to adjust")}
         value={parameters._activePill}
         onChange={(pill) => onParameterChange("_activePill", pill)}
         options={[

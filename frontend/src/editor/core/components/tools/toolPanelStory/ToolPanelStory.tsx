@@ -60,6 +60,8 @@ export interface ToolPanelStoryProps {
   filesModal?: boolean;
 }
 
+const DEFAULT_FILES: readonly FixtureName[] = ["sample.pdf"];
+
 /**
  * The editor's real tool panel for one tool, inside the editor's own provider
  * stack (PlatformProviders, then AppProviders): the same RightSidebar, header and
@@ -68,7 +70,14 @@ export interface ToolPanelStoryProps {
  * after that is reached the way a user reaches it, from the story's play.
  */
 export function ToolPanelStory(props: ToolPanelStoryProps) {
-  // Once per story, before the providers below mount and read any cache.
+  // Storybook re-renders on an args change without remounting, and staging
+  // runs once per mount, so new files or a new tool get a fresh editor.
+  const staging = `${props.toolId}:${(props.files ?? DEFAULT_FILES).join("|")}`;
+  return <StagedEditor key={staging} {...props} />;
+}
+
+function StagedEditor(props: ToolPanelStoryProps) {
+  // Once per mount, before the providers below mount and read any cache.
   useState(forgetEarlierStories);
   if (!useEmptyWorkbench()) return null;
   return (
@@ -138,11 +147,6 @@ function HeldWorkbench({ workbench }: { workbench: WorkbenchType }) {
 }
 
 /**
- * The editor's row of workbench and tool panel, grown to the panel's full
- * content height so a capture shows every setting rather than a scrolled window.
- * The panel's stage is absolutely positioned, so its height is read, not inherited.
- */
-/**
  * A story shows one tool, so closing it would leave the tool picker in its
  * place. The close button stays drawn; the stylesheet stops pointer clicks and
  * this stops the click a keyboard press fires.
@@ -157,6 +161,11 @@ function ignoreToolClose(event: MouseEvent<HTMLDivElement>) {
   }
 }
 
+/**
+ * The editor's row of workbench and tool panel, grown to the panel's full
+ * content height so a capture shows every setting rather than a scrolled window.
+ * The panel's stage is absolutely positioned, so its height is read, not inherited.
+ */
 function PanelFrame({ showWorkbench }: { showWorkbench?: boolean }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | null>(null);
@@ -198,7 +207,7 @@ function PanelFrame({ showWorkbench }: { showWorkbench?: boolean }) {
 
 function StagedTool({
   toolId,
-  files = ["sample.pdf"],
+  files = DEFAULT_FILES,
   children,
 }: ToolPanelStoryProps & { children: ReactNode }) {
   const { addFiles } = useFileHandler();
@@ -219,7 +228,7 @@ function StagedTool({
     return () => {
       cancelled = true;
     };
-    // Stage once per mount; Storybook remounts the story when its args change.
+    // Stage once per mount; ToolPanelStory remounts this when the args change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -23,6 +23,7 @@ const SignatureAppearanceSettings = ({
   return (
     <Stack gap="md">
       <ButtonSelector
+        ariaLabel={t("certSign.appearance.visibility", "Visibility")}
         value={parameters.showSignature ? "visible" : "invisible"}
         onChange={(next) =>
           onParameterChange("showSignature", next === "visible")

@@ -32,7 +32,6 @@ import { PendingFields } from "@editor/tools/formFill/PendingFields";
 import { SkippedEditsAlert } from "@editor/tools/formFill/SkippedEditsAlert";
 import styles from "@editor/tools/formFill/FormFill.module.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
-import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface FormFieldModifyPanelProps {
   currentFile: File | Blob | null;
@@ -236,7 +235,7 @@ function FieldGeometryInputs({
   const stageGeometry = (patch: Partial<FieldGeometry>) =>
     stageModification(field.name, { pageIndex: pageIdx, ...coords, ...patch });
   return (
-    <Group gap={6} mt="xs" grow>
+    <Group gap={6} mt="xs" grow align="flex-start">
       <NumberInput
         size="xs"
         label="X"
@@ -251,15 +250,15 @@ function FieldGeometryInputs({
       />
       <NumberInput
         size="xs"
-        {...infoLabelProps(
-          "W",
-          multiWidget
-            ? t("formFill.modify.groupSizeHint", "Use Option size")
-            : undefined,
-        )}
+        label="W"
         value={Math.round(coords.width)}
         min={1}
         disabled={multiWidget}
+        description={
+          multiWidget
+            ? t("formFill.modify.groupSizeHint", "Use Option size")
+            : undefined
+        }
         onChange={(v) => typeof v === "number" && stageGeometry({ width: v })}
       />
       <NumberInput

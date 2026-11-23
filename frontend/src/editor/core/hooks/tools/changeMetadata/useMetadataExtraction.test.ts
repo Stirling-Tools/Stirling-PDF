@@ -1,5 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, expect, test, vi, beforeEach } from "vitest";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
 const { extractPDFMetadata, files } = vi.hoisted(() => ({
   extractPDFMetadata: vi.fn(),
@@ -29,7 +30,10 @@ const METADATA = {
 // The parameters hook hands back a new object on every render, so the
 // extraction effect re-runs while the first read is still in flight.
 describe("useMetadataExtraction", () => {
-  beforeEach(() => extractPDFMetadata.mockReset());
+  beforeEach(() => {
+    extractPDFMetadata.mockReset();
+    files.splice(0, files.length, { fileId: "file-1" });
+  });
 
   test("reads the PDF once while re-rendering during the read", async () => {
     let finish: (value: unknown) => void = () => {};
@@ -50,6 +54,32 @@ describe("useMetadataExtraction", () => {
     await act(async () => finish({ success: true, metadata: METADATA }));
 
     expect(extractPDFMetadata).toHaveBeenCalledTimes(1);
+    expect(updateParameter).toHaveBeenCalledWith("title", "Title");
+  });
+
+  test("reads the next file after a file it could not read", async () => {
+    allowConsole.warn(/Failed to extract metadata/);
+    extractPDFMetadata.mockResolvedValueOnce({
+      success: false,
+      error: "unreadable",
+    });
+    extractPDFMetadata.mockResolvedValueOnce({
+      success: true,
+      metadata: METADATA,
+    });
+    const updateParameter = vi.fn();
+    const { rerender } = renderHook(() =>
+      useMetadataExtraction({
+        updateParameter: (...args) => updateParameter(...args),
+      }),
+    );
+    await act(async () => {});
+
+    files.splice(0, files.length, { fileId: "file-2" });
+    rerender();
+    await act(async () => {});
+
+    expect(extractPDFMetadata).toHaveBeenCalledTimes(2);
     expect(updateParameter).toHaveBeenCalledWith("title", "Title");
   });
 });

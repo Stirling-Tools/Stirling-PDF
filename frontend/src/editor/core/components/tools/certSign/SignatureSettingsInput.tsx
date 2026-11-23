@@ -66,6 +66,7 @@ const SignatureSettingsInput = ({
       </Group>
 
       <ButtonSelector
+        ariaLabel={t("certSign.appearance.visibility", "Visibility")}
         value={value.showSignature ? "visible" : "invisible"}
         onChange={(next) => handleChange("showSignature", next === "visible")}
         options={[

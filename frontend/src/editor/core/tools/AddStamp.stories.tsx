@@ -1,5 +1,5 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import {
   fixtureResponse,
   knownA11yIssues,
@@ -7,7 +7,6 @@ import {
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
-  bodyOf,
   choose,
   findEnabled,
   openColorPicker,
@@ -44,11 +43,13 @@ async function enterStampText(context: PlayContext, text = "APPROVED") {
   await waitForPanelText(context, "Preview:");
 }
 
-async function pinDynamicVariables(context: PlayContext) {
+async function expandDynamicVariables(context: PlayContext) {
   await userEvent.click(
     await findEnabled(context, "button", "Dynamic Variables"),
   );
-  return within(await bodyOf(context).findByRole("tooltip", {}, STAGE_TIMEOUT));
+  const panel = await panelOf(context);
+  await panel.findByRole("button", { name: "@page_number" }, STAGE_TIMEOUT);
+  return panel;
 }
 
 async function chooseQr(context: PlayContext) {
@@ -129,13 +130,19 @@ export const TemplateChosen: Story = {
   },
 };
 
+export const StampTextTooltip: Story = {
+  play: openTooltip({ info: /^Use dynamic variables below/ }),
+};
+
 export const DynamicVariables: Story = {
-  play: openTooltip({ info: "Dynamic Variables" }),
+  play: async (context) => {
+    await expandDynamicVariables(context);
+  },
 };
 
 export const VariableInserted: Story = {
   play: async (context) => {
-    const variables = await pinDynamicVariables(context);
+    const variables = await expandDynamicVariables(context);
     await userEvent.click(
       variables.getByRole("button", { name: "@page_number" }),
     );

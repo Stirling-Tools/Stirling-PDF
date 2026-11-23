@@ -588,10 +588,16 @@ export const OptionSpacingTooltip = fieldInfoTooltip(
   "contactMethod",
   /^Gap between buttons/,
 );
-export const GroupWidthTooltip = fieldInfoTooltip(
-  "contactMethod",
-  "Use Option size",
-);
+export const GroupSizeNote: Story = {
+  ...withFieldChips,
+  play: async (context) => {
+    const panel = await editingField("contactMethod")(context);
+    await expect(panel.getByText("Use Option size")).toBeVisible();
+    await expect(
+      panel.getByRole("textbox", { name: "W" }),
+    ).toHaveAccessibleDescription("Use Option size");
+  },
+};
 export const ButtonCaptionTooltip = fieldInfoTooltip(
   "submit",
   "The text printed on the button face.",

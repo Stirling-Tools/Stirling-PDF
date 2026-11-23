@@ -2,8 +2,8 @@ import type { StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
 import { expect, userEvent, waitFor } from "storybook/test";
 import type { AttachmentInfo } from "@editor/services/attachmentService";
+import { loadFixture } from "@editor/components/tools/toolPanelStory/fixtures";
 import {
-  fixtureResponse,
   knownA11yIssues,
   toolPanelMeta,
   toolPanelServer,
@@ -174,10 +174,30 @@ export const PendingChanges: Story = {
   },
 };
 
+/** What stagePendingChanges leaves once saved: the invoice gone, the rename and the new image kept. */
+const AFTER_SAVE: AttachmentInfo[] = [
+  { ...LINE_ITEMS, filename: RENAMED },
+  { filename: "sample.png", size: 1_024, contentType: "image/png" },
+];
+
+let attachmentsSaved = false;
+
 export const SavedChanges: Story = {
+  beforeEach: () => {
+    attachmentsSaved = false;
+  },
   parameters: toolPanelServer(
-    listing(SEVERAL_ATTACHMENTS.slice(0, 2)),
-    fixtureResponse("/api/v1/misc/batch-process-attachments", "sample.pdf"),
+    http.post(LIST_ENDPOINT, () =>
+      HttpResponse.json(
+        attachmentsSaved ? AFTER_SAVE : SEVERAL_ATTACHMENTS.slice(0, 2),
+      ),
+    ),
+    http.post("*/api/v1/misc/batch-process-attachments", async () => {
+      attachmentsSaved = true;
+      return new HttpResponse(await loadFixture("sample.pdf"), {
+        headers: { "Content-Type": "application/pdf" },
+      });
+    }),
   ),
   play: async (context) => {
     const panel = await stagePendingChanges(context);
@@ -185,12 +205,14 @@ export const SavedChanges: Story = {
       panel.getByRole("button", { name: /Save Changes \(3\)/ }),
     );
     await waitFor(
-      () =>
-        expect(
-          panel.queryByRole("button", { name: /Save Changes/ }),
-        ).not.toBeInTheDocument(),
+      () => expect(panel.queryByText(INVOICE.filename)).not.toBeInTheDocument(),
       STAGE_TIMEOUT,
     );
+    await expect(panel.getByText(RENAMED)).toBeVisible();
+    await expect(panel.getByText("sample.png")).toBeVisible();
+    await expect(
+      panel.queryByRole("button", { name: /Save Changes/ }),
+    ).not.toBeInTheDocument();
   },
 };
 

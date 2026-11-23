@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -13,17 +13,14 @@ import {
   Paper,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
-import { Icon } from "@editor/ui/Icon";
 import {
   AddStampParameters,
   DEFAULT_QR_SIZE,
   isQrContentWithinLimit,
 } from "@editor/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
-import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Collapsible } from "@editor/ui/Collapsible";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
-import infoLabelClasses from "@editor/components/tools/shared/infoLabel.module.css";
-import "@editor/ui/InfoTooltip.css";
 import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp/StampPreviewUtils";
 import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
@@ -219,6 +216,7 @@ const StampSetupSettings = ({
   filename,
 }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
+  const [variablesOpen, setVariablesOpen] = useState(false);
   const stampImageWithUrl = useFileWithUrl(
     parameters.stampType === "image" ? (parameters.stampImage ?? null) : null,
   );
@@ -492,26 +490,22 @@ const StampSetupSettings = ({
         disabled={disabled}
       />
       <Divider />
-      <div>
-        <Text size="sm" fw={500} mb="xs">
-          {t("AddStampRequest.stampType", "Stamp Type")}
-        </Text>
-        <ButtonSelector
-          value={parameters.stampType}
-          onChange={(v: "text" | "image" | "qr") => {
-            onParameterChange("stampType", v);
-            if (v === "qr" && parameters.fontSize < DEFAULT_QR_SIZE) {
-              onParameterChange("fontSize", DEFAULT_QR_SIZE);
-            }
-          }}
-          options={[
-            { value: "text", label: t("watermark.type.1", "Text") },
-            { value: "image", label: t("watermark.type.2", "Image") },
-            { value: "qr", label: t("AddStampRequest.qrCode", "QR Code") },
-          ]}
-          disabled={disabled}
-        />
-      </div>
+      <ButtonSelector
+        label={t("AddStampRequest.stampType", "Stamp Type")}
+        value={parameters.stampType}
+        onChange={(v: "text" | "image" | "qr") => {
+          onParameterChange("stampType", v);
+          if (v === "qr" && parameters.fontSize < DEFAULT_QR_SIZE) {
+            onParameterChange("fontSize", DEFAULT_QR_SIZE);
+          }
+        }}
+        options={[
+          { value: "text", label: t("watermark.type.1", "Text") },
+          { value: "image", label: t("watermark.type.2", "Image") },
+          { value: "qr", label: t("AddStampRequest.qrCode", "QR Code") },
+        ]}
+        disabled={disabled}
+      />
 
       {parameters.stampType === "text" && (
         <>
@@ -549,33 +543,13 @@ const StampSetupSettings = ({
           />
 
           <Textarea
-            label={
-              <span className={infoLabelClasses.infoLabel}>
-                {t("AddStampRequest.stampText", "Stamp Text")}
-                <Tooltip
-                  sidebarTooltip
-                  pinOnClick
-                  header={{
-                    title: t(
-                      "AddStampRequest.dynamicVariables",
-                      "Dynamic Variables",
-                    ),
-                  }}
-                  content={dynamicVariablesHelp}
-                >
-                  <button
-                    type="button"
-                    className="sui-info"
-                    aria-label={t(
-                      "AddStampRequest.dynamicVariables",
-                      "Dynamic Variables",
-                    )}
-                  >
-                    <Icon name="info" size={14} strokeWidth={2} />
-                  </button>
-                </Tooltip>
-              </span>
-            }
+            {...infoLabelProps(
+              t("AddStampRequest.stampText", "Stamp Text"),
+              t(
+                "AddStampRequest.stampTextDescription",
+                "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines.",
+              ),
+            )}
             value={parameters.stampText}
             className={privateContentClassName}
             onChange={(e) =>
@@ -591,6 +565,14 @@ const StampSetupSettings = ({
             stampText={parameters.stampText}
             filename={filename}
           />
+
+          <Collapsible
+            open={variablesOpen}
+            onToggle={() => setVariablesOpen((open) => !open)}
+            header={t("AddStampRequest.dynamicVariables", "Dynamic Variables")}
+          >
+            {dynamicVariablesHelp}
+          </Collapsible>
 
           <Select
             label={t("AddStampRequest.alphabet", "Alphabet")}

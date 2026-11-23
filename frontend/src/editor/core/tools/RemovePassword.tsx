@@ -6,7 +6,7 @@ import { useRemovePasswordOperation } from "@editor/hooks/tools/removePassword/u
 import { useRemovePasswordTips } from "@editor/components/tooltips/useRemovePasswordTips";
 import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
-import { PasswordInput, Stack } from "@mantine/core";
+import { PasswordInput, Stack, Text } from "@mantine/core";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
 import { useFileContext } from "@editor/contexts/FileContext";
@@ -104,6 +104,12 @@ const RemovePassword = (props: BaseToolProps) => {
         tooltip: removePasswordTips,
         content: (
           <Stack gap="sm">
+            <Text size="xs" style={{ color: "var(--c-text-muted)" }}>
+              {t(
+                "removePassword.keepBlank",
+                "Leave a field blank to keep that password.",
+              )}
+            </Text>
             <PasswordInput
               label={t(
                 "encryptedPdfUnlock.openingPassword",
