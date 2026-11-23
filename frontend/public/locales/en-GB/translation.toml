@@ -658,7 +658,7 @@ label = "Process Executor Limits"
 libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
 pdfToHtml = "PDF to HTML"
-pythonOpenCv = "Python OpenCV"
+pythonOpenCv = "Python"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 weasyPrint = "WeasyPrint"
@@ -3809,14 +3809,14 @@ label = "Apply Greyscale for Compression"
 label = "Linearize PDF for fast web viewing"
 
 [compress.lineArt]
-description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+description = "Reduces images to high-contrast black and white for maximum size reduction."
 detailLevel = "Detail level"
 edgeEmphasis = "Edge emphasis"
 edgeHigh = "Strong"
 edgeLow = "Gentle"
 edgeMedium = "Balanced"
 label = "Convert images to line art"
-unavailable = "ImageMagick is not installed or enabled on this server"
+unavailable = "Line art conversion is not available on this server"
 
 [compress.method]
 filesize = "File Size"
@@ -3841,7 +3841,7 @@ title = "Greyscale"
 title = "Compress Settings Overview"
 
 [compress.tooltip.lineArt]
-text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+text = "Convert images to high-contrast black and white. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 title = "Line Art"
 
 [compress.tooltip.qualityAdjustment]
