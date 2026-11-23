@@ -32,9 +32,9 @@ public final class NativeLicenseLoader {
 
     public static final String NOTICE_RESOURCE = "licenses/NOTICE.txt";
 
-    private static final Pattern SECTION_HEADER = Pattern.compile("^\\d+\\.\\s+(.+?)\\s*$");
-    private static final Pattern LICENSE_LEAD = Pattern.compile("^-\\s*License:\\s*(.*)$");
-    private static final Pattern COPYRIGHT_LEAD = Pattern.compile("^-\\s*Copyright\\s+(.*)$");
+    private static final Pattern SECTION_HEADER = Pattern.compile("^\\d++\\.\\s(.+)$");
+    private static final Pattern LICENSE_LEAD = Pattern.compile("^-\\s*+License:\\s*+(.*)$");
+    private static final Pattern COPYRIGHT_LEAD = Pattern.compile("^-\\s*+Copyright\\s++(.*)$");
     private static final Pattern SEE_FILE = Pattern.compile("\\(see\\s+(\\S+?)\\)");
     private static final Pattern FULL_TEXT_FILE = Pattern.compile("\\(full text in\\s+(\\S+?)\\)");
 
