@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 interface MarqueeSelectorProps {
   store: EditorStore;
 }
+
+// The viewer's page column; a drag may start anywhere inside it.
+const PAGES_SELECTOR = "[data-viewer-pages]";
 
 interface MarqueeRect {
   left: number;
@@ -47,7 +51,7 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
     function onPointerDown(e: PointerEvent) {
       if (e.button !== 0) return;
       const target = e.target as HTMLElement | null;
-      if (!target?.closest('[data-testid="pdf-editor-pages"]')) return;
+      if (!target?.closest(PAGES_SELECTOR)) return;
       const forced = (e.ctrlKey || e.metaKey) && e.shiftKey;
       if (forced) {
         e.preventDefault();
@@ -114,7 +118,9 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
   }, [store]);
 
   if (!rect) return null;
-  return (
+  // Portalled: the rect is in viewport coordinates, and a host with `contain`
+  // or a transform would otherwise re-anchor and clip a fixed element.
+  return createPortal(
     <div
       data-testid="pdf-editor-marquee"
       style={{
@@ -128,12 +134,13 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
         pointerEvents: "none",
         zIndex: 300,
       }}
-    />
+    />,
+    document.body,
   );
 }
 
 function collectIdsInRect(rect: MarqueeRect, testIdPrefix: string): string[] {
-  const pages = document.querySelector('[data-testid="pdf-editor-pages"]');
+  const pages = document.querySelector(PAGES_SELECTOR);
   if (!pages) return [];
   const right = rect.left + rect.width;
   const bottom = rect.top + rect.height;

@@ -233,7 +233,7 @@ public class MergeController {
     @StandardPdfResponse
     @ToolIO(
             accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
-            // The installed ImageIO readers cover these; ToolFormat.IMAGE's ai/eps have none.
+            // The installed ImageIO readers cover these; ToolFormat.IMAGE's ai has none.
             inputExtensions = {
                 "pdf", "png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "webp", "svg", "psd"
             },
@@ -264,7 +264,7 @@ public class MergeController {
             log.info("Reordering files based on fileOrder parameter");
             files = reorderFilesByProvidedOrder(files, fileOrder);
         } else {
-            log.info("Sorting files based on sortType: {}", request.getSortType());
+            log.debug("Sorting files based on sortType: {}", request.getSortType());
             Arrays.sort(files, getSortComparator(request.getSortType()));
         }
 

@@ -14,12 +14,19 @@ import { resetFontHelperCaches } from "@editor/tools/pdfTextEditor/charcode/Font
 import { resetCmapCache } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { resetContentStreamCache } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
 import {
+  forgetDroppedChars,
+  getDroppedBase14Chars,
   resetCharCoverageCache,
   resetDroppedBase14Chars,
   resetOnPageAdvCache,
   resetPerCharBranchPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
-import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type {
+  Command,
+  PageRepaintArea,
+} from "@editor/tools/pdfTextEditor/commands/Command";
+import { unionRect } from "@editor/tools/pdfTextEditor/model/affine";
+import type { FileId } from "@editor/types/file";
 import { AdoptTableCommand } from "@editor/tools/pdfTextEditor/commands/AdoptTableCommand";
 import {
   adoptedTableId,
@@ -31,9 +38,18 @@ import type {
   GroupingMode,
   PageSnapshot,
   TableSnapshot,
+  TextRunSnapshot,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { resetFontCompletions } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+import { resetDocumentFontStyles } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
+import {
+  loadScriptScanFaces,
+  scanScriptsOf,
+  scriptFacesCover,
+  takeUndrawnScriptText,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
@@ -48,6 +64,8 @@ function resetCharcodeCaches(): void {
   resetCharCoverageCache();
   // FontFaces are keyed by font pointer, which PDFium reuses across documents.
   resetEmbeddedFaces();
+  resetFontCompletions();
+  resetDocumentFontStyles();
 }
 
 export type InteractionMode = "select" | "addText" | "addTable";
@@ -81,8 +99,6 @@ export interface EditorViewState {
   // Set when a load hit a password-protected PDF and the UI should prompt.
   // `retry` is true after a wrong password so the prompt can say so.
   passwordPrompt: { fileName: string; retry: boolean } | null;
-  /** Pixel scale at which previews are rendered. */
-  renderScale: number;
   /** What clicks on the page area do. */
   mode: InteractionMode;
   /** How the reader clusters source text into editable runs. */
@@ -117,7 +133,6 @@ const INITIAL: EditorViewState = {
   progress: null,
   error: null,
   passwordPrompt: null,
-  renderScale: 1.5,
   mode: "select",
   groupingMode: "auto",
   widthMode: "grow",
@@ -132,6 +147,15 @@ const INITIAL: EditorViewState = {
 export class EditorStore {
   readonly history: HistoryStack;
   readonly selection: Selection;
+  /**
+   * The workbench file the document was opened from and the name it saves
+   * under. Kept with the document, which outlives the editor's panel when a
+   * layout change remounts it.
+   */
+  source: { fileId: FileId | null; fileName: string | null } = {
+    fileId: null,
+    fileName: null,
+  };
   private doc: EditorDocument | null;
   private state: EditorViewState;
   private listeners: Set<(s: EditorViewState) => void>;
@@ -147,6 +171,8 @@ export class EditorStore {
   private loadToken = 0;
   /** File awaiting a password retry; held off the view state (not serialisable). */
   private _pendingPasswordFile: File | null = null;
+  private nearViewportPages = new Set<number>();
+  private nearViewportListeners = new Set<() => void>();
 
   constructor() {
     this.history = new HistoryStack();
@@ -211,12 +237,12 @@ export class EditorStore {
     return this._pendingPasswordFile;
   }
 
-  setRenderScale(scale: number): void {
-    this.patch({ renderScale: scale });
-  }
-
   setMode(mode: InteractionMode): void {
     this.patch({ mode });
+  }
+
+  toggleMode(mode: InteractionMode): void {
+    this.setMode(this.state.mode === mode ? "select" : mode);
   }
 
   setWidthMode(widthMode: WidthMode): void {
@@ -230,6 +256,28 @@ export class EditorStore {
   setFindOpen(findOpen: boolean): void {
     if (this.state.findOpen === findOpen) return;
     this.patch({ findOpen });
+  }
+
+  setPageNearViewport(pageIndex: number, near: boolean): void {
+    if (this.nearViewportPages.has(pageIndex) === near) return;
+    if (near) this.nearViewportPages.add(pageIndex);
+    else this.nearViewportPages.delete(pageIndex);
+    for (const listener of [...this.nearViewportListeners]) listener();
+  }
+
+  isPageNearViewport(pageIndex: number): boolean {
+    return this.nearViewportPages.has(pageIndex);
+  }
+
+  subscribeNearViewport(listener: () => void): () => void {
+    this.nearViewportListeners.add(listener);
+    return () => this.nearViewportListeners.delete(listener);
+  }
+
+  /** Returns whether find is now open. */
+  toggleFindOpen(): boolean {
+    this.setFindOpen(!this.state.findOpen);
+    return this.state.findOpen;
   }
 
   setHelpOpen(helpOpen: boolean): void {
@@ -419,15 +467,49 @@ export class EditorStore {
   /** Apply a command via the history stack, re-snapshot, and notify. */
   dispatch(cmd: Command): void {
     if (!this.doc) return;
+    const before = cmd.repaintArea?.(this.doc) ?? null;
+    const fromRevision = before ? this.doc.page(before.pageIndex).revision : -1;
+    takeUndrawnScriptText();
+    const droppedBefore = new Set(getDroppedBase14Chars());
     try {
       this.history.execute(cmd, this.doc);
+    } catch (err) {
+      // A step taken back drew nothing, so the letters its attempt could not draw are not ones a save loses.
+      if (err instanceof HistoryStepError && err.documentIntact)
+        forgetDroppedChars(
+          getDroppedBase14Chars()
+            .filter((ch) => !droppedBefore.has(ch))
+            .join(""),
+        );
+      this.recoverFromBrokenStep(err);
+      return;
+    }
+    if (before) noteRepaintArea(this.doc, cmd, before, fromRevision);
+    this.resnapshot();
+    this.patch({ dirty: this.isDirty() });
+    this.schedulePositionRefresh();
+    const undrawn = takeUndrawnScriptText();
+    if (undrawn) void this.redrawOnceScriptFontsLoad(cmd, undrawn);
+  }
+
+  /** Redraw `cmd` and every step after it once fonts for `undrawn`'s scripts are in, so typed text its emit dropped appears. */
+  private async redrawOnceScriptFontsLoad(
+    cmd: Command,
+    undrawn: string,
+  ): Promise<void> {
+    const doc = this.doc;
+    await loadScriptScanFaces(scanScriptsOf(undrawn)).catch(() => undefined);
+    if (this.doc !== doc || !doc || this.state.loading) return;
+    if (!scriptFacesCover(undrawn)) return;
+    try {
+      if (!this.history.replayFrom(cmd, doc)) return;
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
     }
+    forgetDroppedChars(undrawn);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
-    this.schedulePositionRefresh();
   }
 
   private schedulePositionRefresh(): void {
@@ -467,6 +549,27 @@ export class EditorStore {
       }
       if (changedByPage.size > 0) this.refreshRunSnapshots(changedByPage);
     }, delay);
+  }
+
+  /**
+   * Run `runId` with the engine's pen positions for its current text, read
+   * now rather than at the debounced refresh. Re-reads every glyph on the
+   * page, so it is for the keystroke that needs a letter's real advance, not
+   * for every keystroke. Null when the run or the read is unavailable.
+   */
+  measureRun(pageIndex: number, runId: string): TextRunSnapshot | null {
+    const doc = this.doc;
+    if (!doc) return null;
+    const page = doc.page(pageIndex);
+    let changed: Set<TextRun>;
+    try {
+      changed = PdfiumTextReader.recapturePositions(doc, page);
+    } catch {
+      return null;
+    }
+    if (changed.size > 0)
+      this.refreshRunSnapshots(new Map([[pageIndex, changed]]));
+    return page.findRun(runId)?.snapshot() ?? null;
   }
 
   // Re-read one page's geometry from the engine immediately, keeping run ids.
@@ -663,4 +766,21 @@ export class EditorStore {
     this.disposeDocumentIfAny();
     this.listeners.clear();
   }
+}
+
+function noteRepaintArea(
+  doc: EditorDocument,
+  cmd: Command,
+  before: PageRepaintArea,
+  fromRevision: number,
+): void {
+  const after = cmd.repaintArea?.(doc);
+  if (!after || after.pageIndex !== before.pageIndex) return;
+  const page = doc.page(after.pageIndex);
+  if (page.revision === fromRevision) return;
+  page.noteRepaintArea(
+    fromRevision,
+    page.revision,
+    unionRect(before.area, after.area),
+  );
 }

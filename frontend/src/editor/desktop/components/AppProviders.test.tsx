@@ -44,7 +44,7 @@ vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: { stop: vi.fn() },
 }));
 vi.mock("@editor/services/endpointAvailabilityService", () => ({
-  endpointAvailabilityService: { preloadEndpoints: state.preload },
+  endpointAvailabilityService: { preloadLocalCapabilities: state.preload },
 }));
 vi.mock("@editor/hooks/useFirstLaunchCheck", () => ({
   useFirstLaunchCheck: () => state.launch,
@@ -133,10 +133,7 @@ it("initializes backend monitoring and endpoint preload after a gate retry recov
   fireEvent.click(screen.getByRole("button", { name: "common.retry" }));
   await screen.findByText("Required sign-in");
   await waitFor(() => expect(state.monitor).toHaveBeenCalledWith(true));
-  expect(state.preload).toHaveBeenCalledWith(
-    expect.any(Array),
-    "http://localhost:8080",
-  );
+  expect(state.preload).toHaveBeenCalledWith("http://localhost:8080");
   expect(screen.queryByText("Workbench")).toBeNull();
 });
 

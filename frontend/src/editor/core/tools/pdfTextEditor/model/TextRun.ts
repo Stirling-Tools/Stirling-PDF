@@ -5,11 +5,12 @@ import {
   innermostMcid,
   type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import type {
-  Affine,
-  PageRect,
-  RGBA,
-  TextRunSnapshot,
+import {
+  RENDER_MODE_INVISIBLE,
+  type Affine,
+  type PageRect,
+  type RGBA,
+  type TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 
 /** One line's worth of sub-run data inside a paragraph. */
@@ -58,6 +59,7 @@ export class TextRun {
   // PDF text render mode (Tr): 0 fill, 1/2 stroke variants, 3 invisible (OCR
   // layers over scans), 4-7 clipping.
   renderMode: number;
+  hiddenText: boolean;
   // Glyph outline (PDF stroke state), carried even when the render mode hides
   // it, so a re-emit cannot silently drop an outlined heading's outline.
   stroke: RGBA | null;
@@ -105,25 +107,44 @@ export class TextRun {
   // Pointer to the LATEST background cover-rect emitted on the page for this
   // run.
   coverRectPtr: number;
+  /** The document font this run had before a family change, so it can be restored; null if unchanged. */
+  documentFont: { fontId: string; subset: boolean } | null;
   /** Word-level edit state once an invisible OCR run over a scan is edited. */
   scanEdit: ScanEditState | null;
   /** Per-line sub-run snapshots for paragraph-aware partial edits. */
   paragraphLineSlots: ParagraphLineSlot[];
-  // Which visual lines start at a break the WRAP put there rather than one the
-  // user typed. run.text spells both as a newline - it has to, or the line
+  // Which visual lines start at a soft break: one a wrap put there, or one the
+  // document's producer wrapped at its margin, rather than a line the author or
+  // user ended. run.text spells both as a newline - it has to, or the line
   // count the painter and the box height read disagrees with the ink on the
-  // page - so the difference lives here. Without it a reflow re-reads its own
-  // soft breaks as forced ones and the paragraph can never re-flow again.
+  // page - so the difference lives here. Without it a reflow re-reads soft
+  // breaks as forced ones and widening the box can never rejoin them.
   paragraphSoftStarts: boolean[];
+  /** The text `paragraphSoftStarts` was indexed for; read them through `softStartsOf`, which maps them onto edits since. */
+  paragraphSoftStartsText: string;
   // Session-only lock: when true the run is skipped by all hit-tests (mouse,
   // marquee, Ctrl+A) and edit gestures are no-ops.
   locked: boolean;
+  /**
+   * True when the reader could not tell the reading order this line was drawn
+   * from: redrawing it from `text` would move its numbers and words, so an
+   * edit of the text is refused.
+   */
+  readingOrderUnsure: boolean;
   /**
    * Width the user resized the box to, in PDF points, or null to follow the
    * ink. Kept apart from `bounds`, which a reflow sets to the glyphs' extent:
    * text rarely fills its box, so the box would shrink back to the ink.
    */
   wrapWidthPt: number | null;
+
+  /** True when an edit of the text would be refused; invisible OCR text is redrawn from its scan, not from its reading order. */
+  get textReadOnly(): boolean {
+    return (
+      this.readingOrderUnsure &&
+      (this.renderMode !== RENDER_MODE_INVISIBLE || this.hiddenText)
+    );
+  }
 
   constructor(
     init: TextRunSnapshot & {
@@ -143,6 +164,7 @@ export class TextRun {
     this.fill = init.fill;
     this.fontSubset = init.fontSubset;
     this.renderMode = init.renderMode ?? 0;
+    this.hiddenText = init.hiddenText ?? false;
     this.stroke = init.stroke ?? null;
     this.strokeWidth = init.strokeWidth ?? 0;
     this.charStartsX = null;
@@ -165,9 +187,12 @@ export class TextRun {
     this.paragraphLeafContainers = [];
     this.paragraphLineSlots = [];
     this.paragraphSoftStarts = [];
+    this.paragraphSoftStartsText = init.text;
     this.coverRectPtr = 0;
     this.scanEdit = null;
+    this.documentFont = null;
     this.locked = init.locked ?? false;
+    this.readingOrderUnsure = false;
     this.wrapWidthPt = init.wrapWidthPt ?? null;
   }
 
@@ -193,7 +218,13 @@ export class TextRun {
       fontSize: this.fontSize,
       fill: { ...this.fill },
       fontSubset: this.fontSubset,
+      scanFamily:
+        this.scanEdit?.override.style?.family ??
+        this.scanEdit?.override.family ??
+        this.scanEdit?.block?.style.family,
+      documentFontId: this.documentFont?.fontId,
       renderMode: this.renderMode || undefined,
+      hiddenText: this.hiddenText || undefined,
       stroke: this.stroke ? { ...this.stroke } : undefined,
       strokeWidth: this.strokeWidth || undefined,
       charStartsX: this.positionsCurrent()
@@ -208,7 +239,9 @@ export class TextRun {
       paragraphSlotCount: this.paragraphLineSlots.length || undefined,
       paragraphBaselines: this.lineBaselines(),
       paragraphLineLefts: this.lineLefts(),
+      paragraphLineRights: this.lineRights(),
       locked: this.locked || undefined,
+      textReadOnly: this.textReadOnly || undefined,
       wrapWidthPt: this.wrapWidthPt ?? undefined,
       mcid: innermostMcid(this.tagMarks) ?? undefined,
       artifact: artifactMark(this.tagMarks) !== undefined || undefined,
@@ -231,6 +264,18 @@ export class TextRun {
     return this.paragraphLineSlots.length > 0
       ? this.paragraphLineSlots.map((s) => s.matrixE)
       : undefined;
+  }
+
+  private lineRights(): number[] | undefined {
+    const slots = this.paragraphLineSlots;
+    if (
+      slots.length === 0 ||
+      slots.some((s) => s.mergedFromBounds.length === 0)
+    )
+      return undefined;
+    return slots.map((s) =>
+      Math.max(...s.mergedFromBounds.map((b) => b.right)),
+    );
   }
 }
 

@@ -126,3 +126,99 @@ describe("useTextAccessibility other pages", () => {
     store.dispose();
   });
 });
+
+/** A formula drawn as two lines of text, one element over both, then a paragraph. */
+function formulaPdf(): Uint8Array {
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /StructParents 0 " +
+          "/Resources << /Font << /F1 5 0 R >> >> >>",
+      },
+      {
+        num: 4,
+        body: streamBody(
+          "",
+          "/Formula <</MCID 0>> BDC BT /F1 12 Tf 72 700 Td (a = b) Tj ET EMC\n" +
+            "/Formula <</MCID 1>> BDC BT /F1 12 Tf 72 600 Td (c = d) Tj ET EMC\n" +
+            "/P <</MCID 2>> BDC BT /F1 12 Tf 72 500 Td (Where a is) Tj ET EMC\n",
+        ),
+      },
+      {
+        num: 5,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 10 0 R /ParentTreeNextKey 1 >>",
+      },
+      {
+        num: 7,
+        body: "<< /Type /StructElem /S /Document /P 6 0 R /K [8 0 R 9 0 R] >>",
+      },
+      {
+        num: 8,
+        body: "<< /Type /StructElem /S /Formula /P 7 0 R /Pg 3 0 R /K [0 1] >>",
+      },
+      {
+        num: 9,
+        body: "<< /Type /StructElem /S /P /P 7 0 R /Pg 3 0 R /K 2 >>",
+      },
+      { num: 10, body: "<< /Nums [0 [8 0 R 8 0 R 9 0 R]] >>" },
+    ],
+    1,
+  );
+}
+
+describe("useTextAccessibility description", () => {
+  it("describes a formula selected across its runs, and nothing mixed with other text", async () => {
+    const store = new EditorStore();
+    const doc = await EditorDocument.open(formulaPdf());
+    await store.setDocument(doc);
+    const page = doc.page(0);
+    store.publishPages([
+      {
+        pageIndex: 0,
+        width: page.width,
+        height: page.height,
+        dirty: false,
+        revision: 0,
+        runs: [],
+        images: [],
+        shapes: [],
+        display: page.display.toData(),
+      },
+    ]);
+    ensurePageRead(store, 0);
+    const runs = store.getState().pages[0].runs;
+    const idOf = (text: string) => runs.find((r) => r.text.includes(text))!.id;
+    const render = () =>
+      renderHook(() =>
+        useTextAccessibility(store, store.getState(), store.selection.value),
+      );
+
+    store.selection.selectOne(idOf("a = b"));
+    store.selection.toggle(idOf("c = d"));
+    const { result, rerender } = render();
+    expect(result.current.description).toMatchObject({
+      type: "Formula",
+      description: null,
+    });
+    act(() => result.current.description!.onSet("a equals b, c equals d"));
+    rerender();
+    expect(result.current.description?.description).toBe(
+      "a equals b, c equals d",
+    );
+
+    store.selection.toggle(idOf("Where a is"));
+    expect(render().result.current.description).toBeNull();
+    store.dispose();
+  });
+});

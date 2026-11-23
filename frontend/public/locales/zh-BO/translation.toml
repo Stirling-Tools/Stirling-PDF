@@ -512,6 +512,11 @@ submit = "调整页面缩放"
 tags = "缩放,修改,尺寸,适配"
 title = "调整页面缩放"
 
+[adjustPageScale.customSize]
+height = "高度"
+unit = "单位"
+width = "宽度"
+
 [adjustPageScale.error]
 failed = "调整页面缩放时发生错误。"
 
@@ -521,6 +526,7 @@ landscape = "横向"
 portrait = "纵向"
 
 [adjustPageScale.pageSize]
+custom = "自定义"
 keep = "保持原始大小"
 label = "目标页面大小"
 legal = "法律纸"
@@ -641,18 +647,16 @@ description = "图像处理的最大 DPI（0 = 不限）"
 label = "最大 DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "为每个进程执行器配置会话上限和超时"
 ghostscript = "Ghostscript"
 installApp = "安装应用"
 label = "进程执行器限制"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF 转 HTML"
+officeConvert = "Office 转换"
+officeConvertSessionLimit = "最大并发转换数；0 将根据 CPU 和内存选择限制"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "最大并发实例数"
@@ -661,10 +665,6 @@ label = "会话上限"
 [admin.settings.advanced.processExecutor.timeout]
 description = "最大执行时间"
 label = "超时（分钟）"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert 处于测试版阶段。与 LibreOffice 相比，它提供更好的转换效果，速度更快且占用内存更少。"
-label = "使用新的 Stirling Office 转换"
 
 [admin.settings.advanced.tempFileManagement]
 description = "配置临时文件存储和清理行为"
@@ -682,11 +682,6 @@ label = "清理间隔（分钟）"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "是否清理更广泛的系统临时目录（谨慎使用）"
 label = "清理系统临时目录"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice 临时文件目录（留空使用默认：baseTmpDir/libreoffice）"
-label = "LibreOffice 临时目录"
-placeholder = "默认：baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "临时文件在被清理前的最大小时数"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "将图像拉伸以填满整页。禁用时，�
 pageFormatA4 = "A4（210×297mm）"
 pageFormatKeep = "保留（原始尺寸）"
 pageFormatLetter = "信纸（8.5×11 英寸）"
+setupSteps = "如何设置 {{name}}"
 title = "连接"
 unlinkedServices = "未连接的服务"
 
@@ -1294,17 +1290,6 @@ label = "默认生产者"
 description = "为流水线处理和外部工具配置自定义文件系统路径"
 label = "自定义路径"
 
-[admin.settings.general.customPaths.operations]
-label = "外部工具路径"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "LibreOffice unoconvert 的路径，用于文档转换（留空使用默认：/opt/venv/bin/unoconvert）"
-label = "Unoconvert 可执行文件"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "WeasyPrint 可执行文件的路径，用于 HTML 转 PDF（留空使用默认：/opt/venv/bin/weasyprint）"
-label = "WeasyPrint 可执行文件"
-
 [admin.settings.general.customPaths.pipeline]
 label = "流水线目录"
 
@@ -1327,6 +1312,10 @@ label = "监控文件夹目录"
 [admin.settings.general.defaultLocale]
 description = "新用户的默认语言（例如：en_US, es_ES）"
 label = "默认区域"
+
+[admin.settings.general.enableFeedback]
+description = "允许用户向 Stirling 团队发送反馈"
+label = "启用反馈"
 
 [admin.settings.general.fileUploadLimit]
 description = "最大文件上传大小（例如：100MB、1GB）"
@@ -1656,6 +1645,10 @@ verbose = "在 STANDARD 事件基础上，另外：持续轮询调用、所有 G
 [admin.settings.security.audit.retentionDays]
 description = "保留审计日志的天数（0 = 无限期保留）"
 label = "审计保留（天）"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "已签名 PDF 仍可查看、打印、转换或再次签名，但不能在应用中更改。API 调用和服务器流水线不受影响。"
+label = "阻止修改已签名的 PDF"
 
 [admin.settings.security.csrfDisabled]
 description = "禁用跨站请求伪造保护（不推荐）"
@@ -2969,6 +2962,7 @@ loadError = "加载用户失败"
 noTeam = "无团队"
 noUsers = "未找到其他用户。"
 placeholder = "选择用户…"
+signInRequired = "登录以向他人请求签名。"
 you = "{{name}}（你）"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "您的账户由身份提供商管理。"
 title = "ངོ་སྤྲོད་ལག་ཁྱེར་བསྒྱུར་བ།"
 
 [changeMetadata]
-filenamePrefix = "元数据"
 submit = "བསྒྱུར་བ།"
 tags = "编辑,修改,更新,元数据,属性,文档属性,作者,标题,主题,关键词,创建者,生成器,信息,文档信息,文件属性"
 
@@ -3265,6 +3258,248 @@ not_found = "我找不到所需信息。"
 processing = "正在处理（{{outcome}}）..."
 unsupported_capability = "不支持的能力：{{capability}}"
 usage_limit_reached = "您已达到使用限制。请查看您的方案选项以继续使用。"
+
+[checkAccessibility]
+aboutRow = "关于 {{label}}"
+checking = "正在检查..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "下载无障碍报告"
+fileFailed = "失败"
+pickFile = "显示以下文件的结果"
+submit = "检查无障碍"
+
+[checkAccessibility.category]
+altText = "替代文本"
+fonts = "字体"
+language = "语言"
+links = "链接与注释"
+metadata = "元数据与设置"
+structure = "标签与结构"
+
+[checkAccessibility.categoryTip]
+altText = "图像需要简短文本描述，供屏幕阅读器朗读。"
+fonts = "字体需嵌入到文件中，并将每个字符映射到真实文本，以便可被朗读和复制。"
+language = "屏幕阅读器需要知道文档语言以正确发音。"
+links = "链接、评论和表单字段需要标签与描述，并有与页面顺序一致的 Tab 顺序。"
+metadata = "供辅助技术从文件中读取的标题、PDF/UA 声明及其他设置。"
+structure = "标签告诉屏幕阅读器页面各部分的类型（如标题、列表或表格）以及阅读顺序。"
+
+[checkAccessibility.checks]
+label = "{{passed}} / {{total}} 项检查已通过"
+
+[checkAccessibility.error]
+download = "无法创建无障碍报告。请重试。"
+fileTitle = "无法检查此文件"
+partial = "某些文件无法检查。"
+
+[checkAccessibility.facts]
+declares = "声明了 PDF/UA"
+displaysTitle = "显示其标题"
+fonts = "字体已嵌入"
+language = "声明了语言"
+notEncrypted = "未加密"
+tagged = "已加标签"
+title = "有标题"
+
+[checkAccessibility.factTip]
+declares = "文件元数据表明其符合 PDF/UA。"
+displaysTitle = "PDF 阅读器在打开时显示标题而非文件名。"
+fonts = "文本使用的每种字体均包含在文件中。"
+language = "文件声明了其文本所用的语言。"
+notEncrypted = "文件未加密。加密可能会阻止辅助技术读取。"
+tagged = "文件包含描述其结构的标签。否则屏幕阅读器只能获得纯文本。"
+title = "文件在元数据中包含标题。"
+
+[checkAccessibility.figures]
+summary_one = "{{count}} 个图像需要描述（第 {{pages}} 页）"
+summary_other = "{{count}} 个图像需要描述（第 {{pages}} 页）"
+
+[checkAccessibility.issue]
+appliesTo = "适用于"
+clauseValue = "{{spec}} §{{clause}}，测试 {{test}}"
+details = "详情"
+instances_one = "{{count}} 个实例"
+instances_other = "{{count}} 个实例"
+onPages_one = "第 {{pages}} 页"
+onPages_other = "第 {{pages}} 页"
+onPagesPartial_one = "第 {{pages}} 页（列表可能不完整）"
+onPagesPartial_other = "第 {{pages}} 页（列表可能不完整）"
+pages = "页面"
+pagesPartialValue = "{{pages}}（仅首次出现记录了页面，因此此列表可能不完整）"
+requirement = "要求"
+rule = "规则"
+standard = "标准"
+where = "位置"
+
+[checkAccessibility.manual]
+clearAll = "清除全部"
+done = "完成"
+inProgress = "进行中"
+markAllDone = "全部标记为完成"
+tip = "只有人工才能判断的事项，例如阅读顺序以及图像描述是否合理。检查后逐项勾选，你的勾选会包含在下载的报告中。"
+title = "人工检查"
+
+[checkAccessibility.objects]
+annotation = "一个注释"
+bookmark = "一个书签"
+character = "字体中的一个字符"
+contentPiece = "页面内容片段"
+document = "文档"
+drawing = "一个绘图"
+figure = "一个图像"
+file = "文件本身"
+font = "一种字体"
+form = "表单"
+formField = "一个表单字段"
+link = "一个链接"
+markedContent = "被标记的页面内容"
+metadata = "文档元数据"
+page = "一页"
+properties = "文档属性"
+tag = "{{name}} 标签"
+tagTree = "标签树"
+textPiece = "一段文本"
+translatedMetadata = "带翻译的元数据条目"
+
+[checkAccessibility.pdf]
+continued = "{{name}}（续）"
+footer = "使用 Stirling PDF 检查"
+page = "第 {{n}} 页"
+title = "无障碍报告"
+
+[checkAccessibility.result]
+fail = "未通过"
+failSummary = "屏幕阅读器可能无法读出此文档的全部内容。"
+partial = "部分通过"
+partialSummary = "屏幕阅读器可以阅读此文档，但部分检查未通过。"
+pass = "通过"
+passSummary = "通过所有自动化 PDF/UA 检查。"
+
+[checkAccessibility.rules]
+annotationLanguage = "评论或链接文本未设置语言，屏幕阅读器不知道应以哪种语言朗读。设置文档语言以修复此问题。"
+annotationNoDescription = "评论、链接或绘图没有文本描述，屏幕阅读器无可播报。"
+annotationNotTagged = "评论或绘图未标记为注释，因此在阅读顺序中屏幕阅读器无法访问。"
+artifactInsideTagged = "被标记为装饰的内容位于已标记内容之内，因此既会被读取又会被跳过。"
+bookmarkLanguage = "书签未设置语言，屏幕阅读器不知道应以哪种语言朗读。设置文档语言以修复此问题。"
+conformancePrefix = "元数据中的 PDF/UA 声明使用了错误的前缀，PDF 阅读器可能无法识别。"
+contentLanguage = "正文文本未设置语言，屏幕阅读器不知道应以哪种语言朗读。设置文档语言以修复此问题。"
+customTagNotMapped = "某个标签使用了未映射到标准标签的自定义名称，屏幕阅读器不知道其含义。"
+figureNoAlt = "某个图像被标记为图像但没有描述，屏幕阅读器用户不知道其内容。"
+fontMissingGlyphs = "包含的某种字体缺少文档使用的部分字符。"
+fontNotEmbedded = "某种字体未包含在文件中，因此文本在另一台计算机上可能外观不同，或被不同地朗读。"
+formFieldNotTagged = "某个表单字段未标记为表单的一部分，屏幕阅读器可能找不到它。"
+genericHeading = "某个标题使用了 H 标签，它没有级别。PDF/UA-2 需要 H1 至 H6 以便屏幕阅读器了解标题的层级嵌套。"
+glyphWidths = "文件中的字体字符宽度与字体本身不匹配，因此文本间距可能错误。"
+headingSkipped = "标题级别存在跳级，例如从标题 1 直接到标题 3，导致在标题间移动变得混乱。"
+linkNoDescription = "某个链接没有描述，屏幕阅读器只能读出其地址，或什么也不读。"
+linkNotTagged = "某个链接未标记为链接，因此屏幕阅读器不会将其作为链接播报。"
+metadataLanguage = "元数据（如标题）未设置语言，屏幕阅读器不知道应以哪种语言朗读。设置文档语言以修复此问题。"
+noConformanceClaim = "文件未声明其遵循 PDF/UA。其元数据需要 PDF/UA 标识条目。"
+noDocumentTag = "标签需要在顶部有一个单一的 Document 标签，其他所有内容位于其中。"
+noLanguage = "文档未声明其所用语言，屏幕阅读器可能以错误语言朗读。"
+noMetadataStream = "文件没有 XMP 元数据，而 PDF/UA 将文档标题和一致性细节保存在那里。"
+noTags = "文件完全没有标签，因此屏幕阅读器无法区分标题、段落、列表或表格，或按正确顺序阅读。"
+notdefGlyph = "文本使用了“缺失字符”占位符，显示为空白或方框，无法被朗读。"
+noteTag = "文件使用了 Note 标签，而 PDF/UA-2 将其替换为 FENote（脚注与尾注）。"
+noTitle = "文档在其元数据中没有标题。"
+notMarkedTagged = "文件未标记为“已加标签”，因此辅助技术可能忽略其标签。"
+notPdf2Tags = "PDF/UA-2 需要 PDF 2.0 文件使用的标签。当前看起来是 PDF 1.7 的标签，通常意味着该文件为 PDF/UA-1 加过标签。"
+noUnicode = "部分字符无法转换为可读文本，因此屏幕阅读器和复制粘贴可能会出错。"
+replacementTextLanguage = "某些替换文本未设置语言，屏幕阅读器不知道应以哪种语言朗读。设置文档语言以修复此问题。"
+standardTagRemapped = "某个标准标签被映射为自定义标签，屏幕阅读器将丢失其含义。"
+symbolicEncoding = "某个符号字体携带了不应有的编码，因此其字符可能会变成错误的字母。"
+tabOrder = "包含链接或评论的页面没有将 Tab 顺序设置为跟随文档，因此键盘用户可能在页面上跳来跳去。"
+taggedInsideArtifact = "被标记的内容位于被标记为装饰的对象之内，因此屏幕阅读器可能会跳过它。"
+titleNotDisplayed = "PDF 阅读器将显示文件名而不是文档标题。需要开启“显示文档标题”设置。"
+untaggedContent = "页面上的某些内容既未标记为内容也未标记为装饰，屏幕阅读器无法判断是否应读取。常见于背景图像、页眉、页脚或页码。"
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "评论或链接未设置语言"
+annotationNoDescription = "评论、链接或绘图缺少描述"
+annotationNotTagged = "评论或绘图未加标签"
+artifactInsideTagged = "装饰位于已标记内容内"
+bookmarkLanguage = "书签未设置语言"
+conformancePrefix = "PDF/UA 声明书写不正确"
+contentLanguage = "文本未设置语言"
+customTagNotMapped = "自定义标签未映射到标准含义"
+figureNoAlt = "图像缺少描述"
+fontMissingGlyphs = "字体缺少字符"
+fontNotEmbedded = "字体未嵌入"
+formFieldNotTagged = "表单字段未加标签"
+genericHeading = "标题没有级别"
+glyphWidths = "字体字符宽度不匹配"
+headingSkipped = "标题级别跳级"
+linkNoDescription = "链接缺少描述"
+linkNotTagged = "链接未加标签"
+metadataLanguage = "元数据未设置语言"
+noConformanceClaim = "未声明遵循 PDF/UA"
+noDocumentTag = "标签未以 Document 标签开始"
+noLanguage = "未设置文档语言"
+noMetadataStream = "无 XMP 元数据"
+noTags = "无标签"
+notdefGlyph = "使用了缺失字符占位符"
+noteTag = "使用了 Note 标签"
+noTitle = "无文档标题"
+notMarkedTagged = "未标记为已加标签"
+notPdf2Tags = "标签不是 PDF 2.0 标签"
+noUnicode = "无法作为文本读取的字符"
+replacementTextLanguage = "替换文本未设置语言"
+standardTagRemapped = "标准标签被改成自定义标签"
+symbolicEncoding = "符号字体编码错误"
+tabOrder = "Tab 顺序未跟随文档"
+taggedInsideArtifact = "已标记内容被当作装饰隐藏"
+titleNotDisplayed = "打开时未显示标题"
+untaggedContent = "未加标签的内容"
+
+[checkAccessibility.score]
+issues_one = "{{count}} 个问题"
+issues_other = "{{count}} 个问题"
+noIssues = "未发现问题"
+subtitle_one = "{{profile}} - {{count}} 页"
+subtitle_other = "{{profile}} - {{count}} 页"
+
+[checkAccessibility.sections]
+breakdown = "细分"
+
+[checkAccessibility.status]
+checking = "正在检查第 {{current}} / {{total}} 个..."
+complete = "检查完成"
+
+[checkAccessibility.steps]
+results = "结果"
+standard = "标准"
+
+[checkAccessibility.tooltip.header]
+title = "检查哪个标准"
+
+[checkAccessibility.tooltip.ua1]
+text = "PDF/UA 的第一个版本，于 2012 年发布为 ISO 14289-1，适用于 PDF 1.7 文件。"
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "更新版本，于 2024 年发布为 ISO 14289-2，适用于 PDF 2.0 文件。对照它检查的 PDF 1.7 文件会在仅适用于 PDF 2.0 的规则上失败。"
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "注释 {{n}}"
+bookmarks = "书签"
+character = "{{font}} 中的一个字符"
+contentItem = "内容项 {{n}}"
+drawingStep = "绘图步骤 {{n}}"
+embeddedGraphic = "嵌入式图形"
+font = "字体 {{name}}"
+metadata = "文档元数据"
+page = "第 {{n}} 页"
+piece = "片段 {{n}}"
+tag = "{{tag}} 标签"
+tagTree = "标签树"
+wholeDocument = "整个文档"
+
+[checkAccessibility.where.properties]
+author = "作者"
+description = "描述"
+pdfUaPart = "PDF/UA 部分"
+title = "标题"
 
 [classification.families]
 correspondence = "通信"
@@ -3729,6 +3964,10 @@ message = "མཁོ་སྤྲོད་བྱས་པའི་ཡིག་ཆ
 body = "这些 PDF 的总页数超过 2,000 页。处理可能需要几分钟。"
 title = "正在执行大型比较"
 
+[compare.mode]
+pixel = "像素比较"
+text = "文本比较"
+
 [compare.no.text]
 message = "འདེམས་པའི་ PDF གཅིག་གམ་གཉིས་ཀར་ཡི་གེའི་ནང་དོན་མི་འདུག བསྡུར་བའི་ཆེད་དུ་ཡི་གེ་ཡོད་པའི་ PDF འདེམས་རོགས།"
 
@@ -4046,6 +4285,30 @@ failed = "无法续订您的登录。请重试，或关闭此页面并从您的�
 lead = "此服务器已链接到您的账户。续订您的登录以返回服务器上的账单和使用情况。"
 title = "续订您的服务器登录"
 
+[connectedAccounts]
+connect = "连接"
+connectAnother = "再连接一个"
+connectFailed = "无法连接此账户。请检查服务器的应用注册已设置，然后重试。"
+disconnect = "断开连接"
+google = "Google Drive"
+intro = "先连接一次你自己的账户。之后你的流水线即可以你的身份读取并保存到它们。"
+microsoft = "Microsoft（OneDrive 与 SharePoint）"
+needsReconnect = "Stirling 不再能够访问此账户，使用它的流水线已暂停。"
+none = "你的管理员尚未开启已连接账户。"
+personal = "个人账户"
+popupBlocked = "你的浏览器阻止了登录窗口。允许此站点的弹出窗口后重试。"
+reconnect = "重新登录"
+work = "工作账户"
+
+[connectedAccounts.disconnectConfirm]
+body = "使用此账户的来源和流水线将停止，直到你再次连接。"
+confirm = "断开连接"
+title = "断开 {{account}}？"
+
+[connectedAccounts.status]
+connected = "已连接"
+needsSignIn = "需要登录"
+
 [convert]
 autoRotate = "自动旋转"
 autoRotateDescription = "自动旋转图像以更好适配 PDF 页面"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "文档标题"
 pdfUaTitleHelp = "阅读器显示此标题而不是文件名。留空则使用第一个标题。"
 selectSourceFormatFirst = "请先选择源格式"
 settings = "设置"
+signInToUse = "登录以使用"
 single = "单个"
 sourceFormatPlaceholder = "源格式"
-stirlingOfficeConvert = "使用 Stirling Office Convert（测试版）"
-stirlingOfficeConvertDescription = "转换效果更好、速度更快且占用内存更少。关闭以使用标准转换器。"
 strictMode = "严格模式"
 strictModeDesc = "如果转换不完美则报错（使用 VeraPDF 验证）"
 svgPdfOptions = "SVG 转 PDF 选项"
@@ -4134,8 +4396,6 @@ webOptions = "网页转 PDF 选项"
 zoomLevel = "缩放级别"
 
 [convert.ebookOptions]
-embedAllFonts = "嵌入所有字体"
-embedAllFontsDesc = "将电子书中的所有字体嵌入生成的 PDF 中"
 includePageNumbers = "包含页码"
 includePageNumbersDesc = "为生成的 PDF 添加页码"
 includeTableOfContents = "包含目录"
@@ -4648,6 +4908,17 @@ title = "设置"
 [extractPages.tooltip]
 description = "将所选页面按顺序提取到一个新的 PDF。"
 
+[feedback.page]
+open = "发送反馈"
+sendMore = "继续发送反馈"
+sent = "感谢你的反馈"
+title = "帮助我们改进 Stirling"
+unavailable = "反馈不可用"
+
+[feedback.tag]
+dismiss = "隐藏反馈按钮"
+label = "反馈"
+
 [fileCard]
 openInFileEditor = "在文件编辑器中打开"
 viewInViewer = "在查看器中查看"
@@ -4657,7 +4928,6 @@ closeFile = "关闭文件"
 
 [fileEditor]
 closedFile = "已关闭 {{name}}"
-couldNotSave = "无法保存 {{name}}"
 filesReordered_one = "文件已重新排序"
 filesReordered_other = "{{count}} 个文件已重新排序"
 loadedFromStorage_one = "已从存储加载 {{count}} 个文件"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "PDF 库"
 myFiles = "文件库"
 noFiles = "尚无文件"
+oneDrive = "从 OneDrive 打开"
+oneDriveFailed = "无法打开 OneDrive"
 openFileManager = "浏览所有文件和文件夹"
 openFromComputer = "从电脑打开"
 openSettings = "打开设置"
@@ -4804,6 +5076,17 @@ searchFiles = "搜索文件"
 uploadFailedBody = "无法添加所选文件。"
 uploadFailedTitle = "上传失败"
 viewAll = "查看全部 {{count}} 个文件"
+
+[fileSidebar.clearRecents]
+body_one = "从最近列表中清除 1 个文件？此操作无法撤销。"
+body_other = "从最近列表中清除 {{count}} 个文件？此操作无法撤销。"
+button = "清除最近"
+confirm = "清除最近"
+error = "无法清除。请重试。"
+openNote_one = "其中有 1 个在工作台中打开。"
+openNote_other = "其中有 {{count}} 个在工作台中打开。"
+skipOpen = "跳过已打开的文件"
+title = "清除最近？"
 
 [fileSidebar.fileItem]
 closeViewer = "关闭查看器"
@@ -5124,6 +5407,7 @@ diskFileHint = "存储在您的计算机上"
 diskHint = "磁盘上已挂载文件夹中的文件"
 local = "本地"
 localHint = "未备份"
+oneDrive = "OneDrive"
 shared = "已共享"
 sharedHint = "通过链接与你共享"
 
@@ -5672,6 +5956,11 @@ title = "གནས་ཆ་སྒྱུར་བཅོས།"
 desc = "更改文档限制与权限"
 tags = "权限,限制,权利,访问控制,允许,拒绝,打印,复制,编辑,修改权限,安全设置,用户权限"
 title = "更改权限"
+
+[home.checkAccessibility]
+desc = "根据 PDF/UA 为 PDF 打分，并查看是什么阻碍了屏幕阅读器，而不改变它"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "检查 PDF 无障碍"
 
 [home.classify]
 desc = "识别这是什么类型的文档并为其添加标签。"
@@ -6521,6 +6810,32 @@ quickAccess = "从 <strong>快速访问</strong> 侧栏开始，可在阅读器�
 topBar = "顶部栏可在<strong>查看器</strong>、<strong>页面编辑器</strong>和<strong>活动文件</strong>之间切换。"
 wrapUp = "这就是 V2 的新内容。随时打开<strong>导览</strong>菜单重播本导览、工具导览或管理员导览。"
 
+[oneDriveSave]
+chooseFolder = "选择要上传到的 OneDrive 文件夹"
+conflict = "此文件自打开或保存以来已在 OneDrive 中发生更改。请改为将你的版本另存为副本。"
+failedTitle = "无法保存到 OneDrive"
+fromOneDrive = "来自 OneDrive"
+linkNotStored = "此浏览器无法记住到 OneDrive 文件的链接。重新加载后，请改为另存为副本。"
+missing = "此文件已在 OneDrive 中被移动或删除。请改为将你的版本另存为副本。"
+open = "在 OneDrive 中打开"
+personalUnsupported = "上传到 OneDrive 需要工作或学校的 Microsoft 账户。"
+reconnect = "重新连接"
+replaces = "替换 {{name}}"
+saveCopyToOneDrive = "在 OneDrive 中保存副本"
+saved = "已保存到 OneDrive"
+saving = "正在保存到 OneDrive..."
+signInToSave = "请登录到你的服务器以保存到 OneDrive。"
+updateOriginal = "更新 OneDrive 中的原件"
+uploadToOneDrive = "上传到 OneDrive..."
+
+[oneDriveSave.status]
+saved = "已保存到 OneDrive"
+unsaved = "更改尚未保存到 OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "在 OneDrive 中更新 {{name}}"
+saveAll = "在 OneDrive 中全部更新"
+
 [overlay-pdfs]
 desc = "将一个 PDF 叠加到另一个之上"
 submit = "ཕུལ་བ།"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "明天重置"
 thisPeriod = "本计费周期"
 
 [payment]
+annually = "每年"
 billingPeriod = "账单周期"
 cancelTeamChange = "保留当前方案"
 canCloseWindow = "现在可以关闭此窗口。"
@@ -7157,11 +7473,14 @@ title = "调整 Team 方案"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe 会在您确认前显示确切费用、任何按比例计费以及下次账单日期。如可用，将使用您保存的付款方式。"
+billingLabel = "计费"
 continue = "继续付款"
 currencyAtCheckout = "Stripe 会在结账时确认最终金额和付款货币。"
+custom = "自定义"
 customLabel = "用户数量"
 dueToday = "今日应付"
 enterpriseQuote = "获取企业报价"
+enterUsers = "输入用户数量。"
 estimatedTotal = "预估总计"
 lineItem = "Team · 每 {{block}} 位用户 {{price}}{{period}}"
 minimumForCurrentUsers = "您有 {{users}} 位用户，因此方案必须至少覆盖 {{minimum}} 位。"
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "现有账户会保留。在您添加容量或释放�
 overCapacityTitle = "您的服务器用户数超过了方案覆盖范围"
 perMonth = "/月"
 perYear = "/年"
+planName = "Stirling Team"
 reductionNote = "较低容量将从下次续订开始生效。在那之前，您可以使用当前额度。现有用户保留；如果更改生效时您超出容量，将阻止新用户。"
 renewalNote = "按 {{total}}{{period}} 续订。可随时在用量和账单中取消。"
 reviewChange = "在 Stripe 中查看更改"
-roundsTo = "向上取整为 {{users}} 位用户"
+roundsUp = "向上取整为 {{users}} 位用户。"
+selfServeLimit = "此处最多可 {{users}} 位用户。"
 subheading = "以每 {{users}} 位用户为一个区块，覆盖您邀请的所有人。"
 subheadingAdd = "您的方案目前覆盖 {{current}} 位用户。请选择新的总数。"
+talkToEnterprise = "更多需求？与我们沟通 Enterprise。"
+usersCovered = "涵盖的用户"
 usersLabel = "用户"
 userTotal = "{{users}} 位用户"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "将更改应用到工作区中的文件（{{shortcut}}）"
 tags = "编辑文本,修改文本,更改文本,编辑内容,更新文本,重写,更正,修订,红线,修订,文本编辑器,内容编辑器"
 title = "PDF 文本编辑器"
 unsaved = "（未保存）"
-workbenchLabel = "编辑器"
 
 [pdfTextEditor.annotations]
 freetext = "注释文本 - 不是页面文本，因此无法在此处编辑"
@@ -7261,12 +7583,18 @@ widget = "表单字段 - 不是页面文本，因此无法在此处编辑"
 
 [pdfTextEditor.commands]
 edit = "编辑"
+markTagged = "标记为已完全加标签"
+matchScanFont = "将扫描文本匹配到 {{face}}"
 mergeRuns_one = "将 {{count}} 个 run 合并到一个段落"
 mergeRuns_other = "将 {{count}} 个 runs 合并到一个段落"
 setColour = "设置 {{run}} 的颜色"
 setOutline = "设置 {{run}} 的轮廓"
+tagFormField = "标记表单字段"
+tagLink = "为链接加标签"
+tagPageContent = "自动为页面加标签"
 typeInto = "输入到 {{run}}"
 ungroupParagraph = "取消组合段落 {{run}}"
+unmarkTagged = "标记为未完全加标签"
 wrap = "换行 {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "放弃并打开"
 hint = "先取消，然后保存 PDF 以将它们保留在您的工作区中。"
 title = "放弃未保存的更改？"
 
-[pdfTextEditor.drop]
-hint = "释放到编辑器区域会替换任何已打开的文档。"
-title = "拖放 PDF 以打开"
-
 [pdfTextEditor.error]
 decodeImage = "无法解码所选图片。"
+duplicateDropsLetters = "无法复制此文本：没有可用字体能绘制其所有字母。"
+formLiftChangesDrawing = "无法编辑此内容：它作为组的一部分被绘制，该组的裁剪或图形设置在更改时编辑器无法保留。"
 insertImage = "无法插入所选图片。"
+needsShaping = "编辑器尚不能正确绘制此书写系统的连写字母和元音符号，因此未进行此更改。"
+replaceClippedImage = "无法替换此图像：它已被裁剪，替换后会显示被裁剪隐藏的部分。"
+scanOffInk = "无法编辑此文本：其识别的词与扫描不对齐。请重新运行 OCR。"
+unsafeRtlEdit = "无法进行此编辑：编辑器在不改变内容的情况下无法重绘此行的从右到左文本。"
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG 图像"
@@ -7304,15 +7634,42 @@ wholeWord = "全字匹配"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "内置字体"
+closestMatch = "此字体缺少部分所选字母，因此将使用最接近的匹配字体绘制。"
 deviceFontsNone = "未找到额外的设备字体。"
 deviceFontsUnavailable = "设备字体不可用。内置字体仍可使用。"
 deviceGroup = "设备字体"
+documentFontCannotDraw = "编辑器无法用文档自带的字体绘制此文本，因此保留了其当前字体。"
 documentGroup = "文档字体"
+embeddingForbidden = "此字体的许可不允许将其嵌入 PDF。文本保持不变。"
+embedFailed = "无法将此字体嵌入 PDF。文本保持不变。"
+includedGroup = "已包含的字体"
 label = "字体系列"
+matchedGroup = "匹配的字体"
+missingGlyphs = "此字体缺少部分所选字符，且无法保留其当前字体。文本保持不变。"
 mixed = "混合"
+needsShaping = "编辑器尚不能正确重绘此书写系统的连写字母和元音符号，因此该文本保留其当前字体。"
+noGlyphs = "此字体对所选文本没有字符。文本保持不变。"
 noMatch = "没有匹配的字体"
+partOfRunUnsupported = "此文本只能作为整体重新设置样式。请选择该框，而不是其中的一些词。"
 placeholder = "字体系列"
+scannedText = "扫描文本"
+serverFontFailed = "无法下载该服务器字体。文本保持不变。"
+serverGroup = "服务器字体"
+someLeftUnchanged = "此字体不包含部分所选文本所需的字符。该文本保持不变。"
+styleSkipped = "部分所选文本没有该样式的字体版本，因此保持不变。"
+styleUnavailable = "所选文本没有该样式的字体版本，因此保持不变。"
 useDeviceFonts = "使用设备字体"
+weight = "字重"
+weightBlack = "特黑"
+weightBold = "加粗"
+weightExtraBold = "特粗"
+weightExtraLight = "特细"
+weightLight = "细"
+weightMedium = "中等"
+weightNumber = "字重 {{weight}}"
+weightRegular = "常规"
+weightSemibold = "半粗"
+weightThin = "极细"
 
 [pdfTextEditor.fonts]
 allPresent = "所有字母和数字均存在"
@@ -7357,6 +7714,7 @@ helpDesc = "此帮助"
 saveDesc = "保存到您的工作区"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "加粗 / 斜体，应用于所选词或整个框"
 deleteDesc = "移除所选内容"
 duplicateDesc = "复制所选内容"
 groupDesc = "将所选文本段组合为一个段落"
@@ -7380,8 +7738,12 @@ zoomDesc = "放大 / 缩小"
 
 [pdfTextEditor.inspector]
 document = "文档"
+fontCompletedClosest = "已嵌入字体·缺少的字符使用可用的最接近字体 {{name}} 绘制。"
+fontCompletedOriginal = "已嵌入字体·缺少的字符使用同一字体 {{name}} 绘制。"
 fontEmbedded = "嵌入字体 · 缺少的字符会回退到 Helvetica。"
 fontGap = "{{name}} · 缺少 {{glyphs}} - 输入这些字符时会回退到 Helvetica。"
+fontUnknownCoverage = "{{name}} · 缺少的字符回退到 {{fallback}}。"
+formField = "表单字段"
 geometry = "位置和大小"
 height = "高度"
 heightHint = "文本框高度随其字号和行数变化。"
@@ -7403,14 +7765,20 @@ ocrUnavailable = "此服务器上 OCR 不可用。"
 oneImage = "图片"
 oneShape = "形状"
 oneText = "文本"
+outlinedTextHint_one = "本页的文本以形状方式绘制，因此没有可编辑的文本。请先运行 OCR 以便编辑。"
+outlinedTextHint_other = "{{count}} 页的文本以形状方式绘制，因此没有可编辑的文本。请先运行 OCR 以便编辑。"
 pages = "页面"
 runOcr = "运行 OCR"
 scanHint_one = "此页面是扫描图像，没有可编辑文本。请先运行 OCR，使其文本可编辑。"
 scanHint_other = "{{count}} 个页面是扫描图像，没有可编辑文本。请先运行 OCR，使其文本可编辑。"
 scannedText = "扫描文本 · 更改的单词会被覆盖并以匹配的字体重绘。"
+scannedTextMisaligned = "扫描文本·其识别词与扫描不对齐，因此无法编辑或删除此块。"
+scannedTextNoFont = "扫描文本·当前尚不能绘制此书写体系中的键入文字，因此不会保留。仍可删除文字。"
+scannedTextOffInk = "扫描文本·其识别词偏离扫描词，因此此块无法编辑。请重新运行 OCR。"
 tabDocument = "文档"
 tabSelected = "已选择"
 textBoxes = "文本框"
+unreadPagesHint = "{{count}} 页没有可编辑文本：有的是扫描图像，有的将文本绘制为形状。请先运行 OCR 以便编辑。"
 width = "宽度"
 widthHint = "文本会重新换行以适应宽度。"
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "添加标签"
+applyToOtherPages_one = "应用到另外 {{count}} 页"
+applyToOtherPages_other = "应用到另外 {{count}} 页"
+artifactGroup = "屏幕阅读器跳过"
 artifactText = "装饰性"
 cannotChange = "无法更改此图片的无障碍设置。"
+cannotDescribeFormField = "无法更改此表单字段的描述。"
+cannotDescribeLink = "此链接的描述无法更改。"
 cannotRetag = "无法更改此文本的标签。"
+cannotSetDecorative = "此项无法标记或取消标记为装饰。"
+cannotTagFormField = "无法为此表单字段添加标签。"
+cannotTagLink = "此链接无法加标签。"
+cannotTagPage = "此页面的内容无法加标签。"
+contentGroup = "内容"
 customTag = "{{role}}（自定义标签）"
 decorativeInfo = "屏幕阅读器会跳过装饰性图片。可用于边框、背景和其他不包含信息的图片。"
 decorativeLabel = "装饰性图片"
 description = "图片描述"
 descriptionInfo = "屏幕阅读器会朗读此内容来替代图片。"
 encrypted = "加密文件中的标签无法编辑"
+figureDescription = "图像描述"
+figureDescriptionInfo = "屏幕阅读器会用此内容代替图像进行朗读。"
+formFieldDescription = "字段描述"
+formulaDescription = "公式描述"
+formulaDescriptionInfo = "屏幕阅读器会用此内容代替公式朗读。按口语表达，例如“x 的平方加一”。"
 heading = "无障碍"
 innerTagLabel = "标签 {{number}}"
 innerTags = "此文本中的标签"
+linkDescription = "链接描述"
+markedTagged = "文档已完全加标签"
+markedTaggedHint = "告知 PDF 阅读器使用无障碍标签。仅当全部加好标签后再勾选。"
+markedWithUntagged = "部分内容没有标签，屏幕阅读器可能会跳过。"
 missingDescriptions = "缺少描述"
 mixedContent = "图形包含其他内容"
+mixedTags = "混合"
 needsDescriptionBadge = "无描述"
-nextImage = "下一张图片"
+nextToReview = "下一个待审阅"
 notFigure = "标记为文本的一部分"
 removeTag = "移除标签"
 saveFailed = "无法保存您的无障碍更改，因此文件未保存。请撤销这些更改并重试。"
 selectedText = "已选文本"
+tagFormField = "标记表单字段"
+tagging = "正在为页面加标签"
 tagLabel = "标签"
+tagLinks_one = "为链接加标签"
+tagLinks_other = "为 {{count}} 个链接加标签"
+tagUntagged = "自动为文档加标签"
+tagUntaggedHint = "在整个文档中自动添加无障碍标签。结果较为粗略：之后请检查标题、列表和阅读顺序。"
 unknownTag = "此处无法读取"
+unmarkedWithTags = "部分 PDF 查看器仍会使用标签，并可能跳过没有标签的内容。"
 unreadable = "无法编辑此文件的标签"
 untaggableImages = "此处无法添加标签"
 untaggedBadge = "未添加标签"
 untaggedDocument = "文档没有标签"
 untaggedImage = "此处无法添加标签"
 untaggedImages = "未添加标签的图片"
+untaggedPages = "要加标签的页面"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "页脚"
+header = "页眉"
+pageNumber = "页码"
+watermark = "水印"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "无文本的标题"
@@ -7505,6 +7907,23 @@ tableHeader = "表头"
 tableRow = "表格行"
 title = "题名"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "所有语言"
+cannotSetDocument = "无法更改此文档的语言。"
+cannotSetText = "无法更改此文本的语言。"
+documentHint = "除非某段文本自行设置，否则屏幕阅读器使用的语言。"
+documentLabel = "语言"
+documentLocked = "加密文档的语言无法在此处更改。"
+inDocument = "在此文档中"
+innerLabel = "标签 {{number}} 的语言"
+label = "语言"
+missing = "未设置语言。屏幕阅读器将猜测，可能会用错误的发声读完整个文档。"
+mixed = "混合"
+noMatch = "无匹配语言。请改为输入其代码，例如 mt 或 en-IE。"
+placeholder = "选择语言"
+selectedText = "所选文本的语言"
+textHint = "屏幕阅读器会切换到该语言的语音与发音。"
+
 [pdfTextEditor.mobile]
 actions = "编辑器操作"
 addImage = "图片"
@@ -7517,7 +7936,6 @@ done = "完成"
 download = "保存并下载"
 find = "查找"
 lock = "锁定"
-openPdf = "打开 PDF"
 panelHint = "编辑在工作区视图中进行。点击页面上的文本即可更改。"
 save = "保存"
 style = "样式"
@@ -7525,7 +7943,6 @@ tapToPlace = "点击页面上应放置文本的位置"
 unlock = "解锁"
 
 [pdfTextEditor.pageView]
-pageNumber = "第 {{page}} 页"
 renderFailed = "渲染页面失败"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "垂直标尺"
 
 [pdfTextEditor.run]
 lockedTitle = "已锁定 - 使用解锁按钮进行编辑"
+readOnlyOrderTitle = "此行文本无法编辑：它混合了从右到左和从左到右的文本，编辑器无法安全地按该顺序重绘。"
+resizeHandle = "拖动以更改宽度；文本将自动换行"
 
 [pdfTextEditor.saveRisk]
 cancel = "取消"
@@ -7548,6 +7967,35 @@ intro = "保存已编辑副本会更改文件。这意味着："
 note = "您的编辑会保留。保存已编辑副本时，上述更改不可避免。"
 saveAnyway = "仍然保存"
 title = "保存将更改此 PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "近似匹配"
+approximateHint = "找到的最接近字体可能与扫描不完全一致。"
+change = "字体看起来不对？"
+choose = "选择一种字体"
+chooseMissing = "为此文本选择一种字体…"
+compare = "比较字体…"
+deviceAllow = "允许访问字体以获得更好匹配"
+deviceBlocked = "你的浏览器将不再询问。要允许，请点击地址栏左侧的图标，打开“字体”，然后重试。"
+deviceBlockedTitle = "字体访问被阻止"
+deviceNone = "此计算机未安装常用的文档字体。"
+deviceNote = "你的浏览器会先询问。字体保留在此设备上。"
+deviceOn_one = "也与此计算机上的 {{count}} 个字体进行比较。"
+deviceOn_other = "也与此计算机上的 {{count}} 个字体进行比较。"
+deviceReading = "正在读取此计算机上的字体…"
+deviceRetry = "重试"
+done = "完成"
+hint = "你的输入会使用找到的最接近字体绘制。如有更像扫描件的，请改选。"
+hintFromScan = "你的输入由扫描中找到的字母构建。选择字体可改为以该字体绘制。"
+hintOthers = "你的选择也会用于你尚未编辑的扫描文本。"
+matching = "正在匹配字体…"
+noFont = "可用字体均无法绘制此书写体系，因此暂不能重绘键入文本。"
+scan = "原始扫描"
+scanAlt = "已扫描的行"
+scanNote = "扫描通常比真实字体更糊或更粗。请比较字形而非粗细。"
+score = "{{match}}% 相似"
+title = "匹配扫描字体"
+unmeasurable = "此扫描过于暗淡或过小，无法匹配到字体。"
 
 [pdfTextEditor.settings]
 advanced = "高级"
@@ -7564,7 +8012,6 @@ addTable = "添加表格"
 addText = "添加文本"
 clickPageToAddTable = "点击页面以添加表格"
 clickPageToAddText = "点击页面以添加文本"
-document = "文档"
 group = "组合"
 groupingAuto = "自动"
 groupingAutoHint = "将等间距行组合为段落。更改此项会重新读取文档并清除撤销历史。"
@@ -7593,23 +8040,17 @@ auto = "自动"
 enable = "输入时检查拼写"
 language = "词典语言"
 
-[pdfTextEditor.stage]
-loadingDocument = "正在加载文档"
-loadingProgress = "加载进度"
-noDocument = "未加载文档。"
-pickPrompt = "从左侧文件面板选择 PDF 以开始编辑。"
-renderingPreview = "正在渲染预览"
-
 [pdfTextEditor.table]
 addColumn = "添加列"
 addRow = "添加行"
+cellNoGlyphs = "此文本包含表格字体无法绘制的字符。请更改或移除它们以填充该单元格。"
 column = "列"
 deleteColumn = "删除列"
 deleteRow = "删除行"
 done = "完成"
 doneHint = "停止将其作为表格编辑"
-edit = "编辑"
 editHint = "作为表格编辑 - 在单元格中输入，添加或移除行和列"
+editTable = "编辑表格"
 move = "移动"
 moveTable = "拖动以移动整个表格"
 recognizedHint = "已识别的表格 - 点击以选择其所有文本"
@@ -7630,6 +8071,9 @@ alignMiddle = "垂直居中对齐"
 alignRight = "右对齐"
 alignTop = "顶部对齐"
 arrange = "排列"
+bold = "加粗"
+boldOnly = "此字体只有加粗版本"
+boldUnavailable = "此字体没有加粗版本"
 bringForward = "上移一层"
 bringToFront = "置于顶层"
 caseLower = "小写"
@@ -7650,10 +8094,12 @@ fontColour = "字体颜色"
 fontSize = "字体大小"
 formatting = "文本格式"
 italic = "斜体"
+italicOnly = "此字体只有斜体版本"
 italicUnavailable = "此字体没有斜体版本。请加载您的设备字体或选择其他字体系列。"
 lock = "锁定选择"
 lockTooltip = "锁定选择 - 防止意外编辑"
 more = "更多操作"
+noBoldItalic = "此字体没有加粗斜体版本"
 order = "顺序"
 outlineColour = "轮廓颜色"
 outlineWidth = "轮廓宽度（0 = 无）"
@@ -7683,13 +8129,6 @@ title = "预览差异"
 [pdfTextEditor.tooltip.textFocus]
 text = "此工作区侧重于编辑文本和重新定位嵌入图像。复杂的页面图形、表单控件和分层图形会在导出时保留，但在此处不可完全编辑。"
 title = "文本与图像重点"
-
-[pdfTextEditor.zoom]
-fit = "适应"
-fitToWidth = "适应宽度"
-in = "放大"
-out = "缩小"
-reset = "将缩放重置为 100%"
 
 [PDFToCSV]
 header = "PDF ནས་ CSV ལ།"
@@ -7935,8 +8374,6 @@ triggerImport = "导入时运行"
 [policies.enforcement]
 applying = "正在应用 {{names}}"
 applyingProgress = "正在应用 {{names}}（{{done}}/{{total}}）"
-exportFailureBody = "无法应用安全策略。文件已原样导出。"
-exportFailureTitle = "未强制执行即导出"
 failureBody = "某些策略无法应用到 {{total}} 个文件中的 {{failures}} 个。"
 failureTitle = "未完全强制执行即导出"
 printPolicyAppliedBody = "此 PDF 已为满足策略而更新。请检查更改后再打印。"
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "当策略运行时向 Google Chat space 发布消息。"
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "一个可为组织读取和写入 Google Drive 的服务账户。"
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "从 Google Cloud 粘贴该服务账户的 JSON 密钥。它会被加密，且不再显示。"
+label = "服务账户密钥（JSON）"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "可选。启用域范围委派后，此处为其所扮演的 Drive 用户（专用机器人用户可在人员离职后继续工作）。留空则仅可访问共享云端硬盘以及与服务账户共享的文件夹。"
+label = "以该用户身份操作"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "将处理后的文档附加到 Jira issue。"
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "当策略运行时发送文档或通知电子邮件。"
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "需要带管理员同意的 Microsoft Graph 应用程序权限。"
+label = "应用程序（客户端）ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "客户端机密"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "目录（租户）ID"
+placeholder = "contoso.onmicrosoft.com 或租户 GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "App 密码"
+
+[portal.connections.types.onedrive]
+description = "读取和写入某个用户的 OneDrive for Business。"
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "此连接可访问谁的 OneDrive。应用注册需要 Files.ReadWrite.All 应用程序权限。"
+label = "OneDrive 所有者"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "如果你改用 private key 进行身份验证，请留空。"
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "可选。粘贴 OpenSSH private key，以使用 key 而不是密码进行身份验证。"
 label = "私钥"
+
+[portal.connections.types.sharepoint]
+description = "读取和写入某个 SharePoint 站点的文档库。"
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "可选。留空则为站点默认的 Documents 库。"
+label = "文档库"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "站点 URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "当策略处理文档时向 Slack 发布消息。"
@@ -9142,6 +9624,126 @@ status = "状态"
 time = "时间"
 user = "用户"
 
+[portal.enterprise]
+backTo = "返回到 {{stage}}"
+brandTag = "Enterprise"
+callInfo = "一次 15 分钟的电话。带上你关于定价、部署或安全的问题，或一起规划上线。"
+callTitle = "与解决方案工程师沟通"
+deployment = "部署"
+footer = "关于 Stirling Enterprise 有问题？"
+home = "前往 Stirling"
+member = "你的团队负责人负责 Enterprise 交易。一旦开始，你可在此跟进进度。"
+memberDeal = "你的团队负责人负责此交易。你可以在此跟进其进度。"
+quotePanel = "你的报价"
+signIn = "登录"
+signInToStart = "登录以开始试用"
+stage = "阶段 {{current}} / {{total}}"
+stagesLabel = "进度"
+
+[portal.enterprise.landing]
+lede = "免费试用 14 天，然后在此生成报价并签署协议。无需信用卡。"
+tickAgreement = "一份协议涵盖 MSA、订单表、EULA 和 DPA"
+tickCompliance = "SCIM、数据驻留与可用性 SLA"
+tickDeploy = "可运行在 Stirling Cloud、自有服务器，或完全隔离的环境"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "离线许可文档"
+point1 = "使用离线有效的许可文件激活，而非在线校验的密钥"
+point2 = "像自托管一样安装，从你带来的镜像部署"
+point3 = "登录始终留在你的网络内"
+tagline = "在无互联网接入的网络上自托管。"
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud 文档"
+point1 = "你的团队在 stirling.com/app 登录"
+point2 = "运行在 AWS 上，存储的文件静态加密"
+point3 = "通过你的身份提供商进行单点登录需要自托管"
+tagline = "我们代为托管，无需安装。"
+
+[portal.enterprise.options.selfhost]
+more = "自托管文档"
+point1 = "使用 Docker 安装，或在 Kubernetes 上使用 Helm chart"
+point2 = "文档在你的自有基础设施上处理"
+point3 = "OAuth2、OIDC 或 SAML 单点登录"
+tagline = "在你的服务器上，本地或你自己的云中。"
+
+[portal.enterprise.review]
+back = "返回 {{stage}}"
+company = "公司"
+completed = "已完成"
+extensions = "使用的扩展"
+paid = "已付款。你的发票会一直在这里可用。"
+people = "人员"
+started = "已开始"
+trialEnds = "试用结束日期"
+trialTitle = "你的试用"
+version = "版本"
+viewInvoice = "查看发票"
+
+[portal.enterprise.setup]
+copied = "已复制"
+copy = "复制"
+markDone = "将“{{step}}”标记为完成"
+progress = "已完成 {{done}} / {{total}}"
+subtitle = "按你将要运行的方式来尝试，充分利用试用期。"
+subtitleLive = "在向所有人上线前需要完成的步骤。"
+title = "开始设置"
+titleLive = "上线清单"
+
+[portal.enterprise.setup.firstDocument]
+body = "上传你的团队正在处理的 PDF，并尝试你日常会用到的工具，如涂黑、压缩或 OCR。"
+title = "处理你的第一个文档"
+
+[portal.enterprise.setup.getApp]
+body = "安装适用于 Windows、Mac 或 Linux 的桌面应用，并使用你刚创建的账户登录；或直接在浏览器中使用。"
+title = "获取 Stirling"
+
+[portal.enterprise.setup.install]
+body = "在你的服务器上运行。它将启动 Stirling 并应用你的许可，镜像包含 OCR 与 office 转换。更大的团队请使用 Kubernetes。"
+title = "安装并启动 Stirling"
+
+[portal.enterprise.setup.invite]
+body = "邀请将要使用它的人，让试用更贴近真实工作。"
+title = "邀请你的团队"
+
+[portal.enterprise.setup.licence]
+body = "打开 <code>http://your-server:8080/settings/adminPlan</code>，你的 Enterprise 许可应显示为“有效”。以其他方式安装？请将密钥添加到 <code>settings.yml</code> 中的 <code>premium.key</code> 并重启。"
+title = "检查你的许可是否已激活"
+
+[portal.enterprise.setup.links]
+browser = "在浏览器中使用"
+docker = "Docker 指南"
+download = "下载应用"
+downloadForTeam = "为你的团队获取应用"
+downloading = "正在下载..."
+downloadLicence = "下载许可文件"
+invite = "邀请队友"
+kubernetes = "Kubernetes 指南"
+licence = "许可激活"
+ocr = "OCR 语言"
+openApp = "打开 Stirling"
+samlGuide = "SAML 指南"
+ssoGuide = "SSO 指南"
+
+[portal.enterprise.setup.offlineInstall]
+body = "在已联网的机器上拉取完整镜像，将其与许可文件一起带到目标环境，然后加载并启动。完整镜像包含离线服务器无法下载的字体。"
+title = "携带 Stirling 并启动"
+
+[portal.enterprise.setup.offlineLicence]
+body = "隔离网络的服务器无法访问我们的许可服务，因此会改为校验此签名文件。请与要携带的镜像一同保管。"
+title = "下载你的离线许可"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "在 <code>/settings/people</code> 创建账户，或将 Stirling 指向你的内部身份提供商，使登录始终留在你的网络内。"
+bodySelfHosted = "在 <code>/settings/people</code> 创建账户，或连接你的身份提供商，让团队使用其工作账户登录。他们可在你服务器地址的浏览器中使用 Stirling，或在指向该地址的桌面应用中使用。"
+title = "添加你的人员"
+
+[portal.enterprise.setup.signIn]
+body = "打开 <code>http://your-server:8080</code>，使用 <code>admin</code> / <code>stirling</code> 登录。系统会立刻要求你设置新密码。"
+bodyAirgap = "打开 <code>http://your-server:8080</code>，使用 <code>admin</code> / <code>stirling</code> 登录，设置新密码，然后检查 <code>/settings/adminPlan</code> 显示你的许可为有效。"
+title = "以管理员身份登录"
+
 [portal.errorBoundary]
 description = "此视图遇到意外错误。请重试，或从侧边栏选择其他部分。"
 retry = "重试"
@@ -9293,6 +9895,7 @@ title = "没有可审查内容"
 [portal.home.download]
 back = "返回"
 body = "下载桌面应用或自托管服务器。"
+bodyDesktop = "下载桌面应用，然后使用你的 Stirling 账户登录。"
 done = "完成"
 guide = "打开 {{name}} 指南"
 openInBrowser = "改为在浏览器中打开"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "电子邮件接收"
 
 [portal.procurement]
-subtitle = "让您的团队完成评估、签约和入门。所有文档集中一处。"
 title = "采购"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "无法加载协议。请重试。"
 loading = "正在加载协议..."
 ref = "参考 {{ref}} · {{version}}"
 requestChanges = "请求更改"
-scrollHint = "滚动以审阅"
 signatory = "签名人姓名"
 signatoryPlaceholder = "全名"
 signatoryTitle = "签名人职务"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "例如：总法律顾问"
 signError = "无法记录您的签名。请重试。"
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} 一次性"
+addonPerYear = "+{{amount}}/年"
 addons = "附加项"
 addressLine1 = "地址行 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "地址行 2"
 addressLine2Placeholder = "套房、楼层、建筑"
 back = "返回"
+belowMinimum = "此报价低于 Enterprise 交易的最小规模。"
 businessName = "企业名称"
 businessNamePlaceholder = "您的公司"
 city = "城市"
 cityPlaceholder = "San Francisco"
 completeRequired = "请在生成报价前填写必填字段（标记为 *），并提供有效电子邮件。"
+conflict = "此交易自你打开后已发生变化。关闭生成器并重新加载页面以查看当前情况。"
 contactEmail = "联系人电子邮件"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "联系人姓名"
 contactNamePlaceholder = "Jane Doe"
 continue = "继续"
 done = "完成"
+editUsage = "编辑用量"
 eula = "我已阅读并同意 Stirling Enterprise EULA。它管理由此报价生成的协议。"
 generate = "生成报价"
 indemnification = "增强 IP 保护"
 indemnificationSub = "将我们的 IP 防御扩展到专利索赔。基础版权、商标和商业秘密赔偿免费包含。"
+minimum = "Enterprise 要求每年最低支出 {{min}}。"
+minimumBelow = "此报价每年共计 {{annual}}。如果预计会使用更多，请提高你的预计用量；否则 Team 方案可能更合适。"
+minimumNear = "Enterprise 要求每年最低支出 {{min}}。请提高预计用量以达到此数，或与我们沟通。"
+minimumNearTitle = "距离 Enterprise 还差每年 {{gap}}。"
+paperBrand = "Stirling PDF"
 paperEyebrow = "企业报价"
 paperFor = "准备给"
 pdfSize = "PDF 大小"
@@ -10506,9 +11117,13 @@ posture_regulated = "受监管"
 posture_regulatedSub = "每个类别 — 合规、保留、摄取"
 qbr = "季度业务评审"
 qbrSub = "您的 SE 每季度评审使用情况和路线图"
+raiseUsage = "提高预计用量"
 region = "州 / 地区"
 regionPlaceholder = "California"
-running = "{{annual}} / 年 · {{years}} 年 {{tcv}}"
+runningLabel = "预计价格"
+runningLabelIssued = "报价价格"
+runningOneYear = "每年 {{annual}}"
+runningTotal = "{{years}} 年总计 {{tcv}}"
 s1Sub = "您的团队，以及预计每年运行的 PDF。"
 s1Title = "您将处理多少内容？"
 s2Sub = "更长期限会降低费率；您的服务级别决定支持。"
@@ -10547,6 +11162,19 @@ volumePlaceholder = "例如 1,000,000"
 years_one = "{{count}} 年"
 years_other = "{{count}} 年"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} 部署"
+indemnification = "IP 保障"
+multiYear_one = "承诺 {{count}} 年"
+multiYear_other = "承诺 {{count}} 年"
+qbr = "季度业务回顾"
+seats_one = "约定 {{users}} 名用户 + SSO / RBAC / 审计"
+seats_other = "约定 {{users}} 名用户 + SSO / RBAC / 审计"
+seatsUnset = "用户数 + SSO / RBAC / 审计"
+support = "专属 SE / CSM"
+training = "上线与培训"
+usage = "PDF 处理 — 每年 {{volume}} 个 PDF，{{rate}}/PDF（{{posture}} 自动化）"
+
 [portal.procurement.documents]
 agreement = "企业协议"
 agreementSub = "MSA、订单表和 DPA，一次签名完成。"
@@ -10557,6 +11185,8 @@ invoice = "发票"
 invoiceSub = "您的第一张订阅发票。"
 laterInvoice = "接受后可用"
 laterQuote = "报价发出后可用"
+laterSigning = "协议签署后可用"
+laterTitle = "交易后续内容"
 quote = "报价"
 quoteSub = "您的逐项企业报价。"
 sla = "SLA 附件"
@@ -10573,15 +11203,12 @@ title = "出现问题"
 [portal.procurement.hero]
 barAria = "阶段 {{current}} / {{total}}"
 ctaAgreement = "审核并签署协议"
-ctaExploring = "设置您的试用"
 ctaQuote = "审核您的报价"
 ctaReviewQuote = "审阅报价"
 ctaTrial = "构建您的报价"
-documents = "文档"
 eyebrow = "企业版"
 eyebrowCompany = "{{company}} 企业版"
 inviteTeammates = "邀请队友"
-licenseKey = "许可证密钥"
 liveSub = "您的组织已完成配置，许可证处于活跃状态。"
 liveTitle = "您已在 Stirling Enterprise 上线"
 next = "下一步：{{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "暂时无法生成离线许可证文件——请稍后重试。
 downloadOffline = "下载离线许可证 (.lic)"
 hint = "将此密钥粘贴到自托管实例中以激活它，或将其保留作记录。请妥善保管。"
 label = "您的许可证密钥"
-subtitle = "使用此密钥激活自托管实例，或保留以作记录。"
-title = "您的许可证密钥"
 trialFileHint = "这是您的试用许可证文件。协议就位后，请回来再次下载 — 与在线许可证密钥不同，.lic 文件不会自行更新。"
-
-[portal.procurement.link]
-cta = "关联账户"
-description = "采购在您关联的 Stirling 账户上运行：我们通过它预配试用、为报价定价并开始计费。关联账户即可开始。"
-eyebrow = "企业版"
-title = "关联您的账户以开始"
 
 [portal.procurement.live]
 description = "您的订阅已激活，许可证已签发。您的团队已预配，计费已开始。"
-eyebrow = "上线"
 title = "您已在 Stirling Enterprise 上线"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "暂时无法下载报价 PDF——请稍后重试。"
 
 [portal.procurement.payment]
 description = "您的报价已接受，许可证已激活——您的团队可以立即开始使用。准备好后支付第一张发票；您可以在这里付款或下载，无需电子邮件。"
-downloadAgreement = "下载已签署协议"
 downloadInvoice = "下载发票"
-eyebrow = "付款"
-title = "订阅已创建"
 viewInvoice = "查看并支付发票"
 
 [portal.procurement.review]
 acceptCta = "接受报价"
 annual = "年费（第 1 年）"
 downloadCta = "下载报价"
+oneTime = "一次性"
 poNumber = "采购订单：{{po}}"
 renewal = "期限结束后以 {{amount}}/年续订（+{{pct}}% CPI）"
 tcv = "{{years}} 年期限，预先全额支付：{{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "延长会增加 7 天并通知您的解决方案工程师。"
 bodyMaxed = "您已用完所有延长期限——如果需要更多时间，请联系您的解决方案工程师。"
-cancel = "取消试用"
 extend = "延长 7 天"
 maxed = "已达上限"
 subtitle = "您的免费试用持续到 {{date}}。无需银行卡。"
 title = "企业试用"
+
+[portal.procurement.validation]
+confirm = "确认你已获授权可代表该组织签署。"
+email = "请输入有效的 Email 地址。"
+eula = "同意 EULA 后可继续。"
+required = "此字段为必填。"
+seats = "请输入将有多少人参与试用。"
+volume = "请输入你预计每年要处理多少个 PDF。"
 
 [portal.review]
 subtitle = "来自你的策略运行和团队编辑器、需要你关注的任何内容。"
@@ -10735,6 +11358,7 @@ subtitle = "可复用的输入连接，用于将文档送入 Stirling。配置�
 title = "来源"
 
 [portal.sources.actions]
+connectDestination = "连接目标位置"
 connectSource = "连接来源"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "选择已处理文档的去向。灰显的连接器即将推
 comingSoon = "即将推出"
 comingSoonHeading = "即将推出"
 create = "创建来源"
+createDestination = "创建目标位置"
+createDestinationTitle = "添加目标位置"
 createTitle = "连接来源"
 delete = "删除"
 editTitle = "编辑来源"
@@ -10757,6 +11383,41 @@ save = "保存更改"
 description = "文件夹自动化只能使用管理员已允许的文件夹。请在文件夹访问设置中添加它，然后重试。"
 openSettings = "文件夹访问设置"
 title = "不允许使用此文件夹"
+
+[portal.sources.cloudFields.account]
+connect = "连接你的账户"
+connectAnother = "连接其他账户"
+connectFailed = "无法连接此账户。请重试，或请管理员检查应用注册。"
+label = "账户"
+placeholder = "选择一个账户"
+reconnect = "重新登录"
+unavailable = "此服务器已关闭连接你自己的账户。请选择组织连接。"
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "此服务器已关闭个人账户。"
+helperText = "你的账户可访问你能打开的内容，且无需管理员。组织连接在人员离职后仍可工作，并且只访问管理员设置的范围。"
+label = "登录方式"
+
+[portal.sources.cloudFields.authMode.options]
+account = "我的账户"
+organisation = "组织连接"
+
+[portal.sources.cloudFields.connection]
+helperText = "由管理员在“集成”下设置。被所有使用它的位置共享。"
+label = "组织连接"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "粘贴文件夹链接，或从 My Drive 顶层开始输入路径。留空表示 My Drive 顶层。该文件夹必须已存在。"
+placeholder = "文件夹链接，或 Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "你的 OneDrive 中的一个文件夹，或粘贴文件夹链接（在 OneDrive 中选择“复制链接”）。留空表示 OneDrive 顶层。该文件夹必须已存在。"
+placeholder = "Scans/Inbox，或文件夹链接"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "使用你的账号时，粘贴文件夹链接（在 SharePoint 中选择“复制链接”）。使用组织连接时，填写其文档库中的文件夹；留空表示文档库根目录。该文件夹必须已存在。"
+organisationPlaceholder = "文件夹链接，或 Scans/Inbox"
+placeholder = "文件夹链接"
 
 [portal.sources.delete]
 body = "删除 \"{{name}}\"？此操作无法撤销。引用它的政策需要更新。"
@@ -10821,6 +11482,7 @@ label = "电子邮件收件箱"
 [portal.sources.types.folder]
 description = "监视服务器上的目录以发现新文档。"
 label = "文件夹"
+outputDescription = "将结果保存到服务器上的目录。"
 
 [portal.sources.types.folder.fields.directory]
 helperText = "要监控新文件的文件夹绝对路径。"
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "从共享 Google Drive 文件夹中拉取文档。"
 label = "Google Drive"
+outputDescription = "将结果保存到 Google Drive 文件夹。"
 
 [portal.sources.types.network]
 description = "监视 SMB 网络共享以获取新文档。"
@@ -10867,10 +11530,12 @@ label = "网络驱动器"
 [portal.sources.types.onedrive]
 description = "监视 OneDrive 文件夹以获取新文档。"
 label = "OneDrive"
+outputDescription = "将结果保存到 OneDrive 文件夹。"
 
 [portal.sources.types.s3]
 description = "从 Amazon S3 或 S3-compatible 存储桶中拉取文档。"
 label = "Amazon S3"
+outputDescription = "将结果保存到 Amazon S3 或兼容 S3 的存储桶。"
 
 [portal.sources.types.s3.fields.connection]
 helperText = "已保存的连接，包含 bucket 和凭据。由使用它的每个源和流水线输出共享。"
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "从 SharePoint 文档库中拉取文档。"
 label = "SharePoint"
+outputDescription = "将结果保存到 SharePoint 文档库文件夹。"
 
 [portal.sources.types.unknown]
 label = "来源"
@@ -11074,6 +11740,14 @@ waiting = "已排队 ..."
 name = "Google Drive"
 scope = "文件导入"
 
+[provider.googledrive.accountScope]
+description = "drive 访问所有文件（Google 必须验证公开应用）；drive.file 仅访问用户选择的文件或 Stirling 创建的文件"
+label = "Drive 访问权限"
+
+[provider.googledrive.allowAccountConnections]
+description = "一次登录供编辑者及其流水线使用。关闭后仅允许组织连接。"
+label = "允许用户连接他们自己的账号"
+
 [provider.googledrive.apiKey]
 description = "来自 Google Cloud Console 的 Google Picker API 的 Google API Key"
 label = "API 密钥"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "来自 Google Cloud Console 的 Google OAuth 2.0 Client ID"
 label = "客户端 ID"
 
+[provider.googledrive.clientSecret]
+description = "允许用户为其流水线连接各自的 Google 账号。将下方重定向 URI 添加为该 OAuth 客户端的已授权重定向 URI。"
+label = "客户端密钥"
+
 [provider.googledrive.enabled]
 description = "允许用户直接从 Google Drive 导入文件"
 label = "启用 Google Drive 文件选择器"
 
 [provider.googledrive.errors]
+connectFailed = "无法连接你的 Google 账户。请在 设置 > 已连接的账户 中重试。"
 notConfigured = "Google Drive 未配置"
 pickerFailed = "打开 Google Drive 选择器失败"
+
+[provider.googledrive.redirectUri]
+description = "在 Google Cloud Console 中，将此项添加为 OAuth 客户端的已授权重定向 URI。"
+label = "重定向 URI"
+
+[provider.microsoft]
+name = "Microsoft 365（OneDrive 和 SharePoint）"
+scope = "文件与流水线"
+
+[provider.microsoft.allowAccountConnections]
+description = "一次登录供编辑者及其流水线使用。关闭后仅允许组织连接。"
+label = "允许用户连接他们自己的账号"
+
+[provider.microsoft.allowEditorSaves]
+description = "关闭以将编辑保留在 Stirling：从 OneDrive 打开的文件将改为下载，且服务器会拒绝保存到 OneDrive。"
+label = "允许编辑器保存回 OneDrive"
+
+[provider.microsoft.clientId]
+description = "来自一个 Microsoft Entra 应用注册。"
+label = "应用程序（客户端）ID"
+
+[provider.microsoft.clientSecret]
+description = "连接账号所需。仅保存在服务器上。"
+label = "客户端密钥"
+
+[provider.microsoft.enabled]
+description = "允许在流水线中使用 OneDrive 和 SharePoint"
+label = "启用 OneDrive 和 SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "在同一应用注册中，将此添加为 Single-page application redirect URI，用于从编辑器登录。"
+label = "Single-page application redirect URI"
+
+[provider.microsoft.redirectUri]
+description = "在 Entra 应用注册中，将此项添加为 Web 重定向 URI。"
+label = "重定向 URI"
+
+[provider.microsoft.setupSteps]
+connect = "保存并重启，然后在“已连接的账户”下连接一个账户。"
+permissions = "添加 Microsoft Graph 委派权限 Files.ReadWrite.All 和 Files.Read.All，以及 SharePoint 委派权限 MyFiles.Read 和 AllSites.Read，以便工作和学校账户可以打开文件选择器。"
+redirects = "向其添加下面两个重定向 URI：一个为 Web，另一个为 Single-page application。"
+register = "在 Microsoft Entra 管理中心注册一个应用。如果用户使用个人 OneDrive，请允许个人 Microsoft 账户。"
+secret = "创建一个 client secret，然后将其值和应用的 client ID 粘贴到下方。"
+
+[provider.microsoft.tenant]
+description = "common 适用于工作、学校和个人账号；organizations 仅适用于工作和学校；或使用租户 ID 以只允许一个组织"
+label = "目录（租户）ID"
 
 [provider.oauth2.generic]
 name = "通用 OAuth2"
@@ -11195,6 +11921,19 @@ label = "作用域"
 description = "用作用户名的字段（email、name、given_name、family_name、preferred_username）"
 label = "用作用户名"
 
+[provider.onedrive]
+pickerLoading = "正在连接到 OneDrive..."
+pickerTitle = "从 OneDrive 选择文件"
+
+[provider.onedrive.errors]
+connectFailed = "无法连接你的 Microsoft 账户。请在 设置 > 已连接的账户 中重试。"
+notConfigured = "未配置 OneDrive"
+pickerFailed = "打开 OneDrive 失败"
+popupBlocked = "你的浏览器阻止了 Microsoft 登录窗口。请为此站点允许弹出窗口，然后重试。"
+reconnect = "你的 Microsoft 账户需要重新登录。请在 设置 > 已连接的账户 中重新连接。"
+serverError = "OneDrive 或 Stirling 服务器出现问题。请重试，若持续发生，请询问管理员。"
+unreachable = "无法连接到 OneDrive。请检查你的连接并重试。"
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "通知"
 processor = "处理器"
 reader = "阅读器"
 signInToUse = "登录以使用此功能"
+
+[quickNav.accountMenu]
+localMode = "本地模式"
+server = "服务器设置"
+settings = "设置"
+signedOut = "未登录"
+signIn = "登录"
 
 [read]
 tags = "查看,打开,显示,阅读,查看器,PDF viewer,PDF reader,打开 PDF,查看 PDF,显示 PDF,预览,浏览"
@@ -11811,6 +12557,13 @@ title = "PDF གཙང་སེལ།"
 [sanitizePdf]
 tags = "གཙང་སེལ།,བདེ་འཇགས།,ཉེན་མེད།,ཉེན་ཁ་སེལ་བ།"
 
+[saveFile.menu]
+more = "更多保存选项"
+saveCopy = "另存为..."
+
+[saveFile.toolbar]
+mixed = "全部保存"
+
 [scalePages]
 tags = "调整大小,调整,缩放,页面大小,调整页面大小,缩放页面,更改大小,调整尺寸,放大,缩小页面,适合页面,A4,letter size"
 title = "ཤོག་ངོས་ཆེ་ཆུང་སྙོམ་སྒྲིག"
@@ -11905,6 +12658,162 @@ showTools = "查看不可用工具 ▾"
 title = "您的 Stirling-PDF 服务器不可达"
 toolNotAvailableLocally = "您的 Stirling-PDF 服务器已离线，且本地后端不提供 \"{{endpoint}}\"。"
 
+[serverSetup]
+back = "返回"
+collapse = "隐藏 {{setting}} 设置"
+configured = "已配置"
+continue = "继续"
+dialogLabel = "服务器设置"
+expand = "显示 {{setting}} 设置"
+finishSetup = "完成设置"
+loadErrorSubtitle = "开始前需要读取服务器的当前设置。"
+loadErrorTitle = "无法加载你的设置"
+off = "关"
+on = "开"
+save = "保存"
+stepCount = "{{current}} / {{total}}"
+
+[serverSetup.account]
+failed = "无法保存你的详细信息。请检查服务器是否可达，然后重试。"
+save = "保存并继续"
+signIn = "登录"
+signInAgainSubtitle = "使用新的用户名和密码重新登录以继续。"
+signInAgainTitle = "你的详细信息已保存"
+subtitle = "选择今后你的登录方式。"
+title = "设置你的账号"
+updating = "正在更新"
+updatingSubtitle = "请稍候。"
+updatingTitle = "正在更新你的详细信息"
+username = "用户名"
+usernameHelp = "用于登录。也可以使用邮箱地址。"
+
+[serverSetup.addresses]
+backendUrl = "服务器地址"
+backendUrlHelp = "登录提供方将用户重定向回来的地址。通常与网站地址相同。"
+frontendUrl = "网站地址"
+frontendUrlHelp = "用户打开 Stirling PDF 的地址。用于邮件、分享链接和 QR 码。"
+subtitle = "用户和登录提供方如何访问此服务器。"
+title = "地址"
+
+[serverSetup.ai]
+apiKey = "API 密钥"
+apiKeyHelp = "留空以使用 AI 引擎已有的密钥。"
+baseUrl = "基础 URL"
+engineUrl = "AI 引擎地址"
+fastModel = "快速模型"
+label = "自托管 AI"
+provider = "模型提供方"
+providerCustom = "兼容 OpenAI"
+smartModel = "完整模型"
+stirling = "Stirling AI"
+subtitle = "文档问答、自动化编辑与 AI 代理。"
+title = "AI"
+
+[serverSetup.analytics]
+accept = "同意并继续"
+acceptFinish = "同意并完成"
+changeLater = "你可以随时在 {{path}} 中更改。"
+decline = "拒绝并继续"
+declineFinish = "拒绝并完成"
+learnMore = "我们收集哪些数据"
+note = "与我们共享此服务器的使用数据，以帮助改进 Stirling PDF。我们绝不会收集文件或其内容。"
+title = "服务器分析"
+
+[serverSetup.documents]
+label = "文档问答"
+model = "嵌入模型"
+provider = "嵌入提供方"
+providerHelp = "将文档文本转换为可用于回答问题的搜索索引。"
+
+[serverSetup.email]
+from = "发件人地址"
+host = "SMTP 主机"
+label = "发送邮件"
+password = "密码"
+port = "端口"
+subtitle = "用于邀请、签名请求和分享。"
+title = "邮件"
+username = "用户名"
+
+[serverSetup.error]
+email = "请输入邮箱地址"
+issuerUnreachable = "无法连接到此发行方。请检查地址，并确保此服务器可以访问它。"
+passwordIncorrect = "密码不正确"
+passwordLength = "至少使用 8 个字符"
+passwordMismatch = "两次输入的密码不一致"
+passwordRejected = "服务器未接受此密码。请尝试其他密码。"
+passwordUnchanged = "请选择与当前密码不同的新密码"
+port = "请输入 1 到 65535 之间的端口"
+providerName = "只能使用字母、数字、短横线或下划线"
+required = "必填"
+url = "请输入完整地址，以 http:// 或 https:// 开头"
+username = "使用 3 到 50 个字母、数字或 . _ + - @，或使用邮箱地址"
+usernameTaken = "该用户名已被占用"
+
+[serverSetup.files]
+sharing = "文件共享"
+sharingOffWarning = "关闭共享后，现有分享链接将失效。"
+storage = "存储文件"
+storageOffWarning = "关闭存储后，用户先前保存在服务器上的文件将无法再打开。"
+subtitle = "管理文件存储与共享。"
+title = "文件"
+
+[serverSetup.finish]
+errorNote = "请检查服务器是否可达，并确认你仍以管理员身份登录。"
+errorSubtitle = "未重启任何内容。"
+errorTitle = "无法保存你的设置"
+manualSubtitle = "此服务器无法自行重启。请重启其容器或服务以应用设置。"
+manualTitle = "设置已保存"
+restartFailedSubtitle = "服务器未重启。请重启其容器或服务以应用设置。"
+restartingSubtitle = "服务器恢复后本页面将自动刷新，通常在一分钟内。"
+restartingTitle = "正在重启你的服务器"
+retry = "重试"
+saving = "正在保存"
+savingSubtitle = "请稍候。"
+savingTitle = "正在保存你的设置"
+
+[serverSetup.language]
+auto = "与各自浏览器匹配"
+label = "默认语言"
+subtitle = "新访客首先看到的语言。"
+title = "语言"
+
+[serverSetup.mcp]
+label = "MCP 服务器"
+
+[serverSetup.password]
+confirm = "确认新密码"
+current = "当前密码"
+new = "新密码"
+
+[serverSetup.signIn]
+clientId = "客户端 ID"
+clientSecret = "客户端密钥"
+issuer = "发行方 URL"
+label = "登录方式"
+oidc = "其他 OpenID Connect"
+password = "用户名和密码"
+providerName = "提供方名称"
+providerNameHelp = "显示在登录按钮上，例如 okta 或 entra。"
+redirectNote = "在你的提供方中添加此重定向 URI："
+subtitle = "你的团队如何登录。"
+title = "登录"
+
+[serverSetup.signingIn]
+button = "正在登录"
+title = "正在使用默认凭据登录"
+
+[serverSetup.start]
+custom = "自定义"
+quick = "快速开始"
+setupLabel = "设置"
+subtitle = "用几个步骤为你的团队完成设置。"
+title = "你的服务器已就绪"
+
+[serverSetup.summary]
+subtitle = "检查关键设置。其余保持默认。"
+title = "快速开始"
+
 [session]
 expired = "ཁྱེད་ཀྱི་གླེང་མོལ་དུས་ཡོལ་ཟིན། ཤོག་ངོས་གསར་སྒྱུར་བྱས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱེད་རོགས།"
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "隐私"
 storageSharing = "文件存储与共享"
 systemSettings = "系统设置"
+
+[settings.connectedAccounts]
+description = "你自己的 OneDrive、SharePoint 和 Google Drive，用于你的流水线。"
+title = "已连接账号"
 
 [settings.connectedInstances]
 confirmBody = "这会撤销该实例对你在 Stirling Cloud 中团队的访问权限。它不会删除本地文件，也不会移除已记录的使用量。若要再次连接，请在该实例上按照原始连接步骤操作。"
@@ -11992,6 +12905,13 @@ selfhosted = "自托管"
 apiKeys = "API 密钥"
 apiKeysDescription = "用于从脚本和集成调用 Stirling API 的个人密钥。"
 title = "开发者"
+
+[settings.feedback]
+label = "反馈"
+
+[settings.feedback.send]
+description = "向 Stirling 团队报告问题或提出改进建议。"
+label = "发送反馈"
 
 [settings.general]
 autoUnzip = "自动解压 API 响应"
@@ -12058,6 +12978,7 @@ checkForUpdates = "检查更新"
 currentBackendVersion = "当前后端版本"
 currentFrontendVersion = "当前前端版本"
 description = "检查更新并查看版本信息"
+descriptionManaged = "查看版本信息"
 latestVersion = "最新版本"
 managedByAdmin = "由管理员管理"
 modeAuto = "自动安装更新"
@@ -12135,15 +13056,24 @@ title = "法律文件"
 backendDescription = "与此服务器捆绑的后端依赖项许可证。"
 backendLabel = "后端许可证"
 backendTitle = "后端第三方许可证"
+clearSearch = "清除搜索"
 empty = "未找到依赖项。"
 frontendDescription = "打包到发布构建中的前端依赖项许可证。"
 frontendLabel = "前端许可证"
 frontendTitle = "前端第三方许可证"
 license = "许可证"
+licenseAbout = "关于"
+licenseAboutCompound = "关于 {{short}}"
+licenseAboutTitle = "关于 {{short}}"
 listDescription = "该列表直接在 UI 中从发布包或后端端点显示。"
 listTitle = "捆绑依赖项"
 loadError = "加载第三方许可证失败"
 module = "模块"
+noMatch = "没有匹配的依赖项。"
+searchPlaceholder = "搜索依赖项"
+showingCount = "{{count}} 个依赖项"
+showingCount_one = "{{count}} 个依赖项"
+showingCount_other = "{{count}} 个依赖项"
 version = "版本"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "请输入邮箱"
 emptyPassword = "请输入密码"
 emptyUsername = "请输入用户名"
 oauthFailed = "OAuth 登录失败。请重试。"
+openResetFailed = "无法打开浏览器以重置你的密码。"
 
 [setup.saas]
 title = "登录 Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "不可见签名同样提供加密学验证"
 description = "控制签名是在文档中可见还是以不可见方式嵌入。"
 title = "签名可见性"
 
+[signedPdf]
+editsBlocked = "此 PDF 已进行数字签名，且对已签名 PDF 的修改已被禁用。你仍可查看或打印、转换为其他格式，或再次签名。"
+editsBlockedStatus = "已签名：禁止编辑"
+editsBlockedTitle = "已签名的 PDF 无法更改"
+
 [signingDetail]
 allSigned = "所有人都已签署。请查看文档，然后最终确定。"
 awaitingOwner = "发起人准备好后将最终确定文档。"
@@ -13110,7 +14046,6 @@ noLinks = "暂无有效的共享链接。"
 noSharedUsers = "暂无用户拥有访问权限。"
 openInApp = "在 Stirling PDF 中打开"
 ownerLabel = "所有者"
-ownerUnknown = "未知"
 removeLink = "移除链接"
 removeUser = "移除"
 requiresLogin = "此共享文件需要登录。"
@@ -13249,6 +14184,11 @@ remove = "移除"
 roleColumn = "角色"
 title = "团队成员"
 
+[teamWelcome]
+invite = "邀请成员"
+message = "邀请你的团队，与你一起开始协作。"
+title = "你的团队套餐已激活。"
+
 [textAlign]
 center = "居中"
 left = "左对齐"
@@ -13290,7 +14230,6 @@ toggleDetails = "切换详情"
 
 [tool]
 endpointUnavailable = "此工具在您的服务器上不可用。"
-endpointUnavailableClickable = "此模式不可用。点击以登录。"
 filesLoading = "文件仍在加载中，请稍候。"
 filesLoadingProgress = "{{loaded}} / {{total}} 个文件正在加载..."
 invalidParams = "请填写必填设置。"
@@ -13298,6 +14237,8 @@ noFiles = "添加文件以开始。"
 scopeFiles = "文件"
 scopeThisFile = "此文件"
 selectFilesHint = "在“活动文件”中选择文件以运行此工具"
+signInRequired = "此功能需要 Stirling 账户。登录以继续。"
+signInToUse = "登录以使用"
 singleFileScope = "仅应用于：{{fileName}}"
 viewerMode = "切换到文件编辑器以添加多个文件。"
 
@@ -13790,6 +14731,7 @@ coverPageView = "单独显示封面页"
 disableColorFilter = "禁用颜色滤镜"
 documentUpdated = "文档已更新"
 dualPageView = "双页视图"
+editText = "编辑文本"
 enableDarkFilter = "启用深色滤镜"
 enableSepiaFilter = "启用棕褐色滤镜"
 engineLoadError = "无法初始化 PDF 查看器引擎"
@@ -14158,8 +15100,10 @@ closeAll = "关闭所有文件"
 closePdf = "关闭 PDF"
 deselectAll = "取消全选"
 downloadAll = "全部下载"
+editText = "编辑文本"
 exitAnnotations = "退出批注模式"
 exitRedaction = "退出涂黑模式"
+findReplace = "查找并替换"
 formFill = "表单编辑器"
 hideToolbar = "隐藏工具栏"
 moreActions = "更多操作"

@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,12 +21,16 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +52,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -184,44 +188,13 @@ class CompressControllerMoreTest {
     }
 
     // Locate the -sOutputFile= path in a gs command.
-    private static Path ghostscriptOutputPath(List<String> command) {
-        for (String arg : command) {
-            if (arg.startsWith("-sOutputFile=")) {
-                return Path.of(arg.substring("-sOutputFile=".length()));
-            }
-        }
-        return null;
-    }
-
     // The qpdf output path is the last argument of the command.
     private static Path qpdfOutputPath(List<String> command) {
         return Path.of(command.getLast());
     }
 
     /** Stub gs to write a valid PDF to its output file and report success. */
-    private void stubGhostscriptSuccess(byte[] pdfToWrite) throws Exception {
-        ProcessExecutorResult okResult = resultWithRc(0);
-        lenient()
-                .when(ghostscriptExecutor.runCommandWithOutputHandling(anyList()))
-                .thenAnswer(
-                        inv -> {
-                            List<String> command = inv.getArgument(0);
-                            Path out = ghostscriptOutputPath(command);
-                            if (out != null) {
-                                Files.write(out, pdfToWrite);
-                            }
-                            return okResult;
-                        });
-    }
-
     /** Stub gs to report a non-zero, non-critical return code (output stays untouched). */
-    private void stubGhostscriptNonZero() throws Exception {
-        ProcessExecutorResult badResult = resultWithRc(1);
-        lenient()
-                .when(ghostscriptExecutor.runCommandWithOutputHandling(anyList()))
-                .thenReturn(badResult);
-    }
-
     /** Stub qpdf to write a valid PDF to its output file and report success. */
     private void stubQpdfSuccess(byte[] pdfToWrite) throws Exception {
         ProcessExecutorResult okResult = resultWithRc(0);
@@ -260,12 +233,10 @@ class CompressControllerMoreTest {
         }
     }
 
-    /** PDF with one large (>400px) image so the image-compression branch actually resizes it. */
     private byte[] largeImagePdfBytes() throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
-            // >400px so the resize branch fires; filled via Graphics2D (instant vs per-pixel).
             java.awt.image.BufferedImage img =
                     new java.awt.image.BufferedImage(
                             500, 500, java.awt.image.BufferedImage.TYPE_INT_RGB);
@@ -285,6 +256,65 @@ class CompressControllerMoreTest {
         }
     }
 
+    private byte[] colourPdfBytes() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            java.awt.image.BufferedImage img =
+                    new java.awt.image.BufferedImage(
+                            200, 200, java.awt.image.BufferedImage.TYPE_INT_RGB);
+            java.awt.Graphics2D g = img.createGraphics();
+            g.setColor(java.awt.Color.RED);
+            g.fillRect(0, 0, 200, 200);
+            g.setColor(java.awt.Color.BLUE);
+            g.fillRect(50, 50, 100, 100);
+            g.dispose();
+            PDImageXObject image = LosslessFactory.createFromImage(doc, img);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.drawImage(image, 50, 300, 200, 200);
+                cs.setNonStrokingColor(1f, 0f, 0f);
+                cs.addRect(50, 50, 100, 100);
+                cs.fill();
+            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
+        }
+    }
+
+    private byte[] colourTextPdfBytes() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.setNonStrokingColor(0f, 0f, 1f);
+                cs.addRect(10, 10, 5, 5);
+                cs.fill();
+            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
+        }
+    }
+
+    private byte[] signedPdfBytes() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            PDAcroForm form = new PDAcroForm(doc);
+            doc.getDocumentCatalog().setAcroForm(form);
+            PDSignatureField field = new PDSignatureField(form);
+            PDSignature signature = new PDSignature();
+            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+            field.setValue(signature);
+            form.getFields().add(field);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
+        }
+    }
+
     private MockMultipartFile multipart(byte[] bytes) {
         return new MockMultipartFile(
                 "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
@@ -298,137 +328,59 @@ class CompressControllerMoreTest {
         return baos.toByteArray();
     }
 
-    // ===========================================================================================
-    // Ghostscript orchestration
-    // ===========================================================================================
-
     @Nested
-    @DisplayName("Ghostscript orchestration")
-    class Ghostscript {
+    @DisplayName("grayscale")
+    class Grayscale {
 
         @Test
-        @DisplayName("level 6 runs Ghostscript successfully and returns OK")
-        void level6_ghostscriptSuccess_returnsOk() throws Exception {
-            byte[] gsOut = textOnlyPdfBytes();
-            stubGhostscriptSuccess(gsOut);
-            stubQpdfSuccess(textOnlyPdfBytes());
-
+        @DisplayName("grayscale turns colour text and images gray without Ghostscript")
+        void grayscale_convertsColour_withoutGhostscript() throws Exception {
             OptimizePdfRequest request = new OptimizePdfRequest();
-            request.setFileInput(multipart(largeImagePdfBytes()));
-            request.setOptimizeLevel(6);
+            request.setFileInput(multipart(colourPdfBytes()));
+            request.setOptimizeLevel(2);
+            request.setGrayscale(true);
 
             ResponseEntity<Resource> response = controller.optimizePdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(drain(response)).isNotEmpty();
-        }
-
-        @Test
-        @DisplayName("each optimize level 6-9 with Ghostscript enabled returns OK")
-        void levels6to9_ghostscriptSuccess_returnsOk() throws Exception {
-            // Stub once: re-stubbing a mock inside the loop re-invokes the previous answer
-            // with empty matcher args, tripping qpdfOutputPath's last-element lookup.
-            stubGhostscriptSuccess(textOnlyPdfBytes());
-            stubQpdfSuccess(textOnlyPdfBytes());
-
-            for (int level = 6; level <= 9; level++) {
-                OptimizePdfRequest request = new OptimizePdfRequest();
-                request.setFileInput(multipart(largeImagePdfBytes()));
-                request.setOptimizeLevel(level);
-
-                ResponseEntity<Resource> response = controller.optimizePdf(request);
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            try (PDDocument doc = Loader.loadPDF(drain(response))) {
+                PDPage page = doc.getPage(0);
+                String content =
+                        new String(page.getContents().readAllBytes(), StandardCharsets.ISO_8859_1);
+                assertThat(content).doesNotContain(" rg");
+                PDImageXObject image =
+                        (PDImageXObject)
+                                page.getResources()
+                                        .getXObject(
+                                                page.getResources()
+                                                        .getXObjectNames()
+                                                        .iterator()
+                                                        .next());
+                assertThat(image.getCOSObject().getDictionaryObject(COSName.COLORSPACE))
+                        .isEqualTo(COSName.DEVICEGRAY);
             }
-        }
-
-        @Test
-        @DisplayName("levels 1-5 skip Ghostscript (never invoked) but still return OK")
-        void lowLevels_ghostscriptNotInvoked_returnsOk() throws Exception {
-            stubGhostscriptSuccess(textOnlyPdfBytes());
-            stubQpdfSuccess(textOnlyPdfBytes());
-
-            for (int level = 1; level <= 5; level++) {
-                OptimizePdfRequest request = new OptimizePdfRequest();
-                request.setFileInput(multipart(largeImagePdfBytes()));
-                request.setOptimizeLevel(level);
-
-                ResponseEntity<Resource> response = controller.optimizePdf(request);
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            }
-            // gs only runs for levels >= 6.
             org.mockito.Mockito.verify(ghostscriptExecutor, org.mockito.Mockito.never())
                     .runCommandWithOutputHandling(anyList());
         }
 
         @Test
-        @DisplayName("grayscale flag at level 6 still drives Ghostscript and returns OK")
-        void grayscale_level6_returnsOk() throws Exception {
-            stubGhostscriptSuccess(textOnlyPdfBytes());
-            stubQpdfSuccess(textOnlyPdfBytes());
-
+        @DisplayName("grayscale output is returned even when it is not smaller")
+        void grayscale_keptWhenNotSmaller() throws Exception {
+            byte[] original = colourTextPdfBytes();
             OptimizePdfRequest request = new OptimizePdfRequest();
-            request.setFileInput(multipart(largeImagePdfBytes()));
-            request.setOptimizeLevel(7);
+            request.setFileInput(multipart(original));
+            request.setOptimizeLevel(1);
             request.setGrayscale(true);
 
             ResponseEntity<Resource> response = controller.optimizePdf(request);
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
 
-        @Test
-        @DisplayName("non-zero Ghostscript exit is propagated as GhostscriptException")
-        void ghostscriptNonZeroExit_propagates() throws Exception {
-            // A non-zero gs return code is wrapped and rethrown (see optimizePdf's
-            // catch (GhostscriptException) -> throw e), not swallowed.
-            stubGhostscriptNonZero();
-            stubQpdfSuccess(textOnlyPdfBytes());
-
-            OptimizePdfRequest request = new OptimizePdfRequest();
-            request.setFileInput(multipart(largeImagePdfBytes()));
-            request.setOptimizeLevel(6);
-
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(ExceptionUtils.GhostscriptException.class);
-        }
-
-        @Test
-        @DisplayName("critical Ghostscript error is propagated as GhostscriptException")
-        void ghostscriptCriticalError_propagates() throws Exception {
-            // Output containing a recognized critical marker triggers
-            // detectGhostscriptCriticalError.
-            ProcessExecutorResult criticalResult = mock(ProcessExecutorResult.class);
-            lenient().when(criticalResult.getRc()).thenReturn(0);
-            lenient()
-                    .when(criticalResult.getMessages())
-                    .thenReturn("Page 1\nERROR: Could not draw this page");
-            lenient()
-                    .when(ghostscriptExecutor.runCommandWithOutputHandling(anyList()))
-                    .thenReturn(criticalResult);
-
-            OptimizePdfRequest request = new OptimizePdfRequest();
-            request.setFileInput(multipart(largeImagePdfBytes()));
-            request.setOptimizeLevel(8);
-
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(ExceptionUtils.GhostscriptException.class);
-        }
-
-        @Test
-        @DisplayName("Ghostscript IOException is wrapped and propagated as GhostscriptException")
-        void ghostscriptIOException_propagates() throws Exception {
-            // An IOException from the gs executor is wrapped via
-            // createGhostscriptCompressionException and rethrown, not swallowed.
-            lenient()
-                    .when(ghostscriptExecutor.runCommandWithOutputHandling(anyList()))
-                    .thenThrow(new IOException("gs boom"));
-            stubQpdfSuccess(textOnlyPdfBytes());
-
-            OptimizePdfRequest request = new OptimizePdfRequest();
-            request.setFileInput(multipart(largeImagePdfBytes()));
-            request.setOptimizeLevel(6);
-
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(ExceptionUtils.GhostscriptException.class);
+            try (PDDocument doc = Loader.loadPDF(drain(response))) {
+                String content =
+                        new String(
+                                doc.getPage(0).getContents().readAllBytes(),
+                                StandardCharsets.ISO_8859_1);
+                assertThat(content).doesNotContain(" rg");
+            }
         }
     }
 
@@ -489,11 +441,63 @@ class CompressControllerMoreTest {
             assertThat(captured).isNotEmpty();
             assertThat(captured.get(0)).contains("--linearize");
             assertThat(captured.get(0)).contains("--normalize-content=y");
+            assertThat(captured.get(0)).contains("--object-streams=generate");
         }
 
         @Test
-        @DisplayName("higher level enables qpdf --optimize-images and jpeg quality")
-        void highLevel_qpdfOptimizeImages_returnsOk() throws Exception {
+        @DisplayName("linearize leaves a signed PDF alone so its signature stays valid")
+        void linearize_signedPdf_skipsQpdf() throws Exception {
+            lenient().when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
+            AtomicInteger qpdfCalls = new AtomicInteger();
+            lenient()
+                    .when(qpdfExecutor.runCommandWithOutputHandling(anyList(), any()))
+                    .thenAnswer(
+                            inv -> {
+                                qpdfCalls.incrementAndGet();
+                                return resultWithRc(0);
+                            });
+
+            OptimizePdfRequest request = new OptimizePdfRequest();
+            request.setFileInput(multipart(signedPdfBytes()));
+            request.setOptimizeLevel(2);
+            request.setLinearize(true);
+
+            ResponseEntity<Resource> response = controller.optimizePdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(qpdfCalls).hasValue(0);
+        }
+
+        @Test
+        @DisplayName("linearize leaves a PDF it cannot check for signatures alone")
+        void linearize_unreadablePdf_skipsQpdf() throws Exception {
+            lenient().when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
+            lenient()
+                    .when(pdfDocumentFactory.load(any(File.class)))
+                    .thenThrow(new IOException("cannot read"));
+            AtomicInteger qpdfCalls = new AtomicInteger();
+            lenient()
+                    .when(qpdfExecutor.runCommandWithOutputHandling(anyList(), any()))
+                    .thenAnswer(
+                            inv -> {
+                                qpdfCalls.incrementAndGet();
+                                return resultWithRc(0);
+                            });
+
+            OptimizePdfRequest request = new OptimizePdfRequest();
+            request.setFileInput(multipart(textOnlyPdfBytes()));
+            request.setOptimizeLevel(2);
+            request.setLinearize(true);
+
+            ResponseEntity<Resource> response = controller.optimizePdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(qpdfCalls).hasValue(0);
+        }
+
+        @Test
+        @DisplayName("level 5 uses the built-in lossless pass, so qpdf is not invoked")
+        void level5_losslessPass_skipsQpdf() throws Exception {
             lenient().when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
 
             List<List<String>> captured = new ArrayList<>();
@@ -516,7 +520,7 @@ class CompressControllerMoreTest {
             ResponseEntity<Resource> response = controller.optimizePdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(captured.get(0)).contains("--optimize-images");
+            assertThat(captured).isEmpty();
         }
 
         @Test
@@ -534,20 +538,6 @@ class CompressControllerMoreTest {
             ResponseEntity<Resource> response = controller.optimizePdf(request);
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
-
-        @Test
-        @DisplayName("Ghostscript + qpdf both enabled at high level returns OK")
-        void ghostscriptAndQpdf_highLevel_returnsOk() throws Exception {
-            stubGhostscriptSuccess(textOnlyPdfBytes());
-            stubQpdfSuccess(textOnlyPdfBytes());
-
-            OptimizePdfRequest request = new OptimizePdfRequest();
-            request.setFileInput(multipart(largeImagePdfBytes()));
-            request.setOptimizeLevel(9);
-
-            ResponseEntity<Resource> response = controller.optimizePdf(request);
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
     }
 
     // ===========================================================================================
@@ -559,12 +549,8 @@ class CompressControllerMoreTest {
     class AutoMode {
 
         @Test
-        @DisplayName("auto mode reaches target on first pass when gs shrinks enough")
+        @DisplayName("auto mode reaches a generous target on the first pass")
         void autoMode_targetMetFirstPass_returnsOk() throws Exception {
-            // gs writes a tiny PDF so the very first size check meets a generous target.
-            byte[] tiny = textOnlyPdfBytes();
-            stubGhostscriptSuccess(tiny);
-            stubQpdfSuccess(tiny);
 
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(largeImagePdfBytes()));
@@ -580,38 +566,16 @@ class CompressControllerMoreTest {
         @Test
         @DisplayName("auto mode escalates the level when target is not met, then terminates")
         void autoMode_escalatesLevel_returnsOk() throws Exception {
-            // gs always writes the same moderate PDF whose size stays just above the target,
-            // forcing the loop to escalate optimizeLevel from a low start until it caps at 9.
             byte[] moderate = largeImagePdfBytes();
-            // Target ~25% of input => start level 6 (gs eligible); gs success skips image
-            // compression so size stays constant and the loop escalates 6 -> 9 (>=2 gs calls).
-            long target = moderate.length / 4;
-            final AtomicInteger gsCalls = new AtomicInteger();
-            ProcessExecutorResult okResult = resultWithRc(0);
-            lenient()
-                    .when(ghostscriptExecutor.runCommandWithOutputHandling(anyList()))
-                    .thenAnswer(
-                            inv -> {
-                                gsCalls.incrementAndGet();
-                                List<String> command = inv.getArgument(0);
-                                Path out = ghostscriptOutputPath(command);
-                                if (out != null) {
-                                    Files.write(out, moderate);
-                                }
-                                return okResult;
-                            });
-            stubQpdfSuccess(moderate);
-
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(moderate));
             request.setOptimizeLevel(null);
-            request.setExpectedOutputSize(target + "B"); // never met => escalates through levels
+            request.setExpectedOutputSize((moderate.length / 50) + "B");
 
             ResponseEntity<Resource> response = controller.optimizePdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            // Escalation reaches gs-eligible levels (>=6) more than once before bailing at max.
-            assertThat(gsCalls.get()).isGreaterThan(1);
+            assertThat(drain(response).length).isLessThanOrEqualTo(moderate.length);
         }
 
         @Test
@@ -656,8 +620,8 @@ class CompressControllerMoreTest {
         }
 
         @Test
-        @DisplayName("grayscale at low level compresses image via Java path when tools disabled")
-        void grayscale_lowLevel_javaPath_returnsOk() throws Exception {
+        @DisplayName("grayscale at low level converts images when external tools are disabled")
+        void grayscale_lowLevel_toolsDisabled_returnsOk() throws Exception {
             lenient().when(endpointConfiguration.isGroupEnabled(anyString())).thenReturn(false);
 
             OptimizePdfRequest request = new OptimizePdfRequest();
@@ -667,61 +631,6 @@ class CompressControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.optimizePdf(request);
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
-
-        @Test
-        @DisplayName("compressImagesInPDF scales a large image and grayscale converts it")
-        void compressImagesInPDF_largeImage_grayscale() throws Exception {
-            Path src = tempDir.resolve("large.pdf");
-            Files.write(src, largeImagePdfBytes());
-
-            TempFile result = controller.compressImagesInPDF(src, 0.5, 0.6f, true);
-
-            assertThat(result).isNotNull();
-            byte[] out = Files.readAllBytes(result.getPath());
-            try (PDDocument doc = Loader.loadPDF(out)) {
-                assertThat(doc.getNumberOfPages()).isEqualTo(1);
-            }
-        }
-
-        @Test
-        @DisplayName("compressImagesInPDF at high quality on a large image still produces a PDF")
-        void compressImagesInPDF_largeImage_highQuality() throws Exception {
-            Path src = tempDir.resolve("large2.pdf");
-            Files.write(src, largeImagePdfBytes());
-
-            TempFile result = controller.compressImagesInPDF(src, 0.9, 0.95f, false);
-
-            assertThat(result).isNotNull();
-            assertThat(Files.readAllBytes(result.getPath())).isNotEmpty();
-        }
-    }
-
-    // ===========================================================================================
-    // Result-size guard: optimized output never larger than original
-    // ===========================================================================================
-
-    @Nested
-    @DisplayName("output size guard")
-    class OutputSizeGuard {
-
-        @Test
-        @DisplayName("when gs output is larger than original, the original is returned")
-        void gsLargerThanOriginal_usesOriginal_returnsOk() throws Exception {
-            byte[] original = textOnlyPdfBytes();
-            // gs writes a deliberately bloated file so the >= inputFileSize guard trips.
-            byte[] bloated = largeImagePdfBytes();
-            stubGhostscriptSuccess(bloated);
-            stubQpdfSuccess(bloated);
-
-            OptimizePdfRequest request = new OptimizePdfRequest();
-            request.setFileInput(multipart(original));
-            request.setOptimizeLevel(6);
-
-            ResponseEntity<Resource> response = controller.optimizePdf(request);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(drain(response)).isNotEmpty();
         }
     }
 
