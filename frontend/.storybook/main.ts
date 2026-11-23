@@ -132,6 +132,9 @@ const config: StorybookConfig = {
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY": JSON.stringify(
         flavor === "saas" ? "storybook-anon-key" : "",
       ),
+      // No story can reach Stripe: with a key, a checkout story would load
+      // Stripe's real embedded checkout and hand it a made-up client secret.
+      "import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY": JSON.stringify(""),
     };
     return config;
   },

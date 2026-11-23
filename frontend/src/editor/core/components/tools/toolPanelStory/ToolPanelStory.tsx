@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { useIsFetching } from "@tanstack/react-query";
 import { PlatformProviders } from "@editor/components/PlatformProviders";
 import { AppProviders } from "@editor/components/AppProviders";
@@ -30,6 +36,7 @@ import {
 // The editor's App loads Tailwind and Storybook's preview does not; without it
 // the Workbench's flex column collapses and the viewer lays out no pages.
 import "@editor/styles/tailwind.css";
+import classes from "@editor/components/tools/toolPanelStory/ToolPanelStory.module.css";
 
 export interface ToolPanelStoryProps {
   toolId: ToolId;
@@ -135,6 +142,21 @@ function HeldWorkbench({ workbench }: { workbench: WorkbenchType }) {
  * content height so a capture shows every setting rather than a scrolled window.
  * The panel's stage is absolutely positioned, so its height is read, not inherited.
  */
+/**
+ * A story shows one tool, so closing it would leave the tool picker in its
+ * place. The close button stays drawn; the stylesheet stops pointer clicks and
+ * this stops the click a keyboard press fires.
+ */
+function ignoreToolClose(event: MouseEvent<HTMLDivElement>) {
+  if (
+    event.target instanceof Element &&
+    event.target.closest(".sui-panelhdr__close")
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+
 function PanelFrame({ showWorkbench }: { showWorkbench?: boolean }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | null>(null);
@@ -156,7 +178,9 @@ function PanelFrame({ showWorkbench }: { showWorkbench?: boolean }) {
   return (
     <div
       ref={frameRef}
+      className={classes.frame}
       data-queries-settled={queriesSettled}
+      onClickCapture={ignoreToolClose}
       style={{
         display: "flex",
         height: height ? `max(100vh, ${height}px)` : "100vh",
