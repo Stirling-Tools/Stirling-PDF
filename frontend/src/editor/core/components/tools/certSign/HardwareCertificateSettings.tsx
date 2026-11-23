@@ -54,6 +54,7 @@ const HardwareCertificateSettings = ({
 
   const [certs, setCerts] = useState<HardwareCertificateInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pkcs11Loaded, setPkcs11Loaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [libraries, setLibraries] = useState<Pkcs11LibraryInfo[]>([]);
@@ -81,6 +82,7 @@ const HardwareCertificateSettings = ({
       onParameterChange("password", "");
     }
     setCerts([]);
+    setPkcs11Loaded(false);
     setError(null);
   };
 
@@ -205,6 +207,7 @@ const HardwareCertificateSettings = ({
     const selection = value ?? "";
     setLibrarySelection(selection);
     setCerts([]);
+    setPkcs11Loaded(false);
     onParameterChange("alias", undefined);
     if (selection === CUSTOM_LIBRARY_VALUE) {
       onParameterChange("pkcs11LibraryPath", customLibrary || "");
@@ -219,13 +222,18 @@ const HardwareCertificateSettings = ({
     }
     setLoading(true);
     setError(null);
+    setPkcs11Loaded(false);
     listPkcs11Certificates({
       libraryPath: parameters.pkcs11LibraryPath,
       slot: parameters.pkcs11Slot,
       pin: parameters.password,
     })
-      .then(applyCerts)
+      .then((loaded) => {
+        applyCerts(loaded);
+        setPkcs11Loaded(true);
+      })
       .catch(async (e) => {
+        applyCerts([]);
         setError(
           (await serverErrorReason(e)) ||
             (e as { message?: string })?.message ||
@@ -250,7 +258,7 @@ const HardwareCertificateSettings = ({
       selectedAlias={parameters.alias}
       onSelect={(alias) => onParameterChange("alias", alias)}
       loading={loading}
-      disabled={disabled}
+      disabled={disabled || loading}
       onRefresh={onRefresh}
     />
   );
@@ -427,7 +435,7 @@ const HardwareCertificateSettings = ({
             {t("certSign.hardware.listCerts", "Show digital IDs")}
           </Button>
           {errorAlert}
-          {certs.length > 0 && idList()}
+          {pkcs11Loaded && idList()}
         </>
       )}
     </Stack>
