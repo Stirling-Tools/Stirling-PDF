@@ -17,11 +17,7 @@ export function useUnsavedChangesGuard(
   isDirty: () => boolean,
 ): void {
   const { actions } = useNavigationActions();
-  const {
-    setHasUnsavedChanges,
-    registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker,
-  } = actions;
+  const { setHasUnsavedChanges, registerUnsavedChangesChecker } = actions;
   const { hasUnsavedChanges } = useNavigationState();
   const flagCaughtUpRef = useRef(false);
 
@@ -42,9 +38,10 @@ export function useUnsavedChangesGuard(
 
   useEffect(() => {
     // Only covers the pending flag: once it has landed, a discard clears it while the store stays dirty.
-    registerUnsavedChangesChecker(() => isDirty() && !flagCaughtUpRef.current);
-    return () => unregisterUnsavedChangesChecker();
-  }, [isDirty, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+    return registerUnsavedChangesChecker(
+      () => isDirty() && !flagCaughtUpRef.current,
+    );
+  }, [isDirty, registerUnsavedChangesChecker]);
 
   useEffect(() => {
     // The flag re-renders most of the app; urgent, it holds the first typed letter off screen.

@@ -542,7 +542,6 @@ const EmbedPdfViewerContent = ({
   const {
     setHasUnsavedChanges,
     registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker,
     registerNavigationWarningHandlers,
     unregisterNavigationWarningHandlers,
   } = useNavigationGuard();
@@ -1113,18 +1112,13 @@ const EmbedPdfViewerContent = ({
       );
     };
 
-    registerUnsavedChangesChecker(checkForChanges);
-
-    return () => {
-      unregisterUnsavedChangesChecker();
-    };
+    return registerUnsavedChangesChecker(checkForChanges);
   }, [
     historyApiRef,
     hasUnsentEdits,
     previewFile,
     isFormFillToolActive,
     registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker,
     isManualRedactMode,
     redactionsApplied,
   ]);

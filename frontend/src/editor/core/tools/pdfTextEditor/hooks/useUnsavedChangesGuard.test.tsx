@@ -73,6 +73,25 @@ describe("useUnsavedChangesGuard", () => {
     expect(leave).toHaveBeenCalledTimes(1);
   });
 
+  it.each(["mounted", "unmounted"])(
+    "keeps the pending edit protected when a clean viewer checker is %s",
+    async (viewerState) => {
+      renderEditor();
+      const leave = vi.fn();
+      await act(async () => {
+        flushSync(() => setDirty(true));
+        expect(navigation.hasUnsavedChanges).toBe(false);
+        const unregisterViewer = navigation.registerUnsavedChangesChecker(
+          () => false,
+        );
+        if (viewerState === "unmounted") unregisterViewer();
+        navigation.requestNavigation(leave);
+      });
+      expect(leave).not.toHaveBeenCalled();
+      expect(navigation.pendingNavigation).toBe(leave);
+    },
+  );
+
   it("lets navigation through once the user discards the edits", () => {
     renderEditor();
     act(() => setDirty(true));
