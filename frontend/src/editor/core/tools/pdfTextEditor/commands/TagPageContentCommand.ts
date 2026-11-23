@@ -13,13 +13,20 @@ import {
   type Furniture,
 } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import {
+  TagFormFieldCommand,
+  taggableFormFields,
+} from "@editor/tools/pdfTextEditor/commands/TagFormFieldCommand";
+import {
   TagLinkCommand,
   taggableLinks,
 } from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
-import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type {
+  HeadingType,
+  StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
   ARTIFACT_TAG,
   highestMcid,
@@ -42,6 +49,7 @@ type Step =
   | {
       kind: "text";
       runId: string;
+      type: StructureType;
       mcid: number;
       objects: ObjectRetag[];
       runMarks: readonly TagMark[];
@@ -70,30 +78,34 @@ interface Plan {
 
 /**
  * Tag the untagged content drawn directly by a page, as a starting point the
- * user then corrects: each text block a P and each image a Figure, or an
- * artifact of the kind `furniture` names it as (by run or image id), every
- * other object an artifact, the new elements read in content order. Content already
+ * user then corrects: each text block the heading `headings` names it as (by
+ * run id) or else a P, each image a Figure, or an artifact of the kind
+ * `furniture` names it as (by run or image id), every other object an
+ * artifact, the new elements read in content order. Content already
  * tagged or marked an artifact is left alone. Content marked with an MCID no
  * element owns counts as untagged, losing that mark. Content in a form
- * XObject is left alone: the editor cannot tag inside one. Each link
- * annotation no element holds is then tagged (TagLinkCommand), where it can
- * be. The page must already be read.
+ * XObject is left alone: the editor cannot tag inside one. Each link and
+ * form field no element holds is then tagged (TagLinkCommand,
+ * TagFormFieldCommand), where it can be. The page must already be read.
  */
 export class TagPageContentCommand implements Command {
   readonly type = "tag-page-content";
   readonly pageIndex: number;
   private readonly furniture: ReadonlyMap<string, Furniture>;
+  private readonly headings: ReadonlyMap<string, HeadingType>;
   /** Chosen on first apply, so a redo reuses its MCIDs. */
   private plan: Plan | null = null;
-  /** The links the first apply tagged, which a redo tags again. */
-  private links: TagLinkCommand[] | null = null;
+  /** The annotations the first apply tagged, which a redo tags again. */
+  private annotations: Command[] | null = null;
 
   constructor(opts: {
     pageIndex: number;
     furniture?: ReadonlyMap<string, Furniture>;
+    headings?: ReadonlyMap<string, HeadingType>;
   }) {
     this.pageIndex = opts.pageIndex;
     this.furniture = opts.furniture ?? new Map();
+    this.headings = opts.headings ?? new Map();
   }
 
   apply(doc: EditorDocument): void {
@@ -109,14 +121,20 @@ export class TagPageContentCommand implements Command {
         ),
       );
     }
-    this.plan ??= planTagging(doc, page, structure, this.furniture);
+    this.plan ??= planTagging(
+      doc,
+      page,
+      structure,
+      this.furniture,
+      this.headings,
+    );
     const done: Step[] = [];
     try {
       for (const step of this.plan.steps) {
         applyStep(doc, page, structure, step, this.plan.follows);
         done.push(step);
       }
-      this.tagLinks(doc);
+      this.tagAnnotations(doc);
     } catch (err) {
       for (const step of done.reverse()) revertStep(doc, page, structure, step);
       throw new RolledBackError(err);
@@ -129,7 +147,9 @@ export class TagPageContentCommand implements Command {
     if (!this.plan) return;
     const page = doc.page(this.pageIndex);
     const structure = doc.structure(this.pageIndex);
-    for (const link of [...(this.links ?? [])].reverse()) link.revert(doc);
+    for (const tag of [...(this.annotations ?? [])].reverse()) {
+      tag.revert(doc);
+    }
     for (const step of [...this.plan.steps].reverse()) {
       revertStep(doc, page, structure, step);
     }
@@ -142,38 +162,67 @@ export class TagPageContentCommand implements Command {
   }
 
   /**
-   * Tag the links once their text is: on the first apply each one that can
-   * be, and on a redo the same ones. Throws, with none tagged, when a redo
-   * cannot.
+   * Tag the links and form fields once the text is, which links cut from and
+   * fields are named by: on the first apply each one that can be, and on a
+   * redo the same ones. Throws, with none tagged, when a redo cannot.
    */
-  private tagLinks(doc: EditorDocument): void {
-    if (this.links === null) {
-      this.links = [];
-      for (const { annotation } of taggableLinks(doc, this.pageIndex)) {
-        const link = new TagLinkCommand({
-          pageIndex: this.pageIndex,
-          annotation,
-        });
+  private tagAnnotations(doc: EditorDocument): void {
+    if (this.annotations === null) {
+      this.annotations = [];
+      for (const tag of this.annotationTags(doc)) {
         try {
-          link.apply(doc);
-          this.links.push(link);
+          tag.apply(doc);
+          this.annotations.push(tag);
         } catch {
           /* left untagged rather than failing the page */
         }
       }
       return;
     }
-    const done: TagLinkCommand[] = [];
+    const done: Command[] = [];
     try {
-      for (const link of this.links) {
-        link.apply(doc);
-        done.push(link);
+      for (const tag of this.annotations) {
+        tag.apply(doc);
+        done.push(tag);
       }
     } catch (err) {
-      for (const link of done.reverse()) link.revert(doc);
+      for (const tag of done.reverse()) tag.revert(doc);
       throw err;
     }
   }
+
+  private annotationTags(doc: EditorDocument): Command[] {
+    const pageIndex = this.pageIndex;
+    return [
+      ...taggableLinks(doc, pageIndex).map(
+        ({ annotation }) => new TagLinkCommand({ pageIndex, annotation }),
+      ),
+      ...taggableFormFields(doc, pageIndex).map(
+        ({ annotation }) => new TagFormFieldCommand({ pageIndex, annotation }),
+      ),
+    ];
+  }
+}
+
+/**
+ * The runs TagPageContentCommand would tag as text on the page, which must
+ * already be read, by id in the order their elements join the structure
+ * tree. Furniture is left out of the plan here, so its runs are listed too.
+ */
+export function textRunsToTag(
+  doc: EditorDocument,
+  pageIndex: number,
+): string[] {
+  const structure = doc.structure(pageIndex);
+  if (structure.cannotAddElement() !== null) return [];
+  const { steps } = planTagging(
+    doc,
+    doc.page(pageIndex),
+    structure,
+    new Map(),
+    new Map(),
+  );
+  return steps.flatMap((step) => (step.kind === "text" ? [step.runId] : []));
 }
 
 /** True when TagPageContentCommand would change anything on the page, which must already be read. */
@@ -183,8 +232,18 @@ export function hasUntaggedContent(
 ): boolean {
   const structure = doc.structure(pageIndex);
   if (structure.cannotAddElement() !== null) return false;
-  const { steps } = planTagging(doc, doc.page(pageIndex), structure, new Map());
-  return steps.length > 0 || taggableLinks(doc, pageIndex).length > 0;
+  const { steps } = planTagging(
+    doc,
+    doc.page(pageIndex),
+    structure,
+    new Map(),
+    new Map(),
+  );
+  return (
+    steps.length > 0 ||
+    taggableLinks(doc, pageIndex).length > 0 ||
+    taggableFormFields(doc, pageIndex).length > 0
+  );
 }
 
 /** The untagged content as steps, and where each new element reads. */
@@ -193,6 +252,7 @@ function planTagging(
   page: Page,
   structure: PageStructure,
   furniture: ReadonlyMap<string, Furniture>,
+  headings: ReadonlyMap<string, HeadingType>,
 ): Plan {
   const m = doc.module;
   const marks = new Map<number, TagMark[]>();
@@ -246,7 +306,14 @@ function planTagging(
             objects,
             runMarks,
           }
-        : { kind: "text", runId: run.id, mcid: nextMcid++, objects, runMarks },
+        : {
+            kind: "text",
+            runId: run.id,
+            type: headings.get(run.id) ?? TEXT_TAG,
+            mcid: nextMcid++,
+            objects,
+            runMarks,
+          },
     });
   }
 
@@ -359,10 +426,10 @@ function applyStep(
     case "text": {
       const run = page.runs.find((r) => r.id === step.runId);
       if (!run) throw new Error(`no run ${step.runId}`);
-      const tag = { name: TEXT_TAG, mcid: step.mcid };
+      const tag = { name: step.type, mcid: step.mcid };
       for (const object of step.objects) retagObject(doc, object, tag);
       run.tagMarks = [tag];
-      structure.addElement(step.mcid, TEXT_TAG, follows.get(step.mcid));
+      structure.addElement(step.mcid, step.type, follows.get(step.mcid));
       return;
     }
     case "furniture": {
@@ -401,7 +468,7 @@ function revertStep(
 ): void {
   switch (step.kind) {
     case "text": {
-      for (const object of step.objects) restoreObject(doc, object, TEXT_TAG);
+      for (const object of step.objects) restoreObject(doc, object, step.type);
       const run = page.runs.find((r) => r.id === step.runId);
       if (run) run.tagMarks = step.runMarks;
       structure.removeElement(step.mcid);

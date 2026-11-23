@@ -87,7 +87,7 @@ export function useTrackThumbnails(): TrackThumbnailStore {
       const rendering = isPageImage(file)
         ? generateImageThumbnail(file, IMAGE_PAGE_THUMBNAIL_SIZE).then(
             (thumbnail) => {
-              addThumbnailToCache(key, thumbnail);
+              addThumbnailToCache(key, thumbnail, page.sourceFileId);
               return thumbnail;
             },
           )

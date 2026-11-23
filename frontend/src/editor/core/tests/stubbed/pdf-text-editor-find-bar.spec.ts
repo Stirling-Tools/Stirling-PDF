@@ -1,6 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
+import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -8,16 +10,13 @@ const SAMPLE_PDF = path.join(
 );
 
 async function openFind(page: Page): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE_PDF);
+  await openInTextEditor(page, SAMPLE_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
+  // The first page's render holds the main thread, and a cold worker's
+  // can outlast the click's wait for the button to stop moving.
+  await waitForEditorReady(page, 60_000);
   await page.getByTestId("pdf-editor-open-find").click();
   await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
 }
