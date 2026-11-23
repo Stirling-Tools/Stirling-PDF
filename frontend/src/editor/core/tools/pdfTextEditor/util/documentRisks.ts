@@ -24,7 +24,12 @@ export function signedSignatureCount(doc: EditorDocument): number {
   for (let i = 0; i < count; i++) {
     try {
       const signature = m.FPDF_GetSignatureObject(doc.docPtr, i);
-      if (!signature || m.FPDFSignatureObj_GetContents(signature, 0, 0) !== 0)
+      if (
+        !signature ||
+        m.FPDFSignatureObj_GetContents(signature, 0, 0) !== 0 ||
+        m.FPDFSignatureObj_GetByteRange(signature, 0, 0) !== 0 ||
+        m.FPDFSignatureObj_GetSubFilter(signature, 0, 0) !== 0
+      )
         signed++;
     } catch {
       signed++;

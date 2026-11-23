@@ -985,15 +985,47 @@ test.describe("PDF text editor: saving a written document", () => {
     });
     expect(after).toMatchObject({ error: null, pages: 2 });
 
-    const download = page.waitForEvent("download");
-    await page.getByTestId("pdf-editor-download").click();
-    const saved = await (await download).createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of saved) chunks.push(chunk as Buffer);
+    const savedCopy = () =>
+      page.evaluate(async () => {
+        const store = (
+          window as unknown as {
+            __editor_store: { source: { fileId: string | null } };
+          }
+        ).__editor_store;
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const request = indexedDB.open("stirling-pdf-files");
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        try {
+          const record = await new Promise<
+            { data: Blob | ArrayBuffer } | undefined
+          >((resolve, reject) => {
+            const request = db
+              .transaction("files")
+              .objectStore("files")
+              .get(store.source.fileId!);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          });
+          if (!record) return null;
+          const bytes =
+            record.data instanceof Blob
+              ? await record.data.arrayBuffer()
+              : record.data;
+          return Array.from(new Uint8Array(bytes));
+        } finally {
+          db.close();
+        }
+      });
+    await expect
+      .poll(async () => (await savedCopy())?.length ?? 0)
+      .toBeGreaterThan(0);
+    const saved = await savedCopy();
     await openInTextEditor(page, {
       name: "saved-copy.pdf",
       mimeType: "application/pdf",
-      buffer: Buffer.concat(chunks),
+      buffer: Buffer.from(saved!),
     });
     await expect
       .poll(async () => docShape(page), { timeout: 30_000 })

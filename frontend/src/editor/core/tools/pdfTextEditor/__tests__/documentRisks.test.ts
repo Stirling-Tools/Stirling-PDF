@@ -11,6 +11,10 @@ function mkDoc(opts: {
   unsignedFields?: number;
   formType?: number;
   throwOnSig?: boolean;
+  missingSignature?: boolean;
+  throwOnContents?: boolean;
+  byteRangeLength?: number;
+  subFilterLength?: number;
   secHandlerRev?: number;
   throwOnEncrypt?: boolean;
 }): EditorDocument {
@@ -22,9 +26,14 @@ function mkDoc(opts: {
         if (opts.throwOnSig) throw new Error("no API");
         return (opts.signatures ?? 0) + (opts.unsignedFields ?? 0);
       },
-      FPDF_GetSignatureObject: (_doc: number, index: number) => index + 1,
-      FPDFSignatureObj_GetContents: (signature: number) =>
-        signature <= (opts.signatures ?? 0) ? 512 : 0,
+      FPDF_GetSignatureObject: (_doc: number, index: number) =>
+        opts.missingSignature ? 0 : index + 1,
+      FPDFSignatureObj_GetContents: (signature: number) => {
+        if (opts.throwOnContents) throw new Error("unreadable contents");
+        return signature <= (opts.signatures ?? 0) ? 512 : 0;
+      },
+      FPDFSignatureObj_GetByteRange: () => opts.byteRangeLength ?? 0,
+      FPDFSignatureObj_GetSubFilter: () => opts.subFilterLength ?? 0,
       FPDF_GetFormType: () => opts.formType ?? 0,
       FPDF_GetSecurityHandlerRevision: () => {
         if (opts.throwOnEncrypt) throw new Error("no API");
@@ -59,6 +68,17 @@ describe("detectSaveRisks", () => {
     const r = detectSaveRisks(mkDoc({ signatures: 1, unsignedFields: 2 }));
     expect(r.signatures).toBe(1);
     expect(detectSaveRisks(mkDoc({ unsignedFields: 1 })).signatures).toBe(0);
+  });
+
+  it.each([
+    { missingSignature: true },
+    { throwOnContents: true },
+    { byteRangeLength: 4 },
+    { subFilterLength: 20 },
+  ])("protects a signature with inconclusive contents: %j", (inspection) => {
+    const risks = detectSaveRisks(mkDoc({ unsignedFields: 1, ...inspection }));
+    expect(risks.signatures).toBe(1);
+    expect(hasSaveRisks(risks)).toBe(true);
   });
 
   it("flags XFA forms (formType 2/3) but not plain AcroForm (1)", () => {

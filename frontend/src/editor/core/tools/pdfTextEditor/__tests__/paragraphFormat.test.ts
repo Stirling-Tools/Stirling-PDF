@@ -496,6 +496,7 @@ async function burstInFormattedParagraph() {
 
   store.redo();
   expect(para.text).toBe(typed);
+  expect(centres()).toEqual(centredAfter);
   expect(rules()).toBe(para.paragraphLineSlots.length);
 
   store.undo();
