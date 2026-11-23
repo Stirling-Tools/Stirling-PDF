@@ -51,6 +51,9 @@ const config: StorybookConfig = {
     name: "@storybook/react-vite",
     options: {},
   },
+  // Read by manager.ts to name the build beside the sidebar's title.
+  managerHead: (head) =>
+    `${head ?? ""}<script>window.STORYBOOK_FLAVOR = ${JSON.stringify(flavor)};</script>`,
   typescript: {
     reactDocgen: "react-docgen-typescript",
   },
