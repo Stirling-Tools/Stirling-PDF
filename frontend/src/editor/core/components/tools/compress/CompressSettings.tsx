@@ -5,9 +5,9 @@ import {
   Select,
   Checkbox,
   Slider,
-  Tooltip,
   Box,
 } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import SliderWithInput from "@editor/components/shared/sliderWithInput/SliderWithInput";
 import { useTranslation } from "react-i18next";
@@ -166,7 +166,7 @@ const CompressSettings = ({
         </Stack>
 
         <Tooltip
-          label={
+          content={
             lineArtReason ??
             t(
               "compress.lineArt.unavailable",
@@ -174,8 +174,9 @@ const CompressSettings = ({
             )
           }
           disabled={lineArtAvailable !== false}
-          multiline
-          maw={280}
+          position="top"
+          arrow
+          maxWidth={280}
         >
           <Box
             style={{
