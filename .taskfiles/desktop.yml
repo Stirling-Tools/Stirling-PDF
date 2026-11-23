@@ -50,7 +50,7 @@ tasks:
     desc: "Fetch the OCR languages bundled with the desktop app"
     dir: ..
     cmds:
-      - node frontend/scripts/fetch-tessdata.mjs app/core/src/main/resources/ocr/tessdata-fast-catalog.json frontend/src-tauri/tessdata eng
+      - node frontend/scripts/fetch-tessdata.mjs app/core/src/main/resources/ocr/tessdata-catalog.json frontend/src-tauri/tessdata eng
 
   sign:mac-natives:
     desc: "Sign the macOS native libraries inside the bundled backend jar"

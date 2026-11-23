@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 /**
  * What counts as an installed OCR language: a {@code <code>.traineddata} file in the tessdata
@@ -30,6 +31,22 @@ public final class OcrLanguages {
                 .filter(code -> !OSD.equalsIgnoreCase(code))
                 .sorted()
                 .toList();
+    }
+
+    /**
+     * {@code languages} with Chinese and Japanese moved to the front, otherwise in order. Tesseract
+     * leans on the first language: with English first, Chinese and Japanese pages had 7 to 15 times
+     * the character errors of the same pages with their own language first.
+     */
+    public static List<String> cjkFirst(List<String> languages) {
+        return Stream.concat(
+                        languages.stream().filter(OcrLanguages::isCjk),
+                        languages.stream().filter(code -> !isCjk(code)))
+                .toList();
+    }
+
+    private static boolean isCjk(String code) {
+        return code.startsWith("chi_") || code.startsWith("jpn");
     }
 
     /**

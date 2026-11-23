@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -392,14 +393,41 @@ class NativeTesseractServiceTest {
             assertEquals(WORD_BASELINE * pointsPerPixel - 36, first.getY(), 8, "y of STIRLING");
         }
 
+        @Test
+        void chineseTextHasNoSpacesBetweenCharacters(@TempDir Path work) throws Exception {
+            assumeTrue(
+                    Files.exists(Path.of(tessdata, "chi_sim.traineddata")),
+                    "TESSDATA_PREFIX has no chi_sim.traineddata");
+            String[] lines = {"本季度的审查发现客户满意度上升", "供应商的交货时间仍然不稳定"};
+            assumeTrue(
+                    new Font(Font.SANS_SERIF, Font.BOLD, 44).canDisplayUpTo(String.join("", lines))
+                            == -1,
+                    "no font for Chinese");
+
+            Outcome out =
+                    run(scannedPage(0, 0, lines), OcrOptions.DEFAULT, work, List.of("chi_sim"));
+
+            Pattern split = Pattern.compile("\\p{IsHan} +\\p{IsHan}");
+            String layer = text(out.reload());
+            assertTrue(layer.contains("审查"), layer);
+            assertFalse(split.matcher(layer).find(), layer);
+            assertFalse(split.matcher(out.sidecar()).find(), out.sidecar());
+        }
+
         /** Saves {@code source}, OCRs it the way the controller does and returns the result. */
         private Outcome run(PDDocument source, OcrOptions options, Path work) throws Exception {
+            return run(source, options, work, List.of("eng"));
+        }
+
+        private Outcome run(
+                PDDocument source, OcrOptions options, Path work, List<String> languages)
+                throws Exception {
             Path in = work.resolve("in.pdf");
             try (source) {
                 source.save(in.toFile());
             }
             try (PDDocument doc = Loader.loadPDF(in.toFile())) {
-                String sidecar = service.ocrDocument(in, doc, List.of("eng"), options, DPI, work);
+                String sidecar = service.ocrDocument(in, doc, languages, options, DPI, work);
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                 doc.save(bytes);
                 return new Outcome(sidecar, bytes.toByteArray());

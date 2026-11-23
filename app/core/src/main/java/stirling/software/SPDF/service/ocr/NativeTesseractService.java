@@ -557,6 +557,7 @@ public class NativeTesseractService {
             OcrTextLayer.replaceWithImage(document, page, image);
         }
         try (PDDocument textLayer = Loader.loadPDF(result.textLayer().toFile())) {
+            if (CjkSpacing.containsCjk(result.text())) CjkSpacing.joinTextLayer(textLayer);
             PDFormXObject form = new LayerUtility(document).importPageAsForm(textLayer, 0);
             OcrTextLayer.graft(document, page, form);
         }
@@ -680,7 +681,7 @@ public class NativeTesseractService {
             }
             BytePointer text = ocr.GetUTF8Text();
             try {
-                return text == null ? "" : text.getString(StandardCharsets.UTF_8);
+                return text == null ? "" : CjkSpacing.join(text.getString(StandardCharsets.UTF_8));
             } finally {
                 if (text != null) tesseract.TessDeleteText(text);
             }

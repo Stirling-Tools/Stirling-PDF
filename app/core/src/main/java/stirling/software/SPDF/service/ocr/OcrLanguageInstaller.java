@@ -38,7 +38,7 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * Adds OCR languages to the tessdata folder of the desktop app. A language is copied from a
  * Tesseract the user already installed when one is found (no download, but only once Tesseract has
- * proved it can load it), otherwise downloaded from a pinned tessdata_fast commit. URLs and
+ * proved it can load it), otherwise downloaded from a pinned tessdata_best commit. URLs and
  * SHA-256s come only from the bundled catalogue, never from the request. Installing is desktop-only
  * because core has no admin check; servers manage tessdata through their volume, as documented.
  */
@@ -46,12 +46,12 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class OcrLanguageInstaller {
 
-    static final String CATALOG_RESOURCE = "ocr/tessdata-fast-catalog.json";
+    static final String CATALOG_RESOURCE = "ocr/tessdata-catalog.json";
     private static final String ALLOWED_URL_PREFIX =
             "https://raw.githubusercontent.com/tesseract-ocr/";
     private static final Pattern CODE = Pattern.compile("[a-z][a-z0-9_]{1,31}");
 
-    /** The largest catalogue file is about 12 MB; this allows for a slow connection. */
+    /** The largest catalogue file is about 16 MB; this allows for a slow connection. */
     private static final Duration DOWNLOAD_TIMEOUT = Duration.ofMinutes(10);
 
     /** Where an installable language would come from. */

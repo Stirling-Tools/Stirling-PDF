@@ -278,7 +278,7 @@ class OcrLanguageInstallerTest {
         assertTrue(catalog.baseUrl().contains(catalog.commit()));
         CatalogEntry eng =
                 catalog.languages().stream().filter(e -> e.code().equals("eng")).findFirst().get();
-        assertEquals(4113088, eng.sizeBytes());
+        assertEquals(15400601, eng.sizeBytes());
         assertEquals(64, eng.sha256().length());
         // tessdata keeps renamed models as git symlinks, which raw URLs serve as a few
         // bytes naming the target; one of those is not a model.

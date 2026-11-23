@@ -146,7 +146,8 @@ public class OCRController {
 
         // Validate selected languages
         selectedLanguages =
-                selectedLanguages.stream().filter(availableLanguages::contains).toList();
+                OcrLanguages.cjkFirst(
+                        selectedLanguages.stream().filter(availableLanguages::contains).toList());
 
         if (selectedLanguages.isEmpty()) {
             throw ExceptionUtils.createOcrInvalidLanguagesException();
