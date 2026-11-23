@@ -8,7 +8,7 @@ import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@editor/hooks/useWorkbenchBarButtons";
-import type { IconName } from "@editor/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { BarButton } from "@editor/components/viewer/ViewerBarControls";
 import { ViewerDocumentMenu } from "@editor/components/viewer/ViewerDocumentMenu";
@@ -217,6 +217,22 @@ export function useViewerWorkbenchBarButtons(
     // click would close the other's.
     const railOwned = readerMode && !isPhone;
     const railSection = railOwned ? ("top" as const) : pageSection;
+    // A narrow page bar folds these into a menu, which acts through the
+    // registered action and shows the registered icon.
+    const foldsIntoMenu = pageSection === "page-bar";
+    const togglePan = () =>
+      leaveTextEditThen(() => {
+        viewer.panActions.togglePan();
+        if (!isPanning && isRulerActive) setIsRulerActive?.(false);
+      });
+    const toggleRuler = () =>
+      leaveTextEditThen(() => {
+        const next = !isRulerActive;
+        setIsRulerActive?.(next);
+        if (next && isPanning) {
+          viewer.panActions.disablePan();
+        }
+      });
     const popoverPosition = isPhone
       ? ("bottom-end" as const)
       : railOwned
@@ -302,6 +318,10 @@ export function useViewerWorkbenchBarButtons(
         section: pageSection,
         order: 12,
         active: isPanning,
+        icon: <Icon name="hand" size="1rem" />,
+        disabled: panRedactionBlocked,
+        onClick: togglePan,
+        foldsIntoMenu,
         render: ({ disabled }) => (
           <BarButton
             icon="hand"
@@ -311,12 +331,7 @@ export function useViewerWorkbenchBarButtons(
             tooltipPosition={pageTooltip}
             active={isPanning}
             disabled={disabled || panRedactionBlocked}
-            onClick={() =>
-              leaveTextEditThen(() => {
-                viewer.panActions.togglePan();
-                if (!isPanning && isRulerActive) setIsRulerActive?.(false);
-              })
-            }
+            onClick={togglePan}
           />
         ),
       },
@@ -327,6 +342,9 @@ export function useViewerWorkbenchBarButtons(
         section: pageSection,
         order: 14,
         active: Boolean(isRulerActive),
+        icon: <Icon name="ruler" size="1rem" />,
+        onClick: toggleRuler,
+        foldsIntoMenu,
         render: ({ disabled }) => (
           <BarButton
             icon="ruler"
@@ -336,15 +354,7 @@ export function useViewerWorkbenchBarButtons(
             tooltipPosition={pageTooltip}
             active={Boolean(isRulerActive)}
             disabled={disabled}
-            onClick={() =>
-              leaveTextEditThen(() => {
-                const next = !isRulerActive;
-                setIsRulerActive?.(next);
-                if (next && isPanning) {
-                  viewer.panActions.disablePan();
-                }
-              })
-            }
+            onClick={toggleRuler}
           />
         ),
       },
@@ -355,6 +365,10 @@ export function useViewerWorkbenchBarButtons(
         section: railSection,
         order: 16,
         active: isReadingAloud,
+        icon: <Icon name="volume-2" size="1rem" />,
+        disabled: typeof window === "undefined" || !window.speechSynthesis,
+        onClick: handleReadAloud,
+        foldsIntoMenu: foldsIntoMenu && !railOwned,
         render: ({ disabled }) => (
           <Popover
             position={popoverPosition}

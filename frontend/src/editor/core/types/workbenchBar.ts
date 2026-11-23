@@ -53,6 +53,8 @@ export interface WorkbenchBarButtonConfig {
   className?: string;
   /** Optional active state to highlight the control */
   active?: boolean;
+  /** In a narrow page bar, sits in its Tools menu while off. */
+  foldsIntoMenu?: boolean;
 }
 
 /** One file the bar's download writes out. */

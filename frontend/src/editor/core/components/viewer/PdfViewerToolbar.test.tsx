@@ -119,6 +119,7 @@ describe("PdfViewerToolbar registered controls", () => {
   beforeEach(() => {
     device.isPhone = false;
     bar.buttons = [];
+    bar.actions = {};
   });
 
   it("draws the controls registered for the page bar, and only those", () => {
@@ -145,6 +146,49 @@ describe("PdfViewerToolbar registered controls", () => {
     expect(screen.getByRole("button", { name: "Page tool" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Hidden tool" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Top tool" })).toBeNull();
+  });
+
+  it("lists the tools that fold into its Tools menu, acting through their actions", async () => {
+    const user = userEvent.setup();
+    const pan = vi.fn();
+    bar.buttons = [
+      {
+        id: "pan",
+        section: "page-bar",
+        ariaLabel: "Pan",
+        foldsIntoMenu: true,
+        active: true,
+        render: () => <button type="button">Pan</button>,
+      },
+      {
+        id: "ruler",
+        section: "page-bar",
+        ariaLabel: "Ruler",
+        foldsIntoMenu: true,
+        render: () => <button type="button">Ruler</button>,
+      },
+    ];
+    bar.actions = { pan, ruler: vi.fn() };
+    render(
+      // jsdom lays nothing out, so the menu would read its zero-size trigger
+      // as scrolled away and hide itself.
+      <MantineProvider
+        theme={{
+          components: { Menu: { defaultProps: { hideDetached: false } } },
+        }}
+      >
+        <PdfViewerToolbar />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByTestId("viewer-page-tools-menu"));
+    const panItem = await screen.findByRole("menuitem", { name: "Pan" });
+    expect(panItem).toHaveAttribute("data-checked", "true");
+    expect(
+      await screen.findByRole("menuitem", { name: "Ruler" }),
+    ).not.toHaveAttribute("data-checked");
+    await user.click(panItem);
+    expect(pan).toHaveBeenCalledOnce();
   });
 });
 

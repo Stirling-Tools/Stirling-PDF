@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { Fragment, useState, useEffect, useRef } from "react";
 import { Paper, Group, Menu, NumberInput, TextInput } from "@mantine/core";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
@@ -148,6 +148,14 @@ export function PdfViewerToolbar({
   const pageBarButtons = buttons.filter(
     (button) => button.section === "page-bar" && (button.visible ?? true),
   );
+  // A narrow bar folds these into a Tools menu where the first of them sits.
+  const foldingButtons = pageBarButtons.filter(
+    (button) => button.foldsIntoMenu,
+  );
+  const firstFoldingId = foldingButtons[0]?.id;
+  // The menu shows a folded tool that is on, as the tool's own button would.
+  const activeFoldedTool = foldingButtons.find((button) => button.active);
+  const toolsLabel = t("viewer.tools", "Tools");
 
   // A page tool edits pages upright, so the view stays unrotated while it is open.
   const rotateDisabled = useViewerPageTool() != null;
@@ -389,16 +397,70 @@ export function PdfViewerToolbar({
         <>
           <div className="pdf-viewer-toolbar__divider" />
           {pageBarButtons.map((button) => (
-            <span key={button.id} className="pdf-viewer-toolbar__tool">
-              {button.render?.({
-                id: button.id,
-                disabled: Boolean(button.disabled || allButtonsDisabled),
-                allButtonsDisabled,
-                action: actions[button.id],
-                triggerAction: () => actions[button.id]?.(),
-                active: Boolean(button.active),
-              })}
-            </span>
+            <Fragment key={button.id}>
+              {button.id === firstFoldingId && (
+                <Menu
+                  shadow="md"
+                  position="top"
+                  withinPortal
+                  closeOnItemClick={false}
+                >
+                  <Menu.Target>
+                    <span className="pdf-viewer-toolbar__tools-menu">
+                      <Tooltip content={toolsLabel} position="top" arrow>
+                        <ActionIcon
+                          variant={activeFoldedTool ? "primary" : "tertiary"}
+                          size={buttonSize}
+                          aria-label={toolsLabel}
+                          data-testid="viewer-page-tools-menu"
+                        >
+                          {activeFoldedTool?.icon ?? (
+                            <Icon name="pencil-ruler" size={18} />
+                          )}
+                        </ActionIcon>
+                      </Tooltip>
+                    </span>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    {foldingButtons.map((tool) => (
+                      <Menu.Item
+                        key={tool.id}
+                        leftSection={tool.icon}
+                        rightSection={
+                          tool.active ? <Icon name="check" size="1rem" /> : null
+                        }
+                        data-checked={tool.active || undefined}
+                        disabled={Boolean(
+                          tool.disabled ||
+                          allButtonsDisabled ||
+                          !actions[tool.id],
+                        )}
+                        onClick={() => actions[tool.id]?.()}
+                      >
+                        {tool.ariaLabel}
+                      </Menu.Item>
+                    ))}
+                  </Menu.Dropdown>
+                </Menu>
+              )}
+              <span
+                className={
+                  button.foldsIntoMenu
+                    ? "pdf-viewer-toolbar__tool pdf-viewer-toolbar__tool--folds"
+                    : "pdf-viewer-toolbar__tool"
+                }
+                data-active={button.active || undefined}
+              >
+                {button.render?.({
+                  id: button.id,
+                  disabled: Boolean(button.disabled || allButtonsDisabled),
+                  allButtonsDisabled,
+                  action: actions[button.id],
+                  triggerAction: () => actions[button.id]?.(),
+                  active: Boolean(button.active),
+                })}
+              </span>
+            </Fragment>
           ))}
         </>
       )}
