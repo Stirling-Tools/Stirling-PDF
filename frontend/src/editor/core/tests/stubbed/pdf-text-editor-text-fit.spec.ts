@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -15,15 +16,10 @@ interface DriftResult {
 }
 
 async function openFixture(page: Page, name: string): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(
-      path.join(import.meta.dirname, `../test-fixtures/${name}.pdf`),
-    );
+  await openInTextEditor(
+    page,
+    path.join(import.meta.dirname, `../test-fixtures/${name}.pdf`),
+  );
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });

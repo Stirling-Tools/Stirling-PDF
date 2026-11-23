@@ -2,25 +2,46 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
-import { Group, Loader, Select, Text, Tooltip } from "@mantine/core";
-import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
+import {
+  getParsedComboboxData,
+  Group,
+  Loader,
+  Select,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import type {
+  ComboboxData,
+  ComboboxItem,
+  ComboboxItemGroup,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
-import { alert } from "@editor/components/toast";
 import { useServerFontsGroupLabel } from "@editor/tools/pdfTextEditor/hooks/useServerFontsGroupLabel";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
 import {
-  familyOptions,
+  familyOf,
+  isDocumentFontId,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  BUILT_IN_FAMILIES,
+  documentFamilies as groupDocumentFonts,
+  externalFamilies,
+  fontFamilyKey,
+  type FontFamilyEntry,
+} from "@editor/tools/pdfTextEditor/util/fontFaces";
+import {
   isLocalFontAccessSupported,
   listLocalFontsIfGranted,
   loadedLocalFonts,
   retryLocalFonts,
   subscribeLocalFonts,
-  type FontFamilyOption,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   loadedServerFonts,
@@ -28,60 +49,53 @@ import {
   subscribeServerFonts,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 
-/** Base-14 families, renderable by every viewer without embedding. */
-export const BUILT_IN_FONT_FAMILIES: FontFamilyOption[] = [
-  { value: "Helvetica", label: "Helvetica" },
-  { value: "Helvetica-Bold", label: "Helvetica Bold" },
-  { value: "Times-Roman", label: "Times Roman" },
-  { value: "Times-Bold", label: "Times Bold" },
-  { value: "Times-Italic", label: "Times Italic" },
-  { value: "Courier", label: "Courier" },
-  { value: "Courier-Bold", label: "Courier Bold" },
-];
+function itemOf(entry: FontFamilyEntry): ComboboxItem {
+  return { value: entry.value, label: entry.label };
+}
 
-const BUILT_IN_NAMES = BUILT_IN_FONT_FAMILIES.map((option) => option.value);
-
-const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
-  serverFontFailed: [
-    "pdfTextEditor.fontPicker.serverFontFailed",
-    "That server font could not be downloaded. The text was left unchanged.",
-  ],
-  embeddingForbidden: [
-    "pdfTextEditor.fontPicker.embeddingForbidden",
-    "This font's licence does not allow embedding it in a PDF. The text was left unchanged.",
-  ],
-  embedFailed: [
-    "pdfTextEditor.fontPicker.embedFailed",
-    "This font could not be embedded in the PDF. The text was left unchanged.",
-  ],
-  noGlyphs: [
-    "pdfTextEditor.fontPicker.noGlyphs",
-    "This font has no characters for the selected text. The text was left unchanged.",
-  ],
-};
+function withoutKeys(
+  entries: FontFamilyEntry[],
+  taken: FontFamilyEntry[],
+): FontFamilyEntry[] {
+  const keys = new Set(taken.map((entry) => entry.key));
+  return entries.filter((entry) => !keys.has(entry.key));
+}
 
 type DeviceFontNotice = "unavailable" | "none";
 
 interface FontFamilySelectProps {
   value: string | null;
+  /** The selection's fontId, which names the family its face belongs to; null for scanned text. */
+  fontId?: string | null;
+  /** The document's own fonts as families, offered for the selection's family and the one it can be restored to. */
+  documentFamilies?: FontFamilyEntry[];
   /** Set for scanned text: `value` is the matched font (null while none is in force) and `label` the matcher's name for it. */
   scanned?: { label?: string };
+  /** The document font the selection was changed from, offered so the text can go back to it. */
+  documentFontId?: string | null;
   onChange: (family: string) => void | Promise<FontPickFailure | null>;
   mixed?: boolean;
   disabled?: boolean;
   touch?: boolean;
+  /** False renders the list inside the toolbar's own popover rather than portalled out of it. */
+  withinPortal?: boolean;
 }
 
 /** Font picker. Device fonts are additive: no prompt until the user asks. */
 export function FontFamilySelect({
   value,
+  fontId = null,
+  documentFamilies = [],
   scanned,
+  documentFontId = null,
   onChange,
   mixed = false,
   disabled = false,
   touch = false,
+  withinPortal = true,
 }: FontFamilySelectProps) {
   const { t } = useTranslation();
+  const warnAbout = useFontChangeWarning();
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
   const [notice, setNotice] = useState<DeviceFontNotice | null>(null);
@@ -102,15 +116,15 @@ export function FontFamilySelect({
   );
 
   const serverOptions = useMemo(
-    () => familyOptions(serverFonts, BUILT_IN_NAMES),
+    () => withoutKeys(externalFamilies(serverFonts), BUILT_IN_FAMILIES),
     [serverFonts],
   );
 
   const deviceOptions = useMemo(
     () =>
-      familyOptions(localFonts, [
-        ...BUILT_IN_NAMES,
-        ...serverOptions.map((option) => option.value),
+      withoutKeys(externalFamilies(localFonts), [
+        ...BUILT_IN_FAMILIES,
+        ...serverOptions,
       ]),
     [localFonts, serverOptions],
   );
@@ -134,104 +148,165 @@ export function FontFamilySelect({
     if (supported && !loadedLocalFonts()) void listLocalFontsIfGranted();
   }, [supported]);
 
-  const isKnown = useCallback(
-    (family: string) =>
-      [...BUILT_IN_FONT_FAMILIES, ...serverOptions, ...deviceOptions].some(
-        (option) => option.value === family,
-      ),
+  const listed = useMemo(
+    () => [...BUILT_IN_FAMILIES, ...serverOptions, ...deviceOptions],
     [serverOptions, deviceOptions],
   );
 
-  // The run's own face when we hold no bytes for it. Shown so the user can see
-  // what the text IS, listed disabled so picking it can't substitute Helvetica.
-  const documentFamily = useMemo(
-    () => (!mixed && value && !isKnown(value) ? value : null),
-    [mixed, value, isKnown],
+  const familyHolding = useCallback(
+    (face: string | null) =>
+      face && isDocumentFontId(face)
+        ? (documentFamilies.find((entry) =>
+            entry.faces.some((f) => f.value === face),
+          ) ??
+          groupDocumentFonts([face])[0] ??
+          null)
+        : null,
+    [documentFamilies],
+  );
+
+  const restoreFamily = useMemo(
+    () => familyHolding(documentFontId),
+    [familyHolding, documentFontId],
+  );
+
+  const currentKey = useMemo(
+    () => (mixed || !value ? null : fontFamilyKey(fontId ?? value)),
+    [mixed, value, fontId],
+  );
+
+  // The run's own family when no other list names it, so the user can see what the text IS.
+  const currentDocumentFamily = useMemo(() => {
+    if (!currentKey || listed.some((entry) => entry.key === currentKey))
+      return null;
+    return (
+      familyHolding(fontId) ??
+      documentFamilies.find((entry) => entry.key === currentKey) ??
+      null
+    );
+  }, [currentKey, listed, familyHolding, fontId, documentFamilies]);
+
+  // Listed disabled so picking a face we hold no bytes for can't substitute Helvetica.
+  const unknownFamily = useMemo(
+    () =>
+      currentKey &&
+      value &&
+      !currentDocumentFamily &&
+      restoreFamily?.key !== currentKey &&
+      !listed.some((entry) => entry.key === currentKey)
+        ? value
+        : null,
+    [currentKey, value, currentDocumentFamily, restoreFamily, listed],
   );
 
   const data = useMemo<ComboboxData>(() => {
+    const documentItems: ComboboxItem[] = [];
+    if (restoreFamily) documentItems.push(itemOf(restoreFamily));
+    // The text is already in this family and the toggles move it between its faces, so the entry names it and does nothing.
+    if (currentDocumentFamily && currentDocumentFamily !== restoreFamily)
+      documentItems.push({ ...itemOf(currentDocumentFamily), disabled: true });
+    // Always list the current font: a Select whose value has no option filters by stale search text.
+    if (unknownFamily)
+      documentItems.push({
+        value: unknownFamily,
+        label: scanned?.label ?? unknownFamily,
+        disabled: true,
+      });
     if (
       serverOptions.length === 0 &&
       deviceOptions.length === 0 &&
-      !documentFamily
+      documentItems.length === 0
     ) {
-      return BUILT_IN_FONT_FAMILIES;
+      return BUILT_IN_FAMILIES.map(itemOf);
     }
     const groups: ComboboxItemGroup[] = [];
-    if (documentFamily) {
+    if (documentItems.length > 0) {
       groups.push({
         group: scanned
           ? t("pdfTextEditor.fontPicker.matchedGroup", "Matched font")
           : t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
-        items: [
-          {
-            value: documentFamily,
-            label: scanned?.label ?? documentFamily,
-            disabled: true,
-          },
-        ],
+        items: documentItems,
       });
     }
     groups.push({
       group: t("pdfTextEditor.fontPicker.builtInGroup", "Built-in fonts"),
-      items: BUILT_IN_FONT_FAMILIES,
+      items: BUILT_IN_FAMILIES.map(itemOf),
     });
     if (serverOptions.length > 0) {
       groups.push({
         group: serverGroupLabel,
-        items: serverOptions,
+        items: serverOptions.map(itemOf),
       });
     }
     if (deviceOptions.length > 0) {
       groups.push({
         group: t("pdfTextEditor.fontPicker.deviceGroup", "Device fonts"),
-        items: deviceOptions,
+        items: deviceOptions.map(itemOf),
       });
     }
     return groups;
   }, [
     serverOptions,
     deviceOptions,
-    documentFamily,
+    restoreFamily,
+    currentDocumentFamily,
+    unknownFamily,
     scanned,
     serverGroupLabel,
     t,
   ]);
 
-  const pickFailureText = useCallback(
-    (failure: FontPickFailure): string => {
-      const [key, fallback] = PICK_FAILURE_TEXT[failure];
-      return t(key, fallback);
-    },
-    [t],
-  );
+  // Mantine shows nothing for a value with no matching option; the document
+  // font is in `data` precisely so a recognised face still gets named.
+  const selected = useMemo(() => {
+    if (!currentKey) return null;
+    if (unknownFamily) return unknownFamily;
+    const candidates = [...listed, currentDocumentFamily, restoreFamily].filter(
+      (entry): entry is FontFamilyEntry => entry !== null,
+    );
+    const faceNames = fontId ? [fontId, familyOf(fontId)] : [value];
+    const entry =
+      candidates.find((candidate) =>
+        candidate.faces.some((face) => faceNames.includes(face.value)),
+      ) ?? candidates.find((candidate) => candidate.key === currentKey);
+    return entry?.value ?? null;
+  }, [
+    currentKey,
+    unknownFamily,
+    listed,
+    currentDocumentFamily,
+    restoreFamily,
+    fontId,
+    value,
+  ]);
+
+  const selectedLabel = useMemo(() => {
+    if (!selected) return "";
+    const option = getParsedComboboxData(data)
+      .flatMap((entry) => ("items" in entry ? entry.items : [entry]))
+      .find((item) => item.value === selected);
+    return option?.label ?? selected;
+  }, [data, selected]);
+
+  // Mantine only resyncs its search text when `value` changes, and blur never
+  // reaches an input disabled mid-apply, so a refused pick would stay named.
+  const [search, setSearch] = useState(selectedLabel);
+  const selectedLabelRef = useRef(selectedLabel);
+  selectedLabelRef.current = selectedLabel;
 
   const applyFamily = useCallback(
     async (family: string) => {
       setNotice(null);
       setApplying(true);
       try {
-        const failure = await onChange(family);
-        if (failure) {
-          alert({
-            alertType: "warning",
-            title: pickFailureText(failure),
-            expandable: false,
-          });
-        }
+        await warnAbout(() => onChange(family));
       } finally {
         setApplying(false);
+        setSearch(selectedLabelRef.current);
       }
     },
-    [onChange, pickFailureText],
+    [onChange, warnAbout],
   );
-
-  // Mantine shows nothing for a value with no matching option; the document
-  // font is in `data` precisely so a recognised face still gets named.
-  const selected = useMemo(() => {
-    if (mixed || !value) return null;
-    return isKnown(value) || documentFamily === value ? value : null;
-  }, [mixed, value, isKnown, documentFamily]);
 
   const placeholder = useMemo(() => {
     if (mixed) return t("pdfTextEditor.fontPicker.mixed", "Mixed");
@@ -252,8 +327,11 @@ export function FontFamilySelect({
         w={touch ? undefined : 138}
         style={touch ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }}
         searchable
+        comboboxProps={{ withinPortal }}
         data={data}
         value={selected}
+        searchValue={search}
+        onSearchChange={setSearch}
         onChange={(next) => {
           if (next) void applyFamily(next);
         }}

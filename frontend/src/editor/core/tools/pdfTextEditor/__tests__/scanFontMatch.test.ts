@@ -1457,6 +1457,9 @@ describe("edits that need no font, and text no font can draw", () => {
   );
 });
 
+// A blank scan: drawn behind the OCR text, so it is read as a scan, with no ink on it.
+const PAPER = "q 1 g 0 0 612 792 re f Q";
+
 describe("reading scanned words inside a form", () => {
   test("puts each word on its baseline on the page, not in the form", async () => {
     const form =
@@ -1469,7 +1472,10 @@ describe("reading scanned words inside a form", () => {
           num: 3,
           body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Fx 6 0 R >> >> /Contents 4 0 R >>",
         },
-        { num: 4, body: streamBody("", "q 1 0 0 1 0 300 cm /Fx Do Q") },
+        {
+          num: 4,
+          body: streamBody("", `${PAPER} q 1 0 0 1 0 300 cm /Fx Do Q`),
+        },
         {
           num: 5,
           body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
@@ -1514,7 +1520,7 @@ describe("scanned text whose OCR words do not line up with the scan", () => {
           num: 4,
           body: streamBody(
             "",
-            `BT /F1 12 Tf 3 Tr ${scale} Tz 1 0 0 1 50 700 Tm (Invoice for Jane Example) Tj ET`,
+            `${PAPER} BT /F1 12 Tf 3 Tr ${scale} Tz 1 0 0 1 50 700 Tm (Invoice for Jane Example) Tj ET`,
           ),
         },
         {
@@ -1624,7 +1630,7 @@ describe("scanned text whose OCR layer sits off the scanned words", () => {
           num: 4,
           body: streamBody(
             "",
-            "BT /F1 12 Tf 3 Tr 1 0 0 1 50 700 Tm (Invoice for Jane Example) Tj ET",
+            `${PAPER} BT /F1 12 Tf 3 Tr 1 0 0 1 50 700 Tm (Invoice for Jane Example) Tj ET`,
           ),
         },
         {
