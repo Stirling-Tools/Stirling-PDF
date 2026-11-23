@@ -15,10 +15,12 @@ import { join } from "node:path";
 
 const MAC_LAUNCHER_NAME = "Stirling PDF";
 
-const [jreDir, iconPath] = process.argv.slice(2);
+const [jreDir, iconPath, entitlementsPath] = process.argv.slice(2);
 
-if (!jreDir || !iconPath) {
-  console.error("Usage: stage-mac-launcher.mjs <jreDir> <icon.icns>");
+if (!jreDir || !iconPath || !entitlementsPath) {
+  console.error(
+    "Usage: stage-mac-launcher.mjs <jreDir> <icon.icns> <entitlements.plist>",
+  );
   process.exit(1);
 }
 if (process.platform !== "darwin") {
@@ -68,5 +70,19 @@ writeFileSync(
 `,
 );
 
-execFileSync("codesign", ["--force", "--sign", "-", bundle]);
+// Tauri seals Resources without re-signing the code in them, so this bundle has to arrive
+// carrying its final signature: Developer ID in a release build, ad hoc otherwise. Hardened
+// runtime is required for notarisation, and the JVM then needs JIT and the JDK vendor's libraries.
+const identity = process.env.APPLE_SIGNING_IDENTITY || "-";
+execFileSync("codesign", [
+  "--force",
+  "--options",
+  "runtime",
+  "--entitlements",
+  entitlementsPath,
+  ...(identity === "-" ? [] : ["--timestamp"]),
+  "--sign",
+  identity,
+  bundle,
+]);
 console.log(`Staged ${bundle}`);
