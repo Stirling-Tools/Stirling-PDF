@@ -70,7 +70,17 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
     }
 
     const service = getGoogleDrivePickerService();
-    await service.initialize(googleDriveConfig);
+    try {
+      await service.initialize(googleDriveConfig);
+    } catch (error) {
+      throw new Error(
+        t(
+          "provider.googledrive.errors.loadFailed",
+          "Couldn't load Google Drive. Try again later.",
+        ),
+        { cause: error },
+      );
+    }
     setIsInitialized(true);
   }, [isInitialized, googleDriveBackendConfig, t]);
 
