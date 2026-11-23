@@ -23,21 +23,20 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Windows: the {@code Windows-ROOT} store (current user's view, which includes machine and
  * policy roots). macOS: {@code KeychainStore-ROOT} (system and admin-trusted roots) plus {@code
- * KeychainStore} (user-trusted). Linux: the first distribution CA bundle that exists. A store that
- * cannot be opened is logged and skipped, never fatal.
+ * KeychainStore} (user-trusted). Linux: the distribution trust bundle for email signing when the
+ * distribution publishes purpose-specific bundles.
  */
 @Slf4j
 final class OsTrustStore {
 
     static final List<String> WINDOWS_STORES = List.of("Windows-ROOT");
     static final List<String> MAC_STORES = List.of("KeychainStore-ROOT", "KeychainStore");
-    static final List<Path> LINUX_BUNDLES =
+    private static final List<Path> LINUX_PURPOSE_BUNDLE_DIRS =
             List.of(
-                    Path.of("/etc/ssl/certs/ca-certificates.crt"),
-                    Path.of("/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"),
-                    Path.of("/etc/pki/tls/certs/ca-bundle.crt"),
-                    Path.of("/etc/ssl/ca-bundle.pem"),
-                    Path.of("/etc/ssl/cert.pem"));
+                    Path.of("/etc/pki/ca-trust/extracted/pem"),
+                    Path.of("/etc/ca-certificates/extracted"));
+    private static final List<Path> LINUX_UNSCOPED_BUNDLES =
+            List.of(Path.of("/etc/ssl/certs/ca-certificates.crt"));
 
     static final String TRUSTED_KEY_USAGE = "2.16.840.1.113894.746875.1.1";
 
@@ -55,7 +54,7 @@ final class OsTrustStore {
         if (os.contains("mac")) {
             return fromKeyStores(MAC_STORES);
         }
-        return fromFirstBundle(LINUX_BUNDLES);
+        return fromLinuxBundles(LINUX_PURPOSE_BUNDLE_DIRS, LINUX_UNSCOPED_BUNDLES);
     }
 
     static List<X509Certificate> fromKeyStores(List<String> types) {
@@ -105,6 +104,17 @@ final class OsTrustStore {
             }
         }
         return true;
+    }
+
+    static List<X509Certificate> fromLinuxBundles(
+            List<Path> purposeBundleDirs, List<Path> unscopedBundles) {
+        List<Path> signingBundles =
+                purposeBundleDirs.stream()
+                        .filter(Files::isDirectory)
+                        .map(dir -> dir.resolve("email-ca-bundle.pem"))
+                        .toList();
+        // A missing signing bundle must not widen a purpose-aware store to TLS trust.
+        return fromFirstBundle(signingBundles.isEmpty() ? unscopedBundles : signingBundles);
     }
 
     static List<X509Certificate> fromFirstBundle(List<Path> bundles) {
