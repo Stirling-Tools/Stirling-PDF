@@ -494,7 +494,9 @@ test("duplicating a page carries editable underline ownership to its copy", asyn
       align: "center",
       underline: true,
     }).apply(doc);
-    new SyncParagraphFormatCommand({ pageIndex: 0 }).apply(doc);
+    new SyncParagraphFormatCommand({ pageIndex: 0, followsKey: null }).apply(
+      doc,
+    );
     const sourceRules = [...source.underlines.get(run.id)!];
     const { command, focusPage } = pageChangeCommand(doc, {
       kind: "duplicatePage",
@@ -512,7 +514,10 @@ test("duplicating a page carries editable underline ownership to its copy", asyn
       runIds: [copiedRun.id],
       underline: false,
     }).apply(doc);
-    new SyncParagraphFormatCommand({ pageIndex: focusPage }).apply(doc);
+    new SyncParagraphFormatCommand({
+      pageIndex: focusPage,
+      followsKey: null,
+    }).apply(doc);
     expect(copy.underlines.has(copiedRun.id)).toBe(false);
     expect(source.underlines.get(run.id)).toEqual(sourceRules);
     expect(run.underline).toBe(true);
