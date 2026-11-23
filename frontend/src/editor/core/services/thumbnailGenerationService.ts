@@ -1,5 +1,7 @@
 /**
- * High-performance thumbnail generation service using main thread processing
+ * Page thumbnails for the page editor and previews. Rendered in the PDF render
+ * worker where available (main thread stays free, and the worker's PDFium heap
+ * is released when idle); on the main thread otherwise.
  */
 
 import { FileId } from "@editor/types/file";
@@ -9,6 +11,13 @@ import {
   closeRawDocument,
 } from "@editor/services/pdfiumService";
 import { renderPdfiumPageDataUrl } from "@editor/utils/pdfiumPageRender";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import {
+  canRenderInWorker,
+  releaseWorkerDocument,
+  renderPagesInWorker,
+  RenderWorkerUnavailable,
+} from "@editor/services/pdfRenderWorkerClient";
 
 export interface ThumbnailResult {
   pageNumber: number;
@@ -28,6 +37,8 @@ interface CachedThumbnail {
   thumbnail: string;
   lastUsed: number;
   sizeBytes: number;
+  /** The file it was rendered from, so closing the file can drop it. */
+  fileId?: string;
 }
 
 interface CachedPDFDocument {
@@ -48,6 +59,8 @@ export class ThumbnailGenerationService {
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
   private pdfDocumentCache = new Map<FileId, CachedPDFDocument>();
   private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
+  /** Bumped by forgetFile so a worker render still running for the file stops. */
+  private forgetGenerations = new Map<FileId, number>();
 
   constructor(private maxWorkers: number = 10) {
     // PDF rendering requires DOM access, so we use optimized main thread processing
@@ -121,7 +134,7 @@ export class ThumbnailGenerationService {
    */
   async generateThumbnails(
     fileId: FileId,
-    pdfArrayBuffer: ArrayBuffer,
+    source: Blob | ArrayBuffer,
     pageNumbers: number[],
     options: ThumbnailGenerationOptions = {},
     onProgress?: (progress: {
@@ -135,8 +148,10 @@ export class ThumbnailGenerationService {
       throw new Error("generateThumbnails: fileId must be a non-empty string");
     }
 
-    if (!pdfArrayBuffer || pdfArrayBuffer.byteLength === 0) {
-      throw new Error("generateThumbnails: pdfArrayBuffer must not be empty");
+    const sourceSize =
+      source instanceof Blob ? source.size : (source?.byteLength ?? 0);
+    if (sourceSize === 0) {
+      throw new Error("generateThumbnails: source must not be empty");
     }
 
     if (!pageNumbers || pageNumbers.length === 0) {
@@ -145,14 +160,81 @@ export class ThumbnailGenerationService {
 
     const { scale = 0.2, quality = 0.8 } = options;
 
+    if (canRenderInWorker()) {
+      try {
+        return await this.generateThumbnailsInWorker(
+          fileId,
+          source instanceof Blob ? source : new Blob([source]),
+          pageNumbers,
+          scale,
+          quality,
+          onProgress,
+        );
+      } catch (error) {
+        if (!(error instanceof RenderWorkerUnavailable)) throw error;
+      }
+    }
+
     return await this.generateThumbnailsMainThread(
       fileId,
-      pdfArrayBuffer,
+      source instanceof Blob ? await getDocumentBytes(source) : source,
       pageNumbers,
       scale,
       quality,
       onProgress,
     );
+  }
+
+  /** Batches keep progress flowing; the worker keeps the document open
+   *  between them. */
+  private async generateThumbnailsInWorker(
+    fileId: FileId,
+    source: Blob,
+    pageNumbers: number[],
+    scale: number,
+    quality: number,
+    onProgress?: (progress: {
+      completed: number;
+      total: number;
+      thumbnails: ThumbnailResult[];
+    }) => void,
+  ): Promise<ThumbnailResult[]> {
+    const password = getPdfAccess(fileId)?.password ?? "";
+    const generation = this.forgetGenerations.get(fileId);
+    const allResults: ThumbnailResult[] = [];
+    const batchSize = 3;
+    for (let i = 0; i < pageNumbers.length; i += batchSize) {
+      const batch = pageNumbers.slice(i, i + batchSize);
+      const rendered = await renderPagesInWorker(
+        fileId,
+        source,
+        password,
+        batch,
+        scale,
+        { applyRotation: false, format: "jpeg", quality },
+      );
+      // After forgetFile, results would re-cache what it dropped, and another
+      // batch would reopen the document it released.
+      if (this.forgetGenerations.get(fileId) !== generation) return [];
+      const results = rendered.map(
+        ({ pageNumber, thumbnail, error }): ThumbnailResult =>
+          thumbnail
+            ? { pageNumber, thumbnail, success: true }
+            : {
+                pageNumber,
+                thumbnail: "",
+                success: false,
+                error: error ?? `Could not render page ${pageNumber}`,
+              },
+      );
+      allResults.push(...results);
+      onProgress?.({
+        completed: Math.min(i + batch.length, pageNumbers.length),
+        total: pageNumbers.length,
+        thumbnails: results.filter((r) => r.success),
+      });
+    }
+    return allResults;
   }
 
   /**
@@ -242,7 +324,11 @@ export class ThumbnailGenerationService {
     return null;
   }
 
-  addThumbnailToCache(pageId: string, thumbnail: string): void {
+  addThumbnailToCache(
+    pageId: string,
+    thumbnail: string,
+    fileId?: string,
+  ): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
 
     // Enforce cache size limits
@@ -257,6 +343,7 @@ export class ThumbnailGenerationService {
       thumbnail,
       lastUsed: Date.now(),
       sizeBytes,
+      fileId,
     });
 
     this.currentCacheSize += sizeBytes;
@@ -304,7 +391,23 @@ export class ThumbnailGenerationService {
     this.pdfDocumentCache.clear();
   }
 
+  /** Drops everything held for a file that has left the workbench: its page
+   *  thumbnails and any open copy of its document. */
+  forgetFile(fileId: FileId): void {
+    this.forgetGenerations.set(
+      fileId,
+      (this.forgetGenerations.get(fileId) ?? 0) + 1,
+    );
+    for (const [pageId, entry] of this.thumbnailCache) {
+      if (entry.fileId !== fileId) continue;
+      this.thumbnailCache.delete(pageId);
+      this.currentCacheSize -= entry.sizeBytes;
+    }
+    this.clearPDFCacheForFile(fileId);
+  }
+
   clearPDFCacheForFile(fileId: FileId): void {
+    releaseWorkerDocument(fileId);
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
       void closeRawDocument(cached.docPtr);

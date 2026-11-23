@@ -25,11 +25,8 @@
  * Planned checks (metadata, images, JavaScript, attachments, form fields) go in `pdfProbeChecks.ts`
  * too, mirrored on the backend through JPDFium so both sides agree.
  */
-import {
-  init,
-  type PdfiumModule,
-  type WrappedPdfiumModule,
-} from "@embedpdf/pdfium";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import { initWorkerPdfium } from "@editor/workers/initWorkerPdfium";
 import { readPdfiumAccess } from "@editor/utils/pdfiumAccess";
 import {
   backgroundChecksAfter,
@@ -68,38 +65,10 @@ function describeFailure(stage: ProbeStage, error: unknown): string {
 
 let pdfium: Promise<WrappedPdfiumModule> | undefined;
 
-async function loadPdfium(
+function loadPdfium(
   request: PdfAccessRequest | PdfAccessWarmup,
 ): Promise<WrappedPdfiumModule> {
-  let rejectInstantiation!: (error: unknown) => void;
-  const instantiationFailed = new Promise<never>((_, reject) => {
-    rejectInstantiation = reject;
-  });
-  const options: Partial<PdfiumModule> & {
-    wasmBinary?: ArrayBuffer;
-    instantiateWasm?: (
-      imports: WebAssembly.Imports,
-      ready: (
-        instance: WebAssembly.Instance,
-        module: WebAssembly.Module,
-      ) => void,
-    ) => void;
-  } = {};
-  const precompiled = request.wasmModule;
-  if (precompiled) {
-    options.instantiateWasm = (imports, ready) => {
-      void WebAssembly.instantiate(precompiled, imports)
-        .then((instance) => ready(instance, precompiled))
-        .catch(rejectInstantiation);
-    };
-  } else {
-    const response = await fetch(request.wasmUrl);
-    if (!response.ok) throw new Error("Unable to load PDF security reader");
-    options.wasmBinary = await response.arrayBuffer();
-  }
-  const module = await Promise.race([init(options), instantiationFailed]);
-  module.PDFiumExt_Init();
-  return module;
+  return initWorkerPdfium(request.wasmUrl, request.wasmModule);
 }
 
 function heap(module: WrappedPdfiumModule): Uint8Array {
