@@ -11,7 +11,6 @@ import {
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
 import { DesktopQueryCacheReset } from "@editor/components/DesktopQueryCacheReset";
-import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
 import { useFirstLaunchCheck } from "@editor/hooks/useFirstLaunchCheck";
 import { useBackendInitializer } from "@editor/hooks/useBackendInitializer";
 import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
@@ -36,6 +35,9 @@ interface DesktopSession {
   appKey: number;
   /** Lets the access gate seed the mode after a failed startup config read is retried. */
   initializeConnectionMode: (config: ConnectionConfig) => void;
+  /** An expired session fell back to local mode and should offer sign-in once. */
+  pendingSignIn: boolean;
+  consumePendingSignIn: () => void;
 }
 
 const DesktopSessionContext = createContext<DesktopSession | null>(null);
@@ -273,20 +275,6 @@ export function DesktopSessionProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, [shouldPreloadLocalEndpoints, connectionMode]);
 
-  // Dispatch sign-in modal after authChecked so SignInModal's listener is registered.
-  // The modal mounts in the access gate once authChecked flips; the frame below
-  // commits it before this parent effect runs.
-  // detail.locked is always false here: setPendingSignIn(true) is only called inside
-  // `if (!cfg?.lock_connection_mode)` branches above, so locked deployments never set
-  // pendingSignIn and therefore never reach this dispatch.
-  useEffect(() => {
-    if (!authChecked || !pendingSignIn) return;
-    window.dispatchEvent(
-      new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
-    );
-    setPendingSignIn(false);
-  }, [authChecked, pendingSignIn]);
-
   useEffect(() => {
     if (!authChecked) {
       return;
@@ -305,9 +293,27 @@ export function DesktopSessionProvider({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, [authChecked]);
 
+  const consumePendingSignIn = useCallback(() => setPendingSignIn(false), []);
+
+  // pendingSignIn is only set inside `if (!cfg?.lock_connection_mode)` branches
+  // above, so a locked deployment is never offered this prompt.
   const session = useMemo(
-    () => ({ connectionMode, authChecked, appKey, initializeConnectionMode }),
-    [connectionMode, authChecked, appKey, initializeConnectionMode],
+    () => ({
+      connectionMode,
+      authChecked,
+      appKey,
+      initializeConnectionMode,
+      pendingSignIn,
+      consumePendingSignIn,
+    }),
+    [
+      connectionMode,
+      authChecked,
+      appKey,
+      initializeConnectionMode,
+      pendingSignIn,
+      consumePendingSignIn,
+    ],
   );
 
   return (
