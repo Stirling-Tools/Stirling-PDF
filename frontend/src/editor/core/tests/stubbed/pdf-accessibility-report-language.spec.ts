@@ -34,7 +34,7 @@ const REPORT: AccessibilityReport = {
     hasTitle: true,
     displaysDocTitle: true,
     hasLanguage: true,
-    language: "en",
+    language: "en-US",
     allFontsEmbedded: true,
     unembeddedFonts: 0,
     figures: 0,
@@ -68,7 +68,9 @@ test("sets the document language from the report's Language area", async ({
   const picker = page
     .getByTestId("a11y-report-language-picker")
     .getByRole("textbox");
-  await expect(picker).toHaveValue(/\(en\)$/);
+  // The tool opens the review, whose editor shows the file's own language once
+  // loaded; the stub matches it so either source reads the same.
+  await expect(picker).toHaveValue(/\(en-US\)$/);
 
   await expect(async () => {
     await picker.click();
