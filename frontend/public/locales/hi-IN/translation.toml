@@ -512,6 +512,11 @@ submit = "पृष्ठ स्केल समायोजित करें"
 tags = "आकार बदलें,संशोधित करें,आयाम,अनुकूलित करें"
 title = "पृष्ठ स्केल समायोजित करें"
 
+[adjustPageScale.customSize]
+height = "ऊँचाई"
+unit = "इकाई"
+width = "चौड़ाई"
+
 [adjustPageScale.error]
 failed = "पृष्ठ स्केल समायोजित करते समय त्रुटि हुई।"
 
@@ -521,6 +526,7 @@ landscape = "लैंडस्केप"
 portrait = "पोर्ट्रेट"
 
 [adjustPageScale.pageSize]
+custom = "कस्टम"
 keep = "मूल आकार रखें"
 label = "लक्ष्य पृष्ठ आकार"
 legal = "リーगल"
@@ -641,18 +647,16 @@ description = "इमेज प्रोसेसिंग के लिए अ�
 label = "अधिकतम DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "प्रत्येक प्रोसेस एक्सीक्यूटर के लिए सेशन सीमाएँ और टाइमआउट कॉन्फ़िगर करें"
 ghostscript = "Ghostscript"
 installApp = "ऐप इंस्टॉल करें"
 label = "प्रोसेस एक्सीक्यूटर सीमाएँ"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "Office रूपांतरण"
+officeConvertSessionLimit = "अधिकतम समकालिक रूपांतरण; 0 पर CPUs और मेमोरी के आधार पर सीमा चुनी जाएगी"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "अधिकतम समवर्ती इंस्टेंस"
@@ -661,10 +665,6 @@ label = "सेशन सीमा"
 [admin.settings.advanced.processExecutor.timeout]
 description = "अधिकतम निष्पादन समय"
 label = "टाइमआउट (मिनट)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert बीटा में है। यह LibreOffice की तुलना में कम मेमोरी में बेहतर और तेज़ कन्वर्ज़न प्रदान करता है।"
-label = "नए Stirling Office कन्वर्ज़न का उपयोग करें"
 
 [admin.settings.advanced.tempFileManagement]
 description = "अस्थायी फ़ाइल स्टोरेज और क्लीनअप व्यवहार कॉन्फ़िगर करें"
@@ -682,11 +682,6 @@ label = "क्लीनअप अंतराल (मिनट)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "विस्तृत सिस्टम टेम्प डायरेक्टरी को साफ़ करना है या नहीं (सावधानी से उपयोग करें)"
 label = "सिस्टम टेम्प क्लीनअप"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice टेम्प फ़ाइलों के लिए डायरेक्टरी (डिफ़ॉल्ट हेतु खाली छोड़ें: baseTmpDir/libreoffice)"
-label = "LibreOffice टेम्प डायरेक्टरी"
-placeholder = "डिफ़ॉल्ट: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "टेम्प फ़ाइलों को क्लीनअप करने से पहले अधिकतम आयु (घंटों में)"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "छवि को पूरी पृष्ठ �
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "जैसा है रखें (मूल आयाम)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "{{name}} को कैसे सेट अप करें"
 title = "कनेक्शंस"
 unlinkedServices = "अनलिंक्ड सर्विसेज़"
 
@@ -1294,17 +1290,6 @@ label = "डिफ़ॉल्ट प्रोड्यूसर"
 description = "पाइपलाइन प्रोसेसिंग और बाह्य टूल्स के लिए कस्टम फ़ाइल सिस्टम पाथ कॉन्फ़िगर करें"
 label = "कस्टम पाथ"
 
-[admin.settings.general.customPaths.operations]
-label = "बाह्य टूल पाथ"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "दस्तावेज़ कन्वर्ज़न के लिए LibreOffice unoconvert का पाथ (डिफ़ॉल्ट हेतु खाली छोड़ें: /opt/venv/bin/unoconvert)"
-label = "Unoconvert एक्ज़िक्यूटेबल"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTML से PDF कन्वर्ज़न के लिए WeasyPrint एक्ज़िक्यूटेबल का पाथ (डिफ़ॉल्ट हेतु खाली छोड़ें: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint एक्ज़िक्यूटेबल"
-
 [admin.settings.general.customPaths.pipeline]
 label = "पाइपलाइन डायरेक्टरीज़"
 
@@ -1327,6 +1312,10 @@ label = "देखे जाने वाले फ़ोल्डर डाय�
 [admin.settings.general.defaultLocale]
 description = "नए उपयोगकर्ताओं के लिए डिफ़ॉल्ट भाषा (उदा., en_US, es_ES)"
 label = "डिफ़ॉल्ट लोकेल"
+
+[admin.settings.general.enableFeedback]
+description = "उपयोगकर्ताओं को Stirling टीम को फीडबैक भेजने दें"
+label = "फीडबैक सक्षम करें"
 
 [admin.settings.general.fileUploadLimit]
 description = "अधिकतम फ़ाइल अपलोड आकार (उदा., 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "STANDARD इवेंट्स के साथ: निरंतर �
 [admin.settings.security.audit.retentionDays]
 description = "Audit logs रखने के दिनों की संख्या (0 = infinite retention)"
 label = "ऑडिट रिटेंशन (दिन)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "हस्ताक्षरित PDF अब भी देखे, प्रिंट किए, कन्वर्ट किए या फिर से साइन किए जा सकते हैं, लेकिन ऐप में बदले नहीं जा सकते। API कॉल और सर्वर पाइपलाइन प्रभावित नहीं होंगी।"
+label = "हस्ताक्षरित PDF में बदलाव रोकें"
 
 [admin.settings.security.csrfDisabled]
 description = "Cross-Site Request Forgery सुरक्षा निष्क्रिय करें (अनुशंसित नहीं)"
@@ -2969,6 +2962,7 @@ loadError = "उपयोगकर्ता लोड करने में व
 noTeam = "कोई टीम नहीं"
 noUsers = "अन्य कोई उपयोगकर्ता नहीं मिला।"
 placeholder = "उपयोगकर्ता चुनें..."
+signInRequired = "अन्य लोगों से हस्ताक्षर का अनुरोध करने के लिए साइन इन करें।"
 you = "{{name}} (आप)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "आपका खाता आपके पहचान प्र�
 title = "क्रेडेंशियल्स बदलें"
 
 [changeMetadata]
-filenamePrefix = "metadata"
 submit = "बदलें"
 tags = "संपादित करें,संशोधित करें,अपडेट करें,मेटाडेटा,गुण,दस्तावेज़ गुण,लेखक,शीर्षक,विषय,कीवर्ड,निर्माता,प्रोड्यूसर,जानकारी,दस्तावेज़ जानकारी,फ़ाइल गुण"
 
@@ -3265,6 +3258,248 @@ not_found = "मुझे अनुरोधित जानकारी नह�
 processing = "प्रक्रिया जारी ({{outcome}})..."
 unsupported_capability = "असमर्थित क्षमता: {{capability}}"
 usage_limit_reached = "आप अपनी usage limit तक पहुँच गए हैं। जारी रखने के लिए अपने plan options देखें।"
+
+[checkAccessibility]
+aboutRow = "{{label}} के बारे में"
+checking = "जांच हो रही है..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "एक्सेसिबिलिटी रिपोर्ट डाउनलोड करें"
+fileFailed = "असफल"
+pickFile = "इसके लिए परिणाम दिखाएं"
+submit = "एक्सेसिबिलिटी जांचें"
+
+[checkAccessibility.category]
+altText = "वैकल्पिक टेक्स्ट"
+fonts = "फॉन्ट"
+language = "भाषा"
+links = "लिंक व एनोटेशन"
+metadata = "मेटाडेटा व सेटिंग्स"
+structure = "टैग व संरचना"
+
+[checkAccessibility.categoryTip]
+altText = "छवियों के लिए स्क्रीन रीडर द्वारा पढ़ी जा सकने वाली संक्षिप्त टेक्स्ट विवरण चाहिए।"
+fonts = "फॉन्ट फ़ाइल में होने चाहिए, हर अक्षर वास्तविक टेक्स्ट से मैप होना चाहिए, ताकि टेक्स्ट को ज़ोर से पढ़ा और कॉपी किया जा सके।"
+language = "स्क्रीन रीडर्स को सही उच्चारण के लिए दस्तावेज़ की भाषा पता होनी चाहिए।"
+links = "लिंक, टिप्पणियाँ और फॉर्म फ़ील्ड के लिए टैग व विवरण चाहिए, और टैब क्रम पेज के क्रम का पालन करना चाहिए।"
+metadata = "शीर्षक, PDF/UA घोषणा और अन्य सेटिंग्स जिन्हें सहायक तकनीक फ़ाइल से पढ़ती है।"
+structure = "टैग स्क्रीन रीडर्स को बताते हैं कि पेज का हर भाग क्या है, जैसे हेडिंग, सूची या तालिका, और किस क्रम में पढ़ना है।"
+
+[checkAccessibility.checks]
+label = "{{total}} में से {{passed}} जांचें पास"
+
+[checkAccessibility.error]
+download = "एक्सेसिबिलिटी रिपोर्ट नहीं बन सकी। फिर से प्रयास करें।"
+fileTitle = "इस फ़ाइल की जांच नहीं हो सकी"
+partial = "कुछ फ़ाइलों की जांच नहीं हो सकी।"
+
+[checkAccessibility.facts]
+declares = "PDF/UA घोषित करता है"
+displaysTitle = "शीर्षक दिखाता है"
+fonts = "फॉन्ट एंबेडेड"
+language = "भाषा घोषित करता है"
+notEncrypted = "एनक्रिप्टेड नहीं है"
+tagged = "टैग्ड"
+title = "शीर्षक है"
+
+[checkAccessibility.factTip]
+declares = "फ़ाइल के मेटाडेटा में लिखा है कि यह PDF/UA का पालन करती है।"
+displaysTitle = "PDF रीडर्स फ़ाइल खुलने पर फ़ाइल नाम के बजाय शीर्षक दिखाते हैं।"
+fonts = "टेक्स्ट जिन भी फॉन्ट का उपयोग करता है, वे सभी फ़ाइल में शामिल हैं।"
+language = "फ़ाइल बताती है कि इसका टेक्स्ट किस भाषा में है।"
+notEncrypted = "फ़ाइल एनक्रिप्टेड नहीं है। एनक्रिप्शन सहायक तकनीक को इसे पढ़ने से रोक सकता है।"
+tagged = "फ़ाइल में संरचना बताने वाले टैग हैं। इनके बिना, स्क्रीन रीडर्स को केवल सादा टेक्स्ट मिलता है।"
+title = "फ़ाइल के मेटाडेटा में शीर्षक है।"
+
+[checkAccessibility.figures]
+summary_one = "{{count}} छवि को विवरण चाहिए (पृष्ठ {{pages}})"
+summary_other = "{{count}} छवियों को विवरण चाहिए (पृष्ठ {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "लागू होता है"
+clauseValue = "{{spec}} §{{clause}}, टेस्ट {{test}}"
+details = "विवरण"
+instances_one = "{{count}} उदाहरण"
+instances_other = "{{count}} उदाहरण"
+onPages_one = "पृष्ठ {{pages}}"
+onPages_other = "पृष्ठ {{pages}}"
+onPagesPartial_one = "पृष्ठ {{pages}} (सूची अधूरी हो सकती है)"
+onPagesPartial_other = "पृष्ठ {{pages}} (सूची अधूरी हो सकती है)"
+pages = "पृष्ठ"
+pagesPartialValue = "{{pages}} (केवल पहली घटनाओं पर पृष्ठ रिकॉर्ड है, इसलिए सूची अधूरी हो सकती है)"
+requirement = "आवश्यकता"
+rule = "नियम"
+standard = "मानक"
+where = "कहाँ"
+
+[checkAccessibility.manual]
+clearAll = "सभी साफ करें"
+done = "पूरा"
+inProgress = "प्रगति पर"
+markAllDone = "सभी को पूरा चिह्नित करें"
+tip = "कुछ बातें केवल व्यक्ति ही आंक सकता है, जैसे पढ़ने का क्रम और क्या छवि विवरण सार्थक हैं। जांच करने के बाद प्रत्येक को चिह्नित करें; आपके चिह्न डाउनलोड की गई रिपोर्ट में सम्मिलित होंगे।"
+title = "मैनुअल जांचें"
+
+[checkAccessibility.objects]
+annotation = "एक एनोटेशन"
+bookmark = "एक बुकमार्क"
+character = "किसी फॉन्ट में एक अक्षर"
+contentPiece = "पृष्ठ सामग्री का एक भाग"
+document = "दस्तावेज़"
+drawing = "एक ड्रॉइंग"
+figure = "एक आकृति"
+file = "स्वयं फ़ाइल"
+font = "एक फॉन्ट"
+form = "फॉर्म"
+formField = "एक फॉर्म फ़ील्ड"
+link = "एक लिंक"
+markedContent = "चिह्नित पृष्ठ सामग्री"
+metadata = "दस्तावेज़ मेटाडेटा"
+page = "एक पृष्ठ"
+properties = "दस्तावेज़ गुण"
+tag = "एक {{name}} टैग"
+tagTree = "टैग ट्री"
+textPiece = "टेक्स्ट का एक भाग"
+translatedMetadata = "अनुवादों सहित एक मेटाडेटा प्रविष्टि"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (जारी)"
+footer = "Stirling PDF से जाँचा गया"
+page = "पृष्ठ {{n}}"
+title = "एक्सेसिबिलिटी रिपोर्ट"
+
+[checkAccessibility.result]
+fail = "विफल"
+failSummary = "स्क्रीन रीडर्स इस दस्तावेज़ के सभी भाग पढ़ने में सक्षम नहीं हो सकते।"
+partial = "आंशिक"
+partialSummary = "स्क्रीन रीडर्स इसे पढ़ सकते हैं, लेकिन कुछ जांचें विफल हैं।"
+pass = "पास"
+passSummary = "सभी स्वचालित PDF/UA जांचें पास।"
+
+[checkAccessibility.rules]
+annotationLanguage = "टिप्पणी या लिंक टेक्स्ट की कोई भाषा सेट नहीं है, इसलिए स्क्रीन रीडर्स नहीं जानते कि इसे किस भाषा में पढ़ें। इसे ठीक करने के लिए दस्तावेज़ की भाषा सेट करें।"
+annotationNoDescription = "किसी टिप्पणी, लिंक या ड्रॉइंग का टेक्स्ट विवरण नहीं है, इसलिए स्क्रीन रीडर्स के पास बताने के लिए कुछ नहीं होता।"
+annotationNotTagged = "कोई टिप्पणी या ड्रॉइंग एनोटेशन के रूप में टैग नहीं है, इसलिए स्क्रीन रीडर्स पढ़ने के क्रम में इसे नहीं पा पाते।"
+artifactInsideTagged = "सजावट के रूप में चिह्नित कोई तत्व टैग्ड सामग्री के भीतर है, इसलिए उसे पढ़ा भी जाता है और छोड़ा भी जाता है।"
+bookmarkLanguage = "बुकमार्क की कोई भाषा सेट नहीं है, इसलिए स्क्रीन रीडर्स नहीं जानते कि उन्हें किस भाषा में पढ़ें। इसे ठीक करने के लिए दस्तावेज़ की भाषा सेट करें।"
+conformancePrefix = "मेटाडेटा में PDF/UA घोषणा गलत प्रीफ़िक्स का उपयोग करती है, इसलिए PDF रीडर्स इसे पहचान न सकें।"
+contentLanguage = "टेक्स्ट की कोई भाषा सेट नहीं है, इसलिए स्क्रीन रीडर्स नहीं जानते कि इसे किस भाषा में पढ़ें। इसे ठीक करने के लिए दस्तावेज़ की भाषा सेट करें।"
+customTagNotMapped = "किसी टैग में कस्टम नाम है जो किसी मानक टैग से मैप नहीं है, इसलिए स्क्रीन रीडर्स नहीं जानते कि यह क्या है।"
+figureNoAlt = "एक छवि को आकृति के रूप में टैग किया गया है पर उसका कोई विवरण नहीं है, इसलिए स्क्रीन रीडर उपयोगकर्ताओं को पता नहीं चलेगा कि यह क्या दिखाती है।"
+fontMissingGlyphs = "शामिल किसी फॉन्ट में दस्तावेज़ द्वारा उपयोग किए गए कुछ अक्षर नहीं हैं।"
+fontNotEmbedded = "कोई फॉन्ट फ़ाइल में शामिल नहीं है, इसलिए टेक्स्ट किसी दूसरे कंप्यूटर पर अलग दिख सकता है या अलग तरह से पढ़ा जा सकता है।"
+formFieldNotTagged = "कोई फॉर्म फ़ील्ड, फॉर्म के भाग के रूप में टैग नहीं है, इसलिए स्क्रीन रीडर्स उसे ढूंढ न पाएं।"
+genericHeading = "एक हेडिंग H टैग का उपयोग करती है, जिसका कोई स्तर नहीं होता। PDF/UA-2 को H1 से H6 चाहिए ताकि स्क्रीन रीडर उपयोगकर्ता हेडिंग का पदानुक्रम समझ सकें।"
+glyphWidths = "फ़ाइल में फॉन्ट के अक्षर-चौड़ाई वास्तविक फॉन्ट से मेल नहीं खाती, इसलिए टेक्स्ट का स्पेसिंग गलत हो सकता है।"
+headingSkipped = "हेडिंग स्तरों में किसी चरण को छोड़ दिया गया है, जैसे Heading 1 से सीधे Heading 3 पर जाना, जिससे हेडिंग के बीच नेविगेशन भ्रमित होता है।"
+linkNoDescription = "किसी लिंक का कोई विवरण नहीं है, इसलिए स्क्रीन रीडर्स केवल उसका पता पढ़ पाएंगे, या कुछ भी नहीं।"
+linkNotTagged = "किसी लिंक को लिंक के रूप में टैग नहीं किया गया है, इसलिए स्क्रीन रीडर्स उसे ऐसे नहीं बताएंगे।"
+metadataLanguage = "मेटाडेटा, जैसे शीर्षक, की कोई भाषा सेट नहीं है, इसलिए स्क्रीन रीडर्स नहीं जानते कि इसे किस भाषा में पढ़ें। इसे ठीक करने के लिए दस्तावेज़ की भाषा सेट करें।"
+noConformanceClaim = "फ़ाइल यह नहीं कहती कि वह PDF/UA का पालन करती है। इसके मेटाडेटा में PDF/UA पहचान प्रविष्टि चाहिए।"
+noDocumentTag = "टैग्स के शीर्ष पर एकल Document टैग चाहिए, और बाकी सब उसके भीतर होना चाहिए।"
+noLanguage = "दस्तावेज़ यह नहीं बताता कि वह किस भाषा में है, इसलिए स्क्रीन रीडर्स इसे गलत भाषा में पढ़ सकते हैं।"
+noMetadataStream = "फ़ाइल में XMP मेटाडेटा नहीं है, जहाँ PDF/UA दस्तावेज़ का शीर्षक और अनुरूपता विवरण रखता है।"
+noTags = "फ़ाइल में बिल्कुल भी टैग नहीं हैं, इसलिए स्क्रीन रीडर्स हेडिंग, पैराग्राफ, सूचियाँ या टेबल में भेद नहीं कर सकते, न ही सही क्रम में पढ़ सकते हैं।"
+notdefGlyph = "टेक्स्ट में \"missing character\" प्लेसहोल्डर उपयोग हुआ है, जो खाली या डिब्बे जैसा दिखता है और ज़ोर से नहीं पढ़ा जा सकता।"
+noteTag = "फ़ाइल Note टैग का उपयोग करती है, जिसे PDF/UA-2 फुटनोट और एंडनोट के लिए FENote से बदलता है।"
+noTitle = "दस्तावेज़ के मेटाडेटा में शीर्षक नहीं है।"
+notMarkedTagged = "फ़ाइल को टैग्ड के रूप में फ़्लैग नहीं किया गया है, इसलिए सहायक तकनीक उसके टैग को नज़रअंदाज़ कर सकती है।"
+notPdf2Tags = "PDF/UA-2 को वही टैग चाहिए जो PDF 2.0 फ़ाइल उपयोग करती है। ये PDF 1.7 के टैग जैसे दिखते हैं, जो आम तौर पर दर्शाता है कि फ़ाइल PDF/UA-1 के लिए टैग की गई थी।"
+noUnicode = "कुछ अक्षरों को पठनीय टेक्स्ट में नहीं बदला जा सकता, इसलिए स्क्रीन रीडर्स और कॉपी-पेस्ट उन्हें गलत ले सकते हैं।"
+replacementTextLanguage = "कुछ प्रतिस्थापन टेक्स्ट की कोई भाषा सेट नहीं है, इसलिए स्क्रीन रीडर्स नहीं जानते कि इसे किस भाषा में पढ़ें। इसे ठीक करने के लिए दस्तावेज़ की भाषा सेट करें।"
+standardTagRemapped = "किसी मानक टैग को कस्टम टैग से जोड़ा गया है, जिससे स्क्रीन रीडर्स उसका अर्थ खो देते हैं।"
+symbolicEncoding = "किसी प्रतीक फॉन्ट में ऐसी एनकोडिंग है जो नहीं होनी चाहिए, इसलिए उसके अक्षर गलत अक्षरों के रूप में आ सकते हैं।"
+tabOrder = "लिंक या टिप्पणियों वाले पृष्ठ का टैब क्रम दस्तावेज़ के क्रम का पालन नहीं करता, इसलिए कीबोर्ड उपयोगकर्ता पृष्ठ पर इधर-उधर कूद सकते हैं।"
+taggedInsideArtifact = "टैग्ड सामग्री किसी सजावट के रूप में चिह्नित तत्व के भीतर है, इसलिए स्क्रीन रीडर्स इसे छोड़ सकते हैं।"
+titleNotDisplayed = "PDF रीडर्स दस्तावेज़ के शीर्षक के बजाय फ़ाइल नाम दिखाएंगे। फ़ाइल में \"display document title\" सेटिंग को चालू करना होगा।"
+untaggedContent = "पृष्ठ पर कोई तत्व न तो सामग्री के रूप में टैग है, न ही सजावट के रूप में चिह्नित, इसलिए स्क्रीन रीडर्स तय नहीं कर पाते कि उसे पढ़ें या नहीं। अक्सर यह पृष्ठभूमि छवि, हेडर, फुटर या पृष्ठ संख्या होती है।"
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "टिप्पणियों या लिंक के लिए भाषा नहीं"
+annotationNoDescription = "टिप्पणी, लिंक या ड्रॉइंग बिना विवरण"
+annotationNotTagged = "टिप्पणी या ड्रॉइंग टैग नहीं है"
+artifactInsideTagged = "टैग्ड सामग्री के भीतर सजावट"
+bookmarkLanguage = "बुकमार्क के लिए भाषा नहीं"
+conformancePrefix = "PDF/UA घोषणा गलत लिखी गई"
+contentLanguage = "टेक्स्ट के लिए भाषा नहीं"
+customTagNotMapped = "मानक अर्थ बिना कस्टम टैग"
+figureNoAlt = "विवरण बिना छवि"
+fontMissingGlyphs = "फॉन्ट में अक्षर गायब"
+fontNotEmbedded = "फॉन्ट एंबेडेड नहीं"
+formFieldNotTagged = "फॉर्म फ़ील्ड टैग नहीं है"
+genericHeading = "स्तर बिना हेडिंग"
+glyphWidths = "फॉन्ट अक्षर-चौड़ाई मेल नहीं खाती"
+headingSkipped = "हेडिंग स्तर छोड़ा गया"
+linkNoDescription = "विवरण बिना लिंक"
+linkNotTagged = "लिंक टैग नहीं है"
+metadataLanguage = "मेटाडेटा के लिए भाषा नहीं"
+noConformanceClaim = "PDF/UA घोषित नहीं करता"
+noDocumentTag = "टैग Document से शुरू नहीं होते"
+noLanguage = "दस्तावेज़ भाषा नहीं"
+noMetadataStream = "XMP मेटाडेटा नहीं"
+noTags = "टैग नहीं"
+notdefGlyph = "मिसिंग-कैरेक्टर प्लेसहोल्डर उपयोग"
+noteTag = "Note टैग उपयोग"
+noTitle = "दस्तावेज़ शीर्षक नहीं"
+notMarkedTagged = "टैग्ड के रूप में फ़्लैग नहीं"
+notPdf2Tags = "टैग PDF 2.0 के नहीं हैं"
+noUnicode = "अक्षर जिन्हें टेक्स्ट की तरह नहीं पढ़ा जा सकता"
+replacementTextLanguage = "प्रतिस्थापन टेक्स्ट के लिए भाषा नहीं"
+standardTagRemapped = "मानक टैग को कस्टम में बदला"
+symbolicEncoding = "सिंबल फॉन्ट में गलत एन्कोडिंग"
+tabOrder = "टैब क्रम दस्तावेज़ का पालन नहीं करता"
+taggedInsideArtifact = "टैग्ड सामग्री को सजावट के रूप में छिपाया गया"
+titleNotDisplayed = "खोलने पर शीर्षक नहीं दिखता"
+untaggedContent = "सामग्री जो टैग नहीं है"
+
+[checkAccessibility.score]
+issues_one = "{{count}} समस्या"
+issues_other = "{{count}} समस्याएँ"
+noIssues = "कोई समस्या नहीं मिली"
+subtitle_one = "{{profile}} - {{count}} पृष्ठ"
+subtitle_other = "{{profile}} - {{count}} पृष्ठ"
+
+[checkAccessibility.sections]
+breakdown = "विभाजन"
+
+[checkAccessibility.status]
+checking = "जांच {{total}} में से {{current}}..."
+complete = "जांच पूरी"
+
+[checkAccessibility.steps]
+results = "परिणाम"
+standard = "मानक"
+
+[checkAccessibility.tooltip.header]
+title = "किस मानक पर जांचें"
+
+[checkAccessibility.tooltip.ua1]
+text = "PDF/UA का पहला संस्करण, 2012 में ISO 14289-1 के रूप में प्रकाशित, PDF 1.7 फ़ाइलों के लिए।"
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "नया संस्करण, 2024 में ISO 14289-2 के रूप में प्रकाशित, PDF 2.0 फ़ाइलों के लिए। किसी PDF 1.7 फ़ाइल को इसके विरुद्ध जांचने पर वे नियम विफल होंगे जो केवल PDF 2.0 पर लागू होते हैं।"
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "एनोटेशन {{n}}"
+bookmarks = "बुकमार्क"
+character = "{{font}} में एक अक्षर"
+contentItem = "सामग्री आइटम {{n}}"
+drawingStep = "ड्रॉइंग चरण {{n}}"
+embeddedGraphic = "एम्बेडेड ग्राफ़िक"
+font = "फॉन्ट {{name}}"
+metadata = "दस्तावेज़ मेटाडेटा"
+page = "पृष्ठ {{n}}"
+piece = "भाग {{n}}"
+tag = "{{tag}} टैग"
+tagTree = "टैग ट्री"
+wholeDocument = "पूरा दस्तावेज़"
+
+[checkAccessibility.where.properties]
+author = "लेखक"
+description = "विवरण"
+pdfUaPart = "PDF/UA भाग"
+title = "शीर्षक"
 
 [classification.families]
 correspondence = "पत्राचार"
@@ -3729,6 +3964,10 @@ message = "प्रदान किए गए दस्तावेजों �
 body = "ये PDF मिलाकर 2,000 पृष्ठों से अधिक हैं। प्रोसेसिंग में कई मिनट लग सकते हैं।"
 title = "बड़ी तुलना प्रगति पर"
 
+[compare.mode]
+pixel = "पिक्सेल तुलना"
+text = "टेक्स्ट तुलना"
+
 [compare.no.text]
 message = "चयनित PDF में से एक या दोनों में कोई टेक्स्ट सामग्री नहीं है। कृपया तुलना के लिए टेक्स्ट वाले PDF चुनें।"
 
@@ -4046,6 +4285,30 @@ failed = "आपका साइन-इन नवीनीकृत नहीं
 lead = "यह सर्वर पहले से आपके खाते से लिंक है। अपने सर्वर पर billing और usage पर लौटने के लिए अपना साइन-इन नवीनीकृत करें।"
 title = "अपना सर्वर साइन-इन नवीनीकृत करें"
 
+[connectedAccounts]
+connect = "कनेक्ट करें"
+connectAnother = "एक और कनेक्ट करें"
+connectFailed = "खाता कनेक्ट नहीं हो सका। सुनिश्चित करें कि सर्वर का ऐप रजिस्ट्रेशन सेट है, फिर पुनः प्रयास करें।"
+disconnect = "डिसकनेक्ट करें"
+google = "Google Drive"
+intro = "अपने खाते एक बार कनेक्ट करें। फिर आपकी पाइपलाइनें उन्हें आपकी तरह पढ़ और सेव कर सकती हैं।"
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling अब इस खाते तक नहीं पहुंच पा रहा है, इसलिए इसे उपयोग करने वाली पाइपलाइनें रोक दी गई हैं।"
+none = "आपके व्यवस्थापक ने कनेक्टेड अकाउंट्स चालू नहीं किए हैं।"
+personal = "निजी खाता"
+popupBlocked = "आपके ब्राउज़र ने साइन-इन विंडो ब्लॉक कर दी। इस साइट के लिए पॉप-अप की अनुमति दें और फिर से प्रयास करें।"
+reconnect = "फिर से साइन इन करें"
+work = "कार्य खाता"
+
+[connectedAccounts.disconnectConfirm]
+body = "इस खाते का उपयोग करने वाले स्रोत और पाइपलाइनें तब तक रुक जाएंगी जब तक आप इसे फिर से कनेक्ट नहीं करते।"
+confirm = "डिसकनेक्ट करें"
+title = "क्या {{account}} डिसकनेक्ट करें?"
+
+[connectedAccounts.status]
+connected = "कनेक्टेड"
+needsSignIn = "साइन-इन आवश्यक"
+
 [convert]
 autoRotate = "ऑटो रोटेट"
 autoRotateDescription = "PDF पृष्ठ में बेहतर फिट हेतु छवियों को स्वतः घुमाएँ"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "दस्तावेज़ शीर्षक"
 pdfUaTitleHelp = "Reader द्वारा filename के बजाय दिखाया जाता है। खाली छोड़ने पर, first heading उपयोग होती है।"
 selectSourceFormatFirst = "पहले source format चुनें"
 settings = "सेटिंग्स"
+signInToUse = "उपयोग करने के लिए साइन इन करें"
 single = "एकल"
 sourceFormatPlaceholder = "स्रोत फ़ॉर्मेट"
-stirlingOfficeConvert = "Stirling Office Convert (बीटा) का उपयोग करें"
-stirlingOfficeConvertDescription = "कम मेमोरी में बेहतर, तेज़ कन्वर्ज़न। मानक कन्वर्टर का उपयोग करने के लिए बंद करें।"
 strictMode = "सख्त मोड"
 strictModeDesc = "यदि conversion perfect नहीं है तो error (VeraPDF verification का उपयोग करता है)"
 svgPdfOptions = "SVG से PDF विकल्प"
@@ -4134,8 +4396,6 @@ webOptions = "Web to PDF विकल्प"
 zoomLevel = "ज़ूम स्तर"
 
 [convert.ebookOptions]
-embedAllFonts = "सभी फ़ॉन्ट एम्बेड करें"
-embedAllFontsDesc = "eBook के सभी फ़ॉन्ट जनरेट की गई PDF में एम्बेड करें"
 includePageNumbers = "पेज नंबर शामिल करें"
 includePageNumbersDesc = "जनरेट की गई PDF में पेज नंबर जोड़ें"
 includeTableOfContents = "विषयसूची शामिल करें"
@@ -4648,6 +4908,17 @@ title = "सेटिंग्स"
 [extractPages.tooltip]
 description = "चयनित पृष्ठों को क्रम बनाए रखते हुए नए PDF में निकालता है।"
 
+[feedback.page]
+open = "फीडबैक भेजें"
+sendMore = "और फीडबैक भेजें"
+sent = "आपके फीडबैक के लिए धन्यवाद"
+title = "Stirling को बेहतर बनाने में मदद करें"
+unavailable = "फीडबैक उपलब्ध नहीं है"
+
+[feedback.tag]
+dismiss = "फीडबैक बटन छिपाएँ"
+label = "फीडबैक"
+
 [fileCard]
 openInFileEditor = "फ़ाइल संपादक में खोलें"
 viewInViewer = "व्यूअर में देखें"
@@ -4657,7 +4928,6 @@ closeFile = "फ़ाइल बंद करें"
 
 [fileEditor]
 closedFile = "{{name}} बंद किया गया"
-couldNotSave = "{{name}} सहेजा नहीं जा सका"
 filesReordered_one = "फ़ाइल का क्रम बदला गया"
 filesReordered_other = "{{count}} फ़ाइलों का क्रम बदला गया"
 loadedFromStorage_one = "स्टोरेज से {{count}} फ़ाइल लोड की गई"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "PDF लाइब्रेरी"
 myFiles = "File लाइब्रेरी"
 noFiles = "अभी कोई फ़ाइल नहीं"
+oneDrive = "OneDrive से खोलें"
+oneDriveFailed = "OneDrive खोला नहीं जा सका"
 openFileManager = "सभी files और folders browse करें"
 openFromComputer = "कंप्यूटर से खोलें"
 openSettings = "सेटिंग्स खोलें"
@@ -4804,6 +5076,17 @@ searchFiles = "फ़ाइलें खोजें"
 uploadFailedBody = "चुनी गई फ़ाइलें जोड़ी नहीं जा सकीं।"
 uploadFailedTitle = "अपलोड विफल"
 viewAll = "सभी {{count}} फ़ाइलें देखें"
+
+[fileSidebar.clearRecents]
+body_one = "क्या हाल के से 1 फ़ाइल साफ करें? इसे पूर्ववत नहीं किया जा सकता।"
+body_other = "क्या हाल के से {{count}} फ़ाइलें साफ करें? इसे पूर्ववत नहीं किया जा सकता।"
+button = "हाल के साफ करें"
+confirm = "हाल के साफ करें"
+error = "साफ नहीं कर सके। फिर से प्रयास करें।"
+openNote_one = "उनमें से 1 वर्कबेंच में खुली है।"
+openNote_other = "उनमें से {{count}} वर्कबेंच में खुली हैं।"
+skipOpen = "खुली फ़ाइलें छोड़ें"
+title = "हाल के साफ करें?"
 
 [fileSidebar.fileItem]
 closeViewer = "व्यूअर बंद करें"
@@ -5124,6 +5407,7 @@ diskFileHint = "आपके कंप्यूटर पर संग्रह�
 diskHint = "आपकी डिस्क पर माउंट किए गए फ़ोल्डर में एक फ़ाइल"
 local = "लोकल"
 localHint = "बैकअप नहीं किया गया"
+oneDrive = "OneDrive"
 shared = "शेयर किया गया"
 sharedHint = "लिंक के माध्यम से आपके साथ साझा"
 
@@ -5672,6 +5956,11 @@ title = "मेटाडेटा बदलें"
 desc = "दस्तावेज़ प्रतिबंध और अनुमतियाँ बदलें"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,permissions modify करें,security settings,user rights"
 title = "अनुमतियां बदलें"
+
+[home.checkAccessibility]
+desc = "PDF को PDF/UA के अनुसार स्कोर करें और देखें कि स्क्रीन रीडर्स को क्या रोकता है, बिना उसे बदले"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "PDF एक्सेसिबिलिटी जांचें"
 
 [home.classify]
 desc = "पहचानें कि यह किस प्रकार का दस्तावेज़ है और उसे टैग करें।"
@@ -6521,6 +6810,32 @@ quickAccess = "रीडर, ऑटोमेट, आपकी फ़ाइले
 topBar = "ऊपरी बार आपको <strong>Viewer</strong>, <strong>Page Editor</strong>, और <strong>Active Files</strong> के बीच स्विच करने देता है।"
 wrapUp = "V2 में नया यही है। इसे, Tools टूर या Admin टूर को फिर से देखने के लिए कभी भी <strong>Tours</strong> मेनू खोलें।"
 
+[oneDriveSave]
+chooseFolder = "अपलोड करने हेतु OneDrive फ़ोल्डर चुनें"
+conflict = "यह फ़ाइल OneDrive में इस संस्करण को खोले या सहेजे जाने के बाद बदल गई है। इसके बजाय अपने संस्करण को एक प्रति के रूप में सहेजें।"
+failedTitle = "OneDrive में सहेजा नहीं जा सका"
+fromOneDrive = "OneDrive से"
+linkNotStored = "यह ब्राउज़र OneDrive फ़ाइल का लिंक याद नहीं रख सका। रीलोड के बाद, इसके बजाय इसे एक प्रति के रूप में सहेजें।"
+missing = "यह फ़ाइल OneDrive में स्थानांतरित या हटा दी गई है। इसके बजाय अपने संस्करण को एक प्रति के रूप में सहेजें।"
+open = "OneDrive में खोलें"
+personalUnsupported = "OneDrive पर अपलोड करने के लिए कार्य या स्कूल का Microsoft खाता आवश्यक है।"
+reconnect = "पुनः कनेक्ट करें"
+replaces = "यह {{name}} को बदलता है"
+saveCopyToOneDrive = "OneDrive में एक प्रति सहेजें"
+saved = "OneDrive में सहेजा गया"
+saving = "OneDrive में सहेजा जा रहा है..."
+signInToSave = "OneDrive में सहेजने के लिए अपने सर्वर में साइन इन करें।"
+updateOriginal = "OneDrive में अपडेट करें"
+uploadToOneDrive = "OneDrive पर अपलोड करें..."
+
+[oneDriveSave.status]
+saved = "OneDrive में सहेजा गया"
+unsaved = "परिवर्तन अभी OneDrive में सहेजे नहीं गए हैं"
+
+[oneDriveSave.toolbar]
+replace = "OneDrive में {{name}} अपडेट करें"
+saveAll = "OneDrive में सभी अपडेट करें"
+
 [overlay-pdfs]
 desc = "एक PDF को दूसरे के ऊपर ओवरले करें"
 submit = "जमा करें"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "कल reset होगा"
 thisPeriod = "यह billing period"
 
 [payment]
+annually = "वार्षिक"
 billingPeriod = "बिलिंग अवधि"
 cancelTeamChange = "वर्तमान प्लान रखें"
 canCloseWindow = "अब आप यह विंडो बंद कर सकते हैं।"
@@ -7157,11 +7473,14 @@ title = "टीम प्लान समायोजित करें"
 
 [payment.capacityStage]
 adjustmentNote = "पुष्टि करने से पहले Stripe सटीक शुल्क, कोई भी prorations और आपकी अगली बिलिंग तिथि दिखाएगा। उपलब्ध होने पर आपकी सहेजी गई भुगतान विधि का उपयोग किया जाएगा।"
+billingLabel = "बिलिंग"
 continue = "भुगतान पर जारी रखें"
 currencyAtCheckout = "Stripe चेकआउट पर अंतिम राशि और भुगतान मुद्रा की पुष्टि करता है।"
+custom = "कस्टम"
 customLabel = "उपयोगकर्ताओं की संख्या"
 dueToday = "आज देय"
 enterpriseQuote = "enterprise कोट प्राप्त करें"
+enterUsers = "उपयोगकर्ताओं की संख्या दर्ज करें।"
 estimatedTotal = "अनुमानित कुल"
 lineItem = "टीम · {{price}}{{period}} प्रति {{block}} उपयोगकर्ता"
 minimumForCurrentUsers = "आपके पास {{users}} उपयोगकर्ता हैं, इसलिए प्लान में कम से कम {{minimum}} कवर होना चाहिए।"
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "मौजूदा खाते बने रहे�
 overCapacityTitle = "आपके सर्वर पर आपके प्लान से अधिक उपयोगकर्ता हैं"
 perMonth = "/माह"
 perYear = "/वर्ष"
+planName = "Stirling Team"
 reductionNote = "कम क्षमता आपके अगले renewal पर शुरू होगी। तब तक आप अपना वर्तमान अलाउंस इस्तेमाल कर सकते हैं। मौजूदा उपयोगकर्ता रहेंगे; बदलाव प्रभावी होने पर यदि आप क्षमता से अधिक हैं तो नए उपयोगकर्ता ब्लॉक होंगे।"
 renewalNote = "{{total}}{{period}} पर renew होगा। Usage & Billing में कभी भी रद्द करें।"
 reviewChange = "Stripe में बदलाव की समीक्षा करें"
-roundsTo = "{{users}} तक राउंड होता है"
+roundsUp = "{{users}} उपयोगकर्ताओं तक ऊपर की ओर गोल किया जाएगा।"
+selfServeLimit = "यहाँ अधिकतम {{users}} उपयोगकर्ता।"
 subheading = "आप जिन सभी को आमंत्रित करते हैं उन्हें {{users}} उपयोगकर्ताओं के ब्लॉक में कवर करता है।"
 subheadingAdd = "आपका प्लान आज {{current}} उपयोगकर्ताओं को कवर करता है। नया कुल चुनें।"
+talkToEnterprise = "और अधिक के लिए, Enterprise के बारे में हमसे बात करें।"
+usersCovered = "कवर किए गए उपयोगकर्ता"
 usersLabel = "उपयोगकर्ता"
 userTotal = "{{users}} उपयोगकर्ता"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "अपने कार्यक्षेत्र में फ�
 tags = "text edit करें,text modify करें,text change करें,content edit करें,text update करें,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 unsaved = "(असहेजा)"
-workbenchLabel = "एडिटर"
 
 [pdfTextEditor.annotations]
 freetext = "एनोटेशन टेक्स्ट - पेज टेक्स्ट नहीं, इसलिए इसे यहाँ संपादित नहीं किया जा सकता"
@@ -7261,12 +7583,18 @@ widget = "फ़ॉर्म फ़ील्ड - पेज टेक्स्�
 
 [pdfTextEditor.commands]
 edit = "एडिट"
+markTagged = "पूर्णतः टैग्ड के रूप में चिह्नित करें"
+matchScanFont = "स्कैन किए गए टेक्स्ट को {{face}} से मिलाएँ"
 mergeRuns_one = "{{count}} run को paragraph में merge करें"
 mergeRuns_other = "{{count}} runs को paragraph में merge करें"
 setColour = "{{run}} पर colour सेट करें"
 setOutline = "{{run}} पर outline सेट करें"
+tagFormField = "फ़ॉर्म फ़ील्ड टैग करें"
+tagLink = "लिंक टैग करें"
+tagPageContent = "पृष्ठ ऑटो-टैग करें"
 typeInto = "{{run}} में type करें"
 ungroupParagraph = "Paragraph {{run}} ungroup करें"
+unmarkTagged = "पूर्णतः टैग्ड नहीं के रूप में चिह्नित करें"
 wrap = "{{run}} wrap करें"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "त्यागें और खोलें"
 hint = "पहले उन्हें अपने कार्यक्षेत्र में रखने के लिए रद्द करें, फिर PDF सहेजें।"
 title = "असहेजे बदलाव त्यागें?"
 
-[pdfTextEditor.drop]
-hint = "एडिटर स्टेज पर छोड़ने से कोई भी खुला दस्तावेज़ बदल जाएगा।"
-title = "खोलने के लिए PDF छोड़ें"
-
 [pdfTextEditor.error]
 decodeImage = "चुनी गई छवि डिकोड नहीं की जा सकी।"
+duplicateDropsLetters = "यह टेक्स्ट डुप्लिकेट नहीं कर सकते: उपलब्ध कोई भी फ़ॉन्ट इसके सभी अक्षर नहीं दिखा पाता।"
+formLiftChangesDrawing = "इसे संपादित नहीं किया जा सकता: यह एक समूह का हिस्सा है जिसकी क्लिपिंग या ग्राफिक्स सेटिंग्स को बदलते समय संपादक बनाए नहीं रख सकता।"
 insertImage = "चुनी गई छवि डाली नहीं जा सकी।"
+needsShaping = "संपादक अभी इस लिपि के संयुक्त अक्षर और मात्राएँ सही तरह से नहीं बना सकता, इसलिए यह बदलाव नहीं किया गया।"
+replaceClippedImage = "यह छवि बदली नहीं जा सकती: यह क्रॉप की गई है, और प्रतिस्थापन में वे हिस्से दिखेंगे जिन्हें क्रॉप छुपा रहा है।"
+scanOffInk = "यह टेक्स्ट संपादित नहीं हो सकता: इसके पहचाने गए शब्द स्कैन से मेल नहीं खाते। फिर से OCR चलाएँ।"
+unsafeRtlEdit = "यह संपादन नहीं किया जा सकता: संपादक इस पंक्ति के दाएँ-से-बाएँ टेक्स्ट को बदले बिना दोबारा नहीं बना सकता।"
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG image"
@@ -7304,15 +7634,42 @@ wholeWord = "पूरा शब्द"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "बिल्ट-इन फ़ॉन्ट"
+closestMatch = "इस फ़ॉन्ट में चयनित कुछ अक्षर नहीं हैं, इसलिए वे सबसे नज़दीकी मेल खाते फ़ॉन्ट में दिखाए गए हैं।"
 deviceFontsNone = "कोई अतिरिक्त डिवाइस फ़ॉन्ट नहीं मिला।"
 deviceFontsUnavailable = "डिवाइस फ़ॉन्ट अनुपलब्ध हैं। बिल्ट-इन फ़ॉन्ट फिर भी काम करते हैं।"
 deviceGroup = "डिवाइस फ़ॉन्ट"
+documentFontCannotDraw = "संपादक इस टेक्स्ट को दस्तावेज़ के अपने फ़ॉन्ट में नहीं बना सकता, इसलिए इसे वर्तमान फ़ॉन्ट में ही छोड़ा गया।"
 documentGroup = "दस्तावेज़ फ़ॉन्ट"
+embeddingForbidden = "इस फॉन्ट का लाइसेंस इसे PDF में एंबेड करने की अनुमति नहीं देता। टेक्स्ट अपरिवर्तित छोड़ा गया।"
+embedFailed = "यह फॉन्ट PDF में एंबेड नहीं हो सका। टेक्स्ट अपरिवर्तित छोड़ा गया।"
+includedGroup = "शामिल फॉन्ट"
 label = "फ़ॉन्ट family"
+matchedGroup = "मिलता-जुलता फॉन्ट"
+missingGlyphs = "इस फ़ॉन्ट में चयनित कुछ वर्ण नहीं हैं, और उन्हें उनके वर्तमान फ़ॉन्ट में नहीं रखा जा सका। टेक्स्ट अपरिवर्तित छोड़ा गया।"
 mixed = "मिश्रित"
+needsShaping = "संपादक अभी इस लिपि के संयुक्त अक्षर और मात्राएँ सही तरह से दोबारा नहीं बना सकता, इसलिए वह टेक्स्ट वर्तमान फ़ॉन्ट में ही छोड़ा गया।"
+noGlyphs = "इस फॉन्ट में चयनित टेक्स्ट के लिए कोई अक्षर नहीं है। टेक्स्ट अपरिवर्तित छोड़ा गया।"
 noMatch = "कोई मेल खाता फ़ॉन्ट नहीं"
+partOfRunUnsupported = "यह टेक्स्ट केवल पूरे रूप में ही रीस्टाइल किया जा सकता है। इसके कुछ शब्दों के बजाय बॉक्स चुनें।"
 placeholder = "फ़ॉन्ट family"
+scannedText = "स्कैन किया गया टेक्स्ट"
+serverFontFailed = "वह सर्वर फॉन्ट डाउनलोड नहीं हो सका। टेक्स्ट अपरिवर्तित छोड़ा गया।"
+serverGroup = "सर्वर फॉन्ट"
+someLeftUnchanged = "इस फ़ॉन्ट में चयनित टेक्स्ट के कुछ वर्ण नहीं हैं। वह टेक्स्ट बिना बदले छोड़ा गया।"
+styleSkipped = "चयनित टेक्स्ट के कुछ हिस्से के फ़ॉन्ट में वह शैली नहीं है, इसलिए उसे बिना बदले छोड़ा गया।"
+styleUnavailable = "चयनित टेक्स्ट के फ़ॉन्ट में वह शैली नहीं है, इसलिए उसे बिना बदले छोड़ा गया।"
 useDeviceFonts = "डिवाइस फ़ॉन्ट उपयोग करें"
+weight = "फ़ॉन्ट वेट"
+weightBlack = "Black"
+weightBold = "Bold"
+weightExtraBold = "Extra bold"
+weightExtraLight = "Extra light"
+weightLight = "Light"
+weightMedium = "Medium"
+weightNumber = "वेट {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Semibold"
+weightThin = "Thin"
 
 [pdfTextEditor.fonts]
 allPresent = "सभी अक्षर और संख्याएँ मौजूद"
@@ -7357,6 +7714,7 @@ helpDesc = "यह help"
 saveDesc = "अपने कार्यक्षेत्र में सहेजें"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Bold / Italic, चयनित शब्दों या पूरे बॉक्स के लिए"
 deleteDesc = "चयनित हटाएँ"
 duplicateDesc = "चयनित की प्रतिलिपि बनाएँ"
 groupDesc = "चयनित runs को एक पैराग्राफ़ में समूहित करें"
@@ -7380,8 +7738,12 @@ zoomDesc = "Zoom in / out"
 
 [pdfTextEditor.inspector]
 document = "दस्तावेज़"
+fontCompletedClosest = "एंबेडेड फॉन्ट · जो अक्षर इसमें नहीं हैं उन्हें {{name}} में खींचा जाता है, जो सबसे नज़दीकी मेल है।"
+fontCompletedOriginal = "एंबेडेड फॉन्ट · जो अक्षर इसमें नहीं हैं उन्हें {{name}} में खींचा जाता है, वही फॉन्ट।"
 fontEmbedded = "Embedded फ़ॉन्ट · कोई character जो इसमें नहीं है Helvetica पर fallback करता है।"
 fontGap = "{{name}} · {{glyphs}} गायब - इन्हें टाइप करने पर Helvetica पर fallback होता है।"
+fontUnknownCoverage = "{{name}} · जो अक्षर इसमें नहीं हैं, वे {{fallback}} पर फ़ॉलबैक करते हैं।"
+formField = "फ़ॉर्म फ़ील्ड"
 geometry = "स्थिति और आकार"
 height = "ऊँचाई"
 heightHint = "टेक्स्ट बॉक्स की ऊँचाई उसके type size और line count के अनुसार होती है।"
@@ -7403,14 +7765,20 @@ ocrUnavailable = "इस server पर OCR उपलब्ध नहीं ह�
 oneImage = "छवि"
 oneShape = "Shape"
 oneText = "टेक्स्ट"
+outlinedTextHint_one = "इस पेज का टेक्स्ट शेप्स के रूप में बनाया गया है, इसलिए संपादित करने के लिए टेक्स्ट नहीं है। इसे संपादन योग्य बनाने के लिए पहले OCR चलाएँ।"
+outlinedTextHint_other = "{{count}} पेजों में टेक्स्ट शेप्स के रूप में बनाया गया है, इसलिए संपादित करने के लिए टेक्स्ट नहीं है। उन्हें संपादन योग्य बनाने के लिए पहले OCR चलाएँ।"
 pages = "पेज"
 runOcr = "OCR चलाएँ"
 scanHint_one = "यह पेज एक scanned image है जिसमें edit करने के लिए कोई text नहीं है। इसका text editable बनाने के लिए पहले OCR चलाएँ।"
 scanHint_other = "{{count}} पेज scanned images हैं जिनमें edit करने के लिए कोई text नहीं है। उनका text editable बनाने के लिए पहले OCR चलाएँ।"
 scannedText = "Scanned text · बदले हुए शब्द ढके गए हैं और matching font में फिर से बनाए गए हैं।"
+scannedTextMisaligned = "स्कैन किया गया टेक्स्ट · इसके पहचाने गए शब्द स्कैन से मेल नहीं खाते, इसलिए यह ब्लॉक संपादित या हटाया नहीं जा सकता।"
+scannedTextNoFont = "स्कैन किया गया टेक्स्ट · इस लिपि में टाइप किए गए शब्द अभी नहीं बनाए जा सकते, इसलिए वे रखे नहीं जाते। शब्द हटाना फिर भी कार्य करता है।"
+scannedTextOffInk = "स्कैन किया गया टेक्स्ट · इसके पहचाने गए शब्द स्कैन किए गए शब्दों से हटकर बैठते हैं, इसलिए यह ब्लॉक संपादित नहीं हो सकता। फिर से OCR चलाएँ।"
 tabDocument = "दस्तावेज़"
 tabSelected = "चयनित"
 textBoxes = "टेक्स्ट बॉक्स"
+unreadPagesHint = "{{count}} पेजों में संपादित करने योग्य टेक्स्ट नहीं है: कुछ स्कैन की गई छवियाँ हैं और कुछ अपना टेक्स्ट शेप्स के रूप में बनाते हैं। उन्हें संपादन योग्य बनाने के लिए पहले OCR चलाएँ।"
 width = "चौड़ाई"
 widthHint = "Text width में fit होने के लिए फिर से wrap होता है।"
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "टैग जोड़ें"
+applyToOtherPages_one = "{{count}} अन्य पृष्ठ पर लागू करें"
+applyToOtherPages_other = "{{count}} अन्य पृष्ठों पर लागू करें"
+artifactGroup = "स्क्रीन रीडर्स द्वारा छोड़ा गया"
 artifactText = "सजावटी"
 cannotChange = "इस छवि की सुलभता बदली नहीं जा सकती।"
+cannotDescribeFormField = "इस फ़ॉर्म फ़ील्ड का विवरण बदला नहीं जा सकता।"
+cannotDescribeLink = "इस लिंक का विवरण बदला नहीं जा सकता।"
 cannotRetag = "इस टेक्स्ट का टैग बदला नहीं जा सकता।"
+cannotSetDecorative = "इसे सजावटी के रूप में चिह्नित/हटाया नहीं जा सकता।"
+cannotTagFormField = "इस फ़ॉर्म फ़ील्ड को टैग नहीं किया जा सकता।"
+cannotTagLink = "यह लिंक टैग नहीं किया जा सकता।"
+cannotTagPage = "इस पृष्ठ की सामग्री टैग नहीं की जा सकती।"
+contentGroup = "सामग्री"
 customTag = "{{role}} (कस्टम टैग)"
 decorativeInfo = "स्क्रीन रीडर सजावटी छवियों को छोड़ देते हैं। इसे बॉर्डर, बैकग्राउंड और अन्य ऐसी छवियों के लिए उपयोग करें जिनमें कोई जानकारी नहीं होती।"
 decorativeLabel = "सजावटी छवि"
 description = "छवि का विवरण"
 descriptionInfo = "स्क्रीन रीडर छवि की जगह इसे पढ़ते हैं।"
 encrypted = "एन्क्रिप्टेड फ़ाइल में टैग संपादित नहीं किए जा सकते"
+figureDescription = "चित्र विवरण"
+figureDescriptionInfo = "स्क्रीन रीडर इसे चित्र के स्थान पर पढ़ते हैं।"
+formFieldDescription = "फ़ील्ड विवरण"
+formulaDescription = "सूत्र विवरण"
+formulaDescriptionInfo = "स्क्रीन रीडर इसे सूत्र के स्थान पर पढ़ते हैं। इसे वैसे ही कहें जैसे आप ज़ोर से कहेंगे, जैसे \"x squared plus one\"."
 heading = "सुलभता"
 innerTagLabel = "टैग {{number}}"
 innerTags = "इस टेक्स्ट में टैग"
+linkDescription = "लिंक विवरण"
+markedTagged = "दस्तावेज़ पूर्णतः टैग्ड है"
+markedTaggedHint = "PDF रीडर्स को एक्सेसिबिलिटी टैग उपयोग करने को बताता है। इसे तभी चुनें जब सब कुछ टैग हो।"
+markedWithUntagged = "कुछ सामग्री पर टैग नहीं हैं, इसलिए स्क्रीन रीडर्स उसे छोड़ सकते हैं।"
 missingDescriptions = "विवरण अनुपस्थित हैं"
 mixedContent = "चित्र में अन्य सामग्री शामिल है"
+mixedTags = "मिश्रित"
 needsDescriptionBadge = "कोई विवरण नहीं"
-nextImage = "अगली छवि"
+nextToReview = "समीक्षा के लिए अगला"
 notFigure = "टेक्स्ट के भाग के रूप में टैग किया गया"
 removeTag = "टैग हटाएँ"
 saveFailed = "आपके सुलभता बदलाव सहेजे नहीं जा सके, इसलिए फ़ाइल सहेजी नहीं गई। उन्हें पूर्ववत करें और फिर से प्रयास करें।"
 selectedText = "चयनित टेक्स्ट"
+tagFormField = "फ़ॉर्म फ़ील्ड टैग करें"
+tagging = "पृष्ठ टैग करना"
 tagLabel = "टैग"
+tagLinks_one = "लिंक टैग करें"
+tagLinks_other = "{{count}} लिंक टैग करें"
+tagUntagged = "दस्तावेज़ ऑटो-टैग करें"
+tagUntaggedHint = "पूरे दस्तावेज़ में स्वतः एक्सेसिबिलिटी टैग जोड़ता है। परिणाम मोटा होता है: बाद में हेडिंग, सूचियाँ और पढ़ने का क्रम जाँचें।"
 unknownTag = "यहाँ पढ़ा नहीं जा सकता"
+unmarkedWithTags = "कुछ PDF व्यूअर्स टैग वैसे भी उपयोग करेंगे और बिना टैग की सामग्री छोड़ सकते हैं।"
 unreadable = "इस फ़ाइल के टैग संपादित नहीं किए जा सकते"
 untaggableImages = "यहाँ टैग नहीं किया जा सकता"
 untaggedBadge = "टैग नहीं किया गया"
 untaggedDocument = "दस्तावेज़ में कोई टैग नहीं है"
 untaggedImage = "यहाँ टैग नहीं किया जा सकता"
 untaggedImages = "टैग न की गई छवियाँ"
+untaggedPages = "टैग करने के लिए पृष्ठ"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "फुटर"
+header = "हेडर"
+pageNumber = "पृष्ठ संख्या"
+watermark = "वॉटरमार्क"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "बिना टेक्स्ट वाला शीर्षक"
@@ -7505,6 +7907,23 @@ tableHeader = "तालिका हेडर"
 tableRow = "तालिका पंक्ति"
 title = "शीर्षक"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "सभी भाषाएँ"
+cannotSetDocument = "इस दस्तावेज़ की भाषा बदली नहीं जा सकती।"
+cannotSetText = "इस टेक्स्ट की भाषा बदली नहीं जा सकती।"
+documentHint = "वह भाषा जिसे स्क्रीन रीडर्स उपयोग करते हैं, जब तक टेक्स्ट का कोई भाग अपनी भाषा न सेट करे।"
+documentLabel = "भाषा"
+documentLocked = "एन्क्रिप्टेड दस्तावेज़ की भाषा यहाँ नहीं बदली जा सकती।"
+inDocument = "इस दस्तावेज़ में"
+innerLabel = "टैग {{number}} की भाषा"
+label = "भाषा"
+missing = "कोई भाषा सेट नहीं है। स्क्रीन रीडर्स अनुमान लगाएँगे और संभव है पूरे दस्तावेज़ को गलत आवाज़ में पढ़ें।"
+mixed = "मिश्रित"
+noMatch = "कोई मेल खाती भाषा नहीं। इसके कोड टाइप करें, जैसे mt या en-IE।"
+placeholder = "भाषा चुनें"
+selectedText = "चयनित टेक्स्ट की भाषा"
+textHint = "स्क्रीन रीडर्स इस भाषा पर आवाज़ और उच्चारण बदलते हैं।"
+
 [pdfTextEditor.mobile]
 actions = "एडिटर कार्रवाइयाँ"
 addImage = "छवि"
@@ -7517,7 +7936,6 @@ done = "हो गया"
 download = "सहेजें और डाउनलोड करें"
 find = "खोजें"
 lock = "लॉक करें"
-openPdf = "PDF खोलें"
 panelHint = "संपादन Workspace दृश्य में होता है। पेज पर टेक्स्ट बदलने के लिए उस पर टैप करें।"
 save = "सहेजें"
 style = "शैली"
@@ -7525,7 +7943,6 @@ tapToPlace = "जहाँ टेक्स्ट जाना चाहिए, �
 unlock = "अनलॉक करें"
 
 [pdfTextEditor.pageView]
-pageNumber = "पृष्ठ {{page}}"
 renderFailed = "पृष्ठ रेंडर करने में विफल"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "ऊर्ध्वाधर रूलर"
 
 [pdfTextEditor.run]
 lockedTitle = "लॉक है - संपादित करने के लिए Unlock बटन इस्तेमाल करें"
+readOnlyOrderTitle = "इस पंक्ति का टेक्स्ट संपादित नहीं किया जा सकता: यह दाएँ-से-बाएँ और बाएँ-से-दाएँ टेक्स्ट को ऐसे क्रम में मिलाता है जिसे संपादक सुरक्षित रूप से दोबारा नहीं बना सकता"
+resizeHandle = "चौड़ाई बदलने के लिए खींचें; टेक्स्ट फिर से रैप होगा"
 
 [pdfTextEditor.saveRisk]
 cancel = "रद्द करें"
@@ -7548,6 +7967,35 @@ intro = "संपादित कॉपी सहेजने से फ़ा�
 note = "आपके संपादन रखे जाते हैं। संपादित कॉपी सहेजते समय ऊपर सूचीबद्ध बदलाव अपरिहार्य हैं।"
 saveAnyway = "फिर भी सहेजें"
 title = "सहेजने से यह PDF बदल जाएगा"
+
+[pdfTextEditor.scanFont]
+approximate = "अनुमानित मेल"
+approximateHint = "मिला निकटतम फॉन्ट स्कैन से पूरी तरह मेल न खाए।"
+change = "फॉन्ट सही नहीं दिख रहा?"
+choose = "एक फॉन्ट चुनें"
+chooseMissing = "इस टेक्स्ट के लिए एक फॉन्ट चुनें…"
+compare = "फॉन्ट तुलना करें…"
+deviceAllow = "बेहतर मिलान के लिए फॉन्ट एक्सेस की अनुमति दें"
+deviceBlocked = "आपका ब्राउज़र फिर से नहीं पूछेगा। अनुमति देने के लिए, एड्रेस बार के बाएँ आइकन पर क्लिक करें, Fonts चालू करें, फिर दोबारा प्रयास करें।"
+deviceBlockedTitle = "फॉन्ट एक्सेस ब्लॉक है"
+deviceNone = "सामान्य दस्तावेज़ फॉन्ट में से कोई भी इस कंप्यूटर पर इंस्टॉल नहीं है।"
+deviceNote = "आपका ब्राउज़र पहले पूछेगा। फॉन्ट इसी डिवाइस पर रहते हैं।"
+deviceOn_one = "इस कंप्यूटर पर {{count}} फॉन्ट से भी तुलना की गई।"
+deviceOn_other = "इस कंप्यूटर पर {{count}} फॉन्ट से भी तुलना की गई।"
+deviceReading = "इस कंप्यूटर के फॉन्ट पढ़े जा रहे हैं…"
+deviceRetry = "फिर से प्रयास करें"
+done = "पूरा"
+hint = "आपका टाइपिंग मिले सबसे नज़दीकी फॉन्ट में ड्रॉ होती है। यदि स्कैन जैसी न लगे, तो दूसरा चुनें।"
+hintFromScan = "आपका टाइपिंग स्कैन में पाए गए अक्षरों से बनाई जाती है। चाहें तो कोई फॉन्ट चुनकर उसे उसी फॉन्ट में ड्रॉ करें।"
+hintOthers = "आपकी पसंद उन स्कैन किए गए टेक्स्ट पर भी लगेगी जिन्हें आपने अभी संपादित नहीं किया है।"
+matching = "फॉन्ट मिलाए जा रहे हैं…"
+noFont = "उपलब्ध फॉन्ट में से कोई भी इस लिपि को नहीं बना सकता, इसलिए टाइप किया टेक्स्ट अभी पुन: नहीं बनाया जा सकता।"
+scan = "मूल स्कैन"
+scanAlt = "स्कैन की गई पंक्ति"
+scanNote = "स्कैन अक्सर फॉन्ट की वास्तविक मोटाई से धुंधले या गाढ़े दिखते हैं। मोटाई के बजाय अक्षरों के आकार की तुलना करें।"
+score = "{{match}}% समान"
+title = "स्कैन किए गए फॉन्ट से मेल कराएँ"
+unmeasurable = "यह स्कैन फॉन्ट से मेल कराने के लिए बहुत हल्का या छोटा है।"
 
 [pdfTextEditor.settings]
 advanced = "उन्नत"
@@ -7564,7 +8012,6 @@ addTable = "तालिका जोड़ें"
 addText = "टेक्स्ट जोड़ें"
 clickPageToAddTable = "तालिका जोड़ने के लिए पेज पर क्लिक करें"
 clickPageToAddText = "टेक्स्ट जोड़ने के लिए पेज पर क्लिक करें"
-document = "दस्तावेज़"
 group = "समूहित करें"
 groupingAuto = "ऑटो"
 groupingAutoHint = "बराबर दूरी वाली लाइनों को पैराग्राफ़ में समूहित करता है। इसे बदलने से दस्तावेज़ फिर से पढ़ा जाता है और undo history साफ़ हो जाती है।"
@@ -7593,23 +8040,17 @@ auto = "स्वचालित"
 enable = "टाइप करते समय वर्तनी जाँचें"
 language = "Dictionary भाषा"
 
-[pdfTextEditor.stage]
-loadingDocument = "दस्तावेज़ लोड हो रहा है"
-loadingProgress = "लोडिंग प्रगति"
-noDocument = "कोई दस्तावेज़ लोड नहीं।"
-pickPrompt = "संपादन शुरू करने के लिए बाईं ओर Files पैनल से PDF चुनें।"
-renderingPreview = "Preview render हो रहा है"
-
 [pdfTextEditor.table]
 addColumn = "कॉलम जोड़ें"
 addRow = "पंक्ति जोड़ें"
+cellNoGlyphs = "इस टेक्स्ट में ऐसे वर्ण हैं जिन्हें टेबल के फ़ॉन्ट नहीं बना सकते। सेल भरने के लिए उन्हें बदलें या हटाएँ।"
 column = "कॉलम"
 deleteColumn = "कॉलम हटाएं"
 deleteRow = "पंक्ति हटाएं"
 done = "हो गया"
 doneHint = "इसे तालिका के रूप में संपादित करना बंद करें"
-edit = "संपादित करें"
 editHint = "तालिका के रूप में संपादित करें - सेल में टाइप करें, पंक्तियां और कॉलम जोड़ें या हटाएं"
+editTable = "टेबल संपादित करें"
 move = "ले जाएं"
 moveTable = "पूरी तालिका को ले जाने के लिए खींचें"
 recognizedHint = "पहचानी गई तालिका - इसके सभी टेक्स्ट को चुनने के लिए क्लिक करें"
@@ -7630,6 +8071,9 @@ alignMiddle = "मध्य align करें"
 alignRight = "दाएँ align करें"
 alignTop = "ऊपर align करें"
 arrange = "व्यवस्थित करें"
+bold = "Bold"
+boldOnly = "इस फ़ॉन्ट में केवल Bold संस्करण है"
+boldUnavailable = "इस फ़ॉन्ट का Bold संस्करण नहीं है"
 bringForward = "आगे लाएँ"
 bringToFront = "सबसे आगे लाएँ"
 caseLower = "लोअरकेस"
@@ -7650,10 +8094,12 @@ fontColour = "फ़ॉन्ट रंग"
 fontSize = "फ़ॉन्ट आकार"
 formatting = "टेक्स्ट formatting"
 italic = "इटैलिक"
+italicOnly = "इस फ़ॉन्ट में केवल Italic संस्करण है"
 italicUnavailable = "इस फ़ॉन्ट का italic संस्करण नहीं है। अपने डिवाइस फ़ॉन्ट लोड करें या कोई दूसरा फ़ॉन्ट family चुनें।"
 lock = "चयन लॉक करें"
 lockTooltip = "चयन लॉक करें - आकस्मिक संपादन रोकता है"
 more = "अधिक कार्रवाइयाँ"
+noBoldItalic = "इस फ़ॉन्ट का Bold Italic संस्करण नहीं है"
 order = "क्रम"
 outlineColour = "Outline रंग"
 outlineWidth = "Outline चौड़ाई (0 = कोई नहीं)"
@@ -7683,13 +8129,6 @@ title = "पूर्वावलोकन अंतर"
 [pdfTextEditor.tooltip.textFocus]
 text = "यह कार्यक्षेत्र टेक्स्ट संपादन और एम्बेडेड छवियों को पुनर्स्थापित करने पर केंद्रित है। जटिल पेज आर्टवर्क, फ़ॉर्म विजेट और लेयर्ड ग्राफ़िक्स निर्यात के लिए सुरक्षित रहते हैं, लेकिन यहाँ पूरी तरह संपादन योग्य नहीं हैं।"
 title = "टेक्स्ट और छवि फोकस"
-
-[pdfTextEditor.zoom]
-fit = "फिट करें"
-fitToWidth = "चौड़ाई में fit करें"
-in = "ज़ूम इन"
-out = "ज़ूम आउट"
-reset = "Zoom को 100% पर reset करें"
 
 [PDFToCSV]
 header = "PDF से CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "import पर चलता है"
 [policies.enforcement]
 applying = "{{names}} लागू किए जा रहे हैं"
 applyingProgress = "{{names}} लागू किए जा रहे हैं ({{done}}/{{total}})"
-exportFailureBody = "सुरक्षा नीतियाँ लागू नहीं की जा सकीं। फ़ाइलें बिना बदलाव के निर्यात की गईं।"
-exportFailureTitle = "लागू किए बिना निर्यात किया गया"
 failureBody = "कुछ policies {{total}} में से {{failures}} file(s) पर apply नहीं की जा सकीं।"
 failureTitle = "पूर्ण रूप से लागू किए बिना निर्यात किया गया"
 printPolicyAppliedBody = "इस PDF को किसी नीति के अनुरूप अद्यतन किया गया। बदलावों की समीक्षा करें, फिर पुनः प्रिंट करें।"
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "policy run होने पर Google Chat space में message post करें।"
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "एक सेवा खाता जो संगठन के लिए Google Drive पढ़ता और लिखता है।"
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Google Cloud से सेवा खाते की JSON कुंजी पेस्ट करें। यह एन्क्रिप्ट की जाती है और दोबारा कभी नहीं दिखाई जाती।"
+label = "सेवा खाता कुंजी (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "वैकल्पिक। डोमेन-वाइड डेलीगेशन के साथ, वह उपयोगकर्ता जिसका Drive यह बनकर काम करता है (लोगों के छोड़ने पर भी समर्पित बॉट उपयोगकर्ता काम करता रहता है)। खाली छोड़ने पर केवल साझा ड्राइव और सेवा खाते के साथ साझा फ़ोल्डर तक पहुँचा जा सकता है।"
+label = "उपयोगकर्ता के रूप में कार्य करें"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "processed documents को Jira issue से attach करें।"
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "policy run होने पर document या notification email करें।"
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Microsoft Graph एप्लिकेशन अनुमतियाँ, एडमिन सहमति के साथ, आवश्यक हैं।"
+label = "एप्लिकेशन (क्लाइंट) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "क्लाइंट सीक्रेट"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "डायरेक्टरी (टेनेंट) ID"
+placeholder = "contoso.onmicrosoft.com या टेनेंट GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "App पासवर्ड"
+
+[portal.connections.types.onedrive]
+description = "एक उपयोगकर्ता के OneDrive for Business से पढ़ें और उसमें लिखें।"
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "यह कनेक्शन किसके OneDrive तक पहुँचता है। ऐप रजिस्ट्रेशन में Files.ReadWrite.All एप्लिकेशन अनुमति चाहिए।"
+label = "OneDrive मालिक"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "यदि आप इसके बजाय private key से auth
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Optional। password के बजाय key से authenticate करने के लिए OpenSSH private key paste करें।"
 label = "Private key"
+
+[portal.connections.types.sharepoint]
+description = "किसी SharePoint साइट की डॉक्युमेंट लाइब्रेरी से पढ़ें और उसमें लिखें।"
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "वैकल्पिक। साइट की डिफ़ॉल्ट Documents लाइब्रेरी के लिए खाली छोड़ें।"
+label = "डॉक्युमेंट लाइब्रेरी"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "साइट URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "policy जब document process करे, तो Slack पर message post करें।"
@@ -9142,6 +9624,126 @@ status = "स्थिति"
 time = "समय"
 user = "उपयोगकर्ता"
 
+[portal.enterprise]
+backTo = "{{stage}} पर वापस"
+brandTag = "Enterprise"
+callInfo = "15-मिनट की कॉल। मूल्य, परिनियोजन या सुरक्षा पर अपने प्रश्न लाएँ, या साथ मिलकर अपना रोलआउट प्लान करें।"
+callTitle = "सॉल्यूशंस इंजीनियर से बात करें"
+deployment = "परिनियोजन"
+footer = "Stirling Enterprise के बारे में प्रश्न?"
+home = "Stirling पर जाएँ"
+member = "आपके टीम लीडर Enterprise डील चलाते हैं। शुरू होने पर, आप यहाँ इसकी प्रगति देख सकते हैं।"
+memberDeal = "आपके टीम लीडर यह डील चलाते हैं। आप इसकी प्रगति यहाँ देख सकते हैं।"
+quotePanel = "आपका कोट"
+signIn = "साइन इन"
+signInToStart = "ट्रायल शुरू करने के लिए साइन इन करें"
+stage = "चरण {{current}} / {{total}}"
+stagesLabel = "प्रगति"
+
+[portal.enterprise.landing]
+lede = "14 दिन निःशुल्क आज़माएँ, फिर यहीं अपना कोट बनाएं और समझौते पर हस्ताक्षर करें। कार्ड की आवश्यकता नहीं।"
+tickAgreement = "एक ही समझौता जिसमें MSA, ऑर्डर फॉर्म, EULA और DPA सम्मिलित हैं"
+tickCompliance = "SCIM, डेटा रेजिडेंसी और अपटाइम SLA"
+tickDeploy = "Stirling Cloud, अपने सर्वर या पूर्णतः एयर-गैप्ड पर चलाएँ"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "ऑफ़लाइन लाइसेंस दस्तावेज़"
+point1 = "ऐसे लाइसेंस फ़ाइल से सक्रिय होता है जो ऑफ़लाइन काम करती है, न कि ऑनलाइन जाँची जाने वाली कुंजी से"
+point2 = "सेल्फ-होस्टेड की तरह इंस्टॉल होता है, उस इमेज से जिसे आप ले आते हैं"
+point3 = "साइन-इन आपके नेटवर्क के भीतर ही रहता है"
+tagline = "ऐसे नेटवर्क पर सेल्फ-होस्टेड जिसमें इंटरनेट एक्सेस नहीं है।"
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud दस्तावेज़"
+point1 = "आपकी टीम stirling.com/app पर साइन इन करती है"
+point2 = "AWS पर चलता है, संग्रहीत फ़ाइलें एट-रेस्ट एन्क्रिप्टेड रहती हैं"
+point3 = "आपके अपने आइडेंटिटी प्रोवाइडर के जरिए सिंगल साइन-ऑन के लिए सेल्फ-होस्टिंग आवश्यक है"
+tagline = "आपके लिए होस्टेड, कुछ भी इंस्टॉल नहीं करना।"
+
+[portal.enterprise.options.selfhost]
+more = "सेल्फ-होस्टिंग दस्तावेज़"
+point1 = "Docker से इंस्टॉल करें, या Kubernetes पर Helm चार्ट से"
+point2 = "दस्तावेज़ आपकी अपनी इंफ्रास्ट्रक्चर पर प्रोसेस होते हैं"
+point3 = "OAuth2, OIDC या SAML सिंगल साइन-ऑन"
+tagline = "अपने सर्वर पर, ऑन-प्रिमाइसेज़ या अपने क्लाउड में।"
+
+[portal.enterprise.review]
+back = "{{stage}} पर लौटें"
+company = "कंपनी"
+completed = "पूर्ण"
+extensions = "उपयोग किए गए एक्सटेंशन"
+paid = "भुगतान हो गया। आपका इनवॉइस यहीं उपलब्ध रहेगा।"
+people = "लोग"
+started = "शुरू"
+trialEnds = "ट्रायल समाप्ति तिथि"
+trialTitle = "आपका ट्रायल"
+version = "संस्करण"
+viewInvoice = "इनवॉइस देखें"
+
+[portal.enterprise.setup]
+copied = "कॉपी किया गया"
+copy = "कॉपी करें"
+markDone = "“{{step}}” को पूरा चिह्नित करें"
+progress = "{{total}} में से {{done}} पूरा"
+subtitle = "उसे वैसे आज़माकर अपने ट्रायल का सर्वोत्तम उपयोग करें, जैसा आप इसे चलाएंगे।"
+subtitleLive = "वे चरण जिन्हें सभी के लिए रोलआउट से पहले पूरा करना है।"
+title = "सेटअप करें"
+titleLive = "गो-लाइव चेकलिस्ट"
+
+[portal.enterprise.setup.firstDocument]
+body = "एक PDF अपलोड करें जिस पर आपकी टीम काम करती है और वे टूल आज़माएँ जिन्हें आप रोज़ उपयोग करेंगे, जैसे रिडैक्ट, कॉम्प्रेस या OCR।"
+title = "अपना पहला दस्तावेज़ चलाएँ"
+
+[portal.enterprise.setup.getApp]
+body = "Windows, Mac या Linux के लिए डेस्कटॉप ऐप इंस्टॉल करें और अभी बनाए हुए खाते से साइन इन करें, या इसे सीधे ब्राउज़र से उपयोग करें।"
+title = "Stirling प्राप्त करें"
+
+[portal.enterprise.setup.install]
+body = "इसे अपने सर्वर पर चलाएँ। यह आपके लाइसेंस के साथ Stirling शुरू करता है, और इमेज में OCR और ऑफिस कन्वर्ज़न शामिल है। बड़े टीमों के लिए, Kubernetes उपयोग करें।"
+title = "Stirling इंस्टॉल करें और शुरू करें"
+
+[portal.enterprise.setup.invite]
+body = "उन्हें लाएँ जो इसे उपयोग करेंगे, ताकि ट्रायल वास्तविक कार्य को दर्शाए।"
+title = "अपनी टीम को आमंत्रित करें"
+
+[portal.enterprise.setup.licence]
+body = "यह खोलें <code>http://your-server:8080/settings/adminPlan</code>, जहाँ आपका Enterprise लाइसेंस सक्रिय दिखना चाहिए। दूसरे तरीके से इंस्टॉल किया है? <code>settings.yml</code> में <code>premium.key</code> के अंतर्गत कुंजी जोड़ें और पुनः आरंभ करें।"
+title = "जाँचें कि आपका लाइसेंस सक्रिय है"
+
+[portal.enterprise.setup.links]
+browser = "इसे अपने ब्राउज़र में उपयोग करें"
+docker = "Docker गाइड"
+download = "ऐप डाउनलोड करें"
+downloadForTeam = "अपनी टीम के लिए ऐप लें"
+downloading = "डाउनलोड हो रहा है..."
+downloadLicence = "लाइसेंस फ़ाइल डाउनलोड करें"
+invite = "टीममेट आमंत्रित करें"
+kubernetes = "Kubernetes गाइड"
+licence = "लाइसेंस सक्रियण"
+ocr = "OCR भाषाएँ"
+openApp = "Stirling खोलें"
+samlGuide = "SAML गाइड"
+ssoGuide = "SSO गाइड"
+
+[portal.enterprise.setup.offlineInstall]
+body = "कनेक्टेड मशीन पर फुल इमेज पुल करें, उसे और लाइसेंस फ़ाइल को साथ ले जाएँ, फिर लोड कर शुरू करें। फुल इमेज उन फॉन्ट को जोड़ती है जिन्हें ऑफ़लाइन सर्वर डाउनलोड नहीं कर सकता।"
+title = "Stirling को साथ ले जाएँ और शुरू करें"
+
+[portal.enterprise.setup.offlineLicence]
+body = "एयर-गैप्ड सर्वर हमारे लाइसेंस सर्विस तक नहीं पहुँच सकता, इसलिए यह इस साइन की गई फ़ाइल की जाँच करता है। इसे उस इमेज के साथ रखें जिसे आप ले जा रहे हैं।"
+title = "अपना ऑफ़लाइन लाइसेंस डाउनलोड करें"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "<code>/settings/people</code> पर खाते बनाएँ, या Stirling को अपने आंतरिक आइडेंटिटी प्रोवाइडर की ओर इंगित करें ताकि साइन-इन कभी आपके नेटवर्क से बाहर न जाए।"
+bodySelfHosted = "<code>/settings/people</code> पर खाते बनाएँ, या अपना आइडेंटिटी प्रोवाइडर कनेक्ट करें ताकि आपकी टीम अपने कार्य खातों से साइन इन करे। वे Stirling को ब्राउज़र में आपके सर्वर के पते पर, या उस पर पॉइंट किए गए डेस्कटॉप ऐप में उपयोग करते हैं।"
+title = "अपने लोग जोड़ें"
+
+[portal.enterprise.setup.signIn]
+body = "<code>http://your-server:8080</code> खोलें और <code>admin</code> / <code>stirling</code> से साइन इन करें। आपसे तुरंत नया पासवर्ड चुनने के लिए कहा जाएगा।"
+bodyAirgap = "<code>http://your-server:8080</code> खोलें और <code>admin</code> / <code>stirling</code> से साइन इन करें, नया पासवर्ड चुनें, फिर जाँचें कि <code>/settings/adminPlan</code> आपका लाइसेंस सक्रिय दिखाता है।"
+title = "एडमिन के रूप में साइन इन करें"
+
 [portal.errorBoundary]
 description = "इस व्यू में अनपेक्षित त्रुटि हुई। फिर से कोशिश करें, या sidebar से कोई अन्य अनुभाग चुनें।"
 retry = "फिर से कोशिश करें"
@@ -9293,6 +9895,7 @@ title = "Review करने के लिए कुछ नहीं"
 [portal.home.download]
 back = "वापस"
 body = "desktop app download करें या server self-host करें।"
+bodyDesktop = "डेस्कटॉप ऐप डाउनलोड करें, फिर अपने Stirling खाते से साइन इन करें।"
 done = "हो गया"
 guide = "{{name}} guide खोलें"
 openInBrowser = "इसके बजाय browser में खोलें"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Email इनटेक"
 
 [portal.procurement]
-subtitle = "अपनी टीम का मूल्यांकन, अनुबंध और ऑनबोर्डिंग कराएं। हर दस्तावेज़ एक जगह।"
 title = "खरीद"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "agreement लोड नहीं हो सका। कृपय�
 loading = "agreement लोड हो रहा है..."
 ref = "संदर्भ {{ref}} · {{version}}"
 requestChanges = "बदलाव का अनुरोध करें"
-scrollHint = "समीक्षा के लिए scroll करें"
 signatory = "हस्ताक्षरकर्ता का नाम"
 signatoryPlaceholder = "पूरा नाम"
 signatoryTitle = "हस्ताक्षरकर्ता का title"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "जैसे General Counsel"
 signError = "आपका signature रिकॉर्ड नहीं हो सका। कृपया फिर से प्रयास करें।"
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} एकमुश्त"
+addonPerYear = "+{{amount}}/वर्ष"
 addons = "ऐड-ऑन"
 addressLine1 = "पता पंक्ति 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "पता पंक्ति 2"
 addressLine2Placeholder = "Suite, फ़्लोर, बिल्डिंग"
 back = "वापस"
+belowMinimum = "यह कोट Enterprise डील के न्यूनतम आकार से नीचे है।"
 businessName = "व्यवसाय का नाम"
 businessNamePlaceholder = "आपकी कंपनी"
 city = "शहर"
 cityPlaceholder = "San Francisco"
 completeRequired = "quote generate करने से पहले कृपया आवश्यक fields (चिह्नित *) को valid email के साथ पूरा करें।"
+conflict = "यह डील आपके खोलने के बाद से बदल गई है। बिल्डर बंद करें और पेज रीलोड करें ताकि वर्तमान स्थिति देखें।"
 contactEmail = "संपर्क email"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "संपर्क नाम"
 contactNamePlaceholder = "Jane Doe"
 continue = "जारी रखें"
 done = "हो गया"
+editUsage = "उपयोग संपादित करें"
 eula = "मैंने Stirling Enterprise EULA पढ़ लिया है और उससे सहमत हूं। यह इस quote से जनरेट किए गए agreement को नियंत्रित करता है।"
 generate = "Quote जनरेट करें"
 indemnification = "उन्नत IP सुरक्षा"
 indemnificationSub = "हमारी IP defense को patent claims तक बढ़ाता है। Baseline copyright, trademark और trade-secret indemnification मुफ्त में शामिल है।"
+minimum = "Enterprise के लिए न्यूनतम वार्षिक खर्च {{min}} आवश्यक है।"
+minimumBelow = "यह कोट सालाना {{annual}} बनता है। यदि आप अधिक उपयोग की उम्मीद करते हैं, तो अपना अनुमानित उपयोग बढ़ाएँ; अन्यथा Team प्लान शायद बेहतर फिट है।"
+minimumNear = "Enterprise के लिए न्यूनतम वार्षिक खर्च {{min}} आवश्यक है। उसे पाने के लिए अपना अनुमानित उपयोग बढ़ाएँ, या हमसे बात करें।"
+minimumNearTitle = "आप Enterprise से सालाना {{gap}} कम हैं।"
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise कोट"
 paperFor = "इसके लिए तैयार"
 pdfSize = "PDF आकार"
@@ -10506,9 +11117,13 @@ posture_regulated = "विनियमित"
 posture_regulatedSub = "हर category — Compliance, Retention, Ingestion"
 qbr = "त्रैमासिक व्यवसाय समीक्षाएँ"
 qbrSub = "आपका SE हर तिमाही उपयोग और roadmap की समीक्षा करता है"
+raiseUsage = "अनुमानित उपयोग बढ़ाएँ"
 region = "राज्य / क्षेत्र"
 regionPlaceholder = "California"
-running = "{{annual}} / वर्ष · {{years}}-वर्ष {{tcv}}"
+runningLabel = "अनुमानित मूल्य"
+runningLabelIssued = "उद्धृत मूल्य"
+runningOneYear = "{{annual}} प्रति वर्ष"
+runningTotal = "{{years}} वर्षों में कुल {{tcv}}"
 s1Sub = "आपकी टीम, और वे PDFs जिन्हें आप हर साल चलाने की उम्मीद करते हैं।"
 s1Title = "आप कितना प्रोसेस करेंगे?"
 s2Sub = "लंबी अवधि दर पर छूट देती है; आपका service level support सेट करता है।"
@@ -10547,6 +11162,19 @@ volumePlaceholder = "जैसे 1,000,000"
 years_one = "{{count}} वर्ष"
 years_other = "{{count}} वर्ष"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} परिनियोजन"
+indemnification = "IP क्षतिपूर्ति"
+multiYear_one = "{{count}}-वर्ष की प्रतिबद्धता"
+multiYear_other = "{{count}}-वर्ष की प्रतिबद्धता"
+qbr = "त्रैमासिक व्यावसायिक समीक्षा"
+seats_one = "{{users}} सहमति प्राप्त उपयोगकर्ता + SSO / RBAC / ऑडिट"
+seats_other = "{{users}} सहमति प्राप्त उपयोगकर्ता + SSO / RBAC / ऑडिट"
+seatsUnset = "उपयोगकर्ता + SSO / RBAC / ऑडिट"
+support = "समर्पित SE / CSM"
+training = "ऑनबोर्डिंग व प्रशिक्षण"
+usage = "PDF प्रोसेसिंग — {{volume}} PDFs/वर्ष पर {{rate}}/PDF ({{posture}} ऑटोमेशन)"
+
 [portal.procurement.documents]
 agreement = "Enterprise अनुबंध"
 agreementSub = "MSA, Order Form और DPA एक signature में।"
@@ -10557,6 +11185,8 @@ invoice = "इनवॉइस"
 invoiceSub = "आपका पहला subscription invoice।"
 laterInvoice = "आपके स्वीकार करने के बाद उपलब्ध"
 laterQuote = "आपका quote जारी होने पर उपलब्ध"
+laterSigning = "समझौते पर हस्ताक्षर होने के बाद उपलब्ध"
+laterTitle = "डील में आगे"
 quote = "कोट"
 quoteSub = "आपका itemised enterprise quote।"
 sla = "SLA Exhibit"
@@ -10573,15 +11203,12 @@ title = "कुछ गलत हो गया"
 [portal.procurement.hero]
 barAria = "चरण {{current}} / {{total}}"
 ctaAgreement = "Agreement की समीक्षा करें और हस्ताक्षर करें"
-ctaExploring = "अपना trial सेट अप करें"
 ctaQuote = "अपने quote की समीक्षा करें"
 ctaReviewQuote = "quote की समीक्षा करें"
 ctaTrial = "अपना quote बनाएं"
-documents = "दस्तावेज़"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "टीममेट्स को आमंत्रित करें"
-licenseKey = "लाइसेंस key"
 liveSub = "आपका organization provisioned है और आपका लाइसेंस सक्रिय है।"
 liveTitle = "आप Stirling Enterprise पर live हैं"
 next = "अगला: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Offline licence फ़ाइल अभी जनरेट न�
 downloadOffline = "Offline licence डाउनलोड करें (.lic)"
 hint = "इसे activate करने के लिए इस key को self-hosted instance में paste करें, या अपने records के लिए रखें। इसे सुरक्षित रखें।"
 label = "आपकी licence key"
-subtitle = "इस key से self-hosted instance सक्रिय करें, या इसे अपने records के लिए रखें।"
-title = "आपकी लाइसेंस key"
 trialFileHint = "यह आपकी trial licence file है। आपका agreement लागू होने के बाद, वापस आएँ और इसे फिर से डाउनलोड करें — online licence key के विपरीत, .lic file अपने आप update नहीं होगी।"
-
-[portal.procurement.link]
-cta = "Account लिंक करें"
-description = "Procurement आपके linked Stirling account पर चलता है: इसी से हम trial provision करते हैं, आपके quote की कीमत तय करते हैं, और billing शुरू करते हैं। शुरू करने के लिए account लिंक करें।"
-eyebrow = "Enterprise"
-title = "शुरू करने के लिए अपना account लिंक करें"
 
 [portal.procurement.live]
 description = "आपकी subscription सक्रिय है और आपका licence जारी कर दिया गया है। आपकी टीम provisioned है और billing शुरू हो गई है।"
-eyebrow = "लाइव"
 title = "आप Stirling Enterprise पर live हैं"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Quote PDF अभी डाउनलोड नहीं कि�
 
 [portal.procurement.payment]
 description = "आपका quote स्वीकार कर लिया गया है और आपका licence पहले से सक्रिय है — आपकी टीम तुरंत शुरू कर सकती है। तैयार होने पर पहला invoice भुगतान करें; आप इसे यहां भुगतान या डाउनलोड कर सकते हैं, email की आवश्यकता नहीं।"
-downloadAgreement = "signed agreement डाउनलोड करें"
 downloadInvoice = "Invoice डाउनलोड करें"
-eyebrow = "भुगतान"
-title = "Subscription बनाई गई"
 viewInvoice = "Invoice देखें और भुगतान करें"
 
 [portal.procurement.review]
 acceptCta = "quote स्वीकार करें"
 annual = "वार्षिक शुल्क (वर्ष 1)"
 downloadCta = "quote डाउनलोड करें"
+oneTime = "एकमुश्त"
 poNumber = "खरीद आदेश: {{po}}"
 renewal = "term के बाद {{amount}}/year पर renew होता है (+{{pct}}% CPI)"
 tcv = "{{years}}-year term, पूरा upfront paid: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "विस्तार करने से 7 दिन जुड़ते हैं और आपके solutions engineer को सूचना मिलती है।"
 bodyMaxed = "आपने अपने सभी extensions उपयोग कर लिए हैं — यदि आपको अधिक समय चाहिए तो अपने solutions engineer से बात करें।"
-cancel = "Trial रद्द करें"
 extend = "7 दिन बढ़ाएं"
 maxed = "अधिकतम हो गया"
 subtitle = "आपका free trial {{date}} तक चलता है। Card आवश्यक नहीं।"
 title = "Enterprise ट्रायल"
+
+[portal.procurement.validation]
+confirm = "पुष्टि करें कि आप संगठन की ओर से हस्ताक्षर करने के अधिकृत हैं।"
+email = "मान्य ईमेल पता दर्ज करें।"
+eula = "जारी रखने के लिए EULA से सहमत हों।"
+required = "यह फ़ील्ड आवश्यक है।"
+seats = "कितने लोग इसे ट्रायल करेंगे, दर्ज करें।"
+volume = "एक वर्ष में आप कितने PDF प्रोसेस करने की उम्मीद करते हैं, दर्ज करें।"
 
 [portal.review]
 subtitle = "आपकी नीति रन और आपकी टीम के editors से जो भी आपके ध्यान की ज़रूरत रखता है।"
@@ -10735,6 +11358,7 @@ subtitle = "पुन: उपयोग योग्य इनपुट कने
 title = "स्रोत"
 
 [portal.sources.actions]
+connectDestination = "डेस्टिनेशन कनेक्ट करें"
 connectSource = "स्रोत कनेक्ट करें"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "चुनें कि प्रोसेस किए ग�
 comingSoon = "जल्द आ रहा है"
 comingSoonHeading = "जल्द आ रहा है"
 create = "स्रोत बनाएँ"
+createDestination = "डेस्टिनेशन बनाएं"
+createDestinationTitle = "एक डेस्टिनेशन जोड़ें"
 createTitle = "स्रोत कनेक्ट करें"
 delete = "हटाएँ"
 editTitle = "स्रोत संपादित करें"
@@ -10757,6 +11383,41 @@ save = "बदलाव सेव करें"
 description = "Folder automations केवल उन folders का उपयोग कर सकते हैं जिन्हें administrator ने अनुमति दी है। इसे Folder Access settings में जोड़ें, फिर फिर से प्रयास करें।"
 openSettings = "Folder Access सेटिंग्स"
 title = "इस folder की अनुमति नहीं है"
+
+[portal.sources.cloudFields.account]
+connect = "अपना खाता कनेक्ट करें"
+connectAnother = "एक और खाता कनेक्ट करें"
+connectFailed = "खाता कनेक्ट नहीं हो सका। फिर प्रयास करें, या अपने व्यवस्थापक से ऐप रजिस्ट्रेशन जांचने को कहें।"
+label = "खाता"
+placeholder = "एक खाता चुनें"
+reconnect = "फिर से साइन इन करें"
+unavailable = "इस सर्वर पर अपना खाता कनेक्ट करना बंद है। इसके बजाय कोई संगठन कनेक्शन चुनें।"
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "इस सर्वर पर पर्सनल अकाउंट बंद हैं।"
+helperText = "आपका खाता वही पहुँचता है जिसे आप खोल सकते हैं और किसी एडमिन की आवश्यकता नहीं। एक संगठन कनेक्शन लोगों के जाने पर भी काम करता रहता है, और केवल वही पहुँचता है जो किसी एडमिन ने सेट किया है।"
+label = "के रूप में साइन इन करें"
+
+[portal.sources.cloudFields.authMode.options]
+account = "मेरा खाता"
+organisation = "संगठन कनेक्शन"
+
+[portal.sources.cloudFields.connection]
+helperText = "इंटीग्रेशंस के अंतर्गत किसी व्यवस्थापक द्वारा सेटअप। हर उस लोकेशन के बीच साझा जिसे यह उपयोग करती है।"
+label = "संगठन कनेक्शन"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "फ़ोल्डर का लिंक पेस्ट करें, या My Drive के शीर्ष से कोई पथ टाइप करें। My Drive के शीर्ष के लिए खाली छोड़ें। फ़ोल्डर पहले से मौजूद होना चाहिए।"
+placeholder = "फ़ोल्डर लिंक, या Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "आपके OneDrive में कोई फ़ोल्डर, या फ़ोल्डर लिंक पेस्ट करें (OneDrive में Copy link)। OneDrive के शीर्ष के लिए खाली छोड़ें। फ़ोल्डर पहले से मौजूद होना चाहिए।"
+placeholder = "Scans/Inbox, या फ़ोल्डर लिंक"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "अपने खाते के साथ, फ़ोल्डर का लिंक पेस्ट करें (SharePoint में Copy link)। संगठन कनेक्शन के साथ, उसकी लाइब्रेरी के अंदर का कोई फ़ोल्डर; लाइब्रेरी रूट के लिए खाली छोड़ें। फ़ोल्डर पहले से मौजूद होना चाहिए।"
+organisationPlaceholder = "फ़ोल्डर लिंक, या Scans/Inbox"
+placeholder = "फ़ोल्डर लिंक"
 
 [portal.sources.delete]
 body = "\"{{name}}\" हटाएं? इसे वापस नहीं किया जा सकता। इसे reference करने वाली policies को update करना होगा।"
@@ -10821,6 +11482,7 @@ label = "Email इनबॉक्स"
 [portal.sources.types.folder]
 description = "नए दस्तावेज़ों के लिए server पर directory देखें।"
 label = "फ़ोल्डर"
+outputDescription = "परिणाम सर्वर पर किसी डायरेक्टरी में सहेजें।"
 
 [portal.sources.types.folder.fields.directory]
 helperText = "नई फ़ाइलों के लिए देखने हेतु फ़ोल्डर का निरपेक्ष पथ।"
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "shared Google Drive folders से दस्तावेज़ pull करें।"
 label = "Google Drive"
+outputDescription = "परिणाम Google Drive फ़ोल्डर में सहेजें।"
 
 [portal.sources.types.network]
 description = "नए दस्तावेज़ों के लिए SMB network share देखें।"
@@ -10867,10 +11530,12 @@ label = "Network drive"
 [portal.sources.types.onedrive]
 description = "नए दस्तावेज़ों के लिए OneDrive folders देखें।"
 label = "OneDrive"
+outputDescription = "परिणाम OneDrive फ़ोल्डर में सहेजें।"
 
 [portal.sources.types.s3]
 description = "Amazon S3 या S3-compatible bucket से दस्तावेज़ pull करें।"
 label = "Amazon S3"
+outputDescription = "परिणाम Amazon S3 या S3-संगत बकेट में सहेजें।"
 
 [portal.sources.types.s3.fields.connection]
 helperText = "बकेट और क्रेडेंशियल्स के साथ सहेजा गया कनेक्शन। इसका उपयोग करने वाले हर स्रोत और पाइपलाइन आउटपुट द्वारा साझा किया गया।"
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "SharePoint document libraries से दस्तावेज़ pull करें।"
 label = "SharePoint"
+outputDescription = "परिणाम SharePoint डॉक्यूमेंट लाइब्रेरी फ़ोल्डर में सहेजें।"
 
 [portal.sources.types.unknown]
 label = "स्रोत"
@@ -11074,6 +11740,14 @@ waiting = "कतार में ..."
 name = "Google Drive"
 scope = "फ़ाइल आयात"
 
+[provider.googledrive.accountScope]
+description = "drive हर फ़ाइल तक पहुँच रखता है (इसके लिए Google को सार्वजनिक ऐप सत्यापित करना होता है); drive.file केवल वे फ़ाइलें जिनको लोग चुनते हैं या Stirling बनाता है"
+label = "Drive पहुँच"
+
+[provider.googledrive.allowAccountConnections]
+description = "संपादक और उनकी pipelines के लिए एक ही साइन-इन। केवल संगठन कनेक्शन की अनुमति देने के लिए इसे बंद करें।"
+label = "लोगों को अपना खाता कनेक्ट करने दें"
+
 [provider.googledrive.apiKey]
 description = "Google Picker API के लिए Google API Key Google Cloud Console से"
 label = "API Key"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "Google Cloud Console से Google OAuth 2.0 Client ID"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "लोगों को अपनी pipelines के लिए अपना Google खाता कनेक्ट करने देता है। नीचे दिए गए redirect URI को OAuth client के authorised redirect URI के रूप में जोड़ें।"
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "उपयोगकर्ताओं को सीधे Google Drive से फ़ाइलें आयात करने दें"
 label = "Google Drive फ़ाइल पिकर सक्षम करें"
 
 [provider.googledrive.errors]
+connectFailed = "आपका Google खाता कनेक्ट नहीं किया जा सका। Settings > Connected accounts से फिर से प्रयास करें।"
 notConfigured = "Google Drive कॉन्फ़िगर नहीं है"
 pickerFailed = "Google Drive picker खोलने में विफल"
+
+[provider.googledrive.redirectUri]
+description = "इसे Google Cloud Console में OAuth client के authorised redirect URI के रूप में जोड़ें।"
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "फ़ाइलें और pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "संपादक और उनकी pipelines के लिए एक ही साइन-इन। केवल संगठन कनेक्शन की अनुमति देने के लिए इसे बंद करें।"
+label = "लोगों को अपना खाता कनेक्ट करने दें"
+
+[provider.microsoft.allowEditorSaves]
+description = "इसे बंद करें ताकि संपादन Stirling में ही रहें: OneDrive से खोली गई फ़ाइलें तब डाउनलोड होंगी, और सर्वर OneDrive पर सहेजने से मना करेगा।"
+label = "संपादक को OneDrive में वापस सहेजने दें"
+
+[provider.microsoft.clientId]
+description = "किसी एक Microsoft Entra app registration से।"
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "कनेक्टेड खातों के लिए आवश्यक। सर्वर पर ही रहता है।"
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "लोगों को pipelines में OneDrive और SharePoint उपयोग करने दें"
+label = "OneDrive और SharePoint सक्षम करें"
+
+[provider.microsoft.pickerRedirectUri]
+description = "संपादक से साइन-इन के लिए, उसी ऐप रजिस्ट्रेशन पर इसे Single-page application redirect URI के रूप में जोड़ें।"
+label = "Single-page application redirect URI"
+
+[provider.microsoft.redirectUri]
+description = "इसे Entra app registration पर Web redirect URI के रूप में जोड़ें।"
+label = "Redirect URI"
+
+[provider.microsoft.setupSteps]
+connect = "सहेजें, पुनः प्रारंभ करें, फिर Connected accounts के अंतर्गत एक खाता कनेक्ट करें।"
+permissions = "Microsoft Graph delegated permissions Files.ReadWrite.All और Files.Read.All, तथा SharePoint delegated permissions MyFiles.Read और AllSites.Read जोड़ें ताकि कार्य और स्कूल खाते फ़ाइल पिकर खोल सकें।"
+redirects = "नीचे दिए गए दो redirect URI इसमें जोड़ें: एक Web के रूप में, एक Single-page application के रूप में।"
+register = "Microsoft Entra admin center में एक ऐप पंजीकृत करें। यदि लोग व्यक्तिगत OneDrive का उपयोग करते हैं, तो व्यक्तिगत Microsoft खातों की अनुमति दें।"
+secret = "एक client secret बनाएँ, फिर उसका मान और ऐप का client ID नीचे पेस्ट करें।"
+
+[provider.microsoft.tenant]
+description = "work, school और personal खातों के लिए common; केवल work और school के लिए organizations; या किसी एक संगठन को स्वीकार करने हेतु tenant ID"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -11195,6 +11921,19 @@ label = "Scopes"
 description = "यूज़रनेम के रूप में उपयोग करने के लिए फ़ील्ड (email, name, given_name, family_name, preferred_username)"
 label = "Username के रूप में उपयोग करें"
 
+[provider.onedrive]
+pickerLoading = "OneDrive से कनेक्ट किया जा रहा है..."
+pickerTitle = "OneDrive से फ़ाइलें चुनें"
+
+[provider.onedrive.errors]
+connectFailed = "आपका Microsoft खाता कनेक्ट नहीं किया जा सका। Settings > Connected accounts से फिर से प्रयास करें।"
+notConfigured = "OneDrive कॉन्फ़िगर नहीं है"
+pickerFailed = "OneDrive खोलना विफल रहा"
+popupBlocked = "आपके ब्राउज़र ने Microsoft साइन-इन विंडो को ब्लॉक कर दिया। इस साइट के लिए पॉप-अप की अनुमति दें और फिर से प्रयास करें।"
+reconnect = "आपके Microsoft खाते को फिर से साइन-इन करने की आवश्यकता है। Settings > Connected accounts में इसे पुनः कनेक्ट करें।"
+serverError = "OneDrive या Stirling सर्वर में कोई समस्या आई। फिर से प्रयास करें, या अगर यह जारी रहे तो अपने व्यवस्थापक से पूछें।"
+unreachable = "OneDrive तक पहुँचा नहीं जा सका। अपना कनेक्शन जाँचें और फिर से प्रयास करें।"
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "सूचनाएँ"
 processor = "प्रोसेसर"
 reader = "रीडर"
 signInToUse = "इसे उपयोग करने के लिए sign in करें"
+
+[quickNav.accountMenu]
+localMode = "लोकल मोड"
+server = "सर्वर सेटिंग्स"
+settings = "सेटिंग्स"
+signedOut = "साइन इन नहीं है"
+signIn = "Sign in"
 
 [read]
 tags = "देखें,खोलें,प्रदर्शित करें,पढ़ें,viewer,PDF viewer,PDF reader,PDF खोलें,PDF देखें,PDF प्रदर्शित करें,पूर्वावलोकन,ब्राउज़"
@@ -11811,6 +12557,13 @@ title = "PDF सैनिटाइज़ करें"
 [sanitizePdf]
 tags = "साफ,सुरक्षित,सुरक्षा,खतरे-हटाएं"
 
+[saveFile.menu]
+more = "अधिक सहेजने के विकल्प"
+saveCopy = "एक प्रति सहेजें..."
+
+[saveFile.toolbar]
+mixed = "सभी सहेजें"
+
 [scalePages]
 tags = "आकार बदलें,समायोजित करें,स्केल करें,पृष्ठ आकार,पृष्ठ का आकार बदलें,पृष्ठ स्केल करें,आकार बदलें,आकार समायोजित करें,बड़ा करें,पृष्ठ छोटा करें,पृष्ठ में फिट करें,A4,letter size"
 title = "पृष्ठ-स्केल समायोजित करें"
@@ -11905,6 +12658,162 @@ showTools = "उपलब्ध न होने वाले टूल्स �
 title = "आपका Stirling-PDF सर्वर अप्राप्य है"
 toolNotAvailableLocally = "आपका Stirling-PDF सर्वर ऑफ़लाइन है और \"{{endpoint}}\" लोकल बैकएंड पर उपलब्ध नहीं है।"
 
+[serverSetup]
+back = "वापस"
+collapse = "{{setting}} की सेटिंग्स छिपाएँ"
+configured = "कॉन्फ़िगर किया गया"
+continue = "जारी रखें"
+dialogLabel = "सर्वर सेटअप"
+expand = "{{setting}} की सेटिंग्स दिखाएँ"
+finishSetup = "सेटअप पूरा करें"
+loadErrorSubtitle = "शुरू करने के लिए सेटअप को सर्वर की वर्तमान सेटिंग्स चाहिए।"
+loadErrorTitle = "आपकी सेटिंग्स लोड नहीं हो सकीं"
+off = "बंद"
+on = "चालू"
+save = "सहेजें"
+stepCount = "{{current}} में से {{total}}"
+
+[serverSetup.account]
+failed = "आपका विवरण सहेजा नहीं जा सका। जाँचें कि सर्वर सुलभ है, फिर दोबारा प्रयास करें।"
+save = "सहेजें और आगे बढ़ें"
+signIn = "Sign in"
+signInAgainSubtitle = "जारी रखने के लिए अपने नए यूज़रनेम और पासवर्ड से दोबारा साइन इन करें।"
+signInAgainTitle = "आपका विवरण सहेजा गया है"
+subtitle = "अब से आप कैसे साइन इन करेंगे, चुनें।"
+title = "अपना खाता सेट करें"
+updating = "अपडेट हो रहा है"
+updatingSubtitle = "एक क्षण।"
+updatingTitle = "आपका विवरण अपडेट हो रहा है"
+username = "यूज़रनेम"
+usernameHelp = "जिससे आप साइन इन करेंगे। ईमेल पता भी चल जाएगा।"
+
+[serverSetup.addresses]
+backendUrl = "सर्वर पता"
+backendUrlHelp = "जहाँ साइन-इन प्रदाता लोगों को वापस भेजते हैं। आमतौर पर यह वेब पते जैसा ही होता है।"
+frontendUrl = "वेब पता"
+frontendUrlHelp = "जहाँ लोग Stirling PDF खोलते हैं। ईमेल, शेयर लिंक और QR कोड में उपयोग होता है।"
+subtitle = "लोग और साइन-इन प्रदाता इस सर्वर तक कैसे पहुँचते हैं।"
+title = "पते"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "AI इंजन के पास मौजूद key उपयोग करने के लिए खाली छोड़ें।"
+baseUrl = "Base URL"
+engineUrl = "AI इंजन पता"
+fastModel = "तेज़ मॉडल"
+label = "स्व-होस्टेड AI"
+provider = "मॉडल प्रदाता"
+providerCustom = "OpenAI-compatible"
+smartModel = "पूर्ण मॉडल"
+stirling = "Stirling AI"
+subtitle = "डॉक्यूमेंट प्रश्न, स्वचालित संपादन और AI एजेंट।"
+title = "AI"
+
+[serverSetup.analytics]
+accept = "स्वीकारें और आगे बढ़ें"
+acceptFinish = "स्वीकारें और समाप्त करें"
+changeLater = "आप इसे कभी भी {{path}} में बदल सकते हैं।"
+decline = "अस्वीकार करें और आगे बढ़ें"
+declineFinish = "अस्वीकार करें और समाप्त करें"
+learnMore = "हम क्या एकत्र करते हैं"
+note = "हमें Stirling PDF को बेहतर बनाने में मदद के लिए इस सर्वर का उपयोग डेटा हमारे साथ साझा करें। हम कभी भी फ़ाइलें या उनकी सामग्री एकत्र नहीं करते।"
+title = "सर्वर एनालिटिक्स"
+
+[serverSetup.documents]
+label = "डॉक्यूमेंट प्रश्न"
+model = "एम्बेडिंग मॉडल"
+provider = "एम्बेडिंग प्रदाता"
+providerHelp = "डॉक्यूमेंट के पाठ को ऐसे सर्च इंडेक्स में बदलता है जो प्रश्नों के उत्तर देता है।"
+
+[serverSetup.email]
+from = "प्रेषक पता"
+host = "SMTP host"
+label = "ईमेल भेजें"
+password = "पासवर्ड"
+port = "पोर्ट"
+subtitle = "निमंत्रण, साइनिंग अनुरोध और शेयरिंग के लिए।"
+title = "ईमेल"
+username = "यूज़रनेम"
+
+[serverSetup.error]
+email = "ईमेल पता दर्ज करें"
+issuerUnreachable = "इस issuer तक पहुँचा नहीं जा सका। पता जाँचें, और यह भी कि यह सर्वर उसे पहुँच सकता है।"
+passwordIncorrect = "गलत पासवर्ड"
+passwordLength = "कम से कम 8 अक्षरों का उपयोग करें"
+passwordMismatch = "पासवर्ड मेल नहीं खाते"
+passwordRejected = "सर्वर ने इस पासवर्ड को स्वीकार नहीं किया। कोई और आज़माएँ।"
+passwordUnchanged = "वर्तमान से अलग पासवर्ड चुनें"
+port = "1 से 65535 के बीच पोर्ट दर्ज करें"
+providerName = "केवल अक्षर, अंक, डैश या अंडरस्कोर का उपयोग करें"
+required = "आवश्यक"
+url = "पूरा पता दर्ज करें, जो http:// या https:// से शुरू होता हो"
+username = "3 से 50 अक्षर, अंक या . _ + - @ का उपयोग करें, या एक ईमेल पता"
+usernameTaken = "यह यूज़रनेम पहले से लिया जा चुका है"
+
+[serverSetup.files]
+sharing = "फ़ाइल शेयरिंग"
+sharingOffWarning = "शेयरिंग बंद होने पर, मौजूदा शेयर लिंक काम करना बंद कर देंगे।"
+storage = "फ़ाइलें संग्रहीत करें"
+storageOffWarning = "स्टोरेज बंद होने पर, सर्वर पर लोगों द्वारा सहेजी गई फ़ाइलें अब खोली नहीं जा सकेंगी।"
+subtitle = "फ़ाइल स्टोरेज और शेयरिंग प्रबंधित करें।"
+title = "फ़ाइलें"
+
+[serverSetup.finish]
+errorNote = "जाँचें कि सर्वर सुलभ है और आप अभी भी एडमिन के रूप में साइन इन हैं।"
+errorSubtitle = "कुछ भी रीस्टार्ट नहीं हुआ।"
+errorTitle = "आपकी सेटिंग्स सहेजी नहीं जा सकीं"
+manualSubtitle = "यह सर्वर स्वयं रीस्टार्ट नहीं कर सकता। परिवर्तनों को लागू करने के लिए इसके कंटेनर या सेवा को रीस्टार्ट करें।"
+manualTitle = "सेटिंग्स सहेजी गईं"
+restartFailedSubtitle = "सर्वर रीस्टार्ट नहीं हुआ। परिवर्तनों को लागू करने के लिए इसके कंटेनर या सेवा को रीस्टार्ट करें।"
+restartingSubtitle = "यह पेज सर्वर के वापस आने पर रीलोड होगा, सामान्यतः एक मिनट के भीतर।"
+restartingTitle = "आपका सर्वर रीस्टार्ट हो रहा है"
+retry = "फिर से प्रयास करें"
+saving = "सहेजा जा रहा है"
+savingSubtitle = "एक क्षण।"
+savingTitle = "आपकी सेटिंग्स सहेजी जा रही हैं"
+
+[serverSetup.language]
+auto = "हर ब्राउज़र से मिलाएँ"
+label = "डिफ़ॉल्ट भाषा"
+subtitle = "नए आगंतुक सबसे पहले क्या देखते हैं।"
+title = "भाषा"
+
+[serverSetup.mcp]
+label = "MCP सर्वर"
+
+[serverSetup.password]
+confirm = "नए पासवर्ड की पुष्टि करें"
+current = "वर्तमान पासवर्ड"
+new = "नया पासवर्ड"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "इसके साथ साइन इन करें"
+oidc = "अन्य OpenID Connect"
+password = "यूज़रनेम और पासवर्ड"
+providerName = "प्रदाता नाम"
+providerNameHelp = "साइन-इन बटन पर दिखता है, जैसे okta या entra।"
+redirectNote = "अपने प्रदाता में यह redirect URI जोड़ें:"
+subtitle = "आपकी टीम कैसे साइन इन करती है।"
+title = "साइन-इन"
+
+[serverSetup.signingIn]
+button = "साइन इन हो रहा है"
+title = "डिफ़ॉल्ट क्रेडेंशियल्स के साथ साइन इन हो रहा है"
+
+[serverSetup.start]
+custom = "कस्टम"
+quick = "क्विक स्टार्ट"
+setupLabel = "सेटअप"
+subtitle = "कुछ चरणों में अपनी टीम के लिए इसे सेट करें।"
+title = "आपका सर्वर चालू है"
+
+[serverSetup.summary]
+subtitle = "ज़रूरी चीज़ें जाँचें। बाकी सब वैसा ही रहेगा।"
+title = "क्विक स्टार्ट"
+
 [session]
 expired = "आपका सत्र समाप्त हो गया है। कृपया पृष्ठ को रिफ्रेश करें और पुन: प्रयास करें।"
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "गोपनीयता"
 storageSharing = "फ़ाइल भंडारण और शेयरिंग"
 systemSettings = "सिस्टम सेटिंग्स"
+
+[settings.connectedAccounts]
+description = "आपके pipelines के लिए आपका अपना OneDrive, SharePoint और Google Drive।"
+title = "कनेक्टेड खाते"
 
 [settings.connectedInstances]
 confirmBody = "यह Stirling Cloud में आपकी team तक instance की access रद्द करता है। यह local files को delete नहीं करता या पहले से recorded usage को remove नहीं करता। फिर से connect करने के लिए, instance पर original connection steps follow करें।"
@@ -11992,6 +12905,13 @@ selfhosted = "सेल्फ-होस्टेड"
 apiKeys = "API Keys"
 apiKeysDescription = "Scripts और integrations से Stirling API call करने के लिए personal keys।"
 title = "डेवलपर"
+
+[settings.feedback]
+label = "फीडबैक"
+
+[settings.feedback.send]
+description = "Stirling टीम को कोई समस्या रिपोर्ट करें या सुधार का सुझाव दें।"
+label = "फीडबैक भेजें"
 
 [settings.general]
 autoUnzip = "API प्रतिक्रियाओं को स्वत: अनज़िप करें"
@@ -12058,6 +12978,7 @@ checkForUpdates = "अपडेट्स जाँचें"
 currentBackendVersion = "वर्तमान Backend Version"
 currentFrontendVersion = "वर्तमान Frontend Version"
 description = "अपडेट्स जाँचें और वर्ज़न जानकारी देखें"
+descriptionManaged = "संस्करण जानकारी देखें"
 latestVersion = "नवीनतम संस्करण"
 managedByAdmin = "प्रशासक द्वारा प्रबंधित"
 modeAuto = "अपडेट स्वतः इंस्टॉल करें"
@@ -12135,15 +13056,24 @@ title = "कानूनी दस्तावेज़"
 backendDescription = "इस server के साथ bundled backend dependencies के licenses।"
 backendLabel = "Backend लाइसेंस"
 backendTitle = "Backend तृतीय-पक्ष लाइसेंस"
+clearSearch = "खोज साफ़ करें"
 empty = "कोई dependencies नहीं मिली।"
 frontendDescription = "Release build में bundled frontend dependencies के licenses।"
 frontendLabel = "Frontend लाइसेंस"
 frontendTitle = "Frontend तृतीय-पक्ष लाइसेंस"
 license = "लाइसेंस"
+licenseAbout = "के बारे में"
+licenseAboutCompound = "{{short}} के बारे में"
+licenseAboutTitle = "{{short}} के बारे में"
 listDescription = "सूची release bundle या backend endpoint से सीधे UI में दिखाई जाती है।"
 listTitle = "बंडल की गई निर्भरताएँ"
 loadError = "Third-party licenses लोड करने में विफल"
 module = "मॉड्यूल"
+noMatch = "कोई मिलती-जुलती dependencies नहीं।"
+searchPlaceholder = "dependencies खोजें"
+showingCount = "{{count}} dependencies"
+showingCount_one = "{{count}} dependency"
+showingCount_other = "{{count}} dependencies"
 version = "संस्करण"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "कृपया अपना ईमेल दर्ज करे�
 emptyPassword = "कृपया अपना पासवर्ड दर्ज करें"
 emptyUsername = "कृपया अपना उपयोगकर्ता नाम दर्ज करें"
 oauthFailed = "OAuth लॉगिन विफल। कृपया फिर से प्रयास करें।"
+openResetFailed = "आपका पासवर्ड रीसेट करने के लिए आपका ब्राउज़र नहीं खोला जा सका।"
 
 [setup.saas]
 title = "Stirling में साइन इन"
@@ -12703,6 +13634,11 @@ bullet3 = "अदृश्य हस्ताक्षर अभी भी क�
 description = "नियंत्रित करता है कि हस्ताक्षर दस्तावेज़ पर दृश्यमान हो या अदृश्य रूप से एम्बेड हो।"
 title = "हस्ताक्षर की दृश्यता"
 
+[signedPdf]
+editsBlocked = "यह PDF डिजिटल रूप से साइन किया गया है, और साइन किए गए PDFs में बदलाव बंद हैं। आप इसे अब भी देख या प्रिंट कर सकते हैं, किसी अन्य फ़ॉर्मेट में बदल सकते हैं, या दोबारा साइन कर सकते हैं।"
+editsBlockedStatus = "साइन किया: संपादन अवरुद्ध"
+editsBlockedTitle = "साइन किया गया PDF बदला नहीं जा सकता"
+
 [signingDetail]
 allSigned = "सभी ने हस्ताक्षर कर दिए हैं। दस्तावेज़ की समीक्षा करें, फिर अंतिम रूप दें।"
 awaitingOwner = "स्वामी तैयार होने पर दस्तावेज़ को अंतिम रूप देंगे।"
@@ -13110,7 +14046,6 @@ noLinks = "अभी तक कोई सक्रिय शेयर लिं�
 noSharedUsers = "अभी तक किसी उपयोगकर्ता को पहुँच नहीं है।"
 openInApp = "Stirling PDF में खोलें"
 ownerLabel = "मालिक"
-ownerUnknown = "अज्ञात"
 removeLink = "लिंक हटाएँ"
 removeUser = "हटाएँ"
 requiresLogin = "इस साझा फ़ाइल के लिए लॉगिन आवश्यक है।"
@@ -13249,6 +14184,11 @@ remove = "हटाएँ"
 roleColumn = "भूमिका"
 title = "टीम सदस्य"
 
+[teamWelcome]
+invite = "लोगों को आमंत्रित करें"
+message = "अपनी टीम को आमंत्रित करें ताकि वे आपके साथ काम शुरू कर सकें।"
+title = "आपकी Team योजना सक्रिय है।"
+
 [textAlign]
 center = "मध्य"
 left = "बाएँ"
@@ -13290,7 +14230,6 @@ toggleDetails = "विवरण दिखाएँ/छिपाएँ"
 
 [tool]
 endpointUnavailable = "यह टूल आपके सर्वर पर उपलब्ध नहीं है।"
-endpointUnavailableClickable = "इस मोड में उपलब्ध नहीं है। साइन इन करने के लिए क्लिक करें।"
 filesLoading = "फ़ाइलें अभी भी लोड हो रही हैं, कृपया प्रतीक्षा करें।"
 filesLoadingProgress = "{{loaded}} / {{total}} फ़ाइलें लोड हो रही हैं..."
 invalidParams = "आवश्यक सेटिंग्स भरें।"
@@ -13298,6 +14237,8 @@ noFiles = "शुरू करने के लिए एक फ़ाइल ज
 scopeFiles = "फ़ाइलें"
 scopeThisFile = "यह फ़ाइल"
 selectFilesHint = "यह उपकरण चलाने के लिए Active Files में फ़ाइलें चुनें"
+signInRequired = "इसके लिए Stirling खाता आवश्यक है। जारी रखने के लिए साइन इन करें।"
+signInToUse = "उपयोग करने के लिए साइन इन करें"
 singleFileScope = "केवल इस पर लागू: {{fileName}}"
 viewerMode = "कई फ़ाइलें जोड़ने के लिए फ़ाइल एडिटर पर स्विच करें।"
 
@@ -13790,6 +14731,7 @@ coverPageView = "कवर पेज अलग से दिखाएँ"
 disableColorFilter = "रंग फ़िल्टर अक्षम करें"
 documentUpdated = "दस्तावेज़ updated"
 dualPageView = "दोहरा पृष्ठ दृश्य"
+editText = "टेक्स्ट संपादित करें"
 enableDarkFilter = "डार्क फ़िल्टर सक्षम करें"
 enableSepiaFilter = "सेपिया फ़िल्टर सक्षम करें"
 engineLoadError = "PDF viewer engine initialize करने में विफल"
@@ -14158,8 +15100,10 @@ closeAll = "सभी फ़ाइलें बंद करें"
 closePdf = "PDF बंद करें"
 deselectAll = "सभी चयन हटाएँ"
 downloadAll = "सभी डाउनलोड करें"
+editText = "टेक्स्ट संपादित करें"
 exitAnnotations = "एनोटेशन मोड से बाहर निकलें"
 exitRedaction = "रिडैक्शन मोड से बाहर निकलें"
+findReplace = "खोजें और बदलें"
 formFill = "फ़ॉर्म एडिटर"
 hideToolbar = "टूलबार छिपाएँ"
 moreActions = "अधिक कार्रवाइयाँ"

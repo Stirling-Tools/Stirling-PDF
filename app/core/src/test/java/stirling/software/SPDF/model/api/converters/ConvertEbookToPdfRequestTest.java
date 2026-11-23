@@ -26,7 +26,6 @@ class ConvertEbookToPdfRequestTest {
             ConvertEbookToPdfRequest req = new ConvertEbookToPdfRequest();
 
             assertThat(req.getFileInput()).isNull();
-            assertThat(req.getEmbedAllFonts()).isFalse();
             assertThat(req.getIncludeTableOfContents()).isFalse();
             assertThat(req.getIncludePageNumbers()).isFalse();
             assertThat(req.getOptimizeForEbook()).isFalse();
@@ -43,13 +42,11 @@ class ConvertEbookToPdfRequestTest {
             ConvertEbookToPdfRequest req = new ConvertEbookToPdfRequest();
             MultipartFile f = file();
             req.setFileInput(f);
-            req.setEmbedAllFonts(Boolean.TRUE);
             req.setIncludeTableOfContents(Boolean.TRUE);
             req.setIncludePageNumbers(Boolean.FALSE);
             req.setOptimizeForEbook(Boolean.TRUE);
 
             assertThat(req.getFileInput()).isSameAs(f);
-            assertThat(req.getEmbedAllFonts()).isTrue();
             assertThat(req.getIncludeTableOfContents()).isTrue();
             assertThat(req.getIncludePageNumbers()).isFalse();
             assertThat(req.getOptimizeForEbook()).isTrue();
@@ -74,7 +71,7 @@ class ConvertEbookToPdfRequestTest {
         void notEqual() {
             ConvertEbookToPdfRequest a = new ConvertEbookToPdfRequest();
             ConvertEbookToPdfRequest b = new ConvertEbookToPdfRequest();
-            b.setEmbedAllFonts(Boolean.TRUE);
+            b.setIncludePageNumbers(Boolean.TRUE);
 
             assertThat(a).isNotEqualTo(b).isNotEqualTo(null).isNotEqualTo("string");
         }
@@ -83,9 +80,9 @@ class ConvertEbookToPdfRequestTest {
         @DisplayName("toString contains a representative field value")
         void toStringContent() {
             ConvertEbookToPdfRequest req = new ConvertEbookToPdfRequest();
-            req.setEmbedAllFonts(Boolean.TRUE);
+            req.setIncludePageNumbers(Boolean.TRUE);
 
-            assertThat(req.toString()).isNotNull().contains("embedAllFonts=true");
+            assertThat(req.toString()).isNotNull().contains("includePageNumbers=true");
         }
     }
 }
