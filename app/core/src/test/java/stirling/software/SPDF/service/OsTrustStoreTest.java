@@ -58,6 +58,19 @@ class OsTrustStoreTest {
     }
 
     @Test
+    void aPurposeAwareStoreDoesNotFallBackToTheGeneralBundle(@TempDir Path dir) throws Exception {
+        Path general = dir.resolve("ca-certificates.crt");
+        Files.writeString(general, pem(strayLeaf));
+        Path purposeDir = Files.createDirectory(dir.resolve("extracted"));
+
+        assertThat(OsTrustStore.fromLinuxBundles(List.of(purposeDir), List.of(general))).isEmpty();
+
+        Files.writeString(purposeDir.resolve("email-ca-bundle.pem"), pem(root));
+        assertThat(OsTrustStore.fromLinuxBundles(List.of(purposeDir), List.of(general)))
+                .containsExactly(root);
+    }
+
+    @Test
     void noBundleYieldsEmptyList(@TempDir Path dir) {
         assertThat(OsTrustStore.fromFirstBundle(List.of(dir.resolve("missing.pem")))).isEmpty();
     }

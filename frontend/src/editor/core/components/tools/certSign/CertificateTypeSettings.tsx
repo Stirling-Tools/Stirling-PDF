@@ -77,6 +77,7 @@ const CertificateTypeSettings = ({
   };
 
   const selectServer = () => {
+    if (serverCert === null) setServerCert(undefined);
     onParameterChange("signMode", "AUTO");
     onParameterChange("certType", "");
   };
