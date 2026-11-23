@@ -1,9 +1,13 @@
 import UpdateModal from "@editor-core/components/shared/UpdateModal";
-import { useDesktopUpdatePopup } from "@editor/hooks/useDesktopUpdatePopup";
+import type { useDesktopUpdatePopup } from "@editor/hooks/useDesktopUpdatePopup";
 
 /** The startup update popup, shown when a newer desktop release is available. */
-export function DesktopUpdatePopup() {
-  const { state: popupState, actions: popupActions } = useDesktopUpdatePopup();
+export function DesktopUpdatePopup({
+  popup,
+}: {
+  popup: ReturnType<typeof useDesktopUpdatePopup>;
+}) {
+  const { state: popupState, actions: popupActions } = popup;
   if (!popupState.updateSummary) return null;
   return (
     <UpdateModal

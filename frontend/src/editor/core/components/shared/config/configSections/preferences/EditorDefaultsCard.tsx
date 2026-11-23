@@ -10,7 +10,6 @@ import {
   type ViewerZoomSetting,
 } from "@editor/services/preferencesService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
-import { useStartupViewOptions } from "@editor/components/shared/config/configSections/preferences/useStartupViewOptions";
 
 /** What the editor opens with, and which tools it bothers to list. */
 export function EditorDefaultsCard() {
@@ -22,7 +21,6 @@ export function EditorDefaultsCard() {
   const hideToolsLabelId = `${labelIds}-hide-tools`;
   const hideConversionsLabelId = `${labelIds}-hide-conversions`;
   const { preferences, updatePreference } = usePreferences();
-  const startupViewOptions = useStartupViewOptions();
 
   return (
     <Paper withBorder p="md" radius="md">
@@ -93,7 +91,20 @@ export function EditorDefaultsCard() {
             onChange={(val: string) =>
               updatePreference("defaultStartupView", val as StartupView)
             }
-            options={startupViewOptions}
+            options={[
+              {
+                label: t("settings.general.startupView.tools", "Tools"),
+                value: "tools",
+              },
+              {
+                label: t("settings.general.startupView.read", "Reader"),
+                value: "read",
+              },
+              {
+                label: t("settings.general.startupView.automate", "Automate"),
+                value: "automate",
+              },
+            ]}
           />
         </div>
         <div

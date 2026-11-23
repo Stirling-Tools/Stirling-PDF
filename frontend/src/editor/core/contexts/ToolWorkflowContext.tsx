@@ -460,8 +460,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       startupSelectedToolRef.current = "automate";
       actions.setSelectedTool("automate");
       setLeftPanelView("toolContent");
-    } else {
-      // 'tools' is the default, and 'processor' starts another app: nothing to do here.
+    }
+    // 'tools' is the default — no action needed
+    if (startupView === "tools") {
       hasAppliedStartupView.current = true;
     }
   }, [

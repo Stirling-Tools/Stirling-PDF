@@ -6,8 +6,7 @@ import { type ThemeMode } from "@editor/constants/theme";
 
 export type PdfRenderMode = "normal" | "dark" | "sepia";
 
-/** "processor" is offered only where the app ships one (desktop). */
-export type StartupView = "tools" | "read" | "automate" | "processor";
+export type StartupView = "tools" | "read" | "automate";
 
 export type ViewerZoomSetting =
   | "auto"
