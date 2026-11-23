@@ -90,6 +90,9 @@ vi.mock("@editor/components/LocalProcessingFolders", () => ({
 vi.mock("@editor/components/ProcessorPageHandlers", () => ({
   ProcessorPageHandlers: () => null,
 }));
+vi.mock("@editor-core/components/startup/StartupPrompts", () => ({
+  StartupPrompts: () => null,
+}));
 vi.mock("@editor/components/UsageLimitModalHost", () => ({
   default: () => null,
 }));

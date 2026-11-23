@@ -5,13 +5,15 @@ import { DesktopUpdatePopup } from "@editor/components/DesktopUpdatePopup";
 import { LocalProcessingFolders } from "@editor/components/LocalProcessingFolders";
 import { ProcessorPageHandlers } from "@editor/components/ProcessorPageHandlers";
 import { SignInModal } from "@editor/components/SignInModal";
+import { StartupPrompts } from "@editor-core/components/startup/StartupPrompts";
 import UsageLimitModalHost from "@editor/components/UsageLimitModalHost";
 import { useDesktopSession } from "@editor/components/DesktopSession";
 
 /**
  * Holds both apps back until the startup auth check settles the connection
  * mode, then behind managed sign-in. What both apps need on every page mounts
- * here once: sign-in, the usage-limit modals, background folder polling, and
+ * here once: sign-in, the usage-limit modals, background folder polling, the
+ * startup prompts (from the app's own config, not the Processor's server) and
  * the editor's file handling on Processor pages.
  */
 export function AppContentGate({ children }: { children: ReactNode }) {
@@ -22,6 +24,7 @@ export function AppContentGate({ children }: { children: ReactNode }) {
       {authChecked ? (
         <DesktopAccessGate onConfigLoaded={initializeConnectionMode}>
           <DesktopConfigSync />
+          <StartupPrompts />
           <LocalProcessingFolders />
           <ProcessorPageHandlers />
           {children}
