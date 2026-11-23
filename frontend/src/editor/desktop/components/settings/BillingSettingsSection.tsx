@@ -5,6 +5,7 @@ import { Button } from "@editor/ui/Button";
 import { Banner } from "@editor/ui/Banner";
 import { openExternal } from "@editor/platform/openExternal";
 import { connectionModeService } from "@editor/services/connectionModeService";
+import { webPageUrl } from "@editor/utils/webPageUrl";
 
 /** Billing runs on the web because desktop does not ship the processor's billing UI. */
 export function BillingSettingsSection({
@@ -26,16 +27,7 @@ export function BillingSettingsSection({
         mode === "saas"
           ? import.meta.env.VITE_SAAS_FRONTEND_URL
           : connection.server_config?.url;
-      if (!base) throw new Error("Billing destination unavailable");
-      const url = new URL(base);
-      if (url.protocol !== "https:" && url.protocol !== "http:")
-        throw new Error("Invalid billing destination");
-      url.pathname = `${url.pathname.replace(/\/+$/, "")}/settings/billing`;
-      url.search = "";
-      url.hash = "";
-      url.username = "";
-      url.password = "";
-      await openExternal(url.href);
+      await openExternal(webPageUrl(base, "settings/billing"));
     } catch {
       setFailed(true);
     } finally {

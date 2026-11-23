@@ -76,9 +76,12 @@ describe("Integrations view", () => {
     expect(
       screen.getAllByText("portal.integrations.connect").length,
     ).toBeGreaterThan(5);
+    expect(
+      screen.getByText("portal.connections.types.sharepoint.label"),
+    ).toBeInTheDocument();
     // Roadmap source connectors are listed greyed, not connectable.
     expect(
-      screen.getByText("portal.sources.types.sharepoint.label"),
+      screen.getByText("portal.sources.types.dropbox.label"),
     ).toBeInTheDocument();
   });
 
