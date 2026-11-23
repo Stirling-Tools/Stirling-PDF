@@ -47,7 +47,7 @@ const MAX_VERSION_HOPS = 50;
 function heldCopies(stub: StirlingFileStub): () => Promise<Blob[]> {
   return async () => {
     const own = await fileStorage.getStirlingFile(stub.id);
-    const clean = await lastCleanCopy(stub);
+    const clean = stub.isDirty ? await lastCleanCopy(stub) : own;
     return [own, clean].filter(
       (copy, i, all): copy is Blob => copy != null && all.indexOf(copy) === i,
     );

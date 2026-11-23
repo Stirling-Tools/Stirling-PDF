@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
@@ -53,7 +53,15 @@ vi.mock("@editor/utils/thumbnailUtils", async (importOriginal) => ({
 }));
 
 import { reconcileBeforeOpen } from "@editor/contexts/file/storedFileReconciler";
-import { sameBytes } from "@editor/services/diskFileSync";
+import {
+  sameBytes,
+  syncLinkedFileFromDisk,
+} from "@editor/services/diskFileSync";
+import { fileStorage } from "@editor/services/fileStorage";
+import {
+  getDiskFileState,
+  readFileFromDisk,
+} from "@editor/services/desktopFileLink";
 import { requestDiskConflictChoice } from "@editor/services/diskConflictPrompt";
 
 const PATH = "/Users/x/Documents/report.pdf";
@@ -109,7 +117,18 @@ beforeEach(() => {
   vi.mocked(requestDiskConflictChoice).mockClear();
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
+
 describe("opening a stored file whose disk copy only moved its timestamp", () => {
+  test("reads a clean stored record only once", async () => {
+    stored.files.set("open", pdf(DISK_BYTES));
+    vi.mocked(fileStorage.getStirlingFile).mockClear();
+    await open(stub());
+    expect(fileStorage.getStirlingFile).toHaveBeenCalledTimes(1);
+  });
   test("serves the stored copy and says nothing was reloaded", async () => {
     stored.files.set("open", pdf(DISK_BYTES));
 
@@ -200,6 +219,73 @@ describe("opening a stored file whose disk copy really changed", () => {
 
     expect(decision.contentReplaced).toBe(true);
   });
+});
+
+describe("inconclusive disk comparisons", () => {
+  test.each([false, true])(
+    "bounds a held Blob read for dirty=%s",
+    async (isDirty) => {
+      vi.useFakeTimers();
+      const dead = pdf(DISK_BYTES);
+      vi.spyOn(dead, "slice").mockReturnValue({
+        arrayBuffer: () => new Promise<ArrayBuffer>(() => {}),
+      } as Blob);
+      const syncing = syncLinkedFileFromDisk(
+        stub({ isDirty }),
+        false,
+        async () => [dead],
+      );
+      await vi.runAllTimersAsync();
+      expect((await syncing).status).toBe(isDirty ? "conflict" : "updated");
+    },
+  );
+
+  test("bounds an unanswered held-copy lookup", async () => {
+    vi.useFakeTimers();
+    const syncing = syncLinkedFileFromDisk(
+      stub(),
+      false,
+      () => new Promise<Blob[]>(() => {}),
+    );
+    await vi.runAllTimersAsync();
+    expect((await syncing).status).toBe("updated");
+  });
+
+  test.each([false, true])(
+    "preserves the conflict fallback after a null disk read for dirty=%s",
+    async (isDirty) => {
+      vi.mocked(readFileFromDisk).mockResolvedValueOnce(null);
+      const result = await syncLinkedFileFromDisk(
+        stub({ isDirty }),
+        false,
+        async () => [pdf(DISK_BYTES)],
+      );
+      expect(result.status).toBe(isDirty ? "conflict" : "unchanged");
+    },
+  );
+
+  test.each([false, true])(
+    "preserves the conflict fallback after disk moves during a read for dirty=%s",
+    async (isDirty) => {
+      vi.mocked(getDiskFileState)
+        .mockResolvedValueOnce({
+          availability: "present",
+          size: DISK_BYTES.length,
+          modifiedMs: 2,
+        })
+        .mockResolvedValueOnce({
+          availability: "present",
+          size: DISK_BYTES.length,
+          modifiedMs: 3,
+        });
+      const result = await syncLinkedFileFromDisk(
+        stub({ isDirty }),
+        false,
+        async () => [pdf(DISK_BYTES)],
+      );
+      expect(result.status).toBe(isDirty ? "conflict" : "unchanged");
+    },
+  );
 });
 
 describe("sameBytes", () => {

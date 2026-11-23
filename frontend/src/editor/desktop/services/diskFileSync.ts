@@ -33,17 +33,38 @@ export type DiskSyncOutcome =
   | { status: "updated"; file: File; state: PresentDiskFileState };
 
 const COMPARE_CHUNK_BYTES = 8 * 1024 * 1024;
+const HELD_COPY_READ_DEADLINE_MS = 3000;
+
+async function withinHeldReadDeadline<T>(
+  reading: Promise<T>,
+): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      reading,
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), HELD_COPY_READ_DEADLINE_MS);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /** Whether two blobs hold identical bytes, read in chunks so neither is copied
- *  whole. */
+ *  whole. An unanswered chunk read is inconclusive and returns false. */
 export async function sameBytes(a: Blob, b: Blob): Promise<boolean> {
   if (a.size !== b.size) return false;
   for (let start = 0; start < a.size; start += COMPARE_CHUNK_BYTES) {
     const end = Math.min(start + COMPARE_CHUNK_BYTES, a.size);
-    const [left, right] = await Promise.all([
-      a.slice(start, end).arrayBuffer(),
-      b.slice(start, end).arrayBuffer(),
-    ]);
+    const pair = await withinHeldReadDeadline(
+      Promise.all([
+        a.slice(start, end).arrayBuffer(),
+        b.slice(start, end).arrayBuffer(),
+      ]),
+    );
+    if (!pair) return false;
+    const [left, right] = pair;
     const x = new Uint8Array(left);
     const y = new Uint8Array(right);
     for (let i = 0; i < x.length; i++) {
@@ -57,7 +78,7 @@ async function fetchHeldCopies(
   heldCopies: () => Promise<Blob[]>,
 ): Promise<Blob[]> {
   try {
-    return await heldCopies();
+    return (await withinHeldReadDeadline(heldCopies())) ?? [];
   } catch (error) {
     console.warn("[diskFileSync] Could not find the held copies:", error);
     return [];
@@ -223,7 +244,7 @@ export async function syncLinkedFileFromDisk(
   }
 
   const bytes = await readFileFromDisk(stub.localFilePath);
-  if (!bytes) return { status: "unchanged" };
+  if (!bytes) return { status: keepOurs ? "conflict" : "unchanged" };
 
   // The file may still have been being written while we read it. Only commit
   // bytes whose size and mtime held still across the read.
@@ -235,7 +256,7 @@ export async function syncLinkedFileFromDisk(
     bytes.byteLength !== state.size
   ) {
     // Baseline deliberately left un-stamped, so the next event re-reads.
-    return { status: "unchanged" };
+    return { status: keepOurs ? "conflict" : "unchanged" };
   }
 
   const file = new File([bytes], stub.name, {
