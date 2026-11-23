@@ -647,18 +647,16 @@ description = "Maksimal DPI for bildebehandling (0 = ubegrenset)"
 label = "Maksimal DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Konfigurer øktgrenser og tidsavbrudd for hver prosessutfører"
 ghostscript = "Ghostscript"
 installApp = "Installer app"
 label = "Prosessutførerbegrensninger"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF til HTML"
+officeConvert = "Office-konvertering"
+officeConvertSessionLimit = "Maksimalt antall samtidige konverteringer; 0 velger en grense basert på CPU-er og minne"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maksimalt antall samtidige instanser"
@@ -667,10 +665,6 @@ label = "Øktgrense"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maksimal kjøretid"
 label = "Tidsavbrudd (minutter)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert er i beta. Den gir bedre konverteringer, raskere og med mindre minnebruk enn LibreOffice."
-label = "Bruk ny Stirling Office-konvertering"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Konfigurer lagring og opprydding for midlertidige filer"
@@ -688,11 +682,6 @@ label = "Oppryddingsintervall (minutter)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Om den bredere systemtemp-katalogen skal ryddes (bruk med forsiktighet)"
 label = "Rydd opp i systemets temp"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Katalog for midlertidige LibreOffice-filer (la stå tomt for standard: baseTmpDir/libreoffice)"
-label = "LibreOffice temp-katalog"
-placeholder = "Standard: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maksimal alder i timer før midlertidige filer ryddes opp"
@@ -1300,17 +1289,6 @@ label = "Standard produsent"
 [admin.settings.general.customPaths]
 description = "Konfigurer egendefinerte filsystemstier for pipeline-prosessering og eksterne verktøy"
 label = "Egendefinerte stier"
-
-[admin.settings.general.customPaths.operations]
-label = "Stier for eksterne verktøy"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Sti til LibreOffice unoconvert for dokumentkonverteringer (la stå tomt for standard: /opt/venv/bin/unoconvert)"
-label = "Unoconvert-kjørbar fil"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Sti til WeasyPrint-kjørbar for HTML til PDF-konvertering (la stå tomt for standard: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint-kjørbar fil"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline-kataloger"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Dokumenttittel"
 pdfUaTitleHelp = "Vises av en leser i stedet for filnavnet. Hvis den står tom, brukes den første overskriften."
 selectSourceFormatFirst = "Velg et kildeformat først"
 settings = "Innstillinger"
+signInToUse = "Logg inn for å bruke"
 single = "Enkel"
 sourceFormatPlaceholder = "Kildeformat"
-stirlingOfficeConvert = "Bruk Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Bedre og raskere konverteringer med mindre minnebruk. Slå av for å bruke standardkonvertereren."
 strictMode = "Streng modus"
 strictModeDesc = "Feil hvis konverteringen ikke er perfekt (bruker VeraPDF-verifisering)"
 svgPdfOptions = "Alternativer for SVG til PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Alternativer for web til PDF"
 zoomLevel = "Zoomnivå"
 
 [convert.ebookOptions]
-embedAllFonts = "Bygg inn alle skrifter"
-embedAllFontsDesc = "Bygg inn alle skrifter fra eBook-en i den genererte PDF-en"
 includePageNumbers = "Inkluder sidenummer"
 includePageNumbersDesc = "Legg til sidenummer i den genererte PDF-en"
 includeTableOfContents = "Inkluder innholdsfortegnelse"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Dekorativt bilde"
 description = "Bildebeskrivelse"
 descriptionInfo = "Skjermlesere leser dette opp i stedet for bildet."
 encrypted = "Tagger kan ikke redigeres i en kryptert fil"
+figureDescription = "Figurbeskrivelse"
+figureDescriptionInfo = "Skjermlesere leser dette i stedet for figuren."
 formFieldDescription = "Feltbeskrivelse"
+formulaDescription = "Formelbeskrivelse"
+formulaDescriptionInfo = "Skjermlesere leser dette i stedet for formelen. Si det slik du ville sagt det høyt, for eksempel «x i andre pluss én»."
 heading = "Tilgjengelighet"
 innerTagLabel = "Tagg {{number}}"
 innerTags = "Tagger i denne teksten"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Manglende beskrivelser"
 mixedContent = "Figur inneholder annet innhold"
 mixedTags = "Blandet"
 needsDescriptionBadge = "Ingen beskrivelse"
-nextImage = "Neste bilde"
+nextToReview = "Neste til gjennomgang"
 notFigure = "Tagget som del av teksten"
 removeTag = "Fjern tagg"
 saveFailed = "Tilgjengelighetsendringene dine kunne ikke lagres, så filen ble ikke lagret. Angre dem og prøv igjen."
@@ -9661,10 +9640,6 @@ signInToStart = "Logg inn for å starte prøveperioden"
 stage = "Trinn {{current}} av {{total}}"
 stagesLabel = "Fremdrift"
 
-[portal.enterprise.connect]
-ownerOnly = "Bare denne serverens eier kan koble den. Be dem åpne denne siden."
-unavailable = "Tilkobling til en Stirling-konto er slått av på denne serveren. Book en samtale og vi setter opp prøveperioden sammen med deg."
-
 [portal.enterprise.landing]
 lede = "Prøv gratis i 14 dager, lag deretter tilbudet ditt og signer avtalen her. Ingen kort kreves."
 tickAgreement = "Én avtale som dekker MSA, ordreformular, EULA og DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Last ned offline-lisens (.lic)"
 hint = "Lim inn denne nøkkelen i en selvdriftet instans for å aktivere den, eller behold den for arkivet ditt. Oppbevar den trygt."
 label = "Lisensnøkkelen din"
 trialFileHint = "Dette er prøvelisensfilen din. Når avtalen din er på plass, kom tilbake og last den ned igjen — i motsetning til den nettbaserte lisensnøkkelen oppdateres ikke .lic-filen av seg selv."
-
-[portal.procurement.link]
-cta = "Koble til konto"
-description = "Innkjøp kjører på den tilkoblede Stirling-kontoen din: det er slik vi klargjør prøveperioden, priser tilbudet ditt og starter fakturering. Koble til en konto for å starte."
-title = "Koble til kontoen din for å begynne"
 
 [portal.procurement.live]
 description = "Abonnementet ditt er aktivt og lisensen din er utstedt. Teamet ditt er klargjort, og fakturering har startet."
@@ -14260,7 +14230,6 @@ toggleDetails = "Vis/skjul detaljer"
 
 [tool]
 endpointUnavailable = "Dette verktøyet er ikke tilgjengelig på serveren din."
-endpointUnavailableClickable = "Ikke tilgjengelig i denne modusen. Klikk for å logge inn."
 filesLoading = "Filer lastes fortsatt, vennligst vent."
 filesLoadingProgress = "{{loaded}} / {{total}} filer lastes..."
 invalidParams = "Fyll inn de nødvendige innstillingene."
@@ -14268,6 +14237,8 @@ noFiles = "Legg til en fil for å komme i gang."
 scopeFiles = "filer"
 scopeThisFile = "denne filen"
 selectFilesHint = "Velg filer i Aktive filer for å kjøre dette verktøyet"
+signInRequired = "Dette krever en Stirling-konto. Logg inn for å fortsette."
+signInToUse = "Logg inn for å bruke"
 singleFileScope = "Gjelder kun: {{fileName}}"
 viewerMode = "Bytt til filredigereren for å legge til flere filer."
 

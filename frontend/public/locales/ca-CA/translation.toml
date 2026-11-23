@@ -647,18 +647,16 @@ description = "DPI màxim per al processament d'imatges (0 = il·limitat)"
 label = "DPI màxim"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configureu límits de sessió i temps d'espera per a cada executor de processos"
 ghostscript = "Ghostscript"
 installApp = "Instal·la l'app"
 label = "Límits de l'executor de processos"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF a HTML"
+officeConvert = "Conversió d'Office"
+officeConvertSessionLimit = "Màxim de conversions simultànies; 0 selecciona un límit en funció de les CPU i la memòria"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Instàncies concurrents màximes"
@@ -667,10 +665,6 @@ label = "Límit de sessió"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Temps màxim d'execució"
 label = "Temps d'espera (minuts)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert està en beta. Ofereix conversions millors, més ràpides i amb menys memòria que LibreOffice."
-label = "Utilitza la nova conversió de Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configureu l'emmagatzematge de fitxers temporals i el comportament de neteja"
@@ -688,11 +682,6 @@ label = "Interval de neteja (minuts)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Si s'ha de netejar el directori temporal més ampli del sistema (utilitzeu-ho amb precaució)"
 label = "Neteja el temporal del sistema"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directori per als fitxers temporals de LibreOffice (deixeu-ho buit per al valor per defecte: baseTmpDir/libreoffice)"
-label = "Directori temporal de LibreOffice"
-placeholder = "Per defecte: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Antiguitat màxima en hores abans de netejar els fitxers temporals"
@@ -1300,17 +1289,6 @@ label = "Productor per defecte"
 [admin.settings.general.customPaths]
 description = "Configureu camins personalitzats del sistema de fitxers per al processament de pipeline i eines externes"
 label = "Camins personalitzats"
-
-[admin.settings.general.customPaths.operations]
-label = "Camins d'eines externes"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Camí a LibreOffice unoconvert per a conversions de documents (deixeu-ho buit per al valor per defecte: /opt/venv/bin/unoconvert)"
-label = "Executable d'Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Camí a l'executable de WeasyPrint per a la conversió d'HTML a PDF (deixeu-ho buit per al valor per defecte: /opt/venv/bin/weasyprint)"
-label = "Executable de WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Directoris de pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Títol del document"
 pdfUaTitleHelp = "Es mostra en un lector en lloc del nom del fitxer. Si es deixa en blanc, s'utilitza el primer encapçalament."
 selectSourceFormatFirst = "Tria primer un format d'origen"
 settings = "Opcions"
+signInToUse = "Inicia sessió per utilitzar"
 single = "Únic"
 sourceFormatPlaceholder = "Format d'origen"
-stirlingOfficeConvert = "Utilitza Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Conversions millors i més ràpides amb menys memòria. Desactiva-ho per utilitzar el convertidor estàndard."
 strictMode = "Mode estricte"
 strictModeDesc = "Error si la conversió no és perfecta (utilitza la verificació VeraPDF)"
 svgPdfOptions = "Opcions de SVG a PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Opcions de web a PDF"
 zoomLevel = "Nivell de zoom"
 
 [convert.ebookOptions]
-embedAllFonts = "Incrusta tots els tipus de lletra"
-embedAllFontsDesc = "Incrusta tots els tipus de lletra de l'eBook al PDF generat"
 includePageNumbers = "Inclou números de pàgina"
 includePageNumbersDesc = "Afegeix números de pàgina al PDF generat"
 includeTableOfContents = "Inclou la taula de continguts"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Imatge decorativa"
 description = "Descripció de la imatge"
 descriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la imatge."
 encrypted = "No es poden editar les etiquetes en un fitxer xifrat"
+figureDescription = "Descripció de la figura"
+figureDescriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la figura."
 formFieldDescription = "Descripció del camp"
+formulaDescription = "Descripció de la fórmula"
+formulaDescriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la fórmula. Digueu-ho com ho diríeu en veu alta, per exemple, «x al quadrat més u»."
 heading = "Accessibilitat"
 innerTagLabel = "Etiqueta {{number}}"
 innerTags = "Etiquetes en aquest text"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Descripcions que falten"
 mixedContent = "La figura inclou altres continguts"
 mixedTags = "Barrejat"
 needsDescriptionBadge = "Sense descripció"
-nextImage = "Imatge següent"
+nextToReview = "Següent per revisar"
 notFigure = "Etiquetat com a part del text"
 removeTag = "Elimina etiqueta"
 saveFailed = "No s'han pogut desar els canvis d'accessibilitat, de manera que el fitxer no s'ha desat. Desfeu-los i torneu-ho a provar."
@@ -9661,10 +9640,6 @@ signInToStart = "Inicia la sessió per començar la prova"
 stage = "Etapa {{current}} de {{total}}"
 stagesLabel = "Progrés"
 
-[portal.enterprise.connect]
-ownerOnly = "Només el propietari d'aquest servidor el pot connectar. Demana-li que obri aquesta pàgina."
-unavailable = "Connectar-se a un compte de Stirling està desactivat en aquest servidor. Reserva una trucada i configurarem la prova amb tu."
-
 [portal.enterprise.landing]
 lede = "Prova-ho gratuïtament durant 14 dies, després construeix el teu pressupost i signa l'acord aquí. No cal targeta."
 tickAgreement = "Un únic acord que cobreix l'MSA, el formulari de comanda, l'EULA i el DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Baixa la llicència offline (.lic)"
 hint = "Enganxa aquesta clau en una instància autoallotjada per activar-la, o conserva-la per als teus registres. Guarda-la en un lloc segur."
 label = "La teva clau de llicència"
 trialFileHint = "Aquest és el teu fitxer de llicència de prova. Quan l'acord estigui en vigor, torna i descarrega'l de nou; a diferència de la clau de llicència en línia, el fitxer .lic no s'actualitzarà tot sol."
-
-[portal.procurement.link]
-cta = "Enllaça el compte"
-description = "La contractació s'executa amb el teu compte de Stirling enllaçat: així aprovisionem la prova, fixem el preu del pressupost i iniciem la facturació. Enllaça un compte per començar."
-title = "Enllaça el teu compte per començar"
 
 [portal.procurement.live]
 description = "La teva subscripció és activa i la teva llicència s'ha emès. El teu equip està aprovisionat i la facturació ha començat."
@@ -14260,7 +14230,6 @@ toggleDetails = "Commuta els detalls"
 
 [tool]
 endpointUnavailable = "Aquesta eina no està disponible al teu servidor."
-endpointUnavailableClickable = "No disponible en aquest mode. Fes clic per iniciar sessió."
 filesLoading = "Els fitxers encara s’estan carregant, si us plau, espereu."
 filesLoadingProgress = "{{loaded}} / {{total}} fitxers carregant..."
 invalidParams = "Omple els paràmetres requerits."
@@ -14268,6 +14237,8 @@ noFiles = "Afegeix un fitxer per començar."
 scopeFiles = "fitxers"
 scopeThisFile = "aquest fitxer"
 selectFilesHint = "Selecciona fitxers a Fitxers actius per executar aquesta eina"
+signInRequired = "Cal un compte de Stirling. Inicia sessió per continuar."
+signInToUse = "Inicia sessió per utilitzar"
 singleFileScope = "S'aplica només a: {{fileName}}"
 viewerMode = "Canvia a l'editor de fitxers per afegir diversos fitxers."
 

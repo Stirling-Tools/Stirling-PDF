@@ -85,12 +85,13 @@ export interface ProcurementController {
  * for billing and the Enterprise page, so moving between them does not flash the loading state.
  * No retry: the page gates all its content on `loading`, which backoff would hold true.
  */
-export function useProcurementSnapshot() {
+export function useProcurementSnapshot(enabled = true) {
   const isLinked = usePortalLinked();
   return useQuery<ProcurementSnapshot | null>({
     queryKey: qk.procurement(isLinked),
     queryFn: () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
     retry: false,
+    enabled,
   });
 }
 

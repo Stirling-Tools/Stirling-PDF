@@ -19,7 +19,10 @@ import { useLegacySubscriptions } from "@editor/hooks/useLegacySubscriptions";
 import { LegacySubscriptionPlan } from "@editor/components/shared/config/LegacySubscriptionPlan";
 import { useProcurementSnapshot } from "@processor/components/procurement/useProcurement";
 import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
-import { useOpenEnterprise } from "@processor/components/procurement/enterprisePath";
+import {
+  HOSTS_ENTERPRISE_DEAL,
+  useOpenEnterprise,
+} from "@processor/components/procurement/enterpriseEntry";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -117,12 +120,15 @@ export function Usage({
     previousSessionRevision.current = sessionRevision;
     refresh();
   }, [sessionRevision, refresh]);
-  const dealQuery = useProcurementSnapshot();
-  const deal = dealQuery.data;
+  // A self-hosted server has no deal to show: Enterprise is bought on the hosted page.
+  const dealQuery = useProcurementSnapshot(HOSTS_ENTERPRISE_DEAL);
+  const deal = HOSTS_ENTERPRISE_DEAL ? dealQuery.data : null;
   // Session failures surface through the session banner; anything else is shown here, since an
   // unknown deal must not be read as "no deal" and offered a fresh start.
   const dealError =
-    dealQuery.error && !(dealQuery.error instanceof SaasSessionRequiredError)
+    HOSTS_ENTERPRISE_DEAL &&
+    dealQuery.error &&
+    !(dealQuery.error instanceof SaasSessionRequiredError)
       ? dealQuery.error.message
       : null;
   const openEnterprise = useOpenEnterprise();
@@ -510,8 +516,9 @@ export function Usage({
       }
       onEnterpriseQuote={
         isLeader &&
-        dealQuery.isSuccess &&
-        (deal?.dealId == null || deal.stage === "exploring")
+        (!HOSTS_ENTERPRISE_DEAL ||
+          (dealQuery.isSuccess &&
+            (deal?.dealId == null || deal.stage === "exploring")))
           ? openEnterprise
           : undefined
       }
