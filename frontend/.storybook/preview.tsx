@@ -26,6 +26,11 @@ import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
 import { handlers } from "@processor/mocks/handlers";
 // oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
 import { mockDesktopIpc } from "./desktopIpc";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import {
+  installStorybookFilePicker,
+  withStorybookFilePicker,
+} from "./storybookFilePicker";
 import { configureSupabase } from "@editor-proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -100,6 +105,8 @@ if (!i18next.isInitialized) {
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
+
+installStorybookFilePicker();
 
 if (import.meta.env.STORYBOOK_FLAVOR === "desktop") {
   mockDesktopIpc();
@@ -331,6 +338,7 @@ const preview: Preview = {
     },
   },
   decorators: [
+    withStorybookFilePicker,
     withLocale,
     withProviders,
     withThemeByDataAttribute({
