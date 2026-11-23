@@ -23,6 +23,14 @@ import SharedSigningLauncher from "@editor/components/shared/signing/SharedSigni
 import { SuggestedToolsSection } from "@editor/components/tools/shared/SuggestedToolsSection";
 import { useGroupSigningEnabled } from "@editor/hooks/useGroupSigningEnabled";
 import { alert } from "@editor/components/toast";
+import {
+  getPdfAccess,
+  signedPdfEditsBlocked,
+} from "@editor/services/pdfAccessService";
+import {
+  assertSignedPdfsEditable,
+  SignedPdfEditsBlockedError,
+} from "@editor/services/pdfSessionUnlock";
 
 export type StampToolConfig = {
   toolId: ToolId;
@@ -93,6 +101,10 @@ export const createStampTool = (config: StampToolConfig) => {
       props,
     );
 
+    const selectedFiles = base.selectedFiles.filter(
+      (file) => !signedPdfEditsBlocked(getPdfAccess(file)),
+    );
+
     const allowedSignatureTypes = allowedSignatureSources.filter(
       (source): source is SignParameters["signatureType"] => source !== "saved",
     );
@@ -143,11 +155,11 @@ export const createStampTool = (config: StampToolConfig) => {
     useEffect(() => handleDeactivateSignature, [handleDeactivateSignature]);
 
     useEffect(() => {
-      if (base.selectedFiles.length > 0 && !hasOpenedViewer.current) {
+      if (selectedFiles.length > 0 && !hasOpenedViewer.current) {
         setWorkbench("viewer");
         hasOpenedViewer.current = true;
       }
-    }, [base.selectedFiles.length, setWorkbench]);
+    }, [selectedFiles.length, setWorkbench]);
 
     useEffect(() => {
       setSignatureConfig(base.params.parameters);
@@ -175,6 +187,7 @@ export const createStampTool = (config: StampToolConfig) => {
         if (!originalFile) {
           throw new Error("No file available to replace");
         }
+        await assertSignedPdfsEditable([originalFile], undefined, true);
 
         const flattenResult = await flattenSignatures({
           signatureApiRef,
@@ -205,17 +218,29 @@ export const createStampTool = (config: StampToolConfig) => {
       } catch (error) {
         console.error("Error saving signed document:", error);
         setHasUnsavedChanges(true);
-        alert({
-          alertType: "error",
-          title: t(
-            "sign.wallet.toast.applyFailed",
-            "Could not apply signatures",
-          ),
-          body: t(
-            "sign.wallet.toast.applyFailedBody",
-            "Your signatures are still on the document. Try again.",
-          ),
-        });
+        alert(
+          error instanceof SignedPdfEditsBlockedError
+            ? {
+                alertType: "warning",
+                title: t(
+                  "signedPdf.editsBlockedTitle",
+                  "Signed PDF can't be changed",
+                ),
+                body: error.message,
+                expandable: false,
+              }
+            : {
+                alertType: "error",
+                title: t(
+                  "sign.wallet.toast.applyFailed",
+                  "Could not apply signatures",
+                ),
+                body: t(
+                  "sign.wallet.toast.applyFailedBody",
+                  "Your signatures are still on the document. Try again.",
+                ),
+              },
+        );
         return false;
       } finally {
         applyInFlightRef.current = false;
@@ -292,7 +317,7 @@ export const createStampTool = (config: StampToolConfig) => {
     const getSteps = () => {
       const steps = [];
 
-      if (base.selectedFiles.length > 0) {
+      if (selectedFiles.length > 0) {
         steps.push({
           title: translateTool("steps.configure", "Configure Stamp"),
           isCollapsed: false,
@@ -316,7 +341,7 @@ export const createStampTool = (config: StampToolConfig) => {
 
     return createToolFlow({
       files: {
-        selectedFiles: base.selectedFiles,
+        selectedFiles,
         isCollapsed: base.operation.files.length > 0,
       },
       steps: getSteps(),

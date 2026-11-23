@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -108,7 +109,14 @@ public class PageNumbersController {
 
             for (int i : pagesToNumberList) {
                 PDPage page = document.getPage(i);
-                PDRectangle pageSize = page.getMediaBox();
+                PDRectangle cropBox = page.getCropBox();
+                int rotation = page.getRotation();
+                // The page as a reader sees it. The anchors below are laid out on it, then mapped
+                // back to the page's own unrotated space, where the content stream draws.
+                PDRectangle pageSize =
+                        rotation == 90 || rotation == 270
+                                ? new PDRectangle(cropBox.getHeight(), cropBox.getWidth())
+                                : new PDRectangle(cropBox.getWidth(), cropBox.getHeight());
 
                 String nFormatted = String.format(formatN, pageNumber);
                 String text =
@@ -166,6 +174,21 @@ public class PageNumbersController {
                             default -> botY;
                         };
 
+                float originX =
+                        switch (rotation) {
+                            case 90 -> cropBox.getUpperRightX() - y;
+                            case 180 -> cropBox.getUpperRightX() - x;
+                            case 270 -> cropBox.getLowerLeftX() + y;
+                            default -> cropBox.getLowerLeftX() + x;
+                        };
+                float originY =
+                        switch (rotation) {
+                            case 90 -> cropBox.getLowerLeftY() + x;
+                            case 180 -> cropBox.getUpperRightY() - y;
+                            case 270 -> cropBox.getUpperRightY() - x;
+                            default -> cropBox.getLowerLeftY() + y;
+                        };
+
                 try (PDPageContentStream contentStream =
                         new PDPageContentStream(
                                 document,
@@ -176,7 +199,10 @@ public class PageNumbersController {
                     contentStream.beginText();
                     contentStream.setFont(currentFont, fontSize);
                     contentStream.setNonStrokingColor(color);
-                    contentStream.newLineAtOffset(x, y);
+                    // /Rotate turns the page clockwise for display, so the text is turned the
+                    // same angle the other way to read upright.
+                    contentStream.setTextMatrix(
+                            Matrix.getRotateInstance(Math.toRadians(rotation), originX, originY));
                     contentStream.showText(text);
                     contentStream.endText();
                 }

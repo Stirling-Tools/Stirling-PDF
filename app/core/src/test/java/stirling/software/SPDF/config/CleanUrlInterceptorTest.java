@@ -53,6 +53,17 @@ class CleanUrlInterceptorTest {
     }
 
     @Test
+    void shareLinksKeepTheirActionOnly() throws Exception {
+        when(request.getContextPath()).thenReturn("");
+        when(request.getRequestURI()).thenReturn("/share/00dcac3a-fc7a-4989-9c4f-97745484d62f");
+        when(request.getQueryString()).thenReturn("action=download");
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+
+        when(request.getRequestURI()).thenReturn("/some-page");
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+    }
+
+    @Test
     void preHandleRedirectsWhenDisallowedParamsPresent() throws Exception {
         when(request.getRequestURI()).thenReturn("/some-page");
         when(request.getContextPath()).thenReturn("");

@@ -41,10 +41,6 @@ export interface GeneralSettingsData {
       watchedFoldersDirs?: string[];
       finishedFoldersDir?: string;
     };
-    operations?: {
-      weasyprint?: string;
-      unoconvert?: string;
-    };
   };
   customMetadata?: {
     autoUpdateMetadata?: boolean;

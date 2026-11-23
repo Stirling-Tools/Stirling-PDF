@@ -18,6 +18,7 @@ import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology
 import { formatFileSize, IMAGE_EXTENSIONS } from "@editor/utils/fileUtils";
 import "@editor/components/shared/FileSidebarFileItem.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { OneDriveOriginTooltip } from "@editor/components/shared/OneDriveOriginTooltip";
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
@@ -145,6 +146,15 @@ export interface FileItemProps {
   canSaveToCloud?: boolean;
   /** File already lives on the server - shows a cloud badge + "Update" label. */
   isUploadedToCloud?: boolean;
+  onSaveToOneDrive?: (fileId: FileId) => void;
+  onSaveCopyToOneDrive?: (fileId: FileId) => void;
+  onSaveToOneDriveFolder?: (fileId: FileId) => void;
+  hasOneDriveOrigin?: boolean;
+  /** Edited since the last save, and Save sends this file to OneDrive. */
+  oneDriveUnsaved?: boolean;
+  oneDriveName?: string;
+  onOpenInOneDrive?: (fileId: FileId) => void;
+  savingToOneDrive?: boolean;
   /** Open the version-history modal. Only shown when hasVersionHistory. */
   onVersionHistory?: (fileId: FileId) => void;
   /** Whether this file has more than one version (drives the menu item). */
@@ -164,10 +174,12 @@ function FileMenuItem({
   color,
   onClick,
   children,
+  testId,
 }: {
   disabledReason?: React.ReactNode;
   icon: React.ReactNode;
   color?: string;
+  testId?: string;
   onClick: (e: React.MouseEvent) => void;
   children: React.ReactNode;
 }) {
@@ -185,6 +197,7 @@ function FileMenuItem({
           disabled={Boolean(disabledReason)}
           color={color}
           leftSection={icon}
+          data-testid={testId}
           onClick={(e) => {
             e.stopPropagation();
             onClick(e);
@@ -225,10 +238,21 @@ export const FileItem = React.memo(function FileItem({
   onSaveToCloud,
   canSaveToCloud = false,
   isUploadedToCloud = false,
+  onSaveToOneDrive,
+  onSaveCopyToOneDrive,
+  onSaveToOneDriveFolder,
+  hasOneDriveOrigin = false,
+  oneDriveUnsaved = false,
+  oneDriveName,
+  onOpenInOneDrive,
+  savingToOneDrive = false,
   onVersionHistory,
   hasVersionHistory = false,
 }: FileItemProps) {
   const { t } = useTranslation();
+  const oneDriveBadgeLabel = oneDriveUnsaved
+    ? t("oneDriveSave.status.unsaved", "Changes not saved to OneDrive yet")
+    : t("oneDriveSave.fromOneDrive", "From OneDrive");
   const toolSkipReason = isToolSkipped
     ? t("files.notIncludedInToolRun", "Not included in this tool run")
     : undefined;
@@ -272,6 +296,23 @@ export const FileItem = React.memo(function FileItem({
       );
     return null;
   };
+
+  const oneDriveBlockedReason = (action: string): React.ReactNode | null =>
+    savingToOneDrive
+      ? t("oneDriveSave.saving", "Saving to OneDrive...")
+      : blockedReason(action);
+  const updateInOneDriveLabel = t(
+    "oneDriveSave.updateOriginal",
+    "Update in OneDrive",
+  );
+  const saveCopyToOneDriveLabel = t(
+    "oneDriveSave.saveCopyToOneDrive",
+    "Save a copy in OneDrive",
+  );
+  const saveToOneDriveFolderLabel = t(
+    "oneDriveSave.uploadToOneDrive",
+    "Upload to OneDrive...",
+  );
 
   const viewerLabel = isViewedInViewer
     ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
@@ -384,6 +425,27 @@ export const FileItem = React.memo(function FileItem({
                 <span className="file-sidebar-datalost-badge" data-no-select>
                   <Icon name="circle-alert" size={"0.85rem"} />
                   {t("damagedPdf.label", "Damaged")}
+                </span>
+              </Tooltip>
+            )}
+            {hasOneDriveOrigin && (
+              <Tooltip
+                label={<OneDriveOriginTooltip label={oneDriveBadgeLabel} />}
+                multiline
+                maw={220}
+                withArrow
+                position="bottom"
+              >
+                <span
+                  className="file-sidebar-cloud-badge"
+                  data-no-select
+                  data-testid="file-onedrive-badge"
+                  aria-label={oneDriveBadgeLabel}
+                >
+                  <Icon name="onedrive" size={"0.85rem"} />
+                  {oneDriveUnsaved && (
+                    <span className="file-sidebar-cloud-badge-dot" />
+                  )}
                 </span>
               </Tooltip>
             )}
@@ -563,6 +625,62 @@ export const FileItem = React.memo(function FileItem({
                     </FileMenuItem>
                   );
                 })()}
+
+              {hasOneDriveOrigin && onSaveToOneDrive && (
+                <FileMenuItem
+                  disabledReason={oneDriveBlockedReason(updateInOneDriveLabel)}
+                  icon={<Icon name="cloud-upload" size={16} />}
+                  onClick={() => onSaveToOneDrive(fileId)}
+                  testId="file-save-onedrive"
+                >
+                  <span className="file-sidebar-kebab-item-stack">
+                    <span>{updateInOneDriveLabel}</span>
+                    {oneDriveName && oneDriveName !== name && (
+                      <span
+                        className="file-sidebar-kebab-item-detail"
+                        data-testid="file-save-onedrive-target"
+                      >
+                        {t("oneDriveSave.replaces", "Replaces {{name}}", {
+                          name: oneDriveName,
+                        })}
+                      </span>
+                    )}
+                  </span>
+                </FileMenuItem>
+              )}
+              {hasOneDriveOrigin && onSaveCopyToOneDrive && (
+                <FileMenuItem
+                  disabledReason={oneDriveBlockedReason(
+                    saveCopyToOneDriveLabel,
+                  )}
+                  icon={<Icon name="copy-plus" size={16} />}
+                  onClick={() => onSaveCopyToOneDrive(fileId)}
+                  testId="file-save-onedrive-copy"
+                >
+                  {saveCopyToOneDriveLabel}
+                </FileMenuItem>
+              )}
+              {onSaveToOneDriveFolder && (
+                <FileMenuItem
+                  disabledReason={oneDriveBlockedReason(
+                    saveToOneDriveFolderLabel,
+                  )}
+                  icon={<Icon name="folder-up" size={16} />}
+                  onClick={() => onSaveToOneDriveFolder(fileId)}
+                  testId="file-save-onedrive-folder"
+                >
+                  {saveToOneDriveFolderLabel}
+                </FileMenuItem>
+              )}
+              {hasOneDriveOrigin && onOpenInOneDrive && (
+                <FileMenuItem
+                  icon={<Icon name="external-link" size={16} />}
+                  onClick={() => onOpenInOneDrive(fileId)}
+                  testId="file-open-onedrive"
+                >
+                  {t("oneDriveSave.open", "Open in OneDrive")}
+                </FileMenuItem>
+              )}
 
               {hasVersionHistory && onVersionHistory && (
                 <FileMenuItem
