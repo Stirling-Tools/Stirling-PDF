@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -22,6 +23,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -127,10 +129,8 @@ class FlattenControllerTest {
         assertThat(out).isNotEmpty();
         try (PDDocument flattened = Loader.loadPDF(out)) {
             assertThat(flattened.getNumberOfPages()).isEqualTo(1);
-            // Form-only flattening must not discard non-widget annotations; the dedicated
-            // regression test below covers that contract.
-            assertThat(flattened.getPage(0).getAnnotations())
-                    .allMatch(a -> a instanceof PDAnnotationWidget);
+            assertThat(flattened.getPage(0).getAnnotations()).isEmpty();
+            assertThat(new PDFTextStripper().getText(flattened)).contains("sample");
         }
     }
 
@@ -315,7 +315,7 @@ class FlattenControllerTest {
             widget.setRectangle(new PDRectangle(50, 700, 200, 20));
             widget.setPage(page);
             page.getAnnotations().add(widget);
-            field.getWidgets().add(widget);
+            field.setWidgets(List.of(widget));
             acroForm.getFields().add(field);
             field.setValue("sample");
             doc.save(path.toFile());
