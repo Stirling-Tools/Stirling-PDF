@@ -3,7 +3,7 @@
 Signs bundled runtime binaries or verifies existing signatures.
 .DESCRIPTION
 Signing rewrites .dll/.exe files under Root in place, skipping valid signatures.
-It requires smctl on PATH, SM_KEYPAIR_ALIAS and a writable RUNNER_TEMP.
+It requires smctl on PATH, SM_KEYPAIR_ALIAS and a writable process temp directory.
 Failures terminate with a nonzero exit; previously signed files remain changed.
 .PARAMETER Root
 Directory searched recursively; missing or empty binary sets fail.
