@@ -114,6 +114,7 @@ vi.mock("../../services/thumbnailGenerationService", () => ({
       .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
     cleanup: vi.fn(),
     destroy: vi.fn(),
+    forgetFile: vi.fn(),
   },
 }));
 

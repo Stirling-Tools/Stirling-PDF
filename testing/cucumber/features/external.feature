@@ -43,7 +43,7 @@ Feature: API Validation
         When I send the API request to the endpoint "/api/v1/misc/extract-image-scans"
         Then the response content type should be "application/octet-stream"
         And the response file should have extension ".zip"
-        And the response ZIP should contain 2 files
+        And the response ZIP should contain 3 files
         And the response file should have size greater than 0
         And the response status code should be 200
 
@@ -83,7 +83,6 @@ Feature: API Validation
             | format | extension |
             | docx   | .docx     |
             | odt    | .odt      |
-            | doc    | .doc      |
 
     @ocr @pdfa1
     Scenario: PDFA
@@ -203,7 +202,7 @@ Feature: API Validation
             | .pptx     |
             | .rtf      |
 
-    @calibre @positive @htmltopdf
+    @positive @htmltopdf
     Scenario: Convert HTML to PDF
         Given I use an example file at "exampleFiles/example.html" as parameter "fileInput"
         When I send the API request to the endpoint "/api/v1/convert/html/pdf"
@@ -211,7 +210,7 @@ Feature: API Validation
         And the response file should have size greater than 100
         And the response file should have extension ".pdf"
 
-    @calibre @positive @zippedhtmltopdf
+    @positive @zippedhtmltopdf
     Scenario: Convert zipped HTML to PDF
         Given I use an example file at "exampleFiles/example_html.zip" as parameter "fileInput"
         When I send the API request to the endpoint "/api/v1/convert/html/pdf"
@@ -219,7 +218,7 @@ Feature: API Validation
         And the response file should have size greater than 100
         And the response file should have extension ".pdf"
 
-    @calibre @positive @markdowntopdf
+    @positive @markdowntopdf
     Scenario: Convert Markdown to PDF
         Given I use an example file at "exampleFiles/example.md" as parameter "fileInput"
         When I send the API request to the endpoint "/api/v1/convert/markdown/pdf"

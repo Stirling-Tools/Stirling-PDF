@@ -20,11 +20,15 @@ import { tagAllPages } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
 import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { setTextTagCommand } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import { matchingRuns } from "@editor/tools/pdfTextEditor/util/pageFurniture";
 import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import {
   buildClassicPdf,
@@ -128,7 +132,7 @@ async function open(bytes: Uint8Array): Promise<EditorDocument> {
 }
 
 async function savedBytes(doc: EditorDocument): Promise<Uint8Array> {
-  const { blob } = await exportToBlob(doc, "page.pdf");
+  const blob = await exportToBlob(doc);
   return new Uint8Array(await blob.arrayBuffer());
 }
 
@@ -312,7 +316,7 @@ describe("tagAllPages", () => {
 
     expect(store.getState().loading).toBe(false);
     expect(progress).toHaveBeenCalledWith(
-      expect.objectContaining({ current: 0, total: 1 }),
+      expect.objectContaining({ current: 0, total: 2 }),
     );
     const doc = store.document!;
     expect(hasUntaggedContent(doc, 0)).toBe(false);
@@ -326,6 +330,155 @@ describe("tagAllPages", () => {
     store.dispose();
   });
 
+  test("tags text set larger or bolder than the body as headings, levelled by style, even set tight on its paragraph", async () => {
+    const show = (font: string, size: number, y: number, text: string) =>
+      `BT /${font} ${size} Tf 72 ${y} Td (${text}) Tj ET`;
+    const body =
+      "Sales rose in every region over the quarter, led by the north";
+    const store = await storeFor(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+          {
+            num: 3,
+            body:
+              "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+              "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
+          },
+          {
+            num: 4,
+            body: streamBody(
+              "",
+              [
+                show("F1", 24, 720, "Quarterly report"),
+                show("F2", 11, 660, "Results"),
+                show("F1", 11, 646, body),
+                show("F2", 11, 600, "Outlook"),
+                show("F1", 11, 586, body.replace("north", "south")),
+              ].join("\n"),
+            ),
+          },
+          {
+            num: 5,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+          },
+          {
+            num: 6,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+          },
+        ],
+        1,
+      ),
+    );
+    await tagAllPages(store);
+    expect(tagsShown(store.document!, 0)).toEqual(
+      new Map([
+        ["Quarterly report", "H1"],
+        ["Results", "H2"],
+        [body, "P"],
+        ["Outlook", "H2"],
+        [body.replace("north", "south"), "P"],
+      ]),
+    );
+    store.dispose();
+  });
+
+  test("never skips a heading level in the order the structure tree reads, which is drawing order", async () => {
+    const show = (font: string, size: number, y: number, text: string) =>
+      `BT /${font} ${size} Tf 72 ${y} Td (${text}) Tj ET`;
+    const body =
+      "Sales rose in every region over the quarter, led by the north";
+    const store = await storeFor(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+          {
+            num: 3,
+            body:
+              "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+              "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
+          },
+          {
+            num: 4,
+            body: streamBody(
+              "",
+              [
+                show("F2", 11, 660, "Results"),
+                show("F1", 24, 720, "Quarterly report"),
+                show("F1", 11, 646, body),
+                show("F2", 11, 600, "Outlook"),
+                show("F1", 11, 586, body.replace("north", "south")),
+              ].join("\n"),
+            ),
+          },
+          {
+            num: 5,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+          },
+          {
+            num: 6,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+          },
+        ],
+        1,
+      ),
+    );
+    await tagAllPages(store);
+    const shown = tagsShown(store.document!, 0);
+    expect(
+      ["Results", "Quarterly report", "Outlook"].map((text) => shown.get(text)),
+    ).toEqual(["H1", "H1", "H2"]);
+    store.dispose();
+  });
+
+  test("caps heading levels across pages, and undoes and redoes them as one step", async () => {
+    const store = await storeFor(
+      linesPdf([
+        [line("F2", 11, 720, "Summary"), line("F1", 11, 700, BODY_LINE)],
+        [
+          line("F1", 24, 720, "Annual report"),
+          line("F2", 11, 660, "Outlook"),
+          line("F1", 11, 640, BODY_LINE),
+        ],
+      ]),
+    );
+    const doc = store.document!;
+    await tagAllPages(store);
+    const levels = () => [
+      tagsShown(doc, 0).get("Summary"),
+      tagsShown(doc, 1).get("Annual report"),
+      tagsShown(doc, 1).get("Outlook"),
+    ];
+    expect(levels()).toEqual(["H1", "H1", "H2"]);
+
+    store.undo();
+    expect(hasUntaggedContent(doc, 1)).toBe(true);
+    store.redo();
+    expect(levels()).toEqual(["H1", "H1", "H2"]);
+    store.dispose();
+  });
+
+  test("tags a file that has tags already as paragraphs only", async () => {
+    const store = await storeFor(
+      linesPdf([
+        [line("F1", 11, 700, BODY_LINE)],
+        [
+          line("F1", 24, 720, "Annual report"),
+          line("F2", 11, 660, "Outlook"),
+          line("F1", 11, 640, BODY_LINE),
+        ],
+      ]),
+    );
+    const doc = store.document!;
+    PdfiumTextReader.populate(doc, doc.page(0));
+    store.history.execute(new TagPageContentCommand({ pageIndex: 0 }), doc);
+    await tagAllPages(store);
+    expect(new Set(tagsShown(doc, 1).values())).toEqual(new Set(["P"]));
+    store.dispose();
+  });
+
   test("records nothing when nothing is untagged", async () => {
     const store = await storeFor(pagePdf(COLUMNS));
     await tagAllPages(store);
@@ -333,6 +486,239 @@ describe("tagAllPages", () => {
     await tagAllPages(store);
     expect(store.history.peekUndo()).toBe(tagged);
     store.dispose();
+  });
+});
+
+/**
+ * What the watermark tool appends to a page on its default settings: a
+ * half-opaque light grey grid of the text, or of the image 30 points high,
+ * spaced 50 points apart.
+ */
+function toolWatermark(kind: "text" | "image"): string {
+  const grid =
+    kind === "text"
+      ? Array.from({ length: 14 * 9 }, (_, n) => {
+          const [x, y] = [(n % 9) * 86, Math.floor(n / 9) * 62];
+          return `BT /F1 12 Tf 1 0 0 1 ${x} ${y} Tm (DRAFT) Tj 0 -12 Td ET`;
+        })
+      : Array.from({ length: 10 * 8 }, (_, n) => {
+          const [x, y] = [(n % 8) * 80, Math.floor(n / 8) * 80];
+          return `q 30 0 0 30 ${x} ${y} cm /Im1 Do Q`;
+        });
+  return ["/GS0 gs 0.827 0.827 0.827 rg", ...grid].join("\n");
+}
+
+/**
+ * `count` untagged pages, each with a running header, footer and page number
+ * around its own text, and the watermark tool's output over it all when
+ * `watermark` says which.
+ */
+function furnishedPdf(count: number, watermark?: "text" | "image"): Uint8Array {
+  const show = (x: number, y: number, text: string) =>
+    `BT /F1 10 Tf ${x} ${y} Td (${text}) Tj ET`;
+  const pages = Array.from({ length: count }, (_, i) => ({
+    page: 10 + 2 * i,
+    content: [
+      "q",
+      show(72, 760, "Acme Corp | Q3 report"),
+      show(72, 400, `Results for region ${String.fromCharCode(65 + i)}`),
+      show(72, 70, "Confidential"),
+      show(300, 30, `Page ${i + 1}`),
+      "Q",
+      ...(watermark ? [toolWatermark(watermark)] : []),
+    ].join("\n"),
+  }));
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      {
+        num: 2,
+        body: `<< /Type /Pages /Kids [${pages.map((p) => `${p.page} 0 R`).join(" ")}] /Count ${count} >>`,
+      },
+      {
+        num: 3,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 4,
+        body: streamBody(
+          "/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8",
+          "\x80",
+        ),
+      },
+      ...pages.flatMap(({ page, content }) => [
+        {
+          num: page,
+          body:
+            `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${page + 1} 0 R ` +
+            "/Resources << /Font << /F1 3 0 R >> /XObject << /Im1 4 0 R >> " +
+            "/ExtGState << /GS0 << /ca 0.5 >> >> >> >>",
+        },
+        { num: page + 1, body: streamBody("", content) },
+      ]),
+    ],
+    1,
+  );
+}
+
+/** How each run on the page is tagged, by its text. */
+const BODY_LINE =
+  "Sales rose in every region over the quarter, led by the north";
+
+/** Text drawn in a font of `linesPdf`'s: F1 Helvetica, F2 Helvetica-Bold. */
+function line(font: "F1" | "F2", size: number, y: number, text: string) {
+  return `BT /${font} ${size} Tf 72 ${y} Td (${text}) Tj ET`;
+}
+
+/** A PDF of Letter pages, each drawing its `line`s in order. */
+function linesPdf(pages: readonly string[][]): Uint8Array {
+  const fonts = 3 + pages.length * 2;
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      {
+        num: 2,
+        body: `<< /Type /Pages /Kids [${pages.map((_, i) => `${3 + i * 2} 0 R`).join(" ")}] /Count ${pages.length} >>`,
+      },
+      ...pages.flatMap((lines, i) => [
+        {
+          num: 3 + i * 2,
+          body:
+            `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${4 + i * 2} 0 R ` +
+            `/Resources << /Font << /F1 ${fonts} 0 R /F2 ${fonts + 1} 0 R >> >> >>`,
+        },
+        { num: 4 + i * 2, body: streamBody("", lines.join("\n")) },
+      ]),
+      {
+        num: fonts,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: fonts + 1,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+      },
+    ],
+    1,
+  );
+}
+
+function tagsShown(doc: EditorDocument, pageIndex: number) {
+  return new Map(
+    doc.page(pageIndex).runs.map((run) => {
+      const tag = textTag(doc, run.snapshot());
+      const shown =
+        tag.kind === "artifact"
+          ? (tag.furniture ?? "artifact")
+          : tag.kind === "tagged"
+            ? tag.block.type
+            : tag.kind;
+      return [run.text.trim(), shown];
+    }),
+  );
+}
+
+describe("page furniture", () => {
+  test("auto-tag makes repeated headers, footers and page numbers artifacts", async () => {
+    const store = await storeFor(furnishedPdf(3));
+    await tagAllPages(store);
+    const doc = store.document!;
+    expect(tagsShown(doc, 2)).toEqual(
+      new Map([
+        ["Acme Corp | Q3 report", "Header"],
+        ["Results for region C", "P"],
+        ["Confidential", "Footer"],
+        ["Page 3", "PageNum"],
+      ]),
+    );
+    const saved = (await RawPdf.parse(await savedBytes(doc)))!;
+    const content = toLatin1(
+      (await saved.pageContent(saved.pageNumberAt(2)!))!,
+    );
+    expect(content).toContain(
+      "/Artifact <</Subtype/PageNum/Type/Pagination>> BDC",
+    );
+
+    store.undo();
+    expect(tagsShown(doc, 2).get("Page 3")).toBe("untagged");
+    store.dispose();
+  });
+
+  test("auto-tag makes the watermark tool's text an artifact, leaving the furniture under it", async () => {
+    const store = await storeFor(furnishedPdf(2, "text"));
+    await tagAllPages(store);
+    const doc = store.document!;
+    const drafts = doc
+      .page(1)
+      .runs.filter((run) => run.text.trim() === "DRAFT")
+      .map((run) => textTag(doc, run.snapshot()));
+    expect(drafts).toHaveLength(14 * 9);
+    expect(
+      drafts.every(
+        (tag) => tag.kind === "artifact" && tag.furniture === "Watermark",
+      ),
+    ).toBe(true);
+    const others = tagsShown(doc, 1);
+    others.delete("DRAFT");
+    expect(others).toEqual(
+      new Map([
+        ["Acme Corp | Q3 report", "Header"],
+        ["Results for region B", "P"],
+        ["Confidential", "Footer"],
+        ["Page 2", "PageNum"],
+      ]),
+    );
+    const saved = (await RawPdf.parse(await savedBytes(doc)))!;
+    const content = toLatin1(
+      (await saved.pageContent(saved.pageNumberAt(1)!))!,
+    );
+    expect(content).toContain(
+      "/Artifact <</Subtype/Watermark/Type/Pagination>> BDC",
+    );
+    store.dispose();
+  });
+
+  test("auto-tag makes the watermark tool's images artifacts, not figures", async () => {
+    const store = await storeFor(furnishedPdf(2, "image"));
+    await tagAllPages(store);
+    const images = store.document!.page(0).images;
+    expect(images).toHaveLength(10 * 8);
+    expect(images.every((image) => image.artifact && image.mcid === null)).toBe(
+      true,
+    );
+
+    store.undo();
+    expect(images.every((image) => !image.artifact)).toBe(true);
+    store.dispose();
+  });
+
+  test("gives matching text on other pages an artifact's kind, as one undo step", async () => {
+    const doc = await open(furnishedPdf(3));
+    for (const pageIndex of [1, 2]) {
+      PdfiumTextReader.populate(doc, doc.page(pageIndex));
+    }
+    const pages = [0, 1, 2].map((pageIndex) => {
+      const { display, runs } = doc.page(pageIndex);
+      return { pageIndex, display, runs: runs.map((r) => r.snapshot()) };
+    });
+    const footer = pages[0].runs.find((r) => r.text.includes("Confidential"))!;
+    const targets = [
+      footer,
+      ...matchingRuns(pages, 0, footer).map(({ run }) => run),
+    ].map((run) => ({ run, tag: textTag(doc, run) }));
+    expect(targets).toHaveLength(3);
+    const history = new HistoryStack();
+    history.execute(
+      setTextTagCommand(doc, targets, { artifact: "Footer" })!,
+      doc,
+    );
+    expect([0, 1, 2].map((i) => tagsShown(doc, i).get("Confidential"))).toEqual(
+      ["Footer", "Footer", "Footer"],
+    );
+
+    history.undo(doc);
+    expect([0, 1, 2].map((i) => tagsShown(doc, i).get("Confidential"))).toEqual(
+      ["untagged", "untagged", "untagged"],
+    );
   });
 });
 

@@ -162,6 +162,24 @@ describe("AddPasswordSettings", () => {
     ).toBeInTheDocument();
   });
 
+  test("should toggle the advanced disclosure", () => {
+    render(
+      <TestWrapper>
+        <AddPasswordSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+
+    const toggle = screen.getByRole("button", {
+      name: "mock-encryptedPdfUnlock.advanced",
+    });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+  });
+
   test("should call translation function with correct keys", () => {
     render(
       <TestWrapper>

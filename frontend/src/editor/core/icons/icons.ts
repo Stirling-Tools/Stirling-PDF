@@ -24,6 +24,7 @@ import BadgeDollarSign from "lucide-static/icons/badge-dollar-sign.svg?react";
 import Banknote from "lucide-static/icons/banknote.svg?react";
 import Bell from "lucide-static/icons/bell.svg?react";
 import Blocks from "lucide-static/icons/blocks.svg?react";
+import Bold from "lucide-static/icons/bold.svg?react";
 import Bolt from "lucide-static/icons/bolt.svg?react";
 import Book from "lucide-static/icons/book.svg?react";
 import BookOpen from "lucide-static/icons/book-open.svg?react";
@@ -383,6 +384,7 @@ import SinglePage from "@editor/icons/svg/stirling/single-page.svg?react";
 import StirlingMark from "@editor/icons/svg/stirling/stirling-mark.svg?react";
 import StirlingMarkThinking from "@editor/icons/svg/stirling/stirling-mark-thinking.svg?react";
 import StirlingTile from "@editor/icons/svg/stirling/stirling-tile.svg?react";
+import UniversalAccess from "@editor/icons/svg/stirling/universal-access.svg?react";
 import UsersPlus from "@editor/icons/svg/stirling/users-plus.svg?react";
 import Watermark from "@editor/icons/svg/stirling/watermark.svg?react";
 
@@ -457,6 +459,7 @@ export const ICONS = {
   banknote: { Component: Banknote, kind: "lucide" },
   bell: { Component: Bell, kind: "lucide" },
   blocks: { Component: Blocks, kind: "lucide" },
+  bold: { Component: Bold, kind: "lucide" },
   bolt: { Component: Bolt, kind: "lucide" },
   book: { Component: Book, kind: "lucide" },
   "book-open": { Component: BookOpen, kind: "lucide" },
@@ -816,6 +819,7 @@ export const ICONS = {
   "stirling-mark": { Component: StirlingMark, kind: "brand" },
   "stirling-mark-thinking": { Component: StirlingMarkThinking, kind: "brand" },
   "stirling-tile": { Component: StirlingTile, kind: "brand" },
+  "universal-access": { Component: UniversalAccess, kind: "stirling" },
   "users-plus": { Component: UsersPlus, kind: "stirling" },
   watermark: { Component: Watermark, kind: "stirling" },
   apple: { Component: Apple, kind: "brand" },

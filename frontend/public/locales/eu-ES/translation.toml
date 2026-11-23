@@ -512,6 +512,11 @@ submit = "Doitu orri-eskala"
 tags = "tamaina-aldatu,aldatu,neurriak,egokitu"
 title = "Orri-eskala doitu"
 
+[adjustPageScale.customSize]
+height = "Altuera"
+unit = "Unitatea"
+width = "Zabalera"
+
 [adjustPageScale.error]
 failed = "Errore bat gertatu da orri-eskala doitzean."
 
@@ -521,6 +526,7 @@ landscape = "Horizontala"
 portrait = "Bertikala"
 
 [adjustPageScale.pageSize]
+custom = "Pertsonalizatua"
 keep = "Mantendu jatorrizko tamaina"
 label = "Helburu-orriaren tamaina"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "Irudien prozesaketarako gehienezko DPI (0 = mugarik ez)"
 label = "Gehienezko DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Konfiguratu saio-mugak eta denbora-mugak prozesu-exekutore bakoitzerako"
 ghostscript = "Ghostscript"
 installApp = "Aplikazioa instalatu"
 label = "Prozesu-exekutorearen mugak"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDFtik HTMLra"
+officeConvert = "Office bihurketa"
+officeConvertSessionLimit = "Aldi bereko bihurketa kopuru maximoa; 0k muga bat hautatzen du CPUen eta memoriaren arabera"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Gehienezko instantzia konkurrenteak"
@@ -661,10 +665,6 @@ label = "Saio-muga"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Gehienezko exekuzio-denbora"
 label = "Denbora-muga (minutuak)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert beta bertsioan dago. LibreOffice baino bihurketa hobeak eta azkarragoak eskaintzen ditu, memoria gutxiagorekin."
-label = "Erabili Stirling Office bihurketa berria"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Konfiguratu aldi baterako fitxategien biltegiratzea eta garbiketaren portaera"
@@ -682,11 +682,6 @@ label = "Garbiketa tartea (minutuak)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Sistema zabalagoko aldi baterako direktorioa garbitu ala ez (kontuz erabili)"
 label = "Sistemako aldi baterakoa garbitu"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice-ren aldi baterako fitxategietarako direktorioa (utzi hutsik lehenetsia erabiltzeko: baseTmpDir/libreoffice)"
-label = "LibreOffice-ren aldi baterako direktorioa"
-placeholder = "Lehenetsia: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Aldi baterako fitxategiak garbitu aurreko gehienezko adina orduetan"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Irudiak luzatu orri osoa betetzeko. Desgaituta 
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Mantendu (jatorrizko neurriak)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "Nola konfiguratu {{name}}"
 title = "Konexioak"
 unlinkedServices = "Estekatu gabeko zerbitzuak"
 
@@ -1294,17 +1290,6 @@ label = "Ekoizle lehenetsia"
 description = "Konfiguratu fitxategi-sistemako bide pertsonalizatuak pipeline prozesatzeko eta kanpoko tresnetarako"
 label = "Bide pertsonalizatuak"
 
-[admin.settings.general.customPaths.operations]
-label = "Kanpoko tresnen bideak"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Dokumentu-bihurketetarako LibreOffice unoconvert-en bide-izena (utzi hutsik lehenetsia erabiltzeko: /opt/venv/bin/unoconvert)"
-label = "Unoconvert exekutagarria"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTMLtik PDFra bihurtzeko WeasyPrint exekutagarriaren bide-izena (utzi hutsik lehenetsia erabiltzeko: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint exekutagarria"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline direktorioak"
 
@@ -1327,6 +1312,10 @@ label = "Monitorizatutako karpeten direktorioak"
 [admin.settings.general.defaultLocale]
 description = "Erabiltzaile berrientzako hizkuntza lehenetsia (adib., en_US, es_ES)"
 label = "Hizkuntza lehenetsia"
+
+[admin.settings.general.enableFeedback]
+description = "Utzi erabiltzaileei Feedback-a Stirling taldeari bidaltzen"
+label = "Gaitu Feedback-a"
 
 [admin.settings.general.fileUploadLimit]
 description = "Fitxategiak igotzeko gehienezko tamaina (adib., 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "STANDARD gertaerak gehi: etengabeko inkesta-deiak, GET eskaera guztia
 [admin.settings.security.audit.retentionDays]
 description = "Ikuskaritza-erregistroak gordetzeko egun kopurua (0 = gordetze mugagabea)"
 label = "Ikuskaritza atxikipena (egunak)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "Sinatutako PDFak ikus, inprimatu, bihurtu edo berriro sinatu daitezke, baina ez aldatu aplikazioan. API deiek eta zerbitzariko pipelineek ez dute eraginik."
+label = "Blokeatu sinatutako PDFak aldatzea"
 
 [admin.settings.security.csrfDisabled]
 description = "Desgaitu Cross-Site Request Forgery babesa (ez da gomendatzen)"
@@ -2969,6 +2962,7 @@ loadError = "Ezin izan da erabiltzaileak kargatu"
 noTeam = "Talderik ez"
 noUsers = "Ez da beste erabiltzailerik aurkitu."
 placeholder = "Hautatu erabiltzaileak..."
+signInRequired = "Hasi saioa beste pertsonei sinadurak eskatzeko."
 you = "{{name}} (Zu)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "Zure kontua identitate-hornitzaileak kudeatzen du."
 title = "Aldatu kredentzialak"
 
 [changeMetadata]
-filenamePrefix = "metadatuak"
 submit = "Aldatu"
 tags = "editatu,aldatu,eguneratu,metadata,propietateak,dokumentuaren propietateak,egilea,izenburua,gaia,gako-hitzak,sortzailea,ekoizlea,informazioa,dokumentuaren informazioa,fitxategiaren propietateak"
 
@@ -3265,6 +3258,248 @@ not_found = "Ezin izan dut eskatutako informazioa aurkitu."
 processing = "Prozesatzen ({{outcome}})..."
 unsupported_capability = "Onartzen ez den gaitasuna: {{capability}}"
 usage_limit_reached = "Zure erabilera-mugara iritsi zara. Begiratu zure plan-aukerak jarraitzeko."
+
+[checkAccessibility]
+aboutRow = "Honi buruz: {{label}}"
+checking = "Egiaztatzen..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Deskargatu irisgarritasun txostena"
+fileFailed = "huts egin du"
+pickFile = "Erakutsi emaitzak honentzat"
+submit = "Egiaztatu irisgarritasuna"
+
+[checkAccessibility.category]
+altText = "Testu alternatiboa"
+fonts = "Letra-tipoak"
+language = "Hizkuntza"
+links = "Estekak eta anotazioak"
+metadata = "Metadatuak eta ezarpenak"
+structure = "Etiketak eta egitura"
+
+[checkAccessibility.categoryTip]
+altText = "Irudiek deskribapen labur bat behar dute, pantaila-irakurleek ozen irakurtzeko."
+fonts = "Letra-tipoak fitxategian egon behar dira, karaktere bakoitza benetako testuarekin lotuta, testua ozen irakurri eta kopiatzeko moduan."
+language = "Pantaila-irakurleek dokumentuaren hizkuntza jakin behar dute ongi ahoskatzeko."
+links = "Estekek, iruzkinek eta inprimaki-eremuek etiketak eta deskribapenak behar dituzte, eta orriari jarraitzen dion fitxa-ordena bat."
+metadata = "Izenburua, PDF/UA adierazpena eta laguntza-teknologiak fitxategitik irakurtzen dituen beste ezarpen batzuk."
+structure = "Etiketek pantaila-irakurleei orri bateko zati bakoitza zer den esaten diete (izenburua, zerrenda edo taula, adibidez), eta zer ordenatan irakurri."
+
+[checkAccessibility.checks]
+label = "{{total}} egiaztapenetatik, {{passed}} gaindituta"
+
+[checkAccessibility.error]
+download = "Ezin izan da irisgarritasun txostena sortu. Saiatu berriro."
+fileTitle = "Fitxategi hau ezin izan da egiaztatu"
+partial = "Ezin izan dira fitxategi batzuk egiaztatu."
+
+[checkAccessibility.facts]
+declares = "PDF/UA adierazten du"
+displaysTitle = "Titulua erakusten du"
+fonts = "Letra-tipoak txertatuta"
+language = "Hizkuntza adierazten du"
+notEncrypted = "Zifratuta ez"
+tagged = "Etiketatuta"
+title = "Titulua du"
+
+[checkAccessibility.factTip]
+declares = "Fitxategiaren metadatuek diote PDF/UA jarraitzen duela."
+displaysTitle = "PDF irakurleek titulua erakusten dute, ez fitxategi-izena, irekitzean."
+fonts = "Testuak erabiltzen duen letra-tipo bakoitza fitxategian txertatuta dago."
+language = "Fitxategiak zein hizkuntzatan dagoen bere testua adierazten du."
+notEncrypted = "Fitxategia ez dago zifratuta. Zifratzeak laguntza-teknologiak irakurtzea eragotz dezake."
+tagged = "Fitxategiak bere egitura deskribatzen duten etiketak ditu. Horiek gabe, pantaila-irakurleek testu laua baino ez dute jasotzen."
+title = "Fitxategiak titulua du metadatuetan."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} irudik deskribapena behar du ({{pages}} orria)"
+summary_other = "{{count}} irudik deskribapena behar dute ({{pages}} orriak)"
+
+[checkAccessibility.issue]
+appliesTo = "Aplikatzen zaio"
+clauseValue = "{{spec}} §{{clause}}, proba {{test}}"
+details = "Xehetasunak"
+instances_one = "{{count}} instantzia"
+instances_other = "{{count}} instantzia"
+onPages_one = "{{pages}} orria"
+onPages_other = "{{pages}} orriak"
+onPagesPartial_one = "{{pages}} orria (zerrenda osatugabea izan daiteke)"
+onPagesPartial_other = "{{pages}} orriak (zerrenda osatugabea izan daiteke)"
+pages = "Orriak"
+pagesPartialValue = "{{pages}} (lehen agerpenek bakarrik erregistratzen dute orria; zerrenda osatugabea izan daiteke)"
+requirement = "Baldintza"
+rule = "Arau"
+standard = "Estandarra"
+where = "Non"
+
+[checkAccessibility.manual]
+clearAll = "Garbitu guztiak"
+done = "Eginda"
+inProgress = "Prozesuan"
+markAllDone = "Markatu guztiak eginda bezala"
+tip = "Pertsonak bakarrik ebalua ditzakeen gauzak, adibidez, irakurketa-ordena eta irudien deskribapenek zentzua duten ala ez. Marka ezazu bakoitza egiaztatu ondoren, eta markak deskargatutako txostenean sartuko dira."
+title = "Eskuzko egiaztapenak"
+
+[checkAccessibility.objects]
+annotation = "Anotazio bat"
+bookmark = "Laster-marka bat"
+character = "Letra-tipo bateko karaktere bat"
+contentPiece = "Orri-edukiko zati bat"
+document = "Dokumentua"
+drawing = "Marrazki bat"
+figure = "Irudi bat"
+file = "Fitxategia bera"
+font = "Letra-tipo bat"
+form = "Inprimakia"
+formField = "Inprimaki-eremu bat"
+link = "Esteka bat"
+markedContent = "Markatutako orri-edukia"
+metadata = "Dokumentuaren metadatuak"
+page = "Orri bat"
+properties = "Dokumentuaren propietateak"
+tag = "{{name}} etiketa bat"
+tagTree = "Etiketen zuhaitza"
+textPiece = "Testu-zati bat"
+translatedMetadata = "Itzulpenak dituen metadatu-sarrera bat"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (jarraipena)"
+footer = "Stirling PDF-rekin egiaztatua"
+page = "{{n}} orria"
+title = "Irisgarritasun txostena"
+
+[checkAccessibility.result]
+fail = "Huts"
+failSummary = "Pantaila-irakurleek baliteke dokumentu hau guztiz ezin irakurtzea."
+partial = "Partziala"
+partialSummary = "Pantaila-irakurleek dokumentu hau irakur dezakete, baina zenbait egiaztapenek huts egiten dute."
+pass = "Gaindituta"
+passSummary = "PDF/UA egiaztapen automatiko guztiak gainditzen ditu."
+
+[checkAccessibility.rules]
+annotationLanguage = "Iruzkin edo esteka testuak ez du hizkuntzarik ezarrita, eta pantaila-irakurleek ez dakite zein hizkuntzatan irakurri. Ezarri dokumentuaren hizkuntza hori konpontzeko."
+annotationNoDescription = "Iruzkin, esteka edo marrazki batek ez du testu-deskribapenik; beraz, pantaila-irakurleek ez dute ezer iragarriko."
+annotationNotTagged = "Iruzkin edo marrazki bat ez dago anotazio gisa etiketatuta; beraz, pantaila-irakurleek ezin dute irakur-ordenan aurkitu."
+artifactInsideTagged = "Apaingarri gisa markatutako zerbait edukia etiketatuta dagoen barruan dago, eta bai irakurri bai saltatu egiten da."
+bookmarkLanguage = "Laster-markek ez dute hizkuntzarik ezarrita, eta pantaila-irakurleek ez dakite zein hizkuntzatan irakurri. Ezarri dokumentuaren hizkuntza hori konpontzeko."
+conformancePrefix = "Metadatuetako PDF/UA adierazpenak aurrizki okerra erabiltzen du; beraz, PDF irakurleek baliteke ez ezagutzea."
+contentLanguage = "Testuak ez du hizkuntzarik ezarrita, eta pantaila-irakurleek ez dakite zein hizkuntzatan irakurri. Ezarri dokumentuaren hizkuntza hori konpontzeko."
+customTagNotMapped = "Etiketa batek izen pertsonalizatua erabiltzen du, estandar bateko etiketarekin lotu gabe; beraz, pantaila-irakurleek ez dakite zer den."
+figureNoAlt = "Irudi bat irudi gisa etiketatuta dago baina ez du deskribapenik; beraz, pantaila-irakurleek ez dakite zer erakusten duen."
+fontMissingGlyphs = "Txertatutako letra-tipo batek dokumentuak erabiltzen dituen zenbait karaktere falta ditu."
+fontNotEmbedded = "Letra-tipo bat ez dago fitxategian txertatuta; beraz, testuak bestelako itxura izan dezake edo beste ordenagailu batean desberdin irakurri."
+formFieldNotTagged = "Inprimaki-eremu bat ez dago inprimakiaren parte gisa etiketatuta; beraz, pantaila-irakurleek baliteke ez aurkitzea."
+genericHeading = "Izenburu batek H etiketa erabiltzen du, mailarik gabe. PDF/UA-2k H1etik H6ra behar ditu, erabiltzaileek izenburuen habiaratzea uler dezaten."
+glyphWidths = "Fitxategiko letra-tipo baten karaktere-zabalerek ez dute letra-tipoarekin bat egiten; beraz, testua gaizki tartekatu daiteke."
+headingSkipped = "Izenburu-mailak urrats bat saltzen dute, adibidez, 1. izenburutik zuzenean 3. izenburura, eta horrek izenburuen arteko nabigazioa nahastu egiten du."
+linkNoDescription = "Esteka batek ez du deskribapenik; beraz, pantaila-irakurleek bere helbidea soilik irakur dezakete, edo ezer ez."
+linkNotTagged = "Esteka bat ez dago esteka gisa etiketatuta; beraz, pantaila-irakurleek ez dute halakotzat iragarriko."
+metadataLanguage = "Metadatuek, adibidez titulua, ez dute hizkuntzarik ezarrita; beraz, pantaila-irakurleek ez dakite zein hizkuntzatan irakurri. Ezarri dokumentuaren hizkuntza hori konpontzeko."
+noConformanceClaim = "Fitxategiak ez du esaten PDF/UA jarraitzen duenik. Metadatuek PDF/UA identifikazio sarrera bat behar dute."
+noDocumentTag = "Etiketei goian Dokumentu etiketa bakarra behar zaie, gainerakoa haren barruan."
+noLanguage = "Dokumentuak ez du zein hizkuntzatan dagoen adierazten; beraz, pantaila-irakurleek okerreko hizkuntzan irakur dezakete."
+noMetadataStream = "Fitxategiak ez du XMP metadaturik, eta hor dago gordeta PDF/UAren titulua eta egokitasunaren xehetasunak."
+noTags = "Fitxategiak ez du inolako etiketarik; beraz, pantaila-irakurleek ez dituzte izenburuak, paragrafoak, zerrendak edo taulak bereizten, ezta orden egokian irakurtzen ere."
+notdefGlyph = "Testuak \"karaktere faltaren\" leku-marka erabiltzen du, hutsune edo laukizuzen gisa erakusten dena eta ezin dena ozen irakurri."
+noteTag = "Fitxategiak Note etiketa erabiltzen du, eta PDF/UA-2k FENote erabiltzen du oin-oharrentzat eta amaiera-oharrentzat."
+noTitle = "Dokumentuak ez du titulurik metadatuetan."
+notMarkedTagged = "Fitxategia ez dago etiketatuta bezala markatuta; beraz, laguntza-teknologiek baliteke dituen etiketak ez aintzat hartzea."
+notPdf2Tags = "PDF/UA-2k PDF 2.0 fitxategiek erabiltzen dituzten etiketak behar ditu. Hauek PDF 1.7 etiketak dirudite; horrek normalean esan nahi du fitxategia PDF/UA-1erako etiketatuta dagoela."
+noUnicode = "Zenbait karaktere ezin dira testu irakurgarri bihurtu; beraz, pantaila-irakurleek eta kopiatu/itsatsi egiteak akatsak izan ditzakete."
+replacementTextLanguage = "Ordezko testu batzuek ez dute hizkuntzarik ezarrita, eta pantaila-irakurleek ez dakite zein hizkuntzatan irakurri. Ezarri dokumentuaren hizkuntza hori konpontzeko."
+standardTagRemapped = "Estandar bateko etiketa bat etiketa pertsonalizatu batera birbideratuta dago; beraz, pantaila-irakurleek haren esanahia galtzen dute."
+symbolicEncoding = "Ikur-letra-tipo batek ez lukeen kodeketa darama; beraz, karaktereak letra oker gisa atera daitezke."
+tabOrder = "Estekak edo iruzkinak dituen orri batek ez du fitxa-ordena dokumentuari jarraitzeko ezartzen; beraz, teklatu-erabiltzaileak orrian zehar saltoka ibil daitezke."
+taggedInsideArtifact = "Eduki etiketatua apaingarri gisa markatutako zerbaiten barruan dago; beraz, pantaila-irakurleek baliteke saltatzea."
+titleNotDisplayed = "PDF irakurleek fitxategi-izena erakutsiko dute dokumentuaren titulua beharrean. Fitxategiak \"display document title\" ezarpena aktibatuta izan behar du."
+untaggedContent = "Orriko zerbait ez dago ez eduki gisa etiketatuta ez apaingarri gisa markatuta; beraz, pantaila-irakurleek ezin dute jakin irakurri behar den ala ez. Maiz, atzeko planoan dagoen irudia, goiburua, orri-oina edo orri-zenbakia da."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Iruzkin edo estekentzat hizkuntzarik ez"
+annotationNoDescription = "Iruzkin, esteka edo marrazkia deskribapenik gabe"
+annotationNotTagged = "Iruzkin edo marrazkia etiketatu gabe"
+artifactInsideTagged = "Apaingarria edukia etiketatuta dagoenean barruan"
+bookmarkLanguage = "Laster-marketarako hizkuntzarik ez"
+conformancePrefix = "PDF/UA adierazpena gaizki idatzita"
+contentLanguage = "Testuarentzako hizkuntzarik ez"
+customTagNotMapped = "Estandar esanahirik gabeko etiketa pertsonalizatua"
+figureNoAlt = "Irudia deskribapenik gabe"
+fontMissingGlyphs = "Letra-tipoak karaktereak falta ditu"
+fontNotEmbedded = "Letra-tipoa txertatu gabe"
+formFieldNotTagged = "Inprimaki-eremua etiketatu gabe"
+genericHeading = "Mailarik gabeko izenburua"
+glyphWidths = "Letra-tipoaren karaktere-zabalek ez dute bat egiten"
+headingSkipped = "Izenburu-maila saltatuta"
+linkNoDescription = "Esteka deskribapenik gabe"
+linkNotTagged = "Esteka etiketatu gabe"
+metadataLanguage = "Metadatuentzako hizkuntzarik ez"
+noConformanceClaim = "Ez du PDF/UA adierazten"
+noDocumentTag = "Etiketek ez dute Dokumentu etiketarekin hasten"
+noLanguage = "Dokumentu-hizkuntzarik ez"
+noMetadataStream = "XMP metadaturik ez"
+noTags = "Etiketarik ez"
+notdefGlyph = "Karaktere-faltaren leku-marka erabilita"
+noteTag = "Note etiketa erabiltzen da"
+noTitle = "Dokumentu-izenbururik ez"
+notMarkedTagged = "Ez dago etiketatuta bezala markatuta"
+notPdf2Tags = "Etiketak ez dira PDF 2.0 etiketak"
+noUnicode = "Testu gisa irakurtzerik ez duten karaktereak"
+replacementTextLanguage = "Ordezko testuarentzako hizkuntzarik ez"
+standardTagRemapped = "Etiketa estandarra pertsonalizatu bihurtua"
+symbolicEncoding = "Ikur letra-tipoak kodeketa okerra du"
+tabOrder = "Fitxa-ordena ez da dokumentuari jarraitzen"
+taggedInsideArtifact = "Edukia apaingarri gisa ezkutatuta etiketatuta egon arren"
+titleNotDisplayed = "Irekitzean titulua ez da erakusten"
+untaggedContent = "Etiketarik gabeko edukia"
+
+[checkAccessibility.score]
+issues_one = "{{count}} arazo"
+issues_other = "{{count}} arazo"
+noIssues = "Ez da arazorik aurkitu"
+subtitle_one = "{{profile}} - orrialde {{count}}"
+subtitle_other = "{{profile}} - {{count}} orrialde"
+
+[checkAccessibility.sections]
+breakdown = "Banaketa"
+
+[checkAccessibility.status]
+checking = "Egiaztatzen {{current}} / {{total}}..."
+complete = "Egiaztapena osatuta"
+
+[checkAccessibility.steps]
+results = "Emaitzak"
+standard = "Estandarra"
+
+[checkAccessibility.tooltip.header]
+title = "Zein estandar egiaztatu"
+
+[checkAccessibility.tooltip.ua1]
+text = "PDF/UAren lehen bertsioa, 2012an argitaratua ISO 14289-1 gisa, PDF 1.7 fitxategientzat."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "Bertsio berriena, 2024an argitaratua ISO 14289-2 gisa, PDF 2.0 fitxategientzat. PDF 1.7 fitxategi bat haren aurka egiaztatzeak PDF 2.0ri soilik aplikatzen zaizkion arauak ez gainditzea eragingo du."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "{{n}} anotazioa"
+bookmarks = "Laster-markak"
+character = "Karaktere bat {{font}} letra-tipon"
+contentItem = "{{n}} edukia"
+drawingStep = "{{n}} marrazketa-urratsa"
+embeddedGraphic = "Txertatutako grafikoa"
+font = "{{name}} letra-tipoa"
+metadata = "Dokumentuaren metadatuak"
+page = "{{n}} orria"
+piece = "{{n}} zatia"
+tag = "{{tag}} etiketa"
+tagTree = "Etiketen zuhaitza"
+wholeDocument = "Dokumentu osoa"
+
+[checkAccessibility.where.properties]
+author = "Egilea"
+description = "Deskribapena"
+pdfUaPart = "PDF/UA zatia"
+title = "Titulua"
 
 [classification.families]
 correspondence = "Korrespondentzia"
@@ -3729,6 +3964,10 @@ message = "Eman diren dokumentuetako bat edo biak handiegiak dira prozesatzeko"
 body = "PDF hauek elkarrekin 2,000 orri gainditzen dituzte. Prozesatzeak minutu batzuk har ditzake."
 title = "Konparazio handia lantzen"
 
+[compare.mode]
+pixel = "Pixel konparazioa"
+text = "Testu konparazioa"
+
 [compare.no.text]
 message = "Hautatutako PDFetako batek edo biek ez dute testurik. Mesedez, aukeratu testua duten PDFak konparaziorako."
 
@@ -4046,6 +4285,30 @@ failed = "Zure saio-hasiera ezin izan da berritu. Saiatu berriro, edo baztertu o
 lead = "Zerbitzari hau dagoeneko zure kontuarekin lotuta dago. Berritu saio-hasiera zure zerbitzariko fakturaziora eta erabilerara itzultzeko."
 title = "Berritu zure zerbitzariaren saio-hasiera"
 
+[connectedAccounts]
+connect = "Konektatu"
+connectAnother = "Konektatu beste bat"
+connectFailed = "Kontua ezin izan da konektatu. Egiaztatu zerbitzariaren aplikazio-erregistroa ongi konfiguratuta dagoela eta saiatu berriro."
+disconnect = "Deskonektatu"
+google = "Google Drive"
+intro = "Konektatu zure kontuak behin. Ondoren, zure pipelineek haietatik irakurri eta haietan gorde ahal izango dute, zure izenean."
+microsoft = "Microsoft (OneDrive eta SharePoint)"
+needsReconnect = "Stirlingek ezin du gehiago kontu honetara iritsi; beraz, hura erabiltzen duten pipelineak pausatuta daude."
+none = "Zure administratzaileak ez ditu kontu konektatuak gaitu."
+personal = "Kontu pertsonala"
+popupBlocked = "Zure arakatzaileak saio-hasierako leihoa blokeatu du. Baimendu leihatila gainerakorrak gune honetarako eta saiatu berriro."
+reconnect = "Hasi saioa berriro"
+work = "Laneko kontua"
+
+[connectedAccounts.disconnectConfirm]
+body = "Kontu hau erabiltzen duten iturriak eta pipelineak gelditu egingo dira berriro konektatu arte."
+confirm = "Deskonektatu"
+title = "Deskonektatu {{account}}?"
+
+[connectedAccounts.status]
+connected = "Konektatuta"
+needsSignIn = "Saio-hasiera behar du"
+
 [convert]
 autoRotate = "Biraketa automatikoa"
 autoRotateDescription = "Automatikoki biratu irudiak PDF orrialdera hobeto doitzeko"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Dokumentuaren izenburua"
 pdfUaTitleHelp = "Irakurle batek fitxategi-izenaren ordez erakutsiko du. Hutsik utziz gero, lehen goiburua erabiliko da."
 selectSourceFormatFirst = "Aukeratu lehenik jatorri-formatu bat"
 settings = "Ezarpenak"
+signInToUse = "Erabiltzeko hasi saioa"
 single = "Bakarra"
 sourceFormatPlaceholder = "Iturburu formatua"
-stirlingOfficeConvert = "Erabili Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Bihurketa hobeak eta azkarragoak, memoria gutxiagorekin. Desaktibatu bihurgailu estandarra erabiltzeko."
 strictMode = "Modu zorrotza"
 strictModeDesc = "Errorea bihurketa perfektua ez bada (VeraPDF egiaztapena erabiltzen du)"
 svgPdfOptions = "SVGtik PDFra aukerak"
@@ -4134,8 +4396,6 @@ webOptions = "Webetik PDFra aukerak"
 zoomLevel = "Zoom maila"
 
 [convert.ebookOptions]
-embedAllFonts = "Txertatu letra-tipo guztiak"
-embedAllFontsDesc = "Txertatu eBookeko letra-tipo guztiak sortutako PDFan"
 includePageNumbers = "Sartu orrialde-zenbakiak"
 includePageNumbersDesc = "Gehitu orrialde-zenbakiak sortutako PDFari"
 includeTableOfContents = "Sartu aurkibidea"
@@ -4648,6 +4908,17 @@ title = "Ezarpenak"
 [extractPages.tooltip]
 description = "Hautatutako orrialdeak PDF berri batean erauzten ditu, ordena mantenduz."
 
+[feedback.page]
+open = "Bidali Feedback-a"
+sendMore = "Bidali Feedback gehiago"
+sent = "Eskerrik asko zure feedbackagatik"
+title = "Lagundu Stirling hobetzen"
+unavailable = "Feedback-a ez dago erabilgarri"
+
+[feedback.tag]
+dismiss = "Ezkutatu feedback botoia"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "Ireki Fitxategi-editorean"
 viewInViewer = "Ikusi Ikustailean"
@@ -4657,7 +4928,6 @@ closeFile = "Itxi fitxategia"
 
 [fileEditor]
 closedFile = "{{name}} itxita"
-couldNotSave = "Ezin izan da {{name}} gorde"
 filesReordered_one = "Fitxategia berrordenatu da"
 filesReordered_other = "{{count}} fitxategi berrordenatu dira"
 loadedFromStorage_one = "Fitxategi {{count}} biltegiratzetik kargatu da"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "PDF liburutegia"
 myFiles = "Fitxategi-liburutegia"
 noFiles = "Oraindik ez dago fitxategirik"
+oneDrive = "Ireki OneDrive-tik"
+oneDriveFailed = "Ezin izan da OneDrive ireki"
 openFileManager = "Arakatu fitxategi eta karpeta guztiak"
 openFromComputer = "Ireki ordenagailutik"
 openSettings = "Ireki ezarpenak"
@@ -4804,6 +5076,17 @@ searchFiles = "Bilatu fitxategiak"
 uploadFailedBody = "Ezin izan dira hautatutako fitxategiak gehitu."
 uploadFailedTitle = "Kargatzeak huts egin du"
 viewAll = "Ikusi {{count}} fitxategi guztiak"
+
+[fileSidebar.clearRecents]
+body_one = "Garbitu 1 fitxategi azkenetatik? Ezin da desegin."
+body_other = "Garbitu {{count}} fitxategi azkenetatik? Ezin da desegin."
+button = "Garbitu azkenak"
+confirm = "Garbitu azkenak"
+error = "Ezin izan da garbitu. Saiatu berriro."
+openNote_one = "Horietako 1 irekita dago lan-mahaian."
+openNote_other = "Horietako {{count}} irekita daude lan-mahaian."
+skipOpen = "Saltatu irekita dauden fitxategiak"
+title = "Azkenak garbitu?"
 
 [fileSidebar.fileItem]
 closeViewer = "Itxi ikustailea"
@@ -5124,6 +5407,7 @@ diskFileHint = "Zure ordenagailuan gordeta"
 diskHint = "Zure diskoko muntatutako karpetako fitxategia"
 local = "Tokikoa"
 localHint = "Babeskopiarik gabe"
+oneDrive = "OneDrive"
 shared = "Partekatuak"
 sharedHint = "Zurekin estekaz partekatuta"
 
@@ -5672,6 +5956,11 @@ title = "Aldatu metadatuak"
 desc = "Aldatu dokumentuaren murrizketak eta baimenak"
 tags = "baimenak,murrizketak,eskubideak,sarbide-kontrola,baimendu,ukatu,inprimatzea,kopiatzea,editatzea,aldatu baimenak,segurtasun-ezarpenak,erabiltzaile-eskubideak"
 title = "Aldatu baimenak"
+
+[home.checkAccessibility]
+desc = "Baloratu PDF bat PDF/UAren arabera eta ikusi pantaila-irakurleek zer oztopo dituzten, aldaketarik egin gabe"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Egiaztatu PDFaren irisgarritasuna"
 
 [home.classify]
 desc = "Identifikatu zer dokumentu mota den eta etiketatu."
@@ -6521,6 +6810,32 @@ quickAccess = "Hasi <strong>Sarbide azkarraren</strong> errailean Irakurlearen, 
 topBar = "Goiko barrak <strong>Ikustaile</strong>, <strong>Orrialde-editorea</strong> eta <strong>Fitxategi aktiboak</strong> artean aldatzeko aukera ematen du."
 wrapUp = "Hori da V2ko berritasuna. Ireki <strong>Ibilbideak</strong> menua edozein unetan hau, Tresnen ibilbidea edo Administratzailearen ibilbidea berriro ikusteko."
 
+[oneDriveSave]
+chooseFolder = "Aukeratu OneDrive-ko karpeta bat kargatzeko"
+conflict = "Fitxategi hau OneDrive-n aldatu da bertsio hau ireki edo gorde zenetik. Gorde zure bertsioa kopia gisa."
+failedTitle = "Ezin izan da OneDrive-n gorde"
+fromOneDrive = "OneDrive-tik"
+linkNotStored = "Nabigatzaile honek ezin izan du OneDrive-ko fitxategiaren esteka gogoratu. Orria berriro kargatu ondoren, gorde kopia gisa."
+missing = "Fitxategi hau OneDrive-n mugitu edo ezabatu da. Gorde zure bertsioa kopia gisa."
+open = "Ireki OneDrive-n"
+personalUnsupported = "OneDrive-ra kargatzeko laneko edo ikastetxeko Microsoft kontua behar da."
+reconnect = "Konektatu berriro"
+replaces = "{{name}} ordezten du"
+saveCopyToOneDrive = "Gorde kopia bat OneDrive-n"
+saved = "OneDrive-n gordeta"
+saving = "OneDrive-n gordetzen..."
+signInToSave = "Hasi saioa zure zerbitzarian OneDrive-n gordetzeko."
+updateOriginal = "Eguneratu OneDrive-n"
+uploadToOneDrive = "Kargatu OneDrive-ra..."
+
+[oneDriveSave.status]
+saved = "OneDrive-n gordeta"
+unsaved = "Aldaketak oraindik ez daude OneDrive-n gordeta"
+
+[oneDriveSave.toolbar]
+replace = "Eguneratu {{name}} OneDrive-n"
+saveAll = "Eguneratu guztiak OneDrive-n"
+
 [overlay-pdfs]
 desc = "Gainjarri PDF bat beste baten gainean"
 submit = "Bidali"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Bihar berrezartzen da"
 thisPeriod = "Fakturazio-aldi hau"
 
 [payment]
+annually = "Urtero"
 billingPeriod = "Fakturazio-aldia"
 cancelTeamChange = "Mantendu uneko plana"
 canCloseWindow = "Orain leiho hau itxi dezakezu."
@@ -7157,11 +7473,14 @@ title = "Doitu Team plana"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe-k kargu zehatza, hainbanaketak eta hurrengo fakturazio-data erakutsiko ditu baieztatu aurretik. Gordetako ordainketa-metodoa erabiliko da erabilgarri badago."
+billingLabel = "Fakturazioa"
 continue = "Jarraitu ordainketara"
 currencyAtCheckout = "Stripe-k azken zenbatekoa eta ordainketaren moneta baieztatzen ditu ordainketa amaitzean."
+custom = "Pertsonalizatua"
 customLabel = "Erabiltzaile kopurua"
 dueToday = "Gaur ordaindu beharrekoa"
 enterpriseQuote = "Eskatu enpresa-aurrekontua"
+enterUsers = "Sartu erabiltzaile kopuru bat."
 estimatedTotal = "Zenbatetsitako guztizkoa"
 lineItem = "Team · {{price}}{{period}} {{block}} erabiltzaileko"
 minimumForCurrentUsers = "{{users}} erabiltzaile dituzu; beraz, planak gutxienez {{minimum}} estali behar ditu."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Lehendik dauden kontuak bere horretan geratuko dira. 
 overCapacityTitle = "Zure zerbitzariak zure planak estaltzen duena baino erabiltzaile gehiago ditu"
 perMonth = "/hil"
 perYear = "/urte"
+planName = "Stirling Team"
 reductionNote = "Edukiera txikiagoa hurrengo berritzean hasiko da. Ordura arte, zure uneko muga erabil dezakezu. Lehendik dauden erabiltzaileak geratuko dira; erabiltzaile berriak blokeatuko dira aldaketa indarrean sartzean edukieratik gora bazaude."
 renewalNote = "{{total}}{{period}} prezioan berrituko da. Edonoiz bertan behera utzi Erabilera eta fakturazioa atalean."
 reviewChange = "Berrikusi aldaketa Stripe-n"
-roundsTo = "{{users}} erabiltzailetara biribiltzen da"
+roundsUp = "Gorantz biribildu: {{users}} erabiltzaile."
+selfServeLimit = "Hemen, gehienez {{users}} erabiltzaile."
 subheading = "Gonbidatzen dituzun guztiak estaltzen ditu, {{users}} erabiltzaileko bloketan."
 subheadingAdd = "Zure planak {{current}} erabiltzaile estaltzen ditu gaur. Aukeratu guztizko berria."
+talkToEnterprise = "Gehiagorako, hitz egin gurekin Enterprise-ri buruz."
+usersCovered = "estalitako erabiltzaileak"
 usersLabel = "Erabiltzaileak"
 userTotal = "{{users}} erabiltzaile"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Aplikatu aldaketak zure lan-eremuko fitxategiari ({{shortcut}})"
 tags = "editatu testua,aldatu testua,aldatu testua,editatu edukia,eguneratu testua,berridatzi,zuzendu,emendatu,redline,berrikusi,testu-editorea,eduki-editorea"
 title = "PDF testu-editorea"
 unsaved = "(gorde gabe)"
-workbenchLabel = "Editorea"
 
 [pdfTextEditor.annotations]
 freetext = "Ohar-testua - ez da orri-testua, beraz ezin da hemen editatu"
@@ -7261,12 +7583,18 @@ widget = "Inprimaki-eremua - ez da orri-testua, beraz ezin da hemen editatu"
 
 [pdfTextEditor.commands]
 edit = "Editatu"
+markTagged = "Markatu erabat etiketatuta bezala"
+matchScanFont = "Parekatu eskaner bidezko testua {{face}}(r)ekin"
 mergeRuns_one = "Bateratu {{count}} run paragrafo batean"
 mergeRuns_other = "Bateratu {{count}} run paragrafo batean"
 setColour = "Ezarri kolorea {{run}}-n"
 setOutline = "Ezarri outline {{run}}-n"
+tagFormField = "Etiketatu inprimaki-eremua"
+tagLink = "Etiketatu esteka"
+tagPageContent = "Auto-etiketatu orria"
 typeInto = "Idatzi {{run}}-n"
 ungroupParagraph = "Desmultzokatu {{run}} paragrafoa"
+unmarkTagged = "Markatu ez erabat etiketatuta bezala"
 wrap = "Egokitu {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Baztertu eta ireki"
 hint = "Utzi, eta ondoren Gorde PDFa lehenik zure lan-eremuan mantentzeko."
 title = "Baztertu gorde gabeko aldaketak?"
 
-[pdfTextEditor.drop]
-hint = "Editoreko eremuan askatutakoek irekita dagoen edozein dokumentu ordezkatzen dute."
-title = "Jaregin PDF bat irekitzeko"
-
 [pdfTextEditor.error]
 decodeImage = "Ezin izan da hautatutako irudia deskodetu."
+duplicateDropsLetters = "Ezin da testu hau bikoiztu: ez dago hizki guztiak marrazten dituen letra-tipo erabilgarririk."
+formLiftChangesDrawing = "Ezin da hau editatu: talde baten parte gisa marraztuta dago, eta bere mozketa edo grafika ezarpenak editoreak ezin ditu mantendu aldatzean."
 insertImage = "Ezin izan da hautatutako irudia txertatu."
+needsShaping = "Editoreak oraindik ezin ditu idazkera honetako elkartutako hizkiak eta bokal-markak behar bezala marraztu; beraz, aldaketa hau ez da egin."
+replaceClippedImage = "Ezin da irudi hau ordezkatu: moztuta dago, eta ordezkoak mozketa ezkutatzen dituen zatiak erakutsiko lituzke."
+scanOffInk = "Ezin da testu hau editatu: aitortutako hitzak ez datoz bat eskanerrarekin. Exekutatu berriro OCR."
+unsafeRtlEdit = "Ezin da edizio hau egin: editoreak ezin du lerro honetako eskuinetik ezkerrera doan testua berriro marraztu hura aldatu gabe."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG irudia"
@@ -7304,15 +7634,42 @@ wholeWord = "Hitz osoa"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Letra-tipo integratuak"
+closestMatch = "Letra-tipo honek hautatutako hizki batzuk falta ditu; beraz, gehien bat datorren letra-tipoarekin marraztu dira."
 deviceFontsNone = "Ez da gailuko letra-tipo gehigarririk aurkitu."
 deviceFontsUnavailable = "Gailuko letra-tipoak ez daude erabilgarri. Letra-tipo integratuek funtzionatzen jarraitzen dute."
 deviceGroup = "Gailuko letra-tipoak"
+documentFontCannotDraw = "Editoreak ezin du testu hau dokumentuaren beraren letra-tipoan marraztu; beraz, uneko letra-tipuan utzi da."
 documentGroup = "Dokumentuaren letra-tipoa"
+embeddingForbidden = "Letra-tipo honen lizentziak ez du baimentzen PDF batean txertatzea. Testua bere horretan utzi da."
+embedFailed = "Letra-tipo hau ezin izan da PDFan txertatu. Testua bere horretan utzi da."
+includedGroup = "Txertatutako letra-tipoak"
 label = "Letra-tipo familia"
+matchedGroup = "Parekatu den letra-tipoa"
+missingGlyphs = "Letra-tipo honek hautatutako karaktere batzuk falta ditu, eta ezin izan dira uneko letra-tipuan mantendu. Testua aldatu gabe utzi da."
 mixed = "Mistoa"
+needsShaping = "Editoreak oraindik ezin ditu idazkera honetako elkartutako hizkiak eta bokal-markak behar bezala berriro marraztu; beraz, testua uneko letra-tipuan utzi da."
+noGlyphs = "Letra-tipo honek ez du aukeratutako testurako karaktererik. Testua bere horretan utzi da."
 noMatch = "Ez dago bat datorren letra-tiporik"
+partOfRunUnsupported = "Testu hau osoa berriz estiliza daiteke soilik. Hautatu koadroa, ez hitz batzuk bakarrik."
 placeholder = "Letra-tipo familia"
+scannedText = "Eskaneatutako testua"
+serverFontFailed = "Zerbitzariko letra-tipo hori ezin izan da deskargatu. Testua bere horretan utzi da."
+serverGroup = "Zerbitzariko letra-tipoak"
+someLeftUnchanged = "Letra-tipo honek ez ditu hautatutako testuaren zenbait karaktere; testu hori aldatu gabe utzi da."
+styleSkipped = "Hautatutako testuaren zati batzuek ez dute letra-tiporen bertsiorik estilo horretan; beraz, aldatu gabe utzi dira."
+styleUnavailable = "Hautatutako testuak ez du letra-tiporen bertsiorik estilo horretan; beraz, aldatu gabe utzi da."
 useDeviceFonts = "Erabili gailuko letra-tipoak"
+weight = "Letra-tipoaren lodiera"
+weightBlack = "Beltza"
+weightBold = "Lodia"
+weightExtraBold = "Oso lodia"
+weightExtraLight = "Oso arina"
+weightLight = "Arina"
+weightMedium = "Ertaina"
+weightNumber = "Lodiera {{weight}}"
+weightRegular = "Arrunta"
+weightSemibold = "Erdi lodia"
+weightThin = "Mehea"
 
 [pdfTextEditor.fonts]
 allPresent = "Letra eta zenbaki guztiak daude"
@@ -7357,6 +7714,7 @@ helpDesc = "Laguntza hau"
 saveDesc = "Gorde zure lan-eremuan"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Lodia / Etzana, hautatutako hitzetarako edo koadro osoarentzat"
 deleteDesc = "Kendu hautatutakoa"
 duplicateDesc = "Bikoiztu hautatutakoa"
 groupDesc = "Taldekatu hautatutako exekuzioak paragrafo bakarrean"
@@ -7380,8 +7738,12 @@ zoomDesc = "Zooma handitu / txikitu"
 
 [pdfTextEditor.inspector]
 document = "Dokumentua"
+fontCompletedClosest = "Txertatutako letra-tipoa · falta zaizkion karaktereak {{name}}(e)kin marrazten dira, hurbileneko parekatzea."
+fontCompletedOriginal = "Txertatutako letra-tipoa · falta zaizkion karaktereak {{name}}(e)kin marrazten dira, letra-tipo bera."
 fontEmbedded = "Txertatutako letra-tipoa · falta zaion karaktere bat Helveticara aldatzen da."
 fontGap = "{{name}} · {{glyphs}} falta dira - horiek idaztean Helveticara aldatzen da."
+fontUnknownCoverage = "{{name}} · falta duen karaktere bat ordezko gisa {{fallback}}(e)ra doa."
+formField = "Inprimaki-eremua"
 geometry = "Kokapena eta tamaina"
 height = "Altuera"
 heightHint = "Testu-koadro baten altuerak bere letra-tamaina eta lerro kopurua jarraitzen ditu."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR ez dago erabilgarri zerbitzari honetan."
 oneImage = "Irudia"
 oneShape = "Forma"
 oneText = "Testua"
+outlinedTextHint_one = "Orrialde honetako testua formetan marraztuta dago; beraz, ez dago editatzeko testurik. Lehenik exekutatu OCR editagarria izan dadin."
+outlinedTextHint_other = "{{count}} orrialdetan testua formetan marraztuta dago; beraz, ez dago editatzeko testurik. Lehenik exekutatu OCR editagarria izan dadin."
 pages = "Orriak"
 runOcr = "Exekutatu OCR"
 scanHint_one = "Orrialde hau eskaneatutako irudi bat da, editatzeko testurik gabe. Exekutatu OCR lehenik haren testua editagarri egiteko."
 scanHint_other = "{{count}} orrialde eskaneatutako irudiak dira, editatzeko testurik gabe. Exekutatu OCR lehenik haien testua editagarri egiteko."
 scannedText = "Eskaneatutako testua · aldatutako hitzak estali eta bat datorren letra-tipo batean berriro marrazten dira."
+scannedTextMisaligned = "Eskaneatutako testua · aitortutako hitzak ez datoz bat eskanerrarekin; beraz, bloke hau ezin da editatu edo ezabatu."
+scannedTextNoFont = "Eskaneatutako testua · oraindik ezin dira karaktereak marraztu script honetan; beraz, ez dira mantentzen. Hitzak ezabatzea oraindik funtzionatzen du."
+scannedTextOffInk = "Eskaneatutako testua · aitortutako hitzak eskaneatutakoen gainetik kanpo daude; beraz, bloke hau ezin da editatu. Exekutatu berriro OCR."
 tabDocument = "Dokumentua"
 tabSelected = "Hautatuta"
 textBoxes = "Testu-koadroak"
+unreadPagesHint = "{{count}} orrialdek ez dute editatzeko testurik: batzuk eskaneatutako irudiak dira eta beste batzuek testua formetan marrazten dute. Lehenik exekutatu OCR editagarri egiteko."
 width = "Zabalera"
 widthHint = "Testua berriro egokitzen da zabalerara moldatzeko."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Gehitu etiketa"
+applyToOtherPages_one = "Aplikatu beste {{count}} orriri"
+applyToOtherPages_other = "Aplikatu beste {{count}} orriri"
+artifactGroup = "Pantaila-irakurleek saltatzen dute"
 artifactText = "Apaingarria"
 cannotChange = "Irudi honen irisgarritasuna ezin da aldatu."
+cannotDescribeFormField = "Inprimaki-eremu honen deskribapena ezin da aldatu."
+cannotDescribeLink = "Esteka honen deskribapena ezin da aldatu."
 cannotRetag = "Testu honen etiketa ezin da aldatu."
+cannotSetDecorative = "Ezin da apaingarri gisa markatu edo desmarkatu."
+cannotTagFormField = "Inprimaki-eremu hau ezin da etiketatu."
+cannotTagLink = "Esteka hau ezin da etiketatu."
+cannotTagPage = "Orri honen edukia ezin da etiketatu."
+contentGroup = "Edukia"
 customTag = "{{role}} (etiketa pertsonalizatua)"
 decorativeInfo = "Pantaila-irakurgailuek irudi apaingarriak saltatzen dituzte. Erabili ertzetarako, atzeko planoetarako eta informaziorik ematen ez duten beste irudietarako."
 decorativeLabel = "Irudi apaingarria"
 description = "Irudiaren deskribapena"
 descriptionInfo = "Pantaila-irakurgailuek hau irakurtzen dute irudiaren ordez."
 encrypted = "Etiketak ezin dira editatu fitxategi zifratu batean"
+figureDescription = "Irudiaren deskribapena"
+figureDescriptionInfo = "Pantaila-irakurgailuek hau ozen irakurtzen dute irudiaren ordez."
+formFieldDescription = "Eremuaren deskribapena"
+formulaDescription = "Formularen deskribapena"
+formulaDescriptionInfo = "Pantaila-irakurgailuek hau ozen irakurtzen dute formulen ordez. Ahoz esango zenukeen bezala idatzi, adibidez, \"x karratu gehi bat\"."
 heading = "Irisgarritasuna"
 innerTagLabel = "{{number}} etiketa"
 innerTags = "Testu honetako etiketak"
+linkDescription = "Estekaren deskribapena"
+markedTagged = "Dokumentua erabat etiketatuta dago"
+markedTaggedHint = "PDF irakurleei irisgarritasun etiketak erabiltzeko esaten die. Markatu dena etiketatuta dagoenean."
+markedWithUntagged = "Zenbait edukik ez dute etiketarik; beraz, pantaila-irakurleek baliteke saltatzea."
 missingDescriptions = "Deskribapenak falta dira"
 mixedContent = "Irudiak beste eduki bat dauka"
+mixedTags = "Nahasia"
 needsDescriptionBadge = "Deskribapenik gabe"
-nextImage = "Hurrengo irudia"
+nextToReview = "Berrikusteko hurrengoa"
 notFigure = "Testuaren zati gisa etiketatuta"
 removeTag = "Kendu etiketa"
 saveFailed = "Zure irisgarritasun-aldaketak ezin izan dira gorde; beraz, fitxategia ez da gorde. Desegin aldaketak eta saiatu berriro."
 selectedText = "Hautatutako testua"
+tagFormField = "Etiketatu inprimaki-eremua"
+tagging = "Orrialdeak etiketatzen"
 tagLabel = "Etiketa"
+tagLinks_one = "Etiketatu esteka"
+tagLinks_other = "Etiketatu {{count}} esteka"
+tagUntagged = "Auto-etiketatu dokumentua"
+tagUntaggedHint = "Automatikoki gehitzen ditu irisgarritasun etiketak dokumentu osoan. Emaitza gordina da: egiaztatu ondoren izenburuak, zerrendak eta irakurketa-ordena."
 unknownTag = "Ezin da hemen irakurri"
+unmarkedWithTags = "Zenbait PDF ikuslek etiketak hala ere erabiliko dituzte eta etiketarik gabeko edukia salto dezakete."
 unreadable = "Fitxategi honen etiketak ezin dira editatu"
 untaggableImages = "Ezin da hemen etiketatu"
 untaggedBadge = "Etiketatu gabe"
 untaggedDocument = "Dokumentuak ez du etiketarik"
 untaggedImage = "Ezin da hemen etiketatu"
 untaggedImages = "Etiketatu gabeko irudiak"
+untaggedPages = "Etiketatzeko orriak"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Orri-oina"
+header = "Goiburua"
+pageNumber = "Orri-zenbakia"
+watermark = "Ur-marka"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Testurik gabeko izenburua"
@@ -7505,6 +7907,23 @@ tableHeader = "Taulako goiburua"
 tableRow = "Taulako errenkada"
 title = "Titulua"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Hizkuntza guztiak"
+cannotSetDocument = "Dokumentu honen hizkuntza ezin da aldatu."
+cannotSetText = "Testu honen hizkuntza ezin da aldatu."
+documentHint = "Pantaila-irakurleek erabiliko duten hizkuntza, testu-zati batek berea ezartzen ez badu."
+documentLabel = "Hizkuntza"
+documentLocked = "Zifratutako dokumentu baten hizkuntza ezin da hemen aldatu."
+inDocument = "Dokumentu honetan"
+innerLabel = "{{number}} etiketaren hizkuntza"
+label = "Hizkuntza"
+missing = "Ez da hizkuntzarik ezarri. Pantaila-irakurleek asmatuko dute, eta baliteke dokumentu osoa ahots okerrean irakurtzea."
+mixed = "Nahasia"
+noMatch = "Ez dago bat datorren hizkuntzarik. Idatzi bere kodea, adibidez mt edo en-IE."
+placeholder = "Hautatu hizkuntza"
+selectedText = "Hautatutako testuaren hizkuntza"
+textHint = "Pantaila-irakurleek ahotsa eta ahoskera hizkuntza honetara aldatzen dituzte."
+
 [pdfTextEditor.mobile]
 actions = "Editorearen ekintzak"
 addImage = "Irudia"
@@ -7517,7 +7936,6 @@ done = "Eginda"
 download = "Gorde eta deskargatu"
 find = "Bilatu"
 lock = "Blokeatu"
-openPdf = "Ireki PDF bat"
 panelHint = "Editatzea Workspace ikuspegian egiten da. Ukitu orrialdeko testua aldatzeko."
 save = "Gorde"
 style = "Estiloa"
@@ -7525,7 +7943,6 @@ tapToPlace = "Ukitu orrialdea testua jarri behar den tokian"
 unlock = "Desblokeatu"
 
 [pdfTextEditor.pageView]
-pageNumber = "{{page}}. orria"
 renderFailed = "Ezin izan da orria errendatu"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Erregela bertikala"
 
 [pdfTextEditor.run]
 lockedTitle = "Blokeatuta - erabili Desblokeatu botoia editatzeko"
+readOnlyOrderTitle = "Lerro honetako testua ezin da editatu: eskuinetik ezkerrera eta ezkerretik eskuinera doan testua nahasten du editoreak modu seguru batean berriro marraztu ezin duen ordenan"
+resizeHandle = "Zabalera aldatzeko arrastatu; testua berriro doituko da"
 
 [pdfTextEditor.saveRisk]
 cancel = "Utzi"
@@ -7548,6 +7967,35 @@ intro = "Editatutako kopia gordetzeak fitxategia aldatzen du. Horrek esan nahi d
 note = "Zure edizioak mantentzen dira. Goian zerrendatutako aldaketak saihestezinak dira editatutako kopia gordetzean."
 saveAnyway = "Gorde hala ere"
 title = "Gordetzeak PDF hau aldatuko du"
+
+[pdfTextEditor.scanFont]
+approximate = "Gutxi gorabeherako parekatzea"
+approximateHint = "Aurkitutako letra-tipo hurbilenak baliteke eskanerrarekin ez bat etortzea."
+change = "Letra-tipoa ez dirudi egokia?"
+choose = "Aukeratu letra-tipo bat"
+chooseMissing = "Aukeratu letra-tipo bat testu honentzat…"
+compare = "Konparatu letra-tipoak…"
+deviceAllow = "Baimendu letra-tipoetarako sarbidea parekatze hobea lortzeko"
+deviceBlocked = "Zure arakatzaileak ez du berriro galdetuko. Baimendu nahi baduzu, egin klik helbide-barraren ezkerreko ikonoan, aktibatu Fonts eta saiatu berriro."
+deviceBlockedTitle = "Letra-tipoetarako sarbidea blokeatuta dago"
+deviceNone = "Dokumentuko ohiko letra-tipoak ez daude ordenagailu honetan instalatuta."
+deviceNote = "Zure arakatzaileak lehenik galdetuko du. Letra-tipoak gailu honetan geratzen dira."
+deviceOn_one = "Ordenagailu honetako letra-tipo {{count}}(r)ekin ere konparatu da."
+deviceOn_other = "Ordenagailu honetako {{count}} letra-tiporekin ere konparatu da."
+deviceReading = "Ordenagailu honetako letra-tipoak irakurtzen…"
+deviceRetry = "Saiatu berriro"
+done = "Eginda"
+hint = "Zure idazkia aurkitutako letra-tipo hurbilenean marrazten da. Aukeratu beste bat eskanerrera gehiago egokitzen bazaio."
+hintFromScan = "Zure idazkia eskanerrean aurkitutako letretatik eraikitzen da. Aukeratu letra-tipo bat horretan marrazteko."
+hintOthers = "Zure aukeraketa aplikatuko zaie oraindik ez dituzun editatu eskaner-testuei ere."
+matching = "Letra-tipoak parekatzen…"
+noFont = "Eskuragarri dauden letra-tipoek ez dute script hau marraz dezaketenik; beraz, idatzitako testua oraindik ezin da berriz marraztu."
+scan = "Jatorrizko eskanerra"
+scanAlt = "Eskaneatutako lerroa"
+scanNote = "Eskanerrek maiz lausotuago edo lodiago erakusten dute letra-tipoa benetan dena baino. Konparatu letren formak, ez lodiera."
+score = "{{match}}% antzekoa"
+title = "Parekatu eskanerreko letra-tipoa"
+unmeasurable = "Eskaner hau ahulegia edo txikiegia da letra-tipo bat parekatzeko."
 
 [pdfTextEditor.settings]
 advanced = "Aurreratua"
@@ -7564,7 +8012,6 @@ addTable = "Gehitu taula"
 addText = "Gehitu testua"
 clickPageToAddTable = "Egin klik orrian taula bat gehitzeko"
 clickPageToAddText = "Egin klik orrian testua gehitzeko"
-document = "Dokumentua"
 group = "Taldekatu"
 groupingAuto = "Auto"
 groupingAutoHint = "Tarte berdineko lerroak paragrafoetan taldekatzen ditu. Hau aldatzeak dokumentua berriro irakurtzen du eta desegite-historia garbitzen du."
@@ -7593,23 +8040,17 @@ auto = "Automatikoa"
 enable = "Egiaztatu ortografia idatzi ahala"
 language = "Hiztegiaren hizkuntza"
 
-[pdfTextEditor.stage]
-loadingDocument = "Dokumentua kargatzen"
-loadingProgress = "Kargatze-aurrerapena"
-noDocument = "Ez dago dokumenturik kargatuta."
-pickPrompt = "Aukeratu PDF bat ezkerreko Fitxategiak paneletik editatzen hasteko."
-renderingPreview = "Aurrebista errendatzen"
-
 [pdfTextEditor.table]
 addColumn = "Gehitu zutabea"
 addRow = "Gehitu errenkada"
+cellNoGlyphs = "Testu honek taularen letra-tipoek marraztu ezin dituzten karaktereak ditu. Aldatu edo kendu, gelaxka betetzeko."
 column = "Zut."
 deleteColumn = "Ezabatu zutabea"
 deleteRow = "Ezabatu errenkada"
 done = "Eginda"
 doneHint = "Utzi hau taula gisa editatzeari"
-edit = "Editatu"
 editHint = "Editatu taula gisa: idatzi gelaxketan, gehitu edo kendu errenkadak eta zutabeak"
+editTable = "Editatu taula"
 move = "Mugitu"
 moveTable = "Arrastatu taula osoa mugitzeko"
 recognizedHint = "Ezagututako taula: egin klik bere testu guztia hautatzeko"
@@ -7630,6 +8071,9 @@ alignMiddle = "Lerrokatu erdian"
 alignRight = "Lerrokatu eskuinean"
 alignTop = "Lerrokatu goian"
 arrange = "Antolatu"
+bold = "Lodia"
+boldOnly = "Letra-tipo honek bertsio lodia bakarrik du"
+boldUnavailable = "Letra-tipo honek ez du bertsio lodirik"
 bringForward = "Ekarri aurrerago"
 bringToFront = "Ekarri aurrealdera"
 caseLower = "minuskulak"
@@ -7650,10 +8094,12 @@ fontColour = "Letra-kolorea"
 fontSize = "Letra-tamaina"
 formatting = "Testu-formatua"
 italic = "Etzana"
+italicOnly = "Letra-tipo honek bertsio etzana bakarrik du"
 italicUnavailable = "Letra-tipo honek ez du bertsio etzanik. Kargatu zure gailuko letra-tipoak edo aukeratu beste letra-tipo familia bat."
 lock = "Blokeatu hautapena"
 lockTooltip = "Blokeatu hautapena - ustekabeko edizioak saihesten ditu"
 more = "Ekintza gehiago"
+noBoldItalic = "Letra-tipo honek ez du bertsio lodi etzanik"
 order = "Ordena"
 outlineColour = "Ingerada-kolorea"
 outlineWidth = "Ingerada-zabalera (0 = bat ere ez)"
@@ -7683,13 +8129,6 @@ title = "Aurrebistaren aldakortasuna"
 [pdfTextEditor.tooltip.textFocus]
 text = "Lan-eremu honek testua editatzean eta txertatutako irudiak berrantolatzean jartzen du fokua. Orrialdeko arte lan konplexuak, inprimaki-trepetak eta geruzadun grafikoak esportaziorako mantentzen dira, baina hemen ez dira guztiz editagarriak."
 title = "Testu eta irudien fokua"
-
-[pdfTextEditor.zoom]
-fit = "Doitu"
-fitToWidth = "Doitu zabalerara"
-in = "Zooma handitu"
-out = "Zooma txikitu"
-reset = "Berrezarri zooma %100era"
 
 [PDFToCSV]
 header = "PDF a CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Inportatzean exekutatzen da"
 [policies.enforcement]
 applying = "{{names}} aplikatzen"
 applyingProgress = "{{names}} aplikatzen ({{done}}/{{total}})"
-exportFailureBody = "Segurtasun-politikak ezin izan dira aplikatu. Fitxategiak dauden bezala esportatu dira."
-exportFailureTitle = "Betearazi gabe esportatuta"
 failureBody = "Politika batzuk ezin izan zaizkie aplikatu {{failures}} / {{total}} fitxategiri."
 failureTitle = "Betearazpen osorik gabe esportatuta"
 printPolicyAppliedBody = "PDF hau politika bat betetzeko eguneratu da. Aldaketak berrikusi eta, ondoren, inprimatu berriro."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Bidali mezu bat Google Chat espazio batera politika bat exekutatzen denean."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Erakundearen Google Drive irakurri eta idazten duen zerbitzu-kontu bat."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Itsatsi Google Cloud-eko zerbitzu-kontuaren JSON gakoa. Zifratuta gordetzen da eta ez da berriro erakutsiko."
+label = "Zerbitzu-kontuaren gakoa (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Aukerakoa. Domeinu-mailako ordezkaritzarekin, honen izenean arituko den erabiltzailea (bot dedikatu batek lanean jarraitzen du jendea joaten denean). Hutsik uzteak soilik partekatutako unitateetara eta zerbitzu-kontuarekin partekatutako karpetetara iristen da."
+label = "Jokatu erabiltzaile gisa"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Erantsi prozesatutako dokumentuak Jira issue bati."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Bidali dokumentu bat edo jakinarazpen bat email bidez politika bat exekutatzen denean."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Microsoft Graph aplikazio-baimenak behar ditu administratzailearen onespenarekin."
+label = "Aplikazioaren (bezero) IDa"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Bezeroaren sekretua"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Direktorioaren (tenant) IDa"
+placeholder = "contoso.onmicrosoft.com edo tenant GUIDa"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Aplikazioaren pasahitza"
+
+[portal.connections.types.onedrive]
+description = "Erabiltzaile baten OneDrive for Businessetik irakurri eta idatzi."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Konexio honek zein OneDrivetara iristen den. Aplikazio-erregistroak Files.ReadWrite.All aplikazio-baimena behar du."
+label = "OneDrive jabea"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Utzi hutsik pasahitzaren ordez gako pribatu batekin autentifikatze
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Aukerakoa. Itsatsi OpenSSH gako pribatu bat pasahitzaren ordez gako batekin autentifikatzeko."
 label = "Gako pribatua"
+
+[portal.connections.types.sharepoint]
+description = "SharePoint gune baten dokumentu-liburutegitik irakurri eta idatzi."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Aukerakoa. Utzi hutsik guneko Documents liburutegi lehenetsirako."
+label = "Dokumentu-liburutegia"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Gunearen URLa"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Bidali mezu bat Slack-era politika batek dokumentu bat prozesatzen duenean."
@@ -9142,6 +9624,126 @@ status = "Egoera"
 time = "Ordua"
 user = "Erabiltzailea"
 
+[portal.enterprise]
+backTo = "Itzuli hona: {{stage}}"
+brandTag = "Enterprise"
+callInfo = "15 minutuko deia. Ekarri prezioak, inplementazioa edo segurtasuna buruzko galderak, edo planifikatu elkarrekin abiaraztea."
+callTitle = "Hitz egin soluzio-ingeniari batekin"
+deployment = "Hedapena"
+footer = "Galderarik Stirling Enterpriseri buruz?"
+home = "Joan Stirlingera"
+member = "Zure talde-buruak kudeatzen du Enterprise eskaintza. Behin hasita, jarrai dezakezu hemen haren aurrerapena."
+memberDeal = "Zure talde-buruak kudeatzen du eskaintza hau. Haren aurrerapena hemen jarrai dezakezu."
+quotePanel = "Zure eskaintza"
+signIn = "Hasi saioa"
+signInToStart = "Hasi saioa probaldia hasteko"
+stage = "{{current}} / {{total}} etapa"
+stagesLabel = "Aurrerapena"
+
+[portal.enterprise.landing]
+lede = "Probatu doan 14 egunez, gero eraiki zure eskaintza eta sinatu zure akordioa hemen. Ez da txartelik behar."
+tickAgreement = "MSA, eskaera-orria, EULA eta DPA estaltzen dituen akordio bakarra"
+tickCompliance = "SCIM, datuen kokapena eta eskuragarritasun SLAak"
+tickDeploy = "Exekutatu Stirling Clouden, zure zerbitzarietan edo guztiz air-gapped"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Lineaz kanpoko lizentzia-dokumentazioa"
+point1 = "Lineaz kanpo dabilen lizentzia-fitxategi batekin aktibatuta, ez linean egiaztatutako gako batekin"
+point2 = "Auto-ostatukoa bezala instalatzen da, zeuk eramandako irudi batetik"
+point3 = "Saio-hasiera zure sare barruan gelditzen da"
+tagline = "Auto-ostatuta, Interneterik gabeko sare batean."
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud dokumentazioa"
+point1 = "Zure taldeak stirling.com/app helbidean hasten du saioa"
+point2 = "AWSn exekutatzen da, gordetako fitxategiak atsedenean zifratuta"
+point3 = "Zure nortasun-hornitzailearen bidezko single sign-on-ak auto-ostatzea behar du"
+tagline = "Zuretzat ostatuta, ezer instalatu gabe."
+
+[portal.enterprise.options.selfhost]
+more = "Auto-ostatuaren dokumentazioa"
+point1 = "Instalatu Dockerrekin, edo Helm chart-a Kubernetesen"
+point2 = "Dokumentuak zure azpiegituran prozesatzen dira"
+point3 = "OAuth2, OIDC edo SAML single sign-on"
+tagline = "Zure zerbitzarietan, on-premises edo zure cloud-ean."
+
+[portal.enterprise.review]
+back = "Itzuli hona: {{stage}}"
+company = "Enpresa"
+completed = "Osatuta"
+extensions = "Erabilitako hedapenak"
+paid = "Ordainduta. Zure faktura hemen eskuragarri jarraitzen du."
+people = "Pertsonak"
+started = "Hasita"
+trialEnds = "Proba-aldia amaitzen den eguna"
+trialTitle = "Zure probaldia"
+version = "Bertsioa"
+viewInvoice = "Ikusi faktura"
+
+[portal.enterprise.setup]
+copied = "Kopiatuta"
+copy = "Kopiatu"
+markDone = "Markatu “{{step}}” eginda"
+progress = "{{done}} / {{total}} eginda"
+subtitle = "Atera etekinik handiena proba-aldiaz zuk exekutatuko zenukeen moduan probatuta."
+subtitleLive = "Denek erabili aurretik amaitu beharreko urratsak."
+title = "Konfiguratu"
+titleLive = "Abiarazte-kontrol-zerrenda"
+
+[portal.enterprise.setup.firstDocument]
+body = "Igo zure taldeak erabiltzen duen PDF bat eta probatu eguneroko tresnak, hala nola estali (redact), konprimatu edo OCR."
+title = "Exekutatu zure lehen dokumentua"
+
+[portal.enterprise.setup.getApp]
+body = "Instalatu mahaigaineko aplikazioa Windows, Mac edo Linuxerako eta hasi saioa oraintxe sortu duzun kontuarekin, edo erabili zuzenean arakatzailetik."
+title = "Eskuratu Stirling"
+
+[portal.enterprise.setup.install]
+body = "Exekutatu hau zure zerbitzarian. Lizentzia aplikatuta hasten du Stirling, eta irudiak OCR eta bulego-konbertsioa barne hartzen ditu. Talde handiagoetarako, erabili Kubernetes."
+title = "Instalatu eta abiatu Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Eraman sartuko diren pertsonak, probak lan errealak islatu ditzan."
+title = "Gonbidatu zure taldea"
+
+[portal.enterprise.setup.licence]
+body = "Ireki <code>http://your-server:8080/settings/adminPlan</code>, eta zure Enterprise lizentzia aktibo gisa agertu beharko litzateke. Beste modu batean instalatu duzu? Gehitu gakoa <code>settings.yml</code> fitxategiko <code>premium.key</code> atalean eta berrabiarazi."
+title = "Egiaztatu zure lizentzia aktibo dagoela"
+
+[portal.enterprise.setup.links]
+browser = "Erabili arakatzailean"
+docker = "Docker gida"
+download = "Deskargatu aplikazioa"
+downloadForTeam = "Eskuratu aplikazioa zure talderako"
+downloading = "Deskargatzen..."
+downloadLicence = "Deskargatu lizentzia-fitxategia"
+invite = "Gonbidatu taldekideak"
+kubernetes = "Kubernetes gida"
+licence = "Lizentzia aktibazioa"
+ocr = "OCR hizkuntzak"
+openApp = "Ireki Stirling"
+samlGuide = "SAML gida"
+ssoGuide = "SSO gida"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Ekarri irudi osoa konektatutako makina batera, eraman hura eta lizentzia-fitxategia bestaldera, eta gero kargatu eta abiarazi. Irudi osoak offline zerbitzariak ezin dituen letra-tipoak gehitzen ditu."
+title = "Ekarri Stirling eta abiarazi"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Air-gapped zerbitzari batek ezin du gure lizentzia-zerbitzura iritsi; beraz, sinatutako fitxategi hau egiaztatzen du ordez. Mantendu eramango duzun irudiarekin batera."
+title = "Deskargatu zure lineaz kanpoko lizentzia"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Sortu kontuak <code>/settings/people</code> orrian, edo seinalatu Stirling zure barneko nortasun-hornitzailera, saio-hasiera zure sare barruan gera dadin."
+bodySelfHosted = "Sortu kontuak <code>/settings/people</code> orrian, edo konektatu zure nortasun-hornitzailea, taldea bere lan-kontuekin hasi dadin saioa. Stirling erabiltzen dute arakatzailean zure zerbitzariaren helbidean, edo hara seinalatuta dagoen mahaigaineko aplikazioan."
+title = "Gehitu zure jendea"
+
+[portal.enterprise.setup.signIn]
+body = "Ireki <code>http://your-server:8080</code> eta hasi saioa <code>admin</code> / <code>stirling</code> kredentzialekin. Berehala pasahitz berria aukeratzeko eskatuko zaizu."
+bodyAirgap = "Ireki <code>http://your-server:8080</code> eta hasi saioa <code>admin</code> / <code>stirling</code> kredentzialekin, aukeratu pasahitz berria, eta gero egiaztatu <code>/settings/adminPlan</code> orrian zure lizentzia aktibo gisa erakusten dela."
+title = "Hasi saioa administratzaile gisa"
+
 [portal.errorBoundary]
 description = "Ikuspegi honek ustekabeko errore bat izan du. Saiatu berriro, edo aukeratu alboko barrako beste atal bat."
 retry = "Saiatu berriro"
@@ -9293,6 +9895,7 @@ title = "Ez dago berrikusteko ezer"
 [portal.home.download]
 back = "Atzera"
 body = "Deskargatu mahaigaineko aplikazioa edo egin zerbitzaria self-hosted."
+bodyDesktop = "Deskargatu mahaigaineko aplikazioa, eta gero hasi saioa zure Stirling kontuarekin."
 done = "Eginda"
 guide = "Ireki {{name}} gida"
 openInBrowser = "Ireki arakatzailean ordez"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Email sarrera"
 
 [portal.procurement]
-subtitle = "Lortu zure taldea ebaluatzea, kontratatzea eta martxan jartzea. Dokumentu guztiak leku bakarrean."
 title = "Erosketa"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Ezin izan da akordioa kargatu. Saiatu berriro."
 loading = "Akordioa kargatzen..."
 ref = "Erref. {{ref}} · {{version}}"
 requestChanges = "Eskatu aldaketak"
-scrollHint = "Korritu berrikusteko"
 signatory = "Sinatzailearen izena"
 signatoryPlaceholder = "Izen-abizenak"
 signatoryTitle = "Sinatzailearen kargua"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "adib. Aholkulari juridiko nagusia"
 signError = "Ezin izan da zure sinadura erregistratu. Saiatu berriro."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} ordainketa bakarra"
+addonPerYear = "+{{amount}}/urte"
 addons = "Gehigarriak"
 addressLine1 = "Helbidearen 1. lerroa"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Helbidearen 2. lerroa"
 addressLine2Placeholder = "Suitea, solairua, eraikina"
 back = "Atzera"
+belowMinimum = "Eskaintza hau Enterprise akordio baterako gutxieneko tamainaren azpitik dago."
 businessName = "Enpresaren izena"
 businessNamePlaceholder = "Zure enpresa"
 city = "Hiria"
 cityPlaceholder = "San Francisco"
 completeRequired = "Osatu derrigorrezko eremuak (* markatuta) baliozko email batekin aurrekontua sortu aurretik."
+conflict = "Eskaintza hau aldatu da ireki zenuenetik. Itxi eraikitzailea eta kargatu berriro orria egoera ikusteko."
 contactEmail = "Harremanetarako emaila"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Harremanetarako izena"
 contactNamePlaceholder = "Jane Doe"
 continue = "Jarraitu"
 done = "Eginda"
+editUsage = "Editatu erabilera"
 eula = "Stirling Enterprise EULA irakurri dut eta ados nago. Aurrekontu honetatik sortutako akordioa arautzen du."
 generate = "Sortu aurrekontua"
 indemnification = "IP babes hobetua"
 indemnificationSub = "Gure IP defentsa patente-erreklamazioetara zabaltzen du. Oinarrizko copyright, marka komertzial eta merkataritza-sekretuen kalte-ordaina doan sartzen da."
+minimum = "Enterprise-k urteko gutxieneko {{min}} gastua eskatzen du."
+minimumBelow = "Eskaintza honek urtean {{annual}} dira. Gehiago erabiltzea espero baduzu, igo kalkulatutako erabilera; bestela, Team plana egokiagoa izan liteke."
+minimumNear = "Enterprise-k urteko gutxieneko {{min}} gastua eskatzen du. Igo kalkulatutako erabilera hara iristeko, edo hitz egin gurekin."
+minimumNearTitle = "Urtean {{gap}} faltan zaizu Enterprise-rako."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise aurrekontua"
 paperFor = "Honentzat prestatua"
 pdfSize = "PDF tamaina"
@@ -10506,9 +11117,13 @@ posture_regulated = "Arautua"
 posture_regulatedSub = "Kategoria guztiak — Betetzea, Atxikipena, Ingestioa"
 qbr = "Hiruhileko negozio-berrikuspenak"
 qbrSub = "Zure SEk erabilera eta roadmap-a berrikusten ditu hiruhileko bakoitzean"
+raiseUsage = "Igo kalkulatutako erabilera"
 region = "Estatua / eskualdea"
 regionPlaceholder = "California"
-running = "{{annual}} / urte · {{years}} urteko {{tcv}}"
+runningLabel = "Kalkulatutako prezioa"
+runningLabelIssued = "Aipatutako prezioa"
+runningOneYear = "Urtean {{annual}}"
+runningTotal = "Guztira {{tcv}}, {{years}} urteren buruan"
 s1Sub = "Zure taldea eta urtero exekutatzea espero dituzun PDFak."
 s1Title = "Zenbat prozesatuko duzu?"
 s2Sub = "Epe luzeagoek tarifa deskontatzen dute; zure zerbitzu-mailak euskarria ezartzen du."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "adib. 1.000.000"
 years_one = "{{count}} urte"
 years_other = "{{count}} urte"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} hedapena"
+indemnification = "IP indemnizazioa"
+multiYear_one = "{{count}} urteko konpromisoa"
+multiYear_other = "{{count}} urteko konpromisoa"
+qbr = "Hiruhileko negozio-berrikuspenak"
+seats_one = "Adostutako erabiltzaile {{users}} + SSO / RBAC / audit"
+seats_other = "Adostutako {{users}} erabiltzaile + SSO / RBAC / audit"
+seatsUnset = "Erabiltzaileak + SSO / RBAC / audit"
+support = "SE / CSM dedikatuak"
+training = "Onboarding eta prestakuntza"
+usage = "PDF prozesatzea — {{volume}} PDF/urte {{rate}}/PDF ({{posture}} automatizazioa)"
+
 [portal.procurement.documents]
 agreement = "Enterprise akordioa"
 agreementSub = "MSA, Order Form eta DPA sinadura bakarrean."
@@ -10557,6 +11185,8 @@ invoice = "Faktura"
 invoiceSub = "Zure lehen harpidetza-faktura."
 laterInvoice = "Onartu ondoren eskuragarri"
 laterQuote = "Zure aurrekontua jaulki ondoren eskuragarri"
+laterSigning = "Akordioa sinatu ondoren eskuragarri"
+laterTitle = "Zure eskaintzaren beranduagokoak"
 quote = "Aurrekontua"
 quoteSub = "Zure enterprise aurrekontu xehatua."
 sla = "SLA eranskina"
@@ -10573,15 +11203,12 @@ title = "Zerbait gaizki joan da"
 [portal.procurement.hero]
 barAria = "{{current}}. etapa {{total}}(e)tik"
 ctaAgreement = "Berrikusi eta sinatu akordioa"
-ctaExploring = "Konfiguratu zure proba"
 ctaQuote = "Berrikusi zure aurrekontua"
 ctaReviewQuote = "Berrikusi aurrekontua"
 ctaTrial = "Eraiki zure aurrekontua"
-documents = "Dokumentuak"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Gonbidatu taldekideak"
-licenseKey = "Lizentzia-gakoa"
 liveSub = "Zure erakundea hornituta dago eta zure lizentzia aktibo dago."
 liveTitle = "Stirling Enterprise martxan duzu"
 next = "Hurrengoa: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Oraindik ezin izan da offline lizentzia-fitxategia sortu — sa
 downloadOffline = "Deskargatu offline lizentzia (.lic)"
 hint = "Itsatsi gako hau self-hosted instantzia batean aktibatzeko, edo gorde zure erregistroetarako. Gorde seguru."
 label = "Zure lizentzia-gakoa"
-subtitle = "Aktibatu autoostatatutako instantzia bat gako honekin, edo gorde zure erregistroetarako."
-title = "Zure lizentzia-gakoa"
 trialFileHint = "Hau zure proba-lizentziaren fitxategia da. Zure akordioa indarrean dagoenean, itzuli eta deskargatu berriro — online lizentzia-gakoa ez bezala, .lic fitxategia ez da berez eguneratuko."
-
-[portal.procurement.link]
-cta = "Lotu kontua"
-description = "Erosketa zure lotutako Stirling kontuan exekutatzen da: horrela hornitzen dugu probaldia, aurrekontuaren prezioa kalkulatzen dugu eta fakturazioa hasten dugu. Lotu kontu bat hasteko."
-eyebrow = "Enterprise"
-title = "Lotu zure kontua hasteko"
 
 [portal.procurement.live]
 description = "Zure harpidetza aktibo dago eta zure lizentzia jaulkita dago. Zure taldea hornituta dago eta fakturazioa hasi da."
-eyebrow = "Martxan"
 title = "Stirling Enterprise-n martxan zaude"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Oraindik ezin izan da aurrekontuaren PDFa deskargatu — saiatu
 
 [portal.procurement.payment]
 description = "Zure aurrekontua onartuta dago eta zure lizentzia dagoeneko aktibo dago — zure taldea berehala has daiteke. Ordaindu lehen faktura prest zaudenean; hemen ordaindu edo deskarga dezakezu, emailik behar gabe."
-downloadAgreement = "Deskargatu sinatutako akordioa"
 downloadInvoice = "Deskargatu faktura"
-eyebrow = "Ordainketa"
-title = "Harpidetza sortuta"
 viewInvoice = "Ikusi eta ordaindu faktura"
 
 [portal.procurement.review]
 acceptCta = "Onartu aurrekontua"
 annual = "Urteko kuota (1. urtea)"
 downloadCta = "Deskargatu aurrekontua"
+oneTime = "ordainketa bakarra"
 poNumber = "Erosketa-agindua: {{po}}"
 renewal = "{{amount}}/urtean berritzen da epearen ondoren (+{{pct}}% CPI)"
 tcv = "{{years}} urteko epea, osorik aurrez ordaindua: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Luzatzeak 7 egun gehitzen ditu eta zure solutions engineer-i jakinarazten dio."
 bodyMaxed = "Luzapen guztiak erabili dituzu — hitz egin zure solutions engineer-ekin denbora gehiago behar baduzu."
-cancel = "Utzi probaldia"
 extend = "Luzatu 7 egun"
 maxed = "Mugara iritsita"
 subtitle = "Zure doako probaldia {{date}} arte doa. Ez da txartelik behar."
 title = "Enterprise probaldia"
+
+[portal.procurement.validation]
+confirm = "Berretsi erakundearen izenean sinatzeko baimena duzula."
+email = "Sartu helbide elektroniko balioduna."
+eula = "Onartu EULA aurrera jarraitzeko."
+required = "Eremu hau beharrezkoa da."
+seats = "Sartu zenbat pertsonak probatuko duten."
+volume = "Sartu urtean zenbat PDF prozesatzea espero duzun."
 
 [portal.review]
 subtitle = "Zure politikaren exekuzioetatik eta zure taldeko editoreetatik zure arreta behar duen guztia."
@@ -10735,6 +11358,7 @@ subtitle = "Dokumentuak Stirling-era elikatzen dituzten sarrera-konexio berrerab
 title = "Iturburuak"
 
 [portal.sources.actions]
+connectDestination = "Konektatu helmuga"
 connectSource = "Konektatu iturburua"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Aukeratu nora joango diren prozesatutako dokumentuak. Gris k
 comingSoon = "Laster"
 comingSoonHeading = "Laster"
 create = "Sortu iturburua"
+createDestination = "Sortu helmuga"
+createDestinationTitle = "Gehitu helmuga"
 createTitle = "Konektatu iturburu bat"
 delete = "Ezabatu"
 editTitle = "Editatu iturburua"
@@ -10757,6 +11383,41 @@ save = "Gorde aldaketak"
 description = "Karpeta-automatizazioek administratzaileak baimendutako karpetak bakarrik erabil ditzakete. Gehitu Folder Access ezarpenetan, eta saiatu berriro."
 openSettings = "Folder Access ezarpenak"
 title = "Karpeta hau ez dago baimenduta"
+
+[portal.sources.cloudFields.account]
+connect = "Konektatu zure kontua"
+connectAnother = "Konektatu beste kontu bat"
+connectFailed = "Kontua ezin izan da konektatu. Saiatu berriro, edo eskatu administratzaileari aplikazio-erregistroa egiaztatzea."
+label = "Kontua"
+placeholder = "Aukeratu kontu bat"
+reconnect = "hasi saioa berriro"
+unavailable = "Zerbitzari honetan desgaituta dago zure kontua konektatzea. Aukeratu erakundeko konexio bat ordez."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Kontu pertsonalak desgaituta daude zerbitzari honetan."
+helperText = "Zure kontuak zuri irekita dagoenera iristen da eta ez du administratzailerik behar. Erakundeko konexioak lanean jarraitzen du jendea joaten denean, eta administratzaileak ezarritakora baino ez da iristen."
+label = "Hasi saioa honela"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Nire kontua"
+organisation = "Erakundeko konexioa"
+
+[portal.sources.cloudFields.connection]
+helperText = "Administratzaile batek Integrations atalean konfiguratua. Hura erabiltzen duten kokapen guztiek partekatua."
+label = "Erakundearen konexioa"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Itsatsi karpetaren esteka, edo idatzi bide-izena Nire unitatearen goi-mailatik. Utzi hutsik Nire unitatearen goi-mailarako. Karpeta lehendik egon behar da."
+placeholder = "Karpetaren esteka, edo Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Zure OneDrive-ko karpeta bat, edo itsatsi karpeta-esteka bat (Copy link OneDrive-n). Utzi hutsik OneDrive-ren erroarentzat. Karpeta lehendik egon behar da."
+placeholder = "Scans/Inbox, edo karpeta-esteka"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Zure kontuarekin, itsatsi karpetaren esteka (Copy link SharePoint-en). Erakunde-konexioarekin, bere liburutegiko karpeta bat; utzi hutsik liburutegiaren erroarentzat. Karpeta lehendik egon behar da."
+organisationPlaceholder = "Karpetaren esteka, edo Scans/Inbox"
+placeholder = "Karpetaren esteka"
 
 [portal.sources.delete]
 body = "Ezabatu \"{{name}}\"? Hau ezin da desegin. Hura erreferentziatzen duten politikak eguneratu beharko lirateke."
@@ -10821,6 +11482,7 @@ label = "Email sarrera-ontzia"
 [portal.sources.types.folder]
 description = "Begiratu zerbitzariko direktorio bat dokumentu berriak detektatzeko."
 label = "Karpeta"
+outputDescription = "Gorde emaitzak zerbitzariko direktorio batean."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Fitxategi berriak zaintzeko karpetaren bide absolutua."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Ekarri dokumentuak partekatutako Google Drive karpetetatik."
 label = "Google Drive"
+outputDescription = "Gorde emaitzak Google Drive-ko karpeta batean."
 
 [portal.sources.types.network]
 description = "Zaindu SMB sare-partekatze bat dokumentu berrien bila."
@@ -10867,10 +11530,12 @@ label = "Sare-unitatea"
 [portal.sources.types.onedrive]
 description = "Zaindu OneDrive karpetak dokumentu berrien bila."
 label = "OneDrive"
+outputDescription = "Gorde emaitzak OneDrive-ko karpeta batean."
 
 [portal.sources.types.s3]
 description = "Ekarri dokumentuak Amazon S3 edo S3 bateragarri den bucket batetik."
 label = "Amazon S3"
+outputDescription = "Gorde emaitzak Amazon S3 edo S3-rekin bateragarria den bucket batean."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Bucket-a eta kredentzialak dituen gordetako konexioa. Erabiltzen duten iturri eta pipeline irteera guztiek partekatzen dute."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Ekarri dokumentuak SharePoint dokumentu-liburutegietatik."
 label = "SharePoint"
+outputDescription = "Gorde emaitzak SharePoint-eko dokumentu-liburutegiko karpeta batean."
 
 [portal.sources.types.unknown]
 label = "Iturburua"
@@ -11074,6 +11740,14 @@ waiting = "Ilaran ..."
 name = "Google Drive"
 scope = "Fitxategi inportazioa"
 
+[provider.googledrive.accountScope]
+description = "drive fitxategi guztietara heltzen da (Googlek aplikazio publiko bat egiaztatu behar du horretarako); drive.file jendeak hautatzen dituen edo Stirling sortzen dituen fitxategietara bakarrik"
+label = "Drive sarbidea"
+
+[provider.googledrive.allowAccountConnections]
+description = "Saio-hasiera bakarra editorearentzat eta haren pipelineentzat. Desaktibatu soilik erakunde-konexioak baimentzeko."
+label = "Utzi pertsonei beren kontua konektatzen"
+
 [provider.googledrive.apiKey]
 description = "Google Picker API-rako Google API gakoa Google Cloud Console-tik"
 label = "API gakoa"
@@ -11086,13 +11760,65 @@ label = "Aplikazioaren IDa"
 description = "Google Cloud Console-ko Google OAuth 2.0 Bezero IDa"
 label = "Bezeroaren IDa"
 
+[provider.googledrive.clientSecret]
+description = "Jendeari Google kontua beren pipelineetarako konektatzeko aukera ematen die. Gehitu beheko birbideratze URIa OAuth bezeroaren baimendutako birbideratze URI gisa."
+label = "Bezeroaren sekretua"
+
 [provider.googledrive.enabled]
 description = "Baimendu erabiltzaileei fitxategiak zuzenean Google Drivetik inportatzea"
 label = "Gaitu Google Drive fitxategi hautatzailea"
 
 [provider.googledrive.errors]
+connectFailed = "Ezin izan da zure Google kontua konektatu. Saiatu berriro Ezarpenak > Konektatutako kontuak ataletik."
 notConfigured = "Google Drive ez dago konfiguratuta"
 pickerFailed = "Ezin izan da Google Drive hautatzailea ireki"
+
+[provider.googledrive.redirectUri]
+description = "Gehitu hau OAuth bezeroaren baimendutako birbideratze URI gisa Google Cloud Console-n."
+label = "Birbideratze URIa"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Fitxategiak eta pipelineak"
+
+[provider.microsoft.allowAccountConnections]
+description = "Saio-hasiera bakarra editorearentzat eta haren pipelineentzat. Desaktibatu soilik erakunde-konexioak baimentzeko."
+label = "Utzi pertsonei beren kontua konektatzen"
+
+[provider.microsoft.allowEditorSaves]
+description = "Desaktibatu edizioak Stirling-en mantentzeko: OneDrive-tik irekitako fitxategiak deskargatuko dira ordez, eta zerbitzariak OneDrive-n gordetzea ukatuko du."
+label = "Baimendu editoreari OneDrive-n berriz gordetzea"
+
+[provider.microsoft.clientId]
+description = "Microsoft Entra aplikazio-erregistro bakar batetik."
+label = "Aplikazioaren (bezeroaren) IDa"
+
+[provider.microsoft.clientSecret]
+description = "Konektatutako kontuetarako beharrezkoa. Zerbitzarian geratzen da."
+label = "Bezeroaren sekretua"
+
+[provider.microsoft.enabled]
+description = "Utzi pertsonei OneDrive eta SharePoint pipelineetan erabiltzen"
+label = "Gaitu OneDrive eta SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Gehitu hau Single-page application birbideratze URI gisa aplikazio-erregistro berean, editoretik saioa hasteko."
+label = "Single-page application birbideratze URI"
+
+[provider.microsoft.redirectUri]
+description = "Gehitu hau Web birbideratze URI gisa Entra aplikazio-erregistroan."
+label = "Birbideratze URIa"
+
+[provider.microsoft.setupSteps]
+connect = "Gorde, berrabiarazi, eta gero konektatu kontu bat Konektatutako kontuak atalean."
+permissions = "Gehitu Microsoft Graph-eko eskuordetutako baimenak Files.ReadWrite.All eta Files.Read.All, eta SharePoint-eko eskuordetutako baimenak MyFiles.Read eta AllSites.Read, laneko eta ikastetxeko kontuek fitxategi-hautatzailea ireki ahal izateko."
+redirects = "Gehitu azpiko bi birbideratze URI: bat Web gisa, eta bestea Single-page application gisa."
+register = "Erregistratu aplikazio bat Microsoft Entra admin center-en. Baimendu Microsoft kontu pertsonalak jendeak OneDrive pertsonala erabiltzen badu."
+secret = "Sortu bezero-sekretu bat, eta ondoren itsatsi haren balioa eta aplikazioaren bezeroaren IDa behean."
+
+[provider.microsoft.tenant]
+description = "common lanerako, eskolako eta kontu pertsonalentzat; organizations lanerako eta eskolakoentzat bakarrik; edo tenant ID bat erakunde bati baimena emateko"
+label = "Direktorioaren (tenant) IDa"
 
 [provider.oauth2.generic]
 name = "OAuth2 generikoa"
@@ -11195,6 +11921,19 @@ label = "Esparruak"
 description = "Erabiltzaile-izen gisa erabiliko den eremua (email, name, given_name, family_name, preferred_username)"
 label = "Erabili erabiltzaile-izen gisa"
 
+[provider.onedrive]
+pickerLoading = "OneDrive-rekin konektatzen..."
+pickerTitle = "Aukeratu fitxategiak OneDrive-tik"
+
+[provider.onedrive.errors]
+connectFailed = "Ezin izan da zure Microsoft kontua konektatu. Saiatu berriro Ezarpenak > Konektatutako kontuak ataletik."
+notConfigured = "OneDrive ez dago konfiguratuta"
+pickerFailed = "Ezin izan da OneDrive ireki"
+popupBlocked = "Zure nabigatzaileak Microsoft saioa hasteko leihoa blokeatu du. Baimendu laster-leihoak gune honetarako eta saiatu berriro."
+reconnect = "Zure Microsoft kontuak berriro saioa hasi behar du. Konektatu berriro Ezarpenak > Konektatutako kontuak atalean."
+serverError = "OneDrive-k edo Stirling zerbitzariak arazo bat izan dute. Saiatu berriro, edo galdetu zure administratzaileari jarraitzen badu."
+unreachable = "Ezin izan da OneDrive-ra konektatu. Egiaztatu zure konexioa eta saiatu berriro."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Jakinarazpenak"
 processor = "Prozesadorea"
 reader = "Irakurgailua"
 signInToUse = "Hasi saioa hau erabiltzeko"
+
+[quickNav.accountMenu]
+localMode = "Modu lokala"
+server = "Zerbitzariaren ezarpenak"
+settings = "Ezarpenak"
+signedOut = "Saioa hasi gabe"
+signIn = "Hasi saioa"
 
 [read]
 tags = "ikusi,ireki,bistaratu,irakurri,ikustailea,PDF ikustailea,PDF irakurgailua,ireki PDF,ikusi PDF,bistaratu PDF,aurrebista,arakatu"
@@ -11811,6 +12557,13 @@ title = "PDF-a desinfektatu"
 [sanitizePdf]
 tags = "garbitu,seguru,segurtasuna,mehatxuak-kendu"
 
+[saveFile.menu]
+more = "Gordetzeko aukera gehiago"
+saveCopy = "Gorde kopia bat..."
+
+[saveFile.toolbar]
+mixed = "Gorde guztiak"
+
 [scalePages]
 tags = "tamaina aldatu,doitu,eskalatu,orri-tamaina,aldatu orriaren tamaina,eskalatu orria,aldatu tamaina,doitu tamaina,handitu,txikitu orria,egokitu orrira,A4,letter tamaina"
 title = "Doitu orrialdearen eskala"
@@ -11905,6 +12658,162 @@ showTools = "Ikusi erabilgarri ez dauden tresnak ▾"
 title = "Ezin da atzitu zure Stirling-PDF zerbitzaria"
 toolNotAvailableLocally = "Zure Stirling-PDF zerbitzaria lineaz kanpo dago eta \"{{endpoint}}\" ez dago erabilgarri tokiko backend-ean."
 
+[serverSetup]
+back = "Atzera"
+collapse = "Ezkutatu {{setting}} ezarpenak"
+configured = "Konfiguratuta"
+continue = "Jarraitu"
+dialogLabel = "Zerbitzariaren konfigurazioa"
+expand = "Erakutsi {{setting}} ezarpenak"
+finishSetup = "Amaitu konfigurazioa"
+loadErrorSubtitle = "Konfigurazioak zerbitzariaren uneko ezarpenak behar ditu hasteko."
+loadErrorTitle = "Ezin izan dira zure ezarpenak kargatu"
+off = "Desaktibatuta"
+on = "Aktibatuta"
+save = "Gorde"
+stepCount = "{{total}}tik {{current}}"
+
+[serverSetup.account]
+failed = "Ezin izan dira zure datuak gorde. Egiaztatu zerbitzaria eskuragarri dagoela eta saiatu berriro."
+save = "Gorde eta jarraitu"
+signIn = "Hasi saioa"
+signInAgainSubtitle = "Hasi berriro saioa erabiltzaile-izen eta pasahitz berriekin jarraitzeko."
+signInAgainTitle = "Zure datuak gorde dira"
+subtitle = "Aukeratu hemendik aurrera nola hasiko duzun saioa."
+title = "Konfiguratu zure kontua"
+updating = "Eguneratzen"
+updatingSubtitle = "Une bat."
+updatingTitle = "Zure datuak eguneratzen"
+username = "Erabiltzaile-izena"
+usernameHelp = "Honekin hasiko duzu saioa. Helbide elektroniko bat ere balio du."
+
+[serverSetup.addresses]
+backendUrl = "Zerbitzariaren helbidea"
+backendUrlHelp = "Saio-hasierako hornitzaileek jendea itzultzen duten lekua. Normalean web helbide bera."
+frontendUrl = "Web helbidea"
+frontendUrlHelp = "Jendeak Stirling PDF irekitzeko erabiltzen duen helbidea. Posta elektronikoetan, partekatzeko esteketan eta QR kodeetan erabiltzen da."
+subtitle = "Pertsonak eta saio-hasierako hornitzaileak zerbitzari honetara nola iristen diren."
+title = "Helbideak"
+
+[serverSetup.ai]
+apiKey = "API gakoa"
+apiKeyHelp = "Utzi hutsik AI motorak jada duen gakoa erabiltzeko."
+baseUrl = "Oinarrizko URL"
+engineUrl = "AI motoraren helbidea"
+fastModel = "Eredu azkarra"
+label = "Norberak ostatatutako AI"
+provider = "Eredu-hornitzailea"
+providerCustom = "OpenAIrekin bateragarria"
+smartModel = "Eredu osoa"
+stirling = "Stirling AI"
+subtitle = "Dokumentuei buruzko galderak, editatze automatikoak eta AI agenteak."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Onartu eta jarraitu"
+acceptFinish = "Onartu eta amaitu"
+changeLater = "Edozein unetan alda dezakezu hemen: {{path}}."
+decline = "Ukatu eta jarraitu"
+declineFinish = "Ukatu eta amaitu"
+learnMore = "Zer biltzen dugun"
+note = "Partekatu zerbitzari honen erabilera-datuak gurekin Stirling PDF hobetzen laguntzeko. Inoiz ez ditugu fitxategiak edo haien edukiak biltzen."
+title = "Zerbitzariaren analitikak"
+
+[serverSetup.documents]
+label = "Dokumentuei buruzko galderak"
+model = "Embedding eredua"
+provider = "Embedding hornitzailea"
+providerHelp = "Dokumentuen testua galderak erantzuten dituen bilaketa-indize bihurtzen du."
+
+[serverSetup.email]
+from = "Bidaltzailearen helbidea"
+host = "SMTP ostalaria"
+label = "Bidali posta elektronikoa"
+password = "Pasahitza"
+port = "Ataka"
+subtitle = "Gonbidapenetarako, sinadura-eskaeretarako eta partekatzeetarako."
+title = "Posta elektronikoa"
+username = "Erabiltzaile-izena"
+
+[serverSetup.error]
+email = "Sartu helbide elektroniko bat"
+issuerUnreachable = "Ezin izan da jaulkitzaile honetara iritsi. Egiaztatu helbidea eta zerbitzari honek harengana irits daitekeela."
+passwordIncorrect = "Pasahitz okerra"
+passwordLength = "Erabili gutxienez 8 karaktere"
+passwordMismatch = "Pasahitzak ez datoz bat"
+passwordRejected = "Zerbitzariak ez du pasahitz hau onartu. Saiatu beste batekin."
+passwordUnchanged = "Aukeratu unekotik desberdina den pasahitz bat"
+port = "Sartu 1etik 65535era bitarteko ataka bat"
+providerName = "Erabili soilik letrak, zenbakiak, marratxoak edo azpimarrak"
+required = "Beharrezkoa"
+url = "Sartu helbide oso bat, http:// edo https://rekin hasten dena"
+username = "Erabili 3 eta 50 arteko letrak, zenbakiak edo . _ + - @; edo helbide elektroniko bat"
+usernameTaken = "Erabiltzaile-izen hori hartuta dago"
+
+[serverSetup.files]
+sharing = "Fitxategien partekatzea"
+sharingOffWarning = "Partekatzeko aukera desgaituta badago, dauden partekatzeko estekek ez dute funtzionatuko."
+storage = "Fitxategiak biltegiratu"
+storageOffWarning = "Biltegiratzea desgaituta badago, jendeak zerbitzarian gordetako fitxategiak ezin izango dira ireki."
+subtitle = "Kudeatu fitxategien biltegiratzea eta partekatzea."
+title = "Fitxategiak"
+
+[serverSetup.finish]
+errorNote = "Egiaztatu zerbitzaria eskuragarri dagoela eta administratzaile gisa saioa oraindik hasita duzula."
+errorSubtitle = "Ez da ezer berrabiarazi."
+errorTitle = "Ezin izan dira zure ezarpenak gorde"
+manualSubtitle = "Zerbitzari honek ezin du bere burua berrabiarazi. Berrabiarazi bere edukiontzia edo zerbitzua ezarpenak aplikatzeko."
+manualTitle = "Ezarpenak gorde dira"
+restartFailedSubtitle = "Zerbitzaria ez da berrabiarazi. Berrabiarazi bere edukiontzia edo zerbitzua aplikatzeko."
+restartingSubtitle = "Orri hau berritu egingo da bueltan denean, normalean minutu baten barruan."
+restartingTitle = "Zure zerbitzaria berrabiarazten"
+retry = "Saiatu berriro"
+saving = "Gordetzen"
+savingSubtitle = "Une bat."
+savingTitle = "Zure ezarpenak gordetzen"
+
+[serverSetup.language]
+auto = "Arakatzaile bakoitzera egokitu"
+label = "Hizkuntza lehenetsia"
+subtitle = "Bisitari berriek lehenik ikusiko dutena."
+title = "Hizkuntza"
+
+[serverSetup.mcp]
+label = "MCP zerbitzaria"
+
+[serverSetup.password]
+confirm = "Berretsi pasahitz berria"
+current = "Uneko pasahitza"
+new = "Pasahitz berria"
+
+[serverSetup.signIn]
+clientId = "Bezeroaren IDa"
+clientSecret = "Bezeroaren sekretua"
+issuer = "Jaulkitzailearen URL"
+label = "Hasi saioa honekin"
+oidc = "Beste OpenID Connect"
+password = "Erabiltzaile-izena eta pasahitza"
+providerName = "Hornitzailearen izena"
+providerNameHelp = "Saio-hasierako botoian agertuko den izena, adibidez okta edo entra."
+redirectNote = "Gehitu birbideratze URI hau zure hornitzailean:"
+subtitle = "Zure taldeak nola hasten duen saioa."
+title = "Saio-hasiera"
+
+[serverSetup.signingIn]
+button = "Saioa hasten"
+title = "Lehenetsitako kredentzialekin saioa hasten"
+
+[serverSetup.start]
+custom = "Pertsonalizatua"
+quick = "Hasi azkar"
+setupLabel = "Konfigurazioa"
+subtitle = "Konfiguratu zure taldearentzat pauso gutxitan."
+title = "Zure zerbitzaria martxan dago"
+
+[serverSetup.summary]
+subtitle = "Egiaztatu funtsezkoak. Gainerakoa lehenetsita mantentzen da."
+title = "Hasi azkar"
+
 [session]
 expired = "Zure saioa iraungi da. Freskatu orria eta saiatu berriro."
 
@@ -11939,6 +12848,10 @@ mcp = "MCP zerbitzaria"
 privacy = "Pribatutasuna"
 storageSharing = "Fitxategi biltegiratzea eta partekatzea"
 systemSettings = "Sistemaren ezarpenak"
+
+[settings.connectedAccounts]
+description = "Zure OneDrive, SharePoint eta Google Drive kontu propioak, zure pipelineetarako."
+title = "Konektatutako kontuak"
 
 [settings.connectedInstances]
 confirmBody = "Honek instantziak Stirling Cloud-en zure taldera duen sarbidea baliogabetzen du. Ez ditu tokiko fitxategiak ezabatzen eta ez du dagoeneko erregistratutako erabilera kentzen. Berriro konektatzeko, jarraitu instantziako jatorrizko konexio-urratsak."
@@ -11992,6 +12905,13 @@ selfhosted = "Auto-ostatua"
 apiKeys = "API gakoak"
 apiKeysDescription = "Stirling API scriptetatik eta integrazioetatik deitzeko gako pertsonalak."
 title = "Garatzailea"
+
+[settings.feedback]
+label = "Iritzia"
+
+[settings.feedback.send]
+description = "Eman arazo baten berri edo proposatu hobekuntza bat Stirling taldeari."
+label = "Bidali iritzia"
 
 [settings.general]
 autoUnzip = "Automatikoki deskonprimitu API erantzunak"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Egiaztatu eguneratzeak"
 currentBackendVersion = "Uneko backend bertsioa"
 currentFrontendVersion = "Uneko frontend bertsioa"
 description = "Egiaztatu eguneratzeak eta ikusi bertsio-informazioa"
+descriptionManaged = "Ikusi bertsio-informazioa"
 latestVersion = "Azken bertsioa"
 managedByAdmin = "Administratzaileak kudeatuta"
 modeAuto = "Instalatu eguneratzeak automatikoki"
@@ -12135,15 +13056,24 @@ title = "Lege-dokumentuak"
 backendDescription = "Zerbitzari honekin batera bildutako backend mendekotasunen lizentziak."
 backendLabel = "Backend lizentziak"
 backendTitle = "Backend-eko 3rd Party lizentziak"
+clearSearch = "Garbitu bilaketa"
 empty = "Ez da mendekotasunik aurkitu."
 frontendDescription = "Release build-ean bildutako frontend mendekotasunen lizentziak."
 frontendLabel = "Frontend lizentziak"
 frontendTitle = "Frontend-eko 3rd Party lizentziak"
 license = "Lizentzia"
+licenseAbout = "Honi buruz"
+licenseAboutCompound = "{{short}}-ri buruz"
+licenseAboutTitle = "{{short}}-ri buruz"
 listDescription = "Zerrenda zuzenean UIan erakusten da release bundle-tik edo backend endpoint-etik."
 listTitle = "Bildutako mendekotasunak"
 loadError = "Ezin izan dira hirugarrenen lizentziak kargatu"
 module = "Modulua"
+noMatch = "Ez dago bat datorren menpekotasunik."
+searchPlaceholder = "Bilatu menpekotasunak"
+showingCount = "{{count}} menpekotasun"
+showingCount_one = "{{count}} menpekotasun"
+showingCount_other = "{{count}} menpekotasun"
 version = "Bertsioa"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Sartu zure emaila"
 emptyPassword = "Sartu zure pasahitza"
 emptyUsername = "Sartu zure erabiltzaile-izena"
 oauthFailed = "OAuth saio-hasierak huts egin du. Saiatu berriro."
+openResetFailed = "Ezin izan da zure arakatzailea ireki pasahitza berrezartzeko."
 
 [setup.saas]
 title = "Hasi saioa Stirlingen"
@@ -12703,6 +13634,11 @@ bullet3 = "Sinadura ikusezinek ere baliozkotze kriptografikoa ematen dute"
 description = "Kontrolatzen du sinadura dokumentuan ikusgai den ala modu ikusezinean kapsulatuta."
 title = "Sinaduraren ikusgaitasuna"
 
+[signedPdf]
+editsBlocked = "PDF hau digitalki sinatuta dago, eta sinatutako PDFak editatzeko aukera desgaituta dago. Hala ere, ikus edo inprima dezakezu, beste formatu batera bihurtu, edo berriro sinatu."
+editsBlockedStatus = "Sinatuta: edizioak blokeatuta"
+editsBlockedTitle = "Sinatutako PDFa ezin da aldatu"
+
 [signingDetail]
 allSigned = "Denek sinatu dute. Berrikusi dokumentua, eta ondoren amaitu."
 awaitingOwner = "Jabeak dokumentua amaituko du prest dagoenean."
@@ -13110,7 +14046,6 @@ noLinks = "Ez dago partekatzeko esteka aktiborik oraindik."
 noSharedUsers = "Oraindik ez du inork atzipenik."
 openInApp = "Ireki Stirling PDF"
 ownerLabel = "Jabea"
-ownerUnknown = "Ezezaguna"
 removeLink = "Kendu esteka"
 removeUser = "Kendu"
 requiresLogin = "Fitxategi partekatu honek saioa behar du."
@@ -13249,6 +14184,11 @@ remove = "Kendu"
 roleColumn = "Rola"
 title = "Taldekideak"
 
+[teamWelcome]
+invite = "Gonbidatu pertsonak"
+message = "Gonbidatu zure taldea zurekin lanean hasi daitezen."
+title = "Zure Team plana aktibo dago."
+
 [textAlign]
 center = "Erdira"
 left = "Ezkerrera"
@@ -13290,7 +14230,6 @@ toggleDetails = "Txandakatu xehetasunak"
 
 [tool]
 endpointUnavailable = "Tresna hau ez dago erabilgarri zure zerbitzarian."
-endpointUnavailableClickable = "Modu honetan ez dago eskuragarri. Egin klik saioa hasteko."
 filesLoading = "Fitxategiak oraindik kargatzen ari dira, itxaron mesedez."
 filesLoadingProgress = "{{loaded}} / {{total}} fitxategi kargatzen..."
 invalidParams = "Bete beharrezko ezarpenak."
@@ -13298,6 +14237,8 @@ noFiles = "Gehitu fitxategi bat hasteko."
 scopeFiles = "fitxategiak"
 scopeThisFile = "fitxategi hau"
 selectFilesHint = "Tresna hau exekutatzeko, hautatu fitxategiak Fitxategi aktiboetan"
+signInRequired = "Honek Stirling kontua behar du. Jarraitzeko hasi saioa."
+signInToUse = "Erabiltzeko hasi saioa"
 singleFileScope = "Honetara soilik aplikatzen da: {{fileName}}"
 viewerMode = "Aldatu fitxategi-editorea fitxategi anitz gehitzeko."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Erakutsi azala bereizita"
 disableColorFilter = "Desgaitu kolore-iragazkia"
 documentUpdated = "Dokumentua eguneratu da"
 dualPageView = "Orri biko ikuspegia"
+editText = "Editatu testua"
 enableDarkFilter = "Gaitu iragazki iluna"
 enableSepiaFilter = "Gaitu sepia iragazkia"
 engineLoadError = "Ezin izan da PDF ikustailearen motorra hasieratu"
@@ -14158,8 +15100,10 @@ closeAll = "Itxi fitxategi guztiak"
 closePdf = "Itxi PDFa"
 deselectAll = "Kendu hautaketa guztia"
 downloadAll = "Deskargatu dena"
+editText = "Editatu testua"
 exitAnnotations = "Irten anotazio modutik"
 exitRedaction = "Irten zentsura modutik"
+findReplace = "Bilatu eta ordezkatu"
 formFill = "Inprimaki-editorea"
 hideToolbar = "Ezkutatu tresna-barra"
 moreActions = "Ekintza gehiago"

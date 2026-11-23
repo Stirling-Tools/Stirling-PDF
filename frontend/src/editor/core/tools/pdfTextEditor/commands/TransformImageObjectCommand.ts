@@ -1,7 +1,12 @@
+import { liftImageToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Affine } from "@editor/tools/pdfTextEditor/types";
 import { retargetClipPath } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import {
+  readImageClip,
+  visibleImageBounds,
+} from "@editor/tools/pdfTextEditor/util/imageClip";
 
 // Apply an in-place transform to an image: rotate by 90° (CW or CCW), flip
 // horizontally, or flip vertically.
@@ -45,12 +50,27 @@ export class TransformImageObjectCommand implements Command {
     const page = doc.page(this.pageIndex);
     const img = page.findImage(this.imageId);
     if (!img || !img.pdfiumObjPtr) return;
+    if (!liftImageToPage(doc, page, img)) return;
     if (this.prevMatrix === null) this.prevMatrix = { ...img.matrix };
-    const next = composeAboutCentre(img.matrix, this.mode);
+    // About the centre of what shows, so a clipped image turns in place
+    // rather than swinging its window around the hidden part.
+    const shown = visibleImageBounds(img);
+    const next = composeAboutCentre(
+      img.matrix,
+      this.mode,
+      shown.x + shown.width / 2,
+      shown.y + shown.height / 2,
+    );
     setMatrix(doc, img.pdfiumObjPtr, next);
     retargetClipPath(doc.module, img.pdfiumObjPtr, img.matrix, next);
     img.matrix = next;
     img.bounds = matrixBoundsAxisAligned(next);
+    img.clip = readImageClip(
+      doc.module,
+      page.pagePtr,
+      img.pdfiumObjPtr,
+      img.containerPtr,
+    );
     img.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
@@ -65,17 +85,26 @@ export class TransformImageObjectCommand implements Command {
     retargetClipPath(doc.module, img.pdfiumObjPtr, img.matrix, this.prevMatrix);
     img.matrix = { ...this.prevMatrix };
     img.bounds = matrixBoundsAxisAligned(this.prevMatrix);
+    img.clip = readImageClip(
+      doc.module,
+      page.pagePtr,
+      img.pdfiumObjPtr,
+      img.containerPtr,
+    );
     img.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
   }
 }
 
-// Compose `T(cx, cy) * Op * T(-cx, -cy) * M` where M is the input matrix, Op is
-// the rotation/flip, and (cx, cy) is M's image-centre in page space.
-function composeAboutCentre(m: Affine, mode: ImageTransformMode): Affine {
-  const cx = m.e + (m.a + m.c) / 2;
-  const cy = m.f + (m.b + m.d) / 2;
+// Compose `T(cx, cy) * Op * T(-cx, -cy) * M` where M is the input matrix and
+// Op is the rotation/flip about the page-space point (cx, cy).
+function composeAboutCentre(
+  m: Affine,
+  mode: ImageTransformMode,
+  cx: number,
+  cy: number,
+): Affine {
   // Op transforms image-space (post-rotation/flip is applied to page-space
   // output).
   let oa: number, ob: number, oc: number, od: number;
