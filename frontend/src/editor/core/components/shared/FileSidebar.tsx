@@ -374,6 +374,8 @@ interface FileGroupProps {
   renderFileRow: RenderFileRow;
   /** A control beside the header; the header is itself a button, so it can't nest. */
   action?: React.ReactNode;
+  /** Shown under the header, open or collapsed. */
+  status?: React.ReactNode;
 }
 
 function FileGroup({
@@ -382,6 +384,7 @@ function FileGroup({
   onToggle,
   renderFileRow,
   action,
+  status,
 }: FileGroupProps) {
   return (
     <div className="file-sidebar-group">
@@ -410,6 +413,7 @@ function FileGroup({
         </Button>
         {action}
       </div>
+      {status}
       <div className="file-sidebar-group-items">
         {isOpen && group.stubs.map(renderFileRow)}
       </div>
@@ -458,6 +462,7 @@ function GroupedFileList({
                 />
               ) : undefined
             }
+            status={group.id === "recent" ? <BulkAddProgressRow /> : undefined}
           />
         );
       })}
@@ -559,7 +564,7 @@ function FileLibrarySection({
         onOpenFilesPage={list.onOpenFilesPage}
         onClearRecents={list.groups ? undefined : list.onClearRecents}
       />
-      <BulkAddProgressRow />
+      {!list.groups?.some((g) => g.id === "recent") && <BulkAddProgressRow />}
       <LibraryFileList scrollRef={scrollRef} {...list} />
     </div>
   );

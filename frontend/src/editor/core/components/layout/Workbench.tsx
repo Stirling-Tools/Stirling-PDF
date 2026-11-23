@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { Box, Loader, Center, Stack, Text, Progress } from "@mantine/core";
+import { Box, Loader, Center, Stack, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@editor/hooks/useFileHandler";
@@ -25,7 +25,6 @@ import {
 import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
 import WorkbenchFloatingSearch from "@editor/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@editor/components/shared/LandingPage";
-import { useBulkAddProgress } from "@editor/services/bulkAddProgress";
 import DismissAllErrorsButton from "@editor/components/shared/DismissAllErrorsButton";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
 import { FeedbackTag } from "@editor/components/feedback/FeedbackTag";
@@ -74,15 +73,6 @@ export default function Workbench() {
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
   const { t } = useTranslation();
-
-  // An upload of several files into an empty grid shows its progress, not its
-  // cards: redrawing the grid as each file lands roughly doubles the upload.
-  const bulkAdd = useBulkAddProgress();
-  const [upload, setUpload] = useState({ total: 0, intoEmpty: false });
-  if (bulkAdd.total !== upload.total) {
-    setUpload({ total: bulkAdd.total, intoEmpty: !hasFiles });
-  }
-  const holdGrid = upload.total > 1 && upload.intoEmpty;
 
   // Every view takes file drops on the whole canvas, not just the content it
   // happens to render. Views that do something of their own with a dropped file
@@ -188,22 +178,6 @@ export default function Workbench() {
     // currently loaded into the workbench - it lives on top of the IDB store.
     if (currentView === "myFiles") {
       return <FileManagerView />;
-    }
-
-    if (holdGrid && currentView === "fileEditor") {
-      return (
-        <Center h="100%" w="100%">
-          <Stack align="center" gap="xs" w={260} role="status">
-            <Text size="sm">
-              {t("fileSidebar.addingFiles", "Adding files…")}
-            </Text>
-            <Progress w="100%" value={(bulkAdd.done / bulkAdd.total) * 100} />
-            <Text c="dimmed" size="xs">
-              {bulkAdd.done}/{bulkAdd.total}
-            </Text>
-          </Stack>
-        </Center>
-      );
     }
 
     if (activeFiles.length === 0) {
