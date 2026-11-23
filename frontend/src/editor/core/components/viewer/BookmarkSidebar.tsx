@@ -929,9 +929,11 @@ export const BookmarkSidebar = ({
               />
               <Text
                 size="xs"
-                c="blue.5"
                 ta="center"
-                style={{ textDecoration: "underline" }}
+                style={{
+                  color: "var(--c-accent-text)",
+                  textDecoration: "underline",
+                }}
               >
                 {t(
                   "viewer.bookmarks.openEditor",

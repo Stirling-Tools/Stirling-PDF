@@ -294,6 +294,7 @@ export function PdfViewerToolbar({
 
       {/* Page Input */}
       <NumberInput
+        aria-label={t("viewer.pageNumber", "Page number")}
         value={pageInput}
         onChange={(value) => {
           const page = Number(value);
@@ -399,15 +400,16 @@ export function PdfViewerToolbar({
           {pageBarButtons.map((button) => (
             <Fragment key={button.id}>
               {button.id === firstFoldingId && (
-                <Menu
-                  shadow="md"
-                  position="top"
-                  withinPortal
-                  closeOnItemClick={false}
-                >
-                  <Menu.Target>
-                    <span className="pdf-viewer-toolbar__tools-menu">
-                      <Tooltip content={toolsLabel} position="top" arrow>
+                <Tooltip content={toolsLabel} position="top" arrow>
+                  {/* Menu.Target is the button: popup ARIA is invalid on a span. */}
+                  <span className="pdf-viewer-toolbar__tools-menu">
+                    <Menu
+                      shadow="md"
+                      position="top"
+                      withinPortal
+                      closeOnItemClick={false}
+                    >
+                      <Menu.Target>
                         <ActionIcon
                           variant={activeFoldedTool ? "primary" : "tertiary"}
                           size={buttonSize}
@@ -418,30 +420,32 @@ export function PdfViewerToolbar({
                             <Icon name="pencil-ruler" size={18} />
                           )}
                         </ActionIcon>
-                      </Tooltip>
-                    </span>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    {foldingButtons.map((tool) => (
-                      <Menu.Item
-                        key={tool.id}
-                        leftSection={tool.icon}
-                        rightSection={
-                          tool.active ? <Icon name="check" size="1rem" /> : null
-                        }
-                        data-checked={tool.active || undefined}
-                        disabled={Boolean(
-                          tool.disabled ||
-                          allButtonsDisabled ||
-                          !actions[tool.id],
-                        )}
-                        onClick={() => actions[tool.id]?.()}
-                      >
-                        {tool.ariaLabel}
-                      </Menu.Item>
-                    ))}
-                  </Menu.Dropdown>
-                </Menu>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        {foldingButtons.map((tool) => (
+                          <Menu.Item
+                            key={tool.id}
+                            leftSection={tool.icon}
+                            rightSection={
+                              tool.active ? (
+                                <Icon name="check" size="1rem" />
+                              ) : null
+                            }
+                            data-checked={tool.active || undefined}
+                            disabled={Boolean(
+                              tool.disabled ||
+                              allButtonsDisabled ||
+                              !actions[tool.id],
+                            )}
+                            onClick={() => actions[tool.id]?.()}
+                          >
+                            {tool.ariaLabel}
+                          </Menu.Item>
+                        ))}
+                      </Menu.Dropdown>
+                    </Menu>
+                  </span>
+                </Tooltip>
               )}
               <span
                 className={

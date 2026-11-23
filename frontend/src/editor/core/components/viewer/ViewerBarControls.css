@@ -8,7 +8,7 @@
 .viewer-bar-button[data-active="true"],
 .viewer-bar-button[data-active="true"]:hover {
   background: var(--c-primary-subtle);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 /* A menu button stays marked while its menu is open. */
