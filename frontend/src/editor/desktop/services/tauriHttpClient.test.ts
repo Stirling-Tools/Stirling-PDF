@@ -145,3 +145,53 @@ describe("tauriHttpClient — Content-Type handling", () => {
     expect(ct).toBe("application/json");
   });
 });
+
+describe("tauriHttpClient - FormData uploads", () => {
+  const WEBKIT =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)";
+  const WEBVIEW2 =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0";
+
+  const original = new File(["%PDF-2.0 bytes"], "Report.pdf", {
+    type: "application/pdf",
+    lastModified: 1234,
+  });
+
+  async function send(userAgent: string): Promise<FormData> {
+    vi.stubGlobal("navigator", { userAgent, maxTouchPoints: 0 });
+    const form = new FormData();
+    form.append("fileInput", original);
+    form.append("accountId", "33");
+    await create({ baseURL: "https://api.test" }).post(
+      "/api/v1/rights-management/open",
+      form,
+    );
+    return fetchMock.mock.calls[0][1].body as FormData;
+  }
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue(okJson());
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  test("sends in-memory copies from WebKit, keeping fields, names and bytes", async () => {
+    const sent = await send(WEBKIT);
+
+    const file = sent.get("fileInput") as File;
+    expect(file).not.toBe(original);
+    expect(file.name).toBe("Report.pdf");
+    expect(file.type).toBe("application/pdf");
+    expect(file.lastModified).toBe(1234);
+    expect(await file.text()).toBe("%PDF-2.0 bytes");
+    expect(sent.get("accountId")).toBe("33");
+  });
+
+  test("streams the original file from other engines", async () => {
+    const sent = await send(WEBVIEW2);
+
+    expect(sent.get("fileInput")).toBe(original);
+    expect(sent.get("accountId")).toBe("33");
+  });
+});

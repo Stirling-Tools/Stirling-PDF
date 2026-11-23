@@ -280,6 +280,13 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     ],
   },
   {
+    section: "adminSecurity",
+    anchor: "pdfPermissions",
+    labelKey: "admin.settings.security.blockSignedPdfEdits.label",
+    labelFallback: "Block changes to signed PDFs",
+    keywords: ["pdf", "signed", "signature", "edit", "blockSignedPdfEdits"],
+  },
+  {
     section: "adminDatabase",
     anchor: "adminDatabase",
     labelKey: "settings.configuration.database",

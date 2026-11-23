@@ -24,6 +24,11 @@ import {
 } from "@editor/contexts/NavigationContext";
 import { useRedaction } from "@editor/contexts/RedactionContext";
 import { useFileState } from "@editor/contexts/file/fileHooks";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import {
+  getPdfAccess,
+  signedPdfEditsBlocked,
+} from "@editor/services/pdfAccessService";
 
 const Redact = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -62,6 +67,9 @@ const Redact = (props: BaseToolProps) => {
   // Get total file count from context (any files in workbench, not just selected)
   const { state: fileState } = useFileState();
   const hasAnyFiles = fileState.files.ids.length > 0;
+  const signedEditsBlocked = useViewScopedFiles().some((file) =>
+    signedPdfEditsBlocked(getPdfAccess(file)),
+  );
 
   // Tooltips for each step
   const modeTips = useRedactModeTips();
@@ -232,7 +240,11 @@ const Redact = (props: BaseToolProps) => {
         isCollapsed: false,
         onCollapsedClick: () => {},
         tooltip: manualTips,
-        content: <ManualRedactionControls disabled={!hasAnyFiles} />,
+        content: (
+          <ManualRedactionControls
+            disabled={!hasAnyFiles || signedEditsBlocked}
+          />
+        ),
       });
     }
 

@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Regression for the mushroom-life.pdf whitespace reports.
@@ -26,9 +27,7 @@ test("mushroom first-line edits never reuse whitespace (no „) and keep the par
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(MUSHROOM);
+  await openInTextEditor(page, MUSHROOM);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });

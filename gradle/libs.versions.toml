@@ -3,7 +3,7 @@ spring-boot = "4.1.2"
 pdfbox = "3.0.8"
 imageio = "3.15.3"
 lombok = "1.18.46"
-office-convert = "0.3.3"
+office-convert = "0.5.0"
 bouncycastle = "1.85"
 spring-security-saml = "7.1.1"
 open-saml = "5.2.1"
@@ -18,11 +18,11 @@ gson = "2.14.0"
 guava = "33.7.2-jre"
 jsoup = "1.23.2"
 jinjava = "2.8.5"
-jackson2 = "2.22.3"
+jackson2 = "2.22.4"
 bucket4j = "8.20.0"
-archunit = "1.5.0"
+archunit = "1.5.1"
 batik = "1.19"
-jpdfium = "1.3.0"
+jpdfium = "1.3.2"
 jwt = "0.13.0"
 aws-sdk = "2.55.14"
 jsch = "2.28.7"
@@ -41,7 +41,7 @@ flexmark = "0.64.8"
 junrar = "8.0.0"
 jakarta-servlet = "6.1.0"
 snakeyaml-engine = "3.1.1"
-springdoc = "3.0.3"
+springdoc = "3.2.0"
 simple-java-mail = "9.3.9"
 jakarta-mail = "2.1.5"
 angus-mail = "2.0.5"
@@ -95,6 +95,7 @@ batik-transcoder = { module = "org.apache.xmlgraphics:batik-transcoder", version
 # TwelveMonkeys ImageIO family
 imageio-batik = { module = "com.twelvemonkeys.imageio:imageio-batik", version.ref = "imageio" }
 imageio-bmp = { module = "com.twelvemonkeys.imageio:imageio-bmp", version.ref = "imageio" }
+imageio-pnm = { module = "com.twelvemonkeys.imageio:imageio-pnm", version.ref = "imageio" }
 imageio-jpeg = { module = "com.twelvemonkeys.imageio:imageio-jpeg", version.ref = "imageio" }
 imageio-tiff = { module = "com.twelvemonkeys.imageio:imageio-tiff", version.ref = "imageio" }
 imageio-webp = { module = "com.twelvemonkeys.imageio:imageio-webp", version.ref = "imageio" }
@@ -149,8 +150,10 @@ jackson2-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-da
 # Stirling in-house converters
 stirling-office-convert = { module = "com.stirling:stirling-office-convert", version.ref = "office-convert" }
 stirling-office-convert-legacy = { module = "com.stirling:stirling-office-convert-legacy", version.ref = "office-convert" }
+stirling-office-convert-lineart = { module = "com.stirling:stirling-office-convert-lineart", version.ref = "office-convert" }
 stirling-office-convert-topdf = { module = "com.stirling:stirling-office-convert-topdf", version.ref = "office-convert" }
 stirling-office-convert-pdfa = { module = "com.stirling:stirling-office-convert-pdfa", version.ref = "office-convert" }
+stirling-office-convert-optimize = { module = "com.stirling:stirling-office-convert-optimize", version.ref = "office-convert" }
 # JavaMail / mail parsing
 simple-java-mail = { module = "org.simplejavamail:simple-java-mail", version.ref = "simple-java-mail" }
 simple-java-mail-outlook = { module = "org.simplejavamail:outlook-module", version.ref = "simple-java-mail" }

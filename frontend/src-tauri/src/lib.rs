@@ -43,6 +43,27 @@ fn parse_launch_files(args: &[String]) -> Vec<String> {
         .collect()
 }
 
+const ONEDRIVE_PICKER_HOST_SUFFIXES: &[&str] = &[
+    ".sharepoint.com",
+    ".sharepoint.us",
+    ".sharepoint-mil.us",
+    ".sharepoint.de",
+    ".sharepoint.cn",
+];
+
+fn is_onedrive_picker_url(url: &tauri::Url) -> bool {
+    if url.scheme() != "https" {
+        return false;
+    }
+    match url.host_str() {
+        Some("onedrive.live.com") => true,
+        Some(host) => ONEDRIVE_PICKER_HOST_SUFFIXES
+            .iter()
+            .any(|suffix| host.ends_with(suffix)),
+        None => false,
+    }
+}
+
 // URLs the webview is allowed to show: the bundled app and dev server only.
 // Anything else (file://, https://...) must never replace the app UI.
 fn is_app_url(url: &tauri::Url) -> bool {
@@ -72,7 +93,7 @@ pub fn run() {
       // unclosable). Block every off-app navigation at the Rust layer.
       tauri::plugin::Builder::<tauri::Wry, ()>::new("navigation-guard")
         .on_navigation(|_webview, url| {
-          let allowed = is_app_url(url);
+          let allowed = is_app_url(url) || is_onedrive_picker_url(url);
           if !allowed {
             add_log(format!("🚫 Blocked webview navigation to: {}", url));
           }
@@ -122,6 +143,11 @@ pub fn run() {
     }))
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
+      // Drag-and-drop behaviour differs between WebView2 releases.
+      match tauri::webview_version() {
+        Ok(version) => add_log(format!("🌐 WebView version {}", version)),
+        Err(err) => add_log(format!("⚠️ Could not read the WebView version: {}", err)),
+      }
 
       if let Err(err) = apply_provisioning_if_present(app.handle()) {
         add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
@@ -199,10 +225,13 @@ pub fn run() {
       get_opened_files,
       commands::file_drop::resolve_dropped_file_paths,
       commands::file_drop::install_drag_capture,
+      commands::file_drop::log_drop_diagnostic,
       pop_opened_files,
       clear_opened_files,
       file_disk_state,
       commands::files::publish_processing_file,
+      commands::file_lock::holds_writable_lock,
+      commands::file_lock::write_locked_file,
       watch_disk_paths,
       unwatch_disk_paths,
       open_in_new_window,
@@ -236,6 +265,8 @@ pub fn run() {
       get_update_mode,
       set_update_mode,
       restart_app,
+      commands::fonts::list_system_fonts,
+      commands::fonts::read_system_font,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
@@ -321,7 +352,33 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::is_app_url;
+    use super::{is_app_url, is_onedrive_picker_url};
+
+    fn picker(raw: &str) -> bool {
+        is_onedrive_picker_url(&tauri::Url::parse(raw).expect("valid url"))
+    }
+
+    #[test]
+    fn allows_the_onedrive_picker_iframe() {
+        assert!(picker(
+            "https://contoso-my.sharepoint.com/_layouts/15/FilePicker.aspx?x=1"
+        ));
+        assert!(picker(
+            "https://contoso.sharepoint.us/_layouts/15/FilePicker.aspx"
+        ));
+        assert!(picker("https://onedrive.live.com/picker"));
+    }
+
+    #[test]
+    fn picker_allowance_is_https_microsoft_hosts_only() {
+        assert!(!picker(
+            "http://contoso-my.sharepoint.com/_layouts/15/FilePicker.aspx"
+        ));
+        assert!(!picker("https://contoso.sharepoint.com.evil.test/"));
+        assert!(!picker("https://evilsharepoint.com/"));
+        assert!(!picker("https://onedrive.live.com.evil.test/"));
+        assert!(!picker("file:///Users/me/report.pdf"));
+    }
 
     fn allows(raw: &str) -> bool {
         is_app_url(&tauri::Url::parse(raw).expect("valid url"))

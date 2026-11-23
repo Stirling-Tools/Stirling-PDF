@@ -3,6 +3,16 @@
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
+import type { FontFamilyEntry } from "@editor/tools/pdfTextEditor/util/fontFaces";
+
+export const RENDER_MODE_INVISIBLE = 3;
+const RENDER_MODE_CLIP = 7;
+
+/** Which layer text belongs to: 1 invisible, 2 clip only, 0 drawn. Text of different layers is never one line or paragraph. */
+export function textLayer(renderMode: number | undefined): number {
+  if (renderMode === RENDER_MODE_INVISIBLE) return 1;
+  return renderMode === RENDER_MODE_CLIP ? 2 : 0;
+}
 
 export interface RGBA {
   r: number; // 0..255
@@ -60,8 +70,14 @@ export interface TextRunSnapshot {
   fill: RGBA;
   /** True if PDFium says the source PDF subsetted this run's font */
   fontSubset: boolean;
+  /** For scanned text, the family its ink is matched to or redrawn in; `fontId` there is only the OCR layer's font. */
+  scanFamily?: string;
+  /** The PDF's own font the run was in before its family was changed. */
+  documentFontId?: string;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
+  /** Invisible text with nothing drawn behind it: hidden text, not an OCR layer over a scan. */
+  hiddenText?: boolean;
   /** Outline colour, when the run's render mode strokes its glyphs. */
   stroke?: RGBA;
   /** Outline width in PDF points; 0/absent = hairline or unstroked. */
@@ -79,9 +95,13 @@ export interface TextRunSnapshot {
   paragraphSlotCount?: number;
   paragraphBaselines?: number[];
   paragraphLineLefts?: number[];
+  /** Each line's right ink edge, parallel to paragraphLineLefts. */
+  paragraphLineRights?: number[];
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
+  /** The text cannot be changed, though the run can still be selected, moved and deleted: the reader could not tell the order its line was drawn in. */
+  textReadOnly?: boolean;
   /** Box width the user set by resize, in PDF points; absent = follow the ink. */
   wrapWidthPt?: number;
   /** The marked-content ID that ties the run's text into the structure tree. */
@@ -110,6 +130,11 @@ export interface ImageObjectSnapshot {
   artifact?: boolean;
   /** Drawn by a form XObject, whose marks are not the page's to change. */
   inForm?: boolean;
+  /**
+   * Page-space box of the clips the image is drawn through; what shows is
+   * `bounds` cut to it. Absent when nothing clips the image.
+   */
+  clip?: PageRect;
 }
 
 // One ruling line the page draws, with the ink needed to reproduce it: a table
@@ -224,6 +249,8 @@ export interface SelectionState {
   imageIds: string[];
   /** Selected vector shape ids. */
   shapeIds: string[];
+  /** The AnnotationBox id of the selected form field widget; only ever selected alone. */
+  formFieldId: string | null;
   /** Caret position when exactly one run is selected and the user is typing */
   caret: number | null;
   /**
@@ -242,16 +269,31 @@ export interface TextRange {
 
 export interface ToolbarState {
   fontFamily: string | null;
+  /** The document fontId every selected run can be restored to, or null. */
+  documentFontId: string | null;
   fontSize: number | null;
   fill: RGBA | null;
   bold: boolean;
   italic: boolean;
   /**
-   * Whether an italic cut is actually reachable for every selected run - a
-   * base-14 flip, or an installed face of the run's own family. False disables
-   * the control instead of silently substituting Helvetica for the real font.
+   * Whether every selected run is in, or has a real face for, the style the
+   * toggle would give the whole selection: bold when any run is not bold, else
+   * regular. False disables the control instead of silently substituting
+   * Helvetica for the real font.
    */
+  canBold: boolean;
+  /** As {@link canBold}, for italic. */
   canItalic: boolean;
+  /** Bold is off only because the italic text's family has a bold face but no bold italic one. */
+  boldNeedsBoldItalic: boolean;
+  /** Italic is off only because the bold text's family has an italic face but no bold italic one. */
+  italicNeedsBoldItalic: boolean;
+  /** The selection's weight (400 regular, 700 bold), or null when it is mixed. */
+  weight: number | null;
+  /** The weights the selection's family has, when it has more than regular and bold; else empty. */
+  weights: number[];
+  /** The document's own fonts, as families. */
+  documentFamilies: FontFamilyEntry[];
   /** Glyph outline colour across the selection; null when unset or mixed. */
   stroke: RGBA | null;
   /** Glyph outline width in points; null when mixed. 0 means no outline. */

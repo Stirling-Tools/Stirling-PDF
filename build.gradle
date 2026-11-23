@@ -23,6 +23,7 @@ import stirling.software.gradle.PreferredLicenseFilter
 
 ext {
     // Versions live in gradle/libs.versions.toml; keep this block for build-level switches only.
+
     modernJavaVersion = 25
 }
 
@@ -91,7 +92,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '3.3.0'
+    version = '3.5.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -196,6 +197,10 @@ subprojects {
                 }
                 allowInsecureProtocol = true
             }
+        }
+        maven {
+            url = "https://maven.stirlingpdf.com"
+            content { includeGroup "com.stirling" }
         }
         // Maven Central first; mirrors below are fallbacks for niche artifacts.
         mavenCentral()
@@ -657,6 +662,10 @@ repositories {
             }
             allowInsecureProtocol = true
         }
+    }
+    maven {
+        url = "https://maven.stirlingpdf.com"
+        content { includeGroup "com.stirling" }
     }
     mavenCentral()
     maven { url = "https://repository.jboss.org/" }
