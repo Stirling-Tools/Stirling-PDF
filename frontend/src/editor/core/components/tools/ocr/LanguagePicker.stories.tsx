@@ -58,12 +58,6 @@ export const WithSelection: Story = {
 };
 
 /** Disabled — e.g. while OCR is running elsewhere in the tool panel. */
-/**
- * The disabled picker is a button styled faded but not disabled, so axe checks
- * its contrast as live text and it fails. Every build has this; the others pass
- * only because axe scans while the language list is still loading.
- */
 export const Disabled: Story = {
-  tags: ["broken-in-desktop"],
   render: () => <LanguagePickerDemo initialValue={["eng"]} disabled />,
 };

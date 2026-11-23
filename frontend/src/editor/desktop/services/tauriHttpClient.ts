@@ -80,6 +80,37 @@ interface Interceptors {
   };
 }
 
+/**
+ * An error response's body in the shape axios gives it, so the core readers of
+ * `error.response.data` (a server `message`, a Blob for blob requests) find the
+ * server's reason on desktop as they do on the web: a Blob for blob requests,
+ * bytes for arraybuffer, text for text, and otherwise JSON when the body parses,
+ * falling back to the text as axios does.
+ */
+function errorResponseData(
+  body: string,
+  responseType: TauriHttpRequestConfig["responseType"],
+  contentType: string | null,
+): unknown {
+  switch (responseType) {
+    case "blob":
+      return new Blob([body], {
+        type: contentType || "application/octet-stream",
+      });
+    case "arraybuffer":
+      return new TextEncoder().encode(body).buffer;
+    case "text":
+      return body;
+    default:
+      if (!body) return body;
+      try {
+        return JSON.parse(body);
+      } catch {
+        return body;
+      }
+  }
+}
+
 class TauriHttpClient {
   public defaults: TauriHttpRequestConfig = {
     baseURL: "",
@@ -393,7 +424,11 @@ class TauriHttpClient {
         });
 
         const errorResponse: TauriHttpResponse<T> = {
-          data: errorBody as T,
+          data: errorResponseData(
+            errorBody,
+            finalConfig.responseType,
+            response.headers.get("content-type"),
+          ) as T,
           status: response.status,
           statusText: response.statusText || "",
           headers: responseHeaders,

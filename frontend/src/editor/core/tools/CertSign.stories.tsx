@@ -126,13 +126,6 @@ const signsSample = toolPanelServer(
   fixtureResponse("/api/v1/security/cert-sign", "signed-sample.pdf"),
 );
 
-/**
- * The server's own error message. The desktop app's HTTP client hands the
- * error body on as an unparsed string, which the panel cannot read the message
- * from.
- */
-const SHOWS_SERVER_ERROR = ["broken-in-desktop"];
-
 async function press(context: PlayContext, name: string) {
   await userEvent.click(await findEnabled(context, "button", name));
   return panelOf(context);
@@ -423,7 +416,6 @@ export const WindowsCertificateStoreEmpty: Story = {
 };
 
 export const WindowsCertificateStoreError: Story = {
-  tags: SHOWS_SERVER_ERROR,
   parameters: withDevice({
     windowsCertificates: hardwareError("Access to the store was denied"),
   }),
@@ -497,7 +489,6 @@ export const UsbTokenCertificateMenu: Story = {
 };
 
 export const UsbTokenListError: Story = {
-  tags: SHOWS_SERVER_ERROR,
   parameters: withDevice({
     tokenCertificates: hardwareError("CKR_PIN_INCORRECT"),
   }),

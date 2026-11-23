@@ -30,13 +30,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The server's own error message. The desktop app's HTTP client hands the
- * error body on as an unparsed string, which the panel cannot read the message
- * from.
- */
-const SHOWS_SERVER_ERROR = ["broken-in-desktop"];
-
-/**
  * An unavailable detector. The desktop app in local mode offers to sign in
  * instead of disabling the run button.
  */
@@ -159,8 +152,12 @@ export const ResultsWithoutSummary: Story = {
   },
 };
 
+/**
+ * A failure with no message from the server shows the client's own wording,
+ * which the desktop app words differently from the web's.
+ */
 export const DetectionFailed: Story = {
-  tags: SHOWS_SERVER_ERROR,
+  tags: ["not-in-desktop"],
   parameters: toolPanelServer(
     http.post(`*${DETECT_ENDPOINT}`, () =>
       HttpResponse.json(null, { status: 500 }),

@@ -81,9 +81,7 @@ export const FontSizeMenu: Story = {
   },
 };
 
-/** SaaS draws its own copy of the text step, whose colour field has no label. */
 export const TextColorPicker: Story = {
-  tags: ["broken-in-saas"],
   play: async (context) => {
     const colour = await findEnabled(context, "textbox", "Text color");
     // The swatch that opens the picker is a plain div with no role or name.

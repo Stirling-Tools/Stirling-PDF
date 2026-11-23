@@ -31,12 +31,6 @@ type Story = StoryObj<typeof meta>;
 
 const REMOVE_BACKGROUND = "Remove white background (make transparent)";
 
-/**
- * Stories that upload an image. SaaS draws its own copy of the image step,
- * which leaves out the remove-white-background option these stories wait for.
- */
-const UPLOADS_AN_IMAGE = ["broken-in-saas"];
-
 async function uploadImage(context: PlayContext): Promise<PanelQueries> {
   await waitForPanelText(context, "Select image file");
   const panel = await uploadToPanel(context, "sample.png");
@@ -71,7 +65,6 @@ export const NoFiles: Story = {
 };
 
 export const ImageUploaded: Story = {
-  tags: UPLOADS_AN_IMAGE,
   play: async (context) => {
     await uploadImage(context);
     await waitForPanelText(context, "Placement paused");
@@ -79,7 +72,6 @@ export const ImageUploaded: Story = {
 };
 
 export const WhiteBackgroundRemoved: Story = {
-  tags: UPLOADS_AN_IMAGE,
   play: async (context) => {
     await uploadImage(context);
     await toggle(context, "checkbox", REMOVE_BACKGROUND);
@@ -93,7 +85,6 @@ export const MobileUpload: Story = {
 };
 
 export const PlacementActive: Story = {
-  tags: UPLOADS_AN_IMAGE,
   ...onViewer(),
   play: async (context) => {
     await armImagePlacement(context);
@@ -102,30 +93,25 @@ export const PlacementActive: Story = {
 };
 
 export const ImagePlaced: Story = {
-  tags: UPLOADS_AN_IMAGE,
   ...onViewer(),
   play: placeImage,
 };
 
 export const ResumePlacementTooltip: Story = {
-  tags: UPLOADS_AN_IMAGE,
   play: openTooltip({ info: "Resume placement" }, { after: uploadImage }),
 };
 
 export const PausePlacementTooltip: Story = {
-  tags: UPLOADS_AN_IMAGE,
   ...onViewer(),
   play: openTooltip({ info: "Pause placement" }, { after: armImagePlacement }),
 };
 
 export const UndoTooltip: Story = {
-  tags: UPLOADS_AN_IMAGE,
   ...onViewer(),
   play: openTooltip({ info: "Undo" }, { after: placeImage }),
 };
 
 export const RedoTooltip: Story = {
-  tags: UPLOADS_AN_IMAGE,
   ...onViewer(),
   play: openTooltip(
     { info: "Redo" },
