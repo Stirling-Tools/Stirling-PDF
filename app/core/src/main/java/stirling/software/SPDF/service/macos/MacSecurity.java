@@ -65,8 +65,11 @@ final class MacSecurity {
     private final MethodHandle secTrustEvaluateWithError;
     private final MethodHandle secTrustCopyCertificateChain;
 
-    /** A keychain identity: its certificate and a retained native reference used for signing. */
-    record Identity(byte[] certificateDer, MemorySegment ref) {}
+    /**
+     * A keychain identity: its certificate, a retained native reference used for signing, and
+     * whether its key lives on a token (smart card, YubiKey) rather than in a keychain file.
+     */
+    record Identity(byte[] certificateDer, MemorySegment ref, boolean onToken) {}
 
     private MacSecurity() {
         Linker linker = Linker.nativeLinker();
@@ -180,7 +183,7 @@ final class MacSecurity {
      */
     List<Identity> listIdentities() throws Exception {
         Map<String, Identity> byCert = new LinkedHashMap<>();
-        for (boolean tokens : new boolean[] {false, true}) {
+        for (boolean tokens : new boolean[] {true, false}) {
             for (Identity identity : queryIdentities(tokens)) {
                 byCert.putIfAbsent(
                         java.util.HexFormat.of().formatHex(identity.certificateDer()), identity);
@@ -236,7 +239,7 @@ final class MacSecurity {
                             (MemorySegment) cfArrayGetValueAtIndex.invokeExact(array, i);
                     byte[] der = certificateOf(arena, identity);
                     if (der != null) {
-                        identities.add(new Identity(der, retain(identity)));
+                        identities.add(new Identity(der, retain(identity), tokensOnly));
                     }
                 }
             } finally {

@@ -11,14 +11,20 @@ final class MacKeychainPrivateKey implements PrivateKey {
 
     private final String algorithm;
     private final transient MemorySegment identity;
+    private final boolean onToken;
 
-    MacKeychainPrivateKey(String algorithm, MemorySegment identity) {
+    MacKeychainPrivateKey(String algorithm, MemorySegment identity, boolean onToken) {
         this.algorithm = algorithm;
         this.identity = identity;
+        this.onToken = onToken;
     }
 
     MemorySegment identity() {
         return identity;
+    }
+
+    boolean onToken() {
+        return onToken;
     }
 
     @Override

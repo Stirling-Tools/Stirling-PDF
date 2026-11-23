@@ -142,7 +142,7 @@ public class CertSignController {
         }
         return ResponseEntity.ok(
                 HardwareKeyStoreService.toInfo(
-                        "server", serverCertificateService.getServerCertificate(), "SERVER"));
+                        "server", serverCertificateService.getServerCertificate(), "SERVER", null));
     }
 
     /**

@@ -437,9 +437,22 @@ public class HardwareKeyStoreService {
             throws Exception {
         List<HardwareCertificateInfo> certs = new ArrayList<>();
         for (String alias : signingAliases(ks)) {
-            certs.add(toInfo(alias, (X509Certificate) ks.getCertificate(alias), source));
+            certs.add(
+                    toInfo(
+                            alias,
+                            (X509Certificate) ks.getCertificate(alias),
+                            source,
+                            onToken(ks, alias, source)));
         }
         return certs;
+    }
+
+    private static Boolean onToken(KeyStore ks, String alias, String source) throws Exception {
+        return switch (source) {
+            case SOURCE_PKCS11 -> true;
+            case SOURCE_MACOS_KEYCHAIN -> MacKeychainProvider.isOnToken(ks.getKey(alias, null));
+            default -> null;
+        };
     }
 
     private static List<String> signingAliases(KeyStore ks) throws KeyStoreException {
@@ -505,7 +518,7 @@ public class HardwareKeyStoreService {
 
     /** Summarises {@code cert} for display; nothing in the result is secret. */
     public static HardwareCertificateInfo toInfo(
-            String alias, X509Certificate cert, String source) {
+            String alias, X509Certificate cert, String source, Boolean onToken) {
         java.util.Date now = new java.util.Date();
         return new HardwareCertificateInfo(
                 alias,
@@ -519,7 +532,8 @@ public class HardwareKeyStoreService {
                 cert.getNotBefore().toInstant().toString(),
                 cert.getNotAfter().toInstant().toString(),
                 now.after(cert.getNotAfter()),
-                now.before(cert.getNotBefore()));
+                now.before(cert.getNotBefore()),
+                onToken);
     }
 
     private static String commonName(X500Principal principal) {

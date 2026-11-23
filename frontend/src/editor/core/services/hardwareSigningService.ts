@@ -14,6 +14,8 @@ export interface HardwareCertificateInfo {
   notAfter: string;
   expired: boolean;
   notYetValid: boolean;
+  /** True on a smart card or security key, false on this device, null when the source cannot tell. */
+  onToken?: boolean | null;
 }
 
 export interface Pkcs11LibraryInfo {

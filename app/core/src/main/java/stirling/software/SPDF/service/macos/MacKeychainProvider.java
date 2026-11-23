@@ -1,5 +1,6 @@
 package stirling.software.SPDF.service.macos;
 
+import java.security.Key;
 import java.security.Provider;
 
 /**
@@ -27,6 +28,11 @@ public final class MacKeychainProvider extends Provider {
 
     public static MacKeychainProvider get() {
         return INSTANCE;
+    }
+
+    /** Whether {@code key}, taken from this provider's keystore, lives on a token. */
+    public static boolean isOnToken(Key key) {
+        return key instanceof MacKeychainPrivateKey keychainKey && keychainKey.onToken();
     }
 
     /** True on macOS when Security.framework could be bound. */

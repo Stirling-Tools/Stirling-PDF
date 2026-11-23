@@ -110,6 +110,36 @@ const useDigitalIdDetails = () => {
   };
 };
 
+const DigitalIdLocation = ({ cert }: { cert: HardwareCertificateInfo }) => {
+  const { t } = useTranslation();
+  if (cert.onToken == null) return null;
+  const label = cert.onToken
+    ? t("certSign.hardware.onToken", "On a security key or smart card")
+    : t("certSign.hardware.onDevice", "Stored on this device");
+  return (
+    <span className="digital-id-location" title={label}>
+      <Icon
+        name={cert.onToken ? "usb" : "laptop"}
+        size={12}
+        aria-label={label}
+      />
+    </span>
+  );
+};
+
+const DigitalIdDetails = ({
+  cert,
+  text,
+}: {
+  cert: HardwareCertificateInfo;
+  text: string;
+}) => (
+  <Text size="xs" c="dimmed">
+    <DigitalIdLocation cert={cert} />
+    {text}
+  </Text>
+);
+
 /** A read-only card for one digital ID, styled like the entries of the list. */
 export const DigitalIdSummary = ({
   cert,
@@ -121,9 +151,7 @@ export const DigitalIdSummary = ({
     <div className="digital-id-card">
       <Stack gap={0} className={privateContentClassName}>
         <Text className="digital-id-name">{digitalIdName(cert)}</Text>
-        <Text size="xs" c="dimmed">
-          {describe(cert)}
-        </Text>
+        <DigitalIdDetails cert={cert} text={describe(cert)} />
       </Stack>
     </div>
   );
@@ -165,9 +193,7 @@ const DigitalIdList = ({
       >
         <Stack gap={0} className={privateContentClassName}>
           <Text className="digital-id-name">{digitalIdName(cert)}</Text>
-          <Text size="xs" c="dimmed">
-            {details(cert)}
-          </Text>
+          <DigitalIdDetails cert={cert} text={details(cert)} />
         </Stack>
       </Radio.Card>
     );
@@ -197,6 +223,8 @@ const DigitalIdList = ({
       >
         <ScrollArea.Autosize
           mah={visible.length > SCROLL_AFTER ? 230 : undefined}
+          offsetScrollbars="y"
+          scrollbarSize={6}
         >
           <Stack gap={4}>{visible.map(card)}</Stack>
         </ScrollArea.Autosize>

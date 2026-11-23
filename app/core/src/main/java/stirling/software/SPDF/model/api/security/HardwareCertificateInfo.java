@@ -3,7 +3,8 @@ package stirling.software.SPDF.model.api.security;
 /**
  * Metadata for one signing certificate: a hardware one (Windows store, macOS Keychain or a PKCS#11
  * token) the user can pick, or the server certificate shown for information. Never carries private
- * key material.
+ * key material. {@code onToken} is true for a key on a smart card or security key, false for one
+ * stored on this device, and null where the source cannot tell (the Windows store).
  */
 public record HardwareCertificateInfo(
         String alias,
@@ -17,4 +18,5 @@ public record HardwareCertificateInfo(
         String notBefore,
         String notAfter,
         boolean expired,
-        boolean notYetValid) {}
+        boolean notYetValid,
+        Boolean onToken) {}

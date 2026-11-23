@@ -50,7 +50,8 @@ class MacKeychainProviderTest {
         assertThatThrownBy(
                         () ->
                                 signature.initSign(
-                                        new MacKeychainPrivateKey("RSA", MemorySegment.NULL)))
+                                        new MacKeychainPrivateKey(
+                                                "RSA", MemorySegment.NULL, false)))
                 .isInstanceOf(InvalidKeyException.class)
                 .hasMessageContaining("expected EC");
     }

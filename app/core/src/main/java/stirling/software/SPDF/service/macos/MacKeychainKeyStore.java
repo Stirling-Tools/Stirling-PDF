@@ -54,7 +54,9 @@ public final class MacKeychainKeyStore extends KeyStoreSpi {
                         new Entry(
                                 cert,
                                 new MacKeychainPrivateKey(
-                                        cert.getPublicKey().getAlgorithm(), identity.ref())));
+                                        cert.getPublicKey().getAlgorithm(),
+                                        identity.ref(),
+                                        identity.onToken())));
             }
         } catch (IllegalStateException e) {
             throw e;
