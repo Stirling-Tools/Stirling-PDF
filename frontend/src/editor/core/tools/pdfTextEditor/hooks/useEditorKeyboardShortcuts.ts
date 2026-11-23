@@ -3,6 +3,7 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 import {
   isFocusInContentEditable,
   isFocusInFormField,
+  isModalOpen,
   visiblePageNumber,
 } from "@editor/tools/pdfTextEditor/util/dom";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
@@ -20,6 +21,8 @@ interface KeyboardShortcutCallbacks {
   onFindNext: (reverse: boolean) => void;
   onEscape: () => void;
   onMergeSelection: () => void;
+  onToggleBold: () => void;
+  onToggleItalic: () => void;
 }
 
 /** Bind every editor-level keyboard shortcut to `window` for the session. */
@@ -37,6 +40,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onFindNext,
     onEscape,
     onMergeSelection,
+    onToggleBold,
+    onToggleItalic,
   } = cbs;
 
   useEffect(() => {
@@ -44,7 +49,9 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       const meta = e.ctrlKey || e.metaKey;
       if (!meta) return;
       // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
-      switch (e.key.toLowerCase()) {
+      const key = e.key.toLowerCase();
+      if (key !== "s" && isModalOpen()) return;
+      switch (key) {
         case "z":
           // Form fields (Find/Replace/password) keep their NATIVE undo.
           if (isFocusInFormField()) return;
@@ -97,6 +104,14 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           e.preventDefault();
           onFindNext(e.shiftKey);
           return;
+        case "b":
+        case "i":
+          if (isFocusInFormField()) return;
+          if (store.selection.value.runIds.length === 0) return;
+          e.preventDefault();
+          if (key === "b") onToggleBold();
+          else onToggleItalic();
+          return;
         case "m":
           if (store.selection.value.runIds.length < 2) return;
           e.preventDefault();
@@ -111,12 +126,13 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
 
     function onPlainKey(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key === "?" || e.key === "F1") {
-        if (isFocusInContentEditable()) return;
+      // "?" is a character that types into text; F1 types nothing, so it opens the help from anywhere.
+      if (e.key === "F1" || (e.key === "?" && !isFocusInContentEditable())) {
         e.preventDefault();
         onToggleHelp();
         return;
       }
+      if (isModalOpen()) return;
       if (e.key === "F3") {
         e.preventDefault();
         onFindNext(e.shiftKey);
@@ -145,7 +161,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     }
 
     function onPageNav(e: KeyboardEvent) {
-      if (isFocusInContentEditable()) return;
+      if (isFocusInContentEditable() || isModalOpen()) return;
       const isHome = e.key === "Home" && (e.ctrlKey || e.metaKey);
       const isEnd = e.key === "End" && (e.ctrlKey || e.metaKey);
       if (e.key !== "PageDown" && e.key !== "PageUp" && !isHome && !isEnd) {
@@ -189,5 +205,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onFindNext,
     onEscape,
     onMergeSelection,
+    onToggleBold,
+    onToggleItalic,
   ]);
 }

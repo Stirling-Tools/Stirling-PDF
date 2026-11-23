@@ -9,9 +9,15 @@ import type {
   UntaggedLinksControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import type { TextTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 
 const KEY = "pdfTextEditor.inspector.accessibility";
 const LANGUAGE_KEY = "pdfTextEditor.inspector.language";
+const NO_REVIEW: AccessibilityReview = {
+  needsDescription: 0,
+  untagged: 0,
+  untaggable: 0,
+};
 const NO_INNER: InnerTagsControl = {
   tags: [],
   active: null,
@@ -33,7 +39,10 @@ function tagShown(tag: TextTag): HTMLElement {
         inner={NO_INNER}
         language={null}
         otherPages={null}
+        description={null}
         untaggedLinks={null}
+        review={NO_REVIEW}
+        onNext={vi.fn()}
       />
     </MantineProvider>,
   );
@@ -103,7 +112,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -112,6 +124,98 @@ describe("TextAccessibilitySection", () => {
     fireEvent.click(input);
     fireEvent.click(screen.getByText(`${KEY}.tagName.code`));
     expect(onRetag).toHaveBeenCalledWith("Code");
+  });
+
+  it("edits the description of text tagged as a formula", () => {
+    const onSet = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "tagged",
+            block: structureRole("Formula"),
+            cannotRetag: null,
+            canBeArtifact: true,
+          }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          description={{ type: "Formula", description: "x squared", onSet }}
+          untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+    const field = screen.getByRole("textbox", {
+      name: `${KEY}.formulaDescription`,
+    });
+    expect(field).toHaveValue("x squared");
+    fireEvent.change(field, { target: { value: "x squared plus one" } });
+    expect(onSet).toHaveBeenCalledWith("x squared plus one");
+  });
+
+  it.each([
+    ["only this formula needs a description", null, 1, false],
+    ["another needs one too", null, 2, true],
+    ["this one is described and another is not", "x squared", 1, true],
+  ])("offers Next when %s", (_, description, pending, shown) => {
+    const onNext = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "tagged",
+            block: structureRole("Formula"),
+            cannotRetag: null,
+            canBeArtifact: true,
+          }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          description={{ type: "Formula", description, onSet: vi.fn() }}
+          untaggedLinks={null}
+          review={{ ...NO_REVIEW, needsDescription: pending }}
+          onNext={onNext}
+        />
+      </MantineProvider>,
+    );
+    const next = screen.queryByTestId("pdf-editor-text-description-next");
+    expect(next !== null).toBe(shown);
+    if (next) {
+      fireEvent.click(next);
+      expect(onNext).toHaveBeenCalled();
+    }
+  });
+
+  it("offers formula among the types text can be tagged as", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "tagged",
+            block: structureRole("P"),
+            cannotRetag: null,
+            canBeArtifact: true,
+          }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          description={null}
+          untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+    expect(screen.queryByTestId("pdf-editor-text-description")).toBeNull();
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    fireEvent.click(screen.getByText(`${KEY}.tagName.formula`));
+    expect(onSetTag).toHaveBeenCalledWith("Formula");
   });
 
   it("offers making the text decorative", () => {
@@ -128,7 +232,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -147,7 +254,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -166,7 +276,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -187,7 +300,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -212,7 +328,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -232,7 +351,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={{ pages: 3, onApply }}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -250,7 +372,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -275,7 +400,10 @@ describe("TextAccessibilitySection", () => {
           inner={NO_INNER}
           language={null}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -378,7 +506,10 @@ describe("TextAccessibilitySection", () => {
           inner={innerControl()}
           language={{ language: undefined, onSet: vi.fn() }}
           otherPages={null}
+          description={null}
           untaggedLinks={null}
+          review={NO_REVIEW}
+          onNext={vi.fn()}
         />
       </MantineProvider>,
     );
@@ -514,7 +645,10 @@ function renderSection(
         inner={inner}
         language={language}
         otherPages={null}
+        description={null}
         untaggedLinks={untaggedLinks}
+        review={NO_REVIEW}
+        onNext={vi.fn()}
       />
     </MantineProvider>,
   );

@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 
 /**
@@ -14,8 +15,8 @@ export function useEditorSelection(store: EditorStore): SelectionState {
   return useSyncExternalStore(subscribe, () => store.selection.value);
 }
 
-/** The run the find bar is pointing at, or null. */
-export function useHighlightedRunId(store: EditorStore): string | null {
+/** The occurrence the find bar is pointing at, or null. */
+export function useFindMatch(store: EditorStore): FindMatch | null {
   const subscribe = useCallback(
     (onChange: () => void) => store.selection.highlight.subscribe(onChange),
     [store],

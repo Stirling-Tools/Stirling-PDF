@@ -79,6 +79,17 @@ export interface Span {
   right: number;
 }
 
+/** Where a word's letters end in its box: OCR may box a word with its trailing space, and the letters take their share of it. */
+export function lettersRight(word: {
+  text: string;
+  x: number;
+  right: number;
+}): number {
+  const letters = word.text.trimEnd().length;
+  if (letters === 0 || letters === word.text.length) return word.right;
+  return word.x + ((word.right - word.x) * letters) / word.text.length;
+}
+
 export function invisibleText(
   canvas: Canvas,
   text: string,
@@ -88,6 +99,10 @@ export function invisibleText(
   font: SearchableFont,
 ): number[] {
   const m = canvas.doc.module;
+  const letterSpan = {
+    left: span.left,
+    right: lettersRight({ text, x: span.left, right: span.right }),
+  };
   const ptrs = emitTextLine({
     doc: canvas.doc,
     page: canvas.page,
@@ -100,9 +115,11 @@ export function invisibleText(
     fallbackFamily: font.family,
     renderMode: RENDER_MODE_INVISIBLE,
     tags: uniformTags(canvas.tagMarks),
+    // A word keeps its trailing space, as OCR wrote it: the gap alone is too narrow to read back as one.
+    oneObject: !/\s/.test(text.trimEnd()),
   });
   opaqueStroke(m, ptrs);
-  scaleToSpan(m, ptrs, () => span);
+  scaleToSpan(m, ptrs, () => letterSpan);
   return ptrs;
 }
 
