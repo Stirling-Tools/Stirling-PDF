@@ -64,9 +64,6 @@ class TempFileCleanupServiceMoreTest {
         lenient().when(applicationProperties.getSystem()).thenReturn(system);
         lenient().when(system.getTempFileManagement()).thenReturn(tempFileManagement);
         lenient().when(tempFileManagement.getBaseTmpDir()).thenReturn(customTempDir.toString());
-        lenient()
-                .when(tempFileManagement.getLibreofficeDir())
-                .thenReturn(libreOfficeTempDir.toString());
         lenient().when(tempFileManagement.getSystemTempDir()).thenReturn(systemTempDir.toString());
         lenient().when(tempFileManagement.isStartupCleanup()).thenReturn(false);
         lenient().when(tempFileManagement.isCleanupSystemTemp()).thenReturn(false);
@@ -161,15 +158,12 @@ class TempFileCleanupServiceMoreTest {
         @DisplayName("creates configured temp directories that do not yet exist")
         void createsMissingDirectories() {
             Path newBase = tempDir.resolve("newBase");
-            Path newLo = tempDir.resolve("newLo");
             when(tempFileManagement.getBaseTmpDir()).thenReturn(newBase.toString());
-            when(tempFileManagement.getLibreofficeDir()).thenReturn(newLo.toString());
             when(tempFileManagement.isStartupCleanup()).thenReturn(false);
 
             cleanupService.init();
 
             assertThat(Files.exists(newBase)).isTrue();
-            assertThat(Files.exists(newLo)).isTrue();
         }
 
         @Test
@@ -321,43 +315,6 @@ class TempFileCleanupServiceMoreTest {
 
             // Depth guard hit: the file was not visited or deleted.
             assertThat(Files.exists(deepFile)).isTrue();
-        }
-    }
-
-    @Nested
-    @DisplayName("cleanupLibreOfficeTempFiles")
-    class LibreOfficeCleanup {
-
-        @Test
-        @DisplayName("clears contents of registered libreoffice directories but keeps the dir")
-        void clearsLibreOfficeContents() throws IOException {
-            Path loDir = Files.createDirectories(tempDir.resolve("libreoffice-conv"));
-            Path inside = Files.createFile(loDir.resolve("output_lo.pdf"));
-            Set<Path> dirs = new HashSet<>();
-            dirs.add(loDir);
-            when(registry.getTempDirectories()).thenReturn(dirs);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            cleanupService.cleanupLibreOfficeTempFiles();
-
-            // The file is removed (age ignored), directory itself remains.
-            assertThat(Files.exists(inside)).isFalse();
-            assertThat(Files.exists(loDir)).isTrue();
-        }
-
-        @Test
-        @DisplayName("ignores registered directories that are not libreoffice dirs")
-        void ignoresNonLibreOfficeDirs() throws IOException {
-            Path other = Files.createDirectories(tempDir.resolve("other-dir"));
-            Path keep = Files.createFile(other.resolve("output_keep.pdf"));
-            Set<Path> dirs = new HashSet<>();
-            dirs.add(other);
-            when(registry.getTempDirectories()).thenReturn(dirs);
-
-            cleanupService.cleanupLibreOfficeTempFiles();
-
-            // Not a libreoffice dir, so its contents are untouched.
-            assertThat(Files.exists(keep)).isTrue();
         }
     }
 

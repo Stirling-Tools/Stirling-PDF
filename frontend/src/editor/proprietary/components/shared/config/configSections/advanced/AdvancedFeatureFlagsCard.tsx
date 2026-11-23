@@ -82,28 +82,6 @@ export function AdvancedFeatureFlagsCard({
           disabled={!loginEnabled}
           styles={getDisabledStyles()}
         />
-
-        <SettingsToggleRow
-          label={t(
-            "admin.settings.advanced.stirlingOfficeConversion.label",
-            "Use new Stirling Office conversion",
-          )}
-          info={t(
-            "admin.settings.advanced.stirlingOfficeConversion.description",
-            "Stirling Office Convert is in beta. It offers better conversions, faster and with less memory than LibreOffice.",
-          )}
-          pending={isFieldPending("stirlingOfficeConversion")}
-          checked={settings.stirlingOfficeConversion || false}
-          onChange={(checked) => {
-            if (!loginEnabled) return;
-            setSettings({
-              ...settings,
-              stirlingOfficeConversion: checked,
-            });
-          }}
-          disabled={!loginEnabled}
-          styles={getDisabledStyles()}
-        />
       </Stack>
     </Paper>
   );

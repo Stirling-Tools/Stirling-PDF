@@ -2,7 +2,6 @@ import type { StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
 import { expect, userEvent, waitFor } from "storybook/test";
 import {
-  appConfig,
   endpointUnavailable,
   fixtureResponse,
   toolPanelMeta,
@@ -34,7 +33,6 @@ type Story = StoryObj<typeof meta>;
 type FormatDropdown = "convert-from-dropdown" | "convert-to-dropdown";
 
 /** The checkbox's label holds its (i), so its accessible name starts with this. */
-const OFFICE_CONVERT = /^Use Stirling Office Convert/;
 
 async function openFormatMenu(
   context: PlayContext,
@@ -91,19 +89,6 @@ async function expectSection(
   const section = await panel.findByTestId(testId, undefined, STAGE_TIMEOUT);
   await expect(section).toBeVisible();
   return section;
-}
-
-async function expectOfficeConvert(
-  panel: PanelQueries,
-  checked: boolean,
-): Promise<void> {
-  const officeConvert = await panel.findByRole(
-    "checkbox",
-    { name: OFFICE_CONVERT },
-    STAGE_TIMEOUT,
-  );
-  if (checked) await expect(officeConvert).toBeChecked();
-  else await expect(officeConvert).not.toBeChecked();
 }
 
 /** The file editor works on every selected file; the viewer only on the one it shows. */
@@ -226,28 +211,9 @@ export const PdfToImageOutputOptions: Story = {
 
 export const PdfToWord: Story = {
   play: async (context) => {
-    await expectOfficeConvert(await convertTo("docx")(context), false);
-  },
-};
-
-export const StirlingOfficeConvertOn: Story = {
-  play: async (context) => {
     await convertTo("docx")(context);
-    await toggle(context, "checkbox", OFFICE_CONVERT);
+    await expectFormat(context, "convert-to-dropdown", "Document (DOCX)");
   },
-};
-
-export const StirlingOfficeConvertServerDefault: Story = {
-  args: { files: ["sample.docx"] },
-  parameters: toolPanelServer(appConfig({ stirlingOfficeConversion: true })),
-  play: async (context) => {
-    await expectOfficeConvert(await panelOf(context), true);
-  },
-};
-
-export const StirlingOfficeConvertTooltip: Story = {
-  args: { files: ["sample.docx"] },
-  play: openTooltip({ info: /^Beta\. Better, faster conversions/ }),
 };
 
 export const PdfToPdfA: Story = {
@@ -315,9 +281,6 @@ export const PdfToPdfX: Story = {
       "Document (PDF/X)",
     );
     await expect(panel.queryByTestId("pdfa-settings")).toBeNull();
-    await expect(
-      panel.queryByRole("checkbox", { name: OFFICE_CONVERT }),
-    ).toBeNull();
   },
 };
 
@@ -470,7 +433,6 @@ export const PdfToEpub: Story = {
     await expect(
       panel.getByRole("checkbox", { name: /^Detect chapters/ }),
     ).toBeChecked();
-    await expectOfficeConvert(panel, false);
   },
 };
 
@@ -567,12 +529,11 @@ export const MultipleImagesToPdf: Story = {
 export const MixedFilesToPdf: Story = {
   args: inFileEditor(["sample.docx", "sample.png"]),
   play: async (context) => {
-    const panel = await expectFormat(
+    await expectFormat(
       context,
       "convert-from-dropdown",
       "Multiple Files (Any)",
     );
-    await expectOfficeConvert(panel, false);
   },
 };
 
@@ -600,14 +561,14 @@ export const SvgCombineTooltip: Story = {
 export const OfficeToPdf: Story = {
   args: { files: ["sample.docx"] },
   play: async (context) => {
-    await expectOfficeConvert(await panelOf(context), false);
+    await expectFormat(context, "convert-to-dropdown", "Document (PDF)");
   },
 };
 
 export const MarkdownToPdf: Story = {
   args: { files: ["sample.md"] },
   play: async (context) => {
-    await expectOfficeConvert(await panelOf(context), false);
+    await expectFormat(context, "convert-to-dropdown", "Document (PDF)");
   },
 };
 
@@ -617,15 +578,6 @@ export const HtmlToPdf: Story = {
     const panel = await panelOf(context);
     await expectSection(panel, "web-settings");
     await expect(panel.getByTestId("zoom-level-input")).toHaveValue("1");
-    await expectOfficeConvert(panel, false);
-  },
-};
-
-export const HtmlToPdfWithStirlingOfficeConvert: Story = {
-  args: { files: ["sample.html"] },
-  play: async (context) => {
-    const panel = await toggle(context, "checkbox", OFFICE_CONVERT);
-    await waitFor(() => expect(panel.queryByTestId("web-settings")).toBeNull());
   },
 };
 
@@ -635,7 +587,6 @@ export const EmailToPdf: Story = {
     const panel = await panelOf(context);
     await expectSection(panel, "email-settings");
     await expectSection(panel, "max-attachment-size-input");
-    await expectOfficeConvert(panel, false);
   },
 };
 
@@ -656,15 +607,10 @@ export const EmailWithoutAttachments: Story = {
 export const EmailToHtml: Story = {
   args: { files: ["sample.eml"] },
   play: async (context) => {
-    const panel = await toggle(
+    await toggle(
       context,
       "checkbox",
       "Download HTML intermediate file instead of PDF",
-    );
-    await waitFor(() =>
-      expect(
-        panel.queryByRole("checkbox", { name: OFFICE_CONVERT }),
-      ).toBeNull(),
     );
   },
 };
@@ -714,7 +660,6 @@ export const EbookToPdf: Story = {
   play: async (context) => {
     const panel = await panelOf(context);
     for (const option of [
-      /^Embed all fonts/,
       /^Include table of contents/,
       /^Include page numbers/,
       /^Optimize for ebook readers/,
@@ -722,13 +667,7 @@ export const EbookToPdf: Story = {
       await expect(
         await panel.findByRole("checkbox", { name: option }, STAGE_TIMEOUT),
       ).not.toBeChecked();
-    await expectOfficeConvert(panel, false);
   },
-};
-
-export const EbookEmbedFontsTooltip: Story = {
-  args: { files: ["sample.epub"] },
-  play: openTooltip({ info: /^Embed all fonts from the eBook/ }),
 };
 
 export const EbookTableOfContentsTooltip: Story = {

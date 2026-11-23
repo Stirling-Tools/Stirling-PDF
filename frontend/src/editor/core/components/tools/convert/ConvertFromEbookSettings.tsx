@@ -19,19 +19,8 @@ const ConvertFromEbookSettings = ({
 }: ConvertFromEbookSettingsProps) => {
   const { t } = useTranslation();
 
-  const handleEmbedAllFontsChange = (value: boolean) => {
-    onParameterChange("ebookOptions", {
-      embedAllFonts: value,
-      includeTableOfContents:
-        parameters.ebookOptions?.includeTableOfContents ?? false,
-      includePageNumbers: parameters.ebookOptions?.includePageNumbers ?? false,
-      optimizeForEbook: parameters.ebookOptions?.optimizeForEbook ?? false,
-    });
-  };
-
   const handleIncludeTableOfContentsChange = (value: boolean) => {
     onParameterChange("ebookOptions", {
-      embedAllFonts: parameters.ebookOptions?.embedAllFonts ?? false,
       includeTableOfContents: value,
       includePageNumbers: parameters.ebookOptions?.includePageNumbers ?? false,
       optimizeForEbook: parameters.ebookOptions?.optimizeForEbook ?? false,
@@ -40,7 +29,6 @@ const ConvertFromEbookSettings = ({
 
   const handleIncludePageNumbersChange = (value: boolean) => {
     onParameterChange("ebookOptions", {
-      embedAllFonts: parameters.ebookOptions?.embedAllFonts ?? false,
       includeTableOfContents:
         parameters.ebookOptions?.includeTableOfContents ?? false,
       includePageNumbers: value,
@@ -50,7 +38,6 @@ const ConvertFromEbookSettings = ({
 
   const handleOptimizeForEbookChange = (value: boolean) => {
     onParameterChange("ebookOptions", {
-      embedAllFonts: parameters.ebookOptions?.embedAllFonts ?? false,
       includeTableOfContents:
         parameters.ebookOptions?.includeTableOfContents ?? false,
       includePageNumbers: parameters.ebookOptions?.includePageNumbers ?? false,
@@ -60,7 +47,6 @@ const ConvertFromEbookSettings = ({
 
   // Initialize ebookOptions if not present
   const ebookOptions = parameters.ebookOptions || {
-    embedAllFonts: false,
     includeTableOfContents: false,
     includePageNumbers: false,
     optimizeForEbook: false,
@@ -68,20 +54,6 @@ const ConvertFromEbookSettings = ({
 
   return (
     <Stack gap="sm">
-      <Checkbox
-        {...infoLabelProps(
-          t("convert.ebookOptions.embedAllFonts", "Embed all fonts"),
-          t(
-            "convert.ebookOptions.embedAllFontsDesc",
-            "Embed all fonts from the eBook into the generated PDF",
-          ),
-        )}
-        checked={ebookOptions.embedAllFonts}
-        onChange={(event) =>
-          handleEmbedAllFontsChange(event.currentTarget.checked)
-        }
-        disabled={disabled}
-      />
       <Checkbox
         {...infoLabelProps(
           t(

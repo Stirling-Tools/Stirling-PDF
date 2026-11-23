@@ -10,9 +10,6 @@ const state = vi.hoisted(() => ({
   signedOut: false,
   signInEndpoints: ["pdf-to-word"],
 }));
-vi.mock("@editor/hooks/useOfficeConversionDefault", () => ({
-  useOfficeConversionDefault: () => false,
-}));
 vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => state.localOnly,
 }));

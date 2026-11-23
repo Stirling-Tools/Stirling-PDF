@@ -647,18 +647,16 @@ description = "图像处理的最大 DPI（0 = 不限）"
 label = "最大 DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "为每个进程执行器配置会话上限和超时"
 ghostscript = "Ghostscript"
 installApp = "安装应用"
 label = "进程执行器限制"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF 转 HTML"
+officeConvert = "Office 转换"
+officeConvertSessionLimit = "最大并发转换数；0 将根据 CPU 和内存选择限制"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "最大并发实例数"
@@ -667,10 +665,6 @@ label = "会话上限"
 [admin.settings.advanced.processExecutor.timeout]
 description = "最大执行时间"
 label = "超时（分钟）"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert 处于测试版阶段。与 LibreOffice 相比，它提供更好的转换效果，速度更快且占用内存更少。"
-label = "使用新的 Stirling Office 转换"
 
 [admin.settings.advanced.tempFileManagement]
 description = "配置临时文件存储和清理行为"
@@ -688,11 +682,6 @@ label = "清理间隔（分钟）"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "是否清理更广泛的系统临时目录（谨慎使用）"
 label = "清理系统临时目录"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice 临时文件目录（留空使用默认：baseTmpDir/libreoffice）"
-label = "LibreOffice 临时目录"
-placeholder = "默认：baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "临时文件在被清理前的最大小时数"
@@ -1300,17 +1289,6 @@ label = "默认生产者"
 [admin.settings.general.customPaths]
 description = "为流水线处理和外部工具配置自定义文件系统路径"
 label = "自定义路径"
-
-[admin.settings.general.customPaths.operations]
-label = "外部工具路径"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "LibreOffice unoconvert 的路径，用于文档转换（留空使用默认：/opt/venv/bin/unoconvert）"
-label = "Unoconvert 可执行文件"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "WeasyPrint 可执行文件的路径，用于 HTML 转 PDF（留空使用默认：/opt/venv/bin/weasyprint）"
-label = "WeasyPrint 可执行文件"
 
 [admin.settings.general.customPaths.pipeline]
 label = "流水线目录"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "文档标题"
 pdfUaTitleHelp = "阅读器显示此标题而不是文件名。留空则使用第一个标题。"
 selectSourceFormatFirst = "请先选择源格式"
 settings = "设置"
+signInToUse = "登录以使用"
 single = "单个"
 sourceFormatPlaceholder = "源格式"
-stirlingOfficeConvert = "使用 Stirling Office Convert（测试版）"
-stirlingOfficeConvertDescription = "转换效果更好、速度更快且占用内存更少。关闭以使用标准转换器。"
 strictMode = "严格模式"
 strictModeDesc = "如果转换不完美则报错（使用 VeraPDF 验证）"
 svgPdfOptions = "SVG 转 PDF 选项"
@@ -4419,8 +4396,6 @@ webOptions = "网页转 PDF 选项"
 zoomLevel = "缩放级别"
 
 [convert.ebookOptions]
-embedAllFonts = "嵌入所有字体"
-embedAllFontsDesc = "将电子书中的所有字体嵌入生成的 PDF 中"
 includePageNumbers = "包含页码"
 includePageNumbersDesc = "为生成的 PDF 添加页码"
 includeTableOfContents = "包含目录"
@@ -7830,7 +7805,11 @@ decorativeLabel = "装饰性图片"
 description = "图片描述"
 descriptionInfo = "屏幕阅读器会朗读此内容来替代图片。"
 encrypted = "加密文件中的标签无法编辑"
+figureDescription = "图像描述"
+figureDescriptionInfo = "屏幕阅读器会用此内容代替图像进行朗读。"
 formFieldDescription = "字段描述"
+formulaDescription = "公式描述"
+formulaDescriptionInfo = "屏幕阅读器会用此内容代替公式朗读。按口语表达，例如“x 的平方加一”。"
 heading = "无障碍"
 innerTagLabel = "标签 {{number}}"
 innerTags = "此文本中的标签"
@@ -7842,7 +7821,7 @@ missingDescriptions = "缺少描述"
 mixedContent = "图形包含其他内容"
 mixedTags = "混合"
 needsDescriptionBadge = "无描述"
-nextImage = "下一张图片"
+nextToReview = "下一个待审阅"
 notFigure = "标记为文本的一部分"
 removeTag = "移除标签"
 saveFailed = "无法保存您的无障碍更改，因此文件未保存。请撤销这些更改并重试。"
@@ -9661,10 +9640,6 @@ signInToStart = "登录以开始试用"
 stage = "阶段 {{current}} / {{total}}"
 stagesLabel = "进度"
 
-[portal.enterprise.connect]
-ownerOnly = "只有此服务器的所有者可以连接。请让他们打开此页面。"
-unavailable = "此服务器已关闭连接到 Stirling 账户。预约通话，我们将与您一起设置试用。"
-
 [portal.enterprise.landing]
 lede = "免费试用 14 天，然后在此生成报价并签署协议。无需信用卡。"
 tickAgreement = "一份协议涵盖 MSA、订单表、EULA 和 DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "下载离线许可证 (.lic)"
 hint = "将此密钥粘贴到自托管实例中以激活它，或将其保留作记录。请妥善保管。"
 label = "您的许可证密钥"
 trialFileHint = "这是您的试用许可证文件。协议就位后，请回来再次下载 — 与在线许可证密钥不同，.lic 文件不会自行更新。"
-
-[portal.procurement.link]
-cta = "关联账户"
-description = "采购在您关联的 Stirling 账户上运行：我们通过它预配试用、为报价定价并开始计费。关联账户即可开始。"
-title = "关联您的账户以开始"
 
 [portal.procurement.live]
 description = "您的订阅已激活，许可证已签发。您的团队已预配，计费已开始。"
@@ -14260,7 +14230,6 @@ toggleDetails = "切换详情"
 
 [tool]
 endpointUnavailable = "此工具在您的服务器上不可用。"
-endpointUnavailableClickable = "此模式不可用。点击以登录。"
 filesLoading = "文件仍在加载中，请稍候。"
 filesLoadingProgress = "{{loaded}} / {{total}} 个文件正在加载..."
 invalidParams = "请填写必填设置。"
@@ -14268,6 +14237,8 @@ noFiles = "添加文件以开始。"
 scopeFiles = "文件"
 scopeThisFile = "此文件"
 selectFilesHint = "在“活动文件”中选择文件以运行此工具"
+signInRequired = "此功能需要 Stirling 账户。登录以继续。"
+signInToUse = "登录以使用"
 singleFileScope = "仅应用于：{{fileName}}"
 viewerMode = "切换到文件编辑器以添加多个文件。"
 

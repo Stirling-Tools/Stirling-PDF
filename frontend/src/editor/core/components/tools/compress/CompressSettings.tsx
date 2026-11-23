@@ -36,10 +36,8 @@ const CompressSettings = ({
   disabled = false,
 }: CompressSettingsProps) => {
   const { t } = useTranslation();
-  const {
-    enabled: imageMagickAvailable,
-    unavailableReason: imageMagickReason,
-  } = useGroupEnabled("ImageMagick");
+  const { enabled: lineArtAvailable, unavailableReason: lineArtReason } =
+    useGroupEnabled("LineArt");
 
   return (
     <Stack gap="md">
@@ -169,20 +167,19 @@ const CompressSettings = ({
 
         <Tooltip
           label={
-            imageMagickReason ??
+            lineArtReason ??
             t(
               "compress.lineArt.unavailable",
-              "ImageMagick is not installed or enabled on this server",
+              "Line art conversion is not available on this server",
             )
           }
-          disabled={imageMagickAvailable !== false}
+          disabled={lineArtAvailable !== false}
           multiline
           maw={280}
         >
           <Box
             style={{
-              cursor:
-                imageMagickAvailable === false ? "not-allowed" : undefined,
+              cursor: lineArtAvailable === false ? "not-allowed" : undefined,
             }}
           >
             <Checkbox
@@ -190,19 +187,18 @@ const CompressSettings = ({
               onChange={(event) =>
                 onParameterChange("lineArt", event.currentTarget.checked)
               }
-              disabled={disabled || imageMagickAvailable === false}
+              disabled={disabled || lineArtAvailable === false}
               {...infoLabelProps(
                 t("compress.lineArt.label", "Convert images to line art"),
-                imageMagickAvailable !== false
+                lineArtAvailable !== false
                   ? t(
                       "compress.lineArt.description",
-                      "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.",
+                      "Reduces images to high-contrast black and white for maximum size reduction.",
                     )
                   : undefined,
               )}
               style={{
-                pointerEvents:
-                  imageMagickAvailable === false ? "none" : undefined,
+                pointerEvents: lineArtAvailable === false ? "none" : undefined,
               }}
             />
           </Box>
@@ -213,7 +209,7 @@ const CompressSettings = ({
             style={{
               // Dimmed enough to read as inactive, but not so far that the
               // muted labels inside drop below the 4.5:1 text floor.
-              opacity: disabled || imageMagickAvailable === false ? 0.8 : 1,
+              opacity: disabled || lineArtAvailable === false ? 0.8 : 1,
             }}
           >
             <Text size="sm" fw={600}>
@@ -241,7 +237,7 @@ const CompressSettings = ({
                 const thresholdMap = [20, 35, 50, 65, 80];
                 onParameterChange("lineArtThreshold", thresholdMap[value - 1]);
               }}
-              disabled={disabled || imageMagickAvailable === false}
+              disabled={disabled || lineArtAvailable === false}
               label={null}
               // The thumb is a div, so the heading above cannot name it.
               thumbLabel={t("compress.lineArt.detailLevel", "Detail level")}
@@ -263,17 +259,17 @@ const CompressSettings = ({
                 {
                   value: "1",
                   label: t("compress.lineArt.edgeLow", "Gentle"),
-                  disabled: disabled || imageMagickAvailable === false,
+                  disabled: disabled || lineArtAvailable === false,
                 },
                 {
                   value: "2",
                   label: t("compress.lineArt.edgeMedium", "Balanced"),
-                  disabled: disabled || imageMagickAvailable === false,
+                  disabled: disabled || lineArtAvailable === false,
                 },
                 {
                   value: "3",
                   label: t("compress.lineArt.edgeHigh", "Strong"),
-                  disabled: disabled || imageMagickAvailable === false,
+                  disabled: disabled || lineArtAvailable === false,
                 },
               ]}
               value={parameters.lineArtEdgeLevel.toString()}
