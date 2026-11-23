@@ -577,8 +577,11 @@ public class CertSignController {
 
                     // https://stackoverflow.com/questions/2914521/
                     X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
+                    RDN[] cns = x500Name.getRDNs(BCStyle.CN);
+                    String name =
+                            cns.length > 0
+                                    ? IETFUtils.valueToString(cns[0].getFirst().getValue())
+                                    : cert.getSubjectX500Principal().getName();
 
                     String date = signature.getSignDate().getTime().toString();
                     String reason = signature.getReason();
