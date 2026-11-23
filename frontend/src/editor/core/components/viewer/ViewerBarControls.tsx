@@ -27,6 +27,8 @@ interface BarButtonProps {
   onPointerEnter?: React.PointerEventHandler<HTMLButtonElement>;
   onFocus?: React.FocusEventHandler<HTMLButtonElement>;
   testId?: string;
+  /** Joined with the control's own classes, as a menu or popover target adds. */
+  className?: string;
 }
 
 /**
@@ -47,6 +49,7 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
       tooltipPosition = "bottom",
       tooltipDisabled,
       testId,
+      className,
       ...rest
     },
     ref,
@@ -70,7 +73,11 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
         ref={ref}
         size={size}
         variant={active ? "primary" : "tertiary"}
-        className={size ? undefined : "workbench-bar-action-icon"}
+        className={
+          [size ? undefined : "workbench-bar-action-icon", className]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
         disabled={disabled}
         aria-label={label}
         aria-pressed={active}
@@ -85,7 +92,7 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
         size="sm"
         variant="tertiary"
         accent="neutral"
-        className="viewer-bar-button"
+        className={["viewer-bar-button", className].filter(Boolean).join(" ")}
         data-active={active ? "true" : undefined}
         leftSection={<Icon name={icon} size="1rem" />}
         rightSection={trailing}

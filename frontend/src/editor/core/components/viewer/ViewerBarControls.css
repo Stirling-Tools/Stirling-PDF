@@ -36,6 +36,17 @@
   .viewer-bar-button__label {
     display: none;
   }
+  /* Sized like the icon-only controls beside it (24px with its 1px border),
+     with no gap left for the hidden text, so the icon sits in the middle of
+     its highlight. Two classes, to outrank the button's own minimum height. */
+  .viewer-bar-button-wrap .viewer-bar-button {
+    min-height: 24px;
+    height: 24px;
+    padding-inline: 3px;
+  }
+  .viewer-bar-button .mantine-Button-section[data-position="left"] {
+    margin-inline-end: 0;
+  }
 }
 
 /* A page colour choice, previewed in the Page view menu. */
