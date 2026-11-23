@@ -65,6 +65,10 @@ class FleetSeatQueriesTest {
                 .replace(":teamId", "1");
     }
 
+    private static String claimSql() {
+        return SaasTeamExtensionsRepositoryCustom.INCREMENT_SEATS_SQL.replace(":teamId", "1");
+    }
+
     private static long total(Connection db) throws Exception {
         try (var statement = db.createStatement();
                 var rows = statement.executeQuery(query("fleetUsersInUse"))) {
@@ -83,7 +87,7 @@ class FleetSeatQueriesTest {
 
     private static int claim(Connection db) throws Exception {
         try (var statement = db.createStatement()) {
-            return statement.executeUpdate(query("incrementSeatsUsed"));
+            return statement.executeUpdate(claimSql());
         }
     }
 }

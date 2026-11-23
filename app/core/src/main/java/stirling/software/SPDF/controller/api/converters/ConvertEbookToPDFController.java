@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -34,8 +35,6 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.OfficeDocumentSanitizer;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -52,10 +51,7 @@ public class ConvertEbookToPDFController {
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
     private final OfficeDocumentSanitizer officeDocumentSanitizer;
-
-    private boolean isCalibreEnabled() {
-        return endpointConfiguration.isGroupEnabled("Calibre");
-    }
+    private final OfficeToPdfService officeToPdfService;
 
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
@@ -70,13 +66,9 @@ public class ConvertEbookToPDFController {
             summary = "Convert an eBook file to PDF",
             description =
                     "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
-                            + " to PDF using Calibre.")
+                            + " to PDF using Stirling Office Convert.")
     public ResponseEntity<Resource> convertEbookToPdf(
             @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
-        if (!isCalibreEnabled()) {
-            throw new IllegalStateException("Calibre support is disabled");
-        }
-
         MultipartFile inputFile = request.getFileInput();
         if (inputFile == null || inputFile.isEmpty()) {
             throw new IllegalArgumentException("No input file provided");
@@ -89,7 +81,6 @@ public class ConvertEbookToPDFController {
                             + " for ebook conversion");
             optimizeForEbook = false;
         }
-        boolean embedAllFonts = Boolean.TRUE.equals(request.getEmbedAllFonts());
         boolean includeTableOfContents = Boolean.TRUE.equals(request.getIncludeTableOfContents());
         boolean includePageNumbers = Boolean.TRUE.equals(request.getIncludePageNumbers());
 
@@ -116,99 +107,71 @@ public class ConvertEbookToPDFController {
         Path workingDirectory = tempFileManager.createTempDirectory();
         Path inputPath = workingDirectory.resolve(baseName + "." + lowerExtension);
         Path outputPath = workingDirectory.resolve(baseName + ".pdf");
-
-        if (officeDocumentSanitizer.isSanitizableExtension(lowerExtension)) {
-            Files.write(
-                    inputPath,
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), lowerExtension));
-        } else {
-            try (InputStream inputStream = inputFile.getInputStream()) {
-                Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
-            }
-        }
-
-        List<String> command =
-                buildCalibreCommand(
-                        inputPath,
-                        outputPath,
-                        embedAllFonts,
-                        includeTableOfContents,
-                        includePageNumbers);
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                        .runCommandWithOutputHandling(command, workingDirectory.toFile());
-
-        if (result == null) {
-            throw new IllegalStateException("Calibre conversion returned no result");
-        }
-
-        if (result.getRc() != 0) {
-            throw new IllegalStateException("Calibre conversion failed");
-        }
-
-        if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
-            throw new IllegalStateException("Calibre did not produce a PDF output");
-        }
-
-        String outputFilename =
-                GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
-
-        TempFile tempOut = null;
         try {
-            tempOut = tempFileManager.createManagedTempFile(".pdf");
-            if (optimizeForEbook) {
-                byte[] pdfBytes = Files.readAllBytes(outputPath);
+
+            if (officeDocumentSanitizer.isSanitizableExtension(lowerExtension)) {
+                byte[] sanitized;
                 try {
-                    byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
-                    Files.write(tempOut.getPath(), optimizedPdf);
+                    sanitized =
+                            officeDocumentSanitizer.sanitize(inputFile.getBytes(), lowerExtension);
                 } catch (IOException e) {
-                    log.warn(
-                            "Ghostscript optimization failed for ebook conversion, returning"
-                                    + " original PDF",
-                            e);
-                    Files.write(tempOut.getPath(), pdfBytes);
+                    OfficeToPdfService.rejectUnreadable(e);
+                    throw e;
                 }
+                Files.write(inputPath, sanitized);
             } else {
-                try (PDDocument document = pdfDocumentFactory.load(outputPath.toFile())) {
-                    document.save(tempOut.getFile());
+                try (InputStream inputStream = inputFile.getInputStream()) {
+                    Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
-            ResponseEntity<Resource> response =
-                    WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
-            tempOut = null;
-            return response;
-        } catch (Exception e) {
-            if (tempOut != null) {
-                tempOut.close();
+
+            officeToPdfService.convert(
+                    inputPath,
+                    outputPath,
+                    officeToPdfService
+                            .options()
+                            .tableOfContents(includeTableOfContents)
+                            .pageNumbers(includePageNumbers));
+
+            if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
+                throw new IllegalStateException("The ebook converter did not produce a PDF output");
             }
-            throw e;
+
+            String outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
+
+            TempFile tempOut = null;
+            try {
+                tempOut = tempFileManager.createManagedTempFile(".pdf");
+                if (optimizeForEbook) {
+                    byte[] pdfBytes = Files.readAllBytes(outputPath);
+                    try {
+                        byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+                        Files.write(tempOut.getPath(), optimizedPdf);
+                    } catch (IOException e) {
+                        log.warn(
+                                "Ghostscript optimization failed for ebook conversion, returning"
+                                        + " original PDF",
+                                e);
+                        Files.write(tempOut.getPath(), pdfBytes);
+                    }
+                } else {
+                    try (PDDocument document = pdfDocumentFactory.load(outputPath.toFile())) {
+                        document.save(tempOut.getFile());
+                    }
+                }
+                ResponseEntity<Resource> response =
+                        WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+                tempOut = null;
+                return response;
+            } catch (Exception e) {
+                if (tempOut != null) {
+                    tempOut.close();
+                }
+                throw e;
+            }
         } finally {
             cleanupTempFiles(workingDirectory, inputPath, outputPath);
         }
-    }
-
-    private List<String> buildCalibreCommand(
-            Path inputPath,
-            Path outputPath,
-            boolean embedAllFonts,
-            boolean includeTableOfContents,
-            boolean includePageNumbers) {
-        List<String> command = new ArrayList<>();
-        command.add("ebook-convert");
-        command.add(inputPath.toString());
-        command.add(outputPath.toString());
-
-        if (embedAllFonts) {
-            command.add("--embed-all-fonts");
-        }
-        if (includeTableOfContents) {
-            command.add("--pdf-add-toc");
-        }
-        if (includePageNumbers) {
-            command.add("--pdf-page-numbers");
-        }
-
-        return command;
     }
 
     private void cleanupTempFiles(Path workingDirectory, Path inputPath, Path outputPath) {

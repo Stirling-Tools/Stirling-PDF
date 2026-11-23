@@ -44,7 +44,7 @@ public class ModelCatalogService {
             }
             this.entries = List.copyOf(map.values());
             this.byId = Map.copyOf(map);
-            log.info("Loaded {} Auto Form Detection model catalog entries", entries.size());
+            log.debug("Loaded {} Auto Form Detection model catalog entries", entries.size());
         } catch (Exception e) {
             log.error(
                     "Failed to load Auto Form Detection model catalog from {}",

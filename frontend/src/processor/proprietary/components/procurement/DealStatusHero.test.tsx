@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
 import type { ProcurementSnapshot } from "@processor/api/procurement";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -13,9 +14,6 @@ vi.mock("react-i18next", () => ({
       return key;
     },
   }),
-}));
-vi.mock("@processor/components/procurement/CalendlyInline", () => ({
-  warmCalendly: vi.fn(),
 }));
 
 const snapshot: ProcurementSnapshot = {
@@ -33,43 +31,37 @@ const snapshot: ProcurementSnapshot = {
   contactName: null,
   contactEmail: null,
   latestQuote: null,
+  rateCard: RATE_CARD,
+  maxTrialExtensions: 2,
+  minAnnualNetMinor: 0,
+  entitledDeployment: null,
 };
 
-function mount(overrides: Partial<ProcurementSnapshot> = {}, readOnly = false) {
+function mount(overrides: Partial<ProcurementSnapshot> = {}, member = false) {
+  const onOpen = vi.fn();
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-09-11T00:00:00Z"));
-  const onManageTrial = vi.fn();
-  const onDocuments = vi.fn();
   render(
     <MantineProvider>
       <DealStatusHero
         snapshot={{ ...snapshot, ...overrides }}
-        readOnly={readOnly}
-        canSchedule={false}
-        onExpand={vi.fn()}
-        onAcceptQuote={vi.fn()}
-        onLicense={vi.fn()}
-        onInvite={vi.fn()}
-        onSchedule={vi.fn()}
-        onManageTrial={onManageTrial}
-        onDocuments={onDocuments}
+        onOpen={member ? undefined : onOpen}
       />
     </MantineProvider>,
   );
-  return { onManageTrial, onDocuments };
+  return { onOpen };
 }
 
 afterEach(() => vi.useRealTimers());
 
-describe("DealStatusHero trial status", () => {
-  it("preserves the trial-management action and document icon", () => {
-    const { onManageTrial, onDocuments } = mount();
-    fireEvent.click(screen.getByRole("button", { name: "7 days left" }));
-    expect(onManageTrial).toHaveBeenCalledOnce();
+describe("DealStatusHero", () => {
+  it("opens the Enterprise page from its one action", () => {
+    const { onOpen } = mount();
     fireEvent.click(
-      screen.getByRole("button", { name: "portal.procurement.hero.documents" }),
+      screen.getByRole("button", { name: "portal.procurement.hero.open" }),
     );
-    expect(onDocuments).toHaveBeenCalledOnce();
+    expect(onOpen).toHaveBeenCalledOnce();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
   });
 
   it.each(["trial", "quote", "security"] as const)(
@@ -80,14 +72,6 @@ describe("DealStatusHero trial status", () => {
     },
   );
 
-  it("does not offer trial extensions after the deal advances to quote", () => {
-    mount({ stage: "quote" });
-    expect(screen.getByText("7 days left")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "7 days left" }),
-    ).not.toBeInTheDocument();
-  });
-
   it.each(["exploring", "procurement", "active"] as const)(
     "does not label %s using a historical trial date",
     (stage) => {
@@ -96,7 +80,7 @@ describe("DealStatusHero trial status", () => {
     },
   );
 
-  it("shows the member's trial status without mutation actions", () => {
+  it("shows a member the trial status with no way into the deal", () => {
     mount({}, true);
     expect(screen.getByText("7 days left")).toBeInTheDocument();
     expect(screen.queryAllByRole("button")).toHaveLength(0);

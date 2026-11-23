@@ -6,13 +6,30 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { useAccessibilityReview } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityReview";
+import { useFormFieldAccessibility } from "@editor/tools/pdfTextEditor/hooks/useFormFieldAccessibility";
 import { useImageAccessibility } from "@editor/tools/pdfTextEditor/hooks/useImageAccessibility";
-import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
-import { warmDocumentDeviceFonts } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { useTextAccessibility } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import {
-  loadedLocalFonts,
-  subscribeLocalFonts,
-} from "@editor/tools/pdfTextEditor/util/localFonts";
+  isScanRun,
+  scanDrawnFont,
+  type ScanDrawnFont,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  scanFacesGeneration,
+  subscribeScanFaces,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
+import {
+  rangeFontIds,
+  selectedPartOfRun,
+} from "@editor/tools/pdfTextEditor/commands/StyleTextRangeCommand";
+import { useDocumentFontCompletion } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
+import {
+  loadedExternalFonts,
+  subscribeExternalFonts,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
+import { loadServerFonts } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   ChangeZOrderCommand,
   type ZOrderMode,
@@ -46,13 +63,42 @@ type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
 // Everything the contextual `Toolbar` needs, derived from the shared
 // `EditorStore`.
+const CAN_UNDO = 1;
+const CAN_REDO = 2;
+
+// Read from the store, not the deferred state the bars render: a stale enabled redo gets clicked past the end of history.
+function useHistoryFlags(store: EditorStore): {
+  canUndo: boolean;
+  canRedo: boolean;
+} {
+  const subscribe = useCallback(
+    (onChange: () => void) => store.subscribe(onChange),
+    [store],
+  );
+  const read = useCallback(
+    () =>
+      (store.history.canUndo ? CAN_UNDO : 0) |
+      (store.history.canRedo ? CAN_REDO : 0),
+    [store],
+  );
+  const flags = useSyncExternalStore(subscribe, read, read);
+  return {
+    canUndo: (flags & CAN_UNDO) !== 0,
+    canRedo: (flags & CAN_REDO) !== 0,
+  };
+}
+
 export function useToolbarController(
   store: EditorStore,
   state: EditorViewState,
   selection: SelectionState,
 ) {
   const sel = useSelectionActions(store);
+  const history = useHistoryFlags(store);
   const imageA11y = useImageAccessibility(store, state, selection);
+  const a11yReview = useAccessibilityReview(store, state);
+  const textA11y = useTextAccessibility(store, state, selection);
+  const formFieldA11y = useFormFieldAccessibility(store, state, selection);
 
   const onToggleLock = useCallback(() => {
     const doc = store.document;
@@ -380,7 +426,7 @@ export function useToolbarController(
       const cmds: EditTextCommand[] = [];
       for (const p of doc.loadedPages()) {
         for (const r of p.runs) {
-          if (!selIds.has(r.id) || r.locked) continue;
+          if (!selIds.has(r.id) || r.locked || r.textReadOnly) continue;
           const next = transform(r.text);
           if (next === r.text) continue;
           cmds.push(
@@ -398,30 +444,61 @@ export function useToolbarController(
     [store],
   );
 
-  // Null until the user loads their device fonts, and it must re-render when
-  // they do - the italic control's availability is derived from it.
-  const localFonts = useSyncExternalStore(
-    subscribeLocalFonts,
-    loadedLocalFonts,
-    loadedLocalFonts,
+  // Null until device or server fonts load; re-render then, as italic availability derives from it.
+  const externalFonts = useSyncExternalStore(
+    subscribeExternalFonts,
+    loadedExternalFonts,
+    loadedExternalFonts,
   );
 
-  const documentFontIds = useMemo(
-    () => [...new Set(state.pages.flatMap((p) => p.runs.map((r) => r.fontId)))],
-    [state.pages],
-  );
-
-  // Match the document's own families against the installed ones, so an edit
-  // that outgrows an embedded subset completes from the real face.
+  const hasTextSelection = selection.runIds.length > 0;
   useEffect(() => {
-    if (!localFonts) return;
-    void warmDocumentDeviceFonts(documentFontIds);
-  }, [localFonts, documentFontIds]);
+    if (hasTextSelection) void loadServerFonts();
+  }, [hasTextSelection]);
+
+  useDocumentFontCompletion(store, state, selection, externalFonts);
+
+  // state.pages is unread but changes whenever a restyle redraws the selected characters.
+  const selectedFontIds = useMemo(() => {
+    const doc = store.document;
+    const part = selectedPartOfRun(doc, selection);
+    return doc && part
+      ? rangeFontIds(doc, part.page, part.run, part.range)
+      : null;
+  }, [store, selection, state.pages]);
 
   const toolbarState = useMemo(
-    () => deriveToolbarState(state.pages, selection, localFonts),
-    [state.pages, selection, localFonts],
+    () =>
+      deriveToolbarState(
+        state.pages,
+        selection,
+        externalFonts,
+        selectedFontIds,
+      ),
+    [state.pages, selection, externalFonts, selectedFontIds],
   );
+
+  const scanFacesVersion = useSyncExternalStore(
+    subscribeScanFaces,
+    scanFacesGeneration,
+    scanFacesGeneration,
+  );
+  // Undefined unless the selection is wholly scanned text; null when no single font is in force.
+  const scanFont = useMemo<ScanDrawnFont | null | undefined>(() => {
+    const doc = store.document;
+    if (!doc || selection.runIds.length === 0) return undefined;
+    const ids = new Set(selection.runIds);
+    const runs = doc
+      .loadedPages()
+      .flatMap((page) => page.runs.filter((run) => ids.has(run.id)));
+    if (runs.length === 0 || !runs.every(isScanRun)) return undefined;
+    const fonts = runs.map((run) => scanDrawnFont(doc, run));
+    const first = fonts[0];
+    return first && fonts.every((font) => font?.family === first.family)
+      ? first
+      : null;
+    // state.pages and scanFacesVersion are unread but change whenever a block is refitted.
+  }, [store, selection.runIds, state.pages, scanFacesVersion]);
 
   const selectionAllLocked = useMemo(() => {
     const runs = new Set(selection.runIds);
@@ -443,7 +520,15 @@ export function useToolbarController(
       .find((r) => r.id === selection.runIds[0]);
     // Mirrors AlignParagraphLinesCommand.canAlign, which gates on SLOTS: line
     // count enabled the item for paragraphs the command then refused.
-    return !!run && (run.paragraphSlotCount ?? 0) >= 2;
+    return !!run && (run.paragraphSlotCount ?? 0) >= 2 && !run.textReadOnly;
+  }, [state.pages, selection]);
+
+  const selectionTextReadOnly = useMemo(() => {
+    const ids = new Set(selection.runIds);
+    const runs = state.pages
+      .flatMap((p) => p.runs)
+      .filter((r) => ids.has(r.id));
+    return runs.length > 0 && runs.every((r) => r.textReadOnly);
   }, [state.pages, selection]);
 
   const onReplaceImage = useCallback(() => {
@@ -498,17 +583,18 @@ export function useToolbarController(
 
   return {
     state: toolbarState,
-    canUndo: store.history.canUndo,
-    canRedo: store.history.canRedo,
+    scanFont,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
     onUndo: () => store.undo(),
     onRedo: () => store.redo(),
     onChangeFontSize: sel.changeFontSize,
     onChangeFill: sel.changeFill,
     onChangeOutline: sel.changeOutline,
-    onChangeFontFamily: (family: string) => {
-      void sel.changeFontFamily(family);
-    },
+    onChangeFontFamily: sel.changeFontFamily,
+    onToggleBold: sel.toggleBold,
     onToggleItalic: sel.toggleItalic,
+    onChangeFontWeight: sel.changeFontWeight,
     onDelete: sel.deleteSelection,
     onToggleLock,
     onChangeCase,
@@ -521,11 +607,24 @@ export function useToolbarController(
     externalEditSupported: isExternalImageEditSupported(),
     imageAccessibility: imageA11y.accessibility,
     onSetImageDescription: imageA11y.setDescription,
+    onSetImageType: imageA11y.setType,
     onSetImageDecorative: imageA11y.setDecorative,
-    imageReview: imageA11y.review,
-    onSelectNextImageToReview: imageA11y.selectNextImage,
+    accessibilityReview: a11yReview.review,
+    onSelectNextToReview: a11yReview.selectNext,
+    textTag: textA11y.tag,
+    onSetTextTag: textA11y.setTag,
+    innerTextTags: textA11y.inner,
+    textLanguage: textA11y.language,
+    textOtherPages: textA11y.otherPages,
+    textDescription: textA11y.description,
+    textUntaggedLinks: textA11y.untaggedLinks,
+    formFieldAccessibility: formFieldA11y.accessibility,
+    onTagFormField: formFieldA11y.tag,
+    onSetFormFieldDescription: formFieldA11y.setDescription,
     selectionAllLocked,
+    selectionTextReadOnly,
     hasRunSelection: selection.runIds.length > 0,
+    selectedRunIds: selection.runIds,
     hasImageSelection: selection.imageIds.length > 0,
     selectionCount:
       selection.runIds.length +
@@ -533,6 +632,7 @@ export function useToolbarController(
       selection.shapeIds.length,
     canAlignLines,
     disabled:
+      sel.fittingScan ||
       !state.hasDocument ||
       (selection.runIds.length === 0 && selection.imageIds.length === 0),
   };

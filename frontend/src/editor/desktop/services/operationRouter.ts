@@ -5,10 +5,14 @@ import {
   documentPrivacyError,
 } from "@editor/services/documentPrivacyService";
 import { authService } from "@editor/services/authService";
-import { connectionModeService } from "@editor/services/connectionModeService";
+import {
+  connectionModeService,
+  type ConnectionMode,
+} from "@editor/services/connectionModeService";
 import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { requiresSignIn } from "@editor/services/signInRequiredEndpoints";
 import { STIRLING_SAAS_BACKEND_API_URL } from "@editor/constants/connection";
 import {
   CONVERSION_ENDPOINTS,
@@ -16,6 +20,11 @@ import {
 } from "@editor/constants/convertConstants";
 
 export type ExecutionTarget = "local" | "remote";
+
+/** Where a standalone tool runs in `mode`, before any per-endpoint capability fallback. */
+export function executionTargetFor(mode: ConnectionMode): ExecutionTarget {
+  return mode === "saas" || mode === "local" ? "local" : "remote";
+}
 
 export class OperationRouter {
   private static instance: OperationRouter;
@@ -57,16 +66,25 @@ export class OperationRouter {
     return url.replace(/\/$/, "");
   }
 
+  private signInRequiredError(): Error {
+    // Open the connection settings so the user can sign in
+    window.dispatchEvent(
+      new CustomEvent("appConfig:navigate", {
+        detail: { key: "connectionMode" },
+      }),
+    );
+    return new Error(
+      i18n.t(
+        "localMode.toolUnavailable",
+        "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it.",
+      ),
+    );
+  }
+
   /** Standalone tools route by connection mode. Automation endpoints never reach here —
    *  getBaseUrl resolves those via getConnectedServerBaseUrl before this is consulted. */
   async getExecutionTarget(): Promise<ExecutionTarget> {
-    const mode = await connectionModeService.getCurrentMode();
-
-    if (mode === "saas" || mode === "local") {
-      return "local";
-    }
-
-    return "remote";
+    return executionTargetFor(await connectionModeService.getCurrentMode());
   }
 
   /**
@@ -170,13 +188,27 @@ export class OperationRouter {
     return endpoint;
   }
 
+  /** The caller's endpoint key wins: one URL can serve several (PDF to text and to RTF). */
+  private capabilityKey(operation: string, endpointName?: string): string {
+    return endpointName || this.extractEndpointName(operation);
+  }
+
   /**
    * Gets the base URL for an operation based on execution target
    * Enhanced with capability-based routing for tools not supported locally
    * @param operation - The operation endpoint path (for endpoint classification)
+   * @param endpointName - Backend endpoint key, when the URL alone does not identify it
    * @returns Base URL for API calls
    */
-  async getBaseUrl(operation?: string): Promise<string> {
+  async getBaseUrl(operation?: string, endpointName?: string): Promise<string> {
+    if (
+      operation &&
+      this.isToolEndpoint(operation) &&
+      requiresSignIn(this.capabilityKey(operation, endpointName)) &&
+      (await connectionModeService.getCurrentMode()) === "local"
+    ) {
+      throw this.signInRequiredError();
+    }
     if (await isLocalProcessingOnly()) {
       if (operation && requiresOffDeviceProcessing(operation))
         throw documentPrivacyError();
@@ -190,7 +222,7 @@ export class OperationRouter {
           operation &&
           this.isToolEndpoint(operation) &&
           !(await endpointAvailabilityService.isEndpointSupportedLocally(
-            this.extractEndpointName(operation),
+            this.capabilityKey(operation, endpointName),
             localUrl,
           ))
         ) {
@@ -207,27 +239,16 @@ export class OperationRouter {
     // Local-only mode: route everything to local backend; open settings if tool unavailable
     if (mode === "local") {
       if (operation && this.isToolEndpoint(operation)) {
-        const endpointName = this.extractEndpointName(operation);
+        const endpointToCheck = this.capabilityKey(operation, endpointName);
         const backendUrl = tauriBackendService.getBackendUrl();
         if (backendUrl) {
           const supportedLocally =
             await endpointAvailabilityService.isEndpointSupportedLocally(
-              endpointName,
+              endpointToCheck,
               backendUrl,
             );
           if (!supportedLocally) {
-            // Open the connection settings so the user can sign in
-            window.dispatchEvent(
-              new CustomEvent("appConfig:navigate", {
-                detail: { key: "connectionMode" },
-              }),
-            );
-            throw new Error(
-              i18n.t(
-                "localMode.toolUnavailable",
-                "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it.",
-              ),
-            );
+            throw this.signInRequiredError();
           }
         }
       }
@@ -254,7 +275,7 @@ export class OperationRouter {
     // NEW: Check if local backend supports this tool endpoint
     if (mode === "saas" && operation && this.isToolEndpoint(operation)) {
       // Extract endpoint name for capability check (e.g., "/api/v1/misc/repair" -> "repair")
-      const endpointToCheck = this.extractEndpointName(operation);
+      const endpointToCheck = this.capabilityKey(operation, endpointName);
       console.debug(
         `[operationRouter] Checking capability for ${operation} -> endpoint name: ${endpointToCheck}`,
       );
@@ -276,26 +297,6 @@ export class OperationRouter {
         );
 
         if (!supportedLocally) {
-          // Local backend doesn't support this - check if SaaS supports it
-          const supportedOnSaaS =
-            await endpointAvailabilityService.isEndpointSupportedOnSaaS(
-              endpointToCheck,
-            );
-          console.debug(
-            `[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`,
-          );
-
-          if (!supportedOnSaaS) {
-            // Neither local nor SaaS support this - throw error
-            console.error(
-              `[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`,
-            );
-            throw new Error(
-              `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`,
-            );
-          }
-
-          // SaaS supports it - route to SaaS backend
           if (!STIRLING_SAAS_BACKEND_API_URL) {
             console.error(
               "[operationRouter] VITE_SAAS_BACKEND_API_URL not configured",
@@ -306,7 +307,7 @@ export class OperationRouter {
             );
           }
           console.debug(
-            `[operationRouter] Routing ${operation} to SaaS backend (not supported locally, but supported on SaaS)`,
+            `[operationRouter] Routing ${operation} to SaaS backend (not supported locally)`,
           );
           return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, "");
         }
@@ -323,12 +324,12 @@ export class OperationRouter {
     if (mode === "selfhosted" && operation && this.isToolEndpoint(operation)) {
       const { status } = selfHostedServerMonitor.getSnapshot();
       if (status === "offline") {
-        const endpointName = this.extractEndpointName(operation);
+        const endpointToCheck = this.capabilityKey(operation, endpointName);
         const localUrl = tauriBackendService.getBackendUrl();
         if (localUrl) {
           const supportedLocally =
             await endpointAvailabilityService.isEndpointSupportedLocally(
-              endpointName,
+              endpointToCheck,
               localUrl,
             );
           if (supportedLocally) {
@@ -342,7 +343,7 @@ export class OperationRouter {
           i18n.t(
             "selfHosted.offline.toolNotAvailableLocally",
             'Your Stirling-PDF server is offline and "{{endpoint}}" is not available on the local backend.',
-            { endpoint: endpointName },
+            { endpoint: endpointToCheck },
           ),
         );
       }
@@ -395,9 +396,13 @@ export class OperationRouter {
    * Returns true if the endpoint routes to SaaS backend (not local backend)
    * Enhanced to support capability-based routing
    * @param endpoint - The endpoint path to check
+   * @param endpointName - Backend endpoint key, when the URL alone does not identify it
    * @returns Promise<boolean> - true if endpoint should skip backend readiness check
    */
-  async shouldSkipBackendReadyCheck(endpoint?: string): Promise<boolean> {
+  async shouldSkipBackendReadyCheck(
+    endpoint?: string,
+    endpointName?: string,
+  ): Promise<boolean> {
     if (await isLocalProcessingOnly())
       return Boolean(
         endpoint &&
@@ -417,7 +422,7 @@ export class OperationRouter {
       const backendUrl = tauriBackendService.getBackendUrl();
       // Backend not ready — don't skip the readiness check; let it gate the request.
       if (!backendUrl || !tauriBackendService.isOnline) return false;
-      const endpointToCheck = this.extractEndpointName(endpoint);
+      const endpointToCheck = this.capabilityKey(endpoint, endpointName);
       const supportedLocally =
         await endpointAvailabilityService.isEndpointSupportedLocally(
           endpointToCheck,
@@ -449,6 +454,7 @@ export class OperationRouter {
     if (this.isToolEndpoint(endpoint)) {
       // For UI data endpoints, extract the endpoint name
       const endpointToCheck = this.extractEndpointName(endpoint);
+      if (mode === "local" && requiresSignIn(endpointToCheck)) return true;
       const supportedLocally =
         await endpointAvailabilityService.isEndpointSupportedLocally(
           endpointToCheck,

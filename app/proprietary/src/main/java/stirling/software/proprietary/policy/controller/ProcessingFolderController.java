@@ -117,6 +117,7 @@ public class ProcessingFolderController {
     private final FolderAccessGuard folderAccessGuard;
     private final SourceAccessGuard sourceAccessGuard;
     private final ApplicationProperties applicationProperties;
+    private final StepSecrets stepSecrets;
 
     public record ProcessingFolderView(
             String id,
@@ -245,6 +246,9 @@ public class ProcessingFolderController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Pipeline steps must not be null");
         }
+        // Folder views return their steps as stored, so a sentinel here was copied from a masked
+        // policy read and has no stored value behind it.
+        stepSecrets.requireUnmasked(steps);
         Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
                 .distinct()
                 .forEach(outputId -> requireAccessibleDestination(outputId, steps));

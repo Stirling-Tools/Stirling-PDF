@@ -89,7 +89,7 @@ async function saveDocument(page: import("@playwright/test").Page) {
 function tagViewerWrapper(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
     const span = document.querySelector<HTMLElement>(
-      ".ph-no-capture:has([data-page-index])",
+      ".ph-sensitive:has([data-page-index])",
     );
     span?.setAttribute("data-reload-probe", "1");
   });

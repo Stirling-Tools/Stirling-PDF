@@ -10,6 +10,7 @@ import { fetchUsers } from "@editor/api/users";
 import { useAuth } from "@editor/auth/UseSession";
 import { qk } from "@editor/query/keys";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface UserSelectorProps {
   value: number[];
@@ -34,7 +35,7 @@ const UserSelector = ({
   presentation = "dropdown",
 }: UserSelectorProps) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isAnonymous, loading: authLoading } = useAuth();
   const [stringValue, setStringValue] = useState<string[]>([]);
   const [search, setSearch] = useState("");
 
@@ -43,16 +44,21 @@ const UserSelector = ({
     isPending: loading,
     error,
     refetch,
-  } = useQuery({ queryKey: qk.users(), queryFn: fetchUsers });
+  } = useQuery({
+    queryKey: qk.users(),
+    queryFn: fetchUsers,
+    // isAnonymous is false until authentication resolves.
+    enabled: !authLoading && !isAnonymous,
+  });
 
   useEffect(() => {
-    if (!error) return;
+    if (authLoading || isAnonymous || !error) return;
     alert({
       alertType: "error",
       title: t("common.error"),
       body: t("certSign.collab.userSelector.loadError", "Failed to load users"),
     });
-  }, [error, t]);
+  }, [authLoading, isAnonymous, error, t]);
 
   const selectData = useMemo<GroupedData[]>(() => {
     const usersByTeam: Record<string, SelectItem[]> = {};
@@ -97,6 +103,21 @@ const UserSelector = ({
       .filter(Boolean);
     setStringValue(result);
   }, [value]);
+
+  if (authLoading) {
+    return <Loader size="sm" />;
+  }
+
+  if (isAnonymous) {
+    return (
+      <Text size="sm" c="dimmed">
+        {t(
+          "certSign.collab.userSelector.signInRequired",
+          "Sign in to request signatures from other people.",
+        )}
+      </Text>
+    );
+  }
 
   if (loading) {
     return <Loader size="sm" />;
@@ -166,7 +187,7 @@ const UserSelector = ({
                   return (
                     <label
                       key={id}
-                      className={styles.card}
+                      className={`${styles.card} ${privateContentClassName}`}
                       data-selected={selected}
                     >
                       <span className={styles.avatar} aria-hidden="true">

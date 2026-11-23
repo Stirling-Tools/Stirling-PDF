@@ -18,6 +18,7 @@ import { CsvViewer } from "@editor/components/viewer/nonpdf/CsvViewer";
 import { JsonViewer } from "@editor/components/viewer/nonpdf/JsonViewer";
 import { TextViewer } from "@editor/components/viewer/nonpdf/TextViewer";
 import { HtmlViewer } from "@editor/components/viewer/nonpdf/HtmlViewer";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface ViewerProps {
   onClose?: () => void;
@@ -113,6 +114,7 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
         onConvertToPdf={isConvertAvailable ? handleConvertToPdf : undefined}
       />
       <Box
+        className={privateContentClassName}
         style={{
           flex: 1,
           display: "flex",

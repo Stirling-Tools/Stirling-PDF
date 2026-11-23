@@ -149,7 +149,7 @@ const ConvertToPdfUaSettings = ({
         label={t("convert.pdfUaLanguage", "Document language")}
         description={t(
           "convert.pdfUaLanguageHelp",
-          "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language.",
+          "A BCP-47 tag such as en-US. Used only when the document does not already declare its own language.",
         )}
         value={parameters.pdfUaOptions.language}
         onChange={(event) => update({ language: event.currentTarget.value })}

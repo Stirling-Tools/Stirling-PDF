@@ -1,3 +1,6 @@
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
@@ -30,6 +33,8 @@ export class SetFontSizeCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    refuseRedrawOfReadOnlyText(run);
+    liftRunToPage(doc, page, run);
     // Scaled from the size actually drawn: before the first edit the run may
     // still report OCR's guess, which is far off. Fixed once, so redo matches.
     const drawn = scanDrawnSize(doc, page, run);
@@ -146,7 +151,7 @@ export class SetFontSizeCommand implements Command {
 
 /** Mirror the PDFium object scaling in the run's model bookkeeping. */
 function rescaleRunModel(
-  run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
+  run: TextRun,
   s: number,
   ax: number,
   ay: number,

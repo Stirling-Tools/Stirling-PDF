@@ -25,6 +25,7 @@ export const CONVERSION_ENDPOINTS = {
   "pdf-office-word": "/api/v1/convert/pdf/word",
   "pdf-office-presentation": "/api/v1/convert/pdf/presentation",
   "pdf-office-text": "/api/v1/convert/pdf/text",
+  "pdf-office-rtf": "/api/v1/convert/pdf/text",
   "pdf-csv": "/api/v1/convert/pdf/csv",
   "pdf-xlsx": "/api/v1/convert/pdf/xlsx",
   "pdf-markdown": "/api/v1/convert/pdf/markdown",
@@ -39,8 +40,6 @@ export const CONVERSION_ENDPOINTS = {
   "pdf-cbr": "/api/v1/convert/pdf/cbr",
   "ebook-pdf": "/api/v1/convert/ebook/pdf",
   "pdf-epub": "/api/v1/convert/pdf/epub",
-  "pdf-text-editor": "/api/v1/convert/pdf/text-editor",
-  "text-editor-pdf": "/api/v1/convert/text-editor/pdf",
 } as const;
 
 export const ENDPOINT_NAMES = {
@@ -53,6 +52,8 @@ export const ENDPOINT_NAMES = {
   "pdf-office-word": "pdf-to-word",
   "pdf-office-presentation": "pdf-to-presentation",
   "pdf-office-text": "pdf-to-text",
+  // Same URL as text; RTF has its own endpoint key, which an admin can switch off on its own
+  "pdf-office-rtf": "pdf-to-rtf",
   "pdf-csv": "pdf-to-csv",
   "pdf-xlsx": "pdf-to-xlsx",
   "pdf-markdown": "pdf-to-markdown",
@@ -67,8 +68,6 @@ export const ENDPOINT_NAMES = {
   "cbr-pdf": "cbr-to-pdf",
   "pdf-cbr": "pdf-to-cbr",
   "pdf-epub": "pdf-to-epub",
-  "pdf-text-editor": "pdf-to-text-editor",
-  "text-editor-pdf": "text-editor-to-pdf",
 } as const;
 
 /** Maps conversion endpoint → [i18n key, English fallback] for display names */
@@ -80,6 +79,7 @@ export const ENDPOINT_I18N: Record<string, [string, string]> = {
   "pdf-to-word": ["PDFToWord.header", "PDF → Word"],
   "pdf-to-presentation": ["PDFToPresentation.header", "PDF → Presentation"],
   "pdf-to-text": ["PDFToText.header", "PDF → Text"],
+  "pdf-to-rtf": ["PDFToText.header", "PDF → RTF"],
   "pdf-to-csv": ["PDFToCSV.header", "PDF → CSV"],
   "pdf-to-xlsx": ["PDFToXLSX.header", "PDF → Excel"],
   "pdf-to-markdown": ["PDFToMarkdown.header", "PDF → Markdown"],
@@ -273,7 +273,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     csv: "pdf-to-csv",
     xlsx: "pdf-to-xlsx",
     txt: "pdf-to-text",
-    rtf: "pdf-to-text",
+    rtf: "pdf-to-rtf",
     md: "pdf-to-markdown",
     html: "pdf-to-html",
     xml: "pdf-to-xml",

@@ -50,7 +50,7 @@ describe("scratchPtr", () => {
 
   it("never allocates less than four bytes", () => {
     const { m, malloc } = fakeModule();
-    scratchPtr(m, SCRATCH.readerFill, 1);
+    scratchPtr(m, SCRATCH.colourR, 1);
     expect(malloc).toHaveBeenCalledWith(4);
   });
 
@@ -75,10 +75,10 @@ describe("scratchPtr", () => {
   it("releases every slot and re-allocates on next use", () => {
     const { m, malloc, free } = fakeModule();
     const rect = scratchPtr(m, SCRATCH.readerCharRect, 16);
-    const fill = scratchPtr(m, SCRATCH.readerFill, 16);
+    const colour = scratchPtr(m, SCRATCH.colourR, 16);
     releaseScratch(m);
     expect(free).toHaveBeenCalledWith(rect);
-    expect(free).toHaveBeenCalledWith(fill);
+    expect(free).toHaveBeenCalledWith(colour);
     expect(free).toHaveBeenCalledTimes(2);
     scratchPtr(m, SCRATCH.readerCharRect, 16);
     expect(malloc).toHaveBeenCalledTimes(3);

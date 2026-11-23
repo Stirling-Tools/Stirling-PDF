@@ -5,7 +5,7 @@ import {
   processResponse,
   ResponseHandler,
 } from "@editor/utils/toolResponseProcessor";
-import { isEmptyOutput } from "@editor/services/errorUtils";
+import { isEmptyOutput, serverErrorReason } from "@editor/services/errorUtils";
 import type { ProcessingProgress } from "@editor/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@editor/types/fileContext";
 import { isSignupRequiredError } from "@editor/utils/toolErrorHandler";
@@ -62,6 +62,7 @@ export const useToolApiCalls = <TParams = void>() => {
       const failedInputs: FailedInput[] = [];
       const unprocessedSourceIds: FileId[] = [];
       const failedFiles: string[] = [];
+      let firstFailureReason: string | undefined;
       const total = validFiles.length;
 
       const cancellation = axios.CancelToken.source();
@@ -230,6 +231,7 @@ export const useToolApiCalls = <TParams = void>() => {
           }
           console.error("[processFiles] Failed", { name: file.name, error });
           failedFiles.push(file.name);
+          firstFailureReason ??= await serverErrorReason(error);
           failedInputs.push({ fileId: file.fileId, name: file.name, error });
           // mark errored file so UI can highlight
           try {
@@ -253,16 +255,17 @@ export const useToolApiCalls = <TParams = void>() => {
         unprocessedSourceIds.push(id);
       }
 
+      const reasonSuffix = firstFailureReason ? ` (${firstFailureReason})` : "";
       if (failedFiles.length > 0 && processedFiles.length === 0) {
         if (failedInputs.length === 1) throw failedInputs[0].error;
         throw new Error(
-          `Failed to process all files: ${failedFiles.join(", ")}`,
+          `Failed to process all files: ${failedFiles.join(", ")}${reasonSuffix}`,
         );
       }
 
       if (failedFiles.length > 0) {
         onStatus(
-          `Processed ${processedFiles.length}/${total} files. Failed: ${failedFiles.join(", ")}`,
+          `Processed ${processedFiles.length}/${total} files. Failed: ${failedFiles.join(", ")}${reasonSuffix}`,
         );
       } else {
         onStatus(

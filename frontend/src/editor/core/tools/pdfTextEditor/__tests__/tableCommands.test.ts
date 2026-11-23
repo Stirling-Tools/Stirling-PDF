@@ -201,8 +201,6 @@ function ruleShape(rule: PageRuleSnapshot): ShapeObject {
     bounds: { x: rule.x, y: rule.y, width: rule.width, height: rule.height },
     pdfiumObjPtr: rule.ptr,
     containerPtr: 0,
-    topLevelContainerPtr: 0,
-    containerTransform: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
   });
 }
 
@@ -375,6 +373,32 @@ describe("table commands (fake PDFium)", () => {
     expect(extra.matrix).toEqual(before[1].matrix);
     expect(extra.fontSize).toBe(before[1].fontSize);
     expect(extra.bounds).toEqual(before[1].bounds);
+  });
+
+  it("refuses to scale a table holding a line it cannot redraw, before any cell changes", () => {
+    const { model, primary, extra } = filledTable();
+    extra.readingOrderUnsure = true;
+    const before = {
+      runs: [primary.snapshot(), extra.snapshot()],
+      colEdges: [...model.colEdges],
+      rowEdges: [...model.rowEdges],
+    };
+    const history = new HistoryStack();
+
+    expect(() =>
+      history.execute(
+        new ResizeTableCommand({
+          tableId: model.id,
+          edit: { kind: "scale", width: 600, height: 180 },
+        }),
+        doc,
+      ),
+    ).toThrow(expect.objectContaining({ documentIntact: true }));
+
+    expect([primary.snapshot(), extra.snapshot()]).toEqual(before.runs);
+    expect(model.colEdges).toEqual(before.colEdges);
+    expect(model.rowEdges).toEqual(before.rowEdges);
+    expect(history.canUndo).toBe(false);
   });
 
   it("does not draw separators through a cell merged across both axes", () => {

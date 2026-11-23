@@ -270,6 +270,7 @@ tasks:
     cmds:
       - task: frontend:lint
       - task: engine:lint
+      - task: desktop:lint
       - task: comment-lint
 
   comment-lint:
@@ -291,6 +292,7 @@ tasks:
       - task: backend:fix
       - task: frontend:fix
       - task: engine:fix
+      - task: desktop:format
 
   format:
     desc: "Auto-fix formatting across all components"
@@ -298,6 +300,7 @@ tasks:
       - task: backend:format
       - task: frontend:format
       - task: engine:format
+      - task: desktop:format
 
   format:check:
     desc: "Check formatting across all components"
@@ -305,6 +308,7 @@ tasks:
       - task: backend:format:check
       - task: frontend:format:check
       - task: engine:format:check
+      - task: desktop:format:check
 
   # ============================================================
   # Code generation
@@ -332,6 +336,7 @@ tasks:
       - task: backend:check
       - task: frontend:check
       - task: engine:check
+      - task: desktop:check
 
   check:all:
     desc: "Full CI quality gate"
@@ -339,6 +344,7 @@ tasks:
       - task: backend:check
       - task: frontend:check:all
       - task: engine:check
+      - task: desktop:check
 
   # ============================================================
   # Clean

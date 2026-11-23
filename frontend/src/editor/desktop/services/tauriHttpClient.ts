@@ -1,6 +1,7 @@
 /* oxlint-disable typescript/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
 import { enforceDocumentPrivacy } from "@editor/services/documentPrivacyService";
+import { uploadSafeFormData } from "@editor/utils/inMemoryUpload";
 import {
   shouldUseFastLocalTransport,
   fetchViaLocalProxy,
@@ -36,6 +37,8 @@ export interface TauriHttpRequestConfig {
   automationSession?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
+  /** Backend endpoint key for routing, when the URL serves more than one. */
+  endpointName?: string;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
   accountLinkBlockContext?: import("@editor/services/accountLinkBlock").AccountLinkBlockContext;
@@ -225,8 +228,7 @@ class TauriHttpClient {
 
     if (finalConfig.data) {
       if (finalConfig.data instanceof FormData) {
-        // FormData can be passed directly
-        body = finalConfig.data;
+        body = await uploadSafeFormData(finalConfig.data);
         // Drop any caller-supplied Content-Type so the native fetch generates
         // multipart/form-data WITH its boundary (matches axios's FormData
         // handling). A boundary-less "multipart/form-data" header makes the

@@ -22,9 +22,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.model.tool.ToolFormat;
@@ -42,9 +42,9 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertEmlToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final RuntimePathConfig runtimePathConfig;
     private final TempFileManager tempFileManager;
     private final CustomHtmlSanitizer customHtmlSanitizer;
+    private final OfficeToPdfService officeToPdfService;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -103,23 +103,25 @@ public class ConvertEmlToPDF {
                             tempOut, baseFilename + ".html", MediaType.TEXT_HTML);
                 } catch (IOException | IllegalArgumentException e) {
                     log.error("HTML conversion failed for {}", originalFilename, e);
+                    String detail =
+                            e.getMessage() == null
+                                    ? "Unknown error"
+                                    : HtmlUtils.htmlEscape(e.getMessage());
                     return errorResponse(
-                            HttpStatus.INTERNAL_SERVER_ERROR,
-                            "HTML conversion failed: " + e.getMessage());
+                            HttpStatus.INTERNAL_SERVER_ERROR, "HTML conversion failed: " + detail);
                 }
             }
 
-            // Convert EML/MSG to PDF with enhanced options
             try {
                 byte[] pdfBytes =
                         EmlToPdf.convertEmlToPdf(
-                                runtimePathConfig.getWeasyPrintPath(),
                                 request,
                                 fileBytes,
-                                originalFilename,
                                 pdfDocumentFactory,
-                                tempFileManager,
-                                customHtmlSanitizer);
+                                customHtmlSanitizer,
+                                html ->
+                                        officeToPdfService.convertHtml(
+                                                html.getBytes(StandardCharsets.UTF_8), false));
 
                 if (pdfBytes == null || pdfBytes.length == 0) {
                     log.error("PDF conversion failed - empty output for {}", originalFilename);
@@ -144,13 +146,12 @@ public class ConvertEmlToPDF {
                         HttpStatus.INTERNAL_SERVER_ERROR, "Conversion was interrupted");
             } catch (IllegalArgumentException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
-                log.error(
-                        "Email to PDF conversion failed for {}: {}",
+                log.warn(
+                        "Email to PDF conversion rejected for {}: {}",
                         originalFilename,
-                        errorMessage,
-                        e);
-                return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorMessage);
-            } catch (RuntimeException e) {
+                        errorMessage);
+                return errorResponse(HttpStatus.BAD_REQUEST, errorMessage);
+            } catch (IOException | RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error(
                         "Email to PDF conversion failed for {}: {}",
@@ -166,9 +167,11 @@ public class ConvertEmlToPDF {
         }
     }
 
+    /** Error bodies are plain text whatever the request negotiates. */
     private ResponseEntity<Resource> errorResponse(HttpStatus status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.status(status)
+                .contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8))
                 .contentLength(body.length)
                 .body(new ByteArrayResource(body));
     }
@@ -185,11 +188,6 @@ public class ConvertEmlToPDF {
                             + " file ("
                             + safeFilename
                             + ").";
-        } else if (exceptionMessage != null && exceptionMessage.contains("WeasyPrint")) {
-            errorMessage =
-                    "PDF generation failed for "
-                            + safeFilename
-                            + ". This may be due to complex email formatting.";
         } else {
             errorMessage = "Conversion failed for " + safeFilename + ": " + safeExceptionMessage;
         }

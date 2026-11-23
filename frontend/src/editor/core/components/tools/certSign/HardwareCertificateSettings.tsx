@@ -19,6 +19,7 @@ import {
   listWindowsCertificates,
   Pkcs11LibraryInfo,
 } from "@editor/services/hardwareSigningService";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface HardwareCertificateSettingsProps {
   parameters: CertSignParameters;
@@ -346,6 +347,10 @@ const HardwareCertificateSettings = ({
               )}
               data={certOptions}
               value={parameters.alias ?? null}
+              className={privateContentClassName}
+              comboboxProps={{
+                classNames: { dropdown: privateContentClassName },
+              }}
               onChange={(v) => onParameterChange("alias", v ?? undefined)}
               disabled={disabled || loading}
               searchable
@@ -451,6 +456,10 @@ const HardwareCertificateSettings = ({
               )}
               data={certOptions}
               value={parameters.alias ?? null}
+              className={privateContentClassName}
+              comboboxProps={{
+                classNames: { dropdown: privateContentClassName },
+              }}
               onChange={(v) => onParameterChange("alias", v ?? undefined)}
               disabled={disabled || loading}
               searchable

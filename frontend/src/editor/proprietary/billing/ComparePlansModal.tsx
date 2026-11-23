@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { USERS_PER_BLOCK } from "@editor/components/shared/stripeCheckout/utils/capacity";
 import { Button, Modal } from "@editor/ui";
 
 export type ComparePlan = "free" | "team" | "enterprise";
@@ -73,7 +74,13 @@ export function ComparePlansModal({
       {
         plan: "team",
         name: t("portal.billing.compare.teamName", "Team"),
-        price: t("portal.billing.compare.teamPrice", "$99/mo per 100 users"),
+        price: t(
+          "portal.billing.compare.teamPrice",
+          "$99/mo per {{users}} users",
+          {
+            users: USERS_PER_BLOCK,
+          },
+        ),
       },
       {
         plan: "enterprise",

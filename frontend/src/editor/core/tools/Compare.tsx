@@ -21,7 +21,8 @@ import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import type { FileId } from "@editor/types/file";
 import type { StirlingFile } from "@editor/types/fileContext";
 import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
-import type { CompareWorkbenchData } from "@editor/types/compare";
+import type { CompareMode, CompareWorkbenchData } from "@editor/types/compare";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { getDefaultWorkbench } from "@editor/types/workbench";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { registerPolicyFileUsage } from "@editor/services/policyBlockRegistry";
@@ -30,6 +31,7 @@ import {
   FileSelectorResult,
 } from "@editor/components/shared/FileSelectorPicker";
 import "@editor/components/tools/compare/compareView.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const CUSTOM_VIEW_ID = "compareWorkbenchView";
 const CUSTOM_WORKBENCH_ID = "custom:compareWorkbenchView" as const;
@@ -359,6 +361,7 @@ const Compare = (props: BaseToolProps) => {
             data-testid={`compare-slot-${role}`}
             data-slot-state="filled"
             data-slot-filename={stub?.name}
+            className={privateContentClassName}
             style={{
               border: "1px solid var(--c-border)",
               borderRadius: "var(--radius-md)",
@@ -494,6 +497,24 @@ const Compare = (props: BaseToolProps) => {
                 {t("compare.clearSelected", "Clear selected")}
               </Button>
             </div>
+
+            <ButtonSelector<CompareMode>
+              value={params.mode}
+              onChange={(mode) =>
+                base.params.setParameters((prev) => ({ ...prev, mode }))
+              }
+              disabled={base.operation.isLoading}
+              options={[
+                {
+                  value: "text",
+                  label: t("compare.mode.text", "Text Comparison"),
+                },
+                {
+                  value: "pixel",
+                  label: t("compare.mode.pixel", "Pixel Comparison"),
+                },
+              ]}
+            />
 
             <Text fw={700} size="sm" style={{ margin: 0 }}>
               {t("compare.original.label", "Original PDF")}

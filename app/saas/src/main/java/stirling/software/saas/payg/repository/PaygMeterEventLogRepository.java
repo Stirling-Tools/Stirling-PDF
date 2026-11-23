@@ -2,7 +2,6 @@ package stirling.software.saas.payg.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,28 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import stirling.software.saas.payg.meter.PaygMeterEventLog;
 
-public interface PaygMeterEventLogRepository extends JpaRepository<PaygMeterEventLog, Long> {
-
-    /**
-     * Idempotent pending insert. The two meter triggers (charge-completion + stale-close) share the
-     * idempotency key, and a reconcile retry re-runs the same path, so {@code ON CONFLICT DO
-     * NOTHING} keeps the audit row at exactly one per key. {@code occurred_at} defaults to {@code
-     * CURRENT_TIMESTAMP} at the DB; {@code posted_to_stripe_at} stays NULL until success.
-     * Transactional because it's called from the non-transactional meter-reporting path.
-     */
-    @Transactional
-    @Modifying
-    @Query(
-            value =
-                    "INSERT INTO payg_meter_event_log (team_id, job_id, idempotency_key, units)"
-                            + " VALUES (:teamId, :jobId, :key, :units)"
-                            + " ON CONFLICT (idempotency_key) DO NOTHING",
-            nativeQuery = true)
-    void insertPending(
-            @Param("teamId") Long teamId,
-            @Param("jobId") UUID jobId,
-            @Param("key") String key,
-            @Param("units") int units);
+public interface PaygMeterEventLogRepository
+        extends JpaRepository<PaygMeterEventLog, Long>, PaygMeterEventLogRepositoryCustom {
 
     /** Stamp an event posted; clears any prior error. No-op if already posted. */
     @Transactional

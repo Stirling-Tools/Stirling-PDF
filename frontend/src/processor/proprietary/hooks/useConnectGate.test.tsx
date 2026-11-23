@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
 import { UIProvider } from "@processor/contexts/UIContext";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 
 /**
  * The gate answers two questions, and conflating them is the failure that matters: an instance
@@ -10,9 +11,9 @@ import { UIProvider } from "@processor/contexts/UIContext";
  * Pipelines, Policies, Users, Sources and Integrations on every default install with no way out.
  */
 const { json } = vi.hoisted(() => ({ json: vi.fn() }));
-vi.mock("@processor/api/http", () => ({
-  apiClient: { local: { json } },
-  errorMessage: (e: unknown) => String(e),
+vi.mock("@editor/api/config", () => ({
+  DEFAULT_APP_CONFIG: { enableLogin: true },
+  fetchAppConfig: json,
 }));
 
 import { useConnectGate } from "@processor/hooks/useConnectGate";
@@ -37,11 +38,13 @@ function Probe() {
 function renderProbe(linkState: LinkState) {
   return render(
     <PortalTestProviders>
-      <LinkProvider initialState={linkState}>
-        <UIProvider>
-          <Probe />
-        </UIProvider>
-      </LinkProvider>
+      <AppConfigProvider>
+        <LinkProvider initialState={linkState}>
+          <UIProvider>
+            <Probe />
+          </UIProvider>
+        </LinkProvider>
+      </AppConfigProvider>
     </PortalTestProviders>,
   );
 }
@@ -55,16 +58,17 @@ describe("useConnectGate", () => {
   });
 
   it("does not require an instance status or configuration check on SaaS", async () => {
-    json.mockRejectedValue(new Error("No local instance"));
+    json.mockReturnValue(new Promise(() => {}));
     render(
       <PortalTestProviders>
-        <UIProvider>
-          <Probe />
-        </UIProvider>
+        <AppConfigProvider>
+          <UIProvider>
+            <Probe />
+          </UIProvider>
+        </AppConfigProvider>
       </PortalTestProviders>,
     );
     await settled("unavailable:open");
-    expect(json).not.toHaveBeenCalled();
   });
 
   it("gates an unlinked instance that can link", async () => {

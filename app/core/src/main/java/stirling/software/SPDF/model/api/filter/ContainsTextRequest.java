@@ -13,7 +13,7 @@ public class ContainsTextRequest extends PDFWithPageNums {
 
     @Schema(
             description = "The text to check for",
-            defaultValue = "text",
+            example = "Confidential",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String text;
 }

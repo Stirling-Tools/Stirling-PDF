@@ -8,10 +8,11 @@ import {
   isImageFormat,
   isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
-  usesOfficeEngine,
+  getEndpointName,
 } from "@editor/utils/convertUtils";
 import { getConversionEndpoints } from "@editor/data/toolsTaxonomy";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { useToolActions } from "@editor/contexts/ToolActionsContext";
 import { useConversionCloudStatus } from "@editor/hooks/useConversionCloudStatus";
 import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import GroupedFormatDropdown from "@editor/components/tools/convert/GroupedFormatDropdown";
@@ -29,7 +30,6 @@ import ConvertToCbrSettings from "@editor/components/tools/convert/ConvertToCbrS
 import ConvertFromEbookSettings from "@editor/components/tools/convert/ConvertFromEbookSettings";
 import ConvertFromSvgSettings from "@editor/components/tools/convert/ConvertFromSvgSettings";
 import ConvertToEpubSettings from "@editor/components/tools/convert/ConvertToEpubSettings";
-import ConvertOfficeEngineSettings from "@editor/components/tools/convert/ConvertOfficeEngineSettings";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -79,7 +79,19 @@ const ConvertSettings = ({
     return endpoints;
   }, []);
 
-  const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
+  const { endpointStatus, endpointDetails } =
+    useMultipleEndpointsEnabled(allEndpoints);
+  const { onEndpointUnavailableClick } = useToolActions();
+
+  const unlockedBySignIn = (fromExt: string, toExt: string): boolean => {
+    const endpointKey = getEndpointName(fromExt, toExt);
+    return (
+      !localProcessingOnly &&
+      !!onEndpointUnavailableClick &&
+      !!endpointKey &&
+      endpointDetails?.[endpointKey]?.reason === "NOT_SUPPORTED_LOCALLY"
+    );
+  };
 
   // Get comprehensive conversion status (availability + cloud routing)
   const conversionStatus = useConversionCloudStatus();
@@ -113,10 +125,16 @@ const ConvertSettings = ({
         (targetOption) =>
           isConversionAvailable(option.value, targetOption.value),
       );
+      const needsSignIn =
+        !hasAvailableConversions &&
+        availableConversions.some((targetOption) =>
+          unlockedBySignIn(option.value, targetOption.value),
+        );
 
       return {
         ...option,
-        enabled: hasAvailableConversions,
+        enabled: hasAvailableConversions || needsSignIn,
+        needsSignIn,
       };
     });
 
@@ -146,6 +164,8 @@ const ConvertSettings = ({
   }, [
     parameters.fromExtension,
     endpointStatus,
+    endpointDetails,
+    onEndpointUnavailableClick,
     hideUnavailableConversions,
     conversionStatus,
   ]);
@@ -161,14 +181,16 @@ const ConvertSettings = ({
         parameters.fromExtension,
         option.value,
       );
-      const usesCloud = doesConversionUseCloud(
-        parameters.fromExtension,
-        option.value,
-      );
+      const needsSignIn =
+        !enabled && unlockedBySignIn(parameters.fromExtension, option.value);
+      const usesCloud =
+        !needsSignIn &&
+        doesConversionUseCloud(parameters.fromExtension, option.value);
       return {
         ...option,
-        enabled,
+        enabled: enabled || needsSignIn,
         usesCloud,
+        needsSignIn,
       };
     });
 
@@ -180,6 +202,8 @@ const ConvertSettings = ({
   }, [
     parameters.fromExtension,
     endpointStatus,
+    endpointDetails,
+    onEndpointUnavailableClick,
     hideUnavailableConversions,
     conversionStatus,
   ]);
@@ -219,7 +243,6 @@ const ConvertSettings = ({
       dpi: 150,
     });
     onParameterChange("ebookOptions", {
-      embedAllFonts: false,
       includeTableOfContents: false,
       includePageNumbers: false,
       optimizeForEbook: false,
@@ -526,18 +549,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
-      {/* Stirling Office Convert or LibreOffice */}
-      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) && (
-        <>
-          <Divider />
-          <ConvertOfficeEngineSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-        </>
-      )}
 
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&

@@ -65,12 +65,6 @@ class ToolIODeclarationCoverageTest {
      */
     private static final List<String> EXEMPT =
             List.of(
-                    // Interactive editing sessions: page fragments and cache handles, not
-                    // documents.
-                    "/api/v1/convert/pdf/text-editor",
-                    "/api/v1/convert/text-editor/pdf",
-                    // Charcode lookup for the v2 editor: returns glyph mappings, not a document.
-                    "/api/v1/general/pdf-text-editor",
                     // Interactive credential helpers, hidden from pipeline discovery; restoration
                     // requires the original protected document as well as the working result.
                     "/api/v1/security/restore-pdf-protection",
@@ -226,33 +220,6 @@ class ToolIODeclarationCoverageTest {
     void markdownToPdfTakesAZipOfMarkdownAndImages() {
         assertTrue(spec("/api/v1/convert/markdown/pdf").acceptsFormat(ToolFormat.ZIP));
         assertTrue(spec("/api/v1/convert/markdown/pdf").acceptsFormat(ToolFormat.MARKDOWN));
-    }
-
-    @Test
-    void vectorExportDeclaresEveryOutputFormat() {
-        // Every value the request permits must resolve to what it actually emits. "eps" is the
-        // default and is an image extension; the other three are not, and would otherwise fall
-        // through to IMAGE and pass a chain that fails at run time.
-        ToolIOSpec spec = spec("/api/v1/convert/pdf/vector");
-        assertEquals(ToolFormat.IMAGE, spec.resolveOutput(Map.of("outputFormat", "eps")).format());
-        assertEquals(
-                ToolFormat.POSTSCRIPT, spec.resolveOutput(Map.of("outputFormat", "ps")).format());
-        assertEquals(ToolFormat.PCL, spec.resolveOutput(Map.of("outputFormat", "pcl")).format());
-        assertEquals(ToolFormat.XPS, spec.resolveOutput(Map.of("outputFormat", "xps")).format());
-        // The request pattern accepts any casing, so the declaration must too.
-        assertEquals(
-                ToolFormat.POSTSCRIPT, spec.resolveOutput(Map.of("outputFormat", "PS")).format());
-    }
-
-    @Test
-    void everyVectorOutputFormatHasACase() {
-        // Guards the list above against a new allowableValue being added without a declaration.
-        Set<String> declared =
-                spec("/api/v1/convert/pdf/vector").cases().stream()
-                        .flatMap(rule -> rule.when().stream())
-                        .flatMap(when -> when.matches().stream())
-                        .collect(java.util.stream.Collectors.toSet());
-        assertEquals(Set.of("ps", "pcl", "xps"), declared);
     }
 
     @Test

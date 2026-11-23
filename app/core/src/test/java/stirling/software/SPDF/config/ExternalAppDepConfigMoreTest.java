@@ -53,11 +53,7 @@ class ExternalAppDepConfigMoreTest {
 
     @BeforeEach
     void setUp() {
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/custom/weasyprint");
-        when(runtimePathConfig.getUnoConvertPath()).thenReturn("/custom/unoconvert");
-        when(runtimePathConfig.getCalibrePath()).thenReturn("/custom/calibre");
         when(runtimePathConfig.getOcrMyPdfPath()).thenReturn("/custom/ocrmypdf");
-        when(runtimePathConfig.getSOfficePath()).thenReturn("/custom/soffice");
         lenient()
                 .when(endpointConfiguration.getEndpointsForGroup(anyString()))
                 .thenReturn(Set.of());
@@ -295,21 +291,6 @@ class ExternalAppDepConfigMoreTest {
 
             verify(endpointConfiguration, never())
                     .disableGroup(anyString(), eq(EndpointConfiguration.DisableReason.DEPENDENCY));
-        }
-
-        @Test
-        @DisplayName("weasyprint below the required version disables the weasyprint group")
-        void weasyprintBelowMinimumDisabled() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    alwaysReturn(processReturning(0, "WeasyPrint 50.0", ""))) {
-                invoke(
-                        "checkDependencyAndDisableGroup",
-                        new Class<?>[] {String.class},
-                        "/custom/weasyprint");
-            }
-
-            verify(endpointConfiguration)
-                    .disableGroup("Weasyprint", EndpointConfiguration.DisableReason.DEPENDENCY);
         }
     }
 }

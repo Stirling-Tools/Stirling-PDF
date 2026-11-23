@@ -4,30 +4,38 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -46,13 +55,19 @@ import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.TempFileManager;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 /**
  * Gap-filling unit tests for {@link ConvertPDFToPDFA}. Focuses on validation/option/error branches
  * and the small pure helpers, mocking the collaborators so that no external binary (ghostscript,
- * qpdf, libreoffice) or network is invoked.
+ * qpdf) or network is invoked.
  */
 @DisplayName("ConvertPDFToPDFA gap tests")
 @ExtendWith(MockitoExtension.class)
@@ -68,7 +83,12 @@ class ConvertPDFToPDFAGapTest {
 
     private ConvertPDFToPDFA newController() {
         return new ConvertPDFToPDFA(
-                runtimePathConfig, veraPDFService, pdfaLevelAService, tempFileManager);
+                runtimePathConfig,
+                veraPDFService,
+                pdfaLevelAService,
+                tempFileManager,
+                new ApplicationProperties(),
+                mock(stirling.software.SPDF.service.OfficeConversionService.class));
     }
 
     // ---- reflection helpers ----------------------------------------------------------------
@@ -104,6 +124,17 @@ class ConvertPDFToPDFAGapTest {
         }
         throw new IllegalStateException(
                 "No method named " + methodName + " with " + argCount + " params");
+    }
+
+    private static Object pdfaProfile(String token) throws Exception {
+        for (Class<?> inner : ConvertPDFToPDFA.class.getDeclaredClasses()) {
+            if (inner.getSimpleName().equals("PdfaProfile")) {
+                Method fromRequest = inner.getDeclaredMethod("fromRequest", String.class);
+                fromRequest.setAccessible(true);
+                return fromRequest.invoke(null, token);
+            }
+        }
+        throw new IllegalStateException("PdfaProfile not found");
     }
 
     private static Exception unwrap(InvocationTargetException e) {
@@ -163,22 +194,10 @@ class ConvertPDFToPDFAGapTest {
             return (int) getPart.invoke(profile);
         }
 
-        private String suffixOf(Object profile) throws Exception {
-            return suffixOf(profile, true);
-        }
-
-        private String suffixOf(Object profile, boolean levelAReached) throws Exception {
-            Method m = profile.getClass().getDeclaredMethod("outputSuffix", boolean.class);
+        private String displayNameOf(Object profile) throws Exception {
+            Method m = profile.getClass().getDeclaredMethod("getDisplayName");
             m.setAccessible(true);
-            return (String) m.invoke(profile, levelAReached);
-        }
-
-        @Test
-        @DisplayName("a level A profile falls back to the level B name when tagging failed")
-        void levelANotReachedIsNamedLevelB() throws Exception {
-            assertThat(suffixOf(resolveProfile("pdfa-1a"), false)).isEqualTo("_PDFA-1b.pdf");
-            assertThat(suffixOf(resolveProfile("pdfa-2a"), false)).isEqualTo("_PDFA-2b.pdf");
-            assertThat(suffixOf(resolveProfile("pdfa-3a"), true)).isEqualTo("_PDFA-3a.pdf");
+            return (String) m.invoke(profile);
         }
 
         @Test
@@ -186,14 +205,14 @@ class ConvertPDFToPDFAGapTest {
         void nullDefaultsToPdfA2() throws Exception {
             Object profile = resolveProfile(null);
             assertThat(partOf(profile)).isEqualTo(2);
-            assertThat(suffixOf(profile)).isEqualTo("_PDFA-2b.pdf");
+            assertThat(displayNameOf(profile)).isEqualTo("PDF/A-2b");
         }
 
         @Test
         @DisplayName("'pdfa-1' resolves to PDF/A-1b")
         void pdfa1Resolves() throws Exception {
             assertThat(partOf(resolveProfile("pdfa-1"))).isEqualTo(1);
-            assertThat(suffixOf(resolveProfile("pdfa-1"))).isEqualTo("_PDFA-1b.pdf");
+            assertThat(displayNameOf(resolveProfile("pdfa-1"))).isEqualTo("PDF/A-1b");
         }
 
         @Test
@@ -208,7 +227,7 @@ class ConvertPDFToPDFAGapTest {
         void pdfa3Resolves() throws Exception {
             assertThat(partOf(resolveProfile("pdfa-3"))).isEqualTo(3);
             assertThat(partOf(resolveProfile("pdfa-3b"))).isEqualTo(3);
-            assertThat(suffixOf(resolveProfile("pdfa-3"))).isEqualTo("_PDFA-3b.pdf");
+            assertThat(displayNameOf(resolveProfile("pdfa-3"))).isEqualTo("PDF/A-3b");
         }
 
         @Test
@@ -243,8 +262,8 @@ class ConvertPDFToPDFAGapTest {
             return m.invoke(null, token);
         }
 
-        private String suffixOf(Object profile) throws Exception {
-            Method m = profile.getClass().getDeclaredMethod("outputSuffix");
+        private String displayNameOf(Object profile) throws Exception {
+            Method m = profile.getClass().getDeclaredMethod("getDisplayName");
             m.setAccessible(true);
             return (String) m.invoke(profile);
         }
@@ -252,19 +271,19 @@ class ConvertPDFToPDFAGapTest {
         @Test
         @DisplayName("null token defaults to PDF/X")
         void nullDefaultsToPdfX() throws Exception {
-            assertThat(suffixOf(resolveProfile(null))).isEqualTo("_PDFX.pdf");
+            assertThat(displayNameOf(resolveProfile(null))).isEqualTo("PDF/X");
         }
 
         @Test
         @DisplayName("'pdfx' resolves to the PDF/X profile")
         void pdfxResolves() throws Exception {
-            assertThat(suffixOf(resolveProfile("pdfx"))).isEqualTo("_PDFX.pdf");
+            assertThat(displayNameOf(resolveProfile("pdfx"))).isEqualTo("PDF/X");
         }
 
         @Test
         @DisplayName("unknown token falls back to PDF/X")
         void unknownFallsBack() throws Exception {
-            assertThat(suffixOf(resolveProfile("garbage"))).isEqualTo("_PDFX.pdf");
+            assertThat(displayNameOf(resolveProfile("garbage"))).isEqualTo("PDF/X");
         }
     }
 
@@ -377,57 +396,6 @@ class ConvertPDFToPDFAGapTest {
             PDRectangle real = new PDRectangle(0f, 0f, 100f, 50f);
             assertThat((boolean) invokeInstance(controller, "isZeroSizeRect", zero)).isTrue();
             assertThat((boolean) invokeInstance(controller, "isZeroSizeRect", real)).isFalse();
-        }
-    }
-
-    // =======================================================================================
-    @Nested
-    @DisplayName("findUnembeddedFontNames")
-    class UnembeddedFontDetection {
-
-        @Test
-        @DisplayName("standard 14 fonts (not embedded) are reported as missing")
-        void detectsStandardFontAsUnembedded() throws Exception {
-            try (PDDocument document = simplePdf()) {
-                Set<String> missing = invokeStatic("findUnembeddedFontNames", document);
-                assertThat(missing).isNotNull();
-                assertThat(missing).anyMatch(name -> name.contains("Helvetica"));
-            }
-        }
-
-        @Test
-        @DisplayName("page with no resources reports no missing fonts")
-        void pageWithoutResources() throws Exception {
-            try (PDDocument document = new PDDocument()) {
-                PDPage page = new PDPage(PDRectangle.A4);
-                page.setResources(new PDResources());
-                document.addPage(page);
-                Set<String> missing = invokeStatic("findUnembeddedFontNames", document);
-                assertThat(missing).isEmpty();
-            }
-        }
-    }
-
-    // =======================================================================================
-    @Nested
-    @DisplayName("detectTransparentXObjects")
-    class TransparentXObjectDetection {
-
-        @Test
-        @DisplayName("page with no resources returns empty set")
-        void noResources() throws Exception {
-            PDPage page = new PDPage(PDRectangle.A4);
-            Set<COSName> result = invokeStatic("detectTransparentXObjects", page);
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        @DisplayName("page with empty resources returns empty set")
-        void emptyResources() throws Exception {
-            PDPage page = new PDPage(PDRectangle.A4);
-            page.setResources(new PDResources());
-            Set<COSName> result = invokeStatic("detectTransparentXObjects", page);
-            assertThat(result).isEmpty();
         }
     }
 
@@ -579,6 +547,31 @@ class ConvertPDFToPDFAGapTest {
                 assertThat(document.getPage(0).hasContents()).isTrue();
             }
         }
+
+        @Test
+        @DisplayName("page text that uses the default fill stays black")
+        void textStaysBlack() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                invokeInstance(newController(), "addWhiteBackground", document);
+
+                assertThat(darkTextPixels(document)).isPositive();
+            }
+        }
+    }
+
+    /** Dark pixels where {@link #simplePdf()} draws its text, rendered at 72 dpi. */
+    private static int darkTextPixels(PDDocument document) throws IOException {
+        BufferedImage image = new PDFRenderer(document).renderImage(0);
+        int dark = 0;
+        for (int x = 100; x < 170; x++) {
+            for (int y = 132; y < 145; y++) {
+                int rgb = image.getRGB(x, y);
+                if (((rgb >> 16) & 0xff) < 90 && ((rgb >> 8) & 0xff) < 90 && (rgb & 0xff) < 90) {
+                    dark++;
+                }
+            }
+        }
+        return dark;
     }
 
     // =======================================================================================
@@ -620,109 +613,6 @@ class ConvertPDFToPDFAGapTest {
                                                 "ensureEmbeddedFileCompliance",
                                                 document))
                         .doesNotThrowAnyException();
-            }
-        }
-
-        @Test
-        @DisplayName("addICCProfileIfNotPresent adds an sRGB output intent")
-        void addsIccOutputIntent() throws Exception {
-            try (PDDocument document = simplePdf()) {
-                assertThat(document.getDocumentCatalog().getOutputIntents()).isEmpty();
-
-                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
-
-                assertThat(document.getDocumentCatalog().getOutputIntents()).hasSize(1);
-                assertThat(document.getDocumentCatalog().getOutputIntents().get(0).getInfo())
-                        .contains("sRGB");
-            }
-        }
-
-        @Test
-        @DisplayName("addICCProfileIfNotPresent does not add a second intent when one exists")
-        void doesNotDuplicateIntent() throws Exception {
-            try (PDDocument document = simplePdf()) {
-                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
-                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
-                assertThat(document.getDocumentCatalog().getOutputIntents()).hasSize(1);
-            }
-        }
-    }
-
-    // =======================================================================================
-    @Nested
-    @DisplayName("performBasicPdfAValidation / buildComprehensiveValidationMessage")
-    class ValidationHelpers {
-
-        @Test
-        @DisplayName("basic validation flags missing XMP and output intent for a plain PDF")
-        void basicValidationFlagsMissing() throws Exception {
-            Path pdf = tempDir.resolve("plain.pdf");
-            Files.write(pdf, simplePdfBytes());
-
-            // PdfaProfile.PDF_A_2B has no preflight format -> basic validation path.
-            Object profile = resolvePdfaProfile("pdfa-2b");
-            org.apache.pdfbox.preflight.ValidationResult result =
-                    invokeStaticWithTypes(
-                            "performBasicPdfAValidation",
-                            new Class<?>[] {Path.class, profile.getClass()},
-                            pdf,
-                            profile);
-
-            assertThat(result).isNotNull();
-            assertThat(result.isValid()).isFalse();
-            assertThat(result.getErrorsList()).isNotEmpty();
-        }
-
-        @Test
-        @DisplayName("comprehensive message summarises error count and codes")
-        void comprehensiveMessage() throws Exception {
-            Object profile = resolvePdfaProfile("pdfa-1");
-            org.apache.pdfbox.preflight.ValidationResult result =
-                    new org.apache.pdfbox.preflight.ValidationResult(false);
-            result.addError(
-                    new org.apache.pdfbox.preflight.ValidationResult.ValidationError(
-                            "CODE_A", "first problem"));
-            result.addError(
-                    new org.apache.pdfbox.preflight.ValidationResult.ValidationError(
-                            "CODE_B", "second problem"));
-
-            String message =
-                    invokeStaticWithTypes(
-                            "buildComprehensiveValidationMessage",
-                            new Class<?>[] {
-                                org.apache.pdfbox.preflight.ValidationResult.class,
-                                profile.getClass()
-                            },
-                            result,
-                            profile);
-
-            assertThat(message).contains("PDF/A-1b");
-            assertThat(message).contains("2 errors");
-            assertThat(message).contains("CODE_A");
-        }
-
-        // helper: resolve enum constant + call typed static method
-        private Object resolvePdfaProfile(String token) throws Exception {
-            Class<?> enumClass = null;
-            for (Class<?> inner : ConvertPDFToPDFA.class.getDeclaredClasses()) {
-                if (inner.getSimpleName().equals("PdfaProfile")) {
-                    enumClass = inner;
-                }
-            }
-            Method m = enumClass.getDeclaredMethod("fromRequest", String.class);
-            m.setAccessible(true);
-            return m.invoke(null, token);
-        }
-
-        @SuppressWarnings("unchecked")
-        private <T> T invokeStaticWithTypes(String name, Class<?>[] types, Object... args)
-                throws Exception {
-            Method m = ConvertPDFToPDFA.class.getDeclaredMethod(name, types);
-            m.setAccessible(true);
-            try {
-                return (T) m.invoke(null, args);
-            } catch (InvocationTargetException e) {
-                throw unwrap(e);
             }
         }
     }
@@ -899,31 +789,257 @@ class ConvertPDFToPDFAGapTest {
         }
     }
 
-    // =======================================================================================
     @Nested
-    @DisplayName("ensureEmbeddedFilesAFRelationship / isTransparencyGroup")
-    class StaticEdgeCases {
+    @DisplayName("sanitizer bounds")
+    class SanitizerBounds {
+
+        /** Lists the document's only page {@code times} times in the root /Kids array. */
+        private void repeatOnlyPage(PDDocument document, int times) {
+            COSDictionary pages =
+                    document.getDocumentCatalog().getCOSObject().getCOSDictionary(COSName.PAGES);
+            COSArray kids = pages.getCOSArray(COSName.KIDS);
+            COSDictionary page = (COSDictionary) kids.getObject(0);
+            for (int i = 1; i < times; i++) {
+                kids.add(page);
+            }
+            pages.setInt(COSName.COUNT, times);
+        }
+
+        private int contentStreamCount(PDPage page) {
+            COSBase contents = page.getCOSObject().getDictionaryObject(COSName.CONTENTS);
+            return contents instanceof COSArray array ? array.size() : 1;
+        }
+
+        private PDAnnotationHighlight highlight(float... quads) {
+            PDAnnotationHighlight highlight = new PDAnnotationHighlight();
+            highlight.setRectangle(new PDRectangle(0, 0, 10, 10));
+            highlight.setQuadPoints(quads);
+            return highlight;
+        }
 
         @Test
-        @DisplayName("ensureEmbeddedFilesAFRelationship is a no-op when no names dictionary")
-        void afRelationshipNoNames() throws Exception {
+        @DisplayName("a page listed many times in the page tree gets one white background")
+        void repeatedPageSanitizedOnce() throws Exception {
+            try (PDDocument once = simplePdf();
+                    PDDocument repeated = simplePdf()) {
+                repeatOnlyPage(repeated, 50);
+
+                invokeInstance(newController(), "addWhiteBackground", once);
+                invokeInstance(newController(), "addWhiteBackground", repeated);
+
+                assertThat(contentStreamCount(repeated.getPage(0)))
+                        .isEqualTo(contentStreamCount(once.getPage(0)));
+            }
+        }
+
+        @Test
+        @DisplayName("more page-tree entries than the limit are refused")
+        void tooManyPagesRefused() throws Exception {
             try (PDDocument document = simplePdf()) {
-                assertThatCode(() -> invokeStatic("ensureEmbeddedFilesAFRelationship", document))
+                repeatOnlyPage(document, 20_001);
+
+                assertThatThrownBy(
+                                () -> invokeStatic("requireSanitizablePageCount", document, 20_000))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("20000");
+            }
+        }
+
+        @Test
+        @DisplayName("a limit of 0 turns the page check off")
+        void zeroLimitDisablesTheCheck() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                repeatOnlyPage(document, 50);
+
+                assertThatCode(() -> invokeStatic("requireSanitizablePageCount", document, 0))
                         .doesNotThrowAnyException();
             }
         }
 
         @Test
-        @DisplayName("isTransparencyGroup true only for /S /Transparency group dictionaries")
-        void transparencyGroup() throws Exception {
-            COSDictionary withGroup = new COSDictionary();
-            COSDictionary groupDict = new COSDictionary();
-            groupDict.setItem(COSName.S, COSName.TRANSPARENCY);
-            withGroup.setItem(COSName.GROUP, groupDict);
-            assertThat((boolean) invokeStatic("isTransparencyGroup", withGroup)).isTrue();
+        @DisplayName("the page check stops at the limit without resolving later page-tree entries")
+        void pageCheckStopsAtTheLimit() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                repeatOnlyPage(document, 6);
+                AtomicBoolean armed = new AtomicBoolean();
+                document.getDocumentCatalog()
+                        .getCOSObject()
+                        .getCOSDictionary(COSName.PAGES)
+                        .getCOSArray(COSName.KIDS)
+                        .add(
+                                new COSObject(new COSDictionary()) {
+                                    @Override
+                                    public COSBase getObject() {
+                                        if (armed.get()) {
+                                            throw new AssertionError("resolved past the limit");
+                                        }
+                                        return super.getObject();
+                                    }
+                                });
+                armed.set(true);
 
-            COSDictionary withoutGroup = new COSDictionary();
-            assertThat((boolean) invokeStatic("isTransparencyGroup", withoutGroup)).isFalse();
+                assertThatThrownBy(() -> invokeStatic("requireSanitizablePageCount", document, 5))
+                        .isInstanceOf(IllegalArgumentException.class);
+            }
+        }
+
+        @Test
+        @DisplayName("pages are counted as the page tree lists them, with shared nodes and cycles")
+        void pageCountMatchesPageTree() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                COSDictionary root =
+                        document.getDocumentCatalog()
+                                .getCOSObject()
+                                .getCOSDictionary(COSName.PAGES);
+                COSArray rootKids = root.getCOSArray(COSName.KIDS);
+                COSDictionary page = (COSDictionary) rootKids.getObject(0);
+                COSArray sharedKids = new COSArray();
+                sharedKids.add(page);
+                sharedKids.add(page);
+                COSDictionary shared = new COSDictionary();
+                shared.setItem(COSName.TYPE, COSName.PAGES);
+                shared.setItem(COSName.KIDS, sharedKids);
+                rootKids.add(shared);
+                rootKids.add(shared);
+                rootKids.add(root);
+
+                int iterated = 0;
+                for (PDPage ignored : document.getPages()) {
+                    iterated++;
+                }
+                int listed = iterated;
+
+                assertThatCode(() -> invokeStatic("requireSanitizablePageCount", document, listed))
+                        .doesNotThrowAnyException();
+                assertThatThrownBy(
+                                () ->
+                                        invokeStatic(
+                                                "requireSanitizablePageCount",
+                                                document,
+                                                listed - 1))
+                        .isInstanceOf(IllegalArgumentException.class);
+            }
+        }
+
+        @Test
+        @DisplayName("the sanitizer leaves highlights it cannot draw for the appearance check")
+        void sanitizerKeepsMalformedHighlights() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                PDPage page = document.getPage(0);
+                page.setAnnotations(List.of(highlight(0, 0, 10, 10, 0)));
+
+                List<PDPage> flattened = invokeStatic("flattenHighlightsToContent", document);
+
+                assertThat(flattened).isEmpty();
+                assertThat(page.getAnnotations()).hasSize(1);
+            }
+        }
+
+        @Test
+        @DisplayName("pages without highlights get no extra content stream")
+        void noHighlightNoStream() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                int before = contentStreamCount(document.getPage(0));
+
+                List<PDPage> flattened = invokeStatic("flattenHighlightsToContent", document);
+
+                assertThat(flattened).isEmpty();
+                assertThat(contentStreamCount(document.getPage(0))).isEqualTo(before);
+            }
+        }
+
+        @Test
+        @DisplayName("a highlight is drawn inside its own graphics state and removed")
+        void highlightFlattenedAndRemoved() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                PDPage page = document.getPage(0);
+                PDAnnotationLink link = new PDAnnotationLink();
+                link.setRectangle(new PDRectangle(0, 0, 5, 5));
+                page.setAnnotations(List.of(highlight(0, 10, 10, 10, 0, 0, 10, 0), link));
+
+                List<PDPage> flattened = invokeStatic("flattenHighlightsToContent", document);
+
+                assertThat(flattened).hasSize(1);
+                assertThat(page.getAnnotations())
+                        .extracting(PDAnnotation::getSubtype)
+                        .containsExactly("Link");
+
+                // The highlight colour must not carry into the page text drawn after it
+                assertThat(darkTextPixels(document)).isPositive();
+            }
+        }
+
+        @Test
+        @DisplayName("many annotations without appearance are removed in one pass with one warning")
+        void manyAnnotationsRemovedWithOneWarning() throws Exception {
+            Logger logger = (Logger) LoggerFactory.getLogger(ConvertPDFToPDFA.class);
+            Level previousLevel = logger.getLevel();
+            logger.setLevel(Level.INFO);
+            ListAppender<ILoggingEvent> appender = new ListAppender<>();
+            appender.start();
+            logger.addAppender(appender);
+            try (PDDocument document = simplePdf()) {
+                PDPage page = document.getPage(0);
+                COSArray annots = new COSArray();
+                COSDictionary keptLink = new COSDictionary();
+                keptLink.setName(COSName.SUBTYPE, "Link");
+                annots.add(keptLink);
+                String longSubtype = "A".repeat(10_000) + "\nforged line";
+                for (int i = 0; i < 200_000; i++) {
+                    COSDictionary unknown = new COSDictionary();
+                    unknown.setName(COSName.SUBTYPE, longSubtype);
+                    annots.add(unknown);
+                }
+                page.getCOSObject().setItem(COSName.ANNOTS, annots);
+
+                assertTimeoutPreemptively(
+                        Duration.ofSeconds(30),
+                        () ->
+                                invokeInstance(
+                                        newController(), "ensureAnnotationAppearances", document));
+
+                COSArray remaining = page.getCOSObject().getCOSArray(COSName.ANNOTS);
+                assertThat(remaining.size()).isEqualTo(1);
+                assertThat(remaining.getObject(0)).isSameAs(keptLink);
+                assertThat(appender.list)
+                        .singleElement()
+                        .satisfies(
+                                e ->
+                                        assertThat(e.getFormattedMessage())
+                                                .contains("200000")
+                                                .hasSizeLessThan(200)
+                                                .doesNotContain("\n"));
+            } finally {
+                logger.detachAppender(appender);
+                appender.stop();
+                logger.setLevel(previousLevel);
+            }
+        }
+
+        @Test
+        @DisplayName("only file specifications missing from /AF are appended")
+        void embeddedFilesAppendedToAfOnce() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                PDComplexFileSpecification listed = new PDComplexFileSpecification();
+                PDComplexFileSpecification missing = new PDComplexFileSpecification();
+                PDEmbeddedFilesNameTreeNode tree = new PDEmbeddedFilesNameTreeNode();
+                tree.setNames(Map.of("a.txt", listed, "b.txt", missing));
+                PDDocumentNameDictionary names =
+                        new PDDocumentNameDictionary(document.getDocumentCatalog());
+                names.setEmbeddedFiles(tree);
+                document.getDocumentCatalog().setNames(names);
+                COSArray af = new COSArray();
+                af.add(listed.getCOSObject());
+                document.getDocumentCatalog().getCOSObject().setItem(COSName.AF, af);
+
+                invokeInstance(newController(), "ensureEmbeddedFileCompliance", document);
+
+                COSArray result =
+                        document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
+                assertThat(result.size()).isEqualTo(2);
+                assertThat(result.getObject(0)).isSameAs(listed.getCOSObject());
+                assertThat(result.getObject(1)).isSameAs(missing.getCOSObject());
+            }
         }
     }
 }

@@ -7,6 +7,8 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import type { SessionDetail } from "@editor/types/signingSession";
 import "@editor/components/shared/signing/signingDetail.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SessionActionsPanelProps {
   session: SessionDetail;
@@ -97,7 +99,7 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
               "certSign.collab.finalize.confirmTitle",
               "Finalize this signing session?",
             )}
-            subtitle={session.documentName}
+            subtitle={<PrivateContent>{session.documentName}</PrivateContent>}
             footer={
               <Group justify="flex-end">
                 <Button
@@ -144,7 +146,9 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
                         size={16}
                         style={{ color: "var(--c-success)" }}
                       />
-                      <span>{p.name || p.email}</span>
+                      <span className={privateContentClassName}>
+                        {p.name || p.email}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -165,7 +169,7 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
                           size={16}
                           style={{ color: "var(--c-text-muted)" }}
                         />
-                        <span>
+                        <span className={privateContentClassName}>
                           {p.name || p.email} —{" "}
                           {p.status === "DECLINED"
                             ? t("certSign.declined", "Declined")

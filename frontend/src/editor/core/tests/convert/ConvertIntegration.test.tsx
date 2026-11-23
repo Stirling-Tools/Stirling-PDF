@@ -114,6 +114,7 @@ vi.mock("../../services/thumbnailGenerationService", () => ({
       .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
     cleanup: vi.fn(),
     destroy: vi.fn(),
+    forgetFile: vi.fn(),
   },
 }));
 
@@ -463,6 +464,7 @@ describe("Convert Tool Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "pdf-to-img",
         },
       );
 
@@ -806,6 +808,7 @@ describe("Convert Tool Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "pdf-to-csv",
         },
       );
 

@@ -72,10 +72,9 @@ export function TrackPageViewModal({
     }
     void (async () => {
       try {
-        const buffer = await file.arrayBuffer();
         const [result] = await thumbnailGenerationService.generateThumbnails(
           page.sourceFileId,
-          buffer,
+          file,
           [page.sourcePageNumber],
           { scale: PREVIEW_SCALE, quality: 0.92 },
         );
@@ -147,7 +146,6 @@ export function TrackPageViewModal({
                 className={[
                   styles.pageViewImage,
                   quarterTurn ? styles.pageViewQuarter : "",
-                  "ph-no-capture",
                 ]
                   .filter(Boolean)
                   .join(" ")}

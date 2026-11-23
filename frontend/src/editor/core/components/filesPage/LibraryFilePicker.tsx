@@ -13,7 +13,7 @@ import { useFolders } from "@editor/contexts/FolderContext";
 import { useAllFiles } from "@editor/contexts/FileContext";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useSharingEnabled } from "@editor/hooks/useSharingEnabled";
-import { useGoogleDrivePicker } from "@editor/hooks/useGoogleDrivePicker";
+import { useCloudFilePickers } from "@editor/hooks/useCloudFilePickers";
 import { useProcessingFolders } from "@editor/hooks/useProcessingFolders";
 import { useFolderFileStates } from "@editor/components/filesPage/useFolderFileStates";
 import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
@@ -56,6 +56,7 @@ import {
 } from "@editor/styles/zIndex";
 import "@editor/components/filesPage/FilesPage.css";
 import "@editor/components/filesPage/LibraryFilePicker.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface Props {
   supportedFormats?: string[];
@@ -89,7 +90,8 @@ export function LibraryFilePicker({
   );
   const { config } = useAppConfig();
   const { sharingEnabled } = useSharingEnabled();
-  const drive = useGoogleDrivePicker();
+  const cloudPickers = useCloudFilePickers();
+  const cloudError = cloudPickers.find((picker) => picker.error)?.error ?? null;
   const isPhone = useIsMobile();
   const compact = useMediaQuery("(max-width: 1000px)") ?? false;
   const {
@@ -478,6 +480,7 @@ export function LibraryFilePicker({
         alertType: "error",
         title: t("filePicker.errorTitle", "Couldn't add files"),
         body: errors.join("\n"),
+        privateBody: true,
         expandable: false,
         durationMs: 5000,
       });
@@ -591,24 +594,26 @@ export function LibraryFilePicker({
           >
             {t("filePicker.fromComputer", "From your computer")}
           </Button>
-          {drive.isEnabled && (
+          {cloudPickers.map((picker) => (
             <Button
+              key={picker.id}
               variant="tertiary"
               disabled={busy}
-              loading={drive.isLoading}
-              leftSection={<Icon name="googledrive" />}
+              loading={picker.isLoading}
+              leftSection={<Icon name={picker.icon} />}
+              data-testid={`library-picker-${picker.id}`}
               onClick={() => {
                 onExternalPickerChange(true);
-                void drive
+                void picker
                   .openPicker({ multiple: maxSelectable !== 1 })
                   .then(stageFiles)
                   .catch(reportError)
                   .finally(() => onExternalPickerChange(false));
               }}
             >
-              Google Drive
+              {picker.name}
             </Button>
-          )}
+          ))}
           {config?.enableMobileScanner && !isPhone && (
             <Button
               variant="tertiary"
@@ -634,17 +639,17 @@ export function LibraryFilePicker({
           />
         </div>
       )}
-      {(error || (!destination && drive.error)) && (
+      {(error || (!destination && cloudError)) && (
         <Alert
           title={t("filePicker.errorTitle", "Couldn't add files")}
           withCloseButton
           onClose={() => {
             setError(null);
-            drive.clearError();
+            cloudPickers.forEach((picker) => picker.clearError());
           }}
           role="alert"
         >
-          {error ?? drive.error}
+          <PrivateContent>{error ?? cloudError}</PrivateContent>
         </Alert>
       )}
       <LibraryTabs
@@ -670,7 +675,7 @@ export function LibraryFilePicker({
                       className="files-page-breadcrumb"
                       onClick={() => openFolder(folder.id)}
                     >
-                      {folder.name}
+                      <PrivateContent>{folder.name}</PrivateContent>
                     </button>
                   </span>
                 ),

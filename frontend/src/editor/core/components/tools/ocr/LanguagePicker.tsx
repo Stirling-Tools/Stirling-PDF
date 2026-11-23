@@ -44,12 +44,16 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     // Fetch available languages from backend
     const fetchLanguages = async () => {
       try {
         const { data } = await apiClient.get<{ languages: string[] }>(
           languagesEndpoint,
         );
+        if (cancelled) {
+          return;
+        }
 
         const displayNames =
           typeof Intl.DisplayNames !== "undefined"
@@ -86,6 +90,9 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
 
         setAvailableLanguages(languageOptions);
       } catch (error) {
+        if (cancelled) {
+          return;
+        }
         console.error("[LanguagePicker] Fetch failed with error:", error);
         console.error("[LanguagePicker] Error details:", {
           name: error instanceof Error ? error.name : "Unknown",
@@ -93,11 +100,16 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
           stack: error instanceof Error ? error.stack : undefined,
         });
       } finally {
-        setIsLoadingLanguages(false);
+        if (!cancelled) {
+          setIsLoadingLanguages(false);
+        }
       }
     };
 
     fetchLanguages();
+    return () => {
+      cancelled = true;
+    };
   }, [languagesEndpoint, i18n.language, t]);
 
   // Auto-fill OCR language based on browser language when languages are loaded

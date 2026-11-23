@@ -19,6 +19,9 @@ export interface DocumentRestoreRequest {
   zoom: ZoomLevel | null;
   spread: SpreadMode | null;
   rotation: number | null;
+  /** One-based. Brought into view once the replacement is laid out: pages away
+   *  from the viewport are not mounted, so the viewer cannot place it by node. */
+  page: number | null;
 }
 
 /** `scroll-request` fires before the viewport applies that scroll, on its next frame. */
@@ -48,7 +51,7 @@ const zoomMatches = (state: ZoomDocumentState, target: ZoomLevel) =>
     : state.zoomLevel === target;
 
 /**
- * Carries zoom, spread and rotation onto a replacement document. The zoom
+ * Carries zoom, spread, rotation and page onto a replacement document. The zoom
  * plugin silently drops a request made before the viewport is measured, so
  * every later plugin event re-checks; the viewport applies plugin scrolls a
  * frame later, so those requests are forwarded for the viewer to correct.
@@ -114,6 +117,9 @@ function DocumentRestoreBridgeInner({
   const zoomPassSeenRef = useRef(false);
   // A spread changed while the state bridges mount reaches the toolbar out of order.
   const layoutReadyRef = useRef(false);
+  const totalPagesRef = useRef(0);
+  // Once only: a later pass must not pull the reader back to the carried page.
+  const pageRequestedRef = useRef(false);
 
   useLayoutEffect(() => {
     const forDocument = (event: { documentId: string }) =>
@@ -137,6 +143,7 @@ function DocumentRestoreBridgeInner({
       scroll?.onLayoutReady((event) => {
         if (!forDocument(event)) return;
         layoutReadyRef.current = true;
+        totalPagesRef.current = event.totalPages;
         emit({ type: "layout-ready", totalPages: event.totalPages });
         bump();
       }),
@@ -230,7 +237,24 @@ function DocumentRestoreBridgeInner({
         () => scope.requestZoom(target),
       );
     }
-  }, [request, zoom, spread, rotate, documentId, tick]);
+
+    // After the zoom lands: its scroll request is anchored to the current top
+    // and would replace one queued before it.
+    if (
+      request.page !== null &&
+      scroll &&
+      !pageRequestedRef.current &&
+      landed.rotation &&
+      landed.spread &&
+      landed.zoom
+    ) {
+      pageRequestedRef.current = true;
+      scroll.forDocument(documentId).scrollToPage({
+        pageNumber: Math.min(request.page, totalPagesRef.current),
+        behavior: "instant",
+      });
+    }
+  }, [request, zoom, spread, rotate, scroll, documentId, tick]);
 
   return null;
 }

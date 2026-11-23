@@ -20,6 +20,7 @@ import type {
   AppNotification,
   NotificationActionOffer,
 } from "@editor/services/notifications";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** An action that asked for a password, with everything running it needs. */
 export interface PasswordPrompt {
@@ -197,7 +198,11 @@ export function NotificationItem({
 
       {summary && <span className="notification-bell__detail">{summary}</span>}
 
-      {note && <span className="notification-bell__note">{note}</span>}
+      {note && (
+        <span className={`notification-bell__note ${privateContentClassName}`}>
+          {note}
+        </span>
+      )}
 
       {/* The menu is not gated on a button existing: a row with no action still owns its log. */}
       {(primary || notification.detail) && (

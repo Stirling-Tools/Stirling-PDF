@@ -8,6 +8,7 @@ import {
   type PaymentMethod,
   type Wallet,
 } from "@processor/api/billing";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 /**
  * The Payment section for the portal host, read off the Stripe mirror.
@@ -83,7 +84,7 @@ export function PaymentSection({
     <>
       <KvRow
         label={t("portal.billing.payment.method", "Payment method")}
-        value={card}
+        value={<PrivateContent>{card}</PrivateContent>}
         door={update}
       />
       {details?.upcomingInvoices?.length ? (
@@ -107,14 +108,14 @@ export function PaymentSection({
       {details?.companyName && (
         <KvRow
           label={t("portal.billing.payment.billedTo", "Billed to")}
-          value={details.companyName}
+          value={<PrivateContent>{details.companyName}</PrivateContent>}
           door={update}
         />
       )}
       {details?.invoiceEmail && (
         <KvRow
           label={t("portal.billing.payment.invoicesTo", "Invoices go to")}
-          value={details.invoiceEmail}
+          value={<PrivateContent>{details.invoiceEmail}</PrivateContent>}
           door={update}
         />
       )}

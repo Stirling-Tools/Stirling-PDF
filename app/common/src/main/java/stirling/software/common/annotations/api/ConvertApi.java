@@ -23,7 +23,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
         description =
                 """
                 Convert PDFs to and from other formats (Word, images, HTML, Markdown, PDF/A, CBZ/CBR, EML, etc.).
-                This group also powers the text-editor / jobId-based editing flow for incremental PDF edits.
 
                 Typical uses:
                 • Turn PDFs into Word or text for editing

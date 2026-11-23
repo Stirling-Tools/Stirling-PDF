@@ -4,6 +4,7 @@ import { SettingsFieldLabel } from "@editor/components/shared/config/SettingsFie
 import { NumberInput, Stack, Paper, TextInput } from "@mantine/core";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import type { AdvancedCardProps } from "@editor/components/shared/config/configSections/advanced/advancedCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Where temp files live and when they are swept. */
 export function AdvancedTempFilesCard({
@@ -20,6 +21,7 @@ export function AdvancedTempFilesCard({
       <Stack gap="md">
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <SettingsFieldLabel
                 info={t(
@@ -53,39 +55,7 @@ export function AdvancedTempFilesCard({
 
         <div>
           <TextInput
-            label={
-              <SettingsFieldLabel
-                info={t(
-                  "admin.settings.advanced.tempFileManagement.libreofficeDir.description",
-                  "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)",
-                )}
-              >
-                {t(
-                  "admin.settings.advanced.tempFileManagement.libreofficeDir.label",
-                  "LibreOffice Temp Directory",
-                )}
-              </SettingsFieldLabel>
-            }
-            value={settings.tempFileManagement?.libreofficeDir || ""}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                tempFileManagement: {
-                  ...settings.tempFileManagement,
-                  libreofficeDir: e.target.value,
-                },
-              })
-            }
-            placeholder={t(
-              "admin.settings.advanced.tempFileManagement.libreofficeDir.placeholder",
-              "Default: baseTmpDir/libreoffice",
-            )}
-            disabled={!loginEnabled}
-          />
-        </div>
-
-        <div>
-          <TextInput
+            className={privateContentClassName}
             label={
               <SettingsFieldLabel
                 info={t(

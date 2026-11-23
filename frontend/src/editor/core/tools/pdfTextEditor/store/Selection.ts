@@ -1,28 +1,46 @@
-import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import type {
+  SelectionState,
+  TextRange,
+} from "@editor/tools/pdfTextEditor/types";
 
 // Singleton "find highlight" state, kept off the SelectionState (which is used
 // for edit commands) so search highlights survive normal selection changes.
-export class FindHighlight {
-  private id: string | null = null;
-  private listeners: Set<(id: string | null) => void> = new Set();
+/** The find-bar occurrence on show: a range of one run's text. */
+export interface FindMatch {
+  runId: string;
+  range: TextRange;
+}
 
-  set(runId: string | null): void {
-    if (this.id === runId) return;
-    this.id = runId;
+function sameMatch(a: FindMatch | null, b: FindMatch | null): boolean {
+  if (a === null || b === null) return a === b;
+  return (
+    a.runId === b.runId &&
+    a.range.start === b.range.start &&
+    a.range.end === b.range.end
+  );
+}
+
+export class FindHighlight {
+  private match: FindMatch | null = null;
+  private listeners: Set<(match: FindMatch | null) => void> = new Set();
+
+  set(match: FindMatch | null): void {
+    if (sameMatch(this.match, match)) return;
+    this.match = match;
     // Snapshot + guard so one throwing/unsubscribing listener can't abort
     // notification of the rest (see EditorStore.notify for the rationale).
     for (const l of Array.from(this.listeners)) {
       try {
-        l(this.id);
+        l(this.match);
       } catch {
         /* one listener throwing must not stop the rest */
       }
     }
   }
-  get(): string | null {
-    return this.id;
+  get(): FindMatch | null {
+    return this.match;
   }
-  subscribe(l: (id: string | null) => void): () => void {
+  subscribe(l: (match: FindMatch | null) => void): () => void {
     this.listeners.add(l);
     return () => this.listeners.delete(l);
   }
@@ -35,7 +53,14 @@ export class Selection {
   readonly highlight: FindHighlight;
 
   constructor() {
-    this.state = { runIds: [], imageIds: [], shapeIds: [], caret: null };
+    this.state = {
+      runIds: [],
+      imageIds: [],
+      shapeIds: [],
+      formFieldId: null,
+      caret: null,
+      textRange: null,
+    };
     this.listeners = new Set();
     this.highlight = new FindHighlight();
   }
@@ -50,11 +75,25 @@ export class Selection {
   }
 
   clear(): void {
-    this.set({ runIds: [], imageIds: [], shapeIds: [], caret: null });
+    this.set({
+      runIds: [],
+      imageIds: [],
+      shapeIds: [],
+      formFieldId: null,
+      caret: null,
+      textRange: null,
+    });
   }
 
   selectOne(runId: string, caret: number | null = null): void {
-    this.set({ runIds: [runId], imageIds: [], shapeIds: [], caret });
+    this.set({
+      runIds: [runId],
+      imageIds: [],
+      shapeIds: [],
+      formFieldId: null,
+      caret,
+      textRange: null,
+    });
   }
 
   toggle(runId: string): void {
@@ -62,30 +101,66 @@ export class Selection {
       this.set({
         ...this.state,
         runIds: this.state.runIds.filter((id) => id !== runId),
+        formFieldId: null,
         caret: null,
+        textRange: null,
       });
     } else {
       this.set({
         ...this.state,
         runIds: [...this.state.runIds, runId],
+        formFieldId: null,
         caret: null,
+        textRange: null,
       });
     }
   }
 
   selectImage(imageId: string): void {
-    this.set({ runIds: [], imageIds: [imageId], shapeIds: [], caret: null });
+    this.set({
+      runIds: [],
+      imageIds: [imageId],
+      shapeIds: [],
+      formFieldId: null,
+      caret: null,
+      textRange: null,
+    });
   }
 
   selectShape(shapeId: string): void {
-    this.set({ runIds: [], imageIds: [], shapeIds: [shapeId], caret: null });
+    this.set({
+      runIds: [],
+      imageIds: [],
+      shapeIds: [shapeId],
+      formFieldId: null,
+      caret: null,
+      textRange: null,
+    });
   }
 
   toggleShape(shapeId: string): void {
     const shapeIds = this.state.shapeIds.includes(shapeId)
       ? this.state.shapeIds.filter((id) => id !== shapeId)
       : [...this.state.shapeIds, shapeId];
-    this.set({ ...this.state, shapeIds, caret: null });
+    this.set({
+      ...this.state,
+      shapeIds,
+      formFieldId: null,
+      caret: null,
+      textRange: null,
+    });
+  }
+
+  /** Select form field widget `annotationId` (an AnnotationBox id) alone. */
+  selectFormField(annotationId: string): void {
+    this.set({
+      runIds: [],
+      imageIds: [],
+      shapeIds: [],
+      formFieldId: annotationId,
+      caret: null,
+      textRange: null,
+    });
   }
 
   /**
@@ -104,7 +179,9 @@ export class Selection {
         runIds: [...runIds],
         imageIds: [...imageIds],
         shapeIds: [...shapeIds],
+        formFieldId: null,
         caret: null,
+        textRange: null,
       });
       return;
     }
@@ -112,8 +189,25 @@ export class Selection {
       runIds: unionInOrder(this.state.runIds, runIds),
       imageIds: unionInOrder(this.state.imageIds, imageIds),
       shapeIds: unionInOrder(this.state.shapeIds, shapeIds),
+      formFieldId: null,
       caret: null,
+      textRange: null,
     });
+  }
+
+  /**
+   * Record the characters selected inside run `runId`. Ignored unless that
+   * run is the whole selection: a box keeps reporting while another
+   * selection is made.
+   */
+  setTextRange(runId: string, range: TextRange | null): void {
+    const { runIds, imageIds, shapeIds, textRange } = this.state;
+    if (runIds.length !== 1 || runIds[0] !== runId) return;
+    if (imageIds.length > 0 || shapeIds.length > 0) return;
+    if (textRange?.start === range?.start && textRange?.end === range?.end) {
+      return;
+    }
+    this.set({ ...this.state, textRange: range });
   }
 
   subscribe(listener: (s: SelectionState) => void): () => void {

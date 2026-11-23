@@ -322,7 +322,6 @@ function WidgetInputInner({
           ) : (
             <input
               type="text"
-              id={`${field.name}_${widget.pageIndex}_${widget.x}_${widget.y}`}
               value={value}
               onChange={(e) => onChange(field.name, e.target.value)}
               onFocus={handleFocus}
@@ -403,8 +402,6 @@ function WidgetInputInner({
 
     case "combobox":
     case "listbox": {
-      const inputId = `${field.name}_${widget.pageIndex}_${widget.x}_${widget.y}`;
-
       // For multi-select, value should be an array
       // We store as comma-separated string, so parse it
       const selectValue = field.multiSelect
@@ -429,7 +426,6 @@ function WidgetInputInner({
       return (
         <div {...commonProps} title={error || field.tooltip || field.label}>
           <select
-            id={inputId}
             value={selectValue}
             onChange={handleSelectChange}
             onFocus={handleFocus}
@@ -633,6 +629,8 @@ interface FormFieldOverlayProps {
   pageHeight: number; // rendered CSS pixel height
   /** File identity — if provided, overlay only renders when context fields match this file */
   fileId?: string | null;
+  /** CSS filter matching the page render mode (dark, sepia). */
+  renderFilter?: string;
 }
 
 export function FormFieldOverlay({
@@ -641,6 +639,7 @@ export function FormFieldOverlay({
   pageWidth,
   pageHeight,
   fileId,
+  renderFilter,
 }: FormFieldOverlayProps) {
   const {
     setValue,
@@ -804,6 +803,7 @@ export function FormFieldOverlay({
         height: "100%",
         pointerEvents: "none", // allow click-through except on widgets
         zIndex: 5, // above TilingLayer, below LinkLayer
+        filter: renderFilter,
       }}
       inert={saving}
       data-form-overlay-page={pageIndex}

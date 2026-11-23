@@ -39,11 +39,7 @@ public class ExternalAppDepConfig {
     private final boolean isWindows =
             System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 
-    private final String weasyprintPath;
-    private final String unoconvPath;
-    private final String calibrePath;
     private final String ocrMyPdfPath;
-    private final String sOfficePath;
 
     /**
      * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
@@ -56,26 +52,16 @@ public class ExternalAppDepConfig {
     public ExternalAppDepConfig(
             EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
         this.endpointConfiguration = endpointConfiguration;
-        this.weasyprintPath = runtimePathConfig.getWeasyPrintPath();
-        this.unoconvPath = runtimePathConfig.getUnoConvertPath();
-        this.calibrePath = runtimePathConfig.getCalibrePath();
         this.ocrMyPdfPath = runtimePathConfig.getOcrMyPdfPath();
-        this.sOfficePath = runtimePathConfig.getSOfficePath();
 
         Map<String, List<String>> tmp = new HashMap<>();
         tmp.put("gs", List.of("Ghostscript"));
         tmp.put(ocrMyPdfPath, List.of("OCRmyPDF"));
-        tmp.put(sOfficePath, List.of("LibreOffice"));
-        tmp.put(weasyprintPath, List.of("Weasyprint"));
-        tmp.put("pdftohtml", List.of("Pdftohtml"));
-        tmp.put(unoconvPath, List.of("Unoconvert"));
         tmp.put("qpdf", List.of("qpdf"));
         tmp.put("tesseract", List.of("tesseract"));
         tmp.put("rar", List.of("rar")); // Required for real CBR output
-        tmp.put(calibrePath, List.of("Calibre"));
         // ffmpeg disabled due to raised CVEs
         // tmp.put("ffmpeg", List.of("FFmpeg"));
-        tmp.put("magick", List.of("ImageMagick"));
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
 
@@ -96,10 +82,12 @@ public class ExternalAppDepConfig {
                                                 return null;
                                             })
                             .toList();
+            // The Python probe chains several processes, so overlap it with the rest.
+            Future<?> python = pool.submit(this::checkPython);
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
-
-            // Python / OpenCV special handling
-            checkPythonAndOpenCV();
+            if (!awaitPythonCheck(python)) {
+                return;
+            }
 
             dependenciesChecked = true;
         } finally {
@@ -130,38 +118,6 @@ public class ExternalAppDepConfig {
             return;
         }
 
-        // Extra: enforce minimum WeasyPrint version if command matches
-        if (isWeasyprint(command)) {
-            Optional<String> version = getVersionSafe(command, "--version");
-            version.ifPresentOrElse(
-                    v -> {
-                        Version installed = new Version(v);
-                        // https://www.courtbouillon.org/blog/00040-weasyprint-58/
-                        Version required = new Version("58.0");
-                        if (installed.compareTo(required) < 0) {
-                            List<String> affectedGroups =
-                                    commandToGroupMapping.getOrDefault(
-                                            command, List.of("Weasyprint"));
-                            for (String group : affectedGroups) {
-                                endpointConfiguration.disableGroup(
-                                        group, EndpointConfiguration.DisableReason.DEPENDENCY);
-                            }
-                            log.warn(
-                                    "WeasyPrint version {} is below required {} - disabling"
-                                            + " group(s): {}",
-                                    installed,
-                                    required,
-                                    String.join(", ", affectedGroups));
-                        } else {
-                            log.info("WeasyPrint {} meets minimum {}", installed, required);
-                        }
-                    },
-                    () ->
-                            log.warn(
-                                    "WeasyPrint version could not be determined ({} --version)",
-                                    command));
-        }
-
         // Extra: enforce minimum qpdf version if command matches
         if (isQpdf(command)) {
             Optional<String> version = getVersionSafe(command, "--version");
@@ -182,16 +138,11 @@ public class ExternalAppDepConfig {
                                     required,
                                     String.join(", ", affectedGroups));
                         } else {
-                            log.info("qpdf {} meets minimum {}", installed, required);
+                            log.debug("qpdf {} meets minimum {}", installed, required);
                         }
                     },
                     () -> log.warn("qpdf version could not be determined ({} --version)", command));
         }
-    }
-
-    private boolean isWeasyprint(String command) {
-        return Objects.equals(command, weasyprintPath)
-                || command.toLowerCase(Locale.ROOT).contains("weasyprint");
     }
 
     private boolean isQpdf(String command) {
@@ -217,38 +168,16 @@ public class ExternalAppDepConfig {
                 + word.substring(1).toLowerCase(Locale.ROOT);
     }
 
-    private void checkPythonAndOpenCV() {
-        String python = findFirstAvailable(List.of("python3", "python")).orElse(null);
-        if (python == null) {
-            disablePythonAndOpenCV("Python interpreter not found on PATH");
+    private void checkPython() {
+        if (findFirstAvailable(List.of("python3", "python")).isPresent()) {
             return;
         }
-
-        // Check OpenCV import
-        int ec = runAndWait(List.of(python, "-c", "import cv2"), DEFAULT_TIMEOUT).exitCode();
-        if (ec != 0) {
-            List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-            endpointConfiguration.disableGroup(
-                    "OpenCV", EndpointConfiguration.DisableReason.DEPENDENCY);
-            log.warn(
-                    "OpenCV not available in Python - Disabling OpenCV features: {}",
-                    String.join(", ", openCVFeatures));
-        }
-    }
-
-    private void disablePythonAndOpenCV(String reason) {
         List<String> pythonFeatures = getAffectedFeatures("Python");
-        List<String> openCVFeatures = getAffectedFeatures("OpenCV");
         endpointConfiguration.disableGroup(
                 "Python", EndpointConfiguration.DisableReason.DEPENDENCY);
-        endpointConfiguration.disableGroup(
-                "OpenCV", EndpointConfiguration.DisableReason.DEPENDENCY);
         log.warn(
-                "Missing dependency: Python (reason: {}) - Disabling Python features: {} and OpenCV"
-                        + " features: {}",
-                reason,
-                String.join(", ", pythonFeatures),
-                String.join(", ", openCVFeatures));
+                "Missing dependency: Python (not found on PATH) - Disabling Python features: {}",
+                String.join(", ", pythonFeatures));
     }
 
     private Optional<String> findFirstAvailable(List<String> commands) {
@@ -281,6 +210,19 @@ public class ExternalAppDepConfig {
         }
     }
 
+    private boolean awaitPythonCheck(Future<?> python) {
+        try {
+            python.get();
+        } catch (InterruptedException e) {
+            python.cancel(true);
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (ExecutionException e) {
+            log.warn("Python dependency check failed", e.getCause());
+        }
+        return true;
+    }
+
     private void invokeAllWithTimeout(List<Callable<Void>> tasks, Duration timeout) {
         try {
             List<Future<Void>> futures =
@@ -298,8 +240,9 @@ public class ExternalAppDepConfig {
 
     private ProbeResult runAndWait(List<String> cmd, Duration timeout) {
         ProcessBuilder pb = new ProcessBuilder(cmd);
+        Process p = null;
         try {
-            Process p = pb.start();
+            p = pb.start();
             boolean finished = p.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {
                 p.destroyForcibly();
@@ -310,7 +253,10 @@ public class ExternalAppDepConfig {
             int ec = p.exitValue();
             return new ProbeResult(ec, out, err);
         } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            if (e instanceof InterruptedException) {
+                p.destroyForcibly();
+                Thread.currentThread().interrupt();
+            }
             return new ProbeResult(127, "", String.valueOf(e.getMessage()));
         }
     }

@@ -15,6 +15,7 @@ import {
   MIN_SIGNATURE_DIMENSION_REM,
   OVERLAY_EDGE_PADDING_REM,
 } from "@editor/constants/signConstants";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 // Convert rem to pixels using browser's base font size (typically 16px)
 const remToPx = (rem: number) =>
@@ -182,6 +183,7 @@ export const StampPlacementOverlay: React.FC<StampPlacementOverlayProps> = ({
 
   return (
     <Box
+      className={privateContentClassName}
       style={{
         position: "absolute",
         pointerEvents: "none",

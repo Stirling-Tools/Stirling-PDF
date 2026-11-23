@@ -1,6 +1,7 @@
 import React from "react";
 import { Group, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface KeyValueListProps {
   obj?: Record<string, unknown> | null;
@@ -34,6 +35,7 @@ const KeyValueList: React.FC<KeyValueListProps> = ({ obj, emptyLabel }) => {
           <Text
             size="sm"
             c="dimmed"
+            className={privateContentClassName}
             style={{
               wordBreak: "break-word",
               overflowWrap: "break-word",

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
+import { useAuth } from "@editor/auth/UseSession";
 import { isBrowserOnlyFile } from "@editor/components/filesPage/fileOrigin";
 import { FileId } from "@editor/types/file";
 import { StirlingFileStub } from "@editor/types/fileContext";
@@ -45,6 +46,14 @@ export function FileDetailsActions({
   onShare,
 }: FileDetailsActionsProps) {
   const { t } = useTranslation();
+  const { isAnonymous } = useAuth();
+  // Guests are off because they have no server storage, not because sharing is off.
+  const shareDisabledHint = isAnonymous
+    ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
+    : t(
+        "filesPage.shareDisabledHint",
+        "File sharing isn't enabled on this server. Ask your admin to enable it.",
+      );
 
   const addLabel =
     fileCount === 1
@@ -95,10 +104,7 @@ export function FileDetailsActions({
             {/* Keep sharing discoverable when server settings disable it. */}
             {single && (
               <Tooltip
-                label={t(
-                  "filesPage.shareDisabledHint",
-                  "File sharing isn't enabled on this server. Ask your admin to enable it.",
-                )}
+                label={shareDisabledHint}
                 disabled={sharingEnabled}
                 withinPortal
                 multiline

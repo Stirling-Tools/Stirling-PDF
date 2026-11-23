@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Icon } from "@editor/ui/Icon";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
 import { useMobileTransferSession } from "@editor/hooks/useMobileTransferSession";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * The QR modal shell every phone-to-desktop transfer feature shares: session
@@ -114,6 +115,7 @@ export default function MobileTransferModal({
           }}
         >
           <Box
+            className={privateContentClassName}
             style={{
               padding: "1.5rem",
               background: "white",
@@ -139,6 +141,7 @@ export default function MobileTransferModal({
           <Text
             size="xs"
             c="dimmed"
+            className={privateContentClassName}
             style={{
               wordBreak: "break-all",
               textAlign: "center",

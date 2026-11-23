@@ -1,13 +1,11 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
-import {
-  SCRATCH,
-  scratchPtr,
-} from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { readObjFill } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import {
   setScanOverride,
   type ScanOverride,
@@ -36,6 +34,7 @@ export class SetColourCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    liftRunToPage(doc, page, run);
     const scanPrev = setScanOverride(doc, page, run, (o) => ({
       ...o,
       fill: { ...this.nextFill },
@@ -44,19 +43,18 @@ export class SetColourCommand implements Command {
       this.scanPrev = scanPrev;
       return;
     }
-    if (this.prevFill === null) {
-      this.prevFill = { ...run.fill };
-      const m = doc.module;
-      const seen = new Set<number>();
-      this.prevMemberFills = [];
-      for (const ptr of collectMemberPtrs(run)) {
-        if (!ptr || seen.has(ptr)) continue;
-        seen.add(ptr);
-        this.prevMemberFills.push({
-          ptr,
-          fill: readObjFill(m, ptr) ?? { ...run.fill },
-        });
-      }
+    // Read on every apply: redoing an earlier step draws the run in new objects.
+    this.prevFill = { ...run.fill };
+    const m = doc.module;
+    const seen = new Set<number>();
+    this.prevMemberFills = [];
+    for (const ptr of collectMemberPtrs(run)) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      this.prevMemberFills.push({
+        ptr,
+        fill: readObjFill(m, ptr) ?? { ...run.fill },
+      });
     }
     run.fill = { ...this.nextFill };
     run.dirty = true;
@@ -111,27 +109,5 @@ export class SetColourCommand implements Command {
     return i18n.t("pdfTextEditor.commands.setColour", "Set colour on {{run}}", {
       run: this.runId,
     });
-  }
-}
-
-/** Read an object's current fill colour (0-255 RGBA), or null on failure. */
-export function readObjFill(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  objPtr: number,
-): RGBA | null {
-  const r = scratchPtr(m, SCRATCH.colourR, 4);
-  const g = scratchPtr(m, SCRATCH.colourG, 4);
-  const b = scratchPtr(m, SCRATCH.colourB, 4);
-  const a = scratchPtr(m, SCRATCH.colourA, 4);
-  try {
-    if (!m.FPDFPageObj_GetFillColor(objPtr, r, g, b, a)) return null;
-    return {
-      r: m.pdfium.getValue(r, "i32"),
-      g: m.pdfium.getValue(g, "i32"),
-      b: m.pdfium.getValue(b, "i32"),
-      a: m.pdfium.getValue(a, "i32"),
-    };
-  } catch {
-    return null;
   }
 }

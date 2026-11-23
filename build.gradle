@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "4.1.1"
+    id "org.springframework.boot" version "4.1.2"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "8.8.0"
@@ -19,9 +19,11 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import stirling.software.gradle.ModuleLicenseOverrideFilter
+import stirling.software.gradle.PreferredLicenseFilter
 
 ext {
     // Versions live in gradle/libs.versions.toml; keep this block for build-level switches only.
+
     modernJavaVersion = 25
 }
 
@@ -90,7 +92,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '3.2.2'
+    version = '3.5.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -196,6 +198,10 @@ subprojects {
                 allowInsecureProtocol = true
             }
         }
+        maven {
+            url = "https://maven.stirlingpdf.com"
+            content { includeGroup "com.stirling" }
+        }
         // Maven Central first; mirrors below are fallbacks for niche artifacts.
         mavenCentral()
         maven { url = "https://repository.jboss.org/" }
@@ -237,11 +243,13 @@ subprojects {
         resolutionStrategy.force rootProject.libs.bouncycastle.bcutil.get()
         resolutionStrategy.force rootProject.libs.xmlsec.get()
         resolutionStrategy.force rootProject.libs.guava.get()
+        resolutionStrategy.force rootProject.libs.jsoup.get()
     }
 
     dependencyManagement {
         imports {
             mavenBom rootProject.libs.spring.boot.dependencies.get().toString()
+            mavenBom rootProject.libs.jackson2.bom.get().toString()
         }
         dependencies {
             // These are BOM-managed, and the imported Spring Boot platform wins over
@@ -574,18 +582,23 @@ gradle.taskGraph.whenReady { graph ->
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
 def moduleLicenseOverridesFile = project.layout.projectDirectory.file("app/license-overrides.json").asFile
+def allowedLicensesJsonFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
 
 licenseReport {
     projects = allProjects
     renderers = [new JsonReportRenderer()]
-    allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
+    allowedLicensesFile = allowedLicensesJsonFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
     configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
-    filters = [new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile)]
+    filters = [
+        new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile),
+        new PreferredLicenseFilter(allowedLicensesJsonFile)
+    ]
 }
 
 tasks.named('generateLicenseReport') {
     inputs.file(moduleLicenseOverridesFile)
+    inputs.file(allowedLicensesJsonFile)
 }
 
 tasks.named('checkLicensePreparation') {
@@ -649,6 +662,10 @@ repositories {
             }
             allowInsecureProtocol = true
         }
+    }
+    maven {
+        url = "https://maven.stirlingpdf.com"
+        content { includeGroup "com.stirling" }
     }
     mavenCentral()
     maven { url = "https://repository.jboss.org/" }
@@ -760,24 +777,20 @@ tasks.withType(Test).configureEach {
 // ----------------------------------------------------------------------------
 
 configurations {
-    jacocoRuntimeAgent
     jacocoCli
 }
 
 dependencies {
-    // The :runtime classifier on org.jacoco.agent IS the agent jar - no
-    // unzipping required. Kept on the version the plugin already picks so
-    // agent + reporter line up exactly.
-    jacocoRuntimeAgent "org.jacoco:org.jacoco.agent:${jacoco.toolVersion}:runtime"
     jacocoCli "org.jacoco:org.jacoco.cli:${jacoco.toolVersion}"
 }
 
 tasks.register('copyJacocoAgent', Copy) {
     group = 'verification'
     description = 'Copies the JaCoCo runtime agent jar to build/jacoco/jacocoagent.jar.'
-    from configurations.jacocoRuntimeAgent
+    // Reuse the test agent artifact so mirrors and shared caches need only one agent dependency.
+    from { configurations.jacocoAgent.collect { zipTree(it) } }
+    include 'jacocoagent.jar'
     into layout.buildDirectory.dir('jacoco')
-    rename { 'jacocoagent.jar' }
 }
 
 // Aggregates an externally-produced .exec (e.g. from e2e:live or the cucumber

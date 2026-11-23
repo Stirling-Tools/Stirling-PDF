@@ -1,19 +1,9 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -56,15 +46,7 @@ public class TempFileCleanupService {
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
 
-    // A JPDFium dir younger than this may belong to a JVM that is still starting
-    private static final long JPDFIUM_DIR_GRACE_MILLIS = 60 * 60 * 1000;
-
-    // Names of the jpdfium bridge library across platforms; every extraction dir holds one
-    private static final Set<String> JPDFIUM_BRIDGE_FILES =
-            Set.of("jpdfium.dll", "libjpdfium.dylib", "libjpdfium.so");
-
-    // Held by the owning JVM for its lifetime in fallback extraction dirs
-    private static final String JPDFIUM_LOCK_FILE = ".lock";
+    // JPDFium sweeps its own extraction dirs on native load
     private static final String JPDFIUM_DIR_PREFIX = "jpdfium-";
 
     // File patterns that identify our temp files
@@ -133,15 +115,6 @@ public class TempFileCleanupService {
                 }
             }
 
-            // Create LibreOffice temp directory
-            String libreOfficeTempDir = tempFiles.getLibreofficeDir();
-            if (libreOfficeTempDir != null && !libreOfficeTempDir.isEmpty()) {
-                Path loTempDir = Path.of(libreOfficeTempDir);
-                if (!Files.exists(loTempDir)) {
-                    Files.createDirectories(loTempDir);
-                    log.info("Created LibreOffice temp directory: {}", loTempDir);
-                }
-            }
         } catch (IOException e) {
             log.error("Error creating temp directories", e);
         }
@@ -153,12 +126,11 @@ public class TempFileCleanupService {
                     "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
             timeUnit = TimeUnit.MINUTES)
     public void scheduledCleanup() {
-        log.info("Running scheduled temporary file cleanup");
+        log.debug("Running scheduled temporary file cleanup");
         long maxAgeMillis = tempFileManager.getMaxAgeMillis();
 
         // Clean up registered temp files (managed by TempFileRegistry)
         int registeredDeletedCount = tempFileManager.cleanupOldTempFiles(maxAgeMillis);
-        log.info("Cleaned up {} registered temporary files", registeredDeletedCount);
 
         // Clean up registered temp directories
         int directoriesDeletedCount = 0;
@@ -201,128 +173,16 @@ public class TempFileCleanupService {
     private void runStartupCleanup() {
         boolean containerMode = isContainerMode();
 
-        log.info(
-                "Running in {} mode, using {} cleanup strategy",
-                machineType,
-                containerMode ? "aggressive" : "conservative");
+        log.info("Running in {} mode", machineType);
 
         // For startup cleanup, we use a longer timeout for non-container environments
         long maxAgeMillis = containerMode ? 0 : 24 * 60 * 60 * 1000; // 0 or 24 hours
 
         int totalDeletedCount = cleanupUnregisteredFiles(containerMode, false, maxAgeMillis);
-        totalDeletedCount += cleanupStaleJpdfiumDirs();
-        log.info(
-                "Startup cleanup complete. Deleted {} temporary files/directories",
-                totalDeletedCount);
-    }
-
-    /**
-     * Removes JPDFium extraction dirs leaked by older versions on Windows. The age gate keeps a dir
-     * whose JVM may still be extracting, the content check keeps the sweep away from a same-named
-     * dir this application did not create, and the lock check keeps a running JVM's fallback dir:
-     * JPDFium holds {@code .lock} there for its lifetime.
-     *
-     * @return number of directories removed
-     */
-    private int cleanupStaleJpdfiumDirs() {
-        int deletedCount = 0;
-        for (Path root : jpdfiumScanRoots()) {
-            if (!Files.isDirectory(root)) continue;
-            List<Path> stale;
-            try (Stream<Path> entries = Files.list(root)) {
-                stale =
-                        entries.filter(p -> Files.isDirectory(p, LinkOption.NOFOLLOW_LINKS))
-                                .filter(
-                                        p ->
-                                                p.getFileName()
-                                                        .toString()
-                                                        .startsWith(JPDFIUM_DIR_PREFIX))
-                                .filter(p -> isOlderThan(p, JPDFIUM_DIR_GRACE_MILLIS))
-                                .filter(TempFileCleanupService::looksLikeJpdfiumExtraction)
-                                .filter(dir -> !isJpdfiumDirInUse(dir))
-                                .toList();
-            } catch (IOException | UncheckedIOException e) {
-                log.debug("JPDFium temp scan failed for {}: {}", root, e.getMessage());
-                continue;
-            }
-            for (Path dir : stale) {
-                try {
-                    GeneralUtils.deleteDirectory(dir);
-                    deletedCount++;
-                    log.info("Removed stale JPDFium extraction dir: {}", dir);
-                } catch (IOException e) {
-                    // Windows keeps loaded DLLs locked; a later startup retries.
-                    log.debug("Could not remove JPDFium dir {}: {}", dir, e.getMessage());
-                }
-            }
-        }
-        return deletedCount;
-    }
-
-    /**
-     * JPDFium extracts into {@code java.io.tmpdir}; the configured system and base temp dirs
-     * receive the dirs only when the JVM temp dir points at them, so all three are scanned and
-     * deduplicated. An unusable configured path is skipped instead of aborting startup.
-     */
-    private Path[] jpdfiumScanRoots() {
-        List<Path> roots = new ArrayList<>(3);
-        addJpdfiumScanRoot(roots, System.getProperty("java.io.tmpdir"));
-        ApplicationProperties.TempFileManagement tempFiles =
-                applicationProperties.getSystem().getTempFileManagement();
-        addJpdfiumScanRoot(roots, tempFiles.getSystemTempDir());
-        addJpdfiumScanRoot(roots, tempFiles.getBaseTmpDir());
-        return roots.toArray(Path[]::new);
-    }
-
-    private static void addJpdfiumScanRoot(List<Path> roots, String rawPath) {
-        if (rawPath == null || rawPath.isBlank()) return;
-        try {
-            Path root = Path.of(rawPath);
-            if (!roots.contains(root)) {
-                roots.add(root);
-            }
-        } catch (InvalidPathException e) {
-            log.debug("Skipping invalid temp scan root '{}': {}", rawPath, e.getMessage());
-        }
-    }
-
-    /**
-     * Every extraction dir holds the jpdfium bridge next to pdfium itself; requiring that exact
-     * artifact keeps the sweep from deleting an unrelated dir that happens to share the prefix.
-     */
-    private static boolean looksLikeJpdfiumExtraction(Path dir) {
-        try (Stream<Path> entries = Files.list(dir)) {
-            return entries.map(path -> path.getFileName().toString().toLowerCase(Locale.ROOT))
-                    .anyMatch(JPDFIUM_BRIDGE_FILES::contains);
-        } catch (IOException | UncheckedIOException e) {
-            return false;
-        }
-    }
-
-    /**
-     * A fallback extraction dir holds a {@code .lock} the owning JVM keeps locked for its whole
-     * lifetime; a free or absent lock means the dir is a leftover. Anything unreadable counts as in
-     * use so cleanup fails closed.
-     */
-    private static boolean isJpdfiumDirInUse(Path dir) {
-        Path lockFile = dir.resolve(JPDFIUM_LOCK_FILE);
-        if (!Files.exists(lockFile, LinkOption.NOFOLLOW_LINKS)) return false;
-        try (FileChannel channel =
-                        FileChannel.open(
-                                lockFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
-                FileLock lock = channel.tryLock()) {
-            return lock == null;
-        } catch (IOException | RuntimeException e) {
-            return true;
-        }
-    }
-
-    private static boolean isOlderThan(Path path, long ageMillis) {
-        try {
-            return System.currentTimeMillis() - Files.getLastModifiedTime(path).toMillis()
-                    > ageMillis;
-        } catch (IOException e) {
-            return false;
+        if (totalDeletedCount > 0) {
+            log.info(
+                    "Startup cleanup complete. Deleted {} temporary files/directories",
+                    totalDeletedCount);
         }
     }
 
@@ -346,18 +206,9 @@ public class TempFileCleanupService {
                     && tempFiles.getSystemTempDir() != null
                     && !tempFiles.getSystemTempDir().isEmpty()) {
                 Path systemTempPath = getSystemTempPath();
-                dirsToScan =
-                        new Path[] {
-                            systemTempPath,
-                            Path.of(tempFiles.getBaseTmpDir()),
-                            Path.of(tempFiles.getLibreofficeDir())
-                        };
+                dirsToScan = new Path[] {systemTempPath, Path.of(tempFiles.getBaseTmpDir())};
             } else {
-                dirsToScan =
-                        new Path[] {
-                            Path.of(tempFiles.getBaseTmpDir()),
-                            Path.of(tempFiles.getLibreofficeDir())
-                        };
+                dirsToScan = new Path[] {Path.of(tempFiles.getBaseTmpDir())};
             }
 
             // Process each directory
@@ -392,7 +243,7 @@ public class TempFileCleanupService {
                                     int count = dirDeletedCount.get();
                                     totalDeletedCount.addAndGet(count);
                                     if (count > 0) {
-                                        log.info(
+                                        log.debug(
                                                 "Cleaned up {} files/directories in {}",
                                                 count,
                                                 tempDir);
@@ -478,7 +329,7 @@ public class TempFileCleanupService {
 
                             if (Files.isDirectory(path)) {
                                 if (fileName.startsWith(JPDFIUM_DIR_PREFIX)) {
-                                    // The lock-aware sweep owns these; unlinking a
+                                    // JPDFium's lock-aware sweep owns these; unlinking a
                                     // live .lock would hide it from that sweep.
                                     return;
                                 }
@@ -563,30 +414,6 @@ public class TempFileCleanupService {
         }
 
         return shouldDelete;
-    }
-
-    /** Clean up LibreOffice temporary files. This method is called after LibreOffice operations. */
-    public void cleanupLibreOfficeTempFiles() {
-        // Cleanup known LibreOffice temp directories
-        try {
-            Set<Path> directories = registry.getTempDirectories();
-            for (Path dir : directories) {
-                if (dir.getFileName().toString().contains("libreoffice") && Files.exists(dir)) {
-                    // For directories containing "libreoffice", delete all contents
-                    // but keep the directory itself for future use
-                    cleanupDirectoryStreaming(
-                            dir,
-                            isContainerMode(),
-                            0,
-                            0, // age doesn't matter for LibreOffice cleanup
-                            false,
-                            path -> log.debug("Cleaned up LibreOffice temp file: {}", path));
-                    log.debug("Cleaned up LibreOffice temp directory contents: {}", dir);
-                }
-            }
-        } catch (IOException e) {
-            log.warn("Failed to clean up LibreOffice temp files", e);
-        }
     }
 
     /**

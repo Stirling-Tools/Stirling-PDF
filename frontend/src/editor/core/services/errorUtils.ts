@@ -24,6 +24,40 @@ export async function normalizeAxiosErrorData(data: unknown): Promise<unknown> {
   return data;
 }
 
+/** The server's own reason for a failed request (ProblemDetail `detail` or `message`), if any. */
+export async function serverErrorReason(
+  error: unknown,
+): Promise<string | undefined> {
+  const data = (error as { response?: { data?: unknown } })?.response?.data;
+  try {
+    let payload = await normalizeAxiosErrorData(data);
+    if (typeof Blob !== "undefined" && payload instanceof Blob) {
+      // Older Blob implementations lack text(); read it the long way.
+      payload = tryParseJson(await readBlobText(payload));
+    }
+    if (payload && typeof payload === "object") {
+      const { detail, message } = payload as {
+        detail?: unknown;
+        message?: unknown;
+      };
+      const reason = typeof detail === "string" && detail ? detail : message;
+      return typeof reason === "string" && reason ? reason : undefined;
+    }
+  } catch {
+    // Unreadable body: the caller keeps its generic message.
+  }
+  return undefined;
+}
+
+function readBlobText(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(blob);
+  });
+}
+
 export function extractErrorFileIds(payload: unknown): string[] | undefined {
   if (!payload) return undefined;
   const errorFileIds = (payload as { errorFileIds?: unknown }).errorFileIds;

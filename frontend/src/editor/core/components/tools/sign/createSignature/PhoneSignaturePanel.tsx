@@ -8,6 +8,7 @@ import type { MobileSignaturePayload } from "@editor/components/tools/sign/Mobil
 import { parseMobileSignatureFile } from "@editor/components/tools/sign/parseMobileSignatureFile";
 import { TransparentPreview } from "@editor/components/tools/sign/createSignature/TransparentPreview";
 import styles from "@editor/components/tools/sign/createSignature/PhoneSignaturePanel.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface PhoneSignaturePanelProps {
   active: boolean;
@@ -120,6 +121,7 @@ export function PhoneSignaturePanel({
       <div className={styles.qrCard}>
         {active && (
           <QRCodeSVG
+            className={privateContentClassName}
             value={mobileUrl}
             size={176}
             level="H"
