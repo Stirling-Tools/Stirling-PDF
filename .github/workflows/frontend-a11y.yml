@@ -111,7 +111,7 @@ jobs:
         with:
           version: 3.54.0
       - name: Changed stories (${{ matrix.flavor }} build, ${{ matrix.shard }})
-        run: task frontend:storybook:setups:changed FLAVORS=${{ matrix.flavor }} SHARD=${{ matrix.shard }} -- origin/${{ github.base_ref || 'main' }}
+        run: task frontend:storybook:test:changed:${{ matrix.flavor }} SHARD=${{ matrix.shard }} -- origin/${{ github.base_ref || 'main' }}
       - name: Upload story report
         # Names each failing story and its error; the job log is truncated.
         if: always()

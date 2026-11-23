@@ -120,7 +120,7 @@ jobs:
           version: 3.54.0
 
       - name: Every story (${{ matrix.flavor }} build, ${{ matrix.shard }})
-        run: task frontend:storybook:setups FLAVORS=${{ matrix.flavor }} REPORT=${{ strategy.job-index }} -- --shard=${{ matrix.shard }}
+        run: task frontend:storybook:test:${{ matrix.flavor }} -- --shard=${{ matrix.shard }}
       - name: Upload story report
         # Names each failing story and its error; the job log is truncated.
         if: always()
