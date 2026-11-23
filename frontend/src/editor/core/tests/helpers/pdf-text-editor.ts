@@ -1,5 +1,5 @@
 import path from "path";
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 type Upload = string | { name: string; mimeType: string; buffer: Buffer };
 
@@ -13,6 +13,11 @@ export function fileRows(page: Page, name: string) {
       exact: true,
     }),
   });
+}
+
+export async function viewFileRow(row: Locator): Promise<void> {
+  await row.hover();
+  await row.locator(".file-sidebar-eye-btn").dispatchEvent("click");
 }
 
 /**
@@ -40,6 +45,7 @@ const DEFAULT_ZOOM_PERCENT = 150;
 /** The viewer's zoom slider: 20% to 500% in steps of 5. */
 const SLIDER_MIN = 20;
 const SLIDER_MAX = 500;
+const SLIDER_STEP = 5;
 
 /**
  * Opens `file` in the PDF text editor the way a user does: add it to the
@@ -104,8 +110,7 @@ export async function openInTextEditor(
         if (opened || !row) return opened;
         // Viewing a row that is already shown closes it, so only ask once.
         if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
-          await row.hover();
-          await row.locator(".file-sidebar-eye-btn").click();
+          await viewFileRow(row);
         }
         return false;
       },
@@ -136,8 +141,7 @@ export async function showInTextEditor(
   });
   const row = await addToFileList(page, file);
   if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
-    await row.hover();
-    await row.locator(".file-sidebar-eye-btn").click();
+    await viewFileRow(row);
   }
 }
 
@@ -149,8 +153,7 @@ export async function viewInTextEditor(
   const row = fileRows(page, name).first();
   await expect(row).toBeVisible({ timeout: 30_000 });
   if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
-    await row.hover();
-    await row.locator(".file-sidebar-eye-btn").click();
+    await viewFileRow(row);
   }
 }
 
@@ -208,35 +211,34 @@ export async function setViewerZoom(
   const current = () =>
     thumb.getAttribute("aria-valuenow").then((v) => Number(v));
   // Every step the slider passes through re-renders the pages, so jump close
-  // with one click on the track and finish with the arrow keys. The viewer
-  // may still fit a newly opened document to its width just after, so the
-  // zoom is set again until it holds.
+  // with one click on the track and finish with the arrow keys. The slider
+  // reports a value only once the viewer has applied it, which can take
+  // seconds, so each move waits for that before choosing the next: an arrow
+  // key pressed from a stale value overrides the pending zoom.
   await expect(async () => {
-    if ((await current()) !== percent) {
-      const track = page
-        .locator(".pdf-viewer-toolbar-zoom-slider .mantine-Slider-track")
-        .first();
-      const box = await track.boundingBox();
-      if (box) {
-        const fraction = (percent - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN);
-        await page.mouse.click(
-          box.x + fraction * box.width,
-          box.y + box.height / 2,
-        );
-      }
+    const value = await current();
+    if (value === percent) return;
+    const onGrid = (value - SLIDER_MIN) % SLIDER_STEP === 0;
+    if (onGrid && Math.abs(value - percent) <= SLIDER_STEP) {
       await thumb.focus();
-      for (let i = 0; i < 20; i++) {
-        const value = await current();
-        if (value === percent) break;
-        await page.keyboard.press(value < percent ? "ArrowRight" : "ArrowLeft");
-      }
+      await page.keyboard.press(value < percent ? "ArrowRight" : "ArrowLeft");
+    } else {
+      const box = await page
+        .locator(".pdf-viewer-toolbar-zoom-slider .mantine-Slider-track")
+        .first()
+        .boundingBox();
+      if (!box) throw new Error("zoom slider track is not laid out");
+      const fraction = (percent - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN);
+      await page.mouse.click(
+        box.x + fraction * box.width,
+        box.y + box.height / 2,
+      );
     }
-    await page.waitForTimeout(800);
+    await expect.poll(current, { timeout: 10_000 }).not.toBe(value);
     expect(await current()).toBe(percent);
   }).toPass({ timeout: 30_000 });
   // Zoom keeps the scroll position; start from the top, as a fresh open does.
-  await page
-    .getByTestId("pdf-editor-page-0")
-    .evaluate((el) => el.scrollIntoView({ block: "start" }));
-  await page.waitForTimeout(400);
+  const firstPage = page.getByTestId("pdf-editor-page-0");
+  await firstPage.evaluate((el) => el.scrollIntoView({ block: "start" }));
+  await expect(firstPage).toBeInViewport();
 }

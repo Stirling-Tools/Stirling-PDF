@@ -1112,7 +1112,7 @@ const EmbedPdfViewerContent = ({
     registerUnsavedChangesChecker(checkForChanges);
 
     return () => {
-      unregisterUnsavedChangesChecker();
+      unregisterUnsavedChangesChecker(checkForChanges);
     };
   }, [
     historyApiRef,

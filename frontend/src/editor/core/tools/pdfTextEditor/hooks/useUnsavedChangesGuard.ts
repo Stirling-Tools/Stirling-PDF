@@ -42,8 +42,9 @@ export function useUnsavedChangesGuard(
 
   useEffect(() => {
     // Only covers the pending flag: once it has landed, a discard clears it while the store stays dirty.
-    registerUnsavedChangesChecker(() => isDirty() && !flagCaughtUpRef.current);
-    return () => unregisterUnsavedChangesChecker();
+    const checker = () => isDirty() && !flagCaughtUpRef.current;
+    registerUnsavedChangesChecker(checker);
+    return () => unregisterUnsavedChangesChecker(checker);
   }, [isDirty, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   useEffect(() => {
