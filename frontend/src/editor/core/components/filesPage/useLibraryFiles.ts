@@ -150,25 +150,38 @@ export function useLibraryFiles({
     for (const f of diskEntries
       ? [...diskEntries, ...(stagedInScope ?? [])]
       : filesInScope) {
-      const ext = (f.name.split(".").pop() ?? "").toUpperCase();
+      const lastDot = f.name.lastIndexOf(".");
+      const ext = lastDot !== -1 ? f.name.slice(lastDot + 1).toUpperCase() : "";
       if (ext) set.add(ext);
     }
     return Array.from(set).sort();
   }, [filesInScope, diskEntries, stagedInScope, typeFilter]);
 
   const visibleFiles = useMemo(() => {
-    const filtered = filesInScope
-      .filter((f) =>
-        search ? f.name.toLowerCase().includes(search.toLowerCase()) : true,
-      )
-      .filter((f) =>
-        originFilter === "all" ? true : getFileOrigin(f) === originFilter,
-      )
-      .filter((f) => {
-        if (typeFilter.length === 0) return true;
-        const ext = (f.name.split(".").pop() ?? "").toUpperCase();
-        return typeFilter.includes(ext);
-      });
+    const query = search ? search.toLowerCase() : null;
+    const hasTypeFilter = typeFilter.length > 0;
+    const typeSet = hasTypeFilter ? new Set(typeFilter) : null;
+    const hasOriginFilter = originFilter !== "all";
+
+    const filtered: typeof filesInScope = [];
+    for (let i = 0; i < filesInScope.length; i++) {
+      const f = filesInScope[i];
+      if (query && !f.name.toLowerCase().includes(query)) {
+        continue;
+      }
+      if (hasOriginFilter && getFileOrigin(f) !== originFilter) {
+        continue;
+      }
+      if (typeSet) {
+        const lastDot = f.name.lastIndexOf(".");
+        const ext =
+          lastDot !== -1 ? f.name.slice(lastDot + 1).toUpperCase() : "";
+        if (!typeSet.has(ext)) {
+          continue;
+        }
+      }
+      filtered.push(f);
+    }
     return filtered.sort((a, b) => {
       switch (sortMode) {
         case "name-asc":

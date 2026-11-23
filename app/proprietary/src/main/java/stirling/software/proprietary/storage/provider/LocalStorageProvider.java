@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import org.springframework.core.io.FileSystemResource;
@@ -15,14 +16,17 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.security.model.User;
 
+@Slf4j
 @RequiredArgsConstructor
 public class LocalStorageProvider implements StorageProvider {
 
     private static final Pattern CONTROL_CHARACTER_PATTERN = Pattern.compile("\\p{Cntrl}");
     private final Path basePath;
+    private final AtomicBoolean missingWarned = new AtomicBoolean();
 
     @Override
     public StoredObject store(User owner, MultipartFile file) throws IOException {
@@ -63,6 +67,7 @@ public class LocalStorageProvider implements StorageProvider {
         }
 
         if (!Files.exists(targetPath)) {
+            warnMissingOnce(storageKey);
             throw new IOException("File not found");
         }
 
@@ -76,6 +81,19 @@ public class LocalStorageProvider implements StorageProvider {
             throw new IOException("Resolved storage path is outside the storage directory");
         }
         Files.deleteIfExists(targetPath);
+    }
+
+    // The database knows the file but this disk does not: usually several nodes on local storage.
+    private void warnMissingOnce(String storageKey) {
+        if (missingWarned.compareAndSet(false, true)) {
+            log.warn(
+                    "Stored file '{}' is in the database but not under {}. If several Stirling"
+                            + " nodes share this database, enable cluster mode with shared storage"
+                            + " (storage.provider=s3 or database), or each node only sees its own"
+                            + " files.",
+                    storageKey,
+                    basePath);
+        }
     }
 
     private String sanitizeFilename(String filename) {

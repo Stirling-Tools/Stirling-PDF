@@ -8,6 +8,7 @@ export interface AppConfig {
   defaultLocale?: string;
   enableLogin?: boolean;
   honorOwnerPasswords?: boolean;
+  blockSignedPdfEdits?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
   enableOAuth?: boolean;
@@ -15,7 +16,6 @@ export interface AppConfig {
   isAdmin?: boolean;
   shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
-  stirlingOfficeConversion?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
@@ -76,7 +76,12 @@ export interface AppConfig {
   googleDriveApiKey?: string;
   googleDriveAppId?: string;
   googleDriveAccountConnections?: boolean;
+  microsoftEnabled?: boolean;
+  microsoftClientId?: string;
+  microsoftTenant?: string;
+  microsoftGraphUrl?: string;
   microsoftAccountConnections?: boolean;
+  microsoftAllowEditorSaves?: boolean;
   timestampDefaultTsaUrl?: string;
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];

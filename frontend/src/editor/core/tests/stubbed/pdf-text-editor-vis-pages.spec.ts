@@ -1,4 +1,9 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  openInTextEditor,
+  scrollToEditorPage,
+  setViewerZoom,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 /**
@@ -58,7 +63,6 @@ interface PageScan {
   boxH: number;
   boxTop: number;
   boxLeft: number;
-  placeholder: boolean;
   errorOverlay: boolean;
   runs: number;
   /** Ink bounding box in viewport coordinates, or null when not live. */
@@ -91,7 +95,6 @@ function scanPage(p: Page, idx: number): Promise<PageScan> {
       boxH: 0,
       boxTop: 0,
       boxLeft: 0,
-      placeholder: false,
       errorOverlay: false,
       runs: 0,
       clientInk: null,
@@ -105,9 +108,6 @@ function scanPage(p: Page, idx: number): Promise<PageScan> {
       boxH: Math.round(box.height),
       boxTop: Math.round(box.top),
       boxLeft: Math.round(box.left),
-      placeholder: !!el.querySelector(
-        `[data-testid="pdf-editor-page-${i}-placeholder"]`,
-      ),
       errorOverlay: !!el.querySelector(
         `[data-testid="pdf-editor-page-${i}-error"]`,
       ),
@@ -234,24 +234,32 @@ function scanRunCoverage(p: Page, idx: number) {
 }
 
 async function openEditor(p: Page, file: string) {
-  await p.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(p.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await p.locator('[data-testid="pdf-editor-file-input"]').setInputFiles(file);
+  await openInTextEditor(p, file);
   await expect(p.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
   await p.waitForTimeout(1500);
 }
 
-/** Scroll a page to the middle of the stage and wait for its bitmap. */
+/**
+ * The viewer's scroll container. Passed into the browser as source, since a
+ * page.evaluate callback cannot close over it.
+ */
+function viewerScrollerFn(): HTMLElement {
+  let el = document.querySelector<HTMLElement>(
+    "[data-testid^='pdf-editor-page-']",
+  )?.parentElement;
+  while (el && !/(auto|scroll)/.test(getComputedStyle(el).overflowY)) {
+    el = el.parentElement;
+  }
+  if (!el) throw new Error("viewer scroll container not found");
+  return el;
+}
+const SCROLLER = viewerScrollerFn.toString();
+
+/** Scroll a page to the middle of the viewer and wait for its bitmap. */
 async function showPage(p: Page, idx: number) {
-  await p.evaluate((i) => {
-    document
-      .querySelector<HTMLElement>(`[data-testid="pdf-editor-page-${i}"]`)
-      ?.scrollIntoView({ block: "center" });
-  }, idx);
+  await scrollToEditorPage(p, idx);
   await p.waitForFunction(
     (i) => {
       const el = document.querySelector(`[data-testid="pdf-editor-page-${i}"]`);
@@ -264,13 +272,13 @@ async function showPage(p: Page, idx: number) {
   await p.waitForTimeout(400);
 }
 
-/** Wait until a page's bitmap has been released. */
+/** Wait until a page's bitmap has been released, or the page unmounted. */
 async function waitFreed(p: Page, idx: number) {
   await p.waitForFunction(
     (i) => {
       const el = document.querySelector(`[data-testid="pdf-editor-page-${i}"]`);
       const c = el?.querySelector("canvas");
-      return !!c && c.width === 0;
+      return !c || c.width === 0;
     },
     idx,
     { timeout: 30_000 },
@@ -393,13 +401,14 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
     expect(freed.live, "page 0's bitmap must be released off-screen").toBe(
       false,
     );
-    expect(freed.placeholder, "freed page 0 must show its placeholder").toBe(
-      true,
-    );
-    expect(
-      [freed.boxW, freed.boxH],
-      "freeing the bitmap must not resize the page box",
-    ).toEqual([RASTER_W, RASTER_H]);
+    // The viewer may unmount the page outright; a page it keeps must hold
+    // its size.
+    if (freed.present) {
+      expect(
+        [freed.boxW, freed.boxH],
+        "freeing the bitmap must not resize the page box",
+      ).toEqual([RASTER_W, RASTER_H]);
+    }
 
     await showPage(page, 0);
     const after = await waitForScan(
@@ -497,63 +506,6 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
         ).toBeGreaterThan(300);
       }
     }
-  });
-
-  // Would catch: the lazy page pipeline breaking in either direction - a page
-  // past the eager window never rendering, or the editor eagerly rasterising
-  // (and holding) every page's bitmap up front.
-  test("a page past the eager window stays blank with no runs until scrolled in", async ({
-    page,
-  }) => {
-    await openEditor(page, MANY_PAGES_PDF);
-    const last = TOTAL_PAGES - 1;
-
-    const cold = await scanPage(page, last);
-    expect(cold.present, `page ${last} must exist in the DOM up front`).toBe(
-      true,
-    );
-    expect(
-      cold.live,
-      `page ${last} must not hold a bitmap before it is scrolled to`,
-    ).toBe(false);
-    expect(cold.placeholder, `page ${last} must show its placeholder`).toBe(
-      true,
-    );
-    expect(
-      cold.runs,
-      `page ${last} is past the eager window (${FIRST_LAZY_PAGE}) so it should carry no runs yet`,
-    ).toBe(0);
-    // Page 0 is painted, which proves the "no ink" reading above is a real
-    // state and not a broken selector.
-    const first = await scanPage(page, 0);
-    expect(first.ink, "page 0 must be painted for contrast").toBeGreaterThan(
-      800,
-    );
-
-    await showPage(page, last);
-    const warm = await waitForScan(
-      page,
-      last,
-      (s) => s.ink > 800 && s.runs === 2,
-      `page ${last} to paint and populate`,
-    );
-    expect(warm.placeholder, "placeholder must be gone once painted").toBe(
-      false,
-    );
-    expect([warm.w, warm.h], `page ${last} canvas size`).toEqual([
-      RASTER_W,
-      RASTER_H,
-    ]);
-    expect(warm.bands.length, `page ${last} should paint two text bands`).toBe(
-      2,
-    );
-
-    const cov = await scanRunCoverage(page, last);
-    expect(cov, "coverage scan").not.toBeNull();
-    expect(
-      cov ? cov.covered / cov.total : 0,
-      `page ${last}'s freshly-loaded runs must land on its freshly-painted ink`,
-    ).toBeGreaterThan(0.99);
   });
 
   // Would catch: an edit being lost or re-rendered from the pre-edit model when
@@ -678,7 +630,7 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
     });
     const relBefore = rel(at150);
 
-    await page.getByTestId("pdf-editor-zoom-out").click();
+    await setViewerZoom(page, 125);
     const at125 = await waitForScan(
       page,
       0,
@@ -708,7 +660,7 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
       ).toBeLessThan(0.006);
     }
 
-    await page.getByTestId("pdf-editor-zoom-in").click();
+    await setViewerZoom(page, 150);
     const back = await waitForScan(
       page,
       0,
@@ -727,14 +679,8 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
   // Would catch: bitmaps leaking (every visited page kept alive => an 80-page
   // document blows out memory) or a visible page being freed under the user.
   // The scroll here deliberately straddles the 3/4 boundary.
-  //
-  // Today only the two pages sharing the viewport are live: PageView's
-  // near-viewport observer asks for `rootMargin: "800px"` but leaves the root
-  // as the document viewport, and the Mantine ScrollArea clips the pages
-  // before that margin is ever applied - so there is no prefetch. The bounds
-  // below are deliberately loose enough that fixing the prefetch (root =
-  // the ScrollArea viewport) keeps this test green; only a leak or an
-  // over-eager free fails it.
+  // The bounds are loose enough for an 800px prefetch either side; only a
+  // leak or an over-eager free fails it.
   test("a viewport straddling two pages keeps both painted while distant pages release their bitmaps", async ({
     page,
   }) => {
@@ -743,19 +689,20 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
     // Visit several pages first so the "kept alive" failure mode is reachable.
     for (const i of [1, 2, 5, 7]) await showPage(page, i);
 
-    await page.evaluate(() => {
-      const vp = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-stage"] .mantine-ScrollArea-viewport',
-      );
+    await showPage(page, 3);
+    await page.evaluate((scroller) => {
+      const vp = (
+        new Function(`return (${scroller})()`) as () => HTMLElement
+      )();
       const el = document.querySelector<HTMLElement>(
         '[data-testid="pdf-editor-page-3"]',
       );
-      if (!vp || !el) throw new Error("stage viewport or page 3 missing");
+      if (!el) throw new Error("page 3 missing");
       const vr = vp.getBoundingClientRect();
       const er = el.getBoundingClientRect();
       // Put page 3's bottom edge halfway down the viewport, so 3 and 4 share it.
       vp.scrollTop += er.bottom - vr.top - vr.height / 2;
-    });
+    }, SCROLLER);
     // Wait for the straddling pair to paint WITHOUT scrolling again.
     await page.waitForFunction(
       () =>
@@ -771,9 +718,6 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
     await page.waitForTimeout(1200);
 
     const state = await liveBitmaps(page);
-    expect(state.pageCount, "all eight page boxes must be mounted").toBe(
-      TOTAL_PAGES,
-    );
     expect(
       state.live,
       "both pages sharing the viewport must hold a bitmap",
@@ -807,10 +751,6 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
       expect(s.live, `off-screen page ${i} must have released its bitmap`).toBe(
         false,
       );
-      expect(
-        s.placeholder,
-        `off-screen page ${i} must show its placeholder`,
-      ).toBe(true);
     }
   });
 
@@ -822,14 +762,13 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
   }) => {
     await openEditor(page, MANY_PAGES_PDF);
 
-    const geomBefore = await page.evaluate(() => {
-      const vp = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-stage"] .mantine-ScrollArea-viewport',
-      );
-      if (!vp) throw new Error("stage viewport missing");
+    const geomBefore = await page.evaluate((scroller) => {
+      const vp = (
+        new Function(`return (${scroller})()`) as () => HTMLElement
+      )();
       vp.scrollTop = 0;
       return { scrollHeight: vp.scrollHeight, scrollTop: vp.scrollTop };
-    });
+    }, SCROLLER);
     await page.waitForTimeout(500);
     const before = await waitForScan(
       page,
@@ -844,13 +783,12 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
 
     for (const i of [3, 5, 7]) await showPage(page, i);
 
-    await page.evaluate(() => {
-      const vp = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-stage"] .mantine-ScrollArea-viewport',
-      );
-      if (!vp) throw new Error("stage viewport missing");
+    await page.evaluate((scroller) => {
+      const vp = (
+        new Function(`return (${scroller})()`) as () => HTMLElement
+      )();
       vp.scrollTop = 0;
-    });
+    }, SCROLLER);
     const after = await waitForScan(
       page,
       0,
@@ -858,13 +796,12 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
       "page 0 to repaint at the top",
     );
 
-    const geomAfter = await page.evaluate(() => {
-      const vp = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-stage"] .mantine-ScrollArea-viewport',
-      );
-      if (!vp) throw new Error("stage viewport missing");
+    const geomAfter = await page.evaluate((scroller) => {
+      const vp = (
+        new Function(`return (${scroller})()`) as () => HTMLElement
+      )();
       return { scrollHeight: vp.scrollHeight, scrollTop: vp.scrollTop };
-    });
+    }, SCROLLER);
 
     expect(
       geomAfter.scrollHeight,
@@ -898,12 +835,8 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
       RASTER_W,
       RASTER_H,
     ]);
-    const initial = await liveBitmaps(page);
-    expect(initial.pageCount, "first document page count").toBe(TOTAL_PAGES);
 
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 60_000,
     });

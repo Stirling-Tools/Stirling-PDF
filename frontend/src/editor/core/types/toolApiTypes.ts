@@ -322,10 +322,6 @@ export interface ConvertCbzToPdfRequest {
 }
 export interface ConvertEbookToPdfRequest {
   /**
-   * Embed all fonts from the eBook into the generated PDF
-   */
-  embedAllFonts?: true | false;
-  /**
    * Add page numbers to the generated PDF
    */
   includePageNumbers?: true | false;
@@ -337,17 +333,9 @@ export interface ConvertEbookToPdfRequest {
    * Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)
    */
   optimizeForEbook?: true | false;
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
 }
-export interface ConvertPdfHtmlRequest {
-  useStirlingOfficeConvert?: boolean;
-}
-export interface ConvertPdfMarkdownRequest {
-  useStirlingOfficeConvert?: boolean;
-}
+export type ConvertPdfHtmlRequest = Record<string, never>;
+export type ConvertPdfMarkdownRequest = Record<string, never>;
 export interface ConvertPdfToCbrRequest {
   /**
    * The DPI (Dots Per Inch) for rendering PDF pages as images
@@ -373,14 +361,8 @@ export interface ConvertPdfToEpubRequest {
    * Choose an output profile optimized for the reader device.
    */
   targetDevice?: "TABLET_PHONE_IMAGES" | "KINDLE_EINK_TEXT";
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
 }
-export interface ConvertPdfXmlRequest {
-  useStirlingOfficeConvert?: boolean;
-}
+export type ConvertPdfXmlRequest = Record<string, never>;
 export interface ConvertToImageRequest {
   /**
    * The color type of the output image(s)
@@ -498,10 +480,6 @@ export interface EmlToPdfRequest {
    * Maximum attachment size in MB to include (default 10MB, range: 1-100)
    */
   maxAttachmentSizeMB?: number;
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
@@ -564,16 +542,10 @@ export interface FormFormDetectionDetectRequest {
   confThreshold?: number;
 }
 export type GeneralExtractBookmarksRequest = Record<string, never>;
-export interface GeneralFile {
-  useStirlingOfficeConvert?: boolean;
-}
+export type GeneralFile = Record<string, never>;
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
   /**
    * Zoom level for displaying the website. Default is '1'.
    */
@@ -777,15 +749,15 @@ export interface MetadataRequest {
     [k: string]: string | undefined;
   };
   /**
-   * The author of the document. Omit to remove it.
+   * The author of the document. Omit to remove it unless keepOmitted=true.
    */
   author?: string;
   /**
-   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.
+   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it unless keepOmitted=true.
    */
   creationDate?: string;
   /**
-   * The creator of the document. Omit to remove it.
+   * The creator of the document. Omit to remove it unless keepOmitted=true.
    */
   creator?: string;
   /**
@@ -793,27 +765,31 @@ export interface MetadataRequest {
    */
   deleteAll?: boolean;
   /**
-   * The keywords for the document. Omit to remove it.
+   * True keeps the current value of every standard field left out, instead of removing it
+   */
+  keepOmitted?: boolean;
+  /**
+   * The keywords for the document. Omit to remove it unless keepOmitted=true.
    */
   keywords?: string;
   /**
-   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.
+   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it unless keepOmitted=true.
    */
   modificationDate?: string;
   /**
-   * The producer of the document. Omit to remove it.
+   * The producer of the document. Omit to remove it unless keepOmitted=true.
    */
   producer?: string;
   /**
-   * The subject of the document. Omit to remove it.
+   * The subject of the document. Omit to remove it unless keepOmitted=true.
    */
   subject?: string;
   /**
-   * The title of the document. Omit to remove it.
+   * The title of the document. Omit to remove it unless keepOmitted=true.
    */
   title?: string;
   /**
-   * The trapped status of the document. Omit to remove it, which readers treat as Unknown.
+   * The trapped status of the document. Omit to remove it unless keepOmitted=true; readers treat a missing value as Unknown.
    */
   trapped?: "True" | "False" | "Unknown";
 }
@@ -831,11 +807,11 @@ export interface OptimizePdfRequest {
    */
   grayscale?: boolean;
   /**
-   * Whether to convert images to high-contrast line art using ImageMagick. Default is false.
+   * Whether to convert images to high-contrast black and white line art. Default is false.
    */
   lineArt?: boolean;
   /**
-   * Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
+   * Edge detection strength to use for line art conversion (1-3): the radius of the edge filter applied before thresholding.
    */
   lineArtEdgeLevel?: 1 | 2 | 3;
   /**
@@ -966,10 +942,6 @@ export interface PdfToPdfARequest {
    * If true, the conversion will fail if the output is not perfectly compliant
    */
   strict?: boolean;
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToPdfUaRequest {
   /**
@@ -1010,21 +982,18 @@ export interface PdfToPresentationRequest {
    * The output Presentation format
    */
   outputFormat: "ppt" | "pptx" | "odp";
-  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToTextOrRTFRequest {
   /**
    * The output Text or RTF format
    */
   outputFormat: "rtf" | "txt";
-  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToWordRequest {
   /**
    * The output Word document format
    */
-  outputFormat: "doc" | "docx" | "odt";
-  useStirlingOfficeConvert?: boolean;
+  outputFormat: "docx" | "odt";
 }
 export interface Pkcs11CertificatesRequest {
   libraryPath?: string;
@@ -1326,11 +1295,23 @@ export interface SanitizePdfRequest {
 }
 export interface ScalePagesRequest {
   /**
-   * Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+   * Height of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.
+   */
+  customHeight?: number;
+  /**
+   * Unit of customWidth and customHeight.
+   */
+  customUnit?: "mm" | "cm" | "in";
+  /**
+   * Width of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.
+   */
+  customWidth?: number;
+  /**
+   * Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.
    */
   orientation?: "PORTRAIT" | "LANDSCAPE";
   /**
-   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.
+   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM. KEEP keeps each page's own size.
    */
   pageSize?:
     | "A0"
@@ -1342,7 +1323,8 @@ export interface ScalePagesRequest {
     | "A6"
     | "LETTER"
     | "LEGAL"
-    | "KEEP";
+    | "KEEP"
+    | "CUSTOM";
   /**
    * The scale of the content on the pages of the output PDF. Acceptable values are floats.
    */

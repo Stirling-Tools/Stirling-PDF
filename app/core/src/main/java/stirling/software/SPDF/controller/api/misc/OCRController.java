@@ -139,9 +139,7 @@ public class OCRController {
             throw ExceptionUtils.createOcrLanguageRequiredException();
         }
 
-        if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
-            throw ExceptionUtils.createOcrInvalidRenderTypeException();
-        }
+        String renderer = allowedRenderer(ocrRenderType);
 
         // Get available Tesseract languages
         List<String> availableLanguages = getAvailableTesseractLanguages();
@@ -173,7 +171,7 @@ public class OCRController {
                         clean,
                         cleanFinal,
                         ocrType,
-                        ocrRenderType,
+                        renderer,
                         removeImagesAfter,
                         tempInputFile.getPath(),
                         tempOutputFile.getPath(),
@@ -265,6 +263,14 @@ public class OCRController {
                 tempZipFile.close();
             }
         }
+    }
+
+    private static String allowedRenderer(String requested) {
+        return switch (requested == null ? "" : requested) {
+            case "hocr" -> "hocr";
+            case "sandwich" -> "sandwich";
+            default -> throw ExceptionUtils.createOcrInvalidRenderTypeException();
+        };
     }
 
     private void processWithOcrMyPdf(

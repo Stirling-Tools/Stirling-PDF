@@ -1,14 +1,16 @@
 import {
   openRawDocumentSafe,
   closeRawDocument,
-  getPdfiumModule,
   PdfiumOpenError,
   FPDF_ERR_PASSWORD,
 } from "@editor/services/pdfiumService";
+import { renderPdfiumFirstPage } from "@editor/utils/pdfiumPageRender";
+import type { FirstPageRender } from "@editor/utils/pdfiumRenderCore";
 import {
-  renderPdfiumPageDataUrl,
-  readPdfiumPageMetadata,
-} from "@editor/utils/pdfiumPageRender";
+  canRenderInWorker,
+  renderFirstPageInWorker,
+  RenderWorkerUnavailable,
+} from "@editor/services/pdfRenderWorkerClient";
 import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
 import { getDocumentBytes } from "@editor/services/documentBytesCache";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
@@ -61,32 +63,6 @@ const IMAGE_HEADER_PROBE_BYTES = 256 * 1024;
  *  metadata segment; the first probe covers the common case. */
 const IMAGE_HEADER_PROBE_LIMIT = 4 * 1024 * 1024;
 
-/** Pages read between yields while collecting whole-document metadata. */
-const METADATA_YIELD_INTERVAL = 50;
-
-/**
- * Fills rotation and dimensions for pages 1..pageCount-1. Each read is
- * synchronous WASM on the main thread, so this yields every
- * {@link METADATA_YIELD_INTERVAL} pages to let a frame through on long
- * documents.
- */
-async function collectAllPageMetadata(
-  docPtr: number,
-  pageCount: number,
-  pageRotations: number[],
-  pageDimensions: Array<{ width: number; height: number }>,
-): Promise<void> {
-  for (let i = 1; i < pageCount; i++) {
-    if (i % METADATA_YIELD_INTERVAL === 0) {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
-    const meta = await readPdfiumPageMetadata(docPtr, i);
-    if (!meta) continue;
-    pageRotations[i] = meta.rotation;
-    pageDimensions[i] = { width: meta.width, height: meta.height };
-  }
-}
-
 interface PdfiumRenderResult {
   thumbnail: string;
   pageCount: number;
@@ -97,151 +73,110 @@ interface PdfiumRenderResult {
   isEncrypted?: boolean;
 }
 
+const ENCRYPTED: PdfiumRenderResult = {
+  thumbnail: "",
+  pageCount: 1,
+  pageRotations: [],
+  pageDimensions: [],
+  isEncrypted: true,
+};
+
 /**
- * Open a PDF with PDFium, render page 1 to a data URL, and optionally
- * collect rotation + dimensions for every page. Returns `isEncrypted: true`
- * (without rendering) when the document is password-protected.
+ * Page 1 in each requested rotation mode (upright for CSS rotation, or with the
+ * page's rotation baked in) plus page metadata, from one document open. Runs in
+ * the render worker where available, on the main thread otherwise.
  *
- * @param applyRotation When true, bakes the page's own rotation into the
- *   bitmap (static display). When false, renders upright so callers can
- *   apply rotation via CSS (PageEditor).
- * @param collectAllPagesMetadata When true, reads per-page rotation and
- *   dimensions for all pages. When false (very large files), only the
- *   first page's metadata is populated.
+ * @param allPagesMetadata When true, reads per-page rotation and dimensions for
+ *   all pages. When false (a large file's prefix), only page 1's.
  */
-async function renderPdfThumbnailPdfium(
-  data: ArrayBuffer,
+async function renderPdfThumbnails(
+  source: Blob,
   scale: number,
-  applyRotation: boolean,
-  collectAllPagesMetadata: boolean,
+  modes: Array<"unrotated" | "rotated">,
+  allPagesMetadata: boolean,
   password?: string,
-): Promise<PdfiumRenderResult> {
-  const m = await getPdfiumModule();
-  let docPtr: number;
+  /** Receives how many bytes PDFium was actually given. */
+  read?: { bytes: number },
+): Promise<Partial<Record<"unrotated" | "rotated", PdfiumRenderResult>>> {
+  let render: FirstPageRender | null = null;
   try {
-    docPtr = await openRawDocumentSafe(data, password);
+    if (canRenderInWorker()) {
+      if (read) read.bytes = source.size;
+      try {
+        render = await renderFirstPageInWorker(
+          source,
+          password ?? "",
+          scale,
+          {},
+          modes,
+          allPagesMetadata,
+        );
+      } catch (error) {
+        if (!(error instanceof RenderWorkerUnavailable)) throw error;
+      }
+    }
+    if (!render) {
+      const bytes = await getDocumentBytes(source);
+      if (read) read.bytes = bytes.byteLength;
+      const docPtr = await openRawDocumentSafe(bytes, password);
+      try {
+        render = await renderPdfiumFirstPage(
+          docPtr,
+          scale,
+          {},
+          modes,
+          allPagesMetadata,
+        );
+      } finally {
+        await closeRawDocument(docPtr);
+      }
+    }
   } catch (error) {
+    const bytesRead = (error as { bytesRead?: number } | null)?.bytesRead;
+    if (read && bytesRead !== undefined) read.bytes = bytesRead;
     if (error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD) {
-      return {
-        thumbnail: "",
-        pageCount: 1,
-        pageRotations: [],
-        pageDimensions: [],
-        isEncrypted: true,
-      };
+      return Object.fromEntries(modes.map((mode) => [mode, { ...ENCRYPTED }]));
     }
     throw error;
   }
-
-  try {
-    const pageCount = m.FPDF_GetPageCount(docPtr);
-    const thumbnail = await renderPdfiumPageDataUrl(docPtr, 0, scale, {
-      applyRotation,
-    });
-    if (!thumbnail) throw new Error("PDFium: failed to render page 0");
-
-    // Page 0 metadata is already available via the render, but read it
-    // directly for consistency with the later per-page loop.
-    const firstMeta = await readPdfiumPageMetadata(docPtr, 0);
-    const pageRotations: number[] = [firstMeta?.rotation ?? 0];
-    const pageDimensions: Array<{ width: number; height: number }> = [
+  const { pageCount, pageRotations, pageDimensions } = render;
+  return Object.fromEntries(
+    modes.map((mode) => [
+      mode,
       {
-        width: firstMeta?.width ?? 0,
-        height: firstMeta?.height ?? 0,
-      },
-    ];
-
-    if (collectAllPagesMetadata) {
-      await collectAllPageMetadata(
-        docPtr,
+        thumbnail: render.thumbnails[mode] ?? "",
         pageCount,
         pageRotations,
         pageDimensions,
-      );
-    }
-
-    return { thumbnail, pageCount, pageRotations, pageDimensions };
-  } finally {
-    await closeRawDocument(docPtr);
-  }
+      },
+    ]),
+  );
 }
 
-/**
- * Render both thumbnail variants (upright + rotation-baked) from a single
- * document open - halves the parse and memory cost of the add-files path.
- */
-async function renderPdfThumbnailPairPdfium(
-  data: ArrayBuffer,
+async function renderPdfThumbnail(
+  source: Blob,
   scale: number,
-  collectAllPagesMetadata: boolean,
+  applyRotation: boolean,
+  allPagesMetadata: boolean,
   password?: string,
-): Promise<{ unrotated: PdfiumRenderResult; rotated: PdfiumRenderResult }> {
-  const m = await getPdfiumModule();
-  let docPtr: number;
-  try {
-    docPtr = await openRawDocumentSafe(data, password);
-  } catch (error) {
-    if (error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD) {
-      const encrypted: PdfiumRenderResult = {
-        thumbnail: "",
-        pageCount: 1,
-        pageRotations: [],
-        pageDimensions: [],
-        isEncrypted: true,
-      };
-      return { unrotated: encrypted, rotated: { ...encrypted } };
-    }
-    throw error;
-  }
-
-  try {
-    const pageCount = m.FPDF_GetPageCount(docPtr);
-    const unrotatedThumb = await renderPdfiumPageDataUrl(docPtr, 0, scale, {
-      applyRotation: false,
-    });
-    const rotatedThumb = await renderPdfiumPageDataUrl(docPtr, 0, scale, {
-      applyRotation: true,
-    });
-    if (!unrotatedThumb || !rotatedThumb) {
-      throw new Error("PDFium: failed to render page 0");
-    }
-
-    const firstMeta = await readPdfiumPageMetadata(docPtr, 0);
-    const pageRotations: number[] = [firstMeta?.rotation ?? 0];
-    const pageDimensions: Array<{ width: number; height: number }> = [
-      { width: firstMeta?.width ?? 0, height: firstMeta?.height ?? 0 },
-    ];
-    if (collectAllPagesMetadata) {
-      await collectAllPageMetadata(
-        docPtr,
-        pageCount,
-        pageRotations,
-        pageDimensions,
-      );
-    }
-
-    const base = { pageCount, pageRotations, pageDimensions };
-    return {
-      unrotated: { thumbnail: unrotatedThumb, ...base },
-      rotated: { thumbnail: rotatedThumb, ...base },
-    };
-  } finally {
-    await closeRawDocument(docPtr);
-  }
+): Promise<PdfiumRenderResult> {
+  const mode = applyRotation ? "rotated" : "unrotated";
+  const result = await renderPdfThumbnails(
+    source,
+    scale,
+    [mode],
+    allPagesMetadata,
+    password,
+  );
+  return result[mode]!;
 }
 
 async function generatePDFThumbnail(
-  arrayBuffer: ArrayBuffer,
+  source: Blob,
   scale: number,
   password?: string,
 ): Promise<string> {
-  const result = await renderPdfThumbnailPdfium(
-    arrayBuffer,
-    scale,
-    true,
-    false,
-    password,
-  );
+  const result = await renderPdfThumbnail(source, scale, true, false, password);
   if (result.isEncrypted) {
     return "";
   }
@@ -522,11 +457,10 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
 
     // Only read first 2MB for thumbnail generation to save memory
     const chunk = file.slice(0, Math.min(LINEARIZED_PREFIX_BYTES, file.size));
-    const arrayBuffer = await chunk.arrayBuffer();
 
     try {
       return await generatePDFThumbnail(
-        arrayBuffer,
+        chunk,
         scale,
         getPdfAccess(file)?.password,
       );
@@ -535,9 +469,8 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
       // chunk can fail to open for PDFs larger than that. Retry with the
       // full buffer before falling back to an empty thumbnail.
       try {
-        const fullArrayBuffer = await getDocumentBytes(file);
         return await generatePDFThumbnail(
-          fullArrayBuffer,
+          file,
           scale,
           getPdfAccess(file)?.password,
         );
@@ -578,9 +511,8 @@ export async function generateThumbnailWithMetadata(
       if (!getPdfAccess(file) && (await looksEncryptedFromTrailer(file))) {
         return { thumbnail: "", pageCount: 1, isEncrypted: true };
       }
-      const chunk = await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer();
-      const result = await renderPdfThumbnailPdfium(
-        chunk,
+      const result = await renderPdfThumbnail(
+        file.slice(0, LINEARIZED_PREFIX_BYTES),
         scale,
         applyRotation,
         false,
@@ -602,11 +534,10 @@ export async function generateThumbnailWithMetadata(
   }
 
   try {
-    const arrayBuffer = await getDocumentBytes(file);
     // Always read per-page rotation: PageEditor renders thumbnails upright and
     // uses this as the rotation baseline, so skipping it corrupts saves.
-    const result = await renderPdfThumbnailPdfium(
-      arrayBuffer,
+    const result = await renderPdfThumbnail(
+      file,
       scale,
       applyRotation,
       true,
@@ -660,16 +591,21 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
       };
       return { unrotated: encrypted, rotated: { ...encrypted } };
     }
-    const buffer = isLarge
-      ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
-      : await getDocumentBytes(file);
-    parsedBytes = buffer.byteLength;
-    const pair = await renderPdfThumbnailPairPdfium(
-      buffer,
-      scale,
-      !isLarge,
-      getPdfAccess(file)?.password,
-    );
+    const source = isLarge ? file.slice(0, LINEARIZED_PREFIX_BYTES) : file;
+    const read = { bytes: 0 };
+    let pair: Awaited<ReturnType<typeof renderPdfThumbnails>>;
+    try {
+      pair = await renderPdfThumbnails(
+        source,
+        scale,
+        ["unrotated", "rotated"],
+        !isLarge,
+        getPdfAccess(file)?.password,
+        read,
+      );
+    } finally {
+      parsedBytes = read.bytes;
+    }
 
     const toPublic = (r: PdfiumRenderResult): ThumbnailWithMetadata =>
       r.isEncrypted
@@ -681,8 +617,8 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
             pageDimensions: r.pageDimensions,
           };
     return {
-      unrotated: toPublic(pair.unrotated),
-      rotated: toPublic(pair.rotated),
+      unrotated: toPublic(pair.unrotated!),
+      rotated: toPublic(pair.rotated!),
     };
   } catch (error) {
     reportThumbnailFailure(file, error);

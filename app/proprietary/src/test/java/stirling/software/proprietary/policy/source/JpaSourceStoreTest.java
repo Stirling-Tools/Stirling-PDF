@@ -17,7 +17,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -72,6 +77,27 @@ class JpaSourceStoreTest {
         when(repository.findById("s1")).thenReturn(Optional.of(entityFor(source)));
 
         assertEquals(source, store.get("s1").orElseThrow());
+    }
+
+    @Test
+    void aSourceStoredAsJsonNullIsLoggedOnceAcrossRepeatedLists() {
+        SourceEntity entity = new SourceEntity();
+        entity.setId("s-null");
+        entity.setName("empty");
+        entity.setSourceJson("null");
+        when(repository.findAll()).thenReturn(List.of(entity));
+        Logger storeLogger = (Logger) LoggerFactory.getLogger(JpaSourceStore.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        storeLogger.addAppender(appender);
+        try {
+            assertTrue(store.all().isEmpty());
+            assertTrue(store.all().isEmpty());
+        } finally {
+            storeLogger.detachAppender(appender);
+        }
+
+        assertEquals(1, appender.list.stream().filter(e -> e.getLevel() == Level.ERROR).count());
     }
 
     @Test

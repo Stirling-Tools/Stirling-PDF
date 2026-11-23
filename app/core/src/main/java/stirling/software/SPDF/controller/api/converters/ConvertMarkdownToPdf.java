@@ -17,7 +17,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -26,11 +25,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
-import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.tool.ToolFormat;
@@ -55,13 +52,9 @@ public class ConvertMarkdownToPdf {
                     .build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final RuntimePathConfig runtimePathConfig;
 
     private final TempFileManager tempFileManager;
-    private final OfficeConversionService officeConversionService;
     private final OfficeToPdfService officeToPdfService;
-
-    private final CustomHtmlSanitizer customHtmlSanitizer;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -78,10 +71,7 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file or ZIP (containing Markdown + images)"
                             + " input, converts it to HTML, and then to PDF format.")
-    public ResponseEntity<Resource> markdownToPdf(
-            @ModelAttribute GeneralFile generalFile,
-            @RequestParam(value = "useStirlingOfficeConvert", required = false)
-                    Boolean useStirlingOfficeConvert)
+    public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();
 
@@ -104,8 +94,6 @@ public class ConvertMarkdownToPdf {
                     "error.fileFormatRequired", "File must be in {0} format", ".md or .zip");
         }
 
-        boolean officeConvert =
-                officeConversionService.replacesLibreOffice(useStirlingOfficeConvert);
         byte[] pdfBytes;
         String outputFilename;
 
@@ -147,10 +135,10 @@ public class ConvertMarkdownToPdf {
                 String markdownContent = java.nio.file.Files.readString(markdownFile.toPath());
                 String htmlContent = renderHtml(markdownContent);
 
-                // Create a new ZIP with HTML + images for WeasyPrint
+                // Create a new ZIP with HTML + images for the converter
                 byte[] htmlZipBytes = createHtmlZip(htmlContent, tempDirPath.toFile());
 
-                pdfBytes = convertHtml(htmlZipBytes, true, officeConvert);
+                pdfBytes = officeToPdfService.convertHtml(htmlZipBytes, true);
 
                 outputFilename =
                         GeneralUtils.generateFilename(
@@ -163,7 +151,8 @@ public class ConvertMarkdownToPdf {
                     renderHtml(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
 
             pdfBytes =
-                    convertHtml(htmlContent.getBytes(StandardCharsets.UTF_8), false, officeConvert);
+                    officeToPdfService.convertHtml(
+                            htmlContent.getBytes(StandardCharsets.UTF_8), false);
 
             outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
         }
@@ -178,20 +167,6 @@ public class ConvertMarkdownToPdf {
             throw e;
         }
         return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
-    }
-
-    private byte[] convertHtml(byte[] html, boolean packaged, boolean officeConvert)
-            throws Exception {
-        if (officeConvert) {
-            return officeToPdfService.convertHtml(html, packaged);
-        }
-        return FileToPdf.convertHtmlToPdf(
-                runtimePathConfig.getWeasyPrintPath(),
-                null,
-                html,
-                packaged ? "package.zip" : "converted.html",
-                tempFileManager,
-                customHtmlSanitizer);
     }
 
     static String renderHtml(String markdown) {
@@ -276,9 +251,8 @@ class TableAttributeProvider implements AttributeProvider {
     }
 }
 
-// The HTML reaches WeasyPrint with no stylesheet, and its default `white-space: pre` lets a long
-// code line run past the page margin and get clipped. Inline, because the sanitizer strips <style>
-// elements; word-wrap rather than overflow-wrap, because its CSS allowlist drops the latter.
+// The HTML has no stylesheet, and the default `white-space: pre` lets a long code line run past
+// the page margin and get clipped, so code blocks wrap.
 class CodeBlockAttributeProvider implements AttributeProvider {
     @Override
     public void setAttributes(Node node, String tagName, Map<String, String> attributes) {

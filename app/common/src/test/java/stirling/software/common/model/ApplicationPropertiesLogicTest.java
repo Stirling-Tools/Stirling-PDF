@@ -32,13 +32,13 @@ class ApplicationPropertiesLogicTest {
     }
 
     @Test
-    void storageDefaultsEnableLocalStorageAndSigningWithoutSharingOrEncryption() {
+    void storageDefaultsEnableLocalStorageSigningAndSharingWithoutEncryption() {
         ApplicationProperties.Storage storage = new ApplicationProperties().getStorage();
 
         assertTrue(storage.isEnabled());
         assertTrue(storage.getSigning().isEnabled());
         assertEquals("local", storage.getProvider());
-        assertFalse(storage.getSharing().isEnabled());
+        assertTrue(storage.getSharing().isEnabled());
         assertFalse(storage.getEncryption().isEnabled());
     }
 
@@ -52,14 +52,8 @@ class ApplicationPropertiesLogicTest {
                 Path.of(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf").toString();
         assertEquals(expectedBase, tfm.getBaseTmpDir());
 
-        String expectedLibre = Path.of(expectedBase, "libreoffice").toString();
-        assertEquals(expectedLibre, tfm.getLibreofficeDir());
-
         tfm.setBaseTmpDir("/custom/base");
         assertEquals(normalize.apply("/custom/base"), normalize.apply(tfm.getBaseTmpDir()));
-
-        tfm.setLibreofficeDir("/opt/libre");
-        assertEquals(normalize.apply("/opt/libre"), normalize.apply(tfm.getLibreofficeDir()));
     }
 
     @Test
@@ -146,24 +140,17 @@ class ApplicationPropertiesLogicTest {
         ApplicationProperties.ProcessExecutor.SessionLimit s = pe.getSessionLimit();
         assertEquals(2, s.getQpdfSessionLimit());
         assertEquals(1, s.getTesseractSessionLimit());
-        assertEquals(1, s.getLibreOfficeSessionLimit());
-        assertEquals(1, s.getPdfToHtmlSessionLimit());
         assertEquals(8, s.getPythonOpenCvSessionLimit());
-        assertEquals(16, s.getWeasyPrintSessionLimit());
         assertEquals(1, s.getInstallAppSessionLimit());
-        assertEquals(1, s.getCalibreSessionLimit());
         assertEquals(8, s.getGhostscriptSessionLimit());
         assertEquals(2, s.getOcrMyPdfSessionLimit());
 
         ApplicationProperties.ProcessExecutor.TimeoutMinutes t = pe.getTimeoutMinutes();
         assertEquals(30, t.getTesseractTimeoutMinutes());
         assertEquals(30, t.getQpdfTimeoutMinutes());
-        assertEquals(30, t.getLibreOfficeTimeoutMinutes());
-        assertEquals(20, t.getPdfToHtmlTimeoutMinutes());
+        assertEquals(30, t.getOfficeConvertTimeoutMinutes());
         assertEquals(30, t.getPythonOpenCvTimeoutMinutes());
-        assertEquals(30, t.getWeasyPrintTimeoutMinutes());
         assertEquals(60, t.getInstallAppTimeoutMinutes());
-        assertEquals(30, t.getCalibreTimeoutMinutes());
         assertEquals(30, t.getGhostscriptTimeoutMinutes());
         assertEquals(30, t.getOcrMyPdfTimeoutMinutes());
     }

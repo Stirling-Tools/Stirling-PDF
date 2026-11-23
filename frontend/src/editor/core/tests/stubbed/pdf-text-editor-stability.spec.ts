@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -44,11 +45,10 @@ for (const fixture of FIXTURES) {
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
       timeout: 45_000,
     });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(import.meta.dirname, `../test-fixtures/${fixture}.pdf`),
-      );
+    await openInTextEditor(
+      page,
+      path.join(import.meta.dirname, `../test-fixtures/${fixture}.pdf`),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 45_000,
     });

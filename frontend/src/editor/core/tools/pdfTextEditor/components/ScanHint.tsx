@@ -15,6 +15,21 @@ function isUnreadScan(page: PageSnapshot): boolean {
   );
 }
 
+// "Print to PDF" and some exporters draw every letter as an outline and write no text at all.
+const LETTER_SHAPES_MIN = 80;
+const LETTER_MAX_HEIGHT_PT = 30;
+
+function isOutlinedText(page: PageSnapshot): boolean {
+  if (page.runs.length > 0) return false;
+  const letters = (page.shapes ?? []).filter(
+    (shape) =>
+      shape.bounds.height > 0 &&
+      shape.bounds.height <= LETTER_MAX_HEIGHT_PT &&
+      shape.bounds.width <= LETTER_MAX_HEIGHT_PT * 2,
+  );
+  return letters.length >= LETTER_SHAPES_MIN;
+}
+
 /** Offers OCR when the pages they opened are scans with no text. */
 export interface ScanHintProps {
   pages: PageSnapshot[];
@@ -36,17 +51,34 @@ export function ScanHint({
   const { t } = useTranslation();
   const reasonId = useId();
   const scans = pages.filter(isUnreadScan).length;
-  if (scans === 0) return null;
+  const outlined = pages.filter(
+    (page) => !isUnreadScan(page) && isOutlinedText(page),
+  ).length;
+  if (scans + outlined === 0) return null;
   return (
     <Stack gap={6} align="center" data-testid="pdf-editor-scan-hint">
       <Text size="xs" c="dimmed" ta="center">
-        {t("pdfTextEditor.inspector.scanHint", {
-          count: scans,
-          defaultValue_one:
-            "This page is a scanned image with no text to edit. Run OCR first to make its text editable.",
-          defaultValue_other:
-            "{{count}} pages are scanned images with no text to edit. Run OCR first to make their text editable.",
-        })}
+        {scans === 0
+          ? t("pdfTextEditor.inspector.outlinedTextHint", {
+              count: outlined,
+              defaultValue_one:
+                "This page's text is drawn as shapes, so there is no text to edit. Run OCR first to make it editable.",
+              defaultValue_other:
+                "{{count}} pages have their text drawn as shapes, so there is no text to edit. Run OCR first to make it editable.",
+            })
+          : outlined > 0
+            ? t("pdfTextEditor.inspector.unreadPagesHint", {
+                count: scans + outlined,
+                defaultValue:
+                  "{{count}} pages have no text to edit: some are scanned images and some draw their text as shapes. Run OCR first to make them editable.",
+              })
+            : t("pdfTextEditor.inspector.scanHint", {
+                count: scans,
+                defaultValue_one:
+                  "This page is a scanned image with no text to edit. Run OCR first to make its text editable.",
+                defaultValue_other:
+                  "{{count}} pages are scanned images with no text to edit. Run OCR first to make their text editable.",
+              })}
       </Text>
       <Button
         size="sm"
