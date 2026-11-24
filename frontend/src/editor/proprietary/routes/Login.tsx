@@ -191,9 +191,52 @@ export default function Login() {
         "login.ssoError.badCredentials",
         "Your sign-in details were not accepted. Try again.",
       ),
+      invalidUsername: t(
+        "login.ssoError.invalidUsername",
+        "Your identity provider sent a username that Stirling PDF can't use. Contact your administrator.",
+      ),
     };
-    const describeError = (code: string) =>
-      Object.hasOwn(ssoErrorMessages, code) ? ssoErrorMessages[code] : code;
+    const providerErrorMessages: Record<string, string> = {
+      invalid_token_response: t(
+        "login.ssoError.tokenExchangeFailed",
+        "Stirling PDF couldn't complete sign-in with your identity provider. Check the client ID, client secret and token endpoint authentication method.",
+      ),
+      invalid_user_info_response: t(
+        "login.ssoError.userInfoUnreadable",
+        "Stirling PDF couldn't read your profile from your identity provider. User info responses must be plain JSON, not signed or encrypted.",
+      ),
+      invalid_id_token: t(
+        "login.ssoError.idTokenRejected",
+        "Your identity provider's ID token was rejected. Check the issuer URL, the token signing algorithm and the server clocks.",
+      ),
+      access_denied: t(
+        "login.ssoError.accessDenied",
+        "Your identity provider denied the sign-in.",
+      ),
+      authorization_request_not_found: t(
+        "login.ssoError.signInExpired",
+        "The sign-in attempt expired or was started in another tab. Try again.",
+      ),
+      invalid_state_parameter: t(
+        "login.ssoError.signInExpired",
+        "The sign-in attempt expired or was started in another tab. Try again.",
+      ),
+    };
+    const describeError = (code: string) => {
+      if (Object.hasOwn(ssoErrorMessages, code)) {
+        return ssoErrorMessages[code];
+      }
+      const message = Object.hasOwn(providerErrorMessages, code)
+        ? providerErrorMessages[code]
+        : t(
+            "login.ssoError.generic",
+            "Single sign-on failed. Check the server log for details.",
+          );
+      return t("login.ssoError.withCode", "{{message}} Error code: {{code}}", {
+        message,
+        code,
+      });
+    };
     const ssoErrorCode = searchParams.get("errorOAuth");
     if (ssoErrorCode) {
       return describeError(ssoErrorCode);

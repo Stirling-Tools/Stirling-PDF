@@ -14,9 +14,15 @@ import { configureSpringAuth } from "@editor/auth/config";
 // Mock i18n to return fallback text
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string | Record<string, unknown>) => {
-      if (typeof fallback === "string") return fallback;
-      return key;
+    t: (
+      key: string,
+      fallback?: string | Record<string, unknown>,
+      values?: Record<string, unknown>,
+    ) => {
+      if (typeof fallback !== "string") return key;
+      return fallback.replace(/{{(\w+)}}/g, (_, name: string) =>
+        String(values?.[name] ?? ""),
+      );
     },
   }),
   initReactI18next: {
@@ -648,11 +654,28 @@ describe("Login", () => {
     ["oAuth2RequiresLicense", /oauth sign-in requires a license/i],
     ["locked", /locked after too many failed sign-in attempts/i],
     ["badCredentials", /sign-in details were not accepted/i],
-    ["__proto__", "__proto__"],
-    ["constructor", "constructor"],
-    ["toString", "toString"],
-    ["hasOwnProperty", "hasOwnProperty"],
-    ["unexpected_provider_error", "unexpected_provider_error"],
+    ["invalidUsername", /sent a username that Stirling PDF can't use/i],
+    [
+      "invalid_token_response",
+      "Stirling PDF couldn't complete sign-in with your identity provider. Check the client ID, client secret and token endpoint authentication method. Error code: invalid_token_response",
+    ],
+    [
+      "invalid_user_info_response",
+      /must be plain JSON, not signed or encrypted\. Error code: invalid_user_info_response/,
+    ],
+    ["invalid_id_token", /ID token was rejected.*Error code: invalid_id_token/],
+    [
+      "authorization_request_not_found",
+      /expired or was started in another tab.*Error code: authorization_request_not_found/,
+    ],
+    ["__proto__", /Check the server log for details\. Error code: __proto__$/],
+    ["constructor", /Error code: constructor$/],
+    ["toString", /Error code: toString$/],
+    ["hasOwnProperty", /Error code: hasOwnProperty$/],
+    [
+      "unexpected_provider_error",
+      "Single sign-on failed. Check the server log for details. Error code: unexpected_provider_error",
+    ],
   ])("should display the SSO error %s", async (code, message) => {
     await act(async () => {
       render(
@@ -670,8 +693,8 @@ describe("Login", () => {
   it.each([
     ["locked", /locked after too many failed sign-in attempts/i],
     ["badCredentials", /sign-in details were not accepted/i],
-    ["access_denied", "access_denied"],
-    ["__proto__", "__proto__"],
+    ["access_denied", /denied the sign-in\. Error code: access_denied$/],
+    ["__proto__", /Error code: __proto__$/],
   ])("should display the login error %s", async (code, message) => {
     await act(async () => {
       render(
