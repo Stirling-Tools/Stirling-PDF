@@ -2,8 +2,8 @@ import path from "path";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { AccessibilityReport } from "@editor/types/checkAccessibility";
 
-// The tool panel reads top to bottom: the score, the breakdown, the open review's
-// live view of the document, the manual checks, then the actions.
+// The tool panel reads top to bottom: the score, the breakdown, the manual
+// checks, the open review's live view of the document, then the actions.
 
 const FIXTURE = path.join(
   import.meta.dirname,
@@ -62,8 +62,8 @@ test("lays the panel out in reading order, and pauses the review from its footer
     [
       ".a11y-hero",
       ".a11y-breakdown",
-      '[data-testid="pdf-editor-review-summary"]',
       '[data-testid="a11y-manual-checks"]',
+      '[data-testid="pdf-editor-review-summary"]',
     ].map((selector) => {
       const el = root.querySelector(selector);
       return el ? el.getBoundingClientRect().top : null;
@@ -71,6 +71,43 @@ test("lays the panel out in reading order, and pauses the review from its footer
   );
   expect(order.every((top) => top !== null)).toBe(true);
   expect([...order].sort((a, b) => a! - b!)).toEqual(order);
+
+  await expect(summary.getByTestId("pdf-editor-heading-problems")).toHaveText(
+    "1 to fix",
+  );
+  // A heading in the outline jumps to its text on the page.
+  await summary.getByRole("button", { name: /Appendix: method/ }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as {
+            __editor_store: { selection: { value: { runIds: string[] } } };
+          }
+        ).__editor_store;
+        const [id] = store.selection.value.runIds;
+        return id
+          ? (document.querySelector(`[data-testid="pdf-editor-run-${id}"]`)
+              ?.textContent ?? null)
+          : null;
+      }),
+    )
+    .toContain("Appendix: method");
+  await expect(
+    page
+      .locator('[data-testid^="pdf-editor-run-"]')
+      .filter({ hasText: "Appendix: method" }),
+  ).toBeInViewport();
+  // The manual checks wait collapsed, their state beside the title.
+  const manual = results.getByTestId("a11y-manual-checks");
+  await expect(manual.getByTestId("a11y-manual-status")).toHaveText(
+    "In progress",
+  );
+  const manualHeader = manual.getByRole("button", { name: /Manual checks/ });
+  await expect(manualHeader).toHaveAttribute("aria-expanded", "false");
+  await manualHeader.click();
+  await expect(manualHeader).toHaveAttribute("aria-expanded", "true");
+  await expect(manual.getByText("Is the reading order correct?")).toBeVisible();
 
   await expect(page.getByTestId("a11y-tag-everything")).toBeVisible();
   await expect(page.getByTestId("a11y-download-report")).toBeVisible();

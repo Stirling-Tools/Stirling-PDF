@@ -1,12 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "@editor/ui/Checkbox";
+import { Chip } from "@editor/ui/Chip";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { ProgressBar } from "@editor/ui/ProgressBar";
 import { SectionHeader } from "@editor/ui/SectionHeader";
-import { StatRow } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 import type { AccessibilityProgress } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
 import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
-import type { HeadingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
+import {
+  issueCount,
+  type HeadingOutline,
+} from "@editor/tools/pdfTextEditor/util/headingOutline";
 import "@editor/tools/pdfTextEditor/components/review/ReviewSummary.css";
 
 export interface ReviewSummaryProps {
@@ -46,41 +50,42 @@ export function ReviewSummary({
         />
         <TaggingProgress {...progress} />
         {review && (
-          <div
-            className="review-summary__rows"
-            data-testid="pdf-editor-document-accessibility-summary"
-          >
-            <StatRow
-              label={t(
-                "pdfTextEditor.inspector.accessibility.missingDescriptions",
-                "Missing descriptions",
-              )}
-              value={review.needsDescription}
-            />
-            <StatRow
-              label={t(
-                "pdfTextEditor.inspector.accessibility.untaggedImages",
-                "Untagged images",
-              )}
-              value={review.untagged}
-            />
-            {review.untaggable > 0 && (
-              <StatRow
-                label={t(
+          <ToDoRows
+            rows={[
+              {
+                icon: "image",
+                label: t(
+                  "pdfTextEditor.inspector.accessibility.missingDescriptions",
+                  "Missing descriptions",
+                ),
+                count: review.needsDescription,
+              },
+              {
+                icon: "tag",
+                label: t(
+                  "pdfTextEditor.inspector.accessibility.untaggedImages",
+                  "Untagged images",
+                ),
+                count: review.untagged,
+              },
+              {
+                icon: "circle-x",
+                label: t(
                   "pdfTextEditor.inspector.accessibility.untaggableImages",
                   "Can't be tagged here",
-                )}
-                value={review.untaggable}
-              />
-            )}
-            <StatRow
-              label={t(
-                "pdfTextEditor.inspector.accessibility.untaggedPages",
-                "Pages to tag",
-              )}
-              value={untaggedPages}
-            />
-          </div>
+                ),
+                count: review.untaggable,
+              },
+              {
+                icon: "file-text",
+                label: t(
+                  "pdfTextEditor.inspector.accessibility.untaggedPages",
+                  "Pages to tag",
+                ),
+                count: untaggedPages,
+              },
+            ]}
+          />
         )}
         <MarkedTaggedCheckbox
           marked={markedTagged}
@@ -96,6 +101,7 @@ export function ReviewSummary({
               "pdfTextEditor.inspector.accessibility.outline.heading",
               "Headings",
             )}
+            count={<HeadingProblems count={issueCount(headingOutline)} />}
           />
           <HeadingOutlineSection
             outline={headingOutline}
@@ -104,6 +110,48 @@ export function ReviewSummary({
         </section>
       )}
     </div>
+  );
+}
+
+interface ToDoRow {
+  icon: IconName;
+  label: string;
+  count: number;
+}
+
+/** What is left, one row per kind with anything in it, laid out like the report's breakdown. */
+function ToDoRows({ rows }: { rows: ToDoRow[] }) {
+  const left = rows.filter((row) => row.count > 0);
+  if (left.length === 0) return null;
+  return (
+    <ul
+      className="review-summary__rows"
+      data-testid="pdf-editor-document-accessibility-summary"
+    >
+      {left.map((row) => (
+        <li key={row.icon} className="review-summary__row">
+          <Icon name={row.icon} size={16} />
+          <span className="review-summary__label">{row.label}</span>
+          <Chip accent="warning" size="xs">
+            {row.count}
+          </Chip>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function HeadingProblems({ count }: { count: number }) {
+  const { t } = useTranslation();
+  if (count === 0) return null;
+  return (
+    <Chip accent="warning" size="xs" data-testid="pdf-editor-heading-problems">
+      {t(
+        "pdfTextEditor.inspector.accessibility.outline.problemCount",
+        "{{count}} to fix",
+        { count },
+      )}
+    </Chip>
   );
 }
 
@@ -187,7 +235,8 @@ function MarkedTaggedCheckbox({
           className="review-summary__warning"
           data-testid="pdf-editor-document-accessibility-marked-warning"
         >
-          {warning}
+          <Icon name="triangle-alert" size={14} />
+          <span>{warning}</span>
         </p>
       )}
     </div>

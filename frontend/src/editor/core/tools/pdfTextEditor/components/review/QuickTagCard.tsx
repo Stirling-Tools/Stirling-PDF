@@ -117,10 +117,30 @@ export function QuickTagCard({ store, controller, review }: Props) {
   const asksText = (item?.kind === "text" || multiText) && tag !== null;
   const typed = tag ? canTypeText(tag) : false;
   const artifactable = tag ? canBeArtifact(tag) : false;
+  const imageA11y =
+    item?.kind === "image" ? controller.imageAccessibility : null;
+  const toggleImageDecorative = () => {
+    if (!imageA11y) return;
+    const decorative = imageA11y.kind === "decorative";
+    controller.onSetImageDecorative(!decorative);
+    if (!decorative) afterTag();
+  };
   useTagKeys(
     asksText
-      ? { typed, artifactable, textChoices: QUICK_TYPES, applyText }
-      : null,
+      ? {
+          choices: QUICK_TYPES,
+          pick: typed ? applyText : null,
+          decorative: artifactable ? () => applyText({ artifact: null }) : null,
+        }
+      : imageA11y
+        ? {
+            choices: [],
+            pick: null,
+            decorative: canToggleDecorative(imageA11y)
+              ? toggleImageDecorative
+              : null,
+          }
+        : null,
   );
 
   if (!frame || top === null) return null;
@@ -275,19 +295,13 @@ export function QuickTagCard({ store, controller, review }: Props) {
         </>
       )}
 
-      {item?.kind === "image" && controller.imageAccessibility && (
+      {imageA11y && (
         <ImageQuestion
-          // A changed description (Undo) restarts the draft from it.
-          key={`${item.id}:${imageDescription(controller.imageAccessibility)}`}
-          accessibility={controller.imageAccessibility}
-          onDescribe={(text) => {
-            controller.onSetImageDescription(text);
-            afterTag();
-          }}
-          onDecorative={() => {
-            controller.onSetImageDecorative(true);
-            afterTag();
-          }}
+          key={item?.id}
+          accessibility={imageA11y}
+          onSave={controller.onSetImageDescription}
+          onDone={afterTag}
+          onDecorative={toggleImageDecorative}
         />
       )}
 
@@ -389,19 +403,34 @@ function imageDescription(
     : "";
 }
 
+/** Waits this long after the last keystroke before saving a description. */
+const DESCRIPTION_SAVE_MS = 500;
+
+/**
+ * Describes the image, saving as the user types; Enter saves and moves on. Keyed by
+ * the image, so a pending save is flushed to the image it was typed for.
+ */
 function ImageQuestion({
   accessibility,
-  onDescribe,
+  onSave,
+  onDone,
   onDecorative,
 }: {
   accessibility: NonNullable<Controller["imageAccessibility"]>;
-  onDescribe: (text: string) => void;
+  onSave: (text: string) => void;
+  onDone: () => void;
   onDecorative: () => void;
 }) {
   const { t } = useTranslation();
-  const [text, setText] = useState(() => imageDescription(accessibility));
+  const stored = imageDescription(accessibility);
+  const [text, setText] = useState(stored);
+  const draft = useDebouncedSave(stored, onSave);
+  // A description changed elsewhere (Undo) replaces the draft, unless it is the one just saved.
+  useEffect(() => {
+    if (draft.adopt(stored)) setText(stored);
+  }, [stored, draft]);
   const describable = accessibility.kind === "describable";
-  const canBeDecorative = describable && accessibility.canBeDecorative;
+  const decorative = accessibility.kind === "decorative";
   const question = t(
     "pdfTextEditor.review.card.imageQuestion",
     "What does this image show?",
@@ -426,40 +455,108 @@ function ImageQuestion({
         disabled={!describable}
         placeholder={t(
           "pdfTextEditor.review.card.imagePlaceholder",
-          "For example: Bar chart of revenue by region, Europe highest",
+          "Describe the image",
         )}
-        onChange={(e) => setText(e.currentTarget.value)}
+        onChange={(e) => {
+          setText(e.currentTarget.value);
+          draft.schedule(e.currentTarget.value.trim());
+        }}
+        onBlur={draft.flush}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && text.trim()) {
             e.preventDefault();
-            onDescribe(text.trim());
+            draft.flush();
+            onDone();
           }
         }}
         data-autofocus
         data-testid="pdf-editor-quick-tag-description"
         data-fix-target="untagged image"
       />
-      <div className="review-card__row">
-        <Button
-          size="sm"
-          variant="primary"
-          disabled={!describable || !text.trim()}
-          onClick={() => onDescribe(text.trim())}
+      <p className="review-card__label">
+        {t(
+          "pdfTextEditor.review.card.skipQuestion",
+          "Or skip it for screen readers",
+        )}
+      </p>
+      <div className="review-card__chips">
+        <button
+          type="button"
+          className="review-chip review-chip--quiet"
+          data-active={decorative}
+          aria-pressed={decorative}
+          disabled={!canToggleDecorative(accessibility)}
+          onClick={() => {
+            draft.cancel();
+            onDecorative();
+          }}
+          data-testid="pdf-editor-quick-tag-decorative"
         >
-          {t("pdfTextEditor.review.card.saveDescription", "Save description")}
-        </Button>
-        <Button
-          size="sm"
-          variant="tertiary"
-          accent="neutral"
-          disabled={!canBeDecorative}
-          onClick={onDecorative}
-        >
-          {t("pdfTextEditor.review.card.decorative", "It's decorative")}
-        </Button>
+          {artifactName(t, null)}
+          <kbd>D</kbd>
+        </button>
       </div>
     </>
   );
+}
+
+/** Whether the image's Decorative chip can be pressed: to mark it, or to unmark it. */
+function canToggleDecorative(
+  accessibility: NonNullable<Controller["imageAccessibility"]>,
+): boolean {
+  switch (accessibility.kind) {
+    case "describable":
+      return accessibility.canBeDecorative;
+    case "decorative":
+      return accessibility.canUndecorate;
+    case "blocked":
+      return false;
+  }
+}
+
+/**
+ * Saves the latest text a moment after the last change, and at once on flush or
+ * unmount. Each schedule holds the `save` of the render that made it, so a flush
+ * after the selection moves still writes to the item the text was typed for.
+ */
+function useDebouncedSave(stored: string, save: (text: string) => void) {
+  const currentSave = useRef(save);
+  currentSave.current = save;
+  const [draft] = useState(() => {
+    let saved = stored;
+    let pending: { text: string; save: (text: string) => void } | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const cancel = () => {
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      pending = null;
+    };
+    const flush = () => {
+      const next = pending;
+      cancel();
+      if (!next || next.text === saved) return;
+      saved = next.text;
+      next.save(next.text);
+    };
+    return {
+      flush,
+      cancel,
+      /** True when `text` is not what this draft last saved, and takes it as saved. */
+      adopt(text: string): boolean {
+        if (text === saved) return false;
+        saved = text;
+        cancel();
+        return true;
+      },
+      schedule(text: string) {
+        if (timer !== null) clearTimeout(timer);
+        pending = { text, save: currentSave.current };
+        timer = setTimeout(flush, DESCRIPTION_SAVE_MS);
+      },
+    };
+  });
+  useEffect(() => draft.flush, [draft]);
+  return draft;
 }
 
 /** Why an image's description can't be changed here. */
@@ -515,13 +612,14 @@ function useFocusOnOpen(): (card: HTMLElement) => void {
   };
 }
 
-/** Number keys pick the matching text tag and D marks it decorative, unless the user is typing. */
+/** Number keys pick the matching text tag and D toggles decorative, unless the user is typing. */
 function useTagKeys(
   binding: {
-    typed: boolean;
-    artifactable: boolean;
-    textChoices: readonly TextTagChoice[];
-    applyText: (choice: TextTagChoice) => void;
+    choices: readonly TextTagChoice[];
+    /** Null while the item's tag can't be chosen. */
+    pick: ((choice: TextTagChoice) => void) | null;
+    /** Null while the item can't be made decorative. */
+    decorative: (() => void) | null;
   } | null,
 ): void {
   useEffect(() => {
@@ -537,16 +635,16 @@ function useTagKeys(
         return;
       const digit = Number(e.key);
       if (
-        binding.typed &&
+        binding.pick &&
         Number.isInteger(digit) &&
         digit >= 1 &&
-        digit <= binding.textChoices.length
+        digit <= binding.choices.length
       ) {
         e.preventDefault();
-        binding.applyText(binding.textChoices[digit - 1]);
-      } else if (binding.artifactable && (e.key === "d" || e.key === "D")) {
+        binding.pick(binding.choices[digit - 1]);
+      } else if (binding.decorative && (e.key === "d" || e.key === "D")) {
         e.preventDefault();
-        binding.applyText({ artifact: null });
+        binding.decorative();
       }
     };
     window.addEventListener("keydown", onKey);

@@ -94,8 +94,26 @@ test.describe("PDF accessibility review", () => {
     await page.getByTestId(`pdf-editor-image-${image.id}`).click();
     const description = card.getByTestId("pdf-editor-quick-tag-description");
     await expect(description).toHaveValue("Bar chart of revenue by region");
+    await expect(description).toHaveAttribute(
+      "placeholder",
+      "Describe the image",
+    );
+    const savedAlt = () =>
+      page.evaluate(
+        (mcid) =>
+          (window as unknown as EditorWindow).__editor_store.document
+            .structure(0)
+            .alt(mcid),
+        image.mcid!,
+      );
+    await description.fill("Revenue by region");
+    // Saved as typed, with nothing to press, and the field keeps focus.
+    await expect.poll(savedAlt).toBe("Revenue by region");
+    await expect(description).toBeFocused();
+    // Moving straight on still saves what was typed, to this image.
     await description.fill("Revenue by region, third quarter");
-    await card.getByRole("button", { name: "Save description" }).click();
+    await page.locator('[data-testid^="pdf-editor-run-"]').first().click();
+    await expect.poll(savedAlt).toBe("Revenue by region, third quarter");
 
     // Leaving the review for the editor keeps the unsaved tags.
     await page.keyboard.press("Escape");
@@ -291,7 +309,9 @@ test.describe("PDF accessibility review", () => {
         );
       });
     expect(await decorative()).toBe(false);
-    await card.getByRole("button", { name: "It's decorative" }).click();
+    const decorativeChip = card.getByTestId("pdf-editor-quick-tag-decorative");
+    await expect(decorativeChip).toHaveAttribute("aria-pressed", "false");
+    await decorativeChip.click();
     await expect.poll(decorative).toBe(true);
 
     await page.keyboard.press("Escape");

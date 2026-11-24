@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { FileId } from "@editor/types/file";
 import type { AccessibilityReport } from "@editor/types/checkAccessibility";
-import { Field } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
 import {
   reviewLanguage,
@@ -34,20 +33,7 @@ export function ReportLanguageField({
   const editable = live ? live.editable : !report.summary.encrypted;
   const label = t("pdfTextEditor.inspector.language.documentLabel", "Language");
   return (
-    <Field
-      label={label}
-      hint={
-        editable
-          ? t(
-              "pdfTextEditor.inspector.language.documentHint",
-              "The language screen readers use unless a part of the text sets its own.",
-            )
-          : t(
-              "pdfTextEditor.inspector.language.documentLocked",
-              "An encrypted document's language can't be changed here.",
-            )
-      }
-    >
+    <>
       <LanguagePicker
         own={language}
         inherited={null}
@@ -63,6 +49,14 @@ export function ReportLanguageField({
         testId="a11y-report-language-picker"
         disabled={!editable}
       />
-    </Field>
+      {!editable && (
+        <p className="a11y-note">
+          {t(
+            "pdfTextEditor.inspector.language.documentLocked",
+            "An encrypted document's language can't be changed here.",
+          )}
+        </p>
+      )}
+    </>
   );
 }

@@ -40,7 +40,7 @@ interface AccessibilityReportViewProps {
   onSetAllManual: (done: boolean) => void;
   /** Sets the document language, under the Language area. */
   languageFix?: ReactNode;
-  /** Shown between the breakdown and the manual checks: the review's live view of the document. */
+  /** Shown last, under the manual checks: the review's live view of the document. */
   live?: ReactNode;
 }
 
@@ -120,8 +120,6 @@ export function AccessibilityReportView({
         </ul>
       </section>
 
-      {live}
-
       {report.humanChecks.length > 0 && (
         <AccessibilityManualChecks
           checks={report.humanChecks}
@@ -130,6 +128,8 @@ export function AccessibilityReportView({
           onSetAll={onSetAllManual}
         />
       )}
+
+      {live}
     </div>
   );
 }

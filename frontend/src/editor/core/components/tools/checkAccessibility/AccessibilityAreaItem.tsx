@@ -71,6 +71,7 @@ export function AccessibilityAreaItem({
           inert={!open}
         >
           <div className="sui-collapsible__body-inner a11y-area__body">
+            {fix && <div className="a11y-area__fix">{fix}</div>}
             {!passes && (
               <div className="a11y-issues">
                 {area.issues.map((issue) => (
@@ -87,7 +88,6 @@ export function AccessibilityAreaItem({
                 {note}
               </p>
             )}
-            {fix && <div className="a11y-area__fix">{fix}</div>}
           </div>
         </div>
       )}

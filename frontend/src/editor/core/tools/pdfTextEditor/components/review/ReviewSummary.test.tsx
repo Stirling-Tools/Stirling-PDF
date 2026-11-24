@@ -66,6 +66,24 @@ describe("ReviewSummary", () => {
     );
   });
 
+  it("leaves out what has nothing left in it", () => {
+    renderSummary({
+      review: { needsDescription: 0, untagged: 0, untaggable: 0 },
+      untaggedPages: 1,
+    });
+    expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
+      `${KEY}.untaggedPages1`,
+    );
+    expect(screen.getByTestId(SUMMARY)).not.toHaveTextContent(
+      `${KEY}.missingDescriptions`,
+    );
+  });
+
+  it("leaves the list out once nothing is left", () => {
+    renderSummary();
+    expect(screen.queryByTestId(SUMMARY)).not.toBeInTheDocument();
+  });
+
   it("leaves the counts out when the file is not treated as tagged", () => {
     renderSummary({ review: null });
     expect(screen.queryByTestId(SUMMARY)).not.toBeInTheDocument();
@@ -102,6 +120,24 @@ describe("ReviewSummary", () => {
   it("shows no warning when the flag matches the tags", () => {
     renderSummary({ markedTagged: true });
     expect(screen.queryByTestId(MARKED_WARNING)).not.toBeInTheDocument();
+  });
+
+  it("flags heading problems beside the Headings title", () => {
+    renderSummary({
+      headingOutline: { entries: [], mixesNumbering: true },
+    });
+    expect(screen.getByTestId("pdf-editor-heading-problems")).toHaveTextContent(
+      `${KEY}.outline.problemCount`,
+    );
+  });
+
+  it("shows no problem count when the headings are fine", () => {
+    renderSummary({
+      headingOutline: { entries: [], mixesNumbering: false },
+    });
+    expect(
+      screen.queryByTestId("pdf-editor-heading-problems"),
+    ).not.toBeInTheDocument();
   });
 
   it("lists the headings when there are any to check", () => {

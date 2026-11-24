@@ -71,6 +71,17 @@ test("sets the document language from the report's Language area", async ({
   // The tool opens the review, whose editor shows the file's own language once
   // loaded; the stub matches it so either source reads the same.
   await expect(picker).toHaveValue(/\(en-US\)$/);
+  // The picker leads the area, above the issues it fixes, with the area's own
+  // heading as its only label.
+  const body = report
+    .locator(".a11y-area__body")
+    .filter({ has: page.getByTestId("a11y-report-language-picker") });
+  await expect(
+    body
+      .locator(":scope > :first-child")
+      .getByTestId("a11y-report-language-picker"),
+  ).toBeVisible();
+  await expect(body.getByText("Language", { exact: true })).toHaveCount(0);
 
   await expect(async () => {
     await picker.click();
