@@ -1,6 +1,7 @@
+/* Under Mantine's modals (200), so a dialog blocks the card's clicks too. */
 .review-card {
   position: fixed;
-  z-index: 250;
+  z-index: 190;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -178,7 +179,7 @@ html[data-review-card] [data-viewer-pages] *::-webkit-scrollbar {
 
 .review-error {
   position: fixed;
-  z-index: 260;
+  z-index: 195;
   top: 72px;
   left: 50%;
   transform: translateX(-50%);

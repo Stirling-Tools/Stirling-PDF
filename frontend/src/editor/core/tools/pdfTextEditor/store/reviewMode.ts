@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import type { FileId } from "@editor/types/file";
 import type { AccessibilityFixTarget } from "@editor/utils/accessibilityFixes";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { reviewLanguage } from "@editor/tools/pdfTextEditor/store/reviewLanguage";
 
 export interface ReviewModeState {
   /** The editor is in accessibility review: tags on show, quick-tag card on. */
@@ -45,6 +46,9 @@ export const reviewMode = {
     listeners.forEach((listener) => listener());
   },
   close(): void {
+    // A language the report picked for a file the review never opened would
+    // otherwise apply, unasked, the next time that file is reviewed.
+    reviewLanguage.set({ requested: null });
     reviewMode.set({
       reviewing: false,
       startAt: null,

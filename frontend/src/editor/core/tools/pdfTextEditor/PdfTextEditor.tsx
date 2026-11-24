@@ -59,6 +59,7 @@ import {
   reviewMode,
   useReviewMode,
 } from "@editor/tools/pdfTextEditor/store/reviewMode";
+import { reviewLanguage } from "@editor/tools/pdfTextEditor/store/reviewLanguage";
 import { REVIEW_COLUMN_REM } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
 import { MobileEditorSheets } from "@editor/tools/pdfTextEditor/components/MobileEditorSheets";
 import { EditorFileInputs } from "@editor/tools/pdfTextEditor/components/EditorFileInputs";
@@ -701,8 +702,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   );
 
   const handleCancelPassword = useCallback(() => {
-    // A fix waiting on the cancelled file would switch back to it later.
+    // A fix or a language waiting on the cancelled file would apply to it later.
     reviewMode.set({ startAt: null });
+    reviewLanguage.set({ requested: null });
     const file = store.pendingPasswordFile;
     if (file) cancelAutoLoad(file);
     store.clearPasswordPrompt();

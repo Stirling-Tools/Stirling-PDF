@@ -2,10 +2,16 @@ import { Suspense, lazy } from "react";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { useEndReviewOutsideAccessibilityTool } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
-import { CloseReviewPrompt } from "@editor/tools/pdfTextEditor/components/review/CloseReviewPrompt";
 
+// Lazy because the Workbench imports this file: an eager editor import would put
+// the editor's store in the app's first bundle.
 const PdfTextEditor = lazy(
   () => import("@editor/tools/pdfTextEditor/PdfTextEditor"),
+);
+const CloseReviewPrompt = lazy(() =>
+  import("@editor/tools/pdfTextEditor/components/review/CloseReviewPrompt").then(
+    (m) => ({ default: m.CloseReviewPrompt }),
+  ),
 );
 
 /**
@@ -28,7 +34,9 @@ export function ReviewHost() {
       </div>
       {/* Here rather than in the viewer's bar: Pause fixing is pressed from the
           tool panel, whichever workbench is showing. */}
-      <CloseReviewPrompt />
+      <Suspense fallback={null}>
+        <CloseReviewPrompt />
+      </Suspense>
     </>
   );
 }

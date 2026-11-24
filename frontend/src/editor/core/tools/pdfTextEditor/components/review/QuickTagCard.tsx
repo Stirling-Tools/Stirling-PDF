@@ -8,6 +8,7 @@ import {
 import { createPortal } from "react-dom";
 import { Switch, Textarea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import {
@@ -78,8 +79,10 @@ export function QuickTagCard({ store, controller, review }: Props) {
   const top = useCardTop(item, frame);
   useCardOpen();
   const [cardHeight, setCardHeight] = useState(0);
+  const focusOnOpen = useFocusOnOpen();
   const measureCard = (el: HTMLDivElement | null) => {
     if (!el) return;
+    focusOnOpen(el);
     reviewCard.top = el.getBoundingClientRect().top;
     if (el.offsetHeight !== cardHeight) setCardHeight(el.offsetHeight);
   };
@@ -136,6 +139,9 @@ export function QuickTagCard({ store, controller, review }: Props) {
         width: CARD_WIDTH,
         maxHeight: viewer.height - GAP_PX * 2,
       }}
+      role="region"
+      aria-label={t("pdfTextEditor.review.card.label", "Accessibility review")}
+      tabIndex={-1}
       data-testid="pdf-editor-quick-tag"
       // A press here must not reach the page, which would clear the selection.
       onPointerDown={(e) => e.stopPropagation()}
@@ -186,6 +192,7 @@ export function QuickTagCard({ store, controller, review }: Props) {
                 type="button"
                 className="review-chip"
                 data-active={tag.kind === "tagged" && tag.block.type === type}
+                aria-pressed={tag.kind === "tagged" && tag.block.type === type}
                 disabled={!typed}
                 onClick={() => applyText(type)}
               >
@@ -252,6 +259,9 @@ export function QuickTagCard({ store, controller, review }: Props) {
                 type="button"
                 className="review-chip review-chip--quiet"
                 data-active={
+                  tag.kind === "artifact" && tag.furniture === furniture
+                }
+                aria-pressed={
                   tag.kind === "artifact" && tag.furniture === furniture
                 }
                 disabled={!artifactable}
@@ -322,20 +332,20 @@ function TextDescriptionQuestion({
   const { t } = useTranslation();
   const [text, setText] = useState(control.description ?? "");
   const formula = control.type === "Formula";
+  const question = formula
+    ? t(
+        "pdfTextEditor.review.card.formulaQuestion",
+        "How is this formula read aloud?",
+      )
+    : t(
+        "pdfTextEditor.review.card.figureQuestion",
+        "What does this figure show?",
+      );
   return (
     <>
-      <p className="review-card__label">
-        {formula
-          ? t(
-              "pdfTextEditor.review.card.formulaQuestion",
-              "How is this formula read aloud?",
-            )
-          : t(
-              "pdfTextEditor.review.card.figureQuestion",
-              "What does this figure show?",
-            )}
-      </p>
+      <p className="review-card__label">{question}</p>
       <Textarea
+        aria-label={question}
         autosize
         minRows={2}
         maxRows={5}
@@ -391,15 +401,24 @@ function ImageQuestion({
   const { t } = useTranslation();
   const [text, setText] = useState(() => imageDescription(accessibility));
   const describable = accessibility.kind === "describable";
+  const canBeDecorative = describable && accessibility.canBeDecorative;
+  const question = t(
+    "pdfTextEditor.review.card.imageQuestion",
+    "What does this image show?",
+  );
   return (
     <>
-      <p className="review-card__label">
-        {t(
-          "pdfTextEditor.review.card.imageQuestion",
-          "What does this image show?",
-        )}
-      </p>
+      <p className="review-card__label">{question}</p>
+      {accessibility.kind === "blocked" && (
+        <p
+          className="review-card__hint"
+          data-testid="pdf-editor-quick-tag-blocked"
+        >
+          {blockedMessage(t, accessibility)}
+        </p>
+      )}
       <Textarea
+        aria-label={question}
         autosize
         minRows={2}
         maxRows={5}
@@ -433,6 +452,7 @@ function ImageQuestion({
           size="sm"
           variant="tertiary"
           accent="neutral"
+          disabled={!canBeDecorative}
           onClick={onDecorative}
         >
           {t("pdfTextEditor.review.card.decorative", "It's decorative")}
@@ -440,6 +460,59 @@ function ImageQuestion({
       </div>
     </>
   );
+}
+
+/** Why an image's description can't be changed here. */
+function blockedMessage(
+  t: TFunction,
+  accessibility: Extract<
+    NonNullable<Controller["imageAccessibility"]>,
+    { kind: "blocked" }
+  >,
+): string {
+  switch (accessibility.blocker) {
+    case "untagged":
+      return accessibility.documentTagged
+        ? t(
+            "pdfTextEditor.inspector.accessibility.untaggedImage",
+            "Can't be tagged here",
+          )
+        : t(
+            "pdfTextEditor.inspector.accessibility.untaggedDocument",
+            "Document has no tags",
+          );
+    case "not-figure":
+      return t(
+        "pdfTextEditor.inspector.accessibility.notFigure",
+        "Tagged as part of the text",
+      );
+    case "encrypted":
+      return t(
+        "pdfTextEditor.inspector.accessibility.encrypted",
+        "Tags can't be edited in an encrypted file",
+      );
+    case "unreadable":
+      return t(
+        "pdfTextEditor.inspector.accessibility.unreadable",
+        "This file's tags can't be edited",
+      );
+  }
+}
+
+/** Moves focus into the card the first time it shows, unless the user is typing somewhere. */
+function useFocusOnOpen(): (card: HTMLElement) => void {
+  const focused = useRef(false);
+  return (card) => {
+    if (focused.current) return;
+    focused.current = true;
+    const active = document.activeElement;
+    if (
+      isFocusInContentEditable() ||
+      active?.closest("input, textarea, select, [role='combobox']")
+    )
+      return;
+    card.focus({ preventScroll: true });
+  };
 }
 
 /** Number keys pick the matching text tag and D marks it decorative, unless the user is typing. */
