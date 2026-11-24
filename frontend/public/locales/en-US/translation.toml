@@ -8032,16 +8032,16 @@ skipQuestion = "Or skip it for screen readers"
 textQuestion = "What is this text?"
 todo = "Needs attention"
 
-[pdfTextEditor.review.summary]
-progress = "Tagging progress"
-title = "Tagging"
-
 [pdfTextEditor.review.closePrompt]
 body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
 discard = "Discard"
 keep = "Keep tagging"
 save = "Save and close"
 title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
