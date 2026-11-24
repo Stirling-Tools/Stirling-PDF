@@ -420,7 +420,7 @@ timestamp = "Timestamp"
 [AddStampRequest.variablePicker]
 examplesHint = "Replaces the stamp text"
 help = "What each variable means"
-open = "Insert a variable"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Apply Text"

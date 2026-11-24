@@ -1,7 +1,6 @@
-/* Level with the field's label: the label row is shorter than the button. */
 .trigger {
   position: absolute;
-  top: -0.3125rem;
+  top: -0.125rem;
   inset-inline-end: 0;
   display: inline-flex;
 }

@@ -44,14 +44,16 @@ async function enterStampText(context: PlayContext, text = "APPROVED") {
   await waitForPanelText(context, "Preview:");
 }
 
-const INSERT_VARIABLE = "Insert a variable";
+const DYNAMIC_VARIABLES = "Dynamic variables";
 
 async function openVariablePicker(context: PlayContext) {
-  await userEvent.click(await findEnabled(context, "button", INSERT_VARIABLE));
+  await userEvent.click(
+    await findEnabled(context, "button", DYNAMIC_VARIABLES),
+  );
   return within(
     await bodyOf(context).findByRole(
       "dialog",
-      { name: INSERT_VARIABLE },
+      { name: DYNAMIC_VARIABLES },
       STAGE_TIMEOUT,
     ),
   );

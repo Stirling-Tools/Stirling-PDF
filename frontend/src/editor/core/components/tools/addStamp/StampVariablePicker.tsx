@@ -1,7 +1,6 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Popover, Text } from "@mantine/core";
-import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
@@ -22,7 +21,7 @@ interface StampVariablePickerProps {
 }
 
 /**
- * Icon button for the Stamp Text label row. Sits absolutely at the top right of
+ * Small button for the Stamp Text label row. Sits absolutely at the top right of
  * the nearest positioned ancestor, so wrap the field in one.
  */
 export function StampVariablePicker({
@@ -32,7 +31,7 @@ export function StampVariablePicker({
 }: StampVariablePickerProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
-  const label = t("AddStampRequest.variablePicker.open", "Insert a variable");
+  const label = t("AddStampRequest.variablePicker.open", "Dynamic variables");
   const variableTips = useStampVariableTips();
   const helpAnchor = useRef<HTMLSpanElement>(null);
 
@@ -65,23 +64,24 @@ export function StampVariablePicker({
           <button type="button" tabIndex={-1} aria-hidden="true" />
         </Tooltip>
       </span>
-      <Tooltip content={label} position="top" disabled={opened}>
-        <span className={classes.trigger}>
-          <Popover.Target>
-            <ActionIcon
-              variant="quiet"
-              size="sm"
-              aria-label={label}
-              aria-expanded={opened}
-              aria-haspopup="dialog"
-              disabled={disabled}
-              onClick={() => setOpened((open) => !open)}
-            >
-              <Icon name="variable" size={16} />
-            </ActionIcon>
-          </Popover.Target>
-        </span>
-      </Tooltip>
+      <span className={classes.trigger}>
+        <Popover.Target>
+          <Button
+            variant="secondary"
+            size="sm"
+            fontSize="xs"
+            px="xs"
+            // The label line's height, so the button sits beside the label, not over the field.
+            style={{ "--button-height": "1.5rem" } as CSSProperties}
+            aria-expanded={opened}
+            aria-haspopup="dialog"
+            disabled={disabled}
+            onClick={() => setOpened((open) => !open)}
+          >
+            {label}
+          </Button>
+        </Popover.Target>
+      </span>
       <Popover.Dropdown aria-label={label} className={classes.dropdown}>
         <div className={classes.groups}>
           {stampVariableGroups(t).map((group) => (
