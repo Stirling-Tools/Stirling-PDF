@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -22,6 +23,8 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -72,6 +75,64 @@ class CustomOAuth2UserServiceTest {
         verify(userService, never()).hasPassword(anyString());
     }
 
+    @Test
+    void providerErrorKeepsItsCode() throws Exception {
+        CustomOAuth2UserService service = service();
+        OidcUserService delegate = mock(OidcUserService.class);
+        when(delegate.loadUser(any()))
+                .thenThrow(
+                        new OAuth2AuthenticationException(
+                                new OAuth2Error("invalid_user_info_response")));
+        setDelegate(service, delegate);
+        when(userRequest.getClientRegistration()).thenReturn(registration());
+
+        assertThatThrownBy(() -> service.loadUser(userRequest))
+                .isInstanceOfSatisfying(
+                        OAuth2AuthenticationException.class,
+                        e ->
+                                assertThat(e.getError().getErrorCode())
+                                        .isEqualTo("invalid_user_info_response"));
+    }
+
+    @Test
+    void lockedAccountIsReportedAsLocked() throws Exception {
+        CustomOAuth2UserService service = service();
+        OidcIdToken idToken = idToken("jane@example.com");
+        stubDelegate(service, idToken);
+        when(userRequest.getClientRegistration()).thenReturn(registration());
+        User local = new User();
+        local.setUsername("jane@example.com");
+        when(userService.findByUsernameIgnoreCase("jane@example.com"))
+                .thenReturn(Optional.of(local));
+        when(loginAttemptService.isBlocked("jane@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.loadUser(userRequest))
+                .isInstanceOfSatisfying(
+                        OAuth2AuthenticationException.class,
+                        e -> assertThat(e.getError().getErrorCode()).isEqualTo("locked"));
+    }
+
+    private CustomOAuth2UserService service() {
+        ApplicationProperties.Security.OAUTH2 props = new ApplicationProperties.Security.OAUTH2();
+        props.setEnabled(true);
+        props.setUseAsUsername("email");
+        return new CustomOAuth2UserService(props, userService, loginAttemptService);
+    }
+
+    private static OidcIdToken idToken(String email) {
+        return new OidcIdToken(
+                "raw-token",
+                Instant.now(),
+                Instant.now().plusSeconds(300),
+                Map.of(
+                        IdTokenClaimNames.SUB,
+                        "provider-sub",
+                        IdTokenClaimNames.ISS,
+                        "https://idp.example.com",
+                        "email",
+                        email));
+    }
+
     private static ClientRegistration registration() {
         return ClientRegistration.withRegistrationId("keycloak")
                 .clientId("client-id")
@@ -91,6 +152,11 @@ class CustomOAuth2UserServiceTest {
                 .thenReturn(
                         new DefaultOidcUser(
                                 Collections.emptyList(), idToken, IdTokenClaimNames.SUB));
+        setDelegate(service, delegate);
+    }
+
+    private static void setDelegate(CustomOAuth2UserService service, OidcUserService delegate)
+            throws Exception {
         Field field = CustomOAuth2UserService.class.getDeclaredField("delegate");
         field.setAccessible(true);
         field.set(service, delegate);

@@ -119,8 +119,10 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                         true);
             }
             throw new OAuth2AuthenticationException(new OAuth2Error(e.getMessage()), e);
+        } catch (LockedException e) {
+            throw new OAuth2AuthenticationException(new OAuth2Error("locked"), e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Unexpected error loading OIDC user", e);
+            log.error("Error loading OIDC user", e);
             if (debugLogging && usernameAttributeKey != null && userRequest.getIdToken() != null) {
                 logClaimDump(
                         "OAuth2/OIDC login FAILED (unexpected error) - dumping ID token claims",
@@ -130,6 +132,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                         null,
                         userRequest.getIdToken().getClaims(),
                         true);
+            }
+            if (e instanceof OAuth2AuthenticationException providerError) {
+                throw providerError;
             }
             throw new OAuth2AuthenticationException("Unexpected error during authentication");
         }
