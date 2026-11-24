@@ -80,3 +80,28 @@
     transition: none;
   }
 }
+.progress {
+  width: 100%;
+}
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--c-text-subtle);
+  margin-bottom: 4px;
+}
+.progressCount {
+  font-variant-numeric: tabular-nums;
+}
+.progressTrack {
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-primary) 15%, transparent);
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--c-primary);
+  transition: width 0.15s ease-out;
+}

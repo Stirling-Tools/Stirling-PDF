@@ -67,7 +67,10 @@ import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
 import { useOpenInNewWindow } from "@editor/extensions/openInNewWindow";
 import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
 import { alert } from "@editor/components/toast";
-import { useBulkAddProgress } from "@editor/services/bulkAddProgress";
+import {
+  BULK_ADD_INDICATOR_MIN,
+  useBulkAddProgress,
+} from "@editor/services/bulkAddProgress";
 import { useIsScrolled } from "@editor/hooks/useIsScrolled";
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { useCoalescedCallback } from "@editor/hooks/useCoalescedCallback";
@@ -90,9 +93,6 @@ const SIDEBAR_WIDTH = "var(--sidebar-w)";
 // Stable empty props for rows without policies, so the memoized
 // FileItem isn't re-rendered by a fresh `?? []` identity on every list render.
 const NO_POLICIES: never[] = [];
-
-/** Show pre-dispatch progress only for large drops; small imports finish before it paints. */
-const BULK_ADD_INDICATOR_MIN = 8;
 
 export interface FileSidebarProps {
   onOpenSettings?: () => void;

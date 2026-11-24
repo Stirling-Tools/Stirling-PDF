@@ -20,6 +20,9 @@ export interface BulkAddProgress {
   total: number;
 }
 
+/** Show progress only for large drops; small imports finish before it paints. */
+export const BULK_ADD_INDICATOR_MIN = 8;
+
 /** Null object — no bulk add in progress. */
 const IDLE: BulkAddProgress = { done: 0, total: 0 };
 
