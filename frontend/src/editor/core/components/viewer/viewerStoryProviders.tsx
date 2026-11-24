@@ -37,6 +37,7 @@ function pageThumb(pageIndex: number): Blob {
     (_, i) =>
       `<rect x="14" y="${24 + i * 12}" width="${i % 3 === 2 ? 50 : 82}" height="4" fill="black" opacity="0.25"/>`,
   ).join("");
+  // icon-lint-allow: runtime-generated-svg -- a stand-in page thumbnail, numbered per page
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="143"><rect width="110" height="143" fill="white"/><text x="14" y="16" font-size="9" font-family="sans-serif">Page ${pageIndex + 1}</text>${lines}</svg>`;
   return new Blob([svg], { type: "image/svg+xml" });
 }
