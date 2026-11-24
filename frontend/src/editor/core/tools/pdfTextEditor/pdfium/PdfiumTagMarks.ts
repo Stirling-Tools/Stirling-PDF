@@ -71,6 +71,20 @@ export function readTagMarks(
   return tags;
 }
 
+/**
+ * Identifies the object's mark list, or null when it has no marks. PDFium shares
+ * one list between every object a marked-content sequence draws, so objects with
+ * the same key change together: a mark added to or removed from one is on, or
+ * gone from, them all. Objects with different keys hold separate lists.
+ */
+export function markListKey(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+): number | null {
+  const count = m.FPDFPageObj_CountMarks(objPtr);
+  return count > 0 ? m.FPDFPageObj_GetMark(objPtr, count - 1) || null : null;
+}
+
 /** The MCID of the innermost tag that has one: the content's own. */
 export function innermostMcid(tags: readonly TagMark[]): number | null {
   return [...tags].reverse().find((t) => t.mcid !== null)?.mcid ?? null;

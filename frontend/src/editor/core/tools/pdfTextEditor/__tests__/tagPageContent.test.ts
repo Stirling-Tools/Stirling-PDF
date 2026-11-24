@@ -23,7 +23,10 @@ import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
-import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  markNamesOf,
+  readTagMarks,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
@@ -476,6 +479,52 @@ describe("tagAllPages", () => {
     store.history.execute(new TagPageContentCommand({ pageIndex: 0 }), doc);
     await tagAllPages(store);
     expect(new Set(tagsShown(doc, 1).values())).toEqual(new Set(["P"]));
+    store.dispose();
+  });
+
+  test("tags runs one marked-content sequence draws as one element, and undoes it", async () => {
+    // PDFium gives both objects one mark list, so they can carry only one tag.
+    const store = await storeFor(
+      pagePdf(
+        "/TD <</MCID 7>> BDC BT /F1 12 Tf 72 700 Td (Region) Tj 60 0 Td (North) Tj ET EMC\n",
+      ),
+    );
+    await tagAllPages(store);
+
+    expect(store.getState().error).toBeNull();
+    const doc = store.document!;
+    const runs = doc.page(0).runs;
+    expect(runs).toHaveLength(2);
+    const [first, second] = runs.map((run) => run.tagMarks);
+    expect(first).toEqual([{ name: "P", mcid: expect.any(Number) }]);
+    expect(second).toEqual(first);
+    expect(marksByType(doc).get(1)).toEqual([["P"], ["P"]]);
+
+    store.undo();
+    expect(marksByType(doc).get(1)).toEqual([["TD"], ["TD"]]);
+    store.dispose();
+  });
+
+  test("adds one tag to a shared untagged sequence, not one per run", async () => {
+    const store = await storeFor(
+      pagePdf(
+        "/Span <</Lang (en)>> BDC BT /F1 12 Tf 72 700 Td (Region) Tj 60 0 Td (North) Tj ET EMC\n",
+      ),
+    );
+    await tagAllPages(store);
+
+    expect(store.getState().error).toBeNull();
+    const doc = store.document!;
+    const m = doc.module;
+    const pagePtr = doc.page(0).pagePtr;
+    const names = Array.from(
+      { length: m.FPDFPage_CountObjects(pagePtr) },
+      (_, i) => markNamesOf(m, m.FPDFPage_GetObject(pagePtr, i)),
+    );
+    expect(names).toEqual([
+      ["Span", "P"],
+      ["Span", "P"],
+    ]);
     store.dispose();
   });
 

@@ -5,6 +5,7 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
+  oneObjectPerMarkList,
   restoreObject,
   retagObject,
   type ObjectRetag,
@@ -127,10 +128,13 @@ function planTagging(
       : from.kind === "artifact" &&
         as.artifact === (snapshot.furniture ?? null);
   if (unchanged) return null;
-  const objects = members.flatMap((ptr) => {
-    const dropped = readTagMarks(doc.module, ptr);
-    return movable(from, dropped) ? [{ ptr, dropped }] : [];
-  });
+  const objects = oneObjectPerMarkList(
+    doc.module,
+    members.flatMap((ptr) => {
+      const dropped = readTagMarks(doc.module, ptr);
+      return movable(from, dropped) ? [{ ptr, dropped }] : [];
+    }),
+  );
   if (objects.length === 0) return null;
   const runMarks = run.tagMarks;
   if (typeof as !== "string") {
