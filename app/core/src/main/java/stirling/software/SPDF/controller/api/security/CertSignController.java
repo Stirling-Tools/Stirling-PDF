@@ -9,6 +9,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
@@ -35,6 +37,8 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.pdfbox.util.Matrix;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1String;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -77,6 +81,8 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
+import stirling.software.SPDF.utils.text.TextEncodingHelper;
+import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
@@ -479,6 +485,112 @@ public class CertSignController {
             }
         }
 
+        /**
+         * The name shown in the visible signature. Certificates without a CN fall back to the full
+         * subject, and the CN is read as stored so RFC 4514 escapes (e.g. "García\, Ana") are not
+         * shown. For a multi-valued RDN the CN is picked by type, so it is returned whichever
+         * attribute comes first.
+         */
+        static String getSignerName(X509Certificate cert) {
+            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+            RDN[] cn = x500Name.getRDNs(BCStyle.CN);
+            if (cn.length == 0) {
+                return x500Name.toString();
+            }
+            ASN1Encodable value =
+                    Arrays.stream(cn[0].getTypesAndValues())
+                            .filter(a -> BCStyle.CN.equals(a.getType()))
+                            .findFirst()
+                            .orElseThrow()
+                            .getValue();
+            return value instanceof ASN1String asn1String
+                    ? asn1String.getString()
+                    : IETFUtils.valueToString(value);
+        }
+
+        /**
+         * Shrinks the font so {@code text} fits within {@code maxWidth} points, never below 6pt.
+         * The signature box is 200 points wide and the text starts 10 points in, so the "Signed by"
+         * label has 190 points; a long signer name (in particular the full-subject fallback for
+         * certificates without a CN) would otherwise be clipped.
+         */
+        static float fitSignerFontSize(PDFont font, String text, float fontSize, float maxWidth) {
+            float width = WidthCalculator.calculateAccurateWidth(font, text, fontSize);
+            if (width <= maxWidth) {
+                return fontSize;
+            }
+            return Math.max(6f, fontSize * maxWidth / width);
+        }
+
+        /**
+         * Resolves the font for the visible signature. Times Bold is kept whenever it can encode
+         * the label, so Latin signer names look exactly as before. When it cannot (a no-CN subject
+         * such as {@code O=株式会社}), the embedded Noto face covering the script is loaded instead,
+         * following the watermark/stamp pattern; a {@code PDType1Font} would throw in {@code
+         * showText} for those characters.
+         */
+        static PDFont resolveSignatureFont(PDDocument doc, String label) throws IOException {
+            PDFont timesBold = new PDType1Font(FontName.TIMES_BOLD);
+            if (TextEncodingHelper.canEncodeCharacters(timesBold, label)) {
+                return timesBold;
+            }
+            String resource = signatureFontResource(label);
+            try (InputStream is = new ClassPathResource(resource).getInputStream()) {
+                return PDType0Font.load(doc, is);
+            }
+        }
+
+        /**
+         * Picks a bundled Noto face for text Times Bold cannot encode, by the first non-Latin
+         * script found in the text. CJK ideographs without kana default to Simplified Chinese,
+         * which covers the common shared characters.
+         */
+        static String signatureFontResource(String text) {
+            for (int i = 0; i < text.length(); ) {
+                int codePoint = text.codePointAt(i);
+                Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+                if (block == Character.UnicodeBlock.HIRAGANA
+                        || block == Character.UnicodeBlock.KATAKANA) {
+                    return "static/fonts/NotoSansJP-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.HANGUL_SYLLABLES
+                        || block == Character.UnicodeBlock.HANGUL_JAMO
+                        || block == Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO) {
+                    return "static/fonts/NotoSansKR-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                        || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                        || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                        || block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS) {
+                    return "static/fonts/NotoSansSC-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.ARABIC) {
+                    return "static/fonts/NotoSansArabic-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.THAI) {
+                    return "static/fonts/NotoSansThai-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.HEBREW) {
+                    return "static/fonts/NotoSansHebrew-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.DEVANAGARI) {
+                    return "static/fonts/NotoSansDevanagari-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.MALAYALAM) {
+                    return "static/fonts/NotoSansMalayalam-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.TIBETAN) {
+                    return "static/fonts/NotoSerifTibetan-Regular.ttf";
+                }
+                i += Character.charCount(codePoint);
+            }
+            return "static/fonts/NotoSans-Regular.ttf";
+        }
+
+        /**
+         * Builds the visible signature appearance (a 200 by 50 point box showing the signer name,
+         * the signing date and, when present, the reason) as a standalone PDF.
+         */
         public InputStream createVisibleSignature(
                 PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
                 throws IOException {
@@ -544,14 +656,26 @@ public class CertSignController {
                     X509Certificate cert = (X509Certificate) getCertificateChain()[0];
 
                     // https://stackoverflow.com/questions/2914521/
-                    X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
+                    String name = getSignerName(cert);
+                    String signedBy = "Signed by " + name;
+
+                    // Times Bold cannot encode non-Latin subjects (e.g. a no-CN fallback
+                    // such as O=株式会社), and showText would throw for those characters.
+                    // Resolve the font from the label so the width calculation and the
+                    // rendering use the same font.
+                    font = resolveSignatureFont(doc, signedBy);
 
                     String date = signature.getSignDate().getTime().toString();
                     String reason = signature.getReason();
 
-                    cs.showText("Signed by " + name);
+                    // The box is 200 points wide and the text starts 10 points in, so
+                    // this line has 190 points. Shrink the font for this line only so a
+                    // long signer name fits instead of being clipped; the date and the
+                    // reason stay at the regular size.
+                    float maxLabelWidth = rect.getWidth() - fontSize;
+                    cs.setFont(font, fitSignerFontSize(font, signedBy, fontSize, maxLabelWidth));
+                    cs.showText(signedBy);
+                    cs.setFont(font, fontSize);
                     cs.newLine();
                     cs.showText(date);
                     if (StringUtils.isNotBlank(reason)) {

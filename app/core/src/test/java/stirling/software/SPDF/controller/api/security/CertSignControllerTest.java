@@ -20,6 +20,9 @@ import java.security.cert.X509Certificate;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
@@ -45,6 +48,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
+import stirling.software.SPDF.utils.text.TextEncodingHelper;
+import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -479,12 +484,17 @@ class CertSignControllerTest {
 
     /** An openssl-style unencrypted PKCS#8 key and a self-signed certificate, as PEM text. */
     private static byte[][] unencryptedPemPair() throws Exception {
+        return pemPairWithSubject("CN=Chat Tester");
+    }
+
+    /** As {@link #unencryptedPemPair()}, but with the given certificate subject. */
+    private static byte[][] pemPairWithSubject(String subjectDn) throws Exception {
         java.security.KeyPairGenerator generator =
                 java.security.KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);
         java.security.KeyPair pair = generator.generateKeyPair();
         org.bouncycastle.asn1.x500.X500Name subject =
-                new org.bouncycastle.asn1.x500.X500Name("CN=Chat Tester");
+                new org.bouncycastle.asn1.x500.X500Name(subjectDn);
         java.util.Date now = new java.util.Date();
         java.security.cert.X509Certificate cert =
                 new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
@@ -517,7 +527,11 @@ class CertSignControllerTest {
     }
 
     private SignPDFWithCertRequest unencryptedPemRequest() throws Exception {
-        byte[][] pemPair = unencryptedPemPair();
+        return pemRequestWithSubject("CN=Chat Tester");
+    }
+
+    private SignPDFWithCertRequest pemRequestWithSubject(String subjectDn) throws Exception {
+        byte[][] pemPair = pemPairWithSubject(subjectDn);
         SignPDFWithCertRequest request = new SignPDFWithCertRequest();
         request.setFileInput(
                 new MockMultipartFile(
@@ -554,6 +568,92 @@ class CertSignControllerTest {
                         IllegalArgumentException.class,
                         () -> certSignController.signPDFWithCert(request, httpRequest));
         assertTrue(error.getMessage().contains("pageNumber 5"), error.getMessage());
+    }
+
+    @Test
+    void visibleSignatureWithCertificateWithoutCnFallsBackToSubject() throws Exception {
+        SignPDFWithCertRequest request =
+                pemRequestWithSubject("O=Test Organisation, SERIALNUMBER=12345");
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void fallbackSignerNameFitsInsideSignatureBox() throws Exception {
+        X509Certificate cert = certificateWithSubject("O=Test Organisation, SERIALNUMBER=12345");
+        String label = "Signed by " + CertSignController.CreateSignature.getSignerName(cert);
+        PDFont font = new PDType1Font(Standard14Fonts.FontName.TIMES_BOLD);
+        float fitted = CertSignController.CreateSignature.fitSignerFontSize(font, label, 10, 190);
+        assertTrue(fitted < 10, "fallback label is wider than the box at 10pt, so it must shrink");
+        assertTrue(
+                WidthCalculator.calculateAccurateWidth(font, label, fitted) <= 190,
+                "fitted label must fit inside the 190-point text area");
+    }
+
+    @Test
+    void visibleSignatureWithNonLatinFallbackSubjectSignsSuccessfully() throws Exception {
+        SignPDFWithCertRequest request = pemRequestWithSubject("O=株式会社");
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void signatureFontFallsBackToEmbeddedFontForNonLatinNames() throws Exception {
+        String label = "Signed by O=株式会社";
+        try (PDDocument doc = new PDDocument()) {
+            PDFont latinFont =
+                    CertSignController.CreateSignature.resolveSignatureFont(
+                            doc, "Signed by Test Organisation");
+            assertEquals("Times-Bold", latinFont.getName());
+
+            PDFont font = CertSignController.CreateSignature.resolveSignatureFont(doc, label);
+            assertTrue(
+                    TextEncodingHelper.canEncodeCharacters(font, label),
+                    "resolved font must encode the non-Latin label");
+            assertTrue(
+                    !"Times-Bold".equals(font.getName()),
+                    "non-Latin label must not use Times Bold");
+        }
+    }
+
+    @Test
+    void signerNameWithCommaInCommonNameIsNotEscaped() throws Exception {
+        X509Certificate cert = certificateWithSubject("CN=García\\, Ana");
+
+        assertEquals("García, Ana", CertSignController.CreateSignature.getSignerName(cert));
+    }
+
+    @Test
+    void signerNameFromMultiValuedRdnIsTheCommonName() throws Exception {
+        X509Certificate cert = certificateWithSubject("SERIALNUMBER=12345678Z+CN=JUAN GARCIA");
+
+        assertEquals("JUAN GARCIA", CertSignController.CreateSignature.getSignerName(cert));
+    }
+
+    @Test
+    void signerNameFromMultiValuedRdnIsTheCommonNameRegardlessOfOrder() throws Exception {
+        X509Certificate cert = certificateWithSubject("CN=JUAN GARCIA+SERIALNUMBER=12345678Z");
+
+        assertEquals("JUAN GARCIA", CertSignController.CreateSignature.getSignerName(cert));
+    }
+
+    private static X509Certificate certificateWithSubject(String subjectDn) throws Exception {
+        byte[][] pemPair = pemPairWithSubject(subjectDn);
+        return (X509Certificate)
+                CertificateFactory.getInstance("X.509")
+                        .generateCertificate(new ByteArrayInputStream(pemPair[1]));
     }
 
     @Test
