@@ -15172,10 +15172,10 @@ duplicated = "Copy saved to your file library"
 info = "Document info"
 metadata = "Edit properties"
 more = "More document actions"
-pages = "Edit pages"
 password = "Add password"
 protect = "Protect and optimise"
 rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Your access to this document has expired."

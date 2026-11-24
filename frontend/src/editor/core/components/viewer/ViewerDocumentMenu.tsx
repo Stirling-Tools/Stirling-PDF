@@ -12,7 +12,6 @@ import { duplicateStoredFile } from "@editor/utils/duplicateFile";
 import { renameStoredFile } from "@editor/services/renameStoredFile";
 import { useCloseViewerDocument } from "@editor/components/viewer/useCloseViewerDocument";
 import { useAllFiles, useFileActions } from "@editor/contexts/FileContext";
-import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import type { ToolId } from "@editor/types/toolId";
@@ -28,7 +27,6 @@ export function ViewerDocumentMenu({ disabled }: { disabled?: boolean }) {
   const { actions: fileActions } = useFileActions();
   const { activeFileId } = useViewer();
   const { handleToolSelect } = useToolWorkflow();
-  const { actions: navigation } = useNavigationActions();
   const closeDocument = useCloseViewerDocument();
   const indexedDB = useIndexedDB();
   const { addFiles } = useFileHandler();
@@ -171,13 +169,7 @@ export function ViewerDocumentMenu({ disabled }: { disabled?: boolean }) {
             t("workbenchBar.docMenu.compress", "Compress"),
           )}
           <Menu.Divider />
-          <Menu.Item
-            leftSection={<Icon name="layout-grid" size="1rem" />}
-            onClick={() => navigation.setWorkbench("pageEditor")}
-            data-testid="viewer-doc-menu-pages"
-          >
-            {t("workbenchBar.docMenu.pages", "Edit pages")}
-          </Menu.Item>
+          {tool("signature", "sign", t("workbenchBar.docMenu.sign", "Sign"))}
           <Menu.Divider />
           <Menu.Item
             leftSection={<Icon name="x" size="1rem" />}
