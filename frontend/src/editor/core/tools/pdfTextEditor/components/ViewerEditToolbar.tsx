@@ -8,12 +8,22 @@ import type {
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { EditorTopBar } from "@editor/tools/pdfTextEditor/components/EditorTopBar";
 import { MobileEditorTopBar } from "@editor/tools/pdfTextEditor/components/MobileEditorTopBar";
 import { MobileActionBar } from "@editor/tools/pdfTextEditor/components/MobileActionBar";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { FindBar } from "@editor/tools/pdfTextEditor/components/FindBar";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
+import { QuickTagCard } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
+import { EditorTrailControls } from "@editor/tools/pdfTextEditor/components/EditorTrailControls";
+import { ReviewXray } from "@editor/tools/pdfTextEditor/components/review/ReviewXray";
+import { ReviewDocumentPanel } from "@editor/tools/pdfTextEditor/components/review/ReviewDocumentPanel";
+import { useAccessibilityProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
+import {
+  useReviewMode,
+  useReviewing,
+} from "@editor/tools/pdfTextEditor/store/reviewMode";
 
 /** The viewer's own controls float over the page area; pressing one is not a deselect. */
 const CONTROLS =
@@ -26,6 +36,14 @@ export function ViewerEditToolbar() {
   // Deferred so the typed letter is drawn before the bars, which a burst of typing outdates.
   const bars = useDeferredPanelView(state, selection);
   const isMobile = useIsMobile();
+  const reviewing = useReviewing();
+
+  // A review only tags: an armed insert or an open find-and-replace would edit.
+  useEffect(() => {
+    if (!reviewing) return;
+    if (store.getState().mode !== "select") store.setMode("select");
+    if (store.getState().findOpen) store.setFindOpen(false);
+  }, [reviewing, store]);
 
   // A plain press on the bare viewer around the pages clears the selection,
   // as one on bare page does. Shift extends, and Ctrl/Cmd+Shift starts the
@@ -49,8 +67,17 @@ export function ViewerEditToolbar() {
         state={bars.state}
         selection={bars.selection}
         mobile={isMobile}
+        editing={!reviewing}
       />
-      {state.findOpen && state.hasDocument && (
+      {reviewing && store.document && (
+        <ReviewOverlay
+          store={store}
+          doc={store.document}
+          state={state}
+          selection={selection}
+        />
+      )}
+      {state.findOpen && state.hasDocument && !reviewing && (
         <FindBar
           store={store}
           pages={state.pages}
@@ -58,6 +85,39 @@ export function ViewerEditToolbar() {
         />
       )}
       <MarqueeSelector store={store} />
+    </>
+  );
+}
+
+/**
+ * Mounted only while reviewing: the controller and progress read the live state,
+ * so built outside a review they would redo that work on every letter typed.
+ */
+function ReviewOverlay({
+  store,
+  doc,
+  state,
+  selection,
+}: BarProps & { doc: EditorDocument }) {
+  const { showAllTags } = useReviewMode();
+  const controller = useToolbarController(store, state, selection);
+  const review = useAccessibilityProgress(store, state, selection);
+  return (
+    <>
+      <ReviewXray
+        doc={doc}
+        pages={state.pages}
+        items={review.items}
+        showAll={showAllTags}
+        selectedId={review.current?.id ?? null}
+      />
+      <QuickTagCard store={store} controller={controller} review={review} />
+      <ReviewDocumentPanel
+        store={store}
+        state={state}
+        controller={controller}
+        review={review}
+      />
     </>
   );
 }
@@ -73,7 +133,8 @@ const TopBar = memo(function TopBar({
   state,
   selection,
   mobile,
-}: BarProps & { mobile: boolean }) {
+  editing,
+}: BarProps & { mobile: boolean; editing: boolean }) {
   const controller = useToolbarController(store, state, selection);
   if (mobile)
     return (
@@ -95,6 +156,8 @@ const TopBar = memo(function TopBar({
       findOpen={state.findOpen}
       onToggleFind={() => store.toggleFindOpen()}
       onShowHelp={() => store.setHelpOpen(true)}
+      editing={editing}
+      trail={editing ? undefined : <EditorTrailControls state={state} />}
     />
   );
 });
@@ -104,7 +167,8 @@ export function ViewerEditActionBar() {
   const { store, state } = useEditorStoreView();
   const selection = useEditorSelection(store);
   const bars = useDeferredPanelView(state, selection);
-  if (!state.hasDocument) return null;
+  const reviewing = useReviewing();
+  if (!state.hasDocument || reviewing) return null;
   return (
     <ActionBar store={store} state={bars.state} selection={bars.selection} />
   );

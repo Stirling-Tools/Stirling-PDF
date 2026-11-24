@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import axios from "axios";
 import apiClient from "@editor/services/apiClient";
+import { handleHttpError } from "@editor/services/httpErrorHandler";
 import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@editor/types/fileContext";
 import { resolveToolErrorMessage } from "@editor/utils/toolErrorHandler";
@@ -93,7 +95,9 @@ export const useCheckAccessibilityOperation =
               const { data } = await apiClient.post<AccessibilityReport>(
                 "/api/v1/security/accessibility-report",
                 formData,
-                { signal: abort.signal },
+                // A failure shows as that file's error in the report, and a
+                // superseded run's abort is no failure at all.
+                { signal: abort.signal, suppressErrorToast: true },
               );
               // A report the validator could not produce describes the failure, not the file,
               // so scoring it would grade a document nothing has checked.
@@ -104,11 +108,25 @@ export const useCheckAccessibilityOperation =
                 error: data.validationError ?? null,
               });
             } catch (error) {
+              // suppressErrorToast also skips the login redirect a 401 needs.
+              if (
+                isCurrent() &&
+                axios.isAxiosError(error) &&
+                error.response?.status === 401
+              ) {
+                if (error.config) error.config.suppressErrorToast = false;
+                await handleHttpError(error);
+              }
               collected.push({
                 fileId: file.fileId,
                 fileName: file.name,
                 report: null,
-                error: await resolveToolErrorMessage(error),
+                error: unreachable(error)
+                  ? t(
+                      "checkAccessibility.error.unreachable",
+                      "The server didn't answer. Check it's running, then check again.",
+                    )
+                  : await resolveToolErrorMessage(error),
               });
             }
             if (!isCurrent()) return;
@@ -177,3 +195,12 @@ export const useCheckAccessibilityOperation =
       ],
     );
   };
+
+/** No response at all: the server is down or the connection dropped, not a cancelled run. */
+function unreachable(error: unknown): boolean {
+  return (
+    axios.isAxiosError(error) &&
+    !error.response &&
+    error.code !== axios.AxiosError.ERR_CANCELED
+  );
+}

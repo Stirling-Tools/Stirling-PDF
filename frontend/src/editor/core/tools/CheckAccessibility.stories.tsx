@@ -227,7 +227,7 @@ export const Report: Story = {
     ).toBeVisible();
     await expect(
       panel.getByRole("button", { name: "Manual checks" }),
-    ).toHaveAttribute("aria-expanded", "true");
+    ).toHaveAttribute("aria-expanded", "false");
   },
 };
 
@@ -280,10 +280,18 @@ export const ImagesNeedingDescriptions: Story = {
   },
 };
 
+async function openManualChecks(context: PlayContext) {
+  const panel = await runCheck(context);
+  const section = panel.getByRole("button", { name: "Manual checks" });
+  await userEvent.click(section);
+  await waitFor(() => expect(section).toHaveAttribute("aria-expanded", "true"));
+  return panel;
+}
+
 export const ManualCheckTicked: Story = {
   parameters: withReport,
   play: async (context) => {
-    await runCheck(context);
+    await openManualChecks(context);
     await toggle(
       context,
       "checkbox",
@@ -295,7 +303,7 @@ export const ManualCheckTicked: Story = {
 export const ManualChecksDone: Story = {
   parameters: withReport,
   play: async (context) => {
-    const panel = await runCheck(context);
+    const panel = await openManualChecks(context);
     await userEvent.click(
       panel.getByRole("button", { name: "Mark all as done" }),
     );
@@ -307,16 +315,9 @@ export const ManualChecksDone: Story = {
   },
 };
 
-export const ManualChecksCollapsed: Story = {
+export const ManualChecksOpen: Story = {
   parameters: withReport,
-  play: async (context) => {
-    const panel = await runCheck(context);
-    const toggle = panel.getByRole("button", { name: "Manual checks" });
-    await userEvent.click(toggle);
-    await waitFor(() =>
-      expect(toggle).toHaveAttribute("aria-expanded", "false"),
-    );
-  },
+  play: openManualChecks,
 };
 
 export const MultipleFiles: Story = {
