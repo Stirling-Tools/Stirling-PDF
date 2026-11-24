@@ -295,9 +295,12 @@ export async function openSelect(
   context: PlayContext,
   name: string | RegExp,
 ): Promise<PanelQueries> {
-  const select = await findEnabled(context, "textbox", name);
-  await userEvent.click(select);
-  const listbox = await waitFor(() => {
+  const listbox = await waitFor(async () => {
+    // Found again on every try: a panel still settling can remount the field, which
+    // closes a dropdown it opened, so a closed one is clicked open again.
+    const select = await findEnabled(context, "textbox", name);
+    if (select.getAttribute("aria-expanded") !== "true")
+      await userEvent.click(select);
     const id = select.getAttribute("aria-controls");
     const found = id ? select.ownerDocument.getElementById(id) : null;
     // Mounted is not open: mid-transition the dropdown is hidden, and its options
