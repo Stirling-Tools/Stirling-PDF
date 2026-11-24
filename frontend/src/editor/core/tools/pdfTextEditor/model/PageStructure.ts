@@ -403,6 +403,15 @@ export class PageStructure {
   }
 
   /**
+   * True when an element, the file's or one added, owns the content `mcid` marks.
+   * Content no element owns, such as a page merged in without its file's tree,
+   * is untagged however it is marked.
+   */
+  owns(mcid: number): boolean {
+    return this.element(mcid) !== null;
+  }
+
+  /**
    * The block the content `mcid` marks belongs to, as the session has
    * retagged it; null when no element owns it.
    */

@@ -128,11 +128,14 @@ function planTagging(
       : from.kind === "artifact" &&
         as.artifact === (snapshot.furniture ?? null);
   if (unchanged) return null;
+  const structure = doc.structure(run.pageIndex);
   const objects = oneObjectPerMarkList(
     doc.module,
     members.flatMap((ptr) => {
       const dropped = readTagMarks(doc.module, ptr);
-      return movable(from, dropped) ? [{ ptr, dropped }] : [];
+      return movable(from, dropped, (mcid) => structure.owns(mcid))
+        ? [{ ptr, dropped }]
+        : [];
     }),
   );
   if (objects.length === 0) return null;
@@ -155,13 +158,18 @@ function artifactTag(furniture: Furniture | null): TagMark {
 
 /**
  * True when an object of text tagged `from`, carrying `marks`, takes the new
- * tag: one with no marks, or only the ones the text is moving from. An
- * artifact beside untagged text, such as a bullet, stays one.
+ * tag: one with no marks, or only the ones the text is moving from, which for
+ * untagged text are MCIDs no element owns. An artifact beside untagged text,
+ * such as a bullet, stays one.
  */
-function movable(from: RetaggableText, marks: readonly TagMark[]): boolean {
-  return marks.every((mark) =>
-    mark.name === ARTIFACT_TAG
-      ? from.kind === "artifact"
-      : from.kind === "added" && mark.mcid === from.element.mcid,
-  );
+function movable(
+  from: RetaggableText,
+  marks: readonly TagMark[],
+  owned: (mcid: number) => boolean,
+): boolean {
+  return marks.every((mark) => {
+    if (mark.name === ARTIFACT_TAG) return from.kind === "artifact";
+    if (from.kind === "added") return mark.mcid === from.element.mcid;
+    return from.kind === "untagged" && mark.mcid !== null && !owned(mark.mcid);
+  });
 }

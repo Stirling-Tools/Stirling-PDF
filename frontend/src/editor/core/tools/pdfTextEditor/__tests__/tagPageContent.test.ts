@@ -771,6 +771,27 @@ describe("page furniture", () => {
   });
 });
 
+describe("tagging text marked for no element", () => {
+  test("tags it from the card, dropping the stale mark, and undoes back to it", async () => {
+    // As a page merged in without its file's structure tree is.
+    const doc = await open(
+      pagePdf("/P <</MCID 7>> BDC BT /F1 12 Tf 72 700 Td (Orphan) Tj ET EMC\n"),
+    );
+    const run = doc.page(0).runs[0].snapshot();
+    const tag = textTag(doc, run);
+    expect(tag).toMatchObject({ kind: "untagged", taggable: true });
+
+    const history = new HistoryStack();
+    history.execute(setTextTagCommand(doc, [{ run, tag }], "H1")!, doc);
+    expect(marksByType(doc).get(1)).toEqual([["H1"]]);
+    expect(doc.structure(0).addedElements()).toHaveLength(1);
+
+    history.undo(doc);
+    expect(marksByType(doc).get(1)).toEqual([["P"]]);
+    expect(doc.structure(0).addedElements()).toEqual([]);
+  });
+});
+
 describe("tagAllPages and the tagged flag", () => {
   test("marks the document fully tagged in the same undo step", async () => {
     const store = await storeFor(pagePdf(COLUMNS));

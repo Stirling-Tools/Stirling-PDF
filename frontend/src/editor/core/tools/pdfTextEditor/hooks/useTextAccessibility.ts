@@ -497,7 +497,7 @@ export function setTextTagCommand(
   const commands = targets.flatMap(({ run, tag }) => {
     const command =
       typeof choice === "string"
-        ? typeCommand(run, tag, choice)
+        ? typeCommand(doc, run, tag, choice)
         : artifactCommand(doc, run, tag, choice.artifact);
     return command ? [command] : [];
   });
@@ -538,11 +538,17 @@ function artifactCommand(
 }
 
 function typeCommand(
+  doc: EditorDocument,
   run: TextRunSnapshot,
   tag: TextTag,
   type: StructureType,
 ): Command | null {
-  const { pageIndex, mcid } = run;
+  const { pageIndex } = run;
+  // An MCID no element owns marks untagged text, which is retagged like any other.
+  const mcid =
+    run.mcid !== undefined && doc.structure(pageIndex).owns(run.mcid)
+      ? run.mcid
+      : undefined;
   if (tag.kind === "tagged") {
     if (tag.cannotRetag !== null || mcid === undefined) return null;
     return new RetagBlockCommand({ pageIndex, mcid, type });
