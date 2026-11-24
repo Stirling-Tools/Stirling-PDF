@@ -29,9 +29,9 @@
     0 0 0 0.125rem color-mix(in srgb, var(--c-primary) 10%, transparent);
 }
 
-/* The pinned header keeps the regular header colours: white on the primary
-   blue reads at 3.67:1. The container's primary border and ring mark the pin. */
 .tooltip-container.pinned .tooltip-header {
+  background-color: var(--tooltip-pinned-header-bg);
+  color: var(--tooltip-pinned-header-color);
   border-color: var(--primary-color, var(--c-primary));
 }
 
