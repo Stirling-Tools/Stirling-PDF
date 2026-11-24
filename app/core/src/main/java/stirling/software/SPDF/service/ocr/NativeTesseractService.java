@@ -56,6 +56,8 @@ import org.bytedeco.javacpp.IntPointer;
 import org.bytedeco.javacpp.PointerPointer;
 import org.bytedeco.leptonica.L_KERNEL;
 import org.bytedeco.leptonica.PIX;
+import org.bytedeco.tesseract.PageIterator;
+import org.bytedeco.tesseract.ResultIterator;
 import org.bytedeco.tesseract.TessBaseAPI;
 import org.bytedeco.tesseract.TessPDFRenderer;
 import org.bytedeco.tesseract.global.tesseract;
@@ -602,7 +604,7 @@ public class NativeTesseractService {
             OcrTextLayer.replaceWithImage(document, page, image);
         }
         try (PDDocument textLayer = Loader.loadPDF(result.textLayer().toFile())) {
-            if (CjkSpacing.containsCjk(result.text())) CjkSpacing.joinTextLayer(textLayer);
+            CjkSpacing.joinTextLayer(textLayer, result.text());
             PDFormXObject form = new LayerUtility(document).importPageAsForm(textLayer, 0);
             OcrTextLayer.graft(document, page, form);
         }
@@ -620,11 +622,13 @@ public class NativeTesseractService {
 
         private final String tessData;
         private final TessBaseAPI ocr = new TessBaseAPI();
+        private final boolean korean;
         private TessBaseAPI osd;
         private L_KERNEL smoothing;
 
         Worker(String tessData, String language, boolean withOsd) throws IOException {
             this.tessData = tessData;
+            this.korean = List.of(language.split("\\+")).contains("kor");
             if (ocr.Init(tessData, language) != 0) {
                 ocr.close();
                 throw new IOException("Tesseract could not load languages " + language);
@@ -687,14 +691,14 @@ public class NativeTesseractService {
                 }
                 PIX read = cleaned != null ? cleaned : pix;
                 PIX input = smoothed(read, dpi);
-                String text;
+                Reading reading;
                 try {
-                    text = recognise(input, base);
+                    reading = read(input, base);
                 } finally {
                     if (input != read) pixDestroy(input);
                     if (cleaned != null) pixDestroy(cleaned);
                 }
-                if (text == null) {
+                if (reading == null) {
                     log.warn(
                             "Page {} not OCRed: Tesseract failed or ran past {} s",
                             index + 1,
@@ -705,7 +709,8 @@ public class NativeTesseractService {
                         options.force() || straightened || options.cleanFinal()
                                 ? replacement(pix, plan)
                                 : null;
-                return new PageResult(index, Path.of(base + ".pdf"), text, replacement, rotate);
+                return new PageResult(
+                        index, reading.textLayer(), reading.text(), replacement, rotate);
             } finally {
                 pixDestroy(pix);
             }
@@ -741,8 +746,36 @@ public class NativeTesseractService {
             return Math.floorMod(360 - degrees.get(), 360);
         }
 
-        /** The page's plain text, or null when Tesseract failed or hit the page timeout. */
-        private String recognise(PIX pix, Path base) {
+        /**
+         * One reading of a page: its plain text, its text-only PDF page, Tesseract's mean
+         * confidence and whether layout analysis found vertical text blocks.
+         */
+        private record Reading(String text, Path textLayer, int confidence, boolean verticalText) {}
+
+        /**
+         * Reads the page with layout analysis. When Korean is loaded and that reports vertical text
+         * blocks, the page is read again as one column and the reading Tesseract is surer of wins:
+         * its column finder takes the even grid of Hangul syllables for vertical text, which left
+         * horizontal Korean at 73-84% character errors, against 0-2% as one column. Truly vertical
+         * pages are handled as a vertical page rather than as such blocks, so they are not read
+         * twice. Other languages keep layout analysis, which a page with a rotated margin note
+         * still needs to read its columns in order.
+         *
+         * @return null when Tesseract failed or hit the page timeout
+         */
+        private Reading read(PIX pix, Path base) {
+            Reading auto = recognise(pix, base);
+            if (auto == null || !korean || !auto.verticalText()) return auto;
+            ocr.SetPageSegMode(tesseract.PSM_SINGLE_COLUMN);
+            try {
+                Reading column = recognise(pix, Path.of(base + "-column"));
+                return column != null && column.confidence() > auto.confidence() ? column : auto;
+            } finally {
+                ocr.SetPageSegMode(tesseract.PSM_AUTO);
+            }
+        }
+
+        private Reading recognise(PIX pix, Path base) {
             try (TessPDFRenderer renderer = new TessPDFRenderer(nativePath(base), tessData, true)) {
                 if (!renderer.BeginDocument("OCR")
                         || !ocr.ProcessPage(pix, 0, "page", null, PAGE_TIMEOUT_MS, renderer)
@@ -752,9 +785,28 @@ public class NativeTesseractService {
             }
             BytePointer text = ocr.GetUTF8Text();
             try {
-                return text == null ? "" : CjkSpacing.join(text.getString(StandardCharsets.UTF_8));
+                String plain =
+                        text == null ? "" : CjkSpacing.join(text.getString(StandardCharsets.UTF_8));
+                return new Reading(
+                        plain, Path.of(base + ".pdf"), ocr.MeanTextConf(), hasVerticalBlocks());
             } finally {
                 if (text != null) tesseract.TessDeleteText(text);
+            }
+        }
+
+        private boolean hasVerticalBlocks() {
+            ResultIterator results = tesseract.TessBaseAPIGetIterator(ocr);
+            if (results == null) return false;
+            try {
+                PageIterator blocks = tesseract.TessResultIteratorGetPageIterator(results);
+                do {
+                    if (tesseract.TessPageIteratorBlockType(blocks) == tesseract.PT_VERTICAL_TEXT) {
+                        return true;
+                    }
+                } while (tesseract.TessPageIteratorNext(blocks, tesseract.RIL_BLOCK));
+                return false;
+            } finally {
+                tesseract.TessResultIteratorDelete(results);
             }
         }
 

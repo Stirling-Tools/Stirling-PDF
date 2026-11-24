@@ -603,6 +603,36 @@ class NativeTesseractServiceTest {
             assertFalse(split.matcher(out.sidecar()).find(), out.sidecar());
         }
 
+        @Test
+        void horizontalKoreanIsReadLineByLine(@TempDir Path work) throws Exception {
+            assumeTrue(
+                    Files.exists(Path.of(tessdata, "kor.traineddata")),
+                    "TESSDATA_PREFIX has no kor.traineddata");
+            String[] lines = {
+                "이번 분기 검토 결과 고객 만족도는 크게 상승했습니다",
+                "공급업체의 납기는 여전히 불안정하며 개선이 필요합니다",
+                "시설팀은 다음 회의에서 비용 견적과 방안을 제시합니다",
+                "송장은 발행일로부터 삼십 일 이내에 지급해야 합니다",
+            };
+            assumeTrue(
+                    new Font(Font.SANS_SERIF, Font.BOLD, 44).canDisplayUpTo(String.join("", lines))
+                            == -1,
+                    "no font for Korean");
+
+            Outcome out = run(scannedPage(0, 0, lines), OcrOptions.DEFAULT, work, List.of("kor"));
+
+            int found = 0, total = 0;
+            for (String line : lines) {
+                for (String word : line.split(" ")) {
+                    total++;
+                    if (out.sidecar().contains(word)) found++;
+                }
+            }
+            assertTrue(found >= total * 0.9, found + "/" + total + ": " + out.sidecar());
+            String layer = text(out.reload());
+            assertTrue(layer.contains("공급업체의"), layer);
+        }
+
         /** Saves {@code source}, OCRs it the way the controller does and returns the result. */
         private Outcome run(PDDocument source, OcrOptions options, Path work) throws Exception {
             return run(source, options, work, List.of("eng"));

@@ -34,24 +34,64 @@ class CjkSpacingTest {
     void textLayerLosesSpacesBetweenCjkWordsAndKeepsTheirWidth() throws IOException {
         // Shaped like TessPDFRenderer's text-only page: one TJ per word, a trailing space when
         // another word follows. Words: "本季度 ", "的 ", "审 ", "Ab".
-        String content =
-                "BT 3 Tr 1 0 0 1 72 700 Tm /f-0-0 11 Tf"
-                        + " 100 Tz [ <672C5B635EA60020> ] TJ 22 0 Td"
-                        + " 100 Tz [ <76840020> ] TJ 11 0 Td"
-                        + " 100 Tz [ <5BA10020> ] TJ 11 0 Td"
-                        + " 100 Tz [ <00410062> ] TJ ET";
-        try (PDDocument layer = new PDDocument()) {
+        Layer layer =
+                rewrite(
+                        "100 Tz [ <672C5B635EA60020> ] TJ 22 0 Td"
+                                + " 100 Tz [ <76840020> ] TJ 11 0 Td"
+                                + " 100 Tz [ <5BA10020> ] TJ 11 0 Td"
+                                + " 100 Tz [ <00410062> ] TJ",
+                        "本季度的审 Ab");
+
+        // The space before Latin text and the last word stay as they were.
+        assertEquals(List.of("本季度", "的", "审 ", "Ab"), layer.words());
+        assertEquals(List.of(133.33f, 200f, 100f, 100f), layer.scales());
+    }
+
+    @Test
+    void koreanSyllableGroupsJoinWhereTesseractsTextHasNoSpace() throws IOException {
+        // Words: "만 ", "족 ", "도 ", "는 ", "크게"; Tesseract's text reads "만족도는 크게".
+        Layer layer =
+                rewrite(
+                        "100 Tz [ <B9CC0020> ] TJ 11 0 Td"
+                                + " 100 Tz [ <C8710020> ] TJ 11 0 Td"
+                                + " 100 Tz [ <B3C40020> ] TJ 11 0 Td"
+                                + " 100 Tz [ <B2940020> ] TJ 11 0 Td"
+                                + " 100 Tz [ <D06CAC8C> ] TJ",
+                        "만족도는 크게");
+
+        assertEquals(List.of("만", "족", "도", "는 ", "크게"), layer.words());
+        assertEquals(List.of(200f, 200f, 200f, 100f, 100f), layer.scales());
+    }
+
+    @Test
+    void wordsStopMatchingAtTheFirstDifference() {
+        boolean[] runOn = CjkSpacing.runsIntoNext(List.of("ab ", "cd ", "xx ", "ef"), "abcd ef");
+
+        assertEquals(true, runOn[0]);
+        assertEquals(false, runOn[1]);
+        assertEquals(false, runOn[2]);
+        assertEquals(false, runOn[3]);
+    }
+
+    private record Layer(List<String> words, List<Float> scales) {}
+
+    /**
+     * Runs joinTextLayer over one BT block of {@code words} and reads back the TJ strings and Tz.
+     */
+    private static Layer rewrite(String words, String text) throws IOException {
+        String content = "BT 3 Tr 1 0 0 1 72 700 Tm /f-0-0 11 Tf " + words + " ET";
+        try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage();
-            layer.addPage(page);
-            PDStream stream = new PDStream(layer);
+            doc.addPage(page);
+            PDStream stream = new PDStream(doc);
             try (OutputStream out = stream.createOutputStream()) {
                 out.write(content.getBytes(StandardCharsets.US_ASCII));
             }
             page.setContents(stream);
 
-            CjkSpacing.joinTextLayer(layer);
+            CjkSpacing.joinTextLayer(doc, text);
 
-            List<String> words = new ArrayList<>();
+            List<String> strings = new ArrayList<>();
             List<Float> scales = new ArrayList<>();
             List<Object> tokens;
             try (var in = page.getContents()) {
@@ -61,17 +101,13 @@ class CjkSpacingTest {
                 if (!(tokens.get(i) instanceof Operator op)) continue;
                 if ("TJ".equals(op.getName())) {
                     byte[] bytes = ((COSString) ((COSArray) tokens.get(i - 1)).get(0)).getBytes();
-                    words.add(new String(bytes, StandardCharsets.UTF_16BE));
+                    strings.add(new String(bytes, StandardCharsets.UTF_16BE));
                 } else if ("Tz".equals(op.getName())) {
-                    scales.add(((COSNumber) tokens.get(i - 1)).floatValue());
+                    scales.add(
+                            Math.round(((COSNumber) tokens.get(i - 1)).floatValue() * 100) / 100f);
                 }
             }
-            // The space before Latin text and the last word stay as they were.
-            assertEquals(List.of("本季度", "的", "审 ", "Ab"), words);
-            assertEquals(100f * 4 / 3, scales.get(0), 0.01f);
-            assertEquals(200f, scales.get(1), 0.01f);
-            assertEquals(100f, scales.get(2), 0.01f);
-            assertEquals(100f, scales.get(3), 0.01f);
+            return new Layer(strings, scales);
         }
     }
 }

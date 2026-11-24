@@ -19,10 +19,11 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 
 /**
- * Removes the spaces Tesseract puts between Chinese and Japanese words. Those scripts write no
- * spaces, but Tesseract separates every word it finds with one: the best models split most
- * characters ("本 季度 的"), as do any models when a Latin language is listed first, so copied and
- * searched text came out broken. Spaces next to Latin text, Korean or anything else are kept.
+ * Removes spaces Tesseract adds inside Chinese, Japanese and Korean text. Chinese and Japanese
+ * write no spaces, but the best models split most characters into words ("本 季度 的"), as do any
+ * models when a Latin language is listed first; the PDF renderer also puts a space after every word
+ * it iterates, which splits Korean words into syllable groups ("공급 업 체 의") even where Tesseract's
+ * own text keeps them whole. Copied and searched text came out broken.
  */
 final class CjkSpacing {
 
@@ -73,12 +74,14 @@ final class CjkSpacing {
     }
 
     /**
-     * Applies {@link #join} to the text-only page TessPDFRenderer writes. Each word there is one
-     * {@code [<UTF-16BE>] TJ} after its own {@code Tz}, ending in a space when another word
-     * follows. The space is dropped when it sits between CJK characters, and {@code Tz} widened so
-     * the word still covers its box. Anything else in the stream is left alone.
+     * Makes the text-only page TessPDFRenderer wrote space its words as {@code text}, the page's
+     * plain text after {@link #join}. Each word there is one {@code [<UTF-16BE>] TJ} after its own
+     * {@code Tz}, ending in a space when another word follows. That space is dropped where {@code
+     * text} runs the word straight into the next, or, past any point where the two stop matching,
+     * where it sits between CJK characters; {@code Tz} is widened so the word still covers its box.
+     * Anything else in the stream is left alone.
      */
-    static void joinTextLayer(PDDocument textLayer) throws IOException {
+    static void joinTextLayer(PDDocument textLayer, String text) throws IOException {
         PDPage page = textLayer.getPage(0);
         List<Object> tokens;
         try (var contents = page.getContents()) {
@@ -94,19 +97,19 @@ final class CjkSpacing {
                 words.add(i - 1);
             }
         }
+        List<String> strings = new ArrayList<>();
+        for (int index : words)
+            strings.add(text((COSString) ((COSArray) tokens.get(index)).get(0)));
+        boolean[] runOn = runsIntoNext(strings, text);
         boolean changed = false;
         for (int w = 0; w + 1 < words.size(); w++) {
             COSArray array = (COSArray) tokens.get(words.get(w));
-            String word = text((COSString) array.get(0));
-            String next = text((COSString) ((COSArray) tokens.get(words.get(w + 1))).get(0));
+            String word = strings.get(w);
+            String next = strings.get(w + 1);
             int glyphs = word.length();
-            if (glyphs < 2
-                    || word.charAt(glyphs - 1) != ' '
-                    || next.isEmpty()
-                    || !isCjk(word.codePointBefore(glyphs - 1))
-                    || !isCjk(next.codePointAt(0))) {
-                continue;
-            }
+            if (glyphs < 2 || word.charAt(glyphs - 1) != ' ' || next.isEmpty()) continue;
+            boolean cjk = isCjk(word.codePointBefore(glyphs - 1)) && isCjk(next.codePointAt(0));
+            if (!runOn[w] && !cjk) continue;
             COSString joined =
                     new COSString(
                             word.substring(0, glyphs - 1).getBytes(StandardCharsets.UTF_16BE));
@@ -121,6 +124,24 @@ final class CjkSpacing {
             new ContentStreamWriter(out).writeTokens(tokens);
         }
         page.setContents(rewritten);
+    }
+
+    /**
+     * For each word, whether {@code text} runs it straight into the next word with no whitespace.
+     * Stops, leaving the rest false, at the first word {@code text} does not continue with.
+     */
+    static boolean[] runsIntoNext(List<String> words, String text) {
+        boolean[] runOn = new boolean[words.size()];
+        int at = 0;
+        for (int i = 0; i < words.size(); i++) {
+            String word = words.get(i).strip();
+            if (word.isEmpty()) continue;
+            while (at < text.length() && Character.isWhitespace(text.charAt(at))) at++;
+            if (!text.startsWith(word, at)) break;
+            at += word.length();
+            runOn[i] = at < text.length() && !Character.isWhitespace(text.charAt(at));
+        }
+        return runOn;
     }
 
     private static String text(COSString string) {
