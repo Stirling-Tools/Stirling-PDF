@@ -71,7 +71,8 @@ security:
   validation: # PDF signature validation settings
     trust:
       serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)
-      useSystemTrust: true # Trust Java/OS system trust store for PDF signature validation
+      useSystemTrust: true # Trust the Java runtime's bundled CA store (cacerts) for PDF signature validation
+      useOSTrust: false # Trust the operating system's root store (Windows certificate store, macOS keychain, Linux CA bundle), where Group Policy/Intune/MDM deploy organisation roots. On by default in the desktop app
       useMozillaBundle: true # Trust bundled Mozilla CA bundle (~140 CAs) for PDF signature validation
       useAATL: false # Trust Adobe Approved Trust List (AATL) for PDF signature validation - downloads from Adobe on startup if enabled
       useEUTL: false # Trust EU Trusted List (EUTL) for eIDAS qualified certificates - downloads LOTL and national TSLs on startup if enabled

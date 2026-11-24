@@ -4,12 +4,10 @@ import { expect, userEvent, waitFor } from "storybook/test";
 import {
   appConfig,
   fixtureResponse,
-  knownA11yIssues,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
-  bodyOf,
   choose,
   findEnabled,
   openSelect,
@@ -42,8 +40,9 @@ const capabilities = (
   windowsStoreSupported = true,
 ): HardwareSigningCapabilities => ({
   desktop: true,
-  osName: windowsStoreSupported ? "Windows 11" : "Mac OS X",
+  osName: windowsStoreSupported ? "Windows 11" : "Linux",
   windowsStoreSupported,
+  macKeychainSupported: false,
   pkcs11Supported: true,
   detectedLibraries,
 });
@@ -176,27 +175,27 @@ async function chooseDevice(context: PlayContext) {
   return choose(context, "This device");
 }
 
+/** The only usable Windows certificate is chosen without a click. */
 async function windowsCertificateSelected(context: PlayContext) {
   const panel = await chooseDevice(context);
-  await panel.findByDisplayValue(
-    "Jane Signer · Example Issuing CA (expires 2028-01-01)",
-    undefined,
-    STAGE_TIMEOUT,
-  );
+  await expect(
+    await panel.findByRole("radio", { name: /^Jane Signer/ }, STAGE_TIMEOUT),
+  ).toBeChecked();
   return panel;
 }
 
 async function chooseUsbToken(context: PlayContext) {
   await chooseDevice(context);
-  const panel = await choose(context, "USB Token");
-  await panel.findByLabelText("Token PIN", undefined, STAGE_TIMEOUT);
+  await press(context, "Read the card directly");
+  const panel = await panelOf(context);
+  await panel.findByLabelText("PIN", undefined, STAGE_TIMEOUT);
   return panel;
 }
 
 async function listTokenCertificates(context: PlayContext) {
   const panel = await chooseUsbToken(context);
-  await userEvent.type(panel.getByLabelText("Token PIN"), "123456");
-  await press(context, "List certificates");
+  await userEvent.type(panel.getByLabelText("PIN"), "123456");
+  await press(context, "Show digital IDs");
   return panel;
 }
 
@@ -362,8 +361,10 @@ export const DeviceCapabilitiesLoading: Story = {
       STAGE_TIMEOUT,
     );
     await expect(panel.queryByRole("radio", { name: "PKCS12" })).toBeNull();
-    await expect(panel.queryByLabelText("Token PIN")).toBeNull();
-    await expect(panel.queryByRole("radio", { name: "USB Token" })).toBeNull();
+    await expect(panel.queryByLabelText("PIN")).toBeNull();
+    await expect(
+      panel.queryByRole("button", { name: "Read the card directly" }),
+    ).toBeNull();
   },
 };
 
@@ -374,19 +375,14 @@ export const WindowsCertificateStore: Story = {
   },
 };
 
-export const WindowsCertificateMenu: Story = {
-  parameters: {
-    ...withDevice(),
-    // Certificate labels are wider than the listbox, which then scrolls
-    // sideways with nothing in it that takes focus.
-    ...knownA11yIssues("scrollable-region-focusable"),
-  },
+export const WindowsCertificatesExpired: Story = {
+  parameters: withDevice(),
   play: async (context) => {
-    await windowsCertificateSelected(context);
-    const menu = await openSelect(context, "Certificate");
+    const panel = await windowsCertificateSelected(context);
+    await press(context, "Show 2 expired");
     await expect(
-      menu.getByRole("option", { name: /^Old Signing Key/ }),
-    ).toHaveAttribute("data-combobox-disabled", "true");
+      await panel.findByRole("radio", { name: /^Old Signing Key/ }),
+    ).toBeDisabled();
   },
 };
 
@@ -394,24 +390,18 @@ export const WindowsCertificatesLoading: Story = {
   parameters: withDevice({ windowsCertificates: neverAnswers }),
   play: async (context) => {
     const panel = await chooseDevice(context);
-    await panel.findByText("Reading certificates…", undefined, STAGE_TIMEOUT);
+    await panel.findByText("Digital ID", undefined, STAGE_TIMEOUT);
+    await expect(
+      panel.queryByRole("radio", { name: /^Jane Signer/ }),
+    ).toBeNull();
   },
 };
 
 export const WindowsCertificateStoreEmpty: Story = {
-  parameters: {
-    ...withDevice({ windowsCertificates: () => HttpResponse.json([]) }),
-    // The empty Select still draws a listbox, holding only its message.
-    ...knownA11yIssues("aria-required-children"),
-  },
+  parameters: withDevice({ windowsCertificates: () => HttpResponse.json([]) }),
   play: async (context) => {
-    await chooseDevice(context);
-    await openSelect(context, "Certificate");
-    await bodyOf(context).findByText(
-      "No signing certificates found",
-      undefined,
-      STAGE_TIMEOUT,
-    );
+    const panel = await chooseDevice(context);
+    await panel.findByText(/^No digital IDs found/, undefined, STAGE_TIMEOUT);
   },
 };
 
@@ -441,8 +431,8 @@ export const UsbTokenDriverMenu: Story = {
   parameters: withDevice(),
   play: async (context) => {
     await chooseUsbToken(context);
-    const menu = await openSelect(context, "PKCS#11 driver");
-    await menu.findByRole("option", { name: "Custom driver path…" });
+    const menu = await openSelect(context, "Card software (PKCS#11)");
+    await menu.findByRole("option", { name: "Other location…" });
   },
 };
 
@@ -450,13 +440,13 @@ export const UsbTokenCustomDriver: Story = {
   parameters: withDevice(),
   play: async (context) => {
     await chooseUsbToken(context);
-    const menu = await openSelect(context, "PKCS#11 driver");
+    const menu = await openSelect(context, "Card software (PKCS#11)");
     await userEvent.click(
-      menu.getByRole("option", { name: "Custom driver path…" }),
+      menu.getByRole("option", { name: "Other location…" }),
     );
     const panel = await panelOf(context);
     await userEvent.type(
-      await panel.findByLabelText("Driver library path"),
+      await panel.findByLabelText("Card software path"),
       "/opt/token/libpkcs11.so",
     );
   },
@@ -467,23 +457,25 @@ export const UsbTokenCertificates: Story = {
   play: async (context) => {
     const panel = await listTokenCertificates(context);
     await userEvent.type(panel.getByLabelText("Slot (optional)"), "0");
-    await panel.findByPlaceholderText(
-      "Select certificate",
-      undefined,
+    await panel.findByRole(
+      "radio",
+      { name: /^Jane Signer \(token\)/ },
       STAGE_TIMEOUT,
     );
   },
 };
 
-export const UsbTokenCertificateMenu: Story = {
+export const UsbTokenCertificateChosen: Story = {
   parameters: withDevice(),
   play: async (context) => {
-    await listTokenCertificates(context);
-    const menu = await openSelect(context, "Certificate");
+    const panel = await listTokenCertificates(context);
     await userEvent.click(
-      menu.getByRole("option", { name: /^Jane Signer \(token\)/ }),
+      await panel.findByRole(
+        "radio",
+        { name: /^Jane Signer \(token\)/ },
+        STAGE_TIMEOUT,
+      ),
     );
-    const panel = await panelOf(context);
     await panel.findByRole("radio", { name: "Visible" }, STAGE_TIMEOUT);
   },
 };
@@ -502,7 +494,7 @@ export const UsbTokenNoDriverDetected: Story = {
   parameters: withDevice({ detectedLibraries: [] }),
   play: async (context) => {
     const panel = await chooseUsbToken(context);
-    await panel.findByText(/^No PKCS#11 driver was detected/);
+    await panel.findByText(/^No card software was detected/);
   },
 };
 
@@ -510,7 +502,9 @@ export const DeviceWithoutWindowsStore: Story = {
   parameters: withDevice({ windowsStoreSupported: false }),
   play: async (context) => {
     const panel = await chooseDevice(context);
-    await panel.findByLabelText("Token PIN", undefined, STAGE_TIMEOUT);
-    await expect(panel.queryByRole("radio", { name: "USB Token" })).toBeNull();
+    await panel.findByLabelText("PIN", undefined, STAGE_TIMEOUT);
+    await expect(
+      panel.queryByRole("button", { name: "Back to digital IDs" }),
+    ).toBeNull();
   },
 };
