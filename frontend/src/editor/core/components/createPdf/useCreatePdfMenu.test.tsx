@@ -62,6 +62,22 @@ describe("useCreatePdfMenu", () => {
     expect(itemIds()).toEqual(["blank"]);
   });
 
+  it("offers converting another file when only image conversion is on", () => {
+    availability.disabled = new Set(["file-to-pdf"]);
+    const { result } = renderHook(() => useCreatePdfMenu());
+    expect(result.current.items.map((item) => item.id)).toEqual([
+      "blank",
+      "source",
+    ]);
+    render(<>{result.current.dialogs}</>);
+    const accepted = screen
+      .getByTestId("create-pdf-source-input")
+      .getAttribute("accept")!
+      .split(",");
+    expect(accepted).toEqual(expect.arrayContaining([".pdf", ".png"]));
+    expect(accepted).not.toContain(".docx");
+  });
+
   it("offers only the formats whose conversion the server has turned on", () => {
     availability.disabled = new Set(["img-to-pdf"]);
     const { result } = renderHook(() => useCreatePdfMenu());

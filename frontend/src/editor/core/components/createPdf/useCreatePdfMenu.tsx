@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import type { IconName } from "@editor/ui/Icon";
 import { useCreatePdf, type CreatePdfStage } from "@editor/hooks/useCreatePdf";
 import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
@@ -16,7 +17,6 @@ export interface CreatePdfMenuItem {
   testId: string;
 }
 
-const OFFICE_ENDPOINT = "file-to-pdf";
 const SOURCE_ENDPOINTS = new Map(
   CONVERT_SUPPORTED_FORMATS.map((ext) => [ext, getEndpointName(ext, "pdf")]),
 );
@@ -31,8 +31,6 @@ export function useCreatePdfMenu(): {
   const { t } = useTranslation();
   const { stage, createBlank, createFromSource } = useCreatePdf();
   const convert = useMultipleEndpointsEnabled(CONVERT_ENDPOINTS);
-  const canConvert =
-    !convert.loading && convert.endpointStatus[OFFICE_ENDPOINT] === true;
   const sourceExtensions = useMemo(
     () => [
       "pdf",
@@ -43,6 +41,7 @@ export function useCreatePdfMenu(): {
     ],
     [convert.endpointStatus],
   );
+  const canConvert = !convert.loading && sourceExtensions.length > 1;
   const sourceInputRef = useRef<HTMLInputElement | null>(null);
 
   const pickSource = useCallback(async () => {
@@ -104,12 +103,16 @@ export function useCreatePdfMenu(): {
     />
   );
 
-  const busyLabel =
-    stage === "converting"
-      ? t("createPdf.converting", "Converting…")
-      : stage === "creating"
-        ? t("createPdf.creating", "Creating…")
-        : null;
+  return { items, dialogs, stage, busyLabel: busyLabelFor(stage, t) };
+}
 
-  return { items, dialogs, stage, busyLabel };
+function busyLabelFor(stage: CreatePdfStage, t: TFunction): string | null {
+  switch (stage) {
+    case "converting":
+      return t("createPdf.converting", "Converting...");
+    case "creating":
+      return t("createPdf.creating", "Creating...");
+    case "idle":
+      return null;
+  }
 }

@@ -7,6 +7,18 @@ const SAMPLE_PDF = path.join(
   "../test-fixtures/sample.pdf",
 );
 
+const TO_PDF_ENDPOINTS = [
+  "file-to-pdf",
+  "img-to-pdf",
+  "html-to-pdf",
+  "markdown-to-pdf",
+  "eml-to-pdf",
+  "svg-to-pdf",
+  "cbr-to-pdf",
+  "cbz-to-pdf",
+  "ebook-to-pdf",
+];
+
 async function openLibraryMenu(page: Page) {
   await page.goto("/editor", { waitUntil: "domcontentloaded" });
   await page.getByTestId("pdf-library-add-files").click();
@@ -38,11 +50,32 @@ test("the library menu offers only a blank page when the server cannot convert f
 }) => {
   await page.route("**/api/v1/config/endpoints-availability", (route) =>
     route.fulfill({
-      json: { "file-to-pdf": { enabled: false, reason: "DEPENDENCY" } },
+      json: Object.fromEntries(
+        TO_PDF_ENDPOINTS.map((endpoint) => [
+          endpoint,
+          { enabled: false, reason: "DEPENDENCY" },
+        ]),
+      ),
     }),
   );
   await openLibraryMenu(page);
   await expect(page.getByTestId("create-pdf-source")).toHaveCount(0);
+});
+
+test("the library menu offers converting another file when only image conversion is on", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/config/endpoints-availability", (route) =>
+    route.fulfill({
+      json: { "file-to-pdf": { enabled: false, reason: "DEPENDENCY" } },
+    }),
+  );
+  await openLibraryMenu(page);
+  await expect(page.getByTestId("create-pdf-source")).toBeVisible();
+  await expect(page.getByTestId("create-pdf-source-input")).toHaveAttribute(
+    "accept",
+    /\.png/,
+  );
 });
 
 test("the expanded file library creates a blank PDF from its side panel", async ({

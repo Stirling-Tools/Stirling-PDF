@@ -20,6 +20,10 @@ import {
 
 export type CreatePdfStage = "idle" | "creating" | "converting";
 
+/**
+ * Creates a PDF and opens it in the text editor. A failure shows an error
+ * toast; the returned promises never reject.
+ */
 export function useCreatePdf() {
   const { t, i18n } = useTranslation();
   const { addFiles } = useFileHandler();
