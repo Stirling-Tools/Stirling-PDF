@@ -4,6 +4,7 @@ import type {
   DescriptionBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { ImageObjectSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { sharesMarkList } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** What can be said and done about one image's accessibility. */
 export type ImageAccessibility =
@@ -23,7 +24,8 @@ export function imageAccessibility(
 ): ImageAccessibility {
   const retaggable = retaggableTag(doc, image) !== null;
   if (image.artifact) return { kind: "decorative", canUndecorate: retaggable };
-  if (image.mcid === undefined) {
+  const mcid = ownedMcid(doc, image);
+  if (mcid === undefined) {
     if (!retaggable) return blocked(doc, "untagged");
     return {
       kind: "describable",
@@ -33,17 +35,17 @@ export function imageAccessibility(
     };
   }
   const structure = doc.structure(image.pageIndex);
-  const blocker = structure.cannotDescribe(image.mcid);
+  const blocker = structure.cannotDescribe(mcid);
   if (blocker) return blocked(doc, blocker);
-  if (structure.decorative(image.mcid)) {
+  if (structure.decorative(mcid)) {
     return { kind: "decorative", canUndecorate: true };
   }
   return {
     kind: "describable",
-    description: structure.alt(image.mcid),
-    type: structure.describableType(image.mcid),
+    description: structure.alt(mcid),
+    type: structure.describableType(mcid),
     canBeDecorative:
-      retaggable || structure.cannotMarkDecorative(image.mcid) === null,
+      retaggable || structure.cannotMarkDecorative(mcid) === null,
   };
 }
 
@@ -71,17 +73,34 @@ export function retaggableTag(
   if (image.inForm) return null;
   const structure = doc.structure(image.pageIndex);
   if (structure.cannotAddElement()) return null;
-  if (image.mcid === undefined) {
+  const mcid = ownedMcid(doc, image);
+  if (mcid === undefined) {
+    // Drawn in one marked-content sequence with other content, the image can only
+    // be tagged with it, which tagging that content does.
+    const page = doc.page(image.pageIndex);
+    const object = page.findImage(image.id);
+    if (
+      object &&
+      sharesMarkList(doc.module, page.pagePtr, object.pdfiumObjPtr)
+    ) {
+      return null;
+    }
     return image.artifact ? { kind: "artifact" } : { kind: "untagged" };
   }
-  const type = structure.describableType(image.mcid);
-  if (!structure.isAdded(image.mcid) || !type) return null;
-  return {
-    kind: "element",
-    type,
-    mcid: image.mcid,
-    alt: structure.alt(image.mcid),
-  };
+  const type = structure.describableType(mcid);
+  if (!structure.isAdded(mcid) || !type) return null;
+  return { kind: "element", type, mcid, alt: structure.alt(mcid) };
+}
+
+/** The image's MCID when an element owns it; undefined when none does, which leaves it untagged. */
+export function ownedMcid(
+  doc: EditorDocument,
+  image: ImageObjectSnapshot,
+): number | undefined {
+  if (image.mcid === undefined) return undefined;
+  return doc.structure(image.pageIndex).owns(image.mcid)
+    ? image.mcid
+    : undefined;
 }
 
 function blocked(

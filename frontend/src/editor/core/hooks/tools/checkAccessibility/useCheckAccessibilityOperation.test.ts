@@ -83,6 +83,32 @@ describe("useCheckAccessibilityOperation", () => {
     );
   });
 
+  it("shows why the server refused a file, not its status code", async () => {
+    const refusal = Object.assign(
+      new Error("Request failed with status code 400"),
+      {
+        isAxiosError: true,
+        response: {
+          status: 400,
+          data: {
+            detail:
+              "This PDF is 124 MB. The accessibility report is limited to 100 MB.",
+          },
+        },
+      },
+    );
+    (apiClient.post as Mock).mockRejectedValue(refusal);
+    const { result } = renderHook(() => useCheckAccessibilityOperation());
+
+    await act(() =>
+      result.current.executeOperation(defaultParameters, [pdf("book.pdf")]),
+    );
+
+    expect(result.current.results[0].error).toBe(
+      "This PDF is 124 MB. The accessibility report is limited to 100 MB.",
+    );
+  });
+
   it("keeps a cancelled run from resuming beside the run that replaced it", async () => {
     const stalled = deferred<{ data: AccessibilityReport }>();
     (apiClient.post as Mock)

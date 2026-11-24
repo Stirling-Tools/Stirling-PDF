@@ -12,8 +12,13 @@ export function useWorkbenchPin(): () => void {
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
 
+  // Only for the editor tool itself: a review running under another tool
+  // must leave that tool's panel as the user has it.
+  const openedAsToolRef = useRef(
+    navigationState.selectedTool === "pdfTextEditor",
+  );
   useEffect(() => {
-    setLeftPanelView("toolContent");
+    if (openedAsToolRef.current) setLeftPanelView("toolContent");
   }, [setLeftPanelView]);
 
   const actionsRef = useRef(navigationActions);

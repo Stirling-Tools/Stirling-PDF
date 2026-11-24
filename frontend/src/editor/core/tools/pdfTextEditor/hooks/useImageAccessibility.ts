@@ -16,6 +16,7 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 import {
   imageAccessibility,
+  ownedMcid,
   retaggableTag,
   type ImageAccessibility,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
@@ -50,9 +51,10 @@ export function useImageAccessibility(
 
   const setDescription = useCallback(
     (text: string) => {
-      if (!image || accessibility?.kind !== "describable") return;
+      const doc = store.document;
+      if (!doc || !image || accessibility?.kind !== "describable") return;
       // An emptied field removes the description rather than saving an empty one.
-      const command = describeCommand(image, text === "" ? null : text);
+      const command = describeCommand(doc, image, text === "" ? null : text);
       if (command) store.dispatch(command);
     },
     [store, image, accessibility],
@@ -60,9 +62,10 @@ export function useImageAccessibility(
 
   const setType = useCallback(
     (type: DescribableType) => {
-      if (!image || accessibility?.kind !== "describable") return;
+      const doc = store.document;
+      if (!doc || !image || accessibility?.kind !== "describable") return;
       if (type === accessibility.type) return;
-      store.dispatch(typeCommand(image, type));
+      store.dispatch(typeCommand(doc, image, type));
     },
     [store, image, accessibility],
   );
@@ -86,15 +89,13 @@ export function useImageAccessibility(
 }
 
 function describeCommand(
+  doc: EditorDocument,
   image: ImageObjectSnapshot,
   alt: string | null,
 ): Command | null {
-  if (image.mcid !== undefined) {
-    return new SetAltTextCommand({
-      pageIndex: image.pageIndex,
-      mcid: image.mcid,
-      alt,
-    });
+  const mcid = ownedMcid(doc, image);
+  if (mcid !== undefined) {
+    return new SetAltTextCommand({ pageIndex: image.pageIndex, mcid, alt });
   }
   // Clearing the field of an image no element owns leaves it untagged.
   if (alt === null) return null;
@@ -108,10 +109,12 @@ function describeCommand(
 
 /** An untagged image is given an element of `type`; a tagged one is retagged. */
 function typeCommand(
+  doc: EditorDocument,
   image: ImageObjectSnapshot,
   type: DescribableType,
 ): Command {
-  const { pageIndex, mcid } = image;
+  const { pageIndex } = image;
+  const mcid = ownedMcid(doc, image);
   if (mcid !== undefined)
     return new RetagBlockCommand({ pageIndex, mcid, type });
   return new TagImageCommand({ pageIndex, imageId: image.id, as: type });
