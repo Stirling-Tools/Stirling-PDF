@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
@@ -55,6 +55,7 @@ export function PdfViewerToolbar({
   const [pageInput, setPageInput] = useState(
     scrollState.currentPage || currentPage,
   );
+  const committedPageRef = useRef(pageInput);
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
   );
@@ -64,7 +65,7 @@ export function PdfViewerToolbar({
   const isDualPageActive = spreadMode !== SpreadMode.None;
   const isCoverPageActive = spreadMode === SpreadMode.Even;
 
-  // Register for immediate scroll updates and sync with actual scroll state
+  // Keep the subscription; sync live state in a separate effect.
   useEffect(() => {
     const unregister = registerImmediateScrollUpdate(
       (currentPage, _totalPages) => {
@@ -78,6 +79,7 @@ export function PdfViewerToolbar({
 
   useEffect(() => {
     setPageInput(scrollState.currentPage);
+    committedPageRef.current = scrollState.currentPage;
   }, [scrollState.currentPage]);
 
   // A carried zoom's fit pass is intermediate, so the readout holds until its
@@ -143,6 +145,20 @@ export function PdfViewerToolbar({
       onPageChange(page);
     }
     setPageInput(page);
+  };
+
+  // Commit on Enter or blur so typing "120" scrolls once.
+  const commitPageInput = () => {
+    const page = Number(pageInput);
+    if (Number.isInteger(page) && page >= 1 && page <= scrollState.totalPages) {
+      // Enter already committed; don't scroll again on the following blur.
+      if (page !== committedPageRef.current) {
+        committedPageRef.current = page;
+        handlePageNavigation(page);
+      }
+    } else {
+      setPageInput(scrollState.currentPage);
+    }
   };
 
   const handleDualPageToggle = () => {
@@ -230,14 +246,17 @@ export function PdfViewerToolbar({
       <NumberInput
         value={pageInput}
         onChange={(value) => {
-          const page = Number(value);
-          setPageInput(page);
-          if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
-            handlePageNavigation(page);
+          setPageInput(Number(value));
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+            commitPageInput();
           }
         }}
+        onBlur={commitPageInput}
         min={1}
         max={scrollState.totalPages}
+        allowDecimal={false}
         hideControls
         size="xs"
         styles={{
