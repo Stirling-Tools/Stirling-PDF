@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Checkbox } from "@editor/ui/Checkbox";
 import { Chip } from "@editor/ui/Chip";
-import { SectionHeader } from "@editor/ui/SectionHeader";
+import { BreakdownRow } from "@editor/components/tools/checkAccessibility/AccessibilityBreakdownRow";
 
 interface AccessibilityManualChecksProps {
   checks: string[];
@@ -14,7 +14,10 @@ interface AccessibilityManualChecksProps {
   onSetAll: (done: boolean) => void;
 }
 
-/** The checks only a person can make, collapsed until asked for; the ticks go into the downloaded report. */
+/**
+ * The checks only a person can make, as a breakdown row that opens on the list; the
+ * ticks go into the downloaded report.
+ */
 export function AccessibilityManualChecks({
   checks,
   ticked,
@@ -26,15 +29,18 @@ export function AccessibilityManualChecks({
   const bodyId = useId();
   const allDone = ticked.size === checks.length;
   return (
-    <section
-      className="a11y-section a11y-manual-checks"
-      data-testid="a11y-manual-checks"
-    >
-      <SectionHeader
-        title={t("checkAccessibility.manual.title", "Manual checks")}
-        count={
+    <li className="a11y-area" data-testid="a11y-manual-checks">
+      <BreakdownRow
+        icon="list-checks"
+        label={t("checkAccessibility.manual.title", "Manual checks")}
+        tip={t(
+          "checkAccessibility.manual.tip",
+          "Things only a person can judge, such as reading order and whether image descriptions make sense. Tick each one once you've checked it, and your ticks go into the downloaded report.",
+        )}
+        status={allDone ? "pass" : "fail"}
+        badge={
           <span className="a11y-manual__status">
-            {`${ticked.size}/${checks.length}`}
+            <span className="a11y-manual__count">{`${ticked.size}/${checks.length}`}</span>
             <Chip
               accent={allDone ? "success" : "warning"}
               size="xs"
@@ -46,10 +52,11 @@ export function AccessibilityManualChecks({
             </Chip>
           </span>
         }
-        collapsible
-        expanded={open}
-        onToggle={() => setOpen((value) => !value)}
-        controls={bodyId}
+        toggle={{
+          open,
+          controls: bodyId,
+          onToggle: () => setOpen((value) => !value),
+        }}
       />
       <div
         id={bodyId}
@@ -57,13 +64,7 @@ export function AccessibilityManualChecks({
         data-open={open}
         inert={!open}
       >
-        <div className="sui-collapsible__body-inner a11y-manual__body">
-          <p className="a11y-note">
-            {t(
-              "checkAccessibility.manual.tip",
-              "Things only a person can judge, such as reading order and whether image descriptions make sense. Tick each one once you've checked it, and your ticks go into the downloaded report.",
-            )}
-          </p>
+        <div className="sui-collapsible__body-inner a11y-area__body">
           <ul className="a11y-manual">
             {checks.map((check, index) => (
               <li key={check}>
@@ -87,6 +88,6 @@ export function AccessibilityManualChecks({
           </Button>
         </div>
       </div>
-    </section>
+    </li>
   );
 }

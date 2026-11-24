@@ -12,6 +12,7 @@ import type {
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { useReviewPanelSlot } from "@editor/tools/pdfTextEditor/store/reviewPanelSlot";
+import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 
 /** Shows the review's document-wide state in the accessibility tool panel, when that panel is open. */
 export function ReviewDocumentPanel({
@@ -34,8 +35,12 @@ export function ReviewDocumentPanel({
   );
   const headings = useHeadingOutline(store, state, shown && treatedAsTagged);
   const bulkTagging = useBulkTagging(store, state, shown && treatedAsTagged);
+  // A document-wide setting saves at once, unlike tags, which wait for Save.
   const setMarkedTagged = useCallback(
-    (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
+    (marked: boolean) => {
+      store.dispatch(new SetMarkedTaggedCommand(marked));
+      currentEditorSession()?.autosave();
+    },
     [store],
   );
   if (!slot) return null;

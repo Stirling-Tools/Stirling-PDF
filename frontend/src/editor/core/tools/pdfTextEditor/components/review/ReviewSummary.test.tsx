@@ -34,10 +34,9 @@ const MARKED_WARNING = "pdf-editor-document-accessibility-marked-warning";
 describe("ReviewSummary", () => {
   it("shows how much is tagged and how much is left", () => {
     renderSummary();
-    expect(screen.getByText("3/5")).toBeVisible();
-    expect(screen.getByTestId("pdf-editor-review-score")).toHaveTextContent(
-      "pdfTextEditor.review.left",
-    );
+    const score = screen.getByTestId("pdf-editor-review-score");
+    expect(score).toHaveTextContent("pdfTextEditor.review.summary.tagged");
+    expect(score).toHaveTextContent("pdfTextEditor.review.left");
   });
 
   it("says so once everything is tagged", () => {

@@ -47,7 +47,6 @@ export function ReviewSummary({
       <section className="review-summary__section">
         <SectionHeader
           title={t("pdfTextEditor.review.summary.title", "Tagging")}
-          count={`${progress.done}/${progress.total}`}
         />
         <TaggingProgress {...progress} />
         {review && (
@@ -169,6 +168,16 @@ function TaggingProgress({
       className="review-summary__progress"
       data-testid="pdf-editor-review-score"
     >
+      <span className="review-summary__headline">
+        {t(
+          "pdfTextEditor.review.summary.tagged",
+          "{{done}} of {{total}} tagged",
+          {
+            done,
+            total,
+          },
+        )}
+      </span>
       <ProgressBar
         value={total === 0 ? 0 : done / total}
         color={finished ? "var(--c-success)" : undefined}

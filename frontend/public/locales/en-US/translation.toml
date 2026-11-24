@@ -3331,18 +3331,17 @@ summary_other = "{{count}} images need a description (pages {{pages}})"
 [checkAccessibility.fix]
 heading = "Fix the headings"
 headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
 image = "Describe the images"
 imageOnPage = "Describe the image on page {{page}}"
-inDocument = "Fix tags"
 link = "Tag the links"
 linkOnPage = "Tag the link on page {{page}}"
 markedTagged = "Mark the document as tagged"
-pause = "Pause fixing"
+show = "Show tagging tool"
 tagEverything = "Auto-tag"
 tagging = "Tagging… {{percent}}%"
 untagged = "Tag the content"
 untaggedOnPage = "Tag content on page {{page}}"
-viewInDocument = "View tags"
 
 [checkAccessibility.issue]
 appliesTo = "Applies to"
@@ -8025,6 +8024,7 @@ title = "Save your tags?"
 
 [pdfTextEditor.review.summary]
 progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
 title = "Tagging"
 
 [pdfTextEditor.rulers]

@@ -40,6 +40,8 @@ interface BreakdownRowProps {
   /** The standard's clauses the row covers, shown under the tip. */
   reference?: string | null;
   status: BreakdownStatus;
+  /** Shown in place of the Pass or Fail chip, for a row that is neither. */
+  badge?: ReactNode;
   /** Turns the label into a toggle for the details below the row. */
   toggle?: { open: boolean; controls: string; onToggle: () => void };
 }
@@ -50,6 +52,7 @@ export function BreakdownRow({
   tip,
   reference,
   status,
+  badge,
   toggle,
 }: BreakdownRowProps) {
   const { t } = useTranslation();
@@ -106,13 +109,17 @@ export function BreakdownRow({
           <Icon name="info" size={14} />
         </button>
       </Tooltip>
-      <Chip
-        className="a11y-area__status"
-        accent={STATUS_ACCENT[status]}
-        size="xs"
-      >
-        <StatusWord status={status} />
-      </Chip>
+      {badge ? (
+        <span className="a11y-area__status">{badge}</span>
+      ) : (
+        <Chip
+          className="a11y-area__status"
+          accent={STATUS_ACCENT[status]}
+          size="xs"
+        >
+          <StatusWord status={status} />
+        </Chip>
+      )}
     </div>
   );
 }

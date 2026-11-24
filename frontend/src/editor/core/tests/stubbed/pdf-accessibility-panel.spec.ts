@@ -103,7 +103,10 @@ test("lays the panel out in reading order, and pauses the review from its footer
   await expect(manual.getByTestId("a11y-manual-status")).toHaveText(
     "In progress",
   );
-  const manualHeader = manual.getByRole("button", { name: /Manual checks/ });
+  const manualHeader = manual.getByRole("button", {
+    name: "Manual checks",
+    exact: true,
+  });
   await expect(manualHeader).toHaveAttribute("aria-expanded", "false");
   await manualHeader.click();
   await expect(manualHeader).toHaveAttribute("aria-expanded", "true");

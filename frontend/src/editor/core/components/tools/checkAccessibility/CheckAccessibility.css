@@ -319,21 +319,10 @@
   gap: 0.5rem;
 }
 
-/* No gap above the body: it would stay open while the checks are collapsed. */
-.a11y-manual-checks {
-  gap: 0;
-}
-
-/* Spaced with a child margin, as padding on the clipped inner would show while collapsed. */
-.a11y-manual__body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  padding-top: 0;
-}
-
-.a11y-manual__body > :first-child {
-  margin-top: 0.5rem;
+.a11y-manual__count {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .a11y-manual {

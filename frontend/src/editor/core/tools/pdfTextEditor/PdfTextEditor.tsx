@@ -435,6 +435,17 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
+  const autosaveQueued = useRef(false);
+  const handleAutosave = useCallback(async () => {
+    if (savingRef.current) {
+      autosaveQueued.current = true;
+      return;
+    }
+    await runSave(false);
+    if (!autosaveQueued.current) return;
+    autosaveQueued.current = false;
+    await runSave(false);
+  }, [runSave]);
   const handleDownload = useCallback(() => void runSave(true), [runSave]);
 
   const handleConfirmSaveRisk = useCallback(() => {
@@ -786,6 +797,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     const session = {
       fileName: openedFileName,
       save: handleSave,
+      autosave: () => void handleAutosave(),
       download: handleDownload,
       pickImage: openImagePicker,
       // The viewer mounts only the pages near the viewport.
@@ -798,6 +810,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     scrollActions,
     openedFileName,
     handleSave,
+    handleAutosave,
     handleDownload,
     openImagePicker,
   ]);

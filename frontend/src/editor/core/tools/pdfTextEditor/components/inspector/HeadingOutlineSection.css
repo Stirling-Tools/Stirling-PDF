@@ -3,9 +3,10 @@
   --heading-row-pad: 0.1875rem;
   --heading-guide: 1rem;
   /* The middle of the label's first line, where a branch meets it. */
+  --heading-size: 0.8125rem;
+  --heading-line: 1.45;
   --heading-row-mid: calc(
-    var(--heading-row-pad) + var(--mantine-font-size-xs) *
-      var(--mantine-line-height-xs) / 2
+    var(--heading-row-pad) + var(--heading-size) * var(--heading-line) / 2
   );
 }
 
@@ -67,8 +68,8 @@
   background: transparent;
   color: var(--c-text);
   font: inherit;
-  font-size: var(--mantine-font-size-xs);
-  line-height: var(--mantine-line-height-xs);
+  font-size: var(--heading-size);
+  line-height: var(--heading-line);
   text-align: left;
   cursor: pointer;
 }

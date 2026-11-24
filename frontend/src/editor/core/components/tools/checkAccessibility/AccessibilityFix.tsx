@@ -31,9 +31,9 @@ export const AccessibilityFixContext = createContext<AccessibilityFixFn | null>(
 );
 
 /**
- * The report's main call to action: fix what it found, on the page. A file
- * that passes has nothing to fix, so the same button offers to view its tags.
- * While the review is open it pauses it instead.
+ * The report's main call to action: shows the tagging tool on the page, at what
+ * it found to fix, or at the start for a file that passes. While the tool shows,
+ * the same button hides it.
  */
 export function FixInDocumentButton({
   passing,
@@ -51,11 +51,12 @@ export function FixInDocumentButton({
       <Button
         className={className}
         variant="primary"
-        leftSection={<Icon name="pause" size={16} />}
+        accent="danger"
+        leftSection={<Icon name="eye-off" size={16} />}
         onClick={() => reviewMode.requestClose()}
         data-testid="a11y-pause-fixing"
       >
-        {t("checkAccessibility.fix.pause", "Pause fixing")}
+        {t("checkAccessibility.fix.hide", "Hide tagging tool")}
       </Button>
     );
   return (
@@ -67,9 +68,7 @@ export function FixInDocumentButton({
       onClick={() => fix(passing ? null : "untagged")}
       data-testid="a11y-fix-in-document"
     >
-      {passing
-        ? t("checkAccessibility.fix.viewInDocument", "View tags")
-        : t("checkAccessibility.fix.inDocument", "Fix tags")}
+      {t("checkAccessibility.fix.show", "Show tagging tool")}
     </Button>
   );
 }

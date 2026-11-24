@@ -32,7 +32,7 @@ export function ReviewHost() {
           <PdfTextEditor />
         </Suspense>
       </div>
-      {/* Here rather than in the viewer's bar: Pause fixing is pressed from the
+      {/* Here rather than in the viewer's bar: Hide tagging tool is pressed from the
           tool panel, whichever workbench is showing. */}
       <Suspense fallback={null}>
         <CloseReviewPrompt />

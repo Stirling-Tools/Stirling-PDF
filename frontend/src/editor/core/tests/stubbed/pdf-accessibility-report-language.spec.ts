@@ -45,6 +45,7 @@ const REPORT: AccessibilityReport = {
 interface EditorWindow {
   __editor_store?: {
     document: { documentLanguage: () => string | null } | null;
+    getState: () => { dirty: boolean };
   };
 }
 
@@ -106,4 +107,16 @@ test("sets the document language from the report's Language area", async ({
     )
     .toBe("en-IE");
   await expect(picker).toHaveValue(/\(en-IE\)$/);
+  // A document-wide setting saves at once, with no Save to press.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            (window as unknown as EditorWindow).__editor_store?.getState()
+              .dirty ?? true,
+        ),
+      { timeout: 30_000 },
+    )
+    .toBe(false);
 });
