@@ -3,7 +3,10 @@
  */
 
 import axios from "axios";
-import { normalizeAxiosErrorData } from "@editor/services/errorUtils";
+import {
+  normalizeAxiosErrorData,
+  serverErrorReason,
+} from "@editor/services/errorUtils";
 import i18n from "i18next";
 
 /** Signup gates are handled by the account modal and must not be reported as damaged files. */
@@ -37,6 +40,24 @@ export const extractErrorMessage = (error: unknown): string => {
     "There was an error processing your request.",
   );
 };
+
+/**
+ * The text to show under a tool's run button after a failed request. A tool's
+ * own message wins; when that message is only the transport's (axios's "Request
+ * failed with status code 400", or the raw response body), the server's
+ * ProblemDetail reason replaces it.
+ */
+export async function resolveToolErrorMessage(
+  error: unknown,
+  getErrorMessage?: (error: unknown) => string,
+): Promise<string> {
+  const message = getErrorMessage?.(error) || extractErrorMessage(error);
+  const transportText =
+    (error instanceof Error && message === error.message) ||
+    (axios.isAxiosError(error) && message === error.response?.data);
+  if (!transportText) return message;
+  return (await serverErrorReason(error)) ?? message;
+}
 
 /**
  * Creates a standardized error handler for tool operations

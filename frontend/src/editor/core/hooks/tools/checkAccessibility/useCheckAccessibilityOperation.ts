@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
 import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@editor/types/fileContext";
-import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import { resolveToolErrorMessage } from "@editor/utils/toolErrorHandler";
 import type {
   AccessibilityReport,
   AccessibilityReportEntry,
@@ -108,7 +108,7 @@ export const useCheckAccessibilityOperation =
                 fileId: file.fileId,
                 fileName: file.name,
                 report: null,
-                error: extractErrorMessage(error),
+                error: await resolveToolErrorMessage(error),
               });
             }
             if (!isCurrent()) return;

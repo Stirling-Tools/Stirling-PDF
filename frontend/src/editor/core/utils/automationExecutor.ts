@@ -11,7 +11,7 @@ import {
 } from "@editor/hooks/tools/shared/toolOperationTypes";
 import { zipFileService } from "@editor/services/zipFileService";
 import { processResponse } from "@editor/utils/toolResponseProcessor";
-import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import { resolveToolErrorMessage } from "@editor/utils/toolErrorHandler";
 import { type AutomationConfig } from "@editor/types/automation";
 import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
 
@@ -215,7 +215,7 @@ export const executeToolOperationWithPrefix = async (
   } catch (error) {
     console.error(`❌ ${operationName} failed:`, error);
     throw new Error(
-      `${operationName} operation failed: ${extractErrorMessage(error)}`,
+      `${operationName} operation failed: ${await resolveToolErrorMessage(error)}`,
       {
         cause: error,
       },
