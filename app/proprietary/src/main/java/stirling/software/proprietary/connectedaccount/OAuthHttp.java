@@ -102,7 +102,9 @@ public final class OAuthHttp {
         String detail = description != null ? firstLine(description) : error;
         throw new OAuthException(
                 "sign-in refused: " + (detail == null ? "HTTP " + response.statusCode() : detail),
-                "invalid_grant".equals(error));
+                "invalid_grant".equals(error),
+                "consent_required".equals(text(body, "suberror"))
+                        || (description != null && description.startsWith("AADSTS65001")));
     }
 
     public static JsonNode idTokenClaims(String idToken) {

@@ -384,6 +384,18 @@ describe("setDictEntry", () => {
     expect(out).toContain("/Alt (outer) >>");
   });
 
+  it("adds after a hex string that closes the dictionary", () => {
+    expect(setDictEntry("<</T<FEFF0041>>>", "TU", "(x)")).toBe(
+      "<</T<FEFF0041> /TU (x) >>",
+    );
+  });
+
+  it("replaces a nested dictionary that ends in a hex string whole", () => {
+    expect(setDictEntry("<< /A <</B<41>>> /S /P >>", "A", "1")).toBe(
+      "<< /A 1 /S /P >>",
+    );
+  });
+
   it("keeps the result lexable when the value abuts its key", () => {
     expect(setDictEntry("<< /K[1 2] >>", "K", "3")).toBe("<< /K 3 >>");
   });

@@ -93,7 +93,7 @@ export function PdfViewerToolbar({
     return () => {
       unregister?.();
     };
-  }, [registerImmediateZoomUpdate, getZoomState]);
+  }, [registerImmediateZoomUpdate, getZoomState, zoomRestorePendingRef]);
 
   useEffect(() => {
     if (!zoomRestorePendingRef.current) {

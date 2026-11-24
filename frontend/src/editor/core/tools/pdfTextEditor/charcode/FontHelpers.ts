@@ -4,6 +4,7 @@ import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 /**
  * Client-side font helpers for the charcode emit path.
@@ -235,7 +236,7 @@ export function _clearFontNameCacheForTests(): void {
 
 // Read a font's /BaseFont name, the identity used to tell WHICH face a handle
 // points at when two fonts on the page render the same char.
-function readFontName(
+export function readFontName(
   m: ResolverContext["module"],
   fontPtr: number,
 ): string | undefined {
@@ -269,3 +270,4 @@ export function resetFontHelperCaches(): void {
   reusableFontCache.clear();
   fontNameCache.clear();
 }
+clearOnDocumentClose(resetFontHelperCaches);

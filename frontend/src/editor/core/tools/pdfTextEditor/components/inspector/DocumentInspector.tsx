@@ -24,7 +24,8 @@ import type {
   PageSnapshot,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
-import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
+import { NextToReviewButton } from "@editor/tools/pdfTextEditor/components/inspector/NextToReviewButton";
 import type { HeadingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
 import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 
@@ -36,9 +37,9 @@ interface Props {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
-  /** Images needing attention; null when there is nothing to review. */
-  imageReview: ImageReview | null;
-  onSelectNextImageToReview: () => void;
+  /** Images and text needing attention; null when there is nothing to review. */
+  accessibilityReview: AccessibilityReview | null;
+  onSelectNextToReview: () => void;
   /** Read pages with content left untagged. */
   untaggedPages: number;
   onTagUntaggedContent: () => void;
@@ -57,8 +58,8 @@ interface Props {
 /** Facts about the open document. Nothing here acts on a selection. */
 export function DocumentInspector({
   pages,
-  imageReview,
-  onSelectNextImageToReview,
+  accessibilityReview,
+  onSelectNextToReview,
   untaggedPages,
   onTagUntaggedContent,
   markedTagged,
@@ -96,10 +97,10 @@ export function DocumentInspector({
           <DocumentLanguageField control={documentLanguage} />
         )}
       </Section>
-      {imageReview && (
+      {accessibilityReview && (
         <AccessibilitySection
-          review={imageReview}
-          onNext={onSelectNextImageToReview}
+          review={accessibilityReview}
+          onNext={onSelectNextToReview}
           untaggedPages={untaggedPages}
           onTagUntagged={onTagUntaggedContent}
           markedTagged={markedTagged}
@@ -187,7 +188,7 @@ function AccessibilitySection({
   onSetMarkedTagged,
   hasTags,
 }: {
-  review: ImageReview;
+  review: AccessibilityReview;
   onNext: () => void;
   untaggedPages: number;
   onTagUntagged: () => void;
@@ -238,18 +239,10 @@ function AccessibilitySection({
           hasTags={hasTags}
         />
         {pending > 0 && (
-          <Button
-            size="sm"
-            variant="secondary"
-            accent="neutral"
-            fullWidth
-            justify="start"
-            leftSection={<Icon name="arrow-right" size={20} />}
+          <NextToReviewButton
             onClick={onNext}
-            data-testid="pdf-editor-document-accessibility-next"
-          >
-            {t("pdfTextEditor.inspector.accessibility.nextImage", "Next image")}
-          </Button>
+            testId="pdf-editor-document-accessibility-next"
+          />
         )}
       </Stack>
     </Section>

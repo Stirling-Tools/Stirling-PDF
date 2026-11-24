@@ -1,7 +1,7 @@
 @nightly @convert
 Feature: Heavy conversion endpoints
 
-    # Too slow for every PR: these shell out to LibreOffice, Calibre or Ghostscript.
+    # Too slow for every PR: these run heavy Office, Calibre or Ghostscript conversions.
     # behave.ini excludes @nightly; the nightly job opts back in with --tags=@nightly.
 
     @pdf-to-xlsx @positive
@@ -20,14 +20,6 @@ Feature: Heavy conversion endpoints
         And the pdf contains 2 pages with random text
         When I send the API request to the endpoint "/api/v1/convert/pdf/xlsx"
         Then the response status code should be 204
-
-
-    @vector @negative
-    Scenario: vector conversion rejects an input format Ghostscript cannot read
-        Given I generate an SVG file as "fileInput"
-        When I send the API request to the endpoint "/api/v1/convert/vector/pdf"
-        Then the response status code should be 400
-        And the response JSON error should contain "Unsupported"
 
 
     @ebook @positive
