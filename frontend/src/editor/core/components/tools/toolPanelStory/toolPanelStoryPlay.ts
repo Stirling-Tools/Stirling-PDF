@@ -288,7 +288,7 @@ export async function openColorPicker(
 
 /**
  * Opens the panel's Select named `name` once it is enabled and resolves with
- * its listbox, which Mantine portals out of the panel. Found through the
+ * its listbox once open, which Mantine portals out of the panel. Found through the
  * input's aria-controls: a viewer page can draw listboxes of its own.
  */
 export async function openSelect(
@@ -300,7 +300,9 @@ export async function openSelect(
   const listbox = await waitFor(() => {
     const id = select.getAttribute("aria-controls");
     const found = id ? select.ownerDocument.getElementById(id) : null;
-    expect(found).not.toBeNull();
+    // Mounted is not open: mid-transition the dropdown is hidden, and its options
+    // are not yet in the accessibility tree a role query reads.
+    expect(found).toBeVisible();
     return found!;
   }, STAGE_TIMEOUT);
   return within(listbox);
