@@ -21,7 +21,7 @@ export function CreatePdfSidebarRow() {
       >
         <Menu.Target>
           <div
-            className={`file-sidebar-action-row${busy ? " disabled" : ""}`}
+            className="file-sidebar-action-row"
             role="button"
             tabIndex={busy ? -1 : 0}
             aria-busy={busy}
