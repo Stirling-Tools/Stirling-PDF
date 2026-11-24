@@ -12148,7 +12148,6 @@ label = "Reading tools"
 readAloud = "Read aloud"
 rotateLeft = "Rotate left"
 rotateRight = "Rotate right"
-search = "Find in document"
 switchDocument = "Switch document"
 thumbnails = "Pages"
 

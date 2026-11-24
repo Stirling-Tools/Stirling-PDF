@@ -16,14 +16,15 @@
   background: var(--c-hover);
 }
 
-/* The ruler's current scale, read at a glance beside its button. */
-.viewer-bar-scale-value {
-  padding: 1px 6px;
-  border-radius: var(--mantine-radius-sm);
-  background: var(--c-surface-sunken);
-  color: var(--c-text-muted);
-  font-size: var(--mantine-font-size-xs);
-  font-variant-numeric: tabular-nums;
+/* A narrow chevron tucked against the ruler, reading as part of it. */
+.viewer-ruler-scale {
+  display: inline-flex;
+  margin-inline-start: -0.25rem;
+}
+
+.viewer-ruler-scale__toggle {
+  width: 1rem;
+  min-width: 1rem;
 }
 
 .viewer-bar-button-wrap {

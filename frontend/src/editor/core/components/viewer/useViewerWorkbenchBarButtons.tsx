@@ -231,9 +231,9 @@ export function useViewerWorkbenchBarButtons(
     const pageSection = isPhone ? ("top" as const) : ("page-bar" as const);
     const pageTooltip = isPhone ? tooltipPosition : ("top" as const);
     const pageButtonSize = isPhone ? undefined : ("sm" as const);
-    // Reading mode's rail draws search and read aloud itself. A second copy in
-    // the page bar would share their open state, and each popover's outside
-    // click would close the other's.
+    // Reading mode's rail draws read aloud itself. A second copy in the page
+    // bar would share its open state, and each popover's outside click would
+    // close the other's.
     const railOwned = readerMode && !isPhone;
     const railSection = railOwned ? ("top" as const) : pageSection;
     // A narrow page bar folds these into a menu, which acts through the
@@ -296,11 +296,11 @@ export function useViewerWorkbenchBarButtons(
         id: "viewer-search",
         tooltip: searchLabel,
         ariaLabel: searchLabel,
-        section: railSection,
+        section: pageSection,
         order: 10,
         render: ({ disabled }) => (
           <Popover
-            position={popoverPosition}
+            position={isPhone ? "bottom-end" : "top"}
             withArrow
             shadow="md"
             offset={8}
@@ -540,20 +540,21 @@ export function useViewerWorkbenchBarButtons(
           />
         ),
       },
-      // Scale settings belong to the ruler, so they only show while it is on.
+      // Scale settings belong to the ruler, so they sit beside it while it is
+      // on. They don't fold, so a narrow bar keeps them next to the Tools menu.
       ...(isRulerActive
         ? [
             {
               id: "viewer-ruler-settings",
               tooltip: rulerSettingsLabel,
               ariaLabel: rulerSettingsLabel,
-              section: "top" as const,
-              order: 25,
+              section: pageSection,
+              order: 15,
               render: ({ disabled }: { disabled?: boolean }) => (
                 <RulerScaleSettingsButton
                   disabled={disabled}
                   label={rulerSettingsLabel}
-                  tooltipPosition={tooltipPosition}
+                  tooltipPosition={pageTooltip}
                   currentScale={customScale}
                   onApplyScale={handleApplyRulerScale}
                   onResetScale={handleResetRulerScale}

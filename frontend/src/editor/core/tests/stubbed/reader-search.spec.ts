@@ -7,11 +7,10 @@ const SAMPLE_PDF = path.join(
 );
 
 /**
- * Reading mode's rail owns search. A second search button in the page bar
- * would share its open state, and that popover's outside click would close
- * the rail's the moment it opened.
+ * Reading mode keeps search in the page bar, not the rail, so there is one
+ * search button and one popover.
  */
-test("search opens from the reading rail and finds matches", async ({
+test("search opens from the page bar while reading and finds matches", async ({
   page,
 }) => {
   await page.goto("/");
@@ -30,14 +29,13 @@ test("search opens from the reading rail and finds matches", async ({
 
   const toolbar = page.locator(".pdf-viewer-toolbar");
   await expect(toolbar).toBeVisible();
-  await expect(toolbar.getByRole("button", { name: "Search PDF" })).toHaveCount(
-    0,
-  );
+  await expect(
+    page
+      .getByRole("navigation", { name: "Reading tools" })
+      .getByRole("button", { name: "Search PDF" }),
+  ).toHaveCount(0);
 
-  await page
-    .getByRole("navigation", { name: "Reading tools" })
-    .getByRole("button", { name: "Search PDF" })
-    .click();
+  await toolbar.getByRole("button", { name: "Search PDF" }).click();
   const field = page.getByPlaceholder("Enter search term...");
   await expect(field).toBeVisible();
   await field.fill("document");
