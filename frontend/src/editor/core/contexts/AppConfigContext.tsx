@@ -61,6 +61,8 @@ export interface AppConfigProviderProps {
   onConfigLoaded?: (config: AppConfig) => void;
   /** Where the config comes from; the default asks this app's backend. Keep it stable. */
   fetchConfig?: () => Promise<AppConfig>;
+  /** Whether this config sets the app-wide PDF access policies; false for a provider nested for another server. */
+  appliesPdfPolicies?: boolean;
 }
 
 function statusOf(error: unknown): number | undefined {
@@ -87,6 +89,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   autoFetch = true,
   onConfigLoaded,
   fetchConfig = fetchAppConfig,
+  appliesPdfPolicies = true,
 }) => {
   const maxRetries = retryOptions?.maxRetries ?? 0;
   const initialDelay = retryOptions?.initialDelay ?? 1000;
@@ -175,14 +178,19 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   ]);
 
   useLayoutEffect(() => {
+    if (!appliesPdfPolicies) return;
     setPdfAccessPolicy(value.config?.honorOwnerPasswords !== false);
-  }, [value.config?.honorOwnerPasswords]);
+  }, [appliesPdfPolicies, value.config?.honorOwnerPasswords]);
 
   useLayoutEffect(() => {
+    if (!appliesPdfPolicies) return;
     setSignedPdfEditPolicy(value.config?.blockSignedPdfEdits === true);
-  }, [value.config?.blockSignedPdfEdits]);
+  }, [appliesPdfPolicies, value.config?.blockSignedPdfEdits]);
 
-  useLayoutEffect(() => () => setPdfAccessPolicy(true), []);
+  useLayoutEffect(() => {
+    if (!appliesPdfPolicies) return;
+    return () => setPdfAccessPolicy(true);
+  }, [appliesPdfPolicies]);
 
   return (
     <AppConfigContext.Provider value={value}>

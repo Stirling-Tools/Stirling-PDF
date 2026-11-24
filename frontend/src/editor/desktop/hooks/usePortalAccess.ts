@@ -2,7 +2,6 @@ import { useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@editor/services/apiClient";
 import { useAuth } from "@editor/auth/context";
-import { useConnectionMode } from "@editor/hooks/useConnectionMode";
 import { useConnectedServerState } from "@editor/hooks/useConnectedServer";
 import {
   connectionIdentityKey,
@@ -27,9 +26,8 @@ async function fetchCloudPortalAccess(): Promise<boolean> {
  * Local mode has no processor.
  */
 export function usePortalAccessState(): PortalAccessState {
-  const mode = useConnectionMode();
   const server = useConnectedServerState();
-  const connected = server.connected;
+  const { connected, mode } = server;
   const { portalAccess, loading } = useAuth();
   const identity = useSyncExternalStore(
     subscribeToConnectionIdentity,
@@ -55,7 +53,8 @@ export function usePortalAccessState(): PortalAccessState {
   if (mode === "selfhosted") {
     return { granted: connected && portalAccess === true, settled: !loading };
   }
-  return { granted: false, settled: mode !== null };
+  // Local mode, or a mode that could not be read: either way, no processor.
+  return { granted: false, settled: true };
 }
 
 export function usePortalAccess(): boolean {

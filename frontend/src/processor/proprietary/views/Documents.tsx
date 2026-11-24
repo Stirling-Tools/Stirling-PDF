@@ -11,6 +11,7 @@ import {
 import { ReviewQueue } from "@processor/components/documents/ReviewQueue";
 import "@processor/views/Documents.css";
 import { downloadFile } from "@editor/services/downloadService";
+import { alert } from "@editor/components/toast";
 
 function csvCell(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;
@@ -59,7 +60,12 @@ export function Documents() {
     const blob = new Blob([toCsv(documents, t)], {
       type: "text/csv;charset=utf-8",
     });
-    void downloadFile({ data: blob, filename: "documents.csv" });
+    downloadFile({ data: blob, filename: "documents.csv" }).catch(() =>
+      alert({
+        alertType: "error",
+        title: t("fileEditor.saveFailed", "Save failed"),
+      }),
+    );
   }
 
   return (
