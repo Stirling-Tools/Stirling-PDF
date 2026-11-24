@@ -15,6 +15,8 @@ export function fileRows(page: Page, name: string) {
   });
 }
 
+/** Dispatches the click on the row's own eye button: the Recent list can
+ * re-sort between the hover and a pointer click, hiding the button. */
 export async function viewFileRow(row: Locator): Promise<void> {
   await row.hover();
   await row.locator(".file-sidebar-eye-btn").dispatchEvent("click");
