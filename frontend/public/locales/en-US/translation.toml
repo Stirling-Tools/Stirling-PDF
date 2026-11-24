@@ -13053,6 +13053,12 @@ title = "Keyboard Shortcuts"
 mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Terms, privacy policy and your cookie preferences."
 label = "Legal"
