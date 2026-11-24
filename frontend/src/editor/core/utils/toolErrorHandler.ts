@@ -56,7 +56,13 @@ export async function resolveToolErrorMessage(
     (error instanceof Error && message === error.message) ||
     (axios.isAxiosError(error) && message === error.response?.data);
   if (!transportText) return message;
-  return (await serverErrorReason(error)) ?? message;
+  const reason = await serverErrorReason(error);
+  if (reason) return reason;
+  // A proxy's HTML error page is no reason; the status line says more.
+  if (/^\s*</.test(message) && error instanceof Error && error.message) {
+    return error.message;
+  }
+  return message;
 }
 
 /**

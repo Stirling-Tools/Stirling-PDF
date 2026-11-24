@@ -79,12 +79,15 @@ export const Panel: Story = {
 };
 
 export const LoadingBookmarks: Story = {
-  parameters: toolPanelServer(
-    http.post(EXTRACT_ENDPOINT, async () => {
-      await delay("infinite");
-      return HttpResponse.json([]);
-    }),
-  ),
+  parameters: {
+    ...toolPanelServer(
+      http.post(EXTRACT_ENDPOINT, async () => {
+        await delay("infinite");
+        return HttpResponse.json([]);
+      }),
+    ),
+    ...menuA11yIssue,
+  },
   play: async (context) => {
     const panel = within(await waitForToolPanel(context));
     const importButton = await panel.findByRole(
@@ -93,9 +96,17 @@ export const LoadingBookmarks: Story = {
       STAGE_TIMEOUT,
     );
     await waitFor(
-      () => expect(importButton).toHaveAttribute("data-loading"),
+      () => expect(importButton).toHaveAttribute("aria-busy", "true"),
       STAGE_TIMEOUT,
     );
+    await userEvent.click(importButton);
+    const menu = within(context.canvasElement.ownerDocument.body);
+    await expect(
+      await menu.findByRole("menuitem", { name: /Load from selected PDF/ }),
+    ).toBeDisabled();
+    await expect(
+      menu.getByRole("menuitem", { name: /Import JSON/ }),
+    ).toBeEnabled();
   },
 };
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, type ReactNode } from "react";
+import { useId, useState, useMemo, type ReactNode } from "react";
 import {
   Stack,
   Text,
@@ -52,6 +52,8 @@ const GroupedFormatDropdown = ({
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t("dropdownList.selectOption");
   const [dropdownOpened, setDropdownOpened] = useState(false);
+  const labelId = useId();
+  const valueId = useId();
 
   const getOptionLabel = (option: FormatOption) =>
     option.labelKey ? t(option.labelKey, option.label) : option.label;
@@ -105,6 +107,9 @@ const GroupedFormatDropdown = ({
           type="button"
           pointer
           label={label}
+          labelProps={{ id: labelId }}
+          // The <label> would otherwise be the whole name, hiding the chosen format.
+          aria-labelledby={label ? `${labelId} ${valueId}` : undefined}
           name={name}
           data-testid={name}
           onClick={() => setDropdownOpened(!dropdownOpened)}
@@ -129,9 +134,11 @@ const GroupedFormatDropdown = ({
             },
           }}
         >
-          {selectedLabel ?? (
-            <Input.Placeholder>{resolvedPlaceholder}</Input.Placeholder>
-          )}
+          <span id={valueId}>
+            {selectedLabel ?? (
+              <Input.Placeholder>{resolvedPlaceholder}</Input.Placeholder>
+            )}
+          </span>
         </InputBase>
       </Popover.Target>
       <Popover.Dropdown

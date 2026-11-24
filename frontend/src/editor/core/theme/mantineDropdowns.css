@@ -11,6 +11,13 @@
   color: inherit;
 }
 
+/* The keyboard-highlighted option is filled with the accent, so its text takes the
+ * accent's foreground rather than the inherited body colour. */
+:root[data-mantine-color-scheme]
+  .mantine-Combobox-option[data-combobox-selected] {
+  color: var(--c-text-on-primary);
+}
+
 :root[data-mantine-color-scheme] .mantine-Combobox-dropdown {
   color: var(--c-text);
 }

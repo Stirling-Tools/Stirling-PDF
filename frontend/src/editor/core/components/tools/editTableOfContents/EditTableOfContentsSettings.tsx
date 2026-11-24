@@ -1,6 +1,14 @@
 import { useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Checkbox, Group, Menu, Stack, Text } from "@mantine/core";
+import {
+  Alert,
+  Checkbox,
+  Group,
+  Loader,
+  Menu,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { Button as DSButton } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { BookmarkNode } from "@editor/utils/editTableOfContents";
@@ -31,6 +39,8 @@ interface ActionItemProps {
   onClick: () => void;
   /** Shown under the label while the item is disabled, so the menu says why. */
   unavailableReason?: string;
+  /** Disables just this item while its action runs. */
+  loading?: boolean;
 }
 
 function ActionItem({
@@ -38,12 +48,13 @@ function ActionItem({
   label,
   onClick,
   unavailableReason,
+  loading = false,
 }: ActionItemProps) {
   return (
     <Menu.Item
       leftSection={<Icon name={icon} size="1rem" />}
       onClick={onClick}
-      disabled={Boolean(unavailableReason)}
+      disabled={loading || Boolean(unavailableReason)}
     >
       <Text size="sm">{label}</Text>
       {unavailableReason && (
@@ -55,15 +66,16 @@ function ActionItem({
   );
 }
 
+/** `busy` shows a spinner on the trigger but leaves the menu open to its other items. */
 function ActionMenu({
   label,
   disabled,
-  loading,
+  busy = false,
   children,
 }: {
   label: string;
   disabled?: boolean;
-  loading?: boolean;
+  busy?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -71,9 +83,15 @@ function ActionMenu({
       <Menu.Target>
         <DSButton
           variant="secondary"
-          rightSection={<Icon name="chevron-down" size="1em" />}
+          rightSection={
+            busy ? (
+              <Loader size="1em" />
+            ) : (
+              <Icon name="chevron-down" size="1em" />
+            )
+          }
+          aria-busy={busy || undefined}
           disabled={disabled}
-          loading={loading}
           fullWidth
         >
           {label}
@@ -151,7 +169,7 @@ export default function EditTableOfContentsSettings({
         <ActionMenu
           label={t("editTableOfContents.actions.importMenu", "Import")}
           disabled={disabled}
-          loading={isLoading}
+          busy={isLoading}
         >
           <ActionItem
             icon="file-text"
@@ -160,6 +178,7 @@ export default function EditTableOfContentsSettings({
               "Load from selected PDF",
             )}
             onClick={onLoadFromPdf}
+            loading={isLoading}
             unavailableReason={
               selectedFileName
                 ? undefined

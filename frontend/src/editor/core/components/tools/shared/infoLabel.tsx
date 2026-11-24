@@ -69,6 +69,32 @@ function addDescribedBy(control: HTMLElement, id: string): () => void {
 }
 
 /**
+ * Names `control` from its label text alone when its description sits inside the
+ * control's own `<label>`, as a switch's does: otherwise the hidden text and the
+ * (i) are read as part of its name, then again as its description.
+ */
+function nameFromLabelText(
+  control: HTMLElement,
+  description: HTMLElement,
+  fallbackId: string,
+): (() => void) | undefined {
+  const label = description.previousElementSibling;
+  if (
+    !control.closest("label")?.contains(description) ||
+    !(label instanceof HTMLElement)
+  ) {
+    return undefined;
+  }
+  const hadId = Boolean(label.id);
+  if (!hadId) label.id = fallbackId;
+  control.setAttribute("aria-labelledby", label.id);
+  return () => {
+    control.removeAttribute("aria-labelledby");
+    if (!hadId) label.removeAttribute("id");
+  };
+}
+
+/**
  * Renders inside the field's description element, which Mantine links to text
  * inputs, selects and textareas (and `ButtonSelector` links to its group). A
  * checkbox's or switch's description is left unlinked by Mantine, so there the
@@ -86,6 +112,7 @@ function InfoDescription({
 }) {
   const { t } = useTranslation();
   const textId = useId();
+  const labelId = useId();
   const textRef = useRef<HTMLSpanElement>(null);
   const [buttonSlot, setButtonSlot] = useState<HTMLElement | null>(null);
 
@@ -99,12 +126,16 @@ function InfoDescription({
     setButtonSlot(slot);
     const control = inlineInputControl(text);
     const unlink = control ? addDescribedBy(control, textId) : undefined;
+    const unname = control
+      ? nameFromLabelText(control, description, labelId)
+      : undefined;
     return () => {
+      unname?.();
       unlink?.();
       slot.remove();
       setButtonSlot(null);
     };
-  }, [textId]);
+  }, [textId, labelId]);
 
   const buttonName =
     typeof label === "string"

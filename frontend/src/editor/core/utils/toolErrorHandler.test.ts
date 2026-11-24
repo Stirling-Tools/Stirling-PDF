@@ -37,6 +37,14 @@ describe("resolveToolErrorMessage", () => {
     ).resolves.toBe("File is encrypted");
   });
 
+  it("shows the status text instead of an HTML error page", async () => {
+    await expect(
+      resolveToolErrorMessage(
+        httpError("<html><body><h1>502 Bad Gateway</h1></body></html>"),
+      ),
+    ).resolves.toBe("Request failed with status code 400");
+  });
+
   it("keeps the status text when the server gave no reason", async () => {
     await expect(resolveToolErrorMessage(httpError(null))).resolves.toBe(
       "Request failed with status code 400",

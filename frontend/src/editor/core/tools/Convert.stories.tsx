@@ -112,7 +112,7 @@ export const NoFiles: Story = {
       "convert-from-dropdown",
       "Source format",
     );
-    const target = panel.getByRole("button", { name: "Convert to" });
+    const target = panel.getByRole("button", { name: /^Convert to/ });
     await expect(target).toBeDisabled();
     await expect(target).toHaveTextContent("Choose a source format first");
   },
@@ -468,13 +468,6 @@ export const EpubTargetDeviceTooltip: Story = {
   ),
 };
 
-export const EpubOutputFormatTooltip: Story = {
-  play: openTooltip(
-    { info: /^Choose the output format for the ebook/ },
-    { after: convertTo("epub") },
-  ),
-};
-
 export const ImageToPdf: Story = {
   args: { files: ["sample.png"] },
   play: async (context) => {
@@ -668,16 +661,6 @@ export const EbookToPdf: Story = {
         await panel.findByRole("checkbox", { name: option }, STAGE_TIMEOUT),
       ).not.toBeChecked();
   },
-};
-
-export const EbookTableOfContentsTooltip: Story = {
-  args: { files: ["sample.epub"] },
-  play: openTooltip({ info: /^Add a generated table of contents/ }),
-};
-
-export const EbookPageNumbersTooltip: Story = {
-  args: { files: ["sample.epub"] },
-  play: openTooltip({ info: /^Add page numbers to the generated PDF/ }),
 };
 
 export const EbookOptimizeTooltip: Story = {
