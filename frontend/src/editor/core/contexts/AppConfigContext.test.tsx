@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { waitFor, renderHook, act } from "@testing-library/react";
+import { waitFor, renderHook, act, render } from "@testing-library/react";
 import {
   AppConfigProvider,
   useAppConfig,
@@ -59,6 +59,53 @@ describe("AppConfigContext", () => {
       expect(getPdfAccess(file)?.honorOwnerPasswords).toBe(false);
       unmount();
       expect(getPdfAccess(file)?.honorOwnerPasswords).toBe(true);
+    } finally {
+      unmount();
+      clearPdfAccess();
+    }
+  });
+
+  it("leaves the PDF policy to the outer provider when a nested one comes and goes", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { honorOwnerPasswords: false },
+    });
+    const file = new File(["PDF"], "restricted.pdf");
+    rememberPdfAccess(file, {
+      password: "",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: false,
+      permissions: 0,
+      pageCount: 1,
+    });
+    const otherServer = vi
+      .fn()
+      .mockResolvedValue({ honorOwnerPasswords: true });
+    const nested = (show: boolean) => (
+      <TestQueryProvider>
+        <AppConfigProvider>
+          {/* Its own cache, as the Processor's PortalFrame gives it. */}
+          {show && (
+            <TestQueryProvider>
+              <AppConfigProvider
+                fetchConfig={otherServer}
+                appliesPdfPolicies={false}
+              >
+                <span />
+              </AppConfigProvider>
+            </TestQueryProvider>
+          )}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+    const { rerender, unmount } = render(nested(true));
+    try {
+      await waitFor(() =>
+        expect(getPdfAccess(file)?.honorOwnerPasswords).toBe(false),
+      );
+      await waitFor(() => expect(otherServer).toHaveBeenCalled());
+      rerender(nested(false));
+      expect(getPdfAccess(file)?.honorOwnerPasswords).toBe(false);
     } finally {
       unmount();
       clearPdfAccess();

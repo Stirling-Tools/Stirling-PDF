@@ -166,7 +166,11 @@ describe("useConnectedServer", () => {
     withAuthStatus("authenticated", { username: "ada" });
     getCurrentModeMock.mockReturnValue(new Promise<never>(() => {}));
     const { result } = renderHook(() => useConnectedServerState());
-    expect(result.current).toEqual({ connected: false, settled: false });
+    expect(result.current).toEqual({
+      connected: false,
+      mode: null,
+      settled: false,
+    });
   });
 
   it("settles on the cached mode once the session has replayed", () => {
@@ -174,7 +178,11 @@ describe("useConnectedServer", () => {
     withAuthStatus("authenticated", { username: "ada" });
     getCurrentModeMock.mockReturnValue(new Promise<never>(() => {}));
     const { result } = renderHook(() => useConnectedServerState());
-    expect(result.current).toEqual({ connected: true, settled: true });
+    expect(result.current).toEqual({
+      connected: true,
+      mode: "selfhosted",
+      settled: true,
+    });
   });
 
   it("settles as not connected when the config cannot be read at all", async () => {
@@ -182,7 +190,11 @@ describe("useConnectedServer", () => {
     getCurrentModeMock.mockRejectedValue(new Error("no config"));
     const { result } = renderHook(() => useConnectedServerState());
     await waitFor(() =>
-      expect(result.current).toEqual({ connected: false, settled: true }),
+      expect(result.current).toEqual({
+        connected: false,
+        mode: null,
+        settled: true,
+      }),
     );
   });
 });

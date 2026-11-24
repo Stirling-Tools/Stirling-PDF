@@ -12,6 +12,8 @@ function isServerMode(mode: ConnectionMode | null): boolean {
 
 export interface ConnectedServerState {
   connected: boolean;
+  /** The mode this answer was read from, so callers never pair it with another read. */
+  mode: ConnectionMode | null;
   /** False until both the session and the mode have been read once. */
   settled: boolean;
 }
@@ -52,6 +54,7 @@ export function useConnectedServerState(): ConnectedServerState {
 
   return {
     connected: isAuthenticated === true && isServerMode(mode),
+    mode,
     settled: isAuthenticated !== null && (mode !== null || modeUnreadable),
   };
 }

@@ -48,10 +48,11 @@ export function AuditExportModal({ open, onClose }: AuditExportModalProps) {
     try {
       const fieldsParam = FIELD_KEYS.filter((k) => fields[k]).join(",");
       const blob = await exportAuditLog(format, fieldsParam);
-      await downloadFile({
+      const result = await downloadFile({
         data: blob,
         filename: `audit-export-${new Date().toISOString()}.${format}`,
       });
+      if (result.cancelled) return;
       onClose();
     } catch {
       setError(t("portal.infrastructure.audit.export.error"));
