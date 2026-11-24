@@ -32,6 +32,24 @@ describe("buildCertSignFormData - hardware cert types", () => {
     expect(formData.get("jksFile")).toBeNull();
   });
 
+  test("MACOS_KEYCHAIN sends certType and alias, no files or driver", () => {
+    const formData = buildCertSignFormData(
+      params({
+        signMode: "MANUAL",
+        certType: "MACOS_KEYCHAIN",
+        alias: "a0c6e71c07be96556aaab6ed6a73e3ccd1b5b3e9",
+      }),
+      pdf(),
+    );
+
+    expect(formData.get("certType")).toBe("MACOS_KEYCHAIN");
+    expect(formData.get("alias")).toBe(
+      "a0c6e71c07be96556aaab6ed6a73e3ccd1b5b3e9",
+    );
+    expect(formData.get("pkcs11LibraryPath")).toBeNull();
+    expect(formData.get("p12File")).toBeNull();
+  });
+
   test("PKCS11 sends driver path, slot, alias and PIN (as password)", () => {
     const formData = buildCertSignFormData(
       params({

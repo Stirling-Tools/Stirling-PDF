@@ -328,6 +328,7 @@ import Underline from "lucide-static/icons/underline.svg?react";
 import Undo2 from "lucide-static/icons/undo-2.svg?react";
 import Unlink from "lucide-static/icons/unlink.svg?react";
 import Upload from "lucide-static/icons/upload.svg?react";
+import Usb from "lucide-static/icons/usb.svg?react";
 import User from "lucide-static/icons/user.svg?react";
 import UserCheck from "lucide-static/icons/user-check.svg?react";
 import UserCog from "lucide-static/icons/user-cog.svg?react";
@@ -764,6 +765,7 @@ export const ICONS = {
   "undo-2": { Component: Undo2, kind: "lucide" },
   unlink: { Component: Unlink, kind: "lucide" },
   upload: { Component: Upload, kind: "lucide" },
+  usb: { Component: Usb, kind: "lucide" },
   user: { Component: User, kind: "lucide" },
   "user-check": { Component: UserCheck, kind: "lucide" },
   "user-cog": { Component: UserCog, kind: "lucide" },

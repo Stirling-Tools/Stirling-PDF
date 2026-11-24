@@ -24,6 +24,7 @@ import { qk } from "@processor/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
 import { PipelinesTable } from "@processor/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@processor/components/pipelines/PipelineTemplateCard";
+import { ActivityPipelineSuggestions } from "@processor/components/pipelines/ActivityPipelineSuggestions";
 import { PolicySetupWizard } from "@processor/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@processor/hooks/useAiEngineEnabled";
 import { useCanManagePolicies } from "@processor/queries/policyPermissions";
@@ -253,6 +254,11 @@ export function Pipelines() {
           <PipelinesTable pipelines={pipelines} onRowClick={openListRow} />
         )}
       </section>
+
+      <ActivityPipelineSuggestions
+        pipelines={pipelines}
+        onOpen={(draft) => navigate(`${listPath}/new`, { state: { draft } })}
+      />
 
       {galleryEntries.length > 0 && (
         <section className="portal-pipelines__templates">

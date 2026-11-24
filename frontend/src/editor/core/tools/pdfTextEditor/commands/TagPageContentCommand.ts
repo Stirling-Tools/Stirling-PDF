@@ -31,10 +31,12 @@ import {
   ARTIFACT_TAG,
   highestMcid,
   innermostMcid,
+  markListKey,
   readTagMarks,
   type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
+  oneObjectPerMarkList,
   restoreObject,
   retagObject,
   type ObjectRetag,
@@ -45,21 +47,34 @@ const FPDF_PAGEOBJ_SHADING = 4;
 const TEXT_TAG: StructureType = "P";
 const IMAGE_TAG: StructureType = "Figure";
 
+/** A run a step tags, and the marks it had before. */
+interface StepRun {
+  id: string;
+  marks: readonly TagMark[];
+}
+
+/** An image drawn on a mark list a text step tags, as it was before. */
+interface StepImage {
+  id: string;
+  mcid: number | null;
+  artifact: boolean;
+}
+
 type Step =
   | {
       kind: "text";
-      runId: string;
+      runs: StepRun[];
+      images: StepImage[];
       type: StructureType;
       mcid: number;
       objects: ObjectRetag[];
-      runMarks: readonly TagMark[];
     }
   | {
       kind: "furniture";
-      runId: string;
+      runs: StepRun[];
+      images: StepImage[];
       tag: TagMark;
       objects: ObjectRetag[];
-      runMarks: readonly TagMark[];
     }
   | { kind: "image"; imageId: string; mcid: number; object: ObjectRetag }
   | {
@@ -69,6 +84,11 @@ type Step =
       object: ObjectRetag;
     }
   | { kind: "artifact"; object: ObjectRetag };
+
+interface Located {
+  at: number;
+  step: Step;
+}
 
 interface Plan {
   steps: Step[];
@@ -222,7 +242,9 @@ export function textRunsToTag(
     new Map(),
     new Map(),
   );
-  return steps.flatMap((step) => (step.kind === "text" ? [step.runId] : []));
+  return steps.flatMap((step) =>
+    step.kind === "text" ? step.runs.map((run) => run.id) : [],
+  );
 }
 
 /** True when TagPageContentCommand would change anything on the page, which must already be read. */
@@ -270,7 +292,56 @@ function planTagging(
 
   const order = contentOrder(m, page.pagePtr);
   let nextMcid = structure.freeMcid(highestMcid(m, page.pagePtr));
-  const located: { at: number; step: Step }[] = [];
+  const located: Located[] = [];
+  // Objects on one mark list can only carry one tag between them (markListKey),
+  // so the first step to reach a list claims every object drawn on it.
+  const byList = new Map<number, Located>();
+  const stepSharingAList = (objects: readonly ObjectRetag[]) => {
+    for (const { ptr } of objects) {
+      const key = markListKey(m, ptr);
+      const owner = key === null ? undefined : byList.get(key);
+      if (owner) return owner;
+    }
+    return null;
+  };
+  const claim = (objects: readonly ObjectRetag[], entry: Located) => {
+    located.push(entry);
+    for (const { ptr } of objects) {
+      const key = markListKey(m, ptr);
+      if (key !== null) byList.set(key, entry);
+    }
+  };
+  const joinStep = (
+    owner: Located,
+    at: number,
+    run: StepRun,
+    objects: ObjectRetag[],
+  ) => {
+    let step = owner.step;
+    if (step.kind !== "text" && step.kind !== "furniture") return;
+    // The list takes one tag whichever run reached it first, and hiding content a
+    // reader needs is worse than reading a page number out, so text wins.
+    if (step.kind === "furniture" && !furniture.has(run.id)) {
+      step = {
+        kind: "text",
+        runs: step.runs,
+        images: step.images,
+        type: headings.get(run.id) ?? TEXT_TAG,
+        mcid: nextMcid++,
+        objects: step.objects,
+      };
+      owner.step = step;
+    } else if (step.kind === "text" && step.type === TEXT_TAG) {
+      step.type = headings.get(run.id) ?? TEXT_TAG;
+    }
+    owner.at = Math.min(owner.at, at);
+    step.runs.push(run);
+    step.objects.push(...objects);
+    for (const { ptr } of objects) {
+      const key = markListKey(m, ptr);
+      if (key !== null) byList.set(key, owner);
+    }
+  };
 
   for (const run of page.runs) {
     const containers = collectContainersByPtr(run);
@@ -294,25 +365,30 @@ function planTagging(
     const at = Math.min(
       ...objects.map(({ ptr }) => order.get(ptr) ?? Infinity),
     );
-    const runMarks = run.tagMarks;
+    const stepRun = { id: run.id, marks: run.tagMarks };
+    const sharing = stepSharingAList(objects);
+    if (sharing) {
+      joinStep(sharing, at, stepRun, objects);
+      continue;
+    }
     const kind = furniture.get(run.id);
-    located.push({
+    claim(objects, {
       at,
       step: kind
         ? {
             kind: "furniture",
-            runId: run.id,
+            runs: [stepRun],
+            images: [],
             tag: furnitureTag(kind),
             objects,
-            runMarks,
           }
         : {
             kind: "text",
-            runId: run.id,
+            runs: [stepRun],
+            images: [],
             type: headings.get(run.id) ?? TEXT_TAG,
             mcid: nextMcid++,
             objects,
-            runMarks,
           },
     });
   }
@@ -322,8 +398,20 @@ function planTagging(
       image.containerPtr === 0 ? untagged(image.pdfiumObjPtr) : null;
     if (!dropped) continue;
     const object = { ptr: image.pdfiumObjPtr, dropped };
+    // Drawn in a text block's marked content: retagging the block retags it too.
+    const owner = stepSharingAList([object]);
+    if (owner) {
+      if (owner.step.kind === "text" || owner.step.kind === "furniture") {
+        owner.step.images.push({
+          id: image.id,
+          mcid: image.mcid,
+          artifact: image.artifact,
+        });
+      }
+      continue;
+    }
     const kind = furniture.get(image.id);
-    located.push({
+    claim([object], {
       at: order.get(image.pdfiumObjPtr) ?? Infinity,
       step: kind
         ? {
@@ -340,12 +428,10 @@ function planTagging(
     const type = m.FPDFPageObj_GetType(ptr);
     if (type !== FPDF_PAGEOBJ_PATH && type !== FPDF_PAGEOBJ_SHADING) continue;
     const dropped = untagged(ptr);
-    if (dropped) {
-      located.push({
-        at,
-        step: { kind: "artifact", object: { ptr, dropped } },
-      });
-    }
+    if (!dropped) continue;
+    const object = { ptr, dropped };
+    if (stepSharingAList([object])) continue;
+    claim([object], { at, step: { kind: "artifact", object } });
   }
 
   located.sort((a, b) => a.at - b.at);
@@ -424,19 +510,23 @@ function applyStep(
 ): void {
   switch (step.kind) {
     case "text": {
-      const run = page.runs.find((r) => r.id === step.runId);
-      if (!run) throw new Error(`no run ${step.runId}`);
+      const runs = stepRuns(page, step.runs);
       const tag = { name: step.type, mcid: step.mcid };
-      for (const object of step.objects) retagObject(doc, object, tag);
-      run.tagMarks = [tag];
+      for (const object of oneObjectPerMarkList(doc.module, step.objects)) {
+        retagObject(doc, object, tag);
+      }
+      for (const run of runs) run.tagMarks = [tag];
+      setStepImages(page, step.images, tag);
       structure.addElement(step.mcid, step.type, follows.get(step.mcid));
       return;
     }
     case "furniture": {
-      const run = page.runs.find((r) => r.id === step.runId);
-      if (!run) throw new Error(`no run ${step.runId}`);
-      for (const object of step.objects) retagObject(doc, object, step.tag);
-      run.tagMarks = [step.tag];
+      const runs = stepRuns(page, step.runs);
+      for (const object of oneObjectPerMarkList(doc.module, step.objects)) {
+        retagObject(doc, object, step.tag);
+      }
+      for (const run of runs) run.tagMarks = [step.tag];
+      setStepImages(page, step.images, step.tag);
       return;
     }
     case "furnitureImage": {
@@ -459,6 +549,43 @@ function applyStep(
   }
 }
 
+function stepRuns(page: Page, runs: readonly StepRun[]) {
+  return runs.map(({ id }) => {
+    const run = page.runs.find((r) => r.id === id);
+    if (!run) throw new Error(`no run ${id}`);
+    return run;
+  });
+}
+
+function setStepImages(
+  page: Page,
+  images: readonly StepImage[],
+  tag: TagMark,
+): void {
+  for (const { id } of images) {
+    const image = page.findImage(id);
+    if (!image) continue;
+    image.artifact = tag.name === ARTIFACT_TAG;
+    image.mcid = tag.mcid;
+  }
+}
+
+function restoreStepImages(page: Page, images: readonly StepImage[]): void {
+  for (const { id, mcid, artifact } of images) {
+    const image = page.findImage(id);
+    if (!image) continue;
+    image.mcid = mcid;
+    image.artifact = artifact;
+  }
+}
+
+function restoreRunMarks(page: Page, runs: readonly StepRun[]): void {
+  for (const { id, marks } of runs) {
+    const run = page.runs.find((r) => r.id === id);
+    if (run) run.tagMarks = marks;
+  }
+}
+
 /** Undo applyStep. Best effort: a step half applied is undone as far as it went. */
 function revertStep(
   doc: EditorDocument,
@@ -468,18 +595,20 @@ function revertStep(
 ): void {
   switch (step.kind) {
     case "text": {
-      for (const object of step.objects) restoreObject(doc, object, step.type);
-      const run = page.runs.find((r) => r.id === step.runId);
-      if (run) run.tagMarks = step.runMarks;
+      for (const object of oneObjectPerMarkList(doc.module, step.objects)) {
+        restoreObject(doc, object, step.type);
+      }
+      restoreRunMarks(page, step.runs);
+      restoreStepImages(page, step.images);
       structure.removeElement(step.mcid);
       return;
     }
     case "furniture": {
-      for (const object of step.objects) {
+      for (const object of oneObjectPerMarkList(doc.module, step.objects)) {
         restoreObject(doc, object, ARTIFACT_TAG);
       }
-      const run = page.runs.find((r) => r.id === step.runId);
-      if (run) run.tagMarks = step.runMarks;
+      restoreRunMarks(page, step.runs);
+      restoreStepImages(page, step.images);
       return;
     }
     case "furnitureImage": {
