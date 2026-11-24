@@ -10,8 +10,16 @@ export interface CertSignParameters extends BaseParameters {
   //  DEVICE = a certificate held on this machine (Windows store or USB PKCS#11 token, desktop only).
   signMode: "MANUAL" | "AUTO" | "DEVICE";
   // For MANUAL this is the uploaded file format; for DEVICE it is the hardware kind
-  // (WINDOWS_STORE or PKCS11). Hardware kinds are only offered in the desktop app.
-  certType: "" | "PEM" | "PKCS12" | "PFX" | "JKS" | "WINDOWS_STORE" | "PKCS11";
+  // (WINDOWS_STORE, MACOS_KEYCHAIN or PKCS11). Hardware kinds are only offered in the desktop app.
+  certType:
+    | ""
+    | "PEM"
+    | "PKCS12"
+    | "PFX"
+    | "JKS"
+    | "WINDOWS_STORE"
+    | "MACOS_KEYCHAIN"
+    | "PKCS11";
   privateKeyFile?: File;
   certFile?: File;
   p12File?: File;
@@ -71,7 +79,8 @@ export function validateCertSignParameters(
     case "JKS":
       return !!params.jksFile;
     case "WINDOWS_STORE":
-      // Need a chosen certificate from the Windows store.
+    case "MACOS_KEYCHAIN":
+      // Need a chosen certificate from the OS store.
       return !!params.alias;
     case "PKCS11":
       // Need a driver library and a chosen certificate on the token.
