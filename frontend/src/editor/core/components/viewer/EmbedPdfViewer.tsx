@@ -145,7 +145,10 @@ const EmbedPdfViewerContent = ({
   const damagedRepair = useDamagedFileRepair();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
-  const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  // Read only by the keydown handler; a ref avoids re-rendering on hover.
+  const isViewerHoveredRef = React.useRef(false);
+  // The pages' scrollbar, which the page bar stops short of to centre on them.
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const registeredPageTool = useViewerPageTool();
 
   const {
@@ -891,7 +894,7 @@ const EmbedPdfViewerContent = ({
       // All remaining shortcuts require the viewer to be hovered so they
       // don't conflict with the rest of the UI when the viewer is mounted
       // but not the active focus target. A page tool binds its own.
-      if (!isViewerHovered || pageToolActive) return;
+      if (!isViewerHoveredRef.current || pageToolActive) return;
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
@@ -976,7 +979,6 @@ const EmbedPdfViewerContent = ({
     };
   }, [
     pageToolActive,
-    isViewerHovered,
     isSearchInterfaceVisible,
     zoomActions,
     searchInterfaceActions,
@@ -1925,8 +1927,12 @@ const EmbedPdfViewerContent = ({
   return (
     <Box
       ref={viewerRef}
-      onMouseEnter={() => setIsViewerHovered(true)}
-      onMouseLeave={() => setIsViewerHovered(false)}
+      onMouseEnter={() => {
+        isViewerHoveredRef.current = true;
+      }}
+      onMouseLeave={() => {
+        isViewerHoveredRef.current = false;
+      }}
       style={{
         position: "relative",
         height: "100%",
@@ -2022,6 +2028,7 @@ const EmbedPdfViewerContent = ({
               key={currentFileRootId || "no-file"}
               shouldSkipBytes={shouldSkipBytes}
               onPageLayout={handleViewerPageLayout}
+              onScrollbarWidthChange={setScrollbarWidth}
               onDocumentSwapped={handleDocumentSwapped}
               onDocumentSwapFailed={handleDocumentSwapFailed}
               onDocumentReady={documentReady}
@@ -2136,7 +2143,13 @@ const EmbedPdfViewerContent = ({
             // floating card rather than one welded to the viewport edge.
             bottom: "0.5rem",
             left: 0,
-            right: 0,
+            // Centres on the pages: clear of the side panels (always on the
+            // right) and the scrollbar (on the inline end, so left in RTL). As
+            // the toolbar's size container, a narrow dock drops controls
+            // rather than overlapping a panel.
+            right: `${totalRightMargin}rem`,
+            paddingInlineEnd: `${scrollbarWidth}px`,
+            transition: "right 0.3s ease",
             zIndex: 50,
             display: "flex",
             justifyContent: "center",

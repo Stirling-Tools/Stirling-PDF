@@ -44,6 +44,7 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
       ? scrollState?.currentPage
       : Math.min(scrollState.currentPage, totalPages);
 
+  // Publish state without unregistering; cleanup runs on unmount only.
   useLayoutEffect(() => {
     const currentScroll = scrollRef.current;
     if (
@@ -51,24 +52,21 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
       currentPage !== undefined &&
       totalPages !== undefined
     ) {
-      const newState = {
-        currentPage,
-        totalPages,
-      };
-
       // Trigger immediate update for responsive UI
-      triggerImmediateScrollUpdate(newState.currentPage, newState.totalPages);
+      triggerImmediateScrollUpdate(currentPage, totalPages);
 
       registerBridge("scroll", {
-        state: newState,
+        state: { currentPage, totalPages },
         api: currentScroll,
       });
     }
+  }, [currentPage, totalPages, registerBridge, triggerImmediateScrollUpdate]);
 
+  useLayoutEffect(() => {
     return () => {
       registerBridge("scroll", null);
     };
-  }, [currentPage, totalPages, registerBridge, triggerImmediateScrollUpdate]);
+  }, [registerBridge]);
 
   return null;
 }
