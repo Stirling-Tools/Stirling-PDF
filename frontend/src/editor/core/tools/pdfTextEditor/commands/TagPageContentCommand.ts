@@ -317,8 +317,23 @@ function planTagging(
     run: StepRun,
     objects: ObjectRetag[],
   ) => {
-    const step = owner.step;
+    let step = owner.step;
     if (step.kind !== "text" && step.kind !== "furniture") return;
+    // The list takes one tag whichever run reached it first, and hiding content a
+    // reader needs is worse than reading a page number out, so text wins.
+    if (step.kind === "furniture" && !furniture.has(run.id)) {
+      step = {
+        kind: "text",
+        runs: step.runs,
+        images: step.images,
+        type: headings.get(run.id) ?? TEXT_TAG,
+        mcid: nextMcid++,
+        objects: step.objects,
+      };
+      owner.step = step;
+    } else if (step.kind === "text" && step.type === TEXT_TAG) {
+      step.type = headings.get(run.id) ?? TEXT_TAG;
+    }
     owner.at = Math.min(owner.at, at);
     step.runs.push(run);
     step.objects.push(...objects);

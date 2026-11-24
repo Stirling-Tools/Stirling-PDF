@@ -6,6 +6,7 @@ import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import type { ReviewItem } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
 import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import { imageAccessibility } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import { cssString } from "@editor/tools/pdfTextEditor/util/cssString";
 import {
   artifactName,
   typeName,
@@ -80,8 +81,4 @@ function badgeText(
   return item.status === "done"
     ? t("pdfTextEditor.review.badge.described", "Described")
     : t("pdfTextEditor.review.badge.noDescription", "Needs a description");
-}
-
-function cssString(text: string): string {
-  return `"${text.replace(/["\\]/g, "\\$&")}"`;
 }

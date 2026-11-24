@@ -882,6 +882,32 @@ describe("a merged page whose tree was not carried over", () => {
   });
 });
 
+describe("a sequence shared by a page number and text, tagged automatically", () => {
+  const SHARED =
+    "/P <</MCID 7>> BDC BT /F1 12 Tf 72 40 Td (3) Tj 60 0 Td (Confidential) Tj ET EMC\n";
+
+  test("tags it as the text, not as the page number reached first", async () => {
+    const doc = await open(pagePdf(SHARED));
+    const [pageNumber, notice] = doc.page(0).runs;
+    const history = new HistoryStack();
+    history.execute(
+      new TagPageContentCommand({
+        pageIndex: 0,
+        furniture: new Map([[pageNumber.id, "PageNum"]]),
+        headings: new Map([[notice.id, "H2"]]),
+      }),
+      doc,
+    );
+
+    expect(marksByType(doc).get(1)).toEqual([["H2"], ["H2"]]);
+    expect(doc.structure(0).addedElements()).toHaveLength(1);
+
+    history.undo(doc);
+    expect(marksByType(doc).get(1)).toEqual([["P"], ["P"]]);
+    expect(doc.structure(0).addedElements()).toEqual([]);
+  });
+});
+
 describe("content sharing one marked-content sequence, tagged from the card", () => {
   const SHARED =
     "/P <</MCID 7>> BDC BT /F1 12 Tf 72 700 Td (Region) Tj 60 0 Td (North) Tj ET EMC\n";

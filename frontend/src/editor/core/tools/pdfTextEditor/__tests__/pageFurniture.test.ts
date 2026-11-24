@@ -199,6 +199,17 @@ describe("recogniseFurniture", () => {
     expect(found.size).toBe(0);
   });
 
+  it.each(["Figure 3", "Fig. 3", "Part 3", "Step 3", "Table 3"])(
+    "leaves a lone %s that labels something else, at its own page's edge",
+    (text) => {
+      const found = recogniseFurniture(
+        [page(2, [run("a", text, 30), run("b", text, 760)])],
+        12,
+      );
+      expect(found.size).toBe(0);
+    },
+  );
+
   it.each([
     ["alone", (n: number) => `${n}`],
     ["after a word", (n: number) => `Page ${n}`],
