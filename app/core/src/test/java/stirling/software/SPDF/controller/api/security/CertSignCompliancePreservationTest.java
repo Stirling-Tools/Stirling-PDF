@@ -11,7 +11,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.Loader;
@@ -33,6 +35,7 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.core.io.ClassPathResource;
@@ -70,6 +73,33 @@ class CertSignCompliancePreservationTest {
         try (PDDocument doc = Loader.loadPDF(signed)) {
             assertEquals(1, doc.getSignatureDictionaries().size());
         }
+    }
+
+    @Test
+    void signatureWidgetKeyStaysPastAStaleParentTreeNextKey() throws Exception {
+        byte[] signed = sign(buildPdfa2bPdfUa1Document(0), false, false);
+
+        try (PDDocument doc = Loader.loadPDF(signed)) {
+            PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
+            int widgetKey =
+                    doc.getSignatureFields().getFirst().getWidgets().getFirst().getStructParent();
+            assertEquals(1, widgetKey);
+            assertEquals(2, root.getParentTreeNextKey());
+            assertEquals(List.of(0, 1), parentTreeKeys(root.getParentTree()));
+        }
+    }
+
+    private static List<Integer> parentTreeKeys(PDNumberTreeNode node) throws Exception {
+        List<Integer> keys = new ArrayList<>();
+        if (node.getNumbers() != null) {
+            keys.addAll(new TreeMap<>(node.getNumbers()).keySet());
+        }
+        if (node.getKids() != null) {
+            for (PDNumberTreeNode kid : node.getKids()) {
+                keys.addAll(parentTreeKeys(kid));
+            }
+        }
+        return keys;
     }
 
     private static byte[] sign(byte[] source, boolean showSignature, boolean showLogo)
@@ -127,6 +157,10 @@ class CertSignCompliancePreservationTest {
     }
 
     private static byte[] buildPdfa2bPdfUa1Document() throws Exception {
+        return buildPdfa2bPdfUa1Document(1);
+    }
+
+    private static byte[] buildPdfa2bPdfUa1Document(int parentTreeNextKey) throws Exception {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);
@@ -168,7 +202,7 @@ class CertSignCompliancePreservationTest {
             nums.add(pageKids);
             parentTree.getCOSObject().setItem(COSName.NUMS, nums);
             root.setParentTree(parentTree);
-            root.setParentTreeNextKey(1);
+            root.setParentTreeNextKey(parentTreeNextKey);
 
             PDMarkInfo markInfo = new PDMarkInfo();
             markInfo.setMarked(true);

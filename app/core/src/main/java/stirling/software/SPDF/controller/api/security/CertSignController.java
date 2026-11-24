@@ -254,10 +254,7 @@ public class CertSignController {
         form.appendKid(reference);
         parent.appendKid(form);
 
-        int key = root.getParentTreeNextKey();
-        if (key < 0) {
-            key = nextParentTreeKey(root.getParentTree());
-        }
+        int key = Math.max(root.getParentTreeNextKey(), nextParentTreeKey(root.getParentTree()));
         widget.setStructParent(key);
         addParentTreeEntry(root, key, form);
         root.setParentTreeNextKey(key + 1);
