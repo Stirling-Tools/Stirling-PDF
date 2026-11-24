@@ -2,6 +2,7 @@
 
 import { DEFAULT_LABEL_ICON } from "@editor/data/labelIcons";
 import { accentColor, accentCycleColor } from "@editor/utils/accentColors";
+import { libraryFileDate } from "@editor/components/filesPage/libraryFileDate";
 import type { SidebarCategory } from "@editor/services/fileSidebarCategories";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileSidebarGroup } from "@editor-core/components/shared/fileSidebarGrouping";
@@ -27,7 +28,7 @@ export function bucketStubsByLabel(
 }
 
 /**
- * Pure grouping: Recent (top {@link RECENT_COUNT} by lastModified), then one group per VISIBLE
+ * Pure grouping: Recent (top {@link RECENT_COUNT} most recently added), then one group per VISIBLE
  * category with ≥1 file (a file lands in every category it has a label in), sorted alphabetically,
  * then Other (files in no visible category) last. Categories are the fixed, shared set; a category
  * the user has hidden forms no group, so its files fall to Other.
@@ -40,7 +41,7 @@ export function buildLabelGroups(
   if (stubs.length === 0) return null;
 
   const recent = [...stubs]
-    .sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
+    .sort((a, b) => libraryFileDate(b, "recent") - libraryFileDate(a, "recent"))
     .slice(0, RECENT_COUNT);
 
   const visible: Omit<FileSidebarGroup, "color">[] = [];

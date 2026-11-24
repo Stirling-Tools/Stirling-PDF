@@ -67,6 +67,7 @@ import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
 import { useOpenInNewWindow } from "@editor/extensions/openInNewWindow";
 import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
 import { alert } from "@editor/components/toast";
+import { libraryFileDate } from "@editor/components/filesPage/libraryFileDate";
 import {
   BULK_ADD_INDICATOR_MIN,
   useBulkAddProgress,
@@ -697,7 +698,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         );
         setAllFileStubs(
           currentStubs.sort(
-            (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
+            (a, b) =>
+              libraryFileDate(b, "recent") - libraryFileDate(a, "recent"),
           ),
         );
       } finally {
