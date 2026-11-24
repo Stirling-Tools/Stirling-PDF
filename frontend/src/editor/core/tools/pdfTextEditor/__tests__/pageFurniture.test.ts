@@ -169,8 +169,34 @@ describe("recogniseFurniture", () => {
     expect(found.get(0)?.has("m0")).toBe(false);
   });
 
-  it("needs two pages, however short the document", () => {
-    expect(recogniseFurniture([furnished(0)], 1).size).toBe(0);
+  it("needs two pages for headers and footers, however short the document", () => {
+    expect(recogniseFurniture([furnished(0)], 1).get(0)).toEqual(
+      new Map([["n0", "PageNum"]]),
+    );
+  });
+
+  it("finds a page number shown once that numbers its own page", () => {
+    const found = recogniseFurniture(
+      [
+        page(2, [run("a", "Page 3", 30)]),
+        page(3, [run("b", "4 of 12", 30)]),
+        page(4, [run("c", "- 5 -", 760)]),
+      ],
+      12,
+    );
+    expect([kindsOn(found, 2), kindsOn(found, 3), kindsOn(found, 4)]).toEqual([
+      { a: "PageNum" },
+      { b: "PageNum" },
+      { c: "PageNum" },
+    ]);
+  });
+
+  it("leaves a lone number that is not its page's, or that opens a heading", () => {
+    const found = recogniseFurniture(
+      [page(0, [run("a", "Page 7", 30), run("b", "1 Introduction", 760)])],
+      12,
+    );
+    expect(found.size).toBe(0);
   });
 
   it.each([

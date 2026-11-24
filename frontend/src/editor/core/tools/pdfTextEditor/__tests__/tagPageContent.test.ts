@@ -464,7 +464,7 @@ describe("tagAllPages", () => {
     store.dispose();
   });
 
-  test("tags a file that has tags already as paragraphs only", async () => {
+  test("keeps paragraphs on a tagged page, and guesses headings on the untagged ones", async () => {
     const store = await storeFor(
       linesPdf([
         [line("F1", 11, 700, BODY_LINE)],
@@ -479,7 +479,8 @@ describe("tagAllPages", () => {
     PdfiumTextReader.populate(doc, doc.page(0));
     store.history.execute(new TagPageContentCommand({ pageIndex: 0 }), doc);
     await tagAllPages(store);
-    expect(new Set(tagsShown(doc, 1).values())).toEqual(new Set(["P"]));
+    expect(new Set(tagsShown(doc, 0).values())).toEqual(new Set(["P"]));
+    expect(tagsShown(doc, 1).get("Annual report")).toBe("H1");
     store.dispose();
   });
 
