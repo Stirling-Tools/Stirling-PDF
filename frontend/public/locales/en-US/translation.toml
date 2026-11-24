@@ -398,6 +398,12 @@ failed = "An error occurred while adding stamp to the PDF."
 [AddStampRequest.results]
 title = "Stamp Results"
 
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
+
 [AddStampRequest.template]
 custom = "Custom"
 dateHeader = "Date Header"
@@ -415,9 +421,6 @@ timestamp = "Timestamp"
 examplesHint = "Replaces the stamp text"
 help = "What each variable means"
 open = "Insert a variable"
-
-[AddStampRequest.variableTips]
-title = "Stamp variables"
 
 [addText]
 applySignatures = "Apply Text"

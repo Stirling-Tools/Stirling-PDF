@@ -7,15 +7,32 @@ import {
 
 const code = (text: string) => `<code>${text}</code>`;
 
-/** What every stamp @ variable fills in, for the variable picker's help link. */
+/** What stamp text prints and every @ variable it can hold, for the variable picker's help link. */
 export const useStampVariableTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
     header: {
-      title: t("AddStampRequest.variableTips.title", "Stamp variables"),
+      title: t("AddStampRequest.stampText", "Stamp Text"),
     },
     tips: [
+      {
+        title: t("AddStampRequest.stampTextTips.title", "What gets printed"),
+        description: t(
+          "AddStampRequest.stampTextTips.description",
+          "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied.",
+        ),
+        bullets: [
+          t(
+            "AddStampRequest.stampTextTips.newLine",
+            "Type <code>\\n</code> to start a new line",
+          ),
+          t(
+            "AddStampRequest.stampTextTips.literalAt",
+            "Type <code>@@</code> for a literal @",
+          ),
+        ],
+      },
       ...stampVariableGroups(t).map((group) => ({
         title: group.title,
         bullets: group.variables.map(
