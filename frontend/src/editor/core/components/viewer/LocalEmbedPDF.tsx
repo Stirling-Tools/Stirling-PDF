@@ -24,10 +24,14 @@ import { useSignaturePreviewHistory } from "@editor/hooks/signing/useSignaturePr
 import {
   Viewport,
   ViewportPluginPackage,
+  useViewportElement,
 } from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
-import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
+import {
+  RenderLayer,
+  RenderPluginPackage,
+} from "@embedpdf/plugin-render/react";
 import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
@@ -204,6 +208,8 @@ interface LocalEmbedPDFProps {
   shouldSkipBytes?: (stableKey: string) => boolean;
   /** Fires from the layout pass that mounts a page, before it paints. */
   onPageLayout?: () => void;
+  /** Reports the width the pages' scrollbar takes, 0 while there is none. */
+  onScrollbarWidthChange?: (width: number) => void;
   /** Fires when the swap bridge activates a replacement document. */
   onDocumentSwapped?: (documentId: string) => void;
   /** Fires when the swap bridge fails to open or activate a replacement document. */
@@ -429,6 +435,8 @@ const PDF_RENDER_FILTERS: Record<PdfRenderMode, string | undefined> = {
   sepia: "sepia(0.7) brightness(0.85)",
 };
 
+const PAGE_PREVIEW_MAX_EDGE = 1024;
+
 interface PageLayerProps {
   documentId: string;
   pageIndex: number;
@@ -482,6 +490,51 @@ function PageTiles({
       }}
     >
       <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+    </div>
+  );
+}
+
+/** Low-resolution page bitmap under the tiles, painted before the first tile. */
+function PagePreview({
+  documentId,
+  pageIndex,
+  renderMode,
+  hidden = false,
+}: PageLayerProps & { renderMode: PdfRenderMode; hidden?: boolean }) {
+  const documentState = useDocumentState(documentId);
+  const page = documentState?.document?.pages?.[pageIndex];
+  if (!page) return null;
+  const longestEdge = Math.max(page.size.width, page.size.height);
+  const scale =
+    Number.isFinite(longestEdge) && longestEdge > 0
+      ? Math.min(1, PAGE_PREVIEW_MAX_EDGE / longestEdge)
+      : 1;
+
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+        transition: "filter 0.25s ease",
+        filter: PDF_RENDER_FILTERS[renderMode],
+        visibility: hidden ? "hidden" : undefined,
+      }}
+    >
+      <RenderLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        scale={scale}
+        dpr={1}
+        className="pdf-page-preview"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+        }}
+      />
     </div>
   );
 }
@@ -737,11 +790,17 @@ function PageLayers({
       )}
     </>
   );
-  // The tiles keep their place in the tree and stay mounted, only hidden, under
-  // a page tool: remounting them blanks the page while they reload, on the way
-  // into the tool and again on the way out.
+  // The preview and tiles keep their place in the tree and stay mounted, only
+  // hidden, under a page tool: remounting them blanks the page while they
+  // reload, on the way into the tool and again on the way out.
   return (
     <>
+      <PagePreview
+        documentId={documentId}
+        pageIndex={pageIndex}
+        renderMode={pdfRenderMode}
+        hidden={toolCovers}
+      />
       <PageTiles
         documentId={documentId}
         pageIndex={pageIndex}
@@ -789,9 +848,38 @@ function ViewerPage({
 interface DocumentViewportProps {
   documentId: string;
   pageOptions: ViewerPageOptions;
+  onScrollbarWidthChange?: (width: number) => void;
 }
 
-function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
+/** Reports the viewport's scrollbar width as it appears, goes or resizes. */
+function ScrollbarWidthReporter({
+  onChange,
+}: {
+  onChange: (width: number) => void;
+}) {
+  const viewportRef = useViewportElement();
+  useEffect(() => {
+    const el = viewportRef?.current;
+    if (!el) return undefined;
+    // A scrollbar coming or going resizes the content box, which this sees.
+    const report = () => onChange(el.offsetWidth - el.clientWidth);
+    report();
+    const observer = new ResizeObserver(report);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      // Without a viewport there is no scrollbar to clear.
+      onChange(0);
+    };
+  }, [viewportRef, onChange]);
+  return null;
+}
+
+function DocumentViewport({
+  documentId,
+  pageOptions,
+  onScrollbarWidthChange,
+}: DocumentViewportProps) {
   return (
     <ViewerGlobalPointerProvider documentId={documentId}>
       <Viewport
@@ -810,6 +898,9 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           contain: "strict",
         }}
       >
+        {onScrollbarWidthChange && (
+          <ScrollbarWidthReporter onChange={onScrollbarWidthChange} />
+        )}
         <Scroller
           documentId={documentId}
           renderPage={({ width, height, pageIndex }) => (
@@ -978,6 +1069,7 @@ export function LocalEmbedPDF({
   signatureOverlayApiRef,
   shouldSkipBytes,
   onPageLayout,
+  onScrollbarWidthChange,
   onDocumentSwapped,
   onDocumentSwapFailed,
   onDocumentReady,
@@ -1418,7 +1510,10 @@ export function LocalEmbedPDF({
       createPluginRegistration(SpreadPluginPackage, {
         defaultSpreadMode: SpreadMode.None,
       }),
-      createPluginRegistration(ScrollPluginPackage),
+      createPluginRegistration(ScrollPluginPackage, {
+        // Keep pages either side mounted so their previews are ready.
+        defaultBufferSize: 4,
+      }),
       createPluginRegistration(RenderPluginPackage, {
         // RenderFormsBridge syncs withForms at runtime, so access changes never rebuild the registry.
         withForms: renderWithForms ?? false,
@@ -1845,6 +1940,7 @@ export function LocalEmbedPDF({
                 <DocumentViewport
                   documentId={documentId}
                   pageOptions={pageOptions}
+                  onScrollbarWidthChange={onScrollbarWidthChange}
                 />
                 <DocumentComments
                   enabled
