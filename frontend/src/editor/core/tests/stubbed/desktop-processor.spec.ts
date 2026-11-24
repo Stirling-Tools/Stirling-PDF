@@ -2,11 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Page } from "@playwright/test";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import {
-  dismissModals,
-  installTauri,
-  setDisk,
-} from "@editor/tests/helpers/tauriDiskStub";
+import { installTauri, setDisk } from "@editor/tests/helpers/tauriDiskStub";
 
 // The real desktop build, signed in to a self-hosted server the stubs stand in
 // for. Desktop requests go through the native HTTP plugin, which the IPC stub
@@ -102,7 +98,6 @@ async function openFromOs(page: Page) {
 async function openEditorWithFile(page: Page) {
   await signInToServer(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await dismissModals(page);
   await openFromOs(page);
   await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1, {
     timeout: 30_000,
