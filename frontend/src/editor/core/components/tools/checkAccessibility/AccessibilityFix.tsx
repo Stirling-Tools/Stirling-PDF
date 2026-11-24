@@ -114,7 +114,7 @@ export function TagEverythingButton({
         {percent === null
           ? t("checkAccessibility.fix.tagEverything", "Auto-tag")
           : t("checkAccessibility.fix.tagging", {
-              defaultValue: "Tagging… {{percent}}%",
+              defaultValue: "Tagging... {{percent}}%",
               percent,
             })}
       </Button>

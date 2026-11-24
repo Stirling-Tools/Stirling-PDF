@@ -3339,7 +3339,7 @@ linkOnPage = "Tag the link on page {{page}}"
 markedTagged = "Mark the document as tagged"
 show = "Show tagging tool"
 tagEverything = "Auto-tag"
-tagging = "Tagging… {{percent}}%"
+tagging = "Tagging... {{percent}}%"
 untagged = "Tag the content"
 untaggedOnPage = "Tag content on page {{page}}"
 
