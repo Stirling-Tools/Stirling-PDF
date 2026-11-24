@@ -4,8 +4,12 @@ import { useViewer } from "@editor/contexts/ViewerContext";
 import { useSignature } from "@editor/contexts/SignatureContext";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 
-/** Tools that place marks on the pages, which must stay visible meanwhile. */
-const DRAWING_TOOLS = new Set(["sign", "addImage", "addText", "annotate"]);
+/**
+ * Tools that place marks on the pages, which must stay visible meanwhile.
+ * Annotate is left out: its panel disables its tools while annotations are
+ * hidden, so this toggle is the way back.
+ */
+const DRAWING_TOOLS = new Set(["sign", "addImage", "addText"]);
 
 /** Shows or hides the document's annotations, in the viewer only. */
 export function AnnotationVisibilityToggle({
