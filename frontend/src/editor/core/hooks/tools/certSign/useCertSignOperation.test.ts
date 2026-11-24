@@ -296,3 +296,16 @@ describe("buildCertSignFormData - stamp placement", () => {
     expect(named.get("signatureImage")).toBeNull();
   });
 });
+
+describe("certSignFromApiParams - sign mode", () => {
+  test.each([
+    ["SERVER", "AUTO"],
+    ["WINDOWS_STORE", "DEVICE"],
+    ["MACOS_KEYCHAIN", "DEVICE"],
+    ["PKCS11", "DEVICE"],
+    ["PKCS12", "MANUAL"],
+    ["PEM", "MANUAL"],
+  ] as const)("%s restores as %s", (certType, signMode) => {
+    expect(certSignFromApiParams({ certType }).signMode).toBe(signMode);
+  });
+});
