@@ -4,6 +4,7 @@ import { Chip } from "@editor/ui/Chip";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { ProgressBar } from "@editor/ui/ProgressBar";
 import { SectionHeader } from "@editor/ui/SectionHeader";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 import type { AccessibilityProgress } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
 import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
@@ -204,6 +205,10 @@ function MarkedTaggedCheckbox({
 }) {
   const { t } = useTranslation();
   if (marked === null) return null;
+  const hint = t(
+    "pdfTextEditor.inspector.accessibility.markedTaggedHint",
+    "Tells PDF readers to use the accessibility tags. Tick it once everything is tagged.",
+  );
   const warning = marked
     ? untaggedPages > 0 &&
       t(
@@ -220,14 +225,25 @@ function MarkedTaggedCheckbox({
       <Checkbox
         checked={marked}
         onChange={(event) => onChange(event.currentTarget.checked)}
-        label={t(
-          "pdfTextEditor.inspector.accessibility.markedTagged",
-          "Document is fully tagged",
-        )}
-        description={t(
-          "pdfTextEditor.inspector.accessibility.markedTaggedHint",
-          "Tells PDF readers to use the accessibility tags. Tick it once everything is tagged.",
-        )}
+        label={
+          <Tooltip
+            content={hint}
+            position="top"
+            sidebarTooltip={false}
+            offset={6}
+            arrow
+            portalTarget={document.body}
+          >
+            <span data-testid="pdf-editor-document-accessibility-marked-label">
+              {t(
+                "pdfTextEditor.inspector.accessibility.markedTagged",
+                "Document is fully tagged",
+              )}
+            </span>
+          </Tooltip>
+        }
+        // The tooltip opens on hover only; the input carries the hint for keyboard and screen readers.
+        aria-description={hint}
         data-testid="pdf-editor-document-accessibility-marked"
       />
       {warning && (

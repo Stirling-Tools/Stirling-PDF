@@ -98,6 +98,17 @@ describe("ReviewSummary", () => {
     expect(onSetMarkedTagged).toHaveBeenCalledWith(true);
   });
 
+  it("keeps the box's explanation in a tooltip, and on the box for screen readers", () => {
+    renderSummary();
+    expect(
+      screen.queryByText(`${KEY}.markedTaggedHint`),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId(MARKED)).toHaveAttribute(
+      "aria-description",
+      `${KEY}.markedTaggedHint`,
+    );
+  });
+
   it("leaves the box out when the file's flag can't be changed", () => {
     renderSummary({ markedTagged: null });
     expect(screen.queryByTestId(MARKED)).not.toBeInTheDocument();
