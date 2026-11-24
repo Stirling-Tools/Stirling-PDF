@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.beans.PropertyEditorSupport;
 import java.io.*;
-import java.nio.file.Files;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -13,8 +12,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -22,7 +21,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -34,6 +32,7 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.pdfbox.util.Matrix;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -52,7 +51,6 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -78,6 +76,8 @@ import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
 import stirling.software.SPDF.pdf.signature.SignatureStampPlacement;
 import stirling.software.SPDF.pdf.signature.SignatureTextWriter;
+import stirling.software.SPDF.pdf.signature.StampLayout;
+import stirling.software.SPDF.pdf.signature.StampStyle;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -85,6 +85,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
+import stirling.software.common.service.SignatureLogoStore;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -117,16 +118,34 @@ public class CertSignController {
     private final ServerCertificateServiceInterface serverCertificateService;
     private final TempFileManager tempFileManager;
     private final HardwareKeyStoreService hardwareKeyStoreService;
+    private final SignatureLogoStore signatureLogoStore;
 
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
             @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
             TempFileManager tempFileManager,
-            HardwareKeyStoreService hardwareKeyStoreService) {
+            HardwareKeyStoreService hardwareKeyStoreService,
+            SignatureLogoStore signatureLogoStore) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
         this.tempFileManager = tempFileManager;
         this.hardwareKeyStoreService = hardwareKeyStoreService;
+        this.signatureLogoStore = signatureLogoStore;
+    }
+
+    @GetMapping(value = "/cert-sign/logo", produces = MediaType.IMAGE_PNG_VALUE)
+    @Operation(
+            summary = "Get the signature watermark logo",
+            description =
+                    "The logo drawn faded behind visible signatures when showWatermark is set, as a"
+                            + " PNG: the organisation's when an admin has uploaded one, else the"
+                            + " Stirling PDF logo. The X-Signature-Logo header says which (custom"
+                            + " or default).")
+    public ResponseEntity<byte[]> getSignatureLogo() throws IOException {
+        boolean custom = signatureLogoStore.read().isPresent();
+        return ResponseEntity.ok()
+                .header("X-Signature-Logo", custom ? "custom" : "default")
+                .body(signatureLogoStore.effective());
     }
 
     @GetMapping("/cert-sign/server-certificate")
@@ -264,7 +283,15 @@ public class CertSignController {
         String name = request.getName();
         // Convert 1-indexed page number (user input) to 0-indexed page number (API requirement)
         Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
-        Boolean showLogo = request.getShowLogo();
+        Boolean showWatermark =
+                request.getShowWatermark() != null
+                        ? request.getShowWatermark()
+                        : request.getShowLogo();
+        MultipartFile signatureImage = request.getSignatureImage();
+        byte[] graphicImage =
+                signatureImage == null || signatureImage.isEmpty()
+                        ? null
+                        : SignatureLogoStore.toPng(signatureImage.getBytes(), "signatureImage");
         SignatureStampPlacement.Box box =
                 SignatureStampPlacement.Box.of(
                         request.getX(), request.getY(), request.getWidth(), request.getHeight());
@@ -391,6 +418,16 @@ public class CertSignController {
                                     ks, request.getAlias(), certType)
                             : request.getAlias();
             CreateSignature createSignature = new CreateSignature(ks, pin, alias, signingProvider);
+            createSignature.setStampStyle(
+                    StampStyle.of(
+                            signatureLogoStore.effective(),
+                            request.getStampGraphic(),
+                            graphicImage,
+                            request.getTimeZone(),
+                            request.getSignedByLabel(),
+                            request.getDateLabel(),
+                            request.getReasonLabel(),
+                            request.getLocationLabel()));
             signedOut = tempFileManager.createManagedTempFile(".pdf");
             try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
                 sign(
@@ -405,7 +442,7 @@ public class CertSignController {
                         name,
                         location,
                         reason,
-                        showLogo);
+                        showWatermark);
             } catch (IOException | RuntimeException e) {
                 signedOut.close();
                 throw e;
@@ -515,12 +552,10 @@ public class CertSignController {
     }
 
     public static class CreateSignature extends CreateSignatureBase {
-        private static final float LEADING = 1.5f;
-        private static final float ASCENT = 0.75f;
-        private static final float PADDING_SCALE = 0.04f;
-        private static final float LOGO_SCALE = 0.82f;
+        // Faint enough that the text over it stays easy to read.
+        private static final float WATERMARK_OPACITY = 0.2f;
 
-        File logoFile;
+        private StampStyle stampStyle = StampStyle.defaults(null);
 
         public CreateSignature(KeyStore keystore, char[] pin)
                 throws KeyStoreException,
@@ -540,18 +575,10 @@ public class CertSignController {
                         CertificateException {
             super(keystore, pin, alias);
             setSigningProvider(signingProvider);
-            loadLogo();
         }
 
-        private void loadLogo() throws IOException {
-            ClassPathResource resource = new ClassPathResource("static/images/signature.png");
-            try (InputStream is = resource.getInputStream()) {
-                logoFile = Files.createTempFile("signature", ".png").toFile();
-                FileUtils.copyInputStreamToFile(is, logoFile);
-            } catch (IOException e) {
-                log.error("Failed to load image signature file");
-                throw e;
-            }
+        public void setStampStyle(StampStyle stampStyle) {
+            this.stampStyle = stampStyle;
         }
 
         public InputStream createVisibleSignature(
@@ -601,48 +628,45 @@ public class CertSignController {
                 widget.setAppearance(appearance);
 
                 try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {
-                    if (Boolean.TRUE.equals(showLogo)) {
-                        cs.saveGraphicsState();
-                        PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
-                        extState.setBlendMode(BlendMode.MULTIPLY);
-                        extState.setNonStrokingAlphaConstant(0.5f);
-                        cs.setGraphicsStateParameters(extState);
-                        PDImageXObject img =
-                                PDImageXObject.createFromFileByExtension(logoFile, doc);
-                        float logoSize = Math.min(width, height) * LOGO_SCALE;
-                        cs.drawImage(
-                                img,
-                                width * PADDING_SCALE,
-                                (height - logoSize) / 2,
-                                logoSize,
-                                logoSize);
-                        cs.restoreGraphicsState();
+                    if (Boolean.TRUE.equals(showLogo) && stampStyle.watermark() != null) {
+                        PDImageXObject mark =
+                                PDImageXObject.createFromByteArray(
+                                        doc, stampStyle.watermark(), "watermark");
+                        drawWatermark(
+                                cs,
+                                mark,
+                                StampLayout.watermark(
+                                        width, height, (float) mark.getWidth() / mark.getHeight()));
                     }
-
-                    List<String> lines = stampLines(signature);
-                    float padding = width * PADDING_SCALE;
-                    float widest = 0;
-                    for (String line : lines) {
-                        widest = Math.max(widest, text.width(line, 1));
+                    PDImageXObject image =
+                            stampStyle.graphic() == StampStyle.Graphic.IMAGE
+                                    ? PDImageXObject.createFromByteArray(
+                                            doc, stampStyle.image(), "signature")
+                                    : null;
+                    String name = signerName();
+                    StampLayout layout =
+                            StampLayout.of(
+                                    width,
+                                    height,
+                                    stampStyle.graphic() == StampStyle.Graphic.NAME
+                                            ? printable(name)
+                                            : null,
+                                    image == null
+                                            ? 0
+                                            : (float) image.getWidth() / image.getHeight(),
+                                    detailLines(signature, name),
+                                    line -> widthAtSizeOne(text, line));
+                    if (image != null) {
+                        StampLayout.Rect area = layout.logo();
+                        cs.drawImage(image, area.x(), area.y(), area.width(), area.height());
                     }
-                    float fontSize = height / (lines.size() * LEADING + 0.5f);
-                    if (widest > 0) {
-                        fontSize = Math.min(fontSize, (width - 2 * padding) / widest);
-                    }
-                    float leading = fontSize * LEADING;
-                    float block = fontSize + (lines.size() - 1) * leading;
-                    float firstBaseline = (height + block) / 2 - fontSize * ASCENT;
 
                     cs.beginText();
                     cs.setNonStrokingColor(Color.black);
-                    cs.newLineAtOffset(padding, firstBaseline);
-                    cs.setLeading(leading);
-                    for (int index = 0; index < lines.size(); index++) {
-                        if (index > 0) {
-                            cs.newLine();
-                        }
-                        text.showText(cs, lines.get(index), fontSize);
+                    if (layout.name() != null) {
+                        showBlock(cs, text, layout.name());
                     }
+                    showBlock(cs, text, layout.details());
                     cs.endText();
                 }
 
@@ -652,24 +676,88 @@ public class CertSignController {
             }
         }
 
-        private List<String> stampLines(PDSignature signature) {
+        private String signerName() {
             X509Certificate cert = (X509Certificate) getCertificateChain()[0];
 
             // https://stackoverflow.com/questions/2914521/
             X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
             RDN[] cns = x500Name.getRDNs(BCStyle.CN);
-            String name =
-                    cns.length > 0
-                            ? IETFUtils.valueToString(cns[0].getFirst().getValue())
-                            : cert.getSubjectX500Principal().getName();
+            return cns.length > 0
+                    ? IETFUtils.valueToString(cns[0].getFirst().getValue())
+                    : cert.getSubjectX500Principal().getName();
+        }
 
+        private List<String> detailLines(PDSignature signature, String name) {
             List<String> lines = new ArrayList<>();
-            lines.add("Signed by " + name);
-            lines.add(signature.getSignDate().getTime().toString());
-            if (StringUtils.isNotBlank(signature.getReason())) {
-                lines.add(signature.getReason());
+            lines.add(printable(stampStyle.signedBy(name)));
+            List<String> reason = sentences(textLines(signature.getReason()));
+            for (int index = 0; index < reason.size(); index++) {
+                lines.add(index == 0 ? stampStyle.reason(reason.get(index)) : reason.get(index));
+            }
+            List<String> location = textLines(signature.getLocation());
+            if (!location.isEmpty()) {
+                lines.add(stampStyle.location(String.join(" ", location)));
+            }
+            lines.add(stampStyle.date(signature.getSignDate()));
+            return lines;
+        }
+
+        // A new sentence starts a new line, so a reason of several sentences reads as a list
+        // instead of trailing on. A capital must follow, which keeps "e.g. this" together.
+        private static final Pattern SENTENCE_END = Pattern.compile("(?<=[.!?])\\s+(?=\\p{Lu})");
+
+        static List<String> sentences(List<String> lines) {
+            List<String> split = new ArrayList<>();
+            for (String line : lines) {
+                split.addAll(List.of(SENTENCE_END.split(line)));
+            }
+            return split;
+        }
+
+        private static List<String> textLines(String value) {
+            List<String> lines = new ArrayList<>();
+            if (StringUtils.isNotBlank(value)) {
+                for (String line : value.split("\\R")) {
+                    if (StringUtils.isNotBlank(line)) {
+                        lines.add(printable(line.strip()));
+                    }
+                }
             }
             return lines;
+        }
+
+        private static void drawWatermark(
+                PDPageContentStream cs, PDImageXObject img, StampLayout.Rect area)
+                throws IOException {
+            cs.saveGraphicsState();
+            PDExtendedGraphicsState faded = new PDExtendedGraphicsState();
+            faded.setNonStrokingAlphaConstant(WATERMARK_OPACITY);
+            cs.setGraphicsStateParameters(faded);
+            cs.drawImage(img, area.x(), area.y(), area.width(), area.height());
+            cs.restoreGraphicsState();
+        }
+
+        private static void showBlock(
+                PDPageContentStream cs, SignatureTextWriter text, StampLayout.TextBlock block)
+                throws IOException {
+            for (int index = 0; index < block.lines().size(); index++) {
+                cs.setTextMatrix(
+                        Matrix.getTranslateInstance(
+                                block.lefts().get(index), block.baselines().get(index)));
+                text.showText(cs, block.lines().get(index), block.fontSize());
+            }
+        }
+
+        private static String printable(String line) {
+            return line.replaceAll("\\p{Cc}", " ");
+        }
+
+        private static double widthAtSizeOne(SignatureTextWriter text, String line) {
+            try {
+                return text.width(line, 1);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 }

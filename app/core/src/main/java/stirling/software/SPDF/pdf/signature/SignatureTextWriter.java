@@ -2,6 +2,7 @@ package stirling.software.SPDF.pdf.signature;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.Bidi;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,15 +24,16 @@ import lombok.extern.slf4j.Slf4j;
  * as subsets. A character no bundled face covers is drawn as {@code ?}: signing must not fail over
  * display text, and the certificate itself is unaffected.
  *
- * <p>Glyphs are placed in logical order without shaping, so Arabic and Indic text is legible letter
- * by letter but not joined. Not thread-safe; use one instance per document.
+ * <p>Lines are laid out in visual order (Unicode bidi), so Hebrew and Arabic read right to left
+ * within a Latin line. Glyphs are not shaped, so Arabic and Indic letters are not joined. Not
+ * thread-safe; use one instance per document.
  */
 @Slf4j
 public final class SignatureTextWriter {
 
     private static final List<String> FACES =
             List.of(
-                    "static/fonts/NotoSans-Bold.ttf",
+                    "static/fonts/NotoSans-Regular.ttf",
                     "static/fonts/NotoSansSC-Regular.ttf",
                     "static/fonts/NotoSansJP-Regular.ttf",
                     "static/fonts/NotoSansKR-Regular.ttf",
@@ -92,7 +94,28 @@ public final class SignatureTextWriter {
         return units / 1000 * fontSize;
     }
 
-    private List<Run> runs(String text) throws IOException {
+    static String visualOrder(String text) {
+        if (!Bidi.requiresBidi(text.toCharArray(), 0, text.length())) {
+            return text;
+        }
+        Bidi bidi = new Bidi(text, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
+        int count = bidi.getRunCount();
+        byte[] levels = new byte[count];
+        String[] segments = new String[count];
+        for (int index = 0; index < count; index++) {
+            String segment = text.substring(bidi.getRunStart(index), bidi.getRunLimit(index));
+            levels[index] = (byte) bidi.getRunLevel(index);
+            segments[index] =
+                    (levels[index] & 1) == 1
+                            ? new StringBuilder(segment).reverse().toString()
+                            : segment;
+        }
+        Bidi.reorderVisually(levels, 0, segments, 0, count);
+        return String.join("", segments);
+    }
+
+    private List<Run> runs(String logical) throws IOException {
+        String text = visualOrder(logical);
         List<Run> runs = new ArrayList<>();
         Face current = null;
         StringBuilder pending = new StringBuilder();

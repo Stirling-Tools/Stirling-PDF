@@ -5,6 +5,8 @@ import {
   BaseParametersHook,
 } from "@editor/hooks/tools/shared/useBaseParameters";
 
+export type StampGraphic = "NAME" | "IMAGE" | "NONE";
+
 export interface CertSignParameters extends BaseParameters {
   // Where the signing certificate comes from:
   //  MANUAL = upload a keystore file, AUTO = server certificate,
@@ -38,7 +40,12 @@ export interface CertSignParameters extends BaseParameters {
   location: string;
   name: string;
   pageNumber: number;
-  showLogo: boolean;
+  /** Beside the details: the name, the signer's own image, or nothing. */
+  stampGraphic: StampGraphic;
+  /** The signer's image (a handwritten signature, a seal) for the IMAGE graphic. */
+  signatureImage?: File;
+  /** The server's signature logo faded behind the whole stamp. */
+  showWatermark: boolean;
   /** An empty signature field to sign into; it brings its own page and box. */
   fieldName?: string;
   /** Box on pageNumber in PDF user space; unset leaves the server's default corner. */
@@ -54,7 +61,8 @@ export const defaultParameters: CertSignParameters = {
   location: "",
   name: "",
   pageNumber: 1,
-  showLogo: true,
+  stampGraphic: "NAME",
+  showWatermark: true,
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
@@ -64,6 +72,14 @@ export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
 export function validateCertSignParameters(
   params: CertSignParameters,
 ): boolean {
+  if (
+    params.showSignature &&
+    params.stampGraphic === "IMAGE" &&
+    !params.signatureImage
+  ) {
+    return false;
+  }
+
   // Auto mode (server certificate) - no additional validation needed
   if (params.signMode === "AUTO") {
     return true;

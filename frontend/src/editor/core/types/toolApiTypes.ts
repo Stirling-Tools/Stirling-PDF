@@ -1428,6 +1428,10 @@ export interface SignPDFWithCertRequest {
     | "MACOS_KEYCHAIN"
     | "PKCS11";
   /**
+   * Label before the date on the visible signature. Defaults to "Date:".
+   */
+  dateLabel?: string;
+  /**
    * Fully qualified name of an empty signature field to sign into. The signature takes that field's page and box: pageNumber is ignored and x/y/width/height must be left out. Needs showSignature. Rejected when the field does not exist or is already signed.
    */
   fieldName?: string;
@@ -1440,6 +1444,10 @@ export interface SignPDFWithCertRequest {
    * The location where the PDF is signed. Omitted from the signature when not set
    */
   location?: string;
+  /**
+   * Label before the location on the visible signature. Defaults to "Location:".
+   */
+  locationLabel?: string;
   /**
    * Signer name stored in the signature properties; the visible box shows the certificate's name instead. Omitted when not set.
    */
@@ -1467,13 +1475,34 @@ export interface SignPDFWithCertRequest {
    */
   reason?: string;
   /**
-   * Whether to visually show a signature logo along with the signature
+   * Label before the reason on the visible signature. Defaults to "Reason:".
+   */
+  reasonLabel?: string;
+  /**
+   * Older name for showWatermark, used when showWatermark is not set.
    */
   showLogo?: boolean;
   /**
    * Add a visible signature box on pageNumber showing the certificate's name, the date and the reason (if set).
    */
   showSignature?: boolean;
+  /**
+   * Draw the signature logo faded behind the whole visible signature: the organisation's when an admin has uploaded one, else the Stirling PDF logo. Defaults to showLogo.
+   */
+  showWatermark?: boolean;
+  signatureImage?: File;
+  /**
+   * The visible signature's first detail line, with {name} exactly once where the certificate's name goes. Defaults to "Digitally signed by {name}".
+   */
+  signedByLabel?: string;
+  /**
+   * What fills the half beside the visible signature's details: NAME (the certificate's name in large type, the default), IMAGE (signatureImage, such as a handwritten signature) or NONE (the details alone fill the box).
+   */
+  stampGraphic?: "NAME" | "IMAGE" | "NONE";
+  /**
+   * IANA time zone the visible signature's date is written in, as in 2026.11.24 10:12:00 +01'00'. Defaults to the server's.
+   */
+  timeZone?: string;
   /**
    * Width of the visible signature box in PDF points; see x.
    */
@@ -1894,6 +1923,7 @@ export const TOOL_FILE_FIELDS = {
     "certFile",
     "p12File",
     "jksFile",
+    "signatureImage",
   ],
   "/api/v1/security/cert-sign/validate-certificate": [
     "p12File",

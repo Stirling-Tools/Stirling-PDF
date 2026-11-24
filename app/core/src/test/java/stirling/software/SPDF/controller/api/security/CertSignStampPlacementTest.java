@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -17,12 +18,20 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -53,6 +62,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.SignatureLogoStore;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -62,6 +72,7 @@ class CertSignStampPlacementTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @Mock private HardwareKeyStoreService hardwareKeyStoreService;
+    @Mock private SignatureLogoStore signatureLogoStore;
     @Mock private HttpServletRequest httpRequest;
 
     @InjectMocks private CertSignController certSignController;
@@ -226,6 +237,140 @@ class CertSignStampPlacementTest {
                         IllegalArgumentException.class,
                         () -> certSignController.signPDFWithCert(request, httpRequest));
         assertTrue(error.getMessage().contains("showSignature"), error.getMessage());
+    }
+
+    @Test
+    void theWatermarkIsTheSignatureLogoDrawnBehindTheStamp() throws Exception {
+        when(signatureLogoStore.effective()).thenReturn(png(300, 100));
+        SignPDFWithCertRequest request = request(blankLetter(0, null));
+        request.setShowWatermark(true);
+        try (PDDocument doc = Loader.loadPDF(sign(request))) {
+            List<PDImageXObject> images = images(doc);
+            assertEquals(1, images.size());
+            assertEquals(300, images.getFirst().getWidth());
+        }
+    }
+
+    @Test
+    void showLogoStillTurnsTheWatermarkOnForOlderCallers() throws Exception {
+        when(signatureLogoStore.effective()).thenReturn(png(300, 100));
+        SignPDFWithCertRequest request = request(blankLetter(0, null));
+        request.setShowLogo(true);
+        try (PDDocument doc = Loader.loadPDF(sign(request))) {
+            assertEquals(1, images(doc).size());
+        }
+    }
+
+    @Test
+    void theSignersImageFillsTheGraphicHalf() throws Exception {
+        SignPDFWithCertRequest request = request(blankLetter(0, null));
+        request.setStampGraphic("IMAGE");
+        request.setSignatureImage(
+                new MockMultipartFile("signatureImage", "sig.png", "image/png", png(120, 40)));
+        try (PDDocument doc = Loader.loadPDF(sign(request))) {
+            List<PDImageXObject> images = images(doc);
+            assertEquals(1, images.size());
+            assertEquals(120, images.getFirst().getWidth());
+        }
+    }
+
+    @Test
+    void noGraphicWithTheWatermarkDrawsOnlyTheWatermark() throws Exception {
+        when(signatureLogoStore.effective()).thenReturn(png(300, 100));
+        SignPDFWithCertRequest request = request(blankLetter(0, null));
+        request.setStampGraphic("NONE");
+        request.setShowWatermark(true);
+        request.setSignatureImage(
+                new MockMultipartFile("signatureImage", "sig.png", "image/png", png(120, 40)));
+        try (PDDocument doc = Loader.loadPDF(sign(request))) {
+            List<PDImageXObject> images = images(doc);
+            assertEquals(1, images.size());
+            assertEquals(300, images.getFirst().getWidth());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"PICTURE", "IMAGE"})
+    void anUnknownGraphicOrAnImageGraphicWithoutAnImageIsRefused(String graphic) throws Exception {
+        SignPDFWithCertRequest request = request(blankLetter(0, null));
+        request.setStampGraphic(graphic);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> certSignController.signPDFWithCert(request, httpRequest));
+    }
+
+    @Test
+    void aSignatureImageThatIsNotAPngOrJpegIsRefused() throws Exception {
+        SignPDFWithCertRequest request = request(blankLetter(0, null));
+        request.setStampGraphic("IMAGE");
+        request.setSignatureImage(
+                new MockMultipartFile(
+                        "signatureImage", "sig.gif", "image/gif", "GIF89a....".getBytes()));
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
+        assertTrue(error.getMessage().contains("signatureImage"), error.getMessage());
+    }
+
+    private static byte[] png(int width, int height) throws Exception {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", png);
+        return png.toByteArray();
+    }
+
+    private static List<PDImageXObject> images(PDDocument doc) throws Exception {
+        List<PDImageXObject> images = new ArrayList<>();
+        collectImages(
+                stampWidget(doc)
+                        .getAppearance()
+                        .getNormalAppearance()
+                        .getAppearanceStream()
+                        .getResources(),
+                images);
+        return images;
+    }
+
+    @Test
+    void eachSentenceOfTheReasonStartsANewLine() {
+        assertEquals(
+                List.of("Reviewed.", "Approved for release, e.g. version 2.", "Ready!", "Go?"),
+                CertSignController.CreateSignature.sentences(
+                        List.of("Reviewed. Approved for release, e.g. version 2.", "Ready! Go?")));
+    }
+
+    @Test
+    void aSignedByLabelWithoutTheNameIsRefused() throws Exception {
+        SignPDFWithCertRequest request = request(blankLetter(0, null));
+        request.setSignedByLabel("Signed by");
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
+        assertTrue(error.getMessage().contains("signedByLabel"), error.getMessage());
+    }
+
+    private static PDAnnotationWidget stampWidget(PDDocument doc) {
+        PDSignatureField field =
+                (PDSignatureField)
+                        doc.getDocumentCatalog().getAcroForm(null).getFields().getFirst();
+        return field.getWidgets().getFirst();
+    }
+
+    private static void collectImages(PDResources resources, List<PDImageXObject> images)
+            throws Exception {
+        if (resources == null) {
+            return;
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            PDXObject xObject = resources.getXObject(name);
+            if (xObject instanceof PDImageXObject image) {
+                images.add(image);
+            } else if (xObject instanceof PDFormXObject form) {
+                collectImages(form.getResources(), images);
+            }
+        }
     }
 
     private SignPDFWithCertRequest request(byte[] pdf) {

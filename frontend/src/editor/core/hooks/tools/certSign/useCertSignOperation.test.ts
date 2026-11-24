@@ -195,6 +195,39 @@ describe("buildCertSignFormData - stamp placement", () => {
     expect(formData.get("x")).toBeNull();
   });
 
+  test("a visible signature is written in the signer's language and time zone", () => {
+    const formData = buildCertSignFormData(
+      params({ signMode: "AUTO", showSignature: true }),
+      pdf(),
+    );
+
+    expect(formData.get("dateLabel")).toBe("Date:");
+    expect(formData.get("locationLabel")).toBe("Location:");
+    expect(formData.get("timeZone")).toBe(
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+    );
+    expect(formData.get("signedByLabel")).toContain("{name}");
+  });
+
+  test("an invisible signature sends no stamp language", () => {
+    const formData = buildCertSignFormData(
+      params({ signMode: "AUTO", showSignature: false }),
+      pdf(),
+    );
+
+    expect(formData.get("timeZone")).toBeNull();
+    expect(formData.get("signedByLabel")).toBeNull();
+  });
+
+  test("a saved step does not pin the author's language", () => {
+    const api = certSignToApiParams(
+      params({ signMode: "AUTO", showSignature: true }),
+    );
+
+    expect(api.timeZone).toBeUndefined();
+    expect(api.signedByLabel).toBeUndefined();
+  });
+
   test("placement round-trips through the request model", () => {
     const placed = params({
       signMode: "AUTO",
@@ -215,5 +248,51 @@ describe("buildCertSignFormData - stamp placement", () => {
     const restored = certSignFromApiParams(certSignToApiParams(inField));
     expect(restored.fieldName).toBe("Approver");
     expect(restored.stampBox).toBeUndefined();
+  });
+
+  test("sends the graphic choice and watermark for a visible signature", () => {
+    const formData = buildCertSignFormData(
+      params({
+        signMode: "AUTO",
+        showSignature: true,
+        stampGraphic: "NONE",
+        showWatermark: true,
+      }),
+      pdf(),
+    );
+    expect(formData.get("stampGraphic")).toBe("NONE");
+    expect(formData.get("showWatermark")).toBe("true");
+    expect(formData.get("showLogo")).toBeNull();
+  });
+
+  test("a saved step with only showLogo still sets the watermark", () => {
+    expect(
+      certSignFromApiParams({ certType: "SERVER", showLogo: false })
+        .showWatermark,
+    ).toBe(false);
+  });
+
+  test("the signer's image is uploaded only for the image graphic", () => {
+    const image = new File(["png"], "sig.png", { type: "image/png" });
+    const withImage = buildCertSignFormData(
+      params({
+        signMode: "AUTO",
+        showSignature: true,
+        stampGraphic: "IMAGE",
+        signatureImage: image,
+      }),
+      pdf(),
+    );
+    expect(withImage.get("signatureImage")).toBeInstanceOf(File);
+    const named = buildCertSignFormData(
+      params({
+        signMode: "AUTO",
+        showSignature: true,
+        stampGraphic: "NAME",
+        signatureImage: image,
+      }),
+      pdf(),
+    );
+    expect(named.get("signatureImage")).toBeNull();
   });
 });

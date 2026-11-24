@@ -1,7 +1,17 @@
 import { useState } from "react";
-import { Group, Stack, Text, TextInput, NumberInput } from "@mantine/core";
+import {
+  FileInput,
+  Group,
+  Stack,
+  Text,
+  TextInput,
+  NumberInput,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
+import type {
+  CertSignParameters,
+  StampGraphic,
+} from "@editor/hooks/tools/certSign/useCertSignParameters";
 import type { CertSignStampPlacement } from "@editor/hooks/tools/certSign/useCertSignStampPlacement";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
@@ -71,10 +81,15 @@ const SignatureAppearanceSettings = ({
                 disabled={disabled}
               />
             ))}
+          <GraphicChoice
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
           <ToggleSwitch
-            checked={parameters.showLogo}
-            onChange={(checked) => onParameterChange("showLogo", checked)}
-            label={t("certSign.showLogo", "Show Logo")}
+            checked={parameters.showWatermark}
+            onChange={(checked) => onParameterChange("showWatermark", checked)}
+            label={t("certSign.appearance.graphic.watermark", "Logo watermark")}
             disabled={disabled}
           />
         </Stack>
@@ -130,6 +145,64 @@ type SectionProps = Pick<
   SignatureAppearanceSettingsProps,
   "parameters" | "onParameterChange"
 > & { disabled: boolean };
+
+const GraphicChoice = ({
+  parameters,
+  onParameterChange,
+  disabled,
+}: SectionProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <Stack gap="xs">
+      <Text size="sm" fw={500}>
+        {t("certSign.appearance.graphic.title", "Beside the details")}
+      </Text>
+      <RadioGroup<StampGraphic>
+        name="cert-sign-graphic"
+        value={parameters.stampGraphic}
+        onChange={(next) => onParameterChange("stampGraphic", next)}
+        options={[
+          {
+            value: "NAME",
+            label: t("certSign.appearance.graphic.name", "Signer's name"),
+            disabled,
+          },
+          {
+            value: "IMAGE",
+            label: t("certSign.appearance.graphic.image", "Image"),
+            description: t(
+              "certSign.appearance.graphic.imageHint",
+              "A handwritten signature or seal, PNG or JPEG",
+            ),
+            disabled,
+          },
+          {
+            value: "NONE",
+            label: t("certSign.appearance.graphic.none", "Nothing"),
+            disabled,
+          },
+        ]}
+      />
+      {parameters.stampGraphic === "IMAGE" && (
+        <FileInput
+          value={parameters.signatureImage ?? null}
+          onChange={(file) =>
+            onParameterChange("signatureImage", file ?? undefined)
+          }
+          accept="image/png,image/jpeg"
+          placeholder={t(
+            "certSign.appearance.graphic.chooseImage",
+            "Choose an image",
+          )}
+          className={privateContentClassName}
+          disabled={disabled}
+          clearable
+        />
+      )}
+    </Stack>
+  );
+};
 
 const FieldChoice = ({
   placement,

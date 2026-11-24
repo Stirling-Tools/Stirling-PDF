@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSignature } from "@editor/contexts/SignatureContext";
 import { useNavigation } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { DEFAULT_PARAMETERS as SIGN_DEFAULTS } from "@editor/hooks/tools/sign/useSignParameters";
 import type { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
+import { stampLabels } from "@editor/hooks/tools/certSign/useCertSignOperation";
+import { useSignatureLogo } from "@editor/hooks/tools/certSign/useSignatureLogo";
+import { useImageFile } from "@editor/hooks/tools/certSign/useImageFile";
+import { getServerSigningCertificate } from "@editor/services/hardwareSigningService";
+import {
+  DEFAULT_STAMP_SIZE,
+  renderStampPreview,
+  stampDetails,
+} from "@editor/services/signatureStampPreview";
 import {
   readSignatureLayout,
   viewerRectToPdfBox,
@@ -56,6 +65,56 @@ function useSignatureLayout(file: StirlingFile | null) {
   return layout;
 }
 
+function useServerSignerName(serverSigning: boolean): string | null {
+  const [name, setName] = useState<string | null>(null);
+  useEffect(() => {
+    setName(null);
+    if (!serverSigning) return;
+    let cancelled = false;
+    getServerSigningCertificate().then((cert) => {
+      if (!cancelled) setName(cert?.subjectCommonName || null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [serverSigning]);
+  return name;
+}
+
+type StampRenderer = (width: number, height: number) => string | null;
+
+/**
+ * Draws the stamp as the server will, at a given size in points, for the placement guide.
+ */
+function useStampRenderer(parameters: CertSignParameters): StampRenderer {
+  const { t } = useTranslation();
+  const logo = useSignatureLogo();
+  const image = useImageFile(parameters.signatureImage ?? null);
+  const serverName = useServerSignerName(parameters.signMode === "AUTO");
+  const signer =
+    serverName ?? t("certSign.appearance.placement.yourName", "Your name");
+  const { stampGraphic, showWatermark } = parameters;
+  const { reason, location } = parameters;
+
+  return useMemo(() => {
+    const content = {
+      name: signer,
+      details: stampDetails(stampLabels(t), {
+        name: signer,
+        date: new Date(),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        reason,
+        location,
+      }),
+      graphic: stampGraphic,
+      image,
+      watermark: showWatermark ? (logo?.image ?? null) : null,
+    };
+    return (width: number, height: number) =>
+      renderStampPreview(content, width, height);
+  }, [t, signer, reason, location, stampGraphic, image, showWatermark, logo]);
+}
+
 /**
  * Lets the user place the visible signature box with the Sign tool's stamp placement, and offers
  * the file's empty signature fields. The placed stamp lives only in the viewer as a guide; it is
@@ -92,6 +151,7 @@ export function useCertSignStampPlacement({
   const offeredFieldFor = useRef<SignatureLayout | null>(null);
 
   const placingActive = parameters.showSignature && !parameters.fieldName;
+  const renderStamp = useStampRenderer(parameters);
   const stamp = placedSignatures.find((entry) => entry.id === stampId) ?? null;
 
   const previewLabel = parameters.name
@@ -143,9 +203,15 @@ export function useCertSignStampPlacement({
     wasCleanBeforePlacing.current = !hasUnsavedChanges;
     if (file && activeFileId !== file.fileId) setActiveFileId(file.fileId);
     setWorkbench("viewer");
+    const previewImage = renderStamp(
+      DEFAULT_STAMP_SIZE.width,
+      DEFAULT_STAMP_SIZE.height,
+    );
     setSignatureConfig({
       ...SIGN_DEFAULTS,
-      signatureType: "text",
+      ...(previewImage
+        ? { signatureType: "image", signatureData: previewImage }
+        : { signatureType: "text" }),
       signerName: previewLabel,
     });
     setArmed(true);
@@ -159,6 +225,7 @@ export function useCertSignStampPlacement({
     setActiveFileId,
     setWorkbench,
     setSignatureConfig,
+    renderStamp,
     previewLabel,
   ]);
 

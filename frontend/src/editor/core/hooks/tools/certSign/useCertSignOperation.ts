@@ -1,3 +1,4 @@
+import i18n, { type TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
@@ -10,6 +11,7 @@ import {
   type ToolEndpoint,
 } from "@editor/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
+import type { StampLabels } from "@editor/services/signatureStampPreview";
 import {
   validateCertSignParameters,
   CertSignParameters,
@@ -67,7 +69,8 @@ const withSignatureAppearance = (
   if (parameters.name) apiParams.name = parameters.name;
   if (parameters.showSignature) {
     apiParams.showSignature = true;
-    apiParams.showLogo = parameters.showLogo;
+    apiParams.stampGraphic = parameters.stampGraphic;
+    apiParams.showWatermark = parameters.showWatermark;
     if (parameters.fieldName) {
       apiParams.fieldName = parameters.fieldName;
     } else {
@@ -85,7 +88,14 @@ const withSignatureAppearance = (
 
 // Select the keystore File uploads for the chosen certificate type. AUTO mode
 // (server certificate) uploads no keystore.
-const certSignFiles = (parameters: CertSignParameters): FormDataFiles => {
+const certSignFiles = (parameters: CertSignParameters): FormDataFiles => ({
+  ...keystoreFiles(parameters),
+  ...(parameters.showSignature && parameters.stampGraphic === "IMAGE"
+    ? { signatureImage: parameters.signatureImage }
+    : {}),
+});
+
+const keystoreFiles = (parameters: CertSignParameters): FormDataFiles => {
   if (parameters.signMode === "AUTO") return {};
 
   switch (parameters.certType) {
@@ -132,7 +142,13 @@ export const certSignFromApiParams = (
   if (apiParams.pageNumber !== undefined) {
     result.pageNumber = apiParams.pageNumber;
   }
-  if (apiParams.showLogo !== undefined) result.showLogo = apiParams.showLogo;
+  // An image graphic cannot be restored without its file, so it comes back as the name.
+  if (apiParams.stampGraphic === "NONE") result.stampGraphic = "NONE";
+  if (apiParams.showWatermark !== undefined) {
+    result.showWatermark = apiParams.showWatermark;
+  } else if (apiParams.showLogo !== undefined) {
+    result.showWatermark = apiParams.showLogo;
+  }
   if (apiParams.fieldName !== undefined) result.fieldName = apiParams.fieldName;
   if (
     apiParams.x !== undefined &&
@@ -151,15 +167,42 @@ export const certSignFromApiParams = (
   return result;
 };
 
-// Build form data for signing
+/** The stamp's labels in the UI language; the signed-by one keeps the {name} slot the server fills. */
+export const stampLabels = (t: TFunction = i18n.t): StampLabels => ({
+  signedByLabel: t("certSign.stamp.signedBy", "Digitally signed by {{name}}", {
+    name: "{name}",
+    interpolation: { escapeValue: false },
+  }),
+  dateLabel: t("certSign.stamp.date", "Date:"),
+  reasonLabel: t("certSign.stamp.reason", "Reason:"),
+  locationLabel: t("certSign.stamp.location", "Location:"),
+});
+
+// The stamp's words are fixed when signing, in the signer's language and time zone, so they
+// are added here rather than stored with the step: a saved automation signs in whoever runs it.
+const withStampLanguage = (
+  apiParams: CertSignApiParams,
+  parameters: CertSignParameters,
+): CertSignApiParams =>
+  parameters.showSignature
+    ? {
+        ...apiParams,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ...stampLabels(),
+      }
+    : apiParams;
+
 export const buildCertSignFormData = (
   parameters: CertSignParameters,
   file: File,
 ): FormData =>
-  objectToFormData(certSignToApiParams(parameters), {
-    fileInput: file,
-    ...certSignFiles(parameters),
-  });
+  objectToFormData(
+    withStampLanguage(certSignToApiParams(parameters), parameters),
+    {
+      fileInput: file,
+      ...certSignFiles(parameters),
+    },
+  );
 
 // Static configuration object
 export const certSignOperationConfig = defineSingleFileTool({

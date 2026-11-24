@@ -12,7 +12,8 @@ const baseParameters: CertSignParameters = {
   location: "",
   name: "",
   pageNumber: 1,
-  showLogo: true,
+  stampGraphic: "LOGO",
+  showWatermark: false,
 };
 
 const meta = {

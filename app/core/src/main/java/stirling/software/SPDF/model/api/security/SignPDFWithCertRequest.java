@@ -139,8 +139,63 @@ public class SignPDFWithCertRequest extends PDFFile {
     private String fieldName;
 
     @Schema(
-            description = "Whether to visually show a signature logo along with the signature",
+            description = "Older name for showWatermark, used when showWatermark is not set.",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showLogo = true;
+
+    @Schema(
+            description =
+                    "What fills the half beside the visible signature's details: NAME (the certificate's name in large type, the"
+                            + " default), IMAGE (signatureImage, such as a handwritten signature)"
+                            + " or NONE (the details alone fill the box).",
+            allowableValues = {"NAME", "IMAGE", "NONE"})
+    private String stampGraphic;
+
+    @Schema(
+            description =
+                    "PNG or JPEG drawn beside the details when stampGraphic is IMAGE, up to 2 MB"
+                            + " and 4096 pixels on a side.",
+            format = "binary")
+    private MultipartFile signatureImage;
+
+    @Schema(
+            description =
+                    "Draw the signature logo faded behind the whole visible signature: the"
+                            + " organisation's when an admin has uploaded one, else the Stirling"
+                            + " PDF logo. Defaults to showLogo.")
+    private Boolean showWatermark;
+
+    @Schema(
+            description =
+                    "IANA time zone the visible signature's date is written in, as in"
+                            + " 2026.11.24 10:12:00 +01'00'. Defaults to the server's.",
+            example = "Europe/Berlin")
+    private String timeZone;
+
+    @Schema(
+            description =
+                    "The visible signature's first detail line, with {name} exactly once where"
+                            + " the certificate's name goes. Defaults to \"Digitally signed by"
+                            + " {name}\".",
+            example = "Digital signiert von {name}")
+    private String signedByLabel;
+
+    @Schema(
+            description = "Label before the date on the visible signature. Defaults to \"Date:\".",
+            example = "Datum:")
+    private String dateLabel;
+
+    @Schema(
+            description =
+                    "Label before the reason on the visible signature. Defaults to \"Reason:\".",
+            example = "Grund:")
+    private String reasonLabel;
+
+    @Schema(
+            description =
+                    "Label before the location on the visible signature. Defaults to"
+                            + " \"Location:\".",
+            example = "Ort:")
+    private String locationLabel;
 }

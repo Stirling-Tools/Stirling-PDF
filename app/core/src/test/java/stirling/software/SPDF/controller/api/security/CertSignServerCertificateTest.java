@@ -23,6 +23,7 @@ import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
+import stirling.software.common.service.SignatureLogoStore;
 import stirling.software.common.util.TempFileManager;
 
 class CertSignServerCertificateTest {
@@ -32,7 +33,8 @@ class CertSignServerCertificateTest {
                 mock(CustomPDFDocumentFactory.class),
                 service,
                 mock(TempFileManager.class),
-                mock(HardwareKeyStoreService.class));
+                mock(HardwareKeyStoreService.class),
+                mock(SignatureLogoStore.class));
     }
 
     private static X509Certificate certificate() throws Exception {
