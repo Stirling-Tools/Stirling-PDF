@@ -162,19 +162,23 @@ class NativeTesseractServiceTest {
 
             // Pages that are not replaced render and write at the OCR resolution.
             assertEquals(
-                    new NativeTesseractService.PagePlan(300, 300, false),
-                    NativeTesseractService.plan(scan100, 300, 500, false));
+                    new NativeTesseractService.PagePlan(300, 300, 300, false),
+                    NativeTesseractService.plan(scan100, 300, 500, false, false));
             // A low scan is read at 300 and written back at its own 100.
             assertEquals(
-                    new NativeTesseractService.PagePlan(300, 100, false),
-                    NativeTesseractService.plan(scan100, 300, 500, true));
+                    new NativeTesseractService.PagePlan(300, 100, 100, false),
+                    NativeTesseractService.plan(scan100, 300, 500, true, false));
             // A fine scan is read and written at its own DPI, up to the configured maximum.
             assertEquals(
-                    new NativeTesseractService.PagePlan(400, 400, false),
-                    NativeTesseractService.plan(scan400, 300, 500, true));
+                    new NativeTesseractService.PagePlan(400, 400, 400, false),
+                    NativeTesseractService.plan(scan400, 300, 500, true, false));
             assertEquals(
-                    new NativeTesseractService.PagePlan(350, 350, false),
-                    NativeTesseractService.plan(scan400, 300, 350, true));
+                    new NativeTesseractService.PagePlan(350, 350, 400, false),
+                    NativeTesseractService.plan(scan400, 300, 350, true, false));
+            // Cleaning alone measures the scan, without changing how it renders.
+            assertEquals(
+                    new NativeTesseractService.PagePlan(300, 300, 100, false),
+                    NativeTesseractService.plan(scan100, 300, 500, false, true));
             // A black-and-white scan is written back 1-bit.
             PDPage bilevel200 = new PDPage(PDRectangle.LETTER);
             doc.addPage(bilevel200);
@@ -188,8 +192,8 @@ class NativeTesseractServiceTest {
                         PDRectangle.LETTER.getHeight());
             }
             assertEquals(
-                    new NativeTesseractService.PagePlan(300, 200, true),
-                    NativeTesseractService.plan(bilevel200, 300, 500, true));
+                    new NativeTesseractService.PagePlan(300, 200, 200, true),
+                    NativeTesseractService.plan(bilevel200, 300, 500, true, false));
         }
     }
 
@@ -292,7 +296,10 @@ class NativeTesseractServiceTest {
         @Test
         void forceKeepsALowResolutionScanAtItsOwnDpi(@TempDir Path work) throws Exception {
             Outcome out =
-                    run(lowResolutionScan(100), new OcrOptions(true, false, false, false), work);
+                    run(
+                            lowResolutionScan(100),
+                            new OcrOptions(true, false, false, false, false, false),
+                            work);
 
             assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
             try (PDDocument doc = out.reload()) {
@@ -305,7 +312,7 @@ class NativeTesseractServiceTest {
             Outcome out =
                     run(
                             lowResolutionScan(200, true),
-                            new OcrOptions(true, false, false, false),
+                            new OcrOptions(true, false, false, false, false, false),
                             work);
 
             assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
@@ -318,12 +325,54 @@ class NativeTesseractServiceTest {
             }
         }
 
+        @Test
+        void cleanFinalReplacesThePageWithTheCleanedScan(@TempDir Path work) throws Exception {
+            OcrOptions cleanFinal = new OcrOptions(false, false, false, false, false, true);
+            Outcome out = run(lowResolutionScan(300, false, true), cleanFinal, work);
+
+            assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
+            try (PDDocument doc = out.reload()) {
+                BufferedImage page = images(doc.getPage(0).getResources()).get(0).getImage();
+                assertEquals(0, darkPixelsInLowerHalf(page), "dust in the empty half");
+            }
+        }
+
+        @Test
+        void cleanOnlyCleansWhatTesseractReads(@TempDir Path work) throws Exception {
+            OcrOptions clean = new OcrOptions(false, false, false, false, true, false);
+            Outcome out = run(lowResolutionScan(300, false, true), clean, work);
+
+            assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
+            try (PDDocument doc = out.reload()) {
+                BufferedImage page = images(doc.getPage(0).getResources()).get(0).getImage();
+                assertTrue(darkPixelsInLowerHalf(page) > 0, "the page keeps its dust");
+            }
+        }
+
+        private static long darkPixelsInLowerHalf(BufferedImage page) {
+            long dark = 0;
+            for (int y = page.getHeight() / 2; y < page.getHeight(); y++) {
+                for (int x = 0; x < page.getWidth(); x++) {
+                    if ((page.getRGB(x, y) & 0xff) < 128) dark++;
+                }
+            }
+            return dark;
+        }
+
         private PDDocument lowResolutionScan(int dpi) throws IOException {
             return lowResolutionScan(dpi, false);
         }
 
-        /** The paragraph scanned at {@code dpi} in 12 pt type, as a JPEG or 1-bit CCITT image. */
         private PDDocument lowResolutionScan(int dpi, boolean bilevel) throws IOException {
+            return lowResolutionScan(dpi, bilevel, false);
+        }
+
+        /**
+         * The paragraph scanned at {@code dpi} in 12 pt type, as a JPEG or 1-bit CCITT image, with
+         * {@code dusty} adding small dark marks to the empty lower half.
+         */
+        private PDDocument lowResolutionScan(int dpi, boolean bilevel, boolean dusty)
+                throws IOException {
             int width = Math.round(PAGE_WIDTH / 72 * dpi);
             int height = Math.round(PAGE_HEIGHT / 72 * dpi);
             BufferedImage scan = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
@@ -336,6 +385,11 @@ class NativeTesseractServiceTest {
             g.setFont(new Font(Font.SERIF, Font.PLAIN, Math.round(12f / 72 * dpi)));
             for (int i = 0; i < PARAGRAPH.length; i++) {
                 g.drawString(PARAGRAPH[i], dpi, dpi + i * Math.round(dpi * 0.25f));
+            }
+            if (dusty) {
+                for (int i = 0; i < 12; i++) {
+                    g.fillRect(width * (i + 1) / 14, height * 6 / 10 + (i % 4) * height / 12, 3, 3);
+                }
             }
             g.dispose();
             PDDocument document = new PDDocument();
@@ -366,7 +420,11 @@ class NativeTesseractServiceTest {
 
         @Test
         void forceReplacesTheTextInsteadOfDuplicatingIt(@TempDir Path work) throws Exception {
-            Outcome out = run(digitalPage(), new OcrOptions(true, false, false, false), work);
+            Outcome out =
+                    run(
+                            digitalPage(),
+                            new OcrOptions(true, false, false, false, false, false),
+                            work);
 
             assertTrue(out.sidecar().contains("DIGITAL"), out.sidecar());
             try (PDDocument doc = out.reload()) {
@@ -386,7 +444,7 @@ class NativeTesseractServiceTest {
             Outcome out =
                     run(
                             scannedPage(0, 6, fullPage()),
-                            new OcrOptions(false, true, false, false),
+                            new OcrOptions(false, true, false, false, false, false),
                             work);
 
             assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
@@ -405,7 +463,7 @@ class NativeTesseractServiceTest {
             Outcome out =
                     run(
                             scannedPage(0, 180, PARAGRAPH),
-                            new OcrOptions(false, false, true, false),
+                            new OcrOptions(false, false, true, false, false, false),
                             work);
 
             assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
@@ -419,7 +477,7 @@ class NativeTesseractServiceTest {
             Outcome out =
                     run(
                             scannedPage(0, 0, PARAGRAPH),
-                            new OcrOptions(false, false, false, true),
+                            new OcrOptions(false, false, false, true, false, false),
                             work);
 
             try (PDDocument doc = out.reload()) {
@@ -494,7 +552,7 @@ class NativeTesseractServiceTest {
             Outcome out =
                     run(
                             scannedPage(0, 90, fullPage()),
-                            new OcrOptions(false, false, true, false),
+                            new OcrOptions(false, false, true, false, false, false),
                             work);
 
             assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());

@@ -4,6 +4,7 @@ import static org.bytedeco.leptonica.global.leptonica.kernelCreateFromString;
 import static org.bytedeco.leptonica.global.leptonica.kernelDestroy;
 import static org.bytedeco.leptonica.global.leptonica.pixConvertRGBToLuminance;
 import static org.bytedeco.leptonica.global.leptonica.pixConvolve;
+import static org.bytedeco.leptonica.global.leptonica.pixCopy;
 import static org.bytedeco.leptonica.global.leptonica.pixDestroy;
 import static org.bytedeco.leptonica.global.leptonica.pixFindSkewAndDeskew;
 import static org.bytedeco.leptonica.global.leptonica.pixGetDepth;
@@ -79,11 +80,12 @@ import stirling.software.jpdfium.model.RenderResult;
  * Runs Tesseract in-process through JavaCPP, so OCR works where the tesseract CLI is not installed
  * (the desktop app bundles only a JRE). It mirrors OCRmyPDF's pipeline: pages are rendered with
  * pdfium (which, unlike a PDFBox document, can be shared by parallel workers), optionally turned
- * upright with Tesseract OSD and deskewed with Leptonica, then OCRed in parallel, one Tesseract
- * instance per worker thread. Tesseract sees a lightly smoothed copy of each page: a 3x3 Gaussian
- * removes scan speckle it otherwise reads as glyphs (noisy test scans went from 94% to 100% word
- * recall, with no loss on clean, small or low-resolution text). PDFBox work happens on the calling
- * thread afterwards, because PDFBox documents are not thread-safe.
+ * upright with Tesseract OSD, deskewed with Leptonica and cleaned the way OCRmyPDF's unpaper step
+ * does ({@link OcrPageCleaner}), then OCRed in parallel, one Tesseract instance per worker thread.
+ * Tesseract sees a lightly smoothed copy of each page: a 3x3 Gaussian removes scan speckle it
+ * otherwise reads as glyphs (noisy test scans went from 94% to 100% word recall, with no loss on
+ * clean, small or low-resolution text). PDFBox work happens on the calling thread afterwards,
+ * because PDFBox documents are not thread-safe.
  *
  * <p>Availability is decided without loading anything: this platform's natives must be packaged,
  * the tessdata folder must hold a language, and the admin must not have removed the {@code
@@ -318,13 +320,13 @@ public class NativeTesseractService {
         if (options.rotatePages() && !osd) {
             log.warn("Rotate pages requested but osd.traineddata is missing from {}", tessData);
         }
-        // Force and deskew replace the page with what was OCRed, so colour must survive.
-        boolean keepColour = options.force() || options.deskew();
+        // Force, deskew and clean-final replace the page with what was OCRed: colour must survive.
+        boolean keepColour = options.replacesPages();
         Map<Integer, PagePlan> plans = new HashMap<>();
         long largest = 1;
         for (int index : pages) {
             PDPage page = document.getPage(index);
-            PagePlan plan = plan(page, dpi, maxDpi(), keepColour);
+            PagePlan plan = plan(page, dpi, maxDpi(), keepColour, options.clean());
             plans.put(index, plan);
             largest = Math.max(largest, pixels(page, plan.renderDpi()));
         }
@@ -475,23 +477,30 @@ public class NativeTesseractService {
     /**
      * Resolution and form for one page: Tesseract reads it at {@code renderDpi}; a replacement
      * image is written at {@code outputDpi}, which is never higher, and 1-bit when {@code bilevel}.
+     * {@code sourceDpi} is the scan's own resolution, or {@code renderDpi} when the page is not a
+     * scan or was not measured.
      */
-    record PagePlan(int renderDpi, int outputDpi, boolean bilevel) {}
+    record PagePlan(int renderDpi, int outputDpi, int sourceDpi, boolean bilevel) {}
 
     /**
      * Tesseract reads every page at {@code dpi} or more. A page that may be replaced keeps its
      * scan's own resolution, rendered at that DPI when it is higher (up to {@code maxDpi}) and
-     * written back at it when it is lower, and a black-and-white scan stays black-and-white. Other
-     * pages render and write at {@code dpi}.
+     * written back at it when it is lower, and a black-and-white scan stays black-and-white. A page
+     * being cleaned is measured too, because cleaning works in the scan's own pixels. Other pages
+     * render and write at {@code dpi}.
      */
-    static PagePlan plan(PDPage page, int dpi, int maxDpi, boolean replacing) throws IOException {
-        Optional<OcrPageScan.Scan> scan = replacing ? OcrPageScan.scan(page) : Optional.empty();
+    static PagePlan plan(PDPage page, int dpi, int maxDpi, boolean replacing, boolean cleaning)
+            throws IOException {
+        Optional<OcrPageScan.Scan> scan =
+                replacing || cleaning ? OcrPageScan.scan(page) : Optional.empty();
         if (scan.isEmpty()) {
             int render = pageDpi(page, dpi);
-            return new PagePlan(render, render, false);
+            return new PagePlan(render, render, render, false);
         }
-        int render = pageDpi(page, Math.max(dpi, Math.min(scan.get().dpi(), maxDpi)));
-        return new PagePlan(render, Math.min(scan.get().dpi(), render), scan.get().bilevel());
+        int source = scan.get().dpi();
+        int render = pageDpi(page, replacing ? Math.max(dpi, Math.min(source, maxDpi)) : dpi);
+        int output = replacing ? Math.min(source, render) : render;
+        return new PagePlan(render, output, source, scan.get().bilevel());
     }
 
     private int maxDpi() {
@@ -668,12 +677,22 @@ public class NativeTesseractService {
                 }
                 pixSetResolution(pix, dpi, dpi);
                 Path base = workDir.resolve("page-" + index);
-                PIX input = smoothed(pix, dpi);
+                // clean-final cleans the page itself; clean only the copy Tesseract reads.
+                PIX cleaned = null;
+                if (options.cleanFinal()) {
+                    OcrPageCleaner.clean(pix, dpi, plan.sourceDpi());
+                } else if (options.clean()) {
+                    cleaned = pixCopy(null, pix);
+                    if (cleaned != null) OcrPageCleaner.clean(cleaned, dpi, plan.sourceDpi());
+                }
+                PIX read = cleaned != null ? cleaned : pix;
+                PIX input = smoothed(read, dpi);
                 String text;
                 try {
                     text = recognise(input, base);
                 } finally {
-                    if (input != pix) pixDestroy(input);
+                    if (input != read) pixDestroy(input);
+                    if (cleaned != null) pixDestroy(cleaned);
                 }
                 if (text == null) {
                     log.warn(
@@ -683,7 +702,9 @@ public class NativeTesseractService {
                     return new PageResult(index, null, null, null, 0);
                 }
                 OcrPageImages.Encoded replacement =
-                        options.force() || straightened ? replacement(pix, plan) : null;
+                        options.force() || straightened || options.cleanFinal()
+                                ? replacement(pix, plan)
+                                : null;
                 return new PageResult(index, Path.of(base + ".pdf"), text, replacement, rotate);
             } finally {
                 pixDestroy(pix);
