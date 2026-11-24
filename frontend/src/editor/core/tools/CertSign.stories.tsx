@@ -185,7 +185,9 @@ async function windowsCertificateSelected(context: PlayContext) {
 }
 
 async function chooseUsbToken(context: PlayContext) {
-  await chooseDevice(context);
+  // The link is disabled while the Windows IDs load as the step opens, so a click
+  // before that load settles can land on it disabled and do nothing.
+  await windowsCertificateSelected(context);
   await press(context, "Read the card directly");
   const panel = await panelOf(context);
   await panel.findByLabelText("PIN", undefined, STAGE_TIMEOUT);
