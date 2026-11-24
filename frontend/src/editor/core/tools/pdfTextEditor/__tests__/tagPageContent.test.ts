@@ -792,6 +792,77 @@ describe("tagging text marked for no element", () => {
   });
 });
 
+/**
+ * Two pages as a merge leaves them: the second keeps its marked content and its
+ * /StructParents 0 from a file whose tree was not carried over, and the merged
+ * file has no tree.
+ */
+function mergedPdf(): Uint8Array {
+  const page = (num: number, contents: number, extra = "") => ({
+    num,
+    body:
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${contents} 0 R${extra} ` +
+      "/Resources << /Font << /F1 7 0 R >> >> >>",
+  });
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>" },
+      page(3, 5),
+      page(4, 6, " /StructParents 0"),
+      {
+        num: 5,
+        body: streamBody("", "BT /F1 12 Tf 72 700 Td (First page.) Tj ET\n"),
+      },
+      {
+        num: 6,
+        body: streamBody(
+          "",
+          "/P <</MCID 0>> BDC BT /F1 12 Tf 72 700 Td (Merged page.) Tj ET EMC\n",
+        ),
+      },
+      {
+        num: 7,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+    ],
+    1,
+  );
+}
+
+describe("a merged page whose tree was not carried over", () => {
+  async function tagPage(bytes: Uint8Array, pageIndex: number) {
+    const doc = await EditorDocument.open(bytes);
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(pageIndex));
+    new TagPageContentCommand({ pageIndex }).apply(doc);
+    return savedBytes(doc);
+  }
+
+  test("stays taggable once another page's tags are saved, and gets a key of its own", async () => {
+    const firstSaved = await tagPage(mergedPdf(), 0);
+    const reopened = await EditorDocument.open(firstSaved);
+    opened.push(reopened);
+    expect(reopened.structure(1).cannotAddElement()).toBeNull();
+
+    const bothSaved = await tagPage(firstSaved, 1);
+    const structure = await readFileStructure(bothSaved);
+    const pdf = (await RawPdf.parse(bothSaved))!;
+    const keys = [0, 1].map((pageIndex) =>
+      pdf.dictInt(
+        pdf.objectBody(pdf.pageNumberAt(pageIndex)!)!,
+        "StructParents",
+      ),
+    );
+    expect(keys[0]).not.toBeNull();
+    expect(keys[1]).not.toBeNull();
+    expect(keys[1]).not.toBe(keys[0]);
+    expect(structure!.pages.get(0)?.elements).toHaveLength(1);
+    expect(structure!.pages.get(1)?.elements).toHaveLength(1);
+    expect(structure!.pages.get(1)?.slotCount).not.toBeNull();
+  });
+});
+
 describe("tagAllPages and the tagged flag", () => {
   test("marks the document fully tagged in the same undo step", async () => {
     const store = await storeFor(pagePdf(COLUMNS));

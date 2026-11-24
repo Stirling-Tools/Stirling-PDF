@@ -2,7 +2,8 @@
  * Give a file the structure the other passes write elements into, as an
  * appended revision: a StructTreeRoot holding a Document element and an empty
  * ParentTree when the file has none, and a /StructParents key with an empty
- * ParentTree array on each page that lacks one.
+ * ParentTree array on each page that lacks one, or names a key the ParentTree
+ * has no entry for.
  */
 import {
   addTreeEntries,
@@ -30,8 +31,9 @@ export function ensureStructureTree(
 ): Uint8Array | string | null {
   const catalog = pdf.objectBody(pdf.rootNum);
   if (!catalog) return "the file's catalog cannot be read";
+  const treeRef = pdf.dictRef(catalog, "StructTreeRoot");
   const hasTree = pdf.valueSpan(catalog, "StructTreeRoot") !== null;
-  const pages = pagesToKey(pdf, pageIndices, hasTree);
+  const pages = pagesToKey(pdf, pageIndices, hasTree, treeRef);
   if (typeof pages === "string") return pages;
   if (pages.length === 0) return null;
 
@@ -100,20 +102,33 @@ export function ensureStructureTree(
 
 /**
  * The page objects among `pageIndices` that need a ParentTree key, in order:
- * those with no /StructParents, or every one when the file has no tree for
- * a key to name.
+ * those with no /StructParents, those whose key the ParentTree has no entry
+ * for, or every one when the file has no tree for a key to name. A key with
+ * no entry is replaced, not filled: another page may hold it.
  */
 function pagesToKey(
   pdf: RawPdf,
   pageIndices: Iterable<number>,
   hasTree: boolean,
+  treeRoot: number | null,
 ): number[] | string {
   const pages: number[] = [];
   for (const pageIndex of new Set(pageIndices)) {
     const pageNum = pdf.pageNumberAt(pageIndex);
     const page = pageNum === null ? null : pdf.objectBody(pageNum);
     if (pageNum === null || !page) return "no such page";
-    if (!hasTree || !pdf.valueSpan(page, "StructParents")) pages.push(pageNum);
+    if (!hasTree || !pdf.valueSpan(page, "StructParents")) {
+      pages.push(pageNum);
+      continue;
+    }
+    const key = pdf.dictInt(page, "StructParents");
+    if (
+      treeRoot !== null &&
+      key !== null &&
+      !pdf.parentTreeArray(treeRoot, key)
+    ) {
+      pages.push(pageNum);
+    }
   }
   return pages.sort((a, b) => a - b);
 }
