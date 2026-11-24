@@ -118,6 +118,9 @@ vi.mock(
 vi.mock("@editor/components/UsageLimitModalHost", () => ({
   default: () => null,
 }));
+vi.mock("@editor/components/feedback/UserbackWidget", () => ({
+  default: () => null,
+}));
 vi.mock("@editor/components/SignInModal", () => ({ SignInModal: () => null }));
 vi.mock("@editor-core/components/shared/UpdateModal", () => ({
   default: () => null,

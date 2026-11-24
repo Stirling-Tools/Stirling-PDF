@@ -10,6 +10,7 @@ import { DesktopOnboardingModal } from "@editor/components/DesktopOnboardingModa
 import { DesktopSaasOnboardingBootstrap } from "@editor/components/DesktopSaasOnboardingBootstrap";
 import { ClassificationBackgroundRunner } from "@editor/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
 import UsageLimitModalHost from "@editor/components/UsageLimitModalHost";
+import UserbackWidget from "@editor/components/feedback/UserbackWidget";
 import { SignInModal } from "@editor/components/SignInModal";
 import { DesktopAccessGate } from "@editor/components/DesktopAccessGate";
 import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
@@ -365,6 +366,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               for both the imperative open events (direct-call 402s) and the
               usageLimitBridge event (server-side policy/AI run 402s). */}
             <UsageLimitModalHost />
+            <UserbackWidget />
             {/* Global sign-in modal, opened via stirling:open-sign-in event */}
             <SignInModal />
             {/* Desktop auto-update popup */}

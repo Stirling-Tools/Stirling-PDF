@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import type { UserbackWidget } from "@userback/widget";
 
 let current: UserbackWidget | null = null;
@@ -13,9 +14,14 @@ export function setUserbackInstance(instance: UserbackWidget | null): void {
   listeners.forEach((listener) => listener());
 }
 
-export function subscribeUserbackInstance(listener: () => void): () => void {
+function subscribeUserbackInstance(listener: () => void): () => void {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
   };
+}
+
+/** The loaded Userback widget, re-rendering when it loads or goes away. */
+export function useUserbackInstance(): UserbackWidget | null {
+  return useSyncExternalStore(subscribeUserbackInstance, getUserbackInstance);
 }
