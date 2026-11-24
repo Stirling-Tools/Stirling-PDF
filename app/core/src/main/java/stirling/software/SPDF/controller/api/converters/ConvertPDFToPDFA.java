@@ -198,6 +198,9 @@ public class ConvertPDFToPDFA {
         command.add("-dPDFX=" + profile.getPdfxVersion());
         command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
         command.add("-sDEVICE=pdfwrite");
+        // The default /PageByPage turns each page to match its text on top of the page's own
+        // /Rotate, so a page the user rotated comes out upside down.
+        command.add("-dAutoRotatePages=/None");
         command.add("-sColorConversionStrategy=RGB");
         command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());

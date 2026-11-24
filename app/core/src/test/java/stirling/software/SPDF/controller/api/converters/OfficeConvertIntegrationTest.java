@@ -28,11 +28,13 @@ import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.util.Matrix;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
@@ -298,6 +300,37 @@ class OfficeConvertIntegrationTest {
         try (PDDocument output = Loader.loadPDF(body(response))) {
             assertThat(output.getDocumentInformation().getTitle()).isEqualTo("Quarterly report");
             assertThat(output.getDocumentInformation().getAuthor()).isEqualTo("Finance team");
+        }
+    }
+
+    @Test
+    void pdfaKeepsEachPageTheRightWayUp() throws Exception {
+        var controller = new ConvertPDFToPDFA(null, null, null, tempFiles, properties, office);
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setOutputFormat("pdfa-2b");
+        List<Integer> rotations = List.of(0, 90, 270);
+        try (PDDocument pdf = new PDDocument();
+                var out = new ByteArrayOutputStream()) {
+            for (int rotation : rotations) {
+                pdf.addPage(sidewaysPage(pdf, rotation));
+            }
+            pdf.save(out);
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput", "scan.pdf", "application/pdf", out.toByteArray()));
+        }
+
+        try (PDDocument output = Loader.loadPDF(body(controller.pdfToPdfA(request)))) {
+            assertThat(output.getPages())
+                    .extracting(PDPage::getRotation)
+                    .containsExactlyElementsOf(rotations);
+            assertThat(output.getPages())
+                    .extracting(PDPage::getMediaBox)
+                    .allSatisfy(
+                            box -> {
+                                assertThat(box.getWidth()).isEqualTo(PDRectangle.A4.getWidth());
+                                assertThat(box.getHeight()).isEqualTo(PDRectangle.A4.getHeight());
+                            });
         }
     }
 
@@ -799,6 +832,24 @@ class OfficeConvertIntegrationTest {
             content.endText();
         }
         return pdf;
+    }
+
+    /** A portrait page whose text reads upright only once its {@code /Rotate} is applied. */
+    private static PDPage sidewaysPage(PDDocument pdf, int rotation) throws IOException {
+        PDPage page = new PDPage(PDRectangle.A4);
+        page.setRotation(rotation);
+        try (var content = new PDPageContentStream(pdf, page)) {
+            content.beginText();
+            content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+            content.setTextMatrix(
+                    Matrix.getRotateInstance(
+                            Math.toRadians(rotation),
+                            PDRectangle.A4.getWidth() / 2,
+                            PDRectangle.A4.getHeight() / 2));
+            content.showText(TEXT);
+            content.endText();
+        }
+        return page;
     }
 
     private static byte[] zip(String name, byte[] bytes) throws Exception {
