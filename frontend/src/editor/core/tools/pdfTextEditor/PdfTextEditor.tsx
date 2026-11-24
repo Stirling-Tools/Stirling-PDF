@@ -681,6 +681,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   });
 
   useEditorClipboard({
+    enabled: workbench === "viewer",
     hasSelection,
     getSelectedText,
     deleteSelection: reviewing ? noop : sel.deleteSelection,

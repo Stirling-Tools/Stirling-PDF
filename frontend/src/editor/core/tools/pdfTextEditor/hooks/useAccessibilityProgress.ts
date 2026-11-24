@@ -43,24 +43,23 @@ const EMPTY: AccessibilityProgress = {
 };
 
 /**
- * Tagging progress across every page while `active`: scoring only the pages the
- * viewer has read would jump as the user scrolls.
+ * Tagging progress across every page: scoring only the pages the viewer has read
+ * would jump as the user scrolls. Reads every page in the background while mounted.
  */
 export function useAccessibilityProgress(
   store: EditorStore,
   state: EditorViewState,
   selection: SelectionState,
-  active: boolean,
 ): ReviewProgress {
   const doc = store.document;
   useEffect(() => {
-    if (!active || !state.hasDocument) return;
+    if (!state.hasDocument) return;
     return readAllPagesInBackground(store);
-  }, [active, state.hasDocument, store]);
+  }, [state.hasDocument, store]);
 
   const progress = useMemo(
-    () => (active && doc ? accessibilityProgress(doc, state.pages) : EMPTY),
-    [active, doc, state.pages],
+    () => (doc ? accessibilityProgress(doc, state.pages) : EMPTY),
+    [doc, state.pages],
   );
 
   const currentId = selectedId(selection);

@@ -8,6 +8,7 @@ import type {
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { EditorTopBar } from "@editor/tools/pdfTextEditor/components/EditorTopBar";
 import { MobileEditorTopBar } from "@editor/tools/pdfTextEditor/components/MobileEditorTopBar";
 import { MobileActionBar } from "@editor/tools/pdfTextEditor/components/MobileActionBar";
@@ -35,9 +36,7 @@ export function ViewerEditToolbar() {
   // Deferred so the typed letter is drawn before the bars, which a burst of typing outdates.
   const bars = useDeferredPanelView(state, selection);
   const isMobile = useIsMobile();
-  const { reviewing, showAllTags } = useReviewMode();
-  const controller = useToolbarController(store, state, selection);
-  const review = useAccessibilityProgress(store, state, selection, reviewing);
+  const reviewing = useReviewing();
 
   // A review only tags: an armed insert or an open find-and-replace would edit.
   useEffect(() => {
@@ -71,22 +70,12 @@ export function ViewerEditToolbar() {
         editing={!reviewing}
       />
       {reviewing && store.document && (
-        <>
-          <ReviewXray
-            doc={store.document}
-            pages={state.pages}
-            items={review.items}
-            showAll={showAllTags}
-            selectedId={review.current?.id ?? null}
-          />
-          <QuickTagCard store={store} controller={controller} review={review} />
-          <ReviewDocumentPanel
-            store={store}
-            state={state}
-            controller={controller}
-            review={review}
-          />
-        </>
+        <ReviewOverlay
+          store={store}
+          doc={store.document}
+          state={state}
+          selection={selection}
+        />
       )}
       {state.findOpen && state.hasDocument && !reviewing && (
         <FindBar
@@ -96,6 +85,39 @@ export function ViewerEditToolbar() {
         />
       )}
       <MarqueeSelector store={store} />
+    </>
+  );
+}
+
+/**
+ * Mounted only while reviewing: the controller and progress read the live state,
+ * so built outside a review they would redo that work on every letter typed.
+ */
+function ReviewOverlay({
+  store,
+  doc,
+  state,
+  selection,
+}: BarProps & { doc: EditorDocument }) {
+  const { showAllTags } = useReviewMode();
+  const controller = useToolbarController(store, state, selection);
+  const review = useAccessibilityProgress(store, state, selection);
+  return (
+    <>
+      <ReviewXray
+        doc={doc}
+        pages={state.pages}
+        items={review.items}
+        showAll={showAllTags}
+        selectedId={review.current?.id ?? null}
+      />
+      <QuickTagCard store={store} controller={controller} review={review} />
+      <ReviewDocumentPanel
+        store={store}
+        state={state}
+        controller={controller}
+        review={review}
+      />
     </>
   );
 }
