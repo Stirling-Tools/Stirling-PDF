@@ -128,6 +128,7 @@ export class EditorDocument {
   // being visible everywhere else in the app. Created lazily and left null when
   // the build lacks the entry points.
   private formEnvPtr: number | null = null;
+  private formInfoPtr: number | null = null;
   private formEnvTried = false;
   private readonly formLoadedPages = new Set<number>();
   private scratch: EditorDocument | null = null;
@@ -338,13 +339,29 @@ export class EditorDocument {
       return null;
     }
     try {
-      const info = m.PDFiumExt_OpenFormFillInfo();
-      const env = m.PDFiumExt_InitFormFillEnvironment(this.docPtr, info);
+      this.formInfoPtr = m.PDFiumExt_OpenFormFillInfo() || null;
+      const env = this.formInfoPtr
+        ? m.PDFiumExt_InitFormFillEnvironment(this.docPtr, this.formInfoPtr)
+        : 0;
       this.formEnvPtr = env || null;
     } catch {
       this.formEnvPtr = null;
     }
+    if (!this.formEnvPtr) this.closeFormInfo();
     return this.formEnvPtr;
+  }
+
+  private closeFormInfo(): void {
+    if (!this.formInfoPtr) return;
+    const m = this.module as unknown as {
+      PDFiumExt_CloseFormFillInfo?: (info: number) => void;
+    };
+    try {
+      m.PDFiumExt_CloseFormFillInfo?.(this.formInfoPtr);
+    } catch {
+      /* best-effort */
+    }
+    this.formInfoPtr = null;
   }
 
   /** Tell the form layer about a page once, before its first form draw. */
@@ -1147,6 +1164,7 @@ export class EditorDocument {
       }
       this.formEnvPtr = null;
     }
+    this.closeFormInfo();
     this.formLoadedPages.clear();
     for (const page of this.pageCache.values()) {
       try {
