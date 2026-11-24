@@ -85,6 +85,23 @@ export function markListKey(
   return count > 0 ? m.FPDFPageObj_GetMark(objPtr, count - 1) || null : null;
 }
 
+/** True when another object the page draws directly shares `objPtr`'s mark list. */
+export function sharesMarkList(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  objPtr: number,
+): boolean {
+  const key = markListKey(m, objPtr);
+  if (key === null) return false;
+  for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++) {
+    const other = m.FPDFPage_GetObject(pagePtr, i);
+    if (other && other !== objPtr && markListKey(m, other) === key) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** The MCID of the innermost tag that has one: the content's own. */
 export function innermostMcid(tags: readonly TagMark[]): number | null {
   return [...tags].reverse().find((t) => t.mcid !== null)?.mcid ?? null;

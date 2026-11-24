@@ -4,6 +4,7 @@ import type {
   DescriptionBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { ImageObjectSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { sharesMarkList } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** What can be said and done about one image's accessibility. */
 export type ImageAccessibility =
@@ -74,6 +75,16 @@ export function retaggableTag(
   if (structure.cannotAddElement()) return null;
   const mcid = ownedMcid(doc, image);
   if (mcid === undefined) {
+    // Drawn in one marked-content sequence with other content, the image can only
+    // be tagged with it, which tagging that content does.
+    const page = doc.page(image.pageIndex);
+    const object = page.findImage(image.id);
+    if (
+      object &&
+      sharesMarkList(doc.module, page.pagePtr, object.pdfiumObjPtr)
+    ) {
+      return null;
+    }
     return image.artifact ? { kind: "artifact" } : { kind: "untagged" };
   }
   const type = structure.describableType(mcid);

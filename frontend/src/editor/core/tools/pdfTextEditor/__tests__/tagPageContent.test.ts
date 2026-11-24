@@ -33,6 +33,7 @@ import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { setTextTagCommand } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { matchingRuns } from "@editor/tools/pdfTextEditor/util/pageFurniture";
 import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { imageAccessibility } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 import {
   buildClassicPdf,
   streamBody,
@@ -877,6 +878,106 @@ describe("a merged page whose tree was not carried over", () => {
     const [link] = reopened.structure(1).links();
     expect(link?.holder).not.toBeNull();
     store.dispose();
+  });
+});
+
+describe("content sharing one marked-content sequence, tagged from the card", () => {
+  const SHARED =
+    "/P <</MCID 7>> BDC BT /F1 12 Tf 72 700 Td (Region) Tj 60 0 Td (North) Tj ET EMC\n";
+
+  test("tags every run on the sequence together, and undoes them together", async () => {
+    const doc = await open(pagePdf(SHARED));
+    const [region, north] = doc.page(0).runs.map((r) => r.snapshot());
+    const history = new HistoryStack();
+    history.execute(
+      setTextTagCommand(
+        doc,
+        [{ run: region, tag: textTag(doc, region) }],
+        "H1",
+      )!,
+      doc,
+    );
+    const [first, second] = doc.page(0).runs;
+    expect(first.tagMarks).toEqual([{ name: "H1", mcid: expect.any(Number) }]);
+    expect(second.tagMarks).toEqual(first.tagMarks);
+    expect(textTag(doc, second.snapshot()).kind).toBe("tagged");
+    expect(doc.structure(0).addedElements()).toHaveLength(1);
+
+    history.undo(doc);
+    expect(marksByType(doc).get(1)).toEqual([["P"], ["P"]]);
+    expect(textTag(doc, north)).toMatchObject({ kind: "untagged" });
+  });
+
+  test("leaves an image drawn inside a text sequence to that text", async () => {
+    const doc = await open(
+      pagePdf(
+        "/P <</MCID 3>> BDC BT /F1 12 Tf 72 700 Td (Caption text) Tj ET " +
+          "q 50 0 0 50 72 600 cm /Im1 Do Q EMC\n",
+      ),
+    );
+    const image = doc.page(0).images[0];
+    expect(imageAccessibility(doc, image.snapshot()).kind).toBe("blocked");
+
+    const run = doc.page(0).runs[0].snapshot();
+    new HistoryStack().execute(
+      setTextTagCommand(doc, [{ run, tag: textTag(doc, run) }], "P")!,
+      doc,
+    );
+    const tagged = doc.page(0).runs[0].tagMarks[0];
+    expect(image.mcid).toBe(tagged.mcid);
+  });
+});
+
+describe("a page whose ParentTree entry the walk could miss", () => {
+  test("stays read-only when wrong /Limits hide its entry", async () => {
+    const bytes = buildClassicPdf(
+      [
+        {
+          num: 1,
+          body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 7 0 R /MarkInfo << /Marked true >> >>",
+        },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body:
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /StructParents 0 " +
+            "/Resources << /Font << /F1 5 0 R >> >> >>",
+        },
+        {
+          num: 4,
+          body: streamBody(
+            "",
+            "/H1 <</MCID 0>> BDC BT /F1 20 Tf 72 740 Td (Report) Tj ET EMC\n",
+          ),
+        },
+        {
+          num: 5,
+          body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        },
+        {
+          num: 7,
+          body: "<< /Type /StructTreeRoot /K 8 0 R /ParentTree 10 0 R /ParentTreeNextKey 1 >>",
+        },
+        {
+          num: 8,
+          body: "<< /Type /StructElem /S /Document /P 7 0 R /K [9 0 R] >>",
+        },
+        {
+          num: 9,
+          body: "<< /Type /StructElem /S /H1 /P 8 0 R /Pg 3 0 R /K 0 >>",
+        },
+        { num: 10, body: "<< /Kids [11 0 R] >>" },
+        { num: 11, body: "<< /Limits [5 9] /Nums [0 [9 0 R]] >>" },
+      ],
+      1,
+    );
+    const doc = await open(bytes);
+    expect(doc.structure(0).cannotAddElement()).not.toBeNull();
+    const run = doc.page(0).runs[0].snapshot();
+    expect(textTag(doc, run)).not.toMatchObject({
+      kind: "untagged",
+      taggable: true,
+    });
   });
 });
 

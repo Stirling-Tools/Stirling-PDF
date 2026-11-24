@@ -8,6 +8,7 @@
 import {
   addTreeEntries,
   firstFreeKey,
+  staleKeyCheck,
 } from "@editor/tools/pdfTextEditor/pdfdoc/parentTreeEntries";
 import {
   indirectRef,
@@ -102,9 +103,9 @@ export function ensureStructureTree(
 
 /**
  * The page objects among `pageIndices` that need a ParentTree key, in order:
- * those with no /StructParents, those whose key the ParentTree has no entry
- * for, or every one when the file has no tree for a key to name. A key with
- * no entry is replaced, not filled: another page may hold it.
+ * those with no /StructParents, those whose key is stale (staleKeyCheck), or
+ * every one when the file has no tree for a key to name. A stale key is
+ * replaced, not filled: another page may hold it.
  */
 function pagesToKey(
   pdf: RawPdf,
@@ -113,6 +114,8 @@ function pagesToKey(
   treeRoot: number | null,
 ): number[] | string {
   const pages: number[] = [];
+  const rootBody = treeRoot === null ? null : pdf.objectBody(treeRoot);
+  const isStale = rootBody ? staleKeyCheck(pdf, rootBody) : () => false;
   for (const pageIndex of new Set(pageIndices)) {
     const pageNum = pdf.pageNumberAt(pageIndex);
     const page = pageNum === null ? null : pdf.objectBody(pageNum);
@@ -125,7 +128,8 @@ function pagesToKey(
     if (
       treeRoot !== null &&
       key !== null &&
-      !pdf.parentTreeArray(treeRoot, key)
+      !pdf.parentTreeArray(treeRoot, key) &&
+      isStale(pageNum, key)
     ) {
       pages.push(pageNum);
     }

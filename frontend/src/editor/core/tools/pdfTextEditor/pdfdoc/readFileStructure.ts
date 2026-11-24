@@ -14,7 +14,7 @@ import {
   StructureNodes,
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
-import { firstFreeKey } from "@editor/tools/pdfTextEditor/pdfdoc/parentTreeEntries";
+import { staleKeyCheck } from "@editor/tools/pdfTextEditor/pdfdoc/parentTreeEntries";
 import { readLinks } from "@editor/tools/pdfTextEditor/pdfdoc/readLinks";
 import { readWidgets } from "@editor/tools/pdfTextEditor/pdfdoc/readWidgets";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
@@ -117,8 +117,7 @@ export function fileStructureOf(pdf: RawPdf): FileStructure | null {
     return infos.get(num)!;
   };
 
-  // Only a tree that can be walked shows a key to be missing, not just unreadable.
-  const treeReadable = firstFreeKey(pdf, rootBody) !== null;
+  const isStale = staleKeyCheck(pdf, rootBody);
   const byPage = new Map<number, FilePageStructure>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
@@ -129,9 +128,9 @@ export function fileStructureOf(pdf: RawPdf): FileStructure | null {
       return;
     }
     const array = pdf.parentTreeArray(treeRoot, key);
-    // A key the tree has no entry for, as on a page merged in after its tree was
-    // written: the page has no elements yet, and the save gives it a key of its own.
-    if (!array && treeReadable) return;
+    // A stale key, as on a page merged in after its tree was written: the page has
+    // no elements yet, and the save gives it a key of its own.
+    if (!array && isStale(pageNum, key)) return;
     const items = array?.items;
     if (!items) {
       byPage.set(pageIndex, { elements: [], slotCount: null });

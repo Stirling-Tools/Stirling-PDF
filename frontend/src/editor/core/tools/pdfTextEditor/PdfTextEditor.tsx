@@ -862,8 +862,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         incomingFileName={pendingSwitch?.name ?? null}
         onConfirm={confirmSwitch}
         onCancel={() => {
-          // A fix waiting on the declined file would switch to it again later.
+          // A fix or a language waiting on the declined file would apply to it later.
           reviewMode.set({ startAt: null });
+          reviewLanguage.set({ requested: null });
           cancelSwitch();
         }}
       />

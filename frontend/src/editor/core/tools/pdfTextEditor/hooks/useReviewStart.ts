@@ -7,6 +7,7 @@ import {
   type ReviewModeState,
 } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { goToFix } from "@editor/tools/pdfTextEditor/util/reviewFix";
+import { reviewLanguage } from "@editor/tools/pdfTextEditor/store/reviewLanguage";
 import { tagAllPages } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 
@@ -62,7 +63,10 @@ export function useReviewStart({
     let loadStarted = store.getState().loading;
     return store.subscribe((s) => {
       if (s.loading) loadStarted = true;
-      else if (loadStarted && s.error) reviewMode.set({ startAt: null });
+      else if (loadStarted && s.error) {
+        reviewMode.set({ startAt: null });
+        reviewLanguage.set({ requested: null });
+      }
     });
   }, [waiting, store]);
 }

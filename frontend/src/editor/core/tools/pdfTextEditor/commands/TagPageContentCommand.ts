@@ -53,10 +53,18 @@ interface StepRun {
   marks: readonly TagMark[];
 }
 
+/** An image drawn on a mark list a text step tags, as it was before. */
+interface StepImage {
+  id: string;
+  mcid: number | null;
+  artifact: boolean;
+}
+
 type Step =
   | {
       kind: "text";
       runs: StepRun[];
+      images: StepImage[];
       type: StructureType;
       mcid: number;
       objects: ObjectRetag[];
@@ -64,6 +72,7 @@ type Step =
   | {
       kind: "furniture";
       runs: StepRun[];
+      images: StepImage[];
       tag: TagMark;
       objects: ObjectRetag[];
     }
@@ -354,12 +363,14 @@ function planTagging(
         ? {
             kind: "furniture",
             runs: [stepRun],
+            images: [],
             tag: furnitureTag(kind),
             objects,
           }
         : {
             kind: "text",
             runs: [stepRun],
+            images: [],
             type: headings.get(run.id) ?? TEXT_TAG,
             mcid: nextMcid++,
             objects,
@@ -373,7 +384,17 @@ function planTagging(
     if (!dropped) continue;
     const object = { ptr: image.pdfiumObjPtr, dropped };
     // Drawn in a text block's marked content: retagging the block retags it too.
-    if (stepSharingAList([object])) continue;
+    const owner = stepSharingAList([object]);
+    if (owner) {
+      if (owner.step.kind === "text" || owner.step.kind === "furniture") {
+        owner.step.images.push({
+          id: image.id,
+          mcid: image.mcid,
+          artifact: image.artifact,
+        });
+      }
+      continue;
+    }
     const kind = furniture.get(image.id);
     claim([object], {
       at: order.get(image.pdfiumObjPtr) ?? Infinity,
@@ -480,6 +501,7 @@ function applyStep(
         retagObject(doc, object, tag);
       }
       for (const run of runs) run.tagMarks = [tag];
+      setStepImages(page, step.images, tag);
       structure.addElement(step.mcid, step.type, follows.get(step.mcid));
       return;
     }
@@ -489,6 +511,7 @@ function applyStep(
         retagObject(doc, object, step.tag);
       }
       for (const run of runs) run.tagMarks = [step.tag];
+      setStepImages(page, step.images, step.tag);
       return;
     }
     case "furnitureImage": {
@@ -519,6 +542,28 @@ function stepRuns(page: Page, runs: readonly StepRun[]) {
   });
 }
 
+function setStepImages(
+  page: Page,
+  images: readonly StepImage[],
+  tag: TagMark,
+): void {
+  for (const { id } of images) {
+    const image = page.findImage(id);
+    if (!image) continue;
+    image.artifact = tag.name === ARTIFACT_TAG;
+    image.mcid = tag.mcid;
+  }
+}
+
+function restoreStepImages(page: Page, images: readonly StepImage[]): void {
+  for (const { id, mcid, artifact } of images) {
+    const image = page.findImage(id);
+    if (!image) continue;
+    image.mcid = mcid;
+    image.artifact = artifact;
+  }
+}
+
 function restoreRunMarks(page: Page, runs: readonly StepRun[]): void {
   for (const { id, marks } of runs) {
     const run = page.runs.find((r) => r.id === id);
@@ -539,6 +584,7 @@ function revertStep(
         restoreObject(doc, object, step.type);
       }
       restoreRunMarks(page, step.runs);
+      restoreStepImages(page, step.images);
       structure.removeElement(step.mcid);
       return;
     }
@@ -547,6 +593,7 @@ function revertStep(
         restoreObject(doc, object, ARTIFACT_TAG);
       }
       restoreRunMarks(page, step.runs);
+      restoreStepImages(page, step.images);
       return;
     }
     case "furnitureImage": {

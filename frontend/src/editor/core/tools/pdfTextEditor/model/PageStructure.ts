@@ -408,7 +408,8 @@ export class PageStructure {
    * is untagged however it is marked.
    */
   owns(mcid: number): boolean {
-    return this.element(mcid) !== null;
+    // A page whose tags can't be read may own anything: treat its content as tagged.
+    return this.readOnly !== null || this.element(mcid) !== null;
   }
 
   /**
