@@ -838,6 +838,7 @@ test.describe("PDF text editor - combined feature set", () => {
     await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
     await page.getByTestId("pdf-editor-find-input").fill("toolkit");
     await page.waitForTimeout(400);
+    await page.getByTestId("pdf-editor-find-toggle-replace").click();
     await page.getByTestId("pdf-editor-replace-input").fill("widget");
     await page.getByTestId("pdf-editor-replace-one").click();
     await page.waitForTimeout(600);
@@ -859,6 +860,7 @@ test.describe("PDF text editor - combined feature set", () => {
     await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
     await page.getByTestId("pdf-editor-find-input").fill("PDF");
     await page.waitForTimeout(400);
+    await page.getByTestId("pdf-editor-find-toggle-replace").click();
     await page.getByTestId("pdf-editor-replace-input").fill("DOC");
     await page.getByTestId("pdf-editor-replace-all").click();
     await page.waitForTimeout(900);
