@@ -668,7 +668,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     onOpenFind: useCallback(() => {
       if (!reviewing) store.setFindOpen(true);
     }, [store, reviewing]),
-    onFindNext: handleFindNext,
+    onFindNext: reviewing ? noop : handleFindNext,
     onEscape: handleEscape,
     onMergeSelection: reviewing ? noop : handleMergeSelection,
     onToggleBold: useCallback(() => {

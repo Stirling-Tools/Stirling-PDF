@@ -88,7 +88,7 @@ export function ViewerEditToolbar() {
           />
         </>
       )}
-      {state.findOpen && state.hasDocument && (
+      {state.findOpen && state.hasDocument && !reviewing && (
         <FindBar
           store={store}
           pages={state.pages}

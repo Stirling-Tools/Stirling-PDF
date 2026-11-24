@@ -84,6 +84,7 @@ import {
   PAGES_PAST_INSET_ATTR,
   usePagesPastInset,
 } from "@editor/components/viewer/usePagesPastInset";
+import { shouldRefitOnResize } from "@editor/components/viewer/refitOnResize";
 import "@editor/components/viewer/viewerPages.css";
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -1932,25 +1933,29 @@ const EmbedPdfViewerContent = ({
 
   const hasPages = !!effectiveFile;
   // A sidebar or a page tool's column narrows the pages area without a window resize.
-  // Refit when fitting to width, or when the page no longer fits: the narrowed area
-  // would otherwise cut it off. A zoom chosen afterwards is left alone.
   useEffect(() => {
     const area = pdfContainerRef.current;
     if (!area) return;
     let width = area.clientWidth;
+    // The margin animates, so the observer sees every width in between; compare
+    // against the width before the change began, not the last frame of it.
+    let settledWidth = width;
     let settle: number | undefined;
     const observer = new ResizeObserver(() => {
       if (Math.abs(area.clientWidth - width) < 1) return;
-      const narrowed = area.clientWidth < width;
       width = area.clientWidth;
       window.clearTimeout(settle);
       settle = window.setTimeout(() => {
+        const before = settledWidth;
+        settledWidth = area.clientWidth;
         const { level } = getZoomState();
-        const fitting =
-          level === ZoomMode.FitWidth || level === ZoomMode.Automatic;
-        if (fitting || (narrowed && widestPage(area) > area.clientWidth)) {
-          zoomActions.requestZoom(ZoomMode.FitWidth);
-        }
+        const refit = shouldRefitOnResize({
+          fitting: level === ZoomMode.FitWidth || level === ZoomMode.Automatic,
+          before,
+          after: settledWidth,
+          widestPage: widestPage(area),
+        });
+        if (refit) zoomActions.requestZoom(ZoomMode.FitWidth);
       }, FIT_WIDTH_SETTLE_MS);
     });
     observer.observe(area);
