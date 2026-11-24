@@ -1,8 +1,12 @@
-import { renderHook } from "@testing-library/react";
+import { render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { availability } = vi.hoisted(() => ({
-  availability: { enabled: true, loading: false },
+  availability: {
+    enabled: true,
+    loading: false,
+    disabled: new Set<string>(),
+  },
 }));
 
 vi.mock("react-i18next", () => ({
@@ -18,7 +22,10 @@ vi.mock("@editor/hooks/useCreatePdf", () => ({
 vi.mock("@editor/hooks/useEndpointConfig", () => ({
   useMultipleEndpointsEnabled: (endpoints: string[]) => ({
     endpointStatus: Object.fromEntries(
-      endpoints.map((endpoint) => [endpoint, availability.enabled]),
+      endpoints.map((endpoint) => [
+        endpoint,
+        availability.enabled && !availability.disabled.has(endpoint),
+      ]),
     ),
     endpointDetails: {},
     loading: availability.loading,
@@ -38,6 +45,7 @@ describe("useCreatePdfMenu", () => {
   beforeEach(() => {
     availability.enabled = true;
     availability.loading = false;
+    availability.disabled = new Set();
   });
 
   it("offers converting another file when the server can convert", () => {
@@ -52,5 +60,17 @@ describe("useCreatePdfMenu", () => {
   it("offers only a blank page until conversion is known to be available", () => {
     availability.loading = true;
     expect(itemIds()).toEqual(["blank"]);
+  });
+
+  it("offers only the formats whose conversion the server has turned on", () => {
+    availability.disabled = new Set(["img-to-pdf"]);
+    const { result } = renderHook(() => useCreatePdfMenu());
+    render(<>{result.current.dialogs}</>);
+    const accepted = screen
+      .getByTestId("create-pdf-source-input")
+      .getAttribute("accept")!
+      .split(",");
+    expect(accepted).toEqual(expect.arrayContaining([".pdf", ".docx"]));
+    expect(accepted).not.toContain(".png");
   });
 });

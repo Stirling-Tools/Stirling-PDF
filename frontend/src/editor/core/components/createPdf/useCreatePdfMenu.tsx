@@ -5,6 +5,7 @@ import { useCreatePdf, type CreatePdfStage } from "@editor/hooks/useCreatePdf";
 import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
 import { CONVERT_SUPPORTED_FORMATS } from "@editor/constants/convertSupportedFornats";
 import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
+import { getEndpointName } from "@editor/utils/convertUtils";
 
 export interface CreatePdfMenuItem {
   id: "blank" | "source";
@@ -15,8 +16,11 @@ export interface CreatePdfMenuItem {
   testId: string;
 }
 
-const SOURCE_EXTENSIONS = ["pdf", ...CONVERT_SUPPORTED_FORMATS];
-const CONVERT_ENDPOINTS = ["file-to-pdf"];
+const OFFICE_ENDPOINT = "file-to-pdf";
+const SOURCE_ENDPOINTS = new Map(
+  CONVERT_SUPPORTED_FORMATS.map((ext) => [ext, getEndpointName(ext, "pdf")]),
+);
+const CONVERT_ENDPOINTS = [...new Set(SOURCE_ENDPOINTS.values())];
 
 export function useCreatePdfMenu(): {
   items: CreatePdfMenuItem[];
@@ -28,7 +32,17 @@ export function useCreatePdfMenu(): {
   const { stage, createBlank, createFromSource } = useCreatePdf();
   const convert = useMultipleEndpointsEnabled(CONVERT_ENDPOINTS);
   const canConvert =
-    !convert.loading && convert.endpointStatus["file-to-pdf"] === true;
+    !convert.loading && convert.endpointStatus[OFFICE_ENDPOINT] === true;
+  const sourceExtensions = useMemo(
+    () => [
+      "pdf",
+      ...CONVERT_SUPPORTED_FORMATS.filter(
+        (ext) =>
+          convert.endpointStatus[SOURCE_ENDPOINTS.get(ext) ?? ""] === true,
+      ),
+    ],
+    [convert.endpointStatus],
+  );
   const sourceInputRef = useRef<HTMLInputElement | null>(null);
 
   const pickSource = useCallback(async () => {
@@ -37,13 +51,13 @@ export function useCreatePdfMenu(): {
       filters: [
         {
           name: t("createPdf.sourceFilter", "Documents and images"),
-          extensions: SOURCE_EXTENSIONS,
+          extensions: sourceExtensions,
         },
       ],
       onFallbackOpen: () => sourceInputRef.current?.click(),
     });
     if (file) await createFromSource(file);
-  }, [createFromSource, t]);
+  }, [createFromSource, sourceExtensions, t]);
 
   const sourceItem = useMemo<CreatePdfMenuItem>(
     () => ({
@@ -79,7 +93,7 @@ export function useCreatePdfMenu(): {
     <input
       ref={sourceInputRef}
       type="file"
-      accept={SOURCE_EXTENSIONS.map((ext) => `.${ext}`).join(",")}
+      accept={sourceExtensions.map((ext) => `.${ext}`).join(",")}
       style={{ display: "none" }}
       data-testid="create-pdf-source-input"
       onChange={(event) => {

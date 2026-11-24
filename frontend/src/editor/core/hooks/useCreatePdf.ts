@@ -2,7 +2,11 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileHandler } from "@editor/hooks/useFileHandler";
 import { useViewer } from "@editor/contexts/ViewerContext";
-import { useFileSelection } from "@editor/contexts/FileContext";
+import {
+  useFileSelection,
+  useFileSelectors,
+} from "@editor/contexts/FileContext";
+import { createQuickKey } from "@editor/types/fileContext";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
 import { alert } from "@editor/components/toast";
@@ -21,6 +25,7 @@ export function useCreatePdf() {
   const { addFiles } = useFileHandler();
   const { setActiveFileId } = useViewer();
   const { setSelectedFiles } = useFileSelection();
+  const fileSelectors = useFileSelectors();
   const { actions: navigationActions } = useNavigationActions();
   const { handleToolSelect } = useToolWorkflowActions();
   const [stage, setStage] = useState<CreatePdfStage>("idle");
@@ -28,14 +33,26 @@ export function useCreatePdf() {
   const openInTextEditor = useCallback(
     async (file: File) => {
       const [added] = await addFiles([file]);
-      if (!added) return;
-      setSelectedFiles([added.fileId]);
-      setActiveFileId(added.fileId);
+      const quickKey = createQuickKey(file);
+      const fileId =
+        added?.fileId ??
+        fileSelectors
+          .getStirlingFileStubs()
+          .find((stub) => stub.quickKey === quickKey)?.id;
+      if (!fileId) {
+        throw new Error(
+          t("createPdf.openFailed", "The new PDF couldn't be opened."),
+        );
+      }
+      setSelectedFiles([fileId]);
+      setActiveFileId(fileId);
       navigationActions.setWorkbench("viewer");
       handleToolSelect("pdfTextEditor");
     },
     [
       addFiles,
+      fileSelectors,
+      t,
       setSelectedFiles,
       setActiveFileId,
       navigationActions,

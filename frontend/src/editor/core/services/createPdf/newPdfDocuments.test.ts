@@ -26,6 +26,9 @@ describe("defaultPageSizeFor", () => {
     ["en-GB", "A4"],
     ["de-DE", "A4"],
     ["fr", "A4"],
+    ["en-Latn-US", "LETTER"],
+    ["zh_Hant_TW", "A4"],
+    ["not a locale", "A4"],
   ])("%s prints on %s", (locale, size) => {
     expect(defaultPageSizeFor(locale)).toBe(size);
   });

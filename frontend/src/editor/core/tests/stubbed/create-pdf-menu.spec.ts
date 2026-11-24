@@ -66,3 +66,15 @@ test("the text editor with no file creates a new blank PDF", async ({
   await expectBlankInEditor(page);
   await expect(page.getByTestId("pdf-editor-sidebar-empty")).toHaveCount(0);
 });
+
+test("picking a PDF that is already open opens it in the text editor", async ({
+  page,
+}) => {
+  await page.goto("/editor", { waitUntil: "domcontentloaded" });
+  await page.getByTestId("landing-file-input").setInputFiles(SAMPLE_PDF);
+  await page.getByTestId("pdf-library-add-files").click();
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByTestId("create-pdf-source").click();
+  await (await chooser).setFiles(SAMPLE_PDF);
+  await expectBlankInEditor(page);
+});

@@ -4,8 +4,16 @@ export type NewPdfPageSize = "A4" | "LETTER";
 
 const LETTER_SIZE_REGIONS = new Set(["US", "CA", "MX", "PH", "CL", "CO"]);
 
+function regionOf(locale: string): string | undefined {
+  try {
+    return new Intl.Locale(locale.replaceAll("_", "-")).region;
+  } catch {
+    return undefined;
+  }
+}
+
 export function defaultPageSizeFor(locale: string | undefined): NewPdfPageSize {
-  const region = locale?.split(/[-_]/)[1]?.toUpperCase();
+  const region = locale ? regionOf(locale) : undefined;
   return region && LETTER_SIZE_REGIONS.has(region) ? "LETTER" : "A4";
 }
 
