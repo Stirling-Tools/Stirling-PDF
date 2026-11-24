@@ -113,6 +113,10 @@ export function useViewerWorkbenchBarButtons(
   const layersLabel = t("workbenchBar.layers", "Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
   const annotationsLabel = t("workbenchBar.annotate", "Annotate");
+  const exitAnnotationsLabel = t(
+    "workbenchBar.exitAnnotations",
+    "Exit annotation mode",
+  );
   const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const editTextLabel = t("workbenchBar.editText", "Edit Text");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
@@ -569,8 +573,10 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-annotations",
-        tooltip: annotationsLabel,
-        ariaLabel: annotationsLabel,
+        tooltip: isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel,
+        ariaLabel: isAnnotationsActive
+          ? exitAnnotationsLabel
+          : annotationsLabel,
         section: "middle" as const,
         order: 51,
         active: isAnnotationsActive,
@@ -578,6 +584,7 @@ export function useViewerWorkbenchBarButtons(
           <BarButton
             icon="pencil"
             label={annotationsLabel}
+            hint={isAnnotationsActive ? exitAnnotationsLabel : undefined}
             tooltipPosition={tooltipPosition}
             active={isAnnotationsActive}
             disabled={disabled}
@@ -686,6 +693,7 @@ export function useViewerWorkbenchBarButtons(
     preloadTextEditor,
     tooltipPosition,
     annotationsLabel,
+    exitAnnotationsLabel,
     isAnnotationsActive,
     handleToolSelect,
     handleToolSelectForced,

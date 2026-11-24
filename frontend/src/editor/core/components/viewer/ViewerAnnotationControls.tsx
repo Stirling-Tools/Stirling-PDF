@@ -168,6 +168,11 @@ export default function ViewerAnnotationControls({
       label={redactLabel}
       tooltipPosition={tooltipPosition}
       active={isRedactMode}
+      hint={
+        isRedactMode
+          ? t("workbenchBar.exitRedaction", "Exit Redaction Mode")
+          : undefined
+      }
       onClick={handleRedactionToggle}
       disabled={disabled || currentView !== "viewer"}
     />
