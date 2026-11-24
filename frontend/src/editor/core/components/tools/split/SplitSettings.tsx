@@ -9,8 +9,12 @@ import {
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { SPLIT_METHODS } from "@editor/constants/splitConstants";
-import { SplitParameters } from "@editor/hooks/tools/split/useSplitParameters";
+import {
+  SplitParameters,
+  defaultParameters,
+} from "@editor/hooks/tools/split/useSplitParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { orderPaperSizeOptions } from "@editor/utils/paperSize";
 
 export interface SplitSettingsProps {
   parameters: SplitParameters;
@@ -240,9 +244,11 @@ const SplitSettings = ({
           "split.poster.pageSize.description",
           "Size of output pages for printing",
         )}
-        value={parameters.pageSize || "A4"}
-        onChange={(value) => onParameterChange("pageSize", value || "A4")}
-        data={[
+        value={parameters.pageSize || defaultParameters.pageSize}
+        onChange={(value) =>
+          onParameterChange("pageSize", value || defaultParameters.pageSize)
+        }
+        data={orderPaperSizeOptions([
           {
             value: "A4",
             label: t("split.poster.pageSize.options.a4", "A4 (210 × 297 mm)"),
@@ -276,7 +282,7 @@ const SplitSettings = ({
               "Tabloid (11 × 17 in)",
             ),
           },
-        ]}
+        ])}
         disabled={disabled}
         comboboxProps={{
           withinPortal: true,
