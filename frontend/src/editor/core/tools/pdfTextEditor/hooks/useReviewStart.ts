@@ -7,6 +7,7 @@ import {
   type ReviewModeState,
 } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { goToFix } from "@editor/tools/pdfTextEditor/util/reviewFix";
+import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { reviewLanguage } from "@editor/tools/pdfTextEditor/store/reviewLanguage";
 import { tagAllPages } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
@@ -45,6 +46,14 @@ export function useReviewStart({
     const doc = store.document;
     if (!ready || !doc || !session) return;
     reviewMode.set({ startAt: null });
+    if (startAt.target === "markedTagged") {
+      // A document-wide setting: applied and saved at once, nothing to go to.
+      if (doc.canSetMarkedTagged() && !doc.markedTagged()) {
+        store.dispatch(new SetMarkedTaggedCommand(true));
+        session.autosave();
+      }
+      return;
+    }
     if (startAt.autoTag) {
       void autoTag(store).then(() =>
         goToFix(store, startAt.pageIndex, startAt.target),

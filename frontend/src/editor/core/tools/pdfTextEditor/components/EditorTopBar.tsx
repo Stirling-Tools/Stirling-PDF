@@ -185,8 +185,9 @@ export function EditorTopBar({
       data-compact={compact ? "true" : "false"}
       ref={barRef}
     >
-      {/* The viewer's own bar names the file; this only flags unsaved edits. */}
-      {dirty && (
+      {/* The viewer's own bar names the file; this only flags unsaved edits. A
+          trail holding Save shows the flag beside it instead. */}
+      {dirty && !trail && (
         <div className="pdf-editor-topbar__lead">
           <span
             className="pdf-editor-topbar__dirty"

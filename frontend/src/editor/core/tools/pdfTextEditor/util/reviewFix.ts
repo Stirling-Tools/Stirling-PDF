@@ -64,7 +64,8 @@ async function select(
     case "link":
       return selectLinkToFix(store, pageIndex);
     case "markedTagged":
-      return target;
+      // Applied directly by useReviewStart: there is no control to go to.
+      return null;
   }
 }
 

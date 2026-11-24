@@ -12,9 +12,12 @@ import type { TFunction } from "i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import {
+  DESCRIBABLE_TYPES,
   isDescribableType,
   TEXT_BLOCK_TYPES,
+  type DescribableType,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
 import { FURNITURE } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { Controller } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import {
@@ -22,7 +25,10 @@ import {
   typeName,
 } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
-import type { TextDescriptionControl } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import type {
+  TextDescriptionControl,
+  TextLanguageControl,
+} from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
@@ -32,6 +38,7 @@ import {
 import {
   canBeArtifact,
   canTypeText,
+  type TextTag,
   type TextTagChoice,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import {
@@ -172,10 +179,9 @@ export function QuickTagCard({ store, controller, review }: Props) {
         <header className="review-card__head">
           <span
             className={`review-card__status review-card__status--${item.status}`}
+            data-testid="pdf-editor-quick-tag-status"
           >
-            {item.status === "done"
-              ? t("pdfTextEditor.review.card.done", "Tagged")
-              : t("pdfTextEditor.review.card.todo", "Needs attention")}
+            {itemStatus(t, item, tag, imageA11y)}
           </span>
         </header>
       ) : multiText ? (
@@ -200,7 +206,7 @@ export function QuickTagCard({ store, controller, review }: Props) {
       {asksText && tag && (
         <>
           <p className="review-card__label">
-            {t("pdfTextEditor.review.card.textQuestion", "What is this text?")}
+            {t("pdfTextEditor.review.card.textType", "Text type")}
           </p>
           <div
             className="review-card__chips"
@@ -268,8 +274,8 @@ export function QuickTagCard({ store, controller, review }: Props) {
           )}
           <p className="review-card__label">
             {t(
-              "pdfTextEditor.review.card.skipQuestion",
-              "Or skip it for screen readers",
+              "pdfTextEditor.review.card.ignored",
+              "Ignored by screen readers",
             )}
           </p>
           <div className="review-card__chips">
@@ -292,6 +298,9 @@ export function QuickTagCard({ store, controller, review }: Props) {
               </button>
             ))}
           </div>
+          {controller.textLanguage && (
+            <TextLanguageQuestion control={controller.textLanguage} />
+          )}
         </>
       )}
 
@@ -300,6 +309,7 @@ export function QuickTagCard({ store, controller, review }: Props) {
           key={item?.id}
           accessibility={imageA11y}
           onSave={controller.onSetImageDescription}
+          onSetType={controller.onSetImageType}
           onDone={afterTag}
           onDecorative={toggleImageDecorative}
         />
@@ -345,33 +355,17 @@ function TextDescriptionQuestion({
 }) {
   const { t } = useTranslation();
   const [text, setText] = useState(control.description ?? "");
-  const formula = control.type === "Formula";
-  const question = formula
-    ? t(
-        "pdfTextEditor.review.card.formulaQuestion",
-        "How is this formula read aloud?",
-      )
-    : t(
-        "pdfTextEditor.review.card.figureQuestion",
-        "What does this figure show?",
-      );
+  const label = descriptionLabel(t, control.type);
   return (
     <>
-      <p className="review-card__label">{question}</p>
+      <p className="review-card__label">{label}</p>
       <Textarea
-        aria-label={question}
+        aria-label={label}
         autosize
         minRows={2}
         maxRows={5}
         value={text}
-        placeholder={
-          formula
-            ? t(
-                "pdfTextEditor.review.card.formulaPlaceholder",
-                "For example: x squared plus one",
-              )
-            : undefined
-        }
+        placeholder={descriptionPlaceholder(t, control.type)}
         onChange={(e) => setText(e.currentTarget.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && text.trim()) {
@@ -395,6 +389,86 @@ function TextDescriptionQuestion({
   );
 }
 
+/** The language the selected text is read in, for a sentence or block in another language than the document. */
+function TextLanguageQuestion({ control }: { control: TextLanguageControl }) {
+  const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.language.label", "Language");
+  const { language } = control;
+  return (
+    <>
+      <p className="review-card__label">{label}</p>
+      <LanguagePicker
+        own={language?.own ?? null}
+        inherited={language?.inherited ?? null}
+        placeholder={
+          language
+            ? t(
+                "pdfTextEditor.inspector.language.placeholder",
+                "Select language",
+              )
+            : t("pdfTextEditor.inspector.language.mixed", "Mixed")
+        }
+        onChange={control.onSet}
+        label={label}
+        testId="pdf-editor-quick-tag-language"
+      />
+    </>
+  );
+}
+
+/** Where the selected item stands, in the words of what it is tagged as. */
+function itemStatus(
+  t: TFunction,
+  item: ReviewItem,
+  tag: TextTag | null,
+  image: Controller["imageAccessibility"],
+): string {
+  if (item.kind === "image") {
+    if (image?.kind === "decorative") return artifactName(t, null);
+    return item.status === "done"
+      ? t("pdfTextEditor.review.card.status.described", "Described")
+      : t("pdfTextEditor.review.card.status.noDescription", "No description");
+  }
+  switch (tag?.kind) {
+    case "tagged":
+      // Tagged text still to do is a formula or figure with no description.
+      if (item.status === "todo")
+        return t(
+          "pdfTextEditor.review.card.status.noDescription",
+          "No description",
+        );
+      return t("pdfTextEditor.review.card.status.taggedAs", {
+        defaultValue: "Tagged as {{type}}",
+        type: tag.block.type ? typeName(t, tag.block.type) : tag.block.role,
+      });
+    case "artifact":
+      return t("pdfTextEditor.review.card.status.ignoredAs", {
+        defaultValue: "Ignored as {{kind}}",
+        kind: artifactName(t, tag.furniture).toLocaleLowerCase(),
+      });
+    default:
+      return t("pdfTextEditor.review.card.status.untagged", "Not tagged");
+  }
+}
+
+function descriptionLabel(t: TFunction, type: DescribableType | null): string {
+  return type === "Formula"
+    ? t("pdfTextEditor.review.card.readAloudAs", "Read aloud as")
+    : t("pdfTextEditor.review.card.description", "Description");
+}
+
+function descriptionPlaceholder(
+  t: TFunction,
+  type: DescribableType,
+): string | undefined {
+  return type === "Formula"
+    ? t(
+        "pdfTextEditor.review.card.formulaPlaceholder",
+        "For example: x squared plus one",
+      )
+    : t("pdfTextEditor.review.card.imagePlaceholder", "Describe the image");
+}
+
 function imageDescription(
   accessibility: NonNullable<Controller["imageAccessibility"]>,
 ): string {
@@ -413,11 +487,13 @@ const DESCRIPTION_SAVE_MS = 500;
 function ImageQuestion({
   accessibility,
   onSave,
+  onSetType,
   onDone,
   onDecorative,
 }: {
   accessibility: NonNullable<Controller["imageAccessibility"]>;
   onSave: (text: string) => void;
+  onSetType: (type: DescribableType) => void;
   onDone: () => void;
   onDecorative: () => void;
 }) {
@@ -431,13 +507,10 @@ function ImageQuestion({
   }, [stored, draft]);
   const describable = accessibility.kind === "describable";
   const decorative = accessibility.kind === "decorative";
-  const question = t(
-    "pdfTextEditor.review.card.imageQuestion",
-    "What does this image show?",
-  );
+  const type = describable ? accessibility.type : null;
+  const label = descriptionLabel(t, type);
   return (
     <>
-      <p className="review-card__label">{question}</p>
       {accessibility.kind === "blocked" && (
         <p
           className="review-card__hint"
@@ -446,17 +519,35 @@ function ImageQuestion({
           {blockedMessage(t, accessibility)}
         </p>
       )}
+      <p className="review-card__label">
+        {t("pdfTextEditor.review.card.imageType", "Image type")}
+      </p>
+      {/* An image of an equation is a Formula, which screen readers announce as math. */}
+      <div className="review-card__chips">
+        {DESCRIBABLE_TYPES.map((option) => (
+          <button
+            key={option}
+            type="button"
+            className="review-chip"
+            data-active={type === option}
+            aria-pressed={type === option}
+            disabled={!describable}
+            onClick={() => onSetType(option)}
+            data-testid={`pdf-editor-quick-tag-image-type-${option}`}
+          >
+            {typeName(t, option)}
+          </button>
+        ))}
+      </div>
+      <p className="review-card__label">{label}</p>
       <Textarea
-        aria-label={question}
+        aria-label={label}
         autosize
         minRows={2}
         maxRows={5}
         value={text}
         disabled={!describable}
-        placeholder={t(
-          "pdfTextEditor.review.card.imagePlaceholder",
-          "Describe the image",
-        )}
+        placeholder={descriptionPlaceholder(t, type ?? "Figure")}
         onChange={(e) => {
           setText(e.currentTarget.value);
           draft.schedule(e.currentTarget.value.trim());
@@ -474,10 +565,7 @@ function ImageQuestion({
         data-fix-target="untagged image"
       />
       <p className="review-card__label">
-        {t(
-          "pdfTextEditor.review.card.skipQuestion",
-          "Or skip it for screen readers",
-        )}
+        {t("pdfTextEditor.review.card.ignored", "Ignored by screen readers")}
       </p>
       <div className="review-card__chips">
         <button

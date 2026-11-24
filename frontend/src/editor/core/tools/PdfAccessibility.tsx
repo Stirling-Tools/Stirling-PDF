@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
+import { Banner } from "@editor/ui/Banner";
 import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import { useToolPanelSize } from "@editor/hooks/useToolPanelSize";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
@@ -17,6 +18,9 @@ import {
 } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityOperation";
 import { AccessibilityResults } from "@editor/components/tools/checkAccessibility/AccessibilityResults";
 import type { FileId } from "@editor/types/file";
+import type { StirlingFile } from "@editor/types/fileContext";
+import type { AccessibilityReportEntry } from "@editor/types/checkAccessibility";
+import { useAllFiles } from "@editor/contexts/FileContext";
 import { useReviewAvailable } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
@@ -35,14 +39,20 @@ const PdfAccessibility = (props: BaseToolProps) => {
     useCheckAccessibilityOperation,
     props,
   );
-  const operation = base.operation as CheckAccessibilityOperationHook;
+  const checked = base.operation as CheckAccessibilityOperationHook;
+  const carried = useReportsCarriedOverSaves(
+    base.selectedFiles,
+    base.params.parameters.profile,
+    checked,
+  );
+  const operation = carried ? { ...checked, results: carried } : checked;
   const hasReports = operation.results.length > 0;
   const [selectedFileId, setSelectedFileId] = useState<FileId | null>(null);
   const hasFiles = base.selectedFiles.length > 0;
   useCheckWhenIdle(
-    hasFiles,
+    hasFiles && !carried,
     base.endpointEnabled,
-    operation,
+    checked,
     base.handleExecute,
   );
   useReviewInViewer(hasFiles);
@@ -75,6 +85,29 @@ const PdfAccessibility = (props: BaseToolProps) => {
           {t("checkAccessibility.retry", "Check again")}
         </Button>
       )}
+      {carried && (
+        <Banner
+          tone="info"
+          title={t(
+            "checkAccessibility.outOfDate.title",
+            "Checked before your last save",
+          )}
+          description={t(
+            "checkAccessibility.outOfDate.description",
+            "Check again to see your changes in the report.",
+          )}
+          action={
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void base.handleExecute()}
+              data-testid="check-accessibility-recheck"
+            >
+              {t("checkAccessibility.retry", "Check again")}
+            </Button>
+          }
+        />
+      )}
       {(hasReports || operation.isLoading) && (
         <AccessibilityResults
           operation={operation}
@@ -85,6 +118,59 @@ const PdfAccessibility = (props: BaseToolProps) => {
     </Stack>
   );
 };
+
+/**
+ * The last reports for the files the selected ones are new versions of, or null
+ * when the tool should check instead. Saving in the review replaces each file with
+ * a new version, which clears the report; checking again at once would blank the
+ * panel mid-task, so the old report stays, marked out of date, until the user
+ * checks again. Only a saved version carries one over: a new selection, a failed
+ * check or a changed standard still checks.
+ */
+function useReportsCarriedOverSaves(
+  selectedFiles: readonly StirlingFile[],
+  profile: AccessibilityProfile,
+  operation: CheckAccessibilityOperationHook,
+): AccessibilityReportEntry[] | null {
+  const { fileStubs } = useAllFiles();
+  const reports = useRef(
+    new Map<
+      FileId,
+      { profile: AccessibilityProfile; entry: AccessibilityReportEntry }
+    >(),
+  );
+  const { results, isLoading, errorMessage } = operation;
+
+  let carried: AccessibilityReportEntry[] | null = null;
+  if (
+    !isLoading &&
+    results.length === 0 &&
+    !errorMessage &&
+    selectedFiles.length > 0
+  ) {
+    carried = [];
+    for (const file of selectedFiles) {
+      const parent = fileStubs.find(
+        (stub) => stub.id === file.fileId,
+      )?.parentFileId;
+      const last = parent ? reports.current.get(parent) : undefined;
+      if (!last || last.profile !== profile) {
+        carried = null;
+        break;
+      }
+      carried.push({ ...last.entry, fileId: file.fileId, fileName: file.name });
+    }
+  }
+
+  // Kept by file, so a second save finds the first one's carried report.
+  const shown = carried ?? (isLoading ? [] : results);
+  useEffect(() => {
+    for (const entry of shown)
+      reports.current.set(entry.fileId, { profile, entry });
+  }, [shown, profile]);
+
+  return carried;
+}
 
 /**
  * Checks the selected files whenever the tool holds no report: on opening and after a

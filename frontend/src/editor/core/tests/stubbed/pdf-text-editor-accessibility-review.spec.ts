@@ -21,6 +21,7 @@ interface EditorWindow {
     document: {
       structure: (pageIndex: number) => {
         alt: (mcid: number) => string | null;
+        describableType: (mcid: number) => string | null;
         decorative: (mcid: number) => boolean;
         links: () => { annotation: number; holder: string | null }[];
         linkContents: (annotation: number) => string | null;
@@ -131,6 +132,44 @@ test.describe("PDF accessibility review", () => {
     expect(alt).toBe("Revenue by region, third quarter");
   });
 
+  test("tags an image of an equation as a Formula, keeping its description", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    const card = page.getByTestId("pdf-editor-quick-tag");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+
+    const image = await page.evaluate(FIRST_IMAGE);
+    await page.getByTestId(`pdf-editor-image-${image.id}`).click();
+    const figure = card.getByTestId("pdf-editor-quick-tag-image-type-Figure");
+    const formula = card.getByTestId("pdf-editor-quick-tag-image-type-Formula");
+    await expect(figure).toHaveAttribute("aria-pressed", "true");
+    // The card follows the image while the page settles, so a press can land
+    // beside the chip; pressing Formula again is a no-op.
+    await expect(async () => {
+      await formula.click();
+      await expect(formula).toHaveAttribute("aria-pressed", "true", {
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 20_000 });
+    await expect(
+      card.getByRole("textbox", { name: "Read aloud as" }),
+    ).toHaveValue("Bar chart of revenue by region");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (mcid) =>
+            (window as unknown as EditorWindow).__editor_store.document
+              .structure(0)
+              .describableType(mcid),
+          image.mcid!,
+        ),
+      )
+      .toBe("Formula");
+  });
+
   test("shows a failed open's error while the editor runs hidden", async ({
     page,
   }) => {
@@ -223,12 +262,18 @@ test.describe("PDF accessibility review", () => {
     await page.getByTestId(`pdf-editor-run-${runId}`).click();
     const formula = card.getByRole("button", { name: /^Formula/ });
     await expect(formula).toHaveAttribute("aria-pressed", "false");
-    await formula.click();
-    await expect(formula).toHaveAttribute("aria-pressed", "true");
-    await expect(card.getByText("Needs attention")).toBeVisible();
-    const description = card.getByRole("textbox", {
-      name: "How is this formula read aloud?",
-    });
+    // The card follows the selected text while the page settles, so a press can
+    // land beside the chip; tagging it Formula again is a no-op.
+    await expect(async () => {
+      await formula.click();
+      await expect(formula).toHaveAttribute("aria-pressed", "true", {
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 20_000 });
+    await expect(card.getByTestId("pdf-editor-quick-tag-status")).toHaveText(
+      "No description",
+    );
+    const description = card.getByRole("textbox", { name: "Read aloud as" });
     await description.fill("a is the rate");
     await card.getByRole("button", { name: "Save description" }).click();
 
@@ -269,7 +314,7 @@ test.describe("PDF accessibility review", () => {
     await page.getByTestId(`pdf-editor-run-${runId}`).click();
     await card.getByRole("button", { name: /^Quote/ }).click();
 
-    await page.getByTestId("pdf-editor-review-close").click();
+    await page.getByTestId("viewer-review-accessibility").click();
     await expect(
       page.getByRole("dialog", { name: "Save your tags?" }),
     ).toBeVisible();

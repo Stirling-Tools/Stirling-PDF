@@ -10,10 +10,14 @@ import {
 } from "@editor/tools/pdfTextEditor/util/dom";
 import "@editor/tools/pdfTextEditor/components/review/review.css";
 
-/** The top of the review card: the arrows through what is left to tag. */
+/**
+ * The top of the review card: the arrows through what is left to tag. Gone once
+ * nothing is: disabled arrows would read as a next item they can't reach.
+ */
 export function ReviewStepper({ review }: { review: ReviewProgress }) {
   const { t } = useTranslation();
   useNextKey(review);
+  if (review.todoCount === 0) return null;
   return (
     <div className="review-stepper" data-testid="pdf-editor-review-stepper">
       <Button
@@ -44,8 +48,6 @@ export function ReviewStepper({ review }: { review: ReviewProgress }) {
 
 /** Where the selection sits among the items still to tag, or how many are left. */
 function untaggedPosition(t: TFunction, review: ReviewProgress): string {
-  if (review.todoCount === 0)
-    return t("pdfTextEditor.review.noneLeft", "No text or images left to tag");
   if (review.todoPosition === null)
     return t("pdfTextEditor.review.untaggedCount", "{{count}} untagged", {
       count: review.todoCount,

@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import path from "path";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { AccessibilityReport } from "@editor/types/checkAccessibility";
@@ -41,6 +42,97 @@ const REPORT: AccessibilityReport = {
     encrypted: false,
   },
 };
+
+test("flags the document as tagged from the report's fix, saving it", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  let checks = 0;
+  await page.route("**/api/v1/security/accessibility-report", (route) => {
+    checks += 1;
+    return route.fulfill({
+      json: {
+        ...REPORT,
+        issues: [
+          {
+            specification: "PDF/UA-1",
+            clause: "6.2",
+            testNumber: "1",
+            message: "MarkInfo /Marked is not true",
+            severity: "error",
+            occurrences: 1,
+            autoFixable: false,
+          },
+        ],
+      } satisfies AccessibilityReport,
+    });
+  });
+  // Renaming the key, at the same length so the xref offsets hold, leaves the
+  // file tagged but not flagged as tagged.
+  const unflagged = Buffer.from(
+    (await readFile(FIXTURE))
+      .toString("latin1")
+      .replace("/Marked true", "/Xarked true"),
+    "latin1",
+  );
+  await page.getByTestId("file-input").setInputFiles({
+    name: "unflagged.pdf",
+    mimeType: "application/pdf",
+    buffer: unflagged,
+  });
+  await page
+    .getByText("PDF accessibility", { exact: true })
+    .first()
+    .click({ timeout: 60_000 });
+  await expect(page.getByTestId("pdf-editor-quick-tag")).toBeVisible({
+    timeout: 30_000,
+  });
+
+  const store = () =>
+    page.evaluate(() => {
+      const editor = (
+        window as unknown as {
+          __editor_store?: {
+            document: { markedTagged: () => boolean } | null;
+            getState: () => { dirty: boolean; loading: boolean };
+          };
+        }
+      ).__editor_store;
+      return {
+        marked: editor?.document?.markedTagged() ?? null,
+        dirty: editor?.getState().dirty ?? null,
+      };
+    });
+  await expect.poll(async () => (await store()).marked).toBe(false);
+  const report = page.getByTestId("a11y-report");
+  await report
+    .getByRole("button", {
+      name: "Tags & structure",
+      exact: true,
+      expanded: false,
+    })
+    .click();
+  await report
+    .getByRole("button", {
+      name: "Not flagged as tagged",
+      exact: true,
+      expanded: false,
+    })
+    .click();
+  await page
+    .locator('[data-testid="a11y-fix-issue"][data-fix="markedTagged"]')
+    .click();
+
+  await expect
+    .poll(store, { timeout: 30_000 })
+    .toEqual({ marked: true, dirty: false });
+  // No checkbox to hunt for: the review carries the flag itself.
+  await expect(
+    page.getByTestId("pdf-editor-review-summary").getByRole("checkbox"),
+  ).toHaveCount(0);
+  await expect(page.getByTestId("check-accessibility-recheck")).toBeVisible();
+  expect(checks).toBe(1);
+});
 
 test("lays the panel out in reading order, and pauses the review from its footer", async ({
   page,

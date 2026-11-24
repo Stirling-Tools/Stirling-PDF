@@ -67,6 +67,10 @@
   background: var(--c-warning);
 }
 
+.pdf-editor-topbar__trail .pdf-editor-topbar__dirty {
+  margin-inline-end: 0.25rem;
+}
+
 @container pdfeditortoolbar (max-width: 62rem) {
   .pdf-editor-topbar__filename {
     display: none;

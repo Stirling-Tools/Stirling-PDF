@@ -53,9 +53,11 @@ test("sets the document language from the report's Language area", async ({
   page,
 }) => {
   test.setTimeout(120_000);
-  await page.route("**/api/v1/security/accessibility-report", (route) =>
-    route.fulfill({ json: REPORT }),
-  );
+  let checks = 0;
+  await page.route("**/api/v1/security/accessibility-report", (route) => {
+    checks += 1;
+    return route.fulfill({ json: REPORT });
+  });
   await page.getByTestId("file-input").setInputFiles(FIXTURE);
   await page
     .getByText("PDF accessibility", { exact: true })
@@ -137,4 +139,13 @@ test("sets the document language from the report's Language area", async ({
       { timeout: 30_000 },
     )
     .toBe(false);
+  // The save leaves the report in place, out of date, rather than re-checking
+  // under the user; checking again is theirs to ask for.
+  const recheck = page.getByTestId("check-accessibility-recheck");
+  await expect(recheck).toBeVisible({ timeout: 30_000 });
+  await expect(report).toBeVisible();
+  expect(checks).toBe(1);
+  await recheck.click();
+  await expect.poll(() => checks).toBe(2);
+  await expect(recheck).toBeHidden();
 });

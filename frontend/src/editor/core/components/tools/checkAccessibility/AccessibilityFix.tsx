@@ -50,8 +50,7 @@ export function FixInDocumentButton({
     return (
       <Button
         className={className}
-        variant="primary"
-        accent="danger"
+        variant="secondary"
         leftSection={<Icon name="eye-off" size={16} />}
         onClick={() => reviewMode.requestClose()}
         data-testid="a11y-pause-fixing"

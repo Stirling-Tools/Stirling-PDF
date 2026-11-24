@@ -15,7 +15,7 @@ export type AccessibilityFixTarget =
   | "heading"
   /** The first untagged link, with Tag link focused; tagging also writes its description. */
   | "link"
-  /** The "Document is fully tagged" checkbox. */
+  /** Flags the document as tagged and saves it; nothing to go to. */
   | "markedTagged";
 
 export const PAGE_SCOPED_TARGETS: ReadonlySet<AccessibilityFixTarget> = new Set(
