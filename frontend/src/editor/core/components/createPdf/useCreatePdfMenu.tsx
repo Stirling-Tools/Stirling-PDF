@@ -4,6 +4,7 @@ import type { IconName } from "@editor/ui/Icon";
 import { useCreatePdf, type CreatePdfStage } from "@editor/hooks/useCreatePdf";
 import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
 import { CONVERT_SUPPORTED_FORMATS } from "@editor/constants/convertSupportedFornats";
+import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
 
 export interface CreatePdfMenuItem {
   id: "blank" | "source";
@@ -15,6 +16,7 @@ export interface CreatePdfMenuItem {
 }
 
 const SOURCE_EXTENSIONS = ["pdf", ...CONVERT_SUPPORTED_FORMATS];
+const CONVERT_ENDPOINTS = ["file-to-pdf"];
 
 export function useCreatePdfMenu(): {
   items: CreatePdfMenuItem[];
@@ -24,6 +26,9 @@ export function useCreatePdfMenu(): {
 } {
   const { t } = useTranslation();
   const { stage, createBlank, createFromSource } = useCreatePdf();
+  const convert = useMultipleEndpointsEnabled(CONVERT_ENDPOINTS);
+  const canConvert =
+    !convert.loading && convert.endpointStatus["file-to-pdf"] === true;
   const sourceInputRef = useRef<HTMLInputElement | null>(null);
 
   const pickSource = useCallback(async () => {
@@ -40,6 +45,21 @@ export function useCreatePdfMenu(): {
     if (file) await createFromSource(file);
   }, [createFromSource, t]);
 
+  const sourceItem = useMemo<CreatePdfMenuItem>(
+    () => ({
+      id: "source",
+      icon: "file-convert",
+      label: t("createPdf.source", "From another file"),
+      description: t(
+        "createPdf.sourceDesc",
+        "Convert Word, Excel, images and more",
+      ),
+      onClick: () => void pickSource(),
+      testId: "create-pdf-source",
+    }),
+    [t, pickSource],
+  );
+
   const items = useMemo<CreatePdfMenuItem[]>(
     () => [
       {
@@ -50,19 +70,9 @@ export function useCreatePdfMenu(): {
         onClick: () => void createBlank(),
         testId: "create-pdf-blank",
       },
-      {
-        id: "source",
-        icon: "file-convert",
-        label: t("createPdf.source", "From another file"),
-        description: t(
-          "createPdf.sourceDesc",
-          "Convert Word, Excel, images and more",
-        ),
-        onClick: () => void pickSource(),
-        testId: "create-pdf-source",
-      },
+      ...(canConvert ? [sourceItem] : []),
     ],
-    [t, createBlank, pickSource],
+    [t, createBlank, canConvert, sourceItem],
   );
 
   const dialogs = (
