@@ -1,6 +1,7 @@
 package stirling.software.SPDF.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,6 +10,10 @@ import static org.mockito.Mockito.when;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -58,6 +63,7 @@ class HardwareKeyStoreServiceTest {
         HardwareSigningCapabilities caps = service("Server-jar").capabilities();
         assertFalse(caps.desktop());
         assertFalse(caps.windowsStoreSupported());
+        assertFalse(caps.macKeychainSupported());
         assertFalse(caps.pkcs11Supported());
         assertTrue(caps.detectedLibraries().isEmpty());
     }
@@ -142,5 +148,106 @@ class HardwareKeyStoreServiceTest {
                 System.setProperty(PKCS11_PROP, previous);
             }
         }
+    }
+
+    @Test
+    void offersCertificatesWhoseKeyUsageAllowsSigning() {
+        assertTrue(HardwareKeyStoreService.canSign(withKeyUsage(null)));
+        assertTrue(HardwareKeyStoreService.canSign(withKeyUsage(usage(0))));
+        assertTrue(HardwareKeyStoreService.canSign(withKeyUsage(usage(1))));
+    }
+
+    @Test
+    void hidesEncryptionOnlyCertificates() {
+        assertFalse(HardwareKeyStoreService.canSign(withKeyUsage(usage(2))));
+        assertFalse(HardwareKeyStoreService.canSign(withKeyUsage(usage(3))));
+    }
+
+    private static boolean[] usage(int bit) {
+        boolean[] keyUsage = new boolean[9];
+        keyUsage[bit] = true;
+        return keyUsage;
+    }
+
+    private static X509Certificate withKeyUsage(boolean[] keyUsage) {
+        X509Certificate cert = mock(X509Certificate.class);
+        when(cert.getKeyUsage()).thenReturn(keyUsage);
+        return cert;
+    }
+
+    @Test
+    void storeSigningRefusesABlankAlias() throws Exception {
+        KeyStore ks = keyStore(List.of("only"), List.of(withKeyUsage(null)));
+        for (String source :
+                List.of(
+                        HardwareKeyStoreService.SOURCE_WINDOWS_STORE,
+                        HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN)) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> service(null).resolveSigningAlias(ks, " ", source));
+        }
+    }
+
+    @Test
+    void tokenSigningPicksTheOnlySigningCertificate() throws Exception {
+        KeyStore ks =
+                keyStore(
+                        List.of("encrypt", "sign"),
+                        List.of(withKeyUsage(usage(2)), withKeyUsage(usage(0))));
+        assertEquals(
+                "sign",
+                service(null).resolveSigningAlias(ks, null, HardwareKeyStoreService.SOURCE_PKCS11));
+    }
+
+    @Test
+    void tokenSigningRefusesToGuessBetweenSigningCertificates() throws Exception {
+        KeyStore ks =
+                keyStore(List.of("a", "b"), List.of(withKeyUsage(null), withKeyUsage(usage(1))));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        service(null)
+                                .resolveSigningAlias(
+                                        ks, null, HardwareKeyStoreService.SOURCE_PKCS11));
+    }
+
+    @Test
+    void refusesAnAliasThatCannotSign() throws Exception {
+        KeyStore ks =
+                keyStore(
+                        List.of("encrypt", "sign"),
+                        List.of(withKeyUsage(usage(2)), withKeyUsage(usage(0))));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        service(null)
+                                .resolveSigningAlias(
+                                        ks,
+                                        "encrypt",
+                                        HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        service(null)
+                                .resolveSigningAlias(
+                                        ks,
+                                        "missing",
+                                        HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN));
+        assertEquals(
+                "sign",
+                service(null)
+                        .resolveSigningAlias(
+                                ks, "sign", HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN));
+    }
+
+    private static KeyStore keyStore(List<String> aliases, List<X509Certificate> certs)
+            throws Exception {
+        KeyStore ks = mock(KeyStore.class);
+        when(ks.aliases()).thenAnswer(invocation -> Collections.enumeration(aliases));
+        for (int i = 0; i < aliases.size(); i++) {
+            when(ks.isKeyEntry(aliases.get(i))).thenReturn(true);
+            when(ks.getCertificate(aliases.get(i))).thenReturn(certs.get(i));
+        }
+        return ks;
     }
 }

@@ -647,18 +647,16 @@ description = "Maximum DPI for image processing (0 = unlimited)"
 label = "Maximum DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configure session limits and timeouts for each process executor"
 ghostscript = "Ghostscript"
 installApp = "Install App"
 label = "Process Executor Limits"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
-pythonOpenCv = "Python OpenCV"
+officeConvert = "Office conversion"
+officeConvertSessionLimit = "Maximum concurrent conversions; 0 picks a limit from CPUs and memory"
+pythonOpenCv = "Python"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maximum concurrent instances"
@@ -667,10 +665,6 @@ label = "Session Limit"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maximum execution time"
 label = "Timeout (minutes)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert is in beta. It offers better conversions, faster and with less memory than LibreOffice."
-label = "Use new Stirling Office conversion"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configure temporary file storage and cleanup behavior"
@@ -688,11 +682,6 @@ label = "Cleanup Interval (minutes)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Whether to clean broader system temp directory (use with caution)"
 label = "Cleanup System Temp"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
-label = "LibreOffice Temp Directory"
-placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximum age in hours before temp files are cleaned up"
@@ -1300,17 +1289,6 @@ label = "Default Producer"
 [admin.settings.general.customPaths]
 description = "Configure custom file system paths for pipeline processing and external tools"
 label = "Custom Paths"
-
-[admin.settings.general.customPaths.operations]
-label = "External Tool Paths"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
-label = "Unoconvert Executable"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint Executable"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline Directories"
@@ -2383,6 +2361,10 @@ title = "Run Automation"
 [automate.selection]
 title = "Automation Selection"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Create New Automation"
 
@@ -2993,31 +2975,36 @@ stepTitle = "This device"
 [certSign.error]
 failed = "An error occurred while processing signatures."
 
-[certSign.format]
-pkcs11 = "USB Token"
-windowsStore = "Windows certificate store"
-
 [certSign.hardware]
-certificate = "Certificate"
-customLibrary = "Custom driver path…"
-driver = "PKCS#11 driver"
-driverPath = "Driver library path"
-driverPathPlaceholder = "Full path to your PKCS#11 driver (.dll, .so or .dylib)"
-expired = "expired"
-expires = "expires"
-listCerts = "List certificates"
-loading = "Reading certificates…"
-noCerts = "No signing certificates found"
-noDriver = "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC), then reopen this - or enter the driver path manually below."
-notYetValid = "not yet valid"
-pin = "Token PIN"
-pkcs11Hint = "Select your token's PKCS#11 driver, enter the PIN, then list the certificates on the token."
-pkcs11LoadError = "Could not read certificates from the token. Check the PIN and driver."
-refresh = "Refresh"
-selectCert = "Select certificate"
-selectDriver = "Select driver"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+customLibrary = "Other location…"
+digitalId = "Digital ID"
+driver = "Card software (PKCS#11)"
+driverPath = "Card software path"
+driverPathPlaceholder = "Full path to the PKCS#11 library (.dll, .so or .dylib)"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
+listCerts = "Show digital IDs"
+macLoadError = "Could not read the macOS keychain"
+noCerts = "No digital IDs found. Check your card is inserted, then refresh."
+noDriver = "No card software was detected. Install the software that came with your card, then reopen this - or enter its path below."
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
+pin = "PIN"
+pkcs11Hint = "For cards your computer doesn't list. Choose the software that came with your card and enter its PIN."
+pkcs11LoadError = "Could not read the card. Check the PIN and card software."
+refreshList = "Refresh list"
+selectDriver = "Select card software"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (optional)"
-windowsHint = "Pick a certificate from your Windows certificate store. Signing uses the key on your card/token - Windows will prompt for the PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Could not read the Windows certificate store"
 
 [certSign.sessions]
@@ -3057,6 +3044,8 @@ title = "Rule of thumb"
 device = "This device"
 noOtherSources = "No other certificate sources are available."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Certificate source"
 upload = "Upload"
 
@@ -4098,14 +4087,14 @@ label = "Apply Grayscale for Compression"
 label = "Linearize PDF for fast web viewing"
 
 [compress.lineArt]
-description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+description = "Reduces images to high-contrast black and white for maximum size reduction."
 detailLevel = "Detail level"
 edgeEmphasis = "Edge emphasis"
 edgeHigh = "Strong"
 edgeLow = "Gentle"
 edgeMedium = "Balanced"
 label = "Convert images to line art"
-unavailable = "ImageMagick is not installed or enabled on this server"
+unavailable = "Line art conversion is not available on this server"
 
 [compress.method]
 filesize = "File Size"
@@ -4136,7 +4125,7 @@ title = "Grayscale"
 title = "Compress Settings Overview"
 
 [compress.tooltip.lineArt]
-text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+text = "Convert images to high-contrast black and white. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 title = "Line Art"
 
 [compress.tooltip.qualityAdjustment]
@@ -4425,8 +4414,6 @@ settings = "Settings"
 signInToUse = "Sign in to use"
 single = "Single"
 sourceFormatPlaceholder = "Source format"
-stirlingOfficeConvert = "Use Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Better, faster conversions with less memory. Turn off to use the standard converter."
 strictMode = "Strict Mode"
 strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 svgPdfOptions = "SVG to PDF Options"
@@ -4439,8 +4426,6 @@ webOptions = "Web to PDF Options"
 zoomLevel = "Zoom Level"
 
 [convert.ebookOptions]
-embedAllFonts = "Embed all fonts"
-embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
 includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"
@@ -4973,12 +4958,15 @@ closeFile = "Close file"
 
 [fileEditor]
 closedFile = "Closed {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "File reordered"
 filesReordered_other = "{{count}} files reordered"
 loadedFromStorage_one = "Loaded {{count}} file from storage"
 loadedFromStorage_other = "Loaded {{count}} files from storage"
 loadFromStorageFailed = "Failed to load some files from storage"
 pinnedFile = "Pinned {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Saved and closed {{name}}"
 saveFailed = "Save failed"
 unpinnedFile = "Unpinned {{name}}"
@@ -7008,6 +6996,10 @@ yourCloudAccess = "You'll become a team member and lose owner access."
 [pageEdit]
 deselectAll = "None"
 selectAll = "Check All"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Extract Pages"
@@ -10421,6 +10413,10 @@ title = "Pipelines"
 
 [portal.pipelines.actions]
 newCustomPipeline = "New custom pipeline"
+
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
 
 [portal.pipelines.all]
 title = "All pipelines"
@@ -14437,6 +14433,20 @@ noTools = "No tools available"
 
 [tooltip]
 close = "Close tooltip"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."
