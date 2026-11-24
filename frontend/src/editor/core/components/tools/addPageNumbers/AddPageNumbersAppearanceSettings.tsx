@@ -87,13 +87,7 @@ const AddPageNumbersAppearanceSettings = ({
       />
 
       <Select
-        {...infoLabelProps(
-          t("addPageNumbers.fontName", "Font Type"),
-          t(
-            "fontTypeTooltip",
-            "Font family for the page numbers. Choose based on your document style.",
-          ),
-        )}
+        label={t("addPageNumbers.fontName", "Font Type")}
         value={parameters.fontType}
         onChange={(v) =>
           onParameterChange(

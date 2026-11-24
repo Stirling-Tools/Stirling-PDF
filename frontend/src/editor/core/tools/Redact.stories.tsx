@@ -154,7 +154,7 @@ export const RedactionSettingsTooltip: Story = {
 };
 
 export const WordsToRedactTooltip: Story = {
-  play: openTooltip({ info: "Examples: Confidential, Top-Secret" }),
+  play: openTooltip({ info: /^Each word or phrase is found and redacted/ }),
 };
 
 export const AdvancedTooltip: Story = {

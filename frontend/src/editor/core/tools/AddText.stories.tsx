@@ -116,15 +116,6 @@ export const TextPlaced: Story = {
   play: placeText,
 };
 
-export const ResumePlacementTooltip: Story = {
-  play: openTooltip({ info: "Resume placement" }, { after: enterText }),
-};
-
-export const PausePlacementTooltip: Story = {
-  ...onViewer(),
-  play: openTooltip({ info: "Pause placement" }, { after: armTextPlacement }),
-};
-
 export const UndoTooltip: Story = {
   ...onViewer(),
   play: openTooltip({ info: "Undo" }, { after: placeText }),

@@ -14,7 +14,8 @@ export interface StampVariableGroup {
 export interface StampTextExample {
   /** What the stamp text becomes; `\n` is typed as two characters. */
   text: string;
-  label: string;
+  /** Says what the example shows when the text alone does not. */
+  note?: string;
 }
 
 /** The @ variables a stamp can hold, grouped as both the picker and the sidebar help list them. */
@@ -118,18 +119,12 @@ export function stampVariableGroups(t: TFunction): StampVariableGroup[] {
 
 export function stampTextExamples(t: TFunction): StampTextExample[] {
   return [
-    {
-      text: "Page @page_number of @total_pages",
-      label: "Page @page_number of @total_pages",
-    },
-    {
-      text: "Created: @date{dd/MM/yyyy HH:mm}",
-      label: "Created: @date{dd/MM/yyyy HH:mm}",
-    },
-    { text: "© @year @author", label: "© @year @author" },
+    { text: "Page @page_number of @total_pages" },
+    { text: "Created: @date{dd/MM/yyyy HH:mm}" },
+    { text: "© @year @author" },
     {
       text: "@filename\\n@date",
-      label: `@filename\\n@date (${t("AddStampRequest.multiLine", "multi-line")})`,
+      note: t("AddStampRequest.multiLine", "multi-line"),
     },
   ];
 }

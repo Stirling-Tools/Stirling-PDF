@@ -1,27 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useDeleteAllTips = (): SidebarTooltipContent => {
-  const { t } = useTranslation();
-
-  return {
-    header: {
-      title: t(
-        "changeMetadata.tooltip.deleteAll.title",
-        "Remove Existing Metadata",
-      ),
-    },
-    tips: [
-      {
-        description: t(
-          "changeMetadata.tooltip.deleteAll.text",
-          "Complete metadata deletion to ensure privacy.",
-        ),
-      },
-    ],
-  };
-};
-
 export const useStandardMetadataTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 

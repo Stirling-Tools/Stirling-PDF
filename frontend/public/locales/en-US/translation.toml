@@ -45,7 +45,6 @@ fileSelected = "{{filename}}"
 filesSelected = "{{count}} files"
 font = "Font"
 fontSizeTooltip = "Size of the page number text in points. Larger numbers create bigger text."
-fontTypeTooltip = "Font family for the page numbers. Choose based on your document style."
 green = "Green"
 help = "Help"
 incorrectPasswordMessage = "Current password is incorrect."
@@ -250,10 +249,7 @@ image = "Upload"
 text = "Text"
 
 [addImage.step]
-createDesc = "Upload the image you want to add"
-createTitle = "Adding an Image"
 place = "Place image"
-placeDesc = "Click on the PDF to add your image"
 
 [addImage.steps]
 configure = "Configure Image"
@@ -385,7 +381,7 @@ selectTemplate = "Select a template..."
 size = "Size"
 stampSetup = "Stamp Setup"
 stampText = "Stamp Text"
-stampTextInfo = "Printed on every stamped page. Words starting with @, such as @page_number, are filled in when the stamp is applied."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Stamp Type"
 submit = "Add Stamp"
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
@@ -401,12 +397,6 @@ failed = "An error occurred while adding stamp to the PDF."
 
 [AddStampRequest.results]
 title = "Stamp Results"
-
-[AddStampRequest.stampTextTips]
-description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
-literalAt = "Type @@ for a literal @"
-newLine = "Type \\n to start a new line"
-title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Custom"
@@ -425,6 +415,9 @@ timestamp = "Timestamp"
 examplesHint = "Replaces the stamp text"
 help = "What each variable means"
 open = "Insert a variable"
+
+[AddStampRequest.variableTips]
+title = "Stamp variables"
 
 [addText]
 applySignatures = "Apply Text"
@@ -477,10 +470,7 @@ image = "Upload"
 text = "Text"
 
 [addText.step]
-createDesc = "Enter the text you want to add"
-createTitle = "Adding Text"
 place = "Place text"
-placeDesc = "Click on the PDF to add your text"
 
 [addText.steps]
 configure = "Configure Text"
@@ -2555,7 +2545,7 @@ tooltip = "Enable for short-edge duplex printing (automatic duplex only - ignore
 label = "Gutter size"
 
 [bookletImposition.manualDuplex]
-instructions = "For printers without automatic duplex. You'll need to run this twice:"
+instructions = "For printers without automatic duplex. Run the tool twice, once for each Print Pass below."
 title = "Manual Duplex Mode"
 
 [bookletImposition.rtlBinding]
@@ -3072,7 +3062,6 @@ placeholder = "Document creator"
 
 [changeMetadata.customFields]
 add = "Add Field"
-description = "Add custom metadata fields to the document"
 key = "Key"
 keyPlaceholder = "Custom key"
 remove = "Remove"
@@ -3138,10 +3127,6 @@ bullet1 = "Creation Date: When original document was made"
 bullet2 = "Modification Date: When last changed"
 text = "When the document was created and modified."
 title = "Date Fields"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Complete metadata deletion to ensure privacy."
-title = "Remove Existing Metadata"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Title: Document name or heading"
@@ -4401,9 +4386,7 @@ zoomLevel = "Zoom Level"
 
 [convert.ebookOptions]
 includePageNumbers = "Include page numbers"
-includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"
-includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
@@ -4412,7 +4395,6 @@ detectChapters = "Detect chapters"
 detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
 kindleEink = "Kindle e-Ink (text optimized)"
 outputFormat = "Output format"
-outputFormatDesc = "Choose the output format for the ebook"
 tabletPhone = "Tablet/Phone (with images)"
 targetDevice = "Target device"
 targetDeviceDesc = "Choose an output profile optimized for the reader device"
@@ -4476,6 +4458,7 @@ scarf = "Scarf Pixel"
 
 [createPortfolio]
 coverTitle = "Cover page title"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
 goToFileEditor = "Go to file editor"
@@ -4493,6 +4476,9 @@ title = "What it does"
 
 [createPortfolio.tooltip.header]
 title = "About PDF Portfolios"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Auto-crop whitespace"
@@ -5617,7 +5603,6 @@ removeField = "Remove field"
 
 [formFill.editor]
 action = "Button action"
-actionHelp = "What the button does when clicked."
 actionNone = "None"
 actionPrint = "Print"
 actionReset = "Reset form"
@@ -5639,7 +5624,6 @@ maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
 multiline = "Multi-line"
 multilineHelp = "Allows more than one line of text and wraps at the field's edge."
 multiSelect = "Allow multiple selection"
-multiSelectHelp = "Lets more than one option be chosen at once."
 name = "Field name"
 nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
 optionGap = "Option spacing"
@@ -12095,7 +12079,7 @@ title = "Redaction Settings"
 
 [redact.auto.wordsToRedact]
 add = "Add"
-examples = "Examples: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Enter a word"
 title = "Words to Redact"
 
@@ -12169,7 +12153,7 @@ title = "Automatic Redaction"
 title = "Redaction Method"
 
 [redact.tooltip.mode.manual]
-text = "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)"
+text = "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted."
 title = "Manual Redaction"
 
 [redact.tooltip.words]
@@ -12186,7 +12170,7 @@ text = "Typical words to redact include: bank details, email addresses, or speci
 title = "Common Examples"
 
 [redact.tooltip.words.header]
-title = "Words to Redact"
+title = "Redaction Settings"
 
 [releases]
 title = "Release Notes"
@@ -13437,10 +13421,7 @@ image = "Upload"
 text = "Text"
 
 [sign.step]
-createDesc = "Choose how you want to create the signature"
-createTitle = "Creating Your Signature"
 place = "Place & save"
-placeDesc = "Position the signature on your PDF"
 
 [sign.steps]
 configure = "Configure Signature"
@@ -13979,7 +13960,6 @@ placeholder = "Enter number of horizontal divisions"
 
 [split-by-sections.splitMode]
 custom = "Custom pages"
-description = "Choose how to split the pages"
 label = "Split Mode"
 splitAll = "Split all pages"
 splitAllExceptFirst = "Split all except first"

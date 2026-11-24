@@ -135,13 +135,6 @@ export const ZeroPadWidthTooltip: Story = {
   ),
 };
 
-export const FontNameTooltip: Story = {
-  play: openTooltip(
-    { info: /^Font family for the page numbers/ },
-    { after: openCustomize },
-  ),
-};
-
 export const CustomTextFormatTooltip: Story = {
   play: openTooltip(
     { info: /^Optional custom format for page numbers/ },

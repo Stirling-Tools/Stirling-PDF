@@ -53,7 +53,6 @@ import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { buildSignaturePreview } from "@editor/utils/signaturePreview";
 
 import { Icon } from "@editor/ui/Icon";
-import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 type SignatureDrafts = {
   canvas?: string;
@@ -1195,31 +1194,27 @@ const SignSettings = ({
   const placementToggleControl =
     onActivateSignaturePlacement || onDeactivateSignature ? (
       isPlacementMode ? (
-        <Tooltip label={translate("mode.pause", "Pause placement")}>
-          <Button
-            variant="secondary"
-            aria-label={translate("mode.pause", "Pause placement")}
-            onClick={handlePausePlacement}
-            disabled={disabled || !onDeactivateSignature}
-            leftSection={<Icon name="circle-pause" size={20} />}
-          >
-            {translate("mode.pause", "Pause placement")}
-          </Button>
-        </Tooltip>
+        <Button
+          variant="secondary"
+          aria-label={translate("mode.pause", "Pause placement")}
+          onClick={handlePausePlacement}
+          disabled={disabled || !onDeactivateSignature}
+          leftSection={<Icon name="circle-pause" size={20} />}
+        >
+          {translate("mode.pause", "Pause placement")}
+        </Button>
       ) : (
-        <Tooltip label={translate("mode.resume", "Resume placement")}>
-          <Button
-            variant="secondary"
-            aria-label={translate("mode.resume", "Resume placement")}
-            onClick={handleResumePlacement}
-            disabled={
-              disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
-            }
-            leftSection={<Icon name="play" size={20} />}
-          >
-            {translate("mode.resume", "Resume placement")}
-          </Button>
-        </Tooltip>
+        <Button
+          variant="secondary"
+          aria-label={translate("mode.resume", "Resume placement")}
+          onClick={handleResumePlacement}
+          disabled={
+            disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
+          }
+          leftSection={<Icon name="play" size={20} />}
+        >
+          {translate("mode.resume", "Resume placement")}
+        </Button>
       )
     ) : null;
 
@@ -1258,17 +1253,9 @@ const SignSettings = ({
       <Divider />
 
       <Stack gap="sm">
-        <Group gap={4} wrap="nowrap">
-          <Text fw={600} size="md">
-            {translate("step.place", "Place & save")}
-          </Text>
-          <ToolInfoTooltip
-            label={translate(
-              "step.placeDesc",
-              "Position the signature on your PDF",
-            )}
-          />
-        </Group>
+        <Text fw={600} size="md">
+          {translate("step.place", "Place & save")}
+        </Text>
 
         <Group gap="xs" wrap="nowrap" align="center">
           <DrawingControls

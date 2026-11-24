@@ -335,13 +335,7 @@ export function FormFieldPropertyEditor({
         <>
           <Select
             size="xs"
-            {...infoLabelProps(
-              t("formFill.editor.action", "Button action"),
-              t(
-                "formFill.editor.actionHelp",
-                "What the button does when clicked.",
-              ),
-            )}
+            label={t("formFill.editor.action", "Button action")}
             value={action.kind}
             data={[
               { value: "none", label: t("formFill.editor.actionNone", "None") },
@@ -450,13 +444,7 @@ export function FormFieldPropertyEditor({
       {value.type === "listbox" && (
         <Switch
           size="xs"
-          {...infoLabelProps(
-            t("formFill.editor.multiSelect", "Allow multiple selection"),
-            t(
-              "formFill.editor.multiSelectHelp",
-              "Lets more than one option be chosen at once.",
-            ),
-          )}
+          label={t("formFill.editor.multiSelect", "Allow multiple selection")}
           checked={!!value.multiSelect}
           onChange={(e) => onChange({ multiSelect: e.currentTarget.checked })}
         />

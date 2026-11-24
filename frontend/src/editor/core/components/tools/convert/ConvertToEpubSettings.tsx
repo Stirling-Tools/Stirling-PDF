@@ -103,13 +103,7 @@ const ConvertToEpubSettings = ({
       />
 
       <Select
-        {...infoLabelProps(
-          t("convert.epubOptions.outputFormat", "Output format"),
-          t(
-            "convert.epubOptions.outputFormatDesc",
-            "Choose the output format for the ebook",
-          ),
-        )}
+        label={t("convert.epubOptions.outputFormat", "Output format")}
         value={epubOptions.outputFormat}
         onChange={handleOutputFormatChange}
         disabled={disabled}

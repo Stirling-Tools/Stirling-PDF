@@ -46,8 +46,8 @@ export default function WordsToRedactInput({
         </Text>
         <ToolInfoTooltip
           label={t(
-            "redact.auto.wordsToRedact.examples",
-            "Examples: Confidential, Top-Secret",
+            "redact.auto.wordsToRedact.info",
+            "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret.",
           )}
         />
       </Group>

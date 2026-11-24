@@ -537,10 +537,6 @@ export const OptionsTooltip = fieldInfoTooltip(
   "interests",
   /^The choices offered in the list/,
 );
-export const MultipleSelectionTooltip = fieldInfoTooltip(
-  "interests",
-  "Lets more than one option be chosen at once.",
-);
 export const OptionSizeTooltip = fieldInfoTooltip(
   "contactMethod",
   /^Width and height of each button/,
@@ -562,10 +558,6 @@ export const GroupSizeNote: Story = {
 export const ButtonCaptionTooltip = fieldInfoTooltip(
   "submit",
   "The text printed on the button face.",
-);
-export const ButtonActionTooltip = fieldInfoTooltip(
-  "submit",
-  "What the button does when clicked.",
 );
 export const ButtonUrlTooltip = fieldInfoTooltip(
   "submit",

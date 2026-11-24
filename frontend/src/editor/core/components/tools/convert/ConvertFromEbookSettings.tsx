@@ -55,15 +55,9 @@ const ConvertFromEbookSettings = ({
   return (
     <Stack gap="sm">
       <Checkbox
-        {...infoLabelProps(
-          t(
-            "convert.ebookOptions.includeTableOfContents",
-            "Include table of contents",
-          ),
-          t(
-            "convert.ebookOptions.includeTableOfContentsDesc",
-            "Add a generated table of contents to the resulting PDF",
-          ),
+        label={t(
+          "convert.ebookOptions.includeTableOfContents",
+          "Include table of contents",
         )}
         checked={ebookOptions.includeTableOfContents}
         onChange={(event) =>
@@ -72,12 +66,9 @@ const ConvertFromEbookSettings = ({
         disabled={disabled}
       />
       <Checkbox
-        {...infoLabelProps(
-          t("convert.ebookOptions.includePageNumbers", "Include page numbers"),
-          t(
-            "convert.ebookOptions.includePageNumbersDesc",
-            "Add page numbers to the generated PDF",
-          ),
+        label={t(
+          "convert.ebookOptions.includePageNumbers",
+          "Include page numbers",
         )}
         checked={ebookOptions.includePageNumbers}
         onChange={(event) =>

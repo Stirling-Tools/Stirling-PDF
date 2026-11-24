@@ -6,6 +6,17 @@
   display: inline-flex;
 }
 
+/* Holds the variable help's sidebar tooltip, opened only from the help link. */
+.helpAnchor {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .dropdown {
   padding: 0.75rem;
 }

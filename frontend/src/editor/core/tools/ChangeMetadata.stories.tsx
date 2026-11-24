@@ -188,10 +188,6 @@ export const CustomField: Story = {
   },
 };
 
-export const RemoveExistingMetadataTooltip: Story = {
-  play: openTooltip({ text: STEPS.deleteAll }, { after: waitForMetadataRead }),
-};
-
 export const StandardFieldsTooltip: Story = {
   play: openTooltip({ text: STEPS.standard }, { after: openStandardFields }),
 };
@@ -202,13 +198,6 @@ export const DateFieldsTooltip: Story = {
 
 export const AdvancedOptionsTooltip: Story = {
   play: openTooltip({ text: STEPS.advanced }, { after: openAdvancedOptions }),
-};
-
-export const CustomMetadataTooltip: Story = {
-  play: openTooltip(
-    { info: "Add custom metadata fields to the document" },
-    { after: openAdvancedOptions },
-  ),
 };
 
 export const NoFiles: Story = {

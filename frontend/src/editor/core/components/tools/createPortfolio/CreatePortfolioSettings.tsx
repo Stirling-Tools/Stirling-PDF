@@ -31,8 +31,8 @@ const CreatePortfolioSettings = ({
         {...infoLabelProps(
           t("createPortfolio.coverTitle", "Cover page title"),
           t(
-            "createPortfolio.description",
-            "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached.",
+            "createPortfolio.coverTitleInfo",
+            "The heading on the cover page that readers without portfolio support open to.",
           ),
         )}
         placeholder={t(

@@ -20,7 +20,7 @@ export const useRedactModeTips = (): SidebarTooltipContent => {
         title: t("redact.tooltip.mode.manual.title", "Manual Redaction"),
         description: t(
           "redact.tooltip.mode.manual.text",
-          "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)",
+          "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted.",
         ),
       },
     ],
@@ -32,7 +32,7 @@ export const useRedactWordsTips = (): SidebarTooltipContent => {
 
   return {
     header: {
-      title: t("redact.tooltip.words.header.title", "Words to Redact"),
+      title: t("redact.tooltip.words.header.title", "Redaction Settings"),
     },
     tips: [
       {

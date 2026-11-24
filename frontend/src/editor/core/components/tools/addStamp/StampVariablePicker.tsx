@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Popover, Text } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
+import { useStampVariableTips } from "@editor/components/tooltips/useStampVariableTips";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 import {
   stampTextExamples,
@@ -17,8 +18,6 @@ interface StampVariablePickerProps {
   onInsert: (token: string) => void;
   /** Replaces the whole stamp text with an example. */
   onUseExample: (text: string) => void;
-  /** Opens the field's sidebar help, which explains every variable. */
-  onShowHelp: () => void;
   disabled?: boolean;
 }
 
@@ -29,12 +28,20 @@ interface StampVariablePickerProps {
 export function StampVariablePicker({
   onInsert,
   onUseExample,
-  onShowHelp,
   disabled = false,
 }: StampVariablePickerProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const label = t("AddStampRequest.variablePicker.open", "Insert a variable");
+  const variableTips = useStampVariableTips();
+  const helpAnchor = useRef<HTMLSpanElement>(null);
+
+  // Clicking the hidden anchor pins its sidebar tooltip the way a click pins an
+  // (i)'s, so the help closes the same ways. It outlives the popover, which
+  // closes as the help opens.
+  const showHelp = () => {
+    helpAnchor.current?.querySelector("button")?.click();
+  };
 
   return (
     <Popover
@@ -48,6 +55,16 @@ export function StampVariablePicker({
       trapFocus
       returnFocus
     >
+      <span ref={helpAnchor} className={classes.helpAnchor}>
+        <Tooltip
+          sidebarTooltip
+          pinOnClick
+          header={variableTips.header}
+          tips={variableTips.tips}
+        >
+          <button type="button" tabIndex={-1} aria-hidden="true" />
+        </Tooltip>
+      </span>
       <Tooltip content={label} position="top" disabled={opened}>
         <span className={classes.trigger}>
           <Popover.Target>
@@ -113,7 +130,9 @@ export function StampVariablePicker({
                     setOpened(false);
                   }}
                 >
-                  {example.label}
+                  {example.note
+                    ? `${example.text} (${example.note})`
+                    : example.text}
                 </Button>
               ))}
             </div>
@@ -126,7 +145,7 @@ export function StampVariablePicker({
             leftSection={<Icon name="info" size={14} />}
             onClick={() => {
               setOpened(false);
-              onShowHelp();
+              showHelp();
             }}
           >
             {t(

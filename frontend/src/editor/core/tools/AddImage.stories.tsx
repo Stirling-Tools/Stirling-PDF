@@ -97,15 +97,6 @@ export const ImagePlaced: Story = {
   play: placeImage,
 };
 
-export const ResumePlacementTooltip: Story = {
-  play: openTooltip({ info: "Resume placement" }, { after: uploadImage }),
-};
-
-export const PausePlacementTooltip: Story = {
-  ...onViewer(),
-  play: openTooltip({ info: "Pause placement" }, { after: armImagePlacement }),
-};
-
 export const UndoTooltip: Story = {
   ...onViewer(),
   play: openTooltip({ info: "Undo" }, { after: placeImage }),

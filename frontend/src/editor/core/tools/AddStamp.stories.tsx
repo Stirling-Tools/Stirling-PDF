@@ -175,7 +175,7 @@ export const VariableHelp: Story = {
     await userEvent.click(
       picker.getByRole("button", { name: "What each variable means" }),
     );
-    await bodyOf(context).findByText("What gets printed", {}, STAGE_TIMEOUT);
+    await bodyOf(context).findByText("Stamp variables", {}, STAGE_TIMEOUT);
   },
 };
 

@@ -49,7 +49,7 @@ const BookletImpositionSettings = ({
             <ToolInfoTooltip
               label={t(
                 "bookletImposition.manualDuplex.instructions",
-                "For printers without automatic duplex. You'll need to run this twice:",
+                "For printers without automatic duplex. Run the tool twice, once for each Print Pass below.",
               )}
             />
           </Group>

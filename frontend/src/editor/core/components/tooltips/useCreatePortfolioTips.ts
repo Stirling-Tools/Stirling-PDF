@@ -16,6 +16,13 @@ export const useCreatePortfolioTips = (): SidebarTooltipContent => {
           "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own.",
         ),
       },
+      {
+        title: t("createPortfolio.tooltip.olderReaders.title", "Older readers"),
+        description: t(
+          "createPortfolio.description",
+          "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached.",
+        ),
+      },
     ],
   };
 };

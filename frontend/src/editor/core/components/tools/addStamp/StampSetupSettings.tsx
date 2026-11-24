@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
   Textarea,
@@ -17,7 +17,6 @@ import {
   isQrContentWithinLimit,
 } from "@editor/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
-import { useStampTextTips } from "@editor/components/tooltips/useStampTextTips";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import { StampVariablePicker } from "@editor/components/tools/addStamp/StampVariablePicker";
 import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp/StampPreviewUtils";
@@ -185,8 +184,6 @@ const StampSetupSettings = ({
   filename,
 }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
-  const stampTextTips = useStampTextTips();
-  const stampTextFieldRef = useRef<HTMLDivElement>(null);
   const stampTextCaret = useRef<{ start: number; end: number } | null>(null);
   const stampImageWithUrl = useFileWithUrl(
     parameters.stampType === "image" ? (parameters.stampImage ?? null) : null,
@@ -211,14 +208,6 @@ const StampSetupSettings = ({
     );
     const after = start + token.length;
     stampTextCaret.current = { start: after, end: after };
-  };
-
-  // Pins the (i)'s own sidebar tooltip, so the field's help has one copy and
-  // one way to close.
-  const showStampTextHelp = () => {
-    stampTextFieldRef.current
-      ?.querySelector<HTMLButtonElement>("button.sui-info")
-      ?.click();
   };
 
   return (
@@ -291,15 +280,15 @@ const StampSetupSettings = ({
             }}
           />
 
-          <Box pos="relative" ref={stampTextFieldRef}>
+          <Box pos="relative">
             <Textarea
               {...infoLabelProps(
                 t("AddStampRequest.stampText", "Stamp Text"),
-                t(
-                  "AddStampRequest.stampTextInfo",
-                  "Printed on every stamped page. Words starting with @, such as @page_number, are filled in when the stamp is applied.",
-                ),
-                stampTextTips,
+                <Trans
+                  i18nKey="AddStampRequest.stampTextInfo"
+                  defaults="Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\n</code> for a new line and <code>@@</code> for a literal @."
+                  components={{ code: <code /> }}
+                />,
               )}
               value={parameters.stampText}
               className={privateContentClassName}
@@ -318,7 +307,6 @@ const StampSetupSettings = ({
                 stampTextCaret.current = null;
                 onParameterChange("stampText", text);
               }}
-              onShowHelp={showStampTextHelp}
               disabled={disabled}
             />
           </Box>

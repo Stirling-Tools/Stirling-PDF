@@ -46,7 +46,7 @@ export const PortfolioSettingsTooltip: Story = {
 };
 
 export const CoverTitleTooltip: Story = {
-  play: openTooltip({ info: /^Every selected file is kept whole/ }),
+  play: openTooltip({ info: /^The heading on the cover page/ }),
 };
 
 export const OneFile: Story = {
