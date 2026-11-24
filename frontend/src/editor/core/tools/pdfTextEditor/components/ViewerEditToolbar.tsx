@@ -15,7 +15,6 @@ import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { FindBar } from "@editor/tools/pdfTextEditor/components/FindBar";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
 import { QuickTagCard } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
-import { CloseReviewPrompt } from "@editor/tools/pdfTextEditor/components/review/CloseReviewPrompt";
 import { EditorTrailControls } from "@editor/tools/pdfTextEditor/components/EditorTrailControls";
 import { ReviewXray } from "@editor/tools/pdfTextEditor/components/review/ReviewXray";
 import { ReviewDocumentPanel } from "@editor/tools/pdfTextEditor/components/review/ReviewDocumentPanel";
@@ -71,7 +70,6 @@ export function ViewerEditToolbar() {
         mobile={isMobile}
         editing={!reviewing}
       />
-      {reviewing && <CloseReviewPrompt />}
       {reviewing && store.document && (
         <>
           <ReviewXray
