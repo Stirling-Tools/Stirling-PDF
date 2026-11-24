@@ -11,22 +11,28 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 
 @Slf4j
+@RequiredArgsConstructor
 public class CustomOAuth2AuthenticationFailureHandler
         extends SimpleUrlAuthenticationFailureHandler {
+
+    private static final String GENERIC_ERROR_CODE = "oauth2AuthenticationError";
+
+    private final ApplicationProperties applicationProperties;
 
     @Override
     @Audited(type = AuditEventType.USER_FAILED_LOGIN, level = AuditLevel.BASIC)
@@ -55,57 +61,44 @@ public class CustomOAuth2AuthenticationFailureHandler
                 return;
             }
             case OAuth2AuthenticationException oAuth2Exception -> {
-                OAuth2Error error = oAuth2Exception.getError();
-
-                String errorCode = error.getErrorCode();
-
+                String errorCode = oAuth2Exception.getError().getErrorCode();
                 log.error(
                         "OAuth2 Authentication error: {}",
                         errorCode != null ? errorCode : exception.getMessage(),
                         exception);
-                String errorValue = errorCode != null ? errorCode : "oauth2AuthenticationError";
-                clearRedirectCookie(response);
-                boolean tauriState = TauriOAuthUtils.isTauriState(request);
-                String redirectUrl;
-                if (tauriState) {
-                    String basePath =
-                            TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
-                    redirectUrl = basePath;
-                    String stateParam = request.getParameter("state");
-                    if (stateParam != null && !stateParam.isBlank()) {
-                        redirectUrl = appendQueryParam(redirectUrl, "state", stateParam);
-                        // Extract and pass nonce for CSRF validation
-                        String nonce = TauriOAuthUtils.extractNonceFromState(stateParam);
-                        if (nonce != null) {
-                            redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
-                        }
-                    }
-                    redirectUrl = appendQueryParam(redirectUrl, "errorOAuth", errorValue);
-                } else {
-                    redirectUrl = buildFailureRedirectUrl(request, errorValue);
-                }
-                getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+                redirectToCallbackWithError(
+                        request, response, errorCode != null ? errorCode : GENERIC_ERROR_CODE);
                 return;
             }
-            default -> {}
+            default -> {
+                log.error("Unhandled authentication exception", exception);
+                redirectToCallbackWithError(request, response, GENERIC_ERROR_CODE);
+            }
         }
-        log.error("Unhandled authentication exception", exception);
-        super.onAuthenticationFailure(request, response, exception);
     }
 
-    private String buildFailureRedirectUrl(HttpServletRequest request, String errorValue) {
-        String contextPath = request.getContextPath();
-        String cookiePath = TauriOAuthUtils.extractRedirectPathFromCookie(request);
-        String redirectPath =
-                cookiePath != null ? cookiePath : TauriOAuthUtils.defaultCallbackPath(contextPath);
+    private void redirectToCallbackWithError(
+            HttpServletRequest request, HttpServletResponse response, String errorValue)
+            throws IOException {
+        clearRedirectCookie(response);
+        String redirectUrl =
+                OAuth2CallbackUrl.resolve(
+                        request,
+                        applicationProperties.getSecurity().getOauth2().getRedirectBaseUrl(),
+                        applicationProperties.getSystem().getFrontendUrl());
         if (TauriOAuthUtils.isTauriState(request)) {
-            redirectPath = appendQueryParam(redirectPath, "tauri", "1");
+            String stateParam = request.getParameter("state");
+            if (stateParam != null && !stateParam.isBlank()) {
+                redirectUrl = appendQueryParam(redirectUrl, "state", stateParam);
+                // Extract and pass nonce for CSRF validation
+                String nonce = TauriOAuthUtils.extractNonceFromState(stateParam);
+                if (nonce != null) {
+                    redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
+                }
+            }
         }
-        String resolvedPath =
-                redirectPath.startsWith("/")
-                        ? TauriOAuthUtils.normalizeContextPath(contextPath) + redirectPath
-                        : TauriOAuthUtils.normalizeContextPath(contextPath) + "/" + redirectPath;
-        return appendQueryParam(resolvedPath, "errorOAuth", errorValue);
+        redirectUrl = appendQueryParam(redirectUrl, "errorOAuth", errorValue);
+        response.sendRedirect(redirectUrl);
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {

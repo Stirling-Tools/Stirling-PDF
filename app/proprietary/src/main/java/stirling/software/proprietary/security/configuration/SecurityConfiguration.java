@@ -412,7 +412,8 @@ public class SecurityConfiguration {
                                                         licenseSettingsService,
                                                         applicationProperties))
                                         .failureHandler(
-                                                new CustomOAuth2AuthenticationFailureHandler())
+                                                new CustomOAuth2AuthenticationFailureHandler(
+                                                        applicationProperties))
                                         // Add existing Authorities from the database
                                         .userInfoEndpoint(
                                                 userInfoEndpoint ->

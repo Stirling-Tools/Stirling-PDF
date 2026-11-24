@@ -7,7 +7,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -38,7 +37,6 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
-import stirling.software.proprietary.security.util.RedirectBaseUrl;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -154,8 +152,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     }
 
                     // Build context-aware redirect URL based on the original request
-                    String redirectUrl =
-                            buildContextAwareRedirectUrl(request, response, contextPath, jwt);
+                    String redirectUrl = buildContextAwareRedirectUrl(request, response, jwt);
 
                     response.sendRedirect(redirectUrl);
                 } else {
@@ -200,32 +197,21 @@ public class CustomOAuth2AuthenticationSuccessHandler
      *
      * @param request The HTTP request
      * @param response HTTP response (used to clear redirect cookies)
-     * @param contextPath The application context path
      * @param jwt The JWT token to include
      * @return The appropriate redirect URL
      */
     private String buildContextAwareRedirectUrl(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            String contextPath,
-            String jwt) {
-        Optional<String> landingBase =
-                RedirectBaseUrl.landingBase(
+            HttpServletRequest request, HttpServletResponse response, String jwt) {
+        String callbackUrl =
+                OAuth2CallbackUrl.resolve(
+                        request,
                         oauth2Properties.getRedirectBaseUrl(),
                         applicationProperties.getSystem().getFrontendUrl());
-        // The SPA cookie path already includes the browser-side base path, so only add an origin.
-        boolean usesCookiePath =
-                !TauriOAuthUtils.isTauriState(request) && cookieRedirectPath(request) != null;
-        String pathPrefix = landingBase.isPresent() && !usesCookiePath ? "" : contextPath;
-        String redirectPath = resolveRedirectPath(request, pathPrefix);
-        Optional<String> configuredBase =
-                usesCookiePath ? landingBase.flatMap(RedirectBaseUrl::origin) : landingBase;
-        String origin = configuredBase.orElse("");
         clearRedirectCookie(response);
 
         // Extract nonce from state for CSRF validation in callback
         String nonce = TauriOAuthUtils.extractNonceFromRequest(request);
-        String url = origin + redirectPath + "#access_token=" + jwt;
+        String url = callbackUrl + "#access_token=" + jwt;
         if (nonce != null) {
             url +=
                     "&nonce="
@@ -233,21 +219,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
                                     nonce, java.nio.charset.StandardCharsets.UTF_8);
         }
         return url;
-    }
-
-    private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
-        if (TauriOAuthUtils.isTauriState(request)) {
-            return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
-        }
-        String cookiePath = cookieRedirectPath(request);
-        return cookiePath != null ? cookiePath : TauriOAuthUtils.defaultCallbackPath(contextPath);
-    }
-
-    private String cookieRedirectPath(HttpServletRequest request) {
-        String cookiePath = TauriOAuthUtils.extractRedirectPathFromCookie(request);
-        return cookiePath != null && TauriOAuthUtils.isLocalRedirectPath(cookiePath)
-                ? cookiePath
-                : null;
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {
