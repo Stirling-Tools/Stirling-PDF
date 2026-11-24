@@ -166,8 +166,21 @@ const inFillModeWithFields = formOnViewer(
   "aria-progressbar-name",
 );
 
-const fieldsLoaded = async (context: PlayContext) =>
-  waitForPanelText(context, "As it appears on your passport");
+// Fill mode's inputs are black text on a clear background, legible only once the
+// page has drawn behind them; scanned earlier they sit on the dark workbench.
+async function fieldsLoaded(context: PlayContext) {
+  const panel = await waitForPanelText(
+    context,
+    "As it appears on your passport",
+  );
+  await waitFor(() => {
+    const page = context.canvasElement.ownerDocument.querySelector(
+      "img.pdf-page-preview",
+    );
+    expect(page instanceof HTMLImageElement && page.complete).toBe(true);
+  }, STAGE_TIMEOUT);
+  return panel;
+}
 
 function fieldsLoadedIn(mode: string) {
   return async (context: PlayContext) => {

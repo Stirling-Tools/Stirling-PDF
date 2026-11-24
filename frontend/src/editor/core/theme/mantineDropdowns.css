@@ -12,10 +12,11 @@
 }
 
 /* The keyboard-highlighted option is filled with the accent, so its text takes the
- * accent's foreground rather than the inherited body colour. */
+ * accent's foreground rather than the inherited body colour. A picker that restyles
+ * the highlight sets --combobox-option-selected-color, since this rule outranks it. */
 :root[data-mantine-color-scheme]
   .mantine-Combobox-option[data-combobox-selected] {
-  color: var(--c-text-on-primary);
+  color: var(--combobox-option-selected-color, var(--c-text-on-primary));
 }
 
 :root[data-mantine-color-scheme] .mantine-Combobox-dropdown {

@@ -1241,7 +1241,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Item
-                  color="red"
+                  color="var(--c-danger-text)"
                   disabled={isClearingDocumentAnnotations || isApplyingChanges}
                   leftSection={<Icon name="trash" size={18} />}
                   onClick={() => setIsClearDocumentModalOpen(true)}

@@ -87,7 +87,9 @@ const CardSelector = <T, K extends CardOption<T>>({
               onClick={() => handleOptionClick(option.value)}
             >
               <Flex align={"center"} pl="sm" w="100%">
-                <Text size="sm" c="dimmed" ta="center" fw={350}>
+                {/* Weight, not a muted colour, sets the prefix apart: dimmed text falls
+                    under 4.5:1 on the dark card. */}
+                <Text size="sm" ta="center" fw={350}>
                   {t(option.prefixKey, "Prefix")}
                 </Text>
                 <Text
