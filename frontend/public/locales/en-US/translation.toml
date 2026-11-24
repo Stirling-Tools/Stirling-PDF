@@ -5601,11 +5601,6 @@ skippedEdits_other = "{{count}} changes could not be applied:"
 skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Unsaved changes"
 
-[formFill.autoDetect]
-action = "Auto-detect fields"
-body = "Detect the form fields in this PDF automatically instead of drawing them by hand."
-title = "Find fields with AI"
-
 [formFill.create]
 empty = "No fields drawn yet."
 goToField = "Go to this field"

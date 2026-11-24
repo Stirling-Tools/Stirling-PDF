@@ -3,7 +3,6 @@ import { delay, http, HttpResponse, type RequestHandler } from "msw";
 import { expect, userEvent, waitFor } from "storybook/test";
 import {
   appConfig,
-  endpointUnavailable,
   fixtureResponse,
   onViewer,
   toolPanelMeta,
@@ -50,46 +49,8 @@ export const SignedPdfLocked: Story = {
 export const CreateMode: Story = {
   play: async (context) => {
     await choose(context, "Create");
-    const panel = await waitForPanelText(context, "No fields drawn yet.");
-    await expect(
-      panel.getByRole("button", { name: "Auto-detect fields" }),
-    ).toBeEnabled();
+    await waitForPanelText(context, "No fields drawn yet.");
   },
-};
-
-async function autoDetectButton(context: PlayContext) {
-  const panel = await panelOf(context);
-  return panel.findByRole(
-    "button",
-    { name: "Auto-detect fields" },
-    STAGE_TIMEOUT,
-  );
-}
-
-async function waitUntilAutoDetectUnavailable(context: PlayContext) {
-  const button = await autoDetectButton(context);
-  await waitFor(() => expect(button).toBeDisabled(), STAGE_TIMEOUT);
-}
-
-const autoDetectUnavailable = toolPanelServer(
-  ...endpointUnavailable("form-detection"),
-);
-
-export const AutoDetectUnavailable: Story = {
-  parameters: autoDetectUnavailable,
-  play: waitUntilAutoDetectUnavailable,
-};
-
-export const AutoDetectUnavailableTooltip: Story = {
-  parameters: autoDetectUnavailable,
-  play: openTooltip(
-    // A disabled button takes no pointer events; its tooltip hangs on the wrapper.
-    {
-      element: async (context) =>
-        (await autoDetectButton(context)).parentElement!,
-    },
-    { after: waitUntilAutoDetectUnavailable },
-  ),
 };
 
 export const CreateModeArmed: Story = {
