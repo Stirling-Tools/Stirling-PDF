@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { Loader, Menu, Tooltip } from "@mantine/core";
 import { useCreatePdfMenu } from "@editor/components/createPdf/useCreatePdfMenu";
+import { CreatePdfSidebarRow } from "@editor/components/createPdf/CreatePdfSidebarRow";
 import {
   CreatePdfMenuItems,
   RichMenuItem,
@@ -1266,6 +1267,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               label: t("fileSidebar.addFiles", "Add files"),
               onClick: openNativeFilePicker,
               testId: "pdf-library-add-files",
+            },
+            {
+              icon: null,
+              label: t("createPdf.button", "Create PDF"),
+              onClick: () => undefined,
+              render: () => <CreatePdfSidebarRow />,
             },
             ...cloudPickers.map((picker) => ({
               icon: <Icon name={picker.icon} />,

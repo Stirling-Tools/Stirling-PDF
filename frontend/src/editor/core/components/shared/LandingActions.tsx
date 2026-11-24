@@ -1,9 +1,7 @@
 import React from "react";
-import { Group, Menu, Tooltip } from "@mantine/core";
-import { useTranslation } from "react-i18next";
+import { Group, Tooltip } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
-import { Spinner } from "@editor/ui/Spinner";
 import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
 import { useFilesPage } from "@editor/contexts/FilesPageContext";
 import { useFolders } from "@editor/contexts/FolderContext";
@@ -12,8 +10,6 @@ import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { CreateProcessingFolderButton } from "@editor/components/policies/CreateProcessingFolderButton";
 import { folderKind } from "@editor/types/folder";
-import { useCreatePdfMenu } from "@editor/components/createPdf/useCreatePdfMenu";
-import { CreatePdfMenuItems } from "@editor/components/createPdf/CreatePdfMenuItems";
 
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -28,9 +24,7 @@ export function LandingActions({
   onMobileUploadClick,
   onFileSelect,
 }: LandingActionsProps) {
-  const { t } = useTranslation();
   const terminology = useFileActionTerminology();
-  const createPdf = useCreatePdfMenu();
   const { openFilesModal } = useFilesModalContext();
   const { allFiles, loading } = useFilesPage();
   const folders = useFolders();
@@ -61,41 +55,6 @@ export function LandingActions({
           {terminology.addFiles}
         </Button>
 
-        <Menu
-          position="bottom"
-          withinPortal
-          shadow="md"
-          width={300}
-          disabled={createPdf.busyLabel !== null}
-        >
-          <Menu.Target>
-            <Button
-              variant="secondary"
-              fat
-              aria-busy={createPdf.busyLabel !== null}
-              leftSection={
-                createPdf.busyLabel ? (
-                  <Spinner size="xs" />
-                ) : (
-                  <Icon name="file-plus" size="1rem" />
-                )
-              }
-              rightSection={
-                createPdf.busyLabel ? null : (
-                  <Icon name="chevron-down" size="0.875rem" />
-                )
-              }
-              onClick={(e) => e.stopPropagation()}
-              data-testid="landing-create-pdf"
-            >
-              {createPdf.busyLabel ?? t("createPdf.button", "Create PDF")}
-            </Button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <CreatePdfMenuItems items={createPdf.items} />
-          </Menu.Dropdown>
-        </Menu>
-
         <CreateProcessingFolderButton />
 
         {config?.enableMobileScanner && !isMobile && (
@@ -113,7 +72,6 @@ export function LandingActions({
           </Tooltip>
         )}
       </Group>
-      {createPdf.dialogs}
       <input
         ref={fileInputRef}
         data-testid="landing-file-input"
