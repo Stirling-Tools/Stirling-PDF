@@ -78,6 +78,7 @@ import {
 import { CustomSearchLayer } from "@editor/components/viewer/CustomSearchLayer";
 import { useActiveUrlSource } from "@editor/components/viewer/useActiveUrlSource";
 import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
+import { VIEWER_VIEWPORT_ATTR } from "@editor/components/viewer/usePagesPastInset";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
 import { RenderFormsBridge } from "@editor/components/viewer/RenderFormsBridge";
@@ -884,6 +885,7 @@ function DocumentViewport({
     <ViewerGlobalPointerProvider documentId={documentId}>
       <Viewport
         documentId={documentId}
+        {...{ [VIEWER_VIEWPORT_ATTR]: "" }}
         style={{
           backgroundColor: "var(--c-bg)",
           height: "100%",
