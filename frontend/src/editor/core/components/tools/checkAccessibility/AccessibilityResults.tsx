@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@mantine/core";
 import { Banner } from "@editor/ui/Banner";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -27,6 +28,7 @@ import { useViewer } from "@editor/contexts/ViewerContext";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { useReviewAvailable } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
+import { reviewPanelSlot } from "@editor/tools/pdfTextEditor/store/reviewPanelSlot";
 
 const NO_TICKS: ReadonlySet<number> = new Set();
 
@@ -131,40 +133,43 @@ export function AccessibilityResults({
   // A file the check could not read can still be tagged: the review reads it itself.
   const tagEverything = reviewAvailable && !passing && (
     <TagEverythingButton
+      className="a11y-actions__cta"
       onTag={() => openInReview("untagged", undefined, true)}
     />
   );
+  const downloadLabel = t(
+    "checkAccessibility.download",
+    "Download accessibility report",
+  );
 
   return (
-    <div className="a11y-results" data-testid="a11y-results">
-      {(results.length > 1 || isLoading) && (
-        <div className="a11y-picker">
-          <Select
-            aria-label={t("checkAccessibility.pickFile", "Show results for")}
-            options={options}
-            value={selected.fileId}
-            onChange={(value) => {
-              const entry = results.find((item) => item.fileId === value);
-              if (entry) onSelectFile(entry.fileId);
-            }}
-            allowDeselect={false}
-            searchable={results.length > 6}
-          />
-          {isLoading && (
-            <div className="a11y-loading">
-              <Spinner size="sm" />
-              <span>{status}</span>
-            </div>
-          )}
-        </div>
-      )}
+    <AccessibilityFixContext.Provider
+      value={reviewAvailable ? fixInDocument : null}
+    >
+      <div className="a11y-results" data-testid="a11y-results">
+        {(results.length > 1 || isLoading) && (
+          <div className="a11y-picker">
+            <Select
+              aria-label={t("checkAccessibility.pickFile", "Show results for")}
+              options={options}
+              value={selected.fileId}
+              onChange={(value) => {
+                const entry = results.find((item) => item.fileId === value);
+                if (entry) onSelectFile(entry.fileId);
+              }}
+              allowDeselect={false}
+              searchable={results.length > 6}
+            />
+            {isLoading && (
+              <div className="a11y-loading">
+                <Spinner size="sm" />
+                <span>{status}</span>
+              </div>
+            )}
+          </div>
+        )}
 
-      {selected.report ? (
-        <AccessibilityFixContext.Provider
-          value={reviewAvailable ? fixInDocument : null}
-        >
-          <FixInDocumentButton passing={passing} />
-          {tagEverything}
+        {selected.report ? (
           <AccessibilityReportView
             key={selected.fileId}
             report={selected.report}
@@ -178,6 +183,7 @@ export function AccessibilityResults({
                 />
               )
             }
+            live={<div ref={reviewPanelSlot.attach} className="a11y-live" />}
             onToggleManual={(index) => toggleManual(selected.fileId, index)}
             onSetAllManual={(done) =>
               setManualTicks((current) => ({
@@ -190,46 +196,55 @@ export function AccessibilityResults({
               }))
             }
           />
-        </AccessibilityFixContext.Provider>
-      ) : (
-        <Banner
-          tone="danger"
-          title={t(
-            "checkAccessibility.error.fileTitle",
-            "This file could not be checked",
-          )}
-          description={selected.error}
-        />
-      )}
-      {!selected.report && tagEverything}
-
-      {!isLoading && selected.report && (
-        <ToolPanelFooter>
-          <div className="a11y-download">
-            {downloadFailed && (
-              <Banner
-                tone="danger"
-                title={t(
-                  "checkAccessibility.error.download",
-                  "The accessibility report could not be created. Try again.",
-                )}
-                onDismiss={() => setDownloadFailed(false)}
-              />
+        ) : (
+          <Banner
+            tone="danger"
+            title={t(
+              "checkAccessibility.error.fileTitle",
+              "This file could not be checked",
             )}
-            <Button
-              fullWidth
-              loading={buildingPdf}
-              leftSection={<Icon name="download" size={16} />}
-              onClick={() => void downloadReportPdf(selected)}
-            >
-              {t(
-                "checkAccessibility.download",
-                "Download accessibility report",
+            description={selected.error}
+          />
+        )}
+
+        {!isLoading && (selected.report || tagEverything) && (
+          <ToolPanelFooter>
+            <div className="a11y-footer">
+              {downloadFailed && (
+                <Banner
+                  tone="danger"
+                  title={t(
+                    "checkAccessibility.error.download",
+                    "The accessibility report could not be created. Try again.",
+                  )}
+                  onDismiss={() => setDownloadFailed(false)}
+                />
               )}
-            </Button>
-          </div>
-        </ToolPanelFooter>
-      )}
-    </div>
+              <div className="a11y-actions">
+                {selected.report && (
+                  <FixInDocumentButton
+                    className="a11y-actions__cta"
+                    passing={passing}
+                  />
+                )}
+                {tagEverything}
+                {selected.report && (
+                  <Tooltip label={downloadLabel}>
+                    <Button
+                      variant="secondary"
+                      aria-label={downloadLabel}
+                      loading={buildingPdf}
+                      leftSection={<Icon name="download" size={16} />}
+                      onClick={() => void downloadReportPdf(selected)}
+                      data-testid="a11y-download-report"
+                    />
+                  </Tooltip>
+                )}
+              </div>
+            </div>
+          </ToolPanelFooter>
+        )}
+      </div>
+    </AccessibilityFixContext.Provider>
   );
 }

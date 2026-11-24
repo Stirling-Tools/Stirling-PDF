@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { FileId } from "@editor/types/file";
 import type { AccessibilityFixTarget } from "@editor/utils/accessibilityFixes";
-import type { SidebarTab } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 
 export interface ReviewModeState {
@@ -21,8 +20,6 @@ export interface ReviewModeState {
   } | null;
   /** How far an automatic tagging of every page has got; null when none runs. */
   autoTagProgress: { current: number; total: number } | null;
-  /** A tab of the inspector to show, opening the Properties dropdown when the panel is hidden; cleared once shown. */
-  inspectorTab: SidebarTab | null;
   /** The user asked to close; the editor answers once it has dealt with unsaved tags. */
   closeRequested: boolean;
 }
@@ -32,7 +29,6 @@ let state: ReviewModeState = {
   autoAdvance: true,
   showAllTags: true,
   startAt: null,
-  inspectorTab: null,
   closeRequested: false,
   autoTagProgress: null,
 };
@@ -52,7 +48,6 @@ export const reviewMode = {
     reviewMode.set({
       reviewing: false,
       startAt: null,
-      inspectorTab: null,
       closeRequested: false,
     });
   },

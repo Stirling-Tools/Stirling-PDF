@@ -25,12 +25,9 @@ describe("fixTargetFor", () => {
     ["PDF/UA-1", "7.4.2", "1", "heading"],
     ["PDF/UA-1", "7.18.5", "1", "link"],
     ["PDF/UA-1", "7.18.5", "2", "link"],
-    ["PDF/UA-1", "7.2", "34", "documentLanguage"],
-    ["PDF/UA-1", "7.2", "33", "documentLanguage"],
     ["PDF/UA-1", "6.2", "1", "markedTagged"],
     ["PDF/UA-2", "8.2.2", "1", "untagged"],
     ["PDF/UA-2", "8.2.5.28.2", "1", "image"],
-    ["PDF/UA-2", "8.4.4", "1", "documentLanguage"],
   ])("sends %s §%s-%s to %s", (spec, clause, test, target) => {
     expect(fixTargetFor(issue(spec, clause, test))).toBe(target);
   });
@@ -43,6 +40,9 @@ describe("fixTargetFor", () => {
     ["font", "PDF/UA-1", "7.21.4.1", "1"],
     ["tab order", "PDF/UA-1", "7.18.3", "1"],
     ["rule we have no wording for", "PDF/UA-1", "7.5", "1"],
+    // The report sets the language beside these, in its Language area.
+    ["document language", "PDF/UA-1", "7.2", "34"],
+    ["content language", "PDF/UA-2", "8.4.4", "1"],
   ])("offers no fix for a %s rule", (_name, spec, clause, test) => {
     expect(fixTargetFor(issue(spec, clause, test))).toBeNull();
   });

@@ -123,134 +123,18 @@
   border-top: 1px solid var(--c-border-subtle);
 }
 
-.review-checklist {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--c-border-subtle);
-}
-
-.review-list__scroll {
-  max-height: 180px;
-  overflow-y: auto;
-}
-
 .review-card__divider {
   margin: 0;
   border: none;
   border-top: 1px solid var(--c-border-subtle);
 }
 
-.review-score {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.review-score__ring {
-  flex: 0 0 auto;
-}
-
-.review-score__ring-track {
-  stroke: var(--c-border-subtle);
-}
-
-.review-score__ring-fill {
-  transition:
-    stroke-dashoffset 0.4s ease-out,
-    stroke 0.4s;
-}
-
-.review-score__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.review-score__value {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  color: var(--c-text);
-}
-
-.review-score__total {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--c-text-muted);
-}
-
-.review-score__caption {
-  font-size: 13px;
-  color: var(--c-text-muted);
-}
-
-.review-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.review-list__item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 7px 8px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--c-text);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.review-list__item:hover {
-  background: var(--c-hover);
-}
-
-.review-list__item[data-current="true"] {
-  background: var(--c-primary-subtle);
-}
-
-.review-list__text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.review-list__item[data-done="true"] .review-list__text {
-  color: var(--c-text-muted);
-  text-decoration: line-through;
-}
-
-.review-list__page {
-  font-size: 11px;
-  color: var(--c-text-subtle);
-}
-
-.review-section-title {
-  margin: 0 0 4px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--c-text-muted);
-}
-
 .review-stepper {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .review-stepper__label {

@@ -23,11 +23,8 @@ import { useEditorStore } from "@editor/tools/pdfTextEditor/hooks/useEditorStore
 import { useEditorSelection } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { useEditorOcr } from "@editor/tools/pdfTextEditor/hooks/useEditorOcr";
 import {
-  clearEditorInspector,
   clearEditorSession,
-  setEditorInspector,
   setEditorSession,
-  type InspectorActions,
 } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import {
@@ -53,7 +50,10 @@ import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/component
 import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
 import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
-import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
+import {
+  EditorSidebar,
+  type SidebarProps,
+} from "@editor/tools/pdfTextEditor/components/EditorSidebar";
 import { useReviewStart } from "@editor/tools/pdfTextEditor/hooks/useReviewStart";
 import {
   reviewMode,
@@ -746,7 +746,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   }, [panel]);
   const ocrAvailable =
     panel.state.loading && !ocr.running ? null : ocr.available;
-  const inspector = useMemo<InspectorActions>(
+  const inspector = useMemo<
+    Omit<SidebarProps, "store" | "state" | "selection" | "initialTab">
+  >(
     () => ({
       canGroup: panel.selection.runIds.length >= 2,
       canUngroup,
@@ -777,11 +779,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       onSetShowRulers,
     ],
   );
-  useEffect(() => {
-    setEditorInspector(inspector);
-    return () => clearEditorInspector(inspector);
-  }, [inspector]);
-
   useEffect(() => {
     const session = {
       fileName: openedFileName,
@@ -870,7 +867,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           </Text>
         </>
       ) : (
-        // Under a review the panel is hidden and Properties holds the inspector.
         selectedTool === "pdfTextEditor" && <EditorSidebar {...sidebarProps} />
       )}
       {state.hasDocument && (

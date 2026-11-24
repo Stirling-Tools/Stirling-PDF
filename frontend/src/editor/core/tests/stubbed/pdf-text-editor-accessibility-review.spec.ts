@@ -1,10 +1,11 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
+import { formulasPdf } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 import path from "path";
 
 // Accessibility is fixed in the review, not the editor: the review card
-// describes images, Properties sets the language, and both survive a save.
+// describes images, and the description survives a save.
 
 const FIXTURE = path.join(
   import.meta.dirname,
@@ -18,7 +19,6 @@ const RESTRICTED = path.join(
 interface EditorWindow {
   __editor_store: {
     document: {
-      documentLanguage: () => string | null;
       structure: (pageIndex: number) => {
         alt: (mcid: number) => string | null;
         decorative: (mcid: number) => boolean;
@@ -76,16 +76,14 @@ async function saveAndReopen(page: Page) {
 }
 
 test.describe("PDF accessibility review", () => {
-  test("describes an image and sets the language, then the editor saves them", async ({
-    page,
-  }) => {
+  test("describes an image, then the editor saves it", async ({ page }) => {
     test.setTimeout(120_000);
     await openFixture(page);
 
     // The editor itself offers no accessibility controls.
     await page.getByTestId("pdf-editor-tab-document").click();
     await expect(
-      page.getByTestId("pdf-editor-document-language-picker"),
+      page.getByTestId("pdf-editor-document-accessibility"),
     ).toHaveCount(0);
 
     await page.getByTestId("viewer-review-accessibility").click();
@@ -99,35 +97,20 @@ test.describe("PDF accessibility review", () => {
     await description.fill("Revenue by region, third quarter");
     await card.getByRole("button", { name: "Save description" }).click();
 
-    await page.getByTestId("pdf-editor-properties").click();
-    const picker = page
-      .getByTestId("pdf-editor-document-language-picker")
-      .getByRole("textbox");
-    // Under load the option can re-render out from under the click; pick again.
-    await expect(async () => {
-      await picker.click();
-      await picker.fill("en-IE");
-      await page.getByRole("option", { name: /\(en-IE\)$/ }).click();
-      await expect(picker).toHaveValue(/\(en-IE\)$/, { timeout: 2_000 });
-    }).toPass({ timeout: 20_000 });
-
     // Leaving the review for the editor keeps the unsaved tags.
     await page.keyboard.press("Escape");
     await page.getByTestId("viewer-edit-text").click();
     await expect(card).toBeHidden();
     await saveAndReopen(page);
 
-    const reopened = await page.evaluate((mcid) => {
-      const doc = (window as unknown as EditorWindow).__editor_store.document;
-      return {
-        language: doc.documentLanguage(),
-        alt: doc.structure(0).alt(mcid),
-      };
-    }, image.mcid!);
-    expect(reopened).toEqual({
-      language: "en-IE",
-      alt: "Revenue by region, third quarter",
-    });
+    const alt = await page.evaluate(
+      (mcid) =>
+        (window as unknown as EditorWindow).__editor_store.document
+          .structure(0)
+          .alt(mcid),
+      image.mcid!,
+    );
+    expect(alt).toBe("Revenue by region, third quarter");
   });
 
   test("shows a failed open's error while the editor runs hidden", async ({
@@ -192,6 +175,50 @@ test.describe("PDF accessibility review", () => {
       annotation,
     );
     expect(described).toMatch(/appendix/i);
+  });
+
+  test("tags text as a formula from the card, then asks how it reads aloud", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openInTextEditor(page, {
+      name: "formulas.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from(formulasPdf()),
+    });
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.getByTestId("viewer-review-accessibility").click();
+    const card = page.getByTestId("pdf-editor-quick-tag");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+
+    const runId = await page.evaluate(
+      () =>
+        (
+          window as unknown as EditorWindow
+        ).__editor_store.state.pages[0].runs.find((run) =>
+          run.text.includes("Where a is"),
+        )!.id,
+    );
+    await page.getByTestId(`pdf-editor-run-${runId}`).click();
+    await card.getByRole("button", { name: /^Formula/ }).click();
+    await expect(card.getByText("Needs attention")).toBeVisible();
+    const description = card.getByTestId(
+      "pdf-editor-quick-tag-text-description",
+    );
+    await description.fill("a is the rate");
+    await card.getByRole("button", { name: "Save description" }).click();
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          (window as unknown as EditorWindow).__editor_store.document
+            .structure(0)
+            .alt(3),
+        ),
+      )
+      .toBe("a is the rate");
   });
 
   test("marks an image decorative in the review, and the save keeps it", async ({

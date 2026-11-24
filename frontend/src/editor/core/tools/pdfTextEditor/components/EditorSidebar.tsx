@@ -1,10 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { useBulkTagging } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
-import { useHeadingOutline } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
-import { useDocumentLanguage } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -14,12 +11,6 @@ import {
   useSelectedFontNote,
   type ScanNote,
 } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
-import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
-import {
-  reviewMode,
-  useReviewMode,
-} from "@editor/tools/pdfTextEditor/store/reviewMode";
 import {
   ScanHint,
   type ScanHintProps,
@@ -32,7 +23,6 @@ import {
   scanTypingDropped,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
-import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import type {
   EditorViewState,
   LoadProgress,
@@ -94,14 +84,6 @@ export const EditorSidebar = memo(function EditorSidebar({
     if (hasSelection) setTab("selected");
   }, [hasSelection]);
 
-  // After the effect above, so a fix asking for Document wins over a selection made on mount.
-  const { inspectorTab, reviewing } = useReviewMode();
-  useEffect(() => {
-    if (!inspectorTab) return;
-    setTab(inspectorTab);
-    reviewMode.set({ inspectorTab: null });
-  }, [inspectorTab]);
-
   const fontNote = useSelectedFontNote(
     state,
     selection,
@@ -109,41 +91,11 @@ export const EditorSidebar = memo(function EditorSidebar({
   );
   const scanFontMatch = useScanFontMatch(store, state, selection);
 
-  const editorDocument = store.document;
-  const reviewingAccessibility = useMemo(
-    () => ACCESSIBILITY_EDITING && !!editorDocument?.treatAsTagged(),
-    [editorDocument],
-  );
-
   if (!state.hasDocument) {
     return (
       <Box p="md" style={{ flex: 1, overflow: "auto" }}>
         <EmptySidebar progress={state.progress} loading={state.loading} />
       </Box>
-    );
-  }
-
-  const documentTab = (
-    <DocumentTab
-      store={store}
-      state={state}
-      reviewingAccessibility={reviewingAccessibility}
-      accessibilityReview={
-        reviewingAccessibility ? controller.accessibilityReview : null
-      }
-      onSetGroupingMode={onSetGroupingMode}
-      onSetWidthMode={onSetWidthMode}
-      onSetShowRulers={onSetShowRulers}
-      reviewing={reviewing}
-    />
-  );
-
-  // The review card handles the selection, so Properties keeps to the document.
-  if (reviewing) {
-    return (
-      <LanguagesInUse.Provider value={state.languagesInUse}>
-        {documentTab}
-      </LanguagesInUse.Provider>
     );
   }
 
@@ -204,7 +156,17 @@ export const EditorSidebar = memo(function EditorSidebar({
             )}
           </Tabs.Panel>
           <Tabs.Panel value="document">
-            {tab === "document" && documentTab}
+            {tab === "document" && (
+              <DocumentInspector
+                pages={state.pages}
+                groupingMode={state.groupingMode}
+                widthMode={state.widthMode}
+                showRulers={state.showRulers}
+                onSetGroupingMode={onSetGroupingMode}
+                onSetWidthMode={onSetWidthMode}
+                onSetShowRulers={onSetShowRulers}
+              />
+            )}
           </Tabs.Panel>
         </Box>
       </LanguagesInUse.Provider>
@@ -212,59 +174,6 @@ export const EditorSidebar = memo(function EditorSidebar({
     </Tabs>
   );
 });
-
-function DocumentTab({
-  store,
-  state,
-  reviewingAccessibility,
-  accessibilityReview,
-  onSetGroupingMode,
-  onSetWidthMode,
-  onSetShowRulers,
-  reviewing,
-}: Pick<
-  SidebarProps,
-  "store" | "state" | "onSetGroupingMode" | "onSetWidthMode" | "onSetShowRulers"
-> & {
-  reviewingAccessibility: boolean;
-  accessibilityReview: AccessibilityReview | null;
-  reviewing: boolean;
-}) {
-  const documentLanguage = useDocumentLanguage(store, state);
-  const shown = reviewing && reviewingAccessibility;
-  const headings = useHeadingOutline(store, state, shown);
-  const bulkTagging = useBulkTagging(store, state, shown);
-  const setMarkedTagged = useCallback(
-    (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
-    [store],
-  );
-  const editorDocument = store.document;
-  return (
-    <DocumentInspector
-      pages={state.pages}
-      groupingMode={state.groupingMode}
-      widthMode={state.widthMode}
-      showRulers={state.showRulers}
-      onSetGroupingMode={onSetGroupingMode}
-      onSetWidthMode={onSetWidthMode}
-      onSetShowRulers={onSetShowRulers}
-      accessibilityReview={accessibilityReview}
-      untaggedPages={bulkTagging.untaggedPages}
-      onTagUntaggedContent={bulkTagging.tagAll}
-      markedTagged={
-        editorDocument?.canSetMarkedTagged()
-          ? editorDocument.markedTagged()
-          : null
-      }
-      onSetMarkedTagged={setMarkedTagged}
-      hasTags={!!editorDocument?.hasStructureTree()}
-      headingOutline={headings.outline}
-      onSelectHeading={headings.selectHeading}
-      documentLanguage={documentLanguage}
-      reviewing={reviewing}
-    />
-  );
-}
 
 /** What the Selected tab shows before the user has picked anything. */
 function NothingSelected(props: ScanHintProps) {

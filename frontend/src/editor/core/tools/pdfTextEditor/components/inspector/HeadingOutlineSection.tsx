@@ -2,11 +2,7 @@ import { Box, Divider, Group, Stack, Text } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import {
-  Section,
-  SectionLabel,
-  StatRow,
-} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import { StatRow } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import {
   issueCount,
   type HeadingIssue,
@@ -18,7 +14,7 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 const INDENT_PX = 12;
 
-/** The document's headings in reading order, each issue under the heading it belongs to. */
+/** The document's headings in reading order, each issue under the heading it belongs to; the caller titles it. */
 export function HeadingOutlineSection({
   outline,
   onSelect,
@@ -28,51 +24,46 @@ export function HeadingOutlineSection({
 }) {
   const { t } = useTranslation();
   return (
-    <Section testId="pdf-editor-heading-outline">
-      <SectionLabel>
-        {t("pdfTextEditor.inspector.accessibility.outline.heading", "Headings")}
-      </SectionLabel>
-      <Stack gap={4}>
-        <StatRow
-          label={t(
-            "pdfTextEditor.inspector.accessibility.outline.problems",
-            "Heading problems",
+    <Stack gap={4} data-testid="pdf-editor-heading-outline">
+      <StatRow
+        label={t(
+          "pdfTextEditor.inspector.accessibility.outline.problems",
+          "Heading problems",
+        )}
+        value={
+          <span data-testid="pdf-editor-heading-problems">
+            {issueCount(outline)}
+          </span>
+        }
+      />
+      {outline.mixesNumbering && (
+        <IssueText
+          text={t(
+            "pdfTextEditor.inspector.accessibility.outline.mixedNumbering",
+            "Mixes numbered and unnumbered headings",
           )}
-          value={
-            <span data-testid="pdf-editor-heading-problems">
-              {issueCount(outline)}
-            </span>
-          }
+          testId="pdf-editor-heading-mixed"
         />
-        {outline.mixesNumbering && (
-          <IssueText
-            text={t(
-              "pdfTextEditor.inspector.accessibility.outline.mixedNumbering",
-              "Mixes numbered and unnumbered headings",
-            )}
-            testId="pdf-editor-heading-mixed"
+      )}
+      <Divider my={4} />
+      {outline.entries.length === 0 ? (
+        <Text size="xs" c="dimmed" data-testid="pdf-editor-heading-none">
+          {t(
+            "pdfTextEditor.inspector.accessibility.outline.none",
+            "No headings",
+          )}
+        </Text>
+      ) : (
+        outline.entries.map((entry, index) => (
+          <OutlineRow
+            // Headings carry no identity of their own; their order is fixed for the read.
+            key={index}
+            entry={entry}
+            onSelect={() => onSelect(index)}
           />
-        )}
-        <Divider my={4} />
-        {outline.entries.length === 0 ? (
-          <Text size="xs" c="dimmed" data-testid="pdf-editor-heading-none">
-            {t(
-              "pdfTextEditor.inspector.accessibility.outline.none",
-              "No headings",
-            )}
-          </Text>
-        ) : (
-          outline.entries.map((entry, index) => (
-            <OutlineRow
-              // Headings carry no identity of their own; their order is fixed for the read.
-              key={index}
-              entry={entry}
-              onSelect={() => onSelect(index)}
-            />
-          ))
-        )}
-      </Stack>
-    </Section>
+        ))
+      )}
+    </Stack>
   );
 }
 
@@ -148,7 +139,9 @@ function issueText(t: TFunction, issue: HeadingIssue): string {
       return t(
         "pdfTextEditor.inspector.accessibility.outline.skippedLevel",
         "Skips a level after Heading {{previous}}",
-        { previous: issue.previous },
+        {
+          previous: issue.previous,
+        },
       );
   }
 }

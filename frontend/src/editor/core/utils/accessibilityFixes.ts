@@ -14,8 +14,6 @@ export type AccessibilityFixTarget =
   | "heading"
   /** The first untagged link, with Tag link focused; tagging also writes its description. */
   | "link"
-  /** The document language picker. */
-  | "documentLanguage"
   /** The "Document is fully tagged" checkbox. */
   | "markedTagged";
 
@@ -25,7 +23,7 @@ export const PAGE_SCOPED_TARGETS: ReadonlySet<AccessibilityFixTarget> = new Set(
 
 /**
  * Rule keys (accessibilityPlainLanguage) the editor fixes, by where; a rule absent
- * gets no button. Each language rule passes once the catalog has a /Lang.
+ * gets no button.
  */
 const FIX_TARGETS: Record<string, AccessibilityFixTarget> = {
   untaggedContent: "untagged",
@@ -33,12 +31,6 @@ const FIX_TARGETS: Record<string, AccessibilityFixTarget> = {
   headingSkipped: "heading",
   linkNotTagged: "link",
   linkNoDescription: "link",
-  noLanguage: "documentLanguage",
-  contentLanguage: "documentLanguage",
-  bookmarkLanguage: "documentLanguage",
-  annotationLanguage: "documentLanguage",
-  replacementTextLanguage: "documentLanguage",
-  metadataLanguage: "documentLanguage",
   notMarkedTagged: "markedTagged",
 };
 

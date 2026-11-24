@@ -5,7 +5,11 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
-import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
+import {
+  reviewMode,
+  useReviewMode,
+  useReviewing,
+} from "@editor/tools/pdfTextEditor/store/reviewMode";
 import {
   PAGE_SCOPED_TARGETS,
   fixTargetFor,
@@ -29,14 +33,34 @@ export const AccessibilityFixContext = createContext<AccessibilityFixFn | null>(
 /**
  * The report's main call to action: fix what it found, on the page. A file
  * that passes has nothing to fix, so the same button offers to view its tags.
+ * While the review is open it pauses it instead.
  */
-export function FixInDocumentButton({ passing }: { passing: boolean }) {
+export function FixInDocumentButton({
+  passing,
+  className,
+}: {
+  passing: boolean;
+  className?: string;
+}) {
   const { t } = useTranslation();
   const fix = useContext(AccessibilityFixContext);
+  const reviewing = useReviewing();
   if (!fix) return null;
+  if (reviewing)
+    return (
+      <Button
+        className={className}
+        variant="primary"
+        leftSection={<Icon name="pause" size={16} />}
+        onClick={() => reviewMode.requestClose()}
+        data-testid="a11y-pause-fixing"
+      >
+        {t("checkAccessibility.fix.pause", "Pause fixing")}
+      </Button>
+    );
   return (
     <Button
-      fullWidth
+      className={className}
       variant="primary"
       leftSection={<Icon name="universal-access" size={16} />}
       // A passing file has nothing to find, and looking reads every page first.
@@ -44,11 +68,8 @@ export function FixInDocumentButton({ passing }: { passing: boolean }) {
       data-testid="a11y-fix-in-document"
     >
       {passing
-        ? t(
-            "checkAccessibility.fix.viewInDocument",
-            "View tags in the document",
-          )
-        : t("checkAccessibility.fix.inDocument", "Fix tags in the document")}
+        ? t("checkAccessibility.fix.viewInDocument", "View tags")
+        : t("checkAccessibility.fix.inDocument", "Fix tags")}
     </Button>
   );
 }
@@ -57,7 +78,13 @@ export function FixInDocumentButton({ passing }: { passing: boolean }) {
  * Tags every page of the file automatically in the review, as one undo step.
  * Shows how far it has got while it runs.
  */
-export function TagEverythingButton({ onTag }: { onTag: () => void }) {
+export function TagEverythingButton({
+  onTag,
+  className,
+}: {
+  onTag: () => void;
+  className?: string;
+}) {
   const { t } = useTranslation();
   const { autoTagProgress } = useReviewMode();
   const percent = autoTagProgress
@@ -69,7 +96,7 @@ export function TagEverythingButton({ onTag }: { onTag: () => void }) {
     <Tooltip
       multiline
       w={280}
-      position="bottom"
+      position="top"
       openDelay={400}
       label={t(
         "pdfTextEditor.inspector.accessibility.tagUntaggedHint",
@@ -77,7 +104,7 @@ export function TagEverythingButton({ onTag }: { onTag: () => void }) {
       )}
     >
       <Button
-        fullWidth
+        className={className}
         variant="secondary"
         leftSection={<Icon name="sparkles" size={16} />}
         loading={percent !== null}
@@ -86,10 +113,7 @@ export function TagEverythingButton({ onTag }: { onTag: () => void }) {
         data-testid="a11y-tag-everything"
       >
         {percent === null
-          ? t(
-              "checkAccessibility.fix.tagEverything",
-              "Tag everything automatically",
-            )
+          ? t("checkAccessibility.fix.tagEverything", "Auto-tag")
           : t("checkAccessibility.fix.tagging", {
               defaultValue: "Tagging… {{percent}}%",
               percent,
@@ -159,11 +183,6 @@ function fixLabel(
             { page },
           )
         : t("checkAccessibility.fix.link", "Tag the links");
-    case "documentLanguage":
-      return t(
-        "checkAccessibility.fix.documentLanguage",
-        "Set the document language",
-      );
     case "markedTagged":
       return t(
         "checkAccessibility.fix.markedTagged",

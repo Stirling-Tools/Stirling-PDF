@@ -40,6 +40,8 @@ interface AccessibilityReportViewProps {
   onSetAllManual: (done: boolean) => void;
   /** Sets the document language, under the Language area. */
   languageFix?: ReactNode;
+  /** Shown between the breakdown and the manual checks: the review's live view of the document. */
+  live?: ReactNode;
 }
 
 export function AccessibilityReportView({
@@ -48,6 +50,7 @@ export function AccessibilityReportView({
   onToggleManual,
   onSetAllManual,
   languageFix,
+  live,
 }: AccessibilityReportViewProps) {
   const { t } = useTranslation();
   const { result, areas, basics, checks } = useMemo(
@@ -74,7 +77,10 @@ export function AccessibilityReportView({
             {t(
               "checkAccessibility.score.subtitle",
               "{{profile}} - {{count}} pages",
-              { profile: report.profile, count: report.summary.pages },
+              {
+                profile: report.profile,
+                count: report.summary.pages,
+              },
             )}
             {" - "}
             {report.issues.length === 0
@@ -111,16 +117,19 @@ export function AccessibilityReportView({
               />
             </li>
           ))}
-          {report.humanChecks.length > 0 && (
-            <AccessibilityManualChecks
-              checks={report.humanChecks}
-              ticked={manualTicked}
-              onToggle={onToggleManual}
-              onSetAll={onSetAllManual}
-            />
-          )}
         </ul>
       </section>
+
+      {live}
+
+      {report.humanChecks.length > 0 && (
+        <AccessibilityManualChecks
+          checks={report.humanChecks}
+          ticked={manualTicked}
+          onToggle={onToggleManual}
+          onSetAll={onSetAllManual}
+        />
+      )}
     </div>
   );
 }

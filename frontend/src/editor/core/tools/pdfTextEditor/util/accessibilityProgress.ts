@@ -1,5 +1,10 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { PageRect, PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type {
+  PageRect,
+  PageSnapshot,
+  TextRunSnapshot,
+} from "@editor/tools/pdfTextEditor/types";
+import { describableTextBlock } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import {
   textTag,
   type TextTag,
@@ -55,6 +60,16 @@ export function imageStatus(
   return attentionFor(accessibility) === null ? "done" : "todo";
 }
 
+/** A figure or formula drawn as text is done only once described, as an image is. */
+function runStatus(
+  doc: EditorDocument,
+  run: TextRunSnapshot,
+): ReviewStatus | null {
+  const status = textStatus(textTag(doc, run));
+  if (status !== "done" || !describableTextBlock(doc, run)) return status;
+  return doc.structure(run.pageIndex).alt(run.mcid!)?.trim() ? "done" : "todo";
+}
+
 export function reviewItems(
   doc: EditorDocument,
   pages: readonly PageSnapshot[],
@@ -62,7 +77,7 @@ export function reviewItems(
   return pages.flatMap((page) => {
     const items: ReviewItem[] = [];
     for (const run of page.runs) {
-      const status = textStatus(textTag(doc, run));
+      const status = runStatus(doc, run);
       if (status) items.push(item("text", run, status));
     }
     for (const image of page.images) {

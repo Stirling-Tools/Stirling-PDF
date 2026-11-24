@@ -18,6 +18,7 @@ import { QuickTagCard } from "@editor/tools/pdfTextEditor/components/review/Quic
 import { CloseReviewPrompt } from "@editor/tools/pdfTextEditor/components/review/CloseReviewPrompt";
 import { EditorTrailControls } from "@editor/tools/pdfTextEditor/components/EditorTrailControls";
 import { ReviewXray } from "@editor/tools/pdfTextEditor/components/review/ReviewXray";
+import { ReviewDocumentPanel } from "@editor/tools/pdfTextEditor/components/review/ReviewDocumentPanel";
 import { useAccessibilityProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import {
   useReviewMode,
@@ -80,7 +81,8 @@ export function ViewerEditToolbar() {
             showAll={showAllTags}
             selectedId={review.current?.id ?? null}
           />
-          <QuickTagCard
+          <QuickTagCard store={store} controller={controller} review={review} />
+          <ReviewDocumentPanel
             store={store}
             state={state}
             controller={controller}
@@ -135,15 +137,7 @@ const TopBar = memo(function TopBar({
       onToggleFind={() => store.toggleFindOpen()}
       onShowHelp={() => store.setHelpOpen(true)}
       editing={editing}
-      trail={
-        editing ? undefined : (
-          <EditorTrailControls
-            store={store}
-            state={state}
-            selection={selection}
-          />
-        )
-      }
+      trail={editing ? undefined : <EditorTrailControls state={state} />}
     />
   );
 });

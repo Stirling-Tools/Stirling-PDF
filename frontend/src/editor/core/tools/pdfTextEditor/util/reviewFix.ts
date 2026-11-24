@@ -10,7 +10,6 @@ import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibi
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
-import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import {
   reviewItems,
   type ReviewItem,
@@ -31,8 +30,8 @@ const FLASH_CLASS = "review-fix-flash";
 const SCAN_SLICE_MS = 50;
 
 /**
- * Selects what `target` fixes from `pageIndex` on, or opens its inspector tab, then
- * focuses the control marked `data-fix-target`. With nothing left, shows the page.
+ * Selects what `target` fixes from `pageIndex` on, then focuses the control
+ * marked `data-fix-target`. With nothing left, shows the page.
  */
 export async function goToFix(
   store: EditorStore,
@@ -64,9 +63,7 @@ async function select(
       return selectFlaggedHeading(store, pageIndex) ? target : null;
     case "link":
       return selectLinkToFix(store, pageIndex);
-    case "documentLanguage":
     case "markedTagged":
-      reviewMode.set({ inspectorTab: "document" });
       return target;
   }
 }

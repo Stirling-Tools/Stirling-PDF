@@ -10,7 +10,10 @@ import { Switch, Textarea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
-import { TEXT_BLOCK_TYPES } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  isDescribableType,
+  TEXT_BLOCK_TYPES,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import { FURNITURE } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { Controller } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import {
@@ -18,11 +21,9 @@ import {
   typeName,
 } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
+import type { TextDescriptionControl } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
-import type {
-  EditorStore,
-  EditorViewState,
-} from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
   reviewMode,
   useReviewMode,
@@ -46,7 +47,7 @@ import {
   reviewItemElement,
 } from "@editor/tools/pdfTextEditor/util/reviewCardScroll";
 import type { ReviewItem } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
-import { ReviewChecklist } from "@editor/tools/pdfTextEditor/components/review/ReviewChecklist";
+import { ReviewStepper } from "@editor/tools/pdfTextEditor/components/review/ReviewStepper";
 import { PAGES_PAST_INSET_ATTR } from "@editor/components/viewer/usePagesPastInset";
 import "@editor/tools/pdfTextEditor/components/review/review.css";
 
@@ -54,23 +55,22 @@ const CARD_WIDTH = 300;
 const GAP_PX = 12;
 /** The column the viewer clears beside its pages for the card: its width and a gap either side. */
 export const REVIEW_COLUMN_REM = (CARD_WIDTH + GAP_PX * 2) / 16;
-/** The types most text is, in key order 1-7; the rest stay in the full picker. */
+/** The types most text is, in key order 1-8; the rest stay in the full picker. */
 const QUICK_TYPES = (
-  ["P", "H1", "H2", "H3", "Quote", "Note", "Code"] as const
+  ["P", "H1", "H2", "H3", "Quote", "Note", "Code", "Formula"] as const
 ).filter((type) => (TEXT_BLOCK_TYPES as readonly string[]).includes(type));
 
 interface Props {
   store: EditorStore;
-  state: EditorViewState;
   controller: Controller;
   review: ReviewProgress;
 }
 
 /**
- * The review in one card beside the pages: score and lists, then the selected item's
- * tag choices. It sits level with the item, sticking to the viewer's top or bottom.
+ * The review in one card beside the pages: the way through what is left, then the
+ * selected item's tag choices. It sits level with the item, sticking to the viewer's top or bottom.
  */
-export function QuickTagCard({ store, state, controller, review }: Props) {
+export function QuickTagCard({ store, controller, review }: Props) {
   const { t } = useTranslation();
   const { autoAdvance, showAllTags } = useReviewMode();
   const item = review.current;
@@ -102,8 +102,11 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
   };
   const applyText = (choice: TextTagChoice) => {
     controller.onSetTextTag(choice);
+    // A formula is only done once described, which the card asks for next.
+    if (typeof choice === "string" && isDescribableType(choice)) return;
     afterTag();
   };
+  const description = controller.textDescription;
 
   const tag = controller.textTag;
   // The tag applies to every selected block, as the inspector's picker does.
@@ -137,7 +140,7 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
       // A press here must not reach the page, which would clear the selection.
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <ReviewChecklist state={state} review={review} />
+      <ReviewStepper review={review} />
 
       {item ? (
         <header className="review-card__head">
@@ -191,6 +194,17 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
               </button>
             ))}
           </div>
+          {description && (
+            <TextDescriptionQuestion
+              // A changed description (Undo) restarts the draft from it.
+              key={`${item?.id}:${description.type}:${description.description ?? ""}`}
+              control={description}
+              onDescribe={(text) => {
+                description.onSet(text);
+                afterTag();
+              }}
+            />
+          )}
           {controller.textUntaggedLinks && (
             <Button
               size="sm"
@@ -219,7 +233,9 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
               {t(
                 "pdfTextEditor.inspector.accessibility.describeLinks",
                 "Describe link",
-                { count: controller.textUndescribedLinks.count },
+                {
+                  count: controller.textUndescribedLinks.count,
+                },
               )}
             </Button>
           )}
@@ -292,6 +308,66 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
       </footer>
     </div>,
     document.body,
+  );
+}
+
+/** What screen readers read out in place of the formula or figure the selected text makes up. */
+function TextDescriptionQuestion({
+  control,
+  onDescribe,
+}: {
+  control: TextDescriptionControl;
+  onDescribe: (text: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [text, setText] = useState(control.description ?? "");
+  const formula = control.type === "Formula";
+  return (
+    <>
+      <p className="review-card__label">
+        {formula
+          ? t(
+              "pdfTextEditor.review.card.formulaQuestion",
+              "How is this formula read aloud?",
+            )
+          : t(
+              "pdfTextEditor.review.card.figureQuestion",
+              "What does this figure show?",
+            )}
+      </p>
+      <Textarea
+        autosize
+        minRows={2}
+        maxRows={5}
+        value={text}
+        placeholder={
+          formula
+            ? t(
+                "pdfTextEditor.review.card.formulaPlaceholder",
+                "For example: x squared plus one",
+              )
+            : undefined
+        }
+        onChange={(e) => setText(e.currentTarget.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey && text.trim()) {
+            e.preventDefault();
+            onDescribe(text.trim());
+          }
+        }}
+        data-testid="pdf-editor-quick-tag-text-description"
+      />
+      <div className="review-card__row">
+        <Button
+          size="sm"
+          variant="primary"
+          disabled={!text.trim()}
+          onClick={() => onDescribe(text.trim())}
+        >
+          {t("pdfTextEditor.review.card.saveDescription", "Save description")}
+        </Button>
+      </div>
+    </>
   );
 }
 
