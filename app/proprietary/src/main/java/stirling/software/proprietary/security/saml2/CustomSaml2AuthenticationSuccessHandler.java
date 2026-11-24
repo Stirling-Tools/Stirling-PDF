@@ -148,6 +148,12 @@ public class CustomSaml2AuthenticationSuccessHandler
                                 origin + "/login?errorOAuth=oAuth2AutoCreateDisabled");
                         return;
                     }
+                    if (!userExists && !userService.isUsernameValid(username)) {
+                        log.debug("Rejected invalid username '{}' for new SSO user", username);
+                        String origin = resolveOrigin();
+                        response.sendRedirect(origin + "/login?errorOAuth=invalidUsername");
+                        return;
+                    }
                     if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
                         String origin = resolveOrigin();
                         response.sendRedirect(origin + "/logout?maxUsersReached=true");

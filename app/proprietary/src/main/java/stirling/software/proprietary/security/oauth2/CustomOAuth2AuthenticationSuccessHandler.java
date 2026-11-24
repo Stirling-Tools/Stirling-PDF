@@ -105,6 +105,10 @@ public class CustomOAuth2AuthenticationSuccessHandler
             redirectToLogout(request, response, "oAuth2AutoCreateDisabled");
             return;
         }
+        if (!userExists && !userService.isUsernameValid(username)) {
+            redirectToLogout(request, response, "invalidUsername");
+            return;
+        }
 
         if (savedRequest != null
                 && !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {

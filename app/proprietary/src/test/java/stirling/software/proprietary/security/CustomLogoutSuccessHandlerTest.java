@@ -274,6 +274,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getParameter("saml2RequiresLicense")).thenReturn(null);
         when(request.getParameter("maxUsersReached")).thenReturn(null);
         when(request.getParameter("userIsDisabled")).thenReturn(null);
+        when(request.getParameter("invalidUsername")).thenReturn(null);
         when(request.getParameter("error")).thenReturn("!@$!@£" + error + "£$%^*$");
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
@@ -307,6 +308,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getParameter("saml2RequiresLicense")).thenReturn(null);
         when(request.getParameter("maxUsersReached")).thenReturn(null);
         when(request.getParameter("userIsDisabled")).thenReturn(null);
+        when(request.getParameter("invalidUsername")).thenReturn(null);
         when(request.getParameter("error")).thenReturn(null);
         when(request.getParameter(error)).thenReturn("true");
         when(request.getScheme()).thenReturn("http");
@@ -360,6 +362,19 @@ class CustomLogoutSuccessHandlerTest {
         customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
 
         assertEquals("/login?errorOAuth=oAuth2AutoCreateDisabled", response.getRedirectedUrl());
+    }
+
+    @Test
+    void invalidUsernameIsReportedOnTheLoginPage() throws IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("invalidUsername", "true");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        when(jwtService.extractToken(request)).thenReturn(null);
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
+
+        assertEquals("/login?errorOAuth=invalidUsername", response.getRedirectedUrl());
     }
 
     @Test

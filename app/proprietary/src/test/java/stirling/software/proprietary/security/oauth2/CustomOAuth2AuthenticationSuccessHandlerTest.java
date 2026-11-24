@@ -55,6 +55,7 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
     void redirectsToTauriCallbackWhenStateMarked() throws Exception {
         LoginAttemptService loginAttemptService = mock(LoginAttemptService.class);
         UserService userService = mock(UserService.class);
+        lenient().when(userService.isUsernameValid(anyString())).thenReturn(true);
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
 
@@ -125,6 +126,7 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
             String redirectBaseUrl, String frontendUrl, String cookiePath, String expected)
             throws Exception {
         UserService userService = mock(UserService.class);
+        lenient().when(userService.isUsernameValid(anyString())).thenReturn(true);
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         ApplicationProperties applicationProperties = new ApplicationProperties();
         ApplicationProperties.Security.OAUTH2 oauth2Props =
@@ -179,6 +181,7 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
             throws Exception {
         LoginAttemptService loginAttemptService = mock(LoginAttemptService.class);
         UserService userService = mock(UserService.class);
+        lenient().when(userService.isUsernameValid(anyString())).thenReturn(true);
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
         ApplicationProperties properties = new ApplicationProperties();
@@ -223,6 +226,7 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
     void oidcLoginMatchingLocalPasswordAccountIsRefusedByClaimValue() throws Exception {
         LoginAttemptService loginAttemptService = mock(LoginAttemptService.class);
         UserService userService = mock(UserService.class);
+        lenient().when(userService.isUsernameValid(anyString())).thenReturn(true);
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
         ApplicationProperties properties = new ApplicationProperties();
@@ -288,6 +292,7 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
             throws Exception {
         LoginAttemptService loginAttemptService = mock(LoginAttemptService.class);
         UserService userService = mock(UserService.class);
+        lenient().when(userService.isUsernameValid(anyString())).thenReturn(true);
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         UserLicenseSettingsRepository repository = mock(UserLicenseSettingsRepository.class);
         @SuppressWarnings("unchecked")
@@ -377,6 +382,7 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
             String expectedError)
             throws Exception {
         UserService userService = mock(UserService.class);
+        lenient().when(userService.isUsernameValid(anyString())).thenReturn(true);
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
         ApplicationProperties properties = new ApplicationProperties();
@@ -436,8 +442,48 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
     }
 
     @Test
+    void newUserWithInvalidUsernameIsRejectedBeforeAnyTokenIsIssued() throws Exception {
+        UserService userService = mock(UserService.class);
+        lenient().when(userService.isUsernameValid(anyString())).thenReturn(true);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2 = properties.getSecurity().getOauth2();
+        oauth2.setAutoCreateUser(true);
+        oauth2.setBlockRegistration(false);
+        when(userService.usernameExistsIgnoreCase("d'an@example.com")).thenReturn(false);
+        when(userService.isUsernameValid("d'an@example.com")).thenReturn(false);
+
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        mock(LoginAttemptService.class),
+                        oauth2,
+                        userService,
+                        jwtService,
+                        mock(UserLicenseSettingsService.class),
+                        properties);
+        DefaultOAuth2User principal =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        Map.of("sub", "provider-sub", "email", "d'an@example.com"),
+                        "email");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "authelia");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        assertEquals("/logout?invalidUsername=true", response.getRedirectedUrl());
+        verify(userService, never())
+                .processSSOPostLogin(anyString(), anyString(), anyString(), anyBoolean(), any());
+        verifyNoInteractions(jwtService);
+    }
+
+    @Test
     void existingSsoUserCanFollowSavedRequestWithAutoCreateDisabled() throws Exception {
         UserService userService = mock(UserService.class);
+        lenient().when(userService.isUsernameValid(anyString())).thenReturn(true);
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         ApplicationProperties properties = new ApplicationProperties();
         ApplicationProperties.Security.OAUTH2 oauth2 = properties.getSecurity().getOauth2();

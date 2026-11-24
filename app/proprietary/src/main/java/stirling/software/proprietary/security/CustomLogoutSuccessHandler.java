@@ -349,6 +349,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             path = "errorOAuth=maxUsersReached";
         } else if (request.getParameter("userIsDisabled") != null) {
             path = "errorOAuth=userIsDisabled";
+        } else if (request.getParameter("invalidUsername") != null) {
+            path = "errorOAuth=invalidUsername";
         } else if ((errorMessage = request.getParameter("error")) != null) {
             path = "errorOAuth=" + sanitizeInput(errorMessage);
         } else if (request.getParameter("badCredentials") != null) {
