@@ -224,3 +224,31 @@ describe("HistoryStack coalescing", () => {
     expect(h.size().undo).toBe(2);
   });
 });
+
+describe("HistoryStack recording and replay", () => {
+  it("record discards the redo stack", () => {
+    const h = new HistoryStack();
+    h.execute(makeCmd().cmd, fakeDoc);
+    h.undo(fakeDoc);
+    expect(h.canRedo).toBe(true);
+    h.record(makeCmd().cmd);
+    expect(h.canRedo).toBe(false);
+  });
+
+  it("replays a command nested inside a merged batch", () => {
+    const h = new HistoryStack();
+    const edit = makeCmd();
+    const format = makeCmd();
+    const follower: Command = { ...format.cmd, followsPrevious: true };
+    const other = makeCmd();
+    const mark = h.mark;
+    h.execute(edit.cmd, fakeDoc);
+    h.attachToLast(follower, fakeDoc);
+    h.execute(other.cmd, fakeDoc);
+    h.mergeSince(mark);
+    expect(h.size().undo).toBe(1);
+    expect(h.replayFrom(edit.cmd, fakeDoc)).toBe(true);
+    expect(edit.revert).toHaveBeenCalledOnce();
+    expect(edit.apply).toHaveBeenCalledTimes(2);
+  });
+});
