@@ -228,7 +228,19 @@ export function AccessibilityResults({
                   />
                 )}
                 {tagEverything}
-                {selected.report && (
+                {/* Alone, the download is the report's only action and keeps its label. */}
+                {selected.report && !reviewAvailable && (
+                  <Button
+                    fullWidth
+                    loading={buildingPdf}
+                    leftSection={<Icon name="download" size={16} />}
+                    onClick={() => void downloadReportPdf(selected)}
+                    data-testid="a11y-download-report"
+                  >
+                    {downloadLabel}
+                  </Button>
+                )}
+                {selected.report && reviewAvailable && (
                   <Tooltip label={downloadLabel}>
                     <Button
                       variant="secondary"
