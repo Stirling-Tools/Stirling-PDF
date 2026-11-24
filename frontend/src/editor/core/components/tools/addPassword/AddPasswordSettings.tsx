@@ -1,4 +1,4 @@
-import { Stack, PasswordInput } from "@mantine/core";
+import { Stack, PasswordInput, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
@@ -14,6 +14,38 @@ interface AddPasswordSettingsProps {
   disabled?: boolean;
   showOwnerPassword?: boolean;
 }
+
+const EncryptionStrengthInfo = () => {
+  const { t } = useTranslation();
+  return (
+    <Stack gap={4}>
+      <Text size="xs">
+        {t(
+          "addPassword.tooltip.encryption.text",
+          "Higher encryption levels provide better security but may not be supported by older PDF viewers.",
+        )}
+      </Text>
+      <Text size="xs">
+        {t(
+          "addPassword.tooltip.encryption.bullet1",
+          "40-bit: Basic security, compatible with older viewers",
+        )}
+      </Text>
+      <Text size="xs">
+        {t(
+          "addPassword.tooltip.encryption.bullet2",
+          "128-bit: Standard security, widely supported",
+        )}
+      </Text>
+      <Text size="xs">
+        {t(
+          "addPassword.tooltip.encryption.bullet3",
+          "256-bit: Maximum security, requires modern viewers",
+        )}
+      </Text>
+    </Stack>
+  );
+};
 
 const AddPasswordSettings = ({
   parameters,
@@ -63,10 +95,7 @@ const AddPasswordSettings = ({
       <ButtonSelector
         {...infoLabelProps(
           t("addPassword.encryption.keyLength.label", "Encryption Strength"),
-          t(
-            "addPassword.tooltip.encryption.text",
-            "Higher encryption levels provide better security but may not be supported by older PDF viewers.",
-          ),
+          <EncryptionStrengthInfo />,
         )}
         value={parameters.keyLength}
         onChange={(value) => onParameterChange("keyLength", value)}
