@@ -45,7 +45,7 @@ const REPORT: AccessibilityReport = {
 interface EditorWindow {
   __editor_store?: {
     document: { documentLanguage: () => string | null } | null;
-    getState: () => { dirty: boolean };
+    getState: () => { dirty: boolean; loading: boolean };
   };
 }
 
@@ -61,6 +61,24 @@ test("sets the document language from the report's Language area", async ({
     .getByText("PDF accessibility", { exact: true })
     .first()
     .click({ timeout: 60_000 });
+
+  // The tool opens the review as soon as the viewer shows the file. The hidden
+  // editor's load (PDFium opening the file and reading its pages) can hold the
+  // main thread long enough on a slow runner to stall a click on the report, so
+  // the report is used only once that load has finished.
+  await expect(page.getByTestId("pdf-editor-quick-tag")).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const store = (window as unknown as EditorWindow).__editor_store;
+          return !!store?.document && !store.getState().loading;
+        }),
+      { timeout: 30_000 },
+    )
+    .toBe(true);
 
   const report = page.getByTestId("a11y-report");
   await report
