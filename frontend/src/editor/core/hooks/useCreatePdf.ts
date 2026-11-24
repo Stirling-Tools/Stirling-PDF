@@ -11,10 +11,7 @@ import { defaultParameters as defaultConvertParameters } from "@editor/hooks/too
 import { detectFileExtension } from "@editor/utils/fileUtils";
 import {
   createBlankPdf,
-  createPdfFromTemplate,
   defaultPageSizeFor,
-  type NewPdfPageSetup,
-  type PdfTemplate,
 } from "@editor/services/createPdf/newPdfDocuments";
 
 export type CreatePdfStage = "idle" | "creating" | "converting";
@@ -27,10 +24,6 @@ export function useCreatePdf() {
   const { actions: navigationActions } = useNavigationActions();
   const { handleToolSelect } = useToolWorkflowActions();
   const [stage, setStage] = useState<CreatePdfStage>("idle");
-  const [pageSetup, setPageSetup] = useState<NewPdfPageSetup>(() => ({
-    size: defaultPageSizeFor(i18n.language),
-    orientation: "portrait",
-  }));
 
   const openInTextEditor = useCallback(
     async (file: File) => {
@@ -76,17 +69,9 @@ export function useCreatePdf() {
   const createBlank = useCallback(
     () =>
       run("creating", t("createPdf.failed", "Couldn't create the PDF"), () =>
-        createBlankPdf(pageSetup),
+        createBlankPdf(defaultPageSizeFor(i18n.language)),
       ),
-    [run, pageSetup, t],
-  );
-
-  const createFromTemplate = useCallback(
-    (template: PdfTemplate) =>
-      run("creating", t("createPdf.failed", "Couldn't create the PDF"), () =>
-        createPdfFromTemplate(template, pageSetup),
-      ),
-    [run, pageSetup, t],
+    [run, i18n, t],
   );
 
   const createFromSource = useCallback(
@@ -123,12 +108,5 @@ export function useCreatePdf() {
     [run, t],
   );
 
-  return {
-    stage,
-    pageSetup,
-    setPageSetup,
-    createBlank,
-    createFromTemplate,
-    createFromSource,
-  };
+  return { stage, createBlank, createFromSource };
 }

@@ -1,14 +1,12 @@
-import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { IconName } from "@editor/ui/Icon";
 import { useCreatePdf, type CreatePdfStage } from "@editor/hooks/useCreatePdf";
 import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
 import { CONVERT_SUPPORTED_FORMATS } from "@editor/constants/convertSupportedFornats";
-import { CreatePdfTemplateModal } from "@editor/components/createPdf/CreatePdfTemplateModal";
-import type { PdfTemplate } from "@editor/services/createPdf/newPdfDocuments";
 
 export interface CreatePdfMenuItem {
-  id: "blank" | "template" | "source";
+  id: "blank" | "source";
   icon: IconName;
   label: string;
   description: string;
@@ -25,15 +23,7 @@ export function useCreatePdfMenu(): {
   busyLabel: string | null;
 } {
   const { t } = useTranslation();
-  const {
-    stage,
-    pageSetup,
-    setPageSetup,
-    createBlank,
-    createFromTemplate,
-    createFromSource,
-  } = useCreatePdf();
-  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const { stage, createBlank, createFromSource } = useCreatePdf();
   const sourceInputRef = useRef<HTMLInputElement | null>(null);
 
   const pickSource = useCallback(async () => {
@@ -50,14 +40,6 @@ export function useCreatePdfMenu(): {
     if (file) await createFromSource(file);
   }, [createFromSource, t]);
 
-  const selectTemplate = useCallback(
-    (template: PdfTemplate) => {
-      setTemplatesOpen(false);
-      void createFromTemplate(template);
-    },
-    [createFromTemplate],
-  );
-
   const items = useMemo<CreatePdfMenuItem[]>(
     () => [
       {
@@ -67,17 +49,6 @@ export function useCreatePdfMenu(): {
         description: t("createPdf.blankDesc", "Start writing on an empty page"),
         onClick: () => void createBlank(),
         testId: "create-pdf-blank",
-      },
-      {
-        id: "template",
-        icon: "layout-template",
-        label: t("createPdf.template", "From a template"),
-        description: t(
-          "createPdf.templateDesc",
-          "Letters, invoices, forms, résumés and more",
-        ),
-        onClick: () => setTemplatesOpen(true),
-        testId: "create-pdf-template",
       },
       {
         id: "source",
@@ -95,27 +66,18 @@ export function useCreatePdfMenu(): {
   );
 
   const dialogs = (
-    <>
-      <CreatePdfTemplateModal
-        open={templatesOpen}
-        pageSetup={pageSetup}
-        onPageSetupChange={setPageSetup}
-        onClose={() => setTemplatesOpen(false)}
-        onSelect={selectTemplate}
-      />
-      <input
-        ref={sourceInputRef}
-        type="file"
-        accept={SOURCE_EXTENSIONS.map((ext) => `.${ext}`).join(",")}
-        style={{ display: "none" }}
-        data-testid="create-pdf-source-input"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = "";
-          if (file) void createFromSource(file);
-        }}
-      />
-    </>
+    <input
+      ref={sourceInputRef}
+      type="file"
+      accept={SOURCE_EXTENSIONS.map((ext) => `.${ext}`).join(",")}
+      style={{ display: "none" }}
+      data-testid="create-pdf-source-input"
+      onChange={(event) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (file) void createFromSource(file);
+      }}
+    />
   );
 
   const busyLabel =
