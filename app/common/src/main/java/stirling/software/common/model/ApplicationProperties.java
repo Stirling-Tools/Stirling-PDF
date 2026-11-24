@@ -1300,6 +1300,7 @@ public class ApplicationProperties {
             public static class Trust {
                 private boolean serverAsAnchor = true;
                 private boolean useSystemTrust = true;
+                private boolean useOSTrust = false;
                 private boolean useMozillaBundle = true;
                 private boolean useAATL = false;
                 private boolean useEUTL = false;
