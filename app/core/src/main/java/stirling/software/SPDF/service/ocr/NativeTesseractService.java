@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -365,7 +365,11 @@ public class NativeTesseractService {
                                         started.add(worker);
                                         local.set(worker);
                                     }
-                                    PIX pix = renderer.render(index, plan.renderDpi(), keepColour);
+                                    PIX pix =
+                                            renderer.render(
+                                                    index,
+                                                    plan.renderDpi(),
+                                                    keepColour && !plan.bilevel());
                                     return worker.process(index, pix, plan, options, workDir);
                                 }));
             }
@@ -469,21 +473,25 @@ public class NativeTesseractService {
     }
 
     /**
-     * Resolution for one page: Tesseract reads it at {@code renderDpi}, and a replacement image is
-     * written at {@code outputDpi}, which is never higher.
+     * Resolution and form for one page: Tesseract reads it at {@code renderDpi}; a replacement
+     * image is written at {@code outputDpi}, which is never higher, and 1-bit when {@code bilevel}.
      */
-    record PagePlan(int renderDpi, int outputDpi) {}
+    record PagePlan(int renderDpi, int outputDpi, boolean bilevel) {}
 
     /**
      * Tesseract reads every page at {@code dpi} or more. A page that may be replaced keeps its
-     * scan's own resolution: rendered at that DPI when it is higher (up to {@code maxDpi}) and
-     * written back at it when it is lower. Other pages render and write at {@code dpi}.
+     * scan's own resolution, rendered at that DPI when it is higher (up to {@code maxDpi}) and
+     * written back at it when it is lower, and a black-and-white scan stays black-and-white. Other
+     * pages render and write at {@code dpi}.
      */
     static PagePlan plan(PDPage page, int dpi, int maxDpi, boolean replacing) throws IOException {
-        OptionalInt scan = replacing ? OcrPageScan.scanDpi(page) : OptionalInt.empty();
-        int wanted = scan.isPresent() ? Math.max(dpi, Math.min(scan.getAsInt(), maxDpi)) : dpi;
-        int render = pageDpi(page, wanted);
-        return new PagePlan(render, scan.isPresent() ? Math.min(scan.getAsInt(), render) : render);
+        Optional<OcrPageScan.Scan> scan = replacing ? OcrPageScan.scan(page) : Optional.empty();
+        if (scan.isEmpty()) {
+            int render = pageDpi(page, dpi);
+            return new PagePlan(render, render, false);
+        }
+        int render = pageDpi(page, Math.max(dpi, Math.min(scan.get().dpi(), maxDpi)));
+        return new PagePlan(render, Math.min(scan.get().dpi(), render), scan.get().bilevel());
     }
 
     private int maxDpi() {
@@ -682,19 +690,18 @@ public class NativeTesseractService {
             }
         }
 
-        /** The page as OCRed, encoded at the plan's output DPI. */
+        /** The page as OCRed, encoded at the plan's output DPI and form. */
         private static OcrPageImages.Encoded replacement(PIX pix, PagePlan plan)
                 throws IOException {
-            if (plan.outputDpi() >= plan.renderDpi()) {
-                return OcrPageImages.encode(OcrPageImages.toImage(pix));
-            }
             float scale = (float) plan.outputDpi() / plan.renderDpi();
-            PIX scaled = pixScale(pix, scale, scale);
-            if (scaled == null) return OcrPageImages.encode(OcrPageImages.toImage(pix));
+            PIX scaled = scale < 1 ? pixScale(pix, scale, scale) : null;
+            PIX source = scaled != null ? scaled : pix;
             try {
-                return OcrPageImages.encode(OcrPageImages.toImage(scaled));
+                return plan.bilevel()
+                        ? OcrPageImages.bilevel(source)
+                        : OcrPageImages.encode(OcrPageImages.toImage(source));
             } finally {
-                pixDestroy(scaled);
+                if (scaled != null) pixDestroy(scaled);
             }
         }
 

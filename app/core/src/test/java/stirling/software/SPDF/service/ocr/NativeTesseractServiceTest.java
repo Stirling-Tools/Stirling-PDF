@@ -34,6 +34,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.CCITTFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -161,19 +162,34 @@ class NativeTesseractServiceTest {
 
             // Pages that are not replaced render and write at the OCR resolution.
             assertEquals(
-                    new NativeTesseractService.PagePlan(300, 300),
+                    new NativeTesseractService.PagePlan(300, 300, false),
                     NativeTesseractService.plan(scan100, 300, 500, false));
             // A low scan is read at 300 and written back at its own 100.
             assertEquals(
-                    new NativeTesseractService.PagePlan(300, 100),
+                    new NativeTesseractService.PagePlan(300, 100, false),
                     NativeTesseractService.plan(scan100, 300, 500, true));
             // A fine scan is read and written at its own DPI, up to the configured maximum.
             assertEquals(
-                    new NativeTesseractService.PagePlan(400, 400),
+                    new NativeTesseractService.PagePlan(400, 400, false),
                     NativeTesseractService.plan(scan400, 300, 500, true));
             assertEquals(
-                    new NativeTesseractService.PagePlan(350, 350),
+                    new NativeTesseractService.PagePlan(350, 350, false),
                     NativeTesseractService.plan(scan400, 300, 350, true));
+            // A black-and-white scan is written back 1-bit.
+            PDPage bilevel200 = new PDPage(PDRectangle.LETTER);
+            doc.addPage(bilevel200);
+            try (PDPageContentStream content = new PDPageContentStream(doc, bilevel200)) {
+                content.drawImage(
+                        CCITTFactory.createFromImage(
+                                doc, new BufferedImage(1700, 2200, BufferedImage.TYPE_BYTE_BINARY)),
+                        0,
+                        0,
+                        PDRectangle.LETTER.getWidth(),
+                        PDRectangle.LETTER.getHeight());
+            }
+            assertEquals(
+                    new NativeTesseractService.PagePlan(300, 200, true),
+                    NativeTesseractService.plan(bilevel200, 300, 500, true));
         }
     }
 
@@ -284,8 +300,30 @@ class NativeTesseractServiceTest {
             }
         }
 
-        /** The paragraph scanned at {@code dpi} in 12 pt type, stored as a JPEG. */
+        @Test
+        void forceKeepsABlackAndWhiteScanBlackAndWhite(@TempDir Path work) throws Exception {
+            Outcome out =
+                    run(
+                            lowResolutionScan(200, true),
+                            new OcrOptions(true, false, false, false),
+                            work);
+
+            assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
+            try (PDDocument doc = out.reload()) {
+                PDImageXObject image = images(doc.getPage(0).getResources()).get(0);
+                assertEquals(1700, image.getWidth());
+                assertEquals(
+                        COSName.CCITTFAX_DECODE,
+                        image.getCOSObject().getDictionaryObject(COSName.FILTER));
+            }
+        }
+
         private PDDocument lowResolutionScan(int dpi) throws IOException {
+            return lowResolutionScan(dpi, false);
+        }
+
+        /** The paragraph scanned at {@code dpi} in 12 pt type, as a JPEG or 1-bit CCITT image. */
+        private PDDocument lowResolutionScan(int dpi, boolean bilevel) throws IOException {
             int width = Math.round(PAGE_WIDTH / 72 * dpi);
             int height = Math.round(PAGE_HEIGHT / 72 * dpi);
             BufferedImage scan = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
@@ -305,13 +343,25 @@ class NativeTesseractServiceTest {
             document.addPage(page);
             try (PDPageContentStream content = new PDPageContentStream(document, page)) {
                 content.drawImage(
-                        JPEGFactory.createFromImage(document, scan, 0.75f, dpi),
+                        bilevel
+                                ? CCITTFactory.createFromImage(document, binary(scan))
+                                : JPEGFactory.createFromImage(document, scan, 0.75f, dpi),
                         0,
                         0,
                         PAGE_WIDTH,
                         PAGE_HEIGHT);
             }
             return document;
+        }
+
+        private static BufferedImage binary(BufferedImage gray) {
+            BufferedImage bw =
+                    new BufferedImage(
+                            gray.getWidth(), gray.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+            Graphics2D g = bw.createGraphics();
+            g.drawImage(gray, 0, 0, null);
+            g.dispose();
+            return bw;
         }
 
         @Test

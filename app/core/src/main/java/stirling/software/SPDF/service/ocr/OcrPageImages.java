@@ -1,6 +1,8 @@
 package stirling.software.SPDF.service.ocr;
 
+import static org.bytedeco.leptonica.global.leptonica.pixConvertTo1;
 import static org.bytedeco.leptonica.global.leptonica.pixCreate;
+import static org.bytedeco.leptonica.global.leptonica.pixDestroy;
 import static org.bytedeco.leptonica.global.leptonica.pixGetData;
 import static org.bytedeco.leptonica.global.leptonica.pixGetDepth;
 import static org.bytedeco.leptonica.global.leptonica.pixGetHeight;
@@ -8,6 +10,7 @@ import static org.bytedeco.leptonica.global.leptonica.pixGetWidth;
 import static org.bytedeco.leptonica.global.leptonica.pixGetWpl;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -141,6 +144,36 @@ final class OcrPageImages {
             data.position((long) y * wpl).get(words, 0, wpl);
             for (int x = 0; x < width; x++) row[x] = words[x] >>> 8;
             image.setRGB(0, y, width, 1, row, 0, width);
+        }
+        return image;
+    }
+
+    /** A 1-bit replacement for a black-and-white scan: {@code pix} thresholded at mid grey. */
+    static Encoded bilevel(PIX pix) throws IOException {
+        PIX binary = pixConvertTo1(pix, 128);
+        if (binary == null) throw new IOException("Could not threshold the page");
+        try {
+            return new Encoded(null, toBinaryImage(binary));
+        } finally {
+            pixDestroy(binary);
+        }
+    }
+
+    /** A 1 bpp Leptonica image (1 is black) as a Java binary image (0 is black). */
+    static BufferedImage toBinaryImage(PIX pix) {
+        int width = pixGetWidth(pix);
+        int height = pixGetHeight(pix);
+        int wpl = pixGetWpl(pix);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        byte[] out = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        int stride = (width + 7) / 8;
+        IntPointer data = pixGetData(pix);
+        int[] words = new int[wpl];
+        for (int y = 0; y < height; y++) {
+            data.position((long) y * wpl).get(words, 0, wpl);
+            for (int b = 0; b < stride; b++) {
+                out[y * stride + b] = (byte) ~(words[b >> 2] >>> (24 - 8 * (b & 3)));
+            }
         }
         return image;
     }

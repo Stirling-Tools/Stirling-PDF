@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -12,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.CCITTFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
@@ -30,7 +31,7 @@ class OcrPageScanTest {
             try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
                 cs.drawImage(image(doc, 850, 1100), 0, 0, W, H);
             }
-            assertEquals(OptionalInt.of(100), OcrPageScan.scanDpi(page));
+            assertEquals(Optional.of(new OcrPageScan.Scan(100, false)), OcrPageScan.scan(page));
         }
     }
 
@@ -42,7 +43,7 @@ class OcrPageScanTest {
                 cs.drawImage(image(doc, 1700, 1100), 0, 0, W, H / 2);
                 cs.drawImage(image(doc, 1700, 1100), 0, H / 2, W, H / 2);
             }
-            assertEquals(OptionalInt.of(200), OcrPageScan.scanDpi(page));
+            assertEquals(Optional.of(new OcrPageScan.Scan(200, false)), OcrPageScan.scan(page));
         }
     }
 
@@ -54,7 +55,7 @@ class OcrPageScanTest {
                 cs.transform(new Matrix(0, 1, -1, 0, W, 0));
                 cs.drawImage(image(doc, 1100, 850), 0, 0, H, W);
             }
-            assertEquals(OptionalInt.of(100), OcrPageScan.scanDpi(page));
+            assertEquals(Optional.of(new OcrPageScan.Scan(100, false)), OcrPageScan.scan(page));
         }
     }
 
@@ -66,7 +67,7 @@ class OcrPageScanTest {
                 cs.drawImage(image(doc, 850, 1100), 0, 0, W, H);
                 text(cs, RenderingMode.NEITHER);
             }
-            assertEquals(OptionalInt.of(100), OcrPageScan.scanDpi(page));
+            assertEquals(Optional.of(new OcrPageScan.Scan(100, false)), OcrPageScan.scan(page));
         }
     }
 
@@ -82,8 +83,25 @@ class OcrPageScanTest {
             try (PDPageContentStream cs = new PDPageContentStream(doc, halfCovered)) {
                 cs.drawImage(image(doc, 850, 550), 0, 0, W, H / 2);
             }
-            assertEquals(OptionalInt.empty(), OcrPageScan.scanDpi(withText));
-            assertEquals(OptionalInt.empty(), OcrPageScan.scanDpi(halfCovered));
+            assertEquals(Optional.empty(), OcrPageScan.scan(withText));
+            assertEquals(Optional.empty(), OcrPageScan.scan(halfCovered));
+        }
+    }
+
+    @Test
+    void oneBitImagesMakeABlackAndWhiteScan() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage bilevel = page(doc);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, bilevel)) {
+                cs.drawImage(binaryImage(doc, 1700, 2200), 0, 0, W, H);
+            }
+            PDPage mixed = page(doc);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, mixed)) {
+                cs.drawImage(binaryImage(doc, 1700, 1100), 0, 0, W, H / 2);
+                cs.drawImage(image(doc, 1700, 1100), 0, H / 2, W, H / 2);
+            }
+            assertEquals(Optional.of(new OcrPageScan.Scan(200, true)), OcrPageScan.scan(bilevel));
+            assertEquals(Optional.of(new OcrPageScan.Scan(200, false)), OcrPageScan.scan(mixed));
         }
     }
 
@@ -96,6 +114,12 @@ class OcrPageScanTest {
     private static PDImageXObject image(PDDocument doc, int width, int height) throws IOException {
         return LosslessFactory.createFromImage(
                 doc, new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY));
+    }
+
+    private static PDImageXObject binaryImage(PDDocument doc, int width, int height)
+            throws IOException {
+        return CCITTFactory.createFromImage(
+                doc, new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY));
     }
 
     private static void text(PDPageContentStream cs, RenderingMode mode) throws IOException {
