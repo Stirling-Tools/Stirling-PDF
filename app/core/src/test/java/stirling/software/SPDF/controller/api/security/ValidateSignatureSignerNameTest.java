@@ -40,4 +40,18 @@ class ValidateSignatureSignerNameTest {
 
         assertThat(ValidateSignatureController.signerName(null, cert)).isEqualTo("O=Agency,C=US");
     }
+
+    @Test
+    void picksCommonNameInsideMultiValuedRdn() {
+        X509Certificate cert = certWithSubject("OU=A+CN=Alice, O=Agency");
+
+        assertThat(ValidateSignatureController.signerName(null, cert)).isEqualTo("Alice");
+    }
+
+    @Test
+    void returnsCommonNameWithoutDnEscapes() {
+        X509Certificate cert = certWithSubject("CN=Doe\\, Jane, O=Agency");
+
+        assertThat(ValidateSignatureController.signerName(null, cert)).isEqualTo("Doe, Jane");
+    }
 }
