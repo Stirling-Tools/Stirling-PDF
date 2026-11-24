@@ -10,10 +10,15 @@ function fetchConnectedServerConfig() {
   return fetchAppConfig(connectedServerBaseUrl());
 }
 
+/** The connected server's config for the Processor; the desktop app's own config keeps the PDF policies. */
 export function PortalAppConfigProvider(
-  props: Omit<AppConfigProviderProps, "fetchConfig">,
+  props: Omit<AppConfigProviderProps, "fetchConfig" | "appliesPdfPolicies">,
 ) {
   return (
-    <AppConfigProvider {...props} fetchConfig={fetchConnectedServerConfig} />
+    <AppConfigProvider
+      {...props}
+      fetchConfig={fetchConnectedServerConfig}
+      appliesPdfPolicies={false}
+    />
   );
 }
