@@ -145,7 +145,8 @@ const EmbedPdfViewerContent = ({
   const damagedRepair = useDamagedFileRepair();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
-  const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  // Read only by the keydown handler; a ref avoids re-rendering on hover.
+  const isViewerHoveredRef = React.useRef(false);
   // The pages' scrollbar, which the page bar stops short of to centre on them.
   const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const registeredPageTool = useViewerPageTool();
@@ -893,7 +894,7 @@ const EmbedPdfViewerContent = ({
       // All remaining shortcuts require the viewer to be hovered so they
       // don't conflict with the rest of the UI when the viewer is mounted
       // but not the active focus target. A page tool binds its own.
-      if (!isViewerHovered || pageToolActive) return;
+      if (!isViewerHoveredRef.current || pageToolActive) return;
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
@@ -978,7 +979,6 @@ const EmbedPdfViewerContent = ({
     };
   }, [
     pageToolActive,
-    isViewerHovered,
     isSearchInterfaceVisible,
     zoomActions,
     searchInterfaceActions,
@@ -1927,8 +1927,12 @@ const EmbedPdfViewerContent = ({
   return (
     <Box
       ref={viewerRef}
-      onMouseEnter={() => setIsViewerHovered(true)}
-      onMouseLeave={() => setIsViewerHovered(false)}
+      onMouseEnter={() => {
+        isViewerHoveredRef.current = true;
+      }}
+      onMouseLeave={() => {
+        isViewerHoveredRef.current = false;
+      }}
       style={{
         position: "relative",
         height: "100%",
