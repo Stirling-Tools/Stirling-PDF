@@ -797,7 +797,7 @@ describe("tagging text marked for no element", () => {
  * /StructParents 0 from a file whose tree was not carried over, and the merged
  * file has no tree.
  */
-function mergedPdf(): Uint8Array {
+function mergedPdf({ link = false } = {}): Uint8Array {
   const page = (num: number, contents: number, extra = "") => ({
     num,
     body:
@@ -809,7 +809,7 @@ function mergedPdf(): Uint8Array {
       { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
       { num: 2, body: "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>" },
       page(3, 5),
-      page(4, 6, " /StructParents 0"),
+      page(4, 6, ` /StructParents 0${link ? " /Annots [8 0 R]" : ""}`),
       {
         num: 5,
         body: streamBody("", "BT /F1 12 Tf 72 700 Td (First page.) Tj ET\n"),
@@ -824,6 +824,11 @@ function mergedPdf(): Uint8Array {
       {
         num: 7,
         body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      // Its /StructParent is the key its own file gave it, which the save hands a page.
+      {
+        num: 8,
+        body: "<< /Type /Annot /Subtype /Link /Rect [72 690 160 712] /StructParent 1 /A << /S /URI /URI (https://example.com) >> >>",
       },
     ],
     1,
@@ -860,6 +865,18 @@ describe("a merged page whose tree was not carried over", () => {
     expect(structure!.pages.get(0)?.elements).toHaveLength(1);
     expect(structure!.pages.get(1)?.elements).toHaveLength(1);
     expect(structure!.pages.get(1)?.slotCount).not.toBeNull();
+  });
+
+  test("tags a link whose stale /StructParent the save has given to a page, and saves", async () => {
+    const store = await storeFor(mergedPdf({ link: true }));
+    await tagAllPages(store);
+    expect(store.getState().error).toBeNull();
+    const saved = await savedBytes(store.document!);
+    const reopened = await EditorDocument.open(saved);
+    opened.push(reopened);
+    const [link] = reopened.structure(1).links();
+    expect(link?.holder).not.toBeNull();
+    store.dispose();
   });
 });
 
