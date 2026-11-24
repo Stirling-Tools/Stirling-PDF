@@ -257,20 +257,23 @@ export function useViewerWorkbenchBarButtons(
       section,
       order,
       active,
-      // Registered as the action too, for reading mode's rail.
+      // Registered as the action too, for reading mode's rail, which draws
+      // its own round button when no renderer is given.
       onClick: onToggle,
-      render: ({ disabled }) => (
-        <BarButton
-          icon={icon}
-          label={label}
-          iconOnly
-          tooltipPosition={tooltipPosition}
-          active={active}
-          disabled={disabled}
-          onClick={onToggle}
-          testId={id}
-        />
-      ),
+      render: railOwned
+        ? undefined
+        : ({ disabled }) => (
+            <BarButton
+              icon={icon}
+              label={label}
+              iconOnly
+              tooltipPosition={tooltipPosition}
+              active={active}
+              disabled={disabled}
+              onClick={onToggle}
+              testId={id}
+            />
+          ),
     });
 
     const buttons: WorkbenchBarButtonWithAction[] = [
