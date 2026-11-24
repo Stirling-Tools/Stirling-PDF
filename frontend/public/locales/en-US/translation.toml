@@ -421,6 +421,11 @@ page-numbers = "Page Numbers"
 pageNumberFooter = "Page Number Footer"
 timestamp = "Timestamp"
 
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Insert a variable"
+
 [addText]
 applySignatures = "Apply Text"
 header = "Add text to PDFs"

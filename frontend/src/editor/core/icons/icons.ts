@@ -336,6 +336,7 @@ import UserX from "lucide-static/icons/user-x.svg?react";
 import Users from "lucide-static/icons/users.svg?react";
 import UsersRound from "lucide-static/icons/users-round.svg?react";
 import Utensils from "lucide-static/icons/utensils.svg?react";
+import Variable from "lucide-static/icons/variable.svg?react";
 import Video from "lucide-static/icons/video.svg?react";
 import Volume2 from "lucide-static/icons/volume-2.svg?react";
 import Wallet from "lucide-static/icons/wallet.svg?react";
@@ -771,6 +772,7 @@ export const ICONS = {
   users: { Component: Users, kind: "lucide" },
   "users-round": { Component: UsersRound, kind: "lucide" },
   utensils: { Component: Utensils, kind: "lucide" },
+  variable: { Component: Variable, kind: "lucide" },
   video: { Component: Video, kind: "lucide" },
   "volume-2": { Component: Volume2, kind: "lucide" },
   wallet: { Component: Wallet, kind: "lucide" },

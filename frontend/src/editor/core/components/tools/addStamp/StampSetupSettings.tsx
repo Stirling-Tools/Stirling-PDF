@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -8,6 +8,7 @@ import {
   Text,
   Divider,
   Paper,
+  Box,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import {
@@ -18,6 +19,7 @@ import {
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { useStampTextTips } from "@editor/components/tooltips/useStampTextTips";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
+import { StampVariablePicker } from "@editor/components/tools/addStamp/StampVariablePicker";
 import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp/StampPreviewUtils";
 import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
@@ -184,9 +186,40 @@ const StampSetupSettings = ({
 }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
   const stampTextTips = useStampTextTips();
+  const stampTextFieldRef = useRef<HTMLDivElement>(null);
+  const stampTextCaret = useRef<{ start: number; end: number } | null>(null);
   const stampImageWithUrl = useFileWithUrl(
     parameters.stampType === "image" ? (parameters.stampImage ?? null) : null,
   );
+
+  const rememberCaret = (textarea: HTMLTextAreaElement) => {
+    stampTextCaret.current = {
+      start: textarea.selectionStart,
+      end: textarea.selectionEnd,
+    };
+  };
+
+  // At the caret the field last had, or at the end before it has had one.
+  const insertVariable = (token: string) => {
+    const text = parameters.stampText;
+    const caret = stampTextCaret.current;
+    const start = Math.min(caret?.start ?? text.length, text.length);
+    const end = Math.min(caret?.end ?? text.length, text.length);
+    onParameterChange(
+      "stampText",
+      text.slice(0, start) + token + text.slice(end),
+    );
+    const after = start + token.length;
+    stampTextCaret.current = { start: after, end: after };
+  };
+
+  // Pins the (i)'s own sidebar tooltip, so the field's help has one copy and
+  // one way to close.
+  const showStampTextHelp = () => {
+    stampTextFieldRef.current
+      ?.querySelector<HTMLButtonElement>("button.sui-info")
+      ?.click();
+  };
 
   return (
     <Stack gap="md">
@@ -242,6 +275,7 @@ const StampSetupSettings = ({
             onChange={(value) => {
               const template = STAMP_TEMPLATES.find((t) => t.id === value);
               if (template) {
+                stampTextCaret.current = null;
                 onParameterChange("stampText", template.text);
                 onParameterChange(
                   "position",
@@ -257,24 +291,37 @@ const StampSetupSettings = ({
             }}
           />
 
-          <Textarea
-            {...infoLabelProps(
-              t("AddStampRequest.stampText", "Stamp Text"),
-              t(
-                "AddStampRequest.stampTextInfo",
-                "Printed on every stamped page. Words starting with @, such as @page_number, are filled in when the stamp is applied.",
-              ),
-              stampTextTips,
-            )}
-            value={parameters.stampText}
-            className={privateContentClassName}
-            onChange={(e) =>
-              onParameterChange("stampText", e.currentTarget.value)
-            }
-            autosize
-            minRows={2}
-            disabled={disabled}
-          />
+          <Box pos="relative" ref={stampTextFieldRef}>
+            <Textarea
+              {...infoLabelProps(
+                t("AddStampRequest.stampText", "Stamp Text"),
+                t(
+                  "AddStampRequest.stampTextInfo",
+                  "Printed on every stamped page. Words starting with @, such as @page_number, are filled in when the stamp is applied.",
+                ),
+                stampTextTips,
+              )}
+              value={parameters.stampText}
+              className={privateContentClassName}
+              onChange={(e) => {
+                rememberCaret(e.currentTarget);
+                onParameterChange("stampText", e.currentTarget.value);
+              }}
+              onSelect={(e) => rememberCaret(e.currentTarget)}
+              autosize
+              minRows={2}
+              disabled={disabled}
+            />
+            <StampVariablePicker
+              onInsert={insertVariable}
+              onUseExample={(text) => {
+                stampTextCaret.current = null;
+                onParameterChange("stampText", text);
+              }}
+              onShowHelp={showStampTextHelp}
+              disabled={disabled}
+            />
+          </Box>
 
           {/* Live Preview */}
           <StampTextPreview

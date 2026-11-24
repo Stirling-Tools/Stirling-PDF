@@ -1,5 +1,5 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { expect, userEvent } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import {
   fixtureResponse,
   knownA11yIssues,
@@ -7,6 +7,7 @@ import {
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  bodyOf,
   choose,
   findEnabled,
   openColorPicker,
@@ -41,6 +42,19 @@ const QR_CONTENT = /^QR Code Content/;
 async function enterStampText(context: PlayContext, text = "APPROVED") {
   await userEvent.type(await findEnabled(context, "textbox", STAMP_TEXT), text);
   await waitForPanelText(context, "Preview:");
+}
+
+const INSERT_VARIABLE = "Insert a variable";
+
+async function openVariablePicker(context: PlayContext) {
+  await userEvent.click(await findEnabled(context, "button", INSERT_VARIABLE));
+  return within(
+    await bodyOf(context).findByRole(
+      "dialog",
+      { name: INSERT_VARIABLE },
+      STAGE_TIMEOUT,
+    ),
+  );
 }
 
 async function chooseQr(context: PlayContext) {
@@ -123,6 +137,46 @@ export const TemplateChosen: Story = {
 
 export const StampTextTooltip: Story = {
   play: openTooltip({ info: /^Printed on every stamped page/ }),
+};
+
+export const VariablePicker: Story = {
+  play: async (context) => {
+    await openVariablePicker(context);
+  },
+};
+
+export const VariableInserted: Story = {
+  play: async (context) => {
+    await enterStampText(context, "Page ");
+    const picker = await openVariablePicker(context);
+    await userEvent.click(picker.getByRole("button", { name: "@page_number" }));
+    await expect(await findEnabled(context, "textbox", STAMP_TEXT)).toHaveValue(
+      "Page @page_number",
+    );
+  },
+};
+
+export const VariableExampleUsed: Story = {
+  play: async (context) => {
+    await enterStampText(context);
+    const picker = await openVariablePicker(context);
+    await userEvent.click(
+      picker.getByRole("button", { name: "Page @page_number of @total_pages" }),
+    );
+    await expect(await findEnabled(context, "textbox", STAMP_TEXT)).toHaveValue(
+      "Page @page_number of @total_pages",
+    );
+  },
+};
+
+export const VariableHelp: Story = {
+  play: async (context) => {
+    const picker = await openVariablePicker(context);
+    await userEvent.click(
+      picker.getByRole("button", { name: "What each variable means" }),
+    );
+    await bodyOf(context).findByText("What gets printed", {}, STAGE_TIMEOUT);
+  },
 };
 
 export const AlphabetMenu: Story = {

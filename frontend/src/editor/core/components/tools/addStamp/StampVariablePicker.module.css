@@ -1,0 +1,44 @@
+/* Level with the field's label: the label row is shorter than the button. */
+.trigger {
+  position: absolute;
+  top: -0.3125rem;
+  inset-inline-end: 0;
+  display: inline-flex;
+}
+
+.dropdown {
+  padding: 0.75rem;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: min(15rem, 40vh);
+  overflow-y: auto;
+}
+
+.tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+}
+
+.examples {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+}
+
+.token {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.footer {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 0.0625rem solid var(--c-border);
+}
