@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { buildCertSignFormData } from "@editor/hooks/tools/certSign/useCertSignOperation";
+import {
+  buildCertSignFormData,
+  certSignFromApiParams,
+} from "@editor/hooks/tools/certSign/useCertSignOperation";
 import {
   CertSignParameters,
   defaultParameters,
@@ -121,5 +124,18 @@ describe("buildCertSignFormData - signature details", () => {
     expect(formData.get("name")).toBeNull();
     expect(formData.get("reason")).toBeNull();
     expect(formData.get("location")).toBeNull();
+  });
+});
+
+describe("certSignFromApiParams - sign mode", () => {
+  test.each([
+    ["SERVER", "AUTO"],
+    ["WINDOWS_STORE", "DEVICE"],
+    ["MACOS_KEYCHAIN", "DEVICE"],
+    ["PKCS11", "DEVICE"],
+    ["PKCS12", "MANUAL"],
+    ["PEM", "MANUAL"],
+  ] as const)("%s restores as %s", (certType, signMode) => {
+    expect(certSignFromApiParams({ certType }).signMode).toBe(signMode);
   });
 });

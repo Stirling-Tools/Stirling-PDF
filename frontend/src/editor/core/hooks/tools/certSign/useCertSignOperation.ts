@@ -94,6 +94,21 @@ const certSignFiles = (parameters: CertSignParameters): FormDataFiles => {
   }
 };
 
+const signModeForCertType = (
+  certType: CertSignApiParams["certType"],
+): CertSignParameters["signMode"] => {
+  switch (certType) {
+    case "SERVER":
+      return "AUTO";
+    case "WINDOWS_STORE":
+    case "MACOS_KEYCHAIN":
+    case "PKCS11":
+      return "DEVICE";
+    default:
+      return "MANUAL";
+  }
+};
+
 // Reconstruct the tool's UI parameters from a cert-sign request body, so a stored
 // or AI-authored step can be re-rendered in the settings UI. Uploaded keystore
 // files cannot be recovered from the request model.
@@ -101,7 +116,7 @@ export const certSignFromApiParams = (
   apiParams: CertSignApiParams,
 ): Partial<CertSignParameters> => {
   const result: Partial<CertSignParameters> = {
-    signMode: apiParams.certType === "SERVER" ? "AUTO" : "MANUAL",
+    signMode: signModeForCertType(apiParams.certType),
     showSignature: apiParams.showSignature ?? defaultParameters.showSignature,
   };
 
