@@ -124,6 +124,22 @@ describe("RunLocationGate", () => {
     },
   );
 
+  it.each([
+    "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f",
+    "/login?next=%2Fshare%2F00dcac3a-fc7a-4989-9c4f-97745484d62f",
+    "/login?from=%2Fshare%2F00dcac3a-fc7a-4989-9c4f-97745484d62f%3Faction%3Ddownload",
+    "/signup?next=%2Fshare%2F00dcac3a-fc7a-4989-9c4f-97745484d62f",
+  ])("lets %s through to the shared file without asking", (path) => {
+    renderAt(path);
+    expect(screen.getByText("The app")).toBeInTheDocument();
+    expect(window.localStorage.getItem(SEEN_KEY)).toBeNull();
+  });
+
+  it("still asks on sign-in headed to a share-like path that is not a share link", () => {
+    renderAt("/login?next=%2Fshared");
+    expect(screen.queryByText("The app")).not.toBeInTheDocument();
+  });
+
   it("still asks on sign-in headed anywhere else", () => {
     renderAt("/login");
     expect(screen.queryByText("The app")).not.toBeInTheDocument();

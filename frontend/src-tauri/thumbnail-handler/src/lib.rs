@@ -23,16 +23,16 @@ use windows::Win32::System::Com::{
     CoCreateInstance, IClassFactory, IClassFactory_Impl, IStream, CLSCTX_INPROC_SERVER,
     STATFLAG_DEFAULT, STREAM_SEEK_SET,
 };
-use windows::Win32::UI::Shell::{
-    IThumbnailProvider, IThumbnailProvider_Impl, SHCreateMemStream, WTS_ALPHATYPE,
-};
 use windows::Win32::UI::Shell::PropertiesSystem::{
     IInitializeWithStream, IInitializeWithStream_Impl,
+};
+use windows::Win32::UI::Shell::{
+    IThumbnailProvider, IThumbnailProvider_Impl, SHCreateMemStream, WTS_ALPHATYPE,
 };
 
 // WinRT imports for PDF rendering
 use windows::Data::Pdf::PdfDocument;
-use windows::Storage::Streams::{DataWriter, InMemoryRandomAccessStream, IRandomAccessStream};
+use windows::Storage::Streams::{DataWriter, IRandomAccessStream, InMemoryRandomAccessStream};
 
 // CLSID for this thumbnail handler -- must match WiX registry entries
 const CLSID_STIRLING_THUMBNAIL: GUID = GUID::from_u128(0x2d2fbe3a_9a88_4308_a52e_7ef63ca7cf48);
@@ -67,11 +67,7 @@ impl Drop for ThumbnailProvider {
 }
 
 impl IInitializeWithStream_Impl for ThumbnailProvider_Impl {
-    fn Initialize(
-        &self,
-        pstream: Option<&IStream>,
-        _grfmode: u32,
-    ) -> windows::core::Result<()> {
+    fn Initialize(&self, pstream: Option<&IStream>, _grfmode: u32) -> windows::core::Result<()> {
         let result = catch_unwind(std::panic::AssertUnwindSafe(|| {
             *self.stream.borrow_mut() = pstream.cloned();
         }));

@@ -512,6 +512,11 @@ submit = "Ajustează scala paginii"
 tags = "redimensionare,modificare,dimensiune,adaptare"
 title = "Ajustează scala paginii"
 
+[adjustPageScale.customSize]
+height = "Înălțime"
+unit = "Unitate"
+width = "Lățime"
+
 [adjustPageScale.error]
 failed = "A apărut o eroare la ajustarea scalei paginii."
 
@@ -521,6 +526,7 @@ landscape = "Peisaj"
 portrait = "Portret"
 
 [adjustPageScale.pageSize]
+custom = "Personalizat"
 keep = "Păstrează dimensiunea originală"
 label = "Dimensiunea paginii țintă"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "DPI maxim pentru procesarea imaginilor (0 = nelimitat)"
 label = "DPI maxim"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configurați limitele de sesiune și timpii de expirare pentru fiecare executor de procese"
 ghostscript = "Ghostscript"
 installApp = "Instalare aplicație"
 label = "Limite executor procese"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF în HTML"
+officeConvert = "Conversie Office"
+officeConvertSessionLimit = "Număr maxim de conversii simultane; 0 selectează o limită pe baza CPU-urilor și memoriei"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Număr maxim de instanțe simultane"
@@ -661,10 +665,6 @@ label = "Limită sesiune"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Timp maxim de execuție"
 label = "Timp de expirare (minute)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert este în beta. Oferă conversii mai bune, mai rapide și cu mai puțină memorie decât LibreOffice."
-label = "Utilizează noua conversie Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configurați stocarea fișierelor temporare și comportamentul de curățare"
@@ -682,11 +682,6 @@ label = "Interval de curățare (minute)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Dacă se curăță directorul temporar mai larg al sistemului (utilizați cu atenție)"
 label = "Curățare temp sistem"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directorul pentru fișiere temporare LibreOffice (lăsați gol pentru implicit: baseTmpDir/libreoffice)"
-label = "Director temporar LibreOffice"
-placeholder = "Implicit: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Vârsta maximă în ore înainte ca fișierele temporare să fie curățate"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Întinde imaginile pentru a umple întreaga pag
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Păstrează (Dimensiuni originale)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "Cum să configurați {{name}}"
 title = "Conexiuni"
 unlinkedServices = "Servicii neconectate"
 
@@ -1294,17 +1290,6 @@ label = "Producător implicit"
 description = "Configurați căi personalizate ale sistemului de fișiere pentru procesarea pipeline și instrumente externe"
 label = "Căi personalizate"
 
-[admin.settings.general.customPaths.operations]
-label = "Căi pentru instrumente externe"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Calea către LibreOffice unoconvert pentru conversia documentelor (lăsați gol pentru implicit: /opt/venv/bin/unoconvert)"
-label = "Executabil Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Calea către executabilul WeasyPrint pentru conversia HTML în PDF (lăsați gol pentru implicit: /opt/venv/bin/weasyprint)"
-label = "Executabil WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Directoare pipeline"
 
@@ -1327,6 +1312,10 @@ label = "Directoare dosare monitorizate"
 [admin.settings.general.defaultLocale]
 description = "Limba implicită pentru utilizatorii noi (de ex., en_US, es_ES)"
 label = "Limba implicită"
+
+[admin.settings.general.enableFeedback]
+description = "Permiteți utilizatorilor să trimită feedback echipei Stirling"
+label = "Activați feedbackul"
 
 [admin.settings.general.fileUploadLimit]
 description = "Dimensiunea maximă a fișierelor încărcate (de ex., 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "Evenimente STANDARD plus: apeluri de interogare continuă, toate soli
 [admin.settings.security.audit.retentionDays]
 description = "Numărul de zile pentru păstrarea jurnalelor de audit (0 = păstrare infinită)"
 label = "Păstrare audit (zile)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "PDF-urile semnate pot fi în continuare vizualizate, tipărite, convertite sau semnate din nou, dar nu schimbate în aplicație. Apelurile API și fluxurile de pe server nu sunt afectate."
+label = "Blocați modificările la PDF-urile semnate"
 
 [admin.settings.security.csrfDisabled]
 description = "Dezactivează protecția Cross-Site Request Forgery (nerecomandat)"
@@ -2969,6 +2962,7 @@ loadError = "Nu s-au putut încărca utilizatorii"
 noTeam = "Fără echipă"
 noUsers = "Nu s-au găsit alți utilizatori."
 placeholder = "Selectați utilizatori..."
+signInRequired = "Autentificați-vă pentru a solicita semnături de la alte persoane."
 you = "{{name}} (Dvs.)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "Contul dvs. este gestionat de furnizorul de identitate."
 title = "Schimbă Credențialele"
 
 [changeMetadata]
-filenamePrefix = "metadate"
 submit = "Schimbă"
 tags = "editează,modifică,actualizează,metadate,proprietăți,proprietăți document,autor,titlu,subiect,cuvinte cheie,creator,producător,informații,informații document,proprietăți fișier"
 
@@ -3265,6 +3258,248 @@ not_found = "Nu am putut găsi informațiile solicitate."
 processing = "Se procesează ({{outcome}})..."
 unsupported_capability = "Capacitate neacceptată: {{capability}}"
 usage_limit_reached = "Ați atins limita de utilizare. Verificați opțiunile planului pentru a continua."
+
+[checkAccessibility]
+aboutRow = "Despre {{label}}"
+checking = "Se verifică..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Descărcați raportul de accesibilitate"
+fileFailed = "eșuat"
+pickFile = "Afișați rezultatele pentru"
+submit = "Verificați accesibilitatea"
+
+[checkAccessibility.category]
+altText = "Text alternativ"
+fonts = "Fonturi"
+language = "Limbă"
+links = "Linkuri și adnotări"
+metadata = "Metadate și setări"
+structure = "Etichete și structură"
+
+[checkAccessibility.categoryTip]
+altText = "Imaginile au nevoie de o scurtă descriere text pentru ca cititoarele de ecran să o rostească în locul lor."
+fonts = "Fonturile trebuie să fie în fișier, fiecare caracter fiind legat de text real, pentru ca textul să poată fi citit cu voce tare și copiat."
+language = "Cititoarele de ecran trebuie să cunoască limba documentului pentru a o pronunța corect."
+links = "Linkurile, comentariile și câmpurile de formular au nevoie de etichete și descrieri și de un ordin de tabulare care urmează pagina."
+metadata = "Titlul, declarația PDF/UA și alte setări pe care tehnologiile asistive le citesc din fișier."
+structure = "Etichetele indică cititoarelor de ecran ce este fiecare parte a unei pagini, precum un titlu, o listă sau un tabel, și în ce ordine să fie citită."
+
+[checkAccessibility.checks]
+label = "{{passed}} din {{total}} verificări reușite"
+
+[checkAccessibility.error]
+download = "Raportul de accesibilitate nu a putut fi creat. Încercați din nou."
+fileTitle = "Acest fișier nu a putut fi verificat"
+partial = "Unele fișiere nu au putut fi verificate."
+
+[checkAccessibility.facts]
+declares = "Declară PDF/UA"
+displaysTitle = "Își afișează titlul"
+fonts = "Fonturi încorporate"
+language = "Declară o limbă"
+notEncrypted = "Necriptat"
+tagged = "Etichetat"
+title = "Are un titlu"
+
+[checkAccessibility.factTip]
+declares = "Metadatele fișierului indică faptul că respectă PDF/UA."
+displaysTitle = "Cititoarele PDF afișează titlul, nu numele fișierului, la deschidere."
+fonts = "Fiecare font folosit de text este inclus în fișier."
+language = "Fișierul specifică limba în care este textul său."
+notEncrypted = "Fișierul nu este criptat. Criptarea poate împiedica tehnologiile asistive să îl citească."
+tagged = "Fișierul are etichete care descriu structura sa. Fără ele, cititoarele de ecran primesc doar text simplu."
+title = "Fișierul are un titlu în metadate."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} imagine are nevoie de o descriere (pagina {{pages}})"
+summary_other = "{{count}} imagini au nevoie de o descriere (paginile {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Se aplică la"
+clauseValue = "{{spec}} §{{clause}}, test {{test}}"
+details = "Detalii"
+instances_one = "{{count}} instanță"
+instances_other = "{{count}} instanțe"
+onPages_one = "Pagina {{pages}}"
+onPages_other = "Paginile {{pages}}"
+onPagesPartial_one = "Pagina {{pages}} (lista poate fi incompletă)"
+onPagesPartial_other = "Paginile {{pages}} (lista poate fi incompletă)"
+pages = "Pagini"
+pagesPartialValue = "{{pages}} (doar primele apariții au o pagină înregistrată, deci această listă poate fi incompletă)"
+requirement = "Cerință"
+rule = "Regulă"
+standard = "Standard"
+where = "Unde"
+
+[checkAccessibility.manual]
+clearAll = "Ștergeți tot"
+done = "Gata"
+inProgress = "În curs"
+markAllDone = "Marcați totul ca finalizat"
+tip = "Lucruri pe care doar o persoană le poate judeca, cum ar fi ordinea de citire și dacă descrierile imaginilor au sens. Bifați fiecare element după ce l-ați verificat, iar bifările vor apărea în raportul descărcat."
+title = "Verificări manuale"
+
+[checkAccessibility.objects]
+annotation = "O adnotare"
+bookmark = "Un semn de carte"
+character = "Un caracter într-un font"
+contentPiece = "O porțiune de conținut al paginii"
+document = "Documentul"
+drawing = "Un desen"
+figure = "O figură"
+file = "Fișierul în sine"
+font = "Un font"
+form = "Formularul"
+formField = "Un câmp de formular"
+link = "Un link"
+markedContent = "Conținut al paginii marcat"
+metadata = "Metadatele documentului"
+page = "O pagină"
+properties = "Proprietățile documentului"
+tag = "O etichetă {{name}}"
+tagTree = "Arborele etichetelor"
+textPiece = "O porțiune de text"
+translatedMetadata = "O intrare de metadate cu traduceri"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (continuare)"
+footer = "Verificat cu Stirling PDF"
+page = "Pagina {{n}}"
+title = "Raport de accesibilitate"
+
+[checkAccessibility.result]
+fail = "Eșuat"
+failSummary = "Este posibil ca cititoarele de ecran să nu poată citi tot acest document."
+partial = "Parțial"
+partialSummary = "Cititoarele de ecran pot citi acest document, dar unele verificări eșuează."
+pass = "Reușit"
+passSummary = "Trece toate verificările automate PDF/UA."
+
+[checkAccessibility.rules]
+annotationLanguage = "Textul comentariului sau al linkului nu are setată o limbă, astfel încât cititoarele de ecran nu știu în ce limbă să-l citească. Setați limba documentului pentru a remedia."
+annotationNoDescription = "Un comentariu, link sau desen nu are nicio descriere text, astfel încât cititoarele de ecran nu au ce anunța."
+annotationNotTagged = "Un comentariu sau un desen nu este etichetat ca adnotare, astfel încât cititoarele de ecran nu îl pot parcurge în ordinea de citire."
+artifactInsideTagged = "Ceva marcat ca decorațiune se află în interiorul conținutului etichetat, astfel încât este atât citit, cât și sărit."
+bookmarkLanguage = "Semnele de carte nu au setată o limbă, astfel încât cititoarele de ecran nu știu în ce limbă să le citească. Setați limba documentului pentru a remedia."
+conformancePrefix = "Declarația PDF/UA din metadate folosește prefixul greșit, astfel încât cititoarele PDF o pot să nu recunoască."
+contentLanguage = "Textul nu are setată o limbă, astfel încât cititoarele de ecran nu știu în ce limbă să-l citească. Setați limba documentului pentru a remedia."
+customTagNotMapped = "O etichetă folosește un nume personalizat care nu este legat de o etichetă standard, astfel încât cititoarele de ecran nu știu ce este."
+figureNoAlt = "O imagine este etichetată ca figură dar nu are descriere, astfel încât utilizatorii cititoarelor de ecran nu vor ști ce arată."
+fontMissingGlyphs = "Un font inclus nu are unele dintre caracterele folosite de document."
+fontNotEmbedded = "Un font nu este inclus în fișier, astfel încât textul poate arăta diferit sau poate fi citit diferit pe alt calculator."
+formFieldNotTagged = "Un câmp de formular nu este etichetat ca parte a unui formular, astfel încât cititoarele de ecran îl pot să nu găsi."
+genericHeading = "Un titlu folosește eticheta H, care nu are nivel. PDF/UA-2 necesită H1 până la H6, astfel încât utilizatorii cititoarelor de ecran să poată înțelege cuibărirea titlurilor."
+glyphWidths = "Lățimile caracterelor unui font din fișier nu se potrivesc cu fontul propriu-zis, astfel încât textul poate fi spațiat greșit."
+headingSkipped = "Nivelele de titlu sar un pas, de exemplu de la Titlul 1 direct la Titlul 3, ceea ce face dificilă navigarea între titluri."
+linkNoDescription = "Un link nu are descriere, astfel încât cititoarele de ecran îi pot citi doar adresa sau nimic."
+linkNotTagged = "Un link nu este etichetat ca link, astfel încât cititoarele de ecran nu îl vor anunța ca atare."
+metadataLanguage = "Metadatele, precum titlul, nu au setată o limbă, astfel încât cititoarele de ecran nu știu în ce limbă să le citească. Setați limba documentului pentru a remedia."
+noConformanceClaim = "Fișierul nu menționează că respectă PDF/UA. Metadatele sale au nevoie de o intrare de identificare PDF/UA."
+noDocumentTag = "Etichetele au nevoie de o singură etichetă Document în partea de sus, cu tot restul în interiorul ei."
+noLanguage = "Documentul nu specifică în ce limbă este, astfel încât cititoarele de ecran îl pot citi în limba greșită."
+noMetadataStream = "Fișierul nu are metadate XMP, unde PDF/UA păstrează titlul documentului și detaliile de conformitate."
+noTags = "Fișierul nu are deloc etichete, astfel încât cititoarele de ecran nu pot distinge între titluri, paragrafe, liste sau tabele sau să le citească în ordinea corectă."
+notdefGlyph = "Textul folosește un substituent „caracter lipsă”, care apare ca gol sau ca o căsuță și nu poate fi citit cu voce tare."
+noteTag = "Fișierul folosește eticheta Note, pe care PDF/UA-2 o înlocuiește cu FENote pentru note de subsol și note de final."
+noTitle = "Documentul nu are titlu în metadatele sale."
+notMarkedTagged = "Fișierul nu este marcat ca etichetat, astfel încât tehnologiile asistive pot ignora etichetele pe care le are."
+notPdf2Tags = "PDF/UA-2 necesită etichetele pe care le folosește un fișier PDF 2.0. Acestea arată ca etichete PDF 1.7, ceea ce de obicei înseamnă că fișierul a fost etichetat pentru PDF/UA-1."
+noUnicode = "Unele caractere nu pot fi transformate în text lizibil, astfel încât cititoarele de ecran și funcția de copiere pot să le interpreteze greșit."
+replacementTextLanguage = "Unele texte de înlocuire nu au setată o limbă, astfel încât cititoarele de ecran nu știu în ce limbă să le citească. Setați limba documentului pentru a remedia."
+standardTagRemapped = "O etichetă standard este legată de o etichetă personalizată, astfel încât cititoarele de ecran îi pierd semnificația."
+symbolicEncoding = "Un font simbol poartă o codare pe care nu ar trebui să o aibă, astfel încât caracterele sale pot apărea ca litere greșite."
+tabOrder = "O pagină cu linkuri sau comentarii nu își setează ordinea de tabulare să urmeze documentul, astfel încât utilizatorii de tastatură pot sări în jurul paginii."
+taggedInsideArtifact = "Conținutul etichetat se află în interiorul unui element marcat ca decorațiune, astfel încât cititoarele de ecran îl pot sări."
+titleNotDisplayed = "Cititoarele PDF vor afișa numele fișierului în locul titlului documentului. Fișierul necesită setarea „afișează titlul documentului” activată."
+untaggedContent = "Ceva de pe pagină nu este nici etichetat ca și conținut, nici marcat ca decorațiune, astfel încât cititoarele de ecran nu pot ști dacă să îl citească. Adesea este o imagine de fundal, un antet, un subsol sau un număr de pagină."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Fără limbă pentru comentarii sau linkuri"
+annotationNoDescription = "Comentariu, link sau desen fără descriere"
+annotationNotTagged = "Comentariu sau desen neetichetat"
+artifactInsideTagged = "Decorațiune în interiorul conținutului etichetat"
+bookmarkLanguage = "Fără limbă pentru semnele de carte"
+conformancePrefix = "Declarație PDF/UA scrisă incorect"
+contentLanguage = "Fără limbă pentru text"
+customTagNotMapped = "Etichetă personalizată fără semnificație standard"
+figureNoAlt = "Imagine fără descriere"
+fontMissingGlyphs = "Font cu caractere lipsă"
+fontNotEmbedded = "Font neîncorporat"
+formFieldNotTagged = "Câmp de formular neetichetat"
+genericHeading = "Titlu fără nivel"
+glyphWidths = "Lățimile caracterelor fontului nu se potrivesc"
+headingSkipped = "Nivel de titlu sărit"
+linkNoDescription = "Link fără descriere"
+linkNotTagged = "Link neetichetat"
+metadataLanguage = "Fără limbă pentru metadate"
+noConformanceClaim = "Nu declară PDF/UA"
+noDocumentTag = "Etichetele nu încep cu o etichetă Document"
+noLanguage = "Fără limbă a documentului"
+noMetadataStream = "Fără metadate XMP"
+noTags = "Fără etichete"
+notdefGlyph = "S-a folosit substituentul pentru caracter lipsă"
+noteTag = "Folosește eticheta Note"
+noTitle = "Fără titlu al documentului"
+notMarkedTagged = "Nu este marcat ca etichetat"
+notPdf2Tags = "Etichetele nu sunt etichete PDF 2.0"
+noUnicode = "Caractere care nu pot fi citite ca text"
+replacementTextLanguage = "Fără limbă pentru textul de înlocuire"
+standardTagRemapped = "Etichetă standard transformată în una personalizată"
+symbolicEncoding = "Font simbol cu codare greșită"
+tabOrder = "Ordinea de tab nu urmează documentul"
+taggedInsideArtifact = "Conținut etichetat ascuns ca decorațiune"
+titleNotDisplayed = "Titlul nu este afișat la deschidere"
+untaggedContent = "Conținut neetichetat"
+
+[checkAccessibility.score]
+issues_one = "{{count}} problemă"
+issues_other = "{{count}} probleme"
+noIssues = "Nu s-au găsit probleme"
+subtitle_one = "{{profile}} - {{count}} pagină"
+subtitle_other = "{{profile}} - {{count}} pagini"
+
+[checkAccessibility.sections]
+breakdown = "Defalcare"
+
+[checkAccessibility.status]
+checking = "Se verifică {{current}} din {{total}}..."
+complete = "Verificare finalizată"
+
+[checkAccessibility.steps]
+results = "Rezultate"
+standard = "Standard"
+
+[checkAccessibility.tooltip.header]
+title = "Ce standard să verificați"
+
+[checkAccessibility.tooltip.ua1]
+text = "Prima versiune a PDF/UA, publicată în 2012 ca ISO 14289-1, pentru fișiere PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "Versiunea mai nouă, publicată în 2024 ca ISO 14289-2, pentru fișiere PDF 2.0. Un fișier PDF 1.7 verificat după ea va eșua regulilor care se aplică doar la PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Adnotarea {{n}}"
+bookmarks = "Semne de carte"
+character = "Un caracter în {{font}}"
+contentItem = "Element de conținut {{n}}"
+drawingStep = "Pas de desen {{n}}"
+embeddedGraphic = "Grafică încorporată"
+font = "Font {{name}}"
+metadata = "Metadatele documentului"
+page = "Pagina {{n}}"
+piece = "Element {{n}}"
+tag = "Eticheta {{tag}}"
+tagTree = "Arbore de etichete"
+wholeDocument = "Întregul document"
+
+[checkAccessibility.where.properties]
+author = "Autor"
+description = "Descriere"
+pdfUaPart = "Partea PDF/UA"
+title = "Titlu"
 
 [classification.families]
 correspondence = "Corespondență"
@@ -3729,6 +3964,10 @@ message = "Unul sau ambele documente furnizate sunt prea mari pentru a fi proces
 body = "Aceste PDF-uri împreună depășesc 2.000 de pagini. Procesarea poate dura câteva minute."
 title = "Comparare de dimensiuni mari în curs"
 
+[compare.mode]
+pixel = "Comparare pixeli"
+text = "Comparare text"
+
 [compare.no.text]
 message = "Unul sau ambele PDF-uri selectate nu au conținut text. Vă rugăm să alegeți PDF-uri cu text pentru comparare."
 
@@ -4046,6 +4285,30 @@ failed = "Autentificarea dvs. nu a putut fi reînnoită. Încercați din nou sau
 lead = "Acest server este deja legat la contul dvs. Reînnoiți autentificarea pentru a reveni la facturare și utilizare pe serverul dvs."
 title = "Reînnoiți autentificarea pe server"
 
+[connectedAccounts]
+connect = "Conectați-vă"
+connectAnother = "Conectați alt cont"
+connectFailed = "Contul nu a putut fi conectat. Verificați că înregistrarea aplicației pe server este configurată, apoi încercați din nou."
+disconnect = "Deconectați"
+google = "Google Drive"
+intro = "Conectați-vă o singură dată la conturile proprii. Apoi fluxurile dvs. pot citi din ele și salva în ele ca și dvs."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling nu mai poate accesa acest cont, astfel că fluxurile care îl folosesc sunt puse pe pauză."
+none = "Administratorul dvs. nu a activat conturile conectate."
+personal = "Cont personal"
+popupBlocked = "Browserul dvs. a blocat fereastra de autentificare. Permiteți ferestrele pop-up pentru acest site și încercați din nou."
+reconnect = "Autentificați-vă din nou"
+work = "Cont de serviciu"
+
+[connectedAccounts.disconnectConfirm]
+body = "Sursele și fluxurile care folosesc acest cont se vor opri până când îl reconectați."
+confirm = "Deconectați"
+title = "Deconectați {{account}}?"
+
+[connectedAccounts.status]
+connected = "Conectat"
+needsSignIn = "Necesită autentificare"
+
 [convert]
 autoRotate = "Rotire automată"
 autoRotateDescription = "Rotește automat imaginile pentru a se potrivi mai bine pe pagina PDF"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Titlul documentului"
 pdfUaTitleHelp = "Afișat de un cititor în locul numelui fișierului. Dacă este lăsat necompletat, se folosește primul titlu."
 selectSourceFormatFirst = "Alegeți mai întâi un format sursă"
 settings = "Setări"
+signInToUse = "Autentificați-vă pentru a utiliza"
 single = "Unic"
 sourceFormatPlaceholder = "Format sursă"
-stirlingOfficeConvert = "Utilizează Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Conversii mai bune și mai rapide, cu mai puțină memorie. Dezactivează pentru a utiliza convertorul standard."
 strictMode = "Mod strict"
 strictModeDesc = "Eroare dacă conversia nu este perfectă (folosește verificarea VeraPDF)"
 svgPdfOptions = "Opțiuni SVG în PDF"
@@ -4134,8 +4396,6 @@ webOptions = "Opțiuni Web la PDF"
 zoomLevel = "Nivel de zoom"
 
 [convert.ebookOptions]
-embedAllFonts = "Încorporează toate fonturile"
-embedAllFontsDesc = "Încorporează toate fonturile din eBook în PDF-ul generat"
 includePageNumbers = "Include numerele de pagină"
 includePageNumbersDesc = "Adaugă numere de pagină în PDF-ul generat"
 includeTableOfContents = "Include cuprins"
@@ -4648,6 +4908,17 @@ title = "Setări"
 [extractPages.tooltip]
 description = "Extrage paginile selectate într-un nou PDF, păstrând ordinea."
 
+[feedback.page]
+open = "Trimiteți feedback"
+sendMore = "Trimiteți mai mult feedback"
+sent = "Vă mulțumim pentru feedback"
+title = "Ajutați-ne să îmbunătățim Stirling"
+unavailable = "Feedback indisponibil"
+
+[feedback.tag]
+dismiss = "Ascundeți butonul de feedback"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "Deschideți în Editorul de fișiere"
 viewInViewer = "Vizualizați în Vizualizator"
@@ -4657,7 +4928,6 @@ closeFile = "Închideți fișierul"
 
 [fileEditor]
 closedFile = "{{name}} închis"
-couldNotSave = "Nu s-a putut salva {{name}}"
 filesReordered_one = "Fișier reordonat"
 filesReordered_other = "{{count}} fișiere reordonate"
 loadedFromStorage_one = "S-a încărcat {{count}} fișier din stocare"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "Bibliotecă PDF"
 myFiles = "Bibliotecă fișiere"
 noFiles = "Încă nu există fișiere"
+oneDrive = "Deschide din OneDrive"
+oneDriveFailed = "Nu s-a putut deschide OneDrive"
 openFileManager = "Răsfoiește toate fișierele și dosarele"
 openFromComputer = "Deschide de pe calculator"
 openSettings = "Deschide setările"
@@ -4804,6 +5076,17 @@ searchFiles = "Căutați fișiere"
 uploadFailedBody = "Fișierele selectate nu au putut fi adăugate."
 uploadFailedTitle = "Încărcarea a eșuat"
 viewAll = "Vezi toate cele {{count}} fișiere"
+
+[fileSidebar.clearRecents]
+body_one = "Ștergeți 1 fișier din Recente? Această acțiune nu poate fi anulată."
+body_other = "Ștergeți {{count}} fișiere din Recente? Această acțiune nu poate fi anulată."
+button = "Ștergeți recentele"
+confirm = "Ștergeți recentele"
+error = "Nu s-a putut șterge. Încercați din nou."
+openNote_one = "1 dintre ele este deschis în spațiul de lucru."
+openNote_other = "{{count}} dintre ele sunt deschise în spațiul de lucru."
+skipOpen = "Omiteți fișierele deschise"
+title = "Ștergeți recentele?"
 
 [fileSidebar.fileItem]
 closeViewer = "Închideți vizualizatorul"
@@ -5124,6 +5407,7 @@ diskFileHint = "Stocat pe computerul tău"
 diskHint = "Un fișier din folderul montat de pe discul tău"
 local = "Local"
 localHint = "Fără copie de rezervă"
+oneDrive = "OneDrive"
 shared = "Partajat"
 sharedHint = "Partajat cu dvs. prin link"
 
@@ -5672,6 +5956,11 @@ title = "Schimbă Metadatele"
 desc = "Schimbați restricțiile și permisiunile documentului"
 tags = "permisiuni,restricții,drepturi,control acces,permite,refuză,tipărire,copiere,editare,modifică permisiuni,setări securitate,drepturi utilizator"
 title = "Schimbă Permisiunile"
+
+[home.checkAccessibility]
+desc = "Atribuiți un scor unui PDF în raport cu PDF/UA și vedeți ce blochează cititoarele de ecran, fără a-l modifica"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Verificați accesibilitatea PDF-ului"
 
 [home.classify]
 desc = "Identifică ce fel de document este acesta și etichetează-l."
@@ -6521,6 +6810,32 @@ quickAccess = "Începeți din bara <strong>Acces rapid</strong> pentru a comuta 
 topBar = "Bara de sus vă permite să comutați între <strong>Vizualizator</strong>, <strong>Editor de pagini</strong> și <strong>Fișiere active</strong>."
 wrapUp = "Acestea sunt noutățile din V2. Deschideți oricând meniul <strong>Tururi</strong> pentru a relua acesta, turul Instrumente sau turul Admin."
 
+[oneDriveSave]
+chooseFolder = "Alegeți un folder OneDrive în care să încărcați"
+conflict = "Acest fișier s-a modificat în OneDrive de când această versiune a fost deschisă sau salvată. Salvați versiunea dvs. ca o copie."
+failedTitle = "Nu s-a putut salva în OneDrive"
+fromOneDrive = "Din OneDrive"
+linkNotStored = "Acest browser nu a putut reține linkul către fișierul OneDrive. După reîncărcare, salvați-l ca o copie."
+missing = "Acest fișier a fost mutat sau șters în OneDrive. Salvați versiunea dvs. ca o copie."
+open = "Deschide în OneDrive"
+personalUnsupported = "Încărcarea în OneDrive necesită un cont Microsoft de serviciu sau de școală."
+reconnect = "Reconectați"
+replaces = "Înlocuiește {{name}}"
+saveCopyToOneDrive = "Salvați o copie în OneDrive"
+saved = "Salvat în OneDrive"
+saving = "Se salvează în OneDrive..."
+signInToSave = "Autentificați-vă pe server pentru a salva în OneDrive."
+updateOriginal = "Actualizați în OneDrive"
+uploadToOneDrive = "Încărcați în OneDrive..."
+
+[oneDriveSave.status]
+saved = "Salvat în OneDrive"
+unsaved = "Modificările nu au fost încă salvate în OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "Actualizați {{name}} în OneDrive"
+saveAll = "Actualizați totul în OneDrive"
+
 [overlay-pdfs]
 desc = "Suprapune un PDF peste altul"
 submit = "Trimite"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Se resetează mâine"
 thisPeriod = "Această perioadă de facturare"
 
 [payment]
+annually = "Anual"
 billingPeriod = "Perioadă de facturare"
 cancelTeamChange = "Păstrează planul curent"
 canCloseWindow = "Poți închide această fereastră."
@@ -7157,11 +7473,14 @@ title = "Ajustează planul Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe va afișa taxa exactă, orice proratări și următoarea dată de facturare înainte să confirmi. Metoda ta de plată salvată va fi folosită dacă este disponibilă."
+billingLabel = "Facturare"
 continue = "Continuă la plată"
 currencyAtCheckout = "Stripe confirmă suma finală și moneda plății la finalizarea comenzii."
+custom = "Personalizat"
 customLabel = "Număr de utilizatori"
 dueToday = "De plată astăzi"
 enterpriseQuote = "Obține o ofertă enterprise"
+enterUsers = "Introduceți un număr de utilizatori."
 estimatedTotal = "Total estimat"
 lineItem = "Team · {{price}}{{period}} per {{block}} utilizatori"
 minimumForCurrentUsers = "Ai {{users}} utilizatori, deci planul trebuie să acopere cel puțin {{minimum}}."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Conturile existente rămân pe loc. Adăugarea sau in
 overCapacityTitle = "Serverul tău are mai mulți utilizatori decât acoperă planul"
 perMonth = "/lună"
 perYear = "/an"
+planName = "Stirling Team"
 reductionNote = "Capacitatea mai mică începe la următoarea reînnoire. Până atunci, poți folosi alocația curentă. Utilizatorii existenți rămân; utilizatorii noi sunt blocați dacă depășești capacitatea când modificarea intră în vigoare."
 renewalNote = "Se reînnoiește la {{total}}{{period}}. Anulează oricând din Utilizare și facturare."
 reviewChange = "Revizuiește modificarea în Stripe"
-roundsTo = "se rotunjește la {{users}}"
+roundsUp = "Rotunjește la {{users}} utilizatori."
+selfServeLimit = "Până la {{users}} utilizatori aici."
 subheading = "Acoperă pe toți cei pe care îi inviți, în blocuri de {{users}} utilizatori."
 subheadingAdd = "Planul tău acoperă astăzi {{current}} utilizatori. Alege noul total."
+talkToEnterprise = "Pentru mai mulți, discutați cu noi despre Enterprise."
+usersCovered = "utilizatori acoperiți"
 usersLabel = "Utilizatori"
 userTotal = "{{users}} utilizatori"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Aplică modificările fișierului din spațiul tău de lucru ({{s
 tags = "editează text,modifică text,schimbă text,editează conținut,actualizează text,rescrie,corectează,amendează,redline,revizuiește,editor text,editor conținut"
 title = "Editor de text PDF"
 unsaved = "(nesalvat)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Text de adnotare - nu text de pagină, deci nu poate fi editat aici"
@@ -7261,12 +7583,18 @@ widget = "Câmp de formular - nu text de pagină, deci nu poate fi editat aici"
 
 [pdfTextEditor.commands]
 edit = "Editează"
+markTagged = "Marcați ca complet etichetat"
+matchScanFont = "Potriviți textul scanat cu {{face}}"
 mergeRuns_one = "Îmbină {{count}} segment într-un paragraf"
 mergeRuns_other = "Îmbină {{count}} segmente într-un paragraf"
 setColour = "Setează culoarea pentru {{run}}"
 setOutline = "Setează conturul pentru {{run}}"
+tagFormField = "Etichetează câmpul de formular"
+tagLink = "Etichetați linkul"
+tagPageContent = "Etichetați automat pagina"
 typeInto = "Tastează în {{run}}"
 ungroupParagraph = "Degrupează paragraful {{run}}"
+unmarkTagged = "Marcați ca nu complet etichetat"
 wrap = "Încadrează {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Renunță și deschide"
 hint = "Anulează, apoi Salvează PDF pentru a le păstra mai întâi în spațiul tău de lucru."
 title = "Renunți la modificările nesalvate?"
 
-[pdfTextEditor.drop]
-hint = "Eliberările pe suprafața editorului înlocuiesc orice document deschis."
-title = "Plasează un PDF pentru a-l deschide"
-
 [pdfTextEditor.error]
 decodeImage = "Imaginea selectată nu a putut fi decodificată."
+duplicateDropsLetters = "Nu se poate duplica acest text: niciun font disponibil nu redă toate literele."
+formLiftChangesDrawing = "Nu se poate edita: este desenat ca parte a unui grup ale cărui setări de decupare sau grafice editorul nu le poate păstra la modificare."
 insertImage = "Imaginea selectată nu a putut fi inserată."
+needsShaping = "Editorul încă nu poate reda corect literele unite și semnele vocalice ale acestui sistem de scriere, astfel că această modificare nu a fost făcută."
+replaceClippedImage = "Nu se poate înlocui această imagine: este decupată, iar înlocuirea ar afișa părțile pe care decuparea le ascunde."
+scanOffInk = "Nu se poate edita acest text: cuvintele recunoscute nu se aliniază cu scanarea. Rulați din nou OCR."
+unsafeRtlEdit = "Nu se poate face această editare: editorul nu poate redesena textul acestui rând, de la dreapta la stânga, fără a-l modifica."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "Imagine PNG"
@@ -7304,15 +7634,42 @@ wholeWord = "Cuvânt întreg"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Fonturi încorporate"
+closestMatch = "Acest font nu are unele dintre literele selectate, astfel că sunt redate în cel mai apropiat font potrivit."
 deviceFontsNone = "Nu au fost găsite fonturi suplimentare pe dispozitiv."
 deviceFontsUnavailable = "Fonturile de pe dispozitiv nu sunt disponibile. Fonturile încorporate funcționează în continuare."
 deviceGroup = "Fonturi de pe dispozitiv"
+documentFontCannotDraw = "Editorul nu poate reda acest text în fontul propriu al documentului, așa că a fost lăsat în fontul curent."
 documentGroup = "Font document"
+embeddingForbidden = "Licența acestui font nu permite încorporarea lui într-un PDF. Textul a fost lăsat neschimbat."
+embedFailed = "Acest font nu a putut fi încorporat în PDF. Textul a fost lăsat neschimbat."
+includedGroup = "Fonturi incluse"
 label = "Familie de fonturi"
+matchedGroup = "Font potrivit"
+missingGlyphs = "Acest font nu are unele dintre caracterele selectate și ele nu au putut fi păstrate în fontul lor curent. Textul a rămas neschimbat."
 mixed = "Mixt"
+needsShaping = "Editorul încă nu poate redesena corect literele unite și semnele vocalice ale acestei scrieri, astfel că acel text a rămas în fontul curent."
+noGlyphs = "Acest font nu are caractere pentru textul selectat. Textul a rămas neschimbat."
 noMatch = "Niciun font corespunzător"
+partOfRunUnsupported = "Acest text poate fi restilizat doar ca întreg. Selectați caseta, nu doar unele cuvinte."
 placeholder = "Familie de fonturi"
+scannedText = "Text scanat"
+serverFontFailed = "Acel font de pe server nu a putut fi descărcat. Textul a rămas neschimbat."
+serverGroup = "Fonturi de pe server"
+someLeftUnchanged = "Acest font nu are caracterele pentru o parte din textul selectat. Acel text a rămas neschimbat."
+styleSkipped = "O parte din textul selectat nu are o versiune a fontului în acel stil, astfel că a rămas neschimbat."
+styleUnavailable = "Textul selectat nu are o versiune a fontului în acel stil, astfel că a rămas neschimbat."
 useDeviceFonts = "Folosește fonturile de pe dispozitiv"
+weight = "Grosime font"
+weightBlack = "Negru"
+weightBold = "Aldin"
+weightExtraBold = "Extra aldin"
+weightExtraLight = "Extra subțire"
+weightLight = "Subțire"
+weightMedium = "Mediu"
+weightNumber = "Grosime {{weight}}"
+weightRegular = "Normal"
+weightSemibold = "Semialdin"
+weightThin = "Foarte subțire"
 
 [pdfTextEditor.fonts]
 allPresent = "Toate literele și cifrele sunt prezente"
@@ -7357,6 +7714,7 @@ helpDesc = "Acest ajutor"
 saveDesc = "Salvează în spațiul tău de lucru"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Aldin / Cursiv, pentru cuvintele selectate sau pentru întreaga casetă"
 deleteDesc = "Elimină selecția"
 duplicateDesc = "Duplică selecția"
 groupDesc = "Grupează secvențele selectate într-un paragraf"
@@ -7380,8 +7738,12 @@ zoomDesc = "Mărește / micșorează"
 
 [pdfTextEditor.inspector]
 document = "Document"
+fontCompletedClosest = "Font încorporat · caracterele care lipsesc sunt desenate în {{name}}, cea mai apropiată potrivire disponibilă."
+fontCompletedOriginal = "Font încorporat · caracterele care lipsesc sunt desenate în {{name}}, același font."
 fontEmbedded = "Font încorporat · un caracter care îi lipsește folosește Helvetica ca rezervă."
 fontGap = "{{name}} · lipsesc {{glyphs}} - tastarea acestora folosește Helvetica ca rezervă."
+fontUnknownCoverage = "{{name}} · un caracter care lipsește revine la {{fallback}}."
+formField = "Câmp de formular"
 geometry = "Poziție și dimensiune"
 height = "Înălțime"
 heightHint = "Înălțimea unei casete de text urmează dimensiunea fontului și numărul de rânduri."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR nu este disponibil pe acest server."
 oneImage = "Imagine"
 oneShape = "Formă"
 oneText = "Text"
+outlinedTextHint_one = "Textul acestei pagini este redat ca forme, astfel că nu există text de editat. Rulați OCR mai întâi pentru a-l face editabil."
+outlinedTextHint_other = "{{count}} pagini au textul redat ca forme, astfel că nu există text de editat. Rulați OCR mai întâi pentru a-l face editabil."
 pages = "Pagini"
 runOcr = "Rulează OCR"
 scanHint_one = "Această pagină este o imagine scanată fără text de editat. Rulează mai întâi OCR pentru a-i face textul editabil."
 scanHint_other = "{{count}} pagini sunt imagini scanate fără text de editat. Rulează mai întâi OCR pentru a le face textul editabil."
 scannedText = "Text scanat · cuvintele modificate sunt acoperite și redesenate cu un font potrivit."
+scannedTextMisaligned = "Text scanat · cuvintele recunoscute nu se aliniază cu scanarea, astfel încât acest bloc nu poate fi editat sau șters."
+scannedTextNoFont = "Text scanat · cuvintele tastate în acest alfabet nu pot fi încă desenate, astfel încât nu sunt păstrate. Ștergerea cuvintelor funcționează în continuare."
+scannedTextOffInk = "Text scanat · cuvintele recunoscute nu se suprapun cu cele scanate, astfel încât acest bloc nu poate fi editat. Rulați din nou OCR."
 tabDocument = "Document"
 tabSelected = "Selectat"
 textBoxes = "Casete de text"
+unreadPagesHint = "{{count}} pagini nu au text de editat: unele sunt imagini scanate, iar altele redau textul ca forme. Rulați OCR mai întâi pentru a le face editabile."
 width = "Lățime"
 widthHint = "Textul se rearanjează pentru a se potrivi lățimii."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Adaugă etichetă"
+applyToOtherPages_one = "Aplicați la {{count}} altă pagină"
+applyToOtherPages_other = "Aplicați la încă {{count}} pagini"
+artifactGroup = "Omise de cititoarele de ecran"
 artifactText = "Decorativ"
 cannotChange = "Accesibilitatea acestei imagini nu poate fi schimbată."
+cannotDescribeFormField = "Descrierea acestui câmp de formular nu poate fi modificată."
+cannotDescribeLink = "Descrierea acestui link nu poate fi schimbată."
 cannotRetag = "Eticheta acestui text nu poate fi schimbată."
+cannotSetDecorative = "Acest element nu poate fi marcat sau demarcat ca decorativ."
+cannotTagFormField = "Acest câmp de formular nu poate fi etichetat."
+cannotTagLink = "Acest link nu poate fi etichetat."
+cannotTagPage = "Conținutul acestei pagini nu poate fi etichetat."
+contentGroup = "Conținut"
 customTag = "{{role}} (etichetă personalizată)"
 decorativeInfo = "Cititoarele de ecran ignoră imaginile decorative. Folosiți-le pentru borduri, fundaluri și alte imagini care nu transmit informații."
 decorativeLabel = "Imagine decorativă"
 description = "Descrierea imaginii"
 descriptionInfo = "Cititoarele de ecran citesc acest text în locul imaginii."
 encrypted = "Etichetele nu pot fi editate într-un fișier criptat"
+figureDescription = "Descrierea figurii"
+figureDescriptionInfo = "Cititoarele de ecran citesc acest text în locul figurii."
+formFieldDescription = "Descriere câmp"
+formulaDescription = "Descrierea formulei"
+formulaDescriptionInfo = "Cititoarele de ecran citesc acest text în locul formulei. Formulați-l așa cum l-ați rosti cu voce tare, de exemplu \"x la pătrat plus unu\"."
 heading = "Accesibilitate"
 innerTagLabel = "Eticheta {{number}}"
 innerTags = "Etichete în acest text"
+linkDescription = "Descriere link"
+markedTagged = "Documentul este complet etichetat"
+markedTaggedHint = "Indică cititoarelor PDF să folosească etichetele de accesibilitate. Bifați după ce totul este etichetat."
+markedWithUntagged = "O parte din conținut nu are etichete, astfel încât cititoarele de ecran îl pot omite."
 missingDescriptions = "Descrieri lipsă"
 mixedContent = "Figura include alt conținut"
+mixedTags = "Mixt"
 needsDescriptionBadge = "Fără descriere"
-nextImage = "Imaginea următoare"
+nextToReview = "Următorul de revizuit"
 notFigure = "Etichetat ca parte a textului"
 removeTag = "Elimină eticheta"
 saveFailed = "Modificările de accesibilitate nu au putut fi salvate, așa că fișierul nu a fost salvat. Anulați-le și încercați din nou."
 selectedText = "Text selectat"
+tagFormField = "Etichetează câmpul de formular"
+tagging = "Etichetarea paginilor"
 tagLabel = "Etichetă"
+tagLinks_one = "Etichetați linkul"
+tagLinks_other = "Etichetați {{count}} linkuri"
+tagUntagged = "Etichetați automat documentul"
+tagUntaggedHint = "Adaugă automat etichete de accesibilitate în tot documentul. Rezultatul este aproximativ: verificați ulterior titlurile, listele și ordinea de citire."
 unknownTag = "Nu poate fi citit aici"
+unmarkedWithTags = "Unele cititoare PDF vor folosi oricum etichetele și pot omite conținutul fără ele."
 unreadable = "Etichetele acestui fișier nu pot fi editate"
 untaggableImages = "Nu pot fi etichetate aici"
 untaggedBadge = "Neetichetat"
 untaggedDocument = "Documentul nu are etichete"
 untaggedImage = "Nu poate fi etichetat aici"
 untaggedImages = "Imagini neetichetate"
+untaggedPages = "Pagini de etichetat"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Subsol"
+header = "Antet"
+pageNumber = "Număr de pagină"
+watermark = "Filigran"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Titlu fără text"
@@ -7505,6 +7907,23 @@ tableHeader = "Antet de tabel"
 tableRow = "Rând de tabel"
 title = "Titlu"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Toate limbile"
+cannotSetDocument = "Limba acestui document nu poate fi schimbată."
+cannotSetText = "Limba acestui text nu poate fi schimbată."
+documentHint = "Limba folosită de cititoarele de ecran, cu excepția cazului în care o parte a textului își setează propria."
+documentLabel = "Limbă"
+documentLocked = "Limba unui document criptat nu poate fi schimbată aici."
+inDocument = "În acest document"
+innerLabel = "Limbă etichetă {{number}}"
+label = "Limbă"
+missing = "Nicio limbă setată. Cititoarele de ecran vor ghici și pot citi întregul document cu voce greșită."
+mixed = "Mixt"
+noMatch = "Nicio limbă corespondentă. Introduceți codul ei, de exemplu mt sau en-IE."
+placeholder = "Selectați limba"
+selectedText = "Limba textului selectat"
+textHint = "Cititoarele de ecran își schimbă vocea și pronunția la această limbă."
+
 [pdfTextEditor.mobile]
 actions = "Acțiuni editor"
 addImage = "Imagine"
@@ -7517,7 +7936,6 @@ done = "Gata"
 download = "Salvați și descărcați"
 find = "Găsiți"
 lock = "Blocați"
-openPdf = "Deschideți un PDF"
 panelHint = "Editarea are loc în vizualizarea Spațiu de lucru. Atingeți textul de pe pagină pentru a-l modifica."
 save = "Salvați"
 style = "Stil"
@@ -7525,7 +7943,6 @@ tapToPlace = "Atingeți pagina unde ar trebui să apară textul"
 unlock = "Deblocați"
 
 [pdfTextEditor.pageView]
-pageNumber = "Pagina {{page}}"
 renderFailed = "Nu s-a putut reda pagina"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Riglă verticală"
 
 [pdfTextEditor.run]
 lockedTitle = "Blocat - folosește butonul Deblochează pentru a edita"
+readOnlyOrderTitle = "Textul acestui rând nu poate fi editat: amestecă text de la dreapta la stânga și de la stânga la dreapta într-o ordine pe care editorul nu o poate redesena în siguranță"
+resizeHandle = "Trageți pentru a schimba lățimea; textul se rearanjează"
 
 [pdfTextEditor.saveRisk]
 cancel = "Anulează"
@@ -7548,6 +7967,35 @@ intro = "Salvarea copiei editate modifică fișierul. Asta înseamnă:"
 note = "Editările tale sunt păstrate. Modificările enumerate mai sus sunt inevitabile la salvarea copiei editate."
 saveAnyway = "Salvează oricum"
 title = "Salvarea va modifica acest PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "Potrivire aproximativă"
+approximateHint = "Cel mai apropiat font găsit poate să nu se potrivească exact scanării."
+change = "Fontul nu arată corect?"
+choose = "Alegeți un font"
+chooseMissing = "Alegeți un font pentru acest text…"
+compare = "Comparați fonturi…"
+deviceAllow = "Permiteți accesul la fonturi pentru o potrivire mai bună"
+deviceBlocked = "Browserul dvs. nu va mai întreba din nou. Pentru a permite, faceți clic pe pictograma din stânga barei de adrese, activați Fonts, apoi încercați din nou."
+deviceBlockedTitle = "Accesul la fonturi este blocat"
+deviceNone = "Niciunul dintre fonturile uzuale ale documentului nu este instalat pe acest calculator."
+deviceNote = "Browserul întreabă mai întâi. Fonturile rămân pe acest dispozitiv."
+deviceOn_one = "S-a comparat și cu {{count}} font pe acest calculator."
+deviceOn_other = "S-a comparat și cu {{count}} fonturi pe acest calculator."
+deviceReading = "Se citesc fonturile de pe acest calculator…"
+deviceRetry = "Încercați din nou"
+done = "Gata"
+hint = "Textul tastat este desenat în cel mai apropiat font găsit. Alegeți altul dacă arată mai aproape de scanare."
+hintFromScan = "Textul tastat este construit din litere găsite în scanare. Alegeți un font pentru a-l desena în acel font în schimb."
+hintOthers = "Alegerea dvs. este folosită și pentru textul scanat pe care nu l-ați editat încă."
+matching = "Se caută potriviri de fonturi…"
+noFont = "Niciunul dintre fonturile disponibile nu poate reda acest alfabet, astfel încât textul tastat nu poate fi redat încă."
+scan = "Scanarea originală"
+scanAlt = "Linia scanată"
+scanNote = "Scanările par adesea mai neclare sau mai groase decât fontul real. Comparați formele literelor, nu grosimea."
+score = "{{match}}% asemănare"
+title = "Potriviți fontul scanării"
+unmeasurable = "Această scanare este prea ștearsă sau prea mică pentru a potrivi un font."
 
 [pdfTextEditor.settings]
 advanced = "Avansat"
@@ -7564,7 +8012,6 @@ addTable = "Adaugă tabel"
 addText = "Adaugă text"
 clickPageToAddTable = "Faceți clic pe pagină pentru a adăuga un tabel"
 clickPageToAddText = "Dă clic pe pagină pentru a adăuga text"
-document = "Document"
 group = "Grupează"
 groupingAuto = "Auto"
 groupingAutoHint = "Grupează rândurile spațiate egal în paragrafe. Modificarea acestei opțiuni recitește documentul și șterge istoricul anulărilor."
@@ -7593,23 +8040,17 @@ auto = "Automat"
 enable = "Verifică ortografia pe măsură ce tastezi"
 language = "Limba dicționarului"
 
-[pdfTextEditor.stage]
-loadingDocument = "Se încarcă documentul"
-loadingProgress = "Progres încărcare"
-noDocument = "Niciun document încărcat."
-pickPrompt = "Alege un PDF din panoul Fișiere din stânga pentru a începe editarea."
-renderingPreview = "Se randează previzualizarea"
-
 [pdfTextEditor.table]
 addColumn = "Adaugă coloană"
 addRow = "Adaugă rând"
+cellNoGlyphs = "Acest text are caractere pe care fonturile tabelului nu le pot reda. Modificați-le sau eliminați-le pentru a completa celula."
 column = "Col"
 deleteColumn = "Șterge coloana"
 deleteRow = "Șterge rândul"
 done = "Gata"
 doneHint = "Oprește editarea ca tabel"
-edit = "Editează"
 editHint = "Editează ca tabel - tastează în celule, adaugă sau elimină rânduri și coloane"
+editTable = "Editați tabelul"
 move = "Mută"
 moveTable = "Trage pentru a muta întregul tabel"
 recognizedHint = "Tabel recunoscut - clic pentru a selecta tot textul său"
@@ -7630,6 +8071,9 @@ alignMiddle = "Aliniază la mijloc"
 alignRight = "Aliniază la dreapta"
 alignTop = "Aliniază sus"
 arrange = "Aranjează"
+bold = "Aldin"
+boldOnly = "Acest font are doar varianta aldină"
+boldUnavailable = "Nu există variantă aldină pentru acest font"
 bringForward = "Adu în față"
 bringToFront = "Adu deasupra"
 caseLower = "minuscule"
@@ -7650,10 +8094,12 @@ fontColour = "Culoare font"
 fontSize = "Dimensiune font"
 formatting = "Formatare text"
 italic = "Cursiv"
+italicOnly = "Acest font are doar varianta cursivă"
 italicUnavailable = "Acest font nu are versiune italic. Încarcă fonturile de pe dispozitiv sau alege altă familie de fonturi."
 lock = "Blochează selecția"
 lockTooltip = "Blochează selecția - previne editările accidentale"
 more = "Mai multe acțiuni"
+noBoldItalic = "Nu există variantă aldin cursiv pentru acest font"
 order = "Ordine"
 outlineColour = "Culoare contur"
 outlineWidth = "Lățime contur (0 = niciunul)"
@@ -7683,13 +8129,6 @@ title = "Variații în previzualizare"
 [pdfTextEditor.tooltip.textFocus]
 text = "Acest spațiu de lucru se concentrează pe editarea textului și repoziționarea imaginilor încorporate. Elementele grafice complexe ale paginii, widgeturile de formular și grafica stratificată sunt păstrate pentru export, dar nu sunt pe deplin editabile aici."
 title = "Focalizare pe text și imagine"
-
-[pdfTextEditor.zoom]
-fit = "Potrivește"
-fitToWidth = "Potrivește la lățime"
-in = "Mărește"
-out = "Micșorează"
-reset = "Resetează zoom la 100%"
 
 [PDFToCSV]
 header = "PDF în CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Rulează la import"
 [policies.enforcement]
 applying = "Se aplică {{names}}"
 applyingProgress = "Se aplică {{names}} ({{done}} din {{total}})"
-exportFailureBody = "Politicile de securitate nu au putut fi aplicate. Fișierele au fost exportate ca atare."
-exportFailureTitle = "Exportat fără aplicarea politicilor"
 failureBody = "Unele politici nu au putut fi aplicate pentru {{failures}} din {{total}} fișier(e)."
 failureTitle = "Exportat fără aplicare completă"
 printPolicyAppliedBody = "Acest PDF a fost actualizat pentru a respecta o politică. Revizuiți modificările, apoi imprimați din nou."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Postați un mesaj într-un spațiu Google Chat când rulează o politică."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Un cont de serviciu care citește și scrie în Google Drive pentru organizație."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Lipiți cheia JSON a contului de serviciu din Google Cloud. Este criptată și nu va mai fi afișată."
+label = "Cheie cont de serviciu (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Opțional. Cu delegare la nivel de domeniu, utilizatorul al cărui Drive îl imită (un utilizator bot dedicat continuă să funcționeze când oamenii pleacă). Lăsat gol ajunge doar la unități și foldere partajate cu contul de serviciu."
+label = "Acționează ca utilizator"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Atașați documentele procesate la o problemă Jira."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Trimiteți prin email un document sau o notificare când rulează o politică."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Necesită permisiuni de aplicație Microsoft Graph cu consimțământ de administrator."
+label = "ID aplicație (client)"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Secret client"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "ID director (tenant)"
+placeholder = "contoso.onmicrosoft.com sau GUID-ul tenantului"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Parolă aplicație"
+
+[portal.connections.types.onedrive]
+description = "Citiți din și scrieți în OneDrive for Business al unui singur utilizator."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "OneDrive-ul cui este accesat de această conexiune. Înregistrarea aplicației necesită permisiunea de aplicație Files.ReadWrite.All."
+label = "Proprietar OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Lăsați necompletat dacă vă autentificați cu o cheie privată 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Opțional. Lipiți o cheie privată OpenSSH pentru autentificare cu cheie în loc de parolă."
 label = "Cheie privată"
+
+[portal.connections.types.sharepoint]
+description = "Citiți din și scrieți în biblioteca de documente a unui site SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Opțional. Lăsați necompletat pentru biblioteca Documents implicită a site-ului."
+label = "Bibliotecă de documente"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "URL site"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Postați un mesaj pe Slack când o politică procesează un document."
@@ -9142,6 +9624,126 @@ status = "Stare"
 time = "Timp"
 user = "Utilizator"
 
+[portal.enterprise]
+backTo = "Înapoi la {{stage}}"
+brandTag = "Enterprise"
+callInfo = "Un apel de 15 minute. Aduceți întrebările despre prețuri, implementare sau securitate, sau planificați împreună lansarea."
+callTitle = "Discutați cu un inginer de soluții"
+deployment = "Implementare"
+footer = "Întrebări despre Stirling Enterprise?"
+home = "Mergeți la Stirling"
+member = "Liderul echipei dvs. gestionează acordul Enterprise. După ce începe, puteți urmări progresul aici."
+memberDeal = "Liderul echipei dvs. gestionează acest acord. Puteți urmări progresul aici."
+quotePanel = "Oferta dvs."
+signIn = "Autentificați-vă"
+signInToStart = "Autentificați-vă pentru a începe proba"
+stage = "Etapa {{current}} din {{total}}"
+stagesLabel = "Progres"
+
+[portal.enterprise.landing]
+lede = "Încercați gratuit timp de 14 zile, apoi construiți-vă oferta și semnați acordul aici. Nu este necesar card."
+tickAgreement = "Un singur acord care acoperă MSA, ordinul, EULA și DPA"
+tickCompliance = "SCIM, rezidența datelor și SLA-uri de disponibilitate"
+tickDeploy = "Rulați pe Stirling Cloud, pe serverele proprii sau complet air-gapped"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Documentație licență offline"
+point1 = "Activată cu un fișier de licență care funcționează offline, nu cu o cheie verificată online"
+point2 = "Se instalează ca autogăzduit, dintr-o imagine pe care o transferați"
+point3 = "Autentificarea rămâne în interiorul rețelei dvs."
+tagline = "Autogăzduit într-o rețea fără acces la internet."
+
+[portal.enterprise.options.cloud]
+more = "Documentație Stirling Cloud"
+point1 = "Echipa dvs. se autentifică la stirling.com/app"
+point2 = "Rulează pe AWS, cu fișierele stocate criptate la repaus"
+point3 = "Single sign-on prin propriul furnizor de identitate necesită autogăzduire"
+tagline = "Găzduit pentru dvs., fără nimic de instalat."
+
+[portal.enterprise.options.selfhost]
+more = "Documentație autogăzduire"
+point1 = "Instalați cu Docker sau chartul Helm pe Kubernetes"
+point2 = "Documentele sunt procesate pe propria infrastructură"
+point3 = "Autentificare unică OAuth2, OIDC sau SAML"
+tagline = "Pe propriile servere, on-premises sau în cloud-ul propriu."
+
+[portal.enterprise.review]
+back = "Înapoi la {{stage}}"
+company = "Companie"
+completed = "Finalizat"
+extensions = "Extensii utilizate"
+paid = "Plătit. Factura dvs. rămâne disponibilă aici."
+people = "Persoane"
+started = "Început"
+trialEnds = "Data încheierii probei"
+trialTitle = "Perioada dvs. de probă"
+version = "Versiune"
+viewInvoice = "Vizualizați factura"
+
+[portal.enterprise.setup]
+copied = "Copiat"
+copy = "Copiați"
+markDone = "Marcați „{{step}}” ca făcut"
+progress = "{{done}} din {{total}} finalizate"
+subtitle = "Profitați la maximum de probă testând în modul în care îl veți rula."
+subtitleLive = "Pașii de finalizat înainte de a lansa pentru toată lumea."
+title = "Configurați-vă"
+titleLive = "Lista de verificare pentru lansare"
+
+[portal.enterprise.setup.firstDocument]
+body = "Încărcați un PDF cu care lucrează echipa dvs. și încercați instrumentele folosite zi de zi, precum redactare, comprimare sau OCR."
+title = "Rulați primul document"
+
+[portal.enterprise.setup.getApp]
+body = "Instalați aplicația desktop pentru Windows, Mac sau Linux și autentificați-vă cu contul pe care tocmai l-ați creat sau folosiți-o direct din browser."
+title = "Obțineți Stirling"
+
+[portal.enterprise.setup.install]
+body = "Rulați acest lucru pe serverul dvs. Pornește Stirling cu licența aplicată, iar imaginea include OCR și conversie de office. Pentru echipe mai mari, folosiți Kubernetes."
+title = "Instalați și porniți Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Aduceți persoanele care îl vor folosi, astfel încât proba să reflecte munca reală."
+title = "Invitați-vă echipa"
+
+[portal.enterprise.setup.licence]
+body = "Deschideți <code>http://your-server:8080/settings/adminPlan</code>, unde licența Enterprise ar trebui să apară activă. Ați instalat altfel? Adăugați cheia sub <code>premium.key</code> în <code>settings.yml</code> și reporniți."
+title = "Verificați că licența este activă"
+
+[portal.enterprise.setup.links]
+browser = "Folosiți-l în browser"
+docker = "Ghid Docker"
+download = "Descărcați aplicația"
+downloadForTeam = "Obțineți aplicația pentru echipa dvs."
+downloading = "Se descarcă..."
+downloadLicence = "Descărcați fișierul de licență"
+invite = "Invitați colegi"
+kubernetes = "Ghid Kubernetes"
+licence = "Activarea licenței"
+ocr = "Limbi OCR"
+openApp = "Deschideți Stirling"
+samlGuide = "Ghid SAML"
+ssoGuide = "Ghid SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Trageți imaginea completă pe o mașină conectată, transferați-o împreună cu fișierul de licență, apoi încărcați-o și porniți-o. Imaginea completă adaugă fonturile pe care un server offline nu le poate descărca."
+title = "Aduceți Stirling și porniți-l"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Un server izolat nu poate accesa serviciul nostru de licențe, așa că verifică acest fișier semnat. Păstrați-l împreună cu imaginea pe care o transferați."
+title = "Descărcați licența offline"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Creați conturi la <code>/settings/people</code> sau indicați Stirling către furnizorul intern de identitate, astfel încât autentificarea să nu părăsească rețeaua dvs."
+bodySelfHosted = "Creați conturi la <code>/settings/people</code> sau conectați furnizorul de identitate astfel încât echipa să se autentifice cu conturile de lucru. Folosesc Stirling în browser la adresa serverului dvs. sau în aplicația desktop configurată către el."
+title = "Adăugați-vă oamenii"
+
+[portal.enterprise.setup.signIn]
+body = "Deschideți <code>http://your-server:8080</code> și autentificați-vă cu <code>admin</code> / <code>stirling</code>. Vi se va cere imediat să alegeți o parolă nouă."
+bodyAirgap = "Deschideți <code>http://your-server:8080</code> și autentificați-vă cu <code>admin</code> / <code>stirling</code>, alegeți o parolă nouă, apoi verificați că <code>/settings/adminPlan</code> arată licența ca activă."
+title = "Autentificați-vă ca administrator"
+
 [portal.errorBoundary]
 description = "Această vizualizare a întâmpinat o eroare neașteptată. Încercați din nou sau alegeți altă secțiune din bara laterală."
 retry = "Încercați din nou"
@@ -9293,6 +9895,7 @@ title = "Nimic de revizuit"
 [portal.home.download]
 back = "Înapoi"
 body = "Descărcați aplicația desktop sau găzduiți serverul self-hosted."
+bodyDesktop = "Descărcați aplicația desktop, apoi autentificați-vă cu contul Stirling."
 done = "Gata"
 guide = "Deschideți ghidul {{name}}"
 openInBrowser = "Deschideți în browser în schimb"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Preluare email"
 
 [portal.procurement]
-subtitle = "Parcurge evaluarea, contractarea și integrarea echipei tale. Fiecare document într-un singur loc."
 title = "Achiziții"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Nu s-a putut încărca acordul. Încercați din nou."
 loading = "Se încarcă acordul..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "Solicitați modificări"
-scrollHint = "Derulați pentru a revizui"
 signatory = "Nume semnatar"
 signatoryPlaceholder = "Nume complet"
 signatoryTitle = "Titlu semnatar"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "de ex. Consilier juridic general"
 signError = "Nu s-a putut înregistra semnătura dvs. Încercați din nou."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} o singură dată"
+addonPerYear = "+{{amount}}/an"
 addons = "Suplimente"
 addressLine1 = "Linia de adresă 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Linia de adresă 2"
 addressLine2Placeholder = "Suită, etaj, clădire"
 back = "Înapoi"
+belowMinimum = "Această ofertă este sub dimensiunea minimă pentru un acord Enterprise."
 businessName = "Numele firmei"
 businessNamePlaceholder = "Compania ta"
 city = "Oraș"
 cityPlaceholder = "San Francisco"
 completeRequired = "Completați câmpurile obligatorii (marcate cu *) cu un email valid înainte de a genera oferta."
+conflict = "Acest acord s-a schimbat de când l-ați deschis. Închideți configuratorul și reîncărcați pagina pentru a vedea starea actuală."
 contactEmail = "Email contact"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Nume contact"
 contactNamePlaceholder = "Jane Doe"
 continue = "Continuă"
 done = "Gata"
+editUsage = "Editați utilizarea"
 eula = "Am citit și sunt de acord cu Stirling Enterprise EULA. Aceasta guvernează acordul generat din această ofertă."
 generate = "Generează oferta"
 indemnification = "Protecție IP extinsă"
 indemnificationSub = "Extinde apărarea noastră IP la revendicări de brevet. Despăgubirea de bază pentru drepturi de autor, mărci comerciale și secrete comerciale este inclusă gratuit."
+minimum = "Enterprise necesită o cheltuială anuală minimă de {{min}}."
+minimumBelow = "Această ofertă ajunge la {{annual}} pe an. Dacă vă așteptați să folosiți mai mult, măriți utilizarea estimată; altfel planul Team este probabil mai potrivit."
+minimumNear = "Enterprise necesită o cheltuială anuală minimă de {{min}}. Măriți utilizarea estimată pentru a o atinge sau discutați cu noi."
+minimumNearTitle = "Vă lipsesc {{gap}} pe an față de Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Ofertă Enterprise"
 paperFor = "Pregătită pentru"
 pdfSize = "Dimensiune PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "Reglementat"
 posture_regulatedSub = "Fiecare categorie — Conformitate, Retenție, Ingestie"
 qbr = "Evaluări trimestriale de business"
 qbrSub = "SE-ul tău revizuiește utilizarea și foaia de parcurs în fiecare trimestru"
+raiseUsage = "Măriți utilizarea estimată"
 region = "Stat / regiune"
 regionPlaceholder = "California"
-running = "{{annual}} / an · {{years}} ani {{tcv}}"
+runningLabel = "Preț estimat"
+runningLabelIssued = "Preț ofertat"
+runningOneYear = "{{annual}} pe an"
+runningTotal = "{{tcv}} total pe {{years}} ani"
 s1Sub = "Echipa ta și PDF-urile pe care te aștepți să le rulezi în fiecare an."
 s1Title = "Cât vei procesa?"
 s2Sub = "Termenele mai lungi reduc tariful; nivelul de serviciu stabilește suportul."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "de ex. 1.000.000"
 years_one = "{{count}} an"
 years_other = "{{count}} ani"
 
+[portal.procurement.builder.line]
+deployment = "Implementare {{deployment}}"
+indemnification = "Despăgubiri IP"
+multiYear_one = "Angajament pe {{count}} an"
+multiYear_other = "Angajament pe {{count}} ani"
+qbr = "Analize trimestriale de business"
+seats_one = "{{users}} utilizator agreat + SSO / RBAC / audit"
+seats_other = "{{users}} utilizatori agreați + SSO / RBAC / audit"
+seatsUnset = "Utilizatori + SSO / RBAC / audit"
+support = "SE / CSM dedicat"
+training = "Onboarding & training"
+usage = "Procesare PDF — {{volume}} PDF/an la {{rate}}/PDF (automatizare {{posture}})"
+
 [portal.procurement.documents]
 agreement = "Acord Enterprise"
 agreementSub = "MSA, Formular de comandă și DPA într-o singură semnătură."
@@ -10557,6 +11185,8 @@ invoice = "Factură"
 invoiceSub = "Prima dvs. factură de abonament."
 laterInvoice = "Disponibilă după ce acceptați"
 laterQuote = "Disponibilă după emiterea ofertei"
+laterSigning = "Disponibil după semnarea acordului"
+laterTitle = "Ulterior în acord"
 quote = "Ofertă"
 quoteSub = "Oferta dvs. Enterprise detaliată."
 sla = "Anexă SLA"
@@ -10573,15 +11203,12 @@ title = "Ceva nu a mers bine"
 [portal.procurement.hero]
 barAria = "Etapa {{current}} din {{total}}"
 ctaAgreement = "Revizuiește și semnează acordul"
-ctaExploring = "Configurați perioada de probă"
 ctaQuote = "Revizuiește oferta"
 ctaReviewQuote = "Revizuiți oferta"
 ctaTrial = "Construiește oferta"
-documents = "Documente"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Invită coechipieri"
-licenseKey = "Cheie de licență"
 liveSub = "Organizația dvs. este provisionată și licența dvs. este activă."
 liveTitle = "Sunteți live pe Stirling Enterprise"
 next = "Următorul: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Fișierul de licență offline nu a putut fi generat încă —
 downloadOffline = "Descarcă licența offline (.lic)"
 hint = "Lipește această cheie într-o instanță self-hosted pentru a o activa sau păstreaz-o pentru evidențele tale. Păstreaz-o în siguranță."
 label = "Cheia ta de licență"
-subtitle = "Activați o instanță self-hosted cu această cheie sau păstrați-o pentru evidențele dvs."
-title = "Cheia dvs. de licență"
 trialFileHint = "Acesta este fișierul dvs. de licență de probă. După ce acordul este în vigoare, reveniți și descărcați-l din nou — spre deosebire de cheia de licență online, fișierul .lic nu se actualizează singur."
-
-[portal.procurement.link]
-cta = "Conectează contul"
-description = "Achizițiile rulează pe contul tău Stirling conectat: așa provisionăm trialul, stabilim prețul ofertei și pornim facturarea. Conectează un cont pentru a începe."
-eyebrow = "Enterprise"
-title = "Conectează-ți contul pentru a începe"
 
 [portal.procurement.live]
 description = "Abonamentul tău este activ și licența ta a fost emisă. Echipa ta este provisionată și facturarea a început."
-eyebrow = "Activ"
 title = "Ești activ pe Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Oferta PDF nu a putut fi descărcată încă — încearcă din
 
 [portal.procurement.payment]
 description = "Oferta ta este acceptată și licența este deja activă — echipa ta poate începe imediat. Plătește prima factură când ești pregătit; o poți plăti sau descărca aici, fără email."
-downloadAgreement = "Descărcați acordul semnat"
 downloadInvoice = "Descarcă factura"
-eyebrow = "Plată"
-title = "Abonament creat"
 viewInvoice = "Vezi și plătește factura"
 
 [portal.procurement.review]
 acceptCta = "Acceptați oferta"
 annual = "Taxă anuală (anul 1)"
 downloadCta = "Descărcați oferta"
+oneTime = "o singură dată"
 poNumber = "Ordin de achiziție: {{po}}"
 renewal = "Se reînnoiește la {{amount}}/an după termen (+{{pct}}% CPI)"
 tcv = "Termen de {{years}} ani, plătit integral în avans: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Extinderea adaugă 7 zile și notifică inginerul tău de soluții."
 bodyMaxed = "Ai folosit toate extinderile — discută cu inginerul tău de soluții dacă ai nevoie de mai mult timp."
-cancel = "Anulează trialul"
 extend = "Extinde cu 7 zile"
 maxed = "Limită atinsă"
 subtitle = "Trialul tău gratuit rulează până la {{date}}. Nu este necesar cardul."
 title = "Trial Enterprise"
+
+[portal.procurement.validation]
+confirm = "Confirmați că sunteți autorizat să semnați pentru organizație."
+email = "Introduceți o adresă de email validă."
+eula = "Acceptați EULA pentru a continua."
+required = "Acest câmp este obligatoriu."
+seats = "Introduceți câte persoane îl vor testa."
+volume = "Introduceți câte PDF-uri estimați să procesați pe an."
 
 [portal.review]
 subtitle = "Orice din rulările politicilor dvs. și din editorii echipei dvs. care necesită atenția dvs."
@@ -10735,6 +11358,7 @@ subtitle = "Conexiuni de intrare reutilizabile care alimentează documente în S
 title = "Surse"
 
 [portal.sources.actions]
+connectDestination = "Conectați destinația"
 connectSource = "Conectează sursa"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Alegeți unde merg documentele procesate. Conectorii estompa
 comingSoon = "În curând"
 comingSoonHeading = "În curând"
 create = "Creați sursa"
+createDestination = "Creați destinație"
+createDestinationTitle = "Adăugați o destinație"
 createTitle = "Conectați o sursă"
 delete = "Ștergeți"
 editTitle = "Editați sursa"
@@ -10757,6 +11383,41 @@ save = "Salvați modificările"
 description = "Automatizările de folder pot folosi doar foldere pe care un administrator le-a permis. Adăugați-l în setările Acces folder, apoi încercați din nou."
 openSettings = "Setări Acces folder"
 title = "Acest folder nu este permis"
+
+[portal.sources.cloudFields.account]
+connect = "Conectați-vă la contul dvs."
+connectAnother = "Conectați-vă la un alt cont"
+connectFailed = "Contul nu a putut fi conectat. Încercați din nou sau rugați administratorul să verifice înregistrarea aplicației."
+label = "Cont"
+placeholder = "Alegeți un cont"
+reconnect = "autentificați-vă din nou"
+unavailable = "Conectarea propriului cont este dezactivată pe acest server. Alegeți în schimb o conexiune de organizație."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Conturile personale sunt dezactivate pe acest server."
+helperText = "Contul dvs. ajunge la ce puteți deschide și nu necesită admin. O conexiune de organizație continuă să funcționeze când oamenii pleacă și ajunge doar la ce a configurat un admin."
+label = "Autentificați-vă ca"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Contul meu"
+organisation = "Conexiune de organizație"
+
+[portal.sources.cloudFields.connection]
+helperText = "Configurată de un administrator la Integrări. Partajată de fiecare locație care o folosește."
+label = "Conexiune de organizație"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Lipiți linkul folderului sau introduceți o cale din rădăcina Drive-ului meu. Lăsați gol pentru rădăcina Drive-ului meu. Folderul trebuie să existe deja."
+placeholder = "Link către folder sau Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Un folder din OneDrive-ul dvs., sau lipiți un link către un folder (Copy link în OneDrive). Lăsați gol pentru rădăcina OneDrive. Folderul trebuie să existe deja."
+placeholder = "Scans/Inbox sau un link către un folder"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Cu contul dvs., lipiți linkul folderului (Copy link în SharePoint). Cu o conexiune de organizație, un folder din biblioteca acesteia; lăsați gol pentru rădăcina bibliotecii. Folderul trebuie să existe deja."
+organisationPlaceholder = "Link către folder sau Scans/Inbox"
+placeholder = "Link către folder"
 
 [portal.sources.delete]
 body = "Ștergi \"{{name}}\"? Această acțiune nu poate fi anulată. Politicile care o referențiază ar trebui actualizate."
@@ -10821,6 +11482,7 @@ label = "Inbox email"
 [portal.sources.types.folder]
 description = "Monitorizează un director de pe server pentru documente noi."
 label = "Folder"
+outputDescription = "Salvează rezultatele într-un folder pe server."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Calea absolută către folderul de urmărit pentru fișiere noi."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Preluați documente din foldere Google Drive partajate."
 label = "Google Drive"
+outputDescription = "Salvează rezultatele într-un folder Google Drive."
 
 [portal.sources.types.network]
 description = "Monitorizați un share de rețea SMB pentru documente noi."
@@ -10867,10 +11530,12 @@ label = "Drive de rețea"
 [portal.sources.types.onedrive]
 description = "Monitorizați foldere OneDrive pentru documente noi."
 label = "OneDrive"
+outputDescription = "Salvează rezultatele într-un folder OneDrive."
 
 [portal.sources.types.s3]
 description = "Preluați documente dintr-un bucket Amazon S3 sau compatibil S3."
 label = "Amazon S3"
+outputDescription = "Salvează rezultatele într-un bucket Amazon S3 sau compatibil S3."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Conexiunea salvată cu bucket-ul și acreditările. Partajată de fiecare sursă și ieșire de pipeline care o folosește."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Preluați documente din bibliotecile de documente SharePoint."
 label = "SharePoint"
+outputDescription = "Salvează rezultatele într-un folder dintr-o bibliotecă de documente SharePoint."
 
 [portal.sources.types.unknown]
 label = "Sursă"
@@ -11074,6 +11740,14 @@ waiting = "În coadă ..."
 name = "Google Drive"
 scope = "Import fișiere"
 
+[provider.googledrive.accountScope]
+description = "drive are acces la fiecare fișier (Google trebuie să verifice o aplicație publică pentru asta); drive.file doar fișierele pe care utilizatorii le aleg sau pe care le creează Stirling"
+label = "Acces Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "O singură autentificare pentru editor și pipeline-urile sale. Dezactivați pentru a permite doar conexiuni de organizație."
+label = "Permite utilizatorilor să își conecteze propriul cont"
+
 [provider.googledrive.apiKey]
 description = "Cheie Google API pentru Google Picker API din Google Cloud Console"
 label = "Cheie API"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "Client ID Google OAuth 2.0 din Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "Permite utilizatorilor să își conecteze contul Google pentru pipeline-urile lor. Adăugați redirect URI-ul de mai jos ca URI de redirecționare autorizat al clientului OAuth."
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "Permiteți utilizatorilor să importe fișiere direct din Google Drive"
 label = "Activați selectorul de fișiere Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "Nu s-a putut conecta contul Google. Încercați din nou din Setări > Conturi conectate."
 notConfigured = "Google Drive nu este configurat"
 pickerFailed = "Nu s-a putut deschide selectorul Google Drive"
+
+[provider.googledrive.redirectUri]
+description = "Adăugați acesta ca URI de redirecționare autorizat al clientului OAuth în Google Cloud Console."
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Fișiere și pipeline-uri"
+
+[provider.microsoft.allowAccountConnections]
+description = "O singură autentificare pentru editor și pipeline-urile sale. Dezactivați pentru a permite doar conexiuni de organizație."
+label = "Permite utilizatorilor să își conecteze propriul cont"
+
+[provider.microsoft.allowEditorSaves]
+description = "Dezactivați pentru a păstra editările în Stirling: fișierele deschise din OneDrive vor fi apoi descărcate, iar serverul va refuza salvările în OneDrive."
+label = "Permiteți editorului să salveze înapoi în OneDrive"
+
+[provider.microsoft.clientId]
+description = "Dintr-o înregistrare de aplicație Microsoft Entra."
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "Necesar pentru conturile conectate. Rămâne pe server."
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "Permite utilizarea OneDrive și SharePoint în pipeline-uri"
+label = "Activează OneDrive & SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Adăugați aceasta ca Single-page application redirect URI pe aceeași înregistrare de aplicație, pentru autentificarea din editor."
+label = "Single-page application redirect URI"
+
+[provider.microsoft.redirectUri]
+description = "Adăugați acesta ca URI de redirecționare Web în înregistrarea aplicației Entra."
+label = "Redirect URI"
+
+[provider.microsoft.setupSteps]
+connect = "Salvați, reporniți, apoi conectați un cont în Conturi conectate."
+permissions = "Adăugați permisiunile delegate Microsoft Graph Files.ReadWrite.All și Files.Read.All și permisiunile delegate SharePoint MyFiles.Read și AllSites.Read, astfel încât conturile de serviciu și de școală să poată deschide selectorul de fișiere."
+redirects = "Adăugați-i cele două URI de redirecționare de mai jos: una ca Web, una ca Single-page application."
+register = "Înregistrați o aplicație în Microsoft Entra admin center. Permiteți conturile personale Microsoft dacă se folosește OneDrive personal."
+secret = "Creați un secret de client, apoi lipiți mai jos valoarea sa și ID-ul de client al aplicației."
+
+[provider.microsoft.tenant]
+description = "common pentru conturi de serviciu, școală și personale; organizations doar pentru serviciu și școală; sau un ID de tenant pentru a permite o singură organizație"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "OAuth2 generic"
@@ -11195,6 +11921,19 @@ label = "Scope-uri"
 description = "Câmp de folosit ca nume de utilizator (email, name, given_name, family_name, preferred_username)"
 label = "Folosiți ca nume de utilizator"
 
+[provider.onedrive]
+pickerLoading = "Se conectează la OneDrive..."
+pickerTitle = "Alegeți fișiere din OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Nu s-a putut conecta contul Microsoft. Încercați din nou din Setări > Conturi conectate."
+notConfigured = "OneDrive nu este configurat"
+pickerFailed = "Nu s-a putut deschide OneDrive"
+popupBlocked = "Browserul a blocat fereastra de autentificare Microsoft. Permiteți pop-up-uri pentru acest site și încercați din nou."
+reconnect = "Contul Microsoft trebuie să se autentifice din nou. Reconectați-l în Setări > Conturi conectate."
+serverError = "OneDrive sau serverul Stirling a avut o problemă. Încercați din nou sau întrebați administratorul dacă problema persistă."
+unreachable = "Nu s-a putut accesa OneDrive. Verificați conexiunea și încercați din nou."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Notificări"
 processor = "Procesor"
 reader = "Cititor"
 signInToUse = "Autentificați-vă pentru a utiliza aceasta"
+
+[quickNav.accountMenu]
+localMode = "Mod local"
+server = "Setări server"
+settings = "Setări"
+signedOut = "Neautentificat"
+signIn = "Autentificare"
 
 [read]
 tags = "vizualizare,deschidere,afișare,citire,vizualizator,cititor PDF,deschide PDF,vizualizează PDF,afișează PDF,previzualizare,răsfoire"
@@ -11811,6 +12557,13 @@ title = "Igienizează PDF"
 [sanitizePdf]
 tags = "curăță,securizează,sigur,elimină-amenințări"
 
+[saveFile.menu]
+more = "Mai multe opțiuni de salvare"
+saveCopy = "Salvează o copie..."
+
+[saveFile.toolbar]
+mixed = "Salvează tot"
+
 [scalePages]
 tags = "redimensionare,ajustare,scalare,dimensiune pagină,redimensionează pagina,scalează pagina,schimbă dimensiunea,ajustează dimensiunea,mărește,micșorează pagina,potrivește la pagină,A4,dimensiune letter"
 title = "Ajustează scala paginii"
@@ -11905,6 +12658,162 @@ showTools = "Afișează instrumentele indisponibile ▾"
 title = "Serverul dvs. Stirling-PDF este inaccesibil"
 toolNotAvailableLocally = "Serverul dvs. Stirling-PDF este offline, iar \"{{endpoint}}\" nu este disponibil pe backendul local."
 
+[serverSetup]
+back = "Înapoi"
+collapse = "Ascunde setările pentru {{setting}}"
+configured = "Configurat"
+continue = "Continuă"
+dialogLabel = "Configurare server"
+expand = "Afișează setările pentru {{setting}}"
+finishSetup = "Finalizează configurarea"
+loadErrorSubtitle = "Configurarea are nevoie de setările curente ale serverului pentru a începe."
+loadErrorTitle = "Nu s-au putut încărca setările dvs."
+off = "Oprit"
+on = "Pornit"
+save = "Salvează"
+stepCount = "{{current}} din {{total}}"
+
+[serverSetup.account]
+failed = "Nu s-au putut salva detaliile dvs. Verificați că serverul este accesibil și încercați din nou."
+save = "Salvează și continuă"
+signIn = "Autentificare"
+signInAgainSubtitle = "Autentificați-vă din nou cu noul nume de utilizator și parola pentru a continua."
+signInAgainTitle = "Detaliile dvs. au fost salvate"
+subtitle = "Alegeți cum vă veți autentifica de acum înainte."
+title = "Configurați-vă contul"
+updating = "Se actualizează"
+updatingSubtitle = "Un moment."
+updatingTitle = "Se actualizează detaliile dvs."
+username = "Nume de utilizator"
+usernameHelp = "Ce veți folosi la autentificare. Poate fi și o adresă de email."
+
+[serverSetup.addresses]
+backendUrl = "Adresă server"
+backendUrlHelp = "Unde furnizorii de autentificare trimit utilizatorii înapoi. De obicei aceeași cu adresa web."
+frontendUrl = "Adresă web"
+frontendUrlHelp = "Unde utilizatorii deschid Stirling PDF. Folosită în emailuri, linkuri de partajare și coduri QR."
+subtitle = "Cum ajung utilizatorii și furnizorii de autentificare la acest server."
+title = "Adrese"
+
+[serverSetup.ai]
+apiKey = "Cheie API"
+apiKeyHelp = "Lăsați gol pentru a folosi cheia pe care motorul AI o are deja."
+baseUrl = "URL de bază"
+engineUrl = "Adresă motor AI"
+fastModel = "Model rapid"
+label = "AI găzduit local"
+provider = "Furnizor de model"
+providerCustom = "Compatibil OpenAI"
+smartModel = "Model complet"
+stirling = "Stirling AI"
+subtitle = "Întrebări despre documente, editări automate și agenți AI."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Acceptă și continuă"
+acceptFinish = "Acceptă și finalizează"
+changeLater = "Puteți schimba oricând în {{path}}."
+decline = "Refuză și continuă"
+declineFinish = "Refuză și finalizează"
+learnMore = "Ce colectăm"
+note = "Partajați date de utilizare de pe acest server cu noi pentru a ne ajuta să îmbunătățim Stirling PDF. Nu colectăm niciodată fișiere sau conținutul lor."
+title = "Analitice server"
+
+[serverSetup.documents]
+label = "Întrebări despre documente"
+model = "Model de embedding"
+provider = "Furnizor de embedding"
+providerHelp = "Transformă textul documentelor în indexul de căutare care răspunde la întrebări."
+
+[serverSetup.email]
+from = "Adresă expeditor"
+host = "Gazdă SMTP"
+label = "Trimitere email"
+password = "Parolă"
+port = "Port"
+subtitle = "Pentru invitații, solicitări de semnare și partajări."
+title = "Email"
+username = "Nume de utilizator"
+
+[serverSetup.error]
+email = "Introduceți o adresă de email"
+issuerUnreachable = "Nu s-a putut contacta acest emitent. Verificați adresa și că acest server îl poate accesa."
+passwordIncorrect = "Parolă incorectă"
+passwordLength = "Folosiți cel puțin 8 caractere"
+passwordMismatch = "Parolele nu se potrivesc"
+passwordRejected = "Serverul nu a acceptat această parolă. Încercați alta."
+passwordUnchanged = "Alegeți o parolă diferită de cea curentă"
+port = "Introduceți un port între 1 și 65535"
+providerName = "Folosiți doar litere, cifre, liniuțe sau underscore"
+required = "Obligatoriu"
+url = "Introduceți o adresă completă, care începe cu http:// sau https://"
+username = "Folosiți între 3 și 50 de litere, cifre sau . _ + - @, sau o adresă de email"
+usernameTaken = "Acest nume de utilizator este deja folosit"
+
+[serverSetup.files]
+sharing = "Partajare fișiere"
+sharingOffWarning = "Cu partajarea dezactivată, linkurile de partajare existente nu vor mai funcționa."
+storage = "Stocare fișiere"
+storageOffWarning = "Cu stocarea dezactivată, fișierele salvate de utilizatori pe server nu mai pot fi deschise."
+subtitle = "Gestionați stocarea și partajarea fișierelor."
+title = "Fișiere"
+
+[serverSetup.finish]
+errorNote = "Verificați că serverul este accesibil și că sunteți încă autentificat ca administrator."
+errorSubtitle = "Nimic nu a fost repornit."
+errorTitle = "Nu s-au putut salva setările"
+manualSubtitle = "Acest server nu se poate reporni singur. Reporniți containerul sau serviciul pentru a le aplica."
+manualTitle = "Setări salvate"
+restartFailedSubtitle = "Serverul nu s-a repornit. Reporniți containerul sau serviciul pentru a le aplica."
+restartingSubtitle = "Această pagină se reîncarcă la revenire, de obicei în cel mult un minut."
+restartingTitle = "Se repornește serverul"
+retry = "Încercați din nou"
+saving = "Se salvează"
+savingSubtitle = "Un moment."
+savingTitle = "Se salvează setările"
+
+[serverSetup.language]
+auto = "Potrivește cu limba fiecărui browser"
+label = "Limbă implicită"
+subtitle = "Ce văd mai întâi noii vizitatori."
+title = "Limbă"
+
+[serverSetup.mcp]
+label = "Server MCP"
+
+[serverSetup.password]
+confirm = "Confirmați parola nouă"
+current = "Parola curentă"
+new = "Parolă nouă"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "Autentificare cu"
+oidc = "Alt OpenID Connect"
+password = "Nume de utilizator și parolă"
+providerName = "Nume furnizor"
+providerNameHelp = "Afișat pe butonul de autentificare, de exemplu okta sau entra."
+redirectNote = "Adăugați acest redirect URI în furnizorul dvs.:"
+subtitle = "Cum se autentifică echipa dvs."
+title = "Autentificare"
+
+[serverSetup.signingIn]
+button = "Se autentifică"
+title = "Autentificare cu acreditări implicite"
+
+[serverSetup.start]
+custom = "Personalizat"
+quick = "Pornire rapidă"
+setupLabel = "Configurare"
+subtitle = "Configurați-l pentru echipă în câțiva pași."
+title = "Serverul dvs. este pornit"
+
+[serverSetup.summary]
+subtitle = "Verificați elementele esențiale. Restul rămâne implicit."
+title = "Pornire rapidă"
+
 [session]
 expired = "Sesiunea dvs. a expirat. Reîmprospătați pagina și încercați din nou."
 
@@ -11939,6 +12848,10 @@ mcp = "Server MCP"
 privacy = "Confidențialitate"
 storageSharing = "Stocare fișiere și partajare"
 systemSettings = "Setări sistem"
+
+[settings.connectedAccounts]
+description = "OneDrive, SharePoint și Google Drive proprii, pentru pipeline-urile dvs."
+title = "Conturi conectate"
 
 [settings.connectedInstances]
 confirmBody = "Aceasta revocă accesul instanței la echipa dvs. din Stirling Cloud. Nu șterge fișiere locale și nu elimină utilizarea deja înregistrată. Pentru a vă conecta din nou, urmați pașii originali de conectare pe instanță."
@@ -11992,6 +12905,13 @@ selfhosted = "Găzduit local"
 apiKeys = "Chei API"
 apiKeysDescription = "Chei personale pentru apelarea Stirling API din scripturi și integrări."
 title = "Dezvoltator"
+
+[settings.feedback]
+label = "Feedback"
+
+[settings.feedback.send]
+description = "Raportați o problemă sau sugerați o îmbunătățire echipei Stirling."
+label = "Trimite feedback"
 
 [settings.general]
 autoUnzip = "Dezarhivare automată a răspunsurilor API"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Caută actualizări"
 currentBackendVersion = "Versiune Backend curentă"
 currentFrontendVersion = "Versiune Frontend curentă"
 description = "Caută actualizări și vezi informații despre versiune"
+descriptionManaged = "Vizualizați informațiile despre versiune"
 latestVersion = "Ultima versiune"
 managedByAdmin = "Gestionat de administrator"
 modeAuto = "Instalați actualizările automat"
@@ -12135,15 +13056,24 @@ title = "Documente legale"
 backendDescription = "Licențe pentru dependențele backend incluse cu acest server."
 backendLabel = "Licențe backend"
 backendTitle = "Licențe backend 3rd Party"
+clearSearch = "Golește căutarea"
 empty = "Nu s-au găsit dependențe."
 frontendDescription = "Licențe pentru dependențele frontend incluse în build-ul de release."
 frontendLabel = "Licențe frontend"
 frontendTitle = "Licențe frontend 3rd Party"
 license = "Licență"
+licenseAbout = "Despre"
+licenseAboutCompound = "Despre {{short}}"
+licenseAboutTitle = "Despre {{short}}"
 listDescription = "Lista este afișată direct în UI din pachetul de release sau endpoint-ul backend."
 listTitle = "Dependențe incluse"
 loadError = "Licențele third-party nu au putut fi încărcate"
 module = "Modul"
+noMatch = "Nicio dependență potrivită."
+searchPlaceholder = "Căutați dependențe"
+showingCount = "{{count}} dependențe"
+showingCount_one = "{{count}} dependență"
+showingCount_other = "{{count}} dependențe"
 version = "Versiune"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Te rugăm să introduci adresa de email"
 emptyPassword = "Te rugăm să introduci parola"
 emptyUsername = "Te rugăm să introduci numele de utilizator"
 oauthFailed = "Autentificarea OAuth a eșuat. Încearcă din nou."
+openResetFailed = "Nu s-a putut deschide browserul pentru a vă reseta parola."
 
 [setup.saas]
 title = "Autentifică-te în Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "Semnăturile invizibile oferă în continuare validare criptografică
 description = "Controlează dacă semnătura este vizibilă pe document sau încorporată invizibil."
 title = "Vizibilitatea semnăturii"
 
+[signedPdf]
+editsBlocked = "Acest PDF este semnat digital, iar modificările la PDF-uri semnate sunt dezactivate. Îl puteți în continuare vizualiza sau imprima, converti într-un alt format sau semna din nou."
+editsBlockedStatus = "Semnat: editări blocate"
+editsBlockedTitle = "PDF semnat nu poate fi modificat"
+
 [signingDetail]
 allSigned = "Toată lumea a semnat. Revizuiește documentul, apoi finalizează-l."
 awaitingOwner = "Proprietarul va finaliza documentul când este pregătit."
@@ -13110,7 +14046,6 @@ noLinks = "Încă nu există linkuri de partajare active."
 noSharedUsers = "Încă nu au acces utilizatori."
 openInApp = "Deschide în Stirling PDF"
 ownerLabel = "Proprietar"
-ownerUnknown = "Necunoscut"
 removeLink = "Eliminați linkul"
 removeUser = "Eliminați"
 requiresLogin = "Acest fișier partajat necesită autentificare."
@@ -13249,6 +14184,11 @@ remove = "Eliminați"
 roleColumn = "Rol"
 title = "Membrii echipei"
 
+[teamWelcome]
+invite = "Invită persoane"
+message = "Invitați-vă echipa pentru a începe să lucreze alături de dvs."
+title = "Planul Team este activ."
+
 [textAlign]
 center = "Centru"
 left = "Stânga"
@@ -13290,7 +14230,6 @@ toggleDetails = "Comutați detaliile"
 
 [tool]
 endpointUnavailable = "Acest instrument nu este disponibil pe serverul dvs."
-endpointUnavailableClickable = "Nu este disponibil în acest mod. Faceți clic pentru a vă autentifica."
 filesLoading = "Fișierele încă se încarcă, te rugăm să aștepți."
 filesLoadingProgress = "{{loaded}} / {{total}} fișiere se încarcă..."
 invalidParams = "Completați setările obligatorii."
@@ -13298,6 +14237,8 @@ noFiles = "Adăugați un fișier pentru a începe."
 scopeFiles = "fișiere"
 scopeThisFile = "acest fișier"
 selectFilesHint = "Selectați fișiere din Fișiere active pentru a rula acest instrument"
+signInRequired = "Este necesar un cont Stirling. Autentificați-vă pentru a continua."
+signInToUse = "Autentificați-vă pentru a utiliza"
 singleFileScope = "Se aplică numai pentru: {{fileName}}"
 viewerMode = "Comută la editorul de fișiere pentru a adăuga mai multe fișiere."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Afișează pagina de copertă separat"
 disableColorFilter = "Dezactivați filtrul de culoare"
 documentUpdated = "Document actualizat"
 dualPageView = "Vizualizare cu două pagini"
+editText = "Editați textul"
 enableDarkFilter = "Activați filtrul întunecat"
 enableSepiaFilter = "Activați filtrul sepia"
 engineLoadError = "Inițializarea motorului de vizualizare PDF a eșuat"
@@ -14158,8 +15100,10 @@ closeAll = "Închide toate fișierele"
 closePdf = "Închide PDF"
 deselectAll = "Deselectează tot"
 downloadAll = "Descarcă tot"
+editText = "Editare text"
 exitAnnotations = "Ieși din modul de adnotare"
 exitRedaction = "Ieși din modul de redactare"
+findReplace = "Căutare și înlocuire"
 formFill = "Editor de formulare"
 hideToolbar = "Ascunde bara de instrumente"
 moreActions = "Mai multe acțiuni"

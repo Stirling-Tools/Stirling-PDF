@@ -26,15 +26,12 @@ import {
 import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
 import {
   useAllFiles,
-  useFileSelectors,
   useFileSelection,
   useFileActions,
 } from "@editor/contexts/FileContext";
-import { isStirlingFile } from "@editor/types/fileContext";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
-import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@editor/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@editor/types/workbench";
 import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
@@ -47,10 +44,6 @@ import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
 } from "@editor/components/policies/policyRunStore";
-import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
-import { enforceExportPolicies } from "@editor/services/policyExport";
-import { downloadFile as downloadRaw } from "@editor/services/downloadService";
-import { alert as showAlert } from "@editor/components/toast";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
@@ -64,6 +57,9 @@ import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar
 import { useIsMobile, useIsPhone } from "@editor/hooks/useIsMobile";
 import "@editor/components/shared/WorkbenchBar.css";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
+import { useWorkbenchSave } from "@editor/hooks/useWorkbenchSave";
+import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
+import { useCloseViewerDocument } from "@editor/components/viewer/useCloseViewerDocument";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 
@@ -77,18 +73,12 @@ interface WorkbenchBarProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
   hasFiles: boolean;
-  /** Whether the viewer's tool row is currently retracted. */
-  viewerToolbarCollapsed?: boolean;
-  /** Setter for the viewer tool-row retract state (owned by Workbench). */
-  onCollapseViewerToolbar?: (collapsed: boolean) => void;
 }
 
 export default function WorkbenchBar({
   currentView,
   setCurrentView,
   hasFiles,
-  viewerToolbarCollapsed = false,
-  onCollapseViewerToolbar,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -109,9 +99,7 @@ export default function WorkbenchBar({
     useWorkbenchBar();
   const { toolPanelMode, leftPanelView, customWorkbenchViews } =
     useToolWorkflow();
-  const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
-  const isViewer = currentView === "viewer";
 
   // Which view's label is expanded, held back until the new view has mounted
   const [openView, setOpenView] = useState(currentView);
@@ -169,24 +157,15 @@ export default function WorkbenchBar({
   const isPhone = useIsPhone();
   const [mobileToolsExpanded, setMobileToolsExpanded] = useState(false);
 
-  const selectors = useFileSelectors();
-  const { selectedFiles, selectedFileIds } = useFileSelection();
+  const { selectedFileIds } = useFileSelection();
   const { actions: fileActions } = useFileActions();
   const { files: activeFiles } = useAllFiles();
-  const { activeFileId, setActiveFileId } = useViewer();
+  const { activeFileId } = useViewer();
   const policyFileBadges = usePolicyFileBadges();
+  const workbenchSave = useWorkbenchSave();
   // Block print/export while any file the export would touch is under active
-  // policy enforcement: the viewer exports its active file, every other view
-  // exports the selection (or all files when nothing is selected).
-  const exportTargetIds: string[] =
-    currentView === "viewer"
-      ? activeFileId
-        ? [activeFileId]
-        : []
-      : selectedFileIds.length > 0
-        ? selectedFileIds
-        : activeFiles.filter(isStirlingFile).map((f) => f.fileId);
-  const enforcingFileId = exportTargetIds.find((id) =>
+  // policy enforcement.
+  const enforcingFileId = workbenchSave.targetIds.find((id) =>
     (policyFileBadges.get(id) ?? []).some((p) => p.enforcing),
   );
   const policyEnforcing = enforcingFileId != null;
@@ -223,6 +202,22 @@ export default function WorkbenchBar({
     [buttons],
   );
 
+  // Pinned to the tool row's edges, clear of the centred lanes.
+  const rowStartButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "row-start" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
+  const rowEndButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "row-end" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
+
   const sectionsWithButtons = useMemo(() => {
     return SECTION_ORDER.map((section) => {
       const sectionButtons = buttons.filter(
@@ -232,113 +227,13 @@ export default function WorkbenchBar({
     }).filter((entry) => entry.buttons.length > 0);
   }, [buttons]);
 
-  const handleExportAll = useCallback(
-    async (forceNewFile = false) => {
-      if (currentView === "viewer") {
-        const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-        if (!buffer) return;
-        const fileToExport =
-          activeFiles.find(
-            (file) => isStirlingFile(file) && file.fileId === activeFileId,
-          ) ?? activeFiles[0];
-        if (!fileToExport) return;
-        const stub = isStirlingFile(fileToExport)
-          ? selectors.getStirlingFileStub(fileToExport.fileId)
-          : undefined;
-        try {
-          const result = await downloadFile({
-            data: new Blob([buffer], { type: "application/pdf" }),
-            // Stub name, not File.name: a rename only writes the stub.
-            filename: stub?.name ?? fileToExport.name,
-            localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
-          });
-          if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
-            fileActions.updateStirlingFileStub(stub.id, {
-              localFilePath: stub.localFilePath ?? result.savedPath,
-              isDirty: false,
-            });
-          }
-        } catch (error) {
-          console.error("[WorkbenchBar] Failed to export viewer file:", error);
-        }
-        return;
-      }
-
-      const viewExport = await viewFileActions?.getExportFiles?.();
-      if (viewExport === null) return;
-      const filesToExport = viewExport
-        ? viewExport.map((entry) => entry.file)
-        : selectedFiles.length > 0
-          ? selectedFiles
-          : activeFiles;
-      const stubs = viewExport
-        ? viewExport.map((entry) =>
-            entry.fileId
-              ? selectors.getStirlingFileStub(entry.fileId)
-              : undefined,
-          )
-        : filesToExport.map((file) =>
-            isStirlingFile(file)
-              ? selectors.getStirlingFileStub(file.fileId)
-              : undefined,
-          );
-
-      // Enforce all files in one batch so the toast shows progress across the
-      // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
-      let enforced: File[];
-      try {
-        enforced = await enforceExportPolicies(
-          filesToExport,
-          stubs.map((s) => s?.id),
-        );
-      } catch {
-        enforced = filesToExport;
-        showAlert({
-          alertType: "warning",
-          title: t("policies.enforcement.exportFailureTitle"),
-          body: t("policies.enforcement.exportFailureBody"),
-        });
-      }
-
-      for (let idx = 0; idx < filesToExport.length; idx++) {
-        const file = filesToExport[idx];
-        const stub = stubs[idx];
-        try {
-          const result = await downloadRaw({
-            data: enforced[idx],
-            // Stub name, not File.name: a rename only writes the stub.
-            filename: stub?.name ?? file.name,
-            localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
-          });
-          if (result.cancelled) continue;
-          if (!forceNewFile && stub && result.savedPath) {
-            fileActions.updateStirlingFileStub(stub.id, {
-              localFilePath: stub.localFilePath ?? result.savedPath,
-              isDirty: false,
-            });
-          }
-        } catch (error) {
-          console.error(
-            "[WorkbenchBar] Failed to export file:",
-            file.name,
-            error,
-          );
-        }
-      }
-    },
-    [
-      currentView,
-      selectedFiles,
-      activeFiles,
-      activeFileId,
-      viewerContext,
-      viewFileActions,
-      selectors,
-      fileActions,
-    ],
-  );
+  const saveButton = useSaveButton({
+    saver: workbenchSave.saver,
+    targets: workbenchSave.targetStubs,
+    singleFile: currentView === "viewer",
+    onSaveLocalCopy: () => void workbenchSave.saveCopy(),
+    fileFor: workbenchSave.viewerFileFor,
+  });
 
   const printAccess = usePdfAccess(activeFileId);
   const canPrint =
@@ -360,44 +255,16 @@ export default function WorkbenchBar({
     viewerContext?.printActions?.print?.();
   }, [viewerContext]);
 
+  const closeViewerDocument = useCloseViewerDocument();
   const handleClose = useCallback(async () => {
     if (viewFileActions?.onClose) {
       viewFileActions.onClose();
     } else if (currentView === "fileEditor" || currentView === "pageEditor") {
       await fileActions.clearAllFiles();
     } else if (currentView === "viewer") {
-      const file =
-        (activeFileId
-          ? activeFiles.find(
-              (f) => isStirlingFile(f) && f.fileId === activeFileId,
-            )
-          : null) ?? activeFiles[0];
-      const countBeforeRemove = activeFiles.length;
-      if (file && isStirlingFile(file)) {
-        // Pick the next file to show before removing, so the sidebar stays in sync.
-        const remaining = activeFiles.filter(
-          (f) => isStirlingFile(f) && f.fileId !== file.fileId,
-        );
-        const nextFile = remaining.find(isStirlingFile) ?? null;
-        await fileActions.removeFiles([file.fileId], false);
-        if (countBeforeRemove <= 1) {
-          setCurrentView("fileEditor");
-        } else if (nextFile) {
-          setActiveFileId(nextFile.fileId);
-        }
-      } else if (countBeforeRemove <= 1) {
-        setCurrentView("fileEditor");
-      }
+      await closeViewerDocument();
     }
-  }, [
-    currentView,
-    viewFileActions,
-    fileActions,
-    activeFiles,
-    activeFileId,
-    setActiveFileId,
-    setCurrentView,
-  ]);
+  }, [currentView, viewFileActions, fileActions, closeViewerDocument]);
 
   const downloadTooltip = useMemo(() => {
     if (currentView === "viewer") return terminology.download;
@@ -417,22 +284,19 @@ export default function WorkbenchBar({
     showsFileActions: !isCustomView && currentView !== "myFiles",
     actionsDisabled,
     policyEnforcing,
-    downloadLabel: downloadTooltip,
-    downloadIconName: icons.download,
-    saveAsIconName: icons.saveAs,
+    downloadLabel: saveButton.label ?? downloadTooltip,
+    downloadIconName: saveButton.icon ?? icons.download,
+    downloadUnsaved: saveButton.unsaved,
+    saveMenu: saveButton.menu,
     onPrint: canPrint ? handlePrint : undefined,
     printDisabledReason,
-    onExport: handleExportAll,
+    onExport: () => void workbenchSave.save(),
     onClose: handleClose,
   };
 
   const toggleMobileTools = useCallback(
     () => setMobileToolsExpanded((v) => !v),
     [],
-  );
-  const handleRetractToolbar = useCallback(
-    () => onCollapseViewerToolbar?.(true),
-    [onCollapseViewerToolbar],
   );
 
   const renderButton = useCallback(
@@ -483,18 +347,12 @@ export default function WorkbenchBar({
   );
 
   // View options
-  // Tools that own a custom workbench ship their own canvas.
-  const ownsCustomWorkbenchAsDefault = selectedTool === "pdfTextEditor";
   const viewOptions: ViewOption[] = [
-    ...(ownsCustomWorkbenchAsDefault
-      ? []
-      : [
-          {
-            value: "viewer" as WorkbenchType,
-            label: t("workbenchBar.viewer", "Viewer"),
-            icon: <Icon name="file" size={20} />,
-          },
-        ]),
+    {
+      value: "viewer",
+      label: t("workbenchBar.viewer", "Viewer"),
+      icon: <Icon name="file" size={20} />,
+    },
     {
       value: "pageEditor",
       label: t("workbenchBar.pageEditor", "Page Editor"),
@@ -639,11 +497,51 @@ export default function WorkbenchBar({
     </div>
   );
 
-  // Tool buttons - second row, only rendered when buttons exist. In the viewer
-  // the row is retractable: a handle on its right edge hides the whole row;
-  // Workbench then shows a tab below the bar to bring it back.
+  const renderRowButton = (btn: WorkbenchBarButtonConfig) => {
+    const content = renderButton(btn);
+    if (!content) return null;
+    return (
+      <div key={btn.id} className="workbench-bar-action-wrapper">
+        {content}
+      </div>
+    );
+  };
+
+  // The edge groups and the centred lanes. A desktop row holds them in one
+  // element its layout can rearrange; a phone's row scrolls them as one strip.
+  const lanes = (
+    <>
+      {!isMobile && (
+        <div className="workbench-bar-row-start">
+          {rowStartButtons.map(renderRowButton)}
+        </div>
+      )}
+      <div className="workbench-bar-center-scroll">
+        {/* A phone's row scrolls, so its edge controls scroll with it. */}
+        {isMobile && rowStartButtons.map(renderRowButton)}
+        {sectionsWithButtons.map(
+          ({ section, buttons: sectionButtons }, idx) => (
+            <React.Fragment key={section}>
+              {idx > 0 && <div className="workbench-bar-divider" />}
+              {sectionButtons.map(renderRowButton)}
+            </React.Fragment>
+          ),
+        )}
+        {isMobile && rowEndButtons.map(renderRowButton)}
+      </div>
+      {!isMobile && (
+        <div className="workbench-bar-row-end">
+          {rowEndButtons.map(renderRowButton)}
+        </div>
+      )}
+    </>
+  );
+
+  // Tool buttons - second row, only rendered when buttons exist.
   const toolRow =
-    sectionsWithButtons.length > 0 && !(isViewer && viewerToolbarCollapsed) ? (
+    sectionsWithButtons.length > 0 ||
+    rowStartButtons.length > 0 ||
+    rowEndButtons.length > 0 ? (
       <div
         className={`workbench-bar-center${
           isMobile && mobileToolsExpanded
@@ -651,33 +549,11 @@ export default function WorkbenchBar({
             : ""
         }`}
       >
-        <div className="workbench-bar-center-scroll">
-          {sectionsWithButtons.map(
-            ({ section, buttons: sectionButtons }, idx) => (
-              <React.Fragment key={section}>
-                {idx > 0 && <div className="workbench-bar-divider" />}
-                {sectionButtons.map((btn) => {
-                  const content = renderButton(btn);
-                  if (!content) return null;
-                  return (
-                    <div key={btn.id} className="workbench-bar-action-wrapper">
-                      {content}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ),
-          )}
-        </div>
+        {isMobile ? lanes : <div className="workbench-bar-lanes">{lanes}</div>}
         <WorkbenchBarToolbarHandle
           isMobile={isMobile}
           expanded={mobileToolsExpanded}
           onToggleExpanded={toggleMobileTools}
-          onRetract={
-            isViewer && onCollapseViewerToolbar
-              ? handleRetractToolbar
-              : undefined
-          }
         />
       </div>
     ) : null;

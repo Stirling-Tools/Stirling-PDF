@@ -4,6 +4,7 @@ import { Icon, isIconName, type IconName } from "@editor/ui/Icon";
 /** Ids whose registry name differs from the id itself. */
 const ID_ALIASES: Record<string, IconName> = {
   email: "mail",
+  googleworkspace: "googledrive",
   smb: "hard-drive",
   vectordb: "database",
 };
