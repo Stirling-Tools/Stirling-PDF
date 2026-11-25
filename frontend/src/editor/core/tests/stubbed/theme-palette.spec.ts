@@ -6,6 +6,7 @@ test.use({ autoGoto: false, viewport: { width: 1920, height: 1080 } });
 
 interface PaletteReport {
   sectionColours: string[];
+  minSectionOnSurface: number;
   accentTextOnBg: number;
   onPrimary: number;
   tokens: Record<string, string>;
@@ -42,15 +43,28 @@ async function readPalette(page: Page): Promise<PaletteReport> {
     const token = (name: string): string =>
       getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
+    const sectionColours = Array.from(
+      document.querySelectorAll(".tool-panel__fullscreen-section-icon"),
+    ).map((el) => getComputedStyle(el).color);
+    const surface = token("--c-surface");
+    const bg = token("--c-bg");
+
     return {
-      sectionColours: Array.from(
-        document.querySelectorAll(".tool-panel__fullscreen-section-icon"),
-      ).map((el) => getComputedStyle(el).color),
-      accentTextOnBg: contrast(token("--c-accent-text"), token("--c-bg")),
+      sectionColours,
+      minSectionOnSurface:
+        sectionColours.length > 0
+          ? Math.min(
+              ...sectionColours.map((c) =>
+                Math.min(contrast(c, surface), contrast(c, bg)),
+              ),
+            )
+          : 0,
+      accentTextOnBg: contrast(token("--c-accent-text"), bg),
       onPrimary: contrast(token("--c-text-on-primary"), token("--c-primary")),
       tokens: {
         accentText: token("--c-accent-text"),
-        bg: token("--c-bg"),
+        bg,
+        surface,
         onPrimary: token("--c-text-on-primary"),
         primary: token("--c-primary"),
       },
@@ -91,6 +105,7 @@ test("catalogue palette keeps the categories distinguishable and the accent read
   const light = await readPalette(page);
   const tokens = JSON.stringify(light.tokens);
   expect(new Set(light.sectionColours).size, tokens).toBeGreaterThanOrEqual(8);
+  expect(light.minSectionOnSurface, tokens).toBeGreaterThanOrEqual(3);
   expect(light.accentTextOnBg, tokens).toBeGreaterThanOrEqual(4.5);
   expect(light.onPrimary, tokens).toBeGreaterThanOrEqual(4.5);
 });
@@ -105,6 +120,7 @@ test("dark palette keeps the same guarantees", async ({ page }) => {
   const dark = await readPalette(page);
   const tokens = JSON.stringify(dark.tokens);
   expect(new Set(dark.sectionColours).size, tokens).toBeGreaterThanOrEqual(8);
+  expect(dark.minSectionOnSurface, tokens).toBeGreaterThanOrEqual(3);
   expect(dark.accentTextOnBg, tokens).toBeGreaterThanOrEqual(4.5);
   expect(dark.onPrimary, tokens).toBeGreaterThanOrEqual(4.5);
 });

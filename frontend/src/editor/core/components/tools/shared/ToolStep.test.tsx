@@ -57,6 +57,7 @@ describe("ToolStep collapsible header", () => {
 
     await userEvent.setup().click(screen.getByText("Settings"));
     expect(onCollapsedClick).toHaveBeenCalledTimes(1);
+    expect(settingsHeader().querySelector("div")).toBeNull();
   });
 
   it("renders a plain header when the step cannot collapse", () => {
