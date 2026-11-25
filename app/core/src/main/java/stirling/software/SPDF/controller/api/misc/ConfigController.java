@@ -262,6 +262,19 @@ public class ConfigController {
                     enableLogin && googleDrive.accountConnectionsReady());
             ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
                     applicationProperties.getPremium().getProFeatures().getMicrosoft();
+            if (microsoft.isEnabled()) {
+                configData.put("microsoftEnabled", true);
+                configData.put("microsoftClientId", microsoft.getClientId());
+                configData.put("microsoftTenant", microsoft.getTenant());
+                configData.put(
+                        "microsoftGraphUrl",
+                        applicationContext
+                                .getEnvironment()
+                                .getProperty(
+                                        "stirling.microsoft.graph-url",
+                                        "https://graph.microsoft.com/v1.0"));
+                configData.put("microsoftAllowEditorSaves", microsoft.isAllowEditorSaves());
+            }
             configData.put(
                     "microsoftAccountConnections",
                     enableLogin && microsoft.accountConnectionsReady());
@@ -343,9 +356,6 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
-            configData.put(
-                    "stirlingOfficeConversion",
-                    applicationProperties.getSystem().isStirlingOfficeConversion());
             boolean shouldShowUpdate =
                     applicationProperties.getSystem().isShowUpdate()
                             && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());

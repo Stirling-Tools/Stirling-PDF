@@ -1,5 +1,10 @@
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import {
+  indexedInsertOf,
+  insertPageObjectAt,
+} from "@editor/tools/pdfTextEditor/util/insertPageObject";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 
 export type ZOrderMode =
@@ -7,14 +12,6 @@ export type ZOrderMode =
   | "to-back" // bottom of stack (rendered first, underneath everything)
   | "forward" // swap with the object directly above it
   | "backward"; // swap with the object directly below it
-
-interface InsertAtModule {
-  FPDFPage_InsertObjectAtIndex?: (
-    page: number,
-    obj: number,
-    idx: number,
-  ) => boolean;
-}
 
 /** One warning per session, not one per apply() - a drag can fire dozens. */
 let warnedMissingInsertAt = false;
@@ -45,8 +42,7 @@ export class ChangeZOrderCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
-    const ext = m as unknown as InsertAtModule;
-    if (!ext.FPDFPage_InsertObjectAtIndex) {
+    if (!indexedInsertOf(m)) {
       if (typeof console !== "undefined" && !warnedMissingInsertAt) {
         warnedMissingInsertAt = true;
         console.warn(
@@ -98,7 +94,7 @@ export class ChangeZOrderCommand implements Command {
       m.FPDFPage_RemoveObject(page.pagePtr, ptr);
     }
     located.forEach(({ ptr }, j) => {
-      ext.FPDFPage_InsertObjectAtIndex!(page.pagePtr, ptr, insertAt + j);
+      insertPageObjectAt(m, page.pagePtr, ptr, insertAt + j);
     });
     // markDirty bumps the revision so PageView re-renders the bitmap.
     page.markDirty();
@@ -109,23 +105,20 @@ export class ChangeZOrderCommand implements Command {
     if (this.memberPrev.length === 0) return;
     const page = doc.page(this.pageIndex);
     const m = doc.module;
-    const ext = m as unknown as InsertAtModule;
-    if (!ext.FPDFPage_InsertObjectAtIndex) return;
+    if (!indexedInsertOf(m)) return;
     for (const { ptr } of this.memberPrev) {
       m.FPDFPage_RemoveObject(page.pagePtr, ptr);
     }
     // Re-inserting in ascending original index order reconstructs the
     // exact pre-apply list.
     for (const { ptr, idx } of this.memberPrev) {
-      ext.FPDFPage_InsertObjectAtIndex(page.pagePtr, ptr, idx);
+      insertPageObjectAt(m, page.pagePtr, ptr, idx);
     }
     page.markDirty();
     page.markNeedsGenerate();
   }
 
-  private resolveMemberPtrs(
-    page: import("@editor/tools/pdfTextEditor/model/Page").Page,
-  ): Set<number> {
+  private resolveMemberPtrs(page: Page): Set<number> {
     if (this.runId) {
       const run = page.runs.find((r) => r.id === this.runId);
       if (!run) return new Set();

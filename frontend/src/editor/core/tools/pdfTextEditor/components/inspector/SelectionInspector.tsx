@@ -13,9 +13,6 @@ import type { SelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSel
 import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
-import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
-import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 import { ScanFontMatchRow } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
 
@@ -64,6 +61,7 @@ export function SelectionInspector({
         runCount={runCount}
         imageCount={imageCount}
         shapeCount={shapeCount}
+        formField={selection.formFieldId !== null}
         fontNote={hasRunSelection ? fontNote : null}
       />
       {scanFontMatch?.canShow && <ScanFontMatchRow match={scanFontMatch} />}
@@ -79,26 +77,6 @@ export function SelectionInspector({
         />
       )}
       {hasImageSelection && <ImageSection controller={controller} />}
-      {ACCESSIBILITY_EDITING &&
-        (controller.textTag || controller.textLanguage) && (
-          <TextAccessibilitySection
-            tag={controller.textTag}
-            onSetTag={controller.onSetTextTag}
-            inner={controller.innerTextTags}
-            language={controller.textLanguage}
-            otherPages={controller.textOtherPages}
-            untaggedLinks={controller.textUntaggedLinks}
-          />
-        )}
-      {ACCESSIBILITY_EDITING && controller.imageAccessibility && (
-        <ImageAccessibilitySection
-          accessibility={controller.imageAccessibility}
-          onSetDescription={controller.onSetImageDescription}
-          onSetDecorative={controller.onSetImageDecorative}
-          review={controller.imageReview}
-          onNext={controller.onSelectNextImageToReview}
-        />
-      )}
     </Stack>
   );
 }
@@ -108,17 +86,22 @@ function SelectionHeader({
   runCount,
   imageCount,
   shapeCount,
+  formField,
   fontNote,
 }: {
   runCount: number;
   imageCount: number;
   shapeCount: number;
+  /** A form field is only ever selected alone. */
+  formField: boolean;
   fontNote: string | null;
 }) {
   const { t } = useTranslation();
   const kinds = [runCount, imageCount, shapeCount].filter((n) => n > 0).length;
   let title: string;
-  if (kinds > 1) {
+  if (formField) {
+    title = t("pdfTextEditor.inspector.formField", "Form field");
+  } else if (kinds > 1) {
     title = t("pdfTextEditor.inspector.mixed", "{{count}} objects", {
       count: runCount + imageCount + shapeCount,
     });

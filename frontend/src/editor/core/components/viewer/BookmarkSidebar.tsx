@@ -28,7 +28,6 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 interface BookmarkSidebarProps {
   visible: boolean;
-  thumbnailVisible: boolean;
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
 }
@@ -96,7 +95,6 @@ const openBookmarkTarget = (rawUrl: string): void => {
 
 export const BookmarkSidebar = ({
   visible,
-  thumbnailVisible,
   documentCacheKey,
   preloadCacheKeys = [],
 }: BookmarkSidebarProps) => {
@@ -739,7 +737,6 @@ export const BookmarkSidebar = ({
       className="bookmark-sidebar"
       title={t("viewer.bookmarks.title", "Bookmarks")}
       icon={<Icon name="bookmark" />}
-      rightOffset={`${thumbnailVisible ? 15 : 0}rem`}
       visible={visible}
       onClose={toggleBookmarkSidebar}
       closeLabel={t("viewer.bookmarks.closeSidebar", "Close bookmarks sidebar")}
@@ -932,9 +929,11 @@ export const BookmarkSidebar = ({
               />
               <Text
                 size="xs"
-                c="blue.5"
                 ta="center"
-                style={{ textDecoration: "underline" }}
+                style={{
+                  color: "var(--c-accent-text)",
+                  textDecoration: "underline",
+                }}
               >
                 {t(
                   "viewer.bookmarks.openEditor",

@@ -1,4 +1,6 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { editRecognizedTable } from "@editor/tests/helpers/recognizedTable";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import path from "path";
 
@@ -21,16 +23,14 @@ test.describe("PDF text editor - tables", () => {
         width: layout.width,
         height: layout.height,
       });
-      await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-      await expect(page.getByTestId("pdf-editor-root")).toBeAttached();
-      await page
-        .getByTestId("pdf-editor-file-input")
-        .setInputFiles(
-          path.join(
-            import.meta.dirname,
-            "../test-fixtures/paragraph-sample.pdf",
-          ),
-        );
+      await openInTextEditor(
+        page,
+        path.join(import.meta.dirname, "../test-fixtures/paragraph-sample.pdf"),
+        // At a fixed zoom the page outgrows this window and its corner, where
+        // the table goes, slides under the file list; the viewer's fit keeps
+        // it in view.
+        { zoomPercent: null },
+      );
       await page.waitForFunction(() => {
         const state = (
           window as unknown as { __editor_store: EditorStore }
@@ -69,19 +69,14 @@ test.describe("PDF text editor - tables", () => {
 
   test("insert, grow, fill, and undo a table", async ({ page }) => {
     test.setTimeout(180_000);
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(
-          import.meta.dirname,
-          "../test-fixtures",
-          "paragraph-sample.pdf",
-        ),
-      );
+    await openInTextEditor(
+      page,
+      path.join(
+        import.meta.dirname,
+        "../test-fixtures",
+        "paragraph-sample.pdf",
+      ),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -162,19 +157,14 @@ test.describe("PDF text editor - tables", () => {
 
   test("resizes a column, a row, and the whole table", async ({ page }) => {
     test.setTimeout(180_000);
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(
-          import.meta.dirname,
-          "../test-fixtures",
-          "paragraph-sample.pdf",
-        ),
-      );
+    await openInTextEditor(
+      page,
+      path.join(
+        import.meta.dirname,
+        "../test-fixtures",
+        "paragraph-sample.pdf",
+      ),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -273,15 +263,10 @@ test.describe("PDF text editor - tables", () => {
     page,
   }) => {
     test.setTimeout(180_000);
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(import.meta.dirname, "../test-fixtures", "table-sample.pdf"),
-      );
+    await openInTextEditor(
+      page,
+      path.join(import.meta.dirname, "../test-fixtures", "table-sample.pdf"),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -294,10 +279,7 @@ test.describe("PDF text editor - tables", () => {
     await expect(recognized).toHaveCount(1, { timeout: 15_000 });
     await expect(recognized).toHaveText(/4×3/);
 
-    await page
-      .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
-      .first()
-      .click();
+    await editRecognizedTable(page);
     await page.waitForFunction(
       `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) > 0`,
       undefined,

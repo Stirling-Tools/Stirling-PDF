@@ -19,6 +19,10 @@ export class CompositeCommand implements Command {
     this.commands.push(cmd);
   }
 
+  includes(cmd: Command): boolean {
+    return this.commands.includes(cmd);
+  }
+
   /** The most recent child - used to derive the group's coalesce key. */
   get last(): Command {
     return this.commands[this.commands.length - 1];
@@ -38,6 +42,7 @@ export class CompositeCommand implements Command {
     order: Command[],
     phase: "apply" | "revert",
   ): void {
+    if (this.last.moveGroup?.(doc, this.commands, phase)) return;
     const done: Command[] = [];
     for (const [i, cmd] of order.entries()) {
       if (!order[i + 1]?.supersedes?.(cmd)) {
