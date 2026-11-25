@@ -35,6 +35,7 @@ vi.mock("@editor/contexts/IndexedDBContext", () => ({
 vi.mock("@editor/contexts/file/fileHooks", () => ({
   useFileState: () => ({ state: { files: { ids: [], byId: {} } } }),
   useFileActions: () => ({ actions: {} }),
+  useFileSelectors: () => ({ getFiles: () => [] }),
 }));
 vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { storageEnabled: true } }),

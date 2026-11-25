@@ -32,6 +32,7 @@ export interface AttachmentManagerUIProps {
   onRenameRow: (id: string, newName: string) => void;
   onExtractSingle: (filename: string) => Promise<void>;
   onExtractAllZip: () => Promise<void>;
+  extractBlockedReason?: string;
   onSaveDraft: () => Promise<void>;
   onDiscardDraft: () => void;
   onConvertToPdfA3bChange: (val: boolean) => void;
@@ -52,6 +53,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   onRenameRow,
   onExtractSingle,
   onExtractAllZip,
+  extractBlockedReason,
   onSaveDraft,
   onDiscardDraft,
   onConvertToPdfA3bChange,
@@ -131,6 +133,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
                 disabled={disabled || isSaving}
                 isSaving={isSaving}
                 isDownloading={activeAction === `extract-${row.originalName}`}
+                downloadBlockedReason={extractBlockedReason}
                 onExtractSingle={onExtractSingle}
                 onToggleDelete={onToggleDeleteRow}
                 onRestore={onRestoreRow}
@@ -142,17 +145,23 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
       )}
 
       {rows.length > 0 && (
-        <DSButton
-          size="sm"
-          variant="tertiary"
-          fullWidth
-          leftSection={<Icon name="download" size={13} />}
-          onClick={onExtractAllZip}
-          disabled={disabled || isSaving}
-          loading={activeAction === "extractAll"}
+        <Tooltip
+          content={extractBlockedReason}
+          disabled={!extractBlockedReason}
+          position="top"
         >
-          {t("attachments.extractAll", "Extract all")}
-        </DSButton>
+          <DSButton
+            size="sm"
+            variant="tertiary"
+            fullWidth
+            leftSection={<Icon name="download" size={13} />}
+            onClick={onExtractAllZip}
+            disabled={disabled || isSaving || Boolean(extractBlockedReason)}
+            loading={activeAction === "extractAll"}
+          >
+            {t("attachments.extractAll", "Extract all")}
+          </DSButton>
+        </Tooltip>
       )}
 
       <FilePicker

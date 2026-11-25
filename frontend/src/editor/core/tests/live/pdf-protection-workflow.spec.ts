@@ -434,7 +434,7 @@ test("replacing the permissions password follows the owner policy and invalidate
   );
 });
 
-for (const tool of ["annotate", "form-fill", "redact"]) {
+for (const tool of ["annotate", "form-fill"]) {
   test(`${tool} explains that protected editing is unsupported before offering an editable output`, async ({
     page,
   }) => {

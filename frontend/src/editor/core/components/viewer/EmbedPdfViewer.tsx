@@ -82,6 +82,12 @@ import { ScaleCalibrationDialog } from "@editor/components/viewer/ScaleCalibrati
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { alert } from "@editor/components/toast";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
+import {
+  useRightsManagedExport,
+  useRightsManagedPdf,
+} from "@editor/hooks/useRightsManagedPdf";
+import { RightsManagedPdfPanel } from "@editor/components/viewer/RightsManagedPdfPanel";
+import { RightsManagedPdfBanner } from "@editor/components/viewer/RightsManagedPdfBanner";
 import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
@@ -729,6 +735,24 @@ const EmbedPdfViewerContent = ({
     setActiveFileId,
   ]);
   const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
+  const viewedFile = previewFile ?? currentFile;
+  const rightsManaged = useRightsManagedPdf(viewedFile);
+  const rightsManagedOpened =
+    rightsManaged.status === "opened" ? rightsManaged.opened : null;
+  const rightsManagedExport = useRightsManagedExport(rightsManagedOpened);
+  const versionFile = useCallback(
+    async (source: File, contents: Blob) => {
+      const plain = new File([contents], source.name || "document.pdf", {
+        type: "application/pdf",
+      });
+      const file = rightsManagedExport
+        ? await rightsManagedExport.protectFile(plain)
+        : plain;
+      rememberPlainPdfExport(source, file);
+      return file;
+    },
+    [rightsManagedExport],
+  );
 
   // Lineage root of the open document: saves and tool outputs add a child record,
   // so mounting on the root keeps the engine alive across reloads.
@@ -778,6 +802,9 @@ const EmbedPdfViewerContent = ({
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
+    if (rightsManagedOpened) {
+      return { file: rightsManagedOpened.plaintext, url: null };
+    }
     if (previewFile) {
       // In preview mode, show the preview file
       if (previewFile.size === 0) {
@@ -787,7 +814,7 @@ const EmbedPdfViewerContent = ({
     } else {
       return fileWithUrl;
     }
-  }, [previewFile, fileWithUrl]);
+  }, [rightsManagedOpened, previewFile, fileWithUrl]);
 
   // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
   const isStoredFileEncrypted = useFileSelector((s) =>
@@ -795,7 +822,7 @@ const EmbedPdfViewerContent = ({
       ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
       : false,
   );
-  const pdfAccess = usePdfAccess(previewFile ?? currentFile);
+  const pdfAccess = usePdfAccess(rightsManagedOpened?.plaintext ?? viewedFile);
   const isCurrentFileEncrypted =
     isStoredFileEncrypted || Boolean(pdfAccess?.encrypted);
   const isCurrentFileLocked = isCurrentFileEncrypted && !pdfAccess;
@@ -1319,12 +1346,7 @@ const EmbedPdfViewerContent = ({
           "[Viewer] Applying form fill changes - reloading filled PDF",
         );
 
-        // Convert Blob to File
-        const filename = currentFile.name || "document.pdf";
-        const file = new File([filledBlob], filename, {
-          type: "application/pdf",
-        });
-        rememberPlainPdfExport(currentFile, file);
+        const file = await versionFile(currentFile, filledBlob);
 
         // Get current file info for creating the updated version
         const currentFileId = currentFileStableId;
@@ -1371,6 +1393,7 @@ const EmbedPdfViewerContent = ({
       }
     },
     [
+      versionFile,
       currentFile,
       currentFileStableId,
       selectedTool,
@@ -1406,11 +1429,7 @@ const EmbedPdfViewerContent = ({
       layerApplyInProgressRef.current = true;
       try {
         await assertSignedPdfsEditable([currentFile], undefined, true);
-        const filename = currentFile.name || "document.pdf";
-        const file = new File([modifiedBlob], filename, {
-          type: "application/pdf",
-        });
-        rememberPlainPdfExport(currentFile, file);
+        const file = await versionFile(currentFile, modifiedBlob);
 
         const currentFileId = currentFileStableId;
         if (!currentFileId) throw new Error("Current file ID not found");
@@ -1435,6 +1454,7 @@ const EmbedPdfViewerContent = ({
       }
     },
     [
+      versionFile,
       currentFile,
       activeFiles,
       actions,
@@ -2067,6 +2087,11 @@ const EmbedPdfViewerContent = ({
             )}
           </Text>
         </Center>
+      ) : rightsManaged.status === "locked" && viewedFile ? (
+        <RightsManagedPdfPanel
+          file={viewedFile}
+          onClose={previewFile ? onClose : undefined}
+        />
       ) : isCurrentFileLocked ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
@@ -2092,6 +2117,12 @@ const EmbedPdfViewerContent = ({
         <>
           {currentFile && isStirlingFile(currentFile) && (
             <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
+          )}
+          {rightsManagedOpened && (
+            <RightsManagedPdfBanner
+              protection={rightsManagedOpened.protection}
+              fileName={rightsManagedOpened.original.name}
+            />
           )}
           {pageTool ? (
             <pageTool.Toolbar />
@@ -2142,6 +2173,8 @@ const EmbedPdfViewerContent = ({
               pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}
               url={effectiveFile.url}
+              exportOriginal={rightsManagedOpened?.original}
+              exportProtect={rightsManagedExport?.protectBytes}
               fileName={
                 previewFile
                   ? previewFile.name
@@ -2227,37 +2260,39 @@ const EmbedPdfViewerContent = ({
       )}
 
       {/* Bottom Toolbar Overlay */}
-      {effectiveFile && !pageTool?.BottomBar && (
-        <div
-          className="pdf-viewer-toolbar-dock"
-          style={{
-            position: "fixed",
-            // Gutter matching the workbench rails, so the bar reads as a
-            // floating card rather than one welded to the viewport edge.
-            bottom: "0.5rem",
-            left: 0,
-            // Centres on the pages: clear of the side panels (always on the
-            // right) and the scrollbar (on the inline end, so left in RTL). As
-            // the toolbar's size container, a narrow dock drops controls
-            // rather than overlapping a panel.
-            right: `${totalRightMargin}rem`,
-            paddingInlineEnd: `${scrollbarWidth}px`,
-            transition: "right 0.3s ease",
-            zIndex: 50,
-            display: "flex",
-            justifyContent: "center",
-            pointerEvents: "none",
-            background: "transparent",
-          }}
-        >
-          <div style={{ pointerEvents: "auto" }}>
-            <PdfViewerToolbar
-              currentPage={scrollState.currentPage}
-              totalPages={scrollState.totalPages}
-            />
+      {effectiveFile &&
+        rightsManaged.status !== "locked" &&
+        !pageTool?.BottomBar && (
+          <div
+            className="pdf-viewer-toolbar-dock"
+            style={{
+              position: "fixed",
+              // Gutter matching the workbench rails, so the bar reads as a
+              // floating card rather than one welded to the viewport edge.
+              bottom: "0.5rem",
+              left: 0,
+              // Centres on the pages: clear of the side panels (always on the
+              // right) and the scrollbar (on the inline end, so left in RTL). As
+              // the toolbar's size container, a narrow dock drops controls
+              // rather than overlapping a panel.
+              right: `${totalRightMargin}rem`,
+              paddingInlineEnd: `${scrollbarWidth}px`,
+              transition: "right 0.3s ease",
+              zIndex: 50,
+              display: "flex",
+              justifyContent: "center",
+              pointerEvents: "none",
+              background: "transparent",
+            }}
+          >
+            <div style={{ pointerEvents: "auto" }}>
+              <PdfViewerToolbar
+                currentPage={scrollState.currentPage}
+                totalPages={scrollState.totalPages}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Thumbnail Sidebar */}
       <ThumbnailSidebar
@@ -2276,12 +2311,15 @@ const EmbedPdfViewerContent = ({
           visible={isAttachmentSidebarVisible}
           documentCacheKey={bookmarkCacheKey}
           preloadCacheKeys={allBookmarkCacheKeys}
+          contentLocked={rightsManagedOpened !== null}
         />
       )}
       <LayerSidebar
         visible={isLayerSidebarVisible}
         file={effectiveFile?.file ?? null}
-        documentCacheKey={bookmarkCacheKey}
+        documentCacheKey={
+          rightsManagedOpened ? `${bookmarkCacheKey}:opened` : bookmarkCacheKey
+        }
         onApplyLayers={handleLayerApply}
         onLayersDetected={setHasLayers}
         readOnly={pdfEditingLocked(pdfAccess)}

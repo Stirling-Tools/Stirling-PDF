@@ -6,6 +6,7 @@ import { Icon } from "@editor/ui/Icon";
 import { RotateParametersHook } from "@editor/hooks/tools/rotate/useRotateParameters";
 import { useViewScopedFileStubs } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
+import { useRightsManagedThumbnail } from "@editor/hooks/useRightsManagedPdf";
 
 interface RotateSettingsProps {
   parameters: RotateParametersHook;
@@ -20,6 +21,7 @@ const RotateSettings = ({
   // Preview the document the rotation will actually apply to, so it follows
   // the viewer when the user switches files with the tool open.
   const [previewStub = null] = useViewScopedFileStubs();
+  const decryptedThumbnail = useRightsManagedThumbnail(previewStub?.id);
 
   // Calculate current angle display
   const currentAngle = parameters.parameters.angle;
@@ -77,7 +79,9 @@ const RotateSettings = ({
             >
               <DocumentThumbnail
                 file={previewStub}
-                thumbnail={previewStub?.thumbnailUrl ?? null}
+                thumbnail={
+                  decryptedThumbnail ?? previewStub?.thumbnailUrl ?? null
+                }
               />
             </Box>
           </Box>

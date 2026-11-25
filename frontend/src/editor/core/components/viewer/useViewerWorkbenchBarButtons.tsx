@@ -3,6 +3,14 @@ import { Slider, Popover, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@editor/i18n";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { pdfAllows } from "@editor/services/pdfPermissions";
+import { PdfPermissionFlag } from "@editor/contexts/viewer/viewerBridges";
+import {
+  getOpenedRightsManagedPdf,
+  isKnownRightsManagedPdf,
+} from "@editor/services/rightsManagedPdf";
+import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
 import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import {
   useWorkbenchBarButtons,
@@ -140,6 +148,23 @@ export function useViewerWorkbenchBarButtons(
   const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
+  const access = usePdfAccess(viewer.activeFileId);
+  useRightsManagedPdfRevision();
+  const documentLocked =
+    !!viewer.activeFileId &&
+    isKnownRightsManagedPdf(viewer.activeFileId) &&
+    !getOpenedRightsManagedPdf(viewer.activeFileId);
+  const restricted = access?.rightsManaged === true;
+  const annotationsRestricted =
+    restricted && !pdfAllows(access, PdfPermissionFlag.ModifyAnnotations);
+  const formFillRestricted =
+    restricted &&
+    !pdfAllows(access, PdfPermissionFlag.FillForms) &&
+    !pdfAllows(access, PdfPermissionFlag.ModifyAnnotations);
+  const restrictedLabel = t(
+    "encryptedPdfUnlock.changesRestricted",
+    "This PDF's protection does not allow this change.",
+  );
   const isTextEditActive = selectedTool === "pdfTextEditor";
   const pageTool = useViewerPageTool();
   const pageToolActive = pageTool != null;
@@ -631,10 +656,16 @@ export function useViewerWorkbenchBarButtons(
           <BarButton
             icon="pencil"
             label={annotationsLabel}
-            hint={isAnnotationsActive ? exitAnnotationsLabel : undefined}
+            hint={
+              annotationsRestricted
+                ? restrictedLabel
+                : isAnnotationsActive
+                  ? exitAnnotationsLabel
+                  : undefined
+            }
             tooltipPosition={tooltipPosition}
             active={isAnnotationsActive}
-            disabled={disabled}
+            disabled={disabled || annotationsRestricted}
             onClick={() => {
               if (isAnnotationsActive) {
                 // The tool's own exit path, so pending annotations get the
@@ -661,7 +692,7 @@ export function useViewerWorkbenchBarButtons(
         render: ({ disabled }) => (
           <ViewerAnnotationControls
             currentView="viewer"
-            disabled={disabled}
+            disabled={disabled || annotationsRestricted}
             tooltipPosition={tooltipPosition}
           />
         ),
@@ -676,9 +707,10 @@ export function useViewerWorkbenchBarButtons(
           <BarButton
             icon="clipboard-pen-line"
             label={formFillLabel}
+            hint={formFillRestricted ? restrictedLabel : undefined}
             tooltipPosition={tooltipPosition}
             active={isFormFillActive}
-            disabled={disabled}
+            disabled={disabled || formFillRestricted}
             onClick={() =>
               isFormFillActive
                 ? handleBackToTools()
@@ -711,8 +743,11 @@ export function useViewerWorkbenchBarButtons(
       ).map((button) => ({ ...button, visible: false })),
     ];
 
-    return buttons;
+    return documentLocked
+      ? buttons.map((button) => ({ ...button, disabled: true }))
+      : buttons;
   }, [
+    documentLocked,
     t,
     i18n.language,
     viewer,
@@ -751,6 +786,9 @@ export function useViewerWorkbenchBarButtons(
     redactionActiveType,
     formFillLabel,
     isFormFillActive,
+    annotationsRestricted,
+    formFillRestricted,
+    restrictedLabel,
     editTextLabel,
     reviewLabel,
     reviewing,

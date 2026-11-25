@@ -77,6 +77,7 @@ class PDFWorkerManager {
       disableStream?: boolean;
       stopAtErrors?: boolean;
       verbosity?: number;
+      password?: string;
       signal?: { cancelled: boolean };
       /** Reject with {@link PdfOpenTimeout} if the document has not opened by then,
        *  destroying the loading task. A worker that dies mid-parse never settles its
@@ -132,6 +133,7 @@ class PDFWorkerManager {
           typeof pdfData === "string"
             ? {
                 url: pdfData,
+                password: options.password,
                 disableAutoFetch: options.disableAutoFetch ?? true,
                 disableStream: options.disableStream ?? true,
                 stopAtErrors: options.stopAtErrors ?? false,
@@ -141,6 +143,7 @@ class PDFWorkerManager {
               }
             : {
                 ...pdfData,
+                password: options.password,
                 disableAutoFetch: options.disableAutoFetch ?? true,
                 disableStream: options.disableStream ?? true,
                 stopAtErrors: options.stopAtErrors ?? false,

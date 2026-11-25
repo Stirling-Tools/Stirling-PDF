@@ -11,6 +11,7 @@ import {
   getPdfAccess,
   rememberPdfAccess,
 } from "@editor/services/pdfAccessService";
+import { forgetRightsManagedPdfs } from "@editor/services/rightsManagedPdf";
 import {
   FileContextAction,
   FileContextState,
@@ -79,6 +80,7 @@ export class FileLifecycleManager {
    */
   cleanupAllFiles = (): void => {
     forgetPdfAccess([...this.filesRef.current.keys()]);
+    forgetRightsManagedPdfs([...this.filesRef.current.keys()]);
     for (const fileId of this.filesRef.current.keys()) {
       thumbnailGenerationService.forgetFile(fileId);
     }
@@ -169,6 +171,7 @@ export class FileLifecycleManager {
     stateRef?: React.RefObject<FileContextState>,
   ): void => {
     forgetPdfAccess([fileId]);
+    forgetRightsManagedPdfs([fileId]);
     const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
 

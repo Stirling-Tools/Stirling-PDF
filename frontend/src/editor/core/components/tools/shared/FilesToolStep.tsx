@@ -8,6 +8,11 @@ import {
   getPdfAccess,
   signedPdfEditsBlocked,
 } from "@editor/services/pdfAccessService";
+import { signedPdfEditsBlockedMessage } from "@editor/services/pdfSessionUnlock";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { rightsManagedToolBlockReason } from "@editor/services/rightsManagedTools";
+import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
+import type { UnavailableProtectedFile } from "@editor/components/tools/shared/ProtectedPdfToolNotice";
 
 export interface FilesToolStepProps {
   selectedFiles: StirlingFile[];
@@ -24,14 +29,42 @@ function FilesStepContent({
 }: FilesToolStepProps) {
   usePdfAccess(undefined);
   const files = useViewScopedFileStubs();
-  const unavailableFiles = showUnavailableFiles
-    ? files.filter((file) => {
-        const access = getPdfAccess(file.id);
-        return (
-          ((file.processedFile?.isEncrypted && access) ||
-            signedPdfEditsBlocked(access)) &&
-          !selectedFiles.some((selected) => selected.fileId === file.id)
-        );
+  const { selectedTool } = useToolWorkflow();
+  const endpoint = selectedTool?.operationConfig?.endpoint;
+  useRightsManagedPdfRevision();
+  const notSelected = files.filter(
+    (file) => !selectedFiles.some((selected) => selected.fileId === file.id),
+  );
+  const unavailableFiles: UnavailableProtectedFile[] = showUnavailableFiles
+    ? notSelected.flatMap((file): UnavailableProtectedFile[] => {
+        const rightsManagedReason =
+          typeof endpoint === "string"
+            ? rightsManagedToolBlockReason(endpoint, file.id)
+            : undefined;
+        if (rightsManagedReason)
+          return [
+            { file, reason: rightsManagedReason, passwordProtected: false },
+          ];
+        if (file.processedFile?.isEncrypted && getPdfAccess(file.id))
+          return [
+            {
+              file,
+              reason: i18n.t(
+                "encryptedPdfUnlock.toolUnavailable",
+                "This tool doesn't support encrypted PDFs. Remove the password first.",
+              ),
+              passwordProtected: true,
+            },
+          ];
+        if (signedPdfEditsBlocked(getPdfAccess(file.id)))
+          return [
+            {
+              file,
+              reason: signedPdfEditsBlockedMessage(),
+              passwordProtected: false,
+            },
+          ];
+        return [];
       })
     : [];
   return (

@@ -68,3 +68,22 @@ describe("createDocument openTimeoutMs", () => {
     expect(settled).not.toHaveBeenCalled();
   });
 });
+
+describe("createDocument password", () => {
+  test("opens an encrypted document with the given password", async () => {
+    const pdf = { numPages: 1, destroy: () => Promise.resolve() };
+    getDocument.mockReturnValue({
+      promise: Promise.resolve(pdf),
+      destroy: vi.fn(),
+    });
+
+    await pdfWorkerManager.createDocument(new ArrayBuffer(8), {
+      password: "secret",
+    });
+
+    expect(getDocument).toHaveBeenCalledWith(
+      expect.objectContaining({ password: "secret" }),
+    );
+    await pdfWorkerManager.destroyDocument(pdf as never);
+  });
+});

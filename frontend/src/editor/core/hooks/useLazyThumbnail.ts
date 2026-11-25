@@ -9,6 +9,7 @@ import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
 import { readDiskFile } from "@editor/services/localFolderContents";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { useRightsManagedThumbnail } from "@editor/hooks/useRightsManagedPdf";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 
@@ -79,6 +80,7 @@ export function useLazyThumbnail(
   enabled = true,
 ): string | undefined {
   const access = usePdfAccess(fileId);
+  const decrypted = useRightsManagedThumbnail(fileId);
   const locked = isEncrypted && !access;
   const [generated, setGenerated] = useState<{
     fileId: FileId;
@@ -147,6 +149,7 @@ export function useLazyThumbnail(
     selectors,
   ]);
 
+  if (decrypted) return decrypted;
   return locked
     ? undefined
     : (thumbnailUrl ??
