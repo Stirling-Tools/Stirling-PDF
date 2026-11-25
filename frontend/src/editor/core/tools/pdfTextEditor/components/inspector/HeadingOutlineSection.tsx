@@ -1,24 +1,20 @@
-import { Box, Divider, Group, Stack, Text } from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import {
-  Section,
-  SectionLabel,
-  StatRow,
-} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import {
-  issueCount,
   type HeadingIssue,
   type HeadingOutline,
   type OutlineEntry,
 } from "@editor/tools/pdfTextEditor/util/headingOutline";
+import {
+  headingTreeGuides,
+  type TreeGuide,
+} from "@editor/tools/pdfTextEditor/util/headingTree";
 import "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
-const INDENT_PX = 12;
-
-/** The document's headings in reading order, each issue under the heading it belongs to. */
+/** The document's headings in reading order, each issue under the heading it belongs to; the caller titles it and counts the issues. */
 export function HeadingOutlineSection({
   outline,
   onSelect,
@@ -27,52 +23,41 @@ export function HeadingOutlineSection({
   onSelect: (index: number) => void;
 }) {
   const { t } = useTranslation();
+  const guides = headingTreeGuides(outline.entries.map((entry) => entry.level));
   return (
-    <Section testId="pdf-editor-heading-outline">
-      <SectionLabel>
-        {t("pdfTextEditor.inspector.accessibility.outline.heading", "Headings")}
-      </SectionLabel>
-      <Stack gap={4}>
-        <StatRow
-          label={t(
-            "pdfTextEditor.inspector.accessibility.outline.problems",
-            "Heading problems",
+    <Stack
+      gap={0}
+      className="pdf-editor-heading-outline"
+      data-testid="pdf-editor-heading-outline"
+    >
+      {outline.mixesNumbering && (
+        <IssueText
+          text={t(
+            "pdfTextEditor.inspector.accessibility.outline.mixedNumbering",
+            "Mixes numbered and unnumbered headings",
           )}
-          value={
-            <span data-testid="pdf-editor-heading-problems">
-              {issueCount(outline)}
-            </span>
-          }
+          testId="pdf-editor-heading-mixed"
         />
-        {outline.mixesNumbering && (
-          <IssueText
-            text={t(
-              "pdfTextEditor.inspector.accessibility.outline.mixedNumbering",
-              "Mixes numbered and unnumbered headings",
-            )}
-            testId="pdf-editor-heading-mixed"
+      )}
+      {outline.entries.length === 0 ? (
+        <Text size="xs" c="dimmed" data-testid="pdf-editor-heading-none">
+          {t(
+            "pdfTextEditor.inspector.accessibility.outline.none",
+            "No headings",
+          )}
+        </Text>
+      ) : (
+        outline.entries.map((entry, index) => (
+          <OutlineRow
+            // Headings carry no identity of their own; their order is fixed for the read.
+            key={index}
+            entry={entry}
+            guides={guides[index]}
+            onSelect={() => onSelect(index)}
           />
-        )}
-        <Divider my={4} />
-        {outline.entries.length === 0 ? (
-          <Text size="xs" c="dimmed" data-testid="pdf-editor-heading-none">
-            {t(
-              "pdfTextEditor.inspector.accessibility.outline.none",
-              "No headings",
-            )}
-          </Text>
-        ) : (
-          outline.entries.map((entry, index) => (
-            <OutlineRow
-              // Headings carry no identity of their own; their order is fixed for the read.
-              key={index}
-              entry={entry}
-              onSelect={() => onSelect(index)}
-            />
-          ))
-        )}
-      </Stack>
-    </Section>
+        ))
+      )}
+    </Stack>
   );
 }
 
@@ -83,9 +68,11 @@ function headingText({ run, range }: OutlineEntry): string {
 
 function OutlineRow({
   entry,
+  guides,
   onSelect,
 }: {
   entry: OutlineEntry;
+  guides: TreeGuide[];
   onSelect: () => void;
 }) {
   const { t } = useTranslation();
@@ -102,27 +89,42 @@ function OutlineRow({
           { page: entry.pageIndex + 1 },
         ));
   return (
-    <Box
-      pl={((entry.level ?? 1) - 1) * INDENT_PX}
+    <div
+      className="pdf-editor-heading-outline__row"
       data-testid="pdf-editor-heading-entry"
       data-level={entry.level ?? undefined}
     >
-      <button
-        type="button"
-        className={`pdf-editor-heading-outline__entry ${privateContentClassName}`}
-        title={label}
-        disabled={entry.pageIndex === null}
-        onClick={onSelect}
-      >
-        {label}
-      </button>
-      {entry.issue && (
-        <IssueText
-          text={issueText(t, entry.issue)}
-          testId="pdf-editor-heading-issue"
+      {guides.map((guide, column) => (
+        <span
+          // Columns are positional: the same column is the same ancestor.
+          key={column}
+          className={`pdf-editor-heading-outline__guide pdf-editor-heading-outline__guide--${guide}`}
+          aria-hidden
         />
-      )}
-    </Box>
+      ))}
+      <div className="pdf-editor-heading-outline__body">
+        <button
+          type="button"
+          className="pdf-editor-heading-outline__entry"
+          title={label}
+          disabled={entry.pageIndex === null}
+          onClick={onSelect}
+        >
+          <span
+            className={`pdf-editor-heading-outline__label ${privateContentClassName}`}
+          >
+            {label}
+          </span>
+          <span className="pdf-editor-heading-outline__type">{entry.type}</span>
+        </button>
+        {entry.issue && (
+          <IssueText
+            text={issueText(t, entry.issue)}
+            testId="pdf-editor-heading-issue"
+          />
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -148,7 +150,9 @@ function issueText(t: TFunction, issue: HeadingIssue): string {
       return t(
         "pdfTextEditor.inspector.accessibility.outline.skippedLevel",
         "Skips a level after Heading {{previous}}",
-        { previous: issue.previous },
+        {
+          previous: issue.previous,
+        },
       );
   }
 }

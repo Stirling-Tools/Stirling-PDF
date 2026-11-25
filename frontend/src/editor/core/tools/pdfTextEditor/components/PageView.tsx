@@ -9,6 +9,7 @@ import {
 import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useReviewing } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { Button } from "@editor/ui/Button";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -170,12 +171,14 @@ export const PageView = memo(function PageView({
   onFirstPainted,
 }: PageViewProps) {
   const { t } = useTranslation();
+  const reviewing = useReviewing();
+  // Accessibility belongs to the review: editing shows no attention badges.
   const attention = useMemo(
     (): PageAttention =>
-      ACCESSIBILITY_EDITING
+      ACCESSIBILITY_EDITING && reviewing
         ? pageAttention(document, page)
         : { images: new Map(), runs: new Map() },
-    [document, page],
+    [document, page, reviewing],
   );
   const runGrowEdges = useMemo(
     () =>
@@ -508,6 +511,7 @@ export const PageView = memo(function PageView({
             selected={annotation.id === selectedFormFieldId}
             onSelect={
               ACCESSIBILITY_EDITING &&
+              reviewing &&
               annotation.kind === "widget" &&
               onSelectFormField
                 ? () => onSelectFormField(annotation.id)
@@ -524,6 +528,7 @@ export const PageView = memo(function PageView({
             transform={transform}
             scale={cssScale}
             selected={selectedShapeIds.includes(shape.id)}
+            fixed={reviewing}
             onSelect={(extend) => onSelectShape(shape.id, extend)}
             onMove={(dx, dy) => onMoveShape?.(page.pageIndex, shape.id, dx, dy)}
           />
@@ -536,6 +541,7 @@ export const PageView = memo(function PageView({
             transform={transform}
             scale={cssScale}
             selected={selectedImageIds.includes(image.id)}
+            fixed={reviewing}
             onSelect={() => onSelectImage(image.id)}
             onTransformCommit={(next) =>
               onTransformImage?.(page.pageIndex, image.id, next)
@@ -551,13 +557,15 @@ export const PageView = memo(function PageView({
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
             cells are edited through their own run. */}
-        <TableOverlay
-          page={page}
-          transform={transform}
-          scale={cssScale}
-          store={store}
-          selectedRunIds={selectedRunIds}
-        />
+        {!reviewing && (
+          <TableOverlay
+            page={page}
+            transform={transform}
+            scale={cssScale}
+            store={store}
+            selectedRunIds={selectedRunIds}
+          />
+        )}
         {/* Every run's move/width grips, after the objects beneath the text and
             before all runs, so a grip never takes a click aimed at any run. */}
         <div ref={setGripLayer} style={{ display: "contents" }} />
@@ -572,9 +580,10 @@ export const PageView = memo(function PageView({
             widthMode={widthMode}
             growEdge={runGrowEdges.get(run.id) ?? null}
             pageRevision={paintedRevision}
-            gripLayer={gripLayer}
+            gripLayer={reviewing ? null : gripLayer}
             selected={selectedRunIds.includes(run.id)}
             findRange={findMatch?.runId === run.id ? findMatch.range : null}
+            readOnly={reviewing}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
             onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
@@ -583,9 +592,21 @@ export const PageView = memo(function PageView({
                 ? selectedTextRange
                 : null
             }
-            onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
-            onWrap={(maxWidthPt, keepClearBelow) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt, keepClearBelow)
+            onMove={
+              reviewing
+                ? undefined
+                : (dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)
+            }
+            onWrap={
+              reviewing
+                ? undefined
+                : (maxWidthPt, keepClearBelow) =>
+                    onWrapRun?.(
+                      page.pageIndex,
+                      run.id,
+                      maxWidthPt,
+                      keepClearBelow,
+                    )
             }
             onMeasure={
               onMeasureRun
@@ -593,7 +614,7 @@ export const PageView = memo(function PageView({
                 : undefined
             }
             onResize={
-              onResizeRun && canResizeRun(run)
+              onResizeRun && !reviewing && canResizeRun(run)
                 ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
                 : undefined
             }

@@ -8,6 +8,7 @@ import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
 import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 import { connectionModeService } from "@editor/services/connectionModeService";
+import { requiresSignIn } from "@editor/services/signInRequiredEndpoints";
 import {
   createBackendNotReadyError,
   isBackendNotReadyError,
@@ -130,6 +131,18 @@ async function resolveOffline(
 export async function resolveEndpointsAvailability(
   endpoints: string[],
 ): Promise<EndpointAvailabilityMap> {
+  const map = await resolveForEnvironment(endpoints);
+  if ((await connectionModeService.getCurrentMode()) !== "local") return map;
+  for (const endpoint of endpoints) {
+    if (requiresSignIn(endpoint))
+      map[endpoint] = { enabled: false, reason: "NOT_SUPPORTED_LOCALLY" };
+  }
+  return map;
+}
+
+async function resolveForEnvironment(
+  endpoints: string[],
+): Promise<EndpointAvailabilityMap> {
   if (await isLocalProcessingOnly()) {
     const map = await resolveOffline(endpoints);
     for (const endpoint of endpoints) {
@@ -164,6 +177,11 @@ export async function resolveEndpointsAvailability(
 export async function resolveEndpointEnabled(
   endpoint: string,
 ): Promise<boolean> {
+  if (
+    requiresSignIn(endpoint) &&
+    (await connectionModeService.getCurrentMode()) === "local"
+  )
+    return false;
   if (await isLocalProcessingOnly())
     return (await resolveEndpointsAvailability([endpoint]))[endpoint].enabled;
   if (isSelfHostedOffline()) {

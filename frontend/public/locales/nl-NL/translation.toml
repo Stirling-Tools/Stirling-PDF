@@ -647,18 +647,16 @@ description = "Maximale DPI voor beeldverwerking (0 = onbeperkt)"
 label = "Maximale DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Sessielimieten en time-outs configureren voor elke procesuitvoerder"
 ghostscript = "Ghostscript"
 installApp = "App installeren"
 label = "Limieten voor procesuitvoerder"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF naar HTML"
+officeConvert = "Office-conversie"
+officeConvertSessionLimit = "Maximaal aantal gelijktijdige conversies; 0 kiest een limiet op basis van CPU's en geheugen"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maximaal gelijktijdige instanties"
@@ -667,10 +665,6 @@ label = "Sessielimiet"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maximale uitvoeringstijd"
 label = "Time-out (minuten)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert is in beta. Het voert betere conversies sneller en met minder geheugen uit dan LibreOffice."
-label = "Nieuwe Stirling Office-conversie gebruiken"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configureer opslag en opschoongedrag voor tijdelijke bestanden"
@@ -688,11 +682,6 @@ label = "Opschooninterval (minuten)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Of de bredere systeem-tijdelijke map moet worden opgeschoond (gebruik met voorzichtigheid)"
 label = "Systeemtemp opschonen"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Map voor tijdelijke LibreOffice-bestanden (laat leeg voor standaard: baseTmpDir/libreoffice)"
-label = "LibreOffice-tijdelijke map"
-placeholder = "Standaard: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximale leeftijd in uren voordat tijdelijke bestanden worden opgeschoond"
@@ -1300,17 +1289,6 @@ label = "Standaardproducent"
 [admin.settings.general.customPaths]
 description = "Configureer aangepaste bestandssysteempaden voor pijplijnverwerking en externe tools"
 label = "Aangepaste paden"
-
-[admin.settings.general.customPaths.operations]
-label = "Paden naar externe tools"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Pad naar LibreOffice unoconvert voor documentconversies (laat leeg voor standaard: /opt/venv/bin/unoconvert)"
-label = "Unoconvert-uitvoerbaar bestand"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Pad naar WeasyPrint-uitvoerbaar bestand voor HTML-naar-PDF-conversie (laat leeg voor standaard: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint-uitvoerbaar bestand"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipelinemappen"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Documenttitel"
 pdfUaTitleHelp = "Getoond door een reader in plaats van de bestandsnaam. Als dit leeg blijft, wordt de eerste kop gebruikt."
 selectSourceFormatFirst = "Kies eerst een bronformaat"
 settings = "Instellingen"
+signInToUse = "Meld u aan om te gebruiken"
 single = "Enkel"
 sourceFormatPlaceholder = "Brontype"
-stirlingOfficeConvert = "Stirling Office Convert gebruiken (beta)"
-stirlingOfficeConvertDescription = "Betere, snellere conversies met minder geheugen. Schakel uit om de standaardconverter te gebruiken."
 strictMode = "Strikte modus"
 strictModeDesc = "Fout als de conversie niet perfect is (gebruikt VeraPDF-verificatie)"
 svgPdfOptions = "SVG naar PDF-opties"
@@ -4419,8 +4396,6 @@ webOptions = "Web-naar-PDF-opties"
 zoomLevel = "Zoomniveau"
 
 [convert.ebookOptions]
-embedAllFonts = "Alle lettertypes insluiten"
-embedAllFontsDesc = "Alle lettertypen uit het eBook insluiten in de gegenereerde PDF"
 includePageNumbers = "Paginanummering toevoegen"
 includePageNumbersDesc = "Paginanummers toevoegen aan de gegenereerde PDF"
 includeTableOfContents = "Inhoudsopgave toevoegen"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Decoratieve afbeelding"
 description = "Afbeeldingsbeschrijving"
 descriptionInfo = "Schermlezers lezen dit voor in plaats van de afbeelding."
 encrypted = "Tags kunnen niet worden bewerkt in een versleuteld bestand"
+figureDescription = "Figuurbeschrijving"
+figureDescriptionInfo = "Schermlezers lezen dit voor in plaats van de figuur."
 formFieldDescription = "Veldbeschrijving"
+formulaDescription = "Formulebeschrijving"
+formulaDescriptionInfo = "Schermlezers lezen dit voor in plaats van de formule. Beschrijf het zoals u het hardop zou zeggen, bijvoorbeeld \"x in het kwadraat plus één\"."
 heading = "Toegankelijkheid"
 innerTagLabel = "Tag {{number}}"
 innerTags = "Tags in deze tekst"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Ontbrekende beschrijvingen"
 mixedContent = "Figuur bevat andere inhoud"
 mixedTags = "Gemengd"
 needsDescriptionBadge = "Geen beschrijving"
-nextImage = "Volgende afbeelding"
+nextToReview = "Volgende te controleren"
 notFigure = "Getagd als onderdeel van de tekst"
 removeTag = "Tag verwijderen"
 saveFailed = "Je wijzigingen voor toegankelijkheid konden niet worden opgeslagen, dus het bestand is niet opgeslagen. Maak ze ongedaan en probeer het opnieuw."
@@ -9661,10 +9640,6 @@ signInToStart = "Meld u aan om uw proefperiode te starten"
 stage = "Fase {{current}} van {{total}}"
 stagesLabel = "Voortgang"
 
-[portal.enterprise.connect]
-ownerOnly = "Alleen de eigenaar van deze server kan deze koppelen. Vraag hen deze pagina te openen."
-unavailable = "Verbinden met een Stirling-account is uitgeschakeld op deze server. Plan een gesprek en we zetten samen uw proef op."
-
 [portal.enterprise.landing]
 lede = "Probeer het 14 dagen gratis, stel daarna uw offerte op en onderteken hier uw overeenkomst. Geen creditcard vereist."
 tickAgreement = "Eén overeenkomst die de MSA, het orderformulier, de EULA en de DPA omvat"
@@ -11283,11 +11258,6 @@ downloadOffline = "Offline licentie downloaden (.lic)"
 hint = "Plak deze sleutel in een self-hosted instantie om deze te activeren, of bewaar hem voor je administratie. Bewaar hem veilig."
 label = "Je licentiesleutel"
 trialFileHint = "Dit is je proeflicentiebestand. Zodra je overeenkomst rond is, kom je terug en download je het opnieuw — anders dan de online licentiesleutel wordt het .lic-bestand niet vanzelf bijgewerkt."
-
-[portal.procurement.link]
-cta = "Account koppelen"
-description = "Inkoop draait op je gekoppelde Stirling-account: zo richten we de trial in, bepalen we de prijs van je offerte en starten we de facturatie. Koppel een account om te beginnen."
-title = "Koppel je account om te beginnen"
 
 [portal.procurement.live]
 description = "Je abonnement is actief en je licentie is uitgegeven. Je team is ingericht en de facturatie is gestart."
@@ -14260,7 +14230,6 @@ toggleDetails = "Details tonen/verbergen"
 
 [tool]
 endpointUnavailable = "Deze tool is niet beschikbaar op je server."
-endpointUnavailableClickable = "Niet beschikbaar in deze modus. Klik om in te loggen."
 filesLoading = "Bestanden worden nog geladen, even geduld."
 filesLoadingProgress = "{{loaded}} / {{total}} bestanden worden geladen..."
 invalidParams = "Vul de vereiste instellingen in."
@@ -14268,6 +14237,8 @@ noFiles = "Voeg een bestand toe om te beginnen."
 scopeFiles = "bestanden"
 scopeThisFile = "dit bestand"
 selectFilesHint = "Selecteer bestanden in Actieve bestanden om deze tool uit te voeren"
+signInRequired = "Hiervoor is een Stirling-account nodig. Meld u aan om door te gaan."
+signInToUse = "Meld u aan om te gebruiken"
 singleFileScope = "Alleen van toepassing op: {{fileName}}"
 viewerMode = "Schakel over naar de bestandseditor om meerdere bestanden toe te voegen."
 

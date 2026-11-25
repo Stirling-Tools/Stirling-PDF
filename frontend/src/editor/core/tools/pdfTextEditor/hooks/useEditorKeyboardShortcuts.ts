@@ -10,6 +10,8 @@ import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSe
 
 interface KeyboardShortcutCallbacks {
   store: EditorStore;
+  /** False while the editor is not on screen, so its shortcuts leave other views alone. */
+  enabled: boolean;
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
@@ -29,6 +31,7 @@ interface KeyboardShortcutCallbacks {
 export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
   const {
     store,
+    enabled,
     onUndo,
     onRedo,
     onSave,
@@ -45,6 +48,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
   } = cbs;
 
   useEffect(() => {
+    if (!enabled) return;
     function onMetaKey(e: KeyboardEvent) {
       const meta = e.ctrlKey || e.metaKey;
       if (!meta) return;
@@ -193,6 +197,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       window.removeEventListener("keydown", onPageNav);
     };
   }, [
+    enabled,
     store,
     onUndo,
     onRedo,
