@@ -1,6 +1,13 @@
+import { hasRtl, isMostlyRtl } from "@editor/tools/pdfTextEditor/util/bidi";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { PageGlyphs } from "@editor/tools/pdfTextEditor/pdfium/drawnGlyphs";
+import {
+  readDrawnLine,
+  type DrawnLine,
+} from "@editor/tools/pdfTextEditor/pdfium/drawnLine";
 import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { textLayer } from "@editor/tools/pdfTextEditor/types";
 
 /** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {
@@ -18,16 +25,47 @@ export type BlockKey = (run: TextRun) => string;
 
 export const SAME_BLOCK: BlockKey = () => "";
 
+export const sameTextLayer = (a: TextRun, b: TextRun): boolean =>
+  textLayer(a.renderMode) === textLayer(b.renderMode);
+/** The advance of a space in the run's font, in ems, or null when the font cannot say. */
+export type SpaceAdvance = (run: TextRun) => number | null;
+
+const NO_SPACE_ADVANCE: SpaceAdvance = () => null;
+
+/** What the page draws beyond each object's own text. */
+export interface DrawnPage {
+  /** Where every glyph sits; null when the build cannot say. */
+  glyphs: PageGlyphs | null;
+  /** The objects that draw the rest of an object's glyph cluster and hold no text of their own, by that object. */
+  companions: ReadonlyMap<number, readonly number[]>;
+}
+
+const NOTHING_DRAWN: DrawnPage = { glyphs: null, companions: new Map() };
+// Digits and Latin letters keep their own order inside right-to-left text, which reversing a line's objects does not.
+const KEEPS_OWN_ORDER = /[0-9A-Za-z\u0660-\u0669\u06f0-\u06f9]/;
+const UPRIGHT_TOLERANCE = 0.02;
+// Glyphs of one line can sit a little off its baseline; an object running over two lines has some a whole line away.
+const ONE_LINE_EM = 0.6;
+
 const BASELINE_TOLERANCE = 0.4;
 // Two runs on the same baseline join the same line only when the horizontal gap
 // between them is below this absolute cap.
 const ABS_MAX_GAP_PT = 12;
 
 const WORD_GAP_MIN_RATIO = 0.2;
+// A condensed font's whole space can be narrower than WORD_GAP_MIN_RATIO; past this share of it a gap still reads as one.
+const NARROW_SPACE_SHARE = 0.6;
 const FALLBACK_SPACE_UNIT_RATIO = 0.5;
 const MIN_SPACE_UNIT_RATIO = 0.3;
 const MAX_SPACE_UNIT_RATIO = 1;
 const MULTI_SPACE_UNITS = 1.7;
+// A font with no space glyph reports zero or its missing width (1em by default), so only a plausible advance is trusted.
+const MIN_FONT_SPACE_EM = 0.05;
+const MAX_FONT_SPACE_EM = 1;
+// Ink bounds add side bearings to a space, so one space in a wide font can read as up to this many of its advance.
+const MAX_JOIN_SPACES = 1.5;
+// Runs whose space widths differ by more than this share are in different fonts, and no one width counts every gap.
+const SAME_SPACE_TOLERANCE = 0.15;
 
 function junctionGapRatio(prev: TextRun, cur: TextRun): number {
   return gapRatio(
@@ -48,26 +86,199 @@ export function readsWordGap(gapPt: number, fontSize: number): boolean {
   return gapRatio(gapPt, fontSize) > WORD_GAP_MIN_RATIO;
 }
 
-function lineSpaceUnitRatio(members: TextRun[]): number {
+function clampSpaceUnit(ratio: number): number {
+  return Math.min(MAX_SPACE_UNIT_RATIO, Math.max(MIN_SPACE_UNIT_RATIO, ratio));
+}
+
+function fontSpaceEm(
+  members: TextRun[],
+  spaceAdvance: SpaceAdvance,
+): number | null {
+  let narrowest: number | null = null;
+  let widest: number | null = null;
+  for (const member of members) {
+    const em = spaceAdvance(member);
+    if (em === null || em < MIN_FONT_SPACE_EM || em >= MAX_FONT_SPACE_EM)
+      continue;
+    if (narrowest === null || em < narrowest) narrowest = em;
+    if (widest === null || em > widest) widest = em;
+  }
+  if (narrowest === null || widest === null) return null;
+  return widest - narrowest > SAME_SPACE_TOLERANCE * widest ? null : narrowest;
+}
+
+function minWordGapRatio(spaceEm: number | null): number {
+  return spaceEm !== null && spaceEm < WORD_GAP_MIN_RATIO
+    ? NARROW_SPACE_SHARE * spaceEm
+    : WORD_GAP_MIN_RATIO;
+}
+
+function lineSpaceUnit(
+  members: TextRun[],
+  spaceAdvance: SpaceAdvance,
+  minGap: number,
+): { ratio: number; fromFont: boolean } {
   const wordGaps: number[] = [];
   for (let i = 1; i < members.length; i++) {
     const ratio = junctionGapRatio(members[i - 1], members[i]);
-    if (ratio > WORD_GAP_MIN_RATIO) wordGaps.push(ratio);
+    if (ratio > minGap) wordGaps.push(ratio);
   }
-  if (wordGaps.length < 2) return FALLBACK_SPACE_UNIT_RATIO;
+  if (wordGaps.length < 2)
+    return { ratio: FALLBACK_SPACE_UNIT_RATIO, fromFont: false };
   wordGaps.sort((a, b) => a - b);
-  const lowerMedian = wordGaps[Math.floor((wordGaps.length - 1) / 2)];
-  return Math.min(
-    MAX_SPACE_UNIT_RATIO,
-    Math.max(MIN_SPACE_UNIT_RATIO, lowerMedian),
-  );
+  // Two unequal gaps cannot tell one space from several: the narrower may itself be a double space.
+  if (wordGaps.length === 2) {
+    const em = fontSpaceEm(members, spaceAdvance);
+    if (em !== null && wordGaps[1] - wordGaps[0] >= em)
+      return { ratio: em, fromFont: true };
+  }
+  return {
+    ratio: clampSpaceUnit(wordGaps[Math.floor((wordGaps.length - 1) / 2)]),
+    fromFont: false,
+  };
 }
 
-function spacesForGap(gapRatio: number, unitRatio: number): number {
-  if (gapRatio <= WORD_GAP_MIN_RATIO) return 0;
+/**
+ * The width of one space at each junction of a line, as a share of the font
+ * size.
+ *
+ * The line's own gaps usually say it best, since justified text stretches
+ * every space alike. They cannot where the line mixes fonts, or holds too few
+ * gaps to tell one space from several: a word typed in a fallback font after
+ * the document's own sits a different distance away, and a median over such
+ * gaps reads three typed spaces as one. There each junction between two pieces
+ * in the same font is counted in that font's space instead, unless those
+ * junctions are all alike, which is justification, not typing.
+ */
+function junctionSpaceUnits(
+  members: TextRun[],
+  spaceAdvance: SpaceAdvance,
+  minGap: number,
+): number[] {
+  const line = lineSpaceUnit(members, spaceAdvance, minGap);
+  const own: Array<number | null> = [];
+  const counted: number[] = [];
+  for (let i = 1; i < members.length; i++) {
+    const em = fontSpaceEm([members[i - 1], members[i]], spaceAdvance);
+    own.push(em);
+    const gap = junctionGapRatio(members[i - 1], members[i]);
+    if (em !== null && gap > minGap) counted.push(gap / em);
+  }
+  const alike =
+    counted.length >= 3 &&
+    Math.max(...counted) < MULTI_SPACE_UNITS * Math.min(...counted);
+  const byFont =
+    !alike && (line.fromFont || fontSpaceEm(members, spaceAdvance) === null);
+  return own.map((em) => (byFont && em !== null ? em : line.ratio));
+}
+
+function spacesForGap(
+  gapRatio: number,
+  unitRatio: number,
+  minGap: number,
+): number {
+  if (gapRatio <= minGap) return 0;
   const units = gapRatio / unitRatio;
   if (units < MULTI_SPACE_UNITS) return 1;
   return Math.max(2, Math.round(units));
+}
+
+function isUpright(run: TextRun): boolean {
+  const scale = Math.hypot(run.matrix.a, run.matrix.b);
+  return (
+    scale > 0 &&
+    run.matrix.a > 0 &&
+    Math.abs(run.matrix.b) / scale <= UPRIGHT_TOLERANCE
+  );
+}
+
+// A line holding right-to-left text, read from where its glyphs are drawn; null when it holds none or its glyphs cannot be placed on one upright baseline.
+function readMixedLine(
+  members: TextRun[],
+  glyphs: PageGlyphs | null,
+  spaceAdvance: SpaceAdvance,
+): DrawnLine | null {
+  if (!glyphs || !members.some((member) => hasRtl(member.text))) return null;
+  if (!members.every(isUpright)) return null;
+  const objects = members.map(
+    (member) => glyphs.byObject.get(member.pdfiumObjPtr) ?? [],
+  );
+  const fontSize = Math.max(...members.map((member) => member.fontSize), 4);
+  const baseline = objects[0][0]?.baseline ?? 0;
+  if (
+    objects.some(
+      (own) =>
+        own.length === 0 ||
+        own.some(
+          (glyph) =>
+            Math.abs(glyph.baseline - baseline) > ONE_LINE_EM * fontSize,
+        ),
+    )
+  )
+    return null;
+  const spaceEm = fontSpaceEm(members, spaceAdvance);
+  const minGap = minWordGapRatio(spaceEm);
+  return readDrawnLine(objects, glyphs.spaces, fontSize, (gapPt) =>
+    spacesForGap(
+      gapRatio(gapPt, fontSize),
+      spaceEm ?? FALLBACK_SPACE_UNIT_RATIO,
+      minGap,
+    ),
+  );
+}
+
+function applyMixedLine(group: LineGroupInfo, line: DrawnLine): void {
+  const { representative, members } = group;
+  const pieces = members.map((member, i) => ({
+    ptr: member.pdfiumObjPtr,
+    start: line.spans[i].start,
+    end: line.spans[i].end,
+    x: member.bounds.x,
+    right: member.bounds.x + member.bounds.width,
+  }));
+  const left = Math.min(...pieces.map(({ x }) => x));
+  const right = Math.max(...pieces.map((piece) => piece.right));
+  // A space drawn as an object of its own is a piece of the line too, or it stays where it was when the line moves.
+  for (const { ptr, start } of line.spaces)
+    pieces.push({ ptr, start, end: start + 1, x: left, right: left });
+  pieces.sort((a, b) => a.start - b.start);
+  representative.text = line.text;
+  representative.bounds = {
+    ...representative.bounds,
+    x: left,
+    width: Math.max(representative.bounds.width, right - left),
+  };
+  representative.mergedFromTexts = pieces.map(({ start, end }) =>
+    line.text.slice(start, end),
+  );
+  representative.mergedFromCharStarts = pieces.map(({ start }) => start);
+  representative.mergedFromBounds = pieces.map(({ x, right: end }) => ({
+    x,
+    right: end,
+  }));
+  representative.mergedFromPtrs = pieces.map(({ ptr }) => ptr);
+  representative.readingOrderUnsure = !line.faithful;
+}
+
+// A companion goes wherever its object goes: listed as a piece with no text of its own, every command that walks a line's objects takes it along.
+function addCompanions(
+  run: TextRun,
+  companions: ReadonlyMap<number, readonly number[]>,
+): void {
+  if (companions.size === 0) return;
+  for (let i = run.mergedFromPtrs.length - 1; i >= 0; i--) {
+    const own = companions.get(run.mergedFromPtrs[i]);
+    if (!own) continue;
+    const at = run.mergedFromCharStarts[i] + run.mergedFromTexts[i].length;
+    run.mergedFromPtrs.splice(i + 1, 0, ...own);
+    run.mergedFromTexts.splice(i + 1, 0, ...own.map(() => ""));
+    run.mergedFromCharStarts.splice(i + 1, 0, ...own.map(() => at));
+    run.mergedFromBounds.splice(
+      i + 1,
+      0,
+      ...own.map(() => ({ ...run.mergedFromBounds[i] })),
+    );
+  }
 }
 
 // True when a same-baseline cluster's glyphs overlap so heavily that it can't
@@ -102,9 +313,170 @@ function lineBlock(members: TextRun[], blockKey: BlockKey): string | null {
 
 // Sort one container's runs top-to-bottom / left-to-right and merge
 // same-baseline, close-together runs into line groups.
+// A word saved as its own object in a font whose space the file never draws has no space width to read.
+function meanLetterAdvancePt(runs: TextRun[]): number {
+  let letters = 0;
+  let width = 0;
+  for (const run of runs) {
+    letters += run.text.replace(/\s/g, "").length;
+    width += run.bounds.width;
+  }
+  return letters > 0 ? width / letters : 0;
+}
+
+// A superscript or subscript is set this much smaller than its line, within this many of the line's ems of its baseline, and this close to a neighbour.
+const SCRIPT_MAX_SIZE_RATIO = 0.85;
+const SCRIPT_MAX_BASELINE_EM = 0.5;
+const SCRIPT_MAX_GAP_EM = 0.25;
+
+function lineFontSize(group: LineGroupInfo): number {
+  return Math.max(...group.members.map((member) => member.fontSize));
+}
+
+function touchesHorizontally(
+  script: TextRun,
+  member: TextRun,
+  slack: number,
+): boolean {
+  const scriptRight = script.bounds.x + script.bounds.width;
+  const memberRight = member.bounds.x + member.bounds.width;
+  return (
+    Math.abs(script.bounds.x - memberRight) <= slack ||
+    Math.abs(member.bounds.x - scriptRight) <= slack
+  );
+}
+
+// The line a raised or lowered script belongs to, which the baseline band misses because the script sits off it.
+function scriptHost(
+  script: LineGroupInfo,
+  lines: readonly LineGroupInfo[],
+): LineGroupInfo | null {
+  const size = lineFontSize(script);
+  const baseline = script.representative.matrix.f;
+  for (const line of lines) {
+    if (line === script) continue;
+    const lineSize = lineFontSize(line);
+    if (size > lineSize * SCRIPT_MAX_SIZE_RATIO) continue;
+    const em = Math.max(lineSize, 4);
+    if (
+      Math.abs(baseline - line.representative.matrix.f) >
+      SCRIPT_MAX_BASELINE_EM * em
+    )
+      continue;
+    const slack = SCRIPT_MAX_GAP_EM * em;
+    if (
+      script.members.every((member) =>
+        line.members.some((host) => touchesHorizontally(member, host, slack)),
+      )
+    )
+      return line;
+  }
+  return null;
+}
+
+function attachScripts(lines: LineGroupInfo[]): void {
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const script = lines[i];
+    if (script.members.length > 2) continue;
+    const host = scriptHost(script, lines);
+    if (!host) continue;
+    host.members.push(...script.members);
+    host.members.sort((a, b) => a.bounds.x - b.bounds.x);
+    lines.splice(i, 1);
+  }
+}
+
 function groupPartitionIntoLines(
   runs: TextRun[],
   blockKey: BlockKey,
+  spaceAdvance: SpaceAdvance,
+  out: LineGroupInfo[],
+): void {
+  const lines: LineGroupInfo[] = [];
+  groupBaselineBands(runs, blockKey, spaceAdvance, lines);
+  attachScripts(lines);
+  out.push(...lines);
+}
+
+// A column gutter is wider than this many ems and this many of the line's spaces: wide for a word gap, narrow for a gutter.
+const GUTTER_MIN_EM = 0.6;
+const GUTTER_MIN_SPACES = 2.5;
+// Only the middle of the gap is probed, so the slightly uneven column edges of the rows around it still leave it clear.
+const GUTTER_PROBE_EM = 0.2;
+// Lines set either side of a gutter, at least this many ems of text on each side, run past the gap within one unbroken stretch of the page. Justified text never lines its word gaps up so, and a label beside its value is shorter.
+const GUTTER_MIN_LINES = 3;
+const COLUMN_MIN_EM = 8;
+
+// The page's baseline rows, top to bottom, and the row of each run in `sorted`.
+function baselineRows(sorted: readonly TextRun[]): {
+  rows: TextRun[][];
+  rowIndex: number[];
+} {
+  const rows: TextRun[][] = [];
+  const rowIndex: number[] = [];
+  for (const run of sorted) {
+    const row = rows[rows.length - 1];
+    if (
+      row &&
+      Math.abs(run.matrix.f - row[0].matrix.f) <=
+        BASELINE_TOLERANCE * Math.max(row[0].fontSize, 4)
+    )
+      row.push(run);
+    else rows.push([run]);
+    rowIndex.push(rows.length - 1);
+  }
+  return { rows, rowIndex };
+}
+
+// The width of text a row sets left and right of [lo, hi], or null when its text crosses into it.
+function textBeside(
+  row: readonly TextRun[],
+  lo: number,
+  hi: number,
+): { left: number; right: number } | null {
+  let left = 0;
+  let right = 0;
+  for (const run of row) {
+    if (!run.text.trim()) continue;
+    const end = run.bounds.x + run.bounds.width;
+    if (end <= lo) left += run.bounds.width;
+    else if (run.bounds.x >= hi) right += run.bounds.width;
+    else return null;
+  }
+  return { left, right };
+}
+
+/**
+ * Whether the gap from `left` to `right` on row `at` is a column gutter: a
+ * strip of the page the rows above and below it leave empty too, with columns
+ * of text set either side.
+ */
+function isColumnGutter(
+  rows: readonly TextRun[][],
+  at: number,
+  left: number,
+  right: number,
+  em: number,
+): boolean {
+  const mid = (left + right) / 2;
+  const half = Math.min(GUTTER_PROBE_EM * em, (right - left) / 4);
+  const minColumn = COLUMN_MIN_EM * em;
+  let lines = 0;
+  for (const step of [-1, 1]) {
+    for (let i = at + step; i >= 0 && i < rows.length; i += step) {
+      const beside = textBeside(rows[i], mid - half, mid + half);
+      if (!beside) break;
+      if (beside.left >= minColumn && beside.right >= minColumn) lines += 1;
+      if (lines >= GUTTER_MIN_LINES) return true;
+    }
+  }
+  return false;
+}
+
+function groupBaselineBands(
+  runs: TextRun[],
+  blockKey: BlockKey,
+  spaceAdvance: SpaceAdvance,
   out: LineGroupInfo[],
 ): void {
   const sorted = [...runs].sort((a, b) => {
@@ -116,9 +488,10 @@ function groupPartitionIntoLines(
     if (Math.abs(yDiff) > Math.max(1, band)) return yDiff;
     return a.bounds.x - b.bounds.x;
   });
+  const { rows, rowIndex } = baselineRows(sorted);
 
   let current: LineGroupInfo | null = null;
-  for (const run of sorted) {
+  for (const [index, run] of sorted.entries()) {
     if (!current) {
       current = { representative: run, members: [run] };
       out.push(current);
@@ -131,7 +504,22 @@ function groupPartitionIntoLines(
     const gap = run.bounds.x - (prev.bounds.x + prev.bounds.width);
     // The gap cap must scale with font size: an inter-word space in a 50pt
     // heading is ~15-25pt, which a flat 12pt cap would treat as a line break.
-    const maxGap = Math.max(ABS_MAX_GAP_PT, 0.5 * Math.max(ref.fontSize, 4));
+    const spaceEm = fontSpaceEm([prev], spaceAdvance);
+    const spacePt =
+      spaceEm === null
+        ? meanLetterAdvancePt(current.members)
+        : spaceEm * prev.fontSize;
+    // Spaces the text itself holds at the junction are drawn as part of the gap, not a column break.
+    const trailingSpaces = /\s+$/.exec(prev.text)?.[0].length ?? 0;
+    const literalSpaces =
+      trailingSpaces + (/^\s+/.exec(run.text)?.[0].length ?? 0);
+    const maxGap =
+      Math.max(
+        ABS_MAX_GAP_PT,
+        0.5 * Math.max(ref.fontSize, 4),
+        MAX_JOIN_SPACES * spacePt,
+      ) +
+      literalSpaces * spacePt;
     // A leading bullet is indented from its item by more than an inter-word
     // space; let the item attach across that wider indent.
     const effMaxGap = isBulletLead(prev)
@@ -139,14 +527,29 @@ function groupPartitionIntoLines(
       : maxGap;
     // Reject joining a run that starts far to the LEFT of the previous run's
     // right edge - a right-column run must never absorb the left column.
-    const minNegGap = 0.25 * Math.max(ref.fontSize, 4);
-    const close = gap <= effMaxGap && gap >= -minNegGap;
+    // A word's own trailing space may overhang the next: OCR stretches each word, space and all, to its box.
+    const minNegGap =
+      0.25 * Math.max(ref.fontSize, 4) + trailingSpaces * spacePt;
+    const em = Math.max(ref.fontSize, 4);
+    const close =
+      gap <= effMaxGap &&
+      gap >= -minNegGap &&
+      !(
+        gap > Math.max(GUTTER_MIN_EM * em, GUTTER_MIN_SPACES * spacePt) &&
+        isColumnGutter(
+          rows,
+          rowIndex[index],
+          prev.bounds.x + prev.bounds.width,
+          run.bounds.x,
+          em,
+        )
+      );
 
     const block = lineBlock(current.members, blockKey);
     const sameBlock =
       isBulletLead(run) || block === null || blockKey(run) === block;
 
-    if (sameLine && close && sameBlock) {
+    if (sameLine && close && sameBlock && sameTextLayer(prev, run)) {
       current.members.push(run);
     } else {
       current = { representative: run, members: [run] };
@@ -155,13 +558,43 @@ function groupPartitionIntoLines(
   }
 }
 
+/** Each line's fonts, as the share of its letters each draws, so one odd piece at its start does not stand for the whole line. */
+export function lineFontIds(
+  groups: readonly LineGroupInfo[],
+): Map<TextRun, Map<string, number>> {
+  const out = new Map<TextRun, Map<string, number>>();
+  for (const { representative, members } of groups) {
+    const fontOf = new Map(members.map((m) => [m.pdfiumObjPtr, m.fontId]));
+    const letters = new Map<string, number>();
+    let total = 0;
+    representative.mergedFromPtrs.forEach((ptr, i) => {
+      const fontId = fontOf.get(ptr) ?? representative.fontId;
+      const count = (representative.mergedFromTexts[i] ?? "").replace(
+        /\s+/g,
+        "",
+      ).length;
+      letters.set(fontId, (letters.get(fontId) ?? 0) + count);
+      total += count;
+    });
+    for (const [fontId, count] of letters)
+      letters.set(fontId, total > 0 ? count / total : 1);
+    out.set(representative, letters);
+  }
+  return out;
+}
+
 export class LineGrouper {
   /** Group a page's runs and store the result back onto the page. */
-  static apply(page: Page, blockKey: BlockKey = SAME_BLOCK): LineGroupInfo[] {
-    // Partition by form-xobject container BEFORE grouping.
-    const partitions = new Map<number, TextRun[]>();
+  static apply(
+    page: Page,
+    blockKey: BlockKey = SAME_BLOCK,
+    spaceAdvance: SpaceAdvance = NO_SPACE_ADVANCE,
+    drawn: DrawnPage = NOTHING_DRAWN,
+  ): LineGroupInfo[] {
+    // Partition by form-xobject container and text layer BEFORE grouping: OCR words over printed ones would interleave in x.
+    const partitions = new Map<string, TextRun[]>();
     for (const run of page.runs) {
-      const key = run.containerPtr || 0;
+      const key = `${run.containerPtr || 0}:${textLayer(run.renderMode)}`;
       const list = partitions.get(key);
       if (list) list.push(run);
       else partitions.set(key, [run]);
@@ -169,7 +602,7 @@ export class LineGrouper {
 
     const groups: LineGroupInfo[] = [];
     for (const partition of partitions.values()) {
-      groupPartitionIntoLines(partition, blockKey, groups);
+      groupPartitionIntoLines(partition, blockKey, spaceAdvance, groups);
     }
 
     // Refine: a "line" whose glyphs heavily OVERLAP in x is not real running
@@ -190,6 +623,14 @@ export class LineGrouper {
     // Mutate the representative's text/bounds to reflect the merged group and
     // remember the underlying object pointers so ReplaceLineGroupCommand can.
     for (const group of groups) {
+      const mixed = readMixedLine(group.members, drawn.glyphs, spaceAdvance);
+      if (mixed) {
+        const text = group.members.find((member) => !isBulletLead(member));
+        if (text && innermostMcid(group.representative.tagMarks) === null)
+          group.representative.tagMarks = text.tagMarks;
+        applyMixedLine(group, mixed);
+        continue;
+      }
       if (group.members.length === 1) {
         // A one-object line still needs its sub-run arrays. EditTextCommand's
         // surgical path requires a non-empty mergedFromPtrs; without it even a
@@ -219,35 +660,53 @@ export class LineGrouper {
       }));
       // When the typesetter emitted a cursor jump instead of a literal space
       // character, the two runs end up with content like ["Hello".
-      const parts: string[] = [memberTexts[0]];
-      const memberCharStarts: number[] = [0];
-      let cumulativeLen = memberTexts[0].length;
-      const spaceUnitRatio = lineSpaceUnitRatio(group.members);
+      const rtl = isMostlyRtl(memberTexts.join(""));
+      // Gaps between neighbours, in drawn order.
+      const gaps: string[] = [];
+      const minGap = minWordGapRatio(fontSpaceEm(group.members, spaceAdvance));
+      const spaceUnits = junctionSpaceUnits(
+        group.members,
+        spaceAdvance,
+        minGap,
+      );
       for (let i = 1; i < group.members.length; i++) {
-        const prev = group.members[i - 1];
-        const cur = group.members[i];
-        const prevTail = memberTexts[i - 1].slice(-1);
-        const curHead = memberTexts[i].slice(0, 1);
         const extraSpaces = spacesForGap(
-          junctionGapRatio(prev, cur),
-          spaceUnitRatio,
+          junctionGapRatio(group.members[i - 1], group.members[i]),
+          spaceUnits[i - 1],
+          minGap,
         );
-        const prevEndsInSpace = /\s/.test(prevTail);
-        const curStartsWithSpace = /\s/.test(curHead);
+        // A right-to-left piece's trailing space is drawn on its left.
+        const [left, right] = rtl
+          ? [memberTexts[i], memberTexts[i - 1]]
+          : [memberTexts[i - 1], memberTexts[i]];
         const alreadyHave =
-          (prevEndsInSpace ? 1 : 0) + (curStartsWithSpace ? 1 : 0);
-        const toInsert = Math.max(0, extraSpaces - alreadyHave);
-        if (toInsert > 0) {
-          parts.push(" ".repeat(toInsert));
-          cumulativeLen += toInsert;
+          (/\s*$/.exec(left)?.[0].length ?? 0) +
+          (/^\s*/.exec(right)?.[0].length ?? 0);
+        gaps.push(" ".repeat(Math.max(0, extraSpaces - alreadyHave)));
+      }
+      // A right-to-left line reads from its rightmost piece; each piece already holds its own text in reading order.
+      const reading = rtl
+        ? group.members.map((_, i) => group.members.length - 1 - i)
+        : group.members.map((_, i) => i);
+      const parts: string[] = [];
+      const memberCharStarts: number[] = [];
+      let cumulativeLen = 0;
+      reading.forEach((member, k) => {
+        if (k > 0) {
+          const gap = gaps[Math.min(member, reading[k - 1])];
+          parts.push(gap);
+          cumulativeLen += gap.length;
         }
         memberCharStarts.push(cumulativeLen);
-        parts.push(memberTexts[i]);
-        cumulativeLen += memberTexts[i].length;
-      }
+        parts.push(memberTexts[member]);
+        cumulativeLen += memberTexts[member].length;
+      });
       const joined = parts.join("");
       const last = group.members[group.members.length - 1];
-      const left = group.representative.bounds.x;
+      const left = Math.min(
+        group.representative.bounds.x,
+        group.members[0].bounds.x,
+      );
       const right = last.bounds.x + last.bounds.width;
       group.representative.text = joined;
       group.representative.bounds = {
@@ -257,13 +716,19 @@ export class LineGrouper {
       };
       // Per-sub-run texts + bounds so EditTextCommand's pure-deletion
       // optimization can map joined-text chars back to their source.
-      group.representative.mergedFromTexts = memberTexts;
-      group.representative.mergedFromBounds = memberBounds;
-      group.representative.mergedFromCharStarts = memberCharStarts;
-      group.representative.mergedFromPtrs = group.members.map(
-        (m) => m.pdfiumObjPtr,
+      group.representative.mergedFromTexts = reading.map((i) => memberTexts[i]);
+      group.representative.mergedFromBounds = reading.map(
+        (i) => memberBounds[i],
       );
+      group.representative.mergedFromCharStarts = memberCharStarts;
+      group.representative.mergedFromPtrs = reading.map(
+        (i) => group.members[i].pdfiumObjPtr,
+      );
+      group.representative.readingOrderUnsure =
+        hasRtl(joined) && KEEPS_OWN_ORDER.test(joined);
     }
+    for (const group of groups)
+      addCompanions(group.representative, drawn.companions);
 
     // Replace the page's runs with just the representatives.
     page.setRuns(groups.map((g) => g.representative));

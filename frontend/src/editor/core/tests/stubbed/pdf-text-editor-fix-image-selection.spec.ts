@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -38,13 +39,7 @@ interface Rect {
 }
 
 async function openSample(page: Page): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -104,17 +99,17 @@ async function pageBox(page: Page): Promise<Rect> {
 }
 
 /**
- * Two points in the bare gutter LEFT of the page but still inside `pdf-editor-pages`
- * (the stage's clear-on-press target, and the only region the marquee arms in).
- * Outside `pdf-editor-pages` neither handler runs and any assertion would pass blind.
+ * Two points in the bare gutter LEFT of the page but still inside the viewer's
+ * page area (the only region the marquee arms in). Outside it neither the
+ * marquee nor a clear-on-press runs, and any assertion would pass blind.
  */
 async function gutter(page: Page): Promise<{
   from: { x: number; y: number };
   to: { x: number; y: number };
 }> {
-  const pages = await page.getByTestId("pdf-editor-pages").boundingBox();
+  const pages = await page.locator("[data-viewer-pages]").boundingBox();
   const p0 = await pageBox(page);
-  if (!pages) throw new Error("pdf-editor-pages has no bounding box");
+  if (!pages) throw new Error("the viewer's page area has no bounding box");
   const slack = p0.x - pages.x;
   expect(slack, "fixture needs bare stage left of the page").toBeGreaterThan(
     60,

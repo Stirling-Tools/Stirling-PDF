@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnlockModal";
 
@@ -10,7 +10,7 @@ interface PasswordPromptModalProps {
   onCancel: () => void;
 }
 
-export function PasswordPromptModal({
+export const PasswordPromptModal = memo(function PasswordPromptModal({
   prompt,
   loading,
   onSubmit,
@@ -45,4 +45,4 @@ export function PasswordPromptModal({
       testIdPrefix="pdf-editor-password"
     />
   );
-}
+});

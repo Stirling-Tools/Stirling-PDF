@@ -33,9 +33,16 @@ export interface NewElement {
    * content when null or unowned (see StructureNodes.placementSibling).
    */
   after: number | null;
+  /**
+   * True when text was cut out of it, which cutElements writes once it is in
+   * the tree. The cut may have taken all of it, so its MCID need not be on
+   * the page.
+   */
+  cutFrom?: boolean;
 }
 
-interface Placement {
+/** Where a new element joins `parent`'s kids: beside `sibling`, or last when that is null or not among them. */
+export interface Placement {
   parent: number;
   sibling: number | null;
   before: boolean;
@@ -73,7 +80,8 @@ export async function addElements(
     }
     if (!sites.has(pageNum)) sites.set(pageNum, pageSites(pdf, pageNum));
     const read = await sites.get(pageNum)!;
-    if (!read?.sites.some((site) => site.mcid === element.mcid)) {
+    const carried = read?.sites.some((site) => site.mcid === element.mcid);
+    if (!carried && !element.cutFrom) {
       failed.set(index, "the page's content does not carry its MCID");
       continue;
     }
@@ -110,7 +118,7 @@ export function textEntry(key: string, value: string | null): string {
  * page's first tagged content; else last in the document's top element, for a
  * page with no tagged content.
  */
-function placement(
+export function placement(
   pdf: RawPdf,
   body: (num: number) => string | null,
   treeRoot: number,
@@ -138,7 +146,7 @@ function placement(
 }
 
 /** The parent's body with `num` among its /K as `place` puts it; at the end when the sibling is not there. */
-function withKid(
+export function withKid(
   pdf: RawPdf,
   parent: string,
   place: Placement,

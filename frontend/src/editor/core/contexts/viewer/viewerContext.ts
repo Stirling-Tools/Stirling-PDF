@@ -164,6 +164,8 @@ export interface ViewerContextType {
   // PDF page color rendering mode (viewer-only, never modifies the PDF)
   pdfRenderMode: PdfRenderMode;
   cyclePdfRenderMode: () => void;
+  /** Picks a page colour filter directly; saved like a cycled one. */
+  setPdfRenderMode: (mode: PdfRenderMode) => void;
 }
 
 export interface ViewerActiveFileType {

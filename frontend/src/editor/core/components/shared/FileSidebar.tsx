@@ -4,30 +4,29 @@ import React, {
   useMemo,
   useRef,
   useEffect,
-  useLayoutEffect,
   forwardRef,
   type RefCallback,
 } from "react";
-import { Loader, Tooltip } from "@mantine/core";
+import { Loader, Menu, Tooltip } from "@mantine/core";
+import { useNavigate } from "react-router-dom";
+import { useStableCallback } from "@editor/hooks/useStableCallback";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { NavSurface } from "@editor/ui/NavSurface";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import {
-  useFileStore,
-  useFileSelector,
-  useFileActions,
-  shallowEqual,
-} from "@editor/contexts/file/fileHooks";
+import { useFileState, useFileActions } from "@editor/contexts/file/fileHooks";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
-import { useGoogleDrivePicker } from "@editor/hooks/useGoogleDrivePicker";
 import {
-  useNavigationWorkbench,
+  useCloudFilePickers,
+  type CloudFilePicker,
+} from "@editor/hooks/useCloudFilePickers";
+import {
+  useNavigationState,
   useNavigationActions,
   useNavigationGuard,
 } from "@editor/contexts/NavigationContext";
-import { useViewerActiveFile } from "@editor/contexts/ViewerContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import { useFileHandler } from "@editor/hooks/useFileHandler";
 import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
 import { useAccountIdentity } from "@editor/hooks/useAccountIdentity";
@@ -42,7 +41,6 @@ import { SidebarHeader } from "@editor/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 import { FileItem } from "@editor/components/shared/FileSidebarFileItem";
-import type { FileItemPolicyRef } from "@editor/components/shared/PolicyBadges";
 import { useLabelName } from "@editor/data/labelDisplay";
 import { useClassificationEnabled } from "@editor/hooks/useClassificationEnabled";
 import {
@@ -54,6 +52,7 @@ import BulkUploadToServerModal from "@editor/components/shared/BulkUploadToServe
 import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
+import { ClearRecentsDialog } from "@editor/components/shared/ClearRecentsDialog";
 import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@editor/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@editor/components/shared/SidebarChecklistSlot";
@@ -79,6 +78,11 @@ import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityCont
 import { useWorkbenchFileDrop } from "@editor/components/layout/useWorkbenchFileDrop";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 import "@editor/components/shared/FileSidebar.css";
+import {
+  CONNECTED_ACCOUNTS_SETTINGS_PATH,
+  useOneDriveSave,
+} from "@editor/hooks/useOneDriveSave";
+import { hasUnsavedCloudChanges } from "@editor/services/oneDriveSave";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
@@ -98,8 +102,7 @@ export interface FileSidebarProps {
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Publishes the sidebar's picker so the quick navigation rail can reuse it. */
   onRegisterOpenFromComputer?: (open: (() => void) | null) => void;
-  /** Override the Google Drive handler. */
-  onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
+  onPickCloudFiles?: (files: File[]) => void | Promise<void>;
   /** Action rows inserted under Open-from-computer (New folder, Refresh). A
    *  control with more than one destination renders itself instead. */
   extraActions?: Array<{
@@ -207,22 +210,47 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
   );
 }
 
+function ClearRecentsButton({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <ActionIcon
+      variant="quiet"
+      className={`file-sidebar-section-btn${className ? ` ${className}` : ""}`}
+      onClick={onClick}
+      title={t("fileSidebar.clearRecents.button", "Clear recents")}
+      aria-label={t("fileSidebar.clearRecents.button", "Clear recents")}
+      data-testid="file-sidebar-clear-recents"
+    >
+      <Icon name="trash" size={"1rem"} />
+    </ActionIcon>
+  );
+}
+
 interface LibraryHeaderProps {
   stubs: StirlingFileStub[];
   scrolled: boolean;
-  isGoogleDriveEnabled: boolean;
-  onGoogleDrive: () => void;
+  cloudPickers: CloudFilePicker[];
+  onCloudPick: (picker: CloudFilePicker) => void;
   onAddFiles: () => void;
   onOpenFilesPage: () => void;
+  /** Set only for a flat list; a grouped list carries it on its Recent group. */
+  onClearRecents?: () => void;
 }
 
 function LibraryHeader({
   stubs,
   scrolled,
-  isGoogleDriveEnabled,
-  onGoogleDrive,
+  cloudPickers,
+  onCloudPick,
   onAddFiles,
   onOpenFilesPage,
+  onClearRecents,
 }: LibraryHeaderProps) {
   const { t } = useTranslation();
   return (
@@ -257,28 +285,52 @@ function LibraryHeader({
       >
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
-      {isGoogleDriveEnabled && (
+      {onClearRecents && <ClearRecentsButton onClick={onClearRecents} />}
+      {cloudPickers.length === 0 ? (
         <ActionIcon
           variant="quiet"
-          className="file-sidebar-section-btn file-sidebar-section-btn-drive"
-          onClick={onGoogleDrive}
-          title={t("fileSidebar.googleDrive", "Open from Google Drive")}
-          aria-label={t("fileSidebar.googleDrive", "Open from Google Drive")}
-          data-testid="google-drive-button"
+          className="file-sidebar-section-btn file-sidebar-section-btn-add"
+          data-testid="pdf-library-add-files"
+          onClick={onAddFiles}
+          title={t("fileSidebar.addFiles", "Add files")}
+          aria-label={t("fileSidebar.addFiles", "Add files")}
         >
-          <Icon name="googledrive" size={16} />
+          <Icon name="plus" size={"1rem"} />
         </ActionIcon>
+      ) : (
+        <Menu position="bottom-end" withinPortal shadow="md" width={220}>
+          <Menu.Target>
+            <ActionIcon
+              variant="quiet"
+              className="file-sidebar-section-btn file-sidebar-section-btn-add"
+              data-testid="pdf-library-add-files"
+              title={t("fileSidebar.addFiles", "Add files")}
+              aria-label={t("fileSidebar.addFiles", "Add files")}
+            >
+              <Icon name="plus" size={"1rem"} />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<Icon name="file-up" size={16} />}
+              onClick={onAddFiles}
+              data-testid="pdf-library-add-from-computer"
+            >
+              {t("fileSidebar.openFromComputer", "Open from computer")}
+            </Menu.Item>
+            {cloudPickers.map((picker) => (
+              <Menu.Item
+                key={picker.id}
+                leftSection={<Icon name={picker.icon} size={16} />}
+                onClick={() => onCloudPick(picker)}
+                data-testid={picker.testId}
+              >
+                {picker.actionLabel}
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
       )}
-      <ActionIcon
-        variant="quiet"
-        className="file-sidebar-section-btn file-sidebar-section-btn-add"
-        data-testid="pdf-library-add-files"
-        onClick={onAddFiles}
-        title={t("fileSidebar.addFiles", "Add files")}
-        aria-label={t("fileSidebar.addFiles", "Add files")}
-      >
-        <Icon name="plus" size={"1rem"} />
-      </ActionIcon>
     </div>
   );
 }
@@ -320,31 +372,44 @@ interface FileGroupProps {
   isOpen: boolean;
   onToggle: () => void;
   renderFileRow: RenderFileRow;
+  /** A control beside the header; the header is itself a button, so it can't nest. */
+  action?: React.ReactNode;
 }
 
-function FileGroup({ group, isOpen, onToggle, renderFileRow }: FileGroupProps) {
+function FileGroup({
+  group,
+  isOpen,
+  onToggle,
+  renderFileRow,
+  action,
+}: FileGroupProps) {
   return (
     <div className="file-sidebar-group">
-      <Button
-        variant="quiet"
-        fullWidth
-        justify="between"
-        className="file-sidebar-group-header"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        leftSection={
-          <FileGroupSymbol
-            icon={group.icon}
-            color={group.color}
-            isOpen={isOpen}
-          />
-        }
-        rightSection={
-          <span className="file-sidebar-group-count">{group.stubs.length}</span>
-        }
-      >
-        <span className="file-sidebar-group-label">{group.label}</span>
-      </Button>
+      <div className="file-sidebar-group-header-row">
+        <Button
+          variant="quiet"
+          fullWidth
+          justify="between"
+          className="file-sidebar-group-header"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          leftSection={
+            <FileGroupSymbol
+              icon={group.icon}
+              color={group.color}
+              isOpen={isOpen}
+            />
+          }
+          rightSection={
+            <span className="file-sidebar-group-count">
+              {group.stubs.length}
+            </span>
+          }
+        >
+          <span className="file-sidebar-group-label">{group.label}</span>
+        </Button>
+        {action}
+      </div>
       <div className="file-sidebar-group-items">
         {isOpen && group.stubs.map(renderFileRow)}
       </div>
@@ -360,6 +425,8 @@ interface GroupedFileListProps {
   renderFileRow: RenderFileRow;
   total: number;
   onViewAll: () => void;
+  /** Absent when nothing is clearable, which hides the button. */
+  onClearRecents?: () => void;
 }
 
 function GroupedFileList({
@@ -369,6 +436,7 @@ function GroupedFileList({
   renderFileRow,
   total,
   onViewAll,
+  onClearRecents,
 }: GroupedFileListProps) {
   const { t } = useTranslation();
   return (
@@ -382,6 +450,14 @@ function GroupedFileList({
             isOpen={isOpen}
             onToggle={() => onGroupOpenChange(group.id, !isOpen)}
             renderFileRow={renderFileRow}
+            action={
+              group.id === "recent" && onClearRecents ? (
+                <ClearRecentsButton
+                  onClick={onClearRecents}
+                  className="file-sidebar-group-action"
+                />
+              ) : undefined
+            }
           />
         );
       })}
@@ -460,14 +536,14 @@ interface FileLibrarySectionProps extends Omit<
   LibraryFileListProps,
   "scrollRef"
 > {
-  isGoogleDriveEnabled: boolean;
-  onGoogleDrive: () => void;
+  cloudPickers: CloudFilePicker[];
+  onCloudPick: (picker: CloudFilePicker) => void;
   onAddFiles: () => void;
 }
 
 function FileLibrarySection({
-  isGoogleDriveEnabled,
-  onGoogleDrive,
+  cloudPickers,
+  onCloudPick,
   onAddFiles,
   ...list
 }: FileLibrarySectionProps) {
@@ -477,127 +553,17 @@ function FileLibrarySection({
       <LibraryHeader
         stubs={list.stubs}
         scrolled={scrolled}
-        isGoogleDriveEnabled={isGoogleDriveEnabled}
-        onGoogleDrive={onGoogleDrive}
+        cloudPickers={cloudPickers}
+        onCloudPick={onCloudPick}
         onAddFiles={onAddFiles}
         onOpenFilesPage={list.onOpenFilesPage}
+        onClearRecents={list.groups ? undefined : list.onClearRecents}
       />
       <BulkAddProgressRow />
       <LibraryFileList scrollRef={scrollRef} {...list} />
     </div>
   );
 }
-
-interface FileSidebarRowProps {
-  stub: StirlingFileStub;
-  isViewedInViewer: boolean;
-  dataUnavailable: boolean;
-  policies?: FileItemPolicyRef[];
-  primaryLabel?: string;
-  canSaveToCloud: boolean;
-  isUploadedToCloud: boolean;
-  hasVersionHistory: boolean;
-  isToolSkipped?: boolean;
-  canOpenInNewWindow?: boolean;
-  onRepair?: (fileId: FileId) => void;
-  onFileClick: (fileId: FileId) => void;
-  onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
-  onDelete: (fileId: FileId) => void;
-  onDownload: (fileId: FileId) => void;
-  onRename: (fileId: FileId) => void;
-  onDuplicate: (fileId: FileId) => void;
-  onOpenInNewWindow?: (fileId: FileId) => void;
-  onSaveToCloud: (fileId: FileId) => void;
-  onVersionHistory: (fileId: FileId) => void;
-}
-
-/**
- * Merge a live in-memory record over the stored stub it replaces. Fields the
- * live record does not carry stay as stored: the library record is the only
- * place some metadata lives, and a heavy field being absent from the live
- * record must not erase it.
- */
-export function overlayLiveFields(
-  stored: StirlingFileStub,
-  live: StirlingFileStub,
-): StirlingFileStub {
-  const definedLive = Object.fromEntries(
-    Object.entries(live).filter(([, value]) => value !== undefined),
-  ) as Partial<StirlingFileStub>;
-  return { ...stored, ...definedLive };
-}
-
-const FileSidebarRow = React.memo(function FileSidebarRow({
-  stub,
-  isViewedInViewer,
-  dataUnavailable,
-  policies = NO_POLICIES,
-  primaryLabel,
-  canSaveToCloud,
-  isUploadedToCloud,
-  hasVersionHistory,
-  isToolSkipped,
-  canOpenInNewWindow = false,
-  onRepair,
-  onFileClick,
-  onEyeClick,
-  onDelete,
-  onDownload,
-  onRename,
-  onDuplicate,
-  onOpenInNewWindow,
-  onSaveToCloud,
-  onVersionHistory,
-}: FileSidebarRowProps) {
-  const isInWorkbench = useFileSelector((s) => Boolean(s.files.byId[stub.id]));
-  const workbenchThumbnail = useFileSelector(
-    (s) => s.files.byId[stub.id]?.thumbnailUrl,
-  );
-  const isEncryptedFile = stub.processedFile?.isEncrypted === true;
-  const isDamaged = useFileSelector(
-    (s) => s.files.byId[stub.id]?.processedFile?.isDamaged === true,
-  );
-  const thumbnailUrl =
-    (isInWorkbench ? workbenchThumbnail : undefined) || stub.thumbnailUrl;
-
-  const handleOpenWindow = useMemo(
-    () =>
-      canOpenInNewWindow && onOpenInNewWindow ? onOpenInNewWindow : undefined,
-    [canOpenInNewWindow, onOpenInNewWindow],
-  );
-
-  return (
-    <FileItem
-      fileId={stub.id}
-      name={stub.name}
-      size={stub.size}
-      lastModified={stub.lastModified}
-      isSelected={isInWorkbench}
-      isActive={isViewedInViewer}
-      isViewedInViewer={isViewedInViewer}
-      isToolSkipped={isInWorkbench && isToolSkipped}
-      thumbnailUrl={thumbnailUrl}
-      isEncrypted={isEncryptedFile}
-      onClick={onFileClick}
-      onEyeClick={onEyeClick}
-      dataUnavailable={dataUnavailable}
-      isDamaged={isDamaged}
-      onRepair={onRepair}
-      policies={policies}
-      onDelete={onDelete}
-      onDownload={onDownload}
-      onRename={onRename}
-      onDuplicate={onDuplicate}
-      onOpenInNewWindow={handleOpenWindow}
-      onSaveToCloud={onSaveToCloud}
-      canSaveToCloud={canSaveToCloud}
-      isUploadedToCloud={isUploadedToCloud}
-      onVersionHistory={onVersionHistory}
-      hasVersionHistory={hasVersionHistory}
-      primaryLabel={primaryLabel}
-    />
-  );
-});
 
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
@@ -606,7 +572,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       accountHoisted = false,
       onUploadFiles,
       onRegisterOpenFromComputer,
-      onPickGoogleDriveFiles,
+      onPickCloudFiles,
       extraActions,
     },
     ref,
@@ -623,25 +589,18 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     );
 
     const { config } = useAppConfig();
-    const {
-      isEnabled: isGoogleDriveEnabled,
-      openPicker: openGoogleDrivePicker,
-    } = useGoogleDrivePicker();
-    const store = useFileStore();
-    const workbenchFileIds = useFileSelector((s) => s.files.ids, shallowEqual);
-    const workbenchIds = useMemo(
-      () => new Set(workbenchFileIds.map((id) => id as string)),
-      [workbenchFileIds],
-    );
+    const cloudPickers = useCloudFilePickers();
+    const navigate = useNavigate();
+    const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const damagedRepair = useDamagedFileRepair();
     const { actions: navActions } = useNavigationActions();
-    const currentWorkbench = useNavigationWorkbench();
+    const { workbench: currentWorkbench } = useNavigationState();
     const policyFileBadges = usePolicyFileBadges();
     // The page editor lays out every open file, so an added file belongs there.
     const staysOnAdd = currentWorkbench === "pageEditor";
     const { requestNavigation } = useNavigationGuard();
-    const { activeFileId, setActiveFileId } = useViewerActiveFile();
+    const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
 
@@ -663,6 +622,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
     const [stubsLoaded, setStubsLoaded] = useState(false);
+    const [ingestsInFlight, setIngestsInFlight] = useState(0);
+    const trackIngest = useCallback(async (ingest: () => Promise<void>) => {
+      setIngestsInFlight((n) => n + 1);
+      try {
+        await ingest();
+      } finally {
+        setIngestsInFlight((n) => n - 1);
+      }
+    }, []);
     const [saveToServerTarget, setSaveToServerTarget] = useState<
       StirlingFileStub[] | null
     >(null);
@@ -671,6 +639,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Kebab "Delete" target when the file is on the cloud; drives the
     // local/cloud/both choice dialog. Local-only files delete immediately.
     const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
+      null,
+    );
+    // Fixed when the dialog opens, so files added while it is up aren't cleared.
+    const [clearTargets, setClearTargets] = useState<StirlingFileStub[] | null>(
       null,
     );
     const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
@@ -700,25 +672,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
       try {
         const idbIds = new Set(stubs.map((s) => s.id as string));
-        const { files: liveFiles } = store.getState();
 
-        // A record updated in memory (classification labels, encryption) has no
-        // IDB write behind it, so the stored copy for the same id is the stale
-        // one; overlay the live record onto it rather than appending only ids
-        // that storage has never seen.
-        const mergedStubs = stubs.map((stored) => {
-          const live = liveFiles.byId[stored.id];
-          return live ? overlayLiveFields(stored, live) : stored;
-        });
-
-        const pendingStubs = liveFiles.ids
-          .map((id) => liveFiles.byId[id])
+        const pendingStubs = state.files.ids
+          .map((id) => state.files.byId[id])
           .filter(
             (stub): stub is NonNullable<typeof stub> =>
               !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
           );
 
-        const allStubs = [...mergedStubs, ...pendingStubs];
+        const allStubs = [...stubs, ...pendingStubs];
         // During a version swap, drop the superseded IDB leaf to avoid duplicate lineage keys.
         const superseded = new Set(
           allStubs.map((s) => s.parentFileId as string | undefined),
@@ -734,18 +696,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       } finally {
         if (gen === stubsGenRef.current) setStubsLoaded(true);
       }
-    }, [indexedDB, store]);
+    }, [indexedDB, state.files.ids, state.files.byId]);
 
     const indexedDBRevision = useIndexedDBRevision();
-    // In-memory record updates never touch IndexedDB, so the refresh must ride
-    // them too; the reducer hands out a fresh `files.byId` on every change,
-    // which is what this selection keys on.
-    const filesById = useFileSelector((s) => s.files.byId);
-    const stubsSyncTrigger = useMemo(
-      () => ({ indexedDBRevision, filesById }),
-      [indexedDBRevision, filesById],
-    );
-    useCoalescedCallback(refreshStubs, stubsSyncTrigger);
+    useCoalescedCallback(refreshStubs, indexedDBRevision);
 
     // The hook cancels timers but cannot cancel a started run, so unmount has to
     // invalidate it here or a late scan would publish into a gone tree.
@@ -756,26 +710,23 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     }, []);
 
     // Server copies require a deletion-scope choice; local-only files delete immediately.
-    const handleSidebarDelete = useCallback(
-      async (fileId: FileId) => {
-        const stub = allFileStubs.find((s) => s.id === fileId);
-        const hasCloud =
-          !!stub &&
-          typeof stub.remoteStorageId === "number" &&
-          stub.remoteOwnedByCurrentUser === true;
-        if (hasCloud && stub) {
-          setDeleteTarget(stub);
-          return;
-        }
-        // Its superseded versions go too - see orphanedAncestorIds.
-        const orphans = await fileStorage.orphanedAncestorIds([fileId]);
-        await fileActions.removeFiles([fileId, ...orphans], true);
-        await refreshStubs();
-      },
-      [allFileStubs, fileActions, refreshStubs],
-    );
+    const handleSidebarDelete = useStableCallback(async (fileId: FileId) => {
+      const stub = allFileStubs.find((s) => s.id === fileId);
+      const hasCloud =
+        !!stub &&
+        typeof stub.remoteStorageId === "number" &&
+        stub.remoteOwnedByCurrentUser === true;
+      if (hasCloud && stub) {
+        setDeleteTarget(stub);
+        return;
+      }
+      // Its superseded versions go too - see orphanedAncestorIds.
+      const orphans = await fileStorage.orphanedAncestorIds([fileId]);
+      await fileActions.removeFiles([fileId, ...orphans], true);
+      await refreshStubs();
+    });
 
-    const handleConfirmSidebarDelete = useCallback(
+    const handleConfirmSidebarDelete = useStableCallback(
       async (scope: DeleteScope) => {
         const stub = deleteTarget;
         if (!stub) return;
@@ -805,145 +756,144 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         setDeleteTarget(null);
         await refreshStubs();
       },
-      [deleteTarget, fileActions, refreshStubs],
     );
 
-    const handleSaveToCloud = useCallback(
-      (fileId: FileId) => {
-        const stub = allFileStubs.find((s) => s.id === fileId);
-        if (stub) setSaveToServerTarget([stub]);
-      },
-      [allFileStubs],
-    );
+    const handleSaveToCloud = useStableCallback((fileId: FileId) => {
+      const stub = allFileStubs.find((s) => s.id === fileId);
+      if (stub) setSaveToServerTarget([stub]);
+    });
 
-    const handleVersionHistory = useCallback(
-      (fileId: FileId) => {
-        const stub = allFileStubs.find((s) => s.id === fileId);
-        if (stub) setVersionHistoryTarget(stub);
-      },
-      [allFileStubs],
-    );
+    const handleVersionHistory = useStableCallback((fileId: FileId) => {
+      const stub = allFileStubs.find((s) => s.id === fileId);
+      if (stub) setVersionHistoryTarget(stub);
+    });
 
-    const warnDataUnavailable = useCallback(() => {
+    const warnDataUnavailable = useStableCallback(() => {
       alert({
         alertType: "warning",
         title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
         body: t(
           "fileSidebar.dataLostBody",
-          "This browser lost this file's contents. Upload it again to keep working with it.",
+          "Couldn't find this file's contents. Add it again to keep working with it.",
         ),
         expandable: false,
         durationMs: 6000,
       });
-    }, [t]);
+    });
 
     // Kebab: download a copy (desktop saves via the native dialog). Routed
     // through the policy wrapper so export policies enforce here too.
-    const handleDownload = useCallback(
-      async (fileId: FileId) => {
-        const stub = allFileStubs.find((s) => s.id === fileId);
-        const file = await fileStorage.getStirlingFile(fileId);
-        if (!file) {
+    const handleDownload = useStableCallback(async (fileId: FileId) => {
+      const stub = allFileStubs.find((s) => s.id === fileId);
+      const file = await fileStorage.getStirlingFile(fileId);
+      if (!file) {
+        warnDataUnavailable();
+        return;
+      }
+      try {
+        await downloadFileWithPolicy({
+          data: file,
+          filename: stub?.name ?? file.name,
+          fileId: fileId,
+        });
+      } catch (error) {
+        console.error("[FileSidebar] Download failed:", error);
+        alert({
+          alertType: "error",
+          title: t("fileSidebar.downloadFailed", "Download failed"),
+          body: error instanceof Error ? error.message : String(error),
+          expandable: false,
+        });
+      }
+    });
+
+    const oneDriveSave = useOneDriveSave();
+    const oneDriveHandlers = useMemo(() => {
+      const forStub =
+        (act: (stub: StirlingFileStub) => unknown) => (fileId: FileId) => {
+          const stub = allFileStubs.find((s) => s.id === fileId);
+          if (stub) void act(stub);
+        };
+      return {
+        save: forStub(oneDriveSave.save),
+        saveCopy: forStub(oneDriveSave.saveCopy),
+        saveToFolder: forStub(oneDriveSave.saveToFolder),
+        open: forStub(oneDriveSave.openInOneDrive),
+      };
+    }, [allFileStubs, oneDriveSave]);
+
+    const handleDuplicate = useStableCallback(async (fileId: FileId) => {
+      const stub = allFileStubs.find((s) => s.id === fileId);
+      if (!stub) return;
+      try {
+        const copyId = await duplicateStoredFile(
+          stub,
+          allFileStubs.map((s) => s.name),
+          addFiles,
+        );
+        if (!copyId) {
           warnDataUnavailable();
           return;
         }
-        try {
-          await downloadFileWithPolicy({
-            data: file,
-            filename: stub?.name ?? file.name,
-            fileId: fileId,
-          });
-        } catch (error) {
-          console.error("[FileSidebar] Download failed:", error);
-          alert({
-            alertType: "error",
-            title: t("fileSidebar.downloadFailed", "Download failed"),
-            body: error instanceof Error ? error.message : String(error),
-            expandable: false,
-          });
-        }
-      },
-      [allFileStubs, warnDataUnavailable, t],
-    );
-
-    const handleDuplicate = useCallback(
-      async (fileId: FileId) => {
-        const stub = allFileStubs.find((s) => s.id === fileId);
-        if (!stub) return;
-        try {
-          const copyId = await duplicateStoredFile(
-            stub,
-            allFileStubs.map((s) => s.name),
-            addFiles,
-          );
-          if (!copyId) {
-            warnDataUnavailable();
-            return;
-          }
-          await refreshStubs();
-        } catch (error) {
-          console.error("[FileSidebar] Duplicate failed:", error);
-          alert({
-            alertType: "error",
-            title: t("fileSidebar.duplicateFailed", "Could not duplicate file"),
-            body: error instanceof Error ? error.message : String(error),
-            expandable: false,
-          });
-        }
-      },
-      [allFileStubs, addFiles, refreshStubs, warnDataUnavailable, t],
-    );
-
-    const handleRename = useCallback(
-      (fileId: FileId) => {
-        const stub = allFileStubs.find((s) => s.id === fileId);
-        if (stub) setRenameTarget(stub);
-      },
-      [allFileStubs],
-    );
-
-    const handleConfirmRename = useCallback(
-      async (name: string) => {
-        const stub = renameTarget;
-        if (!stub) return;
-        const saved = await renameStoredFile(
-          stub,
-          name,
-          fileActions.updateStirlingFileStub,
-        );
-        if (!saved) {
-          throw new Error(
-            t("fileSidebar.rename.error", "Could not rename the file."),
-          );
-        }
-        setRenameTarget(null);
         await refreshStubs();
-      },
-      [renameTarget, fileActions, refreshStubs, t],
-    );
+      } catch (error) {
+        console.error("[FileSidebar] Duplicate failed:", error);
+        alert({
+          alertType: "error",
+          title: t("fileSidebar.duplicateFailed", "Could not duplicate file"),
+          body: error instanceof Error ? error.message : String(error),
+          expandable: false,
+        });
+      }
+    });
+
+    const handleRename = useStableCallback((fileId: FileId) => {
+      const stub = allFileStubs.find((s) => s.id === fileId);
+      if (stub) setRenameTarget(stub);
+    });
+
+    const handleConfirmRename = useStableCallback(async (name: string) => {
+      const stub = renameTarget;
+      if (!stub) return;
+      const saved = await renameStoredFile(
+        stub,
+        name,
+        fileActions.updateStirlingFileStub,
+      );
+      if (!saved) {
+        throw new Error(
+          t("fileSidebar.rename.error", "Could not rename the file."),
+        );
+      }
+      setRenameTarget(null);
+      await refreshStubs();
+    });
 
     // Desktop-only; a no-op stub on web, where this stays hidden.
     const { canOpenInNewWindow, openInNewWindow } = useOpenInNewWindow();
-    const handleOpenInNewWindow = useCallback(
-      (fileId: FileId) => {
-        const stub = allFileStubs.find((s) => s.id === fileId);
-        if (stub) openInNewWindow(stub);
-      },
-      [allFileStubs, openInNewWindow],
-    );
+    const handleOpenInNewWindow = useStableCallback((fileId: FileId) => {
+      const stub = allFileStubs.find((s) => s.id === fileId);
+      if (stub) openInNewWindow(stub);
+    });
 
     useEffect(() => {
       if (!pendingViewFileId) return;
-      const isInWorkbench = workbenchIds.has(pendingViewFileId);
+      const isInWorkbench = state.files.ids.some(
+        (id) => (id as string) === pendingViewFileId,
+      );
       if (isInWorkbench) {
         setPendingViewFileId(null);
         setActiveFileId(pendingViewFileId);
         navActions.setWorkbench("viewer");
       }
-    }, [pendingViewFileId, workbenchIds, setActiveFileId, navActions]);
+    }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
 
     // SaaS groups by classification label; core returns null → one flat, recency-sorted list.
     const fileGroups = useFileSidebarGroups(allFileStubs);
+    const workbenchIds = useMemo(
+      () => new Set(state.files.ids.map((id) => id as string)),
+      [state.files.ids],
+    );
     // How many rendered stubs share each lineage — >1 means split siblings, which
     // must key by their unique leaf id rather than the shared lineage (see renderFileRow).
     const lineageCounts = useMemo(() => {
@@ -954,6 +904,40 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
+    // Foldered files are kept: the user filed them deliberately.
+    const clearableStubs = useMemo(
+      () => allFileStubs.filter((s) => s.folderId == null),
+      [allFileStubs],
+    );
+    const openClearTargetIds = useMemo(() => {
+      const open = new Set(state.files.ids.map(String));
+      return new Set(
+        (clearTargets ?? []).filter((s) => open.has(s.id)).map((s) => s.id),
+      );
+    }, [clearTargets, state.files.ids]);
+    const handleConfirmClearRecents = useCallback(
+      async (skipOpen: boolean) => {
+        const removed = await fileActions.clearRecentFiles(
+          (clearTargets ?? []).map((s) => s.id),
+          skipOpen ? new Set(state.files.ids.map(String)) : undefined,
+        );
+        // A cleared file's unsaved changes went with it; left set, the flag would
+        // prompt about them on the next navigation.
+        if (activeFileId && removed.includes(activeFileId as FileId)) {
+          navActions.setHasUnsavedChanges(false);
+        }
+        await refreshStubs();
+      },
+      [
+        clearTargets,
+        state.files.ids,
+        fileActions,
+        refreshStubs,
+        activeFileId,
+        navActions,
+      ],
+    );
+
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
       (id: string, open: boolean) =>
@@ -961,118 +945,140 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
 
-    const handleGoogleDriveClick = useCallback(async () => {
-      if (!isGoogleDriveEnabled) return;
-      const files = await openGoogleDrivePicker({ multiple: true });
-      if (files.length === 0) return;
-      if (onPickGoogleDriveFiles) {
-        await onPickGoogleDriveFiles(files);
+    const reportUploadFailure = useCallback(
+      (err: unknown) =>
+        alert({
+          alertType: "error",
+          title: t("fileSidebar.uploadFailedTitle", "Upload failed"),
+          body:
+            err instanceof Error
+              ? err.message
+              : t(
+                  "fileSidebar.uploadFailedBody",
+                  "Could not add the selected files.",
+                ),
+          isPersistentPopup: false,
+        }),
+      [t],
+    );
+
+    const handleCloudPick = useCallback(
+      async (picker: CloudFilePicker) => {
+        const files = await picker.openPicker({ multiple: true });
+        if (files.length === 0) return;
+        try {
+          await trackIngest(async () => {
+            if (onPickCloudFiles) {
+              await onPickCloudFiles(files);
+              return;
+            }
+            await addFiles(files);
+            if (!staysOnAdd) {
+              navActions.setWorkbench(
+                files.length === 1 ? "viewer" : "fileEditor",
+              );
+            }
+          });
+        } catch (err) {
+          console.error("[FileSidebar] Cloud file ingest failed", err);
+          reportUploadFailure(err);
+        }
+      },
+      [
+        trackIngest,
+        addFiles,
+        navActions,
+        staysOnAdd,
+        onPickCloudFiles,
+        reportUploadFailure,
+      ],
+    );
+
+    const failedPicker = cloudPickers.find((picker) => picker.error);
+    useEffect(() => {
+      if (!failedPicker?.error) return;
+      alert({
+        alertType: "error",
+        title: failedPicker.failedTitle,
+        body: failedPicker.error,
+        expandable: false,
+        durationMs: 8000,
+        ...(failedPicker.reconnectNeeded
+          ? {
+              buttonText: t("oneDriveSave.reconnect", "Reconnect"),
+              buttonCallback: () => navigate(CONNECTED_ACCOUNTS_SETTINGS_PATH),
+            }
+          : {}),
+      });
+      failedPicker.clearError();
+    }, [failedPicker, navigate, t]);
+
+    const handleFileClick = useStableCallback(async (fileId: FileId) => {
+      const stub = allFileStubs.find((s) => s.id === fileId);
+      if (!stub) return;
+
+      // Its bytes are gone; opening it can only fail. Say so instead of a
+      // click that goes nowhere.
+      if (stub.dataUnavailable || lostFileIds.has(fileId)) {
+        alert({
+          alertType: "warning",
+          title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
+          body: t(
+            "fileSidebar.dataLostBody",
+            "Couldn't find this file's contents. Add it again to keep working with it.",
+          ),
+          expandable: false,
+          durationMs: 6000,
+        });
         return;
       }
-      await addFiles(files);
-      if (!staysOnAdd) {
-        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+
+      const workbenchFileId = state.files.ids.find(
+        (id) => (id as string) === (stub.id as string),
+      );
+
+      if (workbenchFileId) {
+        // If this is the file currently open in the viewer, route through the
+        // navigation guard so the save modal fires when there are unsaved changes.
+        const isCurrentlyViewed = workbenchFileId === viewedWorkbenchId;
+        if (isCurrentlyViewed) {
+          requestNavigation(() => {
+            void fileActions.removeFiles([workbenchFileId], false);
+          });
+          return;
+        }
+        await fileActions.removeFiles([workbenchFileId], false);
+      } else {
+        // Re-add by stub to preserve its ID - addFiles() would create a new UUID + IDB entry.
+        const workbenchCount = state.files.ids.length;
+
+        if (workbenchCount > 0 && currentWorkbench === "viewer") {
+          navActions.setWorkbench("fileEditor");
+        }
+
+        await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
+
+        if (!staysOnAdd) {
+          if (workbenchCount === 0) {
+            navActions.setWorkbench("viewer");
+          } else {
+            navActions.setWorkbench("fileEditor");
+          }
+        }
       }
-    }, [
-      isGoogleDriveEnabled,
-      openGoogleDrivePicker,
-      addFiles,
-      navActions,
-      staysOnAdd,
-      onPickGoogleDriveFiles,
-    ]);
+    });
 
     // Which file is currently open in the viewer - stable ID, never index-derived.
     const viewedWorkbenchId =
       currentWorkbench === "viewer" ? activeFileId : null;
-    // Rows are memoized on their props, so the click handlers must keep a stable
-    // identity; read the viewed file through this mirror instead of depending on it.
-    // Written after commit so a discarded render cannot leak viewer state into a handler.
-    const viewedWorkbenchIdRef = useRef(viewedWorkbenchId);
-    useLayoutEffect(() => {
-      viewedWorkbenchIdRef.current = viewedWorkbenchId;
-    }, [viewedWorkbenchId]);
 
-    const handleFileClick = useCallback(
-      async (fileId: FileId) => {
-        const stub = allFileStubs.find((s) => s.id === fileId);
-        if (!stub) return;
-
-        // Its bytes are gone; opening it can only fail. Say so instead of a
-        // click that goes nowhere.
-        if (stub.dataUnavailable || lostFileIds.has(fileId)) {
-          alert({
-            alertType: "warning",
-            title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
-            body: t(
-              "fileSidebar.dataLostBody",
-              "This browser lost this file's contents. Upload it again to keep working with it.",
-            ),
-            expandable: false,
-            durationMs: 6000,
-          });
-          return;
-        }
-
-        const { files: liveFiles, ui: liveUi } = store.getState();
-        const workbenchFileId = liveFiles.ids.find(
-          (id) => (id as string) === (stub.id as string),
-        );
-
-        if (workbenchFileId) {
-          // If this is the file currently open in the viewer, route through the
-          // navigation guard so the save modal fires when there are unsaved changes.
-          const isCurrentlyViewed =
-            workbenchFileId === viewedWorkbenchIdRef.current;
-          if (isCurrentlyViewed) {
-            requestNavigation(() => {
-              void fileActions.removeFiles([workbenchFileId], false);
-            });
-            return;
-          }
-          await fileActions.removeFiles([workbenchFileId], false);
-        } else {
-          // Re-add by stub to preserve its ID - addFiles() would create a new UUID + IDB entry.
-          const workbenchCount = liveFiles.ids.length;
-
-          if (workbenchCount > 0 && currentWorkbench === "viewer") {
-            navActions.setWorkbench("fileEditor");
-          }
-
-          await fileActions.addStirlingFileStubs([stub]);
-
-          if (staysOnAdd) {
-            fileActions.setSelectedFiles([...liveUi.selectedFileIds, stub.id]);
-          } else {
-            if (workbenchCount === 0) {
-              navActions.setWorkbench("viewer");
-            } else {
-              navActions.setWorkbench("fileEditor");
-            }
-          }
-        }
-      },
-      [
-        allFileStubs,
-        lostFileIds,
-        t,
-        store,
-        fileActions,
-        navActions,
-        currentWorkbench,
-        requestNavigation,
-        staysOnAdd,
-      ],
-    );
-
-    const handleEyeClick = useCallback(
+    const handleEyeClick = useStableCallback(
       async (fileId: FileId, _e: React.MouseEvent) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
 
         const isCurrentlyViewed = !!(
-          viewedWorkbenchIdRef.current &&
-          viewedWorkbenchIdRef.current === (stub.id as string)
+          viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
         );
 
         if (isCurrentlyViewed) {
@@ -1083,24 +1089,25 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
         // Switching to a different file while viewer is open - guard against unsaved changes.
         const performSwitch = async () => {
-          const { files: liveFiles } = store.getState();
-          const alreadyInWorkbench = liveFiles.ids.some(
+          const alreadyInWorkbench = state.files.ids.some(
             (id) => (id as string) === (stub.id as string),
           );
 
           if (!alreadyInWorkbench) {
             // Leave viewer before mutating workbench (prevents PSPDFKit crash).
-            if (liveFiles.ids.length > 0 && currentWorkbench === "viewer") {
+            if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
               navActions.setWorkbench("fileEditor");
             }
-            await fileActions.addStirlingFileStubs([stub]);
+            await fileActions.addStirlingFileStubs([stub], {
+              selectFiles: true,
+            });
           }
 
           // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
           setPendingViewFileId(stub.id);
         };
 
-        if (currentWorkbench === "viewer" && viewedWorkbenchIdRef.current) {
+        if (currentWorkbench === "viewer" && viewedWorkbenchId) {
           requestNavigation(() => {
             void performSwitch();
           });
@@ -1108,67 +1115,50 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await performSwitch();
         }
       },
-      [
-        allFileStubs,
-        store,
-        fileActions,
-        navActions,
-        currentWorkbench,
-        setPendingViewFileId,
-        requestNavigation,
-      ],
     );
 
     // Shared ingest path for both the native picker and drag-and-drop.
     // Per-tool validation happens downstream.
-    const ingestFiles = useCallback(
-      async (files: File[]) => {
-        if (files.length === 0) return;
+    const ingestFiles = useStableCallback(async (files: File[]) => {
+      if (files.length === 0) return;
+      await trackIngest(async () => {
         if (onUploadFiles) {
           await onUploadFiles(files);
-        } else {
-          await addFiles(files);
-          // A tool that pinned its own workbench surface owns it - switching to
-          // the viewer here strands the upload outside the tool being used.
-          if (!staysOnAdd && !currentWorkbench.startsWith("custom:")) {
-            navActions.setWorkbench(
-              files.length === 1 ? "viewer" : "fileEditor",
-            );
-          }
+          return;
+        }
+        await addFiles(files);
+        // A tool that pinned its own workbench surface owns it - switching to
+        // the viewer here strands the upload outside the tool being used.
+        if (!staysOnAdd && !currentWorkbench.startsWith("custom:")) {
+          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+        }
+      });
+    });
+
+    const handleNativeFilePick = useStableCallback(
+      async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const input = e.target;
+        try {
+          await ingestFiles(Array.from(input.files ?? []));
+        } catch (err) {
+          console.error("[FileSidebar] Native file pick failed", err);
+          reportUploadFailure(err);
+        } finally {
+          input.value = "";
         }
       },
-      [addFiles, navActions, staysOnAdd, onUploadFiles, currentWorkbench],
     );
 
-    const handleNativeFilePick = useCallback(
-      async (e: React.ChangeEvent<HTMLInputElement>) => {
-        await ingestFiles(Array.from(e.target.files ?? []));
-        e.target.value = "";
-      },
-      [ingestFiles],
-    );
-
-    const openNativeFilePicker = useCallback(() => {
+    const openNativeFilePicker = useStableCallback(() => {
       void openFilesFromDisk({
         onFallbackOpen: () => nativeFileInputRef.current?.click(),
       })
         .then(ingestFiles)
         .catch((err) => {
           console.error("[FileSidebar] Native file pick failed", err);
-          alert({
-            alertType: "error",
-            title: t("fileSidebar.uploadFailedTitle", "Upload failed"),
-            body:
-              err instanceof Error
-                ? err.message
-                : t(
-                    "fileSidebar.uploadFailedBody",
-                    "Could not add the selected files.",
-                  ),
-            isPersistentPopup: false,
-          });
+          reportUploadFailure(err);
         });
-    }, [ingestFiles, t]);
+    });
 
     useEffect(() => {
       if (!onRegisterOpenFromComputer) return;
@@ -1182,75 +1172,94 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const eligibleFileIds = useToolEligibleFileIds();
 
-    const renderFileRow = useCallback(
-      (stub: StirlingFileStub) => {
-        const isViewedInViewer = !!(
-          viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
-        );
-        const fileOrigin = getFileOrigin(stub);
-        const dataUnavailable =
-          stub.dataUnavailable === true || lostFileIds.has(stub.id);
-        // Lineage keys preserve rows across version changes; split siblings need unique leaf IDs.
-        const lineageKey = stub.originalFileId ?? stub.id;
-        const rowKey =
-          (lineageCounts.get(lineageKey) ?? 0) > 1
-            ? (stub.id as string)
-            : lineageKey;
-        const isToolSkipped =
-          eligibleFileIds !== null && !eligibleFileIds.has(stub.id);
-
-        return (
-          <FileSidebarRow
-            key={rowKey}
-            stub={stub}
-            isViewedInViewer={isViewedInViewer}
-            dataUnavailable={dataUnavailable}
-            onRepair={damagedRepair?.repair}
-            policies={policyFileBadges.get(stub.id) ?? NO_POLICIES}
-            primaryLabel={
-              classificationEnabled && stub.classificationLabels?.[0]
-                ? labelName(stub.classificationLabels[0])
-                : undefined
-            }
-            canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
-            isUploadedToCloud={fileOrigin === "cloud"}
-            hasVersionHistory={(stub.versionNumber ?? 1) > 1}
-            isToolSkipped={isToolSkipped}
-            canOpenInNewWindow={canOpenInNewWindow(stub)}
-            onFileClick={handleFileClick}
-            onEyeClick={handleEyeClick}
-            onDelete={handleSidebarDelete}
-            onDownload={handleDownload}
-            onRename={handleRename}
-            onDuplicate={handleDuplicate}
-            onOpenInNewWindow={handleOpenInNewWindow}
-            onSaveToCloud={handleSaveToCloud}
-            onVersionHistory={handleVersionHistory}
-          />
-        );
-      },
-      [
-        viewedWorkbenchId,
-        lostFileIds,
-        lineageCounts,
-        eligibleFileIds,
-        policyFileBadges,
-        classificationEnabled,
-        labelName,
-        storageEnabled,
-        canOpenInNewWindow,
-        damagedRepair,
-        handleFileClick,
-        handleEyeClick,
-        handleSidebarDelete,
-        handleDownload,
-        handleRename,
-        handleDuplicate,
-        handleOpenInNewWindow,
-        handleSaveToCloud,
-        handleVersionHistory,
-      ],
-    );
+    const renderFileRow = (stub: StirlingFileStub) => {
+      const isInWorkbench = workbenchIds.has(stub.id);
+      const workbenchFileId = isInWorkbench ? stub.id : undefined;
+      const isViewedInViewer = !!(
+        viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
+      );
+      const isActive = isViewedInViewer;
+      const isEncryptedFile = stub.processedFile?.isEncrypted === true;
+      const thumbnailUrl =
+        (workbenchFileId
+          ? state.files.byId[workbenchFileId]?.thumbnailUrl
+          : undefined) || stub.thumbnailUrl;
+      const fileOrigin = getFileOrigin(stub);
+      const dataUnavailable =
+        stub.dataUnavailable === true || lostFileIds.has(stub.id);
+      // Damage is detected while hydrating, so only workbench files carry it.
+      const isDamaged = workbenchFileId
+        ? state.files.byId[workbenchFileId]?.processedFile?.isDamaged === true
+        : false;
+      // Lineage keys preserve rows across version changes; split siblings need unique leaf IDs.
+      const lineageKey = stub.originalFileId ?? stub.id;
+      const rowKey =
+        (lineageCounts.get(lineageKey) ?? 0) > 1
+          ? (stub.id as string)
+          : lineageKey;
+      return (
+        <FileItem
+          isToolSkipped={
+            isInWorkbench &&
+            eligibleFileIds !== null &&
+            !eligibleFileIds.has(stub.id)
+          }
+          key={rowKey}
+          fileId={stub.id}
+          name={stub.name}
+          size={stub.size}
+          lastModified={stub.lastModified}
+          isSelected={isInWorkbench}
+          isActive={isActive}
+          isViewedInViewer={isViewedInViewer}
+          thumbnailUrl={thumbnailUrl}
+          isEncrypted={isEncryptedFile}
+          onClick={handleFileClick}
+          onEyeClick={handleEyeClick}
+          dataUnavailable={dataUnavailable}
+          isDamaged={isDamaged}
+          onRepair={damagedRepair?.repair}
+          policies={policyFileBadges.get(stub.id) ?? NO_POLICIES}
+          onDelete={handleSidebarDelete}
+          onDownload={handleDownload}
+          onRename={handleRename}
+          onDuplicate={handleDuplicate}
+          onOpenInNewWindow={
+            canOpenInNewWindow(stub) ? handleOpenInNewWindow : undefined
+          }
+          onSaveToCloud={handleSaveToCloud}
+          canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
+          isUploadedToCloud={fileOrigin === "cloud"}
+          hasOneDriveOrigin={Boolean(stub.cloudOrigin)}
+          oneDriveUnsaved={
+            oneDriveSave.available && hasUnsavedCloudChanges(stub)
+          }
+          oneDriveName={stub.cloudOrigin?.name}
+          onOpenInOneDrive={
+            stub.cloudOrigin?.webUrl ? oneDriveHandlers.open : undefined
+          }
+          savingToOneDrive={oneDriveSave.saving === stub.id}
+          onSaveToOneDrive={
+            oneDriveSave.available ? oneDriveHandlers.save : undefined
+          }
+          onSaveCopyToOneDrive={
+            oneDriveSave.available ? oneDriveHandlers.saveCopy : undefined
+          }
+          onSaveToOneDriveFolder={
+            oneDriveSave.canSaveToFolder
+              ? oneDriveHandlers.saveToFolder
+              : undefined
+          }
+          onVersionHistory={handleVersionHistory}
+          hasVersionHistory={(stub.versionNumber ?? 1) > 1}
+          primaryLabel={
+            classificationEnabled && stub.classificationLabels?.[0]
+              ? labelName(stub.classificationLabels[0])
+              : undefined
+          }
+        />
+      );
+    };
 
     const sidebarActions: NonNullable<FileSidebarProps["extraActions"]> = [
       ...(currentWorkbench === "myFiles"
@@ -1261,19 +1270,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               onClick: openNativeFilePicker,
               testId: "pdf-library-add-files",
             },
-            ...(isGoogleDriveEnabled
-              ? [
-                  {
-                    icon: <Icon name="googledrive" />,
-                    label: t(
-                      "fileSidebar.googleDrive",
-                      "Open from Google Drive",
-                    ),
-                    onClick: () => void handleGoogleDriveClick(),
-                    testId: "google-drive-button",
-                  },
-                ]
-              : []),
+            ...cloudPickers.map((picker) => ({
+              icon: <Icon name={picker.icon} />,
+              label: picker.actionLabel,
+              onClick: () => void handleCloudPick(picker),
+              testId: picker.testId,
+            })),
           ]
         : []),
       ...(extraActions ?? []),
@@ -1315,7 +1317,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </NavSurface>
 
           <NavSurface className="file-sidebar-files-box">
-            <div className="file-sidebar-scroll">
+            <div
+              className="file-sidebar-scroll"
+              aria-busy={ingestsInFlight > 0}
+            >
               {currentWorkbench === "myFiles" ? (
                 <FolderTreeSection />
               ) : (
@@ -1326,10 +1331,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   groupOpen={groupOpen}
                   onGroupOpenChange={setGroupOpenState}
                   renderFileRow={renderFileRow}
-                  isGoogleDriveEnabled={isGoogleDriveEnabled}
-                  onGoogleDrive={handleGoogleDriveClick}
+                  cloudPickers={cloudPickers}
+                  onCloudPick={(picker) => void handleCloudPick(picker)}
                   onAddFiles={openNativeFilePicker}
                   onOpenFilesPage={() => navActions.setWorkbench("myFiles")}
+                  onClearRecents={
+                    clearableStubs.length > 0
+                      ? () => setClearTargets(clearableStubs)
+                      : undefined
+                  }
                 />
               )}
             </div>
@@ -1362,6 +1372,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           files={deleteTarget ? [deleteTarget] : []}
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleConfirmSidebarDelete}
+        />
+
+        <ClearRecentsDialog
+          opened={clearTargets !== null}
+          clearCount={clearTargets?.length ?? 0}
+          openCount={openClearTargetIds.size}
+          onClose={() => setClearTargets(null)}
+          onConfirm={handleConfirmClearRecents}
         />
 
         {/* Getting-started checklist, floating above the footer (SaaS only). */}

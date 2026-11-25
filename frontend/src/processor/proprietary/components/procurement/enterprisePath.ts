@@ -1,15 +1,11 @@
-import { useNavigate } from "react-router-dom";
-
-/** The Enterprise page: trial, quote, agreement and licence, outside the app's own chrome. */
+/**
+ * The Enterprise page: trial, quote, agreement and licence, outside the app's own chrome.
+ * Self-hosted builds forward it to the hosted page.
+ */
 export const ENTERPRISE_PATH = "/enterprise";
 
 /** An older address for the page. Sales emails and campaigns still link to it, so it redirects. */
 export const LEGACY_ENTERPRISE_PATH = "/procurement";
-
-export function useOpenEnterprise(): () => void {
-  const navigate = useNavigate();
-  return () => navigate(ENTERPRISE_PATH);
-}
 
 /**
  * Where a billing link that set out to start the Enterprise trial (`?procurement=start`, sent in

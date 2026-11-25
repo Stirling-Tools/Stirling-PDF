@@ -10,7 +10,6 @@ vars:
     'scripts/*.py'
     '.github/scripts/*.py'
     'app/core/src/main/resources/static/python/*.py'
-    ':(exclude)*split_photos.py'
     ':(exclude)scripts/lint/fixtures/*'
   SPELL_FILES: >-
     '*.html'
