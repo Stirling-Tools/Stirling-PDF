@@ -288,6 +288,56 @@ test.describe("PDF accessibility review", () => {
       .toBe("a is the rate");
   });
 
+  test("sets the language of a few words inside a block from the card", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    const card = page.getByTestId("pdf-editor-quick-tag");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+
+    const runId = await page.evaluate(
+      () =>
+        (
+          window as unknown as EditorWindow
+        ).__editor_store.state.pages[0].runs.find(
+          (run) => run.text.trim().length >= 8,
+        )!.id,
+    );
+    const run = page.getByTestId(`pdf-editor-run-${runId}`);
+    await run.click();
+    const selectWords = () =>
+      run.evaluate((el) => {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        let node = walker.nextNode();
+        while (node && (node.textContent ?? "").trim().length < 4) {
+          node = walker.nextNode();
+        }
+        if (!node) throw new Error("no text in the run");
+        const start = (node.textContent ?? "").search(/\S/);
+        window.getSelection()!.setBaseAndExtent(node, start, node, start + 4);
+      });
+    const picker = card
+      .getByTestId("pdf-editor-quick-tag-selected-language")
+      .getByRole("textbox");
+    // The words are read-only in the review, but still selectable.
+    await expect(async () => {
+      await selectWords();
+      await expect(picker).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    await expect(picker).toHaveValue("");
+
+    await picker.click();
+    await picker.fill("fr-FR");
+    await page.getByRole("option", { name: /\(fr-FR\)$/ }).click();
+    // Tagging the words as a Span clears the selection; selecting them again
+    // finds that span, in the language just given.
+    await expect(picker).toBeHidden();
+    await selectWords();
+    await expect(picker).toHaveValue(/\(fr-FR\)$/);
+  });
+
   test("the save prompt covers the card, so tags can't change under it", async ({
     page,
   }) => {

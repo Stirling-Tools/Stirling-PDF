@@ -124,8 +124,8 @@ const PdfAccessibility = (props: BaseToolProps) => {
  * when the tool should check instead. Saving in the review replaces each file with
  * a new version, which clears the report; checking again at once would blank the
  * panel mid-task, so the old report stays, marked out of date, until the user
- * checks again. Only a saved version carries one over: a new selection, a failed
- * check or a changed standard still checks.
+ * checks again. Only the save itself carries one over: a later return to the
+ * saved version, a failed check or a changed standard still checks.
  */
 function useReportsCarriedOverSaves(
   selectedFiles: readonly StirlingFile[],
@@ -133,21 +133,12 @@ function useReportsCarriedOverSaves(
   operation: CheckAccessibilityOperationHook,
 ): AccessibilityReportEntry[] | null {
   const { fileStubs } = useAllFiles();
-  const reports = useRef(
-    new Map<
-      FileId,
-      { profile: AccessibilityProfile; entry: AccessibilityReportEntry }
-    >(),
-  );
+  const reports = useRef(new Map<FileId, CheckedReport>());
   const { results, isLoading, errorMessage } = operation;
+  const savedOver = useSelectionReplacedBySave(selectedFiles, isLoading);
 
   let carried: AccessibilityReportEntry[] | null = null;
-  if (
-    !isLoading &&
-    results.length === 0 &&
-    !errorMessage &&
-    selectedFiles.length > 0
-  ) {
+  if (savedOver && !isLoading && results.length === 0 && !errorMessage) {
     carried = [];
     for (const file of selectedFiles) {
       const parent = fileStubs.find(
@@ -158,18 +149,83 @@ function useReportsCarriedOverSaves(
         carried = null;
         break;
       }
-      carried.push({ ...last.entry, fileId: file.fileId, fileName: file.name });
+      carried.push({
+        ...last.entry,
+        fileId: file.fileId,
+        fileName: file.name,
+        checkedFileId: last.entry.checkedFileId ?? last.entry.fileId,
+      });
     }
   }
 
-  // Kept by file, so a second save finds the first one's carried report.
-  const shown = carried ?? (isLoading ? [] : results);
+  // The standard is read when the check starts: results outlive a change of
+  // standard by a render, and must not be kept under the new one.
+  const checkedProfile = useRef<AccessibilityProfile | null>(null);
   useEffect(() => {
-    for (const entry of shown)
-      reports.current.set(entry.fileId, { profile, entry });
-  }, [shown, profile]);
+    if (isLoading) checkedProfile.current = profile;
+  }, [isLoading, profile]);
+  // Kept by file, so a second save finds the first one's carried report.
+  useEffect(() => {
+    const ran = checkedProfile.current;
+    if (carried) {
+      for (const entry of carried)
+        reports.current.set(entry.fileId, { profile, entry });
+    } else if (!isLoading && ran) {
+      for (const entry of results)
+        reports.current.set(entry.fileId, { profile: ran, entry });
+    }
+  }, [carried, isLoading, results, profile]);
 
   return carried;
+}
+
+interface CheckedReport {
+  /** The standard the check that produced `entry` ran under. */
+  profile: AccessibilityProfile;
+  entry: AccessibilityReportEntry;
+}
+
+/**
+ * Whether the selection is the new versions of the one before it and no check
+ * has started since: true straight after a save, false once the user picks
+ * other files or a check runs.
+ */
+function useSelectionReplacedBySave(
+  selectedFiles: readonly StirlingFile[],
+  isLoading: boolean,
+): boolean {
+  const { fileStubs } = useAllFiles();
+  const key = selectedFiles.map((file) => file.fileId).join("\n");
+  const [seen, setSeen] = useState<{
+    key: string;
+    ids: ReadonlySet<FileId>;
+    before: ReadonlySet<FileId>;
+    checked: boolean;
+  }>(() => ({
+    key,
+    ids: new Set(selectedFiles.map((file) => file.fileId)),
+    before: new Set(),
+    checked: false,
+  }));
+  if (seen.key !== key) {
+    setSeen({
+      key,
+      ids: new Set(selectedFiles.map((file) => file.fileId)),
+      before: seen.ids,
+      checked: false,
+    });
+  } else if (isLoading && !seen.checked) {
+    setSeen({ ...seen, checked: true });
+  }
+  if (seen.key !== key || seen.checked || selectedFiles.length === 0) {
+    return false;
+  }
+  return selectedFiles.every((file) => {
+    const parent = fileStubs.find(
+      (stub) => stub.id === file.fileId,
+    )?.parentFileId;
+    return parent !== undefined && seen.before.has(parent);
+  });
 }
 
 /**

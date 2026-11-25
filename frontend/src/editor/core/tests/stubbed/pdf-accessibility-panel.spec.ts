@@ -105,6 +105,17 @@ test("flags the document as tagged from the report's fix, saving it", async ({
     });
   await expect.poll(async () => (await store()).marked).toBe(false);
   const report = page.getByTestId("a11y-report");
+  const manual = report.getByTestId("a11y-manual-checks");
+  await manual
+    .getByRole("button", { name: "Manual checks", exact: true })
+    .click();
+  const readingOrder = manual.getByRole("checkbox", {
+    name: "Is the reading order correct?",
+  });
+  await manual.getByText("Is the reading order correct?").click();
+  await expect(readingOrder).toBeChecked();
+  // Marks the report's element, to tell after the save whether it was redrawn.
+  await report.evaluate((el) => el.setAttribute("data-before-save", ""));
   await report
     .getByRole("button", {
       name: "Tags & structure",
@@ -132,6 +143,9 @@ test("flags the document as tagged from the report's fix, saving it", async ({
   ).toHaveCount(0);
   await expect(page.getByTestId("check-accessibility-recheck")).toBeVisible();
   expect(checks).toBe(1);
+  // The report shown for the saved version is the same one, ticks and all.
+  await expect(report).toHaveAttribute("data-before-save", "");
+  await expect(readingOrder).toBeChecked();
 });
 
 test("lays the panel out in reading order, and pauses the review from its footer", async ({

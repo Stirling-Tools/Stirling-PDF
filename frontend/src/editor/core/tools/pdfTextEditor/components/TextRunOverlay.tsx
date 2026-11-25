@@ -387,7 +387,10 @@ interface TextRunOverlayProps {
   onMeasure?: () => TextRunSnapshot | null;
   /** Fires when the user drags the right edge to a new width, in PDF points. */
   onResize?: (widthPt: number) => void;
-  /** Fires while the box has focus, as the characters selected inside it change. */
+  /**
+   * Fires as the characters selected inside the box change: while it has focus,
+   * or, read-only, while it is selected, since a read-only box takes no focus.
+   */
   onTextRangeChange?: (range: TextRange | null) => void;
   /** The characters selected inside the box, highlighted while it has no focus. */
   textRange?: TextRange | null;
@@ -554,8 +557,9 @@ export function TextRunOverlay({
   const [focused, setFocused] = useState(false);
   // Only while focused: blurring clears the browser's selection, and the
   // range must outlive that for the inspector to act on it.
+  const tracksSelection = focused || (readOnly && selected);
   useEffect(() => {
-    if (!focused || !onTextRangeChange) return;
+    if (!tracksSelection || !onTextRangeChange) return;
     const report = () => {
       const el = ref.current;
       const selection = window.getSelection();
@@ -566,7 +570,7 @@ export function TextRunOverlay({
     };
     document.addEventListener("selectionchange", report);
     return () => document.removeEventListener("selectionchange", report);
-  }, [focused, onTextRangeChange]);
+  }, [tracksSelection, onTextRangeChange]);
   // Masking a run the user has only clicked into swaps real PDF ink for a
   // CSS approximation, so hold the pristine bitmap until an actual edit.
   const [touched, setTouchedState] = useState(false);

@@ -26,6 +26,7 @@ import {
 } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import type {
+  InnerTagsControl,
   TextDescriptionControl,
   TextLanguageControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
@@ -301,6 +302,7 @@ export function QuickTagCard({ store, controller, review }: Props) {
           {controller.textLanguage && (
             <TextLanguageQuestion control={controller.textLanguage} />
           )}
+          <SelectedTextLanguageQuestion inner={controller.textInner} />
         </>
       )}
 
@@ -411,6 +413,44 @@ function TextLanguageQuestion({ control }: { control: TextLanguageControl }) {
         onChange={control.onSet}
         label={label}
         testId="pdf-editor-quick-tag-language"
+      />
+    </>
+  );
+}
+
+/**
+ * The language of the words selected inside the text, for a phrase in another
+ * language than its block: the span they already are, else a new one. Shown
+ * while some are selected and can take one.
+ */
+function SelectedTextLanguageQuestion({ inner }: { inner: InnerTagsControl }) {
+  const { t } = useTranslation();
+  const active = inner.active;
+  const span = active === null ? null : inner.tags[active];
+  const onPick = inner.onLanguageSelection;
+  if (!span?.languageEditable && !onPick) return null;
+  const label = t(
+    "pdfTextEditor.inspector.language.selectedText",
+    "Selected text language",
+  );
+  return (
+    <>
+      <p className="review-card__label">{label}</p>
+      <LanguagePicker
+        key={span?.key ?? "new"}
+        own={span?.language.own ?? null}
+        inherited={span?.language.inherited ?? null}
+        placeholder={t(
+          "pdfTextEditor.inspector.language.placeholder",
+          "Select language",
+        )}
+        onChange={(lang) => {
+          if (span?.languageEditable && active !== null) {
+            inner.onSetLanguage(active, lang);
+          } else if (lang) onPick?.(lang);
+        }}
+        label={label}
+        testId="pdf-editor-quick-tag-selected-language"
       />
     </>
   );

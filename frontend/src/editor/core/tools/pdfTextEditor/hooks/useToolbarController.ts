@@ -612,6 +612,7 @@ export function useToolbarController(
     onSetTextTag: textA11y.setTag,
     textDescription: textA11y.description,
     textLanguage: textA11y.language,
+    textInner: textA11y.inner,
     textUntaggedLinks: textA11y.untaggedLinks,
     textUndescribedLinks: textA11y.undescribedLinks,
     selectionAllLocked,

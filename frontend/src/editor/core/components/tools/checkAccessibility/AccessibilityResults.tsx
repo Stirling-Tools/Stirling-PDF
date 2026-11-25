@@ -43,6 +43,11 @@ import { reviewPanelSlot } from "@editor/tools/pdfTextEditor/store/reviewPanelSl
 
 const NO_TICKS: ReadonlySet<number> = new Set();
 
+/** Ticks and the open view follow the checked file, so a save keeps them. */
+function reportKey(entry: AccessibilityReportEntry): FileId {
+  return entry.checkedFileId ?? entry.fileId;
+}
+
 interface AccessibilityResultsProps {
   operation: CheckAccessibilityOperationHook;
   /** Falls back to the first report when this file is not in the run. */
@@ -96,7 +101,7 @@ export function AccessibilityResults({
       const pdf = await createAccessibilityReportPdf(
         entry,
         t,
-        manualTicks[entry.fileId] ?? NO_TICKS,
+        manualTicks[reportKey(entry)] ?? NO_TICKS,
       );
       await downloadFile({ data: pdf, filename: pdf.name });
     } catch (error) {
@@ -108,7 +113,11 @@ export function AccessibilityResults({
   };
 
   const selected =
-    results.find((entry) => entry.fileId === selectedFileId) ?? results[0];
+    results.find(
+      (entry) =>
+        entry.fileId === selectedFileId ||
+        entry.checkedFileId === selectedFileId,
+    ) ?? results[0];
   const claim = useCheckedFileClaim(
     selected?.fileId ?? null,
     selected?.report ?? null,
@@ -204,16 +213,18 @@ export function AccessibilityResults({
 
           {selected.report ? (
             <AccessibilityReportView
-              key={selected.fileId}
+              key={reportKey(selected)}
               report={selected.report}
-              manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
+              manualTicked={manualTicks[reportKey(selected)] ?? NO_TICKS}
               fixes={reviewAvailable ? reportFixes(selected.report) : undefined}
               live={<div ref={reviewPanelSlot.attach} className="a11y-live" />}
-              onToggleManual={(index) => toggleManual(selected.fileId, index)}
+              onToggleManual={(index) =>
+                toggleManual(reportKey(selected), index)
+              }
               onSetAllManual={(done) =>
                 setManualTicks((current) => ({
                   ...current,
-                  [selected.fileId]: new Set(
+                  [reportKey(selected)]: new Set(
                     done
                       ? selected.report?.humanChecks.map((_, index) => index)
                       : [],
