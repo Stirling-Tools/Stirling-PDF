@@ -4,6 +4,7 @@ import { connectionModeService } from "@editor/services/connectionModeService";
 import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
 import { clearPolicies } from "@editor/services/policyStorage";
 import { resetPolicyRuns } from "@editor/components/policies/policyRunStore";
+import { forgetServerFontList } from "@editor/tools/pdfTextEditor/util/serverFonts";
 
 /**
  * Drops cached responses when the backend behind them changes. operationRouter
@@ -16,7 +17,10 @@ export function DesktopQueryCacheReset() {
   useEffect(() => {
     // resetQueries, not clear(): clear() evicts without notifying mounted
     // observers, so a panel keeps rendering the old backend's answer.
-    const reset = () => void queryClient.resetQueries();
+    const reset = () => {
+      forgetServerFontList();
+      void queryClient.resetQueries();
+    };
     const unsubscribeMode = connectionModeService.subscribeToModeChanges(() => {
       clearPolicies();
       resetPolicyRuns();

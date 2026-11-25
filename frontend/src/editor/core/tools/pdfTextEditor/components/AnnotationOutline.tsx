@@ -8,6 +8,9 @@ interface AnnotationOutlineProps {
   pageHeight: number;
   transform: DisplayTransform;
   scale: number;
+  selected?: boolean;
+  /** Makes the outline selectable by click. */
+  onSelect?: () => void;
 }
 
 // FreeText/widget/stamp text is painted by FPDF_ANNOT but lives outside the
@@ -19,6 +22,8 @@ export function AnnotationOutline({
   pageHeight,
   transform,
   scale,
+  selected = false,
+  onSelect,
 }: AnnotationOutlineProps) {
   const { t } = useTranslation();
   const { rect, kind } = annotation;
@@ -59,9 +64,16 @@ export function AnnotationOutline({
 
   return (
     <div
-      className="pdf-editor-annotation-outline"
+      className={[
+        "pdf-editor-annotation-outline",
+        onSelect && "pdf-editor-annotation-outline--selectable",
+        selected && "pdf-editor-annotation-outline--selected",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       data-testid={`pdf-editor-annot-${annotation.id}`}
       data-annot-kind={kind}
+      data-selected={selected ? "true" : undefined}
       title={label}
       aria-label={label}
       style={{
@@ -75,6 +87,18 @@ export function AnnotationOutline({
         // click and stays editable.
         pointerEvents: "auto",
       }}
+      onPointerDown={
+        onSelect &&
+        ((e) => {
+          // Ctrl/Cmd+Shift+drag is the marquee gesture - let it reach the stage.
+          if ((e.ctrlKey || e.metaKey) && e.shiftKey) return;
+          // Otherwise the stage's "press on empty space clears" handler would
+          // drop the selection this press makes.
+          e.stopPropagation();
+          onSelect();
+        })
+      }
+      onClick={onSelect && ((e) => e.stopPropagation())}
     />
   );
 }

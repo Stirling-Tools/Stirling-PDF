@@ -1,7 +1,6 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import i18n from "i18next";
 import { fetch } from "@tauri-apps/plugin-http";
-import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
 
 export type ConnectionMode = "saas" | "selfhosted" | "local";
@@ -183,12 +182,6 @@ export class ConnectionModeService {
       lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false,
     };
 
-    // Clear endpoint availability cache when mode changes
-    endpointAvailabilityService.clearCache();
-    console.log(
-      "Cleared endpoint availability cache due to connection mode change",
-    );
-
     this.notifyListeners();
 
     // Re-dispatch `jwt-available` so the proprietary AuthProvider re-runs
@@ -246,9 +239,6 @@ export class ConnectionModeService {
       lock_connection_mode: isLocked,
     };
 
-    // Clear endpoint availability cache when mode changes
-    endpointAvailabilityService.clearCache();
-
     this.notifyListeners();
   }
 
@@ -273,12 +263,6 @@ export class ConnectionModeService {
       server_config: serverConfig,
       lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false,
     };
-
-    // Clear endpoint availability cache when mode changes
-    endpointAvailabilityService.clearCache();
-    console.log(
-      "Cleared endpoint availability cache due to connection mode change",
-    );
 
     // Single authoritative calling point for health monitoring — every path that
     // switches to self-hosted mode funnels through here.

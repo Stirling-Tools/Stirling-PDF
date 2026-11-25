@@ -1,20 +1,105 @@
-import { useState, useEffect } from "react";
-import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
+import { Fragment, useId, useState, useEffect, useRef } from "react";
+import { Paper, Group, Menu, NumberInput, TextInput } from "@mantine/core";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
-import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
+import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import "@editor/components/viewer/PdfViewerToolbar.css";
-import { Icon } from "@editor/ui/Icon";
+import {
+  SelectedNote,
+  toggleProps,
+} from "@editor/components/viewer/ViewerBarControls";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import {
+  defaultZoomLevel,
+  MAX_ZOOM_PERCENT,
+  MIN_ZOOM_PERCENT,
+} from "@editor/components/viewer/defaultZoom";
 
 // Sizing constants for the page number input
 const MIN_PAGE_DIGITS = 2;
 const MIN_INPUT_WIDTH_PX = 48;
 const BASE_INPUT_WIDTH_PX = 32;
 const PX_PER_DIGIT = 8;
+
+/**
+ * The current zoom as an editable percentage. Typing replaces it on Enter or
+ * on leaving the box; Escape puts the current zoom back.
+ */
+function ZoomPercentInput({
+  percent,
+  onCommit,
+  label,
+}: {
+  percent: number;
+  onCommit: (percent: number) => void;
+  label: string;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  // Enter and Escape blur before the cleared draft renders; that blur must
+  // not commit again.
+  const discardRef = useRef(false);
+  const commit = () => {
+    if (discardRef.current) {
+      discardRef.current = false;
+      return;
+    }
+    if (draft === null) return;
+    const typed = Number.parseFloat(draft.replace("%", ""));
+    if (Number.isFinite(typed)) {
+      onCommit(
+        Math.min(
+          Math.max(Math.round(typed), MIN_ZOOM_PERCENT),
+          MAX_ZOOM_PERCENT,
+        ),
+      );
+    }
+    setDraft(null);
+  };
+  return (
+    <TextInput
+      value={draft ?? `${percent}%`}
+      onFocus={(e) => {
+        // Same text as shown, so the selection survives the re-render and
+        // typing replaces it.
+        setDraft(`${percent}%`);
+        e.currentTarget.select();
+      }}
+      onChange={(e) => setDraft(e.currentTarget.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          commit();
+          discardRef.current = true;
+          e.currentTarget.blur();
+        } else if (e.key === "Escape") {
+          discardRef.current = true;
+          setDraft(null);
+          e.currentTarget.blur();
+        }
+      }}
+      aria-label={label}
+      inputMode="decimal"
+      size="xs"
+      data-testid="viewer-zoom-input"
+      styles={{
+        input: {
+          width: "3.75rem",
+          textAlign: "center",
+          fontWeight: 500,
+          fontSize: 13,
+          paddingLeft: 4,
+          paddingRight: 4,
+        },
+      }}
+    />
+  );
+}
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -36,46 +121,86 @@ export function PdfViewerToolbar({
   const {
     getScrollState,
     getZoomState,
-    getSpreadState,
     scrollActions,
     zoomActions,
-    spreadActions,
+    rotationActions,
     zoomRestorePendingRef,
     zoomRestoreSettledTick,
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
-    registerImmediateSpreadUpdate,
-    pdfRenderMode,
-    cyclePdfRenderMode,
   } = useViewer();
+  const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
+  const { preferences } = usePreferences();
+  // Resetting returns to the zoom documents open at, as set in the View menu.
+  const resetZoomLevel = defaultZoomLevel(preferences.defaultViewerZoom);
+  const [resetZoomIcon, resetZoomLabel]: [IconName, string] =
+    resetZoomLevel === ZoomMode.FitPage
+      ? ["scan", t("viewer.resetZoomFitPage", "Reset zoom: fit to page")]
+      : resetZoomLevel === ZoomMode.FitWidth
+        ? [
+            "arrow-left-right",
+            t("viewer.resetZoomFitWidth", "Reset zoom: fit to width"),
+          ]
+        : [
+            "scan",
+            t("viewer.resetZoomPercent", "Reset zoom: {{percent}}%", {
+              percent: Math.round(Number(resetZoomLevel) * 100),
+            }),
+          ];
+  const handleResetZoom = () => zoomActions.requestZoom(resetZoomLevel);
+  // Viewer controls registered for this bar rather than the top one.
+  const pageBarButtons = buttons.filter(
+    (button) => button.section === "page-bar" && (button.visible ?? true),
+  );
+  // A narrow bar folds these into a Tools menu where the first of them sits.
+  const foldingButtons = pageBarButtons.filter(
+    (button) => button.foldsIntoMenu,
+  );
+  const firstFoldingId = foldingButtons[0]?.id;
+  // The menu shows a folded tool that is on, as the tool's own button would.
+  const activeFoldedTool = foldingButtons.find((button) => button.active);
+  const toolsLabel = t("viewer.tools", "Tools");
+  const selectedNoteId = useId();
+
+  // A page tool edits pages upright, so the view stays unrotated while it is open.
+  const rotateDisabled = useViewerPageTool() != null;
+  const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
+  const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
+  const rotations = [
+    ["rotate-ccw", rotateLeftLabel, () => rotationActions.rotateBackward()],
+    ["rotate-cw", rotateRightLabel, () => rotationActions.rotateForward()],
+  ] as const;
+  // Rotation joins the Tools menu when the bar narrows, so it stays reachable.
+  const rotateClass = firstFoldingId
+    ? "pdf-viewer-toolbar__tool--folds"
+    : "pdf-viewer-toolbar-wide-only";
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
-  const spreadState = getSpreadState();
   const [pageInput, setPageInput] = useState(
     scrollState.currentPage || currentPage,
   );
+  const committedPageRef = useRef(pageInput);
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
   );
 
-  const [zoomLevel, setZoomLevel] = useState(() => zoomState.level);
-  const [spreadMode, setSpreadMode] = useState(spreadState.spreadMode);
-  const isDualPageActive = spreadMode !== SpreadMode.None;
-  const isCoverPageActive = spreadMode === SpreadMode.Even;
-
-  // Register for immediate scroll updates and sync with actual scroll state
+  // Keep the subscription; sync live state in a separate effect.
   useEffect(() => {
     const unregister = registerImmediateScrollUpdate(
       (currentPage, _totalPages) => {
         setPageInput(currentPage);
       },
     );
-    setPageInput(scrollState.currentPage);
     return () => {
       unregister?.();
     };
-  }, [registerImmediateScrollUpdate, scrollState.currentPage]);
+  }, [registerImmediateScrollUpdate]);
+
+  useEffect(() => {
+    setPageInput(scrollState.currentPage);
+    committedPageRef.current = scrollState.currentPage;
+  }, [scrollState.currentPage]);
 
   // A carried zoom's fit pass is intermediate, so the readout holds until its
   // settled tick re-syncs from the live state.
@@ -83,36 +208,17 @@ export function PdfViewerToolbar({
     const unregister = registerImmediateZoomUpdate((percent) => {
       if (zoomRestorePendingRef.current) return;
       setDisplayZoomPercent(percent);
-      setZoomLevel(getZoomState().level);
     });
-    if (!zoomRestorePendingRef.current) {
-      setDisplayZoomPercent(zoomState.zoomPercent || 100);
-      setZoomLevel(zoomState.level);
-    }
     return () => {
       unregister?.();
     };
-  }, [
-    registerImmediateZoomUpdate,
-    getZoomState,
-    zoomState.zoomPercent,
-    zoomState.level,
-    zoomRestorePendingRef,
-    zoomRestoreSettledTick,
-  ]);
-
-  const isFitWidthActive = zoomLevel === ZoomMode.FitWidth;
-  const isFitPageActive = zoomLevel === ZoomMode.FitPage;
+  }, [registerImmediateZoomUpdate, getZoomState, zoomRestorePendingRef]);
 
   useEffect(() => {
-    const unregister = registerImmediateSpreadUpdate((mode) => {
-      setSpreadMode(mode);
-    });
-    setSpreadMode(spreadState.spreadMode);
-    return () => {
-      unregister?.();
-    };
-  }, [registerImmediateSpreadUpdate, spreadState.spreadMode]);
+    if (!zoomRestorePendingRef.current) {
+      setDisplayZoomPercent(zoomState.zoomPercent || 100);
+    }
+  }, [zoomState.zoomPercent, zoomRestorePendingRef, zoomRestoreSettledTick]);
 
   const handleZoomOut = () => {
     zoomActions.zoomOut();
@@ -120,14 +226,6 @@ export function PdfViewerToolbar({
 
   const handleZoomIn = () => {
     zoomActions.zoomIn();
-  };
-
-  const handleFitWidth = () => {
-    zoomActions.requestZoom(ZoomMode.FitWidth);
-  };
-
-  const handleFitPage = () => {
-    zoomActions.requestZoom(ZoomMode.FitPage);
   };
 
   const handlePageNavigation = (page: number) => {
@@ -138,14 +236,18 @@ export function PdfViewerToolbar({
     setPageInput(page);
   };
 
-  const handleDualPageToggle = () => {
-    spreadActions.toggleSpreadMode();
-  };
-
-  const handleCoverPageToggle = () => {
-    spreadActions.setSpreadMode(
-      isCoverPageActive ? SpreadMode.Odd : SpreadMode.Even,
-    );
+  // Commit on Enter or blur so typing "120" scrolls once.
+  const commitPageInput = () => {
+    const page = Number(pageInput);
+    if (Number.isInteger(page) && page >= 1 && page <= scrollState.totalPages) {
+      // Enter already committed; don't scroll again on the following blur.
+      if (page !== committedPageRef.current) {
+        committedPageRef.current = page;
+        handlePageNavigation(page);
+      }
+    } else {
+      setPageInput(scrollState.currentPage);
+    }
   };
 
   const handleFirstPage = () => {
@@ -221,16 +323,20 @@ export function PdfViewerToolbar({
 
       {/* Page Input */}
       <NumberInput
+        aria-label={t("viewer.pageNumber", "Page number")}
         value={pageInput}
         onChange={(value) => {
-          const page = Number(value);
-          setPageInput(page);
-          if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
-            handlePageNavigation(page);
+          setPageInput(Number(value));
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+            commitPageInput();
           }
         }}
+        onBlur={commitPageInput}
         min={1}
         max={scrollState.totalPages}
+        allowDecimal={false}
         hideControls
         size="xs"
         styles={{
@@ -287,98 +393,112 @@ export function PdfViewerToolbar({
 
       {/* Hairline between the groups, as the rails divide theirs. */}
       {!isPhone && (
-        <div className="pdf-viewer-toolbar__divider pdf-viewer-toolbar-wide-only" />
+        <div className={`pdf-viewer-toolbar__divider ${rotateClass}`} />
       )}
 
-      {/* Dual Page Toggle */}
-      {!isPhone && (
-        <Tooltip
-          content={
-            isDualPageActive
-              ? t("viewer.singlePageView", "Single Page View")
-              : t("viewer.dualPageView", "Dual Page View")
-          }
-          position="top"
-          arrow
-        >
-          <ActionIcon
-            variant={isDualPageActive ? "primary" : "tertiary"}
-            size={buttonSize}
-            className="pdf-viewer-toolbar-wide-only"
-            onClick={handleDualPageToggle}
-            disabled={scrollState.totalPages <= 1}
-            style={{ minWidth: buttonMinWidth }}
-            aria-label={
-              isDualPageActive
-                ? t("viewer.singlePageView", "Single Page View")
-                : t("viewer.dualPageView", "Dual Page View")
-            }
-          >
-            {isDualPageActive ? (
-              <Icon name="file-text" size={18} />
-            ) : (
-              <Icon name="columns-2" size={18} />
-            )}
-          </ActionIcon>
-        </Tooltip>
+      {!isPhone &&
+        rotations.map(([icon, label, rotate]) => (
+          <Tooltip key={icon} content={label} position="top" arrow>
+            <ActionIcon
+              variant="tertiary"
+              size={buttonSize}
+              className={rotateClass}
+              onClick={() => rotate()}
+              disabled={rotateDisabled}
+              style={{ minWidth: buttonMinWidth }}
+              aria-label={label}
+            >
+              <Icon name={icon} size={18} />
+            </ActionIcon>
+          </Tooltip>
+        ))}
+
+      {pageBarButtons.length > 0 && (
+        <>
+          <div className="pdf-viewer-toolbar__divider" />
+          {pageBarButtons.map((button) => (
+            <Fragment key={button.id}>
+              {button.id === firstFoldingId && (
+                <Tooltip content={toolsLabel} position="top" arrow>
+                  {/* Menu.Target is the button: popup ARIA is invalid on a span. */}
+                  <span className="pdf-viewer-toolbar__tools-menu">
+                    <Menu
+                      shadow="md"
+                      position="top"
+                      withinPortal
+                      closeOnItemClick={false}
+                    >
+                      <Menu.Target>
+                        <ActionIcon
+                          variant={activeFoldedTool ? "primary" : "tertiary"}
+                          size={buttonSize}
+                          aria-label={toolsLabel}
+                          data-testid="viewer-page-tools-menu"
+                        >
+                          {activeFoldedTool?.icon ?? (
+                            <Icon name="pencil-ruler" size={18} />
+                          )}
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <SelectedNote id={selectedNoteId} />
+                        {foldingButtons.map((tool) => (
+                          <Menu.Item
+                            key={tool.id}
+                            leftSection={tool.icon}
+                            {...toggleProps(
+                              Boolean(tool.active),
+                              selectedNoteId,
+                            )}
+                            disabled={Boolean(
+                              tool.disabled ||
+                              allButtonsDisabled ||
+                              !actions[tool.id],
+                            )}
+                            onClick={() => actions[tool.id]?.()}
+                          >
+                            {tool.ariaLabel}
+                          </Menu.Item>
+                        ))}
+                        <Menu.Divider />
+                        {rotations.map(([icon, label, rotate]) => (
+                          <Menu.Item
+                            key={icon}
+                            leftSection={<Icon name={icon} size={18} />}
+                            disabled={rotateDisabled}
+                            onClick={() => rotate()}
+                          >
+                            {label}
+                          </Menu.Item>
+                        ))}
+                      </Menu.Dropdown>
+                    </Menu>
+                  </span>
+                </Tooltip>
+              )}
+              <span
+                className={
+                  button.foldsIntoMenu
+                    ? "pdf-viewer-toolbar__tool pdf-viewer-toolbar__tool--folds"
+                    : "pdf-viewer-toolbar__tool"
+                }
+                data-active={button.active || undefined}
+              >
+                {button.render?.({
+                  id: button.id,
+                  disabled: Boolean(button.disabled || allButtonsDisabled),
+                  allButtonsDisabled,
+                  action: actions[button.id],
+                  triggerAction: () => actions[button.id]?.(),
+                  active: Boolean(button.active),
+                })}
+              </span>
+            </Fragment>
+          ))}
+        </>
       )}
 
-      {!isPhone && isDualPageActive && (
-        <Tooltip
-          content={t("viewer.coverPageView", "Show Cover Page Separately")}
-          position="top"
-          arrow
-        >
-          <ActionIcon
-            variant={isCoverPageActive ? "primary" : "tertiary"}
-            size={buttonSize}
-            className="pdf-viewer-toolbar-wide-only"
-            onClick={handleCoverPageToggle}
-            disabled={scrollState.totalPages <= 1}
-            style={{ minWidth: buttonMinWidth }}
-            aria-pressed={isCoverPageActive}
-            aria-label={t("viewer.coverPageView", "Show Cover Page Separately")}
-          >
-            <Icon name="book" size={18} />
-          </ActionIcon>
-        </Tooltip>
-      )}
-
-      {/* PDF Render Mode Toggle */}
-      {!isPhone && (
-        <Tooltip
-          content={
-            pdfRenderMode === "normal"
-              ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-              : pdfRenderMode === "dark"
-                ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                : t("viewer.disableColorFilter", "Disable Color Filter")
-          }
-          position="top"
-          arrow
-        >
-          <ActionIcon
-            variant={pdfRenderMode !== "normal" ? "primary" : "tertiary"}
-            size={buttonSize}
-            className="pdf-viewer-toolbar-wide-only"
-            onClick={cyclePdfRenderMode}
-            style={{ minWidth: buttonMinWidth }}
-            aria-label={
-              pdfRenderMode === "normal"
-                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-                : pdfRenderMode === "dark"
-                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                  : t("viewer.disableColorFilter", "Disable Color Filter")
-            }
-          >
-            {pdfRenderMode === "normal" && <Icon name="moon" size={18} />}
-            {pdfRenderMode === "dark" && <Icon name="sunset" size={18} />}
-            {pdfRenderMode === "sepia" && <Icon name="sun" size={18} />}
-          </ActionIcon>
-        </Tooltip>
-      )}
-
-      {/* Desktop zoom controls (slider + buttons) */}
+      {/* Desktop zoom controls */}
       {!isPhone && (
         <Group gap={4} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
           <div className="pdf-viewer-toolbar__divider" />
@@ -390,20 +510,10 @@ export function PdfViewerToolbar({
           >
             <Icon name="zoom-out" size={18} />
           </ActionIcon>
-          <Slider
-            className="pdf-viewer-toolbar-zoom-slider"
-            value={Math.min(Math.max(displayZoomPercent, 20), 500)}
-            min={20}
-            max={500}
-            step={5}
-            onChange={(val) => zoomActions.setZoomLevel?.(val / 100)}
-            size="xs"
-            styles={{
-              root: { minWidth: "6rem", width: "6rem", flexShrink: 0 },
-              thumb: { width: 12, height: 12 },
-              track: { height: 2 },
-            }}
-            label={null}
+          <ZoomPercentInput
+            percent={displayZoomPercent}
+            onCommit={(percent) => zoomActions.setZoomLevel?.(percent / 100)}
+            label={t("viewer.zoomLevel", "Zoom level")}
           />
           <ActionIcon
             variant="tertiary"
@@ -413,44 +523,15 @@ export function PdfViewerToolbar({
           >
             <Icon name="zoom-in" size={18} />
           </ActionIcon>
-          <span
-            style={{
-              minWidth: "2.5rem",
-              textAlign: "center",
-              fontSize: 12,
-              color: "var(--c-text-subtle)",
-            }}
-          >
-            {displayZoomPercent}%
-          </span>
-          <Tooltip
-            content={t("viewer.fitWidth", "Fit to width")}
-            position="top"
-            arrow
-          >
+          <Tooltip content={resetZoomLabel} position="top" arrow>
             <ActionIcon
-              variant={isFitWidthActive ? "primary" : "tertiary"}
+              variant="tertiary"
               size={buttonSize}
-              onClick={handleFitWidth}
-              aria-label={t("viewer.fitWidth", "Fit to width")}
-              aria-pressed={isFitWidthActive}
+              onClick={handleResetZoom}
+              aria-label={resetZoomLabel}
+              data-testid="viewer-reset-zoom"
             >
-              <Icon name="arrow-left-right" size={18} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip
-            content={t("viewer.fitPage", "Fit to page")}
-            position="top"
-            arrow
-          >
-            <ActionIcon
-              variant={isFitPageActive ? "primary" : "tertiary"}
-              size={buttonSize}
-              onClick={handleFitPage}
-              aria-label={t("viewer.fitPage", "Fit to page")}
-              aria-pressed={isFitPageActive}
-            >
-              <Icon name="scan" size={18} />
+              <Icon name={resetZoomIcon} size={18} />
             </ActionIcon>
           </Tooltip>
         </Group>
@@ -507,68 +588,26 @@ export function PdfViewerToolbar({
               {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
             </Menu.Item>
             <Menu.Item
-              leftSection={<Icon name="arrow-left-right" size={18} />}
-              rightSection={isFitWidthActive && <Icon name="check" size={16} />}
-              aria-current={isFitWidthActive || undefined}
-              onClick={handleFitWidth}
+              leftSection={<Icon name={resetZoomIcon} size={18} />}
+              onClick={handleResetZoom}
             >
-              {t("viewer.fitWidth", "Fit to width")}
+              {resetZoomLabel}
             </Menu.Item>
-            <Menu.Item
-              leftSection={<Icon name="scan" size={18} />}
-              rightSection={isFitPageActive && <Icon name="check" size={16} />}
-              aria-current={isFitPageActive || undefined}
-              onClick={handleFitPage}
-            >
-              {t("viewer.fitPage", "Fit to page")}
-            </Menu.Item>
-
             <Menu.Divider />
-            <Menu.Label>{t("viewer.view", "View")}</Menu.Label>
+            <Menu.Label>{t("viewer.rotate", "Rotate")}</Menu.Label>
             <Menu.Item
-              leftSection={
-                isDualPageActive ? (
-                  <Icon name="file-text" size={18} />
-                ) : (
-                  <Icon name="columns-2" size={18} />
-                )
-              }
-              disabled={scrollState.totalPages <= 1}
-              onClick={handleDualPageToggle}
+              leftSection={<Icon name="rotate-ccw" size={18} />}
+              disabled={rotateDisabled}
+              onClick={() => rotationActions.rotateBackward()}
             >
-              {isDualPageActive
-                ? t("viewer.singlePageView", "Single Page View")
-                : t("viewer.dualPageView", "Dual Page View")}
+              {rotateLeftLabel}
             </Menu.Item>
-            {isDualPageActive && (
-              <Menu.Item
-                leftSection={<Icon name="book" size={18} />}
-                rightSection={
-                  isCoverPageActive && <Icon name="check" size={16} />
-                }
-                disabled={scrollState.totalPages <= 1}
-                onClick={handleCoverPageToggle}
-              >
-                {t("viewer.coverPageView", "Show Cover Page Separately")}
-              </Menu.Item>
-            )}
             <Menu.Item
-              leftSection={
-                pdfRenderMode === "normal" ? (
-                  <Icon name="moon" size={18} />
-                ) : pdfRenderMode === "dark" ? (
-                  <Icon name="sunset" size={18} />
-                ) : (
-                  <Icon name="sun" size={18} />
-                )
-              }
-              onClick={cyclePdfRenderMode}
+              leftSection={<Icon name="rotate-cw" size={18} />}
+              disabled={rotateDisabled}
+              onClick={() => rotationActions.rotateForward()}
             >
-              {pdfRenderMode === "normal"
-                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-                : pdfRenderMode === "dark"
-                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                  : t("viewer.disableColorFilter", "Disable Color Filter")}
+              {rotateRightLabel}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>

@@ -512,6 +512,11 @@ submit = "ปรับสเกลหน้า"
 tags = "ปรับขนาด,แก้ไข,มิติ,ปรับให้เหมาะ"
 title = "ปรับสเกลหน้า"
 
+[adjustPageScale.customSize]
+height = "ความสูง"
+unit = "หน่วย"
+width = "ความกว้าง"
+
 [adjustPageScale.error]
 failed = "เกิดข้อผิดพลาดขณะปรับสเกลหน้า"
 
@@ -521,6 +526,7 @@ landscape = "แนวนอน"
 portrait = "แนวตั้ง"
 
 [adjustPageScale.pageSize]
+custom = "กำหนดเอง"
 keep = "คงขนาดเดิม"
 label = "ขนาดหน้าที่ต้องการ"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "DPI สูงสุดสำหรับการประมว�
 label = "DPI สูงสุด"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "กำหนดขีดจำกัดเซสชันและระยะหมดเวลาสำหรับตัวประมวลผลแต่ละตัว"
 ghostscript = "Ghostscript"
 installApp = "ติดตั้งแอป"
 label = "ข้อจำกัดของตัวประมวลผลกระบวนการ"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "การแปลงไฟล์ Office"
+officeConvertSessionLimit = "จำนวนการแปลงพร้อมกันสูงสุด; 0 จะเลือกขีดจำกัดตาม CPU และหน่วยความจำ"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "จำนวนอินสแตนซ์พร้อมกันสูงสุด"
@@ -661,10 +665,6 @@ label = "ขีดจำกัดเซสชัน"
 [admin.settings.advanced.processExecutor.timeout]
 description = "เวลาในการทำงานสูงสุด"
 label = "ระยะหมดเวลา (นาที)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert อยู่ในเวอร์ชันเบต้า ให้การแปลงที่ดีกว่า เร็วกว่า และใช้หน่วยความจำน้อยกว่า LibreOffice"
-label = "ใช้การแปลง Stirling Office แบบใหม่"
 
 [admin.settings.advanced.tempFileManagement]
 description = "กำหนดค่าการจัดเก็บไฟล์ชั่วคราวและพฤติกรรมการล้างไฟล์"
@@ -682,11 +682,6 @@ label = "ช่วงเวลาการล้าง (นาที)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "จะทำความสะอาดไดเรกทอรีชั่วคราวของระบบในวงกว้างหรือไม่ (ใช้ด้วยความระมัดระวัง)"
 label = "ล้างไดเรกทอรีชั่วคราวของระบบ"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "ไดเรกทอรีสำหรับไฟล์ชั่วคราวของ LibreOffice (ปล่อยว่างเพื่อค่าเริ่มต้น: baseTmpDir/libreoffice)"
-label = "ไดเรกทอรีชั่วคราวของ LibreOffice"
-placeholder = "ค่าเริ่มต้น: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "อายุสูงสุดเป็นชั่วโมงก่อนที่จะล้างไฟล์ชั่วคราว"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "ยืดภาพให้เต็มหน�
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "คงไว้ (ขนาดดั้งเดิม)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "วิธีตั้งค่า {{name}}"
 title = "การเชื่อมต่อ"
 unlinkedServices = "บริการที่ยังไม่เชื่อมต่อ"
 
@@ -1294,17 +1290,6 @@ label = "ผู้ผลิตเริ่มต้น"
 description = "กำหนดค่าพาธระบบไฟล์แบบกำหนดเองสำหรับการประมวลผล Pipeline และเครื่องมือภายนอก"
 label = "พาธแบบกำหนดเอง"
 
-[admin.settings.general.customPaths.operations]
-label = "พาธเครื่องมือภายนอก"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "พาธไปยัง LibreOffice unoconvert สำหรับการแปลงเอกสาร (ปล่อยว่างเพื่อค่าเริ่มต้น: /opt/venv/bin/unoconvert)"
-label = "ไฟล์ปฏิบัติการ Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "พาธไปยังไฟล์ปฏิบัติการ WeasyPrint สำหรับแปลง HTML เป็น PDF (ปล่อยว่างเพื่อค่าเริ่มต้น: /opt/venv/bin/weasyprint)"
-label = "ไฟล์ปฏิบัติการ WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "ไดเรกทอรี Pipeline"
 
@@ -1327,6 +1312,10 @@ label = "ไดเรกทอรีโฟลเดอร์ที่เฝ้�
 [admin.settings.general.defaultLocale]
 description = "ภาษาค่าเริ่มต้นสำหรับผู้ใช้ใหม่ (เช่น en_US, es_ES)"
 label = "Locale เริ่มต้น"
+
+[admin.settings.general.enableFeedback]
+description = "ให้ผู้ใช้ส่งข้อเสนอแนะถึงทีม Stirling"
+label = "เปิดใช้งานข้อเสนอแนะ"
 
 [admin.settings.general.fileUploadLimit]
 description = "ขนาดไฟล์อัปโหลดสูงสุด (เช่น 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "เหตุการณ์แบบ STANDARD เพิ่มเต�
 [admin.settings.security.audit.retentionDays]
 description = "จำนวนวันที่เก็บ audit logs (0 = เก็บไม่จำกัด)"
 label = "ระยะเวลาเก็บบันทึก (วัน)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "PDF ที่มีลายเซ็นยังสามารถดู พิมพ์ แปลง หรือเซ็นใหม่ได้ แต่ไม่สามารถแก้ไขในแอปได้ คำขอ API และไปป์ไลน์ของเซิร์ฟเวอร์ไม่ได้รับผลกระทบ."
+label = "ปิดกั้นการเปลี่ยนแปลงใน PDF ที่มีลายเซ็น"
 
 [admin.settings.security.csrfDisabled]
 description = "ปิดการป้องกัน Cross-Site Request Forgery (ไม่แนะนำ)"
@@ -2969,6 +2962,7 @@ loadError = "ไม่สามารถโหลดผู้ใช้ได้"
 noTeam = "ไม่มีทีม"
 noUsers = "ไม่พบผู้ใช้อื่น"
 placeholder = "เลือกผู้ใช้..."
+signInRequired = "ลงชื่อเข้าใช้เพื่อขอให้บุคคลอื่นลงนาม."
 you = "{{name}} (คุณ)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "บัญชีของคุณถูกจัดการโด
 title = "เปลี่ยนข้อมูลรับรอง"
 
 [changeMetadata]
-filenamePrefix = "เมตาดาตา"
 submit = "เปลี่ยน"
 tags = "แก้ไข,ปรับเปลี่ยน,อัปเดต,metadata,คุณสมบัติ,คุณสมบัติเอกสาร,ผู้เขียน,ชื่อเรื่อง,หัวเรื่อง,คำสำคัญ,ผู้สร้าง,ผู้ผลิต,ข้อมูล,ข้อมูลเอกสาร,คุณสมบัติไฟล์"
 
@@ -3265,6 +3258,248 @@ not_found = "ฉันไม่พบข้อมูลที่ร้องข�
 processing = "กำลังประมวลผล ({{outcome}})..."
 unsupported_capability = "ไม่รองรับความสามารถ: {{capability}}"
 usage_limit_reached = "คุณถึงขีดจำกัดการใช้งานแล้ว ตรวจสอบตัวเลือกแผนของคุณเพื่อใช้งานต่อ"
+
+[checkAccessibility]
+aboutRow = "เกี่ยวกับ {{label}}"
+checking = "กำลังตรวจสอบ..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "ดาวน์โหลดรายงานการช่วยการเข้าถึง"
+fileFailed = "ล้มเหลว"
+pickFile = "แสดงผลลัพธ์สำหรับ"
+submit = "ตรวจสอบการช่วยการเข้าถึง"
+
+[checkAccessibility.category]
+altText = "ข้อความแสดงแทน"
+fonts = "ฟอนต์"
+language = "ภาษา"
+links = "ลิงก์และคำอธิบายประกอบ"
+metadata = "ข้อมูลเมตาและการตั้งค่า"
+structure = "แท็กและโครงสร้าง"
+
+[checkAccessibility.categoryTip]
+altText = "รูปภาพต้องมีคำอธิบายสั้นๆ เพื่อให้โปรแกรมอ่านหน้าจออ่านออกแทนได้."
+fonts = "ฟอนต์ต้องถูกรวมอยู่ในไฟล์ โดยมีทุกอักขระเชื่อมโยงกับข้อความจริง เพื่อให้สามารถอ่านออกเสียงและคัดลอกได้."
+language = "โปรแกรมอ่านหน้าจอต้องรู้ภาษาของเอกสารเพื่อออกเสียงได้ถูกต้อง."
+links = "ลิงก์ ความเห็น และช่องฟอร์มต้องมีแท็กและคำอธิบาย และมีลำดับแท็บที่เป็นไปตามหน้า."
+metadata = "ชื่อเรื่อง คำประกาศ PDF/UA และการตั้งค่าอื่นๆ ที่เทคโนโลยีช่วยเหลืออ่านจากไฟล์."
+structure = "แท็กบอกโปรแกรมอ่านหน้าจอว่าส่วนต่างๆ ของหน้าเป็นอะไร เช่น หัวข้อ รายการ หรือ ตาราง และลำดับที่ควรอ่าน."
+
+[checkAccessibility.checks]
+label = "{{passed}} จาก {{total}} รายการผ่าน"
+
+[checkAccessibility.error]
+download = "ไม่สามารถสร้างรายงานการช่วยการเข้าถึงได้ โปรดลองอีกครั้ง."
+fileTitle = "ไม่สามารถตรวจสอบไฟล์นี้ได้"
+partial = "ไม่สามารถตรวจสอบไฟล์บางไฟล์ได้."
+
+[checkAccessibility.facts]
+declares = "ระบุ PDF/UA"
+displaysTitle = "แสดงชื่อเรื่อง"
+fonts = "ฝังฟอนต์แล้ว"
+language = "ระบุภาษา"
+notEncrypted = "ไม่ได้เข้ารหัส"
+tagged = "มีแท็ก"
+title = "มีชื่อเรื่อง"
+
+[checkAccessibility.factTip]
+declares = "ข้อมูลเมตาของไฟล์ระบุว่าปฏิบัติตาม PDF/UA."
+displaysTitle = "โปรแกรมอ่าน PDF จะแสดงชื่อเรื่องไม่ใช่ชื่อไฟล์เมื่อเปิดไฟล์."
+fonts = "ฟอนต์ทุกแบบที่ข้อความใช้ถูกรวมอยู่ในไฟล์."
+language = "ไฟล์ระบุว่าข้อความเป็นภาษาใด."
+notEncrypted = "ไฟล์ไม่ได้เข้ารหัส การเข้ารหัสอาจทำให้เทคโนโลยีช่วยเหลืออ่านไม่ได้."
+tagged = "ไฟล์มีแท็กอธิบายโครงสร้างของมัน หากไม่มี แว่นอ่านหน้าจอจะได้เพียงข้อความล้วน."
+title = "ไฟล์มีชื่อเรื่องในข้อมูลเมตา."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} รูปภาพต้องมีคำอธิบาย (หน้า {{pages}})"
+summary_other = "{{count}} รูปภาพต้องมีคำอธิบาย (หน้า {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "ใช้กับ"
+clauseValue = "{{spec}} §{{clause}}, การทดสอบ {{test}}"
+details = "รายละเอียด"
+instances_one = "{{count}} กรณี"
+instances_other = "{{count}} กรณี"
+onPages_one = "หน้า {{pages}}"
+onPages_other = "หน้า {{pages}}"
+onPagesPartial_one = "หน้า {{pages}} (อาจแสดงไม่ครบถ้วน)"
+onPagesPartial_other = "หน้า {{pages}} (อาจแสดงไม่ครบถ้วน)"
+pages = "หน้า"
+pagesPartialValue = "{{pages}} (บันทึกหน้าของการเกิดขึ้นครั้งแรกเท่านั้น ดังนั้นรายการนี้อาจไม่ครบถ้วน)"
+requirement = "ข้อกำหนด"
+rule = "กฎ"
+standard = "มาตรฐาน"
+where = "ตำแหน่ง"
+
+[checkAccessibility.manual]
+clearAll = "ล้างทั้งหมด"
+done = "เสร็จสิ้น"
+inProgress = "กำลังดำเนินการ"
+markAllDone = "ทำเครื่องหมายว่าทำเสร็จทั้งหมด"
+tip = "สิ่งที่ต้องอาศัยการตัดสินของคน เช่น ลำดับการอ่าน และว่าคำอธิบายรูปภาพสมเหตุสมผลหรือไม่ ติ๊กแต่ละข้อเมื่อคุณตรวจสอบแล้ว และเครื่องหมายของคุณจะถูกรวมในรายงานที่ดาวน์โหลด."
+title = "การตรวจสอบด้วยตนเอง"
+
+[checkAccessibility.objects]
+annotation = "คำอธิบายประกอบ"
+bookmark = "ที่คั่นหน้า"
+character = "อักขระในฟอนต์"
+contentPiece = "ส่วนหนึ่งของเนื้อหาหน้า"
+document = "เอกสาร"
+drawing = "ภาพวาด"
+figure = "รูปภาพ"
+file = "ตัวไฟล์เอง"
+font = "ฟอนต์"
+form = "แบบฟอร์ม"
+formField = "ช่องฟอร์ม"
+link = "ลิงก์"
+markedContent = "เนื้อหาหน้าพร้อมมาร์ก"
+metadata = "ข้อมูลเมตาของเอกสาร"
+page = "หน้า"
+properties = "คุณสมบัติของเอกสาร"
+tag = "แท็ก {{name}}"
+tagTree = "โครงสร้างแท็ก"
+textPiece = "ส่วนข้อความ"
+translatedMetadata = "รายการข้อมูลเมตาที่มีคำแปล"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (ต่อ)"
+footer = "ตรวจสอบด้วย Stirling PDF"
+page = "หน้า {{n}}"
+title = "รายงานการช่วยการเข้าถึง"
+
+[checkAccessibility.result]
+fail = "ไม่ผ่าน"
+failSummary = "โปรแกรมอ่านหน้าจออาจไม่สามารถอ่านเอกสารนี้ได้ทั้งหมด."
+partial = "บางส่วน"
+partialSummary = "โปรแกรมอ่านหน้าจอสามารถอ่านเอกสารนี้ได้ แต่บางการตรวจสอบไม่ผ่าน."
+pass = "ผ่าน"
+passSummary = "ผ่านการตรวจสอบ PDF/UA อัตโนมัติทุกข้อ."
+
+[checkAccessibility.rules]
+annotationLanguage = "ข้อความความคิดเห็นหรือลิงก์ไม่มีการตั้งค่าภาษา ดังนั้นโปรแกรมอ่านหน้าจอไม่รู้ว่าจะอ่านเป็นภาษาใด ตั้งค่าภาษาให้เอกสารเพื่อแก้ไข."
+annotationNoDescription = "ความคิดเห็น ลิงก์ หรือภาพวาดไม่มีคำอธิบายข้อความ ดังนั้นโปรแกรมอ่านหน้าจอจะไม่มีอะไรประกาศ."
+annotationNotTagged = "ความคิดเห็นหรือภาพวาดไม่ได้ถูกแท็กเป็นคำอธิบายประกอบ ดังนั้นโปรแกรมอ่านหน้าจอไม่สามารถเข้าถึงได้ตามลำดับการอ่าน."
+artifactInsideTagged = "บางสิ่งที่ทำเครื่องหมายว่าเป็นการตกแต่งอยู่ภายในเนื้อหาที่มีแท็ก จึงถูกทั้งอ่านและข้ามไปพร้อมกัน."
+bookmarkLanguage = "ที่คั่นหน้าไม่มีการตั้งค่าภาษา ดังนั้นโปรแกรมอ่านหน้าจอไม่รู้ว่าจะอ่านเป็นภาษาใด ตั้งค่าภาษาให้เอกสารเพื่อแก้ไข."
+conformancePrefix = "คำประกาศ PDF/UA ในข้อมูลเมตาใช้คำนำหน้าที่ไม่ถูกต้อง ทำให้โปรแกรมอ่าน PDF อาจไม่รู้จัก."
+contentLanguage = "ข้อความไม่มีการตั้งค่าภาษา ดังนั้นโปรแกรมอ่านหน้าจอไม่รู้ว่าจะอ่านเป็นภาษาใด ตั้งค่าภาษาให้เอกสารเพื่อแก้ไข."
+customTagNotMapped = "แท็กใช้ชื่อกำหนดเองที่ไม่ได้เชื่อมโยงกับแท็กมาตรฐาน ทำให้โปรแกรมอ่านหน้าจอไม่รู้ว่าคืออะไร."
+figureNoAlt = "รูปภาพถูกแท็กเป็นรูปภาพแต่ไม่มีคำอธิบาย ทำให้ผู้ใช้โปรแกรมอ่านหน้าจอไม่รู้ว่าแสดงอะไร."
+fontMissingGlyphs = "ฟอนต์ที่รวมอยู่ขาดอักขระบางตัวที่เอกสารใช้."
+fontNotEmbedded = "ไม่ได้รวมฟอนต์ไว้ในไฟล์ ทำให้ข้อความอาจแสดงต่างไป หรือถูกอ่านต่างออกไป บนคอมพิวเตอร์เครื่องอื่น."
+formFieldNotTagged = "ช่องฟอร์มไม่ได้ถูกแท็กว่าเป็นส่วนหนึ่งของแบบฟอร์ม ทำให้โปรแกรมอ่านหน้าจออาจหาไม่เจอ."
+genericHeading = "หัวข้อใช้แท็ก H ซึ่งไม่มีระดับ PDF/UA-2 ต้องการ H1 ถึง H6 เพื่อให้ผู้ใช้โปรแกรมอ่านหน้าจอทราบการซ้อนของหัวข้อ."
+glyphWidths = "ความกว้างอักขระของฟอนต์ในไฟล์ไม่ตรงกับฟอนต์จริง ทำให้ระยะห่างข้อความอาจผิดพลาด."
+headingSkipped = "ระดับหัวข้อข้ามขั้น เช่น จากหัวข้อ 1 ไปเป็นหัวข้อ 3 ทันที ทำให้การเลื่อนไปมาระหว่างหัวข้อสับสน."
+linkNoDescription = "ลิงก์ไม่มีคำอธิบาย ทำให้โปรแกรมอ่านหน้าจอจะอ่านได้แค่อยู่ที่อยู่ หรือตรวจไม่พบ."
+linkNotTagged = "ลิงก์ไม่ได้ถูกแท็กเป็นลิงก์ ทำให้โปรแกรมอ่านหน้าจอจะไม่ประกาศว่าเป็นลิงก์."
+metadataLanguage = "ข้อมูลเมตา เช่น ชื่อเรื่อง ไม่มีการตั้งค่าภาษา ดังนั้นโปรแกรมอ่านหน้าจอไม่รู้ว่าจะอ่านเป็นภาษาใด ตั้งค่าภาษาให้เอกสารเพื่อแก้ไข."
+noConformanceClaim = "ไฟล์ไม่ได้ระบุว่าปฏิบัติตาม PDF/UA ข้อมูลเมตาของมันต้องมีรายการระบุ PDF/UA."
+noDocumentTag = "แท็กต้องมีแท็ก Document เดียวอยู่บนสุด และทุกอย่างต้องอยู่ภายในนั้น."
+noLanguage = "เอกสารไม่ได้ระบุว่ามีภาษาใด ดังนั้นโปรแกรมอ่านหน้าจออาจอ่านเป็นภาษาที่ไม่ถูกต้อง."
+noMetadataStream = "ไฟล์ไม่มีข้อมูลเมตา XMP ซึ่งเป็นที่เก็บชื่อเรื่องและรายละเอียดการปฏิบัติตาม PDF/UA."
+noTags = "ไฟล์ไม่มีแท็กเลย ทำให้โปรแกรมอ่านหน้าจอแยกหัวข้อ ย่อหน้า รายการ หรือ ตาราง ไม่ออก และไม่สามารถอ่านตามลำดับที่ถูกต้อง."
+notdefGlyph = "ข้อความใช้ตัวแทน \"ตัวอักษรที่หายไป\" ซึ่งแสดงเป็นช่องว่างหรือกล่อง และไม่สามารถอ่านออกเสียงได้."
+noteTag = "ไฟล์ใช้แท็ก Note ซึ่งใน PDF/UA-2 ถูกแทนที่ด้วย FENote สำหรับเชิงอรรถและเชิงอ้างอิงท้าย."
+noTitle = "เอกสารไม่มีชื่อเรื่องในข้อมูลเมตา."
+notMarkedTagged = "ไฟล์ไม่ได้ถูกตั้งธงว่าเป็นไฟล์ที่มีแท็ก ทำให้เทคโนโลยีช่วยเหลืออาจเพิกเฉยต่อแท็กที่มีอยู่."
+notPdf2Tags = "PDF/UA-2 ต้องการแท็กที่ไฟล์ PDF 2.0 ใช้ แท็กเหล่านี้ดูเหมือนแท็ก PDF 1.7 ซึ่งมักหมายความว่าไฟล์ถูกแท็กสำหรับ PDF/UA-1."
+noUnicode = "อักขระบางตัวไม่สามารถแปลงเป็นข้อความที่อ่านได้ ทำให้โปรแกรมอ่านหน้าจอและการคัดลอก/วางอาจผิดพลาด."
+replacementTextLanguage = "ข้อความทดแทนบางส่วนไม่มีการตั้งค่าภาษา ดังนั้นโปรแกรมอ่านหน้าจอไม่รู้ว่าจะอ่านเป็นภาษาใด ตั้งค่าภาษาให้เอกสารเพื่อแก้ไข."
+standardTagRemapped = "แท็กมาตรฐานถูกเชื่อมโยงไปยังแท็กกำหนดเอง ทำให้โปรแกรมอ่านหน้าจอสูญเสียความหมายของมัน."
+symbolicEncoding = "ฟอนต์สัญลักษณ์มีการเข้ารหัสที่ไม่ควรมี ทำให้อักขระอาจออกมาเป็นตัวอักษรที่ผิด."
+tabOrder = "หน้าที่มีลิงก์หรือความคิดเห็นไม่ได้ตั้งลำดับแท็บให้เป็นไปตามเอกสาร ทำให้ผู้ใช้คีย์บอร์ดอาจกระโดดไปมาบนหน้า."
+taggedInsideArtifact = "เนื้อหาที่มีแท็กอยู่ภายในสิ่งที่ถูกทำเครื่องหมายว่าเป็นการตกแต่ง ทำให้โปรแกรมอ่านหน้าจออาจข้ามมันไป."
+titleNotDisplayed = "โปรแกรมอ่าน PDF จะแสดงชื่อไฟล์แทนชื่อเรื่องของเอกสาร ไฟล์ต้องเปิดการตั้งค่า \"แสดงชื่อเอกสาร\"."
+untaggedContent = "บางอย่างบนหน้าไม่ได้ถูกแท็กเป็นเนื้อหาหรือทำเครื่องหมายว่าเป็นการตกแต่ง ทำให้โปรแกรมอ่านหน้าจอไม่รู้ว่าควรอ่านหรือไม่ โดยมักเป็นภาพพื้นหลัง ส่วนหัว ส่วนท้าย หรือเลขหน้า."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "ไม่มีภาษาสำหรับความคิดเห็นหรือลิงก์"
+annotationNoDescription = "ความคิดเห็น ลิงก์ หรือภาพวาดไม่มีคำอธิบาย"
+annotationNotTagged = "ความคิดเห็นหรือภาพวาดไม่ได้แท็ก"
+artifactInsideTagged = "การตกแต่งอยู่ในเนื้อหาที่มีแท็ก"
+bookmarkLanguage = "ไม่มีภาษาสำหรับที่คั่นหน้า"
+conformancePrefix = "เขียนคำประกาศ PDF/UA ไม่ถูกต้อง"
+contentLanguage = "ไม่มีภาษาสำหรับข้อความ"
+customTagNotMapped = "แท็กกำหนดเองที่ไม่มีความหมายมาตรฐาน"
+figureNoAlt = "รูปภาพไม่มีคำอธิบาย"
+fontMissingGlyphs = "ฟอนต์ขาดอักขระ"
+fontNotEmbedded = "ไม่ได้ฝังฟอนต์"
+formFieldNotTagged = "ช่องฟอร์มไม่ได้แท็ก"
+genericHeading = "หัวข้อไม่มีระดับ"
+glyphWidths = "ความกว้างอักขระของฟอนต์ไม่ตรงกัน"
+headingSkipped = "ข้ามระดับหัวข้อ"
+linkNoDescription = "ลิงก์ไม่มีคำอธิบาย"
+linkNotTagged = "ลิงก์ไม่ได้แท็ก"
+metadataLanguage = "ไม่มีภาษาสำหรับข้อมูลเมตา"
+noConformanceClaim = "ไม่ประกาศ PDF/UA"
+noDocumentTag = "แท็กไม่ได้เริ่มด้วยแท็ก Document"
+noLanguage = "ไม่มีภาษาของเอกสาร"
+noMetadataStream = "ไม่มีข้อมูลเมตา XMP"
+noTags = "ไม่มีแท็ก"
+notdefGlyph = "ใช้ตัวแทนตัวอักษรที่หายไป"
+noteTag = "ใช้แท็ก Note"
+noTitle = "ไม่มีชื่อเรื่องเอกสาร"
+notMarkedTagged = "ไม่ได้ตั้งธงว่าเป็นไฟล์ที่มีแท็ก"
+notPdf2Tags = "แท็กไม่ใช่แท็ก PDF 2.0"
+noUnicode = "อักขระที่ไม่สามารถอ่านเป็นข้อความได้"
+replacementTextLanguage = "ไม่มีภาษาสำหรับข้อความทดแทน"
+standardTagRemapped = "แท็กมาตรฐานถูกเปลี่ยนเป็นแท็กกำหนดเอง"
+symbolicEncoding = "ฟอนต์สัญลักษณ์มีการเข้ารหัสไม่ถูกต้อง"
+tabOrder = "ลำดับแท็บไม่เป็นไปตามเอกสาร"
+taggedInsideArtifact = "เนื้อหาที่มีแท็กถูกซ่อนไว้เป็นการตกแต่ง"
+titleNotDisplayed = "ไม่แสดงชื่อเรื่องเมื่อเปิด"
+untaggedContent = "เนื้อหาที่ไม่มีแท็ก"
+
+[checkAccessibility.score]
+issues_one = "{{count}} ปัญหา"
+issues_other = "{{count}} ปัญหา"
+noIssues = "ไม่พบปัญหา"
+subtitle_one = "{{profile}} - {{count}} หน้า"
+subtitle_other = "{{profile}} - {{count}} หน้า"
+
+[checkAccessibility.sections]
+breakdown = "สรุปแยกหมวด"
+
+[checkAccessibility.status]
+checking = "กำลังตรวจสอบ {{current}} จาก {{total}}..."
+complete = "ตรวจสอบเสร็จสิ้น"
+
+[checkAccessibility.steps]
+results = "ผลลัพธ์"
+standard = "มาตรฐาน"
+
+[checkAccessibility.tooltip.header]
+title = "ตรวจสอบตามมาตรฐานใด"
+
+[checkAccessibility.tooltip.ua1]
+text = "เวอร์ชันแรกของ PDF/UA เผยแพร่ปี 2012 เป็น ISO 14289-1 สำหรับไฟล์ PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "เวอร์ชันใหม่กว่า เผยแพร่ปี 2024 เป็น ISO 14289-2 สำหรับไฟล์ PDF 2.0 ไฟล์ PDF 1.7 ที่ตรวจตามนี้จะไม่ผ่านกฎที่ใช้เฉพาะกับ PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "คำอธิบายประกอบ {{n}}"
+bookmarks = "ที่คั่นหน้า"
+character = "อักขระใน {{font}}"
+contentItem = "รายการเนื้อหา {{n}}"
+drawingStep = "ขั้นตอนการวาด {{n}}"
+embeddedGraphic = "กราฟิกฝัง"
+font = "ฟอนต์ {{name}}"
+metadata = "ข้อมูลเมตาของเอกสาร"
+page = "หน้า {{n}}"
+piece = "ชิ้นที่ {{n}}"
+tag = "แท็ก {{tag}}"
+tagTree = "โครงสร้างแท็ก"
+wholeDocument = "ทั้งเอกสาร"
+
+[checkAccessibility.where.properties]
+author = "ผู้เขียน"
+description = "คำอธิบาย"
+pdfUaPart = "ส่วนของ PDF/UA"
+title = "ชื่อเรื่อง"
 
 [classification.families]
 correspondence = "จดหมายโต้ตอบ"
@@ -3729,6 +3964,10 @@ message = "หนึ่งหรือทั้งสองเอกสารท
 body = "PDF เหล่านี้รวมกันเกิน 2,000 หน้า การประมวลผลอาจใช้เวลาหลายนาที"
 title = "กำลังดำเนินการเปรียบเทียบขนาดใหญ่"
 
+[compare.mode]
+pixel = "เปรียบเทียบพิกเซล"
+text = "เปรียบเทียบข้อความ"
+
 [compare.no.text]
 message = "หนึ่งหรือทั้งสองเอกสาร PDF ที่เลือกไม่มีเนื้อหาข้อความ กรุณาเลือกเอกสาร PDF ที่มีข้อความสำหรับการเปรียบเทียบ"
 
@@ -4046,6 +4285,30 @@ failed = "ไม่สามารถต่ออายุการลงชื�
 lead = "เซิร์ฟเวอร์นี้เชื่อมโยงกับบัญชีของคุณแล้ว ต่ออายุการลงชื่อเข้าใช้เพื่อกลับไปยังการเรียกเก็บเงินและการใช้งานบนเซิร์ฟเวอร์ของคุณ"
 title = "ต่ออายุการลงชื่อเข้าใช้เซิร์ฟเวอร์ของคุณ"
 
+[connectedAccounts]
+connect = "เชื่อมต่อ"
+connectAnother = "เชื่อมต่ออีกบัญชี"
+connectFailed = "ไม่สามารถเชื่อมต่อบัญชีได้ ตรวจสอบว่าการลงทะเบียนแอปของเซิร์ฟเวอร์ตั้งค่าไว้แล้ว แล้วลองอีกครั้ง."
+disconnect = "ตัดการเชื่อมต่อ"
+google = "Google Drive"
+intro = "เชื่อมต่อบัญชีของคุณเองครั้งเดียว ไปป์ไลน์ของคุณจะสามารถอ่านจากและบันทึกไปยังบัญชีเหล่านั้นในนามของคุณ."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling ไม่สามารถเข้าถึงบัญชีนี้ได้อีกต่อไป ดังนั้นไปป์ไลน์ที่ใช้งานบัญชีนี้จึงถูกหยุดชั่วคราว."
+none = "ผู้ดูแลระบบของคุณยังไม่ได้เปิดใช้งานบัญชีที่เชื่อมต่อ."
+personal = "บัญชีส่วนบุคคล"
+popupBlocked = "เบราว์เซอร์ของคุณบล็อกหน้าต่างลงชื่อเข้าใช้ อนุญาตป๊อปอัปสำหรับไซต์นี้แล้วลองอีกครั้ง."
+reconnect = "ลงชื่อเข้าใช้อีกครั้ง"
+work = "บัญชีที่ทำงาน"
+
+[connectedAccounts.disconnectConfirm]
+body = "แหล่งข้อมูลและไปป์ไลน์ที่ใช้บัญชีนี้จะหยุดทำงานจนกว่าคุณจะเชื่อมต่ออีกครั้ง."
+confirm = "ตัดการเชื่อมต่อ"
+title = "ตัดการเชื่อมต่อ {{account}}?"
+
+[connectedAccounts.status]
+connected = "เชื่อมต่อแล้ว"
+needsSignIn = "ต้องลงชื่อเข้าใช้"
+
 [convert]
 autoRotate = "หมุนอัตโนมัติ"
 autoRotateDescription = "หมุนภาพอัตโนมัติเพื่อให้พอดีกับหน้า PDF ดีขึ้น"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "ชื่อเอกสาร"
 pdfUaTitleHelp = "แสดงโดย reader แทนชื่อไฟล์ หากเว้นว่าง จะใช้หัวข้อแรก"
 selectSourceFormatFirst = "เลือก format ต้นทางก่อน"
 settings = "การตั้งค่า"
+signInToUse = "ลงชื่อเข้าใช้เพื่อใช้งาน"
 single = "เดี่ยว"
 sourceFormatPlaceholder = "รูปแบบต้นทาง"
-stirlingOfficeConvert = "ใช้ Stirling Office Convert (เบต้า)"
-stirlingOfficeConvertDescription = "การแปลงที่ดีกว่า เร็วกว่า และใช้หน่วยความจำน้อยลง ปิดใช้งานเพื่อใช้ตัวแปลงมาตรฐาน"
 strictMode = "โหมดเข้มงวด"
 strictModeDesc = "เกิดข้อผิดพลาดหากการแปลงไม่สมบูรณ์แบบ (ใช้การตรวจสอบ VeraPDF)"
 svgPdfOptions = "ตัวเลือก SVG to PDF"
@@ -4134,8 +4396,6 @@ webOptions = "ตัวเลือก Web เป็น PDF"
 zoomLevel = "ระดับการซูม"
 
 [convert.ebookOptions]
-embedAllFonts = "ฝังแบบอักษรทั้งหมด"
-embedAllFontsDesc = "ฝังแบบอักษรทั้งหมดจาก eBook ลงใน PDF ที่สร้าง"
 includePageNumbers = "ใส่หมายเลขหน้า"
 includePageNumbersDesc = "เพิ่มหมายเลขหน้าลงใน PDF ที่สร้าง"
 includeTableOfContents = "รวมสารบัญ"
@@ -4648,6 +4908,17 @@ title = "การตั้งค่า"
 [extractPages.tooltip]
 description = "แยกหน้าที่เลือกเป็น PDF ใหม่ โดยคงลำดับเดิม"
 
+[feedback.page]
+open = "ส่งข้อเสนอแนะ"
+sendMore = "ส่งข้อเสนอแนะเพิ่มเติม"
+sent = "ขอบคุณสำหรับข้อเสนอแนะของคุณ"
+title = "ช่วยเราพัฒนา Stirling ให้ดีขึ้น"
+unavailable = "ไม่พร้อมใช้งานสำหรับข้อเสนอแนะ"
+
+[feedback.tag]
+dismiss = "ซ่อนปุ่มข้อเสนอแนะ"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "เปิดในตัวแก้ไขไฟล์"
 viewInViewer = "ดูในตัวแสดงผล"
@@ -4657,7 +4928,6 @@ closeFile = "ปิดไฟล์"
 
 [fileEditor]
 closedFile = "ปิด {{name}} แล้ว"
-couldNotSave = "ไม่สามารถบันทึก {{name}} ได้"
 filesReordered_one = "จัดลำดับไฟล์ใหม่แล้ว"
 filesReordered_other = "จัดลำดับไฟล์ใหม่ {{count}} ไฟล์แล้ว"
 loadedFromStorage_one = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "ไลบรารี PDF"
 myFiles = "คลังไฟล์"
 noFiles = "ยังไม่มีไฟล์"
+oneDrive = "เปิดจาก OneDrive"
+oneDriveFailed = "ไม่สามารถเปิด OneDrive ได้"
 openFileManager = "เรียกดูไฟล์และโฟลเดอร์ทั้งหมด"
 openFromComputer = "เปิดจากคอมพิวเตอร์"
 openSettings = "เปิดการตั้งค่า"
@@ -4804,6 +5076,17 @@ searchFiles = "ค้นหาไฟล์"
 uploadFailedBody = "ไม่สามารถเพิ่มไฟล์ที่เลือกได้"
 uploadFailedTitle = "อัปโหลดล้มเหลว"
 viewAll = "ดูไฟล์ทั้งหมด {{count}} ไฟล์"
+
+[fileSidebar.clearRecents]
+body_one = "ล้าง 1 ไฟล์ออกจากรายการล่าสุดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้."
+body_other = "ล้าง {{count}} ไฟล์ออกจากรายการล่าสุดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้."
+button = "ล้างรายการล่าสุด"
+confirm = "ล้างรายการล่าสุด"
+error = "ไม่สามารถล้างได้ โปรดลองอีกครั้ง."
+openNote_one = "มี 1 รายการเปิดอยู่ในเวิร์กเบนช์."
+openNote_other = "มี {{count}} รายการเปิดอยู่ในเวิร์กเบนช์."
+skipOpen = "ข้ามไฟล์ที่เปิดอยู่"
+title = "ล้างรายการล่าสุดหรือไม่?"
 
 [fileSidebar.fileItem]
 closeViewer = "ปิดตัวแสดงผล"
@@ -5124,6 +5407,7 @@ diskFileHint = "จัดเก็บบนคอมพิวเตอร์ข�
 diskHint = "ไฟล์ในโฟลเดอร์ที่เมานต์บนดิสก์ของคุณ"
 local = "ในเครื่อง"
 localHint = "ไม่ได้สำรองข้อมูล"
+oneDrive = "OneDrive"
 shared = "แชร์"
 sharedHint = "แชร์กับคุณผ่านลิงก์"
 
@@ -5672,6 +5956,11 @@ title = "เปลี่ยนข้อมูลเมตา"
 desc = "เปลี่ยนข้อจำกัดและสิทธิ์ของเอกสาร"
 tags = "สิทธิ์,ข้อจำกัด,สิทธิ,การควบคุมการเข้าถึง,อนุญาต,ปฏิเสธ,การพิมพ์,การคัดลอก,การแก้ไข,ปรับเปลี่ยนสิทธิ์,การตั้งค่าความปลอดภัย,สิทธิผู้ใช้"
 title = "เปลี่ยนสิทธิ์"
+
+[home.checkAccessibility]
+desc = "ให้คะแนน PDF ตาม PDF/UA และดูสิ่งที่ขัดขวางโปรแกรมอ่านหน้าจอ โดยไม่เปลี่ยนแปลงไฟล์"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "ตรวจสอบการช่วยการเข้าถึงของ PDF"
 
 [home.classify]
 desc = "ระบุว่าเอกสารนี้เป็นชนิดใดและติดแท็ก"
@@ -6521,6 +6810,32 @@ quickAccess = "เริ่มที่ราง <strong>Quick Access</strong> �
 topBar = "แถบด้านบนช่วยให้คุณสลับระหว่าง <strong>Viewer</strong>, <strong>Page Editor</strong> และ <strong>Active Files</strong>"
 wrapUp = "นี่คือสิ่งใหม่ใน V2 เปิดเมนู <strong>Tours</strong> ได้ทุกเวลาเพื่อดูสิ่งนี้อีกครั้ง ทัวร์ Tools หรือทัวร์ Admin"
 
+[oneDriveSave]
+chooseFolder = "เลือกโฟลเดอร์ OneDrive เพื่ออัปโหลด"
+conflict = "ไฟล์นี้มีการเปลี่ยนแปลงใน OneDrive ตั้งแต่เปิดหรือบันทึกเวอร์ชันนี้ โปรดบันทึกเวอร์ชันของคุณเป็นสำเนาแทน"
+failedTitle = "ไม่สามารถบันทึกไปยัง OneDrive ได้"
+fromOneDrive = "จาก OneDrive"
+linkNotStored = "เบราว์เซอร์นี้ไม่สามารถจดจำลิงก์ไปยังไฟล์ OneDrive ได้ หลังจากรีโหลดแล้ว โปรดบันทึกเป็นสำเนาแทน"
+missing = "ไฟล์นี้ถูกย้ายหรือลบใน OneDrive โปรดบันทึกเวอร์ชันของคุณเป็นสำเนาแทน"
+open = "เปิดใน OneDrive"
+personalUnsupported = "การอัปโหลดไปยัง OneDrive ต้องใช้บัญชี Microsoft แบบองค์กรหรือสถานศึกษา"
+reconnect = "เชื่อมต่อใหม่"
+replaces = "แทนที่ {{name}}"
+saveCopyToOneDrive = "บันทึกสำเนาใน OneDrive"
+saved = "บันทึกไปยัง OneDrive แล้ว"
+saving = "กำลังบันทึกไปยัง OneDrive..."
+signInToSave = "ลงชื่อเข้าใช้เซิร์ฟเวอร์ของคุณเพื่อบันทึกไปยัง OneDrive."
+updateOriginal = "อัปเดตใน OneDrive"
+uploadToOneDrive = "อัปโหลดไปยัง OneDrive..."
+
+[oneDriveSave.status]
+saved = "บันทึกไปยัง OneDrive แล้ว"
+unsaved = "ยังไม่ได้บันทึกการเปลี่ยนแปลงไปยัง OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "อัปเดต {{name}} ใน OneDrive"
+saveAll = "อัปเดตทั้งหมดใน OneDrive"
+
 [overlay-pdfs]
 desc = "ซ้อนทับ PDF หนึ่งบนอีกไฟล์หนึ่ง"
 submit = "ส่ง"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "รีเซ็ตพรุ่งนี้"
 thisPeriod = "Billing period นี้"
 
 [payment]
+annually = "รายปี"
 billingPeriod = "รอบการเรียกเก็บเงิน"
 cancelTeamChange = "ใช้แผนปัจจุบันต่อ"
 canCloseWindow = "คุณสามารถปิดหน้าต่างนี้ได้แล้ว"
@@ -7157,11 +7473,14 @@ title = "ปรับแผน Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe จะแสดงยอดเรียกเก็บที่แน่นอน การคิดตามสัดส่วน และวันที่เรียกเก็บเงินครั้งถัดไปก่อนที่คุณจะยืนยัน ระบบจะใช้วิธีชำระเงินที่บันทึกไว้หากมี"
+billingLabel = "การเรียกเก็บเงิน"
 continue = "ดำเนินการต่อไปยังการชำระเงิน"
 currencyAtCheckout = "Stripe จะยืนยันยอดเงินสุดท้ายและสกุลเงินชำระเงินที่ checkout"
+custom = "กำหนดเอง"
 customLabel = "จำนวนผู้ใช้"
 dueToday = "ชำระวันนี้"
 enterpriseQuote = "ขอใบเสนอราคาระดับองค์กร"
+enterUsers = "ป้อนจำนวนผู้ใช้."
 estimatedTotal = "ยอดรวมโดยประมาณ"
 lineItem = "Team · {{price}}{{period}} ต่อ {{block}} ผู้ใช้"
 minimumForCurrentUsers = "คุณมีผู้ใช้ {{users}} คน ดังนั้นแผนต้องครอบคลุมอย่างน้อย {{minimum}} คน"
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "บัญชีที่มีอยู่จะย�
 overCapacityTitle = "เซิร์ฟเวอร์ของคุณมีผู้ใช้มากกว่าที่แผนครอบคลุม"
 perMonth = "/เดือน"
 perYear = "/ปี"
+planName = "Stirling Team"
 reductionNote = "ความจุที่ลดลงจะเริ่มในรอบต่ออายุถัดไปของคุณ จนถึงตอนนั้น คุณสามารถใช้สิทธิ์ปัจจุบันได้ ผู้ใช้ที่มีอยู่จะยังคงอยู่ ผู้ใช้ใหม่จะถูกบล็อกหากคุณเกินความจุเมื่อการเปลี่ยนแปลงมีผล"
 renewalNote = "ต่ออายุที่ {{total}}{{period}} ยกเลิกได้ทุกเมื่อใน Usage & Billing"
 reviewChange = "ตรวจสอบการเปลี่ยนแปลงใน Stripe"
-roundsTo = "ปัดเป็น {{users}} ผู้ใช้"
+roundsUp = "ปัดขึ้นเป็น {{users}} ผู้ใช้."
+selfServeLimit = "สูงสุด {{users}} ผู้ใช้ที่นี่."
 subheading = "ครอบคลุมทุกคนที่คุณเชิญ เป็นบล็อกละ {{users}} ผู้ใช้"
 subheadingAdd = "แผนของคุณครอบคลุม {{current}} ผู้ใช้ในวันนี้ เลือกยอดรวมใหม่"
+talkToEnterprise = "ต้องการมากกว่านี้ ติดต่อเราสำหรับ Enterprise."
+usersCovered = "ผู้ใช้ที่ครอบคลุม"
 usersLabel = "ผู้ใช้"
 userTotal = "{{users}} ผู้ใช้"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "ใช้การเปลี่ยนแปลงกับไ�
 tags = "แก้ไขข้อความ,ปรับเปลี่ยนข้อความ,เปลี่ยนข้อความ,แก้ไขเนื้อหา,อัปเดตข้อความ,เขียนใหม่,แก้ไขให้ถูกต้อง,แก้ไขเพิ่มเติม,redline,ปรับปรุง,ตัวแก้ไขข้อความ,ตัวแก้ไขเนื้อหา"
 title = "ตัวแก้ไขข้อความ PDF"
 unsaved = "(ยังไม่ได้บันทึก)"
-workbenchLabel = "ตัวแก้ไข"
 
 [pdfTextEditor.annotations]
 freetext = "ข้อความคำอธิบายประกอบ - ไม่ใช่ข้อความบนหน้า จึงแก้ไขที่นี่ไม่ได้"
@@ -7261,12 +7583,18 @@ widget = "ช่องฟอร์ม - ไม่ใช่ข้อความ�
 
 [pdfTextEditor.commands]
 edit = "แก้ไข"
+markTagged = "ทำเครื่องหมายว่าแท็กครบถ้วน"
+matchScanFont = "จับคู่ข้อความที่สแกนกับ {{face}}"
 mergeRuns_one = "รวม {{count}} run เป็นย่อหน้า"
 mergeRuns_other = "รวม {{count}} runs เป็นย่อหน้า"
 setColour = "ตั้งค่าสีบน {{run}}"
 setOutline = "ตั้งค่า outline บน {{run}}"
+tagFormField = "ติดแท็กฟิลด์แบบฟอร์ม"
+tagLink = "แท็กลิงก์"
+tagPageContent = "แท็กหน้าอัตโนมัติ"
 typeInto = "พิมพ์ลงใน {{run}}"
 ungroupParagraph = "ยกเลิกการจัดกลุ่มย่อหน้า {{run}}"
+unmarkTagged = "ทำเครื่องหมายว่าแท็กไม่ครบถ้วน"
 wrap = "ตัดบรรทัด {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "ละทิ้งและเปิด"
 hint = "ยกเลิก แล้วบันทึก PDF เพื่อเก็บไว้ในพื้นที่ทำงานของคุณก่อน"
 title = "ละทิ้งการเปลี่ยนแปลงที่ยังไม่ได้บันทึกหรือไม่?"
 
-[pdfTextEditor.drop]
-hint = "การปล่อยบนพื้นที่ตัวแก้ไขจะแทนที่เอกสารที่เปิดอยู่"
-title = "วาง PDF เพื่อเปิด"
-
 [pdfTextEditor.error]
 decodeImage = "ไม่สามารถถอดรหัสรูปภาพที่เลือกได้"
+duplicateDropsLetters = "ไม่สามารถทำสำเนาข้อความนี้ได้: ไม่มีฟอนต์ที่ใช้ได้ที่สามารถแสดงอักษรทั้งหมดของมัน"
+formLiftChangesDrawing = "ไม่สามารถแก้ไขรายการนี้ได้: มันถูกวาดเป็นส่วนหนึ่งของกลุ่มที่มีการครอบตัดหรือการตั้งค่ากราฟิกที่ตัวแก้ไขไม่สามารถคงไว้ได้เมื่อแก้ไข"
 insertImage = "ไม่สามารถแทรกรูปภาพที่เลือกได้"
+needsShaping = "ตัวแก้ไขยังไม่สามารถแสดงอักษรต่อเนื่องและสัญลักษณ์สระของสคริปต์นี้ได้อย่างถูกต้อง จึงไม่ได้ทำการเปลี่ยนแปลงนี้"
+replaceClippedImage = "ไม่สามารถแทนที่รูปภาพนี้ได้: รูปถูกครอบตัดไว้ และรูปที่แทนที่จะทำให้ส่วนที่การครอบตัดซ่อนไว้แสดงขึ้นมา"
+scanOffInk = "ไม่สามารถแก้ไขข้อความนี้: คำที่รู้จำไม่ตรงกับภาพสแกน รัน OCR อีกครั้ง."
+unsafeRtlEdit = "ไม่สามารถทำการแก้ไขนี้ได้: ตัวแก้ไขไม่สามารถวาดข้อความแบบขวาไปซ้ายของบรรทัดนี้ใหม่โดยไม่เปลี่ยนแปลงข้อความ"
 
 [pdfTextEditor.externalEdit]
 pngFileType = "รูปภาพ PNG"
@@ -7304,15 +7634,42 @@ wholeWord = "ทั้งคำ"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "ฟอนต์ในตัว"
+closestMatch = "ฟอนต์นี้ขาดตัวอักษรบางตัวที่เลือกไว้ จึงจะแสดงด้วยฟอนต์ที่ใกล้เคียงที่สุดแทน"
 deviceFontsNone = "ไม่พบฟอนต์อุปกรณ์เพิ่มเติม"
 deviceFontsUnavailable = "ฟอนต์อุปกรณ์ไม่พร้อมใช้งาน ฟอนต์ในตัวยังคงใช้ได้"
 deviceGroup = "ฟอนต์อุปกรณ์"
+documentFontCannotDraw = "ตัวแก้ไขไม่สามารถแสดงข้อความนี้ด้วยฟอนต์ของเอกสารเองได้ จึงคงไว้เป็นฟอนต์ปัจจุบัน"
 documentGroup = "ฟอนต์เอกสาร"
+embeddingForbidden = "ไลเซนส์ของฟอนต์นี้ไม่อนุญาตให้ฝังใน PDF ข้อความจึงไม่ถูกเปลี่ยนแปลง."
+embedFailed = "ไม่สามารถฝังฟอนต์นี้ใน PDF ได้ ข้อความจึงไม่ถูกเปลี่ยนแปลง."
+includedGroup = "ฟอนต์ที่รวมมา"
 label = "ตระกูลฟอนต์"
+matchedGroup = "ฟอนต์ที่จับคู่ได้"
+missingGlyphs = "ฟอนต์นี้ขาดอักขระบางส่วนที่เลือกไว้ และไม่สามารถคงไว้ในฟอนต์ปัจจุบันได้ ข้อความจึงไม่ถูกเปลี่ยนแปลง"
 mixed = "ผสม"
+needsShaping = "ตัวแก้ไขยังไม่สามารถวาดอักษรต่อเนื่องและสัญลักษณ์สระของสคริปต์นี้ได้อย่างถูกต้อง ข้อความนั้นจึงคงไว้ในฟอนต์ปัจจุบัน"
+noGlyphs = "ฟอนต์นี้ไม่มีอักขระสำหรับข้อความที่เลือก ข้อความจึงไม่ถูกเปลี่ยนแปลง."
 noMatch = "ไม่พบฟอนต์ที่ตรงกัน"
+partOfRunUnsupported = "ข้อความนี้สามารถปรับสไตล์ได้ทั้งบล็อกเท่านั้น โปรดเลือกทั้งกล่องแทนที่จะเลือกบางคำ"
 placeholder = "ตระกูลฟอนต์"
+scannedText = "ข้อความสแกน"
+serverFontFailed = "ไม่สามารถดาวน์โหลดฟอนต์จากเซิร์ฟเวอร์นั้นได้ ข้อความจึงไม่ถูกเปลี่ยนแปลง."
+serverGroup = "ฟอนต์จากเซิร์ฟเวอร์"
+someLeftUnchanged = "ฟอนต์นี้ไม่มีอักขระสำหรับข้อความบางส่วนที่เลือกไว้ ข้อความส่วนนั้นจึงไม่ถูกเปลี่ยนแปลง"
+styleSkipped = "ข้อความบางส่วนที่เลือกไม่มีรูปแบบฟอนต์ในสไตล์นั้น จึงไม่ถูกเปลี่ยนแปลง"
+styleUnavailable = "ข้อความที่เลือกไม่มีรูปแบบฟอนต์ในสไตล์นั้น จึงไม่ถูกเปลี่ยนแปลง"
 useDeviceFonts = "ใช้ฟอนต์อุปกรณ์"
+weight = "น้ำหนักฟอนต์"
+weightBlack = "หนามากสุด"
+weightBold = "หนา"
+weightExtraBold = "หนาพิเศษ"
+weightExtraLight = "บางพิเศษ"
+weightLight = "บาง"
+weightMedium = "ปานกลาง"
+weightNumber = "น้ำหนัก {{weight}}"
+weightRegular = "ปกติ"
+weightSemibold = "กึ่งหนา"
+weightThin = "บางมาก"
 
 [pdfTextEditor.fonts]
 allPresent = "มีตัวอักษรและตัวเลขทั้งหมด"
@@ -7357,6 +7714,7 @@ helpDesc = "วิธีใช้นี้"
 saveDesc = "บันทึกไปยังพื้นที่ทำงานของคุณ"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "ตัวหนา / ตัวเอียง สำหรับคำที่เลือกหรือทั้งกล่อง"
 deleteDesc = "ลบรายการที่เลือก"
 duplicateDesc = "ทำซ้ำรายการที่เลือก"
 groupDesc = "จัดกลุ่ม runs ที่เลือกเป็นหนึ่งย่อหน้า"
@@ -7380,8 +7738,12 @@ zoomDesc = "ซูมเข้า / ออก"
 
 [pdfTextEditor.inspector]
 document = "เอกสาร"
+fontCompletedClosest = "ฝังฟอนต์ · อักขระที่ขาดถูกวาดด้วย {{name}} ซึ่งใกล้เคียงที่สุดที่มี."
+fontCompletedOriginal = "ฝังฟอนต์ · อักขระที่ขาดถูกวาดด้วย {{name}} ฟอนต์เดียวกัน."
 fontEmbedded = "ฟอนต์ฝังตัว · อักขระที่ไม่มีจะใช้ Helvetica แทน"
 fontGap = "{{name}} · ขาด {{glyphs}} - การพิมพ์อักขระเหล่านั้นจะใช้ Helvetica แทน"
+fontUnknownCoverage = "{{name}} · อักขระที่ขาดตกไปใช้ {{fallback}} แทน."
+formField = "ฟิลด์แบบฟอร์ม"
 geometry = "ตำแหน่งและขนาด"
 height = "ความสูง"
 heightHint = "ความสูงของกล่องข้อความเป็นไปตามขนาดตัวอักษรและจำนวนบรรทัด"
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR ไม่พร้อมใช้งานบนเซิ�
 oneImage = "รูปภาพ"
 oneShape = "รูปร่าง"
 oneText = "ข้อความ"
+outlinedTextHint_one = "ข้อความในหน้านี้ถูกวาดเป็นรูปร่าง จึงไม่มีข้อความให้แก้ไข โปรดรัน OCR ก่อนเพื่อให้สามารถแก้ไขได้"
+outlinedTextHint_other = "มี {{count}} หน้า ที่ข้อความถูกวาดเป็นรูปร่าง จึงไม่มีข้อความให้แก้ไข โปรดรัน OCR ก่อนเพื่อให้สามารถแก้ไขได้"
 pages = "หน้า"
 runOcr = "เรียกใช้ OCR"
 scanHint_one = "หน้านี้เป็นภาพสแกนที่ไม่มีข้อความให้แก้ไข เรียกใช้ OCR ก่อนเพื่อทำให้ข้อความแก้ไขได้"
 scanHint_other = "{{count}} หน้าเป็นภาพสแกนที่ไม่มีข้อความให้แก้ไข เรียกใช้ OCR ก่อนเพื่อทำให้ข้อความแก้ไขได้"
 scannedText = "ข้อความที่สแกน · คำที่เปลี่ยนแปลงจะถูกปิดทับและวาดใหม่ด้วยฟอนต์ที่เข้ากัน"
+scannedTextMisaligned = "ข้อความสแกน · คำที่รู้จำไม่ตรงกับภาพสแกน บล็อกนี้จึงแก้ไขหรือลบไม่ได้."
+scannedTextNoFont = "ข้อความสแกน · ยังไม่สามารถวาดคำที่พิมพ์ในสคริปต์นี้ได้ จึงไม่ถูกเก็บไว้ แต่ยังสามารถลบคำได้."
+scannedTextOffInk = "ข้อความสแกน · คำที่รู้จำไม่ทับกับคำที่สแกน บล็อกนี้จึงแก้ไขไม่ได้ รัน OCR อีกครั้ง."
 tabDocument = "เอกสาร"
 tabSelected = "เลือกแล้ว"
 textBoxes = "กล่องข้อความ"
+unreadPagesHint = "มี {{count}} หน้า ที่ไม่มีข้อความให้แก้ไข: บางหน้าเป็นภาพสแกน และบางหน้าวาดข้อความเป็นรูปร่าง โปรดรัน OCR ก่อนเพื่อให้สามารถแก้ไขได้"
 width = "ความกว้าง"
 widthHint = "ข้อความจะจัดบรรทัดใหม่ให้พอดีกับความกว้าง"
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "เพิ่มแท็ก"
+applyToOtherPages_one = "ใช้กับอีก {{count}} หน้า"
+applyToOtherPages_other = "ใช้กับอีก {{count}} หน้า"
+artifactGroup = "ถูกข้ามโดยโปรแกรมอ่านหน้าจอ"
 artifactText = "ตกแต่ง"
 cannotChange = "ไม่สามารถเปลี่ยนการช่วยสำหรับการเข้าถึงของรูปภาพนี้ได้"
+cannotDescribeFormField = "ไม่สามารถเปลี่ยนคำอธิบายของฟิลด์แบบฟอร์มนี้ได้"
+cannotDescribeLink = "ไม่สามารถเปลี่ยนคำอธิบายของลิงก์นี้ได้."
 cannotRetag = "ไม่สามารถเปลี่ยนแท็กของข้อความนี้ได้"
+cannotSetDecorative = "ไม่สามารถทำเครื่องหมายหรือยกเลิกว่าเป็นการตกแต่งได้."
+cannotTagFormField = "ไม่สามารถติดแท็กฟิลด์แบบฟอร์มนี้ได้"
+cannotTagLink = "ไม่สามารถแท็กลิงก์นี้ได้."
+cannotTagPage = "ไม่สามารถแท็กเนื้อหาของหน้านี้ได้."
+contentGroup = "เนื้อหา"
 customTag = "{{role}} (แท็กกำหนดเอง)"
 decorativeInfo = "โปรแกรมอ่านหน้าจอจะข้ามรูปภาพตกแต่ง ใช้สำหรับเส้นขอบ พื้นหลัง และรูปภาพอื่น ๆ ที่ไม่มีข้อมูล"
 decorativeLabel = "รูปภาพตกแต่ง"
 description = "คำอธิบายรูปภาพ"
 descriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนรูปภาพ"
 encrypted = "ไม่สามารถแก้ไขแท็กในไฟล์ที่เข้ารหัสได้"
+figureDescription = "คำอธิบายรูปภาพ"
+figureDescriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนรูปภาพ."
+formFieldDescription = "คำอธิบายฟิลด์"
+formulaDescription = "คำอธิบายสูตร"
+formulaDescriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนสูตร บรรยายตามที่คุณจะพูดออกเสียง เช่น \"x กำลังสองบวกหนึ่ง\"."
 heading = "การช่วยสำหรับการเข้าถึง"
 innerTagLabel = "แท็ก {{number}}"
 innerTags = "แท็กในข้อความนี้"
+linkDescription = "คำอธิบายลิงก์"
+markedTagged = "เอกสารมีแท็กครบถ้วน"
+markedTaggedHint = "บอกโปรแกรมอ่าน PDF ให้ใช้แท็กการช่วยการเข้าถึง ติ๊กเมื่อทุกอย่างถูกแท็กแล้ว."
+markedWithUntagged = "เนื้อหาบางส่วนไม่มีแท็ก โปรแกรมอ่านหน้าจออาจข้ามไป."
 missingDescriptions = "ไม่มีคำอธิบาย"
 mixedContent = "ภาพประกอบมีเนื้อหาอื่นรวมอยู่ด้วย"
+mixedTags = "ผสม"
 needsDescriptionBadge = "ไม่มีคำอธิบาย"
-nextImage = "รูปภาพถัดไป"
+nextToReview = "ถัดไปเพื่อตรวจทาน"
 notFigure = "ถูกแท็กเป็นส่วนหนึ่งของข้อความ"
 removeTag = "ลบแท็ก"
 saveFailed = "ไม่สามารถบันทึกการเปลี่ยนแปลงการช่วยสำหรับการเข้าถึงของคุณได้ จึงไม่ได้บันทึกไฟล์ ย้อนกลับการเปลี่ยนแปลงแล้วลองอีกครั้ง"
 selectedText = "ข้อความที่เลือก"
+tagFormField = "ติดแท็กฟิลด์แบบฟอร์ม"
+tagging = "การแท็กหน้า"
 tagLabel = "แท็ก"
+tagLinks_one = "แท็กลิงก์"
+tagLinks_other = "แท็ก {{count}} ลิงก์"
+tagUntagged = "แท็กเอกสารอัตโนมัติ"
+tagUntaggedHint = "เพิ่มแท็กการช่วยการเข้าถึงให้ทั่วทั้งเอกสารโดยอัตโนมัติ ผลลัพธ์ยังหยาบ: ตรวจสอบหัวข้อ รายการ และลำดับการอ่านภายหลัง."
 unknownTag = "ไม่สามารถอ่านได้ที่นี่"
+unmarkedWithTags = "โปรแกรมดู PDF บางตัวจะใช้แท็กอยู่ดี และอาจข้ามเนื้อหาที่ไม่มีแท็ก."
 unreadable = "ไม่สามารถแก้ไขแท็กของไฟล์นี้ได้"
 untaggableImages = "ไม่สามารถติดแท็กที่นี่ได้"
 untaggedBadge = "ไม่ได้ติดแท็ก"
 untaggedDocument = "เอกสารไม่มีแท็ก"
 untaggedImage = "ไม่สามารถติดแท็กที่นี่ได้"
 untaggedImages = "รูปภาพที่ไม่ได้ติดแท็ก"
+untaggedPages = "หน้าที่จะใส่แท็ก"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "ส่วนท้าย"
+header = "ส่วนหัว"
+pageNumber = "เลขหน้า"
+watermark = "ลายน้ำ"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "หัวเรื่องที่ไม่มีข้อความ"
@@ -7505,6 +7907,23 @@ tableHeader = "ส่วนหัวตาราง"
 tableRow = "แถวตาราง"
 title = "ชื่อเรื่อง"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "ทุกภาษา"
+cannotSetDocument = "ไม่สามารถเปลี่ยนภาษาของเอกสารนี้ได้."
+cannotSetText = "ไม่สามารถเปลี่ยนภาษาของข้อความนี้ได้."
+documentHint = "ภาษาที่โปรแกรมอ่านหน้าจอจะใช้ เว้นแต่ส่วนของข้อความจะกำหนดของตัวเอง."
+documentLabel = "ภาษา"
+documentLocked = "ไม่สามารถเปลี่ยนภาษาของเอกสารที่เข้ารหัสได้ที่นี่."
+inDocument = "ในเอกสารนี้"
+innerLabel = "ภาษาแท็ก {{number}}"
+label = "ภาษา"
+missing = "ไม่ได้ตั้งค่าภาษา โปรแกรมอ่านหน้าจอจะคาดเดา และอาจอ่านเอกสารทั้งฉบับด้วยน้ำเสียงที่ไม่ถูกต้อง."
+mixed = "ผสม"
+noMatch = "ไม่มีภาษาที่ตรงกัน ให้พิมพ์รหัสภาษาแทน เช่น mt หรือ en-IE."
+placeholder = "เลือกภาษา"
+selectedText = "ภาษาของข้อความที่เลือก"
+textHint = "โปรแกรมอ่านหน้าจอจะสลับน้ำเสียงและการออกเสียงเป็นภาษานี้."
+
 [pdfTextEditor.mobile]
 actions = "การดำเนินการของตัวแก้ไข"
 addImage = "รูปภาพ"
@@ -7517,7 +7936,6 @@ done = "เสร็จสิ้น"
 download = "บันทึกและดาวน์โหลด"
 find = "ค้นหา"
 lock = "ล็อก"
-openPdf = "เปิด PDF"
 panelHint = "การแก้ไขเกิดขึ้นในมุมมอง Workspace แตะข้อความบนหน้าเพื่อเปลี่ยนแปลง"
 save = "บันทึก"
 style = "สไตล์"
@@ -7525,7 +7943,6 @@ tapToPlace = "แตะหน้าตรงตำแหน่งที่ต้
 unlock = "ปลดล็อก"
 
 [pdfTextEditor.pageView]
-pageNumber = "หน้า {{page}}"
 renderFailed = "เรนเดอร์หน้าไม่สำเร็จ"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "ไม้บรรทัดแนวตั้ง"
 
 [pdfTextEditor.run]
 lockedTitle = "ล็อกอยู่ - ใช้ปุ่มปลดล็อกเพื่อแก้ไข"
+readOnlyOrderTitle = "ไม่สามารถแก้ไขข้อความบรรทัดนี้ได้: มีการผสมข้อความแบบขวาไปซ้ายและซ้ายไปขวาในลำดับที่ตัวแก้ไขไม่สามารถวาดใหม่ได้อย่างปลอดภัย"
+resizeHandle = "ลากเพื่อเปลี่ยนความกว้าง; ข้อความจะปรับตัดบรรทัดใหม่"
 
 [pdfTextEditor.saveRisk]
 cancel = "ยกเลิก"
@@ -7548,6 +7967,35 @@ intro = "การบันทึกสำเนาที่แก้ไขจ�
 note = "การแก้ไขของคุณจะถูกเก็บไว้ การเปลี่ยนแปลงที่แสดงด้านบนหลีกเลี่ยงไม่ได้เมื่อบันทึกสำเนาที่แก้ไข"
 saveAnyway = "บันทึกต่อไป"
 title = "การบันทึกจะเปลี่ยน PDF นี้"
+
+[pdfTextEditor.scanFont]
+approximate = "จับคู่โดยประมาณ"
+approximateHint = "ฟอนต์ที่ใกล้ที่สุดที่พบอาจไม่ตรงกับสแกน."
+change = "ฟอนต์ดูไม่ตรง?"
+choose = "เลือกฟอนต์"
+chooseMissing = "เลือกฟอนต์สำหรับข้อความนี้…"
+compare = "เปรียบเทียบฟอนต์…"
+deviceAllow = "อนุญาตการเข้าถึงฟอนต์เพื่อให้จับคู่ได้ดียิ่งขึ้น"
+deviceBlocked = "เบราว์เซอร์ของคุณจะไม่ถามอีก หากต้องการอนุญาต ให้คลิกไอคอนทางซ้ายของแถบที่อยู่ เปิด Fonts แล้วลองอีกครั้ง."
+deviceBlockedTitle = "บล็อกการเข้าถึงฟอนต์"
+deviceNone = "ไม่มีฟอนต์เอกสารที่ใช้บ่อยติดตั้งอยู่ในคอมพิวเตอร์เครื่องนี้."
+deviceNote = "เบราว์เซอร์ของคุณจะถามก่อน ฟอนต์ยังคงอยู่บนอุปกรณ์นี้."
+deviceOn_one = "เปรียบเทียบกับฟอนต์ในคอมพิวเตอร์นี้เพิ่มอีก {{count}} แบบด้วย."
+deviceOn_other = "เปรียบเทียบกับฟอนต์ในคอมพิวเตอร์นี้เพิ่มอีก {{count}} แบบด้วย."
+deviceReading = "กำลังอ่านฟอนต์บนคอมพิวเตอร์นี้…"
+deviceRetry = "ลองอีกครั้ง"
+done = "เสร็จสิ้น"
+hint = "ข้อความที่คุณพิมพ์ถูกวาดด้วยฟอนต์ที่ใกล้เคียงที่สุดที่พบ หากดูไม่เหมือนสแกน เลือกฟอนต์อื่น."
+hintFromScan = "ข้อความที่คุณพิมพ์ถูกสร้างจากตัวอักษรที่พบในสแกน หากต้องการวาดด้วยฟอนต์นั้น ให้เลือกฟอนต์."
+hintOthers = "การเลือกของคุณจะใช้กับข้อความที่สแกนที่คุณยังไม่ได้แก้ไขด้วย."
+matching = "กำลังจับคู่ฟอนต์…"
+noFont = "ไม่มีฟอนต์ที่ใช้ได้สามารถวาดสคริปต์นี้ได้ จึงยังไม่สามารถวาดข้อความที่พิมพ์ใหม่ได้."
+scan = "ภาพสแกนต้นฉบับ"
+scanAlt = "บรรทัดที่สแกน"
+scanNote = "ภาพสแกนมักดูเบลอหรือหนากว่าฟอนต์จริง ให้เปรียบเทียบรูปทรงตัวอักษรมากกว่าความหนา."
+score = "{{match}}% ใกล้เคียง"
+title = "จับคู่ฟอนต์จากสแกน"
+unmeasurable = "การสแกนนี้จางหรือเล็กเกินไปที่จะจับคู่กับฟอนต์ได้."
 
 [pdfTextEditor.settings]
 advanced = "ขั้นสูง"
@@ -7564,7 +8012,6 @@ addTable = "เพิ่มตาราง"
 addText = "เพิ่มข้อความ"
 clickPageToAddTable = "คลิกหน้าเพื่อเพิ่มตาราง"
 clickPageToAddText = "คลิกหน้าเพื่อเพิ่มข้อความ"
-document = "เอกสาร"
 group = "จัดกลุ่ม"
 groupingAuto = "อัตโนมัติ"
 groupingAutoHint = "จัดกลุ่มบรรทัดที่มีระยะห่างเท่ากันเป็นย่อหน้า การเปลี่ยนค่านี้จะอ่านเอกสารใหม่และล้างประวัติการเลิกทำ"
@@ -7593,23 +8040,17 @@ auto = "อัตโนมัติ"
 enable = "ตรวจตัวสะกดขณะพิมพ์"
 language = "ภาษาพจนานุกรม"
 
-[pdfTextEditor.stage]
-loadingDocument = "กำลังโหลดเอกสาร"
-loadingProgress = "ความคืบหน้าการโหลด"
-noDocument = "ไม่ได้โหลดเอกสาร"
-pickPrompt = "เลือก PDF จากแผงไฟล์ทางซ้ายเพื่อเริ่มแก้ไข"
-renderingPreview = "กำลังเรนเดอร์ตัวอย่าง"
-
 [pdfTextEditor.table]
 addColumn = "เพิ่มคอลัมน์"
 addRow = "เพิ่มแถว"
+cellNoGlyphs = "ข้อความนี้มีอักขระที่ฟอนต์ของตารางไม่สามารถแสดงได้ โปรดเปลี่ยนหรือลบออกเพื่อให้ใส่ลงในเซลล์ได้"
 column = "คอลัมน์"
 deleteColumn = "ลบคอลัมน์"
 deleteRow = "ลบแถว"
 done = "เสร็จสิ้น"
 doneHint = "หยุดแก้ไขรายการนี้เป็นตาราง"
-edit = "แก้ไข"
 editHint = "แก้ไขเป็นตาราง - พิมพ์ในเซลล์ เพิ่มหรือลบแถวและคอลัมน์"
+editTable = "แก้ไขตาราง"
 move = "ย้าย"
 moveTable = "ลากเพื่อย้ายทั้งตาราง"
 recognizedHint = "ตารางที่รู้จำแล้ว - คลิกเพื่อเลือกข้อความทั้งหมดในตาราง"
@@ -7630,6 +8071,9 @@ alignMiddle = "จัดกึ่งกลางแนวตั้ง"
 alignRight = "จัดชิดขวา"
 alignTop = "จัดชิดบน"
 arrange = "จัดเรียง"
+bold = "ตัวหนา"
+boldOnly = "ฟอนต์นี้มีเฉพาะเวอร์ชันตัวหนา"
+boldUnavailable = "ไม่มีเวอร์ชันตัวหนาของฟอนต์นี้"
 bringForward = "นำมาข้างหน้า"
 bringToFront = "นำมาไว้หน้าสุด"
 caseLower = "ตัวพิมพ์เล็ก"
@@ -7650,10 +8094,12 @@ fontColour = "สีฟอนต์"
 fontSize = "ขนาดฟอนต์"
 formatting = "การจัดรูปแบบข้อความ"
 italic = "ตัวเอียง"
+italicOnly = "ฟอนต์นี้มีเฉพาะเวอร์ชันตัวเอียง"
 italicUnavailable = "ฟอนต์นี้ไม่มีเวอร์ชันตัวเอียง โหลดฟอนต์อุปกรณ์ของคุณหรือเลือกตระกูลฟอนต์อื่น"
 lock = "ล็อกการเลือก"
 lockTooltip = "ล็อกการเลือก - ป้องกันการแก้ไขโดยไม่ตั้งใจ"
 more = "การดำเนินการเพิ่มเติม"
+noBoldItalic = "ไม่มีเวอร์ชันตัวหนาเอียงของฟอนต์นี้"
 order = "ลำดับ"
 outlineColour = "สีเส้นขอบ"
 outlineWidth = "ความกว้างเส้นขอบ (0 = ไม่มี)"
@@ -7683,13 +8129,6 @@ title = "ความแตกต่างระหว่างการแส�
 [pdfTextEditor.tooltip.textFocus]
 text = "พื้นที่ทำงานนี้เน้นการแก้ไขข้อความและปรับตำแหน่งรูปภาพที่ฝังไว้ งานกราฟิกของหน้าแบบซับซ้อน วิดเจ็ตฟอร์ม และกราฟิกแบบหลายชั้นจะคงไว้สำหรับการส่งออก แต่ไม่สามารถแก้ไขได้ทั้งหมดที่นี่"
 title = "เน้นข้อความและรูปภาพ"
-
-[pdfTextEditor.zoom]
-fit = "พอดี"
-fitToWidth = "พอดีกับความกว้าง"
-in = "ซูมเข้า"
-out = "ซูมออก"
-reset = "รีเซ็ตการซูมเป็น 100%"
 
 [PDFToCSV]
 header = "PDF เป็น CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "ทำงานเมื่อนำเข้า"
 [policies.enforcement]
 applying = "กำลังนำ {{names}} ไปใช้"
 applyingProgress = "กำลังนำ {{names}} ไปใช้ ({{done}} จาก {{total}})"
-exportFailureBody = "ไม่สามารถนำนโยบายความปลอดภัยไปใช้ได้ ไฟล์ถูกส่งออกตามเดิม"
-exportFailureTitle = "ส่งออกโดยไม่มีการบังคับใช้"
 failureBody = "ไม่สามารถใช้นโยบายบางรายการกับไฟล์ {{failures}} จาก {{total}} ไฟล์ได้"
 failureTitle = "ส่งออกโดยไม่ได้บังคับใช้อย่างครบถ้วน"
 printPolicyAppliedBody = "PDF นี้ถูกอัปเดตให้เป็นไปตามนโยบาย โปรดตรวจสอบการเปลี่ยนแปลง จากนั้นพิมพ์อีกครั้ง"
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "โพสต์ข้อความไปยังพื้นที่ Google Chat เมื่อ policy ทำงาน"
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "บัญชีบริการที่อ่านและเขียน Google Drive สำหรับองค์กร."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "วางคีย์ JSON ของบัญชีบริการจาก Google Cloud คีย์นี้ถูกเข้ารหัสและจะไม่แสดงอีก."
+label = "คีย์บัญชีบริการ (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "ไม่บังคับ หากมีการมอบสิทธิ์ทั่วทั้งโดเมน ผู้ใช้ที่ไดรฟ์นี้ทำงานในนาม (ผู้ใช้บ็อตเฉพาะจะยังคงทำงานเมื่อคนออกจากงาน) เว้นว่างไว้จะเข้าถึงได้เฉพาะไดรฟ์ที่แชร์และโฟลเดอร์ที่แชร์กับบัญชีบริการ."
+label = "ทำงานในนามผู้ใช้"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "แนบเอกสารที่ประมวลผลแล้วไปยัง issue ของ Jira"
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "ส่งอีเมลเอกสารหรือการแจ้งเตือนเมื่อ policy ทำงาน"
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "ต้องมีสิทธิ์แอปพลิเคชัน Microsoft Graph พร้อมความยินยอมจากผู้ดูแลระบบ."
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com หรือ tenant GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "รหัสผ่านแอป"
+
+[portal.connections.types.onedrive]
+description = "อ่านและเขียน OneDrive for Business ของผู้ใช้หนึ่งคน."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "เจ้าของ OneDrive ที่การเชื่อมต่อนี้เข้าถึงได้ การลงทะเบียนแอปต้องมีสิทธิ์ Files.ReadWrite.All แบบแอปพลิเคชัน."
+label = "เจ้าของ OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "เว้นว่างหากคุณยืนยันตั
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "ไม่บังคับ วาง OpenSSH private key เพื่อยืนยันตัวตนด้วย key แทนรหัสผ่าน"
 label = "Private key"
+
+[portal.connections.types.sharepoint]
+description = "อ่านและเขียนไลบรารีเอกสารของไซต์ SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "ไม่บังคับ เว้นว่างไว้สำหรับไลบรารี Documents เริ่มต้นของไซต์."
+label = "ไลบรารีเอกสาร"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "โพสต์ข้อความไปยัง Slack เมื่อ policy ประมวลผลเอกสาร"
@@ -9142,6 +9624,126 @@ status = "สถานะ"
 time = "เวลา"
 user = "ผู้ใช้"
 
+[portal.enterprise]
+backTo = "ย้อนกลับไปยัง {{stage}}"
+brandTag = "Enterprise"
+callInfo = "การโทร 15 นาที เตรียมคำถามเรื่องราคา การปรับใช้ หรือความปลอดภัย หรือวางแผนการเปิดใช้งานร่วมกัน."
+callTitle = "พูดคุยกับวิศวกรโซลูชัน"
+deployment = "การปรับใช้"
+footer = "มีคำถามเกี่ยวกับ Stirling Enterprise?"
+home = "ไปที่ Stirling"
+member = "หัวหน้าทีมของคุณดูแลดีล Enterprise เมื่อเริ่มแล้ว คุณสามารถติดตามความคืบหน้าได้ที่นี่."
+memberDeal = "หัวหน้าทีมของคุณดูแลดีลนี้ คุณสามารถติดตามความคืบหน้าได้ที่นี่."
+quotePanel = "ใบเสนอราคาของคุณ"
+signIn = "ลงชื่อเข้าใช้"
+signInToStart = "ลงชื่อเข้าใช้เพื่อเริ่มทดลองใช้ฟรีของคุณ"
+stage = "ขั้นตอนที่ {{current}} จาก {{total}}"
+stagesLabel = "ความคืบหน้า"
+
+[portal.enterprise.landing]
+lede = "ทดลองใช้ฟรี 14 วัน จากนั้นสร้างใบเสนอราคาและลงนามข้อตกลงได้ที่นี่ ไม่ต้องใช้บัตร."
+tickAgreement = "สัญญาเดียวครอบคลุม MSA แบบฟอร์มคำสั่งซื้อ EULA และ DPA"
+tickCompliance = "SCIM การกำหนดที่ตั้งข้อมูล และ SLA ด้านเวลาให้บริการ"
+tickDeploy = "รันบน Stirling Cloud เซิร์ฟเวอร์ของคุณเอง หรือแบบแยกขาดจากอินเทอร์เน็ตโดยสมบูรณ์"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "เอกสารไลเซนส์แบบออฟไลน์"
+point1 = "เปิดใช้งานด้วยไฟล์ไลเซนส์ที่ใช้งานออฟไลน์ ไม่ใช่คีย์ที่ตรวจสอบแบบออนไลน์"
+point2 = "ติดตั้งเหมือนการโฮสต์เอง จากอิมเมจที่คุณนำข้ามไป"
+point3 = "การลงชื่อเข้าอยู่ภายในเครือข่ายของคุณ"
+tagline = "โฮสต์เองบนเครือข่ายที่ไม่มีการเชื่อมต่ออินเทอร์เน็ต."
+
+[portal.enterprise.options.cloud]
+more = "เอกสาร Stirling Cloud"
+point1 = "ทีมของคุณลงชื่อเข้าใช้ที่ stirling.com/app"
+point2 = "รันบน AWS โดยไฟล์ที่เก็บไว้ถูกเข้ารหัสขณะพัก"
+point3 = "Single sign-on ผ่านผู้ให้บริการระบุตัวตนของคุณเองต้องใช้การโฮสต์เอง"
+tagline = "โฮสต์ให้คุณ โดยไม่ต้องติดตั้งอะไร."
+
+[portal.enterprise.options.selfhost]
+more = "เอกสารการโฮสต์เอง"
+point1 = "ติดตั้งด้วย Docker หรือ Helm chart บน Kubernetes"
+point2 = "ประมวลผลเอกสารบนโครงสร้างพื้นฐานของคุณเอง"
+point3 = "OAuth2, OIDC หรือ SAML single sign-on"
+tagline = "บนเซิร์ฟเวอร์ของคุณเอง ภายในองค์กรหรือบนคลาวด์ของคุณ."
+
+[portal.enterprise.review]
+back = "กลับไปยัง {{stage}}"
+company = "บริษัท"
+completed = "เสร็จสมบูรณ์"
+extensions = "ส่วนขยายที่ใช้"
+paid = "ชำระเงินแล้ว ใบแจ้งหนี้ของคุณยังดูได้ที่นี่."
+people = "ผู้คน"
+started = "เริ่มต้นแล้ว"
+trialEnds = "วันสิ้นสุดการทดลองใช้"
+trialTitle = "การทดลองใช้ฟรีของคุณ"
+version = "เวอร์ชัน"
+viewInvoice = "ดูใบแจ้งหนี้"
+
+[portal.enterprise.setup]
+copied = "คัดลอกแล้ว"
+copy = "คัดลอก"
+markDone = "ทำเครื่องหมายว่า “{{step}}” เสร็จแล้ว"
+progress = "เสร็จ {{done}} จาก {{total}}"
+subtitle = "ใช้ช่วงทดลองให้คุ้ม โดยลองใช้งานในแบบที่คุณจะรันจริง."
+subtitleLive = "ขั้นตอนที่ต้องทำให้เสร็จก่อนเปิดใช้กับทุกคน."
+title = "เริ่มต้นการตั้งค่า"
+titleLive = "เช็กลิสต์ก่อนใช้งานจริง"
+
+[portal.enterprise.setup.firstDocument]
+body = "อัปโหลด PDF ที่ทีมของคุณทำงานด้วย และลองใช้เครื่องมือที่ใช้ทุกวัน เช่น ซ่อน/ลบข้อมูล (redact) บีบอัด หรือ OCR."
+title = "ประมวลผลเอกสารแรกของคุณ"
+
+[portal.enterprise.setup.getApp]
+body = "ติดตั้งแอปเดสก์ท็อปสำหรับ Windows, Mac หรือ Linux และลงชื่อเข้าใช้ด้วยบัญชีที่คุณเพิ่งสร้าง หรือใช้งานจากเบราว์เซอร์ของคุณโดยตรง."
+title = "รับ Stirling"
+
+[portal.enterprise.setup.install]
+body = "รันสิ่งนี้บนเซิร์ฟเวอร์ของคุณ มันจะเริ่ม Stirling ด้วยไลเซนส์ของคุณ และอิมเมจนี้มี OCR และการแปลงเอกสารสำนักงาน สำหรับทีมขนาดใหญ่ ใช้ Kubernetes."
+title = "ติดตั้งและเริ่ม Stirling"
+
+[portal.enterprise.setup.invite]
+body = "เชิญคนที่จะใช้งาน เพื่อให้การทดลองสะท้อนงานจริง."
+title = "เชิญทีมของคุณ"
+
+[portal.enterprise.setup.licence]
+body = "เปิด <code>http://your-server:8080/settings/adminPlan</code> ซึ่งควรแสดงว่าไลเซนส์ Enterprise ของคุณใช้งานอยู่ ติดตั้งด้วยวิธีอื่น? เพิ่มคีย์ไว้ใต้ <code>premium.key</code> ใน <code>settings.yml</code> แล้วรีสตาร์ต."
+title = "ตรวจสอบว่าไลเซนส์ของคุณใช้งานอยู่"
+
+[portal.enterprise.setup.links]
+browser = "ใช้งานในเบราว์เซอร์"
+docker = "คู่มือ Docker"
+download = "ดาวน์โหลดแอป"
+downloadForTeam = "รับแอปสำหรับทีมของคุณ"
+downloading = "กำลังดาวน์โหลด..."
+downloadLicence = "ดาวน์โหลดไฟล์ไลเซนส์"
+invite = "เชิญเพื่อนร่วมทีม"
+kubernetes = "คู่มือ Kubernetes"
+licence = "การเปิดใช้งานไลเซนส์"
+ocr = "ภาษา OCR"
+openApp = "เปิด Stirling"
+samlGuide = "คู่มือ SAML"
+ssoGuide = "คู่มือ SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "ดึงอิมเมจแบบเต็มบนเครื่องที่เชื่อมต่อ นำมันและไฟล์ไลเซนส์ข้ามไป จากนั้นโหลดและเริ่ม อิมเมจแบบเต็มจะเพิ่มฟอนต์ที่เซิร์ฟเวอร์ออฟไลน์ดาวน์โหลดไม่ได้."
+title = "นำ Stirling ข้ามไปและเริ่มใช้งาน"
+
+[portal.enterprise.setup.offlineLicence]
+body = "เซิร์ฟเวอร์ที่แยกขาดจากอินเทอร์เน็ตไม่สามารถติดต่อบริการไลเซนส์ของเราได้ จึงตรวจสอบไฟล์ที่ลงนามนี้แทน เก็บไว้พร้อมอิมเมจที่คุณนำข้ามไป."
+title = "ดาวน์โหลดไลเซนส์แบบออฟไลน์ของคุณ"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "สร้างบัญชีที่ <code>/settings/people</code> หรือให้ Stirling ชี้ไปยังผู้ให้บริการระบุตัวตนภายในของคุณ เพื่อให้การลงชื่อเข้าใช้ไม่ออกนอกเครือข่าย."
+bodySelfHosted = "สร้างบัญชีที่ <code>/settings/people</code> หรือเชื่อมต่อผู้ให้บริการระบุตัวตนของคุณ เพื่อให้ทีมของคุณลงชื่อเข้าใช้ด้วยบัญชีทำงาน พวกเขาใช้ Stirling ในเบราว์เซอร์ที่ที่อยู่ของเซิร์ฟเวอร์ของคุณ หรือในแอปเดสก์ท็อปที่ชี้ไปยังเซิร์ฟเวอร์นั้น."
+title = "เพิ่มผู้ใช้งานของคุณ"
+
+[portal.enterprise.setup.signIn]
+body = "เปิด <code>http://your-server:8080</code> และลงชื่อเข้าใช้ด้วย <code>admin</code> / <code>stirling</code> คุณจะถูกขอให้ตั้งรหัสผ่านใหม่ทันที."
+bodyAirgap = "เปิด <code>http://your-server:8080</code> และลงชื่อเข้าใช้ด้วย <code>admin</code> / <code>stirling</code> เลือกรหัสผ่านใหม่ จากนั้นตรวจสอบว่า <code>/settings/adminPlan</code> แสดงว่าไลเซนส์ของคุณใช้งานอยู่."
+title = "ลงชื่อเข้าใช้เป็นผู้ดูแลระบบ"
+
 [portal.errorBoundary]
 description = "มุมมองนี้พบข้อผิดพลาดที่ไม่คาดคิด ลองอีกครั้ง หรือเลือกส่วนอื่นจากแถบด้านข้าง"
 retry = "ลองอีกครั้ง"
@@ -9293,6 +9895,7 @@ title = "ไม่มีสิ่งที่ต้องตรวจสอบ"
 [portal.home.download]
 back = "กลับ"
 body = "ดาวน์โหลดแอป desktop หรือ self-host server"
+bodyDesktop = "ดาวน์โหลดแอปเดสก์ท็อป จากนั้นลงชื่อเข้าใช้ด้วยบัญชี Stirling ของคุณ."
 done = "เสร็จสิ้น"
 guide = "เปิดคู่มือ {{name}}"
 openInBrowser = "เปิดในเบราว์เซอร์แทน"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "รับ Email"
 
 [portal.procurement]
-subtitle = "ให้ทีมของคุณได้รับการประเมิน ทำสัญญา และเริ่มใช้งาน ทุกเอกสารอยู่ในที่เดียว"
 title = "การจัดซื้อ"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "ไม่สามารถโหลดข้อตกลงได�
 loading = "กำลังโหลดข้อตกลง..."
 ref = "อ้างอิง {{ref}} · {{version}}"
 requestChanges = "ขอเปลี่ยนแปลง"
-scrollHint = "เลื่อนเพื่อตรวจทาน"
 signatory = "ชื่อผู้ลงนาม"
 signatoryPlaceholder = "ชื่อเต็ม"
 signatoryTitle = "ตำแหน่งผู้ลงนาม"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "เช่น General Counsel"
 signError = "ไม่สามารถบันทึกลายเซ็นของคุณได้ โปรดลองอีกครั้ง"
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} ครั้งเดียว"
+addonPerYear = "+{{amount}}/ปี"
 addons = "ส่วนเสริม"
 addressLine1 = "ที่อยู่บรรทัด 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "ที่อยู่บรรทัด 2"
 addressLine2Placeholder = "ห้องชุด, ชั้น, อาคาร"
 back = "ย้อนกลับ"
+belowMinimum = "ใบเสนอราคานี้ต่ำกว่าขนาดขั้นต่ำสำหรับดีล Enterprise."
 businessName = "ชื่อธุรกิจ"
 businessNamePlaceholder = "บริษัทของคุณ"
 city = "เมือง"
 cityPlaceholder = "San Francisco"
 completeRequired = "โปรดกรอกฟิลด์ที่จำเป็น (ทำเครื่องหมาย *) พร้อมอีเมลที่ถูกต้องก่อนสร้างใบเสนอราคา"
+conflict = "ข้อตกลงนี้มีการเปลี่ยนแปลงตั้งแต่คุณเปิด ปิดตัวสร้างและโหลดหน้าใหม่เพื่อดูสถานะปัจจุบัน."
 contactEmail = "อีเมลติดต่อ"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "ชื่อผู้ติดต่อ"
 contactNamePlaceholder = "Jane Doe"
 continue = "ดำเนินการต่อ"
 done = "เสร็จสิ้น"
+editUsage = "แก้ไขการใช้งาน"
 eula = "ฉันได้อ่านและยอมรับ Stirling Enterprise EULA แล้ว ซึ่งควบคุมข้อตกลงที่สร้างจากใบเสนอราคานี้"
 generate = "สร้างใบเสนอราคา"
 indemnification = "การคุ้มครอง IP ขั้นสูง"
 indemnificationSub = "ขยายการป้องกัน IP ของเราไปยังการอ้างสิทธิ์ด้านสิทธิบัตร การคุ้มครองพื้นฐานด้านลิขสิทธิ์ เครื่องหมายการค้า และความลับทางการค้ารวมอยู่ฟรี"
+minimum = "Enterprise ต้องใช้จ่ายขั้นต่ำต่อปี {{min}}."
+minimumBelow = "ใบเสนอราคานี้รวม {{annual}} ต่อปี หากคาดว่าจะใช้มากกว่านี้ ให้เพิ่มการใช้งานโดยประมาณ มิฉะนั้นแผน Team น่าจะเหมาะกว่า."
+minimumNear = "Enterprise ต้องใช้จ่ายขั้นต่ำต่อปี {{min}} เพิ่มการใช้งานโดยประมาณเพื่อให้ถึง หรือปรึกษาเราก่อนได้."
+minimumNearTitle = "คุณขาด {{gap}} ต่อปีเพื่อถึงเกณฑ์ Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "ใบเสนอราคาสำหรับ Enterprise"
 paperFor = "จัดเตรียมสำหรับ"
 pdfSize = "ขนาด PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "Regulated"
 posture_regulatedSub = "ทุกหมวดหมู่ — การปฏิบัติตามข้อกำหนด, การเก็บรักษา, การนำเข้า"
 qbr = "การทบทวนธุรกิจรายไตรมาส"
 qbrSub = "SE ของคุณจะทบทวนการใช้งานและ roadmap ทุกไตรมาส"
+raiseUsage = "เพิ่มการใช้งานโดยประมาณ"
 region = "รัฐ / ภูมิภาค"
 regionPlaceholder = "California"
-running = "{{annual}} / ปี · {{years}} ปี {{tcv}}"
+runningLabel = "ราคาประเมิน"
+runningLabelIssued = "ราคาที่เสนอ"
+runningOneYear = "{{annual}} ต่อปี"
+runningTotal = "{{tcv}} รวมตลอด {{years}} ปี"
 s1Sub = "ทีมของคุณ และ PDFs ที่คุณคาดว่าจะเรียกใช้ในแต่ละปี"
 s1Title = "คุณจะประมวลผลมากแค่ไหน?"
 s2Sub = "ระยะเวลาที่ยาวขึ้นจะลดอัตรา ส่วนระดับบริการของคุณกำหนดการสนับสนุน"
@@ -10547,6 +11162,19 @@ volumePlaceholder = "เช่น 1,000,000"
 years_one = "{{count}} ปี"
 years_other = "{{count}} ปี"
 
+[portal.procurement.builder.line]
+deployment = "การปรับใช้แบบ {{deployment}}"
+indemnification = "การคุ้มครองความรับผิด IP"
+multiYear_one = "ผูกมัด {{count}} ปี"
+multiYear_other = "ผูกมัด {{count}} ปี"
+qbr = "การทบทวนธุรกิจรายไตรมาส"
+seats_one = "ผู้ใช้ที่ตกลง {{users}} คน + SSO / RBAC / การตรวจสอบ"
+seats_other = "ผู้ใช้ที่ตกลง {{users}} คน + SSO / RBAC / การตรวจสอบ"
+seatsUnset = "ผู้ใช้ + SSO / RBAC / การตรวจสอบ"
+support = "SE/CSM เฉพาะทีม"
+training = "การเริ่มใช้งานและการฝึกอบรม"
+usage = "การประมวลผล PDF — {{volume}} PDF/ปี ที่ {{rate}}/PDF (ระบบอัตโนมัติแบบ {{posture}})"
+
 [portal.procurement.documents]
 agreement = "ข้อตกลง Enterprise"
 agreementSub = "MSA, Order Form และ DPA ในการลงนามครั้งเดียว"
@@ -10557,6 +11185,8 @@ invoice = "ใบแจ้งหนี้"
 invoiceSub = "ใบแจ้งหนี้การสมัครสมาชิกฉบับแรกของคุณ"
 laterInvoice = "พร้อมใช้งานหลังจากคุณยอมรับ"
 laterQuote = "พร้อมใช้งานเมื่อออกใบเสนอราคาของคุณแล้ว"
+laterSigning = "พร้อมใช้งานเมื่อมีการลงนามข้อตกลง"
+laterTitle = "ขั้นต่อไปในดีลของคุณ"
 quote = "ใบเสนอราคา"
 quoteSub = "ใบเสนอราคา Enterprise แบบแยกรายการของคุณ"
 sla = "เอกสารแนบ SLA"
@@ -10573,15 +11203,12 @@ title = "มีบางอย่างผิดพลาด"
 [portal.procurement.hero]
 barAria = "ขั้นที่ {{current}} จาก {{total}}"
 ctaAgreement = "ตรวจสอบและลงนามข้อตกลง"
-ctaExploring = "ตั้งค่าการทดลองใช้ของคุณ"
 ctaQuote = "ตรวจสอบใบเสนอราคาของคุณ"
 ctaReviewQuote = "ตรวจทานใบเสนอราคา"
 ctaTrial = "สร้างใบเสนอราคาของคุณ"
-documents = "เอกสาร"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "เชิญเพื่อนร่วมทีม"
-licenseKey = "คีย์ใบอนุญาต"
 liveSub = "องค์กรของคุณได้รับการจัดเตรียมแล้ว และใบอนุญาตของคุณใช้งานอยู่"
 liveTitle = "คุณใช้งานจริงบน Stirling Enterprise แล้ว"
 next = "ถัดไป: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "ยังไม่สามารถสร้างไฟล์
 downloadOffline = "ดาวน์โหลด licence ออฟไลน์ (.lic)"
 hint = "วางคีย์นี้ลงใน instance แบบ self-hosted เพื่อเปิดใช้งาน หรือเก็บไว้เป็นบันทึกของคุณ เก็บรักษาให้ปลอดภัย"
 label = "คีย์ licence ของคุณ"
-subtitle = "เปิดใช้งานอินสแตนซ์แบบ self-hosted ด้วยคีย์นี้ หรือเก็บไว้เป็นบันทึกของคุณ"
-title = "คีย์ใบอนุญาตของคุณ"
 trialFileHint = "นี่คือไฟล์ใบอนุญาตทดลองใช้ของคุณ เมื่อข้อตกลงของคุณพร้อมแล้ว ให้กลับมาดาวน์โหลดอีกครั้ง — ไฟล์ .lic จะไม่อัปเดตเอง ต่างจากคีย์ใบอนุญาตออนไลน์"
-
-[portal.procurement.link]
-cta = "เชื่อมโยงบัญชี"
-description = "การจัดซื้อทำงานบนบัญชี Stirling ที่เชื่อมโยงของคุณ: นี่คือวิธีที่เราจัดเตรียม trial, ตั้งราคาใบเสนอราคา และเริ่มการเรียกเก็บเงิน เชื่อมโยงบัญชีเพื่อเริ่มต้น"
-eyebrow = "Enterprise"
-title = "เชื่อมโยงบัญชีของคุณเพื่อเริ่มต้น"
 
 [portal.procurement.live]
 description = "การสมัครใช้งานของคุณใช้งานอยู่และ licence ของคุณออกแล้ว ทีมของคุณได้รับการจัดเตรียมแล้วและการเรียกเก็บเงินได้เริ่มต้นแล้ว"
-eyebrow = "ใช้งานจริง"
 title = "คุณใช้งานจริงบน Stirling Enterprise แล้ว"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "ยังไม่สามารถดาวน์โหลด
 
 [portal.procurement.payment]
 description = "ใบเสนอราคาของคุณได้รับการยอมรับแล้วและ licence ของคุณใช้งานอยู่แล้ว — ทีมของคุณเริ่มได้ทันที ชำระใบแจ้งหนี้แรกเมื่อคุณพร้อม; คุณสามารถชำระหรือดาวน์โหลดได้ที่นี่ ไม่ต้องใช้อีเมล"
-downloadAgreement = "ดาวน์โหลดข้อตกลงที่ลงนามแล้ว"
 downloadInvoice = "ดาวน์โหลดใบแจ้งหนี้"
-eyebrow = "การชำระเงิน"
-title = "สร้างการสมัครใช้งานแล้ว"
 viewInvoice = "ดูและชำระใบแจ้งหนี้"
 
 [portal.procurement.review]
 acceptCta = "ยอมรับใบเสนอราคา"
 annual = "ค่าธรรมเนียมรายปี (ปีที่ 1)"
 downloadCta = "ดาวน์โหลดใบเสนอราคา"
+oneTime = "ครั้งเดียว"
 poNumber = "ใบสั่งซื้อ: {{po}}"
 renewal = "ต่ออายุที่ {{amount}}/ปี หลังหมดระยะเวลา (+{{pct}}% CPI)"
 tcv = "ระยะเวลา {{years}} ปี ชำระเต็มจำนวนล่วงหน้า: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "การขยายเวลาจะเพิ่ม 7 วันและแจ้ง solutions engineer ของคุณ"
 bodyMaxed = "คุณใช้การขยายเวลาทั้งหมดแล้ว — คุยกับ solutions engineer ของคุณหากต้องการเวลามากขึ้น"
-cancel = "ยกเลิก trial"
 extend = "ขยาย 7 วัน"
 maxed = "ถึงขีดจำกัดแล้ว"
 subtitle = "trial ฟรีของคุณใช้งานได้ถึง {{date}} ไม่ต้องใช้บัตร"
 title = "ทดลองใช้ Enterprise"
+
+[portal.procurement.validation]
+confirm = "ยืนยันว่าคุณได้รับอนุญาตให้ลงนามในนามขององค์กร."
+email = "ป้อนอีเมลที่ถูกต้อง."
+eula = "ยอมรับ EULA เพื่อดำเนินการต่อ."
+required = "จำเป็นต้องกรอกช่องนี้."
+seats = "ป้อนจำนวนคนที่จะทดลองใช้ฟรี."
+volume = "ป้อนจำนวน PDF ที่คาดว่าจะประมวลผลต่อปี."
 
 [portal.review]
 subtitle = "รายการใด ๆ จากการรันนโยบายของคุณและตัวแก้ไขของทีมที่ต้องการความสนใจจากคุณ"
@@ -10735,6 +11358,7 @@ subtitle = "การเชื่อมต่อ input ที่นำมาใ�
 title = "แหล่งที่มา"
 
 [portal.sources.actions]
+connectDestination = "เชื่อมต่อปลายทาง"
 connectSource = "เชื่อมต่อแหล่งที่มา"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "เลือกตำแหน่งที่จะส่ง
 comingSoon = "เร็ว ๆ นี้"
 comingSoonHeading = "เร็ว ๆ นี้"
 create = "สร้างแหล่งที่มา"
+createDestination = "สร้างปลายทาง"
+createDestinationTitle = "เพิ่มปลายทาง"
 createTitle = "เชื่อมต่อแหล่งที่มา"
 delete = "ลบ"
 editTitle = "แก้ไขแหล่งที่มา"
@@ -10757,6 +11383,41 @@ save = "บันทึกการเปลี่ยนแปลง"
 description = "ระบบอัตโนมัติของโฟลเดอร์สามารถใช้ได้เฉพาะโฟลเดอร์ที่ผู้ดูแลระบบอนุญาต เพิ่มในส่วนการตั้งค่าการเข้าถึงโฟลเดอร์ แล้วลองอีกครั้ง"
 openSettings = "การตั้งค่าการเข้าถึงโฟลเดอร์"
 title = "โฟลเดอร์นี้ไม่ได้รับอนุญาต"
+
+[portal.sources.cloudFields.account]
+connect = "เชื่อมต่อบัญชีของคุณ"
+connectAnother = "เชื่อมต่อบัญชีอื่น"
+connectFailed = "ไม่สามารถเชื่อมต่อบัญชีได้ โปรดลองอีกครั้ง หรือขอให้ผู้ดูแลระบบตรวจสอบการลงทะเบียนแอป."
+label = "บัญชี"
+placeholder = "เลือกบัญชี"
+reconnect = "ลงชื่อเข้าใช้อีกครั้ง"
+unavailable = "การเชื่อมต่อบัญชีของคุณเองถูกปิดบนเซิร์ฟเวอร์นี้ โปรดเลือกการเชื่อมต่อขององค์กรแทน."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "ปิดใช้งานบัญชีส่วนบุคคลบนเซิร์ฟเวอร์นี้."
+helperText = "บัญชีของคุณเข้าถึงสิ่งที่คุณเปิดได้และไม่ต้องใช้ผู้ดูแล การเชื่อมต่อขององค์การจะยังทำงานต่อเมื่อคนลาออก และเข้าถึงได้เฉพาะสิ่งที่ผู้ดูแลตั้งค่าไว้."
+label = "ลงชื่อเข้าใช้เป็น"
+
+[portal.sources.cloudFields.authMode.options]
+account = "บัญชีของฉัน"
+organisation = "การเชื่อมต่อขององค์กร"
+
+[portal.sources.cloudFields.connection]
+helperText = "ตั้งค่าโดยผู้ดูแลภายใต้ Integrations ใช้ร่วมกันได้ทุกที่ที่ใช้งาน."
+label = "การเชื่อมต่อขององค์กร"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "วางลิงก์ของโฟลเดอร์ หรือพิมพ์พาธจากส่วนบนสุดของไดรฟ์ของฉัน เว้นว่างไว้สำหรับส่วนบนสุดของไดรฟ์ของฉัน โฟลเดอร์ต้องมีอยู่แล้ว"
+placeholder = "ลิงก์โฟลเดอร์ หรือ Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "โฟลเดอร์ใน OneDrive ของคุณ หรือวางลิงก์โฟลเดอร์ (คัดลอกลิงก์ใน OneDrive) เว้นว่างไว้สำหรับส่วนบนสุดของ OneDrive โฟลเดอร์ต้องมีอยู่แล้ว"
+placeholder = "Scans/Inbox หรือ ลิงก์โฟลเดอร์"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "ใช้บัญชีของคุณ วางลิงก์ของโฟลเดอร์ (คัดลอกลิงก์ใน SharePoint) หากเป็นการเชื่อมต่อขององค์กร ให้ระบุโฟลเดอร์ภายในไลบรารีของมัน; เว้นว่างไว้สำหรับรากของไลบรารี โฟลเดอร์ต้องมีอยู่แล้ว"
+organisationPlaceholder = "ลิงก์โฟลเดอร์ หรือ Scans/Inbox"
+placeholder = "ลิงก์โฟลเดอร์"
 
 [portal.sources.delete]
 body = "ลบ \"{{name}}\" หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้ นโยบายที่อ้างอิงถึงรายการนี้จะต้องได้รับการอัปเดต"
@@ -10821,6 +11482,7 @@ label = "กล่องจดหมาย Email"
 [portal.sources.types.folder]
 description = "เฝ้าดูไดเรกทอรีบนเซิร์ฟเวอร์สำหรับเอกสารใหม่"
 label = "โฟลเดอร์"
+outputDescription = "บันทึกผลลัพธ์ไปยังไดเรกทอรีบนเซิร์ฟเวอร์"
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Path แบบ absolute ไปยังโฟลเดอร์ที่จะเฝ้าดูไฟล์ใหม่"
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "ดึงเอกสารจากโฟลเดอร์ Google Drive ที่แชร์"
 label = "Google Drive"
+outputDescription = "บันทึกผลลัพธ์ไปยังโฟลเดอร์ Google Drive"
 
 [portal.sources.types.network]
 description = "เฝ้าดู SMB network share เพื่อหาเอกสารใหม่"
@@ -10867,10 +11530,12 @@ label = "ไดรฟ์เครือข่าย"
 [portal.sources.types.onedrive]
 description = "เฝ้าดูโฟลเดอร์ OneDrive เพื่อหาเอกสารใหม่"
 label = "OneDrive"
+outputDescription = "บันทึกผลลัพธ์ไปยังโฟลเดอร์ OneDrive"
 
 [portal.sources.types.s3]
 description = "ดึงเอกสารจาก Amazon S3 หรือ bucket ที่เข้ากันได้กับ S3"
 label = "Amazon S3"
+outputDescription = "บันทึกผลลัพธ์ไปยัง Amazon S3 หรือบักเก็ตที่รองรับ S3"
 
 [portal.sources.types.s3.fields.connection]
 helperText = "การเชื่อมต่อที่บันทึกไว้พร้อม bucket และข้อมูลรับรอง ใช้ร่วมกันโดยทุกแหล่งที่มาและ output ของ pipeline ที่ใช้การเชื่อมต่อนี้"
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "ดึงเอกสารจาก SharePoint document libraries"
 label = "SharePoint"
+outputDescription = "บันทึกผลลัพธ์ไปยังโฟลเดอร์ในไลบรารีเอกสารของ SharePoint"
 
 [portal.sources.types.unknown]
 label = "แหล่งที่มา"
@@ -11074,6 +11740,14 @@ waiting = "อยู่ในคิว ..."
 name = "Google Drive"
 scope = "นำเข้าไฟล์"
 
+[provider.googledrive.accountScope]
+description = "drive เข้าถึงทุกไฟล์ (Google ต้องตรวจสอบแอปสาธารณะสำหรับสิ่งนี้); drive.file เฉพาะไฟล์ที่ผู้ใช้เลือกหรือที่ Stirling สร้าง"
+label = "การเข้าถึง Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "ลงชื่อเข้าใช้ครั้งเดียวสำหรับผู้แก้ไขและไปป์ไลน์ของตน ปิดเพื่ออนุญาตเฉพาะการเชื่อมต่อขององค์กร"
+label = "ให้ผู้ใช้เชื่อมต่อบัญชีของตนเอง"
+
 [provider.googledrive.apiKey]
 description = "Google API Key สำหรับ Google Picker API จาก Google Cloud Console"
 label = "API Key"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "Google OAuth 2.0 Client ID จาก Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "อนุญาตให้ผู้ใช้เชื่อมต่อบัญชี Google ของตนสำหรับไปป์ไลน์ เพิ่ม Redirect URI ด้านล่างเป็น Redirect URI ที่ได้รับอนุญาตของไคลเอนต์ OAuth"
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "อนุญาตให้ผู้นำเข้าไฟล์จาก Google Drive ได้โดยตรง"
 label = "เปิดใช้งานตัวเลือกไฟล์ Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "ไม่สามารถเชื่อมต่อบัญชี Google ของคุณได้ ลองอีกครั้งที่ การตั้งค่า > บัญชีที่เชื่อมต่อ"
 notConfigured = "ยังไม่ได้กำหนดค่า Google Drive"
 pickerFailed = "เปิดตัวเลือก Google Drive ไม่สำเร็จ"
+
+[provider.googledrive.redirectUri]
+description = "เพิ่มค่านี้เป็น Redirect URI ที่ได้รับอนุญาตของไคลเอนต์ OAuth ใน Google Cloud Console"
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "ไฟล์และไปป์ไลน์"
+
+[provider.microsoft.allowAccountConnections]
+description = "ลงชื่อเข้าใช้ครั้งเดียวสำหรับผู้แก้ไขและไปป์ไลน์ของตน ปิดเพื่ออนุญาตเฉพาะการเชื่อมต่อขององค์กร"
+label = "ให้ผู้ใช้เชื่อมต่อบัญชีของตนเอง"
+
+[provider.microsoft.allowEditorSaves]
+description = "ปิดเพื่อให้การแก้ไขคงอยู่ใน Stirling: ไฟล์ที่เปิดจาก OneDrive จะดาวน์โหลดแทน และเซิร์ฟเวอร์จะปฏิเสธการบันทึกไปยัง OneDrive."
+label = "อนุญาตให้ตัวแก้ไขบันทึกกลับไปยัง OneDrive"
+
+[provider.microsoft.clientId]
+description = "จากการลงทะเบียนแอป Microsoft Entra หนึ่งรายการ"
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "จำเป็นสำหรับบัญชีที่เชื่อมต่อ เก็บไว้บนเซิร์ฟเวอร์"
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "ให้ผู้ใช้ใช้ OneDrive และ SharePoint ในไปป์ไลน์"
+label = "เปิดใช้ OneDrive และ SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "เพิ่มรายการนี้เป็น Single-page application redirect URI ในการลงทะเบียนแอปเดียวกัน เพื่อใช้ลงชื่อเข้าใช้จากตัวแก้ไข"
+label = "Single-page application redirect URI"
+
+[provider.microsoft.redirectUri]
+description = "เพิ่มค่านี้เป็น Web redirect URI ในการลงทะเบียนแอป Entra"
+label = "Redirect URI"
+
+[provider.microsoft.setupSteps]
+connect = "บันทึก รีสตาร์ท จากนั้นเชื่อมต่อบัญชีภายใต้ บัญชีที่เชื่อมต่อ"
+permissions = "เพิ่มสิทธิ์แบบ delegated ของ Microsoft Graph คือ Files.ReadWrite.All และ Files.Read.All และสิทธิ์แบบ delegated ของ SharePoint คือ MyFiles.Read และ AllSites.Read เพื่อให้บัญชีองค์กรและสถานศึกษาสามารถเปิดตัวเลือกไฟล์ได้"
+redirects = "เพิ่ม Redirect URI สองรายการด้านล่างเข้าไป: หนึ่งรายการเป็น Web และอีกหนึ่งรายการเป็น Single-page application"
+register = "ลงทะเบียนแอปใน Microsoft Entra admin center อนุญาตบัญชี Microsoft ส่วนบุคคลหากผู้ใช้ใช้ OneDrive ส่วนบุคคล"
+secret = "สร้าง client secret แล้ววางค่าของมันและ client ID ของแอปด้านล่าง"
+
+[provider.microsoft.tenant]
+description = "common สำหรับบัญชีที่ทำงาน โรงเรียน และส่วนบุคคล; organizations สำหรับเฉพาะที่ทำงานและโรงเรียน; หรือ tenant ID เพื่ออนุญาตองค์กรเดียว"
+label = "รหัสไดเรกทอรี (tenant)"
 
 [provider.oauth2.generic]
 name = "OAuth2 ทั่วไป"
@@ -11195,6 +11921,19 @@ label = "Scopes"
 description = "ฟิลด์ที่จะใช้เป็นชื่อผู้ใช้ (email, name, given_name, family_name, preferred_username)"
 label = "ใช้เป็นชื่อผู้ใช้"
 
+[provider.onedrive]
+pickerLoading = "กำลังเชื่อมต่อกับ OneDrive..."
+pickerTitle = "เลือกไฟล์จาก OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "ไม่สามารถเชื่อมต่อบัญชี Microsoft ของคุณได้ ลองอีกครั้งที่ การตั้งค่า > บัญชีที่เชื่อมต่อ"
+notConfigured = "ยังไม่ได้ตั้งค่า OneDrive"
+pickerFailed = "เปิด OneDrive ไม่สำเร็จ"
+popupBlocked = "เบราว์เซอร์ของคุณบล็อกหน้าต่างลงชื่อเข้าใช้ของ Microsoft โปรดอนุญาตป๊อปอัปสำหรับไซต์นี้แล้วลองอีกครั้ง"
+reconnect = "บัญชี Microsoft ของคุณต้องลงชื่อเข้าใช้อีกครั้ง เชื่อมต่อใหม่ได้ที่ การตั้งค่า > บัญชีที่เชื่อมต่อ"
+serverError = "OneDrive หรือเซิร์ฟเวอร์ของ Stirling มีปัญหา โปรดลองอีกครั้ง หรือแจ้งผู้ดูแลระบบหากปัญหายังคงเกิดขึ้น"
+unreachable = "ไม่สามารถเชื่อมต่อกับ OneDrive ได้ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง"
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "การแจ้งเตือน"
 processor = "ตัวประมวลผล"
 reader = "ตัวอ่าน"
 signInToUse = "ลงชื่อเข้าใช้เพื่อใช้สิ่งนี้"
+
+[quickNav.accountMenu]
+localMode = "โหมดโลคัล"
+server = "การตั้งค่าเซิร์ฟเวอร์"
+settings = "การตั้งค่า"
+signedOut = "ยังไม่ลงชื่อเข้าใช้"
+signIn = "ลงชื่อเข้าใช้"
 
 [read]
 tags = "ดู,เปิด,แสดง,อ่าน,viewer,PDF viewer,PDF reader,เปิด PDF,ดู PDF,แสดง PDF,พรีวิว,เรียกดู"
@@ -11811,6 +12557,13 @@ title = "ทำความสะอาด PDF"
 [sanitizePdf]
 tags = "ทำความสะอาด, ปลอดภัย, ปลอดภัย, ลบภัยคุกคาม"
 
+[saveFile.menu]
+more = "ตัวเลือกการบันทึกเพิ่มเติม"
+saveCopy = "บันทึกสำเนา..."
+
+[saveFile.toolbar]
+mixed = "บันทึกทั้งหมด"
+
 [scalePages]
 tags = "ปรับขนาด,ปรับ,ปรับสเกล,ขนาดหน้า,ปรับขนาดหน้า,ปรับสเกลหน้า,เปลี่ยนขนาด,ปรับขนาด,ขยาย,ย่อหน้า,พอดีกับหน้า,A4,ขนาด letter"
 title = "ปรับสเกลหน้า"
@@ -11905,6 +12658,162 @@ showTools = "ดูเครื่องมือที่ใช้งานไ�
 title = "ไม่สามารถเข้าถึงเซิร์ฟเวอร์ Stirling-PDF ของคุณ"
 toolNotAvailableLocally = "เซิร์ฟเวอร์ Stirling-PDF ของคุณออฟไลน์และ \"{{endpoint}}\" ไม่มีในแบ็กเอนด์ภายในเครื่อง"
 
+[serverSetup]
+back = "ย้อนกลับ"
+collapse = "ซ่อนการตั้งค่า {{setting}}"
+configured = "กำหนดค่าแล้ว"
+continue = "ดำเนินการต่อ"
+dialogLabel = "การตั้งค่าเซิร์ฟเวอร์"
+expand = "แสดงการตั้งค่า {{setting}}"
+finishSetup = "เสร็จสิ้นการตั้งค่า"
+loadErrorSubtitle = "การตั้งค่าต้องใช้การตั้งค่าปัจจุบันของเซิร์ฟเวอร์เพื่อเริ่มต้น"
+loadErrorTitle = "ไม่สามารถโหลดการตั้งค่าของคุณได้"
+off = "ปิด"
+on = "เปิด"
+save = "บันทึก"
+stepCount = "{{current}} จาก {{total}}"
+
+[serverSetup.account]
+failed = "ไม่สามารถบันทึกรายละเอียดของคุณได้ ตรวจสอบว่าเซิร์ฟเวอร์เข้าถึงได้และลองอีกครั้ง"
+save = "บันทึกและดำเนินการต่อ"
+signIn = "ลงชื่อเข้าใช้"
+signInAgainSubtitle = "ลงชื่อเข้าใช้อีกครั้งด้วยชื่อผู้ใช้และรหัสผ่านใหม่ของคุณเพื่อดำเนินการต่อ"
+signInAgainTitle = "บันทึกรายละเอียดของคุณแล้ว"
+subtitle = "เลือกวิธีที่คุณจะลงชื่อเข้าใช้ต่อจากนี้"
+title = "ตั้งค่าบัญชีของคุณ"
+updating = "กำลังอัปเดต"
+updatingSubtitle = "โปรดรอสักครู่"
+updatingTitle = "กำลังอัปเดตรายละเอียดของคุณ"
+username = "ชื่อผู้ใช้"
+usernameHelp = "สิ่งที่คุณจะใช้ลงชื่อเข้าใช้ ที่อยู่อีเมลก็ใช้ได้"
+
+[serverSetup.addresses]
+backendUrl = "ที่อยู่เซิร์ฟเวอร์"
+backendUrlHelp = "ตำแหน่งที่ผู้ให้บริการลงชื่อเข้าส่งผู้ใช้กลับมา โดยปกติจะเหมือนกับที่อยู่เว็บ"
+frontendUrl = "ที่อยู่เว็บ"
+frontendUrlHelp = "ตำแหน่งที่ผู้ใช้เปิด Stirling PDF ใช้ในอีเมล ลิงก์แชร์ และรหัส QR"
+subtitle = "วิธีที่ผู้ใช้และผู้ให้บริการลงชื่อเข้าใช้เข้าถึงเซิร์ฟเวอร์นี้"
+title = "ที่อยู่"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "เว้นว่างไว้เพื่อใช้คีย์ที่เอนจิน AI มีอยู่แล้ว"
+baseUrl = "Base URL"
+engineUrl = "ที่อยู่เอนจิน AI"
+fastModel = "โมเดลเร็ว"
+label = "AI แบบโฮสต์เอง"
+provider = "ผู้ให้บริการโมเดล"
+providerCustom = "เข้ากันได้กับ OpenAI"
+smartModel = "โมเดลเต็ม"
+stirling = "Stirling AI"
+subtitle = "คำถามเกี่ยวกับเอกสาร การแก้ไขอัตโนมัติ และเอเจนต์ AI"
+title = "AI"
+
+[serverSetup.analytics]
+accept = "ยอมรับและดำเนินการต่อ"
+acceptFinish = "ยอมรับและเสร็จสิ้น"
+changeLater = "คุณสามารถเปลี่ยนแปลงได้ทุกเมื่อใน {{path}}"
+decline = "ปฏิเสธและดำเนินการต่อ"
+declineFinish = "ปฏิเสธและเสร็จสิ้น"
+learnMore = "เราเก็บอะไรบ้าง"
+note = "แชร์ข้อมูลการใช้งานจากเซิร์ฟเวอร์นี้กับเราเพื่อช่วยปรับปรุง Stirling PDF เราไม่เคยเก็บไฟล์หรือเนื้อหาในไฟล์"
+title = "การวิเคราะห์เซิร์ฟเวอร์"
+
+[serverSetup.documents]
+label = "คำถามเกี่ยวกับเอกสาร"
+model = "โมเดล Embedding"
+provider = "ผู้ให้บริการ Embedding"
+providerHelp = "แปลงข้อความในเอกสารเป็นดัชนีค้นหาสำหรับตอบคำถาม"
+
+[serverSetup.email]
+from = "ที่อยู่ผู้ส่ง"
+host = "โฮสต์ SMTP"
+label = "ส่งอีเมล"
+password = "รหัสผ่าน"
+port = "พอร์ต"
+subtitle = "สำหรับคำเชิญ คำขอลงนาม และการแชร์"
+title = "อีเมล"
+username = "ชื่อผู้ใช้"
+
+[serverSetup.error]
+email = "กรอกที่อยู่อีเมล"
+issuerUnreachable = "ไม่สามารถเข้าถึง issuer นี้ ตรวจสอบที่อยู่ และให้แน่ใจว่าเซิร์ฟเวอร์นี้เข้าถึงได้"
+passwordIncorrect = "รหัสผ่านไม่ถูกต้อง"
+passwordLength = "ใช้รหัสผ่านอย่างน้อย 8 อักขระ"
+passwordMismatch = "รหัสผ่านไม่ตรงกัน"
+passwordRejected = "เซิร์ฟเวอร์ไม่ยอมรับรหัสผ่านนี้ ลองใช้รหัสผ่านอื่น"
+passwordUnchanged = "เลือกรหัสผ่านที่แตกต่างจากปัจจุบัน"
+port = "กรอกพอร์ตตั้งแต่ 1 ถึง 65535"
+providerName = "ใช้เฉพาะตัวอักษร ตัวเลข ขีดกลาง หรือขีดล่างเท่านั้น"
+required = "จำเป็น"
+url = "กรอกที่อยู่อย่างเต็มรูปแบบ โดยขึ้นต้นด้วย http:// หรือ https://"
+username = "ใช้ตัวอักษร ตัวเลข หรือ . _ + - @ จำนวน 3 ถึง 50 ตัว หรือที่อยู่อีเมล"
+usernameTaken = "มีชื่อผู้ใช้นี้แล้ว"
+
+[serverSetup.files]
+sharing = "การแชร์ไฟล์"
+sharingOffWarning = "เมื่อปิดการแชร์ ลิงก์แชร์ที่มีอยู่จะใช้งานไม่ได้"
+storage = "จัดเก็บไฟล์"
+storageOffWarning = "เมื่อปิดการจัดเก็บ ไฟล์ที่ผู้ใช้บันทึกไว้บนเซิร์ฟเวอร์จะไม่สามารถเปิดได้อีก"
+subtitle = "จัดการการจัดเก็บและการแชร์ไฟล์"
+title = "ไฟล์"
+
+[serverSetup.finish]
+errorNote = "ตรวจสอบว่าเซิร์ฟเวอร์เข้าถึงได้ และคุณยังลงชื่อเข้าใช้เป็นผู้ดูแลระบบอยู่"
+errorSubtitle = "ไม่มีการรีสตาร์ทใดๆ"
+errorTitle = "ไม่สามารถบันทึกการตั้งค่าของคุณได้"
+manualSubtitle = "เซิร์ฟเวอร์นี้ไม่สามารถรีสตาร์ทตัวเองได้ รีสตาร์ทคอนเทนเนอร์หรือบริการเพื่อให้มีผล"
+manualTitle = "บันทึกการตั้งค่าแล้ว"
+restartFailedSubtitle = "เซิร์ฟเวอร์ไม่ได้รีสตาร์ท รีสตาร์ทคอนเทนเนอร์หรือบริการเพื่อให้มีผล"
+restartingSubtitle = "หน้านี้จะรีโหลดเมื่อกลับมา โดยปกติภายในหนึ่งนาที"
+restartingTitle = "กำลังรีสตาร์ทเซิร์ฟเวอร์ของคุณ"
+retry = "ลองอีกครั้ง"
+saving = "กำลังบันทึก"
+savingSubtitle = "โปรดรอสักครู่"
+savingTitle = "กำลังบันทึกการตั้งค่าของคุณ"
+
+[serverSetup.language]
+auto = "ให้ตรงกับแต่ละเบราว์เซอร์"
+label = "ภาษาปริยาย"
+subtitle = "สิ่งที่ผู้มาใหม่จะเห็นก่อน"
+title = "ภาษา"
+
+[serverSetup.mcp]
+label = "เซิร์ฟเวอร์ MCP"
+
+[serverSetup.password]
+confirm = "ยืนยันรหัสผ่านใหม่"
+current = "รหัสผ่านปัจจุบัน"
+new = "รหัสผ่านใหม่"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "ลงชื่อเข้าใช้ด้วย"
+oidc = "OpenID Connect อื่นๆ"
+password = "ชื่อผู้ใช้และรหัสผ่าน"
+providerName = "ชื่อผู้ให้บริการ"
+providerNameHelp = "แสดงบนปุ่มลงชื่อเข้าใช้ เช่น okta หรือ entra"
+redirectNote = "เพิ่ม Redirect URI นี้ในผู้ให้บริการของคุณ:"
+subtitle = "วิธีที่ทีมของคุณลงชื่อเข้าใช้"
+title = "การลงชื่อเข้าใช้"
+
+[serverSetup.signingIn]
+button = "กำลังลงชื่อเข้าใช้"
+title = "กำลังลงชื่อเข้าใช้ด้วยข้อมูลประจำตัวเริ่มต้น"
+
+[serverSetup.start]
+custom = "กำหนดเอง"
+quick = "เริ่มต้นอย่างรวดเร็ว"
+setupLabel = "ตั้งค่า"
+subtitle = "ตั้งค่าสำหรับทีมของคุณในไม่กี่ขั้นตอน"
+title = "เซิร์ฟเวอร์ของคุณพร้อมใช้งานแล้ว"
+
+[serverSetup.summary]
+subtitle = "ตรวจสอบสิ่งจำเป็น ที่เหลือคงค่าเริ่มต้นไว้"
+title = "เริ่มต้นอย่างรวดเร็ว"
+
 [session]
 expired = "สถานะของคุณในระบบหมดอายุ กรุณารีเฟรชหน้าและลองใหม่อีกครั้ง"
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "ความเป็นส่วนตัว"
 storageSharing = "การจัดเก็บไฟล์และการแชร์"
 systemSettings = "การตั้งค่าระบบ"
+
+[settings.connectedAccounts]
+description = "OneDrive, SharePoint และ Google Drive ของคุณ สำหรับไปป์ไลน์ของคุณ"
+title = "บัญชีที่เชื่อมต่อ"
 
 [settings.connectedInstances]
 confirmBody = "การดำเนินการนี้จะเพิกถอนการเข้าถึงทีมของคุณใน Stirling Cloud จากอินสแตนซ์นี้ แต่จะไม่ลบไฟล์ในเครื่องหรือลบการใช้งานที่บันทึกไว้แล้ว หากต้องการเชื่อมต่ออีกครั้ง ให้ทำตามขั้นตอนการเชื่อมต่อเดิมบนอินสแตนซ์"
@@ -11992,6 +12905,13 @@ selfhosted = "โฮสต์เอง"
 apiKeys = "API Keys"
 apiKeysDescription = "คีย์ส่วนตัวสำหรับเรียก Stirling API จากสคริปต์และการผสานรวม"
 title = "นักพัฒนา"
+
+[settings.feedback]
+label = "ข้อเสนอแนะ"
+
+[settings.feedback.send]
+description = "รายงานปัญหาหรือแนะนำการปรับปรุงให้ทีม Stirling"
+label = "ส่งข้อเสนอแนะ"
 
 [settings.general]
 autoUnzip = "แตก ZIP จาก API อัตโนมัติ"
@@ -12058,6 +12978,7 @@ checkForUpdates = "ตรวจสอบอัปเดต"
 currentBackendVersion = "เวอร์ชัน Backend ปัจจุบัน"
 currentFrontendVersion = "เวอร์ชัน Frontend ปัจจุบัน"
 description = "ตรวจสอบอัปเดตและดูข้อมูลเวอร์ชัน"
+descriptionManaged = "ดูข้อมูลเวอร์ชัน"
 latestVersion = "เวอร์ชันล่าสุด"
 managedByAdmin = "จัดการโดยผู้ดูแลระบบ"
 modeAuto = "ติดตั้งอัปเดตอัตโนมัติ"
@@ -12135,15 +13056,24 @@ title = "เอกสารทางกฎหมาย"
 backendDescription = "Licenses สำหรับ dependencies ของ backend ที่รวมมากับเซิร์ฟเวอร์นี้"
 backendLabel = "ใบอนุญาต Backend"
 backendTitle = "ใบอนุญาตบุคคลที่สามของ Backend"
+clearSearch = "ล้างการค้นหา"
 empty = "ไม่พบ dependencies"
 frontendDescription = "Licenses สำหรับ dependencies ของ frontend ที่รวมอยู่ใน release build"
 frontendLabel = "ใบอนุญาต Frontend"
 frontendTitle = "ใบอนุญาตบุคคลที่สามของ Frontend"
 license = "ใบอนุญาต"
+licenseAbout = "เกี่ยวกับ"
+licenseAboutCompound = "เกี่ยวกับ {{short}}"
+licenseAboutTitle = "เกี่ยวกับ {{short}}"
 listDescription = "รายการจะแสดงโดยตรงใน UI จาก release bundle หรือ backend endpoint"
 listTitle = "Dependencies ที่รวมมา"
 loadError = "โหลด third-party licenses ไม่สำเร็จ"
 module = "โมดูล"
+noMatch = "ไม่มีการพึ่งพาที่ตรงกัน"
+searchPlaceholder = "ค้นหาการพึ่งพา"
+showingCount = "{{count}} การพึ่งพา"
+showingCount_one = "{{count}} การพึ่งพา"
+showingCount_other = "{{count}} การพึ่งพา"
 version = "เวอร์ชัน"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "โปรดป้อนอีเมล"
 emptyPassword = "โปรดป้อนรหัสผ่าน"
 emptyUsername = "โปรดป้อนชื่อผู้ใช้"
 oauthFailed = "เข้าสู่ระบบ OAuth ไม่สำเร็จ โปรดลองอีกครั้ง"
+openResetFailed = "ไม่สามารถเปิดเบราว์เซอร์ของคุณเพื่อรีเซ็ตรหัสผ่านได้"
 
 [setup.saas]
 title = "ลงชื่อเข้าใช้ Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "ลายเซ็นที่ไม่แสดงยังคงใ
 description = "ควบคุมว่าลายเซ็นจะแสดงบนเอกสารหรือฝังแบบไม่แสดง"
 title = "การแสดงผลของลายเซ็น"
 
+[signedPdf]
+editsBlocked = "PDF นี้ถูกลงนามแบบดิจิทัล และได้ปิดการเปลี่ยนแปลงสำหรับ PDF ที่ลงนามไว้แล้ว คุณยังสามารถดูหรือพิมพ์ แปลงเป็นรูปแบบอื่น หรือเซ็นอีกครั้งได้"
+editsBlockedStatus = "ลงนามแล้ว: บล็อกการแก้ไข"
+editsBlockedTitle = "ไม่สามารถแก้ไข PDF ที่ลงนามได้"
+
 [signingDetail]
 allSigned = "ทุกคนลงนามแล้ว ตรวจสอบเอกสาร จากนั้นดำเนินการขั้นสุดท้าย"
 awaitingOwner = "เจ้าของจะดำเนินการเอกสารขั้นสุดท้ายเมื่อพร้อม"
@@ -13110,7 +14046,6 @@ noLinks = "ยังไม่มีลิงก์แชร์ที่ใช้
 noSharedUsers = "ยังไม่มีผู้ใช้ที่มีสิทธิ์เข้าถึง"
 openInApp = "เปิดใน Stirling PDF"
 ownerLabel = "เจ้าของ"
-ownerUnknown = "ไม่ทราบ"
 removeLink = "นำลิงก์ออก"
 removeUser = "นำออก"
 requiresLogin = "ไฟล์ที่แชร์นี้ต้องเข้าสู่ระบบ"
@@ -13249,6 +14184,11 @@ remove = "ลบ"
 roleColumn = "บทบาท"
 title = "สมาชิกทีม"
 
+[teamWelcome]
+invite = "เชิญผู้ใช้"
+message = "เชิญทีมของคุณเพื่อให้เริ่มทำงานร่วมกับคุณ"
+title = "แผน Team ของคุณเปิดใช้งานแล้ว"
+
 [textAlign]
 center = "กึ่งกลาง"
 left = "ชิดซ้าย"
@@ -13290,7 +14230,6 @@ toggleDetails = "สลับรายละเอียด"
 
 [tool]
 endpointUnavailable = "เครื่องมือนี้ไม่พร้อมใช้งานบนเซิร์ฟเวอร์ของคุณ"
-endpointUnavailableClickable = "ไม่พร้อมใช้งานในโหมดนี้ คลิกเพื่อลงชื่อเข้าใช้"
 filesLoading = "ไฟล์กำลังโหลดอยู่ โปรดรอ."
 filesLoadingProgress = "{{loaded}} / {{total}} ไฟล์กำลังโหลด..."
 invalidParams = "กรอกการตั้งค่าที่จำเป็นให้ครบถ้วน"
@@ -13298,6 +14237,8 @@ noFiles = "เพิ่มไฟล์เพื่อเริ่มต้น"
 scopeFiles = "ไฟล์"
 scopeThisFile = "ไฟล์นี้"
 selectFilesHint = "เลือกไฟล์ในไฟล์ที่ใช้งานเพื่อเรียกใช้เครื่องมือนี้"
+signInRequired = "จำเป็นต้องมีบัญชี Stirling ลงชื่อเข้าใช้เพื่อดำเนินการต่อ"
+signInToUse = "ลงชื่อเข้าใช้เพื่อใช้งาน"
 singleFileScope = "ใช้เฉพาะกับ: {{fileName}}"
 viewerMode = "สลับไปที่ file editor เพื่อเพิ่มหลายไฟล์"
 
@@ -13790,6 +14731,7 @@ coverPageView = "แสดงหน้าปกแยกต่างหาก"
 disableColorFilter = "ปิดใช้งานตัวกรองสี"
 documentUpdated = "อัปเดตเอกสารแล้ว"
 dualPageView = "มุมมองสองหน้า"
+editText = "แก้ไขข้อความ"
 enableDarkFilter = "เปิดใช้งานตัวกรองโทนมืด"
 enableSepiaFilter = "เปิดใช้งานตัวกรองเซเปีย"
 engineLoadError = "ไม่สามารถเริ่มต้นเอนจินตัวดู PDF ได้"
@@ -14158,8 +15100,10 @@ closeAll = "ปิดไฟล์ทั้งหมด"
 closePdf = "ปิด PDF"
 deselectAll = "ยกเลิกการเลือกทั้งหมด"
 downloadAll = "ดาวน์โหลดทั้งหมด"
+editText = "แก้ไขข้อความ"
 exitAnnotations = "ออกจากโหมดคำอธิบายประกอบ"
 exitRedaction = "ออกจากโหมดปกปิดข้อมูล"
+findReplace = "ค้นหาและแทนที่"
 formFill = "ตัวแก้ไขฟอร์ม"
 hideToolbar = "ซ่อนแถบเครื่องมือ"
 moreActions = "การดำเนินการเพิ่มเติม"

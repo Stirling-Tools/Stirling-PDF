@@ -1,42 +1,25 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { selectWrapWidthMode } from "@editor/tests/stubbed/widthModeHelpers";
 
 // The sidebar promises two distinct behaviours:
 //
-//   Grow - "Boxes widen to the right as you type (no wrapping)."
-//   Wrap - "Boxes keep their width; extra text wraps onto new lines."
-//
-// Neither held. Measured on paragraph-sample.pdf before this spec existed:
-//
-//   grow / single-line  box 303 -> 551 then STOPS at the page edge; 2944px of
-//                       typed text clipped and invisible; never wraps.
-//   grow / paragraph    box 500 -> 551 then stops; 1851px clipped; on blur the
-//                       box SHRINKS to 490 and the model never gains a line.
-//   wrap / single-line  box GREW 303 -> 551 (it is supposed to keep its width);
-//                       3209px clipped; on blur box drops to 286 with the text
-//                       still long, and the model still has one line.
-//   wrap / paragraph    identical to grow - the two modes were indistinguishable.
-//
-// The user reported it as "grow mode doesn't grow, it just forces word wrap but
-// doesn't visually show it or change the cursor onto the new line until you
-// click off, and clicking back on resets the box to the old small size even
-// though there is now text overlapped on a new line".
+//   Grow - boxes widen as you type until they reach the page edge, then the
+//          overflow flows onto new lines.
+//   Wrap - boxes keep their width and flow onto new lines.
 //
 // The rules this spec holds both modes to:
 //   * the box does not change size between blurring and re-focusing,
-//   * Grow widens to fit, clips nothing, and never adds a line,
+//   * Grow widens to fit, clips nothing, and stays on the page, wrapping only
+//     what is typed past the page edge,
 //   * Wrap keeps its width and moves the overflow onto new lines WHILE typing.
 //
-// Wrap's overflow used to stay hidden even after the model had wrapped, because
-// ReflowWrapCommand joined a wrap-created line with " " while the loader emits
-// one "\n" per visual line. run.text then held fewer lines than the page had ink
-// for, buildExactLines failed at the seam, and the box kept its pre-edit height
-// with the stale blocks still painted. Every visual line now joins with "\n" and
-// the wrap-owned ones are recorded in run.paragraphSoftStarts, so they stay
-// re-flowable. Measured after: wrap/paragraph clipped 2073px -> 4px, box height
-// 100 -> 148 (4 -> 6 lines) WHILE still focused, blocks 6 at one row each.
+// Wrap's overflow shows while typing only because run.text joins every visual
+// line with "\n" and records the wrap-owned ones in run.paragraphSoftStarts. A
+// line joined with " " leaves run.text with fewer lines than the page has ink
+// for, buildExactLines fails at the seam, and the box keeps its pre-edit height.
 
 const PARAGRAPH_PDF = path.join(
   import.meta.dirname,
@@ -56,13 +39,7 @@ const textFor = (which: "single" | "paragraph") =>
   which === "single" ? LONG_SHORT : LONG;
 
 async function open(page: Page, mode: "grow" | "wrap"): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(PARAGRAPH_PDF);
+  await openInTextEditor(page, PARAGRAPH_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -210,10 +187,17 @@ for (const which of ["single", "paragraph"] as const) {
         `${typed!.clipped}px of typed text is clipped out of sight`,
       ).toBeLessThanOrEqual(1);
       expect(typed!.caretInBox, "the caret left the box").not.toBe(false);
+      const pageRight = await page
+        .getByTestId("pdf-editor-page-0")
+        .evaluate((el) => el.getBoundingClientRect().right);
+      const boxRight = await page
+        .getByTestId(testId)
+        .evaluate((el) => el.getBoundingClientRect().right);
       expect(
-        typed!.modelLines,
-        "Grow must not wrap - the hint says 'no wrapping'",
-      ).toBe(before!.modelLines);
+        boxRight,
+        "Grow ran the box off the page instead of wrapping",
+      ).toBeLessThanOrEqual(pageRight + 1);
+      expect(typed!.modelLines).toBeGreaterThan(before!.modelLines);
     });
 
     test("Grow keeps the same size across blur and re-focus", async ({

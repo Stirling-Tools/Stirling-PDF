@@ -1,11 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
-  groupByFamily,
   isLocalFontAccessSupported,
   listLocalFonts,
+  listLocalFontsIfGranted,
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
-import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 
 type QueryStub = () => Promise<unknown[]>;
 
@@ -21,15 +20,6 @@ function face(
   postscriptName: string,
 ): Record<string, string> {
   return { family, style, postscriptName, fullName: `${family} ${style}` };
-}
-
-function mkFont(family: string, style: string): LocalFont {
-  return {
-    family,
-    style,
-    fullName: `${family} ${style}`,
-    postscriptName: `${family}-${style}`,
-  };
 }
 
 beforeEach(() => {
@@ -160,43 +150,48 @@ describe("listLocalFonts", () => {
   });
 });
 
-describe("groupByFamily", () => {
-  it("collapses faces into families sorted case-insensitively", () => {
-    const grouped = groupByFamily([
-      mkFont("inter", "Regular"),
-      mkFont("Arial", "Bold"),
-      mkFont("Zapfino", "Regular"),
-      mkFont("bahnschrift", "Light"),
-    ]);
-    expect(grouped.map((f) => f.family)).toEqual([
-      "Arial",
-      "bahnschrift",
-      "inter",
-      "Zapfino",
-    ]);
+describe("listLocalFontsIfGranted", () => {
+  function setPermission(state: PermissionState): void {
+    Object.defineProperty(navigator, "permissions", {
+      configurable: true,
+      value: { query: vi.fn().mockResolvedValue({ state }) },
+    });
+  }
+
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, "permissions");
   });
 
-  it("merges faces of one family and sorts its styles", () => {
-    const grouped = groupByFamily([
-      mkFont("Inter", "Regular"),
-      mkFont("Inter", "Bold"),
-      mkFont("inter", "Italic"),
-    ]);
-    expect(grouped).toHaveLength(1);
-    expect(grouped[0]?.family).toBe("Inter");
-    expect(grouped[0]?.styles).toEqual(["Bold", "Italic", "Regular"]);
+  it("lists the fonts when access was already granted", async () => {
+    setPermission("granted");
+    setQuery(
+      vi.fn<QueryStub>().mockResolvedValue([face("Acme", "Regular", "Acme")]),
+    );
+    const fonts = await listLocalFontsIfGranted();
+    expect(fonts?.map((f) => f.family)).toEqual(["Acme"]);
   });
 
-  it("de-duplicates styles case-insensitively and skips empty ones", () => {
-    const grouped = groupByFamily([
-      mkFont("Inter", "Bold"),
-      mkFont("Inter", "bold"),
-      mkFont("Inter", ""),
-    ]);
-    expect(grouped[0]?.styles).toEqual(["Bold"]);
+  it("lists the fonts once access is granted after an earlier query failed", async () => {
+    setQuery(vi.fn<QueryStub>().mockRejectedValue(new Error("dismissed")));
+    await expect(listLocalFonts()).resolves.toBeNull();
+    setPermission("granted");
+    setQuery(
+      vi.fn<QueryStub>().mockResolvedValue([face("Acme", "Regular", "Acme")]),
+    );
+    const fonts = await listLocalFontsIfGranted();
+    expect(fonts?.map((f) => f.family)).toEqual(["Acme"]);
   });
 
-  it("returns an empty list for no faces", () => {
-    expect(groupByFamily([])).toEqual([]);
+  it("never asks when access would have to be requested", async () => {
+    setPermission("prompt");
+    const query = vi.fn<QueryStub>().mockResolvedValue([]);
+    setQuery(query);
+    await expect(listLocalFontsIfGranted()).resolves.toBeNull();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("returns null in a browser without the API", async () => {
+    setPermission("granted");
+    await expect(listLocalFontsIfGranted()).resolves.toBeNull();
   });
 });

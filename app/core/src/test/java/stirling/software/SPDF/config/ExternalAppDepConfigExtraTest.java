@@ -34,9 +34,9 @@ import org.mockito.quality.Strictness;
 import stirling.software.common.configuration.RuntimePathConfig;
 
 /**
- * Pure-helper coverage for {@link ExternalAppDepConfig}: the inner Version comparator, the
- * weasyprint/qpdf command recognisers, feature-name formatting and the findFirstAvailable probe
- * loop. No real binaries run; ProcessBuilder is intercepted where a probe is required.
+ * Pure-helper coverage for {@link ExternalAppDepConfig}: the inner Version comparator, the qpdf
+ * command recogniser, feature-name formatting and the findFirstAvailable probe loop. No real
+ * binaries run; ProcessBuilder is intercepted where a probe is required.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -50,11 +50,7 @@ class ExternalAppDepConfigExtraTest {
 
     @BeforeEach
     void setUp() {
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/opt/weasyprint");
-        when(runtimePathConfig.getUnoConvertPath()).thenReturn("/opt/unoconvert");
-        when(runtimePathConfig.getCalibrePath()).thenReturn("/opt/calibre");
         when(runtimePathConfig.getOcrMyPdfPath()).thenReturn("/opt/ocrmypdf");
-        when(runtimePathConfig.getSOfficePath()).thenReturn("/opt/soffice");
         lenient()
                 .when(endpointConfiguration.getEndpointsForGroup(anyString()))
                 .thenReturn(Set.of());
@@ -128,20 +124,8 @@ class ExternalAppDepConfigExtraTest {
     @DisplayName("command recognisers")
     class CommandRecognisers {
 
-        private boolean isWeasyprint(String command) throws Exception {
-            return (boolean) invoke("isWeasyprint", new Class<?>[] {String.class}, command);
-        }
-
         private boolean isQpdf(String command) throws Exception {
             return (boolean) invoke("isQpdf", new Class<?>[] {String.class}, command);
-        }
-
-        @Test
-        @DisplayName("isWeasyprint matches the configured path and any name containing weasyprint")
-        void weasyprintMatches() throws Exception {
-            assertThat(isWeasyprint("/opt/weasyprint")).isTrue();
-            assertThat(isWeasyprint("WeasyPrint")).isTrue();
-            assertThat(isWeasyprint("gs")).isFalse();
         }
 
         @Test
