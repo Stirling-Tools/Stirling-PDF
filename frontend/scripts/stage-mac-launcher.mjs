@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // macOS names and badges a smart-card PIN prompt after the requesting executable: a bare
 // bin/java shows "java" with a terminal icon. Wrapping a copy of the launcher in an app bundle
-// inside the JRE makes the prompt read "Stirling PDF" with the app icon.
+// inside the JRE makes the prompt read "Stirling PDF Service" with the app icon.
 import {
   chmodSync,
   cpSync,
@@ -13,7 +13,7 @@ import {
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
-const MAC_LAUNCHER_NAME = "Stirling PDF";
+const MAC_LAUNCHER_NAME = "Stirling PDF Service";
 
 const [jreDir, iconPath, entitlementsPath] = process.argv.slice(2);
 
@@ -59,7 +59,7 @@ writeFileSync(
 <plist version="1.0">
 <dict>
   <key>CFBundleExecutable</key><string>${MAC_LAUNCHER_NAME}</string>
-  <key>CFBundleIdentifier</key><string>stirling.pdf.dev.backend</string>
+  <key>CFBundleIdentifier</key><string>com.stirlingpdf.service</string>
   <key>CFBundleName</key><string>${MAC_LAUNCHER_NAME}</string>
   <key>CFBundleDisplayName</key><string>${MAC_LAUNCHER_NAME}</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
