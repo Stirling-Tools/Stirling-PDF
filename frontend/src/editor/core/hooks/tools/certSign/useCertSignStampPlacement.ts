@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSignature } from "@editor/contexts/SignatureContext";
 import { useNavigation } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { useSignatureFieldPicker } from "@editor/contexts/SignatureFieldPickerContext";
 import { DEFAULT_PARAMETERS as SIGN_DEFAULTS } from "@editor/hooks/tools/sign/useSignParameters";
 import type { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { stampLabels } from "@editor/hooks/tools/certSign/useCertSignOperation";
@@ -40,6 +41,7 @@ export interface CertSignStampPlacement {
   placedPage: number | null;
   place: () => void;
   remove: () => void;
+  preview: string | null;
 }
 
 function useSignatureLayout(file: StirlingFile | null) {
@@ -139,7 +141,7 @@ export function useCertSignStampPlacement({
     setSignaturesApplied,
   } = useSignature();
   const { hasUnsavedChanges, setWorkbench } = useNavigation();
-  const { activeFileId, setActiveFileId } = useViewer();
+  const { activeFileId, setActiveFileId, scrollActions } = useViewer();
   const layout = useSignatureLayout(
     active && parameters.showSignature ? file : null,
   );
@@ -180,7 +182,7 @@ export function useCertSignStampPlacement({
     );
     if (stampId || ours.length > 0) {
       for (const entry of ours) {
-        signatureApiRef.current?.deleteAnnotation(entry.id, entry.pageIndex);
+        signatureApiRef.current?.discardAnnotation(entry.id, entry.pageIndex);
       }
       if (wasCleanBeforePlacing.current) setSignaturesApplied(true);
     }
@@ -285,6 +287,73 @@ export function useCertSignStampPlacement({
     onParameterChange("pageNumber", stampPage + 1);
   }, [active, stampPage, rect, cropBox, onParameterChange]);
 
+  const { setPick } = useSignatureFieldPicker();
+  const emptyFields = useMemo(() => layout?.emptyFields ?? [], [layout]);
+  const fieldName = parameters.fieldName ?? null;
+  const chosenField = emptyFields.find((field) => field.name === fieldName);
+  const stampBox = parameters.stampBox;
+  const fieldPreview = useMemo(
+    () =>
+      chosenField
+        ? renderStamp(chosenField.box.width, chosenField.box.height)
+        : null,
+    [chosenField, renderStamp],
+  );
+  const preview = useMemo(
+    () =>
+      fieldPreview ??
+      renderStamp(
+        stampBox?.width ?? DEFAULT_STAMP_SIZE.width,
+        stampBox?.height ?? DEFAULT_STAMP_SIZE.height,
+      ),
+    [fieldPreview, stampBox, renderStamp],
+  );
+  const chosenOnPage = useRef<string | null>(null);
+  useEffect(() => {
+    if (!active || !parameters.showSignature || emptyFields.length === 0) {
+      setPick(null);
+      return;
+    }
+    setPick({
+      fieldNames: new Set(emptyFields.map((field) => field.name)),
+      selected: fieldName,
+      preview: fieldPreview,
+      choose: (name) => {
+        chosenOnPage.current = name;
+        onParameterChange("fieldName", name);
+      },
+    });
+  }, [
+    active,
+    parameters.showSignature,
+    emptyFields,
+    fieldName,
+    fieldPreview,
+    onParameterChange,
+    setPick,
+  ]);
+  useEffect(() => () => setPick(null), [setPick]);
+
+  const shownField = useRef<string | null>(null);
+  useEffect(() => {
+    if (!chosenField || shownField.current === chosenField.name) return;
+    const first = shownField.current === null;
+    const fromPage = chosenOnPage.current === chosenField.name;
+    shownField.current = chosenField.name;
+    chosenOnPage.current = null;
+    if (first || fromPage) return;
+    if (file && activeFileId !== file.fileId) setActiveFileId(file.fileId);
+    setWorkbench("viewer");
+    scrollActions.scrollToPage(chosenField.pageIndex + 1);
+  }, [
+    chosenField,
+    file,
+    activeFileId,
+    setActiveFileId,
+    setWorkbench,
+    scrollActions,
+  ]);
+
   const removeRef = useRef(remove);
   removeRef.current = remove;
   useEffect(() => {
@@ -304,5 +373,6 @@ export function useCertSignStampPlacement({
     placedPage: stampPage === undefined ? null : stampPage + 1,
     place,
     remove,
+    preview,
   };
 }

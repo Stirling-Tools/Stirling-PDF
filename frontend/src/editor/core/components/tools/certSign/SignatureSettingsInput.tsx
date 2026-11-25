@@ -135,7 +135,10 @@ const SignatureSettingsInput = ({
             size="xs"
           />
           <Switch
-            label={t("certSign.appearance.graphic.watermark", "Logo watermark")}
+            label={t(
+              "certSign.appearance.graphic.watermark",
+              "Logo behind signature",
+            )}
             checked={value.showLogo || false}
             onChange={(event) =>
               handleChange("showLogo", event.currentTarget.checked)

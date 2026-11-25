@@ -189,12 +189,16 @@ const createTextStampImage = (
 interface SignatureAPIBridgeProps {
   /** When true (sign tool context), the general ink/pen annotation tool is blocked. */
   isSignMode?: boolean;
+  onAnnotationDiscarded?: (annotationId: string) => void;
 }
 
 export const SignatureAPIBridge = forwardRef<
   SignatureAPI,
   SignatureAPIBridgeProps
->(function SignatureAPIBridge({ isSignMode = false }, ref) {
+>(function SignatureAPIBridge(
+  { isSignMode = false, onAnnotationDiscarded },
+  ref,
+) {
   const { provides: annotationApi } = useAnnotationCapability();
   const {
     signatureConfig,
@@ -521,6 +525,12 @@ export const SignatureAPIBridge = forwardRef<
         }
 
         // Delete specific annotation by ID
+        annotationApi.deleteAnnotation(pageIndex, annotationId);
+      },
+
+      discardAnnotation: (annotationId: string, pageIndex: number) => {
+        if (!annotationApi) return;
+        onAnnotationDiscarded?.(annotationId);
         annotationApi.deleteAnnotation(pageIndex, annotationId);
       },
 

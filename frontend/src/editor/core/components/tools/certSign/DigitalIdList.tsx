@@ -14,6 +14,7 @@ import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { HardwareCertificateInfo } from "@editor/services/hardwareSigningService";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import "@editor/components/tools/certSign/CertSignCard.css";
 import "@editor/components/tools/certSign/DigitalIdList.css";
 
 interface DigitalIdListProps {
@@ -144,9 +145,9 @@ export const DigitalIdSummary = ({
 }) => {
   const describe = useDigitalIdDetails();
   return (
-    <div className="digital-id-card">
+    <div className="cert-sign-card">
       <Stack gap={0} className={privateContentClassName}>
-        <Text className="digital-id-name">{digitalIdName(cert)}</Text>
+        <Text className="cert-sign-card-name">{digitalIdName(cert)}</Text>
         <DigitalIdDetails cert={cert} text={describe(cert)} />
       </Stack>
     </div>
@@ -179,7 +180,7 @@ const DigitalIdList = ({
 
   const cardBody = (cert: HardwareCertificateInfo) => (
     <Stack gap={0} className={privateContentClassName}>
-      <Text className="digital-id-name">{digitalIdName(cert)}</Text>
+      <Text className="cert-sign-card-name">{digitalIdName(cert)}</Text>
       <DigitalIdDetails cert={cert} text={details(cert)} />
     </Stack>
   );
@@ -188,7 +189,7 @@ const DigitalIdList = ({
     <Radio.Card
       key={cert.alias}
       value={cert.alias}
-      className="digital-id-card"
+      className="cert-sign-card"
       disabled={disabled}
     >
       {cardBody(cert)}
@@ -197,7 +198,7 @@ const DigitalIdList = ({
 
   // Not radios: Mantine's arrow keys step onto disabled cards in the group and stop there.
   const blockedCard = (cert: HardwareCertificateInfo) => (
-    <div key={cert.alias} className="digital-id-card" data-disabled>
+    <div key={cert.alias} className="cert-sign-card" data-disabled>
       {cardBody(cert)}
     </div>
   );

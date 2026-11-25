@@ -1,0 +1,28 @@
+.cert-sign-card {
+  padding: 8px 10px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--c-surface);
+}
+
+.cert-sign-card[data-checked] {
+  border-color: var(--c-primary);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+
+.cert-sign-card:not([data-disabled]):hover {
+  border-color: var(--c-primary);
+}
+
+.cert-sign-card[data-disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cert-sign-card-name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}

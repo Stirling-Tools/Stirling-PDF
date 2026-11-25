@@ -17,9 +17,11 @@ import { documentHasFormFields } from "@editor/services/documentFormProbe";
 import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
+import { useSignatureFieldPicker } from "@editor/contexts/SignatureFieldPickerContext";
 import {
   renderSignatureFieldAppearances,
   extractSignatures,
+  type PdfiumSignature,
   type SignatureFieldAppearance,
 } from "@editor/services/pdfiumService";
 
@@ -51,6 +53,10 @@ let _cachedSource: File | Blob | null = null;
 let _cachedFields: ResolvedSignatureField[] = [];
 let _cachePromise: Promise<ResolvedSignatureField[]> | null = null;
 
+function hasSignatureValue(signature: PdfiumSignature | undefined): boolean {
+  return (signature?.contents.length ?? 0) > 0;
+}
+
 async function resolveFields(
   source: File | Blob,
 ): Promise<ResolvedSignatureField[]> {
@@ -76,7 +82,9 @@ async function resolveFields(
       const matchedSig = exactMatch ? signatures[i] : undefined;
       return {
         ...f,
-        isSigned: exactMatch ? i < signatures.length : signatures.length > 0,
+        isSigned: exactMatch
+          ? hasSignatureValue(matchedSig)
+          : signatures.some(hasSignatureValue),
         reason: matchedSig?.reason,
         time: matchedSig?.time,
       };
@@ -130,6 +138,7 @@ function SignatureFieldOverlayInner({
 }: SignatureFieldOverlayProps) {
   const { t } = useTranslation();
   const staleNames = useStaleBakedFieldNames();
+  const { pick } = useSignatureFieldPicker();
   const [fields, setFields] = useState<ResolvedSignatureField[]>([]);
 
   useEffect(() => {
@@ -203,6 +212,62 @@ function SignatureFieldOverlayInner({
         const height = field.height * sy;
 
         // If we have a rendered appearance bitmap, paint it via <canvas>.
+        const pickable =
+          !field.isSigned && !!pick?.fieldNames.has(field.fieldName);
+        const chosen = pickable && pick?.selected === field.fieldName;
+        const pickProps = pickable
+          ? {
+              role: "button",
+              "aria-pressed": chosen,
+              onClick: () => pick?.choose(field.fieldName),
+              title: t(
+                "viewer.signatureField.signHere",
+                "Sign here: {{name}}",
+                { name: field.fieldName },
+              ),
+            }
+          : {};
+        const pickStyle: React.CSSProperties = pickable
+          ? {
+              cursor: "pointer",
+              border: chosen
+                ? "2px solid var(--c-primary)"
+                : "2px dashed var(--c-primary)",
+              background: chosen
+                ? "white"
+                : "color-mix(in srgb, var(--c-primary) 6%, transparent)",
+              boxShadow: chosen
+                ? "0 0 0 4px color-mix(in srgb, var(--c-primary) 25%, transparent)"
+                : undefined,
+            }
+          : {};
+        if (chosen && pick?.preview) {
+          return (
+            <div
+              key={`sig-${field.fieldName}-${idx}`}
+              data-signature-field-chosen
+              style={{
+                position: "absolute",
+                left,
+                top,
+                width,
+                height,
+                overflow: "hidden",
+                pointerEvents: "auto",
+                borderRadius: 4,
+                ...pickStyle,
+              }}
+              {...pickProps}
+            >
+              <img
+                src={pick.preview}
+                alt=""
+                style={{ width: "100%", height: "100%", display: "block" }}
+              />
+            </div>
+          );
+        }
+
         if (field.imageData) {
           return (
             <div
@@ -216,15 +281,19 @@ function SignatureFieldOverlayInner({
                 overflow: "hidden",
                 pointerEvents: "auto",
                 cursor: "default",
+                ...pickStyle,
               }}
+              {...pickProps}
               title={
-                field.isSigned
-                  ? getSignedTitle(field)
-                  : t(
-                      "viewer.signatureField.fieldTitle",
-                      "Signature field: {{name}}",
-                      { name: field.fieldName },
-                    )
+                pickable
+                  ? pickProps.title
+                  : field.isSigned
+                    ? getSignedTitle(field)
+                    : t(
+                        "viewer.signatureField.fieldTitle",
+                        "Signature field: {{name}}",
+                        { name: field.fieldName },
+                      )
               }
             >
               {!appearanceInBitmap && (
@@ -261,15 +330,19 @@ function SignatureFieldOverlayInner({
               overflow: "hidden",
               pointerEvents: "auto",
               cursor: "default",
+              ...pickStyle,
             }}
+            {...pickProps}
             title={
-              field.isSigned
-                ? getSignedTitle(field)
-                : t(
-                    "viewer.signatureField.unsignedFieldTitle",
-                    "Unsigned signature field: {{name}}",
-                    { name: field.fieldName },
-                  )
+              pickable
+                ? pickProps.title
+                : field.isSigned
+                  ? getSignedTitle(field)
+                  : t(
+                      "viewer.signatureField.unsignedFieldTitle",
+                      "Unsigned signature field: {{name}}",
+                      { name: field.fieldName },
+                    )
             }
           >
             <span
@@ -277,7 +350,9 @@ function SignatureFieldOverlayInner({
                 fontSize: Math.min(height * 0.35, 14),
                 color: field.isSigned
                   ? "rgba(34, 139, 34, 0.85)"
-                  : "rgba(120, 120, 120, 0.85)",
+                  : pickable
+                    ? "var(--c-accent-fg, var(--c-primary))"
+                    : "rgba(120, 120, 120, 0.85)",
                 fontWeight: 600,
                 textAlign: "center",
                 lineHeight: 1.2,
@@ -291,7 +366,9 @@ function SignatureFieldOverlayInner({
             >
               {field.isSigned
                 ? `🔒 ${t("viewer.signatureField.signed", "Signed")}`
-                : `✎ ${t("viewer.signatureField.badge", "Signature")}`}
+                : pickable
+                  ? t("viewer.signatureField.clickToSign", "Click to sign here")
+                  : `✎ ${t("viewer.signatureField.badge", "Signature")}`}
             </span>
           </div>
         );

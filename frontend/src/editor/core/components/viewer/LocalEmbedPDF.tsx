@@ -994,6 +994,7 @@ type EditingBridgesProps = Pick<
   isSignMode: boolean;
   getAnnotationAnchor: (annotationId: string) => AnnotationMenuAnchor | null;
   onAnnotationDeleted: (anchor: AnnotationMenuAnchor) => void;
+  onAnnotationDiscarded: (annotationId: string) => void;
   deletedAnnotationMenu: AnnotationMenuAnchor | null;
   onDismissDeletedAnnotationMenu: () => void;
 };
@@ -1010,6 +1011,7 @@ function EditingBridges({
   redactionTrackerRef,
   getAnnotationAnchor,
   onAnnotationDeleted,
+  onAnnotationDiscarded,
   deletedAnnotationMenu,
   onDismissDeletedAnnotationMenu,
 }: EditingBridgesProps) {
@@ -1029,7 +1031,11 @@ function EditingBridges({
       {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
       {redactionActive && <RedactionAPIBridge />}
       {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
-      <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
+      <SignatureAPIBridge
+        ref={signatureApiRef}
+        isSignMode={isSignMode}
+        onAnnotationDiscarded={onAnnotationDiscarded}
+      />
       {/* Pending redactions must remain available to Save & Leave in other editing tools. */}
       <RedactionPendingTracker ref={redactionTrackerRef} />
       {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
@@ -1262,6 +1268,9 @@ export function LocalEmbedPDF({
       annotationAnchorsByIdRef.current.get(annotationId) ?? null,
     [],
   );
+  const forgetAnnotationAnchor = useCallback((annotationId: string) => {
+    annotationAnchorsByIdRef.current.delete(annotationId);
+  }, []);
   const handleAnnotationDeleted = useCallback(
     (anchor: AnnotationMenuAnchor) => setDeletedAnnotationMenu(anchor),
     [],
@@ -1880,6 +1889,7 @@ export function LocalEmbedPDF({
             redactionTrackerRef={redactionTrackerRef}
             getAnnotationAnchor={getAnnotationAnchor}
             onAnnotationDeleted={handleAnnotationDeleted}
+            onAnnotationDiscarded={forgetAnnotationAnchor}
             deletedAnnotationMenu={deletedAnnotationMenu}
             onDismissDeletedAnnotationMenu={dismissDeletedAnnotationMenu}
           />

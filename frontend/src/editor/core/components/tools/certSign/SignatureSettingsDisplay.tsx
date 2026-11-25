@@ -90,7 +90,10 @@ const SignatureSettingsDisplay = ({
 
               <Group gap="xs" justify="space-between">
                 <Text size="xs" c="dimmed">
-                  {t("certSign.appearance.graphic.watermark", "Logo watermark")}
+                  {t(
+                    "certSign.appearance.graphic.watermark",
+                    "Logo behind signature",
+                  )}
                 </Text>
                 <Group gap="xs">
                   {showLogo ? (
