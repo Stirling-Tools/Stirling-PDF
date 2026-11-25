@@ -1,5 +1,6 @@
 import path from "path";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { toggleViewerPanel } from "@editor/tests/helpers/ui-helpers";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -54,6 +55,18 @@ test("ctrl + zooms the document after a click on the pages, and not after one on
   const seenBefore = await keysSeen();
   await page.keyboard.press("Control+Equal");
   await expect.poll(keysSeen).toBe(seenBefore + 1);
+  await expect(zoom).toHaveValue(before);
+  expect(await lastKeyTaken()).toBe(false);
+
+  // The comments panel sits inside the pages area but is a panel all the same.
+  await toggleViewerPanel(page, "Comments");
+  await page
+    .locator(".comments-sidebar")
+    .click({ position: { x: 20, y: 120 } });
+  before = await zoom.inputValue();
+  const seenBeforePanel = await keysSeen();
+  await page.keyboard.press("Control+Equal");
+  await expect.poll(keysSeen).toBe(seenBeforePanel + 1);
   await expect(zoom).toHaveValue(before);
   expect(await lastKeyTaken()).toBe(false);
 });

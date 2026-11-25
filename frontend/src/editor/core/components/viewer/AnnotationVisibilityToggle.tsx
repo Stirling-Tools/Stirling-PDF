@@ -3,13 +3,18 @@ import { BarButton } from "@editor/components/viewer/ViewerBarControls";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useSignature } from "@editor/contexts/SignatureContext";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
+import type { ToolId } from "@editor/types/toolId";
 
 /**
  * Tools that place marks on the pages, which must stay visible meanwhile.
  * Annotate is left out: its panel disables its tools while annotations are
  * hidden, so this toggle is the way back.
  */
-const DRAWING_TOOLS = new Set(["sign", "addImage", "addText"]);
+const DRAWING_TOOLS: ReadonlySet<ToolId> = new Set<ToolId>([
+  "sign",
+  "addImage",
+  "addText",
+]);
 
 /** Shows or hides the document's annotations, in the viewer only. */
 export function AnnotationVisibilityToggle({
@@ -36,7 +41,9 @@ export function AnnotationVisibilityToggle({
       tooltipPosition="top"
       active={!isAnnotationsVisible}
       disabled={
-        disabled || isPlacementMode || DRAWING_TOOLS.has(selectedTool as string)
+        disabled ||
+        isPlacementMode ||
+        (selectedTool != null && DRAWING_TOOLS.has(selectedTool))
       }
       onClick={toggleAnnotationsVisibility}
       testId="viewer-annotation-visibility"

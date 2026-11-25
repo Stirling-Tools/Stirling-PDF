@@ -851,8 +851,10 @@ const EmbedPdfViewerContent = ({
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Element | null;
+      // The comments panel renders inside the pages area but is a panel.
       keyZoomOnPagesRef.current = Boolean(
-        target?.closest?.("[data-viewer-pages]"),
+        target?.closest?.("[data-viewer-pages]") &&
+        !target.closest(".comments-sidebar"),
       );
     };
     document.addEventListener("pointerdown", onPointerDown, true);
