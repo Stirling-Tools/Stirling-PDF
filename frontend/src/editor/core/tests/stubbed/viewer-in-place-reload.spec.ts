@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "path";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { toggleViewerPanel } from "@editor/tests/helpers/ui-helpers";
 
 interface SwapSamplerState {
   swapMs: number;
@@ -31,7 +32,10 @@ async function loadViewer(
   pages = 3,
 ) {
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(fixture);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(fixture);
   const firstPage = page.locator('[data-page-index="0"]').first();
   await expect(firstPage).toBeVisible({ timeout: 30_000 });
   await expect
@@ -236,7 +240,7 @@ test("saving annotations keeps the live document mounted", async ({ page }) => {
   await page.waitForTimeout(800);
   await page.getByRole("button", { name: "Zoom In" }).first().click();
   await page.waitForTimeout(500);
-  const zoomBefore = await page.getByText(/%$/).first().textContent();
+  const zoomBefore = await page.getByTestId("viewer-zoom-input").inputValue();
   await page.mouse.wheel(0, 320);
   await page.waitForTimeout(400);
   const pageTop = (index: number) =>
@@ -304,7 +308,7 @@ test("saving annotations keeps the live document mounted", async ({ page }) => {
     })
     .toBe(true);
   await expect
-    .poll(async () => page.getByText(/%$/).first().textContent(), {
+    .poll(async () => page.getByTestId("viewer-zoom-input").inputValue(), {
       timeout: 10_000,
     })
     .toBe(zoomBefore);
@@ -341,8 +345,7 @@ test("a reload keeps other open viewer surfaces", async ({ page }) => {
   test.setTimeout(180_000);
   await loadViewer(page);
 
-  const comments = page.getByRole("button", { name: "Comments" }).first();
-  await comments.click();
+  await toggleViewerPanel(page, "Comments");
   await expect(page.locator(".comments-sidebar").first()).toBeVisible({
     timeout: 5_000,
   });
@@ -416,7 +419,10 @@ test("a different document remounts and shows its own bytes", async ({
   await tagViewerWrapper(page);
 
   // A different lineage root cannot share the mount: the viewer remounts.
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE_PDF);
   await expect
     .poll(() => page.locator("[data-page-index]").count(), { timeout: 30_000 })
     .toBe(1);

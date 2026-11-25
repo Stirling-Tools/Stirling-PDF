@@ -33,6 +33,7 @@ vi.mock("@editor/services/operationRouter", () => ({
     isSelfHostedMode: vi.fn().mockResolvedValue(true),
     isSaaSMode: vi.fn().mockResolvedValue(false),
     getBaseUrl: vi.fn().mockResolvedValue("https://example.test"),
+    getServerOnlyBaseUrl: vi.fn().mockResolvedValue("https://example.test"),
     shouldSkipBackendReadyCheck: vi.fn().mockResolvedValue(false),
   },
 }));
@@ -346,6 +347,10 @@ describe("desktop request interceptor - hardware signing stays on this device", 
     vi.mocked(operationRouter.getBaseUrl).mockResolvedValue(
       "https://remote.test",
     );
+    vi.mocked(operationRouter.getServerOnlyBaseUrl).mockClear();
+    vi.mocked(operationRouter.getServerOnlyBaseUrl).mockResolvedValue(
+      "https://remote.test",
+    );
   });
 
   test("sends token discovery, PIN included, to the bundled backend", async () => {
@@ -378,7 +383,7 @@ describe("desktop request interceptor - hardware signing stays on this device", 
     },
   );
 
-  test("routes server and uploaded-file signing as usual", async () => {
+  test("keeps server signing on the connected server", async () => {
     const result = await runRequestInterceptor({
       url: "/api/v1/security/cert-sign",
       method: "post",
@@ -387,5 +392,42 @@ describe("desktop request interceptor - hardware signing stays on this device", 
     });
     expect(result.url).toBe("https://remote.test/api/v1/security/cert-sign");
     expect(result.headers.Authorization).toBe("Bearer jwt-123");
+    expect(operationRouter.getServerOnlyBaseUrl).toHaveBeenCalled();
+    expect(operationRouter.getBaseUrl).not.toHaveBeenCalled();
+  });
+
+  test("keeps the server certificate lookup on the connected server", async () => {
+    await runRequestInterceptor({
+      url: "/api/v1/security/cert-sign/server-certificate",
+      method: "get",
+      headers: {},
+    });
+    expect(operationRouter.getServerOnlyBaseUrl).toHaveBeenCalled();
+    expect(operationRouter.getBaseUrl).not.toHaveBeenCalled();
+  });
+
+  test("fails server signing when the server is offline", async () => {
+    vi.mocked(operationRouter.getServerOnlyBaseUrl).mockRejectedValueOnce(
+      new Error("Your Stirling-PDF server is offline"),
+    );
+    await expect(
+      runRequestInterceptor({
+        url: "/api/v1/security/cert-sign",
+        method: "post",
+        headers: {},
+        data: signForm("SERVER"),
+      }),
+    ).rejects.toThrow("Your Stirling-PDF server is offline");
+  });
+
+  test("routes uploaded-file signing as usual", async () => {
+    const result = await runRequestInterceptor({
+      url: "/api/v1/security/cert-sign",
+      method: "post",
+      headers: {},
+      data: signForm("P12"),
+    });
+    expect(result.url).toBe("https://remote.test/api/v1/security/cert-sign");
+    expect(operationRouter.getServerOnlyBaseUrl).not.toHaveBeenCalled();
   });
 });

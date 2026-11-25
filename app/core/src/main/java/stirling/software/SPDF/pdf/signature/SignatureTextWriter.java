@@ -2,6 +2,8 @@ package stirling.software.SPDF.pdf.signature;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.Bidi;
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +25,8 @@ import lombok.extern.slf4j.Slf4j;
  * as subsets. A character no bundled face covers is drawn as {@code ?}: signing must not fail over
  * display text, and the certificate itself is unaffected.
  *
- * <p>Glyphs are placed in logical order without shaping, so Arabic and Indic text is legible letter
- * by letter but not joined. Not thread-safe; use one instance per document.
+ * <p>Right-to-left runs are reordered for display, but glyphs are not shaped, so Arabic and Indic
+ * text is legible letter by letter but not joined. Not thread-safe; use one instance per document.
  */
 @Slf4j
 public final class SignatureTextWriter {
@@ -78,10 +80,41 @@ public final class SignatureTextWriter {
     /** Shows {@code text} at the current text position; the caller is inside BT/ET. */
     public void showText(PDPageContentStream stream, String text, float fontSize)
             throws IOException {
-        for (Run run : runs(text)) {
+        for (Run run : runs(visualOrder(text))) {
             stream.setFont(run.face().font(document), fontSize);
             stream.showText(run.text());
         }
+    }
+
+    static String visualOrder(String text) {
+        char[] chars = text.toCharArray();
+        if (!Bidi.requiresBidi(chars, 0, chars.length)) {
+            return text;
+        }
+        Bidi bidi = new Bidi(text, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
+        int count = bidi.getRunCount();
+        byte[] levels = new byte[count];
+        String[] runs = new String[count];
+        for (int i = 0; i < count; i++) {
+            levels[i] = (byte) bidi.getRunLevel(i);
+            String run = text.substring(bidi.getRunStart(i), bidi.getRunLimit(i));
+            runs[i] = (levels[i] & 1) == 1 ? reverseClusters(run) : run;
+        }
+        Bidi.reorderVisually(levels, 0, runs, 0, count);
+        return String.join("", runs);
+    }
+
+    private static String reverseClusters(String run) {
+        BreakIterator clusters = BreakIterator.getCharacterInstance();
+        clusters.setText(run);
+        StringBuilder reversed = new StringBuilder(run.length());
+        int end = clusters.last();
+        for (int start = clusters.previous();
+                start != BreakIterator.DONE;
+                end = start, start = clusters.previous()) {
+            reversed.append(run, start, end);
+        }
+        return reversed.toString();
     }
 
     private List<Run> runs(String text) throws IOException {
