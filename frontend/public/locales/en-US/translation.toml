@@ -12,9 +12,11 @@ comingSoon = "Coming soon"
 confirm = "Confirm"
 confirmClose = "Confirm Close"
 confirmCloseCancel = "Cancel"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Close File"
 confirmCloseDiscard = "Discard changes and close"
 confirmCloseMessage = "Are you sure you want to close this file?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Save and close"
 confirmCloseSaveFailed_one = "Saved with errors. {{count}} file could not be saved."
 confirmCloseSaveFailed_other = "Saved with errors. {{count}} files could not be saved."
@@ -647,18 +649,16 @@ description = "Maximum DPI for image processing (0 = unlimited)"
 label = "Maximum DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configure session limits and timeouts for each process executor"
 ghostscript = "Ghostscript"
 installApp = "Install App"
 label = "Process Executor Limits"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
-pythonOpenCv = "Python OpenCV"
+officeConvert = "Office conversion"
+officeConvertSessionLimit = "Maximum concurrent conversions; 0 picks a limit from CPUs and memory"
+pythonOpenCv = "Python"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maximum concurrent instances"
@@ -667,10 +667,6 @@ label = "Session Limit"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maximum execution time"
 label = "Timeout (minutes)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert is in beta. It offers better conversions, faster and with less memory than LibreOffice."
-label = "Use new Stirling Office conversion"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configure temporary file storage and cleanup behavior"
@@ -688,11 +684,6 @@ label = "Cleanup Interval (minutes)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Whether to clean broader system temp directory (use with caution)"
 label = "Cleanup System Temp"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
-label = "LibreOffice Temp Directory"
-placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximum age in hours before temp files are cleaned up"
@@ -1300,17 +1291,6 @@ label = "Default Producer"
 [admin.settings.general.customPaths]
 description = "Configure custom file system paths for pipeline processing and external tools"
 label = "Custom Paths"
-
-[admin.settings.general.customPaths.operations]
-label = "External Tool Paths"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
-label = "Unoconvert Executable"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint Executable"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline Directories"
@@ -2383,6 +2363,10 @@ title = "Run Automation"
 [automate.selection]
 title = "Automation Selection"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Create New Automation"
 
@@ -2993,31 +2977,36 @@ stepTitle = "This device"
 [certSign.error]
 failed = "An error occurred while processing signatures."
 
-[certSign.format]
-pkcs11 = "USB Token"
-windowsStore = "Windows certificate store"
-
 [certSign.hardware]
-certificate = "Certificate"
-customLibrary = "Custom driver path…"
-driver = "PKCS#11 driver"
-driverPath = "Driver library path"
-driverPathPlaceholder = "Full path to your PKCS#11 driver (.dll, .so or .dylib)"
-expired = "expired"
-expires = "expires"
-listCerts = "List certificates"
-loading = "Reading certificates…"
-noCerts = "No signing certificates found"
-noDriver = "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC), then reopen this - or enter the driver path manually below."
-notYetValid = "not yet valid"
-pin = "Token PIN"
-pkcs11Hint = "Select your token's PKCS#11 driver, enter the PIN, then list the certificates on the token."
-pkcs11LoadError = "Could not read certificates from the token. Check the PIN and driver."
-refresh = "Refresh"
-selectCert = "Select certificate"
-selectDriver = "Select driver"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+customLibrary = "Other location…"
+digitalId = "Digital ID"
+driver = "Card software (PKCS#11)"
+driverPath = "Card software path"
+driverPathPlaceholder = "Full path to the PKCS#11 library (.dll, .so or .dylib)"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
+listCerts = "Show digital IDs"
+macLoadError = "Could not read the macOS keychain"
+noCerts = "No digital IDs found. Check your card is inserted, then refresh."
+noDriver = "No card software was detected. Install the software that came with your card, then reopen this - or enter its path below."
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
+pin = "PIN"
+pkcs11Hint = "For cards your computer doesn't list. Choose the software that came with your card and enter its PIN."
+pkcs11LoadError = "Could not read the card. Check the PIN and card software."
+refreshList = "Refresh list"
+selectDriver = "Select card software"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (optional)"
-windowsHint = "Pick a certificate from your Windows certificate store. Signing uses the key on your card/token - Windows will prompt for the PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Could not read the Windows certificate store"
 
 [certSign.sessions]
@@ -3057,6 +3046,8 @@ title = "Rule of thumb"
 device = "This device"
 noOtherSources = "No other certificate sources are available."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Certificate source"
 upload = "Upload"
 
@@ -3287,7 +3278,9 @@ checking = "Checking..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Download accessibility report"
 fileFailed = "failed"
+noFiles = "Select a PDF to check it."
 pickFile = "Show results for"
+retry = "Check again"
 submit = "Check accessibility"
 
 [checkAccessibility.category]
@@ -3313,6 +3306,7 @@ label = "{{passed}} of {{total}} checks passed"
 download = "The accessibility report could not be created. Try again."
 fileTitle = "This file could not be checked"
 partial = "Some files could not be checked."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Declares PDF/UA"
@@ -3335,6 +3329,21 @@ title = "The file has a title in its metadata."
 [checkAccessibility.figures]
 summary_one = "{{count}} image needs a description (page {{pages}})"
 summary_other = "{{count}} images need a description (pages {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Applies to"
@@ -4079,14 +4088,14 @@ label = "Apply Grayscale for Compression"
 label = "Linearize PDF for fast web viewing"
 
 [compress.lineArt]
-description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+description = "Reduces images to high-contrast black and white for maximum size reduction."
 detailLevel = "Detail level"
 edgeEmphasis = "Edge emphasis"
 edgeHigh = "Strong"
 edgeLow = "Gentle"
 edgeMedium = "Balanced"
 label = "Convert images to line art"
-unavailable = "ImageMagick is not installed or enabled on this server"
+unavailable = "Line art conversion is not available on this server"
 
 [compress.method]
 filesize = "File Size"
@@ -4117,7 +4126,7 @@ title = "Grayscale"
 title = "Compress Settings Overview"
 
 [compress.tooltip.lineArt]
-text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+text = "Convert images to high-contrast black and white. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 title = "Line Art"
 
 [compress.tooltip.qualityAdjustment]
@@ -4406,8 +4415,6 @@ settings = "Settings"
 signInToUse = "Sign in to use"
 single = "Single"
 sourceFormatPlaceholder = "Source format"
-stirlingOfficeConvert = "Use Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Better, faster conversions with less memory. Turn off to use the standard converter."
 strictMode = "Strict Mode"
 strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 svgPdfOptions = "SVG to PDF Options"
@@ -4420,8 +4427,6 @@ webOptions = "Web to PDF Options"
 zoomLevel = "Zoom Level"
 
 [convert.ebookOptions]
-embedAllFonts = "Embed all fonts"
-embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
 includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"
@@ -4954,12 +4959,15 @@ closeFile = "Close file"
 
 [fileEditor]
 closedFile = "Closed {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "File reordered"
 filesReordered_other = "{{count}} files reordered"
 loadedFromStorage_one = "Loaded {{count}} file from storage"
 loadedFromStorage_other = "Loaded {{count}} files from storage"
 loadFromStorageFailed = "Failed to load some files from storage"
 pinnedFile = "Pinned {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Saved and closed {{name}}"
 saveFailed = "Save failed"
 unpinnedFile = "Unpinned {{name}}"
@@ -5985,8 +5993,10 @@ title = "Change Permissions"
 
 [home.checkAccessibility]
 desc = "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
+descWithReview = "Check a PDF against PDF/UA, then tag and describe what screen readers miss"
 tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
 title = "Check PDF accessibility"
+titleWithReview = "PDF accessibility"
 
 [home.classify]
 desc = "Identify what kind of document this is and tag it."
@@ -6988,6 +6998,10 @@ yourCloudAccess = "You'll become a team member and lose owner access."
 deselectAll = "None"
 selectAll = "Check All"
 
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
+
 [pageExtracter]
 title = "Extract Pages"
 
@@ -7649,6 +7663,7 @@ pngFileType = "PNG image"
 close = "Close find bar"
 count = "{{current}} of {{total}}"
 findPlaceholder = "Find"
+hideReplace = "Hide replace"
 ignoreAccents = "Ignore accents"
 matchCase = "Match case"
 next = "Next match"
@@ -7658,6 +7673,7 @@ replace = "Replace"
 replaceAll = "Replace all"
 replaced = "{{count}} replaced"
 replacePlaceholder = "Replace with"
+showReplace = "Show replace"
 wholeWord = "Whole word"
 
 [pdfTextEditor.fontPicker]
@@ -7828,14 +7844,11 @@ cannotTagLink = "This link can't be tagged."
 cannotTagPage = "This page's content can't be tagged."
 contentGroup = "Content"
 customTag = "{{role}} (custom tag)"
-decorativeInfo = "Screen readers skip decorative images. Use it for borders, backgrounds and other images that carry no information."
-decorativeLabel = "Decorative image"
-description = "Image description"
-descriptionInfo = "Screen readers read this out in place of the image."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Tags can't be edited in an encrypted file"
 figureDescription = "Figure description"
 figureDescriptionInfo = "Screen readers read this out in place of the figure."
-formFieldDescription = "Field description"
 formulaDescription = "Formula description"
 formulaDescriptionInfo = "Screen readers read this out in place of the formula. Say it as you would aloud, such as \"x squared plus one\"."
 heading = "Accessibility"
@@ -7846,7 +7859,6 @@ markedTagged = "Document is fully tagged"
 markedTaggedHint = "Tells PDF readers to use the accessibility tags. Tick it once everything is tagged."
 markedWithUntagged = "Some content has no tags, so screen readers may skip it."
 missingDescriptions = "Missing descriptions"
-mixedContent = "Figure includes other content"
 mixedTags = "Mixed"
 needsDescriptionBadge = "No description"
 nextToReview = "Next to review"
@@ -7854,12 +7866,10 @@ notFigure = "Tagged as part of the text"
 removeTag = "Remove tag"
 saveFailed = "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again."
 selectedText = "Selected text"
-tagFormField = "Tag form field"
 tagging = "Tagging pages"
 tagLabel = "Tag"
 tagLinks_one = "Tag link"
 tagLinks_other = "Tag {{count}} links"
-tagUntagged = "Auto-tag document"
 tagUntaggedHint = "Automatically adds accessibility tags throughout the document. The result is rough: check headings, lists and reading order afterwards."
 unknownTag = "Can't be read here"
 unmarkedWithTags = "Some PDF viewers will use the tags anyway and may skip content without them."
@@ -7884,7 +7894,7 @@ heading = "Headings"
 mixedNumbering = "Mixes numbered and unnumbered headings"
 none = "No headings"
 onPage = "Heading on page {{page}}"
-problems = "Heading problems"
+problemCount = "{{count}} to fix"
 skippedLevel = "Skips a level after Heading {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7939,13 +7949,11 @@ title = "Title"
 allLanguages = "All languages"
 cannotSetDocument = "This document's language can't be changed."
 cannotSetText = "This text's language can't be changed."
-documentHint = "The language screen readers use unless a part of the text sets its own."
 documentLabel = "Language"
 documentLocked = "An encrypted document's language can't be changed here."
 inDocument = "In this document"
 innerLabel = "Tag {{number}} language"
 label = "Language"
-missing = "No language set. Screen readers will guess, and may read the whole document in the wrong voice."
 mixed = "Mixed"
 noMatch = "No matching language. Type its code instead, such as mt or en-IE."
 placeholder = "Select language"
@@ -7976,6 +7984,52 @@ renderFailed = "Failed to render page"
 [pdfTextEditor.password]
 incorrect = "Incorrect password - try again."
 label = "Password"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
@@ -8157,6 +8211,10 @@ title = "Preview Variance"
 [pdfTextEditor.tooltip.textFocus]
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF to CSV"
@@ -10360,6 +10418,10 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newCustomPipeline = "New custom pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "All pipelines"
 
@@ -12090,7 +12152,6 @@ label = "Reading tools"
 readAloud = "Read aloud"
 rotateLeft = "Rotate left"
 rotateRight = "Rotate right"
-search = "Find in document"
 switchDocument = "Switch document"
 thumbnails = "Pages"
 
@@ -13076,6 +13137,12 @@ title = "Keyboard Shortcuts"
 [settings.hotkeys.errorModifier]
 mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
+
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
 
 [settings.legal]
 description = "Terms, privacy policy and your cookie preferences."
@@ -14376,6 +14443,20 @@ noTools = "No tools available"
 [tooltip]
 close = "Close tooltip"
 
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
+
 [unlockPDFForms]
 description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."
 submit = "Unlock Forms"
@@ -14766,12 +14847,9 @@ cannotPreviewFile = "Cannot Preview File"
 copyRestricted = "Copying is disabled by this PDF's permissions."
 copyText = "Copy"
 coverPageView = "Show Cover Page Separately"
-disableColorFilter = "Disable Color Filter"
 documentUpdated = "Document updated"
 dualPageView = "Dual Page View"
 editText = "Edit text"
-enableDarkFilter = "Enable Dark Filter"
-enableSepiaFilter = "Enable Sepia Filter"
 engineLoadError = "Failed to initialize PDF viewer engine"
 engineSlowWarning = "PDF engine initialization is taking longer than expected. Please check your browser WebAssembly and Worker settings, or reload the page."
 firstPage = "First Page"
@@ -14779,20 +14857,27 @@ fitPage = "Fit to page"
 fitWidth = "Fit to width"
 lastPage = "Last Page"
 loadingEngine = "Loading PDF Engine..."
+menuSelected = "Selected"
 moreOptions = "More"
 nextPage = "Next Page"
 noPdfProvided = "No PDF provided"
 onlyPdfSupported = "This file format is not supported for preview."
 pageNavigation = "Page navigation"
+pageNumber = "Page number"
 previousPage = "Previous Page"
 readAloudFromHere = "Read aloud from here"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "The document could not be saved. Try again."
 saveChangesErrorTitle = "Could not save changes"
 singlePageView = "Single Page View"
+tools = "Tools"
 unknownFile = "Unknown file"
-view = "View"
 zoom = "Zoom"
 zoomIn = "Zoom In"
+zoomLevel = "Zoom level"
 zoomOut = "Zoom Out"
 
 [viewer.attachments]
@@ -15132,10 +15217,13 @@ partial = "Restored {{restored}} of {{total}} files. The rest are no longer stor
 
 [workbenchBar]
 activeFiles = "Active Files"
-annotations = "Annotations"
+annotate = "Annotate"
 applyRedactionsFirst = "Apply redactions first"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Close All Files"
 closePdf = "Close PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
 editText = "Edit Text"
@@ -15143,18 +15231,26 @@ exitAnnotations = "Exit annotation mode"
 exitRedaction = "Exit Redaction Mode"
 findReplace = "Find & replace"
 formFill = "Form Editor"
-hideToolbar = "Hide toolbar"
+layers = "Layers"
 moreActions = "More actions"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Page Editor"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Pan Mode"
 print = "Print PDF"
 readAloud = "Read Aloud"
 readAloudLanguage = "Language"
 readAloudSpeed = "Speed"
 redact = "Redact"
+reviewAccessibility = "Review accessibility"
 rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 ruler = "Ruler / Measure"
+rulerScaleUnset = "Not set"
 rulerSettings = "Scale Settings"
 save = "Save"
 saveAll = "Save All"
@@ -15166,14 +15262,23 @@ selectLanguage = "Select language"
 share = "Share"
 showAllTools = "Show all tools"
 showFewerTools = "Collapse toolbar"
-showToolbar = "Show toolbar"
+thumbnails = "Pages"
 toggleAnnotations = "Toggle Annotations Visibility"
-toggleAttachments = "Toggle Attachments"
-toggleBookmarks = "Bookmarks (Table of Contents)"
 toggleComments = "Comments"
-toggleLayers = "Toggle Layers"
-toggleSidebar = "Toggle Sidebar"
 viewer = "Viewer"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Your access to this document has expired."

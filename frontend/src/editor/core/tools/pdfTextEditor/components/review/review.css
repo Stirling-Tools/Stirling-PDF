@@ -1,0 +1,187 @@
+/* Under Mantine's modals (200), so a dialog blocks the card's clicks too. */
+.review-card {
+  position: fixed;
+  z-index: 190;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.25);
+  overflow-y: auto;
+  animation: review-card-in 0.16s ease-out;
+}
+
+@keyframes review-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+
+.review-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-card__status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.review-card__status--todo {
+  background: var(--c-warning-subtle);
+  color: var(--c-warning-solid, var(--c-warning));
+}
+
+.review-card__status--done {
+  background: var(--c-success-subtle);
+  color: var(--c-success-solid, var(--c-success));
+}
+
+.review-card__count {
+  flex: 1;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-card__label {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.review-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.review-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-raised);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
+}
+
+.review-chip:hover:not(:disabled) {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+
+.review-chip[data-active="true"] {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+}
+
+.review-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.review-chip--quiet {
+  background: transparent;
+  color: var(--c-text-muted);
+}
+
+.review-chip kbd {
+  font-family: inherit;
+  font-size: 10px;
+  padding: 0 4px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  opacity: 0.6;
+}
+
+.review-card__row {
+  display: flex;
+  gap: 8px;
+}
+
+.review-card__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.review-card__divider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.review-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.review-stepper__label {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-card__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+
+html[data-review-card] [data-viewer-pages] * {
+  scrollbar-width: none;
+}
+
+html[data-review-card] [data-viewer-pages] *::-webkit-scrollbar {
+  display: none;
+}
+
+/* Where an accessibility fix from the report lands. */
+.review-fix-flash {
+  border-radius: 6px;
+  animation: review-fix-flash 1.6s ease-out;
+}
+
+@keyframes review-fix-flash {
+  0%,
+  40% {
+    box-shadow: 0 0 0 3px var(--c-primary);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+.review-error {
+  position: fixed;
+  z-index: 195;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(480px, calc(100vw - 32px));
+}

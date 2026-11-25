@@ -254,7 +254,7 @@ class AnnotationRevision {
   private currentHolder(num: number, annotation: string): number | null {
     return (
       this.holders.get(num) ??
-      holderOf(this.pdf, this.parentKeys().treeRoot, annotation)
+      holderOf(this.pdf, this.parentKeys().treeRoot, num, annotation)
     );
   }
 
@@ -336,15 +336,27 @@ function pageAnnotations(pdf: RawPdf, page: string): number[] {
 }
 
 /** The element the annotation's /StructParent entry names; null when it has none. */
+/**
+ * The element whose /K lists the annotation, found through its /StructParent; null
+ * when that key names anything else. A key can be stale, as on an annotation merged
+ * in from a file whose tree was not carried over, and the save may since have given
+ * the same key to a page.
+ */
 function holderOf(
   pdf: RawPdf,
   treeRoot: number,
+  annotationNum: number,
   annotation: string,
 ): number | null {
   const key = pdf.dictInt(annotation, "StructParent");
   const entry =
     key === null ? null : pdf.numberTreeEntry(treeRoot, "ParentTree", key);
-  return entry ? referencedObject(entry.span.text) : null;
+  const element = entry ? referencedObject(entry.span.text) : null;
+  const body = element === null ? null : pdf.objectBody(element);
+  const kids = body ? elementKids(pdf, body) : null;
+  return kids?.some((kid) => objrTarget(pdf, kid) === annotationNum)
+    ? element
+    : null;
 }
 
 function objr(pdf: RawPdf, annotation: number, pageNum: number): string {

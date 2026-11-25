@@ -19,8 +19,6 @@ services:
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "false"
-      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "true"
-      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "1"
       # JAVA_BASE_OPTS: ""               # Full JVM flag override (default comes from the image _JVM_OPTS)
       # JAVA_CUSTOM_OPTS: ""              # Additional JVM flags appended to the active options
       PUID: 1002

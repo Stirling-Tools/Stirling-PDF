@@ -229,14 +229,46 @@
   min-width: 0;
   max-width: calc(100% + 16px);
   margin-inline: -8px;
-  position: relative;
   display: flex;
   align-items: center;
-  /* Symmetric side padding leaves room for the retract handle pinned right
-     without knocking the centred tool icons off-centre. The extra 8px each side
-     absorbs the negative margin. */
-  padding: 4px 44px;
+  /* The extra 8px each side absorbs the negative margin. */
+  padding: 4px 14px;
+  /* Lets the row's controls fit themselves to its width. */
+  container: workbench-tool-row / inline-size;
   border-top: 1px solid var(--c-border-subtle);
+}
+
+/* Edge groups in equal outer columns keep the lanes centred on the row
+   while there is room, and push the lanes aside rather than overlap them
+   when there is not. */
+.workbench-bar-lanes {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(
+      max-content,
+      1fr
+    );
+  align-items: center;
+  column-gap: 8px;
+}
+
+/* Once the labels drop to icons (the same width as ViewerBarControls.css),
+   every icon, edge groups included, is spread evenly across the row. */
+@container workbench-tool-row (max-width: 820px) {
+  .workbench-bar-lanes {
+    display: flex;
+    justify-content: space-between;
+    column-gap: 2px;
+  }
+  .workbench-bar-lanes > .workbench-bar-row-start,
+  .workbench-bar-lanes > .workbench-bar-center-scroll,
+  .workbench-bar-lanes > .workbench-bar-row-end {
+    display: contents;
+  }
+  .workbench-bar-lanes .workbench-bar-divider {
+    display: none;
+  }
 }
 
 .workbench-bar-center-scroll {
@@ -249,7 +281,7 @@
   gap: 2px;
 }
 
-/* Retract / reopen handle for the viewer tool row. */
+/* Expand handle for the mobile tool row. */
 .workbench-bar-toolbar-handle {
   display: inline-flex;
   align-items: center;
@@ -270,14 +302,15 @@
   background: var(--c-hover);
 }
 
-/* Pinned to the right edge of the tool row. */
-.workbench-bar-toolbar-handle-retract {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
+/* Controls at the tool row's edges. */
+.workbench-bar-row-start,
+.workbench-bar-row-end {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.workbench-bar-row-end {
+  justify-content: flex-end;
 }
 
 /* ---- Right: global buttons (print / download / save / close), row 1 ---- */
@@ -416,6 +449,7 @@
   }
 
   .workbench-bar-center {
+    display: flex;
     flex-basis: 100%;
     max-width: 100%;
     margin-inline: 0;

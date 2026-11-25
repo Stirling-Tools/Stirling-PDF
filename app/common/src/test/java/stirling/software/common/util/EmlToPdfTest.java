@@ -1,35 +1,22 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Locale;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.SsrfProtectionService;
 
 @DisplayName("EML to PDF Conversion tests")
@@ -54,9 +41,7 @@ class EmlToPdfTest {
                 new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
     }
 
-    // Focus on testing EML to HTML conversion functionality since the PDF conversion relies on
-    // WeasyPrint
-    // But HTML to PDF conversion is also briefly tested at PdfConversionTests class.
+    // PDF rendering is covered by the Office Convert tests in core.
     private void testEmailConversion(
             String emlContent, String[] expectedContent, boolean includeAttachments)
             throws IOException {
@@ -554,215 +539,6 @@ class EmlToPdfTest {
                             "sender@example.com", "recipient@example.com", subject, body, charset);
 
             testEmailConversion(emlContent, new String[] {subject, body}, false);
-        }
-    }
-
-    @Nested
-    @ExtendWith(MockitoExtension.class)
-    @DisplayName("PDF Conversion Tests")
-    class PdfConversionTests {
-
-        @Mock private CustomPDFDocumentFactory mockPdfDocumentFactory;
-
-        @Mock private PDDocument mockPdDocument;
-
-        @Mock private TempFileManager mockTempFileManager;
-
-        @Test
-        @Disabled("Complex static mocking - temporarily disabled while refactoring")
-        @DisplayName("Should convert EML to PDF without attachments when not requested")
-        void convertEmlToPdfWithoutAttachments() throws Exception {
-            String emlContent =
-                    createSimpleTextEmail("from@test.com", "to@test.com", "Subject", "Body");
-            byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
-            EmlToPdfRequest request = createBasicRequest();
-
-            PDDocument testPdf = new PDDocument();
-            testPdf.addPage(new PDPage());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            testPdf.save(baos);
-            testPdf.close();
-            byte[] fakePdfBytes = baos.toByteArray();
-
-            when(mockPdfDocumentFactory.load(any(byte[].class))).thenReturn(mockPdDocument);
-            when(mockPdDocument.getNumberOfPages()).thenReturn(1);
-
-            try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(
-                            FileToPdf.class,
-                            org.mockito.Mockito.withSettings()
-                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
-                fileToPdf
-                        .when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                anyString(),
-                                                any(),
-                                                any(byte[].class),
-                                                anyString(),
-                                                any(TempFileManager.class),
-                                                any(CustomHtmlSanitizer.class)))
-                        .thenReturn(fakePdfBytes);
-
-                byte[] resultPdf =
-                        EmlToPdf.convertEmlToPdf(
-                                "weasyprint",
-                                request,
-                                emlBytes,
-                                "test.eml",
-                                mockPdfDocumentFactory,
-                                mockTempFileManager,
-                                customHtmlSanitizer);
-
-                assertArrayEquals(fakePdfBytes, resultPdf);
-
-                try (PDDocument resultDoc = mockPdfDocumentFactory.load(resultPdf)) {
-                    assertNotNull(resultDoc);
-                    assertTrue(resultDoc.getNumberOfPages() > 0);
-                }
-
-                fileToPdf.verify(
-                        () ->
-                                FileToPdf.convertHtmlToPdf(
-                                        anyString(),
-                                        any(),
-                                        any(byte[].class),
-                                        anyString(),
-                                        any(TempFileManager.class),
-                                        any(CustomHtmlSanitizer.class)));
-                verify(mockPdfDocumentFactory).load(resultPdf);
-            }
-        }
-
-        @Test
-        @Disabled("Complex static mocking - temporarily disabled while refactoring")
-        @DisplayName("Should convert EML to PDF with attachments when requested")
-        void convertEmlToPdfWithAttachments() throws Exception {
-            String boundary = "----=_Part_1234567890";
-            String emlContent =
-                    createMultipartEmailWithAttachment(
-                            "multipart@example.com",
-                            "user@example.com",
-                            "Multipart Email Test",
-                            "This email has both text content and an attachment.",
-                            boundary,
-                            "document.txt",
-                            "Sample attachment content");
-            byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
-            EmlToPdfRequest request = createRequestWithAttachments();
-
-            PDDocument testPdf = new PDDocument();
-            testPdf.addPage(new PDPage());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            testPdf.save(baos);
-            testPdf.close();
-            byte[] fakePdfBytes = baos.toByteArray();
-
-            when(mockPdfDocumentFactory.load(any(byte[].class))).thenReturn(mockPdDocument);
-            when(mockPdDocument.getNumberOfPages()).thenReturn(1);
-
-            try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(
-                            FileToPdf.class,
-                            org.mockito.Mockito.withSettings()
-                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
-                fileToPdf
-                        .when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                anyString(),
-                                                any(),
-                                                any(byte[].class),
-                                                anyString(),
-                                                any(TempFileManager.class),
-                                                any(CustomHtmlSanitizer.class)))
-                        .thenReturn(fakePdfBytes);
-
-                try (MockedStatic<EmlToPdf> ignored =
-                        mockStatic(
-                                EmlToPdf.class,
-                                invocation -> {
-                                    String methodName = invocation.getMethod().getName();
-                                    return switch (methodName) {
-                                        case "shouldAttachFiles" -> true;
-                                        case "attachFilesToPdf" -> fakePdfBytes;
-                                        default -> invocation.callRealMethod();
-                                    };
-                                })) {
-                    byte[] resultPdf =
-                            EmlToPdf.convertEmlToPdf(
-                                    "weasyprint",
-                                    request,
-                                    emlBytes,
-                                    "test.eml",
-                                    mockPdfDocumentFactory,
-                                    mockTempFileManager,
-                                    customHtmlSanitizer);
-
-                    assertArrayEquals(fakePdfBytes, resultPdf);
-
-                    try (PDDocument resultDoc = mockPdfDocumentFactory.load(resultPdf)) {
-                        assertNotNull(resultDoc);
-                        assertTrue(resultDoc.getNumberOfPages() > 0);
-                    }
-
-                    fileToPdf.verify(
-                            () ->
-                                    FileToPdf.convertHtmlToPdf(
-                                            anyString(),
-                                            any(),
-                                            any(byte[].class),
-                                            anyString(),
-                                            any(TempFileManager.class),
-                                            any(CustomHtmlSanitizer.class)));
-
-                    verify(mockPdfDocumentFactory).load(resultPdf);
-                }
-            }
-        }
-
-        @Test
-        @Disabled("Complex static mocking - temporarily disabled while refactoring")
-        @DisplayName("Should handle errors during EML to PDF conversion")
-        void handleErrorsDuringConversion() {
-            String emlContent =
-                    createSimpleTextEmail("from@test.com", "to@test.com", "Subject", "Body");
-            byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
-            EmlToPdfRequest request = createBasicRequest();
-            String errorMessage = "Conversion failed";
-
-            try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(
-                            FileToPdf.class,
-                            org.mockito.Mockito.withSettings()
-                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
-                fileToPdf
-                        .when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                anyString(),
-                                                any(),
-                                                any(byte[].class),
-                                                anyString(),
-                                                any(TempFileManager.class),
-                                                any(CustomHtmlSanitizer.class)))
-                        .thenThrow(new IOException(errorMessage));
-
-                IOException exception =
-                        assertThrows(
-                                IOException.class,
-                                () ->
-                                        EmlToPdf.convertEmlToPdf(
-                                                "weasyprint",
-                                                request,
-                                                emlBytes,
-                                                "test.eml",
-                                                mockPdfDocumentFactory,
-                                                mockTempFileManager,
-                                                customHtmlSanitizer));
-
-                assertTrue(exception.getMessage().contains(errorMessage));
-            }
         }
     }
 

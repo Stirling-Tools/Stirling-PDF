@@ -269,6 +269,7 @@ class PdfUaServicesTest {
             assertFalse(report.getSummary().isAllFontsEmbedded());
             assertTrue(report.getSummary().getUnembeddedFonts() > 0);
             assertFalse(report.getSummary().isHasLanguage());
+            assertNull(report.getSummary().getLanguage());
             assertFalse(report.getSummary().isHasTitle());
         }
 
@@ -315,6 +316,7 @@ class PdfUaServicesTest {
             assertTrue(report.isTagged());
             assertTrue(report.getSummary().isHasTitle());
             assertTrue(report.getSummary().isHasLanguage());
+            assertEquals("en-GB", report.getSummary().getLanguage());
             assertTrue(report.getSummary().isDisplaysDocTitle());
         }
     }

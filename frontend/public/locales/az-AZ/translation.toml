@@ -647,18 +647,16 @@ description = "Şəkil emalı üçün maksimal DPI (0 = limitsiz)"
 label = "Maksimum DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Hər icraedici üçün sessiya limitlərini və taym-outları konfiqurasiya edin"
 ghostscript = "Ghostscript"
 installApp = "Tətbiqi quraşdır"
 label = "Proses İcraedicisi Limitləri"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "Office çevrilməsi"
+officeConvertSessionLimit = "Eyni vaxtda maksimum çevirmə sayı; 0 olduqda limit CPU və yaddaşa əsasən avtomatik təyin olunur"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Eyni vaxtda maksimal instansiya sayı"
@@ -667,10 +665,6 @@ label = "Sessiya limiti"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maksimal icra müddəti"
 label = "Vaxt məhdudu (dəqiqə)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert beta mərhələsindədir. O, LibreOffice ilə müqayisədə daha yaxşı, daha sürətli və daha az yaddaşla çevirmələr təklif edir."
-label = "Yeni Stirling Office çevirməsindən istifadə edin"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Müvəqqəti fayl saxlama və təmizləmə davranışını konfiqurasiya edin"
@@ -688,11 +682,6 @@ label = "Təmizləmə intervalı (dəqiqə)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Daha geniş sistem müvəqqəti qovluğunu təmizləyib-təmizləməmək (diqqətlə istifadə edin)"
 label = "Sistem tempini təmizlə"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice müvəqqəti faylları üçün qovluq (defolt üçün boş saxlayın: baseTmpDir/libreoffice)"
-label = "LibreOffice Müvəqqəti Qovluğu"
-placeholder = "Standart: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Müvəqqəti faylların təmizlənməsindən əvvəl maksimal saat sayı"
@@ -1300,17 +1289,6 @@ label = "Standart İstehsalçı"
 [admin.settings.general.customPaths]
 description = "Pipeline emalı və xarici alətlər üçün fərdi fayl sistemi yollarını konfiqurasiya edin"
 label = "Fərdi Yollar"
-
-[admin.settings.general.customPaths.operations]
-label = "Xarici Alət Yolları"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Sənəd çevirmələri üçün LibreOffice unoconvert yolunun göstərilməsi (defolt üçün boş saxlayın: /opt/venv/bin/unoconvert)"
-label = "Unoconvert İcra faylı"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTML-dən PDF-ə çevirmə üçün WeasyPrint icra faylına yol (defolt üçün boş saxlayın: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint İcra faylı"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline Qovluqları"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Sənəd başlığı"
 pdfUaTitleHelp = "Oxucu tərəfindən fayl adı əvəzinə göstərilir. Boş buraxılarsa, ilk başlıq istifadə olunur."
 selectSourceFormatFirst = "Əvvəlcə mənbə formatını seçin"
 settings = "Parametrlər"
+signInToUse = "İstifadə etmək üçün daxil olun"
 single = "Tək"
 sourceFormatPlaceholder = "Mənbə formatı"
-stirlingOfficeConvert = "Stirling Office Convert-dən istifadə edin (beta)"
-stirlingOfficeConvertDescription = "Daha az yaddaşla daha yaxşı, daha sürətli çevirmələr. Standart çeviricidən istifadə etmək üçün söndürün."
 strictMode = "Ciddi rejim"
 strictModeDesc = "Çevirmə mükəmməl deyilsə xəta ver (VeraPDF yoxlamasından istifadə edir)"
 svgPdfOptions = "SVG to PDF seçimləri"
@@ -4419,8 +4396,6 @@ webOptions = "Web to PDF seçimləri"
 zoomLevel = "Miqyas səviyyəsi"
 
 [convert.ebookOptions]
-embedAllFonts = "Bütün şriftləri daxil et"
-embedAllFontsDesc = "eBook-dakı bütün şriftləri yaradılan PDF-ə daxil et"
 includePageNumbers = "Səhifə nömrələrini daxil et"
 includePageNumbersDesc = "Yaradılan PDF-ə səhifə nömrələri əlavə edin"
 includeTableOfContents = "Mündəricatı daxil et"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Dekorativ şəkil"
 description = "Şəkil təsviri"
 descriptionInfo = "Ekran oxuyucuları bunu şəklin əvəzinə oxuyur."
 encrypted = "Şifrələnmiş faylda teqlər redaktə edilə bilməz"
+figureDescription = "Şəkil təsviri"
+figureDescriptionInfo = "Ekran oxuyucuları bunu şəkil əvəzinə səsləndirir."
 formFieldDescription = "Sahənin təsviri"
+formulaDescription = "Formula təsviri"
+formulaDescriptionInfo = "Ekran oxuyucuları bunu formula əvəzinə səsləndirir. Bunu sanki ucadan deyirmiş kimi ifadə edin, məsələn, \"x kvadrat üstəgəl bir\"."
 heading = "Əlçatanlıq"
 innerTagLabel = "Teq {{number}}"
 innerTags = "Bu mətndəki teqlər"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Çatışmayan təsvirlər"
 mixedContent = "Şəkil digər məzmunu ehtiva edir"
 mixedTags = "Qarışıq"
 needsDescriptionBadge = "Təsvir yoxdur"
-nextImage = "Növbəti şəkil"
+nextToReview = "Baxış üçün növbəti"
 notFigure = "Mətnin bir hissəsi kimi teqlənib"
 removeTag = "Teqi sil"
 saveFailed = "Əlçatanlıq dəyişiklikləriniz yadda saxlanıla bilmədi, buna görə də fayl yadda saxlanmadı. Onları geri alın və yenidən cəhd edin."
@@ -9661,10 +9640,6 @@ signInToStart = "Sınağa başlamaq üçün daxil olun"
 stage = "{{total}} mərhələdən {{current}}-ci"
 stagesLabel = "Gedişat"
 
-[portal.enterprise.connect]
-ownerOnly = "Yalnız bu serverin sahibi onu qoşa bilər. Onlardan bu səhifəni açmalarını xahiş edin."
-unavailable = "Bu serverdə Stirling hesabına qoşulma söndürülüb. Zəng təyin edin, sınağı sizinlə birlikdə quracağıq."
-
 [portal.enterprise.landing]
 lede = "14 gün pulsuz sınaqdan keçirin, sonra təklifinizi qurun və razılaşmanızı burada imzalayın. Kart tələb olunmur."
 tickAgreement = "MSA, sifariş formu, EULA və DPA-nı əhatə edən tək razılaşma"
@@ -11283,11 +11258,6 @@ downloadOffline = "Offline lisenziyanı endir (.lic)"
 hint = "Aktivləşdirmək üçün bu açarı self-hosted instansiyaya yapışdırın və ya qeydləriniz üçün saxlayın. Onu təhlükəsiz saxlayın."
 label = "Lisenziya açarınız"
 trialFileHint = "Bu, sınaq lisenziya faylınızdır. Razılaşmanız qüvvəyə mindikdən sonra qayıdıb onu yenidən endirin — onlayn lisenziya açarından fərqli olaraq, .lic faylı öz-özünə yenilənməyəcək."
-
-[portal.procurement.link]
-cta = "Hesabı əlaqələndir"
-description = "Satınalma əlaqələndirilmiş Stirling hesabınızda işləyir: sınağı təmin etməyimiz, təklifinizi qiymətləndirməyimiz və hesablaşmanı başlatmağımız belə olur. Başlamaq üçün hesabı əlaqələndirin."
-title = "Başlamaq üçün hesabınızı əlaqələndirin"
 
 [portal.procurement.live]
 description = "Abunəliyiniz aktivdir və lisenziyanız verilib. Komandanız təmin edilib və hesablaşma başlayıb."
@@ -14260,7 +14230,6 @@ toggleDetails = "Təfərrüatları aç/bağla"
 
 [tool]
 endpointUnavailable = "Bu alət serverinizdə mövcud deyil."
-endpointUnavailableClickable = "Bu rejimdə mövcud deyil. Daxil olmaq üçün klikləyin."
 filesLoading = "Fayllar hələ yüklənir, zəhmət olmasa gözləyin."
 filesLoadingProgress = "{{loaded}} / {{total}} fayl yüklənir..."
 invalidParams = "Tələb olunan ayarları doldurun."
@@ -14268,6 +14237,8 @@ noFiles = "Başlamaq üçün fayl əlavə edin."
 scopeFiles = "fayllar"
 scopeThisFile = "bu fayl"
 selectFilesHint = "Bu aləti işə salmaq üçün Aktiv Fayllarda faylları seçin"
+signInRequired = "Bunun üçün Stirling hesabı tələb olunur. Davam etmək üçün daxil olun."
+signInToUse = "İstifadə etmək üçün daxil olun"
 singleFileScope = "Yalnız buna tətbiq olunur: {{fileName}}"
 viewerMode = "Birdən çox fayl əlavə etmək üçün fayl redaktoruna keçin."
 
