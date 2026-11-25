@@ -253,6 +253,37 @@ describe("desktop useMultipleEndpointsEnabled", () => {
     expect(result.current.endpointStatus.ocr).toBe(true);
   });
 
+  it.each(["local", "saas"] as const)(
+    "gates Office Convert endpoints on sign-in in %s mode",
+    async (current) => {
+      mode = current;
+      mockGet.mockImplementation((url: string) => {
+        if (url.includes("app-config")) return Promise.resolve(appConfig(true));
+        return Promise.resolve(
+          availability({
+            "file-to-pdf": { enabled: true },
+            "pdf-to-word": { enabled: true },
+            merge: { enabled: true },
+          }),
+        );
+      });
+
+      const { result } = renderHook(
+        () =>
+          useMultipleEndpointsEnabled(["file-to-pdf", "pdf-to-word", "merge"]),
+        { wrapper: TestQueryProvider },
+      );
+
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      const signedIn = current !== "local";
+      expect(result.current.endpointStatus).toEqual({
+        "file-to-pdf": signedIn,
+        "pdf-to-word": signedIn,
+        merge: true,
+      });
+    },
+  );
+
   it("fails closed for un-fetchable endpoints outside SaaS mode", async () => {
     mode = "local";
     mockGet.mockImplementation((url: string) => {

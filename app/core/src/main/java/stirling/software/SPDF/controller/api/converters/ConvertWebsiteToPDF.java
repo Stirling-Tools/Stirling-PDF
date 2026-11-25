@@ -5,8 +5,6 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,22 +22,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
-import stirling.software.SPDF.service.RemoteHtmlFetcher;
-import stirling.software.SPDF.service.RemoteHtmlFetcher.RemoteHtml;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.officeconvert.topdf.WebAssets;
 
 @ConvertApi
 @Slf4j
@@ -47,10 +43,9 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertWebsiteToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final RuntimePathConfig runtimePathConfig;
+    private final OfficeToPdfService officeToPdfService;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
-    private final RemoteHtmlFetcher remoteHtmlFetcher;
 
     private static final Pattern FILE_SCHEME_PATTERN =
             Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
@@ -83,9 +78,16 @@ public class ConvertWebsiteToPDF {
             return errorResponse(HttpStatus.BAD_REQUEST, "Enter a valid HTTP or HTTPS URL.");
         }
 
-        RemoteHtml remoteHtml;
+        WebAssets assets;
         try {
-            remoteHtml = remoteHtmlFetcher.fetch(URL);
+            // Public addresses only, for the page, every asset it links and every redirect hop.
+            assets =
+                    WebAssets.fetch(
+                            URL,
+                            WebAssets.Access.none()
+                                    .network(true)
+                                    .redirects(true)
+                                    .privateAddresses(false));
         } catch (IOException e) {
             log.info("URL to PDF fetch refused or failed for {}: {}", URL, e.getMessage());
             return errorResponse(
@@ -95,8 +97,7 @@ public class ConvertWebsiteToPDF {
         Path tempOutputFile = null;
         Path tempHtmlInput = null;
         try {
-            String htmlContent = remoteHtml.content();
-            URL = remoteHtml.url();
+            String htmlContent = new String(assets.page(), StandardCharsets.UTF_8);
 
             if (containsDisallowedUriScheme(htmlContent)) {
                 log.warn("Rejected URL to PDF conversion due to disallowed content references");
@@ -106,24 +107,10 @@ public class ConvertWebsiteToPDF {
             }
 
             tempHtmlInput = Files.createTempFile("url_input_", ".html");
-            Files.writeString(tempHtmlInput, htmlContent, StandardCharsets.UTF_8);
-
-            // Prepare the output file path
+            Files.write(tempHtmlInput, assets.page());
             tempOutputFile = Files.createTempFile("output_", ".pdf");
-
-            // Prepare the WeasyPrint command
-            List<String> command = new ArrayList<>();
-            command.add(runtimePathConfig.getWeasyPrintPath());
-            command.add(tempHtmlInput.toString());
-            command.add("--base-url");
-            command.add(URL);
-            command.add("--pdf-forms");
-            command.add("--allowed-protocols");
-            command.add("data,http,https");
-            command.add(tempOutputFile.toString());
-
-            ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
-                    .runCommandWithOutputHandling(command);
+            officeToPdfService.convert(
+                    tempHtmlInput, tempOutputFile, officeToPdfService.options().htmlAssets(assets));
 
             // Load the PDF using pdfDocumentFactory
             String outputFilename = convertURLToFileName(URL);

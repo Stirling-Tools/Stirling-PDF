@@ -30,11 +30,7 @@ import stirling.software.jpdfium.PdfDocument;
 class ConvertPDFToMarkdownTest {
 
     private MockMvc mockMvc(PdfMarkdownExtractor extractor) {
-        return MockMvcBuilders.standaloneSetup(
-                        new ConvertPDFToMarkdown(
-                                null,
-                                extractor,
-                                mock(stirling.software.SPDF.service.OfficeConversionService.class)))
+        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown(null, extractor))
                 .setControllerAdvice(new GlobalErrorHandler())
                 .build();
     }

@@ -112,6 +112,7 @@ export interface MicrosoftSettings {
   tenant?: string;
   clientSecret?: string;
   allowAccountConnections?: boolean;
+  allowEditorSaves?: boolean;
 }
 
 export interface OAuth2GenericSettings {

@@ -242,9 +242,6 @@ export const executeAutomationSequence = async (
   }
 
   let currentFiles = [...initialFiles];
-  const automationPrefix = automation.name
-    ? `${automation.name}_`
-    : "automated_";
 
   for (let i = 0; i < automation.operations.length; i++) {
     const operation = automation.operations[i];
@@ -262,7 +259,7 @@ export const executeAutomationSequence = async (
         operation.parameters || {},
         currentFiles,
         toolRegistry,
-        i === automation.operations.length - 1 ? automationPrefix : "", // Only add prefix to final step
+        "",
       );
 
       console.log(

@@ -6,14 +6,14 @@ import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { defineConfig, loadEnv } from "vite";
+import { createLogger, defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption, Rollup } from "vite";
 import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
-import { embedpdfFontFallbackPlugin } from "./scripts/embedpdfFontFallbackPatch.mts";
+import { embedpdfEnginesPlugin } from "./scripts/embedpdfEnginesPatch.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
@@ -524,6 +524,29 @@ export default defineConfig(async ({ mode, command }) => {
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  // The backend usually boots after the frontend, and until it does Vite prints
+  // the full AggregateError stack for every proxied request. Report the outage
+  // once instead; any other proxy failure still logs normally.
+  const logger = createLogger();
+  const logError = logger.error;
+  let reportedBackendDown = false;
+  logger.error = (msg, options) => {
+    const code = (options?.error as NodeJS.ErrnoException | undefined)?.code;
+    if (
+      command === "serve" &&
+      msg.includes("http proxy error") &&
+      code === "ECONNREFUSED"
+    ) {
+      if (!reportedBackendDown) {
+        reportedBackendDown = true;
+        logger.warn(
+          `backend unreachable at ${backendUrl}; suppressing proxy connection errors until it starts`,
+        );
+      }
+      return;
+    }
+    logError(msg, options);
+  };
   // Allow host header checks to be configured via env so LAN/reverse-proxy
   // dev setups don't require editing this file for each machine.
   const allowedHostsRaw =
@@ -557,6 +580,7 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
+    customLogger: logger,
     // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
     // different modes re-optimize over each other and the browser 504s on a stale dep
     // hash. Anchored to frontend/ because a relative path resolves against the vite
@@ -574,7 +598,7 @@ export default defineConfig(async ({ mode, command }) => {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
-      embedpdfFontFallbackPlugin(),
+      embedpdfEnginesPlugin(),
       iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
@@ -703,6 +727,10 @@ export default defineConfig(async ({ mode, command }) => {
       // Minifies better than esbuild for this esnext target.
       cssMinify: "lightningcss" as const,
       rollupOptions: {
+        input: {
+          index: path.resolve(__dirname, "index.html"),
+          "msal-redirect": path.resolve(__dirname, "msal-redirect.html"),
+        },
         output: {
           assetFileNames: mjsToJsAssetFileNames,
           manualChunks(id: string, meta: ManualChunkMeta) {
@@ -787,9 +815,14 @@ export default defineConfig(async ({ mode, command }) => {
     // an absolute base so deep-route asset paths resolve to /assets/...
     // Trailing slash required: it becomes `<base href>`, and browsers resolve
     // relative URLs (manifest.json, favicon) against the base's *directory*.
+    // Desktop always serves dist at the webview root, and its windows reload
+    // nested routes (/processor/..., /settings/...), so it takes the absolute
+    // base too: with "./" those reloads fetch assets and locales from under the
+    // route and render blank.
     base: runSubpath
       ? `/${runSubpath}/`
-      : process.env.VITE_BUILD_FOR_PREVIEW === "1"
+      : process.env.VITE_BUILD_FOR_PREVIEW === "1" ||
+          effectiveMode === "desktop"
         ? "/"
         : "./",
   };

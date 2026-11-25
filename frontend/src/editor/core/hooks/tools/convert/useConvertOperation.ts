@@ -19,8 +19,6 @@ import {
   getEndpointUrl,
   getEndpointName,
   isImageFormat,
-  usesOfficeEngine,
-  parseOfficeEngineChoice,
 } from "@editor/utils/convertUtils";
 import {
   isToolEndpoint,
@@ -96,16 +94,6 @@ export const buildConvertFormData = (
     formData.append("fileInput", file);
   });
 
-  if (
-    parameters.useStirlingOfficeConvert !== undefined &&
-    usesOfficeEngine(fromExtension, toExtension)
-  ) {
-    formData.append(
-      "useStirlingOfficeConvert",
-      String(parameters.useStirlingOfficeConvert),
-    );
-  }
-
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
     formData.append("colorType", imageOptions.colorType);
@@ -133,12 +121,7 @@ export const buildConvertFormData = (
     (fromExtension === "html" || fromExtension === "zip") &&
     toExtension === "pdf"
   ) {
-    formData.append(
-      "zoom",
-      parameters.useStirlingOfficeConvert
-        ? "1"
-        : htmlOptions.zoomLevel.toString(),
-    );
+    formData.append("zoom", htmlOptions.zoomLevel.toString());
   } else if (
     (fromExtension === "eml" || fromExtension === "msg") &&
     toExtension === "pdf"
@@ -193,10 +176,6 @@ export const buildConvertFormData = (
     ["epub", "mobi", "azw3", "fb2"].includes(fromExtension) &&
     toExtension === "pdf"
   ) {
-    formData.append(
-      "embedAllFonts",
-      (ebookOptions?.embedAllFonts ?? false).toString(),
-    );
     formData.append(
       "includeTableOfContents",
       (ebookOptions?.includeTableOfContents ?? false).toString(),
@@ -278,6 +257,7 @@ const rethrowWithServerReason = async (error: unknown): Promise<never> => {
 export const convertProcessor = async (
   rawParameters: ConvertParameters,
   selectedFiles: File[],
+  requestOptions: { suppressErrorToast?: boolean } = {},
 ): Promise<CustomProcessorResult> => {
   const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
   const processedFiles: File[] = [];
@@ -293,6 +273,7 @@ export const convertProcessor = async (
   }
   // PDF to text and to RTF share a URL, so desktop routing needs the key itself.
   let requestConfig = {
+    ...requestOptions,
     responseType: "blob" as const,
     endpointName: getEndpointName(parameters.fromExtension, actualToExtension),
   };
@@ -576,7 +557,6 @@ const CONVERT_OPTION_READERS: ConvertOptionReaders = {
   }),
   "/api/v1/convert/ebook/pdf": (body) => ({
     ebookOptions: {
-      embedAllFonts: asFlag(body.embedAllFonts),
       includeTableOfContents: asFlag(body.includeTableOfContents),
       includePageNumbers: asFlag(body.includePageNumbers),
       optimizeForEbook: asFlag(body.optimizeForEbook),
@@ -617,14 +597,9 @@ export const convertFromApiParams = (
   // Each reader reads only its own endpoint's fields; the runtime endpoint is just a string, so
   // readOptions is looked up per-endpoint (undefined when the pair has no reader).
   const readOptions = endpoint ? CONVERT_OPTION_READERS[endpoint] : undefined;
-  const officeChoice = parseOfficeEngineChoice(body.useStirlingOfficeConvert);
   return {
     fromExtension,
     toExtension,
-    ...(usesOfficeEngine(fromExtension, toExtension) &&
-    officeChoice !== undefined
-      ? { useStirlingOfficeConvert: officeChoice }
-      : {}),
     ...(readOptions ? readOptions(body, toExtension) : {}),
   };
 };

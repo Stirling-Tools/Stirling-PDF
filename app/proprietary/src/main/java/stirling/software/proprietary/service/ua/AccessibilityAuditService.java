@@ -133,7 +133,10 @@ public class AccessibilityAuditService {
 
         summary.setPages(document.getNumberOfPages());
         summary.setEncrypted(document.isEncrypted());
-        summary.setHasLanguage(catalog.getLanguage() != null && !catalog.getLanguage().isBlank());
+        String language = catalog.getLanguage();
+        boolean hasLanguage = language != null && !language.isBlank();
+        summary.setHasLanguage(hasLanguage);
+        summary.setLanguage(hasLanguage ? language.strip() : null);
 
         String title = document.getDocumentInformation().getTitle();
         summary.setHasTitle(title != null && !title.isBlank());

@@ -1,15 +1,11 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
-// Two toolbar changes:
-//
-//   * The bold button was a second, weaker way to say what the font family
-//     picker already says, and it applied to whole runs rather than to the
-//     text the user had selected. The weight control is gone; Helvetica Bold
-//     and friends are still one dropdown pick away.
-//   * Fill colour and outline colour sat side by side, so the common case
-//     (change the text colour) had two pickers to choose between. Outline
-//     colour and width now live behind an advanced control.
+// Fill colour and outline colour sat side by side, so the common case (change
+// the text colour) had two pickers to choose between. Outline colour and width
+// live behind an advanced control. The font list names a family once, so bold
+// is the Bold toggle's, beside Italic.
 
 const PARAGRAPH_PDF = path.join(
   import.meta.dirname,
@@ -17,13 +13,7 @@ const PARAGRAPH_PDF = path.join(
 );
 
 async function openEditor(page: import("@playwright/test").Page, file: string) {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+  await openInTextEditor(page, file);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -60,33 +50,26 @@ function readRun(page: import("@playwright/test").Page, runId: string) {
   }, runId);
 }
 
-test.describe("PDF text editor - the weight control is gone", () => {
-  test("the toolbar has no bold button", async ({ page }) => {
+test.describe("PDF text editor - bold is a toggle, not a list entry", () => {
+  test("the toolbar has Bold beside Italic", async ({ page }) => {
     await openEditor(page, PARAGRAPH_PDF);
     await selectFirstRun(page);
     await expect(page.getByTestId("pdf-editor-toolbar")).toBeVisible();
-    await expect(
-      page.getByTestId("pdf-editor-bold"),
-      "the bold weight control should have been dropped",
-    ).toHaveCount(0);
-    // Italic is a style, not a weight, and stays.
+    await expect(page.getByTestId("pdf-editor-bold")).toBeVisible();
     await expect(page.getByTestId("pdf-editor-italic")).toBeVisible();
   });
 
-  test("bold is still reachable through the font family picker", async ({
-    page,
-  }) => {
+  test("Bold makes the selected run bold", async ({ page }) => {
     await openEditor(page, PARAGRAPH_PDF);
     const runId = await selectFirstRun(page);
     const before = await readRun(page, runId);
     expect(before, "run should be in the model").not.toBeNull();
 
-    await page.getByTestId("pdf-editor-font-family").click();
-    await page.getByRole("option", { name: "Helvetica Bold" }).click();
-    await page.waitForTimeout(600);
+    await page.getByTestId("pdf-editor-bold").click();
 
-    const after = await readRun(page, runId);
-    expect(after!.fontId).toMatch(/Helvetica-Bold/);
+    await expect
+      .poll(async () => (await readRun(page, runId))?.fontId)
+      .toMatch(/Helvetica-Bold/);
   });
 });
 

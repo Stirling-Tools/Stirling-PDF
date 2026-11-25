@@ -40,7 +40,6 @@ dependencies {
         exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
     }
     implementation "commons-io:commons-io:$commonsIoVersion"
-    implementation 'org.apache.httpcomponents.client5:httpclient5'
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation 'io.micrometer:micrometer-core'
@@ -48,11 +47,12 @@ dependencies {
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
 
-    // Stirling Office Convert: PDF to Office, legacy .ppt output, and Office to PDF without LibreOffice.
+    // Stirling Office Convert: PDF to Office, legacy .ppt output, Office to PDF and PDF/A.
     implementation "com.stirling:stirling-office-convert:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-pdfa:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-optimize:$officeConvertVersion"
 
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
@@ -101,7 +101,7 @@ dependencies {
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"

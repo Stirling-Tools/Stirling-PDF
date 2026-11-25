@@ -170,6 +170,8 @@ function fakeHarness(options: FakeModuleOptions = {}): FakeHarness {
       ownedFonts.set(font.id, font);
     },
     ownedFont: (id: string) => ownedFonts.get(id),
+    findOwnedFont: (matches: (font: FontRef) => boolean) =>
+      [...ownedFonts.values()].find(matches),
     recordEmbeddedFontFile: (bytes: Uint8Array) =>
       embeddedFontFiles.push(bytes),
     embeddedFontFiles: () => embeddedFontFiles,

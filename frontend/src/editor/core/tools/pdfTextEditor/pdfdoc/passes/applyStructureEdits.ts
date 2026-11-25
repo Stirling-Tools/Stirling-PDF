@@ -50,6 +50,8 @@ export interface StructureEdit {
   lang?: string | null;
   /** As `lang`, for the block the element belongs to, as `type` is. */
   blockLang?: string | null;
+  /** As `alt`, for the block the element belongs to, as `type` is. */
+  blockAlt?: string | null;
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
   /** The page furniture that artifact is; absent for a plain one. */
@@ -146,7 +148,10 @@ export async function applyStructureEdits(
       unwraps.push({ edit, owner });
       continue;
     }
-    const ofBlock = edit.type !== undefined || edit.blockLang !== undefined;
+    const ofBlock =
+      edit.type !== undefined ||
+      edit.blockLang !== undefined ||
+      edit.blockAlt !== undefined;
     const target = ofBlock ? nodes.blockOf(owner) : owner;
     const body = bodies.get(target) ?? pdf.objectBody(target);
     const updated = body === null ? null : edited(pdf, body, edit, target);
@@ -279,8 +284,9 @@ function edited(
 ): string | null {
   let out: string | null = body;
   const type = edit.type ?? edit.ownType;
-  if (edit.alt !== undefined) {
-    out = withTextEntry(out, "Alt", edit.alt);
+  const alt = edit.blockAlt !== undefined ? edit.blockAlt : edit.alt;
+  if (alt !== undefined) {
+    out = withTextEntry(out, "Alt", alt);
   }
   const lang = edit.blockLang !== undefined ? edit.blockLang : edit.lang;
   if (out !== null && lang !== undefined) {

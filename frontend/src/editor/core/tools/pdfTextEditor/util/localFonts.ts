@@ -27,16 +27,6 @@ export interface LocalFont {
   axes?: FaceAxes;
 }
 
-export interface FontFamilyOption {
-  value: string;
-  label: string;
-}
-
-export interface LocalFontFamily {
-  family: string;
-  styles: string[];
-}
-
 /** Feature detection only - never prompts and has no side effects. */
 export function isLocalFontAccessSupported(): boolean {
   return hasDeviceFontSource();
@@ -105,62 +95,6 @@ export function resetLocalFontsCache(): void {
   bytesPending.clear();
 }
 
-function compareNames(a: string, b: string): number {
-  return a.localeCompare(b, undefined, { sensitivity: "base" });
-}
-
-/** Collapse the face list into families with styles, sorted and de-duplicated. */
-export function groupByFamily(fonts: LocalFont[]): LocalFontFamily[] {
-  const byFamily = new Map<string, LocalFontFamily>();
-  for (const font of fonts) {
-    if (!font.family) continue;
-    const key = font.family.toLowerCase();
-    let entry = byFamily.get(key);
-    if (!entry) {
-      entry = { family: font.family, styles: [] };
-      byFamily.set(key, entry);
-    }
-    const style = font.style;
-    if (!style) continue;
-    const seen = entry.styles.some(
-      (s) => s.toLowerCase() === style.toLowerCase(),
-    );
-    if (!seen) entry.styles.push(style);
-  }
-  const families = [...byFamily.values()];
-  for (const entry of families) entry.styles.sort(compareNames);
-  families.sort((a, b) => compareNames(a.family, b.family));
-  return families;
-}
-
-/** Picker options per family, plus a Bold entry where an upright bold cut exists; `taken` names are left out. */
-export function familyOptions(
-  fonts: LocalFont[] | null,
-  taken: string[],
-): FontFamilyOption[] {
-  if (!fonts) return [];
-  const hidden = new Set(taken.map(normaliseName));
-  const families = groupByFamily(fonts);
-  const listed = new Set([
-    ...hidden,
-    ...families.map(({ family }) => normaliseName(family)),
-  ]);
-  const withBold = new Set<string>();
-  for (const font of fonts) {
-    const flags = faceStyleFlags(font);
-    if (flags.bold && !flags.italic) withBold.add(normaliseName(font.family));
-  }
-  return families.flatMap(({ family }) => {
-    const key = normaliseName(family);
-    if (hidden.has(key)) return [];
-    const options = [{ value: family, label: family }];
-    if (withBold.has(key) && !listed.has(normaliseName(`${family} Bold`))) {
-      options.push({ value: `${family} Bold`, label: `${family} Bold` });
-    }
-    return options;
-  });
-}
-
 /** Case/separator-insensitive key, so "Segoe-UI" and "Segoe UI" are one name. */
 export function normaliseName(name: string): string {
   return name
@@ -192,7 +126,7 @@ export function splitRequested(requested: string): RequestedFace {
   return { family: family || spaced, ...styleAxes(spaced) };
 }
 
-export function knownFamilyOf(
+function knownFamilyOf(
   fonts: LocalFont[],
   requested: string,
 ): RequestedFace | null {
@@ -211,7 +145,7 @@ export function knownFamilyOf(
   return best;
 }
 
-export function resolveRequested(
+function resolveRequested(
   fonts: LocalFont[],
   requested: string,
 ): RequestedFace {
@@ -292,7 +226,7 @@ export function pickLocalFontFace(
   );
 }
 
-export function pickRequestedFace(
+function pickRequestedFace(
   fonts: LocalFont[],
   wanted: RequestedFace,
 ): LocalFont | null {

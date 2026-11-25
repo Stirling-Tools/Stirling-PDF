@@ -397,11 +397,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         // Guests get NO team: the editor is free and needs none. Everyone else is provisioned
         // atomically, so a user visible to a parallel request always already has one.
         try {
-            return isAnonymous(jwt)
-                    ? userService.saveUser(newUser)
-                    : saasTeamService.saveUserWithPersonalTeam(newUser);
+            return saasTeamService.provisionUser(newUser, !isAnonymous(jwt));
         } catch (DataIntegrityViolationException dup) {
-            // Parallel filter won the race; fetch the winning row.
+            // Provisioning is serialised per account, so this is a collision on another unique
+            // column (e.g. email); adopt our row if one exists.
             return userService
                     .findBySupabaseId(supabaseId)
                     .orElseThrow(
