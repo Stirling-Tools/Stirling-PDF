@@ -98,7 +98,6 @@ labels:
       - 'app/saas/src/main/resources/application-saas.properties'
       - 'app/core/src/main/resources/banner.txt'
       - 'app/core/src/main/resources/static/python/png_to_webp.py'
-      - 'app/core/src/main/resources/static/python/split_photos.py'
       - 'app/core/src/main/resources/static/pipeline/defaultWebUIConfigs/**'
       - 'application.properties'
 
@@ -118,7 +117,6 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/service/ApiDocService.java'
       - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/api/.*'
       - 'app/core/src/main/resources/static/python/png_to_webp.py'
-      - 'app/core/src/main/resources/static/python/split_photos.py'
       - '.github/workflows/swagger.yml'
 
   - label: 'Documentation'

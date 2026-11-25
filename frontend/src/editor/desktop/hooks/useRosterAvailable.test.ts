@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 
 const getCurrentMode = vi.fn();
 const subscribeToModeChanges = vi.fn((_cb: unknown) => () => {});
 
 vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
+    getCachedMode: () => null,
     getCurrentMode: () => getCurrentMode(),
     subscribeToModeChanges: (cb: unknown) => subscribeToModeChanges(cb),
   },
@@ -35,6 +36,22 @@ describe("useRosterAvailable (desktop)", () => {
     getCurrentMode.mockResolvedValue("selfhosted");
     const { result } = renderHook(() => useRosterAvailable());
     await waitFor(() => expect(result.current).toBe(true));
+  });
+
+  it("keeps a mode change that lands before the saved mode resolves", async () => {
+    let resolveSaved: (mode: string) => void = () => {};
+    getCurrentMode.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSaved = resolve;
+      }),
+    );
+    const { result } = renderHook(() => useRosterAvailable());
+    const onChange = subscribeToModeChanges.mock.calls[0][0] as (config: {
+      mode: string;
+    }) => void;
+    act(() => onChange({ mode: "selfhosted" }));
+    await act(async () => resolveSaved("local"));
+    expect(result.current).toBe(true);
   });
 
   it("serves it once signed into the cloud", async () => {

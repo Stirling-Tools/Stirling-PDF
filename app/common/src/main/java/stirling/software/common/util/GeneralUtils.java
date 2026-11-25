@@ -45,8 +45,7 @@ public class GeneralUtils {
     private static final BigDecimal KIB = BigDecimal.valueOf(1024L);
     private static final BigDecimal LONG_MAX_DECIMAL = BigDecimal.valueOf(Long.MAX_VALUE);
 
-    private final Set<String> DEFAULT_VALID_SCRIPTS =
-            Set.of("calibre_sandbox.py", "png_to_webp.py", "split_photos.py");
+    private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
                     "OCR images.json",
@@ -1157,9 +1156,7 @@ public class GeneralUtils {
         }
 
         if (!DEFAULT_VALID_SCRIPTS.contains(scriptName)) {
-            throw new IllegalArgumentException(
-                    "scriptName must be one of 'calibre_sandbox.py', 'png_to_webp.py' or"
-                            + " 'split_photos.py'");
+            throw new IllegalArgumentException("scriptName must be 'png_to_webp.py'");
         }
 
         Path scriptsDir = Path.of(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);

@@ -24,6 +24,7 @@ import BadgeDollarSign from "lucide-static/icons/badge-dollar-sign.svg?react";
 import Banknote from "lucide-static/icons/banknote.svg?react";
 import Bell from "lucide-static/icons/bell.svg?react";
 import Blocks from "lucide-static/icons/blocks.svg?react";
+import Bold from "lucide-static/icons/bold.svg?react";
 import Bolt from "lucide-static/icons/bolt.svg?react";
 import Book from "lucide-static/icons/book.svg?react";
 import BookOpen from "lucide-static/icons/book-open.svg?react";
@@ -78,6 +79,7 @@ import Clipboard from "lucide-static/icons/clipboard.svg?react";
 import ClipboardCheck from "lucide-static/icons/clipboard-check.svg?react";
 import ClipboardClock from "lucide-static/icons/clipboard-clock.svg?react";
 import ClipboardList from "lucide-static/icons/clipboard-list.svg?react";
+import ClipboardPenLine from "lucide-static/icons/clipboard-pen-line.svg?react";
 import ClipboardPlus from "lucide-static/icons/clipboard-plus.svg?react";
 import Clock from "lucide-static/icons/clock.svg?react";
 import Cloud from "lucide-static/icons/cloud.svg?react";
@@ -242,6 +244,8 @@ import Recycle from "lucide-static/icons/recycle.svg?react";
 import Redo2 from "lucide-static/icons/redo-2.svg?react";
 import RefreshCw from "lucide-static/icons/refresh-cw.svg?react";
 import RefreshCwOff from "lucide-static/icons/refresh-cw-off.svg?react";
+import Replace from "lucide-static/icons/replace.svg?react";
+import ReplaceAll from "lucide-static/icons/replace-all.svg?react";
 import Rocket from "lucide-static/icons/rocket.svg?react";
 import RotateCcw from "lucide-static/icons/rotate-ccw.svg?react";
 import RotateCcwClock from "lucide-static/icons/rotate-ccw-clock.svg?react";
@@ -326,6 +330,7 @@ import Underline from "lucide-static/icons/underline.svg?react";
 import Undo2 from "lucide-static/icons/undo-2.svg?react";
 import Unlink from "lucide-static/icons/unlink.svg?react";
 import Upload from "lucide-static/icons/upload.svg?react";
+import Usb from "lucide-static/icons/usb.svg?react";
 import User from "lucide-static/icons/user.svg?react";
 import UserCheck from "lucide-static/icons/user-check.svg?react";
 import UserCog from "lucide-static/icons/user-cog.svg?react";
@@ -383,6 +388,7 @@ import SinglePage from "@editor/icons/svg/stirling/single-page.svg?react";
 import StirlingMark from "@editor/icons/svg/stirling/stirling-mark.svg?react";
 import StirlingMarkThinking from "@editor/icons/svg/stirling/stirling-mark-thinking.svg?react";
 import StirlingTile from "@editor/icons/svg/stirling/stirling-tile.svg?react";
+import UniversalAccess from "@editor/icons/svg/stirling/universal-access.svg?react";
 import UsersPlus from "@editor/icons/svg/stirling/users-plus.svg?react";
 import Watermark from "@editor/icons/svg/stirling/watermark.svg?react";
 
@@ -457,6 +463,7 @@ export const ICONS = {
   banknote: { Component: Banknote, kind: "lucide" },
   bell: { Component: Bell, kind: "lucide" },
   blocks: { Component: Blocks, kind: "lucide" },
+  bold: { Component: Bold, kind: "lucide" },
   bolt: { Component: Bolt, kind: "lucide" },
   book: { Component: Book, kind: "lucide" },
   "book-open": { Component: BookOpen, kind: "lucide" },
@@ -511,6 +518,7 @@ export const ICONS = {
   "clipboard-check": { Component: ClipboardCheck, kind: "lucide" },
   "clipboard-clock": { Component: ClipboardClock, kind: "lucide" },
   "clipboard-list": { Component: ClipboardList, kind: "lucide" },
+  "clipboard-pen-line": { Component: ClipboardPenLine, kind: "lucide" },
   "clipboard-plus": { Component: ClipboardPlus, kind: "lucide" },
   clock: { Component: Clock, kind: "lucide" },
   cloud: { Component: Cloud, kind: "lucide" },
@@ -675,6 +683,8 @@ export const ICONS = {
   "redo-2": { Component: Redo2, kind: "lucide" },
   "refresh-cw": { Component: RefreshCw, kind: "lucide" },
   "refresh-cw-off": { Component: RefreshCwOff, kind: "lucide" },
+  replace: { Component: Replace, kind: "lucide" },
+  "replace-all": { Component: ReplaceAll, kind: "lucide" },
   rocket: { Component: Rocket, kind: "lucide" },
   "rotate-ccw": { Component: RotateCcw, kind: "lucide" },
   "rotate-ccw-clock": { Component: RotateCcwClock, kind: "lucide" },
@@ -759,6 +769,7 @@ export const ICONS = {
   "undo-2": { Component: Undo2, kind: "lucide" },
   unlink: { Component: Unlink, kind: "lucide" },
   upload: { Component: Upload, kind: "lucide" },
+  usb: { Component: Usb, kind: "lucide" },
   user: { Component: User, kind: "lucide" },
   "user-check": { Component: UserCheck, kind: "lucide" },
   "user-cog": { Component: UserCog, kind: "lucide" },
@@ -816,6 +827,7 @@ export const ICONS = {
   "stirling-mark": { Component: StirlingMark, kind: "brand" },
   "stirling-mark-thinking": { Component: StirlingMarkThinking, kind: "brand" },
   "stirling-tile": { Component: StirlingTile, kind: "brand" },
+  "universal-access": { Component: UniversalAccess, kind: "stirling" },
   "users-plus": { Component: UsersPlus, kind: "stirling" },
   watermark: { Component: Watermark, kind: "stirling" },
   apple: { Component: Apple, kind: "brand" },

@@ -1,8 +1,10 @@
+import { drawnCodePoint } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type { ResolverContext } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 /**
  * Client-side font helpers for the charcode emit path.
@@ -164,7 +166,7 @@ export function findFontForChar(
     // right weight, slightly wrong shapes and advances.
     let fallback: number | null = null;
     for (let i = 0; i < count; i++) {
-      const u = tpMod.FPDFText_GetUnicode(textPage, i);
+      const u = drawnCodePoint(tpMod.FPDFText_GetUnicode(textPage, i));
       if (u !== cp) continue;
       const obj = tpMod.FPDFText_GetTextObject(textPage, i);
       if (!obj) continue;
@@ -234,7 +236,7 @@ export function _clearFontNameCacheForTests(): void {
 
 // Read a font's /BaseFont name, the identity used to tell WHICH face a handle
 // points at when two fonts on the page render the same char.
-function readFontName(
+export function readFontName(
   m: ResolverContext["module"],
   fontPtr: number,
 ): string | undefined {
@@ -268,3 +270,4 @@ export function resetFontHelperCaches(): void {
   reusableFontCache.clear();
   fontNameCache.clear();
 }
+clearOnDocumentClose(resetFontHelperCaches);

@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { toggleViewerPanel } from "@editor/tests/helpers/ui-helpers";
 import type { Page } from "@playwright/test";
 import path from "node:path";
 
@@ -48,7 +49,7 @@ test("unlocked annotations render before opening comments and remain read-only",
     page.getByRole("button", { name: "Manage protection", exact: true }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "Comments", exact: true }).click();
+  await toggleViewerPanel(page, "Comments");
   const comments = page.locator(".comments-sidebar");
   await expect(comments).toBeVisible();
   await expect(comments.locator("[data-comment-card]")).toHaveCount(12);
@@ -71,7 +72,7 @@ test("unlocked annotations render before opening comments and remain read-only",
     .click();
   await expect(comments).toBeHidden();
   await expect(annotations).toHaveCount(4);
-  await page.getByRole("button", { name: "Comments", exact: true }).click();
+  await toggleViewerPanel(page, "Comments");
   await expect(comments).toBeVisible();
   await expect(comments.locator("[data-comment-card]")).toHaveCount(12);
 

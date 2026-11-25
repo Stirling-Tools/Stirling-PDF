@@ -7,9 +7,12 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.SupabaseUser;
@@ -26,6 +29,11 @@ public interface SupabaseUserRepository extends JpaRepository<SupabaseUser, UUID
                     + " WHERE u.supabaseId = :supabaseId"
                     + " AND EXISTS (SELECT 1 FROM SupabaseUser s WHERE s.id = u.supabaseId)")
     Optional<User> findLinkedUser(@Param("supabaseId") UUID supabaseId);
+
+    /** Row-locking read that serialises first-request provisioning of one account. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM SupabaseUser s WHERE s.id = :id")
+    Optional<SupabaseUser> lockById(@Param("id") UUID id);
 
     /**
      * Anonymous users created before the cut-off date. Used by the cleanup job to drop stale
