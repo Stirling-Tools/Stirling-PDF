@@ -9,9 +9,9 @@ import type { PortalSettingsOptions } from "@editor/components/settings/portalSe
 
 /**
  * Desktop: the rules of the edition the connection runs, none in local mode.
- * Stirling Cloud as on web SaaS, without the roster; a self-hosted server as
- * on web self-hosted. Billing stays the browser handoff in configNavSections,
- * and account linking is not offered.
+ * Stirling Cloud as on web SaaS, a self-hosted server as on web self-hosted.
+ * Billing stays the browser handoff in configNavSections, and account linking
+ * is not offered.
  */
 export function usePortalSettingsOptions(): PortalSettingsOptions | null {
   const mode = useConnectionMode();
@@ -25,7 +25,7 @@ export function usePortalSettingsOptions(): PortalSettingsOptions | null {
     if (!connected) return null;
     if (mode === "saas") {
       return {
-        includeRoster: false,
+        includeRoster: rosterAvailable && portalAccess,
         includeApiKeys: portalAccess,
         includeAudit: portalAccess,
         includeEncryption: false,

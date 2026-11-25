@@ -45,13 +45,12 @@ vi.mock("@processor/auth/saasSupabase", () => ({
 vi.mock("@editor/portal/usersCapabilities", async () => ({
   usersCapabilities:
     // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @editor alias
-    (await import("../../../editor/saas/portal/usersCapabilities"))
-      .usersCapabilities,
+    (await import("../../cloud/usersCapabilities")).usersCapabilities,
 }));
 vi.mock("@editor/portal/usersBackend", async () => ({
   usersBackend:
     // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @editor alias
-    (await import("../../../editor/saas/portal/usersBackend")).usersBackend,
+    (await import("../../cloud/usersBackend")).usersBackend,
 }));
 
 vi.mock("@processor/contexts/TierContext", () => ({
