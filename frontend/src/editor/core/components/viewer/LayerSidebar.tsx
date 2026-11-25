@@ -232,40 +232,21 @@ export function LayerSidebar({
       >
         <div
           className={`layer-item ${!isVisible ? "layer-item--hidden" : ""}`}
-          onClick={() => {
-            if (hasChildren) {
-              toggleExpanded(layer.id);
-            } else {
-              toggleLayerVisibility(layer.id);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              if (hasChildren) {
-                toggleExpanded(layer.id);
-              } else {
-                toggleLayerVisibility(layer.id);
-              }
-            }
-          }}
         >
           {hasChildren ? (
-            <span
+            <button
+              type="button"
               className="layer-item__expand-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpanded(layer.id);
-              }}
+              aria-expanded={isExpanded}
+              aria-label={layer.name}
+              onClick={() => toggleExpanded(layer.id)}
             >
               {isExpanded ? (
                 <Icon name="chevron-down" size={12} strokeWidth={2.5} />
               ) : (
                 <Icon name="chevron-right" size={12} strokeWidth={2.5} />
               )}
-            </span>
+            </button>
           ) : (
             <span className="layer-item__expand-placeholder" />
           )}
@@ -287,9 +268,26 @@ export function LayerSidebar({
             withinPortal
             disabled={layer.name.length < 20}
           >
-            <span className={`layer-item__label ${privateContentClassName}`}>
+            <button
+              type="button"
+              className={`layer-item__label ${privateContentClassName}`}
+              style={{
+                background: "none",
+                border: 0,
+                padding: 0,
+                color: "inherit",
+                font: "inherit",
+                textAlign: "left",
+                cursor: "pointer",
+              }}
+              onClick={() =>
+                hasChildren
+                  ? toggleExpanded(layer.id)
+                  : toggleLayerVisibility(layer.id)
+              }
+            >
               {layer.name}
-            </span>
+            </button>
           </Tooltip>
         </div>
 

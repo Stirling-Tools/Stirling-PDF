@@ -100,7 +100,7 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
     });
 
     const layersButton = page
-      .getByRole("button", { name: "Toggle Layers", exact: true })
+      .getByRole("button", { name: "Layers", exact: true })
       .first();
     await expect(layersButton).toBeVisible({ timeout: 15_000 });
     await layersButton.click();
