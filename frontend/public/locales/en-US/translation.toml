@@ -2779,8 +2779,6 @@ adjust = "Drag the box to move it, or drag a corner to resize it."
 cancel = "Cancel"
 clickPage = "Click the page where the signature should go."
 cornerPage = "Or the bottom-right corner of page"
-elsewhere = "Custom position"
-pageOf = "Page {{page}}"
 place = "Place on the page"
 placeAgain = "Place again"
 placedOnPage = "Placed on page {{page}}"
@@ -13686,6 +13684,10 @@ rotateLeft = "Rotate left"
 rotateRight = "Rotate right"
 trim = "Trim to signature"
 trimHint = "Crops the empty space around it"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Signature Appearance Settings"

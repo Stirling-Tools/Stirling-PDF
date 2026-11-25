@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSignature } from "@editor/contexts/SignatureContext";
 import { useNavigation } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
-import { useSignatureFieldPicker } from "@editor/contexts/SignatureFieldPickerContext";
+import { useOfferSignatureFields } from "@editor/hooks/signing/useOfferSignatureFields";
 import { DEFAULT_PARAMETERS as SIGN_DEFAULTS } from "@editor/hooks/tools/sign/useSignParameters";
 import type { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { stampLabels } from "@editor/hooks/tools/certSign/useCertSignOperation";
@@ -172,7 +172,7 @@ export function useCertSignStampPlacement({
     setSignaturesApplied,
   } = useSignature();
   const { hasUnsavedChanges, setWorkbench } = useNavigation();
-  const { activeFileId, setActiveFileId, scrollActions } = useViewer();
+  const { activeFileId, setActiveFileId } = useViewer();
   const layout = useSignatureLayout(
     active && parameters.showSignature ? file : null,
   );
@@ -318,7 +318,6 @@ export function useCertSignStampPlacement({
     onParameterChange("pageNumber", stampPage + 1);
   }, [active, stampPage, rect, cropBox, onParameterChange]);
 
-  const { setPick } = useSignatureFieldPicker();
   const emptyFields = useMemo(() => layout?.emptyFields ?? [], [layout]);
   const fieldName = parameters.fieldName ?? null;
   const chosenField = emptyFields.find((field) => field.name === fieldName);
@@ -339,65 +338,18 @@ export function useCertSignStampPlacement({
       ),
     [fieldPreview, stampBox, renderStamp],
   );
-  const chosenOnPage = useRef<string | null>(null);
-  const [flash, setFlash] = useState(0);
-  useEffect(() => {
-    if (!active || !parameters.showSignature || emptyFields.length === 0) {
-      setPick(null);
-      return;
-    }
-    setPick({
-      fieldNames: new Set(emptyFields.map((field) => field.name)),
-      selected: fieldName,
-      preview: fieldPreview,
-      flash,
-      choose: (name) => {
-        chosenOnPage.current = name;
-        onParameterChange("fieldName", name);
-      },
-    });
-  }, [
-    active,
-    parameters.showSignature,
-    emptyFields,
-    fieldName,
-    fieldPreview,
-    flash,
-    onParameterChange,
-    setPick,
-  ]);
-  useEffect(() => () => setPick(null), [setPick]);
-
-  const shownField = useRef<string | null>(null);
-  useEffect(() => {
-    if (!chosenField || shownField.current === chosenField.name) return;
-    const first = shownField.current === null;
-    const fromPage = chosenOnPage.current === chosenField.name;
-    shownField.current = chosenField.name;
-    chosenOnPage.current = null;
-    setFlash((count) => count + 1);
-    if (first || fromPage) return;
-    if (file && activeFileId !== file.fileId) setActiveFileId(file.fileId);
-    setWorkbench("viewer");
-    const crop = layout?.cropBoxes[chosenField.pageIndex];
-    if (!crop) {
-      scrollActions.scrollToPage(chosenField.pageIndex + 1);
-      return;
-    }
-    const { box } = chosenField;
-    scrollActions.centrePagePoint(chosenField.pageIndex + 1, {
-      x: box.x - crop.x + box.width / 2,
-      y: crop.y + crop.height - (box.y + box.height / 2),
-    });
-  }, [
-    layout,
-    chosenField,
+  const selectField = useCallback(
+    (name: string) => onParameterChange("fieldName", name),
+    [onParameterChange],
+  );
+  useOfferSignatureFields({
+    enabled: active && parameters.showSignature,
     file,
-    activeFileId,
-    setActiveFileId,
-    setWorkbench,
-    scrollActions,
-  ]);
+    layout,
+    selected: fieldName,
+    onSelect: selectField,
+    preview: fieldPreview,
+  });
 
   const removeRef = useRef(remove);
   removeRef.current = remove;

@@ -1,8 +1,0 @@
-.cert-sign-preview {
-  display: block;
-  width: 100%;
-  height: auto;
-  background: white;
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-sm);
-}

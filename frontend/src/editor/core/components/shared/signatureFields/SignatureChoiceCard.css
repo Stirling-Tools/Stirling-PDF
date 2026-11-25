@@ -1,31 +1,31 @@
-.cert-sign-card {
+.signature-choice-card {
   padding: 8px 10px;
   border: 1px solid var(--c-border-strong);
   border-radius: var(--mantine-radius-sm);
   background: var(--c-surface);
 }
 
-.cert-sign-card--custom {
+.signature-choice-card--custom {
   border-style: dashed;
 }
 
-.cert-sign-card[data-checked] {
+.signature-choice-card[data-checked] {
   border-color: var(--c-primary);
   border-style: solid;
   box-shadow: inset 0 0 0 1px var(--c-primary);
   background: var(--c-primary-subtle);
 }
 
-.cert-sign-card:not([data-disabled]):hover {
+.signature-choice-card:not([data-disabled]):hover {
   border-color: var(--c-primary);
 }
 
-.cert-sign-card[data-disabled] {
+.signature-choice-card[data-disabled] {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.cert-sign-card-name {
+.signature-choice-card-name {
   font-size: 13px;
   font-weight: 500;
   line-height: 1.35;

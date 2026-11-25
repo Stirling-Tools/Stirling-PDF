@@ -1,19 +1,15 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import HardwareCertificateSettings from "@editor/components/tools/certSign/HardwareCertificateSettings";
-import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
+import {
+  CertSignParameters,
+  defaultParameters,
+} from "@editor/hooks/tools/certSign/useCertSignParameters";
 
 const baseParameters: CertSignParameters = {
+  ...defaultParameters,
   signMode: "DEVICE",
   certType: "WINDOWS_STORE",
-  password: "",
-  showSignature: false,
-  reason: "",
-  location: "",
-  name: "",
-  pageNumber: 1,
-  stampGraphic: "LOGO",
-  showWatermark: false,
 };
 
 const meta = {

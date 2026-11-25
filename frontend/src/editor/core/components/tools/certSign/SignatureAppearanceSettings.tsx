@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FileInput,
   Group,
@@ -6,8 +6,6 @@ import {
   Text,
   TextInput,
   NumberInput,
-  Radio as MantineRadio,
-  ScrollArea,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import type {
@@ -16,15 +14,14 @@ import type {
 } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import type { CertSignStampPlacement } from "@editor/hooks/tools/certSign/useCertSignStampPlacement";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
-import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { Banner } from "@editor/ui/Banner";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
-import "@editor/components/tools/certSign/CertSignCard.css";
-import "@editor/components/tools/certSign/SignatureAppearanceSettings.css";
+import { SignatureFieldList } from "@editor/components/shared/signatureFields/SignatureFieldList";
+import { StampPreviewFrame } from "@editor/components/shared/signatureFields/StampPreviewFrame";
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
@@ -36,9 +33,6 @@ interface SignatureAppearanceSettingsProps {
   /** Field choice and on-page placement; absent where no single document is open. */
   placement?: CertSignStampPlacement;
 }
-
-const PLACE_ON_PAGE = "place";
-const FIELD_PREFIX = "field:";
 
 const SignatureAppearanceSettings = ({
   parameters,
@@ -60,13 +54,12 @@ const SignatureAppearanceSettings = ({
       {parameters.showSignature && (
         <Stack gap="sm">
           {placement?.preview && (
-            <img
+            <StampPreviewFrame
               src={placement.preview}
               alt={t(
                 "certSign.appearance.placement.stampPreview",
                 "How the signature will look",
               )}
-              className={`cert-sign-preview ${privateContentClassName}`}
             />
           )}
           {placement && (
@@ -284,8 +277,6 @@ const GraphicChoice = ({
   );
 };
 
-const SCROLL_AFTER = 4;
-
 const FieldChoice = ({
   placement,
   parameters,
@@ -296,78 +287,17 @@ const FieldChoice = ({
   const fields = placement.layout?.emptyFields ?? [];
   if (fields.length === 0) return null;
 
-  const title = t("certSign.appearance.placement.where", "Where to sign");
-  const choose = (next: string) =>
-    onParameterChange(
-      "fieldName",
-      next === PLACE_ON_PAGE ? undefined : next.slice(FIELD_PREFIX.length),
-    );
-  const card = (value: string, name: ReactNode, detail: string) => (
-    <MantineRadio.Card
-      key={value}
-      value={value}
-      className="cert-sign-card"
-      disabled={disabled}
-    >
-      <Stack gap={0}>
-        <Text className="cert-sign-card-name">{name}</Text>
-        <Text size="xs" c="dimmed">
-          {detail}
-        </Text>
-      </Stack>
-    </MantineRadio.Card>
-  );
-
   return (
-    <Stack gap={6}>
-      <Text size="sm" fw={500}>
-        {title}
-      </Text>
-      <MantineRadio.Group
-        value={
-          parameters.fieldName
-            ? `${FIELD_PREFIX}${parameters.fieldName}`
-            : PLACE_ON_PAGE
-        }
-        onChange={choose}
-        aria-label={title}
-      >
-        <Stack gap={4}>
-          <ScrollArea.Autosize
-            mah={fields.length > SCROLL_AFTER ? 230 : undefined}
-            offsetScrollbars="y"
-            scrollbarSize={6}
-          >
-            <Stack gap={4}>
-              {fields.map((field) =>
-                card(
-                  `${FIELD_PREFIX}${field.name}`,
-                  <PrivateContent>{field.name}</PrivateContent>,
-                  t("certSign.appearance.placement.pageOf", "Page {{page}}", {
-                    page: field.pageIndex + 1,
-                  }),
-                ),
-              )}
-            </Stack>
-          </ScrollArea.Autosize>
-          <MantineRadio.Card
-            value={PLACE_ON_PAGE}
-            className="cert-sign-card cert-sign-card--custom"
-            disabled={disabled}
-          >
-            <Group gap={6} wrap="nowrap">
-              <Icon name="locate-fixed" size={14} />
-              <Text className="cert-sign-card-name">
-                {t(
-                  "certSign.appearance.placement.elsewhere",
-                  "Custom position",
-                )}
-              </Text>
-            </Group>
-          </MantineRadio.Card>
-        </Stack>
-      </MantineRadio.Group>
-    </Stack>
+    <SignatureFieldList
+      title={t("certSign.appearance.placement.where", "Where to sign")}
+      fields={fields}
+      selected={parameters.fieldName ?? null}
+      onChange={(fieldName) =>
+        onParameterChange("fieldName", fieldName ?? undefined)
+      }
+      allowCustomPosition
+      disabled={disabled}
+    />
   );
 };
 
