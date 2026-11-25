@@ -119,7 +119,7 @@ public class CertificateValidationService {
         // our own signing cert is trusted via serverAsAnchor, not by force-loading every system CA.
         if (validation.getTrust().isServerAsAnchor()) loadServerCertAsAnchor();
         if (validation.getTrust().isUseSystemTrust()) loadJavaSystemTrustStore();
-        if (validation.getTrust().isUseOSTrust()) loadOSTrustStore();
+        if (validation.getTrust().trustsOSRoots()) loadOSTrustStore();
         if (validation.getTrust().isUseMozillaBundle()) loadBundledMozillaCACerts();
         if (validation.getTrust().isUseAATL()) loadAATLCertificates();
         if (validation.getTrust().isUseEUTL()) loadEUTLCertificates();
