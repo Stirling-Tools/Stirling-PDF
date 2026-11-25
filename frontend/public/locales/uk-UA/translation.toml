@@ -512,6 +512,11 @@ submit = "Налаштувати масштаб сторінки"
 tags = "змінити розмір,модифікувати,розмірність,адаптувати"
 title = "Налаштувати масштаб сторінки"
 
+[adjustPageScale.customSize]
+height = "Висота"
+unit = "Одиниця"
+width = "Ширина"
+
 [adjustPageScale.error]
 failed = "Під час налаштування масштабу сторінки сталася помилка."
 
@@ -521,6 +526,7 @@ landscape = "Альбомна"
 portrait = "Книжкова"
 
 [adjustPageScale.pageSize]
+custom = "Користувацький"
 keep = "Зберегти початковий розмір"
 label = "Цільовий розмір сторінки"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "Максимальний DPI для обробки зображе
 label = "Максимальний DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Налаштуйте ліміти сеансів і тайм-аути для кожного виконавця процесів"
 ghostscript = "Ghostscript"
 installApp = "Встановлення застосунку"
 label = "Обмеження виконавця процесів"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF у HTML"
+officeConvert = "Конвертація Office"
+officeConvertSessionLimit = "Максимальна кількість одночасних конвертацій; 0 вибирає ліміт на основі кількості CPU та пам’яті"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Максимальна кількість одночасних екземплярів"
@@ -661,10 +665,6 @@ label = "Ліміт сеансів"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Максимальний час виконання"
 label = "Тайм-аут (хвилини)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert у бета-версії. Він пропонує кращу й швидшу конвертацію з меншим використанням пам’яті, ніж LibreOffice."
-label = "Використовувати нову конвертацію Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Налаштуйте зберігання тимчасових файлів та поведінку очищення"
@@ -682,11 +682,6 @@ label = "Інтервал очищення (хвилини)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Чи очищати ширший системний тимчасовий каталог (з обережністю)"
 label = "Очищати системний tmp"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Каталог для тимчасових файлів LibreOffice (залиште порожнім для типового: baseTmpDir/libreoffice)"
-label = "Тимчасовий каталог LibreOffice"
-placeholder = "Типово: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Максимальний вік у годинах до очищення тимчасових файлів"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Розтягувати зображення н�
 pageFormatA4 = "A4 (210×297мм)"
 pageFormatKeep = "Зберегти (оригінальні розміри)"
 pageFormatLetter = "Letter (8.5×11дюйм)"
+setupSteps = "Як налаштувати {{name}}"
 title = "Підключення"
 unlinkedServices = "Непов’язані служби"
 
@@ -1294,17 +1290,6 @@ label = "Виробник за замовчуванням"
 description = "Налаштуйте користувацькі шляхи файлової системи для конвеєрної обробки та зовнішніх інструментів"
 label = "Користувацькі шляхи"
 
-[admin.settings.general.customPaths.operations]
-label = "Шляхи до зовнішніх інструментів"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Шлях до LibreOffice unoconvert для конвертації документів (залиште порожнім для типового: /opt/venv/bin/unoconvert)"
-label = "Виконуваний файл Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Шлях до виконуваного файлу WeasyPrint для конвертації HTML у PDF (залиште порожнім для типового: /opt/venv/bin/weasyprint)"
-label = "Виконуваний файл WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Каталоги конвеєра"
 
@@ -1327,6 +1312,10 @@ label = "Каталоги відстежуваних папок"
 [admin.settings.general.defaultLocale]
 description = "Мова за замовчуванням для нових користувачів (наприклад, en_US, es_ES)"
 label = "Мова за замовчуванням"
+
+[admin.settings.general.enableFeedback]
+description = "Дозволяє користувачам надсилати відгук команді Stirling"
+label = "Увімкнути відгук"
 
 [admin.settings.general.fileUploadLimit]
 description = "Максимальний розмір завантаження файлу (наприклад, 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "Події STANDARD плюс: безперервні опитувал
 [admin.settings.security.audit.retentionDays]
 description = "Кількість днів зберігання журналів аудиту (0 = безстрокове зберігання)"
 label = "Зберігання аудиту (дні)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "Підписані PDF можна переглядати, друкувати, конвертувати або підписувати знову, але не змінювати в застосунку. На виклики API та серверні конвеєри це не впливає."
+label = "Блокувати зміни підписаних PDF"
 
 [admin.settings.security.csrfDisabled]
 description = "Вимкнути захист від Cross-Site Request Forgery (не рекомендовано)"
@@ -2969,6 +2962,7 @@ loadError = "Не вдалося завантажити користувачів
 noTeam = "Без команди"
 noUsers = "Інших користувачів не знайдено."
 placeholder = "Виберіть користувачів..."
+signInRequired = "Увійдіть, щоб надіслати запити на підпис іншим людям."
 you = "{{name}} (Ви)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "Вашим обліковим записом керує ваш п�
 title = "Змінити облікові дані"
 
 [changeMetadata]
-filenamePrefix = "метадані"
 submit = "Змінити"
 tags = "редагувати,змінити,оновити,метадані,властивості,властивості документа,автор,заголовок,тема,ключові слова,створювач,виробник,інформація,інформація про документ,властивості файлу"
 
@@ -3265,6 +3258,248 @@ not_found = "Мені не вдалося знайти запитувану ін
 processing = "Обробка ({{outcome}})..."
 unsupported_capability = "Непідтримувана можливість: {{capability}}"
 usage_limit_reached = "Ви досягли ліміту використання. Перевірте варіанти вашого плану, щоб продовжити."
+
+[checkAccessibility]
+aboutRow = "Відомості про {{label}}"
+checking = "Перевіряємо..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Завантажити звіт про доступність"
+fileFailed = "не вдалося"
+pickFile = "Показати результати для"
+submit = "Перевірити доступність"
+
+[checkAccessibility.category]
+altText = "Альтернативний текст"
+fonts = "Шрифти"
+language = "Мова"
+links = "Посилання й анотації"
+metadata = "Метадані та налаштування"
+structure = "Теги та структура"
+
+[checkAccessibility.categoryTip]
+altText = "Зображення мають мати короткий текстовий опис, щоб скрінрідери могли його озвучити."
+fonts = "Шрифти мають бути у файлі, з кожним символом, пов’язаним зі справжнім текстом, щоб текст можна було озвучити та скопіювати."
+language = "Скрінрідерам потрібна мова документа, щоб правильно вимовляти текст."
+links = "Посилання, коментарі та поля форм мають мати теги й описи та порядок вкладок, що відповідає сторінці."
+metadata = "Заголовок, декларація PDF/UA та інші налаштування, які допоміжні технології читають із файлу."
+structure = "Теги повідомляють скрінрідерам, що є чим на сторінці (заголовок, список, таблиця тощо) і в якому порядку це читати."
+
+[checkAccessibility.checks]
+label = "Пройдено перевірок: {{passed}} із {{total}}"
+
+[checkAccessibility.error]
+download = "Не вдалося створити звіт про доступність. Спробуйте ще раз."
+fileTitle = "Цей файл не вдалося перевірити"
+partial = "Деякі файли не вдалося перевірити."
+
+[checkAccessibility.facts]
+declares = "Декларує PDF/UA"
+displaysTitle = "Показує свій заголовок"
+fonts = "Шрифти вбудовано"
+language = "Задано мову"
+notEncrypted = "Не зашифровано"
+tagged = "Має теги"
+title = "Має заголовок"
+
+[checkAccessibility.factTip]
+declares = "Метадані файлу вказують, що він відповідає PDF/UA."
+displaysTitle = "PDF‑читачі показують заголовок, а не ім’я файлу, під час відкриття."
+fonts = "Кожен шрифт, який використовує текст, включений у файл."
+language = "Файл вказує, якою мовою написано його текст."
+notEncrypted = "Файл не зашифрований. Шифрування може завадити допоміжним технологіям читати його."
+tagged = "Файл має теги, що описують його структуру. Без них скрінрідери отримують лише простий текст."
+title = "Файл має заголовок у своїх метаданих."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} зображення потребує опису (сторінка {{pages}})"
+summary_other = "{{count}} зображень потребують опису (сторінки {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Стосується"
+clauseValue = "{{spec}} §{{clause}}, тест {{test}}"
+details = "Подробиці"
+instances_one = "{{count}} випадок"
+instances_other = "{{count}} випадків"
+onPages_one = "Сторінка {{pages}}"
+onPages_other = "Сторінки {{pages}}"
+onPagesPartial_one = "Сторінка {{pages}} (список може бути неповним)"
+onPagesPartial_other = "Сторінки {{pages}} (список може бути неповним)"
+pages = "Сторінки"
+pagesPartialValue = "{{pages}} (лише перші входження записують сторінку, тому список може бути неповним)"
+requirement = "Вимога"
+rule = "Правило"
+standard = "Стандарт"
+where = "Де"
+
+[checkAccessibility.manual]
+clearAll = "Очистити все"
+done = "Готово"
+inProgress = "У процесі"
+markAllDone = "Позначити все як виконане"
+tip = "Речі, які може оцінити лише людина, як-от порядок читання та чи мають сенс описи зображень. Позначайте кожен пункт після перевірки — позначки потраплять до завантаженого звіту."
+title = "Ручні перевірки"
+
+[checkAccessibility.objects]
+annotation = "Анотація"
+bookmark = "Закладка"
+character = "Символ у шрифті"
+contentPiece = "Фрагмент вмісту сторінки"
+document = "Документ"
+drawing = "Малюнок"
+figure = "Ілюстрація"
+file = "Сам файл"
+font = "Шрифт"
+form = "Форма"
+formField = "Поле форми"
+link = "Посилання"
+markedContent = "Позначений вміст сторінки"
+metadata = "Метадані документа"
+page = "Сторінка"
+properties = "Властивості документа"
+tag = "Тег {{name}}"
+tagTree = "Дерево тегів"
+textPiece = "Фрагмент тексту"
+translatedMetadata = "Запис метаданих із перекладами"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (продовження)"
+footer = "Перевірено за допомогою Stirling PDF"
+page = "Сторінка {{n}}"
+title = "Звіт про доступність"
+
+[checkAccessibility.result]
+fail = "Не пройдено"
+failSummary = "Скрінрідери можуть не прочитати весь цей документ."
+partial = "Частково"
+partialSummary = "Скрінрідери можуть читати цей документ, але деякі перевірки не пройдено."
+pass = "Успішно"
+passSummary = "Пройдено всі автоматичні перевірки PDF/UA."
+
+[checkAccessibility.rules]
+annotationLanguage = "Текст коментаря або посилання не має заданої мови, тож скрінрідери не знають, якою мовою його читати. Щоб виправити, задайте мову документа."
+annotationNoDescription = "Коментар, посилання або малюнок не мають текстового опису, тож скрінрідерам нічого озвучувати."
+annotationNotTagged = "Коментар або малюнок не позначено як анотацію, тож скрінрідери не можуть дістатися до нього в порядку читання."
+artifactInsideTagged = "Щось, позначене як оформлення, розміщено всередині розміченого вмісту, тому його і читають, і пропускають."
+bookmarkLanguage = "Закладки не мають заданої мови, тож скрінрідери не знають, якою мовою їх читати. Щоб виправити, задайте мову документа."
+conformancePrefix = "Декларація PDF/UA в метаданих має неправильний префікс, тож PDF‑читачі можуть її не розпізнати."
+contentLanguage = "Текст не має заданої мови, тож скрінрідери не знають, якою мовою його читати. Щоб виправити, задайте мову документа."
+customTagNotMapped = "Тег використовує нестандартну назву, не пов’язану зі стандартним тегом, тож скрінрідери не знають, що це."
+figureNoAlt = "Зображення позначено як ілюстрацію, але без опису, тож користувачі скрінрідерів не знатимуть, що воно показує."
+fontMissingGlyphs = "У включеному шрифті бракує деяких символів, які використовує документ."
+fontNotEmbedded = "Шрифт не включено до файлу, тому текст може виглядати або озвучуватися інакше на іншому комп’ютері."
+formFieldNotTagged = "Поле форми не позначено як частину форми, тож скрінрідери можуть його не знайти."
+genericHeading = "Заголовок використовує тег H без рівня. PDF/UA‑2 потребує H1–H6, щоб користувачі скрінрідерів розуміли вкладеність заголовків."
+glyphWidths = "Ширини символів шрифту у файлі не відповідають самому шрифту, тож інтервали в тексті можуть бути неправильними."
+headingSkipped = "Рівні заголовків пропускають крок, наприклад, із Заголовка 1 одразу до Заголовка 3, що ускладнює навігацію між заголовками."
+linkNoDescription = "Посилання не має опису, тож скрінрідери можуть озвучити лише адресу або нічого."
+linkNotTagged = "Посилання не позначено як посилання, тож скрінрідери не оголосять його як таке."
+metadataLanguage = "Метадані, зокрема заголовок, не мають заданої мови, тож скрінрідери не знають, якою мовою їх читати. Щоб виправити, задайте мову документа."
+noConformanceClaim = "Файл не заявляє відповідність PDF/UA. У метаданих потрібен запис ідентифікації PDF/UA."
+noDocumentTag = "Теги мають починатися з єдиного тега Document угорі, з усім іншим усередині нього."
+noLanguage = "Документ не вказує, якою мовою він написаний, тож скрінрідери можуть читати його неправильною мовою."
+noMetadataStream = "Файл не має метаданих XMP, де PDF/UA зберігає заголовок документа та відомості про відповідність."
+noTags = "Файл зовсім не має тегів, тож скрінрідери не можуть розрізняти заголовки, абзаци, списки чи таблиці або читати їх у правильному порядку."
+notdefGlyph = "Текст використовує заповнювач «відсутній символ», який відображається як порожнє місце або рамка і не може бути озвучений."
+noteTag = "Файл використовує тег Note, який у PDF/UA‑2 замінено на FENote для виносок і приміток наприкінці."
+noTitle = "Документ не має заголовка в метаданих."
+notMarkedTagged = "Файл не позначено як розмічений, тож допоміжні технології можуть ігнорувати наявні теги."
+notPdf2Tags = "PDF/UA‑2 потребує тегів, які використовує файл PDF 2.0. Ці виглядають як теги PDF 1.7, що зазвичай означає розмітку для PDF/UA‑1."
+noUnicode = "Деякі символи не можна перетворити на читабельний текст, тож скрінрідери та копіювання можуть відтворювати їх неправильно."
+replacementTextLanguage = "Деякий замінний текст не має заданої мови, тож скрінрідери не знають, якою мовою його читати. Щоб виправити, задайте мову документа."
+standardTagRemapped = "Стандартний тег пов’язано з нестандартним, тож скрінрідери втрачають його значення."
+symbolicEncoding = "Символьний шрифт має кодування, якого не повинен мати, тож символи можуть відображатися як неправильні літери."
+tabOrder = "На сторінці з посиланнями або коментарями порядок переходу за вкладками не відповідає документу, тож користувачі клавіатури можуть стрибати по сторінці."
+taggedInsideArtifact = "Розмічений вміст розміщено всередині елемента, позначеного як оформлення, тож скрінрідери можуть його пропускати."
+titleNotDisplayed = "PDF‑читачі показуватимуть ім’я файлу замість заголовка документа. Необхідно ввімкнути параметр «display document title»."
+untaggedContent = "Щось на сторінці не позначено як вміст і не позначено як оформлення, тож скрінрідери не знають, чи потрібно це читати. Часто це фонове зображення, колонтитул або номер сторінки."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Немає мови для коментарів або посилань"
+annotationNoDescription = "Коментар, посилання або малюнок без опису"
+annotationNotTagged = "Коментар або малюнок без тега"
+artifactInsideTagged = "Оформлення всередині розміченого вмісту"
+bookmarkLanguage = "Немає мови для закладок"
+conformancePrefix = "Некоректно записана декларація PDF/UA"
+contentLanguage = "Немає мови для тексту"
+customTagNotMapped = "Користувацький тег без стандартного значення"
+figureNoAlt = "Зображення без опису"
+fontMissingGlyphs = "У шрифті бракує символів"
+fontNotEmbedded = "Шрифт не вбудовано"
+formFieldNotTagged = "Поле форми без тега"
+genericHeading = "Заголовок без рівня"
+glyphWidths = "Ширини символів шрифту не збігаються"
+headingSkipped = "Пропущено рівень заголовка"
+linkNoDescription = "Посилання без опису"
+linkNotTagged = "Посилання без тега"
+metadataLanguage = "Немає мови для метаданих"
+noConformanceClaim = "Не декларує PDF/UA"
+noDocumentTag = "Теги не починаються з тега Document"
+noLanguage = "Немає мови документа"
+noMetadataStream = "Немає метаданих XMP"
+noTags = "Немає тегів"
+notdefGlyph = "Використано заповнювач відсутнього символу"
+noteTag = "Використовує тег Note"
+noTitle = "Немає заголовка документа"
+notMarkedTagged = "Не позначено як розмічений"
+notPdf2Tags = "Теги не є тегами PDF 2.0"
+noUnicode = "Символи, які не читаються як текст"
+replacementTextLanguage = "Немає мови для замінного тексту"
+standardTagRemapped = "Стандартний тег перетворено на користувацький"
+symbolicEncoding = "Символьний шрифт має неправильне кодування"
+tabOrder = "Порядок вкладок не відповідає документу"
+taggedInsideArtifact = "Розмічений вміст приховано як оформлення"
+titleNotDisplayed = "Заголовок не показується при відкритті"
+untaggedContent = "Вміст без тегів"
+
+[checkAccessibility.score]
+issues_one = "{{count}} проблема"
+issues_other = "{{count}} проблем"
+noIssues = "Проблем не знайдено"
+subtitle_one = "{{profile}} — {{count}} сторінка"
+subtitle_other = "{{profile}} — {{count}} сторінок"
+
+[checkAccessibility.sections]
+breakdown = "Деталізація"
+
+[checkAccessibility.status]
+checking = "Перевіряємо {{current}} із {{total}}..."
+complete = "Перевірку завершено"
+
+[checkAccessibility.steps]
+results = "Результати"
+standard = "Стандарт"
+
+[checkAccessibility.tooltip.header]
+title = "Який стандарт перевіряти"
+
+[checkAccessibility.tooltip.ua1]
+text = "Перша версія PDF/UA, опублікована у 2012 році як ISO 14289-1, для файлів PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "Нова версія, опублікована у 2024 році як ISO 14289-2, для файлів PDF 2.0. Файл PDF 1.7, перевірений за нею, не пройде правила, що стосуються лише PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Анотація {{n}}"
+bookmarks = "Закладки"
+character = "Символ у {{font}}"
+contentItem = "Елемент вмісту {{n}}"
+drawingStep = "Крок малювання {{n}}"
+embeddedGraphic = "Вбудована графіка"
+font = "Шрифт {{name}}"
+metadata = "Метадані документа"
+page = "Сторінка {{n}}"
+piece = "Фрагмент {{n}}"
+tag = "Тег {{tag}}"
+tagTree = "Дерево тегів"
+wholeDocument = "Увесь документ"
+
+[checkAccessibility.where.properties]
+author = "Автор"
+description = "Опис"
+pdfUaPart = "Частина PDF/UA"
+title = "Заголовок"
 
 [classification.families]
 correspondence = "Листування"
@@ -3729,6 +3964,10 @@ message = "Один або обидва надані документи зана
 body = "Сукупно ці PDF перевищують 2 000 сторінок. Обробка може зайняти кілька хвилин."
 title = "Триває велике порівняння"
 
+[compare.mode]
+pixel = "Порівняння пікселів"
+text = "Порівняння тексту"
+
 [compare.no.text]
 message = "Вибрані PDF-файли не містять текстового вмісту. Будь ласка, виберіть PDF-файли з текстом для порівняння."
 
@@ -4046,6 +4285,30 @@ failed = "Не вдалося оновити ваш вхід. Спробуйте
 lead = "Цей сервер уже пов’язано з вашим обліковим записом. Оновіть свій вхід, щоб повернутися до виставлення рахунків і використання на вашому сервері."
 title = "Оновити вхід на сервер"
 
+[connectedAccounts]
+connect = "Підключити"
+connectAnother = "Підключити інший"
+connectFailed = "Обліковий запис не вдалося підключити. Переконайтеся, що реєстрацію застосунку на сервері налаштовано, потім спробуйте знову."
+disconnect = "Від'єднати"
+google = "Google Drive"
+intro = "Підключіть власні облікові записи один раз. Тоді ваші конвеєри зможуть читати з них і зберігати до них від вашого імені."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling більше не може дістатися до цього облікового запису, тому конвеєри, що його використовують, призупинено."
+none = "Ваш адміністратор не увімкнув підключені облікові записи."
+personal = "Особистий обліковий запис"
+popupBlocked = "Ваш браузер заблокував вікно входу. Дозвольте спливаючі вікна для цього сайту й спробуйте знову."
+reconnect = "Увійдіть ще раз"
+work = "Робочий обліковий запис"
+
+[connectedAccounts.disconnectConfirm]
+body = "Джерела та конвеєри, що використовують цей обліковий запис, зупиняться, доки ви не підключите його знову."
+confirm = "Від'єднати"
+title = "Від'єднати {{account}}?"
+
+[connectedAccounts.status]
+connected = "Підключено"
+needsSignIn = "Потрібен вхід"
+
 [convert]
 autoRotate = "Автоповорот"
 autoRotateDescription = "Автоматично повертати зображення для кращого розміщення на сторінці PDF"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Назва документа"
 pdfUaTitleHelp = "Показується читачем замість імені файлу. Якщо залишити порожнім, використовується перший заголовок."
 selectSourceFormatFirst = "Спочатку виберіть формат джерела"
 settings = "Налаштування"
+signInToUse = "Увійдіть, щоб скористатися"
 single = "Один"
 sourceFormatPlaceholder = "Вихідний формат"
-stirlingOfficeConvert = "Використовувати Stirling Office Convert (бета)"
-stirlingOfficeConvertDescription = "Краща й швидша конвертація з меншим використанням пам’яті. Вимкніть, щоб використовувати стандартний конвертер."
 strictMode = "Суворий режим"
 strictModeDesc = "Помилка, якщо конвертація не ідеальна (використовує перевірку VeraPDF)"
 svgPdfOptions = "Параметри SVG у PDF"
@@ -4134,8 +4396,6 @@ webOptions = "Параметри перетворення Web у PDF"
 zoomLevel = "Рівень масштабування"
 
 [convert.ebookOptions]
-embedAllFonts = "Вбудувати всі шрифти"
-embedAllFontsDesc = "Вбудувати всі шрифти з електронної книги до створеного PDF"
 includePageNumbers = "Додати номери сторінок"
 includePageNumbersDesc = "Додати номери сторінок до створеного PDF"
 includeTableOfContents = "Додати зміст"
@@ -4648,6 +4908,17 @@ title = "Налаштування"
 [extractPages.tooltip]
 description = "Витягує вибрані сторінки в новий PDF, зберігаючи порядок."
 
+[feedback.page]
+open = "Надіслати відгук"
+sendMore = "Надіслати ще відгук"
+sent = "Дякуємо за відгук"
+title = "Допоможіть покращити Stirling"
+unavailable = "Відгук недоступний"
+
+[feedback.tag]
+dismiss = "Сховати кнопку відгуку"
+label = "Відгук"
+
 [fileCard]
 openInFileEditor = "Відкрити в редакторі файлів"
 viewInViewer = "Переглянути у переглядачі"
@@ -4657,7 +4928,6 @@ closeFile = "Закрити файл"
 
 [fileEditor]
 closedFile = "Закрито {{name}}"
-couldNotSave = "Не вдалося зберегти {{name}}"
 filesReordered_one = "Файл перевпорядковано"
 filesReordered_other = "{{count}} файлів перевпорядковано"
 loadedFromStorage_one = "Завантажено {{count}} файл зі сховища"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "Бібліотека PDF"
 myFiles = "Бібліотека файлів"
 noFiles = "Файлів ще немає"
+oneDrive = "Відкрити з OneDrive"
+oneDriveFailed = "Не вдалося відкрити OneDrive"
 openFileManager = "Переглянути всі файли й папки"
 openFromComputer = "Відкрити з комп’ютера"
 openSettings = "Відкрити налаштування"
@@ -4804,6 +5076,17 @@ searchFiles = "Пошук файлів"
 uploadFailedBody = "Не вдалося додати вибрані файли."
 uploadFailedTitle = "Завантаження не вдалося"
 viewAll = "Переглянути всі файли ({{count}})"
+
+[fileSidebar.clearRecents]
+body_one = "Очистити 1 файл із нещодавніх? Це неможливо скасувати."
+body_other = "Очистити {{count}} файлів із нещодавніх? Це неможливо скасувати."
+button = "Очистити нещодавні"
+confirm = "Очистити нещодавні"
+error = "Не вдалося очистити. Спробуйте ще раз."
+openNote_one = "1 із них відкрито в робочій області."
+openNote_other = "{{count}} із них відкрито в робочій області."
+skipOpen = "Пропустити відкриті файли"
+title = "Очистити нещодавні?"
 
 [fileSidebar.fileItem]
 closeViewer = "Закрити переглядач"
@@ -5124,6 +5407,7 @@ diskFileHint = "Зберігається на вашому комп’ютері
 diskHint = "Файл у змонтованій папці на вашому диску"
 local = "Локальні"
 localHint = "Без резервного копіювання"
+oneDrive = "OneDrive"
 shared = "Спільний доступ"
 sharedHint = "Надано вам за посиланням"
 
@@ -5672,6 +5956,11 @@ title = "Змінити метадані"
 desc = "Змінити обмеження та дозволи документа"
 tags = "дозволи,обмеження,права,контроль доступу,дозволити,заборонити,друк,копіювання,редагування,змінити дозволи,налаштування безпеки,права користувача"
 title = "Змінити дозволи"
+
+[home.checkAccessibility]
+desc = "Оцініть PDF за PDF/UA і подивіться, що блокує скрінрідери, без змінення файлу"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Перевірити доступність PDF"
 
 [home.classify]
 desc = "Визначте, що це за документ, і позначте його тегом."
@@ -6521,6 +6810,32 @@ quickAccess = "Почніть із панелі <strong>Швидкий дост�
 topBar = "Верхня панель дозволяє перемикатися між <strong>Переглядачем</strong>, <strong>Редактором сторінок</strong> та <strong>Активними файлами</strong>."
 wrapUp = "Ось що нового у V2. Відкривайте меню <strong>Тури</strong> будь-коли, щоб переглянути це знову, тур інструментами або тур для адміністратора."
 
+[oneDriveSave]
+chooseFolder = "Виберіть папку OneDrive для завантаження"
+conflict = "Цей файл змінився в OneDrive після відкриття або збереження цієї версії. Збережіть вашу версію як копію."
+failedTitle = "Не вдалося зберегти до OneDrive"
+fromOneDrive = "З OneDrive"
+linkNotStored = "Цей браузер не зміг запам’ятати посилання на файл OneDrive. Після перезавантаження збережіть як копію."
+missing = "Цей файл переміщено або видалено в OneDrive. Збережіть вашу версію як копію."
+open = "Відкрити в OneDrive"
+personalUnsupported = "Для завантаження до OneDrive потрібен робочий або навчальний обліковий запис Microsoft."
+reconnect = "Підключитися знову"
+replaces = "Замінює {{name}}"
+saveCopyToOneDrive = "Зберегти копію в OneDrive"
+saved = "Збережено до OneDrive"
+saving = "Збереження до OneDrive..."
+signInToSave = "Увійдіть на свій сервер, щоб зберігати до OneDrive."
+updateOriginal = "Оновити в OneDrive"
+uploadToOneDrive = "Завантажити до OneDrive..."
+
+[oneDriveSave.status]
+saved = "Збережено до OneDrive"
+unsaved = "Зміни ще не збережені до OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "Оновити {{name}} в OneDrive"
+saveAll = "Оновити усе в OneDrive"
+
 [overlay-pdfs]
 desc = "Накладіть один PDF поверх іншого"
 submit = "Надіслати"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Скидання завтра"
 thisPeriod = "Цей billing period"
 
 [payment]
+annually = "Щороку"
 billingPeriod = "Платіжний період"
 cancelTeamChange = "Зберегти поточний план"
 canCloseWindow = "Можете закрити це вікно."
@@ -7157,11 +7473,14 @@ title = "Налаштувати план Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe покаже точну суму, будь-які пропорційні перерахунки та дату наступного платежу перед підтвердженням. Якщо доступний збережений спосіб оплати, його буде використано."
+billingLabel = "Білінг"
 continue = "Перейти до оплати"
 currencyAtCheckout = "Stripe підтверджує остаточну суму та валюту платежу під час оформлення."
+custom = "Користувацьке"
 customLabel = "Кількість користувачів"
 dueToday = "До сплати сьогодні"
 enterpriseQuote = "Отримати корпоративну пропозицію"
+enterUsers = "Введіть кількість користувачів."
 estimatedTotal = "Орієнтовна сума"
 lineItem = "Team · {{price}}{{period}} за {{block}} користувачів"
 minimumForCurrentUsers = "У вас {{users}} користувачів, тому план має покривати щонайменше {{minimum}}."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Наявні облікові записи залиш
 overCapacityTitle = "На вашому сервері більше користувачів, ніж покриває ваш план"
 perMonth = "/міс."
 perYear = "/рік"
+planName = "Stirling Team"
 reductionNote = "Менша місткість почнеться з наступного поновлення. До того часу ви можете використовувати поточний ліміт. Наявні користувачі залишаються; нові користувачі блокуються, якщо на момент набуття чинності зміни ви перевищуєте місткість."
 renewalNote = "Поновлюється за {{total}}{{period}}. Скасувати можна будь-коли в Usage & Billing."
 reviewChange = "Переглянути зміну в Stripe"
-roundsTo = "округлюється до {{users}}"
+roundsUp = "Округлюється до {{users}} користувачів."
+selfServeLimit = "До {{users}} користувачів тут."
 subheading = "Покриває всіх, кого ви запрошуєте, блоками по {{users}} користувачів."
 subheadingAdd = "Сьогодні ваш план покриває {{current}} користувачів. Виберіть нову загальну кількість."
+talkToEnterprise = "Для більшої кількості поговоріть з нами про Enterprise."
+usersCovered = "охоплених користувачів"
 usersLabel = "Користувачі"
 userTotal = "{{users}} користувачів"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Застосувати зміни до файлу у вашій �
 tags = "редагувати текст,змінити текст,змінити текст,редагувати вміст,оновити текст,переписати,виправити,уточнити,виправлення,переглянути,редактор тексту,редактор вмісту"
 title = "Редактор тексту PDF"
 unsaved = "(не збережено)"
-workbenchLabel = "Редактор"
 
 [pdfTextEditor.annotations]
 freetext = "Текст анотації — не текст сторінки, тому його не можна редагувати тут"
@@ -7261,12 +7583,18 @@ widget = "Поле форми — не текст сторінки, тому й�
 
 [pdfTextEditor.commands]
 edit = "Редагувати"
+markTagged = "Позначити як повністю розмічений"
+matchScanFont = "Зіставити сканований текст із {{face}}"
 mergeRuns_one = "Об’єднати {{count}} фрагмент в абзац"
 mergeRuns_other = "Об’єднати {{count}} фрагментів в абзац"
 setColour = "Установити колір для {{run}}"
 setOutline = "Установити контур для {{run}}"
+tagFormField = "Позначити поле форми"
+tagLink = "Позначити посилання"
+tagPageContent = "Автоматично розмітити сторінку"
 typeInto = "Ввести в {{run}}"
 ungroupParagraph = "Розгрупувати абзац {{run}}"
+unmarkTagged = "Позначити як не повністю розмічений"
 wrap = "Перенести {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Відкинути й відкрити"
 hint = "Скасуйте, а потім натисніть Зберегти PDF, щоб спочатку зберегти їх у вашій робочій області."
 title = "Відкинути незбережені зміни?"
 
-[pdfTextEditor.drop]
-hint = "Файли, відпущені на область редактора, замінять будь-який відкритий документ."
-title = "Перетягніть PDF, щоб відкрити"
-
 [pdfTextEditor.error]
 decodeImage = "Не вдалося декодувати вибране зображення."
+duplicateDropsLetters = "Не вдається дублювати цей текст: жоден доступний шрифт не відображає всі його літери."
+formLiftChangesDrawing = "Не можна редагувати: це намальовано як частина групи, для якої під час зміни редактор не може зберегти обрізання або графічні параметри."
 insertImage = "Не вдалося вставити вибране зображення."
+needsShaping = "Редактор поки не може коректно відтворювати з’єднані літери та голосні знаки цього письма, тому зміну не виконано."
+replaceClippedImage = "Не можна замінити це зображення: воно обрізане, і заміна покаже частини, які приховує обрізання."
+scanOffInk = "Не можна редагувати цей текст: розпізнані слова не збігаються зі сканом. Запустіть OCR ще раз."
+unsafeRtlEdit = "Неможливо внести цю зміну: редактор не може перемалювати текст цього рядка справа-наліво без змін."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG зображення"
@@ -7304,15 +7634,42 @@ wholeWord = "Ціле слово"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Вбудовані шрифти"
+closestMatch = "Цьому шрифту бракує деяких вибраних літер, тому їх відображено найближчим відповідним шрифтом."
 deviceFontsNone = "Додаткові шрифти пристрою не знайдено."
 deviceFontsUnavailable = "Шрифти пристрою недоступні. Вбудовані шрифти все ще працюють."
 deviceGroup = "Шрифти пристрою"
+documentFontCannotDraw = "Редактор не може відобразити цей текст у власному шрифті документа, тож його залишено в поточному шрифті."
 documentGroup = "Шрифт документа"
+embeddingForbidden = "Ліцензія цього шрифту не дозволяє вбудовувати його в PDF. Текст залишено без змін."
+embedFailed = "Не вдалося вбудувати цей шрифт у PDF. Текст залишено без змін."
+includedGroup = "Включені шрифти"
 label = "Сімейство шрифтів"
+matchedGroup = "Відповідний шрифт"
+missingGlyphs = "Цьому шрифту бракує деяких вибраних символів, і їх не вдалося зберегти в поточному шрифті. Текст залишено без змін."
 mixed = "Змішано"
+needsShaping = "Редактор поки не може коректно перемальовувати з’єднані літери та голосні знаки цього письма, тож той текст залишено в поточному шрифті."
+noGlyphs = "У цьому шрифті немає символів для вибраного тексту. Текст залишено без змін."
 noMatch = "Немає відповідного шрифту"
+partOfRunUnsupported = "Цей текст можна переформатувати лише повністю. Виберіть блок замість окремих слів."
 placeholder = "Сімейство шрифтів"
+scannedText = "Сканований текст"
+serverFontFailed = "Не вдалося завантажити цей серверний шрифт. Текст залишено без змін."
+serverGroup = "Серверні шрифти"
+someLeftUnchanged = "Цей шрифт не має символів для частини вибраного тексту. Цей текст залишено без змін."
+styleSkipped = "Деяка частина вибраного тексту не має версії свого шрифту в цьому стилі, тому її залишено без змін."
+styleUnavailable = "Вибраний текст не має версії свого шрифту в цьому стилі, тому його залишено без змін."
 useDeviceFonts = "Використовувати шрифти пристрою"
+weight = "Товщина шрифту"
+weightBlack = "Наджирний"
+weightBold = "Жирний"
+weightExtraBold = "Дуже жирний"
+weightExtraLight = "Надлегкий"
+weightLight = "Легкий"
+weightMedium = "Середній"
+weightNumber = "Товщина {{weight}}"
+weightRegular = "Звичайний"
+weightSemibold = "Напівжирний"
+weightThin = "Тонкий"
 
 [pdfTextEditor.fonts]
 allPresent = "Усі літери й цифри наявні"
@@ -7357,6 +7714,7 @@ helpDesc = "Ця довідка"
 saveDesc = "Зберегти у вашу робочу область"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Жирний / Курсив для вибраних слів або всього блока"
 deleteDesc = "Видалити вибране"
 duplicateDesc = "Дублювати вибране"
 groupDesc = "Згрупувати вибрані фрагменти в один абзац"
@@ -7380,8 +7738,12 @@ zoomDesc = "Збільшити / зменшити масштаб"
 
 [pdfTextEditor.inspector]
 document = "Документ"
+fontCompletedClosest = "Вбудований шрифт · відсутні символи відтворюються у {{name}}, найближчому доступному збігу."
+fontCompletedOriginal = "Вбудований шрифт · відсутні символи відтворюються у {{name}}, тому самому шрифті."
 fontEmbedded = "Вбудований шрифт · символ, якого в ньому немає, замінюється Helvetica."
 fontGap = "{{name}} · відсутні {{glyphs}} — під час введення вони замінюються Helvetica."
+fontUnknownCoverage = "{{name}} · відсутній символ замінюється на {{fallback}}."
+formField = "Поле форми"
 geometry = "Позиція та розмір"
 height = "Висота"
 heightHint = "Висота текстового поля відповідає розміру шрифту та кількості рядків."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR недоступний на цьому сервері."
 oneImage = "Зображення"
 oneShape = "Фігура"
 oneText = "Текст"
+outlinedTextHint_one = "Текст цієї сторінки намальовано як фігури, тому редагувати нічого. Спершу запустіть OCR, щоб його можна було редагувати."
+outlinedTextHint_other = "{{count}} сторінок мають свій текст, намальований як фігури, тому редагувати нічого. Спершу запустіть OCR, щоб зробити його придатним до редагування."
 pages = "Сторінки"
 runOcr = "Запустити OCR"
 scanHint_one = "Ця сторінка є сканованим зображенням без тексту для редагування. Спочатку запустіть OCR, щоб зробити її текст доступним для редагування."
 scanHint_other = "{{count}} сторінок є сканованими зображеннями без тексту для редагування. Спочатку запустіть OCR, щоб зробити їхній текст доступним для редагування."
 scannedText = "Сканований текст · змінені слова закриваються та перемальовуються відповідним шрифтом."
+scannedTextMisaligned = "Сканований текст · розпізнані слова не збігаються зі сканом, тому цей блок не можна редагувати або видаляти."
+scannedTextNoFont = "Сканований текст · набрані слова цією писемністю ще не можна відобразити, тому їх не зберігають. Видалення слів працює."
+scannedTextOffInk = "Сканований текст · розпізнані слова зміщені відносно відсканованих, тому цей блок не можна редагувати. Запустіть OCR ще раз."
 tabDocument = "Документ"
 tabSelected = "Вибране"
 textBoxes = "Текстові поля"
+unreadPagesHint = "{{count}} сторінок не мають тексту для редагування: частина — це скановані зображення, а частина — малює свій текст як фігури. Спершу запустіть OCR, щоб зробити їх придатними до редагування."
 width = "Ширина"
 widthHint = "Текст переноситься відповідно до ширини."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Додати тег"
+applyToOtherPages_one = "Застосувати до {{count}} іншої сторінки"
+applyToOtherPages_other = "Застосувати до {{count}} інших сторінок"
+artifactGroup = "Пропускається скрінрідерами"
 artifactText = "Декоративне"
 cannotChange = "Доступність цього зображення не можна змінити."
+cannotDescribeFormField = "Опис цього поля форми не можна змінити."
+cannotDescribeLink = "Опис цього посилання не можна змінити."
 cannotRetag = "Тег цього тексту не можна змінити."
+cannotSetDecorative = "Це не можна позначити або зняти позначку як декоративне."
+cannotTagFormField = "Це поле форми не можна позначити."
+cannotTagLink = "Це посилання не можна тегувати."
+cannotTagPage = "Вміст цієї сторінки не можна тегувати."
+contentGroup = "Вміст"
 customTag = "{{role}} (користувацький тег)"
 decorativeInfo = "Програми зчитування з екрана пропускають декоративні зображення. Використовуйте це для рамок, фонів та інших зображень, які не несуть інформації."
 decorativeLabel = "Декоративне зображення"
 description = "Опис зображення"
 descriptionInfo = "Програми зчитування з екрана читають це замість зображення."
 encrypted = "Теги не можна редагувати в зашифрованому файлі"
+figureDescription = "Опис рисунка"
+figureDescriptionInfo = "Зчитувачі екрана зачитують це замість рисунка."
+formFieldDescription = "Опис поля"
+formulaDescription = "Опис формули"
+formulaDescriptionInfo = "Зчитувачі екрана зачитують це замість формули. Опишіть так, як сказали б уголос, наприклад: «ікс у квадраті плюс один»."
 heading = "Доступність"
 innerTagLabel = "Тег {{number}}"
 innerTags = "Теги в цьому тексті"
+linkDescription = "Опис посилання"
+markedTagged = "Документ повністю розмічений"
+markedTaggedHint = "Каже PDF‑читачам використовувати теги доступності. Позначте, коли все розмічено."
+markedWithUntagged = "Деякий вміст не має тегів, тож скрінрідери можуть його пропускати."
 missingDescriptions = "Відсутні описи"
 mixedContent = "Рисунок містить інший вміст"
+mixedTags = "Змішано"
 needsDescriptionBadge = "Немає опису"
-nextImage = "Наступне зображення"
+nextToReview = "Наступне для перевірки"
 notFigure = "Позначено тегом як частину тексту"
 removeTag = "Видалити тег"
 saveFailed = "Не вдалося зберегти зміни доступності, тому файл не було збережено. Скасуйте їх і спробуйте ще раз."
 selectedText = "Вибраний текст"
+tagFormField = "Позначити поле форми"
+tagging = "Розмітка сторінок"
 tagLabel = "Тег"
+tagLinks_one = "Позначити посилання"
+tagLinks_other = "Позначити {{count}} посилань"
+tagUntagged = "Автоматично розмітити документ"
+tagUntaggedHint = "Автоматично додає теги доступності по всьому документу. Результат приблизний: перевірте заголовки, списки та порядок читання після цього."
 unknownTag = "Не можна прочитати тут"
+unmarkedWithTags = "Деякі переглядачі PDF однаково використовуватимуть теги й можуть пропускати вміст без них."
 unreadable = "Теги цього файлу не можна редагувати"
 untaggableImages = "Тут не можна додати теги"
 untaggedBadge = "Без тегу"
 untaggedDocument = "Документ не має тегів"
 untaggedImage = "Тут не можна додати тег"
 untaggedImages = "Зображення без тегів"
+untaggedPages = "Сторінки для розмітки"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Нижній колонтитул"
+header = "Верхній колонтитул"
+pageNumber = "Номер сторінки"
+watermark = "Водяний знак"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Заголовок без тексту"
@@ -7505,6 +7907,23 @@ tableHeader = "Заголовок таблиці"
 tableRow = "Рядок таблиці"
 title = "Назва"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Усі мови"
+cannotSetDocument = "Мову цього документа не можна змінити."
+cannotSetText = "Мову цього тексту не можна змінити."
+documentHint = "Мова, яку використовують скрінрідери, якщо частина тексту не задає власну."
+documentLabel = "Мова"
+documentLocked = "Мову зашифрованого документа тут не можна змінити."
+inDocument = "У цьому документі"
+innerLabel = "Мова тега {{number}}"
+label = "Мова"
+missing = "Мову не задано. Скрінрідери здогадуватимуться й можуть читати весь документ неправильним голосом."
+mixed = "Змішано"
+noMatch = "Немає відповідної мови. Введіть її код, наприклад mt або en-IE."
+placeholder = "Виберіть мову"
+selectedText = "Мова вибраного тексту"
+textHint = "Скрінрідери перемикають голос і вимову на цю мову."
+
 [pdfTextEditor.mobile]
 actions = "Дії редактора"
 addImage = "Зображення"
@@ -7517,7 +7936,6 @@ done = "Готово"
 download = "Зберегти й завантажити"
 find = "Знайти"
 lock = "Заблокувати"
-openPdf = "Відкрити PDF"
 panelHint = "Редагування відбувається в поданні Workspace. Торкніться тексту на сторінці, щоб змінити його."
 save = "Зберегти"
 style = "Стиль"
@@ -7525,7 +7943,6 @@ tapToPlace = "Торкніться сторінки, де має бути тек
 unlock = "Розблокувати"
 
 [pdfTextEditor.pageView]
-pageNumber = "Сторінка {{page}}"
 renderFailed = "Не вдалося відобразити сторінку"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Вертикальна лінійка"
 
 [pdfTextEditor.run]
 lockedTitle = "Заблоковано — використайте кнопку Розблокувати для редагування"
+readOnlyOrderTitle = "Текст цього рядка не можна редагувати: він поєднує текст справа-наліво та зліва-направо в порядку, який редактор не може безпечно перемалювати"
+resizeHandle = "Перетягніть, щоб змінити ширину; текст перенесеться"
 
 [pdfTextEditor.saveRisk]
 cancel = "Скасувати"
@@ -7548,6 +7967,35 @@ intro = "Збереження відредагованої копії зміню
 note = "Ваші редагування збережено. Перелічені вище зміни неминучі під час збереження відредагованої копії."
 saveAnyway = "Все одно зберегти"
 title = "Збереження змінить цей PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "Приблизний збіг"
+approximateHint = "Найближчий знайдений шрифт може не збігатися зі сканом."
+change = "Шрифт виглядає не так?"
+choose = "Виберіть шрифт"
+chooseMissing = "Виберіть шрифт для цього тексту…"
+compare = "Порівняти шрифти…"
+deviceAllow = "Дозвольте доступ до шрифтів для кращого добору"
+deviceBlocked = "Ваш браузер більше не питатиме. Щоб дозволити, натисніть значок ліворуч від адресного рядка, увімкніть Fonts, потім спробуйте знову."
+deviceBlockedTitle = "Доступ до шрифтів заблоковано"
+deviceNone = "Жоден зі звичних шрифтів документа не встановлений на цьому комп’ютері."
+deviceNote = "Ваш браузер спочатку запитає. Шрифти залишаються на цьому пристрої."
+deviceOn_one = "Також порівняно з {{count}} шрифтом на цьому комп’ютері."
+deviceOn_other = "Також порівняно з {{count}} шрифтами на цьому комп’ютері."
+deviceReading = "Зчитування шрифтів на цьому комп’ютері…"
+deviceRetry = "Спробувати ще раз"
+done = "Готово"
+hint = "Ваше введення відтворюється найближчим знайденим шрифтом. Виберіть інший, якщо він більше схожий на скан."
+hintFromScan = "Ваше введення складено з літер, знайдених у скані. Виберіть шрифт, щоб намалювати його цим шрифтом натомість."
+hintOthers = "Ваш вибір також застосовується до сканованого тексту, який ви ще не редагували."
+matching = "Добираємо шрифти…"
+noFont = "Жоден з доступних шрифтів не може відтворити цю писемність, тож набраний текст поки не можна перемалювати."
+scan = "Оригінальний скан"
+scanAlt = "Відсканований рядок"
+scanNote = "Скан часто виглядає розмитішим або жирнішим, ніж реальний шрифт. Порівнюйте форми літер, а не товщину."
+score = "{{match}}% схожості"
+title = "Підібрати шрифт скану"
+unmeasurable = "Цей скан надто блідий або малий, щоб підібрати шрифт."
 
 [pdfTextEditor.settings]
 advanced = "Додатково"
@@ -7564,7 +8012,6 @@ addTable = "Додати таблицю"
 addText = "Додати текст"
 clickPageToAddTable = "Клацніть сторінку, щоб додати таблицю"
 clickPageToAddText = "Натисніть сторінку, щоб додати текст"
-document = "Документ"
 group = "Згрупувати"
 groupingAuto = "Авто"
 groupingAutoHint = "Групує рівновіддалені рядки в абзаци. Зміна цього повторно читає документ і очищає історію скасувань."
@@ -7593,23 +8040,17 @@ auto = "Автоматично"
 enable = "Перевіряти правопис під час введення"
 language = "Мова словника"
 
-[pdfTextEditor.stage]
-loadingDocument = "Завантаження документа"
-loadingProgress = "Хід завантаження"
-noDocument = "Документ не завантажено."
-pickPrompt = "Виберіть PDF на панелі Файли ліворуч, щоб почати редагування."
-renderingPreview = "Візуалізація попереднього перегляду"
-
 [pdfTextEditor.table]
 addColumn = "Додати стовпець"
 addRow = "Додати рядок"
+cellNoGlyphs = "Цей текст містить символи, які шрифти таблиці не можуть відобразити. Змініть або приберіть їх, щоб заповнити комірку."
 column = "Стовп."
 deleteColumn = "Видалити стовпець"
 deleteRow = "Видалити рядок"
 done = "Готово"
 doneHint = "Припинити редагувати це як таблицю"
-edit = "Редагувати"
 editHint = "Редагувати як таблицю — вводьте в клітинках, додавайте або видаляйте рядки та стовпці"
+editTable = "Редагувати таблицю"
 move = "Перемістити"
 moveTable = "Перетягніть, щоб перемістити всю таблицю"
 recognizedHint = "Розпізнана таблиця — клацніть, щоб вибрати весь її текст"
@@ -7630,6 +8071,9 @@ alignMiddle = "Вирівняти посередині"
 alignRight = "Вирівняти праворуч"
 alignTop = "Вирівняти за верхом"
 arrange = "Упорядкувати"
+bold = "Жирний"
+boldOnly = "Цей шрифт має лише жирний варіант"
+boldUnavailable = "У цього шрифту немає жирного варіанта"
 bringForward = "Перемістити вперед"
 bringToFront = "На передній план"
 caseLower = "нижній регістр"
@@ -7650,10 +8094,12 @@ fontColour = "Колір шрифту"
 fontSize = "Розмір шрифту"
 formatting = "Форматування тексту"
 italic = "Курсив"
+italicOnly = "Цей шрифт має лише курсивний варіант"
 italicUnavailable = "Цей шрифт не має курсивної версії. Завантажте шрифти пристрою або виберіть інше сімейство шрифтів."
 lock = "Заблокувати вибір"
 lockTooltip = "Заблокувати вибір — запобігає випадковим редагуванням"
 more = "Більше дій"
+noBoldItalic = "У цього шрифту немає варіанта «жирний курсив»"
 order = "Порядок"
 outlineColour = "Колір контуру"
 outlineWidth = "Ширина контуру (0 = немає)"
@@ -7683,13 +8129,6 @@ title = "Відмінності попереднього перегляду"
 [pdfTextEditor.tooltip.textFocus]
 text = "Це робоче середовище зосереджене на редагуванні тексту та переміщенні вбудованих зображень. Складні графічні елементи сторінок, віджети форм і багатошарова графіка зберігаються для експорту, але тут повністю не редагуються."
 title = "Фокус на тексті та зображеннях"
-
-[pdfTextEditor.zoom]
-fit = "Припасувати"
-fitToWidth = "Припасувати до ширини"
-in = "Збільшити масштаб"
-out = "Зменшити масштаб"
-reset = "Скинути масштаб до 100%"
 
 [PDFToCSV]
 header = "PDF в CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Запускається під час імпорту"
 [policies.enforcement]
 applying = "Застосовуємо {{names}}"
 applyingProgress = "Застосовуємо {{names}} ({{done}} з {{total}})"
-exportFailureBody = "Не вдалося застосувати політики безпеки. Файли експортовано як є."
-exportFailureTitle = "Експорт без застосування"
 failureBody = "Деякі політики не вдалося застосувати до {{failures}} з {{total}} файлів."
 failureTitle = "Експорт без повного застосування"
 printPolicyAppliedBody = "Цей PDF оновлено відповідно до політики. Перегляньте зміни, потім надрукуйте ще раз."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Публікуйте повідомлення в просторі Google Chat, коли політика запускається."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Обліковий запис служби, що читає й записує Google Drive для організації."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Вставте JSON‑ключ облікового запису служби з Google Cloud. Його буде зашифровано і більше не показуватиметься."
+label = "Ключ облікового запису служби (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Необов’язково. За делегування на рівні домену — користувач, чий Drive використовується (виділений бот‑користувач продовжує працювати, коли люди йдуть). Порожньо — лише спільні диски та папки, спільні з обліковим записом служби."
+label = "Діяти як користувач"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Прикріплюйте оброблені документи до issue Jira."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Надсилайте документ або сповіщення Email, коли політика запускається."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Потрібні дозволи Microsoft Graph на рівні застосунку зі згодою адміністратора."
+label = "Ідентифікатор застосунку (client ID)"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Секрет клієнта"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Ідентифікатор каталогу (тенанта)"
+placeholder = "contoso.onmicrosoft.com або GUID тенанта"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Пароль застосунку"
+
+[portal.connections.types.onedrive]
+description = "Читати й записувати OneDrive for Business одного користувача."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Чий OneDrive доступний цьому з’єднанню. Реєстрація застосунку потребує дозволу Files.ReadWrite.All для застосунку."
+label = "Власник OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Залиште порожнім, якщо замість цьог�
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Необов’язково. Вставте приватний ключ OpenSSH для автентифікації ключем замість пароля."
 label = "Приватний ключ"
+
+[portal.connections.types.sharepoint]
+description = "Читати й записувати бібліотеку документів сайту SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Необов’язково. Залиште порожнім для типової бібліотеки Documents сайту."
+label = "Бібліотека документів"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "URL сайту"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Публікуйте повідомлення в Slack, коли політика обробляє документ."
@@ -9142,6 +9624,126 @@ status = "Статус"
 time = "Час"
 user = "Користувач"
 
+[portal.enterprise]
+backTo = "Назад до {{stage}}"
+brandTag = "Enterprise"
+callInfo = "15‑хвилинний дзвінок. Поставте свої запитання щодо ціноутворення, розгортання чи безпеки або сплануйте розгортання разом."
+callTitle = "Поспілкуйтеся з інженером з рішень"
+deployment = "Розгортання"
+footer = "Питання щодо Stirling Enterprise?"
+home = "Перейти до Stirling"
+member = "Лідер вашої команди веде угоду Enterprise. Щойно вона почнеться, ви зможете відстежувати її прогрес тут."
+memberDeal = "Лідер вашої команди веде цю угоду. Ви можете відстежувати її прогрес тут."
+quotePanel = "Ваша пропозиція"
+signIn = "Увійти"
+signInToStart = "Увійдіть, щоб розпочати пробний період"
+stage = "Етап {{current}} із {{total}}"
+stagesLabel = "Прогрес"
+
+[portal.enterprise.landing]
+lede = "Спробуйте безкоштовно 14 днів, потім сформуйте свою пропозицію та підпишіть угоду тут. Картка не потрібна."
+tickAgreement = "Одна угода, що охоплює MSA, order form, EULA та DPA"
+tickCompliance = "SCIM, резидентність даних та SLA щодо доступності"
+tickDeploy = "Запускайте у Stirling Cloud, на власних серверах або повністю без доступу до інтернету"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Документація щодо офлайн‑ліцензії"
+point1 = "Активується ліцензійним файлом, що працює офлайн, а не ключем, який перевіряється онлайн"
+point2 = "Встановлюється як самостійно розгорнуте рішення, з образу, який ви переносите"
+point3 = "Вхід залишається всередині вашої мережі"
+tagline = "Самостійний хостинг у мережі без доступу до інтернету."
+
+[portal.enterprise.options.cloud]
+more = "Документація Stirling Cloud"
+point1 = "Ваша команда входить на stirling.com/app"
+point2 = "Працює на AWS, з файлами, зашифрованими під час зберігання"
+point3 = "Single sign‑on через вашого провайдера ідентичності потребує самостійного хостингу"
+tagline = "Хостинг для вас, нічого встановлювати."
+
+[portal.enterprise.options.selfhost]
+more = "Документація з самостійного хостингу"
+point1 = "Встановіть за допомогою Docker або чарту Helm у Kubernetes"
+point2 = "Документи обробляються на вашій інфраструктурі"
+point3 = "OAuth2, OIDC або SAML single sign‑on"
+tagline = "На ваших серверах, on‑premises або у вашій хмарі."
+
+[portal.enterprise.review]
+back = "Повернутися до {{stage}}"
+company = "Компанія"
+completed = "Завершено"
+extensions = "Використані розширення"
+paid = "Оплачено. Ваш рахунок лишається доступним тут."
+people = "Люди"
+started = "Розпочато"
+trialEnds = "Дата завершення пробного періоду"
+trialTitle = "Ваш пробний період"
+version = "Версія"
+viewInvoice = "Переглянути рахунок"
+
+[portal.enterprise.setup]
+copied = "Скопійовано"
+copy = "Копіювати"
+markDone = "Позначити «{{step}}» виконаним"
+progress = "{{done}} із {{total}} виконано"
+subtitle = "Скористайтеся пробним періодом якнайкраще, випробувавши так, як ви його запускатимете."
+subtitleLive = "Кроки, які слід завершити перед розгортанням для всіх."
+title = "Налаштування"
+titleLive = "Чеклист запуску"
+
+[portal.enterprise.setup.firstDocument]
+body = "Завантажте PDF, з яким працює ваша команда, і спробуйте інструменти, які ви використовуватимете щодня, наприклад приховування, стискання або OCR."
+title = "Обробіть ваш перший документ"
+
+[portal.enterprise.setup.getApp]
+body = "Встановіть настільний застосунок для Windows, Mac або Linux і увійдіть в обліковий запис, який щойно створили, або користуйтетеся ним прямо в браузері."
+title = "Отримайте Stirling"
+
+[portal.enterprise.setup.install]
+body = "Запустіть це на вашому сервері. Це запускає Stirling із застосованою ліцензією, і образ включає OCR та офісну конвертацію. Для більших команд використовуйте Kubernetes."
+title = "Встановіть і запустіть Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Запросіть людей, які користуватимуться ним, щоб пробний період відображав реальну роботу."
+title = "Запросіть вашу команду"
+
+[portal.enterprise.setup.licence]
+body = "Відкрийте <code>http://your-server:8080/settings/adminPlan</code>, де ваша ліцензія Enterprise має відображатися як активна. Встановили іншим способом? Додайте ключ у <code>premium.key</code> у <code>settings.yml</code> і перезавантажте."
+title = "Перевірте, що ваша ліцензія активна"
+
+[portal.enterprise.setup.links]
+browser = "Використовуйте в браузері"
+docker = "Посібник Docker"
+download = "Завантажити застосунок"
+downloadForTeam = "Отримати застосунок для команди"
+downloading = "Завантаження..."
+downloadLicence = "Завантажити ліцензійний файл"
+invite = "Запросити колег"
+kubernetes = "Посібник Kubernetes"
+licence = "Активація ліцензії"
+ocr = "Мови OCR"
+openApp = "Відкрити Stirling"
+samlGuide = "Посібник SAML"
+ssoGuide = "Посібник SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Завантажте повний образ на підключеній машині, перенесіть його та ліцензійний файл, потім завантажте й запустіть. Повний образ додає шрифти, які офлайн‑сервер не може завантажити."
+title = "Перенесіть Stirling і запустіть"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Сервер без доступу до мережі не може дістатися нашого ліцензійного сервісу, тож натомість перевіряє цей підписаний файл. Тримайте його разом із образом, який переносите."
+title = "Завантажте вашу офлайн‑ліцензію"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Створіть облікові записи на <code>/settings/people</code> або вкажіть Stirling на ваш внутрішній провайдер ідентичності, щоб вхід ніколи не залишав вашу мережу."
+bodySelfHosted = "Створіть облікові записи на <code>/settings/people</code> або під’єднайте ваш провайдер ідентичності, щоб ваша команда входила зі своїми робочими обліковими записами. Вони використовують Stirling у браузері за адресою вашого сервера або в настільному застосунку, налаштованому на нього."
+title = "Додайте ваших користувачів"
+
+[portal.enterprise.setup.signIn]
+body = "Відкрийте <code>http://your-server:8080</code> і увійдіть як <code>admin</code> / <code>stirling</code>. Вас одразу попросять вибрати новий пароль."
+bodyAirgap = "Відкрийте <code>http://your-server:8080</code> і увійдіть як <code>admin</code> / <code>stirling</code>, виберіть новий пароль, потім перевірте, що <code>/settings/adminPlan</code> показує вашу ліцензію як активну."
+title = "Увійдіть як адміністратор"
+
 [portal.errorBoundary]
 description = "У цьому поданні сталася неочікувана помилка. Спробуйте ще раз або виберіть інший розділ на бічній панелі."
 retry = "Спробувати ще раз"
@@ -9293,6 +9895,7 @@ title = "Немає нічого для перегляду"
 [portal.home.download]
 back = "Назад"
 body = "Завантажте desktop app або self-host сервер."
+bodyDesktop = "Завантажте настільний застосунок, потім увійдіть у свій обліковий запис Stirling."
 done = "Готово"
 guide = "Відкрити посібник {{name}}"
 openInBrowser = "Відкрити в браузері замість цього"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Приймання email"
 
 [portal.procurement]
-subtitle = "Оцініть, укладіть контракт і підключіть свою команду. Кожен документ в одному місці."
 title = "Закупівля"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Не вдалося завантажити угоду. Спробу
 loading = "Завантаження угоди..."
 ref = "Реф. {{ref}} · {{version}}"
 requestChanges = "Запросити зміни"
-scrollHint = "Прокрутіть, щоб переглянути"
 signatory = "Ім'я підписанта"
 signatoryPlaceholder = "Повне ім'я"
 signatoryTitle = "Посада підписанта"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "наприклад, General Counsel"
 signError = "Не вдалося записати ваш підпис. Спробуйте ще раз."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} одноразово"
+addonPerYear = "+{{amount}}/рік"
 addons = "Додатки"
 addressLine1 = "Адреса, рядок 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Адреса, рядок 2"
 addressLine2Placeholder = "Офіс, поверх, будівля"
 back = "Назад"
+belowMinimum = "Ця пропозиція нижча за мінімальний розмір для угоди Enterprise."
 businessName = "Назва компанії"
 businessNamePlaceholder = "Ваша компанія"
 city = "Місто"
 cityPlaceholder = "San Francisco"
 completeRequired = "Заповніть обов'язкові поля (позначені *) дійсним email перед створенням комерційної пропозиції."
+conflict = "Цю угоду змінено з часу відкриття. Закрийте конструктор і перезавантажте сторінку, щоб побачити актуальний стан."
 contactEmail = "Контактний email"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Ім'я контактної особи"
 contactNamePlaceholder = "Jane Doe"
 continue = "Продовжити"
 done = "Готово"
+editUsage = "Змінити використання"
 eula = "Я прочитав(-ла) і погоджуюся зі Stirling Enterprise EULA. Вона регулює угоду, створену з цієї пропозиції."
 generate = "Створити пропозицію"
 indemnification = "Розширений захист IP"
 indemnificationSub = "Поширює наш захист IP на патентні претензії. Базове відшкодування щодо авторських прав, торговельних марок і комерційної таємниці включено безкоштовно."
+minimum = "Для Enterprise потрібні щорічні витрати щонайменше {{min}}."
+minimumBelow = "Ця пропозиція становить {{annual}} на рік. Якщо очікуєте використовувати більше, підвищте приблизне використання; інакше план Team, ймовірно, краще підійде."
+minimumNear = "Для Enterprise потрібні щорічні витрати щонайменше {{min}}. Підвищте приблизне використання, щоб досягти цього, або обговоріть із нами."
+minimumNearTitle = "Вам бракує {{gap}} на рік до Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise пропозиція"
 paperFor = "Підготовлено для"
 pdfSize = "Розмір PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "Регульований"
 posture_regulatedSub = "Кожна категорія — відповідність, зберігання, приймання"
 qbr = "Щоквартальні бізнес-огляди"
 qbrSub = "Ваш SE щокварталу переглядає використання та roadmap"
+raiseUsage = "Підвищити приблизне використання"
 region = "Штат / регіон"
 regionPlaceholder = "California"
-running = "{{annual}} / рік · {{years}}-річний {{tcv}}"
+runningLabel = "Орієнтовна ціна"
+runningLabelIssued = "Запропонована ціна"
+runningOneYear = "{{annual}} на рік"
+runningTotal = "{{tcv}} загалом за {{years}} років"
 s1Sub = "Ваша команда та PDF, які ви плануєте обробляти щороку."
 s1Title = "Скільки ви оброблятимете?"
 s2Sub = "Довші терміни знижують тариф; ваш рівень сервісу визначає підтримку."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "наприклад, 1,000,000"
 years_one = "{{count}} рік"
 years_other = "{{count}} років"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} розгортання"
+indemnification = "Індемніфікація IP"
+multiYear_one = "{{count}}‑річне зобов’язання"
+multiYear_other = "{{count}}‑річне зобов’язання"
+qbr = "Квартальні бізнес‑огляди"
+seats_one = "{{users}} погоджений користувач + SSO / RBAC / аудит"
+seats_other = "{{users}} погоджених користувачів + SSO / RBAC / аудит"
+seatsUnset = "Користувачі + SSO / RBAC / аудит"
+support = "Виділені SE / CSM"
+training = "Онбординг і навчання"
+usage = "Обробка PDF — {{volume}} PDF/рік за {{rate}}/PDF ({{posture}} автоматизація)"
+
 [portal.procurement.documents]
 agreement = "Корпоративна угода"
 agreementSub = "MSA, Order Form і DPA в одному підписі."
@@ -10557,6 +11185,8 @@ invoice = "Рахунок"
 invoiceSub = "Ваш перший рахунок за підписку."
 laterInvoice = "Доступно після прийняття"
 laterQuote = "Доступно після випуску вашої пропозиції"
+laterSigning = "Доступно після підписання угоди"
+laterTitle = "Пізніше у вашій угоді"
 quote = "Комерційна пропозиція"
 quoteSub = "Ваша деталізована Enterprise пропозиція."
 sla = "Додаток SLA"
@@ -10573,15 +11203,12 @@ title = "Щось пішло не так"
 [portal.procurement.hero]
 barAria = "Етап {{current}} з {{total}}"
 ctaAgreement = "Переглянути й підписати угоду"
-ctaExploring = "Налаштувати пробний період"
 ctaQuote = "Переглянути вашу пропозицію"
 ctaReviewQuote = "Переглянути пропозицію"
 ctaTrial = "Створити пропозицію"
-documents = "Документи"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Запросити колег"
-licenseKey = "Ліцензійний ключ"
 liveSub = "Вашу організацію підготовлено, і ваша ліцензія активна."
 liveTitle = "Ви працюєте на Stirling Enterprise"
 next = "Далі: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Поки що не вдалося створити офлайн
 downloadOffline = "Завантажити офлайн-ліцензію (.lic)"
 hint = "Вставте цей ключ у self-hosted екземпляр, щоб активувати його, або збережіть для своїх записів. Зберігайте його безпечно."
 label = "Ваш ліцензійний ключ"
-subtitle = "Активуйте self-hosted інстанс цим ключем або збережіть його для своїх записів."
-title = "Ваш ліцензійний ключ"
 trialFileHint = "Це ваш пробний файл ліцензії. Коли угоду буде укладено, поверніться та завантажте його знову — на відміну від онлайн-ліцензійного ключа, файл .lic не оновлюється самостійно."
-
-[portal.procurement.link]
-cta = "Прив’язати обліковий запис"
-description = "Закупівля працює через ваш прив’язаний обліковий запис Stirling: так ми надаємо trial, оцінюємо вашу пропозицію та запускаємо білінг. Прив’яжіть обліковий запис, щоб почати."
-eyebrow = "Enterprise"
-title = "Прив’яжіть ваш обліковий запис, щоб почати"
 
 [portal.procurement.live]
 description = "Ваша підписка активна, і ліцензію видано. Вашу команду підготовлено, і білінг розпочато."
-eyebrow = "Наживо"
 title = "Ви вже працюєте в Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Поки що не вдалося завантажити PDF п
 
 [portal.procurement.payment]
 description = "Вашу пропозицію прийнято, і ваша ліцензія вже активна — ваша команда може почати одразу. Сплатіть перший рахунок, коли будете готові; ви можете сплатити або завантажити його тут, без email."
-downloadAgreement = "Завантажити підписану угоду"
 downloadInvoice = "Завантажити рахунок"
-eyebrow = "Оплата"
-title = "Підписку створено"
 viewInvoice = "Переглянути й сплатити рахунок"
 
 [portal.procurement.review]
 acceptCta = "Прийняти пропозицію"
 annual = "Річна плата (рік 1)"
 downloadCta = "Завантажити пропозицію"
+oneTime = "одноразово"
 poNumber = "Замовлення на купівлю: {{po}}"
 renewal = "Поновлюється за {{amount}}/рік після строку (+{{pct}}% CPI)"
 tcv = "{{years}}-річний строк, повна передоплата: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Продовження додає 7 днів і повідомляє вашого solutions engineer."
 bodyMaxed = "Ви використали всі продовження — зверніться до вашого solutions engineer, якщо вам потрібно більше часу."
-cancel = "Скасувати trial"
 extend = "Продовжити на 7 днів"
 maxed = "Ліміт вичерпано"
 subtitle = "Ваш безкоштовний trial триває до {{date}}. Картка не потрібна."
 title = "Enterprise-пробний період"
+
+[portal.procurement.validation]
+confirm = "Підтвердіть, що ви маєте повноваження підписувати від імені організації."
+email = "Введіть дійсну адресу Email."
+eula = "Погодьтеся з EULA, щоб продовжити."
+required = "Це поле обов’язкове."
+seats = "Вкажіть, скільки людей це тестуватиме."
+volume = "Вкажіть, скільки PDF ви очікуєте обробляти за рік."
 
 [portal.review]
 subtitle = "Усе з запусків ваших політик і редакторів вашої команди, що потребує вашої уваги."
@@ -10735,6 +11358,7 @@ subtitle = "Багаторазові вхідні підключення, які
 title = "Джерела"
 
 [portal.sources.actions]
+connectDestination = "Підключити пункт призначення"
 connectSource = "Підключити джерело"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Виберіть, куди надходитимуть обр
 comingSoon = "Незабаром"
 comingSoonHeading = "Незабаром"
 create = "Створити джерело"
+createDestination = "Створити пункт призначення"
+createDestinationTitle = "Додати пункт призначення"
 createTitle = "Підключити джерело"
 delete = "Видалити"
 editTitle = "Редагувати джерело"
@@ -10757,6 +11383,41 @@ save = "Зберегти зміни"
 description = "Автоматизації папок можуть використовувати лише папки, дозволені адміністратором. Додайте її в налаштуваннях доступу до папок, а потім спробуйте ще раз."
 openSettings = "Налаштування доступу до папок"
 title = "Ця папка не дозволена"
+
+[portal.sources.cloudFields.account]
+connect = "Підключити обліковий запис"
+connectAnother = "Підключити інший обліковий запис"
+connectFailed = "Обліковий запис не вдалося підключити. Спробуйте ще раз або попросіть адміністратора перевірити реєстрацію застосунку."
+label = "Обліковий запис"
+placeholder = "Виберіть обліковий запис"
+reconnect = "увійти ще раз"
+unavailable = "Підключення власного облікового запису вимкнено на цьому сервері. Натомість виберіть з’єднання організації."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Особисті облікові записи вимкнено на цьому сервері."
+helperText = "Ваш обліковий запис має доступ до того, що ви можете відкрити, і не потребує адміністратора. З’єднання організації продовжує працювати, коли люди йдуть, і має доступ лише до того, що налаштував адміністратор."
+label = "Увійти як"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Мій обліковий запис"
+organisation = "З’єднання організації"
+
+[portal.sources.cloudFields.connection]
+helperText = "Налаштовано адміністратором у розділі Інтеграції. Спільне для кожної локації, що його використовує."
+label = "Підключення організації"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Вставте посилання на папку або введіть шлях від верхнього рівня My Drive. Залиште порожнім для верхнього рівня My Drive. Папка має вже існувати."
+placeholder = "Посилання на папку або Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Папка у вашому OneDrive або вставте посилання на папку (Copy link у OneDrive). Залиште порожнім для верхнього рівня OneDrive. Папка має вже існувати."
+placeholder = "Scans/Inbox або посилання на папку"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Зі свого облікового запису вставте посилання на папку (Copy link у SharePoint). Для підключення організації — папка всередині її бібліотеки; залиште порожнім для кореня бібліотеки. Папка має вже існувати."
+organisationPlaceholder = "Посилання на папку або Scans/Inbox"
+placeholder = "Посилання на папку"
 
 [portal.sources.delete]
 body = "Видалити «{{name}}»? Цю дію не можна скасувати. Політики, які посилаються на нього, потрібно буде оновити."
@@ -10821,6 +11482,7 @@ label = "Вхідні Email"
 [portal.sources.types.folder]
 description = "Відстежувати каталог на сервері для нових документів."
 label = "Папка"
+outputDescription = "Зберігати результати в каталозі на сервері."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Абсолютний шлях до папки, у якій потрібно відстежувати нові файли."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Отримуйте документи зі спільних папок Google Drive."
 label = "Google Drive"
+outputDescription = "Зберігати результати в папці Google Drive."
 
 [portal.sources.types.network]
 description = "Відстежуйте SMB мережевий ресурс на наявність нових документів."
@@ -10867,10 +11530,12 @@ label = "Мережевий диск"
 [portal.sources.types.onedrive]
 description = "Відстежуйте папки OneDrive на наявність нових документів."
 label = "OneDrive"
+outputDescription = "Зберігати результати в папці OneDrive."
 
 [portal.sources.types.s3]
 description = "Отримуйте документи з Amazon S3 або S3-сумісного bucket."
 label = "Amazon S3"
+outputDescription = "Зберігати результати в бакеті Amazon S3 або сумісному з S3."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Збережене підключення з bucket і обліковими даними. Спільне для кожного джерела та виходу пайплайну, що його використовує."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Отримуйте документи з бібліотек документів SharePoint."
 label = "SharePoint"
+outputDescription = "Зберігати результати в папці бібліотеки документів SharePoint."
 
 [portal.sources.types.unknown]
 label = "Джерело"
@@ -11074,6 +11740,14 @@ waiting = "У черзі ..."
 name = "Google Drive"
 scope = "Імпорт файлів"
 
+[provider.googledrive.accountScope]
+description = "drive має доступ до всіх файлів (для цього Google має верифікувати публічний застосунок); drive.file — лише до файлів, які користувачі вибирають або створює Stirling"
+label = "Доступ до Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "Один вхід для редактора і їхніх конвеєрів. Вимкніть, щоб дозволити лише підключення організації."
+label = "Дозволити користувачам підключати власний обліковий запис"
+
 [provider.googledrive.apiKey]
 description = "Ключ Google API для Google Picker API з Google Cloud Console"
 label = "Ключ API"
@@ -11086,13 +11760,65 @@ label = "ID застосунку"
 description = "Google OAuth 2.0 Client ID з Google Cloud Console"
 label = "ID клієнта"
 
+[provider.googledrive.clientSecret]
+description = "Дозволяє користувачам підключати свій обліковий запис Google для їхніх конвеєрів. Додайте наведений нижче URI переспрямування як авторизований URI переспрямування клієнта OAuth."
+label = "Секрет клієнта"
+
 [provider.googledrive.enabled]
 description = "Дозволити користувачам імпортувати файли безпосередньо з Google Drive"
 label = "Увімкнути вибір файлів Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "Не вдалося підключити ваш обліковий запис Google. Спробуйте ще раз у Налаштування > Підключені облікові записи."
 notConfigured = "Google Drive не налаштовано"
 pickerFailed = "Не вдалося відкрити засіб вибору Google Drive"
+
+[provider.googledrive.redirectUri]
+description = "Додайте це як авторизований URI переспрямування клієнта OAuth у Google Cloud Console."
+label = "URI переспрямування"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Файли та конвеєри"
+
+[provider.microsoft.allowAccountConnections]
+description = "Один вхід для редактора і їхніх конвеєрів. Вимкніть, щоб дозволити лише підключення організації."
+label = "Дозволити користувачам підключати власний обліковий запис"
+
+[provider.microsoft.allowEditorSaves]
+description = "Вимкніть, щоб зберігати зміни у Stirling: файли, відкриті з OneDrive, тоді буде просто завантажено, а сервер відхилить збереження до OneDrive."
+label = "Дозволити редактору зберігати назад до OneDrive"
+
+[provider.microsoft.clientId]
+description = "Із однієї реєстрації застосунку Microsoft Entra."
+label = "Ідентифікатор застосунку (клієнта)"
+
+[provider.microsoft.clientSecret]
+description = "Потрібен для підключених облікових записів. Залишається на сервері."
+label = "Секрет клієнта"
+
+[provider.microsoft.enabled]
+description = "Дозволити використовувати OneDrive і SharePoint у конвеєрах"
+label = "Увімкнути OneDrive і SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Додайте це як Redirect URI для Single-page application у тій самій реєстрації застосунку для входу з редактора."
+label = "Redirect URI для Single-page application"
+
+[provider.microsoft.redirectUri]
+description = "Додайте це як веб-URI переспрямування у реєстрації застосунку Entra."
+label = "URI переспрямування"
+
+[provider.microsoft.setupSteps]
+connect = "Збережіть, перезапустіть, потім підключіть обліковий запис у розділі Підключені облікові записи."
+permissions = "Додайте делеговані дозволи Microsoft Graph Files.ReadWrite.All і Files.Read.All та делеговані дозволи SharePoint MyFiles.Read і AllSites.Read, щоб робочі та навчальні облікові записи могли відкривати вікно вибору файлів."
+redirects = "Додайте до нього дві наведені нижче адреси перенаправлення: одну як Web, іншу як Single-page application."
+register = "Зареєструйте застосунок у Microsoft Entra admin center. Дозвольте персональні облікові записи Microsoft, якщо люди використовують особистий OneDrive."
+secret = "Створіть секрет клієнта, потім вставте його значення та ID клієнта застосунку нижче."
+
+[provider.microsoft.tenant]
+description = "common — для робочих, навчальних і особистих облікових записів; organizations — лише для робочих і навчальних; або tenant ID, щоб допустити лише одну організацію"
+label = "Ідентифікатор каталогу (тенанта)"
 
 [provider.oauth2.generic]
 name = "Загальний OAuth2"
@@ -11195,6 +11921,19 @@ label = "Області доступу"
 description = "Поле для використання як ім’я користувача (email, name, given_name, family_name, preferred_username)"
 label = "Використовувати як ім’я користувача"
 
+[provider.onedrive]
+pickerLoading = "Підключення до OneDrive..."
+pickerTitle = "Виберіть файли з OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Не вдалося підключити ваш обліковий запис Microsoft. Спробуйте ще раз у Налаштування > Підключені облікові записи."
+notConfigured = "OneDrive не налаштовано"
+pickerFailed = "Не вдалося відкрити OneDrive"
+popupBlocked = "Ваш браузер заблокував вікно входу Microsoft. Дозвольте спливаючі вікна для цього сайту й спробуйте ще раз."
+reconnect = "Вашому обліковому запису Microsoft потрібно ввійти знову. Підключіть його знову в Налаштування > Підключені облікові записи."
+serverError = "OneDrive або сервер Stirling зіткнувся з проблемою. Спробуйте ще раз, або зверніться до адміністратора, якщо це повторюється."
+unreachable = "Не вдалося зв’язатися з OneDrive. Перевірте підключення і спробуйте ще раз."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Сповіщення"
 processor = "Процесор"
 reader = "Читач"
 signInToUse = "Увійдіть, щоб скористатися цим"
+
+[quickNav.accountMenu]
+localMode = "Локальний режим"
+server = "Налаштування сервера"
+settings = "Налаштування"
+signedOut = "Не виконано вхід"
+signIn = "Увійти"
 
 [read]
 tags = "перегляд,відкрити,показати,читати,переглядач,PDF viewer,PDF reader,відкрити PDF,переглянути PDF,показати PDF,попередній перегляд,огляд"
@@ -11811,6 +12557,13 @@ title = "Дезінфекція PDF"
 [sanitizePdf]
 tags = "чистка,безпека,безпечні,віддалення загроз"
 
+[saveFile.menu]
+more = "Більше параметрів збереження"
+saveCopy = "Зберегти копію..."
+
+[saveFile.toolbar]
+mixed = "Зберегти все"
+
 [scalePages]
 tags = "змінити розмір,налаштувати,масштабувати,розмір сторінки,змінити розмір сторінки,масштаб сторінки,змінити розмір,налаштувати розмір,збільшити,зменшити сторінку,підігнати до сторінки,A4,letter size"
 title = "Відрегулювати масштаб сторінки"
@@ -11905,6 +12658,162 @@ showTools = "Показати недоступні інструменти ▾"
 title = "Ваш сервер Stirling-PDF недоступний"
 toolNotAvailableLocally = "Ваш сервер Stirling-PDF офлайн і \"{{endpoint}}\" недоступний у локальному бекенді."
 
+[serverSetup]
+back = "Назад"
+collapse = "Приховати налаштування {{setting}}"
+configured = "Налаштовано"
+continue = "Продовжити"
+dialogLabel = "Налаштування сервера"
+expand = "Показати налаштування {{setting}}"
+finishSetup = "Завершити налаштування"
+loadErrorSubtitle = "Для запуску налаштування потрібні поточні параметри сервера."
+loadErrorTitle = "Не вдалося завантажити ваші налаштування"
+off = "Вимкнено"
+on = "Увімкнено"
+save = "Зберегти"
+stepCount = "{{current}} з {{total}}"
+
+[serverSetup.account]
+failed = "Не вдалося зберегти ваші дані. Переконайтеся, що сервер доступний, і спробуйте ще раз."
+save = "Зберегти і продовжити"
+signIn = "Увійти"
+signInAgainSubtitle = "Увійдіть знову з новими іменем користувача та паролем, щоб продовжити."
+signInAgainTitle = "Ваші дані збережено"
+subtitle = "Виберіть, як ви надалі входитимете."
+title = "Налаштуйте свій обліковий запис"
+updating = "Оновлення"
+updatingSubtitle = "Хвилинку."
+updatingTitle = "Оновлення ваших даних"
+username = "Ім’я користувача"
+usernameHelp = "Те, з чим ви входитимете. Також підійде адреса електронної пошти."
+
+[serverSetup.addresses]
+backendUrl = "Адреса сервера"
+backendUrlHelp = "Куди постачальники входу повертають користувачів. Зазвичай збігається з веб-адресою."
+frontendUrl = "Веб-адреса"
+frontendUrlHelp = "Де користувачі відкривають Stirling PDF. Використовується в листах, посиланнях для спільного доступу та QR-кодах."
+subtitle = "Як користувачі та постачальники входу досягають цього сервера."
+title = "Адреси"
+
+[serverSetup.ai]
+apiKey = "Ключ API"
+apiKeyHelp = "Залиште порожнім, щоб використовувати ключ, який рушій AI уже має."
+baseUrl = "Базова URL-адреса"
+engineUrl = "Адреса рушія AI"
+fastModel = "Швидка модель"
+label = "Самостійно розгорнутий AI"
+provider = "Постачальник моделей"
+providerCustom = "Сумісний з OpenAI"
+smartModel = "Повна модель"
+stirling = "Stirling AI"
+subtitle = "Питання до документів, автоматизовані редагування та AI-агенти."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Прийняти і продовжити"
+acceptFinish = "Прийняти і завершити"
+changeLater = "Ви можете змінити це будь-коли в {{path}}."
+decline = "Відхилити і продовжити"
+declineFinish = "Відхилити і завершити"
+learnMore = "Що ми збираємо"
+note = "Діліться з нами даними використання цього сервера, щоб допомогти покращити Stirling PDF. Ми ніколи не збираємо файли або їхній вміст."
+title = "Аналітика сервера"
+
+[serverSetup.documents]
+label = "Питання до документів"
+model = "Модель вбудовувань"
+provider = "Постачальник вбудовувань"
+providerHelp = "Перетворює текст документа на пошуковий індекс, який відповідає на запитання."
+
+[serverSetup.email]
+from = "Адреса відправника"
+host = "Хост SMTP"
+label = "Надсилати електронну пошту"
+password = "Пароль"
+port = "Порт"
+subtitle = "Для запрошень, запитів на підпис і спільного доступу."
+title = "Електронна пошта"
+username = "Ім’я користувача"
+
+[serverSetup.error]
+email = "Введіть адресу електронної пошти"
+issuerUnreachable = "Не вдалося зв’язатися з цим емітентом. Перевірте адресу та чи може цей сервер до нього дістатися."
+passwordIncorrect = "Неправильний пароль"
+passwordLength = "Використовуйте щонайменше 8 символів"
+passwordMismatch = "Паролі не збігаються"
+passwordRejected = "Сервер не прийняв цей пароль. Спробуйте інший."
+passwordUnchanged = "Виберіть пароль, відмінний від поточного"
+port = "Введіть порт від 1 до 65535"
+providerName = "Використовуйте лише літери, цифри, дефіси або підкреслення"
+required = "Обов’язково"
+url = "Введіть повну адресу, що починається з http:// або https://"
+username = "Використовуйте від 3 до 50 літер, цифр або . _ + - @, або адресу електронної пошти"
+usernameTaken = "Це ім’я користувача вже зайнято"
+
+[serverSetup.files]
+sharing = "Спільний доступ до файлів"
+sharingOffWarning = "Якщо спільний доступ вимкнено, наявні посилання для доступу перестануть працювати."
+storage = "Зберігати файли"
+storageOffWarning = "Якщо зберігання вимкнено, файли, збережені користувачами на сервері, більше не можна відкрити."
+subtitle = "Керуйте зберіганням і спільним доступом до файлів."
+title = "Файли"
+
+[serverSetup.finish]
+errorNote = "Переконайтеся, що сервер доступний і що ви все ще ввійшли як адміністратор."
+errorSubtitle = "Нічого не перезапущено."
+errorTitle = "Не вдалося зберегти ваші налаштування"
+manualSubtitle = "Цей сервер не може перезапустити себе. Перезапустіть його контейнер або службу, щоб застосувати зміни."
+manualTitle = "Налаштування збережено"
+restartFailedSubtitle = "Сервер не перезапустився. Перезапустіть його контейнер або службу, щоб застосувати зміни."
+restartingSubtitle = "Ця сторінка перезавантажиться, коли сервер повернеться, зазвичай протягом хвилини."
+restartingTitle = "Перезапуск вашого сервера"
+retry = "Спробувати ще раз"
+saving = "Збереження"
+savingSubtitle = "Хвилинку."
+savingTitle = "Збереження ваших налаштувань"
+
+[serverSetup.language]
+auto = "Відповідно до браузера"
+label = "Мова за замовчуванням"
+subtitle = "Що спершу бачитимуть нові користувачі."
+title = "Мова"
+
+[serverSetup.mcp]
+label = "Сервер MCP"
+
+[serverSetup.password]
+confirm = "Підтвердіть новий пароль"
+current = "Поточний пароль"
+new = "Новий пароль"
+
+[serverSetup.signIn]
+clientId = "Ідентифікатор клієнта"
+clientSecret = "Секрет клієнта"
+issuer = "URL емітента"
+label = "Вхід через"
+oidc = "Інший OpenID Connect"
+password = "Ім’я користувача і пароль"
+providerName = "Назва провайдера"
+providerNameHelp = "Показується на кнопці входу, наприклад okta або entra."
+redirectNote = "Додайте цей URI переспрямування у свого провайдера:"
+subtitle = "Як ваша команда входить."
+title = "Вхід"
+
+[serverSetup.signingIn]
+button = "Виконується вхід"
+title = "Вхід із типовими обліковими даними"
+
+[serverSetup.start]
+custom = "Користувацький"
+quick = "Швидкий старт"
+setupLabel = "Налаштування"
+subtitle = "Налаштуйте для своєї команди за кілька кроків."
+title = "Ваш сервер запущено"
+
+[serverSetup.summary]
+subtitle = "Перевірте основне. Решта залишиться за замовчуванням."
+title = "Швидкий старт"
+
 [session]
 expired = "Ваш сеанс закінчився. Будь ласка, оновіть сторінку та повторіть спробу."
 
@@ -11939,6 +12848,10 @@ mcp = "MCP-сервер"
 privacy = "Конфіденційність"
 storageSharing = "Зберігання файлів і спільний доступ"
 systemSettings = "Системні налаштування"
+
+[settings.connectedAccounts]
+description = "Ваші власні OneDrive, SharePoint і Google Drive для ваших конвеєрів."
+title = "Підключені облікові записи"
 
 [settings.connectedInstances]
 confirmBody = "Це відкликає доступ інстансу до вашої команди в Stirling Cloud. Це не видаляє локальні файли й не прибирає вже записане використання. Щоб підключитися знову, виконайте початкові кроки підключення на інстансі."
@@ -11992,6 +12905,13 @@ selfhosted = "Самохостинг"
 apiKeys = "Ключі API"
 apiKeysDescription = "Особисті ключі для виклику Stirling API зі скриптів та інтеграцій."
 title = "Розробка"
+
+[settings.feedback]
+label = "Відгук"
+
+[settings.feedback.send]
+description = "Повідомте про проблему або запропонуйте покращення команді Stirling."
+label = "Надіслати відгук"
 
 [settings.general]
 autoUnzip = "Автоматично розпаковувати відповіді API"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Перевірити оновлення"
 currentBackendVersion = "Поточна версія Backend"
 currentFrontendVersion = "Поточна версія Frontend"
 description = "Перевіряйте оновлення та переглядайте інформацію про версію"
+descriptionManaged = "Переглянути інформацію про версію"
 latestVersion = "Остання версія"
 managedByAdmin = "Керується адміністратором"
 modeAuto = "Встановлювати оновлення автоматично"
@@ -12135,15 +13056,24 @@ title = "Юридичні документи"
 backendDescription = "Ліцензії для залежностей backend, включених до цього сервера."
 backendLabel = "Ліцензії Backend"
 backendTitle = "Ліцензії сторонніх компонентів Backend"
+clearSearch = "Очистити пошук"
 empty = "Залежностей не знайдено."
 frontendDescription = "Ліцензії для залежностей frontend, включених у release build."
 frontendLabel = "Ліцензії Frontend"
 frontendTitle = "Ліцензії сторонніх компонентів Frontend"
 license = "Ліцензія"
+licenseAbout = "Про"
+licenseAboutCompound = "Про {{short}}"
+licenseAboutTitle = "Про {{short}}"
 listDescription = "Список показується безпосередньо в UI з release bundle або endpoint backend."
 listTitle = "Включені залежності"
 loadError = "Не вдалося завантажити ліцензії сторонніх компонентів"
 module = "Модуль"
+noMatch = "Немає відповідних залежностей."
+searchPlaceholder = "Пошук залежностей"
+showingCount = "{{count}} залежностей"
+showingCount_one = "{{count}} залежність"
+showingCount_other = "{{count}} залежності"
 version = "Версія"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Введіть email"
 emptyPassword = "Введіть пароль"
 emptyUsername = "Введіть ім’я користувача"
 oauthFailed = "Вхід через OAuth не вдався. Спробуйте ще раз."
+openResetFailed = "Не вдалося відкрити ваш браузер, щоб скинути пароль."
 
 [setup.saas]
 title = "Увійдіть до Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "Невидимі підписи все одно забезпечую�
 description = "Керує тим, чи підпис видимий у документі або вбудований невидимо."
 title = "Видимість підпису"
 
+[signedPdf]
+editsBlocked = "Цей PDF цифрово підписаний, і зміни підписаних PDF вимкнено. Ви все ще можете переглядати або друкувати його, конвертувати в інший формат або підписати ще раз."
+editsBlockedStatus = "Підписано: редагування заблоковано"
+editsBlockedTitle = "Підписаний PDF не можна змінити"
+
 [signingDetail]
 allSigned = "Усі підписали. Перегляньте документ, а потім завершіть."
 awaitingOwner = "Власник завершить документ, коли буде готовий."
@@ -13110,7 +14046,6 @@ noLinks = "Ще немає активних посилань для спільн
 noSharedUsers = "Ще немає користувачів із доступом."
 openInApp = "Відкрити в Stirling PDF"
 ownerLabel = "Власник"
-ownerUnknown = "Невідомо"
 removeLink = "Видалити посилання"
 removeUser = "Видалити"
 requiresLogin = "Для цього спільного файлу потрібен вхід."
@@ -13249,6 +14184,11 @@ remove = "Видалити"
 roleColumn = "Роль"
 title = "Учасники команди"
 
+[teamWelcome]
+invite = "Запросити користувачів"
+message = "Запросіть свою команду, щоб вони могли почати працювати разом із вами."
+title = "Ваш план Team активний."
+
 [textAlign]
 center = "По центру"
 left = "Ліворуч"
@@ -13290,7 +14230,6 @@ toggleDetails = "Показати/сховати подробиці"
 
 [tool]
 endpointUnavailable = "Цей інструмент недоступний на вашому сервері."
-endpointUnavailableClickable = "Недоступно в цьому режимі. Натисніть, щоб увійти."
 filesLoading = "Файли ще завантажуються, зачекайте."
 filesLoadingProgress = "{{loaded}} / {{total}} файлів завантажується..."
 invalidParams = "Заповніть обов’язкові налаштування."
@@ -13298,6 +14237,8 @@ noFiles = "Додайте файл, щоб розпочати."
 scopeFiles = "файли"
 scopeThisFile = "цей файл"
 selectFilesHint = "Виберіть файли в Активних файлах, щоб запустити цей інструмент"
+signInRequired = "Потрібен обліковий запис Stirling. Увійдіть, щоб продовжити."
+signInToUse = "Увійдіть, щоб скористатися"
 singleFileScope = "Застосовується лише до: {{fileName}}"
 viewerMode = "Перемкніться на редактор файлів, щоб додати кілька файлів."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Показувати обкладинку окремо"
 disableColorFilter = "Вимкнути кольоровий фільтр"
 documentUpdated = "Документ оновлено"
 dualPageView = "Парний перегляд"
+editText = "Редагувати текст"
 enableDarkFilter = "Увімкнути темний фільтр"
 enableSepiaFilter = "Увімкнути фільтр сепії"
 engineLoadError = "Не вдалося ініціалізувати рушій переглядача PDF"
@@ -14158,8 +15100,10 @@ closeAll = "Закрити всі файли"
 closePdf = "Закрити PDF"
 deselectAll = "Скасувати вибір"
 downloadAll = "Завантажити всі"
+editText = "Редагувати текст"
 exitAnnotations = "Вийти з режиму анотацій"
 exitRedaction = "Вийти з режиму затемнення"
+findReplace = "Пошук і заміна"
 formFill = "Редактор форм"
 hideToolbar = "Сховати панель інструментів"
 moreActions = "Більше дій"

@@ -1,5 +1,6 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { PdfAccess } from "@editor/services/pdfAccessService";
+import { countPdfiumSignatures } from "@editor/utils/pdfiumSignatures";
 
 /** Reads the authenticated document without reopening it or changing its protection. */
 export function readPdfiumAccess(
@@ -11,7 +12,7 @@ export function readPdfiumAccess(
   const ownerAuthenticated = encrypted && module.EPDF_IsOwnerUnlocked(document);
   const permissions = module.FPDF_GetDocUserPermissions(document);
   const encryptionRevision = module.FPDF_GetSecurityHandlerRevision(document);
-  const signatureCount = module.FPDF_GetSignatureCount(document);
+  const signatureCount = countPdfiumSignatures(module, document);
   if (
     !Number.isInteger(permissions) ||
     signatureCount < 0 ||

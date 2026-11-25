@@ -1,5 +1,6 @@
 import { test, expect } from "@editor/tests/helpers/test-base";
 import { loginAndSetup } from "@editor/tests/helpers/login";
+import { toggleViewerPanel } from "@editor/tests/helpers/ui-helpers";
 
 import * as path from "path";
 import * as fs from "fs";
@@ -87,10 +88,7 @@ test.describe("Viewer sidebar add buttons - real PDF round-trip", () => {
   }) => {
     await openSamplePdfInViewer(page);
 
-    await page
-      .getByRole("button", { name: /Toggle Attachments/i })
-      .first()
-      .click();
+    await toggleViewerPanel(page, "Attachments");
 
     const addBtn = page.getByRole("button", { name: /^Add attachment$/i });
     await expect(addBtn).toBeVisible({ timeout: 15_000 });
@@ -148,10 +146,7 @@ test.describe("Viewer sidebar add buttons - real PDF round-trip", () => {
     await openSamplePdfInViewer(page);
     const viewerUrl = page.url();
 
-    await page
-      .getByRole("button", { name: /Bookmarks \(Table of Contents\)/i })
-      .first()
-      .click();
+    await toggleViewerPanel(page, "Bookmarks");
 
     const addBtn = page.getByRole("button", { name: /^Add bookmark$/i });
     await expect(addBtn).toBeVisible({ timeout: 15_000 });

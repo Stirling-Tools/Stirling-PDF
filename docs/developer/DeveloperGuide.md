@@ -13,7 +13,7 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 **Backend:**
 - Spring Boot (requires JDK 25)
 - PDFBox for core PDF operations
-- LibreOffice for document conversions
+- Stirling Office Convert (in-process Java library) for document conversions
 - qpdf for PDF optimization
 - Spring Security (optional, controlled by `DOCKER_ENABLE_SECURITY`)
 - Lombok for reducing boilerplate code
@@ -59,9 +59,7 @@ These are not required to run the app but enable specific features. The app dete
 
 | Dependency | Feature | Install |
 |---|---|---|
-| LibreOffice | File-to-PDF conversions | `brew install libreoffice` / `apt install libreoffice` |
 | Tesseract | OCR | `brew install tesseract` / `apt install tesseract-ocr` |
-| WeasyPrint | AI document creation | `brew install weasyprint` / `apt install weasyprint` |
 | qpdf | PDF optimisation | `brew install qpdf` / `apt install qpdf` |
 
 ### Setup Steps
@@ -378,7 +376,7 @@ To run Stirling-PDF locally:
 
 Important notes:
 
-- Local testing doesn't include features that depend on external tools like qpdf, LibreOffice, or Python scripts.
+- Local testing doesn't include features that depend on external tools like qpdf, Ghostscript, or Python scripts.
 - There are currently no automated unit tests. All testing is done manually through the UI or API calls. (You are welcome to add JUnits!)
 - Always verify your changes in the full Docker environment before submitting pull requests, as some integrations and features will only work in the complete setup.
 

@@ -77,40 +77,32 @@ test.describe("Convert Tool", () => {
     });
   });
 
-  test("offers Office Convert for supported document outputs", async ({
+  test("sends document conversions without an engine choice", async ({
     page,
-  }, testInfo) => {
+  }) => {
+    await page.route("**/api/v1/convert/pdf/word", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers: {
+          "Content-Disposition": 'attachment; filename="sample.docx"',
+        },
+        body: Buffer.from("PK"),
+      }),
+    );
     await uploadFile(page, SAMPLE_PDF);
     await navigateToConvert(page);
-    for (const format of [
-      "docx",
-      "pptx",
-      "xlsx",
-      "txt",
-      "rtf",
-      "md",
-      "xml",
-      "html",
-      "epub",
-      "azw3",
-      "pdfa",
-    ]) {
-      await selectToFormat(page, format);
-      const choice = page.getByTestId("stirling-office-convert-switch");
-      await expect(choice).toBeVisible();
-      await choice.check();
-      await expect(choice).toBeChecked();
-      await choice.uncheck();
-    }
-    await page.screenshot({
-      path: testInfo.outputPath("office-convert-options.png"),
-    });
-    for (const format of ["png", "pdfx"]) {
-      await selectToFormat(page, format);
-      await expect(
-        page.getByTestId("stirling-office-convert-switch"),
-      ).toHaveCount(0);
-    }
+    await selectToFormat(page, "docx");
+    await expect(
+      page.getByTestId("stirling-office-convert-switch"),
+    ).toHaveCount(0);
+    await dismissTourTooltip(page);
+    const request = page.waitForRequest("**/api/v1/convert/pdf/word");
+    await page.getByTestId("convert-button").click();
+    const payload = (await request).postData() ?? "";
+    expect(payload).toMatch(/name="outputFormat"\r\n\r\ndocx/);
+    expect(payload).not.toContain("useStirlingOfficeConvert");
   });
 
   test("convert button is disabled before a TO format is selected", async ({
@@ -154,20 +146,12 @@ test.describe("Convert Tool", () => {
       await navigateToConvert(page);
       await selectToFormat(page, "pdf");
       await expect(page.getByTestId("email-settings")).toBeVisible();
-      const choice = page.getByTestId("stirling-office-convert-switch");
-      await choice.check();
-      await expect(choice).toBeChecked();
-      await page.getByTestId("download-html-checkbox").check();
-      await expect(choice).toHaveCount(0);
-      await page.getByTestId("download-html-checkbox").uncheck();
-      await expect(choice).toBeChecked();
       await page.getByTestId("include-attachments-checkbox").check();
       await page.getByTestId("include-all-recipients-checkbox").uncheck();
       await dismissTourTooltip(page);
       const request = page.waitForRequest("**/api/v1/convert/eml/pdf");
       await page.getByTestId("convert-button").click();
       const payload = (await request).postData() ?? "";
-      expect(payload).toMatch(/name="useStirlingOfficeConvert"\r\n\r\ntrue/);
       expect(payload).toMatch(/name="includeAttachments"\r\n\r\ntrue/);
       expect(payload).toMatch(/name="includeAllRecipients"\r\n\r\nfalse/);
       await expect(page.getByTestId("download-result-button")).toBeVisible();

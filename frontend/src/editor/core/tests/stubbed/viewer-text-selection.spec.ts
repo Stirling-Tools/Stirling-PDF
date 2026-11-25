@@ -6,7 +6,10 @@ const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 const MULTIPAGE_PDF = path.join(FIXTURES_DIR, "annotations_out_of_order.pdf");
 
 async function loadSampleAndOpenViewer(page: import("@playwright/test").Page) {
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE_PDF);
 
   const firstPage = page.locator('[data-page-index="0"]').first();
   await expect(firstPage).toBeVisible({ timeout: 30_000 });
@@ -288,7 +291,10 @@ test("Ctrl+A selects text on every page of a multi-page document", async ({
   page,
 }) => {
   test.setTimeout(60_000);
-  await page.locator('input[type="file"]').first().setInputFiles(MULTIPAGE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(MULTIPAGE_PDF);
 
   // Wait until all 3 pages have rendered (the viewer pulls them in as the
   // scroll plugin reports them).

@@ -106,24 +106,22 @@ for (const path of ["/settings/account-link", "/settings/billing"]) {
   });
 }
 
-test("the Enterprise page asks an unlinked server to connect first, and only on request", async ({
+test("the Enterprise address forwards to the hosted Enterprise page, without asking to connect", async ({
   page,
 }) => {
-  await page.goto("/enterprise");
-  const connect = page.getByRole("button", {
-    name: "Link account",
-    exact: true,
+  // Stands in for stirling.com, so the forward is checked without loading the live site.
+  let forwardedTo: string | null = null;
+  await page.route(/^https:\/\/[^/]*stirling\.com\//, (route) => {
+    forwardedTo = route.request().url();
+    return route.fulfill({ contentType: "text/html", body: "" });
   });
-  await expect(connect).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await connect.click();
-  await expect(page.getByRole("dialog")).toHaveCount(1);
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Not now", exact: true })
-    .click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(connect).toBeVisible();
+  await page.goto("/enterprise?source=sales");
+  await expect
+    .poll(() => forwardedTo)
+    .toMatch(/^https:\/\/[^/]*stirling\.com\/.*\/enterprise\?source=sales$/);
+  await expect(
+    page.getByRole("button", { name: "Link account", exact: true }),
+  ).toHaveCount(0);
 });
 
 test("late exhausted-credit responses do not reopen a dismissed dialog", async ({
@@ -194,9 +192,11 @@ for (const role of ["ROLE_ADMIN", "ROLE_TEAM_LEAD", "ROLE_USER"]) {
         return route.fulfill({ status: 403, json: {} });
       });
       await page.goto(path);
-      await expect(
-        page.getByRole("button", { name: "colleague — Account", exact: true }),
-      ).toBeVisible();
+      const avatar = page.getByRole("button", {
+        name: "colleague - Account",
+        exact: true,
+      });
+      await expect(avatar).toBeVisible();
       await page.evaluate(() =>
         window.dispatchEvent(new Event("stirling:portal-free-tier-exhausted")),
       );
@@ -211,6 +211,14 @@ for (const role of ["ROLE_ADMIN", "ROLE_TEAM_LEAD", "ROLE_USER"]) {
       ).toHaveCount(0);
       await expect(
         page.getByRole("button", { name: "Usage & Billing", exact: true }),
+      ).toHaveCount(0);
+      // The avatar menu must not offer billing to non-owners either.
+      await avatar.click();
+      await expect(
+        page.getByRole("menuitem", { name: "Settings", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("menuitem", { name: "Usage & Billing", exact: true }),
       ).toHaveCount(0);
       expect(linkRequests).toBe(0);
     });
@@ -348,10 +356,10 @@ for (const connectionState of [
     }
     if (linked) {
       await page
-        .getByRole("button", { name: "owner — Account", exact: true })
+        .getByRole("button", { name: "owner - Account", exact: true })
         .click();
       await page
-        .getByRole("button", { name: "Usage & Billing", exact: true })
+        .getByRole("menuitem", { name: "Usage & Billing", exact: true })
         .click();
       await expect(
         page.getByRole("button", { name: "Sign in again", exact: true }),

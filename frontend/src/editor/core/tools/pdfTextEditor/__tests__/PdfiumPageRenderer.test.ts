@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 
 // A4 in PDF points.
@@ -38,5 +39,20 @@ describe("PdfiumPageRenderer.deviceScale", () => {
   it("keeps ordinary pages essentially unclamped at max zoom on 2x", () => {
     // A4 at 8x sits right on the pixel budget, so the cap shaves ~0.01.
     expect(PdfiumPageRenderer.deviceScale(A4_W, A4_H, 4, 2)).toBeCloseTo(8, 1);
+  });
+});
+
+describe("PdfiumPageRenderer.pixelsCovering", () => {
+  it("scales each axis by the bitmap's own rounding on a long, narrow page", () => {
+    const page = new Page({ index: 0, pagePtr: 1, width: 100, height: 10_000 });
+    const scale = 1.004;
+    const raster = PdfiumPageRenderer.rasterSize(100, 10_000, scale);
+    const k = raster.height / 10_000;
+    const line = { x: 10, y: 20, width: 50, height: 12 };
+
+    const area = PdfiumPageRenderer.pixelsCovering(page, scale, line)!;
+
+    expect(area.y).toBeLessThanOrEqual((10_000 - line.y - line.height) * k);
+    expect(area.y + area.height).toBeGreaterThanOrEqual((10_000 - line.y) * k);
   });
 });

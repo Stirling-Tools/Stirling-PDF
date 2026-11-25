@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -41,22 +40,15 @@ import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
 import stirling.software.SPDF.service.OfficeConversionService;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils.ToolRequiredException;
 import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Additional tests for {@link ConvertPDFToOffice}. The office-format conversions delegate to {@code
- * PDFToFile.processPdfToOfficeFormat}, which shells out to LibreOffice through the static {@link
- * ProcessExecutor} factory. Here that factory is mocked with {@code mockStatic}; the mocked
- * command-runner writes the expected output file into the LibreOffice {@code --outdir} so the real
- * {@code PDFToFile} flow completes and a file-backed response is produced. No real LibreOffice
- * runs.
+ * Additional tests for {@link ConvertPDFToOffice}. The converter is mocked to write a fake output
+ * file, and {@link ProcessExecutor} is mocked statically to prove no external process runs.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -65,16 +57,12 @@ class ConvertPDFToOfficeMoreTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @Mock private OfficeConversionService officeConversionService;
-    @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private EndpointConfiguration endpointConfiguration;
 
     @InjectMocks private ConvertPDFToOffice controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        // These cover the legacy converters; Stirling Office Convert has its own tests.
-        lenient().when(officeConversionService.legacy(null)).thenReturn(true);
-        lenient().when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
         lenient().when(endpointConfiguration.isEndpointEnabled("pdf-to-rtf")).thenReturn(true);
         // Real temp files backing TempFileManager so the file-backed response can be read back.
         lenient()
@@ -90,27 +78,6 @@ class ConvertPDFToOfficeMoreTest {
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
                         });
-
-        // PDFToFile creates its own TempFile(manager, suffix) which calls manager.createTempFile.
-        lenient()
-                .when(tempFileManager.createTempFile(any()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("conv-in", inv.<String>getArgument(0))
-                                            .toFile();
-                            f.deleteOnExit();
-                            return f;
-                        });
-
-        // PDFToFile also creates a TempDirectory for LibreOffice output.
-        lenient()
-                .when(tempFileManager.createTempDirectory())
-                .thenAnswer(inv -> Files.createTempDirectory("conv-dir"));
-
-        // Force the soffice fallback path (uno disabled) and a deterministic soffice binary name.
-        lenient().when(runtimePathConfig.getUnoConvertPath()).thenReturn("");
-        lenient().when(runtimePathConfig.getSOfficePath()).thenReturn("soffice");
     }
 
     private MockMultipartFile pdfFile() {
@@ -126,39 +93,25 @@ class ConvertPDFToOfficeMoreTest {
                 "fileInput", "document.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
     }
 
+    /** Makes the mocked converter write a fake output file to its target path. */
+    private void stubConverterWritesOutput() throws Exception {
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            Path out = inv.getArgument(1);
+                            Files.write(out, "converted-bytes".getBytes(StandardCharsets.UTF_8));
+                            return null;
+                        })
+                .when(officeConversionService)
+                .convert(any(), any(Path.class), any(String.class), any());
+    }
+
     private static byte[] readResource(Resource resource) throws IOException {
         try (InputStream in = resource.getInputStream();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             in.transferTo(baos);
             return baos.toByteArray();
         }
-    }
-
-    /**
-     * Stubs the LibreOffice executor so that running the soffice command writes a fake output file
-     * (named {@code document.<ext>}) into the directory that follows {@code --outdir}.
-     */
-    private void stubLibreOfficeWritesOutput(
-            MockedStatic<ProcessExecutor> mockedFactory, String primaryExt) throws Exception {
-        ProcessExecutor executor = mock(ProcessExecutor.class);
-        ProcessExecutorResult okResult = mock(ProcessExecutorResult.class);
-        lenient().when(okResult.getRc()).thenReturn(0);
-
-        when(executor.runCommandWithOutputHandling(any()))
-                .thenAnswer(
-                        inv -> {
-                            List<String> cmd = inv.getArgument(0);
-                            int outDirIdx = cmd.indexOf("--outdir");
-                            Path outDir = Path.of(cmd.get(outDirIdx + 1));
-                            Path outFile = outDir.resolve("document." + primaryExt);
-                            Files.write(
-                                    outFile, "converted-bytes".getBytes(StandardCharsets.UTF_8));
-                            return okResult;
-                        });
-
-        mockedFactory
-                .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
-                .thenReturn(executor);
     }
 
     @Nested
@@ -173,10 +126,9 @@ class ConvertPDFToOfficeMoreTest {
             request.setOutputFormat("pptx");
 
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                stubLibreOfficeWritesOutput(mockedFactory, "pptx");
+                stubConverterWritesOutput();
 
-                ResponseEntity<Resource> response =
-                        controller.processPdfToPresentation(request, null);
+                ResponseEntity<Resource> response = controller.processPdfToPresentation(request);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
@@ -184,39 +136,29 @@ class ConvertPDFToOfficeMoreTest {
         }
 
         @Test
-        @DisplayName("non-PDF input returns 400 without invoking LibreOffice")
+        @DisplayName("non-PDF input returns 400 without converting")
         void presentationNonPdfReturnsBadRequest() throws Exception {
             PdfToPresentationRequest request = new PdfToPresentationRequest();
             request.setFileInput(nonPdfFile());
             request.setOutputFormat("pptx");
 
-            ResponseEntity<Resource> response = controller.processPdfToPresentation(request, null);
+            ResponseEntity<Resource> response = controller.processPdfToPresentation(request);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         }
 
         @Test
-        @DisplayName("LibreOffice IOException propagates from presentation conversion")
-        void presentationLibreOfficeFailurePropagates() throws Exception {
+        @DisplayName("a converter IOException propagates from presentation conversion")
+        void presentationConverterFailurePropagates() throws Exception {
             PdfToPresentationRequest request = new PdfToPresentationRequest();
             request.setFileInput(pdfFile());
             request.setOutputFormat("pptx");
 
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                ProcessExecutor executor = mock(ProcessExecutor.class);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenThrow(new IOException("soffice crashed"));
-                mockedFactory
-                        .when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.LIBRE_OFFICE))
-                        .thenReturn(executor);
+            org.mockito.Mockito.doThrow(new IOException("conversion failed"))
+                    .when(officeConversionService)
+                    .convert(any(), any(Path.class), any(String.class), any());
 
-                assertThrows(
-                        IOException.class,
-                        () -> controller.processPdfToPresentation(request, null));
-            }
+            assertThrows(IOException.class, () -> controller.processPdfToPresentation(request));
         }
     }
 
@@ -232,9 +174,9 @@ class ConvertPDFToOfficeMoreTest {
             request.setOutputFormat("docx");
 
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                stubLibreOfficeWritesOutput(mockedFactory, "docx");
+                stubConverterWritesOutput();
 
-                ResponseEntity<Resource> response = controller.processPdfToWord(request, null);
+                ResponseEntity<Resource> response = controller.processPdfToWord(request);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
@@ -248,7 +190,7 @@ class ConvertPDFToOfficeMoreTest {
             request.setFileInput(pdfFile());
             request.setOutputFormat("bogus");
 
-            ResponseEntity<Resource> response = controller.processPdfToWord(request, null);
+            ResponseEntity<Resource> response = controller.processPdfToWord(request);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         }
@@ -259,8 +201,8 @@ class ConvertPDFToOfficeMoreTest {
     class TextRtfConversion {
 
         @Test
-        @DisplayName("txt output uses PDFBox stripper, not LibreOffice")
-        void txtUsesStripper() throws Exception {
+        @DisplayName("txt output is served as plain text")
+        void txtIsPlainText() throws Exception {
             PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
             request.setFileInput(pdfFile());
             request.setOutputFormat("txt");
@@ -269,23 +211,23 @@ class ConvertPDFToOfficeMoreTest {
             realDoc.addPage(new PDPage());
             when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request, null);
+            ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertEquals(MediaType.TEXT_PLAIN, response.getHeaders().getContentType());
         }
 
         @Test
-        @DisplayName("rtf output delegates to LibreOffice and streams back")
-        void rtfDelegatesToLibreOffice() throws Exception {
+        @DisplayName("rtf output streams the converted file back")
+        void rtfStreamsBack() throws Exception {
             PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
             request.setFileInput(pdfFile());
             request.setOutputFormat("rtf");
 
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                stubLibreOfficeWritesOutput(mockedFactory, "rtf");
+                stubConverterWritesOutput();
 
-                ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request, null);
+                ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
@@ -293,7 +235,7 @@ class ConvertPDFToOfficeMoreTest {
         }
 
         @Test
-        @DisplayName("txt branch closes temp file and rethrows when stripper load fails")
+        @DisplayName("txt closes the temp file and rethrows when the load fails")
         void txtLoadFailurePropagates() throws Exception {
             PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
             request.setFileInput(pdfFile());
@@ -303,16 +245,14 @@ class ConvertPDFToOfficeMoreTest {
                     .thenThrow(new IOException("cannot parse pdf"));
 
             IOException thrown =
-                    assertThrows(
-                            IOException.class,
-                            () -> controller.processPdfToRTForTXT(request, null));
+                    assertThrows(IOException.class, () -> controller.processPdfToRTForTXT(request));
             assertEquals("cannot parse pdf", thrown.getMessage());
         }
     }
 
     @Nested
-    @DisplayName("LibreOffice gate")
-    class LibreOfficeGate {
+    @DisplayName("Format and endpoint gates")
+    class FormatGates {
 
         private PdfToTextOrRTFRequest textRequest(String format) {
             PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
@@ -322,7 +262,7 @@ class ConvertPDFToOfficeMoreTest {
         }
 
         @Test
-        @DisplayName("rtf answers 403 when pdf-to-rtf is disabled, without running LibreOffice")
+        @DisplayName("rtf answers 403 when pdf-to-rtf is disabled, without converting")
         void rtfRefusedWhenItsEndpointIsDisabled() {
             when(endpointConfiguration.isEndpointEnabled("pdf-to-rtf")).thenReturn(false);
 
@@ -330,7 +270,7 @@ class ConvertPDFToOfficeMoreTest {
                 ResponseStatusException thrown =
                         assertThrows(
                                 ResponseStatusException.class,
-                                () -> controller.processPdfToRTForTXT(textRequest("rtf"), null));
+                                () -> controller.processPdfToRTForTXT(textRequest("rtf")));
                 assertEquals(HttpStatus.FORBIDDEN, thrown.getStatusCode());
                 mockedFactory.verifyNoInteractions();
             }
@@ -344,8 +284,7 @@ class ConvertPDFToOfficeMoreTest {
             realDoc.addPage(new PDPage());
             when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response =
-                    controller.processPdfToRTForTXT(textRequest("txt"), null);
+            ResponseEntity<Resource> response = controller.processPdfToRTForTXT(textRequest("txt"));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -359,9 +298,7 @@ class ConvertPDFToOfficeMoreTest {
                 for (String format : new String[] {"docx", null}) {
                     assertEquals(
                             HttpStatus.BAD_REQUEST,
-                            controller
-                                    .processPdfToRTForTXT(textRequest(format), null)
-                                    .getStatusCode(),
+                            controller.processPdfToRTForTXT(textRequest(format)).getStatusCode(),
                             String.valueOf(format));
                 }
                 mockedFactory.verifyNoInteractions();
@@ -375,9 +312,7 @@ class ConvertPDFToOfficeMoreTest {
                 for (String format : new String[] {"doc", "docx", "odt", "xml"}) {
                     assertEquals(
                             HttpStatus.BAD_REQUEST,
-                            controller
-                                    .processPdfToRTForTXT(textRequest(format), null)
-                                    .getStatusCode(),
+                            controller.processPdfToRTForTXT(textRequest(format)).getStatusCode(),
                             format);
                 }
                 mockedFactory.verifyNoInteractions();
@@ -392,37 +327,22 @@ class ConvertPDFToOfficeMoreTest {
             request.setOutputFormat("xml");
 
             assertEquals(
-                    HttpStatus.BAD_REQUEST,
-                    controller.processPdfToWord(request, null).getStatusCode());
+                    HttpStatus.BAD_REQUEST, controller.processPdfToWord(request).getStatusCode());
         }
 
         @Test
-        @DisplayName("every LibreOffice branch asks for LibreOffice when its group is off")
-        void libreOfficeBranchesRefuseWhenUnavailable() {
-            when(officeConversionService.libreOfficeAvailable()).thenReturn(false);
-            PdfToWordRequest word = new PdfToWordRequest();
-            word.setFileInput(pdfFile());
-            word.setOutputFormat("docx");
-            PdfToPresentationRequest presentation = new PdfToPresentationRequest();
-            presentation.setFileInput(pdfFile());
-            presentation.setOutputFormat("pptx");
-            PDFFile xml = new PDFFile();
-            xml.setFileInput(pdfFile());
+        @DisplayName("word endpoint explains that .doc output is gone")
+        void wordEndpointExplainsDoc() {
+            PdfToWordRequest request = new PdfToWordRequest();
+            request.setFileInput(pdfFile());
+            request.setOutputFormat("doc");
 
-            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                assertThrows(
-                        ToolRequiredException.class,
-                        () -> controller.processPdfToRTForTXT(textRequest("rtf"), null));
-                assertThrows(
-                        ToolRequiredException.class,
-                        () -> controller.processPdfToWord(word, false));
-                assertThrows(
-                        ToolRequiredException.class,
-                        () -> controller.processPdfToPresentation(presentation, false));
-                assertThrows(
-                        ToolRequiredException.class, () -> controller.processPdfToXML(xml, null));
-                mockedFactory.verifyNoInteractions();
-            }
+            IllegalArgumentException e =
+                    org.junit.jupiter.api.Assertions.assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.processPdfToWord(request));
+            org.junit.jupiter.api.Assertions.assertTrue(
+                    e.getMessage().contains("use docx or odt"), e.getMessage());
         }
     }
 
@@ -437,9 +357,9 @@ class ConvertPDFToOfficeMoreTest {
             file.setFileInput(pdfFile());
 
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
-                stubLibreOfficeWritesOutput(mockedFactory, "xml");
+                stubConverterWritesOutput();
 
-                ResponseEntity<Resource> response = controller.processPdfToXML(file, null);
+                ResponseEntity<Resource> response = controller.processPdfToXML(file);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertTrue(readResource(response.getBody()).length > 0);
@@ -452,7 +372,7 @@ class ConvertPDFToOfficeMoreTest {
             PDFFile file = new PDFFile();
             file.setFileInput(nonPdfFile());
 
-            ResponseEntity<Resource> response = controller.processPdfToXML(file, null);
+            ResponseEntity<Resource> response = controller.processPdfToXML(file);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         }

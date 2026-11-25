@@ -1,0 +1,32 @@
+.item {
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-md);
+}
+
+.chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium, 500);
+  line-height: 1.3;
+  color: var(--c-text);
+}
+
+.description {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--c-text-muted);
+}

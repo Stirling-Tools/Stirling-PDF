@@ -512,6 +512,11 @@ submit = "تنظیم مقیاس صفحه"
 tags = "تغییر اندازه,ویرایش,ابعاد,تطبیق"
 title = "تنظیم مقیاس صفحه"
 
+[adjustPageScale.customSize]
+height = "ارتفاع"
+unit = "واحد"
+width = "عرض"
+
 [adjustPageScale.error]
 failed = "هنگام تنظیم مقیاس صفحه خطایی رخ داد."
 
@@ -521,6 +526,7 @@ landscape = "افقی"
 portrait = "عمودی"
 
 [adjustPageScale.pageSize]
+custom = "سفارشی"
 keep = "حفظ اندازه اصلی"
 label = "اندازه صفحه مقصد"
 legal = "لگال"
@@ -641,18 +647,16 @@ description = "حداکثر DPI برای پردازش تصویر (0 = نامحد
 label = "حداکثر DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "پیکربندی محدودیت نشست و مهلت‌ها برای هر مجری فرایند"
 ghostscript = "Ghostscript"
 installApp = "نصب برنامه"
 label = "محدودیت‌های مجری فرایند"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF به HTML"
+officeConvert = "تبدیل Office"
+officeConvertSessionLimit = "حداکثر تبدیل‌های همزمان؛ 0 محدودیت را بر اساس CPUها و حافظه انتخاب می‌کند"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "حداکثر نمونه‌های همزمان"
@@ -661,10 +665,6 @@ label = "محدودیت نشست"
 [admin.settings.advanced.processExecutor.timeout]
 description = "حداکثر زمان اجرا"
 label = "مهلت (دقیقه)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert در نسخه بتا است. تبدیل‌های بهتر و سریع‌تری را با مصرف حافظه کمتر نسبت به LibreOffice ارائه می‌دهد."
-label = "استفاده از تبدیل جدید Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "پیکربندی ذخیره‌سازی فایل‌های موقت و رفتار پاکسازی"
@@ -682,11 +682,6 @@ label = "بازه پاکسازی (دقیقه)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "این‌که آیا دایرکتوری موقت سراسری سیستم پاکسازی شود (با احتیاط استفاده کنید)"
 label = "پاکسازی موقت سیستم"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "دایرکتوری فایل‌های موقت LibreOffice (خالی بگذارید برای پیش‌فرض: baseTmpDir/libreoffice)"
-label = "دایرکتوری موقت LibreOffice"
-placeholder = "پیش‌فرض: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "حداکثر سن بر حسب ساعت قبل از پاکسازی فایل‌های موقت"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "تصاویر را برای پر کردن کل �
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "حفظ (ابعاد اصلی)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "نحوهٔ راه‌اندازی {{name}}"
 title = "اتصالات"
 unlinkedServices = "سرویس‌های غیرمتصل"
 
@@ -1294,17 +1290,6 @@ label = "تولیدکننده پیش‌فرض"
 description = "پیکربندی مسیرهای فایل سیستم سفارشی برای پردازش پایپلاین و ابزارهای خارجی"
 label = "مسیرهای سفارشی"
 
-[admin.settings.general.customPaths.operations]
-label = "مسیر ابزارهای خارجی"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "مسیر LibreOffice unoconvert برای تبدیل اسناد (خالی بگذارید برای پیش‌فرض: /opt/venv/bin/unoconvert)"
-label = "فایل اجرایی Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "مسیر فایل اجرایی WeasyPrint برای تبدیل HTML به PDF (خالی بگذارید برای پیش‌فرض: /opt/venv/bin/weasyprint)"
-label = "فایل اجرایی WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "دایرکتوری‌های پایپلاین"
 
@@ -1327,6 +1312,10 @@ label = "دایرکتوری‌های پوشه‌های پایش‌شده"
 [admin.settings.general.defaultLocale]
 description = "زبان پیش‌فرض برای کاربران جدید (مثلاً en_US, es_ES)"
 label = "زبان پیش‌فرض"
+
+[admin.settings.general.enableFeedback]
+description = "به کاربران اجازه دهید برای تیم Stirling بازخورد ارسال کنند"
+label = "فعال‌سازی بازخورد"
 
 [admin.settings.general.fileUploadLimit]
 description = "حداکثر اندازه بارگذاری فایل (مثلاً 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "رویدادهای STANDARD به‌علاوه: فراخوانی‌ه�
 [admin.settings.security.audit.retentionDays]
 description = "تعداد روزهای نگهداری گزارش‌های ممیزی (0 = نگهداری نامحدود)"
 label = "نگهداری گزارش (روز)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "PDFهای امضاشده همچنان قابل مشاهده، چاپ، تبدیل یا دوباره امضا کردن هستند، اما در برنامه قابل تغییر نیستند. تماس‌های API و پایپ‌لاین‌های سرور تحت تأثیر قرار نمی‌گیرند."
+label = "مسدودکردن تغییرات در PDFهای امضاشده"
 
 [admin.settings.security.csrfDisabled]
 description = "غیرفعال کردن محافظت Cross-Site Request Forgery (توصیه نمی‌شود)"
@@ -2969,6 +2962,7 @@ loadError = "بارگذاری کاربران ناموفق بود"
 noTeam = "بدون تیم"
 noUsers = "کاربر دیگری یافت نشد."
 placeholder = "کاربران را انتخاب کنید..."
+signInRequired = "برای درخواست امضا از دیگران وارد شوید."
 you = "{{name}} (شما)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "حساب شما توسط ارائه‌دهنده هویت شما �
 title = "تغییر مشخصات"
 
 [changeMetadata]
-filenamePrefix = "فراداده"
 submit = "تغییر"
 tags = "ویرایش,تغییر,به‌روزرسانی,فراداده,ویژگی‌ها,ویژگی‌های سند,نویسنده,عنوان,موضوع,کلمات کلیدی,ایجادکننده,تولیدکننده,اطلاعات,اطلاعات سند,ویژگی‌های فایل"
 
@@ -3265,6 +3258,248 @@ not_found = "اطلاعات درخواستی را پیدا نکردم."
 processing = "در حال پردازش ({{outcome}})..."
 unsupported_capability = "قابلیت پشتیبانی‌نشده: {{capability}}"
 usage_limit_reached = "به حد مجاز استفاده خود رسیده‌اید. برای ادامه، گزینه‌های پلن خود را بررسی کنید."
+
+[checkAccessibility]
+aboutRow = "درباره {{label}}"
+checking = "در حال بررسی..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "دانلود گزارش دسترس‌پذیری"
+fileFailed = "ناموفق"
+pickFile = "نمایش نتایج برای"
+submit = "بررسی دسترس‌پذیری"
+
+[checkAccessibility.category]
+altText = "متن جایگزین"
+fonts = "فونت‌ها"
+language = "زبان"
+links = "پیوندها و حاشیه‌نویسی‌ها"
+metadata = "فراداده و تنظیمات"
+structure = "برچسب‌ها و ساختار"
+
+[checkAccessibility.categoryTip]
+altText = "تصاویر نیاز به توضیح کوتاهی دارند تا صفحه‌خوان‌ها به‌جای خود تصویر آن را بخوانند."
+fonts = "فونت‌ها باید در فایل باشند و هر نویسه به متن واقعی پیوند داشته باشد تا متن خوانده و کپی شود."
+language = "صفحه‌خوان‌ها باید زبان سند را بدانند تا درست تلفظ کنند."
+links = "پیوندها، نظرها و فیلدهای فرم نیاز به برچسب و توضیح دارند و ترتیب زبانه باید از صفحه پیروی کند."
+metadata = "عنوان، اعلام PDF/UA و سایر تنظیماتی که فناوری کمکی از فایل می‌خواند."
+structure = "برچسب‌ها به صفحه‌خوان‌ها می‌گویند هر بخش صفحه چیست، مانند سرعنوان، فهرست یا جدول، و ترتیب خواندن آن چگونه است."
+
+[checkAccessibility.checks]
+label = "{{passed}} از {{total}} بررسی با موفقیت گذرانده شد"
+
+[checkAccessibility.error]
+download = "گزارش دسترس‌پذیری ایجاد نشد. دوباره تلاش کنید."
+fileTitle = "این فایل قابل بررسی نبود"
+partial = "برخی فایل‌ها قابل بررسی نبودند."
+
+[checkAccessibility.facts]
+declares = "PDF/UA را اعلام می‌کند"
+displaysTitle = "عنوانش را نشان می‌دهد"
+fonts = "فونت‌ها جاسازی شده‌اند"
+language = "یک زبان را اعلام می‌کند"
+notEncrypted = "رمزنگاری نشده"
+tagged = "برچسب‌گذاری شده است"
+title = "عنوان دارد"
+
+[checkAccessibility.factTip]
+declares = "فرادادهٔ فایل می‌گوید از PDF/UA پیروی می‌کند."
+displaysTitle = "نمایشگرهای PDF هنگام بازشدن، عنوان را نشان می‌دهند نه نام فایل."
+fonts = "هر فونتی که متن استفاده می‌کند در فایل گنجانده شده است."
+language = "فایل می‌گوید متنش به چه زبانی است."
+notEncrypted = "فایل رمزنگاری نشده است. رمزنگاری می‌تواند مانع خواندن آن توسط فناوری کمکی شود."
+tagged = "فایل دارای برچسب‌هایی برای توصیف ساختارش است. بدون آن‌ها، صفحه‌خوان‌ها فقط متن ساده می‌گیرند."
+title = "فایل در فراداده‌اش یک عنوان دارد."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} تصویر به توضیح نیاز دارد (صفحه {{pages}})"
+summary_other = "{{count}} تصویر به توضیح نیاز دارند (صفحات {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "مربوط به"
+clauseValue = "{{spec}} §{{clause}}، آزمون {{test}}"
+details = "جزئیات"
+instances_one = "{{count}} مورد"
+instances_other = "{{count}} مورد"
+onPages_one = "صفحه {{pages}}"
+onPages_other = "صفحات {{pages}}"
+onPagesPartial_one = "صفحه {{pages}} (فهرست ممکن است کامل نباشد)"
+onPagesPartial_other = "صفحات {{pages}} (فهرست ممکن است کامل نباشد)"
+pages = "صفحات"
+pagesPartialValue = "{{pages}} (فقط رخدادهای نخست یک صفحه ثبت می‌کنند، بنابراین این فهرست ممکن است کامل نباشد)"
+requirement = "الزام"
+rule = "قانون"
+standard = "استاندارد"
+where = "محل"
+
+[checkAccessibility.manual]
+clearAll = "پاک کردن همه"
+done = "انجام شد"
+inProgress = "در حال انجام"
+markAllDone = "علامت‌گذاری همه به‌عنوان انجام‌شده"
+tip = "چیزهایی که فقط یک انسان می‌تواند قضاوت کند، مانند ترتیب خواندن و این‌که آیا توضیح تصاویر منطقی است. هر مورد را پس از بررسی علامت بزنید؛ علامت‌های شما در گزارش دانلودشده می‌آیند."
+title = "بررسی‌های دستی"
+
+[checkAccessibility.objects]
+annotation = "یک حاشیه‌نویسی"
+bookmark = "یک نشانک"
+character = "یک نویسه در یک فونت"
+contentPiece = "بخشی از محتوای صفحه"
+document = "سند"
+drawing = "یک ترسیم"
+figure = "یک شکل"
+file = "خودِ فایل"
+font = "یک فونت"
+form = "فرم"
+formField = "یک فیلد فرم"
+link = "یک پیوند"
+markedContent = "محتوای نشانه‌دار صفحه"
+metadata = "فرادادهٔ سند"
+page = "یک صفحه"
+properties = "ویژگی‌های سند"
+tag = "یک برچسب {{name}}"
+tagTree = "درخت برچسب"
+textPiece = "بخشی از متن"
+translatedMetadata = "یک ورودی فراداده با ترجمه‌ها"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (ادامه)"
+footer = "بررسی‌شده با Stirling PDF"
+page = "صفحه {{n}}"
+title = "گزارش دسترس‌پذیری"
+
+[checkAccessibility.result]
+fail = "رد"
+failSummary = "ممکن است صفحه‌خوان‌ها نتوانند همهٔ این سند را بخوانند."
+partial = "جزئی"
+partialSummary = "صفحه‌خوان‌ها می‌توانند این سند را بخوانند، اما برخی بررسی‌ها رد می‌شوند."
+pass = "قبول"
+passSummary = "همهٔ بررسی‌های خودکار PDF/UA را می‌گذراند."
+
+[checkAccessibility.rules]
+annotationLanguage = "متن نظر یا پیوند زبانی ندارد، بنابراین صفحه‌خوان‌ها نمی‌دانند به چه زبانی آن را بخوانند. برای رفع، زبان سند را تنظیم کنید."
+annotationNoDescription = "یک نظر، پیوند یا ترسیم توضیح متنی ندارد؛ بنابراین صفحه‌خوان‌ها چیزی برای اعلان ندارند."
+annotationNotTagged = "یک نظر یا ترسیم به‌صورت حاشیه‌نویسی برچسب‌گذاری نشده است، بنابراین صفحه‌خوان‌ها در ترتیب خواندن به آن نمی‌رسند."
+artifactInsideTagged = "چیزی که به‌عنوان تزئینی علامت خورده داخل محتوای برچسب‌گذاری‌شده قرار دارد، بنابراین هم خوانده و هم پرش می‌شود."
+bookmarkLanguage = "نشانک‌ها زبان ندارند، بنابراین صفحه‌خوان‌ها نمی‌دانند به چه زبانی آن‌ها را بخوانند. برای رفع، زبان سند را تنظیم کنید."
+conformancePrefix = "اعلام PDF/UA در فراداده از پیشوند اشتباه استفاده می‌کند، بنابراین نمایشگرهای PDF ممکن است آن را نشناسند."
+contentLanguage = "متن زبانی ندارد، بنابراین صفحه‌خوان‌ها نمی‌دانند به چه زبانی آن را بخوانند. برای رفع، زبان سند را تنظیم کنید."
+customTagNotMapped = "یک برچسب از نام سفارشی‌ای استفاده می‌کند که به برچسب استانداردی نگاشته نشده است، بنابراین صفحه‌خوان‌ها نمی‌دانند چیست."
+figureNoAlt = "یک تصویر به‌عنوان شکل برچسب‌گذاری شده اما توضیحی ندارد؛ بنابراین کاربران صفحه‌خوان‌ها نمی‌فهمند چه چیزی را نشان می‌دهد."
+fontMissingGlyphs = "یکی از فونت‌های درج‌شده برخی نویسه‌هایی را که سند استفاده می‌کند ندارد."
+fontNotEmbedded = "یک فونت در فایل گنجانده نشده است، بنابراین ممکن است متن روی رایانه‌ای دیگر متفاوت دیده یا خوانده شود."
+formFieldNotTagged = "یک فیلد فرم به‌عنوان بخشی از فرم برچسب‌گذاری نشده است، بنابراین صفحه‌خوان‌ها ممکن است آن را پیدا نکنند."
+genericHeading = "یک سرعنوان از برچسب H استفاده می‌کند که سطح ندارد. PDF/UA-2 به H1 تا H6 نیاز دارد تا کاربران صفحه‌خوان‌ها بتوانند تو در تو بودن سرعنوان‌ها را بفهمند."
+glyphWidths = "عرض نویسه‌های یک فونت در فایل با خود فونت تطابق ندارد، بنابراین ممکن است فاصله‌گذاری متن نادرست باشد."
+headingSkipped = "سطوح سرعنوان یک پله را رد کرده‌اند، برای نمونه از سرعنوان 1 مستقیم به سرعنوان 3، که جابه‌جایی بین سرعنوان‌ها را گیج‌کننده می‌کند."
+linkNoDescription = "یک پیوند توضیحی ندارد، بنابراین صفحه‌خوان‌ها فقط می‌توانند آدرس آن یا هیچ‌چیز را بخوانند."
+linkNotTagged = "یک پیوند به‌عنوان پیوند برچسب‌گذاری نشده است، بنابراین صفحه‌خوان‌ها آن را به‌عنوان پیوند اعلام نمی‌کنند."
+metadataLanguage = "فراداده، مانند عنوان، زبانی ندارد، بنابراین صفحه‌خوان‌ها نمی‌دانند به چه زبانی آن را بخوانند. برای رفع، زبان سند را تنظیم کنید."
+noConformanceClaim = "فایل نمی‌گوید از PDF/UA پیروی می‌کند. فرادادهٔ آن به یک ورودی شناسایی PDF/UA نیاز دارد."
+noDocumentTag = "برچسب‌ها به یک برچسب Document در بالا نیاز دارند و بقیه درون آن قرار گیرند."
+noLanguage = "سند مشخص نکرده به چه زبانی است، بنابراین صفحه‌خوان‌ها ممکن است آن را به زبان اشتباه بخوانند."
+noMetadataStream = "فایل فرادادهٔ XMP ندارد؛ جایی که PDF/UA عنوان و جزئیات انطباق سند را نگه می‌دارد."
+noTags = "فایل هیچ برچسبی ندارد، بنابراین صفحه‌خوان‌ها نمی‌توانند سرعنوان‌ها، پاراگراف‌ها، فهرست‌ها یا جدول‌ها را از هم جدا کنند یا به ترتیب درست بخوانند."
+notdefGlyph = "متن از جانگهدار «نویسهٔ مفقود» استفاده می‌کند که به‌صورت سفید یا کادر نمایش داده می‌شود و قابل خواندن نیست."
+noteTag = "فایل از برچسب Note استفاده می‌کند که در PDF/UA-2 با FENote برای پانوشت‌ها و یادداشت‌های انتهایی جایگزین شده است."
+noTitle = "سند در فراداده‌اش عنوانی ندارد."
+notMarkedTagged = "فایل به‌عنوان برچسب‌گذاری‌شده علامت نخورده است، بنابراین فناوری کمکی ممکن است برچسب‌های موجود را نادیده بگیرد."
+notPdf2Tags = "PDF/UA-2 به برچسب‌هایی نیاز دارد که یک فایل PDF 2.0 استفاده می‌کند. این‌ها شبیه برچسب‌های PDF 1.7 به نظر می‌رسند که معمولاً یعنی فایل برای PDF/UA-1 برچسب‌گذاری شده است."
+noUnicode = "برخی نویسه‌ها قابل تبدیل به متن خوانا نیستند، بنابراین صفحه‌خوان‌ها و کپی‌ـ‌چسباندن ممکن است آن‌ها را نادرست بگیرند."
+replacementTextLanguage = "بعضی متن‌های جایگزین زبان ندارند، بنابراین صفحه‌خوان‌ها نمی‌دانند به چه زبانی آن را بخوانند. برای رفع، زبان سند را تنظیم کنید."
+standardTagRemapped = "یک برچسب استاندارد به برچسب سفارشی پیوند شده است، بنابراین صفحه‌خوان‌ها معنای آن را از دست می‌دهند."
+symbolicEncoding = "یک فونت نمادی کدی را حمل می‌کند که نباید داشته باشد، بنابراین ممکن است نویسه‌هایش به حروف اشتباه تبدیل شوند."
+tabOrder = "صفحه‌ای با پیوند یا نظر ترتیب زبانه‌اش را مطابق سند تنظیم نکرده است، بنابراین کاربران صفحه‌کلید ممکن است در صفحه جهش کنند."
+taggedInsideArtifact = "محتوای برچسب‌گذاری‌شده داخل چیزی که به‌عنوان تزئینی علامت خورده قرار دارد، بنابراین صفحه‌خوان‌ها ممکن است از آن بگذرند."
+titleNotDisplayed = "نمایشگرهای PDF به‌جای عنوان سند، نام فایل را نشان خواهند داد. فایل نیاز دارد تنظیم \"display document title\" روشن باشد."
+untaggedContent = "چیزی در صفحه نه به‌عنوان محتوا برچسب‌گذاری شده و نه به‌عنوان تزئینی علامت خورده است، بنابراین صفحه‌خوان‌ها نمی‌توانند تصمیم بگیرند آن را بخوانند یا نه. این مورد اغلب یک تصویر پس‌زمینه، سربرگ، پاورقی یا شماره صفحه است."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "بدون زبان برای نظرها یا پیوندها"
+annotationNoDescription = "نظر، پیوند یا ترسیم بدون توضیح"
+annotationNotTagged = "نظر یا ترسیم برچسب‌گذاری نشده"
+artifactInsideTagged = "تزئینی داخل محتوای برچسب‌گذاری‌شده"
+bookmarkLanguage = "بدون زبان برای نشانک‌ها"
+conformancePrefix = "اعلام PDF/UA به‌نادرستی نوشته شده"
+contentLanguage = "بدون زبان برای متن"
+customTagNotMapped = "برچسب سفارشی بدون معنای استاندارد"
+figureNoAlt = "تصویر بدون توضیح"
+fontMissingGlyphs = "فونت نویسه‌هایی را کم دارد"
+fontNotEmbedded = "فونت جاسازی نشده"
+formFieldNotTagged = "فیلد فرم برچسب‌گذاری نشده"
+genericHeading = "سرعنوان بدون سطح"
+glyphWidths = "عرض نویسه‌های فونت تطابق ندارد"
+headingSkipped = "سطح سرعنوان رد شده"
+linkNoDescription = "پیوند بدون توضیح"
+linkNotTagged = "پیوند برچسب‌گذاری نشده"
+metadataLanguage = "بدون زبان برای فراداده"
+noConformanceClaim = "PDF/UA را اعلام نمی‌کند"
+noDocumentTag = "برچسب‌ها با Document شروع نمی‌شوند"
+noLanguage = "زبان سند تنظیم نشده"
+noMetadataStream = "فرادادهٔ XMP ندارد"
+noTags = "بدون برچسب"
+notdefGlyph = "از جانگهدار نویسهٔ مفقود استفاده شده"
+noteTag = "از برچسب Note استفاده می‌کند"
+noTitle = "بدون عنوان سند"
+notMarkedTagged = "به‌عنوان برچسب‌گذاری‌شده علامت نخورده"
+notPdf2Tags = "برچسب‌ها از نوع PDF 2.0 نیستند"
+noUnicode = "نویسه‌هایی که به‌صورت متن قابل خواندن نیستند"
+replacementTextLanguage = "بدون زبان برای متن جایگزین"
+standardTagRemapped = "برچسب استاندارد به سفارشی تبدیل شده"
+symbolicEncoding = "فونت نمادی کدگذاری نادرست دارد"
+tabOrder = "ترتیب زبانه از سند پیروی نمی‌کند"
+taggedInsideArtifact = "محتوای برچسب‌گذاری‌شده به‌عنوان تزئینی پنهان شده"
+titleNotDisplayed = "هنگام بازشدن عنوان نمایش داده نمی‌شود"
+untaggedContent = "محتوایی که برچسب‌گذاری نشده است"
+
+[checkAccessibility.score]
+issues_one = "{{count}} مورد"
+issues_other = "{{count}} مورد"
+noIssues = "هیچ موردی یافت نشد"
+subtitle_one = "{{profile}} - {{count}} صفحه"
+subtitle_other = "{{profile}} - {{count}} صفحه"
+
+[checkAccessibility.sections]
+breakdown = "تفکیک"
+
+[checkAccessibility.status]
+checking = "در حال بررسی {{current}} از {{total}}..."
+complete = "بررسی کامل شد"
+
+[checkAccessibility.steps]
+results = "نتایج"
+standard = "استاندارد"
+
+[checkAccessibility.tooltip.header]
+title = "کدام استاندارد بررسی شود"
+
+[checkAccessibility.tooltip.ua1]
+text = "اولین نسخه PDF/UA، منتشرشده در 2012 به‌عنوان ISO 14289-1، برای فایل‌های PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "نسخهٔ جدیدتر، منتشرشده در 2024 به‌عنوان ISO 14289-2، برای فایل‌های PDF 2.0. یک فایل PDF 1.7 که با آن سنجیده شود، قوانینی را که فقط برای PDF 2.0 اعمال می‌شوند رد می‌کند."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "حاشیه‌نویسی {{n}}"
+bookmarks = "نشانک‌ها"
+character = "یک نویسه در {{font}}"
+contentItem = "آیتم محتوا {{n}}"
+drawingStep = "گام ترسیم {{n}}"
+embeddedGraphic = "گرافیک جاسازی‌شده"
+font = "فونت {{name}}"
+metadata = "فرادادهٔ سند"
+page = "صفحه {{n}}"
+piece = "بخش {{n}}"
+tag = "برچسب {{tag}}"
+tagTree = "درخت برچسب"
+wholeDocument = "کل سند"
+
+[checkAccessibility.where.properties]
+author = "نویسنده"
+description = "توضیحات"
+pdfUaPart = "بخش PDF/UA"
+title = "عنوان"
 
 [classification.families]
 correspondence = "مکاتبات"
@@ -3729,6 +3964,10 @@ message = "یکی یا هر دو از اسناد ارائه شده برای پر
 body = "مجموع صفحات این PDFها بیش از 2,000 است. پردازش می‌تواند چند دقیقه طول بکشد."
 title = "مقایسه بزرگ در حال انجام"
 
+[compare.mode]
+pixel = "مقایسه پیکسلی"
+text = "مقایسه متنی"
+
 [compare.no.text]
 message = "یکی یا هر دو از PDFهای انتخاب شده محتوای متنی ندارند. لطفاً PDFهایی با متن برای مقایسه انتخاب کنید."
 
@@ -4046,6 +4285,30 @@ failed = "ورود شما قابل تمدید نبود. دوباره تلاش ک
 lead = "این سرور از قبل به حساب شما پیوند شده است. ورود خود را تمدید کنید تا به صورت‌حساب و میزان استفاده روی سرور خود برگردید."
 title = "تمدید ورود سرور شما"
 
+[connectedAccounts]
+connect = "اتصال"
+connectAnother = "اتصال یکی دیگر"
+connectFailed = "این حساب متصل نشد. بررسی کنید ثبت برنامهٔ سرور تنظیم شده باشد، سپس دوباره تلاش کنید."
+disconnect = "قطع اتصال"
+google = "Google Drive"
+intro = "یک‌بار حساب‌های خودتان را متصل کنید. سپس پایپ‌لاین‌های شما می‌توانند به‌عنوان شما از آن‌ها بخوانند و در آن‌ها ذخیره کنند."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling دیگر به این حساب دسترسی ندارد، بنابراین پایپ‌لاین‌هایی که از آن استفاده می‌کنند متوقف شده‌اند."
+none = "مدیر شما حساب‌های متصل را فعال نکرده است."
+personal = "حساب شخصی"
+popupBlocked = "مرورگر شما پنجرهٔ ورود را مسدود کرد. پاپ‌آپ‌ها را برای این سایت مجاز کنید و دوباره تلاش کنید."
+reconnect = "دوباره وارد شوید"
+work = "حساب کاری"
+
+[connectedAccounts.disconnectConfirm]
+body = "منابع و پایپ‌لاین‌هایی که از این حساب استفاده می‌کنند تا زمانی که دوباره آن را متصل کنید متوقف می‌شوند."
+confirm = "قطع اتصال"
+title = "اتصال {{account}} قطع شود؟"
+
+[connectedAccounts.status]
+connected = "متصل"
+needsSignIn = "نیاز به ورود"
+
 [convert]
 autoRotate = "چرخش خودکار"
 autoRotateDescription = "چرخش خودکار تصاویر برای تناسب بهتر با صفحه PDF"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "عنوان سند"
 pdfUaTitleHelp = "به‌جای نام فایل توسط خواننده نمایش داده می‌شود. اگر خالی بماند، اولین تیتر استفاده می‌شود."
 selectSourceFormatFirst = "ابتدا یک قالب مبدأ انتخاب کنید"
 settings = "تنظیمات"
+signInToUse = "برای استفاده وارد شوید"
 single = "تکی"
 sourceFormatPlaceholder = "قالب مبدأ"
-stirlingOfficeConvert = "استفاده از Stirling Office Convert (بتا)"
-stirlingOfficeConvertDescription = "تبدیل‌های بهتر و سریع‌تر با مصرف حافظه کمتر. برای استفاده از مبدل استاندارد، آن را خاموش کنید."
 strictMode = "حالت سخت‌گیرانه"
 strictModeDesc = "در صورت کامل نبودن تبدیل خطا بده (از تأیید VeraPDF استفاده می‌کند)"
 svgPdfOptions = "گزینه‌های SVG به PDF"
@@ -4134,8 +4396,6 @@ webOptions = "گزینه‌های Web به PDF"
 zoomLevel = "سطح بزرگ‌نمایی"
 
 [convert.ebookOptions]
-embedAllFonts = "جاسازی همه فونت‌ها"
-embedAllFontsDesc = "همه فونت‌های eBook را در PDF تولیدشده جاسازی کن"
 includePageNumbers = "شامل شماره صفحات"
 includePageNumbersDesc = "افزودن شماره صفحات به PDF تولیدشده"
 includeTableOfContents = "شامل فهرست مطالب"
@@ -4648,6 +4908,17 @@ title = "تنظیمات"
 [extractPages.tooltip]
 description = "صفحات انتخاب‌شده را در یک PDF جدید استخراج می‌کند و ترتیب را حفظ می‌کند."
 
+[feedback.page]
+open = "ارسال بازخورد"
+sendMore = "ارسال بازخورد بیشتر"
+sent = "از بازخورد شما متشکریم"
+title = "به ما کمک کنید Stirling را بهتر کنیم"
+unavailable = "بازخورد در دسترس نیست"
+
+[feedback.tag]
+dismiss = "مخفی کردن دکمهٔ بازخورد"
+label = "بازخورد"
+
 [fileCard]
 openInFileEditor = "باز کردن در ویرایشگر فایل"
 viewInViewer = "مشاهده در نمایشگر"
@@ -4657,7 +4928,6 @@ closeFile = "بستن فایل"
 
 [fileEditor]
 closedFile = "{{name}} بسته شد"
-couldNotSave = "ذخیره {{name}} ممکن نبود"
 filesReordered_one = "فایل دوباره مرتب شد"
 filesReordered_other = "{{count}} فایل دوباره مرتب شدند"
 loadedFromStorage_one = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شد"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "کتابخانه PDF"
 myFiles = "کتابخانه فایل"
 noFiles = "هنوز فایلی نیست"
+oneDrive = "باز کردن از OneDrive"
+oneDriveFailed = "نتوانستیم OneDrive را باز کنیم"
 openFileManager = "مرور همه فایل‌ها و پوشه‌ها"
 openFromComputer = "باز کردن از رایانه"
 openSettings = "باز کردن تنظیمات"
@@ -4804,6 +5076,17 @@ searchFiles = "جستجوی فایل‌ها"
 uploadFailedBody = "فایل‌های انتخاب‌شده اضافه نشدند."
 uploadFailedTitle = "بارگذاری ناموفق بود"
 viewAll = "مشاهده همه {{count}} فایل"
+
+[fileSidebar.clearRecents]
+body_one = "1 فایل از موارد اخیر پاک شود؟ این کار قابل بازگشت نیست."
+body_other = "{{count}} فایل از موارد اخیر پاک شوند؟ این کار قابل بازگشت نیست."
+button = "پاک‌سازی موارد اخیر"
+confirm = "پاک‌سازی موارد اخیر"
+error = "پاک‌سازی انجام نشد. دوباره تلاش کنید."
+openNote_one = "1 مورد از آن‌ها در محیط کار باز است."
+openNote_other = "{{count}} مورد از آن‌ها در محیط کار باز است."
+skipOpen = "پرش از فایل‌های باز"
+title = "پاک‌سازی موارد اخیر؟"
 
 [fileSidebar.fileItem]
 closeViewer = "بستن نمایشگر"
@@ -5124,6 +5407,7 @@ diskFileHint = "ذخیره‌شده روی رایانه شما"
 diskHint = "فایلی در پوشه متصل‌شده روی دیسک شما"
 local = "محلی"
 localHint = "پشتیبان‌گیری نشده"
+oneDrive = "OneDrive"
 shared = "اشتراکی"
 sharedHint = "از طریق لینک با شما به اشتراک گذاشته شده"
 
@@ -5672,6 +5956,11 @@ title = "تغییر متاداده"
 desc = "تغییر محدودیت‌ها و مجوزهای سند"
 tags = "مجوزها،محدودیت‌ها،حقوق،کنترل دسترسی،اجازه دادن،رد کردن،چاپ،کپی،ویرایش،تغییر مجوزها،تنظیمات امنیتی،حقوق کاربر"
 title = "تغییر مجوزها"
+
+[home.checkAccessibility]
+desc = "یک PDF را در برابر PDF/UA امتیازدهی کنید و ببینید چه چیزی مانع صفحه‌خوان‌ها می‌شود، بدون تغییر آن"
+tags = "دسترس‌پذیری,a11y,PDF/UA,صفحه‌خوان,WCAG,Section 508,veraPDF,PDF برچسب‌گذاری‌شده,متن جایگزین,بررسی‌کننده دسترس‌پذیری,گزارش دسترس‌پذیری,انطباق,UA"
+title = "بررسی دسترس‌پذیری PDF"
 
 [home.classify]
 desc = "نوع این سند را شناسایی و آن را برچسب‌گذاری کنید."
@@ -6521,6 +6810,32 @@ quickAccess = "از نوار <strong>Quick Access</strong> شروع کنید ت�
 topBar = "نوار بالا به شما اجازه می‌دهد بین <strong>Viewer</strong>، <strong>Page Editor</strong> و <strong>Active Files</strong> جابه‌جا شوید."
 wrapUp = "این‌ها موارد جدید در V2 هستند. هر زمان منوی <strong>Tours</strong> را باز کنید تا این تور، تور ابزارها یا تور مدیریت را دوباره پخش کنید."
 
+[oneDriveSave]
+chooseFolder = "یک پوشه در OneDrive برای بارگذاری انتخاب کنید"
+conflict = "این فایل از زمانی که این نسخه باز یا ذخیره شده، در OneDrive تغییر کرده است. نسخهٔ خود را به‌صورت یک کپی ذخیره کنید."
+failedTitle = "نتوانستیم در OneDrive ذخیره کنیم"
+fromOneDrive = "از OneDrive"
+linkNotStored = "این مرورگر نتوانست پیوند به فایل OneDrive را به‌خاطر بسپارد. پس از بارگذاری مجدد، به‌جای آن به‌صورت یک کپی ذخیره کنید."
+missing = "این فایل در OneDrive جابه‌جا یا حذف شده است. نسخهٔ خود را به‌صورت یک کپی ذخیره کنید."
+open = "باز کردن در OneDrive"
+personalUnsupported = "بارگذاری در OneDrive به یک حساب کاری یا مدرسه Microsoft نیاز دارد."
+reconnect = "اتصال مجدد"
+replaces = "جایگزین {{name}} می‌شود"
+saveCopyToOneDrive = "ذخیره یک کپی در OneDrive"
+saved = "در OneDrive ذخیره شد"
+saving = "در حال ذخیره در OneDrive..."
+signInToSave = "برای ذخیره در OneDrive به سرور خود وارد شوید."
+updateOriginal = "به‌روزرسانی در OneDrive"
+uploadToOneDrive = "بارگذاری در OneDrive..."
+
+[oneDriveSave.status]
+saved = "در OneDrive ذخیره شد"
+unsaved = "تغییرات هنوز در OneDrive ذخیره نشده‌اند"
+
+[oneDriveSave.toolbar]
+replace = "به‌روزرسانی {{name}} در OneDrive"
+saveAll = "به‌روزرسانی همه در OneDrive"
+
 [overlay-pdfs]
 desc = "قرار دادن یک PDF روی PDF دیگر"
 submit = "ارسال"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "فردا بازنشانی می‌شود"
 thisPeriod = "این دوره صورتحساب"
 
 [payment]
+annually = "سالانه"
 billingPeriod = "دوره صورتحساب"
 cancelTeamChange = "حفظ طرح فعلی"
 canCloseWindow = "اکنون می‌توانید این پنجره را ببندید."
@@ -7157,11 +7473,14 @@ title = "تنظیم طرح Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe پیش از تأیید شما، مبلغ دقیق، هرگونه تعدیل نسبی و تاریخ صورتحساب بعدی شما را نمایش می‌دهد. در صورت موجود بودن، روش پرداخت ذخیره‌شده شما استفاده خواهد شد."
+billingLabel = "صورتحساب"
 continue = "ادامه به پرداخت"
 currencyAtCheckout = "Stripe مبلغ نهایی و ارز پرداخت را در مرحله پرداخت نهایی تأیید می‌کند."
+custom = "سفارشی"
 customLabel = "تعداد کاربران"
 dueToday = "قابل پرداخت امروز"
 enterpriseQuote = "دریافت قیمت سازمانی"
+enterUsers = "تعداد کاربران را وارد کنید."
 estimatedTotal = "مجموع تخمینی"
 lineItem = "Team · {{price}}{{period}} به‌ازای هر {{block}} کاربر"
 minimumForCurrentUsers = "شما {{users}} کاربر دارید، بنابراین طرح باید حداقل {{minimum}} را پوشش دهد."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "حساب‌های موجود باقی می‌مانن
 overCapacityTitle = "سرور شما کاربران بیشتری از پوشش طرح شما دارد"
 perMonth = "/ماه"
 perYear = "/سال"
+planName = "Stirling Team"
 reductionNote = "ظرفیت کمتر از تمدید بعدی شما شروع می‌شود. تا آن زمان می‌توانید از سهمیه فعلی خود استفاده کنید. کاربران موجود باقی می‌مانند؛ اگر هنگام اعمال تغییر بیش از ظرفیت باشید، کاربران جدید مسدود می‌شوند."
 renewalNote = "با {{total}}{{period}} تمدید می‌شود. هر زمان در Usage & Billing لغو کنید."
 reviewChange = "بررسی تغییر در Stripe"
-roundsTo = "به {{users}} گرد می‌شود"
+roundsUp = "به {{users}} کاربر گرد می‌شود."
+selfServeLimit = "تا {{users}} کاربر در اینجا."
 subheading = "همه کسانی را که دعوت می‌کنید، در بلوک‌های {{users}} کاربر پوشش می‌دهد."
 subheadingAdd = "طرح شما امروز {{current}} کاربر را پوشش می‌دهد. مجموع جدید را انتخاب کنید."
+talkToEnterprise = "برای بیشتر، با ما درباره Enterprise صحبت کنید."
+usersCovered = "کاربر تحت پوشش"
 usersLabel = "کاربران"
 userTotal = "{{users}} کاربر"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "اعمال تغییرات روی فایل در فضای کاری 
 tags = "ویرایش متن،تغییر متن،تغییر دادن متن،ویرایش محتوا،به‌روزرسانی متن،بازنویسی،اصلاح،اصلاح کردن،خط قرمز،بازبینی،ویرایشگر متن،ویرایشگر محتوا"
 title = "ویرایشگر متن PDF"
 unsaved = "(ذخیره‌نشده)"
-workbenchLabel = "ویرایشگر"
 
 [pdfTextEditor.annotations]
 freetext = "متن حاشیه‌نویسی - متن صفحه نیست، بنابراین اینجا قابل ویرایش نیست"
@@ -7261,12 +7583,18 @@ widget = "فیلد فرم - متن صفحه نیست، بنابراین اینج
 
 [pdfTextEditor.commands]
 edit = "ویرایش"
+markTagged = "علامت‌گذاری به‌عنوان کاملاً برچسب‌گذاری‌شده"
+matchScanFont = "تطبیق متن اسکن‌شده با {{face}}"
 mergeRuns_one = "ادغام {{count}} run در یک پاراگراف"
 mergeRuns_other = "ادغام {{count}} run در یک پاراگراف"
 setColour = "تنظیم رنگ روی {{run}}"
 setOutline = "تنظیم outline روی {{run}}"
+tagFormField = "برچسب‌گذاری فیلد فرم"
+tagLink = "برچسب‌گذاری پیوند"
+tagPageContent = "برچسب‌گذاری خودکار صفحه"
 typeInto = "تایپ در {{run}}"
 ungroupParagraph = "خارج کردن پاراگراف {{run}} از گروه"
+unmarkTagged = "علامت‌گذاری به‌عنوان برچسب‌گذاری‌نشده"
 wrap = "Wrap کردن {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "دور انداختن و باز کردن"
 hint = "لغو کنید، سپس ابتدا با ذخیره PDF آن‌ها را در فضای کاری خود نگه دارید."
 title = "تغییرات ذخیره‌نشده دور انداخته شوند؟"
 
-[pdfTextEditor.drop]
-hint = "رها کردن روی بخش ویرایشگر، هر سند باز را جایگزین می‌کند."
-title = "برای باز کردن، یک PDF رها کنید"
-
 [pdfTextEditor.error]
 decodeImage = "تصویر انتخاب‌شده رمزگشایی نشد."
+duplicateDropsLetters = "نمی‌توان این متن را تکثیر کرد: هیچ فونتِ موجودی قادر به رسم همهٔ حروف آن نیست."
+formLiftChangesDrawing = "نمی‌توان این مورد را ویرایش کرد: به‌صورت بخشی از یک گروه با تنظیمات برش یا گرافیک رسم شده که ویرایشگر هنگام تغییر نمی‌تواند آن‌ها را حفظ کند."
 insertImage = "تصویر انتخاب‌شده درج نشد."
+needsShaping = "ویرایشگر هنوز نمی‌تواند حروف پیوسته و نشانه‌های مصوت این خط نوشتاری را به‌درستی رسم کند، بنابراین این تغییر اعمال نشد."
+replaceClippedImage = "نمی‌توان این تصویر را جایگزین کرد: برش خورده است و تصویر جایگزین بخش‌هایی را که برش پنهان کرده نمایش می‌دهد."
+scanOffInk = "نمی‌توان این متن را ویرایش کرد: واژه‌های شناسایی‌شده با اسکن هم‌تراز نیستند. دوباره OCR اجرا کنید."
+unsafeRtlEdit = "نمی‌توان این ویرایش را انجام داد: ویرایشگر نمی‌تواند متن راست‌به‌چپ این خط را بدون تغییر، بازترسیم کند."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "تصویر PNG"
@@ -7304,15 +7634,42 @@ wholeWord = "کل واژه"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "فونت‌های داخلی"
+closestMatch = "این فونت برخی از حروف انتخاب‌شده را ندارد، بنابراین آن‌ها در نزدیک‌ترین فونتِ مطابق رسم می‌شوند."
 deviceFontsNone = "فونت اضافی دستگاهی یافت نشد."
 deviceFontsUnavailable = "فونت‌های دستگاه در دسترس نیستند. فونت‌های داخلی همچنان کار می‌کنند."
 deviceGroup = "فونت‌های دستگاه"
+documentFontCannotDraw = "ویرایشگر نمی‌تواند این متن را با فونت خودِ سند رسم کند، بنابراین در فونت فعلی‌اش باقی ماند."
 documentGroup = "فونت سند"
+embeddingForbidden = "مجوز این فونت اجازهٔ جاسازی آن در PDF را نمی‌دهد. متن بدون تغییر ماند."
+embedFailed = "این فونت نتوانست در PDF جاسازی شود. متن بدون تغییر ماند."
+includedGroup = "فونت‌های موجود در فایل"
 label = "خانواده فونت"
+matchedGroup = "فونتِ مطابق"
+missingGlyphs = "این فونت برخی از نویسه‌های انتخاب‌شده را ندارد و آن‌ها را نتوانستیم در فونت فعلی نگه داریم. متن بدون تغییر باقی ماند."
 mixed = "ترکیبی"
+needsShaping = "ویرایشگر هنوز نمی‌تواند حروف پیوسته و نشانه‌های مصوت این خط نوشتاری را به‌درستی بازترسیم کند، بنابراین آن متن در فونت فعلی‌اش باقی ماند."
+noGlyphs = "این فونت برای متن انتخاب‌شده نویسه‌ای ندارد. متن بدون تغییر ماند."
 noMatch = "فونت مطابقی وجود ندارد"
+partOfRunUnsupported = "این متن فقط به‌صورت کل قابل تغییر سبک است. به‌جای چند کلمه، کل جعبه را انتخاب کنید."
 placeholder = "خانواده فونت"
+scannedText = "متن اسکن‌شده"
+serverFontFailed = "آن فونت سرور دانلود نشد. متن بدون تغییر ماند."
+serverGroup = "فونت‌های سرور"
+someLeftUnchanged = "این فونت برای بخشی از متن انتخاب‌شده نویسه‌ها را ندارد. آن متن بدون تغییر باقی ماند."
+styleSkipped = "بخشی از متن انتخاب‌شده نسخه‌ای از فونت خود در آن سبک ندارد، بنابراین بدون تغییر باقی ماند."
+styleUnavailable = "متن انتخاب‌شده نسخه‌ای از فونت خود در آن سبک ندارد، بنابراین بدون تغییر باقی ماند."
 useDeviceFonts = "استفاده از فونت‌های دستگاه"
+weight = "وزن فونت"
+weightBlack = "خیلی پررنگ"
+weightBold = "پررنگ"
+weightExtraBold = "بسیار پررنگ"
+weightExtraLight = "بسیار نازک"
+weightLight = "نازک"
+weightMedium = "متوسط"
+weightNumber = "وزن {{weight}}"
+weightRegular = "معمولی"
+weightSemibold = "نیمه‌پررنگ"
+weightThin = "نازک"
 
 [pdfTextEditor.fonts]
 allPresent = "همه حروف و اعداد موجود هستند"
@@ -7357,6 +7714,7 @@ helpDesc = "این راهنما"
 saveDesc = "ذخیره در فضای کاری شما"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "پررنگ / ایتالیک برای کلمات انتخاب‌شده یا کل جعبه"
 deleteDesc = "حذف انتخاب‌شده"
 duplicateDesc = "تکثیر انتخاب‌شده"
 groupDesc = "گروه‌بندی اجراهای انتخاب‌شده در یک پاراگراف"
@@ -7380,8 +7738,12 @@ zoomDesc = "بزرگ‌نمایی / کوچک‌نمایی"
 
 [pdfTextEditor.inspector]
 document = "سند"
+fontCompletedClosest = "فونت جاسازی‌شده · نویسه‌های کم‌داشتۀ آن با {{name}}، نزدیک‌ترین تطابق موجود، رسم شده‌اند."
+fontCompletedOriginal = "فونت جاسازی‌شده · نویسه‌های کم‌داشتۀ آن با {{name}}، همان فونت، رسم شده‌اند."
 fontEmbedded = "فونت تعبیه‌شده · نویسه‌ای که ندارد به Helvetica برمی‌گردد."
 fontGap = "{{name}} · {{glyphs}} ناموجود - تایپ آن‌ها به Helvetica برمی‌گردد."
+fontUnknownCoverage = "{{name}} · یک نویسهٔ کم‌داشت به {{fallback}} برمی‌گردد."
+formField = "فیلد فرم"
 geometry = "موقعیت و اندازه"
 height = "ارتفاع"
 heightHint = "ارتفاع کادر متن از اندازه نوع و تعداد خطوط آن پیروی می‌کند."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR روی این سرور در دسترس نیست."
 oneImage = "تصویر"
 oneShape = "شکل"
 oneText = "متن"
+outlinedTextHint_one = "متن این صفحه به‌صورت شکل‌ها رسم شده، بنابراین متنی برای ویرایش وجود ندارد. ابتدا OCR اجرا کنید تا قابل ویرایش شود."
+outlinedTextHint_other = "{{count}} صفحه متن‌شان به‌صورت شکل‌ها رسم شده، بنابراین متنی برای ویرایش وجود ندارد. ابتدا OCR اجرا کنید تا قابل ویرایش شوند."
 pages = "صفحات"
 runOcr = "اجرای OCR"
 scanHint_one = "این صفحه یک تصویر اسکن‌شده است و متنی برای ویرایش ندارد. ابتدا OCR را اجرا کنید تا متن آن قابل ویرایش شود."
 scanHint_other = "{{count}} صفحه تصویر اسکن‌شده هستند و متنی برای ویرایش ندارند. ابتدا OCR را اجرا کنید تا متن آن‌ها قابل ویرایش شود."
 scannedText = "متن اسکن‌شده · واژه‌های تغییرکرده پوشانده شده و با فونت مشابه دوباره رسم می‌شوند."
+scannedTextMisaligned = "متن اسکن‌شده · واژه‌های شناسایی‌شده با اسکن هم‌تراز نیستند، پس این بلوک قابل ویرایش یا حذف نیست."
+scannedTextNoFont = "متن اسکن‌شده · واژه‌های تایپ‌شده در این اسکریپت هنوز قابل رسم نیستند، بنابراین نگه داشته نمی‌شوند. حذف واژه‌ها همچنان کار می‌کند."
+scannedTextOffInk = "متن اسکن‌شده · واژه‌های شناسایی‌شده خارج از واژه‌های اسکن‌شده قرار دارند، بنابراین این بلوک قابل ویرایش نیست. دوباره OCR اجرا کنید."
 tabDocument = "سند"
 tabSelected = "انتخاب‌شده"
 textBoxes = "کادرهای متن"
+unreadPagesHint = "{{count}} صفحه متنی برای ویرایش ندارند: برخی تصاویر اسکن‌شده‌اند و برخی متن را به‌صورت شکل رسم می‌کنند. ابتدا OCR اجرا کنید تا قابل ویرایش شوند."
 width = "عرض"
 widthHint = "متن دوباره متناسب با عرض wrap می‌شود."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "افزودن برچسب"
+applyToOtherPages_one = "اعمال به {{count}} صفحهٔ دیگر"
+applyToOtherPages_other = "اعمال به {{count}} صفحهٔ دیگر"
+artifactGroup = "توسط صفحه‌خوان‌ها نادیده گرفته می‌شود"
 artifactText = "تزئینی"
 cannotChange = "دسترس‌پذیری این تصویر قابل تغییر نیست."
+cannotDescribeFormField = "توضیح این فیلد فرم قابل تغییر نیست."
+cannotDescribeLink = "توضیح این پیوند را نمی‌توان تغییر داد."
 cannotRetag = "برچسب این متن قابل تغییر نیست."
+cannotSetDecorative = "این مورد را نمی‌توان به‌عنوان تزئینی علامت‌گذاری یا برداشته کرد."
+cannotTagFormField = "این فیلد فرم قابل برچسب‌گذاری نیست."
+cannotTagLink = "این پیوند را نمی‌توان برچسب‌گذاری کرد."
+cannotTagPage = "محتوای این صفحه را نمی‌توان برچسب‌گذاری کرد."
+contentGroup = "محتوا"
 customTag = "{{role}} (برچسب سفارشی)"
 decorativeInfo = "صفحه‌خوان‌ها تصاویر تزئینی را نادیده می‌گیرند. از آن برای حاشیه‌ها، پس‌زمینه‌ها و تصاویر دیگری که اطلاعاتی ندارند استفاده کنید."
 decorativeLabel = "تصویر تزئینی"
 description = "توضیح تصویر"
 descriptionInfo = "صفحه‌خوان‌ها این متن را به جای تصویر می‌خوانند."
 encrypted = "برچسب‌ها در فایل رمزگذاری‌شده قابل ویرایش نیستند"
+figureDescription = "توضیح شکل"
+figureDescriptionInfo = "صفحه‌خوان‌ها این را به‌جای شکل می‌خوانند."
+formFieldDescription = "توضیح فیلد"
+formulaDescription = "توضیح فرمول"
+formulaDescriptionInfo = "صفحه‌خوان‌ها این را به‌جای فرمول می‌خوانند. آن را همان‌طور که با صدای بلند می‌گویید بیان کنید، مانند \"x squared plus one\"."
 heading = "دسترس‌پذیری"
 innerTagLabel = "برچسب {{number}}"
 innerTags = "برچسب‌های این متن"
+linkDescription = "توضیح پیوند"
+markedTagged = "سند کاملاً برچسب‌گذاری‌شده است"
+markedTaggedHint = "به نمایشگرهای PDF می‌گوید از برچسب‌های دسترس‌پذیری استفاده کنند. زمانی آن را تیک بزنید که همه‌چیز برچسب‌گذاری شده باشد."
+markedWithUntagged = "برخی محتوا برچسب ندارند، بنابراین صفحه‌خوان‌ها ممکن است از آن‌ها بگذرند."
 missingDescriptions = "توضیحات ناموجود"
 mixedContent = "شکل شامل محتوای دیگری است"
+mixedTags = "مخلوط"
 needsDescriptionBadge = "بدون توضیح"
-nextImage = "تصویر بعدی"
+nextToReview = "مورد بعدی برای بازبینی"
 notFigure = "به‌عنوان بخشی از متن برچسب‌گذاری شده است"
 removeTag = "حذف برچسب"
 saveFailed = "تغییرات دسترس‌پذیری شما ذخیره نشد، بنابراین فایل ذخیره نشد. آن‌ها را واگرد کنید و دوباره تلاش کنید."
 selectedText = "متن انتخاب‌شده"
+tagFormField = "برچسب‌گذاری فیلد فرم"
+tagging = "در حال برچسب‌گذاری صفحات"
 tagLabel = "برچسب"
+tagLinks_one = "برچسب‌گذاری پیوند"
+tagLinks_other = "برچسب‌گذاری {{count}} پیوند"
+tagUntagged = "برچسب‌گذاری خودکار سند"
+tagUntaggedHint = "به‌طور خودکار برچسب‌های دسترس‌پذیری را در سراسر سند اضافه می‌کند. نتیجه خام است: پس از آن سرعنوان‌ها، فهرست‌ها و ترتیب خواندن را بررسی کنید."
 unknownTag = "اینجا قابل خواندن نیست"
+unmarkedWithTags = "برخی نمایشگرهای PDF به‌هرحال از برچسب‌ها استفاده می‌کنند و ممکن است از محتوای بدون برچسب بگذرند."
 unreadable = "برچسب‌های این فایل قابل ویرایش نیستند"
 untaggableImages = "اینجا قابل برچسب‌گذاری نیست"
 untaggedBadge = "برچسب‌گذاری نشده"
 untaggedDocument = "سند برچسبی ندارد"
 untaggedImage = "اینجا قابل برچسب‌گذاری نیست"
 untaggedImages = "تصاویر بدون برچسب"
+untaggedPages = "صفحات برای برچسب‌گذاری"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "پاورقی"
+header = "سربرگ"
+pageNumber = "شماره صفحه"
+watermark = "واترمارک"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "سرفصل بدون متن"
@@ -7505,6 +7907,23 @@ tableHeader = "سربرگ جدول"
 tableRow = "ردیف جدول"
 title = "عنوان"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "همهٔ زبان‌ها"
+cannotSetDocument = "زبان این سند را نمی‌توان تغییر داد."
+cannotSetText = "زبان این متن را نمی‌توان تغییر داد."
+documentHint = "زبانی که صفحه‌خوان‌ها استفاده می‌کنند مگر اینکه بخشی از متن زبان خودش را تنظیم کند."
+documentLabel = "زبان"
+documentLocked = "زبان یک سند رمزنگاری‌شده را نمی‌توان اینجا تغییر داد."
+inDocument = "در این سند"
+innerLabel = "زبان برچسب {{number}}"
+label = "زبان"
+missing = "هیچ زبانی تنظیم نشده است. صفحه‌خوان‌ها حدس می‌زنند و ممکن است کل سند را با صدای نادرست بخوانند."
+mixed = "مخلوط"
+noMatch = "هیچ زبان مطابقی نیست. به‌جای آن کدش را تایپ کنید، مانند mt یا en-IE."
+placeholder = "انتخاب زبان"
+selectedText = "زبان متن انتخاب‌شده"
+textHint = "صفحه‌خوان‌ها صدا و تلفظ را به این زبان تغییر می‌دهند."
+
 [pdfTextEditor.mobile]
 actions = "اقدام‌های ویرایشگر"
 addImage = "تصویر"
@@ -7517,7 +7936,6 @@ done = "انجام شد"
 download = "ذخیره و دانلود"
 find = "یافتن"
 lock = "قفل"
-openPdf = "باز کردن یک PDF"
 panelHint = "ویرایش در نمای Workspace انجام می‌شود. برای تغییر متن، روی متن در صفحه ضربه بزنید."
 save = "ذخیره"
 style = "سبک"
@@ -7525,7 +7943,6 @@ tapToPlace = "روی جایی از صفحه که متن باید قرار بگی
 unlock = "باز کردن قفل"
 
 [pdfTextEditor.pageView]
-pageNumber = "صفحه {{page}}"
 renderFailed = "رندر صفحه ناموفق بود"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "خط‌کش عمودی"
 
 [pdfTextEditor.run]
 lockedTitle = "قفل است - برای ویرایش از دکمه باز کردن قفل استفاده کنید"
+readOnlyOrderTitle = "متن این خط قابل ویرایش نیست: متن راست‌به‌چپ و چپ‌به‌راست را به ترتیبی مخلوط می‌کند که ویرایشگر نمی‌تواند با اطمینان آن را بازترسیم کند"
+resizeHandle = "برای تغییر عرض بکشید؛ متن دوباره سطربندی می‌شود"
 
 [pdfTextEditor.saveRisk]
 cancel = "لغو"
@@ -7548,6 +7967,35 @@ intro = "ذخیره کپی ویرایش‌شده فایل را تغییر می�
 note = "ویرایش‌های شما نگه داشته می‌شوند. تغییرات فهرست‌شده بالا هنگام ذخیره کپی ویرایش‌شده اجتناب‌ناپذیر هستند."
 saveAnyway = "با این حال ذخیره کن"
 title = "ذخیره کردن این PDF را تغییر می‌دهد"
+
+[pdfTextEditor.scanFont]
+approximate = "تطابق تقریبی"
+approximateHint = "نزدیک‌ترین فونت یافت‌شده ممکن است با اسکن مطابقت نداشته باشد."
+change = "فونت درست به نظر نمی‌رسد؟"
+choose = "یک فونت انتخاب کنید"
+chooseMissing = "برای این متن یک فونت انتخاب کنید…"
+compare = "مقایسه فونت‌ها…"
+deviceAllow = "برای تطابق بهتر، دسترسی به فونت را مجاز کنید"
+deviceBlocked = "مرورگر شما دوباره سؤال نخواهد کرد. برای مجازکردن، روی آیکون سمت چپ نوار آدرس کلیک کنید، Fonts را روشن کنید، سپس دوباره تلاش کنید."
+deviceBlockedTitle = "دسترسی به فونت مسدود شده است"
+deviceNone = "هیچ‌یک از فونت‌های معمول اسناد روی این رایانه نصب نیست."
+deviceNote = "مرورگر شما ابتدا می‌پرسد. فونت‌ها روی همین دستگاه می‌مانند."
+deviceOn_one = "همچنین با {{count}} فونت روی این رایانه مقایسه شد."
+deviceOn_other = "همچنین با {{count}} فونت روی این رایانه مقایسه شد."
+deviceReading = "در حال خواندن فونت‌های این رایانه…"
+deviceRetry = "دوباره تلاش کنید"
+done = "انجام شد"
+hint = "تایپ شما در نزدیک‌ترین فونتِ یافت‌شده رسم می‌شود. اگر فونت دیگری شبیه‌تر به اسکن است انتخابش کنید."
+hintFromScan = "تایپ شما از حروف یافت‌شده در اسکن ساخته می‌شود. برای رسم آن با آن فونت، یک فونت انتخاب کنید."
+hintOthers = "انتخاب شما برای متن اسکن‌شده‌ای که هنوز ویرایش نکرده‌اید نیز استفاده می‌شود."
+matching = "در حال تطبیق فونت‌ها…"
+noFont = "هیچ‌یک از فونت‌های موجود نمی‌تواند این اسکریپت را رسم کند، بنابراین متن تایپ‌شده هنوز قابل رسم نیست."
+scan = "اسکن اصلی"
+scanAlt = "خطِ اسکن‌شده"
+scanNote = "اسکن‌ها اغلب مات‌تر یا پررنگ‌تر از خود فونت به نظر می‌رسند. شکل حروف را، نه ضخامت را، مقایسه کنید."
+score = "{{match}}% مشابه"
+title = "تطبیق فونتِ اسکن‌شده"
+unmeasurable = "این اسکن برای تطبیق با یک فونت بیش از حد کم‌رنگ یا کوچک است."
 
 [pdfTextEditor.settings]
 advanced = "پیشرفته"
@@ -7564,7 +8012,6 @@ addTable = "افزودن جدول"
 addText = "افزودن متن"
 clickPageToAddTable = "برای افزودن جدول، روی صفحه کلیک کنید"
 clickPageToAddText = "برای افزودن متن روی صفحه کلیک کنید"
-document = "سند"
 group = "گروه‌بندی"
 groupingAuto = "خودکار"
 groupingAutoHint = "خطوط با فاصله برابر را در پاراگراف‌ها گروه‌بندی می‌کند. تغییر این گزینه سند را دوباره می‌خواند و تاریخچه واگرد را پاک می‌کند."
@@ -7593,23 +8040,17 @@ auto = "خودکار"
 enable = "بررسی املا هنگام تایپ"
 language = "زبان واژه‌نامه"
 
-[pdfTextEditor.stage]
-loadingDocument = "در حال بارگذاری سند"
-loadingProgress = "پیشرفت بارگذاری"
-noDocument = "هیچ سندی بارگذاری نشده است."
-pickPrompt = "برای شروع ویرایش، از پنل فایل‌ها در سمت چپ یک PDF انتخاب کنید."
-renderingPreview = "در حال رندر پیش‌نمایش"
-
 [pdfTextEditor.table]
 addColumn = "افزودن ستون"
 addRow = "افزودن ردیف"
+cellNoGlyphs = "این متن شامل نویسه‌هایی است که فونت‌های جدول نمی‌توانند رسم کنند. برای پر کردن سلول آن‌ها را تغییر دهید یا حذف کنید."
 column = "ستون"
 deleteColumn = "حذف ستون"
 deleteRow = "حذف ردیف"
 done = "تمام"
 doneHint = "ویرایش این مورد به‌عنوان جدول را متوقف کنید"
-edit = "ویرایش"
 editHint = "ویرایش به‌عنوان جدول - در سلول‌ها تایپ کنید، ردیف‌ها و ستون‌ها را اضافه یا حذف کنید"
+editTable = "ویرایش جدول"
 move = "جابجایی"
 moveTable = "برای جابجایی کل جدول بکشید"
 recognizedHint = "جدول شناسایی‌شده - برای انتخاب همه متن آن کلیک کنید"
@@ -7630,6 +8071,9 @@ alignMiddle = "تراز میانی"
 alignRight = "تراز راست"
 alignTop = "تراز بالا"
 arrange = "چیدمان"
+bold = "پررنگ"
+boldOnly = "این فونت فقط نسخهٔ پررنگ دارد"
+boldUnavailable = "نسخهٔ پررنگی از این فونت وجود ندارد"
 bringForward = "آوردن به جلو"
 bringToFront = "آوردن به جلوی همه"
 caseLower = "حروف کوچک"
@@ -7650,10 +8094,12 @@ fontColour = "رنگ فونت"
 fontSize = "اندازه فونت"
 formatting = "قالب‌بندی متن"
 italic = "ایتالیک"
+italicOnly = "این فونت فقط نسخهٔ ایتالیک دارد"
 italicUnavailable = "این فونت نسخه Italic ندارد. فونت‌های دستگاه خود را بارگذاری کنید یا خانواده فونت دیگری انتخاب کنید."
 lock = "قفل کردن انتخاب"
 lockTooltip = "قفل کردن انتخاب - از ویرایش‌های تصادفی جلوگیری می‌کند"
 more = "اقدام‌های بیشتر"
+noBoldItalic = "نسخهٔ پررنگِ ایتالیک برای این فونت وجود ندارد"
 order = "ترتیب"
 outlineColour = "رنگ دورخط"
 outlineWidth = "عرض دورخط (0 = هیچ)"
@@ -7683,13 +8129,6 @@ title = "تفاوت پیش‌نمایش"
 [pdfTextEditor.tooltip.textFocus]
 text = "این فضای کاری بر ویرایش متن و جابه‌جایی تصاویر توکار تمرکز دارد. آثار هنری پیچیده صفحه، ابزارک‌های فرم و گرافیک‌های لایه‌ای برای خروجی حفظ می‌شوند اما در اینجا کاملاً قابل ویرایش نیستند."
 title = "تمرکز متن و تصویر"
-
-[pdfTextEditor.zoom]
-fit = "متناسب کردن"
-fitToWidth = "متناسب با عرض"
-in = "بزرگ‌نمایی"
-out = "کوچک‌نمایی"
-reset = "بازنشانی بزرگ‌نمایی به 100%"
 
 [PDFToCSV]
 header = "PDF به CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "هنگام وارد کردن اجرا می‌شود"
 [policies.enforcement]
 applying = "در حال اعمال {{names}}"
 applyingProgress = "در حال اعمال {{names}} ({{done}} از {{total}})"
-exportFailureBody = "خط‌مشی‌های امنیتی قابل اعمال نبودند. فایل‌ها به همان صورت صادر شدند."
-exportFailureTitle = "صدور بدون اعمال"
 failureBody = "برخی سیاست‌ها روی {{failures}} از {{total}} فایل اعمال نشدند."
 failureTitle = "صدور بدون اعمال کامل"
 printPolicyAppliedBody = "این PDF برای برآورده‌کردن یک خط‌مشی به‌روزرسانی شد. تغییرات را بررسی کرده و سپس دوباره چاپ کنید."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "وقتی یک خط‌مشی اجرا می‌شود، پیامی به فضای Google Chat ارسال کنید."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "یک حساب سرویس که برای سازمان، Google Drive را می‌خواند و می‌نویسد."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "کلید JSON حساب سرویس را از Google Cloud بچسبانید. رمزنگاری می‌شود و دوباره نمایش داده نمی‌شود."
+label = "کلید حساب سرویس (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "اختیاری. با نمایندگی سراسری دامنه، کاربری که Drive او به‌جای او عمل می‌شود (یک کاربر ربات اختصاصی زمانی که افراد می‌روند هم کار می‌کند). خالی فقط به درایوهای مشترک و پوشه‌های مشترک با حساب سرویس دسترسی دارد."
+label = "اقدام به‌جای کاربر"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "اسناد پردازش‌شده را به یک issue در Jira پیوست کنید."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "وقتی یک خط‌مشی اجرا می‌شود، سند یا اعلان را ایمیل کنید."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "به مجوزهای برنامه Microsoft Graph با رضایت ادمین نیاز دارد."
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com یا tenant GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "رمز عبور برنامه"
+
+[portal.connections.types.onedrive]
+description = "خواندن و نوشتن در OneDrive for Business یک کاربر."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "OneDrive چه کسی با این اتصال در دسترس است. ثبت برنامه به مجوز برنامه Files.ReadWrite.All نیاز دارد."
+label = "مالک OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "اگر به‌جای آن با کلید خصوصی احراز هو
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "اختیاری. برای احراز هویت با کلید به‌جای رمز عبور، یک کلید خصوصی OpenSSH را جای‌گذاری کنید."
 label = "کلید خصوصی"
+
+[portal.connections.types.sharepoint]
+description = "خواندن و نوشتن در کتابخانهٔ اسناد یک سایت SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "اختیاری. برای کتابخانهٔ پیش‌فرض Documents سایت خالی بگذارید."
+label = "کتابخانهٔ اسناد"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "URL سایت"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "وقتی یک خط‌مشی سندی را پردازش می‌کند، پیامی در Slack ارسال کنید."
@@ -9142,6 +9624,126 @@ status = "وضعیت"
 time = "زمان"
 user = "کاربر"
 
+[portal.enterprise]
+backTo = "بازگشت به {{stage}}"
+brandTag = "Enterprise"
+callInfo = "یک تماس 15 دقیقه‌ای. پرسش‌های خود درباره قیمت‌گذاری، استقرار یا امنیت را بیاورید، یا برنامهٔ استقرار را با هم بچینید."
+callTitle = "گفت‌وگو با مهندس راهکار"
+deployment = "استقرار"
+footer = "سؤالی درباره Stirling Enterprise دارید؟"
+home = "رفتن به Stirling"
+member = "رهبر تیم شما معاملهٔ Enterprise را اجرا می‌کند. وقتی شروع شود، می‌توانید پیشرفتش را اینجا دنبال کنید."
+memberDeal = "رهبر تیم شما این معامله را اجرا می‌کند. می‌توانید پیشرفتش را اینجا دنبال کنید."
+quotePanel = "پیشنهاد شما"
+signIn = "ورود"
+signInToStart = "برای شروع آزمایشی وارد شوید"
+stage = "مرحله {{current}} از {{total}}"
+stagesLabel = "پیشرفت"
+
+[portal.enterprise.landing]
+lede = "۱۴ روز رایگان امتحان کنید، سپس همین‌جا پیشنهاد خود را بسازید و قرارداد خود را امضا کنید. نیاز به کارت نیست."
+tickAgreement = "یک قرارداد که MSA، فرم سفارش، EULA و DPA را پوشش می‌دهد"
+tickCompliance = "SCIM، محل نگهداری داده‌ها و SLAهای آپ‌تایم"
+tickDeploy = "اجرایش کنید روی Stirling Cloud، سرورهای خودتان یا کاملاً بدون اینترنت"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "مستندات مجوز آفلاین"
+point1 = "با یک فایل مجوز که آفلاین کار می‌کند فعال می‌شود، نه کلیدی که آنلاین بررسی شود"
+point2 = "مثل خود-میزبانی نصب می‌شود، از تصویری که خودتان منتقل می‌کنید"
+point3 = "ورود در شبکهٔ شما می‌ماند"
+tagline = "خود-میزبان روی شبکه‌ای بدون دسترسی به اینترنت."
+
+[portal.enterprise.options.cloud]
+more = "مستندات Stirling Cloud"
+point1 = "تیمتان در stirling.com/app وارد می‌شود"
+point2 = "روی AWS اجرا می‌شود، با فایل‌های ذخیره‌شده رمزنگاری‌شده در حالت سکون"
+point3 = "ورود تک‌مرحله‌ای از طریق ارائه‌دهندهٔ هویت خودتان نیازمند خود-میزبانی است"
+tagline = "برای شما میزبانی می‌شود، بدون نیاز به نصب."
+
+[portal.enterprise.options.selfhost]
+more = "مستندات خود-میزبانی"
+point1 = "با Docker، یا Helm chart روی Kubernetes نصب کنید"
+point2 = "اسناد روی زیرساخت خودتان پردازش می‌شوند"
+point3 = "ورود تک‌مرحله‌ای با OAuth2، OIDC یا SAML"
+tagline = "روی سرورهای خودتان، در محل یا در کلاود خودتان."
+
+[portal.enterprise.review]
+back = "بازگشت به {{stage}}"
+company = "شرکت"
+completed = "تکمیل شد"
+extensions = "افزونه‌های استفاده‌شده"
+paid = "پرداخت شد. فاکتور شما اینجا در دسترس می‌ماند."
+people = "افراد"
+started = "شروع شد"
+trialEnds = "تاریخ پایان دورهٔ آزمایشی"
+trialTitle = "آزمایش شما"
+version = "نسخه"
+viewInvoice = "مشاهدهٔ فاکتور"
+
+[portal.enterprise.setup]
+copied = "کپی شد"
+copy = "کپی"
+markDone = "«{{step}}» را انجام‌شده علامت بزن"
+progress = "{{done}} از {{total}} انجام شد"
+subtitle = "حداکثر بهره را ببرید با امتحان کردن به شیوه‌ای که می‌خواهید اجرا کنید."
+subtitleLive = "مراحلی که باید پیش از rollout برای همه تکمیل شوند."
+title = "راه‌اندازی شوید"
+titleLive = "چک‌لیست راه‌اندازی نهایی"
+
+[portal.enterprise.setup.firstDocument]
+body = "یک PDF که تیم‌تان با آن کار می‌کند آپلود کنید و ابزارهایی را که روزبه‌روز استفاده می‌کنید امتحان کنید، مانند پنهان‌سازی، فشرده‌سازی یا OCR."
+title = "اجرای اولین سند شما"
+
+[portal.enterprise.setup.getApp]
+body = "برنامهٔ دسکتاپ برای Windows، Mac یا Linux را نصب کنید و با همان حسابی که ساختید وارد شوید، یا مستقیماً از مرورگر استفاده کنید."
+title = "Stirling را دریافت کنید"
+
+[portal.enterprise.setup.install]
+body = "این را روی سرور خود اجرا کنید. Stirling را با مجوز شما اجرا می‌کند و تصویر شامل OCR و تبدیل اداری است. برای تیم‌های بزرگ‌تر از Kubernetes استفاده کنید."
+title = "نصب و شروع Stirling"
+
+[portal.enterprise.setup.invite]
+body = "افرادی را که از آن استفاده خواهند کرد دعوت کنید تا آزمایش منعکس‌کنندهٔ کار واقعی باشد."
+title = "تیم خود را دعوت کنید"
+
+[portal.enterprise.setup.licence]
+body = "<code>http://your-server:8080/settings/adminPlan</code> را باز کنید، جایی که باید مجوز Enterprise شما به‌صورت فعال نمایش داده شود. به روش دیگری نصب کرده‌اید؟ کلید را زیر <code>premium.key</code> در <code>settings.yml</code> اضافه کنید و راه‌اندازی مجدد کنید."
+title = "بررسی کنید مجوز شما فعال باشد"
+
+[portal.enterprise.setup.links]
+browser = "در مرورگر استفاده کنید"
+docker = "راهنمای Docker"
+download = "دانلود برنامه"
+downloadForTeam = "گرفتن برنامه برای تیم شما"
+downloading = "در حال دانلود..."
+downloadLicence = "دانلود فایل مجوز"
+invite = "دعوت از هم‌تیمی‌ها"
+kubernetes = "راهنمای Kubernetes"
+licence = "فعال‌سازی مجوز"
+ocr = "زبان‌های OCR"
+openApp = "باز کردن Stirling"
+samlGuide = "راهنمای SAML"
+ssoGuide = "راهنمای SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "تصویر کامل را روی یک دستگاه متصل بکشید، آن را و فایل مجوز را منتقل کنید، سپس بارگذاری و اجرا کنید. تصویر کامل فونت‌هایی را اضافه می‌کند که یک سرور آفلاین نمی‌تواند دانلود کند."
+title = "Stirling را منتقل و اجرا کنید"
+
+[portal.enterprise.setup.offlineLicence]
+body = "یک سرور بدون اینترنت نمی‌تواند به سرویس مجوز ما برسد، بنابراین به‌جای آن این فایل امضاشده را بررسی می‌کند. آن را کنار تصویری که منتقل می‌کنید نگه دارید."
+title = "مجوز آفلاین خود را دانلود کنید"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "در <code>/settings/people</code> حساب بسازید، یا Stirling را به ارائه‌دهندهٔ هویت داخلی خود اشاره دهید تا ورود هرگز از شبکهٔ شما خارج نشود."
+bodySelfHosted = "در <code>/settings/people</code> حساب بسازید، یا ارائه‌دهندهٔ هویت خود را متصل کنید تا تیم‌تان با حساب‌های کاری‌شان وارد شوند. آن‌ها Stirling را در مرورگر در نشانی سرور شما یا در برنامهٔ دسکتاپ متصل به آن استفاده می‌کنند."
+title = "افراد خود را اضافه کنید"
+
+[portal.enterprise.setup.signIn]
+body = "<code>http://your-server:8080</code> را باز کنید و با <code>admin</code> / <code>stirling</code> وارد شوید. بلافاصله از شما خواسته می‌شود رمز تازه‌ای انتخاب کنید."
+bodyAirgap = "<code>http://your-server:8080</code> را باز کنید و با <code>admin</code> / <code>stirling</code> وارد شوید، یک رمز تازه انتخاب کنید، سپس بررسی کنید <code>/settings/adminPlan</code> مجوز شما را فعال نشان می‌دهد."
+title = "به‌عنوان ادمین وارد شوید"
+
 [portal.errorBoundary]
 description = "این نما با خطای غیرمنتظره‌ای روبه‌رو شد. دوباره تلاش کنید، یا بخش دیگری را از نوار کناری انتخاب کنید."
 retry = "دوباره تلاش کنید"
@@ -9293,6 +9895,7 @@ title = "چیزی برای بازبینی وجود ندارد"
 [portal.home.download]
 back = "بازگشت"
 body = "برنامه دسکتاپ را دانلود کنید یا سرور را خودمیزبان کنید."
+bodyDesktop = "برنامهٔ دسکتاپ را دانلود کنید، سپس با حساب Stirling خود وارد شوید."
 done = "انجام شد"
 guide = "باز کردن راهنمای {{name}}"
 openInBrowser = "به‌جای آن در مرورگر باز کنید"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "دریافت Email"
 
 [portal.procurement]
-subtitle = "تیم خود را ارزیابی، قراردادبندی و راه‌اندازی کنید. همه اسناد در یک مکان."
 title = "خرید سازمانی"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "بارگذاری توافق‌نامه ممکن نشد. لطفاً 
 loading = "در حال بارگذاری توافق‌نامه..."
 ref = "مرجع {{ref}} · {{version}}"
 requestChanges = "درخواست تغییرات"
-scrollHint = "برای بازبینی پیمایش کنید"
 signatory = "نام امضاکننده"
 signatoryPlaceholder = "نام کامل"
 signatoryTitle = "عنوان امضاکننده"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "مثلاً مشاور حقوقی ارشد"
 signError = "ثبت امضای شما ممکن نشد. لطفاً دوباره تلاش کنید."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} یک‌باره"
+addonPerYear = "+{{amount}}/yr"
 addons = "افزونه‌ها"
 addressLine1 = "خط آدرس 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "خط آدرس 2"
 addressLine2Placeholder = "سوئیت، طبقه، ساختمان"
 back = "بازگشت"
+belowMinimum = "این پیشنهاد زیر حداقل اندازه برای یک معامله Enterprise است."
 businessName = "نام کسب‌وکار"
 businessNamePlaceholder = "شرکت شما"
 city = "شهر"
 cityPlaceholder = "San Francisco"
 completeRequired = "لطفاً پیش از تولید پیش‌فاکتور، فیلدهای الزامی (مشخص‌شده با *) را با یک ایمیل معتبر تکمیل کنید."
+conflict = "این معامله از زمانی که آن را باز کردید تغییر کرده است. سازنده را ببندید و صفحه را دوباره بارگذاری کنید تا وضعیت فعلی را ببینید."
 contactEmail = "ایمیل تماس"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "نام تماس"
 contactNamePlaceholder = "Jane Doe"
 continue = "ادامه"
 done = "انجام شد"
+editUsage = "ویرایش مصرف"
 eula = "من EULA مربوط به Stirling Enterprise را خوانده‌ام و با آن موافقم. این سند بر توافق‌نامه‌ای که از این پیشنهاد قیمت ایجاد می‌شود حاکم است."
 generate = "ایجاد پیشنهاد قیمت"
 indemnification = "حفاظت پیشرفته IP"
 indemnificationSub = "دفاع IP ما را به ادعاهای مربوط به پتنت گسترش می‌دهد. جبران خسارت پایه برای کپی‌رایت، علامت تجاری و اسرار تجاری رایگان شامل می‌شود."
+minimum = "Enterprise به حداقل هزینهٔ سالانه {{min}} نیاز دارد."
+minimumBelow = "این پیشنهاد سالانه به {{annual}} می‌رسد. اگر انتظار استفادهٔ بیشتری دارید، مصرف برآوردی را بالا ببرید؛ در غیر این صورت، طرح Team احتمالاً مناسب‌تر است."
+minimumNear = "Enterprise به حداقل هزینهٔ سالانه {{min}} نیاز دارد. مصرف برآوردی را بالا ببرید تا به آن برسید، یا با ما گفت‌وگو کنید."
+minimumNearTitle = "سالانه {{gap}} از Enterprise کمتر دارید."
+paperBrand = "Stirling PDF"
 paperEyebrow = "پیش‌فاکتور سازمانی"
 paperFor = "تهیه‌شده برای"
 pdfSize = "اندازه PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "تنظیم‌شده"
 posture_regulatedSub = "هر دسته — Compliance، Retention، Ingestion"
 qbr = "بازبینی‌های فصلی کسب‌وکار"
 qbrSub = "SE شما هر فصل استفاده و نقشه راه را بررسی می‌کند"
+raiseUsage = "بالابردن مصرف برآوردی"
 region = "ایالت / منطقه"
 regionPlaceholder = "California"
-running = "{{annual}} / سال · {{years}} ساله {{tcv}}"
+runningLabel = "قیمت تخمینی"
+runningLabelIssued = "قیمت پیشنهادی"
+runningOneYear = "{{annual}} در سال"
+runningTotal = "{{tcv}} مجموع طی {{years}} سال"
 s1Sub = "تیم شما و PDFهایی که انتظار دارید هر سال اجرا شوند."
 s1Title = "چه مقدار پردازش خواهید کرد؟"
 s2Sub = "دوره‌های طولانی‌تر نرخ را کاهش می‌دهند؛ سطح سرویس شما پشتیبانی را تعیین می‌کند."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "مثلاً 1,000,000"
 years_one = "{{count}} سال"
 years_other = "{{count}} سال"
 
+[portal.procurement.builder.line]
+deployment = "استقرار {{deployment}}"
+indemnification = "حمایت IP"
+multiYear_one = "تعهد {{count}}-ساله"
+multiYear_other = "تعهد {{count}}-ساله"
+qbr = "بازبینی‌های تجاری فصلی"
+seats_one = "{{users}} کاربر توافق‌شده + SSO / RBAC / حسابرسی"
+seats_other = "{{users}} کاربر توافق‌شده + SSO / RBAC / حسابرسی"
+seatsUnset = "کاربران + SSO / RBAC / حسابرسی"
+support = "SE / CSM اختصاصی"
+training = "آن‌بوردینگ و آموزش"
+usage = "پردازش PDF — {{volume}} PDFs/yr با {{rate}}/PDF (اتوماسیون {{posture}})"
+
 [portal.procurement.documents]
 agreement = "توافق‌نامه سازمانی"
 agreementSub = "MSA، Order Form و DPA در یک امضا."
@@ -10557,6 +11185,8 @@ invoice = "فاکتور"
 invoiceSub = "اولین فاکتور اشتراک شما."
 laterInvoice = "پس از پذیرش شما در دسترس است"
 laterQuote = "پس از صدور پیش‌فاکتور شما در دسترس است"
+laterSigning = "پس از امضای قرارداد در دسترس است"
+laterTitle = "بعدتر در معاملهٔ شما"
 quote = "پیش‌فاکتور"
 quoteSub = "پیش‌فاکتور سازمانی ریزاقلام شما."
 sla = "پیوست SLA"
@@ -10573,15 +11203,12 @@ title = "مشکلی پیش آمد"
 [portal.procurement.hero]
 barAria = "مرحله {{current}} از {{total}}"
 ctaAgreement = "بررسی و امضای توافق‌نامه"
-ctaExploring = "راه‌اندازی نسخه آزمایشی شما"
 ctaQuote = "بررسی پیشنهاد قیمت"
 ctaReviewQuote = "بازبینی پیش‌فاکتور"
 ctaTrial = "ساخت پیشنهاد قیمت"
-documents = "اسناد"
 eyebrow = "سازمانی"
 eyebrowCompany = "{{company}} سازمانی"
 inviteTeammates = "دعوت از هم‌تیمی‌ها"
-licenseKey = "کلید مجوز"
 liveSub = "سازمان شما آماده‌سازی شده و مجوز شما فعال است."
 liveTitle = "شما روی Stirling Enterprise فعال هستید"
 next = "بعدی: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "هنوز امکان ایجاد فایل مجوز آفلاین �
 downloadOffline = "دانلود مجوز آفلاین (.lic)"
 hint = "این کلید را برای فعال‌سازی در یک نمونه self-hosted وارد کنید، یا برای سوابق خود نگه دارید. آن را امن نگه دارید."
 label = "کلید مجوز شما"
-subtitle = "یک نمونه self-hosted را با این کلید فعال کنید، یا آن را برای سوابق خود نگه دارید."
-title = "کلید مجوز شما"
 trialFileHint = "این فایل مجوز آزمایشی شماست. وقتی توافق‌نامه شما برقرار شد، برگردید و دوباره آن را دانلود کنید — برخلاف کلید مجوز آنلاین، فایل .lic به‌خودی‌خود به‌روزرسانی نمی‌شود."
-
-[portal.procurement.link]
-cta = "پیوند دادن حساب"
-description = "خرید سازمانی روی حساب Stirling پیوندشده شما اجرا می‌شود: از این طریق دوره آزمایشی را آماده می‌کنیم، پیشنهاد قیمت را تعیین می‌کنیم و صورتحساب را شروع می‌کنیم. برای شروع، یک حساب را پیوند دهید."
-eyebrow = "سازمانی"
-title = "برای شروع، حساب خود را پیوند دهید"
 
 [portal.procurement.live]
 description = "اشتراک شما فعال است و مجوز شما صادر شده است. تیم شما آماده شده و صورتحساب آغاز شده است."
-eyebrow = "فعال"
 title = "شما در Stirling Enterprise فعال هستید"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "هنوز امکان دانلود PDF پیشنهاد قیمت و
 
 [portal.procurement.payment]
 description = "پیشنهاد قیمت شما پذیرفته شده و مجوز شما از قبل فعال است — تیم شما می‌تواند بلافاصله شروع کند. هر زمان آماده بودید اولین فاکتور را پرداخت کنید؛ می‌توانید آن را اینجا پرداخت یا دانلود کنید، بدون نیاز به ایمیل."
-downloadAgreement = "دانلود توافق‌نامه امضاشده"
 downloadInvoice = "دانلود فاکتور"
-eyebrow = "پرداخت"
-title = "اشتراک ایجاد شد"
 viewInvoice = "مشاهده و پرداخت فاکتور"
 
 [portal.procurement.review]
 acceptCta = "پذیرش پیش‌فاکتور"
 annual = "هزینه سالانه (سال 1)"
 downloadCta = "دانلود پیش‌فاکتور"
+oneTime = "یک‌باره"
 poNumber = "سفارش خرید: {{po}}"
 renewal = "پس از دوره با {{amount}}/سال تمدید می‌شود (+{{pct}}% CPI)"
 tcv = "دوره {{years}} ساله، پرداخت کامل از پیش: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "تمدید، ۷ روز اضافه می‌کند و به مهندس راهکارهای شما اطلاع می‌دهد."
 bodyMaxed = "همه تمدیدهای خود را استفاده کرده‌اید — اگر به زمان بیشتری نیاز دارید با مهندس راهکارهای خود صحبت کنید."
-cancel = "لغو دوره آزمایشی"
 extend = "تمدید ۷ روز"
 maxed = "به سقف رسیده"
 subtitle = "دوره آزمایشی رایگان شما تا {{date}} ادامه دارد. کارت لازم نیست."
 title = "دوره آزمایشی Enterprise"
+
+[portal.procurement.validation]
+confirm = "تأیید کنید مجاز به امضای طرف سازمان هستید."
+email = "یک نشانی ایمیل معتبر وارد کنید."
+eula = "برای ادامه با EULA موافقت کنید."
+required = "این فیلد الزامی است."
+seats = "تعداد افرادی را که آن را آزمایش خواهند کرد وارد کنید."
+volume = "تعداد PDFهایی را که انتظار دارید در سال پردازش کنید وارد کنید."
 
 [portal.review]
 subtitle = "هر چیزی از اجرای سیاست‌های شما و ویرایشگرهای تیمتان که به توجه شما نیاز دارد."
@@ -10735,6 +11358,7 @@ subtitle = "اتصال‌های ورودی قابل استفاده مجدد که
 title = "منابع"
 
 [portal.sources.actions]
+connectDestination = "اتصال مقصد"
 connectSource = "اتصال منبع"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "انتخاب کنید اسناد پردازش‌شده به 
 comingSoon = "به‌زودی"
 comingSoonHeading = "به‌زودی"
 create = "ایجاد منبع"
+createDestination = "ایجاد مقصد"
+createDestinationTitle = "افزودن یک مقصد"
 createTitle = "اتصال یک منبع"
 delete = "حذف"
 editTitle = "ویرایش منبع"
@@ -10757,6 +11383,41 @@ save = "ذخیره تغییرات"
 description = "اتوماسیون‌های پوشه فقط می‌توانند از پوشه‌هایی استفاده کنند که یک مدیر مجاز کرده است. آن را در تنظیمات دسترسی پوشه اضافه کنید، سپس دوباره تلاش کنید."
 openSettings = "تنظیمات دسترسی پوشه"
 title = "این پوشه مجاز نیست"
+
+[portal.sources.cloudFields.account]
+connect = "حساب خود را متصل کنید"
+connectAnother = "اتصال حساب دیگر"
+connectFailed = "این حساب متصل نشد. دوباره تلاش کنید، یا از مدیرتان بخواهید ثبت برنامه را بررسی کند."
+label = "حساب"
+placeholder = "یک حساب انتخاب کنید"
+reconnect = "دوباره وارد شوید"
+unavailable = "اتصال حساب شخصی شما روی این سرور خاموش است. به‌جای آن یک اتصال سازمانی انتخاب کنید."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "حساب‌های شخصی روی این سرور خاموش هستند."
+helperText = "حساب شما به چیزهایی که می‌توانید باز کنید دسترسی دارد و نیاز به ادمین ندارد. یک اتصال سازمانی وقتی افراد می‌روند هم کار می‌کند و فقط به آنچه یک ادمین تنظیم کرده دسترسی دارد."
+label = "ورود به‌عنوان"
+
+[portal.sources.cloudFields.authMode.options]
+account = "حساب من"
+organisation = "اتصال سازمانی"
+
+[portal.sources.cloudFields.connection]
+helperText = "توسط یک مدیر در بخش Integrations راه‌اندازی شده است. بین هر مکانی که از آن استفاده می‌کند به‌اشتراک گذاشته می‌شود."
+label = "اتصال سازمان"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "لینک پوشه را جای‌گذاری کنید، یا مسیری از بالای My Drive تایپ کنید. برای بالای My Drive خالی بگذارید. پوشه باید از قبل وجود داشته باشد."
+placeholder = "لینک پوشه، یا Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "یک پوشه در OneDrive شما، یا لینک یک پوشه را جای‌گذاری کنید (Copy link در OneDrive). برای بالای OneDrive خالی بگذارید. پوشه باید از قبل وجود داشته باشد."
+placeholder = "Scans/Inbox، یا یک لینک پوشه"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "با حساب خود، لینک پوشه را جای‌گذاری کنید (Copy link در SharePoint). با اتصال سازمان، یک پوشه داخل کتابخانه آن؛ برای ریشه کتابخانه خالی بگذارید. پوشه باید از قبل وجود داشته باشد."
+organisationPlaceholder = "لینک پوشه، یا Scans/Inbox"
+placeholder = "لینک پوشه"
 
 [portal.sources.delete]
 body = "«{{name}}» حذف شود؟ این کار قابل بازگشت نیست. خط‌مشی‌هایی که به آن ارجاع می‌دهند باید به‌روزرسانی شوند."
@@ -10821,6 +11482,7 @@ label = "صندوق ورودی Email"
 [portal.sources.types.folder]
 description = "یک دایرکتوری روی سرور را برای اسناد جدید پایش کنید."
 label = "پوشه"
+outputDescription = "نتایج را در یک پوشه روی سرور ذخیره کنید."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "مسیر مطلق پوشه‌ای که باید برای فایل‌های جدید پایش شود."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "اسناد را از پوشه‌های مشترک Google Drive بیرون بکشید."
 label = "Google Drive"
+outputDescription = "نتایج را در یک پوشه Google Drive ذخیره کنید."
 
 [portal.sources.types.network]
 description = "یک SMB network share را برای اسناد جدید پایش کنید."
@@ -10867,10 +11530,12 @@ label = "درایو شبکه"
 [portal.sources.types.onedrive]
 description = "پوشه‌های OneDrive را برای اسناد جدید پایش کنید."
 label = "OneDrive"
+outputDescription = "نتایج را در یک پوشه OneDrive ذخیره کنید."
 
 [portal.sources.types.s3]
 description = "اسناد را از یک bucket در Amazon S3 یا سازگار با S3 بیرون بکشید."
 label = "Amazon S3"
+outputDescription = "نتایج را در یک باکت Amazon S3 یا سازگار با S3 ذخیره کنید."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "اتصال ذخیره‌شده با bucket و اعتبارنامه‌ها. بین هر منبع و خروجی پایپ‌لاینی که از آن استفاده می‌کند مشترک است."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "اسناد را از کتابخانه‌های سند SharePoint بیرون بکشید."
 label = "SharePoint"
+outputDescription = "نتایج را در یک پوشه کتابخانه اسناد SharePoint ذخیره کنید."
 
 [portal.sources.types.unknown]
 label = "منبع"
@@ -11074,6 +11740,14 @@ waiting = "در صف ..."
 name = "Google Drive"
 scope = "وارد کردن فایل"
 
+[provider.googledrive.accountScope]
+description = "drive به هر فایل می‌رسد (Google باید یک برنامه عمومی را برای آن تأیید کند)؛ drive.file فقط فایل‌هایی که افراد انتخاب می‌کنند یا Stirling ایجاد می‌کند"
+label = "دسترسی Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "یک ورود برای ویرایشگر و پایپلاین‌های او. برای محدود کردن به اتصالات سازمانی خاموش کنید."
+label = "اجازه اتصال حساب خود افراد"
+
 [provider.googledrive.apiKey]
 description = "Google API Key برای Google Picker API از Google Cloud Console"
 label = "API Key"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "Google OAuth 2.0 Client ID از Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "به افراد امکان می‌دهد حساب Google خود را برای پایپلاین‌هایشان متصل کنند. Redirect URI زیر را به‌عنوان یک Redirect URI مجازِ OAuth client اضافه کنید."
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "اجازه دهید کاربران مستقیماً از Google Drive فایل وارد کنند"
 label = "فعال‌سازی انتخاب‌گر فایل Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "نتوانستیم حساب Google شما را متصل کنیم. دوباره از مسیر تنظیمات > حساب‌های متصل امتحان کنید."
 notConfigured = "Google Drive پیکربندی نشده است"
 pickerFailed = "باز کردن انتخابگر Google Drive ناموفق بود"
+
+[provider.googledrive.redirectUri]
+description = "این را به‌عنوان یک Redirect URI مجازِ OAuth client در Google Cloud Console اضافه کنید."
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive و SharePoint)"
+scope = "فایل‌ها و پایپلاین‌ها"
+
+[provider.microsoft.allowAccountConnections]
+description = "یک ورود برای ویرایشگر و پایپلاین‌های او. برای محدود کردن به اتصالات سازمانی خاموش کنید."
+label = "اجازه اتصال حساب خود افراد"
+
+[provider.microsoft.allowEditorSaves]
+description = "برای نگه‌داشتن ویرایش‌ها در Stirling این را خاموش کنید: فایل‌هایی که از OneDrive باز می‌شوند به‌جای آن دانلود می‌شوند و سرور ذخیره در OneDrive را رد می‌کند."
+label = "اجازه به ویرایشگر برای ذخیره در OneDrive"
+
+[provider.microsoft.clientId]
+description = "از یک ثبت‌نام برنامه Microsoft Entra."
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "برای حساب‌های متصل لازم است. روی سرور می‌ماند."
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "اجازه دهید افراد از OneDrive و SharePoint در پایپلاین‌ها استفاده کنند"
+label = "فعال‌سازی OneDrive و SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "این را به‌عنوان URI تغییرمسیر Single-page application در همان ثبت برنامه اضافه کنید، برای ورود از ویرایشگر."
+label = "URI تغییرمسیر Single-page application"
+
+[provider.microsoft.redirectUri]
+description = "این را به‌عنوان یک Web redirect URI در ثبت‌نام برنامه Entra اضافه کنید."
+label = "Redirect URI"
+
+[provider.microsoft.setupSteps]
+connect = "ذخیره کنید، راه‌اندازی مجدد کنید، سپس یک حساب را در تنظیمات > حساب‌های متصل متصل کنید."
+permissions = "مجوزهای واگذار‌شدهٔ Microsoft Graph شامل Files.ReadWrite.All و Files.Read.All و مجوزهای واگذار‌شدهٔ SharePoint شامل MyFiles.Read و AllSites.Read را اضافه کنید تا حساب‌های کاری و مدرسه بتوانند انتخاب‌گر فایل را باز کنند."
+redirects = "دو URI تغییرمسیر زیر را به آن اضافه کنید: یکی به‌صورت Web و یکی به‌صورت Single-page application."
+register = "در Microsoft Entra admin center یک برنامه ثبت کنید. اگر افراد از OneDrive شخصی استفاده می‌کنند، حساب‌های شخصی Microsoft را مجاز کنید."
+secret = "یک client secret بسازید، سپس مقدار آن و client ID برنامه را در پایین بچسبانید."
+
+[provider.microsoft.tenant]
+description = "common برای حساب‌های کاری، مدرسه و شخصی؛ organizations برای فقط کاری و مدرسه؛ یا یک Tenant ID برای پذیرش یک سازمان"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "OAuth2 عمومی"
@@ -11195,6 +11921,19 @@ label = "Scopeها"
 description = "فیلدی که به‌عنوان نام کاربری استفاده شود (email، name، given_name، family_name، preferred_username)"
 label = "استفاده به‌عنوان نام کاربری"
 
+[provider.onedrive]
+pickerLoading = "در حال اتصال به OneDrive..."
+pickerTitle = "انتخاب فایل‌ها از OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "نتوانستیم حساب Microsoft شما را متصل کنیم. دوباره از مسیر تنظیمات > حساب‌های متصل امتحان کنید."
+notConfigured = "OneDrive پیکربندی نشده است"
+pickerFailed = "باز کردن OneDrive ناموفق بود"
+popupBlocked = "مرورگر شما پنجرهٔ ورود Microsoft را مسدود کرد. پاپ‌آپ‌ها را برای این سایت مجاز کنید و دوباره امتحان کنید."
+reconnect = "حساب Microsoft شما نیاز به ورود مجدد دارد. آن را در تنظیمات > حساب‌های متصل دوباره متصل کنید."
+serverError = "OneDrive یا سرور Stirling مشکلی داشت. دوباره تلاش کنید، یا اگر ادامه داشت از مدیرتان کمک بخواهید."
+unreachable = "به OneDrive دسترسی پیدا نشد. اتصال خود را بررسی کرده و دوباره تلاش کنید."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "اعلان‌ها"
 processor = "پردازشگر"
 reader = "خواننده"
 signInToUse = "برای استفاده وارد شوید"
+
+[quickNav.accountMenu]
+localMode = "حالت محلی"
+server = "تنظیمات سرور"
+settings = "تنظیمات"
+signedOut = "وارد نشده‌اید"
+signIn = "ورود"
 
 [read]
 tags = "مشاهده,باز کردن,نمایش,خواندن,بیننده,PDF viewer,PDF reader,باز کردن PDF,مشاهده PDF,نمایش PDF,پیش‌نمایش,مرور"
@@ -11811,6 +12557,13 @@ title = "پاکسازی PDF"
 [sanitizePdf]
 tags = "پاکسازی،امن،ایمن،حذف تهدیدها"
 
+[saveFile.menu]
+more = "گزینه‌های بیشتر ذخیره"
+saveCopy = "ذخیره یک کپی..."
+
+[saveFile.toolbar]
+mixed = "ذخیره همه"
+
 [scalePages]
 tags = "تغییر اندازه,تنظیم,مقیاس,اندازه صفحه,تغییر اندازه صفحه,مقیاس صفحه,تغییر اندازه,تنظیم اندازه,بزرگ کردن,کوچک کردن صفحه,تناسب با صفحه,A4,letter size"
 title = "تنظیم مقیاس صفحه"
@@ -11905,6 +12658,162 @@ showTools = "نمایش ابزارهای ناموجود ▾"
 title = "سرور Stirling-PDF شما در دسترس نیست"
 toolNotAvailableLocally = "سرور Stirling-PDF شما آفلاین است و \"{{endpoint}}\" در بک‌اند محلی در دسترس نیست."
 
+[serverSetup]
+back = "بازگشت"
+collapse = "پنهان کردن تنظیمات {{setting}}"
+configured = "پیکربندی‌شده"
+continue = "ادامه"
+dialogLabel = "راه‌اندازی سرور"
+expand = "نمایش تنظیمات {{setting}}"
+finishSetup = "پایان راه‌اندازی"
+loadErrorSubtitle = "برای شروع، راه‌اندازی به تنظیمات فعلی سرور نیاز دارد."
+loadErrorTitle = "نتوانستیم تنظیمات شما را بارگذاری کنیم"
+off = "خاموش"
+on = "روشن"
+save = "ذخیره"
+stepCount = "{{current}} از {{total}}"
+
+[serverSetup.account]
+failed = "ذخیره جزئیات شما ممکن نشد. بررسی کنید سرور در دسترس است و دوباره تلاش کنید."
+save = "ذخیره و ادامه"
+signIn = "ورود"
+signInAgainSubtitle = "برای ادامه با نام کاربری و رمز عبور جدید دوباره وارد شوید."
+signInAgainTitle = "جزئیات شما ذخیره شد"
+subtitle = "شیوه ورود خود از این پس را انتخاب کنید."
+title = "راه‌اندازی حساب شما"
+updating = "در حال به‌روزرسانی"
+updatingSubtitle = "یک لحظه."
+updatingTitle = "در حال به‌روزرسانی جزئیات شما"
+username = "نام کاربری"
+usernameHelp = "چیزی که با آن وارد می‌شوید. نشانی ایمیل هم کار می‌کند."
+
+[serverSetup.addresses]
+backendUrl = "نشانی سرور"
+backendUrlHelp = "جایی که ارائه‌دهندگان ورود کاربران را به آن بازمی‌گردانند. معمولاً همان نشانی وب است."
+frontendUrl = "نشانی وب"
+frontendUrlHelp = "جایی که کاربران Stirling PDF را باز می‌کنند. در ایمیل‌ها، لینک‌های اشتراک و کدهای QR استفاده می‌شود."
+subtitle = "نحوه دسترسی کاربران و ارائه‌دهندگان ورود به این سرور."
+title = "نشانی‌ها"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "برای استفاده از کلیدِ از پیش موجود موتور AI، خالی بگذارید."
+baseUrl = "Base URL"
+engineUrl = "نشانی موتور AI"
+fastModel = "مدل سریع"
+label = "هوش مصنوعی خودمیزبان"
+provider = "ارائه‌دهنده مدل"
+providerCustom = "سازگار با OpenAI"
+smartModel = "مدل کامل"
+stirling = "Stirling AI"
+subtitle = "پرسش‌های سند، ویرایش‌های خودکار و عامل‌های AI."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "پذیرفتن و ادامه"
+acceptFinish = "پذیرفتن و پایان"
+changeLater = "می‌توانید هر زمان در {{path}} آن را تغییر دهید."
+decline = "رد کردن و ادامه"
+declineFinish = "رد کردن و پایان"
+learnMore = "چه چیزی جمع‌آوری می‌کنیم"
+note = "داده‌های استفاده از این سرور را با ما به اشتراک بگذارید تا به بهبود Stirling PDF کمک کنیم. ما هرگز فایل‌ها یا محتوای آنها را جمع‌آوری نمی‌کنیم."
+title = "تحلیل‌های سرور"
+
+[serverSetup.documents]
+label = "پرسش‌های سند"
+model = "مدل تعبیه"
+provider = "ارائه‌دهنده تعبیه"
+providerHelp = "متن سند را به نمایه جستجو تبدیل می‌کند که به پرسش‌ها پاسخ می‌دهد."
+
+[serverSetup.email]
+from = "نشانی فرستنده"
+host = "میزبان SMTP"
+label = "ارسال ایمیل"
+password = "رمز عبور"
+port = "پورت"
+subtitle = "برای دعوت‌ها، درخواست‌های امضا و اشتراک‌گذاری‌ها."
+title = "ایمیل"
+username = "نام کاربری"
+
+[serverSetup.error]
+email = "یک نشانی ایمیل وارد کنید"
+issuerUnreachable = "دسترسی به این صادرکننده ممکن نشد. نشانی را بررسی کنید و اینکه این سرور می‌تواند به آن دسترسی یابد."
+passwordIncorrect = "رمز عبور نادرست است"
+passwordLength = "از حداقل ۸ کاراکتر استفاده کنید"
+passwordMismatch = "رمزهای عبور هم‌خوانی ندارند"
+passwordRejected = "سرور این رمز عبور را نپذیرفت. مورد دیگری را امتحان کنید."
+passwordUnchanged = "رمز عبوری متفاوت از فعلی انتخاب کنید"
+port = "یک پورت از ۱ تا ۶۵۵۳۵ وارد کنید"
+providerName = "فقط از حروف، اعداد، خط تیره یا زیرخط استفاده کنید"
+required = "الزامی"
+url = "یک نشانی کامل وارد کنید که با http:// یا https:// شروع شود"
+username = "از ۳ تا ۵۰ حرف، عدد یا . _ + - @ استفاده کنید، یا یک نشانی ایمیل"
+usernameTaken = "این نام کاربری قبلاً گرفته شده است"
+
+[serverSetup.files]
+sharing = "اشتراک‌گذاری فایل"
+sharingOffWarning = "با خاموش بودن اشتراک‌گذاری، لینک‌های اشتراک موجود از کار می‌افتند."
+storage = "ذخیره فایل‌ها"
+storageOffWarning = "با خاموش بودن ذخیره‌سازی، فایل‌هایی که افراد روی سرور ذخیره کرده‌اند دیگر قابل باز کردن نیستند."
+subtitle = "مدیریت ذخیره‌سازی و اشتراک‌گذاری فایل."
+title = "فایل‌ها"
+
+[serverSetup.finish]
+errorNote = "بررسی کنید سرور در دسترس است و همچنان به‌عنوان ادمین وارد هستید."
+errorSubtitle = "هیچ موردی راه‌اندازی مجدد نشد."
+errorTitle = "نتوانستیم تنظیمات شما را ذخیره کنیم"
+manualSubtitle = "این سرور نمی‌تواند خودش راه‌اندازی مجدد شود. برای اعمال آنها، کانتینر یا سرویس آن را راه‌اندازی مجدد کنید."
+manualTitle = "تنظیمات ذخیره شد"
+restartFailedSubtitle = "سرور راه‌اندازی مجدد نشد. برای اعمال آنها، کانتینر یا سرویس آن را راه‌اندازی مجدد کنید."
+restartingSubtitle = "این صفحه پس از بازگشت سرور بارگذاری مجدد می‌شود، معمولاً ظرف یک دقیقه."
+restartingTitle = "در حال راه‌اندازی مجدد سرور شما"
+retry = "تلاش دوباره"
+saving = "در حال ذخیره"
+savingSubtitle = "یک لحظه."
+savingTitle = "در حال ذخیره تنظیمات شما"
+
+[serverSetup.language]
+auto = "همسان با هر مرورگر"
+label = "زبان پیش‌فرض"
+subtitle = "آنچه بازدیدکنندگان جدید ابتدا می‌بینند."
+title = "زبان"
+
+[serverSetup.mcp]
+label = "سرور MCP"
+
+[serverSetup.password]
+confirm = "تأیید رمز عبور جدید"
+current = "رمز عبور فعلی"
+new = "رمز عبور جدید"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "ورود با"
+oidc = "OpenID Connect دیگر"
+password = "نام کاربری و رمز عبور"
+providerName = "نام ارائه‌دهنده"
+providerNameHelp = "روی دکمه ورود نمایش داده می‌شود، برای نمونه okta یا entra."
+redirectNote = "این Redirect URI را در ارائه‌دهنده خود اضافه کنید:"
+subtitle = "نحوه ورود تیم شما."
+title = "ورود"
+
+[serverSetup.signingIn]
+button = "در حال ورود"
+title = "در حال ورود با اعتبارهای پیش‌فرض"
+
+[serverSetup.start]
+custom = "سفارشی"
+quick = "شروع سریع"
+setupLabel = "راه‌اندازی"
+subtitle = "در چند گام آن را برای تیم خود راه‌اندازی کنید."
+title = "سرور شما آماده است"
+
+[serverSetup.summary]
+subtitle = "موارد ضروری را بررسی کنید. بقیه در حالت پیش‌فرض می‌مانند."
+title = "شروع سریع"
+
 [session]
 expired = "نشست شما به پایان رسیده است. لطفاً صفحه را تازه‌سازی کرده و دوباره تلاش کنید."
 
@@ -11939,6 +12848,10 @@ mcp = "سرور MCP"
 privacy = "حریم خصوصی"
 storageSharing = "ذخیره‌سازی فایل و اشتراک‌گذاری"
 systemSettings = "تنظیمات سیستم"
+
+[settings.connectedAccounts]
+description = "OneDrive، SharePoint و Google Drive خودتان، برای پایپلاین‌های شما."
+title = "حساب‌های متصل"
 
 [settings.connectedInstances]
 confirmBody = "این کار دسترسی instance به تیم شما در Stirling Cloud را لغو می‌کند. فایل‌های محلی را حذف نمی‌کند و مصرفی را که قبلاً ثبت شده حذف نمی‌کند. برای اتصال دوباره، مراحل اتصال اولیه را روی instance دنبال کنید."
@@ -11992,6 +12905,13 @@ selfhosted = "خودمیزبان"
 apiKeys = "کلیدهای API"
 apiKeysDescription = "کلیدهای شخصی برای فراخوانی Stirling API از اسکریپت‌ها و یکپارچه‌سازی‌ها."
 title = "توسعه‌دهنده"
+
+[settings.feedback]
+label = "بازخورد"
+
+[settings.feedback.send]
+description = "مشکلی را گزارش کنید یا پیشنهادی برای بهبود به تیم Stirling بدهید."
+label = "ارسال بازخورد"
 
 [settings.general]
 autoUnzip = "استخراج خودکار پاسخ‌های API"
@@ -12058,6 +12978,7 @@ checkForUpdates = "بررسی به‌روزرسانی"
 currentBackendVersion = "نسخه فعلی Backend"
 currentFrontendVersion = "نسخه فعلی Frontend"
 description = "بررسی به‌روزرسانی و مشاهده اطلاعات نسخه"
+descriptionManaged = "مشاهده اطلاعات نسخه"
 latestVersion = "آخرین نسخه"
 managedByAdmin = "مدیریت‌شده توسط مدیر"
 modeAuto = "نصب خودکار به‌روزرسانی‌ها"
@@ -12135,15 +13056,24 @@ title = "اسناد حقوقی"
 backendDescription = "مجوزهای وابستگی‌های backend که با این سرور بسته‌بندی شده‌اند."
 backendLabel = "مجوزهای Backend"
 backendTitle = "مجوزهای شخص ثالث Backend"
+clearSearch = "پاک کردن جستجو"
 empty = "هیچ وابستگی‌ای یافت نشد."
 frontendDescription = "مجوزهای وابستگی‌های frontend که در build انتشار بسته‌بندی شده‌اند."
 frontendLabel = "مجوزهای Frontend"
 frontendTitle = "مجوزهای شخص ثالث Frontend"
 license = "مجوز"
+licenseAbout = "درباره"
+licenseAboutCompound = "درباره {{short}}"
+licenseAboutTitle = "درباره {{short}}"
 listDescription = "فهرست مستقیماً در UI از بسته انتشار یا endpoint مربوط به backend نمایش داده می‌شود."
 listTitle = "وابستگی‌های بسته‌بندی‌شده"
 loadError = "بارگیری مجوزهای شخص ثالث ناموفق بود"
 module = "ماژول"
+noMatch = "هیچ وابستگیِ مطابقی یافت نشد."
+searchPlaceholder = "جستجوی وابستگی‌ها"
+showingCount = "{{count}} وابستگی"
+showingCount_one = "{{count}} وابستگی"
+showingCount_other = "{{count}} وابستگی"
 version = "نسخه"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "لطفاً ایمیل خود را وارد کنید"
 emptyPassword = "لطفاً گذرواژه خود را وارد کنید"
 emptyUsername = "لطفاً نام کاربری خود را وارد کنید"
 oauthFailed = "ورود OAuth ناموفق بود. لطفاً دوباره تلاش کنید."
+openResetFailed = "نتوانستیم برای بازنشانی رمز عبور، مرورگر شما را باز کنیم."
 
 [setup.saas]
 title = "ورود به Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "امضاهای نامرئی همچنان اعتبارسنجی رمز�
 description = "کنترل می‌کند امضا روی سند مرئی باشد یا نامرئی جاسازی شود."
 title = "قابلیت مشاهده امضا"
 
+[signedPdf]
+editsBlocked = "این PDF دارای امضای دیجیتال است و اعمال تغییرات روی PDFهای امضاشده غیرفعال است. همچنان می‌توانید آن را مشاهده یا چاپ کنید، به قالب دیگری تبدیل کنید، یا دوباره امضا کنید."
+editsBlockedStatus = "امضاشده: ویرایش مسدود است"
+editsBlockedTitle = "PDF امضاشده قابل تغییر نیست"
+
 [signingDetail]
 allSigned = "همه امضا کرده‌اند. سند را بررسی کنید، سپس نهایی کنید."
 awaitingOwner = "مالک پس از آماده شدن، سند را نهایی خواهد کرد."
@@ -13110,7 +14046,6 @@ noLinks = "هنوز لینک اشتراکی فعالی نیست."
 noSharedUsers = "هنوز هیچ کاربری دسترسی ندارد."
 openInApp = "باز کردن در Stirling PDF"
 ownerLabel = "مالک"
-ownerUnknown = "نامشخص"
 removeLink = "حذف لینک"
 removeUser = "حذف"
 requiresLogin = "این فایل مشترک نیاز به ورود دارد."
@@ -13249,6 +14184,11 @@ remove = "حذف"
 roleColumn = "نقش"
 title = "اعضای تیم"
 
+[teamWelcome]
+invite = "دعوت از افراد"
+message = "تیمتان را دعوت کنید تا بتوانند با شما شروع به کار کنند."
+title = "طرح Team شما فعال است."
+
 [textAlign]
 center = "وسط"
 left = "چپ"
@@ -13290,7 +14230,6 @@ toggleDetails = "تغییر نمایش جزئیات"
 
 [tool]
 endpointUnavailable = "این ابزار روی سرور شما در دسترس نیست."
-endpointUnavailableClickable = "در این حالت در دسترس نیست. برای ورود کلیک کنید."
 filesLoading = "فایل‌ها همچنان در حال بارگذاری هستند، لطفاً صبر کنید."
 filesLoadingProgress = "{{loaded}} / {{total}} فایل در حال بارگذاری..."
 invalidParams = "تنظیمات لازم را تکمیل کنید."
@@ -13298,6 +14237,8 @@ noFiles = "برای شروع یک فایل اضافه کنید."
 scopeFiles = "پرونده‌ها"
 scopeThisFile = "این پرونده"
 selectFilesHint = "برای اجرای این ابزار، پرونده‌ها را در «پرونده‌های فعال» انتخاب کنید"
+signInRequired = "این به یک حساب Stirling نیاز دارد. برای ادامه وارد شوید."
+signInToUse = "برای استفاده وارد شوید"
 singleFileScope = "فقط اعمال می‌شود روی: {{fileName}}"
 viewerMode = "برای افزودن چند فایل به ویرایشگر فایل بروید."
 
@@ -13790,6 +14731,7 @@ coverPageView = "نمایش صفحه جلد به‌صورت جداگانه"
 disableColorFilter = "غیرفعال کردن فیلتر رنگ"
 documentUpdated = "سند به‌روزرسانی شد"
 dualPageView = "نمای دوصفحه‌ای"
+editText = "ویرایش متن"
 enableDarkFilter = "فعال‌سازی فیلتر تیره"
 enableSepiaFilter = "فعال‌سازی فیلتر سپیا"
 engineLoadError = "راه‌اندازی موتور نمایشگر PDF ناموفق بود"
@@ -14158,8 +15100,10 @@ closeAll = "بستن همهٔ فایل‌ها"
 closePdf = "بستن PDF"
 deselectAll = "لغو انتخاب همه"
 downloadAll = "دانلود همه"
+editText = "ویرایش متن"
 exitAnnotations = "خروج از حالت حاشیه‌نویسی"
 exitRedaction = "خروج از حالت پنهان‌سازی"
+findReplace = "یافتن و جایگزینی"
 formFill = "ویرایشگر فرم"
 hideToolbar = "پنهان کردن نوار ابزار"
 moreActions = "اقدامات بیشتر"
