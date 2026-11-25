@@ -1,10 +1,12 @@
 import { ReactNode } from "react";
 import { PlatformProviders as ProprietaryPlatformProviders } from "@editor-proprietary/components/PlatformProviders";
 import { DESKTOP_DEFAULT_APP_CONFIG } from "@editor/config/defaultAppConfig";
+import { DesktopSessionProvider } from "@editor/components/DesktopSession";
 
 /**
  * Retries the app config because the bundled backend may still be starting,
- * and renders on the bundled defaults until DesktopConfigSync fetches it.
+ * and renders on the bundled defaults until DesktopConfigSync fetches it. The
+ * desktop session sits here so the editor and the Processor share it.
  */
 export function PlatformProviders({ children }: { children: ReactNode }) {
   return (
@@ -19,7 +21,7 @@ export function PlatformProviders({ children }: { children: ReactNode }) {
         autoFetch: false,
       }}
     >
-      {children}
+      <DesktopSessionProvider>{children}</DesktopSessionProvider>
     </ProprietaryPlatformProviders>
   );
 }

@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Checkbox } from "@editor/ui/Checkbox";
+import { Chip } from "@editor/ui/Chip";
 import { BreakdownRow } from "@editor/components/tools/checkAccessibility/AccessibilityBreakdownRow";
 
 interface AccessibilityManualChecksProps {
@@ -13,7 +14,10 @@ interface AccessibilityManualChecksProps {
   onSetAll: (done: boolean) => void;
 }
 
-/** The checks a person has to make, as a breakdown row whose ticks go into the downloaded report. */
+/**
+ * The checks only a person can make, as a breakdown row that opens on the list; the
+ * ticks go into the downloaded report.
+ */
 export function AccessibilityManualChecks({
   checks,
   ticked,
@@ -21,20 +25,33 @@ export function AccessibilityManualChecks({
   onSetAll,
 }: AccessibilityManualChecksProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const bodyId = useId();
   const allDone = ticked.size === checks.length;
-
   return (
-    <li className="a11y-area">
+    <li className="a11y-area" data-testid="a11y-manual-checks">
       <BreakdownRow
-        icon="user-check"
+        icon="list-checks"
         label={t("checkAccessibility.manual.title", "Manual checks")}
         tip={t(
           "checkAccessibility.manual.tip",
           "Things only a person can judge, such as reading order and whether image descriptions make sense. Tick each one once you've checked it, and your ticks go into the downloaded report.",
         )}
-        status={allDone ? "done" : "inProgress"}
+        status={allDone ? "pass" : "fail"}
+        badge={
+          <span className="a11y-manual__status">
+            <span className="a11y-manual__count">{`${ticked.size}/${checks.length}`}</span>
+            <Chip
+              accent={allDone ? "success" : "warning"}
+              size="xs"
+              data-testid="a11y-manual-status"
+            >
+              {allDone
+                ? t("checkAccessibility.manual.done", "Done")
+                : t("checkAccessibility.manual.inProgress", "In progress")}
+            </Chip>
+          </span>
+        }
         toggle={{
           open,
           controls: bodyId,
