@@ -13,6 +13,7 @@ import { zipFileService } from "@editor/services/zipFileService";
 import { processResponse } from "@editor/utils/toolResponseProcessor";
 import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
 import { type AutomationConfig } from "@editor/types/automation";
+import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
 
 export const processMultiFileResponse = async (
   responseData: Blob,
@@ -178,6 +179,15 @@ export const executeToolOperationWithPrefix = async (
 
   // Merge with default parameters to ensure all required fields are present
   const mergedParameters = { ...config.defaultParameters, ...parameters };
+  const stepEndpoint =
+    (typeof config.endpoint === "function"
+      ? config.endpoint(mergedParameters)
+      : config.endpoint) ?? undefined;
+  await assertSignedPdfsEditable(
+    files,
+    stepEndpoint,
+    !stepEndpoint && !!config.customProcessor,
+  );
 
   try {
     // Check if tool uses custom processor (like Convert tool)
@@ -232,9 +242,6 @@ export const executeAutomationSequence = async (
   }
 
   let currentFiles = [...initialFiles];
-  const automationPrefix = automation.name
-    ? `${automation.name}_`
-    : "automated_";
 
   for (let i = 0; i < automation.operations.length; i++) {
     const operation = automation.operations[i];
@@ -252,7 +259,7 @@ export const executeAutomationSequence = async (
         operation.parameters || {},
         currentFiles,
         toolRegistry,
-        i === automation.operations.length - 1 ? automationPrefix : "", // Only add prefix to final step
+        "",
       );
 
       console.log(

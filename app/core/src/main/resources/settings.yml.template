@@ -12,10 +12,13 @@
 
 security:
   honorOwnerPasswords: true # Require the permissions password for restricted PDF actions; opening passwords are always required.
+  blockSignedPdfEdits: false # Lock digitally signed PDFs against changes in the web and desktop apps; viewing, converting and signing again stay allowed. API calls and server pipelines are not affected.
   enableLogin: true # set to 'true' to enable login
   ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
+  scimToken: "" # Bearer token (at least 32 characters) for SCIM 2.0 user provisioning at /api/v1/scim/v2 (Okta, Entra ID). Leave empty to disable
+  scimDeleteRemovesUser: false # When true, a SCIM DELETE permanently erases the user and their files; when false it only deactivates them
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
   initialLogin:
     username: "" # initial username for the first login
@@ -74,7 +77,8 @@ security:
   validation: # PDF signature validation settings
     trust:
       serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)
-      useSystemTrust: true # Trust Java/OS system trust store for PDF signature validation
+      useSystemTrust: true # Trust the Java runtime's bundled CA store (cacerts) for PDF signature validation
+      useOSTrust: false # Trust the operating system's root store (Windows certificate store, macOS keychain, Linux CA bundle), where Group Policy/Intune/MDM deploy organisation roots. On by default in the desktop app
       useMozillaBundle: true # Trust bundled Mozilla CA bundle (~140 CAs) for PDF signature validation
       useAATL: false # Trust Adobe Approved Trust List (AATL) for PDF signature validation - downloads from Adobe on startup if enabled
       useEUTL: false # Trust EU Trusted List (EUTL) for eIDAS qualified certificates - downloads LOTL and national TSLs on startup if enabled
@@ -106,6 +110,16 @@ premium:
       clientId: "" # Google OAuth 2.0 client ID (obtain from Google Cloud Console)
       apiKey: "" # Google API key for Google Picker API (obtain from Google Cloud Console)
       appId: "" # Google Drive app ID
+      clientSecret: "" # OAuth client secret; lets users connect their Google account so pipelines can use their Drive (redirect URI <server>/api/v1/connected-accounts/callback/google)
+      allowAccountConnections: true # set to 'false' to stop users connecting their own Google account
+      accountScope: drive # Drive scope requested when a user connects: 'drive' (every file) or 'drive.file' (only files they pick or Stirling creates)
+    microsoft:
+      enabled: false # Enable OneDrive and SharePoint (editor picker, connected accounts, pipeline locations)
+      clientId: "" # Application (client) ID of the Microsoft Entra app registration
+      tenant: common # 'common' (work, school and personal accounts), 'organizations' (work and school only), or a tenant ID/domain to admit one organisation
+      clientSecret: "" # Client secret; needed for connected accounts (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
+      allowAccountConnections: true # set to 'false' to stop users connecting their own Microsoft account
+      allowEditorSaves: true # set to 'false' to stop the editor saving files back to OneDrive; the server then refuses those saves
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging for security and compliance tracking
@@ -189,7 +203,7 @@ system:
   enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
-  stirlingOfficeConversion: false # Beta: set to 'true' to convert Office files with the built-in Stirling Office Convert (better, faster conversions using less memory) instead of LibreOffice
+  stirlingOfficeConversion: false # Unused since Office Convert replaced it; kept so a rollback keeps your value
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   maxPdfaConversionPages: 20000 # Most pages a PDF/A or PDF/X conversion accepts; larger documents are refused (0 = unlimited)
   maxImageMegapixels: 0 # Largest image one page render may create, in megapixels. 0 = automatic (a quarter of the Java heap, at most 1 GB)
@@ -235,15 +249,15 @@ system:
       watchedFoldersDirs: [] # List of watched folder directories. Defaults to watchedFoldersDir or /pipeline/watchedFolders.
       finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
-      weasyprint: "" # Defaults to /opt/venv/bin/weasyprint
-      unoconvert: "" # Defaults to /opt/venv/bin/unoconvert
-      calibre: "" # Defaults to /usr/bin/ebook-convert
+      weasyprint: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
+      unoconvert: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
+      calibre: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
       ocrmypdf: "" # Defaults to /usr/bin/ocrmypdf
-      soffice: "" # Defaults to /usr/bin/soffice
+      soffice: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
   fileUploadLimit: "" # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
   tempFileManagement:
     baseTmpDir: "" # Defaults to java.io.tmpdir/stirling-pdf
-    libreofficeDir: "" # Defaults to tempFileManagement.baseTmpDir/libreoffice
+    libreofficeDir: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
     systemTempDir: "" # Only used if cleanupSystemTemp is true
     prefix: stirling-pdf- # Prefix for temp file names
     maxAgeHours: 24 # Maximum age in hours before temp files are cleaned up
@@ -296,7 +310,7 @@ storage:
     maxStorageMbTotal: -1 # Max storage across all users in MB; -1 disables total cap
     maxFileMb: -1 # Max size per stored file (including history/audit) in MB; -1 disables limit
   sharing:
-    enabled: false # set to 'true' to enable file sharing features [ALPHA]
+    enabled: true # set to 'false' to disable file sharing features
     linkEnabled: true # set to 'false' to disable share links (requires system.frontendUrl)
     emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
     linkExpirationDays: 3 # Number of days before share links expire
@@ -332,7 +346,7 @@ ui:
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
-  groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
+  groupsToRemove: [] # list groups to disable (e.g. ['Ghostscript', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
 
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
@@ -352,38 +366,30 @@ AutomaticallyGenerated:
   appVersion: 0.35.0
 
 processExecutor:
-  autoUnoServer: true # true: use local pool based on libreOfficeSessionLimit; false: use unoServerEndpoints
-  unoServerEndpoints: [] # Used when autoUnoServer is false
-  # Example manual endpoints (uncomment to use):
-  # unoServerEndpoints:
-  #   - host: "127.0.0.1"
-  #     port: 2003
-  #     hostLocation: "auto"  # auto|local|remote (use "remote" for port-forwarded servers)
-  #     protocol: "http"       # http|https
-  #   - host: "remote-server.local"
-  #     port: 8080
-  #     hostLocation: "remote"
-  #     protocol: "https"
+  autoUnoServer: true # Unused since Office Convert replaced it; kept so a rollback keeps your value
+  unoServerEndpoints: [] # Unused since Office Convert replaced it; kept so a rollback keeps your value
   sessionLimit: # Process executor instances limits
-    libreOfficeSessionLimit: 1 # Each additional uno server adds ~50MB idle RAM
-    pdfToHtmlSessionLimit: 1
+    libreOfficeSessionLimit: 1 # Unused since Office Convert replaced it; kept so a rollback keeps your value
+    pdfToHtmlSessionLimit: 1 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
-    weasyPrintSessionLimit: 16
+    weasyPrintSessionLimit: 16 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     installAppSessionLimit: 1
-    calibreSessionLimit: 1
-    imageMagickSessionLimit: 4
+    calibreSessionLimit: 1 # Unused since Office Convert replaced it; kept so a rollback keeps your value
+    imageMagickSessionLimit: 4 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     ghostscriptSessionLimit: 8
     ocrMyPdfSessionLimit: 2
+    officeConvertSessionLimit: 0 # Conversions run at once; 0 sizes it from CPUs and memory
   timeoutMinutes: # Process executor timeout in minutes
-    libreOfficetimeoutMinutes: 30
-    pdfToHtmltimeoutMinutes: 20
+    officeConvertTimeoutMinutes: 30 # Office, HTML, ebook and PDF/A conversions
+    libreOfficetimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value
+    pdfToHtmltimeoutMinutes: 20 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     pythonOpenCvtimeoutMinutes: 30
-    weasyPrinttimeoutMinutes: 30
+    weasyPrinttimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     installApptimeoutMinutes: 60
-    calibretimeoutMinutes: 30
-    imageMagickTimeoutMinutes: 30
+    calibretimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value
+    imageMagickTimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     tesseractTimeoutMinutes: 30
     qpdfTimeoutMinutes: 30
     ghostscriptTimeoutMinutes: 30

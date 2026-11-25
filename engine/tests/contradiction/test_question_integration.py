@@ -59,7 +59,7 @@ def _claim(page: int, quote: str) -> Claim:
 @pytest.fixture
 def runtime_with_stub_docs(runtime: AppRuntime) -> AppRuntime:
     stub = DocumentService(
-        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        embedder=StubEmbedder(),  # pyrefly: ignore [bad-argument-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=runtime.settings.rag_default_top_k,
     )
@@ -76,7 +76,7 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
     constructor and inspect what was wired.
 
     Uses pytest's ``monkeypatch`` fixture rather than direct attribute
-    assignment so pyright sees the swap as a typed test-only operation
+    assignment so pyrefly sees the swap as a typed test-only operation
     and restoration is automatic if the test raises.
     """
     file = _file("doc-a", "a.pdf")

@@ -3,7 +3,6 @@ import {
   thumbnailGenerationService,
   type ThumbnailResult,
 } from "@editor/services/thumbnailGenerationService";
-import { getDocumentBytes } from "@editor/services/documentBytesCache";
 import { createQuickKey, isStirlingFile } from "@editor/types/fileContext";
 import { FileId } from "@editor/types/file";
 
@@ -75,9 +74,6 @@ async function processRequestQueue() {
         try {
           const pageNumbers = requests.map((req) => req.pageNumber);
 
-          // Share the cached buffer instead of minting a second copy.
-          const arrayBuffer = await getDocumentBytes(file);
-
           // Use quickKey for PDF document caching (same metadata, consistent format)
           const fileId = isStirlingFile(file)
             ? file.fileId
@@ -85,7 +81,7 @@ async function processRequestQueue() {
 
           const results = await thumbnailGenerationService.generateThumbnails(
             fileId,
-            arrayBuffer,
+            file,
             pageNumbers,
             { scale: 1.0, quality: 0.8, batchSize: BATCH_SIZE },
             (_progress) => {
@@ -103,6 +99,7 @@ async function processRequestQueue() {
               thumbnailGenerationService.addThumbnailToCache(
                 request.pageId,
                 result.thumbnail,
+                fileId,
               );
               request.resolve(result.thumbnail);
             } else {
@@ -133,7 +130,7 @@ export function useThumbnailGeneration() {
   const generateThumbnails = useCallback(
     async (
       fileId: FileId,
-      pdfArrayBuffer: ArrayBuffer,
+      source: Blob | ArrayBuffer,
       pageNumbers: number[],
       options: {
         scale?: number;
@@ -149,7 +146,7 @@ export function useThumbnailGeneration() {
     ) => {
       return thumbnailGenerationService.generateThumbnails(
         fileId,
-        pdfArrayBuffer,
+        source,
         pageNumbers,
         options,
         onProgress,
@@ -159,8 +156,8 @@ export function useThumbnailGeneration() {
   );
 
   const addThumbnailToCache = useCallback(
-    (pageId: string, thumbnail: string) => {
-      thumbnailGenerationService.addThumbnailToCache(pageId, thumbnail);
+    (pageId: string, thumbnail: string, fileId?: string) => {
+      thumbnailGenerationService.addThumbnailToCache(pageId, thumbnail, fileId);
     },
     [],
   );

@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
-// Strips external refs from OOXML/ODF uploads so LibreOffice can't be made to fetch them.
+// Strips external refs from OOXML/ODF uploads so the converter can't be made to fetch them.
 @Component
 @Slf4j
 public class OfficeDocumentSanitizer {

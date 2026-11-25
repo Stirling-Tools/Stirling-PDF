@@ -4,9 +4,15 @@ import apiClient from "@editor/services/apiClient";
 import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
 import {
+  executeAutomationSequence,
   executeToolOperation,
   processMultiFileResponse,
 } from "@editor/utils/automationExecutor";
+import type { AutomationConfig } from "@editor/types/automation";
+import {
+  rememberPdfAccess,
+  setSignedPdfEditPolicy,
+} from "@editor/services/pdfAccessService";
 
 vi.mock("@editor/services/apiClient", () => ({
   default: {
@@ -122,5 +128,125 @@ describe("executeToolOperation (automation execution)", () => {
       expect.any(FormData),
       { responseType: "blob" },
     );
+  });
+});
+
+describe("executeAutomationSequence (automation execution)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (mockedApiClient.post as Mock).mockResolvedValue({
+      data: new Blob([PDF_BYTES], { type: "application/pdf" }),
+      headers: { "content-type": "application/pdf" },
+    });
+  });
+
+  test("keeps each input's file name", async () => {
+    const step = {
+      operationConfig: {
+        toolType: ToolType.singleFile,
+        endpoint: "/api/v1/misc/compress-pdf",
+        defaultParameters: {},
+        buildFormData: (_parameters: unknown, file: File) => {
+          const formData = new FormData();
+          formData.append("fileInput", file);
+          return formData;
+        },
+      },
+    };
+    const toolRegistry = {
+      compress: step,
+      repair: step,
+    } as unknown as ToolRegistry;
+    const automation = {
+      id: "release-prep",
+      name: "Records release prep",
+      operations: [
+        { operation: "compress", parameters: {} },
+        { operation: "repair", parameters: {} },
+      ],
+    } as unknown as AutomationConfig;
+
+    const result = await executeAutomationSequence(
+      automation,
+      [
+        new File(["a"], "01_cover_letter.pdf", { type: "application/pdf" }),
+        new File(["b"], "03_memo_followup_scan.pdf", {
+          type: "application/pdf",
+        }),
+      ],
+      toolRegistry,
+    );
+
+    expect(result.map((f) => f.name)).toEqual([
+      "01_cover_letter.pdf",
+      "03_memo_followup_scan.pdf",
+    ]);
+  });
+});
+
+describe("automation steps on a signed PDF while edits are blocked", () => {
+  const registry = (endpoint: string) =>
+    ({
+      step: {
+        operationConfig: {
+          operationType: "step",
+          toolType: ToolType.singleFile,
+          endpoint,
+          defaultParameters: {},
+          buildFormData: (_parameters: unknown, file: File) => {
+            const formData = new FormData();
+            formData.append("fileInput", file);
+            return formData;
+          },
+        },
+      },
+    }) as unknown as ToolRegistry;
+
+  function signedFile() {
+    const file = new File(["%PDF-1.7"], "signed.pdf", {
+      type: "application/pdf",
+    });
+    rememberPdfAccess(file, {
+      password: "",
+      encrypted: false,
+      signed: true,
+      ownerAuthenticated: false,
+      permissions: -4,
+      pageCount: 1,
+    });
+    return file;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setSignedPdfEditPolicy(true);
+    (mockedApiClient.post as Mock).mockResolvedValue({
+      data: new Blob([PDF_BYTES], { type: "application/pdf" }),
+      headers: { "content-type": "application/pdf" },
+    });
+  });
+
+  test("refuses a step that rewrites the PDF", async () => {
+    await expect(
+      executeToolOperation(
+        "step",
+        {},
+        [signedFile()],
+        registry("/api/v1/general/rotate-pdf"),
+      ),
+    ).rejects.toThrow("digitally signed");
+    expect(mockedApiClient.post).not.toHaveBeenCalled();
+    setSignedPdfEditPolicy(false);
+  });
+
+  test("runs a step that only converts it", async () => {
+    await executeToolOperation(
+      "step",
+      {},
+      [signedFile()],
+      registry("/api/v1/convert/pdf/img"),
+    );
+    expect(mockedApiClient.post).toHaveBeenCalled();
+    setSignedPdfEditPolicy(false);
   });
 });

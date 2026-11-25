@@ -18,7 +18,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -26,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
-import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -37,8 +35,6 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.officeconvert.OfficeConvert;
-import stirling.software.officeconvert.PdfToXlsx;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -53,7 +49,6 @@ public class ConvertPDFToExcelController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private final OfficeConversionService officeConversionService;
 
     @AutoJobPostMapping(
             value = "/pdf/xlsx",
@@ -65,10 +60,7 @@ public class ConvertPDFToExcelController {
             description =
                     "Extracts tabular data from each page of a PDF and writes it into an Excel"
                             + " workbook, one sheet per table.")
-    public ResponseEntity<Resource> pdfToExcel(
-            @ModelAttribute PDFWithPageNums request,
-            @RequestParam(value = "useStirlingOfficeConvert", required = false)
-                    Boolean useStirlingOfficeConvert)
+    public ResponseEntity<Resource> pdfToExcel(@ModelAttribute PDFWithPageNums request)
             throws Exception {
         String baseName =
                 GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
@@ -76,11 +68,7 @@ public class ConvertPDFToExcelController {
         TempFile tempOut = tempFileManager.createManagedTempFile(".xlsx");
         try (PDDocument document = pdfDocumentFactory.load(request)) {
             List<Integer> pages = request.getPageNumbersList(document, true);
-            boolean written =
-                    officeConversionService.legacy(useStirlingOfficeConvert)
-                            ? writeTabula(document, pages, tempOut.getPath())
-                            : writeOfficeConvert(document, pages, tempOut.getPath());
-            if (!written) {
+            if (!writeTabula(document, pages, tempOut.getPath())) {
                 tempOut.close();
                 return ResponseEntity.noContent().build();
             }
@@ -138,37 +126,6 @@ public class ConvertPDFToExcelController {
             }
             return true;
         }
-    }
-
-    private boolean writeOfficeConvert(PDDocument document, List<Integer> pages, Path out)
-            throws IOException {
-        if (pages.isEmpty()) {
-            return false;
-        }
-        OfficeConvert.Settings settings =
-                officeConversionService.settings().sheets(PdfToXlsx.Sheets.TABLE);
-        if (consecutive(pages)) {
-            // A run of pages converts in place, so sheet names keep the PDF's page numbers.
-            officeConversionService.convert(
-                    document, out, "xlsx", settings.pages(pages.getFirst(), pages.getLast()));
-        } else {
-            try (PDDocument chosen = new PDDocument()) {
-                for (int page : pages) {
-                    chosen.importPage(document.getPage(page - 1));
-                }
-                officeConversionService.convert(chosen, out, "xlsx", settings);
-            }
-        }
-        return OfficeConversionService.hasCells(out);
-    }
-
-    private static boolean consecutive(List<Integer> pages) {
-        for (int i = 1; i < pages.size(); i++) {
-            if (pages.get(i) != pages.get(i - 1) + 1) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private String getUniqueSheetName(Workbook workbook, String baseName) {

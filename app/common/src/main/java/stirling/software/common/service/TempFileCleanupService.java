@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -116,15 +115,6 @@ public class TempFileCleanupService {
                 }
             }
 
-            // Create LibreOffice temp directory
-            String libreOfficeTempDir = tempFiles.getLibreofficeDir();
-            if (libreOfficeTempDir != null && !libreOfficeTempDir.isEmpty()) {
-                Path loTempDir = Path.of(libreOfficeTempDir);
-                if (!Files.exists(loTempDir)) {
-                    Files.createDirectories(loTempDir);
-                    log.debug("Created LibreOffice temp directory: {}", loTempDir);
-                }
-            }
         } catch (IOException e) {
             log.error("Error creating temp directories", e);
         }
@@ -216,18 +206,9 @@ public class TempFileCleanupService {
                     && tempFiles.getSystemTempDir() != null
                     && !tempFiles.getSystemTempDir().isEmpty()) {
                 Path systemTempPath = getSystemTempPath();
-                dirsToScan =
-                        new Path[] {
-                            systemTempPath,
-                            Path.of(tempFiles.getBaseTmpDir()),
-                            Path.of(tempFiles.getLibreofficeDir())
-                        };
+                dirsToScan = new Path[] {systemTempPath, Path.of(tempFiles.getBaseTmpDir())};
             } else {
-                dirsToScan =
-                        new Path[] {
-                            Path.of(tempFiles.getBaseTmpDir()),
-                            Path.of(tempFiles.getLibreofficeDir())
-                        };
+                dirsToScan = new Path[] {Path.of(tempFiles.getBaseTmpDir())};
             }
 
             // Process each directory
@@ -433,30 +414,6 @@ public class TempFileCleanupService {
         }
 
         return shouldDelete;
-    }
-
-    /** Clean up LibreOffice temporary files. This method is called after LibreOffice operations. */
-    public void cleanupLibreOfficeTempFiles() {
-        // Cleanup known LibreOffice temp directories
-        try {
-            Set<Path> directories = registry.getTempDirectories();
-            for (Path dir : directories) {
-                if (dir.getFileName().toString().contains("libreoffice") && Files.exists(dir)) {
-                    // For directories containing "libreoffice", delete all contents
-                    // but keep the directory itself for future use
-                    cleanupDirectoryStreaming(
-                            dir,
-                            isContainerMode(),
-                            0,
-                            0, // age doesn't matter for LibreOffice cleanup
-                            false,
-                            path -> log.debug("Cleaned up LibreOffice temp file: {}", path));
-                    log.debug("Cleaned up LibreOffice temp directory contents: {}", dir);
-                }
-            }
-        } catch (IOException e) {
-            log.warn("Failed to clean up LibreOffice temp files", e);
-        }
     }
 
     /**

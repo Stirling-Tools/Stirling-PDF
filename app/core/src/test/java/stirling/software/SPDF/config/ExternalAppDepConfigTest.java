@@ -30,9 +30,6 @@ class ExternalAppDepConfigTest {
 
     @BeforeEach
     void setUp() {
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/custom/weasyprint");
-        when(runtimePathConfig.getUnoConvertPath()).thenReturn("/custom/unoconvert");
-        when(runtimePathConfig.getCalibrePath()).thenReturn("/custom/calibre");
         when(runtimePathConfig.getOcrMyPdfPath()).thenReturn("/custom/ocrmypdf");
         lenient()
                 .when(endpointConfiguration.getEndpointsForGroup(anyString()))
@@ -58,9 +55,6 @@ class ExternalAppDepConfigTest {
     void commandToGroupMappingIncludesRuntimePaths() throws Exception {
         Map<String, List<String>> mapping = getCommandToGroupMapping();
 
-        assertEquals(List.of("Weasyprint"), mapping.get("/custom/weasyprint"));
-        assertEquals(List.of("Unoconvert"), mapping.get("/custom/unoconvert"));
-        assertEquals(List.of("Calibre"), mapping.get("/custom/calibre"));
         assertEquals(List.of("OCRmyPDF"), mapping.get("/custom/ocrmypdf"));
         assertEquals(List.of("Ghostscript"), mapping.get("gs"));
     }
@@ -94,19 +88,6 @@ class ExternalAppDepConfigTest {
         assertEquals("PDF", pdf);
         assertEquals("Test", mixed);
         assertEquals("", empty);
-    }
-
-    @Test
-    void isWeasyprintMatchesConfiguredCommands() throws Exception {
-        boolean directMatch =
-                (boolean) invokePrivateMethod(config, "isWeasyprint", "/custom/weasyprint");
-        boolean nameContains =
-                (boolean) invokePrivateMethod(config, "isWeasyprint", "/usr/bin/weasyprint-cli");
-        boolean differentCommand = (boolean) invokePrivateMethod(config, "isWeasyprint", "qpdf");
-
-        assertTrue(directMatch);
-        assertTrue(nameContains);
-        assertFalse(differentCommand);
     }
 
     @Test

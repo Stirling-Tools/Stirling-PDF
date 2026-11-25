@@ -20,6 +20,7 @@ import {
   useIsFullscreenExpanded,
 } from "@editor/components/tools/FullscreenToolPanel";
 import { useToolPanelGeometry } from "@editor/hooks/tools/useToolPanelGeometry";
+import { useToolPanelWidth } from "@editor/hooks/useToolPanelSize";
 import "@editor/components/tools/ToolPanel.css";
 
 /**
@@ -104,7 +105,7 @@ export default function RightSidebar() {
     transitionProperty: "transform",
   };
 
-  const expandedWidth = "18.5rem";
+  const expandedWidth = useToolPanelWidth();
 
   return (
     <div
@@ -123,7 +124,9 @@ export default function RightSidebar() {
             opacity: 1,
             transition: "opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             height: "100%",
-            width: isMobile ? "100%" : expandedWidth,
+            // Fills the panel rather than matching its width, so content reflows as the
+            // panel animates between sizes instead of snapping to the target first.
+            width: "100%",
             maxWidth: isMobile ? "44rem" : undefined,
             marginInline: isMobile ? "auto" : undefined,
             flexShrink: 0,
