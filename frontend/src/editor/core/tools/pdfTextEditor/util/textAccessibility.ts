@@ -181,7 +181,7 @@ export function retaggableText(
   if (run.inForm) return null;
   const structure = doc.structure(run.pageIndex);
   if (structure.cannotAddElement() !== null) return null;
-  if (run.mcid === undefined) {
+  if (run.mcid === undefined || !structure.owns(run.mcid)) {
     return run.artifact ? { kind: "artifact" } : { kind: "untagged" };
   }
   const element = structure.standaloneAdded(run.mcid);

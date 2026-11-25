@@ -91,6 +91,8 @@ function useImmediateNotifier<Args extends unknown[]>() {
   return { register, trigger };
 }
 
+type ContentPanel = "bookmarks" | "attachments" | "layers" | "comments";
+
 interface ViewerProviderProps {
   children: ReactNode;
 }
@@ -100,14 +102,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] =
     useState(false);
-  const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] =
-    useState(false);
-  const [isAttachmentSidebarVisible, setIsAttachmentSidebarVisible] =
-    useState(false);
-  const [isLayerSidebarVisible, setIsLayerSidebarVisible] = useState(false);
+  // Bookmarks, attachments, layers and comments share one slot beside the
+  // pages, so at most one is open; thumbnails can sit alongside it.
+  const [contentPanel, setContentPanel] = useState<ContentPanel | null>(null);
+  const isBookmarkSidebarVisible = contentPanel === "bookmarks";
+  const isAttachmentSidebarVisible = contentPanel === "attachments";
+  const isLayerSidebarVisible = contentPanel === "layers";
+  const isCommentsSidebarVisible = contentPanel === "comments";
   const [hasLayers, setHasLayers] = useState(false);
-  const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] =
-    useState(false);
   const [highlightCommentRequest, setHighlightCommentRequest] = useState<{
     documentId: string;
     pageIndex: number;
@@ -243,25 +245,35 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     setIsThumbnailSidebarVisible((prev) => !prev);
   }, []);
 
-  const toggleBookmarkSidebar = useCallback(() => {
-    setIsBookmarkSidebarVisible((prev) => !prev);
+  const toggleContentPanel = useCallback((panel: ContentPanel) => {
+    setContentPanel((prev) => (prev === panel ? null : panel));
   }, []);
 
-  const toggleAttachmentSidebar = useCallback(() => {
-    setIsAttachmentSidebarVisible((prev) => !prev);
-  }, []);
+  const toggleBookmarkSidebar = useCallback(
+    () => toggleContentPanel("bookmarks"),
+    [toggleContentPanel],
+  );
 
-  const toggleLayerSidebar = useCallback(() => {
-    setIsLayerSidebarVisible((prev) => !prev);
-  }, []);
+  const toggleAttachmentSidebar = useCallback(
+    () => toggleContentPanel("attachments"),
+    [toggleContentPanel],
+  );
+
+  const toggleLayerSidebar = useCallback(
+    () => toggleContentPanel("layers"),
+    [toggleContentPanel],
+  );
 
   const setCommentsSidebarVisible = useCallback((visible: boolean) => {
-    setIsCommentsSidebarVisible(visible);
+    setContentPanel((prev) =>
+      visible ? "comments" : prev === "comments" ? null : prev,
+    );
   }, []);
 
-  const toggleCommentsSidebar = useCallback(() => {
-    setIsCommentsSidebarVisible((prev) => !prev);
-  }, []);
+  const toggleCommentsSidebar = useCallback(
+    () => toggleContentPanel("comments"),
+    [toggleContentPanel],
+  );
 
   const requestCommentFocus = useCallback(
     (
@@ -270,7 +282,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       annotationId: string,
       hasContent: boolean,
     ) => {
-      setIsCommentsSidebarVisible(true);
+      setContentPanel("comments");
       setHighlightCommentRequest({
         documentId,
         pageIndex,
@@ -309,6 +321,11 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       preferencesService.setPreference("pdfRenderMode", next);
       return next;
     });
+  }, []);
+
+  const setPdfRenderMode = useCallback((mode: PdfRenderMode) => {
+    preferencesService.setPreference("pdfRenderMode", mode);
+    setPdfRenderModeState(mode);
   }, []);
 
   // State getters - read from bridge refs
@@ -565,6 +582,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       // PDF page rendering mode
       pdfRenderMode,
       cyclePdfRenderMode,
+      setPdfRenderMode,
     }),
     [
       isThumbnailSidebarVisible,
@@ -625,6 +643,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       setApplyChanges,
       pdfRenderMode,
       cyclePdfRenderMode,
+      setPdfRenderMode,
     ],
   );
 
