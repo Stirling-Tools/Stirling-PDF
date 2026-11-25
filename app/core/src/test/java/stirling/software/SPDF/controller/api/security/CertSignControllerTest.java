@@ -479,12 +479,16 @@ class CertSignControllerTest {
 
     /** An openssl-style unencrypted PKCS#8 key and a self-signed certificate, as PEM text. */
     private static byte[][] unencryptedPemPair() throws Exception {
+        return unencryptedPemPair("CN=Chat Tester");
+    }
+
+    private static byte[][] unencryptedPemPair(String subjectDn) throws Exception {
         java.security.KeyPairGenerator generator =
                 java.security.KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);
         java.security.KeyPair pair = generator.generateKeyPair();
         org.bouncycastle.asn1.x500.X500Name subject =
-                new org.bouncycastle.asn1.x500.X500Name("CN=Chat Tester");
+                new org.bouncycastle.asn1.x500.X500Name(subjectDn);
         java.util.Date now = new java.util.Date();
         java.security.cert.X509Certificate cert =
                 new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
@@ -517,7 +521,10 @@ class CertSignControllerTest {
     }
 
     private SignPDFWithCertRequest unencryptedPemRequest() throws Exception {
-        byte[][] pemPair = unencryptedPemPair();
+        return unencryptedPemRequest(unencryptedPemPair());
+    }
+
+    private SignPDFWithCertRequest unencryptedPemRequest(byte[][] pemPair) throws Exception {
         SignPDFWithCertRequest request = new SignPDFWithCertRequest();
         request.setFileInput(
                 new MockMultipartFile(
@@ -536,6 +543,32 @@ class CertSignControllerTest {
         SignPDFWithCertRequest request = unencryptedPemRequest();
         request.setShowSignature(true);
         request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void visibleSignatureForACertificateWithNoCommonNameSigns() throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest(unencryptedPemPair("O=Example Org"));
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"CN=山田 太郎", "CN=Иван Петров", "O=東京"})
+    void visibleSignatureShowsNamesOutsideWesternEuropeanScripts(String subject) throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest(unencryptedPemPair(subject));
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+        request.setReason("承認 · Утверждено");
 
         ResponseEntity<Resource> response =
                 certSignController.signPDFWithCert(request, httpRequest);

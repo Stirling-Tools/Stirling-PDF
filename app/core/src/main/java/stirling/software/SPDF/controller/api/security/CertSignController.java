@@ -19,9 +19,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -74,8 +71,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
+import stirling.software.SPDF.pdf.signature.SignatureTextWriter;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -125,6 +124,23 @@ public class CertSignController {
         this.serverCertificateService = serverCertificateService;
         this.tempFileManager = tempFileManager;
         this.hardwareKeyStoreService = hardwareKeyStoreService;
+    }
+
+    @GetMapping("/cert-sign/server-certificate")
+    @Operation(
+            summary = "Describe the server signing certificate",
+            description =
+                    "The identity that signing with certType=SERVER uses: name, issuer and validity."
+                            + " 404 when no server certificate is available.")
+    public ResponseEntity<HardwareCertificateInfo> getServerCertificate() throws Exception {
+        if (serverCertificateService == null
+                || !serverCertificateService.isEnabled()
+                || !serverCertificateService.hasServerCertificate()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(
+                HardwareKeyStoreService.toInfo(
+                        "server", serverCertificateService.getServerCertificate(), "SERVER", null));
     }
 
     /**
@@ -201,8 +217,8 @@ public class CertSignController {
                             + " SERVER signs with this server's own certificate, so no file or"
                             + " password is needed, and the signer shown is the server's"
                             + " organisation rather than the user. PEM, PKCS12/PFX and JKS sign"
-                            + " with an uploaded certificate and key; WINDOWS_STORE and PKCS11 work"
-                            + " only in the desktop app. Make signing the last change to the file:"
+                            + " with an uploaded certificate and key; WINDOWS_STORE, MACOS_KEYCHAIN and"
+                            + " PKCS11 work only in the desktop app. Make signing the last change to the file:"
                             + " any later edit (compress, watermark, add a password, flatten and"
                             + " so on) invalidates the signature. Set showSignature to add a"
                             + " visible signature box on pageNumber.")
@@ -296,6 +312,13 @@ public class CertSignController {
                 // PIN is prompted by the Windows CSP / token middleware, not passed here.
                 keystorePassword = password;
                 break;
+            case "MACOS_KEYCHAIN":
+                hardwareKeyStoreService.assertLocalDesktop(httpRequest);
+                ks = hardwareKeyStoreService.loadMacKeychain();
+                signingProvider = hardwareKeyStoreService.macKeychainProvider();
+                // macOS prompts for the card PIN or keychain access itself.
+                keystorePassword = null;
+                break;
             case "PKCS11":
                 hardwareKeyStoreService.assertLocalDesktop(httpRequest);
                 char[] pkcs11Pin = password != null ? password.toCharArray() : null;
@@ -322,24 +345,31 @@ public class CertSignController {
         }
 
         char[] pin = keystorePassword != null ? keystorePassword.toCharArray() : null;
-        CreateSignature createSignature =
-                new CreateSignature(ks, pin, request.getAlias(), signingProvider);
-        TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
-        try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
-            sign(
-                    pdfDocumentFactory,
-                    pdf,
-                    os,
-                    createSignature,
-                    showSignature,
-                    pageNumber,
-                    name,
-                    location,
-                    reason,
-                    showLogo);
-        } catch (IOException | RuntimeException e) {
-            signedOut.close();
-            throw e;
+        TempFile signedOut;
+        try {
+            String alias =
+                    HardwareKeyStoreService.isHardwareSource(certType)
+                            ? hardwareKeyStoreService.resolveSigningAlias(
+                                    ks, request.getAlias(), certType)
+                            : request.getAlias();
+            CreateSignature createSignature = new CreateSignature(ks, pin, alias, signingProvider);
+            signedOut = tempFileManager.createManagedTempFile(".pdf");
+            try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
+                sign(
+                        pdfDocumentFactory,
+                        pdf,
+                        os,
+                        createSignature,
+                        showSignature,
+                        pageNumber,
+                        name,
+                        location,
+                        reason,
+                        showLogo);
+            } catch (IOException | RuntimeException e) {
+                signedOut.close();
+                throw e;
+            }
         } finally {
             // Clear the PIN copy and log out the token session once signing is done.
             if (pin != null) {
@@ -509,7 +539,7 @@ public class CertSignController {
                 PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
-                PDFont font = new PDType1Font(FontName.TIMES_BOLD);
+                SignatureTextWriter text = new SignatureTextWriter(doc);
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
                 PDAppearanceDictionary appearance = new PDAppearanceDictionary();
@@ -536,7 +566,6 @@ public class CertSignController {
                     float fontSize = 10;
                     float leading = fontSize * 1.5f;
                     cs.beginText();
-                    cs.setFont(font, fontSize);
                     cs.setNonStrokingColor(Color.black);
                     cs.newLineAtOffset(fontSize, height - leading);
                     cs.setLeading(leading);
@@ -545,18 +574,21 @@ public class CertSignController {
 
                     // https://stackoverflow.com/questions/2914521/
                     X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
+                    RDN[] cns = x500Name.getRDNs(BCStyle.CN);
+                    String name =
+                            cns.length > 0
+                                    ? IETFUtils.valueToString(cns[0].getFirst().getValue())
+                                    : cert.getSubjectX500Principal().getName();
 
                     String date = signature.getSignDate().getTime().toString();
                     String reason = signature.getReason();
 
-                    cs.showText("Signed by " + name);
+                    text.showText(cs, "Signed by " + name, fontSize);
                     cs.newLine();
-                    cs.showText(date);
+                    text.showText(cs, date, fontSize);
                     if (StringUtils.isNotBlank(reason)) {
                         cs.newLine();
-                        cs.showText(reason);
+                        text.showText(cs, reason, fontSize);
                     }
 
                     cs.endText();
