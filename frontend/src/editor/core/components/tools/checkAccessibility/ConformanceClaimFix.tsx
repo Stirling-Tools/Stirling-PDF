@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Button } from "@editor/ui/Button";
@@ -24,10 +25,10 @@ export function DeclareConformanceButton({
   issue: AccessibilityIssue;
 }) {
   const { t } = useTranslation();
-  const claim = useConformanceClaim(useContext(ConformanceClaimContext));
   const part = conformanceClaimFixFor(issue);
+  const claim = useConformanceClaim(useContext(ConformanceClaimContext), part);
   if (!claim?.editable || part === null) return null;
-  const declared = claim.part === part;
+  const { declared } = claim;
   return (
     <Button
       size="sm"
@@ -41,14 +42,11 @@ export function DeclareConformanceButton({
       data-testid="a11y-declare-conformance"
     >
       {declared
-        ? t("checkAccessibility.fix.conformanceDeclared", {
-            defaultValue: "PDF/UA-{{part}} declared",
+        ? t("checkAccessibility.claim.declared", {
+            defaultValue: "Declared as PDF/UA-{{part}} compliant",
             part,
           })
-        : t("checkAccessibility.fix.declareConformance", {
-            defaultValue: "Declare PDF/UA-{{part}}",
-            part,
-          })}
+        : declareLabel(t, part)}
     </Button>
   );
 }
@@ -56,7 +54,7 @@ export function DeclareConformanceButton({
 /** Declares `part` when ticked, and withdraws the claim when unticked. */
 export function ConformanceClaimField({ part }: { part: PdfUaPart }) {
   const { t } = useTranslation();
-  const claim = useConformanceClaim(useContext(ConformanceClaimContext));
+  const claim = useConformanceClaim(useContext(ConformanceClaimContext), part);
   if (!claim) return null;
   const hint = t("checkAccessibility.claim.hint", {
     defaultValue:
@@ -77,12 +75,7 @@ export function ConformanceClaimField({ part }: { part: PdfUaPart }) {
           arrow
           portalTarget={document.body}
         >
-          <span>
-            {t(
-              "checkAccessibility.claim.label",
-              "Declare file as PDF/UA compliant",
-            )}
-          </span>
+          <span>{declareLabel(t, part)}</span>
         </Tooltip>
       }
       // The tooltip opens on hover only; the input carries the hint for keyboard and screen readers.
@@ -90,4 +83,11 @@ export function ConformanceClaimField({ part }: { part: PdfUaPart }) {
       data-testid="a11y-conformance-claim"
     />
   );
+}
+
+function declareLabel(t: TFunction, part: PdfUaPart): string {
+  return t("checkAccessibility.claim.label", {
+    defaultValue: "Declare file as PDF/UA-{{part}} compliant",
+    part,
+  });
 }

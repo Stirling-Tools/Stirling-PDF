@@ -68,9 +68,7 @@ describe("DeclareConformanceButton", () => {
     renderWith(control(), <DeclareConformanceButton issue={NO_CLAIM} />);
     const button = screen.getByTestId("a11y-declare-conformance");
     expect(button).toBeDisabled();
-    expect(button).toHaveTextContent(
-      "checkAccessibility.fix.conformanceDeclared",
-    );
+    expect(button).toHaveTextContent("checkAccessibility.claim.declared");
   });
 
   it("is not offered where the claim cannot be changed", () => {

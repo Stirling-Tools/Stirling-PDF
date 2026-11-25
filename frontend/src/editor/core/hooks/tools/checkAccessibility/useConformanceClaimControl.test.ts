@@ -48,6 +48,7 @@ const CHECKED = "checked" as FileId;
 const REPORT = {
   profile: "PDF/UA-1",
   declaresConformance: false,
+  issues: [],
   summary: { encrypted: false },
 } as AccessibilityReport;
 
@@ -66,7 +67,7 @@ const PDF = buildClassicPdf(
 function render(report: AccessibilityReport = REPORT) {
   const onWritten = vi.fn();
   const view = renderHook(() =>
-    useConformanceClaim(useCheckedFileClaim(CHECKED, report, onWritten)),
+    useConformanceClaim(useCheckedFileClaim(CHECKED, report, onWritten), 1),
   );
   return { view, onWritten };
 }
@@ -132,12 +133,12 @@ describe("the checked file's claim", () => {
     const set = vi.fn();
     reviewConformanceClaim.set({
       fileId: CHECKED,
-      part: 2,
+      part: 1,
       editable: true,
       set,
     });
     const { view } = render();
-    expect(view.result.current).toMatchObject({ declared: true, part: 2 });
+    expect(view.result.current!.declared).toBe(true);
 
     act(() => view.result.current!.set(null));
 
@@ -158,6 +159,26 @@ describe("the checked file's claim", () => {
       }),
     );
 
+    expect(view.result.current!.declared).toBe(false);
+  });
+
+  it("counts only a declaration of the part asked about", () => {
+    reviewConformanceClaim.set({
+      fileId: CHECKED,
+      part: 2,
+      editable: true,
+      set: vi.fn(),
+    });
+    const { view } = render();
+    expect(view.result.current!.declared).toBe(false);
+  });
+
+  it("does not count a declaration the check rejects", () => {
+    const { view } = render({
+      ...REPORT,
+      declaresConformance: true,
+      issues: [{ clause: "5", testNumber: "2" }],
+    } as AccessibilityReport);
     expect(view.result.current!.declared).toBe(false);
   });
 

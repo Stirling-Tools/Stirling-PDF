@@ -3301,8 +3301,9 @@ structure = "Tags tell screen readers what each part of a page is, such as a hea
 label = "{{passed}} of {{total}} checks passed"
 
 [checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
 hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
-label = "Declare file as PDF/UA compliant"
+label = "Declare file as PDF/UA-{{part}} compliant"
 
 [checkAccessibility.error]
 conformanceClaim = "The PDF/UA claim couldn't be saved."
@@ -3334,8 +3335,6 @@ summary_one = "{{count}} image needs a description (page {{pages}})"
 summary_other = "{{count}} images need a description (pages {{pages}})"
 
 [checkAccessibility.fix]
-conformanceDeclared = "PDF/UA-{{part}} declared"
-declareConformance = "Declare PDF/UA-{{part}}"
 heading = "Fix the headings"
 headingOnPage = "Fix the heading on page {{page}}"
 hide = "Hide tagging tool"

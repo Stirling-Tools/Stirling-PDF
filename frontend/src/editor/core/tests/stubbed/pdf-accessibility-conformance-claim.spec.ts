@@ -106,7 +106,7 @@ test("declares PDF/UA from the report as an unsaved edit in the review", async (
   await expect(page.getByTestId("a11y-declare-conformance")).toBeDisabled();
   await expect(checkbox).toBeChecked();
 
-  await report.getByText("Declare file as PDF/UA compliant").click();
+  await report.locator("label", { has: checkbox }).click();
   await expect
     .poll(() => editorClaim(page), { timeout: 10_000 })
     .toMatchObject({ part: null });

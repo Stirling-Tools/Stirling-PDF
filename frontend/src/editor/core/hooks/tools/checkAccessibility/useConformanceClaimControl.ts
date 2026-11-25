@@ -23,7 +23,7 @@ const MAX_REWRITE_BYTES = 256 * 1024 * 1024;
 /** A checked file's claim as its report has it, and a way to rewrite the file with another. */
 export interface CheckedFileClaim {
   fileId: FileId;
-  /** Whether the file declares PDF/UA, or will once the rewrite in progress lands. */
+  /** Whether the file declares the part it was checked against, or will once the rewrite in progress lands. */
   declared: boolean;
   /** False when the claim cannot be written, as for an encrypted file. */
   editable: boolean;
@@ -34,10 +34,8 @@ export interface CheckedFileClaim {
 
 /** A checked file's PDF/UA claim, and a way to change it. */
 export interface ConformanceClaimControl {
-  /** Whether the file declares PDF/UA, the review's unsaved edits included. */
+  /** Whether the file declares the part asked about, the review's unsaved edits included. */
   declared: boolean;
-  /** The declared part while the review has the file open; null otherwise, as the report does not say. */
-  part: number | null;
   editable: boolean;
   writing: boolean;
   set: (part: PdfUaPart | null) => void;
@@ -114,7 +112,7 @@ export function useCheckedFileClaim(
   return {
     fileId,
     declared:
-      pending === undefined ? report.declaresConformance : pending !== null,
+      pending === undefined ? declaresCheckedPart(report) : pending !== null,
     editable: !report.summary.encrypted && size <= MAX_REWRITE_BYTES,
     writing: pending !== undefined,
     write: (part) => void write(part),
@@ -122,28 +120,40 @@ export function useCheckedFileClaim(
 }
 
 /**
- * `file`'s claim, or the review's while the review has the file open: a change
- * there joins its unsaved edits, to be written by its Save. Subscribes to the
- * review, so call it in the controls that show the claim and only they re-render.
+ * `file`'s claim to `part`, the part it was checked against, or the review's
+ * claim while the review has the file open: a change there joins its unsaved
+ * edits, to be written by its Save. Subscribes to the review, so call it in the
+ * controls that show the claim and only they re-render.
  */
 export function useConformanceClaim(
   file: CheckedFileClaim | null,
+  part: PdfUaPart | null,
 ): ConformanceClaimControl | null {
   const review = useReviewConformanceClaim();
   if (!file) return null;
   if (review?.fileId === file.fileId)
     return {
-      declared: review.part !== null,
-      part: review.part,
+      declared: part !== null && review.part === part,
       editable: review.editable,
       writing: false,
       set: review.set,
     };
   return {
     declared: file.declared,
-    part: null,
     editable: file.editable,
     writing: file.writing,
     set: file.write,
   };
+}
+
+/**
+ * The report says only whether the file declares any part; clause 5 of both
+ * PDF/UA parts is where the check flags a declaration of the wrong part or under
+ * the wrong prefix.
+ */
+function declaresCheckedPart(report: AccessibilityReport): boolean {
+  return (
+    report.declaresConformance &&
+    !report.issues.some((issue) => issue.clause === "5")
+  );
 }
