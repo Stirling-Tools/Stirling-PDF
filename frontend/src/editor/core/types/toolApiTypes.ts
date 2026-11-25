@@ -1487,6 +1487,10 @@ export interface SignPDFWithCertRequest {
    */
   requireToken?: boolean;
   /**
+   * Add a line to the visible signature with the certificate's distinguished name, such as DN: CN=Ada Lovelace, O=Example Ltd, C=GB.
+   */
+  showCertificateDetails?: boolean;
+  /**
    * Older name for showWatermark, used when showWatermark is not set.
    */
   showLogo?: boolean;

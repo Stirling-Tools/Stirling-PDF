@@ -291,6 +291,7 @@ export function stampDetails(
     timeZone: string;
     reason: string;
     location: string;
+    subject?: string | null;
   },
 ): string[] {
   const reason = textLines(values.reason).flatMap((line) =>
@@ -299,6 +300,7 @@ export function stampDetails(
   const location = textLines(values.location);
   return [
     labels.signedByLabel.replace("{name}", values.name),
+    ...(values.subject ? [`DN: ${values.subject}`] : []),
     ...reason.map((line, index) =>
       index === 0 ? `${labels.reasonLabel} ${line}` : line,
     ),
@@ -370,6 +372,16 @@ export function renderStampPreview(
     });
   }
   return canvas.toDataURL("image/png");
+}
+
+export function readableDistinguishedName(rfc2253: string): string {
+  const parts = rfc2253
+    .split(/(?<!\\),/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const rank = (part: string) =>
+    /^CN=/i.test(part) ? 0 : /^C=/i.test(part) ? 2 : 1;
+  return [...parts].sort((a, b) => rank(a) - rank(b)).join(", ");
 }
 
 /** The sign time as the stamp writes it: `2026.11.24 10:12:05 +01'00'` in `timeZone`. */

@@ -51,6 +51,7 @@ export interface CertSignParameters extends BaseParameters {
   signatureImage?: File;
   /** The server's signature logo faded behind the whole stamp. */
   showWatermark: boolean;
+  showCertificateDetails: boolean;
   /** An empty signature field to sign into; it brings its own page and box. */
   fieldName?: string;
   /** Box on pageNumber in PDF user space; unset leaves the server's default corner. */
@@ -68,6 +69,7 @@ export const defaultParameters: CertSignParameters = {
   pageNumber: 1,
   stampGraphic: "NAME",
   showWatermark: true,
+  showCertificateDetails: false,
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;

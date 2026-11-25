@@ -13,7 +13,10 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
+
+import javax.security.auth.x500.X500Principal;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -35,6 +38,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.pdfbox.util.Matrix;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -471,6 +475,8 @@ public class CertSignController {
                             request.getDateLabel(),
                             request.getReasonLabel(),
                             request.getLocationLabel()));
+            createSignature.setShowCertificateDetails(
+                    Boolean.TRUE.equals(request.getShowCertificateDetails()));
             signedOut = tempFileManager.createManagedTempFile(".pdf");
             try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
                 sign(
@@ -599,6 +605,7 @@ public class CertSignController {
         private static final float WATERMARK_OPACITY = 0.2f;
 
         private StampStyle stampStyle = StampStyle.defaults(null);
+        private boolean showCertificateDetails;
 
         public CreateSignature(KeyStore keystore, char[] pin)
                 throws KeyStoreException,
@@ -622,6 +629,10 @@ public class CertSignController {
 
         public void setStampStyle(StampStyle stampStyle) {
             this.stampStyle = stampStyle;
+        }
+
+        public void setShowCertificateDetails(boolean showCertificateDetails) {
+            this.showCertificateDetails = showCertificateDetails;
         }
 
         public InputStream createVisibleSignature(
@@ -730,9 +741,39 @@ public class CertSignController {
                     : cert.getSubjectX500Principal().getName();
         }
 
+        static String distinguishedName(X500Principal subject) {
+            RDN[] rdns = X500Name.getInstance(subject.getEncoded()).getRDNs();
+            List<String> first = new ArrayList<>();
+            List<String> middle = new ArrayList<>();
+            List<String> last = new ArrayList<>();
+            for (int index = rdns.length - 1; index >= 0; index--) {
+                for (AttributeTypeAndValue value : rdns[index].getTypesAndValues()) {
+                    String type = BCStyle.INSTANCE.oidToDisplayName(value.getType());
+                    String part =
+                            (type == null ? value.getType().getId() : type.toUpperCase(Locale.ROOT))
+                                    + "="
+                                    + IETFUtils.valueToString(value.getValue());
+                    if (BCStyle.CN.equals(value.getType())) {
+                        first.add(part);
+                    } else if (BCStyle.C.equals(value.getType())) {
+                        last.add(part);
+                    } else {
+                        middle.add(part);
+                    }
+                }
+            }
+            first.addAll(middle);
+            first.addAll(last);
+            return String.join(", ", first);
+        }
+
         private List<String> detailLines(PDSignature signature, String name) {
             List<String> lines = new ArrayList<>();
             lines.add(printable(stampStyle.signedBy(name)));
+            if (showCertificateDetails) {
+                X509Certificate cert = (X509Certificate) getCertificateChain()[0];
+                lines.add(printable("DN: " + distinguishedName(cert.getSubjectX500Principal())));
+            }
             List<String> reason = sentences(textLines(signature.getReason()));
             for (int index = 0; index < reason.size(); index++) {
                 lines.add(index == 0 ? stampStyle.reason(reason.get(index)) : reason.get(index));

@@ -2762,6 +2762,7 @@ visible = "Visible"
 remove = "Remove {{detail}}"
 
 [certSign.appearance.graphic]
+certificateDetails = "Certificate details"
 image = "Image"
 imageHint = "A handwritten signature or seal, PNG or JPEG"
 name = "Name"
@@ -2779,7 +2780,6 @@ cancel = "Cancel"
 clickPage = "Click the page where the signature should go."
 cornerPage = "Or the bottom-right corner of page"
 elsewhere = "Custom position"
-elsewhereHint = "Place it anywhere on the page"
 pageOf = "Page {{page}}"
 place = "Place on the page"
 placeAgain = "Place again"
@@ -2790,6 +2790,7 @@ stampPreview = "How the signature will look"
 useCorner = "Use default corner"
 where = "Where to sign"
 yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "About Signature Appearance"

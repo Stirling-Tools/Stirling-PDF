@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   formatStampDate,
   layoutStamp,
+  readableDistinguishedName,
   stampDetails,
   textLines,
   watermarkRect,
@@ -134,6 +135,23 @@ describe("stampDetails", () => {
     ]);
   });
 
+  test("puts the certificate's distinguished name under the signer", () => {
+    expect(
+      stampDetails(labels, {
+        name: "Ada",
+        date: new Date("2026-11-24T10:12:05Z"),
+        timeZone: "UTC",
+        reason: "",
+        location: "",
+        subject: "CN=Ada, O=Example Ltd, C=GB",
+      }),
+    ).toEqual([
+      "Digitally signed by Ada",
+      "DN: CN=Ada, O=Example Ltd, C=GB",
+      "Date: 2026.11.24 10:12:05 +00'00'",
+    ]);
+  });
+
   test("starts each sentence of the reason on a new line", () => {
     expect(
       stampDetails(labels, {
@@ -160,6 +178,26 @@ describe("stampDetails", () => {
         location: "",
       }),
     ).toHaveLength(2);
+  });
+});
+
+describe("readableDistinguishedName", () => {
+  test("spaces the parts the way the server writes them", () => {
+    expect(
+      readableDistinguishedName("CN=Ada,OU=Legal,O=Example Ltd,C=GB"),
+    ).toBe("CN=Ada, OU=Legal, O=Example Ltd, C=GB");
+  });
+
+  test("leads with the name and ends with the country whatever order it arrives in", () => {
+    expect(
+      readableDistinguishedName("C=US,O=Example Inc,CN=Example Server"),
+    ).toBe("CN=Example Server, O=Example Inc, C=US");
+  });
+
+  test("keeps an escaped comma inside its value", () => {
+    expect(readableDistinguishedName("CN=Lovelace\\, Ada,O=Example")).toBe(
+      "CN=Lovelace\\, Ada, O=Example",
+    );
   });
 });
 

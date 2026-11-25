@@ -13,6 +13,7 @@ import { getServerSigningCertificate } from "@editor/services/hardwareSigningSer
 import {
   DEFAULT_STAMP_SIZE,
   renderStampPreview,
+  readableDistinguishedName,
   stampDetails,
 } from "@editor/services/signatureStampPreview";
 import {
@@ -67,20 +68,32 @@ function useSignatureLayout(file: StirlingFile | null) {
   return layout;
 }
 
-function useServerSignerName(serverSigning: boolean): string | null {
-  const [name, setName] = useState<string | null>(null);
+interface ServerSigner {
+  name: string | null;
+  subject: string | null;
+}
+
+function useServerSigner(serverSigning: boolean): ServerSigner | null {
+  const [signer, setSigner] = useState<ServerSigner | null>(null);
   useEffect(() => {
-    setName(null);
+    setSigner(null);
     if (!serverSigning) return;
     let cancelled = false;
     getServerSigningCertificate().then((cert) => {
-      if (!cancelled) setName(cert?.subjectCommonName || null);
+      if (!cancelled && cert) {
+        setSigner({
+          name: cert.subjectCommonName || null,
+          subject: cert.subject
+            ? readableDistinguishedName(cert.subject)
+            : null,
+        });
+      }
     });
     return () => {
       cancelled = true;
     };
   }, [serverSigning]);
-  return name;
+  return signer;
 }
 
 type StampRenderer = (width: number, height: number) => string | null;
@@ -92,9 +105,16 @@ function useStampRenderer(parameters: CertSignParameters): StampRenderer {
   const { t } = useTranslation();
   const logo = useSignatureLogo();
   const image = useImageFile(parameters.signatureImage ?? null);
-  const serverName = useServerSignerName(parameters.signMode === "AUTO");
+  const server = useServerSigner(parameters.signMode === "AUTO");
   const signer =
-    serverName ?? t("certSign.appearance.placement.yourName", "Your name");
+    server?.name ?? t("certSign.appearance.placement.yourName", "Your name");
+  const subject = parameters.showCertificateDetails
+    ? (server?.subject ??
+      t(
+        "certSign.appearance.placement.yourSubject",
+        "CN=Your name, O=Your organisation",
+      ))
+    : null;
   const { stampGraphic, showWatermark } = parameters;
   const { reason, location } = parameters;
 
@@ -107,6 +127,7 @@ function useStampRenderer(parameters: CertSignParameters): StampRenderer {
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         reason,
         location,
+        subject,
       }),
       graphic: stampGraphic,
       image,
@@ -114,7 +135,17 @@ function useStampRenderer(parameters: CertSignParameters): StampRenderer {
     };
     return (width: number, height: number) =>
       renderStampPreview(content, width, height);
-  }, [t, signer, reason, location, stampGraphic, image, showWatermark, logo]);
+  }, [
+    t,
+    signer,
+    subject,
+    reason,
+    location,
+    stampGraphic,
+    image,
+    showWatermark,
+    logo,
+  ]);
 }
 
 /**

@@ -183,6 +183,13 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description =
+                    "Add a line to the visible signature with the certificate's distinguished"
+                            + " name, such as DN: CN=Ada Lovelace, O=Example Ltd, C=GB.",
+            defaultValue = "false")
+    private Boolean showCertificateDetails = false;
+
+    @Schema(
+            description =
                     "IANA time zone the visible signature's date is written in, as in"
                             + " 2026.11.24 10:12:00 +01'00'. Defaults to the server's.",
             example = "Europe/Berlin")

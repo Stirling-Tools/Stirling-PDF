@@ -106,6 +106,17 @@ const SignatureAppearanceSettings = ({
             )}
             disabled={disabled}
           />
+          <ToggleSwitch
+            checked={parameters.showCertificateDetails}
+            onChange={(checked) =>
+              onParameterChange("showCertificateDetails", checked)
+            }
+            label={t(
+              "certSign.appearance.graphic.certificateDetails",
+              "Certificate details",
+            )}
+            disabled={disabled}
+          />
         </Stack>
       )}
 
@@ -312,41 +323,50 @@ const FieldChoice = ({
       <Text size="sm" fw={500}>
         {title}
       </Text>
-      <ScrollArea.Autosize
-        mah={fields.length + 1 > SCROLL_AFTER ? 230 : undefined}
-        offsetScrollbars="y"
-        scrollbarSize={6}
+      <MantineRadio.Group
+        value={
+          parameters.fieldName
+            ? `${FIELD_PREFIX}${parameters.fieldName}`
+            : PLACE_ON_PAGE
+        }
+        onChange={choose}
+        aria-label={title}
       >
-        <MantineRadio.Group
-          value={
-            parameters.fieldName
-              ? `${FIELD_PREFIX}${parameters.fieldName}`
-              : PLACE_ON_PAGE
-          }
-          onChange={choose}
-          aria-label={title}
-        >
-          <Stack gap={4}>
-            {fields.map((field) =>
-              card(
-                `${FIELD_PREFIX}${field.name}`,
-                <PrivateContent>{field.name}</PrivateContent>,
-                t("certSign.appearance.placement.pageOf", "Page {{page}}", {
-                  page: field.pageIndex + 1,
-                }),
-              ),
-            )}
-            {card(
-              PLACE_ON_PAGE,
-              t("certSign.appearance.placement.elsewhere", "Custom position"),
-              t(
-                "certSign.appearance.placement.elsewhereHint",
-                "Place it anywhere on the page",
-              ),
-            )}
-          </Stack>
-        </MantineRadio.Group>
-      </ScrollArea.Autosize>
+        <Stack gap={4}>
+          <ScrollArea.Autosize
+            mah={fields.length > SCROLL_AFTER ? 230 : undefined}
+            offsetScrollbars="y"
+            scrollbarSize={6}
+          >
+            <Stack gap={4}>
+              {fields.map((field) =>
+                card(
+                  `${FIELD_PREFIX}${field.name}`,
+                  <PrivateContent>{field.name}</PrivateContent>,
+                  t("certSign.appearance.placement.pageOf", "Page {{page}}", {
+                    page: field.pageIndex + 1,
+                  }),
+                ),
+              )}
+            </Stack>
+          </ScrollArea.Autosize>
+          <MantineRadio.Card
+            value={PLACE_ON_PAGE}
+            className="cert-sign-card cert-sign-card--custom"
+            disabled={disabled}
+          >
+            <Group gap={6} wrap="nowrap">
+              <Icon name="locate-fixed" size={14} />
+              <Text className="cert-sign-card-name">
+                {t(
+                  "certSign.appearance.placement.elsewhere",
+                  "Custom position",
+                )}
+              </Text>
+            </Group>
+          </MantineRadio.Card>
+        </Stack>
+      </MantineRadio.Group>
     </Stack>
   );
 };

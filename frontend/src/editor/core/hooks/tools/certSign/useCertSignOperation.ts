@@ -71,6 +71,9 @@ const withSignatureAppearance = (
     apiParams.showSignature = true;
     apiParams.stampGraphic = parameters.stampGraphic;
     apiParams.showWatermark = parameters.showWatermark;
+    if (parameters.showCertificateDetails) {
+      apiParams.showCertificateDetails = true;
+    }
     if (parameters.fieldName) {
       apiParams.fieldName = parameters.fieldName;
     } else {
@@ -163,6 +166,9 @@ export const certSignFromApiParams = (
     result.showWatermark = apiParams.showWatermark;
   } else if (apiParams.showLogo !== undefined) {
     result.showWatermark = apiParams.showLogo;
+  }
+  if (apiParams.showCertificateDetails !== undefined) {
+    result.showCertificateDetails = apiParams.showCertificateDetails;
   }
   if (apiParams.fieldName !== undefined) result.fieldName = apiParams.fieldName;
   if (
