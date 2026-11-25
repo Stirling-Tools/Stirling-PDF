@@ -243,10 +243,13 @@ describe("tauriHttpClient - FormData uploads", () => {
     expect(sent.get("accountId")).toBe("33");
   });
 
-  test("streams the original file from other engines", async () => {
+  test("streams a detached copy from other engines, not the caller's file", async () => {
     const sent = await send(WEBVIEW2);
 
-    expect(sent.get("fileInput")).toBe(original);
+    const file = sent.get("fileInput") as File;
+    expect(file).not.toBe(original);
+    expect(file.name).toBe("Report.pdf");
+    expect(await file.text()).toBe("%PDF-2.0 bytes");
     expect(sent.get("accountId")).toBe("33");
   });
 });
