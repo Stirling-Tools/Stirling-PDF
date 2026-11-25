@@ -81,7 +81,7 @@ async function written(bytes: Uint8Array): Promise<Written> {
     "application/xml",
   );
   return {
-    part: await readConformanceClaim(raw),
+    part: (await readConformanceClaim(raw)).part,
     rdf: doc.getElementsByTagNameNS(RDF, "RDF")[0],
     metadataDict: raw.objectBody(num)!,
   };
@@ -239,8 +239,12 @@ describe("applyConformanceClaim", () => {
 });
 
 describe("readConformanceClaim", () => {
-  test("is null for a file without metadata", async () => {
-    expect(await readConformanceClaim((await RawPdf.parse(pdf()))!)).toBeNull();
+  async function read(bytes: Uint8Array) {
+    return readConformanceClaim((await RawPdf.parse(bytes))!);
+  }
+
+  test("finds no claim in a file without metadata, and can add one", async () => {
+    expect(await read(pdf())).toEqual({ part: null, writable: true });
   });
 
   test("reads a claim written as an attribute", async () => {
@@ -249,6 +253,13 @@ describe("readConformanceClaim", () => {
         `<rdf:Description rdf:about="" xmlns:pdfuaid="${PDFUA}" pdfuaid:part="2"/>`,
       ),
     );
-    expect(await readConformanceClaim((await RawPdf.parse(bytes))!)).toBe(2);
+    expect(await read(bytes)).toEqual({ part: 2, writable: true });
+  });
+
+  test("reports metadata it cannot parse as not writable", async () => {
+    expect(await read(pdfWithPacket("<x:xmpmeta"))).toEqual({
+      part: null,
+      writable: false,
+    });
   });
 });

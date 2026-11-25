@@ -40,16 +40,23 @@ export class ConformanceClaimError extends Error {
   }
 }
 
-/** The part the file's XMP declares; null when it declares none or the packet cannot be read. */
+export interface FileConformanceClaim {
+  /** The declared `pdfuaid:part`; null when there is none or the metadata cannot be read. */
+  part: number | null;
+  /** False when applyConformanceClaim would refuse the file. */
+  writable: boolean;
+}
+
 export async function readConformanceClaim(
   pdf: RawPdf,
-): Promise<number | null> {
-  const catalog = pdf.objectBody(pdf.rootNum);
-  const num = catalog ? pdf.dictRef(catalog, "Metadata") : null;
-  if (num === null) return null;
-  const data = await pdf.streamData(num);
-  const rdf = data ? parsePacket(decodeXml(data)) : null;
-  return rdf ? declaredPart(rdf) : null;
+): Promise<FileConformanceClaim> {
+  const catalog = pdf.encrypted ? null : pdf.objectBody(pdf.rootNum);
+  const metadata = catalog ? await readMetadata(pdf, catalog) : "unreadable";
+  if (metadata === "unreadable") return { part: null, writable: false };
+  return {
+    part: metadata ? declaredPart(metadata.rdf) : null,
+    writable: true,
+  };
 }
 
 /**
@@ -72,18 +79,12 @@ export async function applyConformanceClaim(
   if (!catalog)
     throw new ConformanceClaimError("the file's catalog cannot be read");
 
-  const existingNum = pdf.dictRef(catalog, "Metadata");
-  let rdf: Element;
-  if (existingNum === null) {
-    if (part === null) return bytes;
-    rdf = emptyPacket();
-  } else {
-    const data = await pdf.streamData(existingNum);
-    const parsed = data ? parsePacket(decodeXml(data)) : null;
-    if (!parsed)
-      throw new ConformanceClaimError("the file's metadata cannot be read");
-    rdf = parsed;
-  }
+  const metadata = await readMetadata(pdf, catalog);
+  if (metadata === "unreadable")
+    throw new ConformanceClaimError("the file's metadata cannot be read");
+  if (metadata === null && part === null) return bytes;
+  const existingNum = metadata?.num ?? null;
+  const rdf = metadata?.rdf ?? emptyPacket();
 
   writeClaim(rdf, part);
 
@@ -107,6 +108,18 @@ export async function applyConformanceClaim(
   const out = appendRevision(pdf, objects);
   if (!out) throw new ConformanceClaimError("the file cannot be extended");
   return out;
+}
+
+/** The catalog's metadata packet; null when it has none. */
+async function readMetadata(
+  pdf: RawPdf,
+  catalog: string,
+): Promise<{ num: number; rdf: Element } | null | "unreadable"> {
+  const num = pdf.dictRef(catalog, "Metadata");
+  if (num === null) return null;
+  const data = await pdf.streamData(num);
+  const rdf = data ? parsePacket(decodeXml(data)) : null;
+  return rdf ? { num, rdf } : "unreadable";
 }
 
 function decodeXml(data: Uint8Array): string {

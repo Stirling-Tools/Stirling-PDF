@@ -7622,6 +7622,8 @@ stamp = "Stamp annotation - not page text, so it can't be edited here"
 widget = "Form field - not page text, so it can't be edited here"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Edit"
 markTagged = "Mark as fully tagged"
 matchScanFont = "Match scanned text to {{face}}"
@@ -7635,6 +7637,7 @@ tagPageContent = "Auto-tag page"
 typeInto = "Type into {{run}}"
 ungroupParagraph = "Ungroup paragraph {{run}}"
 unmarkTagged = "Mark as not fully tagged"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Wrap {{run}}"
 
 [pdfTextEditor.discard]
