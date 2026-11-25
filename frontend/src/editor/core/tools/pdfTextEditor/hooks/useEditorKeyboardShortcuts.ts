@@ -1,14 +1,17 @@
 import { useEffect } from "react";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
-  findVisiblePageIndex,
   isFocusInContentEditable,
   isFocusInFormField,
-  pageElements,
+  isModalOpen,
+  visiblePageNumber,
 } from "@editor/tools/pdfTextEditor/util/dom";
+import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 
 interface KeyboardShortcutCallbacks {
   store: EditorStore;
+  /** False while the editor is not on screen, so its shortcuts leave other views alone. */
+  enabled: boolean;
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
@@ -20,12 +23,15 @@ interface KeyboardShortcutCallbacks {
   onFindNext: (reverse: boolean) => void;
   onEscape: () => void;
   onMergeSelection: () => void;
+  onToggleBold: () => void;
+  onToggleItalic: () => void;
 }
 
 /** Bind every editor-level keyboard shortcut to `window` for the session. */
 export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
   const {
     store,
+    enabled,
     onUndo,
     onRedo,
     onSave,
@@ -37,14 +43,19 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onFindNext,
     onEscape,
     onMergeSelection,
+    onToggleBold,
+    onToggleItalic,
   } = cbs;
 
   useEffect(() => {
+    if (!enabled) return;
     function onMetaKey(e: KeyboardEvent) {
       const meta = e.ctrlKey || e.metaKey;
       if (!meta) return;
       // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
-      switch (e.key.toLowerCase()) {
+      const key = e.key.toLowerCase();
+      if (key !== "s" && isModalOpen()) return;
+      switch (key) {
         case "z":
           // Form fields (Find/Replace/password) keep their NATIVE undo.
           if (isFocusInFormField()) return;
@@ -97,6 +108,14 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           e.preventDefault();
           onFindNext(e.shiftKey);
           return;
+        case "b":
+        case "i":
+          if (isFocusInFormField()) return;
+          if (store.selection.value.runIds.length === 0) return;
+          e.preventDefault();
+          if (key === "b") onToggleBold();
+          else onToggleItalic();
+          return;
         case "m":
           if (store.selection.value.runIds.length < 2) return;
           e.preventDefault();
@@ -111,12 +130,13 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
 
     function onPlainKey(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key === "?" || e.key === "F1") {
-        if (isFocusInContentEditable()) return;
+      // "?" is a character that types into text; F1 types nothing, so it opens the help from anywhere.
+      if (e.key === "F1" || (e.key === "?" && !isFocusInContentEditable())) {
         e.preventDefault();
         onToggleHelp();
         return;
       }
+      if (isModalOpen()) return;
       if (e.key === "F3") {
         e.preventDefault();
         onFindNext(e.shiftKey);
@@ -145,25 +165,27 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     }
 
     function onPageNav(e: KeyboardEvent) {
-      if (isFocusInContentEditable()) return;
+      if (isFocusInContentEditable() || isModalOpen()) return;
       const isHome = e.key === "Home" && (e.ctrlKey || e.metaKey);
       const isEnd = e.key === "End" && (e.ctrlKey || e.metaKey);
       if (e.key !== "PageDown" && e.key !== "PageUp" && !isHome && !isEnd) {
         return;
       }
-      if (store.getState().pageCount === 0) return;
-      const pages = pageElements();
-      if (pages.length === 0) return;
-      const current = findVisiblePageIndex();
+      const { pageCount } = store.getState();
+      if (pageCount === 0) return;
+      // The viewer mounts only the pages near the viewport, so it does the
+      // navigating.
+      const session = currentEditorSession();
+      if (!session) return;
+      const current = visiblePageNumber();
       let target = current;
-      if (e.key === "PageDown")
-        target = Math.min(pages.length - 1, current + 1);
+      if (e.key === "PageDown") target = Math.min(pageCount - 1, current + 1);
       else if (e.key === "PageUp") target = Math.max(0, current - 1);
       else if (isHome) target = 0;
-      else if (isEnd) target = pages.length - 1;
+      else if (isEnd) target = pageCount - 1;
       if (target === current) return;
       e.preventDefault();
-      pages[target]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      session.revealPage(target);
     }
 
     window.addEventListener("keydown", onMetaKey);
@@ -175,6 +197,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       window.removeEventListener("keydown", onPageNav);
     };
   }, [
+    enabled,
     store,
     onUndo,
     onRedo,
@@ -187,5 +210,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onFindNext,
     onEscape,
     onMergeSelection,
+    onToggleBold,
+    onToggleItalic,
   ]);
 }

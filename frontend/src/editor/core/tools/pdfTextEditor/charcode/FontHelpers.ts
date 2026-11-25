@@ -4,6 +4,7 @@ import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 /**
  * Client-side font helpers for the charcode emit path.
@@ -269,3 +270,4 @@ export function resetFontHelperCaches(): void {
   reusableFontCache.clear();
   fontNameCache.clear();
 }
+clearOnDocumentClose(resetFontHelperCaches);

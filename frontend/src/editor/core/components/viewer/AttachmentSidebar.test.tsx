@@ -76,8 +76,6 @@ const renderSidebar = () => {
     <MantineProvider>
       <AttachmentSidebar
         visible
-        thumbnailVisible={false}
-        bookmarkVisible={false}
         portfolio={{
           file: portfolioFile,
           members: [MEMBER],

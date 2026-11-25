@@ -512,6 +512,11 @@ submit = "སྙོམ་སྒྲིག་ཤོག་ངོས་ཚད་ག�
 tags = "ཚད་བབ་བསྒྱུར་བ།བསྒྱུར་བཅོས།ཚད་གཞི་དང་།"
 title = "སྙོམ་སྒྲིག་ཤོག་ངོས་ཚད་གཞི།"
 
+[adjustPageScale.customSize]
+height = "མཐོ་ཚད"
+unit = "ཆ་ཕྲན"
+width = "ཞེང་ཚད"
+
 [adjustPageScale.error]
 failed = "ཤོག་ངོས་ཚད་གཞི་སྙོམ་སྒྲིག་བྱེད་སྐབས་ནོར་འཁྲུལ་བྱུང་ཡོད།"
 
@@ -521,6 +526,7 @@ landscape = "འཕྲེད་ཕྱོགས"
 portrait = "དྲང་ཕྱོགས"
 
 [adjustPageScale.pageSize]
+custom = "རང་སྒྲིག"
 keep = "ཚད་གཞི་ཐོག་མ་ཉར་དགོས།"
 label = "དམིགས་འབེན་ཤོག་ངོས་ཚད་གཞི།"
 legal = "ཁྲིམས་ཀྱི"
@@ -641,18 +647,16 @@ description = "པར་རིས་བཟོ་བཅོས་བྱེད་�
 label = "ཆེས་མཐོའི་DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "ཚད་གཞི།"
 description = "བྱ་རིམ་ལག་བསྟར་བྱེད་མཁན་རེ་རེའི་དུས་ཚོད་ཚད་གཞི་དང་དུས་ཚོད་བཀོད་སྒྲིག་སྒྲིག་བཀོད་བྱེད།"
 ghostscript = "འདྲེ་གདོན་འདྲེ།"
 installApp = "མཉེན་ཆས་སྒྲིག་འཇུག་བྱེད་པ།"
 label = "ལས་སྣོན་ལས་སྣོན་ཚད་གཞི།"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF ནས་ HTML བར།"
+officeConvert = "Office བརྗེ་སྒྱུར"
+officeConvertSessionLimit = "མཉམ་དུ་བརྗེ་སྒྱུར་བྱེད་པའི་གྲངས་མང་ཤོས; 0 ཡིན་ན CPUs དང་ memory ལ་བརྟེན་ནས་ཚད་ཞིག་གདམ།"
 pythonOpenCv = "ཕའི་ཐོན་ OpenCV །"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "ཝེ་སི་པར་སྐྲུན་ཁང་།"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "ཆེས་མང་བའི་དུས་མཉམ་གྱི་དཔེ་མཚོན།"
@@ -661,10 +665,6 @@ label = "ཚོགས་འདུའི་ཚད་གཞི།"
 [admin.settings.advanced.processExecutor.timeout]
 description = "ཆེས་མང་བའི་ལག་བསྟར་དུས་ཚོད།"
 label = "དུས་ཚོད་ཕྱིར་ཐོན་(སྐར་མ་)།"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert ནི beta ཚོད་ལྟའི་གནས་སྐབས་སུ་ཡོད། དེས LibreOffice ལས་སྒྱུར་སྤོར་ལེགས་པ། མགྱོགས་པ། དྲན་གསོག་ཉུང་བ་སྤྱོད་པ་མཁོ་འདོན་བྱེད།"
-label = "Stirling Office སྒྱུར་སྤོར་གསར་པ་སྤྱོད།"
 
 [admin.settings.advanced.tempFileManagement]
 description = "གནས་སྐབས་ཀྱི་ཡིག་ཆ་གསོག་འཇོག་དང་གཙང་སྦྲ་བྱེད་པའི་སྤྱོད་ཚུལ་བཀོད་སྒྲིག་བྱེད་པ།"
@@ -682,11 +682,6 @@ label = "གཙང་བཟོའི་བར་མཚམས་(སྐར་མ)
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "རྒྱ་ཆེ་བའི་མ་ལག་གི་དྲོད་ཚད་སྣོད་ཐོ་གཙང་མ་བཟོ་དགོས་མིན་(དོགས་ཟོན་དང་བཅས་བེད་སྤྱོད་གཏོང་དགོས།)"
 label = "གཙང་བཟོའི་མ་ལག་གི་དུས་བབ།"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice tempt ཡིག་ཆའི་དཀར་ཆག (སྔོན་སྒྲིག་ཆེད་དུ་སྟོང་པར་བཞག་པ་: bateTMmpDir/librefofce)"
-label = "LibreOffice གནས་སྐབས་སྣོད་ཐོ།"
-placeholder = "སོར་བཞག: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "དྲོད་ཚད་ཡིག་ཆ་གཙང་མ་མ་བཟོས་གོང་ཆུ་ཚོད་ཁ་ཤས་ནང་ཆེས་མཐོ་བའི་ལོ་ཚད།"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "པར་རིས་ཤོག་ངོས་�
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "བཞག (ཐོག་མའི་རྒྱ་ཁྱོན)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "{{name}} ལ་སྒྲིག་འཛུགས་བྱེད་ཐབས"
 title = "འབྲེལ་མཐུད།"
 unlinkedServices = "འབྲེལ་མཐུད་མེད་པའི་ཞབས་ཞུ།"
 
@@ -1294,17 +1290,6 @@ label = "སྔོན་སྒྲིག་ཐོན་སྐྱེད་པ།"
 description = "མདོང་ལམ་ལས་སྣོན་དང་ཕྱིའི་ལག་ཆའི་ཆེད་དུ་རང་སྒྲིག་ཡིག་ཆའི་མ་ལག་གི་འགྲོ་ལམ་སྒྲིག་བཀོད་བྱེད་པ།"
 label = "ལམ་འགྲོ་ལམ་ལུགས།"
 
-[admin.settings.general.customPaths.operations]
-label = "ཕྱིའི་ལག་ཆའི་ལམ།"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "ཡིག་ཆ་སྒྱུར་བཀོད་ཀྱི་ཆེད་དུ་LibreOffice ནས་Oconcorvert (སྔོན་སྒྲིག་ཆེད་དུ་སྟོང་པར་བཞག་པ་: /opt/venv/bin/octurntert)"
-label = "མེད་ཐབས་མེད་པ་ལག་བསྟར་བྱེད་ཐུབ།"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTMLནས་PDFབསྒྱུར་བའི་ཆེད་དུ་WasyPrintནས་ལག་བསྟར་བྱེད་ཐུབ།"
-label = "WasyPrint ལག་བསྟར་བྱེད་ཐུབ་པ།"
-
 [admin.settings.general.customPaths.pipeline]
 label = "མདོང་ལམ་ངོས་འཛིན།"
 
@@ -1327,6 +1312,10 @@ label = "ལྟ་སྲུང་བྱས་པའི་ཡིག་ཁུག�
 [admin.settings.general.defaultLocale]
 description = "བེད་སྤྱོད་པ་གསར་པའི་ཆེད་དུ་སྔོན་སྒྲིག་སྐད་ཡིག་(དཔེར་ན། en_US, es_ES)"
 label = "སྔོན་སྒྲིག ས་ཁུལ།"
+
+[admin.settings.general.enableFeedback]
+description = "བཀོལ་མཁན་ཚོས Stirling རུ་ཚོགས་ལ་བསམ་འཆར་གཏོང་བ་ལྟེར་བྱེད"
+label = "བསམ་འཆར་ལེན་པ་ལྕོགས་ཅན"
 
 [admin.settings.general.fileUploadLimit]
 description = "ཆེས་མཐོ་བའི་ཡིག་ཆ་ཡར་བསྐུར་ཚད་(དཔེར་ན། 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "STANDARD བྱུང་ལས་ལ་ཁ་པར་སྣོན: �
 [admin.settings.security.audit.retentionDays]
 description = "ཞིབ་བཤེར་ཐོ་ཉར་དགོས་པའི་ཉིན་གྲངས (0 = ཚད་མེད་ཉར་ཚགས)"
 label = "རྩིས་ཞིབ་བཀག་སྡོམ།(ཉིན་མོ།)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "མི་སྣར་བཀོལ་ཟིན་པའི PDF ཚུལ་བལྟ་བ། དཔར་འདེབས་པ། བརྗེ་སྒྱུར་བྱེད་པ ཡང་ན་བསྐྱར་དུ་མི་སྣར་བཀོལ་ཐུབ་ཀྱང་ app ནང་བཟོ་བཅོས་མི་ཆོག། API ཞལ་འདྲེན་དང་ server pipelines ལ་ཕན་གནོད་མེད།"
+label = "མི་སྣར་བཀོལ་ཟིན་པའི PDF ལ་བཟོ་བཅོས་འགོག"
 
 [admin.settings.security.csrfDisabled]
 description = "ས་ཁོངས་བརྒལ་བའི་རེ་འདུན་རྫུན་བཟོ་སྲུང་སྐྱོབ།"
@@ -2969,6 +2962,7 @@ loadError = "མི་སྣ་འཇུག་མ་ཐུབ"
 noTeam = "ཚོགས་མིང་མེད"
 noUsers = "མི་སྣ་གཞན་མ་རྙེད།"
 placeholder = "མི་སྣ་འདེམས..."
+signInRequired = "གཞན་ལས་མི་སྣར་ཞུ་བ་གཏོང་བར་ཐོ་འགོད་དགོས།"
 you = "{{name}} (ཁྱེད)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "ཁྱེད་རང་གི་ཁ་བྱང་དེ་ཁྱ
 title = "ཡིག་ཚགས་བསྒྱུར་བ།"
 
 [changeMetadata]
-filenamePrefix = "མེ་ཏོག"
 submit = "བརྗེ་འགྱུར"
 tags = "རྩོམ་སྒྲིག,བཟོ་བཅོས,གསར་སྒྱུར,metadata,ཁྱད་ཆོས,ཡིག་ཆའི་ཁྱད་ཆོས,རྩོམ་པ་པོ,ཁ་བྱང,བརྗོད་གཞི,གཙོ་ཚིག,creator,producer,info,ཡིག་ཆའི་ཆ་འཕྲིན,ཡིག་ཆའི་ཁྱད་ཆོས"
 
@@ -3265,6 +3258,248 @@ not_found = "འཚོལ་བཤེར་བྱས་པ་མ་ཐོབ།"
 processing = "བཟོ་སྒྲིག་བཞིན་པ ({{outcome}})..."
 unsupported_capability = "ཁྱབ་ཚད་རྒྱབ་སྐྱོར་མེད: {{capability}}"
 usage_limit_reached = "ཁྱེད་སྤྱོད་ཚད་ལ་སླེབས་ཟིན། མུ་མཐུད་ཆེད་ཁྱེད་ཀྱི plan འདེམས་ཚན་ཞིབ་བཤེར་བྱོས།"
+
+[checkAccessibility]
+aboutRow = "{{label}} སྐོར།"
+checking = "ཞིབ་བཤེར་བཞིན་..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "འཇུག་སྤྱོད་སླ་བའི་སྙན་ཞུ་ཕབ་ལེན"
+fileFailed = "ཕམ་པ"
+pickFile = "མཇུག་འབྲས་མངོན་པ"
+submit = "འཇུག་སྤྱོད་སླ་བ་ཞིབ་བཤེར"
+
+[checkAccessibility.category]
+altText = "ཚབ་ཡིག"
+fonts = "ཡིག་གཟུགས"
+language = "སྐད་ཡིག"
+links = "འབྲེལ་མཐུད་དང་མཆན་འགྲེལ"
+metadata = "མེ་ཊ་གནས་བརྡ་དང་སྒྲིག་འགོད"
+structure = "ངོ་རྟགས་དང་གཞི་བཀོད"
+
+[checkAccessibility.categoryTip]
+altText = "པར་རིས་ལ་མཐོང་བྱེད་ཆས་ཀྱིས་ཀློག་ཐུབ་པའི་ཚབ་བརྗེ་ཡིག་ཚིག་ཐུང་ཐུང་ཞིག་དགོས།"
+fonts = "ཡིག་གཟུགས་ཚང་མ་ཡིག་ཆའི་ནང་འཇུག་དགོས་པ་དང་ ཡི་གེ་རེ་རེ་དངོས་ཡིག་དང་འབྲེལ་བ་དགོས་པས་ ཀློག་བྱེད་དང་འདྲ་བཤུས་བྱ་ཐུབ།"
+language = "མཐོང་བྱེད་ཆས་ཀྱིས་ཡིག་ཆའི་སྐད་ཡིག་ཤེས་དགོས་པས་སྒྲ་ཡག་པོར་སྒྲུབ་ཐུབ།"
+links = "འབྲེལ་མཐུད། བསམ་བཀོད། དེབ་གཏུབ་ཁྲ་ལ་ངོ་རྟགས་དང་འགྲེལ་བཤད་དགོས་པ། ཐེག་མཐེབ་གོ་རིམ་ཡང་ཤོག་ངོས་དང་མཐུན་དགོས།"
+metadata = "ཁ་བྱང་། PDF/UA གསལ་བཀོད་དང་ལྕོགས་འགན་ཆས་ཀྱིས་ཡིག་ཆ་ནས་ཀློག་པའི་སྒྲིག་འགོད་གཞན།"
+structure = "ངོ་རྟགས་ནི་ཤོག་ངོས་ཀྱི་ཡན་ལག་རེ་རེ་ག་རེ་ཡིན་མིང་དང་ ཁ་བྱང་། རེའུ་མིག ཐིག་ཁྲམ་ལྟ་བུར་བཀོད་པ་དང་ ཀློག་གོ་རིམ་ག་རེ་ཡིན་བརྗོད་དོ།"
+
+[checkAccessibility.checks]
+label = "ཞིབ་བཤེར {{total}} ནས་ {{passed}} འགྲུབ་ཟིན"
+
+[checkAccessibility.error]
+download = "འཇུག་སྤྱོད་སླ་བའི་སྙན་ཞུ་བཟོ་མ་ཐུབ། ཡང་བསྐྱར་ཚོད་ལྟ།"
+fileTitle = "ཡིག་ཆ་འདི་ཞིབ་བཤེར་མ་ཐུབ།"
+partial = "ཡིག་ཆ་ཁ་ཤས་ཞིབ་བཤེར་མ་ཐུབ།"
+
+[checkAccessibility.facts]
+declares = "PDF/UA གསལ་བཀོད་ཡོད"
+displaysTitle = "ཁ་བྱང་མངོན་སྟོན"
+fonts = "ཡིག་གཟུགས་ནང་འཇུག"
+language = "སྐད་ཡིག་གསལ་བཀོད"
+notEncrypted = "གསང་སྡོམ་མེད"
+tagged = "ངོ་རྟགས་ཡོད"
+title = "ཁ་བྱང་ཡོད"
+
+[checkAccessibility.factTip]
+declares = "ཡིག་ཆའི་མེ་ཊ་གནས་བརྡ་ནས་ PDF/UA ལྟར་འཇུག་པའི་གསལ་བཀོད་ཡོད།"
+displaysTitle = "PDF ཀློག་ཆས་ཁ་ཕྱེས་སྐབས་ཡིག་ཆའི་མིང་མིན་པར་ཁ་བྱང་སྟོན།"
+fonts = "ཡིག་ཚིག་སྤྱོད་པའི་ཡིག་གཟུགས་ཚང་མ་ཡིག་ཆའི་ནང་ཡོད།"
+language = "ཡིག་ཆས་ཡིག་ཚིག་གི་སྐད་ཡིག་གསལ་བཀོད་བྱས་ཡོད།"
+notEncrypted = "ཡིག་ཆ་གསང་སྡོམ་མེད། གསང་སྡོམ་གྱིས་ལྕོགས་འགན་ཆས་ཀློག་པ་བཀག་སྡོམ་བྱེད་པ་ཡོད།"
+tagged = "ཡིག་ཆ་ལ་གཞི་བཀོད་འགྲེལ་བཤད་བརྗོད་པའི་ངོ་རྟགས་ཡོད། དེ་མེད་ན་མཐོང་བྱེད་ཆས་ཀྱིས་ཡིག་ཡིགས་ཙམ་ཁོ་ན་ཐོབ།"
+title = "མེ་ཊ་གནས་བརྡ་ནང་ཁ་བྱང་ཡོད།"
+
+[checkAccessibility.figures]
+summary_one = "པར་རིས {{count}} ལ་འགྲེལ་བཤད་དགོས (ཤོག་ངོས {{pages}})"
+summary_other = "པར་རིས {{count}} ལ་འགྲེལ་བཤད་དགོས (ཤོག་ངོས {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "ག་ལ་འཇུག"
+clauseValue = "{{spec}} §{{clause}}, ཚོད་ལྟ {{test}}"
+details = "ཞིབ་དོན"
+instances_one = "{{count}} ཐེངས"
+instances_other = "{{count}} ཐེངས"
+onPages_one = "ཤོག་ངོས {{pages}}"
+onPages_other = "ཤོག་ངོས {{pages}}"
+onPagesPartial_one = "ཤོག་ངོས {{pages}} (ཐོ་ཡིག་མི་ཚང་པའོ)"
+onPagesPartial_other = "ཤོག་ངོས {{pages}} (ཐོ་ཡིག་མི་ཚང་པའོ)"
+pages = "ཤོག་ངོས"
+pagesPartialValue = "{{pages}} (ཐོ་ཐོག་མའི་མཐོང་བའི་སྣང་ཚོར་ཁ་ཤས་ཀྱིས་ཤོག་ངོས་ཐོ་འགོད་ཡོད་པས་ཐོ་ཡིག་མི་ཚང་)"
+requirement = "ཆ་རྐྱེན"
+rule = "ལམ་ལུགས"
+standard = "ཚད་ལྡན"
+where = "གནས་ས"
+
+[checkAccessibility.manual]
+clearAll = "ཚང་མ་བསལ"
+done = "ཚར་བ"
+inProgress = "ལས་སྒོར"
+markAllDone = "ཚང་མ་ཚར་བར་རྟགས"
+tip = "མིས་ཁྱད་པར་དཔག་དགོས་པའི་གནས་ཚུལ་ཚོད་ལྟ་དགོས་པ་ལྟ་བུ། ཀློག་གོ་རིམ་དང་པར་རིས་ཀྱི་འགྲེལ་བཤད་གཞན་ཚོས་དགོས་མཁོ་ཡོད་མི། གཅིག་རྗེས་གཅིག་བཤེར་ཞིབ་བྱས་ཚར་རྗེས་སྐོར་རེ་རེ་ལ་རྟགས་བཀལ། དེ་དག་གྲངས་མང་སྙན་ཞུ་ཕབ་ལེན་ནང་འདུ་བཞག"
+title = "ལག་བསྟར་ཞིབ་བཤེར"
+
+[checkAccessibility.objects]
+annotation = "མཆན་འགྲེལ་ཞིག"
+bookmark = "དེབ་རྟགས་ཞིག"
+character = "ཡིག་གཟུགས་ནང་གི་ཡིག་འབྲུ་ཞིག"
+contentPiece = "ཤོག་ངོས་ནང་དོན་ཚན་ཞིག"
+document = "ཡིག་ཆ་འདི"
+drawing = "རིས་འགོད་ཞིག"
+figure = "དཔེ་རིས་ཞིག"
+file = "ཡིག་ཆ་དངོས་མཐའ།"
+font = "ཡིག་གཟུགས་ཞིག"
+form = "དེབ་གཏུབ་ཞིག"
+formField = "དེབ་གཏུབ་ཡིག་སྒམ་ཞིག"
+link = "འབྲེལ་མཐུད་ཞིག"
+markedContent = "མཚོན་བྱང་བཀོད་པའི་ཤོག་ངོས་ནང་དོན"
+metadata = "ཡིག་ཆའི་མེ་ཊ་གནས་བརྡ"
+page = "ཤོག་ངོས་ཞིག"
+properties = "ཡིག་ཆའི་གཏོགས་གཤིས"
+tag = "{{name}} ངོ་རྟགས་ཞིག"
+tagTree = "ངོ་རྟགས་ཤིང་འབྲས"
+textPiece = "ཡིག་ཚིག་ཚན་ཞིག"
+translatedMetadata = "སྐད་བསྒྱུར་ཡོད་པའི་མེ་ཊ་གནས་བརྡ་ཐོ་འགོད"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (འཕྲོ་མཐུད)"
+footer = "Stirling PDF ཡིས་ཞིབ་བཤེར་བྱས"
+page = "ཤོག་ངོས {{n}}"
+title = "འཇུག་སྤྱོད་སླ་བའི་སྙན་ཞུ"
+
+[checkAccessibility.result]
+fail = "ཕམ་པ"
+failSummary = "screen reader ཚོས་ཡིག་ཆ་འདི་ཡོངས་སུ་ཀློག་པ་མི་ཐུབ་སྲིད།"
+partial = "ཕྱེད་ཀ"
+partialSummary = "screen reader ཚོས་ཀློག་ཐུབ་ཀྱང་ ཞིབ་བཤེར་ཁ་ཤས་ཕམ།"
+pass = "མཐར་འཁྱོལ"
+passSummary = "PDF/UA རང་འགུལ་ཞིབ་བཤེར་ཚང་མ་ལ་འགྲུབ།"
+
+[checkAccessibility.rules]
+annotationLanguage = "མཆན་འགྲེལ་དང་འབྲེལ་མཐུད་ཡིག་ཚིག་ལ་སྐད་ཡིག་མ་སྒྲིག་པས་ screen reader ཚོས་སྐད་ག་གིས་ཀློག་དགོས་མི་ཤེས། ཡིག་ཆའི་སྐད་ཡིག་སྒྲིག་ནས་བཀག་སྒྲིག་བཟོ།"
+annotationNoDescription = "མཆན་འགྲེལ་ འབྲེལ་མཐུད་ ཡང་ན་རིས་འགོད་ལ་འགྲེལ་བཤད་མེད་པས་ screen reader ལ་གསལ་བཤད་བྱེད་མི་ཐུབ།"
+annotationNotTagged = "མཆན་འགྲེལ་ཡང་ན་རིས་འགོད་ལ་མཆན་འགྲེལ་ངོ་རྟགས་མེད་པས་ screen reader ཚོས་ཀློག་གོ་རིམ་ནས་འཚོལ་མི་ཐུབ།"
+artifactInsideTagged = "རྒྱན་ཆས་རྟགས་བཀོད་པ་ཞིག་ངོ་རྟགས་ཡོད་པའི་ནང་འཁོད་ལ་ཡོད་པས་ ཀློག་དང་སྐོར་བསྐྱར་མི་དག།"
+bookmarkLanguage = "དེབ་རྟགས་ལ་སྐད་ཡིག་མ་སྒྲིག་པས་ screen reader ཚོས་སྐད་ག་གིས་ཀློག་དགོས་མི་ཤེས། ཡིག་ཆའི་སྐད་ཡིག་སྒྲིག་ནས་བཀག་སྒྲིག་བཟོ།"
+conformancePrefix = "མེ་ཊ་གནས་བརྡ་ནང་གི PDF/UA གསལ་བཀོད་སྔོན་ཚིག་ཕྱི་པས་ PDF ཀློག་ཆས་ཀྱིས་ངོས་འཛིན་སྲིད་མེད།"
+contentLanguage = "ཡིག་ཚིག་ལ་སྐད་ཡིག་མ་སྒྲིག་པས་ screen reader ཚོས་སྐད་ག་གིས་ཀློག་དགོས་མི་ཤེས། ཡིག་ཆའི་སྐད་ཡིག་སྒྲིག་ནས་བཀག་སྒྲིག་བཟོ།"
+customTagNotMapped = "ངོ་རྟགས་ཞིག་སྲོལ་སྒྲིག་མིང་སྤྱད་པ་ཞིག་ཡིན་ཀྱང་ ཚད་ལྡན་ངོ་རྟགས་ལ་མ་མཐུན་པས་ screen reader ཚོས་དེ་ག་རེ་ཡིན་ཤེས་མི་ཐུབ།"
+figureNoAlt = "པར་རིས་ལ་དཔེ་རིས་ངོ་རྟགས་ཡོད་ཀྱང་ འགྲེལ་བཤད་མེད་པས་ screen reader བཀོལ་མཁན་ལ་དེ་གི་དོན་དག་མི་ཤེས།"
+fontMissingGlyphs = "ཡིག་ཆའི་ནང་འཇུག་ཡོད་པའི་ཡིག་གཟུགས་ནས་ཡིག་འབྲུ་ཁ་ཤས་མེད།"
+fontNotEmbedded = "ཡིག་གཟུགས་ཞིག་ཡིག་ཆའི་ནང་མི་འཇུག་པས་ ཡིག་ཚིག་གཞན་པར་འབྱུང་སྲིད་དང་ མི་འདྲ་སྒྲུབ་སྲིད།"
+formFieldNotTagged = "དེབ་གཏུབ་ཡིག་སྒམ་ལ་དེབ་གཏུབ་ངོ་རྟགས་མེད་པས་ screen reader ཚོས་འཚོལ་མི་ཐུབ།"
+genericHeading = "ཁ་བྱང་འདི་ H ངོ་རྟགས་སྤྱད་པས་རིམ་པ་མེད། PDF/UA-2 ལ་ H1 ནས་ H6 དགོས་པས་ ཁ་བྱང་གི་སྤྱོད་ལམ་དཀྲལ་བྱེད།"
+glyphWidths = "ཡིག་གཟུགས་ཀྱི་ཡིག་འབྲུ་ཞེང་ཚད་ཡིག་ཆ་ནང་གི་ཐོ་འགོད་དང་ཡིག་གཟུགས་དང་མཐུན་མི་འདུག དེས་ཡིག་ཚིག་ཕྲ་མོས་འགྲོ་སྲིད།"
+headingSkipped = "ཁ་བྱང་རིམ་པ་ལམ་སྟོན་བཀག་ཤོར་པ། དཔེར་ན་ ཁ་བྱང་ 1 ནས་ཐད་ཀར་ཁ་བྱང་ 3 ལ་འགྱུར།"
+linkNoDescription = "འབྲེལ་མཐུད་ཞིག་ལ་འགྲེལ་བཤད་མེད་པས་ screen reader ཚོས་ཁ་བྱངས་ཀྱི་ཁ་བྱང་མིང་ཡང་ན་ག་ནི་ཡང་མི་ཀློག།"
+linkNotTagged = "འབྲེལ་མཐུད་ལ་འབྲེལ་མཐུད་ངོ་རྟགས་མེད་པས་ screen reader ཚོས་འབྲེལ་མཐུད་དུ་གསལ་བཤད་མི་བྱེད།"
+metadataLanguage = "ཁ་བྱང་པོ་ལྟ་བུའི་མེ་ཊ་གནས་བརྡ་ལ་སྐད་ཡིག་མེད་པས་ screen reader ཚོས་སྐད་ག་གིས་ཀློག་དགོས་མི་ཤེས། ཡིག་ཆའི་སྐད་ཡིག་སྒྲིག་ནས་བཀག་སྒྲིག་བཟོ།"
+noConformanceClaim = "ཡིག་ཆས་ PDF/UA ལྟར་འཇུག་པའི་གསལ་བཀོད་མེད། མེ་ཊ་གནས་བརྡ་ནང་ PDF/UA ངོས་འཛིན་ཐོ་འགོད་དགོས།"
+noDocumentTag = "ངོ་རྟགས་ནང་མགོ་རིམ་དུ Document ངོ་རྟགས་གཅིག་དགོས་པ་དང་ དེའི་ནང་གཞན་ཚང་མ་འཇུག་པ་དགོས།"
+noLanguage = "ཡིག་ཆས་སྐད་ཡིག་ག་རེ་ཡིན་མ་སྒྲིག་པས་ screen reader ཚོས་སྐད་འཛོམས་ཀྱིས་ཀློག་སྲིད།"
+noMetadataStream = "ཡིག་ཆ་ལ་ XMP མེ་ཊ་གནས་བརྡ་མེད་པས་ ཡིག་ཆའི་ཁ་བྱང་དང་ PDF/UA འཇུག་ཚུལ་ཁ་གསལ་སུ་མེད།"
+noTags = "ཡིག་ཆ་ལ་ངོ་རྟགས་གང་ཡང་མེད་པས་ screen reader ཚོས་ཁ་བྱང་ དོན་ཚན་ རེའུ་མིག ཐིག་ཁྲམ་ལས་ཁྱད་པར་ངོས་འཛིན་མི་ཐུབ་དང་ གོ་རིམ་ནས་ཀློག་མི་ཐུབ།"
+notdefGlyph = "ཡིག་ཚིག་ལ་ \"missing character\" ཚབ་བརྗེ་སྤྱད་པས་ སྟོང་པ་ཡང་ན་སྒོར་སྒོར་ཡོད་པར་མངོན་ནས་ཀློག་མི་ཐུབ།"
+noteTag = "ཡིག་ཆས་ Note ངོ་རྟགས་སྤྱད་པ་ཡིན་ལ་ PDF/UA-2 ནི་ མཇུག་འགྲེམས་དང་མཇུག་མཚམས་ལ་དམིགས་པའི FENote བཀོལ།"
+noTitle = "ཡིག་ཆའི་མེ་ཊ་གནས་བརྡ་ནང་ཁ་བྱང་མེད།"
+notMarkedTagged = "ཡིག་ཆ་ལ་ངོ་རྟགས་ཡོད་པའི་མཚོན་བྱང་མེད་པས་ ལྕོགས་འགན་ཆས་ཀྱིས་ངོ་རྟགས་དེ་སྣང་མེད་བྱེད་སྲིད།"
+notPdf2Tags = "PDF/UA-2 ལ་ PDF 2.0 ངོ་རྟགས་དགོས། འདི་ PDF 1.7 ངོ་རྟགས་ལྟ་བུ་ཡིན་པས་ དེ་ནི PDF/UA-1 ལ་ངོ་རྟགས་བཀོད་མི་སྲིད་པའི་དཔེ་མཚོན།"
+noUnicode = "ཡིག་འབྲུ་ཁ་ཤས་ཡིག་ཚིག་དུ་བསྒྱུར་མི་ཐུབ་པས་ screen reader དང་ འདྲ་བཤུས་གཏོང་བ་ལ་ནོར་འཁྲུལ་འཐོར་སྲིད།"
+replacementTextLanguage = "ཚབ་བརྗེ་ཡིག་ཚིག་ཁ་ཤས་ལ་སྐད་ཡིག་སྒྲིག་མེད་པས་ screen reader ཚོས་སྐད་ག་གིས་ཀློག་དགོས་མི་ཤེས། ཡིག་ཆའི་སྐད་ཡིག་སྒྲིག་ནས་བཀག་སྒྲིག་བཟོ།"
+standardTagRemapped = "ཚད་ལྡན་ངོ་རྟགས་ཞིག་སྲོལ་སྒྲིག་ངོ་རྟགས་ལ་བཀོལ་བས་ screen reader ཚོས་དེའི་དོན་དག་བརྙན་མི་ཐུབ།"
+symbolicEncoding = "བརྡ་རྟགས་ཡིག་གཟུགས་ལ་མ་རིགས་པའི encoding ཡོད་པས་ ཡིག་འབྲུ་མི་འགྲིག་པར་འབྱུང་སྲིད།"
+tabOrder = "འབྲེལ་མཐུད་དང་མཆན་འགྲེལ་ཡོད་པའི་ཤོག་ངོས་ལ་ tab གོ་རིམ་ཡིག་ཆའི་གོ་རིམ་དང་མཐུན་མི་འདུག དེས་ལྡེ་མིག་བཀོལ་མཁན་ཚོས་ཤོག་ངོས་ཁྲོད་འཕྲོ་མཐུད་འབྱུང་སྲིད།"
+taggedInsideArtifact = "ངོ་རྟགས་ཡོད་པའི་ནང་དོན་རྒྱན་ཆས་ཁོངས་ནང་ཡོད་པས་ screen reader ཚོས་མཆོངས་སྲིད།"
+titleNotDisplayed = "PDF ཀློག་ཆས་ཁ་ཕྱེ་སྐབས་ཡིག་ཆའི་མིང་སྟོན་སྲིད། \"display document title\" སྒྲིག་འགོད་བཀོལ་དགོས།"
+untaggedContent = "ཤོག་ངོས་ནང་དོན་ཞིག་ལ་ ངོ་རྟགས་ཡང་ན་རྒྱན་ཆས་མཚོན་བྱང་གང་ཡང་མེད་པས་ screen reader ཚོས་ཀློག་དགོས་མི་ཤེས། འདི་ནི་རྒྱབ་ལྗོངས་པར་རིས་། གཙོ་འདེབས། མཇུག་འདེབས། ཤོག་ཨང་ལ་འབྱུང་བ་ཡོད།"
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "མཆན་འགྲེལ་དང་འབྲེལ་མཐུད་ལ་སྐད་ཡིག་མེད"
+annotationNoDescription = "མཆན་འགྲེལ/འབྲེལ་མཐུད/རིས་འགོད་ལ་འགྲེལ་བཤད་མེད"
+annotationNotTagged = "མཆན་འགྲེལ་ཡང་ན་རིས་འགོད་ངོ་རྟགས་མེད"
+artifactInsideTagged = "རྒྱན་ཆས་ངོ་རྟགས་ནང་འཁོད"
+bookmarkLanguage = "དེབ་རྟགས་ལ་སྐད་ཡིག་མེད"
+conformancePrefix = "PDF/UA གསལ་བཀོད་མི་འགྲིག"
+contentLanguage = "ཡིག་ཚིག་ལ་སྐད་ཡིག་མེད"
+customTagNotMapped = "སྲོལ་སྒྲིག་ངོ་རྟགས་ལ་ཚད་ལྡན་མེད"
+figureNoAlt = "པར་རིས་ལ་འགྲེལ་བཤད་མེད"
+fontMissingGlyphs = "ཡིག་གཟུགས་ལ་ཡིག་འབྲུ་མེད"
+fontNotEmbedded = "ཡིག་གཟུགས་ནང་མ་འཇུག"
+formFieldNotTagged = "དེབ་གཏུབ་ཡིག་སྒམ་ངོ་རྟགས་མེད"
+genericHeading = "ཁ་བྱང་རིམ་པ་མེད"
+glyphWidths = "ཡིག་འབྲུ་ཞེང་ཚད་མཐུན་མི་འདུག"
+headingSkipped = "ཁ་བྱང་རིམ་པ་ཤོར"
+linkNoDescription = "འབྲེལ་མཐུད་ལ་འགྲེལ་བཤད་མེད"
+linkNotTagged = "འབྲེལ་མཐུད་ངོ་རྟགས་མེད"
+metadataLanguage = "མེ་ཊ་གནས་བརྡ་ལ་སྐད་ཡིག་མེད"
+noConformanceClaim = "PDF/UA གསལ་བཀོད་མེད"
+noDocumentTag = "ངོ་རྟགས་ཀྱི་མགོ་རིམ་ Document མེད"
+noLanguage = "ཡིག་ཆའི་སྐད་ཡིག་མེད"
+noMetadataStream = "XMP མེ་ཊ་གནས་བརྡ་མེད"
+noTags = "ངོ་རྟགས་མེད"
+notdefGlyph = "ཡིག་འབྲུ་མེད་པའི་ཚབ་བརྗེ་སྤྱོད"
+noteTag = "Note ངོ་རྟགས་སྤྱད"
+noTitle = "ཡིག་ཆའི་ཁ་བྱང་མེད"
+notMarkedTagged = "ངོ་རྟགས་མཚོན་བྱང་མེད"
+notPdf2Tags = "ངོ་རྟགས་ནི PDF 2.0 མིན"
+noUnicode = "ཡིག་འབྲུ་ཁ་ཤས་ཀློག་མི་ཐུབ"
+replacementTextLanguage = "ཚབ་བརྗེ་ཡིག་ཚིག་ལ་སྐད་ཡིག་མེད"
+standardTagRemapped = "ཚད་ལྡན་ངོ་རྟགས་སྲོལ་སྒྲིག་ལ་བསྒྱུར"
+symbolicEncoding = "བརྡ་རྟགས་ཡིག་གཟུགས་ཀྱི encoding མི་འགྲིག"
+tabOrder = "Tab གོ་རིམ་ཡིག་ཆ་དང་མཐུན་མི་འདུག"
+taggedInsideArtifact = "ངོ་རྟགས་ཡོད་པ་རྒྱན་ཆས་ལ་བཀོག"
+titleNotDisplayed = "ཁ་ཕྱེས་པར་ཁ་བྱང་མངོན་མི་འདུག"
+untaggedContent = "ངོ་རྟགས་མེད་པའི་ནང་དོན"
+
+[checkAccessibility.score]
+issues_one = "གནད་དོན {{count}}"
+issues_other = "གནད་དོན {{count}}"
+noIssues = "གནད་དོན་མ་རྙེད"
+subtitle_one = "{{profile}} - {{count}} ཤོག"
+subtitle_other = "{{profile}} - {{count}} ཤོག"
+
+[checkAccessibility.sections]
+breakdown = "ཁག་ཕྱེས"
+
+[checkAccessibility.status]
+checking = "{{total}} ནས་ {{current}} ཞིབ་བཤེར་བཞིན་..."
+complete = "ཞིབ་བཤེར་ཚར་བ"
+
+[checkAccessibility.steps]
+results = "མཇུག་འབྲས"
+standard = "ཚད་ལྡན"
+
+[checkAccessibility.tooltip.header]
+title = "ཞིབ་བཤེར་བྱ་རྒྱུའི་ཚད་ལྡན"
+
+[checkAccessibility.tooltip.ua1]
+text = "2012 ལོར་སྤེལ་བའི་ཐོན་རིམ་ ISO 14289-1 ཡི PDF/UA ཐོན་རིམ་དང་ PDF 1.7 ཡིག་ཆ་ལ་དོན་ལྡན།"
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "2024 ལོར་སྤེལ་བའི་ཐོན་རིམ་ ISO 14289-2 ཡི PDF/UA གསར་པ། PDF 2.0 ཡིག་ཆ་ལ་དོན་ལྡན། PDF 1.7 ཡིག་ཆ་ལ་ཞིབ་བཤེར་བྱས་ན་ PDF 2.0 ལ་མཉམ་མེད་ཀྱི་ཁྲིམས་ལ་ཕམ།"
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "མཆན་འགྲེལ {{n}}"
+bookmarks = "དེབ་རྟགས"
+character = "{{font}} ནང་གི་ཡིག་འབྲུ་ཞིག"
+contentItem = "ནང་དོན་རྣམ་པ {{n}}"
+drawingStep = "རིས་འགོད་རིམ་པ {{n}}"
+embeddedGraphic = "ནང་འཇུག་པར་རིས"
+font = "ཡིག་གཟུགས {{name}}"
+metadata = "ཡིག་ཆའི་མེ་ཊ་གནས་བརྡ"
+page = "ཤོག་ངོས {{n}}"
+piece = "ཚན་པ {{n}}"
+tag = "{{tag}} ངོ་རྟགས"
+tagTree = "ངོ་རྟགས་ཤིང་འབྲས"
+wholeDocument = "ཡིག་ཆ་ཧྲིལ་བོ"
+
+[checkAccessibility.where.properties]
+author = "རྩོམ་པ་པོ"
+description = "འགྲེལ་བཤད"
+pdfUaPart = "PDF/UA ཆ་ཤས"
+title = "ཁ་བྱང་"
 
 [classification.families]
 correspondence = "འཕྲིན་འབྲེལ།"
@@ -3729,6 +3964,10 @@ message = "མཁོ་སྤྲོད་བྱས་པའི་ཡིག་ཆ
 body = "PDF འདི་དག་མཉམ་དུ་ཤོག་ངོས་ ༢༠༠༠ ལས་བརྒལ་ཡོད། ལས་སྣོན་བྱེད་པར་སྐར་མ་འགའ་ཤས་འགོར་གྱི་ཡོད།"
 title = "དུས་ཐོག་ཏུ་འགྲན་རྩོད་ཆེན་པོ་བྱེད་པ།"
 
+[compare.mode]
+pixel = "Pixel བསྡུར་བ"
+text = "ཡིག་གེ་བསྡུར་བ"
+
 [compare.no.text]
 message = "འདེམས་སྒྲུག་བྱས་པའི་PDFགཅིག་ཡང་ན་གཉིས་ཀར་ཡིག་ཆའི་ནང་དོན་མེད། དཔྱད་གཞིའི་ཆེད་དུ་ཡིག་ཆ་ཡོད་པའི་PDFའདེམས་རོགས།"
 
@@ -4046,6 +4285,30 @@ failed = "ཁྱེད་ཀྱི་ནང་འཛུལ་བསྐྱར་�
 lead = "Server འདི་སྔར་ནས་ཁྱེད་ཀྱི་རྩིས་ཐོ་དང་མཐུད་ཟིན། Server ཐོག་གི་འཛིན་ཤོག་དང་བེད་སྤྱོད་ལ་ཕྱིར་ལོག་པར་ཁྱེད་ཀྱི་ནང་འཛུལ་བསྐྱར་གསོ་བྱེད།"
 title = "ཁྱེད་ཀྱི server ནང་འཛུལ་བསྐྱར་གསོ"
 
+[connectedAccounts]
+connect = "འབྲེལ"
+connectAnother = "གཞན་ཞིག་འབྲེལ"
+connectFailed = "རྩིས་ཐོ་འབྲེལ་མ་ཐུབ། སར་བར་གློག་རིག་གནས་ཐོ་སྒྲིག་ཡོད་མེད་བལྟས་རྗེས་ཡང་བསྐྱར་ཚོད་ལྟ།"
+disconnect = "བཅད"
+google = "Google Drive"
+intro = "རང་ཉིད་ཀྱི་རྩིས་ཐོ་ཚུད་ནས་ཐེངས་གཅིག་འབྲེལ། ཞུན་དག་ཆས་ཀྱིས་དེ་ཚོ་ནས་ཡིག་ཆ་ཁ་ཕྱེ་ཐུབ་པ་དང་ ཡང་བསྐྱར་ཐོ་འགོད་མི་དགོས། པའིፕ་ལ་ཡིནས་ཀྱང་ཁྱེད་ཀྱི་རྩིས་ཐོ་ལྟར་ཀློག་དང་ཉར་ཚགས་བྱེད།"
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling གྱིས་རྩིས་ཐོ་འདི་ལ་མི་འབྱུང་པས་ དེ་བརྟེན་པའི་ pipeline ཚུལ་འདི་ཚུར་འགོག་ཡོད།"
+none = "ཁྱེད་ཀྱི་དོ་དམ་པས་འབྲེལ་བའི་རྩིས་ཐོ་མ་སྒོ་འབྱེད།"
+personal = "མི་སྒེར་རྩིས་ཐོ"
+popupBlocked = "ཡིག་ཚང་གིས་ཐོ་འགོད་སྒེའུ་ཁུང་འགགས་ཡོད། འདྲེན་ལམ་འདིའི་ས་ཁོངས་ལ་ pop-up གཏོང་ཆོག་བཟོས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ།"
+reconnect = "བསྐྱར་དུ་ཐོ་འགོད"
+work = "ལས་ཀ་རྩིས་ཐོ"
+
+[connectedAccounts.disconnectConfirm]
+body = "རང་འབྲེལ་ཐུབ་པ་འདི་སྤྱད་པའི་ཁྱབ་ཁོངས་དང་ pipeline ཚོ་འགོག་དུས། ཡང་བསྐྱར་འབྲེལ་རྗེས་ ཁོང་ཚོའི་རྩིས་ཐོ་སྒྲིག་འགོད་གསར་པ་བཀོད་དགོས།"
+confirm = "བཅད"
+title = "{{account}} བཅད་དམ།"
+
+[connectedAccounts.status]
+connected = "འབྲེལ་ཟིན"
+needsSignIn = "ཐོ་འགོད་དགོས"
+
 [convert]
 autoRotate = "རླངས་འཁོར་འཁོར་སྐྱོད་བྱེད་པ།"
 autoRotateDescription = "རང་འགུལ་གྱིས་པར་རིས་རྣམས་PDFཤོག་ངོས་ལ་འཚམ་པར་བསྒྱུར་དགོས།"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "ཡིག་ཆའི་ཁ་བྱང"
 pdfUaTitleHelp = "ཀློག་ཆས་ཀྱིས་ཡིག་ཆའི་མིང་གི་ཚབ་ཏུ་སྟོན། སྟོང་པར་བཞག་ན་ཁ་བྱང་དང་པོ་སྤྱོད།"
 selectSourceFormatFirst = "སྔོན་ལ་ཁུངས་ཀྱི་རྣམ་གཞག་འདེམས"
 settings = "སྒྲིག་སྟངས།"
+signInToUse = "ལག་ལེན་བྱེད་པར་ནང་འཛུལ།"
 single = "ཁེར་ཧྲེང"
 sourceFormatPlaceholder = "འབྱུང་ཁུངས་རྣམ་གྲངས།"
-stirlingOfficeConvert = "Stirling Office Convert (beta) སྤྱོད།"
-stirlingOfficeConvertDescription = "དྲན་གསོག་ཉུང་བས་སྒྱུར་སྤོར་ལེགས་པ་དང་མགྱོགས་པ། ཚད་ལྡན་སྒྱུར་ཆས་སྤྱོད་པར་ཁ་རྒྱགပါ།"
 strictMode = "ནན་མོའི་རྣམ་པ"
 strictModeDesc = "སྒྱུར་བ་འཐུས་ཚང་མིན་ན་ནོར་འཁྲུལ་སྟོན (VeraPDF verification སྤྱོད)"
 svgPdfOptions = "SVG to PDF གདམ་ག"
@@ -4134,8 +4396,6 @@ webOptions = "དྲ་རྒྱ་ནས་PDFགདམ་ག།"
 zoomLevel = "ཟོམ་རིམ་པ།"
 
 [convert.ebookOptions]
-embedAllFonts = "ཡིག་གཟུགས་ཚང་མ་བཙུགས།"
-embedAllFontsDesc = "གློག་དེབ་ཀྱི་ཡིག་གཟུགས་ཚང་མ་ཐོན་པའི་PDFནང་དུ་བཙུགས་ཡོད།"
 includePageNumbers = "ཤོག་ངོས་ཨང་རྟགས་བཀོད་པ།"
 includePageNumbersDesc = "ཐོན་པའི་PDFལ་ཤོག་ངོས་ཨང་གྲངས་ཁ་སྣོན་བྱེད།"
 includeTableOfContents = "ནང་དོན་གྱི་རེའུ་མིག་ཚུད་པ།"
@@ -4648,6 +4908,17 @@ title = "སྒྲིག་སྟངས།"
 [extractPages.tooltip]
 description = "འདེམས་སྒྲུག་བྱས་པའི་ཤོག་ངོས་དེ་ཚོ་PDFགསར་པར་བཏོན་ནས་གོ་རིམ་སྲུང་སྐྱོབ་བྱེད།"
 
+[feedback.page]
+open = "བསམ་འཆར་གཏོང"
+sendMore = "བསམ་འཆར་གཞན་ཡང་གཏོང"
+sent = "བསམ་འཆར་ལ་ཐུགས་རྗེ་ཆེ།"
+title = "Stirling ཡར་འཕེལ་ལ་རོགས་རམ་བྱོས"
+unavailable = "བསམ་འཆར་མི་འཐོབ"
+
+[feedback.tag]
+dismiss = "བསམ་འཆར་མཐེབ་གནོན་སྦེད"
+label = "བསམ་འཆར"
+
 [fileCard]
 openInFileEditor = "ཡིག་ཆ་ཞུན་དག་ཆས་ནང་ཁ་ཕྱེ"
 viewInViewer = "མཐོང་ཆས་ནང་ལྟ"
@@ -4657,7 +4928,6 @@ closeFile = "ཡིག་ཆ་ཁ་རྒྱག"
 
 [fileEditor]
 closedFile = "{{name}} སྒོ་བརྒྱབ་ཟིན"
-couldNotSave = "{{name}} ཉར་མ་ཐུབ"
 filesReordered_one = "ཡིག་ཆའི་གོ་རིམ་བསྐྱར་སྒྲིག་བྱས"
 filesReordered_other = "ཡིག་ཆ {{count}} ཡི་གོ་རིམ་བསྐྱར་སྒྲིག་བྱས"
 loadedFromStorage_one = "ཉར་སྣོད་ནས་ཡིག་ཆ {{count}} བླངས"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "PDF དཔེ་མཛོད"
 myFiles = "ཡིག་ཆའི་མཛོད"
 noFiles = "ད་ཚུན་ཡིག་ཆ་མེད"
+oneDrive = "OneDrive ནས་ཁ་ཕྱེ"
+oneDriveFailed = "OneDrive ཁ་ཕྱེ་མ་ཐུབ"
 openFileManager = "ཡིག་ཆ་དང་ཡིག་ཁུག་ཚང་མ་བཤེར་ལྟ"
 openFromComputer = "གློག་ཀླད་ནས་ཁ་ཕྱེ"
 openSettings = "སྒྲིག་སྟངས་ཁ་ཕྱེ"
@@ -4804,6 +5076,17 @@ searchFiles = "ཡིག་ཆ་འཚོལ"
 uploadFailedBody = "བདམས་པའི་ཡིག་ཆ་ཁ་སྣོན་མ་ཐུབ།"
 uploadFailedTitle = "ཡར་སྐུར་མ་ཐུབ"
 viewAll = "{{count}} ཡིག་ཆ་ཚང་མ་ལྟ"
+
+[fileSidebar.clearRecents]
+body_one = "ཉེ་དུས་ཡིག་ཆ 1 བསལ་དམ། འདི་ལོག་མི་ཐུབ།"
+body_other = "ཉེ་དུས་ཡིག་ཆ {{count}} བསལ་དམ། འདི་ལོག་མི་ཐུབ།"
+button = "ཉེ་དུས་བསལ"
+confirm = "ཉེ་དུས་བསལ"
+error = "བསལ་མ་ཐུབ། ཡང་བསྐྱར་ཚོད་ལྟ།"
+openNote_one = "དེ་ཚོའི་ནང་ 1 ཡིག་ཆ་ལས་ལྟེན་ནས་ཁང་ལས་ནས་ཁ་ཕྱེ་ཡོད།"
+openNote_other = "{{count}} ཡིག་ཆ་ཁང་ལས་ནས་ཁ་ཕྱེ་ཡོད།"
+skipOpen = "ཁ་ཕྱེས་པ་མཆོངས"
+title = "ཉེ་དུས་བསལ་དམ།"
 
 [fileSidebar.fileItem]
 closeViewer = "མཐོང་ཆས་ཁ་རྒྱག"
@@ -5124,6 +5407,7 @@ diskFileHint = "ཁྱེད་ཀྱི་གློག་ཀླད་ཐོག�
 diskHint = "ཁྱེད་ཀྱི་སྡུད་སྡེར་ཐོག mount བྱས་པའི་ཡིག་ཁུག་ནང་གི་ཡིག་ཆ"
 local = "རང་ས"
 localHint = "གྲབས་ཉར་མེད"
+oneDrive = "OneDrive"
 shared = "མཉམ་སྤྱོད"
 sharedHint = "འབྲེལ་མཐུད་བརྒྱུད་ནས་མཉམ་སྤྱོད"
 
@@ -5672,6 +5956,11 @@ title = "མེ་ཊ་ཌ་ཏ་བསྒྱུར་བ།"
 desc = "ཡིག་ཆའི་ཚད་བཀག་དང་ཆོག་མཆན་བསྒྱུར་བ།"
 tags = "permissions,restrictions,rights,access control,allow,deny,པར་འདེབས,འདྲ་བཤུས,རྩོམ་སྒྲིག,permissions བཟོ་བཅོས,security settings,སྤྱོད་མཁན་ཐོབ་ཐང"
 title = "འཕོ་འགྱུར།"
+
+[home.checkAccessibility]
+desc = "PDF ཞིབ་བཤེར་བྱས་ PDF/UA ལྟར་ཚད་འཇལ་ཞིང་ screen reader ལ་གོམ་འགྲོ་བྱེད་པ་ག་རེ་ཡིན་མཐོང་། ཡིག་ཆ་བསྒྱུར་མེད།"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "PDF འཇུག་སྤྱོད་སླ་བ་ཞིབ་བཤེར"
 
 [home.classify]
 desc = "ཡིག་ཆ་འདི་རིགས་གང་ཡིན་པ་ངོས་འཛིན་བྱས་ནས་ཤོ་བྱང་སྦྱོར།"
@@ -6521,6 +6810,32 @@ quickAccess = "ཀློག་མཁན་དང་། རང་འགུལ་�
 topBar = "མཐོ་རིས་ཀྱིས་ཁྱེད་ལ་<strong>Viewer</strong> དང་། ​​<strong>ཤོག་ངོས་རྩོམ་སྒྲིག་པ</strong> དང་<strong>Active Files</strong> གཉིས་ཀྱི་བར་ལ་བརྗེ་རེས་བྱེད་ཐུབ།"
 wrapUp = "དེ་ནི་V2ནང་གསར་པ་རེད། འདི་བསྐྱར་དུ་བཤད་པར་དུས་ཚོད་གང་རུང་དང་། ལག་ཆའི་ཡུལ་སྐོར་ཡང་ན་འཛིན་སྐྱོང་སྐོར་སྐྱོད་ལ་དུས་ནམ་ཡང་<strong>ཡུལ་སྐོར་</strong>ཡི་རེའུ་མིག་ཁ་ཕྱེ།"
 
+[oneDriveSave]
+chooseFolder = "OneDrive ཡི་སྣོད་འཛིན་ཞིག་འདེམས་ནས་ཡར་འཇུག"
+conflict = "འདི་ལྟར་ཁ་ཕྱེས་པ་ཡང་ན་ཉར་ཚགས་བྱས་ནས་བྱུང་ OneDrive ནང་ཡིག་ཆ་བསྒྱུར་བྱས་འདུག ཁྱེད་ཀྱི་ཐོན་རིམ་དེ་དང་འདྲ་མིན་གྱི་དེབ་གཞིར་ཉར།"
+failedTitle = "OneDrive ལ་ཉར་མ་ཐུབ"
+fromOneDrive = "OneDrive ནས"
+linkNotStored = "འཛིན་གྲྭ་འདིས OneDrive ཡིག་ཆའི་འབྲེལ་ལམ་དྲན་མི་ཐུབ། སླར་སྒྲིག་བྱས་རྗེས་ དེབ་གཞི་གཞན་ཞིག་ཉར།"
+missing = "ཡིག་ཆ་འདི OneDrive ནས་སྤོ་ཡོད་ཡང་ན་བསུབས་ཡོད། ཁྱེད་ཀྱི་ཐོན་རིམ་དེ་དེབ་གཞི་གཞན་ཞིག་བྱས་ནས་ཉར།"
+open = "OneDrive ནས་ཁ་ཕྱེ"
+personalUnsupported = "OneDrive ལ་ཡར་འཇུག་བྱེད་པར་ Microsoft ལས་ཀ་ཡང་ན་ས་སྡེའི་རྩིས་ཐོ་དགོས།"
+reconnect = "ཡང་བསྐྱར་འབྲེལ"
+replaces = "{{name}} བརྗེ་བ"
+saveCopyToOneDrive = "OneDrive ནང་དེབ་གཞི་ཞིག་ཉར"
+saved = "OneDrive ལ་ཉར་ཟིན"
+saving = "OneDrive ལ་ཉར་བཞིན་..."
+signInToSave = "OneDrive ལ་ཉར་བར་སར་བར་ལ་ཐོ་འགོད་དགོས།"
+updateOriginal = "OneDrive ནང་གསར་སྒྱུར"
+uploadToOneDrive = "OneDrive ལ་ཡར་འཇུག་..."
+
+[oneDriveSave.status]
+saved = "OneDrive ལ་ཉར་ཟིན"
+unsaved = "OneDrive ལ་ཉར་མེད་པའི་བཟོ་བཅོས་ཡོད"
+
+[oneDriveSave.toolbar]
+replace = "OneDrive ནས {{name}} གསར་སྒྱུར"
+saveAll = "OneDrive ནང་ཚང་མ་གསར་སྒྱུར"
+
 [overlay-pdfs]
 desc = "གཞན་ཞིག་གི་སྟེང་དུ་PDFགཅིག་བཀབ་དགོས།"
 submit = "སྤྲོད་པ"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "སང་ཉིན་བསྐྱར་སྒྲིག"
 thisPeriod = "རྩིས་སྤྲོད་དུས་ཡུན་འདི"
 
 [payment]
+annually = "ལོ་རེས"
 billingPeriod = "རྩིས་སྤྲོད་དུས་ཡུན"
 cancelTeamChange = "ད་ལྟའི་འཆར་གཞི་ཉར"
 canCloseWindow = "ཁྱོད་ཀྱིས་ད་ལྟ་སྒེའུ་ཁུང་འདི་ཁ་རྒྱག་ཐུབ།"
@@ -7157,11 +7473,14 @@ title = "Team འཆར་གཞི་སྙོམས་སྒྲིག"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe ཡིས་ཁྱེད་ཀྱིས་གཏན་འཁེལ་མ་བྱས་གོང་གླ་དངོས། prorations གང་ཡོད། རྩིས་སྤྲོད་ཚེས་གྲངས་རྗེས་མ་བཅས་སྟོན་གྱི་རེད། ཡོད་ན་ཁྱེད་ཀྱི་ཉར་ཡོད་སྤྲོད་ཐབས་སྤྱོད་གྱི་རེད།"
+billingLabel = "གླ་ཆ་སྤྲོད་པ"
 continue = "སྤྲོད་པར་མུ་མཐུད"
 currencyAtCheckout = "checkout སྐབས་ Stripe ཡིས་མཐའ་མའི་གྲངས་འབོར་དང་སྤྲོད་དངུལ་རིགས་གཏན་འཁེལ་བྱེད།"
+custom = "རང་སྒྲིག"
 customLabel = "སྤྱོད་མཁན་གྲངས"
 dueToday = "དེ་རིང་སྤྲོད་དགོས"
 enterpriseQuote = "enterprise quote ལེན"
+enterUsers = "བཀོལ་མཁན་གྲངས་འཇུག་ནས།"
 estimatedTotal = "སྔོན་རྩིས་ཁྱོན"
 lineItem = "Team · སྤྱོད་མཁན་ {{block}} རེར་ {{price}}{{period}}"
 minimumForCurrentUsers = "ཁྱེད་ལ་སྤྱོད་མཁན་ {{users}} ཡོད་པས། འཆར་གཞིས་ཉུང་མཐར་ {{minimum}} ཁེབས་དགོས།"
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "ད་ཡོད་རྩིས་ཐོ་དེ་�
 overCapacityTitle = "ཁྱེད་ཀྱི་ཞབས་ཞུ་ཆས་ལ་འཆར་གཞིས་ཁེབས་པ་ལས་མང་བའི་སྤྱོད་མཁན་ཡོད"
 perMonth = "/ཟླ"
 perYear = "/ལོ"
+planName = "Stirling Team"
 reductionNote = "ཤོང་ཚད་དམའ་བ་དེ་ཁྱེད་ཀྱི་བསྐྱར་གསོ་རྗེས་མར་འགོ་ཚུགས། དེ་བར་ཁྱེད་ཀྱི་ད་ལྟའི་ཆོག་ཚད་སྤྱོད་ཆོག ད་ཡོད་སྤྱོད་མཁན་གནས། འགྱུར་བ་ནུས་སྐབས་ཁྱེད་ཤོང་ཚད་ལས་བརྒལ་ན་སྤྱོད་མཁན་གསར་པ་བཀག་ཡོད།"
 renewalNote = "{{total}}{{period}} ལ་བསྐྱར་གསོ། Usage & Billing ནང་དུས་ནམ་ཡང་དོར་ཆོག"
 reviewChange = "Stripe ནང་འགྱུར་བ་ཞིབ་ལྟ"
-roundsTo = "{{users}} ལ་སྒོར་སྒྲིལ"
+roundsUp = "{{users}} བཀོལ་མཁན་ལ་ཡོངས་སུ་བསྡུས།"
+selfServeLimit = "དེ་འདིར {{users}} བཀོལ་མཁན་བརྒལ་མི་ཆོག།"
 subheading = "ཁྱེད་ཀྱིས་གདན་འདྲེན་བྱེད་པ་ཚང་མ་སྤྱོད་མཁན་ {{users}} ཡི་ཚན་པར་ཁེབས།"
 subheadingAdd = "ཁྱེད་ཀྱི་འཆར་གཞིས་དེ་རིང་སྤྱོད་མཁན་ {{current}} ཁེབས། ཁྱོན་གསར་པ་འདེམས།"
+talkToEnterprise = "དེ་ལས་མང་བ་དགོས་ན་ Enterprise སྐོར་ང་ཚོས་གླེང་མོལ་བྱོས།"
+usersCovered = "བཀོལ་མཁན་ཁེབས་པ"
 usersLabel = "སྤྱོད་མཁན"
 userTotal = "སྤྱོད་མཁན་ {{users}}"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "ཁྱེད་ཀྱི workspace ནང་ཡིག་ཆར་
 tags = "ཡི་གེ་རྩོམ་སྒྲིག,ཡི་གེ་བཟོ་བཅོས,ཡི་གེ་བསྒྱུར,ནང་དོན་རྩོམ་སྒྲིག,ཡི་གེ་གསར་སྒྱུར,rewrite,བཅོས,amend,redline,revise,text editor,content editor"
 title = "PDFཡིག་འབྲིའི་རྩོམ་སྒྲིག་པ།"
 unsaved = "(མ་ཉར)"
-workbenchLabel = "རྩོམ་སྒྲིག་ཆས"
 
 [pdfTextEditor.annotations]
 freetext = "མཆན་འགྲེལ་ཡི་གེ - ཤོག་ངོས་ཡི་གེ་མིན་པས་འདིར་རྩོམ་སྒྲིག་མི་ཐུབ"
@@ -7261,12 +7583,18 @@ widget = "རེའུ་མིག་ས་ཁོངས - ཤོག་ངོས�
 
 [pdfTextEditor.commands]
 edit = "རྩོམ་སྒྲིག"
+markTagged = "ཡོངས་རྫོགས་ངོ་རྟགས་བཀོད་ཟིན་དུ་རྟགས"
+matchScanFont = "སྔོན་བཤར་ཡིག་ཚིག {{face}} ལ་མཐུན"
 mergeRuns_one = "run {{count}} དུམ་མཚམས་ཤིག་ཏུ་ཟླ་སྒྲིལ"
 mergeRuns_other = "runs {{count}} དུམ་མཚམས་ཤིག་ཏུ་ཟླ་སྒྲིལ"
 setColour = "{{run}} ལ་ཚོན་སྒྲིག"
 setOutline = "{{run}} ལ་ཕྱི་ཐིག་སྒྲིག"
+tagFormField = "དེབ་གཏུབ་ཡིག་སྒམ་ངོ་རྟགས"
+tagLink = "འབྲེལ་མཐུད་ངོ་རྟགས"
+tagPageContent = "ཤོག་ངོས་རང་འགུལ་ངོ་རྟགས"
 typeInto = "{{run}} ནང་ཡི་གེ་རྒྱག"
 ungroupParagraph = "དུམ་མཚམས་ {{run}} ཚོགས་དབྱེ"
+unmarkTagged = "ཡོངས་རྫོགས་ངོ་རྟགས་མ་ཡིན་དུ་རྟགས"
 wrap = "{{run}} ཕྲེང་བསྐྱར་སྒྲིག"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "དོར་ནས་ཁ་ཕྱེ"
 hint = "སྔོན་ལ་ཁྱེད་ཀྱི workspace ནང་ཉར་བར། དོར་ནས Save PDF བྱེད།"
 title = "ཉར་མེད་པའི་འགྱུར་བ་དོར་རམ།"
 
-[pdfTextEditor.drop]
-hint = "editor stage ཐོག་གློད་ན་ཁ་ཕྱེ་ཡོད་པའི་ཡིག་ཆ་གང་ཡིན་ཡང་ཚབ་བརྗེ་བྱེད།"
-title = "PDF གློད་ནས་ཁ་ཕྱེ"
-
 [pdfTextEditor.error]
 decodeImage = "བདམས་པའི་པར་རིས decode བྱེད་མ་ཐུབ།"
+duplicateDropsLetters = "ཡིག་ཚིག་འདི་གསར་འཛུགས་མི་ཚུལ། ཡིག་འབྲུ་ཚང་མ་བྲིས་ཐུབ་པའི་ཡིག་གཟུགས་མེད།"
+formLiftChangesDrawing = "འདི་ཞུན་དག་མི་ཐུབ། འདི་ནི་སྡེ་ཚན་ཞིག་གི་རིས་འགོད་ཁོངས་ནས་བྲིས་པ་ཡིན་པས་ བཅོས་སྒྱུར་སྐབས་སྒྲ་རྟགས་སྒྲིག་འགོད་དེ་ཉར་མི་ཐུབ།"
 insertImage = "བདམས་པའི་པར་རིས་འཇུག་མ་ཐུབ།"
+needsShaping = "ཞུན་དག་ཆས་ཀྱིས་ཡིག་རྟགས་མཐུན་པའི་སྐད་ཡིག་གི་འབྲུ་སྦྲེལ་དང་སྒྲ་རྟགས་ཡིག་རྟགས་ཀྱི་འབྲེལ་སྒྲིག་ད་དུང་ཡག་པོ་བྲིས་མི་ཐུབ། དེས་བཅོས་སྒྱུར་བྱས་མེད།"
+replaceClippedImage = "པར་རིས་འདི་བརྗེ་མི་ཐུབ། དེ་ནི་དྲས་གཏུབས་ཡོད་པས་ བརྗེས་ཚེ་དྲས་གཏུབས་ཀྱིས་སྦས་པ་མངོན་སྲིད།"
+scanOffInk = "ཡིག་ཚིག་འདི་ཞུན་དག་མི་ཐུབ། ངོས་འཛིན་གྲུབ་པའི་མིང་ཚིག་དྲས་བརྙན་དང་མཐུན་མི་འདུག ཡང་བསྐྱར OCR བཀོལ།"
+unsafeRtlEdit = "ཞུན་དག་འདི་མི་ཐུབ། ཞུན་དག་ཆས་ཀྱིས་འལོག་གཡས་ནས་གཡོན་ལ་ཡིག་ཚིག་ཕྲེང་འདི་བསྐྲུན་སེམས་བསྒྱུར་མི་ཐུབ།"
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG image"
@@ -7304,15 +7634,42 @@ wholeWord = "ཚིག་ཆ་ཚང"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "ནང་སྒྲིག fonts"
+closestMatch = "ཡིག་གཟུགས་འདིས་ཡིག་འབྲུ་ཁ་ཤས་མེད་པས་ དེ་ཚོ་ཉེ་འདྲ་མཐུན་མི་ཡིག་གཟུགས་ནང་བྲིས།"
 deviceFontsNone = "ཐེབས་ཆས་སྟེང་སྣོན་མའི fonts རྙེད་མ་བྱུང་།"
 deviceFontsUnavailable = "ཐེབས་ཆས fonts སྤྱོད་མི་ཐུབ། ནང་སྒྲིག fonts ད་དུང་ལས་ཀ་བྱེད།"
 deviceGroup = "ཐེབས་ཆས fonts"
+documentFontCannotDraw = "ཞུན་དག་ཆས་ཀྱིས་ཡིག་ཆའི་རང་ཉིད་ཀྱི་ཡིག་གཟུགས་ནང་ཡིག་ཚིག་འདི་བྲིས་མི་ཐུབ། དེས་ཡིག་གཟུགས་ད་ལྟའི་དུས་སུ་བཞག"
 documentGroup = "ཡིག་ཆའི font"
+embeddingForbidden = "ཡིག་གཟུགས་འདིའི་ཆོག་མཆན་ནི PDF ནང་འཇུག་མི་ཆོག ཡིག་ཚིག་མ་བསྒྱུར།"
+embedFailed = "ཡིག་གཟུགས་འདི་ PDF ནང་འཇུག་མ་ཐུབ། ཡིག་ཚིག་མ་བསྒྱུར།"
+includedGroup = "ནང་འཇུག་ཡིག་གཟུགས"
 label = "ཡིག་གཟུགས་ཁྱིམ་ཚང"
+matchedGroup = "མཐུན་པའི་ཡིག་གཟུགས"
+missingGlyphs = "ཡིག་གཟུགས་འདི་ལ་ཡིག་འབྲུ་ཁ་ཤས་མེད་པས་ དེ་ཚོ་ད་ལྟའི་ཡིག་གཟུགས་ནང་ཉར་མི་ཐུབ། ཡིག་ཚིག་མ་བསྒྱུར།"
 mixed = "བསྲེས་མ"
+needsShaping = "ཞུན་དག་ཆས་ཀྱིས་སྐད་ཡིག་འདིའི་འབྲེལ་སྒྲིག་ཡག་པོ་བྲིས་མི་ཐུབ། དེས་དེ་ཚོ་ད་ལྟའི་ཡིག་གཟུགས་ནང་བཞག"
+noGlyphs = "ཡིག་གཟུགས་འདིས་འདེམས་པའི་ཡིག་ཚིག་ལ་ཡིག་འབྲུ་མེད། ཡིག་ཚིག་མ་བསྒྱུར།"
 noMatch = "མཐུན་པའི font མེད"
+partOfRunUnsupported = "ཡིག་ཚིག་འདི་ཧྲིལ་བོས་རྣམ་བཞག་བཅོས་ཙམ་བྱ་ཐུབ། ཚིག་སྒྲོམ་ཧྲིལ་བོ་འདེམས།"
 placeholder = "ཡིག་གཟུགས་ཁྱིམ་ཚང"
+scannedText = "སྔོན་བཤར་ཡིག་ཚིག"
+serverFontFailed = "སར་བར་ཡིག་གཟུགས་དེ་ཕབ་ལེན་མ་ཐུབ། ཡིག་ཚིག་མ་བསྒྱུར།"
+serverGroup = "སར་བར་ཡིག་གཟུགས"
+someLeftUnchanged = "ཡིག་གཟུགས་འདིས་འདེམས་པའི་ཡིག་ཚིག་ཁ་ཤས་ལ་ཡིག་འབྲུ་མེད། དེ་ཚོ་ཡིག་ཚིག་མ་བསྒྱུར།"
+styleSkipped = "འདེམས་པའི་ཡིག་ཚིག་ཁ་ཤས་ལ་དེའི་ཡིག་གཟུགས་ཀྱི་སྣ་ཚོགས་མིན་པས་ དེ་ཚོ་མི་བསྒྱུར།"
+styleUnavailable = "འདེམས་པའི་ཡིག་ཚིག་ལ་དེའི་ཡིག་གཟུགས་སྣ་ཚོགས་མེད་པས་ དེ་ཚོ་མི་བསྒྱུར།"
 useDeviceFonts = "ཐེབས་ཆས fonts སྤྱོད"
+weight = "ཡིག་གཟུགས་སྒྱིལ་ཚད"
+weightBlack = "Black"
+weightBold = "Bold"
+weightExtraBold = "Extra bold"
+weightExtraLight = "Extra light"
+weightLight = "Light"
+weightMedium = "Medium"
+weightNumber = "Weight {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Semibold"
+weightThin = "Thin"
 
 [pdfTextEditor.fonts]
 allPresent = "ཡི་གེ་དང་གྲངས་ཀ་ཚང་མ་ཡོད"
@@ -7357,6 +7714,7 @@ helpDesc = "རོགས་རམ་འདི"
 saveDesc = "ཁྱེད་ཀྱི workspace ལ་ཉར"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Bold / Italic — འདེམས་པའི་མིང་ཚིག་ཡང་ན་སྒམ་ཧྲིལ་བོར"
 deleteDesc = "བདམས་པ་སུབ"
 duplicateDesc = "བདམས་པ་འདྲ་བཤུས་གསར་བཟོ"
 groupDesc = "བདམས་པའི runs དུམ་མཚམས་གཅིག་ཏུ་སྡེ་ཚན་བཟོ"
@@ -7380,8 +7738,12 @@ zoomDesc = "ཆེར་སྐྱེད / ཆུང་སྐྱུང"
 
 [pdfTextEditor.inspector]
 document = "ཡིག་ཆ"
+fontCompletedClosest = "ནང་འཇུག་ཡིག་གཟུགས · མི་འདུག་པའི་ཡིག་འབྲུ་ཚོ་ {{name}} ཉེ་འདྲ་མཐུན་མི་ཡིག་གཟུགས་ནང་བྲིས།"
+fontCompletedOriginal = "ནང་འཇུག་ཡིག་གཟུགས · མི་འདུག་པའི་ཡིག་འབྲུ་ཚོ་ {{name}} མཚུངས་པའི་ཡིག་གཟུགས་ནང་བྲིས།"
 fontEmbedded = "Embedded font · དེར་མེད་པའི་ཡིག་རྟགས་ Helvetica ལ་ཕྱིར་ལོག"
 fontGap = "{{name}} · {{glyphs}} མེད - དེ་ཚོ་རྒྱག་སྐབས་ Helvetica ལ་ཕྱིར་ལོག"
+fontUnknownCoverage = "{{name}} · མི་འདུག་པའི་ཡིག་འབྲུ་ཞིག་ {{fallback}} ལ་སྐྱོན་བརྗེས།"
+formField = "དེབ་གཏུབ་ཡིག་སྒམ"
 geometry = "གནས་ས་དང་ཆེ་ཆུང"
 height = "མཐོ་ཚད"
 heightHint = "ཡི་གེ་སྒྲོམ་གྱི་མཐོ་ཚད་དེ་དེའི་ཡིག་ཆེ་ཆུང་དང་ཕྲེང་གྲངས་ལྟར་འགྲོ།"
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR ཞབས་ཞུ་ཆས་འདིར་སྤྱོ�
 oneImage = "པར་རིས"
 oneShape = "དབྱིབས"
 oneText = "ཡི་གེ"
+outlinedTextHint_one = "ཤོག་ངོས་འདིའི་ཡིག་ཚིག་གྲུ་གཟུགས་སྒྲིག་རྣམ་པས་བྲིས་པས་ ཞུན་དག་མི་ཐུབ། དང་པོ OCR བཀོལ།"
+outlinedTextHint_other = "ཤོག་ངོས {{count}} ལ་ཡིག་ཚིག་གྲུ་གཟུགས་སྒྲིག་རྣམ་པས་བྲིས་པས་ ཞུན་དག་མི་ཐུབ། དང་པོ OCR བཀོལ།"
 pages = "ཤོག་ངོས"
 runOcr = "OCR སྒྲུབ"
 scanHint_one = "ཤོག་ངོས་འདི་རྩོམ་སྒྲིག་བྱ་རྒྱུའི་ཡི་གེ་མེད་པའི scanned image རེད། ཡི་གེ་རྩོམ་སྒྲིག་ཐུབ་པར་སྔོན་ལ OCR སྒྲུབ།"
 scanHint_other = "ཤོག་ངོས་ {{count}} ནི་རྩོམ་སྒྲིག་བྱ་རྒྱུའི་ཡི་གེ་མེད་པའི scanned images རེད། དེ་ཚོའི་ཡི་གེ་རྩོམ་སྒྲིག་ཐུབ་པར་སྔོན་ལ OCR སྒྲུབ།"
 scannedText = "Scanned text · བསྒྱུར་བའི་ཚིག་དེ་ཚོ་འགེབས་ནས་མཐུན་པའི font ནང་ཡང་བསྐྱར་འབྲི།"
+scannedTextMisaligned = "སྔོན་བཤར་ཡིག་ཚིག · ངོས་འཛིན་གྲུབ་པའི་མིང་ཚིག་དྲས་བརྙན་དང་མཐུན་མི་འདུག འདི་སྒམ་ཞིག་ཞུན་དག་དང་བསུབས་མི་ཐུབ།"
+scannedTextNoFont = "སྔོན་བཤར་ཡིག་ཚིག · སྐད་ཡིག་འདིའི་འབྲེལ་སྒྲིག་ཡིག་ཚིག་འབྲི་མི་ཐུབ། ཡིག་ཚིག་བསུབ་པ་ནི་བྱ་ཐུབ།"
+scannedTextOffInk = "སྔོན་བཤར་ཡིག་ཚིག · ངོས་འཛིན་ཡིག་ཚིག་དྲས་ཡིག་ཚིག་ལས་འཕྱིས་པས་ སྒམ་འདི་ཞུན་དག་མི་ཐུབ། OCR ཡང་བསྐྱར་བཀོལ།"
 tabDocument = "ཡིག་ཆ"
 tabSelected = "བདམས་པ"
 textBoxes = "ཡི་གེ་སྒྲོམ"
+unreadPagesHint = "ཤོག་ངོས {{count}} ལ་ཞུན་དག་བྱ་རུང་ཡིག་ཚིག་མེད། ཁ་ཤས་སྔོན་བཤར་ཡིག་ཚིག་དང་ ཁ་ཤས་ཡིག་ཚིག་གྲུ་གཟུགས་སྒྲིག་རྣམ་པས་བྲིས་པ་ཡིན། OCR དང་པོ་བཀོལ།"
 width = "ཞེང་ཚད"
 widthHint = "ཡི་གེ་ཞེང་ཚད་ལ་འཚམ་པར་ཕྲེང་བསྐྱར་སྒྲིག་བྱེད།"
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "མཚོན་རྟགས་སྣོན"
+applyToOtherPages_one = "ཤོག་ངོས་གཞན {{count}} ལ་པེར་སྤྱོད"
+applyToOtherPages_other = "ཤོག་ངོས་གཞན {{count}} ལ་པེར་སྤྱོད"
+artifactGroup = "screen reader ཚོས་མཆོངས"
 artifactText = "མཛེས་བཟོ"
 cannotChange = "པར་རིས་འདིའི་འཛུལ་སྤྱོད་སྟབས་བདེ་བསྒྱུར་མི་ཐུབ།"
+cannotDescribeFormField = "དེབ་གཏུབ་ཡིག་སྒམ་འདིའི་འགྲེལ་བཤད་བསྒྱུར་མི་ཐུབ།"
+cannotDescribeLink = "འབྲེལ་མཐུད་འདིའི་འགྲེལ་བཤད་བསྒྱུར་མི་ཐུབ།"
 cannotRetag = "ཡི་གེ་འདིའི་མཚོན་རྟགས་བསྒྱུར་མི་ཐུབ།"
+cannotSetDecorative = "འདི་རྒྱན་ཆས་དང་མིན་པར་མཚོན་མི་ཐུབ།"
+cannotTagFormField = "དེབ་གཏུབ་ཡིག་སྒམ་འདི་ངོ་རྟགས་མི་ཐུབ།"
+cannotTagLink = "འབྲེལ་མཐུད་འདི་ངོ་རྟགས་མི་ཐུབ།"
+cannotTagPage = "ཤོག་ངོས་འདིའི་ནང་དོན་ངོ་རྟགས་མི་ཐུབ།"
+contentGroup = "ནང་དོན"
 customTag = "{{role}} (རང་བཟོས་མཚོན་རྟགས)"
 decorativeInfo = "བརྙན་ཡོལ་ཀློག་ཆས་ཀྱིས་མཛེས་བཟོའི་པར་རིས་མཆོངས་འགྲོ། མཐའ་སྒྲོམ། རྒྱབ་ལྗོངས། ཆ་འཕྲིན་མེད་པའི་པར་རིས་གཞན་ལ་སྤྱོད།"
 decorativeLabel = "མཛེས་བཟོའི་པར་རིས"
 description = "པར་རིས་འགྲེལ་བཤད"
 descriptionInfo = "བརྙན་ཡོལ་ཀློག་ཆས་ཀྱིས་འདི་པར་རིས་ཀྱི་ཚབ་ཏུ་ཀློག"
 encrypted = "གསང་སྡོམ་བྱས་པའི་ཡིག་ཆའི་ནང་མཚོན་རྟགས་རྩོམ་སྒྲིག་མི་ཐུབ"
+figureDescription = "དཔེ་རིས་ཀྱི་འགྲེལ་བཤད"
+figureDescriptionInfo = "Screen reader ཡིས་དཔེ་རིས་ཀྱི་ཚབ་ཏུ་འདི་སྐད་ཀྱིས་ཀློག་དོ།"
+formFieldDescription = "ཡིག་སྒམ་འགྲེལ་བཤད"
+formulaDescription = "Formula འགྲེལ་བཤད"
+formulaDescriptionInfo = "Screen reader ཡིས་ formula གི་ཚབ་ཏུ་འདི་སྐད་ཀྱིས་ཀློག་དོ། ཁྲོད་སྐད་དུ་ལྟར་བཤད་དགོས་པས། དཔེར་ན \"x squared plus one\" ལྟ་བུ།"
 heading = "འཛུལ་སྤྱོད་སྟབས་བདེ"
 innerTagLabel = "མཚོན་རྟགས་ {{number}}"
 innerTags = "ཡི་གེ་འདིའི་ནང་གི་མཚོན་རྟགས"
+linkDescription = "འབྲེལ་མཐུད་འགྲེལ་བཤད"
+markedTagged = "ཡིག་ཆ་ཡོངས་རྫོགས་ངོ་རྟགས་ཡོད"
+markedTaggedHint = "PDF ཀློག་ཆས་ལ་འཇུག་སྤྱོད་སླ་བའི་ངོ་རྟགས་སྤྱོད་ཟེར་བརྡ་ཐུབ། ཡོངས་རྫོགས་ངོ་རྟགས་བཀོད་ཚར་རྗེས་རྟགས་བཀལ།"
+markedWithUntagged = "ནང་དོན་ཁ་ཤས་ལ་ངོ་རྟགས་མེད་པས་ screen reader ཚོས་མཆོངས་སྲིད།"
 missingDescriptions = "འགྲེལ་བཤད་ཆད་པ"
 mixedContent = "པར་རིས་ནང་ནང་དོན་གཞན་འདུས་ཡོད"
+mixedTags = "མཉམ་སྦྲེལ"
 needsDescriptionBadge = "འགྲེལ་བཤད་མེད"
-nextImage = "པར་རིས་རྗེས་མ"
+nextToReview = "རྗེས་མ་བསྐྱར་ཞིབ"
 notFigure = "ཡི་གེའི་ཆ་ཤས་སུ་མཚོན་རྟགས་བཏགས་ཡོད"
 removeTag = "མཚོན་རྟགས་སུབ"
 saveFailed = "ཁྱེད་ཀྱི་འཛུལ་སྤྱོད་སྟབས་བདེའི་བཟོ་བཅོས་ཉར་ཚགས་མ་ཐུབ་པས། ཡིག་ཆ་ཉར་ཚགས་མ་བྱས། དེ་དག་ཕྱིར་བཤོལ་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
 selectedText = "བདམས་པའི་ཡི་གེ"
+tagFormField = "དེབ་གཏུབ་ཡིག་སྒམ་ངོ་རྟགས"
+tagging = "ཤོག་ངོས་ངོ་རྟགས་བཀོལ་བཞིན་"
 tagLabel = "མཚོན་རྟགས"
+tagLinks_one = "འབྲེལ་མཐུད་ངོ་རྟགས"
+tagLinks_other = "འབྲེལ་མཐུད {{count}} ངོ་རྟགས"
+tagUntagged = "ཡིག་ཆ་རང་འགུལ་ངོ་རྟགས"
+tagUntaggedHint = "ཡིག་ཆ་ཧྲིལ་བོར་འཇུག་སྤྱོད་སླ་བའི་ངོ་རྟགས་རང་འགུལ་ངང་ཁ་སྣོན། མཐའ་འཁྱོལ་འདི་ཕྲ་མོ་ཡིན་པས་ ཁ་བྱང་། རེའུ་མིག དང་ཀློག་གོ་རིམ་ལ་བསྐྱར་ཞིབ་བྱོས།"
 unknownTag = "འདིར་ཀློག་མི་ཐུབ"
+unmarkedWithTags = "PDF ཀློག་ཆས་ཁ་ཤས་ལ་ངོ་རྟགས་སྤྱོད་པར་སྲིད་པས་ ངོ་རྟགས་མེད་པའི་ནང་དོན་མཆོངས་སྲིད།"
 unreadable = "ཡིག་ཆ་འདིའི་མཚོན་རྟགས་རྩོམ་སྒྲིག་མི་ཐུབ"
 untaggableImages = "འདིར་མཚོན་རྟགས་བཏགས་མི་ཐུབ"
 untaggedBadge = "མཚོན་རྟགས་མ་བཏགས"
 untaggedDocument = "ཡིག་ཆར་མཚོན་རྟགས་མེད"
 untaggedImage = "འདིར་མཚོན་རྟགས་བཏགས་མི་ཐུབ"
 untaggedImages = "མཚོན་རྟགས་མ་བཏགས་པའི་པར་རིས"
+untaggedPages = "ངོ་རྟགས་བཀོལ་དགོས་པའི་ཤོག་ངོས"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "མཇུག་འདེབས"
+header = "ཁ་བྱང་སྒང་"
+pageNumber = "ཤོག་ཨང་"
+watermark = "Watermark"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "ཡི་གེ་མེད་པའི་ཁ་བྱང"
@@ -7505,6 +7907,23 @@ tableHeader = "རེའུ་མིག་གི་ཁ་བྱང"
 tableRow = "རེའུ་མིག་གི་ཕྲེང"
 title = "མཚན་བྱང"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "སྐད་ཡིག་ཚང་མ"
+cannotSetDocument = "ཡིག་ཆ་འདིའི་སྐད་ཡིག་བསྒྱུར་མི་ཐུབ།"
+cannotSetText = "ཡིག་ཚིག་འདིའི་སྐད་ཡིག་བསྒྱུར་མི་ཐུབ།"
+documentHint = "ཡིག་ཆའི་སྐད་ཡིག — དེར་མེད་ན་ཡིག་ཚིག་ཁ་ཤས་རང་ཉིད་ཀྱི་སྐད་ཡིག་སྒྲིག་པ་ཡིན།"
+documentLabel = "སྐད་ཡིག"
+documentLocked = "གསང་སྡོམ་ཡོད་པའི་ཡིག་ཆའི་སྐད་ཡིག་ནཱ་ལ་བསྒྱུར་མི་ཐུབ།"
+inDocument = "ཡིག་ཆ་འདིར"
+innerLabel = "ངོ་རྟགས {{number}} སྐད་ཡིག"
+label = "སྐད་ཡིག"
+missing = "སྐད་ཡིག་མེད། screen reader ཚོས་ཚོར་བསླུངས་ནས་ ཡིག་ཆ་ཧྲིལ་བོ་སྐད་ཡིག་ཕྱི་རོལ་གྱིས་ཀློག་སྲིད།"
+mixed = "མཉམ་སྦྲེལ"
+noMatch = "མཐུན་སྐད་མེད། དེའི་ཚོད་རྟགས་ཨང་འཇུག — དཔེ་མཚོན mt ཡང་ན་ en-IE བཟུམ།"
+placeholder = "སྐད་ཡིག་འདེམས"
+selectedText = "འདེམས་པའི་ཡིག་ཚིག་སྐད་ཡིག"
+textHint = "screen reader ཚོས་སྐད་སྒྱུར་དང་སྒྲ་གཞི་འདི་སྐད་ཡིག་ལ་འགྱུར།"
+
 [pdfTextEditor.mobile]
 actions = "Editor བྱ་སྤྱོད"
 addImage = "པར་རིས"
@@ -7517,7 +7936,6 @@ done = "ཟིན"
 download = "ཉར་ནས་ཕབ་ལེན"
 find = "འཚོལ"
 lock = "སྒོ་རྒྱག"
-openPdf = "PDF ཁ་ཕྱེ"
 panelHint = "རྩོམ་སྒྲིག་ནི Workspace མཐོང་རིས་ནང་བྱེད། ཤོག་ངོས་ཐོག་ཡི་གེ་མནན་ནས་བསྒྱུར།"
 save = "ཉར"
 style = "བཟོ་ལྟ"
@@ -7525,7 +7943,6 @@ tapToPlace = "ཡི་གེ་འཇོག་སའི་ཤོག་ངོས
 unlock = "སྒོ་ཕྱེ"
 
 [pdfTextEditor.pageView]
-pageNumber = "ཤོག་ངོས་ {{page}}"
 renderFailed = "ཤོག་ངོས render བྱེད་ཕམ"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "གཞུང་ཕྱོགས ruler"
 
 [pdfTextEditor.run]
 lockedTitle = "སྒོ་རྒྱབ་ཡོད - རྩོམ་སྒྲིག་ལ Unlock མཐེབ་སྤྱོད"
+readOnlyOrderTitle = "སྡེ་ཚན་འདིའི་ཡིག་ཚིག་ཞུན་དག་མི་ཐུབ། གཡས་ནས་གཡོན་དང་གཡོན་ནས་གཡས་སྦྲེལ་མི་གོ་རིམ་ཡོད་པས་ཞུན་དག་ཆས་ཀྱིས་བསྐྲུན་མི་ཐུབ།"
+resizeHandle = "ཞེང་ཚད་བསྒྱུར་བར་འདྲུད། ཡིག་ཚིག་ལྟེབ་སྒྲིག་བྱེད།"
 
 [pdfTextEditor.saveRisk]
 cancel = "དོར"
@@ -7548,6 +7967,35 @@ intro = "རྩོམ་སྒྲིག་བྱས་པའི་འདྲ་�
 note = "ཁྱེད་ཀྱི་རྩོམ་སྒྲིག་ཉར་ཡོད། གོང་དུ་བཀོད་པའི་འགྱུར་བ་དེ་ཚོ་རྩོམ་སྒྲིག་འདྲ་བཤུས་ཉར་སྐབས་གཡོལ་མི་ཐུབ།"
 saveAnyway = "གང་ལྟར་ཉར"
 title = "ཉར་ན་རྒྱུན་ PDF འདི་འགྱུར་གྱི་རེད"
+
+[pdfTextEditor.scanFont]
+approximate = "ཉེ་འདྲ་མཐུན"
+approximateHint = "མཐུན་མི་ཡིག་གཟུགས་ཉེ་ཤེས་ཀྱང་ དྲས་བརྙན་དང་ཆ་མཚུངས་མིན་སྲིད།"
+change = "ཡིག་གཟུགས་མཐོང་ཚུལ་མི་འགྲིག་གས།"
+choose = "ཡིག་གཟུགས་འདེམས"
+chooseMissing = "ཡིག་ཚིག་འདིའི་ཡིག་གཟུགས་འདེམས་..."
+compare = "ཡིག་གཟུགས་བསྡུར་..."
+deviceAllow = "ཡིག་གཟུགས་ལ་འཛུལ་སྤྱོད་ཆོག་བཟོས་ནས་མཐུན་ཚུལ་ཡག་པོ་བྱེད"
+deviceBlocked = "ཡིག་ཚང་གིས་ད་ནས་མ་འདྲིས། ཆོག་བཟོ་དགོས་ན་ ཤག་གནས་མདུན་ཕྱོགས་ཀྱི་རིགས་རྟགས་ལུས་ནས་ Fonts ལ་ཁ་ཕྱེས་པའི་རྗེས་ཡང་བསྐྱར་ཚོད་ལྟ།"
+deviceBlockedTitle = "ཡིག་གཟུགས་ལ་འཛུལ་སྤྱོད་བཀག་སྡམས"
+deviceNone = "སྤྱོད་བཞིན་པའི་ཡིག་ཆ་ལ་སྤྱོད་དགོས་པའི་ཡིག་གཟུགས་སྤྱིར་བཏང་ཚང་མ་འདེམས་ཐུབ་མ་སོང་།"
+deviceNote = "ཡིག་ཚང་གིས་ཐོག་མ་དྲིས། ཡིག་གཟུགས་ཚང་མ་སྒྲུབ་སྟངས་འདི་སྒེར་གནས་ནས་ཡོང་།"
+deviceOn_one = "མ་ལག་འདི་ནས་ཡིག་གཟུགས {{count}} ཡང་བསྡུར།"
+deviceOn_other = "མ་ལག་འདི་ནས་ཡིག་གཟུགས {{count}} ཡང་བསྡུར།"
+deviceReading = "མ་ལག་འདིའི་ཡིག་གཟུགས་ཀློག་བཞིན་..."
+deviceRetry = "ཡང་བསྐྱར་ཚོད་ལྟ"
+done = "ཚར་བ"
+hint = "ཁྱེད་ཀྱིས་བྲིས་པ་ནི་ཉེ་འདྲ་མཐུན་མི་ཡིག་གཟུགས་ནང་བྲིས། དྲས་བརྙན་ལ་བཟུམ་པ་ཡིག་གཟུགས་འདེམས།"
+hintFromScan = "ཁྱེད་ཀྱིས་བྲིས་པ་ནི་དྲས་བརྙན་ནས་ཡིག་འབྲུ་མཐོང་བའི་ནང་ནས་བཟོས། ཡིག་གཟུགས་འདེམས་ནས་དེའི་ཡིག་གཟུགས་ནང་བྲིས།"
+hintOthers = "ཁྱེད་ཀྱིས་འདེམས་པ་དེ་ཡང་ ད་དུང་ཞུན་དག་མི་བྱས་པའི་སྔོན་བཤར་ཡིག་ཚིག་ལ་ཡང་སྤྱོད།"
+matching = "ཡིག་གཟུགས་མཐུན་བཞིན་..."
+noFont = "སྐད་ཡིག་འདི་བྲིས་ཐུབ་པའི་ཡིག་གཟུགས་མེད་པས་ ཡིག་ཚིག་འབྲི་མི་ཐུབ།"
+scan = "གདོང་ངོས་དྲས་བརྙན"
+scanAlt = "སྔོན་བཤར་གྱི་ཐིག་ཕྲེང"
+scanNote = "དྲས་བརྙན་ནི་ཡིག་གཟུགས་དང་བསྡུར་ནས་དྲགས་པ་དང་རྐྱང་བ་སྲིད། ཁ་གདོང་གྱི་བཟོ་ཉམས་ལ་བསྡུར།"
+score = "{{match}}% འདྲ་མཐུན"
+title = "སྔོན་བཤར་ཡིག་གཟུགས་མཐུན"
+unmeasurable = "དྲས་བརྙན་འདི་མི་ཚད་འཛིན་པས་ ཡིག་གཟུགས་མཐུན་མི་ཐུབ།"
 
 [pdfTextEditor.settings]
 advanced = "སྔོན་ཐོན"
@@ -7564,7 +8012,6 @@ addTable = "རེའུ་མིག་ཁ་སྣོན"
 addText = "ཡི་གེ་སྣོན"
 clickPageToAddTable = "རེའུ་མིག་ཁ་སྣོན་ཕྱིར་ཤོག་ངོས་ལ་གནོན"
 clickPageToAddText = "ཡི་གེ་སྣོན་པར་ཤོག་ངོས་མནན"
-document = "ཡིག་ཆ"
 group = "སྡེ་ཚན"
 groupingAuto = "རང་འགུལ"
 groupingAutoHint = "བར་ཐག་མཉམ་པའི་ཕྲེང་དེ་ཚོ་དུམ་མཚམས་སུ་སྡེ་ཚན་བཟོ། འདི་བསྒྱུར་ན་ཡིག་ཆ་ཡང་བསྐྱར་ཀློག་ནས undo ལོ་རྒྱུས་གཙང་སེལ་བྱེད།"
@@ -7593,23 +8040,17 @@ auto = "རང་འགུལ"
 enable = "ཡི་གེ་རྒྱག་སྐབས་སྡེབ་དག་ཞིབ་བཤེར"
 language = "ཚིག་མཛོད་སྐད་ཡིག"
 
-[pdfTextEditor.stage]
-loadingDocument = "ཡིག་ཆ་འཇུག་བཞིན"
-loadingProgress = "འཇུག་བཞིན་པའི་འཕེལ་རིམ"
-noDocument = "ཡིག་ཆ་འཇུག་མེད།"
-pickPrompt = "རྩོམ་སྒྲིག་འགོ་འཛུགས་པར་གཡོན་གྱི Files panel ནས PDF ཞིག་འདེམས།"
-renderingPreview = "སྔོན་ལྟ render བྱེད་བཞིན"
-
 [pdfTextEditor.table]
 addColumn = "ཀ་ཐིག་ཁ་སྣོན"
 addRow = "ཕྲེང་ཁ་སྣོན"
+cellNoGlyphs = "ལེའུ་ནང་ཡིག་ཚིག་འདིར་ ཐིག་ཁྲམ་ཡིག་གཟུགས་ཀྱིས་བྲིས་མི་ཐུབ་པའི་ཡིག་འབྲུ་ཡོད། གང་ཡང་བསྒྱུར་ཡང་ན་བསུབས་ཏེ་འགྲེམས།"
 column = "ཀ་ཐིག"
 deleteColumn = "ཀ་ཐིག་སུབ"
 deleteRow = "ཕྲེང་སུབ"
 done = "ལེགས་གྲུབ"
 doneHint = "འདི་རེའུ་མིག་ལྟར་རྩོམ་སྒྲིག་བྱེད་པ་མཚམས་འཇོག"
-edit = "རྩོམ་སྒྲིག"
 editHint = "རེའུ་མིག་ལྟར་རྩོམ་སྒྲིག - cells ནང་ཡིག་འཇུག་བྱེད་པ། ཕྲེང་དང་ཀ་ཐིག་ཁ་སྣོན་ཡང་ན་སུབ་པ"
+editTable = "ཐིག་ཁྲམ་ཞུན་དག"
 move = "སྤོ"
 moveTable = "རེའུ་མིག་ཧྲིལ་པོ་སྤོ་ཕྱིར་འདྲུད"
 recognizedHint = "ངོས་འཛིན་བྱས་པའི་རེའུ་མིག - ཡི་གེ་ཡོད་ཚད་འདེམས་ཕྱིར་གནོན"
@@ -7630,6 +8071,9 @@ alignMiddle = "དཀྱིལ་མར་སྙོམས"
 alignRight = "གཡས་ལ་སྙོམས"
 alignTop = "སྟེང་ལ་སྙོམས"
 arrange = "སྒྲིག"
+bold = "Bold"
+boldOnly = "ཡིག་གཟུགས་འདི་ལ་ Bold ཙམ་ཡོད།"
+boldUnavailable = "ཡིག་གཟུགས་འདི་ལ་ Bold མེད།"
 bringForward = "མདུན་དུ་འདྲུད"
 bringToFront = "མདུན་ཤོས་སུ་འདྲུད"
 caseLower = "ཡིག་ཆུང"
@@ -7650,10 +8094,12 @@ fontColour = "Font ཚོན"
 fontSize = "ཡིག་གཟུགས་ཆེ་ཆུང"
 formatting = "ཡི་གེའི་རྣམ་གཞག"
 italic = "Italic"
+italicOnly = "ཡིག་གཟུགས་འདི་ལ་ Italic ཙམ་ཡོད།"
 italicUnavailable = "ཡིག་གཟུགས་འདིར italic ཐོན་རིམ་མེད། ཁྱེད་ཀྱི་སྒྲིག་ཆས་ཡིག་གཟུགས་ནང་འཇུག་བྱེད་པའམ་ཡིག་གཟུགས་ཁྱིམ་ཚང་གཞན་འདེམས།"
 lock = "འདེམས་ཚན་སྒོ་རྒྱག"
 lockTooltip = "འདེམས་ཚན་སྒོ་རྒྱག - མི་འདོད་པའི་རྩོམ་སྒྲིག་སྔོན་འགོག"
 more = "བྱ་སྤྱོད་མང་བ"
+noBoldItalic = "ཡིག་གཟུགས་འདི་ལ་ Bold Italic མེད།"
 order = "གོ་རིམ"
 outlineColour = "ཕྱི་ཐིག་ཁ་དོག"
 outlineWidth = "ཕྱི་ཐིག་ཞེང་ཚད (0 = མེད)"
@@ -7683,13 +8129,6 @@ title = "སྔོན་ལྟ། འགྱུར་བ།"
 [pdfTextEditor.tooltip.textFocus]
 text = "ལས་ཀའི་ས་ཁོངས་འདིས་ཡིག་ཆ་རྩོམ་སྒྲིག་དང་བཙུགས་པའི་པར་རིས་བརྗེ་སྒྱུར་བྱེད་པར་གཙོ་བོར་བལྟས་ཡོད། ཤོག་ངོས་སྒྱུ་རྩལ་གྱི་ལས་ཀ་སྣ་ཚོགས་དང་། འབྲི་ཤོག་གི་ཝི་ཇེཊ། དེ་བཞིན་བང་རིམ་ཅན་གྱི་རི་མོ་བཅས་ཕྱིར་གཏོང་ཆེད་དུ་ཉར་ཚགས་བྱས་ཡོད་ཀྱང་། འདིར་ཆ་ཚང་རྩོམ་སྒྲིག་བྱེད་ཐུབ་ཀྱི་མེད།"
 title = "ཡིག་ཆ་དང་པར་རིས་དམིགས་ཡུལ།"
-
-[pdfTextEditor.zoom]
-fit = "འཚམ"
-fitToWidth = "ཞེང་ཚད་ལ་འཚམ"
-in = "ཆེར་སྐྱེད"
-out = "ཆུང་སྐྱུང"
-reset = "zoom 100% ལ་བསྐྱར་སྒྲིག"
 
 [PDFToCSV]
 header = "PDF ནས་ CSV བར།"
@@ -7935,8 +8374,6 @@ triggerImport = "ནང་འདྲེན་སྐབས་འཁོར་སྐ
 [policies.enforcement]
 applying = "{{names}} བཀོལ་སྤྱོད་བཞིན"
 applyingProgress = "{{names}} བཀོལ་སྤྱོད་བཞིན ({{done}}/{{total}})"
-exportFailureBody = "བདེ་འཇགས་སྲིད་བྱང་བཀོལ་སྤྱོད་ཐབས་མེད། ཡིག་ཆ་དེ་རྣམས་བསྒྱུར་བ་མེད་པར་ ཕྱིར་འདྲེན་བཟོ་བྱས།"
-exportFailureTitle = "བཀོལ་སྤྱོད་མེད་པར་ཕྱིར་འདྲེན་བཟོ།"
 failureBody = "ཡིག་ཆ་ {{total}} ནས་ {{failures}} ལ་སྲིད་ཇུས་ཁ་ཤས་སྤྱོད་མ་ཐུབ།"
 failureTitle = "བཀོལ་སྤྱོད་ཆ་ཚང་མེད་པར་ཕྱིར་འདྲེན་བཟོ།"
 printPolicyAppliedBody = "འདི་ PDF ཞིག་སྲིད་བྱང་གཅིག་ལ་འཚམ་པར་གསར་བཅོས་བྱས་ཟིན། བཟོ་བཅོས་ལ་བསྐྱར་ཞིབ་བྱས་ནས་ ཡང་བསྐྱར་དཔར་བྱེད།"
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "སྲིད་ཇུས་འཁོར་སྐབས Google Chat སྟོང་ཆ་ལ་བརྡ་འཕྲིན་ཞིག་སྤེལ།"
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "སྤྱི་ཚོགས་ཀྱི Google Drive ལ་ཀློག་དང་འབྲི་ཐུབ་པའི service account ཞིག"
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Google Cloud ནས service account ཀྱི JSON གསང་གྲངས་འདྲས་ནས་འདེམས། དེ་གསང་སྡོམ་བྱ་ཡིན་པའི་མཐའ་མཇུག་ལ་སྟོན་མི་འདུག"
+label = "Service account key (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "གདམ་ཁ་ཅན། ཁྱེད་ཀྱི་ཁོངས་ཁྲོད་ཆེས་ཆེ་བའི་དོ་དམ་ནང་ domain-wide delegation ཡོད་ན་ ཡིག་ཆ་ལ་བྱེད་མཁན་གཞན་སྤྱོད་བྱེད། (bot མི་སྒེར་མཚམས་འགྲོས་གྲོལ་རྗེས་ཀྱང་ལས་ཀ་ཡོད) སྟོང་བ་ཡིན་ན་སྤྱིའི་སྣོད་དང་ service account ལ་མཉམ་སྤྱོད་བྱས་པའི་སྣོད་ཁང་ཁོངས་ཙམ་ལས་འགྲོ།"
+label = "བྱེད་མཁན"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "ལས་སྣོན་བྱས་པའི་ཡིག་ཆ་ Jira issue ལ་ཟུར་སྣོན་བྱེད།"
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "སྲིད་ཇུས་འཁོར་སྐབས་ཡིག་ཆ་ཞིག་ཡང་ན་བརྡ་ཐོ་ཞིག་གློག་འཕྲིན་གྱིས་སྐུར།"
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Microsoft Graph application permissions དང་ admin consent དགོས།"
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com ཡང་ན་ tenant GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "App གསང་ཚིག"
+
+[portal.connections.types.onedrive]
+description = "OneDrive for Business ལས་མི་ཞིག་གི OneDrive ནས་ཀློག་དང་འབྲི་ཐུབ།"
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "འབྲེལ་མཐུད་འདིས་མཐོང་ཐུབ་པའི OneDrive ཡི་བདག་པོ དམིགས་བསལ། App registration ལ་ Files.ReadWrite.All application permission དགོས།"
+label = "OneDrive བདག་པོ"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "སྒེར་ལྡེ་མིག་གིས་བདེན་
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "གདམ་རུང་། གསང་ཚིག་གི་ཚབ་ཏུ་ལྡེ་མིག་གིས་བདེན་སྦྱོར་བྱེད་ཆེད OpenSSH སྒེར་ལྡེ་མིག་སྦྱར།"
 label = "སྒེར་ལྡེ་མིག"
+
+[portal.connections.types.sharepoint]
+description = "SharePoint ས་ཁོངས་ཞིག་གི་ཡིག་ཆའི་མཛོད་ཁང་ནས་ཀློག་དང་འབྲི་ཐུབ།"
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "གདམ་ཁ་ཅན། ས་ཁོངས་ཀྱི Documents མཛོད་ཁང་སྔོན་སྒྲིག་ལ་སྤྱོད་ན་སྟོང་།"
+label = "ཡིག་ཆའི་མཛོད་ཁང་"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "སྲིད་ཇུས་ཀྱིས་ཡིག་ཆ་ལས་སྣོན་བྱེད་སྐབས Slack ལ་བརྡ་འཕྲིན་ཞིག་སྤེལ།"
@@ -9142,6 +9624,126 @@ status = "གནས་ཚུལ"
 time = "དུས་ཚོད"
 user = "སྤྱོད་མཁན"
 
+[portal.enterprise]
+backTo = "{{stage}} ལ་ལོག"
+brandTag = "Enterprise"
+callInfo = "སྐར་མ 15 ཀྱི་གླེང་མོལ། གླ་ཆའི་གནས་ཚུལ་དང་ འགེལ་འདྲེན་དང་ བདེ་འཇགས། ཡང་ན་ཡོ་བྱད་ཕྱོགས་སྒྲིག་སྐོར་བྱ་རྒྱུ་ལྟར་དྲི་བ་འབྲི་འོས།"
+callTitle = "Solutions engineer དང་གླེང་མོལ་བྱོས"
+deployment = "འགེལ་འདྲེན"
+footer = "Stirling Enterprise སྐོར་དྲི་བ་ཡོད་དམ།"
+home = "Stirling ལ་འགྲོ"
+member = "ཁྱེད་ཀྱི་སྡེ་ཚན་འདིས Enterprise གནད་དོན་འདི་སྤྱོད། མགོ་རིམ་འགོ་བསྐྱེད་བྱས་རྗེས་ འགྲོ་རྒྱུ་ནཱ་ལ་ལྟ་ཐུབ།"
+memberDeal = "སྡེ་ཚན་འདིས་དཔང་ཡིག་འདི་སྤྱོད། འགྲོ་རྒྱུ་ནཱ་ལ་ལྟ་ཐུབ།"
+quotePanel = "ཁྱེད་ཀྱི་ཐོག་འདེབས"
+signIn = "ཐོ་འགོད"
+signInToStart = "ཚོད་ལེན་འགོ་འཛུགས་བྱེད་དུས་ཐོ་འགོད་བྱོས"
+stage = "རིམ་པ {{current}}/{{total}}"
+stagesLabel = "རྒྱུན་སྒྲིག"
+
+[portal.enterprise.landing]
+lede = "མར་འདེབས་མེད་པར་ 14 ཉིན་སོང་མ་སྒྲིག་ཚོད་ལེན་བྱེད། དེའི་རྗེས་ཁྱེད་ཀྱི་ཐོག་འདེབས་བཟོ་ནས་གན་འཛིན་འཇུག"
+tickAgreement = "MSA, order form, EULA, DPA ཡོངས་ཁྱབ་གཅིག་པའི་གན་འཛིན་གཅིག"
+tickCompliance = "SCIM དང་ གནས་སར་གྱི་གཞི་གྲངས་དང་ uptime SLAs"
+tickDeploy = "Stirling Cloud ཡང་ན་ཁྱེད་རང་གི་སར་བར། ཡང་ན་དྲ་ལམ་མེད་པའི་སྐབས་སུ་སྤྱོད"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "དྲ་ལམ་མེད་མི་ཆོག་ཡིག་ཚགས་ཡིག"
+point1 = "དྲ་ལམ་མེད་པའི་ལིསིནསི་ཡིག་ཆ་ཡིས་སྤྱོད། དྲ་ལམ་ནས་ལྟ་ཞིབ་མི་དགོས་པའི་ཁྲིམས་མིན།"
+point2 = "ཁྱེད་རང་གི་གཟུགས་དངོས་ནས་འདྲེན་པའི་ image ནས་སྒྲིག"
+point3 = "ཐོ་འགོད་ནི་ཁྱེད་ཀྱི་དྲ་ཐོག་ནང་འཁོད་ལ་བཞག"
+tagline = "དྲ་ལམ་མེད་པའི་སྐབས་སུ་རང་སྒྲིག་སར་བར་སྒྲིག"
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud ཡི་ཡིག་ཚགས"
+point1 = "ཁྱེད་ཀྱི་སྡེ་ཚན་ནི stirling.com/app ནས་ཐོ་འགོད།"
+point2 = "AWS སྟེང་དུ་སྒྲིག ཡིག་ཆ་ཉར་ཚགས་དེར་གསང་སྡོམ་ཡོད།"
+point3 = "ཁྱེད་རང་གི identity provider ཡི single sign-on དགོས་ན་ self-hosting དགོས།"
+tagline = "ཁྱེད་ལ་གསར་སྒྲིག་མེད་པར་བཙུགས་ཟིན།"
+
+[portal.enterprise.options.selfhost]
+more = "Self-hosting ཡི་ཡིག་ཚགས"
+point1 = "Docker ཡང་ན་ Kubernetes ལ་ Helm chart བཀོལ་ནས་སྒྲིག"
+point2 = "ཡིག་ཆ་ཚོར་སྤྱད་པ་ཁྱེད་རང་གི་གཟུགས་དངོས་སྟེང་།"
+point3 = "OAuth2, OIDC ཡང་ན་ SAML གཅིག་པའི sign-on"
+tagline = "རང་སྒྲིག་སར་བར། གཙང་སྡེ་ཡང་ན་ཁྱེད་ཀྱི cloud སྟེང་།"
+
+[portal.enterprise.review]
+back = "{{stage}} ལ་སླར་ལོག"
+company = "ཚོང་པ"
+completed = "ཚར་ཟིན"
+extensions = "སྒྱུར་བཅོས་སྤྱད་པ"
+paid = "གླ་ཆ་སྤྲོད་ཟིན། ཁྱེད་ཀྱི་གླ་དངུལ་ཡིག་ལམ་འདིར་ཡོད།"
+people = "མི་ཚོ"
+started = "འགོ་བསྐྱེད་ཟིན"
+trialEnds = "ཚོད་ལེན་དུས་ཚོད་མཇུག"
+trialTitle = "ཁྱེད་ཀྱི་ཚོད་ལེན"
+version = "པར་གཞི"
+viewInvoice = "གླ་དངུལ་ཡིག་ལྟ"
+
+[portal.enterprise.setup]
+copied = "འདྲས་བཟུང་ཟིན"
+copy = "འདྲས་བཟུང་"
+markDone = "“{{step}}” ཚར་བར་རྟགས"
+progress = "{{done}}/{{total}} ཚར་ཟིན"
+subtitle = "ཁྱེད་ཀྱིས་འགོ་འཛུགས་རྗེས་དེ་སྤྱོད་དུས་དེ་ལྟར་ཚོད་ལེན་བྱས་ནས་ཕན་ཐོགས་མང་བཟོ།"
+subtitleLive = "མི་ཚང་ལ་འགོ་སློང་སྔོན་ལས་མཇུག་བསྒྲིལ་དགོས་པའི་རིམ་པ།"
+title = "གོ་སྒྲིག་བྱོས"
+titleLive = "Go-live ཡི་ཐོ་གཞུང་"
+
+[portal.enterprise.setup.firstDocument]
+body = "ཁྱེད་ཀྱི་ཚོགས་པས་སྤྱོད་པའི PDF ཞིག་ཡར་འཇུག་བྱས་ནས་ ཉིན་རེར་སྤྱོད་པའི་ལག་ཆ་པར་སྦྲགས། བཅད་དམ། སྲིངས་གོས། OCR ལྟ་བུ་ཚོད་ལྟ།"
+title = "ཡིག་ཆ་དང་པོ་གཡར"
+
+[portal.enterprise.setup.getApp]
+body = "Windows, Mac ཡང་ན་ Linux ཡི་མ་ལག་ཕབ་ལེན་བྱས་ནས་ ད་ལྟའི་རྩིས་ཐོ་དང་མཉམ་པར་ཐོ་འགོད་བྱོས ཡང་ན་ དྲ་ཚིགས་ནས་ཐོག་མ་སྤྱོད།"
+title = "Stirling ཐོབ"
+
+[portal.enterprise.setup.install]
+body = "སར་བར་ཁྱེད་ལ་འདི་སྒྲིག འདིས་ Stirling དང་ཁྱེད་ཀྱི་ལིསིནསི་བཀོལ་སྤྱོད་ཀྱིས་འགོ་བསྐྱེད། དེབ་གཞི་ལ་ OCR དང་ office conversion ཡོད། ཚོགས་པ་ཆེ་བ་ལ་ Kubernetes སྤྱོད།"
+title = "Stirling སྒྲིག་འགོ་བསྐྱེད"
+
+[portal.enterprise.setup.invite]
+body = "སྤྱོད་མཁན་ཚོ་འདུ་འཇུག་བྱས་ནས་ ཚོད་ལེན་དེ་དང་བཅས་ལས་ཀ་དང་མཐུན་པ་བྱེད།"
+title = "སྡེ་ཚན་འདུས"
+
+[portal.enterprise.setup.licence]
+body = "<code>http://your-server:8080/settings/adminPlan</code> ཁ་ཕྱེས་ནས་ Enterprise ལིསིནསི་འདི་ཤུགས་ལྡན་སྟོན་དགོས། གཞན་སྒྲིག་བྱས་ནས་ཡོད་ན་ <code>settings.yml</code> ནང་ <code>premium.key</code> འཇུག་ནས་བསྐྱར་འཁོར།"
+title = "ལིསིནསི་ཤུགས་ལྡན་ཡིན་མིན་བལྟ"
+
+[portal.enterprise.setup.links]
+browser = "དྲ་ཚིགས་ནས་སྤྱོད"
+docker = "Docker ལམ་སྟོན"
+download = "མ་ལག་ཕབ་ལེན"
+downloadForTeam = "སྡེ་ཚན་ལ་མ་ལག་ཐོབ"
+downloading = "ཕབ་ལེན་བཞིན་..."
+downloadLicence = "ལིསིནསི་ཡིག་ཕབ་ལེན"
+invite = "མཉམ་ལས་པ་འདུས"
+kubernetes = "Kubernetes ལམ་སྟོན"
+licence = "ཆོག་མཆན་འགོ་འཛུགས"
+ocr = "OCR སྐད་ཡིག"
+openApp = "Stirling ཁ་ཕྱེ"
+samlGuide = "SAML ལམ་སྟོན"
+ssoGuide = "SSO ལམ་སྟོན"
+
+[portal.enterprise.setup.offlineInstall]
+body = "དྲ་ལམ་ཡོད་པའི་འཁྲུལ་ཆས་ཞིག་ལ full image འདྲེན་ནས་ དེ་དང་ཆོག་མཆན་ཡིག་ཆ་སྤོ་བཤུད་བྱས་རྗེས་ ཕབ་འཇུག་བྱས་ནས་འགོ་འཛུགས། full image ནི་དྲ་ལམ་མེད་པའི་སར་བར་གིས་ཕབ་ལེན་མི་ཐུབ་པའི་ཡིག་གཟུགས་ཁ་སྣོན་བྱེད་དོ།"
+title = "Stirling འདྲེན་ནས་འགོ་འཛུགས"
+
+[portal.enterprise.setup.offlineLicence]
+body = "དྲ་ལམ་ལས་བྲལ་བའི་སར་བར་གྱིས་ང་ཚོའི་ཆོག་མཆན་ཞབས་ཞུ་ལ་མཐུད་མི་ཐུབ་པས་ ཚབ་ཏུ་མིང་རྟགས་བཀོད་པའི་ཡིག་ཆ་འདི་ཞིབ་བཤེར་བྱེད། ཁྱེད་ཀྱིས་འདྲེན་པའི image དང་མཉམ་དུ་བཞག"
+title = "དྲ་ལམ་མེད་པའི་ཆོག་མཆན་ཕབ་ལེན"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "<code>/settings/people</code> ནས་རྩིས་ཐོ་གསར་བཟོ་ ཡང་ན་ ནང་ཁུལ་གྱི་ངོས་འཛིན་བྱེད་མཁན་ལ Stirling སྟོན་ནས་ ནང་འཛུལ་གྱི་ལས་འགན་ནི་དྲ་ལམ་ལས་མ་ཐོན་བཞིན་བཟོ"
+bodySelfHosted = "<code>/settings/people</code> ནས་རྩིས་ཐོ་གསར་བཟོ་ ཡང་ན་ ངོས་འཛིན་བྱེད་མཁན་མཐུད་ནས་ཚོགས་མི་ཚོས་ལས་ཀྱི་རྩིས་ཐོས་ནང་འཛུལ་ཐུབ། ཁོང་ཚོས་སྣེ་མོ་ནས་ཁྱེད་ཀྱི་སར་བར་གྱི་ཁ་བྱང་ལ Stirling སྤྱོད་པ་དང་ ཡང་ན་དེ་ལ་མགོ་བཙུགས་པའི desktop app ནས་སྤྱོད་པ།"
+title = "ཁྱེད་ཀྱི་མི་ཚོ་ཁ་སྣོན"
+
+[portal.enterprise.setup.signIn]
+body = "<code>http://your-server:8080</code> ཕྱེ་ནས <code>admin</code> / <code>stirling</code> ཡིས་ནང་འཛུལ། དེ་འཕྲོས་རྗེས་ གསང་ཚིག་གསར་པ་ཞིག་འདེམས་དགོས་པ་བསྐུལ་བྱེད་ཐེབས།"
+bodyAirgap = "<code>http://your-server:8080</code> ཕྱེ་ནས <code>admin</code> / <code>stirling</code> ཡིས་ནང་འཛུལ། གསང་ཚིག་གསར་པ་འདེམས་རྗེས་ <code>/settings/adminPlan</code> ནས་ཁྱེད་ཀྱི་ཆོག་མཆན་ཤུགས་ལྡན་ཡོད་པ་ཞིབ་བཤེར་བྱོས།"
+title = "དོ་དམ་པའི་ཁོང་དུ་ནང་འཛུལ"
+
 [portal.errorBoundary]
 description = "མཐོང་ངོས་འདིར་མ་བསམ་པའི་ནོར་འཁྲུལ་ཞིག་བྱུང་། ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས། ཡང་ན་ཟུར་གྱི་དཀར་ཆག་ནས་སྡེ་ཚན་གཞན་ཞིག་འདེམས།"
 retry = "ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས"
@@ -9293,6 +9895,7 @@ title = "བསྐྱར་ཞིབ་བྱ་རྒྱུ་མེད།"
 [portal.home.download]
 back = "ཕྱིར་ལོག"
 body = "ཅོག་ངོས་ཉེར་སྤྱོད་ཕབ་ལེན་བྱོས། ཡང་ན server རང་གིས་གནས་སྡོད་བྱོས།"
+bodyDesktop = "desktop app ཕབ་ལེན་བྱས་ནས་ ཁྱེད་ཀྱི Stirling རྩིས་ཐོས་ནང་འཛུལ།"
 done = "ལེགས་གྲུབ"
 guide = "{{name}} ལམ་སྟོན་ཁ་ཕྱེ"
 openInBrowser = "དེའི་ཚབ་ཏུ་བཤེར་ཆས་ནང་ཁ་ཕྱེ"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Email ལེན་འཇུག"
 
 [portal.procurement]
-subtitle = "ཁྱེད་ཀྱི་ཚོགས་པ་དཔྱད་ཞིབ། གན་རྒྱ་འཇོག་པ། དང་འགོ་འཛུགས་བྱེད། ཡིག་ཆ་ཡོངས་གནས་གཅིག་ཏུ།"
 title = "ཉོ་སྒྲུབ"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "གྲོས་མཐུན་འགེལ་མ་ཐུབ། ས
 loading = "གྲོས་མཐུན་འགེལ་བཞིན་པ..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "བསྒྱུར་བ་ཞུ་བ"
-scrollHint = "ཞིབ་བཤེར་ཆེད་འདྲིལ་སྒུལ་བྱེད"
 signatory = "མིང་རྟགས་འགོད་མཁན་གྱི་མིང"
 signatoryPlaceholder = "མིང་ཆ་ཚང"
 signatoryTitle = "མིང་རྟགས་འགོད་མཁན་གྱི་གོ་གནས"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "དཔེར་ན། ཁྲིམས་དོན�
 signError = "ཁྱེད་ཀྱི་མིང་རྟགས་ཟིན་ཐོར་འགོད་མ་ཐུབ། སླར་ཚོད་ལྟ་གནང་རོགས།"
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} ཐེངས་གཅིག"
+addonPerYear = "+{{amount}}/ལོ"
 addons = "ཁ་སྣོན"
 addressLine1 = "ཁ་བྱང་ཕྲེང་ 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "ཁ་བྱང་ཕྲེང་ 2"
 addressLine2Placeholder = "ཁང་མིག་། ཐོག་རྩེག ཁང་པ"
 back = "ཕྱིར་ལོག"
+belowMinimum = "རིན་གོང་འདོན་པ་འདི་ Enterprise གྲོས་མཐུན་གྱི་ཉུང་མཐའ་ལས་ཉུངས་ཡོད།"
 businessName = "ཚོང་ལས་མིང"
 businessNamePlaceholder = "ཁྱེད་ཀྱི་ཀུང་སི"
 city = "གྲོང་ཁྱེར"
 cityPlaceholder = "San Francisco"
 completeRequired = "རིན་གོང་འདྲེན་ཡིག་བཟོ་སྔོན། དགོས་ངེས་ཀྱི་ས་སྟོང་ (* རྟགས་ཅན) རྣམས་ནུས་ལྡན་གྱི email དང་བཅས་ཆ་ཚང་སྐོང་རོགས།"
+conflict = "ཁྱེད་ཀྱིས་ཁ་ཕྱེས་པ་ནས་བསྒྱུར་བྱས་ཟིན་པའི་གྲོས་མཐུན་ཞིག་ཡིན། བཟོ་བསྐྲུན་ལྷུ་ཆས་ཁ་རྒྱག་ནས་ ཤོག་ངོས་ཡང་བསྐྱར་སྣོན་བྱས་ནས་དུས་མཐར་གནས་སྟངས་ལྟ།"
 contactEmail = "འབྲེལ་གཏུག email"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "འབྲེལ་གཏུག་མིང"
 contactNamePlaceholder = "Jane Doe"
 continue = "མུ་མཐུད"
 done = "ལེགས་གྲུབ"
+editUsage = "བེད་སྤྱོད་ཞུན་དག"
 eula = "ངས Stirling Enterprise EULA ཀློག་ཟིན་ཞིང་དེར་མོས་མཐུན་བྱེད། དེས་རིན་གོང་འདྲེན་ཡིག་འདི་ནས་བཟོས་པའི་གྲོས་མཐུན་ལ་སྟངས་འཛིན་བྱེད།"
 generate = "རིན་གོང་འདྲེན་ཡིག་བཟོ"
 indemnification = "IP སྲུང་སྐྱོབ་ཇེ་ལེགས"
 indemnificationSub = "ང་ཚོའི IP སྲུང་སྐྱོབ་དེ་པེ་ཊེན་ཊི་རེ་འདུན་བར་རྒྱ་བསྐྱེད་བྱེད། པར་དབང་། ཚོང་རྟགས། ཚོང་ལས་གསང་བའི་རྩ་བའི་གུན་གསབ་ནི་རིན་མེད་དུ་ཚུད་ཡོད།"
+minimum = "Enterprise ལ་ལོ་རེར་ཉུང་མཐའ་སྤྲོད་དངུལ {{min}} དགོས།"
+minimumBelow = "རིན་གོང་འདོན་པ་འདི་ལོ་རེར {{annual}} ཡིན། མང་བར་བེད་སྤྱོད་བསམ་བློ་ཡོད་ན་ ཐུན་མོང་བསྒྲིགས་པའི་བེད་སྤྱོད་མཐོར་འཕེལ་བྱོས། དེ་མིན་ན་ Team plan ཡང་ལྡན་འགྲོ་བཟང་འདུག"
+minimumNear = "Enterprise ལ་ལོ་རེར་ཉུང་མཐའ་སྤྲོད་དངུལ {{min}} དགོས། དེ་ལྷག་སྙོམས་བྱེད་པར་ཐུན་མོང་བསྒྲིགས་པའི་བེད་སྤྱོད་མཐོར་འཕེལ་བྱོས ཡང་ན་ང་ཚོ་དང་གྲོས་མོལ་བྱོས།"
+minimumNearTitle = "ཁྱེད་ཚོ་ Enterprise ཉུང་མཐའ་ལས ལོ་རེར {{gap}} ཉུངས་ཡོད།"
+paperBrand = "Stirling PDF"
 paperEyebrow = "ཁེ་ལས་རིམ་པའི་རིན་གོང་འདྲེན་ཡིག"
 paperFor = "གྲ་སྒྲིག་བྱས་ཡུལ"
 pdfSize = "PDF ཆེ་ཆུང"
@@ -10506,9 +11117,13 @@ posture_regulated = "སྒྲིག་སྲོལ་འོག"
 posture_regulatedSub = "རིགས་ཚན་ཚང་མ — མཐུན་སྒྲུབ། ཉར་ཚགས། ནང་འཇུག"
 qbr = "དུས་ཚིགས་རེའི་ཚོང་ལས་ཞིབ་བཤེར"
 qbrSub = "ཁྱེད་ཀྱི SE ཡིས་དུས་ཚིགས་རེར་སྤྱོད་ཚུལ་དང་ལམ་དཀར་ཞིབ་བཤེར་བྱེད"
+raiseUsage = "ཐུན་མོང་བསྒྲིགས་པའི་བེད་སྤྱོད་མཐོར་འཕེལ"
 region = "མངའ་སྡེ / ས་ཁུལ"
 regionPlaceholder = "California"
-running = "{{annual}} / ལོ · {{years}}-ལོ {{tcv}}"
+runningLabel = "ཐུན་མོང་བསྒྲིགས་པའི་རིན་གོང"
+runningLabelIssued = "འདོན་བྱས་པའི་རིན་གོང"
+runningOneYear = "ལོ་རེར {{annual}}"
+runningTotal = "{{years}} ལོའི་ནང་བསྡོམས {{tcv}}"
 s1Sub = "ཁྱེད་ཀྱི་ཚོགས་པ་དང་། ལོ་རེར་སྒྲུབ་རྒྱུར་རེ་བ་ཡོད་པའི PDF རྣམས།"
 s1Title = "ཁྱེད་ཀྱིས་ག་ཚོད་ལས་སྣོན་བྱེད་རྒྱུ་ཡིན།"
 s2Sub = "དུས་ཡུན་རིང་བས་རིན་ཚད་ལ་ཆག་ཡང་ཡོད། ཁྱེད་ཀྱི་ཞབས་ཞུའི་རིམ་པས་རམ་འདེགས་གཏན་འཁེལ་བྱེད།"
@@ -10547,6 +11162,19 @@ volumePlaceholder = "དཔེར་ན། 1,000,000"
 years_one = "ལོ་ {{count}}"
 years_other = "ལོ་ {{count}}"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} གཞི་བསྒྲིགས"
+indemnification = "IP སྲུང་སྐྱོབ"
+multiYear_one = "{{count}} ལོའི་ཁས་ལེན"
+multiYear_other = "{{count}} ལོའི་ཁས་ལེན"
+qbr = "བཞི་ཟླ་རེ་གི་ཚོང་ལས་བཤེར་ཞིབ"
+seats_one = "ཁས་ལེན་བྱས་པའི་སྤྱོད་པ {{users}} + SSO / RBAC / audit"
+seats_other = "ཁས་ལེན་བྱས་པའི་སྤྱོད་པ {{users}} + SSO / RBAC / audit"
+seatsUnset = "སྤྱོད་པ + SSO / RBAC / audit"
+support = "དམིགས་བསལ SE / CSM"
+training = "འཛུལ་ཞུགས་དང་སྦྱང་བ"
+usage = "PDF ལས་སྦྱོར — ལོ་རེར {{volume}} PDFs དང་ {{rate}}/PDF ({{posture}} འཕྲུལ་སྒྲུབ)"
+
 [portal.procurement.documents]
 agreement = "ཁེ་ལས་རིམ་པའི་གྲོས་མཐུན"
 agreementSub = "MSA, མངགས་ཐོ་དང DPA མིང་རྟགས་གཅིག་ནང་།"
@@ -10557,6 +11185,8 @@ invoice = "འཛིན་ཤོག"
 invoiceSub = "ཁྱེད་ཀྱི་དང་པོའི་མངགས་ཉོའི་འཛིན་ཤོག"
 laterInvoice = "ཁྱེད་ཀྱིས་ད स्वीकार་བྱས་རྗེས་ཐོབ་ཐུབ"
 laterQuote = "ཁྱེད་ཀྱི་རིན་གོང་འདྲེན་ཡིག་སྤྲད་རྗེས་ཐོབ་ཐུབ"
+laterSigning = "གན་འཛིན་ལ་མིང་རྟགས་བཀོད་ཚར་རྗེས་འཐོབ་ཐུབ"
+laterTitle = "ཁྱེད་ཀྱི་གྲོས་མཐུན་གྱི་ཤུལ་མ"
 quote = "རིན་གོང་འདྲེན་ཡིག"
 quoteSub = "ཁྱེད་ཀྱི་རྣམ་གྲངས་བགོས་པའི་ཁེ་ལས་རིམ་པའི་རིན་གོང་འདྲེན་ཡིག"
 sla = "SLA ཟུར་སྦྱར"
@@ -10573,15 +11203,12 @@ title = "གནད་དོན་ཞིག་བྱུང་སོང"
 [portal.procurement.hero]
 barAria = "གོ་རིམ་ {{current}} / {{total}}"
 ctaAgreement = "གྲོས་མཐུན་ཞིབ་བཤེར་དང་མིང་རྟགས་འགོད"
-ctaExploring = "ཁྱེད་ཀྱི་ཚོད་ལྟ་སྒྲིག་སྦྱོར"
 ctaQuote = "ཁྱེད་ཀྱི་རིན་གོང་འདྲེན་ཡིག་ཞིབ་བཤེར"
 ctaReviewQuote = "རིན་གོང་འདྲེན་ཡིག་ཞིབ་བཤེར"
 ctaTrial = "ཁྱེད་ཀྱི་རིན་གོང་འདྲེན་ཡིག་བཟོ"
-documents = "ཡིག་ཆ"
 eyebrow = "ཁེ་ལས་རིམ་པ"
 eyebrowCompany = "{{company}} ཁེ་ལས"
 inviteTeammates = "ཚོགས་གྲོགས་གདན་འདྲེན"
-licenseKey = "ཆོག་མཆན་ལྡེ་མིག"
 liveSub = "ཁྱེད་ཀྱི་ཚོགས་སྡེ་མཁོ་སྤྲོད་ཟིན་ཞིང་ཆོག་མཆན་ནུས་ལྡན་ཡིན།"
 liveTitle = "ཁྱེད་ Stirling Enterprise ཐོག་དངོས་སུ་སྤྱོད་བཞིན་ཡོད"
 next = "རྗེས་མ། {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "ད་ལྟ་དྲ་མེད་ཆོག་མཆན་ཡ
 downloadOffline = "དྲ་མེད་ཆོག་མཆན་ཕབ་ལེན (.lic)"
 hint = "ལྡེ་མིག་འདི་རང་སྐྱོང་དཔེ་མཚོན་ནང་སྦྱར་ནས་ནུས་སློང་བྱེད་ཆོག ཡང་ན་ཁྱེད་ཀྱི་ཟིན་ཐོའི་ཆེད་ཉར་ཆོག དེ་བདེ་འཇགས་སུ་ཉར་རོགས།"
 label = "ཁྱེད་ཀྱི་ཆོག་མཆན་ལྡེ་མིག"
-subtitle = "ལྡེ་མིག་འདིས་རང་སྐྱོང་དཔེ་མཚོན་ནུས་སློང་བྱེད་ཆོག ཡང་ན་ཁྱེད་ཀྱི་ཟིན་ཐོའི་ཆེད་ཉར་ཆོག"
-title = "ཁྱེད་ཀྱི་ཆོག་མཆན་ལྡེ་མིག"
 trialFileHint = "འདི་ནི་ཁྱེད་ཀྱི་ཚོད་སྤྱོད་ཆོག་མཆན་ཡིག་ཆ་ཡིན། གྲོས་མཐུན་གཏན་འཁེལ་བྱས་རྗེས། ཕྱིར་ལོག་ནས་ཡང་བསྐྱར་ཕབ་ལེན་བྱོས — དྲ་ཐོག་ཆོག་མཆན་ལྡེ་མིག་དང་མི་འདྲ་བར། .lic ཡིག་ཆ་རང་འགུལ་གྱིས་གསར་སྒྱུར་མི་བྱེད།"
-
-[portal.procurement.link]
-cta = "རྩིས་ཐོ་འབྲེལ་མཐུད"
-description = "ཉོ་སྒྲུབ་ནི་ཁྱེད་ཀྱི་འབྲེལ་མཐུད་བྱས་པའི Stirling རྩིས་ཐོ་ཐོག་འགྲོ་སྐྱོང་བྱེད། འདིས་ང་ཚོས་ཚོད་སྤྱོད་སྤྲོད་པ། གོང་འབོལ་རིན་གོང་རྩིས་པ། དང་རྩིས་བསྡུ་འགོ་འཛུགས་པའི་ཐབས་ཡིན། འགོ་འཛུགས་ཆེད་རྩིས་ཐོ་ཞིག་འབྲེལ་མཐུད་བྱོས།"
-eyebrow = "ཁེ་ལས"
-title = "འགོ་འཛུགས་ཆེད་ཁྱེད་ཀྱི་རྩིས་ཐོ་འབྲེལ་མཐུད་བྱོས"
 
 [portal.procurement.live]
 description = "ཁྱེད་ཀྱི་མངགས་ཉོ་འགུལ་སྤྱོད་ནང་ཡོད་ཅིང་ཆོག་མཆན་སྤྲད་ཟིན། ཁྱེད་ཀྱི་ཚོགས་པ་སྤྲོད་སྒྲིག་བྱས་ཟིན་ཞིང་རྩིས་བསྡུ་འགོ་ཚུགས་ཟིན།"
-eyebrow = "དངོས་སྤྱོད"
 title = "ཁྱེད་རང Stirling Enterprise ཐོག་དངོས་སྤྱོད་ལ་ཞུགས་ཟིན"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "ད་ལྟ་གོང་འབོལ PDF ཕབ་ལེན�
 
 [portal.procurement.payment]
 description = "ཁྱེད་ཀྱི་གོང་འབོལ་དང་ལེན་བྱས་ཟིན་ཞིང་ཆོག་མཆན་ཡང་ད་སྔ་ནས་འགུལ་སྤྱོད་ནང་ཡོད — ཁྱེད་ཀྱི་ཚོགས་པས་འཕྲལ་དུ་འགོ་འཛུགས་ཆོག གྲ་སྒྲིག་ཡོད་སྐབས་རྩིས་ཤོག་དང་པོ་སྤྲོད། འདི་ནས་སྤྲོད་པའམ་ཕབ་ལེན་བྱེད་ཆོག་ཅིང་། email མི་དགོས།"
-downloadAgreement = "མིང་རྟགས་བཀོད་པའི་གྲོས་མཐུན་ཕབ་ལེན"
 downloadInvoice = "རྩིས་ཤོག་ཕབ་ལེན"
-eyebrow = "དངུལ་སྤྲོད"
-title = "མངགས་ཉོ་བཟོས་ཟིན"
 viewInvoice = "རྩིས་ཤོག་ལྟ་བ་དང་སྤྲོད་པ"
 
 [portal.procurement.review]
 acceptCta = "གོང་འབོལ་དང་ལེན"
 annual = "ལོ་རེའི་རིན་གླ་། (ལོ་ 1)"
 downloadCta = "གོང་འབོལ་ཕབ་ལེན"
+oneTime = "ཐེངས་གཅིག"
 poNumber = "ཉོ་སྒྲུབ་མངགས་ཐོ། {{po}}"
 renewal = "དུས་ཡུན་རྗེས་སུ {{amount}}/ལོ ཐོག་སླར་གསོ་བྱེད། (+{{pct}}% CPI)"
 tcv = "{{years}}-ལོའི་དུས་ཡུན། སྔོན་ནས་ཆ་ཚང་སྤྲད་པ། {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "དུས་འགྱངས་བྱས་ན་ཉིན་ 7 ཁ་སྣོན་བྱེད་ཅིང་ཁྱེད་ཀྱི་ཐབས་ལམ་བཟོ་འགོད་པར་བརྡ་ཐོ་གཏོང་།"
 bodyMaxed = "ཁྱེད་ཀྱིས་དུས་འགྱངས་ཚང་མ་སྤྱད་ཟིན — དུས་ཚོད་མང་བ་དགོས་ན་ཁྱེད་ཀྱི་ཐབས་ལམ་བཟོ་འགོད་པར་གྲོས་མོལ་བྱོས།"
-cancel = "ཚོད་སྤྱོད་འདོར"
 extend = "ཉིན་ 7 དུས་འགྱངས"
 maxed = "མཐོ་ཚད་ལ་སླེབས"
 subtitle = "ཁྱེད་ཀྱི་རིན་མེད་ཚོད་སྤྱོད {{date}} བར་འགྲོ སྤྱོད་བྱང་མི་དགོས།"
 title = "ཁེ་ལས་ཚོད་སྤྱོད"
+
+[portal.procurement.validation]
+confirm = "ཁྱེད་ཀྱིས་ཚོགས་སྡེའི་ཁུངས་ལ་ཁས་ལེན་བྱས་ནས་མིང་རྟགས་བཀོད་ཆོག་པ་ཡོད་པ་གཏན་འཁེལ་བྱོས།"
+email = "ནུས་ལྡན་ email ཁ་བྱང་འཇུག"
+eula = "མུ་མཐུད་བྱེད་པར EULA ཁས་ལེན་བྱོས།"
+required = "ས་སྒོ་འདི་དགོས་ངེས་ཡིན།"
+seats = "ཚོད་ལྟ་བྱེད་མིའི་གྲངས་འཇུག"
+volume = "ལོ་རེར རེ་བ་བསྐྱེད་ཡོད་པའི PDF ལས་སྦྱོར་གྲངས་འཇུག"
 
 [portal.review]
 subtitle = "ཁྱེད་ཀྱི་སྲིད་ཇུས་འཁོར་སྐྱོད་དང་ཁྱེད་ཀྱི་རུ་ཁག་གི editor ནས་ཁྱེད་ཀྱི་དོ་སྣང་དགོས་པ་གང་ཡིན།"
@@ -10735,6 +11358,7 @@ subtitle = "ཡིག་ཆ་རྣམས Stirling ནང་འཇུག་པ�
 title = "ཁུངས"
 
 [portal.sources.actions]
+connectDestination = "དམིགས་ས་མཐུད"
 connectSource = "ཁུངས་འབྲེལ་མཐུད"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "ལས་སྣོན་བྱས་པའི་ཡིག་
 comingSoon = "མགྱོགས་པོ་འོང་རྒྱུ"
 comingSoonHeading = "མགྱོགས་པོ་འོང་རྒྱུ"
 create = "ཁུངས་བཟོ"
+createDestination = "དམིགས་ས་གསར་བཟོ"
+createDestinationTitle = "དམིགས་ས་ཁ་སྣོན"
 createTitle = "ཁུངས་ཞིག་འབྲེལ་མཐུད"
 delete = "སུབ"
 editTitle = "ཁུངས་རྩོམ་སྒྲིག"
@@ -10757,6 +11383,41 @@ save = "འགྱུར་བ་ཉར"
 description = "ཡིག་སྣོད་རང་འགུལ་བྱ་རིམ་གྱིས་དོ་དམ་པས་ཆོག་མཆན་སྤྲད་པའི་ཡིག་སྣོད་ཁོ་ན་སྤྱོད་ཐུབ། དེ་ཡིག་སྣོད་འཛུལ་སྤྱོད་སྒྲིག་འགོད་འོག་ཁ་སྣོན་བྱས་ནས། ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
 openSettings = "ཡིག་སྣོད་འཛུལ་སྤྱོད་སྒྲིག་འགོད"
 title = "ཡིག་སྣོད་འདི་ལ་ཆོག་མཆན་མེད"
+
+[portal.sources.cloudFields.account]
+connect = "ཁྱེད་ཀྱི་རྩིས་ཐོ་མཐུད"
+connectAnother = "རྩིས་ཐོ་གཞན་ཞིག་མཐུད"
+connectFailed = "རྩིས་ཐོ་མཐུད་མ་ཐུབ། ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས ཡང་ན་ དོ་དམ་པས app registration ཞིབ་བཤེར་བྱས་མེད་མེད་ཞིབ་བཤེར་བྱོས།"
+label = "རྩིས་ཐོ"
+placeholder = "རྩིས་ཐོ་གདམ"
+reconnect = "ཡང་བསྐྱར་ནང་འཛུལ"
+unavailable = "སར་བར་འདིར་རང་ཉིད་ཀྱི་རྩིས་ཐོ་མཐུད་པ་སྒྲིག་མཚམས་བུད་ཟིན། ཚབ་ཏུ་ཚོགས་སྡེའི་མཐུད་ལམ་གདམ།"
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "སར་བར་འདིར་མི་སྒེར་རྩིས་ཐོ་སྒྲིག་མཚམས་བུད་ཟིན་པ།"
+helperText = "ཁྱེད་ཀྱི་རྩིས་ཐོས་ནི་ཁྱེད་ཀྱིས་ཕྱེ་ཐུབ་པ་ལ་འཛུལ་སྒོ་ཡོད་ནས་དོ་དམ་པ་མི་དགོས། ཚོགས་སྡེའི་མཐུད་ལམ་ནི་མི་ཚང་ཕྱུགས་པ་ཡང་དུ་འགུལ་བསྐྱོད་བཟོ་བའི་ཁྱབ་ཁོངས་སྲུངས་ནས་ དོ་དམ་པས་སྒྲིག་འགོད་བྱས་པ་ཁོ་ན་ལ་འཛུལ་སྒོ་ཡོད།"
+label = "ངོ་སྤྲོད་དུ"
+
+[portal.sources.cloudFields.authMode.options]
+account = "ངའི་རྩིས་ཐོ"
+organisation = "ཚོགས་སྡེའི་མཐུད་ལམ"
+
+[portal.sources.cloudFields.connection]
+helperText = "Integrations ནང་དོ་དམ་པས་སྒྲིག་འགོད། སྤྱོད་ས་ཚིགས་ཐམས་ཅད་ཀྱིས་མཉམ་སྤྱོད།"
+label = "ཚོགས་སྡེ་མཐུད་སྦྲེལ"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "ཡིག་སྣོད་ཀྱི་འབྲེལ་མཐུད་འདྲ་བསྣུར་བཞག ཡང་ན My Drive ཡི་རྩ་བ་ནས་འགྲོ་ལམ་ཞིག་འབྲི། My Drive རྩ་བ་ལ་གནས་དགོས་ན་སྟོང་བར་བཞག། ཡིག་སྣོད་དེ་སྔོན་ལ་ཡོད་དགོས།"
+placeholder = "ཡིག་སྣོད་འབྲེལ་མཐུད་ ཡང་ན Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "ཁྱེད་ཀྱི OneDrive ནས་ཡིག་སྣོད་ཞིག ཡང་ན་ཡིག་སྣོད་འབྲེལ་མཐུད་འདྲ་བསྣུར་བཞག (Copy link in OneDrive)། OneDrive ཡི་རྩ་བ་ལ་གནས་དགོས་ན་སྟོང་བར་བཞག། ཡིག་སྣོད་དེ་སྔོན་ལ་ཡོད་དགོས།"
+placeholder = "Scans/Inbox ཡང་ན་ཡིག་སྣོད་འབྲེལ་མཐུད"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "ཁྱེད་རྩིས་ཐོས་སྤྱོད་ནས་ཡིག་སྣོད་ཀྱི་འབྲེལ་མཐུད་འདྲ་བསྣུར་བཞག (Copy link in SharePoint)། ཚོགས་སྡེ་མཐུད་སྦྲེལ་ཡོད་ན་ དེའི་དཔེ་མཛོད་ནང་གི་ཡིག་སྣོད་ཞིག; དཔེ་མཛོད་རྩ་བ་ལ་གནས་དགོས་ན་སྟོང་བར་བཞག། ཡིག་སྣོད་དེ་སྔོན་ལ་ཡོད་དགོས།"
+organisationPlaceholder = "ཡིག་སྣོད་འབྲེལ་མཐུད་ ཡང་ན Scans/Inbox"
+placeholder = "ཡིག་སྣོད་འབྲེལ་མཐུད"
 
 [portal.sources.delete]
 body = "\"{{name}}\" སུབ་བམ། འདི་ཕྱིར་འཐེན་མི་ཐུབ། དེ་ལ་གཞི་བཅོལ་བྱེད་པའི་སྲིད་ཇུས་རྣམས་གསར་སྒྱུར་དགོས་སྲིད།"
@@ -10821,6 +11482,7 @@ label = "Email འབྱོར་སྒམ"
 [portal.sources.types.folder]
 description = "server ཐོག་གི་ཡིག་སྣོད་ཞིག་ལ་ཡིག་ཆ་གསར་པ་ཡོད་མེད་ལྟ་སྲུང་བྱོས།"
 label = "ཡིག་སྣོད"
+outputDescription = "འབྲས་བུ་དེ་སར་བར་གྱི་སྣོད་ཁུག་ཞིག་ཏུ་ཉར།"
 
 [portal.sources.types.folder.fields.directory]
 helperText = "ཡིག་ཆ་གསར་པར་ལྟ་ཞིབ་བྱ་རྒྱུའི་ཡིག་ཁུག་གི་ལམ་བུ་ཆ་ཚང་།"
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "མཉམ་སྤྱོད་ Google Drive ཡིག་ཁུག་ནས་ཡིག་ཆ་འཐེན་ལེན་བྱེད།"
 label = "Google Drive"
+outputDescription = "འབྲས་བུ་དེ Google Drive ཡི་ཡིག་སྣོད་ཞིག་ཏུ་ཉར།"
 
 [portal.sources.types.network]
 description = "ཡིག་ཆ་གསར་པའི་ཆེད་ SMB དྲ་རྒྱ་མཉམ་སྤྱོད་ལ་ལྟ་ཞིབ་བྱེད།"
@@ -10867,10 +11530,12 @@ label = "དྲ་རྒྱའི drive"
 [portal.sources.types.onedrive]
 description = "ཡིག་ཆ་གསར་པའི་ཆེད་ OneDrive ཡིག་ཁུག་ལ་ལྟ་ཞིབ་བྱེད།"
 label = "OneDrive"
+outputDescription = "འབྲས་བུ་དེ OneDrive ཡི་ཡིག་སྣོད་ཞིག་ཏུ་ཉར།"
 
 [portal.sources.types.s3]
 description = "Amazon S3 ཡང་ན་ S3-compatible bucket ནས་ཡིག་ཆ་འཐེན་ལེན་བྱེད།"
 label = "Amazon S3"
+outputDescription = "འབྲས་བུ་དེ Amazon S3 ཡང་ན S3 མཐུན་སྒྲིག bucket ཞིག་ཏུ་ཉར།"
 
 [portal.sources.types.s3.fields.connection]
 helperText = "bucket དང་དཔང་ཡིག་ཡོད་པའི་ཉར་ཚགས་བྱས་པའི་མཐུད་སྦྲེལ། དེ་སྤྱོད་པའི་ཁུངས་དང pipeline ཕྱིར་འདོན་ཚང་མས་མཉམ་སྤྱོད་བྱེད།"
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "SharePoint ཡིག་ཆ་དཔེ་མཛོད་ནས་ཡིག་ཆ་འཐེན་ལེན་བྱེད།"
 label = "SharePoint"
+outputDescription = "འབྲས་བུ་དེ SharePoint ཡི་ཡིག་ཚགས་དཔེ་མཛོད་ཀྱི་ཡིག་སྣོད་ཞིག་ཏུ་ཉར།"
 
 [portal.sources.types.unknown]
 label = "འབྱུང་ཁུངས"
@@ -11074,6 +11740,14 @@ waiting = "རུ་སྒྲིག་ཟིན ..."
 name = "Google Drive"
 scope = "ཡིག་ཆ་འདྲེན་འཇུག"
 
+[provider.googledrive.accountScope]
+description = "drive ཡིས་ཡིག་ཆ་ཡོངས་ལ་འཛུལ་ཆོག (དེའི་དོན་ལ Google ཡིས་སྤྱི་བཏང་ app ཞིག་བདེན་བཤད་དགོས); drive.file ནི་མི་ཚོས་འདེམས་པ་དང་ Stirling ཡིས་བཟོས་པའི་ཡིག་ཆ་ཙམ"
+label = "Drive ལ་འཛུལ་བ"
+
+[provider.googledrive.allowAccountConnections]
+description = "ཞུན་དག་པ་དང་ཁོང་ཚོའི pipelines ལ་ཐོ་འགོད་གཅིག་གཏོང་། ཁ་རྒྱ་རྒྱག་ན་ཚོགས་སྡེ་མཐུད་སྦྲེལ་ཙམ་ཆོག"
+label = "མི་ཚོས་རང་ཉིད་ཀྱི་རྩིས་ཐོ་མཐུད་ཆོག"
+
 [provider.googledrive.apiKey]
 description = "Google Cloud Console ནས་ Google Picker API ཡི Google API Key"
 label = "API Key"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "Google Cloud Console ནས་ Google OAuth 2.0 Client ID"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "མི་ཚོས་ཁོང་ཚོའི pipelines ལ་སྤྱོད་པའི Google རྩིས་ཐོ་མཐུད་ཆོག་པར་བྱེད། འོག་གི redirect URI འདི་ཡིན་པ་དང་ OAuth client ཡི authorised redirect URI ལ་ཁ་སྣོན།"
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "སྤྱོད་མཁན་ཚོས Google Drive ནས་ཐད་ཀར་ཡིག་ཆ་ནང་འཇུག་བྱེད་ཆོག"
 label = "Google Drive ཡིག་ཆ་འདེམས་བྱེད་སྤྱོད་བཅུག"
 
 [provider.googledrive.errors]
+connectFailed = "Google རྩིས་ཐོ་མཐུད་མ་ཐུབ། Settings > Connected accounts ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
 notConfigured = "Google Drive སྒྲིག་འགོད་བྱས་མེད"
 pickerFailed = "Google Drive picker ཁ་ཕྱེ་མ་ཐུབ"
+
+[provider.googledrive.redirectUri]
+description = "Google Cloud Console ནང་ OAuth client ཡི authorised redirect URI ལ་འདི་ཁ་སྣོན།"
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Files & pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "ཞུན་དག་པ་དང་ཁོང་ཚོའི pipelines ལ་ཐོ་འགོད་གཅིག་གཏོང་། ཁ་རྒྱ་རྒྱག་ན་ཚོགས་སྡེ་མཐུད་སྦྲེལ་ཙམ་ཆོག"
+label = "མི་ཚོས་རང་ཉིད་ཀྱི་རྩིས་ཐོ་མཐུད་ཆོག"
+
+[provider.microsoft.allowEditorSaves]
+description = "སྒོ་རྒྱག་ནས་ཞུན་དག་དེ Stirling ནང་དུ་བཞག་ཐུབ། OneDrive ནས་ཕྱེས་པའི་ཡིག་ཆ་ཚང་བ་དེ་ཚབ་ཏུ་ཕབ་ལེན་བྱེད་དེ་ སར་བར་གྱིས OneDrive ལ་སྲུང་བཞག་གི་འབྲས་བུ་ཁོང་དུ་མ་འཇུག"
+label = "ཞུན་དག་པས OneDrive ལ་ལོག་སྲུང་བཅུག"
+
+[provider.microsoft.clientId]
+description = "Microsoft Entra app ཐོ་འགོད་ཞིག་ནས།"
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "མཐུད་ཟིན་པའི་རྩིས་ཐོར་དགོས། སར་བར་ནས་བཞག་ཡོད།"
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "pipelines ནང OneDrive དང SharePoint སྤྱོད་ཆོག"
+label = "OneDrive & SharePoint འགོ་སློང"
+
+[provider.microsoft.pickerRedirectUri]
+description = "ཞུན་དག་པ་ནས་ནང་འཛུལ་བྱེད་པར་ འདི་དེ་དང་འདྲ་བའི app registration ནང་ Single-page application redirect URI འདི་ཁ་སྣོན་བྱོས།"
+label = "Single-page application redirect URI"
+
+[provider.microsoft.redirectUri]
+description = "Entra app ཐོ་འགོད་ནང Web redirect URI ལ་འདི་ཁ་སྣོན།"
+label = "Redirect URI"
+
+[provider.microsoft.setupSteps]
+connect = "སྲུང་བཞག་བྱས་ནས་སླར་འགོ་སློང་ དེ་རྗེས Connected accounts ནང་རྩིས་ཐོ་ཞིག་མཐུད།"
+permissions = "Microsoft Graph delegated permissions Files.ReadWrite.All དང Files.Read.All དང་ SharePoint delegated permissions MyFiles.Read དང AllSites.Read ཁ་སྣོན་བྱོས། འདིས་ལས་ཁོངས་དང་སློབ་གྲྭའི་རྩིས་ཐོས་ཀྱིས file picker ཕྱེ་ཐུབ།"
+redirects = "འོག་གི་ redirect URI གཉིས་དེ་ཁ་སྣོན་བྱོས། གཅིག་ནི Web དང་ གཅིག་ནི Single-page application ཡིན།"
+register = "Microsoft Entra admin center ནང་ app ཞིག་ཐོ་འགོད་བྱོས། མི་སྒེར་ OneDrive སྤྱོད་པ་ཡོད་ཚེ་ Microsoft སྒེར་རྩིས་ཐོ་ཆོག་བཤེར་བྱོས།"
+secret = "client secret ཞིག་གསར་བཟོས་ནས་ དེའི་value དང་ app ཡི client ID འོག་ཏུ་པར་སྣོན་བྱོས།"
+
+[provider.microsoft.tenant]
+description = "work, school དང་རང་སྤྱོད་རྩིས་ཐོར་དུ common བཀོལ; work དང school ཙམ་ལ organizations བཀོལ; ཡང་ན་ཚོགས་སྡེ་གཅིག་ལ་དབང་སྤྲོད་པའི tenant ID བཙུགས།"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -11195,6 +11921,19 @@ label = "ཁྱབ་ཁོངས"
 description = "username ལ་སྤྱོད་ཀྱི་ཁག (email, name, given_name, family_name, preferred_username)"
 label = "Username ལ་སྤྱོད"
 
+[provider.onedrive]
+pickerLoading = "OneDrive ལ་མཐུད་བཞིན..."
+pickerTitle = "OneDrive ནས་ཡིག་ཆ་གདམ"
+
+[provider.onedrive.errors]
+connectFailed = "Microsoft རྩིས་ཐོ་མཐུད་མ་ཐུབ། Settings > Connected accounts ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+notConfigured = "OneDrive སྒྲིག་འགོད་མེད"
+pickerFailed = "OneDrive ཁ་ཕྱེ་མ་ཐུབ།"
+popupBlocked = "ཁྱེད་ཀྱི browser ཡིས Microsoft ནང་འཛུལ་སྒོ་འགེབས་ཟིན། དྲ་ཚིགས་འདིའི pop-ups ཆོག་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+reconnect = "ཁྱེད་ཀྱི Microsoft རྩིས་ཐོས་ཡང་བསྐྱར་ནང་འཛུལ་དགོས། Settings > Connected accounts ནས་ཡང་མཐུད།"
+serverError = "OneDrive ཡང་ན Stirling སར་བར་ལ་དཀའ་ངལ་བྱུང་བ། ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས ཡང་ན་ བསྐྱར་བརྒྱབ་རྒྱུ་བརྒྱུད་དུ་ཡོད་ན་དོ་དམ་པ་ལ་ཞུ་བྱོས།"
+unreachable = "OneDrive ལ་མཐུད་མ་ཐུབ། མཐུད་ལམ་ཞིབ་བཤེར་བྱས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "བརྡ་ཐོ"
 processor = "སྒྲིག་གཅོད་ཆས"
 reader = "ཀློག་ཆས"
 signInToUse = "འདི་སྤྱོད་པར་ནང་འཛུལ་བྱོས"
+
+[quickNav.accountMenu]
+localMode = "རང་ས་ཐབས་ལམ"
+server = "སར་བར་སྒྲིག་འགོད"
+settings = "སྒྲིག་འགོད"
+signedOut = "ཐོ་འགོད་མ་བྱས"
+signIn = "ཐོ་འགོད"
 
 [read]
 tags = "ལྟ,ཁ་ཕྱེ,མངོན,ཀློག,viewer,PDF viewer,PDF reader,PDF ཁ་ཕྱེ,PDF ལྟ,PDF མངོན,སྔོན་ལྟ,browse"
@@ -11811,6 +12557,13 @@ title = "PDF གཙང་བཟོ་བྱེད་དགོས།"
 [sanitizePdf]
 tags = "གཙང་མ་དང་བདེ་འཇགས་དང་བདེ་འཇགས་དང་སེལ་བའི་ཉེན་ཁ།"
 
+[saveFile.menu]
+more = "ཉར་ཚགས་གདམ་བཟུང་མང་བ"
+saveCopy = "འདྲ་བཤུས་ཞིག་ཉར..."
+
+[saveFile.toolbar]
+mixed = "ཡོངས་རྫོགས་ཉར"
+
 [scalePages]
 tags = "ཆེ་ཆུང་བསྒྱུར,ལེགས་སྒྲིག,scale,ཤོག་ངོས་ཆེ་ཆུང,ཤོག་ངོས་ཆེ་ཆུང་བསྒྱུར,ཤོག་ངོས scale,ཆེ་ཆུང་བསྒྱུར,ཆེ་ཆུང་ལེགས་སྒྲིག,ཆེར་སྐྱེད,ཤོག་ངོས་ཆུང་དུ་གཏོང,ཤོག་ངོས་ལ་འཚམ,A4,letter size"
 title = "ཤོག་ངོས་གཞི་ཁྱོན་སྙོམ་སྒྲིག་བྱེད་པ།"
@@ -11905,6 +12658,162 @@ showTools = "མི་འཐོབ་ལག་ཆ་ལྟ་ ▾"
 title = "ཁྱེད་ཀྱི Stirling-PDF ཞབས་ཞུ་ལ་མཐུད་མི་ཐུབ"
 toolNotAvailableLocally = "ཁྱེད་ཀྱི Stirling-PDF ཞབས་ཞུ་ཨོླཕ་ལ་ཡིན་པས \"{{endpoint}}\" རང་གནས་རྒྱབ་སྟེགས་ནང་མི་འཐོབ།"
 
+[serverSetup]
+back = "རྒྱབ"
+collapse = "{{setting}} སྒྲིག་འགོད་སྦས"
+configured = "སྒྲིག་འགོད་ཟིན"
+continue = "མདུན་སྐྱོད"
+dialogLabel = "སར་བར་སྒྲིག་འགོད"
+expand = "{{setting}} སྒྲིག་འགོད་མངོན"
+finishSetup = "སྒྲིག་འགོད་མཇུག་བསྒྲིལ"
+loadErrorSubtitle = "སྒྲིག་འགོད་འགོ་སློང་ལ་སར་བར་གྱི་དང་སྐབས་སྒྲིག་འགོད་དགོས།"
+loadErrorTitle = "ཁྱེད་ཀྱི་སྒྲིག་འགོད་འཇུག་མི་ཐུབ"
+off = "ཁ་རྒྱག"
+on = "ཁ་འབྱེད"
+save = "ཉར"
+stepCount = "{{total}} ནས་ {{current}}"
+
+[serverSetup.account]
+failed = "ཁྱེད་ཀྱི་ཞིབ་བརྗོད་ཉར་མ་ཐུབ། སར་བར་འཚོལ་ཐུབ་མིན་ཞིབ་བཤེར་བྱས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ།"
+save = "ཉར་ནས་མདུན་སྐྱོད"
+signIn = "ཐོ་འགོད"
+signInAgainSubtitle = "མུ་མཐུད་བཀོད་མིང་དང་གསང་ཨང་གསར་པ་བེད་ནས་ཡང་བསྐྱར་ཐོ་འགོད་བྱས་ནས་མུ་མཐུད།"
+signInAgainTitle = "ཁྱེད་ཀྱི་ཞིབ་བརྗོད་ཉར་ཟིན"
+subtitle = "ད་ལས་མདུན་དུ་གང་འདྲས་ཐོ་འགོད་བྱེད་ནི་འདེམས།"
+title = "ཁྱེད་ཀྱི་རྩིས་ཐོ་སྒྲིག་འགོད"
+updating = "གསར་སྒྱུར་བཞིན"
+updatingSubtitle = "སྐར་མ་ཙམ།"
+updatingTitle = "ཁྱེད་ཀྱི་ཞིབ་བརྗོད་གསར་སྒྱུར་བཞིན"
+username = "བཀོད་མིང་"
+usernameHelp = "ཐོ་འགོད་སྐབས་བེད་སྤྱོད་བྱེད་པ། གློག་ཡིག་ཁ་བྱང་ཡང་བེད་ཆོག"
+
+[serverSetup.addresses]
+backendUrl = "སར་བར་ཁ་བྱང་"
+backendUrlHelp = "ཐོ་འགོད་ provider ཚོས་མི་ཚོར་ཕྱིར་གཏོང་ས་ཡིན། སྤྱིར་བཏང་ཝེབ་ཁ་བྱང་དང་འདྲ།"
+frontendUrl = "ཝེབ་ཁ་བྱང་"
+frontendUrlHelp = "མི་ཚོས Stirling PDF ཁ་ཕྱེ་ས་ཡིན། གློག་ཡིག། མཉམ་སྤྱོད་འབྲེལ་མཐུད་དང QR code ནས་བེད་སྤྱོད།"
+subtitle = "མི་ཚོ་དང་ཐོ་འགོད་ provider ཚོས་སར་བར་འདིར་འཛུལ་ཐབས།"
+title = "ཁ་བྱང་"
+
+[serverSetup.ai]
+apiKey = "API ལྡེ་མིག"
+apiKeyHelp = "AI མ་ལག་ལ་ཡོད་པའི་ལྡེ་མིག་སྤྱོད་དགོས་ན་སྟོང་བར་བཞག"
+baseUrl = "Base URL"
+engineUrl = "AI མ་ལག་ཁ་བྱང་"
+fastModel = "མགྱོགས་པོའི་དཔེ་གཞི"
+label = "རང་ས་མངའ་འཛིན AI"
+provider = "དཔེ་གཞི provider"
+providerCustom = "OpenAI མཐུན་སྒྲིག"
+smartModel = "ཆ་ཚང་གི་དཔེ་གཞི"
+stirling = "Stirling AI"
+subtitle = "ཡིག་ཆ་དྲི་བ། རང་འགུལ་ཞུན་དག་དང AI agents།"
+title = "AI"
+
+[serverSetup.analytics]
+accept = "ཁས་ལེན་ནས་མདུན་སྐྱོད"
+acceptFinish = "ཁས་ལེན་ནས་མཇུག་བསྒྲིལ"
+changeLater = "{{path}} ནང་དུ་དུས་ཚོད་གང་རུང་བཅོས་ཆོག།"
+decline = "ཟུར་འདོར་ནས་མདུན་སྐྱོད"
+declineFinish = "ཟུར་འདོར་ནས་མཇུག་བསྒྲིལ"
+learnMore = "ང་ཚོས་མཛོད་བསྡུས་ག་རེ"
+note = "སར་བར་འདིའི་བེད་སྤྱོད་གཞི་གྲངས་ང་ཚོས་མཉམ་སྤྱོད་བྱས་ན Stirling PDF ལེགས་སྒྲུབ་ལ་རོགས་རམ་བྱེད། ང་ཚོས་ཡིག་ཆ་དང་ནང་དོན་མཛོད་བསྡུས་མི་བྱེད།"
+title = "སར་བར་དཔྱད་ཞིབ"
+
+[serverSetup.documents]
+label = "ཡིག་ཆ་དྲི་བ"
+model = "Embedding དཔེ་གཞི"
+provider = "Embedding provider"
+providerHelp = "ཡིག་ཆའི་ཚིག་ཡིག་དེ་དྲི་བའི་ལན་བཤད་བྱེད་པའི་འཚོལ་བཤེར་ཟུར་བསྡུས་ལ་བསྒྱུར།"
+
+[serverSetup.email]
+from = "གཏོང་མཁན་ཁ་བྱང་"
+host = "SMTP host"
+label = "གློག་ཡིག་གཏོང"
+password = "གསང་ཨང་"
+port = "Port"
+subtitle = "འབོད་འབྱུང་ མཛུབ་འགོད་ཞུ་བ་ དང་མཉམ་སྤྱོད་ལ།"
+title = "Email"
+username = "བཀོད་མིང་"
+
+[serverSetup.error]
+email = "གློག་ཡིག་ཁ་བྱང་ཞིག་འཇུག"
+issuerUnreachable = "issuer འདིར་འཛུལ་མ་ཐུབ། ཁ་བྱང་དང་ སར་བར་འདིས་དེར་འཛུལ་ཐུབ་མིན་ཞིབ་བཤེར་བྱོས།"
+passwordIncorrect = "གསང་ཨང་ཕྱི་འགྱུར"
+passwordLength = "ཉུང་མཐར 8 ཡིག་རྟགས་བེད་སྤྱོད།"
+passwordMismatch = "གསང་ཨང་མཐུན་མི་འགྲིག"
+passwordRejected = "སར་བར་དེའི་གསང་ཨང་ཁས་ལེན་མ་བྱས། གཞན་ཞིག་ཚོད་ལྟ"
+passwordUnchanged = "ད་ལྟའི་དང་མི་འདྲ་བའི་གསང་ཨང་འདེམས"
+port = "1 ནས 65535 བར་གྱི port ཨང་འཇུག"
+providerName = "ཡིག་གཟུགས་ ཨང་ - དང་ _ ཙམ་བེད་སྤྱོད།"
+required = "དགོས་ངེས"
+url = "http:// ཡང་ན https:// ཡིས་འགོ་བརྩམས་པའི་ཁ་བྱང་ཆ་ཚང་འཇུག"
+username = "3 ནས 50 བར་གྱི་ཡིག་གཟུགས་ ཨང་ ཡང་ན . _ + - @ བེད་སྤྱོད། ཡང་ན་གློག་ཡིག་ཁ་བྱང་"
+usernameTaken = "བཀོད་མིང་དེ་བཀོད་ཟིན"
+
+[serverSetup.files]
+sharing = "ཡིག་ཆ་མཉམ་སྤྱོད"
+sharingOffWarning = "མཉམ་སྤྱོད་ཁ་རྒྱ་རྒྱག་ན་གནས་ཡོད་པའི་མཉམ་སྤྱོད་འབྲེལ་མཐུད་ལག་ལེན་མི་བྱེད།"
+storage = "ཡིག་ཆ་ཉར་ཚགས"
+storageOffWarning = "ཉར་ཚགས་ཁ་རྒྱ་རྒྱག་ན་མི་ཚོས་སར་བར་ལ་ཉརས་པའི་ཡིག་ཆ་ཁ་ཕྱེ་མི་ཐུབ།"
+subtitle = "ཡིག་ཆའི་ཉར་ཚགས་དང་མཉམ་སྤྱོད་དོ་དམ།"
+title = "ཡིག་ཆ"
+
+[serverSetup.finish]
+errorNote = "སར་བར་འཚོལ་ཐུབ་མིན་དང་ ཁྱེད་ཀྱིས་ད་དུང་དོ་དམ་པ་ཡིན་པས་ཐོ་འགོད་ཡོད་མིན་ཞིབ་བཤེར་བྱོས།"
+errorSubtitle = "བསྐྱར་འགོ་མི་བྱས།"
+errorTitle = "ཁྱེད་ཀྱི་སྒྲིག་འགོད་ཉར་མ་ཐུབ"
+manualSubtitle = "སར་བར་འདིར་རང་གིས་བསྐྱར་འགོ་མི་བྱེད། container ཡང་ན service བསྐྱར་འགོ་བྱས་ནས་སྤྱོད་སྒོ་བཟོ།"
+manualTitle = "སྒྲིག་འགོད་ཉར་ཟིན"
+restartFailedSubtitle = "སར་བར་བསྐྱར་འགོ་མ་བྱས། container ཡང་ན service བསྐྱར་འགོ་བྱས་ནས་སྤྱོད་སྒོ་བཟོ།"
+restartingSubtitle = "སར་བར་ཕྱིར་ལོག་སྐབས་ཤོག་ངོས་འདི་ཡང་ཕབ་ཡོད་པ། སྤྱིར་བཏང་སྐར་མ་གཅིག་ནང་དུ།"
+restartingTitle = "སར་བར་ཁྱེད་ཀྱི་བསྐྱར་འགོ་བཞིན"
+retry = "ཡང་བསྐྱར་ཚོད་ལྟ"
+saving = "ཉར་བཞིན"
+savingSubtitle = "སྐར་མ་ཙམ།"
+savingTitle = "ཁྱེད་ཀྱི་སྒྲིག་འགོད་ཉར་བཞིན"
+
+[serverSetup.language]
+auto = "བརའུ་ཟར་རེ་རེར་མཐུན"
+label = "སོར་བཞག་སྐད་ཡིག"
+subtitle = "ཐོ་མཁོན་གསར་པས་མདུན་མཐོང་བ།"
+title = "སྐད་ཡིག"
+
+[serverSetup.mcp]
+label = "MCP སར་བར"
+
+[serverSetup.password]
+confirm = "གསང་ཨང་གསར་པ་ངེས་འཛིན"
+current = "ད་ལྟའི་གསང་ཨང་"
+new = "གསང་ཨང་གསར་པ"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "… ལས་ཐོ་འགོད"
+oidc = "OpenID Connect གཞན"
+password = "བཀོད་མིང་དང་གསང་ཨང་"
+providerName = "Provider name"
+providerNameHelp = "ཐོ་འགོད་པར་མཐེབ་ཐོག་མངོན་པ། དཔེར་ན okta ཡང་ན entra།"
+redirectNote = "ཁྱེད་ཀྱི provider ནང redirect URI འདི་ཁ་སྣོན:"
+subtitle = "ཁྱེད་ཀྱི་ཚོགས་ཆུང་གིས་གང་འདྲས་ཐོ་འགོད།"
+title = "ཐོ་འགོད"
+
+[serverSetup.signingIn]
+button = "ཐོ་འགོད་བཞིན"
+title = "སོར་བཞག་ངོ་སྤྲོད་དང་བཅས་ཐོ་འགོད་བཞིན"
+
+[serverSetup.start]
+custom = "རང་སྒྲིག"
+quick = "མྱུར་འགོ་སློང"
+setupLabel = "སྒྲིག་འགོད"
+subtitle = "ཁྱེད་ཀྱི་ཚོགས་ཆུང་ལ་གོ་རིམ་ཉུང་ཙམ་གྱིས་སྒྲིག་འགོད།"
+title = "ཁྱེད་ཀྱི་སར་བར་སྒོ་ཕྱེས་ཟིན"
+
+[serverSetup.summary]
+subtitle = "གལ་ཆེ་བའི་གནས་ཚད་ཞིབ་བཤེར། དེ་མིན་ཚང་མས་སོར་བཞག་བཞག"
+title = "མྱུར་འགོ་སློང"
+
 [session]
 expired = "ཁྱེད་རང་གི་ཚོགས་ཐུན་དུས་ཚོད་རྫོགས་ཡོད། ཤོག་བུ་གསར་བཟོ་བྱས་ནས་བསྐྱར་དུ་ཚོད་ལྟ་གནང་རོགས།"
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "གསང་དོན"
 storageSharing = "ཡིག་ཆའི་གསོག་འཇོག་དང་མཉམ་སྤྱོད"
 systemSettings = "མ་ལག་སྒྲིག་བཀོད།"
+
+[settings.connectedAccounts]
+description = "ཁྱེད་རང་གི OneDrive, SharePoint དང Google Drive ཚང་མ་— ཁྱེད་ཀྱི pipelines ལ་སྤྱོད་པ།"
+title = "མཐུད་ཟིན་པའི་རྩིས་ཐོ"
 
 [settings.connectedInstances]
 confirmBody = "འདིས instance དེའི Stirling Cloud ནང་ཁྱེད་ཀྱི་ཚོགས་པར་འཛུལ་དབང་ཕྱིར་འཐེན་བྱེད། འདིས་རང་སའི་ཡིག་ཆ་སུབ་པའམ་ཟིན་ཐོ་བྱས་ཟིན་པའི་སྤྱོད་ཚད་ཕྱིར་འདོན་མི་བྱེད། ཡང་བསྐྱར་མཐུད་པར། instance ཐོག་གི་ཐོག་མའི་མཐུད་སྦྲེལ་གོམ་རིམ་ལྟར་བྱོས།"
@@ -11992,6 +12905,13 @@ selfhosted = "རང་གིས་རང་ལ་མགྲོན་ཁང་།
 apiKeys = "APIལྡེ་མིག"
 apiKeysDescription = "scripts དང integrations ནས Stirling API འབོད་པའི་མི་སྒེར keys།"
 title = "གོང་འཕེལ་གཏོང་མཁན།"
+
+[settings.feedback]
+label = "བསམ་འཆར"
+
+[settings.feedback.send]
+description = "Stirling ཚོགས་ཆུང་ལ་དཀའ་ངལ་སྙན་ཞུ་ཡང་ན་ལེགས་སྒྲུབ་བསམ་འཆར་གསུངས།"
+label = "བསམ་འཆར་གཏོང"
 
 [settings.general]
 autoUnzip = "རང་འགུལ་གྱིས་APIལན་འདེབས།"
@@ -12058,6 +12978,7 @@ checkForUpdates = "གསར་བརྗེ་ལ་ཞིབ་བཤེར།"
 currentBackendVersion = "ད་ལྟའི Backend Version"
 currentFrontendVersion = "ད་ལྟའི Frontend Version"
 description = "གསར་བརྗེའི་གནས་ཚུལ་ལ་ཞིབ་བཤེར་དང་ཐོན་རིམ་གྱི་ཆ་འཕྲིན་ལ་ལྟོས།"
+descriptionManaged = "ཐོན་རིམ་ཆ་འཕྲིན་ལྟ"
 latestVersion = "ཐོན་རིམ་གསར་ཤོས།"
 managedByAdmin = "སྐྱོང་འཛིན་གྱིས་དོ་དམ"
 modeAuto = "གསར་སྒྱུར་རང་འགུལ་འཇུག"
@@ -12135,15 +13056,24 @@ title = "ཁྲིམས་མཐུན་ཡིག་ཆ"
 backendDescription = "server འདིར་མཉམ་སྡེབ་བྱས་པའི backend dependencies ཡི licenses།"
 backendLabel = "Backend ཆོག་མཆན"
 backendTitle = "Backend ཕྱོགས་གསུམ་པའི་ཆོག་མཆན"
+clearSearch = "འཚོལ་བ་བསལ"
 empty = "dependencies མ་རྙེད།"
 frontendDescription = "release build ནང་མཉམ་སྡེབ་བྱས་པའི frontend dependencies ཡི licenses།"
 frontendLabel = "Frontend ཆོག་མཆན"
 frontendTitle = "Frontend ཕྱོགས་གསུམ་པའི་ཆོག་མཆན"
 license = "ཆོག་མཆན"
+licenseAbout = "སྐོར"
+licenseAboutCompound = "{{short}} སྐོར"
+licenseAboutTitle = "{{short}} སྐོར"
 listDescription = "ཐོ་འདི release bundle ཡང་ན backend endpoint ནས UI ནང་ཐད་ཀར་སྟོན།"
 listTitle = "མཉམ་སྡེབ dependencies"
 loadError = "third-party licenses འཇུག་མ་ཐུབ"
 module = "དཔེ་དུམ"
+noMatch = "མཐུན་པའི་བརྟེན་འབྲེལ་མ་རྙེད།"
+searchPlaceholder = "བརྟེན་འབྲེལ་འཚོལ"
+showingCount = "{{count}} བརྟེན་འབྲེལ"
+showingCount_one = "{{count}} བརྟེན་འབྲེལ"
+showingCount_other = "{{count}} བརྟེན་འབྲེལ"
 version = "པར་གཞི"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "ཁྱེད་རང་གི་གློག་འཕྲིན་
 emptyPassword = "ཁྱེད་རང་གི་གསང་གྲངས་བླུགས་རོགས།"
 emptyUsername = "ཁྱེད་རང་གི་སྤྱོད་མཁན་གྱི་མིང་བླུགས་རོགས།"
 oauthFailed = "OAuth ནང་འཛུལ་བྱེད་མ་ཐུབ་པ་རེད། བསྐྱར་དུ་ཚོད་ལྟ་གནང་རོགས།"
+openResetFailed = "ཁྱེད་ཀྱི browser ཁ་ཕྱེ་ནས་གསང་ཨང་བསྐྱར་འཇོག་མི་ཐུབ།"
 
 [setup.saas]
 title = "སི་ཊར་ལིང་ལ་འཛུལ་བ།"
@@ -12703,6 +13634,11 @@ bullet3 = "མཐོང་མི་རུང་མཛུབ་འགན་ཡང
 description = "མཛུབ་འགན་ཡིག་ཆ་སྟེང་མངོན་དམ་ནང་ཁ་མས་བཅུག་ན་གདམ།"
 title = "མཛུབ་འགན་མཐོང་རུང་གནས"
 
+[signedPdf]
+editsBlocked = "PDF འདི་དེ་གནས་ལུགས་ཀྱིས་མཛུབ་འགོད་ཟིན་པས། མཛུབ་འགོད་ཟིན་པའི PDF བཅོས་བཀག་ཡོད། ཁྱེད་ཀྱིས་ལྟ་བའམ་དཔར་བསྐྲུན་བྱེད་ ཡང་ན་གཞན་དབྱེ་རིམ་ལ་བསྒྱུར་ ཡང་ན་ཡང་བསྐྱར་མཛུབ་འགོད་བྱེད་ཆོག"
+editsBlockedStatus = "མཛུབ་འགོད་ཟིན: ཞུན་དག་བཀག"
+editsBlockedTitle = "མཛུབ་འགོད་ཟིན་པའི PDF བཅོས་མི་ཆོག"
+
 [signingDetail]
 allSigned = "ཚང་མས་མིང་རྟགས་བཀོད་ཟིན། ཡིག་ཆར་བསྐྱར་ཞིབ་བྱས་ནས་མཐའ་མཇུག་གཏན་འཁེལ་བྱོས།"
 awaitingOwner = "བདག་པོ་གྲ་སྒྲིག་ཡོད་སྐབས་ཡིག་ཆ་མཐའ་མཇུག་གཏན་འཁེལ་བྱེད།"
@@ -13110,7 +14046,6 @@ noLinks = "མཉམ་སྤྱོད་འབྲེལ་ཐག་མ་འད
 noSharedUsers = "འཛུལ་ས་ཡོད་པའི་མི་མེད།"
 openInApp = "Stirling PDF ནང་ཁ་ཕྱེ"
 ownerLabel = "བདག་པོ"
-ownerUnknown = "མ་ཤེས"
 removeLink = "འབྲེལ་ཐག་བསུབ"
 removeUser = "བསུབ"
 requiresLogin = "མཉམ་སྤྱོད་ཡིག་ཆ་འདི་ལ་ཐོ་འགོད་དགོས།"
@@ -13249,6 +14184,11 @@ remove = "སུབ"
 roleColumn = "ལས་འགན"
 title = "ཚོགས་མི"
 
+[teamWelcome]
+invite = "མི་ཚོ་འབོད"
+message = "ཁྱེད་ཀྱི་ཚོགས་ཆུང་འབོད་ནས་ཁྱེད་དང་མཉམ་དུ་ལས་ཀ་འགོ་སློང་ཐུབ་གོ།"
+title = "ཁྱེད་ཀྱི Team plan འགུལ་སྤྱོད་བྱེད་འགྲོ།"
+
 [textAlign]
 center = "ལྟེ་བ"
 left = "གཡོན"
@@ -13290,7 +14230,6 @@ toggleDetails = "ཞིབ་ཕྲ་བརྗེ"
 
 [tool]
 endpointUnavailable = "ལག་ཆ་འདི་ཁྱེད་ཀྱི་ཞབས་ཞུ་ནས་མི་འཐོབ།"
-endpointUnavailableClickable = "ཐབས་ལམ་འདིར་མི་འཐོབ། མནན་ནས་ནང་འཇུག་བྱོས།"
 filesLoading = "ཡིག་ཆ་ད་དུང་འཇུག་བཞིན་ཡོད། སྒུག་རོགས།"
 filesLoadingProgress = "{{loaded}} / {{total}} ཡིག་ཆ་འཇུག་བཞིན..."
 invalidParams = "དགོས་མཁོའི་སྒྲིག་འགོད་ལེན་བསྐྱེད།"
@@ -13298,6 +14237,8 @@ noFiles = "འགོ་འཛུགས་བྱ་ཆེད་ཡིག་ཆ་
 scopeFiles = "ཡིག་ཆ་ཚོ"
 scopeThisFile = "ཡིག་ཆ་འདི་"
 selectFilesHint = "ལག་ཆ་འདི་སྒྲུབ་བར Active Files ནས་ཡིག་ཆ་སེལ།"
+signInRequired = "འདི་ལ་ Stirling རྩིས་ཐོ་དགོས། མུ་མཐུད་བྱེད་པར་ནང་འཛུལ།"
+signInToUse = "ལག་ལེན་བྱེད་པར་ནང་འཛུལ།"
 singleFileScope = "འཇུག་སྤྱོད་: {{fileName}} ཁོ་ན"
 viewerMode = "ཡིག་ཆ་མང་པོ་སྣོན་པར་ཡིག་ཆ editor ལ་བརྗེ།"
 
@@ -13790,6 +14731,7 @@ coverPageView = "ཁ་ཤོག་ལོགས་སུ་སྟོན"
 disableColorFilter = "ཁ་དོག་འཚག་བཟོ་བར་བཀག"
 documentUpdated = "ཡིག་ཆ་གསར་སྒྱུར་བྱས་ཟིན།"
 dualPageView = "ཤོག་ངོས་གཉིས་ལྡན་གྱི་མཐོང་སྣང་།"
+editText = "ཡིག་རྐྱང་ཞུན་དག"
 enableDarkFilter = "མུན་མཐོང་འཚག་བཟོ་ལྕོགས་འགུལ"
 enableSepiaFilter = "Sepia འཚག་བཟོ་ལྕོགས་འགུལ"
 engineLoadError = "PDF viewer engine འགོ་སྒྲིག་བྱེད་མ་ཐུབ།"
@@ -14158,8 +15100,10 @@ closeAll = "ཡིག་ཆ་ཚང་མ་ཁ་བསྡམས"
 closePdf = "PDF ཁ་བསྡམས"
 deselectAll = "ཚང་མ་འདེམས་པ་བཤོལ"
 downloadAll = "ཚང་མ་ཕབ་ལེན"
+editText = "ཡིག་རྐྱང་ཞུན་དག"
 exitAnnotations = "མཆན་འགྲེལ་རྣམ་པ་ནས་ཕྱིར་འཐོན"
 exitRedaction = "སྦ་བཅོས་ཐབས་ལམ་ནས་ཕྱིར་ཐོན"
+findReplace = "འཚོལ་ནས་བརྗེ"
 formFill = "འགེངས་ཤོག་རྩོམ་སྒྲིག་ཆས།"
 hideToolbar = "ལག་ཆའི་སྒྲོམ་སྦས།"
 moreActions = "བྱ་སྤྱོད་མང་བ།"

@@ -1,4 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  openInTextEditor,
+  scrollToEditorPage,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 /**
@@ -7,11 +11,11 @@ import path from "path";
  * PageView keeps a page's PDFium bitmap only while the page is "near" the
  * viewport, and frees the canvas otherwise (a 4x-zoom A4 canvas is ~32MB).
  * The observer that decides "near" uses rootMargin: 800px, but the pages live
- * inside a Mantine ScrollArea. IntersectionObserver clips the target against
+ * inside a scroll container. IntersectionObserver clips the target against
  * every scrolling ancestor BEFORE root+rootMargin is applied, so with the
- * default (document) root a page one pixel outside the ScrollArea is already
- * non-intersecting and the margin can never bring it back - the prefetch was
- * dead code and pages popped in as blank placeholders on scroll.
+ * default (document) root a page one pixel outside the container is already
+ * non-intersecting and the margin can never bring it back - the prefetch is
+ * dead and pages pop in blank on scroll.
  *
  * These tests measure it from geometry + canvas backing stores only:
  *   - a page whose top edge is inside the 800px margin must be rendered
@@ -29,20 +33,24 @@ interface PageGeom {
   index: number;
   /** Canvas backing-store width; 0 means the bitmap was freed. */
   canvasW: number;
-  placeholder: boolean;
   /** px from the scroll viewport's bottom edge down to the page's top edge. */
   gapBelow: number;
   /** px from the page's bottom edge up to the scroll viewport's top edge. */
   gapAbove: number;
 }
 
-/** Geometry + bitmap state of every mounted page, relative to the ScrollArea. */
+/** Geometry + bitmap state of every mounted page, relative to the viewer's scroll container. */
 function scanPages(p: Page): Promise<{ vpH: number; pages: PageGeom[] }> {
   return p.evaluate(() => {
-    const vp = document.querySelector<HTMLElement>(
-      '[data-testid="pdf-editor-stage"] .mantine-ScrollArea-viewport',
+    // Any mounted page leads to the viewer's scroll container.
+    const first = document.querySelector<HTMLElement>(
+      "[data-testid^='pdf-editor-page-']",
     );
-    if (!vp) throw new Error("ScrollArea viewport not found");
+    let vp: HTMLElement | null = first?.parentElement ?? null;
+    while (vp && !/(auto|scroll)/.test(getComputedStyle(vp).overflowY)) {
+      vp = vp.parentElement;
+    }
+    if (!vp) throw new Error("viewer scroll container not found");
     const vr = vp.getBoundingClientRect();
     const pages = Array.from(
       document.querySelectorAll<HTMLElement>(
@@ -59,9 +67,6 @@ function scanPages(p: Page): Promise<{ vpH: number; pages: PageGeom[] }> {
         return {
           index: idx,
           canvasW: c ? c.width : -1,
-          placeholder: !!el.querySelector(
-            `[data-testid="pdf-editor-page-${idx}-placeholder"]`,
-          ),
           gapBelow: Math.round(r.top - vr.bottom),
           gapAbove: Math.round(vr.top - r.bottom),
         };
@@ -74,22 +79,24 @@ function fmt(scan: { vpH: number; pages: PageGeom[] }) {
   return scan.pages
     .map(
       (g) =>
-        `page ${g.index}: canvas.width=${g.canvasW} placeholder=${g.placeholder} gapBelow=${g.gapBelow} gapAbove=${g.gapAbove}`,
+        `page ${g.index}: canvas.width=${g.canvasW} gapBelow=${g.gapBelow} gapAbove=${g.gapAbove}`,
     )
     .join("\n");
 }
 
 /** Scroll so page `idx`'s top edge sits exactly `gap` px below the fold. */
 async function parkGapBelow(p: Page, idx: number, gap: number) {
+  await scrollToEditorPage(p, idx);
   await p.evaluate(
     ({ i, g }) => {
-      const vp = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-stage"] .mantine-ScrollArea-viewport',
-      );
       const el = document.querySelector<HTMLElement>(
         `[data-testid="pdf-editor-page-${i}"]`,
       );
-      if (!vp || !el) throw new Error("stage or page missing");
+      let vp: HTMLElement | null = el?.parentElement ?? null;
+      while (vp && !/(auto|scroll)/.test(getComputedStyle(vp).overflowY)) {
+        vp = vp.parentElement;
+      }
+      if (!vp || !el) throw new Error("scroll container or page missing");
       const current =
         el.getBoundingClientRect().top - vp.getBoundingClientRect().bottom;
       vp.scrollTop += current - g;
@@ -103,7 +110,7 @@ async function openEditor(p: Page, file: string) {
   await expect(p.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await p.locator('[data-testid="pdf-editor-file-input"]').setInputFiles(file);
+  await openInTextEditor(p, file);
   await expect(p.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -136,7 +143,7 @@ const INSIDE = 700;
 const OUTSIDE = 1000;
 
 test.describe("near-viewport prefetch", () => {
-  test("a page inside the 800px prefetch margin is rendered, not a placeholder", async ({
+  test("a page inside the 800px prefetch margin is rendered", async ({
     page,
   }) => {
     await openEditor(page, MANY_PAGES_PDF);
@@ -156,10 +163,6 @@ test.describe("near-viewport prefetch", () => {
         g.canvasW,
         `page ${g.index} sits ${g.gapBelow}px below the fold (inside the ${MARGIN}px prefetch margin) so its bitmap must already be rendered\n${fmt(scan)}`,
       ).toBeGreaterThan(0);
-      expect(
-        g.placeholder,
-        `page ${g.index} sits ${g.gapBelow}px below the fold and must not show the placeholder\n${fmt(scan)}`,
-      ).toBe(false);
     }
   });
 
@@ -210,18 +213,13 @@ test.describe("near-viewport prefetch", () => {
       near.canvasW,
       `page 3 parked ${near.gapBelow}px below the fold is inside the ${MARGIN}px margin and must be rendered ahead of the scroll\n${fmt(inside)}`,
     ).toBeGreaterThan(0);
-    expect(near.placeholder).toBe(false);
   });
 
   test("prefetch also covers pages just above the viewport", async ({
     page,
   }) => {
     await openEditor(page, MANY_PAGES_PDF);
-    await page.evaluate(() => {
-      document
-        .querySelector<HTMLElement>('[data-testid="pdf-editor-page-4"]')
-        ?.scrollIntoView({ block: "center" });
-    });
+    await scrollToEditorPage(page, 4);
     const scan = await settledScan(page);
     console.log(`[page 4 centred] viewport height ${scan.vpH}\n${fmt(scan)}`);
 

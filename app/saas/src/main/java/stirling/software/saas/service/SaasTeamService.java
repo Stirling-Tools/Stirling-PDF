@@ -2,6 +2,7 @@ package stirling.software.saas.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
@@ -27,6 +28,7 @@ import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
 import stirling.software.saas.model.TeamInvitation;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
+import stirling.software.saas.repository.SupabaseUserRepository;
 import stirling.software.saas.repository.TeamInvitationRepository;
 
 /** SaaS-only team management: invitations, personal teams, seat caps, paid-subscription gating. */
@@ -51,6 +53,7 @@ public class SaasTeamService {
     private final SaasUserExtensionService saasUserExtensionService;
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
+    private final SupabaseUserRepository supabaseUserRepository;
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
@@ -65,6 +68,24 @@ public class SaasTeamService {
         User saved = userService.saveUser(user);
         saved.setTeam(ensurePersonalTeam(saved));
         return saved;
+    }
+
+    /**
+     * Persist a first-time Supabase account, or return the row a parallel request already
+     * committed. A new sign-in fires a burst of requests that all miss the user lookup; locking the
+     * account's auth.users row queues them behind the first insert. Without it each one inserts,
+     * and Postgres logs every losing insert as a unique-violation ERROR even though the caller
+     * recovers.
+     */
+    @Transactional
+    public User provisionUser(User newUser, boolean withPersonalTeam) {
+        UUID supabaseId = newUser.getSupabaseId();
+        supabaseUserRepository.lockById(supabaseId);
+        Optional<User> committed = userRepository.findBySupabaseId(supabaseId);
+        if (committed.isPresent()) {
+            return committed.get();
+        }
+        return withPersonalTeam ? saveUserWithPersonalTeam(newUser) : userService.saveUser(newUser);
     }
 
     /** Returns the user's personal team, creating one if they have none. Idempotent. */

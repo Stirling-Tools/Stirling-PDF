@@ -102,3 +102,14 @@ function heapView(m: WrappedPdfiumModule): Uint8Array {
   ).memory;
   return new Uint8Array(memory.buffer);
 }
+
+/** The pixels of image `imageId` as the open document draws them, or null. */
+export function readShownImagePixels(
+  store: { document: EditorDocument | null },
+  pageIndex: number,
+  imageId: string,
+): ImagePixels | null {
+  const doc = store.document;
+  const ptr = doc?.page(pageIndex).findImage(imageId)?.pdfiumObjPtr ?? 0;
+  return doc && ptr ? readImageObjectPixels(doc, pageIndex, ptr) : null;
+}

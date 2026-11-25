@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -20,9 +21,7 @@ async function openEditor(page: Page): Promise<void> {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 45_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 45_000,
   });

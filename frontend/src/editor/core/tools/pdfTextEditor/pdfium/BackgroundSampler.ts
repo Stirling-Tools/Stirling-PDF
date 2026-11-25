@@ -209,7 +209,7 @@ const GROUND_SHARE = 0.65;
 const HIGHLIGHT_SHARE = 0.97;
 const REVERSED_GROUND_MAX = 110;
 const REVERSED_CONTRAST = 60;
-const DOT_GAP_SHARE = 0.2;
+const DOT_GAP_SHARE = 0.3;
 
 // Faint anti-aliased edges still show once the paper around them is covered, so the extent uses a softer cut than the colour does.
 function inkLevel(l: number, paper: number): number {

@@ -3,42 +3,39 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import { PolicyPdfaConfig } from "@editor/components/policies/PolicyPdfaConfig";
 
-const config = vi.hoisted(() => ({ stirlingOfficeConversion: false }));
-vi.mock("@editor/contexts/AppConfigContext", () => ({
-  useAppConfig: () => ({ config }),
-}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
 
-describe("PDF/A policy converter choice", () => {
-  test.each([
-    [false, undefined, false],
-    [true, undefined, true],
-    [true, false, false],
-    [false, true, true],
-  ])("server=%s choice=%s gives checked=%s", (server, choice, checked) => {
-    config.stirlingOfficeConversion = server;
-    const onChange = vi.fn();
-    render(
-      <MantineProvider>
-        <PolicyPdfaConfig
-          parameters={{
-            outputFormat: "pdfa-3b",
-            useStirlingOfficeConvert: choice,
-          }}
-          onChange={onChange}
-        />
-      </MantineProvider>,
-    );
-    const control = screen.getByTestId("stirling-office-convert-switch");
-    expect(control).toHaveProperty("checked", checked);
-    fireEvent.click(control);
-    expect(onChange).toHaveBeenCalledWith({
-      outputFormat: "pdfa-3b",
-      useStirlingOfficeConvert: !checked,
-    });
+function renderConfig(onChange = vi.fn()) {
+  render(
+    <MantineProvider>
+      <PolicyPdfaConfig
+        parameters={{ outputFormat: "pdfa-3b" }}
+        onChange={onChange}
+      />
+    </MantineProvider>,
+  );
+  return onChange;
+}
+
+describe("PDF/A policy settings", () => {
+  test("shows the stored profile", () => {
+    renderConfig();
+    expect(screen.getByRole("textbox")).toHaveProperty("value", "pdfa-3b");
+  });
+
+  test.each(["pdfa-1", "pdfa-2b"])("picking %s stores that profile", (pick) => {
+    const onChange = renderConfig();
+    fireEvent.click(screen.getByRole("textbox"));
+    fireEvent.click(screen.getByRole("option", { name: pick }));
+    expect(onChange).toHaveBeenCalledWith({ outputFormat: pick });
+  });
+
+  test("offers no converter choice", () => {
+    renderConfig();
+    expect(screen.queryByTestId("stirling-office-convert-switch")).toBeNull();
   });
 });

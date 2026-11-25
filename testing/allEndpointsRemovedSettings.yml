@@ -71,7 +71,8 @@ security:
   validation: # PDF signature validation settings
     trust:
       serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)
-      useSystemTrust: true # Trust Java/OS system trust store for PDF signature validation
+      useSystemTrust: true # Trust the Java runtime's bundled CA store (cacerts) for PDF signature validation
+      useOSTrust: null # Trust the operating system's root store (Windows certificate store, macOS keychain, Linux CA bundle), where Group Policy/Intune/MDM deploy organisation roots: set to 'true' or 'false', or leave as 'null' to trust it in the desktop app only
       useMozillaBundle: true # Trust bundled Mozilla CA bundle (~140 CAs) for PDF signature validation
       useAATL: false # Trust Adobe Approved Trust List (AATL) for PDF signature validation - downloads from Adobe on startup if enabled
       useEUTL: false # Trust EU Trusted List (EUTL) for eIDAS qualified certificates - downloads LOTL and national TSLs on startup if enabled
@@ -222,15 +223,10 @@ system:
       watchedFoldersDirs: [] # List of watched folder directories. Defaults to watchedFoldersDir or /pipeline/watchedFolders.
       finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
-      weasyprint: "" # Defaults to /opt/venv/bin/weasyprint
-      unoconvert: "" # Defaults to /opt/venv/bin/unoconvert
-      calibre: "" # Defaults to /usr/bin/ebook-convert
       ocrmypdf: "" # Defaults to /usr/bin/ocrmypdf
-      soffice: "" # Defaults to /usr/bin/soffice
   fileUploadLimit: "" # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
   tempFileManagement:
     baseTmpDir: "" # Defaults to java.io.tmpdir/stirling-pdf
-    libreofficeDir: "" # Defaults to tempFileManagement.baseTmpDir/libreoffice
     systemTempDir: "" # Only used if cleanupSystemTemp is true
     prefix: stirling-pdf- # Prefix for temp file names
     maxAgeHours: 24 # Maximum age in hours before temp files are cleaned up
@@ -275,7 +271,7 @@ ui:
 
 endpoints:
   toRemove: [ebook-to-pdf, crop, merge-pdfs, multi-page-layout, overlay-pdfs, pdf-to-single-page, rearrange-pages, remove-image-pdf, remove-pages, rotate-pdf, scale-pages, split-by-size-or-count, split-pages, split-pdf-by-chapters, split-pdf-by-sections, add-password, add-watermark, auto-redact, cert-sign, get-info-on-pdf, redact, remove-cert-sign, remove-password, sanitize-pdf, validate-signature, file-to-pdf, html-to-pdf, img-to-pdf, markdown-to-pdf, pdf-to-csv, pdf-to-html, pdf-to-img, pdf-to-markdown, pdf-to-pdfa, pdf-to-presentation, pdf-to-text, pdf-to-word, pdf-to-xml, url-to-pdf, add-image, add-page-numbers, add-stamp, auto-rename, auto-split-pdf, compress-pdf, decompress-pdf, extract-image-scans, extract-images, flatten, ocr-pdf, remove-blanks, repair, replace-invert-pdf, show-javascript, update-metadata, filter-contains-image, filter-contains-text, filter-file-size, filter-page-count, filter-page-rotation, filter-page-size, add-attachments] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
-  groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
+  groupsToRemove: [] # list groups to disable (e.g. ['Ghostscript', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
 
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
@@ -287,38 +283,17 @@ AutomaticallyGenerated:
   appVersion: 2.9.2
 
 processExecutor:
-  autoUnoServer: true # true: use local pool based on libreOfficeSessionLimit; false: use unoServerEndpoints
-  unoServerEndpoints: [] # Used when autoUnoServer is false
-  # Example manual endpoints (uncomment to use):
-  # unoServerEndpoints:
-  #   - host: "127.0.0.1"
-  #     port: 2003
-  #     hostLocation: "auto"  # auto|local|remote (use "remote" for port-forwarded servers)
-  #     protocol: "http"       # http|https
-  #   - host: "remote-server.local"
-  #     port: 8080
-  #     hostLocation: "remote"
-  #     protocol: "https"
   sessionLimit: # Process executor instances limits
-    libreOfficeSessionLimit: 1 # Each additional uno server adds ~50MB idle RAM
-    pdfToHtmlSessionLimit: 1
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
-    weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
-    calibreSessionLimit: 1
-    imageMagickSessionLimit: 4
     ghostscriptSessionLimit: 8
     ocrMyPdfSessionLimit: 2
   timeoutMinutes: # Process executor timeout in minutes
-    libreOfficetimeoutMinutes: 30
-    pdfToHtmltimeoutMinutes: 20
+    officeConvertTimeoutMinutes: 30 # Office, HTML, ebook and PDF/A conversions
     pythonOpenCvtimeoutMinutes: 30
-    weasyPrinttimeoutMinutes: 30
     installApptimeoutMinutes: 60
-    calibretimeoutMinutes: 30
-    imageMagickTimeoutMinutes: 30
     tesseractTimeoutMinutes: 30
     qpdfTimeoutMinutes: 30
     ghostscriptTimeoutMinutes: 30

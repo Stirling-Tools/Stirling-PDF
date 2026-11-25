@@ -1,3 +1,5 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -57,22 +59,23 @@ export class SetTextOutlineCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    refuseRedrawOfReadOnlyText(run);
+    liftRunToPage(doc, page, run);
 
-    if (this.prev === null) {
-      const seen = new Set<number>();
-      const members: MemberInk[] = [];
-      for (const ptr of collectMemberPtrs(run)) {
-        if (!ptr || seen.has(ptr)) continue;
-        seen.add(ptr);
-        members.push(readMemberInk(doc, ptr, run));
-      }
-      this.prev = {
-        renderMode: run.renderMode,
-        stroke: run.stroke ? { ...run.stroke } : null,
-        strokeWidth: run.strokeWidth,
-        members,
-      };
+    // Read on every apply: redoing an earlier step draws the run in new objects.
+    const seen = new Set<number>();
+    const members: MemberInk[] = [];
+    for (const ptr of collectMemberPtrs(run)) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      members.push(readMemberInk(doc, ptr, run));
     }
+    this.prev = {
+      renderMode: run.renderMode,
+      stroke: run.stroke ? { ...run.stroke } : null,
+      strokeWidth: run.strokeWidth,
+      members,
+    };
 
     const outlined = this.nextStroke !== null && this.nextWidth > 0;
     // An invisible OCR layer stays invisible, and a clipping mode (4-7) keeps
@@ -113,7 +116,6 @@ export class SetTextOutlineCommand implements Command {
         stroke: member.stroke,
         strokeWidth: member.strokeWidth,
       });
-      if (!member.stroke) clearStroke(doc, member.ptr);
     }
     page.markNeedsGenerate();
   }
@@ -132,7 +134,6 @@ export class SetTextOutlineCommand implements Command {
         stroke: run.stroke,
         strokeWidth: run.strokeWidth,
       });
-      if (!run.stroke) clearStroke(doc, ptr);
     }
     doc.page(this.pageIndex).markNeedsGenerate();
   }
@@ -189,16 +190,5 @@ function readMemberInk(
     return { ptr, renderMode, stroke, strokeWidth };
   } catch {
     return { ptr, renderMode, stroke: null, strokeWidth: 0 };
-  }
-}
-
-/** A zero-width transparent stroke is how PDFium expresses "no outline". */
-function clearStroke(doc: EditorDocument, ptr: number): void {
-  const mod = doc.module as unknown as OutlineModule;
-  try {
-    mod.FPDFPageObj_SetStrokeWidth?.(ptr, 0);
-    mod.FPDFPageObj_SetStrokeColor?.(ptr, 0, 0, 0, 0);
-  } catch {
-    /* best-effort */
   }
 }
