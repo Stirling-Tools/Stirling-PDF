@@ -7,12 +7,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.core.io.ByteArrayResource;
@@ -20,6 +23,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.util.MultiValueMap;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -34,6 +40,34 @@ import tools.jackson.databind.node.ObjectNode;
 class McpOperationExecutorTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
+
+    @AfterEach
+    void clearAuthentication() {
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void admittedJwtIsForwardedToTheToolApiWithoutApiKeyFallback() throws Exception {
+        InternalApiClient api = mock(InternalApiClient.class);
+        FileStorage storage = mock(FileStorage.class);
+        when(api.post(eq("/api/v1/misc/compress-pdf"), any(), eq("admitted-session")))
+                .thenReturn(pdfResponse("RESULT".getBytes(StandardCharsets.UTF_8)));
+        when(storage.storeBytes(any(), anyString())).thenReturn("result");
+        var jwt =
+                Jwt.withTokenValue("admitted-session")
+                        .header("alg", "RS256")
+                        .subject("company-user")
+                        .build();
+        SecurityContextHolder.getContext()
+                .setAuthentication(new JwtAuthenticationToken(jwt, List.of(), "original-user"));
+        var executor = new McpOperationExecutor(mapper, api, storage, new ApplicationProperties());
+        var arguments =
+                mapper.createObjectNode()
+                        .put("file", Base64.getEncoder().encodeToString(new byte[] {1}));
+        assertFalse(executor.execute(compressOp(), arguments).path("isError").asBoolean(false));
+        verify(api).post(eq("/api/v1/misc/compress-pdf"), any(), eq("admitted-session"));
+        verify(api, never()).post(anyString(), any());
+    }
 
     private OperationMeta compressOp() {
         return new OperationMeta(

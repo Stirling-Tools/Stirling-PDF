@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { profileIdentity } from "@editor/services/profileIdentity";
 import {
   Alert,
   Divider,
@@ -70,7 +71,20 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
   const isOAuthPicture = profilePictureMetadata?.source === "oauth";
   const provider = profilePictureMetadata?.provider;
 
-  const profilePath = user ? `${user.id}/avatar` : null;
+  const [profilePath, setProfilePath] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setProfilePath(null);
+    if (user)
+      void profileIdentity(user.id)
+        .then((id) => {
+          if (!cancelled) setProfilePath(`${id}/avatar`);
+        })
+        .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const handleProfileUpload = async (file: File | null) => {
     if (!file || !user || !profilePath) {

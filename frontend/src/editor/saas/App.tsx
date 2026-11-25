@@ -30,6 +30,8 @@ import UsageLimitModalHost from "@editor/components/UsageLimitModalHost";
 import UserbackWidget from "@editor/components/feedback/UserbackWidget";
 import { RootGate } from "@editor/routes/RootGate";
 
+const CompanySso = lazy(() => import("@editor/routes/CompanySso"));
+
 const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@editor/pages/MobileSignPage"));
 const FeedbackPage = lazy(() => import("@editor/pages/FeedbackPage"));
@@ -115,6 +117,14 @@ export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
+        <Route
+          path="/company-sso"
+          element={
+            <PublicRouteProviders>
+              <CompanySso />
+            </PublicRouteProviders>
+          }
+        />
         {/* Mobile scanner - public, no auth. Opened on a phone via the QR code,
             so it must render without a logged-in session. Kept outside
             AppProviders or it falls through to the auth-gated catch-all. */}

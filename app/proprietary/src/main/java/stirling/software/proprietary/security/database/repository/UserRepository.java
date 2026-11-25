@@ -39,6 +39,8 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailIgnoreCase(String email);
+
     /** Both associations are EAGER, so fetch them in one statement rather than three. */
     @EntityGraph(attributePaths = {"team", "authorities"})
     Optional<User> findBySupabaseId(UUID supabaseId);

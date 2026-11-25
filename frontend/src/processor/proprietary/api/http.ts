@@ -53,6 +53,7 @@ import {
   onLocalUnauthorized,
 } from "@editor/portal/api/localBackend";
 import { localFetch } from "@editor/portal/localTransport";
+import { reportCompanySsoRequired } from "@editor/services/companySsoRequired";
 
 /**
  * SaaS base URL via the flavor seam: self-hosted reads VITE_SAAS_API_URL (a
@@ -131,6 +132,7 @@ async function unwrap<T>(
       // ignore — non-JSON error response
     }
     const error = new HttpError(res.status, res.statusText, body);
+    reportCompanySsoRequired(res.status, body);
     // The instance's entitlement gate answers a spent free grant here, and the prompt it raises is
     // the actionable surface. Reported for every domain rather than only the local one because the
     // classifier keys on a sentinel only the local backend sends, so a SaaS 402 cannot reach it.
