@@ -217,7 +217,6 @@ const FileEditor = ({
     [reorderFiles, showStatus, t],
   );
 
-
   const handleSaveFile = useCallback(
     async (fileId: FileId) => {
       const record = stubsRef.current.find((r) => r.id === fileId);
