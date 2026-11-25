@@ -1,4 +1,8 @@
-import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import i18n from "i18next";
+import {
+  RolledBackError,
+  type Command,
+} from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -14,14 +18,12 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { copyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-
-interface ZOrderModule {
-  FPDFPage_InsertObjectAtIndex?: (
-    page: number,
-    obj: number,
-    index: number,
-  ) => boolean;
-}
+import {
+  indexedInsertOf,
+  insertPageObjectAt,
+} from "@editor/tools/pdfTextEditor/util/insertPageObject";
+import { pageObjectIndex } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { clipHidesImage } from "@editor/tools/pdfTextEditor/util/imageClip";
 
 interface MatrixModule {
   FPDFImageObj_SetMatrix?: (
@@ -89,6 +91,18 @@ export class ReplaceImageCommand implements Command {
     const page = doc.page(this.pageIndex);
     const img = page.findImage(this.imageId);
     if (!img || !img.pdfiumObjPtr) return;
+    // The replacement is a new object, and PDFium cannot give an object a
+    // clip, so it would show what the original's clip hides.
+    if (clipHidesImage(img)) {
+      throw new RolledBackError(
+        new Error(
+          i18n.t(
+            "pdfTextEditor.error.replaceClippedImage",
+            "Can't replace this image: it is cropped, and the replacement would show the parts the crop hides.",
+          ),
+        ),
+      );
+    }
     const m = doc.module;
     // A form-nested original cannot be detached and put back (this build has
     // no FPDFFormObj_InsertObject), so hide it in place instead and draw the
@@ -98,7 +112,7 @@ export class ReplaceImageCommand implements Command {
       this.prevObjPtr = img.pdfiumObjPtr;
       this.prevMatrix = { ...img.matrix };
       this.prevBounds = { ...img.bounds };
-      this.prevIndex = objectIndex(m, page.pagePtr, this.prevObjPtr);
+      this.prevIndex = pageObjectIndex(m, page.pagePtr, this.prevObjPtr);
     }
     const matrix = this.prevMatrix;
     const box = this.prevBounds;
@@ -107,7 +121,7 @@ export class ReplaceImageCommand implements Command {
     if (this.nextObjPtr) {
       if (nested) setActive(m, this.prevObjPtr, false);
       else m.FPDFPage_RemoveObject(page.pagePtr, this.prevObjPtr);
-      insertObjectAt(m, page.pagePtr, this.nextObjPtr, this.prevIndex);
+      insertPageObjectAt(m, page.pagePtr, this.nextObjPtr, this.prevIndex);
       this.adopt(page, img, this.nextObjPtr);
       return;
     }
@@ -149,9 +163,9 @@ export class ReplaceImageCommand implements Command {
     if (nested) setActive(m, this.prevObjPtr, false);
     else m.FPDFPage_RemoveObject(page.pagePtr, this.prevObjPtr);
     // The embed appended, so without this the replacement jumps to the top.
-    if (this.prevIndex >= 0 && supportsInsertAtIndex(m)) {
+    if (this.prevIndex >= 0 && indexedInsertOf(m)) {
       m.FPDFPage_RemoveObject(page.pagePtr, objPtr);
-      insertObjectAt(m, page.pagePtr, objPtr, this.prevIndex);
+      insertPageObjectAt(m, page.pagePtr, objPtr, this.prevIndex);
     }
     this.nextObjPtr = objPtr;
     this.adopt(page, img, objPtr);
@@ -166,7 +180,7 @@ export class ReplaceImageCommand implements Command {
     // Detach only again: the replacement is what redo re-attaches.
     m.FPDFPage_RemoveObject(page.pagePtr, this.nextObjPtr);
     if (img.containerPtr) setActive(m, this.prevObjPtr, true);
-    else insertObjectAt(m, page.pagePtr, this.prevObjPtr, this.prevIndex);
+    else insertPageObjectAt(m, page.pagePtr, this.prevObjPtr, this.prevIndex);
     this.adopt(page, img, this.prevObjPtr);
   }
 
@@ -178,43 +192,6 @@ export class ReplaceImageCommand implements Command {
     page.markDirty();
     page.markNeedsGenerate();
   }
-}
-
-function objectIndex(
-  m: WrappedPdfiumModule,
-  pagePtr: number,
-  objPtr: number,
-): number {
-  const total = m.FPDFPage_CountObjects(pagePtr);
-  for (let i = 0; i < total; i++) {
-    if (m.FPDFPage_GetObject(pagePtr, i) === objPtr) return i;
-  }
-  return -1;
-}
-
-function supportsInsertAtIndex(m: WrappedPdfiumModule): boolean {
-  return (
-    typeof (m as unknown as ZOrderModule).FPDFPage_InsertObjectAtIndex ===
-    "function"
-  );
-}
-
-/** Re-attach a detached object at `index`, appending when that is unavailable. */
-function insertObjectAt(
-  m: WrappedPdfiumModule,
-  pagePtr: number,
-  objPtr: number,
-  index: number,
-): void {
-  const insertAt = (m as unknown as ZOrderModule).FPDFPage_InsertObjectAtIndex;
-  if (typeof insertAt === "function" && index >= 0) {
-    try {
-      if (insertAt.call(m, pagePtr, objPtr, index)) return;
-    } catch {
-      /* fall through to append */
-    }
-  }
-  m.FPDFPage_InsertObject(pagePtr, objPtr);
 }
 
 function setImageMatrix(

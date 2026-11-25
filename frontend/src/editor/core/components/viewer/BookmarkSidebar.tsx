@@ -16,6 +16,7 @@ import { useFileContext } from "@editor/contexts/FileContext";
 import { isStirlingFile } from "@editor/types/fileContext";
 import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
 import apiClient from "@editor/services/apiClient";
+import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
 import { openExternalTab } from "@editor/platform/openExternalTab";
 import { getExternalHref } from "@editor/utils/externalUrl";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
@@ -27,7 +28,6 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 interface BookmarkSidebarProps {
   visible: boolean;
-  thumbnailVisible: boolean;
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
 }
@@ -95,7 +95,6 @@ const openBookmarkTarget = (rawUrl: string): void => {
 
 export const BookmarkSidebar = ({
   visible,
-  thumbnailVisible,
   documentCacheKey,
   preloadCacheKeys = [],
 }: BookmarkSidebarProps) => {
@@ -394,6 +393,11 @@ export const BookmarkSidebar = ({
     setIsSavingBookmark(true);
     setAddBookmarkError(null);
     try {
+      await assertSignedPdfsEditable(
+        [file],
+        "/api/v1/general/edit-table-of-contents",
+        false,
+      );
       // Convert existing PDF bookmarks (from embedpdf) to the backend's
       // payload shape, then append the new one.
       const toPayload = (b: PdfBookmarkObject): BookmarkPayload => ({
@@ -733,7 +737,6 @@ export const BookmarkSidebar = ({
       className="bookmark-sidebar"
       title={t("viewer.bookmarks.title", "Bookmarks")}
       icon={<Icon name="bookmark" />}
-      rightOffset={`${thumbnailVisible ? 15 : 0}rem`}
       visible={visible}
       onClose={toggleBookmarkSidebar}
       closeLabel={t("viewer.bookmarks.closeSidebar", "Close bookmarks sidebar")}
@@ -926,9 +929,11 @@ export const BookmarkSidebar = ({
               />
               <Text
                 size="xs"
-                c="blue.5"
                 ta="center"
-                style={{ textDecoration: "underline" }}
+                style={{
+                  color: "var(--c-accent-text)",
+                  textDecoration: "underline",
+                }}
               >
                 {t(
                   "viewer.bookmarks.openEditor",

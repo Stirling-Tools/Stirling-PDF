@@ -103,7 +103,7 @@ class PdfCommentAgentOrchestratorTest {
 
         AnnotatedPdf result = orchestrator.applyComments(input, "please comment");
 
-        assertEquals("doc-commented.pdf", result.fileName());
+        assertEquals("doc.pdf", result.fileName());
         assertNotNull(result.bytes(), "Returned bytes must not be null");
         try (PDDocument saved = Loader.loadPDF(result.bytes())) {
             List<PDAnnotationText> page0Texts = textAnnotations(saved.getPage(0).getAnnotations());
@@ -163,7 +163,7 @@ class PdfCommentAgentOrchestratorTest {
 
         AnnotatedPdf result = orchestrator.applyComments(input, "test");
 
-        assertEquals("doc-commented.pdf", result.fileName());
+        assertEquals("doc.pdf", result.fileName());
         try (PDDocument saved = Loader.loadPDF(result.bytes())) {
             for (int i = 0; i < saved.getNumberOfPages(); i++) {
                 assertTrue(

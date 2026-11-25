@@ -1,5 +1,9 @@
 import { expect } from "@editor/tests/helpers/stub-test-base";
 import type { Download, Page } from "@playwright/test";
+import {
+  openInTextEditor,
+  scrollToEditorPage,
+} from "@editor/tests/helpers/pdf-text-editor";
 
 /** Save helpers for the PDF text editor specs. */
 
@@ -25,6 +29,18 @@ export async function saveAndDownload(
   await page.getByTestId("pdf-editor-download").click();
   // Wait for the modal itself before arming the download listener.
   await expect(confirm).toBeVisible({ timeout: 10_000 });
+  // The modal slides in; a click while it moves presses the button and
+  // releases past it, so no click fires and the download never starts.
+  await expect
+    .poll(() =>
+      confirm.evaluate(
+        (button) =>
+          (button.closest('[role="dialog"]') ?? button)
+            .getAnimations({ subtree: true })
+            .filter((animation) => animation.playState === "running").length,
+      ),
+    )
+    .toBe(0);
   const downloadPromise = page.waitForEvent("download");
   await confirm.click();
   return downloadPromise;
@@ -73,4 +89,28 @@ export async function waitForReopenedPage(
     pageIndex,
     { timeout },
   );
+}
+
+/**
+ * Open `bytes` the way a user reopens a saved copy and wait until they, not the
+ * document they replace, have populated `pageIndex`. The replaced document's
+ * runs stay mounted while the new file is read, and for a moment afterwards the
+ * new document has no pages, so a wait on a visible run resolves too early.
+ */
+export async function reopenSavedBytes(
+  page: Page,
+  bytes: Buffer,
+  name: string,
+  pageIndex = 0,
+  timeout = 30_000,
+  { zoomPercent }: { zoomPercent?: number | null } = {},
+): Promise<void> {
+  await stashCurrentDocument(page);
+  await openInTextEditor(
+    page,
+    { name, mimeType: "application/pdf", buffer: bytes },
+    zoomPercent === undefined ? undefined : { zoomPercent },
+  );
+  if (pageIndex > 0) await scrollToEditorPage(page, pageIndex);
+  await waitForReopenedPage(page, pageIndex, timeout);
 }
