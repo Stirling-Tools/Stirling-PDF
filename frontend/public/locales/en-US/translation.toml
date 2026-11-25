@@ -4113,6 +4113,7 @@ title = "Image options"
 [compress.tooltip.linearize]
 text = "Reorganises the PDF so a browser can render the first page before downloading the whole file. It improves loading speed but does not change how the pages look."
 title = "Linearize for fast web viewing"
+
 [compress.tooltip.qualityAdjustment]
 text = "Drag the slider to adjust the compression strength. Lower values (1-3) preserve quality but result in larger files. Higher values (7-9) shrink the file more but reduce image clarity."
 title = "Quality Adjustment"
