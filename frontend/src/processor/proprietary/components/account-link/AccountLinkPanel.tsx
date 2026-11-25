@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
 import { SaasSessionBanner } from "@editor/portal/components/account-link/SaasSessionBanner";
 import { useTranslation } from "react-i18next";
+import { handleExternalLinkClick } from "@editor/platform/externalLinkClick";
 import { Banner, Button, InfoTooltip, Skeleton } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
 import { AccountConnectionLayout } from "@editor/components/settings/AccountConnectionLayout";
@@ -87,6 +88,9 @@ function OwnerAccountLinkPanel() {
             href={cloudSettingsUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(event) =>
+              handleExternalLinkClick(cloudSettingsUrl, event)
+            }
             rightSection={<Icon name="external-link" size={20} />}
           >
             {t(

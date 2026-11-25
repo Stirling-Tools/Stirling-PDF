@@ -10,15 +10,16 @@ import type { PortalSettingsOptions } from "@editor/components/settings/portalSe
 /**
  * Desktop: the rules of the edition the connection runs, none in local mode.
  * Stirling Cloud as on web SaaS, a self-hosted server as on web self-hosted.
- * Every signed-in Stirling Cloud member gets Usage & Billing (purchases stay
- * leader-only inside it); a self-hosted owner's billing is the browser handoff
- * in configNavSections, and account linking is not offered.
+ * Usage & Billing is the only billing page in both: every signed-in Stirling
+ * Cloud member gets it (purchases stay leader-only inside it), and on a
+ * self-hosted server the organisation owner does, with the account connection.
  */
 export function usePortalSettingsOptions(): PortalSettingsOptions | null {
   const mode = useConnectionMode();
   const connected = useConnectedServer();
   const { granted: portalAccess } = usePortalAccessState();
-  const { isAdmin, isAnonymous, loading } = useAuth();
+  const { isAdmin, isAnonymous, user, loading } = useAuth();
+  const isOwner = isAdmin && !loading && user?.orgOwner === true;
   const { config } = useAppConfig();
   const rosterAvailable = useRosterAvailable();
 
@@ -44,8 +45,8 @@ export function usePortalSettingsOptions(): PortalSettingsOptions | null {
           !loading,
         includeApiKeys: portalAccess,
         includeEncryption: portalAccess && isAdmin,
-        includeBilling: false,
-        includeAccountLink: false,
+        includeBilling: isOwner,
+        includeAccountLink: isOwner,
       };
     }
     return null;
@@ -57,6 +58,7 @@ export function usePortalSettingsOptions(): PortalSettingsOptions | null {
     isAnonymous,
     config?.enableLogin,
     isAdmin,
+    isOwner,
     loading,
   ]);
 }
