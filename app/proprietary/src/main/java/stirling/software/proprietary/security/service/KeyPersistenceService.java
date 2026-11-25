@@ -14,6 +14,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -25,7 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.proprietary.security.configuration.CacheConfig;
 import stirling.software.proprietary.security.model.JwtSigningKeyEntity;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
@@ -52,6 +54,8 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     private final ApplicationProperties.Security.Jwt jwtProperties;
     private final JwtSigningKeyRepository keyRepository;
     private final boolean clusterEnabled;
+    private final long activeKeyReloadMs;
+    private final LazyScheduledTask keyReload;
 
     // kid -> KeyPair. Immutable once minted, so this is bounded for exposure, not for staleness:
     // an unbounded map kept every historic key's decrypted private half for the life of the
@@ -64,11 +68,15 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             ApplicationProperties applicationProperties,
             CacheManager cacheManager,
             JwtSigningKeyRepository keyRepository,
-            @Value("${cluster.enabled:false}") boolean clusterEnabled) {
+            @Value("${cluster.enabled:false}") boolean clusterEnabled,
+            @Value("${stirling.security.jwt.activeKeyReloadMs:300000}") long activeKeyReloadMs,
+            TaskScheduler scheduler) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
         this.keyPairCache = cacheManager.getCache(CacheConfig.SIGNING_KEYS_CACHE);
         this.keyRepository = keyRepository;
         this.clusterEnabled = clusterEnabled;
+        this.activeKeyReloadMs = activeKeyReloadMs;
+        this.keyReload = new LazyScheduledTask(scheduler, this::reloadActiveKeyFromDb);
     }
 
     @PostConstruct
@@ -92,7 +100,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
      * interval, keeping cluster rotation equivalent to single-node. Cluster-only: a single node
      * always holds its own newest key, so this is skipped entirely off-cluster.
      */
-    @Scheduled(fixedDelayString = "${stirling.security.jwt.activeKeyReloadMs:300000}")
     public void reloadActiveKeyFromDb() {
         if (!clusterEnabled || !isKeystoreEnabled()) {
             return;
@@ -157,10 +164,18 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     @Override
     public JwtVerificationKey getActiveKey() {
+        ensureKeyReloadScheduled();
         if (activeKey == null) {
             return generateAndStoreKeypair();
         }
         return activeKey;
+    }
+
+    /** Registers the cluster key-reload on the first keystore use. */
+    private void ensureKeyReloadScheduled() {
+        if (clusterEnabled && isKeystoreEnabled()) {
+            keyReload.ensureFixedDelay(Duration.ofMillis(activeKeyReloadMs));
+        }
     }
 
     @Override

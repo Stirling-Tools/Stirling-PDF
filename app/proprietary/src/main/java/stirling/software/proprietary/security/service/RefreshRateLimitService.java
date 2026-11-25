@@ -1,18 +1,20 @@
 package stirling.software.proprietary.security.service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.scheduling.LazyScheduledTask;
 
 /**
  * Service to rate limit token refresh attempts within the grace period.
@@ -25,10 +27,13 @@ import stirling.software.common.model.ApplicationProperties;
 public class RefreshRateLimitService {
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
+    private final LazyScheduledTask cleanupSweep;
 
     @Autowired
-    public RefreshRateLimitService(ApplicationProperties applicationProperties) {
+    public RefreshRateLimitService(
+            ApplicationProperties applicationProperties, TaskScheduler scheduler) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
+        this.cleanupSweep = new LazyScheduledTask(scheduler, this::cleanupExpiredEntries);
     }
 
     private record RefreshAttempt(AtomicInteger count, Instant firstAttempt) {
@@ -54,6 +59,7 @@ public class RefreshRateLimitService {
         RefreshAttempt attempt = attempts.computeIfAbsent(tokenHash, k -> new RefreshAttempt());
 
         int attemptCount = attempt.incrementAndGet();
+        cleanupSweep.ensureFixedRate(Duration.ofMinutes(5));
 
         if (attemptCount > JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE) {
             log.warn(
@@ -81,8 +87,7 @@ public class RefreshRateLimitService {
         attempts.remove(tokenHash);
     }
 
-    /** Clean up expired tracking entries every 5 minutes. */
-    @Scheduled(fixedRate = 300000)
+    /** Cleans up expired tracking entries; armed by the first refresh attempt. */
     public void cleanupExpiredEntries() {
         // Use configured grace period with same normalization as runtime checks
         int configuredMinutes = jwtProperties.getRefreshGraceMinutes();

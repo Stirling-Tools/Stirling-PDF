@@ -33,6 +33,7 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 import stirling.software.saas.security.TeamSecurityExpressions;
 import stirling.software.saas.service.SaasTeamExtensionService;
 import stirling.software.saas.service.SaasTeamService;
+import stirling.software.saas.service.TeamInvitationCleanupService;
 
 /** SaaS-only team endpoints: invitations, personal teams, billing-aware lookups. */
 @TeamApi
@@ -51,6 +52,7 @@ public class SaasTeamController {
     private final TeamInvitationRepository invitationRepository;
     private final UserService userService;
     private final TeamSecurityExpressions teamSecurityExpressions;
+    private final TeamInvitationCleanupService invitationCleanup;
     private final stirling.software.saas.procurement.service.EnterpriseEntitlementService
             enterprise;
 
@@ -135,6 +137,7 @@ public class SaasTeamController {
 
             invitation.setStatus(
                     stirling.software.common.model.enumeration.InvitationStatus.REJECTED);
+            invitationCleanup.ensureScheduled();
             invitationRepository.save(invitation);
 
             return ResponseEntity.ok(Map.of("message", "Invitation rejected"));
@@ -185,6 +188,7 @@ public class SaasTeamController {
 
             invitation.setStatus(
                     stirling.software.common.model.enumeration.InvitationStatus.CANCELLED);
+            invitationCleanup.ensureScheduled();
             invitationRepository.save(invitation);
 
             return ResponseEntity.ok(Map.of("message", "Invitation cancelled"));

@@ -3,8 +3,8 @@ package stirling.software.common.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -12,15 +12,15 @@ import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
@@ -32,16 +32,27 @@ import stirling.software.common.util.TempFileRegistry;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TempFileCleanupService {
 
     private final TempFileRegistry registry;
     private final TempFileManager tempFileManager;
     private final ApplicationProperties applicationProperties;
+    private final LazyScheduledTask cleanupSweep;
 
     @Autowired
     @Qualifier("machineType")
     private String machineType;
+
+    public TempFileCleanupService(
+            TempFileRegistry registry,
+            TempFileManager tempFileManager,
+            ApplicationProperties applicationProperties,
+            TaskScheduler scheduler) {
+        this.registry = registry;
+        this.tempFileManager = tempFileManager;
+        this.applicationProperties = applicationProperties;
+        this.cleanupSweep = new LazyScheduledTask(scheduler, this::scheduledCleanup);
+    }
 
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
@@ -97,6 +108,14 @@ public class TempFileCleanupService {
         if (applicationProperties.getSystem().getTempFileManagement().isStartupCleanup()) {
             runStartupCleanup();
         }
+        // Startup removed today's stale files, but external producers can create
+        // more without touching the registry; keep the periodic sweep armed.
+        ensureScheduled(
+                Duration.ofMinutes(
+                        applicationProperties
+                                .getSystem()
+                                .getTempFileManagement()
+                                .getCleanupIntervalMinutes()));
     }
 
     /** Ensure that all required temp directories exist */
@@ -120,11 +139,22 @@ public class TempFileCleanupService {
         }
     }
 
-    /** Scheduled task to clean up old temporary files. Runs at the configured interval. */
-    @Scheduled(
-            fixedDelayString =
-                    "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
-            timeUnit = TimeUnit.MINUTES)
+    /** Registers the periodic sweep on the first temp-file use. */
+    public boolean ensureScheduled() {
+        return ensureScheduled(Duration.ZERO);
+    }
+
+    private boolean ensureScheduled(Duration initialDelay) {
+        long minutes =
+                applicationProperties
+                        .getSystem()
+                        .getTempFileManagement()
+                        .getCleanupIntervalMinutes();
+        Duration interval = Duration.ofMinutes(minutes);
+        return cleanupSweep.ensureFixedRate(initialDelay, interval);
+    }
+
+    /** Periodic sweep, armed by {@link #ensureScheduled()}. */
     public void scheduledCleanup() {
         log.debug("Running scheduled temporary file cleanup");
         long maxAgeMillis = tempFileManager.getMaxAgeMillis();

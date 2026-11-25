@@ -1,22 +1,41 @@
 package stirling.software.SPDF.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.scheduling.TaskScheduler;
 
 class WeeklyActiveUsersServiceTest {
 
+    private TaskScheduler scheduler;
     private WeeklyActiveUsersService service;
 
     @BeforeEach
     void setUp() {
-        service = new WeeklyActiveUsersService();
+        scheduler = mock(TaskScheduler.class);
+        service = new WeeklyActiveUsersService(scheduler);
+    }
+
+    @Test
+    void recordBrowserAccess_registersCleanupOnce() {
+        service.recordBrowserAccess("browser-1");
+        service.recordBrowserAccess("browser-2");
+
+        verify(scheduler, times(1))
+                .scheduleAtFixedRate(
+                        org.mockito.ArgumentMatchers.any(Runnable.class),
+                        org.mockito.ArgumentMatchers.any(Instant.class),
+                        org.mockito.ArgumentMatchers.eq(Duration.ofHours(1)));
     }
 
     @Test

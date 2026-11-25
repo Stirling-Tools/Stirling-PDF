@@ -24,9 +24,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import stirling.software.SPDF.service.MetricsAggregatorService;
+
 class MetricsFilterTest {
 
     private SimpleMeterRegistry registry;
+    private MetricsAggregatorService metricsAggregatorService;
     private MetricsFilter filter;
     private HttpServletRequest request;
     private HttpServletResponse response;
@@ -35,7 +38,8 @@ class MetricsFilterTest {
     @BeforeEach
     void setUp() {
         registry = new SimpleMeterRegistry();
-        filter = new MetricsFilter(registry);
+        metricsAggregatorService = mock(MetricsAggregatorService.class);
+        filter = new MetricsFilter(registry, metricsAggregatorService);
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
         chain = mock(FilterChain.class);
@@ -68,6 +72,7 @@ class MetricsFilterTest {
                             .tag("uri", "/api/v1/general/rotate-pdf")
                             .counter()
                             .count());
+            verify(metricsAggregatorService).onRequestTracked();
         }
 
         @Test
@@ -84,6 +89,7 @@ class MetricsFilterTest {
 
             verify(chain).doFilter(request, response);
             assertNotNull(registry.find("http.requests").tag("session", "no-session").counter());
+            verify(metricsAggregatorService).onRequestTracked();
         }
 
         @Test
@@ -168,6 +174,7 @@ class MetricsFilterTest {
                     registry.find("http.requests")
                             .tag("uri", "/api/v1/general/rotate-pdf")
                             .counter());
+            verify(metricsAggregatorService).onRequestTracked();
         }
     }
 
@@ -185,6 +192,7 @@ class MetricsFilterTest {
 
             verify(chain).doFilter(request, response);
             verify(request, never()).getMethod();
+            verify(metricsAggregatorService, never()).onRequestTracked();
         }
 
         @Test
@@ -197,6 +205,7 @@ class MetricsFilterTest {
 
             verify(chain).doFilter(request, response);
             assertTrue(registry.find("http.requests").counters().isEmpty());
+            verify(metricsAggregatorService, never()).onRequestTracked();
         }
     }
 }

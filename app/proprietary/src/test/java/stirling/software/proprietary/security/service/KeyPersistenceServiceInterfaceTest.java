@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.scheduling.TaskScheduler;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.configuration.CacheConfig;
@@ -40,6 +41,7 @@ class KeyPersistenceServiceInterfaceTest {
     @Mock private ApplicationProperties.Security security;
     @Mock private ApplicationProperties.Security.Jwt jwtConfig;
     @Mock private JwtSigningKeyRepository keyRepository;
+    @Mock private TaskScheduler scheduler;
 
     private CacheManager cacheManager;
 
@@ -59,7 +61,13 @@ class KeyPersistenceServiceInterfaceTest {
         lenient().when(keyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         // clusterEnabled=true so the convergence-reload path is exercised.
         keyPersistenceService =
-                new KeyPersistenceService(applicationProperties, cacheManager, keyRepository, true);
+                new KeyPersistenceService(
+                        applicationProperties,
+                        cacheManager,
+                        keyRepository,
+                        true,
+                        300000L,
+                        scheduler);
     }
 
     private JwtSigningKeyEntity entityFrom(String keyId) {
@@ -157,7 +165,12 @@ class KeyPersistenceServiceInterfaceTest {
     void reloadDoesNothingOffCluster() {
         KeyPersistenceService singleNode =
                 new KeyPersistenceService(
-                        applicationProperties, cacheManager, keyRepository, false);
+                        applicationProperties,
+                        cacheManager,
+                        keyRepository,
+                        false,
+                        300000L,
+                        scheduler);
 
         singleNode.reloadActiveKeyFromDb();
 

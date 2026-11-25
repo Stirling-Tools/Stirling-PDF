@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.TaskScheduler;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -29,6 +30,7 @@ class LicenseKeyCheckerTest {
 
     @Mock private KeygenLicenseVerifier verifier;
     @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock private TaskScheduler scheduler;
 
     @Test
     void bootGateRefreshesTeamBeforeRejectingPaidConfiguration() {
@@ -37,7 +39,7 @@ class LicenseKeyCheckerTest {
                 .thenThrow(new IllegalStateException("Database not initialized"))
                 .thenReturn(300);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
         checker.init();
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
         assertThatCode(() -> checker.requireProOrEnterprise("storage.provider=s3"))
@@ -52,7 +54,7 @@ class LicenseKeyCheckerTest {
         ApplicationProperties properties = new ApplicationProperties();
         when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(300);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
 
         assertEquals(License.SERVER, checker.premiumTier());
         assertEquals(License.SERVER, checker.premiumTier());
@@ -69,7 +71,7 @@ class LicenseKeyCheckerTest {
                 .thenThrow(new IllegalStateException("Supabase unreachable"))
                 .thenReturn(300);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
 
         assertEquals(License.SERVER, checker.premiumTier());
         checker.onEntitlementRefreshed();
@@ -87,7 +89,7 @@ class LicenseKeyCheckerTest {
                 .thenThrow(new IllegalStateException("Database not initialized"))
                 .thenReturn(300);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
 
         assertEquals(License.NORMAL, checker.premiumTier());
         assertEquals(License.SERVER, checker.premiumTier());
@@ -103,7 +105,7 @@ class LicenseKeyCheckerTest {
         properties.getPremium().setKey("a-key");
         when(verifier.verifyLicense("a-key")).thenReturn(License.ENTERPRISE);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.ENTERPRISE, checker.premiumTier());
@@ -119,7 +121,7 @@ class LicenseKeyCheckerTest {
         props.getPremium().setKey("dummy");
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
@@ -134,7 +136,7 @@ class LicenseKeyCheckerTest {
         when(verifier.verifyLicense("abc")).thenReturn(License.SERVER);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
@@ -152,7 +154,7 @@ class LicenseKeyCheckerTest {
         when(verifier.verifyLicense("filekey")).thenReturn(License.ENTERPRISE);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.ENTERPRISE, checker.getPremiumLicenseEnabledResult());
@@ -167,7 +169,7 @@ class LicenseKeyCheckerTest {
         props.getPremium().setKey("file:" + file);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
@@ -210,7 +212,7 @@ class LicenseKeyCheckerTest {
         when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(100);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
@@ -231,7 +233,7 @@ class LicenseKeyCheckerTest {
         when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(100);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
@@ -248,7 +250,7 @@ class LicenseKeyCheckerTest {
         when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(100000);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
@@ -263,7 +265,7 @@ class LicenseKeyCheckerTest {
         when(verifier.verifyLicense("ent")).thenReturn(License.ENTERPRISE);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.ENTERPRISE, checker.getPremiumLicenseEnabledResult());
@@ -278,7 +280,7 @@ class LicenseKeyCheckerTest {
         when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(null);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
@@ -297,7 +299,7 @@ class LicenseKeyCheckerTest {
                 .thenThrow(new IllegalStateException("no datasource yet"));
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
 
         assertThatCode(checker::init).doesNotThrowAnyException();
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
@@ -313,7 +315,7 @@ class LicenseKeyCheckerTest {
                 .thenReturn(100);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
 
@@ -337,7 +339,7 @@ class LicenseKeyCheckerTest {
                 .thenThrow(new IllegalStateException("no datasource"));
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
 
@@ -359,7 +361,7 @@ class LicenseKeyCheckerTest {
         when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(100);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
         assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
 
@@ -378,7 +380,7 @@ class LicenseKeyCheckerTest {
         when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(100);
 
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
 
         reset(userLicenseSettingsService);
@@ -399,7 +401,7 @@ class LicenseKeyCheckerTest {
             when(verifier.verifyLicense("any")).thenReturn(level);
         }
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService, scheduler);
         checker.init();
         return checker;
     }

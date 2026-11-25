@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,58 @@ class TempFileRegistryTest {
     @BeforeEach
     void setUp() {
         registry = new TempFileRegistry();
+    }
+
+    @Test
+    void register_nullFileDoesNotSignal() {
+        AtomicInteger signals = new AtomicInteger();
+        TempFileRegistry signalling = new TempFileRegistry(signals::incrementAndGet);
+
+        signalling.register((File) null);
+
+        assertEquals(0, signals.get());
+    }
+
+    @Test
+    void registerFile_signalsFirstUseOnce() throws IOException {
+        AtomicInteger signals = new AtomicInteger();
+        TempFileRegistry signalling = new TempFileRegistry(signals::incrementAndGet);
+
+        signalling.register(Files.createTempFile(tempDir, "a", ".tmp").toFile());
+        signalling.register(Files.createTempFile(tempDir, "b", ".tmp").toFile());
+
+        assertEquals(1, signals.get());
+    }
+
+    @Test
+    void registerDirectoryAndThirdParty_signalFirstUse() throws IOException {
+        AtomicInteger signals = new AtomicInteger();
+        TempFileRegistry signalling = new TempFileRegistry(signals::incrementAndGet);
+
+        signalling.registerThirdParty(Files.createTempFile(tempDir, "third", ".tmp").toFile());
+        signalling.registerDirectory(tempDir);
+        signalling.register(Files.createTempFile(tempDir, "owned", ".tmp"));
+
+        assertEquals(1, signals.get());
+    }
+
+    @Test
+    void failingFirstUseCallbackIsRetriedAndDoesNotBreakRegistration() throws IOException {
+        AtomicInteger attempts = new AtomicInteger();
+        TempFileRegistry signalling =
+                new TempFileRegistry(
+                        () -> {
+                            attempts.incrementAndGet();
+                            throw new IllegalStateException("scheduler unavailable");
+                        });
+
+        File first = Files.createTempFile(tempDir, "first", ".tmp").toFile();
+        assertDoesNotThrow(() -> signalling.register(first));
+        assertTrue(signalling.contains(first));
+
+        signalling.register(Files.createTempFile(tempDir, "second", ".tmp").toFile());
+
+        assertEquals(2, attempts.get(), "a failed first-use callback must be retried");
     }
 
     @Test

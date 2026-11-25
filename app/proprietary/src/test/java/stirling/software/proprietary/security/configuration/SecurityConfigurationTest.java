@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
+import stirling.software.proprietary.security.RateLimitResetScheduler;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
@@ -143,8 +145,10 @@ class SecurityConfigurationTest {
 
         @Test
         @DisplayName("rateLimitingFilter is created")
+        @SuppressWarnings("unchecked")
         void rateLimitingFilter() {
-            IPRateLimitingFilter filter = newConfig(true).rateLimitingFilter();
+            ObjectProvider<RateLimitResetScheduler> resetScheduler = mock(ObjectProvider.class);
+            IPRateLimitingFilter filter = newConfig(true).rateLimitingFilter(resetScheduler);
             assertThat(filter).isNotNull();
         }
 

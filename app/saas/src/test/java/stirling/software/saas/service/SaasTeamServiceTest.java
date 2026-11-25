@@ -85,6 +85,7 @@ class SaasTeamServiceTest {
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private stirling.software.proprietary.security.service.UserService userService;
     @Mock private SupabaseUserRepository supabaseUserRepository;
+    @Mock private TeamInvitationCleanupService invitationCleanup;
 
     @InjectMocks private SaasTeamService service;
 

@@ -1,32 +1,58 @@
 package stirling.software.SPDF.service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.Search;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointInspector;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.common.service.PostHogService;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class MetricsAggregatorService {
     private final MeterRegistry meterRegistry;
     private final PostHogService postHogService;
     private final EndpointInspector endpointInspector;
+    private final ApplicationProperties applicationProperties;
+    private final LazyScheduledTask aggregationTask;
     private final Map<String, Double> lastSentMetrics = new ConcurrentHashMap<>();
 
-    @Scheduled(fixedRate = 7200000) // Run every 2 hours
+    public MetricsAggregatorService(
+            MeterRegistry meterRegistry,
+            PostHogService postHogService,
+            EndpointInspector endpointInspector,
+            ApplicationProperties applicationProperties,
+            TaskScheduler scheduler) {
+        this.meterRegistry = meterRegistry;
+        this.postHogService = postHogService;
+        this.endpointInspector = endpointInspector;
+        this.applicationProperties = applicationProperties;
+        this.aggregationTask = new LazyScheduledTask(scheduler, this::aggregateAndSendMetrics);
+    }
+
+    /**
+     * Called by the request metrics filter; registers the 2-hour aggregation once telemetry is on.
+     */
+    public void onRequestTracked() {
+        if (!applicationProperties.getSystem().isPosthogEnabled()) {
+            return;
+        }
+        aggregationTask.ensureFixedRate(Duration.ofHours(2));
+    }
+
+    /** Aggregates request counters and sends the delta to PostHog. */
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 

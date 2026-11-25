@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -27,6 +27,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.common.service.PostHogService;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 
@@ -52,12 +53,14 @@ public class McpAnalytics {
 
     private static final String SOURCE = "posthog_mcp_analytics";
     private static final String SERVER_NAME = "stirling-pdf-mcp";
+    private static final String DAILY_FLUSH_CRON = "0 0 0 * * *";
     private static final Pattern SAFE_TOKEN =
             Pattern.compile("[A-Za-z0-9][A-Za-z0-9 ._/()-]{0,63}");
 
     private final ObjectProvider<PostHogService> postHog;
     private final ObjectProvider<McpToolCatalog> catalog;
     private final ApplicationProperties applicationProperties;
+    private final LazyScheduledTask dailyFlush;
     // Usernames seen today per auth method, in memory only and sent as counts.
     // Per node and lost on restart, so multi-node totals overcount users seen on several nodes.
     private final Map<String, Set<String>> dailyUsers = new ConcurrentHashMap<>();
@@ -77,10 +80,12 @@ public class McpAnalytics {
     public McpAnalytics(
             ObjectProvider<PostHogService> postHog,
             ObjectProvider<McpToolCatalog> catalog,
-            ApplicationProperties applicationProperties) {
+            ApplicationProperties applicationProperties,
+            TaskScheduler scheduler) {
         this.postHog = postHog;
         this.catalog = catalog;
         this.applicationProperties = applicationProperties;
+        this.dailyFlush = new LazyScheduledTask(scheduler, this::flushDailyUsers);
     }
 
     // Checked per call since admins can toggle analytics at runtime.
@@ -88,8 +93,12 @@ public class McpAnalytics {
         return applicationProperties.getSystem().isPosthogEnabled();
     }
 
+    /** Registers the daily aggregate on the first MCP analytics event. */
+    private void ensureScheduled() {
+        dailyFlush.ensureCron(DAILY_FLUSH_CRON);
+    }
+
     /** Daily aggregate of distinct MCP users; no identifiers leave the server. */
-    @Scheduled(cron = "0 0 0 * * *")
     public void flushDailyUsers() {
         if (!enabled()) {
             dailyUsers.clear();
@@ -120,6 +129,7 @@ public class McpAnalytics {
         if (!enabled()) {
             return null;
         }
+        ensureScheduled();
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
         String id = "ses_" + HexFormat.of().formatHex(bytes);
@@ -134,6 +144,7 @@ public class McpAnalytics {
         if (!enabled()) {
             return;
         }
+        ensureScheduled();
         Map<String, Object> props = baseProperties();
         props.put("$mcp_protocol_version", protocolVersion);
         // Server identity once per session; other events carry app_version already.
@@ -160,6 +171,7 @@ public class McpAnalytics {
         if (!enabled()) {
             return;
         }
+        ensureScheduled();
         Map<String, Object> props = baseProperties();
         props.put("$mcp_listed_tool_names", toolNames);
         capture("$mcp_tools_list", props);
@@ -175,6 +187,7 @@ public class McpAnalytics {
         if (!enabled()) {
             return;
         }
+        ensureScheduled();
         boolean toolError = result != null && result.path("isError").asBoolean(false);
         Map<String, Object> props = baseProperties();
         props.put("$mcp_tool_name", tool.name());

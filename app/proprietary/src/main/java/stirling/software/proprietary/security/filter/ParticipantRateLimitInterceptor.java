@@ -1,9 +1,10 @@
 package stirling.software.proprietary.security.filter;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -11,6 +12,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.scheduling.LazyScheduledTask;
 
 /** Per-IP rate limiter for the unauthenticated participant token endpoints. */
 @Slf4j
@@ -22,6 +25,12 @@ public class ParticipantRateLimitInterceptor implements HandlerInterceptor {
 
     // value: [requestCount, windowStartMs]
     private final ConcurrentHashMap<String, long[]> requestCounts = new ConcurrentHashMap<>();
+
+    private final LazyScheduledTask cleanupSweep;
+
+    public ParticipantRateLimitInterceptor(TaskScheduler scheduler) {
+        this.cleanupSweep = new LazyScheduledTask(scheduler, this::cleanupExpiredWindows);
+    }
 
     @Override
     public boolean preHandle(
@@ -41,6 +50,7 @@ public class ParticipantRateLimitInterceptor implements HandlerInterceptor {
                             existing[0]++;
                             return existing;
                         });
+        cleanupSweep.ensureFixedDelay(Duration.ofMinutes(5));
 
         if (entry[0] > MAX_REQUESTS_PER_MINUTE) {
             log.warn(
@@ -65,7 +75,7 @@ public class ParticipantRateLimitInterceptor implements HandlerInterceptor {
         return request.getRemoteAddr();
     }
 
-    @Scheduled(fixedDelay = 300_000)
+    /** Evicts stale per-IP windows; armed by the first non-static request. */
     public void cleanupExpiredWindows() {
         long cutoff = System.currentTimeMillis() - WINDOW_MS;
         requestCounts.entrySet().removeIf(e -> e.getValue()[1] < cutoff);

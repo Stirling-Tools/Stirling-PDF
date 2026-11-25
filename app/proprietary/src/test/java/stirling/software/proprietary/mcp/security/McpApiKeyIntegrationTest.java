@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import stirling.software.common.configuration.SchedulingConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.McpAnalytics;
 import stirling.software.proprietary.mcp.McpServerController;
@@ -113,6 +114,7 @@ class McpApiKeyIntegrationTest {
     @SpringBootConfiguration
     @EnableAutoConfiguration
     @Import({
+        SchedulingConfig.class,
         McpSecurityConfig.class,
         McpServerController.class,
         McpAnalytics.class,

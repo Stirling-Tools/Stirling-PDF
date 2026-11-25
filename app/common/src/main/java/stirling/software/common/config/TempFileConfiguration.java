@@ -3,6 +3,7 @@ package stirling.software.common.config;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.TempFileCleanupService;
 import stirling.software.common.util.TempFileRegistry;
 
 /**
@@ -26,13 +28,22 @@ public class TempFileConfiguration {
     private final ApplicationProperties applicationProperties;
 
     /**
-     * Create the TempFileRegistry bean.
+     * Create the TempFileRegistry bean. Resolves the cleanup service lazily: it depends on this
+     * registry, so a direct dependency would cycle.
      *
      * @return A new TempFileRegistry instance
      */
     @Bean
-    public TempFileRegistry tempFileRegistry() {
-        return new TempFileRegistry();
+    public TempFileRegistry tempFileRegistry(
+            ObjectProvider<TempFileCleanupService> tempFileCleanup) {
+        return new TempFileRegistry(
+                () -> {
+                    TempFileCleanupService cleanup = tempFileCleanup.getIfAvailable();
+                    if (cleanup == null || !cleanup.ensureScheduled()) {
+                        throw new IllegalStateException(
+                                "temp file cleanup scheduler is not available");
+                    }
+                });
     }
 
     @PostConstruct

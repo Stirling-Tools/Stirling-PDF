@@ -1,15 +1,18 @@
 package stirling.software.SPDF.service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.scheduling.LazyScheduledTask;
 
 /**
  * Service for tracking Weekly Active Users (WAU) in no-login mode. Uses in-memory storage with
@@ -28,6 +31,12 @@ public class WeeklyActiveUsersService {
     // Application start time
     private final Instant startTime = Instant.now();
 
+    private final LazyScheduledTask cleanupTask;
+
+    public WeeklyActiveUsersService(TaskScheduler scheduler) {
+        this.cleanupTask = new LazyScheduledTask(scheduler, this::performCleanup);
+    }
+
     /**
      * Records a browser access with the current timestamp
      *
@@ -37,6 +46,7 @@ public class WeeklyActiveUsersService {
         if (browserId == null || browserId.trim().isEmpty()) {
             return;
         }
+        cleanupTask.ensureFixedRate(Duration.ofHours(1));
 
         Instant now = Instant.now();
         Instant previous = activeBrowsers.put(browserId, now);
@@ -90,8 +100,7 @@ public class WeeklyActiveUsersService {
         activeBrowsers.entrySet().removeIf(entry -> entry.getValue().isBefore(sevenDaysAgo));
     }
 
-    /** Scheduled cleanup trigger running every hour */
-    @Scheduled(fixedRate = 3600000)
+    /** Prunes entries older than 7 days; armed by the first recorded browser access. */
     public void performCleanup() {
         int sizeBefore = activeBrowsers.size();
         cleanupOldEntries();
