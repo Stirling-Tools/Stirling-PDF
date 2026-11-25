@@ -252,6 +252,7 @@ export function LayerSidebar({
           {isLeaf && (
             <Checkbox
               size="xs"
+              aria-label={layer.name}
               checked={visibility[layer.id] ?? layer.visible}
               disabled={readOnly}
               onChange={() => toggleLayerVisibility(layer.id)}
