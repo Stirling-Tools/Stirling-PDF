@@ -12,6 +12,8 @@ export interface SectionHeaderProps {
   /** When collapsible, whether the section is expanded. */
   expanded?: boolean;
   onToggle?: () => void;
+  /** When collapsible, the id of the body it shows and hides. */
+  controls?: string;
   className?: string;
 }
 
@@ -25,6 +27,7 @@ export function SectionHeader({
   collapsible,
   expanded = true,
   onToggle,
+  controls,
   className,
 }: SectionHeaderProps) {
   const classes = ["sui-sectionhdr", className ?? ""].filter(Boolean).join(" ");
@@ -49,6 +52,7 @@ export function SectionHeader({
       className={classes}
       onClick={onToggle}
       aria-expanded={expanded}
+      aria-controls={controls}
     >
       {inner}
     </button>

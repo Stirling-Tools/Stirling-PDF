@@ -15,15 +15,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFileManager;
 
 /**
  * Branch coverage for the disallowed-scheme detection helpers of {@link ConvertWebsiteToPDF}. These
- * are pure string transforms exercised by reflection, so no network call or external WeasyPrint
- * invocation occurs.
+ * are pure string transforms exercised by reflection, so no network call or conversion occurs.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -31,7 +30,7 @@ import stirling.software.common.util.TempFileManager;
 class ConvertWebsiteToPDFExtraTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock private OfficeToPdfService officeToPdfService;
     @Mock private TempFileManager tempFileManager;
 
     private ConvertWebsiteToPDF sut;
@@ -41,7 +40,7 @@ class ConvertWebsiteToPDFExtraTest {
         sut =
                 new ConvertWebsiteToPDF(
                         pdfDocumentFactory,
-                        runtimePathConfig,
+                        officeToPdfService,
                         new ApplicationProperties(),
                         tempFileManager);
     }

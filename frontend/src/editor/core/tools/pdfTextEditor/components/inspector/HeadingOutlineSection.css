@@ -1,7 +1,65 @@
-/* One line of xs text, so rows keep the stat rows' rhythm. The negative
-   margin lets the hover background extend past the text without indenting it. */
+/* Rows sit flush so the guides join up; each row pads inside itself, under the lines. */
+.pdf-editor-heading-outline {
+  --heading-row-pad: 0.1875rem;
+  --heading-guide: 1rem;
+  /* The middle of the label's first line, where a branch meets it. */
+  --heading-size: 0.8125rem;
+  --heading-line: 1.45;
+  --heading-row-mid: calc(
+    var(--heading-row-pad) + var(--heading-size) * var(--heading-line) / 2
+  );
+}
+
+.pdf-editor-heading-outline__row {
+  display: flex;
+  min-width: 0;
+}
+
+.pdf-editor-heading-outline__guide {
+  position: relative;
+  flex: 0 0 var(--heading-guide);
+}
+
+.pdf-editor-heading-outline__guide::before,
+.pdf-editor-heading-outline__guide::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--heading-guide) / 2 - 0.5px);
+  border: 0 solid var(--c-border-strong);
+}
+
+.pdf-editor-heading-outline__guide--line::before,
+.pdf-editor-heading-outline__guide--tee::before {
+  top: 0;
+  bottom: 0;
+  border-left-width: 1px;
+}
+
+.pdf-editor-heading-outline__guide--elbow::before {
+  top: 0;
+  height: var(--heading-row-mid);
+  border-left-width: 1px;
+}
+
+.pdf-editor-heading-outline__guide--tee::after,
+.pdf-editor-heading-outline__guide--elbow::after {
+  top: var(--heading-row-mid);
+  right: 0.125rem;
+  border-top-width: 1px;
+}
+
+.pdf-editor-heading-outline__body {
+  flex: 1;
+  min-width: 0;
+  padding: var(--heading-row-pad) 0;
+}
+
+/* One line of xs text. The negative margin lets the hover background extend past
+   the text without indenting it. */
 .pdf-editor-heading-outline__entry {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
   width: calc(100% + 0.5rem);
   margin: 0 -0.25rem;
   padding: 0 0.25rem;
@@ -10,17 +68,40 @@
   background: transparent;
   color: var(--c-text);
   font: inherit;
-  font-size: var(--mantine-font-size-xs);
-  line-height: var(--mantine-line-height-xs);
+  font-size: var(--heading-size);
+  line-height: var(--heading-line);
   text-align: left;
+  cursor: pointer;
+}
+
+.pdf-editor-heading-outline__label {
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: pointer;
+}
+
+.pdf-editor-heading-outline__type {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--c-text-subtle);
 }
 
 .pdf-editor-heading-outline__entry:hover:not(:disabled) {
   background: var(--c-hover);
+}
+
+.pdf-editor-heading-outline__entry:hover:not(:disabled)
+  .pdf-editor-heading-outline__label {
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.pdf-editor-heading-outline__entry:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
 }
 
 .pdf-editor-heading-outline__entry:disabled {

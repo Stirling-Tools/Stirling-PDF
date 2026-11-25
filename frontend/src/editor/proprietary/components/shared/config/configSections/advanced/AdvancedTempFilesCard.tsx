@@ -59,40 +59,6 @@ export function AdvancedTempFilesCard({
             label={
               <SettingsFieldLabel
                 info={t(
-                  "admin.settings.advanced.tempFileManagement.libreofficeDir.description",
-                  "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)",
-                )}
-              >
-                {t(
-                  "admin.settings.advanced.tempFileManagement.libreofficeDir.label",
-                  "LibreOffice Temp Directory",
-                )}
-              </SettingsFieldLabel>
-            }
-            value={settings.tempFileManagement?.libreofficeDir || ""}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                tempFileManagement: {
-                  ...settings.tempFileManagement,
-                  libreofficeDir: e.target.value,
-                },
-              })
-            }
-            placeholder={t(
-              "admin.settings.advanced.tempFileManagement.libreofficeDir.placeholder",
-              "Default: baseTmpDir/libreoffice",
-            )}
-            disabled={!loginEnabled}
-          />
-        </div>
-
-        <div>
-          <TextInput
-            className={privateContentClassName}
-            label={
-              <SettingsFieldLabel
-                info={t(
                   "admin.settings.advanced.tempFileManagement.systemTempDir.description",
                   "System temp directory to clean (only used if cleanupSystemTemp is enabled)",
                 )}

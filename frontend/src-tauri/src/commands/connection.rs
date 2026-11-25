@@ -16,6 +16,7 @@ const REQUIRE_SIGN_IN_KEY: &str = "require_sign_in";
 const CLOUD_ONLY_KEY: &str = "cloud_only";
 const LOCAL_PROCESSING_ONLY_KEY: &str = "local_processing_only";
 const LOGIN_AGREEMENT_KEY: &str = "login_agreement_enabled";
+const BLOCK_SIGNED_PDF_EDITS_KEY: &str = "block_signed_pdf_edits";
 pub(crate) const UPDATE_MODE_KEY: &str = "update_mode";
 /// When `true` the update mode was written by a provisioning file and cannot
 /// be changed from the UI. Only another provisioning file (from MDM) can
@@ -214,6 +215,7 @@ struct ProvisioningConfig {
     cloud_only: Option<bool>,
     local_processing_only: Option<bool>,
     login_agreement_enabled: Option<bool>,
+    block_signed_pdf_edits: Option<bool>,
     /// Optional headless-install update policy (`"prompt"`, `"auto"`, `"disabled"`).
     /// When omitted the existing stored mode is left unchanged.
     update_mode: Option<UpdateMode>,
@@ -369,6 +371,20 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         ));
     }
 
+    if let Some(block_signed_pdf_edits) = parsed.block_signed_pdf_edits {
+        if let Ok(store) = app_handle.store(STORE_FILE) {
+            store.set(
+                BLOCK_SIGNED_PDF_EDITS_KEY,
+                serde_json::json!(block_signed_pdf_edits),
+            );
+            let _ = store.save();
+        }
+        add_log(format!(
+            "🧩 Provisioned signed PDF edit blocking = {}",
+            block_signed_pdf_edits
+        ));
+    }
+
     let server_url = parsed
         .server_url
         .map(|value| value.trim().to_string())
@@ -383,6 +399,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         && parsed.require_sign_in.is_none()
         && parsed.cloud_only.is_none()
         && parsed.local_processing_only.is_none()
+        && parsed.block_signed_pdf_edits.is_none()
     {
         add_log(
             "⚠️ Provisioning file has no actionable fields (serverUrl/updateMode/loginAgreement); skipping apply"
@@ -526,6 +543,15 @@ pub fn login_agreement_enabled(app_handle: &AppHandle) -> bool {
         .store(STORE_FILE)
         .ok()
         .and_then(|store| store.get(LOGIN_AGREEMENT_KEY))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
+}
+
+pub fn block_signed_pdf_edits(app_handle: &AppHandle) -> bool {
+    app_handle
+        .store(STORE_FILE)
+        .ok()
+        .and_then(|store| store.get(BLOCK_SIGNED_PDF_EDITS_KEY))
         .and_then(|value| value.as_bool())
         .unwrap_or(false)
 }

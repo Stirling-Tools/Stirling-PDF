@@ -1,12 +1,17 @@
 import React from "react";
 import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /** "bar-lead" follows the view switcher, for content naming what the view is showing;
  *  "bar" renders among the bar's own actions on the right; top/middle/bottom are lanes
- *  of the retractable tool row beneath it. */
+ *  of the tool row beneath it, and "row-start"/"row-end" sit at that row's edges;
+ *  "page-bar" renders in the viewer's page bar at the foot of the document. */
 export type WorkbenchBarSection =
   | "bar-lead"
   | "bar"
+  | "row-start"
+  | "row-end"
+  | "page-bar"
   | "top"
   | "middle"
   | "bottom"
@@ -48,6 +53,8 @@ export interface WorkbenchBarButtonConfig {
   className?: string;
   /** Optional active state to highlight the control */
   active?: boolean;
+  /** In a narrow page bar, sits in its Tools menu while off. */
+  foldsIntoMenu?: boolean;
 }
 
 /** One file the bar's download writes out. */
@@ -57,6 +64,15 @@ export interface WorkbenchExportFile {
    *  to its disk location and lets export policies version it. Omit for bytes
    *  the workbench does not hold, such as unsaved edits. */
   fileId?: FileId;
+  /** Set for a version the export just committed: it is not in the file
+   *  selectors until the next render. */
+  stub?: StirlingFileStub;
+}
+
+export interface WorkbenchExportOptions {
+  /** Commit unsaved edits as new versions first, so the exported files are ones
+   *  the workbench holds. Cancelling or failing that commit cancels the export. */
+  commitEdits?: boolean;
 }
 
 /**
@@ -68,6 +84,8 @@ export interface WorkbenchViewFileActions {
    * The files to download in place of the open ones, or null to cancel. The bar
    * cancels silently, so a view returning null has already told the user why.
    */
-  getExportFiles?: () => Promise<WorkbenchExportFile[] | null>;
+  getExportFiles?: (
+    options?: WorkbenchExportOptions,
+  ) => Promise<WorkbenchExportFile[] | null>;
   onClose?: () => void;
 }

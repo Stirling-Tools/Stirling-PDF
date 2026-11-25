@@ -16,12 +16,6 @@
   animation: pdf-viewer-toolbar-in 280ms ease both;
 }
 
-@container (max-width: 38rem) {
-  .pdf-viewer-toolbar-zoom-slider {
-    display: none;
-  }
-}
-
 @container (max-width: 34rem) {
   .pdf-viewer-toolbar-wide-only {
     display: none;
@@ -54,4 +48,27 @@
   background: var(--c-border-subtle);
   flex-shrink: 0;
   margin: 0 0.25rem;
+}
+
+/* A viewer control registered into this bar. */
+.pdf-viewer-toolbar__tool {
+  display: inline-flex;
+}
+
+/* Tools that fold into a menu once the bar runs short of room, rather than
+   wrapping it onto a second row. Folded, they are invisible and out of the
+   row but still laid out beside the menu, so a popover of theirs (read
+   aloud's speed controls) still has somewhere to open from. */
+.pdf-viewer-toolbar__tools-menu {
+  display: none;
+}
+
+@container (max-width: 44rem) {
+  .pdf-viewer-toolbar__tool--folds {
+    position: absolute;
+    visibility: hidden;
+  }
+  .pdf-viewer-toolbar__tools-menu {
+    display: inline-flex;
+  }
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
@@ -6,6 +6,8 @@ import AutomationImportModal from "@editor/components/tools/automate/AutomationI
 import { Banner } from "@editor/ui/Banner";
 import { useSuggestedAutomations } from "@editor/hooks/tools/automate/useSuggestedAutomations";
 import { useServerAutomations } from "@editor/hooks/tools/automate/useServerAutomations";
+import { useActivityAutomations } from "@editor/hooks/tools/automate/useActivityAutomations";
+import { useActivityChainText } from "@editor/hooks/useToolWorkflowSuggestions";
 import {
   AutomationConfig,
   SuggestedAutomation,
@@ -13,11 +15,20 @@ import {
 import { iconMap } from "@editor/components/tools/automate/iconMap";
 import { iconKeyForSuggestedAutomation } from "@editor/components/tools/automate/suggestedAutomationIcon";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ActivityChain } from "@editor/utils/activityChains";
 import {
   downloadAutomationConfig,
   downloadFolderScanningConfig,
 } from "@editor/utils/automationConverter";
 import type { ImportableAutomation } from "@editor/hooks/tools/automate/useSavedAutomations";
+
+const SECTION_TITLE_STYLE: CSSProperties = {
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  color: "var(--c-text-subtle)",
+};
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -26,6 +37,7 @@ interface AutomationSelectionProps {
   onEdit: (automation: AutomationConfig) => void;
   onDelete: (automation: AutomationConfig) => void;
   onCopyFromSuggested: (automation: SuggestedAutomation) => void;
+  onCreateFromActivity: (automation: AutomationConfig) => void;
   onImportAutomation: (
     automation: ImportableAutomation,
   ) => Promise<AutomationConfig>;
@@ -41,6 +53,7 @@ export default function AutomationSelection({
   onEdit,
   onDelete,
   onCopyFromSuggested,
+  onCreateFromActivity,
   onImportAutomation,
   onImportError,
   onImportSuccess,
@@ -51,7 +64,10 @@ export default function AutomationSelection({
   const { automations: serverAutomations, loadFailed: serverLoadFailed } =
     useServerAutomations(toolRegistry);
   const serverAutomationIds = new Set(serverAutomations.map((a) => a.id));
-  const suggestedAutomations = [...serverAutomations, ...builtInAutomations];
+  const suggestedAutomations = useMemo(
+    () => [...serverAutomations, ...builtInAutomations],
+    [serverAutomations, builtInAutomations],
+  );
   const addedByAdmin = t(
     "automate.selection.suggested.addedByAdmin",
     "Added by your administrator",
@@ -60,6 +76,41 @@ export default function AutomationSelection({
     serverAutomationIds.has(automation.id)
       ? [automation.description, addedByAdmin].filter(Boolean).join(" · ")
       : automation.description;
+  const existingOperationLists = useMemo(
+    () =>
+      [...savedAutomations, ...suggestedAutomations].map((automation) =>
+        automation.operations.map((op) =>
+          typeof op === "string" ? op : op.operation,
+        ),
+      ),
+    [savedAutomations, suggestedAutomations],
+  );
+  const activityChains = useActivityAutomations(
+    toolRegistry,
+    existingOperationLists,
+  );
+
+  const {
+    name: activityChainName,
+    ranBy,
+    ranByShort,
+    draftName,
+  } = useActivityChainText(toolRegistry);
+
+  const activityChainConfig = (chain: ActivityChain): AutomationConfig => {
+    const now = new Date().toISOString();
+    return {
+      id: `activity-${chain.operations.join("-")}`,
+      name: draftName(chain),
+      icon: "SettingsIcon",
+      operations: chain.operations.map((operation) => ({
+        operation,
+        parameters: {},
+      })),
+      createdAt: now,
+      updatedAt: now,
+    };
+  };
 
   const [importModalOpen, setImportModalOpen] = useState(false);
 
@@ -98,13 +149,7 @@ export default function AutomationSelection({
 
   return (
     <div>
-      <Title
-        order={3}
-        size="h4"
-        fw={600}
-        mb="md"
-        style={{ color: "var(--mantine-color-dimmed)" }}
-      >
+      <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
         {t("automate.selection.saved.title", "Saved")}
       </Title>
 
@@ -150,15 +195,37 @@ export default function AutomationSelection({
         })}
         <Divider pb="sm" />
 
+        {activityChains.length > 0 && (
+          <div>
+            <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
+              {t("automate.selection.activity.title", "Frequent workflows")}
+            </Title>
+            <Stack gap="xs">
+              {activityChains.map((chain) => (
+                <AutomationEntry
+                  key={chain.operations.join("-")}
+                  title={activityChainName(chain)}
+                  subtitle={ranByShort(chain)}
+                  description={`${ranBy(chain)} ${t(
+                    "automate.selection.activity.description",
+                    "Save it as an automation and run it with one click.",
+                  )}`}
+                  badgeIcon="activity"
+                  operations={chain.operations}
+                  onClick={() =>
+                    onCreateFromActivity(activityChainConfig(chain))
+                  }
+                  toolRegistry={toolRegistry}
+                />
+              ))}
+            </Stack>
+            <Divider pb="sm" mt="xs" />
+          </div>
+        )}
+
         {/* Suggested Automations */}
         <div>
-          <Title
-            order={3}
-            size="h4"
-            fw={600}
-            mb="md"
-            style={{ color: "var(--mantine-color-dimmed)" }}
-          >
+          <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
             {t("automate.selection.suggested.title", "Suggested")}
           </Title>
           <Stack gap="xs">

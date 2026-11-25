@@ -512,6 +512,11 @@ submit = "Juster sideskalering"
 tags = "ændre størrelse,ændre,dimension,tilpas"
 title = "Juster sideskalering"
 
+[adjustPageScale.customSize]
+height = "Højde"
+unit = "Enhed"
+width = "Bredde"
+
 [adjustPageScale.error]
 failed = "Der opstod en fejl under justering af sideskaleringen."
 
@@ -521,6 +526,7 @@ landscape = "Liggende"
 portrait = "Stående"
 
 [adjustPageScale.pageSize]
+custom = "Brugerdefineret"
 keep = "Behold original størrelse"
 label = "Mål-papirstørrelse"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "Maksimal DPI for billedbehandling (0 = ubegrænset)"
 label = "Maksimal DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Konfigurer sessionsgrænser og tidsgrænser for hver proceskører"
 ghostscript = "Ghostscript"
 installApp = "Installer app"
 label = "Grænser for proceskører"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF til HTML"
+officeConvert = "Office-konvertering"
+officeConvertSessionLimit = "Maksimalt antal samtidige konverteringer; 0 vælger en grænse ud fra CPU'er og hukommelse"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maksimalt antal samtidige instanser"
@@ -661,10 +665,6 @@ label = "Sessionsgrænse"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maksimal køretid"
 label = "Tidsgrænse (minutter)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert er i beta. Det tilbyder bedre konverteringer, hurtigere og med mindre hukommelse end LibreOffice."
-label = "Brug ny Stirling Office-konvertering"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Konfigurer lagring af midlertidige filer og oprydningsadfærd"
@@ -682,11 +682,6 @@ label = "Oprydningsinterval (minutter)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Om den bredere system-tempmappe skal ryddes (brug med forsigtighed)"
 label = "Ryd systemets temp"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Mappe til LibreOffice midlertidige filer (lad tom for standard: baseTmpDir/libreoffice)"
-label = "LibreOffice midlertidig mappe"
-placeholder = "Standard: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maksimal alder i timer før midlertidige filer ryddes op"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Stræk billeder, så de fylder hele siden. Hvis
 pageFormatA4 = "A4 (210×297 mm)"
 pageFormatKeep = "Behold (originale dimensioner)"
 pageFormatLetter = "Letter (8.5×11 in)"
+setupSteps = "Sådan opsætter du {{name}}"
 title = "Forbindelser"
 unlinkedServices = "Ikke-tilknyttede tjenester"
 
@@ -1294,17 +1290,6 @@ label = "Standardproducer"
 description = "Konfigurer brugerdefinerede filsystemstier til pipeline-behandling og eksterne værktøjer"
 label = "Brugerdefinerede stier"
 
-[admin.settings.general.customPaths.operations]
-label = "Stier til eksterne værktøjer"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Sti til LibreOffice unoconvert til dokumentkonverteringer (lad tom for standard: /opt/venv/bin/unoconvert)"
-label = "Unoconvert-eksekverbar"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Sti til WeasyPrint-eksekverbar for HTML til PDF-konvertering (lad tom for standard: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint-eksekverbar"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Pipelinemapper"
 
@@ -1327,6 +1312,10 @@ label = "Mapper til overvågede mapper"
 [admin.settings.general.defaultLocale]
 description = "Standardsprog for nye brugere (fx en_US, es_ES)"
 label = "Standardlokalisering"
+
+[admin.settings.general.enableFeedback]
+description = "Lad brugere sende feedback til Stirling-teamet"
+label = "Aktiver feedback"
 
 [admin.settings.general.fileUploadLimit]
 description = "Maksimal filuploadstørrelse (fx 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "STANDARD-begivenheder plus: kontinuerlige polling-kald, alle GET-fore
 [admin.settings.security.audit.retentionDays]
 description = "Antal dage auditlogs bevares (0 = uendelig opbevaring)"
 label = "Revisionsbevaring (dage)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "Signerede PDF'er kan stadig vises, udskrives, konverteres eller underskrives igen, men kan ikke ændres i appen. API-kald og server-pipelines påvirkes ikke."
+label = "Bloker ændringer af signerede PDF'er"
 
 [admin.settings.security.csrfDisabled]
 description = "Deaktivér Cross-Site Request Forgery-beskyttelse (anbefales ikke)"
@@ -2969,6 +2962,7 @@ loadError = "Kunne ikke indlæse brugere"
 noTeam = "Intet team"
 noUsers = "Ingen andre brugere fundet."
 placeholder = "Vælg brugere..."
+signInRequired = "Log ind for at anmode andre om underskrifter."
 you = "{{name}} (Dig)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "Din konto administreres af din identitetsudbyder."
 title = "Skift Legitimationsoplysninger"
 
 [changeMetadata]
-filenamePrefix = "metadata"
 submit = "Ændre"
 tags = "rediger,ændr,opdater,metadata,egenskaber,dokumentegenskaber,forfatter,titel,emne,nøgleord,opretter,producent,info,dokumentinfo,filegenskaber"
 
@@ -3265,6 +3258,248 @@ not_found = "Jeg kunne ikke finde de ønskede oplysninger."
 processing = "Behandler ({{outcome}})..."
 unsupported_capability = "Ikke-understøttet funktion: {{capability}}"
 usage_limit_reached = "Du har nået din brugsgrænse. Tjek dine planmuligheder for at fortsætte."
+
+[checkAccessibility]
+aboutRow = "Om {{label}}"
+checking = "Kontrollerer..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Download tilgængelighedsrapport"
+fileFailed = "mislykkedes"
+pickFile = "Vis resultater for"
+submit = "Kontroller tilgængelighed"
+
+[checkAccessibility.category]
+altText = "Alternativ tekst"
+fonts = "Skrifttyper"
+language = "Sprog"
+links = "Links og annoteringer"
+metadata = "Metadata og indstillinger"
+structure = "Tags og struktur"
+
+[checkAccessibility.categoryTip]
+altText = "Billeder skal have en kort tekstbeskrivelse, som skærmlæsere kan læse op i stedet."
+fonts = "Skrifttyper skal være i filen, med hvert tegn knyttet til egentlig tekst, så teksten kan læses op og kopieres."
+language = "Skærmlæsere skal kende dokumentets sprog for at udtale det korrekt."
+links = "Links, kommentarer og formularfelter skal have tags og beskrivelser samt en fanerækkefølge, der følger siden."
+metadata = "Titel, PDF/UA-erklæring og andre indstillinger, som hjælpemidler læser fra filen."
+structure = "Tags fortæller skærmlæsere, hvad hver del af en side er, f.eks. en overskrift, liste eller tabel, og i hvilken rækkefølge den skal læses."
+
+[checkAccessibility.checks]
+label = "{{passed}} af {{total}} kontroller bestået"
+
+[checkAccessibility.error]
+download = "Tilgængelighedsrapporten kunne ikke oprettes. Prøv igen."
+fileTitle = "Denne fil kunne ikke kontrolleres"
+partial = "Nogle filer kunne ikke kontrolleres."
+
+[checkAccessibility.facts]
+declares = "Erklærer PDF/UA"
+displaysTitle = "Viser sin titel"
+fonts = "Skrifttyper indlejret"
+language = "Erklærer et sprog"
+notEncrypted = "Ikke krypteret"
+tagged = "Tagget"
+title = "Har en titel"
+
+[checkAccessibility.factTip]
+declares = "Filens metadata angiver, at den følger PDF/UA."
+displaysTitle = "PDF-læsere viser titlen, ikke filnavnet, når filen åbnes."
+fonts = "Hver skrifttype, teksten bruger, er inkluderet i filen."
+language = "Filen angiver, hvilket sprog dens tekst er på."
+notEncrypted = "Filen er ikke krypteret. Kryptering kan forhindre hjælpemidler i at læse den."
+tagged = "Filen har tags, der beskriver dens struktur. Uden dem får skærmlæsere kun ren tekst."
+title = "Filen har en titel i sine metadata."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} billede mangler en beskrivelse (side {{pages}})"
+summary_other = "{{count}} billeder mangler en beskrivelse (sider {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Gælder for"
+clauseValue = "{{spec}} §{{clause}}, test {{test}}"
+details = "Detaljer"
+instances_one = "{{count}} forekomst"
+instances_other = "{{count}} forekomster"
+onPages_one = "Side {{pages}}"
+onPages_other = "Sider {{pages}}"
+onPagesPartial_one = "Side {{pages}} (listen kan være ufuldstændig)"
+onPagesPartial_other = "Sider {{pages}} (listen kan være ufuldstændig)"
+pages = "Sider"
+pagesPartialValue = "{{pages}} (kun de første forekomster registrerer en side, så listen kan være ufuldstændig)"
+requirement = "Krav"
+rule = "Regel"
+standard = "Standard"
+where = "Hvor"
+
+[checkAccessibility.manual]
+clearAll = "Ryd alle"
+done = "Færdig"
+inProgress = "I gang"
+markAllDone = "Markér alle som færdige"
+tip = "Ting, som kun et menneske kan vurdere, f.eks. læserækkefølge og om billedbeskrivelser giver mening. Sæt flueben ved hver, når du har kontrolleret den; dine markeringer kommer med i den downloadede rapport."
+title = "Manuelle kontroller"
+
+[checkAccessibility.objects]
+annotation = "En annotering"
+bookmark = "Et bogmærke"
+character = "Et tegn i en skrifttype"
+contentPiece = "Et stykke sideindhold"
+document = "Dokumentet"
+drawing = "En tegning"
+figure = "En figur"
+file = "Selve filen"
+font = "En skrifttype"
+form = "Formularen"
+formField = "Et formularfelt"
+link = "Et link"
+markedContent = "Markeret sideindhold"
+metadata = "Dokumentets metadata"
+page = "En side"
+properties = "Dokumentegenskaberne"
+tag = "Et {{name}}-tag"
+tagTree = "Tag-træet"
+textPiece = "Et stykke tekst"
+translatedMetadata = "En metadata-post med oversættelser"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (fortsat)"
+footer = "Kontrolleret med Stirling PDF"
+page = "Side {{n}}"
+title = "Tilgængelighedsrapport"
+
+[checkAccessibility.result]
+fail = "Ikke bestået"
+failSummary = "Skærmlæsere kan muligvis ikke læse hele dette dokument."
+partial = "Delvist"
+partialSummary = "Skærmlæsere kan læse dette dokument, men nogle kontroller fejler."
+pass = "Bestået"
+passSummary = "Består alle automatiske PDF/UA-kontroller."
+
+[checkAccessibility.rules]
+annotationLanguage = "Kommentar- eller linktekst har ikke et angivet sprog, så skærmlæsere ved ikke, hvilket sprog det skal læses i. Angiv dokumentets sprog for at løse dette."
+annotationNoDescription = "En kommentar, et link eller en tegning har ingen tekstbeskrivelse, så skærmlæsere har intet at annoncere."
+annotationNotTagged = "En kommentar eller tegning er ikke tagget som en annotering, så skærmlæsere kan ikke nå den i læserækkefølgen."
+artifactInsideTagged = "Noget markeret som dekoration ligger inde i tagget indhold, så det både læses og springes over."
+bookmarkLanguage = "Bogmærkerne har ikke et angivet sprog, så skærmlæsere ved ikke, hvilket sprog de skal læses i. Angiv dokumentets sprog for at løse dette."
+conformancePrefix = "PDF/UA-erklæringen i metadata bruger det forkerte præfiks, så PDF-læsere muligvis ikke genkender den."
+contentLanguage = "Teksten har ikke et angivet sprog, så skærmlæsere ved ikke, hvilket sprog den skal læses i. Angiv dokumentets sprog for at løse dette."
+customTagNotMapped = "Et tag bruger et brugerdefineret navn, der ikke er knyttet til et standardtag, så skærmlæsere ikke ved, hvad det er."
+figureNoAlt = "Et billede er tagget som en figur, men har ingen beskrivelse, så skærmlæserbrugere ikke ved, hvad det viser."
+fontMissingGlyphs = "En medtaget skrifttype mangler nogle af de tegn, dokumentet bruger."
+fontNotEmbedded = "En skrifttype er ikke inkluderet i filen, så teksten kan se anderledes ud eller blive læst anderledes på en anden computer."
+formFieldNotTagged = "Et formularfelt er ikke tagget som en del af en formular, så skærmlæsere muligvis ikke finder det."
+genericHeading = "En overskrift bruger H-tagget, som ikke har noget niveau. PDF/UA-2 kræver H1 til H6, så skærmlæserbrugere kan se, hvordan overskrifter er indlejret."
+glyphWidths = "En skrifttypes tegnbredder i filen stemmer ikke overens med selve skrifttypen, så teksten kan have forkert afstand."
+headingSkipped = "Overskriftsniveauer springer et trin over, f.eks. fra Overskrift 1 direkte til Overskrift 3, hvilket gør det forvirrende at navigere mellem overskrifter."
+linkNoDescription = "Et link har ingen beskrivelse, så skærmlæsere kan kun læse dets adresse op – eller intet."
+linkNotTagged = "Et link er ikke tagget som et link, så skærmlæsere vil ikke annoncere det som et."
+metadataLanguage = "Metadata, f.eks. titlen, har ikke et angivet sprog, så skærmlæsere ved ikke, hvilket sprog de skal læses i. Angiv dokumentets sprog for at løse dette."
+noConformanceClaim = "Filen angiver ikke, at den følger PDF/UA. Dens metadata skal have en PDF/UA-identifikationspost."
+noDocumentTag = "Tagsene skal have ét Document-tag øverst, med alt andet indeni."
+noLanguage = "Dokumentet angiver ikke, hvilket sprog det er på, så skærmlæsere kan læse det op på det forkerte sprog."
+noMetadataStream = "Filen har ingen XMP-metadata, hvor PDF/UA gemmer dokumentets titel og overensstemmelsesdetaljer."
+noTags = "Filen har slet ingen tags, så skærmlæsere kan ikke skelne mellem overskrifter, afsnit, lister eller tabeller eller læse dem i den rigtige rækkefølge."
+notdefGlyph = "Teksten bruger en \"manglende tegn\"-pladsholder, som vises som et tomt felt eller en boks og ikke kan læses op."
+noteTag = "Filen bruger Note-tagget, som PDF/UA-2 erstatter med FENote til fod- og slutnoter."
+noTitle = "Dokumentet har ingen titel i sine metadata."
+notMarkedTagged = "Filen er ikke markeret som tagget, så hjælpemidler kan ignorere de tags, den har."
+notPdf2Tags = "PDF/UA-2 kræver de tags, som en PDF 2.0-fil bruger. Disse ligner PDF 1.7-tags, hvilket normalt betyder, at filen blev tagget til PDF/UA-1."
+noUnicode = "Nogle tegn kan ikke omdannes til læsbar tekst, så skærmlæsere samt kopier/indsæt kan gengive dem forkert."
+replacementTextLanguage = "Noget erstatningstekst har ikke et angivet sprog, så skærmlæsere ved ikke, hvilket sprog den skal læses i. Angiv dokumentets sprog for at løse dette."
+standardTagRemapped = "Et standardtag er knyttet til et brugerdefineret tag, så skærmlæsere mister dets betydning."
+symbolicEncoding = "En symbolskrifttype har en kodning, den ikke burde, så dens tegn kan komme ud som de forkerte bogstaver."
+tabOrder = "En side med links eller kommentarer har ikke en fanerækkefølge, der følger dokumentet, så tastaturbrugere kan hoppe rundt på siden."
+taggedInsideArtifact = "Tagget indhold ligger inde i noget, der er markeret som dekoration, så skærmlæsere kan springe det over."
+titleNotDisplayed = "PDF-læsere vil vise filnavnet i stedet for dokumentets titel. Filen skal have indstillingen \"vis dokumenttitel\" slået til."
+untaggedContent = "Noget på siden er hverken tagget som indhold eller markeret som dekoration, så skærmlæsere ikke kan afgøre, om det skal læses. Det er ofte et baggrundsbillede, en sidehoved, sidefod eller sidenummer."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Intet sprog for kommentarer eller links"
+annotationNoDescription = "Kommentar, link eller tegning uden beskrivelse"
+annotationNotTagged = "Kommentar eller tegning ikke tagget"
+artifactInsideTagged = "Dekoration i tagget indhold"
+bookmarkLanguage = "Intet sprog for bogmærker"
+conformancePrefix = "PDF/UA-erklæring skrevet forkert"
+contentLanguage = "Intet sprog for tekst"
+customTagNotMapped = "Brugerdefineret tag uden standardbetydning"
+figureNoAlt = "Billede uden beskrivelse"
+fontMissingGlyphs = "Skrifttype mangler tegn"
+fontNotEmbedded = "Skrifttype ikke indlejret"
+formFieldNotTagged = "Formularfelt ikke tagget"
+genericHeading = "Overskrift uden niveau"
+glyphWidths = "Skrifttypens tegnbredder stemmer ikke overens"
+headingSkipped = "Overskriftsniveau sprunget over"
+linkNoDescription = "Link uden beskrivelse"
+linkNotTagged = "Link ikke tagget"
+metadataLanguage = "Intet sprog for metadata"
+noConformanceClaim = "Erklærer ikke PDF/UA"
+noDocumentTag = "Tags starter ikke med et Document-tag"
+noLanguage = "Intet dokumentsprog"
+noMetadataStream = "Ingen XMP-metadata"
+noTags = "Ingen tags"
+notdefGlyph = "Pladsholder for manglende tegn brugt"
+noteTag = "Bruger Note-tagget"
+noTitle = "Ingen dokumenttitel"
+notMarkedTagged = "Ikke markeret som tagget"
+notPdf2Tags = "Tags er ikke PDF 2.0-tags"
+noUnicode = "Tegn, der ikke kan læses som tekst"
+replacementTextLanguage = "Intet sprog for erstatningstekst"
+standardTagRemapped = "Standardtag ændret til et brugerdefineret"
+symbolicEncoding = "Symbolskrifttype har forkert kodning"
+tabOrder = "Fanerækkefølge følger ikke dokumentet"
+taggedInsideArtifact = "Tagget indhold skjult som dekoration"
+titleNotDisplayed = "Titel vises ikke ved åbning"
+untaggedContent = "Indhold, der ikke er tagget"
+
+[checkAccessibility.score]
+issues_one = "{{count}} problem"
+issues_other = "{{count}} problemer"
+noIssues = "Ingen problemer fundet"
+subtitle_one = "{{profile}} - {{count}} side"
+subtitle_other = "{{profile}} - {{count}} sider"
+
+[checkAccessibility.sections]
+breakdown = "Opdeling"
+
+[checkAccessibility.status]
+checking = "Kontrollerer {{current}} af {{total}}..."
+complete = "Kontrol fuldført"
+
+[checkAccessibility.steps]
+results = "Resultater"
+standard = "Standard"
+
+[checkAccessibility.tooltip.header]
+title = "Hvilken standard der skal kontrolleres"
+
+[checkAccessibility.tooltip.ua1]
+text = "Den første version af PDF/UA, udgivet i 2012 som ISO 14289-1, for PDF 1.7-filer."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "Den nyere version, udgivet i 2024 som ISO 14289-2, for PDF 2.0-filer. En PDF 1.7-fil, der kontrolleres mod den, fejler de regler, der kun gælder for PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Annotering {{n}}"
+bookmarks = "Bogmærker"
+character = "Et tegn i {{font}}"
+contentItem = "Indholdselement {{n}}"
+drawingStep = "Tegnetrin {{n}}"
+embeddedGraphic = "Indlejret grafik"
+font = "Skrifttype {{name}}"
+metadata = "Dokumentmetadata"
+page = "Side {{n}}"
+piece = "Stykke {{n}}"
+tag = "{{tag}}-tag"
+tagTree = "Tag-træ"
+wholeDocument = "Hele dokumentet"
+
+[checkAccessibility.where.properties]
+author = "Forfatter"
+description = "Beskrivelse"
+pdfUaPart = "PDF/UA-del"
+title = "Titel"
 
 [classification.families]
 correspondence = "Korrespondance"
@@ -3729,6 +3964,10 @@ message = "Et eller Begge af de Angivne Dokumenter Er For Store At Behandle"
 body = "Disse PDF'er tilsammen overstiger 2.000 sider. Behandling kan tage flere minutter."
 title = "Stor sammenligning i gang"
 
+[compare.mode]
+pixel = "Pixel-sammenligning"
+text = "Tekstsammenligning"
+
 [compare.no.text]
 message = "Et eller Begge Af de Vælgede PDFs Har Ingen Tekstindhold. Vælg Vores PDFs Med Tekst for Sammenligning."
 
@@ -4046,6 +4285,30 @@ failed = "Dit login kunne ikke fornyes. Prøv igen, eller luk denne side og star
 lead = "Denne server er allerede knyttet til din konto. Forny dit login for at vende tilbage til fakturering og forbrug på din server."
 title = "Forny dit serverlogin"
 
+[connectedAccounts]
+connect = "Forbind"
+connectAnother = "Forbind en anden"
+connectFailed = "Kontoen kunne ikke forbindes. Kontroller, at serverens app-registrering er sat op, og prøv igen."
+disconnect = "Afbryd forbindelsen"
+google = "Google Drive"
+intro = "Forbind dine egne konti én gang. Dine pipelines kan derefter læse fra og gemme til dem som dig."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling kan ikke længere nå denne konto, så pipelines, der bruger den, er sat på pause."
+none = "Din administrator har ikke slået forbundne konti til."
+personal = "Personlig konto"
+popupBlocked = "Din browser blokerede login-vinduet. Tillad pop op-vinduer for dette websted, og prøv igen."
+reconnect = "Log ind igen"
+work = "Arbejdskonto"
+
+[connectedAccounts.disconnectConfirm]
+body = "Kilder og pipelines, der bruger denne konto, stopper, indtil du forbinder den igen."
+confirm = "Afbryd forbindelsen"
+title = "Afbryd {{account}}?"
+
+[connectedAccounts.status]
+connected = "Forbundet"
+needsSignIn = "Kræver login"
+
 [convert]
 autoRotate = "Automatisk rotation"
 autoRotateDescription = "Rotér automatisk billeder for bedre at passe til PDF-siden"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Dokumenttitel"
 pdfUaTitleHelp = "Vises af en læser i stedet for filnavnet. Hvis feltet er tomt, bruges den første overskrift."
 selectSourceFormatFirst = "Vælg først et kildeformat"
 settings = "Indstillinger"
+signInToUse = "Log ind for at bruge"
 single = "Enkelt"
 sourceFormatPlaceholder = "Kildeformat"
-stirlingOfficeConvert = "Brug Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Bedre, hurtigere konverteringer med mindre hukommelse. Slå fra for at bruge standardkonverteren."
 strictMode = "Streng tilstand"
 strictModeDesc = "Fejl hvis konverteringen ikke er perfekt (bruger VeraPDF-verifikation)"
 svgPdfOptions = "SVG til PDF-indstillinger"
@@ -4134,8 +4396,6 @@ webOptions = "Web til PDF-indstillinger"
 zoomLevel = "Zoomniveau"
 
 [convert.ebookOptions]
-embedAllFonts = "Indlejr alle skrifttyper"
-embedAllFontsDesc = "Indlejr alle skrifttyper fra e-bogen i den genererede PDF"
 includePageNumbers = "Medtag sidetal"
 includePageNumbersDesc = "Tilføj sidetal til den genererede PDF"
 includeTableOfContents = "Medtag indholdsfortegnelse"
@@ -4648,6 +4908,17 @@ title = "Indstillinger"
 [extractPages.tooltip]
 description = "Udtrækker de valgte sider til en ny PDF og bevarer rækkefølgen."
 
+[feedback.page]
+open = "Send feedback"
+sendMore = "Send mere feedback"
+sent = "Tak for din feedback"
+title = "Hjælp os med at forbedre Stirling"
+unavailable = "Feedback er ikke tilgængelig"
+
+[feedback.tag]
+dismiss = "Skjul feedback-knappen"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "Åbn i filredigering"
 viewInViewer = "Vis i fremviser"
@@ -4657,7 +4928,6 @@ closeFile = "Luk fil"
 
 [fileEditor]
 closedFile = "Lukkede {{name}}"
-couldNotSave = "Kunne ikke gemme {{name}}"
 filesReordered_one = "Fil omarrangeret"
 filesReordered_other = "{{count}} filer omarrangeret"
 loadedFromStorage_one = "Indlæste {{count}} fil fra lager"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "PDF-bibliotek"
 myFiles = "Filbibliotek"
 noFiles = "Ingen filer endnu"
+oneDrive = "Åbn fra OneDrive"
+oneDriveFailed = "Kunne ikke åbne OneDrive"
 openFileManager = "Gennemse alle filer og mapper"
 openFromComputer = "Åbn fra computer"
 openSettings = "Åbn indstillinger"
@@ -4804,6 +5076,17 @@ searchFiles = "Søg i filer"
 uploadFailedBody = "Kunne ikke tilføje de valgte filer."
 uploadFailedTitle = "Upload mislykkedes"
 viewAll = "Vis alle {{count}} filer"
+
+[fileSidebar.clearRecents]
+body_one = "Fjern 1 fil fra Seneste? Dette kan ikke fortrydes."
+body_other = "Fjern {{count}} filer fra Seneste? Dette kan ikke fortrydes."
+button = "Ryd Seneste"
+confirm = "Ryd Seneste"
+error = "Kunne ikke rydde. Prøv igen."
+openNote_one = "1 af dem er åben i arbejdsområdet."
+openNote_other = "{{count}} af dem er åbne i arbejdsområdet."
+skipOpen = "Spring åbne filer over"
+title = "Ryd Seneste?"
 
 [fileSidebar.fileItem]
 closeViewer = "Luk fremviser"
@@ -5124,6 +5407,7 @@ diskFileHint = "Gemt på din computer"
 diskHint = "En fil i den monterede mappe på din disk"
 local = "Lokal"
 localHint = "Ikke sikkerhedskopieret"
+oneDrive = "OneDrive"
 shared = "Delt"
 sharedHint = "Delt med dig via link"
 
@@ -5672,6 +5956,11 @@ title = "Ændre Metadata"
 desc = "Ændr dokumentbegrænsninger og tilladelser"
 tags = "tilladelser,begrænsninger,rettigheder,adgangskontrol,tillad,afvis,udskrivning,kopiering,redigering,ændr tilladelser,sikkerhedsindstillinger,brugerrettigheder"
 title = "Ændre Tilladelser"
+
+[home.checkAccessibility]
+desc = "Bedøm en PDF mod PDF/UA og se, hvad der spærrer for skærmlæsere – uden at ændre den"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Kontrollér PDF-tilgængelighed"
 
 [home.classify]
 desc = "Identificér, hvilken slags dokument dette er, og mærk det."
@@ -6521,6 +6810,32 @@ quickAccess = "Start i <strong>Hurtig adgang</strong>-panelet for at hoppe melle
 topBar = "Topbjælken lader dig skifte mellem <strong>Fremviser</strong>, <strong>Sideeditor</strong> og <strong>Aktive filer</strong>."
 wrapUp = "Det var det nye i V2. Åbn menuen <strong>Rundvisninger</strong> når som helst for at afspille dette, værktøjsrundvisningen eller admin-rundvisningen."
 
+[oneDriveSave]
+chooseFolder = "Vælg en OneDrive-mappe at uploade til"
+conflict = "Denne fil er ændret i OneDrive, siden denne version blev åbnet eller gemt. Gem i stedet din version som en kopi."
+failedTitle = "Kunne ikke gemme til OneDrive"
+fromOneDrive = "Fra OneDrive"
+linkNotStored = "Denne browser kunne ikke huske linket til OneDrive-filen. Gem den som en kopi efter en genindlæsning."
+missing = "Denne fil blev flyttet eller slettet i OneDrive. Gem i stedet din version som en kopi."
+open = "Åbn i OneDrive"
+personalUnsupported = "Upload til OneDrive kræver en arbejds- eller skolekonto hos Microsoft."
+reconnect = "Opret forbindelse igen"
+replaces = "Erstatter {{name}}"
+saveCopyToOneDrive = "Gem en kopi i OneDrive"
+saved = "Gemt til OneDrive"
+saving = "Gemmer til OneDrive..."
+signInToSave = "Log ind på din server for at gemme til OneDrive."
+updateOriginal = "Opdater i OneDrive"
+uploadToOneDrive = "Upload til OneDrive..."
+
+[oneDriveSave.status]
+saved = "Gemt til OneDrive"
+unsaved = "Ændringer er ikke gemt til OneDrive endnu"
+
+[oneDriveSave.toolbar]
+replace = "Opdater {{name}} i OneDrive"
+saveAll = "Opdater alle i OneDrive"
+
 [overlay-pdfs]
 desc = "Overlejr én PDF oven på en anden"
 submit = "Indsend"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Nulstilles i morgen"
 thisPeriod = "Denne faktureringsperiode"
 
 [payment]
+annually = "Årligt"
 billingPeriod = "Faktureringsperiode"
 cancelTeamChange = "Behold nuværende plan"
 canCloseWindow = "Du kan nu lukke dette vindue."
@@ -7157,11 +7473,14 @@ title = "Juster Team-plan"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe viser den nøjagtige opkrævning, eventuelle forholdsmæssige justeringer og din næste faktureringsdato, før du bekræfter. Din gemte betalingsmetode bruges, hvis den er tilgængelig."
+billingLabel = "Fakturering"
 continue = "Fortsæt til betaling"
 currencyAtCheckout = "Stripe bekræfter det endelige beløb og betalingsvalutaen ved betaling."
+custom = "Brugerdefineret"
 customLabel = "Antal brugere"
 dueToday = "Forfalder i dag"
 enterpriseQuote = "Få et enterprise-tilbud"
+enterUsers = "Angiv et antal brugere."
 estimatedTotal = "Anslået total"
 lineItem = "Team · {{price}}{{period}} pr. {{block}} brugere"
 minimumForCurrentUsers = "Du har {{users}} brugere, så planen skal dække mindst {{minimum}}."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Eksisterende konti forbliver på plads. Tilføjelse e
 overCapacityTitle = "Din server har flere brugere, end din plan dækker"
 perMonth = "/md."
 perYear = "/år"
+planName = "Stirling Team"
 reductionNote = "Den lavere kapacitet starter ved din næste fornyelse. Indtil da kan du bruge din nuværende kvote. Eksisterende brugere bliver; nye brugere blokeres, hvis du er over kapacitet, når ændringen træder i kraft."
 renewalNote = "Fornyes til {{total}}{{period}}. Annuller når som helst i Forbrug og fakturering."
 reviewChange = "Gennemgå ændring i Stripe"
-roundsTo = "afrundes til {{users}}"
+roundsUp = "Afrundes op til {{users}} brugere."
+selfServeLimit = "Op til {{users}} brugere her."
 subheading = "Dækker alle, du inviterer, i blokke af {{users}} brugere."
 subheadingAdd = "Din plan dækker {{current}} brugere i dag. Vælg den nye total."
+talkToEnterprise = "For mere, tal med os om Enterprise."
+usersCovered = "brugere dækket"
 usersLabel = "Brugere"
 userTotal = "{{users}} brugere"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Anvend ændringer på filen i dit arbejdsområde ({{shortcut}})"
 tags = "rediger tekst,ændr tekst,skift tekst,rediger indhold,opdater tekst,omskriv,ret,ændr,redline,revider,teksteditor,indholdseditor"
 title = "PDF-teksteditor"
 unsaved = "(ikke gemt)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Annotationstekst - ikke sidetekst, så den kan ikke redigeres her"
@@ -7261,12 +7583,18 @@ widget = "Formularfelt - ikke sidetekst, så det kan ikke redigeres her"
 
 [pdfTextEditor.commands]
 edit = "Rediger"
+markTagged = "Marker som fuldt tagget"
+matchScanFont = "Match scannet tekst til {{face}}"
 mergeRuns_one = "Flet {{count}} tekststykke til et afsnit"
 mergeRuns_other = "Flet {{count}} tekststykker til et afsnit"
 setColour = "Angiv farve på {{run}}"
 setOutline = "Angiv kontur på {{run}}"
+tagFormField = "Opmærk formularfelt"
+tagLink = "Tag link"
+tagPageContent = "Auto-tag side"
 typeInto = "Skriv i {{run}}"
 ungroupParagraph = "Opløs gruppering af afsnit {{run}}"
+unmarkTagged = "Marker som ikke fuldt tagget"
 wrap = "Ombryd {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Kassér og åbn"
 hint = "Annuller, og vælg derefter Gem PDF for først at beholde dem i dit arbejdsområde."
 title = "Kassér ikke-gemte ændringer?"
 
-[pdfTextEditor.drop]
-hint = "Slip på editorens arbejdsflade erstatter ethvert åbent dokument."
-title = "Slip en PDF for at åbne"
-
 [pdfTextEditor.error]
 decodeImage = "Kunne ikke afkode det valgte billede."
+duplicateDropsLetters = "Kan ikke duplikere denne tekst: ingen tilgængelig skrifttype kan gengive alle dens bogstaver."
+formLiftChangesDrawing = "Kan ikke redigere dette: det er tegnet som en del af en gruppe, hvis beskæring eller grafikindstillinger editoren ikke kan bevare ved ændringer."
 insertImage = "Kunne ikke indsætte det valgte billede."
+needsShaping = "Editoren kan endnu ikke gengive dette skripts sammenbundne bogstaver og vokaltegn korrekt, så ændringen blev ikke udført."
+replaceClippedImage = "Kan ikke erstatte dette billede: det er beskåret, og erstatningen vil vise de dele, beskæringen skjuler."
+scanOffInk = "Kan ikke redigere denne tekst: De genkendte ord flugter ikke med scanningen. Kør OCR igen."
+unsafeRtlEdit = "Kan ikke udføre denne redigering: editoren kan ikke tegne linjens højre-til-venstre-tekst om uden at ændre den."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG-billede"
@@ -7304,15 +7634,42 @@ wholeWord = "Hele ord"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Indbyggede skrifttyper"
+closestMatch = "Denne skrifttype mangler nogle af de valgte bogstaver, så de tegnes med den nærmeste matchende skrifttype."
 deviceFontsNone = "Der blev ikke fundet ekstra enhedsskrifttyper."
 deviceFontsUnavailable = "Enhedsskrifttyper er ikke tilgængelige. De indbyggede skrifttyper virker stadig."
 deviceGroup = "Enhedsskrifttyper"
+documentFontCannotDraw = "Editoren kan ikke gengive denne tekst i dokumentets egen skrifttype, så den blev efterladt i sin nuværende skrifttype."
 documentGroup = "Dokumentskrifttype"
+embeddingForbidden = "Denne skrifttypes licens tillader ikke indlejring i en PDF. Teksten blev ikke ændret."
+embedFailed = "Denne skrifttype kunne ikke indlejres i PDF'en. Teksten blev ikke ændret."
+includedGroup = "Inkluderede skrifttyper"
 label = "Skrifttypefamilie"
+matchedGroup = "Matchet skrifttype"
+missingGlyphs = "Denne skrifttype mangler nogle af de valgte tegn, og de kunne ikke bevares i deres nuværende skrifttype. Teksten blev ikke ændret."
 mixed = "Blandet"
+needsShaping = "Editoren kan endnu ikke tegne dette skripts sammenbundne bogstaver og vokaltegn korrekt, så den tekst blev efterladt i sin nuværende skrifttype."
+noGlyphs = "Denne skrifttype har ingen tegn til den valgte tekst. Teksten blev ikke ændret."
 noMatch = "Ingen matchende skrifttype"
+partOfRunUnsupported = "Denne tekst kan kun formateres som helhed. Vælg feltet i stedet for nogle af ordene."
 placeholder = "Skrifttypefamilie"
+scannedText = "Scannet tekst"
+serverFontFailed = "Den server-skrifttype kunne ikke downloades. Teksten blev ikke ændret."
+serverGroup = "Server-skrifttyper"
+someLeftUnchanged = "Denne skrifttype har ikke tegnene til nogle af den valgte tekst. Den tekst blev ikke ændret."
+styleSkipped = "Noget af den valgte tekst har ingen version af sin skrifttype i den stil, så den blev ikke ændret."
+styleUnavailable = "Den valgte tekst har ingen version af sin skrifttype i den stil, så den blev ikke ændret."
 useDeviceFonts = "Brug enhedsskrifttyper"
+weight = "Skrifttykkelse"
+weightBlack = "Black"
+weightBold = "Bold"
+weightExtraBold = "Extra bold"
+weightExtraLight = "Extra light"
+weightLight = "Light"
+weightMedium = "Medium"
+weightNumber = "Vægt {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Semibold"
+weightThin = "Thin"
 
 [pdfTextEditor.fonts]
 allPresent = "Alle bogstaver og tal findes"
@@ -7357,6 +7714,7 @@ helpDesc = "Denne hjælp"
 saveDesc = "Gem i dit arbejdsområde"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Fed / Kursiv for de valgte ord eller hele feltet"
 deleteDesc = "Fjern valgte"
 duplicateDesc = "Dupliker valgte"
 groupDesc = "Gruppér valgte kørsler i ét afsnit"
@@ -7380,8 +7738,12 @@ zoomDesc = "Zoom ind / ud"
 
 [pdfTextEditor.inspector]
 document = "Dokument"
+fontCompletedClosest = "Indlejret skrifttype · tegn, der mangler, tegnes med {{name}}, det nærmeste match."
+fontCompletedOriginal = "Indlejret skrifttype · tegn, der mangler, tegnes med {{name}}, samme skrifttype."
 fontEmbedded = "Indlejret skrifttype · et tegn, den mangler, falder tilbage til Helvetica."
 fontGap = "{{name}} · mangler {{glyphs}} - hvis du skriver dem, falder det tilbage til Helvetica."
+fontUnknownCoverage = "{{name}} · et manglende tegn falder tilbage til {{fallback}}."
+formField = "Formularfelt"
 geometry = "Position og størrelse"
 height = "Højde"
 heightHint = "En tekstboks' højde følger dens skriftstørrelse og linjeantal."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR er ikke tilgængelig på denne server."
 oneImage = "Billede"
 oneShape = "Form"
 oneText = "Tekst"
+outlinedTextHint_one = "Teksten på denne side er tegnet som former, så der er ingen tekst at redigere. Kør først OCR for at gøre den redigerbar."
+outlinedTextHint_other = "{{count}} sider har tekst tegnet som former, så der er ingen tekst at redigere. Kør først OCR for at gøre den redigerbar."
 pages = "Sider"
 runOcr = "Kør OCR"
 scanHint_one = "Denne side er et scannet billede uden tekst, der kan redigeres. Kør OCR først for at gøre teksten redigerbar."
 scanHint_other = "{{count}} sider er scannede billeder uden tekst, der kan redigeres. Kør OCR først for at gøre teksten redigerbar."
 scannedText = "Scannet tekst · ændrede ord er dækket og gentegnet med en matchende skrifttype."
+scannedTextMisaligned = "Scannet tekst · de genkendte ord flugter ikke med scanningen, så denne blok kan ikke redigeres eller slettes."
+scannedTextNoFont = "Scannet tekst · skrevne ord i dette skriftsystem kan endnu ikke tegnes, så de bevares ikke. Sletning af ord virker stadig."
+scannedTextOffInk = "Scannet tekst · de genkendte ord ligger forskudt fra de scannede ord, så denne blok kan ikke redigeres. Kør OCR igen."
 tabDocument = "Dokument"
 tabSelected = "Valgt"
 textBoxes = "Tekstbokse"
+unreadPagesHint = "{{count}} sider har ingen tekst at redigere: nogle er scannede billeder, og nogle tegner deres tekst som former. Kør først OCR for at gøre dem redigerbare."
 width = "Bredde"
 widthHint = "Tekst ombrydes igen, så den passer til bredden."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Tilføj tag"
+applyToOtherPages_one = "Anvend på {{count}} anden side"
+applyToOtherPages_other = "Anvend på {{count}} andre sider"
+artifactGroup = "Springes over af skærmlæsere"
 artifactText = "Dekorativ"
 cannotChange = "Dette billedes tilgængelighed kan ikke ændres."
+cannotDescribeFormField = "Beskrivelsen af dette formularfelt kan ikke ændres."
+cannotDescribeLink = "Dette links beskrivelse kan ikke ændres."
 cannotRetag = "Denne teksts tag kan ikke ændres."
+cannotSetDecorative = "Dette kan ikke markeres eller afmarkeres som dekorativt."
+cannotTagFormField = "Dette formularfelt kan ikke opmærkes."
+cannotTagLink = "Dette link kan ikke tagges."
+cannotTagPage = "Denne sides indhold kan ikke tagges."
+contentGroup = "Indhold"
 customTag = "{{role}} (brugerdefineret tag)"
 decorativeInfo = "Skærmlæsere springer dekorative billeder over. Brug det til rammer, baggrunde og andre billeder, der ikke indeholder information."
 decorativeLabel = "Dekorativt billede"
 description = "Billedbeskrivelse"
 descriptionInfo = "Skærmlæsere læser dette op i stedet for billedet."
 encrypted = "Tags kan ikke redigeres i en krypteret fil"
+figureDescription = "Figurbeskrivelse"
+figureDescriptionInfo = "Skærmlæsere læser dette op i stedet for figuren."
+formFieldDescription = "Feltbeskrivelse"
+formulaDescription = "Formelbeskrivelse"
+formulaDescriptionInfo = "Skærmlæsere læser dette op i stedet for formlen. Sig det, som du ville sige det højt, f.eks. \"x i anden plus en\"."
 heading = "Tilgængelighed"
 innerTagLabel = "Tag {{number}}"
 innerTags = "Tags i denne tekst"
+linkDescription = "Linkbeskrivelse"
+markedTagged = "Dokumentet er fuldt tagget"
+markedTaggedHint = "Fortæller PDF-læsere at bruge tilgængelighedstags. Sæt flueben, når alt er tagget."
+markedWithUntagged = "Noget indhold har ingen tags, så skærmlæsere kan springe det over."
 missingDescriptions = "Manglende beskrivelser"
 mixedContent = "Figur indeholder andet indhold"
+mixedTags = "Blandet"
 needsDescriptionBadge = "Ingen beskrivelse"
-nextImage = "Næste billede"
+nextToReview = "Næste til gennemgang"
 notFigure = "Tagget som en del af teksten"
 removeTag = "Fjern tag"
 saveFailed = "Dine ændringer af tilgængelighed kunne ikke gemmes, så filen blev ikke gemt. Fortryd dem, og prøv igen."
 selectedText = "Markeret tekst"
+tagFormField = "Opmærk formularfelt"
+tagging = "Tagger sider"
 tagLabel = "Tag"
+tagLinks_one = "Tag link"
+tagLinks_other = "Tag {{count}} links"
+tagUntagged = "Auto-tag dokument"
+tagUntaggedHint = "Tilføjer automatisk tilgængelighedstags i hele dokumentet. Resultatet er groft: Kontroller overskrifter, lister og læserækkefølge bagefter."
 unknownTag = "Kan ikke læses her"
+unmarkedWithTags = "Nogle PDF-visere vil bruge tags alligevel og kan springe indhold uden dem over."
 unreadable = "Denne fils tags kan ikke redigeres"
 untaggableImages = "Kan ikke tagges her"
 untaggedBadge = "Ikke tagget"
 untaggedDocument = "Dokumentet har ingen tags"
 untaggedImage = "Kan ikke tagges her"
 untaggedImages = "Ikke-taggede billeder"
+untaggedPages = "Sider der skal tagges"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Sidefod"
+header = "Sidehoved"
+pageNumber = "Sidenummer"
+watermark = "Vandmærke"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Overskrift uden tekst"
@@ -7505,6 +7907,23 @@ tableHeader = "Tabeloverskrift"
 tableRow = "Tabelrække"
 title = "Titel"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Alle sprog"
+cannotSetDocument = "Dette dokuments sprog kan ikke ændres."
+cannotSetText = "Denne teksts sprog kan ikke ændres."
+documentHint = "Det sprog, skærmlæsere bruger, medmindre en del af teksten angiver sit eget."
+documentLabel = "Sprog"
+documentLocked = "Et krypteret dokuments sprog kan ikke ændres her."
+inDocument = "I dette dokument"
+innerLabel = "Sprog for tag {{number}}"
+label = "Sprog"
+missing = "Intet sprog angivet. Skærmlæsere vil gætte og kan læse hele dokumentet op med forkert stemme."
+mixed = "Blandet"
+noMatch = "Intet matchende sprog. Skriv i stedet dets kode, f.eks. mt eller en-IE."
+placeholder = "Vælg sprog"
+selectedText = "Valgt teksts sprog"
+textHint = "Skærmlæsere skifter stemme og udtale til dette sprog."
+
 [pdfTextEditor.mobile]
 actions = "Editorhandlinger"
 addImage = "Billede"
@@ -7517,7 +7936,6 @@ done = "Færdig"
 download = "Gem og download"
 find = "Find"
 lock = "Lås"
-openPdf = "Åbn en PDF"
 panelHint = "Redigering sker i Workspace-visningen. Tryk på tekst på siden for at ændre den."
 save = "Gem"
 style = "Stil"
@@ -7525,7 +7943,6 @@ tapToPlace = "Tryk på siden, hvor teksten skal placeres"
 unlock = "Lås op"
 
 [pdfTextEditor.pageView]
-pageNumber = "Side {{page}}"
 renderFailed = "Kunne ikke gengive side"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Lodret lineal"
 
 [pdfTextEditor.run]
 lockedTitle = "Låst - brug knappen Lås op for at redigere"
+readOnlyOrderTitle = "Denne linjes tekst kan ikke redigeres: den blander højre-til-venstre og venstre-til-højre tekst i en rækkefølge, som editoren ikke kan tegne sikkert om"
+resizeHandle = "Træk for at ændre bredden; teksten ombrydes"
 
 [pdfTextEditor.saveRisk]
 cancel = "Annuller"
@@ -7548,6 +7967,35 @@ intro = "Når du gemmer den redigerede kopi, ændres filen. Det betyder:"
 note = "Dine redigeringer bevares. Ændringerne angivet ovenfor er uundgåelige, når den redigerede kopi gemmes."
 saveAnyway = "Gem alligevel"
 title = "Gemning ændrer denne PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "Omtrentligt match"
+approximateHint = "Den nærmeste fundne skrifttype matcher muligvis ikke scanningen."
+change = "Ser skrifttypen forkert ud?"
+choose = "Vælg en skrifttype"
+chooseMissing = "Vælg en skrifttype til denne tekst…"
+compare = "Sammenlign skrifttyper…"
+deviceAllow = "Tillad skrifttypeadgang for bedre matching"
+deviceBlocked = "Din browser spørger ikke igen. For at tillade det skal du klikke på ikonet til venstre for adresselinjen, slå Skrifttyper til og prøve igen."
+deviceBlockedTitle = "Adgang til skrifttyper er blokeret"
+deviceNone = "Ingen af de normale dokumentskrifttyper er installeret på denne computer."
+deviceNote = "Din browser spørger først. Skrifttyper bliver på denne enhed."
+deviceOn_one = "Også sammenlignet med {{count}} skrifttype på denne computer."
+deviceOn_other = "Også sammenlignet med {{count}} skrifttyper på denne computer."
+deviceReading = "Læser skrifttyper på denne computer…"
+deviceRetry = "Prøv igen"
+done = "Færdig"
+hint = "Din indtastning tegnes i den nærmeste fundne skrifttype. Vælg en anden, hvis den ligner scanningen mere."
+hintFromScan = "Din indtastning bygges af bogstaver fundet i scanningen. Vælg en skrifttype for i stedet at tegne den i den skrifttype."
+hintOthers = "Dit valg bruges også til scannet tekst, du endnu ikke har redigeret."
+matching = "Matcher skrifttyper…"
+noFont = "Ingen af de tilgængelige skrifttyper kan tegne dette skriftsystem, så indtastet tekst kan endnu ikke tegnes om."
+scan = "Original scanning"
+scanAlt = "Den scannede linje"
+scanNote = "Scanninger ser ofte mere slørede eller kraftigere ud end skrifttypen egentlig er. Sammenlign bogstavformer frem for tykkelse."
+score = "{{match}}% ens"
+title = "Match den scannede skrifttype"
+unmeasurable = "Denne scanning er for svag eller for lille til at matche en skrifttype."
 
 [pdfTextEditor.settings]
 advanced = "Avanceret"
@@ -7564,7 +8012,6 @@ addTable = "Tilføj tabel"
 addText = "Tilføj tekst"
 clickPageToAddTable = "Klik på siden for at tilføje en tabel"
 clickPageToAddText = "Klik på siden for at tilføje tekst"
-document = "Dokument"
 group = "Gruppér"
 groupingAuto = "Auto"
 groupingAutoHint = "Grupperer linjer med ens afstand i afsnit. Hvis du ændrer dette, genlæses dokumentet, og fortrydelseshistorikken ryddes."
@@ -7593,23 +8040,17 @@ auto = "Automatisk"
 enable = "Kontroller stavning, mens du skriver"
 language = "Ordbogssprog"
 
-[pdfTextEditor.stage]
-loadingDocument = "Indlæser dokument"
-loadingProgress = "Indlæsningsstatus"
-noDocument = "Intet dokument indlæst."
-pickPrompt = "Vælg en PDF fra panelet Filer til venstre for at begynde at redigere."
-renderingPreview = "Renderer forhåndsvisning"
-
 [pdfTextEditor.table]
 addColumn = "Tilføj kolonne"
 addRow = "Tilføj række"
+cellNoGlyphs = "Denne tekst indeholder tegn, som tabellens skrifttyper ikke kan gengive. Ændr eller fjern dem for at udfylde cellen."
 column = "Kol."
 deleteColumn = "Slet kolonne"
 deleteRow = "Slet række"
 done = "Færdig"
 doneHint = "Stop med at redigere dette som en tabel"
-edit = "Rediger"
 editHint = "Rediger som en tabel - skriv i celler, tilføj eller fjern rækker og kolonner"
+editTable = "Rediger tabel"
 move = "Flyt"
 moveTable = "Træk for at flytte hele tabellen"
 recognizedHint = "Genkendt tabel - klik for at markere al dens tekst"
@@ -7630,6 +8071,9 @@ alignMiddle = "Juster midt"
 alignRight = "Juster til højre"
 alignTop = "Juster øverst"
 arrange = "Arranger"
+bold = "Fed"
+boldOnly = "Denne skrifttype har kun en fed version"
+boldUnavailable = "Ingen fed version af denne skrifttype"
 bringForward = "Flyt fremad"
 bringToFront = "Flyt forrest"
 caseLower = "små bogstaver"
@@ -7650,10 +8094,12 @@ fontColour = "Skriftfarve"
 fontSize = "Skriftstørrelse"
 formatting = "Tekstformatering"
 italic = "Kursiv"
+italicOnly = "Denne skrifttype har kun en kursiv version"
 italicUnavailable = "Denne skrifttype har ingen kursiv version. Indlæs dine enhedsskrifttyper, eller vælg en anden skrifttypefamilie."
 lock = "Lås markering"
 lockTooltip = "Lås markering - forhindrer utilsigtede redigeringer"
 more = "Flere handlinger"
+noBoldItalic = "Ingen fed kursiv version af denne skrifttype"
 order = "Rækkefølge"
 outlineColour = "Konturfarve"
 outlineWidth = "Konturbredde (0 = ingen)"
@@ -7683,13 +8129,6 @@ title = "Afvigelser i forhåndsvisning"
 [pdfTextEditor.tooltip.textFocus]
 text = "Dette arbejdsområde fokuserer på redigering af tekst og omplacering af indlejrede billeder. Komplekst sidegrafik, formular-widgets og lagdelte grafikker bevares til eksport, men kan ikke redigeres fuldt ud her."
 title = "Fokus på tekst og billeder"
-
-[pdfTextEditor.zoom]
-fit = "Tilpas"
-fitToWidth = "Tilpas til bredde"
-in = "Zoom ind"
-out = "Zoom ud"
-reset = "Nulstil zoom til 100 %"
 
 [PDFToCSV]
 header = "PDF til CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Kører ved import"
 [policies.enforcement]
 applying = "Anvender {{names}}"
 applyingProgress = "Anvender {{names}} ({{done}} af {{total}})"
-exportFailureBody = "Sikkerhedspolitikker kunne ikke anvendes. Filer blev eksporteret som de er."
-exportFailureTitle = "Eksporteret uden håndhævelse"
 failureBody = "Nogle politikker kunne ikke anvendes på {{failures}} af {{total}} fil(er)."
 failureTitle = "Eksporteret uden fuld håndhævelse"
 printPolicyAppliedBody = "Denne PDF blev opdateret for at opfylde en politik. Gennemse ændringerne, og udskriv derefter igen."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Send en besked til et Google Chat-rum, når en politik kører."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "En servicekonto, der læser og skriver Google Drive for organisationen."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Indsæt servicekontoens JSON-nøgle fra Google Cloud. Den krypteres og vises aldrig igen."
+label = "Servicekonto-nøgle (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Valgfrit. Med domæneomspændende delegation den bruger, hvis Drive denne agerer som (en dedikeret bot-bruger fortsætter, når folk forlader virksomheden). Tomt giver kun adgang til delte drev og mapper, der er delt med servicekontoen."
+label = "Ager som bruger"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Vedhæft behandlede dokumenter til en Jira-issue."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Send et dokument eller en notifikation via email, når en politik kører."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Kræver Microsoft Graph-applikationstilladelser med administrator-samtykke."
+label = "Applikations-id (klient)"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Klienthemmelighed"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Katalog-id (lejer)"
+placeholder = "contoso.onmicrosoft.com eller lejer-GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "App-adgangskode"
+
+[portal.connections.types.onedrive]
+description = "Læs fra og skriv til én brugers OneDrive for Business."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Hvis OneDrive denne forbindelse når. App-registreringen skal have Files.ReadWrite.All-applikationstilladelsen."
+label = "OneDrive-ejer"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Lad stå tomt, hvis du i stedet godkender med en privat nøgle."
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Valgfrit. Indsæt en OpenSSH privat nøgle for at godkende med en nøgle i stedet for en adgangskode."
 label = "Privat nøgle"
+
+[portal.connections.types.sharepoint]
+description = "Læs fra og skriv til et SharePoint-websteds dokumentbibliotek."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Valgfrit. Lad være tomt for webstedets standardbibliotek Dokumenter."
+label = "Dokumentbibliotek"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Websteds-URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Send en besked til Slack, når en politik behandler et dokument."
@@ -9142,6 +9624,126 @@ status = "Status"
 time = "Tidspunkt"
 user = "Bruger"
 
+[portal.enterprise]
+backTo = "Tilbage til {{stage}}"
+brandTag = "Enterprise"
+callInfo = "Et 15-minutters opkald. Medbring dine spørgsmål om priser, udrulning eller sikkerhed, eller planlæg din udrulning sammen."
+callTitle = "Tal med en løsningsingeniør"
+deployment = "Udrulning"
+footer = "Spørgsmål om Stirling Enterprise?"
+home = "Gå til Stirling"
+member = "Din teamleder styrer Enterprise-aftalen. Når den starter, kan du følge dens fremdrift her."
+memberDeal = "Din teamleder styrer denne aftale. Du kan følge dens fremdrift her."
+quotePanel = "Dit tilbud"
+signIn = "Log ind"
+signInToStart = "Log ind for at starte din prøveperiode"
+stage = "Fase {{current}} af {{total}}"
+stagesLabel = "Fremdrift"
+
+[portal.enterprise.landing]
+lede = "Prøv det gratis i 14 dage, opret derefter dit tilbud og underskriv din aftale her. Intet kort påkrævet."
+tickAgreement = "Én aftale, der dækker MSA, ordreformular, EULA og DPA"
+tickCompliance = "SCIM, dataresidens og oppetids-SLA'er"
+tickDeploy = "Kør det på Stirling Cloud, dine egne servere eller fuldt air-gapped"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Offline licensdokumenter"
+point1 = "Aktiveres med en licensfil, der virker offline, ikke en nøgle, der tjekkes online"
+point2 = "Installeres som selvhostet, fra et image du bringer med"
+point3 = "Login forbliver i dit netværk"
+tagline = "Selvhostet på et netværk uden internetadgang."
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud-dokumentation"
+point1 = "Dit team logger ind på stirling.com/app"
+point2 = "Kører på AWS, med lagrede filer krypteret i hvile"
+point3 = "Single sign-on via din egen identitetsudbyder kræver selvhosting"
+tagline = "Hostet for dig, intet at installere."
+
+[portal.enterprise.options.selfhost]
+more = "Selvhostingsdokumentation"
+point1 = "Installer med Docker eller Helm-chartet på Kubernetes"
+point2 = "Dokumenter behandles på din egen infrastruktur"
+point3 = "OAuth2, OIDC eller SAML single sign-on"
+tagline = "På dine egne servere, on-premises eller i din egen cloud."
+
+[portal.enterprise.review]
+back = "Tilbage til {{stage}}"
+company = "Virksomhed"
+completed = "Fuldført"
+extensions = "Anvendte udvidelser"
+paid = "Betalt. Din faktura forbliver tilgængelig her."
+people = "Personer"
+started = "Startet"
+trialEnds = "Dato for prøveperiodens slutning"
+trialTitle = "Din prøveperiode"
+version = "Version"
+viewInvoice = "Vis faktura"
+
+[portal.enterprise.setup]
+copied = "Kopieret"
+copy = "Kopiér"
+markDone = "Markér “{{step}}” som færdig"
+progress = "{{done}} af {{total}} færdige"
+subtitle = "Få mest muligt ud af din prøveperiode ved at prøve det på den måde, du vil køre det."
+subtitleLive = "Trinnene, der skal være færdige, før du ruller ud til alle."
+title = "Kom i gang"
+titleLive = "Go-live-tjekliste"
+
+[portal.enterprise.setup.firstDocument]
+body = "Upload en PDF, dit team arbejder med, og prøv de værktøjer, I ville bruge til daglig, såsom maskere, komprimere eller OCR."
+title = "Kør dit første dokument"
+
+[portal.enterprise.setup.getApp]
+body = "Installer desktopappen til Windows, Mac eller Linux og log ind med den konto, du lige har oprettet, eller brug den direkte i din browser."
+title = "Hent Stirling"
+
+[portal.enterprise.setup.install]
+body = "Kør dette på din server. Det starter Stirling med din licens anvendt, og imaget inkluderer OCR og kontordokumentkonvertering. Til større teams: brug Kubernetes."
+title = "Installer og start Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Invitér de personer, der skal bruge det, så prøveperioden afspejler rigtigt arbejde."
+title = "Invitér dit team"
+
+[portal.enterprise.setup.licence]
+body = "Åbn <code>http://your-server:8080/settings/adminPlan</code>, hvor din Enterprise-licens bør stå som aktiv. Installeret på en anden måde? Tilføj nøglen under <code>premium.key</code> i <code>settings.yml</code> og genstart."
+title = "Kontrollér, at din licens er aktiv"
+
+[portal.enterprise.setup.links]
+browser = "Brug det i din browser"
+docker = "Docker-vejledning"
+download = "Download appen"
+downloadForTeam = "Hent appen til dit team"
+downloading = "Downloader..."
+downloadLicence = "Download licensfil"
+invite = "Invitér teammedlemmer"
+kubernetes = "Kubernetes-vejledning"
+licence = "Licensaktivering"
+ocr = "OCR-sprog"
+openApp = "Åbn Stirling"
+samlGuide = "SAML-vejledning"
+ssoGuide = "SSO-vejledning"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Hent det fulde image på en tilsluttet maskine, tag det og licensfilen med over, og indlæs og start det derefter. Det fulde image tilføjer de skrifttyper, som en offline server ikke kan downloade."
+title = "Tag Stirling med over og start det"
+
+[portal.enterprise.setup.offlineLicence]
+body = "En air-gapped server kan ikke nå vores licenstjeneste, så den tjekker i stedet denne signerede fil. Opbevar den sammen med imaget, du tager med over."
+title = "Download din offline licens"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Opret konti på <code>/settings/people</code>, eller peg Stirling mod din interne identitetsudbyder, så login aldrig forlader dit netværk."
+bodySelfHosted = "Opret konti på <code>/settings/people</code>, eller forbind din identitetsudbyder, så dit team logger ind med deres arbejdskonti. De bruger Stirling i browseren på din servers adresse eller i desktopappen peget mod den."
+title = "Tilføj dine folk"
+
+[portal.enterprise.setup.signIn]
+body = "Åbn <code>http://your-server:8080</code> og log ind med <code>admin</code> / <code>stirling</code>. Du bliver straks bedt om at vælge en ny adgangskode."
+bodyAirgap = "Åbn <code>http://your-server:8080</code> og log ind med <code>admin</code> / <code>stirling</code>, vælg en ny adgangskode, og kontroller derefter, at <code>/settings/adminPlan</code> viser din licens som aktiv."
+title = "Log ind som administratoren"
+
 [portal.errorBoundary]
 description = "Denne visning ramte en uventet fejl. Prøv igen, eller vælg en anden sektion i sidebjælken."
 retry = "Prøv igen"
@@ -9293,6 +9895,7 @@ title = "Intet at gennemgå"
 [portal.home.download]
 back = "Tilbage"
 body = "Download desktop-appen, eller self-host serveren."
+bodyDesktop = "Download desktopappen, og log derefter ind med din Stirling-konto."
 done = "Færdig"
 guide = "Åbn {{name}}-guiden"
 openInBrowser = "Åbn i browser i stedet"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Email-indtag"
 
 [portal.procurement]
-subtitle = "Få dit team evalueret, kontraheret og onboardet. Alle dokumenter samlet ét sted."
 title = "Indkøb"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Kunne ikke indlæse aftalen. Prøv igen."
 loading = "Indlæser aftalen..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "Anmod om ændringer"
-scrollHint = "Rul for at gennemgå"
 signatory = "Underskriverens navn"
 signatoryPlaceholder = "Fulde navn"
 signatoryTitle = "Underskriverens titel"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "f.eks. General Counsel"
 signError = "Kunne ikke registrere din signatur. Prøv igen."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} engangs"
+addonPerYear = "+{{amount}}/år"
 addons = "Tilføjelser"
 addressLine1 = "Adresselinje 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Adresselinje 2"
 addressLine2Placeholder = "Suite, etage, bygning"
 back = "Tilbage"
+belowMinimum = "Dette tilbud ligger under minimumsstørrelsen for en Enterprise-aftale."
 businessName = "Virksomhedsnavn"
 businessNamePlaceholder = "Din virksomhed"
 city = "By"
 cityPlaceholder = "San Francisco"
 completeRequired = "Udfyld de påkrævede felter (markeret *) med en gyldig email, før tilbuddet genereres."
+conflict = "Denne aftale har ændret sig, siden du åbnede den. Luk konfiguratoren og genindlæs siden for at se status."
 contactEmail = "Kontakt-email"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Kontaktnavn"
 contactNamePlaceholder = "Jane Doe"
 continue = "Fortsæt"
 done = "Færdig"
+editUsage = "Redigér forbrug"
 eula = "Jeg har læst og accepterer Stirling Enterprise EULA. Den regulerer den aftale, der genereres ud fra dette tilbud."
 generate = "Generer tilbud"
 indemnification = "Udvidet IP-beskyttelse"
 indemnificationSub = "Udvider vores IP-forsvar til patentkrav. Grundlæggende skadesløsholdelse for ophavsret, varemærker og forretningshemmeligheder er inkluderet gratis."
+minimum = "Enterprise kræver et minimum årligt forbrug på {{min}}."
+minimumBelow = "Dette tilbud udgør {{annual}} om året. Hvis du forventer at bruge mere, så hæv dit estimerede forbrug; ellers passer Team-planen sandsynligvis bedre."
+minimumNear = "Enterprise kræver et minimum årligt forbrug på {{min}}. Hæv dit estimerede forbrug for at nå det, eller tal det igennem med os."
+minimumNearTitle = "Du mangler {{gap}} om året for Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise-tilbud"
 paperFor = "Udarbejdet til"
 pdfSize = "PDF-størrelse"
@@ -10506,9 +11117,13 @@ posture_regulated = "Regulated"
 posture_regulatedSub = "Hver kategori — Compliance, Retention, Ingestion"
 qbr = "Kvartalsvise forretningsgennemgange"
 qbrSub = "Din SE gennemgår brug og roadmap hvert kvartal"
+raiseUsage = "Hæv estimeret forbrug"
 region = "Stat / region"
 regionPlaceholder = "California"
-running = "{{annual}} / år · {{years}} år {{tcv}}"
+runningLabel = "Estimeret pris"
+runningLabelIssued = "Tilbudspris"
+runningOneYear = "{{annual}} om året"
+runningTotal = "{{tcv}} i alt over {{years}} år"
 s1Sub = "Dit team og de PDFs, I forventer at køre hvert år."
 s1Title = "Hvor meget vil I behandle?"
 s2Sub = "Længere perioder giver rabat på satsen; dit serviceniveau bestemmer supporten."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "f.eks. 1.000.000"
 years_one = "{{count}} år"
 years_other = "{{count}} år"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}}-udrulning"
+indemnification = "IP-skadesløsholdelse"
+multiYear_one = "{{count}}-årig forpligtelse"
+multiYear_other = "{{count}}-årig forpligtelse"
+qbr = "Kvartalsvise forretningsgennemgange"
+seats_one = "{{users}} aftalt bruger + SSO / RBAC / revision"
+seats_other = "{{users}} aftalte brugere + SSO / RBAC / revision"
+seatsUnset = "Brugere + SSO / RBAC / revision"
+support = "Dedikeret SE / CSM"
+training = "Onboarding og træning"
+usage = "PDF-behandling — {{volume}} PDF'er/år til {{rate}}/PDF ({{posture}} automatisering)"
+
 [portal.procurement.documents]
 agreement = "Enterprise-aftale"
 agreementSub = "MSA, Order Form og DPA i én signatur."
@@ -10557,6 +11185,8 @@ invoice = "Faktura"
 invoiceSub = "Din første abonnementsfaktura."
 laterInvoice = "Tilgængelig efter du accepterer"
 laterQuote = "Tilgængelig når dit tilbud er udstedt"
+laterSigning = "Tilgængelig, når aftalen er underskrevet"
+laterTitle = "Senere i din aftale"
 quote = "Tilbud"
 quoteSub = "Dit specificerede enterprise-tilbud."
 sla = "SLA-bilag"
@@ -10573,15 +11203,12 @@ title = "Noget gik galt"
 [portal.procurement.hero]
 barAria = "Fase {{current}} af {{total}}"
 ctaAgreement = "Gennemgå og underskriv aftale"
-ctaExploring = "Opsæt din prøveperiode"
 ctaQuote = "Gennemgå dit tilbud"
 ctaReviewQuote = "Gennemgå tilbud"
 ctaTrial = "Byg dit tilbud"
-documents = "Dokumenter"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Inviter teammedlemmer"
-licenseKey = "Licensnøgle"
 liveSub = "Din organisation er provisioneret, og din licens er aktiv."
 liveTitle = "Du er live på Stirling Enterprise"
 next = "Næste: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Kunne ikke generere offline licensfilen endnu — prøv igen om
 downloadOffline = "Download offline licens (.lic)"
 hint = "Indsæt denne nøgle i en self-hosted instans for at aktivere den, eller gem den til dine optegnelser. Opbevar den sikkert."
 label = "Din licensnøgle"
-subtitle = "Aktivér en selvhostet instans med denne nøgle, eller gem den til dine optegnelser."
-title = "Din licensnøgle"
 trialFileHint = "Dette er din prøvelicensfil. Når din aftale er på plads, skal du komme tilbage og downloade den igen — i modsætning til den online licensnøgle opdateres .lic-filen ikke af sig selv."
-
-[portal.procurement.link]
-cta = "Tilknyt konto"
-description = "Indkøb kører på din tilknyttede Stirling-konto: Det er sådan, vi klargør prøveperioden, prissætter dit tilbud og starter fakturering. Tilknyt en konto for at starte."
-eyebrow = "Enterprise"
-title = "Tilknyt din konto for at begynde"
 
 [portal.procurement.live]
 description = "Dit abonnement er aktivt, og din licens er udstedt. Dit team er klargjort, og faktureringen er startet."
-eyebrow = "Live"
 title = "Du er live på Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Kunne ikke downloade tilbuds-PDF'en endnu — prøv igen om lid
 
 [portal.procurement.payment]
 description = "Dit tilbud er accepteret, og din licens er allerede aktiv — dit team kan starte med det samme. Betal den første faktura, når du er klar; du kan betale eller downloade den her, ingen e-mail nødvendig."
-downloadAgreement = "Download signeret aftale"
 downloadInvoice = "Download faktura"
-eyebrow = "Betaling"
-title = "Abonnement oprettet"
 viewInvoice = "Se og betal faktura"
 
 [portal.procurement.review]
 acceptCta = "Accepter tilbud"
 annual = "Årligt gebyr (år 1)"
 downloadCta = "Download tilbud"
+oneTime = "engangs"
 poNumber = "Købsordre: {{po}}"
 renewal = "Fornys til {{amount}}/år efter perioden (+{{pct}}% CPI)"
 tcv = "{{years}}-års periode, betalt fuldt ud på forhånd: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Forlængelse tilføjer 7 dage og underretter din solutions engineer."
 bodyMaxed = "Du har brugt alle dine forlængelser — tal med din solutions engineer, hvis du har brug for mere tid."
-cancel = "Annuller prøveperiode"
 extend = "Forlæng 7 dage"
 maxed = "Maksimum nået"
 subtitle = "Din gratis prøveperiode løber til {{date}}. Intet kort kræves."
 title = "Enterprise-prøveperiode"
+
+[portal.procurement.validation]
+confirm = "Bekræft, at du er autoriseret til at underskrive for organisationen."
+email = "Indtast en gyldig e-mailadresse."
+eula = "Accepter EULA'en for at fortsætte."
+required = "Dette felt er påkrævet."
+seats = "Angiv hvor mange personer der skal prøve det."
+volume = "Angiv hvor mange PDF'er du forventer at behandle om året."
 
 [portal.review]
 subtitle = "Alt fra dine politikkørsler og dit teams editorer, der kræver din opmærksomhed."
@@ -10735,6 +11358,7 @@ subtitle = "Genanvendelige inputforbindelser, der sender dokumenter ind i Stirli
 title = "Kilder"
 
 [portal.sources.actions]
+connectDestination = "Forbind destination"
 connectSource = "Forbind kilde"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Vælg, hvor behandlede dokumenter skal sendes hen. Nedtonede
 comingSoon = "Kommer snart"
 comingSoonHeading = "Kommer snart"
 create = "Opret kilde"
+createDestination = "Opret destination"
+createDestinationTitle = "Tilføj en destination"
 createTitle = "Forbind en kilde"
 delete = "Slet"
 editTitle = "Rediger kilde"
@@ -10757,6 +11383,41 @@ save = "Gem ændringer"
 description = "Mappeautomatiseringer kan kun bruge mapper, som en administrator har tilladt. Tilføj den under indstillinger for Mappeadgang, og prøv derefter igen."
 openSettings = "Indstillinger for Mappeadgang"
 title = "Denne mappe er ikke tilladt"
+
+[portal.sources.cloudFields.account]
+connect = "Forbind din konto"
+connectAnother = "Forbind en anden konto"
+connectFailed = "Kontoen kunne ikke forbindes. Prøv igen, eller bed din administrator tjekke app-registreringen."
+label = "Konto"
+placeholder = "Vælg en konto"
+reconnect = "log ind igen"
+unavailable = "Forbindelse af din egen konto er slået fra på denne server. Vælg i stedet en organisationsforbindelse."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Personlige konti er slået fra på denne server."
+helperText = "Din konto giver adgang til det, du kan åbne, og kræver ingen admin. En organisationsforbindelse fortsætter, når folk forlader, og giver kun adgang til det, en admin har sat op."
+label = "Log ind som"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Min konto"
+organisation = "Organisationsforbindelse"
+
+[portal.sources.cloudFields.connection]
+helperText = "Opsat af en administrator under Integrationer. Deles af alle placeringer, der bruger den."
+label = "Organisationsforbindelse"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Indsæt mappe-linket, eller skriv en sti fra roden af Mit Drev. Lad feltet være tomt for roden af Mit Drev. Mappen skal allerede findes."
+placeholder = "Mappe-link eller Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "En mappe i dit OneDrive, eller indsæt et mappe-link (Kopiér link i OneDrive). Lad feltet være tomt for roden af OneDrive. Mappen skal allerede findes."
+placeholder = "Scans/Inbox eller et mappe-link"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Med din konto: indsæt mappe-linket (Kopiér link i SharePoint). Med en organisationsforbindelse: en mappe i dens bibliotek; lad feltet være tomt for biblioteksroden. Mappen skal allerede findes."
+organisationPlaceholder = "Mappe-link eller Scans/Inbox"
+placeholder = "Mappe-link"
 
 [portal.sources.delete]
 body = "Slet \"{{name}}\"? Dette kan ikke fortrydes. Politikker, der refererer til den, skal opdateres."
@@ -10821,6 +11482,7 @@ label = "Email-indbakke"
 [portal.sources.types.folder]
 description = "Overvåg en mappe på serveren for nye dokumenter."
 label = "Mappe"
+outputDescription = "Gem resultater til en mappe på serveren."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Den absolutte sti til mappen, der skal overvåges for nye filer."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Hent dokumenter fra delte Google Drive-mapper."
 label = "Google Drive"
+outputDescription = "Gem resultater i en Google Drive-mappe."
 
 [portal.sources.types.network]
 description = "Overvåg et SMB-netværksshare for nye dokumenter."
@@ -10867,10 +11530,12 @@ label = "Netværksdrev"
 [portal.sources.types.onedrive]
 description = "Overvåg OneDrive-mapper for nye dokumenter."
 label = "OneDrive"
+outputDescription = "Gem resultater i en OneDrive-mappe."
 
 [portal.sources.types.s3]
 description = "Hent dokumenter fra en Amazon S3- eller S3-kompatibel bucket."
 label = "Amazon S3"
+outputDescription = "Gem resultater i en Amazon S3- eller S3-kompatibel bucket."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Den gemte forbindelse med bucket og legitimationsoplysninger. Delt af hver kilde og pipeline-output, der bruger den."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Hent dokumenter fra SharePoint-dokumentbiblioteker."
 label = "SharePoint"
+outputDescription = "Gem resultater i en mappe i et SharePoint-dokumentbibliotek."
 
 [portal.sources.types.unknown]
 label = "Kilde"
@@ -11074,6 +11740,14 @@ waiting = "I kø ..."
 name = "Google Drive"
 scope = "Filimport"
 
+[provider.googledrive.accountScope]
+description = "drive giver adgang til alle filer (Google skal verificere en offentlig app for det); drive.file kun til filer, som folk vælger, eller som Stirling opretter"
+label = "Drive-adgang"
+
+[provider.googledrive.allowAccountConnections]
+description = "Ét login for brugeren og deres pipelines. Slå fra for kun at tillade organisationsforbindelser."
+label = "Lad folk forbinde deres egen konto"
+
 [provider.googledrive.apiKey]
 description = "Google API-nøgle til Google Picker API fra Google Cloud Console"
 label = "API-nøgle"
@@ -11086,13 +11760,65 @@ label = "App-id"
 description = "Google OAuth 2.0 Client ID fra Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "Lader folk forbinde deres Google-konto til deres pipelines. Tilføj omdirigerings-URI'en nedenfor som en autoriseret omdirigerings-URI for OAuth-klienten."
+label = "Klienthemmelighed"
+
 [provider.googledrive.enabled]
 description = "Tillad brugere at importere filer direkte fra Google Drive"
 label = "Aktivér Google Drive-filvælger"
 
 [provider.googledrive.errors]
+connectFailed = "Kunne ikke forbinde din Google-konto. Prøv igen via Indstillinger > Forbundne konti."
 notConfigured = "Google Drive er ikke konfigureret"
 pickerFailed = "Kunne ikke åbne Google Drive-vælgeren"
+
+[provider.googledrive.redirectUri]
+description = "Tilføj dette som en autoriseret omdirigerings-URI for OAuth-klienten i Google Cloud Console."
+label = "Omdirigerings-URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Filer og pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "Ét login for brugeren og deres pipelines. Slå fra for kun at tillade organisationsforbindelser."
+label = "Lad folk forbinde deres egen konto"
+
+[provider.microsoft.allowEditorSaves]
+description = "Slå fra for at beholde ændringer i Stirling: filer, der åbnes fra OneDrive, downloades i stedet, og serveren afviser at gemme til OneDrive."
+label = "Lad editoren gemme tilbage til OneDrive"
+
+[provider.microsoft.clientId]
+description = "Fra én Microsoft Entra app-registrering."
+label = "Program-id (klient)"
+
+[provider.microsoft.clientSecret]
+description = "Påkrævet for forbundne konti. Forbliver på serveren."
+label = "Klienthemmelighed"
+
+[provider.microsoft.enabled]
+description = "Lad folk bruge OneDrive og SharePoint i pipelines"
+label = "Aktivér OneDrive & SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Tilføj dette som en Single-page application redirect URI på den samme appregistrering, så der kan logges ind fra editoren."
+label = "Single-page application redirect URI"
+
+[provider.microsoft.redirectUri]
+description = "Tilføj dette som en web-omdirigerings-URI i Entra-app-registreringen."
+label = "Omdirigerings-URI"
+
+[provider.microsoft.setupSteps]
+connect = "Gem, genstart, og forbind derefter en konto under Forbundne konti."
+permissions = "Tilføj Microsoft Graph-delegerede tilladelserne Files.ReadWrite.All og Files.Read.All samt SharePoint-delegerede tilladelserne MyFiles.Read og AllSites.Read, så arbejds- og skolekonti kan åbne filvælgeren."
+redirects = "Tilføj de to redirect URI'er nedenfor: én som Web og én som Single-page application."
+register = "Registrer en app i Microsoft Entra admin center. Tillad personlige Microsoft-konti, hvis folk bruger personlig OneDrive."
+secret = "Opret en client secret, og indsæt derefter dens værdi og appens client ID nedenfor."
+
+[provider.microsoft.tenant]
+description = "common for arbejds-, skole- og personlige konti; organizations for kun arbejds- og skolekonti; eller et lejer-id for at give adgang til én organisation"
+label = "Mappe-id (lejer)"
 
 [provider.oauth2.generic]
 name = "Generisk OAuth2"
@@ -11195,6 +11921,19 @@ label = "Scopes"
 description = "Felt der bruges som brugernavn (email, name, given_name, family_name, preferred_username)"
 label = "Brug som brugernavn"
 
+[provider.onedrive]
+pickerLoading = "Opretter forbindelse til OneDrive..."
+pickerTitle = "Vælg filer fra OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Kunne ikke forbinde din Microsoft-konto. Prøv igen via Indstillinger > Forbundne konti."
+notConfigured = "OneDrive er ikke konfigureret"
+pickerFailed = "Kunne ikke åbne OneDrive"
+popupBlocked = "Din browser blokerede Microsoft-loginvinduet. Tillad pop op-vinduer for dette websted, og prøv igen."
+reconnect = "Din Microsoft-konto skal logge ind igen. Opret forbindelse igen under Indstillinger > Forbundne konti."
+serverError = "OneDrive eller Stirling-serveren havde et problem. Prøv igen, eller spørg din administrator, hvis det bliver ved."
+unreachable = "Kunne ikke nå OneDrive. Tjek din forbindelse, og prøv igen."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Notifikationer"
 processor = "Processor"
 reader = "Læser"
 signInToUse = "Log ind for at bruge dette"
+
+[quickNav.accountMenu]
+localMode = "Lokal tilstand"
+server = "Serverindstillinger"
+settings = "Indstillinger"
+signedOut = "Ikke logget ind"
+signIn = "Log ind"
 
 [read]
 tags = "vis,åbn,visning,læs,viser,PDF viewer,PDF reader,åbn PDF,vis PDF,forhåndsvis,browse"
@@ -11811,6 +12557,13 @@ title = "Rens PDF"
 [sanitizePdf]
 tags = "rens,sikker,sikker,fjern-trusler"
 
+[saveFile.menu]
+more = "Flere gemmemuligheder"
+saveCopy = "Gem en kopi..."
+
+[saveFile.toolbar]
+mixed = "Gem alle"
+
 [scalePages]
 tags = "ændr størrelse,juster,skalér,sidestørrelse,ændr sidestørrelse,skalér side,skift størrelse,juster størrelse,forstør,formindsk side,tilpas til side,A4,letter size"
 title = "Justér sidestørrelse"
@@ -11905,6 +12658,162 @@ showTools = "Vis utilgængelige værktøjer ▾"
 title = "Din Stirling-PDF-server kan ikke nås"
 toolNotAvailableLocally = "Din Stirling-PDF-server er offline, og \"{{endpoint}}\" er ikke tilgængelig på den lokale backend."
 
+[serverSetup]
+back = "Tilbage"
+collapse = "Skjul {{setting}}-indstillinger"
+configured = "Konfigureret"
+continue = "Fortsæt"
+dialogLabel = "Serveropsætning"
+expand = "Vis {{setting}}-indstillinger"
+finishSetup = "Afslut opsætning"
+loadErrorSubtitle = "Opsætningen skal bruge serverens aktuelle indstillinger for at starte."
+loadErrorTitle = "Dine indstillinger kunne ikke indlæses"
+off = "Fra"
+on = "Til"
+save = "Gem"
+stepCount = "{{current}} af {{total}}"
+
+[serverSetup.account]
+failed = "Dine oplysninger kunne ikke gemmes. Tjek, at serveren kan nås, og prøv igen."
+save = "Gem og fortsæt"
+signIn = "Log ind"
+signInAgainSubtitle = "Log ind igen med dit nye brugernavn og din nye adgangskode for at fortsætte."
+signInAgainTitle = "Dine oplysninger er gemt"
+subtitle = "Vælg, hvordan du logger ind fremover."
+title = "Opsæt din konto"
+updating = "Opdaterer"
+updatingSubtitle = "Et øjeblik."
+updatingTitle = "Opdaterer dine oplysninger"
+username = "Brugernavn"
+usernameHelp = "Det, du logger ind med. En e-mailadresse virker også."
+
+[serverSetup.addresses]
+backendUrl = "Serveradresse"
+backendUrlHelp = "Hvor login-udbydere sender folk tilbage. Som regel det samme som webadressen."
+frontendUrl = "Webadresse"
+frontendUrlHelp = "Hvor folk åbner Stirling PDF. Bruges i e-mails, delingslinks og QR-koder."
+subtitle = "Hvordan folk og login-udbydere når denne server."
+title = "Adresser"
+
+[serverSetup.ai]
+apiKey = "API-nøgle"
+apiKeyHelp = "Lad feltet være tomt for at bruge nøglen, som AI-motoren allerede har."
+baseUrl = "Basis-URL"
+engineUrl = "AI-motoradresse"
+fastModel = "Hurtig model"
+label = "Selvhostet AI"
+provider = "Modeludbyder"
+providerCustom = "OpenAI-compatible"
+smartModel = "Fuld model"
+stirling = "Stirling AI"
+subtitle = "Dokumentspørgsmål, automatiske redigeringer og AI-agenter."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Acceptér og fortsæt"
+acceptFinish = "Acceptér og afslut"
+changeLater = "Du kan ændre dette når som helst i {{path}}."
+decline = "Afslå og fortsæt"
+declineFinish = "Afslå og afslut"
+learnMore = "Hvad vi indsamler"
+note = "Del brugsdata fra denne server med os for at hjælpe os med at forbedre Stirling PDF. Vi indsamler aldrig filer eller deres indhold."
+title = "Serveranalyse"
+
+[serverSetup.documents]
+label = "Dokumentspørgsmål"
+model = "Indlejringsmodel"
+provider = "Indlejringsudbyder"
+providerHelp = "Omsætter dokumenttekst til det søgeindeks, der besvarer spørgsmål."
+
+[serverSetup.email]
+from = "Afsenderadresse"
+host = "SMTP-vært"
+label = "Send e-mail"
+password = "Adgangskode"
+port = "Port"
+subtitle = "Til invitationer, underskriftsanmodninger og delinger."
+title = "E-mail"
+username = "Brugernavn"
+
+[serverSetup.error]
+email = "Indtast en e-mailadresse"
+issuerUnreachable = "Kunne ikke nå denne issuer. Tjek adressen, og at denne server kan nå den."
+passwordIncorrect = "Forkert adgangskode"
+passwordLength = "Brug mindst 8 tegn"
+passwordMismatch = "Adgangskoderne er ikke ens"
+passwordRejected = "Serveren accepterede ikke denne adgangskode. Prøv en anden."
+passwordUnchanged = "Vælg en anden adgangskode end den nuværende"
+port = "Indtast en port fra 1 til 65535"
+providerName = "Brug kun bogstaver, tal, bindestreger eller understregningstegn"
+required = "Påkrævet"
+url = "Indtast en fuld adresse, der starter med http:// eller https://"
+username = "Brug 3 til 50 bogstaver, tal eller . _ + - @, eller en e-mailadresse"
+usernameTaken = "Brugernavnet er allerede taget"
+
+[serverSetup.files]
+sharing = "Fildeling"
+sharingOffWarning = "Når deling er slået fra, virker eksisterende delingslinks ikke længere."
+storage = "Lagre filer"
+storageOffWarning = "Når lagring er slået fra, kan filer, som folk har gemt på serveren, ikke længere åbnes."
+subtitle = "Administrér fillagring og deling."
+title = "Filer"
+
+[serverSetup.finish]
+errorNote = "Tjek, at serveren kan nås, og at du stadig er logget ind som administrator."
+errorSubtitle = "Intet blev genstartet."
+errorTitle = "Dine indstillinger kunne ikke gemmes"
+manualSubtitle = "Denne server kan ikke genstarte sig selv. Genstart dens container eller tjeneste for at anvende indstillingerne."
+manualTitle = "Indstillinger gemt"
+restartFailedSubtitle = "Serveren blev ikke genstartet. Genstart dens container eller tjeneste for at anvende indstillingerne."
+restartingSubtitle = "Denne side genindlæses, når den er tilbage, som regel inden for et minut."
+restartingTitle = "Genstarter din server"
+retry = "Prøv igen"
+saving = "Gemmer"
+savingSubtitle = "Et øjeblik."
+savingTitle = "Gemmer dine indstillinger"
+
+[serverSetup.language]
+auto = "Match den enkelte browser"
+label = "Standardsprog"
+subtitle = "Det, nye besøgende ser først."
+title = "Sprog"
+
+[serverSetup.mcp]
+label = "MCP-server"
+
+[serverSetup.password]
+confirm = "Bekræft ny adgangskode"
+current = "Nuværende adgangskode"
+new = "Ny adgangskode"
+
+[serverSetup.signIn]
+clientId = "Klient-id"
+clientSecret = "Klienthemmelighed"
+issuer = "Issuer-URL"
+label = "Log ind med"
+oidc = "Anden OpenID Connect"
+password = "Brugernavn og adgangskode"
+providerName = "Udbydernavn"
+providerNameHelp = "Vises på login-knappen, for eksempel okta eller entra."
+redirectNote = "Tilføj denne omdirigerings-URI hos din udbyder:"
+subtitle = "Hvordan dit team logger ind."
+title = "Login"
+
+[serverSetup.signingIn]
+button = "Logger ind"
+title = "Logger ind med standardoplysninger"
+
+[serverSetup.start]
+custom = "Brugerdefineret"
+quick = "Hurtig start"
+setupLabel = "Opsætning"
+subtitle = "Sæt det op til dit team i få trin."
+title = "Din server er oppe"
+
+[serverSetup.summary]
+subtitle = "Tjek det vigtigste. Alt andet beholder standardindstillingerne."
+title = "Hurtig start"
+
 [session]
 expired = "Din sesions tid har udløbet. Genlad siden og prøv igen."
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "Privatliv"
 storageSharing = "Fillagring og deling"
 systemSettings = "Systemindstillinger"
+
+[settings.connectedAccounts]
+description = "Dine egne OneDrive, SharePoint og Google Drive til dine pipelines."
+title = "Forbundne konti"
 
 [settings.connectedInstances]
 confirmBody = "Dette tilbagekalder instansens adgang til dit team i Stirling Cloud. Det sletter ikke lokale filer eller fjerner forbrug, der allerede er registreret. For at tilslutte igen skal du følge de oprindelige tilslutningstrin på instansen."
@@ -11992,6 +12905,13 @@ selfhosted = "Selvhostet"
 apiKeys = "API-nøgler"
 apiKeysDescription = "Personlige nøgler til at kalde Stirling API fra scripts og integrationer."
 title = "Udvikler"
+
+[settings.feedback]
+label = "Feedback"
+
+[settings.feedback.send]
+description = "Rapportér et problem eller foreslå en forbedring til Stirling-teamet."
+label = "Send feedback"
 
 [settings.general]
 autoUnzip = "Auto-udpak API-svar"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Søg efter opdateringer"
 currentBackendVersion = "Aktuel Backend-version"
 currentFrontendVersion = "Aktuel Frontend-version"
 description = "Søg efter opdateringer og se versionsinfo"
+descriptionManaged = "Vis versionsoplysninger"
 latestVersion = "Seneste version"
 managedByAdmin = "Administreret af administrator"
 modeAuto = "Installer opdateringer automatisk"
@@ -12135,15 +13056,24 @@ title = "Juridiske dokumenter"
 backendDescription = "Licenser for backend-afhængigheder, der er inkluderet med denne server."
 backendLabel = "Backend-licenser"
 backendTitle = "Backend-licenser fra 3. parter"
+clearSearch = "Ryd søgning"
 empty = "Ingen afhængigheder fundet."
 frontendDescription = "Licenser for frontend-afhængigheder, der er inkluderet i release-buildet."
 frontendLabel = "Frontend-licenser"
 frontendTitle = "Frontend-licenser fra 3. parter"
 license = "Licens"
+licenseAbout = "Om"
+licenseAboutCompound = "Om {{short}}"
+licenseAboutTitle = "Om {{short}}"
 listDescription = "Listen vises direkte i UI'et fra release-bundlet eller backend-endpointet."
 listTitle = "Bundled afhængigheder"
 loadError = "Kunne ikke indlæse tredjepartslicenser"
 module = "Modul"
+noMatch = "Ingen matchende afhængigheder."
+searchPlaceholder = "Søg i afhængigheder"
+showingCount = "{{count}} afhængigheder"
+showingCount_one = "{{count}} afhængighed"
+showingCount_other = "{{count}} afhængigheder"
 version = "Version"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Indtast din email"
 emptyPassword = "Indtast din adgangskode"
 emptyUsername = "Indtast dit brugernavn"
 oauthFailed = "OAuth-login mislykkedes. Prøv igen."
+openResetFailed = "Kunne ikke åbne din browser for at nulstille din adgangskode."
 
 [setup.saas]
 title = "Log ind på Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "Usynlige underskrifter giver stadig kryptografisk validering"
 description = "Styrer om underskriften er synlig på dokumentet eller indlejres usynligt."
 title = "Underskriftssynlighed"
 
+[signedPdf]
+editsBlocked = "Denne PDF er digitalt underskrevet, og ændringer af underskrevne PDF'er er slået fra. Du kan stadig se eller udskrive den, konvertere den til et andet format eller underskrive den igen."
+editsBlockedStatus = "Underskrevet: redigering blokeret"
+editsBlockedTitle = "Underskrevet PDF kan ikke ændres"
+
 [signingDetail]
 allSigned = "Alle har underskrevet. Gennemgå dokumentet, og færdiggør det derefter."
 awaitingOwner = "Ejeren færdiggør dokumentet, når vedkommende er klar."
@@ -13110,7 +14046,6 @@ noLinks = "Ingen aktive delingslinks endnu."
 noSharedUsers = "Ingen brugere har adgang endnu."
 openInApp = "Åbn i Stirling PDF"
 ownerLabel = "Ejer"
-ownerUnknown = "Ukendt"
 removeLink = "Fjern link"
 removeUser = "Fjern"
 requiresLogin = "Denne delte fil kræver login."
@@ -13249,6 +14184,11 @@ remove = "Fjern"
 roleColumn = "Rolle"
 title = "Teammedlemmer"
 
+[teamWelcome]
+invite = "Inviter personer"
+message = "Inviter dit team, så de kan begynde at arbejde sammen med dig."
+title = "Dit Team-abonnement er aktivt."
+
 [textAlign]
 center = "Centreret"
 left = "Venstre"
@@ -13290,7 +14230,6 @@ toggleDetails = "Skift detaljer"
 
 [tool]
 endpointUnavailable = "Dette værktøj er ikke tilgængeligt på din server."
-endpointUnavailableClickable = "Ikke tilgængelig i denne tilstand. Klik for at logge ind."
 filesLoading = "Filer indlæses stadig, vent venligst."
 filesLoadingProgress = "{{loaded}} / {{total}} filer indlæses..."
 invalidParams = "Udfyld de påkrævede indstillinger."
@@ -13298,6 +14237,8 @@ noFiles = "Tilføj en fil for at komme i gang."
 scopeFiles = "filer"
 scopeThisFile = "denne fil"
 selectFilesHint = "Vælg filer i Aktive filer for at køre dette værktøj"
+signInRequired = "Dette kræver en Stirling PDF-konto. Log ind for at fortsætte."
+signInToUse = "Log ind for at bruge"
 singleFileScope = "Anvendes kun på: {{fileName}}"
 viewerMode = "Skift til fileditoren for at tilføje flere filer."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Vis forside separat"
 disableColorFilter = "Deaktiver farvefilter"
 documentUpdated = "Dokument opdateret"
 dualPageView = "To-siders visning"
+editText = "Rediger tekst"
 enableDarkFilter = "Aktiver mørkt filter"
 enableSepiaFilter = "Aktiver sepiafilter"
 engineLoadError = "Kunne ikke initialisere PDF-visningsmotor"
@@ -14158,8 +15100,10 @@ closeAll = "Luk alle filer"
 closePdf = "Luk PDF"
 deselectAll = "Fravælg alle"
 downloadAll = "Download alle"
+editText = "Rediger tekst"
 exitAnnotations = "Afslut annoteringstilstand"
 exitRedaction = "Afslut maskeringstilstand"
+findReplace = "Find og erstat"
 formFill = "Formulareditor"
 hideToolbar = "Skjul værktøjslinje"
 moreActions = "Flere handlinger"

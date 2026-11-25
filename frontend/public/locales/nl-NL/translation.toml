@@ -512,6 +512,11 @@ submit = "Paginaschaal aanpassen"
 tags = "resize,wijzigen,afmetingen,aanpassen"
 title = "Paginaschaal aanpassen"
 
+[adjustPageScale.customSize]
+height = "Hoogte"
+unit = "Eenheid"
+width = "Breedte"
+
 [adjustPageScale.error]
 failed = "Er is een fout opgetreden bij het aanpassen van de paginaschaal."
 
@@ -521,6 +526,7 @@ landscape = "Liggend"
 portrait = "Staand"
 
 [adjustPageScale.pageSize]
+custom = "Aangepast"
 keep = "Oorspronkelijk formaat behouden"
 label = "Doelpaginaformaat"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "Maximale DPI voor beeldverwerking (0 = onbeperkt)"
 label = "Maximale DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Sessielimieten en time-outs configureren voor elke procesuitvoerder"
 ghostscript = "Ghostscript"
 installApp = "App installeren"
 label = "Limieten voor procesuitvoerder"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF naar HTML"
+officeConvert = "Office-conversie"
+officeConvertSessionLimit = "Maximaal aantal gelijktijdige conversies; 0 kiest een limiet op basis van CPU's en geheugen"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maximaal gelijktijdige instanties"
@@ -661,10 +665,6 @@ label = "Sessielimiet"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maximale uitvoeringstijd"
 label = "Time-out (minuten)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert is in beta. Het voert betere conversies sneller en met minder geheugen uit dan LibreOffice."
-label = "Nieuwe Stirling Office-conversie gebruiken"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configureer opslag en opschoongedrag voor tijdelijke bestanden"
@@ -682,11 +682,6 @@ label = "Opschooninterval (minuten)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Of de bredere systeem-tijdelijke map moet worden opgeschoond (gebruik met voorzichtigheid)"
 label = "Systeemtemp opschonen"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Map voor tijdelijke LibreOffice-bestanden (laat leeg voor standaard: baseTmpDir/libreoffice)"
-label = "LibreOffice-tijdelijke map"
-placeholder = "Standaard: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximale leeftijd in uren voordat tijdelijke bestanden worden opgeschoond"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Rek afbeeldingen uit om de hele pagina te vulle
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Behouden (originele afmetingen)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "Zo stelt u {{name}} in"
 title = "Verbindingen"
 unlinkedServices = "Niet-gekoppelde diensten"
 
@@ -1294,17 +1290,6 @@ label = "Standaardproducent"
 description = "Configureer aangepaste bestandssysteempaden voor pijplijnverwerking en externe tools"
 label = "Aangepaste paden"
 
-[admin.settings.general.customPaths.operations]
-label = "Paden naar externe tools"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Pad naar LibreOffice unoconvert voor documentconversies (laat leeg voor standaard: /opt/venv/bin/unoconvert)"
-label = "Unoconvert-uitvoerbaar bestand"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Pad naar WeasyPrint-uitvoerbaar bestand voor HTML-naar-PDF-conversie (laat leeg voor standaard: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint-uitvoerbaar bestand"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Pipelinemappen"
 
@@ -1327,6 +1312,10 @@ label = "Mappen voor bewaakte mappen"
 [admin.settings.general.defaultLocale]
 description = "De standaardtaal voor nieuwe gebruikers (bijv. en_US, es_ES)"
 label = "Standaardlocale"
+
+[admin.settings.general.enableFeedback]
+description = "Laat gebruikers feedback sturen naar het Stirling-team"
+label = "Feedback inschakelen"
 
 [admin.settings.general.fileUploadLimit]
 description = "Maximale bestandsgrootte voor uploaden (bijv. 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "STANDARD-gebeurtenissen plus: continue polling-aanroepen, alle GET-ve
 [admin.settings.security.audit.retentionDays]
 description = "Aantal dagen om auditlogs te bewaren (0 = onbeperkt bewaren)"
 label = "Bewaartermijn audit (dagen)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "Ondertekende PDF's kunnen nog steeds worden bekeken, afgedrukt, geconverteerd of opnieuw ondertekend, maar niet gewijzigd in de app. API-aanroepen en serverpipelines worden niet beïnvloed."
+label = "Wijzigingen in ondertekende PDF's blokkeren"
 
 [admin.settings.security.csrfDisabled]
 description = "Cross-Site Request Forgery-bescherming uitschakelen (niet aanbevolen)"
@@ -2969,6 +2962,7 @@ loadError = "Gebruikers laden mislukt"
 noTeam = "Geen team"
 noUsers = "Geen andere gebruikers gevonden."
 placeholder = "Gebruikers selecteren..."
+signInRequired = "Meld u aan om handtekeningen van anderen aan te vragen."
 you = "{{name}} (jij)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "Uw account wordt beheerd door uw identity-provider."
 title = "Inloggegevens wijzigen"
 
 [changeMetadata]
-filenamePrefix = "metadata"
 submit = "Wijzigen"
 tags = "bewerken,wijzigen,bijwerken,metadata,eigenschappen,documenteigenschappen,auteur,titel,onderwerp,trefwoorden,maker,producent,info,documentinfo,bestandseigenschappen"
 
@@ -3265,6 +3258,248 @@ not_found = "Ik kon de gevraagde informatie niet vinden."
 processing = "Bezig met verwerken ({{outcome}})..."
 unsupported_capability = "Niet-ondersteunde mogelijkheid: {{capability}}"
 usage_limit_reached = "Je hebt je gebruikslimiet bereikt. Bekijk je planopties om door te gaan."
+
+[checkAccessibility]
+aboutRow = "Over {{label}}"
+checking = "Controleren..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Toegankelijkheidsrapport downloaden"
+fileFailed = "mislukt"
+pickFile = "Resultaten tonen voor"
+submit = "Toegankelijkheid controleren"
+
+[checkAccessibility.category]
+altText = "Alternatieve tekst"
+fonts = "Lettertypen"
+language = "Taal"
+links = "Links en annotaties"
+metadata = "Metadata en instellingen"
+structure = "Tags en structuur"
+
+[checkAccessibility.categoryTip]
+altText = "Afbeeldingen hebben een korte tekstbeschrijving nodig die schermlezers kunnen voorlezen."
+fonts = "Lettertypen moeten in het bestand zijn opgenomen, met elk teken gekoppeld aan echte tekst, zodat de tekst kan worden voorgelezen en gekopieerd."
+language = "Schermlezers moeten de taal van het document kennen om het correct uit te spreken."
+links = "Links, opmerkingen en formuliervelden hebben tags en beschrijvingen nodig, en een tabvolgorde die de pagina volgt."
+metadata = "De titel, PDF/UA-verklaring en andere instellingen die ondersteunende technologie uit het bestand leest."
+structure = "Tags vertellen schermlezers wat elk deel van een pagina is, zoals een kop, lijst of tabel, en in welke volgorde het moet worden gelezen."
+
+[checkAccessibility.checks]
+label = "{{passed}} van {{total}} controles geslaagd"
+
+[checkAccessibility.error]
+download = "Het toegankelijkheidsrapport kon niet worden gemaakt. Probeer het opnieuw."
+fileTitle = "Dit bestand kon niet worden gecontroleerd"
+partial = "Sommige bestanden konden niet worden gecontroleerd."
+
+[checkAccessibility.facts]
+declares = "Verklaart PDF/UA"
+displaysTitle = "Toont de titel"
+fonts = "Lettertypen ingesloten"
+language = "Geeft een taal op"
+notEncrypted = "Niet versleuteld"
+tagged = "Getagd"
+title = "Heeft een titel"
+
+[checkAccessibility.factTip]
+declares = "De metadata van het bestand geeft aan dat het PDF/UA volgt."
+displaysTitle = "PDF-readers tonen de titel, niet de bestandsnaam, wanneer het bestand wordt geopend."
+fonts = "Elk lettertype dat de tekst gebruikt, is in het bestand opgenomen."
+language = "Het bestand geeft aan in welke taal de tekst is."
+notEncrypted = "Het bestand is niet versleuteld. Versleuteling kan voorkomen dat ondersteunende technologie het kan lezen."
+tagged = "Het bestand heeft tags die de structuur beschrijven. Zonder die tags krijgen schermlezers alleen platte tekst."
+title = "Het bestand heeft een titel in de metadata."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} afbeelding heeft een beschrijving nodig (pagina {{pages}})"
+summary_other = "{{count}} afbeeldingen hebben een beschrijving nodig (pagina's {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Van toepassing op"
+clauseValue = "{{spec}} §{{clause}}, test {{test}}"
+details = "Details"
+instances_one = "{{count}} instantie"
+instances_other = "{{count}} instanties"
+onPages_one = "Pagina {{pages}}"
+onPages_other = "Pagina's {{pages}}"
+onPagesPartial_one = "Pagina {{pages}} (lijst is mogelijk onvolledig)"
+onPagesPartial_other = "Pagina's {{pages}} (lijst is mogelijk onvolledig)"
+pages = "Pagina's"
+pagesPartialValue = "{{pages}} (alleen de eerste voorkomens hebben een paginavermelding, dus deze lijst is mogelijk onvolledig)"
+requirement = "Vereiste"
+rule = "Regel"
+standard = "Standaard"
+where = "Waar"
+
+[checkAccessibility.manual]
+clearAll = "Alles wissen"
+done = "Gereed"
+inProgress = "Bezig"
+markAllDone = "Alles als gereed markeren"
+tip = "Dingen die alleen een persoon kan beoordelen, zoals leesvolgorde en of afbeeldingsbeschrijvingen kloppen. Vink elk punt aan zodra u het hebt gecontroleerd; uw vinkjes komen in het gedownloade rapport."
+title = "Handmatige controles"
+
+[checkAccessibility.objects]
+annotation = "Een annotatie"
+bookmark = "Een bladwijzer"
+character = "Een teken in een lettertype"
+contentPiece = "Een stuk pagina-inhoud"
+document = "Het document"
+drawing = "Een tekening"
+figure = "Een figuur"
+file = "Het bestand zelf"
+font = "Een lettertype"
+form = "Het formulier"
+formField = "Een formulierveld"
+link = "Een link"
+markedContent = "Gemarkeerde pagina-inhoud"
+metadata = "De documentmetadata"
+page = "Een pagina"
+properties = "De documenteigenschappen"
+tag = "Een {{name}}-tag"
+tagTree = "De tagstructuur"
+textPiece = "Een stuk tekst"
+translatedMetadata = "Een metadataveld met vertalingen"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (vervolg)"
+footer = "Gecontroleerd met Stirling PDF"
+page = "Pagina {{n}}"
+title = "Toegankelijkheidsrapport"
+
+[checkAccessibility.result]
+fail = "Mislukt"
+failSummary = "Schermlezers kunnen mogelijk niet het hele document lezen."
+partial = "Gedeeltelijk"
+partialSummary = "Schermlezers kunnen dit document lezen, maar enkele controles mislukken."
+pass = "Geslaagd"
+passSummary = "Slaagt voor alle geautomatiseerde PDF/UA-controles."
+
+[checkAccessibility.rules]
+annotationLanguage = "Opmerking- of linktekst heeft geen taal ingesteld, waardoor schermlezers niet weten in welke taal deze moet worden voorgelezen. Stel de documenttaal in om dit op te lossen."
+annotationNoDescription = "Een opmerking, link of tekening heeft geen tekstbeschrijving, waardoor schermlezers niets kunnen aankondigen."
+annotationNotTagged = "Een opmerking of tekening is niet getagd als annotatie, waardoor schermlezers deze niet in de leesvolgorde kunnen bereiken."
+artifactInsideTagged = "Iets dat als decoratie is gemarkeerd bevindt zich binnen getagde content, waardoor het zowel wordt gelezen als overgeslagen."
+bookmarkLanguage = "De bladwijzers hebben geen taal ingesteld, waardoor schermlezers niet weten in welke taal ze moeten worden voorgelezen. Stel de documenttaal in om dit op te lossen."
+conformancePrefix = "De PDF/UA-verklaring in de metadata gebruikt het verkeerde voorvoegsel, waardoor PDF-readers deze mogelijk niet herkennen."
+contentLanguage = "De tekst heeft geen taal ingesteld, waardoor schermlezers niet weten in welke taal deze moet worden voorgelezen. Stel de documenttaal in om dit op te lossen."
+customTagNotMapped = "Een tag gebruikt een aangepaste naam die niet is gekoppeld aan een standaardtag, waardoor schermlezers niet weten wat het is."
+figureNoAlt = "Een afbeelding is getagd als figuur maar heeft geen beschrijving, waardoor schermlezergebruikers niet weten wat deze toont."
+fontMissingGlyphs = "Bij een opgenomen lettertype ontbreken enkele tekens die het document gebruikt."
+fontNotEmbedded = "Een lettertype is niet in het bestand opgenomen, waardoor de tekst er op een andere computer anders uit kan zien of anders kan worden voorgelezen."
+formFieldNotTagged = "Een formulierveld is niet getagd als onderdeel van een formulier, waardoor schermlezers het mogelijk niet vinden."
+genericHeading = "Een kop gebruikt de H-tag, die geen niveau heeft. PDF/UA-2 vereist H1 t/m H6 zodat schermlezergebruikers de hiërarchie van koppen kunnen herkennen."
+glyphWidths = "De tekenbreedtes van een lettertype in het bestand komen niet overeen met het lettertype zelf, waardoor tekst onjuist kan worden gespatieerd."
+headingSkipped = "Kopniveaus slaan een stap over, bijvoorbeeld van Kop 1 direct naar Kop 3, wat navigeren tussen koppen verwarrend maakt."
+linkNoDescription = "Een link heeft geen beschrijving, waardoor schermlezers alleen het adres kunnen voorlezen, of niets."
+linkNotTagged = "Een link is niet getagd als link, waardoor schermlezers deze niet als zodanig aankondigen."
+metadataLanguage = "De metadata, zoals de titel, heeft geen taal ingesteld, waardoor schermlezers niet weten in welke taal deze moet worden voorgelezen. Stel de documenttaal in om dit op te lossen."
+noConformanceClaim = "Het bestand geeft niet aan dat het PDF/UA volgt. De metadata heeft een PDF/UA-identificatie-item nodig."
+noDocumentTag = "De tags hebben één Document-tag bovenaan nodig, met al het andere daarbinnen."
+noLanguage = "Het document geeft niet aan in welke taal het is, waardoor schermlezers het mogelijk in de verkeerde taal voorlezen."
+noMetadataStream = "Het bestand heeft geen XMP-metadata, waar PDF/UA de documenttitel en conformiteitsdetails bewaart."
+noTags = "Het bestand heeft helemaal geen tags, waardoor schermlezers koppen, alinea's, lijsten of tabellen niet kunnen onderscheiden of in de juiste volgorde kunnen lezen."
+notdefGlyph = "De tekst gebruikt een aanduiding voor een 'ontbrekend teken', die als leegte of als blokje verschijnt en niet kan worden voorgelezen."
+noteTag = "Het bestand gebruikt de Note-tag, die in PDF/UA-2 wordt vervangen door FENote voor voet- en eindnoten."
+noTitle = "Het document heeft geen titel in de metadata."
+notMarkedTagged = "Het bestand is niet als getagd gemarkeerd, waardoor ondersteunende technologie de aanwezige tags mogelijk negeert."
+notPdf2Tags = "PDF/UA-2 vereist de tags die een PDF 2.0-bestand gebruikt. Deze lijken op PDF 1.7-tags, wat meestal betekent dat het bestand is getagd voor PDF/UA-1."
+noUnicode = "Sommige tekens kunnen niet naar leesbare tekst worden omgezet, waardoor schermlezers en kopiëren-en-plakken ze mogelijk verkeerd weergeven."
+replacementTextLanguage = "Sommige vervangende tekst heeft geen taal ingesteld, waardoor schermlezers niet weten in welke taal deze moet worden voorgelezen. Stel de documenttaal in om dit op te lossen."
+standardTagRemapped = "Een standaardtag is gekoppeld aan een aangepaste tag, waardoor schermlezers de betekenis ervan verliezen."
+symbolicEncoding = "Een symboollettertype heeft een codering die het niet zou moeten hebben, waardoor tekens als de verkeerde letters kunnen verschijnen."
+tabOrder = "Een pagina met links of opmerkingen stelt de tabvolgorde niet in om het document te volgen, waardoor toetsenbordgebruikers over de pagina kunnen springen."
+taggedInsideArtifact = "Getagde content bevindt zich binnen iets dat als decoratie is gemarkeerd, waardoor schermlezers deze mogelijk overslaan."
+titleNotDisplayed = "PDF-readers tonen de bestandsnaam in plaats van de documenttitel. Schakel de instelling 'documenttitel weergeven' in het bestand in."
+untaggedContent = "Iets op de pagina is niet als content getagd en ook niet als decoratie gemarkeerd, waardoor schermlezers niet weten of het moet worden voorgelezen. Dit is vaak een achtergrondafbeelding, koptekst, voettekst of paginanummer."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Geen taal voor opmerkingen of links"
+annotationNoDescription = "Opmerking, link of tekening zonder beschrijving"
+annotationNotTagged = "Opmerking of tekening niet getagd"
+artifactInsideTagged = "Decoratie binnen getagde content"
+bookmarkLanguage = "Geen taal voor bladwijzers"
+conformancePrefix = "PDF/UA-verklaring onjuist geschreven"
+contentLanguage = "Geen taal voor tekst"
+customTagNotMapped = "Aangepaste tag zonder standaardbetekenis"
+figureNoAlt = "Afbeelding zonder beschrijving"
+fontMissingGlyphs = "Lettertype mist tekens"
+fontNotEmbedded = "Lettertype niet ingesloten"
+formFieldNotTagged = "Formulierveld niet getagd"
+genericHeading = "Kop zonder niveau"
+glyphWidths = "Tekenbreedtes komen niet overeen"
+headingSkipped = "Kopniveau overgeslagen"
+linkNoDescription = "Link zonder beschrijving"
+linkNotTagged = "Link niet getagd"
+metadataLanguage = "Geen taal voor metadata"
+noConformanceClaim = "Verklaart PDF/UA niet"
+noDocumentTag = "Tags beginnen niet met een Document-tag"
+noLanguage = "Geen documenttaal"
+noMetadataStream = "Geen XMP-metadata"
+noTags = "Geen tags"
+notdefGlyph = "Plaatsaanduiding voor ontbrekend teken gebruikt"
+noteTag = "Gebruikt de Note-tag"
+noTitle = "Geen documenttitel"
+notMarkedTagged = "Niet als getagd gemarkeerd"
+notPdf2Tags = "Tags zijn geen PDF 2.0-tags"
+noUnicode = "Tekens die niet als tekst kunnen worden gelezen"
+replacementTextLanguage = "Geen taal voor vervangende tekst"
+standardTagRemapped = "Standaardtag omgezet in aangepaste tag"
+symbolicEncoding = "Symboollettertype heeft onjuiste codering"
+tabOrder = "Tabvolgorde volgt het document niet"
+taggedInsideArtifact = "Getagde content verborgen als decoratie"
+titleNotDisplayed = "Titel wordt niet getoond bij openen"
+untaggedContent = "Content die niet is getagd"
+
+[checkAccessibility.score]
+issues_one = "{{count}} probleem"
+issues_other = "{{count}} problemen"
+noIssues = "Geen problemen gevonden"
+subtitle_one = "{{profile}} - {{count}} pagina"
+subtitle_other = "{{profile}} - {{count}} pagina's"
+
+[checkAccessibility.sections]
+breakdown = "Uitsplitsing"
+
+[checkAccessibility.status]
+checking = "Controleren {{current}} van {{total}}..."
+complete = "Controle voltooid"
+
+[checkAccessibility.steps]
+results = "Resultaten"
+standard = "Standaard"
+
+[checkAccessibility.tooltip.header]
+title = "Welke standaard te controleren"
+
+[checkAccessibility.tooltip.ua1]
+text = "De eerste versie van PDF/UA, gepubliceerd in 2012 als ISO 14289-1, voor PDF 1.7-bestanden."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "De nieuwere versie, gepubliceerd in 2024 als ISO 14289-2, voor PDF 2.0-bestanden. Een PDF 1.7-bestand dat hiertegen wordt gecontroleerd, faalt op regels die alleen voor PDF 2.0 gelden."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Annotatie {{n}}"
+bookmarks = "Bladwijzers"
+character = "Een teken in {{font}}"
+contentItem = "Contentitem {{n}}"
+drawingStep = "Tekenstap {{n}}"
+embeddedGraphic = "Ingesloten grafisch element"
+font = "Lettertype {{name}}"
+metadata = "Documentmetadata"
+page = "Pagina {{n}}"
+piece = "Deel {{n}}"
+tag = "{{tag}}-tag"
+tagTree = "Tagstructuur"
+wholeDocument = "Gehele document"
+
+[checkAccessibility.where.properties]
+author = "Auteur"
+description = "Beschrijving"
+pdfUaPart = "PDF/UA-deel"
+title = "Titel"
 
 [classification.families]
 correspondence = "Correspondentie"
@@ -3729,6 +3964,10 @@ message = "Eén of beiden van de bijgewerkte documenten zijn te groot om verwerk
 body = "Deze PDF's overschrijden samen 2,000 pagina's. De verwerking kan enkele minuten duren."
 title = "Grote vergelijking bezig"
 
+[compare.mode]
+pixel = "Pixelvergelijking"
+text = "Tekstvergelijking"
+
 [compare.no.text]
 message = "Een of beide geselecteerde PDF-bestanden bevatten geen tekstinhoud. Kies a.u.b. PDF-bestanden met tekst voor vergelijking."
 
@@ -4046,6 +4285,30 @@ failed = "Je aanmelding kon niet worden vernieuwd. Probeer het opnieuw, of sluit
 lead = "Deze server is al gekoppeld aan je account. Vernieuw je aanmelding om terug te keren naar facturering en gebruik op je server."
 title = "Je serveraanmelding vernieuwen"
 
+[connectedAccounts]
+connect = "Verbinden"
+connectAnother = "Nog een verbinden"
+connectFailed = "Het account kon niet worden verbonden. Controleer of de app-registratie van de server is ingesteld en probeer het opnieuw."
+disconnect = "Verbinding verbreken"
+google = "Google Drive"
+intro = "Verbind uw eigen accounts één keer. Uw pipelines kunnen er daarna als uzelf uit lezen en naar opslaan."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling kan dit account niet meer bereiken, daarom zijn pipelines die het gebruiken gepauzeerd."
+none = "Uw beheerder heeft gekoppelde accounts niet ingeschakeld."
+personal = "Persoonlijk account"
+popupBlocked = "Uw browser blokkeerde het aanmeldvenster. Sta pop-ups voor deze site toe en probeer het opnieuw."
+reconnect = "Opnieuw aanmelden"
+work = "Werkaccount"
+
+[connectedAccounts.disconnectConfirm]
+body = "Bronnen en pipelines die dit account gebruiken stoppen totdat u het opnieuw verbindt."
+confirm = "Verbinding verbreken"
+title = "Verbinding met {{account}} verbreken?"
+
+[connectedAccounts.status]
+connected = "Verbonden"
+needsSignIn = "Aanmelding vereist"
+
 [convert]
 autoRotate = "Automatisch roteren"
 autoRotateDescription = "Afbeeldingen automatisch draaien zodat ze beter op de PDF-pagina passen"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Documenttitel"
 pdfUaTitleHelp = "Getoond door een reader in plaats van de bestandsnaam. Als dit leeg blijft, wordt de eerste kop gebruikt."
 selectSourceFormatFirst = "Kies eerst een bronformaat"
 settings = "Instellingen"
+signInToUse = "Meld u aan om te gebruiken"
 single = "Enkel"
 sourceFormatPlaceholder = "Brontype"
-stirlingOfficeConvert = "Stirling Office Convert gebruiken (beta)"
-stirlingOfficeConvertDescription = "Betere, snellere conversies met minder geheugen. Schakel uit om de standaardconverter te gebruiken."
 strictMode = "Strikte modus"
 strictModeDesc = "Fout als de conversie niet perfect is (gebruikt VeraPDF-verificatie)"
 svgPdfOptions = "SVG naar PDF-opties"
@@ -4134,8 +4396,6 @@ webOptions = "Web-naar-PDF-opties"
 zoomLevel = "Zoomniveau"
 
 [convert.ebookOptions]
-embedAllFonts = "Alle lettertypes insluiten"
-embedAllFontsDesc = "Alle lettertypen uit het eBook insluiten in de gegenereerde PDF"
 includePageNumbers = "Paginanummering toevoegen"
 includePageNumbersDesc = "Paginanummers toevoegen aan de gegenereerde PDF"
 includeTableOfContents = "Inhoudsopgave toevoegen"
@@ -4648,6 +4908,17 @@ title = "Instellingen"
 [extractPages.tooltip]
 description = "Extraheert de geselecteerde pagina's in een nieuwe PDF, met behoud van de volgorde."
 
+[feedback.page]
+open = "Feedback verzenden"
+sendMore = "Meer feedback verzenden"
+sent = "Bedankt voor uw feedback"
+title = "Help ons Stirling te verbeteren"
+unavailable = "Feedback is niet beschikbaar"
+
+[feedback.tag]
+dismiss = "Feedbackknop verbergen"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "Openen in bestandseditor"
 viewInViewer = "Bekijken in viewer"
@@ -4657,7 +4928,6 @@ closeFile = "Bestand sluiten"
 
 [fileEditor]
 closedFile = "{{name}} gesloten"
-couldNotSave = "Kon {{name}} niet opslaan"
 filesReordered_one = "Bestand opnieuw geordend"
 filesReordered_other = "{{count}} bestanden opnieuw geordend"
 loadedFromStorage_one = "{{count}} bestand uit opslag geladen"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "PDF-bibliotheek"
 myFiles = "Bestandsbibliotheek"
 noFiles = "Nog geen bestanden"
+oneDrive = "Openen vanuit OneDrive"
+oneDriveFailed = "Kon OneDrive niet openen"
 openFileManager = "Alle bestanden en mappen bekijken"
 openFromComputer = "Openen vanaf computer"
 openSettings = "Instellingen openen"
@@ -4804,6 +5076,17 @@ searchFiles = "Bestanden zoeken"
 uploadFailedBody = "Kon de geselecteerde bestanden niet toevoegen."
 uploadFailedTitle = "Uploaden mislukt"
 viewAll = "Alle {{count}} bestanden bekijken"
+
+[fileSidebar.clearRecents]
+body_one = "1 bestand uit recente bestanden wissen? Dit kan niet ongedaan worden gemaakt."
+body_other = "{{count}} bestanden uit recente bestanden wissen? Dit kan niet ongedaan worden gemaakt."
+button = "Recente bestanden wissen"
+confirm = "Recente bestanden wissen"
+error = "Wissen mislukt. Probeer het opnieuw."
+openNote_one = "Er is 1 daarvan geopend in de werkruimte."
+openNote_other = "{{count}} daarvan zijn geopend in de werkruimte."
+skipOpen = "Open bestanden overslaan"
+title = "Recente bestanden wissen?"
 
 [fileSidebar.fileItem]
 closeViewer = "Viewer sluiten"
@@ -5124,6 +5407,7 @@ diskFileHint = "Opgeslagen op je computer"
 diskHint = "Een bestand in de gekoppelde map op je schijf"
 local = "Lokaal"
 localHint = "Niet geback-upt"
+oneDrive = "OneDrive"
 shared = "Gedeeld"
 sharedHint = "Met u gedeeld via link"
 
@@ -5672,6 +5956,11 @@ title = "Metadata wijzigen"
 desc = "Documentbeperkingen en machtigingen wijzigen"
 tags = "machtigingen,beperkingen,rechten,toegangscontrole,toestaan,weigeren,afdrukken,kopiëren,bewerken,machtigingen wijzigen,beveiligingsinstellingen,gebruikersrechten"
 title = "Rechten wijzigen"
+
+[home.checkAccessibility]
+desc = "Beoordeel een PDF op PDF/UA en zie wat schermlezers belemmert, zonder het bestand te wijzigen"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "PDF-toegankelijkheid controleren"
 
 [home.classify]
 desc = "Bepaal wat voor soort document dit is en voorzie het van een tag."
@@ -6521,6 +6810,32 @@ quickAccess = "Begin met de balk <strong>Snelle toegang</strong> om te schakelen
 topBar = "De bovenste balk laat u schakelen tussen <strong>Viewer</strong>, <strong>Pagina Editor</strong> en <strong>Actieve bestanden</strong>."
 wrapUp = "Dit zijn de nieuwtjes in V2. Open het menu <strong>Tours</strong> wanneer u maar wilt om dit, de Tools-tour of de Admin-tour opnieuw te bekijken."
 
+[oneDriveSave]
+chooseFolder = "Kies een OneDrive-map om naar te uploaden"
+conflict = "Dit bestand is gewijzigd in OneDrive sinds deze versie is geopend of opgeslagen. Sla uw versie in plaats daarvan op als een kopie."
+failedTitle = "Kon niet opslaan in OneDrive"
+fromOneDrive = "Vanuit OneDrive"
+linkNotStored = "Deze browser kon de link naar het OneDrive-bestand niet onthouden. Sla het na het opnieuw laden op als een kopie."
+missing = "Dit bestand is in OneDrive verplaatst of verwijderd. Sla uw versie in plaats daarvan op als een kopie."
+open = "Openen in OneDrive"
+personalUnsupported = "Uploaden naar OneDrive vereist een werk- of schoolaccount van Microsoft."
+reconnect = "Opnieuw verbinden"
+replaces = "Vervangt {{name}}"
+saveCopyToOneDrive = "Sla een kopie op in OneDrive"
+saved = "Opgeslagen in OneDrive"
+saving = "Bezig met opslaan in OneDrive..."
+signInToSave = "Meld u aan bij uw server om in OneDrive op te slaan."
+updateOriginal = "Bijwerken in OneDrive"
+uploadToOneDrive = "Uploaden naar OneDrive..."
+
+[oneDriveSave.status]
+saved = "Opgeslagen in OneDrive"
+unsaved = "Wijzigingen nog niet in OneDrive opgeslagen"
+
+[oneDriveSave.toolbar]
+replace = "Werk {{name}} bij in OneDrive"
+saveAll = "Alles bijwerken in OneDrive"
+
 [overlay-pdfs]
 desc = "Leg een PDF over een andere heen"
 submit = "Indienen"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Wordt morgen gereset"
 thisPeriod = "Deze factureringsperiode"
 
 [payment]
+annually = "Jaarlijks"
 billingPeriod = "Factureringsperiode"
 cancelTeamChange = "Huidig plan behouden"
 canCloseWindow = "U kunt dit venster nu sluiten."
@@ -7157,11 +7473,14 @@ title = "Team-plan aanpassen"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe toont de exacte kosten, eventuele pro rata verrekeningen en je volgende factuurdatum voordat je bevestigt. Je opgeslagen betaalmethode wordt gebruikt als die beschikbaar is."
+billingLabel = "Facturering"
 continue = "Doorgaan naar betaling"
 currencyAtCheckout = "Stripe bevestigt het definitieve bedrag en de betaalvaluta bij het afrekenen."
+custom = "Aangepast"
 customLabel = "Aantal gebruikers"
 dueToday = "Vandaag verschuldigd"
 enterpriseQuote = "Enterprise-offerte aanvragen"
+enterUsers = "Voer een aantal gebruikers in."
 estimatedTotal = "Geschat totaal"
 lineItem = "Team · {{price}}{{period}} per {{block}} gebruikers"
 minimumForCurrentUsers = "Je hebt {{users}} gebruikers, dus het plan moet ten minste {{minimum}} dekken."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Bestaande accounts blijven bestaan. Gebruikers toevoe
 overCapacityTitle = "Je server heeft meer gebruikers dan je plan dekt"
 perMonth = "/mnd"
 perYear = "/jr"
+planName = "Stirling Team"
 reductionNote = "De lagere capaciteit begint bij je volgende verlenging. Tot die tijd kun je je huidige limiet gebruiken. Bestaande gebruikers blijven; nieuwe gebruikers worden geblokkeerd als je boven de capaciteit zit wanneer de wijziging ingaat."
 renewalNote = "Wordt verlengd voor {{total}}{{period}}. Annuleer op elk moment in Gebruik en facturering."
 reviewChange = "Wijziging bekijken in Stripe"
-roundsTo = "wordt afgerond naar {{users}}"
+roundsUp = "Afgerond naar {{users}} gebruikers."
+selfServeLimit = "Tot {{users}} gebruikers hier."
 subheading = "Dekt iedereen die je uitnodigt, in blokken van {{users}} gebruikers."
 subheadingAdd = "Je plan dekt vandaag {{current}} gebruikers. Kies het nieuwe totaal."
+talkToEnterprise = "Voor meer, neem contact met ons op over Enterprise."
+usersCovered = "gebruikers gedekt"
 usersLabel = "Gebruikers"
 userTotal = "{{users}} gebruikers"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Wijzigingen toepassen op het bestand in je werkruimte ({{shortcut
 tags = "tekst bewerken,tekst wijzigen,tekst aanpassen,inhoud bewerken,tekst bijwerken,herschrijven,corrigeren,aanpassen,redline,herzien,teksteditor,inhoudseditor"
 title = "PDF Teksteditor"
 unsaved = "(niet opgeslagen)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Annotatietekst - geen paginatekst, dus kan hier niet worden bewerkt"
@@ -7261,12 +7583,18 @@ widget = "Formulierveld - geen paginatekst, dus kan hier niet worden bewerkt"
 
 [pdfTextEditor.commands]
 edit = "Bewerken"
+markTagged = "Markeren als volledig getagd"
+matchScanFont = "Gescande tekst afstemmen op {{face}}"
 mergeRuns_one = "Voeg {{count}} run samen tot een alinea"
 mergeRuns_other = "Voeg {{count}} runs samen tot een alinea"
 setColour = "Stel kleur in op {{run}}"
 setOutline = "Stel omtrek in op {{run}}"
+tagFormField = "Formulierveld taggen"
+tagLink = "Link taggen"
+tagPageContent = "Pagina automatisch taggen"
 typeInto = "Typ in {{run}}"
 ungroupParagraph = "Groepering van alinea {{run}} opheffen"
+unmarkTagged = "Markeren als niet volledig getagd"
 wrap = "Laat {{run}} omlopen"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Verwerpen en openen"
 hint = "Annuleer en kies daarna PDF opslaan om ze eerst in je werkruimte te bewaren."
 title = "Niet-opgeslagen wijzigingen verwerpen?"
 
-[pdfTextEditor.drop]
-hint = "Loslaten op het editorvlak vervangt elk geopend document."
-title = "Sleep een PDF hierheen om te openen"
-
 [pdfTextEditor.error]
 decodeImage = "Kon de geselecteerde afbeelding niet decoderen."
+duplicateDropsLetters = "Kan deze tekst niet dupliceren: geen beschikbaar lettertype kan al zijn letters weergeven."
+formLiftChangesDrawing = "Kan dit niet bewerken: het is weergegeven als onderdeel van een groep met uitsnijding of grafische instellingen die de editor bij wijzigen niet kan behouden."
 insertImage = "Kon de geselecteerde afbeelding niet invoegen."
+needsShaping = "De editor kan de verbonden letters en klinkertekens van dit schrift nog niet correct weergeven, daarom is deze wijziging niet doorgevoerd."
+replaceClippedImage = "Kan deze afbeelding niet vervangen: deze is bijgesneden en de vervanging zou de delen tonen die door de uitsnijding verborgen zijn."
+scanOffInk = "Kan deze tekst niet bewerken: de herkende woorden lijnen niet uit met de scan. Voer OCR opnieuw uit."
+unsafeRtlEdit = "Kan deze bewerking niet uitvoeren: de editor kan de tekst van deze regel van rechts-naar-links niet opnieuw tekenen zonder deze te veranderen."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG-afbeelding"
@@ -7304,15 +7634,42 @@ wholeWord = "Hele woord"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Ingebouwde lettertypen"
+closestMatch = "Dit lettertype mist enkele van de geselecteerde letters, dus worden ze weergegeven in het best overeenkomende lettertype."
 deviceFontsNone = "Geen extra apparaatlettertypen gevonden."
 deviceFontsUnavailable = "Apparaatlettertypen zijn niet beschikbaar. De ingebouwde lettertypen werken nog steeds."
 deviceGroup = "Apparaatlettertypen"
+documentFontCannotDraw = "De editor kan deze tekst niet in het eigen lettertype van het document weergeven, dus is deze in het huidige lettertype gelaten."
 documentGroup = "Documentlettertype"
+embeddingForbidden = "De licentie van dit lettertype staat insluiting in een PDF niet toe. De tekst is ongewijzigd gelaten."
+embedFailed = "Dit lettertype kon niet in de PDF worden ingesloten. De tekst is ongewijzigd gelaten."
+includedGroup = "Ingesloten lettertypen"
 label = "Lettertypefamilie"
+matchedGroup = "Overeenkomend lettertype"
+missingGlyphs = "Dit lettertype mist enkele van de geselecteerde tekens, en die konden niet in hun huidige lettertype behouden blijven. De tekst is ongewijzigd gelaten."
 mixed = "Gemengd"
+needsShaping = "De editor kan de verbonden letters en klinkertekens van dit schrift nog niet correct opnieuw tekenen, dus is die tekst in het huidige lettertype gelaten."
+noGlyphs = "Dit lettertype heeft geen tekens voor de geselecteerde tekst. De tekst is ongewijzigd gelaten."
 noMatch = "Geen overeenkomend lettertype"
+partOfRunUnsupported = "Deze tekst kan alleen als geheel opnieuw worden opgemaakt. Selecteer het vak in plaats van enkele woorden."
 placeholder = "Lettertypefamilie"
+scannedText = "Gescande tekst"
+serverFontFailed = "Dat serverlettertype kon niet worden gedownload. De tekst is ongewijzigd gelaten."
+serverGroup = "Serverlettertypen"
+someLeftUnchanged = "Dit lettertype heeft de tekens voor een deel van de geselecteerde tekst niet. Die tekst is ongewijzigd gelaten."
+styleSkipped = "Voor een deel van de geselecteerde tekst bestaat geen versie van het lettertype in die stijl, dus is die tekst ongewijzigd gelaten."
+styleUnavailable = "Voor de geselecteerde tekst bestaat geen versie van het lettertype in die stijl, dus is deze ongewijzigd gelaten."
 useDeviceFonts = "Apparaatlettertypen gebruiken"
+weight = "Letterdikte"
+weightBlack = "Zwart"
+weightBold = "Vet"
+weightExtraBold = "Extra vet"
+weightExtraLight = "Extra licht"
+weightLight = "Licht"
+weightMedium = "Medium"
+weightNumber = "Dikte {{weight}}"
+weightRegular = "Normaal"
+weightSemibold = "Halfvet"
+weightThin = "Dun"
 
 [pdfTextEditor.fonts]
 allPresent = "Alle letters en cijfers aanwezig"
@@ -7357,6 +7714,7 @@ helpDesc = "Deze hulp"
 saveDesc = "Opslaan in je werkruimte"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Vet / Cursief, voor de geselecteerde woorden of het hele vak"
 deleteDesc = "Geselecteerde verwijderen"
 duplicateDesc = "Geselecteerde dupliceren"
 groupDesc = "Geselecteerde runs groeperen in één alinea"
@@ -7380,8 +7738,12 @@ zoomDesc = "Inzoomen / uitzoomen"
 
 [pdfTextEditor.inspector]
 document = "Document"
+fontCompletedClosest = "Ingesloten lettertype · ontbrekende tekens worden getekend in {{name}}, de dichtstbijzijnde beschikbare match."
+fontCompletedOriginal = "Ingesloten lettertype · ontbrekende tekens worden getekend in {{name}}, hetzelfde lettertype."
 fontEmbedded = "Ingesloten lettertype · een teken dat ontbreekt valt terug op Helvetica."
 fontGap = "{{name}} · ontbreekt {{glyphs}} - bij het typen daarvan wordt teruggevallen op Helvetica."
+fontUnknownCoverage = "{{name}} · voor een ontbrekend teken wordt teruggevallen op {{fallback}}."
+formField = "Formulierveld"
 geometry = "Positie en grootte"
 height = "Hoogte"
 heightHint = "De hoogte van een tekstvak volgt de tekengrootte en het aantal regels."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR is niet beschikbaar op deze server."
 oneImage = "Afbeelding"
 oneShape = "Vorm"
 oneText = "Tekst"
+outlinedTextHint_one = "De tekst op deze pagina is als vormen weergegeven, dus er is geen tekst om te bewerken. Voer eerst OCR uit om deze bewerkbaar te maken."
+outlinedTextHint_other = "{{count}} pagina's hebben tekst die als vormen is weergegeven, dus er is geen tekst om te bewerken. Voer eerst OCR uit om deze bewerkbaar te maken."
 pages = "Pagina's"
 runOcr = "OCR uitvoeren"
 scanHint_one = "Deze pagina is een gescande afbeelding zonder tekst om te bewerken. Voer eerst OCR uit om de tekst bewerkbaar te maken."
 scanHint_other = "{{count}} pagina's zijn gescande afbeeldingen zonder tekst om te bewerken. Voer eerst OCR uit om de tekst bewerkbaar te maken."
 scannedText = "Gescande tekst · gewijzigde woorden worden bedekt en opnieuw getekend in een passend lettertype."
+scannedTextMisaligned = "Gescande tekst · de herkende woorden lijnen niet uit met de scan, dus dit blok kan niet worden bewerkt of verwijderd."
+scannedTextNoFont = "Gescande tekst · getypte woorden in dit schrift kunnen nog niet worden getekend, dus ze worden niet behouden. Het verwijderen van woorden werkt nog wel."
+scannedTextOffInk = "Gescande tekst · de herkende woorden liggen naast de gescande woorden, dus dit blok kan niet worden bewerkt. Voer OCR opnieuw uit."
 tabDocument = "Document"
 tabSelected = "Geselecteerd"
 textBoxes = "Tekstvakken"
+unreadPagesHint = "{{count}} pagina's hebben geen tekst om te bewerken: sommige zijn gescande afbeeldingen en sommige geven hun tekst weer als vormen. Voer eerst OCR uit om ze bewerkbaar te maken."
 width = "Breedte"
 widthHint = "Tekst loopt opnieuw door om binnen de breedte te passen."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Tag toevoegen"
+applyToOtherPages_one = "Toepassen op {{count}} andere pagina"
+applyToOtherPages_other = "Toepassen op {{count}} andere pagina's"
+artifactGroup = "Overgeslagen door schermlezers"
 artifactText = "Decoratief"
 cannotChange = "De toegankelijkheid van deze afbeelding kan niet worden gewijzigd."
+cannotDescribeFormField = "De beschrijving van dit formulierveld kan niet worden gewijzigd."
+cannotDescribeLink = "De beschrijving van deze link kan niet worden gewijzigd."
 cannotRetag = "De tag van deze tekst kan niet worden gewijzigd."
+cannotSetDecorative = "Dit kan niet als decoratief worden gemarkeerd of gedemarkeerd."
+cannotTagFormField = "Dit formulierveld kan niet worden getagd."
+cannotTagLink = "Deze link kan niet worden getagd."
+cannotTagPage = "De inhoud van deze pagina kan niet worden getagd."
+contentGroup = "Content"
 customTag = "{{role}} (aangepaste tag)"
 decorativeInfo = "Schermlezers slaan decoratieve afbeeldingen over. Gebruik dit voor randen, achtergronden en andere afbeeldingen die geen informatie bevatten."
 decorativeLabel = "Decoratieve afbeelding"
 description = "Afbeeldingsbeschrijving"
 descriptionInfo = "Schermlezers lezen dit voor in plaats van de afbeelding."
 encrypted = "Tags kunnen niet worden bewerkt in een versleuteld bestand"
+figureDescription = "Figuurbeschrijving"
+figureDescriptionInfo = "Schermlezers lezen dit voor in plaats van de figuur."
+formFieldDescription = "Veldbeschrijving"
+formulaDescription = "Formulebeschrijving"
+formulaDescriptionInfo = "Schermlezers lezen dit voor in plaats van de formule. Beschrijf het zoals u het hardop zou zeggen, bijvoorbeeld \"x in het kwadraat plus één\"."
 heading = "Toegankelijkheid"
 innerTagLabel = "Tag {{number}}"
 innerTags = "Tags in deze tekst"
+linkDescription = "Linkbeschrijving"
+markedTagged = "Document is volledig getagd"
+markedTaggedHint = "Vertelt PDF-readers de toegankelijkheidstags te gebruiken. Vink dit aan zodra alles is getagd."
+markedWithUntagged = "Een deel van de content heeft geen tags, waardoor schermlezers dit mogelijk overslaan."
 missingDescriptions = "Ontbrekende beschrijvingen"
 mixedContent = "Figuur bevat andere inhoud"
+mixedTags = "Gemengd"
 needsDescriptionBadge = "Geen beschrijving"
-nextImage = "Volgende afbeelding"
+nextToReview = "Volgende te controleren"
 notFigure = "Getagd als onderdeel van de tekst"
 removeTag = "Tag verwijderen"
 saveFailed = "Je wijzigingen voor toegankelijkheid konden niet worden opgeslagen, dus het bestand is niet opgeslagen. Maak ze ongedaan en probeer het opnieuw."
 selectedText = "Geselecteerde tekst"
+tagFormField = "Formulierveld taggen"
+tagging = "Pagina's taggen"
 tagLabel = "Tag"
+tagLinks_one = "Link taggen"
+tagLinks_other = "{{count}} links taggen"
+tagUntagged = "Document automatisch taggen"
+tagUntaggedHint = "Voegt automatisch toegankelijkheidstags in het hele document toe. Het resultaat is grof: controleer daarna koppen, lijsten en leesvolgorde."
 unknownTag = "Kan hier niet worden gelezen"
+unmarkedWithTags = "Sommige PDF-viewers zullen de tags toch gebruiken en kunnen content zonder tags overslaan."
 unreadable = "De tags van dit bestand kunnen niet worden bewerkt"
 untaggableImages = "Kan hier niet worden getagd"
 untaggedBadge = "Niet getagd"
 untaggedDocument = "Document heeft geen tags"
 untaggedImage = "Kan hier niet worden getagd"
 untaggedImages = "Niet-getagde afbeeldingen"
+untaggedPages = "Te taggen pagina's"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Voettekst"
+header = "Koptekst"
+pageNumber = "Paginanummer"
+watermark = "Watermerk"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Kop zonder tekst"
@@ -7505,6 +7907,23 @@ tableHeader = "Tabelkopcel"
 tableRow = "Tabelrij"
 title = "Titel"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Alle talen"
+cannotSetDocument = "De taal van dit document kan niet worden gewijzigd."
+cannotSetText = "De taal van deze tekst kan niet worden gewijzigd."
+documentHint = "De taal die schermlezers gebruiken, tenzij een deel van de tekst zijn eigen taal instelt."
+documentLabel = "Taal"
+documentLocked = "De taal van een versleuteld document kan hier niet worden gewijzigd."
+inDocument = "In dit document"
+innerLabel = "Taal van tag {{number}}"
+label = "Taal"
+missing = "Geen taal ingesteld. Schermlezers zullen raden en kunnen het hele document met de verkeerde stem voorlezen."
+mixed = "Gemengd"
+noMatch = "Geen overeenkomende taal. Typ in plaats daarvan de code, zoals mt of en-IE."
+placeholder = "Taal selecteren"
+selectedText = "Taal van geselecteerde tekst"
+textHint = "Schermlezers schakelen stem en uitspraak naar deze taal."
+
 [pdfTextEditor.mobile]
 actions = "Editoracties"
 addImage = "Afbeelding"
@@ -7517,7 +7936,6 @@ done = "Gereed"
 download = "Opslaan en downloaden"
 find = "Zoeken"
 lock = "Vergrendelen"
-openPdf = "Een PDF openen"
 panelHint = "Bewerken gebeurt in de Workspace-weergave. Tik op tekst op de pagina om deze te wijzigen."
 save = "Opslaan"
 style = "Stijl"
@@ -7525,7 +7943,6 @@ tapToPlace = "Tik op de pagina waar de tekst moet komen"
 unlock = "Ontgrendelen"
 
 [pdfTextEditor.pageView]
-pageNumber = "Pagina {{page}}"
 renderFailed = "Pagina weergeven mislukt"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Verticale liniaal"
 
 [pdfTextEditor.run]
 lockedTitle = "Vergrendeld - gebruik de knop Ontgrendelen om te bewerken"
+readOnlyOrderTitle = "De tekst van deze regel kan niet worden bewerkt: hierin wordt rechts-naar-links- en links-naar-rechts-tekst gemengd in een volgorde die de editor niet veilig opnieuw kan tekenen"
+resizeHandle = "Sleep om de breedte te wijzigen; de tekst wordt opnieuw omgebroken"
 
 [pdfTextEditor.saveRisk]
 cancel = "Annuleren"
@@ -7548,6 +7967,35 @@ intro = "Het opslaan van de bewerkte kopie wijzigt het bestand. Dat betekent:"
 note = "Je bewerkingen blijven behouden. De hierboven genoemde wijzigingen zijn onvermijdelijk bij het opslaan van de bewerkte kopie."
 saveAnyway = "Toch opslaan"
 title = "Opslaan wijzigt deze PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "Bij benadering overeenkomend"
+approximateHint = "Het dichtstbijzijnde gevonden lettertype komt mogelijk niet exact overeen met de scan."
+change = "Ziet het lettertype er niet goed uit?"
+choose = "Kies een lettertype"
+chooseMissing = "Kies een lettertype voor deze tekst…"
+compare = "Lettertypen vergelijken…"
+deviceAllow = "Sta toegang tot lettertypen toe voor betere overeenstemming"
+deviceBlocked = "Uw browser zal niet opnieuw vragen. Klik links van de adresbalk op het pictogram, schakel Lettertypen in en probeer het opnieuw."
+deviceBlockedTitle = "Toegang tot lettertypen is geblokkeerd"
+deviceNone = "Geen van de gebruikelijke documentlettertypen is op deze computer geïnstalleerd."
+deviceNote = "Uw browser vraagt eerst om toestemming. Lettertypen blijven op dit apparaat."
+deviceOn_one = "Ook vergeleken met {{count}} lettertype op deze computer."
+deviceOn_other = "Ook vergeleken met {{count}} lettertypen op deze computer."
+deviceReading = "Lettertypen op deze computer lezen…"
+deviceRetry = "Opnieuw proberen"
+done = "Gereed"
+hint = "Uw typwerk wordt getekend in het dichtstbijzijnde gevonden lettertype. Kies een ander als dat meer op de scan lijkt."
+hintFromScan = "Uw typwerk is opgebouwd uit letters die in de scan zijn gevonden. Kies een lettertype om het in dat lettertype te tekenen."
+hintOthers = "Uw keuze wordt ook gebruikt voor gescande tekst die u nog niet hebt bewerkt."
+matching = "Overeenkomende lettertypen zoeken…"
+noFont = "Geen van de beschikbare lettertypen kan dit schrift weergeven, waardoor getypte tekst nog niet opnieuw kan worden getekend."
+scan = "Oorspronkelijke scan"
+scanAlt = "De gescande regel"
+scanNote = "Scans zien er vaak waziger of vetter uit dan het lettertype werkelijk is. Vergelijk lettervormen in plaats van dikte."
+score = "{{match}}% gelijkend"
+title = "Het gescande lettertype evenaren"
+unmeasurable = "Deze scan is te vaag of te klein om aan een lettertype te koppelen."
 
 [pdfTextEditor.settings]
 advanced = "Geavanceerd"
@@ -7564,7 +8012,6 @@ addTable = "Tabel toevoegen"
 addText = "Tekst toevoegen"
 clickPageToAddTable = "Klik op de pagina om een tabel toe te voegen"
 clickPageToAddText = "Klik op de pagina om tekst toe te voegen"
-document = "Document"
 group = "Groeperen"
 groupingAuto = "Automatisch"
 groupingAutoHint = "Groepeert regels met gelijke afstand in alinea's. Als je dit wijzigt, wordt het document opnieuw gelezen en wordt de geschiedenis voor ongedaan maken gewist."
@@ -7593,23 +8040,17 @@ auto = "Automatisch"
 enable = "Spelling controleren tijdens het typen"
 language = "Woordenboektaal"
 
-[pdfTextEditor.stage]
-loadingDocument = "Document laden"
-loadingProgress = "Laadvoortgang"
-noDocument = "Geen document geladen."
-pickPrompt = "Kies een PDF uit het Bestandenpaneel links om te beginnen met bewerken."
-renderingPreview = "Voorbeeld renderen"
-
 [pdfTextEditor.table]
 addColumn = "Kolom toevoegen"
 addRow = "Rij toevoegen"
+cellNoGlyphs = "Deze tekst bevat tekens die de lettertypen van de tabel niet kunnen weergeven. Wijzig of verwijder ze om de cel te vullen."
 column = "Kol"
 deleteColumn = "Kolom verwijderen"
 deleteRow = "Rij verwijderen"
 done = "Gereed"
 doneHint = "Stop met bewerken als tabel"
-edit = "Bewerken"
 editHint = "Bewerken als tabel - typ in cellen, voeg rijen en kolommen toe of verwijder ze"
+editTable = "Tabel bewerken"
 move = "Verplaatsen"
 moveTable = "Sleep om de hele tabel te verplaatsen"
 recognizedHint = "Herkende tabel - klik om alle tekst te selecteren"
@@ -7630,6 +8071,9 @@ alignMiddle = "Midden uitlijnen"
 alignRight = "Rechts uitlijnen"
 alignTop = "Boven uitlijnen"
 arrange = "Rangschikken"
+bold = "Vet"
+boldOnly = "Dit lettertype heeft alleen een vette versie"
+boldUnavailable = "Geen vette versie van dit lettertype"
 bringForward = "Naar voren brengen"
 bringToFront = "Naar voorgrond brengen"
 caseLower = "kleine letters"
@@ -7650,10 +8094,12 @@ fontColour = "Lettertypekleur"
 fontSize = "Lettergrootte"
 formatting = "Tekstopmaak"
 italic = "Cursief"
+italicOnly = "Dit lettertype heeft alleen een cursieve versie"
 italicUnavailable = "Dit lettertype heeft geen cursieve versie. Laad je apparaatlettertypen of kies een andere lettertypefamilie."
 lock = "Selectie vergrendelen"
 lockTooltip = "Selectie vergrendelen - voorkomt onbedoelde bewerkingen"
 more = "Meer acties"
+noBoldItalic = "Geen vette cursieve versie van dit lettertype"
 order = "Volgorde"
 outlineColour = "Omtrekkleur"
 outlineWidth = "Omtrekbreedte (0 = geen)"
@@ -7683,13 +8129,6 @@ title = "Variantie in voorbeeldweergave"
 [pdfTextEditor.tooltip.textFocus]
 text = "Deze werkruimte richt zich op het bewerken van tekst en het verplaatsen van ingesloten afbeeldingen. Complexe pagina-ontwerpen, formulierwidgets en gelaagde graphics worden behouden voor export, maar zijn hier niet volledig bewerkbaar."
 title = "Focus op Tekst en Afbeeldingen"
-
-[pdfTextEditor.zoom]
-fit = "Passend"
-fitToWidth = "Aan breedte aanpassen"
-in = "Inzoomen"
-out = "Uitzoomen"
-reset = "Zoom resetten naar 100%"
 
 [PDFToCSV]
 header = "PDF naar CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Wordt uitgevoerd bij importeren"
 [policies.enforcement]
 applying = "Bezig met toepassen van {{names}}"
 applyingProgress = "Bezig met toepassen van {{names}} ({{done}} van {{total}})"
-exportFailureBody = "Beveiligingsbeleid kon niet worden toegepast. Bestanden zijn ongewijzigd geëxporteerd."
-exportFailureTitle = "Geëxporteerd zonder afdwinging"
 failureBody = "Sommige beleidsregels konden niet worden toegepast op {{failures}} van {{total}} bestand(en)."
 failureTitle = "Geëxporteerd zonder volledige afdwinging"
 printPolicyAppliedBody = "Deze PDF is bijgewerkt om aan een beleid te voldoen. Controleer de wijzigingen en druk vervolgens opnieuw af."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Plaats een bericht in een Google Chat-ruimte wanneer een beleidsregel wordt uitgevoerd."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Een serviceaccount dat Google Drive voor de organisatie leest en schrijft."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Plak de JSON-sleutel van het serviceaccount uit Google Cloud. Deze wordt versleuteld en niet opnieuw getoond."
+label = "Serviceaccountsleutel (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Optioneel. Met domeinbrede delegatie, de gebruiker wiens Drive dit vertegenwoordigt (een speciale botgebruiker blijft werken wanneer mensen vertrekken). Leeg bereikt alleen gedeelde drives en mappen die met het serviceaccount zijn gedeeld."
+label = "Handelen als gebruiker"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Voeg verwerkte documenten toe als bijlage aan een Jira-issue."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "E-mail een document of melding wanneer een beleidsregel wordt uitgevoerd."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Vereist Microsoft Graph-toepassingsmachtigingen met beheerdersgoedkeuring."
+label = "Toepassing (client)-ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Clientgeheim"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Directory (tenant)-ID"
+placeholder = "contoso.onmicrosoft.com of tenant-GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "App-wachtwoord"
+
+[portal.connections.types.onedrive]
+description = "Lezen van en schrijven naar OneDrive voor Bedrijven van één gebruiker."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Van wie de OneDrive deze verbinding is. De app-registratie heeft de toepassingsmachtiging Files.ReadWrite.All nodig."
+label = "Eigenaar van OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Laat leeg als je in plaats daarvan met een private key authenticee
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Optioneel. Plak een OpenSSH private key om te authenticeren met een key in plaats van een wachtwoord."
 label = "Privésleutel"
+
+[portal.connections.types.sharepoint]
+description = "Lezen van en schrijven naar de documentbibliotheek van een SharePoint-site."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Optioneel. Laat leeg voor de standaardbibliotheek Documenten van de site."
+label = "Documentbibliotheek"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site-URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Plaats een bericht op Slack wanneer een beleidsregel een document verwerkt."
@@ -9142,6 +9624,126 @@ status = "Status"
 time = "Tijd"
 user = "Gebruiker"
 
+[portal.enterprise]
+backTo = "Terug naar {{stage}}"
+brandTag = "Enterprise"
+callInfo = "Een gesprek van 15 minuten. Neem uw vragen mee over prijzen, implementatie of beveiliging, of plan samen uw uitrol."
+callTitle = "Spreek met een Solutions Engineer"
+deployment = "Implementatie"
+footer = "Vragen over Stirling Enterprise?"
+home = "Ga naar Stirling"
+member = "Uw teamleider beheert de Enterprise-deal. Zodra deze start, kunt u de voortgang hier volgen."
+memberDeal = "Uw teamleider beheert deze deal. U kunt de voortgang hier volgen."
+quotePanel = "Uw offerte"
+signIn = "Aanmelden"
+signInToStart = "Meld u aan om uw proefperiode te starten"
+stage = "Fase {{current}} van {{total}}"
+stagesLabel = "Voortgang"
+
+[portal.enterprise.landing]
+lede = "Probeer het 14 dagen gratis, stel daarna uw offerte op en onderteken hier uw overeenkomst. Geen creditcard vereist."
+tickAgreement = "Eén overeenkomst die de MSA, het orderformulier, de EULA en de DPA omvat"
+tickCompliance = "SCIM, gegevensresidentie en uptime-SLA's"
+tickDeploy = "Draai het op Stirling Cloud, uw eigen servers of volledig air-gapped"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Offline licentiedocumentatie"
+point1 = "Geactiveerd met een licentiebestand dat offline werkt, geen online gecontroleerde sleutel"
+point2 = "Installatie zoals self-hosted, vanaf een image die u meeneemt"
+point3 = "Aanmelden blijft binnen uw netwerk"
+tagline = "Self-hosted op een netwerk zonder internettoegang."
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud-documentatie"
+point1 = "Uw team meldt zich aan op stirling.com/app"
+point2 = "Draait op AWS, met opgeslagen bestanden versleuteld in rust"
+point3 = "Single sign-on via uw eigen identity provider vereist self-hosting"
+tagline = "Gehost voor u, zonder iets te installeren."
+
+[portal.enterprise.options.selfhost]
+more = "Self-hostingdocumentatie"
+point1 = "Installeren met Docker, of de Helm-chart op Kubernetes"
+point2 = "Documenten worden op uw eigen infrastructuur verwerkt"
+point3 = "OAuth2, OIDC of SAML single sign-on"
+tagline = "Op uw eigen servers, on-premises of in uw eigen cloud."
+
+[portal.enterprise.review]
+back = "Terug naar {{stage}}"
+company = "Bedrijf"
+completed = "Voltooid"
+extensions = "Gebruikte extensies"
+paid = "Betaald. Uw factuur blijft hier beschikbaar."
+people = "Personen"
+started = "Gestart"
+trialEnds = "Einddatum proef"
+trialTitle = "Uw proef"
+version = "Versie"
+viewInvoice = "Factuur bekijken"
+
+[portal.enterprise.setup]
+copied = "Gekopieerd"
+copy = "Kopiëren"
+markDone = "“{{step}}” als gereed markeren"
+progress = "{{done}} van {{total}} gereed"
+subtitle = "Haal het meeste uit uw proef door het te proberen zoals u het gaat draaien."
+subtitleLive = "De stappen die u voltooit voordat u naar iedereen uitrolt."
+title = "Aan de slag"
+titleLive = "Go-live-checklist"
+
+[portal.enterprise.setup.firstDocument]
+body = "Upload een PDF waar uw team mee werkt en probeer de tools die u dagelijks gebruikt, zoals redigeren, comprimeren of OCR."
+title = "Voer uw eerste document uit"
+
+[portal.enterprise.setup.getApp]
+body = "Installeer de desktop-app voor Windows, Mac of Linux en meld u aan met het account dat u zojuist hebt gemaakt, of gebruik het direct in uw browser."
+title = "Stirling installeren"
+
+[portal.enterprise.setup.install]
+body = "Voer dit uit op uw server. Het start Stirling met uw licentie toegepast, en de image bevat OCR en office-conversie. Voor grotere teams gebruikt u Kubernetes."
+title = "Stirling installeren en starten"
+
+[portal.enterprise.setup.invite]
+body = "Nodig de mensen uit die het gaan gebruiken, zodat de proef echte werkzaamheden weerspiegelt."
+title = "Uw team uitnodigen"
+
+[portal.enterprise.setup.licence]
+body = "Open <code>http://your-server:8080/settings/adminPlan</code>, waar uw Enterprise-licentie als actief zou moeten worden weergegeven. Op een andere manier geïnstalleerd? Voeg de sleutel toe onder <code>premium.key</code> in <code>settings.yml</code> en start opnieuw."
+title = "Controleren of uw licentie actief is"
+
+[portal.enterprise.setup.links]
+browser = "Gebruik het in uw browser"
+docker = "Docker-handleiding"
+download = "Download de app"
+downloadForTeam = "De app voor uw team ophalen"
+downloading = "Downloaden..."
+downloadLicence = "Licentiebestand downloaden"
+invite = "Teamleden uitnodigen"
+kubernetes = "Kubernetes-handleiding"
+licence = "Licentie-activering"
+ocr = "OCR-talen"
+openApp = "Stirling openen"
+samlGuide = "SAML-handleiding"
+ssoGuide = "SSO-handleiding"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Trek de volledige image op een verbonden machine binnen, neem deze en het licentiebestand mee, en laad en start deze vervolgens. De volledige image voegt de lettertypen toe die een offline server niet kan downloaden."
+title = "Breng Stirling over en start het"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Een air-gapped server kan onze licentieservice niet bereiken, dus controleert deze in plaats daarvan dit ondertekende bestand. Bewaar het bij de image die u meeneemt."
+title = "Uw offline licentie downloaden"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Maak accounts aan op <code>/settings/people</code>, of wijs Stirling naar uw interne identity provider zodat aanmelden uw netwerk nooit verlaat."
+bodySelfHosted = "Maak accounts aan op <code>/settings/people</code>, of koppel uw identity provider zodat uw team zich met hun werkaccount aanmeldt. Zij gebruiken Stirling in de browser op het adres van uw server of in de desktop-app die daarop is gericht."
+title = "Uw mensen toevoegen"
+
+[portal.enterprise.setup.signIn]
+body = "Open <code>http://your-server:8080</code> en meld u aan met <code>admin</code> / <code>stirling</code>. U wordt direct gevraagd een nieuw wachtwoord te kiezen."
+bodyAirgap = "Open <code>http://your-server:8080</code> en meld u aan met <code>admin</code> / <code>stirling</code>, kies een nieuw wachtwoord en controleer vervolgens of <code>/settings/adminPlan</code> uw licentie als actief weergeeft."
+title = "Aanmelden als de admin"
+
 [portal.errorBoundary]
 description = "Deze weergave heeft een onverwachte fout aangetroffen. Probeer het opnieuw of kies een andere sectie in de zijbalk."
 retry = "Opnieuw proberen"
@@ -9293,6 +9895,7 @@ title = "Niets om te beoordelen"
 [portal.home.download]
 back = "Terug"
 body = "Download de desktop-app of host de server zelf."
+bodyDesktop = "Download de desktop-app en meld u vervolgens aan met uw Stirling-account."
 done = "Gereed"
 guide = "Open de {{name}}-gids"
 openInBrowser = "In plaats daarvan openen in browser"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "E-mailinvoer"
 
 [portal.procurement]
-subtitle = "Laat je team evalueren, contracteren en onboarden. Elk document op één plek."
 title = "Inkoop"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Kon de overeenkomst niet laden. Probeer het opnieuw."
 loading = "Overeenkomst laden..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "Wijzigingen aanvragen"
-scrollHint = "Scroll om te controleren"
 signatory = "Naam ondertekenaar"
 signatoryPlaceholder = "Volledige naam"
 signatoryTitle = "Functie van ondertekenaar"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "bijv. General Counsel"
 signError = "Kon je handtekening niet vastleggen. Probeer het opnieuw."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} eenmalig"
+addonPerYear = "+{{amount}}/jaar"
 addons = "Add-ons"
 addressLine1 = "Adresregel 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Adresregel 2"
 addressLine2Placeholder = "Suite, verdieping, gebouw"
 back = "Terug"
+belowMinimum = "Deze offerte ligt onder de minimumomvang voor een Enterprise-deal."
 businessName = "Bedrijfsnaam"
 businessNamePlaceholder = "Je bedrijf"
 city = "Plaats"
 cityPlaceholder = "San Francisco"
 completeRequired = "Vul de verplichte velden (gemarkeerd met *) in met een geldig e-mailadres voordat je de offerte genereert."
+conflict = "Deze deal is gewijzigd sinds u deze opende. Sluit de bouwer en laad de pagina opnieuw om de huidige status te zien."
 contactEmail = "E-mailadres contactpersoon"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Naam contactpersoon"
 contactNamePlaceholder = "Jane Doe"
 continue = "Doorgaan"
 done = "Gereed"
+editUsage = "Gebruik bewerken"
 eula = "Ik heb de Stirling Enterprise EULA gelezen en ga ermee akkoord. Deze is van toepassing op de overeenkomst die uit deze offerte wordt gegenereerd."
 generate = "Offerte genereren"
 indemnification = "Uitgebreide IP-bescherming"
 indemnificationSub = "Breidt onze IP-verdediging uit naar patentclaims. Basisvrijwaring voor copyright, handelsmerken en bedrijfsgeheimen is gratis inbegrepen."
+minimum = "Enterprise vereist een minimale jaarlijkse uitgave van {{min}}."
+minimumBelow = "Deze offerte komt uit op {{annual}} per jaar. Verwacht u meer te gebruiken, verhoog dan uw geschatte gebruik; anders past het Team-abonnement waarschijnlijk beter."
+minimumNear = "Enterprise vereist een minimale jaarlijkse uitgave van {{min}}. Verhoog uw geschatte gebruik om dit te bereiken, of bespreek het met ons."
+minimumNearTitle = "U komt {{gap}} per jaar tekort voor Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise-offerte"
 paperFor = "Opgesteld voor"
 pdfSize = "PDF-grootte"
@@ -10506,9 +11117,13 @@ posture_regulated = "Gereguleerd"
 posture_regulatedSub = "Elke categorie — Compliance, Bewaring, Ingestie"
 qbr = "Kwartaalreviews"
 qbrSub = "Je SE beoordeelt elk kwartaal gebruik en roadmap"
+raiseUsage = "Geschat gebruik verhogen"
 region = "Staat / regio"
 regionPlaceholder = "Californië"
-running = "{{annual}} / jaar · {{years}} jaar {{tcv}}"
+runningLabel = "Geschatte prijs"
+runningLabelIssued = "Geoffreerde prijs"
+runningOneYear = "{{annual}} per jaar"
+runningTotal = "{{tcv}} totaal over {{years}} jaar"
 s1Sub = "Je team en de PDFs die je elk jaar verwacht te verwerken."
 s1Title = "Hoeveel ga je verwerken?"
 s2Sub = "Langere looptijden geven korting op het tarief; je serviceniveau bepaalt de ondersteuning."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "bijv. 1.000.000"
 years_one = "{{count}} jaar"
 years_other = "{{count}} jaar"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}}-implementatie"
+indemnification = "IP-vrijwaring"
+multiYear_one = "Toezegging voor {{count}} jaar"
+multiYear_other = "Toezegging voor {{count}} jaar"
+qbr = "Kwartaalreviews"
+seats_one = "{{users}} overeengekomen gebruiker + SSO / RBAC / audit"
+seats_other = "{{users}} overeengekomen gebruikers + SSO / RBAC / audit"
+seatsUnset = "Gebruikers + SSO / RBAC / audit"
+support = "Toegewijde SE / CSM"
+training = "Onboarding & training"
+usage = "PDF-verwerking — {{volume}} PDF's/jaar à {{rate}}/PDF ({{posture}} automatisering)"
+
 [portal.procurement.documents]
 agreement = "Enterprise-overeenkomst"
 agreementSub = "MSA, orderformulier en DPA in één handtekening."
@@ -10557,6 +11185,8 @@ invoice = "Factuur"
 invoiceSub = "Je eerste abonnementsfactuur."
 laterInvoice = "Beschikbaar nadat je accepteert"
 laterQuote = "Beschikbaar zodra je offerte is uitgebracht"
+laterSigning = "Beschikbaar zodra de overeenkomst is ondertekend"
+laterTitle = "Later in uw deal"
 quote = "Offerte"
 quoteSub = "Je gespecificeerde enterprise-offerte."
 sla = "SLA-bijlage"
@@ -10573,15 +11203,12 @@ title = "Er is iets misgegaan"
 [portal.procurement.hero]
 barAria = "Fase {{current}} van {{total}}"
 ctaAgreement = "Overeenkomst controleren & ondertekenen"
-ctaExploring = "Je proefperiode instellen"
 ctaQuote = "Je offerte controleren"
 ctaReviewQuote = "Offerte bekijken"
 ctaTrial = "Je offerte samenstellen"
-documents = "Documenten"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Teamgenoten uitnodigen"
-licenseKey = "Licentiesleutel"
 liveSub = "Je organisatie is ingericht en je licentie is actief."
 liveTitle = "Je bent live op Stirling Enterprise"
 next = "Volgende: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Kon het offline licentiebestand nog niet genereren — probeer 
 downloadOffline = "Offline licentie downloaden (.lic)"
 hint = "Plak deze sleutel in een self-hosted instantie om deze te activeren, of bewaar hem voor je administratie. Bewaar hem veilig."
 label = "Je licentiesleutel"
-subtitle = "Activeer een self-hosted instantie met deze sleutel, of bewaar deze voor je administratie."
-title = "Je licentiesleutel"
 trialFileHint = "Dit is je proeflicentiebestand. Zodra je overeenkomst rond is, kom je terug en download je het opnieuw — anders dan de online licentiesleutel wordt het .lic-bestand niet vanzelf bijgewerkt."
-
-[portal.procurement.link]
-cta = "Account koppelen"
-description = "Inkoop draait op je gekoppelde Stirling-account: zo richten we de trial in, bepalen we de prijs van je offerte en starten we de facturatie. Koppel een account om te beginnen."
-eyebrow = "Enterprise"
-title = "Koppel je account om te beginnen"
 
 [portal.procurement.live]
 description = "Je abonnement is actief en je licentie is uitgegeven. Je team is ingericht en de facturatie is gestart."
-eyebrow = "Live"
 title = "Je bent live op Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Kon de offerte-PDF nog niet downloaden — probeer het over enk
 
 [portal.procurement.payment]
 description = "Je offerte is geaccepteerd en je licentie is al actief — je team kan meteen beginnen. Betaal de eerste factuur wanneer je er klaar voor bent; je kunt deze hier betalen of downloaden, geen e-mail nodig."
-downloadAgreement = "Ondertekende overeenkomst downloaden"
 downloadInvoice = "Factuur downloaden"
-eyebrow = "Betaling"
-title = "Abonnement aangemaakt"
 viewInvoice = "Factuur bekijken & betalen"
 
 [portal.procurement.review]
 acceptCta = "Offerte accepteren"
 annual = "Jaarlijkse vergoeding (jaar 1)"
 downloadCta = "Offerte downloaden"
+oneTime = "eenmalig"
 poNumber = "Inkooporder: {{po}}"
 renewal = "Verlengt tegen {{amount}}/jaar na de looptijd (+{{pct}}% CPI)"
 tcv = "Looptijd van {{years}} jaar, volledig vooraf betaald: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Verlengen voegt 7 dagen toe en stelt je solutions engineer op de hoogte."
 bodyMaxed = "Je hebt al je verlengingen gebruikt — neem contact op met je solutions engineer als je meer tijd nodig hebt."
-cancel = "Trial annuleren"
 extend = "7 dagen verlengen"
 maxed = "Maximum bereikt"
 subtitle = "Je gratis trial loopt tot en met {{date}}. Geen kaart vereist."
 title = "Enterprise-trial"
+
+[portal.procurement.validation]
+confirm = "Bevestig dat u gemachtigd bent om voor de organisatie te ondertekenen."
+email = "Voer een geldig e-mailadres in."
+eula = "Ga akkoord met de EULA om door te gaan."
+required = "Dit veld is verplicht."
+seats = "Voer in hoeveel mensen het gaan uitproberen."
+volume = "Voer in hoeveel PDF's u per jaar verwacht te verwerken."
 
 [portal.review]
 subtitle = "Alles uit je beleidsuitvoeringen en de editors van je team dat je aandacht nodig heeft."
@@ -10735,6 +11358,7 @@ subtitle = "Herbruikbare invoerverbindingen die documenten naar Stirling voeren.
 title = "Bronnen"
 
 [portal.sources.actions]
+connectDestination = "Doel verbinden"
 connectSource = "Bron verbinden"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Kies waar verwerkte documenten naartoe gaan. Grijs weergegev
 comingSoon = "Binnenkort beschikbaar"
 comingSoonHeading = "Binnenkort beschikbaar"
 create = "Bron maken"
+createDestination = "Doel maken"
+createDestinationTitle = "Een doel toevoegen"
 createTitle = "Een bron verbinden"
 delete = "Verwijderen"
 editTitle = "Bron bewerken"
@@ -10757,6 +11383,41 @@ save = "Wijzigingen opslaan"
 description = "Mapautomatiseringen kunnen alleen mappen gebruiken die een beheerder heeft toegestaan. Voeg deze toe onder instellingen voor Maptoegang en probeer het daarna opnieuw."
 openSettings = "Instellingen voor Maptoegang"
 title = "Deze map is niet toegestaan"
+
+[portal.sources.cloudFields.account]
+connect = "Uw account verbinden"
+connectAnother = "Nog een account verbinden"
+connectFailed = "Het account kon niet worden verbonden. Probeer het opnieuw, of vraag uw beheerder de app-registratie te controleren."
+label = "Account"
+placeholder = "Kies een account"
+reconnect = "opnieuw aanmelden"
+unavailable = "Het verbinden van uw eigen account is op deze server uitgeschakeld. Kies in plaats daarvan een organisatieverbinding."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Persoonlijke accounts zijn uitgeschakeld op deze server."
+helperText = "Uw account bereikt wat u kunt openen en heeft geen admin nodig. Een organisatieverbinding blijft werken wanneer mensen vertrekken en bereikt alleen wat een admin heeft ingesteld."
+label = "Aanmelden als"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Mijn account"
+organisation = "Organisatieverbinding"
+
+[portal.sources.cloudFields.connection]
+helperText = "Ingesteld door een beheerder onder Integrations. Gedeeld door elke locatie die het gebruikt."
+label = "Organisatieverbinding"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Plak de koppeling van de map of typ een pad vanaf de bovenste laag van Mijn Drive. Laat leeg voor de bovenste laag van Mijn Drive. De map moet al bestaan."
+placeholder = "Mapkoppeling of Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Een map in uw OneDrive, of plak een mapkoppeling (Koppeling kopiëren in OneDrive). Laat leeg voor de bovenste laag van OneDrive. De map moet al bestaan."
+placeholder = "Scans/Inbox of een mapkoppeling"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Met uw account: plak de koppeling naar de map (Koppeling kopiëren in SharePoint). Met een organisatieverbinding: een map binnen de bibliotheek; laat leeg voor de hoofdmap van de bibliotheek. De map moet al bestaan."
+organisationPlaceholder = "Mapkoppeling of Scans/Inbox"
+placeholder = "Mapkoppeling"
 
 [portal.sources.delete]
 body = "\"{{name}}\" verwijderen? Dit kan niet ongedaan worden gemaakt. Beleidsregels die ernaar verwijzen moeten worden bijgewerkt."
@@ -10821,6 +11482,7 @@ label = "E-mailinbox"
 [portal.sources.types.folder]
 description = "Bewaak een directory op de server voor nieuwe documenten."
 label = "Map"
+outputDescription = "Resultaten opslaan in een map op de server."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Het absolute pad naar de map die op nieuwe bestanden moet worden gemonitord."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Haal documenten op uit gedeelde Google Drive-mappen."
 label = "Google Drive"
+outputDescription = "Resultaten opslaan in een Google Drive-map."
 
 [portal.sources.types.network]
 description = "Bewaak een SMB-netwerkshare op nieuwe documenten."
@@ -10867,10 +11530,12 @@ label = "Netwerkdrive"
 [portal.sources.types.onedrive]
 description = "Bewaak OneDrive-mappen op nieuwe documenten."
 label = "OneDrive"
+outputDescription = "Resultaten opslaan in een OneDrive-map."
 
 [portal.sources.types.s3]
 description = "Haal documenten op uit een Amazon S3- of S3-compatibele bucket."
 label = "Amazon S3"
+outputDescription = "Resultaten opslaan in een Amazon S3- of S3-compatibele bucket."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "De opgeslagen verbinding met de bucket en inloggegevens. Gedeeld door elke bron en pipeline-uitvoer die deze gebruikt."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Haal documenten op uit SharePoint-documentbibliotheken."
 label = "SharePoint"
+outputDescription = "Resultaten opslaan in een map van een SharePoint-documentbibliotheek."
 
 [portal.sources.types.unknown]
 label = "Bron"
@@ -11074,6 +11740,14 @@ waiting = "In wachtrij ..."
 name = "Google Drive"
 scope = "Bestandsimport"
 
+[provider.googledrive.accountScope]
+description = "drive bereikt elk bestand (Google moet een openbare app daarvoor verifiëren); drive.file alleen bestanden die mensen selecteren of die Stirling aanmaakt"
+label = "Drive-toegang"
+
+[provider.googledrive.allowAccountConnections]
+description = "Eén aanmelding voor de bewerker en hun pipelines. Schakel uit om alleen organisatieverbindingen toe te staan."
+label = "Mensen hun eigen account laten koppelen toestaan"
+
 [provider.googledrive.apiKey]
 description = "Google API-sleutel voor Google Picker API van Google Cloud Console"
 label = "API-sleutel"
@@ -11086,13 +11760,65 @@ label = "App-ID"
 description = "Google OAuth 2.0 Client-ID van Google Cloud Console"
 label = "Client-ID"
 
+[provider.googledrive.clientSecret]
+description = "Laat mensen hun Google-account koppelen voor hun pipelines. Voeg de Redirect-URI hieronder toe als geautoriseerde Redirect-URI van de OAuth-client."
+label = "Clientgeheim"
+
 [provider.googledrive.enabled]
 description = "Sta gebruikers toe om bestanden rechtstreeks vanaf Google Drive te importeren"
 label = "Google Drive-bestandskiezer inschakelen"
 
 [provider.googledrive.errors]
+connectFailed = "Kan uw Google-account niet koppelen. Probeer het opnieuw via Instellingen > Gekoppelde accounts."
 notConfigured = "Google Drive is niet geconfigureerd"
 pickerFailed = "Google Drive-picker openen mislukt"
+
+[provider.googledrive.redirectUri]
+description = "Voeg dit toe als geautoriseerde Redirect-URI van de OAuth-client in Google Cloud Console."
+label = "Redirect-URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Bestanden en pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "Eén aanmelding voor de bewerker en hun pipelines. Schakel uit om alleen organisatieverbindingen toe te staan."
+label = "Mensen hun eigen account laten koppelen toestaan"
+
+[provider.microsoft.allowEditorSaves]
+description = "Schakel uit om bewerkingen in Stirling te houden: bestanden die vanuit OneDrive zijn geopend worden dan in plaats daarvan gedownload, en de server weigert opslaan in OneDrive."
+label = "Sta de editor toe om terug op te slaan in OneDrive"
+
+[provider.microsoft.clientId]
+description = "Van één Microsoft Entra-appregistratie."
+label = "Toepassings-ID (client)"
+
+[provider.microsoft.clientSecret]
+description = "Nodig voor gekoppelde accounts. Blijft op de server."
+label = "Clientgeheim"
+
+[provider.microsoft.enabled]
+description = "Mensen OneDrive en SharePoint in pipelines laten gebruiken"
+label = "OneDrive & SharePoint inschakelen"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Voeg dit toe als een Single-page application-omleidings-URI bij dezelfde app-registratie, voor aanmelden vanuit de editor."
+label = "Single-page application-omleidings-URI"
+
+[provider.microsoft.redirectUri]
+description = "Voeg dit toe als een Web Redirect-URI bij de Entra-appregistratie."
+label = "Redirect-URI"
+
+[provider.microsoft.setupSteps]
+connect = "Sla op, start opnieuw, en koppel vervolgens een account onder Gekoppelde accounts."
+permissions = "Voeg de Microsoft Graph gedelegeerde machtigingen Files.ReadWrite.All en Files.Read.All toe, en de SharePoint gedelegeerde machtigingen MyFiles.Read en AllSites.Read zodat werk- en schoolaccounts de bestandskiezer kunnen openen."
+redirects = "Voeg hieronder de twee omleidings-URI's toe: één als Web, één als Single-page application."
+register = "Registreer een app in het Microsoft Entra-beheercentrum. Sta persoonlijke Microsoft-accounts toe als mensen persoonlijke OneDrive gebruiken."
+secret = "Maak een clientgeheim aan en plak vervolgens de waarde en de client-ID van de app hieronder."
+
+[provider.microsoft.tenant]
+description = "common voor werk-, school- en persoonlijke accounts; organizations voor alleen werk en school; of een tenant-ID om één organisatie toe te laten"
+label = "Directory- (tenant-)ID"
 
 [provider.oauth2.generic]
 name = "Generieke OAuth2"
@@ -11195,6 +11921,19 @@ label = "Scopes"
 description = "Veld om als gebruikersnaam te gebruiken (email, name, given_name, family_name, preferred_username)"
 label = "Gebruiken als gebruikersnaam"
 
+[provider.onedrive]
+pickerLoading = "Bezig met verbinden met OneDrive..."
+pickerTitle = "Bestanden kiezen uit OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Kan uw Microsoft-account niet koppelen. Probeer het opnieuw via Instellingen > Gekoppelde accounts."
+notConfigured = "OneDrive is niet geconfigureerd"
+pickerFailed = "OneDrive openen is mislukt"
+popupBlocked = "Uw browser blokkeerde het Microsoft-aanmeldvenster. Sta pop-ups toe voor deze site en probeer het opnieuw."
+reconnect = "U moet zich opnieuw aanmelden met uw Microsoft-account. Verbind het opnieuw via Instellingen > Gekoppelde accounts."
+serverError = "Er was een probleem met OneDrive of de Stirling-server. Probeer het opnieuw, of vraag uw beheerder als dit blijft gebeuren."
+unreachable = "Kan OneDrive niet bereiken. Controleer uw verbinding en probeer het opnieuw."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Meldingen"
 processor = "Processor"
 reader = "Reader"
 signInToUse = "Log in om dit te gebruiken"
+
+[quickNav.accountMenu]
+localMode = "Lokale modus"
+server = "Serverinstellingen"
+settings = "Instellingen"
+signedOut = "Niet aangemeld"
+signIn = "Aanmelden"
 
 [read]
 tags = "bekijken,openen,weergeven,lezen,viewer,PDF viewer,PDF reader,PDF openen,PDF bekijken,PDF weergeven,voorbeeld,browsen"
@@ -11811,6 +12557,13 @@ title = "PDF opschonen"
 [sanitizePdf]
 tags = "schoonmaken,veilig,veilig,bedreigingen verwijderen"
 
+[saveFile.menu]
+more = "Meer opslagopties"
+saveCopy = "Een kopie opslaan..."
+
+[saveFile.toolbar]
+mixed = "Alles opslaan"
+
 [scalePages]
 tags = "formaat wijzigen,aanpassen,schalen,paginaformaat,paginaformaat wijzigen,pagina schalen,grootte wijzigen,grootte aanpassen,vergroten,pagina verkleinen,aan pagina aanpassen,A4,letter size"
 title = "Pagina-schaal aanpassen"
@@ -11905,6 +12658,162 @@ showTools = "Niet-beschikbare tools bekijken ▾"
 title = "Je Stirling-PDF-server is onbereikbaar"
 toolNotAvailableLocally = "Je Stirling-PDF-server is offline en \"{{endpoint}}\" is niet beschikbaar op de lokale backend."
 
+[serverSetup]
+back = "Terug"
+collapse = "Instellingen voor {{setting}} verbergen"
+configured = "Geconfigureerd"
+continue = "Doorgaan"
+dialogLabel = "Serverconfiguratie"
+expand = "Instellingen voor {{setting}} tonen"
+finishSetup = "Configuratie voltooien"
+loadErrorSubtitle = "De configuratie heeft de huidige serverinstellingen nodig om te starten."
+loadErrorTitle = "Kan uw instellingen niet laden"
+off = "Uit"
+on = "Aan"
+save = "Opslaan"
+stepCount = "{{current}} van {{total}}"
+
+[serverSetup.account]
+failed = "Uw gegevens konden niet worden opgeslagen. Controleer of de server bereikbaar is en probeer het opnieuw."
+save = "Opslaan en doorgaan"
+signIn = "Aanmelden"
+signInAgainSubtitle = "Meld u opnieuw aan met uw nieuwe gebruikersnaam en wachtwoord om door te gaan."
+signInAgainTitle = "Uw gegevens zijn opgeslagen"
+subtitle = "Kies hoe u zich vanaf nu aanmeldt."
+title = "Uw account instellen"
+updating = "Bijwerken"
+updatingSubtitle = "Een ogenblik."
+updatingTitle = "Uw gegevens bijwerken"
+username = "Gebruikersnaam"
+usernameHelp = "Waarmee u zich aanmeldt. Een e‑mailadres kan ook."
+
+[serverSetup.addresses]
+backendUrl = "Serveradres"
+backendUrlHelp = "Waar aanmeldproviders mensen naartoe terugsturen. Meestal hetzelfde als het webadres."
+frontendUrl = "Webadres"
+frontendUrlHelp = "Waar mensen Stirling PDF openen. Gebruikt in e‑mails, deelkoppelingen en QR-codes."
+subtitle = "Hoe mensen en aanmeldproviders deze server bereiken."
+title = "Adressen"
+
+[serverSetup.ai]
+apiKey = "API-sleutel"
+apiKeyHelp = "Laat leeg om de sleutel te gebruiken die de AI-engine al heeft."
+baseUrl = "Basis-URL"
+engineUrl = "AI-engine-adres"
+fastModel = "Snel model"
+label = "Zelfgehoste AI"
+provider = "Modelprovider"
+providerCustom = "OpenAI-compatibel"
+smartModel = "Volledig model"
+stirling = "Stirling AI"
+subtitle = "Vragen over documenten, geautomatiseerde bewerkingen en AI-agenten."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Accepteren en doorgaan"
+acceptFinish = "Accepteren en voltooien"
+changeLater = "U kunt dit op elk moment wijzigen in {{path}}."
+decline = "Weigeren en doorgaan"
+declineFinish = "Weigeren en voltooien"
+learnMore = "Wat we verzamelen"
+note = "Deel gebruiksgegevens van deze server met ons om Stirling PDF te verbeteren. We verzamelen nooit bestanden of hun inhoud."
+title = "Serveranalyse"
+
+[serverSetup.documents]
+label = "Vragen over documenten"
+model = "Embeddingmodel"
+provider = "Embeddingprovider"
+providerHelp = "Zet documenttekst om in de zoekindex die vragen beantwoordt."
+
+[serverSetup.email]
+from = "Afzenderadres"
+host = "SMTP-host"
+label = "E-mail verzenden"
+password = "Wachtwoord"
+port = "Poort"
+subtitle = "Voor uitnodigingen, ondertekeningsverzoeken en gedeelde items."
+title = "E-mail"
+username = "Gebruikersnaam"
+
+[serverSetup.error]
+email = "Voer een e‑mailadres in"
+issuerUnreachable = "Kon deze issuer niet bereiken. Controleer het adres en of deze server deze kan bereiken."
+passwordIncorrect = "Onjuist wachtwoord"
+passwordLength = "Gebruik minimaal 8 tekens"
+passwordMismatch = "Wachtwoorden komen niet overeen"
+passwordRejected = "De server heeft dit wachtwoord niet geaccepteerd. Probeer een ander."
+passwordUnchanged = "Kies een ander wachtwoord dan het huidige"
+port = "Voer een poort in van 1 tot 65535"
+providerName = "Gebruik alleen letters, cijfers, koppeltekens of underscores"
+required = "Vereist"
+url = "Voer een volledig adres in dat begint met http:// of https://"
+username = "Gebruik 3 tot 50 letters, cijfers of . _ + - @, of een e‑mailadres"
+usernameTaken = "Die gebruikersnaam is al in gebruik"
+
+[serverSetup.files]
+sharing = "Bestanden delen"
+sharingOffWarning = "Als delen is uitgeschakeld, werken bestaande deellinks niet meer."
+storage = "Bestanden opslaan"
+storageOffWarning = "Als opslag is uitgeschakeld, kunnen op de server opgeslagen bestanden niet meer worden geopend."
+subtitle = "Bestandsopslag en delen beheren."
+title = "Bestanden"
+
+[serverSetup.finish]
+errorNote = "Controleer of de server bereikbaar is en of u nog steeds bent aangemeld als beheerder."
+errorSubtitle = "Niets is opnieuw opgestart."
+errorTitle = "Kan uw instellingen niet opslaan"
+manualSubtitle = "Deze server kan zichzelf niet opnieuw opstarten. Start de container of service opnieuw om ze toe te passen."
+manualTitle = "Instellingen opgeslagen"
+restartFailedSubtitle = "De server is niet opnieuw opgestart. Start de container of service opnieuw om ze toe te passen."
+restartingSubtitle = "Deze pagina wordt herladen zodra hij terug is, meestal binnen een minuut."
+restartingTitle = "Uw server wordt opnieuw opgestart"
+retry = "Opnieuw proberen"
+saving = "Opslaan"
+savingSubtitle = "Een ogenblik."
+savingTitle = "Uw instellingen opslaan"
+
+[serverSetup.language]
+auto = "Afstemmen op elke browser"
+label = "Standaardtaal"
+subtitle = "Wat nieuwe bezoekers als eerste zien."
+title = "Taal"
+
+[serverSetup.mcp]
+label = "MCP-server"
+
+[serverSetup.password]
+confirm = "Nieuw wachtwoord bevestigen"
+current = "Huidig wachtwoord"
+new = "Nieuw wachtwoord"
+
+[serverSetup.signIn]
+clientId = "Client-ID"
+clientSecret = "Clientgeheim"
+issuer = "Issuer-URL"
+label = "Aanmelden met"
+oidc = "Andere OpenID Connect"
+password = "Gebruikersnaam en wachtwoord"
+providerName = "Naam van de provider"
+providerNameHelp = "Weergegeven op de aanmeldknop, bijvoorbeeld okta of entra."
+redirectNote = "Voeg deze Redirect-URI toe in uw provider:"
+subtitle = "Hoe uw team zich aanmeldt."
+title = "Aanmelden"
+
+[serverSetup.signingIn]
+button = "Aanmelden"
+title = "Aanmelden met standaardaanmeldgegevens"
+
+[serverSetup.start]
+custom = "Aangepast"
+quick = "Snelstart"
+setupLabel = "Instellen"
+subtitle = "Stel het in voor uw team in een paar stappen."
+title = "Uw server is actief"
+
+[serverSetup.summary]
+subtitle = "Controleer de belangrijkste punten. Al het andere behoudt de standaardinstelling."
+title = "Snelstart"
+
 [session]
 expired = "Uw sessie is verlopen. Voer de pagina opnieuw in en probeer het opnieuw."
 
@@ -11939,6 +12848,10 @@ mcp = "MCP-server"
 privacy = "Privacy"
 storageSharing = "Bestandsopslag en delen"
 systemSettings = "Systeeminstellingen"
+
+[settings.connectedAccounts]
+description = "Uw eigen OneDrive, SharePoint en Google Drive, voor uw pipelines."
+title = "Verbonden accounts"
 
 [settings.connectedInstances]
 confirmBody = "Dit trekt de toegang van de instantie tot je team in Stirling Cloud in. Lokale bestanden worden niet verwijderd en al geregistreerd gebruik wordt niet verwijderd. Volg de oorspronkelijke koppelingsstappen op de instantie om opnieuw te koppelen."
@@ -11992,6 +12905,13 @@ selfhosted = "Self-hosted"
 apiKeys = "API-sleutels"
 apiKeysDescription = "Persoonlijke sleutels om de Stirling API aan te roepen vanuit scripts en integraties."
 title = "Ontwikkelaar"
+
+[settings.feedback]
+label = "Feedback"
+
+[settings.feedback.send]
+description = "Meld een probleem of stel een verbetering voor aan het Stirling-team."
+label = "Feedback versturen"
 
 [settings.general]
 autoUnzip = "API-antwoorden automatisch uitpakken"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Op updates controleren"
 currentBackendVersion = "Huidige backendversie"
 currentFrontendVersion = "Huidige frontendversie"
 description = "Controleer op updates en bekijk versie-informatie"
+descriptionManaged = "Versie-informatie bekijken"
 latestVersion = "Laatste versie"
 managedByAdmin = "Beheerd door beheerder"
 modeAuto = "Updates automatisch installeren"
@@ -12135,15 +13056,24 @@ title = "Juridische documenten"
 backendDescription = "Licenties voor backend-afhankelijkheden die met deze server zijn gebundeld."
 backendLabel = "Backend-licenties"
 backendTitle = "Backend-licenties van derden"
+clearSearch = "Zoekopdracht wissen"
 empty = "Geen afhankelijkheden gevonden."
 frontendDescription = "Licenties voor frontend-afhankelijkheden die in de release-build zijn gebundeld."
 frontendLabel = "Frontend-licenties"
 frontendTitle = "Frontend-licenties van derden"
 license = "Licentie"
+licenseAbout = "Over"
+licenseAboutCompound = "Over {{short}}"
+licenseAboutTitle = "Over {{short}}"
 listDescription = "De lijst wordt rechtstreeks in de UI getoond vanuit de release-bundel of backend-endpoint."
 listTitle = "Gebundelde afhankelijkheden"
 loadError = "Laden van licenties van derden mislukt"
 module = "Module"
+noMatch = "Geen overeenkomende afhankelijkheden."
+searchPlaceholder = "Afhankelijkheden zoeken"
+showingCount = "{{count}} afhankelijkheden"
+showingCount_one = "{{count}} afhankelijkheid"
+showingCount_other = "{{count}} afhankelijkheden"
 version = "Versie"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Vul uw e-mailadres in"
 emptyPassword = "Vul uw wachtwoord in"
 emptyUsername = "Vul uw gebruikersnaam in"
 oauthFailed = "OAuth-login mislukt. Probeer het opnieuw."
+openResetFailed = "Kon uw browser niet openen om uw wachtwoord opnieuw in te stellen."
 
 [setup.saas]
 title = "Inloggen bij Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "Onzichtbare handtekeningen bieden nog steeds cryptografische validati
 description = "Bepaalt of de handtekening zichtbaar is op het document of onzichtbaar wordt ingesloten."
 title = "Zichtbaarheid van handtekening"
 
+[signedPdf]
+editsBlocked = "Deze PDF is digitaal ondertekend en wijzigingen aan ondertekende PDF's zijn uitgeschakeld. U kunt het nog wel bekijken of afdrukken, naar een ander formaat converteren of opnieuw ondertekenen."
+editsBlockedStatus = "Ondertekend: bewerkingen geblokkeerd"
+editsBlockedTitle = "Ondertekende PDF kan niet worden gewijzigd"
+
 [signingDetail]
 allSigned = "Iedereen heeft ondertekend. Controleer het document en rond het daarna af."
 awaitingOwner = "De eigenaar rondt het document af zodra die klaar is."
@@ -13110,7 +14046,6 @@ noLinks = "Nog geen actieve deellinks."
 noSharedUsers = "Nog geen gebruikers met toegang."
 openInApp = "Openen in Stirling PDF"
 ownerLabel = "Eigenaar"
-ownerUnknown = "Onbekend"
 removeLink = "Link verwijderen"
 removeUser = "Verwijderen"
 requiresLogin = "Dit gedeelde bestand vereist inloggen."
@@ -13249,6 +14184,11 @@ remove = "Verwijderen"
 roleColumn = "Rol"
 title = "Teamleden"
 
+[teamWelcome]
+invite = "Mensen uitnodigen"
+message = "Nodig uw team uit zodat ze met u aan de slag kunnen."
+title = "Uw Team-abonnement is actief."
+
 [textAlign]
 center = "Gecentreerd"
 left = "Links"
@@ -13290,7 +14230,6 @@ toggleDetails = "Details tonen/verbergen"
 
 [tool]
 endpointUnavailable = "Deze tool is niet beschikbaar op je server."
-endpointUnavailableClickable = "Niet beschikbaar in deze modus. Klik om in te loggen."
 filesLoading = "Bestanden worden nog geladen, even geduld."
 filesLoadingProgress = "{{loaded}} / {{total}} bestanden worden geladen..."
 invalidParams = "Vul de vereiste instellingen in."
@@ -13298,6 +14237,8 @@ noFiles = "Voeg een bestand toe om te beginnen."
 scopeFiles = "bestanden"
 scopeThisFile = "dit bestand"
 selectFilesHint = "Selecteer bestanden in Actieve bestanden om deze tool uit te voeren"
+signInRequired = "Hiervoor is een Stirling-account nodig. Meld u aan om door te gaan."
+signInToUse = "Meld u aan om te gebruiken"
 singleFileScope = "Alleen van toepassing op: {{fileName}}"
 viewerMode = "Schakel over naar de bestandseditor om meerdere bestanden toe te voegen."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Voorblad afzonderlijk weergeven"
 disableColorFilter = "Kleurfilter uitschakelen"
 documentUpdated = "Document bijgewerkt"
 dualPageView = "Dubbele paginaweergave"
+editText = "Tekst bewerken"
 enableDarkFilter = "Donkerfilter inschakelen"
 enableSepiaFilter = "Sepiafilter inschakelen"
 engineLoadError = "Kan PDF-viewerengine niet initialiseren"
@@ -14158,8 +15100,10 @@ closeAll = "Alle bestanden sluiten"
 closePdf = "PDF sluiten"
 deselectAll = "Alles deselecteren"
 downloadAll = "Alles downloaden"
+editText = "Tekst bewerken"
 exitAnnotations = "Annotatiemodus verlaten"
 exitRedaction = "Zwartlakmodus afsluiten"
+findReplace = "Zoeken en vervangen"
 formFill = "Formuliereditor"
 hideToolbar = "Toolbar verbergen"
 moreActions = "Meer acties"
