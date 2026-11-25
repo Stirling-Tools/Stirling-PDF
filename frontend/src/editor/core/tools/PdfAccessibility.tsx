@@ -186,9 +186,9 @@ interface CheckedReport {
 }
 
 /**
- * Whether the selection is the new versions of the one before it and no check
- * has started since: true straight after a save, false once the user picks
- * other files or a check runs.
+ * Whether the selection is the new versions of the one before it, which they
+ * replaced, and no check has started since: true straight after a save, false
+ * once the user picks other files or a check runs.
  */
 function useSelectionReplacedBySave(
   selectedFiles: readonly StirlingFile[],
@@ -224,7 +224,13 @@ function useSelectionReplacedBySave(
     const parent = fileStubs.find(
       (stub) => stub.id === file.fileId,
     )?.parentFileId;
-    return parent !== undefined && seen.before.has(parent);
+    // A save replaces the file it came from; switching to a version while its
+    // original is still open is a new selection.
+    return (
+      parent !== undefined &&
+      seen.before.has(parent) &&
+      !fileStubs.some((stub) => stub.id === parent)
+    );
   });
 }
 
