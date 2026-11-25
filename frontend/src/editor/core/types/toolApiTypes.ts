@@ -1411,12 +1411,12 @@ export type SecurityRemoveCertSignRequest = Record<string, never>;
 export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
-   * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
+   * The alias of the certificate to sign with. Required for WINDOWS_STORE and MACOS_KEYCHAIN, and recommended for PKCS11 tokens holding multiple certificates.
    */
   alias?: string;
   certFile?: File;
   /**
-   * SERVER: this server's own certificate, no file or password. Signer shown is the server's organisation, not the user; self-signed by default, so other PDF readers may show it unverified. PEM needs certFile+privateKeyFile, PKCS12/PFX p12File, JKS jksFile. WINDOWS_STORE/PKCS11: desktop app only.
+   * SERVER: this server's own certificate, no file or password. Signer shown is the server's organisation, not the user; self-signed by default, so other PDF readers may show it unverified. PEM needs certFile+privateKeyFile, PKCS12/PFX p12File, JKS jksFile. WINDOWS_STORE/MACOS_KEYCHAIN/PKCS11: desktop app only.
    */
   certType:
     | "SERVER"
@@ -1425,6 +1425,7 @@ export interface SignPDFWithCertRequest {
     | "PFX"
     | "JKS"
     | "WINDOWS_STORE"
+    | "MACOS_KEYCHAIN"
     | "PKCS11";
   jksFile?: File;
   /**
@@ -1441,7 +1442,7 @@ export interface SignPDFWithCertRequest {
    */
   pageNumber?: number;
   /**
-   * Password for the PKCS12/PFX or JKS keystore or an encrypted PEM key, or the PKCS11 token PIN. Leave empty if the key has none. Not needed for SERVER or WINDOWS_STORE.
+   * Password for the PKCS12/PFX or JKS keystore or an encrypted PEM key, or the PKCS11 token PIN. Leave empty if the key has none. Not needed for SERVER, WINDOWS_STORE or MACOS_KEYCHAIN.
    */
   password?: string;
   /**
