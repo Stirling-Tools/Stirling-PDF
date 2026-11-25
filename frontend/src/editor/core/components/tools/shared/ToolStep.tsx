@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { Text, Stack, Flex, Divider } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/components/shared/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { TooltipTip } from "@editor/types/tips";
 import {
   createFilesToolStep,
@@ -49,24 +49,19 @@ const renderTooltipTitle = (
 ) => {
   if (tooltip && (!isCollapsed || alwaysShowTooltip)) {
     return (
-      <Tooltip
-        content={tooltip.content}
-        tips={tooltip.tips}
-        header={tooltip.header}
-        sidebarTooltip={true}
-        pinOnClick={true}
-      >
-        <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-          <Text fw={400} size="sm">
-            {title}
-          </Text>
-          <Icon
-            name="info"
-            size="1.25rem"
-            style={{ color: "var(--icon-files-color)" }}
-          />
-        </Flex>
-      </Tooltip>
+      <Flex align="center" gap="xs">
+        <Text fw={400} size="sm">
+          {title}
+        </Text>
+        <InfoTooltip
+          title={tooltip.header?.title ?? title}
+          tips={tooltip.tips}
+          content={tooltip.content}
+          position="right"
+          width={400}
+          iconSize={16}
+        />
+      </Flex>
     );
   }
 

@@ -108,16 +108,16 @@ export function AuthenticationCard({
                 <InfoTooltip
                   label={t(
                     "admin.settings.security.loginAttemptCount.description",
-                    "Maximum number of failed login attempts before account lockout",
+                    "Failed login attempts before the account is locked. Use -1 to disable lockout.",
                   )}
                 />
               </Group>
             }
-            value={settings?.loginAttemptCount || 0}
+            value={settings?.loginAttemptCount ?? 0}
             onChange={(value) =>
               setSettings({ ...settings, loginAttemptCount: Number(value) })
             }
-            min={0}
+            min={-1}
             max={100}
             disabled={!loginEnabled}
           />

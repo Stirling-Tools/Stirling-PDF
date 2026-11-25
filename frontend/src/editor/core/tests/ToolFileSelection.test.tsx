@@ -482,7 +482,7 @@ describe("tool file selection", () => {
     expect(
       screen.queryByText(/files$/, { selector: "p" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Compress" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Compress/ })).toBeEnabled();
 
     workspace.fileStubs[0].processedFile = { pages: [], isEncrypted: true };
     act(() => forgetPdfAccess([workspace.files[0].fileId]));
@@ -492,7 +492,7 @@ describe("tool file selection", () => {
       </MantineProvider>,
     );
     expect(screen.queryByText("report.pdf")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Compress" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Compress/ })).toBeDisabled();
 
     workspace.fileStubs[0].processedFile.isEncrypted = false;
     navigation.workbench = "viewer";
@@ -503,7 +503,7 @@ describe("tool file selection", () => {
       </MantineProvider>,
     );
     expect(screen.queryByText("report.pdf")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Compress/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Compress/ })).toBeDisabled();
 
     viewer.activeFileIndex = 0;
     view.rerender(
@@ -512,7 +512,7 @@ describe("tool file selection", () => {
       </MantineProvider>,
     );
     expect(screen.getByText("report.pdf")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Compress/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Compress/ })).toBeEnabled();
   });
 
   test("Convert updates Files, settings and Run count as parameters change", async () => {

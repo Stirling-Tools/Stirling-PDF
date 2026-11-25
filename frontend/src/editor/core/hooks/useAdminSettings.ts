@@ -31,6 +31,12 @@ interface UseAdminSettingsOptions<T> {
   saveTransformer?: (settings: T) => {
     sectionData: SettingsBlock;
     deltaSettings?: SettingsBlock;
+    /**
+     * Keys to write even when the transformed draft matches the transformed
+     * baseline. For values whose persisted form must change without an edit,
+     * such as a tier-dependent clamp.
+     */
+    forceKeys?: string[];
   };
 }
 
@@ -109,9 +115,14 @@ export function useAdminSettings<T>(
         return;
       }
 
-      const { sectionData, deltaSettings } = transform(draft);
+      const {
+        sectionData,
+        deltaSettings,
+        forceKeys: draftForceKeys,
+      } = transform(draft);
       const { sectionData: originalSectionData, deltaSettings: originalDelta } =
         transform(baseline);
+      const forceKeys = draftForceKeys ?? [];
 
       const sectionDelta = computeDelta(originalSectionData, sectionData);
       if (Object.keys(sectionDelta).length > 0) {
@@ -123,6 +134,11 @@ export function useAdminSettings<T>(
         for (const [key, value] of Object.entries(deltaSettings)) {
           if (JSON.stringify(value) !== JSON.stringify(originalDelta?.[key])) {
             changed[key] = value;
+          }
+        }
+        for (const key of forceKeys) {
+          if (deltaSettings[key] !== undefined) {
+            changed[key] = deltaSettings[key];
           }
         }
         if (Object.keys(changed).length > 0) await putAdminSettings(changed);

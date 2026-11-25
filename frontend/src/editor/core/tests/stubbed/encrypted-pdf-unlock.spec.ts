@@ -215,11 +215,15 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       name: "About session unlocking",
     });
     await details.focus();
-    await expect(page.getByRole("tooltip")).toHaveText(
+    const detailsPanel = page.locator(".sui-info-panel");
+    await expect(detailsPanel).toContainText(
       "Open for this session. The PDF stays protected.",
     );
+    // Move the pointer out of the panel first: a hovered panel stays open even
+    // when focus moves, so only then does focusing the password field close it.
+    await page.mouse.move(0, 0);
     await page.getByLabel(PASSWORD_LABEL, { exact: true }).focus();
-    await expect(page.getByRole("tooltip")).toBeHidden();
+    await expect(detailsPanel).toBeHidden();
   });
 
   test("explicit removal of all protection creates a usable copy and retains the protected source", async ({

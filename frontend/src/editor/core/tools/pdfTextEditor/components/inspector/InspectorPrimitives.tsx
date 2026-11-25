@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Box, Group, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon } from "@editor/ui/Icon";
+import { Box, Group, NumberInput, Stack, Text } from "@mantine/core";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 /** Shared layout atoms for the editor's properties inspector. */
 
 /** Uppercase section heading, optionally with an info affordance beside it and a trailing control. */
@@ -85,36 +85,9 @@ export function Field({
   );
 }
 
-/**
- * The `?` that replaced the panel's permanent explanatory paragraphs, its
- * hint shown on hover or keyboard focus and read out as its name.
- */
+/** The (i) that replaced the panel's permanent explanatory paragraphs. */
 export function HintIcon({ label }: { label: string }) {
-  return (
-    <Tooltip
-      label={label}
-      multiline
-      w={220}
-      withArrow
-      position="left"
-      events={{ hover: true, focus: true, touch: true }}
-    >
-      {/* Tooltip anchors to its child's ref and handlers, which Icon drops. */}
-      <span
-        role="img"
-        aria-label={label}
-        tabIndex={0}
-        style={{
-          display: "inline-flex",
-          cursor: "help",
-          color: "var(--mantine-color-dimmed)",
-          flexShrink: 0,
-        }}
-      >
-        <Icon name="circle-question-mark" size="1em" />
-      </span>
-    </Tooltip>
-  );
+  return <InfoTooltip label={label} ariaLabel={label} position="left" />;
 }
 
 /** Read-only key/value line used by the Document tab. */

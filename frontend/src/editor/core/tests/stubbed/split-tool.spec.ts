@@ -36,9 +36,9 @@ test.describe("6. Split Tool", () => {
       }
 
       // Step 3: Verify the "Split" button is disabled
-      const splitButton = page
-        .getByRole("button", { name: /split|pisahkan/i })
-        .first();
+      const splitButton = page.getByRole("button", {
+        name: /^(Split|Pisahkan)$/i,
+      });
       await expect(splitButton).toBeVisible();
       await expect(splitButton).toBeDisabled();
     });
@@ -53,9 +53,9 @@ test.describe("6. Split Tool", () => {
       }
 
       // Step 2: Verify the "Split" button remains disabled without a file uploaded
-      const splitButton = page
-        .getByRole("button", { name: /split|pisahkan/i })
-        .first();
+      const splitButton = page.getByRole("button", {
+        name: /^(Split|Pisahkan)$/i,
+      });
       await expect(splitButton).toBeDisabled();
     });
   });

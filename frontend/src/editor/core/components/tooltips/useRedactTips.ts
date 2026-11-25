@@ -20,7 +20,7 @@ export const useRedactModeTips = (): TooltipContent => {
         title: t("redact.tooltip.mode.manual.title", "Manual Redaction"),
         description: t(
           "redact.tooltip.mode.manual.text",
-          "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)",
+          "Select text or drag rectangles directly in the viewer. Use this when you need to see exactly what will be removed before applying the redactions.",
         ),
       },
     ],
@@ -45,7 +45,7 @@ export const useRedactWordsTips = (): TooltipContent => {
           t("redact.tooltip.words.bullet1", "Add one word at a time"),
           t(
             "redact.tooltip.words.bullet2",
-            "Press Enter or click 'Add Another' to add",
+            "Press Enter or click '+ Add' to add",
           ),
           t("redact.tooltip.words.bullet3", "Click × to remove words"),
         ],
@@ -80,41 +80,21 @@ export const useRedactAdvancedTips = (): TooltipContent => {
         ),
       },
       {
-        title: t("redact.tooltip.advanced.regex.title", "Use Regex"),
-        description: t(
-          "redact.tooltip.advanced.regex.text",
-          "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns.",
-        ),
+        title: t("redact.tooltip.advanced.matching.title", "Matching"),
         bullets: [
           t(
             "redact.tooltip.advanced.regex.bullet1",
-            "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format",
+            "Use Regex for patterns such as phone numbers, emails, or \\d{4}-\\d{2}-\\d{2} dates",
           ),
           t(
-            "redact.tooltip.advanced.regex.bullet2",
-            "Use with caution - test thoroughly",
+            "redact.tooltip.advanced.wholeWord.text",
+            "Whole word only: 'John' won't match 'Johnson'",
+          ),
+          t(
+            "redact.tooltip.advanced.caseSensitive.text",
+            "Case sensitive: 'Secret' won't match 'SECRET'",
           ),
         ],
-      },
-      {
-        title: t(
-          "redact.tooltip.advanced.wholeWord.title",
-          "Whole Word Search",
-        ),
-        description: t(
-          "redact.tooltip.advanced.wholeWord.text",
-          "Only match complete words, not partial matches. 'John' won't match 'Johnson' when enabled.",
-        ),
-      },
-      {
-        title: t(
-          "redact.tooltip.advanced.caseSensitive.title",
-          "Case Sensitive Matching",
-        ),
-        description: t(
-          "redact.tooltip.advanced.caseSensitive.text",
-          "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals.",
-        ),
       },
       {
         title: t(
@@ -142,17 +122,13 @@ export const useRedactManualTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("redact.tooltip.manual.markText.title", "Mark Text Tool"),
-        description: t(
-          "redact.tooltip.manual.markText.text",
-          "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact.",
+        title: t(
+          "redact.tooltip.manual.mark.title",
+          "Select or draw in the viewer",
         ),
-      },
-      {
-        title: t("redact.tooltip.manual.markArea.title", "Mark Area Tool"),
         description: t(
-          "redact.tooltip.manual.markArea.text",
-          "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes.",
+          "redact.tooltip.manual.mark.text",
+          "Select text to mark it, or drag a rectangle for images, signatures and other shapes. Both kinds of mark are redacted together.",
         ),
       },
       {
@@ -161,20 +137,6 @@ export const useRedactManualTips = (): TooltipContent => {
           "redact.tooltip.manual.apply.text",
           "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied.",
         ),
-        bullets: [
-          t(
-            "redact.tooltip.manual.apply.bullet1",
-            "Mark as many areas as needed before applying",
-          ),
-          t(
-            "redact.tooltip.manual.apply.bullet2",
-            "All pending redactions are applied at once",
-          ),
-          t(
-            "redact.tooltip.manual.apply.bullet3",
-            "Redactions cannot be undone after applying",
-          ),
-        ],
       },
     ],
   };

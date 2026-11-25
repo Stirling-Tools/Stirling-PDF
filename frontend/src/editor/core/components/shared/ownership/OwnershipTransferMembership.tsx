@@ -1,8 +1,6 @@
 import { Trans, useTranslation } from "react-i18next";
 import type { OwnershipTransferFlow } from "@editor/components/shared/ownership/useOwnershipTransfer";
-import { Tooltip } from "@mantine/core";
-import { ActionIcon } from "@editor/ui/ActionIcon";
-import { Icon } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
@@ -103,27 +101,17 @@ export function OwnershipTransferMembership({
       {(needsMember || (editing && emailValid && !matchingMember)) && (
         <div className="ownership-flow__detail">
           <span>{t("ownership.anotherTeam", "Already on another team?")}</span>
-          <Tooltip
-            multiline
-            w={300}
-            zIndex={Z_INDEX_OVER_CONFIG_MODAL + 2}
-            events={{ hover: true, focus: true, touch: true }}
+          <InfoTooltip
             label={t(
               "ownership.otherTeam",
               "If they belong to another team, accepting may move their account. A paid account or ownership of another team may need resolving first. We won't move their subscription or merge teams.",
             )}
-          >
-            <ActionIcon
-              variant="quiet"
-              size="sm"
-              aria-label={t(
-                "ownership.membershipDetails",
-                "Team membership details",
-              )}
-            >
-              <Icon name="info" size={16} />
-            </ActionIcon>
-          </Tooltip>
+            ariaLabel={t(
+              "ownership.membershipDetails",
+              "Team membership details",
+            )}
+            zIndex={Z_INDEX_OVER_CONFIG_MODAL + 2}
+          />
         </div>
       )}
     </>

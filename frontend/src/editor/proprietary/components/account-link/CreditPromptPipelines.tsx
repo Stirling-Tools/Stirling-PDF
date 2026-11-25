@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { type TFunction } from "i18next";
 import { Button, ToggleSwitch } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/ui/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import {
   fetchCreditPromptPipelines,
   setCreditPromptPipelineEnabled,
@@ -282,17 +282,7 @@ function TriggeredInfo({ triggered }: { triggered: boolean }) {
     "portal.accountLink.pipelines.triggered",
     "Triggered this prompt",
   );
-  return (
-    <Tooltip content={label}>
-      <button
-        type="button"
-        className="portal-connect__trigger-info"
-        aria-label={label}
-      >
-        <Icon name="info" size={14} />
-      </button>
-    </Tooltip>
-  );
+  return <InfoTooltip label={label} ariaLabel={label} />;
 }
 
 function PipelineNotes({ pipeline }: { pipeline: CreditPromptPipeline }) {

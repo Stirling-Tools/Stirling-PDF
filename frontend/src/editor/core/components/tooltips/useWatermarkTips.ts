@@ -87,20 +87,6 @@ export const useWatermarkTypeTips = (): TooltipContent => {
           "watermark.tooltip.type.text.text",
           "Perfect for adding copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colors.",
         ),
-        bullets: [
-          t(
-            "watermark.tooltip.type.text.bullet1",
-            "Customizable fonts and languages",
-          ),
-          t(
-            "watermark.tooltip.type.text.bullet2",
-            "Adjustable colors and transparency",
-          ),
-          t(
-            "watermark.tooltip.type.text.bullet3",
-            "Ideal for legal or branding text",
-          ),
-        ],
       },
       {
         title: t("watermark.tooltip.type.image.title", "Image Watermarks"),
@@ -108,14 +94,6 @@ export const useWatermarkTypeTips = (): TooltipContent => {
           "watermark.tooltip.type.image.text",
           "Use logos, stamps, or any image as a watermark. Great for branding and visual identification.",
         ),
-        bullets: [
-          t("watermark.tooltip.type.image.bullet1", "Upload any image format"),
-          t("watermark.tooltip.type.image.bullet2", "Maintains image quality"),
-          t(
-            "watermark.tooltip.type.image.bullet3",
-            "Perfect for logos and stamps",
-          ),
-        ],
       },
     ],
   };
@@ -169,20 +147,6 @@ export const useWatermarkTextStyleTips = (): TooltipContent => {
           "watermark.tooltip.textStyle.color.text",
           "Choose a color that provides good contrast with your document content.",
         ),
-        bullets: [
-          t(
-            "watermark.tooltip.textStyle.color.bullet1",
-            "Light gray (#d3d3d3) for subtle watermarks",
-          ),
-          t(
-            "watermark.tooltip.textStyle.color.bullet2",
-            "Black or dark colors for high contrast",
-          ),
-          t(
-            "watermark.tooltip.textStyle.color.bullet3",
-            "Custom colors for branding purposes",
-          ),
-        ],
       },
       languageSupportTip,
     ],
@@ -218,30 +182,6 @@ export const useWatermarkFileTips = (): TooltipContent => {
           ),
         ],
       },
-      {
-        title: t(
-          "watermark.tooltip.file.recommendations.title",
-          "Best Practices",
-        ),
-        description: t(
-          "watermark.tooltip.file.recommendations.text",
-          "Tips for optimal image watermark results.",
-        ),
-        bullets: [
-          t(
-            "watermark.tooltip.file.recommendations.bullet1",
-            "Use logos or stamps with transparent backgrounds",
-          ),
-          t(
-            "watermark.tooltip.file.recommendations.bullet2",
-            "Simple designs work better than complex images",
-          ),
-          t(
-            "watermark.tooltip.file.recommendations.bullet3",
-            "Consider the final document size when choosing resolution",
-          ),
-        ],
-      },
     ],
   };
 };
@@ -264,12 +204,6 @@ export const useWatermarkFormattingTips = (): TooltipContent => {
           "watermark.tooltip.formatting.size.text",
           "Adjust the size of your watermark (text or image).",
         ),
-        bullets: [
-          t(
-            "watermark.tooltip.formatting.size.bullet1",
-            "Larger sizes create more prominent watermarks",
-          ),
-        ],
       },
       appearanceTip,
       spacingTip,

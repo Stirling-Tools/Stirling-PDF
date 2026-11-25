@@ -142,19 +142,23 @@ global.Worker = vi.fn().mockImplementation(() => ({
   onerror: null,
 }));
 
-// Mock ResizeObserver for Mantine components
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Class mocks, not vi.fn(): a suite that calls vi.resetAllMocks() would
+// otherwise wipe the constructor body and crash Mantine's positioning code.
+class ResizeObserverMock {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
 
-// Mock IntersectionObserver for components that might use it
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class IntersectionObserverMock {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+global.ResizeObserver = ResizeObserverMock;
+global.IntersectionObserver =
+  IntersectionObserverMock as unknown as typeof IntersectionObserver;
 
 // Mock matchMedia for responsive components
 Object.defineProperty(globalThis, "matchMedia", {

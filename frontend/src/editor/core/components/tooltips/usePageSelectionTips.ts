@@ -16,8 +16,14 @@ export const usePageSelectionTips = (): TooltipContent => {
           "Use numbers, ranges, keywords, and progressions (n starts at 0). Parentheses are supported.",
         ),
         bullets: [
-          t("bulkSelection.syntax.bullets.numbers", "Numbers/ranges: 5, 10-20"),
-          t("bulkSelection.syntax.bullets.keywords", "Keywords: odd, even"),
+          t(
+            "bulkSelection.syntax.bullets.numbers",
+            "Numbers and ranges: 5, 10-20",
+          ),
+          t(
+            "bulkSelection.syntax.bullets.keywords",
+            "Keywords: odd, even, all",
+          ),
           t(
             "bulkSelection.syntax.bullets.progressions",
             "Progressions: 3n, 4n+1",

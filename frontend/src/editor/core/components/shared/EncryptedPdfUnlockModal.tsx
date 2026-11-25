@@ -1,9 +1,7 @@
 import { Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
-import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ProtectedPdfFileCard } from "@editor/components/shared/ProtectedPdfFileCard";
 import { Button } from "@editor/ui/Button";
-import { ActionIcon } from "@editor/ui/ActionIcon";
-import { Icon } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
@@ -67,28 +65,18 @@ const EncryptedPdfUnlockModal = ({
         <Group component="span" gap={6} wrap="nowrap">
           <span>{title}</span>
           {sessionUnlock && !ownerUnlock && (
-            <Tooltip
-              content={t(
+            <InfoTooltip
+              label={t(
                 "encryptedPdfUnlock.sessionDetails",
                 "Open for this session. The PDF stays protected.",
               )}
-              position="top"
-              maxWidth={280}
-              arrow
-              containerStyle={{ zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE + 1 }}
-            >
-              <ActionIcon
-                variant="quiet"
-                accent="neutral"
-                size="sm"
-                aria-label={t(
-                  "encryptedPdfUnlock.sessionDetailsLabel",
-                  "About session unlocking",
-                )}
-              >
-                <Icon name="info" size={16} />
-              </ActionIcon>
-            </Tooltip>
+              ariaLabel={t(
+                "encryptedPdfUnlock.sessionDetailsLabel",
+                "About session unlocking",
+              )}
+              width={280}
+              zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
+            />
           )}
         </Group>
       }

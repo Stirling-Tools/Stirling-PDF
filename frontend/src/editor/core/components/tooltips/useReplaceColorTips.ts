@@ -13,7 +13,6 @@ export const useReplaceColorTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("replaceColor.tooltip.description.title", "Description"),
         description: t(
           "replaceColor.tooltip.description.text",
           "Transform PDF colours to improve readability and accessibility. Choose from high contrast presets, invert all colours, or create custom colour schemes.",
@@ -25,24 +24,6 @@ export const useReplaceColorTips = (): TooltipContent => {
           "replaceColor.tooltip.highContrast.text",
           "Apply predefined high contrast colour combinations designed for better readability and accessibility compliance.",
         ),
-        bullets: [
-          t(
-            "replaceColor.tooltip.highContrast.bullet1",
-            "White text on black background - Classic dark mode",
-          ),
-          t(
-            "replaceColor.tooltip.highContrast.bullet2",
-            "Black text on white background - Standard high contrast",
-          ),
-          t(
-            "replaceColor.tooltip.highContrast.bullet3",
-            "Yellow text on black background - High visibility option",
-          ),
-          t(
-            "replaceColor.tooltip.highContrast.bullet4",
-            "Green text on black background - Alternative high contrast",
-          ),
-        ],
       },
       {
         title: t("replaceColor.tooltip.invertAll.title", "Invert All Colours"),
@@ -57,16 +38,6 @@ export const useReplaceColorTips = (): TooltipContent => {
           "replaceColor.tooltip.custom.text",
           "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
         ),
-        bullets: [
-          t(
-            "replaceColor.tooltip.custom.bullet1",
-            "Text colour - Choose the colour for text elements",
-          ),
-          t(
-            "replaceColor.tooltip.custom.bullet2",
-            "Background colour - Set the background colour for the document",
-          ),
-        ],
       },
       {
         title: t("replaceColor.tooltip.cmyk.title", "Convert to CMYK"),

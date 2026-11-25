@@ -1,21 +1,321 @@
+/* Trigger ------------------------------------------------------------------ */
+
 .sui-info {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
   padding: 0;
   border: none;
+  border-radius: 999px;
   background: none;
   color: var(--c-text-subtle);
   cursor: pointer;
   line-height: 0;
   /* Ignored in flex rows; keeps the icon centred when it sits inside a line of text. */
   vertical-align: middle;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
 }
+
 .sui-info:hover {
   color: var(--c-text);
+  background-color: color-mix(in srgb, var(--c-text) 6%, transparent);
 }
+
+.sui-info:active {
+  background-color: color-mix(in srgb, var(--c-text) 10%, transparent);
+}
+
 .sui-info:focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
+}
+
+.sui-info:disabled {
+  color: var(--c-text-subtle);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Caller-owned label trigger, for explanations attached to a visible heading
+   rather than to a standalone (i). */
+.sui-info-trigger-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.sui-info-trigger-label:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Panel -------------------------------------------------------------------- */
+
+.sui-info-panel.mantine-Popover-dropdown {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: 0.75rem;
+  background: var(--c-surface-raised);
+  color: var(--c-text);
+  box-shadow: var(--shadow-lg);
+  outline: none;
+}
+
+.sui-info-panel__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: min(80vh, 44rem);
+  overflow: hidden;
+}
+
+/* Branded masthead for guide panels. It is part of the panel from the first
+   hover frame: pinning only adds the close control, which sits in reserved
+   padding, so the header never changes size or colour under the pointer. */
+.sui-info-panel__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 3rem;
+  /* Inline-end padding is reserved for the close control in both directions. */
+  padding-block: 0.625rem;
+  padding-inline: 1rem 2.75rem;
+  background: var(--c-surface-sunken);
+  color: var(--c-text);
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.sui-info-panel__brand {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.sui-info-panel__brand .sui-brandmark {
+  display: block;
+  width: auto;
+  height: 1.25rem;
+}
+
+/* The body's bottom padding leaves room for this fade, so it never covers the
+   final line of a fully scrolled panel. */
+.sui-info-panel__inner::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1.75rem;
+  background: linear-gradient(to top, var(--c-surface-raised), transparent);
+  pointer-events: none;
+}
+
+/* On a phone a floating bubble next to the trigger has nowhere to go: use a
+   bottom sheet that always fits, and hide the arrow that would point at the
+   wrong edge. */
+@media (max-width: 30rem) {
+  .sui-info-panel.mantine-Popover-dropdown {
+    position: fixed !important;
+    inset: auto 0.5rem max(0.5rem, env(safe-area-inset-bottom)) 0.5rem !important;
+    width: auto !important;
+    max-width: none;
+    max-height: 70vh;
+  }
+
+  .sui-info-panel__inner {
+    max-height: calc(70vh - 0.125rem);
+  }
+
+  .sui-info-panel .mantine-Popover-arrow {
+    display: none;
+  }
+}
+
+.sui-info-panel[data-pinned] {
+  border-color: color-mix(in srgb, var(--c-text) 16%, var(--c-border));
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px color-mix(in srgb, var(--c-text) 7%, transparent);
+}
+
+.sui-info-panel__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+
+.sui-info-panel__body {
+  min-height: 0;
+  padding: 1.125rem 1.125rem 1.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  /* A soft bottom edge, so a clipped paragraph reads as "scroll for more"
+     rather than as a broken panel. The bottom padding keeps the final line
+     clear of the fade once the reader reaches the end. */
+  box-shadow: inset 0 -1.25rem 1rem -0.75rem var(--c-surface-raised);
+  color: var(--c-text);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.sui-info-panel__body::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.sui-info-panel__body::-webkit-scrollbar-thumb {
   border-radius: 999px;
+  background-color: var(--c-border-strong);
+}
+
+.sui-info-panel__body::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--c-text) 5%, transparent);
+  border-radius: 999px;
+}
+
+.sui-info-panel__body > :first-child {
+  margin-top: 0;
+}
+
+.sui-info-panel__body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Each tip is its own block. The rule makes the boundary visible when a
+   section's copy runs long; spacing alone disappears in a dense panel. */
+.sui-info-panel__section + .sui-info-panel__section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.sui-info-panel__section-title {
+  margin: 0 0 0.5rem;
+  color: var(--c-text);
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+
+.sui-info-panel__text {
+  margin: 0;
+}
+
+.sui-info-panel__list {
+  margin: 0.5rem 0 0;
+  padding-inline-start: 1.25rem;
+  list-style: disc;
+}
+
+.sui-info-panel__list li {
+  padding-inline-start: 0.125rem;
+  margin-top: 0.5rem;
+}
+
+.sui-info-panel__list li:first-child {
+  margin-top: 0;
+}
+
+.sui-info-panel__list li::marker {
+  color: var(--c-text-subtle);
+}
+
+.sui-info-panel__body-extra,
+.sui-info-panel__extra {
+  margin-top: 0.875rem;
+}
+
+.sui-info-panel__extra {
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.sui-info-panel a {
+  color: var(--link-color, var(--c-accent-text, var(--c-primary)));
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--c-accent-text, var(--c-primary)) 40%,
+    transparent
+  );
+}
+
+.sui-info-panel a:hover {
+  color: var(--link-hover-color, var(--c-accent-text, var(--c-primary)));
+}
+
+.sui-info-panel code {
+  padding: 0.0625rem 0.25rem;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--c-text) 7%, transparent);
+  color: var(--c-text);
+  font-size: 0.75rem;
+}
+
+.sui-info-panel strong {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+/* Only pinned panels need a dismiss control; a hover preview closes on leave. */
+.sui-info-panel__close {
+  position: absolute;
+  top: 0.5rem;
+  inset-inline-end: 0.5rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
+}
+
+.sui-info-panel__close:hover {
+  color: var(--c-text);
+  background-color: color-mix(in srgb, var(--c-text) 8%, transparent);
+}
+
+.sui-info-panel__close:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-info,
+  .sui-info-panel__close {
+    transition: none;
+  }
 }

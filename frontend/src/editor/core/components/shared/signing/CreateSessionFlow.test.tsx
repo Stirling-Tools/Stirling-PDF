@@ -330,26 +330,30 @@ it("moves signing guidance into focusable tooltips while preserving submitted si
   expect(
     screen.queryByText(/^Participants can sign in any order/),
   ).not.toBeInTheDocument();
-  fireEvent.focus(screen.getByRole("button", { name: "About signing order" }));
-  expect(screen.getByRole("tooltip")).toHaveTextContent(
+  fireEvent.focusIn(
+    screen.getByRole("button", { name: "About signing order" }),
+  );
+  expect(screen.getByRole("dialog")).toHaveTextContent(
     "Participants can sign in any order",
   );
-  fireEvent.blur(screen.getByRole("button", { name: "About signing order" }));
+  fireEvent.focusOut(
+    screen.getByRole("button", { name: "About signing order" }),
+  );
   await user.click(
     screen.getByRole("button", {
       name: "Appearance and summary page (optional)",
     }),
   );
   expect(screen.queryByText(/^A summary page will/)).not.toBeInTheDocument();
-  fireEvent.focus(
+  fireEvent.focusIn(
     await screen.findByRole("button", {
       name: "Include Signature Summary Page",
     }),
   );
-  expect(screen.getByRole("tooltip")).toHaveTextContent(
+  expect(screen.getByRole("dialog")).toHaveTextContent(
     "wet signatures are unaffected",
   );
-  fireEvent.blur(
+  fireEvent.focusOut(
     screen.getByRole("button", { name: "Include Signature Summary Page" }),
   );
   await user.click(

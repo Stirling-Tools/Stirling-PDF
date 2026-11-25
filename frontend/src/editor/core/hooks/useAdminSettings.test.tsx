@@ -161,6 +161,32 @@ describe("useAdminSettings", () => {
     expect(mockPutSection).not.toHaveBeenCalled();
   });
 
+  it("writes forceKeys even when the transformed draft matches the baseline", async () => {
+    mockFetch.mockResolvedValue({ appName: "Stirling", retention: 0 });
+    const { result } = renderHook(
+      () =>
+        useAdminSettings<{ appName: string; retention: number }>({
+          sectionName: "security",
+          saveTransformer: () => ({
+            sectionData: {},
+            deltaSettings: { retention: 30 },
+            forceKeys: ["retention"],
+          }),
+        }),
+      { wrapper: makeWrapper() },
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    act(() => {
+      result.current.setSettings({ appName: "Renamed", retention: 0 });
+    });
+    await act(async () => {
+      await result.current.saveSettings();
+    });
+
+    expect(mockPutSettings).toHaveBeenCalledWith({ retention: 30 });
+  });
+
   it("refetches after a save so the _pending block is current", async () => {
     mockFetch.mockResolvedValue({ appName: "Stirling" });
     const { result } = renderHook(
