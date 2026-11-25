@@ -27,6 +27,7 @@ import { addPasswordOperationConfig } from "@editor/hooks/tools/addPassword/useA
 import { removePasswordOperationConfig } from "@editor/hooks/tools/removePassword/useRemovePasswordOperation";
 import { sanitizeOperationConfig } from "@editor/hooks/tools/sanitize/useSanitizeOperation";
 import { repairOperationConfig } from "@editor/hooks/tools/repair/useRepairOperation";
+import { archivePdfOperationConfig } from "@editor/hooks/tools/archivePdf/useArchivePdfOperation";
 import { addWatermarkOperationConfig } from "@editor/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { addStampOperationConfig } from "@editor/components/tools/addStamp/useAddStampOperation";
 import { addAttachmentsOperationConfig } from "@editor/hooks/tools/addAttachments/useAddAttachmentsOperation";
@@ -988,6 +989,25 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(repairOperationConfig),
         synonyms: getSynonyms(t, "repair"),
         automationSettings: null,
+      },
+      archivePdf: {
+        icon: <Icon name="archive" size="1.5rem" />,
+        name: t("home.archivePdf.title", "Archive PDF (PDF/A)"),
+        component: lazy(() => import("@editor/tools/ArchivePdf")),
+        description: t(
+          "home.archivePdf.desc",
+          "Convert PDFs to PDF/A for long-term archiving",
+        ),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["pdf-to-pdfa"],
+        operationConfig: asRegistryConfig(archivePdfOperationConfig),
+        automationSettings: lazySettings(
+          () =>
+            import("@editor/components/tools/archivePdf/ArchivePdfSettings"),
+        ),
+        synonyms: getSynonyms(t, "archivePdf"),
       },
       scannerImageSplit: {
         icon: <Icon name="table-columns-split" size="1.5rem" />,

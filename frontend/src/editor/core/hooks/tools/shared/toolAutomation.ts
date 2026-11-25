@@ -449,7 +449,8 @@ function withFileParameters(
 /**
  * Find the registry tool for a stored step's endpoint: exact match for static endpoints, else
  * membership in a dynamic tool's declared `endpoints` set (replaying its function can't recover a
- * frontend-only routing field). Replay is only the fallback when no set is declared.
+ * frontend-only routing field). Replay is only the fallback when no set is declared. A static match
+ * whose `claimsStoredStep` rejects the step yields to a dynamic owner of the same endpoint.
  */
 function findToolByEndpoint(
   step: ToolApiStep,
@@ -471,7 +472,10 @@ function findToolByEndpoint(
     }
   }
   if (staticMatches.length > 0) {
-    return disambiguateStaticMatches(staticMatches, step.parameters);
+    const match = disambiguateStaticMatches(staticMatches, step.parameters);
+    const declined =
+      match[1].operationConfig?.claimsStoredStep?.(step.parameters) === false;
+    if (!declined || !dynamic) return match;
   }
   return dynamic;
 }

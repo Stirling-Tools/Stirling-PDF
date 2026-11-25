@@ -79,6 +79,7 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   // Large operations (5 credits)
   compress: CREDIT_COSTS.LARGE,
   convert: CREDIT_COSTS.LARGE,
+  archivePdf: CREDIT_COSTS.LARGE,
   ocr: CREDIT_COSTS.LARGE,
   certSign: CREDIT_COSTS.LARGE,
   timestampPdf: CREDIT_COSTS.LARGE,

@@ -2073,6 +2073,36 @@ description = "A free, private PDF editor you can run on any infrastructure."
 [appBanner]
 dismiss = "Dismiss"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+outputFormat = "PDF/A version"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+strict = "Strict mode"
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.tooltip.description]
+text = "Converts your PDF to PDF/A, the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "Archive PDF (PDF/A)"
+
+[archivePdf.tooltip.outputFormat]
+text = "PDF/A-2b suits most archives. PDF/A-1b is the oldest and most widely accepted. PDF/A-3b also allows other files to be attached, such as the data behind an e-invoice. The accessible versions also tag the document so screen readers can follow it."
+title = "PDF/A version"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
 [attachments]
 addAttachments = "Add attachments..."
 convertToPdfA3b = "Convert to PDF/A-3b"
@@ -6002,6 +6032,11 @@ title = "Adjust Colors/Contrast"
 desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
+
+[home.archivePdf]
+desc = "Convert PDFs to PDF/A for long-term archiving"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Archive PDF (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Automatically detect form fields with AI and make your PDF fillable."

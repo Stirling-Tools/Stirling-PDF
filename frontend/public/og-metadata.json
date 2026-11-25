@@ -80,6 +80,11 @@
       "title": "PDF Converter - Stirling PDF",
       "description": "Convert files to and from PDF format"
     },
+    "archivePdf": {
+      "image": "/og_images/home.png",
+      "title": "Archive PDF (PDF/A) - Stirling PDF",
+      "description": "Convert PDFs to PDF/A for long-term archiving"
+    },
     "ocr": {
       "image": "/og_images/ocr.png",
       "title": "OCR PDF - Stirling PDF",
@@ -803,6 +808,7 @@
     "/split": "split",
     "/merge": "merge",
     "/convert": "convert",
+    "/archive-pdf": "archivePdf",
     "/ocr": "ocr",
     "/add-image": "addImage",
     "/rotate": "rotate",
@@ -854,6 +860,7 @@
     "/merge-pdfs": "merge",
     "/compress-pdf": "compress",
     "/rotate-pdf": "rotate",
+    "/pdf-to-pdfa": "/pdf-to-pdfa",
     "/convert-pdf": "convert",
     "/file-to-pdf": "/file-to-pdf",
     "/eml-to-pdf": "/eml-to-pdf",
@@ -863,7 +870,6 @@
     "/pdf-to-xlsx": "/pdf-to-xlsx",
     "/pdf-to-img": "/pdf-to-img",
     "/pdf-to-markdown": "/pdf-to-markdown",
-    "/pdf-to-pdfa": "/pdf-to-pdfa",
     "/pdf-to-word": "/pdf-to-word",
     "/pdf-to-xml": "/pdf-to-xml",
     "/cbr-to-pdf": "/cbr-to-pdf",
