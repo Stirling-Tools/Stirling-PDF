@@ -198,6 +198,7 @@ const EmbedPdfViewerContent = ({
     selectionActions,
     setApplyChanges,
     applyChanges: viewerApplyChanges,
+    hasUnsentEdits,
     pdfRenderMode,
     cyclePdfRenderMode,
     setActiveFileIndex: _setActiveFileIndex,
@@ -562,7 +563,6 @@ const EmbedPdfViewerContent = ({
   const {
     setHasUnsavedChanges,
     registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker,
     registerNavigationWarningHandlers,
     unregisterNavigationWarningHandlers,
   } = useNavigationGuard();
@@ -1125,21 +1125,20 @@ const EmbedPdfViewerContent = ({
       const hasAppliedRedactions = redactionsApplied;
 
       return (
-        hasAnnotationChanges || hasPendingRedactions || hasAppliedRedactions
+        hasAnnotationChanges ||
+        hasPendingRedactions ||
+        hasAppliedRedactions ||
+        hasUnsentEdits()
       );
     };
 
-    registerUnsavedChangesChecker(checkForChanges);
-
-    return () => {
-      unregisterUnsavedChangesChecker();
-    };
+    return registerUnsavedChangesChecker(checkForChanges);
   }, [
     historyApiRef,
+    hasUnsentEdits,
     previewFile,
     isFormFillToolActive,
     registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker,
     isManualRedactMode,
     redactionsApplied,
   ]);

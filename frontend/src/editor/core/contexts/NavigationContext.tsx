@@ -104,8 +104,8 @@ export interface NavigationContextActions {
     workbench: WorkbenchType,
   ) => void;
   setHasUnsavedChanges: (hasChanges: boolean) => void;
-  registerUnsavedChangesChecker: (checker: () => boolean) => void;
-  unregisterUnsavedChangesChecker: () => void;
+  /** Each source owns its registration; disposing it leaves other editors' checks active. */
+  registerUnsavedChangesChecker: (checker: () => boolean) => () => void;
   showNavigationWarning: (show: boolean) => void;
   requestNavigation: (navigationFn: () => void) => void;
   confirmNavigation: () => void;
@@ -155,7 +155,7 @@ export const NavigationProvider: React.FC<{
 }> = ({ children }) => {
   const [state, dispatch] = useReducer(navigationReducer, initialState);
   const { allTools: toolRegistry } = useToolRegistry();
-  const unsavedChangesCheckerRef = React.useRef<(() => boolean) | null>(null);
+  const unsavedChangesCheckersRef = React.useRef(new Set<() => boolean>());
   const viewDerivedFromPathRef = useRef<string | null>(null);
   const navigationWarningHandlersRef = useRef<NavigationWarningHandlers | null>(
     null,
@@ -166,11 +166,12 @@ export const NavigationProvider: React.FC<{
     (workbench: WorkbenchType) => {
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges =
-        unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+        [...unsavedChangesCheckersRef.current].some((checker) => checker()) ||
+        state.hasUnsavedChanges;
       console.log("[NavigationContext] setWorkbench:", {
         from: state.workbench,
         to: workbench,
-        hasChecker: !!unsavedChangesCheckerRef.current,
+        hasChecker: unsavedChangesCheckersRef.current.size > 0,
         hasUnsavedChanges,
       });
 
@@ -242,7 +243,8 @@ export const NavigationProvider: React.FC<{
     (toolId: ToolId | null, workbench: WorkbenchType) => {
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges =
-        unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+        [...unsavedChangesCheckersRef.current].some((checker) => checker()) ||
+        state.hasUnsavedChanges;
 
       // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
       const leavingWorkbenchWithChanges =
@@ -289,7 +291,7 @@ export const NavigationProvider: React.FC<{
     () =>
       registerUnsavedWorkChecker(
         () =>
-          unsavedChangesCheckerRef.current?.() === true ||
+          [...unsavedChangesCheckersRef.current].some((checker) => checker()) ||
           state.hasUnsavedChanges,
       ),
     [state.hasUnsavedChanges],
@@ -297,14 +299,13 @@ export const NavigationProvider: React.FC<{
 
   const registerUnsavedChangesChecker = useCallback(
     (checker: () => boolean) => {
-      unsavedChangesCheckerRef.current = checker;
+      unsavedChangesCheckersRef.current.add(checker);
+      return () => {
+        unsavedChangesCheckersRef.current.delete(checker);
+      };
     },
     [],
   );
-
-  const unregisterUnsavedChangesChecker = useCallback(() => {
-    unsavedChangesCheckerRef.current = null;
-  }, []);
 
   const registerNavigationWarningHandlers = useCallback(
     (handlers: NavigationWarningHandlers) => {
@@ -324,7 +325,8 @@ export const NavigationProvider: React.FC<{
   const requestNavigation = useCallback(
     (navigationFn: () => void) => {
       const hasUnsavedChanges =
-        unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+        [...unsavedChangesCheckersRef.current].some((checker) => checker()) ||
+        state.hasUnsavedChanges;
       if (!hasUnsavedChanges) {
         navigationFn();
         return;
@@ -406,7 +408,8 @@ export const NavigationProvider: React.FC<{
 
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges =
-        unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+        [...unsavedChangesCheckersRef.current].some((checker) => checker()) ||
+        state.hasUnsavedChanges;
 
       // If switching away from current tool and have unsaved changes, show warning
       if (
@@ -436,7 +439,6 @@ export const NavigationProvider: React.FC<{
       setToolAndWorkbench,
       setHasUnsavedChanges,
       registerUnsavedChangesChecker,
-      unregisterUnsavedChangesChecker,
       showNavigationWarning,
       requestNavigation,
       confirmNavigation,
@@ -455,7 +457,6 @@ export const NavigationProvider: React.FC<{
       setToolAndWorkbench,
       setHasUnsavedChanges,
       registerUnsavedChangesChecker,
-      unregisterUnsavedChangesChecker,
       showNavigationWarning,
       requestNavigation,
       confirmNavigation,
@@ -535,7 +536,6 @@ export const useNavigationGuard = () => {
     setHasUnsavedChanges: actions.setHasUnsavedChanges,
     setShowNavigationWarning: actions.showNavigationWarning,
     registerUnsavedChangesChecker: actions.registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker: actions.unregisterUnsavedChangesChecker,
     registerNavigationWarningHandlers:
       actions.registerNavigationWarningHandlers,
     unregisterNavigationWarningHandlers:

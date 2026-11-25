@@ -161,6 +161,10 @@ export interface ViewerContextType {
   applyChanges: (() => Promise<void>) | null;
   setApplyChanges: (fn: (() => Promise<void>) | null) => void;
 
+  /** Registers a check for typed-but-unsent input (e.g. comment drafts); returns an unregister. */
+  registerUnsentEditsCheck: (fn: () => boolean) => () => void;
+  hasUnsentEdits: () => boolean;
+
   // PDF page color rendering mode (viewer-only, never modifies the PDF)
   pdfRenderMode: PdfRenderMode;
   cyclePdfRenderMode: () => void;

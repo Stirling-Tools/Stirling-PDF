@@ -83,7 +83,6 @@ const FormFill = (_props: BaseToolProps) => {
   const {
     selectedTool,
     registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker,
     setHasUnsavedChanges,
     registerNavigationWarningHandlers,
     unregisterNavigationWarningHandlers,
@@ -178,12 +177,11 @@ const FormFill = (_props: BaseToolProps) => {
   const hasUncommittedRef = useRef(false);
   hasUncommittedRef.current = hasUncommittedChanges;
   useEffect(() => {
-    registerUnsavedChangesChecker(
+    return registerUnsavedChangesChecker(
       () =>
         hasUncommittedRef.current || isDirtyRef.current || savingRef.current,
     );
-    return () => unregisterUnsavedChangesChecker();
-  }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+  }, [registerUnsavedChangesChecker]);
 
   // requestNavigation gates on this flag rather than on the checker above.
   useEffect(() => {

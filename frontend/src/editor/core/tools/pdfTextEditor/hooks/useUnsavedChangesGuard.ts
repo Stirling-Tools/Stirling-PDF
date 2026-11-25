@@ -17,11 +17,7 @@ export function useUnsavedChangesGuard(
   isDirty: () => boolean,
 ): void {
   const { actions } = useNavigationActions();
-  const {
-    setHasUnsavedChanges,
-    registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker,
-  } = actions;
+  const { setHasUnsavedChanges, registerUnsavedChangesChecker } = actions;
   const { hasUnsavedChanges } = useNavigationState();
   const flagCaughtUpRef = useRef(false);
 
@@ -41,16 +37,11 @@ export function useUnsavedChangesGuard(
   }, [dirty]);
 
   useEffect(() => {
-    const owner = {};
-    checkerOwner = owner;
     // Only covers the pending flag: once it has landed, a discard clears it while the store stays dirty.
-    registerUnsavedChangesChecker(() => isDirty() && !flagCaughtUpRef.current);
-    return () => {
-      if (checkerOwner !== owner) return;
-      checkerOwner = null;
-      unregisterUnsavedChangesChecker();
-    };
-  }, [isDirty, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+    return registerUnsavedChangesChecker(
+      () => isDirty() && !flagCaughtUpRef.current,
+    );
+  }, [isDirty, registerUnsavedChangesChecker]);
 
   useEffect(() => {
     const owner = {};
@@ -67,8 +58,7 @@ export function useUnsavedChangesGuard(
   }, [dirty, setHasUnsavedChanges]);
 }
 
-// The navigation guard holds one checker and one flag. Two editors overlap when
+// The navigation guard holds one unsaved-changes flag. Two editors overlap when
 // the text editor hands over to the review, and the one leaving unmounts last:
-// only the latest registration may withdraw them, or the review runs unguarded.
-let checkerOwner: object | null = null;
+// only the latest owner may clear it, or the review runs unguarded.
 let flagOwner: object | null = null;

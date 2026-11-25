@@ -173,6 +173,18 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const unsentEditsChecksRef = useRef(new Set<() => boolean>());
+  const registerUnsentEditsCheck = useCallback((fn: () => boolean) => {
+    unsentEditsChecksRef.current.add(fn);
+    return () => {
+      unsentEditsChecksRef.current.delete(fn);
+    };
+  }, []);
+  const hasUnsentEdits = useCallback(
+    () => [...unsentEditsChecksRef.current].some((fn) => fn()),
+    [],
+  );
+
   const {
     register: registerImmediateZoomUpdate,
     trigger: triggerImmediateZoomInternal,
@@ -561,6 +573,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       // Apply changes
       applyChanges,
       setApplyChanges,
+      registerUnsentEditsCheck,
+      hasUnsentEdits,
 
       // PDF page rendering mode
       pdfRenderMode,
@@ -623,6 +637,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       registerBridge,
       applyChanges,
       setApplyChanges,
+      registerUnsentEditsCheck,
+      hasUnsentEdits,
       pdfRenderMode,
       cyclePdfRenderMode,
     ],

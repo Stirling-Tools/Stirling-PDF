@@ -770,6 +770,8 @@ interface EditingReply {
   cardKey: string;
   replyId: string;
   draft: string;
+  /** Reply text when editing began, to tell a real change from an opened editor. */
+  original: string;
 }
 
 interface CommentActions {
@@ -1083,6 +1085,7 @@ export function CommentsSidebar({
     scrollActions,
     getZoomState,
     toggleCommentsSidebar,
+    registerUnsentEditsCheck,
   } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
@@ -1484,6 +1487,32 @@ export function CommentsSidebar({
     [provides, displayName, navActions],
   );
 
+  // Typed but unsent text counts as unsaved so leaving the file warns first.
+  const hasUnsentDraftsRef = useRef<() => boolean>(() => false);
+  hasUnsentDraftsRef.current = () => {
+    if (readOnly) return false;
+    if (
+      editingReply &&
+      editingReply.draft.trim() !== editingReply.original.trim()
+    ) {
+      return true;
+    }
+    return Object.entries(byPage).some(([page, entries]) =>
+      entries.some((entry) => {
+        const cardKey = `${page}_${entry.annotation.object.id}`;
+        const draft = draftContents[cardKey]?.trim();
+        if (draft && draft !== getCommentDisplayContent(entry).trim()) {
+          return true;
+        }
+        return !!replyDrafts[`${cardKey}_reply`]?.trim();
+      }),
+    );
+  };
+  useEffect(
+    () => registerUnsentEditsCheck?.(() => hasUnsentDraftsRef.current()),
+    [registerUnsentEditsCheck],
+  );
+
   const handleAddComment = useCallback(() => {
     // Keep the sidebar open this time - the button morphs into a
     // "Click on a page... cancel" hint so the user can see exactly
@@ -1536,6 +1565,7 @@ export function CommentsSidebar({
         cardKey: `${pageIndex}_${parentId}`,
         replyId,
         draft: contents,
+        original: contents,
       }),
     changeReplyEdit: (draft) =>
       setEditingReply((prev) => prev && { ...prev, draft }),
