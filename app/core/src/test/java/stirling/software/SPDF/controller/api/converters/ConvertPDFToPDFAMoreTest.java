@@ -320,6 +320,19 @@ class ConvertPDFToPDFAMoreTest {
         @Test
         @DisplayName("buildGhostscriptCommandX wires PDF/X version and image tuning")
         void buildsPdfXCommand() throws Exception {
+            List<String> command = pdfXCommand();
+
+            assertThat(command).contains("-dPDFX=2008", "-sDEVICE=pdfwrite");
+            assertThat(command).anyMatch(a -> a.startsWith("-dColorImageResolution="));
+        }
+
+        @Test
+        @DisplayName("buildGhostscriptCommandX keeps each page's own rotation")
+        void pdfXCommandKeepsPageRotation() throws Exception {
+            assertThat(pdfXCommand()).contains("-dAutoRotatePages=/None");
+        }
+
+        private List<String> pdfXCommand() throws Exception {
             Path workingDir = Files.createDirectories(tempDir.resolve("gsx"));
             Path input = Files.write(workingDir.resolve("in.pdf"), simplePdfBytes());
             Path output = workingDir.resolve("out.pdf");
@@ -342,9 +355,7 @@ class ConvertPDFToPDFAMoreTest {
             List<String> command =
                     (List<String>)
                             m.invoke(null, input, output, colorProfiles, workingDir, profile);
-
-            assertThat(command).contains("-dPDFX=2008", "-sDEVICE=pdfwrite");
-            assertThat(command).anyMatch(a -> a.startsWith("-dColorImageResolution="));
+            return command;
         }
 
         @Test

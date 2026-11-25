@@ -51,6 +51,13 @@ export interface ViewerPageTool {
   onSave?: () => Promise<void>;
   /** Toggles the tool's own find, which the viewer's search button opens in place of its own. */
   onToggleFind?: () => void;
+  /**
+   * Room, in rem, the pages give up on their right for something the tool
+   * floats there; taken the way a viewer sidebar takes its width, innermost.
+   */
+  rightInsetRem?: number;
+  /** Hides the viewer's form-fields notice, which would sit under what the tool floats over the pages. */
+  hidesFormNotice?: boolean;
 }
 
 /** Text selected in the viewer that a page tool is asked to open at. */

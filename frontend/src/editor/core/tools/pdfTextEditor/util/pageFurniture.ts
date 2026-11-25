@@ -155,9 +155,16 @@ export function recogniseFurniture(
   }
 
   const needed = Math.max(2, half);
-  for (const sameText of groups.values()) {
+  for (const [key, sameText] of groups) {
     for (const { at, runs } of sameText) {
-      if (pagesOf(runs) < needed) continue;
+      if (pagesOf(runs) < needed) {
+        const text = key.slice(key.indexOf(":") + 1);
+        for (const run of runs) {
+          if (isOwnPageNumber(text, run))
+            mark(run.pageIndex, run.id, "PageNum");
+        }
+        continue;
+      }
       if (!numbersPages(runs) && readsAsContent(runs)) continue;
       const kind = furnitureKind(runs, at.edge);
       for (const { pageIndex, id } of runs) mark(pageIndex, id, kind);
@@ -322,6 +329,51 @@ interface GroupedRun {
   numbers: number[];
   /** A cell of a table on its page (see tableCells). */
   inTable: boolean;
+}
+
+/**
+ * A page number on its own, digits as furnitureText writes them: an optional
+ * label (group 1), the number, and an optional total after a short word or a
+ * slash ("of 12", "/ 12"), dashes aside.
+ */
+const OWN_PAGE_NUMBER =
+  /^[-–—\s]*(?:(\p{L}{1,6})\.?\s*)?#(?:\s*(?:\p{L}{1,4}|\/)\s*#)?[-–—\s]*$/u;
+
+/**
+ * The words that label a page number, lower-cased. Only these: a lone "Figure 3",
+ * "Part 1" or "Step 2" at a page's edge numbers what it labels, not the page.
+ */
+const PAGE_LABELS: ReadonlySet<string> = new Set([
+  "p",
+  "pg",
+  "page",
+  "pag",
+  "pág",
+  "pagina",
+  "página",
+  "seite",
+  "s",
+  "side",
+  "sida",
+  "sivu",
+  "blz",
+  "str",
+  "strona",
+]);
+
+/**
+ * True for a page number shown without a repeat to match it by, at a page's
+ * edge: OWN_PAGE_NUMBER with no label or a PAGE_LABELS one, numbering the page
+ * it is on. `text` is furnitureText's.
+ */
+function isOwnPageNumber(text: string, run: GroupedRun): boolean {
+  if (run.inTable) return false;
+  const match = OWN_PAGE_NUMBER.exec(text);
+  if (!match) return false;
+  const label = match[1]?.toLocaleLowerCase();
+  if (label !== undefined && !PAGE_LABELS.has(label)) return false;
+  const [own, total] = run.numbers;
+  return own === run.pageIndex + 1 && (total === undefined || total >= own);
 }
 
 function furnitureKind(

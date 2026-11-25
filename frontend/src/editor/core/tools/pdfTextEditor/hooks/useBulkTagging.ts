@@ -9,7 +9,6 @@ import {
   textRunsToTag,
 } from "@editor/tools/pdfTextEditor/commands/TagPageContentCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { HeadingType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import { publishAllPages } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import {
   PdfiumTextReader,
@@ -111,11 +110,13 @@ export async function tagAllPages(store: EditorStore): Promise<void> {
       return { pageIndex, display, runs, images };
     });
     const furniture = recogniseFurniture(read, doc.pageCount);
-    // A file that has tags already gets paragraphs only: guessed levels could
-    // not follow the headings it has, nor where its tree puts new elements.
-    const headings = hasTaggedContent(doc, pageIndices)
-      ? new Map<number, Map<string, HeadingType>>()
-      : guessHeadings(headingPages(doc, pageIndices), furniture);
+    // A page that has tags already gets paragraphs only: guessed levels could not
+    // follow the headings it has, nor where its tree puts new elements. Pages with
+    // none, such as one merged into a tagged file, are levelled among themselves.
+    const untagged = pageIndices.filter(
+      (pageIndex) => !hasTags(doc, pageIndex),
+    );
+    const headings = guessHeadings(headingPages(doc, untagged), furniture);
     for (const [done, pageIndex] of pageIndices.entries()) {
       const current = pageIndices.length + done;
       if (!(await slices(() => store.setProgress({ stage, current, total })))) {
@@ -174,15 +175,10 @@ function headingPages(
   });
 }
 
-/** True when any page has tagged content, the file's own or added since it opened. */
-function hasTaggedContent(
-  doc: EditorDocument,
-  pageIndices: readonly number[],
-): boolean {
-  return pageIndices.some((pageIndex) => {
-    const structure = doc.structure(pageIndex);
-    return structure.tagged || structure.addedElements().length > 0;
-  });
+/** True when the page has tagged content, the file's own or added since it opened. */
+function hasTags(doc: EditorDocument, pageIndex: number): boolean {
+  const structure = doc.structure(pageIndex);
+  return structure.tagged || structure.addedElements().length > 0;
 }
 
 /**
