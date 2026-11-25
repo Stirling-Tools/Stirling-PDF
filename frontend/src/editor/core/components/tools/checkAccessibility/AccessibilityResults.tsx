@@ -50,8 +50,12 @@ function reportKey(entry: AccessibilityReportEntry): FileId {
 
 interface AccessibilityResultsProps {
   operation: CheckAccessibilityOperationHook;
-  /** Falls back to the first report when this file is not in the run. */
+  /**
+   * The report to show, by the file it was checked as, which a save keeps; falls
+   * back to the first report when this file is not in the run.
+   */
   selectedFileId: FileId | null;
+  /** Given the picked report's checked file, so the pick survives later saves. */
   onSelectFile: (fileId: FileId) => void;
 }
 
@@ -115,8 +119,7 @@ export function AccessibilityResults({
   const selected =
     results.find(
       (entry) =>
-        entry.fileId === selectedFileId ||
-        entry.checkedFileId === selectedFileId,
+        reportKey(entry) === selectedFileId || entry.fileId === selectedFileId,
     ) ?? results[0];
   const claim = useCheckedFileClaim(
     selected?.fileId ?? null,
@@ -175,10 +178,15 @@ export function AccessibilityResults({
       onTag={() => openInReview("untagged", undefined, true)}
     />
   );
-  const downloadLabel = t(
-    "checkAccessibility.download",
-    "Download accessibility report",
-  );
+  // A report kept from before a save describes the earlier version, so it is not
+  // offered as the saved file's report.
+  const outOfDate = selected.checkedFileId !== undefined;
+  const downloadLabel = outOfDate
+    ? t(
+        "checkAccessibility.downloadOutOfDate",
+        "Check again to download the report",
+      )
+    : t("checkAccessibility.download", "Download accessibility report");
 
   return (
     <AccessibilityFixContext.Provider
@@ -197,7 +205,7 @@ export function AccessibilityResults({
                 value={selected.fileId}
                 onChange={(value) => {
                   const entry = results.find((item) => item.fileId === value);
-                  if (entry) onSelectFile(entry.fileId);
+                  if (entry) onSelectFile(reportKey(entry));
                 }}
                 allowDeselect={false}
                 searchable={results.length > 6}
@@ -269,6 +277,7 @@ export function AccessibilityResults({
                     <Button
                       fullWidth
                       loading={buildingPdf}
+                      disabled={outOfDate}
                       leftSection={<Icon name="download" size={16} />}
                       onClick={() => void downloadReportPdf(selected)}
                       data-testid="a11y-download-report"
@@ -282,6 +291,7 @@ export function AccessibilityResults({
                         variant="secondary"
                         aria-label={downloadLabel}
                         loading={buildingPdf}
+                        disabled={outOfDate}
                         leftSection={<Icon name="download" size={16} />}
                         onClick={() => void downloadReportPdf(selected)}
                         data-testid="a11y-download-report"

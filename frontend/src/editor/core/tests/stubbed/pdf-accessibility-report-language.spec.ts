@@ -148,4 +148,5 @@ test("sets the document language from the report's Language area", async ({
   await recheck.click();
   await expect.poll(() => checks).toBe(2);
   await expect(recheck).toBeHidden();
+  await expect(page.getByTestId("a11y-download-report")).toBeEnabled();
 });

@@ -146,6 +146,8 @@ test("flags the document as tagged from the report's fix, saving it", async ({
   // The report shown for the saved version is the same one, ticks and all.
   await expect(report).toHaveAttribute("data-before-save", "");
   await expect(readingOrder).toBeChecked();
+  // It describes the version before the save, so it isn't offered as this one's.
+  await expect(page.getByTestId("a11y-download-report")).toBeDisabled();
 });
 
 test("lays the panel out in reading order, and pauses the review from its footer", async ({
