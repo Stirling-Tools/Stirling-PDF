@@ -1,22 +1,15 @@
-import React, { useState } from "react";
-import {
-  Stack,
-  Text,
-  Group,
-  Divider,
-  Alert,
-  NumberInput,
-  Box,
-} from "@mantine/core";
+import React, { useId, useRef, useState } from "react";
+import { Stack, Text, Group, Divider, Alert, Box } from "@mantine/core";
 import "@editor/components/shared/stripeCheckout/team-checkout.css";
 import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { PlanTier } from "@editor/services/licenseService";
 import { formatPrice } from "@editor/components/shared/stripeCheckout/utils/pricingUtils";
 import {
-  USERS_PER_BLOCK,
+  PRESET_BLOCKS,
   SELF_SERVE_MAX_BLOCKS,
-  USER_PRESETS,
+  USERS_PER_BLOCK,
   usersForBlocks,
   blocksForUsers,
   shouldOfferEnterprise,
@@ -38,25 +31,20 @@ interface CapacityStageProps {
   onContactSales?: () => void;
 }
 
-function showCustomValueInvalid(
-  value: number | string,
-  minimum: number,
-  maximum: number,
-) {
-  return (
-    value === "" ||
-    !Number.isSafeInteger(Number(value)) ||
-    Number(value) < minimum ||
-    Number(value) > maximum
-  );
+type CustomEntry = "ok" | "empty" | "overLimit";
+
+function checkCustomEntry(value: string, maximum: number): CustomEntry {
+  const n = Number(value);
+  if (value === "" || !Number.isSafeInteger(n) || n <= 0) return "empty";
+  return n > maximum ? "overLimit" : "ok";
 }
 
 /**
  * Choose how many users the Team plan should cover.
  *
  * The buyer picks users; the plan is priced per block of {@link USERS_PER_BLOCK}. Presets cover the
- * common sizes and "Other" opens a free entry that rounds up to the next whole block, because a
- * part-block cannot be bought.
+ * common sizes and "Custom" turns into a free entry that rounds up to the next whole block, because
+ * a part-block cannot be bought. Above the self-serve maximum the hint points to Enterprise.
  */
 export const CapacityStage: React.FC<CapacityStageProps> = ({
   selectedPlan,
@@ -75,21 +63,26 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   const blockPrice = selectedPlan?.price || 0;
   const isYearly = selectedPlan?.period?.includes("year") ?? false;
   const covered = usersForBlocks(serverQuantity);
-  const total = blockPrice * serverQuantity;
-  const [draftUsers, setDraftUsers] = useState<number | string>(covered);
+  const [draftUsers, setDraftUsers] = useState(String(covered));
 
-  const minBlocks = currentLimit == null ? blocksForUsers(currentUsers) : 1;
-  const reducing = currentLimit != null && covered < currentLimit;
+  const adjusting = currentLimit != null;
+  const minBlocks = adjusting ? 1 : blocksForUsers(currentUsers);
+  const reducing = adjusting && covered < currentLimit;
   const minUsers = usersForBlocks(minBlocks);
   const maxUsers = usersForBlocks(SELF_SERVE_MAX_BLOCKS);
   const belowMinimumCapacity = serverQuantity < minBlocks;
   const offerEnterprise = shouldOfferEnterprise(serverQuantity);
-  const invalidDraft = showCustomValueInvalid(draftUsers, 1, maxUsers);
 
-  const presets = USER_PRESETS.filter((users) => users <= maxUsers);
+  const presets = PRESET_BLOCKS.filter(
+    (blocks) => blocks <= SELF_SERVE_MAX_BLOCKS,
+  ).map((blocks) => usersForBlocks(blocks));
   const [showCustom, setShowCustom] = useState(
-    () => !presets.includes(usersForBlocks(serverQuantity)),
+    () => !presets.includes(covered),
   );
+  const customEntry = checkCustomEntry(draftUsers, maxUsers);
+  // Focus only when the buyer picks Custom, not whenever the stage remounts in custom mode.
+  const focusCustom = useRef(false);
+  const hintId = useId();
 
   const period = isYearly
     ? t("payment.capacityStage.perYear", "/yr")
@@ -99,138 +92,285 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
     setServerQuantity(blocksForUsers(users));
 
   return (
-    <Stack gap="sm" className="team-capacity">
-      {capacityNotice && capacityNotice.users > capacityNotice.limit && (
-        <Box className="team-capacity__notice">
-          <Text size="sm" fw={500}>
-            {t(
-              "payment.capacityStage.overCapacityTitle",
-              "Your server has more users than your plan covers",
-            )}
-          </Text>
-          <Text size="sm" mt={4}>
-            {t(
-              "payment.capacityStage.overCapacityBody",
-              "{{users}} users are on this server; your current allowance is {{limit}}. Choose a Team plan below to cover everyone.",
-              { users: capacityNotice.users, limit: capacityNotice.limit },
-            )}
-          </Text>
-          <Text size="xs" c="dimmed" mt={6}>
-            {t(
-              "payment.capacityStage.overCapacityConsequence",
-              "Existing accounts stay in place. Adding or inviting users is blocked until you add capacity or free up seats.",
-            )}
-          </Text>
-        </Box>
-      )}
-      <Text size="sm" c="dimmed">
-        {currentLimit != null
-          ? t(
-              "payment.capacityStage.subheadingAdd",
-              "Your plan covers {{current}} users today. Choose the new total.",
-              {
-                current: currentLimit,
-              },
-            )
-          : t(
-              "payment.capacityStage.subheading",
-              "Covers everyone you invite, in blocks of {{users}} users.",
-              {
-                users: USERS_PER_BLOCK,
-              },
-            )}
-      </Text>
+    <div className="team-capacity">
+      <Stack gap="md" className="team-capacity__choices">
+        {capacityNotice && capacityNotice.users > capacityNotice.limit && (
+          <Box className="team-capacity__notice">
+            <Text size="sm" fw={500}>
+              {t(
+                "payment.capacityStage.overCapacityTitle",
+                "Your server has more users than your plan covers",
+              )}
+            </Text>
+            <Text size="sm" mt={4}>
+              {t(
+                "payment.capacityStage.overCapacityBody",
+                "{{users}} users are on this server; your current allowance is {{limit}}. Choose a Team plan below to cover everyone.",
+                { users: capacityNotice.users, limit: capacityNotice.limit },
+              )}
+            </Text>
+            <Text size="xs" c="dimmed" mt={6}>
+              {t(
+                "payment.capacityStage.overCapacityConsequence",
+                "Existing accounts stay in place. Adding or inviting users is blocked until you add capacity or free up seats.",
+              )}
+            </Text>
+          </Box>
+        )}
+        <Text size="sm" c="dimmed">
+          {adjusting
+            ? t(
+                "payment.capacityStage.subheadingAdd",
+                "Your plan covers {{current}} users today. Choose the new total.",
+                {
+                  current: currentLimit,
+                },
+              )
+            : t(
+                "payment.capacityStage.subheading",
+                "Covers everyone you invite, in blocks of {{users}} users.",
+                {
+                  users: USERS_PER_BLOCK,
+                },
+              )}
+        </Text>
 
-      <Box className="team-capacity__selection">
-        <Group gap="xs" wrap="wrap" align="center">
-          <Text size="sm" fw={500}>
+        {periodPicker && (
+          <Stack gap="xs">
+            <Text size="sm" fw={600}>
+              {t("payment.capacityStage.billingLabel", "Billing")}
+            </Text>
+            {periodPicker}
+          </Stack>
+        )}
+
+        <Stack gap="xs">
+          <Text size="sm" fw={600}>
             {t("payment.capacityStage.usersLabel", "Users")}
           </Text>
-          {presets.map((users) => (
-            <Button
-              key={users}
-              variant="secondary"
-              className="team-capacity__pill"
-              aria-pressed={!showCustom && covered === users}
-              disabled={users < minUsers}
-              onClick={() => {
-                setShowCustom(false);
-                setDraftUsers(users);
-                selectUsers(users);
-              }}
-            >
-              {users}
-            </Button>
-          ))}
-          <Button
-            variant="secondary"
-            className="team-capacity__pill"
-            aria-pressed={showCustom}
-            onClick={() => {
-              setDraftUsers(covered);
-              setShowCustom(true);
+          <div
+            className="team-capacity__pills"
+            style={{
+              gridTemplateColumns: `repeat(${presets.length}, minmax(0, 1fr)) minmax(0, 1.4fr)`,
             }}
           >
-            {t("payment.capacityStage.other", "Other")}
-          </Button>
-        </Group>
+            {presets.map((users) => (
+              <Button
+                key={users}
+                variant="secondary"
+                px="xs"
+                className="team-capacity__pill"
+                aria-pressed={!showCustom && covered === users}
+                disabled={users < minUsers}
+                onClick={() => {
+                  setShowCustom(false);
+                  setDraftUsers(String(users));
+                  selectUsers(users);
+                }}
+              >
+                {users}
+              </Button>
+            ))}
+            {showCustom ? (
+              <span className="team-capacity__pill team-capacity__pill--input">
+                <input
+                  ref={(el) => {
+                    if (el && focusCustom.current) {
+                      focusCustom.current = false;
+                      el.focus();
+                    }
+                  }}
+                  aria-label={t(
+                    "payment.capacityStage.customLabel",
+                    "Number of users",
+                  )}
+                  aria-invalid={customEntry !== "ok"}
+                  aria-describedby={hintId}
+                  inputMode="numeric"
+                  value={draftUsers}
+                  onChange={(event) => {
+                    const value = event.target.value.replace(/\D/g, "");
+                    setDraftUsers(value);
+                    if (checkCustomEntry(value, maxUsers) === "ok")
+                      selectUsers(Number(value));
+                  }}
+                />
+              </span>
+            ) : (
+              <Button
+                variant="secondary"
+                px="xs"
+                className="team-capacity__pill"
+                aria-pressed={false}
+                onClick={() => {
+                  focusCustom.current = true;
+                  setDraftUsers(String(covered));
+                  setShowCustom(true);
+                }}
+              >
+                {t("payment.capacityStage.custom", "Custom")}
+              </Button>
+            )}
+          </div>
+          <Text
+            id={hintId}
+            aria-live="polite"
+            size="xs"
+            c="dimmed"
+            className="team-capacity__hint"
+          >
+            {showCustom && (
+              <CapacityHint
+                entry={customEntry}
+                draftUsers={draftUsers}
+                covered={covered}
+                maxUsers={maxUsers}
+                onContactSales={onContactSales}
+              />
+            )}
+          </Text>
+        </Stack>
 
-        {showCustom && (
-          <Group gap="xs" mt="xs">
-            <NumberInput
-              aria-label={t(
-                "payment.capacityStage.customLabel",
-                "Number of users",
-              )}
-              value={draftUsers}
-              onChange={(value) => {
-                setDraftUsers(value);
-                if (
-                  value !== "" &&
-                  Number.isSafeInteger(Number(value)) &&
-                  Number(value) > 0
-                )
-                  selectUsers(Number(value));
-              }}
-              min={minUsers}
-              max={maxUsers}
-              clampBehavior="none"
-              hideControls
-              allowDecimal={false}
-              allowNegative={false}
-              style={{ width: 80 }}
-            />
-            <Text size="xs" c="dimmed">
-              {t("payment.capacityStage.roundsTo", "rounds to {{users}}", {
-                users: covered,
-              })}
-            </Text>
-          </Group>
+        {belowMinimumCapacity && (
+          <Alert color="yellow" variant="light">
+            {t(
+              "payment.capacityStage.minimumForCurrentUsers",
+              "You have {{users}} users, so the plan must cover at least {{minimum}}.",
+              { users: currentUsers, minimum: minUsers },
+            )}
+          </Alert>
         )}
-      </Box>
 
-      {belowMinimumCapacity && (
-        <Alert color="yellow" variant="light">
-          {t(
-            "payment.capacityStage.minimumForCurrentUsers",
-            "You have {{users}} users, so the plan must cover at least {{minimum}}.",
-            { users: currentUsers, minimum: minUsers },
-          )}
-        </Alert>
-      )}
+        {reducing && (
+          <Text size="sm" c="dimmed">
+            {t(
+              "payment.capacityStage.reductionNote",
+              "The lower capacity starts at your next renewal. Until then, you can use your current allowance. Existing users stay; new users are blocked if you are over capacity when the change takes effect.",
+            )}
+          </Text>
+        )}
+      </Stack>
 
-      {periodPicker}
-      {reducing && (
-        <Text size="sm" c="dimmed">
-          {t(
-            "payment.capacityStage.reductionNote",
-            "The lower capacity starts at your next renewal. Until then, you can use your current allowance. Existing users stay; new users are blocked if you are over capacity when the change takes effect.",
-          )}
+      <CapacitySummary
+        blocks={serverQuantity}
+        blockPrice={blockPrice}
+        currency={currency}
+        period={period}
+        adjusting={adjusting}
+        continueDisabled={
+          belowMinimumCapacity || (showCustom && customEntry !== "ok")
+        }
+        onContinue={onContinue}
+        onEnterpriseQuote={offerEnterprise ? onContactSales : undefined}
+      />
+    </div>
+  );
+};
+
+interface CapacityHintProps {
+  entry: CustomEntry;
+  draftUsers: string;
+  covered: number;
+  maxUsers: number;
+  onContactSales?: () => void;
+}
+
+/** What a custom entry will buy, or why it cannot be bought here. */
+function CapacityHint({
+  entry,
+  draftUsers,
+  covered,
+  maxUsers,
+  onContactSales,
+}: CapacityHintProps) {
+  const { t } = useTranslation();
+
+  if (entry === "empty") {
+    return t("payment.capacityStage.enterUsers", "Enter a number of users.");
+  }
+  if (entry === "overLimit") {
+    return (
+      <>
+        {t(
+          "payment.capacityStage.selfServeLimit",
+          "Up to {{users}} users here.",
+          {
+            users: maxUsers,
+          },
+        )}
+        {onContactSales && (
+          <>
+            {" "}
+            <button
+              type="button"
+              className="team-capacity__link"
+              onClick={onContactSales}
+            >
+              {t(
+                "payment.capacityStage.talkToEnterprise",
+                "For more, talk to us about Enterprise.",
+              )}
+            </button>
+          </>
+        )}
+      </>
+    );
+  }
+  if (Number(draftUsers) !== covered) {
+    return t(
+      "payment.capacityStage.roundsUp",
+      "Rounds up to {{users}} users.",
+      {
+        users: covered,
+      },
+    );
+  }
+  return null;
+}
+
+interface CapacitySummaryProps {
+  blocks: number;
+  blockPrice: number;
+  currency: string;
+  period: string;
+  /** Changing an existing plan rather than buying a first one. */
+  adjusting: boolean;
+  continueDisabled: boolean;
+  onContinue: () => void;
+  onEnterpriseQuote?: () => void;
+}
+
+/** The order as it stands, and the way on to payment. */
+function CapacitySummary({
+  blocks,
+  blockPrice,
+  currency,
+  period,
+  adjusting,
+  continueDisabled,
+  onContinue,
+  onEnterpriseQuote,
+}: CapacitySummaryProps) {
+  const { t } = useTranslation();
+  const covered = usersForBlocks(blocks);
+  const total = blockPrice * blocks;
+
+  return (
+    <Stack gap="md" className="team-capacity__summary">
+      <Group gap="xs" wrap="nowrap">
+        <Icon name="users" />
+        <Text fw={600}>
+          {t("payment.capacityStage.planName", "Stirling Team")}
         </Text>
-      )}
-
-      <Stack gap="sm" className="team-capacity__receipt">
-        <Group justify="space-between">
+      </Group>
+      <div>
+        <Text className="team-capacity__covered">{covered}</Text>
+        <Text size="sm" c="dimmed">
+          {t("payment.capacityStage.usersCovered", "users covered")}
+        </Text>
+      </div>
+      <Stack gap="sm">
+        <Group justify="space-between" wrap="nowrap">
           <Text size="sm" c="dimmed">
             {t(
               "payment.capacityStage.lineItem",
@@ -251,17 +391,36 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
         <Divider />
         <Group justify="space-between" align="baseline">
           <Text fw={600}>
-            {currentLimit != null
+            {adjusting
               ? t("payment.capacityStage.newPlanTotal", "New plan total")
               : t("payment.capacityStage.estimatedTotal", "Estimated total")}
           </Text>
-          <Text size="md" fw={600}>
+          <Text size="xl" fw={700}>
             {formatPrice(total, currency)}
           </Text>
         </Group>
       </Stack>
-      <Text size="xs" c="dimmed">
-        {currentLimit != null
+      <div className="team-capacity__spacer" />
+      <Button
+        fullWidth
+        size="lg"
+        onClick={onContinue}
+        disabled={continueDisabled}
+      >
+        {adjusting
+          ? t("payment.capacityStage.reviewChange", "Review change in Stripe")
+          : t("payment.capacityStage.continue", "Continue to payment")}
+      </Button>
+      {onEnterpriseQuote && (
+        <Button variant="secondary" onClick={onEnterpriseQuote} fullWidth>
+          {t(
+            "payment.capacityStage.enterpriseQuote",
+            "Get an enterprise quote",
+          )}
+        </Button>
+      )}
+      <Text size="xs" c="dimmed" ta="center">
+        {adjusting
           ? t(
               "payment.capacityStage.adjustmentNote",
               "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available.",
@@ -273,34 +432,12 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
                 total: formatPrice(total, currency, 0),
                 period,
               },
-            )}
-      </Text>
-
-      <Text size="xs" c="dimmed">
+            )}{" "}
         {t(
           "payment.capacityStage.currencyAtCheckout",
           "Stripe confirms the final amount and payment currency at checkout.",
         )}
       </Text>
-      <Group justify="flex-end" mt="sm">
-        <Button
-          onClick={onContinue}
-          disabled={belowMinimumCapacity || (showCustom && invalidDraft)}
-        >
-          {currentLimit != null
-            ? t("payment.capacityStage.reviewChange", "Review change in Stripe")
-            : t("payment.capacityStage.continue", "Continue to payment")}
-        </Button>
-
-        {offerEnterprise && onContactSales && (
-          <Button variant="secondary" onClick={onContactSales} fullWidth>
-            {t(
-              "payment.capacityStage.enterpriseQuote",
-              "Get an enterprise quote",
-            )}
-          </Button>
-        )}
-      </Group>
     </Stack>
   );
-};
+}

@@ -1,0 +1,72 @@
+/* Labelled viewer toolbar controls. Active reads as a soft tint rather than a
+   solid fill, so several on at once stay calm. */
+.viewer-bar-button {
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.viewer-bar-button[data-active="true"],
+.viewer-bar-button[data-active="true"]:hover {
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-text);
+}
+
+/* A menu button stays marked while its menu is open. */
+.viewer-bar-button[aria-expanded="true"]:not([data-active="true"]) {
+  background: var(--c-hover);
+}
+
+/* A narrow chevron tucked against the ruler, reading as part of it. */
+.viewer-ruler-scale {
+  display: inline-flex;
+  margin-inline-start: -0.25rem;
+}
+
+.viewer-ruler-scale__toggle {
+  width: 1rem;
+  min-width: 1rem;
+}
+
+.viewer-bar-button-wrap {
+  display: inline-flex;
+}
+
+/* A row too narrow for every name shows icons, named by their tooltips, rather
+   than scrolling some controls out of sight. */
+@container workbench-tool-row (max-width: 820px) {
+  .viewer-bar-button__label {
+    display: none;
+  }
+  /* Sized like the icon-only controls beside it (24px with its 1px border),
+     with no gap left for the hidden text, so the icon sits in the middle of
+     its highlight. Two classes, to outrank the button's own minimum height. */
+  .viewer-bar-button-wrap .viewer-bar-button {
+    min-height: 24px;
+    height: 24px;
+    padding-inline: 3px;
+  }
+  .viewer-bar-button .mantine-Button-section[data-position="left"] {
+    margin-inline-end: 0;
+  }
+}
+
+/* A page colour choice, previewed in the View menu. */
+.viewer-page-colour-swatch {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 3px;
+  border: 1px solid var(--c-border);
+}
+
+.viewer-page-colour-swatch--normal {
+  background: var(--c-page-colour-normal);
+}
+
+.viewer-page-colour-swatch--dark {
+  background: var(--c-page-colour-dark);
+}
+
+.viewer-page-colour-swatch--sepia {
+  background: var(--c-page-colour-sepia);
+}

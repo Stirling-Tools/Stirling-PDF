@@ -127,11 +127,6 @@ export default function AdminSystemSection() {
             watchedFoldersDirs: normalizedWatchedFoldersDirs,
             finishedFoldersDir: pipelinePaths.finishedFoldersDir || "",
           },
-          operations: {
-            ...(system.customPaths?.operations || {}),
-            weasyprint: system.customPaths?.operations?.weasyprint || "",
-            unoconvert: system.customPaths?.operations?.unoconvert || "",
-          },
         },
         customMetadata: premium.proFeatures?.customMetadata || {
           autoUpdateMetadata: false,
@@ -177,6 +172,7 @@ export default function AdminSystemSection() {
         "system.defaultLocale": settings.system?.defaultLocale,
         "system.showUpdate": settings.system?.showUpdate,
         "system.showUpdateOnlyAdmin": settings.system?.showUpdateOnlyAdmin,
+        "system.enableFeedback": settings.system?.enableFeedback,
         "system.customHTMLFiles": settings.system?.customHTMLFiles,
         "system.fileUploadLimit": settings.system?.fileUploadLimit,
         "system.frontendUrl": settings.system?.frontendUrl,
@@ -210,10 +206,6 @@ export default function AdminSystemSection() {
           settings.customPaths?.pipeline?.watchedFoldersDirs;
         deltaSettings["system.customPaths.pipeline.finishedFoldersDir"] =
           settings.customPaths?.pipeline?.finishedFoldersDir;
-        deltaSettings["system.customPaths.operations.weasyprint"] =
-          settings.customPaths?.operations?.weasyprint;
-        deltaSettings["system.customPaths.operations.unoconvert"] =
-          settings.customPaths?.operations?.unoconvert;
       }
 
       return {

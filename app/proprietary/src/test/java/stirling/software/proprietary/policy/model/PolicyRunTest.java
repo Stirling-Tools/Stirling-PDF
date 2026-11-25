@@ -22,6 +22,7 @@ class PolicyRunTest {
                 null,
                 null,
                 null,
+                null,
                 null);
     }
 
@@ -33,6 +34,7 @@ class PolicyRunTest {
                         "policy",
                         new PipelineDefinition(
                                 "copy", List.of(), List.of(OutputSpec.folder("/out"))),
+                        null,
                         null,
                         null,
                         null,
@@ -61,6 +63,7 @@ class PolicyRunTest {
                                             new RoutedDestination(
                                                     new RoutingRule(condition, "destination"),
                                                     destination))),
+                            null,
                             null,
                             null,
                             null,
