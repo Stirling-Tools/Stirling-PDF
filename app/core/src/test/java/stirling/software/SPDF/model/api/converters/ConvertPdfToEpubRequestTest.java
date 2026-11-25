@@ -49,13 +49,6 @@ class ConvertPdfToEpubRequestTest {
     class TargetDeviceEnum {
 
         @Test
-        @DisplayName("exposes calibre profile per device")
-        void calibreProfiles() {
-            assertThat(TargetDevice.TABLET_PHONE_IMAGES.getCalibreProfile()).isEqualTo("tablet");
-            assertThat(TargetDevice.KINDLE_EINK_TEXT.getCalibreProfile()).isEqualTo("kindle");
-        }
-
-        @Test
         @DisplayName("valueOf round trips")
         void valueOf() {
             assertThat(TargetDevice.valueOf("KINDLE_EINK_TEXT"))

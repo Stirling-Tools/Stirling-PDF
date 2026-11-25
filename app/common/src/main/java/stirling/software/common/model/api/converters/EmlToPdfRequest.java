@@ -11,9 +11,6 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class EmlToPdfRequest extends PDFFile {
 
-    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
-    private Boolean useStirlingOfficeConvert;
-
     @Schema(
             description = "Include email attachments in the PDF output",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,

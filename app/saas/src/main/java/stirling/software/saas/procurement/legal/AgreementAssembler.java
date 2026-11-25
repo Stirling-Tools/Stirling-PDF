@@ -138,7 +138,11 @@ public class AgreementAssembler {
      * reading differently from the one the signatory saw.
      */
     private static String cell(String raw) {
-        return raw.trim().replace("|", "\\|").replaceAll("\\s*\\R+\\s*", " ");
+        return raw.trim()
+                .replace("\\", "\\\\")
+                .replace("|", "\\|")
+                .replace("<", "\\<")
+                .replaceAll("\\s*\\R+\\s*", " ");
     }
 
     /** Part B — the Order Form. Generated from the quote; the only per-deal section. */
