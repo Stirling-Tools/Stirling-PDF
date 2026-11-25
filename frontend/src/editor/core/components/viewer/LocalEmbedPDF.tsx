@@ -153,6 +153,7 @@ import { FormFieldCreationOverlay } from "@editor/tools/formFill/FormFieldCreati
 import { FormFieldEditOverlay } from "@editor/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@editor/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@editor/components/viewer/SignatureFieldOverlay";
+import { StampGuideLayer } from "@editor/components/viewer/StampGuideLayer";
 import { CommentsSidebar } from "@editor/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@editor/contexts/CommentAuthorContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
@@ -768,6 +769,14 @@ function PageLayers({
         selectionActive={isAnnotationMode && !annotationsReadOnly}
         readOnly={annotationsReadOnly}
       />
+      {file && (
+        <StampGuideLayer
+          pageIndex={pageIndex}
+          pdfSource={file}
+          pageWidth={width}
+          pageHeight={height}
+        />
+      )}
       {readOnlySignaturePreviews && (
         <SignaturePreviewLayer
           pageIndex={pageIndex}
@@ -994,7 +1003,6 @@ type EditingBridgesProps = Pick<
   isSignMode: boolean;
   getAnnotationAnchor: (annotationId: string) => AnnotationMenuAnchor | null;
   onAnnotationDeleted: (anchor: AnnotationMenuAnchor) => void;
-  onAnnotationDiscarded: (annotationId: string) => void;
   deletedAnnotationMenu: AnnotationMenuAnchor | null;
   onDismissDeletedAnnotationMenu: () => void;
 };
@@ -1011,7 +1019,6 @@ function EditingBridges({
   redactionTrackerRef,
   getAnnotationAnchor,
   onAnnotationDeleted,
-  onAnnotationDiscarded,
   deletedAnnotationMenu,
   onDismissDeletedAnnotationMenu,
 }: EditingBridgesProps) {
@@ -1031,11 +1038,7 @@ function EditingBridges({
       {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
       {redactionActive && <RedactionAPIBridge />}
       {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
-      <SignatureAPIBridge
-        ref={signatureApiRef}
-        isSignMode={isSignMode}
-        onAnnotationDiscarded={onAnnotationDiscarded}
-      />
+      <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
       {/* Pending redactions must remain available to Save & Leave in other editing tools. */}
       <RedactionPendingTracker ref={redactionTrackerRef} />
       {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
@@ -1268,9 +1271,6 @@ export function LocalEmbedPDF({
       annotationAnchorsByIdRef.current.get(annotationId) ?? null,
     [],
   );
-  const forgetAnnotationAnchor = useCallback((annotationId: string) => {
-    annotationAnchorsByIdRef.current.delete(annotationId);
-  }, []);
   const handleAnnotationDeleted = useCallback(
     (anchor: AnnotationMenuAnchor) => setDeletedAnnotationMenu(anchor),
     [],
@@ -1889,7 +1889,6 @@ export function LocalEmbedPDF({
             redactionTrackerRef={redactionTrackerRef}
             getAnnotationAnchor={getAnnotationAnchor}
             onAnnotationDeleted={handleAnnotationDeleted}
-            onAnnotationDiscarded={forgetAnnotationAnchor}
             deletedAnnotationMenu={deletedAnnotationMenu}
             onDismissDeletedAnnotationMenu={dismissDeletedAnnotationMenu}
           />

@@ -40,7 +40,9 @@ public class PdfSigningServiceImpl implements PdfSigningService {
 
         CertSignController.CreateSignature createSignature =
                 new CertSignController.CreateSignature(keystore, password);
-        createSignature.setStampStyle(StampStyle.defaults(signatureLogoStore.effective()));
+        createSignature.setStampStyle(
+                StampStyle.defaults(
+                        showSignature && showLogo ? signatureLogoStore.effective() : null));
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ByteArrayMultipartFile inputFile =

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PDFDocument, PDFString } from "@cantoo/pdf-lib";
+import { createStirlingFile, type FileId } from "@editor/types/fileContext";
 import {
   SignatureFieldPickerProvider,
   useSignatureFieldPicker,
@@ -27,7 +28,9 @@ export const Default: Story = {
   },
 };
 
-async function twoFieldPdf(): Promise<Blob> {
+const STORY_FILE_ID = "story-contract" as FileId;
+
+async function twoFieldPdf(): Promise<File> {
   const doc = await PDFDocument.create();
   const page = doc.addPage([612, 792]);
   const form = doc.getForm();
@@ -50,9 +53,12 @@ async function twoFieldPdf(): Promise<Blob> {
     form.acroForm.addField(widget);
   }
   const bytes = await doc.save();
-  return new Blob([bytes.slice().buffer], {
-    type: "application/pdf",
-  });
+  return createStirlingFile(
+    new File([bytes.slice().buffer], "contract.pdf", {
+      type: "application/pdf",
+    }),
+    STORY_FILE_ID,
+  );
 }
 
 function PickableFields({ children }: { children: ReactNode }) {
@@ -60,6 +66,7 @@ function PickableFields({ children }: { children: ReactNode }) {
   const [selected, setSelected] = useState("Company signature");
   useEffect(() => {
     setPick({
+      fileId: STORY_FILE_ID,
       fieldNames: new Set(["Company signature", "Supplier signature"]),
       selected,
       preview: null,
@@ -91,7 +98,7 @@ export const PickableFieldsOnPage: Story = {
             border: "1px solid var(--c-border)",
           }}
         >
-          <SignatureFieldOverlay {...args} pdfSource={loaded.pdf as Blob} />
+          <SignatureFieldOverlay {...args} pdfSource={loaded.pdf as File} />
         </div>
       </PickableFields>
     </SignatureFieldPickerProvider>

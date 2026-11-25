@@ -144,6 +144,10 @@ public record StampLayout(Rect logo, TextBlock name, TextBlock details) {
         if (widest > 0) {
             unwrapped = Math.min(unwrapped, width / widest);
         }
+        if (width <= 0 || height <= 0) {
+            return new Fit(
+                    0, lines.stream().map(line -> new Line(line, readsRightToLeft(line))).toList());
+        }
 
         for (float size = height; size > unwrapped * WRAP_GAIN; size *= SHRINK_STEP) {
             List<Line> wrapped = wrapAll(lines, width / size, measure);
@@ -222,7 +226,8 @@ public record StampLayout(Rect logo, TextBlock name, TextBlock details) {
                 String next = current.toString() + Character.toString(codePoint);
                 if (measure.applyAsDouble(next) <= limit) {
                     current.appendCodePoint(codePoint);
-                } else if (current.isEmpty()) {
+                } else if (current.isEmpty()
+                        || measure.applyAsDouble(Character.toString(codePoint)) > limit) {
                     return null;
                 } else {
                     wrapped.add(current.toString());

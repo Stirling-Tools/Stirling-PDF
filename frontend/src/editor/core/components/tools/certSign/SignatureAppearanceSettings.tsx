@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  FileInput,
-  Group,
-  Stack,
-  Text,
-  TextInput,
-  NumberInput,
-} from "@mantine/core";
+import { Group, Stack, Text, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import type {
   CertSignParameters,
@@ -20,6 +13,8 @@ import { Icon } from "@editor/ui/Icon";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
+import FileUploadButton from "@editor/components/shared/FileUploadButton";
+import { Tooltip } from "@editor/ui/Tooltip";
 import { SignatureFieldList } from "@editor/components/shared/signatureFields/SignatureFieldList";
 import { StampPreviewFrame } from "@editor/components/shared/signatureFields/StampPreviewFrame";
 
@@ -266,20 +261,27 @@ const GraphicChoice = ({
         ]}
       />
       {parameters.stampGraphic === "IMAGE" && (
-        <FileInput
-          value={parameters.signatureImage ?? null}
-          onChange={(file) =>
-            onParameterChange("signatureImage", file ?? undefined)
-          }
-          accept="image/png,image/jpeg"
-          placeholder={t(
+        <Tooltip
+          content={t(
             "certSign.appearance.graphic.imageHint",
             "A handwritten signature or seal, PNG or JPEG",
           )}
-          className={privateContentClassName}
-          disabled={disabled}
-          clearable
-        />
+        >
+          <div className={privateContentClassName}>
+            <FileUploadButton
+              file={parameters.signatureImage}
+              onChange={(file) =>
+                onParameterChange("signatureImage", file ?? undefined)
+              }
+              accept="image/png,image/jpeg"
+              placeholder={t(
+                "certSign.appearance.graphic.chooseImage",
+                "Choose an image",
+              )}
+              disabled={disabled}
+            />
+          </div>
+        </Tooltip>
       )}
     </Stack>
   );

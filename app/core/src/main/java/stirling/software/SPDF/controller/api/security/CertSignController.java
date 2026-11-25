@@ -13,10 +13,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Pattern;
-
-import javax.security.auth.x500.X500Principal;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -38,7 +35,6 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.pdfbox.util.Matrix;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -79,6 +75,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
+import stirling.software.SPDF.pdf.signature.DistinguishedNames;
 import stirling.software.SPDF.pdf.signature.SignatureStampPlacement;
 import stirling.software.SPDF.pdf.signature.SignatureTextWriter;
 import stirling.software.SPDF.pdf.signature.StampLayout;
@@ -331,6 +328,9 @@ public class CertSignController {
                         ? request.getShowWatermark()
                         : request.getShowLogo();
         MultipartFile signatureImage = request.getSignatureImage();
+        if (signatureImage != null) {
+            SignatureLogoStore.requireUploadSize(signatureImage.getSize(), "signatureImage");
+        }
         byte[] graphicImage =
                 signatureImage == null || signatureImage.isEmpty()
                         ? null
@@ -467,7 +467,9 @@ public class CertSignController {
             requireExpectedCertificate(createSignature, request.getExpectedCertificateSha256());
             createSignature.setStampStyle(
                     StampStyle.of(
-                            signatureLogoStore.effective(),
+                            Boolean.TRUE.equals(showSignature) && Boolean.TRUE.equals(showWatermark)
+                                    ? signatureLogoStore.effective()
+                                    : null,
                             request.getStampGraphic(),
                             graphicImage,
                             request.getTimeZone(),
@@ -697,7 +699,10 @@ public class CertSignController {
                                     ? PDImageXObject.createFromByteArray(
                                             doc, stampStyle.image(), "signature")
                                     : null;
-                    String name = signerName();
+                    String name =
+                            StringUtils.isNotBlank(signature.getName())
+                                    ? signature.getName().strip()
+                                    : signerName();
                     StampLayout layout =
                             StampLayout.of(
                                     width,
@@ -741,38 +746,16 @@ public class CertSignController {
                     : cert.getSubjectX500Principal().getName();
         }
 
-        static String distinguishedName(X500Principal subject) {
-            RDN[] rdns = X500Name.getInstance(subject.getEncoded()).getRDNs();
-            List<String> first = new ArrayList<>();
-            List<String> middle = new ArrayList<>();
-            List<String> last = new ArrayList<>();
-            for (int index = rdns.length - 1; index >= 0; index--) {
-                for (AttributeTypeAndValue value : rdns[index].getTypesAndValues()) {
-                    String type = BCStyle.INSTANCE.oidToDisplayName(value.getType());
-                    String part =
-                            (type == null ? value.getType().getId() : type.toUpperCase(Locale.ROOT))
-                                    + "="
-                                    + IETFUtils.valueToString(value.getValue());
-                    if (BCStyle.CN.equals(value.getType())) {
-                        first.add(part);
-                    } else if (BCStyle.C.equals(value.getType())) {
-                        last.add(part);
-                    } else {
-                        middle.add(part);
-                    }
-                }
-            }
-            first.addAll(middle);
-            first.addAll(last);
-            return String.join(", ", first);
-        }
-
         private List<String> detailLines(PDSignature signature, String name) {
             List<String> lines = new ArrayList<>();
             lines.add(printable(stampStyle.signedBy(name)));
             if (showCertificateDetails) {
                 X509Certificate cert = (X509Certificate) getCertificateChain()[0];
-                lines.add(printable("DN: " + distinguishedName(cert.getSubjectX500Principal())));
+                lines.add(
+                        printable(
+                                "DN: "
+                                        + DistinguishedNames.readable(
+                                                cert.getSubjectX500Principal())));
             }
             List<String> reason = sentences(textLines(signature.getReason()));
             for (int index = 0; index < reason.size(); index++) {

@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.Bidi;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.TTFParser;
@@ -107,11 +109,35 @@ public final class SignatureTextWriter {
             levels[index] = (byte) bidi.getRunLevel(index);
             segments[index] =
                     (levels[index] & 1) == 1
-                            ? new StringBuilder(segment).reverse().toString()
+                            ? mirrored(new StringBuilder(segment).reverse().toString())
                             : segment;
         }
         Bidi.reorderVisually(levels, 0, segments, 0, count);
         return String.join("", segments);
+    }
+
+    // Unicode BidiMirroring pairs for the brackets and quotes a signer is likely to type: a
+    // reversed right-to-left run must show each one facing the other way (UAX #9 rule L4).
+    private static final Map<Integer, Integer> MIRRORS =
+            mirrorPairs("()<>[]{}«»‹›⁅⁆⁽⁾₍₎≤≥〈〉《》「」『』【】");
+
+    private static Map<Integer, Integer> mirrorPairs(String pairs) {
+        Map<Integer, Integer> mirrors = new HashMap<>();
+        int[] codePoints = pairs.codePoints().toArray();
+        for (int index = 0; index + 1 < codePoints.length; index += 2) {
+            mirrors.put(codePoints[index], codePoints[index + 1]);
+            mirrors.put(codePoints[index + 1], codePoints[index]);
+        }
+        return Map.copyOf(mirrors);
+    }
+
+    private static String mirrored(String text) {
+        StringBuilder out = new StringBuilder(text.length());
+        text.codePoints()
+                .forEach(
+                        codePoint ->
+                                out.appendCodePoint(MIRRORS.getOrDefault(codePoint, codePoint)));
+        return out.toString();
     }
 
     private List<Run> runs(String logical) throws IOException {

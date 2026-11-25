@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
@@ -47,6 +47,16 @@ const CertSign = (props: BaseToolProps) => {
 
   const singleFile =
     base.selectedFiles.length === 1 ? base.selectedFiles[0] : null;
+  const signingFileId = singleFile?.fileId ?? null;
+  const placedFor = useRef(signingFileId);
+  useEffect(() => {
+    if (placedFor.current === signingFileId) return;
+    placedFor.current = signingFileId;
+    const { fieldName, stampBox } = base.params.parameters;
+    if (fieldName) base.params.updateParameter("fieldName", undefined);
+    if (stampBox) base.params.updateParameter("stampBox", undefined);
+  }, [signingFileId, base.params]);
+
   const stampPlacement = useCertSignStampPlacement({
     file: singleFile,
     parameters: base.params.parameters,
@@ -189,7 +199,10 @@ const CertSign = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
-      paramsValid: base.params.validateParameters(),
+      paramsValid:
+        base.params.validateParameters() &&
+        (base.params.parameters.signMode !== "AUTO" ||
+          !!base.params.parameters.expectedCertificateSha256),
     },
     review: {
       isVisible: base.hasResults,

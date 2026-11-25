@@ -100,4 +100,11 @@ class SignatureTextWriterTest {
                         "\u05E0\u05D7\u05EA\u05DD \u05E2\u05DC \u05D9\u05D3\u05D9 Ada"));
         assertEquals("Signed by Ada", SignatureTextWriter.visualOrder("Signed by Ada"));
     }
+
+    @Test
+    void bracketsInRightToLeftTextStillFaceTheirContents() {
+        assertEquals(
+                "(\u05DD\u05D5\u05DC\u05E9)",
+                SignatureTextWriter.visualOrder("(\u05E9\u05DC\u05D5\u05DD)"));
+    }
 }

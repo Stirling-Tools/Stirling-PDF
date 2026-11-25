@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities.Pkcs11LibraryInfo;
+import stirling.software.SPDF.pdf.signature.DistinguishedNames;
 import stirling.software.SPDF.service.macos.MacKeychainProvider;
 import stirling.software.common.util.ExceptionUtils;
 
@@ -564,6 +565,7 @@ public class HardwareKeyStoreService {
                 alias,
                 source,
                 cert.getSubjectX500Principal().getName(),
+                DistinguishedNames.readable(cert.getSubjectX500Principal()),
                 cert.getIssuerX500Principal().getName(),
                 commonName(cert.getSubjectX500Principal()),
                 commonName(cert.getIssuerX500Principal()),

@@ -14,10 +14,12 @@ const listeners = new Set<() => void>();
 /**
  * The logo the server draws faded behind visible certificate signatures: the organisation's or
  * the bundled Stirling PDF one, or null when it cannot be fetched. Fetched once per session from
- * the backend that signs; {@link forgetSignatureLogo} makes the next call fetch again.
+ * the backend that signs, though a failed fetch is retried on the next call;
+ * {@link forgetSignatureLogo} makes the next call fetch again.
  */
 export function getSignatureLogo(): Promise<SignatureLogo | null> {
-  pending ??= apiClient
+  if (pending) return pending;
+  const request: Promise<SignatureLogo | null> = apiClient
     .get<Blob>(LOGO_URL, {
       responseType: "blob",
       endpointName: "cert-sign",
@@ -27,8 +29,12 @@ export function getSignatureLogo(): Promise<SignatureLogo | null> {
       blob: response.data,
       custom: response.headers?.["x-signature-logo"] === "custom",
     }))
-    .catch(() => null);
-  return pending;
+    .catch(() => {
+      if (pending === request) pending = null;
+      return null;
+    });
+  pending = request;
+  return request;
 }
 
 export function forgetSignatureLogo(): void {

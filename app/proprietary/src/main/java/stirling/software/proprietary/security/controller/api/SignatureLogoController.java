@@ -39,6 +39,7 @@ public class SignatureLogoController {
                             + " pixels on a side.")
     public ResponseEntity<Void> upload(@RequestParam("file") MultipartFile file)
             throws IOException {
+        SignatureLogoStore.requireUploadSize(file.getSize(), "logo");
         signatureLogoStore.save(file.getBytes());
         return ResponseEntity.noContent().build();
     }

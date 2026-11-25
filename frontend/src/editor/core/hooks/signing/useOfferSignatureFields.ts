@@ -38,11 +38,12 @@ export function useOfferSignatureFields({
   const chosenOnPage = useRef<string | null>(null);
   const [flash, setFlash] = useState(0);
   useEffect(() => {
-    if (!enabled || fields.length === 0) {
+    if (!enabled || !file || fields.length === 0) {
       setPick(null);
       return;
     }
     setPick({
+      fileId: file.fileId,
       fieldNames: new Set(fields.map((field) => field.name)),
       selected,
       preview,
@@ -52,7 +53,7 @@ export function useOfferSignatureFields({
         onSelect(name);
       },
     });
-  }, [enabled, fields, selected, preview, flash, onSelect, setPick]);
+  }, [enabled, file, fields, selected, preview, flash, onSelect, setPick]);
   useEffect(() => () => setPick(null), [setPick]);
 
   const shownField = useRef<string | null>(null);

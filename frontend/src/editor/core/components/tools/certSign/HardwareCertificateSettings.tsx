@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Anchor,
@@ -165,16 +165,24 @@ const HardwareCertificateSettings = ({
   const chosen = certs.find((cert) => cert.alias === parameters.alias);
   const chosenSha256 = chosen?.sha256;
   const chosenOnToken = chosen?.onToken === true;
+  // A refresh after the key is unplugged can list the login-keychain copy under the same alias;
+  // the token requirement stays with the selection until the user picks something else.
+  const tokenRequiredFor = useRef(parameters.alias);
   useEffect(() => {
     if (parameters.expectedCertificateSha256 !== chosenSha256) {
       onParameterChange("expectedCertificateSha256", chosenSha256);
     }
-    if (Boolean(parameters.requireToken) !== chosenOnToken) {
-      onParameterChange("requireToken", chosenOnToken || undefined);
+    const sameSelection = tokenRequiredFor.current === parameters.alias;
+    tokenRequiredFor.current = parameters.alias;
+    const required =
+      chosenOnToken || (sameSelection && Boolean(parameters.requireToken));
+    if (Boolean(parameters.requireToken) !== required) {
+      onParameterChange("requireToken", required || undefined);
     }
   }, [
     chosenSha256,
     chosenOnToken,
+    parameters.alias,
     parameters.expectedCertificateSha256,
     parameters.requireToken,
     onParameterChange,

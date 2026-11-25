@@ -18,6 +18,7 @@ import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSignatureFieldPicker } from "@editor/contexts/SignatureFieldPickerContext";
+import { isStirlingFile } from "@editor/types/fileContext";
 import "@editor/components/viewer/SignatureFieldOverlay.css";
 import {
   renderSignatureFieldAppearances,
@@ -74,18 +75,16 @@ async function resolveFields(
     );
     const signatures = await runPdfiumScan(() => extractSignatures(buf));
 
-    return appearances.map((f, i) => {
-      // Positional correlation is only reliable when both arrays have the same
-      // length — i.e. one signature object per signature field in document order.
-      // When the counts differ we cannot safely attribute reason/time per-field,
-      // so we fall back to a whole-document "is signed" indicator.
-      const exactMatch = appearances.length === signatures.length;
-      const matchedSig = exactMatch ? signatures[i] : undefined;
+    // PDFium does not say which field a signature belongs to, so reason and time are matched
+    // by position only when the signed fields and the signatures line up one to one.
+    const signedFields = appearances.filter((f) => f.signed);
+    const values = signatures.filter(hasSignatureValue);
+    const paired = signedFields.length === values.length;
+    return appearances.map((f) => {
+      const matchedSig = paired ? values[signedFields.indexOf(f)] : undefined;
       return {
         ...f,
-        isSigned: exactMatch
-          ? hasSignatureValue(matchedSig)
-          : signatures.some(hasSignatureValue),
+        isSigned: f.signed,
         reason: matchedSig?.reason,
         time: matchedSig?.time,
       };
@@ -140,6 +139,8 @@ function SignatureFieldOverlayInner({
   const { t } = useTranslation();
   const staleNames = useStaleBakedFieldNames();
   const { pick } = useSignatureFieldPicker();
+  const sourceFileId =
+    pdfSource && isStirlingFile(pdfSource) ? pdfSource.fileId : null;
   const [fields, setFields] = useState<ResolvedSignatureField[]>([]);
 
   useEffect(() => {
@@ -214,13 +215,22 @@ function SignatureFieldOverlayInner({
 
         // If we have a rendered appearance bitmap, paint it via <canvas>.
         const pickable =
-          !field.isSigned && !!pick?.fieldNames.has(field.fieldName);
+          !field.isSigned &&
+          pick?.fileId === sourceFileId &&
+          pick.fieldNames.has(field.fieldName);
         const chosen = pickable && pick?.selected === field.fieldName;
         const pickProps = pickable
           ? {
               role: "button",
+              tabIndex: 0,
               "aria-pressed": chosen,
               onClick: () => pick?.choose(field.fieldName),
+              onKeyDown: (event: React.KeyboardEvent) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  pick?.choose(field.fieldName);
+                }
+              },
               title: t(
                 "viewer.signatureField.signHere",
                 "Sign here: {{name}}",

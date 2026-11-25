@@ -90,6 +90,18 @@ class SignatureLogoStoreTest {
     }
 
     @Test
+    void anUploadDeclaredOverTwoMegabytesIsRefusedBeforeItIsRead() {
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                SignatureLogoStore.requireUploadSize(
+                                        SignatureLogoStore.MAX_UPLOAD_BYTES + 1L, "logo"));
+        assertTrue(error.getMessage().contains("logo"), error.getMessage());
+        SignatureLogoStore.requireUploadSize(SignatureLogoStore.MAX_UPLOAD_BYTES, "logo");
+    }
+
+    @Test
     void aHugeCanvasIsRefusedFromItsHeaderBeforeDecoding() throws Exception {
         byte[] png = image("png", 1, 1);
         withHeaderSize(png, 100_000, 100_000);

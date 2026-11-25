@@ -1605,6 +1605,8 @@ export interface SignatureFieldAppearance {
   /** Height in PDF points. */
   height: number;
   fieldName: string;
+  /** Whether the field carries a /V, i.e. has been signed. */
+  signed: boolean;
   /**
    * RGBA pixel data of the rendered appearance stream, or `null` when the
    * annotation has no visible appearance (e.g. unsigned fields).
@@ -1993,6 +1995,15 @@ export async function renderSignatureFieldAppearances(
           }
         }
 
+        let signed = m.FPDFAnnot_HasKey(annotPtr, "V");
+        if (!signed) {
+          const parentPtr = m.FPDFAnnot_GetLinkedAnnot(annotPtr, "Parent");
+          if (parentPtr) {
+            signed = m.FPDFAnnot_HasKey(parentPtr, "V");
+            m.FPDFPage_CloseAnnot(parentPtr);
+          }
+        }
+
         m.FPDFPage_CloseAnnot(annotPtr);
 
         results.push({
@@ -2002,6 +2013,7 @@ export async function renderSignatureFieldAppearances(
           width: pdfW,
           height: pdfH,
           fieldName: name,
+          signed,
           imageData,
           sourcePageWidth: cropWidth,
           sourcePageHeight: cropHeight,
@@ -2171,6 +2183,7 @@ export async function renderButtonFieldAppearances(
           width: pdfW,
           height: pdfH,
           fieldName: btnName,
+          signed: false,
           imageData,
           sourcePageWidth: cropWidth,
           sourcePageHeight: cropHeight,

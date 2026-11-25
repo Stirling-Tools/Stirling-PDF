@@ -151,6 +151,52 @@ class SignatureStampPlacementTest {
     }
 
     @Test
+    void aBoxWithinTheEdgeToleranceButNoVisibleAreaIsRejected() throws Exception {
+        try (PDDocument doc = pageWith(new PDRectangle(50, 60, 500, 700), 0)) {
+            IllegalArgumentException error =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () ->
+                                    SignatureStampPlacement.resolve(
+                                            doc,
+                                            0,
+                                            SignatureStampPlacement.Box.of(49.6f, 100f, 0.2f, 50f),
+                                            null));
+            assertTrue(error.getMessage().contains("no visible area"), error.getMessage());
+        }
+    }
+
+    @Test
+    void aBoxWhoseWidthRoundsToNothingIsRejected() throws Exception {
+        try (PDDocument doc = pageWith(LETTER, 0)) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            SignatureStampPlacement.resolve(
+                                    doc,
+                                    0,
+                                    SignatureStampPlacement.Box.of(100f, 100f, 0.000001f, 50f),
+                                    null));
+        }
+    }
+
+    @Test
+    void aFieldOutsideTheVisiblePageIsRejected() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            page.setCropBox(new PDRectangle(100, 100, 400, 500));
+            doc.addPage(page);
+            addSignatureField(doc, page, "Hidden", new PDRectangle(10, 10, 70, 30));
+
+            IllegalArgumentException error =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> SignatureStampPlacement.resolve(doc, 0, null, "Hidden"));
+            assertTrue(error.getMessage().contains("outside the visible page"), error.getMessage());
+        }
+    }
+
+    @Test
     void aMissingPageIsRejected() throws Exception {
         try (PDDocument doc = pageWith(LETTER, 0)) {
             IllegalArgumentException error =

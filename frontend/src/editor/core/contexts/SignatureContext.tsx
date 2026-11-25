@@ -6,7 +6,6 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import type { Rect } from "@embedpdf/models";
 import { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 import { SignatureFieldPickerProvider } from "@editor/contexts/SignatureFieldPickerContext";
 import type {
@@ -19,8 +18,6 @@ export interface PlacedSignature {
   id: string;
   pageIndex: number;
   imageSrc?: string;
-  /** PDF points from the crop box's top-left corner, before page rotation. */
-  rect?: Rect;
 }
 
 // Signature state interface

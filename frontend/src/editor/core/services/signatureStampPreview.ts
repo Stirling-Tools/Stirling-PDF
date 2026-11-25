@@ -40,6 +40,8 @@ export interface TextBlock {
   lefts: number[];
   /** Baselines measured up from the bottom of the box. */
   baselines: number[];
+  /** Each line's paragraph direction, as the server's first-strong-character rule picks it. */
+  rightToLeft: boolean[];
 }
 
 export interface StampLayout {
@@ -179,6 +181,7 @@ function block(area: Rect, lines: string[], measure: Measure): TextBlock {
         : area.x,
     ),
     baselines: fit.lines.map((_, index) => first - index * leading),
+    rightToLeft: fit.lines.map((line) => line.rightToLeft),
   };
 }
 
@@ -191,6 +194,15 @@ function fitLines(
   const widest = Math.max(0, ...lines.map(measure));
   let unwrapped = height / ((lines.length - 1) * LEADING + 1);
   if (widest > 0) unwrapped = Math.min(unwrapped, width / widest);
+  if (width <= 0 || height <= 0) {
+    return {
+      fontSize: 0,
+      lines: lines.map((text) => ({
+        text,
+        rightToLeft: readsRightToLeft(text),
+      })),
+    };
+  }
 
   for (let size = height; size > unwrapped * WRAP_GAIN; size *= SHRINK_STEP) {
     const wrapped = wrapAll(lines, width / size, measure);
@@ -251,7 +263,7 @@ function wrap(
       for (const char of word) {
         if (measure(current + char) <= limit) {
           current += char;
-        } else if (!current) {
+        } else if (!current || measure(char) > limit) {
           return null;
         } else {
           wrapped.push(current);
@@ -364,24 +376,16 @@ export function renderStampPreview(
   }
   ctx.fillStyle = "black";
   ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
   for (const text of [layout.name, layout.details]) {
     if (!text) continue;
     ctx.font = `${text.fontSize}px ${FONT}`;
     text.lines.forEach((line, index) => {
+      ctx.direction = text.rightToLeft[index] ? "rtl" : "ltr";
       ctx.fillText(line, text.lefts[index], height - text.baselines[index]);
     });
   }
   return canvas.toDataURL("image/png");
-}
-
-export function readableDistinguishedName(rfc2253: string): string {
-  const parts = rfc2253
-    .split(/(?<!\\),/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-  const rank = (part: string) =>
-    /^CN=/i.test(part) ? 0 : /^C=/i.test(part) ? 2 : 1;
-  return [...parts].sort((a, b) => rank(a) - rank(b)).join(", ");
 }
 
 /** The sign time as the stamp writes it: `2026.11.24 10:12:05 +01'00'` in `timeZone`. */

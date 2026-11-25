@@ -106,13 +106,23 @@ public class SignatureLogoStore {
         return png.toByteArray();
     }
 
+    /**
+     * Refuses an upload over 2 MB from its declared size, before its bytes are read into memory.
+     *
+     * @param field the request field named in the error
+     * @throws IllegalArgumentException when {@code size} is over 2 MB
+     */
+    public static void requireUploadSize(long size, String field) {
+        if (size > MAX_UPLOAD_BYTES) {
+            throw invalid(field, "the file is over 2 MB");
+        }
+    }
+
     private static BufferedImage decode(byte[] upload, String field) throws IOException {
         if (upload == null || upload.length == 0) {
             throw invalid(field, "the file is empty");
         }
-        if (upload.length > MAX_UPLOAD_BYTES) {
-            throw invalid(field, "the file is over 2 MB");
-        }
+        requireUploadSize(upload.length, field);
         if (!isPng(upload) && !isJpeg(upload)) {
             throw invalid(field, "the file must be a PNG or JPEG image");
         }

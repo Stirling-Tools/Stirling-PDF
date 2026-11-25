@@ -60,6 +60,27 @@ class StampLayoutTest {
     }
 
     @Test
+    void aBoxWithNoWidthIsLaidOutWithoutSearchingForAFit() {
+        StampLayout layout = StampLayout.of(0, 50, "Ada", 0, DETAILS, HALF_EM);
+        assertEquals(0, layout.details().fontSize(), 0.0001);
+    }
+
+    @Test
+    void everyWrappedLineFitsWhenOneCharacterIsMuchWiderThanTheNext() {
+        ToDoubleFunction<String> measure =
+                line -> line.codePoints().mapToDouble(c -> c == '漢' ? 3 : 0.5).sum();
+        String name = "ｱ漢ｱ漢ｱ漢ｱ漢";
+        float width = 60;
+        StampLayout layout = StampLayout.of(width, 200, name, 0, DETAILS, measure);
+        float graphicWidth = width - 2 * width * 0.04f;
+        for (String line : layout.name().lines()) {
+            assertTrue(
+                    measure.applyAsDouble(line) * layout.name().fontSize() <= graphicWidth + 0.01,
+                    line);
+        }
+    }
+
+    @Test
     void aWordWiderThanItsHalfBreaksBetweenCharacters() {
         String name = "山田太郎山田太郎山田太郎山田太郎山田太郎";
         StampLayout layout = StampLayout.of(120, 120, name, 0, DETAILS, HALF_EM);

@@ -5,6 +5,7 @@ export interface HardwareCertificateInfo {
   alias: string;
   source: "WINDOWS_STORE" | "MACOS_KEYCHAIN" | "PKCS11" | "SERVER";
   subject: string;
+  displaySubject: string;
   issuer: string;
   subjectCommonName: string;
   issuerCommonName: string;

@@ -65,7 +65,6 @@ describe("signatureFlattening", () => {
       activateSignaturePlacementMode: vi.fn(),
       activateDeleteMode: vi.fn(),
       deleteAnnotation,
-      discardAnnotation: vi.fn(),
       updateDrawSettings: vi.fn(),
       deactivateTools: vi.fn(),
       selectAnnotation: vi.fn(),

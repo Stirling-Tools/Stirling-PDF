@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSignature } from "@editor/contexts/SignatureContext";
 import { useNavigation } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useOfferSignatureFields } from "@editor/hooks/signing/useOfferSignatureFields";
-import { DEFAULT_PARAMETERS as SIGN_DEFAULTS } from "@editor/hooks/tools/sign/useSignParameters";
+import {
+  useSignatureFieldPicker,
+  type StampGuideRect,
+} from "@editor/contexts/SignatureFieldPickerContext";
 import type { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { stampLabels } from "@editor/hooks/tools/certSign/useCertSignOperation";
 import { useSignatureLogo } from "@editor/hooks/tools/certSign/useSignatureLogo";
@@ -13,7 +15,6 @@ import { getServerSigningCertificate } from "@editor/services/hardwareSigningSer
 import {
   DEFAULT_STAMP_SIZE,
   renderStampPreview,
-  readableDistinguishedName,
   stampDetails,
 } from "@editor/services/signatureStampPreview";
 import {
@@ -83,9 +84,7 @@ function useServerSigner(serverSigning: boolean): ServerSigner | null {
       if (!cancelled && cert) {
         setSigner({
           name: cert.subjectCommonName || null,
-          subject: cert.subject
-            ? readableDistinguishedName(cert.subject)
-            : null,
+          subject: cert.displaySubject || null,
         });
       }
     });
@@ -107,7 +106,9 @@ function useStampRenderer(parameters: CertSignParameters): StampRenderer {
   const image = useImageFile(parameters.signatureImage ?? null);
   const server = useServerSigner(parameters.signMode === "AUTO");
   const signer =
-    server?.name ?? t("certSign.appearance.placement.yourName", "Your name");
+    parameters.name.trim() ||
+    server?.name ||
+    t("certSign.appearance.placement.yourName", "Your name");
   const subject = parameters.showCertificateDetails
     ? (server?.subject ??
       t(
@@ -160,9 +161,9 @@ export function useDefaultStampPreview(
 }
 
 /**
- * Lets the user place the visible signature box with the Sign tool's stamp placement, and offers
- * the file's empty signature fields. The placed stamp lives only in the viewer as a guide; it is
- * removed when placement is abandoned, so the signed file never contains it.
+ * Offers the file's empty signature fields, and lets the user put the visible signature box
+ * anywhere on a page instead. The box is drawn over the viewer, never added to the document, so
+ * no save can write it into the file.
  */
 export function useCertSignStampPlacement({
   file,
@@ -170,39 +171,22 @@ export function useCertSignStampPlacement({
   onParameterChange,
   active,
 }: StampPlacementOptions): CertSignStampPlacement {
-  const { t } = useTranslation();
-  const {
-    signatureConfig,
-    setSignatureConfig,
-    activateSignaturePlacementMode,
-    deactivateDrawMode,
-    isPlacementMode,
-    isSignatureApiReady,
-    placedSignatures,
-    signatureApiRef,
-    setSignaturesApplied,
-  } = useSignature();
-  const { hasUnsavedChanges, setWorkbench } = useNavigation();
+  const { setWorkbench } = useNavigation();
   const { activeFileId, setActiveFileId } = useViewer();
+  const { setGuide } = useSignatureFieldPicker();
   const layout = useSignatureLayout(
     active && parameters.showSignature ? file : null,
   );
 
-  const [armed, setArmed] = useState(false);
-  const [stampId, setStampId] = useState<string | null>(null);
-  const knownIds = useRef<Set<string>>(new Set());
-  const wasCleanBeforePlacing = useRef(false);
+  const [placing, setPlacing] = useState(false);
+  const [placed, setPlaced] = useState<{
+    pageIndex: number;
+    rect: StampGuideRect;
+  } | null>(null);
   const offeredFieldFor = useRef<SignatureLayout | null>(null);
 
   const placingActive = parameters.showSignature && !parameters.fieldName;
   const renderStamp = useStampRenderer(parameters);
-  const stamp = placedSignatures.find((entry) => entry.id === stampId) ?? null;
-
-  const previewLabel = parameters.name
-    ? t("certSign.appearance.placement.previewNamed", "Signed by {{name}}", {
-        name: parameters.name,
-      })
-    : t("certSign.appearance.placement.preview", "Digital signature");
 
   useEffect(() => {
     if (!layout || offeredFieldFor.current === layout) return;
@@ -210,124 +194,101 @@ export function useCertSignStampPlacement({
     const names = layout.emptyFields.map((field) => field.name);
     if (parameters.fieldName && !names.includes(parameters.fieldName)) {
       onParameterChange("fieldName", undefined);
-    } else if (!parameters.fieldName && !stampId && names.length > 0) {
+    } else if (!parameters.fieldName && !placed && names.length > 0) {
       onParameterChange("fieldName", names[0]);
     }
-  }, [layout, parameters.fieldName, stampId, onParameterChange]);
+  }, [layout, parameters.fieldName, placed, onParameterChange]);
 
   const remove = useCallback(() => {
-    setArmed(false);
-    if (isPlacementMode) deactivateDrawMode();
-    const ours = placedSignatures.filter(
-      (entry) =>
-        entry.id === stampId || (armed && !knownIds.current.has(entry.id)),
-    );
-    if (stampId || ours.length > 0) {
-      for (const entry of ours) {
-        signatureApiRef.current?.discardAnnotation(entry.id, entry.pageIndex);
-      }
-      if (wasCleanBeforePlacing.current) setSignaturesApplied(true);
-    }
-    setStampId(null);
-    onParameterChange("stampBox", undefined);
-  }, [
-    armed,
-    isPlacementMode,
-    deactivateDrawMode,
-    placedSignatures,
-    stampId,
-    signatureApiRef,
-    setSignaturesApplied,
-    onParameterChange,
-  ]);
+    setPlacing(false);
+    setPlaced(null);
+    if (active) onParameterChange("stampBox", undefined);
+  }, [active, onParameterChange]);
 
   const place = useCallback(() => {
-    if (stampId) remove();
-    knownIds.current = new Set(placedSignatures.map((entry) => entry.id));
-    wasCleanBeforePlacing.current = !hasUnsavedChanges;
     if (file && activeFileId !== file.fileId) setActiveFileId(file.fileId);
     setWorkbench("viewer");
-    const previewImage = renderStamp(
-      DEFAULT_STAMP_SIZE.width,
-      DEFAULT_STAMP_SIZE.height,
-    );
-    setSignatureConfig({
-      ...SIGN_DEFAULTS,
-      ...(previewImage
-        ? { signatureType: "image", signatureData: previewImage }
-        : { signatureType: "text" }),
-      signerName: previewLabel,
-    });
-    setArmed(true);
-  }, [
-    stampId,
-    remove,
-    placedSignatures,
-    hasUnsavedChanges,
-    file,
-    activeFileId,
-    setActiveFileId,
-    setWorkbench,
-    setSignatureConfig,
-    renderStamp,
-    previewLabel,
-  ]);
+    setPlaced(null);
+    setPlacing(true);
+  }, [file, activeFileId, setActiveFileId, setWorkbench]);
 
+  const moveTo = useCallback(
+    (pageIndex: number, rect: StampGuideRect) => {
+      setPlacing(false);
+      setPlaced({ pageIndex, rect });
+      const cropBox = layout?.cropBoxes[pageIndex];
+      if (!cropBox) return;
+      onParameterChange("stampBox", viewerRectToPdfBox(rect, cropBox));
+      onParameterChange("pageNumber", pageIndex + 1);
+    },
+    [layout, onParameterChange],
+  );
+
+  const guideSize = placed?.rect ?? DEFAULT_STAMP_SIZE;
+  const guidePreview = useMemo(
+    () => renderStamp(guideSize.width, guideSize.height),
+    [renderStamp, guideSize.width, guideSize.height],
+  );
+  const pageSizes = useMemo(
+    () =>
+      (layout?.cropBoxes ?? []).map((box) => ({
+        width: box.width,
+        height: box.height,
+      })),
+    [layout],
+  );
   useEffect(() => {
     if (
-      armed &&
-      isSignatureApiReady &&
-      !isPlacementMode &&
-      signatureConfig?.signerName === previewLabel
+      !active ||
+      !placingActive ||
+      !file ||
+      !layout ||
+      (!placing && !placed)
     ) {
-      activateSignaturePlacementMode();
+      setGuide(null);
+      return;
     }
+    setGuide({
+      fileId: file.fileId,
+      placing,
+      pageIndex: placed?.pageIndex ?? null,
+      rect: placed?.rect ?? null,
+      pageSizes,
+      defaultSize: DEFAULT_STAMP_SIZE,
+      preview: guidePreview,
+      onChange: moveTo,
+    });
   }, [
-    armed,
-    isSignatureApiReady,
-    isPlacementMode,
-    signatureConfig,
-    previewLabel,
-    activateSignaturePlacementMode,
+    active,
+    placingActive,
+    file,
+    layout,
+    placing,
+    placed,
+    pageSizes,
+    guidePreview,
+    moveTo,
+    setGuide,
   ]);
+  useEffect(() => () => setGuide(null), [setGuide]);
+
+  const fileKey = file?.fileId ?? null;
+  const placedFor = useRef(fileKey);
+  useEffect(() => {
+    if (placedFor.current === fileKey) return;
+    placedFor.current = fileKey;
+    setPlacing(false);
+    setPlaced(null);
+  }, [fileKey]);
 
   useEffect(() => {
-    if (!armed) return;
-    const fresh = placedSignatures.filter(
-      (entry) => !knownIds.current.has(entry.id),
-    );
-    if (fresh.length === 0) return;
-    setStampId(fresh[fresh.length - 1].id);
-    setArmed(false);
-    deactivateDrawMode();
-  }, [armed, placedSignatures, deactivateDrawMode]);
+    if (active && !placingActive) {
+      setPlacing(false);
+      setPlaced(null);
+    }
+  }, [active, placingActive]);
 
-  useEffect(() => {
-    if (!stampId || stamp) return;
-    setStampId(null);
-    if (active) onParameterChange("stampBox", undefined);
-  }, [stampId, stamp, active, onParameterChange]);
-
-  const stampPage = stamp?.pageIndex;
-  const rect = stamp?.rect;
-  const cropBox =
-    stampPage === undefined ? undefined : layout?.cropBoxes[stampPage];
-  useEffect(() => {
-    if (!active || stampPage === undefined || !rect || !cropBox) return;
-    onParameterChange(
-      "stampBox",
-      viewerRectToPdfBox(
-        {
-          x: rect.origin.x,
-          y: rect.origin.y,
-          width: rect.size.width,
-          height: rect.size.height,
-        },
-        cropBox,
-      ),
-    );
-    onParameterChange("pageNumber", stampPage + 1);
-  }, [active, stampPage, rect, cropBox, onParameterChange]);
+  const stampPage = placed?.pageIndex;
 
   const emptyFields = useMemo(() => layout?.emptyFields ?? [], [layout]);
   const fieldName = parameters.fieldName ?? null;
@@ -362,22 +323,9 @@ export function useCertSignStampPlacement({
     preview: fieldPreview,
   });
 
-  const removeRef = useRef(remove);
-  removeRef.current = remove;
-  useEffect(() => {
-    if (active && !placingActive) removeRef.current();
-  }, [active, placingActive]);
-  useEffect(
-    () => () => {
-      removeRef.current();
-      setSignatureConfig(null);
-    },
-    [setSignatureConfig],
-  );
-
   return {
     layout,
-    placing: armed,
+    placing,
     placedPage: stampPage === undefined ? null : stampPage + 1,
     place,
     remove,

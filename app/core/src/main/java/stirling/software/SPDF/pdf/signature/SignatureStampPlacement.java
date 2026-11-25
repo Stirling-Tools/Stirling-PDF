@@ -148,7 +148,32 @@ public record SignatureStampPlacement(
                             cropBox.getUpperRightX(),
                             cropBox.getUpperRightY()));
         }
-        return new PDRectangle(box.x(), box.y(), box.width(), box.height());
+        PDRectangle rectangle = new PDRectangle(box.x(), box.y(), box.width(), box.height());
+        if (rectangle.getWidth() <= 0
+                || rectangle.getHeight() <= 0
+                || !overlaps(rectangle, cropBox)) {
+            throw invalid(
+                    String.format(
+                            Locale.ROOT,
+                            "x, y, width and height - the signature box (%.1f, %.1f, %.1f x %.1f)"
+                                    + " has no visible area on page %d",
+                            box.x(),
+                            box.y(),
+                            box.width(),
+                            box.height(),
+                            pageIndex + 1));
+        }
+        return rectangle;
+    }
+
+    private static boolean overlaps(PDRectangle box, PDRectangle cropBox) {
+        float width =
+                Math.min(box.getUpperRightX(), cropBox.getUpperRightX())
+                        - Math.max(box.getLowerLeftX(), cropBox.getLowerLeftX());
+        float height =
+                Math.min(box.getUpperRightY(), cropBox.getUpperRightY())
+                        - Math.max(box.getLowerLeftY(), cropBox.getLowerLeftY());
+        return width > 0 && height > 0;
     }
 
     private static SignatureStampPlacement inField(PDDocument doc, String fieldName) {
@@ -173,6 +198,12 @@ public record SignatureStampPlacement(
         int index = pageIndexOf(doc, widget);
         if (index < 0) {
             throw invalid("fieldName " + fieldName + " - that signature field is not on any page");
+        }
+        if (!overlaps(rectangle, doc.getPage(index).getCropBox())) {
+            throw invalid(
+                    "fieldName "
+                            + fieldName
+                            + " - that signature field lies outside the visible page");
         }
         return new SignatureStampPlacement(
                 index, rectangle, rotationOf(doc.getPage(index)), signatureField);

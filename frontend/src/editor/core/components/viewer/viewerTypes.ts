@@ -47,7 +47,6 @@ export interface SignatureAPI {
   activateSignaturePlacementMode: () => void;
   activateDeleteMode: () => void;
   deleteAnnotation: (annotationId: string, pageIndex: number) => void;
-  discardAnnotation: (annotationId: string, pageIndex: number) => void;
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
   getPageAnnotations: (pageIndex: number) => Promise<unknown[]>;

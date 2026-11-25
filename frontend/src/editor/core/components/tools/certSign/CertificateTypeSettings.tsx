@@ -77,6 +77,7 @@ const CertificateTypeSettings = ({
   useEffect(() => {
     if (
       parameters.signMode === "AUTO" &&
+      serverCert !== undefined &&
       parameters.expectedCertificateSha256 !== serverSha256
     ) {
       onParameterChange("expectedCertificateSha256", serverSha256);
@@ -84,6 +85,7 @@ const CertificateTypeSettings = ({
   }, [
     parameters.signMode,
     parameters.expectedCertificateSha256,
+    serverCert,
     serverSha256,
     onParameterChange,
   ]);
