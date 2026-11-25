@@ -5,6 +5,11 @@ import type { DocumentChange } from "@editor/tools/pdfTextEditor/util/documentCh
 export interface EditorSession {
   fileName: string | null;
   save: () => void;
+  /**
+   * Saves now for a document-wide setting, unsaved edits and all; a change made while
+   * a save runs is saved once it ends, where save would skip it.
+   */
+  autosave: () => void;
   download: () => void;
   pickImage: () => void;
   /** Brings a page on screen, mounted or not. */
@@ -21,8 +26,19 @@ function emit(): void {
   for (const listener of Array.from(listeners)) listener();
 }
 
-export function setEditorSession(session: EditorSession | null): void {
+export function setEditorSession(session: EditorSession): void {
   current = session;
+  emit();
+}
+
+/**
+ * Clears `session` if it is still the current one. An editor unmounting after
+ * another has mounted (leaving the text editor for a review) must not clear the
+ * newcomer's session.
+ */
+export function clearEditorSession(session: EditorSession): void {
+  if (current !== session) return;
+  current = null;
   emit();
 }
 

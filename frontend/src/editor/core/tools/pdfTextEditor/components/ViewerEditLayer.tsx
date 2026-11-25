@@ -13,6 +13,8 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import type { ViewerPageLayerProps } from "@editor/contexts/viewer/ViewerPageTool";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import type { PdfRenderMode } from "@editor/services/preferencesService";
 
 /** Display aspect ratios further apart than this mean the two disagree on rotation. */
 const ASPECT_TOLERANCE = 0.02;
@@ -36,6 +38,7 @@ export function ViewerEditLayer({
   onCovered,
 }: ViewerPageLayerProps) {
   const store = useSharedEditorStore();
+  const { pdfRenderMode } = useViewer();
   // Each page watches only its own snapshot, so an edit re-renders one page.
   // A new or closed document replaces every snapshot, so `store.document`
   // below stays current.
@@ -82,6 +85,7 @@ export function ViewerEditLayer({
         document={document}
         page={page}
         scale={displayWidth / page.width}
+        renderMode={pdfRenderMode}
         onPainted={onPainted}
       />
     </div>
@@ -93,12 +97,14 @@ function EditablePage({
   document,
   page,
   scale,
+  renderMode,
   onPainted,
 }: {
   store: EditorStore;
   document: EditorDocument;
   page: PageSnapshot;
   scale: number;
+  renderMode: PdfRenderMode;
   onPainted: () => void;
 }) {
   const widthMode = useEditorState(store, (s) => s.widthMode);
@@ -124,6 +130,7 @@ function EditablePage({
       store={store}
       page={page}
       scale={scale}
+      renderMode={renderMode}
       widthMode={widthMode}
       showRulers={showRulers}
       selectedRunIds={runIds}

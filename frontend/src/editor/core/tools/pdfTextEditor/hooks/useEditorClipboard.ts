@@ -5,6 +5,8 @@ import {
 } from "@editor/tools/pdfTextEditor/util/dom";
 
 export interface EditorClipboardCallbacks {
+  /** False while the editor is not on screen, so a paste or cut can't reach the hidden document. */
+  enabled: boolean;
   /** True when any run or image is selected (images cut without carrying text). */
   hasSelection: () => boolean;
   /** Text of the selected runs, or null when the selection carries none. */
@@ -39,7 +41,9 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
   const ref = useRef(cbs);
   ref.current = cbs;
 
+  const { enabled } = cbs;
   useEffect(() => {
+    if (!enabled) return;
     // ClipboardEvent carries no modifier state, so Ctrl+Shift+V is remembered
     // from the keystroke that triggered it.
     let pastePlain = false;
@@ -174,5 +178,5 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
       window.removeEventListener("keydown", onKeyDown);
       document.getElementById(SINK_ID)?.remove();
     };
-  }, []);
+  }, [enabled]);
 }

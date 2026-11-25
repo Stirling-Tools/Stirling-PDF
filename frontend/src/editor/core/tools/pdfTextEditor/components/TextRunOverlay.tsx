@@ -410,6 +410,8 @@ interface TextRunOverlayProps {
    * as the box, painted beneath every run. Without it the box has no grips.
    */
   gripLayer?: HTMLElement | null;
+  /** Selectable but not editable, so keys reach the review card rather than the text. */
+  readOnly?: boolean;
 }
 
 /**
@@ -556,6 +558,7 @@ export function TextRunOverlay({
   onTextRangeChange,
   textRange,
   gripLayer,
+  readOnly = false,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
   // Subscribed, so toggling the preference re-renders every overlay.
@@ -1399,7 +1402,7 @@ export function TextRunOverlay({
       data-testid={`pdf-editor-run-${run.id}`}
       data-run-id={run.id}
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
-      contentEditable={!run.locked && !run.textReadOnly}
+      contentEditable={!run.locked && !run.textReadOnly && !readOnly}
       suppressContentEditableWarning
       spellCheck={spellcheck.enabled && focused}
       lang={spellcheckLang ?? undefined}

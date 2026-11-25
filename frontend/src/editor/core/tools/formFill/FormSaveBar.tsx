@@ -27,6 +27,8 @@ interface FormSaveBarProps {
   onApply?: (filledBlob: Blob) => Promise<void>;
   /** Disable download while an ingestion-time policy run is in flight. */
   policyEnforcing?: boolean;
+  /** Kept out of sight without forgetting a dismissal, for while something else covers its corner. */
+  hidden?: boolean;
 }
 
 export function FormSaveBar({
@@ -34,6 +36,7 @@ export function FormSaveBar({
   hiddenByTool,
   onApply,
   policyEnforcing = false,
+  hidden = false,
 }: FormSaveBarProps) {
   const { t } = useTranslation();
   const { state, submitForm } = useFormFill();
@@ -96,7 +99,8 @@ export function FormSaveBar({
   const hasFields = fields.some(
     (f) => f.type !== "signature" && f.type !== "button",
   );
-  const visible = !hiddenByTool && hasFields && !loading && !dismissed;
+  const visible =
+    !hiddenByTool && !hidden && hasFields && !loading && !dismissed;
 
   return (
     <Transition mounted={visible} transition="slide-down" duration={300}>

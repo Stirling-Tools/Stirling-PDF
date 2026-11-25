@@ -15,10 +15,6 @@ import type { SelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSel
 import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
-import { FormFieldAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/FormFieldAccessibilitySection";
-import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
-import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
 import { ScanFontMatchRow } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
@@ -87,37 +83,6 @@ export function SelectionInspector({
         />
       )}
       {hasImageSelection && <ImageSection controller={controller} />}
-      {ACCESSIBILITY_EDITING &&
-        (controller.textTag || controller.textLanguage) && (
-          <TextAccessibilitySection
-            tag={controller.textTag}
-            onSetTag={controller.onSetTextTag}
-            inner={controller.innerTextTags}
-            language={controller.textLanguage}
-            otherPages={controller.textOtherPages}
-            description={controller.textDescription}
-            untaggedLinks={controller.textUntaggedLinks}
-            review={controller.accessibilityReview}
-            onNext={controller.onSelectNextToReview}
-          />
-        )}
-      {ACCESSIBILITY_EDITING && controller.imageAccessibility && (
-        <ImageAccessibilitySection
-          accessibility={controller.imageAccessibility}
-          onSetDescription={controller.onSetImageDescription}
-          onSetType={controller.onSetImageType}
-          onSetDecorative={controller.onSetImageDecorative}
-          review={controller.accessibilityReview}
-          onNext={controller.onSelectNextToReview}
-        />
-      )}
-      {ACCESSIBILITY_EDITING && controller.formFieldAccessibility && (
-        <FormFieldAccessibilitySection
-          accessibility={controller.formFieldAccessibility}
-          onTag={controller.onTagFormField}
-          onSetDescription={controller.onSetFormFieldDescription}
-        />
-      )}
     </Stack>
   );
 }
