@@ -207,7 +207,7 @@ class RepairControllerTest {
     class FilenameHandling {
 
         @Test
-        @DisplayName("appends _repaired.pdf to the base name in the Content-Disposition header")
+        @DisplayName("keeps the input name in the Content-Disposition header")
         void repairPdf_setsRepairedFilename() throws Exception {
             MockMultipartFile input =
                     new MockMultipartFile(
@@ -224,12 +224,12 @@ class RepairControllerTest {
             String disposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
             assertTrue(
-                    disposition.contains("mydoc_repaired.pdf"),
+                    disposition.contains("mydoc.pdf"),
                     "expected repaired filename in: " + disposition);
         }
 
         @Test
-        @DisplayName("filename without extension still gets _repaired.pdf appended")
+        @DisplayName("filename without extension gets a .pdf extension")
         void repairPdf_filenameWithoutExtension() throws Exception {
             MockMultipartFile input =
                     new MockMultipartFile(
@@ -245,7 +245,7 @@ class RepairControllerTest {
             String disposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
             assertTrue(
-                    disposition.contains("noext_repaired.pdf"),
+                    disposition.contains("noext.pdf"),
                     "expected repaired filename in: " + disposition);
         }
 
@@ -264,9 +264,9 @@ class RepairControllerTest {
             assertEquals(HttpStatus.OK, response.getStatusCode());
             String disposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
-            // MockMultipartFile maps a null name to "", so the base is empty -> leading underscore.
+            // MockMultipartFile maps a null name to "", so the base is empty.
             assertTrue(
-                    disposition.contains("_repaired.pdf"),
+                    disposition.contains("filename=\".pdf\""),
                     "expected empty-base repaired filename in: " + disposition);
         }
     }

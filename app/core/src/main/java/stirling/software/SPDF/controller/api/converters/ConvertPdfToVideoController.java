@@ -147,7 +147,7 @@ public class ConvertPdfToVideoController {
 
             byte[] videoBytes = Files.readAllBytes(outputVideo.getPath());
             MediaType mediaType = getMediaType(format);
-            String outputName = pdfBaseName + "-video." + format;
+            String outputName = pdfBaseName + "." + format;
             return WebResponseUtils.bytesToWebResponse(videoBytes, outputName, mediaType);
         }
     }

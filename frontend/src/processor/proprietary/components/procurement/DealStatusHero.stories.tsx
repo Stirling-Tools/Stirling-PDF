@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
 import type { ProcurementSnapshot } from "@processor/api/procurement";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 import { BillingScreen } from "@editor/billing/BillingScreen";
 import { freeWallet } from "@editor/billing/walletFixtures";
 
@@ -19,23 +20,18 @@ const base: ProcurementSnapshot = {
   contactEmail: null,
   agreementSignedVersion: null,
   latestQuote: null,
+  rateCard: RATE_CARD,
+  maxTrialExtensions: 2,
+  minAnnualNetMinor: 0,
+  entitledDeployment: null,
 };
 
-/** The CTA opens the existing flow; the billing stories exercise its section and jump link. */
+/** Billing's view of a deal underway; its one action opens the Enterprise page. */
 const meta: Meta<typeof DealStatusHero> = {
   title: "Portal/Procurement/DealStatusHero",
   component: DealStatusHero,
   parameters: { layout: "padded" },
-  args: {
-    canSchedule: true,
-    onExpand: () => {},
-    onAcceptQuote: () => {},
-    onLicense: () => {},
-    onInvite: () => {},
-    onSchedule: () => {},
-    onManageTrial: () => {},
-    onDocuments: () => {},
-  },
+  args: { onOpen: () => {} },
 };
 export default meta;
 
@@ -62,6 +58,11 @@ export const Live: Story = {
   args: {
     snapshot: { ...base, stage: "active", licensed: true, trialEndsAt: null },
   },
+};
+
+/** Members follow the deal from billing without a way into it. */
+export const Member: Story = {
+  args: { ...Trial.args, onOpen: undefined },
 };
 
 export const BillingTrial: Story = {

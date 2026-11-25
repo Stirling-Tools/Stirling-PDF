@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -25,19 +26,15 @@ async function arrangeItemDisabled(
   const disabled = await item.isDisabled();
   // Close via a neutral click in the top bar, NOT Escape: the editor's global
   // Escape handler also clears the selection, which would break the next check.
-  await page.getByTestId("pdf-editor-zoom-percent").click();
+  await page
+    .getByTestId("pdf-editor-toolbar")
+    .click({ position: { x: 2, y: 2 } });
   await item.waitFor({ state: "hidden" });
   return disabled;
 }
 
 async function open(page: Page, firstPage = 0): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 15_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId(`pdf-editor-page-${firstPage}`)).toBeVisible({
     timeout: 30_000,
   });

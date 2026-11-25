@@ -25,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -37,19 +36,14 @@ import stirling.software.officeconvert.OfficeConvert;
 import stirling.software.officeconvert.PdfToPptx;
 import stirling.software.officeconvert.legacy.PdfToPpt;
 
-/**
- * PDF to Office in process through Stirling Office Convert, and the switch between it and the
- * legacy converters. Conversions use the configured LibreOffice timeout.
- */
+/** PDF to Office in process through Stirling Office Convert, under the configured timeout. */
 @Service
 @RequiredArgsConstructor
 public class OfficeConversionService {
 
-    /** Output formats by extension; a .doc is RTF, which Word opens as a document. */
     private static final Map<String, OfficeConvert.Format> FORMATS =
             Map.ofEntries(
                     Map.entry("docx", OfficeConvert.Format.DOCX),
-                    Map.entry("doc", OfficeConvert.Format.RTF),
                     Map.entry("odt", OfficeConvert.Format.ODT),
                     Map.entry("rtf", OfficeConvert.Format.RTF),
                     Map.entry("txt", OfficeConvert.Format.TXT),
@@ -64,7 +58,6 @@ public class OfficeConversionService {
                     Map.entry("azw3", OfficeConvert.Format.AZW3));
 
     private final ApplicationProperties applicationProperties;
-    private final EndpointConfiguration endpointConfiguration;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -89,37 +82,12 @@ public class OfficeConversionService {
         return FORMATS.containsKey(format) || "ppt".equals(format);
     }
 
-    /** Whether the legacy converters (LibreOffice, Tabula, plain text) apply. */
-    public boolean legacy() {
-        return legacy(null);
-    }
-
-    /** {@code choice} is the caller's per-request pick; null follows the admin setting. */
-    public boolean legacy(Boolean choice) {
-        return choice != null
-                ? !choice
-                : !applicationProperties.getSystem().isStirlingOfficeConversion();
-    }
-
-    public boolean libreOfficeAvailable() {
-        return endpointConfiguration.isGroupEnabled("LibreOffice");
-    }
-
-    /** Stirling Office Convert replaces LibreOffice only when the admin enables it. */
-    public boolean replacesLibreOffice() {
-        return !legacy();
-    }
-
-    public boolean replacesLibreOffice(Boolean choice) {
-        return !legacy(choice);
-    }
-
     public OfficeConvert.Settings settings() {
         long minutes =
                 applicationProperties
                         .getProcessExecutor()
                         .getTimeoutMinutes()
-                        .getLibreOfficeTimeoutMinutes();
+                        .getOfficeConvertTimeoutMinutes();
         return OfficeConvert.Settings.defaults().timeout(Duration.ofMinutes(minutes));
     }
 
