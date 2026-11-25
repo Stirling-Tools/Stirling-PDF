@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import type { ReactNode } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -178,10 +178,12 @@ describe("FreeTierPlanView", () => {
   });
 
   it.each(["Get an enterprise quote", "Explore Enterprise"])(
-    "opens the Enterprise page from %s, which handles connecting",
+    "opens the hosted Enterprise page from %s, with no account to connect first",
     async (button) => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+      onTestFinished(() => open.mockRestore());
       fetchFreeTier.mockResolvedValue(BALANCE);
-      renderView(undefined, undefined, "/settings/billing?source=sales");
+      renderView();
       await screen.findByText("120 of 500 used");
       if (button === "Explore Enterprise") {
         fireEvent.click(screen.getByRole("button", { name: "Compare plans" }));
@@ -190,7 +192,11 @@ describe("FreeTierPlanView", () => {
       fireEvent.click(screen.getByRole("button", { name: button }));
 
       expect(openLinkModal).not.toHaveBeenCalled();
-      expect(screen.getByTestId("location")).toHaveTextContent("/enterprise");
+      expect(open).toHaveBeenCalledWith(
+        expect.stringMatching(/^https:\/\/.+\/enterprise$/),
+        "_blank",
+        "noopener,noreferrer",
+      );
     },
   );
 

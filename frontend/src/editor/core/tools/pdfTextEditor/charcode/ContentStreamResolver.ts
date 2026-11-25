@@ -1,8 +1,10 @@
+import { drawnCodePoint } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type {
   CharcodeResolver,
   CharcodeResolveResult,
   ResolverContext,
 } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 // Strategy 2: scrape Unicode→charcode mappings by walking the page's existing
 // text via PDFium's text page API.
@@ -13,6 +15,7 @@ interface TextPageModule {
   FPDFText_CountChars?: (textPage: number) => number;
   FPDFText_GetUnicode?: (textPage: number, idx: number) => number;
   FPDFText_GetTextObject?: (textPage: number, idx: number) => number;
+  FPDFText_IsGenerated?: (textPage: number, idx: number) => number;
 }
 
 interface FontReadModule {
@@ -94,7 +97,9 @@ function buildPageMap(ctx: ResolverContext): Map<number, Map<number, number>> {
     // in a given font gets the next sequential CID starting at 1.
     const perFontNext = new Map<number, number>();
     for (let i = 0; i < count; i++) {
-      const unicode = tpMod.FPDFText_GetUnicode(textPage, i);
+      // A space the text page inferred from a gap is given the object before it, whose font drew no glyph for it.
+      if (tpMod.FPDFText_IsGenerated?.(textPage, i) === 1) continue;
+      const unicode = drawnCodePoint(tpMod.FPDFText_GetUnicode(textPage, i));
       if (!unicode) continue;
       const obj = tpMod.FPDFText_GetTextObject(textPage, i);
       if (!obj) continue;
@@ -132,6 +137,7 @@ function buildPageMap(ctx: ResolverContext): Map<number, Map<number, number>> {
 export function resetContentStreamCache(): void {
   perPageCache.clear();
 }
+clearOnDocumentClose(resetContentStreamCache);
 
 /** Test-only alias for {@link resetContentStreamCache}. */
 export function _clearContentStreamCacheForTests(): void {

@@ -21,6 +21,7 @@ import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportW
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { useVirtualFileRows } from "@editor/components/filesPage/useVirtualFileRows";
+import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import type { FileItemPolicyRef } from "@editor/components/shared/PolicyBadges";
 import styles from "@editor/components/fileEditor/FileEditor.module.css";
 
@@ -83,6 +84,7 @@ const FileEditor = ({
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
   const { actions: fileActions } = useFileActions();
+  const saver = useSaveStoredFile();
   const { selectedFileIds, setSelectedFiles } = useFileSelection();
 
   const activeStirlingFileStubs = useMemo(
@@ -213,6 +215,17 @@ const FileEditor = ({
       );
     },
     [reorderFiles, showStatus, t],
+  );
+
+
+  const handleSaveFile = useCallback(
+    async (fileId: FileId) => {
+      const record = stubsRef.current.find((r) => r.id === fileId);
+      if (!record) return false;
+      const file = selectors.getFile(fileId) ?? undefined;
+      return (await saver.saveStoredFile(record, file)) === "saved";
+    },
+    [saver, selectors],
   );
 
   const handleCloseFile = useCallback(
@@ -440,6 +453,9 @@ const FileEditor = ({
                     onViewFile={handleViewFile}
                     onReorderFiles={handleReorderFiles}
                     onDownloadFile={handleDownloadFile}
+                    onSaveFile={handleSaveFile}
+                    unsaved={saver.isUnsaved(record)}
+                    saveTarget={saver.targetFor(record)}
                     onUnzipFile={handleUnzipFile}
                     toolMode={toolMode}
                     isSupported={isFileSupported(record.name)}

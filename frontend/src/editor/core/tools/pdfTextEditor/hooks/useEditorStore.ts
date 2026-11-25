@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 let __singleton: EditorStore | null = null;
 let __disposeTimer: ReturnType<typeof setTimeout> | null = null;
+let __owners = 0;
 
 // The store is a module-level singleton, so a hot update to EditorStore.ts
 // swaps the CLASS but leaves this instance - built from the old code - running.
@@ -17,37 +18,84 @@ if (import.meta.hot) {
 /** Grace period before a fully-unmounted editor frees its PDFium document. */
 const DISPOSE_GRACE_MS = 1500;
 
-/** Returns the singleton editor store, plus the current view state. */
+function sharedStore(): EditorStore {
+  if (!__singleton) __singleton = new EditorStore();
+  return __singleton;
+}
+
+type EditorViewState = ReturnType<EditorStore["getState"]>;
+
+/**
+ * The singleton editor store and its state, owning the open document: once the
+ * last owner unmounts, the document is freed after a grace period.
+ */
 export function useEditorStore(): {
   store: EditorStore;
-  state: ReturnType<EditorStore["getState"]>;
+  state: EditorViewState;
 } {
-  const store = useMemo(() => {
-    if (!__singleton) __singleton = new EditorStore();
-    return __singleton;
-  }, []);
-  const [state, setState] = useState(store.getState());
+  const view = useEditorStoreView();
   useEffect(() => {
+    __owners += 1;
     // A pending disposal means we just remounted within the grace window
     // (StrictMode / sidebar toggle) - cancel it so the open doc survives.
     if (__disposeTimer) {
       clearTimeout(__disposeTimer);
       __disposeTimer = null;
     }
-    setState(store.getState());
-    const unsubscribe = store.subscribe(setState);
     return () => {
-      unsubscribe();
-      // Defer disposal: if the component remounts (the effect above runs again)
-      // the timer is cancelled.
+      __owners -= 1;
+      // Counted, not last-unmount-wins: the text editor can unmount after the
+      // review's editor has mounted, and freeing then drops its unsaved edits.
+      if (__owners > 0) return;
       if (__disposeTimer) clearTimeout(__disposeTimer);
       __disposeTimer = setTimeout(() => {
         __disposeTimer = null;
         __singleton?.clearDocument();
       }, DISPOSE_GRACE_MS);
     };
-  }, [store]);
+  }, []);
+  return view;
+}
+
+/**
+ * The singleton editor store and its state, without owning the document's
+ * lifetime: viewer pages mount and unmount as they scroll, and an owning hook
+ * there would drop the document every time a page left the screen.
+ */
+export function useEditorStoreView(): {
+  store: EditorStore;
+  state: EditorViewState;
+} {
+  const store = useSharedEditorStore();
+  const state = useEditorState(store, identity);
   return { store, state };
+}
+
+/**
+ * The singleton editor store without subscribing to its state; pair it with
+ * `useEditorState` to re-render on just the slice a component reads.
+ */
+export function useSharedEditorStore(): EditorStore {
+  return useMemo(sharedStore, []);
+}
+
+/**
+ * One slice of the editor's state; re-renders only when that slice changes
+ * identity, so `select` must return stored values, not build new ones.
+ */
+export function useEditorState<T>(
+  store: EditorStore,
+  select: (state: EditorViewState) => T,
+): T {
+  const subscribe = useCallback(
+    (onChange: () => void) => store.subscribe(onChange),
+    [store],
+  );
+  return useSyncExternalStore(subscribe, () => select(store.getState()));
+}
+
+function identity<T>(value: T): T {
+  return value;
 }
 
 /** Test-only - drop the singleton so the next mount starts fresh. */

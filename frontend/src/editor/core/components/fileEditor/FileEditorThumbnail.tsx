@@ -23,16 +23,12 @@ import { zipFileService } from "@editor/services/zipFileService";
 
 import styles from "@editor/components/fileEditor/FileEditorThumbnail.module.css";
 import { useFileContext } from "@editor/contexts/FileContext";
-import {
-  useFileSelector,
-  useFileSelectors,
-} from "@editor/contexts/file/fileHooks";
+import { useFileSelector } from "@editor/contexts/file/fileHooks";
 import { FileId } from "@editor/types/file";
 import ToolChain from "@editor/components/shared/ToolChain";
 import HoverActionMenu, {
   HoverAction,
 } from "@editor/components/shared/HoverActionMenu";
-import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { CloseFilesConfirmModal } from "@editor/components/shared/CloseFilesConfirmModal";
 import UploadToServerModal from "@editor/components/shared/UploadToServerModal";
@@ -47,6 +43,8 @@ import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThu
 import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { FileEditorStatusDot } from "@editor/components/fileEditor/FileEditorStatusDot";
+import type { SaveTarget } from "@editor/services/saveTargets";
+import { SAVES_TO_DISK } from "@editor/services/downloadService";
 import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityContext";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 
@@ -58,6 +56,12 @@ interface FileEditorThumbnailProps {
   onViewFile: (fileId: FileId) => void;
   onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId) => void;
   onDownloadFile: (fileId: FileId) => void;
+  /** Saves where the toolbar's Save would; false when nothing was saved. */
+  onSaveFile: (fileId: FileId) => Promise<boolean>;
+  /** Unsaved against where Save sends the file. */
+  unsaved?: boolean;
+  /** Set when Save sends this file somewhere other than disk or a download. */
+  saveTarget?: SaveTarget;
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
@@ -70,6 +74,9 @@ const FileEditorThumbnail = ({
   onViewFile,
   onReorderFiles,
   onDownloadFile,
+  onSaveFile,
+  unsaved = false,
+  saveTarget,
   onUnzipFile,
   isSupported = true,
   policies = [],
@@ -94,7 +101,6 @@ const FileEditorThumbnail = ({
     actions: fileActions,
     openEncryptedUnlockPrompt,
   } = useFileContext();
-  const selectors = useFileSelectors();
   const isMobile = useIsMobile();
 
   const actualFile = useMemo(
@@ -247,38 +253,9 @@ const FileEditorThumbnail = ({
   }, [file.id, file.name, onCloseFile, t]);
 
   const handleSaveAndClose = useCallback(async () => {
-    const fileToSave = selectors.getFile(file.id);
-    if (fileToSave) {
-      try {
-        const result = await downloadFile({
-          data: fileToSave,
-          filename: file.name,
-          localPath: file.localFilePath,
-          fileId: file.id,
-        });
-        if (!result.cancelled && result.savedPath) {
-          fileActions.updateStirlingFileStub(file.id, {
-            localFilePath: file.localFilePath ?? result.savedPath,
-            isDirty: false,
-          });
-        } else if (result.cancelled) {
-          setShowCloseModal(false);
-          return;
-        }
-      } catch (error) {
-        console.error(`Failed to save ${file.name}:`, error);
-        alert({
-          alertType: "error",
-          title: t("fileEditor.saveFailed", "Save failed"),
-          body: t("fileEditor.couldNotSave", "Could not save {{name}}", {
-            name: file.name,
-          }),
-          privateBody: true,
-          expandable: true,
-        });
-        setShowCloseModal(false);
-        return;
-      }
+    if (!(await onSaveFile(file.id))) {
+      setShowCloseModal(false);
+      return;
     }
     onCloseFile(file.id);
     alert({
@@ -291,15 +268,7 @@ const FileEditorThumbnail = ({
       durationMs: 3500,
     });
     setShowCloseModal(false);
-  }, [
-    file.id,
-    file.name,
-    file.localFilePath,
-    onCloseFile,
-    selectors,
-    fileActions,
-    t,
-  ]);
+  }, [file.id, file.name, onCloseFile, onSaveFile, t]);
 
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
@@ -316,6 +285,12 @@ const FileEditorThumbnail = ({
   const backgroundPolicy = policies.find((p) => p.background && !p.enforcing);
 
   const hoverActions = useMemo<HoverAction[]>(() => {
+    const targetLabel = saveTarget?.saveLabel(file);
+    // A plain "Save" beside the save to another home would read as that save.
+    const downloadLabel =
+      saveTarget && SAVES_TO_DISK
+        ? t("saveFile.menu.saveCopy", "Save a copy...")
+        : terminology.download;
     const uploadLabel = isUploaded
       ? t("fileManager.updateOnServer", "Update on Server")
       : t("fileManager.uploadToServer", "Upload to Server");
@@ -394,14 +369,29 @@ const FileEditorThumbnail = ({
           }
         },
       },
+      ...(saveTarget && targetLabel
+        ? [
+            {
+              id: "saveToTarget",
+              icon: <Icon name={saveTarget.icon} size={20} />,
+              label: targetLabel,
+              disabled: policyEnforcing || saveTarget.saving === file.id,
+              tooltip: policyEnforcing
+                ? enforcingTooltip(targetLabel)
+                : undefined,
+              onClick: (e: React.MouseEvent) => {
+                e.stopPropagation();
+                void onSaveFile(file.id);
+              },
+            },
+          ]
+        : []),
       {
         id: "download",
         icon: <Icon name={icons.download} size={20} />,
-        label: terminology.download,
+        label: downloadLabel,
         disabled: policyEnforcing,
-        tooltip: policyEnforcing
-          ? enforcingTooltip(terminology.download)
-          : undefined,
+        tooltip: policyEnforcing ? enforcingTooltip(downloadLabel) : undefined,
         onClick: (e) => {
           e.stopPropagation();
           onDownloadFile(file.id);
@@ -497,6 +487,9 @@ const FileEditorThumbnail = ({
     terminology,
     onViewFile,
     onDownloadFile,
+    onSaveFile,
+    saveTarget,
+    file,
     onUnzipFile,
     handleCloseWithConfirmation,
     policyEnforcing,
@@ -709,7 +702,14 @@ const FileEditorThumbnail = ({
                 )}
               </div>
 
-              <FileEditorStatusDot file={file} />
+              <FileEditorStatusDot
+                file={file}
+                target={
+                  saveTarget
+                    ? { unsaved, label: saveTarget.statusLabel(unsaved) }
+                    : undefined
+                }
+              />
             </div>
           </div>
           {/* end thumbUnit */}
@@ -767,7 +767,7 @@ const FileEditorThumbnail = ({
       <CloseFilesConfirmModal
         opened={showCloseModal}
         message={
-          file.isDirty && file.localFilePath
+          unsaved
             ? t("confirmCloseUnsaved", "This file has unsaved changes.")
             : t(
                 "confirmCloseMessage",
@@ -776,15 +776,13 @@ const FileEditorThumbnail = ({
         }
         files={[{ id: file.id, name: file.name }]}
         closeLabel={
-          file.isDirty && file.localFilePath
+          unsaved
             ? t("confirmCloseDiscard", "Discard changes and close")
             : t("confirmCloseConfirm", "Close File")
         }
         onClose={handleConfirmClose}
         onCancel={handleCancelClose}
-        onSave={
-          file.isDirty && file.localFilePath ? handleSaveAndClose : undefined
-        }
+        onSave={unsaved ? handleSaveAndClose : undefined}
       />
 
       {/* Shared edit notice modal */}
