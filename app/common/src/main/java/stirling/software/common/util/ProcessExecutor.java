@@ -7,17 +7,15 @@ import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import io.github.pixee.security.BoundedLineReader;
 
@@ -30,21 +28,14 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 public class ProcessExecutor {
 
+    // A document can make a tool print without end, so each run logs a bounded amount of output
+    static final int MAX_LOGGED_LINES = 200;
+    static final int MAX_LOGGED_LINE_LENGTH = 1_000;
+    private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cntrl}&&[^\\t]]");
+
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
-    private static volatile UnoServerPool unoServerPool;
-    private static volatile List<Path> libreOfficeWorkRoots = workRoots(List.of());
 
-    // Installed only in the Docker image (docker/base/lo-sandbox.c), where LibreOffice runs as its
-    // own user under a policy read from the environment; bare installs launch it unchanged.
-    private static volatile boolean libreOfficeSandboxed =
-            Files.isExecutable(Path.of("/usr/local/lib/stirling/lo-sandbox"));
-
-    private static volatile CalibreSandboxPolicy.Mode calibreSandboxMode =
-            CalibreSandboxPolicy.configuredMode();
-
-    // Made by the init script (create_office_profile_template in init-without-ocr.sh).
-    private static final Path libreOfficeProfileTemplate = profileTemplateFromEnvironment();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -68,26 +59,11 @@ public class ProcessExecutor {
                 key -> {
                     int semaphoreLimit =
                             switch (key) {
-                                case LIBRE_OFFICE ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getSessionLimit()
-                                                .getLibreOfficeSessionLimit();
-                                case PDFTOHTML ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getSessionLimit()
-                                                .getPdfToHtmlSessionLimit();
                                 case PYTHON_OPENCV ->
                                         applicationProperties
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getPythonOpenCvSessionLimit();
-                                case WEASYPRINT ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getSessionLimit()
-                                                .getWeasyPrintSessionLimit();
                                 case INSTALL_APP ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -103,16 +79,6 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getQpdfSessionLimit();
-                                case CALIBRE ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getSessionLimit()
-                                                .getCalibreSessionLimit();
-                                case IMAGEMAGICK ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getSessionLimit()
-                                                .getImageMagickSessionLimit();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -123,7 +89,6 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getOcrMyPdfSessionLimit();
-                                case CFF_CONVERTER -> 1;
                                 case FFMPEG ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -133,26 +98,11 @@ public class ProcessExecutor {
 
                     long timeoutMinutes =
                             switch (key) {
-                                case LIBRE_OFFICE ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getTimeoutMinutes()
-                                                .getLibreOfficeTimeoutMinutes();
-                                case PDFTOHTML ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getTimeoutMinutes()
-                                                .getPdfToHtmlTimeoutMinutes();
                                 case PYTHON_OPENCV ->
                                         applicationProperties
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getPythonOpenCvTimeoutMinutes();
-                                case WEASYPRINT ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getTimeoutMinutes()
-                                                .getWeasyPrintTimeoutMinutes();
                                 case INSTALL_APP ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -168,16 +118,6 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getQpdfTimeoutMinutes();
-                                case CALIBRE ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getTimeoutMinutes()
-                                                .getCalibreTimeoutMinutes();
-                                case IMAGEMAGICK ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getTimeoutMinutes()
-                                                .getImageMagickTimeoutMinutes();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -188,7 +128,6 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
-                                case CFF_CONVERTER -> 1L;
                                 case FFMPEG ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -200,63 +139,6 @@ public class ProcessExecutor {
                 });
     }
 
-    public static void setUnoServerPool(UnoServerPool pool) {
-        unoServerPool = pool;
-    }
-
-    static void setLibreOfficeSandboxed(boolean sandboxed) {
-        libreOfficeSandboxed = sandboxed;
-    }
-
-    static void setCalibreSandboxMode(CalibreSandboxPolicy.Mode mode) {
-        calibreSandboxMode = mode;
-    }
-
-    /**
-     * Runs {@code probeCommand}, normally Calibre's version check, through the Calibre sandbox,
-     * logs the outcome, and says whether the configured mode lets Calibre be offered on this host.
-     */
-    public static boolean isCalibreSandboxUsable(List<String> probeCommand) {
-        return CalibreSandboxPolicy.probeAtStartup(calibreSandboxMode, probeCommand);
-    }
-
-    private static Path profileTemplateFromEnvironment() {
-        String template = System.getenv("STIRLING_LO_PROFILE_TEMPLATE");
-        if (template == null || template.isBlank()) {
-            return null;
-        }
-        try {
-            return Path.of(template);
-        } catch (InvalidPathException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Dirs a direct soffice job's profile, output dir and inputs must lie within for it to get a
-     * per-job sandbox policy. java.io.tmpdir is always included; blank or invalid entries are
-     * ignored.
-     */
-    public static void setLibreOfficeWorkRoots(Collection<String> dirs) {
-        libreOfficeWorkRoots = workRoots(dirs);
-    }
-
-    private static List<Path> workRoots(Collection<String> dirs) {
-        List<Path> roots = new ArrayList<>();
-        roots.add(Path.of(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize());
-        for (String dir : dirs) {
-            if (dir == null || dir.isBlank()) {
-                continue;
-            }
-            try {
-                roots.add(Path.of(dir).toAbsolutePath().normalize());
-            } catch (InvalidPathException e) {
-                log.warn("Ignoring invalid LibreOffice work dir {}: {}", dir, e.getMessage());
-            }
-        }
-        return List.copyOf(roots);
-    }
-
     public ProcessExecutorResult runCommandWithOutputHandling(List<String> command)
             throws IOException, InterruptedException {
         return runCommandWithOutputHandling(command, null);
@@ -264,115 +146,25 @@ public class ProcessExecutor {
 
     public ProcessExecutorResult runCommandWithOutputHandling(
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
-        RunOutcome outcome = new RunOutcome();
-        try {
-            return runOnce(command, workingDirectory, outcome);
-        } catch (IOException e) {
-            // A fresh profile makes soffice initialise it, relaunch under the IPC pipe the sandbox
-            // would not let it unlink, and exit 1; with the profile now initialised, one more run
-            // does not relaunch. Gated on this job's own profile, not on its pipe sweep finding the
-            // dead pipe: another job's sweep, or the init script's, may have removed it first.
-            if (outcome.freshProfile == null
-                    || outcome.timedOut
-                    || LibreOfficeSandboxPolicy.isProfileUninitialised(outcome.freshProfile)) {
-                throw e;
-            }
-            log.info("Retrying LibreOffice now its fresh profile is initialised");
-            return runOnce(command, workingDirectory, new RunOutcome());
-        }
-    }
-
-    private static final class RunOutcome {
-        /** The job's profile when it had no user layer before this run, else null. */
-        Path freshProfile;
-
-        boolean timedOut;
-    }
-
-    private ProcessExecutorResult runOnce(
-            List<String> command, File workingDirectory, RunOutcome outcome)
-            throws IOException, InterruptedException {
         String messages = "";
         int exitCode = 1;
-        UnoServerPool.UnoServerLease unoLease = null;
-        boolean useSemaphore = true;
-        List<String> commandToRun = command;
-        Set<Path> ipcPipesBefore = null;
-        LibreOfficeSandboxPolicy.JobPolicy jobPolicy = null;
-
-        boolean useUnoServerPool = shouldUseUnoServerPool(command);
-
-        if (useUnoServerPool) {
-            // Signal the on-demand manager to start unoserver if needed, then
-            // wait on the leased endpoint itself: probing every endpoint and
-            // leasing one afterwards could pick an endpoint that never became
-            // ready. A direct soffice command never signals: it does not call
-            // an endpoint, and its demand would wake a server nobody uses.
-            signalUnoServerDemand();
-            try {
-                unoLease = unoServerPool.acquireEndpoint(timeoutDuration, TimeUnit.MINUTES);
-            } catch (TimeoutException e) {
-                throw new IOException(
-                        "All unoserver endpoints busy; request timed out after "
-                                + timeoutDuration
-                                + " minutes",
-                        e);
-            }
-            if (!unoServerPool.waitForEndpoint(
-                    unoLease.getEndpoint(), UNO_SERVER_READY_WAIT_SECONDS, TimeUnit.SECONDS)) {
-                log.warn(
-                        "No local unoserver endpoint accepted connections within {}s; continuing",
-                        UNO_SERVER_READY_WAIT_SECONDS);
-            }
-            commandToRun = applyUnoServerEndpoint(command, unoLease.getEndpoint());
-            useSemaphore = false;
-        }
-        if (useSemaphore) {
-            semaphore.acquire();
-        }
+        semaphore.acquire();
         try {
 
-            validateCommand(commandToRun);
-            log.info("Running command: {}", String.join(" ", commandToRun));
-            ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
-            scrubEnvironment(processBuilder);
-            if (processType == Processes.CALIBRE) {
-                processBuilder.command(
-                        CalibreSandboxPolicy.confine(
-                                calibreSandboxMode,
-                                commandToRun,
-                                workingDirectory,
-                                processBuilder.environment()));
-            }
-            if (processType == Processes.LIBRE_OFFICE && libreOfficeSandboxed) {
-                jobPolicy =
-                        LibreOfficeSandboxPolicy.forCommand(commandToRun, libreOfficeWorkRoots)
-                                .orElse(null);
-                if (jobPolicy != null) {
-                    processBuilder.environment().putAll(jobPolicy.env());
-                    LibreOfficeSandboxPolicy.seedProfile(
-                            jobPolicy.profile(), libreOfficeProfileTemplate);
-                    if (LibreOfficeSandboxPolicy.isProfileUninitialised(jobPolicy.profile())) {
-                        outcome.freshProfile = jobPolicy.profile();
-                    }
-                    ipcPipesBefore =
-                            LibreOfficeSandboxPolicy.snapshotIpcPipes(
-                                    Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR));
-                }
-            }
+            validateCommand(command);
+            log.info("Running command: {}", String.join(" ", command));
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
 
             // Use the working directory if it's set
             if (workingDirectory != null) {
                 processBuilder.directory(workingDirectory);
-            }
-            if (useUnoServerPool) {
-                signalUnoServerDemand();
             }
             Process process = processBuilder.start();
 
             // Read the error stream and standard output stream concurrently
             List<String> errorLines = new ArrayList<>();
             List<String> outputLines = new ArrayList<>();
+            AtomicInteger offeredLines = new AtomicInteger();
 
             Thread errorReaderThread =
                     Thread.ofVirtual()
@@ -389,7 +181,7 @@ public class ProcessExecutor {
                                                                     errorReader, 5_000_000))
                                                     != null) {
                                                 errorLines.add(line);
-                                                if (liveUpdates) logLiveLine(line);
+                                                if (liveUpdates) logLiveLine(line, offeredLines);
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -414,7 +206,7 @@ public class ProcessExecutor {
                                                                     outputReader, 5_000_000))
                                                     != null) {
                                                 outputLines.add(line);
-                                                if (liveUpdates) logLiveLine(line);
+                                                if (liveUpdates) logLiveLine(line, offeredLines);
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -427,29 +219,6 @@ public class ProcessExecutor {
             errorReaderThread.start();
             outputReaderThread.start();
 
-            Thread unoHeartbeat = null;
-            if (useUnoServerPool) {
-                unoHeartbeat =
-                        Thread.ofVirtual()
-                                .unstarted(
-                                        () -> {
-                                            while (!Thread.currentThread().isInterrupted()
-                                                    && process.isAlive()) {
-                                                try {
-                                                    Thread.sleep(30_000);
-                                                } catch (InterruptedException e) {
-                                                    Thread.currentThread().interrupt();
-                                                    break;
-                                                }
-                                                signalUnoServerDemand();
-                                            }
-                                        });
-                unoHeartbeat.start();
-            }
-
-            // Wait for the conversion process to complete. The heartbeat must be
-            // stopped on every exit path, and a cancelled request must not leave
-            // the child alive still refreshing demand.
             boolean finished;
             try {
                 finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);
@@ -457,10 +226,6 @@ public class ProcessExecutor {
                 process.descendants().forEach(ProcessHandle::destroyForcibly);
                 process.destroyForcibly();
                 throw e;
-            } finally {
-                if (unoHeartbeat != null) {
-                    unoHeartbeat.interrupt();
-                }
             }
 
             if (!finished) {
@@ -470,28 +235,22 @@ public class ProcessExecutor {
                 // Interrupt the reader threads
                 errorReaderThread.interrupt();
                 outputReaderThread.interrupt();
-                outcome.timedOut = true;
                 throw new IOException("Process timeout exceeded.");
             }
             exitCode = process.exitValue();
             // Wait for the reader threads to finish
             errorReaderThread.join();
             outputReaderThread.join();
+            logUnloggedLiveLines(offeredLines.get());
 
-            if (processType == Processes.CALIBRE) {
-                return finishCalibreRun(exitCode, outputLines, errorLines);
-            }
-
-            boolean isQpdf =
-                    commandToRun != null
-                            && !commandToRun.isEmpty()
-                            && commandToRun.getFirst().contains("qpdf");
+            boolean isQpdf = command.getFirst().contains("qpdf");
+            boolean qpdfWarnings = isQpdf && exitCode == 3;
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);
                 messages += outputMessage;
                 if (!liveUpdates) {
-                    log.info("Command output:\n{}", outputMessage);
+                    log.info("Command output:\n{}", forLog(outputLines, offeredLines));
                 }
             }
 
@@ -499,266 +258,89 @@ public class ProcessExecutor {
                 String errorMessage = String.join("\n", errorLines);
                 messages += errorMessage;
                 if (!liveUpdates) {
-                    log.warn("Command error output:\n{}", errorMessage);
+                    log.warn("Command error output:\n{}", forLog(errorLines, offeredLines));
                 }
-                if (exitCode != 0) {
-                    if (isQpdf && exitCode == 3) {
-                        log.warn("qpdf succeeded with warnings: {}", messages);
-                    } else {
-                        throw new IOException(
-                                "Command process failed with exit code "
-                                        + exitCode
-                                        + ". Error message: "
-                                        + errorMessage);
-                    }
-                }
-            }
-
-            if (exitCode != 0) {
-                if (isQpdf && exitCode == 3) {
-                    log.warn("qpdf succeeded with warnings: {}", messages);
-                } else {
+                if (exitCode != 0 && !qpdfWarnings) {
                     throw new IOException(
                             "Command process failed with exit code "
                                     + exitCode
-                                    + "\nLogs: "
-                                    + messages);
+                                    + ". Error message: "
+                                    + forLog(errorLines));
                 }
             }
+
+            if (qpdfWarnings) {
+                log.warn(
+                        "qpdf succeeded with warnings: {}",
+                        forLog(allLines(outputLines, errorLines), offeredLines));
+            } else if (exitCode != 0) {
+                throw new IOException(
+                        "Command process failed with exit code "
+                                + exitCode
+                                + "\nLogs: "
+                                + forLog(allLines(outputLines, errorLines)));
+            }
         } finally {
-            if (ipcPipesBefore != null) {
-                LibreOfficeSandboxPolicy.removeLeftoverIpcPipes(
-                        Path.of(LibreOfficeSandboxPolicy.IPC_PIPE_DIR), ipcPipesBefore);
-            }
-            if (useSemaphore) {
-                semaphore.release();
-            }
-            if (unoLease != null) {
-                unoLease.close();
-            }
+            semaphore.release();
         }
         return new ProcessExecutorResult(exitCode, messages);
     }
 
-    private void logLiveLine(String line) {
-        if (processType == Processes.CALIBRE) {
-            log.debug(line);
-        } else {
-            log.info(line);
-        }
-    }
-
-    private ProcessExecutorResult finishCalibreRun(
-            int exitCode, List<String> outputLines, List<String> errorLines) throws IOException {
-        String output = String.join("\n", outputLines);
-        String errors = String.join("\n", errorLines);
-        if (!liveUpdates) {
-            log.debug("Calibre output:\n{}", output);
-            log.debug("Calibre error output:\n{}", errors);
-        }
-        CalibreSandboxPolicy.checkLauncherOutcome(errorLines);
-        if (exitCode != 0) {
-            log.warn("Calibre exited with code {}; its output is logged at debug level", exitCode);
-            throw new IOException("Calibre conversion failed with exit code " + exitCode);
-        }
-        return new ProcessExecutorResult(exitCode, output + errors);
-    }
-
-    private static final Set<String> LIBRE_OFFICE_ENV_ALLOWLIST =
-            Set.of(
-                    "HOME",
-                    "USER",
-                    "LOGNAME",
-                    "PATH",
-                    "SHELL",
-                    "PWD",
-                    "TMPDIR",
-                    "TMP",
-                    "LANG",
-                    "LANGUAGE",
-                    "TZ",
-                    "TERM",
-                    "HOSTNAME",
-                    "DISPLAY",
-                    "XDG_RUNTIME_DIR",
-                    "XDG_CACHE_HOME",
-                    "XDG_CONFIG_HOME",
-                    "XDG_DATA_HOME",
-                    "LD_LIBRARY_PATH",
-                    "JAVA_HOME",
-                    "FONTCONFIG_PATH",
-                    "FONTCONFIG_FILE",
-                    "DBUS_SESSION_BUS_ADDRESS",
-                    "MALLOC_ARENA_MAX",
-                    "PYTHONIOENCODING",
-                    "PYTHONUNBUFFERED");
-
-    private static final List<String> LIBRE_OFFICE_ENV_ALLOWED_PREFIXES =
-            List.of("LC_", "SAL_", "OOO_", "UNO_", "URE_", "OFFICE_", "STIRLING_LO_");
-
-    private static boolean isLoopbackHost(String host) {
-        if (host == null) {
-            return false;
-        }
-        String normalized = host.trim().toLowerCase(java.util.Locale.ROOT);
-        return "127.0.0.1".equals(normalized)
-                || "localhost".equals(normalized)
-                || "::1".equals(normalized)
-                || "[::1]".equals(normalized);
-    }
-
-    private void scrubEnvironment(ProcessBuilder processBuilder) {
-        if (processType != Processes.LIBRE_OFFICE || !libreOfficeSandboxed) {
+    private void logLiveLine(String line, AtomicInteger seen) {
+        if (seen.incrementAndGet() > MAX_LOGGED_LINES) {
             return;
         }
-        processBuilder.environment().keySet().removeIf(name -> !isLibreOfficeEnvAllowed(name));
+        log.info("{}", forLog(line));
     }
 
-    private static boolean isLibreOfficeEnvAllowed(String name) {
-        if (name == null) {
-            return false;
+    private void logUnloggedLiveLines(int seen) {
+        int unlogged = seen - MAX_LOGGED_LINES;
+        if (unlogged <= 0) {
+            return;
         }
-        if (LIBRE_OFFICE_ENV_ALLOWLIST.contains(name)) {
-            return true;
-        }
-        for (String prefix : LIBRE_OFFICE_ENV_ALLOWED_PREFIXES) {
-            if (name.startsWith(prefix)) {
-                return true;
-            }
-        }
-        return false;
+        log.info("{} more output lines were not logged", unlogged);
     }
 
-    private boolean shouldUseUnoServerPool(List<String> command) {
-        if (processType != Processes.LIBRE_OFFICE || unoServerPool == null) {
-            return false;
-        }
-        if (unoServerPool.isEmpty()) {
-            return false;
-        }
-        if (command == null || command.isEmpty()) {
-            return false;
-        }
-
-        // Check if this is a UNO conversion by looking for unoconvert executable
-        String executable = command.getFirst();
-        if (executable != null) {
-            // Extract basename from path for matching
-            String basename = executable;
-            int lastSlash = Math.max(executable.lastIndexOf('/'), executable.lastIndexOf('\\'));
-            if (lastSlash >= 0) {
-                basename = executable.substring(lastSlash + 1);
-            }
-            // Strip .exe extension on Windows
-            if (basename.toLowerCase(java.util.Locale.ROOT).endsWith(".exe")) {
-                basename = basename.substring(0, basename.length() - 4);
-            }
-            // Match common unoconvert variants (but NOT soffice)
-            String lowerBasename = basename.toLowerCase(java.util.Locale.ROOT);
-            if (lowerBasename.contains("unoconvert") || "unoconv".equals(lowerBasename)) {
-                return true;
-            }
-        }
-
-        return false;
+    private static List<String> allLines(List<String> outputLines, List<String> errorLines) {
+        List<String> lines = new ArrayList<>(outputLines);
+        lines.addAll(errorLines);
+        return lines;
     }
 
-    private List<String> applyUnoServerEndpoint(
-            List<String> command,
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint) {
-        if (endpoint == null || command == null || command.isEmpty()) {
-            return command;
-        }
-        List<String> updated = stripUnoEndpointArgs(command);
-        String host = endpoint.getHost();
-        int port = endpoint.getPort();
-        String hostLocation = endpoint.getHostLocation();
-        String protocol = endpoint.getProtocol();
-
-        // Normalize and validate host
-        if (host == null || host.isBlank()) {
-            host = "127.0.0.1";
-        }
-
-        // Normalize and validate port
-        if (port <= 0) {
-            port = 2003;
-        }
-
-        // Normalize and validate hostLocation (only auto|local|remote allowed)
-        if (hostLocation == null
-                || hostLocation.isBlank()
-                || "auto".equalsIgnoreCase(hostLocation)) {
-            hostLocation = libreOfficeSandboxed && isLoopbackHost(host) ? "remote" : "auto";
-        } else {
-            hostLocation = hostLocation.trim().toLowerCase(java.util.Locale.ROOT);
-            if (!Set.of("auto", "local", "remote").contains(hostLocation)) {
-                log.warn(
-                        "Invalid hostLocation '{}' for endpoint {}:{}, defaulting to 'auto'",
-                        hostLocation,
-                        host,
-                        port);
-                hostLocation = "auto";
-            }
-        }
-
-        // Normalize and validate protocol (only http|https allowed)
-        if (protocol == null) {
-            protocol = "http";
-        } else {
-            protocol = protocol.trim().toLowerCase(java.util.Locale.ROOT);
-            if (!Set.of("http", "https").contains(protocol)) {
-                log.warn(
-                        "Invalid protocol '{}' for endpoint {}:{}, defaulting to 'http'",
-                        protocol,
-                        host,
-                        port);
-                protocol = "http";
-            }
-        }
-
-        int insertIndex = Math.min(1, updated.size());
-        updated.add(insertIndex++, "--host");
-        updated.add(insertIndex++, host);
-        updated.add(insertIndex++, "--port");
-        updated.add(insertIndex++, String.valueOf(port));
-
-        // Only inject --host-location if non-default (for compatibility with older unoconvert)
-        if (!"auto".equals(hostLocation)) {
-            updated.add(insertIndex++, "--host-location");
-            updated.add(insertIndex++, hostLocation);
-        }
-
-        // Only inject --protocol if non-default (for compatibility with older unoconvert)
-        if (!"http".equals(protocol)) {
-            updated.add(insertIndex++, "--protocol");
-            updated.add(insertIndex, protocol);
-        }
-
-        return updated;
+    /** Uses what is left of the run's {@link #MAX_LOGGED_LINES}, counted in {@code offered}. */
+    private static String forLog(List<String> lines, AtomicInteger offered) {
+        int left = MAX_LOGGED_LINES - offered.getAndAdd(lines.size());
+        return forLog(lines, Math.max(left, 0));
     }
 
-    private List<String> stripUnoEndpointArgs(List<String> command) {
-        List<String> stripped = new ArrayList<>(command.size());
-        for (int i = 0; i < command.size(); i++) {
-            String arg = command.get(i);
-            if ("--host".equals(arg)
-                    || "--port".equals(arg)
-                    || "--host-location".equals(arg)
-                    || "--protocol".equals(arg)) {
-                i++;
-                continue;
+    /** The first {@link #MAX_LOGGED_LINES} lines, each cut short and made printable. */
+    static String forLog(List<String> lines) {
+        return forLog(lines, MAX_LOGGED_LINES);
+    }
+
+    private static String forLog(List<String> lines, int allowance) {
+        StringBuilder text = new StringBuilder();
+        int shown = Math.min(lines.size(), allowance);
+        for (int i = 0; i < shown; i++) {
+            if (i > 0) {
+                text.append('\n');
             }
-            if (arg != null
-                    && (arg.startsWith("--host=")
-                            || arg.startsWith("--port=")
-                            || arg.startsWith("--host-location=")
-                            || arg.startsWith("--protocol="))) {
-                continue;
-            }
-            stripped.add(arg);
+            text.append(forLog(lines.get(i)));
         }
-        return stripped;
+        if (lines.size() > shown) {
+            if (shown > 0) {
+                text.append('\n');
+            }
+            text.append("... ").append(lines.size() - shown).append(" more lines");
+        }
+        return text.toString();
+    }
+
+    static String forLog(String line) {
+        boolean truncated = line.length() > MAX_LOGGED_LINE_LENGTH;
+        String head = truncated ? line.substring(0, MAX_LOGGED_LINE_LENGTH) : line;
+        String printable = CONTROL_CHARACTERS.matcher(head).replaceAll("?");
+        return truncated ? printable + "..." : printable;
     }
 
     private void validateCommand(List<String> command) {
@@ -810,45 +392,13 @@ public class ProcessExecutor {
         // For relative paths, trust that PATH resolution will work or fail appropriately
     }
 
-    /**
-     * How long a conversion waits for a local unoserver endpoint to accept connections after
-     * signalling demand. The manager notices the demand file on its own schedule and then starts
-     * soffice, which takes a few seconds; the wait is bounded so a broken setup still reaches the
-     * soffice fallback quickly.
-     */
-    private static final long UNO_SERVER_READY_WAIT_SECONDS = 15;
-
-    /**
-     * Signal the on-demand unoserver manager that a conversion is needed. Writes the current epoch
-     * timestamp to /tmp/uno-last-used. The demand manager watches this file. Skips writing when
-     * configured purely with remoteunoserver endpoints.
-     */
-    private static void signalUnoServerDemand() {
-        if (unoServerPool != null && !unoServerPool.hasLocalEndpoints()) {
-            return;
-        }
-        try {
-            Path demandFile = Path.of("/tmp/uno-last-used");
-            String epoch = String.valueOf(System.currentTimeMillis() / 1000);
-            Files.writeString(demandFile, epoch);
-        } catch (IOException e) {
-            log.debug("Could not write unoserver demand file: {}", e.getMessage());
-        }
-    }
-
     public enum Processes {
-        LIBRE_OFFICE,
-        PDFTOHTML,
         PYTHON_OPENCV,
-        WEASYPRINT,
         INSTALL_APP,
-        CALIBRE,
-        IMAGEMAGICK,
         TESSERACT,
         QPDF,
         GHOSTSCRIPT,
         OCR_MY_PDF,
-        CFF_CONVERTER,
         FFMPEG
     }
 

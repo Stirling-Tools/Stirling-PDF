@@ -629,6 +629,8 @@ interface FormFieldOverlayProps {
   pageHeight: number; // rendered CSS pixel height
   /** File identity — if provided, overlay only renders when context fields match this file */
   fileId?: string | null;
+  /** CSS filter matching the page render mode (dark, sepia). */
+  renderFilter?: string;
 }
 
 export function FormFieldOverlay({
@@ -637,6 +639,7 @@ export function FormFieldOverlay({
   pageWidth,
   pageHeight,
   fileId,
+  renderFilter,
 }: FormFieldOverlayProps) {
   const {
     setValue,
@@ -800,6 +803,7 @@ export function FormFieldOverlay({
         height: "100%",
         pointerEvents: "none", // allow click-through except on widgets
         zIndex: 5, // above TilingLayer, below LinkLayer
+        filter: renderFilter,
       }}
       inert={saving}
       data-form-overlay-page={pageIndex}

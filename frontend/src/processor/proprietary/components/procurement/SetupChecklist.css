@@ -88,6 +88,11 @@
   text-underline-offset: 0.2em;
 }
 
+.ent-setup__inline-code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
 /* Copy sits in the corner so the command keeps the full width. */
 .ent-setup__code {
   position: relative;

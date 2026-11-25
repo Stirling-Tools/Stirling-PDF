@@ -81,6 +81,7 @@ export class PdfiumAnnotationReader {
         out.push({
           id: `p${page.index}-annot-${i}`,
           kind,
+          index: i,
           rect: { x, y, width, height },
         });
       } finally {

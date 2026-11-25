@@ -282,7 +282,8 @@ class ToolUsageSignalServiceTest {
     @Test
     @DisplayName("chain rows are decoded back into ordered tool lists")
     void chainRowsDecoded() {
-        when(chainRepository.topByPrincipal(eq("alice"), eq(10L), eq(2), any(Pageable.class)))
+        when(chainRepository.topByPrincipal(
+                        eq("alice"), eq(10L), eq(2), eq(3L), any(Pageable.class)))
                 .thenReturn(List.<Object[]>of(chainRow("compress>watermark", 2, 4)));
 
         assertThat(service.userChains("alice", 10, 2, 6))
@@ -292,19 +293,44 @@ class ToolUsageSignalServiceTest {
     @Test
     @DisplayName("the requested limit bounds the page asked of the database")
     void chainLimitBoundsThePage() {
-        when(chainRepository.topGlobal(eq(10L), eq(2), any(Pageable.class))).thenReturn(List.of());
+        when(chainRepository.topGlobal(eq(10L), eq(2), eq(3L), any(Pageable.class)))
+                .thenReturn(List.of());
 
         service.globalChains(10, 2, 3);
 
         ArgumentCaptor<Pageable> page = ArgumentCaptor.forClass(Pageable.class);
-        verify(chainRepository).topGlobal(eq(10L), eq(2), page.capture());
+        verify(chainRepository).topGlobal(eq(10L), eq(2), eq(3L), page.capture());
         assertThat(page.getValue().getPageSize()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("a chain must be a real share of its scope's runs, not a handful of coincidences")
+    void habitThresholdScalesWithScopeActivity() {
+        assertThat(ToolUsageSignalService.minHabitRuns(0)).isEqualTo(3);
+        assertThat(ToolUsageSignalService.minHabitRuns(40)).isEqualTo(3);
+        assertThat(ToolUsageSignalService.minHabitRuns(600)).isEqualTo(30);
+        assertThat(ToolUsageSignalService.minHabitRuns(601)).isEqualTo(31);
+    }
+
+    @Test
+    @DisplayName("team chains are asked for at the threshold their own activity sets")
+    void teamChainsUseTheTeamThreshold() {
+        TeamScope team = new TeamScope(List.of(7L), List.of("alice", "bob"), true);
+        when(chainRepository.countMultiStepRunsByPrincipals(List.of("alice", "bob"), 10L))
+                .thenReturn(600L);
+        when(chainRepository.topByPrincipals(
+                        anyCollection(), eq(10L), eq(2), eq(30L), any(Pageable.class)))
+                .thenReturn(List.<Object[]>of(chainRow("ocr>compress", 2, 150)));
+
+        assertThat(service.teamChains(team, 10, 2, 6))
+                .containsExactly(new ToolChainSummary(List.of("ocr", "compress"), 150));
     }
 
     @Test
     @DisplayName("single-tool and zero-count chain rows are not workflows")
     void nonWorkflowChainRowsDropped() {
-        when(chainRepository.topByPrincipal(eq("alice"), eq(10L), eq(2), any(Pageable.class)))
+        when(chainRepository.topByPrincipal(
+                        eq("alice"), eq(10L), eq(2), eq(3L), any(Pageable.class)))
                 .thenReturn(
                         List.<Object[]>of(
                                 chainRow("compress", 1, 9), chainRow("compress>ocr", 2, 0)));

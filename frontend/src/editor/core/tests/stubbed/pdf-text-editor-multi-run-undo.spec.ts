@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Every toolbar action walks the selection and dispatches one command PER RUN.
@@ -24,13 +25,7 @@ const MANY_PAGES_PDF = path.join(
 );
 
 async function openEditor(page: import("@playwright/test").Page, file: string) {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+  await openInTextEditor(page, file);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -117,13 +112,13 @@ test.describe("PDF text editor - a restyle of many runs is one undo step", () =>
 
     const picker = page.getByTestId("pdf-editor-font-family");
     await picker.click();
-    await page.getByRole("option", { name: "Helvetica", exact: true }).click();
+    await page.getByRole("option", { name: "Times", exact: true }).click();
     await page.waitForTimeout(2500);
 
     // Sanity: the change has to have landed, or the undo assertion is vacuous.
     const changed = await runsInModel(page);
     expect(
-      changed.filter((r) => /helvetica/i.test(r.fontId)).length,
+      changed.filter((r) => /times/i.test(r.fontId)).length,
       "the font change did not apply",
     ).toBeGreaterThan(1);
 

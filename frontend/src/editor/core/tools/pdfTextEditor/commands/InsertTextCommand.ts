@@ -47,7 +47,7 @@ export class InsertTextCommand implements Command {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
 
-    // Base-14 (WinAnsi) can't render >U+00FF.
+    // Base-14 can only render WinAnsi.
     const sanitized = sanitizeForBase14(this.text);
     let objPtr = 0;
     if ([...this.text].length > [...sanitized].length) {
@@ -94,7 +94,9 @@ export class InsertTextCommand implements Command {
         }
       : { a: 1, b: 0, c: 0, d: 1, e: this.x, f: this.y };
 
-    const runId = `p${page.index}-new-${page.runs.length}-${objPtr}`;
+    // Kept across redo: later steps that edit this text find it by this id.
+    const runId =
+      this.createdRunId ?? `p${page.index}-new-${page.runs.length}-${objPtr}`;
     const run = new TextRun({
       id: runId,
       pageIndex: page.index,

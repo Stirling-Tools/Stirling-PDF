@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -15,6 +15,8 @@ import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
 import { detectTables } from "@editor/tools/pdfTextEditor/util/tableDetection";
 import { ModifyTableCommand } from "@editor/tools/pdfTextEditor/commands/ModifyTableCommand";
 import { FillTableCellCommand } from "@editor/tools/pdfTextEditor/commands/FillTableCellCommand";
+import { cellTextDrawable } from "@editor/tools/pdfTextEditor/commands/tableHelpers";
+import { alert } from "@editor/components/toast";
 import type { TableResize } from "@editor/tools/pdfTextEditor/commands/ResizeTableCommand";
 import { ResizeTableCommand } from "@editor/tools/pdfTextEditor/commands/ResizeTableCommand";
 import { MaterialiseTableCommand } from "@editor/tools/pdfTextEditor/commands/MaterialiseTableCommand";
@@ -24,6 +26,7 @@ import {
   pageCanvas,
   sampleTableColors,
 } from "@editor/tools/pdfTextEditor/util/scanSampling";
+import "@editor/tools/pdfTextEditor/components/TableOverlay.css";
 
 // Edge handles live wholly OUTSIDE the grid, in a margin strip below it
 // (columns) or left of it (rows), the way a spreadsheet puts them in its
@@ -36,6 +39,14 @@ const GRAB = 13;
 
 /** Selection accent, matching the image handle's outline. */
 const ACCENT = "var(--c-accent-fg)";
+const OUTLINE =
+  "1px dotted color-mix(in srgb, var(--c-accent-fg) 45%, transparent)";
+const GRID_LINE =
+  "1px solid color-mix(in srgb, var(--c-accent-fg) 25%, transparent)";
+/** Reach around the table and its chip that still counts as over them, so crossing the gap between the two does not flicker the chip. */
+const HOVER_SLACK = 6;
+/** Gap between the table edge (or its handle strip) and the editing toolbar. */
+const TOOLBAR_GAP = 6;
 
 // The controls sit over page content, so they need to read as a floating
 // toolbar rather than as loose buttons tangled in the text behind them.
@@ -54,25 +65,13 @@ const toolbarStyle: React.CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-const chipStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 4,
-  padding: "2px 6px",
-  fontSize: 11,
-  lineHeight: "16px",
-  color: ACCENT,
-  background: "transparent",
-  border: "none",
-  borderRadius: 4,
-  cursor: "pointer",
-};
-
 interface TableOverlayProps {
   page: PageSnapshot;
   transform: DisplayTransform;
   scale: number;
   store: EditorStore;
+  /** A recognized table shows its affordances while any of its text is selected. */
+  selectedRunIds?: readonly string[];
 }
 
 interface CssRect {
@@ -114,6 +113,7 @@ export function TableOverlay({
   transform,
   scale,
   store,
+  selectedRunIds = [],
 }: TableOverlayProps) {
   const detected = useMemo(
     () => detectTables(page.runs, page.pageIndex, {}, page.rules ?? []),
@@ -138,6 +138,9 @@ export function TableOverlay({
           transform={transform}
           scale={scale}
           store={store}
+          selected={table.cells.some((c) =>
+            c.runIds.some((id) => selectedRunIds.includes(id)),
+          )}
         />
       ))}
       {synthetic.map((table) => (
@@ -194,60 +197,56 @@ function justifyFor(align: TableCellStyle["align"]): string {
   return "flex-start";
 }
 
-// A grid recognized from ordinary text. Shows its structure and lets the user
-// select the whole thing, but structural edits need the tracked geometry that
-// only inserted tables carry.
+// A grid recognized from ordinary text. The page is the user's document, so
+// nothing is drawn over it until the pointer is over the table or its text is
+// selected; the chip stays focusable while hidden and shows on keyboard focus.
+// Structural edits need the tracked geometry that only inserted tables carry.
 function RecognizedTable({
   table,
   page,
   transform,
   scale,
   store,
+  selected,
 }: {
   table: TableSnapshot;
   page: PageSnapshot;
   transform: DisplayTransform;
   scale: number;
   store: EditorStore;
+  selected: boolean;
 }) {
   const { t } = useTranslation();
   const box = rectToCss(table.bounds, transform, scale, page.height);
   const runIds = table.cells.flatMap((c) => c.runIds);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const chipRef = useRef<HTMLDivElement | null>(null);
+  const hovered = usePointerOver(ref, chipRef);
+  const shown = hovered || selected;
 
   return (
     <div
+      ref={ref}
       data-testid={`pdf-editor-recognized-table-${table.id}`}
+      data-shown={shown}
       style={{
         position: "absolute",
         left: box.left,
         top: box.top,
         width: box.width,
         height: box.height,
-        border: table.pageRuled
-          ? "1px solid color-mix(in srgb, var(--c-accent-fg) 35%, transparent)"
-          : "1px dashed color-mix(in srgb, var(--c-accent-fg) 55%, transparent)",
+        border: shown ? OUTLINE : "1px solid transparent",
+        borderRadius: 2,
         pointerEvents: "none",
         boxSizing: "border-box",
       }}
     >
-      {!table.pageRuled && gridLines(table, box)}
-      <div style={{ ...toolbarStyle, top: -26, left: -1 }}>
-        <Tooltip
-          label={t(
-            "pdfTextEditor.table.recognizedHint",
-            "Recognized table - click to select all its text",
-          )}
-        >
-          <button
-            type="button"
-            onClick={() => store.selection.selectMany(runIds)}
-            data-testid={`pdf-editor-recognized-table-select-${table.id}`}
-            style={chipStyle}
-          >
-            <Icon name="table" size={13} />
-            {table.rows}×{table.cols}
-          </button>
-        </Tooltip>
+      <div
+        ref={chipRef}
+        className="pdf-editor-table-chip"
+        data-shown={shown}
+        data-testid={`pdf-editor-recognized-table-chip-${table.id}`}
+      >
         <Tooltip
           label={t(
             "pdfTextEditor.table.editHint",
@@ -258,15 +257,66 @@ function RecognizedTable({
             type="button"
             onClick={() => store.adoptTable(table)}
             data-testid={`pdf-editor-recognized-table-edit-${table.id}`}
-            style={chipStyle}
           >
-            <Icon name="pencil" size={13} />
-            {t("pdfTextEditor.table.edit", "Edit")}
+            <Icon name="table" size={13} />
+            {t("pdfTextEditor.table.editTable", "Edit table")}
+          </button>
+        </Tooltip>
+        <span className="pdf-editor-table-chip-divider" />
+        <Tooltip
+          label={t(
+            "pdfTextEditor.table.recognizedHint",
+            "Recognized table - click to select all its text",
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => store.selection.selectMany(runIds)}
+            data-testid={`pdf-editor-recognized-table-select-${table.id}`}
+          >
+            {table.rows}×{table.cols}
           </button>
         </Tooltip>
       </div>
     </div>
   );
+}
+
+// Whether the pointer is over `target` or `extra`, read from the document: the
+// run overlays above the table and the page canvas below it take the pointer,
+// so the table's own box (pointer-events: none) never sees it.
+function usePointerOver(
+  target: React.RefObject<HTMLElement | null>,
+  extra: React.RefObject<HTMLElement | null>,
+): boolean {
+  const [over, setOver] = useState(false);
+  useEffect(() => {
+    const doc = target.current?.ownerDocument;
+    if (!doc) return;
+    const inside = (el: HTMLElement | null, x: number, y: number) => {
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      return (
+        x >= r.left - HOVER_SLACK &&
+        x <= r.right + HOVER_SLACK &&
+        y >= r.top - HOVER_SLACK &&
+        y <= r.bottom + HOVER_SLACK
+      );
+    };
+    const onMove = (e: MouseEvent) =>
+      setOver(
+        inside(target.current, e.clientX, e.clientY) ||
+          inside(extra.current, e.clientX, e.clientY),
+      );
+    const onLeave = () => setOver(false);
+    doc.addEventListener("pointermove", onMove, { passive: true });
+    doc.documentElement.addEventListener("pointerleave", onLeave);
+    return () => {
+      doc.removeEventListener("pointermove", onMove);
+      doc.documentElement.removeEventListener("pointerleave", onLeave);
+    };
+  }, [target, extra]);
+  return over;
 }
 
 // Internal separators for a table, positioned relative to the outer box.
@@ -285,8 +335,7 @@ function gridLines(table: TableSnapshot, box: CssRect) {
           left: fx * box.width,
           top: 0,
           bottom: 0,
-          borderLeft:
-            "1px dashed color-mix(in srgb, var(--c-accent-fg) 35%, transparent)",
+          borderLeft: GRID_LINE,
         }}
       />,
     );
@@ -302,13 +351,58 @@ function gridLines(table: TableSnapshot, box: CssRect) {
           top: fy * box.height,
           left: 0,
           right: 0,
-          borderTop:
-            "1px dashed color-mix(in srgb, var(--c-accent-fg) 35%, transparent)",
+          borderTop: GRID_LINE,
         }}
       />,
     );
   }
   return lines;
+}
+
+function centredIn(r: PageRect, bounds: PageRect): boolean {
+  const x = r.x + r.width / 2;
+  const y = r.y + r.height / 2;
+  return (
+    x >= bounds.x &&
+    x <= bounds.x + bounds.width &&
+    y >= bounds.y &&
+    y <= bounds.y + bounds.height
+  );
+}
+
+type ToolbarPlacement = "above" | "below";
+
+// Above the table unless that covers text or leaves the page, then below its
+// handle strip, each tried at the left edge and then the right; where every
+// spot covers something, above at the left if it stays on the page.
+function placeToolbar(
+  box: CssRect,
+  toolbar: { width: number; height: number },
+  blockers: readonly CssRect[],
+  pageHeightPx: number,
+): { placement: ToolbarPlacement; top: number; left: number } {
+  const above = box.top - toolbar.height - TOOLBAR_GAP;
+  const below = box.top + box.height + MARGIN + TOOLBAR_GAP;
+  const lefts = [box.left - 1, box.left + box.width + 1 - toolbar.width];
+  const clear = (top: number, left: number) =>
+    !blockers.some(
+      (r) =>
+        r.left < left + toolbar.width &&
+        r.left + r.width > left &&
+        r.top < top + toolbar.height &&
+        r.top + r.height > top,
+    );
+  const aboveFits = above >= 0;
+  const belowFits = below + toolbar.height <= pageHeightPx;
+  const spots: Array<{ placement: ToolbarPlacement; top: number }> = [];
+  if (aboveFits) spots.push({ placement: "above", top: above });
+  if (belowFits) spots.push({ placement: "below", top: below });
+  for (const spot of spots)
+    for (const left of lefts)
+      if (clear(spot.top, left)) return { ...spot, left };
+  return aboveFits || !belowFits
+    ? { placement: "above", top: above, left: lefts[0] }
+    : { placement: "below", top: below, left: lefts[0] };
 }
 
 // An inserted table with tracked geometry: supports add/remove row & column and
@@ -424,6 +518,28 @@ function EditableTable({
 
   const emptyCells = table.cells.filter((c) => c.runIds.length === 0);
 
+  const toolbarRef = useRef<HTMLDivElement | null>(null);
+  const [toolbarSize, setToolbarSize] = useState({ width: 260, height: 28 });
+  useLayoutEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const next = { width: el.offsetWidth, height: el.offsetHeight };
+    if (next.width === 0 || next.height === 0) return;
+    setToolbarSize((prev) =>
+      prev.width === next.width && prev.height === next.height ? prev : next,
+    );
+  });
+  const ownRuns = new Set(table.cells.flatMap((c) => c.runIds));
+  const blockers = page.runs
+    .filter((r) => !ownRuns.has(r.id) && !centredIn(r.bounds, table.bounds))
+    .map((r) => rectToCss(r.bounds, transform, scale, page.height));
+  const toolbarAt = placeToolbar(
+    box,
+    toolbarSize,
+    blockers,
+    page.height * scale,
+  );
+
   return (
     <>
       <div
@@ -439,10 +555,7 @@ function EditableTable({
           // Outline what is being edited, but only draw cell separators the
           // page does not already draw - dashes on top of printed rules are
           // just fuzz over lines the reader can already see.
-          border:
-            table.ruled || table.pageRuled
-              ? "1px solid color-mix(in srgb, var(--c-accent-fg) 35%, transparent)"
-              : "1px dashed color-mix(in srgb, var(--c-accent-fg) 55%, transparent)",
+          border: OUTLINE,
         }}
       >
         {!table.ruled && !table.pageRuled && gridLines(table, box)}
@@ -462,19 +575,31 @@ function EditableTable({
                 }
               }}
               onBlur={(e) => {
-                const text = e.currentTarget.textContent?.trim() ?? "";
+                const input = e.currentTarget;
+                const text = input.textContent?.trim() ?? "";
                 if (!text) return;
-                e.currentTarget.textContent = "";
-                const cmd = new FillTableCellCommand({
-                  tableId: table.id,
-                  row: cell.row,
-                  col: cell.col,
-                  text,
-                });
-                mutate(cmd);
-                if (cmd.insertedRunId) {
-                  store.selection.selectOne(cmd.insertedRunId);
+                const cmd = cellTextDrawable(text)
+                  ? new FillTableCellCommand({
+                      tableId: table.id,
+                      row: cell.row,
+                      col: cell.col,
+                      text,
+                    })
+                  : null;
+                if (cmd) mutate(cmd);
+                if (!cmd?.insertedRunId) {
+                  alert({
+                    alertType: "warning",
+                    title: t(
+                      "pdfTextEditor.table.cellNoGlyphs",
+                      "This text has characters the table's fonts can't draw. Change or remove them to fill the cell.",
+                    ),
+                    expandable: false,
+                  });
+                  return;
                 }
+                input.textContent = "";
+                store.selection.selectOne(cmd.insertedRunId);
               }}
               style={{
                 position: "absolute",
@@ -606,8 +731,10 @@ function EditableTable({
         )}
       </div>
       <div
-        style={{ ...toolbarStyle, left: box.left - 1, top: box.top - 30 }}
+        ref={toolbarRef}
+        style={{ ...toolbarStyle, left: toolbarAt.left, top: toolbarAt.top }}
         data-testid={`pdf-editor-table-controls-${table.id}`}
+        data-placement={toolbarAt.placement}
       >
         <DragArea
           testid={`pdf-editor-table-move-handle-${table.id}`}

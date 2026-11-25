@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -32,29 +33,32 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Additional coverage for {@link ConvertPDFToExcelController}. Tabula runs in-process, so documents
- * are built in-memory: an empty page exercises the no-content branch, a multi-page document drives
- * the page loop, and a bordered-grid page drives the workbook-writing path. The managed temp file
- * is a real file so the workbook is written to disk.
+ * Additional coverage for {@link ConvertPDFToExcelController}. Stirling Office Convert runs
+ * in-process, so documents are built in-memory: an empty page exercises the no-content branch, a
+ * multi-page document drives the page loop, and a bordered-grid page drives the workbook-writing
+ * path. The managed temp file is a real file so the workbook is written to disk.
  */
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToExcelControllerMoreTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
-    @Mock private OfficeConversionService officeConversionService;
+
+    // Real converter: these documents are built in memory, so it runs quickly in process.
+    @Spy
+    private OfficeConversionService officeConversionService =
+            new OfficeConversionService(new ApplicationProperties(), null, null);
 
     @InjectMocks private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        // These cover the legacy converters; Stirling Office Convert has its own tests.
-        lenient().when(officeConversionService.legacy(null)).thenReturn(true);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -82,7 +86,7 @@ class ConvertPDFToExcelControllerMoreTest {
         return doc;
     }
 
-    /** Build a single-page document with a drawn bordered grid that Tabula can detect. */
+    /** Build a single-page document with a drawn bordered grid that the table detector can find. */
     private static PDDocument borderedTableDoc() throws Exception {
         PDDocument doc = new PDDocument();
         PDPage page = new PDPage(PDRectangle.A4);
@@ -139,7 +143,7 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(blankPages(1));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
+            ResponseEntity<Resource> response = controller.pdfToExcel(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         }
@@ -153,7 +157,7 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(blankPages(3));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
+            ResponseEntity<Resource> response = controller.pdfToExcel(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         }
@@ -173,9 +177,9 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(borderedTableDoc());
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
+            ResponseEntity<Resource> response = controller.pdfToExcel(request);
 
-            // Lattice detection depends on the Tabula build; accept either outcome but assert the
+            // Table detection may not find this grid; accept either outcome but assert the
             // success path produced a real, non-empty xlsx body.
             if (response.getStatusCode() == HttpStatus.OK) {
                 assertThat(response.getHeaders().getContentType().toString())
@@ -202,7 +206,7 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenThrow(new java.io.IOException("load boom"));
 
-            assertThatThrownBy(() -> controller.pdfToExcel(request, null))
+            assertThatThrownBy(() -> controller.pdfToExcel(request))
                     .isInstanceOf(java.io.IOException.class);
         }
     }
