@@ -67,6 +67,7 @@ export default defineConfig({
       "@mantine/dates",
       "@userback/widget",
       "@tauri-apps/api/mocks",
+      "@tauri-apps/api/app",
     ],
   },
   test: {

@@ -34,8 +34,11 @@ const PANEL = '[data-sidebar="tool-panel"]';
 /**
  * For waits that span staging, a server response or an opening transition;
  * the default findBy timeout of one second is shorter than a cold story load.
+ * A full-suite CI shard takes over 20 seconds on its slowest stories. Keep it
+ * under the Storybook project's testTimeout, or a slow story times out with no
+ * message instead of naming the element it waited for.
  */
-export const STAGE_TIMEOUT = { timeout: 20000 };
+export const STAGE_TIMEOUT = { timeout: 40000 };
 
 /**
  * Resolves once the staged tool has slid over the tool picker, drawn its
