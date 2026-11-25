@@ -32,7 +32,10 @@ async function loadViewer(
   pages = 3,
 ) {
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(fixture);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(fixture);
   const firstPage = page.locator('[data-page-index="0"]').first();
   await expect(firstPage).toBeVisible({ timeout: 30_000 });
   await expect
@@ -416,7 +419,10 @@ test("a different document remounts and shows its own bytes", async ({
   await tagViewerWrapper(page);
 
   // A different lineage root cannot share the mount: the viewer remounts.
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE_PDF);
   await expect
     .poll(() => page.locator("[data-page-index]").count(), { timeout: 30_000 })
     .toBe(1);
