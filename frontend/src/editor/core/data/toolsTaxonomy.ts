@@ -42,6 +42,8 @@ export type ToolRegistryEntry = {
   icon: React.ReactNode;
   name: string;
   component: React.ComponentType<BaseToolProps> | null;
+  /** Fetches `component`'s code ahead of first use, for tools opened in place where a load delay shows. */
+  preload?: () => Promise<unknown>;
   description: string;
   categoryId: ToolCategoryId;
   subcategoryId: SubcategoryId;

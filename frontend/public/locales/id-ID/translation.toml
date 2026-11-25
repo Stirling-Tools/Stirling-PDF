@@ -512,6 +512,11 @@ submit = "Sesuaikan Skala Halaman"
 tags = "ubah ukuran,modifikasi,dimensi,adaptasi"
 title = "Sesuaikan Skala Halaman"
 
+[adjustPageScale.customSize]
+height = "Tinggi"
+unit = "Unit"
+width = "Lebar"
+
 [adjustPageScale.error]
 failed = "Terjadi kesalahan saat menyesuaikan skala halaman."
 
@@ -521,6 +526,7 @@ landscape = "Lanskap"
 portrait = "Potret"
 
 [adjustPageScale.pageSize]
+custom = "Kustom"
 keep = "Pertahankan Ukuran Asli"
 label = "Ukuran Halaman Target"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "DPI maksimum untuk pemrosesan gambar (0 = tanpa batas)"
 label = "DPI Maksimum"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Konfigurasikan batas sesi dan batas waktu untuk setiap eksekutor proses"
 ghostscript = "Ghostscript"
 installApp = "Instal Aplikasi"
 label = "Batas Eksekutor Proses"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF ke HTML"
+officeConvert = "Konversi Office"
+officeConvertSessionLimit = "Jumlah maksimum konversi serentak; 0 memilih batas berdasarkan CPU dan memori"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Instans bersamaan maksimum"
@@ -661,10 +665,6 @@ label = "Batas Sesi"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Waktu eksekusi maksimum"
 label = "Batas Waktu (menit)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert masih dalam versi beta. Menawarkan konversi yang lebih baik, lebih cepat, dan menggunakan lebih sedikit memori dibandingkan LibreOffice."
-label = "Gunakan konversi Stirling Office yang baru"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Konfigurasikan penyimpanan file sementara dan perilaku pembersihan"
@@ -682,11 +682,6 @@ label = "Interval Pembersihan (menit)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Apakah akan membersihkan direktori temp sistem yang lebih luas (gunakan dengan hati-hati)"
 label = "Bersihkan Temp Sistem"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Direktori untuk file temp LibreOffice (biarkan kosong untuk default: baseTmpDir/libreoffice)"
-label = "Direktori Temp LibreOffice"
-placeholder = "Bawaan: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Usia maksimum dalam jam sebelum file temp dibersihkan"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Rentangkan gambar agar memenuhi seluruh halaman
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Dimensi Asli)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "Cara menyiapkan {{name}}"
 title = "Koneksi"
 unlinkedServices = "Layanan Tidak Tertaut"
 
@@ -1294,17 +1290,6 @@ label = "Produser Bawaan"
 description = "Konfigurasikan jalur sistem file kustom untuk pemrosesan pipeline dan alat eksternal"
 label = "Jalur Kustom"
 
-[admin.settings.general.customPaths.operations]
-label = "Jalur Alat Eksternal"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Path ke LibreOffice unoconvert untuk konversi dokumen (biarkan kosong untuk default: /opt/venv/bin/unoconvert)"
-label = "Eksekutabel Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Path ke eksekutabel WeasyPrint untuk konversi HTML ke PDF (biarkan kosong untuk default: /opt/venv/bin/weasyprint)"
-label = "Eksekutabel WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Direktori Pipeline"
 
@@ -1327,6 +1312,10 @@ label = "Direktori Folder yang Dipantau"
 [admin.settings.general.defaultLocale]
 description = "Bahasa bawaan untuk pengguna baru (mis., en_US, es_ES)"
 label = "Lokal Bawaan"
+
+[admin.settings.general.enableFeedback]
+description = "Izinkan pengguna mengirim masukan ke tim Stirling"
+label = "Aktifkan Masukan"
 
 [admin.settings.general.fileUploadLimit]
 description = "Ukuran unggahan file maksimum (mis., 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "Kejadian STANDARD plus: panggilan polling berkelanjutan, semua permin
 [admin.settings.security.audit.retentionDays]
 description = "Jumlah hari untuk menyimpan log audit (0 = penyimpanan tanpa batas)"
 label = "Retensi Audit (hari)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "PDF yang ditandatangani tetap dapat dilihat, dicetak, dikonversi, atau ditandatangani lagi, tetapi tidak dapat diubah di aplikasi. Panggilan API dan pipeline server tidak terpengaruh."
+label = "Blokir perubahan pada PDF yang ditandatangani"
 
 [admin.settings.security.csrfDisabled]
 description = "Nonaktifkan perlindungan Cross-Site Request Forgery (tidak disarankan)"
@@ -2969,6 +2962,7 @@ loadError = "Gagal memuat pengguna"
 noTeam = "Tidak Ada Tim"
 noUsers = "Tidak ada pengguna lain yang ditemukan."
 placeholder = "Pilih pengguna..."
+signInRequired = "Masuk untuk meminta tanda tangan dari orang lain."
 you = "{{name}} (Anda)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "Akun Anda dikelola oleh penyedia identitas Anda."
 title = "Ubah Kredensial"
 
 [changeMetadata]
-filenamePrefix = "metadata"
 submit = "Ganti"
 tags = "edit,ubah,perbarui,metadata,properti,properti dokumen,penulis,judul,subjek,kata kunci,pembuat,produser,info,info dokumen,properti file"
 
@@ -3265,6 +3258,248 @@ not_found = "Saya tidak dapat menemukan informasi yang diminta."
 processing = "Memproses ({{outcome}})..."
 unsupported_capability = "Kemampuan tidak didukung: {{capability}}"
 usage_limit_reached = "Anda telah mencapai batas penggunaan. Periksa opsi paket Anda untuk melanjutkan."
+
+[checkAccessibility]
+aboutRow = "Tentang {{label}}"
+checking = "Memeriksa..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Unduh laporan aksesibilitas"
+fileFailed = "gagal"
+pickFile = "Tampilkan hasil untuk"
+submit = "Periksa aksesibilitas"
+
+[checkAccessibility.category]
+altText = "Teks alternatif"
+fonts = "Font"
+language = "Bahasa"
+links = "Tautan & anotasi"
+metadata = "Metadata & pengaturan"
+structure = "Tag & struktur"
+
+[checkAccessibility.categoryTip]
+altText = "Gambar memerlukan deskripsi teks singkat agar pembaca layar dapat membacakannya sebagai gantinya."
+fonts = "Font harus disertakan dalam file, dengan setiap karakter ditautkan ke teks nyata, sehingga teks dapat dibacakan dan disalin."
+language = "Pembaca layar perlu mengetahui bahasa dokumen agar dapat melafalkannya dengan benar."
+links = "Tautan, komentar, dan kolom formulir memerlukan tag dan deskripsi, serta urutan tab yang mengikuti halaman."
+metadata = "Judul, deklarasi PDF/UA, dan pengaturan lain yang dibaca teknologi bantu dari file."
+structure = "Tag memberi tahu pembaca layar bagian apa dari suatu halaman, seperti judul, daftar, atau tabel, serta urutan membacanya."
+
+[checkAccessibility.checks]
+label = "{{passed}} dari {{total}} pemeriksaan lulus"
+
+[checkAccessibility.error]
+download = "Laporan aksesibilitas tidak dapat dibuat. Coba lagi."
+fileTitle = "File ini tidak dapat diperiksa"
+partial = "Beberapa file tidak dapat diperiksa."
+
+[checkAccessibility.facts]
+declares = "Mendeklarasikan PDF/UA"
+displaysTitle = "Menampilkan judulnya"
+fonts = "Font tertanam"
+language = "Mendeklarasikan bahasa"
+notEncrypted = "Tidak dienkripsi"
+tagged = "Ditandai"
+title = "Memiliki judul"
+
+[checkAccessibility.factTip]
+declares = "Metadata file menyatakan bahwa file ini mengikuti PDF/UA."
+displaysTitle = "Pembaca PDF akan menampilkan judul, bukan nama file, saat file dibuka."
+fonts = "Setiap font yang digunakan teks disertakan dalam file."
+language = "File menyatakan bahasa yang digunakan teksnya."
+notEncrypted = "File tidak dienkripsi. Enkripsi dapat menghentikan teknologi bantu membacanya."
+tagged = "File memiliki tag yang menggambarkan strukturnya. Tanpa itu, pembaca layar hanya mendapatkan teks polos."
+title = "File memiliki judul di metadatanya."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} gambar memerlukan deskripsi (halaman {{pages}})"
+summary_other = "{{count}} gambar memerlukan deskripsi (halaman {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Berlaku untuk"
+clauseValue = "{{spec}} §{{clause}}, uji {{test}}"
+details = "Detail"
+instances_one = "{{count}} kejadian"
+instances_other = "{{count}} kejadian"
+onPages_one = "Halaman {{pages}}"
+onPages_other = "Halaman {{pages}}"
+onPagesPartial_one = "Halaman {{pages}} (daftar mungkin tidak lengkap)"
+onPagesPartial_other = "Halaman {{pages}} (daftar mungkin tidak lengkap)"
+pages = "Halaman"
+pagesPartialValue = "{{pages}} (hanya kemunculan pertama yang mencatat halaman, jadi daftar ini mungkin tidak lengkap)"
+requirement = "Persyaratan"
+rule = "Aturan"
+standard = "Standar"
+where = "Di mana"
+
+[checkAccessibility.manual]
+clearAll = "Hapus semua"
+done = "Selesai"
+inProgress = "Sedang berlangsung"
+markAllDone = "Tandai semua sebagai selesai"
+tip = "Hal-hal yang hanya dapat dinilai manusia, seperti urutan baca dan apakah deskripsi gambar masuk akal. Centang masing-masing setelah Anda memeriksanya, dan centang Anda akan masuk ke laporan yang diunduh."
+title = "Pemeriksaan manual"
+
+[checkAccessibility.objects]
+annotation = "Sebuah anotasi"
+bookmark = "Sebuah markah"
+character = "Sebuah karakter dalam sebuah font"
+contentPiece = "Sebagian konten halaman"
+document = "Dokumen"
+drawing = "Sebuah gambar"
+figure = "Sebuah figur"
+file = "File itu sendiri"
+font = "Sebuah font"
+form = "Formulir"
+formField = "Sebuah kolom formulir"
+link = "Sebuah tautan"
+markedContent = "Konten halaman yang ditandai"
+metadata = "Metadata dokumen"
+page = "Sebuah halaman"
+properties = "Properti dokumen"
+tag = "Sebuah tag {{name}}"
+tagTree = "Pohon tag"
+textPiece = "Sepotong teks"
+translatedMetadata = "Entri metadata dengan terjemahan"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (bersambung)"
+footer = "Diperiksa dengan Stirling PDF"
+page = "Halaman {{n}}"
+title = "Laporan aksesibilitas"
+
+[checkAccessibility.result]
+fail = "Gagal"
+failSummary = "Pembaca layar mungkin tidak dapat membaca seluruh dokumen ini."
+partial = "Sebagian"
+partialSummary = "Pembaca layar dapat membaca dokumen ini, tetapi beberapa pemeriksaan gagal."
+pass = "Lulus"
+passSummary = "Lulus semua pemeriksaan PDF/UA otomatis."
+
+[checkAccessibility.rules]
+annotationLanguage = "Teks komentar atau tautan tidak memiliki bahasa yang ditetapkan, sehingga pembaca layar tidak tahu dalam bahasa apa harus membacanya. Atur bahasa dokumen untuk memperbaikinya."
+annotationNoDescription = "Sebuah komentar, tautan, atau gambar tidak memiliki deskripsi teks, sehingga pembaca layar tidak memiliki apa pun untuk diumumkan."
+annotationNotTagged = "Komentar atau gambar tidak ditandai sebagai anotasi, sehingga pembaca layar tidak dapat menjangkaunya dalam urutan baca."
+artifactInsideTagged = "Sesuatu yang ditandai sebagai dekorasi berada di dalam konten bertagar, sehingga ia sekaligus dibaca dan dilewati."
+bookmarkLanguage = "Markah tidak memiliki bahasa yang ditetapkan, sehingga pembaca layar tidak tahu dalam bahasa apa membacanya. Atur bahasa dokumen untuk memperbaikinya."
+conformancePrefix = "Deklarasi PDF/UA di metadata menggunakan prefiks yang salah, sehingga pembaca PDF mungkin tidak mengenalinya."
+contentLanguage = "Teks tidak memiliki bahasa yang ditetapkan, sehingga pembaca layar tidak tahu dalam bahasa apa harus membacanya. Atur bahasa dokumen untuk memperbaikinya."
+customTagNotMapped = "Sebuah tag menggunakan nama kustom yang tidak ditautkan ke tag standar, sehingga pembaca layar tidak tahu itu apa."
+figureNoAlt = "Sebuah gambar ditandai sebagai figur tetapi tidak memiliki deskripsi, sehingga pengguna pembaca layar tidak akan tahu apa yang ditampilkan."
+fontMissingGlyphs = "Sebuah font yang disertakan kehilangan beberapa karakter yang digunakan dokumen."
+fontNotEmbedded = "Sebuah font tidak disertakan dalam file, sehingga teks mungkin terlihat berbeda, atau dibaca berbeda, di komputer lain."
+formFieldNotTagged = "Sebuah kolom formulir tidak ditandai sebagai bagian dari formulir, sehingga pembaca layar mungkin tidak menemukannya."
+genericHeading = "Sebuah judul menggunakan tag H, yang tidak memiliki tingkat. PDF/UA-2 memerlukan H1 hingga H6 agar pengguna pembaca layar dapat mengetahui hierarki judul."
+glyphWidths = "Lebar karakter font di dalam file tidak sesuai dengan font itu sendiri, sehingga jarak teks mungkin salah."
+headingSkipped = "Tingkat judul melompati satu langkah, misalnya dari Judul 1 langsung ke Judul 3, yang membuat perpindahan antarjudul membingungkan."
+linkNoDescription = "Sebuah tautan tidak memiliki deskripsi, sehingga pembaca layar hanya dapat membacakan alamatnya, atau tidak sama sekali."
+linkNotTagged = "Sebuah tautan tidak ditandai sebagai tautan, sehingga pembaca layar tidak akan mengumumkannya sebagai tautan."
+metadataLanguage = "Metadata, seperti judul, tidak memiliki bahasa yang ditetapkan, sehingga pembaca layar tidak tahu dalam bahasa apa membacanya. Atur bahasa dokumen untuk memperbaikinya."
+noConformanceClaim = "File tidak menyatakan bahwa ia mengikuti PDF/UA. Metadatanya memerlukan entri identifikasi PDF/UA."
+noDocumentTag = "Tag memerlukan satu tag Document di bagian atas, dengan semua yang lain di dalamnya."
+noLanguage = "Dokumen tidak menyatakan dalam bahasa apa ia ditulis, sehingga pembaca layar mungkin membacanya dalam bahasa yang salah."
+noMetadataStream = "File tidak memiliki metadata XMP, tempat PDF/UA menyimpan judul dokumen dan detail kepatuhan."
+noTags = "File sama sekali tidak memiliki tag, sehingga pembaca layar tidak dapat membedakan judul, paragraf, daftar, atau tabel, atau membacanya dalam urutan yang benar."
+notdefGlyph = "Teks menggunakan placeholder \"karakter hilang\", yang tampil sebagai kosong atau kotak dan tidak dapat dibacakan."
+noteTag = "File menggunakan tag Note, yang dalam PDF/UA-2 diganti dengan FENote untuk catatan kaki dan catatan akhir."
+noTitle = "Dokumen tidak memiliki judul di metadatanya."
+notMarkedTagged = "File tidak ditandai sebagai bertagar, sehingga teknologi bantu mungkin mengabaikan tag yang ada."
+notPdf2Tags = "PDF/UA-2 memerlukan tag yang digunakan file PDF 2.0. Tag ini terlihat seperti tag PDF 1.7, yang biasanya berarti file ditandai untuk PDF/UA-1."
+noUnicode = "Beberapa karakter tidak dapat diubah menjadi teks yang dapat dibaca, sehingga pembaca layar serta salin-tempel mungkin menanganinya dengan salah."
+replacementTextLanguage = "Beberapa teks pengganti tidak memiliki bahasa yang ditetapkan, sehingga pembaca layar tidak tahu dalam bahasa apa membacanya. Atur bahasa dokumen untuk memperbaikinya."
+standardTagRemapped = "Sebuah tag standar ditautkan ke tag kustom, sehingga pembaca layar kehilangan maknanya."
+symbolicEncoding = "Sebuah font simbol membawa encoding yang seharusnya tidak ada, sehingga karakternya dapat muncul sebagai huruf yang salah."
+tabOrder = "Halaman dengan tautan atau komentar tidak menetapkan urutan tab untuk mengikuti dokumen, sehingga pengguna keyboard dapat melompat-lompat di halaman."
+taggedInsideArtifact = "Konten bertagar berada di dalam sesuatu yang ditandai sebagai dekorasi, sehingga pembaca layar mungkin melewatinya."
+titleNotDisplayed = "Pembaca PDF akan menampilkan nama file alih-alih judul dokumen. File perlu mengaktifkan pengaturan \"tampilkan judul dokumen\"."
+untaggedContent = "Sesuatu pada halaman tidak ditandai sebagai konten maupun sebagai dekorasi, sehingga pembaca layar tidak dapat menentukan apakah perlu membacanya. Ini sering berupa gambar latar, header, footer, atau nomor halaman."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Tidak ada bahasa untuk komentar atau tautan"
+annotationNoDescription = "Komentar, tautan, atau gambar tanpa deskripsi"
+annotationNotTagged = "Komentar atau gambar tidak ditandai"
+artifactInsideTagged = "Dekorasi di dalam konten bertagar"
+bookmarkLanguage = "Tidak ada bahasa untuk markah"
+conformancePrefix = "Deklarasi PDF/UA ditulis tidak benar"
+contentLanguage = "Tidak ada bahasa untuk teks"
+customTagNotMapped = "Tag kustom tanpa makna standar"
+figureNoAlt = "Gambar tanpa deskripsi"
+fontMissingGlyphs = "Font kekurangan karakter"
+fontNotEmbedded = "Font tidak tertanam"
+formFieldNotTagged = "Kolom formulir tidak ditandai"
+genericHeading = "Judul tanpa tingkat"
+glyphWidths = "Lebar karakter font tidak cocok"
+headingSkipped = "Tingkat judul dilewati"
+linkNoDescription = "Tautan tanpa deskripsi"
+linkNotTagged = "Tautan tidak ditandai"
+metadataLanguage = "Tidak ada bahasa untuk metadata"
+noConformanceClaim = "Tidak mendeklarasikan PDF/UA"
+noDocumentTag = "Tag tidak dimulai dengan tag Document"
+noLanguage = "Tidak ada bahasa dokumen"
+noMetadataStream = "Tidak ada metadata XMP"
+noTags = "Tidak ada tag"
+notdefGlyph = "Menggunakan placeholder karakter hilang"
+noteTag = "Menggunakan tag Note"
+noTitle = "Tidak ada judul dokumen"
+notMarkedTagged = "Tidak ditandai sebagai bertagar"
+notPdf2Tags = "Tag bukan tag PDF 2.0"
+noUnicode = "Karakter yang tidak dapat dibaca sebagai teks"
+replacementTextLanguage = "Tidak ada bahasa untuk teks pengganti"
+standardTagRemapped = "Tag standar diubah menjadi tag kustom"
+symbolicEncoding = "Font simbol memiliki encoding yang salah"
+tabOrder = "Urutan tab tidak mengikuti dokumen"
+taggedInsideArtifact = "Konten bertagar disembunyikan sebagai dekorasi"
+titleNotDisplayed = "Judul tidak ditampilkan saat dibuka"
+untaggedContent = "Konten yang tidak ditandai"
+
+[checkAccessibility.score]
+issues_one = "{{count}} masalah"
+issues_other = "{{count}} masalah"
+noIssues = "Tidak ada masalah"
+subtitle_one = "{{profile}} - {{count}} halaman"
+subtitle_other = "{{profile}} - {{count}} halaman"
+
+[checkAccessibility.sections]
+breakdown = "Rincian"
+
+[checkAccessibility.status]
+checking = "Memeriksa {{current}} dari {{total}}..."
+complete = "Pemeriksaan selesai"
+
+[checkAccessibility.steps]
+results = "Hasil"
+standard = "Standar"
+
+[checkAccessibility.tooltip.header]
+title = "Standar mana yang akan diperiksa"
+
+[checkAccessibility.tooltip.ua1]
+text = "Versi pertama PDF/UA, diterbitkan pada 2012 sebagai ISO 14289-1, untuk file PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "Versi yang lebih baru, diterbitkan pada 2024 sebagai ISO 14289-2, untuk file PDF 2.0. File PDF 1.7 yang diperiksa terhadapnya akan gagal pada aturan yang hanya berlaku untuk PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Anotasi {{n}}"
+bookmarks = "Markah"
+character = "Sebuah karakter dalam {{font}}"
+contentItem = "Item konten {{n}}"
+drawingStep = "Langkah gambar {{n}}"
+embeddedGraphic = "Grafik tertanam"
+font = "Font {{name}}"
+metadata = "Metadata dokumen"
+page = "Halaman {{n}}"
+piece = "Bagian {{n}}"
+tag = "Tag {{tag}}"
+tagTree = "Pohon tag"
+wholeDocument = "Seluruh dokumen"
+
+[checkAccessibility.where.properties]
+author = "Penulis"
+description = "Deskripsi"
+pdfUaPart = "Bagian PDF/UA"
+title = "Judul"
 
 [classification.families]
 correspondence = "Korespondensi"
@@ -3729,6 +3964,10 @@ message = "Satu atau Kedua dokumen yang disediakan terlalu besar untuk diproses"
 body = "Gabungan PDF ini melebihi 2.000 halaman. Pemrosesan dapat memakan waktu beberapa menit."
 title = "Perbandingan besar sedang berlangsung"
 
+[compare.mode]
+pixel = "Perbandingan Piksel"
+text = "Perbandingan Teks"
+
 [compare.no.text]
 message = "Satu atau kedua PDF yang dipilih tidak memiliki konten teks. Pilih PDF dengan teks untuk perbandingan."
 
@@ -4046,6 +4285,30 @@ failed = "Proses masuk Anda tidak dapat diperbarui. Coba lagi, atau tutup halama
 lead = "Server ini sudah ditautkan ke akun Anda. Perbarui proses masuk Anda untuk kembali ke penagihan dan penggunaan di server Anda."
 title = "Perbarui proses masuk server Anda"
 
+[connectedAccounts]
+connect = "Hubungkan"
+connectAnother = "Hubungkan lainnya"
+connectFailed = "Akun tidak dapat dihubungkan. Periksa bahwa pendaftaran aplikasi server telah disiapkan, lalu coba lagi."
+disconnect = "Putuskan"
+google = "Google Drive"
+intro = "Hubungkan akun Anda sekali. Pipeline Anda kemudian dapat membaca dari dan menyimpannya atas nama Anda."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling tidak lagi dapat mengakses akun ini, sehingga pipeline yang menggunakannya dijeda."
+none = "Administrator Anda belum mengaktifkan akun terhubung."
+personal = "Akun pribadi"
+popupBlocked = "Browser Anda memblokir jendela masuk. Izinkan pop-up untuk situs ini lalu coba lagi."
+reconnect = "Masuk lagi"
+work = "Akun kerja"
+
+[connectedAccounts.disconnectConfirm]
+body = "Sumber dan pipeline yang menggunakan akun ini akan berhenti hingga Anda menghubungkannya kembali."
+confirm = "Putuskan"
+title = "Putuskan {{account}}?"
+
+[connectedAccounts.status]
+connected = "Terhubung"
+needsSignIn = "Perlu masuk"
+
 [convert]
 autoRotate = "Putar Otomatis"
 autoRotateDescription = "Putar gambar secara otomatis agar lebih pas dengan halaman PDF"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Judul dokumen"
 pdfUaTitleHelp = "Ditampilkan oleh pembaca sebagai pengganti nama file. Jika dibiarkan kosong, heading pertama digunakan."
 selectSourceFormatFirst = "Pilih format sumber terlebih dahulu"
 settings = "Pengaturan"
+signInToUse = "Masuk untuk menggunakan"
 single = "Tunggal"
 sourceFormatPlaceholder = "Format sumber"
-stirlingOfficeConvert = "Gunakan Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Konversi yang lebih baik dan lebih cepat dengan lebih sedikit memori. Nonaktifkan untuk menggunakan konverter standar."
 strictMode = "Mode Ketat"
 strictModeDesc = "Kesalahan jika konversi tidak sempurna (menggunakan verifikasi VeraPDF)"
 svgPdfOptions = "Opsi SVG ke PDF"
@@ -4134,8 +4396,6 @@ webOptions = "Opsi Web ke PDF"
 zoomLevel = "Tingkat Zoom"
 
 [convert.ebookOptions]
-embedAllFonts = "Sematkan semua font"
-embedAllFontsDesc = "Sematkan semua font dari eBook ke PDF yang dihasilkan"
 includePageNumbers = "Sertakan nomor halaman"
 includePageNumbersDesc = "Tambahkan nomor halaman ke PDF yang dihasilkan"
 includeTableOfContents = "Sertakan daftar isi"
@@ -4648,6 +4908,17 @@ title = "Pengaturan"
 [extractPages.tooltip]
 description = "Mengekstrak halaman yang dipilih ke PDF baru, mempertahankan urutan."
 
+[feedback.page]
+open = "Kirim masukan"
+sendMore = "Kirim masukan lagi"
+sent = "Terima kasih atas masukan Anda"
+title = "Bantu kami meningkatkan Stirling"
+unavailable = "Masukan tidak tersedia"
+
+[feedback.tag]
+dismiss = "Sembunyikan tombol masukan"
+label = "Masukan"
+
 [fileCard]
 openInFileEditor = "Buka di Editor File"
 viewInViewer = "Lihat di Penampil"
@@ -4657,7 +4928,6 @@ closeFile = "Tutup file"
 
 [fileEditor]
 closedFile = "Menutup {{name}}"
-couldNotSave = "Tidak dapat menyimpan {{name}}"
 filesReordered_one = "File diurutkan ulang"
 filesReordered_other = "{{count}} file diurutkan ulang"
 loadedFromStorage_one = "Memuat {{count}} file dari penyimpanan"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "Perpustakaan PDF"
 myFiles = "Pustaka file"
 noFiles = "Belum ada file"
+oneDrive = "Buka dari OneDrive"
+oneDriveFailed = "Tidak dapat membuka OneDrive"
 openFileManager = "Telusuri semua file & folder"
 openFromComputer = "Buka dari komputer"
 openSettings = "Buka pengaturan"
@@ -4804,6 +5076,17 @@ searchFiles = "Cari file"
 uploadFailedBody = "Tidak dapat menambahkan file yang dipilih."
 uploadFailedTitle = "Unggah gagal"
 viewAll = "Lihat semua {{count}} file"
+
+[fileSidebar.clearRecents]
+body_one = "Hapus 1 file dari terbaru? Tindakan ini tidak dapat dibatalkan."
+body_other = "Hapus {{count}} file dari terbaru? Tindakan ini tidak dapat dibatalkan."
+button = "Hapus terbaru"
+confirm = "Hapus terbaru"
+error = "Tidak dapat dihapus. Coba lagi."
+openNote_one = "1 di antaranya terbuka di workbench."
+openNote_other = "{{count}} di antaranya terbuka di workbench."
+skipOpen = "Lewati file yang terbuka"
+title = "Hapus terbaru?"
 
 [fileSidebar.fileItem]
 closeViewer = "Tutup penampil"
@@ -5124,6 +5407,7 @@ diskFileHint = "Disimpan di komputer Anda"
 diskHint = "File dalam folder yang dikaitkan di disk Anda"
 local = "Lokal"
 localHint = "Tidak dicadangkan"
+oneDrive = "OneDrive"
 shared = "Dibagikan"
 sharedHint = "Dibagikan kepada Anda melalui tautan"
 
@@ -5672,6 +5956,11 @@ title = "Ubah Metadata"
 desc = "Ubah pembatasan dan izin dokumen"
 tags = "izin,pembatasan,hak,kontrol akses,izinkan,tolak,pencetakan,penyalinan,pengeditan,ubah izin,pengaturan keamanan,hak pengguna"
 title = "Ganti Perizinan"
+
+[home.checkAccessibility]
+desc = "Nilai sebuah PDF terhadap PDF/UA dan lihat apa yang menghambat pembaca layar, tanpa mengubahnya"
+tags = "aksesibilitas,a11y,PDF/UA,pembaca layar,WCAG,Section 508,veraPDF,PDF bertagar,teks alt,pemeriksa aksesibilitas,laporan aksesibilitas,kepatuhan,UA"
+title = "Periksa aksesibilitas PDF"
 
 [home.classify]
 desc = "Identifikasi jenis dokumen ini dan beri tag."
@@ -6521,6 +6810,32 @@ quickAccess = "Mulai dari panel <strong>Akses Cepat</strong> untuk beralih antar
 topBar = "Bilah atas memungkinkan Anda beralih antara <strong>Penampil</strong>, <strong>Editor Halaman</strong>, dan <strong>File Aktif</strong>."
 wrapUp = "Itulah yang baru di V2. Buka menu <strong>Tur</strong> kapan saja untuk memutar ulang ini, tur Alat, atau tur Admin."
 
+[oneDriveSave]
+chooseFolder = "Pilih folder OneDrive sebagai tujuan unggahan"
+conflict = "File ini telah berubah di OneDrive sejak versi ini dibuka atau disimpan. Simpan versi Anda sebagai salinan."
+failedTitle = "Tidak dapat menyimpan ke OneDrive"
+fromOneDrive = "Dari OneDrive"
+linkNotStored = "Browser ini tidak dapat mengingat tautan ke file OneDrive. Setelah memuat ulang, simpan sebagai salinan."
+missing = "File ini telah dipindahkan atau dihapus di OneDrive. Simpan versi Anda sebagai salinan."
+open = "Buka di OneDrive"
+personalUnsupported = "Mengunggah ke OneDrive memerlukan akun Microsoft kerja atau sekolah."
+reconnect = "Sambungkan kembali"
+replaces = "Mengganti {{name}}"
+saveCopyToOneDrive = "Simpan salinan di OneDrive"
+saved = "Disimpan ke OneDrive"
+saving = "Menyimpan ke OneDrive..."
+signInToSave = "Masuk ke server Anda untuk menyimpan ke OneDrive."
+updateOriginal = "Perbarui di OneDrive"
+uploadToOneDrive = "Unggah ke OneDrive..."
+
+[oneDriveSave.status]
+saved = "Disimpan ke OneDrive"
+unsaved = "Perubahan belum disimpan ke OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "Perbarui {{name}} di OneDrive"
+saveAll = "Perbarui semua di OneDrive"
+
 [overlay-pdfs]
 desc = "Letakkan satu PDF di atas PDF lainnya"
 submit = "Kirim"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Direset besok"
 thisPeriod = "Periode penagihan ini"
 
 [payment]
+annually = "Tahunan"
 billingPeriod = "Periode penagihan"
 cancelTeamChange = "Pertahankan paket saat ini"
 canCloseWindow = "Anda bisa menutup jendela ini sekarang."
@@ -7157,11 +7473,14 @@ title = "Sesuaikan paket Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe akan menampilkan biaya tepatnya, prorata apa pun, dan tanggal penagihan berikutnya sebelum Anda mengonfirmasi. Metode pembayaran tersimpan Anda akan digunakan jika tersedia."
+billingLabel = "Penagihan"
 continue = "Lanjutkan ke pembayaran"
 currencyAtCheckout = "Stripe mengonfirmasi jumlah akhir dan mata uang pembayaran saat checkout."
+custom = "Kustom"
 customLabel = "Jumlah pengguna"
 dueToday = "Harus dibayar hari ini"
 enterpriseQuote = "Dapatkan penawaran enterprise"
+enterUsers = "Masukkan jumlah pengguna."
 estimatedTotal = "Total perkiraan"
 lineItem = "Team · {{price}}{{period}} per {{block}} pengguna"
 minimumForCurrentUsers = "Anda memiliki {{users}} pengguna, jadi paket harus mencakup setidaknya {{minimum}}."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Akun yang ada tetap berada di tempatnya. Menambahkan 
 overCapacityTitle = "Server Anda memiliki lebih banyak pengguna daripada yang dicakup paket Anda"
 perMonth = "/bln"
 perYear = "/thn"
+planName = "Stirling Team"
 reductionNote = "Kapasitas yang lebih rendah dimulai pada perpanjangan berikutnya. Hingga saat itu, Anda dapat menggunakan kuota saat ini. Pengguna yang ada tetap; pengguna baru diblokir jika Anda melebihi kapasitas saat perubahan berlaku."
 renewalNote = "Diperpanjang dengan {{total}}{{period}}. Batalkan kapan saja di Penggunaan & Penagihan."
 reviewChange = "Tinjau perubahan di Stripe"
-roundsTo = "dibulatkan menjadi {{users}}"
+roundsUp = "Dibulatkan menjadi {{users}} pengguna."
+selfServeLimit = "Hingga {{users}} pengguna di sini."
 subheading = "Mencakup semua orang yang Anda undang, dalam blok {{users}} pengguna."
 subheadingAdd = "Paket Anda mencakup {{current}} pengguna hari ini. Pilih total baru."
+talkToEnterprise = "Untuk lebih banyak, hubungi kami tentang Enterprise."
+usersCovered = "pengguna tercakup"
 usersLabel = "Pengguna"
 userTotal = "{{users}} pengguna"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Terapkan perubahan ke file di workspace Anda ({{shortcut}})"
 tags = "edit teks,ubah teks,ganti teks,edit konten,perbarui teks,tulis ulang,koreksi,perbaiki,redline,revisi,editor teks,editor konten"
 title = "Editor Teks PDF"
 unsaved = "(belum disimpan)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Teks anotasi - bukan teks halaman, jadi tidak dapat diedit di sini"
@@ -7261,12 +7583,18 @@ widget = "Bidang formulir - bukan teks halaman, jadi tidak dapat diedit di sini"
 
 [pdfTextEditor.commands]
 edit = "Edit"
+markTagged = "Tandai sebagai sepenuhnya bertagar"
+matchScanFont = "Samakan teks hasil pindai dengan {{face}}"
 mergeRuns_one = "Gabungkan {{count}} run menjadi paragraf"
 mergeRuns_other = "Gabungkan {{count}} run menjadi paragraf"
 setColour = "Atur warna pada {{run}}"
 setOutline = "Atur outline pada {{run}}"
+tagFormField = "Beri tag bidang formulir"
+tagLink = "Tag tautan"
+tagPageContent = "Tag otomatis halaman"
 typeInto = "Ketik ke {{run}}"
 ungroupParagraph = "Pisahkan grup paragraf {{run}}"
+unmarkTagged = "Tandai sebagai tidak sepenuhnya bertagar"
 wrap = "Bungkus {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Buang dan buka"
 hint = "Batalkan, lalu Simpan PDF untuk menyimpannya di workspace Anda terlebih dahulu."
 title = "Buang perubahan yang belum disimpan?"
 
-[pdfTextEditor.drop]
-hint = "Melepas di area editor akan mengganti dokumen yang terbuka."
-title = "Jatuhkan PDF untuk membuka"
-
 [pdfTextEditor.error]
 decodeImage = "Tidak dapat mendekode gambar yang dipilih."
+duplicateDropsLetters = "Tidak dapat menduplikasi teks ini: tidak ada font yang tersedia yang dapat menampilkan semua hurufnya."
+formLiftChangesDrawing = "Tidak dapat mengedit ini: ini digambar sebagai bagian dari grup dengan pengaturan pemotongan atau grafis yang tidak dapat dipertahankan editor saat diubah."
 insertImage = "Tidak dapat menyisipkan gambar yang dipilih."
+needsShaping = "Editor belum dapat menampilkan huruf sambung dan tanda vokal skrip ini dengan benar, sehingga perubahan ini tidak dilakukan."
+replaceClippedImage = "Tidak dapat mengganti gambar ini: gambar dipotong, dan penggantinya akan menampilkan bagian yang disembunyikan oleh pemotongan."
+scanOffInk = "Tidak dapat mengedit teks ini: kata yang dikenali tidak sejajar dengan hasil pindai. Jalankan OCR lagi."
+unsafeRtlEdit = "Tidak dapat melakukan pengeditan ini: editor tidak dapat menggambar ulang teks kanan-ke-kiri pada baris ini tanpa mengubahnya."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "Gambar PNG"
@@ -7304,15 +7634,42 @@ wholeWord = "Seluruh kata"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Font bawaan"
+closestMatch = "Font ini tidak memiliki beberapa huruf yang dipilih, sehingga huruf tersebut ditampilkan dengan font yang paling mendekati."
 deviceFontsNone = "Tidak ada font perangkat tambahan yang ditemukan."
 deviceFontsUnavailable = "Font perangkat tidak tersedia. Font bawaan tetap berfungsi."
 deviceGroup = "Font perangkat"
+documentFontCannotDraw = "Editor tidak dapat menampilkan teks ini dengan font milik dokumen, sehingga dibiarkan dengan font saat ini."
 documentGroup = "Font dokumen"
+embeddingForbidden = "Lisensi font ini tidak mengizinkan penyematannya dalam PDF. Teks dibiarkan tidak berubah."
+embedFailed = "Font ini tidak dapat disematkan dalam PDF. Teks dibiarkan tidak berubah."
+includedGroup = "Font yang disertakan"
 label = "Keluarga font"
+matchedGroup = "Font yang cocok"
+missingGlyphs = "Font ini tidak memiliki beberapa karakter yang dipilih, dan karakter tersebut tidak dapat dipertahankan dalam font saat ini. Teks dibiarkan tidak berubah."
 mixed = "Campuran"
+needsShaping = "Editor belum dapat menggambar ulang huruf sambung dan tanda vokal skrip ini dengan benar, sehingga teks tersebut dibiarkan dalam font saat ini."
+noGlyphs = "Font ini tidak memiliki karakter untuk teks yang dipilih. Teks dibiarkan tidak berubah."
 noMatch = "Tidak ada font yang cocok"
+partOfRunUnsupported = "Teks ini hanya dapat diubah gayanya secara keseluruhan. Pilih kotaknya, bukan sebagian katanya."
 placeholder = "Keluarga font"
+scannedText = "Teks hasil pindai"
+serverFontFailed = "Font server tersebut tidak dapat diunduh. Teks dibiarkan tidak berubah."
+serverGroup = "Font server"
+someLeftUnchanged = "Font ini tidak memiliki karakter untuk sebagian teks yang dipilih. Teks tersebut dibiarkan tidak berubah."
+styleSkipped = "Sebagian teks yang dipilih tidak memiliki versi font dengan gaya tersebut, sehingga dibiarkan tidak berubah."
+styleUnavailable = "Teks yang dipilih tidak memiliki versi font dengan gaya tersebut, sehingga dibiarkan tidak berubah."
 useDeviceFonts = "Gunakan font perangkat"
+weight = "Ketebalan font"
+weightBlack = "Hitam"
+weightBold = "Tebal"
+weightExtraBold = "Ekstra tebal"
+weightExtraLight = "Ekstra tipis"
+weightLight = "Tipis"
+weightMedium = "Sedang"
+weightNumber = "Ketebalan {{weight}}"
+weightRegular = "Biasa"
+weightSemibold = "Semi tebal"
+weightThin = "Sangat tipis"
 
 [pdfTextEditor.fonts]
 allPresent = "Semua huruf & angka ada"
@@ -7357,6 +7714,7 @@ helpDesc = "Bantuan ini"
 saveDesc = "Simpan ke workspace Anda"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Tebal / Miring, untuk kata yang dipilih atau seluruh kotak"
 deleteDesc = "Hapus yang dipilih"
 duplicateDesc = "Duplikatkan yang dipilih"
 groupDesc = "Kelompokkan run terpilih menjadi satu paragraf"
@@ -7380,8 +7738,12 @@ zoomDesc = "Perbesar / perkecil"
 
 [pdfTextEditor.inspector]
 document = "Dokumen"
+fontCompletedClosest = "Font tertanam · karakter yang tidak dimilikinya digambar dengan {{name}}, kecocokan terdekat yang tersedia."
+fontCompletedOriginal = "Font tertanam · karakter yang tidak dimilikinya digambar dengan {{name}}, font yang sama."
 fontEmbedded = "Font tertanam · karakter yang tidak dimilikinya akan menggunakan Helvetica sebagai fallback."
 fontGap = "{{name}} · hilang {{glyphs}} - mengetik karakter tersebut akan menggunakan Helvetica sebagai fallback."
+fontUnknownCoverage = "{{name}} · karakter yang tidak dimilikinya akan menggunakan {{fallback}}."
+formField = "Bidang formulir"
 geometry = "Posisi & ukuran"
 height = "Tinggi"
 heightHint = "Tinggi kotak teks mengikuti ukuran jenis dan jumlah barisnya."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR tidak tersedia di server ini."
 oneImage = "Gambar"
 oneShape = "Bentuk"
 oneText = "Teks"
+outlinedTextHint_one = "Teks pada halaman ini digambar sebagai bentuk, sehingga tidak ada teks untuk diedit. Jalankan OCR terlebih dahulu agar dapat diedit."
+outlinedTextHint_other = "{{count}} halaman memiliki teks yang digambar sebagai bentuk, sehingga tidak ada teks untuk diedit. Jalankan OCR terlebih dahulu agar dapat diedit."
 pages = "Halaman"
 runOcr = "Jalankan OCR"
 scanHint_one = "Halaman ini adalah gambar hasil scan tanpa teks untuk diedit. Jalankan OCR terlebih dahulu agar teksnya dapat diedit."
 scanHint_other = "{{count}} halaman adalah gambar hasil scan tanpa teks untuk diedit. Jalankan OCR terlebih dahulu agar teksnya dapat diedit."
 scannedText = "Teks hasil scan · kata yang diubah ditutup dan digambar ulang dengan font yang sesuai."
+scannedTextMisaligned = "Teks hasil pindai · kata yang dikenali tidak sejajar dengan hasil pindai, sehingga blok ini tidak dapat diedit atau dihapus."
+scannedTextNoFont = "Teks hasil pindai · kata yang diketik dalam skrip ini belum dapat digambar, sehingga tidak dipertahankan. Menghapus kata tetap berfungsi."
+scannedTextOffInk = "Teks hasil pindai · kata yang dikenali tidak sejajar dengan kata hasil pindai, sehingga blok ini tidak dapat diedit. Jalankan OCR lagi."
 tabDocument = "Dokumen"
 tabSelected = "Dipilih"
 textBoxes = "Kotak teks"
+unreadPagesHint = "{{count}} halaman tidak memiliki teks untuk diedit: beberapa merupakan gambar hasil pindai dan sebagian menggambar teksnya sebagai bentuk. Jalankan OCR terlebih dahulu agar dapat diedit."
 width = "Lebar"
 widthHint = "Teks dibungkus ulang agar sesuai dengan lebar."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Tambahkan tag"
+applyToOtherPages_one = "Terapkan ke {{count}} halaman lain"
+applyToOtherPages_other = "Terapkan ke {{count}} halaman lain"
+artifactGroup = "Dilewati oleh pembaca layar"
 artifactText = "Dekoratif"
 cannotChange = "Aksesibilitas gambar ini tidak dapat diubah."
+cannotDescribeFormField = "Deskripsi bidang formulir ini tidak dapat diubah."
+cannotDescribeLink = "Deskripsi tautan ini tidak dapat diubah."
 cannotRetag = "Tag teks ini tidak dapat diubah."
+cannotSetDecorative = "Ini tidak dapat ditandai atau dihapus tandanya sebagai dekoratif."
+cannotTagFormField = "Bidang formulir ini tidak dapat diberi tag."
+cannotTagLink = "Tautan ini tidak dapat diberi tag."
+cannotTagPage = "Konten halaman ini tidak dapat diberi tag."
+contentGroup = "Konten"
 customTag = "{{role}} (tag khusus)"
 decorativeInfo = "Pembaca layar melewati gambar dekoratif. Gunakan untuk bingkai, latar belakang, dan gambar lain yang tidak memuat informasi."
 decorativeLabel = "Gambar dekoratif"
 description = "Deskripsi gambar"
 descriptionInfo = "Pembaca layar membacakan ini sebagai pengganti gambar."
 encrypted = "Tag tidak dapat diedit dalam file terenkripsi"
+figureDescription = "Deskripsi gambar"
+figureDescriptionInfo = "Pembaca layar membacakan ini sebagai pengganti gambar."
+formFieldDescription = "Deskripsi bidang"
+formulaDescription = "Deskripsi rumus"
+formulaDescriptionInfo = "Pembaca layar membacakan ini sebagai pengganti rumus. Ucapkan seperti saat diucapkan lantang, misalnya \"x kuadrat ditambah satu\"."
 heading = "Aksesibilitas"
 innerTagLabel = "Tag {{number}}"
 innerTags = "Tag dalam teks ini"
+linkDescription = "Deskripsi tautan"
+markedTagged = "Dokumen sepenuhnya bertagar"
+markedTaggedHint = "Memberi tahu pembaca PDF untuk menggunakan tag aksesibilitas. Centang ini setelah semuanya ditandai."
+markedWithUntagged = "Beberapa konten tidak memiliki tag, sehingga pembaca layar mungkin melewatinya."
 missingDescriptions = "Deskripsi hilang"
 mixedContent = "Gambar menyertakan konten lain"
+mixedTags = "Campuran"
 needsDescriptionBadge = "Tidak ada deskripsi"
-nextImage = "Gambar berikutnya"
+nextToReview = "Berikutnya untuk ditinjau"
 notFigure = "Ditandai sebagai bagian dari teks"
 removeTag = "Hapus tag"
 saveFailed = "Perubahan aksesibilitas Anda tidak dapat disimpan, sehingga file tidak disimpan. Urungkan perubahan tersebut dan coba lagi."
 selectedText = "Teks yang dipilih"
+tagFormField = "Beri tag bidang formulir"
+tagging = "Memberi tag halaman"
 tagLabel = "Tag"
+tagLinks_one = "Tag tautan"
+tagLinks_other = "Tag {{count}} tautan"
+tagUntagged = "Tag otomatis dokumen"
+tagUntaggedHint = "Secara otomatis menambahkan tag aksesibilitas di seluruh dokumen. Hasilnya masih kasar: periksa judul, daftar, dan urutan baca setelahnya."
 unknownTag = "Tidak dapat dibaca di sini"
+unmarkedWithTags = "Beberapa penampil PDF tetap akan menggunakan tag dan mungkin melewati konten yang tidak memiliki tag."
 unreadable = "Tag file ini tidak dapat diedit"
 untaggableImages = "Tidak dapat diberi tag di sini"
 untaggedBadge = "Tidak diberi tag"
 untaggedDocument = "Dokumen tidak memiliki tag"
 untaggedImage = "Tidak dapat diberi tag di sini"
 untaggedImages = "Gambar tanpa tag"
+untaggedPages = "Halaman untuk diberi tag"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Footer"
+header = "Header"
+pageNumber = "Nomor halaman"
+watermark = "Watermark"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Heading tanpa teks"
@@ -7505,6 +7907,23 @@ tableHeader = "Header tabel"
 tableRow = "Baris tabel"
 title = "Judul"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Semua bahasa"
+cannotSetDocument = "Bahasa dokumen ini tidak dapat diubah."
+cannotSetText = "Bahasa teks ini tidak dapat diubah."
+documentHint = "Bahasa yang digunakan pembaca layar kecuali sebagian teks menetapkan bahasanya sendiri."
+documentLabel = "Bahasa"
+documentLocked = "Bahasa dokumen terenkripsi tidak dapat diubah di sini."
+inDocument = "Di dokumen ini"
+innerLabel = "Bahasa tag {{number}}"
+label = "Bahasa"
+missing = "Tidak ada bahasa yang ditetapkan. Pembaca layar akan menebak, dan mungkin membaca seluruh dokumen dengan suara yang salah."
+mixed = "Campuran"
+noMatch = "Tidak ada bahasa yang cocok. Ketik kodenya sebagai gantinya, misalnya mt atau en-IE."
+placeholder = "Pilih bahasa"
+selectedText = "Bahasa teks terpilih"
+textHint = "Pembaca layar akan beralih suara dan pelafalan ke bahasa ini."
+
 [pdfTextEditor.mobile]
 actions = "Tindakan editor"
 addImage = "Gambar"
@@ -7517,7 +7936,6 @@ done = "Selesai"
 download = "Simpan dan unduh"
 find = "Temukan"
 lock = "Kunci"
-openPdf = "Buka PDF"
 panelHint = "Pengeditan dilakukan di tampilan Workspace. Ketuk teks pada halaman untuk mengubahnya."
 save = "Simpan"
 style = "Gaya"
@@ -7525,7 +7943,6 @@ tapToPlace = "Ketuk halaman tempat teks harus ditempatkan"
 unlock = "Buka kunci"
 
 [pdfTextEditor.pageView]
-pageNumber = "Halaman {{page}}"
 renderFailed = "Gagal merender halaman"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Penggaris vertikal"
 
 [pdfTextEditor.run]
 lockedTitle = "Terkunci - gunakan tombol Buka kunci untuk mengedit"
+readOnlyOrderTitle = "Teks pada baris ini tidak dapat diedit: mencampur teks kanan-ke-kiri dan kiri-ke-kanan dalam urutan yang tidak dapat digambar ulang editor dengan aman"
+resizeHandle = "Seret untuk mengubah lebar; teks akan dibungkus ulang"
 
 [pdfTextEditor.saveRisk]
 cancel = "Batal"
@@ -7548,6 +7967,35 @@ intro = "Menyimpan salinan yang diedit akan mengubah file. Itu berarti:"
 note = "Editan Anda disimpan. Perubahan yang tercantum di atas tidak dapat dihindari saat menyimpan salinan yang diedit."
 saveAnyway = "Tetap simpan"
 title = "Menyimpan akan mengubah PDF ini"
+
+[pdfTextEditor.scanFont]
+approximate = "Kecocokan perkiraan"
+approximateHint = "Font terdekat yang ditemukan mungkin tidak cocok dengan hasil pindai."
+change = "Font terlihat tidak pas?"
+choose = "Pilih font"
+chooseMissing = "Pilih font untuk teks ini…"
+compare = "Bandingkan font…"
+deviceAllow = "Izinkan akses font untuk kecocokan yang lebih baik"
+deviceBlocked = "Browser Anda tidak akan menanyakannya lagi. Untuk mengizinkannya, klik ikon di kiri bilah alamat, aktifkan Fonts, lalu coba lagi."
+deviceBlockedTitle = "Akses font diblokir"
+deviceNone = "Tidak ada font dokumen yang umum terpasang di komputer ini."
+deviceNote = "Browser Anda akan meminta izin terlebih dahulu. Font tetap berada di perangkat ini."
+deviceOn_one = "Juga dibandingkan dengan {{count}} font di komputer ini."
+deviceOn_other = "Juga dibandingkan dengan {{count}} font di komputer ini."
+deviceReading = "Membaca font di komputer ini…"
+deviceRetry = "Coba lagi"
+done = "Selesai"
+hint = "Teks yang Anda ketik digambar dengan font terdekat yang ditemukan. Pilih yang lain jika lebih mirip dengan hasil pindai."
+hintFromScan = "Teks yang Anda ketik dibangun dari huruf yang ditemukan pada hasil pindai. Pilih font untuk menggambarnya dengan font tersebut."
+hintOthers = "Pilihan Anda juga digunakan untuk teks hasil pindai yang belum Anda edit."
+matching = "Mencocokkan font…"
+noFont = "Tidak ada font yang tersedia yang dapat menggambar skrip ini, sehingga teks ketik belum dapat digambar ulang."
+scan = "Pindaian asli"
+scanAlt = "Baris yang dipindai"
+scanNote = "Pindaian sering terlihat lebih buram atau lebih tebal daripada font aslinya. Bandingkan bentuk hurufnya, bukan ketebalannya."
+score = "{{match}}% mirip"
+title = "Cocokkan font hasil pindai"
+unmeasurable = "Pindaian ini terlalu samar atau kecil untuk dicocokkan dengan font."
 
 [pdfTextEditor.settings]
 advanced = "Lanjutan"
@@ -7564,7 +8012,6 @@ addTable = "Tambah tabel"
 addText = "Tambahkan teks"
 clickPageToAddTable = "Klik halaman untuk menambahkan tabel"
 clickPageToAddText = "Klik halaman untuk menambahkan teks"
-document = "Dokumen"
 group = "Kelompokkan"
 groupingAuto = "Otomatis"
 groupingAutoHint = "Mengelompokkan baris dengan jarak sama menjadi paragraf. Mengubah ini akan membaca ulang dokumen dan menghapus riwayat urung."
@@ -7593,23 +8040,17 @@ auto = "Otomatis"
 enable = "Periksa ejaan saat Anda mengetik"
 language = "Bahasa kamus"
 
-[pdfTextEditor.stage]
-loadingDocument = "Memuat dokumen"
-loadingProgress = "Progres pemuatan"
-noDocument = "Tidak ada dokumen yang dimuat."
-pickPrompt = "Pilih PDF dari panel File di kiri untuk mulai mengedit."
-renderingPreview = "Merender pratinjau"
-
 [pdfTextEditor.table]
 addColumn = "Tambah kolom"
 addRow = "Tambah baris"
+cellNoGlyphs = "Teks ini memiliki karakter yang tidak dapat ditampilkan oleh font tabel. Ubah atau hapus agar dapat mengisi sel."
 column = "Kol"
 deleteColumn = "Hapus kolom"
 deleteRow = "Hapus baris"
 done = "Selesai"
 doneHint = "Berhenti mengedit ini sebagai tabel"
-edit = "Edit"
 editHint = "Edit sebagai tabel - ketik di sel, tambah atau hapus baris dan kolom"
+editTable = "Edit tabel"
 move = "Pindahkan"
 moveTable = "Seret untuk memindahkan seluruh tabel"
 recognizedHint = "Tabel dikenali - klik untuk memilih semua teksnya"
@@ -7630,6 +8071,9 @@ alignMiddle = "Ratakan tengah vertikal"
 alignRight = "Ratakan kanan"
 alignTop = "Ratakan atas"
 arrange = "Atur"
+bold = "Tebal"
+boldOnly = "Font ini hanya memiliki versi tebal"
+boldUnavailable = "Tidak ada versi tebal untuk font ini"
 bringForward = "Bawa maju"
 bringToFront = "Bawa ke depan"
 caseLower = "huruf kecil"
@@ -7650,10 +8094,12 @@ fontColour = "Warna font"
 fontSize = "Ukuran font"
 formatting = "Pemformatan teks"
 italic = "Miring"
+italicOnly = "Font ini hanya memiliki versi miring"
 italicUnavailable = "Font ini tidak memiliki versi italic. Muat font perangkat Anda atau pilih keluarga font lain."
 lock = "Kunci pilihan"
 lockTooltip = "Kunci pilihan - mencegah edit tidak sengaja"
 more = "Tindakan lainnya"
+noBoldItalic = "Tidak ada versi tebal miring untuk font ini"
 order = "Urutan"
 outlineColour = "Warna garis luar"
 outlineWidth = "Lebar garis luar (0 = tidak ada)"
@@ -7683,13 +8129,6 @@ title = "Perbedaan Pratinjau"
 [pdfTextEditor.tooltip.textFocus]
 text = "Ruang kerja ini berfokus pada pengeditan teks dan memosisikan ulang gambar tersemat. Karya seni halaman yang kompleks, widget formulir, dan grafik berlapis dipertahankan untuk ekspor tetapi tidak sepenuhnya dapat diedit di sini."
 title = "Fokus Teks dan Gambar"
-
-[pdfTextEditor.zoom]
-fit = "Pas"
-fitToWidth = "Pas dengan lebar"
-in = "Perbesar"
-out = "Perkecil"
-reset = "Reset zoom ke 100%"
 
 [PDFToCSV]
 header = "PDF ke CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Berjalan saat impor"
 [policies.enforcement]
 applying = "Menerapkan {{names}}"
 applyingProgress = "Menerapkan {{names}} ({{done}} dari {{total}})"
-exportFailureBody = "Kebijakan keamanan tidak dapat diterapkan. File diekspor apa adanya."
-exportFailureTitle = "Diekspor tanpa penegakan"
 failureBody = "Beberapa kebijakan tidak dapat diterapkan ke {{failures}} dari {{total}} file."
 failureTitle = "Diekspor tanpa penegakan penuh"
 printPolicyAppliedBody = "PDF ini diperbarui agar memenuhi kebijakan. Tinjau perubahan, lalu cetak lagi."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Posting pesan ke ruang Google Chat saat kebijakan berjalan."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Akun layanan yang membaca dan menulis Google Drive untuk organisasi."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Tempel kunci JSON akun layanan dari Google Cloud. Ini dienkripsi dan tidak akan ditampilkan lagi."
+label = "Kunci akun layanan (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Opsional. Dengan pendelegasian seluruh domain, pengguna yang Drive-nya diwakili oleh ini (pengguna bot khusus tetap bekerja saat orang keluar). Kosong hanya menjangkau drive bersama dan folder yang dibagikan dengan akun layanan."
+label = "Bertindak sebagai pengguna"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Lampirkan dokumen yang diproses ke issue Jira."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Kirim email dokumen atau notifikasi saat kebijakan berjalan."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Memerlukan izin aplikasi Microsoft Graph dengan persetujuan admin."
+label = "ID Aplikasi (klien)"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Rahasia klien"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "ID Direktori (penyewa)"
+placeholder = "contoso.onmicrosoft.com atau GUID tenant"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Kata sandi aplikasi"
+
+[portal.connections.types.onedrive]
+description = "Membaca dari dan menulis ke OneDrive for Business milik satu pengguna."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Pemilik OneDrive yang dijangkau koneksi ini. Pendaftaran aplikasi memerlukan izin aplikasi Files.ReadWrite.All."
+label = "Pemilik OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Biarkan kosong jika Anda mengautentikasi dengan private key sebaga
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Opsional. Tempel private key OpenSSH untuk mengautentikasi dengan key alih-alih kata sandi."
 label = "Kunci privat"
+
+[portal.connections.types.sharepoint]
+description = "Membaca dari dan menulis ke pustaka dokumen situs SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Opsional. Biarkan kosong untuk pustaka Documents bawaan situs."
+label = "Pustaka dokumen"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "URL Situs"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Posting pesan ke Slack saat kebijakan memproses dokumen."
@@ -9142,6 +9624,126 @@ status = "Status"
 time = "Waktu"
 user = "Pengguna"
 
+[portal.enterprise]
+backTo = "Kembali ke {{stage}}"
+brandTag = "Enterprise"
+callInfo = "Panggilan 15 menit. Bawa pertanyaan Anda tentang harga, penerapan, atau keamanan, atau rencanakan peluncuran bersama."
+callTitle = "Bicara dengan insinyur solusi"
+deployment = "Penerapan"
+footer = "Ada pertanyaan tentang Stirling Enterprise?"
+home = "Buka Stirling"
+member = "Pimpinan tim Anda menjalankan kesepakatan Enterprise. Setelah dimulai, Anda dapat mengikuti kemajuannya di sini."
+memberDeal = "Pimpinan tim Anda menjalankan kesepakatan ini. Anda dapat mengikuti kemajuannya di sini."
+quotePanel = "Penawaran Anda"
+signIn = "Masuk"
+signInToStart = "Masuk untuk memulai uji coba Anda"
+stage = "Tahap {{current}} dari {{total}}"
+stagesLabel = "Kemajuan"
+
+[portal.enterprise.landing]
+lede = "Coba gratis selama 14 hari, lalu buat penawaran Anda dan tanda tangani perjanjian Anda di sini. Tidak memerlukan kartu."
+tickAgreement = "Satu perjanjian mencakup MSA, formulir pemesanan, EULA, dan DPA"
+tickCompliance = "SCIM, data residency, dan SLA uptime"
+tickDeploy = "Jalankan di Stirling Cloud, server Anda sendiri, atau sepenuhnya air-gapped"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Dokumentasi lisensi luring"
+point1 = "Diaktifkan dengan file lisensi yang berfungsi luring, bukan kunci yang diperiksa daring"
+point2 = "Diinstal seperti self-hosted, dari image yang Anda bawa"
+point3 = "Proses masuk tetap di dalam jaringan Anda"
+tagline = "Self-hosted pada jaringan tanpa akses internet."
+
+[portal.enterprise.options.cloud]
+more = "Dokumentasi Stirling Cloud"
+point1 = "Tim Anda masuk di stirling.com/app"
+point2 = "Berjalan di AWS, dengan file tersimpan dienkripsi saat tersimpan"
+point3 = "Single sign-on melalui identity provider Anda sendiri memerlukan self-hosting"
+tagline = "Di-host untuk Anda, tanpa perlu menginstal apa pun."
+
+[portal.enterprise.options.selfhost]
+more = "Dokumentasi self-hosting"
+point1 = "Instal dengan Docker, atau Helm chart di Kubernetes"
+point2 = "Dokumen diproses di infrastruktur Anda sendiri"
+point3 = "OAuth2, OIDC, atau SAML single sign-on"
+tagline = "Di server Anda sendiri, on-premises atau di cloud Anda sendiri."
+
+[portal.enterprise.review]
+back = "Kembali ke {{stage}}"
+company = "Perusahaan"
+completed = "Selesai"
+extensions = "Ekstensi yang digunakan"
+paid = "Dibayar. Faktur Anda tetap tersedia di sini."
+people = "Orang"
+started = "Dimulai"
+trialEnds = "Tanggal akhir uji coba"
+trialTitle = "Uji coba Anda"
+version = "Versi"
+viewInvoice = "Lihat faktur"
+
+[portal.enterprise.setup]
+copied = "Disalin"
+copy = "Salin"
+markDone = "Tandai “{{step}}” selesai"
+progress = "{{done}} dari {{total}} selesai"
+subtitle = "Maksimalkan uji coba Anda dengan mencobanya seperti cara Anda akan menjalankannya."
+subtitleLive = "Langkah-langkah yang perlu diselesaikan sebelum Anda meluncurkannya ke semua orang."
+title = "Mulai penyiapan"
+titleLive = "Daftar periksa go-live"
+
+[portal.enterprise.setup.firstDocument]
+body = "Unggah PDF yang digunakan tim Anda dan coba alat yang akan Anda gunakan sehari-hari, seperti sensor, kompres, atau OCR."
+title = "Jalankan dokumen pertama Anda"
+
+[portal.enterprise.setup.getApp]
+body = "Instal aplikasi desktop untuk Windows, Mac, atau Linux dan masuk dengan akun yang baru Anda buat, atau gunakan langsung dari browser Anda."
+title = "Dapatkan Stirling"
+
+[portal.enterprise.setup.install]
+body = "Jalankan ini di server Anda. Ini akan memulai Stirling dengan lisensi Anda diterapkan, dan image menyertakan OCR serta konversi office. Untuk tim yang lebih besar, gunakan Kubernetes."
+title = "Instal dan mulai Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Ajak orang-orang yang akan menggunakannya, agar uji coba mencerminkan pekerjaan nyata."
+title = "Undang tim Anda"
+
+[portal.enterprise.setup.licence]
+body = "Buka <code>http://your-server:8080/settings/adminPlan</code>, di mana lisensi Enterprise Anda seharusnya terlihat aktif. Dipasang dengan cara lain? Tambahkan kunci di <code>premium.key</code> dalam <code>settings.yml</code> lalu mulai ulang."
+title = "Periksa lisensi Anda aktif"
+
+[portal.enterprise.setup.links]
+browser = "Gunakan di browser Anda"
+docker = "Panduan Docker"
+download = "Unduh aplikasinya"
+downloadForTeam = "Dapatkan aplikasi untuk tim Anda"
+downloading = "Mengunduh..."
+downloadLicence = "Unduh file lisensi"
+invite = "Undang rekan satu tim"
+kubernetes = "Panduan Kubernetes"
+licence = "Aktivasi lisensi"
+ocr = "Bahasa OCR"
+openApp = "Buka Stirling"
+samlGuide = "Panduan SAML"
+ssoGuide = "Panduan SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Tarik image penuh pada mesin yang terhubung, bawa image dan file lisensinya, lalu muat dan jalankan. Image penuh menambahkan font yang tidak dapat diunduh server luring."
+title = "Bawa Stirling dan mulai"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Server air-gapped tidak dapat menjangkau layanan lisensi kami, jadi ia memeriksa file bertanda tangan ini sebagai gantinya. Simpan bersama image yang Anda bawa."
+title = "Unduh lisensi luring Anda"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Buat akun di <code>/settings/people</code>, atau arahkan Stirling ke identity provider internal Anda agar proses masuk tidak pernah keluar dari jaringan Anda."
+bodySelfHosted = "Buat akun di <code>/settings/people</code>, atau hubungkan identity provider Anda sehingga tim Anda masuk dengan akun kerja mereka. Mereka menggunakan Stirling di browser pada alamat server Anda, atau di aplikasi desktop yang diarahkan ke sana."
+title = "Tambahkan orang Anda"
+
+[portal.enterprise.setup.signIn]
+body = "Buka <code>http://your-server:8080</code> dan masuk dengan <code>admin</code> / <code>stirling</code>. Anda akan diminta untuk segera memilih kata sandi baru."
+bodyAirgap = "Buka <code>http://your-server:8080</code> dan masuk dengan <code>admin</code> / <code>stirling</code>, pilih kata sandi baru, lalu periksa bahwa <code>/settings/adminPlan</code> menampilkan lisensi Anda sebagai aktif."
+title = "Masuk sebagai admin"
+
 [portal.errorBoundary]
 description = "Tampilan ini mengalami error tak terduga. Coba lagi, atau pilih bagian lain dari sidebar."
 retry = "Coba lagi"
@@ -9293,6 +9895,7 @@ title = "Tidak ada yang perlu ditinjau"
 [portal.home.download]
 back = "Kembali"
 body = "Unduh aplikasi desktop atau self-host server."
+bodyDesktop = "Unduh aplikasi desktop, lalu masuk dengan akun Stirling Anda."
 done = "Selesai"
 guide = "Buka panduan {{name}}"
 openInBrowser = "Buka di browser saja"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Penerimaan email"
 
 [portal.procurement]
-subtitle = "Buat tim Anda dievaluasi, dikontrak, dan di-onboard. Setiap dokumen di satu tempat."
 title = "Pengadaan"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Tidak dapat memuat perjanjian. Silakan coba lagi."
 loading = "Memuat perjanjian..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "Minta perubahan"
-scrollHint = "Gulir untuk meninjau"
 signatory = "Nama penanda tangan"
 signatoryPlaceholder = "Nama lengkap"
 signatoryTitle = "Jabatan penanda tangan"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "mis. General Counsel"
 signError = "Tidak dapat merekam tanda tangan Anda. Silakan coba lagi."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} satu kali"
+addonPerYear = "+{{amount}}/tahun"
 addons = "Add-on"
 addressLine1 = "Baris alamat 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Baris alamat 2"
 addressLine2Placeholder = "Suite, lantai, gedung"
 back = "Kembali"
+belowMinimum = "Penawaran ini berada di bawah ukuran minimum untuk kesepakatan Enterprise."
 businessName = "Nama bisnis"
 businessNamePlaceholder = "Perusahaan Anda"
 city = "Kota"
 cityPlaceholder = "San Francisco"
 completeRequired = "Silakan lengkapi field wajib (ditandai *) dengan email yang valid sebelum membuat penawaran."
+conflict = "Kesepakatan ini telah berubah sejak Anda membukanya. Tutup builder dan muat ulang halaman untuk melihat statusnya."
 contactEmail = "Email kontak"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Nama kontak"
 contactNamePlaceholder = "Jane Doe"
 continue = "Lanjutkan"
 done = "Selesai"
+editUsage = "Edit penggunaan"
 eula = "Saya telah membaca dan menyetujui Stirling Enterprise EULA. Ini mengatur perjanjian yang dihasilkan dari penawaran ini."
 generate = "Buat penawaran"
 indemnification = "Perlindungan IP yang Ditingkatkan"
 indemnificationSub = "Memperluas pembelaan IP kami ke klaim paten. Indemnifikasi hak cipta, merek dagang, dan rahasia dagang dasar disertakan gratis."
+minimum = "Enterprise memerlukan pengeluaran tahunan minimum sebesar {{min}}."
+minimumBelow = "Penawaran ini menjadi {{annual}} per tahun. Jika Anda memperkirakan penggunaan lebih banyak, tingkatkan perkiraan penggunaan Anda; jika tidak, paket Team kemungkinan lebih cocok."
+minimumNear = "Enterprise memerlukan pengeluaran tahunan minimum sebesar {{min}}. Naikkan perkiraan penggunaan Anda untuk mencapainya, atau diskusikan dengan kami."
+minimumNearTitle = "Anda kurang {{gap}} per tahun untuk Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Penawaran enterprise"
 paperFor = "Disiapkan untuk"
 pdfSize = "Ukuran PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "Teregulasi"
 posture_regulatedSub = "Setiap kategori — Kepatuhan, Retensi, Ingesti"
 qbr = "Tinjauan bisnis triwulanan"
 qbrSub = "SE Anda meninjau penggunaan dan roadmap setiap kuartal"
+raiseUsage = "Naikkan perkiraan penggunaan"
 region = "Negara bagian / wilayah"
 regionPlaceholder = "California"
-running = "{{annual}} / thn · {{years}} thn {{tcv}}"
+runningLabel = "Perkiraan harga"
+runningLabelIssued = "Harga penawaran"
+runningOneYear = "{{annual}} per tahun"
+runningTotal = "{{tcv}} total selama {{years}} tahun"
 s1Sub = "Tim Anda, dan PDF yang Anda perkirakan akan dijalankan setiap tahun."
 s1Title = "Berapa banyak yang akan Anda proses?"
 s2Sub = "Jangka waktu lebih panjang mendiskon tarif; level layanan Anda menentukan dukungan."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "mis. 1.000.000"
 years_one = "{{count}} tahun"
 years_other = "{{count}} tahun"
 
+[portal.procurement.builder.line]
+deployment = "Penerapan {{deployment}}"
+indemnification = "Ganti rugi IP"
+multiYear_one = "Komitmen {{count}} tahun"
+multiYear_other = "Komitmen {{count}} tahun"
+qbr = "Tinjauan bisnis triwulanan"
+seats_one = "{{users}} pengguna yang disepakati + SSO / RBAC / audit"
+seats_other = "{{users}} pengguna yang disepakati + SSO / RBAC / audit"
+seatsUnset = "Pengguna + SSO / RBAC / audit"
+support = "SE / CSM khusus"
+training = "Onboarding & pelatihan"
+usage = "Pemrosesan PDF — {{volume}} PDF/thn pada {{rate}}/PDF (otomatisasi {{posture}})"
+
 [portal.procurement.documents]
 agreement = "Perjanjian Enterprise"
 agreementSub = "MSA, Order Form, dan DPA dalam satu tanda tangan."
@@ -10557,6 +11185,8 @@ invoice = "Faktur"
 invoiceSub = "Faktur langganan pertama Anda."
 laterInvoice = "Tersedia setelah Anda menerima"
 laterQuote = "Tersedia setelah penawaran Anda diterbitkan"
+laterSigning = "Tersedia setelah perjanjian ditandatangani"
+laterTitle = "Nanti dalam kesepakatan Anda"
 quote = "Penawaran"
 quoteSub = "Penawaran enterprise terperinci Anda."
 sla = "Lampiran SLA"
@@ -10573,15 +11203,12 @@ title = "Terjadi kesalahan"
 [portal.procurement.hero]
 barAria = "Tahap {{current}} dari {{total}}"
 ctaAgreement = "Tinjau & tanda tangani perjanjian"
-ctaExploring = "Siapkan uji coba Anda"
 ctaQuote = "Tinjau penawaran Anda"
 ctaReviewQuote = "Tinjau penawaran"
 ctaTrial = "Buat penawaran Anda"
-documents = "Dokumen"
 eyebrow = "Enterprise"
 eyebrowCompany = "Enterprise {{company}}"
 inviteTeammates = "Undang rekan tim"
-licenseKey = "Key lisensi"
 liveSub = "Organisasi Anda sudah diprovisikan dan lisensi Anda aktif."
 liveTitle = "Anda sudah live di Stirling Enterprise"
 next = "Berikutnya: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Belum dapat membuat file lisensi offline — silakan coba lagi 
 downloadOffline = "Download lisensi offline (.lic)"
 hint = "Tempel kunci ini ke instance self-hosted untuk mengaktifkannya, atau simpan untuk catatan Anda. Jaga tetap aman."
 label = "Kunci lisensi Anda"
-subtitle = "Aktifkan instance self-hosted dengan key ini, atau simpan untuk arsip Anda."
-title = "Key lisensi Anda"
 trialFileHint = "Ini adalah file lisensi uji coba Anda. Setelah perjanjian Anda siap, kembali dan unduh lagi — tidak seperti key lisensi online, file .lic tidak akan diperbarui sendiri."
-
-[portal.procurement.link]
-cta = "Tautkan akun"
-description = "Pengadaan berjalan pada akun Stirling tertaut Anda: begitulah cara kami memprovision uji coba, memberi harga penawaran, dan memulai penagihan. Tautkan akun untuk memulai."
-eyebrow = "Enterprise"
-title = "Tautkan akun Anda untuk memulai"
 
 [portal.procurement.live]
 description = "Langganan Anda aktif dan lisensi Anda telah diterbitkan. Tim Anda telah diprovision dan penagihan telah dimulai."
-eyebrow = "Live"
 title = "Anda sudah live di Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Belum dapat mendownload PDF penawaran — silakan coba lagi seb
 
 [portal.procurement.payment]
 description = "Penawaran Anda diterima dan lisensi Anda sudah aktif — tim Anda dapat langsung mulai. Bayar invoice pertama saat Anda siap; Anda dapat membayar atau mendownloadnya di sini, tanpa perlu email."
-downloadAgreement = "Unduh perjanjian yang ditandatangani"
 downloadInvoice = "Unduh faktur"
-eyebrow = "Pembayaran"
-title = "Langganan dibuat"
 viewInvoice = "Lihat & bayar invoice"
 
 [portal.procurement.review]
 acceptCta = "Terima penawaran"
 annual = "Biaya tahunan (tahun 1)"
 downloadCta = "Unduh penawaran"
+oneTime = "satu kali"
 poNumber = "Purchase order: {{po}}"
 renewal = "Diperpanjang pada {{amount}}/tahun setelah masa berlaku (+{{pct}}% CPI)"
 tcv = "Masa berlaku {{years}} tahun, dibayar penuh di muka: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Memperpanjang menambahkan 7 hari dan memberi tahu engineer solusi Anda."
 bodyMaxed = "Anda telah menggunakan semua perpanjangan — bicara dengan engineer solusi Anda jika membutuhkan waktu lebih."
-cancel = "Batalkan uji coba"
 extend = "Perpanjang 7 hari"
 maxed = "Maksimal"
 subtitle = "Uji coba gratis Anda berjalan hingga {{date}}. Tidak perlu kartu."
 title = "Uji coba Enterprise"
+
+[portal.procurement.validation]
+confirm = "Konfirmasikan bahwa Anda berwenang untuk menandatangani atas nama organisasi."
+email = "Masukkan alamat email yang valid."
+eula = "Setujui EULA untuk melanjutkan."
+required = "Bidang ini wajib diisi."
+seats = "Masukkan berapa banyak orang yang akan mengujinya."
+volume = "Masukkan berapa banyak PDF yang Anda perkirakan akan diproses per tahun."
 
 [portal.review]
 subtitle = "Apa pun dari eksekusi kebijakan Anda dan editor tim Anda yang memerlukan perhatian Anda."
@@ -10735,6 +11358,7 @@ subtitle = "Koneksi input yang dapat digunakan ulang untuk memasukkan dokumen ke
 title = "Sumber"
 
 [portal.sources.actions]
+connectDestination = "Hubungkan tujuan"
 connectSource = "Hubungkan sumber"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Pilih ke mana dokumen yang diproses akan dikirim. Konektor b
 comingSoon = "Segera hadir"
 comingSoonHeading = "Segera hadir"
 create = "Buat sumber"
+createDestination = "Buat tujuan"
+createDestinationTitle = "Tambahkan tujuan"
 createTitle = "Hubungkan sumber"
 delete = "Hapus"
 editTitle = "Edit sumber"
@@ -10757,6 +11383,41 @@ save = "Simpan perubahan"
 description = "Otomatisasi folder hanya dapat menggunakan folder yang diizinkan administrator. Tambahkan di pengaturan Akses Folder, lalu coba lagi."
 openSettings = "Pengaturan Akses Folder"
 title = "Folder ini tidak diizinkan"
+
+[portal.sources.cloudFields.account]
+connect = "Hubungkan akun Anda"
+connectAnother = "Hubungkan akun lain"
+connectFailed = "Akun tidak dapat dihubungkan. Coba lagi, atau minta administrator Anda memeriksa pendaftaran aplikasi."
+label = "Akun"
+placeholder = "Pilih akun"
+reconnect = "masuk lagi"
+unavailable = "Menghubungkan akun Anda sendiri dinonaktifkan di server ini. Pilih koneksi organisasi sebagai gantinya."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Akun pribadi dinonaktifkan di server ini."
+helperText = "Akun Anda menjangkau apa yang dapat Anda buka dan tidak memerlukan admin. Koneksi organisasi terus bekerja saat orang pergi, dan hanya menjangkau apa yang disiapkan admin."
+label = "Masuk sebagai"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Akun saya"
+organisation = "Koneksi organisasi"
+
+[portal.sources.cloudFields.connection]
+helperText = "Disiapkan oleh administrator di bawah Integrations. Digunakan bersama oleh setiap lokasi yang menggunakannya."
+label = "Koneksi organisasi"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Tempel tautan folder, atau ketik jalur dari tingkat teratas My Drive. Biarkan kosong untuk tingkat teratas My Drive. Folder harus sudah ada."
+placeholder = "Tautan folder, atau Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Folder di OneDrive Anda, atau tempel tautan folder (Copy link di OneDrive). Biarkan kosong untuk tingkat teratas OneDrive. Folder harus sudah ada."
+placeholder = "Scans/Inbox, atau tautan folder"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Dengan akun Anda, tempel tautan folder (Copy link di SharePoint). Dengan koneksi organisasi, folder di dalam perpustakaan dokumennya; biarkan kosong untuk root perpustakaan. Folder harus sudah ada."
+organisationPlaceholder = "Tautan folder, atau Scans/Inbox"
+placeholder = "Tautan folder"
 
 [portal.sources.delete]
 body = "Hapus \"{{name}}\"? Tindakan ini tidak dapat dibatalkan. Kebijakan yang mereferensikannya perlu diperbarui."
@@ -10821,6 +11482,7 @@ label = "Kotak masuk email"
 [portal.sources.types.folder]
 description = "Pantau direktori di server untuk dokumen baru."
 label = "Folder"
+outputDescription = "Simpan hasil ke direktori di server."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Path absolut ke folder yang akan dipantau untuk file baru."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Ambil dokumen dari folder Google Drive bersama."
 label = "Google Drive"
+outputDescription = "Simpan hasil ke folder Google Drive."
 
 [portal.sources.types.network]
 description = "Pantau SMB network share untuk dokumen baru."
@@ -10867,10 +11530,12 @@ label = "Drive jaringan"
 [portal.sources.types.onedrive]
 description = "Pantau folder OneDrive untuk dokumen baru."
 label = "OneDrive"
+outputDescription = "Simpan hasil ke folder OneDrive."
 
 [portal.sources.types.s3]
 description = "Ambil dokumen dari bucket Amazon S3 atau yang kompatibel dengan S3."
 label = "Amazon S3"
+outputDescription = "Simpan hasil ke bucket Amazon S3 atau yang kompatibel dengan S3."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Koneksi tersimpan dengan bucket dan kredensial. Dibagikan oleh setiap sumber dan output pipeline yang menggunakannya."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Ambil dokumen dari pustaka dokumen SharePoint."
 label = "SharePoint"
+outputDescription = "Simpan hasil ke folder perpustakaan dokumen SharePoint."
 
 [portal.sources.types.unknown]
 label = "Sumber"
@@ -11074,6 +11740,14 @@ waiting = "Dalam antrean ..."
 name = "Google Drive"
 scope = "Impor File"
 
+[provider.googledrive.accountScope]
+description = "drive menjangkau setiap file (Google harus memverifikasi aplikasi publik untuk itu); drive.file hanya file yang dipilih orang atau yang dibuat Stirling"
+label = "Akses Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "Satu kali masuk untuk editor dan pipeline mereka. Nonaktifkan untuk hanya mengizinkan koneksi organisasi."
+label = "Izinkan orang menghubungkan akun mereka sendiri"
+
 [provider.googledrive.apiKey]
 description = "Google API Key untuk Google Picker API dari Google Cloud Console"
 label = "API Key"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "Client ID OAuth 2.0 Google dari Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "Memungkinkan orang menghubungkan akun Google mereka untuk pipeline mereka. Tambahkan URI pengalihan di bawah sebagai URI pengalihan yang diotorisasi dari klien OAuth."
+label = "Rahasia klien"
+
 [provider.googledrive.enabled]
 description = "Izinkan pengguna mengimpor file langsung dari Google Drive"
 label = "Aktifkan Google Drive File Picker"
 
 [provider.googledrive.errors]
+connectFailed = "Tidak dapat menghubungkan akun Google Anda. Coba lagi dari Pengaturan > Akun terhubung."
 notConfigured = "Google Drive belum dikonfigurasi"
 pickerFailed = "Gagal membuka pemilih Google Drive"
+
+[provider.googledrive.redirectUri]
+description = "Tambahkan ini sebagai URI pengalihan yang diotorisasi dari klien OAuth di Google Cloud Console."
+label = "URI pengalihan"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "File & pipeline"
+
+[provider.microsoft.allowAccountConnections]
+description = "Satu kali masuk untuk editor dan pipeline mereka. Nonaktifkan untuk hanya mengizinkan koneksi organisasi."
+label = "Izinkan orang menghubungkan akun mereka sendiri"
+
+[provider.microsoft.allowEditorSaves]
+description = "Nonaktifkan untuk menyimpan perubahan di Stirling: file yang dibuka dari OneDrive kemudian diunduh sebagai gantinya, dan server menolak penyimpanan ke OneDrive."
+label = "Izinkan editor menyimpan kembali ke OneDrive"
+
+[provider.microsoft.clientId]
+description = "Dari satu pendaftaran aplikasi Microsoft Entra."
+label = "ID Aplikasi (klien)"
+
+[provider.microsoft.clientSecret]
+description = "Diperlukan untuk akun yang terhubung. Tetap di server."
+label = "Rahasia klien"
+
+[provider.microsoft.enabled]
+description = "Izinkan orang menggunakan OneDrive dan SharePoint dalam pipeline"
+label = "Aktifkan OneDrive & SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Tambahkan ini sebagai URI pengalihan Single-page application pada pendaftaran aplikasi yang sama, untuk masuk dari editor."
+label = "URI pengalihan Single-page application"
+
+[provider.microsoft.redirectUri]
+description = "Tambahkan ini sebagai URI pengalihan Web pada pendaftaran aplikasi Entra."
+label = "URI pengalihan"
+
+[provider.microsoft.setupSteps]
+connect = "Simpan, mulai ulang, lalu sambungkan akun di Akun terhubung."
+permissions = "Tambahkan izin terdelegasi Microsoft Graph Files.ReadWrite.All dan Files.Read.All, serta izin terdelegasi SharePoint MyFiles.Read dan AllSites.Read agar akun kerja dan sekolah dapat membuka pemilih file."
+redirects = "Tambahkan dua URI pengalihan di bawah ini: satu sebagai Web, satu lagi sebagai Single-page application."
+register = "Daftarkan sebuah aplikasi di Microsoft Entra admin center. Izinkan akun Microsoft pribadi jika orang menggunakan OneDrive pribadi."
+secret = "Buat client secret, lalu tempel nilainya dan client ID aplikasi di bawah ini."
+
+[provider.microsoft.tenant]
+description = "common untuk akun kerja, sekolah dan pribadi; organizations untuk kerja dan sekolah saja; atau ID tenant untuk menerima satu organisasi"
+label = "ID Direktori (tenant)"
 
 [provider.oauth2.generic]
 name = "OAuth2 Generik"
@@ -11195,6 +11921,19 @@ label = "Scopes"
 description = "Bidang yang digunakan sebagai nama pengguna (email, name, given_name, family_name, preferred_username)"
 label = "Gunakan sebagai Nama Pengguna"
 
+[provider.onedrive]
+pickerLoading = "Menyambungkan ke OneDrive..."
+pickerTitle = "Pilih file dari OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Tidak dapat menghubungkan akun Microsoft Anda. Coba lagi dari Pengaturan > Akun terhubung."
+notConfigured = "OneDrive belum dikonfigurasi"
+pickerFailed = "Gagal membuka OneDrive"
+popupBlocked = "Browser Anda memblokir jendela masuk Microsoft. Izinkan pop-up untuk situs ini lalu coba lagi."
+reconnect = "Akun Microsoft Anda perlu masuk lagi. Sambungkan kembali di Pengaturan > Akun terhubung."
+serverError = "OneDrive atau server Stirling mengalami masalah. Coba lagi, atau hubungi administrator Anda jika masalah berlanjut."
+unreachable = "Tidak dapat menjangkau OneDrive. Periksa koneksi Anda lalu coba lagi."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Notifikasi"
 processor = "Processor"
 reader = "Pembaca"
 signInToUse = "Masuk untuk menggunakan ini"
+
+[quickNav.accountMenu]
+localMode = "Mode lokal"
+server = "Pengaturan server"
+settings = "Pengaturan"
+signedOut = "Belum masuk"
+signIn = "Masuk"
 
 [read]
 tags = "lihat,buka,tampilkan,baca,viewer,PDF viewer,PDF reader,buka PDF,lihat PDF,tampilkan PDF,pratinjau,jelajahi"
@@ -11811,6 +12557,13 @@ title = "Bersihkan PDF"
 [sanitizePdf]
 tags = "bersih, terlindungi, aman, menghilangkan ancaman"
 
+[saveFile.menu]
+more = "Opsi simpan lainnya"
+saveCopy = "Simpan salinan..."
+
+[saveFile.toolbar]
+mixed = "Simpan semua"
+
 [scalePages]
 tags = "ubah ukuran,sesuaikan,skala,ukuran halaman,ubah ukuran halaman,skala halaman,ubah ukuran,sesuaikan ukuran,perbesar,perkecil halaman,paskan ke halaman,A4,ukuran letter"
 title = "Sesuaikan skala halaman"
@@ -11905,6 +12658,162 @@ showTools = "Lihat alat yang tidak tersedia ▾"
 title = "Server Stirling-PDF Anda tidak dapat dijangkau"
 toolNotAvailableLocally = "Server Stirling-PDF Anda sedang offline dan \"{{endpoint}}\" tidak tersedia pada backend lokal."
 
+[serverSetup]
+back = "Kembali"
+collapse = "Sembunyikan pengaturan {{setting}}"
+configured = "Dikonfigurasi"
+continue = "Lanjutkan"
+dialogLabel = "Penyiapan server"
+expand = "Tampilkan pengaturan {{setting}}"
+finishSetup = "Selesaikan penyiapan"
+loadErrorSubtitle = "Penyiapan memerlukan pengaturan server saat ini untuk memulai."
+loadErrorTitle = "Tidak dapat memuat pengaturan Anda"
+off = "Nonaktif"
+on = "Aktif"
+save = "Simpan"
+stepCount = "{{current}} dari {{total}}"
+
+[serverSetup.account]
+failed = "Tidak dapat menyimpan detail Anda. Periksa apakah server dapat dijangkau lalu coba lagi."
+save = "Simpan dan lanjutkan"
+signIn = "Masuk"
+signInAgainSubtitle = "Masuk lagi dengan nama pengguna dan kata sandi baru Anda untuk melanjutkan."
+signInAgainTitle = "Detail Anda telah disimpan"
+subtitle = "Pilih cara Anda akan masuk mulai sekarang."
+title = "Siapkan akun Anda"
+updating = "Memperbarui"
+updatingSubtitle = "Tunggu sebentar."
+updatingTitle = "Memperbarui detail Anda"
+username = "Nama pengguna"
+usernameHelp = "Yang akan Anda gunakan untuk masuk. Alamat email juga bisa."
+
+[serverSetup.addresses]
+backendUrl = "Alamat server"
+backendUrlHelp = "Tempat penyedia masuk mengarahkan kembali pengguna. Biasanya sama dengan alamat web."
+frontendUrl = "Alamat web"
+frontendUrlHelp = "Tempat orang membuka Stirling PDF. Digunakan dalam email, tautan berbagi, dan kode QR."
+subtitle = "Bagaimana pengguna dan penyedia masuk menjangkau server ini."
+title = "Alamat"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "Biarkan kosong untuk menggunakan key yang sudah dimiliki engine AI."
+baseUrl = "URL dasar"
+engineUrl = "Alamat mesin AI"
+fastModel = "Model cepat"
+label = "AI yang di-host sendiri"
+provider = "Penyedia model"
+providerCustom = "Kompatibel dengan OpenAI"
+smartModel = "Model lengkap"
+stirling = "Stirling AI"
+subtitle = "Pertanyaan dokumen, edit otomatis, dan agen AI."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Terima dan lanjutkan"
+acceptFinish = "Terima dan selesai"
+changeLater = "Anda dapat mengubah ini kapan saja di {{path}}."
+decline = "Tolak dan lanjutkan"
+declineFinish = "Tolak dan selesai"
+learnMore = "Apa yang kami kumpulkan"
+note = "Bagikan data penggunaan dari server ini kepada kami untuk membantu meningkatkan Stirling PDF. Kami tidak pernah mengumpulkan file atau isinya."
+title = "Analitik server"
+
+[serverSetup.documents]
+label = "Pertanyaan dokumen"
+model = "Model embedding"
+provider = "Penyedia embedding"
+providerHelp = "Mengubah teks dokumen menjadi indeks pencarian yang menjawab pertanyaan."
+
+[serverSetup.email]
+from = "Alamat pengirim"
+host = "Host SMTP"
+label = "Kirim email"
+password = "Kata sandi"
+port = "Port"
+subtitle = "Untuk undangan, permintaan tanda tangan, dan berbagi."
+title = "Email"
+username = "Nama pengguna"
+
+[serverSetup.error]
+email = "Masukkan alamat email"
+issuerUnreachable = "Tidak dapat menghubungi issuer ini. Periksa alamatnya, dan pastikan server ini dapat mengaksesnya."
+passwordIncorrect = "Kata sandi salah"
+passwordLength = "Gunakan setidaknya 8 karakter"
+passwordMismatch = "Kata sandi tidak cocok"
+passwordRejected = "Server tidak menerima kata sandi ini. Coba yang lain."
+passwordUnchanged = "Pilih kata sandi yang berbeda dari yang sekarang"
+port = "Masukkan port dari 1 hingga 65535"
+providerName = "Gunakan huruf, angka, tanda hubung, atau garis bawah saja"
+required = "Wajib"
+url = "Masukkan alamat lengkap, diawali dengan http:// atau https://"
+username = "Gunakan 3 hingga 50 huruf, angka, atau . _ + - @, atau alamat email"
+usernameTaken = "Nama pengguna tersebut sudah digunakan"
+
+[serverSetup.files]
+sharing = "Berbagi file"
+sharingOffWarning = "Dengan berbagi dinonaktifkan, tautan berbagi yang ada berhenti berfungsi."
+storage = "Simpan file"
+storageOffWarning = "Dengan penyimpanan dinonaktifkan, file yang disimpan orang di server tidak lagi dapat dibuka."
+subtitle = "Kelola penyimpanan dan berbagi file."
+title = "File"
+
+[serverSetup.finish]
+errorNote = "Periksa bahwa server dapat dijangkau dan Anda masih masuk sebagai admin."
+errorSubtitle = "Tidak ada yang dimulai ulang."
+errorTitle = "Tidak dapat menyimpan pengaturan Anda"
+manualSubtitle = "Server ini tidak dapat memulai ulang dirinya sendiri. Mulai ulang kontainer atau layanannya untuk menerapkannya."
+manualTitle = "Pengaturan disimpan"
+restartFailedSubtitle = "Server tidak dimulai ulang. Mulai ulang kontainer atau layanannya untuk menerapkannya."
+restartingSubtitle = "Halaman ini akan dimuat ulang saat kembali, biasanya dalam satu menit."
+restartingTitle = "Memulai ulang server Anda"
+retry = "Coba lagi"
+saving = "Menyimpan"
+savingSubtitle = "Tunggu sebentar."
+savingTitle = "Menyimpan pengaturan Anda"
+
+[serverSetup.language]
+auto = "Samakan dengan setiap browser"
+label = "Bahasa bawaan"
+subtitle = "Yang pertama dilihat pengunjung baru."
+title = "Bahasa"
+
+[serverSetup.mcp]
+label = "Server MCP"
+
+[serverSetup.password]
+confirm = "Konfirmasi kata sandi baru"
+current = "Kata sandi saat ini"
+new = "Kata sandi baru"
+
+[serverSetup.signIn]
+clientId = "ID Klien"
+clientSecret = "Rahasia klien"
+issuer = "URL Issuer"
+label = "Masuk dengan"
+oidc = "OpenID Connect lainnya"
+password = "Nama pengguna dan kata sandi"
+providerName = "Nama penyedia"
+providerNameHelp = "Ditampilkan pada tombol masuk, misalnya okta atau entra."
+redirectNote = "Tambahkan URI pengalihan ini di penyedia Anda:"
+subtitle = "Bagaimana tim Anda masuk."
+title = "Masuk"
+
+[serverSetup.signingIn]
+button = "Sedang masuk"
+title = "Masuk dengan kredensial bawaan"
+
+[serverSetup.start]
+custom = "Kustom"
+quick = "Mulai cepat"
+setupLabel = "Penyiapan"
+subtitle = "Siapkan untuk tim Anda dalam beberapa langkah."
+title = "Server Anda aktif"
+
+[serverSetup.summary]
+subtitle = "Periksa hal-hal penting. Yang lain tetap pada bawaan."
+title = "Mulai cepat"
+
 [session]
 expired = "Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman dan coba lagi."
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "Privasi"
 storageSharing = "Penyimpanan File & Berbagi"
 systemSettings = "Pengaturan Sistem"
+
+[settings.connectedAccounts]
+description = "OneDrive, SharePoint, dan Google Drive Anda, untuk pipeline Anda."
+title = "Akun terhubung"
 
 [settings.connectedInstances]
 confirmBody = "Ini mencabut akses instans ke tim Anda di Stirling Cloud. Ini tidak menghapus file lokal atau menghapus penggunaan yang sudah tercatat. Untuk menghubungkan lagi, ikuti langkah koneksi asli pada instans."
@@ -11992,6 +12905,13 @@ selfhosted = "Dihosting Sendiri"
 apiKeys = "Kunci API"
 apiKeysDescription = "Kunci pribadi untuk memanggil Stirling API dari skrip dan integrasi."
 title = "Pengembang"
+
+[settings.feedback]
+label = "Masukan"
+
+[settings.feedback.send]
+description = "Laporkan masalah atau sarankan perbaikan kepada tim Stirling."
+label = "Kirim masukan"
 
 [settings.general]
 autoUnzip = "Auto-unzip respons API"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Periksa Pembaruan"
 currentBackendVersion = "Versi Backend Saat Ini"
 currentFrontendVersion = "Versi Frontend Saat Ini"
 description = "Periksa pembaruan dan lihat informasi versi"
+descriptionManaged = "Lihat informasi versi"
 latestVersion = "Versi Terbaru"
 managedByAdmin = "Dikelola oleh administrator"
 modeAuto = "Instal pembaruan secara otomatis"
@@ -12135,15 +13056,24 @@ title = "Dokumen Hukum"
 backendDescription = "Lisensi untuk dependensi backend yang dibundel dengan server ini."
 backendLabel = "Lisensi Backend"
 backendTitle = "Lisensi Pihak Ketiga Backend"
+clearSearch = "Bersihkan pencarian"
 empty = "Tidak ada dependensi ditemukan."
 frontendDescription = "Lisensi untuk dependensi frontend yang dibundel ke dalam release build."
 frontendLabel = "Lisensi Frontend"
 frontendTitle = "Lisensi Pihak Ketiga Frontend"
 license = "Lisensi"
+licenseAbout = "Tentang"
+licenseAboutCompound = "Tentang {{short}}"
+licenseAboutTitle = "Tentang {{short}}"
 listDescription = "Daftar ditampilkan langsung di UI dari release bundle atau endpoint backend."
 listTitle = "Dependensi yang dibundel"
 loadError = "Gagal memuat lisensi pihak ketiga"
 module = "Modul"
+noMatch = "Tidak ada dependensi yang cocok."
+searchPlaceholder = "Cari dependensi"
+showingCount = "{{count}} dependensi"
+showingCount_one = "{{count}} dependensi"
+showingCount_other = "{{count}} dependensi"
 version = "Versi"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Masukkan email Anda"
 emptyPassword = "Masukkan kata sandi Anda"
 emptyUsername = "Masukkan nama pengguna Anda"
 oauthFailed = "Login OAuth gagal. Silakan coba lagi."
+openResetFailed = "Tidak dapat membuka browser Anda untuk mengatur ulang kata sandi Anda."
 
 [setup.saas]
 title = "Masuk ke Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "Tanda tangan tidak terlihat tetap memberikan validasi kriptografis"
 description = "Mengontrol apakah tanda tangan terlihat pada dokumen atau disematkan secara tidak terlihat."
 title = "Visibilitas Tanda Tangan"
 
+[signedPdf]
+editsBlocked = "PDF ini ditandatangani secara digital, dan perubahan pada PDF yang ditandatangani dinonaktifkan. Anda masih dapat melihat atau mencetaknya, mengonversinya ke format lain, atau menandatanganinya lagi."
+editsBlockedStatus = "Ditandatangani: edit diblokir"
+editsBlockedTitle = "PDF yang ditandatangani tidak dapat diubah"
+
 [signingDetail]
 allSigned = "Semua orang telah menandatangani. Tinjau dokumen, lalu finalisasi."
 awaitingOwner = "Pemilik akan memfinalisasi dokumen setelah siap."
@@ -13110,7 +14046,6 @@ noLinks = "Belum ada tautan berbagi aktif."
 noSharedUsers = "Belum ada pengguna yang memiliki akses."
 openInApp = "Buka di Stirling PDF"
 ownerLabel = "Pemilik"
-ownerUnknown = "Tidak diketahui"
 removeLink = "Hapus tautan"
 removeUser = "Hapus"
 requiresLogin = "File bersama ini memerlukan login."
@@ -13249,6 +14184,11 @@ remove = "Hapus"
 roleColumn = "Peran"
 title = "Anggota Tim"
 
+[teamWelcome]
+invite = "Undang orang"
+message = "Undang tim Anda agar mereka dapat mulai bekerja dengan Anda."
+title = "Paket Team Anda aktif."
+
 [textAlign]
 center = "Tengah"
 left = "Kiri"
@@ -13290,7 +14230,6 @@ toggleDetails = "Alihkan detail"
 
 [tool]
 endpointUnavailable = "Alat ini tidak tersedia di server Anda."
-endpointUnavailableClickable = "Tidak tersedia dalam mode ini. Klik untuk masuk."
 filesLoading = "File masih dimuat, harap tunggu."
 filesLoadingProgress = "{{loaded}} / {{total}} file sedang dimuat..."
 invalidParams = "Isi pengaturan yang diperlukan."
@@ -13298,6 +14237,8 @@ noFiles = "Tambahkan berkas untuk memulai."
 scopeFiles = "file"
 scopeThisFile = "file ini"
 selectFilesHint = "Pilih file di File Aktif untuk menjalankan alat ini"
+signInRequired = "Ini memerlukan akun Stirling. Masuk untuk melanjutkan."
+signInToUse = "Masuk untuk menggunakan"
 singleFileScope = "Hanya diterapkan pada: {{fileName}}"
 viewerMode = "Beralih ke editor file untuk menambahkan beberapa file."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Tampilkan Halaman Sampul Secara Terpisah"
 disableColorFilter = "Nonaktifkan Filter Warna"
 documentUpdated = "Dokumen diperbarui"
 dualPageView = "Tampilan Dua Halaman"
+editText = "Edit teks"
 enableDarkFilter = "Aktifkan Filter Gelap"
 enableSepiaFilter = "Aktifkan Filter Sepia"
 engineLoadError = "Gagal menginisialisasi mesin penampil PDF"
@@ -14158,8 +15100,10 @@ closeAll = "Tutup semua file"
 closePdf = "Tutup PDF"
 deselectAll = "Batalkan semua pilihan"
 downloadAll = "Unduh Semua"
+editText = "Edit Teks"
 exitAnnotations = "Keluar dari mode anotasi"
 exitRedaction = "Keluar dari Mode Redaksi"
+findReplace = "Cari & ganti"
 formFill = "Editor Formulir"
 hideToolbar = "Sembunyikan bilah alat"
 moreActions = "Tindakan lainnya"

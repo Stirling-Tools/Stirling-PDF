@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -134,7 +136,12 @@ public class ApplicationProperties {
             environment.getPropertySources().addFirst(propertySource);
         }
 
-        log.debug("Loaded properties: {}", propertySource.getSource());
+        // Names only: values include secrets such as security.scimToken.
+        log.debug(
+                "Loaded property keys: {}",
+                propertySource instanceof EnumerablePropertySource<?> keys
+                        ? Arrays.toString(keys.getPropertyNames())
+                        : propertySource.getName());
 
         return propertySource;
     }
@@ -966,6 +973,7 @@ public class ApplicationProperties {
     public static class Security {
         private boolean enableLogin;
         private boolean honorOwnerPasswords = true;
+        private boolean blockSignedPdfEdits = false;
         private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
@@ -974,6 +982,10 @@ public class ApplicationProperties {
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
+        // Bearer token (32+ chars) for SCIM 2.0 provisioning at /api/v1/scim/v2; blank disables it.
+        @ToString.Exclude private String scimToken;
+        // SCIM DELETE erases the user and their files; when false it only deactivates them.
+        private boolean scimDeleteRemovesUser = false;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
         private Timestamp timestamp = new Timestamp();
@@ -1288,6 +1300,7 @@ public class ApplicationProperties {
             public static class Trust {
                 private boolean serverAsAnchor = true;
                 private boolean useSystemTrust = true;
+                private boolean useOSTrust = false;
                 private boolean useMozillaBundle = true;
                 private boolean useAATL = false;
                 private boolean useEUTL = false;
@@ -1329,6 +1342,8 @@ public class ApplicationProperties {
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
+        // True when absent: older and read-only settings files belong to servers already set up.
+        private boolean setupCompleted = true;
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
@@ -1336,7 +1351,6 @@ public class ApplicationProperties {
         private boolean enableFeedback = true;
         private Datasource datasource;
         private boolean disableSanitize;
-        private boolean stirlingOfficeConversion;
         private int maxDPI = 500;
         private int maxPdfaConversionPages = 20_000;
         private int maxImageMegapixels;
@@ -1481,7 +1495,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Sharing {
-            private boolean enabled = false;
+            private boolean enabled = true;
             private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;
@@ -1521,11 +1535,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Operations {
-            private String weasyprint;
-            private String unoconvert;
-            private String calibre;
             private String ocrmypdf;
-            private String soffice;
         }
     }
 
@@ -1533,9 +1543,6 @@ public class ApplicationProperties {
     public static class TempFileManagement {
         @JsonProperty("baseTmpDir")
         private String baseTmpDir = "";
-
-        @JsonProperty("libreofficeDir")
-        private String libreofficeDir = "";
 
         private String systemTempDir = "";
         private String prefix = "stirling-pdf-";
@@ -1551,14 +1558,6 @@ public class ApplicationProperties {
             }
             String tmp = java.lang.System.getProperty("java.io.tmpdir");
             return new File(tmp, "stirling-pdf").getPath();
-        }
-
-        @JsonIgnore
-        public String getLibreofficeDir() {
-            if (libreofficeDir != null && !libreofficeDir.isEmpty()) {
-                return libreofficeDir;
-            }
-            return new File(getBaseTmpDir(), "libreoffice").getPath();
         }
     }
 
@@ -1883,6 +1882,7 @@ public class ApplicationProperties {
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();
+            private Microsoft microsoft = new Microsoft();
 
             @Data
             public static class GoogleDrive {
@@ -1890,6 +1890,43 @@ public class ApplicationProperties {
                 private String clientId = "";
                 private String apiKey = "";
                 private String appId = "";
+                @ToString.Exclude private String clientSecret = "";
+                private boolean allowAccountConnections = true;
+                private String accountScope = "drive";
+
+                private static final Set<String> ACCOUNT_SCOPES =
+                        Set.of("drive", "drive.file", "drive.readonly");
+
+                public boolean accountConnectionsReady() {
+                    return enabled
+                            && allowAccountConnections
+                            && !clientId.isBlank()
+                            && !clientSecret.isBlank()
+                            && validAccountScope() != null;
+                }
+
+                /** The trimmed {@code accountScope}, or null when it is not a Drive scope. */
+                public String validAccountScope() {
+                    String scope = accountScope == null ? "" : accountScope.trim();
+                    return ACCOUNT_SCOPES.contains(scope) ? scope : null;
+                }
+            }
+
+            @Data
+            public static class Microsoft {
+                private boolean enabled = false;
+                private String clientId = "";
+                private String tenant = "common";
+                @ToString.Exclude private String clientSecret = "";
+                private boolean allowAccountConnections = true;
+                private boolean allowEditorSaves = true;
+
+                public boolean accountConnectionsReady() {
+                    return enabled
+                            && allowAccountConnections
+                            && !clientId.isBlank()
+                            && !clientSecret.isBlank();
+                }
             }
 
             @Data
@@ -1960,31 +1997,17 @@ public class ApplicationProperties {
     public static class ProcessExecutor {
         private SessionLimit sessionLimit = new SessionLimit();
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
-        private boolean autoUnoServer = true;
-        private List<UnoServerEndpoint> unoServerEndpoints = new ArrayList<>();
-
-        @Data
-        public static class UnoServerEndpoint {
-            private String host = "127.0.0.1";
-            private int port = 2003;
-            private String hostLocation = "auto"; // auto|local|remote
-            private String protocol = "http"; // http|https
-        }
 
         @Data
         public static class SessionLimit {
-            private int libreOfficeSessionLimit;
-            private int pdfToHtmlSessionLimit;
             private int pythonOpenCvSessionLimit;
-            private int weasyPrintSessionLimit;
             private int installAppSessionLimit;
-            private int calibreSessionLimit;
-            private int imageMagickSessionLimit;
             private int qpdfSessionLimit;
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
             private int ffmpegSessionLimit;
+            private int officeConvertSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -1994,32 +2017,12 @@ public class ApplicationProperties {
                 return tesseractSessionLimit > 0 ? tesseractSessionLimit : 1;
             }
 
-            public int getLibreOfficeSessionLimit() {
-                return libreOfficeSessionLimit > 0 ? libreOfficeSessionLimit : 1;
-            }
-
-            public int getPdfToHtmlSessionLimit() {
-                return pdfToHtmlSessionLimit > 0 ? pdfToHtmlSessionLimit : 1;
-            }
-
             public int getPythonOpenCvSessionLimit() {
                 return pythonOpenCvSessionLimit > 0 ? pythonOpenCvSessionLimit : 8;
             }
 
-            public int getWeasyPrintSessionLimit() {
-                return weasyPrintSessionLimit > 0 ? weasyPrintSessionLimit : 16;
-            }
-
             public int getInstallAppSessionLimit() {
                 return installAppSessionLimit > 0 ? installAppSessionLimit : 1;
-            }
-
-            public int getCalibreSessionLimit() {
-                return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
-            }
-
-            public int getImageMagickSessionLimit() {
-                return imageMagickSessionLimit > 0 ? imageMagickSessionLimit : 4;
             }
 
             public int getGhostscriptSessionLimit() {
@@ -2037,25 +2040,13 @@ public class ApplicationProperties {
 
         @Data
         public static class TimeoutMinutes {
-            @JsonProperty("libreOfficetimeoutMinutes")
-            private long libreOfficeTimeoutMinutes;
-
-            @JsonProperty("pdfToHtmltimeoutMinutes")
-            private long pdfToHtmlTimeoutMinutes;
+            private long officeConvertTimeoutMinutes;
 
             @JsonProperty("pythonOpenCvtimeoutMinutes")
             private long pythonOpenCvTimeoutMinutes;
 
-            @JsonProperty("weasyPrinttimeoutMinutes")
-            private long weasyPrintTimeoutMinutes;
-
             @JsonProperty("installApptimeoutMinutes")
             private long installAppTimeoutMinutes;
-
-            @JsonProperty("calibretimeoutMinutes")
-            private long calibreTimeoutMinutes;
-
-            private long imageMagickTimeoutMinutes;
 
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
@@ -2071,32 +2062,16 @@ public class ApplicationProperties {
                 return qpdfTimeoutMinutes > 0 ? qpdfTimeoutMinutes : 30;
             }
 
-            public long getLibreOfficeTimeoutMinutes() {
-                return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
-            }
-
-            public long getPdfToHtmlTimeoutMinutes() {
-                return pdfToHtmlTimeoutMinutes > 0 ? pdfToHtmlTimeoutMinutes : 20;
+            public long getOfficeConvertTimeoutMinutes() {
+                return officeConvertTimeoutMinutes > 0 ? officeConvertTimeoutMinutes : 30;
             }
 
             public long getPythonOpenCvTimeoutMinutes() {
                 return pythonOpenCvTimeoutMinutes > 0 ? pythonOpenCvTimeoutMinutes : 30;
             }
 
-            public long getWeasyPrintTimeoutMinutes() {
-                return weasyPrintTimeoutMinutes > 0 ? weasyPrintTimeoutMinutes : 30;
-            }
-
             public long getInstallAppTimeoutMinutes() {
                 return installAppTimeoutMinutes > 0 ? installAppTimeoutMinutes : 60;
-            }
-
-            public long getCalibreTimeoutMinutes() {
-                return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
-            }
-
-            public long getImageMagickTimeoutMinutes() {
-                return imageMagickTimeoutMinutes > 0 ? imageMagickTimeoutMinutes : 30;
             }
 
             public long getGhostscriptTimeoutMinutes() {

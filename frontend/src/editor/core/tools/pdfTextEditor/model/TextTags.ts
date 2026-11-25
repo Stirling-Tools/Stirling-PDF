@@ -1,3 +1,4 @@
+import { sameArtifactKind } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /**
@@ -101,6 +102,11 @@ export function sameTags(
 ): boolean {
   return (
     a.length === b.length &&
-    a.every((mark, i) => mark.name === b[i].name && mark.mcid === b[i].mcid)
+    a.every(
+      (mark, i) =>
+        mark.name === b[i].name &&
+        mark.mcid === b[i].mcid &&
+        sameArtifactKind(mark.artifact, b[i].artifact),
+    )
   );
 }

@@ -67,3 +67,27 @@ describe("SSO auto-login security setting", () => {
     });
   });
 });
+
+describe("Microsoft editor saves", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it.each([true, false])(
+    "loads %s from the server and saves it back unchanged",
+    async (allowEditorSaves) => {
+      vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+        data: url.endsWith("/premium")
+          ? { proFeatures: { microsoft: { allowEditorSaves } } }
+          : {},
+      }));
+
+      const settings = await fetchConnectionsSettings();
+
+      expect(settings.microsoft?.allowEditorSaves).toBe(allowEditorSaves);
+      expect(
+        saveConnectionsSettings(settings).deltaSettings[
+          "premium.proFeatures.microsoft.allowEditorSaves"
+        ],
+      ).toBe(allowEditorSaves);
+    },
+  );
+});

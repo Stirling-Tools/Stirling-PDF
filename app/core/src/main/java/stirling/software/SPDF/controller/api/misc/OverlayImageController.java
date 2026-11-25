@@ -107,8 +107,7 @@ public class OverlayImageController {
 
                 return WebResponseUtils.pdfFileToWebResponse(
                         tempOut,
-                        GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_overlayed.pdf"));
+                        GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"));
             }
 
         } catch (IOException e) {

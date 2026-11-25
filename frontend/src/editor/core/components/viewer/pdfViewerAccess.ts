@@ -71,8 +71,36 @@ export function withPdfViewerAccess(engine: PdfEngine<Blob>): PdfEngine<Blob> {
           return;
         }
         if (!document.isEncrypted) {
-          rememberUnencryptedPdf(source, document.pageCount);
-          task.resolve(document);
+          // Second read of `signed`; belongs to the probe in workers/pdfAccessWorker.ts.
+          const publish = (signed: boolean) => {
+            if (!isCurrent()) {
+              close();
+              task.abort({
+                code: PdfErrorCode.Cancelled,
+                message: "PDF opening cancelled.",
+              });
+              return;
+            }
+            rememberUnencryptedPdf(source, document.pageCount, signed);
+            task.resolve(document);
+          };
+          const signatures = engine.getSignatures(document);
+          cancellation.signal.addEventListener(
+            "abort",
+            () =>
+              signatures.abort({
+                code: PdfErrorCode.Cancelled,
+                message: "PDF opening cancelled.",
+              }),
+            { once: true },
+          );
+          signatures.wait(
+            (found) =>
+              publish(
+                found.some((signature) => signature.contents.byteLength > 0),
+              ),
+            () => publish(true),
+          );
           return;
         }
         void ensureLocalPdfAccess(

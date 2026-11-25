@@ -6,7 +6,10 @@ import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 import { useNavigation } from "@editor/contexts/NavigationContext";
 import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
-import { getPdfAccess } from "@editor/services/pdfAccessService";
+import {
+  getPdfAccess,
+  signedPdfEditsBlocked,
+} from "@editor/services/pdfAccessService";
 import { BaseToolProps } from "@editor/types/tool";
 import { useSignature } from "@editor/contexts/SignatureContext";
 import { useAnnotation as useAnnotationContext } from "@editor/contexts/AnnotationContext";
@@ -81,9 +84,10 @@ const Annotate = (_props: BaseToolProps) => {
     useNavigation();
   const scopedFiles = useViewScopedFiles();
   usePdfAccess(undefined);
-  const editableFiles = scopedFiles.filter(
-    (file) => !getPdfAccess(file)?.encrypted,
-  );
+  const editableFiles = scopedFiles.filter((file) => {
+    const access = getPdfAccess(file);
+    return !access?.encrypted && !signedPdfEditsBlocked(access);
+  });
   const {
     signatureApiRef,
     annotationApiRef,
