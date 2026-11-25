@@ -243,6 +243,8 @@ import Recycle from "lucide-static/icons/recycle.svg?react";
 import Redo2 from "lucide-static/icons/redo-2.svg?react";
 import RefreshCw from "lucide-static/icons/refresh-cw.svg?react";
 import RefreshCwOff from "lucide-static/icons/refresh-cw-off.svg?react";
+import Replace from "lucide-static/icons/replace.svg?react";
+import ReplaceAll from "lucide-static/icons/replace-all.svg?react";
 import Rocket from "lucide-static/icons/rocket.svg?react";
 import RotateCcw from "lucide-static/icons/rotate-ccw.svg?react";
 import RotateCcwClock from "lucide-static/icons/rotate-ccw-clock.svg?react";
@@ -679,6 +681,8 @@ export const ICONS = {
   "redo-2": { Component: Redo2, kind: "lucide" },
   "refresh-cw": { Component: RefreshCw, kind: "lucide" },
   "refresh-cw-off": { Component: RefreshCwOff, kind: "lucide" },
+  replace: { Component: Replace, kind: "lucide" },
+  "replace-all": { Component: ReplaceAll, kind: "lucide" },
   rocket: { Component: Rocket, kind: "lucide" },
   "rotate-ccw": { Component: RotateCcw, kind: "lucide" },
   "rotate-ccw-clock": { Component: RotateCcwClock, kind: "lucide" },

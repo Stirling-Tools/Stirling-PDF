@@ -43,6 +43,8 @@ import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTrans
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import type { PdfRenderMode } from "@editor/services/preferencesService";
+import { PDF_RENDER_FILTERS } from "@editor/components/viewer/pdfRenderFilters";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -55,6 +57,8 @@ interface PageViewProps {
   onFirstRendered?: (pageIndex: number) => void;
   /** Fires the first time the page's bitmap is painted, including on a retry. */
   onFirstPainted?: () => void;
+  /** The viewer's reading mode; tints the page the same way the viewer does. */
+  renderMode?: PdfRenderMode;
   scale: number;
   widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
@@ -139,6 +143,7 @@ export const PageView = memo(function PageView({
   document,
   store,
   page,
+  renderMode = "normal",
   scale,
   widthMode,
   showRulers,
@@ -198,6 +203,9 @@ export const PageView = memo(function PageView({
   // Raw-PDF -> display (CropBox/rotation) transform for this page. Identity for
   // normal pages, so every overlay/click computation below is unchanged there.
   const transform = DisplayTransform.fromData(page.display);
+  // The overlay's editing mask is sampled from the untinted bitmap, so both
+  // surfaces get the same filter or the mask reads as a patch on the page.
+  const pageFilter = PDF_RENDER_FILTERS[renderMode];
   // Per document: a newly opened file reuses this view for its page of the same index.
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
@@ -438,6 +446,8 @@ export const PageView = memo(function PageView({
           display: "block",
           width: raster.width,
           height: raster.height,
+          transition: "filter 0.25s ease",
+          filter: pageFilter,
         }}
       />
       {renderError && (
@@ -484,7 +494,11 @@ export const PageView = memo(function PageView({
         left={0}
         right={0}
         bottom={0}
-        style={{ pointerEvents: "none" }}
+        style={{
+          pointerEvents: "none",
+          transition: "filter 0.25s ease",
+          filter: pageFilter,
+        }}
       >
         {/* Before the runs: a run overlapping an annotation still wins clicks. */}
         {(page.annotations ?? []).map((annotation) => (
