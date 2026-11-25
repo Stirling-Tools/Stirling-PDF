@@ -19,6 +19,7 @@ import { BannerProvider } from "@editor/contexts/BannerContext";
 import ErrorBoundary from "@editor/components/shared/ErrorBoundary";
 import { useAppInitialization } from "@editor/hooks/useAppInitialization";
 import { useLogoAssets } from "@editor/hooks/useLogoAssets";
+import { useManifestUrl } from "@editor/hooks/useManifestUrl";
 import AppConfigLoader from "@editor/components/shared/AppConfigLoader";
 import { UpdateStartupPopup } from "@editor/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@editor/contexts/RedactionContext";
@@ -38,7 +39,8 @@ function AppInitializer() {
 }
 
 function BrandingAssetManager() {
-  const { favicon, logo192, manifestHref } = useLogoAssets();
+  const { favicon, logo192 } = useLogoAssets();
+  const { manifestHref } = useManifestUrl();
 
   useEffect(() => {
     if (typeof document === "undefined") {

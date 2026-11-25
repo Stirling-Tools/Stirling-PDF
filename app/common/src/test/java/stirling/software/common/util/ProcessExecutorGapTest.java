@@ -10,19 +10,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import stirling.software.common.model.ApplicationProperties;
-
 /**
  * Gap-filling unit tests for {@link ProcessExecutor}. Focused on the pure logic that can be
- * exercised without launching any real OS process: command validation branches, the unoserver
- * endpoint helper methods (via reflection), the {@link ProcessExecutor.Processes} enum, the
- * singleton/getInstance behaviour, the static unoserver pool setter, and the nested {@link
+ * exercised without launching any real OS process: command validation branches, the {@link
+ * ProcessExecutor.Processes} enum, the singleton/getInstance behaviour, and the nested {@link
  * ProcessExecutor.ProcessExecutorResult} value type.
  */
 class ProcessExecutorGapTest {
@@ -40,50 +36,8 @@ class ProcessExecutorGapTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private List<String> invokeStripUnoEndpointArgs(ProcessExecutor executor, List<String> command)
-            throws Exception {
-        Method method = ProcessExecutor.class.getDeclaredMethod("stripUnoEndpointArgs", List.class);
-        method.setAccessible(true);
-        return (List<String>) method.invoke(executor, command);
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<String> invokeApplyUnoServerEndpoint(
-            ProcessExecutor executor,
-            List<String> command,
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint)
-            throws Exception {
-        Method method =
-                ProcessExecutor.class.getDeclaredMethod(
-                        "applyUnoServerEndpoint",
-                        List.class,
-                        ApplicationProperties.ProcessExecutor.UnoServerEndpoint.class);
-        method.setAccessible(true);
-        return (List<String>) method.invoke(executor, command, endpoint);
-    }
-
-    private boolean invokeShouldUseUnoServerPool(ProcessExecutor executor, List<String> command)
-            throws Exception {
-        Method method =
-                ProcessExecutor.class.getDeclaredMethod("shouldUseUnoServerPool", List.class);
-        method.setAccessible(true);
-        return (boolean) method.invoke(executor, command);
-    }
-
     private ProcessExecutor qpdfExecutor() {
         return ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF);
-    }
-
-    private ProcessExecutor libreOfficeExecutor() {
-        return ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE);
-    }
-
-    /** The static unoserver pool is global state; clear it after every test that touches it. */
-    @AfterEach
-    void resetUnoServerPool() {
-        ProcessExecutor.setUnoServerPool(null);
-        ProcessExecutor.setLibreOfficeSandboxed(false);
     }
 
     // ----- validateCommand deeper branches -----------------------------------
@@ -173,325 +127,6 @@ class ProcessExecutorGapTest {
         }
     }
 
-    // ----- stripUnoEndpointArgs ----------------------------------------------
-
-    @Nested
-    @DisplayName("stripUnoEndpointArgs")
-    class StripUnoEndpointArgsTests {
-
-        @Test
-        @DisplayName("removes space-separated --host/--port/--host-location/--protocol pairs")
-        void stripsSpaceSeparatedArgs() throws Exception {
-            List<String> input =
-                    List.of(
-                            "unoconvert",
-                            "--host",
-                            "1.2.3.4",
-                            "--port",
-                            "9999",
-                            "--host-location",
-                            "remote",
-                            "--protocol",
-                            "https",
-                            "in.docx",
-                            "out.pdf");
-            List<String> result = invokeStripUnoEndpointArgs(qpdfExecutor(), input);
-            assertEquals(List.of("unoconvert", "in.docx", "out.pdf"), result);
-        }
-
-        @Test
-        @DisplayName("removes equals-form --host=.../--port=... arguments")
-        void stripsEqualsFormArgs() throws Exception {
-            List<String> input =
-                    List.of(
-                            "unoconvert",
-                            "--host=5.6.7.8",
-                            "--port=4002",
-                            "--host-location=local",
-                            "--protocol=http",
-                            "doc.odt");
-            List<String> result = invokeStripUnoEndpointArgs(qpdfExecutor(), input);
-            assertEquals(List.of("unoconvert", "doc.odt"), result);
-        }
-
-        @Test
-        @DisplayName("leaves a command without endpoint args unchanged")
-        void leavesPlainCommandUntouched() throws Exception {
-            List<String> input = List.of("unoconvert", "in.docx", "out.pdf");
-            List<String> result = invokeStripUnoEndpointArgs(qpdfExecutor(), input);
-            assertEquals(input, result);
-        }
-
-        @Test
-        @DisplayName("returns a fresh list, not the same instance")
-        void returnsNewList() throws Exception {
-            List<String> input = new ArrayList<>(List.of("unoconvert", "a", "b"));
-            List<String> result = invokeStripUnoEndpointArgs(qpdfExecutor(), input);
-            assertNotSame(input, result);
-        }
-    }
-
-    // ----- applyUnoServerEndpoint --------------------------------------------
-
-    private ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint(
-            String host, int port, String hostLocation, String protocol) {
-        ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
-        ep.setHost(host);
-        ep.setPort(port);
-        ep.setHostLocation(hostLocation);
-        ep.setProtocol(protocol);
-        return ep;
-    }
-
-    @Nested
-    @DisplayName("applyUnoServerEndpoint")
-    class ApplyUnoServerEndpointTests {
-
-        @Test
-        @DisplayName(
-                "injects --host/--port after the executable, defaults omit host-location and protocol")
-        void injectsHostAndPortWithDefaults() throws Exception {
-            List<String> command = List.of("unoconvert", "in.docx", "out.pdf");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("9.9.9.9", 7777, "auto", "http");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of(
-                            "unoconvert",
-                            "--host",
-                            "9.9.9.9",
-                            "--port",
-                            "7777",
-                            "in.docx",
-                            "out.pdf"),
-                    result);
-        }
-
-        @Test
-        @DisplayName("non-default host-location and protocol are injected")
-        void injectsHostLocationAndProtocolWhenNonDefault() throws Exception {
-            List<String> command = List.of("unoconvert", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("10.0.0.5", 2200, "remote", "https");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of(
-                            "unoconvert",
-                            "--host",
-                            "10.0.0.5",
-                            "--port",
-                            "2200",
-                            "--host-location",
-                            "remote",
-                            "--protocol",
-                            "https",
-                            "in.docx"),
-                    result);
-        }
-
-        @Test
-        @DisplayName(
-                "blank host falls back to loopback, which forces byte transport when sandboxed")
-        void appliesHostAndPortFallbacks() throws Exception {
-            ProcessExecutor.setLibreOfficeSandboxed(true);
-            List<String> command = List.of("unoconvert", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("   ", 0, "auto", "http");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of(
-                            "unoconvert",
-                            "--host",
-                            "127.0.0.1",
-                            "--port",
-                            "2003",
-                            "--host-location",
-                            "remote",
-                            "in.docx"),
-                    result);
-        }
-
-        @Test
-        @DisplayName("without the sandbox a loopback endpoint keeps unoconvert's own transport")
-        void loopbackStaysAutoWithoutSandbox() throws Exception {
-            List<String> command = List.of("unoconvert", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("127.0.0.1", 2003, "auto", "http");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of("unoconvert", "--host", "127.0.0.1", "--port", "2003", "in.docx"),
-                    result);
-        }
-
-        @Test
-        @DisplayName("auto host-location on a non-loopback host stays auto")
-        void autoHostLocationRemainsForRemoteHost() throws Exception {
-            List<String> command = List.of("unoconvert", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("uno.internal", 2003, "auto", "http");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of("unoconvert", "--host", "uno.internal", "--port", "2003", "in.docx"),
-                    result);
-        }
-
-        @Test
-        @DisplayName("invalid host-location and protocol values are normalised to defaults")
-        void invalidHostLocationAndProtocolNormalised() throws Exception {
-            List<String> command = List.of("unoconvert", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("1.1.1.1", 3000, "sideways", "gopher");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            // Both invalid -> normalised to defaults (auto/http) -> neither injected.
-            assertEquals(
-                    List.of("unoconvert", "--host", "1.1.1.1", "--port", "3000", "in.docx"),
-                    result);
-        }
-
-        @Test
-        @DisplayName("host-location and protocol matching is case-insensitive and trimmed")
-        void hostLocationAndProtocolCaseInsensitive() throws Exception {
-            List<String> command = List.of("unoconvert", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("1.1.1.1", 3000, "  REMOTE ", " HTTPS ");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of(
-                            "unoconvert",
-                            "--host",
-                            "1.1.1.1",
-                            "--port",
-                            "3000",
-                            "--host-location",
-                            "remote",
-                            "--protocol",
-                            "https",
-                            "in.docx"),
-                    result);
-        }
-
-        @Test
-        @DisplayName("existing endpoint args are stripped before re-injection")
-        void stripsExistingEndpointArgsBeforeInjecting() throws Exception {
-            List<String> command = List.of("unoconvert", "--host", "old", "--port", "1", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("2.2.2.2", 2222, "auto", "http");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of("unoconvert", "--host", "2.2.2.2", "--port", "2222", "in.docx"),
-                    result);
-        }
-
-        @Test
-        @DisplayName("null endpoint returns the command unchanged")
-        void nullEndpointReturnsCommandUnchanged() throws Exception {
-            List<String> command = List.of("unoconvert", "in.docx");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, null);
-            assertEquals(command, result);
-        }
-
-        @Test
-        @DisplayName("empty command returns the command unchanged")
-        void emptyCommandReturnedUnchanged() throws Exception {
-            List<String> command = List.of();
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("1.1.1.1", 2003, "auto", "http");
-            List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(command, result);
-        }
-    }
-
-    // ----- shouldUseUnoServerPool --------------------------------------------
-
-    @Nested
-    @DisplayName("shouldUseUnoServerPool")
-    class ShouldUseUnoServerPoolTests {
-
-        private UnoServerPool nonEmptyPool() {
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
-            return new UnoServerPool(List.of(ep));
-        }
-
-        @Test
-        @DisplayName(
-                "false for non-LIBRE_OFFICE process type even with a pool and unoconvert command")
-        void falseForNonLibreOfficeProcessType() throws Exception {
-            ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertFalse(
-                    invokeShouldUseUnoServerPool(qpdfExecutor(), List.of("unoconvert", "in.docx")));
-        }
-
-        @Test
-        @DisplayName("false when no pool is configured")
-        void falseWhenPoolNull() throws Exception {
-            ProcessExecutor.setUnoServerPool(null);
-            assertFalse(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(), List.of("unoconvert", "in.docx")));
-        }
-
-        @Test
-        @DisplayName("false when the configured pool is empty")
-        void falseWhenPoolEmpty() throws Exception {
-            ProcessExecutor.setUnoServerPool(new UnoServerPool(List.of()));
-            assertFalse(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(), List.of("unoconvert", "in.docx")));
-        }
-
-        @Test
-        @DisplayName("false for null or empty command")
-        void falseForNullOrEmptyCommand() throws Exception {
-            ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertFalse(invokeShouldUseUnoServerPool(libreOfficeExecutor(), null));
-            assertFalse(invokeShouldUseUnoServerPool(libreOfficeExecutor(), List.of()));
-        }
-
-        @Test
-        @DisplayName("true for a plain unoconvert command with a non-empty pool")
-        void trueForUnoconvertCommand() throws Exception {
-            ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertTrue(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(), List.of("unoconvert", "in.docx", "out.pdf")));
-        }
-
-        @Test
-        @DisplayName("true for a unoconvert path with directories and a .exe extension")
-        void trueForUnoconvertWithPathAndExeExtension() throws Exception {
-            ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertTrue(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(),
-                            List.of("C:\\tools\\bin\\unoconvert.exe", "in.docx")));
-            assertTrue(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(),
-                            List.of("/usr/local/bin/unoconvert", "in.docx")));
-        }
-
-        @Test
-        @DisplayName("true for the legacy 'unoconv' executable name")
-        void trueForLegacyUnoconv() throws Exception {
-            ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertTrue(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(), List.of("unoconv", "in.docx")));
-        }
-
-        @Test
-        @DisplayName("false for soffice, which must not be routed through the pool")
-        void falseForSoffice() throws Exception {
-            ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertFalse(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(),
-                            List.of("/usr/bin/soffice", "--headless", "in.docx")));
-        }
-    }
-
     // ----- Processes enum -----------------------------------------------------
 
     @Nested
@@ -502,13 +137,7 @@ class ProcessExecutorGapTest {
         @DisplayName("contains all expected process types")
         void containsExpectedValues() {
             ProcessExecutor.Processes[] values = ProcessExecutor.Processes.values();
-            assertEquals(13, values.length);
-            assertEquals(
-                    ProcessExecutor.Processes.LIBRE_OFFICE,
-                    ProcessExecutor.Processes.valueOf("LIBRE_OFFICE"));
-            assertEquals(
-                    ProcessExecutor.Processes.CFF_CONVERTER,
-                    ProcessExecutor.Processes.valueOf("CFF_CONVERTER"));
+            assertEquals(7, values.length);
             assertEquals(
                     ProcessExecutor.Processes.FFMPEG, ProcessExecutor.Processes.valueOf("FFMPEG"));
         }
@@ -557,31 +186,6 @@ class ProcessExecutorGapTest {
             ProcessExecutor second =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF, true);
             assertSame(first, second);
-        }
-    }
-
-    // ----- setUnoServerPool ---------------------------------------------------
-
-    @Nested
-    @DisplayName("setUnoServerPool")
-    class SetUnoServerPoolTests {
-
-        @Test
-        @DisplayName("setting then clearing the pool flips shouldUseUnoServerPool")
-        void poolSetterAffectsRouting() throws Exception {
-            ProcessExecutor exec = libreOfficeExecutor();
-            List<String> command = List.of("unoconvert", "in.docx");
-
-            ProcessExecutor.setUnoServerPool(null);
-            assertFalse(invokeShouldUseUnoServerPool(exec, command));
-
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
-            ProcessExecutor.setUnoServerPool(new UnoServerPool(List.of(ep)));
-            assertTrue(invokeShouldUseUnoServerPool(exec, command));
-
-            ProcessExecutor.setUnoServerPool(null);
-            assertFalse(invokeShouldUseUnoServerPool(exec, command));
         }
     }
 
