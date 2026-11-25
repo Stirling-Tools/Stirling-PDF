@@ -130,10 +130,8 @@ export const useConfigNavSections = (
   // Connection Mode always sits immediately after Preferences
   result.push(connectionModeSection);
 
-  if (
-    isAuthenticated &&
-    (isSaasMode || (connectionMode === "selfhosted" && isOwner))
-  ) {
+  // Stirling Cloud's Usage & Billing is the processor's page (see useSettingsNav).
+  if (isAuthenticated && connectionMode === "selfhosted" && isOwner) {
     const billingSection: ConfigNavSection = {
       id: "workspace",
       title: t("settings.workspace.title", "Workspace"),
@@ -142,15 +140,11 @@ export const useConfigNavSections = (
           key: "billing",
           label: t("portal.nav.usage", "Usage & Billing"),
           icon: "credit-card",
-          component: (
-            <BillingSettingsSection mode={isSaasMode ? "saas" : "selfhosted"} />
-          ),
+          component: <BillingSettingsSection mode="selfhosted" />,
         },
       ],
     };
-    const workspace = isSaasMode
-      ? undefined
-      : sections.find((section) => section.id === "workspace");
+    const workspace = sections.find((section) => section.id === "workspace");
     if (workspace) {
       const index = sections.indexOf(workspace);
       sections[index] = {
