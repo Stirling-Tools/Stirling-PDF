@@ -69,7 +69,7 @@ CRITICAL RULES - MUST FOLLOW EXACTLY:
 3. DO NOT TRANSLATE TECHNICAL TERMS:
    - File formats: PDF, JSON, CSV, XML, HTML, ZIP, DOCX, XLSX, PNG, JPG
    - Protocols: API, OAuth2, SAML2, JWT, SMTP, HTTP, HTTPS, SSL, TLS
-   - Technologies: Git, GitHub, Google, PostHog, Scarf, LibreOffice, Ghostscript, Tesseract, OCR
+   - Technologies: Git, GitHub, Google, PostHog, Scarf, Ghostscript, Tesseract, OCR
    - Technical keywords: URL, URI, DPI, RGB, CMYK, QR
    - "Stirling PDF" - always keep as-is
 

@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
+import JSZip from "jszip";
 import { zipFileService } from "@editor/services/zipFileService";
 
 // jsdom's Blob.slice(...).arrayBuffer() returns an empty buffer in this
@@ -175,6 +176,31 @@ describe("zipFileService.isZipResponse", () => {
           fakeBlob(UNKNOWN_BYTES, "application/zip"),
         ),
       ).toBe(true);
+    });
+  });
+});
+
+describe("zipFileService.createZipFromFiles", () => {
+  test("keeps every file when two share a name", async () => {
+    const { zipFile } = await zipFileService.createZipFromFiles(
+      [
+        new File(["one"], "report.pdf"),
+        new File(["two"], "report.pdf"),
+        new File(["three"], "report (1).pdf"),
+      ],
+      "results.zip",
+    );
+
+    const zip = await JSZip.loadAsync(await zipFile.arrayBuffer());
+    const entries = await Promise.all(
+      Object.values(zip.files).map(
+        async (entry) => [entry.name, await entry.async("string")] as const,
+      ),
+    );
+    expect(Object.fromEntries(entries)).toEqual({
+      "report.pdf": "one",
+      "report (1).pdf": "two",
+      "report (1) (1).pdf": "three",
     });
   });
 });

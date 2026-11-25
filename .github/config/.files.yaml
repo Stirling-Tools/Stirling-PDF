@@ -44,7 +44,7 @@ openapi: &openapi
 docker-base: &docker-base
   - docker/base/**
 
-# Dockerfiles only (base, embedded, and unoserver). The slow multi-architecture
+# Dockerfiles only (base, embedded, backend and engine). The slow multi-architecture
 # (arm64) leg of the PR Docker test build runs only when a Dockerfile changes,
 # rather than for every code PR.
 dockerfiles: &dockerfiles

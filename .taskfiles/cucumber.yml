@@ -18,7 +18,7 @@ tasks:
   nightly:
     desc: "Run the @nightly cucumber scenarios, excluded from the default run"
     summary: |
-      Heavy LibreOffice/Calibre/Ghostscript conversions. behave.ini excludes @nightly,
+      Heavy Office/Ghostscript conversions. behave.ini excludes @nightly,
       so this opts back in explicitly.
 
       Pass extra behave flags via -- :

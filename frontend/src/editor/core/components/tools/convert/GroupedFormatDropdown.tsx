@@ -20,6 +20,7 @@ interface FormatOption {
   group: string;
   enabled?: boolean;
   usesCloud?: boolean;
+  needsSignIn?: boolean;
 }
 
 interface GroupedFormatDropdownProps {
@@ -165,8 +166,19 @@ const GroupedFormatDropdown = ({
                     size="sm"
                     onClick={() => handleOptionSelect(option.value)}
                     disabled={option.enabled === false}
+                    title={
+                      option.needsSignIn
+                        ? t("convert.signInToUse", "Sign in to use")
+                        : undefined
+                    }
                     rightSection={
-                      option.usesCloud ? (
+                      option.needsSignIn ? (
+                        <Icon
+                          name="lock"
+                          size={"0.625rem"}
+                          style={{ marginLeft: "0.25rem", opacity: 0.7 }}
+                        />
+                      ) : option.usesCloud ? (
                         <Icon
                           name="cloud"
                           size={"0.625rem"}

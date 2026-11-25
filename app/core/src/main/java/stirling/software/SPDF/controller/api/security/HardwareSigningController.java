@@ -24,9 +24,9 @@ import stirling.software.SPDF.service.HardwareKeyStoreService;
 
 /**
  * Lets the desktop frontend discover which hardware-backed signing options the local backend can
- * reach (Windows certificate store, plugged-in USB / PKCS#11 tokens) and enumerate the certificates
- * available to sign with. Enumeration endpoints are restricted to the desktop bundle, reached over
- * loopback - see {@link HardwareKeyStoreService#assertLocalDesktop}.
+ * reach (Windows certificate store, macOS keychain, plugged-in USB / PKCS#11 tokens) and enumerate
+ * the certificates available to sign with. Enumeration endpoints are restricted to the desktop
+ * bundle, reached over loopback - see {@link HardwareKeyStoreService#assertLocalDesktop}.
  */
 @RestController
 @RequestMapping("/api/v1/security/cert-sign/hardware")
@@ -58,6 +58,18 @@ public class HardwareSigningController {
             HttpServletRequest request) throws Exception {
         hardwareKeyStoreService.assertLocalDesktop(request);
         return ResponseEntity.ok(hardwareKeyStoreService.listWindowsCertificates());
+    }
+
+    @GetMapping("/macos-certificates")
+    @Operation(
+            summary = "List macOS keychain signing certificates",
+            description =
+                    "Enumerates signing identities in the user's keychains and on inserted smart"
+                            + " cards or YubiKeys. Desktop-only, loopback-only.")
+    public ResponseEntity<List<HardwareCertificateInfo>> getMacKeychainCertificates(
+            HttpServletRequest request) throws Exception {
+        hardwareKeyStoreService.assertLocalDesktop(request);
+        return ResponseEntity.ok(hardwareKeyStoreService.listMacKeychainCertificates());
     }
 
     @PostMapping("/pkcs11-certificates")
