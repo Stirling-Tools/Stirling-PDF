@@ -15,7 +15,6 @@ ignore = [
 
 [bo_CN]
 ignore = [
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
@@ -57,14 +56,11 @@ ignore = [
     'AddStampRequest.position',
     'adjustPageScale.pageSize.legal',
     'adjustPageScale.pageSize.letter',
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.saml2.label',
     'admin.settings.database.port.label',
@@ -155,14 +151,11 @@ ignore = [
 ignore = [
     'adjustPageScale.pageSize.legal',
     'admin.error',
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.connections.mobileScanner.pageFormatA4',
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.pageFormatA4',
@@ -276,13 +269,10 @@ ignore = [
 
 [ga_IE]
 ignore = [
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.saml2.label',
     'admin.settings.database.port.label',
@@ -443,14 +433,11 @@ ignore = [
 
 [tr_TR]
 ignore = [
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.ai.status.cloud.hostLabel',
     'admin.settings.ai.status.cloud.name',
     'admin.settings.connections.mobileScanner.pageFormatA4',
@@ -681,14 +668,11 @@ ignore = [
 
 [zh_TW]
 ignore = [
-    'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
-    'admin.settings.advanced.processExecutor.libreOffice',
     'admin.settings.advanced.processExecutor.ocrMyPdf',
     'admin.settings.advanced.processExecutor.pythonOpenCv',
     'admin.settings.advanced.processExecutor.qpdf',
     'admin.settings.advanced.processExecutor.tesseract',
-    'admin.settings.advanced.processExecutor.weasyPrint',
     'admin.settings.connections.mobileScanner.pageFormatA4',
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.pageFormatA4',

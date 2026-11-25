@@ -85,12 +85,13 @@ export interface ProcurementController {
  * for billing and the Enterprise page, so moving between them does not flash the loading state.
  * No retry: the page gates all its content on `loading`, which backoff would hold true.
  */
-export function useProcurementSnapshot() {
+export function useProcurementSnapshot(enabled = true) {
   const isLinked = usePortalLinked();
   return useQuery<ProcurementSnapshot | null>({
     queryKey: qk.procurement(isLinked),
     queryFn: () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
     retry: false,
+    enabled,
   });
 }
 
@@ -152,8 +153,8 @@ export function useProcurement(): ProcurementController {
     try {
       await fn();
       queryClient.setQueryData(snapshotKey, await fetchSnapshot());
+      // The wallet is left to the page, which refreshes its server-side cache first.
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: qk.wallet(true) }),
         queryClient.invalidateQueries({ queryKey: qk.teamMy() }),
         queryClient.invalidateQueries({ queryKey: ["portal", "users"] }),
       ]);

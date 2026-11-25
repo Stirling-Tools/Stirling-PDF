@@ -11,9 +11,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class ConvertEbookToPdfRequest {
 
-    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
-    private Boolean useStirlingOfficeConvert;
-
     @Schema(
             description =
                     "The input eBook file to be converted to a PDF file (EPUB, MOBI, AZW3, FB2,"
@@ -24,13 +21,6 @@ public class ConvertEbookToPdfRequest {
                             + " application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
-
-    @Schema(
-            description = "Embed all fonts from the eBook into the generated PDF",
-            allowableValues = {"true", "false"},
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "false")
-    private Boolean embedAllFonts = false;
 
     @Schema(
             description = "Add a generated table of contents to the resulting PDF",

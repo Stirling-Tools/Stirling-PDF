@@ -18,7 +18,10 @@ import type {
   AppConfigBootstrapMode,
 } from "@editor/types/appConfig";
 import { useJwtConfigSync } from "@editor/hooks/useJwtConfigSync";
-import { setPdfAccessPolicy } from "@editor/services/pdfAccessService";
+import {
+  setPdfAccessPolicy,
+  setSignedPdfEditPolicy,
+} from "@editor/services/pdfAccessService";
 
 export interface AppConfigRetryOptions {
   maxRetries?: number;
@@ -56,6 +59,10 @@ export interface AppConfigProviderProps {
   bootstrapMode?: AppConfigBootstrapMode;
   autoFetch?: boolean;
   onConfigLoaded?: (config: AppConfig) => void;
+  /** Where the config comes from; the default asks this app's backend. Keep it stable. */
+  fetchConfig?: () => Promise<AppConfig>;
+  /** Whether this config sets the app-wide PDF access policies; false for a provider nested for another server. */
+  appliesPdfPolicies?: boolean;
 }
 
 function statusOf(error: unknown): number | undefined {
@@ -81,6 +88,8 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   bootstrapMode = "blocking",
   autoFetch = true,
   onConfigLoaded,
+  fetchConfig = fetchAppConfig,
+  appliesPdfPolicies = true,
 }) => {
   const maxRetries = retryOptions?.maxRetries ?? 0;
   const initialDelay = retryOptions?.initialDelay ?? 1000;
@@ -100,17 +109,17 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     setSignedIn(true);
     await queryClient.fetchQuery({
       queryKey: qk.appConfig(),
-      queryFn: fetchAppConfig,
+      queryFn: () => fetchConfig(),
       staleTime: 0,
     });
-  }, [queryClient]);
+  }, [queryClient, fetchConfig]);
 
   const { isAuthPage } = useJwtConfigSync(refetch);
   const fetching = autoFetch && (!isAuthPage || signedIn);
 
   const { data, error, isFetching } = useQuery({
     queryKey: qk.appConfig(),
-    queryFn: fetchAppConfig,
+    queryFn: () => fetchConfig(),
     enabled: fetching,
     staleTime: CONFIG_STALE_TIME,
     // Network and 5xx only; failureCount is 0-based, so `<` gives maxRetries retries.
@@ -169,10 +178,19 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   ]);
 
   useLayoutEffect(() => {
+    if (!appliesPdfPolicies) return;
     setPdfAccessPolicy(value.config?.honorOwnerPasswords !== false);
-  }, [value.config?.honorOwnerPasswords]);
+  }, [appliesPdfPolicies, value.config?.honorOwnerPasswords]);
 
-  useLayoutEffect(() => () => setPdfAccessPolicy(true), []);
+  useLayoutEffect(() => {
+    if (!appliesPdfPolicies) return;
+    setSignedPdfEditPolicy(value.config?.blockSignedPdfEdits === true);
+  }, [appliesPdfPolicies, value.config?.blockSignedPdfEdits]);
+
+  useLayoutEffect(() => {
+    if (!appliesPdfPolicies) return;
+    return () => setPdfAccessPolicy(true);
+  }, [appliesPdfPolicies]);
 
   return (
     <AppConfigContext.Provider value={value}>
