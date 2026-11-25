@@ -25,17 +25,19 @@ export function DownloadSelectedPagesMenu({
   return (
     <Menu shadow="md" position="bottom-start">
       <Menu.Target>
-        <Tooltip content={label} position="bottom" offset={6} arrow>
-          <ActionIcon
-            variant="quiet"
-            hover={false}
-            className="workbench-bar-action-icon"
-            disabled={disabled}
-            aria-label={label}
-          >
-            <Icon name={iconName} size="1.25rem" />
-          </ActionIcon>
-        </Tooltip>
+        <div style={{ display: "inline-flex" }}>
+          <Tooltip content={label} position="bottom" offset={6} arrow>
+            <ActionIcon
+              variant="quiet"
+              hover={false}
+              className="workbench-bar-action-icon"
+              disabled={disabled}
+              aria-label={label}
+            >
+              <Icon name={iconName} size="1.25rem" />
+            </ActionIcon>
+          </Tooltip>
+        </div>
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item onClick={() => onDownload("eachPage")}>

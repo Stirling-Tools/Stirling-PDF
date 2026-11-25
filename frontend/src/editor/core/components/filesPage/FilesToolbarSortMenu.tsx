@@ -48,16 +48,18 @@ export function FilesToolbarSortMenu({
       zIndex={zIndex}
     >
       <Menu.Target>
-        <Tooltip content={`${label} · ${current}`} position="bottom">
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            aria-label={`${label}: ${current}`}
-            className="files-page-toolbar-icon-btn"
-          >
-            <Icon name="arrow-up-down" size={"1.1rem"} />
-          </ActionIcon>
-        </Tooltip>
+        <div>
+          <Tooltip content={`${label} · ${current}`} position="bottom">
+            <ActionIcon
+              variant="tertiary"
+              size="sm"
+              aria-label={`${label}: ${current}`}
+              className="files-page-toolbar-icon-btn"
+            >
+              <Icon name="arrow-up-down" size={"1.1rem"} />
+            </ActionIcon>
+          </Tooltip>
+        </div>
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Label>{label}</Menu.Label>
