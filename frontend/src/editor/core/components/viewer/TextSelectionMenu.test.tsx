@@ -64,8 +64,11 @@ const mockHandleToolSelectForced = vi.fn();
 const mockSetLeftPanelView = vi.fn();
 vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({
+    handleToolSelect: vi.fn(),
     handleToolSelectForced: mockHandleToolSelectForced,
     setLeftPanelView: mockSetLeftPanelView,
+    toolAvailability: {},
+    toolRegistry: {},
   }),
 }));
 
@@ -92,6 +95,8 @@ vi.mock("@editor/contexts/NavigationContext", () => ({
       setHasUnsavedChanges: mockSetHasUnsavedChanges,
     },
   }),
+  useNavigationGuard: () => ({ requestNavigation: (fn: () => void) => fn() }),
+  useNavigationState: () => ({ selectedTool: null }),
 }));
 
 const mockAlert = vi.fn();

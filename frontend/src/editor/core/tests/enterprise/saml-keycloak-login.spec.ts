@@ -52,6 +52,7 @@ test.describe("Enterprise SAML (Keycloak) — full SSO flow", () => {
 
     // ── 2. Identity in settings → Account ────────────────────
     await page.locator('[data-testid="config-button"]').first().click();
+    await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
     await page
       .getByText(/account settings/i)
       .first()

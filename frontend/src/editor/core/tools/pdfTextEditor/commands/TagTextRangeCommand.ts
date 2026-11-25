@@ -38,6 +38,7 @@ import {
   type LeafList,
 } from "@editor/tools/pdfTextEditor/commands/runLeaves";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   isInlineType,
@@ -100,6 +101,11 @@ export class TagTextRangeCommand implements Command {
    */
   get movedToRunId(): string | null {
     return this.movedTo;
+  }
+
+  /** The MCID the cut text carries, chosen on first apply; null before then. */
+  get cutMcid(): number | null {
+    return this.mcids?.cut ?? null;
   }
 
   apply(doc: EditorDocument): void {
@@ -482,7 +488,7 @@ function redraw(
     if (!kept) {
       const index = pageObjects(m, page).indexOf(ptr);
       m.FPDFPage_RemoveObject(page.pagePtr, ptr);
-      undo.push(() => m.FPDFPage_InsertObjectAtIndex(page.pagePtr, ptr, index));
+      undo.push(() => insertPageObjectAt(m, page.pagePtr, ptr, index));
       continue;
     }
     const matrix = readMatrix(m, ptr);
