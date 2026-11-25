@@ -16,19 +16,19 @@ describe("useGroupEnabled", () => {
   it("reports null while loading, then the server's answer", async () => {
     mockFetch.mockResolvedValue(true);
 
-    const { result } = renderHook(() => useGroupEnabled("ImageMagick"), {
+    const { result } = renderHook(() => useGroupEnabled("LineArt"), {
       wrapper: TestQueryProvider,
     });
 
     expect(result.current.enabled).toBeNull();
     await waitFor(() => expect(result.current.enabled).toBe(true));
-    expect(mockFetch).toHaveBeenCalledWith("ImageMagick");
+    expect(mockFetch).toHaveBeenCalledWith("LineArt");
   });
 
   it("reads a failed check as disabled", async () => {
     mockFetch.mockRejectedValue(new Error("boom"));
 
-    const { result } = renderHook(() => useGroupEnabled("ImageMagick"), {
+    const { result } = renderHook(() => useGroupEnabled("LineArt"), {
       wrapper: TestQueryProvider,
     });
 
@@ -40,8 +40,8 @@ describe("useGroupEnabled", () => {
 
     const { result } = renderHook(
       () => ({
-        a: useGroupEnabled("ImageMagick"),
-        b: useGroupEnabled("ImageMagick"),
+        a: useGroupEnabled("LineArt"),
+        b: useGroupEnabled("LineArt"),
       }),
       { wrapper: TestQueryProvider },
     );
@@ -53,18 +53,18 @@ describe("useGroupEnabled", () => {
 
   it("keeps distinct groups on distinct keys", async () => {
     mockFetch.mockImplementation((group: string) =>
-      Promise.resolve(group === "ImageMagick"),
+      Promise.resolve(group === "LineArt"),
     );
 
     const { result } = renderHook(
       () => ({
-        magick: useGroupEnabled("ImageMagick"),
+        lineArt: useGroupEnabled("LineArt"),
         calibre: useGroupEnabled("Calibre"),
       }),
       { wrapper: TestQueryProvider },
     );
 
-    await waitFor(() => expect(result.current.magick.enabled).toBe(true));
+    await waitFor(() => expect(result.current.lineArt.enabled).toBe(true));
     await waitFor(() => expect(result.current.calibre.enabled).toBe(false));
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });

@@ -9,7 +9,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.SPDF.service.OfficeToPdfService;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
@@ -57,10 +54,8 @@ class ConvertEmlToPDFTest {
     }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private TempFileManager tempFileManager;
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
-    @Mock private OfficeConversionService officeConversionService;
     @Mock private OfficeToPdfService officeToPdfService;
 
     @InjectMocks private ConvertEmlToPDF controller;
@@ -151,8 +146,6 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
-
         ResponseEntity<Resource> expectedResponse = streamingOk(pdfBytes);
 
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class);
@@ -162,13 +155,11 @@ class ConvertEmlToPDFTest {
             emlMock.when(
                             () ->
                                     EmlToPdf.convertEmlToPdf(
-                                            eq("/usr/bin/weasyprint"),
                                             eq(request),
                                             any(byte[].class),
-                                            eq("test.eml"),
                                             eq(pdfDocumentFactory),
-                                            eq(tempFileManager),
-                                            eq(customHtmlSanitizer)))
+                                            eq(customHtmlSanitizer),
+                                            any()))
                     .thenReturn(pdfBytes);
 
             wrMock.when(
@@ -264,14 +255,9 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
-
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class)) {
 
-            emlMock.when(
-                            () ->
-                                    EmlToPdf.convertEmlToPdf(
-                                            any(), any(), any(), any(), any(), any(), any()))
+            emlMock.when(() -> EmlToPdf.convertEmlToPdf(any(), any(), any(), any(), any()))
                     .thenReturn(null);
 
             ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
@@ -296,18 +282,13 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
-
         ResponseEntity<Resource> expectedResponse = streamingOk(pdfBytes);
 
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class);
                 MockedStatic<WebResponseUtils> wrMock =
                         Mockito.mockStatic(WebResponseUtils.class)) {
 
-            emlMock.when(
-                            () ->
-                                    EmlToPdf.convertEmlToPdf(
-                                            any(), any(), any(), any(), any(), any(), any()))
+            emlMock.when(() -> EmlToPdf.convertEmlToPdf(any(), any(), any(), any(), any()))
                     .thenReturn(pdfBytes);
 
             wrMock.when(
@@ -331,14 +312,9 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
-
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class)) {
 
-            emlMock.when(
-                            () ->
-                                    EmlToPdf.convertEmlToPdf(
-                                            any(), any(), any(), any(), any(), any(), any()))
+            emlMock.when(() -> EmlToPdf.convertEmlToPdf(any(), any(), any(), any(), any()))
                     .thenThrow(new InterruptedException("interrupted"));
 
             ResponseEntity<Resource> response = controller.convertEmlToPdf(request);

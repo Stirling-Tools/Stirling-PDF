@@ -4,8 +4,7 @@ import { useSettingsNav as useCoreSettingsNav } from "@editor-core/components/se
 import type { SettingsNav } from "@editor/components/settings/settingsNavTypes";
 import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
 import { useAuth } from "@editor/auth/context";
-import { useAppConfig } from "@editor/contexts/AppConfigContext";
-import { useRosterAvailable } from "@editor/hooks/useRosterAvailable";
+import { usePortalSettingsOptions } from "@editor/components/settings/usePortalSettingsOptions";
 import { mergeSettingsGroups } from "@editor/components/settings/mergeSettingsGroups";
 import {
   buildPortalSettingsSections,
@@ -22,43 +21,18 @@ export type { SettingsNav };
  * processor access, audit) — so the narrower section is dropped rather than
  * shown twice, and its key aliases across.
  *
- * Admins manage encryption; only the organization owner manages billing and
- * the Stirling account connection. Portal access alone grants neither.
+ * Which sections it carries is the {@link usePortalSettingsOptions} seam.
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
   const base = useCoreSettingsNav(onLeave);
-  const { granted: portalAccess, settled: accessSettled } =
-    usePortalAccessState();
-  const { isAdmin, user, loading } = useAuth();
-  const isOwner = isAdmin && !loading && user?.orgOwner === true;
-  const { config } = useAppConfig();
-  const rosterAvailable = useRosterAvailable();
+  const { settled: accessSettled } = usePortalAccessState();
+  const { loading } = useAuth();
+  const options = usePortalSettingsOptions();
 
   const portalSections = useMemo(
-    () =>
-      buildPortalSettingsSections(t, {
-        // The roster is this build's only one, so it does not wait on processor
-        // access the way the processor's own surfaces do.
-        includeRoster:
-          rosterAvailable &&
-          config?.enableLogin === true &&
-          isAdmin &&
-          !loading,
-        includeApiKeys: portalAccess,
-        includeEncryption: portalAccess && isAdmin,
-        includeBilling: portalAccess && isOwner,
-        includeAccountLink: portalAccess && isOwner,
-      }),
-    [
-      portalAccess,
-      isAdmin,
-      isOwner,
-      loading,
-      config?.enableLogin,
-      rosterAvailable,
-      t,
-    ],
+    () => (options ? buildPortalSettingsSections(t, options) : []),
+    [options, t],
   );
 
   const sections = useMemo(

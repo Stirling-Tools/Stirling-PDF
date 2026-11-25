@@ -60,49 +60,51 @@ beforeEach(() => {
     .mockResolvedValue({ data: new Blob(["converted"]), headers: {} });
 });
 
-describe.each([true, false, undefined])(
-  "Office conversion requests with choice %s",
-  (choice) => {
-    test.each(OFFICE_ROUTES)(
-      "%s to %s sends the selected Office engine to %s",
-      async (fromExtension, toExtension, path, endpointName) => {
-        const parameters = {
-          ...defaultParameters,
-          fromExtension,
-          toExtension,
-          useStirlingOfficeConvert: choice,
-        };
-        const files = ["first"].map(
-          (name) =>
-            new File([name], `${name}.${fromExtension.replace("file-", "")}`),
-        );
+describe("Office conversion requests", () => {
+  test.each(OFFICE_ROUTES)(
+    "%s to %s posts to %s",
+    async (fromExtension, toExtension, path, endpointName) => {
+      const parameters = { ...defaultParameters, fromExtension, toExtension };
+      const file = new File(
+        ["first"],
+        `first.${fromExtension.replace("file-", "")}`,
+      );
 
-        const result = await convertProcessor(parameters, files);
+      const result = await convertProcessor(parameters, [file]);
 
-        expect(result.files).toHaveLength(1);
-        expect(api.post).toHaveBeenCalledTimes(1);
-        for (let index = 0; index < files.length; index++) {
-          const [url, form, config] = api.post.mock.calls[index];
-          expect(url).toBe(`/api/v1/convert/${path}`);
-          expect(config.endpointName).toBe(endpointName);
-          expect(form.getAll("fileInput")).toEqual([files[index]]);
-          expect(form.get("useStirlingOfficeConvert")).toBe(
-            choice === undefined ? null : String(choice),
-          );
-        }
+      expect(result.files).toHaveLength(1);
+      expect(api.post).toHaveBeenCalledTimes(1);
+      const [url, form, config] = api.post.mock.calls[0];
+      expect(url).toBe(`/api/v1/convert/${path}`);
+      expect(config.endpointName).toBe(endpointName);
+      expect(form.getAll("fileInput")).toEqual([file]);
+      expect(form.get("useStirlingOfficeConvert")).toBeNull();
+      expect(
+        convertFromApiParams(convertToApiParams(parameters)),
+      ).toMatchObject({ fromExtension, toExtension });
+    },
+  );
+});
 
-        const saved = convertToApiParams(parameters);
-        expect(convertFromApiParams(saved).useStirlingOfficeConvert).toBe(
-          choice,
-        );
-        if (choice !== undefined) {
-          expect(
-            convertFromApiParams(
-              Object.assign(saved, { useStirlingOfficeConvert: choice }),
-            ).useStirlingOfficeConvert,
-          ).toBe(choice);
-        }
+test.each(["eml", "msg"])(
+  "preserves %s email options in saved steps",
+  (fromExtension) => {
+    const parameters = {
+      ...defaultParameters,
+      fromExtension,
+      toExtension: "pdf",
+      emailOptions: {
+        includeAttachments: true,
+        maxAttachmentSizeMB: 3,
+        downloadHtml: false,
+        includeAllRecipients: false,
       },
-    );
+    };
+
+    expect(convertFromApiParams(convertToApiParams(parameters))).toEqual({
+      fromExtension,
+      toExtension: "pdf",
+      emailOptions: parameters.emailOptions,
+    });
   },
 );
