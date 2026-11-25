@@ -1,9 +1,14 @@
 import { Button } from "@editor/ui/Button";
-import { useEffect } from "react";
-import { Stack } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import {
+  getServerSigningCertificate,
+  HardwareCertificateInfo,
+} from "@editor/services/hardwareSigningService";
+import { DigitalIdSummary } from "@editor/components/tools/certSign/DigitalIdList";
 
 interface CertificateTypeSettingsProps {
   parameters: CertSignParameters;
@@ -15,7 +20,7 @@ interface CertificateTypeSettingsProps {
 }
 
 const sourceButtonStyle = {
-  flex: 1,
+  flex: "1 1 auto",
   height: "auto",
   minHeight: "44px",
   fontSize: "11px",
@@ -48,6 +53,22 @@ const CertificateTypeSettings = ({
     onParameterChange,
   ]);
 
+  const [serverCert, setServerCert] = useState<
+    HardwareCertificateInfo | null | undefined
+  >(undefined);
+  useEffect(() => {
+    if (parameters.signMode !== "AUTO" || serverCert !== undefined) {
+      return;
+    }
+    let cancelled = false;
+    getServerSigningCertificate().then((cert) => {
+      if (!cancelled) setServerCert(cert);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [parameters.signMode, serverCert]);
+
   const selectUpload = () => {
     onParameterChange("signMode", "MANUAL");
     if (parameters.signMode !== "MANUAL") {
@@ -56,15 +77,17 @@ const CertificateTypeSettings = ({
   };
 
   const selectServer = () => {
+    if (serverCert === null) setServerCert(undefined);
     onParameterChange("signMode", "AUTO");
     onParameterChange("certType", "");
   };
 
   const selectDevice = () => {
     onParameterChange("signMode", "DEVICE");
-    // Default to the Windows store; the device step lets the user switch to a token.
+    // Default to the OS store; the device step swaps in this platform's store or a token.
     if (
       parameters.certType !== "WINDOWS_STORE" &&
+      parameters.certType !== "MACOS_KEYCHAIN" &&
       parameters.certType !== "PKCS11"
     ) {
       onParameterChange("certType", "WINDOWS_STORE");
@@ -97,6 +120,7 @@ const CertificateTypeSettings = ({
           onClick={selectUpload}
           disabled={disabled}
           style={sourceButtonStyle}
+          overflow="hidden"
         >
           {t("certSign.source.upload", "Upload")}
         </Button>
@@ -107,6 +131,7 @@ const CertificateTypeSettings = ({
             onClick={selectServer}
             disabled={disabled}
             style={sourceButtonStyle}
+            overflow="hidden"
           >
             {t("certSign.source.server", "Server")}
           </Button>
@@ -118,11 +143,29 @@ const CertificateTypeSettings = ({
             onClick={selectDevice}
             disabled={disabled}
             style={sourceButtonStyle}
+            overflow="hidden"
           >
             {t("certSign.source.device", "This device")}
           </Button>
         )}
       </div>
+      {parameters.signMode === "AUTO" && serverCert !== undefined && (
+        <Stack gap={6}>
+          <Text size="sm" fw={500}>
+            {t("certSign.source.signsAs", "Signs as")}
+          </Text>
+          {serverCert ? (
+            <DigitalIdSummary cert={serverCert} />
+          ) : (
+            <Text size="sm" c="dimmed">
+              {t(
+                "certSign.source.serverCertUnavailable",
+                "The server's signing certificate isn't available.",
+              )}
+            </Text>
+          )}
+        </Stack>
+      )}
     </Stack>
   );
 };

@@ -2,6 +2,7 @@ import { lazy, useMemo } from "react";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@editor/constants/links";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { reorganizePagesOperationConfig } from "@editor/hooks/tools/reorganizePages/useReorganizePagesOperation";
 import {
   SubcategoryId,
@@ -351,7 +352,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       formFill: {
-        icon: <Icon name="form-input" size="1.5rem" />,
+        icon: <Icon name="clipboard-pen-line" size="1.5rem" />,
         name: t("home.formFill.title", "Form Editor"),
         component: lazy(() => import("@editor/tools/formFill/FormFill")),
         description: t(
@@ -449,12 +450,22 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       checkAccessibility: {
         icon: <Icon name="universal-access" size="1.5rem" />,
-        name: t("home.checkAccessibility.title", "Check PDF accessibility"),
-        component: lazy(() => import("@editor/tools/CheckAccessibility")),
-        description: t(
-          "home.checkAccessibility.desc",
-          "Score a PDF against PDF/UA and see what blocks screen readers, without changing it",
-        ),
+        // The accessibility-editing build replaces the report with the tool that also fixes tags.
+        name: ACCESSIBILITY_EDITING
+          ? t("home.checkAccessibility.titleWithReview", "PDF accessibility")
+          : t("home.checkAccessibility.title", "Check PDF accessibility"),
+        component: ACCESSIBILITY_EDITING
+          ? lazy(() => import("@editor/tools/PdfAccessibility"))
+          : lazy(() => import("@editor/tools/CheckAccessibility")),
+        description: ACCESSIBILITY_EDITING
+          ? t(
+              "home.checkAccessibility.descWithReview",
+              "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
+            )
+          : t(
+              "home.checkAccessibility.desc",
+              "Score a PDF against PDF/UA and see what blocks screen readers, without changing it",
+            ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
         maxFiles: -1,

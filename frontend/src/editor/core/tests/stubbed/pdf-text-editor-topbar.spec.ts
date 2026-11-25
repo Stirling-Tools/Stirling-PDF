@@ -174,6 +174,9 @@ test.describe("PDF text editor - top bar", () => {
     const pages = await page.locator("[data-viewer-pages]").boundingBox();
     expect(bar).not.toBeNull();
     expect(pages).not.toBeNull();
-    expect(bar!.y).toBeLessThan(pages!.y);
+    // Floats over the top of the pages column, clear of the side panel.
+    expect(bar!.x).toBeGreaterThanOrEqual(pages!.x);
+    expect(bar!.x + bar!.width).toBeLessThanOrEqual(pages!.x + pages!.width);
+    expect(Math.abs(bar!.y - pages!.y)).toBeLessThan(24);
   });
 });

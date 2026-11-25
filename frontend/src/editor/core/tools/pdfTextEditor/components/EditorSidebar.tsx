@@ -1,10 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { useBulkTagging } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
-import { useHeadingOutline } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
-import { useDocumentLanguage } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -14,9 +11,6 @@ import {
   useSelectedFontNote,
   type ScanNote,
 } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
-import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
-import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   ScanHint,
   type ScanHintProps,
@@ -29,7 +23,6 @@ import {
   scanTypingDropped,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
-import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import type {
   EditorViewState,
   LoadProgress,
@@ -40,7 +33,7 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 
-interface SidebarProps extends Omit<ScanHintProps, "pages"> {
+export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   store: EditorStore;
   state: EditorViewState;
   selection: SelectionState;
@@ -97,27 +90,6 @@ export const EditorSidebar = memo(function EditorSidebar({
     selectedScanNote(store, state, selection),
   );
   const scanFontMatch = useScanFontMatch(store, state, selection);
-
-  const editorDocument = store.document;
-  const reviewingAccessibility = useMemo(
-    () => ACCESSIBILITY_EDITING && !!editorDocument?.treatAsTagged(),
-    [editorDocument],
-  );
-  const imageSelected = controller.imageAccessibility !== null;
-  const artifactTextSelected = controller.textTag?.kind === "artifact";
-  // Counts and Next cover only pages already read, which is just the first few
-  // until the rest scroll into view; so do an artifact's matches on other pages.
-  useEffect(() => {
-    const reviewing =
-      reviewingAccessibility && (tab === "document" || imageSelected);
-    if (!reviewing && !(ACCESSIBILITY_EDITING && artifactTextSelected)) return;
-    return readAllPagesInBackground(store);
-  }, [reviewingAccessibility, tab, imageSelected, artifactTextSelected, store]);
-  // Following the selection only catches one appearing, so moving from one
-  // selected image to the next would leave the new one's description hidden.
-  const selectNextToReview = () => {
-    if (controller.onSelectNextToReview()) setTab("selected");
-  };
 
   if (!state.hasDocument) {
     return (
@@ -185,14 +157,11 @@ export const EditorSidebar = memo(function EditorSidebar({
           </Tabs.Panel>
           <Tabs.Panel value="document">
             {tab === "document" && (
-              <DocumentTab
-                store={store}
-                state={state}
-                reviewingAccessibility={reviewingAccessibility}
-                accessibilityReview={
-                  reviewingAccessibility ? controller.accessibilityReview : null
-                }
-                onSelectNextToReview={selectNextToReview}
+              <DocumentInspector
+                pages={state.pages}
+                groupingMode={state.groupingMode}
+                widthMode={state.widthMode}
+                showRulers={state.showRulers}
                 onSetGroupingMode={onSetGroupingMode}
                 onSetWidthMode={onSetWidthMode}
                 onSetShowRulers={onSetShowRulers}
@@ -205,58 +174,6 @@ export const EditorSidebar = memo(function EditorSidebar({
     </Tabs>
   );
 });
-
-function DocumentTab({
-  store,
-  state,
-  reviewingAccessibility,
-  accessibilityReview,
-  onSelectNextToReview,
-  onSetGroupingMode,
-  onSetWidthMode,
-  onSetShowRulers,
-}: Pick<
-  SidebarProps,
-  "store" | "state" | "onSetGroupingMode" | "onSetWidthMode" | "onSetShowRulers"
-> & {
-  reviewingAccessibility: boolean;
-  accessibilityReview: AccessibilityReview | null;
-  onSelectNextToReview: () => void;
-}) {
-  const documentLanguage = useDocumentLanguage(store, state);
-  const headings = useHeadingOutline(store, state, reviewingAccessibility);
-  const bulkTagging = useBulkTagging(store, state, reviewingAccessibility);
-  const setMarkedTagged = useCallback(
-    (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
-    [store],
-  );
-  const editorDocument = store.document;
-  return (
-    <DocumentInspector
-      pages={state.pages}
-      groupingMode={state.groupingMode}
-      widthMode={state.widthMode}
-      showRulers={state.showRulers}
-      onSetGroupingMode={onSetGroupingMode}
-      onSetWidthMode={onSetWidthMode}
-      onSetShowRulers={onSetShowRulers}
-      accessibilityReview={accessibilityReview}
-      onSelectNextToReview={onSelectNextToReview}
-      untaggedPages={bulkTagging.untaggedPages}
-      onTagUntaggedContent={bulkTagging.tagAll}
-      markedTagged={
-        editorDocument?.canSetMarkedTagged()
-          ? editorDocument.markedTagged()
-          : null
-      }
-      onSetMarkedTagged={setMarkedTagged}
-      hasTags={!!editorDocument?.hasStructureTree()}
-      headingOutline={headings.outline}
-      onSelectHeading={headings.selectHeading}
-      documentLanguage={documentLanguage}
-    />
-  );
-}
 
 /** What the Selected tab shows before the user has picked anything. */
 function NothingSelected(props: ScanHintProps) {
