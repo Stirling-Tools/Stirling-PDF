@@ -1,4 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  openInTextEditor,
+  scrollToEditorPage,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import {
@@ -225,13 +229,7 @@ function tv(a: number[], b: number[]): number {
 const rel = (a: number, b: number) => Math.abs(a - b) / Math.max(b, 1);
 
 async function openEditor(page: Page, file: string, pageIdx = 0) {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(FIX(file));
+  await openInTextEditor(page, FIX(file));
   await expect(page.getByTestId(`pdf-editor-page-${pageIdx}`)).toBeVisible({
     timeout: 60_000,
   });
@@ -315,7 +313,7 @@ async function saveAndReopen(page: Page, pageIdx = 0): Promise<number> {
   await settled(page, pageIdx);
   await stashCurrentDocument(page);
   await stampCanvases(page);
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+  await openInTextEditor(page, {
     name: "round-trip.pdf",
     mimeType: "application/pdf",
     buffer,
@@ -429,7 +427,7 @@ test.describe("PDF text editor - save round-trip fidelity (pixels)", () => {
     test.setTimeout(180_000);
     const page0Loaded = await openEditor(page, "many-pages-sample.pdf");
 
-    await page.getByTestId("pdf-editor-page-5").scrollIntoViewIfNeeded();
+    await scrollToEditorPage(page, 5);
     const page5Loaded = await settled(page, 5);
     const runs5 = await runsOn(page, 5);
     expect(runs5.length, "page index 5 has no runs").toBeGreaterThan(0);
@@ -447,11 +445,11 @@ test.describe("PDF text editor - save round-trip fidelity (pixels)", () => {
 
     // Scroll back before saving: page 0 is virtualised away while page 6 is on
     // screen, and the round-trip is measured on both.
-    await page.getByTestId("pdf-editor-page-0").scrollIntoViewIfNeeded();
+    await scrollToEditorPage(page, 0);
     await settled(page, 0);
     await saveAndReopen(page, 0);
     const page0After = await settled(page, 0);
-    await page.getByTestId("pdf-editor-page-5").scrollIntoViewIfNeeded();
+    await scrollToEditorPage(page, 5);
     const page5After = await settled(page, 5);
 
     expect(
@@ -799,7 +797,7 @@ test.describe("PDF text editor - save round-trip fidelity (pixels)", () => {
       timeout: 30_000,
     });
     await stashCurrentDocument(page);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "cold-start.pdf",
       mimeType: "application/pdf",
       buffer,

@@ -125,7 +125,7 @@ public class RedactController {
                                             Objects.requireNonNull(
                                                     Filenames.toSimpleFileName(
                                                             file.getOriginalFilename())))
-                                    + "_redacted.pdf",
+                                    + ".pdf",
                             tempFileManager);
                 }
             }
@@ -135,7 +135,7 @@ public class RedactController {
                     removeFileExtension(
                                     Objects.requireNonNull(
                                             Filenames.toSimpleFileName(file.getOriginalFilename())))
-                            + "_redacted.pdf",
+                            + ".pdf",
                     tempFileManager);
         }
     }
@@ -203,7 +203,7 @@ public class RedactController {
                                 Objects.requireNonNull(
                                         Filenames.toSimpleFileName(
                                                 request.getFileInput().getOriginalFilename())))
-                        + "_redacted.pdf";
+                        + ".pdf";
 
         Color redactColor = ManualRedactionService.decodeOrDefault(request.getRedactColor());
         int boxColorInt = redactColor.getRGB();
@@ -331,7 +331,7 @@ public class RedactController {
                                 Objects.requireNonNull(
                                         Filenames.toSimpleFileName(
                                                 request.getFileInput().getOriginalFilename())))
-                        + "_redacted.pdf";
+                        + ".pdf";
 
         RedactExecuteService.Outcome outcome = redactExecuteService.executeWithOutcome(request);
         ResponseEntity<Resource> response =

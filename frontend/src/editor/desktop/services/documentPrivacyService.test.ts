@@ -56,6 +56,7 @@ describe("managed document request boundary", () => {
     "http://127.0.0.1:62994/api/v1/policies/run",
     "http://127.0.0.1:62994/api/v1/security/timestamp-pdf",
     "http://127.0.0.1:62994/api/v1/security/cert-sign/sessions",
+    "https://selfhosted.test/api/v1/security/cert-sign/hardware/pkcs11-certificates",
     "http://127.0.0.1:62994/api/v1/storage/files",
     "http://127.0.0.1:62994/api/v1/mobile-scanner/create-session",
     "http://127.0.0.1:7777/api/v1/misc/compress-pdf",
@@ -93,6 +94,18 @@ describe("managed document request boundary", () => {
       expect.any(String),
       expect.objectContaining({ body, maxRedirections: 0 }),
     );
+  });
+
+  test("permits hardware certificate discovery on the bundled backend", async () => {
+    const client = create({ baseURL: "http://127.0.0.1:62994" });
+    await client.get(
+      "/api/v1/security/cert-sign/hardware/windows-certificates",
+    );
+    await client.post(
+      "/api/v1/security/cert-sign/hardware/pkcs11-certificates",
+      { pin: "123456" },
+    );
+    expect(state.fetch).toHaveBeenCalledTimes(2);
   });
 
   test("permits account and billing requests, but no file payloads to account APIs", async () => {

@@ -14,6 +14,10 @@ import {
 import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
 import i18n from "@editor/i18n";
 import { requireAutomationSession } from "@editor/services/serverAutomationSession";
+import {
+  requiresBundledBackend,
+  requiresConnectedServer,
+} from "@editor/services/bundledBackendOnly";
 
 /**
  * Auth headers for raw fetch() calls (the AI SSE stream) — desktop variant.
@@ -28,6 +32,12 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
   await authService.awaitRefreshIfInProgress();
   const token = await getAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function bundledBackendUrl(): string {
+  const url = tauriBackendService.getBackendUrl();
+  if (!url) throw createBackendNotReadyError();
+  return url.replace(/\/$/, "");
 }
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
@@ -77,10 +87,22 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       try {
         // Get the appropriate base URL for this request
-        const baseUrl = await operationRouter.getBaseUrl(
+        const bundledOnly = requiresBundledBackend(
           originalUrl,
-          extendedConfig.endpointName,
+          extendedConfig.data,
         );
+        const baseUrl = bundledOnly
+          ? bundledBackendUrl()
+          : originalUrl &&
+              requiresConnectedServer(originalUrl, extendedConfig.data)
+            ? await operationRouter.getServerOnlyBaseUrl(
+                originalUrl,
+                extendedConfig.endpointName,
+              )
+            : await operationRouter.getBaseUrl(
+                originalUrl,
+                extendedConfig.endpointName,
+              );
 
         // Build the full URL
         if (extendedConfig.url && !extendedConfig.url.startsWith("http")) {
@@ -94,7 +116,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         // - Local bundled backend: No auth (security disabled)
         // - SaaS backend: Needs auth token
         // - Self-hosted backend: Needs auth token
-        const isRemote = await operationRouter.isSelfHostedMode();
+        const isRemote =
+          !bundledOnly && (await operationRouter.isSelfHostedMode());
         // A request targets the SaaS backend either because operationRouter
         // routed a relative path there, OR because the caller passed an absolute
         // SaaS URL. The latter matters for the AI result-file download: it hits

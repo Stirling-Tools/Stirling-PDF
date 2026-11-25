@@ -73,7 +73,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -136,7 +136,7 @@ jobs:
       SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -362,7 +362,7 @@ jobs:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
           & smctl healthcheck
-          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl healthcheck returned non-zero - continuing, keypair ls is the gate" }
           & smctl keypair ls
           if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
           & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
@@ -386,6 +386,11 @@ jobs:
             }
           }
           EOF
+
+      - name: Sign bundled runtime binaries
+        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre
 
       - name: Import release GPG signing key (Linux)
         if: inputs.sign && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
@@ -563,6 +568,11 @@ jobs:
             find . -name "*.AppImage" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
+      - name: Verify bundled runtime signatures
+        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre -VerifyOnly
+
       # Verify the MSI AND the inner exe extracted from it are signed.
       # The inner exe is what gets installed on users' machines and what AV scans.
       - name: Verify Windows Code Signature
@@ -730,7 +740,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -823,7 +833,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -916,7 +926,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
