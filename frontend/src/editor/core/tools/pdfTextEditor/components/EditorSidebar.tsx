@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { useBulkTagging } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
-import { useHeadingOutline } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
-import { useDocumentLanguage } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -14,9 +11,6 @@ import {
   useSelectedFontNote,
   type ScanNote,
 } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
-import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
-import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   ScanHint,
   type ScanHintProps,
@@ -39,7 +33,7 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 
-interface SidebarProps extends Omit<ScanHintProps, "pages"> {
+export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   store: EditorStore;
   state: EditorViewState;
   selection: SelectionState;
@@ -55,7 +49,7 @@ interface SidebarProps extends Omit<ScanHintProps, "pages"> {
 
 export type SidebarTab = "selected" | "document";
 
-export function EditorSidebar({
+export const EditorSidebar = memo(function EditorSidebar({
   store,
   state,
   selection,
@@ -76,11 +70,11 @@ export function EditorSidebar({
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
-  const documentLanguage = useDocumentLanguage(store, state);
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
-    selection.shapeIds.length > 0;
+    selection.shapeIds.length > 0 ||
+    selection.formFieldId !== null;
   const [tab, setTab] = useState<SidebarTab>(initialTab);
 
   // Picking something on the page is a request to see its properties, so the
@@ -96,43 +90,6 @@ export function EditorSidebar({
     selectedScanNote(store, state, selection),
   );
   const scanFontMatch = useScanFontMatch(store, state, selection);
-
-  const editorDocument = store.document;
-  const reviewingAccessibility = useMemo(
-    () => ACCESSIBILITY_EDITING && !!editorDocument?.treatAsTagged(),
-    [editorDocument],
-  );
-  const imageSelected = controller.imageAccessibility !== null;
-  const artifactTextSelected = controller.textTag?.kind === "artifact";
-  // Counts and Next cover only pages already read, which is just the first few
-  // until the rest scroll into view; so do an artifact's matches on other pages.
-  useEffect(() => {
-    const reviewing =
-      reviewingAccessibility && (tab === "document" || imageSelected);
-    if (!reviewing && !(ACCESSIBILITY_EDITING && artifactTextSelected)) return;
-    return readAllPagesInBackground(store);
-  }, [reviewingAccessibility, tab, imageSelected, artifactTextSelected, store]);
-  const setMarkedTagged = useCallback(
-    (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
-    [store],
-  );
-  const headings = useHeadingOutline(
-    store,
-    state,
-    reviewingAccessibility && tab === "document",
-  );
-
-  const bulkTagging = useBulkTagging(
-    store,
-    state,
-    reviewingAccessibility && tab === "document",
-  );
-
-  // Following the selection only catches one appearing, so moving from one
-  // selected image to the next would leave the new one's description hidden.
-  const selectNextImageToReview = () => {
-    if (controller.onSelectNextImageToReview()) setTab("selected");
-  };
 
   if (!state.hasDocument) {
     return (
@@ -199,38 +156,24 @@ export function EditorSidebar({
             )}
           </Tabs.Panel>
           <Tabs.Panel value="document">
-            <DocumentInspector
-              pages={state.pages}
-              groupingMode={state.groupingMode}
-              widthMode={state.widthMode}
-              showRulers={state.showRulers}
-              onSetGroupingMode={onSetGroupingMode}
-              onSetWidthMode={onSetWidthMode}
-              onSetShowRulers={onSetShowRulers}
-              imageReview={
-                reviewingAccessibility ? controller.imageReview : null
-              }
-              onSelectNextImageToReview={selectNextImageToReview}
-              untaggedPages={bulkTagging.untaggedPages}
-              onTagUntaggedContent={bulkTagging.tagAll}
-              markedTagged={
-                editorDocument?.canSetMarkedTagged()
-                  ? editorDocument.markedTagged()
-                  : null
-              }
-              onSetMarkedTagged={setMarkedTagged}
-              hasTags={!!editorDocument?.hasStructureTree()}
-              headingOutline={headings.outline}
-              onSelectHeading={headings.selectHeading}
-              documentLanguage={documentLanguage}
-            />
+            {tab === "document" && (
+              <DocumentInspector
+                pages={state.pages}
+                groupingMode={state.groupingMode}
+                widthMode={state.widthMode}
+                showRulers={state.showRulers}
+                onSetGroupingMode={onSetGroupingMode}
+                onSetWidthMode={onSetWidthMode}
+                onSetShowRulers={onSetShowRulers}
+              />
+            )}
           </Tabs.Panel>
         </Box>
       </LanguagesInUse.Provider>
       {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
     </Tabs>
   );
-}
+});
 
 /** What the Selected tab shows before the user has picked anything. */
 function NothingSelected(props: ScanHintProps) {

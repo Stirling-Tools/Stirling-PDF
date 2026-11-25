@@ -8,6 +8,7 @@
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { Affine, PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
+import { tableCells } from "@editor/tools/pdfTextEditor/util/tableRow";
 
 /** How far apart two runs can sit, in points, and still be at the same height or in the same place. */
 const SAME_HEIGHT_PT = 4;
@@ -21,6 +22,12 @@ const EDGE_BAND = 0.12;
 const TILED = 3;
 /** How far from square to the page, in radians, a run must be turned to read as set at an angle. */
 const OFF_AXIS = 0.05;
+/**
+ * How much of the page's shorter side, at least, text set at an angle spans
+ * to read as a watermark however few pages show it: a stamp such as "COPY"
+ * across one page, where a chart's slanted axis labels stay small.
+ */
+const STAMP_SHARE = 0.25;
 const DIGITS = /\p{Nd}+/gu;
 const DIGIT = /^\p{Nd}$/u;
 
@@ -89,11 +96,16 @@ export function matchingRuns<R extends FurnitureRun>(
  * page index and then run or image id. Watermarks come first: text or images
  * drawn in the same place on at least half the document's pages that are
  * tiled across the page, set at an angle, or (text) see-through, and that
- * repeat on two pages or tile one. Then text near the top or bottom of a
- * page that at least half the pages, and at least two, show at the same
- * height: near the top a header, near the bottom a footer, and either a page
- * number when one of its numbers counts up with the pages, whatever words
- * surround it. `pageCount` counts the pages not in `pages` too.
+ * repeat on two pages or tile one; and, on any page, text set at an angle
+ * across a good part of it (see STAMP_SHARE). Then text near the top or
+ * bottom of a page that at least half the pages, and at least two, show at
+ * the same height: near the top a header, near the bottom a footer, and
+ * either a page number when one of its numbers counts up with the pages,
+ * whatever words surround it. Table text is kept wherever a table runs
+ * over a page break: a cell of a table (see tableCells) is never a header or
+ * footer unless it numbers the pages, nor a watermark unless see-through, and
+ * neither is text whose number changes on every page without rising with
+ * them. `pageCount` counts the pages not in `pages` too.
  */
 export function recogniseFurniture(
   pages: readonly FurniturePage[],
@@ -105,8 +117,19 @@ export function recogniseFurniture(
     const onPage = furniture.get(pageIndex) ?? new Map<string, Furniture>();
     furniture.set(pageIndex, onPage.set(id, kind));
   };
-  for (const { pageIndex, id } of watermarks(pages, half)) {
+  const cells = new Map(
+    pages.map((page) => [page.pageIndex, tableCells(page.runs, page.display)]),
+  );
+  for (const { pageIndex, id } of watermarks(pages, half, cells)) {
     mark(pageIndex, id, "Watermark");
+  }
+  // Read again without the watermarks, whose tiles can line up with a header
+  // in parts and pass for a table's rows.
+  for (const page of pages) {
+    const marked = furniture.get(page.pageIndex);
+    if (!marked) continue;
+    const kept = page.runs.filter((run) => !marked.has(run.id));
+    cells.set(page.pageIndex, tableCells(kept, page.display));
   }
 
   const groups = new Map<string, { at: Placement; runs: GroupedRun[] }[]>();
@@ -123,6 +146,7 @@ export function recogniseFurniture(
         pageIndex: page.pageIndex,
         id: run.id,
         numbers: numbers(run.text),
+        inTable: cells.get(page.pageIndex)!.has(run),
       };
       const group = sameText.find((g) => sameHeight(g.at, at));
       if (group) group.runs.push(grouped);
@@ -131,9 +155,17 @@ export function recogniseFurniture(
   }
 
   const needed = Math.max(2, half);
-  for (const sameText of groups.values()) {
+  for (const [key, sameText] of groups) {
     for (const { at, runs } of sameText) {
-      if (pagesOf(runs) < needed) continue;
+      if (pagesOf(runs) < needed) {
+        const text = key.slice(key.indexOf(":") + 1);
+        for (const run of runs) {
+          if (isOwnPageNumber(text, run))
+            mark(run.pageIndex, run.id, "PageNum");
+        }
+        continue;
+      }
+      if (!numbersPages(runs) && readsAsContent(runs)) continue;
       const kind = furnitureKind(runs, at.edge);
       for (const { pageIndex, id } of runs) mark(pageIndex, id, kind);
     }
@@ -148,15 +180,21 @@ interface Drawn {
   key: string;
   centre: { x: number; y: number };
   tiled: boolean;
+  /** Set at an angle across a good part of the page (see STAMP_SHARE). */
+  stamped: boolean;
 }
 
 /** The text and images `recogniseFurniture` reads as watermarks. */
 function watermarks(
   pages: readonly FurniturePage[],
   half: number,
+  cells: ReadonlyMap<number, ReadonlySet<FurnitureRun>>,
 ): { pageIndex: number; id: string }[] {
   const groups = new Map<string, Drawn[][]>();
-  for (const drawn of pages.flatMap(watermarkLike)) {
+  const candidates = pages.flatMap((page) =>
+    watermarkLike(page, cells.get(page.pageIndex)!),
+  );
+  for (const drawn of candidates) {
     const sameKey = groups.get(drawn.key) ?? [];
     groups.set(drawn.key, sameKey);
     const group = sameKey.find((g) => samePlace(g[0].centre, drawn.centre));
@@ -166,20 +204,33 @@ function watermarks(
   return [...groups.values()].flat().flatMap((group) => {
     const pages = pagesOf(group);
     const repeats = pages >= 2 || group.some((drawn) => drawn.tiled);
-    return pages >= half && repeats ? group : [];
+    const stamped = group.every((drawn) => drawn.stamped);
+    return (pages >= half && repeats) || stamped ? group : [];
   });
 }
 
-/** What the page draws that looks like a watermark: tiled, set at an angle, or see-through. */
-function watermarkLike(page: FurniturePage): Drawn[] {
+/**
+ * What the page draws that looks like a watermark: tiled, set at an angle, or
+ * see-through. A table's opaque cells are left out: a column of "Yes" can
+ * tile a page, and column headings set at an angle repeat on every page.
+ */
+function watermarkLike(
+  page: FurniturePage,
+  cells: ReadonlySet<FurnitureRun>,
+): Drawn[] {
   const items = [
-    ...page.runs.map((run) => ({
-      id: run.id,
-      key: furnitureText(run.text) && `text:${furnitureText(run.text)}`,
-      bounds: run.bounds,
-      matrix: run.matrix,
-      seeThrough: run.fill.a < 255,
-    })),
+    ...page.runs
+      .filter((run) => run.fill.a < 255 || !cells.has(run))
+      .map((run) => ({
+        id: run.id,
+        // The exact text, digits and all: a watermark repeats itself word for
+        // word, where reading "7" and "41" as one would tile a table's number
+        // column across the page.
+        key: watermarkText(run.text) && `text:${watermarkText(run.text)}`,
+        bounds: run.bounds,
+        matrix: run.matrix,
+        seeThrough: run.fill.a < 255,
+      })),
     ...(page.images ?? []).map((image) => ({
       id: image.id,
       key: `image:${Math.round(image.bounds.width)}x${Math.round(image.bounds.height)}`,
@@ -192,12 +243,17 @@ function watermarkLike(page: FurniturePage): Drawn[] {
   const centres = new Map<string, { x: number; y: number }[]>();
   const placed = items.map((item) => {
     const at = centre(page.display, item.bounds);
-    centres.set(item.key, [...(centres.get(item.key) ?? []), at]);
+    const same = centres.get(item.key) ?? [];
+    centres.set(item.key, same);
+    same.push(at);
     return { ...item, at };
   });
   return placed.flatMap((item) => {
     const tiled = tiles(centres.get(item.key)!, page.display);
-    if (!tiled && !item.seeThrough && !offAxis(item.matrix)) return [];
+    const angled = offAxis(item.matrix);
+    if (!tiled && !item.seeThrough && !angled) return [];
+    const { displayWidth, displayHeight } = page.display;
+    const span = Math.max(item.bounds.width, item.bounds.height);
     return [
       {
         pageIndex: page.pageIndex,
@@ -205,9 +261,17 @@ function watermarkLike(page: FurniturePage): Drawn[] {
         key: item.key,
         centre: item.at,
         tiled,
+        stamped:
+          item.key.startsWith("text:") &&
+          angled &&
+          span >= STAMP_SHARE * Math.min(displayWidth, displayHeight),
       },
     ];
   });
+}
+
+function watermarkText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
 }
 
 /** True when copies at `centres` tile the page (see TILED). */
@@ -216,7 +280,10 @@ function tiles(
   { displayWidth, displayHeight }: DisplayTransformData,
 ): boolean {
   if (centres.length < TILED) return false;
-  const span = (values: number[]) => Math.max(...values) - Math.min(...values);
+  const span = (values: number[]) => {
+    const { least, most } = extent(values);
+    return most - least;
+  };
   return (
     span(centres.map((c) => c.x)) >= displayWidth / 2 &&
     span(centres.map((c) => c.y)) >= displayHeight / 2
@@ -260,6 +327,53 @@ interface GroupedRun {
   pageIndex: number;
   id: string;
   numbers: number[];
+  /** A cell of a table on its page (see tableCells). */
+  inTable: boolean;
+}
+
+/**
+ * A page number on its own, digits as furnitureText writes them: an optional
+ * label (group 1), the number, and an optional total after a short word or a
+ * slash ("of 12", "/ 12"), dashes aside.
+ */
+const OWN_PAGE_NUMBER =
+  /^[-–—\s]*(?:(\p{L}{1,6})\.?\s*)?#(?:\s*(?:\p{L}{1,4}|\/)\s*#)?[-–—\s]*$/u;
+
+/**
+ * The words that label a page number, lower-cased. Only these: a lone "Figure 3",
+ * "Part 1" or "Step 2" at a page's edge numbers what it labels, not the page.
+ */
+const PAGE_LABELS: ReadonlySet<string> = new Set([
+  "p",
+  "pg",
+  "page",
+  "pag",
+  "pág",
+  "pagina",
+  "página",
+  "seite",
+  "s",
+  "side",
+  "sida",
+  "sivu",
+  "blz",
+  "str",
+  "strona",
+]);
+
+/**
+ * True for a page number shown without a repeat to match it by, at a page's
+ * edge: OWN_PAGE_NUMBER with no label or a PAGE_LABELS one, numbering the page
+ * it is on. `text` is furnitureText's.
+ */
+function isOwnPageNumber(text: string, run: GroupedRun): boolean {
+  if (run.inTable) return false;
+  const match = OWN_PAGE_NUMBER.exec(text);
+  if (!match) return false;
+  const label = match[1]?.toLocaleLowerCase();
+  if (label !== undefined && !PAGE_LABELS.has(label)) return false;
+  const [own, total] = run.numbers;
+  return own === run.pageIndex + 1 && (total === undefined || total >= own);
 }
 
 function furnitureKind(
@@ -281,6 +395,52 @@ function numbersPages(runs: readonly GroupedRun[]): boolean {
     (_, i) =>
       new Set(runs.map((run) => run.numbers[i] - run.pageIndex)).size === 1,
   );
+}
+
+/**
+ * True when the runs read as a table's content rather than as furniture: a
+ * table's cells, or text with a number that differs from page to page,
+ * however often one page shows it, without rising with them. A number that
+ * rises is page numbering that skips, such as two page numbers to a sheet.
+ */
+function readsAsContent(runs: readonly GroupedRun[]): boolean {
+  if (runs.some((run) => run.inTable)) return true;
+  const onEachPage = new Map<number, GroupedRun[]>();
+  for (const run of runs) {
+    const onPage = onEachPage.get(run.pageIndex) ?? [];
+    onEachPage.set(run.pageIndex, onPage);
+    onPage.push(run);
+  }
+  const inPageOrder = [...onEachPage.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, onPage]) => onPage);
+  return runs[0].numbers.some((_, i) => {
+    const byPage = inPageOrder.map((onPage) =>
+      extent(new Set(onPage.map((run) => run.numbers[i]))),
+    );
+    const shown = byPage.reduce((count, values) => count + values.count, 0);
+    const differ = new Set(runs.map((run) => run.numbers[i])).size === shown;
+    const rise = byPage.every(
+      (values, at) => at === 0 || values.least > byPage[at - 1].most,
+    );
+    return differ && !rise;
+  });
+}
+
+// Folded rather than spread: Math.min(...values) overflows the stack on a few
+// hundred thousand values, which one crafted page can hold.
+function extent(values: Iterable<number>): {
+  least: number;
+  most: number;
+  count: number;
+} {
+  let [least, most, count] = [Infinity, -Infinity, 0];
+  for (const value of values) {
+    least = Math.min(least, value);
+    most = Math.max(most, value);
+    count++;
+  }
+  return { least, most, count };
 }
 
 /** The text's numbers, written in the digits of any script. */

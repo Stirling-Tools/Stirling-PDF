@@ -172,6 +172,23 @@ class ConnectedAccountServiceTest {
     }
 
     @Test
+    void aScopeTheAppWasNeverGrantedFailsWithoutPausingTheAccount() throws Exception {
+        ConnectedAccount account = connect();
+        String sharePoint = "https://contoso.sharepoint.com/.default";
+        microsoft.unconsentedScopes.add(sharePoint);
+
+        OAuthException failure =
+                assertThrows(
+                        OAuthException.class,
+                        () -> service.accessToken(account.getId(), List.of(sharePoint)));
+
+        assertThat(failure.getMessage()).contains("AADSTS65001");
+        assertThat(store.rows.get(account.getId()).getStatus())
+                .isEqualTo(ConnectedAccount.STATUS_CONNECTED);
+        assertThat(service.accessToken(account.getId(), List.of("Sites.Read.All"))).isNotBlank();
+    }
+
+    @Test
     void connectionsCanBeTurnedOffByTheAdmin() {
         properties.getPremium().getProFeatures().getMicrosoft().setAllowAccountConnections(false);
         assertThat(service.isAvailable(CloudProvider.MICROSOFT)).isFalse();

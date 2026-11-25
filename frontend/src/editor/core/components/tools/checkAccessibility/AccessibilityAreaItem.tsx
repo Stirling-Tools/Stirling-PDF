@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { BreakdownRow } from "@editor/components/tools/checkAccessibility/AccessibilityBreakdownRow";
@@ -28,6 +28,8 @@ interface AccessibilityAreaItemProps {
   profile: string;
   /** Shown under the issues, such as how many images need a description. */
   note: string | null;
+  /** A control that fixes the area, shown when it is open. */
+  fix?: ReactNode;
 }
 
 /** One breakdown area: its result, and its issues behind a toggle when there is anything to show. */
@@ -35,12 +37,13 @@ export function AccessibilityAreaItem({
   area,
   profile,
   note,
+  fix,
 }: AccessibilityAreaItemProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const bodyId = useId();
   const passes = area.issues.length === 0;
-  const expandable = !passes || note !== null;
+  const expandable = !passes || note !== null || !!fix;
 
   return (
     <li className="a11y-area">
@@ -68,6 +71,7 @@ export function AccessibilityAreaItem({
           inert={!open}
         >
           <div className="sui-collapsible__body-inner a11y-area__body">
+            {fix && <div className="a11y-area__fix">{fix}</div>}
             {!passes && (
               <div className="a11y-issues">
                 {area.issues.map((issue) => (

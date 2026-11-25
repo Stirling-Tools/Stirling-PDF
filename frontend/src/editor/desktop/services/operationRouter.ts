@@ -12,6 +12,7 @@ import {
 import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { requiresSignIn } from "@editor/services/signInRequiredEndpoints";
 import { STIRLING_SAAS_BACKEND_API_URL } from "@editor/constants/connection";
 import {
   CONVERSION_ENDPOINTS,
@@ -63,6 +64,21 @@ export class OperationRouter {
         : (await connectionModeService.getServerConfig())?.url;
     if (!url) throw new Error("Server configuration not found");
     return url.replace(/\/$/, "");
+  }
+
+  private signInRequiredError(): Error {
+    // Open the connection settings so the user can sign in
+    window.dispatchEvent(
+      new CustomEvent("appConfig:navigate", {
+        detail: { key: "connectionMode" },
+      }),
+    );
+    return new Error(
+      i18n.t(
+        "localMode.toolUnavailable",
+        "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it.",
+      ),
+    );
   }
 
   /** Standalone tools route by connection mode. Automation endpoints never reach here —
@@ -185,6 +201,14 @@ export class OperationRouter {
    * @returns Base URL for API calls
    */
   async getBaseUrl(operation?: string, endpointName?: string): Promise<string> {
+    if (
+      operation &&
+      this.isToolEndpoint(operation) &&
+      requiresSignIn(this.capabilityKey(operation, endpointName)) &&
+      (await connectionModeService.getCurrentMode()) === "local"
+    ) {
+      throw this.signInRequiredError();
+    }
     if (await isLocalProcessingOnly()) {
       if (operation && requiresOffDeviceProcessing(operation))
         throw documentPrivacyError();
@@ -210,6 +234,11 @@ export class OperationRouter {
     if (this.isServerAutomationEndpoint(operation)) {
       return this.getConnectedServerBaseUrl();
     }
+    // An absolute URL already names its server. Resolving it would fall through to
+    // the bundled backend in SaaS mode, which throws while that backend is starting.
+    if (operation?.startsWith("http")) {
+      return "";
+    }
     const mode = await connectionModeService.getCurrentMode();
 
     // Local-only mode: route everything to local backend; open settings if tool unavailable
@@ -224,18 +253,7 @@ export class OperationRouter {
               backendUrl,
             );
           if (!supportedLocally) {
-            // Open the connection settings so the user can sign in
-            window.dispatchEvent(
-              new CustomEvent("appConfig:navigate", {
-                detail: { key: "connectionMode" },
-              }),
-            );
-            throw new Error(
-              i18n.t(
-                "localMode.toolUnavailable",
-                "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it.",
-              ),
-            );
+            throw this.signInRequiredError();
           }
         }
       }
@@ -284,26 +302,6 @@ export class OperationRouter {
         );
 
         if (!supportedLocally) {
-          // Local backend doesn't support this - check if SaaS supports it
-          const supportedOnSaaS =
-            await endpointAvailabilityService.isEndpointSupportedOnSaaS(
-              endpointToCheck,
-            );
-          console.debug(
-            `[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`,
-          );
-
-          if (!supportedOnSaaS) {
-            // Neither local nor SaaS support this - throw error
-            console.error(
-              `[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`,
-            );
-            throw new Error(
-              `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`,
-            );
-          }
-
-          // SaaS supports it - route to SaaS backend
           if (!STIRLING_SAAS_BACKEND_API_URL) {
             console.error(
               "[operationRouter] VITE_SAAS_BACKEND_API_URL not configured",
@@ -314,7 +312,7 @@ export class OperationRouter {
             );
           }
           console.debug(
-            `[operationRouter] Routing ${operation} to SaaS backend (not supported locally, but supported on SaaS)`,
+            `[operationRouter] Routing ${operation} to SaaS backend (not supported locally)`,
           );
           return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, "");
         }
@@ -461,6 +459,7 @@ export class OperationRouter {
     if (this.isToolEndpoint(endpoint)) {
       // For UI data endpoints, extract the endpoint name
       const endpointToCheck = this.extractEndpointName(endpoint);
+      if (mode === "local" && requiresSignIn(endpointToCheck)) return true;
       const supportedLocally =
         await endpointAvailabilityService.isEndpointSupportedLocally(
           endpointToCheck,
