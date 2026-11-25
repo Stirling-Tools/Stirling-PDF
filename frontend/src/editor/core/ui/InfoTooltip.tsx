@@ -360,9 +360,9 @@ export function InfoTooltip({
                         </h3>
                       )}
                     {tip.description && (
-                      <p className="sui-info-panel__text" dir="auto">
+                      <div className="sui-info-panel__text" dir="auto">
                         {tip.description}
-                      </p>
+                      </div>
                     )}
                     {tip.bullets && tip.bullets.length > 0 && (
                       <ul className="sui-info-panel__list">
@@ -379,9 +379,9 @@ export function InfoTooltip({
                   </section>
                 ))
               : label && (
-                  <p className="sui-info-panel__text" dir="auto">
+                  <div className="sui-info-panel__text" dir="auto">
                     {label}
-                  </p>
+                  </div>
                 )}
             {content && <div className="sui-info-panel__extra">{content}</div>}
           </div>
