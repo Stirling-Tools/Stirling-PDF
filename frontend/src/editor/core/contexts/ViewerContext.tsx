@@ -51,6 +51,8 @@ import {
 import {
   ViewerContext,
   type ViewerContextType,
+  ViewerActiveFileContext,
+  type ViewerActiveFileType,
 } from "@editor/contexts/viewer/viewerContext";
 import type { SpreadMode } from "@embedpdf/plugin-spread/react";
 
@@ -65,8 +67,13 @@ const SPREAD_NONE = "none" satisfies `${SpreadMode}` as SpreadMode;
 export {
   ViewerContext,
   useViewer,
+  ViewerActiveFileContext,
+  useViewerActiveFile,
 } from "@editor/contexts/viewer/viewerContext";
-export type { ViewerContextType } from "@editor/contexts/viewer/viewerContext";
+export type {
+  ViewerContextType,
+  ViewerActiveFileType,
+} from "@editor/contexts/viewer/viewerContext";
 
 function useImmediateNotifier<Args extends unknown[]>() {
   const callbacksRef = useRef(new Set<(...args: Args) => void>());
@@ -647,9 +654,21 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     ],
   );
 
+  const activeFileValue: ViewerActiveFileType = useMemo(
+    () => ({
+      activeFileId,
+      setActiveFileId,
+    }),
+    [activeFileId],
+  );
+
   return (
     <ViewerContext.Provider value={value}>
-      <ViewerPageToolProvider>{children}</ViewerPageToolProvider>
+      <ViewerPageToolProvider>
+        <ViewerActiveFileContext.Provider value={activeFileValue}>
+          {children}
+        </ViewerActiveFileContext.Provider>
+      </ViewerPageToolProvider>
     </ViewerContext.Provider>
   );
 };

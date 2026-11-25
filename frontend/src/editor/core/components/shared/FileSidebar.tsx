@@ -565,6 +565,22 @@ function FileLibrarySection({
   );
 }
 
+/**
+ * Merge a live in-memory record over the stored stub it replaces. Fields the
+ * live record does not carry stay as stored: the library record is the only
+ * place some metadata lives, and a heavy field being absent from the live
+ * record must not erase it.
+ */
+export function overlayLiveFields(
+  stored: StirlingFileStub,
+  live: StirlingFileStub,
+): StirlingFileStub {
+  const definedLive = Object.fromEntries(
+    Object.entries(live).filter(([, value]) => value !== undefined),
+  ) as Partial<StirlingFileStub>;
+  return { ...stored, ...definedLive };
+}
+
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
     {
@@ -680,7 +696,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
           );
 
-        const allStubs = [...stubs, ...pendingStubs];
+        // The live workbench record is newer than the stored stub; overlay it
+        // so a pending IDB write cannot show stale metadata.
+        const mergedStubs = stubs.map((stored) => {
+          const live = state.files.byId[stored.id];
+          return live ? overlayLiveFields(stored, live) : stored;
+        });
+        const allStubs = [...mergedStubs, ...pendingStubs];
         // During a version swap, drop the superseded IDB leaf to avoid duplicate lineage keys.
         const superseded = new Set(
           allStubs.map((s) => s.parentFileId as string | undefined),
