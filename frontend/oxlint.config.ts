@@ -5,8 +5,12 @@ import { defineConfig, type OxlintGlobals } from "oxlint";
 // oxlint REPLACES (does not merge) a rule across matching overrides, so each
 // scope must restate the full set of bans that apply to it.
 const APP_SOURCE = "src/**/*.{js,mjs,jsx,ts,tsx}";
-const DESKTOP_SOURCE = "src/editor/desktop/**/*.{js,mjs,jsx,ts,tsx}";
-const CLOUD_SOURCE = "src/editor/cloud/**/*.{js,mjs,jsx,ts,tsx}";
+// processor/desktop is the processor's desktop edition and processor/cloud its
+// hosted edition, so each takes the import scope of the editor layer it pairs with.
+const DESKTOP_SOURCE =
+  "src/{editor/desktop,processor/desktop}/**/*.{js,mjs,jsx,ts,tsx}";
+const CLOUD_SOURCE =
+  "src/{editor/cloud,processor/cloud}/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
 
@@ -369,8 +373,8 @@ export default defineConfig({
       // are exempt from the shared-DS Mantine import ban; being desktop they also
       // keep the Tauri allowance.
       files: [
-        "src/editor/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
-        "src/editor/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "src/{editor/desktop,processor/desktop}/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "src/{editor/desktop,processor/desktop}/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [
