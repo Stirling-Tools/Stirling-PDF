@@ -4,10 +4,10 @@ import {
   type Command,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { StructureElementEdit } from "@editor/tools/pdfTextEditor/model/PageStructure";
 
 /**
- * Set or remove the description of the structure element owning `mcid`.
+ * Set or remove the description of the block the content `mcid` marks
+ * belongs to.
  * Touches no page content: the edit is held on the document's structure index
  * and written by the save pass, so the page is never regenerated for it.
  */
@@ -16,7 +16,7 @@ export class SetAltTextCommand implements Command {
   private readonly pageIndex: number;
   private readonly mcid: number;
   private readonly alt: string | null;
-  private previous: StructureElementEdit | null | undefined;
+  private previous: string | null | undefined;
 
   constructor(opts: { pageIndex: number; mcid: number; alt: string | null }) {
     this.pageIndex = opts.pageIndex;
@@ -40,15 +40,15 @@ export class SetAltTextCommand implements Command {
       );
     }
     if (this.previous === undefined) {
-      this.previous = structure.editFor(this.mcid);
+      this.previous = structure.alt(this.mcid);
     }
-    structure.setAlt(this.mcid, this.alt);
+    doc.setDescription(this.pageIndex, this.mcid, this.alt);
     doc.page(this.pageIndex).bumpRevision();
   }
 
   revert(doc: EditorDocument): void {
     if (this.previous === undefined) return;
-    doc.structure(this.pageIndex).setEdit(this.mcid, this.previous);
+    doc.setDescription(this.pageIndex, this.mcid, this.previous);
     doc.page(this.pageIndex).bumpRevision();
   }
 

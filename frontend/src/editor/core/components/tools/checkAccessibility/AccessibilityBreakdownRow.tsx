@@ -4,13 +4,11 @@ import { Chip, type ChipAccent } from "@editor/ui/Chip";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 
-export type BreakdownStatus = "pass" | "fail" | "inProgress" | "done";
+export type BreakdownStatus = "pass" | "fail";
 
 const STATUS_ACCENT: Record<BreakdownStatus, ChipAccent> = {
   pass: "success",
   fail: "danger",
-  inProgress: "warning",
-  done: "success",
 };
 
 /** Every status word stacked in one cell, so each pill is as wide as the longest in any language. */
@@ -19,8 +17,6 @@ function StatusWord({ status }: { status: BreakdownStatus }) {
   const words: Record<BreakdownStatus, string> = {
     pass: t("checkAccessibility.result.pass", "Pass"),
     fail: t("checkAccessibility.result.fail", "Fail"),
-    inProgress: t("checkAccessibility.manual.inProgress", "In progress"),
-    done: t("checkAccessibility.manual.done", "Done"),
   };
   return (
     <span className="a11y-result-word">
@@ -44,6 +40,8 @@ interface BreakdownRowProps {
   /** The standard's clauses the row covers, shown under the tip. */
   reference?: string | null;
   status: BreakdownStatus;
+  /** Shown in place of the Pass or Fail chip, for a row that is neither. */
+  badge?: ReactNode;
   /** Turns the label into a toggle for the details below the row. */
   toggle?: { open: boolean; controls: string; onToggle: () => void };
 }
@@ -54,6 +52,7 @@ export function BreakdownRow({
   tip,
   reference,
   status,
+  badge,
   toggle,
 }: BreakdownRowProps) {
   const { t } = useTranslation();
@@ -110,13 +109,17 @@ export function BreakdownRow({
           <Icon name="info" size={14} />
         </button>
       </Tooltip>
-      <Chip
-        className="a11y-area__status"
-        accent={STATUS_ACCENT[status]}
-        size="xs"
-      >
-        <StatusWord status={status} />
-      </Chip>
+      {badge ? (
+        <span className="a11y-area__status">{badge}</span>
+      ) : (
+        <Chip
+          className="a11y-area__status"
+          accent={STATUS_ACCENT[status]}
+          size="xs"
+        >
+          <StatusWord status={status} />
+        </Chip>
+      )}
     </div>
   );
 }

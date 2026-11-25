@@ -4,6 +4,7 @@ import {
   type Command,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type {
@@ -15,6 +16,7 @@ import type { ScanColors } from "@editor/tools/pdfTextEditor/util/scanSampling";
 import {
   measureObjBoxPt,
   measureObjSpanPt,
+  sanitizeForBase14,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   emitCellText,
@@ -136,14 +138,13 @@ export class MaterialiseTableCommand implements Command {
     const found = locateTable(doc, this.tableId);
     if (!found) return;
     const { page, model } = found;
-    const mod = doc.module as unknown as ZOrderModule;
     if (this.emittedPtrs.length > 0) {
       removeObjects(doc.module, page, this.emittedPtrs);
       this.emittedPtrs = [];
     }
     // Lowest index last, so each form lands back where it was taken from.
     for (const { ptr, index } of [...this.droppedForms].reverse()) {
-      mod.FPDFPage_InsertObjectAtIndex?.(page.pagePtr, ptr, index);
+      insertPageObjectAt(doc.module, page.pagePtr, ptr, index);
     }
     this.droppedForms = [];
     if (this.paintedPtrs.length > 0) {
@@ -230,7 +231,16 @@ export class MaterialiseTableCommand implements Command {
     const target = this.placeOf(doc, run);
     if (!target || target.width <= 0 || target.height <= 0) return null;
     const nominal = Math.min(72, Math.max(4, target.height / CAP_RATIO));
-    const emitted = emitCellText(doc, page, 0, 0, run.text, nominal, ink);
+    // Only what the standard fonts encode: text with any other character would be refused whole, and the cell left blank.
+    const emitted = emitCellText(
+      doc,
+      page,
+      0,
+      0,
+      sanitizeForBase14(run.text),
+      nominal,
+      ink,
+    );
     if (!emitted) return null;
     this.emittedPtrs.push(emitted.ptr);
     const box = measureObjBoxPt(doc.module, emitted.ptr);

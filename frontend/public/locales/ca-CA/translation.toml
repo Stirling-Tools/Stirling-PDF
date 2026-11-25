@@ -512,6 +512,11 @@ submit = "Ajusta l'escala de pàgina"
 tags = "redimensiona,modifica,dimensió,adapta"
 title = "Ajusta l'escala de pàgina"
 
+[adjustPageScale.customSize]
+height = "Alçada"
+unit = "Unitat"
+width = "Amplada"
+
 [adjustPageScale.error]
 failed = "S'ha produït un error en ajustar l'escala de pàgina."
 
@@ -521,6 +526,7 @@ landscape = "Apaïsat"
 portrait = "Vertical"
 
 [adjustPageScale.pageSize]
+custom = "Personalitzat"
 keep = "Mantén la mida original"
 label = "Mida de pàgina de destinació"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "DPI màxim per al processament d'imatges (0 = il·limitat)"
 label = "DPI màxim"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configureu límits de sessió i temps d'espera per a cada executor de processos"
 ghostscript = "Ghostscript"
 installApp = "Instal·la l'app"
 label = "Límits de l'executor de processos"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF a HTML"
+officeConvert = "Conversió d'Office"
+officeConvertSessionLimit = "Màxim de conversions simultànies; 0 selecciona un límit en funció de les CPU i la memòria"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Instàncies concurrents màximes"
@@ -661,10 +665,6 @@ label = "Límit de sessió"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Temps màxim d'execució"
 label = "Temps d'espera (minuts)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert està en beta. Ofereix conversions millors, més ràpides i amb menys memòria que LibreOffice."
-label = "Utilitza la nova conversió de Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configureu l'emmagatzematge de fitxers temporals i el comportament de neteja"
@@ -682,11 +682,6 @@ label = "Interval de neteja (minuts)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Si s'ha de netejar el directori temporal més ampli del sistema (utilitzeu-ho amb precaució)"
 label = "Neteja el temporal del sistema"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directori per als fitxers temporals de LibreOffice (deixeu-ho buit per al valor per defecte: baseTmpDir/libreoffice)"
-label = "Directori temporal de LibreOffice"
-placeholder = "Per defecte: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Antiguitat màxima en hores abans de netejar els fitxers temporals"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Estira les imatges per omplir tota la pàgina. 
 pageFormatA4 = "A4 (210×297 mm)"
 pageFormatKeep = "Mantén (dimensions originals)"
 pageFormatLetter = "Letter (8,5×11 polzades)"
+setupSteps = "Com configurar {{name}}"
 title = "Connexions"
 unlinkedServices = "Serveis no enllaçats"
 
@@ -1294,17 +1290,6 @@ label = "Productor per defecte"
 description = "Configureu camins personalitzats del sistema de fitxers per al processament de pipeline i eines externes"
 label = "Camins personalitzats"
 
-[admin.settings.general.customPaths.operations]
-label = "Camins d'eines externes"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Camí a LibreOffice unoconvert per a conversions de documents (deixeu-ho buit per al valor per defecte: /opt/venv/bin/unoconvert)"
-label = "Executable d'Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Camí a l'executable de WeasyPrint per a la conversió d'HTML a PDF (deixeu-ho buit per al valor per defecte: /opt/venv/bin/weasyprint)"
-label = "Executable de WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Directoris de pipeline"
 
@@ -1327,6 +1312,10 @@ label = "Directoris de carpetes supervisades"
 [admin.settings.general.defaultLocale]
 description = "L'idioma per defecte per als usuaris nous (p. ex., en_US, es_ES)"
 label = "Idioma per defecte"
+
+[admin.settings.general.enableFeedback]
+description = "Permet als usuaris enviar comentaris a l'equip de Stirling"
+label = "Habilita els comentaris"
 
 [admin.settings.general.fileUploadLimit]
 description = "Mida màxima de fitxer a pujar (p. ex., 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "Esdeveniments STANDARD més: crides de sondeig continu, totes les sol
 [admin.settings.security.audit.retentionDays]
 description = "Nombre de dies per conservar els registres d'auditoria (0 = conservació infinita)"
 label = "Retenció d'auditoria (dies)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "Els PDF signats encara es poden visualitzar, imprimir, convertir o tornar a signar, però no es poden canviar a l'aplicació. Les crides a l'API i les pipelines del servidor no es veuen afectades."
+label = "Bloqueja els canvis als PDF signats"
 
 [admin.settings.security.csrfDisabled]
 description = "Desactiva la protecció contra Cross-Site Request Forgery (no recomanat)"
@@ -2969,6 +2962,7 @@ loadError = "No s'han pogut carregar els usuaris"
 noTeam = "Sense equip"
 noUsers = "No s'han trobat altres usuaris."
 placeholder = "Selecciona usuaris..."
+signInRequired = "Inicia la sessió per sol·licitar signatures d'altres persones."
 you = "{{name}} (tu)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "El compte el gestiona el proveïdor d'identitat."
 title = "Canvia les Credencials"
 
 [changeMetadata]
-filenamePrefix = "metadades"
 submit = "Canvia"
 tags = "editar,modificar,actualitzar,metadades,propietats,propietats del document,autor,títol,assumpte,paraules clau,creador,productor,info,informació del document,propietats del fitxer"
 
@@ -3265,6 +3258,248 @@ not_found = "No he pogut trobar la informació sol·licitada."
 processing = "Processant ({{outcome}})..."
 unsupported_capability = "Capacitat no admesa: {{capability}}"
 usage_limit_reached = "Has assolit el teu límit d'ús. Consulta les opcions del teu pla per continuar."
+
+[checkAccessibility]
+aboutRow = "Quant a {{label}}"
+checking = "Comprovant..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Descarrega l'informe d'accessibilitat"
+fileFailed = "ha fallat"
+pickFile = "Mostra els resultats de"
+submit = "Comprova l'accessibilitat"
+
+[checkAccessibility.category]
+altText = "Text alternatiu"
+fonts = "Tipus de lletra"
+language = "Idioma"
+links = "Enllaços i anotacions"
+metadata = "Metadades i configuració"
+structure = "Etiquetes i estructura"
+
+[checkAccessibility.categoryTip]
+altText = "Les imatges necessiten una descripció breu de text perquè els lectors de pantalla la llegeixin en lloc de la imatge."
+fonts = "Els tipus de lletra han d'estar al fitxer, amb cada caràcter enllaçat a text real, perquè el text es pugui llegir en veu alta i copiar."
+language = "Els lectors de pantalla han de conèixer l'idioma del document per pronunciar-lo correctament."
+links = "Els enllaços, comentaris i camps de formulari necessiten etiquetes i descripcions, i un ordre de tabulació que segueixi la pàgina."
+metadata = "El títol, la declaració PDF/UA i altres paràmetres que la tecnologia d'assistència llegeix del fitxer."
+structure = "Les etiquetes indiquen als lectors de pantalla què és cada part d'una pàgina, com ara un encapçalament, llista o taula, i l'ordre en què s'ha de llegir."
+
+[checkAccessibility.checks]
+label = "{{passed}} de {{total}} comprovacions superades"
+
+[checkAccessibility.error]
+download = "No s'ha pogut crear l'informe d'accessibilitat. Torna-ho a intentar."
+fileTitle = "No s'ha pogut comprovar aquest fitxer"
+partial = "Alguns fitxers no s'han pogut comprovar."
+
+[checkAccessibility.facts]
+declares = "Declara PDF/UA"
+displaysTitle = "Mostra el títol"
+fonts = "Tipus de lletra incrustats"
+language = "Declara un idioma"
+notEncrypted = "No xifrat"
+tagged = "Etiquetat"
+title = "Té un títol"
+
+[checkAccessibility.factTip]
+declares = "Les metadades del fitxer indiquen que segueix PDF/UA."
+displaysTitle = "Els lectors de PDF mostren el títol, no el nom del fitxer, quan s'obre el fitxer."
+fonts = "Cada tipus de lletra que utilitza el text està inclòs al fitxer."
+language = "El fitxer indica en quin idioma està el seu text."
+notEncrypted = "El fitxer no està xifrat. El xifrat pot impedir que la tecnologia d'assistència el llegeixi."
+tagged = "El fitxer té etiquetes que descriuen la seva estructura. Sense elles, els lectors de pantalla només obtenen text pla."
+title = "El fitxer té un títol a les seves metadades."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} imatge necessita una descripció (pàgina {{pages}})"
+summary_other = "{{count}} imatges necessiten una descripció (pàgines {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "S'aplica a"
+clauseValue = "{{spec}} §{{clause}}, prova {{test}}"
+details = "Detalls"
+instances_one = "{{count}} instància"
+instances_other = "{{count}} instàncies"
+onPages_one = "Pàgina {{pages}}"
+onPages_other = "Pàgines {{pages}}"
+onPagesPartial_one = "Pàgina {{pages}} (la llista pot ser incompleta)"
+onPagesPartial_other = "Pàgines {{pages}} (la llista pot ser incompleta)"
+pages = "Pàgines"
+pagesPartialValue = "{{pages}} (només les primeres ocurrències registren una pàgina, així que aquesta llista pot ser incompleta)"
+requirement = "Requisit"
+rule = "Regla"
+standard = "Estàndard"
+where = "On"
+
+[checkAccessibility.manual]
+clearAll = "Esborra-ho tot"
+done = "Fet"
+inProgress = "En curs"
+markAllDone = "Marca-ho tot com a fet"
+tip = "Aspectes que només una persona pot jutjar, com ara l'ordre de lectura i si les descripcions d'imatges tenen sentit. Marca cada element un cop l'hagis comprovat, i les teves marques s'inclouran a l'informe descarregat."
+title = "Comprovacions manuals"
+
+[checkAccessibility.objects]
+annotation = "Una anotació"
+bookmark = "Un marcador"
+character = "Un caràcter en un tipus de lletra"
+contentPiece = "Una part del contingut de la pàgina"
+document = "El document"
+drawing = "Un dibuix"
+figure = "Una figura"
+file = "El fitxer mateix"
+font = "Un tipus de lletra"
+form = "El formulari"
+formField = "Un camp de formulari"
+link = "Un enllaç"
+markedContent = "Contingut de pàgina marcat"
+metadata = "Les metadades del document"
+page = "Una pàgina"
+properties = "Les propietats del document"
+tag = "Una etiqueta {{name}}"
+tagTree = "L'arbre d'etiquetes"
+textPiece = "Un fragment de text"
+translatedMetadata = "Una entrada de metadades amb traduccions"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (continua)"
+footer = "Comprovat amb Stirling PDF"
+page = "Pàgina {{n}}"
+title = "Informe d'accessibilitat"
+
+[checkAccessibility.result]
+fail = "Incorrecte"
+failSummary = "És possible que els lectors de pantalla no puguin llegir tot aquest document."
+partial = "Parcial"
+partialSummary = "Els lectors de pantalla poden llegir aquest document, però algunes comprovacions fallen."
+pass = "Aprovat"
+passSummary = "Supera totes les comprovacions automàtiques de PDF/UA."
+
+[checkAccessibility.rules]
+annotationLanguage = "El text del comentari o enllaç no té cap idioma definit, així que els lectors de pantalla no saben en quin idioma llegir-lo. Defineix l'idioma del document per solucionar-ho."
+annotationNoDescription = "Un comentari, enllaç o dibuix no té descripció de text, així que els lectors de pantalla no tenen res per anunciar."
+annotationNotTagged = "Un comentari o dibuix no està etiquetat com a anotació, així que els lectors de pantalla no hi poden arribar en l'ordre de lectura."
+artifactInsideTagged = "Alguna cosa marcada com a decoració està dins de contingut etiquetat, de manera que tant es llegeix com s'omet."
+bookmarkLanguage = "Els marcadors no tenen cap idioma definit, així que els lectors de pantalla no saben en quin idioma llegir-los. Defineix l'idioma del document per solucionar-ho."
+conformancePrefix = "La declaració PDF/UA a les metadades utilitza el prefix incorrecte, així que els lectors de PDF poden no reconèixer-la."
+contentLanguage = "El text no té cap idioma definit, així que els lectors de pantalla no saben en quin idioma llegir-lo. Defineix l'idioma del document per solucionar-ho."
+customTagNotMapped = "Una etiqueta utilitza un nom personalitzat que no està enllaçat a una etiqueta estàndard, així que els lectors de pantalla no saben què és."
+figureNoAlt = "Una imatge està etiquetada com a figura però no té descripció, així que els usuaris de lectors de pantalla no sabran què mostra."
+fontMissingGlyphs = "Un tipus de lletra inclòs no té alguns dels caràcters que utilitza el document."
+fontNotEmbedded = "Un tipus de lletra no està inclòs al fitxer, així que el text pot veure's diferent, o llegir-se diferent, en un altre ordinador."
+formFieldNotTagged = "Un camp de formulari no està etiquetat com a part d'un formulari, així que els lectors de pantalla poden no trobar-lo."
+genericHeading = "Un encapçalament utilitza l'etiqueta H, que no té nivell. PDF/UA-2 requereix H1 a H6 perquè els usuaris de lectors de pantalla puguin saber com s'aniden els encapçalaments."
+glyphWidths = "Les amplades de caràcter d'un tipus de lletra al fitxer no coincideixen amb el tipus de lletra real, de manera que el text pot espaiar-se incorrectament."
+headingSkipped = "Els nivells d'encapçalament salten un pas, per exemple d'Encapçalament 1 directament a Encapçalament 3, cosa que fa confús moure's entre encapçalaments."
+linkNoDescription = "Un enllaç no té descripció, així que els lectors de pantalla només en poden llegir l'adreça, o res."
+linkNotTagged = "Un enllaç no està etiquetat com a enllaç, així que els lectors de pantalla no l'anunciaran com a tal."
+metadataLanguage = "Les metadades, com ara el títol, no tenen cap idioma definit, així que els lectors de pantalla no saben en quin idioma llegir-les. Defineix l'idioma del document per solucionar-ho."
+noConformanceClaim = "El fitxer no diu que segueix PDF/UA. Les metadades necessiten una entrada d'identificació PDF/UA."
+noDocumentTag = "Les etiquetes necessiten una única etiqueta Document a la part superior, amb la resta a dins."
+noLanguage = "El document no indica en quin idioma està, així que els lectors de pantalla poden llegir-lo en l'idioma equivocat."
+noMetadataStream = "El fitxer no té metadades XMP, que és on PDF/UA desa el títol del document i els detalls de conformitat."
+noTags = "El fitxer no té cap etiqueta, així que els lectors de pantalla no poden distingir encapçalaments, paràgrafs, llistes o taules, ni llegir-los en l'ordre correcte."
+notdefGlyph = "El text utilitza un marcador de «caràcter absent», que es mostra com un en blanc o una caixa i no es pot llegir en veu alta."
+noteTag = "El fitxer utilitza l'etiqueta Note, que PDF/UA-2 substitueix per FENote per a notes al peu i finals."
+noTitle = "El document no té títol a les seves metadades."
+notMarkedTagged = "El fitxer no està marcat com a etiquetat, així que la tecnologia d'assistència pot ignorar les etiquetes que té."
+notPdf2Tags = "PDF/UA-2 necessita les etiquetes que utilitza un fitxer PDF 2.0. Aquestes semblen etiquetes de PDF 1.7, cosa que sol indicar que el fitxer es va etiquetar per a PDF/UA-1."
+noUnicode = "Alguns caràcters no es poden convertir en text llegible, així que els lectors de pantalla i el copiar i enganxar poden interpretar-los malament."
+replacementTextLanguage = "Alguns textos de substitució no tenen cap idioma definit, així que els lectors de pantalla no saben en quin idioma llegir-los. Defineix l'idioma del document per solucionar-ho."
+standardTagRemapped = "Una etiqueta estàndard s'ha enllaçat a una etiqueta personalitzada, així que els lectors de pantalla en perden el significat."
+symbolicEncoding = "Un tipus de lletra de símbols porta una codificació que no hauria de portar, així que els seus caràcters poden sortir com a lletres equivocades."
+tabOrder = "Una pàgina amb enllaços o comentaris no estableix l'ordre de tabulació per seguir el document, així que els usuaris de teclat poden saltar per la pàgina."
+taggedInsideArtifact = "Contingut etiquetat se situa dins d'alguna cosa marcada com a decoració, així que els lectors de pantalla poden ometre'l."
+titleNotDisplayed = "Els lectors de PDF mostraran el nom del fitxer en lloc del títol del document. Cal activar l'opció «mostrar el títol del document» al fitxer."
+untaggedContent = "Alguna cosa a la pàgina no està ni etiquetada com a contingut ni marcada com a decoració, així que els lectors de pantalla no poden saber si l'han de llegir. Sovint es tracta d'una imatge de fons, capçalera, peu o número de pàgina."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Sense idioma per a comentaris o enllaços"
+annotationNoDescription = "Comentari, enllaç o dibuix sense descripció"
+annotationNotTagged = "Comentari o dibuix sense etiquetar"
+artifactInsideTagged = "Decoració dins de contingut etiquetat"
+bookmarkLanguage = "Sense idioma per a marcadors"
+conformancePrefix = "Declaració PDF/UA escrita incorrectament"
+contentLanguage = "Sense idioma per al text"
+customTagNotMapped = "Etiqueta personalitzada sense significat estàndard"
+figureNoAlt = "Imatge sense descripció"
+fontMissingGlyphs = "Tipus de lletra amb caràcters que falten"
+fontNotEmbedded = "Tipus de lletra no incrustat"
+formFieldNotTagged = "Camp de formulari sense etiquetar"
+genericHeading = "Encapçalament sense nivell"
+glyphWidths = "Les amplades de caràcters del tipus de lletra no coincideixen"
+headingSkipped = "Nivell d'encapçalament saltat"
+linkNoDescription = "Enllaç sense descripció"
+linkNotTagged = "Enllaç sense etiquetar"
+metadataLanguage = "Sense idioma per a metadades"
+noConformanceClaim = "No declara PDF/UA"
+noDocumentTag = "Les etiquetes no comencen amb una etiqueta Document"
+noLanguage = "Sense idioma del document"
+noMetadataStream = "Sense metadades XMP"
+noTags = "Sense etiquetes"
+notdefGlyph = "S'ha utilitzat el marcador de caràcter absent"
+noteTag = "Utilitza l'etiqueta Note"
+noTitle = "Sense títol del document"
+notMarkedTagged = "No marcat com a etiquetat"
+notPdf2Tags = "Les etiquetes no són de PDF 2.0"
+noUnicode = "Caràcters que no es poden llegir com a text"
+replacementTextLanguage = "Sense idioma per al text de substitució"
+standardTagRemapped = "Etiqueta estàndard convertida en personalitzada"
+symbolicEncoding = "El tipus de lletra de símbols té una codificació incorrecta"
+tabOrder = "L'ordre de tabulació no segueix el document"
+taggedInsideArtifact = "Contingut etiquetat ocult com a decoració"
+titleNotDisplayed = "El títol no es mostra en obrir"
+untaggedContent = "Contingut sense etiquetar"
+
+[checkAccessibility.score]
+issues_one = "{{count}} incidència"
+issues_other = "{{count}} incidències"
+noIssues = "No s'han trobat incidències"
+subtitle_one = "{{profile}} - {{count}} pàgina"
+subtitle_other = "{{profile}} - {{count}} pàgines"
+
+[checkAccessibility.sections]
+breakdown = "Desglossament"
+
+[checkAccessibility.status]
+checking = "Comprovant {{current}} de {{total}}..."
+complete = "Comprovació completada"
+
+[checkAccessibility.steps]
+results = "Resultats"
+standard = "Estàndard"
+
+[checkAccessibility.tooltip.header]
+title = "Quin estàndard comprovar"
+
+[checkAccessibility.tooltip.ua1]
+text = "La primera versió de PDF/UA, publicada el 2012 com a ISO 14289-1, per a fitxers PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "La versió més nova, publicada el 2024 com a ISO 14289-2, per a fitxers PDF 2.0. Un fitxer PDF 1.7 comprovat segons aquesta falla les regles que només s'apliquen a PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Anotació {{n}}"
+bookmarks = "Marcadors"
+character = "Un caràcter a {{font}}"
+contentItem = "Element de contingut {{n}}"
+drawingStep = "Pas de dibuix {{n}}"
+embeddedGraphic = "Gràfic incrustat"
+font = "Tipus de lletra {{name}}"
+metadata = "Metadades del document"
+page = "Pàgina {{n}}"
+piece = "Fragment {{n}}"
+tag = "Etiqueta {{tag}}"
+tagTree = "Arbre d'etiquetes"
+wholeDocument = "Document sencer"
+
+[checkAccessibility.where.properties]
+author = "Autor"
+description = "Descripció"
+pdfUaPart = "Part de PDF/UA"
+title = "Títol"
 
 [classification.families]
 correspondence = "Correspondència"
@@ -3729,6 +3964,10 @@ message = "Un o tots dos documents proporcionats són massa grans per ser proces
 body = "Aquests PDFs junts superen les 2.000 pàgines. El processament pot trigar diversos minuts."
 title = "Comparació gran en curs"
 
+[compare.mode]
+pixel = "Comparació de píxels"
+text = "Comparació de text"
+
 [compare.no.text]
 message = "Un o tots dos dels PDFs seleccionats no tenen contingut de text. Si us plau, trieu PDFs amb text per a la comparació."
 
@@ -4046,6 +4285,30 @@ failed = "No s'ha pogut renovar l'inici de sessió. Torneu-ho a provar o descart
 lead = "Aquest servidor ja està enllaçat al vostre compte. Renoveu l'inici de sessió per tornar a la facturació i l'ús al servidor."
 title = "Renoveu l'inici de sessió del servidor"
 
+[connectedAccounts]
+connect = "Connecta"
+connectAnother = "Connecta'n un altre"
+connectFailed = "No s'ha pogut connectar el compte. Comprova que el registre de l'aplicació del servidor estigui configurat i torna-ho a intentar."
+disconnect = "Desconnecta"
+google = "Google Drive"
+intro = "Connecta els teus propis comptes un cop. Les teves pipelines podran llegir-hi i desar-hi com tu."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling ja no pot arribar a aquest compte, així que les pipelines que l'utilitzen estan en pausa."
+none = "El teu administrador no ha activat els comptes connectats."
+personal = "Compte personal"
+popupBlocked = "El navegador ha bloquejat la finestra d'inici de sessió. Permet les finestres emergents per a aquest lloc i torna-ho a intentar."
+reconnect = "Torna a iniciar la sessió"
+work = "Compte de feina"
+
+[connectedAccounts.disconnectConfirm]
+body = "Les fonts i pipelines que usen aquest compte s'aturaran fins que el tornis a connectar."
+confirm = "Desconnecta"
+title = "Vols desconnectar {{account}}?"
+
+[connectedAccounts.status]
+connected = "Connectat"
+needsSignIn = "Cal iniciar la sessió"
+
 [convert]
 autoRotate = "Rotació automàtica"
 autoRotateDescription = "Gira automàticament les imatges per encabir-les millor a la pàgina del PDF"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Títol del document"
 pdfUaTitleHelp = "Es mostra en un lector en lloc del nom del fitxer. Si es deixa en blanc, s'utilitza el primer encapçalament."
 selectSourceFormatFirst = "Tria primer un format d'origen"
 settings = "Opcions"
+signInToUse = "Inicia sessió per utilitzar"
 single = "Únic"
 sourceFormatPlaceholder = "Format d'origen"
-stirlingOfficeConvert = "Utilitza Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Conversions millors i més ràpides amb menys memòria. Desactiva-ho per utilitzar el convertidor estàndard."
 strictMode = "Mode estricte"
 strictModeDesc = "Error si la conversió no és perfecta (utilitza la verificació VeraPDF)"
 svgPdfOptions = "Opcions de SVG a PDF"
@@ -4134,8 +4396,6 @@ webOptions = "Opcions de web a PDF"
 zoomLevel = "Nivell de zoom"
 
 [convert.ebookOptions]
-embedAllFonts = "Incrusta tots els tipus de lletra"
-embedAllFontsDesc = "Incrusta tots els tipus de lletra de l'eBook al PDF generat"
 includePageNumbers = "Inclou números de pàgina"
 includePageNumbersDesc = "Afegeix números de pàgina al PDF generat"
 includeTableOfContents = "Inclou la taula de continguts"
@@ -4648,6 +4908,17 @@ title = "Configuració"
 [extractPages.tooltip]
 description = "Extreu les pàgines seleccionades a un nou PDF, preservant-ne l'ordre."
 
+[feedback.page]
+open = "Envia comentaris"
+sendMore = "Envia més comentaris"
+sent = "Gràcies pels teus comentaris"
+title = "Ajuda'ns a millorar Stirling"
+unavailable = "Els comentaris no estan disponibles"
+
+[feedback.tag]
+dismiss = "Amaga el botó de comentaris"
+label = "Comentaris"
+
 [fileCard]
 openInFileEditor = "Obre a l'editor de fitxers"
 viewInViewer = "Obre al visor"
@@ -4657,7 +4928,6 @@ closeFile = "Tanca el fitxer"
 
 [fileEditor]
 closedFile = "S'ha tancat {{name}}"
-couldNotSave = "No s'ha pogut desar {{name}}"
 filesReordered_one = "Fitxer reordenat"
 filesReordered_other = "{{count}} fitxers reordenats"
 loadedFromStorage_one = "S'ha carregat {{count}} fitxer de l'emmagatzematge"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "Biblioteca de PDF"
 myFiles = "Biblioteca de fitxers"
 noFiles = "Encara no hi ha fitxers"
+oneDrive = "Obre des de OneDrive"
+oneDriveFailed = "No s'ha pogut obrir OneDrive"
 openFileManager = "Explora tots els fitxers i carpetes"
 openFromComputer = "Obre des de l’ordinador"
 openSettings = "Obre la configuració"
@@ -4804,6 +5076,17 @@ searchFiles = "Cerca fitxers"
 uploadFailedBody = "No s'han pogut afegir els fitxers seleccionats."
 uploadFailedTitle = "La pujada ha fallat"
 viewAll = "Mostra tots els {{count}} fitxers"
+
+[fileSidebar.clearRecents]
+body_one = "Vols esborrar 1 fitxer dels recents? Això no es pot desfer."
+body_other = "Vols esborrar {{count}} fitxers dels recents? Això no es pot desfer."
+button = "Esborra recents"
+confirm = "Esborra recents"
+error = "No s'ha pogut esborrar. Torna-ho a intentar."
+openNote_one = "1 d'ells és obert al banc de treball."
+openNote_other = "{{count}} d'ells són oberts al banc de treball."
+skipOpen = "Omet els fitxers oberts"
+title = "Vols esborrar els recents?"
 
 [fileSidebar.fileItem]
 closeViewer = "Tanca el visor"
@@ -5124,6 +5407,7 @@ diskFileHint = "Emmagatzemat a l'ordinador"
 diskHint = "Un fitxer a la carpeta muntada del vostre disc"
 local = "Local"
 localHint = "No s'ha fet cap còpia de seguretat"
+oneDrive = "OneDrive"
 shared = "Compartit"
 sharedHint = "Compartit amb tu mitjançant enllaç"
 
@@ -5672,6 +5956,11 @@ title = "Canvia Metadades"
 desc = "Canvia les restriccions i els permisos del document"
 tags = "permisos,restriccions,drets,control d'accés,permetre,denegar,impressió,còpia,edició,modificar permisos,configuració de seguretat,drets d'usuari"
 title = "Canviar Permissos"
+
+[home.checkAccessibility]
+desc = "Avalua un PDF segons PDF/UA i veu què bloqueja els lectors de pantalla, sense canviar-lo"
+tags = "accessibilitat,a11y,PDF/UA,lector de pantalla,WCAG,Section 508,veraPDF,PDF etiquetat,text alternatiu,verificador d'accessibilitat,informe d'accessibilitat,compliment,UA"
+title = "Comprova l'accessibilitat del PDF"
 
 [home.classify]
 desc = "Identifica quin tipus de document és i etiqueta'l."
@@ -6521,6 +6810,32 @@ quickAccess = "Comença a la barra de <strong>Accés ràpid</strong> per saltar 
 topBar = "La barra superior et permet canviar entre el <strong>Visor</strong>, l’<strong>Editor de pàgines</strong> i els <strong>Fitxers actius</strong>."
 wrapUp = "Això és el que hi ha de nou a la V2. Obre el menú de <strong>Visites guiades</strong> en qualsevol moment per tornar a veure aquesta, la visita d’Eines o la d’Administració."
 
+[oneDriveSave]
+chooseFolder = "Tria una carpeta de OneDrive on pujar"
+conflict = "Aquest fitxer ha canviat a OneDrive des que es va obrir o desar aquesta versió. Deseu la vostra versió com a còpia."
+failedTitle = "No s'ha pogut desar a OneDrive"
+fromOneDrive = "De OneDrive"
+linkNotStored = "Aquest navegador no ha pogut recordar l'enllaç al fitxer de OneDrive. Després de tornar a carregar, deseu-lo com a còpia."
+missing = "Aquest fitxer s'ha mogut o s'ha suprimit a OneDrive. Deseu la vostra versió com a còpia."
+open = "Obre a OneDrive"
+personalUnsupported = "Per pujar a OneDrive cal un compte de Microsoft de feina o d'escola."
+reconnect = "Reconnecta"
+replaces = "Substitueix {{name}}"
+saveCopyToOneDrive = "Desa una còpia a OneDrive"
+saved = "S'ha desat a OneDrive"
+saving = "S'està desant a OneDrive..."
+signInToSave = "Inicieu la sessió al vostre servidor per desar a OneDrive."
+updateOriginal = "Actualitza a OneDrive"
+uploadToOneDrive = "Puja a OneDrive..."
+
+[oneDriveSave.status]
+saved = "S'ha desat a OneDrive"
+unsaved = "Els canvis encara no s'han desat a OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "Actualitza {{name}} a OneDrive"
+saveAll = "Actualitza-ho tot a OneDrive"
+
 [overlay-pdfs]
 desc = "Superposa un PDF damunt d'un altre"
 submit = "Envia"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Es reinicia demà"
 thisPeriod = "Aquest període de facturació"
 
 [payment]
+annually = "Anualment"
 billingPeriod = "Període de facturació"
 cancelTeamChange = "Mantén el pla actual"
 canCloseWindow = "Ara pots tancar aquesta finestra."
@@ -7157,11 +7473,14 @@ title = "Ajusta el pla Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe mostrarà el càrrec exacte, qualsevol prorrateig i la propera data de facturació abans que confirmeu. S'utilitzarà el vostre mètode de pagament desat si està disponible."
+billingLabel = "Facturació"
 continue = "Continua al pagament"
 currencyAtCheckout = "Stripe confirma l’import final i la moneda del pagament en finalitzar la compra."
+custom = "Personalitzat"
 customLabel = "Nombre d'usuaris"
 dueToday = "A pagar avui"
 enterpriseQuote = "Demana un pressupost empresarial"
+enterUsers = "Introdueix un nombre d'usuaris."
 estimatedTotal = "Total estimat"
 lineItem = "Team · {{price}}{{period}} per cada {{block}} usuaris"
 minimumForCurrentUsers = "Teniu {{users}} usuaris, així que el pla ha de cobrir com a mínim {{minimum}}."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Els comptes existents es mantenen. Afegir o convidar 
 overCapacityTitle = "El vostre servidor té més usuaris dels que cobreix el vostre pla"
 perMonth = "/mes"
 perYear = "/any"
+planName = "Stirling Team"
 reductionNote = "La capacitat inferior començarà a la vostra propera renovació. Fins llavors, podeu utilitzar l'assignació actual. Els usuaris existents es mantenen; els nous usuaris quedaran bloquejats si supereu la capacitat quan el canvi entri en vigor."
 renewalNote = "Es renova a {{total}}{{period}}. Cancel·leu en qualsevol moment a Ús i facturació."
 reviewChange = "Revisa el canvi a Stripe"
-roundsTo = "s'arrodoneix a {{users}}"
+roundsUp = "S'arrodoneix a {{users}} usuaris."
+selfServeLimit = "Fins a {{users}} usuaris aquí."
 subheading = "Cobreix tothom que convideu, en blocs de {{users}} usuaris."
 subheadingAdd = "El vostre pla cobreix {{current}} usuaris avui. Trieu el nou total."
+talkToEnterprise = "Per a més, parla amb nosaltres sobre Enterprise."
+usersCovered = "usuaris coberts"
 usersLabel = "Usuaris"
 userTotal = "{{users}} usuaris"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Aplica els canvis al fitxer del vostre espai de treball ({{shortc
 tags = "editar text,modificar text,canviar text,editar contingut,actualitzar text,reescriure,corregir,esmenar,redline,revisar,editor de text,editor de contingut"
 title = "Editor de text PDF"
 unsaved = "(sense desar)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Text d'anotació: no és text de pàgina, així que no es pot editar aquí"
@@ -7261,12 +7583,18 @@ widget = "Camp de formulari: no és text de pàgina, així que no es pot editar 
 
 [pdfTextEditor.commands]
 edit = "Edita"
+markTagged = "Marca com a totalment etiquetat"
+matchScanFont = "Fes coincidir el text escanejat amb {{face}}"
 mergeRuns_one = "Fusiona {{count}} fragment en un paràgraf"
 mergeRuns_other = "Fusiona {{count}} fragments en un paràgraf"
 setColour = "Defineix el color a {{run}}"
 setOutline = "Defineix el contorn a {{run}}"
+tagFormField = "Etiqueta el camp de formulari"
+tagLink = "Etiqueta l'enllaç"
+tagPageContent = "Etiqueta automàticament la pàgina"
 typeInto = "Escriu a {{run}}"
 ungroupParagraph = "Desagrupa el paràgraf {{run}}"
+unmarkTagged = "Marca com a no totalment etiquetat"
 wrap = "Ajusta {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Descarta i obre"
 hint = "Cancel·leu i després deseu el PDF per conservar-los primer al vostre espai de treball."
 title = "Voleu descartar els canvis no desats?"
 
-[pdfTextEditor.drop]
-hint = "Si deixeu anar un fitxer a l'àrea de l'editor, substituirà qualsevol document obert."
-title = "Deixeu anar un PDF per obrir-lo"
-
 [pdfTextEditor.error]
 decodeImage = "No s'ha pogut descodificar la imatge seleccionada."
+duplicateDropsLetters = "No es pot duplicar aquest text: cap tipus de lletra disponible pot representar totes les seves lletres."
+formLiftChangesDrawing = "No es pot editar això: es dibuixa com a part d'un grup amb retall o configuracions gràfiques que l'editor no pot mantenir en canviar-lo."
 insertImage = "No s'ha pogut inserir la imatge seleccionada."
+needsShaping = "L'editor encara no pot representar correctament les lletres unides i els signes vocàlics d'aquesta escriptura, de manera que no s'ha fet aquest canvi."
+replaceClippedImage = "No es pot substituir aquesta imatge: està retallada i la substitució mostraria les parts que el retall amaga."
+scanOffInk = "No es pot editar aquest text: les paraules reconegudes no s'alineen amb l'escaneig. Torna a executar l'OCR."
+unsafeRtlEdit = "No es pot fer aquesta edició: l'editor no pot redibuixar el text d'aquesta línia de dreta a esquerra sense canviar-lo."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "Imatge PNG"
@@ -7304,15 +7634,42 @@ wholeWord = "Paraula sencera"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Tipus de lletra integrats"
+closestMatch = "A aquest tipus de lletra li falten algunes de les lletres seleccionades, així que es representen amb el tipus de lletra més semblant."
 deviceFontsNone = "No s'han trobat tipus de lletra addicionals del dispositiu."
 deviceFontsUnavailable = "Els tipus de lletra del dispositiu no estan disponibles. Els tipus de lletra integrats continuen funcionant."
 deviceGroup = "Tipus de lletra del dispositiu"
+documentFontCannotDraw = "L'editor no pot representar aquest text amb el tipus de lletra propi del document, així que s'ha deixat en el tipus de lletra actual."
 documentGroup = "Tipus de lletra del document"
+embeddingForbidden = "La llicència d'aquest tipus de lletra no permet incrustar-lo en un PDF. El text s'ha deixat sense canvis."
+embedFailed = "No s'ha pogut incrustar aquest tipus de lletra al PDF. El text s'ha deixat sense canvis."
+includedGroup = "Tipus de lletra inclosos"
 label = "Família de tipus de lletra"
+matchedGroup = "Tipus de lletra coincident"
+missingGlyphs = "A aquest tipus de lletra li falten alguns dels caràcters seleccionats, i no s'han pogut mantenir en el seu tipus de lletra actual. El text s'ha deixat sense canvis."
 mixed = "Mixt"
+needsShaping = "L'editor encara no pot redibuixar correctament les lletres unides i els signes vocàlics d'aquesta escriptura, així que aquell text s'ha deixat en el seu tipus de lletra actual."
+noGlyphs = "Aquest tipus de lletra no té caràcters per al text seleccionat. El text s'ha deixat sense canvis."
 noMatch = "Cap tipus de lletra coincident"
+partOfRunUnsupported = "Aquest text només es pot reestilitzar com a conjunt. Seleccioneu el quadre en lloc d'algunes de les seves paraules."
 placeholder = "Família de tipus de lletra"
+scannedText = "Text escanejat"
+serverFontFailed = "No s'ha pogut baixar aquest tipus de lletra del servidor. El text s'ha deixat sense canvis."
+serverGroup = "Tipus de lletra del servidor"
+someLeftUnchanged = "Aquest tipus de lletra no té els caràcters per a part del text seleccionat. Aquest text s'ha deixat sense canvis."
+styleSkipped = "Part del text seleccionat no té cap versió del seu tipus de lletra en aquest estil, així que s'ha deixat sense canvis."
+styleUnavailable = "El text seleccionat no té cap versió del seu tipus de lletra en aquest estil, així que s'ha deixat sense canvis."
 useDeviceFonts = "Utilitza tipus de lletra del dispositiu"
+weight = "Pes del tipus de lletra"
+weightBlack = "Negra"
+weightBold = "Negreta"
+weightExtraBold = "Extra negreta"
+weightExtraLight = "Extra lleugera"
+weightLight = "Lleugera"
+weightMedium = "Mitjana"
+weightNumber = "Pes {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Seminegreta"
+weightThin = "Fina"
 
 [pdfTextEditor.fonts]
 allPresent = "Totes les lletres i números presents"
@@ -7357,6 +7714,7 @@ helpDesc = "Aquesta ajuda"
 saveDesc = "Desa al vostre espai de treball"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Negreta / Cursiva, per a les paraules seleccionades o tot el quadre"
 deleteDesc = "Elimina la selecció"
 duplicateDesc = "Duplica la selecció"
 groupDesc = "Agrupa els fragments seleccionats en un paràgraf"
@@ -7380,8 +7738,12 @@ zoomDesc = "Amplia / redueix"
 
 [pdfTextEditor.inspector]
 document = "Document"
+fontCompletedClosest = "Tipus de lletra incrustat · els caràcters que li manquen es dibuixen amb {{name}}, la coincidència més propera disponible."
+fontCompletedOriginal = "Tipus de lletra incrustat · els caràcters que li manquen es dibuixen amb {{name}}, el mateix tipus de lletra."
 fontEmbedded = "Tipus de lletra incrustat · un caràcter que no tingui recorrerà a Helvetica."
 fontGap = "{{name}} · falten {{glyphs}}; en escriure'ls es recorrerà a Helvetica."
+fontUnknownCoverage = "{{name}} · un caràcter que li manca recorre a {{fallback}}."
+formField = "Camp de formulari"
 geometry = "Posició i mida"
 height = "Alçada"
 heightHint = "L'alçada d'un quadre de text segueix la mida del tipus i el nombre de línies."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "L'OCR no està disponible en aquest servidor."
 oneImage = "Imatge"
 oneShape = "Forma"
 oneText = "Text"
+outlinedTextHint_one = "El text d'aquesta pàgina es representa com a formes, així que no hi ha text per editar. Executeu primer l'OCR per fer-lo editable."
+outlinedTextHint_other = "{{count}} pàgines tenen el text representat com a formes, així que no hi ha text per editar. Executeu primer l'OCR per fer-lo editable."
 pages = "Pàgines"
 runOcr = "Executa l'OCR"
 scanHint_one = "Aquesta pàgina és una imatge escanejada sense text per editar. Executa primer l'OCR perquè el text sigui editable."
 scanHint_other = "{{count}} pàgines són imatges escanejades sense text per editar. Executa primer l'OCR perquè el text sigui editable."
 scannedText = "Text escanejat · les paraules modificades es cobreixen i es redibuixen amb una font coincident."
+scannedTextMisaligned = "Text escanejat · les seves paraules reconegudes no s'alineen amb l'escaneig, així que aquest bloc no es pot editar ni suprimir."
+scannedTextNoFont = "Text escanejat · les paraules teclejades en aquesta escriptura encara no es poden dibuixar, així que no es conserven. Encara es poden suprimir paraules."
+scannedTextOffInk = "Text escanejat · les seves paraules reconegudes no coincideixen amb les escanejades, així que aquest bloc no es pot editar. Torna a executar l'OCR."
 tabDocument = "Document"
 tabSelected = "Seleccionat"
 textBoxes = "Quadres de text"
+unreadPagesHint = "{{count}} pàgines no tenen text per editar: algunes són imatges escanejades i d'altres representen el text com a formes. Executeu primer l'OCR per fer-les editables."
 width = "Amplada"
 widthHint = "El text es reajusta per encaixar a l'amplada."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Afegeix etiqueta"
+applyToOtherPages_one = "Aplica a {{count}} altra pàgina"
+applyToOtherPages_other = "Aplica a {{count}} altres pàgines"
+artifactGroup = "Omesos pels lectors de pantalla"
 artifactText = "Decoratiu"
 cannotChange = "No es pot canviar l'accessibilitat d'aquesta imatge."
+cannotDescribeFormField = "No es pot canviar la descripció d'aquest camp de formulari."
+cannotDescribeLink = "No es pot canviar la descripció d'aquest enllaç."
 cannotRetag = "No es pot canviar l'etiqueta d'aquest text."
+cannotSetDecorative = "Això no es pot marcar ni desmarcar com a decoratiu."
+cannotTagFormField = "Aquest camp de formulari no es pot etiquetar."
+cannotTagLink = "Aquest enllaç no es pot etiquetar."
+cannotTagPage = "El contingut d'aquesta pàgina no es pot etiquetar."
+contentGroup = "Contingut"
 customTag = "{{role}} (etiqueta personalitzada)"
 decorativeInfo = "Els lectors de pantalla ometen les imatges decoratives. Utilitzeu-ho per a vores, fons i altres imatges que no transmeten informació."
 decorativeLabel = "Imatge decorativa"
 description = "Descripció de la imatge"
 descriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la imatge."
 encrypted = "No es poden editar les etiquetes en un fitxer xifrat"
+figureDescription = "Descripció de la figura"
+figureDescriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la figura."
+formFieldDescription = "Descripció del camp"
+formulaDescription = "Descripció de la fórmula"
+formulaDescriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la fórmula. Digueu-ho com ho diríeu en veu alta, per exemple, «x al quadrat més u»."
 heading = "Accessibilitat"
 innerTagLabel = "Etiqueta {{number}}"
 innerTags = "Etiquetes en aquest text"
+linkDescription = "Descripció de l'enllaç"
+markedTagged = "El document està totalment etiquetat"
+markedTaggedHint = "Indica als lectors de PDF que utilitzin les etiquetes d'accessibilitat. Marca-ho quan estigui tot etiquetat."
+markedWithUntagged = "Alguns continguts no tenen etiquetes, de manera que els lectors de pantalla poden ometre'ls."
 missingDescriptions = "Descripcions que falten"
 mixedContent = "La figura inclou altres continguts"
+mixedTags = "Barrejat"
 needsDescriptionBadge = "Sense descripció"
-nextImage = "Imatge següent"
+nextToReview = "Següent per revisar"
 notFigure = "Etiquetat com a part del text"
 removeTag = "Elimina etiqueta"
 saveFailed = "No s'han pogut desar els canvis d'accessibilitat, de manera que el fitxer no s'ha desat. Desfeu-los i torneu-ho a provar."
 selectedText = "Text seleccionat"
+tagFormField = "Etiqueta el camp de formulari"
+tagging = "Etiquetant pàgines"
 tagLabel = "Etiqueta"
+tagLinks_one = "Etiqueta l'enllaç"
+tagLinks_other = "Etiqueta {{count}} enllaços"
+tagUntagged = "Etiqueta automàticament el document"
+tagUntaggedHint = "Afegeix automàticament etiquetes d'accessibilitat a tot el document. El resultat és aproximat: comprova després els encapçalaments, les llistes i l'ordre de lectura."
 unknownTag = "No es pot llegir aquí"
+unmarkedWithTags = "Alguns visualitzadors de PDF utilitzaran igualment les etiquetes i poden ometre el contingut sense elles."
 unreadable = "No es poden editar les etiquetes d'aquest fitxer"
 untaggableImages = "No es pot etiquetar aquí"
 untaggedBadge = "Sense etiquetar"
 untaggedDocument = "El document no té etiquetes"
 untaggedImage = "No es pot etiquetar aquí"
 untaggedImages = "Imatges sense etiquetar"
+untaggedPages = "Pàgines per etiquetar"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Peu de pàgina"
+header = "Capçalera"
+pageNumber = "Número de pàgina"
+watermark = "Filigrana"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Encapçalament sense text"
@@ -7505,6 +7907,23 @@ tableHeader = "Capçalera de taula"
 tableRow = "Fila de la taula"
 title = "Títol"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Tots els idiomes"
+cannotSetDocument = "L'idioma d'aquest document no es pot canviar."
+cannotSetText = "L'idioma d'aquest text no es pot canviar."
+documentHint = "L'idioma que utilitzaran els lectors de pantalla tret que una part del text en defineixi un altre."
+documentLabel = "Idioma"
+documentLocked = "L'idioma d'un document xifrat no es pot canviar aquí."
+inDocument = "En aquest document"
+innerLabel = "Idioma de l'etiqueta {{number}}"
+label = "Idioma"
+missing = "Sense idioma definit. Els lectors de pantalla el deduiran i poden llegir tot el document amb una veu incorrecta."
+mixed = "Barrejat"
+noMatch = "No hi ha cap idioma coincident. Escriu-ne el codi, com ara mt o en-IE."
+placeholder = "Selecciona l'idioma"
+selectedText = "Idioma del text seleccionat"
+textHint = "Els lectors de pantalla canvien la veu i la pronunciació a aquest idioma."
+
 [pdfTextEditor.mobile]
 actions = "Accions de l’editor"
 addImage = "Imatge"
@@ -7517,7 +7936,6 @@ done = "Fet"
 download = "Desa i descarrega"
 find = "Cerca"
 lock = "Bloqueja"
-openPdf = "Obre un PDF"
 panelHint = "L’edició es fa a la vista d’Espai de treball. Toqueu el text de la pàgina per canviar-lo."
 save = "Desa"
 style = "Estil"
@@ -7525,7 +7943,6 @@ tapToPlace = "Toqueu la pàgina on ha d’anar el text"
 unlock = "Desbloqueja"
 
 [pdfTextEditor.pageView]
-pageNumber = "Pàgina {{page}}"
 renderFailed = "No s'ha pogut renderitzar la pàgina"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Regle vertical"
 
 [pdfTextEditor.run]
 lockedTitle = "Bloquejat: utilitzeu el botó Desbloqueja per editar"
+readOnlyOrderTitle = "No es pot editar el text d'aquesta línia: barreja text de dreta a esquerra i d'esquerra a dreta en un ordre que l'editor no pot redibuixar de manera segura"
+resizeHandle = "Arrossegueu per canviar l'amplada; el text es reajusta"
 
 [pdfTextEditor.saveRisk]
 cancel = "Cancel·la"
@@ -7548,6 +7967,35 @@ intro = "Desar la còpia editada canvia el fitxer. Això vol dir:"
 note = "Les vostres edicions es conserven. Els canvis indicats anteriorment són inevitables en desar la còpia editada."
 saveAnyway = "Desa igualment"
 title = "En desar es modificarà aquest PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "Coincidència aproximada"
+approximateHint = "El tipus de lletra més proper trobat pot no coincidir amb l'escaneig."
+change = "El tipus de lletra no es veu bé?"
+choose = "Tria un tipus de lletra"
+chooseMissing = "Tria un tipus de lletra per a aquest text…"
+compare = "Compara tipus de lletra…"
+deviceAllow = "Permet l'accés als tipus de lletra per obtenir una millor coincidència"
+deviceBlocked = "El teu navegador no ho tornarà a demanar. Per permetre-ho, fes clic a la icona a l'esquerra de la barra d'adreces, activa Tipus de lletra i torna-ho a intentar."
+deviceBlockedTitle = "S'ha bloquejat l'accés als tipus de lletra"
+deviceNone = "Cap dels tipus de lletra habituals del document està instal·lat en aquest ordinador."
+deviceNote = "El teu navegador ho demana primer. Els tipus de lletra es mantenen en aquest dispositiu."
+deviceOn_one = "També comparat amb {{count}} tipus de lletra en aquest ordinador."
+deviceOn_other = "També comparat amb {{count}} tipus de lletra en aquest ordinador."
+deviceReading = "Llegint els tipus de lletra d'aquest ordinador…"
+deviceRetry = "Torna-ho a intentar"
+done = "Fet"
+hint = "Allò que escriguis es dibuixa amb el tipus de lletra més proper trobat. Tria'n un altre si s'assembla més a l'escaneig."
+hintFromScan = "El que escriguis es construeix a partir de lletres trobades a l'escaneig. Tria un tipus de lletra per dibuixar-ho en aquell tipus, si ho prefereixes."
+hintOthers = "La teva tria també s'utilitza per al text escanejat que encara no has editat."
+matching = "Cercant coincidències de tipus de lletra…"
+noFont = "Cap dels tipus de lletra disponibles pot dibuixar aquesta escriptura, així que el text teclejat encara no es pot redibuixar."
+scan = "Escaneig original"
+scanAlt = "La línia escanejada"
+scanNote = "Els escaneigs sovint es veuen més borrosos o més gruixuts del que és realment el tipus de lletra. Compara la forma de les lletres més que no pas el gruix."
+score = "{{match}}% semblant"
+title = "Fes coincidir el tipus de lletra escanejat"
+unmeasurable = "Aquest escaneig és massa tènue o petit per poder-hi ajustar un tipus de lletra."
 
 [pdfTextEditor.settings]
 advanced = "Avançat"
@@ -7564,7 +8012,6 @@ addTable = "Afegeix una taula"
 addText = "Afegeix text"
 clickPageToAddTable = "Fes clic a la pàgina per afegir una taula"
 clickPageToAddText = "Feu clic a la pàgina per afegir text"
-document = "Document"
 group = "Agrupa"
 groupingAuto = "Automàtic"
 groupingAutoHint = "Agrupa les línies espaiades igualment en paràgrafs. Canviar això torna a llegir el document i esborra l'historial de desfer."
@@ -7593,23 +8040,17 @@ auto = "Automàtic"
 enable = "Comprova l'ortografia mentre escriviu"
 language = "Idioma del diccionari"
 
-[pdfTextEditor.stage]
-loadingDocument = "S'està carregant el document"
-loadingProgress = "Progrés de càrrega"
-noDocument = "No hi ha cap document carregat."
-pickPrompt = "Trieu un PDF del tauler Fitxers de l'esquerra per començar a editar."
-renderingPreview = "S'està renderitzant la previsualització"
-
 [pdfTextEditor.table]
 addColumn = "Afegeix una columna"
 addRow = "Afegeix una fila"
+cellNoGlyphs = "Aquest text conté caràcters que els tipus de lletra de la taula no poden representar. Canvieu-los o elimineu-los per omplir la cel·la."
 column = "Col."
 deleteColumn = "Suprimeix la columna"
 deleteRow = "Suprimeix la fila"
 done = "Fet"
 doneHint = "Deixa d'editar-ho com a taula"
-edit = "Edita"
 editHint = "Edita com a taula: escriu a les cel·les, afegeix o elimina files i columnes"
+editTable = "Edita la taula"
 move = "Mou"
 moveTable = "Arrossega per moure tota la taula"
 recognizedHint = "Taula reconeguda: fes clic per seleccionar-ne tot el text"
@@ -7630,6 +8071,9 @@ alignMiddle = "Alinea al mig"
 alignRight = "Alinea a la dreta"
 alignTop = "Alinea a dalt"
 arrange = "Organitza"
+bold = "Negreta"
+boldOnly = "Aquest tipus de lletra només té versió en negreta"
+boldUnavailable = "No hi ha versió en negreta d'aquest tipus de lletra"
 bringForward = "Porta endavant"
 bringToFront = "Porta al davant"
 caseLower = "minúscules"
@@ -7650,10 +8094,12 @@ fontColour = "Color del tipus de lletra"
 fontSize = "Mida del tipus de lletra"
 formatting = "Format del text"
 italic = "Cursiva"
+italicOnly = "Aquest tipus de lletra només té versió en cursiva"
 italicUnavailable = "Aquest tipus de lletra no té versió cursiva. Carregueu els tipus de lletra del dispositiu o trieu una altra família de tipus de lletra."
 lock = "Bloqueja la selecció"
 lockTooltip = "Bloqueja la selecció: evita edicions accidentals"
 more = "Més accions"
+noBoldItalic = "No hi ha versió en negreta i en cursiva d'aquest tipus de lletra"
 order = "Ordre"
 outlineColour = "Color del contorn"
 outlineWidth = "Amplada del contorn (0 = cap)"
@@ -7683,13 +8129,6 @@ title = "Variacions de previsualització"
 [pdfTextEditor.tooltip.textFocus]
 text = "Aquest espai de treball se centra en l’edició de text i el reposicionament d’imatges incrustades. Els elements gràfics complexos, els ginys de formulari i els gràfics amb capes es conserven per a l’exportació però no són totalment editables aquí."
 title = "Enfocament en text i imatge"
-
-[pdfTextEditor.zoom]
-fit = "Ajusta"
-fitToWidth = "Ajusta a l'amplada"
-in = "Amplia"
-out = "Redueix"
-reset = "Restableix el zoom al 100%"
 
 [PDFToCSV]
 header = "PDF a CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "S'executa en importar"
 [policies.enforcement]
 applying = "Aplicant {{names}}"
 applyingProgress = "Aplicant {{names}} ({{done}} de {{total}})"
-exportFailureBody = "No s'han pogut aplicar les polítiques de seguretat. Els fitxers s'han exportat tal com estan."
-exportFailureTitle = "Exportat sense aplicar polítiques"
 failureBody = "Algunes polítiques no s'han pogut aplicar a {{failures}} de {{total}} fitxer(s)."
 failureTitle = "Exportat sense aplicació completa"
 printPolicyAppliedBody = "S'ha actualitzat aquest PDF per complir una política. Reviseu els canvis i torneu a imprimir."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Publica un missatge en un espai de Google Chat quan s'executi una política."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Un compte de servei que llegeix i escriu Google Drive per a l'organització."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Enganxa la clau JSON del compte de servei de Google Cloud. Es xifra i no es tornarà a mostrar."
+label = "Clau del compte de servei (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Opcional. Amb delegació a nivell de domini, l'usuari el Drive del qual actua aquest servei (un usuari bot dedicat continua funcionant quan la gent marxa). En blanc només arriba a unitats compartides i carpetes compartides amb el compte de servei."
+label = "Actua com a usuari"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Adjunta documents processats a una incidència de Jira."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Envia un document o una notificació per correu electrònic quan s'executi una política."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Cal permisos d'aplicació de Microsoft Graph amb consentiment d'administrador."
+label = "ID d'aplicació (client)"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Secret de client"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "ID de directori (tenant)"
+placeholder = "contoso.onmicrosoft.com o GUID del tenant"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Contrasenya de l'aplicació"
+
+[portal.connections.types.onedrive]
+description = "Llegeix i escriu a l'OneDrive for Business d'un usuari."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "De qui és l'OneDrive que abasta aquesta connexió. El registre de l'aplicació necessita el permís d'aplicació Files.ReadWrite.All."
+label = "Propietari de l'OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Deixa-ho en blanc si t'autentiques amb una clau privada."
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Opcional. Enganxa una clau privada OpenSSH per autenticar-te amb una clau en lloc d'una contrasenya."
 label = "Clau privada"
+
+[portal.connections.types.sharepoint]
+description = "Llegeix i escriu a la biblioteca de documents d'un lloc de SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Opcional. Deixa-ho en blanc per a la biblioteca Documents predeterminada del lloc."
+label = "Biblioteca de documents"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "URL del lloc"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Publica un missatge a Slack quan una política processi un document."
@@ -9142,6 +9624,126 @@ status = "Estat"
 time = "Hora"
 user = "Usuari"
 
+[portal.enterprise]
+backTo = "Torna a {{stage}}"
+brandTag = "Enterprise"
+callInfo = "Una trucada de 15 minuts. Porta les teves preguntes sobre preus, desplegament o seguretat, o planifica el desplegament plegats."
+callTitle = "Parla amb un enginyer de solucions"
+deployment = "Desplegament"
+footer = "Dubtes sobre Stirling Enterprise?"
+home = "Vés a Stirling"
+member = "El/la líder del teu equip gestiona l'acord Enterprise. Quan comenci, en podràs seguir el progrés aquí."
+memberDeal = "El/la líder del teu equip gestiona aquest acord. En podràs seguir el progrés aquí."
+quotePanel = "El teu pressupost"
+signIn = "Inicia la sessió"
+signInToStart = "Inicia la sessió per començar la prova"
+stage = "Etapa {{current}} de {{total}}"
+stagesLabel = "Progrés"
+
+[portal.enterprise.landing]
+lede = "Prova-ho gratuïtament durant 14 dies, després construeix el teu pressupost i signa l'acord aquí. No cal targeta."
+tickAgreement = "Un únic acord que cobreix l'MSA, el formulari de comanda, l'EULA i el DPA"
+tickCompliance = "SCIM, residència de dades i SLA de disponibilitat"
+tickDeploy = "Executa-ho a Stirling Cloud, als teus propis servidors, o totalment aïllat d'Internet"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Documentació de llicència fora de línia"
+point1 = "S'activa amb un fitxer de llicència que funciona fora de línia, no amb una clau verificada en línia"
+point2 = "S'instal·la com l'autogestionat, a partir d'una imatge que porteu a l'altra banda"
+point3 = "L'inici de sessió es manté dins de la teva xarxa"
+tagline = "Autogestionat en una xarxa sense accés a Internet."
+
+[portal.enterprise.options.cloud]
+more = "Documentació de Stirling Cloud"
+point1 = "El teu equip inicia sessió a stirling.com/app"
+point2 = "S'executa a AWS, amb els fitxers desats xifrats en repòs"
+point3 = "L'inici de sessió únic a través del teu propi proveïdor d'identitat requereix autogestió"
+tagline = "Allotjat per a tu, sense res per instal·lar."
+
+[portal.enterprise.options.selfhost]
+more = "Documentació d'autogestió"
+point1 = "Instal·la amb Docker, o el gràfic de Helm a Kubernetes"
+point2 = "Els documents es processen a la teva pròpia infraestructura"
+point3 = "OAuth2, OIDC o SAML d'inici de sessió únic"
+tagline = "Als teus propis servidors, localment o al teu núvol."
+
+[portal.enterprise.review]
+back = "Torna a {{stage}}"
+company = "Empresa"
+completed = "Completat"
+extensions = "Extensions utilitzades"
+paid = "Pagat. La teva factura resta disponible aquí."
+people = "Persones"
+started = "Iniciat"
+trialEnds = "Data de finalització de la prova"
+trialTitle = "La teva prova"
+version = "Versió"
+viewInvoice = "Visualitza la factura"
+
+[portal.enterprise.setup]
+copied = "Copiat"
+copy = "Copia"
+markDone = "Marca «{{step}}» com a fet"
+progress = "{{done}} de {{total}} fets"
+subtitle = "Aprofita al màxim la prova provant-lo de la manera com l'executaràs."
+subtitleLive = "Els passos a completar abans de desplegar-ho a tothom."
+title = "Configura-ho"
+titleLive = "Llista de control de posada en marxa"
+
+[portal.enterprise.setup.firstDocument]
+body = "Puja un PDF amb què treballi el teu equip i prova les eines que faries servir dia a dia, com censurar, comprimir o OCR."
+title = "Executa el teu primer document"
+
+[portal.enterprise.setup.getApp]
+body = "Instal·la l'aplicació d'escriptori per a Windows, Mac o Linux i inicia sessió amb el compte que acabes de crear, o utilitza-la directament des del navegador."
+title = "Aconsegueix Stirling"
+
+[portal.enterprise.setup.install]
+body = "Executa això al teu servidor. Inicia Stirling amb la llicència aplicada, i la imatge inclou OCR i conversió d'Office. Per a equips més grans, utilitza Kubernetes."
+title = "Instal·la i inicia Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Afegeix-hi les persones que l'utilitzaran, perquè la prova reflecteixi feina real."
+title = "Convida el teu equip"
+
+[portal.enterprise.setup.licence]
+body = "Obre <code>http://your-server:8080/settings/adminPlan</code>, on la teva llicència Enterprise hauria d'aparèixer com a activa. Ho has instal·lat d'una altra manera? Afegeix la clau sota <code>premium.key</code> a <code>settings.yml</code> i reinicia."
+title = "Comprova que la teva llicència estigui activa"
+
+[portal.enterprise.setup.links]
+browser = "Fes-lo servir al navegador"
+docker = "Guia de Docker"
+download = "Descarrega l'aplicació"
+downloadForTeam = "Aconsegueix l'aplicació per al teu equip"
+downloading = "Descarregant..."
+downloadLicence = "Descarrega el fitxer de llicència"
+invite = "Convida companys d'equip"
+kubernetes = "Guia de Kubernetes"
+licence = "Activació de la llicència"
+ocr = "Idiomes OCR"
+openApp = "Obre Stirling"
+samlGuide = "Guia de SAML"
+ssoGuide = "Guia de SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Baixa la imatge completa en una màquina connectada, porta-la i el fitxer de llicència a l'altra banda, després carrega-la i inicia-la. La imatge completa afegeix els tipus de lletra que un servidor fora de línia no pot baixar."
+title = "Porta Stirling i inicia'l"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Un servidor aïllat d'Internet no pot arribar al nostre servei de llicències, així que comprova aquest fitxer signat. Conserva'l amb la imatge que hi portes."
+title = "Descarrega la teva llicència fora de línia"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Crea comptes a <code>/settings/people</code>, o apunta Stirling al teu proveïdor d'identitat intern perquè l'inici de sessió no surti mai de la teva xarxa."
+bodySelfHosted = "Crea comptes a <code>/settings/people</code>, o connecta el teu proveïdor d'identitat perquè el teu equip iniciï sessió amb els seus comptes de feina. Usaran Stirling al navegador a l'adreça del teu servidor, o a l'aplicació d'escriptori apuntada a aquest."
+title = "Afegeix les persones"
+
+[portal.enterprise.setup.signIn]
+body = "Obre <code>http://your-server:8080</code> i inicia la sessió amb <code>admin</code> / <code>stirling</code>. Se't demanarà que triïs una contrasenya nova de seguida."
+bodyAirgap = "Obre <code>http://your-server:8080</code> i inicia la sessió amb <code>admin</code> / <code>stirling</code>, tria una contrasenya nova, i després comprova que <code>/settings/adminPlan</code> mostri la llicència com a activa."
+title = "Inicia la sessió com a l'admin"
+
 [portal.errorBoundary]
 description = "Aquesta vista ha trobat un error inesperat. Torna-ho a provar o tria una altra secció de la barra lateral."
 retry = "Torna-ho a provar"
@@ -9293,6 +9895,7 @@ title = "No hi ha res per revisar"
 [portal.home.download]
 back = "Enrere"
 body = "Baixa l'aplicació d'escriptori o autoallotja el servidor."
+bodyDesktop = "Descarrega l'aplicació d'escriptori i després inicia sessió amb el teu compte de Stirling."
 done = "Fet"
 guide = "Obre la guia de {{name}}"
 openInBrowser = "Obre al navegador en lloc d'això"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Entrada de correu electrònic"
 
 [portal.procurement]
-subtitle = "Aconsegueix que el teu equip sigui avaluat, contractat i incorporat. Tots els documents en un sol lloc."
 title = "Contractació"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "No s'ha pogut carregar l'acord. Torna-ho a provar."
 loading = "S'està carregant l'acord..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "Sol·licita canvis"
-scrollHint = "Desplaça't per revisar"
 signatory = "Nom del signant"
 signatoryPlaceholder = "Nom complet"
 signatoryTitle = "Càrrec del signant"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "p. ex. director jurídic"
 signError = "No s'ha pogut enregistrar la teva signatura. Torna-ho a provar."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} de pagament únic"
+addonPerYear = "+{{amount}}/any"
 addons = "Complements"
 addressLine1 = "Línia d'adreça 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Línia d'adreça 2"
 addressLine2Placeholder = "Suite, planta, edifici"
 back = "Enrere"
+belowMinimum = "Aquest pressupost és per sota de la mida mínima per a un acord Enterprise."
 businessName = "Nom de l'empresa"
 businessNamePlaceholder = "La teva empresa"
 city = "Ciutat"
 cityPlaceholder = "San Francisco"
 completeRequired = "Completa els camps obligatoris (marcats amb *) amb un correu electrònic vàlid abans de generar el pressupost."
+conflict = "Aquest acord ha canviat des que l'has obert. Tanca el generador i recarrega la pàgina per veure en quin punt està."
 contactEmail = "Correu electrònic de contacte"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Nom de contacte"
 contactNamePlaceholder = "Jane Doe"
 continue = "Continua"
 done = "Fet"
+editUsage = "Edita l'ús"
 eula = "He llegit i accepto l'EULA de Stirling Enterprise. Regeix l'acord generat a partir d'aquest pressupost."
 generate = "Genera pressupost"
 indemnification = "Protecció de la propietat intel·lectual millorada"
 indemnificationSub = "Amplia la nostra defensa de la propietat intel·lectual a reclamacions de patents. La indemnització bàsica per drets d'autor, marques comercials i secrets comercials s'inclou gratuïtament."
+minimum = "Enterprise requereix una despesa anual mínima de {{min}}."
+minimumBelow = "Aquest pressupost suma {{annual}} l'any. Si preveus usar-ne més, puja l'ús estimat; en cas contrari, el pla Team probablement és una millor opció."
+minimumNear = "Enterprise requereix una despesa anual mínima de {{min}}. Apuja l'ús estimat per arribar-hi, o comenta-ho amb nosaltres."
+minimumNearTitle = "Et falten {{gap}} a l'any per arribar a Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Pressupost Enterprise"
 paperFor = "Preparat per a"
 pdfSize = "Mida del PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "Regulat"
 posture_regulatedSub = "Totes les categories — Compliment, Retenció, Ingesta"
 qbr = "Revisions empresarials trimestrals"
 qbrSub = "El teu SE revisa l'ús i el full de ruta cada trimestre"
+raiseUsage = "Apuja l'ús estimat"
 region = "Estat / regió"
 regionPlaceholder = "Califòrnia"
-running = "{{annual}} / any · {{years}} anys {{tcv}}"
+runningLabel = "Preu estimat"
+runningLabelIssued = "Preu cotitzat"
+runningOneYear = "{{annual}} l'any"
+runningTotal = "{{tcv}} en total durant {{years}} anys"
 s1Sub = "El teu equip i els PDFs que preveus processar cada any."
 s1Title = "Quant processareu?"
 s2Sub = "Els terminis més llargs redueixen la tarifa; el teu nivell de servei defineix el suport."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "p. ex. 1,000,000"
 years_one = "{{count}} any"
 years_other = "{{count}} anys"
 
+[portal.procurement.builder.line]
+deployment = "Desplegament {{deployment}}"
+indemnification = "Indemnització per propietat intel·lectual"
+multiYear_one = "Compromís de {{count}} any"
+multiYear_other = "Compromís de {{count}} anys"
+qbr = "Revisions trimestrals del negoci"
+seats_one = "{{users}} usuari acordat + SSO / RBAC / auditoria"
+seats_other = "{{users}} usuaris acordats + SSO / RBAC / auditoria"
+seatsUnset = "Usuaris + SSO / RBAC / auditoria"
+support = "SE / CSM dedicats"
+training = "Incorporació i formació"
+usage = "Processament de PDF — {{volume}} PDF/any a {{rate}}/PDF (automatització {{posture}})"
+
 [portal.procurement.documents]
 agreement = "Acord Enterprise"
 agreementSub = "MSA, formulari de comanda i DPA en una sola signatura."
@@ -10557,6 +11185,8 @@ invoice = "Factura"
 invoiceSub = "La factura de la teva primera subscripció."
 laterInvoice = "Disponible després que acceptis"
 laterQuote = "Disponible un cop s'emeti el teu pressupost"
+laterSigning = "Disponible un cop s'hagi signat l'acord"
+laterTitle = "Més endavant en el teu acord"
 quote = "Pressupost"
 quoteSub = "El teu pressupost enterprise detallat."
 sla = "Annex SLA"
@@ -10573,15 +11203,12 @@ title = "Alguna cosa ha anat malament"
 [portal.procurement.hero]
 barAria = "Etapa {{current}} de {{total}}"
 ctaAgreement = "Revisa i signa l'acord"
-ctaExploring = "Configura la teva prova"
 ctaQuote = "Revisa el teu pressupost"
 ctaReviewQuote = "Revisa el pressupost"
 ctaTrial = "Crea el teu pressupost"
-documents = "Documents"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Convida companys d'equip"
-licenseKey = "Clau de llicència"
 liveSub = "La teva organització està provisionada i la teva llicència és activa."
 liveTitle = "Ja estàs en directe a Stirling Enterprise"
 next = "Següent: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Encara no s'ha pogut generar el fitxer de llicència offline �
 downloadOffline = "Baixa la llicència offline (.lic)"
 hint = "Enganxa aquesta clau en una instància autoallotjada per activar-la, o conserva-la per als teus registres. Guarda-la en un lloc segur."
 label = "La teva clau de llicència"
-subtitle = "Activa una instància autoallotjada amb aquesta clau o conserva-la per als teus registres."
-title = "La teva clau de llicència"
 trialFileHint = "Aquest és el teu fitxer de llicència de prova. Quan l'acord estigui en vigor, torna i descarrega'l de nou; a diferència de la clau de llicència en línia, el fitxer .lic no s'actualitzarà tot sol."
-
-[portal.procurement.link]
-cta = "Enllaça el compte"
-description = "La contractació s'executa amb el teu compte de Stirling enllaçat: així aprovisionem la prova, fixem el preu del pressupost i iniciem la facturació. Enllaça un compte per començar."
-eyebrow = "Enterprise"
-title = "Enllaça el teu compte per començar"
 
 [portal.procurement.live]
 description = "La teva subscripció és activa i la teva llicència s'ha emès. El teu equip està aprovisionat i la facturació ha començat."
-eyebrow = "En producció"
 title = "Ja estàs en producció amb Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Encara no s'ha pogut baixar el PDF del pressupost — torna-ho 
 
 [portal.procurement.payment]
 description = "El teu pressupost s'ha acceptat i la teva llicència ja és activa — el teu equip pot començar de seguida. Paga la primera factura quan estiguis a punt; pots pagar-la o baixar-la aquí, sense correu electrònic."
-downloadAgreement = "Descarrega l'acord signat"
 downloadInvoice = "Baixa la factura"
-eyebrow = "Pagament"
-title = "Subscripció creada"
 viewInvoice = "Mostra i paga la factura"
 
 [portal.procurement.review]
 acceptCta = "Accepta el pressupost"
 annual = "Quota anual (any 1)"
 downloadCta = "Descarrega el pressupost"
+oneTime = "pagament únic"
 poNumber = "Ordre de compra: {{po}}"
 renewal = "Es renova a {{amount}}/any després del termini (+{{pct}}% IPC)"
 tcv = "Termini de {{years}} anys, pagat íntegrament per avançat: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "tu@empresa.com"
 [portal.procurement.trial]
 body = "L'extensió afegeix 7 dies i notifica el teu enginyer de solucions."
 bodyMaxed = "Has utilitzat totes les extensions — parla amb el teu enginyer de solucions si necessites més temps."
-cancel = "Cancel·la la prova"
 extend = "Amplia 7 dies"
 maxed = "Límit assolit"
 subtitle = "La teva prova gratuïta dura fins al {{date}}. No cal targeta."
 title = "Prova Enterprise"
+
+[portal.procurement.validation]
+confirm = "Confirma que estàs autoritzat a signar en nom de l'organització."
+email = "Introdueix una adreça de correu electrònic vàlida."
+eula = "Accepta l'EULA per continuar."
+required = "Aquest camp és obligatori."
+seats = "Introdueix quantes persones el provaran."
+volume = "Introdueix quants PDF esperes processar a l'any."
 
 [portal.review]
 subtitle = "Qualsevol element de les execucions de les teves polítiques i dels editors del teu equip que requereixi la teva atenció."
@@ -10735,6 +11358,7 @@ subtitle = "Connexions d'entrada reutilitzables que alimenten documents a Stirli
 title = "Fonts"
 
 [portal.sources.actions]
+connectDestination = "Connecta la destinació"
 connectSource = "Connecta una font"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Tria on van els documents processats. Els connectors en gris
 comingSoon = "Properament"
 comingSoonHeading = "Properament"
 create = "Crea una font"
+createDestination = "Crea una destinació"
+createDestinationTitle = "Afegeix una destinació"
 createTitle = "Connecta una font"
 delete = "Suprimeix"
 editTitle = "Edita la font"
@@ -10757,6 +11383,41 @@ save = "Desa els canvis"
 description = "Les automatitzacions de carpetes només poden utilitzar carpetes que un administrador hagi permès. Afegeix-la a la configuració d'accés a carpetes i torna-ho a provar."
 openSettings = "Configuració d'accés a carpetes"
 title = "Aquesta carpeta no està permesa"
+
+[portal.sources.cloudFields.account]
+connect = "Connecta el teu compte"
+connectAnother = "Connecta un altre compte"
+connectFailed = "No s'ha pogut connectar el compte. Torna-ho a intentar, o demana a l'administrador que revisi el registre de l'aplicació."
+label = "Compte"
+placeholder = "Tria un compte"
+reconnect = "torna a iniciar la sessió"
+unavailable = "Connectar el teu propi compte està desactivat en aquest servidor. Tria una connexió d'organització en el seu lloc."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Els comptes personals estan desactivats en aquest servidor."
+helperText = "El teu compte arriba al que pots obrir i no requereix cap administrador. Una connexió d'organització continua funcionant quan la gent marxa, i només arriba al que un administrador ha configurat."
+label = "Inicia la sessió com a"
+
+[portal.sources.cloudFields.authMode.options]
+account = "El meu compte"
+organisation = "Connexió d'organització"
+
+[portal.sources.cloudFields.connection]
+helperText = "Configurat per un administrador a Integracions. Compartit per totes les ubicacions que l'utilitzen."
+label = "Connexió de l'organització"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Enganxa l'enllaç de la carpeta o escriu un camí des de l'arrel d'El meu Drive. Deixa-ho en blanc per a l'arrel d'El meu Drive. La carpeta ja ha d'existir."
+placeholder = "Enllaç de carpeta, o Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Una carpeta del teu OneDrive, o enganxa un enllaç de carpeta (Copia l'enllaç a OneDrive). Deixa-ho en blanc per a l'arrel d'OneDrive. La carpeta ja ha d'existir."
+placeholder = "Scans/Inbox, o un enllaç de carpeta"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Amb el teu compte, enganxa l'enllaç de la carpeta (Copia l'enllaç a SharePoint). Amb una connexió de l'organització, una carpeta dins de la seva biblioteca; deixa-ho en blanc per a l'arrel de la biblioteca. La carpeta ja ha d'existir."
+organisationPlaceholder = "Enllaç de carpeta, o Scans/Inbox"
+placeholder = "Enllaç de carpeta"
 
 [portal.sources.delete]
 body = "Vols suprimir \"{{name}}\"? Això no es pot desfer. Les polítiques que hi fan referència s'haurien d'actualitzar."
@@ -10821,6 +11482,7 @@ label = "Safata d'entrada de correu electrònic"
 [portal.sources.types.folder]
 description = "Vigila un directori del servidor per detectar documents nous."
 label = "Carpeta"
+outputDescription = "Desa els resultats a un directori del servidor."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "El camí absolut a la carpeta que s'ha de supervisar per detectar fitxers nous."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Extreu documents de carpetes compartides de Google Drive."
 label = "Google Drive"
+outputDescription = "Desa els resultats a una carpeta de Google Drive."
 
 [portal.sources.types.network]
 description = "Supervisa una compartició de xarxa SMB per detectar documents nous."
@@ -10867,10 +11530,12 @@ label = "Unitat de xarxa"
 [portal.sources.types.onedrive]
 description = "Supervisa carpetes de OneDrive per detectar documents nous."
 label = "OneDrive"
+outputDescription = "Desa els resultats a una carpeta de OneDrive."
 
 [portal.sources.types.s3]
 description = "Extreu documents d'un bucket Amazon S3 o compatible amb S3."
 label = "Amazon S3"
+outputDescription = "Desa els resultats a un bucket d'Amazon S3 o compatible amb S3."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "La connexió desada amb el bucket i les credencials. La comparteixen totes les fonts i sortides de pipeline que la fan servir."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Extreu documents de biblioteques de documents de SharePoint."
 label = "SharePoint"
+outputDescription = "Desa els resultats a una carpeta de la biblioteca de documents de SharePoint."
 
 [portal.sources.types.unknown]
 label = "Font"
@@ -11074,6 +11740,14 @@ waiting = "A la cua ..."
 name = "Google Drive"
 scope = "Importació de fitxers"
 
+[provider.googledrive.accountScope]
+description = "drive arriba a tots els fitxers (Google ha de verificar una aplicació pública per a això); drive.file només als fitxers que la gent triï o que Stirling creï"
+label = "Accés a Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "Un sol inici de sessió per a l'editor i les seves pipelines. Desactiva-ho per permetre només connexions d'organització."
+label = "Permet que la gent connecti el seu propi compte"
+
 [provider.googledrive.apiKey]
 description = "Clau d'API de Google per a l'API Google Picker de Google Cloud Console"
 label = "Clau d'API"
@@ -11086,13 +11760,65 @@ label = "ID d'aplicació"
 description = "ID de client OAuth 2.0 de Google de Google Cloud Console"
 label = "ID de client"
 
+[provider.googledrive.clientSecret]
+description = "Permet que la gent connecti el seu compte de Google per a les seves pipelines. Afegeix l'URI de redirecció a continuació com a URI de redirecció autoritzat del client OAuth."
+label = "Secret del client"
+
 [provider.googledrive.enabled]
 description = "Permet als usuaris importar fitxers directament des de Google Drive"
 label = "Habilita el selector de fitxers de Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "No s'ha pogut connectar el vostre compte de Google. Torneu-ho a intentar a Configuració > Comptes connectats."
 notConfigured = "Google Drive no està configurat"
 pickerFailed = "No s'ha pogut obrir el selector de Google Drive"
+
+[provider.googledrive.redirectUri]
+description = "Afegeix-ho com a URI de redirecció autoritzat del client OAuth a Google Cloud Console."
+label = "URI de redirecció"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive i SharePoint)"
+scope = "Fitxers i pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "Un sol inici de sessió per a l'editor i les seves pipelines. Desactiva-ho per permetre només connexions d'organització."
+label = "Permet que la gent connecti el seu propi compte"
+
+[provider.microsoft.allowEditorSaves]
+description = "Desactiveu-ho per mantenir les edicions a Stirling: els fitxers oberts des de OneDrive es baixaran en lloc de desar-se, i el servidor rebutjarà els desaments a OneDrive."
+label = "Permet que l'editor desi a OneDrive"
+
+[provider.microsoft.clientId]
+description = "D'un registre d'aplicació de Microsoft Entra."
+label = "ID d'aplicació (client)"
+
+[provider.microsoft.clientSecret]
+description = "Necessari per als comptes connectats. Es manté al servidor."
+label = "Secret del client"
+
+[provider.microsoft.enabled]
+description = "Permet que la gent utilitzi OneDrive i SharePoint en pipelines"
+label = "Habilita OneDrive i SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Afegiu això com a URI de redirecció d'aplicació d'una sola pàgina al mateix registre d'aplicació, per iniciar la sessió des de l'editor."
+label = "URI de redirecció d'aplicació d'una sola pàgina"
+
+[provider.microsoft.redirectUri]
+description = "Afegeix-ho com a URI de redirecció web al registre de l'aplicació Entra."
+label = "URI de redirecció"
+
+[provider.microsoft.setupSteps]
+connect = "Deseu, reinicieu i després connecteu un compte a Comptes connectats."
+permissions = "Afegiu els permisos delegats de Microsoft Graph Files.ReadWrite.All i Files.Read.All, i els permisos delegats de SharePoint MyFiles.Read i AllSites.Read perquè els comptes de feina i escola puguin obrir el selector de fitxers."
+redirects = "Afegiu-hi les dues URI de redirecció següents: una com a Web i una com a aplicació d'una sola pàgina."
+register = "Registreu una aplicació al centre d'administració de Microsoft Entra. Permeteu comptes personals de Microsoft si la gent utilitza OneDrive personal."
+secret = "Creeu un secret de client i, a continuació, enganxeu-ne el valor i l'ID de client de l'aplicació a continuació."
+
+[provider.microsoft.tenant]
+description = "common per a comptes de feina, escola i personals; organizations només per a feina i escola; o un ID de tenant per admetre una sola organització"
+label = "ID de directori (tenant)"
 
 [provider.oauth2.generic]
 name = "OAuth2 genèric"
@@ -11195,6 +11921,19 @@ label = "Àmbits"
 description = "Camp a utilitzar com a nom d'usuari (email, name, given_name, family_name, preferred_username)"
 label = "Utilitza com a nom d'usuari"
 
+[provider.onedrive]
+pickerLoading = "S'està connectant a OneDrive..."
+pickerTitle = "Tria fitxers de OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "No s'ha pogut connectar el vostre compte de Microsoft. Torneu-ho a intentar a Configuració > Comptes connectats."
+notConfigured = "OneDrive no està configurat"
+pickerFailed = "No s'ha pogut obrir OneDrive"
+popupBlocked = "El vostre navegador ha bloquejat la finestra d'inici de sessió de Microsoft. Permeteu les finestres emergents per a aquest lloc i torneu-ho a intentar."
+reconnect = "El vostre compte de Microsoft ha de tornar a iniciar sessió. Torneu-lo a connectar a Configuració > Comptes connectats."
+serverError = "OneDrive o el servidor de Stirling ha tingut un problema. Torneu-ho a provar, o demaneu ajuda a l'administrador si continua passant."
+unreachable = "No s'ha pogut contactar amb OneDrive. Comproveu la connexió i torneu-ho a intentar."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Notificacions"
 processor = "Processador"
 reader = "Lector"
 signInToUse = "Inicia la sessió per utilitzar-ho"
+
+[quickNav.accountMenu]
+localMode = "Mode local"
+server = "Configuració del servidor"
+settings = "Configuració"
+signedOut = "Sense iniciar sessió"
+signIn = "Inicia la sessió"
 
 [read]
 tags = "veure,obrir,mostrar,llegir,visor,visor de PDF,lector de PDF,obrir PDF,veure PDF,mostrar PDF,previsualitzar,navegar"
@@ -11811,6 +12557,13 @@ title = "Neteja PDF"
 [sanitizePdf]
 tags = "netejar,segur,sense riscos,eliminar amenaces"
 
+[saveFile.menu]
+more = "Més opcions de desament"
+saveCopy = "Desa una còpia..."
+
+[saveFile.toolbar]
+mixed = "Desa-ho tot"
+
 [scalePages]
 tags = "redimensionar,ajustar,escalar,mida de pàgina,redimensionar pàgina,escalar pàgina,canviar mida,ajustar mida,ampliar,reduir pàgina,ajustar a la pàgina,A4,mida carta"
 title = "Ajusta l'escala de la pàgina"
@@ -11905,6 +12658,162 @@ showTools = "Mostra les eines no disponibles ▾"
 title = "No es pot accedir al teu servidor de Stirling-PDF"
 toolNotAvailableLocally = "El teu servidor de Stirling-PDF és fora de línia i \"{{endpoint}}\" no està disponible al backend local."
 
+[serverSetup]
+back = "Enrere"
+collapse = "Amaga la configuració de {{setting}}"
+configured = "Configurat"
+continue = "Continua"
+dialogLabel = "Configuració del servidor"
+expand = "Mostra la configuració de {{setting}}"
+finishSetup = "Finalitza la configuració"
+loadErrorSubtitle = "La configuració necessita els paràmetres actuals del servidor per començar."
+loadErrorTitle = "No s'ha pogut carregar la teva configuració"
+off = "Desactivat"
+on = "Activat"
+save = "Desa"
+stepCount = "{{current}} de {{total}}"
+
+[serverSetup.account]
+failed = "No s'han pogut desar les teves dades. Comprova que el servidor sigui accessible i torna-ho a provar."
+save = "Desa i continua"
+signIn = "Inicia la sessió"
+signInAgainSubtitle = "Torna a iniciar la sessió amb el teu nom d'usuari i contrasenya nous per continuar."
+signInAgainTitle = "S'han desat les teves dades"
+subtitle = "Tria com iniciaràs la sessió a partir d'ara."
+title = "Configura el teu compte"
+updating = "Actualitzant"
+updatingSubtitle = "Un moment."
+updatingTitle = "S'estan actualitzant les teves dades"
+username = "Nom d'usuari"
+usernameHelp = "El que faràs servir per iniciar sessió. També pot ser una adreça de correu electrònic."
+
+[serverSetup.addresses]
+backendUrl = "Adreça del servidor"
+backendUrlHelp = "On els proveïdors d'inici de sessió redirigeixen les persones de tornada. Normalment és la mateixa que l'adreça web."
+frontendUrl = "Adreça web"
+frontendUrlHelp = "On la gent obre Stirling PDF. S'utilitza en correus, enllaços compartits i codis QR."
+subtitle = "Com arriben a aquest servidor les persones i els proveïdors d'inici de sessió."
+title = "Adreces"
+
+[serverSetup.ai]
+apiKey = "Clau API"
+apiKeyHelp = "Deixa-ho en blanc per utilitzar la clau que el motor d'IA ja té."
+baseUrl = "URL base"
+engineUrl = "Adreça del motor d'IA"
+fastModel = "Model ràpid"
+label = "IA autoallotjada"
+provider = "Proveïdor del model"
+providerCustom = "Compatible amb OpenAI"
+smartModel = "Model complet"
+stirling = "Stirling AI"
+subtitle = "Preguntes sobre documents, edicions automàtiques i agents d'IA."
+title = "IA"
+
+[serverSetup.analytics]
+accept = "Accepta i continua"
+acceptFinish = "Accepta i finalitza"
+changeLater = "Ho pots canviar en qualsevol moment a {{path}}."
+decline = "Rebutja i continua"
+declineFinish = "Rebutja i finalitza"
+learnMore = "Què recollim"
+note = "Comparteix amb nosaltres dades d'ús d'aquest servidor per ajudar-nos a millorar Stirling PDF. No recollim mai fitxers ni el seu contingut."
+title = "Analítica del servidor"
+
+[serverSetup.documents]
+label = "Preguntes sobre documents"
+model = "Model d'incrustació"
+provider = "Proveïdor d'incrustació"
+providerHelp = "Converteix el text del document en l'índex de cerca que respon preguntes."
+
+[serverSetup.email]
+from = "Adreça de remitent"
+host = "Servidor SMTP"
+label = "Envia correu electrònic"
+password = "Contrasenya"
+port = "Port"
+subtitle = "Per a invitacions, sol·licituds de signatura i comparticions."
+title = "Correu electrònic"
+username = "Nom d'usuari"
+
+[serverSetup.error]
+email = "Introdueix una adreça de correu electrònic"
+issuerUnreachable = "No s'ha pogut contactar amb aquest emissor. Comprova l'adreça i que aquest servidor el pugui contactar."
+passwordIncorrect = "Contrasenya incorrecta"
+passwordLength = "Utilitza almenys 8 caràcters"
+passwordMismatch = "Les contrasenyes no coincideixen"
+passwordRejected = "El servidor no ha acceptat aquesta contrasenya. Prova'n una altra."
+passwordUnchanged = "Tria una contrasenya diferent de l'actual"
+port = "Introdueix un port de l'1 al 65535"
+providerName = "Utilitza només lletres, números, guions o guions baixos"
+required = "Obligatori"
+url = "Introdueix una adreça completa que comenci per http:// o https://"
+username = "Utilitza de 3 a 50 lletres, números o . _ + - @, o una adreça de correu electrònic"
+usernameTaken = "Aquest nom d'usuari ja està en ús"
+
+[serverSetup.files]
+sharing = "Compartició de fitxers"
+sharingOffWarning = "Amb la compartició desactivada, els enllaços de compartició existents deixaran de funcionar."
+storage = "Emmagatzema fitxers"
+storageOffWarning = "Amb l'emmagatzematge desactivat, els fitxers que la gent ha desat al servidor ja no es podran obrir."
+subtitle = "Gestiona l'emmagatzematge i la compartició de fitxers."
+title = "Fitxers"
+
+[serverSetup.finish]
+errorNote = "Comprova que el servidor sigui accessible i que encara hagis iniciat sessió com a administrador."
+errorSubtitle = "No s'ha reiniciat res."
+errorTitle = "No s'han pogut desar els paràmetres"
+manualSubtitle = "Aquest servidor no es pot reiniciar tot sol. Reinicia el seu contenidor o servei per aplicar-los."
+manualTitle = "Paràmetres desats"
+restartFailedSubtitle = "El servidor no s'ha reiniciat. Reinicia el seu contenidor o servei per aplicar-los."
+restartingSubtitle = "Aquesta pàgina es recarregarà quan torni, normalment en menys d'un minut."
+restartingTitle = "S'està reiniciant el servidor"
+retry = "Torna-ho a provar"
+saving = "Desant"
+savingSubtitle = "Un moment."
+savingTitle = "S'està desant la configuració"
+
+[serverSetup.language]
+auto = "Coincideix amb cada navegador"
+label = "Idioma per defecte"
+subtitle = "El que veuen primer els nous visitants."
+title = "Idioma"
+
+[serverSetup.mcp]
+label = "Servidor MCP"
+
+[serverSetup.password]
+confirm = "Confirma la nova contrasenya"
+current = "Contrasenya actual"
+new = "Contrasenya nova"
+
+[serverSetup.signIn]
+clientId = "ID de client"
+clientSecret = "Secret del client"
+issuer = "URL de l'emissor"
+label = "Inicia la sessió amb"
+oidc = "Altres OpenID Connect"
+password = "Nom d'usuari i contrasenya"
+providerName = "Nom del proveïdor"
+providerNameHelp = "Es mostra al botó d'inici de sessió, per exemple okta o entra."
+redirectNote = "Afegeix aquest URI de redirecció al teu proveïdor:"
+subtitle = "Com inicia la sessió el teu equip."
+title = "Inici de sessió"
+
+[serverSetup.signingIn]
+button = "Iniciant la sessió"
+title = "Iniciant la sessió amb les credencials per defecte"
+
+[serverSetup.start]
+custom = "Personalitzat"
+quick = "Inici ràpid"
+setupLabel = "Configuració"
+subtitle = "Configura'l per al teu equip en pocs passos."
+title = "El servidor és en marxa"
+
+[serverSetup.summary]
+subtitle = "Comprova l'essencial. La resta es manté per defecte."
+title = "Inici ràpid"
+
 [session]
 expired = "La teva sessió ha expirat. Si us plau, actualitza la pàgina i torna a intentar-ho."
 
@@ -11939,6 +12848,10 @@ mcp = "Servidor MCP"
 privacy = "Privacitat"
 storageSharing = "Emmagatzematge i compartició de fitxers"
 systemSettings = "Configuració del sistema"
+
+[settings.connectedAccounts]
+description = "Els teus propis OneDrive, SharePoint i Google Drive, per a les teves pipelines."
+title = "Comptes connectats"
 
 [settings.connectedInstances]
 confirmBody = "Això revoca l’accés de la instància al teu equip a Stirling Cloud. No elimina fitxers locals ni suprimeix l’ús ja registrat. Per tornar a connectar-la, segueix els passos de connexió originals a la instància."
@@ -11992,6 +12905,13 @@ selfhosted = "Autoallotjat"
 apiKeys = "Claus API"
 apiKeysDescription = "Claus personals per cridar la Stirling API des de scripts i integracions."
 title = "Desenvolupador"
+
+[settings.feedback]
+label = "Comentaris"
+
+[settings.feedback.send]
+description = "Informa d'un problema o proposa una millora a l'equip de Stirling."
+label = "Envia comentaris"
 
 [settings.general]
 autoUnzip = "Descomprimeix automàticament respostes de l'API"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Comprova actualitzacions"
 currentBackendVersion = "Versió actual del backend"
 currentFrontendVersion = "Versió actual del frontend"
 description = "Comprova actualitzacions i informació de la versió"
+descriptionManaged = "Mostra la informació de la versió"
 latestVersion = "Última versió"
 managedByAdmin = "Gestionat per l'administrador"
 modeAuto = "Instal·la les actualitzacions automàticament"
@@ -12135,15 +13056,24 @@ title = "Documents legals"
 backendDescription = "Llicències de les dependències de backend incloses amb aquest servidor."
 backendLabel = "Llicències de backend"
 backendTitle = "Llicències de tercers del backend"
+clearSearch = "Neteja la cerca"
 empty = "No s'han trobat dependències."
 frontendDescription = "Llicències de les dependències de frontend incloses a la build de publicació."
 frontendLabel = "Llicències de frontend"
 frontendTitle = "Llicències de tercers del frontend"
 license = "Llicència"
+licenseAbout = "Quant a"
+licenseAboutCompound = "Quant a {{short}}"
+licenseAboutTitle = "Quant a {{short}}"
 listDescription = "La llista es mostra directament a la UI des del paquet de publicació o l'endpoint de backend."
 listTitle = "Dependències incloses"
 loadError = "No s'han pogut carregar les llicències de tercers"
 module = "Mòdul"
+noMatch = "No hi ha dependències coincidents."
+searchPlaceholder = "Cerca dependències"
+showingCount = "{{count}} dependències"
+showingCount_one = "{{count}} dependència"
+showingCount_other = "{{count}} dependències"
 version = "Versió"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Introdueix el teu correu electrònic"
 emptyPassword = "Introdueix la teva contrasenya"
 emptyUsername = "Introdueix el teu nom d'usuari"
 oauthFailed = "Ha fallat l'inici de sessió OAuth. Torna-ho a provar."
+openResetFailed = "No s'ha pogut obrir el navegador per restablir la contrasenya."
 
 [setup.saas]
 title = "Inicia sessió a Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "Les signatures invisibles encara ofereixen validació criptogràfica"
 description = "Controla si la signatura és visible al document o s'incrusta de manera invisible."
 title = "Visibilitat de la signatura"
 
+[signedPdf]
+editsBlocked = "Aquest PDF està signat digitalment i els canvis als PDF signats estan desactivats. Encara el pots veure o imprimir, convertir-lo a un altre format o tornar-lo a signar."
+editsBlockedStatus = "Signat: edicions bloquejades"
+editsBlockedTitle = "No es pot modificar un PDF signat"
+
 [signingDetail]
 allSigned = "Tothom ha signat. Revisa el document i després finalitza'l."
 awaitingOwner = "El propietari finalitzarà el document quan estigui a punt."
@@ -13110,7 +14046,6 @@ noLinks = "Encara no hi ha enllaços de compartició actius."
 noSharedUsers = "Encara no hi ha usuaris amb accés."
 openInApp = "Obre a Stirling PDF"
 ownerLabel = "Propietari"
-ownerUnknown = "Desconegut"
 removeLink = "Elimina l'enllaç"
 removeUser = "Elimina"
 requiresLogin = "Aquest fitxer compartit requereix iniciar sessió."
@@ -13249,6 +14184,11 @@ remove = "Elimina"
 roleColumn = "Rol"
 title = "Membres de l'equip"
 
+[teamWelcome]
+invite = "Convida persones"
+message = "Convida el teu equip perquè puguin començar a treballar amb tu."
+title = "El teu pla Team és actiu."
+
 [textAlign]
 center = "Centre"
 left = "Esquerra"
@@ -13290,7 +14230,6 @@ toggleDetails = "Commuta els detalls"
 
 [tool]
 endpointUnavailable = "Aquesta eina no està disponible al teu servidor."
-endpointUnavailableClickable = "No disponible en aquest mode. Fes clic per iniciar sessió."
 filesLoading = "Els fitxers encara s’estan carregant, si us plau, espereu."
 filesLoadingProgress = "{{loaded}} / {{total}} fitxers carregant..."
 invalidParams = "Omple els paràmetres requerits."
@@ -13298,6 +14237,8 @@ noFiles = "Afegeix un fitxer per començar."
 scopeFiles = "fitxers"
 scopeThisFile = "aquest fitxer"
 selectFilesHint = "Selecciona fitxers a Fitxers actius per executar aquesta eina"
+signInRequired = "Cal un compte de Stirling. Inicia sessió per continuar."
+signInToUse = "Inicia sessió per utilitzar"
 singleFileScope = "S'aplica només a: {{fileName}}"
 viewerMode = "Canvia a l'editor de fitxers per afegir diversos fitxers."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Mostra la portada per separat"
 disableColorFilter = "Desactiva el filtre de color"
 documentUpdated = "Document actualitzat"
 dualPageView = "Vista de dues pàgines"
+editText = "Edita el text"
 enableDarkFilter = "Activa el filtre fosc"
 enableSepiaFilter = "Activa el filtre sèpia"
 engineLoadError = "No s’ha pogut inicialitzar el motor del visor de PDF"
@@ -14158,8 +15100,10 @@ closeAll = "Tanca tots els fitxers"
 closePdf = "Tanca el PDF"
 deselectAll = "Desselecciona-ho tot"
 downloadAll = "Descarrega-ho tot"
+editText = "Edita el text"
 exitAnnotations = "Surt del mode d'anotació"
 exitRedaction = "Surt del mode de censura"
+findReplace = "Cerca i substitueix"
 formFill = "Editor de formularis"
 hideToolbar = "Amaga la barra d'eines"
 moreActions = "Més accions"

@@ -2,9 +2,9 @@ import { createContext, useContext } from "react";
 
 interface ToolActionsContextValue {
   /**
-   * Called when the user clicks the disabled execute button while the reason
-   * is 'endpointUnavailable'. Desktop provides a sign-in modal dispatch;
-   * web builds leave this undefined (button stays disabled with tooltip only).
+   * Set only where signing in would unlock unavailable tools (desktop while
+   * signed out). When set, an 'endpointUnavailable' execute button becomes a
+   * sign-in prompt that calls this; otherwise it stays disabled.
    */
   onEndpointUnavailableClick?: () => void;
 }

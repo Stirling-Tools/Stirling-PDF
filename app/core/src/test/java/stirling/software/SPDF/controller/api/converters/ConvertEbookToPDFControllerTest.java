@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,11 +19,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,47 +40,33 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
-import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.OfficeDocumentSanitizer;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.ProcessExecutor.Processes;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.officeconvert.topdf.OfficeToPdf;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertEbookToPDFControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private OfficeDocumentSanitizer officeDocumentSanitizer;
-    @Mock private RuntimePathConfig runtimePathConfig;
-
-    private static final String CALIBRE_PATH = "/opt/calibre/ebook-convert";
-
-    @Mock private stirling.software.SPDF.service.OfficeConversionService officeConversionService;
-    @Mock private stirling.software.SPDF.service.OfficeToPdfService officeToPdfService;
+    @Mock private OfficeToPdfService officeToPdfService;
 
     @InjectMocks private ConvertEbookToPDFController controller;
 
+    private Path workingDir;
+
     @BeforeEach
     void setUp() throws Exception {
-        lenient().when(runtimePathConfig.getCalibrePath()).thenReturn(CALIBRE_PATH);
+        workingDir = Files.createTempDirectory("ebook-convert-test-");
+        lenient().when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
+        lenient().when(officeToPdfService.options()).thenReturn(OfficeToPdf.Options.defaults());
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -94,312 +81,145 @@ class ConvertEbookToPDFControllerTest {
                         });
     }
 
-    @Test
-    void convertEbookToPdf_buildsCalibreCommandAndCleansUp() throws Exception {
-        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+    @AfterEach
+    void tearDown() throws IOException {
+        deleteRecursively(workingDir);
+    }
 
-        MockMultipartFile ebookFile =
-                new MockMultipartFile(
-                        "fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
-
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(ebookFile);
-        request.setEmbedAllFonts(true);
-        request.setIncludeTableOfContents(true);
-        request.setIncludePageNumbers(true);
-
-        Path workingDir = Files.createTempDirectory("ebook-convert-test-");
-        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
-
-        AtomicReference<Path> deletedDir = new AtomicReference<>();
+    private void converterWritesPdf() throws IOException {
         Mockito.doAnswer(
-                        invocation -> {
-                            Path dir = invocation.getArgument(0);
-                            deletedDir.set(dir);
-                            if (Files.exists(dir)) {
-                                try (Stream<Path> paths = Files.walk(dir)) {
-                                    paths.sorted(Comparator.reverseOrder())
-                                            .forEach(
-                                                    path -> {
-                                                        try {
-                                                            Files.deleteIfExists(path);
-                                                        } catch (IOException ignored) {
-                                                        }
-                                                    });
-                                }
-                            }
+                        inv -> {
+                            Files.writeString(inv.getArgument(1), "pdf");
                             return null;
                         })
-                .when(tempFileManager)
-                .deleteTempDirectory(any(Path.class));
-
-        PDDocument mockDocument = Mockito.mock(PDDocument.class);
-        when(pdfDocumentFactory.load(any(File.class))).thenReturn(mockDocument);
-
-        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
-                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class)) {
-
-            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
-            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
-
-            ProcessExecutorResult execResult = Mockito.mock(ProcessExecutorResult.class);
-            when(execResult.getRc()).thenReturn(0);
-
-            @SuppressWarnings("unchecked")
-            ArgumentCaptor<List<String>> commandCaptor = ArgumentCaptor.forClass(List.class);
-            Path expectedInput = workingDir.resolve("ebook.epub");
-            Path expectedOutput = workingDir.resolve("ebook.pdf");
-            when(executor.runCommandWithOutputHandling(
-                            commandCaptor.capture(), eq(workingDir.toFile())))
-                    .thenAnswer(
-                            invocation -> {
-                                Files.writeString(expectedOutput, "pdf");
-                                return execResult;
-                            });
-
-            ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
-            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
-                    .thenReturn(expectedResponse);
-            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", ".pdf"))
-                    .thenReturn("ebook.pdf");
-
-            ResponseEntity<Resource> response = controller.convertEbookToPdf(request);
-
-            assertSame(expectedResponse, response);
-
-            List<String> command = commandCaptor.getValue();
-            assertEquals(6, command.size());
-            assertEquals(CALIBRE_PATH, command.get(0));
-            assertEquals(expectedInput.toString(), command.get(1));
-            assertEquals(expectedOutput.toString(), command.get(2));
-            assertEquals("--embed-all-fonts", command.get(3));
-            assertEquals("--pdf-add-toc", command.get(4));
-            assertEquals("--pdf-page-numbers", command.get(5));
-
-            assertFalse(Files.exists(expectedInput));
-            assertFalse(Files.exists(expectedOutput));
-            assertEquals(workingDir, deletedDir.get());
-            Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
-        }
-
-        if (Files.exists(workingDir)) {
-            try (Stream<Path> paths = Files.walk(workingDir)) {
-                paths.sorted(Comparator.reverseOrder())
-                        .forEach(
-                                path -> {
-                                    try {
-                                        Files.deleteIfExists(path);
-                                    } catch (IOException ignored) {
-                                    }
-                                });
-            }
-        }
+                .when(officeToPdfService)
+                .convert(any(Path.class), any(Path.class), any(OfficeToPdf.Options.class));
     }
 
-    @Test
-    void convertEbookToPdf_withUnsupportedExtensionThrows() {
-        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
-
-        MockMultipartFile unsupported =
-                new MockMultipartFile(
-                        "fileInput", "ebook.exe", "application/octet-stream", new byte[] {1, 2, 3});
-
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(unsupported);
-
-        assertThrows(IllegalArgumentException.class, () -> controller.convertEbookToPdf(request));
-    }
-
-    @Test
-    void convertEbookToPdf_withOptimizeForEbookUsesGhostscript() throws Exception {
-        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
-        when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-
-        MockMultipartFile ebookFile =
-                new MockMultipartFile(
-                        "fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
-
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(ebookFile);
-        request.setOptimizeForEbook(true);
-
-        Path workingDir = Files.createTempDirectory("ebook-convert-opt-test-");
-        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
-
-        AtomicReference<Path> deletedDir = new AtomicReference<>();
-        Mockito.doAnswer(
-                        invocation -> {
-                            Path dir = invocation.getArgument(0);
-                            deletedDir.set(dir);
-                            if (Files.exists(dir)) {
-                                try (Stream<Path> paths = Files.walk(dir)) {
-                                    paths.sorted(Comparator.reverseOrder())
-                                            .forEach(
-                                                    path -> {
-                                                        try {
-                                                            Files.deleteIfExists(path);
-                                                        } catch (IOException ignored) {
-                                                        }
-                                                    });
-                                }
-                            }
-                            return null;
-                        })
-                .when(tempFileManager)
-                .deleteTempDirectory(any(Path.class));
-
-        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
-
-            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
-            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
-
-            ProcessExecutorResult execResult = Mockito.mock(ProcessExecutorResult.class);
-            when(execResult.getRc()).thenReturn(0);
-
-            Path expectedInput = workingDir.resolve("ebook.epub");
-            Path expectedOutput = workingDir.resolve("ebook.pdf");
-            when(executor.runCommandWithOutputHandling(any(List.class), eq(workingDir.toFile())))
-                    .thenAnswer(
-                            invocation -> {
-                                Files.writeString(expectedOutput, "pdf");
-                                return execResult;
-                            });
-
-            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", ".pdf"))
-                    .thenReturn("ebook.pdf");
-            byte[] optimizedBytes = "optimized".getBytes(StandardCharsets.UTF_8);
-            gu.when(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)))
-                    .thenReturn(optimizedBytes);
-
-            ResponseEntity<Resource> expectedResponse = streamingOk(optimizedBytes);
-            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
-                    .thenReturn(expectedResponse);
-
-            ResponseEntity<Resource> response = controller.convertEbookToPdf(request);
-
-            assertSame(expectedResponse, response);
-            gu.verify(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)));
-            Mockito.verifyNoInteractions(pdfDocumentFactory);
-            Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
-            assertEquals(workingDir, deletedDir.get());
-            assertFalse(Files.exists(expectedInput));
-            assertFalse(Files.exists(expectedOutput));
-        }
-
-        if (Files.exists(workingDir)) {
-            try (Stream<Path> paths = Files.walk(workingDir)) {
-                paths.sorted(Comparator.reverseOrder())
-                        .forEach(
-                                path -> {
-                                    try {
-                                        Files.deleteIfExists(path);
-                                    } catch (IOException ignored) {
-                                    }
-                                });
-            }
-        }
-    }
-
-    @Test
-    void convertEbookToPdf_sanitizesDocxBeforeCalibreReadsIt() throws Exception {
-        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
-        byte[] uploaded = "linked-picture-docx".getBytes(StandardCharsets.UTF_8);
-        byte[] sanitized = "sanitized-docx".getBytes(StandardCharsets.UTF_8);
-        when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-        when(officeDocumentSanitizer.sanitize(uploaded, "docx")).thenReturn(sanitized);
-
+    private static ConvertEbookToPdfRequest request(String name, byte[] content) {
         ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
         request.setFileInput(
-                new MockMultipartFile("fileInput", "book.docx", "application/zip", uploaded));
+                new MockMultipartFile("fileInput", name, "application/octet-stream", content));
+        return request;
+    }
 
-        Path workingDir = Files.createTempDirectory("ebook-convert-docx-test-");
-        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
-        AtomicReference<byte[]> seenByCalibre = new AtomicReference<>();
+    @Test
+    void convertEbookToPdf_passesOptionsAndCleansUp() throws Exception {
+        ConvertEbookToPdfRequest request = request("ebook.epub", "content".getBytes());
+        request.setIncludeTableOfContents(true);
+        request.setIncludePageNumbers(true);
+        converterWritesPdf();
+        when(pdfDocumentFactory.load(any(File.class))).thenReturn(mock(PDDocument.class));
 
-        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
-            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
-            when(executor.runCommandWithOutputHandling(any(List.class), eq(workingDir.toFile())))
-                    .thenAnswer(
-                            invocation -> {
-                                seenByCalibre.set(
-                                        Files.readAllBytes(workingDir.resolve("book.docx")));
-                                throw new IOException("Calibre conversion failed with exit code 1");
-                            });
+        try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
+                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class)) {
+            ResponseEntity<Resource> expected =
+                    ResponseEntity.ok(new ByteArrayResource(new byte[0]));
+            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
+                    .thenReturn(expected);
+            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", ".pdf"))
+                    .thenReturn("ebook.pdf");
 
-            assertThrows(IOException.class, () -> controller.convertEbookToPdf(request));
-        } finally {
-            deleteRecursively(workingDir);
+            assertSame(expected, controller.convertEbookToPdf(request));
         }
 
-        assertArrayEquals(sanitized, seenByCalibre.get());
+        ArgumentCaptor<OfficeToPdf.Options> options =
+                ArgumentCaptor.forClass(OfficeToPdf.Options.class);
+        Mockito.verify(officeToPdfService)
+                .convert(
+                        eq(workingDir.resolve("ebook.epub")),
+                        eq(workingDir.resolve("ebook.pdf")),
+                        options.capture());
+        assertTrue(options.getValue().tableOfContents());
+        assertTrue(options.getValue().pageNumbers());
+        assertFalse(Files.exists(workingDir.resolve("ebook.epub")));
+        assertFalse(Files.exists(workingDir.resolve("ebook.pdf")));
         Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
     }
 
     @Test
-    void convertEbookToPdf_rejectedDocxLeavesNoWorkDir() throws Exception {
-        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+    void convertEbookToPdf_withUnsupportedExtensionThrows() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.convertEbookToPdf(request("ebook.exe", new byte[] {1, 2, 3})));
+    }
+
+    @Test
+    void convertEbookToPdf_withOptimizeForEbookUsesGhostscript() throws Exception {
+        when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
+        ConvertEbookToPdfRequest request = request("ebook.epub", "content".getBytes());
+        request.setOptimizeForEbook(true);
+        converterWritesPdf();
+
+        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", ".pdf"))
+                    .thenReturn("ebook.pdf");
+            byte[] optimizedBytes = "optimized".getBytes(StandardCharsets.UTF_8);
+            gu.when(() -> GeneralUtils.optimizePdfWithGhostscript(any(byte[].class)))
+                    .thenReturn(optimizedBytes);
+            ResponseEntity<Resource> expected =
+                    ResponseEntity.ok(new ByteArrayResource(optimizedBytes));
+            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
+                    .thenReturn(expected);
+
+            assertSame(expected, controller.convertEbookToPdf(request));
+            gu.verify(() -> GeneralUtils.optimizePdfWithGhostscript(any(byte[].class)));
+        }
+        Mockito.verifyNoInteractions(pdfDocumentFactory);
+        Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
+    }
+
+    @Test
+    void convertEbookToPdf_sanitizesDocxBeforeConverting() throws Exception {
+        byte[] uploaded = "linked-picture-docx".getBytes(StandardCharsets.UTF_8);
+        byte[] sanitized = "sanitized-docx".getBytes(StandardCharsets.UTF_8);
+        when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+        when(officeDocumentSanitizer.sanitize(uploaded, "docx")).thenReturn(sanitized);
+        AtomicReference<byte[]> seen = new AtomicReference<>();
+        Mockito.doAnswer(
+                        inv -> {
+                            seen.set(Files.readAllBytes(inv.getArgument(0)));
+                            throw new IOException("conversion failed");
+                        })
+                .when(officeToPdfService)
+                .convert(any(Path.class), any(Path.class), any(OfficeToPdf.Options.class));
+
+        assertThrows(
+                IOException.class,
+                () -> controller.convertEbookToPdf(request("book.docx", uploaded)));
+
+        assertArrayEquals(sanitized, seen.get());
+        Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
+    }
+
+    @Test
+    void convertEbookToPdf_rejectedDocxNeverConverts() throws Exception {
         byte[] uploaded = "docx".getBytes(StandardCharsets.UTF_8);
         when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
         when(officeDocumentSanitizer.sanitize(uploaded, "docx"))
                 .thenThrow(new IOException("part could not be sanitized"));
 
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(
-                new MockMultipartFile("fileInput", "book.docx", "application/zip", uploaded));
+        assertThrows(
+                IOException.class,
+                () -> controller.convertEbookToPdf(request("book.docx", uploaded)));
 
-        Path workingDir = Files.createTempDirectory("ebook-convert-reject-test-");
-        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
-
-        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-            assertThrows(IOException.class, () -> controller.convertEbookToPdf(request));
-
-            pe.verifyNoInteractions();
-        } finally {
-            deleteRecursively(workingDir);
-        }
-
+        Mockito.verify(officeToPdfService, Mockito.never())
+                .convert(any(Path.class), any(Path.class), any(OfficeToPdf.Options.class));
         Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
     }
 
     @Test
-    void convertEbookToPdf_failedRunDoesNotEchoCalibreOutput() throws Exception {
-        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
-
-        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setFileInput(
-                new MockMultipartFile(
-                        "fileInput", "book.mobi", "application/octet-stream", new byte[] {1}));
-
-        Path workingDir = Files.createTempDirectory("ebook-convert-fail-test-");
-        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
-
-        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
-            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
-            ProcessExecutorResult execResult = Mockito.mock(ProcessExecutorResult.class);
-            when(execResult.getRc()).thenReturn(2);
-            lenient()
-                    .when(execResult.getMessages())
-                    .thenReturn("Could not find file uuid-in-the-copy/secret-uuid in book");
-            when(executor.runCommandWithOutputHandling(any(List.class), eq(workingDir.toFile())))
-                    .thenReturn(execResult);
-
-            IllegalStateException e =
-                    assertThrows(
-                            IllegalStateException.class,
-                            () -> controller.convertEbookToPdf(request));
-            assertEquals("Calibre conversion failed", e.getMessage());
-        } finally {
-            deleteRecursively(workingDir);
-        }
+    void convertEbookToPdf_missingOutputFails() throws Exception {
+        IllegalStateException e =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> controller.convertEbookToPdf(request("book.mobi", new byte[] {1})));
+        assertEquals("The ebook converter did not produce a PDF output", e.getMessage());
     }
 
     private static void deleteRecursively(Path dir) throws IOException {
-        if (!Files.exists(dir)) {
+        if (dir == null || !Files.exists(dir)) {
             return;
         }
         try (Stream<Path> paths = Files.walk(dir)) {

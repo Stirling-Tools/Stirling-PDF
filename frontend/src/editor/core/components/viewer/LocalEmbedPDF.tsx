@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  type ComponentType,
 } from "react";
 import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
@@ -23,10 +24,14 @@ import { useSignaturePreviewHistory } from "@editor/hooks/signing/useSignaturePr
 import {
   Viewport,
   ViewportPluginPackage,
+  useViewportElement,
 } from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
-import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
+import {
+  RenderLayer,
+  RenderPluginPackage,
+} from "@embedpdf/plugin-render/react";
 import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
@@ -43,6 +48,7 @@ import {
   ViewerGlobalPointerProvider,
   ViewerPagePointerProvider,
 } from "@editor/components/viewer/ViewerPointerProviders";
+import { PDF_RENDER_FILTERS } from "@editor/components/viewer/pdfRenderFilters";
 import { SpreadPluginPackage, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { SearchPluginPackage } from "@embedpdf/plugin-search/react";
 import { ThumbnailPluginPackage } from "@embedpdf/plugin-thumbnail/react";
@@ -73,8 +79,10 @@ import {
 import { CustomSearchLayer } from "@editor/components/viewer/CustomSearchLayer";
 import { useActiveUrlSource } from "@editor/components/viewer/useActiveUrlSource";
 import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
+import { VIEWER_VIEWPORT_ATTR } from "@editor/components/viewer/usePagesPastInset";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
+import { RenderFormsBridge } from "@editor/components/viewer/RenderFormsBridge";
 import { SelectionAPIBridge } from "@editor/components/viewer/SelectionAPIBridge";
 import { PanAPIBridge } from "@editor/components/viewer/PanAPIBridge";
 import { SpreadAPIBridge } from "@editor/components/viewer/SpreadAPIBridge";
@@ -141,6 +149,8 @@ import { useFontFallbackConfig } from "@editor/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@editor/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@editor/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@editor/tools/formFill/FormCreationInteractionLock";
+import { ViewerInteractionLock } from "@editor/components/viewer/ViewerInteractionLock";
+import type { ViewerPageLayerProps } from "@editor/contexts/viewer/ViewerPageTool";
 import { FormFieldCreationOverlay } from "@editor/tools/formFill/FormFieldCreationOverlay";
 import { FormFieldEditOverlay } from "@editor/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@editor/tools/formFill/ButtonAppearanceOverlay";
@@ -157,8 +167,12 @@ interface LocalEmbedPDFProps {
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
   enableFormFill?: boolean;
+  /** True while the PDF access check is running, so form rendering is not yet decided. */
+  pdfAccessPending?: boolean;
   /** Structural create/modify overlays only mount while the Form tool owns the viewer. */
   formEditingActive?: boolean;
+  /** A tool's layer that replaces each page's own, or null for the viewer's layers. */
+  pageLayer?: ComponentType<ViewerPageLayerProps> | null;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
@@ -196,6 +210,8 @@ interface LocalEmbedPDFProps {
   shouldSkipBytes?: (stableKey: string) => boolean;
   /** Fires from the layout pass that mounts a page, before it paints. */
   onPageLayout?: () => void;
+  /** Reports the width the pages' scrollbar takes, 0 while there is none. */
+  onScrollbarWidthChange?: (width: number) => void;
   /** Fires when the swap bridge activates a replacement document. */
   onDocumentSwapped?: (documentId: string) => void;
   /** Fires when the swap bridge fails to open or activate a replacement document. */
@@ -224,6 +240,11 @@ interface ViewerPageContainerProps {
   onPageLayout?: () => void;
   /** Gates the layout callback so steady-state scrolling pays nothing. */
   restorePending?: boolean;
+  /**
+   * Clip overlays to the page rect. A page tool's handles must stay reachable
+   * where an object sticks out past the page edge.
+   */
+  clip?: boolean;
 }
 
 function normalizePageRotation(rotation: number | null | undefined): number {
@@ -364,6 +385,7 @@ function ViewerPageContainer({
   children,
   onPageLayout,
   restorePending = false,
+  clip = true,
 }: ViewerPageContainerProps) {
   const documentState = useDocumentState(documentId);
   const pageRotation = normalizePageRotation(
@@ -385,7 +407,7 @@ function ViewerPageContainer({
         width,
         height,
         position: "relative",
-        overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
+        overflow: clip ? "hidden" : "visible",
         userSelect: "none",
         WebkitUserSelect: "none",
         MozUserSelect: "none",
@@ -409,11 +431,7 @@ type SignatureOverlayOptions = Omit<
 
 type PdfRenderMode = NonNullable<LocalEmbedPDFProps["pdfRenderMode"]>;
 
-const PDF_RENDER_FILTERS: Record<PdfRenderMode, string | undefined> = {
-  normal: undefined,
-  dark: "invert(1) hue-rotate(180deg)",
-  sepia: "sepia(0.7) brightness(0.85)",
-};
+const PAGE_PREVIEW_MAX_EDGE = 1024;
 
 interface PageLayerProps {
   documentId: string;
@@ -430,7 +448,10 @@ interface PageLayerOptions {
   fileId?: string | null;
   pdfRenderMode: PdfRenderMode;
   enableFormFill: boolean;
+  /** The page bitmap already includes form widgets, signatures among them. */
+  formsInBitmap: boolean;
   formEditingActive: boolean;
+  pageLayer: ComponentType<ViewerPageLayerProps> | null;
   enableAnnotations: boolean;
   annotationsReadOnly: boolean;
   canCopy: boolean;
@@ -452,7 +473,8 @@ function PageTiles({
   documentId,
   pageIndex,
   renderMode,
-}: PageLayerProps & { renderMode: PdfRenderMode }) {
+  hidden = false,
+}: PageLayerProps & { renderMode: PdfRenderMode; hidden?: boolean }) {
   return (
     <div
       style={{
@@ -460,9 +482,55 @@ function PageTiles({
         inset: 0,
         transition: "filter 0.25s ease",
         filter: PDF_RENDER_FILTERS[renderMode],
+        visibility: hidden ? "hidden" : undefined,
       }}
     >
       <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+    </div>
+  );
+}
+
+/** Low-resolution page bitmap under the tiles, painted before the first tile. */
+function PagePreview({
+  documentId,
+  pageIndex,
+  renderMode,
+  hidden = false,
+}: PageLayerProps & { renderMode: PdfRenderMode; hidden?: boolean }) {
+  const documentState = useDocumentState(documentId);
+  const page = documentState?.document?.pages?.[pageIndex];
+  if (!page) return null;
+  const longestEdge = Math.max(page.size.width, page.size.height);
+  const scale =
+    Number.isFinite(longestEdge) && longestEdge > 0
+      ? Math.min(1, PAGE_PREVIEW_MAX_EDGE / longestEdge)
+      : 1;
+
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+        transition: "filter 0.25s ease",
+        filter: PDF_RENDER_FILTERS[renderMode],
+        visibility: hidden ? "hidden" : undefined,
+      }}
+    >
+      <RenderLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        scale={scale}
+        dpr={1}
+        className="pdf-page-preview"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+        }}
+      />
     </div>
   );
 }
@@ -540,11 +608,13 @@ function FormFillLayers({
   enabled,
   editing,
   file,
+  renderFilter,
   ...page
 }: FormFieldLayersProps & {
   enabled: boolean;
   editing: boolean;
   file?: File | Blob;
+  renderFilter?: string;
 }) {
   if (!enabled) return null;
   return (
@@ -556,6 +626,7 @@ function FormFillLayers({
           pdfSource={file}
           pageWidth={page.width}
           pageHeight={page.height}
+          renderFilter={renderFilter}
         />
       )}
       {/* FormFieldOverlay for interactive form filling */}
@@ -565,6 +636,7 @@ function FormFillLayers({
         pageWidth={page.width}
         pageHeight={page.height}
         fileId={page.fileId}
+        renderFilter={renderFilter}
       />
       <FormFieldEditingOverlays active={editing} {...page} />
     </>
@@ -630,7 +702,9 @@ function PageLayers({
   fileId,
   pdfRenderMode,
   enableFormFill,
+  formsInBitmap,
   formEditingActive,
+  pageLayer: PageLayer,
   enableAnnotations,
   annotationsReadOnly,
   canCopy,
@@ -641,13 +715,10 @@ function PageLayers({
   readOnlySignaturePreviews,
 }: PageGeometry & PageLayerOptions) {
   const { isAnnotationMode } = useViewer();
-  return (
+  const [covered, setCovered] = useState(false);
+  const toolCovers = !!PageLayer && covered;
+  const overlays = (
     <>
-      <PageTiles
-        documentId={documentId}
-        pageIndex={pageIndex}
-        renderMode={pdfRenderMode}
-      />
       <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
       <PageTextSelection
         documentId={documentId}
@@ -664,6 +735,7 @@ function PageLayers({
         width={width}
         height={height}
         fileId={fileId}
+        renderFilter={PDF_RENDER_FILTERS[pdfRenderMode]}
       />
       {/* SignatureFieldOverlay: bitmaps of digital-signature appearances */}
       {file && (
@@ -673,6 +745,8 @@ function PageLayers({
           pdfSource={file}
           pageWidth={width}
           pageHeight={height}
+          appearanceInBitmap={formsInBitmap}
+          renderFilter={PDF_RENDER_FILTERS[pdfRenderMode]}
         />
       )}
       <AnnotationEditingLayers
@@ -712,6 +786,34 @@ function PageLayers({
       )}
     </>
   );
+  // The preview and tiles keep their place in the tree and stay mounted, only
+  // hidden, under a page tool: remounting them blanks the page while they
+  // reload, on the way into the tool and again on the way out.
+  return (
+    <>
+      <PagePreview
+        documentId={documentId}
+        pageIndex={pageIndex}
+        renderMode={pdfRenderMode}
+        hidden={toolCovers}
+      />
+      <PageTiles
+        documentId={documentId}
+        pageIndex={pageIndex}
+        renderMode={pdfRenderMode}
+        hidden={toolCovers}
+      />
+      {!toolCovers && overlays}
+      {PageLayer && (
+        <PageLayer
+          pageIndex={pageIndex}
+          width={width}
+          height={height}
+          onCovered={setCovered}
+        />
+      )}
+    </>
+  );
 }
 
 function ViewerPage({
@@ -730,6 +832,7 @@ function ViewerPage({
           height={layers.height}
           onPageLayout={onPageLayout}
           restorePending={restorePending}
+          clip={!layers.pageLayer}
         >
           <PageLayers {...layers} />
         </ViewerPageContainer>
@@ -741,13 +844,43 @@ function ViewerPage({
 interface DocumentViewportProps {
   documentId: string;
   pageOptions: ViewerPageOptions;
+  onScrollbarWidthChange?: (width: number) => void;
 }
 
-function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
+/** Reports the viewport's scrollbar width as it appears, goes or resizes. */
+function ScrollbarWidthReporter({
+  onChange,
+}: {
+  onChange: (width: number) => void;
+}) {
+  const viewportRef = useViewportElement();
+  useEffect(() => {
+    const el = viewportRef?.current;
+    if (!el) return undefined;
+    // A scrollbar coming or going resizes the content box, which this sees.
+    const report = () => onChange(el.offsetWidth - el.clientWidth);
+    report();
+    const observer = new ResizeObserver(report);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      // Without a viewport there is no scrollbar to clear.
+      onChange(0);
+    };
+  }, [viewportRef, onChange]);
+  return null;
+}
+
+function DocumentViewport({
+  documentId,
+  pageOptions,
+  onScrollbarWidthChange,
+}: DocumentViewportProps) {
   return (
     <ViewerGlobalPointerProvider documentId={documentId}>
       <Viewport
         documentId={documentId}
+        {...{ [VIEWER_VIEWPORT_ATTR]: "" }}
         style={{
           backgroundColor: "var(--c-bg)",
           height: "100%",
@@ -762,6 +895,9 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           contain: "strict",
         }}
       >
+        {onScrollbarWidthChange && (
+          <ScrollbarWidthReporter onChange={onScrollbarWidthChange} />
+        )}
         <Scroller
           documentId={documentId}
           renderPage={({ width, height, pageIndex }) => (
@@ -905,7 +1041,9 @@ export function LocalEmbedPDF({
   enableAnnotations = false,
   enableRedaction = false,
   enableFormFill = false,
+  pdfAccessPending = false,
   formEditingActive = false,
+  pageLayer = null,
   isManualRedactionMode = false,
   showBakedAnnotations = true,
   onSignatureAdded,
@@ -928,6 +1066,7 @@ export function LocalEmbedPDF({
   signatureOverlayApiRef,
   shouldSkipBytes,
   onPageLayout,
+  onScrollbarWidthChange,
   onDocumentSwapped,
   onDocumentSwapFailed,
   onDocumentReady,
@@ -1326,6 +1465,14 @@ export function LocalEmbedPDF({
     annotationAnchorsByIdRef.current.clear();
   }, [fileStableKey]);
 
+  // Null while access is pending, so a new version keeps the last known setting.
+  const renderWithForms = pdfAccessPending ? null : !enableFormFill;
+  // What the bitmap holds right now: the last decided value, kept through a pending check.
+  const [formsInBitmap, setFormsInBitmap] = useState(renderWithForms ?? false);
+  if (renderWithForms !== null && renderWithForms !== formsInBitmap) {
+    setFormsInBitmap(renderWithForms);
+  }
+
   // The registry is built from the viewer's first source; later bytes arrive
   // through DocumentSwapBridge, so no replacement may change that identity.
   // Create plugins configuration
@@ -1360,10 +1507,13 @@ export function LocalEmbedPDF({
       createPluginRegistration(SpreadPluginPackage, {
         defaultSpreadMode: SpreadMode.None,
       }),
-      createPluginRegistration(ScrollPluginPackage),
+      createPluginRegistration(ScrollPluginPackage, {
+        // Keep pages either side mounted so their previews are ready.
+        defaultBufferSize: 4,
+      }),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: !enableFormFill,
-        // The overlay owns appearances in every mode, so access changes never rebuild the registry.
+        // RenderFormsBridge syncs withForms at runtime, so access changes never rebuild the registry.
+        withForms: renderWithForms ?? false,
         withAnnotations: false,
       }),
 
@@ -1638,7 +1788,9 @@ export function LocalEmbedPDF({
     fileId,
     pdfRenderMode,
     enableFormFill,
+    formsInBitmap,
     formEditingActive,
+    pageLayer,
     enableAnnotations: true,
     annotationsReadOnly,
     canCopy: pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents),
@@ -1699,12 +1851,14 @@ export function LocalEmbedPDF({
             restorePending={restorePending}
             onEvent={onRestoreEvent}
           />
+          <RenderFormsBridge withForms={renderWithForms} />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
           <SelectionAPIBridge
             canCopy={pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents)}
           />
           <FormCreationInteractionLock />
+          <ViewerInteractionLock active={pageLayer != null} />
           <PanAPIBridge />
           <SpreadAPIBridge />
           <SearchAPIBridge />
@@ -1783,6 +1937,7 @@ export function LocalEmbedPDF({
                 <DocumentViewport
                   documentId={documentId}
                   pageOptions={pageOptions}
+                  onScrollbarWidthChange={onScrollbarWidthChange}
                 />
                 <DocumentComments
                   enabled

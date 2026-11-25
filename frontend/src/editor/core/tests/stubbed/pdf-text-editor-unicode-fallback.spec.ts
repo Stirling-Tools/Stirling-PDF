@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -56,7 +57,7 @@ function runText(page: Page, rid: string): Promise<string> {
 // Reopen saved bytes and wait for that document, not the one still on screen.
 async function reopen(page: Page, name: string, saved: Buffer) {
   await stashCurrentDocument(page);
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+  await openInTextEditor(page, {
     name,
     mimeType: "application/pdf",
     buffer: saved,
@@ -75,9 +76,7 @@ async function appendSaveReopen(
   page.on("pageerror", (e) => errs.push(e.message));
 
   const fontLoaded = await gotoEditor(page);
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });
@@ -182,9 +181,7 @@ for (const { name, text } of RTL_SAMPLES) {
     page.on("pageerror", (e) => errs.push(e.message));
 
     const fontLoaded = await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(SAMPLE);
+    await openInTextEditor(page, SAMPLE);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });

@@ -12,9 +12,9 @@ import {
 } from "@editor/tools/pdfTextEditor/util/localFontSource";
 import {
   faceStyleFlags,
-  familyOptions,
   pickLocalFontFace,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { externalFamilies } from "@editor/tools/pdfTextEditor/util/fontFaces";
 
 const ARIAL = {
   id: 7,
@@ -78,9 +78,11 @@ describe("desktop local font source", () => {
     ]);
     expect(pickLocalFontFace(faces, "Arial")?.style).toBe("Standard");
     expect(pickLocalFontFace(faces, "Arial Bold")?.style).toBe("Fett");
-    expect(familyOptions(faces, []).map((o) => o.value)).toEqual([
+    expect(externalFamilies(faces)[0].faces.map((f) => f.value)).toEqual([
       "Arial",
       "Arial Bold",
+      "Arial Italic",
+      "Arial Bold Italic",
     ]);
   });
 

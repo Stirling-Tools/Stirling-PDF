@@ -51,7 +51,7 @@ describe("desktop useGroupEnabled", () => {
     privacy.localOnly = true;
     setStatus("offline");
     mockFetch.mockResolvedValue(true);
-    const { result } = renderHook(() => useGroupEnabled("ImageMagick"), {
+    const { result } = renderHook(() => useGroupEnabled("LineArt"), {
       wrapper: TestQueryProvider,
     });
     await waitFor(() => expect(result.current.enabled).toBe(true));
@@ -61,7 +61,7 @@ describe("desktop useGroupEnabled", () => {
   it("skips the request entirely when the server is offline", async () => {
     setStatus("offline");
 
-    const { result } = renderHook(() => useGroupEnabled("ImageMagick"), {
+    const { result } = renderHook(() => useGroupEnabled("LineArt"), {
       wrapper: TestQueryProvider,
     });
 
@@ -73,7 +73,7 @@ describe("desktop useGroupEnabled", () => {
   it("reflects the server going offline after a successful check", async () => {
     mockFetch.mockResolvedValue(true);
 
-    const { result } = renderHook(() => useGroupEnabled("ImageMagick"), {
+    const { result } = renderHook(() => useGroupEnabled("LineArt"), {
       wrapper: TestQueryProvider,
     });
     await waitFor(() => expect(result.current.enabled).toBe(true));
