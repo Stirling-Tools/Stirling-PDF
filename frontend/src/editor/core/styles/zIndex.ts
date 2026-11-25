@@ -43,6 +43,8 @@ export const Z_INDEX_SIGN_IN_MODAL = 9000;
 export const Z_INDEX_VIEWER_FLOATING_MENU = 10000;
 
 export const Z_INDEX_TOAST = 10001;
+// A warning raised while the unsaved-changes prompt, which sits at the toast layer, waits on it.
+export const Z_INDEX_OVER_UNSAVED_PROMPT = 10002;
 
 export const Z_INDEX_SIGNATURE_OVERLAY = 1000;
 export const Z_INDEX_SIGNATURE_OVERLAY_HANDLE = 1001;

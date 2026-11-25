@@ -2,49 +2,9 @@
 bootRun {
     enabled = false
 }
-dependencies {
-    // Security-hardening utilities (zip-slip, SSRF, filename sanitization, command injection).
-    // Declared as api here so core + proprietary (which depend on common) get it transitively,
-    // keeping it off modules that don't need it (e.g. saas).
-    api 'io.github.pixee:java-security-toolkit:1.2.3'
-    api "com.google.guava:guava:${guavaVersion}"
-    api 'org.springframework.boot:spring-boot-starter-webmvc'
-    api 'org.springframework.boot:spring-boot-starter-aspectj'
-    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260924.2'
-    api 'com.fathzer:javaluator:3.0.6'
-    api 'com.posthog.java:posthog:1.2.0'
-    api "org.apache.commons:commons-lang3:${commonsLang3}"
-    api 'com.drewnoakes:metadata-extractor:2.21.0' // Image metadata extractor
-    api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
-    api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
-    api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
-    api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
-    api "org.apache.pdfbox:preflight:$pdfboxVersion"
-    api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
-    api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
-    api 'org.snakeyaml:snakeyaml-engine:3.1.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
-    // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:9.3.9'
-    // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)
-    api('org.simplejavamail:outlook-module:9.3.9') {
-        exclude group: 'org.apache.commons', module: 'commons-math3'
-    }
-    api 'jakarta.mail:jakarta.mail-api:2.1.5'
-    runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
-
-    // Tabula table extraction — used by the shared PDF parser and directly by downstream modules.
-    // api-scoped so downstream modules (core, proprietary) retain it on their compile classpath.
-    api ('technology.tabula:tabula:1.0.5') {
-        exclude group: 'org.slf4j', module: 'slf4j-simple'
-        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
-        exclude group: 'com.google.code.gson', module: 'gson'
-    }
-
-    api "com.stirling:jpdfium:${jpdfiumVersion}"
-
-    // -PjpdfiumPlatforms=auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64,windows-arm64>
-    def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'auto').toString().trim()
+// -PjpdfiumPlatforms / -PjpdfiumNativePlatforms = auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64,windows-arm64>
+def resolveJpdfiumPlatforms = { String propertyName ->
+    def jpdfiumPlatformsProp = (project.findProperty(propertyName) ?: 'auto').toString().trim()
     def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'linux-musl-x64', 'linux-musl-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64', 'windows-arm64']
     def jpdfiumPlatforms
     if (jpdfiumPlatformsProp == 'auto') {
@@ -70,12 +30,73 @@ dependencies {
     }
     def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumAllPlatforms.contains(it) }
     if (jpdfiumInvalid) {
-        throw new GradleException("Unknown jpdfiumPlatforms value(s): ${jpdfiumInvalid.join(', ')}. " +
+        throw new GradleException("Unknown ${propertyName} value(s): ${jpdfiumInvalid.join(', ')}. " +
                 "Valid: ${jpdfiumAllPlatforms.join(', ')}, 'auto', 'all' or 'none'.")
     }
+    return jpdfiumPlatforms
+}
+
+dependencies {
+    // Security-hardening utilities (zip-slip, SSRF, filename sanitization, command injection).
+    // Declared as api here so core + proprietary (which depend on common) get it transitively,
+    // keeping it off modules that don't need it (e.g. saas).
+    api 'io.github.pixee:java-security-toolkit:1.2.3'
+    api "com.google.guava:guava:${guavaVersion}"
+    api 'org.springframework.boot:spring-boot-starter-webmvc'
+    api 'org.springframework.boot:spring-boot-starter-aspectj'
+    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260924.2'
+    api 'com.fathzer:javaluator:3.0.6'
+    api 'com.posthog.java:posthog:1.2.0'
+    api "org.apache.commons:commons-lang3:${commonsLang3}"
+    api 'com.drewnoakes:metadata-extractor:2.21.0' // Image metadata extractor
+    // In-process HTML to PDF for FileToPdf
+    implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
+    api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
+    api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
+    api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
+    api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
+    api "org.apache.pdfbox:preflight:$pdfboxVersion"
+    api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
+    api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+    api 'org.snakeyaml:snakeyaml-engine:3.1.1'
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0"
+    // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
+    api 'org.simplejavamail:simple-java-mail:9.3.9'
+    // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)
+    api('org.simplejavamail:outlook-module:9.3.9') {
+        exclude group: 'org.apache.commons', module: 'commons-math3'
+    }
+    api 'jakarta.mail:jakarta.mail-api:2.1.5'
+    runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
+
+    // Tabula table extraction — used by the shared PDF parser and directly by downstream modules.
+    // api-scoped so downstream modules (core, proprietary) retain it on their compile classpath.
+    api ('technology.tabula:tabula:1.0.5') {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
+
+    api "com.stirling:jpdfium:${jpdfiumVersion}"
+
+    def jpdfiumPlatforms = resolveJpdfiumPlatforms('jpdfiumPlatforms')
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms ? jpdfiumPlatforms.join(', ') : 'none'}")
     jpdfiumPlatforms.each { platform ->
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
+    }
+    def jpdfiumLicenseOnlyPlatforms = project.hasProperty('jpdfiumNativePlatforms')
+            ? resolveJpdfiumPlatforms('jpdfiumNativePlatforms') - jpdfiumPlatforms
+            : []
+    jpdfiumLicenseOnlyPlatforms.each { platform ->
+        def nativeJar = configurations.detachedConfiguration(
+                dependencies.create("com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"))
+        nativeJar.transitive = false
+        def licensesJar = tasks.register("jpdfiumLicensesJar-${platform}", Jar) {
+            from({ zipTree(nativeJar.singleFile) }) { include 'licenses/**' }
+            archiveFileName = "jpdfium-licenses-${platform}-${jpdfiumVersion}.jar"
+            destinationDirectory = layout.buildDirectory.dir('jpdfium-licenses')
+        }
+        runtimeOnly files(licensesJar)
     }
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
@@ -83,4 +104,59 @@ dependencies {
 
     // ArchUnit: enforces module dependency direction (see ArchitectureTest)
     testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+}
+
+tasks.register('stageJpdfiumNatives') {
+    description = 'Extracts the JPDFium native libraries for the selected platforms into a directory.'
+    def platforms = resolveJpdfiumPlatforms('jpdfiumNativePlatforms')
+    def nativeJars = configurations.detachedConfiguration(
+            *platforms.collect { dependencies.create("com.stirling:jpdfium-natives-${it}:${jpdfiumVersion}") })
+    nativeJars.transitive = false
+    def xzClasspath = configurations.detachedConfiguration(dependencies.create("com.stirling:jpdfium:${jpdfiumVersion}"))
+    def outputDir = layout.buildDirectory.dir('jpdfium-natives')
+    inputs.files(nativeJars)
+    inputs.property('platforms', platforms)
+    outputs.dir(outputDir)
+    doLast {
+        def root = outputDir.get().asFile
+        root.deleteDir()
+        def xzLoader = new URLClassLoader(xzClasspath.files.collect { it.toURI().toURL() } as URL[], (ClassLoader) null)
+        def xzStream = xzLoader.loadClass('org.tukaani.xz.XZInputStream').getConstructor(InputStream)
+        try {
+            platforms.each { platform ->
+                def jar = nativeJars.files.find { it.name == "jpdfium-natives-${platform}-${jpdfiumVersion}.jar" }
+                def prefix = "natives/${platform}/"
+                def platformDir = new File(root, platform)
+                def licenseDir = new File(platformDir, 'licenses')
+                licenseDir.mkdirs()
+                new java.util.zip.ZipFile(jar).withCloseable { zip ->
+                    def readEntry = { String name -> zip.getInputStream(zip.getEntry(prefix + name)).getText('UTF-8') }
+                    def libs = readEntry('native-libs.txt').readLines()*.trim().findAll { it && !it.startsWith('#') }
+                    def hashes = readEntry('native-libs.sha256').readLines()*.trim().findAll { it && !it.startsWith('#') }
+                            .collectEntries { line -> [(line.substring(64).trim()): line.substring(0, 64).toLowerCase()] }
+                    libs.each { lib ->
+                        if (!hashes[lib]) throw new GradleException("No checksum for ${lib} in ${jar.name}")
+                        def entry = zip.getEntry(prefix + lib) ?: zip.getEntry(prefix + lib + '.xz')
+                        if (entry == null) throw new GradleException("${lib} is missing from ${jar.name}")
+                        def digest = java.security.MessageDigest.getInstance('SHA-256')
+                        InputStream raw = zip.getInputStream(entry)
+                        InputStream input = entry.name.endsWith('.xz') ? xzStream.newInstance(raw) : raw
+                        new File(platformDir, lib).withOutputStream { out ->
+                            new java.security.DigestInputStream(input, digest).withCloseable { it.transferTo(out) }
+                        }
+                        if (HexFormat.of().formatHex(digest.digest()) != hashes[lib]) {
+                            throw new GradleException("Checksum mismatch for ${lib} in ${jar.name}")
+                        }
+                    }
+                    new File(platformDir, 'native-libs.txt').text = libs.join('\n') + '\n'
+                    zip.entries().findAll { !it.directory && it.name.startsWith('licenses/') }.each { entry ->
+                        new File(licenseDir, entry.name.substring('licenses/'.length())).bytes = zip.getInputStream(entry).bytes
+                    }
+                }
+                logger.lifecycle("Staged JPDFium natives for ${platform} in ${platformDir}")
+            }
+        } finally {
+            xzLoader.close()
+        }
+    }
 }

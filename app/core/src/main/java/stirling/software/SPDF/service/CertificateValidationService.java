@@ -119,6 +119,7 @@ public class CertificateValidationService {
         // our own signing cert is trusted via serverAsAnchor, not by force-loading every system CA.
         if (validation.getTrust().isServerAsAnchor()) loadServerCertAsAnchor();
         if (validation.getTrust().isUseSystemTrust()) loadJavaSystemTrustStore();
+        if (validation.getTrust().trustsOSRoots()) loadOSTrustStore();
         if (validation.getTrust().isUseMozillaBundle()) loadBundledMozillaCACerts();
         if (validation.getTrust().isUseAATL()) loadAATLCertificates();
         if (validation.getTrust().isUseEUTL()) loadEUTLCertificates();
@@ -383,9 +384,9 @@ public class CertificateValidationService {
     // ==================== Trust Store Loading ====================
 
     /**
-     * Load certificates from Java's system trust store (cacerts). On Windows, this includes
-     * certificates from the Windows trust store. This provides maximum compatibility with what
-     * browsers and OS trust.
+     * Load CA certificates from the Java runtime's bundled trust store (cacerts). This is not the
+     * operating system's store: roots deployed by Group Policy, Intune or MDM come from {@link
+     * #loadOSTrustStore()}.
      */
     private void loadJavaSystemTrustStore() {
         try {
@@ -415,6 +416,30 @@ public class CertificateValidationService {
         } catch (Exception e) {
             log.error("Failed to load Java system trust store: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * Trust the roots the operating system trusts, as Acrobat does with Windows integration on.
+     * Self-signed entries are kept even without a CA flag because legacy v1 roots carry none.
+     */
+    void loadOSTrustStore() {
+        loadOSTrustAnchors(OsTrustStore.load(System.getProperty("os.name")));
+    }
+
+    void loadOSTrustAnchors(List<X509Certificate> certs) {
+        int loadedCount = 0;
+        for (X509Certificate cert : certs) {
+            if (!isCA(cert) && !isSelfSigned(cert)) {
+                continue;
+            }
+            try {
+                signingTrustAnchors.setCertificateEntry("os-" + sha256Fingerprint(cert), cert);
+                loadedCount++;
+            } catch (Exception e) {
+                log.debug("Skipping OS trust certificate: {}", e.getMessage());
+            }
+        }
+        log.info("Loaded {} operating system trust anchors", loadedCount);
     }
 
     /**

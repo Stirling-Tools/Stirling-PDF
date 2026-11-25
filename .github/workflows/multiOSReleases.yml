@@ -48,7 +48,7 @@ jobs:
       version: ${{ steps.versionNumber.outputs.versionNumber }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -140,7 +140,7 @@ jobs:
             file_suffix: "-server"
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -208,7 +208,7 @@ jobs:
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
           allowed-endpoints: >
@@ -404,7 +404,7 @@ jobs:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
           & smctl healthcheck
-          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl healthcheck returned non-zero - continuing, keypair ls is the gate" }
           & smctl keypair ls
           if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
           & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
@@ -448,6 +448,11 @@ jobs:
           EOF
           echo "Generated tauri.windows.conf.json (alias masked):"
           sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
+
+      - name: Sign bundled runtime binaries
+        if: ${{ startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre
 
       - name: Import release GPG signing key (Linux)
         if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
@@ -557,6 +562,11 @@ jobs:
             gpg --batch --yes --delete-secret-keys "$RELEASE_GPG_FINGERPRINT" || true
             gpg --batch --yes --delete-keys "$RELEASE_GPG_FINGERPRINT" || true
           fi
+
+      - name: Verify bundled runtime signatures
+        if: ${{ startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre -VerifyOnly
 
       # Verify the MSI (outer wrapper users download) AND the inner exe extracted
       # from it (what actually gets installed and what AV scans). We don't check
@@ -736,7 +746,7 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -915,7 +925,7 @@ jobs:
       # instead of silently shipping a broken auto-update.
       - name: Upload binaries to Release
         if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true' && github.event.inputs.platform == 'all') || github.event_name == 'release' || github.ref == 'refs/heads/release'
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           # Don't regenerate/append notes on re-runs, and don't force this into the

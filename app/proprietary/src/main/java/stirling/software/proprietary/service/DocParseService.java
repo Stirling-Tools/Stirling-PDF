@@ -1,6 +1,7 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -147,10 +148,9 @@ public class DocParseService {
         try (TempFile tempInput = new TempFile(tempFileManager, ".pdf")) {
             // Copy rather than transferTo: transferTo moves the servlet part's backing file away,
             // and the controller still reads the upload afterwards to build the export ZIP.
-            Files.copy(
-                    file.getInputStream(),
-                    tempInput.getPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream in = file.getInputStream()) {
+                Files.copy(in, tempInput.getPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
             MarkdownJob.Result converted =
                     pdfWorkerPool.execute(new MarkdownJob(tempInput.getPath(), markdownExtractor));
             sourcePages = converted.pageCount();

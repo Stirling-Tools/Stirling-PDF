@@ -32,21 +32,12 @@ jobs:
           - name: Stirling-PDF base image
             key: base-image
             variable: BASE_VERSION
-          - name: Calibre
-            key: calibre
-            variable: CALIBRE_VERSION
           - name: Ghostscript
             key: ghostscript
             variable: GS_VERSION
           - name: QPDF
             key: qpdf
             variable: QPDF_VERSION
-          - name: ImageMagick
-            key: imagemagick
-            variable: IM_VERSION
-          - name: unoserver
-            key: unoserver
-            variable: UNOSERVER_VERSION
           - name: Task
             key: task
             variable: TASK_VERSION
@@ -72,14 +63,6 @@ jobs:
                 'https://hub.docker.com/v2/repositories/stirlingtools/stirling-pdf-base/tags?page_size=100' \
                 | jq -r '[.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))] | sort_by(.last_updated) | last | "\(.name)@\(.digest)"')
               ;;
-            calibre)
-              # The calibre Linux download page is the upstream source for the
-              # binary URL used by docker/base/Dockerfile.
-              latest=$(curl --fail --silent --show-error --location \
-                https://calibre-ebook.com/download_linux \
-                | grep -oP 'latest release of calibre is \K[0-9]+(\.[0-9]+)+' \
-                | head -n 1)
-              ;;
             ghostscript)
               tag=$(gh api repos/ArtifexSoftware/ghostpdl-downloads/releases/latest \
                 --jq '.tag_name')
@@ -89,14 +72,6 @@ jobs:
             qpdf)
               latest=$(gh api repos/qpdf/qpdf/releases/latest \
                 --jq '.tag_name' | sed 's/^v//')
-              ;;
-            imagemagick)
-              latest=$(gh api repos/ImageMagick/ImageMagick/releases/latest \
-                --jq '.tag_name')
-              ;;
-            unoserver)
-              latest=$(curl --fail --silent --show-error \
-                https://pypi.org/pypi/unoserver/json | jq -r '.info.version')
               ;;
             task)
               latest=$(gh api repos/go-task/task/releases/latest \
@@ -160,7 +135,7 @@ jobs:
 
       - name: Create pull request
         if: steps.update.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
         with:
           branch: automation/docker-version-${{ matrix.key }}
           delete-branch: true

@@ -35,11 +35,7 @@ class ConvertPDFToMarkdownTest {
 
     private MockMvc mockMvc(PdfMarkdownExtractor extractor) {
         return MockMvcBuilders.standaloneSetup(
-                        new ConvertPDFToMarkdown(
-                                null,
-                                extractor,
-                                mock(stirling.software.SPDF.service.OfficeConversionService.class),
-                                PdfWorkerPool.inProcess()))
+                        new ConvertPDFToMarkdown(null, extractor, PdfWorkerPool.inProcess()))
                 .setControllerAdvice(new GlobalErrorHandler())
                 .build();
     }
