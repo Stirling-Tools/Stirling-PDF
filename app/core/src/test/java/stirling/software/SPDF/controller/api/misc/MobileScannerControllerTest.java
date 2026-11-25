@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.SPDF.service.MobileLanListener;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.MobileScannerService;
 import stirling.software.common.service.MobileScannerService.FileMetadata;
@@ -38,12 +40,15 @@ class MobileScannerControllerTest {
     @Mock private MobileScannerService mobileScannerService;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private ApplicationProperties.System systemProps;
+    @Mock private MobileLanListener mobileLanListener;
 
     private MobileScannerController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new MobileScannerController(mobileScannerService, applicationProperties);
+        controller =
+                new MobileScannerController(
+                        mobileScannerService, applicationProperties, mobileLanListener);
     }
 
     private void enableMobileScanner() {
@@ -96,6 +101,19 @@ class MobileScannerControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(true, response.getBody().get("success"));
         assertEquals("test-session", response.getBody().get("sessionId"));
+        assertFalse(response.getBody().containsKey("mobileBaseUrl"));
+    }
+
+    @Test
+    void createSession_whenPhoneListenerOpens_returnsItsUrl() {
+        enableMobileScanner();
+        SessionInfo sessionInfo = new SessionInfo("test-session", 1000L, 601000L, 600000L);
+        when(mobileScannerService.createSession("test-session")).thenReturn(sessionInfo);
+        when(mobileLanListener.open()).thenReturn(Optional.of("http://192.168.1.20:50123"));
+
+        ResponseEntity<Map<String, Object>> response = controller.createSession("test-session");
+
+        assertEquals("http://192.168.1.20:50123", response.getBody().get("mobileBaseUrl"));
     }
 
     @Test
@@ -352,6 +370,7 @@ class MobileScannerControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(mobileScannerService).deleteSession("test-session");
+        verify(mobileLanListener).closeIfIdle();
     }
 
     @Test

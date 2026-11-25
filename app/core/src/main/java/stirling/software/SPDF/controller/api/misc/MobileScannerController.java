@@ -35,6 +35,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.service.MobileLanListener;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.MobileScannerService;
 import stirling.software.common.service.MobileScannerService.FileMetadata;
@@ -58,12 +59,15 @@ public class MobileScannerController {
 
     private final MobileScannerService mobileScannerService;
     private final ApplicationProperties applicationProperties;
+    private final MobileLanListener mobileLanListener;
 
     public MobileScannerController(
             MobileScannerService mobileScannerService,
-            ApplicationProperties applicationProperties) {
+            ApplicationProperties applicationProperties,
+            MobileLanListener mobileLanListener) {
         this.mobileScannerService = mobileScannerService;
         this.applicationProperties = applicationProperties;
+        this.mobileLanListener = mobileLanListener;
     }
 
     /**
@@ -125,6 +129,7 @@ public class MobileScannerController {
             response.put("createdAt", sessionInfo.getCreatedAt());
             response.put("expiresAt", sessionInfo.getExpiresAt());
             response.put("timeoutMs", sessionInfo.getTimeoutMs());
+            mobileLanListener.open().ifPresent(url -> response.put("mobileBaseUrl", url));
 
             return ResponseEntity.ok(response);
 
@@ -347,6 +352,7 @@ public class MobileScannerController {
         }
 
         mobileScannerService.deleteSession(sessionId);
+        mobileLanListener.closeIfIdle();
 
         return ResponseEntity.ok(
                 Map.of("success", true, "sessionId", sessionId, "message", "Session deleted"));

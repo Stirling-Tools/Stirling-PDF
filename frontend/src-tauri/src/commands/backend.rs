@@ -372,6 +372,7 @@ fn run_stirling_pdf_jar(
         &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
         "-Dserver.port=0", // Let OS assign an available port
+        "-Dserver.address=127.0.0.1",
         // No reverse proxy in front of the local sidecar, so don't trust forwarded headers.
         // Stops a LAN caller spoofing X-Forwarded-For to defeat the desktop-only signing gate.
         "-Dserver.forward-headers-strategy=none",

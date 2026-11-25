@@ -54,6 +54,7 @@ export interface MobileTransferSessionInfo {
   createdAt: number;
   expiresAt: number;
   timeoutMs: number;
+  mobileBaseUrl?: string;
 }
 
 interface UseMobileTransferSessionParams {
@@ -95,6 +96,7 @@ export function useMobileTransferSession({
   // the app's base path, otherwise the phone hits the auth-gated catch-all
   // route and is bounced to the login page.
   const configuredUrl =
+    sessionInfo?.mobileBaseUrl ||
     localStorage.getItem("server_url") ||
     (import.meta.env.DEV ? "" : config?.frontendUrl || "");
   const mobileUrl = buildMobileRouteUrl({

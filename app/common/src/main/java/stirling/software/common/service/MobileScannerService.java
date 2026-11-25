@@ -456,6 +456,11 @@ public class MobileScannerService {
         }
     }
 
+    public boolean hasLiveSessions() {
+        long now = System.currentTimeMillis();
+        return activeSessions.values().stream().anyMatch(session -> !session.isExpired(now));
+    }
+
     private SessionData liveSession(String sessionId) {
         SessionData session = activeSessions.get(sessionId);
         return session == null || session.isExpired(System.currentTimeMillis()) ? null : session;
