@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
@@ -103,6 +105,7 @@ public class InitialSecuritySetup {
 
         configureJWTSettings();
         initializeInternalApiUser();
+        markProvisionedServerSetUp();
         if (isSaas()) {
             log.info(
                     "SaaS profile active - skipping self-host user-table bootstrap"
@@ -110,6 +113,22 @@ public class InitialSecuritySetup {
         } else {
             assignUsersToDefaultTeamIfMissing();
             initializeUserLicenseSettings();
+        }
+    }
+
+    // An admin with their own password means the server was set up some other way (initialLogin, or
+    // a database that outlived settings.yml). In memory first, so a read-only file still counts.
+    private void markProvisionedServerSetUp() {
+        if (applicationProperties.getSystem().isSetupCompleted()
+                || !userService.hasAdminPastFirstLogin()) {
+            return;
+        }
+        applicationProperties.getSystem().setSetupCompleted(true);
+        log.info("An admin already has their own password; first-run setup is not needed.");
+        try {
+            GeneralUtils.saveKeyToSettings("system.setupCompleted", true);
+        } catch (IOException e) {
+            log.debug("Could not record setup as complete in the settings file", e);
         }
     }
 

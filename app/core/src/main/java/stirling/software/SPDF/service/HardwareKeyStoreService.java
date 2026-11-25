@@ -5,13 +5,13 @@ import java.net.NetworkInterface;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.Provider;
 import java.security.Security;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -36,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities.Pkcs11LibraryInfo;
+import stirling.software.SPDF.service.macos.MacKeychainProvider;
+import stirling.software.SPDF.service.windows.WindowsKeyLocation;
 import stirling.software.common.util.ExceptionUtils;
 
 /**
@@ -54,6 +56,7 @@ public class HardwareKeyStoreService {
 
     public static final String SOURCE_WINDOWS_STORE = "WINDOWS_STORE";
     public static final String SOURCE_PKCS11 = "PKCS11";
+    public static final String SOURCE_MACOS_KEYCHAIN = "MACOS_KEYCHAIN";
 
     private static final String WINDOWS_KEYSTORE_TYPE = "Windows-MY";
     private static final String MSCAPI_PROVIDER = "SunMSCAPI";
@@ -95,6 +98,10 @@ public class HardwareKeyStoreService {
 
     private boolean windowsStoreSupported() {
         return isWindows() && Security.getProvider(MSCAPI_PROVIDER) != null;
+    }
+
+    private boolean macKeychainSupported() {
+        return MacKeychainProvider.isSupported();
     }
 
     private boolean pkcs11Supported() {
@@ -144,12 +151,13 @@ public class HardwareKeyStoreService {
     public HardwareSigningCapabilities capabilities() {
         boolean desktop = isDesktop();
         if (!desktop) {
-            return new HardwareSigningCapabilities(false, "", false, false, List.of());
+            return new HardwareSigningCapabilities(false, "", false, false, false, List.of());
         }
         return new HardwareSigningCapabilities(
                 true,
                 System.getProperty("os.name", ""),
                 windowsStoreSupported(),
+                macKeychainSupported(),
                 pkcs11Supported(),
                 detectPkcs11Libraries());
     }
@@ -183,6 +191,7 @@ public class HardwareKeyStoreService {
                     "OpenSC",
                     List.of(
                             "/Library/OpenSC/lib/opensc-pkcs11.so",
+                            "/opt/homebrew/lib/opensc-pkcs11.so",
                             "/usr/local/lib/opensc-pkcs11.so"));
             candidates.put(
                     "YubiKey (ykcs11)",
@@ -272,6 +281,30 @@ public class HardwareKeyStoreService {
 
     public List<HardwareCertificateInfo> listWindowsCertificates() throws Exception {
         return listSigningCertificates(loadWindowsKeyStore(), SOURCE_WINDOWS_STORE);
+    }
+
+    // ---------------------------------------------------------------------
+    // macOS keychain (includes smart cards and YubiKeys via CryptoTokenKit)
+    // ---------------------------------------------------------------------
+
+    public KeyStore loadMacKeychain() throws Exception {
+        if (!macKeychainSupported()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.macKeychainUnavailable",
+                    "The macOS keychain is not available on this platform");
+        }
+        KeyStore ks =
+                KeyStore.getInstance(MacKeychainProvider.KEYSTORE_TYPE, MacKeychainProvider.get());
+        ks.load(null, null);
+        return ks;
+    }
+
+    public Provider macKeychainProvider() {
+        return MacKeychainProvider.get();
+    }
+
+    public List<HardwareCertificateInfo> listMacKeychainCertificates() throws Exception {
+        return listSigningCertificates(loadMacKeychain(), SOURCE_MACOS_KEYCHAIN);
     }
 
     // ---------------------------------------------------------------------
@@ -404,22 +437,90 @@ public class HardwareKeyStoreService {
     private List<HardwareCertificateInfo> listSigningCertificates(KeyStore ks, String source)
             throws Exception {
         List<HardwareCertificateInfo> certs = new ArrayList<>();
-        Enumeration<String> aliases = ks.aliases();
-        while (aliases.hasMoreElements()) {
-            String alias = aliases.nextElement();
-            if (!ks.isKeyEntry(alias)) {
-                continue; // only entries we can sign with
-            }
-            Certificate cert = ks.getCertificate(alias);
-            if (cert instanceof X509Certificate x509) {
-                certs.add(toInfo(alias, x509, source));
-            }
+        for (String alias : signingAliases(ks)) {
+            certs.add(
+                    toInfo(
+                            alias,
+                            (X509Certificate) ks.getCertificate(alias),
+                            source,
+                            onToken(ks, alias, source)));
         }
         return certs;
     }
 
-    private static HardwareCertificateInfo toInfo(
-            String alias, X509Certificate cert, String source) {
+    private static Boolean onToken(KeyStore ks, String alias, String source) throws Exception {
+        return switch (source) {
+            case SOURCE_MACOS_KEYCHAIN -> MacKeychainProvider.isOnToken(ks.getKey(alias, null));
+            case SOURCE_WINDOWS_STORE ->
+                    WindowsKeyLocation.isOnToken((X509Certificate) ks.getCertificate(alias));
+            default -> null;
+        };
+    }
+
+    private static List<String> signingAliases(KeyStore ks) throws KeyStoreException {
+        List<String> aliases = new ArrayList<>();
+        for (String alias : Collections.list(ks.aliases())) {
+            if (isSigningEntry(ks, alias)) {
+                aliases.add(alias);
+            }
+        }
+        return aliases;
+    }
+
+    private static boolean isSigningEntry(KeyStore ks, String alias) throws KeyStoreException {
+        return ks.isKeyEntry(alias)
+                && ks.getCertificate(alias) instanceof X509Certificate x509
+                && canSign(x509);
+    }
+
+    /**
+     * The alias to sign with from a hardware {@code source}, refusing rather than guessing. The
+     * Windows store and macOS keychain hold unrelated identities (code signing, VPN, Wi-Fi), so
+     * they need an explicit alias; a PKCS#11 token holding exactly one signing certificate may omit
+     * it. The alias must name a key entry whose certificate may sign.
+     *
+     * @throws IllegalArgumentException when no alias can be chosen, or it names no usable entry
+     */
+    public String resolveSigningAlias(KeyStore ks, String requestedAlias, String source)
+            throws KeyStoreException {
+        if (requestedAlias == null || requestedAlias.isBlank()) {
+            if (SOURCE_PKCS11.equals(source)) {
+                List<String> candidates = signingAliases(ks);
+                if (candidates.size() == 1) {
+                    return candidates.get(0);
+                }
+            }
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.hardwareAliasRequired", "Choose which certificate to sign with");
+        }
+        if (!isSigningEntry(ks, requestedAlias)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.hardwareAliasNotUsable",
+                    "No certificate on this device can sign as {0}",
+                    requestedAlias);
+        }
+        return requestedAlias;
+    }
+
+    public static boolean isHardwareSource(String certType) {
+        return SOURCE_WINDOWS_STORE.equals(certType)
+                || SOURCE_MACOS_KEYCHAIN.equals(certType)
+                || SOURCE_PKCS11.equals(certType);
+    }
+
+    /**
+     * Whether a certificate's key usage permits signing. A CAC/PIV card carries an encryption-only
+     * certificate beside the signing one, under the same name, issuer and expiry; offering it makes
+     * the two indistinguishable and its signature invalid.
+     */
+    static boolean canSign(X509Certificate cert) {
+        boolean[] keyUsage = cert.getKeyUsage();
+        return keyUsage == null || keyUsage[0] || keyUsage[1]; // digitalSignature, nonRepudiation
+    }
+
+    /** Summarises {@code cert} for display; nothing in the result is secret. */
+    public static HardwareCertificateInfo toInfo(
+            String alias, X509Certificate cert, String source, Boolean onToken) {
         java.util.Date now = new java.util.Date();
         return new HardwareCertificateInfo(
                 alias,
@@ -433,7 +534,8 @@ public class HardwareKeyStoreService {
                 cert.getNotBefore().toInstant().toString(),
                 cert.getNotAfter().toInstant().toString(),
                 now.after(cert.getNotAfter()),
-                now.before(cert.getNotBefore()));
+                now.before(cert.getNotBefore()),
+                onToken);
     }
 
     private static String commonName(X500Principal principal) {

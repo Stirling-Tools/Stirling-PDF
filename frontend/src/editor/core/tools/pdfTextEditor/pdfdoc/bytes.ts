@@ -61,6 +61,7 @@ export function undoPngPredictor(
   const bpp = Math.max(1, Math.ceil((colors * bpc) / 8));
   const rowLen = Math.ceil((colors * bpc * columns) / 8);
   const rows = Math.floor(data.length / (rowLen + 1));
+  if (rows < 1) return new Uint8Array(0);
   const out = new Uint8Array(rows * rowLen);
   let prev = new Uint8Array(rowLen);
   for (let r = 0; r < rows; r += 1) {

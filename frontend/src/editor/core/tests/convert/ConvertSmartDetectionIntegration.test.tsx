@@ -103,6 +103,7 @@ vi.mock("../../services/thumbnailGenerationService", () => ({
       .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
     cleanup: vi.fn(),
     destroy: vi.fn(),
+    forgetFile: vi.fn(),
   },
 }));
 
@@ -470,7 +471,6 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         "text/html",
       );
 
-      // Set up HTML conversion parameters
       act(() => {
         paramsResult.current.analyzeFileTypes([htmlFile]);
         paramsResult.current.updateParameter("htmlOptions", {

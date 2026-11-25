@@ -72,7 +72,6 @@ export interface ConvertParameters extends BaseParameters {
     dpi: number;
   };
   ebookOptions?: {
-    embedAllFonts: boolean;
     includeTableOfContents: boolean;
     includePageNumbers: boolean;
     optimizeForEbook: boolean;
@@ -82,8 +81,6 @@ export interface ConvertParameters extends BaseParameters {
     targetDevice: string;
     outputFormat: string;
   };
-  /** Per-request engine pick; undefined follows the server setting. */
-  useStirlingOfficeConvert?: boolean;
   isSmartDetection: boolean;
   smartDetectionType: "mixed" | "images" | "web" | "none";
 }
@@ -145,7 +142,6 @@ export const defaultParameters: ConvertParameters = {
     dpi: 150,
   },
   ebookOptions: {
-    embedAllFonts: false,
     includeTableOfContents: false,
     includePageNumbers: false,
     optimizeForEbook: false,
