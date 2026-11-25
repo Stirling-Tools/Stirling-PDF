@@ -156,32 +156,24 @@ export function ReaderRail() {
           styles={{ dropdown: { maxHeight: "70vh", overflowY: "auto" } }}
         >
           <Menu.Target>
-            {/* The wrapper takes the click handler and ref Menu.Target injects;
-                AppTooltip does not forward either, so without it the menu never
-                opens. */}
-            <div className="reader-rail__item">
-              {/* Labelled like every other control in the rail: icons only, so
-                  the tooltip is the only name a pointer ever sees. */}
-              <AppTooltip
-                content={t("reader.rail.switchDocument", "Switch document")}
-                position="left"
-                arrow
-                delay={0}
+            {/* Labelled like every other control in the rail: icons only, so the
+                tooltip is the only name a pointer ever sees. */}
+            <AppTooltip
+              content={t("reader.rail.switchDocument", "Switch document")}
+              position="left"
+              arrow
+              delay={0}
+            >
+              <ActionIcon
+                variant="tertiary"
+                size="md"
+                shape="circle"
+                // The name is in the dropdown; the trigger says what it opens.
+                aria-label={t("reader.rail.switchDocument", "Switch document")}
               >
-                <ActionIcon
-                  variant="tertiary"
-                  size="md"
-                  shape="circle"
-                  // The name is in the dropdown; the trigger says what it opens.
-                  aria-label={t(
-                    "reader.rail.switchDocument",
-                    "Switch document",
-                  )}
-                >
-                  <Icon name="file-text" size={SIZE} />
-                </ActionIcon>
-              </AppTooltip>
-            </div>
+                <Icon name="file-text" size={SIZE} />
+              </ActionIcon>
+            </AppTooltip>
           </Menu.Target>
           <Menu.Dropdown>
             {documents.map((doc) => (
