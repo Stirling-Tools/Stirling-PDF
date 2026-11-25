@@ -76,6 +76,13 @@ vi.mock("@editor/services/exportWithPolicy", () => ({
   downloadFileWithPolicy: vi.fn(),
 }));
 vi.mock("@editor/services/zipFileService", () => ({ zipFileService: {} }));
+vi.mock("@editor/hooks/useSaveStoredFile", () => ({
+  useSaveStoredFile: () => ({
+    saveStoredFile: vi.fn(),
+    isUnsaved: () => false,
+    targetFor: () => null,
+  }),
+}));
 
 import FileEditor from "@editor/components/fileEditor/FileEditor";
 
