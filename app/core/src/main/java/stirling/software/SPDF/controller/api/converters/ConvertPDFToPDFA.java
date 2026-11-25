@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.awt.Color;
-import java.awt.color.ColorSpace;
 import java.awt.color.ICC_Profile;
 import java.io.*;
 import java.nio.file.Files;
@@ -33,14 +32,23 @@ import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecifica
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType1CFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.encoding.SymbolEncoding;
+import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.preflight.Format;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -68,11 +76,23 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.misc.CmykGhostscriptFallback;
+import stirling.software.common.util.misc.CmykProfileResolver;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.doc.PdfXConverter;
+import stirling.software.jpdfium.doc.PdfXOptions;
+import stirling.software.jpdfium.doc.PdfXStandard;
+import stirling.software.jpdfium.exception.JPDFiumException;
+import stirling.software.jpdfium.model.FlattenMode;
+import stirling.software.jpdfium.model.PageSize;
+import stirling.software.jpdfium.model.SaveOptions;
 import stirling.software.officeconvert.pdfa.PdfALevel;
 import stirling.software.officeconvert.pdfa.PdfToPdfA;
 
@@ -107,6 +127,7 @@ public class ConvertPDFToPDFA {
     }
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
+    private static final int FLATTEN_DPI = 300;
 
     private static final String ANNOTATION_HIGHLIGHT = "Highlight";
     private static final String ANNOTATION_POPUP = "Popup";
@@ -181,52 +202,6 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private static List<String> buildGhostscriptCommandX(
-            Path inputPdf,
-            Path outputPdf,
-            ColorProfiles colorProfiles,
-            Path workingDir,
-            PdfXProfile profile) {
-
-        List<String> command = new ArrayList<>(25);
-        command.add("gs");
-        command.add("--permit-file-read=" + workingDir.toAbsolutePath());
-        command.add("--permit-file-read=" + colorProfiles.rgb().toAbsolutePath());
-        command.add("--permit-file-read=" + colorProfiles.gray().toAbsolutePath());
-        command.add("--permit-file-read=" + inputPdf.toAbsolutePath());
-        command.add("--permit-file-write=" + workingDir.toAbsolutePath());
-        command.add("-dPDFX=" + profile.getPdfxVersion());
-        command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
-        command.add("-sDEVICE=pdfwrite");
-        // The default /PageByPage turns each page to match its text on top of the page's own
-        // /Rotate, so a page the user rotated comes out upside down.
-        command.add("-dAutoRotatePages=/None");
-        command.add("-sColorConversionStrategy=RGB");
-        command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
-        command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
-        command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
-        command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=true");
-        command.add("-dCompressFonts=true");
-        command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
-
-        // Explicitly tune downsampling/compression for high-quality print
-        command.add("-dColorImageDownsampleType=/Bicubic");
-        command.add("-dColorImageResolution=300");
-        command.add("-dGrayImageDownsampleType=/Bicubic");
-        command.add("-dGrayImageResolution=300");
-        command.add("-dMonoImageDownsampleType=/Bicubic");
-        command.add("-dMonoImageResolution=1200");
-
-        command.add("-dNOPAUSE");
-        command.add("-dBATCH");
-        command.add("-dNOOUTERSAVE");
-        command.add("-sOutputFile=" + outputPdf.toAbsolutePath());
-        command.add(inputPdf.toAbsolutePath().toString());
-
-        return command;
-    }
-
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/pdfa",
@@ -235,9 +210,9 @@ public class ConvertPDFToPDFA {
     @Operation(
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
-                    "This endpoint converts a PDF file to PDF/A using Stirling Office Convert, or to"
-                            + " PDF/X using Ghostscript. PDF/A is a format designed for long-term"
-                            + " archiving, while PDF/X is optimized for print production.")
+                    "This endpoint converts a PDF file to PDF/A using Stirling Office Convert,"
+                            + " and to PDF/X in process with JPDFium. PDF/A is a format designed for"
+                            + " long-term archiving, while PDF/X is optimized for print production.")
     public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -253,65 +228,14 @@ public class ConvertPDFToPDFA {
         boolean isPdfX = outputFormat != null && outputFormat.toLowerCase().startsWith("pdfx");
 
         if (isPdfX) {
-            return handlePdfXConversion(inputFile, outputFormat);
+            return handlePdfXConversion(
+                    inputFile, outputFormat, request.getStrict() != null && request.getStrict());
         } else {
             return handlePdfAConversion(
                     inputFile,
                     outputFormat,
                     request.getStrict() != null && request.getStrict(),
                     request.getPdfUa() != null && request.getPdfUa());
-        }
-    }
-
-    private ResponseEntity<Resource> handlePdfXConversion(
-            MultipartFile inputFile, String outputFormat) throws Exception {
-        PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
-
-        String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
-        if (originalFileName == null || originalFileName.trim().isEmpty()) {
-            originalFileName = "output.pdf";
-        }
-        String baseFileName =
-                originalFileName.contains(".")
-                        ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
-                        : originalFileName;
-
-        Path workingDir = Files.createTempDirectory("pdfx_conversion_");
-        Path inputPath = workingDir.resolve("input.pdf");
-        inputFile.transferTo(inputPath);
-
-        try {
-            // PDF/X conversion uses Ghostscript (no fallback currently)
-            if (!isGhostscriptAvailable()) {
-                throw ExceptionUtils.createGhostscriptRequiredException("PDF/X conversion");
-            }
-
-            log.info("Using Ghostscript for PDF/X conversion to {}", profile.getDisplayName());
-            byte[] converted = convertWithGhostscriptX(inputPath, workingDir, profile);
-            String outputFilename = baseFileName + ".pdf";
-
-            log.info("PDF/X conversion completed successfully to {}", profile.getDisplayName());
-
-            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-            try {
-                Files.write(tempOut.getPath(), converted);
-            } catch (Exception ex) {
-                tempOut.close();
-                throw ex;
-            }
-            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw ExceptionUtils.createProcessingInterruptedException("PDF/X conversion", e);
-        } catch (ExceptionUtils.BaseAppException e) {
-            // Already says what went wrong, such as the missing binary above.
-            throw e;
-        } catch (IOException e) {
-            log.error("PDF/X conversion failed", e);
-            throw ExceptionUtils.createPdfaConversionFailedException(e);
-        } finally {
-            deleteQuietly(workingDir);
         }
     }
 
@@ -324,6 +248,453 @@ public class ConvertPDFToPDFA {
         } catch (Exception e) {
             log.debug("Ghostscript availability check failed", e);
             return false;
+        }
+    }
+
+    private static Set<String> findUnembeddedFontNames(PDDocument doc) throws IOException {
+        Set<String> missing = new HashSet<>(16);
+        for (PDPage page : doc.getPages()) {
+            collectUnembeddedFontNames(page.getResources(), missing, 0);
+        }
+        for (PDResources resources : formFontResources(doc)) {
+            collectUnembeddedFontNames(resources, missing, 0);
+        }
+        return missing;
+    }
+
+    private static void collectUnembeddedFontNames(
+            PDResources resources, Set<String> missing, int depth) throws IOException {
+        if (resources == null || depth > 8) return;
+        for (COSName name : resources.getFontNames()) {
+            PDFont font = resources.getFont(name);
+            if (font != null && !font.isEmbedded()) {
+                missing.add(font.getName());
+            }
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            if (resources.getXObject(name) instanceof PDFormXObject form) {
+                collectUnembeddedFontNames(form.getResources(), missing, depth + 1);
+            }
+        }
+    }
+
+    /**
+     * Replaces non-embedded simple Type1/TrueType fonts with metric-compatible Liberation fonts
+     * before PDF/X conversion. JPDFium cannot invent a font program; exact Standard 14 names and
+     * custom Latin family names are mapped by name, so the default PDF/X path does not emit
+     * non-embedded simple fonts. Composite, Type3 and symbol fonts are left for strict checking.
+     */
+    private void embedPdfxFonts(Path pdfPath) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
+            Map<String, PDTrueTypeFont> substitutes = new HashMap<>();
+            int replaced = 0;
+            for (PDPage page : document.getPages()) {
+                replaced += replacePdfxFonts(document, page.getResources(), substitutes, 0);
+            }
+            for (PDResources resources : formFontResources(document)) {
+                replaced += replacePdfxFonts(document, resources, substitutes, 0);
+            }
+            if (replaced > 0) {
+                // The document reads lazily from pdfPath; saving in place truncates
+                // unread content streams, so the substitution lands via a sibling file.
+                Path output = Files.createTempFile(pdfPath.getParent(), "pdfx-embed-", ".pdf");
+                try {
+                    document.save(output.toFile());
+                    Files.move(output, pdfPath, StandardCopyOption.REPLACE_EXISTING);
+                } finally {
+                    Files.deleteIfExists(output);
+                }
+                log.info("Embedded {} PDF/X standard font resource(s)", replaced);
+            }
+        }
+    }
+
+    /**
+     * Font resources of the AcroForm: its default resources plus every widget appearance stream.
+     * PDF/X validation checks these like page resources, so detection and substitution must walk
+     * them too or a converted form still claims a non-embedded font.
+     */
+    private static List<PDResources> formFontResources(PDDocument doc) throws IOException {
+        PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm();
+        if (acroForm == null) {
+            return List.of();
+        }
+        List<PDResources> resources = new ArrayList<>();
+        if (acroForm.getDefaultResources() != null) {
+            resources.add(acroForm.getDefaultResources());
+        }
+        for (PDField field : acroForm.getFieldTree()) {
+            for (PDAnnotationWidget widget : field.getWidgets()) {
+                collectAppearanceResources(widget, resources);
+            }
+        }
+        return resources;
+    }
+
+    private static void collectAppearanceResources(
+            PDAnnotationWidget widget, List<PDResources> out) {
+        PDAppearanceDictionary appearance = widget.getAppearance();
+        if (appearance == null) return;
+        addAppearanceEntryResources(appearance.getNormalAppearance(), out);
+        addAppearanceEntryResources(appearance.getDownAppearance(), out);
+        addAppearanceEntryResources(appearance.getRolloverAppearance(), out);
+    }
+
+    private static void addAppearanceEntryResources(
+            PDAppearanceEntry entry, List<PDResources> out) {
+        if (entry == null) return;
+        if (entry.isStream()) {
+            out.add(entry.getAppearanceStream().getResources());
+        } else {
+            for (PDAppearanceStream stream : entry.getSubDictionary().values()) {
+                out.add(stream.getResources());
+            }
+        }
+    }
+
+    /**
+     * Embeds the fonts JPDFium cannot substitute by running Ghostscript's pdfwrite pass. This is
+     * the fallback for composite Type0/CID and symbol fonts; it only runs when unsupported fonts
+     * remain after the in-process substitute and Ghostscript is installed.
+     */
+    private void embedPdfxFontsWithGhostscript(Path pdfPath) throws IOException {
+        Path output = Files.createTempFile(pdfPath.getParent(), "pdfx-fonts-", ".pdf");
+        try {
+            List<String> command =
+                    new ArrayList<>(
+                            List.of(
+                                    "gs",
+                                    "-sDEVICE=pdfwrite",
+                                    "-dCompatibilityLevel=1.6",
+                                    "-dPDFSETTINGS=/prepress",
+                                    "-dEmbedAllFonts=true",
+                                    "-dSubsetFonts=true",
+                                    "-dPreserveAnnots=true",
+                                    "-dNOPAUSE",
+                                    "-dQUIET",
+                                    "-dBATCH",
+                                    "-sOutputFile=" + output,
+                                    pdfPath.toString()));
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(command);
+            if (result.getRc() != 0) {
+                throw new IOException(
+                        "Ghostscript font embedding failed with return code "
+                                + result.getRc()
+                                + ": "
+                                + result.getMessages());
+            }
+            if (Files.size(output) == 0) {
+                throw new IOException("Ghostscript font embedding produced an empty PDF");
+            }
+            Files.move(output, pdfPath, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Embedded PDF/X fonts with Ghostscript for {}", pdfPath.getFileName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Ghostscript font embedding was interrupted", e);
+        } finally {
+            Files.deleteIfExists(output);
+        }
+    }
+
+    /** Page indices that still contain a non-embedded font after in-process substitution. */
+    private static Set<Integer> pagesWithUnembeddedFonts(Path pdfPath) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
+            Set<Integer> pages = new HashSet<>();
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                Set<String> missing = new HashSet<>();
+                collectUnembeddedFontNames(document.getPage(i).getResources(), missing, 0);
+                if (!missing.isEmpty()) {
+                    pages.add(i);
+                }
+            }
+            return pages;
+        }
+    }
+
+    /**
+     * Rasterizes pages whose fonts JPDFium cannot embed without Ghostscript. The page becomes a 300
+     * dpi image, so the PDF/X output is valid but its text is no longer selectable.
+     */
+    private void flattenUnsupportedFontPages(Path pdfPath, Set<Integer> pages) throws IOException {
+        byte[] input = Files.readAllBytes(pdfPath);
+        try (PdfDocument document = PdfDocument.open(input)) {
+            int flattened = 0;
+            for (int pageIndex : pages) {
+                if (pageIndex >= 0 && pageIndex < document.pageCount()) {
+                    try (PdfPage page = document.page(pageIndex)) {
+                        PageSize size = page.size();
+                        ImageMemoryLimit.requirePointSizeFits(
+                                size.width(), size.height(), pageIndex + 1, FLATTEN_DPI);
+                    }
+                    document.flattenPage(pageIndex, FlattenMode.FULL, FLATTEN_DPI);
+                    flattened++;
+                }
+            }
+            if (flattened == 0) {
+                throw new IOException("No PDF/X page could be rasterized for unsupported fonts");
+            }
+            document.saveTo(pdfPath, SaveOptions.validated());
+            log.info("Rasterized {} PDF/X page(s) with unsupported fonts", flattened);
+        }
+    }
+
+    private static Set<String> findUnembeddedFontNamesInFile(Path pdfPath) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
+            return findUnembeddedFontNames(document);
+        }
+    }
+
+    private int replacePdfxFonts(
+            PDDocument document,
+            PDResources resources,
+            Map<String, PDTrueTypeFont> substitutes,
+            int depth)
+            throws IOException {
+        if (resources == null || depth > 8) return 0;
+        int replaced = 0;
+        for (COSName key : resources.getFontNames()) {
+            PDFont font = resources.getFont(key);
+            if (font.isEmbedded()) continue;
+            // Type0/CID and Type3 fonts need their own glyph programs; replacing
+            // them with a Latin TrueType font would drop text. Only simple fonts
+            // with a single-byte encoding are safe to substitute.
+            if (!(font instanceof PDType1Font) && !(font instanceof PDTrueTypeFont)) continue;
+            String fontName = font.getName();
+            String substitute =
+                    "Symbol".equals(fontName) ? "DejaVuSans.ttf" : pdfxFontSubstitute(fontName);
+            if (substitute == null) continue;
+            // One font object per family: reusing it keeps a long form from embedding
+            // the full Liberation program once per resource entry.
+            PDTrueTypeFont loaded = substitutes.get(substitute);
+            if (loaded == null) {
+                try (InputStream fontStream =
+                        ConvertPDFToPDFA.class.getResourceAsStream("/static/fonts/" + substitute)) {
+                    if (fontStream == null) {
+                        log.warn("Bundled PDF/X font substitute not found: {}", substitute);
+                        continue;
+                    }
+                    loaded =
+                            PDTrueTypeFont.load(
+                                    document,
+                                    fontStream,
+                                    "DejaVuSans.ttf".equals(substitute)
+                                            ? SymbolEncoding.INSTANCE
+                                            : WinAnsiEncoding.INSTANCE);
+                    substitutes.put(substitute, loaded);
+                } catch (IOException | IllegalArgumentException e) {
+                    log.warn(
+                            "Could not substitute PDF/X font {} with {}",
+                            font.getName(),
+                            substitute,
+                            e);
+                    continue;
+                }
+            }
+            resources.put(key, loaded);
+            replaced++;
+        }
+        for (COSName key : resources.getXObjectNames()) {
+            PDXObject object = resources.getXObject(key);
+            if (object instanceof PDFormXObject form) {
+                replaced += replacePdfxFonts(document, form.getResources(), substitutes, depth + 1);
+            }
+        }
+        return replaced;
+    }
+
+    private static String pdfxFontSubstitute(String baseFont) {
+        String name = baseFont == null ? "" : baseFont;
+        int plus = name.indexOf('+');
+        if (plus >= 0) name = name.substring(plus + 1);
+        String exact = pdfxFontSubstituteExact(name);
+        if (exact != null) return exact;
+        String lower = name.toLowerCase(Locale.ROOT);
+        if (lower.contains("symbol")
+                || lower.contains("dingbat")
+                || lower.contains("wingding")
+                || lower.contains("webding")) {
+            return null;
+        }
+        boolean bold = lower.contains("bold") || lower.contains("black") || lower.contains("heavy");
+        boolean italic =
+                lower.contains("italic") || lower.contains("oblique") || lower.contains("slanted");
+        String family;
+        if (lower.contains("mono") || lower.contains("courier") || lower.contains("consol")) {
+            family = "LiberationMono";
+        } else if (lower.contains("serif")
+                || lower.contains("times")
+                || lower.contains("georgia")
+                || lower.contains("garamond")
+                || lower.contains("book")) {
+            family = "LiberationSerif";
+        } else {
+            family = "LiberationSans";
+        }
+        return family
+                + "-"
+                + (bold ? (italic ? "BoldItalic" : "Bold") : (italic ? "Italic" : "Regular"))
+                + ".ttf";
+    }
+
+    private static String pdfxFontSubstituteExact(String name) {
+        return switch (name) {
+            case "Helvetica", "Arial", "ArialMT" -> "LiberationSans-Regular.ttf";
+            case "Helvetica-Bold", "Arial-BoldMT" -> "LiberationSans-Bold.ttf";
+            case "Helvetica-Oblique", "Helvetica-Italic", "Arial-ItalicMT" ->
+                    "LiberationSans-Italic.ttf";
+            case "Helvetica-BoldOblique", "Helvetica-BoldItalic", "Arial-BoldItalicMT" ->
+                    "LiberationSans-BoldItalic.ttf";
+            case "Times-Roman", "TimesNewRoman", "TimesNewRomanPSMT" ->
+                    "LiberationSerif-Regular.ttf";
+            case "Times-Bold", "TimesNewRoman-Bold", "TimesNewRomanPS-BoldMT" ->
+                    "LiberationSerif-Bold.ttf";
+            case "Times-Italic", "TimesNewRoman-Italic", "TimesNewRomanPS-ItalicMT" ->
+                    "LiberationSerif-Italic.ttf";
+            case "Times-BoldItalic", "TimesNewRoman-BoldItalic", "TimesNewRomanPS-BoldItalicMT" ->
+                    "LiberationSerif-BoldItalic.ttf";
+            case "Courier", "CourierNew", "CourierNewPSMT" -> "LiberationMono-Regular.ttf";
+            case "Courier-Bold", "CourierNew-Bold", "CourierNewPS-BoldMT" ->
+                    "LiberationMono-Bold.ttf";
+            case "Courier-Oblique",
+                    "Courier-Italic",
+                    "CourierNew-Italic",
+                    "CourierNewPS-ItalicMT" ->
+                    "LiberationMono-Italic.ttf";
+            case "Courier-BoldOblique",
+                    "Courier-BoldItalic",
+                    "CourierNew-BoldItalic",
+                    "CourierNewPS-BoldItalicMT" ->
+                    "LiberationMono-BoldItalic.ttf";
+            default -> null;
+        };
+    }
+
+    private ResponseEntity<Resource> handlePdfXConversion(
+            MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
+        PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
+
+        String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            originalFileName = "output.pdf";
+        }
+        String baseFileName =
+                originalFileName.contains(".")
+                        ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
+                        : originalFileName;
+
+        try {
+            if (!PdfXConverter.supports(profile.getStandard())) {
+                throw new IOException(
+                        "PDF/X conversion is not supported by this JPDFium build for "
+                                + profile.getDisplayName());
+            }
+
+            PdfXOptions.Builder optionsBuilder =
+                    PdfXOptions.builder()
+                            .standard(profile.getStandard())
+                            .convertForms(true)
+                            .convertSpecialColors(true)
+                            .convertLosslessImages(true)
+                            .requireEmbeddedFonts(strict)
+                            .title(baseFileName);
+            byte[] cmykProfile = CmykProfileResolver.profile();
+            if (cmykProfile != null) {
+                optionsBuilder
+                        .outputIntentProfile(cmykProfile)
+                        .conditionIdentifier("Stirling PDF CMYK")
+                        .info("Stirling PDF CMYK output intent");
+            } else {
+                optionsBuilder.useCompactCmyk();
+            }
+            PdfXOptions options = optionsBuilder.build();
+
+            TempFile inputTemp = null;
+            TempFile outputTemp = null;
+            try {
+                inputTemp = tempFileManager.createManagedTempFile(".pdf");
+                outputTemp = tempFileManager.createManagedTempFile(".pdf");
+                inputFile.transferTo(inputTemp.getFile());
+                byte[] inputBytes = Files.readAllBytes(inputTemp.getFile().toPath());
+                if (CmykGhostscriptFallback.needsGhostscript(inputBytes)) {
+                    try {
+                        Files.write(
+                                inputTemp.getFile().toPath(),
+                                CmykGhostscriptFallback.convert(inputBytes));
+                    } catch (IOException e) {
+                        log.warn(
+                                "Ghostscript CMYK shading fallback failed; continuing with JPDFium",
+                                e);
+                    }
+                }
+                embedPdfxFonts(inputTemp.getFile().toPath());
+                try (PDDocument prepared = Loader.loadPDF(inputTemp.getFile())) {
+                    requireSanitizablePageCount(prepared, maxConversionPages);
+                }
+                Set<String> unsupportedFonts = findUnembeddedFontNamesInFile(inputTemp.getPath());
+                if (!unsupportedFonts.isEmpty() && isGhostscriptAvailable()) {
+                    try {
+                        embedPdfxFontsWithGhostscript(inputTemp.getPath());
+                        unsupportedFonts = findUnembeddedFontNamesInFile(inputTemp.getPath());
+                    } catch (IOException e) {
+                        log.warn("Ghostscript PDF/X font fallback failed", e);
+                    }
+                }
+                if (!unsupportedFonts.isEmpty()) {
+                    try {
+                        Set<Integer> pages = pagesWithUnembeddedFonts(inputTemp.getPath());
+                        if (!pages.isEmpty()) {
+                            flattenUnsupportedFontPages(inputTemp.getPath(), pages);
+                            unsupportedFonts = findUnembeddedFontNamesInFile(inputTemp.getPath());
+                        }
+                    } catch (ExceptionUtils.BaseAppException e) {
+                        // An oversized page is the user's real problem; the font error
+                        // would hide it.
+                        throw e;
+                    } catch (IOException | RuntimeException e) {
+                        log.warn("Could not rasterize PDF/X pages with unsupported fonts", e);
+                    }
+                }
+                if (!unsupportedFonts.isEmpty()) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "PDF/X requires embedded fonts. These fonts could not be"
+                                    + " substituted automatically: "
+                                    + String.join(", ", unsupportedFonts));
+                }
+
+                PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
+                PdfXConverter.checkMetadata(outputTemp.getPath(), options);
+
+                String outputFilename = baseFileName + ".pdf";
+                TempFile out = outputTemp;
+                outputTemp = null; // ownership transferred to the response
+                return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
+            } finally {
+                if (inputTemp != null) {
+                    inputTemp.close();
+                }
+                if (outputTemp != null) {
+                    outputTemp.close();
+                }
+            }
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (JPDFiumException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (ExceptionUtils.BaseAppException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            log.error("JPDFium PDF/X conversion failed", e);
+            throw ExceptionUtils.createPdfaConversionFailedException(e);
+        } catch (LinkageError e) {
+            log.error("JPDFium native library is unavailable for PDF/X conversion", e);
+            throw ExceptionUtils.createPdfaConversionFailedException(e);
+        } catch (IOException e) {
+            log.error("PDF/X conversion failed", e);
+            throw ExceptionUtils.createPdfaConversionFailedException(e);
         }
     }
 
@@ -403,21 +774,6 @@ public class ConvertPDFToPDFA {
                 }
             }
         }
-    }
-
-    private ColorProfiles prepareColorProfiles(Path workingDir) throws IOException {
-        Path rgbProfile = workingDir.resolve("sRGB.icc");
-        copyResourceIcc(rgbProfile);
-
-        Path grayProfile = workingDir.resolve("Gray.icc");
-        try {
-            writeJavaIccProfile(ICC_Profile.getInstance(ColorSpace.CS_GRAY), grayProfile);
-        } catch (IllegalArgumentException e) {
-            log.warn("Falling back to sRGB ICC profile for grayscale defaults", e);
-            Files.copy(rgbProfile, grayProfile, StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        return new ColorProfiles(rgbProfile, grayProfile);
     }
 
     private static int countGlyphs(String charSet) {
@@ -765,36 +1121,6 @@ public class ConvertPDFToPDFA {
                 log.debug("Fixed single OCG missing or empty name");
             }
         }
-    }
-
-    private byte[] convertWithGhostscriptX(Path inputPdf, Path workingDir, PdfXProfile profile)
-            throws IOException, InterruptedException {
-        Path outputPdf = workingDir.resolve("gs_output_pdfx.pdf");
-        ColorProfiles colorProfiles = prepareColorProfiles(workingDir);
-
-        // Sanitize the PDF before PDF/X conversion for better Ghostscript compatibility
-        Path sanitizedInputPdf = sanitizePdfWithPdfBox(inputPdf, true);
-        Path inputForGs = sanitizedInputPdf != null ? sanitizedInputPdf : inputPdf;
-
-        List<String> command =
-                buildGhostscriptCommandX(inputForGs, outputPdf, colorProfiles, workingDir, profile);
-
-        log.info("Running Ghostscript PDF/X command: {}", String.join(" ", command));
-
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                        .runCommandWithOutputHandling(command);
-
-        if (result.getRc() != 0) {
-            log.error("Ghostscript PDF/X failed with output: {}", result.getMessages());
-            throw new IOException("Ghostscript exited with code " + result.getRc());
-        }
-
-        if (!Files.exists(outputPdf)) {
-            throw new IOException("Ghostscript did not produce an output file");
-        }
-
-        return Files.readAllBytes(outputPdf);
     }
 
     /** Tags a converted PDF/A for level A; must run after Ghostscript, which discards tags. */
@@ -1714,21 +2040,19 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X("PDF/X", "1.6", "2008", "pdfx");
+        PDF_X("PDF/X", PdfXStandard.PDF_X_4, "pdfx"),
+        PDF_X_1A("PDF/X-1a", PdfXStandard.PDF_X_1A, "pdfx-1a", "pdfx-1"),
+        PDF_X_3("PDF/X-3", PdfXStandard.PDF_X_3, "pdfx-3"),
+        PDF_X_4("PDF/X-4", PdfXStandard.PDF_X_4, "pdfx-4"),
+        PDF_X_6("PDF/X-6", PdfXStandard.PDF_X_6, "pdfx-6");
 
         private final String displayName;
-        private final String compatibilityLevel;
-        private final String pdfxVersion;
+        private final PdfXStandard standard;
         private final List<String> requestTokens;
 
-        PdfXProfile(
-                String displayName,
-                String compatibilityLevel,
-                String pdfxVersion,
-                String... requestTokens) {
+        PdfXProfile(String displayName, PdfXStandard standard, String... requestTokens) {
             this.displayName = displayName;
-            this.compatibilityLevel = compatibilityLevel;
-            this.pdfxVersion = pdfxVersion;
+            this.standard = standard;
             this.requestTokens =
                     Arrays.stream(requestTokens)
                             .map(token -> token.toLowerCase(Locale.ROOT))
@@ -1753,6 +2077,4 @@ public class ConvertPDFToPDFA {
     private interface DocumentSanitizer {
         void sanitize(PDDocument doc) throws IOException;
     }
-
-    private record ColorProfiles(Path rgb, Path gray) {}
 }

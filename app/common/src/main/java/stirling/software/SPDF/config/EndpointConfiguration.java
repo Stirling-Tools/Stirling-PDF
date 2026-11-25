@@ -566,7 +566,6 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "crop");
-        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
         addEndpointToGroup("Ghostscript", "scanner-effect");
 
         /* tesseract */

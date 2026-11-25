@@ -35,7 +35,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -55,7 +54,6 @@ class CropControllerTest {
     }
 
     @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @InjectMocks private CropController cropController;
     private TestPdfFactory pdfFactory;
@@ -216,13 +214,12 @@ class CropControllerTest {
     }
 
     @Nested
-    @DisplayName("Manual Crop with PDFBox")
-    class ManualCropPDFBoxTests {
+    @DisplayName("Manual Crop with JPDFium")
+    class ManualCropTests {
 
         @Test
-        @DisplayName(
-                "Should successfully crop PDF using PDFBox when removeDataOutsideCrop is false")
-        void shouldCropPdfSuccessfullyWithPDFBox() throws IOException {
+        @DisplayName("Should successfully crop PDF when removeDataOutsideCrop is false")
+        void shouldCropPdfSuccessfullyWithJpdfium() throws IOException {
             MockMultipartFile testFile = pdfFactory.createStandardPdf("test.pdf");
             CropPdfForm request =
                     new CropRequestBuilder()
@@ -232,27 +229,17 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
-            PDDocument newDocument = spy(new PDDocument());
-            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
-                    .thenReturn(newDocument);
-
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-            assertThat(response)
-                    .isNotNull()
-                    .extracting(ResponseEntity::getStatusCode, ResponseEntity::getBody)
-                    .satisfies(
-                            tuple -> {
-                                assertThat(tuple.get(0)).isEqualTo(HttpStatus.OK);
-                                assertThat(tuple.get(1)).isNotNull();
-                            });
-
-            verify(pdfDocumentFactory).load(request);
-            verify(pdfDocumentFactory).createNewDocumentBasedOnOldDocument(mockDocument);
-            verify(mockDocument, times(1)).close();
-            verify(newDocument, times(1)).close();
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                PDRectangle box = result.getPage(0).getMediaBox();
+                assertThat(box.getLowerLeftX()).isEqualTo(50f);
+                assertThat(box.getLowerLeftY()).isEqualTo(50f);
+                assertThat(box.getWidth()).isEqualTo(512f);
+                assertThat(box.getHeight()).isEqualTo(692f);
+            }
         }
 
         @ParameterizedTest
@@ -269,21 +256,17 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
-            PDDocument newDocument = spy(new PDDocument());
-            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
-                    .thenReturn(newDocument);
-
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-            assertThat(response).isNotNull();
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
-
-            verify(pdfDocumentFactory).load(request);
-            verify(mockDocument, times(1)).close();
-            verify(newDocument, times(1)).close();
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                PDRectangle box = result.getPage(0).getMediaBox();
+                assertThat(box.getLowerLeftX()).isCloseTo(x, within(0.01f));
+                assertThat(box.getLowerLeftY()).isCloseTo(y, within(0.01f));
+                assertThat(box.getWidth()).isCloseTo(width, within(0.01f));
+                assertThat(box.getHeight()).isCloseTo(height, within(0.01f));
+            }
         }
 
         @Test
@@ -298,10 +281,6 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .withPageNumbers("9")
                             .build();
-
-            PDDocument mockDocument = mock(PDDocument.class);
-            when(mockDocument.getNumberOfPages()).thenReturn(3);
-            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
 
             assertThatThrownBy(() -> cropController.cropPdf(request))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -330,26 +309,15 @@ class CropControllerTest {
             CropPdfForm request =
                     new CropRequestBuilder().withFile(testFile).withAutoCrop(true).build();
 
-            // Mock the pdfDocumentFactory to load real PDFs
-            try (PDDocument sourceDoc = Loader.loadPDF(testFile.getBytes());
-                    PDDocument newDoc = new PDDocument()) {
-                when(pdfDocumentFactory.load(request)).thenReturn(sourceDoc);
-                when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
-                        .thenReturn(newDoc);
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-                ResponseEntity<Resource> response = cropController.cropPdf(request);
-
-                assertThat(response).isNotNull();
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                assertThat(drainBody(response)).isNotEmpty();
-
-                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
-                    assertThat(result.getNumberOfPages()).isEqualTo(1);
-
-                    PDPage page = result.getPage(0);
-                    assertThat(page).isNotNull();
-                    assertThat(page.getMediaBox()).isNotNull();
-                }
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                assertThat(result.getNumberOfPages()).isEqualTo(1);
+                PDRectangle box = result.getPage(0).getMediaBox();
+                assertThat(box.getWidth()).isLessThan(PDRectangle.A4.getWidth());
+                assertThat(box.getHeight()).isLessThan(PDRectangle.A4.getHeight());
             }
         }
 
@@ -361,22 +329,12 @@ class CropControllerTest {
             CropPdfForm request =
                     new CropRequestBuilder().withFile(testFile).withAutoCrop(true).build();
 
-            // Mock the pdfDocumentFactory to load real PDFs
-            try (PDDocument sourceDoc = Loader.loadPDF(testFile.getBytes());
-                    PDDocument newDoc = new PDDocument()) {
-                when(pdfDocumentFactory.load(request)).thenReturn(sourceDoc);
-                when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
-                        .thenReturn(newDoc);
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-                ResponseEntity<Resource> response = cropController.cropPdf(request);
-
-                assertThat(response).isNotNull();
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-                Assertions.assertNotNull(response.getBody());
-                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
-                    assertThat(result.getNumberOfPages()).isEqualTo(1);
-                }
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                assertThat(result.getNumberOfPages()).isEqualTo(1);
             }
         }
     }
@@ -609,7 +567,7 @@ class CropControllerTest {
 
         @Test
         @DisplayName("Should throw exception for corrupt PDF file")
-        void shouldThrowExceptionForCorruptPdf() throws IOException {
+        void shouldThrowExceptionForCorruptPdf() {
             MockMultipartFile corruptFile =
                     new MockMultipartFile(
                             "fileInput",
@@ -625,13 +583,10 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            when(pdfDocumentFactory.load(request)).thenThrow(new IOException("Invalid PDF format"));
-
             assertThatThrownBy(() -> cropController.cropPdf(request))
                     .isInstanceOf(IOException.class)
-                    .hasMessageContaining("Invalid PDF format");
-
-            verify(pdfDocumentFactory).load(request);
+                    .hasMessageContaining("JPDFium crop failed")
+                    .hasCauseInstanceOf(RuntimeException.class);
         }
 
         @Test
@@ -659,16 +614,7 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
-            PDDocument newDocument = spy(new PDDocument());
-            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
-                    .thenReturn(newDocument);
-
             assertThatCode(() -> cropController.cropPdf(request)).doesNotThrowAnyException();
-
-            verify(mockDocument, times(1)).close();
-            verify(newDocument, times(1)).close();
         }
 
         @Test
@@ -718,15 +664,8 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
-            PDDocument newDocument = spy(new PDDocument());
-            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
-                    .thenReturn(newDocument);
-
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-            assertThat(response).isNotNull();
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             try (PDDocument cropped = Loader.loadPDF(drainBody(response))) {
                 assertThat(cropped.getNumberOfPages()).isEqualTo(1);
@@ -752,17 +691,13 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
-            PDDocument newDocument = spy(new PDDocument());
-            when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
-                    .thenReturn(newDocument);
-
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            verify(mockDocument, times(1)).close();
-            verify(newDocument, times(1)).close();
+            try (PDDocument cropped = Loader.loadPDF(drainBody(response))) {
+                assertThat(cropped.getPage(0).getMediaBox().getWidth()).isEqualTo(300f);
+                assertThat(cropped.getPage(0).getMediaBox().getHeight()).isEqualTo(400f);
+            }
         }
     }
 
@@ -784,33 +719,19 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            try (PDDocument sourceDoc = Loader.loadPDF(testFile.getBytes());
-                    PDDocument newDoc = new PDDocument()) {
-                when(pdfDocumentFactory.load(request)).thenReturn(sourceDoc);
-                when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
-                        .thenReturn(newDoc);
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-                ResponseEntity<Resource> response = cropController.cropPdf(request);
-
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
-                    assertThat(result.getNumberOfPages()).isEqualTo(3);
-
-                    assertThat(result.getPage(0).getMediaBox().getWidth())
-                            .isEqualTo(PDRectangle.LETTER.getWidth());
-                    assertThat(result.getPage(0).getMediaBox().getHeight())
-                            .isEqualTo(PDRectangle.LETTER.getHeight());
-
-                    assertThat(result.getPage(1).getMediaBox().getWidth())
-                            .isCloseTo(300f, within(0.01f));
-                    assertThat(result.getPage(1).getMediaBox().getHeight())
-                            .isCloseTo(400f, within(0.01f));
-
-                    assertThat(result.getPage(2).getMediaBox().getWidth())
-                            .isEqualTo(PDRectangle.LETTER.getWidth());
-                    assertThat(result.getPage(2).getMediaBox().getHeight())
-                            .isEqualTo(PDRectangle.LETTER.getHeight());
-                }
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                assertThat(result.getNumberOfPages()).isEqualTo(3);
+                assertThat(result.getPage(0).getMediaBox().getWidth())
+                        .isEqualTo(PDRectangle.LETTER.getWidth());
+                assertThat(result.getPage(1).getMediaBox().getWidth())
+                        .isCloseTo(300f, within(0.01f));
+                assertThat(result.getPage(1).getMediaBox().getHeight())
+                        .isCloseTo(400f, within(0.01f));
+                assertThat(result.getPage(2).getMediaBox().getWidth())
+                        .isEqualTo(PDRectangle.LETTER.getWidth());
             }
         }
 
@@ -826,23 +747,16 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            try (PDDocument sourceDoc = Loader.loadPDF(testFile.getBytes());
-                    PDDocument newDoc = new PDDocument()) {
-                when(pdfDocumentFactory.load(request)).thenReturn(sourceDoc);
-                when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
-                        .thenReturn(newDoc);
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-                ResponseEntity<Resource> response = cropController.cropPdf(request);
-
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
-                    assertThat(result.getNumberOfPages()).isEqualTo(3);
-                    for (int i = 0; i < result.getNumberOfPages(); i++) {
-                        assertThat(result.getPage(i).getMediaBox().getWidth())
-                                .isCloseTo(300f, within(0.01f));
-                        assertThat(result.getPage(i).getMediaBox().getHeight())
-                                .isCloseTo(400f, within(0.01f));
-                    }
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                assertThat(result.getNumberOfPages()).isEqualTo(3);
+                for (int i = 0; i < result.getNumberOfPages(); i++) {
+                    assertThat(result.getPage(i).getMediaBox().getWidth())
+                            .isCloseTo(300f, within(0.01f));
+                    assertThat(result.getPage(i).getMediaBox().getHeight())
+                            .isCloseTo(400f, within(0.01f));
                 }
             }
         }
