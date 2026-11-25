@@ -237,6 +237,15 @@ Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowin
 
 **Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`desktop/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local mode and the server keeps the on/off switch (no desktop release needed to flip a flag). In self-hosted mode the connected server's own `AppConfigContext` is the authority instead. Gate a feature behind a per-platform seam - e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useAppConfig()` when signed in to a self-hosted server and `useSaasAppConfig()` otherwise) - rather than hardcoding the flag on.
 
+#### Processor Editions on Desktop
+
+Web builds pick the Processor's edition at build time (`processor/saas` → `processor/cloud` → `processor/proprietary`). The desktop app connects to either Stirling Cloud or a self-hosted server, so `processor/desktop` picks per connection at runtime:
+
+- When a seam has different `processor/cloud` and `processor/proprietary` implementations, add a `processor/desktop` file at the same path that picks between them with `editionFunction` (plain functions, chosen on each call), `editionHook` (hooks) or `editionComponent` (components). Without one, desktop runs the self-hosted implementation on Stirling Cloud.
+- Edition hooks and components render only inside a `ProcessorEditionBoundary`, which remounts its subtree when the mode, server or account changes. The Processor route and `PortalSettingsSectionHost` provide one. Outside a boundary they log an error in dev and test builds.
+- Processor queries on desktop use the per-connection client in `processor/desktop/queryClient.ts`, so one connection's data never shows on another.
+- The desktop startup prompts (cookie bar, analytics, first-run setup) run once in the frame from the app's own config, not per app.
+
 #### Component Override Pattern (Stub/Shadow)
 Use this pattern for desktop-specific or proprietary-specific features WITHOUT runtime checks or conditionals.
 

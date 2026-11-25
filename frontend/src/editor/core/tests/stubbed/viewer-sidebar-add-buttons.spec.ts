@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { toggleViewerPanel } from "@editor/tests/helpers/ui-helpers";
 import path from "path";
 
 /**
@@ -41,10 +42,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
   }) => {
     await openViewerWithSample(page);
 
-    const attachmentsToggle = page
-      .getByRole("button", { name: /Toggle Attachments/i })
-      .first();
-    await attachmentsToggle.click();
+    await toggleViewerPanel(page, "Attachments");
 
     // Sidebar header shows up
     const sidebarTitle = page.getByText(/^Attachments$/i).first();
@@ -68,10 +66,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
 
     const initialUrl = page.url();
 
-    await page
-      .getByRole("button", { name: /Bookmarks \(Table of Contents\)/i })
-      .first()
-      .click();
+    await toggleViewerPanel(page, "Bookmarks");
 
     await expect(page.getByText(/^Bookmarks$/i).first()).toBeVisible({
       timeout: 10_000,
@@ -132,10 +127,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
     await openViewerWithSample(page);
     const viewerUrl = page.url();
 
-    await page
-      .getByRole("button", { name: /Bookmarks \(Table of Contents\)/i })
-      .first()
-      .click();
+    await toggleViewerPanel(page, "Bookmarks");
     await page.getByRole("button", { name: /^Add bookmark$/i }).click();
 
     const form = page.locator('[data-testid="bookmark-add-form"]');
@@ -179,24 +171,15 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
     };
 
     // Bookmark sidebar
-    await page
-      .getByRole("button", { name: /Bookmarks \(Table of Contents\)/i })
-      .first()
-      .click();
+    await toggleViewerPanel(page, "Bookmarks");
     await closeViaButton(/Close bookmarks sidebar/i);
 
     // Attachment sidebar
-    await page
-      .getByRole("button", { name: /Toggle Attachments/i })
-      .first()
-      .click();
+    await toggleViewerPanel(page, "Attachments");
     await closeViaButton(/Close attachments sidebar/i);
 
     // Thumbnail sidebar
-    await page
-      .getByRole("button", { name: /Toggle Sidebar/i })
-      .first()
-      .click();
+    await toggleViewerPanel(page, "Pages");
     await closeViaButton(/Close thumbnails sidebar/i);
   });
 });

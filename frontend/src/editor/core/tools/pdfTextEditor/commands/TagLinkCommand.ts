@@ -31,6 +31,11 @@ export interface TaggableLink {
   text: LinkText;
 }
 
+/** A link an element holds but with no /Contents, and the text it covers. */
+export interface UndescribedLink extends TaggableLink {
+  contents: string;
+}
+
 interface AppliedPlan {
   cut: TagTextRangeCommand | null;
   /** The MCID of the existing Link, when there is no cut. */
@@ -138,6 +143,41 @@ export function taggableLinks(
 }
 
 /**
+ * The links on a page, which must already be read, that an element holds but
+ * that have no /Contents, so a screen reader has nothing to announce; with
+ * `runId`, only those over that run's text. Empty on a page whose save cannot
+ * write /Contents.
+ */
+export function undescribedLinks(
+  doc: EditorDocument,
+  pageIndex: number,
+  runId?: string,
+): UndescribedLink[] {
+  const structure = doc.structure(pageIndex);
+  if (structure.readOnly) return [];
+  const links = structure
+    .links()
+    .filter(
+      ({ annotation }) =>
+        structure.linkHeld(annotation) &&
+        structure.linkContents(annotation) === null,
+    );
+  const page = doc.page(pageIndex);
+  const out: UndescribedLink[] = [];
+  for (const [annotation, text] of linkTexts(doc, pageIndex, links)) {
+    const run = page.findRun(text.runId);
+    if (!run || (runId !== undefined && run.id !== runId)) continue;
+    const contents = coveredText(run.text, text);
+    if (contents) out.push({ annotation, text, contents });
+  }
+  return out;
+}
+
+function coveredText(runText: string, { start, end }: LinkText): string {
+  return runText.slice(start, end).replace(/\s+/g, " ").trim();
+}
+
+/**
  * How each of `annotations` can be tagged, by annotation. Left out when it
  * cannot: an element already holds it, it covers no text of one run, or that
  * text cannot be cut out (rangeTagTypes).
@@ -162,10 +202,7 @@ function planLinkTags(
   for (const [annotation, text] of linkTexts(doc, pageIndex, links)) {
     const run = page.findRun(text.runId);
     if (!run || (runId !== undefined && run.id !== runId)) continue;
-    const contents = run.text
-      .slice(text.start, text.end)
-      .replace(/\s+/g, " ")
-      .trim();
+    const contents = coveredText(run.text, text);
     const owner = elementStretches(doc, pageIndex, text.runId).find(
       (stretch) => stretch.start <= text.start && stretch.end >= text.end,
     )?.element;

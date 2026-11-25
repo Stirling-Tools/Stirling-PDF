@@ -187,7 +187,8 @@ const RULE_TITLE_DEFAULTS: Record<string, string> = {
   notdefGlyph: "Missing-character placeholder used",
 };
 
-function knownRuleKey(issue: AccessibilityIssue): string | null {
+/** The plain-language key of the failing rule, or null when it is not one we know. */
+export function knownRuleKey(issue: AccessibilityIssue): string | null {
   // The report names the profile ("PDF/UA-1"), not the ISO part.
   const keys =
     issue.specification === "PDF/UA-1"
