@@ -107,6 +107,7 @@ export function FormSaveBar({
     <Transition mounted={visible} transition="slide-down" duration={300}>
       {(styles) => (
         <div
+          className="form-save-bar"
           style={{
             ...styles,
             position: "absolute",

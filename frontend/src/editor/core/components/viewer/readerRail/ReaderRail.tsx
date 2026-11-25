@@ -46,10 +46,6 @@ const RAIL_GROUPS: readonly (readonly RailItem[])[] = [
       id: "viewer-toggle-sidebar",
       icon: <Icon name="rows-2" size={SIZE} />,
     },
-    {
-      id: "viewer-search",
-      icon: <Icon name="search" size={SIZE} />,
-    },
   ],
   [
     {
@@ -104,7 +100,6 @@ export function ReaderRail() {
     () => ({
       "viewer-toggle-bookmarks": t("reader.rail.bookmarks", "Bookmarks"),
       "viewer-toggle-sidebar": t("reader.rail.thumbnails", "Pages"),
-      "viewer-search": t("reader.rail.search", "Find in document"),
       "viewer-rotate-left": t("reader.rail.rotateLeft", "Rotate left"),
       "viewer-rotate-right": t("reader.rail.rotateRight", "Rotate right"),
       "viewer-toggle-comments": t("reader.rail.comment", "Comments"),
@@ -223,7 +218,7 @@ export function ReaderRail() {
             const action = button ? actions[button.id] : undefined;
 
             // A control that brought its own renderer keeps it: that is where the
-            // search field and the read-aloud controls live.
+            // read-aloud controls live.
             if (button?.render) {
               return (
                 <div className="reader-rail__item" key={item.id}>

@@ -79,6 +79,7 @@ import Clipboard from "lucide-static/icons/clipboard.svg?react";
 import ClipboardCheck from "lucide-static/icons/clipboard-check.svg?react";
 import ClipboardClock from "lucide-static/icons/clipboard-clock.svg?react";
 import ClipboardList from "lucide-static/icons/clipboard-list.svg?react";
+import ClipboardPenLine from "lucide-static/icons/clipboard-pen-line.svg?react";
 import ClipboardPlus from "lucide-static/icons/clipboard-plus.svg?react";
 import Clock from "lucide-static/icons/clock.svg?react";
 import Cloud from "lucide-static/icons/cloud.svg?react";
@@ -517,6 +518,7 @@ export const ICONS = {
   "clipboard-check": { Component: ClipboardCheck, kind: "lucide" },
   "clipboard-clock": { Component: ClipboardClock, kind: "lucide" },
   "clipboard-list": { Component: ClipboardList, kind: "lucide" },
+  "clipboard-pen-line": { Component: ClipboardPenLine, kind: "lucide" },
   "clipboard-plus": { Component: ClipboardPlus, kind: "lucide" },
   clock: { Component: Clock, kind: "lucide" },
   cloud: { Component: Cloud, kind: "lucide" },
