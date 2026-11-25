@@ -56,7 +56,22 @@ function useAnchoredLeft(
     const panel = panelRef.current;
     const host = panel?.offsetParent;
     if (!panel || !(host instanceof HTMLElement)) return;
+    // The control moves when the bar resizes or folds, when the unsaved dot
+    // narrows its band, and when that band scrolls sideways.
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => place());
+    let band: Element | null = null;
     const place = () => {
+      // Swapping between the mobile and desktop bars resizes the host and
+      // remounts the band, so follow whichever band is current.
+      const current = host.querySelector(".pdf-editor-topbar__band");
+      if (observer && current !== band) {
+        if (band) observer.unobserve(band);
+        if (current) observer.observe(current);
+        band = current;
+      }
       const anchor = host.querySelector<HTMLElement>(ANCHOR);
       if (!anchor) {
         setLeft(null);
@@ -71,17 +86,11 @@ function useAnchoredLeft(
       const max = h.width - panel.offsetWidth - EDGE_GAP_PX;
       setLeft(Math.max(EDGE_GAP_PX, Math.min(ideal, max)));
     };
+    observer?.observe(host);
     place();
-    if (typeof ResizeObserver === "undefined") return;
-    // The control moves when the bar resizes or folds, when the unsaved dot
-    // narrows its band, and when that band scrolls sideways.
-    const observer = new ResizeObserver(place);
-    observer.observe(host);
-    const band = host.querySelector(".pdf-editor-topbar__band");
-    if (band) observer.observe(band);
     host.addEventListener("scroll", place, true);
     return () => {
-      observer.disconnect();
+      observer?.disconnect();
       host.removeEventListener("scroll", place, true);
     };
   }, [panelRef]);
