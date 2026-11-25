@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Rewriting the editing host inside a `beforeinput` handler makes WebKit
@@ -15,11 +16,10 @@ test.describe("PDF text editor - beforeinput must not mutate the DOM", () => {
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
       timeout: 30_000,
     });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(import.meta.dirname, "../test-fixtures/cropbox-rotate90.pdf"),
-      );
+    await openInTextEditor(
+      page,
+      path.join(import.meta.dirname, "../test-fixtures/cropbox-rotate90.pdf"),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });

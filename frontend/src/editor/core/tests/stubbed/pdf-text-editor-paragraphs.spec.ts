@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -12,13 +13,7 @@ const SAMPLE = path.join(
 /** Comprehensive paragraph-editing battery for the PDF text editor. */
 
 async function gotoWrap(page: Page): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 15_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId("pdf-editor-page-1")).toBeVisible({
     timeout: 30_000,
   });
@@ -29,13 +24,7 @@ async function gotoWrap(page: Page): Promise<void> {
 
 /** Load page 2 but leave the default "grow" width mode (no wrap toggle). */
 async function gotoGrow(page: Page): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 15_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId("pdf-editor-page-1")).toBeVisible({
     timeout: 30_000,
   });
@@ -467,13 +456,7 @@ test.describe("PDF text editor - paragraph editing battery", () => {
   test("grow mode: typing a long tail grows right (one line, no wrap)", async ({
     page,
   }) => {
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(SAMPLE);
+    await openInTextEditor(page, SAMPLE);
     await expect(page.getByTestId("pdf-editor-page-1")).toBeVisible({
       timeout: 30_000,
     });

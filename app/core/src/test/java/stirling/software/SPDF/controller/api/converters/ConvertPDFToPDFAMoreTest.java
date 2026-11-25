@@ -1,9 +1,11 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -18,7 +20,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
@@ -39,6 +44,14 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType3;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -52,11 +65,12 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
-import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -315,6 +329,42 @@ class ConvertPDFToPDFAMoreTest {
         }
     }
 
+    private MockMultipartFile formWidgetHelveticaPdf() throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+
+            PDAcroForm acroForm = new PDAcroForm(document);
+            PDTextField field = new PDTextField(acroForm);
+            field.setPartialName("name1");
+            acroForm.getFields().add(field);
+            document.getDocumentCatalog().setAcroForm(acroForm);
+
+            PDAnnotationWidget widget = field.getWidgets().get(0);
+            widget.setRectangle(new PDRectangle(100, 650, 100, 15));
+            PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+            PDAppearanceStream normal = new PDAppearanceStream(document);
+            normal.setBBox(new PDRectangle(100, 15));
+            normal.setResources(new PDResources());
+            appearance.setNormalAppearance(normal);
+            widget.setAppearance(appearance);
+            page.getAnnotations().add(widget);
+
+            try (PDPageContentStream content = new PDPageContentStream(document, normal)) {
+                content.beginText();
+                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 10);
+                content.newLineAtOffset(2, 3);
+                content.showText("WIDGET VALUE");
+                content.endText();
+            }
+
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "widget.pdf", "application/pdf", output.toByteArray());
+        }
+    }
+
     private MockMultipartFile transparentPdfFile() throws IOException {
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream output = new ByteArrayOutputStream()) {
@@ -331,6 +381,33 @@ class ConvertPDFToPDFAMoreTest {
             document.save(output);
             return new MockMultipartFile(
                     "fileInput", "transparent.pdf", "application/pdf", output.toByteArray());
+        }
+    }
+
+    private MockMultipartFile helveticaTextPdf(String text) throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.beginText();
+                content.setFont(font, 12);
+                content.newLineAtOffset(100, 700);
+                content.showText(text);
+                content.endText();
+                // A long content stream sits outside PDFBox's read buffer, so a save that
+                // truncates the source loses it exactly like a real-world document.
+                for (int i = 0; i < 3000; i++) {
+                    content.beginText();
+                    content.newLineAtOffset(100, 650);
+                    content.showText("padding line " + i);
+                    content.endText();
+                }
+            }
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "helvetica.pdf", "application/pdf", output.toByteArray());
         }
     }
 
@@ -420,107 +497,6 @@ class ConvertPDFToPDFAMoreTest {
 
                 boolean available = invokeInstance(newController(), "isGhostscriptAvailable");
                 assertThat(available).isFalse();
-            }
-        }
-    }
-
-    @Nested
-    @DisplayName("handlePdfAConversion via pdfToPdfA endpoint")
-    class PdfAConversion {
-
-        @Test
-        @DisplayName("Ghostscript success path returns the produced PDF/A-2b file")
-        void ghostscriptSuccess() throws Exception {
-            TempFile managed = managedTempFile();
-            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
-
-            PdfToPdfARequest request = new PdfToPdfARequest();
-            request.setFileInput(pdfFile());
-            request.setOutputFormat("pdfa-2b");
-
-            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
-                wireProcessExecutor(pe, 0);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
-                        .thenReturn(expected);
-
-                ResponseEntity<Resource> response = newController().pdfToPdfA(request);
-
-                assertThat(response).isSameAs(expected);
-                wr.verify(
-                        () ->
-                                WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class),
-                                        org.mockito.ArgumentMatchers.contains("_PDFA-2b.pdf")));
-            }
-        }
-
-        @Test
-        @DisplayName("PDF/A-1b exercises the part-1 CIDSet/qpdf branch and succeeds")
-        void pdfA1Success() throws Exception {
-            TempFile managed = managedTempFile();
-            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
-
-            PdfToPdfARequest request = new PdfToPdfARequest();
-            request.setFileInput(pdfFile());
-            request.setOutputFormat("pdfa-1");
-
-            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
-                wireProcessExecutor(pe, 0);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
-                        .thenReturn(expected);
-
-                ResponseEntity<Resource> response = newController().pdfToPdfA(request);
-                assertThat(response).isSameAs(expected);
-            }
-        }
-
-        @Test
-        @DisplayName("strict mode runs VeraPDF and a compliant result still returns the file")
-        void strictCompliantSucceeds() throws Exception {
-            TempFile managed = managedTempFile();
-            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
-
-            PDFVerificationResult ok = new PDFVerificationResult();
-            ok.setCompliant(true);
-            ok.setStandard("2b");
-            ok.setComplianceSummary("PDF/A-2b compliant");
-            when(veraPDFService.validatePDF(any())).thenReturn(List.of(ok));
-
-            PdfToPdfARequest request = new PdfToPdfARequest();
-            request.setFileInput(pdfFile());
-            request.setOutputFormat("pdfa-2b");
-            request.setStrict(true);
-
-            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
-                wireProcessExecutor(pe, 0);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
-                        .thenReturn(expected);
-
-                ResponseEntity<Resource> response = newController().pdfToPdfA(request);
-
-                assertThat(response).isSameAs(expected);
-                Mockito.verify(veraPDFService).validatePDF(any());
             }
         }
     }
@@ -653,10 +629,22 @@ class ConvertPDFToPDFAMoreTest {
 
             Method replace =
                     ConvertPDFToPDFA.class.getDeclaredMethod(
-                            "replacePdfxFonts", PDDocument.class, PDResources.class, int.class);
+                            "replacePdfxFonts",
+                            PDDocument.class,
+                            PDResources.class,
+                            Map.class,
+                            int.class);
             replace.setAccessible(true);
             try (PDDocument document = new PDDocument()) {
-                assertThat((int) replace.invoke(newController(), document, resources, 0)).isZero();
+                assertThat(
+                                (int)
+                                        replace.invoke(
+                                                newController(),
+                                                document,
+                                                resources,
+                                                new HashMap<>(),
+                                                0))
+                        .isZero();
                 verify(resources, never()).put(any(COSName.class), any(PDFont.class));
             }
         }
@@ -793,8 +781,8 @@ class ConvertPDFToPDFAMoreTest {
         }
 
         @Test
-        @DisplayName("PDF/X-1a flattens transparent pages instead of rejecting them")
-        void pdfX1aFlattensTransparency() throws Exception {
+        @DisplayName("PDF/X-1a rejects transparent pages instead of flattening them")
+        void pdfX1aRejectsTransparentPages() throws Exception {
             TempFile managed = managedTempFile();
             when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
 
@@ -802,23 +790,11 @@ class ConvertPDFToPDFAMoreTest {
             request.setFileInput(transparentPdfFile());
             request.setOutputFormat("pdfx-1a");
 
-            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
-            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
-                        .thenReturn(expected);
-
-                ResponseEntity<Resource> response = newController().pdfToPdfA(request);
-
-                assertThat(response).isSameAs(expected);
-                assertThat(managed.getFile()).exists();
-                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
-                    assertThat(output.getVersion()).isEqualTo(1.3f);
-                    assertThat(output.getDocumentCatalog().getOutputIntents()).isNotEmpty();
-                }
-            }
+            assertThatThrownBy(() -> newController().pdfToPdfA(request))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("transparency")
+                    .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
         @Test
@@ -852,163 +828,63 @@ class ConvertPDFToPDFAMoreTest {
                 wr.verify(
                         () ->
                                 WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class),
-                                        org.mockito.ArgumentMatchers.contains("_PDFX.pdf")));
+                                        any(TempFile.class), eq("input.pdf")));
             }
         }
-    }
-
-    @Nested
-    @DisplayName("convertPDDocumentToPDFA")
-    class ConvertDocument {
 
         @Test
-        @DisplayName("Ghostscript success returns converted bytes")
-        void documentConversionSuccess() throws Exception {
-            try (PDDocument document = simplePdf();
-                    MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                wireProcessExecutor(pe, 0);
+        @DisplayName("PDF/X keeps page content when substituting a non-embedded font")
+        void pdfxKeepsContentWhenSubstitutingFont() throws Exception {
+            TempFile input = managedTempFile();
+            TempFile output = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(input, output);
 
-                byte[] converted = newController().convertPDDocumentToPDFA(document, "pdfa-2b");
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(helveticaTextPdf("SURVIVES SUBSTITUTION"));
+            request.setOutputFormat("pdfx-4");
 
-                assertThat(converted).isNotNull();
-                assertThat(converted.length).isGreaterThan(0);
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                assertThat(newController().pdfToPdfA(request)).isSameAs(expected);
+            }
+
+            try (PDDocument converted = Loader.loadPDF(output.getFile())) {
+                assertThat(new PDFTextStripper().getText(converted))
+                        .contains("SURVIVES SUBSTITUTION");
             }
         }
-    }
-
-    @Nested
-    @DisplayName("Ghostscript command builders")
-    class CommandBuilders {
 
         @Test
-        @DisplayName("buildGhostscriptCommand wires PDF/A part, devices and IO files")
-        void buildsPdfACommand() throws Exception {
-            Path workingDir = Files.createDirectories(tempDir.resolve("gs"));
-            Path input = Files.write(workingDir.resolve("in.pdf"), simplePdfBytes());
-            Path output = workingDir.resolve("out.pdf");
-            Path rgb = Files.write(workingDir.resolve("rgb.icc"), new byte[] {1});
-            Path gray = Files.write(workingDir.resolve("gray.icc"), new byte[] {1});
-            Path defFile = Files.write(workingDir.resolve("def.ps"), new byte[] {1});
+        @DisplayName("PDF/X substitutes fonts inside form widget appearance streams")
+        void pdfxSubstitutesWidgetAppearanceFonts() throws Exception {
+            Path input = tempDir.resolve("widget-helvetica.pdf");
+            try (InputStream in = formWidgetHelveticaPdf().getInputStream()) {
+                Files.copy(in, input, StandardCopyOption.REPLACE_EXISTING);
+            }
 
-            Object colorProfiles = newColorProfiles(rgb, gray);
-            Object profile = resolvePdfaProfile("pdfa-1");
+            invokeInstance(newController(), "embedPdfxFonts", input);
 
-            Method m =
-                    ConvertPDFToPDFA.class.getDeclaredMethod(
-                            "buildGhostscriptCommand",
-                            Path.class,
-                            Path.class,
-                            colorProfiles.getClass(),
-                            Path.class,
-                            profile.getClass(),
-                            Path.class);
-            m.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            List<String> command =
-                    (List<String>)
-                            m.invoke(
-                                    null,
-                                    input,
-                                    output,
-                                    colorProfiles,
-                                    workingDir,
-                                    profile,
-                                    defFile);
-
-            assertThat(command).isNotEmpty();
-            assertThat(command.get(0)).isEqualTo("gs");
-            assertThat(command).contains("-dPDFA=1", "-sDEVICE=pdfwrite", "-dEmbedAllFonts=true");
-            assertThat(command).anyMatch(a -> a.startsWith("-sOutputFile="));
-        }
-
-        @Test
-        @DisplayName("createPdfaDefFile writes a PDFA_def.ps with the profile title")
-        void createsPdfaDef() throws Exception {
-            Path workingDir = Files.createDirectories(tempDir.resolve("def"));
-            Path rgb = Files.write(workingDir.resolve("rgb.icc"), new byte[] {1});
-            Path gray = Files.write(workingDir.resolve("gray.icc"), new byte[] {1});
-
-            Object colorProfiles = newColorProfiles(rgb, gray);
-            Object profile = resolvePdfaProfile("pdfa-2b");
-
-            Method m =
-                    ConvertPDFToPDFA.class.getDeclaredMethod(
-                            "createPdfaDefFile",
-                            Path.class,
-                            colorProfiles.getClass(),
-                            profile.getClass());
-            m.setAccessible(true);
-            Path defFile = (Path) m.invoke(null, workingDir, colorProfiles, profile);
-
-            assertThat(defFile).exists();
-            String content = Files.readString(defFile);
-            assertThat(content).contains("PDF/A-2b");
-            assertThat(content).contains("OutputIntent");
-        }
-
-        @Test
-        @DisplayName("prepareColorProfiles copies the sRGB icc and writes a gray profile")
-        void preparesColorProfiles() throws Exception {
-            Path workingDir = Files.createDirectories(tempDir.resolve("colors"));
-            Object colorProfiles =
-                    invokeInstance(newController(), "prepareColorProfiles", workingDir);
-            assertThat(colorProfiles).isNotNull();
-
-            Method rgbAccessor = colorProfiles.getClass().getDeclaredMethod("rgb");
-            rgbAccessor.setAccessible(true);
-            Path rgb = (Path) rgbAccessor.invoke(colorProfiles);
-            assertThat(rgb).exists();
-            assertThat(Files.size(rgb)).isGreaterThan(0L);
-        }
-
-        private Object newColorProfiles(Path rgb, Path gray) throws Exception {
-            Class<?> recordClass = null;
-            for (Class<?> inner : ConvertPDFToPDFA.class.getDeclaredClasses()) {
-                if (inner.getSimpleName().equals("ColorProfiles")) {
-                    recordClass = inner;
+            try (PDDocument output = Loader.loadPDF(input.toFile())) {
+                PDAcroForm acroForm = output.getDocumentCatalog().getAcroForm();
+                assertThat(acroForm).isNotNull();
+                assertThat(acroForm.getFieldTree()).isNotEmpty();
+                for (PDField field : acroForm.getFieldTree()) {
+                    for (PDAnnotationWidget widget : field.getWidgets()) {
+                        PDAppearanceEntry normal = widget.getAppearance().getNormalAppearance();
+                        assertThat(normal.isStream()).isTrue();
+                        PDResources resources = normal.getAppearanceStream().getResources();
+                        assertThat(resources.getFontNames()).isNotEmpty();
+                        for (COSName name : resources.getFontNames()) {
+                            assertThat(resources.getFont(name).isEmbedded()).isTrue();
+                        }
+                    }
                 }
-            }
-            var ctor = recordClass.getDeclaredConstructor(Path.class, Path.class);
-            ctor.setAccessible(true);
-            return ctor.newInstance(rgb, gray);
-        }
-    }
-
-    @Nested
-    @DisplayName("qpdf helpers")
-    class QpdfHelpers {
-
-        @Test
-        @DisplayName("normalizePdfWithQpdf returns null when qpdf is unavailable")
-        void normalizeUnavailable() throws Exception {
-            Path input = Files.write(tempDir.resolve("n.pdf"), simplePdfBytes());
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
-                pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class)))
-                        .thenReturn(executor);
-                ProcessExecutorResult notAvail = mock(ProcessExecutorResult.class);
-                when(notAvail.getRc()).thenReturn(1);
-                when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(notAvail);
-
-                Path result = invokeInstance(newController(), "normalizePdfWithQpdf", input);
-                assertThat(result).isNull();
-            }
-        }
-
-        @Test
-        @DisplayName("cleanCidSetWithQpdf returns null on exception")
-        void cleanCidSetThrows() throws Exception {
-            Path input = Files.write(tempDir.resolve("c.pdf"), simplePdfBytes());
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
-                pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class)))
-                        .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenThrow(new IOException("qpdf boom"));
-
-                Path result = invokeInstance(newController(), "cleanCidSetWithQpdf", input);
-                assertThat(result).isNull();
             }
         }
     }

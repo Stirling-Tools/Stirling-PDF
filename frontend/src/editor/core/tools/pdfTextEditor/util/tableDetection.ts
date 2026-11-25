@@ -4,6 +4,8 @@ import type {
   TableSnapshot,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
+import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
+import { median } from "@editor/tools/pdfTextEditor/util/median";
 
 // Recognizes tabular layouts from a page's text runs. PDF has no native table
 // object, so a "table" here is a derived grid: runs that line up into shared
@@ -30,6 +32,22 @@ const RULE_COVERAGE = 0.5;
 const RULE_EDGE_MARGIN_PT = 12;
 /** A gap this many times the table's usual row gap ends the table. */
 const ROW_GAP_TOLERANCE = 2;
+// Turned text (a running watermark, a rotated axis label) has a box that says nothing about rows and columns.
+const TURNED_TEXT_RATIO = 0.02;
+// A column whose typical line is a sentence is running text; two of them side by side are a page of columns, not a table. Descriptive tables run to about 32 characters a line, article columns from about 37.
+const PROSE_LINE_CHARS = 35;
+const PROSE_COLUMNS_MAX = 1;
+// Text a table's own cells leave out but that sits inside its area means the "grid" is page layout around other text.
+const INTRUDER_SHARE = 0.15;
+const INTRUDER_MIN_CHARS = 6;
+// Where a line's ink can sit about its baseline, in ems: from its descenders to the marks above its letters, and short of the lines either side.
+const LINE_INK_BELOW_EM = 0.25;
+const LINE_INK_ABOVE_EM = 0.8;
+const INSET_EDGE_SLACK_PT = 0.5;
+// Two text stacks side by side, each on its own line pitch, pair lines into rows only by chance: rows hold one column's line as often as both, and the paired lines sit at a different height to each other row to row, where a table's cells, even skewed on a scan, keep one offset.
+const STACK_LONE_ROWS_MIN = 2;
+const STACK_OFFSET_SPREAD_EM = 0.25;
+const STACK_OFFSET_SAMPLES_MIN = 3;
 
 export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
   rowTolFactor: 0.6,
@@ -41,11 +59,15 @@ export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
 
 interface Cand {
   run: TextRunSnapshot;
+  /** Runs drawn inside this line: they share its cell and are no cells of their own. */
+  inset: TextRunSnapshot[];
+  text: string;
   left: number;
   right: number;
   cx: number;
   cy: number;
   height: number;
+  baseline: number;
 }
 
 interface Row {
@@ -55,15 +77,6 @@ interface Row {
   bottom: number;
 }
 
-function median(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
-}
-
 // One candidate box per line of text. A table cell is a single line, but the
 // editor's paragraph grouping merges a whole table COLUMN into one multi-line
 // run, so a run must be expanded into its member lines or the cells never
@@ -71,6 +84,7 @@ function median(values: number[]): number {
 function toCandidates(run: TextRunSnapshot): Cand[] {
   if (run.locked) return [];
   if (!run.text || run.text.trim().length === 0) return [];
+  if (isTurned(run)) return [];
   const { x, y, width, height } = run.bounds;
   if (width <= 0 || height <= 0) return [];
   const lines = run.paragraphLineCount ?? 1;
@@ -78,11 +92,14 @@ function toCandidates(run: TextRunSnapshot): Cand[] {
     return [
       {
         run,
+        inset: [],
+        text: run.text,
         left: x,
         right: x + width,
         cx: x + width / 2,
         cy: y + height / 2,
         height,
+        baseline: run.matrix.f,
       },
     ];
   }
@@ -90,11 +107,13 @@ function toCandidates(run: TextRunSnapshot): Cand[] {
 }
 
 // Split a multi-line run using the per-line geometry PDFium gave us. Baselines
-// and lefts are exact; only each line's width is estimated, from its share of
-// the longest line's character count.
+// and lefts are exact, and so are rights where the run carries them; otherwise
+// a line's width is estimated from its share of the longest line's characters.
 function expandParagraph(run: TextRunSnapshot, lines: number): Cand[] {
   const baselines = run.paragraphBaselines;
   const lefts = run.paragraphLineLefts;
+  const rights =
+    run.paragraphLineRights?.length === lines ? run.paragraphLineRights : null;
   const texts = run.text.split("\n");
   // Without real baselines the line boxes would be guesswork, and a wrong row
   // band is worse than no candidate.
@@ -113,18 +132,107 @@ function expandParagraph(run: TextRunSnapshot, lines: number): Cand[] {
   for (let i = 0; i < lines; i++) {
     if (lengths[i] === 0) continue;
     const left = lefts?.[i] ?? x;
-    const w = Math.max(1, (width * lengths[i]) / maxLen);
+    const w =
+      rights !== null && rights[i] > left
+        ? rights[i] - left
+        : Math.max(1, (width * lengths[i]) / maxLen);
     const bottom = baselines[i] - descent;
     out.push({
       run,
+      inset: [],
+      text: texts[i],
       left,
       right: left + w,
       cx: left + w / 2,
       cy: bottom + lineHeight / 2,
       height: lineHeight,
+      baseline: baselines[i],
     });
   }
   return out;
+}
+
+function isTurned(run: TextRunSnapshot): boolean {
+  const { a, b, c, d } = run.matrix;
+  return (
+    Math.abs(b) > TURNED_TEXT_RATIO * Math.abs(a) ||
+    Math.abs(c) > TURNED_TEXT_RATIO * Math.abs(d) ||
+    a <= 0 ||
+    d <= 0
+  );
+}
+
+function drawnInside(piece: Cand, line: Cand): boolean {
+  if (piece.run === line.run) return false;
+  if (piece.right - piece.left >= line.right - line.left) return false;
+  if (
+    piece.left < line.left - INSET_EDGE_SLACK_PT ||
+    piece.right > line.right + INSET_EDGE_SLACK_PT
+  )
+    return false;
+  const size = line.run.fontSize;
+  return (
+    piece.cy >= line.baseline - LINE_INK_BELOW_EM * size &&
+    piece.cy <= line.baseline + LINE_INK_ABOVE_EM * size
+  );
+}
+
+// A producer shaping right-to-left text can draw a letter of a word as an
+// object of its own, in another font or off the line's baseline, and it arrives
+// as a run inside the line it belongs to. Left as a candidate it reads as a
+// cell, and a page of such paragraphs as a sparse grid; folded into its line it
+// goes where that goes.
+//
+// Only lines holding right-to-left text take insets. Folding a stray run
+// elsewhere changes which rows count as holding several cells, and with it where
+// a block of rows starts, so text further down the page can turn into a grid.
+function foldInsetRuns(cands: Cand[]): Cand[] {
+  // Only the lines whose baseline a piece's centre can sit on are tried: detection reruns on every keystroke, and trying every pair is quadratic in the page's runs.
+  const byBaseline = cands
+    .filter((cand) => hasRtl(cand.text))
+    .sort((a, b) => a.baseline - b.baseline);
+  if (byBaseline.length === 0) return cands;
+  const largest = Math.max(...byBaseline.map((line) => line.run.fontSize));
+  const host = new Map<Cand, Cand>();
+  for (const piece of cands) {
+    const lowest = piece.cy - LINE_INK_ABOVE_EM * largest;
+    const highest = piece.cy + LINE_INK_BELOW_EM * largest;
+    let widest: Cand | null = null;
+    for (
+      let i = firstAtOrAbove(byBaseline, lowest);
+      i < byBaseline.length && byBaseline[i].baseline <= highest;
+      i++
+    ) {
+      const line = byBaseline[i];
+      if (!drawnInside(piece, line)) continue;
+      if (!widest || line.right - line.left > widest.right - widest.left)
+        widest = line;
+    }
+    if (widest) host.set(piece, widest);
+  }
+  if (host.size === 0) return cands;
+  for (const piece of host.keys()) {
+    let line = host.get(piece);
+    while (line && host.has(line)) line = host.get(line);
+    line?.inset.push(piece.run);
+  }
+  return cands.filter((cand) => !host.has(cand));
+}
+
+/** Index of the first of `byBaseline`, sorted ascending, whose baseline is at least `baseline`. */
+function firstAtOrAbove(byBaseline: Cand[], baseline: number): number {
+  let lo = 0;
+  let hi = byBaseline.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (byBaseline[mid].baseline < baseline) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function runIdsOf(cand: Cand): string[] {
+  return [cand.run.id, ...cand.inset.map((run) => run.id)];
 }
 
 // Cluster candidates into rows by vertical-centre proximity, top-down.
@@ -655,13 +763,15 @@ function buildTable(
   if (rows < opts.minRows || cols < opts.minCols) return null;
 
   // Inner edges sit at the midpoint of the whitespace between tracks. The outer
-  // ones get the SAME half-gap as a margin: taking the glyph extent instead
+  // ones get the same half-gap as a margin: taking the glyph extent instead
   // makes the boundary graze the first and last row's text, which reads as a
   // misdrawn grid on a table that has no printed border to check it against.
+  // Capped, because half of a gutter that spans most of the page puts the
+  // table's edge past the page's.
   const colGaps: number[] = [];
   for (let i = 1; i < cols; i++)
     colGaps.push(bands[i].left - bands[i - 1].right);
-  const colPad = Math.max(1, median(colGaps) / 2);
+  const colPad = Math.max(1, Math.min(median(colGaps) / 2, 2 * snapTol));
   const derivedCols: number[] = [bands[0].left - colPad];
   for (let i = 1; i < cols; i++) {
     derivedCols.push((bands[i - 1].right + bands[i].left) / 2);
@@ -725,7 +835,7 @@ function buildTable(
     for (const c of row.cands) {
       const col = edgeIndex(colEdges, c.cx);
       const list = map.get(col) ?? [];
-      list.push(c.run.id);
+      list.push(...runIdsOf(c));
       map.set(col, list);
     }
     return map;
@@ -777,6 +887,13 @@ function buildTable(
     (r) => new Set(r.cands.map((c) => edgeIndex(colEdges, c.cx))).size >= 2,
   ).length;
   if (rowsWithMultipleCols < 2) return null;
+  const columns = Array.from({ length: cols }, (): Cand[] => []);
+  for (const c of block.flatMap((row) => row.cands))
+    columns[edgeIndex(colEdges, c.cx)].push(c);
+  // Rows the page rules apart are a table however long their cells run.
+  if (!snappedRows.drawn && proseColumns(columns) > PROSE_COLUMNS_MAX)
+    return null;
+  if (!snappedRows.drawn && sideBySideStacks(block, colEdges)) return null;
 
   const bounds: PageRect = {
     x: colEdges[0],
@@ -811,6 +928,86 @@ function buildTable(
   };
 }
 
+function sideBySideStacks(block: Row[], colEdges: number[]): boolean {
+  const loneRows = new Map<number, number>();
+  const offsets = new Map<number, number[]>();
+  let pairedRows = 0;
+  for (const row of block) {
+    const firstByCol = new Map<number, Cand>();
+    for (const c of row.cands) {
+      const col = edgeIndex(colEdges, c.cx);
+      if (!firstByCol.has(col)) firstByCol.set(col, c);
+    }
+    const cols = [...firstByCol.keys()].sort((a, b) => a - b);
+    if (cols.length === 1) {
+      loneRows.set(cols[0], (loneRows.get(cols[0]) ?? 0) + 1);
+      continue;
+    }
+    pairedRows++;
+    for (let i = 1; i < cols.length; i++) {
+      const offset =
+        firstByCol.get(cols[i])!.baseline -
+        firstByCol.get(cols[i - 1])!.baseline;
+      const list = offsets.get(cols[i - 1]) ?? [];
+      list.push(offset);
+      offsets.set(cols[i - 1], list);
+    }
+  }
+  const lone = [...loneRows.values()];
+  const stackedColumns = lone.filter((n) => n >= STACK_LONE_ROWS_MIN).length;
+  const loneTotal = lone.reduce((sum, n) => sum + n, 0);
+  if (stackedColumns < 2 || loneTotal <= pairedRows) return false;
+  const em = median(block.flatMap((row) => row.cands.map((c) => c.height)));
+  return [...offsets.values()].some(
+    (list) =>
+      list.length >= STACK_OFFSET_SAMPLES_MIN &&
+      spread(list) > STACK_OFFSET_SPREAD_EM * em,
+  );
+}
+
+function spread(values: number[]): number {
+  const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+  return Math.sqrt(
+    values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length,
+  );
+}
+
+function proseColumns(columns: Cand[][]): number {
+  return columns.filter(
+    (column) =>
+      column.length >= 2 &&
+      median(column.map((c) => c.text.trim().length)) >= PROSE_LINE_CHARS,
+  ).length;
+}
+
+function visibleChars(cand: Cand): number {
+  return [cand.text, ...cand.inset.map((run) => run.text)].reduce(
+    (sum, text) => sum + text.replace(/\s+/g, "").length,
+    0,
+  );
+}
+
+// Characters of upright page text the table leaves out of its cells yet covers.
+function intrudingChars(table: TableSnapshot, runs: TextRunSnapshot[]): number {
+  const own = new Set(table.cells.flatMap((cell) => cell.runIds));
+  const b = table.bounds;
+  let chars = 0;
+  for (const run of runs) {
+    if (own.has(run.id) || run.locked || isTurned(run)) continue;
+    const r = run.bounds;
+    const area = r.width * r.height;
+    if (area <= 0) continue;
+    const inside =
+      Math.max(0, Math.min(r.x + r.width, b.x + b.width) - Math.max(r.x, b.x)) *
+      Math.max(
+        0,
+        Math.min(r.y + r.height, b.y + b.height) - Math.max(r.y, b.y),
+      );
+    if (inside > 0.5 * area) chars += run.text.replace(/\s+/g, "").length;
+  }
+  return chars;
+}
+
 /** Recognize tables on one page from its text-run snapshots. */
 export function detectTables(
   runs: TextRunSnapshot[],
@@ -819,7 +1016,7 @@ export function detectTables(
   rules: PageRect[] = [],
 ): TableSnapshot[] {
   const opts = { ...DEFAULT_TABLE_OPTIONS, ...options };
-  const cands = runs.flatMap(toCandidates);
+  const cands = foldInsetRuns(runs.flatMap(toCandidates));
   if (cands.length < opts.minRows * opts.minCols) return [];
 
   const medHeight = median(cands.map((c) => c.height)) || 1;
@@ -891,7 +1088,17 @@ export function detectTables(
       rules,
       Math.max(4, medHeight * 1.5),
     );
-    if (table) tables.push(table);
+    if (!table) continue;
+    const cellChars = block
+      .flatMap((row) => row.cands)
+      .reduce((sum, c) => sum + visibleChars(c), 0);
+    const intruding = intrudingChars(table, runs);
+    if (
+      intruding >= INTRUDER_MIN_CHARS &&
+      intruding >= INTRUDER_SHARE * cellChars
+    )
+      continue;
+    tables.push(table);
   }
   return tables;
 }

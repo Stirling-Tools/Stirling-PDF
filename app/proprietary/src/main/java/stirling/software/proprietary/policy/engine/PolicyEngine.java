@@ -219,7 +219,8 @@ public class PolicyEngine {
                             sourceId,
                             fileIdentity,
                             triggeringUser,
-                            fileOwner);
+                            fileOwner,
+                            billingPrincipal);
             String message = "Policy run could not start: " + e.getMessage();
             run.fail(message);
             taskManager.setError(run.getRunId(), message);
@@ -252,7 +253,13 @@ public class PolicyEngine {
             Semaphore admission) {
         PolicyRun run =
                 registerRun(
-                        policyId, definition, sourceId, fileIdentity, triggeringUser, fileOwner);
+                        policyId,
+                        definition,
+                        sourceId,
+                        fileIdentity,
+                        triggeringUser,
+                        fileOwner,
+                        billingPrincipal);
         String runId = run.getRunId();
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -314,7 +321,8 @@ public class PolicyEngine {
             String sourceId,
             String fileIdentity,
             String triggeringUser,
-            String fileOwner) {
+            String fileOwner,
+            String pipelineOwner) {
         String runId =
                 jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString(), fileOwner);
         taskManager.createTask(runId);
@@ -330,7 +338,8 @@ public class PolicyEngine {
                         sourceId,
                         fileIdentity,
                         triggeringUser,
-                        fileOwner);
+                        fileOwner,
+                        pipelineOwner);
         taskManager.putMetadata(runId, "externalOutput", String.valueOf(run.externalOutput()));
         registry.register(run);
         return run;
@@ -579,7 +588,13 @@ public class PolicyEngine {
             PolicyRun run, String runId, PolicyInputs inputs, List<Resource> files)
             throws IOException {
         OutputDelivery delivery =
-                new OutputDelivery(runId, run.getPolicyId(), inputs, JobContext.getOwner());
+                new OutputDelivery(
+                        runId,
+                        run.getPolicyId(),
+                        inputs,
+                        JobContext.getOwner(),
+                        null,
+                        run.getPipelineOwner());
         List<OutputSpec> fallback = run.getDefinition().outputs();
         if (fallback.isEmpty()) {
             // No destinations means inline delivery (results returned to the caller), preserving
