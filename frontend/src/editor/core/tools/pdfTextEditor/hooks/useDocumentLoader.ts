@@ -7,6 +7,7 @@ import {
 } from "@editor/services/pdfiumService";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   getPdfAccess,
   rememberPdfAccess,
@@ -25,124 +26,137 @@ const yieldToBrowser = () =>
 /** Open a PDF in PDFium and lazily populate pages on first visibility. */
 export function useDocumentLoader(store: EditorStore) {
   return useCallback(
-    async (file: File, password?: string): Promise<void> => {
-      const documentPassword = password ?? getPdfAccess(file)?.password;
-      const token = store.beginLoad();
-      store.setLoading(true);
-      store.setProgress({
-        stage: `Reading ${file.name}`,
-        current: 0,
-        total: 0,
-      });
-      try {
-        await yieldToBrowser();
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        if (!store.isCurrentLoad(token)) return;
-        store.setProgress({
-          stage: "Parsing PDF",
-          current: 0,
-          total: 0,
-        });
-        await yieldToBrowser();
-        const doc = await EditorDocument.open(bytes, documentPassword);
-        try {
-          if (!store.isCurrentLoad(token)) {
-            doc.dispose();
-            return;
-          }
-          const access = rememberPdfAccess(
-            file,
-            readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
-          );
-          assertPdfSessionEditable(access);
-        } catch (error) {
-          doc.dispose();
-          throw error;
-        }
-        if (!store.isCurrentLoad(token)) {
-          // A newer load superseded us before we installed our doc - free
-          // it ourselves (setDocument never took ownership).
-          try {
-            doc.dispose();
-          } catch {
-            /* best-effort */
-          }
-          return;
-        }
-        await store.setDocument(doc);
-
-        const total = doc.pageCount;
-        const eager = Math.min(EAGER_PAGE_LIMIT, total);
-        const snapshots: PageSnapshot[] = [];
-        for (let i = 0; i < eager; i++) {
-          store.setProgress({
-            stage: `Reading page ${i + 1} of ${total}`,
-            current: i,
-            total,
-          });
-          await yieldToBrowser();
-          // The check + synchronous read below run in one tick, so a
-          // superseding load can only interpose here.
-          if (!store.isCurrentLoad(token)) return;
-          const page = doc.page(i);
-          PdfiumTextReader.populate(doc, page, store.groupingMode);
-          snapshots.push({
-            pageIndex: i,
-            width: page.width,
-            height: page.height,
-            dirty: false,
-            revision: page.revision,
-            runs: page.runs.map((r) => r.snapshot()),
-            images: page.images.map((img) => img.snapshot()),
-            shapes: page.shapes.map((shape) => shape.snapshot()),
-            annotations: page.annotations,
-            rules: page.rules,
-            display: page.display.toData(),
-          });
-        }
-        for (let i = eager; i < total; i++) {
-          const page = doc.page(i);
-          snapshots.push({
-            pageIndex: i,
-            width: page.width,
-            height: page.height,
-            dirty: false,
-            revision: 0,
-            runs: [],
-            images: [],
-            shapes: [],
-            display: page.display.toData(),
-          });
-        }
-        if (!store.isCurrentLoad(token)) return;
-        store.publishPages(snapshots);
-        store.setProgress({
-          stage: "Ready",
-          current: total,
-          total,
-        });
-      } catch (err) {
-        if (store.isCurrentLoad(token)) {
-          // A password-protected PDF isn't a hard error.
-          if (
-            err instanceof PdfiumOpenError &&
-            err.code === FPDF_ERR_PASSWORD
-          ) {
-            store.setPasswordRequired(file, documentPassword !== undefined);
-          } else {
-            store.setError(err instanceof Error ? err.message : String(err));
-          }
-        }
-      } finally {
-        // Only the winning load owns the loading/progress UI state.
-        if (store.isCurrentLoad(token)) {
-          store.setLoading(false);
-          store.setProgress(null);
-        }
-      }
-    },
+    (file: File, password?: string) => loadDocument(store, file, password),
     [store],
   );
+}
+
+/**
+ * Resolves true when the document on screen as this call settles is the one it
+ * opened from `file`, even if a newer load has started but not yet replaced it.
+ * On false `file` is not on screen (it failed, wants a password, or a newer
+ * document replaced it), so the caller must leave the filename and workbench
+ * file alone.
+ */
+export async function loadDocument(
+  store: EditorStore,
+  file: File,
+  password?: string,
+): Promise<boolean> {
+  let installed: EditorDocument | null = null;
+  const documentPassword = password ?? getPdfAccess(file)?.password;
+  const token = store.beginLoad();
+  store.setLoading(true);
+  store.setProgress({
+    stage: `Reading ${file.name}`,
+    current: 0,
+    total: 0,
+  });
+  try {
+    await yieldToBrowser();
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (!store.isCurrentLoad(token)) return false;
+    store.setProgress({
+      stage: "Parsing PDF",
+      current: 0,
+      total: 0,
+    });
+    await yieldToBrowser();
+    const doc = await EditorDocument.open(bytes, documentPassword);
+    try {
+      if (!store.isCurrentLoad(token)) {
+        doc.dispose();
+        return false;
+      }
+      const access = rememberPdfAccess(
+        file,
+        readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
+      );
+      assertPdfSessionEditable(access);
+    } catch (error) {
+      doc.dispose();
+      throw error;
+    }
+    if (!store.isCurrentLoad(token)) {
+      // A newer load superseded us before we installed our doc - free
+      // it ourselves (setDocument never took ownership).
+      try {
+        doc.dispose();
+      } catch {
+        /* best-effort */
+      }
+      return false;
+    }
+    await store.setDocument(doc);
+    installed = doc;
+
+    const total = doc.pageCount;
+    const eager = Math.min(EAGER_PAGE_LIMIT, total);
+    const snapshots: PageSnapshot[] = [];
+    for (let i = 0; i < eager; i++) {
+      store.setProgress({
+        stage: `Reading page ${i + 1} of ${total}`,
+        current: i,
+        total,
+      });
+      await yieldToBrowser();
+      // The check + synchronous read below run in one tick, so a
+      // superseding load can only interpose here.
+      if (!store.isCurrentLoad(token)) return store.document === doc;
+      const page = doc.page(i);
+      PdfiumTextReader.populate(doc, page, store.groupingMode);
+      snapshots.push({
+        pageIndex: i,
+        width: page.width,
+        height: page.height,
+        dirty: false,
+        revision: page.revision,
+        runs: page.runs.map((r) => r.snapshot()),
+        images: page.images.map((img) => img.snapshot()),
+        shapes: page.shapes.map((shape) => shape.snapshot()),
+        annotations: page.annotations,
+        rules: page.rules,
+        display: page.display.toData(),
+      });
+    }
+    for (let i = eager; i < total; i++) {
+      const page = doc.page(i);
+      snapshots.push({
+        pageIndex: i,
+        width: page.width,
+        height: page.height,
+        dirty: false,
+        revision: 0,
+        runs: [],
+        images: [],
+        shapes: [],
+        display: page.display.toData(),
+      });
+    }
+    if (!store.isCurrentLoad(token)) return store.document === doc;
+    store.publishPages(snapshots);
+    store.setProgress({
+      stage: "Ready",
+      current: total,
+      total,
+    });
+  } catch (err) {
+    if (store.isCurrentLoad(token)) {
+      // A password-protected PDF isn't a hard error.
+      if (err instanceof PdfiumOpenError && err.code === FPDF_ERR_PASSWORD) {
+        store.setPasswordRequired(file, documentPassword !== undefined);
+      } else {
+        store.setError(err instanceof Error ? err.message : String(err));
+      }
+    }
+  } finally {
+    // Only the winning load owns the loading/progress UI state.
+    if (store.isCurrentLoad(token)) {
+      store.setLoading(false);
+      store.setProgress(null);
+    }
+  }
+  return installed !== null && store.document === installed;
 }
 
 /** Read EVERY not-yet-loaded page in one pass and publish once. */
@@ -226,18 +240,41 @@ export function publishAllPages(store: EditorStore): void {
   store.publishPages(next);
 }
 
-/** Ensure a page's runs/images are loaded. */
+/**
+ * Only the never-published case: a page mid-edit has a revision ahead of its
+ * snapshot too, and republishing it there would move the caret.
+ */
+function readButUnpublished(
+  published: PageSnapshot | undefined,
+  page: Page,
+): boolean {
+  return (
+    !!published &&
+    published.runs.length === 0 &&
+    published.images.length === 0 &&
+    (page.runs.length > 0 || page.images.length > 0)
+  );
+}
+
+/**
+ * Ensure a page's runs/images are loaded and published. A page the background
+ * reader has loaded but not yet published is published here, so a lookup in
+ * the store's snapshot right after this sees it.
+ */
 export function ensurePageRead(store: EditorStore, pageIndex: number): void {
   const doc = store.document;
   if (!doc) return;
   const page = doc.page(pageIndex);
-  if (page.loaded) return;
-  try {
-    // Lazy reads must surface failures like the eager path, not throw out of the observer.
-    PdfiumTextReader.populate(doc, page, store.groupingMode);
-  } catch (err) {
-    store.setError(err instanceof Error ? err.message : String(err));
-    return;
+  if (page.loaded) {
+    if (!readButUnpublished(store.getState().pages[pageIndex], page)) return;
+  } else {
+    try {
+      // Lazy reads must surface failures like the eager path, not throw out of the observer.
+      PdfiumTextReader.populate(doc, page, store.groupingMode);
+    } catch (err) {
+      store.setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
   }
   const state = store.getState();
   const next = state.pages.map((p) =>

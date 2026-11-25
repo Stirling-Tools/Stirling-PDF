@@ -10,7 +10,8 @@ import { useAppConfig } from "@editor/contexts/AppConfigContext";
 export function DesktopConfigSync() {
   const { status } = useBackendHealth();
   const { refetch } = useAppConfig();
-  const previousStatus = useRef(status);
+  // Null so a backend that was already healthy at mount still triggers the first fetch.
+  const previousStatus = useRef<typeof status | null>(null);
 
   useEffect(() => {
     if (status === "healthy" && previousStatus.current !== "healthy") {

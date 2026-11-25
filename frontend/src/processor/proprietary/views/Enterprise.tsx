@@ -11,12 +11,8 @@ import { FLOW_JOURNEY, type DealStage } from "@processor/api/procurement";
 import { refreshWalletCache } from "@processor/api/billing";
 import { qk } from "@processor/queries/keys";
 import { walletQuery } from "@processor/queries/wallet";
-import { useLinkOptional } from "@processor/contexts/LinkContext";
 import { useUI } from "@processor/contexts/UIContext";
-import { useConnectGate } from "@processor/hooks/useConnectGate";
-import { useAccountLinkOwner } from "@processor/hooks/useAccountLinkOwner";
 import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
-import { SaasSessionBanner } from "@processor/components/account-link/SaasSessionBanner";
 import {
   useProcurement,
   type ProcurementController,
@@ -56,8 +52,8 @@ const TRIAL_STAGES: DealStage[] = ["trial", "quote", "security"];
  * then where the deal stands, its next action, licence key, trial, documents and a way to talk to
  * us. Building a quote and signing the agreement are long enough to open over it.
  *
- * Open to visitors without an account where the build allows it (the hosted page, linked from
- * the website): they read the page and fill in the trial setup, and sign in only to start it.
+ * Hosted app only, where the signed-in account is the Stirling account. Visitors without an account
+ * read the page and fill in the trial setup, and sign in only to start it.
  */
 export function Enterprise({
   onSignIn = signIn,
@@ -131,10 +127,6 @@ function SignedIn() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const procurement = useProcurement();
-  const gate = useConnectGate();
-  // No provider on SaaS: the signed-in account is the Stirling account, so there is nothing to link.
-  const link = useLinkOptional();
-  const isOwner = useAccountLinkOwner();
   const email = useLinkedAccountEmail();
   const { openSettings } = useUI();
   // Answers given before signing in, if this visit is the return from it. Only the account they
@@ -206,10 +198,7 @@ function SignedIn() {
     !procurement.error &&
     !procurement.loadError &&
     (!firstVisitHandled.current || busy);
-  const loading =
-    gate.loading ||
-    (isLinked && (procurement.loading || wallet.isPending)) ||
-    startingTrial;
+  const loading = procurement.loading || wallet.isPending || startingTrial;
 
   const company =
     latest?.config.businessName?.trim() || data?.businessName?.trim() || null;
@@ -218,20 +207,9 @@ function SignedIn() {
   const flowOpen = flowStep != null;
   const onInvite = canManage ? () => openSettings("users") : undefined;
 
-  /** The page's main content, by how far the visitor has got: linking, then exploring, then the deal. */
+  /** The page's main content, by how far the visitor has got: exploring, then the deal. */
   function body(): ReactNode {
     if (loading) return <PageSkeleton />;
-    if (!isLinked)
-      return (
-        <Landing>
-          <ConnectPanel
-            available={gate.available}
-            isOwner={isOwner}
-            onConnect={gate.connect}
-            onSchedule={schedule}
-          />
-        </Landing>
-      );
     // The banner above says what failed and offers a retry.
     if (procurement.loadError) return null;
     if (exploring) {
@@ -280,13 +258,9 @@ function SignedIn() {
       onInvite={onInvite}
       scrollKey={flowOpen ? "flow" : "page"}
       // A deal carries its own contact section, so the footer would only repeat it.
-      onSchedule={loading || !isLinked || exploring ? schedule : undefined}
+      onSchedule={loading || exploring ? schedule : undefined}
     >
       <div className="ent__wrap ent__notices">
-        {link && <SaasSessionBanner />}
-        {gate.error && (
-          <RetryBanner message={gate.error} onRetry={gate.retry} />
-        )}
         {wallet.isError && (
           <RetryBanner
             message={wallet.error.message}
@@ -491,59 +465,6 @@ function Landing({ children }: { children: ReactNode }) {
       <Card padding="loose" className="ent__panel">
         {children}
       </Card>
-    </div>
-  );
-}
-
-/** Self-hosted, before the server has a Stirling account to run the trial and quote on. */
-function ConnectPanel({
-  available,
-  isOwner,
-  onConnect,
-  onSchedule,
-}: {
-  available: boolean;
-  isOwner: boolean;
-  onConnect: () => void;
-  onSchedule: () => void;
-}) {
-  const { t } = useTranslation();
-  if (!available) {
-    return (
-      <div className="ent__panel-body">
-        <h2 className="ent__h2">{t("portal.procurement.link.title")}</h2>
-        <p className="ent__text">
-          {t(
-            "portal.enterprise.connect.unavailable",
-            "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you.",
-          )}
-        </p>
-        <div className="ent__actions">
-          <Button variant="primary" onClick={onSchedule}>
-            {t("portal.procurement.hero.scheduleCall")}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className="ent__panel-body">
-      <h2 className="ent__h2">{t("portal.procurement.link.title")}</h2>
-      <p className="ent__text">{t("portal.procurement.link.description")}</p>
-      {isOwner ? (
-        <div className="ent__actions">
-          <Button variant="primary" onClick={onConnect}>
-            {t("portal.procurement.link.cta")}
-          </Button>
-        </div>
-      ) : (
-        <p className="ent__note">
-          {t(
-            "portal.enterprise.connect.ownerOnly",
-            "Only this server’s owner can connect it. Ask them to open this page.",
-          )}
-        </p>
-      )}
     </div>
   );
 }

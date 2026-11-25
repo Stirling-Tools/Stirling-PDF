@@ -20,14 +20,25 @@ import {
   loadedExternalFonts,
 } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
-  familyOptions,
   listLocalFonts,
   pickLocalFontFace,
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { deviceFontIdFor } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
-import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import {
+  externalFamilies,
+  restyledFace,
+  type StyleRequest,
+} from "@editor/tools/pdfTextEditor/util/fontFaces";
 import { resetFontCompletions } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+
+/** The face a run's font moves to for `request` among the external fonts loaded so far. */
+function faceWithLoadedFonts(fontId: string, request: StyleRequest) {
+  return restyledFace(fontId, request, {
+    documentFamilies: [],
+    externalFonts: loadedExternalFonts(),
+  });
+}
 
 const requestsAtImport = get.mock.calls.length;
 
@@ -464,14 +475,12 @@ describe("server fonts", () => {
     serveManifestAndFaces();
     await loadServerFonts();
 
-    expect(italicCapability("device:Acme Sans", true)).toEqual({
-      family: "Acme Sans Italic",
-      source: "device",
-    });
-    expect(italicCapability("device:Acme Sans Bold", true)).toEqual({
-      family: null,
-      source: null,
-    });
+    expect(faceWithLoadedFonts("device:Acme Sans", { italic: true })).toBe(
+      "Acme Sans Italic",
+    );
+    expect(
+      faceWithLoadedFonts("device:Acme Sans Bold", { italic: true }),
+    ).toBeNull();
   });
 
   it("loads the new face after a refresh replaces the one already loaded", async () => {
@@ -559,17 +568,17 @@ describe("server fonts", () => {
     });
     const fonts = (await loadServerFonts()) ?? [];
 
-    expect(familyOptions(fonts, []).map((option) => option.value)).toEqual([
+    expect(externalFamilies(fonts)[0].faces.map((face) => face.value)).toEqual([
       "Acme Sans",
       "Acme Sans Bold",
+      "Acme Sans Italic",
     ]);
     expect(serverFaceFor("Acme Sans")?.id).toBe(REGULAR);
     expect(serverFaceFor("Acme Sans Bold")?.id).toBe(BOLD);
     expect(serverFaceFor("Acme Sans Italic")?.id).toBe(ITALIC);
-    expect(italicCapability("device:Acme Sans", true)).toEqual({
-      family: "Acme Sans Italic",
-      source: "device",
-    });
+    expect(faceWithLoadedFonts("device:Acme Sans", { italic: true })).toBe(
+      "Acme Sans Italic",
+    );
   });
 
   it("italicises a server Times New Roman with its own italic face", async () => {
@@ -586,27 +595,23 @@ describe("server fonts", () => {
         ],
       },
     });
-    expect(italicCapability("pdf:1:Times New Roman", true)).toEqual({
-      family: "Times-Italic",
-      source: "base14",
-    });
+    expect(faceWithLoadedFonts("pdf:1:Times New Roman", { italic: true })).toBe(
+      "Times-Italic",
+    );
 
     const fonts = await loadServerFonts();
 
-    expect(italicCapability("device:Times New Roman", true)).toEqual({
-      family: "Times New Roman Italic",
-      source: "device",
-    });
-    expect(italicCapability("device:Times New Roman Italic", false)).toEqual({
-      family: "Times New Roman",
-      source: "device",
-    });
+    expect(
+      faceWithLoadedFonts("device:Times New Roman", { italic: true }),
+    ).toBe("Times New Roman Italic");
+    expect(
+      faceWithLoadedFonts("device:Times New Roman Italic", { italic: false }),
+    ).toBe("Times New Roman");
     expect(
       pickLocalFontFace(fonts ?? [], "Times New Roman Italic")?.style,
     ).toBe("Italic");
-    expect(italicCapability("base14:Times-Roman", true)).toEqual({
-      family: "Times-Italic",
-      source: "base14",
-    });
+    expect(faceWithLoadedFonts("base14:Times-Roman", { italic: true })).toBe(
+      "Times-Italic",
+    );
   });
 });

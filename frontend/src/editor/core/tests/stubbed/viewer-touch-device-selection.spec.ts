@@ -21,7 +21,10 @@ async function loadViewer(
   pdf: string = SAMPLE_PDF,
 ) {
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(pdf);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(pdf);
 
   const workspaceTab = page.getByRole("tab", { name: "Workspace" });
   if (await workspaceTab.isVisible().catch(() => false)) {
@@ -200,7 +203,10 @@ test("pan button state is not left stale after switching files", async ({
     .poll(() => grabCursorCount(page), { timeout: 5_000 })
     .toBeGreaterThan(0);
 
-  await page.locator('input[type="file"]').first().setInputFiles(MULTIPAGE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(MULTIPAGE_PDF);
 
   await expect
     .poll(() => page.locator("[data-page-index]").count(), { timeout: 30_000 })

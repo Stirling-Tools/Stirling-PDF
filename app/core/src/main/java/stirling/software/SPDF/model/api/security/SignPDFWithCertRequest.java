@@ -19,8 +19,17 @@ public class SignPDFWithCertRequest extends PDFFile {
                             + " the server's organisation, not the user; self-signed by default, so"
                             + " other PDF readers may show it unverified. PEM needs"
                             + " certFile+privateKeyFile, PKCS12/PFX p12File, JKS jksFile."
-                            + " WINDOWS_STORE/PKCS11: desktop app only.",
-            allowableValues = {"SERVER", "PEM", "PKCS12", "PFX", "JKS", "WINDOWS_STORE", "PKCS11"},
+                            + " WINDOWS_STORE/MACOS_KEYCHAIN/PKCS11: desktop app only.",
+            allowableValues = {
+                "SERVER",
+                "PEM",
+                "PKCS12",
+                "PFX",
+                "JKS",
+                "WINDOWS_STORE",
+                "MACOS_KEYCHAIN",
+                "PKCS11"
+            },
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String certType;
 
@@ -46,13 +55,14 @@ public class SignPDFWithCertRequest extends PDFFile {
             description =
                     "Password for the PKCS12/PFX or JKS keystore or an encrypted PEM key, or the"
                             + " PKCS11 token PIN. Leave empty if the key has none. Not needed for"
-                            + " SERVER or WINDOWS_STORE.",
+                            + " SERVER, WINDOWS_STORE or MACOS_KEYCHAIN.",
             format = "password")
     private String password;
 
     @Schema(
             description =
                     "The alias of the certificate to sign with. Required for WINDOWS_STORE and"
+                            + " MACOS_KEYCHAIN, and"
                             + " recommended for PKCS11 tokens holding multiple certificates.")
     private String alias;
 

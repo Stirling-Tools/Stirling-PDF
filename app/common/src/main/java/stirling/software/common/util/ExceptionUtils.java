@@ -735,16 +735,6 @@ public class ExceptionUtils {
         return new ToolRequiredException(message, ErrorCode.GHOSTSCRIPT_REQUIRED.getCode());
     }
 
-    public static ToolRequiredException createLibreOfficeRequiredException(String extension) {
-        requireNonNull(extension, "extension");
-        String message =
-                getMessage(
-                        ErrorCode.LIBREOFFICE_REQUIRED.getMessageKey(),
-                        ErrorCode.LIBREOFFICE_REQUIRED.getDefaultMessage(),
-                        extension);
-        return new ToolRequiredException(message, ErrorCode.LIBREOFFICE_REQUIRED.getCode());
-    }
-
     public static ToolRequiredException createPythonRequiredForWebpException() {
         String message = getMessage(ErrorCode.PYTHON_REQUIRED_WEBP);
         return new ToolRequiredException(message, ErrorCode.PYTHON_REQUIRED_WEBP.getCode());
@@ -963,12 +953,6 @@ public class ExceptionUtils {
     public static ToolFailedException createPdfaConversionFailedException(Throwable cause) {
         String message = getMessage(ErrorCode.PDFA_CONVERSION_FAILED);
         return new ToolFailedException(message, cause, ErrorCode.PDFA_CONVERSION_FAILED.getCode());
-    }
-
-    public static ToolFailedException createConversionIncompleteException(String fileName) {
-        requireNonNull(fileName, "fileName");
-        String message = getMessage(ErrorCode.CONVERSION_INCOMPLETE, fileName);
-        return new ToolFailedException(message, null, ErrorCode.CONVERSION_INCOMPLETE.getCode());
     }
 
     public static StepConfigurationException createInvalidArgumentException(
@@ -1299,10 +1283,6 @@ public class ExceptionUtils {
                 "E064",
                 "error.ghostscriptRequired",
                 "Ghostscript must be installed for {0}. Install Ghostscript and ensure it is available on the system PATH."),
-        LIBREOFFICE_REQUIRED(
-                "E082",
-                "error.libreOfficeRequired",
-                "LibreOffice is needed to convert .{0} files but is not available. Install LibreOffice and ensure it is on the system PATH, or ask an administrator to re-enable the LibreOffice tool group."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
@@ -1360,9 +1340,7 @@ public class ExceptionUtils {
         DECODED_STREAM_TOO_LARGE(
                 "E087",
                 "error.decodedStreamTooLarge",
-                "Part of this document decompresses to more than this server''s limit of {0} MB."),
-        CONVERSION_INCOMPLETE(
-                "E088", "error.conversionIncomplete", "Only part of {0} could be converted");
+                "Part of this document decompresses to more than this server''s limit of {0} MB.");
 
         private final String code;
         private final String messageKey;

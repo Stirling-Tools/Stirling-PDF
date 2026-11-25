@@ -1,0 +1,5 @@
+/* EmbedPDF pads the viewport inline with its gap (3.5rem, LocalEmbedPDF's viewportGap);
+   the inset added here lets a zoomed page's right edge scroll out from under the tool. */
+[data-pages-past-inset] [data-viewer-viewport] {
+  padding-right: calc(3.5rem + var(--viewer-right-inset)) !important;
+}

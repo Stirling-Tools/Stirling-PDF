@@ -30,6 +30,43 @@ export function firstFreeKey(pdf: RawPdf, rootBody: string): number | null {
   );
 }
 
+/**
+ * Tells whether a page's /StructParents key is stale: a full walk of the
+ * ParentTree, ignoring /Limits, finds no entry for it, and no object names the
+ * page with /Pg. Such a page, as one merged in from a file whose tree was not
+ * carried over, holds no elements. Any doubt, a tree that cannot be walked or an
+ * element naming the page, reads as not stale, so the page stays as the file has it.
+ * Walks the file once, on the first call.
+ */
+export function staleKeyCheck(
+  pdf: RawPdf,
+  rootBody: string,
+): (pageNum: number, key: number) => boolean {
+  let keys: Set<number> | null | undefined;
+  let namedPages: Set<number> | undefined;
+  return (pageNum, key) => {
+    if (keys === undefined) {
+      const tree = pdf.resolve(rootBody, "ParentTree");
+      const walked = tree === null ? [] : treeKeys(pdf, tree, new Set(), 0);
+      keys = walked ? new Set(walked) : null;
+    }
+    if (!keys || keys.has(key)) return false;
+    namedPages ??= pagesNamedByPg(pdf);
+    return !namedPages.has(pageNum);
+  };
+}
+
+function pagesNamedByPg(pdf: RawPdf): Set<number> {
+  const named = new Set<number>();
+  for (const num of pdf.objectNumbers()) {
+    const body = pdf.objectBody(num);
+    for (const m of body?.matchAll(/\/Pg\s+(\d+)\s+\d+\s+R\b/g) ?? []) {
+      named.add(parseInt(m[1], 10));
+    }
+  }
+  return named;
+}
+
 function treeKeys(
   pdf: RawPdf,
   node: string,
