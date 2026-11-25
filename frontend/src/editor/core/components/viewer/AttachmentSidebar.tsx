@@ -25,8 +25,6 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 interface AttachmentSidebarProps {
   visible: boolean;
-  thumbnailVisible: boolean;
-  bookmarkVisible: boolean;
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
   /** Set for an Adobe PDF Portfolio: renders the richer collection experience
@@ -143,8 +141,6 @@ const createEntry = (
 
 export const AttachmentSidebar = ({
   visible,
-  thumbnailVisible,
-  bookmarkVisible,
   documentCacheKey,
   preloadCacheKeys = [],
   portfolio = null,
@@ -625,27 +621,31 @@ export const AttachmentSidebar = ({
                 : "attachment-item"
             } ${privateContentClassName}`}
             onClick={rowClick}
-            role="button"
-            tabIndex={0}
-            aria-current={isCurrent ? "true" : undefined}
-            title={
-              isPortfolio
-                ? canPreviewMember(attachment)
-                  ? t("viewer.portfolio.preview", "Preview")
-                  : t("viewer.attachments.download", "Download attachment")
-                : attachment.name ||
-                  t("viewer.attachments.untitled", "Untitled")
-            }
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                rowClick(event);
-              }
-            }}
           >
             {isPortfolio &&
               (MEMBER_ICONS[memberIconKey(attachment)] ?? MEMBER_ICONS.default)}
-            <div className="attachment-item__content">
+            {/* The row holds its own buttons, so it cannot be one itself;
+                its name and details are the keyboard's way in. */}
+            <div
+              className="attachment-item__content"
+              role="button"
+              tabIndex={0}
+              aria-current={isCurrent ? "true" : undefined}
+              title={
+                isPortfolio
+                  ? canPreviewMember(attachment)
+                    ? t("viewer.portfolio.preview", "Preview")
+                    : t("viewer.attachments.download", "Download attachment")
+                  : attachment.name ||
+                    t("viewer.attachments.untitled", "Untitled")
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  rowClick(event);
+                }
+              }}
+            >
               <Text
                 size="sm"
                 fw={500}
@@ -751,7 +751,6 @@ export const AttachmentSidebar = ({
           : t("viewer.attachments.title", "Attachments")
       }
       icon={isPortfolio ? <Icon name="library" /> : <Icon name="paperclip" />}
-      rightOffset={`${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`}
       visible={visible}
       onClose={toggleAttachmentSidebar}
       closeLabel={t(

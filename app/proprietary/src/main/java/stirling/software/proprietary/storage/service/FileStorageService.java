@@ -14,11 +14,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +33,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.util.EmailAddresses;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionErrors;
 import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -59,10 +60,6 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 @RequiredArgsConstructor
 @Slf4j
 public class FileStorageService {
-
-    // Requires at least 2-character TLD; rejects obvious non-addresses like a@b.c
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
 
     private final StoredFileRepository storedFileRepository;
     private final FolderRepository folderRepository;
@@ -117,6 +114,14 @@ public class FileStorageService {
         ensureStorageEnabled();
         return storedFileRepository.findAccessibleFiles(user).stream()
                 .filter(file -> file.getExpiresAt() == null)
+                .toList();
+    }
+
+    /** Accessible files plus temporary ones that have not expired yet (e.g. MCP results). */
+    public List<StoredFile> listLiveAccessibleFiles(User user) {
+        ensureStorageEnabled();
+        return storedFileRepository.findAccessibleFiles(user).stream()
+                .filter(file -> !isExpired(file))
                 .toList();
     }
 
@@ -694,6 +699,18 @@ public class FileStorageService {
         return fileShareRepository.save(share);
     }
 
+    /** A link only {@code recipient} (and the owner) can open, e.g. an MCP result's own link. */
+    public FileShare createShareLink(
+            User owner,
+            StoredFile file,
+            ShareAccessRole role,
+            LocalDateTime expiresAt,
+            User recipient) {
+        FileShare share = createShareLink(owner, file, role, false, expiresAt);
+        share.setSharedWithUser(recipient);
+        return fileShareRepository.save(share);
+    }
+
     /** True when share links can be created, so callers can degrade instead of failing. */
     public boolean canCreateShareLinks() {
         return applicationProperties.getStorage().isEnabled()
@@ -913,7 +930,7 @@ public class FileStorageService {
     }
 
     private boolean isEmailAddress(String value) {
-        return value != null && EMAIL_PATTERN.matcher(value.trim()).matches();
+        return EmailAddresses.hasDeliverableShape(value);
     }
 
     private boolean isOwner(StoredFile file, User owner) {
@@ -929,7 +946,37 @@ public class FileStorageService {
         if (principal instanceof User user) {
             return user;
         }
-        return null;
+        // Token sign-ins (Supabase on SaaS) carry a Jwt; only its subject identifies the account,
+        // since the name is an email another local account may share.
+        if (principal instanceof Jwt jwt) {
+            return findBySupabaseId(jwt.getSubject()).orElse(null);
+        }
+        String name = authentication.getName();
+        if (name == null || name.isBlank() || "anonymousUser".equals(name)) {
+            return null;
+        }
+        Optional<User> byName = userRepository.findByUsernameIgnoreCase(name);
+        if (byName.isPresent()) {
+            return byName.get();
+        }
+        return findBySupabaseId(name).orElse(null);
+    }
+
+    /** Whether the caller owns the file, resolved the same way share-link access is. */
+    public boolean isOwnedByCaller(StoredFile file, Authentication authentication) {
+        User caller = extractAuthenticatedUser(authentication);
+        return caller != null && file.getOwner() != null && isOwner(file, caller);
+    }
+
+    private Optional<User> findBySupabaseId(String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        try {
+            return userRepository.findBySupabaseId(UUID.fromString(id));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     private static final Set<String> BLOCKED_CONTENT_TYPES =

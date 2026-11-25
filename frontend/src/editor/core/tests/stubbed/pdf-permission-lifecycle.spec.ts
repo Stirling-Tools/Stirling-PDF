@@ -58,9 +58,7 @@ test("removing a password keeps the result after switching tools", async ({
     .click();
   await expect.poll(() => requested).toBe(true);
   try {
-    await page
-      .getByRole("button", { name: "Annotations", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Annotate", exact: true }).click();
     await expect(page).toHaveURL(/\/annotate$/);
   } finally {
     finish();
@@ -157,9 +155,7 @@ for (const operation of ["compress", "remove-password"] as const) {
       .click();
     await expect(firstPage).not.toHaveAttribute("data-before-tool", "true");
     await expect(firstPage.locator(".pdf-link-overlay")).toHaveCount(4);
-    await page
-      .getByRole("button", { name: "Annotations", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Annotate", exact: true }).click();
     await expect(page).toHaveURL(/\/annotate$/);
     await page.getByRole("button", { name: "Polygon", exact: true }).click();
     await expect(
@@ -288,7 +284,10 @@ test("local opening applies the administrator policy without claiming owner auth
 
 test("repeated annotation saves remain editable", async ({ page }) => {
   await page.goto("/annotate");
-  await page.locator('input[type="file"]').first().setInputFiles(links);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(links);
   const firstPage = page.locator('[data-page-index="0"]').first();
   const overlays = firstPage.locator(".pdf-link-overlay");
   await expect(overlays).toHaveCount(4);
@@ -344,7 +343,10 @@ for (const protection of ["ordinary", "owner-only", "opening-password"]) {
       });
     const filename = testInfo.outputPath("large.pdf");
     await writeFile(filename, await pdf.save({ useObjectStreams: false }));
-    await page.locator('input[type="file"]').first().setInputFiles(filename);
+    await page
+      .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+      .first()
+      .setInputFiles(filename);
     if (password) {
       await page.getByLabel("Password to open", { exact: true }).fill(password);
       await page.getByRole("button", { name: "Open PDF", exact: true }).click();

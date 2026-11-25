@@ -2,6 +2,8 @@ import { ReactNode, useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createAppQueryClient } from "@editor/query/queryClient";
 import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 import {
   AppConfigProvider,
   AppConfigProviderProps,
@@ -31,13 +33,17 @@ export function PlatformProviders({
 }: PlatformProvidersProps) {
   const [queryClient] = useState(createAppQueryClient);
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppConfigProvider
-        retryOptions={appConfigRetryOptions}
-        {...appConfigProviderProps}
-      >
-        <ToolRegistryProvider>{children}</ToolRegistryProvider>
-      </AppConfigProvider>
-    </QueryClientProvider>
+    <PreferencesProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AppConfigProvider
+            retryOptions={appConfigRetryOptions}
+            {...appConfigProviderProps}
+          >
+            <ToolRegistryProvider>{children}</ToolRegistryProvider>
+          </AppConfigProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </PreferencesProvider>
   );
 }

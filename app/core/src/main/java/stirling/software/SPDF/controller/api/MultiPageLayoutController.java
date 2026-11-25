@@ -350,8 +350,7 @@ public class MultiPageLayoutController {
 
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
-                        GeneralUtils.generateFilename(
-                                file.getOriginalFilename(), "_multi_page_layout.pdf"),
+                        GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"),
                         tempFileManager);
             } // newDocument is closed here
         } // sourceDocument is closed here

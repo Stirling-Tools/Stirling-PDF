@@ -1,0 +1,14 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  color: var(--c-text);
+}

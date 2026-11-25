@@ -1,10 +1,18 @@
 import { useMemo } from "react";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
-import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import {
+  canResizeRun,
+  resizeRunCommand,
+} from "@editor/tools/pdfTextEditor/commands/resizeRun";
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
+import {
+  imageBoundsForVisible,
+  visibleImageBounds,
+} from "@editor/tools/pdfTextEditor/util/imageClip";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
+  ImageObjectSnapshot,
   PageRect,
   SelectionState,
 } from "@editor/tools/pdfTextEditor/types";
@@ -13,7 +21,7 @@ export interface SingleSelectionGeometry {
   bounds: PageRect;
   setX: (next: number) => void;
   setY: (next: number) => void;
-  setWidth: (next: number) => void;
+  setWidth?: (next: number) => void;
   /** Absent for text runs: their height follows the type, not a handle. */
   setHeight?: (next: number) => void;
 }
@@ -29,6 +37,31 @@ export interface SelectionGeometry {
  * Only meaningful for a single object - the fields would have to invent a
  * value for a mixed selection, so the panel shows a hint instead.
  */
+// The panel may draw a deferred snapshot, so setters read bounds from the store when they run.
+function liveRunBounds(
+  store: EditorStore,
+  runId: string,
+  fallback: PageRect,
+): PageRect {
+  for (const page of store.getState().pages) {
+    const run = page.runs.find((r) => r.id === runId);
+    if (run) return run.bounds;
+  }
+  return fallback;
+}
+
+function liveImage(
+  store: EditorStore,
+  imageId: string,
+  fallback: ImageObjectSnapshot,
+): ImageObjectSnapshot {
+  for (const page of store.getState().pages) {
+    const img = page.images.find((i) => i.id === imageId);
+    if (img) return img;
+  }
+  return fallback;
+}
+
 export function useSelectionGeometry(
   store: EditorStore,
   state: EditorViewState,
@@ -59,7 +92,7 @@ export function useSelectionGeometry(
                 new MoveTextRunCommand({
                   pageIndex,
                   runId,
-                  dx: next - bounds.x,
+                  dx: next - liveRunBounds(store, runId, bounds).x,
                   dy: 0,
                 }),
               ),
@@ -69,20 +102,19 @@ export function useSelectionGeometry(
                   pageIndex,
                   runId,
                   dx: 0,
-                  dy: next - bounds.y,
+                  dy: next - liveRunBounds(store, runId, bounds).y,
                 }),
               ),
             // Narrowing a run is exactly the wrap gesture, so it reuses the
             // same command the canvas resize handle drives.
-            setWidth: (next) =>
-              store.dispatch(
-                new ReflowWrapCommand({
-                  pageIndex,
-                  runId,
-                  maxWidthPt: Math.max(1, next),
-                  explicit: true,
-                }),
-              ),
+            setWidth: canResizeRun(run)
+              ? (next) => {
+                  const doc = store.document;
+                  const cmd =
+                    doc && resizeRunCommand(doc, pageIndex, runId, next);
+                  if (cmd) store.dispatch(cmd);
+                }
+              : undefined,
           },
         };
       }
@@ -94,15 +126,20 @@ export function useSelectionGeometry(
         const img = page.images.find((i) => i.id === imageId);
         if (!img) continue;
         const pageIndex = page.pageIndex;
-        const bounds = img.bounds;
-        const set = (patch: Partial<PageRect>) =>
+        const bounds = visibleImageBounds(img);
+        const set = (patch: Partial<PageRect>) => {
+          const live = liveImage(store, imageId, img);
           store.dispatch(
             new SetImageTransformCommand({
               pageIndex,
               imageId,
-              nextBounds: { ...bounds, ...patch },
+              nextBounds: imageBoundsForVisible(live, {
+                ...visibleImageBounds(live),
+                ...patch,
+              }),
             }),
           );
+        };
         return {
           single: {
             bounds,

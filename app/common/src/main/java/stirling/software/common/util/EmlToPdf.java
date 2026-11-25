@@ -1,7 +1,6 @@
 package stirling.software.common.util;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import lombok.experimental.UtilityClass;
 
@@ -33,30 +32,6 @@ public class EmlToPdf {
                 emailContent, request, customHtmlSanitizer);
     }
 
-    public static byte[] convertEmlToPdf(
-            String weasyprintPath,
-            EmlToPdfRequest request,
-            byte[] emlBytes,
-            String fileName,
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager,
-            CustomHtmlSanitizer customHtmlSanitizer)
-            throws IOException, InterruptedException {
-
-        return convertEmlToPdf(
-                request,
-                emlBytes,
-                pdfDocumentFactory,
-                customHtmlSanitizer,
-                html ->
-                        convertHtmlToPdf(
-                                weasyprintPath,
-                                request,
-                                html,
-                                tempFileManager,
-                                customHtmlSanitizer));
-    }
-
     /** Keeps parsing, sanitization and attachment rules independent of the PDF renderer. */
     public static byte[] convertEmlToPdf(
             EmlToPdfRequest request,
@@ -86,7 +61,7 @@ public class EmlToPdf {
 
             return pdfBytes;
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
             throw new IOException("Error converting EML to PDF", e);
@@ -99,35 +74,5 @@ public class EmlToPdf {
                 && request != null
                 && request.isIncludeAttachments()
                 && !emailContent.getAttachments().isEmpty();
-    }
-
-    private static byte[] convertHtmlToPdf(
-            String weasyprintPath,
-            EmlToPdfRequest request,
-            String htmlContent,
-            TempFileManager tempFileManager,
-            CustomHtmlSanitizer customHtmlSanitizer)
-            throws IOException, InterruptedException {
-
-        var htmlRequest = EmlProcessingUtils.createHtmlRequest(request);
-
-        try {
-            return FileToPdf.convertHtmlToPdf(
-                    weasyprintPath,
-                    htmlRequest,
-                    htmlContent.getBytes(StandardCharsets.UTF_8),
-                    "email.html",
-                    tempFileManager,
-                    customHtmlSanitizer);
-        } catch (IOException | InterruptedException e) {
-            String simplifiedHtml = EmlProcessingUtils.simplifyHtmlContent(htmlContent);
-            return FileToPdf.convertHtmlToPdf(
-                    weasyprintPath,
-                    htmlRequest,
-                    simplifiedHtml.getBytes(StandardCharsets.UTF_8),
-                    "email.html",
-                    tempFileManager,
-                    customHtmlSanitizer);
-        }
     }
 }
