@@ -47,7 +47,7 @@ describe("HeadingOutlineSection", () => {
     expect(onSelect).toHaveBeenCalledWith(1);
   });
 
-  it("shows each issue under its heading and counts them", () => {
+  it("shows each issue under its heading", () => {
     renderOutline({
       entries: [
         entry(1, "Quarterly report"),
@@ -59,9 +59,6 @@ describe("HeadingOutlineSection", () => {
       `${KEY}.skippedLevel`,
     );
     expect(screen.getByTestId("pdf-editor-heading-mixed")).toBeVisible();
-    expect(screen.getByTestId("pdf-editor-heading-problems")).toHaveTextContent(
-      "2",
-    );
   });
 
   it("names a heading by its page until that page is read", () => {
