@@ -1,6 +1,8 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
   addTagMark,
+  markListKey,
   removeTagMark,
   type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
@@ -37,4 +39,22 @@ export function restoreObject(
   for (const dropped of object.dropped) {
     addTagMark(doc.module, doc.docPtr, object.ptr, dropped);
   }
+}
+
+/**
+ * The objects to retag so each mark list is retagged once (markListKey): a second
+ * object on a list already retagged would find its marks gone.
+ */
+export function oneObjectPerMarkList(
+  m: WrappedPdfiumModule,
+  objects: readonly ObjectRetag[],
+): ObjectRetag[] {
+  const seen = new Set<number>();
+  return objects.filter(({ ptr }) => {
+    const key = markListKey(m, ptr);
+    if (key === null) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

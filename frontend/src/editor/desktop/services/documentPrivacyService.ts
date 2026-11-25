@@ -3,14 +3,17 @@ import { connectionModeService } from "@editor/services/connectionModeService";
 import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { STIRLING_SAAS_BACKEND_API_URL } from "@editor/constants/connection";
 
-/** These endpoints can send document data onward even from the bundled backend. */
+/** These endpoints can send document data onward even from the bundled backend.
+ * Hardware signing discovery reads this device's certificate stores and tokens, so it stays. */
 export function requiresOffDeviceProcessing(endpoint: string): boolean {
   const path = decodeURIComponent(new URL(endpoint, "http://local").pathname);
   return (
     /^\/api\/v1\/(?:ai|storage|sharing|share|signing|workflow|policies|processing-folders|automation|pipeline|mobile-scanner)(?:\/|$)/.test(
       path,
     ) ||
-    /^\/api\/v1\/security\/(?:timestamp-pdf(?:\/|$)|cert-sign\/)/.test(path)
+    /^\/api\/v1\/security\/(?:timestamp-pdf(?:\/|$)|cert-sign\/(?!hardware\/))/.test(
+      path,
+    )
   );
 }
 
