@@ -4,11 +4,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -32,7 +35,6 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.PostHogService;
-import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -122,22 +124,12 @@ public class PipelineController {
             // Multiple files: stream into a zip TempFile
             TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
             try {
-                Map<String, Integer> filenameCount = new HashMap<>();
+                Set<String> usedNames = new HashSet<>();
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
                     for (Resource file : outputFiles) {
-                        String originalFilename = file.getFilename();
-                        String filename = originalFilename;
-                        if (filenameCount.containsKey(originalFilename)) {
-                            int count = filenameCount.get(originalFilename);
-                            filename =
-                                    GeneralUtils.generateFilename(
-                                            originalFilename, "(" + count + ")");
-                            filenameCount.put(originalFilename, count + 1);
-                        } else {
-                            filenameCount.put(originalFilename, 1);
-                        }
-                        zipOut.putNextEntry(new ZipEntry(filename));
+                        zipOut.putNextEntry(
+                                new ZipEntry(uniqueEntryName(file.getFilename(), usedNames)));
                         try (InputStream is = file.getInputStream()) {
                             is.transferTo(zipOut);
                         }
@@ -162,5 +154,20 @@ public class PipelineController {
             }
             processor.deleteInputFiles(inputFiles);
         }
+    }
+
+    /**
+     * The entry's own name, or "name (n).ext" in the same folder once an earlier entry has it.
+     * Checked against every emitted name, since an output can already be called "name (1).ext".
+     */
+    private static String uniqueEntryName(String filename, Set<String> usedNames) {
+        String stem = FilenameUtils.removeExtension(filename);
+        String extension = FilenameUtils.getExtension(filename);
+        String dotExtension = extension.isEmpty() ? "" : "." + extension;
+        String candidate = filename;
+        for (int n = 1; !usedNames.add(candidate); n++) {
+            candidate = stem + " (" + n + ")" + dotExtension;
+        }
+        return candidate;
     }
 }

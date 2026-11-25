@@ -364,7 +364,9 @@ async def test_orchestrate_assembles_multiple_chunks(agent: PdfCreateAgent) -> N
         result = await agent.orchestrate(_orchestrator_request("Create a multi-chunk doc"))
 
     assert isinstance(result, EditPlanResponse)
-    document = result.steps[0].parameters.document  # type: ignore[union-attr]
+    parameters = result.steps[0].parameters
+    assert isinstance(parameters, CreatePdfFromHtmlAgentParams)
+    document = parameters.document
     assert "Introduction text." in document
     assert "Details" in document
 
@@ -395,7 +397,9 @@ async def test_orchestrate_applies_planner_inferred_style(agent: PdfCreateAgent)
         result = await agent.orchestrate(_orchestrator_request("Make an invoice, magenta styling"))
 
     assert isinstance(result, EditPlanResponse)
-    document = result.steps[0].parameters.document  # type: ignore[union-attr]
+    parameters = result.steps[0].parameters
+    assert isinstance(parameters, CreatePdfFromHtmlAgentParams)
+    document = parameters.document
     assert json.loads(document)["style"]["primaryColor"] == "#ff00ff"
 
 
@@ -440,6 +444,8 @@ async def test_orchestrate_drops_non_hex_planner_colour(agent: PdfCreateAgent) -
         result = await agent.orchestrate(_orchestrator_request("make it blue"))
 
     assert isinstance(result, EditPlanResponse)
-    document = result.steps[0].parameters.document  # type: ignore[union-attr]
+    parameters = result.steps[0].parameters
+    assert isinstance(parameters, CreatePdfFromHtmlAgentParams)
+    document = parameters.document
     assert "rgb(" not in document
     assert json.loads(document)["style"]["primaryColor"] is None

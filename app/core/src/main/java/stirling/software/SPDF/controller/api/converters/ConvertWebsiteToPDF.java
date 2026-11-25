@@ -2,15 +2,9 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -29,21 +24,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.officeconvert.topdf.WebAssets;
 
 @ConvertApi
 @Slf4j
@@ -51,7 +45,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertWebsiteToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final RuntimePathConfig runtimePathConfig;
+    private final OfficeToPdfService officeToPdfService;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
 
@@ -72,8 +66,12 @@ public class ConvertWebsiteToPDF {
     public ResponseEntity<?> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
+        // Async jobs (MCP, pipelines) run off the request thread, where there is no request URL.
         UriComponentsBuilder uriComponentsBuilder =
-                ServletUriComponentsBuilder.fromCurrentContextPath().path("/url-to-pdf");
+                (RequestContextHolder.getRequestAttributes() != null
+                                ? ServletUriComponentsBuilder.fromCurrentContextPath()
+                                : UriComponentsBuilder.newInstance())
+                        .path("/url-to-pdf");
         URI location = null;
         HttpStatus status = HttpStatus.SEE_OTHER;
 
@@ -112,8 +110,15 @@ public class ConvertWebsiteToPDF {
         Path tempOutputFile = null;
         Path tempHtmlInput = null;
         try {
-            // Download the remote content first to ensure we don't allow dangerous schemes
-            String htmlContent = fetchRemoteHtml(URL);
+            // Public addresses only, for the page, every asset it links and every redirect hop.
+            WebAssets assets =
+                    WebAssets.fetch(
+                            URL,
+                            WebAssets.Access.none()
+                                    .network(true)
+                                    .redirects(true)
+                                    .privateAddresses(false));
+            String htmlContent = new String(assets.page(), StandardCharsets.UTF_8);
 
             if (containsDisallowedUriScheme(htmlContent)) {
                 URI rejectionLocation =
@@ -126,24 +131,10 @@ public class ConvertWebsiteToPDF {
             }
 
             tempHtmlInput = Files.createTempFile("url_input_", ".html");
-            Files.writeString(tempHtmlInput, htmlContent, StandardCharsets.UTF_8);
-
-            // Prepare the output file path
+            Files.write(tempHtmlInput, assets.page());
             tempOutputFile = Files.createTempFile("output_", ".pdf");
-
-            // Prepare the WeasyPrint command
-            List<String> command = new ArrayList<>();
-            command.add(runtimePathConfig.getWeasyPrintPath());
-            command.add(tempHtmlInput.toString());
-            command.add("--base-url");
-            command.add(URL);
-            command.add("--pdf-forms");
-            command.add("--allowed-protocols");
-            command.add("data,http,https");
-            command.add(tempOutputFile.toString());
-
-            ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
-                    .runCommandWithOutputHandling(command);
+            officeToPdfService.convert(
+                    tempHtmlInput, tempOutputFile, officeToPdfService.options().htmlAssets(assets));
 
             // Load the PDF using pdfDocumentFactory
             String outputFilename = convertURLToFileName(URL);
@@ -172,34 +163,6 @@ public class ConvertWebsiteToPDF {
                 }
             }
         }
-    }
-
-    private String fetchRemoteHtml(String url) throws IOException, InterruptedException {
-        HttpClient client =
-                HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.NEVER)
-                        .connectTimeout(Duration.ofSeconds(10))
-                        .build();
-
-        HttpRequest request =
-                HttpRequest.newBuilder(URI.create(url))
-                        .timeout(Duration.ofSeconds(20))
-                        .GET()
-                        .header("User-Agent", "Stirling-PDF/URL-to-PDF")
-                        .build();
-
-        HttpResponse<String> response =
-                client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
-        if (response.statusCode() >= 300 || response.body() == null) {
-            throw ExceptionUtils.createIOException(
-                    "error.httpRequestFailed",
-                    "Failed to retrieve remote HTML. Status: {0}",
-                    null,
-                    response.statusCode());
-        }
-
-        return response.body();
     }
 
     private boolean containsDisallowedUriScheme(String htmlContent) {

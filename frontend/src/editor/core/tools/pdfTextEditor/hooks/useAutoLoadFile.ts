@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAllFiles, useFileSelection } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 
 type Loader = (file: File) => unknown;
 // The workbench fileId is what lets save write the edit back to the
@@ -17,12 +18,16 @@ function fileKey(file: File): string {
 }
 
 interface AutoLoad {
-  /** Open a workbench file deliberately. */
-  openFile: (file: File) => void;
-  /** Record a document the editor loaded by other means, so auto-open stands down. */
+  /** Record a document the editor loaded by other means, so it is not opened again. */
   adopt: (file: File) => void;
   /** Keep a cancelled password request closed until another file or an explicit open. */
   cancel: (file: File) => void;
+  /** The file the user moved to while the open document has unsaved edits. */
+  pendingSwitch: File | null;
+  /** Drop the unsaved edits and open the pending file. */
+  confirmSwitch: () => void;
+  /** Keep editing the open document and move the active file back to it. */
+  cancelSwitch: () => void;
 }
 
 /** The slice of the editor's state that decides whether it needs a file. */
@@ -30,22 +35,22 @@ export interface EditorLoadState {
   hasDocument: boolean;
   loading: boolean;
   error: string | null;
+  dirty: boolean;
   passwordPrompt?: { fileName: string; retry: boolean } | null;
 }
 
 /**
- * Open the file the user most likely wants.
+ * Keep the editor on the workbench's active file, the one the viewer shows.
  *
- * Auto-opening only ever fires while the editor holds nothing: the selection
- * moves on its own (the Active Files view trims a multi-file selection down to
- * its last entry to honour the tool's one-file limit), and following it would
- * swap the open document, and any unsaved edits, out from under the user.
+ * Only the active file is followed, never the selection: the selection moves on
+ * its own (the Active Files view trims a multi-file selection down to its last
+ * entry), and following it would swap the document out from under the user.
+ * The selection is read only for the first pick, while no file is active.
  *
- * "Holds nothing" is the store's own state, not a memory of having opened
- * something. The store is a module singleton that drops its document when the
- * canvas unmounts, while this hook's refs belong to the panel - so the two
- * disagree whenever one outlives the other, and a hook that stood down on its
- * own memory left the editor empty with no way back in.
+ * "Is a document open" is the store's own state, not a memory of having opened
+ * something: the store is a module singleton that can drop its document while
+ * this hook's refs live on, and a hook that trusted its own memory left the
+ * editor empty with no way back in.
  */
 export function useAutoLoadFile(
   load: Loader,
@@ -53,39 +58,31 @@ export function useAutoLoadFile(
   currentFileId: FileId | null,
   /** Saving is swapping the workbench file under us; do not re-pick mid-swap. */
   hold: boolean,
-  /** The editor's live state, so "is a document open" is asked, not remembered. */
   editor: EditorLoadState,
 ): AutoLoad {
   const navigationState = useNavigationState();
   const { selectedFiles } = useFileSelection();
   const { files: allFiles } = useAllFiles();
-  const { activeFileId } = useViewer();
+  const { activeFileId, setActiveFileId } = useViewer();
+  const { reviewing } = useReviewMode();
 
-  const autoLoadFile = useMemo(() => {
-    // Prefer the open document while it is still selected so a reordering
-    // selection cannot nudge the editor onto a different file.
-    if (currentFileId) {
-      const held = selectedFiles.find(
-        (f) => (f as WorkbenchFile).fileId === currentFileId,
-      );
-      if (held) return held;
-    }
-    if (selectedFiles[0]) return selectedFiles[0];
-    if (activeFileId) {
-      const viewerFile = allFiles.find(
-        (f) => (f as WorkbenchFile).fileId === activeFileId,
-      );
-      if (viewerFile) return viewerFile;
-    }
-    if (allFiles.length === 1) return allFiles[0];
-    return null;
-  }, [selectedFiles, activeFileId, allFiles, currentFileId]);
+  const activeFile = useMemo(
+    () =>
+      (activeFileId &&
+        allFiles.find((f) => (f as WorkbenchFile).fileId === activeFileId)) ||
+      null,
+    [activeFileId, allFiles],
+  );
+  const firstPick =
+    selectedFiles[0] ?? (allFiles.length === 1 ? allFiles[0] : null);
+  const target = activeFile ?? (editor.hasDocument ? null : firstPick);
 
-  // The open document left the workbench, so the editor is free to pick again.
+  // The open document left the workbench, so its edits have nowhere to go.
   const documentGone =
     currentFileId != null &&
     !allFiles.some((f) => (f as WorkbenchFile).fileId === currentFileId);
 
+  const [pendingSwitch, setPendingSwitch] = useState<File | null>(null);
   const lastKeyRef = useRef<string | null>(null);
   const cancelledKeyRef = useRef<string | null>(null);
   const cancel = useCallback((file: File) => {
@@ -95,7 +92,7 @@ export function useAutoLoadFile(
     cancelledKeyRef.current = null;
     lastKeyRef.current = fileKey(file);
   }, []);
-  const openFile = useCallback(
+  const open = useCallback(
     (file: File) => {
       adopt(file);
       onFileChosen(file.name, (file as WorkbenchFile).fileId);
@@ -105,56 +102,67 @@ export function useAutoLoadFile(
   );
 
   useEffect(() => {
-    if (!autoLoadFile || hold) return;
-    if (navigationState.selectedTool !== "pdfTextEditor") return;
-    const cancelled = cancelledKeyRef.current;
-    if (cancelled === fileKey(autoLoadFile)) return;
+    if (!target || hold) return;
+    if (navigationState.selectedTool !== "pdfTextEditor" && !reviewing) return;
+    const key = fileKey(target);
+    if (cancelledKeyRef.current === key) return;
     cancelledKeyRef.current = null;
-    // A document is open: leave it, and the user's unsaved edits, alone.
-    if (editor.hasDocument && !documentGone) return;
     // Restarting a pending open would reset its password prompt.
     if (editor.loading || editor.passwordPrompt) return;
 
-    // Recovery: the store dropped a document this hook had already opened.
-    // Re-open THAT file, and do it quietly - no pin, no filename change. The
-    // canvas can be dropped because the user went to Active Files, and pinning
-    // it back would yank them out of the list they just asked for.
-    const recovering = lastKeyRef.current !== null && cancelled === null;
-    if (recovering) {
-      const same = allFiles.find(
-        (f) => (f as WorkbenchFile).fileId === currentFileId,
-      );
-      // Nothing to recover to: the file left the workbench, so fall through
-      // and pick a candidate the normal way.
-      if (same) {
-        if (editor.error && lastKeyRef.current === fileKey(same)) return;
-        adopt(same);
-        void load(same);
+    // The open document's own file, met again by a hook that remounted.
+    if (
+      editor.hasDocument &&
+      currentFileId != null &&
+      (target as WorkbenchFile).fileId === currentFileId
+    ) {
+      lastKeyRef.current = key;
+    }
+    if (lastKeyRef.current === key) {
+      if (editor.hasDocument) {
+        setPendingSwitch(null);
         return;
       }
+      // This exact file already failed to open. Retrying it is a loop, not a fix.
+      if (editor.error) return;
+      // The store dropped the document this hook opened: reopen it quietly.
+      void load(target);
+      return;
     }
-
-    // This exact file already failed to open. Retrying it is a loop, not a fix.
-    if (editor.error && lastKeyRef.current === fileKey(autoLoadFile)) return;
-    openFile(autoLoadFile);
+    if (editor.hasDocument && editor.dirty && !documentGone) {
+      setPendingSwitch(target);
+      return;
+    }
+    setPendingSwitch(null);
+    open(target);
   }, [
-    autoLoadFile,
-    documentGone,
-    editor.error,
-    editor.hasDocument,
-    editor.loading,
-    editor.passwordPrompt,
+    target,
     hold,
     navigationState.selectedTool,
-    openFile,
-    adopt,
-    allFiles,
-    currentFileId,
+    reviewing,
+    editor.loading,
+    editor.passwordPrompt,
+    editor.hasDocument,
+    editor.error,
+    editor.dirty,
+    documentGone,
     load,
+    open,
   ]);
 
+  const confirmSwitch = useCallback(() => {
+    if (pendingSwitch) open(pendingSwitch);
+    setPendingSwitch(null);
+  }, [open, pendingSwitch]);
+
+  const cancelSwitch = useCallback(() => {
+    if (pendingSwitch) cancelledKeyRef.current = fileKey(pendingSwitch);
+    setPendingSwitch(null);
+    if (currentFileId) setActiveFileId(currentFileId);
+  }, [currentFileId, pendingSwitch, setActiveFileId]);
+
   return useMemo(
-    () => ({ openFile, adopt, cancel }),
-    [openFile, adopt, cancel],
+    () => ({ adopt, cancel, pendingSwitch, confirmSwitch, cancelSwitch }),
+    [adopt, cancel, pendingSwitch, confirmSwitch, cancelSwitch],
   );
 }

@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Button, Card } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
 import { EDITOR_URL } from "@processor/auth/editorUrl";
@@ -8,6 +8,7 @@ import { useCopyFeedback } from "@processor/hooks/useCopyFeedback";
 import { useEditorInstalled } from "@processor/hooks/useEditorInstalled";
 import {
   DOCKER_IMAGE,
+  dockerRunCommand,
   type DockerImageTag,
 } from "@editor/constants/selfHosting";
 import type { Deployment } from "@processor/api/procurement";
@@ -16,10 +17,9 @@ import "@processor/views/Procurement.css";
 import "@processor/components/procurement/SetupChecklist.css";
 
 const DOC = ENTERPRISE_DOCS;
-const image = (tag: DockerImageTag) => `${DOCKER_IMAGE}:${tag}`;
-const IMAGE = image("latest");
 /** Bundles the fonts an offline server cannot download. */
-const FULL_IMAGE = image("latest-fat");
+const FULL_TAG: DockerImageTag = "latest-fat";
+const FULL_IMAGE = `${DOCKER_IMAGE}:${FULL_TAG}`;
 
 interface StepLink {
   label: string;
@@ -30,7 +30,7 @@ interface StepLink {
 interface Step {
   id: string;
   title: string;
-  body: string;
+  body: ReactNode;
   links: StepLink[];
   /** A command to copy, for steps run on the buyer's own machines. */
   code?: string;
@@ -86,24 +86,29 @@ export function SetupChecklist({
     deployment === "selfhost" || deployment === "airgap" ? deployment : "cloud";
   const key = licenseKey ?? "YOUR-LICENCE-KEY";
 
-  const runCommand = (image: string, licence: string) =>
-    [
-      "docker run -d --name stirling-pdf -p 8080:8080 \\",
-      '  -v "$(pwd)/stirling/configs:/configs" \\',
-      '  -v "$(pwd)/stirling/logs:/logs" \\',
-      "  -e SECURITY_ENABLELOGIN=true \\",
-      "  -e PREMIUM_ENABLED=true \\",
-      `  -e PREMIUM_KEY=${licence} \\`,
-      `  ${image}`,
-    ].join("\n");
+  const runCommand = (tag: DockerImageTag, licence: string) =>
+    dockerRunCommand(tag, {
+      SECURITY_ENABLELOGIN: "true",
+      PREMIUM_ENABLED: "true",
+      PREMIUM_KEY: licence,
+    });
+
+  // Copy naming addresses, paths or settings, which it marks <code> so they read as typed.
+  const withCode = (key: string, defaults: string) => (
+    <Trans
+      i18nKey={key}
+      defaults={defaults}
+      components={{ code: <code className="ent-setup__inline-code" /> }}
+    />
+  );
 
   // The same first sign-in on any server the buyer runs: the default admin, then the licence.
   const signInStep: Step = {
     id: "signIn",
     title: t("portal.enterprise.setup.signIn.title", "Sign in as the admin"),
-    body: t(
+    body: withCode(
       "portal.enterprise.setup.signIn.body",
-      "Open http://your-server:8080 and sign in with admin / stirling. You'll be asked to choose a new password straight away.",
+      "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>. You'll be asked to choose a new password straight away.",
     ),
     links: [],
   };
@@ -119,7 +124,7 @@ export function SetupChecklist({
     },
   ];
 
-  const peopleStep = (body: string): Step => ({
+  const peopleStep = (body: ReactNode): Step => ({
     id: "people",
     title: t("portal.enterprise.setup.people.title", "Add your people"),
     body,
@@ -193,7 +198,7 @@ export function SetupChecklist({
               : [],
             done: teamSize > 1,
           },
-          // No single sign-on step: on Stirling Cloud it needs self-hosting (see DeploymentOptions).
+          // No single sign-on step: on Stirling Cloud it needs self-hosting (see DeploymentDetails).
         ]
       : kind === "selfhost"
         ? [
@@ -207,7 +212,7 @@ export function SetupChecklist({
                 "portal.enterprise.setup.install.body",
                 "Run this on your server. It starts Stirling with your licence applied, and the image includes OCR and office conversion. For larger teams, use Kubernetes.",
               ),
-              code: runCommand(IMAGE, key),
+              code: runCommand("latest", key),
               links: [
                 {
                   label: t(
@@ -232,9 +237,9 @@ export function SetupChecklist({
                 "portal.enterprise.setup.licence.title",
                 "Check your licence is active",
               ),
-              body: t(
+              body: withCode(
                 "portal.enterprise.setup.licence.body",
-                "Open http://your-server:8080/settings/adminPlan, where your Enterprise licence should show as active. Installed another way? Add the key under premium.key in settings.yml and restart.",
+                "Open <code>http://your-server:8080/settings/adminPlan</code>, where your Enterprise licence should show as active. Installed another way? Add the key under <code>premium.key</code> in <code>settings.yml</code> and restart.",
               ),
               links: [
                 {
@@ -247,9 +252,9 @@ export function SetupChecklist({
               ],
             },
             peopleStep(
-              t(
+              withCode(
                 "portal.enterprise.setup.people.bodySelfHosted",
-                "Create accounts at /settings/people, or connect your identity provider so your team signs in with their work accounts. They use Stirling in the browser at your server's address, or in the desktop app pointed at it.",
+                "Create accounts at <code>/settings/people</code>, or connect your identity provider so your team signs in with their work accounts. They use Stirling in the browser at your server's address, or in the desktop app pointed at it.",
               ),
             ),
           ]
@@ -296,9 +301,9 @@ export function SetupChecklist({
                 `docker pull ${FULL_IMAGE}`,
                 `docker save -o stirling-pdf.tar ${FULL_IMAGE}`,
                 "",
-                "# On the air-gapped server, with stirling-enterprise.lic in ./stirling/configs",
+                "# On the air-gapped server, with stirling-enterprise.lic in ./stirling-data",
                 "docker load -i stirling-pdf.tar",
-                runCommand(FULL_IMAGE, "file:/configs/stirling-enterprise.lic"),
+                runCommand(FULL_TAG, "file:/configs/stirling-enterprise.lic"),
               ].join("\n"),
               links: [
                 {
@@ -319,15 +324,15 @@ export function SetupChecklist({
             },
             {
               ...signInStep,
-              body: t(
+              body: withCode(
                 "portal.enterprise.setup.signIn.bodyAirgap",
-                "Open http://your-server:8080 and sign in with admin / stirling, choose a new password, then check /settings/adminPlan shows your licence as active.",
+                "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>, choose a new password, then check <code>/settings/adminPlan</code> shows your licence as active.",
               ),
             },
             peopleStep(
-              t(
+              withCode(
                 "portal.enterprise.setup.people.bodyAirgap",
-                "Create accounts at /settings/people, or point Stirling at your internal identity provider so sign-in never leaves your network.",
+                "Create accounts at <code>/settings/people</code>, or point Stirling at your internal identity provider so sign-in never leaves your network.",
               ),
             ),
           ];

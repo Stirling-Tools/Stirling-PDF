@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import path from "node:path";
 
@@ -25,14 +26,13 @@ for (const dpi of [96, 150, 600]) {
       timeout: 60_000,
     });
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible();
-    await page
-      .getByTestId("pdf-editor-file-input")
-      .setInputFiles(
-        path.join(
-          import.meta.dirname,
-          `../test-fixtures/scanned-ocr-weight-${dpi}.pdf`,
-        ),
-      );
+    await openInTextEditor(
+      page,
+      path.join(
+        import.meta.dirname,
+        `../test-fixtures/scanned-ocr-weight-${dpi}.pdf`,
+      ),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible();
     await expect
       .poll(() =>

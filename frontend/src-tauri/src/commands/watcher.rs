@@ -216,6 +216,7 @@ fn reconcile(
         }
         claims.values().flatten().cloned().collect::<Vec<String>>()
     };
+    crate::commands::file_lock::sync_locks(&union);
 
     let (routes, dirs) = build_routes(&union);
     *ROUTES.lock().map_err(|e| e.to_string())? = Some(Arc::new(routes));
