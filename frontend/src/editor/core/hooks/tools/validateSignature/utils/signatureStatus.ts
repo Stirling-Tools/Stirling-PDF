@@ -83,7 +83,7 @@ export const computeSignatureStatus = (
     trustIssues.push(
       t(
         "validateSignature.issue.documentModified",
-        "Document modified after signing - content was added outside the signed area",
+        "Document modified after signing: content was added outside the signed area",
       ),
     );
   }

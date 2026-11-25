@@ -20,7 +20,7 @@ const WelcomeSlideBody = () => (
       <Trans
         i18nKey="onboarding.desktopWelcome.body"
         components={{ strong: <strong /> }}
-        defaults="There's a whole host of new changes to explore, including <strong>Agent Chat</strong>, automatic document <strong>classification</strong>, and more."
+        defaults="New in this release: <strong>Agent Chat</strong>, automatic document <strong>classification</strong> and more."
       />
     </span>
     <span className={styles.line}>

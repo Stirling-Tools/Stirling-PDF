@@ -101,7 +101,7 @@ describe("PDF/UA descriptions are scoped to one document", () => {
     expect(
       screen.getByTestId("pdfua-alt-text-single-file-only"),
     ).toHaveTextContent(
-      /Convert these 2 files to tag them, then convert one at a time/,
+      /Convert these 2 files to tag them, then convert each one on its own/,
     );
     expect(screen.queryByTestId("pdfua-find-figures")).toBeNull();
   });

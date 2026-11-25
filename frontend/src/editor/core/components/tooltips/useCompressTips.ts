@@ -13,7 +13,7 @@ export const useCompressTips = (): TooltipContent => {
         title: t("compress.tooltip.description.title", "Description"),
         description: t(
           "compress.tooltip.description.text",
-          "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually.",
+          "Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually.",
         ),
       },
       {

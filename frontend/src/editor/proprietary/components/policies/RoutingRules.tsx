@@ -82,7 +82,7 @@ export function RoutingRules({
         tone="info"
         description={t(
           "portal.policies.wizard.routing.needsDestination",
-          "Add a destination below first - a rule needs somewhere to send documents to.",
+          "Add a destination below first, so rules have somewhere to send documents.",
         )}
       />
     );

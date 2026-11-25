@@ -123,7 +123,7 @@ export function VersionHistoryModal({
             style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
           <Text fw={600} size="md" c="var(--c-text)">
-            {t("filesPage.field.versionHistory", "Version journey")}
+            {t("filesPage.field.versionHistory", "Version history")}
           </Text>
         </Group>
       }

@@ -571,7 +571,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         icon: <Icon name="rotate-cw" size="1.5rem" />,
         name: t("home.rotate.title", "Rotate"),
         component: lazy(() => import("@editor/tools/Rotate")),
-        description: t("home.rotate.desc", "Easily rotate your PDFs."),
+        description: t("home.rotate.desc", "Rotate your PDFs."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
@@ -756,7 +756,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         component: lazy(() => import("@editor/tools/CreatePortfolio")),
         description: t(
           "home.createPortfolio.desc",
-          "Bundle multiple files into an Adobe PDF Portfolio",
+          "Bundle multiple files into a PDF Portfolio",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,

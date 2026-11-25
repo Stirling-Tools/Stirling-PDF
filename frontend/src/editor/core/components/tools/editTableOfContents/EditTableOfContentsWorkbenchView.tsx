@@ -112,7 +112,7 @@ const EditTableOfContentsWorkbenchView = ({
           <Text size="sm" c="dimmed">
             {t(
               "editTableOfContents.workbench.subtitle",
-              "Import bookmarks, build hierarchies, and apply the outline without cramped side panels.",
+              "Import bookmarks, build hierarchies, and apply the outline.",
             )}
           </Text>
         </Stack>

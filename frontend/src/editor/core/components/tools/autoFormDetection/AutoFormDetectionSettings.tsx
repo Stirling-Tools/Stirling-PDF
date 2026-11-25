@@ -37,7 +37,7 @@ export default function AutoFormDetectionSettings({
   const sensitivityHint: Record<DetectionSensitivity, string> = {
     low: t(
       "autoFormDetection.sensitivity.lowHint",
-      "Only very confident matches - fewer fields, fewer mistakes.",
+      "Only very confident matches. Finds fewer fields but makes fewer mistakes.",
     ),
     balanced: t(
       "autoFormDetection.sensitivity.balancedHint",

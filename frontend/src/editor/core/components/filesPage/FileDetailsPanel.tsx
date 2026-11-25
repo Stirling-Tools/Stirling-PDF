@@ -331,7 +331,7 @@ export function FileDetailsPanel({
                 >
                   {t(
                     "filesPage.viewVersionHistory",
-                    "Version journey ({{count}})",
+                    "Version history ({{count}})",
                     { count: versionChain.length },
                   )}
                 </Button>
@@ -355,7 +355,7 @@ export function FileDetailsPanel({
                     <span>
                       {t(
                         "filesPage.viewVersionHistory",
-                        "Version journey ({{count}})",
+                        "Version history ({{count}})",
                         { count: versionChain.length },
                       )}
                     </span>

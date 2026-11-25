@@ -46,7 +46,7 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
           "Stirling Sign · Organization",
         );
       case "UPLOAD":
-        return `${uploadFormat} — ${p12File?.name || t("certSign.collab.signRequest.uploadCert", "Upload a certificate")}`;
+        return `${uploadFormat}: ${p12File?.name || t("certSign.collab.signRequest.uploadCert", "Upload a certificate")}`;
       default:
         return "";
     }

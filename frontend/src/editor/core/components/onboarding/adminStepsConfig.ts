@@ -64,7 +64,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     selector: '[data-tour="config-button"]',
     contentKey: "adminOnboarding.welcome",
     contentDefault:
-      "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
+      "Welcome to the <strong>Admin Tour</strong>. It covers the enterprise features and settings available to administrators.",
     padding: NAV_PADDING,
     saveStateOnEnter: true,
   },
@@ -82,7 +82,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     selector: ".modal-nav",
     contentKey: "adminOnboarding.settingsOverview",
     contentDefault:
-      "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation.",
+      "This is the <strong>Settings Panel</strong>. Admin settings are grouped by category.",
     padding: 0,
   },
   {
@@ -99,7 +99,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     selector: '[data-tour="admin-adminGeneral-nav"]',
     contentKey: "adminOnboarding.systemCustomization",
     contentDefault:
-      "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users.",
+      "<strong>System Settings</strong> changes the app name and languages, <strong>Features</strong> manages the server certificate, and <strong>Endpoints</strong> turns tools on or off for your users.",
     padding: NAV_PADDING,
     section: "adminGeneral",
   },
@@ -108,7 +108,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     selector: '[data-tour="admin-adminDatabase-nav"]',
     contentKey: "adminOnboarding.databaseSection",
     contentDefault:
-      "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure.",
+      "For production environments, you can connect an <strong>external database</strong> to use your existing infrastructure.",
     padding: NAV_PADDING,
     section: "adminDatabase",
   },
@@ -127,7 +127,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     selector: '[data-tour="admin-adminAudit-nav"]',
     contentKey: "adminOnboarding.adminTools",
     contentDefault:
-      "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform.",
+      "<strong>Auditing</strong> tracks system activity and <strong>Usage Analytics</strong> shows how users interact with the platform.",
     padding: NAV_PADDING,
     section: "adminAudit",
     highlightedSelectors: [
@@ -140,7 +140,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     selector: '[data-tour="admin-about-nav"]',
     contentKey: "adminOnboarding.wrapUp",
     contentDefault:
-      "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here under <strong>About</strong>.",
+      "That's the end of the admin tour. To replay it, open <strong>Settings</strong> and find it under <strong>About</strong>.",
     padding: NAV_PADDING,
     section: "about",
     waitForSelectorOnEnter: true,
