@@ -76,8 +76,8 @@ public class FileStorage {
 
     public MultipartFile retrieveFile(String fileId) throws IOException {
         enforceOwnership(fileId);
-        byte[] fileData = fileStore.retrieveBytes(fileId);
-        return fileOrUploadService.toMockMultipartFile(fileId, fileData);
+        return fileOrUploadService.toStreamingMultipartFile(
+                fileId, fileStore.size(fileId), () -> fileStore.retrieve(fileId));
     }
 
     public byte[] retrieveBytes(String fileId) throws IOException {
@@ -92,7 +92,13 @@ public class FileStorage {
 
     public StoredFile storeInputStream(InputStream inputStream, String originalName)
             throws IOException {
-        FileStore.Stored stored = fileStore.store(inputStream, originalName, resolveOwner());
+        return storeInputStream(inputStream, originalName, resolveOwner());
+    }
+
+    /** Stores on behalf of an authenticated owner supplied by a credential outside the session. */
+    public StoredFile storeInputStream(InputStream inputStream, String originalName, String owner)
+            throws IOException {
+        FileStore.Stored stored = fileStore.store(inputStream, originalName, owner);
         log.debug("Stored input stream with ID: {}", stored.fileId());
         return new StoredFile(stored.fileId(), stored.size());
     }
@@ -187,8 +193,8 @@ public class FileStorage {
      * unauthenticated scheduled task. Routing those through {@link #deleteFile(String)} makes the
      * ownership check throw and silently orphans the files on disk.
      *
-     * <p>Only ever pass file ids read back off a job that the caller has already been authorised
-     * for; never a caller-supplied id.
+     * <p>Only pass file ids from an authorised job, or ids just returned by {@link #storeFile} for
+     * trusted pre-submission copies; never a caller-supplied id.
      */
     public boolean deleteFileAsSystem(String fileId) {
         return fileStore.delete(fileId);

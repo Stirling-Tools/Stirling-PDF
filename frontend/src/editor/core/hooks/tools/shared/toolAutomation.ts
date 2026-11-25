@@ -348,7 +348,8 @@ export function stepNeedsConfiguring(
  * The tools that can be run as a backend operation step, sorted by name. Includes automatable tools
  * whose endpoint resolves from defaults, plus format-routed tools (e.g. convert) whose endpoint only
  * resolves once configured but that declare their routing set - represented by the first endpoint of
- * that set. Drops tools with no operationConfig and no way to name a backend endpoint at all.
+ * that set. Custom processors need a backend parameter mapper: their endpoint alone may only
+ * describe routing for frontend execution. Tools without a resolvable backend endpoint are omitted.
  */
 export function getExecutableTools(
   registry: Partial<ToolRegistry>,
@@ -358,6 +359,7 @@ export function getExecutableTools(
     if (!entry || !getToolSupportsAutomate(entry)) continue;
     const config = entry.operationConfig;
     if (!config) continue;
+    if (config.toolType === ToolType.custom && !config.toApiParams) continue;
     // A configured endpoint from defaults, else the routing set's first member as a stand-in so a
     // tool that only resolves once the user picks (convert's from/to) can still be offered.
     const endpoint =

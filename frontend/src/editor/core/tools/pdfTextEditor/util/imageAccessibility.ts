@@ -1,9 +1,10 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { DescriptionBlocker } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
-  ImageObjectSnapshot,
-  PageSnapshot,
-} from "@editor/tools/pdfTextEditor/types";
+  DescribableType,
+  DescriptionBlocker,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type { ImageObjectSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { sharesMarkList } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** What can be said and done about one image's accessibility. */
 export type ImageAccessibility =
@@ -12,8 +13,8 @@ export type ImageAccessibility =
   | {
       kind: "describable";
       description: string | null;
-      /** False for an image no element owns yet: describing it adds one. */
-      tagged: boolean;
+      /** Null for an image no element owns yet: describing it adds a Figure. */
+      type: DescribableType | null;
       canBeDecorative: boolean;
     };
 
@@ -23,27 +24,28 @@ export function imageAccessibility(
 ): ImageAccessibility {
   const retaggable = retaggableTag(doc, image) !== null;
   if (image.artifact) return { kind: "decorative", canUndecorate: retaggable };
-  if (image.mcid === undefined) {
+  const mcid = ownedMcid(doc, image);
+  if (mcid === undefined) {
     if (!retaggable) return blocked(doc, "untagged");
     return {
       kind: "describable",
       description: null,
-      tagged: false,
+      type: null,
       canBeDecorative: true,
     };
   }
   const structure = doc.structure(image.pageIndex);
-  const blocker = structure.cannotDescribe(image.mcid);
+  const blocker = structure.cannotDescribe(mcid);
   if (blocker) return blocked(doc, blocker);
-  if (structure.decorative(image.mcid)) {
+  if (structure.decorative(mcid)) {
     return { kind: "decorative", canUndecorate: true };
   }
   return {
     kind: "describable",
-    description: structure.alt(image.mcid),
-    tagged: true,
+    description: structure.alt(mcid),
+    type: structure.describableType(mcid),
     canBeDecorative:
-      retaggable || structure.cannotMarkDecorative(image.mcid) === null,
+      retaggable || structure.cannotMarkDecorative(mcid) === null,
   };
 }
 
@@ -51,13 +53,18 @@ export function imageAccessibility(
 export type RetaggableTag =
   | { kind: "untagged" }
   | { kind: "artifact" }
-  | { kind: "figure"; mcid: number; alt: string | null };
+  | {
+      kind: "element";
+      type: DescribableType;
+      mcid: number;
+      alt: string | null;
+    };
 
 /**
  * The image's tag when TagImageCommand can change it: an image the page
  * itself draws, whose save can add an element, that is untagged, an
- * artifact, or a figure the session added. Null otherwise, for content the file's elements
- * own among the rest.
+ * artifact, or a figure or formula the session added. Null otherwise, for
+ * content the file's elements own among the rest.
  */
 export function retaggableTag(
   doc: EditorDocument,
@@ -66,15 +73,34 @@ export function retaggableTag(
   if (image.inForm) return null;
   const structure = doc.structure(image.pageIndex);
   if (structure.cannotAddElement()) return null;
-  if (image.mcid === undefined) {
+  const mcid = ownedMcid(doc, image);
+  if (mcid === undefined) {
+    // Drawn in one marked-content sequence with other content, the image can only
+    // be tagged with it, which tagging that content does.
+    const page = doc.page(image.pageIndex);
+    const object = page.findImage(image.id);
+    if (
+      object &&
+      sharesMarkList(doc.module, page.pagePtr, object.pdfiumObjPtr)
+    ) {
+      return null;
+    }
     return image.artifact ? { kind: "artifact" } : { kind: "untagged" };
   }
-  if (!structure.isAdded(image.mcid)) return null;
-  return {
-    kind: "figure",
-    mcid: image.mcid,
-    alt: structure.alt(image.mcid),
-  };
+  const type = structure.describableType(mcid);
+  if (!structure.isAdded(mcid) || !type) return null;
+  return { kind: "element", type, mcid, alt: structure.alt(mcid) };
+}
+
+/** The image's MCID when an element owns it; undefined when none does, which leaves it untagged. */
+export function ownedMcid(
+  doc: EditorDocument,
+  image: ImageObjectSnapshot,
+): number | undefined {
+  if (image.mcid === undefined) return undefined;
+  return doc.structure(image.pageIndex).owns(image.mcid)
+    ? image.mcid
+    : undefined;
 }
 
 function blocked(
@@ -91,18 +117,11 @@ function blocked(
  */
 export type ImageAttention = "needs-description" | "untagged" | "untaggable";
 
-/** Images needing attention, by reason. */
-export interface ImageReview {
-  needsDescription: number;
-  untagged: number;
-  untaggable: number;
-}
-
 export function attentionFor(
   accessibility: ImageAccessibility,
 ): ImageAttention | null {
   if (accessibility.kind === "describable") {
-    if (!accessibility.tagged) return "untagged";
+    if (accessibility.type === null) return "untagged";
     return accessibility.description?.trim() ? null : "needs-description";
   }
   if (
@@ -125,42 +144,4 @@ export function imageAttention(
   image: ImageObjectSnapshot,
 ): ImageAttention | null {
   return attentionFor(imageAccessibility(doc, image));
-}
-
-export function reviewImages(
-  doc: EditorDocument,
-  pages: readonly PageSnapshot[],
-): ImageReview {
-  const review: ImageReview = {
-    needsDescription: 0,
-    untagged: 0,
-    untaggable: 0,
-  };
-  for (const image of pages.flatMap((page) => page.images)) {
-    const attention = imageAttention(doc, image);
-    if (attention === "needs-description") review.needsDescription++;
-    if (attention === "untagged") review.untagged++;
-    if (attention === "untaggable") review.untaggable++;
-  }
-  return review;
-}
-
-/**
- * The first image with actionable attention after `currentId`, in page order
- * and then the order each page draws its images, wrapping round to the start.
- * Covers only the pages in `pages` that have been read.
- */
-export function nextImageNeedingAttention(
-  doc: EditorDocument,
-  pages: readonly PageSnapshot[],
-  currentId: string | null,
-): ImageObjectSnapshot | null {
-  const images = pages.flatMap((page) => page.images);
-  // An id not in the list (or none) yields 0: start from the first image.
-  const start = images.findIndex((img) => img.id === currentId) + 1;
-  for (let i = 0; i < images.length; i++) {
-    const image = images[(start + i) % images.length];
-    if (isActionable(imageAttention(doc, image))) return image;
-  }
-  return null;
 }

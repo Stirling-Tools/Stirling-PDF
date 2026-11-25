@@ -20,7 +20,7 @@ vi.mock("@editor/services/connectionModeService", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  api.getConfig.mockResolvedValue({ stirlingOfficeConversion: true });
+  api.getConfig.mockResolvedValue({ aiEngineEnabled: true });
   api.subscribe.mockReturnValue(api.unsubscribe);
 });
 
@@ -34,9 +34,7 @@ test("disabled consumers never fetch or subscribe, and stop listening when disab
   expect(api.subscribe).not.toHaveBeenCalled();
 
   rerender({ enabled: true });
-  await waitFor(() =>
-    expect(result.current?.stirlingOfficeConversion).toBe(true),
-  );
+  await waitFor(() => expect(result.current?.aiEngineEnabled).toBe(true));
   expect(api.getConfig).toHaveBeenCalledTimes(1);
   expect(api.subscribe).toHaveBeenCalledTimes(1);
 
@@ -48,8 +46,6 @@ test("disabled consumers never fetch or subscribe, and stop listening when disab
 
 test("existing consumers without an enabled argument still load the cloud config", async () => {
   const { result } = renderHook(() => useSaasAppConfig());
-  await waitFor(() =>
-    expect(result.current?.stirlingOfficeConversion).toBe(true),
-  );
+  await waitFor(() => expect(result.current?.aiEngineEnabled).toBe(true));
   expect(api.getConfig).toHaveBeenCalledTimes(1);
 });

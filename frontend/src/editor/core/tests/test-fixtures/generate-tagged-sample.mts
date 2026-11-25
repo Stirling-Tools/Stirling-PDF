@@ -9,13 +9,23 @@ import process from "node:process";
 // Page 2 has text in each tag the text editor shows: H2, H3 and a deliberately
 // skipped H5, paragraphs holding an inline Link, Quote and Span, a list with
 // Lbl and LBody, a Code block, a Note, a custom role the RoleMap leaves
-// unmapped, a header artifact, and one line of untagged text.
+// unmapped, a header artifact, and one line of untagged text. Its two link
+// annotations are one the Link holds through an OBJR, with /Contents, and one
+// over "Atlas" that no element holds and that has no /Contents.
+//
+// Page 3 is a sign-off form with no heading, so the document's outline stays
+// as pages 1 and 2 give it. "Reviewed by:" has a field a Form holds through an
+// OBJR, with a /TU; "Department:" has a field no element holds and with no /TU,
+// labelled on its left; "Approved for release" has a checkbox likewise
+// untagged and unnamed, labelled on its right.
 //
 // Run with: npx tsx generate-tagged-sample.mts
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
+  PDFArray,
+  PDFDict,
   PDFDocument,
   PDFName,
   PDFNumber,
@@ -71,8 +81,11 @@ function show(font: Font, size: number, x: number, y: number, text: string) {
   return `BT /${font.name} ${size} Tf ${x.toFixed(2)} ${y} Td ${encoded} Tj ET`;
 }
 
-/** One kid of a structure element: an MCID on its page, or a child element. */
-type Kid = number | PDFRef;
+/**
+ * One kid of a structure element: an MCID on its page, a child element, or an
+ * OBJR naming an annotation.
+ */
+type Kid = number | PDFRef | PDFDict;
 
 interface PendingElement {
   ref: PDFRef;
@@ -94,6 +107,8 @@ class StructureBuilder {
   private readonly byRef = new Map<PDFRef, PendingElement>();
   /** Per page, in StructParents order: the element owning each MCID. */
   private readonly owners: PDFRef[][] = [];
+  /** Annotations elements hold, keyed in the ParentTree after every page. */
+  private readonly held: { annotation: PDFRef; owner: PDFRef }[] = [];
 
   constructor(private readonly ctx: PDFContext) {
     this.rootRef = ctx.nextRef();
@@ -149,6 +164,14 @@ class StructureBuilder {
     });
   }
 
+  /** Make `owner` hold `annotation`, which `page` lists in its /Annots. */
+  holdAnnotation(owner: PDFRef, page: PDFPage, annotation: PDFRef): void {
+    const el = this.byRef.get(owner)!;
+    this.attach(el);
+    el.kids.push(this.ctx.obj({ Type: "OBJR", Obj: annotation, Pg: page.ref }));
+    this.held.push({ annotation, owner });
+  }
+
   finish(topLevel: PDFRef): void {
     const ctx = this.ctx;
     for (const el of this.elements) {
@@ -168,13 +191,20 @@ class StructureBuilder {
     this.owners.forEach((owners, key) => {
       nums.push(PDFNumber.of(key), ctx.obj(owners));
     });
+    this.held.forEach(({ annotation, owner }, i) => {
+      const key = this.owners.length + i;
+      ctx
+        .lookup(annotation, PDFDict)
+        .set(PDFName.of("StructParent"), PDFNumber.of(key));
+      nums.push(PDFNumber.of(key), owner);
+    });
     ctx.assign(
       this.rootRef,
       ctx.obj({
         Type: "StructTreeRoot",
         K: topLevel,
         ParentTree: ctx.register(ctx.obj({ Nums: nums })),
-        ParentTreeNextKey: this.owners.length,
+        ParentTreeNextKey: this.owners.length + this.held.length,
       }),
     );
   }
@@ -199,21 +229,24 @@ class TaggedContent {
 
   /**
    * One line of pieces set side by side from `x`, each its own sequence: how
-   * an inline element sits inside its paragraph's line.
+   * an inline element sits inside its paragraph's line. Returns where each
+   * piece starts and ends.
    */
   line(
     x: number,
     y: number,
     size: number,
     pieces: { tag: string; owner: PDFRef; font: Font; text: string }[],
-  ): void {
+  ): { left: number; right: number }[] {
     let at = x;
-    for (const piece of pieces) {
+    return pieces.map((piece) => {
       this.mark(piece.tag, piece.owner, [
         show(piece.font, size, at, y, piece.text),
       ]);
+      const left = at;
       at += piece.font.pdf.widthOfTextAtSize(piece.text, size);
-    }
+      return { left, right: at };
+    });
   }
 
   artifact(properties: string, ops: string[]): void {
@@ -231,6 +264,104 @@ class TaggedContent {
       ctx.register(PDFRawStream.of(ctx.obj({ Length: bytes.length }), bytes)),
     );
   }
+}
+
+/**
+ * A link annotation over `left`..`right` of the line set at baseline `y` in
+ * `size` pt, added to the page's /Annots.
+ */
+function addLink(
+  ctx: PDFContext,
+  page: PDFPage,
+  span: { left: number; right: number; y: number; size: number },
+  extra: Record<string, PDFObject>,
+): PDFRef {
+  const { left, right, y, size } = span;
+  const annotation = ctx.register(
+    ctx.obj({
+      Type: "Annot",
+      Subtype: "Link",
+      Rect: [left, y - 3, right, y + size - 2],
+      Border: [0, 0, 0],
+      P: page.ref,
+      ...extra,
+    }),
+  );
+  const annots = page.node.lookupMaybe(PDFName.of("Annots"), PDFArray);
+  if (annots) annots.push(annotation);
+  else page.node.set(PDFName.of("Annots"), ctx.obj([annotation]));
+  return annotation;
+}
+
+/** Where `word` sits in `text` set at `x` in `font` at `size` pt. */
+function wordSpan(
+  font: Font,
+  size: number,
+  x: number,
+  text: string,
+  word: string,
+): { left: number; right: number } {
+  const left =
+    x + font.pdf.widthOfTextAtSize(text.slice(0, text.indexOf(word)), size);
+  return { left, right: left + font.pdf.widthOfTextAtSize(word, size) };
+}
+
+/** The widget `page` lists last in its /Annots. */
+function lastAnnotation(page: PDFPage): PDFRef {
+  const annots = page.node.lookup(PDFName.of("Annots"), PDFArray);
+  return annots.get(annots.size() - 1) as PDFRef;
+}
+
+/**
+ * Page 3: labelled form fields, made after pages 1 and 2 are done so their
+ * object numbers do not move.
+ */
+function addSignOffPage(
+  doc: PDFDocument,
+  tree: StructureBuilder,
+  document: PDFRef,
+  regular: Font,
+): void {
+  const ctx = doc.context;
+  const form = doc.getForm();
+  const third = doc.addPage([612, 792]);
+  third.node.setFontDictionary(PDFName.of(regular.name), regular.pdf.ref);
+  const content = tree.page(third);
+  const paragraph = (x: number, y: number, text: string) =>
+    content.mark("P", tree.element("P", document, third), [
+      show(regular, 12, x, y, text),
+    ]);
+  const fieldX = 160;
+  const textField = { width: 240, height: 20, font: regular.pdf };
+
+  paragraph(72, 712, "Please complete this section before filing the report.");
+
+  paragraph(72, 660, "Reviewed by:");
+  const reviewer = form.createTextField("reviewer");
+  reviewer.acroField.dict.set(PDFName.of("TU"), PDFString.of("Reviewer name"));
+  reviewer.addToPage(third, { x: fieldX, y: 654, ...textField });
+  tree.holdAnnotation(
+    tree.element("Form", document, third),
+    third,
+    lastAnnotation(third),
+  );
+
+  paragraph(72, 624, "Department:");
+  form
+    .createTextField("department")
+    .addToPage(third, { x: fieldX, y: 618, ...textField });
+
+  form.createCheckBox("approved").addToPage(third, {
+    x: 72,
+    y: 570,
+    width: 14,
+    height: 14,
+  });
+  paragraph(94, 573, "Approved for release");
+
+  content.artifact("/Type /Pagination", [show(regular, 10, 300, 40, "Page 3")]);
+  content.writeTo(ctx, third);
+  third.node.set(PDFName.of("Tabs"), PDFName.of("S"));
 }
 
 async function main() {
@@ -321,7 +452,7 @@ async function main() {
     ),
   ]);
   const appendixLink = tree.element("Link", intro, second);
-  two.line(72, 656, 12, [
+  const [, appendix] = two.line(72, 656, 12, [
     { tag: "P", owner: intro, font: regular, text: "are in the " },
     { tag: "Link", owner: appendixLink, font: regular, text: "appendix" },
     {
@@ -333,6 +464,7 @@ async function main() {
   ]);
 
   block("H3", bold, 16, 620, "North America");
+  const atlasLine = "and the launch of the Atlas product line in Canada.";
   two.mark("P", el("P"), [
     show(
       regular,
@@ -341,13 +473,7 @@ async function main() {
       598,
       "Revenue rose 18% to $4.2 million, driven by enterprise renewals",
     ),
-    show(
-      regular,
-      12,
-      72,
-      582,
-      "and the launch of the Atlas product line in Canada.",
-    ),
+    show(regular, 12, 72, 582, atlasLine),
   ]);
 
   block("H3", bold, 16, 548, "Europe");
@@ -463,6 +589,33 @@ async function main() {
   two.artifact("/Type /Pagination", [show(regular, 10, 300, 40, "Page 2")]);
   two.writeTo(ctx, second);
 
+  // Made after the page's content and elements, so their object numbers do
+  // not move.
+  tree.holdAnnotation(
+    appendixLink,
+    second,
+    addLink(
+      ctx,
+      second,
+      { ...appendix, y: 656, size: 12 },
+      {
+        Contents: PDFString.of("Appendix: method"),
+        Dest: ctx.obj([second.ref, "XYZ", 72, 330, 0]),
+      },
+    ),
+  );
+  addLink(
+    ctx,
+    second,
+    { ...wordSpan(regular, 12, 72, atlasLine, "Atlas"), y: 582, size: 12 },
+    {
+      A: ctx.obj({ S: "URI", URI: PDFString.of("https://example.com/atlas") }),
+    },
+  );
+  second.node.set(PDFName.of("Tabs"), PDFName.of("S"));
+
+  addSignOffPage(doc, tree, document, regular);
+
   tree.finish(document);
 
   doc.catalog.set(PDFName.of("StructTreeRoot"), tree.rootRef);
@@ -470,7 +623,9 @@ async function main() {
   doc.catalog.set(PDFName.of("Lang"), PDFString.of("en-US"));
   doc.setTitle("Quarterly report");
 
-  const bytes = await doc.save();
+  // addToPage drew each field's appearance in the page's own font; refreshing
+  // them here would embed a second Helvetica for nothing.
+  const bytes = await doc.save({ updateFieldAppearances: false });
   const out = join(__dirname, "tagged-sample.pdf");
   writeFileSync(out, bytes);
   console.log(`wrote ${out} (${bytes.length} bytes)`);

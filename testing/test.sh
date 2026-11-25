@@ -324,8 +324,8 @@ capture_file_list() {
     gha_group "Capture file list: $container_name"
     echo "Capturing file list from $container_name..."
     # Get all files in one command, output directly from Docker to avoid path issues
-    # Skip proc, sys, dev, and the specified LibreOffice config directory
-    # Also skip PDFBox, LibreOffice, and Jetty temporary files
+    # Skip proc, sys, dev, and app config directories
+    # Also skip PDFBox and Jetty temporary files
     docker exec "$container_name" sh -c "find / -type f \
         -not -path '*/proc/*' \
         -not -path '*/sys/*' \
@@ -333,8 +333,6 @@ capture_file_list() {
         -not -path '/config/*' \
         -not -path '/configs/*' \
         -not -path '/logs/*' \
-        -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
-        -not -path '*/home/stirlingpdfuser/.config/calibre/*' \
         -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
         -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
         -not -path '*/tmp/stirling-pdf/PDFBox*' \
@@ -342,10 +340,8 @@ capture_file_list() {
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_root/*' \
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-        -not -path '*/tmp/stirling-pdf/lu*' \
         -not -path '*/tmp/stirling-pdf/tmp*' \
         -not -path '/tmp/lu*' \
-        -not -path '/var/lib/libreoffice-sandbox/tmp/lu*' \
         -not -path '*/tmp/*/user/registrymodifications.xcu' \
         -not -path '/app/stirling.aot' \
         -not -path '*/tmp/stirling.aotconf' \
@@ -365,8 +361,6 @@ capture_file_list() {
             -not -path '/config/*' \
         -not -path '/configs/*' \
             -not -path '/logs/*' \
-            -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
-            -not -path '*/home/stirlingpdfuser/.config/calibre/*' \
             -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
             -not -path '*/tmp/PDFBox*' \
@@ -374,7 +368,6 @@ capture_file_list() {
             -not -path '*/tmp/hsperfdata_root/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-            -not -path '*/tmp/stirling-pdf/lu*' \
             -not -path '*/tmp/stirling-pdf/tmp*' \
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
@@ -429,11 +422,6 @@ compare_file_lists() {
             echo "Checking for temp files in the after snapshot..."
             grep -i "tmp\|temp" "$after_file" \
                 | grep -v '/jpdfium-' \
-                | grep -v '\.libreoffice_uno_' \
-                | grep -v '/var/lib/libreoffice-sandbox/profiles/' \
-                | grep -v '/var/lib/libreoffice-template/' \
-                | grep -v '\.X99-lock' \
-                | grep -v 'uno-last-used' \
                 | grep -v 'xdg-' \
                 | grep -v 'dconf' \
                 | grep -v 'fontconfig' \
@@ -467,14 +455,10 @@ compare_file_lists() {
 
             # Exclude JPDFium extraction dirs: older versions leak one per JVM
             # on Windows; TempFileCleanupService sweeps stale ones at startup.
-            # Also exclude LibreOffice instance folders, X11 locks, and dconf caches
+            # Also exclude XDG runtime dirs and dconf caches
             # which are transient and normal during container operation.
             grep -i "tmp\|temp" "${diff_file}.added" \
                 | grep -v '/jpdfium-' \
-                | grep -v '\.libreoffice_uno_' \
-                | grep -v '/var/lib/libreoffice-sandbox/profiles/' \
-                | grep -v '\.X99-lock' \
-                | grep -v 'uno-last-used' \
                 | grep -v 'xdg-' \
                 | grep -v 'dconf' \
                 | grep -v 'fontconfig' \
