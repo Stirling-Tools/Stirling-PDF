@@ -230,9 +230,7 @@ export function LayerSidebar({
           marginLeft: layer.depth > 0 ? `${layer.depth * 0.875}rem` : "0",
         }}
       >
-        <div
-          className={`layer-item ${!isVisible ? "layer-item--hidden" : ""}`}
-        >
+        <div className={`layer-item ${!isVisible ? "layer-item--hidden" : ""}`}>
           {hasChildren ? (
             <button
               type="button"
