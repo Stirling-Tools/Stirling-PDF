@@ -80,8 +80,26 @@ import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext"
 import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
+import {
+  PAGES_PAST_INSET_ATTR,
+  usePagesPastInset,
+} from "@editor/components/viewer/usePagesPastInset";
+import { shouldRefitOnResize } from "@editor/components/viewer/refitOnResize";
+import "@editor/components/viewer/viewerPages.css";
 
 // ──────────────────────────────────────────────────────────────────────────────
+
+/** Waits out the margin transition (0.3s) before refitting, so it fits the final width. */
+const FIT_WIDTH_SETTLE_MS = 350;
+
+/** The widest page the viewer has mounted in `area`, in CSS pixels; 0 when none. */
+function widestPage(area: HTMLElement): number {
+  let widest = 0;
+  for (const page of area.querySelectorAll("[data-page-index]")) {
+    widest = Math.max(widest, page.getBoundingClientRect().width);
+  }
+  return widest;
+}
 
 export interface EmbedPdfViewerProps {
   onClose?: () => void;
@@ -145,7 +163,10 @@ const EmbedPdfViewerContent = ({
   const damagedRepair = useDamagedFileRepair();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
-  const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  // Read only by the keydown handler; a ref avoids re-rendering on hover.
+  const isViewerHoveredRef = React.useRef(false);
+  // The pages' scrollbar, which the page bar stops short of to centre on them.
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const registeredPageTool = useViewerPageTool();
 
   const {
@@ -891,7 +912,7 @@ const EmbedPdfViewerContent = ({
       // All remaining shortcuts require the viewer to be hovered so they
       // don't conflict with the rest of the UI when the viewer is mounted
       // but not the active focus target. A page tool binds its own.
-      if (!isViewerHovered || pageToolActive) return;
+      if (!isViewerHoveredRef.current || pageToolActive) return;
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
@@ -976,7 +997,6 @@ const EmbedPdfViewerContent = ({
     };
   }, [
     pageToolActive,
-    isViewerHovered,
     isSearchInterfaceVisible,
     zoomActions,
     searchInterfaceActions,
@@ -1912,20 +1932,66 @@ const EmbedPdfViewerContent = ({
     isCurrentFileEncrypted,
   ]);
 
+  const hasPages = !!effectiveFile;
+  // A sidebar or a page tool's column narrows the pages area without a window resize.
+  useEffect(() => {
+    const area = pdfContainerRef.current;
+    if (!area) return;
+    let width = area.clientWidth;
+    // The margin animates, so the observer sees every width in between; compare
+    // against the width before the change began, not the last frame of it.
+    let settledWidth = width;
+    let settle: number | undefined;
+    const observer = new ResizeObserver(() => {
+      if (Math.abs(area.clientWidth - width) < 1) return;
+      width = area.clientWidth;
+      window.clearTimeout(settle);
+      settle = window.setTimeout(() => {
+        const before = settledWidth;
+        settledWidth = area.clientWidth;
+        const { level } = getZoomState();
+        const refit = shouldRefitOnResize({
+          fitting: level === ZoomMode.FitWidth || level === ZoomMode.Automatic,
+          before,
+          after: settledWidth,
+          widestPage: widestPage(area),
+        });
+        if (refit) zoomActions.requestZoom(ZoomMode.FitWidth);
+      }, FIT_WIDTH_SETTLE_MS);
+    });
+    observer.observe(area);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(settle);
+    };
+  }, [hasPages, getZoomState, zoomActions]);
+
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 15;
-  const totalRightMargin =
+  const sidebarsMarginRem =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
     (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
     (isLayerSidebarVisible ? sidebarWidthRem : 0) +
     (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
+  const rightInsetRem = pageTool?.rightInsetRem ?? 0;
+  const pagesPastInset = usePagesPastInset(
+    pdfContainerRef,
+    rightInsetRem,
+    sidebarsMarginRem,
+  );
+  const totalRightMargin =
+    sidebarsMarginRem + (pagesPastInset ? 0 : rightInsetRem);
 
   return (
     <Box
       ref={viewerRef}
-      onMouseEnter={() => setIsViewerHovered(true)}
-      onMouseLeave={() => setIsViewerHovered(false)}
+      onMouseEnter={() => {
+        isViewerHoveredRef.current = true;
+      }}
+      onMouseLeave={() => {
+        isViewerHoveredRef.current = false;
+      }}
       style={{
         position: "relative",
         height: "100%",
@@ -2007,20 +2073,24 @@ const EmbedPdfViewerContent = ({
           <Box
             ref={pdfContainerRef}
             data-viewer-pages
+            {...{ [PAGES_PAST_INSET_ATTR]: pagesPastInset || undefined }}
             style={{
+              ["--viewer-right-inset" as string]: `${rightInsetRem}rem`,
               position: "relative",
               flex: 1,
               overflow: "hidden",
               minHeight: 0,
               minWidth: 0,
               marginRight: `${totalRightMargin}rem`,
-              transition: "margin-right 0.3s ease",
+              // The card in the inset tracks this box's edge; animating the margin would slide it.
+              transition: rightInsetRem ? undefined : "margin-right 0.3s ease",
             }}
           >
             <LocalEmbedPDF
               key={currentFileRootId || "no-file"}
               shouldSkipBytes={shouldSkipBytes}
               onPageLayout={handleViewerPageLayout}
+              onScrollbarWidthChange={setScrollbarWidth}
               onDocumentSwapped={handleDocumentSwapped}
               onDocumentSwapFailed={handleDocumentSwapFailed}
               onDocumentReady={documentReady}
@@ -2088,6 +2158,7 @@ const EmbedPdfViewerContent = ({
             <FormSaveBar
               file={currentFile ?? null}
               isFormFillToolActive={isFormFillToolActive}
+              hidden={!!pageTool?.hidesFormNotice}
               onApply={handleFormApply}
               policyEnforcing={policyEnforcing}
             />
@@ -2128,7 +2199,13 @@ const EmbedPdfViewerContent = ({
             // floating card rather than one welded to the viewport edge.
             bottom: "0.5rem",
             left: 0,
-            right: 0,
+            // Centres on the pages: clear of the side panels (always on the
+            // right) and the scrollbar (on the inline end, so left in RTL). As
+            // the toolbar's size container, a narrow dock drops controls
+            // rather than overlapping a panel.
+            right: `${totalRightMargin}rem`,
+            paddingInlineEnd: `${scrollbarWidth}px`,
+            transition: "right 0.3s ease",
             zIndex: 50,
             display: "flex",
             justifyContent: "center",

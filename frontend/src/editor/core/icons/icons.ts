@@ -243,6 +243,8 @@ import Recycle from "lucide-static/icons/recycle.svg?react";
 import Redo2 from "lucide-static/icons/redo-2.svg?react";
 import RefreshCw from "lucide-static/icons/refresh-cw.svg?react";
 import RefreshCwOff from "lucide-static/icons/refresh-cw-off.svg?react";
+import Replace from "lucide-static/icons/replace.svg?react";
+import ReplaceAll from "lucide-static/icons/replace-all.svg?react";
 import Rocket from "lucide-static/icons/rocket.svg?react";
 import RotateCcw from "lucide-static/icons/rotate-ccw.svg?react";
 import RotateCcwClock from "lucide-static/icons/rotate-ccw-clock.svg?react";
@@ -327,6 +329,7 @@ import Underline from "lucide-static/icons/underline.svg?react";
 import Undo2 from "lucide-static/icons/undo-2.svg?react";
 import Unlink from "lucide-static/icons/unlink.svg?react";
 import Upload from "lucide-static/icons/upload.svg?react";
+import Usb from "lucide-static/icons/usb.svg?react";
 import User from "lucide-static/icons/user.svg?react";
 import UserCheck from "lucide-static/icons/user-check.svg?react";
 import UserCog from "lucide-static/icons/user-cog.svg?react";
@@ -678,6 +681,8 @@ export const ICONS = {
   "redo-2": { Component: Redo2, kind: "lucide" },
   "refresh-cw": { Component: RefreshCw, kind: "lucide" },
   "refresh-cw-off": { Component: RefreshCwOff, kind: "lucide" },
+  replace: { Component: Replace, kind: "lucide" },
+  "replace-all": { Component: ReplaceAll, kind: "lucide" },
   rocket: { Component: Rocket, kind: "lucide" },
   "rotate-ccw": { Component: RotateCcw, kind: "lucide" },
   "rotate-ccw-clock": { Component: RotateCcwClock, kind: "lucide" },
@@ -762,6 +767,7 @@ export const ICONS = {
   "undo-2": { Component: Undo2, kind: "lucide" },
   unlink: { Component: Unlink, kind: "lucide" },
   upload: { Component: Upload, kind: "lucide" },
+  usb: { Component: Usb, kind: "lucide" },
   user: { Component: User, kind: "lucide" },
   "user-check": { Component: UserCheck, kind: "lucide" },
   "user-cog": { Component: UserCog, kind: "lucide" },

@@ -110,4 +110,33 @@ describe("useUnsavedChangesGuard", () => {
     act(() => navigation.requestNavigation(leave));
     expect(leave).toHaveBeenCalledTimes(1);
   });
+  it("keeps guarding when the editor leaving unmounts after its successor mounted", () => {
+    liveDirty = true;
+    let closeFirst: () => void = () => {};
+    function DirtyEditor() {
+      useUnsavedChangesGuard(true, readDirty);
+      return null;
+    }
+    function Handover() {
+      const [firstOpen, setFirstOpen] = useState(true);
+      closeFirst = () => setFirstOpen(false);
+      navigation = useNavigation();
+      return (
+        <>
+          {firstOpen && <DirtyEditor />}
+          <DirtyEditor />
+        </>
+      );
+    }
+    render(
+      <NavigationProvider>
+        <Handover />
+      </NavigationProvider>,
+    );
+    act(() => closeFirst());
+    expect(navigation.hasUnsavedChanges).toBe(true);
+    const leave = vi.fn();
+    act(() => navigation.requestNavigation(leave));
+    expect(leave).not.toHaveBeenCalled();
+  });
 });

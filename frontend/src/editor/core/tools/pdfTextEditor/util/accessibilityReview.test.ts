@@ -11,6 +11,7 @@ import {
   pageAttention,
   reviewAccessibility,
 } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
+import { reviewItems } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
 import {
   blockFormulasPdf,
   formulasPdf,
@@ -99,6 +100,21 @@ describe("reviewing text that makes up a formula", () => {
 
     store.dispatch(new RetagBlockCommand({ pageIndex: 0, mcid: 3, type: "P" }));
     expect(reviewAccessibility(doc, pages()).needsDescription).toBe(1);
+    store.dispose();
+  });
+
+  it("keeps a formula on the review's to-do list until it is described", async () => {
+    const { store, doc, pages, idOf } = await openFormulas();
+    const statusOf = (text: string) =>
+      reviewItems(doc, pages()).find((item) => item.id === idOf(text))?.status;
+    expect(statusOf("a = b")).toBe("todo");
+    expect(statusOf("e = f")).toBe("done");
+    expect(statusOf("Where a is")).toBe("done");
+
+    store.dispatch(
+      new SetAltTextCommand({ pageIndex: 0, mcid: 0, alt: "a equals b" }),
+    );
+    expect(statusOf("a = b")).toBe("done");
     store.dispose();
   });
 });
