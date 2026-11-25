@@ -538,7 +538,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       expect(formData.get("includeAllRecipients")).toBe("true");
     });
 
-    test("should send correct PDF/A parameters for pdf-to-pdfa conversion", async () => {
+    test("should send PDF/X through the shared PDF/A endpoint", async () => {
       // Test files aren't registered in the FileContext stub registry, so
       // production warns about the stub/output mismatch - incidental to what
       // this test asserts.
@@ -565,14 +565,9 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         "application/pdf",
       );
 
-      // Set up PDF/A conversion parameters
       act(() => {
         paramsResult.current.updateParameter("fromExtension", "pdf");
-        paramsResult.current.updateParameter("toExtension", "pdfa");
-        paramsResult.current.updateParameter("pdfaOptions", {
-          outputFormat: "pdfa",
-          strict: false,
-        });
+        paramsResult.current.updateParameter("toExtension", "pdfx");
       });
 
       await act(async () => {
@@ -584,8 +579,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
       const formData = (mockedApiClient.post as Mock).mock
         .calls[0][1] as FormData;
-      expect(formData.get("outputFormat")).toBe("pdfa");
-      expect(formData.get("strict")).toBe("false");
+      expect(formData.get("outputFormat")).toBe("pdfx");
       expect(mockedApiClient.post).toHaveBeenCalledWith(
         "/api/v1/convert/pdf/pdfa",
         expect.any(FormData),

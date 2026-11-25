@@ -27,7 +27,7 @@ const CONVERSION_ROUTES = [
   ["pdf", "html", "pdf/html", "pdf-to-html"],
   ["pdf", "md", "pdf/markdown", "pdf-to-markdown"],
   ["pdf", "xml", "pdf/xml", "pdf-to-xml"],
-  ["pdf", "pdfa", "pdf/pdfa", "pdf-to-pdfa"],
+  ["pdf", "pdfx", "pdf/pdfa", "pdf-to-pdfa"],
   ["pdf", "epub", "pdf/epub", "pdf-to-epub"],
   ["pdf", "azw3", "pdf/epub", "pdf-to-epub"],
   ["docx", "pdf", "file/pdf", "file-to-pdf"],

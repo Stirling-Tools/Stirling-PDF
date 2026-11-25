@@ -425,10 +425,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -538,10 +534,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -608,10 +600,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -685,10 +673,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -769,10 +753,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -852,10 +832,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -939,10 +915,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -1010,10 +982,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -1089,10 +1057,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -1160,10 +1124,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -1238,10 +1198,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -1314,10 +1270,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",

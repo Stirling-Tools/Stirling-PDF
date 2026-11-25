@@ -42,10 +42,6 @@ export interface ConvertParameters extends BaseParameters {
     downloadHtml: boolean;
     includeAllRecipients: boolean;
   };
-  pdfaOptions: {
-    outputFormat: string;
-    strict?: boolean;
-  };
   pdfUaOptions: {
     profile: string;
     language: string;
@@ -111,10 +107,6 @@ export const defaultParameters: ConvertParameters = {
     maxAttachmentSizeMB: 10,
     downloadHtml: false,
     includeAllRecipients: false,
-  },
-  pdfaOptions: {
-    outputFormat: "pdfa-2b",
-    strict: false,
   },
   pdfUaOptions: {
     profile: "ua1",
