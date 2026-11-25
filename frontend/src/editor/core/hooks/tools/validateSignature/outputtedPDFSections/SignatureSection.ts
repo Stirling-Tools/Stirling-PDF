@@ -5,10 +5,8 @@ import { drawFieldBox } from "@editor/hooks/tools/validateSignature/outputtedPDF
 import { drawStatusBadge } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/StatusBadgeSection";
 import { computeSignatureStatus } from "@editor/hooks/tools/validateSignature/utils/signatureStatus";
 import { formatDate } from "@editor/hooks/tools/validateSignature/utils/pdfText";
-import {
-  colorPalette,
-  statusKindToPdfColor,
-} from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
+import { colorPalette } from "@editor/services/reportPdf/reportPalette";
+import { statusKindToPdfColor } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
 
 interface DrawSignatureSectionOptions {
   page: PdfiumPage;

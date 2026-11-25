@@ -7,6 +7,7 @@ import {
   TextRun,
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 
 /** Split a paragraph-grouped run back into one editable run per source line. */
 interface RepSnapshot {
@@ -27,6 +28,13 @@ export class UngroupParagraphCommand implements Command {
   private readonly runId: string;
   private prev: RepSnapshot | null = null;
   private createdRunIds: string[] = [];
+
+  private prevLineObjects: {
+    ptrs: number[];
+    texts: string[];
+    bounds: Array<{ x: number; right: number }>;
+    charStarts: number[];
+  } = { ptrs: [], texts: [], bounds: [], charStarts: [] };
 
   constructor(opts: { pageIndex: number; runId: string }) {
     this.pageIndex = opts.pageIndex;
@@ -56,6 +64,12 @@ export class UngroupParagraphCommand implements Command {
       paragraphLineSlots: rep.paragraphLineSlots.map(cloneParagraphLineSlot),
     };
 
+    this.prevLineObjects = {
+      ptrs: [...rep.mergedFromPtrs],
+      texts: [...rep.mergedFromTexts],
+      bounds: rep.mergedFromBounds.map((b) => ({ ...b })),
+      charStarts: [...rep.mergedFromCharStarts],
+    };
     const ptrs = rep.paragraphMemberPtrs;
     const fs = rep.paragraphMemberFs;
     const containers = rep.paragraphMemberContainers;
@@ -67,6 +81,9 @@ export class UngroupParagraphCommand implements Command {
       ? slots.map((s) => rep.text.slice(s.startChar, s.endChar))
       : rep.text.split(/\r?\n/);
     const n = Math.min(lines.length, ptrs.length);
+    const leavesByLine = useSlots
+      ? null
+      : leavesPerLine(doc, rep, fs.slice(0, n));
     const newRuns: TextRun[] = [];
     const perLineHeight =
       rep.paragraphLineHeight > 0
@@ -93,13 +110,19 @@ export class UngroupParagraphCommand implements Command {
         fill: { ...rep.fill },
         fontSubset: rep.fontSubset,
         renderMode: rep.renderMode,
+        hiddenText: rep.hiddenText,
       });
       r.containerPtr = containers[i] ?? 0;
+      r.documentFont = rep.documentFont && { ...rep.documentFont };
+      // Which of the paragraph's lines could not be read back is not kept, so none of them becomes editable by being split off.
+      r.readingOrderUnsure = rep.readingOrderUnsure;
       // Each line keeps its own object's tags: lines grouped into one paragraph
       // can belong to different structure elements, such as list items.
       if (!r.containerPtr) {
         r.tagMarks = ptrs[i] ? readTagMarks(doc.module, ptrs[i]) : rep.tagMarks;
       }
+      if (useSlots) takeLineObjects(r, slots[i]);
+      else if (leavesByLine) takeLineLeaves(r, baselineY, leavesByLine[i]);
       newRuns.push(r);
     }
     this.createdRunIds = newRuns.map((r) => r.id);
@@ -119,6 +142,9 @@ export class UngroupParagraphCommand implements Command {
       height: rep.fontSize,
     };
     rep.matrix = { ...rep.matrix, f: fs[0] ?? rep.matrix.f };
+    if (useSlots) takeLineObjects(rep, slots[0]);
+    else if (leavesByLine)
+      takeLineLeaves(rep, fs[0] ?? rep.matrix.f, leavesByLine[0]);
 
     // Replace rep with rep + (n-1) new lines; the first line stays on rep.
     const tail = newRuns.slice(1);
@@ -153,6 +179,10 @@ export class UngroupParagraphCommand implements Command {
     rep.paragraphLineSlots = this.prev.paragraphLineSlots.map(
       cloneParagraphLineSlot,
     );
+    rep.mergedFromPtrs = this.prevLineObjects.ptrs;
+    rep.mergedFromTexts = this.prevLineObjects.texts;
+    rep.mergedFromBounds = this.prevLineObjects.bounds;
+    rep.mergedFromCharStarts = this.prevLineObjects.charStarts;
     const tailIds = new Set(this.createdRunIds.slice(1));
     page.setRuns(page.runs.filter((r) => !tailIds.has(r.id)));
     page.markDirty();
@@ -166,4 +196,52 @@ export class UngroupParagraphCommand implements Command {
       { run: this.runId },
     );
   }
+}
+
+// A line redrawn word by word is several objects; a run that keeps only the first leaves the rest on the page when it is deleted or restyled.
+function takeLineObjects(run: TextRun, slot: ParagraphLineSlot): void {
+  if (slot.mergedFromPtrs.length < 2) return;
+  run.mergedFromPtrs = [...slot.mergedFromPtrs];
+  run.mergedFromTexts = [...slot.mergedFromTexts];
+  run.mergedFromBounds = slot.mergedFromBounds.map((b) => ({ ...b }));
+  run.mergedFromCharStarts = [...slot.mergedFromCharStarts];
+}
+
+interface Leaf {
+  ptr: number;
+  container: number;
+}
+
+// The word objects of a paragraph redrawn word by word, split between its lines by baseline; null when it has none beyond the line anchors.
+function leavesPerLine(
+  doc: EditorDocument,
+  rep: TextRun,
+  baselines: number[],
+): Leaf[][] | null {
+  if (rep.paragraphLeafPtrs.length <= rep.paragraphMemberPtrs.length)
+    return null;
+  const lines: Leaf[][] = baselines.map(() => []);
+  rep.paragraphLeafPtrs.forEach((ptr, i) => {
+    const y = ptr ? readMatrix(doc.module, ptr)?.[5] : undefined;
+    if (y === undefined) return;
+    let nearest = 0;
+    baselines.forEach((baseline, line) => {
+      if (Math.abs(baseline - y) < Math.abs(baselines[nearest] - y))
+        nearest = line;
+    });
+    lines[nearest].push({
+      ptr,
+      container: rep.paragraphLeafContainers[i] ?? 0,
+    });
+  });
+  return lines;
+}
+
+function takeLineLeaves(run: TextRun, baselineY: number, leaves: Leaf[]): void {
+  if (leaves.length === 0) return;
+  run.paragraphMemberPtrs = [run.pdfiumObjPtr];
+  run.paragraphMemberContainers = [run.containerPtr];
+  run.paragraphMemberFs = [baselineY];
+  run.paragraphLeafPtrs = leaves.map((leaf) => leaf.ptr);
+  run.paragraphLeafContainers = leaves.map((leaf) => leaf.container);
 }

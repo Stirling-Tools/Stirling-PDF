@@ -21,6 +21,8 @@ export async function normalizeAxiosErrorData(data: unknown): Promise<unknown> {
     const text = await blobLike.text();
     return tryParseJson(text) ?? text;
   }
+  // The desktop HTTP client hands error bodies over as raw text.
+  if (typeof data === "string") return tryParseJson(data) ?? data;
   return data;
 }
 

@@ -9,6 +9,7 @@ import {
   type HeadingOutline,
 } from "@editor/tools/pdfTextEditor/util/headingOutline";
 import { locateHeading } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { revealOnPage } from "@editor/tools/pdfTextEditor/util/dom";
 
 /**
  * The document's heading outline, null when its structure tree could not be
@@ -28,31 +29,36 @@ export function useHeadingOutline(
       : null;
   }, [store, state.pages, shown]);
 
-  /** Selects the run showing heading `index`, reading its page first. */
   const selectHeading = useCallback(
-    (index: number) => {
-      const doc = store.document;
-      const headings = doc?.headings();
-      const pageIndex = headings?.[index]?.pageIndex;
-      if (!doc || !headings || pageIndex == null) return;
-      ensurePageRead(store, pageIndex);
-      const { run, range } = headingOutline(
-        headings,
-        store.getState().pages,
-        (h) => locateHeading(doc, h),
-      ).entries[index];
-      if (!run) return;
-      store.selection.selectOne(run.id);
-      if (range) store.selection.setTextRange(run.id, range);
-      // A page read just now has no overlay until React commits it.
-      window.requestAnimationFrame(() =>
-        document
-          .querySelector(`[data-testid="pdf-editor-run-${run.id}"]`)
-          ?.scrollIntoView({ block: "center", behavior: "smooth" }),
-      );
-    },
+    (index: number) => selectHeadingAt(store, index),
     [store],
   );
 
   return { outline, selectHeading };
+}
+
+/**
+ * Selects the run showing heading `index` in the document's headings, reading its
+ * page first. False when no run shows it (an image-only heading): nothing is selected.
+ */
+export function selectHeadingAt(store: EditorStore, index: number): boolean {
+  const doc = store.document;
+  const headings = doc?.headings();
+  const pageIndex = headings?.[index]?.pageIndex;
+  if (!doc || !headings || pageIndex == null) return false;
+  ensurePageRead(store, pageIndex);
+  const { run, range } = headingOutline(headings, store.getState().pages, (h) =>
+    locateHeading(doc, h),
+  ).entries[index];
+  if (!run) return false;
+  store.selection.selectOne(run.id);
+  if (range) store.selection.setTextRange(run.id, range);
+  // A page read just now has no overlay until React commits it.
+  window.requestAnimationFrame(() =>
+    revealOnPage(
+      document.querySelector(`[data-testid="pdf-editor-run-${run.id}"]`),
+      run.pageIndex,
+    ),
+  );
+  return true;
 }

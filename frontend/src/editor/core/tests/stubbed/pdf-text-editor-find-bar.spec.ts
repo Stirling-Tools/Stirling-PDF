@@ -1,6 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
+import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -8,16 +10,13 @@ const SAMPLE_PDF = path.join(
 );
 
 async function openFind(page: Page): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE_PDF);
+  await openInTextEditor(page, SAMPLE_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
+  // The first page's render holds the main thread, and a cold worker's
+  // can outlast the click's wait for the button to stop moving.
+  await waitForEditorReady(page, 60_000);
   await page.getByTestId("pdf-editor-open-find").click();
   await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
 }
@@ -42,19 +41,46 @@ test.describe("PDF text editor - find bar", () => {
     await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
   });
 
-  test("the close button sits at the bar's far right, clear of the arrows", async ({
+  test("the bar floats over the pages instead of pushing them down", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openInTextEditor(page, SAMPLE_PDF);
+    const firstPage = page.getByTestId("pdf-editor-page-0");
+    await expect(firstPage).toBeVisible({ timeout: 60_000 });
+    await waitForEditorReady(page, 60_000);
+    const before = await firstPage.boundingBox();
+    await page.getByTestId("pdf-editor-open-find").click();
+    await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
+    const after = await firstPage.boundingBox();
+    expect(before).not.toBeNull();
+    expect(after).not.toBeNull();
+    expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(1);
+  });
+
+  test("the bar hangs beneath the toolbar's search button", async ({
     page,
   }) => {
     test.setTimeout(120_000);
     await openFind(page);
-    const close = await page.getByTestId("pdf-editor-find-close").boundingBox();
-    const next = await page.getByTestId("pdf-editor-find-next").boundingBox();
+    const button = await page.getByTestId("pdf-editor-open-find").boundingBox();
     const bar = await page.getByTestId("pdf-editor-find-bar").boundingBox();
-    expect(close).not.toBeNull();
-    expect(next).not.toBeNull();
+    expect(button).not.toBeNull();
     expect(bar).not.toBeNull();
-    expect(close!.x).toBeGreaterThan(next!.x + next!.width + 40);
-    expect(bar!.x + bar!.width - (close!.x + close!.width)).toBeLessThan(24);
+    expect(Math.abs(bar!.x - button!.x)).toBeLessThanOrEqual(1);
+    expect(bar!.y).toBeGreaterThanOrEqual(button!.y + button!.height);
+  });
+
+  test("replace stays tucked away until asked for", async ({ page }) => {
+    test.setTimeout(120_000);
+    await openFind(page);
+    const toggle = page.getByTestId("pdf-editor-find-toggle-replace");
+    await expect(page.getByTestId("pdf-editor-replace-input")).toBeHidden();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    await toggle.click();
+    await expect(page.getByTestId("pdf-editor-replace-input")).toBeVisible();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
 
   test("the option toggles inside the field actually toggle", async ({
@@ -115,6 +141,7 @@ test.describe("PDF text editor - find bar", () => {
   test("the replace row lines up with the find row", async ({ page }) => {
     test.setTimeout(120_000);
     await openFind(page);
+    await page.getByTestId("pdf-editor-find-toggle-replace").click();
     const find = await page.getByTestId("pdf-editor-find-input").boundingBox();
     const replace = await page
       .getByTestId("pdf-editor-replace-input")
