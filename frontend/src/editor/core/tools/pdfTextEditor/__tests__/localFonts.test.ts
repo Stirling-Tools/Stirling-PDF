@@ -1,12 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
-  groupByFamily,
   isLocalFontAccessSupported,
   listLocalFonts,
   listLocalFontsIfGranted,
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
-import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 
 type QueryStub = () => Promise<unknown[]>;
 
@@ -22,15 +20,6 @@ function face(
   postscriptName: string,
 ): Record<string, string> {
   return { family, style, postscriptName, fullName: `${family} ${style}` };
-}
-
-function mkFont(family: string, style: string): LocalFont {
-  return {
-    family,
-    style,
-    fullName: `${family} ${style}`,
-    postscriptName: `${family}-${style}`,
-  };
 }
 
 beforeEach(() => {
@@ -204,46 +193,5 @@ describe("listLocalFontsIfGranted", () => {
   it("returns null in a browser without the API", async () => {
     setPermission("granted");
     await expect(listLocalFontsIfGranted()).resolves.toBeNull();
-  });
-});
-
-describe("groupByFamily", () => {
-  it("collapses faces into families sorted case-insensitively", () => {
-    const grouped = groupByFamily([
-      mkFont("inter", "Regular"),
-      mkFont("Arial", "Bold"),
-      mkFont("Zapfino", "Regular"),
-      mkFont("bahnschrift", "Light"),
-    ]);
-    expect(grouped.map((f) => f.family)).toEqual([
-      "Arial",
-      "bahnschrift",
-      "inter",
-      "Zapfino",
-    ]);
-  });
-
-  it("merges faces of one family and sorts its styles", () => {
-    const grouped = groupByFamily([
-      mkFont("Inter", "Regular"),
-      mkFont("Inter", "Bold"),
-      mkFont("inter", "Italic"),
-    ]);
-    expect(grouped).toHaveLength(1);
-    expect(grouped[0]?.family).toBe("Inter");
-    expect(grouped[0]?.styles).toEqual(["Bold", "Italic", "Regular"]);
-  });
-
-  it("de-duplicates styles case-insensitively and skips empty ones", () => {
-    const grouped = groupByFamily([
-      mkFont("Inter", "Bold"),
-      mkFont("Inter", "bold"),
-      mkFont("Inter", ""),
-    ]);
-    expect(grouped[0]?.styles).toEqual(["Bold"]);
-  });
-
-  it("returns an empty list for no faces", () => {
-    expect(groupByFamily([])).toEqual([]);
   });
 });

@@ -64,10 +64,8 @@ export default function AdminAdvancedPage() {
         enableUrlToPDF: systemData.enableUrlToPDF || false,
         tessdataDir: systemData.tessdataDir || "",
         disableSanitize: systemData.disableSanitize || false,
-        stirlingOfficeConversion: systemData.stirlingOfficeConversion || false,
         tempFileManagement: systemData.tempFileManagement || {
           baseTmpDir: "",
-          libreofficeDir: "",
           systemTempDir: "",
           prefix: "stirling-pdf-",
           maxAgeHours: 24,
@@ -96,10 +94,6 @@ export default function AdminAdvancedPage() {
       if (systemData._pending?.disableSanitize !== undefined) {
         pendingBlock.disableSanitize = systemData._pending.disableSanitize;
       }
-      if (systemData._pending?.stirlingOfficeConversion !== undefined) {
-        pendingBlock.stirlingOfficeConversion =
-          systemData._pending.stirlingOfficeConversion;
-      }
       if (systemData._pending?.tempFileManagement) {
         pendingBlock.tempFileManagement =
           systemData._pending.tempFileManagement;
@@ -121,15 +115,12 @@ export default function AdminAdvancedPage() {
         "system.enableUrlToPDF": settings.enableUrlToPDF,
         "system.tessdataDir": settings.tessdataDir,
         "system.disableSanitize": settings.disableSanitize,
-        "system.stirlingOfficeConversion": settings.stirlingOfficeConversion,
       };
 
       // Add temp file management settings
       if (settings.tempFileManagement) {
         deltaSettings["system.tempFileManagement.baseTmpDir"] =
           settings.tempFileManagement.baseTmpDir;
-        deltaSettings["system.tempFileManagement.libreofficeDir"] =
-          settings.tempFileManagement.libreofficeDir;
         deltaSettings["system.tempFileManagement.systemTempDir"] =
           settings.tempFileManagement.systemTempDir;
         deltaSettings["system.tempFileManagement.prefix"] =

@@ -6,7 +6,10 @@ const SAMPLE_PDF = path.join(FIXTURES, "sample.pdf");
 
 async function loadViewerWithHighlight(page: import("@playwright/test").Page) {
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE_PDF);
   const firstPage = page.locator('[data-page-index="0"]').first();
   await expect(firstPage).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(2_000);

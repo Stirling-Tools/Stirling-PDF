@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { WorkbenchBarButtonWithAction } from "@editor/hooks/useWorkbenchBarButtons";
 import { useViewerWorkbenchBarButtons } from "@editor/components/viewer/useViewerWorkbenchBarButtons";
 
@@ -51,6 +51,15 @@ vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
     handleToolSelect: vi.fn(),
     handleToolSelectForced: vi.fn(),
     handleBackToTools: vi.fn(),
+    clearToolSelection: vi.fn(),
+    setLeftPanelView: vi.fn(),
+    setReaderMode: vi.fn(),
+    readerMode: false,
+    toolRegistry: {},
+  }),
+  useToolWorkflowActions: () => ({
+    handleToolSelect: vi.fn(),
+    handleToolSelectForced: vi.fn(),
   }),
 }));
 vi.mock("@editor/contexts/NavigationContext", () => ({
@@ -78,6 +87,11 @@ beforeEach(() => {
   state.registered = [];
   state.known.clear();
   state.opened.clear();
+  vi.stubGlobal("speechSynthesis", {});
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("useViewerWorkbenchBarButtons", () => {

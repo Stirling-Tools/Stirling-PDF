@@ -256,45 +256,47 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       { timeout: 30_000 },
     );
     expect(removals).toBe(1);
-    const stored = await page.evaluate(async () => {
-      const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open("stirling-pdf-files");
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+    // The dialog closes before the copy is stored, so wait for the store.
+    const storedRecords = () =>
+      page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const request = indexedDB.open("stirling-pdf-files");
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        const records = await new Promise<
+          Array<{
+            name: string;
+            isEncrypted: boolean;
+            data: Blob | ArrayBuffer;
+          }>
+        >((resolve, reject) => {
+          const request = db
+            .transaction("files", "readonly")
+            .objectStore("files")
+            .getAll();
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        db.close();
+        return Promise.all(
+          records.map(async (record) => {
+            const bytes =
+              record.data instanceof Blob
+                ? await record.data.arrayBuffer()
+                : record.data;
+            const digest = await crypto.subtle.digest("SHA-256", bytes);
+            return {
+              name: record.name,
+              encrypted: record.isEncrypted,
+              hash: Array.from(new Uint8Array(digest), (byte) =>
+                byte.toString(16).padStart(2, "0"),
+              ).join(""),
+            };
+          }),
+        );
       });
-      const records = await new Promise<
-        Array<{
-          name: string;
-          isEncrypted: boolean;
-          data: Blob | ArrayBuffer;
-        }>
-      >((resolve, reject) => {
-        const request = db
-          .transaction("files", "readonly")
-          .objectStore("files")
-          .getAll();
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      db.close();
-      return Promise.all(
-        records.map(async (record) => {
-          const bytes =
-            record.data instanceof Blob
-              ? await record.data.arrayBuffer()
-              : record.data;
-          const digest = await crypto.subtle.digest("SHA-256", bytes);
-          return {
-            name: record.name,
-            encrypted: record.isEncrypted,
-            hash: Array.from(new Uint8Array(digest), (byte) =>
-              byte.toString(16).padStart(2, "0"),
-            ).join(""),
-          };
-        }),
-      );
-    });
-    expect(stored).toEqual(
+    await expect.poll(storedRecords, { timeout: 30_000 }).toEqual(
       expect.arrayContaining([
         {
           name: "encrypted.pdf",

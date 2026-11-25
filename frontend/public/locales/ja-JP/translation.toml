@@ -512,6 +512,11 @@ submit = "ページスケールを調整"
 tags = "リサイズ,変更,寸法,調整"
 title = "ページスケールを調整"
 
+[adjustPageScale.customSize]
+height = "高さ"
+unit = "単位"
+width = "幅"
+
 [adjustPageScale.error]
 failed = "ページスケールの調整中にエラーが発生しました。"
 
@@ -521,6 +526,7 @@ landscape = "横"
 portrait = "縦"
 
 [adjustPageScale.pageSize]
+custom = "カスタム"
 keep = "元のサイズを保持"
 label = "出力ページサイズ"
 legal = "リーガル"
@@ -641,18 +647,16 @@ description = "画像処理の最大 DPI（0 = 無制限）"
 label = "最大 DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "各プロセス実行器のセッション上限とタイムアウトを設定"
 ghostscript = "Ghostscript"
 installApp = "アプリをインストール"
 label = "プロセス実行制限"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+officeConvert = "Office 変換"
+officeConvertSessionLimit = "同時変換の最大数。0 にすると CPU とメモリに基づき上限を自動設定します"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "最大同時実行数"
@@ -661,10 +665,6 @@ label = "セッション上限"
 [admin.settings.advanced.processExecutor.timeout]
 description = "最大実行時間"
 label = "タイムアウト（分）"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert はベータ版です。LibreOffice よりも少ないメモリで、より高速かつ高品質な変換を提供します。"
-label = "新しい Stirling Office 変換を使用"
 
 [admin.settings.advanced.tempFileManagement]
 description = "一時ファイルの保存場所とクリーンアップ動作を構成"
@@ -682,11 +682,6 @@ label = "クリーンアップ間隔（分）"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "より広範なシステム一時ディレクトリをクリーンアップするか（注意して使用）"
 label = "システムの一時領域をクリーンアップ"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice の一時ファイル用ディレクトリ（空欄で既定: baseTmpDir/libreoffice）"
-label = "LibreOffice 一時ディレクトリ"
-placeholder = "既定: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "一時ファイルをクリーンアップするまでの最大経過時間（時間）"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "ページ全体を満たすように画像を�
 pageFormatA4 = "A4（210×297mm）"
 pageFormatKeep = "保持（元の寸法）"
 pageFormatLetter = "Letter（8.5×11in）"
+setupSteps = "{{name}} の設定方法"
 title = "接続"
 unlinkedServices = "未連携サービス"
 
@@ -1294,17 +1290,6 @@ label = "既定のプロデューサー"
 description = "パイプライン処理や外部ツール用のカスタムファイルシステムパスを構成"
 label = "カスタムパス"
 
-[admin.settings.general.customPaths.operations]
-label = "外部ツールのパス"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "ドキュメント変換用 LibreOffice unoconvert のパス（空欄で既定: /opt/venv/bin/unoconvert）"
-label = "Unoconvert 実行ファイル"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTML から PDF 変換用 WeasyPrint 実行ファイルのパス（空欄で既定: /opt/venv/bin/weasyprint）"
-label = "WeasyPrint 実行ファイル"
-
 [admin.settings.general.customPaths.pipeline]
 label = "パイプラインディレクトリ"
 
@@ -1327,6 +1312,10 @@ label = "監視フォルダーディレクトリ"
 [admin.settings.general.defaultLocale]
 description = "新規ユーザーの既定言語（例: en_US, es_ES）"
 label = "既定のロケール"
+
+[admin.settings.general.enableFeedback]
+description = "ユーザーが Stirling チームにフィードバックを送れるようにします"
+label = "フィードバックを有効化"
 
 [admin.settings.general.fileUploadLimit]
 description = "最大ファイルアップロードサイズ（例: 100MB, 1GB）"
@@ -1656,6 +1645,10 @@ verbose = "STANDARD のイベントに加えて、継続的なポーリング呼
 [admin.settings.security.audit.retentionDays]
 description = "監査ログを保持する日数（0 = 無期限保持）"
 label = "監査保管期間（日）"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "署名済みのPDFは引き続き表示、印刷、変換、再署名できますが、アプリ内で変更はできません。API呼び出しとサーバーパイプラインには影響しません。"
+label = "署名済みPDFの変更をブロック"
 
 [admin.settings.security.csrfDisabled]
 description = "クロスサイトリクエストフォージェリ保護を無効化（非推奨）"
@@ -2969,6 +2962,7 @@ loadError = "ユーザーの読み込みに失敗しました"
 noTeam = "チームなし"
 noUsers = "他のユーザーが見つかりません。"
 placeholder = "ユーザーを選択..."
+signInRequired = "他の人に署名を依頼するにはサインインしてください。"
 you = "{{name}} (自分)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "あなたのアカウントはアイデンティティプロバイ
 title = "資格情報の変更"
 
 [changeMetadata]
-filenamePrefix = "metadata"
 submit = "変更"
 tags = "編集,変更,更新,metadata,プロパティ,ドキュメントプロパティ,作成者,タイトル,件名,キーワード,作成元,生成元,情報,ドキュメント情報,ファイルプロパティ"
 
@@ -3265,6 +3258,248 @@ not_found = "リクエストされた情報が見つかりませんでした。"
 processing = "処理中（{{outcome}}）..."
 unsupported_capability = "未対応の機能: {{capability}}"
 usage_limit_reached = "使用上限に達しました。続行するにはプランオプションを確認してください。"
+
+[checkAccessibility]
+aboutRow = "{{label}} について"
+checking = "確認中..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "アクセシビリティレポートをダウンロード"
+fileFailed = "失敗"
+pickFile = "結果を表示"
+submit = "アクセシビリティをチェック"
+
+[checkAccessibility.category]
+altText = "代替テキスト"
+fonts = "フォント"
+language = "言語"
+links = "リンクと注釈"
+metadata = "メタデータと設定"
+structure = "タグと構造"
+
+[checkAccessibility.categoryTip]
+altText = "画像には、スクリーンリーダーが読み上げられるよう短い説明文が必要です。"
+fonts = "テキストを正しく読み上げ・コピーできるよう、フォントはファイル内に含まれ、すべての文字が実テキストに結び付いている必要があります。"
+language = "スクリーンリーダーが正しく発音するには、文書の言語が必要です。"
+links = "リンク、コメント、フォームフィールドにはタグと説明、そしてページに沿ったタブ順が必要です。"
+metadata = "タイトル、PDF/UA の宣言、支援技術がファイルから読むその他の設定。"
+structure = "見出し、リスト、表などページ各部の意味と読む順序を、タグでスクリーンリーダーに伝えます。"
+
+[checkAccessibility.checks]
+label = "チェック項目のうち {{passed}}/{{total}} が合格"
+
+[checkAccessibility.error]
+download = "アクセシビリティレポートを作成できませんでした。もう一度お試しください。"
+fileTitle = "このファイルはチェックできませんでした"
+partial = "一部のファイルをチェックできませんでした。"
+
+[checkAccessibility.facts]
+declares = "PDF/UA を宣言"
+displaysTitle = "タイトルを表示"
+fonts = "フォントを埋め込み"
+language = "言語を宣言"
+notEncrypted = "暗号化なし"
+tagged = "タグ付き"
+title = "タイトルあり"
+
+[checkAccessibility.factTip]
+declares = "メタデータに PDF/UA 準拠が記されています。"
+displaysTitle = "ファイルを開くと、PDF リーダーはファイル名ではなくタイトルを表示します。"
+fonts = "テキストが使用するすべてのフォントがファイルに含まれています。"
+language = "ファイル内でテキストの言語が明示されています。"
+notEncrypted = "ファイルは暗号化されていません。暗号化は支援技術による読み取りを妨げることがあります。"
+tagged = "ファイルには構造を説明するタグがあります。タグがないとスクリーンリーダーはプレーンテキストしか得られません。"
+title = "メタデータにタイトルがあります。"
+
+[checkAccessibility.figures]
+summary_one = "{{count}} 件の画像に説明が必要（{{pages}} ページ）"
+summary_other = "{{count}} 件の画像に説明が必要（{{pages}} ページ）"
+
+[checkAccessibility.issue]
+appliesTo = "適用対象"
+clauseValue = "{{spec}} §{{clause}}、テスト {{test}}"
+details = "詳細"
+instances_one = "{{count}} 件"
+instances_other = "{{count}} 件"
+onPages_one = "ページ {{pages}}"
+onPages_other = "ページ {{pages}}"
+onPagesPartial_one = "ページ {{pages}}（一覧は不完全な場合があります）"
+onPagesPartial_other = "ページ {{pages}}（一覧は不完全な場合があります）"
+pages = "ページ"
+pagesPartialValue = "{{pages}}（最初の出現のみページを記録するため、この一覧は不完全な場合があります）"
+requirement = "要件"
+rule = "ルール"
+standard = "規格"
+where = "対象"
+
+[checkAccessibility.manual]
+clearAll = "すべてクリア"
+done = "完了"
+inProgress = "進行中"
+markAllDone = "すべてを完了としてマーク"
+tip = "読み順や画像説明の妥当性など、人にしか判断できない項目です。確認したら各項目にチェックを入れてください。チェックはダウンロードされるレポートに含まれます。"
+title = "手動チェック"
+
+[checkAccessibility.objects]
+annotation = "注釈"
+bookmark = "しおり"
+character = "フォント内の文字"
+contentPiece = "ページコンテンツの一部"
+document = "ドキュメント"
+drawing = "描画"
+figure = "図"
+file = "ファイル本体"
+font = "フォント"
+form = "フォーム"
+formField = "フォームフィールド"
+link = "リンク"
+markedContent = "マーク済みページコンテンツ"
+metadata = "ドキュメントのメタデータ"
+page = "ページ"
+properties = "ドキュメントのプロパティ"
+tag = "{{name}} タグ"
+tagTree = "タグツリー"
+textPiece = "テキストの一部"
+translatedMetadata = "翻訳を含むメタデータ項目"
+
+[checkAccessibility.pdf]
+continued = "{{name}}（続き）"
+footer = "Stirling PDF でチェック"
+page = "ページ {{n}}"
+title = "アクセシビリティレポート"
+
+[checkAccessibility.result]
+fail = "不合格"
+failSummary = "このドキュメントのすべてをスクリーンリーダーが読めない可能性があります。"
+partial = "一部"
+partialSummary = "このドキュメントは読めますが、一部のチェックに不合格があります。"
+pass = "合格"
+passSummary = "自動 PDF/UA チェックをすべて合格。"
+
+[checkAccessibility.rules]
+annotationLanguage = "コメントやリンクのテキストに言語が設定されていないため、スクリーンリーダーはどの言語で読むべきか分かりません。ドキュメントの言語を設定してください。"
+annotationNoDescription = "コメント、リンク、または描画に説明テキストがないため、スクリーンリーダーが案内できません。"
+annotationNotTagged = "コメントまたは描画が注釈としてタグ付けされていないため、読み順でスクリーンリーダーが到達できません。"
+artifactInsideTagged = "装飾としてマークされたものがタグ付きコンテンツ内にあり、読み上げ対象にもスキップ対象にもなっています。"
+bookmarkLanguage = "しおりに言語が設定されていないため、スクリーンリーダーはどの言語で読むべきか分かりません。ドキュメントの言語を設定してください。"
+conformancePrefix = "メタデータの PDF/UA 宣言が誤った接頭辞を使用しており、PDF リーダーが認識しない可能性があります。"
+contentLanguage = "テキストに言語が設定されていないため、スクリーンリーダーはどの言語で読むべきか分かりません。ドキュメントの言語を設定してください。"
+customTagNotMapped = "カスタム名のタグが標準タグに関連付けられておらず、スクリーンリーダーに意味が伝わりません。"
+figureNoAlt = "画像が図としてタグ付けされていますが、説明がないため、何を示しているか分かりません。"
+fontMissingGlyphs = "含まれているフォントに、このドキュメントで使用している一部の文字がありません。"
+fontNotEmbedded = "フォントがファイルに含まれていないため、別のコンピュータでは見た目や読み上げが変わる可能性があります。"
+formFieldNotTagged = "フォームフィールドがフォームの一部としてタグ付けされておらず、スクリーンリーダーが見つけられない可能性があります。"
+genericHeading = "見出しにレベルのない H タグを使用しています。PDF/UA-2 では H1〜H6 が必要で、入れ子構造が分かるようにします。"
+glyphWidths = "ファイル内のフォントの文字幅が実フォントと一致せず、文字間隔が不正確になる可能性があります。"
+headingSkipped = "見出しレベルが飛んでいます（例: 見出し1の次が見出し3）。見出し間の移動が分かりにくくなります。"
+linkNoDescription = "リンクに説明がなく、スクリーンリーダーはアドレスだけ、または何も読み上げられません。"
+linkNotTagged = "リンクがリンクとしてタグ付けされていないため、リンクとして案内されません。"
+metadataLanguage = "タイトルなどのメタデータに言語が設定されていないため、スクリーンリーダーはどの言語で読むべきか分かりません。ドキュメントの言語を設定してください。"
+noConformanceClaim = "ファイルが PDF/UA 準拠である旨を示していません。メタデータに PDF/UA 識別エントリが必要です。"
+noDocumentTag = "タグの最上位に単一の Document タグが必要で、その内側にすべてを含めます。"
+noLanguage = "ドキュメントの言語が示されていないため、スクリーンリーダーが誤った言語で読む可能性があります。"
+noMetadataStream = "ファイルに XMP メタデータがありません。ここにタイトルや PDF/UA の準拠情報が保存されます。"
+noTags = "ファイルにタグがまったくなく、スクリーンリーダーは見出し、段落、リスト、表を区別したり、正しい順で読んだりできません。"
+notdefGlyph = "テキストに「欠落文字」プレースホルダーが使われており、空白や枠として表示され、読み上げできません。"
+noteTag = "ファイルが Note タグを使用しています。PDF/UA-2 では脚注・巻末注に FENote を使用します。"
+noTitle = "メタデータにタイトルがありません。"
+notMarkedTagged = "ファイルがタグ付きとしてフラグされていないため、支援技術がタグを無視する可能性があります。"
+notPdf2Tags = "PDF/UA-2 には PDF 2.0 のタグが必要です。これは PDF 1.7 のタグの見た目で、多くの場合 PDF/UA-1 用にタグ付けされたことを示します。"
+noUnicode = "一部の文字が読み取り可能なテキストに変換できず、スクリーンリーダーやコピー＆ペーストで誤認される可能性があります。"
+replacementTextLanguage = "一部の置換テキストに言語が設定されておらず、スクリーンリーダーはどの言語で読むべきか分かりません。ドキュメントの言語を設定してください。"
+standardTagRemapped = "標準タグがカスタムタグに関連付けられ、意味が失われています。"
+symbolicEncoding = "シンボルフォントに本来不要なエンコーディングがあり、別の文字として出力される可能性があります。"
+tabOrder = "リンクやコメントのあるページで、タブ順がドキュメントに従うよう設定されておらず、キーボード操作でページ内を飛んでしまう可能性があります。"
+taggedInsideArtifact = "タグ付きコンテンツが装飾としてマークされた要素の内側にあり、スクリーンリーダーにスキップされる可能性があります。"
+titleNotDisplayed = "PDF リーダーはドキュメントのタイトルではなくファイル名を表示します。「ドキュメントのタイトルを表示」設定を有効にする必要があります。"
+untaggedContent = "ページ上の何かが、コンテンツとしてのタグも装飾としてのマークもなく、スクリーンリーダーが読むべきか判断できません。よくあるのは背景画像、ヘッダー、フッター、ページ番号です。"
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "コメントやリンクの言語が未設定"
+annotationNoDescription = "説明のないコメント・リンク・描画"
+annotationNotTagged = "コメントまたは描画が未タグ付け"
+artifactInsideTagged = "タグ付きコンテンツ内の装飾"
+bookmarkLanguage = "しおりの言語が未設定"
+conformancePrefix = "PDF/UA 宣言の記述誤り"
+contentLanguage = "テキストの言語が未設定"
+customTagNotMapped = "標準の意味がないカスタムタグ"
+figureNoAlt = "説明のない画像"
+fontMissingGlyphs = "フォントの文字不足"
+fontNotEmbedded = "フォントが未埋め込み"
+formFieldNotTagged = "フォームフィールドが未タグ付け"
+genericHeading = "レベルのない見出し"
+glyphWidths = "フォントの文字幅が不一致"
+headingSkipped = "見出しレベルの飛び"
+linkNoDescription = "説明のないリンク"
+linkNotTagged = "リンクが未タグ付け"
+metadataLanguage = "メタデータの言語が未設定"
+noConformanceClaim = "PDF/UA を宣言していない"
+noDocumentTag = "Document タグで開始していない"
+noLanguage = "ドキュメントの言語が未設定"
+noMetadataStream = "XMP メタデータなし"
+noTags = "タグなし"
+notdefGlyph = "欠落文字プレースホルダーを使用"
+noteTag = "Note タグを使用"
+noTitle = "ドキュメントのタイトルなし"
+notMarkedTagged = "タグ付きのフラグなし"
+notPdf2Tags = "PDF 2.0 のタグではない"
+noUnicode = "テキストとして読めない文字"
+replacementTextLanguage = "置換テキストの言語が未設定"
+standardTagRemapped = "標準タグをカスタム化"
+symbolicEncoding = "シンボルフォントの不正なエンコーディング"
+tabOrder = "タブ順がドキュメントに不一致"
+taggedInsideArtifact = "装飾として隠されたタグ付きコンテンツ"
+titleNotDisplayed = "開いたときにタイトルが表示されない"
+untaggedContent = "未タグ付けのコンテンツ"
+
+[checkAccessibility.score]
+issues_one = "問題 {{count}} 件"
+issues_other = "問題 {{count}} 件"
+noIssues = "問題は見つかりません"
+subtitle_one = "{{profile}} - {{count}} ページ"
+subtitle_other = "{{profile}} - {{count}} ページ"
+
+[checkAccessibility.sections]
+breakdown = "内訳"
+
+[checkAccessibility.status]
+checking = "{{current}}/{{total}} を確認中..."
+complete = "チェック完了"
+
+[checkAccessibility.steps]
+results = "結果"
+standard = "規格"
+
+[checkAccessibility.tooltip.header]
+title = "どの規格でチェックするか"
+
+[checkAccessibility.tooltip.ua1]
+text = "2012 年に ISO 14289-1 として公開された最初の PDF/UA。PDF 1.7 ファイル向け。"
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "2024 年に ISO 14289-2 として公開された新しいバージョン。PDF 2.0 ファイル向け。PDF 1.7 ファイルをこれでチェックすると、PDF 2.0 のみに適用されるルールで不合格になります。"
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "注釈 {{n}}"
+bookmarks = "しおり"
+character = "{{font}} 内の文字"
+contentItem = "コンテンツ項目 {{n}}"
+drawingStep = "描画ステップ {{n}}"
+embeddedGraphic = "埋め込みグラフィック"
+font = "フォント {{name}}"
+metadata = "ドキュメントのメタデータ"
+page = "ページ {{n}}"
+piece = "要素 {{n}}"
+tag = "{{tag}} タグ"
+tagTree = "タグツリー"
+wholeDocument = "ドキュメント全体"
+
+[checkAccessibility.where.properties]
+author = "作成者"
+description = "説明"
+pdfUaPart = "PDF/UA パート"
+title = "タイトル"
 
 [classification.families]
 correspondence = "通信文書"
@@ -3729,6 +3964,10 @@ message = "提供された文書の1つまたは両方が大きすぎて処理�
 body = "これらの PDF の合計は 2,000 ページを超えます。処理に数分かかる場合があります。"
 title = "大規模な比較を処理中"
 
+[compare.mode]
+pixel = "ピクセル比較"
+text = "テキスト比較"
+
 [compare.no.text]
 message = "選択したPDFの1つまたは両方にテキストコンテンツがありません。比較するには、テキストを含むPDFを選択してください。"
 
@@ -4046,6 +4285,30 @@ failed = "サインインを更新できませんでした。もう一度試す�
 lead = "このサーバーはすでにあなたのアカウントにリンクされています。サインインを更新して、サーバー上の請求と使用状況に戻ってください。"
 title = "サーバーのサインインを更新"
 
+[connectedAccounts]
+connect = "接続"
+connectAnother = "別のアカウントを接続"
+connectFailed = "アカウントを接続できませんでした。サーバーのアプリ登録が正しく設定されているか確認して、もう一度お試しください。"
+disconnect = "切断"
+google = "Google Drive"
+intro = "自分のアカウントを一度接続すれば、パイプラインが自分として読み書きできます。"
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling はこのアカウントに到達できなくなったため、これを使うパイプラインは一時停止されています。"
+none = "管理者が接続済みアカウントを有効にしていません。"
+personal = "個人アカウント"
+popupBlocked = "ブラウザがサインインウィンドウをブロックしました。このサイトのポップアップを許可して、もう一度お試しください。"
+reconnect = "再度サインイン"
+work = "仕事用アカウント"
+
+[connectedAccounts.disconnectConfirm]
+body = "このアカウントを使用するソースとパイプラインは、再度接続するまで停止します。"
+confirm = "切断"
+title = "{{account}} を切断しますか？"
+
+[connectedAccounts.status]
+connected = "接続済み"
+needsSignIn = "サインインが必要"
+
 [convert]
 autoRotate = "自動回転"
 autoRotateDescription = "PDF ページにより適した向きになるよう画像を自動回転します"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "ドキュメントタイトル"
 pdfUaTitleHelp = "ファイル名の代わりにリーダーに表示されます。空白の場合、最初の見出しが使用されます。"
 selectSourceFormatFirst = "先にソース形式を選択してください"
 settings = "設定"
+signInToUse = "使用するにはサインインしてください"
 single = "単一"
 sourceFormatPlaceholder = "変換元形式"
-stirlingOfficeConvert = "Stirling Office Convert（ベータ版）を使用"
-stirlingOfficeConvertDescription = "少ないメモリで、より高品質かつ高速に変換します。標準コンバーターを使用するにはオフにしてください。"
 strictMode = "厳格モード"
 strictModeDesc = "変換が完全でない場合はエラーにします（VeraPDF 検証を使用）"
 svgPdfOptions = "SVG から PDF のオプション"
@@ -4134,8 +4396,6 @@ webOptions = "Web → PDF オプション"
 zoomLevel = "ズームレベル"
 
 [convert.ebookOptions]
-embedAllFonts = "すべてのフォントを埋め込む"
-embedAllFontsDesc = "eBook のすべてのフォントを生成される PDF に埋め込みます"
 includePageNumbers = "ページ番号を含める"
 includePageNumbersDesc = "生成される PDF にページ番号を追加"
 includeTableOfContents = "目次を含める"
@@ -4648,6 +4908,17 @@ title = "設定"
 [extractPages.tooltip]
 description = "選択したページを順序を保ったまま新しい PDF に抽出します。"
 
+[feedback.page]
+open = "フィードバックを送信"
+sendMore = "さらにフィードバックを送る"
+sent = "フィードバックありがとうございます"
+title = "Stirling の改善にご協力ください"
+unavailable = "フィードバックは利用できません"
+
+[feedback.tag]
+dismiss = "フィードバックボタンを隠す"
+label = "フィードバック"
+
 [fileCard]
 openInFileEditor = "ファイルエディタで開く"
 viewInViewer = "ビューアで表示"
@@ -4657,7 +4928,6 @@ closeFile = "ファイルを閉じる"
 
 [fileEditor]
 closedFile = "{{name}} を閉じました"
-couldNotSave = "{{name}} を保存できませんでした"
 filesReordered_one = "ファイルの順序を変更しました"
 filesReordered_other = "{{count}} 個のファイルの順序を変更しました"
 loadedFromStorage_one = "ストレージから {{count}} 個のファイルを読み込みました"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "PDF ライブラリ"
 myFiles = "ファイルライブラリ"
 noFiles = "まだファイルがありません"
+oneDrive = "OneDrive から開く"
+oneDriveFailed = "OneDrive を開けませんでした"
 openFileManager = "すべてのファイルとフォルダーを参照"
 openFromComputer = "コンピューターから開く"
 openSettings = "設定を開く"
@@ -4804,6 +5076,17 @@ searchFiles = "ファイルを検索"
 uploadFailedBody = "選択したファイルを追加できませんでした。"
 uploadFailedTitle = "Upload に失敗しました"
 viewAll = "{{count}} 個のファイルをすべて表示"
+
+[fileSidebar.clearRecents]
+body_one = "最近のファイルから 1 件を消去しますか？取り消せません。"
+body_other = "最近のファイルから {{count}} 件を消去しますか？取り消せません。"
+button = "最近のファイルを消去"
+confirm = "最近のファイルを消去"
+error = "消去できませんでした。もう一度お試しください。"
+openNote_one = "そのうち 1 件はワークベンチで開いています。"
+openNote_other = "そのうち {{count}} 件はワークベンチで開いています。"
+skipOpen = "開いているファイルを除外"
+title = "最近のファイルを消去しますか？"
 
 [fileSidebar.fileItem]
 closeViewer = "ビューアを閉じる"
@@ -5124,6 +5407,7 @@ diskFileHint = "コンピューターに保存されています"
 diskHint = "ディスク上のマウント済みフォルダー内のファイル"
 local = "ローカル"
 localHint = "バックアップなし"
+oneDrive = "OneDrive"
 shared = "共有"
 sharedHint = "リンクであなたと共有"
 
@@ -5672,6 +5956,11 @@ title = "メタデータの変更"
 desc = "文書の制限と権限を変更"
 tags = "権限,制限,権利,アクセス制御,許可,拒否,印刷,コピー,編集,権限変更,セキュリティ設定,ユーザー権限"
 title = "権限の変更"
+
+[home.checkAccessibility]
+desc = "PDF を PDF/UA に照らして採点し、変更せずにスクリーンリーダーの妨げになる点を確認"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "PDF のアクセシビリティをチェック"
 
 [home.classify]
 desc = "このドキュメントの種類を識別してタグ付けします。"
@@ -6521,6 +6810,32 @@ quickAccess = "最初は <strong>Quick Access</strong> レールから始め、R
 topBar = "上部バーで <strong>ビューアー</strong>、<strong>ページエディター</strong>、<strong>アクティブファイル</strong> を切り替えられます。"
 wrapUp = "V2 の新機能は以上です。いつでも <strong>ツアー</strong> メニューを開いて、これやツールのツアー、管理者ツアーを再生できます。"
 
+[oneDriveSave]
+chooseFolder = "アップロード先の OneDrive フォルダーを選択"
+conflict = "このバージョンを開くか保存して以降、OneDrive 上のこのファイルが変更されています。代わりにコピーとして保存してください。"
+failedTitle = "OneDrive に保存できませんでした"
+fromOneDrive = "OneDrive から"
+linkNotStored = "このブラウザーは OneDrive ファイルへのリンクを記憶できませんでした。再読み込み後は、コピーとして保存してください。"
+missing = "このファイルは OneDrive で移動または削除されました。代わりにこのバージョンをコピーとして保存してください。"
+open = "OneDrive で開く"
+personalUnsupported = "OneDrive へのアップロードには、職場または学校の Microsoft アカウントが必要です。"
+reconnect = "再接続"
+replaces = "{{name}} を置き換えます"
+saveCopyToOneDrive = "OneDrive にコピーを保存"
+saved = "OneDrive に保存しました"
+saving = "OneDrive に保存中..."
+signInToSave = "OneDrive に保存するには、サーバーにサインインしてください。"
+updateOriginal = "OneDrive 上で更新"
+uploadToOneDrive = "OneDrive にアップロード..."
+
+[oneDriveSave.status]
+saved = "OneDrive に保存しました"
+unsaved = "変更はまだ OneDrive に保存されていません"
+
+[oneDriveSave.toolbar]
+replace = "OneDrive 上の {{name}} を更新"
+saveAll = "OneDrive 上のすべてを更新"
+
 [overlay-pdfs]
 desc = "1 つの PDF を別の PDF の上に重ねます"
 submit = "重ねる"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "明日リセット"
 thisPeriod = "この請求期間"
 
 [payment]
+annually = "年額"
 billingPeriod = "請求期間"
 cancelTeamChange = "現在のプランを維持"
 canCloseWindow = "このウィンドウは閉じても構いません。"
@@ -7157,11 +7473,14 @@ title = "Team プランを調整"
 
 [payment.capacityStage]
 adjustmentNote = "確定する前に、Stripe に正確な請求額、日割り調整、次回請求日が表示されます。利用可能な場合は保存済みの支払い方法が使用されます。"
+billingLabel = "請求"
 continue = "支払いに進む"
 currencyAtCheckout = "Stripe がチェックアウト時に最終金額と支払い通貨を確認します。"
+custom = "カスタム"
 customLabel = "ユーザー数"
 dueToday = "本日のお支払い"
 enterpriseQuote = "エンタープライズ見積もりを取得"
+enterUsers = "ユーザー数を入力してください。"
 estimatedTotal = "推定合計"
 lineItem = "Team · {{block}}ユーザーごとに {{price}}{{period}}"
 minimumForCurrentUsers = "{{users}}ユーザーいるため、プランは少なくとも{{minimum}}をカバーする必要があります。"
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "既存のアカウントはそのまま残ります�
 overCapacityTitle = "サーバーのユーザー数がプランの対象数を超えています"
 perMonth = "/月"
 perYear = "/年"
+planName = "Stirling Team"
 reductionNote = "少ない容量は次回更新時から開始されます。それまでは現在の許容量を使用できます。既存ユーザーは残ります。変更が有効になった時点で容量超過の場合、新しいユーザーはブロックされます。"
 renewalNote = "{{total}}{{period}}で更新されます。Usage & Billing でいつでもキャンセルできます。"
 reviewChange = "Stripe で変更を確認"
-roundsTo = "{{users}}に丸められます"
+roundsUp = "{{users}} ユーザーに切り上げ。"
+selfServeLimit = "ここでは最大 {{users}} ユーザーまで。"
 subheading = "招待する全員を、{{users}}ユーザー単位でカバーします。"
 subheadingAdd = "現在のプランは{{current}}ユーザーをカバーしています。新しい合計を選択してください。"
+talkToEnterprise = "それ以上は Enterprise についてご相談ください。"
+usersCovered = "対象ユーザー数"
 usersLabel = "ユーザー"
 userTotal = "{{users}}ユーザー"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "ワークスペース内のファイルに変更を適用（{{sho
 tags = "テキスト編集,テキスト変更,テキスト変更,コンテンツ編集,テキスト更新,書き換え,修正,修正,赤入れ,改訂,テキストエディター,コンテンツエディター"
 title = "PDF Text Editor"
 unsaved = "（未保存）"
-workbenchLabel = "エディター"
 
 [pdfTextEditor.annotations]
 freetext = "注釈テキスト - ページテキストではないため、ここでは編集できません"
@@ -7261,12 +7583,18 @@ widget = "フォームフィールド - ページテキストではないため�
 
 [pdfTextEditor.commands]
 edit = "編集"
+markTagged = "完全にタグ付け済みとしてマーク"
+matchScanFont = "スキャンテキストを {{face}} に合わせる"
 mergeRuns_one = "{{count}} 個のランを段落に結合"
 mergeRuns_other = "{{count}} 個のランを段落に結合"
 setColour = "{{run}} に色を設定"
 setOutline = "{{run}} にアウトラインを設定"
+tagFormField = "フォーム フィールドにタグ付け"
+tagLink = "リンクにタグ付け"
+tagPageContent = "ページを自動タグ付け"
 typeInto = "{{run}} に入力"
 ungroupParagraph = "段落 {{run}} のグループ化を解除"
+unmarkTagged = "完全にタグ付け済みの指定を解除"
 wrap = "{{run}} を折り返し"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "破棄して開く"
 hint = "まずキャンセルしてから PDF を保存し、ワークスペースに保持してください。"
 title = "未保存の変更を破棄しますか？"
 
-[pdfTextEditor.drop]
-hint = "エディターステージにドロップすると、開いているドキュメントが置き換えられます。"
-title = "PDF をドロップして開く"
-
 [pdfTextEditor.error]
 decodeImage = "選択した画像をデコードできませんでした。"
+duplicateDropsLetters = "このテキストを複製できません。使用可能なフォントに、すべての文字を描画できるものがありません。"
+formLiftChangesDrawing = "編集できません。これは、変更時にエディターが維持できないクリッピングまたはグラフィック設定を持つグループの一部として描画されています。"
 insertImage = "選択した画像を挿入できませんでした。"
+needsShaping = "エディターはまだこのスクリプトの連結文字や母音記号を正しく描画できないため、この変更は行われませんでした。"
+replaceClippedImage = "この画像は置換できません。トリミングされており、置換するとトリミングで隠れている部分が表示されてしまいます。"
+scanOffInk = "このテキストは編集できません: 認識された語がスキャンと一致しません。OCR を再実行してください。"
+unsafeRtlEdit = "この編集は行えません。エディターは、この行の右から左へのテキストを変更せずに再描画できません。"
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG画像"
@@ -7304,15 +7634,42 @@ wholeWord = "単語全体"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "組み込みフォント"
+closestMatch = "このフォントには選択した文字の一部がないため、最も近いフォントで描画されます。"
 deviceFontsNone = "追加のデバイスフォントは見つかりませんでした。"
 deviceFontsUnavailable = "デバイスフォントは利用できません。組み込みフォントは引き続き動作します。"
 deviceGroup = "デバイスフォント"
+documentFontCannotDraw = "エディターはこのテキストをドキュメント独自のフォントで描画できないため、現在のフォントのままにしました。"
 documentGroup = "ドキュメントフォント"
+embeddingForbidden = "このフォントのライセンスでは PDF への埋め込みが許可されていません。テキストは変更されませんでした。"
+embedFailed = "このフォントを PDF に埋め込めませんでした。テキストは変更されませんでした。"
+includedGroup = "含まれるフォント"
 label = "フォントファミリー"
+matchedGroup = "一致したフォント"
+missingGlyphs = "このフォントには選択した文字の一部がなく、現在のフォントのまま保持できませんでした。テキストは変更されませんでした。"
 mixed = "混在"
+needsShaping = "エディターはまだこのスクリプトの連結文字や母音記号を正しく再描画できないため、そのテキストは現在のフォントのままにしました。"
+noGlyphs = "このフォントには選択したテキストに対応する文字がありません。テキストは変更されませんでした。"
 noMatch = "一致するフォントなし"
+partOfRunUnsupported = "このテキストは全体としてのみ再スタイル可能です。単語の一部ではなく、ボックス全体を選択してください。"
 placeholder = "フォントファミリー"
+scannedText = "スキャンテキスト"
+serverFontFailed = "そのサーバーフォントをダウンロードできませんでした。テキストは変更されませんでした。"
+serverGroup = "サーバーフォント"
+someLeftUnchanged = "このフォントには選択したテキストの一部に必要な文字がありません。該当のテキストは変更されませんでした。"
+styleSkipped = "選択したテキストの一部には、そのスタイルのフォント バージョンがないため、変更されませんでした。"
+styleUnavailable = "選択したテキストには、そのスタイルのフォント バージョンがないため、変更されませんでした。"
 useDeviceFonts = "デバイスフォントを使用"
+weight = "フォントの太さ"
+weightBlack = "Black"
+weightBold = "Bold"
+weightExtraBold = "Extra bold"
+weightExtraLight = "Extra light"
+weightLight = "Light"
+weightMedium = "Medium"
+weightNumber = "太さ {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Semibold"
+weightThin = "Thin"
 
 [pdfTextEditor.fonts]
 allPresent = "すべての文字と数字があります"
@@ -7357,6 +7714,7 @@ helpDesc = "このヘルプ"
 saveDesc = "ワークスペースに保存"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "太字 / 斜体。選択した語句またはボックス全体に適用"
 deleteDesc = "選択項目を削除"
 duplicateDesc = "選択項目を複製"
 groupDesc = "選択したランを1つの段落にグループ化"
@@ -7380,8 +7738,12 @@ zoomDesc = "ズームイン / ズームアウト"
 
 [pdfTextEditor.inspector]
 document = "ドキュメント"
+fontCompletedClosest = "埋め込みフォント · 不足する文字は、利用可能な最も近い {{name}} で描画されます。"
+fontCompletedOriginal = "埋め込みフォント · 不足する文字は同一フォントの {{name}} で描画されます。"
 fontEmbedded = "埋め込みフォント · 含まれない文字は Helvetica にフォールバックします。"
 fontGap = "{{name}} · {{glyphs}} が不足 - それらを入力すると Helvetica にフォールバックします。"
+fontUnknownCoverage = "{{name}} · 不足する文字は {{fallback}} にフォールバックします。"
+formField = "フォーム フィールド"
 geometry = "位置とサイズ"
 height = "高さ"
 heightHint = "テキストボックスの高さは、文字サイズと行数に従います。"
@@ -7403,14 +7765,20 @@ ocrUnavailable = "このサーバーではOCRを利用できません。"
 oneImage = "画像"
 oneShape = "図形"
 oneText = "テキスト"
+outlinedTextHint_one = "このページのテキストは図形として描画されているため、編集できるテキストがありません。編集可能にするには、まず OCR を実行してください。"
+outlinedTextHint_other = "{{count}} ページでテキストが図形として描画されているため、編集できるテキストがありません。編集可能にするには、まず OCR を実行してください。"
 pages = "ページ"
 runOcr = "OCRを実行"
 scanHint_one = "このページはスキャン画像で、編集できるテキストがありません。テキストを編集可能にするには、先にOCRを実行してください。"
 scanHint_other = "{{count}}ページはスキャン画像で、編集できるテキストがありません。テキストを編集可能にするには、先にOCRを実行してください。"
 scannedText = "スキャンされたテキスト · 変更された単語は覆われ、一致するフォントで再描画されます。"
+scannedTextMisaligned = "スキャンテキスト · 認識語がスキャンと整合しないため、このブロックは編集や削除ができません。"
+scannedTextNoFont = "スキャンテキスト · このスクリプトの入力文字はまだ描画できないため保持されません。語の削除は可能です。"
+scannedTextOffInk = "スキャンテキスト · 認識語がスキャン上の語からずれているため、このブロックは編集できません。OCR を再実行してください。"
 tabDocument = "ドキュメント"
 tabSelected = "選択済み"
 textBoxes = "テキストボックス"
+unreadPagesHint = "{{count}} ページに編集可能なテキストがありません。スキャン画像のページや、テキストを図形として描画しているページがあります。編集可能にするには、まず OCR を実行してください。"
 width = "幅"
 widthHint = "テキストは幅に合わせて再折り返しされます。"
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "タグを追加"
+applyToOtherPages_one = "他の {{count}} ページに適用"
+applyToOtherPages_other = "他の {{count}} ページに適用"
+artifactGroup = "スクリーンリーダーでスキップ"
 artifactText = "装飾用"
 cannotChange = "この画像のアクセシビリティは変更できません。"
+cannotDescribeFormField = "このフォーム フィールドの説明は変更できません。"
+cannotDescribeLink = "このリンクの説明は変更できません。"
 cannotRetag = "このテキストのタグは変更できません。"
+cannotSetDecorative = "装飾としての指定は変更できません。"
+cannotTagFormField = "このフォーム フィールドにはタグを付けられません。"
+cannotTagLink = "このリンクはタグ付けできません。"
+cannotTagPage = "このページのコンテンツはタグ付けできません。"
+contentGroup = "コンテンツ"
 customTag = "{{role}}（カスタムタグ）"
 decorativeInfo = "スクリーンリーダーは装飾用画像をスキップします。境界線、背景、その他情報を持たない画像に使用してください。"
 decorativeLabel = "装飾用画像"
 description = "画像の説明"
 descriptionInfo = "スクリーンリーダーは画像の代わりにこれを読み上げます。"
 encrypted = "暗号化されたファイルではタグを編集できません"
+figureDescription = "図の説明"
+figureDescriptionInfo = "スクリーンリーダーは図の代わりにこれを読み上げます。"
+formFieldDescription = "フィールドの説明"
+formulaDescription = "数式の説明"
+formulaDescriptionInfo = "スクリーンリーダーは数式の代わりにこれを読み上げます。例えば「x の二乗プラス 1」のように、口頭で言う形で記述してください。"
 heading = "アクセシビリティ"
 innerTagLabel = "タグ {{number}}"
 innerTags = "このテキスト内のタグ"
+linkDescription = "リンクの説明"
+markedTagged = "ドキュメントは完全にタグ付け済み"
+markedTaggedHint = "PDF リーダーにアクセシビリティタグの使用を指示します。すべてタグ付けし終えたら有効にしてください。"
+markedWithUntagged = "一部のコンテンツにタグがなく、スクリーンリーダーにスキップされる可能性があります。"
 missingDescriptions = "説明がありません"
 mixedContent = "図に他のコンテンツが含まれています"
+mixedTags = "混在"
 needsDescriptionBadge = "説明なし"
-nextImage = "次の画像"
+nextToReview = "次のレビュー対象へ"
 notFigure = "テキストの一部としてタグ付け済み"
 removeTag = "タグを削除"
 saveFailed = "アクセシビリティの変更を保存できなかったため、ファイルは保存されませんでした。変更を元に戻して、もう一度お試しください。"
 selectedText = "選択したテキスト"
+tagFormField = "フォーム フィールドにタグ付け"
+tagging = "ページのタグ付け"
 tagLabel = "タグ"
+tagLinks_one = "リンクにタグ付け"
+tagLinks_other = "{{count}} 件のリンクにタグ付け"
+tagUntagged = "ドキュメントを自動タグ付け"
+tagUntaggedHint = "ドキュメント全体にアクセシビリティタグを自動追加します。結果は大まかなので、その後に見出し、リスト、読み順を確認してください。"
 unknownTag = "ここでは読み取れません"
+unmarkedWithTags = "一部の PDF ビューアはタグを使用するため、タグのないコンテンツをスキップする場合があります。"
 unreadable = "このファイルのタグは編集できません"
 untaggableImages = "ここではタグ付けできません"
 untaggedBadge = "タグなし"
 untaggedDocument = "ドキュメントにタグがありません"
 untaggedImage = "ここではタグ付けできません"
 untaggedImages = "タグなし画像"
+untaggedPages = "タグ付けするページ"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "フッター"
+header = "ヘッダー"
+pageNumber = "ページ番号"
+watermark = "透かし"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "テキストのない見出し"
@@ -7505,6 +7907,23 @@ tableHeader = "表見出し"
 tableRow = "表の行"
 title = "タイトル"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "すべての言語"
+cannotSetDocument = "このドキュメントの言語は変更できません。"
+cannotSetText = "このテキストの言語は変更できません。"
+documentHint = "テキストで個別設定がない限り、スクリーンリーダーが使用する言語です。"
+documentLabel = "言語"
+documentLocked = "暗号化されたドキュメントの言語はここでは変更できません。"
+inDocument = "このドキュメント内"
+innerLabel = "タグ {{number}} の言語"
+label = "言語"
+missing = "言語が未設定です。スクリーンリーダーが推測するため、文書全体を誤った声で読む可能性があります。"
+mixed = "混在"
+noMatch = "一致する言語がありません。代わりに mt や en-IE のようにコードを入力してください。"
+placeholder = "言語を選択"
+selectedText = "選択したテキストの言語"
+textHint = "スクリーンリーダーはこの言語に合わせて声と発音を切り替えます。"
+
 [pdfTextEditor.mobile]
 actions = "エディター操作"
 addImage = "画像"
@@ -7517,7 +7936,6 @@ done = "完了"
 download = "保存してダウンロード"
 find = "検索"
 lock = "ロック"
-openPdf = "PDF を開く"
 panelHint = "編集はワークスペース表示で行います。ページ上のテキストをタップして変更します。"
 save = "保存"
 style = "スタイル"
@@ -7525,7 +7943,6 @@ tapToPlace = "テキストを配置するページ上の場所をタップして
 unlock = "ロック解除"
 
 [pdfTextEditor.pageView]
-pageNumber = "ページ {{page}}"
 renderFailed = "ページをレンダリングできませんでした"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "垂直ルーラー"
 
 [pdfTextEditor.run]
 lockedTitle = "ロックされています - 編集するにはロック解除ボタンを使用してください"
+readOnlyOrderTitle = "この行のテキストは編集できません。右から左と左から右のテキストが、安全に再描画できない順序で混在しています"
+resizeHandle = "ドラッグして幅を変更します。テキストは自動的に折り返されます。"
 
 [pdfTextEditor.saveRisk]
 cancel = "キャンセル"
@@ -7548,6 +7967,35 @@ intro = "編集済みコピーを保存すると、ファイルが変更され�
 note = "編集内容は保持されます。上記の変更は、編集済みコピーを保存する際に避けられません。"
 saveAnyway = "それでも保存"
 title = "保存するとこの PDF が変更されます"
+
+[pdfTextEditor.scanFont]
+approximate = "おおよその一致"
+approximateHint = "最も近いフォントはスキャンと一致しない場合があります。"
+change = "フォントが合っていませんか？"
+choose = "フォントを選択"
+chooseMissing = "このテキストのフォントを選択…"
+compare = "フォントを比較…"
+deviceAllow = "より良い一致のためにフォントへのアクセスを許可"
+deviceBlocked = "ブラウザは二度と確認しません。許可するにはアドレスバー左のアイコンをクリックし、フォントをオンにして、再試行してください。"
+deviceBlockedTitle = "フォントへのアクセスがブロックされています"
+deviceNone = "このコンピュータには一般的なドキュメント用フォントがインストールされていません。"
+deviceNote = "ブラウザが確認します。フォントはこのデバイス内にとどまります。"
+deviceOn_one = "このコンピュータのフォント {{count}} 個とも比較しました。"
+deviceOn_other = "このコンピュータのフォント {{count}} 個とも比較しました。"
+deviceReading = "このコンピュータ上のフォントを読み取り中…"
+deviceRetry = "再試行"
+done = "完了"
+hint = "入力は最も近いフォントで描画されます。スキャンにより近い見た目であれば、別のフォントを選んでください。"
+hintFromScan = "入力はスキャンから検出した文字で構成されています。代わりに選んだフォントで描画するにはフォントを選択してください。"
+hintOthers = "あなたの選択は、まだ編集していないスキャンテキストにも適用されます。"
+matching = "フォントを照合中…"
+noFont = "利用可能なフォントではこのスクリプトを描画できないため、入力テキストはまだ再描画できません。"
+scan = "元のスキャン"
+scanAlt = "スキャンされた行"
+scanNote = "スキャンは実際のフォントよりぼやけたり太く見えることがあります。太さではなく文字の形を比較してください。"
+score = "{{match}}% 類似"
+title = "スキャンフォントに一致させる"
+unmeasurable = "このスキャンは薄すぎるか小さすぎて、フォントを照合できません。"
 
 [pdfTextEditor.settings]
 advanced = "詳細"
@@ -7564,7 +8012,6 @@ addTable = "表を追加"
 addText = "テキストを追加"
 clickPageToAddTable = "表を追加するにはページをクリック"
 clickPageToAddText = "ページをクリックしてテキストを追加"
-document = "ドキュメント"
 group = "グループ化"
 groupingAuto = "自動"
 groupingAutoHint = "等間隔の行を段落にグループ化します。これを変更するとドキュメントを再読み込みし、元に戻す履歴をクリアします。"
@@ -7593,23 +8040,17 @@ auto = "自動"
 enable = "入力中にスペルをチェック"
 language = "辞書の言語"
 
-[pdfTextEditor.stage]
-loadingDocument = "ドキュメントを読み込み中"
-loadingProgress = "読み込み進行状況"
-noDocument = "ドキュメントが読み込まれていません。"
-pickPrompt = "編集を開始するには、左側のファイルパネルから PDF を選択してください。"
-renderingPreview = "プレビューをレンダリング中"
-
 [pdfTextEditor.table]
 addColumn = "列を追加"
 addRow = "行を追加"
+cellNoGlyphs = "このテキストには、表のフォントで描画できない文字が含まれています。セルを埋めるには、それらを変更または削除してください。"
 column = "列"
 deleteColumn = "列を削除"
 deleteRow = "行を削除"
 done = "完了"
 doneHint = "これを表として編集するのを停止"
-edit = "編集"
 editHint = "表として編集 - セルに入力し、行と列を追加または削除します"
+editTable = "表を編集"
 move = "移動"
 moveTable = "ドラッグして表全体を移動"
 recognizedHint = "認識された表 - クリックしてそのテキストをすべて選択"
@@ -7630,6 +8071,9 @@ alignMiddle = "上下中央揃え"
 alignRight = "右揃え"
 alignTop = "上揃え"
 arrange = "整列"
+bold = "太字"
+boldOnly = "このフォントには太字のみがあります"
+boldUnavailable = "このフォントには太字がありません"
 bringForward = "前面へ移動"
 bringToFront = "最前面へ移動"
 caseLower = "小文字"
@@ -7650,10 +8094,12 @@ fontColour = "フォント色"
 fontSize = "フォントサイズ"
 formatting = "テキスト書式"
 italic = "斜体"
+italicOnly = "このフォントには斜体のみがあります"
 italicUnavailable = "このフォントには italic バージョンがありません。デバイスフォントを読み込むか、別のフォントファミリーを選択してください。"
 lock = "選択項目をロック"
 lockTooltip = "選択項目をロック - 誤編集を防ぎます"
 more = "その他の操作"
+noBoldItalic = "このフォントには太字斜体がありません"
 order = "順序"
 outlineColour = "アウトライン色"
 outlineWidth = "アウトライン幅（0 = なし）"
@@ -7683,13 +8129,6 @@ title = "プレビュー差異"
 [pdfTextEditor.tooltip.textFocus]
 text = "このワークスペースはテキストの編集と埋め込み画像の位置調整に重点を置いています。複雑なページのアートワーク、フォームウィジェット、レイヤー化されたグラフィックは書き出し時に保持されますが、ここでは完全には編集できません。"
 title = "テキストと画像のフォーカス"
-
-[pdfTextEditor.zoom]
-fit = "合わせる"
-fitToWidth = "幅に合わせる"
-in = "ズームイン"
-out = "ズームアウト"
-reset = "Zoom を100%にリセット"
 
 [PDFToCSV]
 header = "PDFをCSVに変換"
@@ -7935,8 +8374,6 @@ triggerImport = "インポート時に実行"
 [policies.enforcement]
 applying = "{{names}} を適用中"
 applyingProgress = "{{names}} を適用中（{{total}} 中 {{done}}）"
-exportFailureBody = "セキュリティポリシーを適用できませんでした。ファイルはそのままエクスポートされました。"
-exportFailureTitle = "ポリシー適用なしでエクスポート"
 failureBody = "一部のポリシーを {{total}} 個中 {{failures}} 個のファイルに適用できませんでした。"
 failureTitle = "完全な適用なしでエクスポート"
 printPolicyAppliedBody = "この PDF はポリシーを満たすよう更新されました。変更内容を確認してから、もう一度印刷してください。"
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "policy 実行時に Google Chat スペースへメッセージを投稿します。"
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "組織の Google Drive に読み書きするサービスアカウント。"
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Google Cloud のサービスアカウントの JSON キーを貼り付けてください。暗号化され、再表示はされません。"
+label = "サービスアカウントキー (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "任意。ドメイン全体の委任がある場合、この接続が動作する Drive のユーザー（人の異動に影響されない専用ボットユーザー推奨）。空欄の場合はサービスアカウントに共有された共有ドライブとフォルダのみに到達します。"
+label = "代理ユーザー"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "処理済みドキュメントを Jira issue に添付します。"
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "policy 実行時にドキュメントまたは通知をメール送信します。"
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "管理者承認付きの Microsoft Graph アプリケーション権限が必要です。"
+label = "アプリケーション (クライアント) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "クライアント シークレット"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "ディレクトリ (テナント) ID"
+placeholder = "contoso.onmicrosoft.com または テナント GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "アプリパスワード"
+
+[portal.connections.types.onedrive]
+description = "OneDrive for Business の 1 ユーザーに読み書きします。"
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "この接続が到達する OneDrive の所有者。アプリ登録に Files.ReadWrite.All のアプリケーション権限が必要です。"
+label = "OneDrive の所有者"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "代わりに private key で認証する場合は空白のまま�
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "任意。password の代わりに key で認証するには OpenSSH private key を貼り付けてください。"
 label = "秘密鍵"
+
+[portal.connections.types.sharepoint]
+description = "SharePoint サイトのドキュメント ライブラリに読み書きします。"
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "任意。空欄の場合、サイトの既定の Documents ライブラリになります。"
+label = "ドキュメント ライブラリ"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "サイト URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "policy がドキュメントを処理したときに Slack へメッセージを投稿します。"
@@ -9142,6 +9624,126 @@ status = "ステータス"
 time = "時刻"
 user = "ユーザー"
 
+[portal.enterprise]
+backTo = "{{stage}} に戻る"
+brandTag = "Enterprise"
+callInfo = "15 分の通話。価格、導入、セキュリティのご質問や、ロールアウト計画のご相談に。"
+callTitle = "ソリューションエンジニアに相談"
+deployment = "導入"
+footer = "Stirling Enterprise についてのご質問はありますか？"
+home = "Stirling へ"
+member = "チームリーダーが Enterprise の契約を進めています。開始後はここで進行状況を確認できます。"
+memberDeal = "チームリーダーがこの契約を進めています。ここで進行状況を確認できます。"
+quotePanel = "お見積り"
+signIn = "サインイン"
+signInToStart = "トライアルを開始するにはサインインしてください"
+stage = "ステージ {{current}} / {{total}}"
+stagesLabel = "進捗"
+
+[portal.enterprise.landing]
+lede = "14 日間無料でお試し後、ここで見積り作成と契約締結ができます。カード不要。"
+tickAgreement = "MSA、注文書、EULA、DPA をまとめた 1 通の契約"
+tickCompliance = "SCIM、データ所在地、稼働時間の SLA"
+tickDeploy = "Stirling Cloud、自社サーバー、完全エアギャップで運用可能"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "オフライン ライセンスのドキュメント"
+point1 = "オンライン検証キーではなく、オフラインで有効なライセンス ファイルでアクティベート"
+point2 = "持ち込んだイメージから、セルフホストと同様にインストール"
+point3 = "サインインはネットワーク内にとどまる"
+tagline = "インターネット非接続ネットワークでのセルフホスト。"
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud のドキュメント"
+point1 = "stirling.com/app でチームがサインイン"
+point2 = "AWS 上で稼働し、保管ファイルは暗号化"
+point3 = "自社の IdP でのシングルサインオンはセルフホストが必要"
+tagline = "インストール不要でホスティング提供。"
+
+[portal.enterprise.options.selfhost]
+more = "セルフホストのドキュメント"
+point1 = "Docker、または Kubernetes 上の Helm チャートでインストール"
+point2 = "ドキュメントは自社インフラで処理"
+point3 = "OAuth2、OIDC、または SAML のシングルサインオン"
+tagline = "自社サーバー上で、オンプレミスまたは自社クラウドで。"
+
+[portal.enterprise.review]
+back = "{{stage}} に戻る"
+company = "会社"
+completed = "完了"
+extensions = "使用した拡張機能"
+paid = "支払い済み。請求書はいつでもここから確認できます。"
+people = "担当者"
+started = "開始済み"
+trialEnds = "トライアル終了日"
+trialTitle = "トライアル"
+version = "バージョン"
+viewInvoice = "請求書を表示"
+
+[portal.enterprise.setup]
+copied = "コピーしました"
+copy = "コピー"
+markDone = "「{{step}}」を完了としてマーク"
+progress = "{{total}} 中 {{done}} 完了"
+subtitle = "実運用に近い形で試して、トライアルの効果を最大化しましょう。"
+subtitleLive = "全社展開までに完了しておく手順。"
+title = "セットアップ"
+titleLive = "本番リリース チェックリスト"
+
+[portal.enterprise.setup.firstDocument]
+body = "チームが扱う PDF をアップロードし、リダクト、圧縮、OCR など日常的に使うツールを試しましょう。"
+title = "最初のドキュメントを処理"
+
+[portal.enterprise.setup.getApp]
+body = "Windows、Mac、Linux 用のデスクトップアプリをインストールし、作成したアカウントでサインイン。もしくはブラウザから直接使用できます。"
+title = "Stirling を入手"
+
+[portal.enterprise.setup.install]
+body = "サーバーでこれを実行します。ライセンス適用済みで Stirling が起動し、イメージには OCR とオフィス変換が含まれます。大規模チームには Kubernetes を推奨します。"
+title = "Stirling をインストールして起動"
+
+[portal.enterprise.setup.invite]
+body = "利用するメンバーを招待し、トライアルを実際の業務に近づけましょう。"
+title = "チームを招待"
+
+[portal.enterprise.setup.licence]
+body = "<code>http://your-server:8080/settings/adminPlan</code> を開くと、Enterprise ライセンスが有効として表示されるはずです。別の方法でインストールしましたか？<code>settings.yml</code> の <code>premium.key</code> にキーを追加して再起動してください。"
+title = "ライセンスが有効か確認"
+
+[portal.enterprise.setup.links]
+browser = "ブラウザで使う"
+docker = "Docker ガイド"
+download = "アプリをダウンロード"
+downloadForTeam = "チーム向けアプリを入手"
+downloading = "ダウンロード中..."
+downloadLicence = "ライセンスファイルをダウンロード"
+invite = "チームメイトを招待"
+kubernetes = "Kubernetes ガイド"
+licence = "ライセンスの有効化"
+ocr = "OCR 言語"
+openApp = "Stirling を開く"
+samlGuide = "SAML ガイド"
+ssoGuide = "SSO ガイド"
+
+[portal.enterprise.setup.offlineInstall]
+body = "接続されたマシンでフルイメージを取得し、ライセンスファイルと一緒に持ち込み、読み込んで起動します。フルイメージには、オフラインサーバーがダウンロードできないフォントが含まれます。"
+title = "Stirling を持ち込んで起動"
+
+[portal.enterprise.setup.offlineLicence]
+body = "エアギャップ環境のサーバーは当社のライセンスサービスに到達できないため、代わりに署名済みのこのファイルを検証します。持ち込むイメージと一緒に保管してください。"
+title = "オフライン ライセンスをダウンロード"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "<code>/settings/people</code> でアカウントを作成するか、Stirling を社内の IdP に接続して、サインインがネットワーク外に出ないようにします。"
+bodySelfHosted = "<code>/settings/people</code> でアカウントを作成するか、IdP に接続してチームが業務アカウントでサインインできるようにします。利用はサーバーのアドレスでのブラウザ、またはそれを指すデスクトップアプリから。"
+title = "メンバーを追加"
+
+[portal.enterprise.setup.signIn]
+body = "<code>http://your-server:8080</code> を開き、<code>admin</code> / <code>stirling</code> でサインインします。すぐに新しいパスワードの設定を求められます。"
+bodyAirgap = "<code>http://your-server:8080</code> を開き、<code>admin</code> / <code>stirling</code> でサインインして新しいパスワードを設定し、<code>/settings/adminPlan</code> にライセンスが有効と表示されることを確認してください。"
+title = "管理者としてサインイン"
+
 [portal.errorBoundary]
 description = "このビューで予期しないエラーが発生しました。再試行するか、サイドバーから別のセクションを選択してください。"
 retry = "再試行"
@@ -9293,6 +9895,7 @@ title = "レビュー対象はありません"
 [portal.home.download]
 back = "戻る"
 body = "デスクトップアプリをダウンロードするか、サーバーをセルフホストします。"
+bodyDesktop = "デスクトップアプリをダウンロードし、Stirling アカウントでサインインしてください。"
 done = "完了"
 guide = "{{name}} ガイドを開く"
 openInBrowser = "代わりにブラウザーで開く"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "メール取り込み"
 
 [portal.procurement]
-subtitle = "チームの評価、契約、オンボーディングを進めます。すべてのドキュメントを一か所に。"
 title = "調達"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "契約書を読み込めませんでした。もう一度お試し�
 loading = "契約書を読み込み中..."
 ref = "参照 {{ref}} · {{version}}"
 requestChanges = "変更を依頼"
-scrollHint = "スクロールして確認"
 signatory = "署名者名"
 signatoryPlaceholder = "氏名"
 signatoryTitle = "署名者の役職"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "例: General Counsel"
 signError = "署名を記録できませんでした。もう一度お試しください。"
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}}（一括）"
+addonPerYear = "+{{amount}}/年"
 addons = "アドオン"
 addressLine1 = "住所行 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "住所行 2"
 addressLine2Placeholder = "スイート、階、建物"
 back = "戻る"
+belowMinimum = "この見積りは Enterprise の最小条件を下回っています。"
 businessName = "会社名"
 businessNamePlaceholder = "貴社名"
 city = "市区町村"
 cityPlaceholder = "San Francisco"
 completeRequired = "見積を生成する前に、必須フィールド（* 印）を有効なメールで入力してください。"
+conflict = "この案件は開いてから変更されています。ビルダーを閉じてページを再読み込みし、最新状況を確認してください。"
 contactEmail = "連絡先メール"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "連絡先名"
 contactNamePlaceholder = "Jane Doe"
 continue = "続行"
 done = "完了"
+editUsage = "利用量を編集"
 eula = "Stirling Enterprise EULA を読み、同意します。この見積もりから生成される契約に適用されます。"
 generate = "見積もりを生成"
 indemnification = "強化された IP 保護"
 indemnificationSub = "当社の IP 防御を特許請求にも拡張します。基本的な著作権、商標、営業秘密の補償は無料で含まれています。"
+minimum = "Enterprise には年間最低支出 {{min}} が必要です。"
+minimumBelow = "この見積りは年額 {{annual}} です。より多く使う見込みがあれば推定利用量を増やしてください。そうでなければ Team プランの方が適している可能性があります。"
+minimumNear = "Enterprise には年間最低支出 {{min}} が必要です。到達するよう推定利用量を増やすか、ご相談ください。"
+minimumNearTitle = "Enterprise まであと {{gap}}/年 足りません。"
+paperBrand = "Stirling PDF"
 paperEyebrow = "エンタープライズ見積"
 paperFor = "宛先"
 pdfSize = "PDF サイズ"
@@ -10506,9 +11117,13 @@ posture_regulated = "規制対応"
 posture_regulatedSub = "すべてのカテゴリ — コンプライアンス、保持、取り込み"
 qbr = "四半期ビジネスレビュー"
 qbrSub = "担当 SE が四半期ごとに使用状況とロードマップをレビューします"
+raiseUsage = "推定利用量を増やす"
 region = "州 / 地域"
 regionPlaceholder = "California"
-running = "{{annual}} / 年 · {{years}}年 {{tcv}}"
+runningLabel = "概算価格"
+runningLabelIssued = "見積価格"
+runningOneYear = "{{annual}}/年"
+runningTotal = "{{years}} 年間の合計 {{tcv}}"
 s1Sub = "チームと、年間に処理する予定の PDF。"
 s1Title = "どのくらい処理しますか？"
 s2Sub = "長期契約ほど料金が割引され、サービスレベルによってサポートが決まります。"
@@ -10547,6 +11162,19 @@ volumePlaceholder = "例: 1,000,000"
 years_one = "{{count}}年"
 years_other = "{{count}}年"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} 導入"
+indemnification = "IP 保障"
+multiYear_one = "{{count}} 年のコミットメント"
+multiYear_other = "{{count}} 年のコミットメント"
+qbr = "四半期ビジネスレビュー"
+seats_one = "合意ユーザー {{users}} 名 + SSO / RBAC / 監査"
+seats_other = "合意ユーザー {{users}} 名 + SSO / RBAC / 監査"
+seatsUnset = "ユーザー数 + SSO / RBAC / 監査"
+support = "専任 SE / CSM"
+training = "オンボーディングとトレーニング"
+usage = "PDF 処理 — 年間 {{volume}} PDF、{{rate}}/PDF（{{posture}} 自動化）"
+
 [portal.procurement.documents]
 agreement = "エンタープライズ契約書"
 agreementSub = "MSA、注文書、DPA を 1 つの署名にまとめたものです。"
@@ -10557,6 +11185,8 @@ invoice = "請求書"
 invoiceSub = "初回サブスクリプション請求書です。"
 laterInvoice = "承諾後に利用可能"
 laterQuote = "見積発行後に利用可能"
+laterSigning = "契約締結後に利用可能"
+laterTitle = "お取引の後半"
 quote = "見積"
 quoteSub = "項目別のエンタープライズ見積です。"
 sla = "SLA 別紙"
@@ -10573,15 +11203,12 @@ title = "問題が発生しました"
 [portal.procurement.hero]
 barAria = "{{total}} 中 {{current}} 段階"
 ctaAgreement = "契約を確認して署名"
-ctaExploring = "トライアルをセットアップ"
 ctaQuote = "見積もりを確認"
 ctaReviewQuote = "見積を確認"
 ctaTrial = "見積もりを作成"
-documents = "ドキュメント"
 eyebrow = "エンタープライズ"
 eyebrowCompany = "{{company}} エンタープライズ"
 inviteTeammates = "チームメイトを招待"
-licenseKey = "ライセンスキー"
 liveSub = "組織はプロビジョニング済みで、ライセンスは有効です。"
 liveTitle = "Stirling Enterprise で本番稼働中です"
 next = "次: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "オフラインライセンスファイルをまだ生成でき
 downloadOffline = "オフラインライセンス (.lic) をダウンロード"
 hint = "このキーをセルフホストインスタンスに貼り付けて有効化するか、記録用に保管してください。安全に保管してください。"
 label = "ライセンスキー"
-subtitle = "このキーでセルフホストインスタンスをアクティブ化するか、記録用に保管してください。"
-title = "ライセンスキー"
 trialFileHint = "これはトライアルライセンスファイルです。契約が成立したら、戻ってもう一度ダウンロードしてください。オンラインライセンスキーとは異なり、.lic ファイルは自動更新されません。"
-
-[portal.procurement.link]
-cta = "アカウントをリンク"
-description = "調達はリンクされた Stirling アカウントで実行されます。トライアルのプロビジョニング、見積もり価格の算出、請求の開始に使用します。開始するにはアカウントをリンクしてください。"
-eyebrow = "エンタープライズ"
-title = "開始するにはアカウントをリンク"
 
 [portal.procurement.live]
 description = "サブスクリプションがアクティブで、ライセンスが発行されています。チームはプロビジョニング済みで、請求も開始されています。"
-eyebrow = "本番稼働"
 title = "Stirling Enterprise で利用開始済みです"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "見積もり PDF をまだダウンロードできませんで�
 
 [portal.procurement.payment]
 description = "見積もりは承諾済みで、ライセンスはすでに有効です。チームはすぐに開始できます。準備ができたら最初の請求書を支払ってください。ここで支払うかダウンロードでき、メールは不要です。"
-downloadAgreement = "署名済み契約書をダウンロード"
 downloadInvoice = "請求書をダウンロード"
-eyebrow = "支払い"
-title = "サブスクリプションが作成されました"
 viewInvoice = "請求書を表示して支払う"
 
 [portal.procurement.review]
 acceptCta = "見積を承諾"
 annual = "年間料金（1 年目）"
 downloadCta = "見積をダウンロード"
+oneTime = "一括"
 poNumber = "発注書: {{po}}"
 renewal = "期間終了後は {{amount}}/年で更新（+{{pct}}% CPI）"
 tcv = "{{years}} 年契約、前払い一括: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "延長すると7日追加され、担当ソリューションエンジニアに通知されます。"
 bodyMaxed = "すべての延長を使用しました。さらに時間が必要な場合は、担当ソリューションエンジニアにご相談ください。"
-cancel = "トライアルをキャンセル"
 extend = "7日延長"
 maxed = "上限に達しました"
 subtitle = "無料トライアルは {{date}} まで有効です。カードは不要です。"
 title = "Enterprise トライアル"
+
+[portal.procurement.validation]
+confirm = "組織を代表して署名する権限があることを確認してください。"
+email = "有効なメールアドレスを入力してください。"
+eula = "EULA に同意して続行してください。"
+required = "必須項目です。"
+seats = "試用する人数を入力してください。"
+volume = "年間に処理予定の PDF 数を入力してください。"
 
 [portal.review]
 subtitle = "ポリシーの実行やチームのエディターから、確認が必要なもの。"
@@ -10735,6 +11358,7 @@ subtitle = "Stirling にドキュメントを取り込む再利用可能な入�
 title = "ソース"
 
 [portal.sources.actions]
+connectDestination = "宛先に接続"
 connectSource = "ソースを接続"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "処理済みドキュメントの送信先を選択します
 comingSoon = "近日対応予定"
 comingSoonHeading = "近日対応予定"
 create = "ソースを作成"
+createDestination = "宛先を作成"
+createDestinationTitle = "宛先を追加"
 createTitle = "ソースを接続"
 delete = "削除"
 editTitle = "ソースを編集"
@@ -10757,6 +11383,41 @@ save = "変更を保存"
 description = "フォルダー自動化は、管理者が許可したフォルダーのみ使用できます。フォルダーアクセス設定で追加してから、もう一度お試しください。"
 openSettings = "フォルダーアクセス設定"
 title = "このフォルダーは許可されていません"
+
+[portal.sources.cloudFields.account]
+connect = "アカウントを接続"
+connectAnother = "別のアカウントを接続"
+connectFailed = "アカウントを接続できませんでした。もう一度お試しください。改善しない場合は管理者にアプリ登録を確認してもらってください。"
+label = "アカウント"
+placeholder = "アカウントを選択"
+reconnect = "再度サインイン"
+unavailable = "このサーバーでは自分のアカウントの接続が無効です。代わりに組織の接続を選択してください。"
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "このサーバーでは個人アカウントが無効です。"
+helperText = "自分のアカウントは自分が開ける範囲にアクセスでき、管理者は不要です。組織の接続は人が退職しても動作し、管理者が設定した範囲のみにアクセスします。"
+label = "サインイン方法"
+
+[portal.sources.cloudFields.authMode.options]
+account = "自分のアカウント"
+organisation = "組織の接続"
+
+[portal.sources.cloudFields.connection]
+helperText = "管理者が「統合」で設定。これを使うすべてのロケーションで共有されます。"
+label = "組織接続"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "フォルダのリンクを貼り付けるか、マイドライブの最上位からのパスを入力します。空欄の場合はマイドライブの最上位になります。フォルダは既に存在している必要があります。"
+placeholder = "フォルダのリンク、または Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "OneDrive 内のフォルダ、またはフォルダのリンク（OneDrive で「リンクをコピー」）を貼り付けます。空欄の場合は OneDrive の最上位になります。フォルダは既に存在している必要があります。"
+placeholder = "Scans/Inbox、またはフォルダのリンク"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "自分のアカウントでは、フォルダのリンク（SharePoint で「リンクをコピー」）を貼り付けます。組織接続では、ライブラリ内のフォルダを指定します。空欄の場合はライブラリのルートになります。フォルダは既に存在している必要があります。"
+organisationPlaceholder = "フォルダのリンク、または Scans/Inbox"
+placeholder = "フォルダのリンク"
 
 [portal.sources.delete]
 body = "「{{name}}」を削除しますか？この操作は元に戻せません。これを参照しているポリシーは更新が必要になります。"
@@ -10821,6 +11482,7 @@ label = "メール受信箱"
 [portal.sources.types.folder]
 description = "サーバー上のディレクトリを監視して新しいドキュメントを検出します。"
 label = "フォルダー"
+outputDescription = "結果をサーバー上のディレクトリに保存します。"
 
 [portal.sources.types.folder.fields.directory]
 helperText = "新しいファイルを監視するフォルダーの絶対パスです。"
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "共有 Google Drive フォルダーからドキュメントを取得します。"
 label = "Google Drive"
+outputDescription = "結果を Google Drive のフォルダに保存します。"
 
 [portal.sources.types.network]
 description = "新しいドキュメントがないか SMB ネットワーク共有を監視します。"
@@ -10867,10 +11530,12 @@ label = "ネットワークドライブ"
 [portal.sources.types.onedrive]
 description = "新しいドキュメントがないか OneDrive フォルダーを監視します。"
 label = "OneDrive"
+outputDescription = "結果を OneDrive のフォルダに保存します。"
 
 [portal.sources.types.s3]
 description = "Amazon S3 または S3 互換バケットからドキュメントを取得します。"
 label = "Amazon S3"
+outputDescription = "結果を Amazon S3 または S3 互換バケットに保存します。"
 
 [portal.sources.types.s3.fields.connection]
 helperText = "バケットと認証情報を含む保存済み接続です。これを使用するすべてのソースとパイプライン出力で共有されます。"
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "SharePoint ドキュメントライブラリからドキュメントを取得します。"
 label = "SharePoint"
+outputDescription = "結果を SharePoint のドキュメント ライブラリ フォルダに保存します。"
 
 [portal.sources.types.unknown]
 label = "ソース"
@@ -11074,6 +11740,14 @@ waiting = "キューに登録済み ..."
 name = "Google Drive"
 scope = "ファイルのインポート"
 
+[provider.googledrive.accountScope]
+description = "drive はすべてのファイルにアクセス（公開アプリには Google の検証が必要）; drive.file はユーザーが選んだファイルまたは Stirling が作成したファイルのみ"
+label = "Drive アクセス"
+
+[provider.googledrive.allowAccountConnections]
+description = "編集者とそのパイプラインで 1 回のサインインを共有します。オフにすると組織接続のみを許可します。"
+label = "ユーザーが自分のアカウントを接続できるようにする"
+
 [provider.googledrive.apiKey]
 description = "Google Cloud Console の Google Picker API 用 Google API キー"
 label = "API キー"
@@ -11086,13 +11760,65 @@ label = "アプリ ID"
 description = "Google Cloud Console の Google OAuth 2.0 クライアント ID"
 label = "クライアント ID"
 
+[provider.googledrive.clientSecret]
+description = "ユーザーがパイプライン用に自分の Google アカウントを接続できるようにします。下記のリダイレクト URI を OAuth クライアントの承認済みリダイレクト URI に追加してください。"
+label = "クライアントシークレット"
+
 [provider.googledrive.enabled]
 description = "ユーザーが Google Drive から直接ファイルをインポートできるようにする"
 label = "Google Drive ファイルピッカーを有効化"
 
 [provider.googledrive.errors]
+connectFailed = "Google アカウントに接続できませんでした。Settings > Connected accounts から再試行してください。"
 notConfigured = "Google Drive が設定されていません"
 pickerFailed = "Google Drive picker を開けませんでした"
+
+[provider.googledrive.redirectUri]
+description = "これを Google Cloud Console の OAuth クライアントの承認済みリダイレクト URI として追加してください。"
+label = "リダイレクト URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "ファイルとパイプライン"
+
+[provider.microsoft.allowAccountConnections]
+description = "編集者とそのパイプラインで 1 回のサインインを共有します。オフにすると組織接続のみを許可します。"
+label = "ユーザーが自分のアカウントを接続できるようにする"
+
+[provider.microsoft.allowEditorSaves]
+description = "オフにすると編集内容は Stirling 内に保持されます。OneDrive から開いたファイルはダウンロードされるようになり、サーバーは OneDrive への保存を拒否します。"
+label = "エディターから OneDrive へ保存を許可"
+
+[provider.microsoft.clientId]
+description = "1 つの Microsoft Entra のアプリ登録から取得します。"
+label = "アプリケーション (クライアント) ID"
+
+[provider.microsoft.clientSecret]
+description = "接続済みアカウントに必要です。サーバーに保持されます。"
+label = "クライアントシークレット"
+
+[provider.microsoft.enabled]
+description = "パイプラインで OneDrive と SharePoint を使えるようにします"
+label = "OneDrive と SharePoint を有効化"
+
+[provider.microsoft.pickerRedirectUri]
+description = "エディターからのサインイン用に、同じアプリ登録に Single-page application のリダイレクト URI としてこれを追加してください。"
+label = "Single-page application リダイレクト URI"
+
+[provider.microsoft.redirectUri]
+description = "これを Entra のアプリ登録の Web リダイレクト URI として追加してください。"
+label = "リダイレクト URI"
+
+[provider.microsoft.setupSteps]
+connect = "保存して再起動し、Connected accounts でアカウントを接続してください。"
+permissions = "職場および学校アカウントでファイル ピッカーを開けるように、Microsoft Graph の委任されたアクセス許可 Files.ReadWrite.All と Files.Read.All、SharePoint の委任されたアクセス許可 MyFiles.Read と AllSites.Read を追加してください。"
+redirects = "以下の 2 つのリダイレクト URI を追加してください。1 つは Web、もう 1 つは Single-page application として追加します。"
+register = "Microsoft Entra 管理センターでアプリを登録してください。個人用 OneDrive を使用する場合は、個人用 Microsoft アカウントを許可してください。"
+secret = "クライアント シークレットを作成し、その値とアプリのクライアント ID を以下に貼り付けてください。"
+
+[provider.microsoft.tenant]
+description = "work・school・personal 兼用は common、work と school のみは organizations、または特定の組織を許可するテナント ID"
+label = "ディレクトリ (テナント) ID"
 
 [provider.oauth2.generic]
 name = "汎用 OAuth2"
@@ -11195,6 +11921,19 @@ label = "スコープ"
 description = "ユーザー名として使用するフィールド（email、name、given_name、family_name、preferred_username）"
 label = "ユーザー名として使用"
 
+[provider.onedrive]
+pickerLoading = "OneDrive に接続中..."
+pickerTitle = "OneDrive からファイルを選択"
+
+[provider.onedrive.errors]
+connectFailed = "Microsoft アカウントに接続できませんでした。Settings > Connected accounts から再試行してください。"
+notConfigured = "OneDrive が構成されていません"
+pickerFailed = "OneDrive を開けませんでした"
+popupBlocked = "お使いのブラウザーが Microsoft のサインイン ウィンドウをブロックしました。このサイトのポップアップを許可して、もう一度お試しください。"
+reconnect = "Microsoft アカウントで再度サインインが必要です。Settings > Connected accounts で再接続してください。"
+serverError = "OneDrive または Stirling サーバーで問題が発生しました。もう一度お試しください。繰り返し発生する場合は管理者にお問い合わせください。"
+unreachable = "OneDrive に接続できませんでした。接続を確認して、もう一度お試しください。"
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO（SAML）"
@@ -11293,6 +12032,13 @@ notifications = "通知"
 processor = "プロセッサー"
 reader = "リーダー"
 signInToUse = "使用するにはサインインしてください"
+
+[quickNav.accountMenu]
+localMode = "ローカルモード"
+server = "サーバー設定"
+settings = "設定"
+signedOut = "未サインイン"
+signIn = "サインイン"
 
 [read]
 tags = "表示,開く,表示,読む,ビューア,PDF ビューア,PDF リーダー,PDF を開く,PDF を表示,PDF を表示,プレビュー,閲覧"
@@ -11811,6 +12557,13 @@ title = "PDFをサニタイズ"
 [sanitizePdf]
 tags = "クリーン,安全,保護,脅威除去"
 
+[saveFile.menu]
+more = "その他の保存オプション"
+saveCopy = "コピーを保存..."
+
+[saveFile.toolbar]
+mixed = "すべて保存"
+
 [scalePages]
 tags = "サイズ変更,調整,拡大縮小,ページサイズ,ページをサイズ変更,ページを拡大縮小,サイズ変更,サイズ調整,拡大,ページを縮小,ページに合わせる,A4,レターサイズ"
 title = "ページの縮尺の調整"
@@ -11905,6 +12658,162 @@ showTools = "利用不可のツールを表示 ▾"
 title = "Stirling-PDF サーバーに到達できません"
 toolNotAvailableLocally = "Stirling-PDF サーバーがオフラインで、ローカルバックエンドでは「{{endpoint}}」を利用できません。"
 
+[serverSetup]
+back = "戻る"
+collapse = "「{{setting}}」の設定を非表示"
+configured = "設定済み"
+continue = "続行"
+dialogLabel = "サーバーのセットアップ"
+expand = "「{{setting}}」の設定を表示"
+finishSetup = "セットアップを完了"
+loadErrorSubtitle = "開始するには、サーバーの現在の設定が必要です。"
+loadErrorTitle = "設定を読み込めませんでした"
+off = "オフ"
+on = "オン"
+save = "保存"
+stepCount = "全{{total}}中{{current}}"
+
+[serverSetup.account]
+failed = "詳細を保存できませんでした。サーバーに到達可能か確認して、もう一度お試しください。"
+save = "保存して続行"
+signIn = "サインイン"
+signInAgainSubtitle = "引き続き進めるには、新しいユーザー名とパスワードでサインインし直してください。"
+signInAgainTitle = "詳細を保存しました"
+subtitle = "今後のサインイン方法を選択します。"
+title = "アカウントを設定"
+updating = "更新中"
+updatingSubtitle = "少々お待ちください。"
+updatingTitle = "詳細を更新中"
+username = "ユーザー名"
+usernameHelp = "サインインに使用します。メールアドレスでも構いません。"
+
+[serverSetup.addresses]
+backendUrl = "サーバーアドレス"
+backendUrlHelp = "サインインプロバイダーがユーザーを戻す先。通常は Web アドレスと同じです。"
+frontendUrl = "Web アドレス"
+frontendUrlHelp = "ユーザーが Stirling PDF を開く場所。メール、共有リンク、QR コードで使用されます。"
+subtitle = "ユーザーとサインインプロバイダーがこのサーバーに到達する方法。"
+title = "アドレス"
+
+[serverSetup.ai]
+apiKey = "API キー"
+apiKeyHelp = "空のままにすると、AI エンジンに既にあるキーを使用します。"
+baseUrl = "Base URL"
+engineUrl = "AI エンジンのアドレス"
+fastModel = "高速モデル"
+label = "セルフホスト AI"
+provider = "モデルプロバイダー"
+providerCustom = "OpenAI 互換"
+smartModel = "高品質モデル"
+stirling = "Stirling AI"
+subtitle = "ドキュメントの質問、自動編集、AI エージェント。"
+title = "AI"
+
+[serverSetup.analytics]
+accept = "同意して続行"
+acceptFinish = "同意して完了"
+changeLater = "{{path}} でいつでも変更できます。"
+decline = "拒否して続行"
+declineFinish = "拒否して完了"
+learnMore = "収集内容"
+note = "このサーバーの利用状況データを当社と共有して、Stirling PDF の改善にご協力ください。ファイルやその内容を収集することはありません。"
+title = "サーバー分析"
+
+[serverSetup.documents]
+label = "ドキュメントの質問"
+model = "埋め込みモデル"
+provider = "埋め込みプロバイダー"
+providerHelp = "ドキュメントのテキストを、質問に回答する検索インデックスに変換します。"
+
+[serverSetup.email]
+from = "差出人アドレス"
+host = "SMTP ホスト"
+label = "メール送信"
+password = "パスワード"
+port = "ポート"
+subtitle = "招待、署名依頼、共有のために使用します。"
+title = "メール"
+username = "ユーザー名"
+
+[serverSetup.error]
+email = "メールアドレスを入力してください"
+issuerUnreachable = "この発行者に到達できませんでした。アドレスと、このサーバーから到達可能かを確認してください。"
+passwordIncorrect = "パスワードが正しくありません"
+passwordLength = "8 文字以上を使用してください"
+passwordMismatch = "パスワードが一致しません"
+passwordRejected = "サーバーがこのパスワードを受け付けませんでした。別のものをお試しください。"
+passwordUnchanged = "現在とは異なるパスワードを選択してください"
+port = "1〜65535 のポートを入力してください"
+providerName = "英数字、ハイフン、アンダースコアのみ使用してください"
+required = "必須です"
+url = "http:// または https:// から始まる完全なアドレスを入力してください"
+username = "3〜50 文字の英数字または . _ + - @、またはメールアドレスを使用してください"
+usernameTaken = "このユーザー名は既に使用されています"
+
+[serverSetup.files]
+sharing = "ファイル共有"
+sharingOffWarning = "共有をオフにすると、既存の共有リンクは動作しなくなります。"
+storage = "ファイルを保存"
+storageOffWarning = "保存をオフにすると、サーバーに保存されたファイルは開けなくなります。"
+subtitle = "ファイルの保存と共有を管理します。"
+title = "ファイル"
+
+[serverSetup.finish]
+errorNote = "サーバーに到達可能か、管理者としてサインインしたままかを確認してください。"
+errorSubtitle = "何も再起動されませんでした。"
+errorTitle = "設定を保存できませんでした"
+manualSubtitle = "このサーバーは自動で再起動できません。適用するにはコンテナまたはサービスを再起動してください。"
+manualTitle = "設定を保存しました"
+restartFailedSubtitle = "サーバーは再起動しませんでした。適用するにはコンテナまたはサービスを再起動してください。"
+restartingSubtitle = "通常 1 分以内に復帰し、復帰するとこのページは再読み込みされます。"
+restartingTitle = "サーバーを再起動しています"
+retry = "再試行"
+saving = "保存中"
+savingSubtitle = "少々お待ちください。"
+savingTitle = "設定を保存中"
+
+[serverSetup.language]
+auto = "各ブラウザーに合わせる"
+label = "既定の言語"
+subtitle = "新しい訪問者に最初に表示されます。"
+title = "言語"
+
+[serverSetup.mcp]
+label = "MCP サーバー"
+
+[serverSetup.password]
+confirm = "新しいパスワードの確認"
+current = "現在のパスワード"
+new = "新しいパスワード"
+
+[serverSetup.signIn]
+clientId = "クライアント ID"
+clientSecret = "クライアントシークレット"
+issuer = "Issuer URL"
+label = "サインイン方法"
+oidc = "その他の OpenID Connect"
+password = "ユーザー名とパスワード"
+providerName = "プロバイダー名"
+providerNameHelp = "サインインボタンに表示されます。例: okta や entra。"
+redirectNote = "プロバイダーにこのリダイレクト URI を追加してください:"
+subtitle = "チームのサインイン方法。"
+title = "サインイン"
+
+[serverSetup.signingIn]
+button = "サインイン中"
+title = "既定の資格情報でサインイン中"
+
+[serverSetup.start]
+custom = "カスタム"
+quick = "クイックスタート"
+setupLabel = "セットアップ"
+subtitle = "数ステップでチーム向けに設定できます。"
+title = "サーバーが起動しました"
+
+[serverSetup.summary]
+subtitle = "要点を確認してください。その他は既定のままです。"
+title = "クイックスタート"
+
 [session]
 expired = "セッションが期限切れです。ページを更新してもう一度お試しください。"
 
@@ -11939,6 +12848,10 @@ mcp = "MCPサーバー"
 privacy = "プライバシー"
 storageSharing = "ファイルストレージと共有"
 systemSettings = "システム設定"
+
+[settings.connectedAccounts]
+description = "パイプライン用に自分の OneDrive、SharePoint、Google Drive を使用します。"
+title = "接続済みアカウント"
 
 [settings.connectedInstances]
 confirmBody = "これにより、インスタンスの Stirling Cloud 内のチームへのアクセスが取り消されます。ローカルファイルは削除されず、既に記録された使用量も削除されません。再度接続するには、インスタンスで元の接続手順に従ってください。"
@@ -11992,6 +12905,13 @@ selfhosted = "セルフホスト"
 apiKeys = "APIキー"
 apiKeysDescription = "スクリプトや連携から Stirling API を呼び出すための個人用キー。"
 title = "開発者"
+
+[settings.feedback]
+label = "フィードバック"
+
+[settings.feedback.send]
+description = "Stirling チームに問題の報告や改善の提案を送信します。"
+label = "フィードバックを送信"
 
 [settings.general]
 autoUnzip = "API 応答を自動解凍"
@@ -12058,6 +12978,7 @@ checkForUpdates = "更新を確認"
 currentBackendVersion = "現在のバックエンドバージョン"
 currentFrontendVersion = "現在のフロントエンドバージョン"
 description = "更新の確認とバージョン情報の表示"
+descriptionManaged = "バージョン情報を表示"
 latestVersion = "最新バージョン"
 managedByAdmin = "管理者により管理されています"
 modeAuto = "自動的に更新をインストール"
@@ -12135,15 +13056,24 @@ title = "法的文書"
 backendDescription = "このサーバーにバンドルされている backend 依存関係のライセンス。"
 backendLabel = "Backend ライセンス"
 backendTitle = "Backend サードパーティライセンス"
+clearSearch = "検索をクリア"
 empty = "依存関係が見つかりませんでした。"
 frontendDescription = "リリースビルドにバンドルされている frontend 依存関係のライセンス。"
 frontendLabel = "Frontend ライセンス"
 frontendTitle = "Frontend サードパーティライセンス"
 license = "ライセンス"
+licenseAbout = "詳細"
+licenseAboutCompound = "{{short}} の詳細"
+licenseAboutTitle = "{{short}} の詳細"
 listDescription = "リストは、リリースバンドルまたは backend エンドポイントから UI に直接表示されます。"
 listTitle = "バンドルされた依存関係"
 loadError = "サードパーティライセンスの読み込みに失敗しました"
 module = "モジュール"
+noMatch = "一致する依存関係はありません。"
+searchPlaceholder = "依存関係を検索"
+showingCount = "{{count}} 件の依存関係"
+showingCount_one = "{{count}} 件の依存関係"
+showingCount_other = "{{count}} 件の依存関係"
 version = "バージョン"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "メールアドレスを入力してください"
 emptyPassword = "パスワードを入力してください"
 emptyUsername = "ユーザー名を入力してください"
 oauthFailed = "OAuth ログインに失敗しました。もう一度お試しください。"
+openResetFailed = "パスワードをリセットするためにブラウザーを開けませんでした。"
 
 [setup.saas]
 title = "Stirling にサインイン"
@@ -12703,6 +13634,11 @@ bullet3 = "非表示の署名でも暗号学的な検証が提供されます"
 description = "署名をドキュメント上に表示するか、非表示で埋め込むかを制御します。"
 title = "署名の表示"
 
+[signedPdf]
+editsBlocked = "この PDF はデジタル署名されています。署名付き PDF の変更はオフになっています。表示や印刷、別形式への変換、再署名は可能です。"
+editsBlockedStatus = "署名済み: 編集はブロックされています"
+editsBlockedTitle = "署名済み PDF は変更できません"
+
 [signingDetail]
 allSigned = "全員が署名しました。ドキュメントを確認してから確定してください。"
 awaitingOwner = "所有者は準備ができ次第、ドキュメントを確定します。"
@@ -13110,7 +14046,6 @@ noLinks = "アクティブな共有リンクはまだありません。"
 noSharedUsers = "まだアクセス権を持つユーザーはいません。"
 openInApp = "Stirling PDF で開く"
 ownerLabel = "所有者"
-ownerUnknown = "不明"
 removeLink = "リンクを削除"
 removeUser = "削除"
 requiresLogin = "この共有ファイルはログインが必要です。"
@@ -13249,6 +14184,11 @@ remove = "削除"
 roleColumn = "役割"
 title = "チームメンバー"
 
+[teamWelcome]
+invite = "ユーザーを招待"
+message = "チームを招待して、共同作業を始めましょう。"
+title = "Team プランは有効です。"
+
 [textAlign]
 center = "中央揃え"
 left = "左揃え"
@@ -13290,7 +14230,6 @@ toggleDetails = "詳細を切り替え"
 
 [tool]
 endpointUnavailable = "このツールはサーバーで利用できません。"
-endpointUnavailableClickable = "このモードでは利用できません。クリックしてサインイン。"
 filesLoading = "ファイルを読み込み中です。しばらくお待ちください。"
 filesLoadingProgress = "{{loaded}} / {{total}} 件のファイルを読み込み中..."
 invalidParams = "必須の設定を入力してください。"
@@ -13298,6 +14237,8 @@ noFiles = "開始するにはファイルを追加してください。"
 scopeFiles = "ファイル"
 scopeThisFile = "このファイル"
 selectFilesHint = "このツールを実行するには、アクティブなファイルでファイルを選択してください"
+signInRequired = "Stirling アカウントが必要です。続行するにはサインインしてください。"
+signInToUse = "使用するにはサインインしてください"
 singleFileScope = "適用対象: {{fileName}} のみ"
 viewerMode = "複数のファイルを追加するにはファイルエディターに切り替えてください。"
 
@@ -13790,6 +14731,7 @@ coverPageView = "表紙ページを個別に表示"
 disableColorFilter = "カラーフィルターを無効化"
 documentUpdated = "ドキュメントが更新されました"
 dualPageView = "見開き表示"
+editText = "テキストを編集"
 enableDarkFilter = "ダークフィルターを有効化"
 enableSepiaFilter = "セピアフィルターを有効化"
 engineLoadError = "PDF ビューアーエンジンの初期化に失敗しました"
@@ -14158,8 +15100,10 @@ closeAll = "すべてのファイルを閉じる"
 closePdf = "PDF を閉じる"
 deselectAll = "すべての選択を解除"
 downloadAll = "すべてダウンロード"
+editText = "テキストを編集"
 exitAnnotations = "注釈モードを終了"
 exitRedaction = "墨消しモードを終了"
+findReplace = "検索と置換"
 formFill = "フォームエディター"
 hideToolbar = "ツールバーを非表示"
 moreActions = "その他のアクション"

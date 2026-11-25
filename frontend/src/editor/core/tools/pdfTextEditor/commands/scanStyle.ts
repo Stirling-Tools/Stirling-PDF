@@ -15,6 +15,7 @@ import {
   emitTextLine,
   measureObjSpanPt,
   removeAndDestroyObject,
+  withoutDroppedChars,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import { advanceWidth } from "@editor/tools/pdfTextEditor/util/fontMetrics";
@@ -55,18 +56,20 @@ export function spanOf(
   size: number,
 ): number {
   const sheet = doc.scratchPageFor(page);
-  const ptrs = emitTextLine({
-    doc: sheet.doc,
-    page: sheet.page,
-    text,
-    x: 0,
-    y: 0,
-    fontSize: size,
-    fill: BLACK,
-    originalFontPtr: 0,
-    fallbackFamily: family,
-    tags: uniformTags([]),
-  });
+  const ptrs = withoutDroppedChars(() =>
+    emitTextLine({
+      doc: sheet.doc,
+      page: sheet.page,
+      text,
+      x: 0,
+      y: 0,
+      fontSize: size,
+      fill: BLACK,
+      originalFontPtr: 0,
+      fallbackFamily: family,
+      tags: uniformTags([]),
+    }),
+  );
   const span = measureObjSpanPt(doc.module, ptrs);
   for (const p of ptrs)
     removeAndDestroyObject(doc.module, sheet.page.pagePtr, p);

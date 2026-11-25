@@ -72,10 +72,9 @@ export function TrackPageViewModal({
     }
     void (async () => {
       try {
-        const buffer = await file.arrayBuffer();
         const [result] = await thumbnailGenerationService.generateThumbnails(
           page.sourceFileId,
-          buffer,
+          file,
           [page.sourcePageNumber],
           { scale: PREVIEW_SCALE, quality: 0.92 },
         );
