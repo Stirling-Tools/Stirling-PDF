@@ -24,7 +24,10 @@ test("the view rotation returns when the text editor closes", async ({
 }) => {
   test.setTimeout(120_000);
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE_PDF);
   await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
     timeout: 30_000,
   });
@@ -54,7 +57,7 @@ test("a view rotation is not carried onto another document", async ({
   test.setTimeout(120_000);
   await page.goto("/editor");
   await page
-    .locator('input[type="file"]')
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
     .first()
     .setInputFiles([SAMPLE_PDF, OTHER_PDF]);
   const rows = page.locator(".file-sidebar-file-item");

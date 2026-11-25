@@ -280,3 +280,56 @@ describe("operationRouter — Office Convert needs an account", () => {
     ).resolves.toBe("http://localhost:62994");
   });
 });
+
+describe("operationRouter — server signing never falls back", () => {
+  const certSign = "/api/v1/security/cert-sign";
+
+  beforeEach(() => {
+    vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue(
+      "selfhosted",
+    );
+    vi.mocked(connectionModeService.getServerConfig).mockResolvedValue({
+      url: "https://selfhosted.test/",
+    });
+  });
+
+  afterEach(() => {
+    vi.mocked(selfHostedServerMonitor.getSnapshot).mockReturnValue({
+      status: "online",
+      isOnline: true,
+      serverUrl: "https://selfhosted.test",
+    });
+  });
+
+  test("fails instead of using the bundled backend when the server is offline", async () => {
+    vi.mocked(selfHostedServerMonitor.getSnapshot).mockReturnValue({
+      status: "offline",
+      isOnline: false,
+      serverUrl: "https://selfhosted.test",
+    });
+    await expect(operationRouter.getBaseUrl(certSign)).resolves.toBe(
+      "http://localhost:62994",
+    );
+    await expect(
+      operationRouter.getServerOnlyBaseUrl(certSign),
+    ).rejects.toThrow("Your Stirling-PDF server is offline");
+  });
+
+  test("uses the server while it is online", async () => {
+    vi.mocked(selfHostedServerMonitor.getSnapshot).mockReturnValue({
+      status: "online",
+      isOnline: true,
+      serverUrl: "https://selfhosted.test",
+    });
+    await expect(operationRouter.getServerOnlyBaseUrl(certSign)).resolves.toBe(
+      "https://selfhosted.test",
+    );
+  });
+
+  test("uses the bundled backend's own certificate in local mode", async () => {
+    vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("local");
+    await expect(operationRouter.getServerOnlyBaseUrl(certSign)).resolves.toBe(
+      "http://localhost:62994",
+    );
+  });
+});

@@ -41,6 +41,7 @@ import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities.Pkcs11LibraryInfo;
 import stirling.software.SPDF.pdf.signature.DistinguishedNames;
 import stirling.software.SPDF.service.macos.MacKeychainProvider;
+import stirling.software.SPDF.service.windows.WindowsKeyLocation;
 import stirling.software.common.util.ExceptionUtils;
 
 /**
@@ -468,6 +469,8 @@ public class HardwareKeyStoreService {
     private static Boolean onToken(KeyStore ks, String alias, String source) throws Exception {
         return switch (source) {
             case SOURCE_MACOS_KEYCHAIN -> MacKeychainProvider.isOnToken(ks.getKey(alias, null));
+            case SOURCE_WINDOWS_STORE ->
+                    WindowsKeyLocation.isOnToken((X509Certificate) ks.getCertificate(alias));
             default -> null;
         };
     }

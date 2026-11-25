@@ -361,13 +361,14 @@ class CertSignStampPlacementTest {
                 new CertSignController.CreateSignature(keystore, "password".toCharArray());
         assertEquals(
                 SignatureOptions.DEFAULT_SIGNATURE_SIZE,
-                CertSignController.signatureSize(instance));
+                CertSignController.signatureReservation(instance.getCertificateChain()));
         X509Certificate leaf = (X509Certificate) instance.getCertificateChain()[0];
         Certificate[] longChain = new Certificate[12];
         java.util.Arrays.fill(longChain, leaf);
         instance.setCertificateChain(longChain);
         assertTrue(
-                CertSignController.signatureSize(instance) >= 12 * leaf.getEncoded().length,
+                CertSignController.signatureReservation(instance.getCertificateChain())
+                        >= 12 * leaf.getEncoded().length,
                 "reservation must cover every certificate");
     }
 

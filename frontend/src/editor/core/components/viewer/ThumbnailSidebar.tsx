@@ -7,16 +7,22 @@ import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { Icon } from "@editor/ui/Icon";
 import "@editor/components/viewer/SidebarBase.css";
 
+/** A narrow strip: it only has to show which page is which. */
+export const THUMBNAIL_SIDEBAR_WIDTH_REM = 7.5;
+
 interface ThumbnailSidebarProps {
   visible: boolean;
   onToggle: () => void;
   activeFileId?: string | null;
+  /** Room left at the edge for the panel the strip sits beside. */
+  rightOffsetRem?: number;
 }
 
 export function ThumbnailSidebar({
   visible,
   onToggle,
   activeFileId,
+  rightOffsetRem = 0,
 }: ThumbnailSidebarProps) {
   const { t } = useTranslation();
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
@@ -161,10 +167,10 @@ export function ThumbnailSidebar({
           className="sidebar-base"
           style={{
             position: "fixed",
-            right: 0,
+            right: `${rightOffsetRem}rem`,
             top: 0,
             bottom: 0,
-            width: "15rem",
+            width: `${THUMBNAIL_SIDEBAR_WIDTH_REM}rem`,
             zIndex: 998,
           }}
         >
@@ -215,7 +221,20 @@ export function ThumbnailSidebar({
                   (_, pageIndex) => (
                     <Box
                       key={pageIndex}
+                      role="button"
+                      tabIndex={0}
+                      aria-current={
+                        scrollState.currentPage === pageIndex + 1
+                          ? "page"
+                          : undefined
+                      }
                       onClick={() => handlePageClick(pageIndex)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handlePageClick(pageIndex);
+                        }
+                      }}
                       style={{
                         cursor: "pointer",
                         borderRadius: "8px",
@@ -269,8 +288,8 @@ export function ThumbnailSidebar({
                       ) : thumbnails[pageIndex] === "error" ? (
                         <div
                           style={{
-                            width: "11.5rem",
-                            height: "15rem",
+                            width: "100%",
+                            aspectRatio: "11.5 / 15",
                             backgroundColor: "var(--color-red-50)",
                             border: "1px solid var(--color-red-200)",
                             borderRadius: "4px",
@@ -286,8 +305,8 @@ export function ThumbnailSidebar({
                       ) : (
                         <div
                           style={{
-                            width: "11.5rem",
-                            height: "15rem",
+                            width: "100%",
+                            aspectRatio: "11.5 / 15",
                             backgroundColor: "var(--c-surface-sunken)",
                             border: "1px solid var(--c-border-subtle)",
                             borderRadius: "4px",
