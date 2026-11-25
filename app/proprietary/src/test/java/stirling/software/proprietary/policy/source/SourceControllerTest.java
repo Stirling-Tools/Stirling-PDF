@@ -24,7 +24,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.document.conditions.Condition;
 import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
@@ -40,7 +39,7 @@ import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
-import stirling.software.proprietary.policy.webhook.WebhookSpool;
+import stirling.software.proprietary.policy.webhook.WebhookDeliveries;
 import stirling.software.proprietary.util.SecretMasker;
 
 /**
@@ -53,6 +52,7 @@ class SourceControllerTest {
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyStore policyStore = new InProcessPolicyStore();
     private PolicyTriggerManager triggerManager;
+    private WebhookDeliveries webhookDeliveries;
     private SourceController controller;
     private SourceController webhookController;
     private final PolicyOutputSink vectorSink = mock(PolicyOutputSink.class);
@@ -104,8 +104,8 @@ class SourceControllerTest {
                         properties,
                         List.of(folderInput),
                         List.of(vectorSink));
-        WebhookInputSource webhookInput =
-                new WebhookInputSource(new WebhookSpool(tempDir), mock(FileReadinessChecker.class));
+        webhookDeliveries = mock(WebhookDeliveries.class);
+        WebhookInputSource webhookInput = new WebhookInputSource(webhookDeliveries);
         webhookController =
                 new SourceController(
                         sourceStore,
@@ -199,6 +199,27 @@ class SourceControllerTest {
         assertTrue(sourceStore.get(source.id()).isEmpty());
         // A deletable source is referenced by no policy, so no watch registration can change.
         verify(triggerManager, never()).notifyPoliciesChanged();
+    }
+
+    @Test
+    void deletingAWebhookSourceDiscardsItsDeliveries() {
+        Source created =
+                webhookController
+                        .save(
+                                new Source(
+                                        null,
+                                        "Partner uploads",
+                                        "webhook",
+                                        Map.of(),
+                                        true,
+                                        null,
+                                        null))
+                        .getBody();
+        String webhookId = String.valueOf(created.options().get("webhookId"));
+
+        assertEquals(204, webhookController.delete(created.id()).getStatusCode().value());
+
+        verify(webhookDeliveries).discardAll(webhookId);
     }
 
     @Test

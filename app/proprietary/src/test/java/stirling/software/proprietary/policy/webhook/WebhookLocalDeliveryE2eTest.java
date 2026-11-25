@@ -1,20 +1,19 @@
 package stirling.software.proprietary.policy.webhook;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.input.WebhookInputSource;
@@ -32,6 +30,7 @@ import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.WebhookTrigger;
+import stirling.software.proprietary.storage.provider.LocalStorageProvider;
 
 class WebhookLocalDeliveryE2eTest {
 
@@ -49,7 +48,6 @@ class WebhookLocalDeliveryE2eTest {
 
     @BeforeEach
     void setUp() {
-        WebhookSpool spool = new WebhookSpool(tempDir.resolve("spool"));
         SourceStore sourceStore = new InProcessSourceStore();
         sourceStore.save(
                 new Source(
@@ -58,36 +56,41 @@ class WebhookLocalDeliveryE2eTest {
                         "webhook",
                         Map.of("webhookId", WEBHOOK_ID, "signingSecret", SECRET, "mode", "consume"),
                         true,
-                        "owner",
+                        WebhookTestUsers.OWNER,
                         null));
+        WebhookDeliveries deliveries =
+                new WebhookDeliveries(
+                        new LocalStorageProvider(tempDir),
+                        new InProcessWebhookDeliveryStore(),
+                        WebhookTestUsers.knowingOnly(WebhookTestUsers.owner()));
         trigger = mock(WebhookTrigger.class);
-        FileReadinessChecker readiness = mock(FileReadinessChecker.class);
-        when(readiness.isReady(any())).thenReturn(true);
         receiver =
                 new WebhookReceiverController(
-                        sourceStore, spool, trigger, new ApplicationProperties());
-        inputSource = new WebhookInputSource(spool, readiness);
+                        sourceStore, deliveries, trigger, new ApplicationProperties());
+        inputSource = new WebhookInputSource(deliveries);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
     }
 
     @Test
-    void aDeliveryIsSpooledFiresTheTriggerThenIsReadAndConsumed() throws IOException {
-        byte[] body = "a pdf".getBytes(StandardCharsets.UTF_8);
+    void aDeliveryIsStoredFiresTheTriggerThenIsReadAndConsumed() throws IOException {
+        byte[] body = TestPdfs.minimal();
         String signature = WebhookSignatures.sign(SECRET, body);
 
         var response = receiver.receive(WEBHOOK_ID, signature, "invoice.pdf", request(body));
         assertThat(response.getStatusCode().value()).isEqualTo(202);
         verify(trigger).fireForWebhook(WEBHOOK_ID);
+        assertThat(storedFiles()).isEqualTo(1);
 
         List<ResolvedInput> work = inputSource.resolve(spec(), ctx);
         assertThat(work).hasSize(1);
         assertThat(work.get(0).inputs().primary().get(0).getFilename()).isEqualTo("invoice.pdf");
-        assertThat(read(work.get(0))).isEqualTo("a pdf");
+        assertThat(read(work.get(0))).isEqualTo(body);
         assertThat(inputSource.resolve(spec(), ctx)).isEmpty();
 
         work.get(0).onComplete().accept(true);
         assertThat(inputSource.resolve(spec(), ctx)).isEmpty();
+        assertThat(storedFiles()).isZero();
     }
 
     private static InputSpec spec() {
@@ -103,9 +106,17 @@ class WebhookLocalDeliveryE2eTest {
         return req;
     }
 
-    private static String read(ResolvedInput unit) throws IOException {
+    private static byte[] read(ResolvedInput unit) throws IOException {
         try (InputStream stream = unit.inputs().primary().get(0).getInputStream()) {
-            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            return stream.readAllBytes();
+        }
+    }
+
+    private long storedFiles() {
+        try (Stream<Path> walk = Files.walk(tempDir)) {
+            return walk.filter(Files::isRegularFile).count();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
