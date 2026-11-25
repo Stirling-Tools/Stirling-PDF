@@ -8172,13 +8172,6 @@ selectedCount_other = "{{count}} blocks selected"
 showAllTags = "Show tags on every block"
 textType = "Text type"
 
-[pdfTextEditor.review.card.status]
-described = "Described"
-ignoredAs = "Ignored as {{kind}}"
-noDescription = "No description"
-taggedAs = "Tagged as {{type}}"
-untagged = "Not tagged"
-
 [pdfTextEditor.review.closePrompt]
 body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
 discard = "Discard"

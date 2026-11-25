@@ -270,9 +270,6 @@ test.describe("PDF accessibility review", () => {
         timeout: 2_000,
       });
     }).toPass({ timeout: 20_000 });
-    await expect(card.getByTestId("pdf-editor-quick-tag-status")).toHaveText(
-      "No description",
-    );
     const description = card.getByRole("textbox", { name: "Read aloud as" });
     await description.fill("a is the rate");
     await card.getByRole("button", { name: "Save description" }).click();

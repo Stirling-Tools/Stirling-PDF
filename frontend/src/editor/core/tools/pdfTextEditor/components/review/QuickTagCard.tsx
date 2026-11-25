@@ -39,7 +39,6 @@ import {
 import {
   canBeArtifact,
   canTypeText,
-  type TextTag,
   type TextTagChoice,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import {
@@ -176,16 +175,7 @@ export function QuickTagCard({ store, controller, review }: Props) {
     >
       <ReviewStepper review={review} />
 
-      {item ? (
-        <header className="review-card__head">
-          <span
-            className={`review-card__status review-card__status--${item.status}`}
-            data-testid="pdf-editor-quick-tag-status"
-          >
-            {itemStatus(t, item, tag, imageA11y)}
-          </span>
-        </header>
-      ) : multiText ? (
+      {multiText ? (
         <header className="review-card__head">
           <span className="review-card__status">
             {t("pdfTextEditor.review.card.selectedCount", {
@@ -195,14 +185,14 @@ export function QuickTagCard({ store, controller, review }: Props) {
             })}
           </span>
         </header>
-      ) : (
+      ) : !item ? (
         <p className="review-card__hint">
           {t(
             "pdfTextEditor.review.card.pickHint",
             "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once.",
           )}
         </p>
-      )}
+      ) : null}
 
       {asksText && tag && (
         <>
@@ -454,41 +444,6 @@ function SelectedTextLanguageQuestion({ inner }: { inner: InnerTagsControl }) {
       />
     </>
   );
-}
-
-/** Where the selected item stands, in the words of what it is tagged as. */
-function itemStatus(
-  t: TFunction,
-  item: ReviewItem,
-  tag: TextTag | null,
-  image: Controller["imageAccessibility"],
-): string {
-  if (item.kind === "image") {
-    if (image?.kind === "decorative") return artifactName(t, null);
-    return item.status === "done"
-      ? t("pdfTextEditor.review.card.status.described", "Described")
-      : t("pdfTextEditor.review.card.status.noDescription", "No description");
-  }
-  switch (tag?.kind) {
-    case "tagged":
-      // Tagged text still to do is a formula or figure with no description.
-      if (item.status === "todo")
-        return t(
-          "pdfTextEditor.review.card.status.noDescription",
-          "No description",
-        );
-      return t("pdfTextEditor.review.card.status.taggedAs", {
-        defaultValue: "Tagged as {{type}}",
-        type: tag.block.type ? typeName(t, tag.block.type) : tag.block.role,
-      });
-    case "artifact":
-      return t("pdfTextEditor.review.card.status.ignoredAs", {
-        defaultValue: "Ignored as {{kind}}",
-        kind: artifactName(t, tag.furniture).toLocaleLowerCase(),
-      });
-    default:
-      return t("pdfTextEditor.review.card.status.untagged", "Not tagged");
-  }
 }
 
 function descriptionLabel(t: TFunction, type: DescribableType | null): string {

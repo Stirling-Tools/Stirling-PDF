@@ -34,16 +34,6 @@
   border-radius: 999px;
 }
 
-.review-card__status--todo {
-  background: var(--c-warning-subtle);
-  color: var(--c-warning-solid, var(--c-warning));
-}
-
-.review-card__status--done {
-  background: var(--c-success-subtle);
-  color: var(--c-success-solid, var(--c-success));
-}
-
 .review-card__count {
   flex: 1;
   font-size: 12px;
