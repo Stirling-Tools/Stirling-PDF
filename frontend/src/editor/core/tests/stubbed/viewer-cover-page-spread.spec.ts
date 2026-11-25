@@ -1,6 +1,10 @@
 import path from "path";
 import type { Page } from "@playwright/test";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  choosePageView,
+  expectPageViewChecked,
+} from "@editor/tests/helpers/ui-helpers";
 
 const THREE_PAGE_PDF = path.join(
   import.meta.dirname,
@@ -10,7 +14,7 @@ const THREE_PAGE_PDF = path.join(
 async function loadViewer(page: Page) {
   await page.goto("/editor");
   await page
-    .locator('input[type="file"]')
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
     .first()
     .setInputFiles(THREE_PAGE_PDF);
   await expect
@@ -41,20 +45,26 @@ test.describe("viewer cover page spread", () => {
   }) => {
     await loadViewer(page);
 
-    await page.getByRole("button", { name: "Dual Page View" }).click();
+    await choosePageView(page, "Dual Page View");
     await expect.poll(() => spreadRows(page)).toEqual([[0, 1], [2]]);
 
-    const cover = page.getByRole("button", {
-      name: "Show Cover Page Separately",
-    });
-    await cover.click();
-    await expect(cover).toHaveAttribute("aria-pressed", "true");
+    await choosePageView(page, "Show Cover Page Separately");
+    await expectPageViewChecked(page, "Show Cover Page Separately");
     await expect.poll(() => spreadRows(page)).toEqual([[0], [1, 2]]);
 
-    await page.getByRole("button", { name: "Single Page View" }).click();
+    await choosePageView(page, "Single Page View");
     await expect.poll(() => spreadRows(page)).toEqual([[0], [1], [2]]);
 
-    await page.getByRole("button", { name: "Dual Page View" }).click();
+    await choosePageView(page, "Dual Page View");
     await expect.poll(() => spreadRows(page)).toEqual([[0], [1, 2]]);
+  });
+
+  test("choosing the cover page from single page goes to pairs", async ({
+    page,
+  }) => {
+    await loadViewer(page);
+    await choosePageView(page, "Show Cover Page Separately");
+    await expect.poll(() => spreadRows(page)).toEqual([[0], [1, 2]]);
+    await expectPageViewChecked(page, "Dual Page View");
   });
 });

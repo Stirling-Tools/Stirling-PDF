@@ -32,6 +32,8 @@ import stirling.software.common.model.ApplicationProperties;
 
 class OsTrustStoreTest {
 
+    private static final String TAURI_MODE = "STIRLING_PDF_TAURI_MODE";
+
     private static KeyPair rootKeys;
     private static X509Certificate root;
     private static X509Certificate leaf;
@@ -143,6 +145,29 @@ class OsTrustStoreTest {
         svc.loadOSTrustAnchors(List.of(strayLeaf, root));
 
         assertThat(svc.getSigningTrustStore().size()).isEqualTo(1);
+    }
+
+    @Test
+    void osTrustIsOnByDefaultOnlyInTheDesktopApp() {
+        String previous = System.getProperty(TAURI_MODE);
+        var trust = new ApplicationProperties().getSecurity().getValidation().getTrust();
+        try {
+            System.clearProperty(TAURI_MODE);
+            assertThat(trust.trustsOSRoots()).isFalse();
+            System.setProperty(TAURI_MODE, "true");
+            assertThat(trust.trustsOSRoots()).isTrue();
+            trust.setUseOSTrust(false);
+            assertThat(trust.trustsOSRoots()).isFalse();
+            System.clearProperty(TAURI_MODE);
+            trust.setUseOSTrust(true);
+            assertThat(trust.trustsOSRoots()).isTrue();
+        } finally {
+            if (previous == null) {
+                System.clearProperty(TAURI_MODE);
+            } else {
+                System.setProperty(TAURI_MODE, previous);
+            }
+        }
     }
 
     private static CertificateValidationService service() throws Exception {

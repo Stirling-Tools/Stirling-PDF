@@ -435,8 +435,6 @@ fn run_stirling_pdf_jar(
         "-Dserver.forward-headers-strategy=none",
         "-Dsecurity.enableLogin=false", // Disable login for desktop mode
         "-Dsecurity.csrfDisabled=true", // Disable CSRF for desktop mode
-        // Validate signatures against the roots IT deploys to the OS store, as Acrobat does.
-        "-Dsecurity.validation.trust.useOSTrust=true",
     ];
 
     // Enable the login agreement on local desktop installs when it has been provisioned.

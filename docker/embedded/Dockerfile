@@ -1,7 +1,7 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=1.1.1@sha256:6b57e965506d61170851d6e85e4ff1a29fbc66db4fc4bf3d78c0e31fd1fb32ae
+ARG BASE_VERSION=1.2.0@sha256:2e97e233a716a4f32acb14c6af93999d6d9735a4e4b711338a24c8574a8c409f
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend

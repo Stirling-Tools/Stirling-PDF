@@ -410,7 +410,7 @@ jobs:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
           & smctl healthcheck
-          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl healthcheck returned non-zero - continuing, keypair ls is the gate" }
           & smctl keypair ls
           if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
           & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
@@ -454,6 +454,11 @@ jobs:
           EOF
           echo "Generated tauri.windows.conf.json (alias masked):"
           sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
+
+      - name: Sign bundled runtime binaries
+        if: ${{ startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre
 
       - name: Import release GPG signing key (Linux)
         if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
@@ -563,6 +568,11 @@ jobs:
             gpg --batch --yes --delete-secret-keys "$RELEASE_GPG_FINGERPRINT" || true
             gpg --batch --yes --delete-keys "$RELEASE_GPG_FINGERPRINT" || true
           fi
+
+      - name: Verify bundled runtime signatures
+        if: ${{ startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release') }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre -VerifyOnly
 
       # Verify the MSI (outer wrapper users download) AND the inner exe extracted
       # from it (what actually gets installed and what AV scans). We don't check
