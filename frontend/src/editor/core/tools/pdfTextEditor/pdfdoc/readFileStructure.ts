@@ -14,6 +14,7 @@ import {
   StructureNodes,
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
+import { staleKeyCheck } from "@editor/tools/pdfTextEditor/pdfdoc/parentTreeEntries";
 import { readLinks } from "@editor/tools/pdfTextEditor/pdfdoc/readLinks";
 import { readWidgets } from "@editor/tools/pdfTextEditor/pdfdoc/readWidgets";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
@@ -36,6 +37,7 @@ export interface FileBlock extends StructureRole {
   pageIndex: number | null;
   /** Its MCIDs on that page, its inline elements' included. */
   mcids: number[];
+  alt: string | null;
 }
 
 /** An element's /Lang, and its nearest ancestor's. */
@@ -115,6 +117,7 @@ export function fileStructureOf(pdf: RawPdf): FileStructure | null {
     return infos.get(num)!;
   };
 
+  const isStale = staleKeyCheck(pdf, rootBody);
   const byPage = new Map<number, FilePageStructure>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
@@ -124,7 +127,11 @@ export function fileStructureOf(pdf: RawPdf): FileStructure | null {
       byPage.set(pageIndex, { elements: [], slotCount: null });
       return;
     }
-    const items = pdf.parentTreeArray(treeRoot, key)?.items;
+    const array = pdf.parentTreeArray(treeRoot, key);
+    // A stale key, as on a page merged in after its tree was written: the page has
+    // no elements yet, and the save gives it a key of its own.
+    if (!array && isStale(pageNum, key)) return;
+    const items = array?.items;
     if (!items) {
       byPage.set(pageIndex, { elements: [], slotCount: null });
       return;
@@ -198,6 +205,7 @@ function readBlocks(
           type: node.type,
           pageIndex: at?.pageIndex ?? null,
           mcids: at ? [...at.mcids].sort((a, b) => a - b) : [],
+          alt: textEntry(pdf, kidBody, "Alt"),
         });
       }
       visit(kidBody);
@@ -214,10 +222,7 @@ function readElement(
 ): ElementInfo | null {
   const body = pdf.objectBody(num);
   if (!body) return null;
-  const text = (key: string): string | null => {
-    const value = pdf.resolve(body, key);
-    return value === null ? null : decodeTextString(value.trim());
-  };
+  const text = (key: string) => textEntry(pdf, body, key);
   return {
     role: node.role,
     type: node.type,
@@ -228,4 +233,9 @@ function readElement(
     lang: node.lang,
     onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),
   };
+}
+
+function textEntry(pdf: RawPdf, body: string, key: string): string | null {
+  const value = pdf.resolve(body, key);
+  return value === null ? null : decodeTextString(value.trim());
 }

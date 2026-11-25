@@ -647,18 +647,16 @@ description = "Максимальний DPI для обробки зображе
 label = "Максимальний DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Налаштуйте ліміти сеансів і тайм-аути для кожного виконавця процесів"
 ghostscript = "Ghostscript"
 installApp = "Встановлення застосунку"
 label = "Обмеження виконавця процесів"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF у HTML"
+officeConvert = "Конвертація Office"
+officeConvertSessionLimit = "Максимальна кількість одночасних конвертацій; 0 вибирає ліміт на основі кількості CPU та пам’яті"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Максимальна кількість одночасних екземплярів"
@@ -667,10 +665,6 @@ label = "Ліміт сеансів"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Максимальний час виконання"
 label = "Тайм-аут (хвилини)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert у бета-версії. Він пропонує кращу й швидшу конвертацію з меншим використанням пам’яті, ніж LibreOffice."
-label = "Використовувати нову конвертацію Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Налаштуйте зберігання тимчасових файлів та поведінку очищення"
@@ -688,11 +682,6 @@ label = "Інтервал очищення (хвилини)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Чи очищати ширший системний тимчасовий каталог (з обережністю)"
 label = "Очищати системний tmp"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Каталог для тимчасових файлів LibreOffice (залиште порожнім для типового: baseTmpDir/libreoffice)"
-label = "Тимчасовий каталог LibreOffice"
-placeholder = "Типово: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Максимальний вік у годинах до очищення тимчасових файлів"
@@ -1300,17 +1289,6 @@ label = "Виробник за замовчуванням"
 [admin.settings.general.customPaths]
 description = "Налаштуйте користувацькі шляхи файлової системи для конвеєрної обробки та зовнішніх інструментів"
 label = "Користувацькі шляхи"
-
-[admin.settings.general.customPaths.operations]
-label = "Шляхи до зовнішніх інструментів"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Шлях до LibreOffice unoconvert для конвертації документів (залиште порожнім для типового: /opt/venv/bin/unoconvert)"
-label = "Виконуваний файл Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Шлях до виконуваного файлу WeasyPrint для конвертації HTML у PDF (залиште порожнім для типового: /opt/venv/bin/weasyprint)"
-label = "Виконуваний файл WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Каталоги конвеєра"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Назва документа"
 pdfUaTitleHelp = "Показується читачем замість імені файлу. Якщо залишити порожнім, використовується перший заголовок."
 selectSourceFormatFirst = "Спочатку виберіть формат джерела"
 settings = "Налаштування"
+signInToUse = "Увійдіть, щоб скористатися"
 single = "Один"
 sourceFormatPlaceholder = "Вихідний формат"
-stirlingOfficeConvert = "Використовувати Stirling Office Convert (бета)"
-stirlingOfficeConvertDescription = "Краща й швидша конвертація з меншим використанням пам’яті. Вимкніть, щоб використовувати стандартний конвертер."
 strictMode = "Суворий режим"
 strictModeDesc = "Помилка, якщо конвертація не ідеальна (використовує перевірку VeraPDF)"
 svgPdfOptions = "Параметри SVG у PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Параметри перетворення Web у PDF"
 zoomLevel = "Рівень масштабування"
 
 [convert.ebookOptions]
-embedAllFonts = "Вбудувати всі шрифти"
-embedAllFontsDesc = "Вбудувати всі шрифти з електронної книги до створеного PDF"
 includePageNumbers = "Додати номери сторінок"
 includePageNumbersDesc = "Додати номери сторінок до створеного PDF"
 includeTableOfContents = "Додати зміст"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Декоративне зображення"
 description = "Опис зображення"
 descriptionInfo = "Програми зчитування з екрана читають це замість зображення."
 encrypted = "Теги не можна редагувати в зашифрованому файлі"
+figureDescription = "Опис рисунка"
+figureDescriptionInfo = "Зчитувачі екрана зачитують це замість рисунка."
 formFieldDescription = "Опис поля"
+formulaDescription = "Опис формули"
+formulaDescriptionInfo = "Зчитувачі екрана зачитують це замість формули. Опишіть так, як сказали б уголос, наприклад: «ікс у квадраті плюс один»."
 heading = "Доступність"
 innerTagLabel = "Тег {{number}}"
 innerTags = "Теги в цьому тексті"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Відсутні описи"
 mixedContent = "Рисунок містить інший вміст"
 mixedTags = "Змішано"
 needsDescriptionBadge = "Немає опису"
-nextImage = "Наступне зображення"
+nextToReview = "Наступне для перевірки"
 notFigure = "Позначено тегом як частину тексту"
 removeTag = "Видалити тег"
 saveFailed = "Не вдалося зберегти зміни доступності, тому файл не було збережено. Скасуйте їх і спробуйте ще раз."
@@ -9661,10 +9640,6 @@ signInToStart = "Увійдіть, щоб розпочати пробний пе
 stage = "Етап {{current}} із {{total}}"
 stagesLabel = "Прогрес"
 
-[portal.enterprise.connect]
-ownerOnly = "Лише власник цього сервера може підключити його. Попросіть його відкрити цю сторінку."
-unavailable = "Підключення до облікового запису Stirling вимкнено на цьому сервері. Забронюйте дзвінок, і ми налаштуємо ваш пробний період разом із вами."
-
 [portal.enterprise.landing]
 lede = "Спробуйте безкоштовно 14 днів, потім сформуйте свою пропозицію та підпишіть угоду тут. Картка не потрібна."
 tickAgreement = "Одна угода, що охоплює MSA, order form, EULA та DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Завантажити офлайн-ліцензію (.lic)"
 hint = "Вставте цей ключ у self-hosted екземпляр, щоб активувати його, або збережіть для своїх записів. Зберігайте його безпечно."
 label = "Ваш ліцензійний ключ"
 trialFileHint = "Це ваш пробний файл ліцензії. Коли угоду буде укладено, поверніться та завантажте його знову — на відміну від онлайн-ліцензійного ключа, файл .lic не оновлюється самостійно."
-
-[portal.procurement.link]
-cta = "Прив’язати обліковий запис"
-description = "Закупівля працює через ваш прив’язаний обліковий запис Stirling: так ми надаємо trial, оцінюємо вашу пропозицію та запускаємо білінг. Прив’яжіть обліковий запис, щоб почати."
-title = "Прив’яжіть ваш обліковий запис, щоб почати"
 
 [portal.procurement.live]
 description = "Ваша підписка активна, і ліцензію видано. Вашу команду підготовлено, і білінг розпочато."
@@ -14260,7 +14230,6 @@ toggleDetails = "Показати/сховати подробиці"
 
 [tool]
 endpointUnavailable = "Цей інструмент недоступний на вашому сервері."
-endpointUnavailableClickable = "Недоступно в цьому режимі. Натисніть, щоб увійти."
 filesLoading = "Файли ще завантажуються, зачекайте."
 filesLoadingProgress = "{{loaded}} / {{total}} файлів завантажується..."
 invalidParams = "Заповніть обов’язкові налаштування."
@@ -14268,6 +14237,8 @@ noFiles = "Додайте файл, щоб розпочати."
 scopeFiles = "файли"
 scopeThisFile = "цей файл"
 selectFilesHint = "Виберіть файли в Активних файлах, щоб запустити цей інструмент"
+signInRequired = "Потрібен обліковий запис Stirling. Увійдіть, щоб продовжити."
+signInToUse = "Увійдіть, щоб скористатися"
 singleFileScope = "Застосовується лише до: {{fileName}}"
 viewerMode = "Перемкніться на редактор файлів, щоб додати кілька файлів."
 

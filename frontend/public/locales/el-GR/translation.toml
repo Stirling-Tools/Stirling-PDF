@@ -647,18 +647,16 @@ description = "Μέγιστο DPI για επεξεργασία εικόνας (
 label = "Μέγιστο DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Ρυθμίστε όρια συνεδριών και χρονικά όρια για κάθε εκτελεστή διεργασιών"
 ghostscript = "Ghostscript"
 installApp = "Εγκατάσταση εφαρμογής"
 label = "Όρια εκτελεστών διεργασιών"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF σε HTML"
+officeConvert = "Μετατροπή Office"
+officeConvertSessionLimit = "Μέγιστος αριθμός ταυτόχρονων μετατροπών· το 0 επιλέγει όριο βάσει CPUs και μνήμης"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Μέγιστος αριθμός ταυτόχρονων στιγμιότυπων"
@@ -667,10 +665,6 @@ label = "Όριο συνεδριών"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Μέγιστος χρόνος εκτέλεσης"
 label = "Χρονικό όριο (λεπτά)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Το Stirling Office Convert είναι σε beta. Προσφέρει καλύτερες μετατροπές, ταχύτερα και με λιγότερη μνήμη από το LibreOffice."
-label = "Χρήση της νέας μετατροπής Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Ρυθμίστε την αποθήκευση και τον καθαρισμό προσωρινών αρχείων"
@@ -688,11 +682,6 @@ label = "Διάστημα καθαρισμού (λεπτά)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Να καθαρίζεται ο ευρύτερος κατάλογος προσωρινών του συστήματος (με προσοχή)"
 label = "Καθαρισμός προσωρινών συστήματος"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Κατάλογος για προσωρινά αρχεία LibreOffice (αφήστε κενό για προεπιλογή: baseTmpDir/libreoffice)"
-label = "Κατάλογος προσωρινών LibreOffice"
-placeholder = "Προεπιλογή: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Μέγιστη ηλικία σε ώρες πριν καθαριστούν τα προσωρινά αρχεία"
@@ -1300,17 +1289,6 @@ label = "Προεπιλεγμένος παραγωγός"
 [admin.settings.general.customPaths]
 description = "Ρυθμίστε προσαρμοσμένες διαδρομές συστήματος αρχείων για επεξεργασία pipeline και εξωτερικά εργαλεία"
 label = "Προσαρμοσμένες διαδρομές"
-
-[admin.settings.general.customPaths.operations]
-label = "Διαδρομές εξωτερικών εργαλείων"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Διαδρομή προς το LibreOffice unoconvert για μετατροπές εγγράφων (αφήστε κενό για προεπιλογή: /opt/venv/bin/unoconvert)"
-label = "Εκτελέσιμο Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Διαδρομή προς το εκτελέσιμο WeasyPrint για μετατροπή HTML σε PDF (αφήστε κενό για προεπιλογή: /opt/venv/bin/weasyprint)"
-label = "Εκτελέσιμο WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Κατάλογοι pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Τίτλος εγγράφου"
 pdfUaTitleHelp = "Εμφανίζεται από έναν reader αντί για το όνομα αρχείου. Αν μείνει κενό, χρησιμοποιείται η πρώτη επικεφαλίδα."
 selectSourceFormatFirst = "Επιλέξτε πρώτα μορφή πηγής"
 settings = "Ρυθμίσεις"
+signInToUse = "Συνδεθείτε για να χρησιμοποιήσετε"
 single = "Μονό"
 sourceFormatPlaceholder = "Μορφή προέλευσης"
-stirlingOfficeConvert = "Χρήση του Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Καλύτερες, ταχύτερες μετατροπές με λιγότερη μνήμη. Απενεργοποιήστε το για να χρησιμοποιήσετε τον τυπικό μετατροπέα."
 strictMode = "Αυστηρή λειτουργία"
 strictModeDesc = "Σφάλμα αν η μετατροπή δεν είναι τέλεια (χρησιμοποιεί επαλήθευση VeraPDF)"
 svgPdfOptions = "Επιλογές SVG σε PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Επιλογές Web σε PDF"
 zoomLevel = "Επίπεδο ζουμ"
 
 [convert.ebookOptions]
-embedAllFonts = "Ενσωμάτωση όλων των γραμματοσειρών"
-embedAllFontsDesc = "Ενσωματώστε όλες τις γραμματοσειρές του eBook στο παραγόμενο PDF"
 includePageNumbers = "Συμπερίληψη αριθμών σελίδων"
 includePageNumbersDesc = "Προσθέστε αριθμούς σελίδων στο παραγόμενο PDF"
 includeTableOfContents = "Συμπερίληψη πίνακα περιεχομένων"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Διακοσμητική εικόνα"
 description = "Περιγραφή εικόνας"
 descriptionInfo = "Οι αναγνώστες οθόνης διαβάζουν αυτό αντί για την εικόνα."
 encrypted = "Δεν είναι δυνατή η επεξεργασία ετικετών σε κρυπτογραφημένο αρχείο"
+figureDescription = "Περιγραφή σχήματος"
+figureDescriptionInfo = "Οι αναγνώστες οθόνης το διαβάζουν αντί για το σχήμα."
 formFieldDescription = "Περιγραφή πεδίου"
+formulaDescription = "Περιγραφή τύπου"
+formulaDescriptionInfo = "Οι αναγνώστες οθόνης το διαβάζουν αντί για τον τύπο. Πείτε το όπως θα το λέγατε προφορικά, όπως \"x στο τετράγωνο συν ένα\"."
 heading = "Προσβασιμότητα"
 innerTagLabel = "Ετικέτα {{number}}"
 innerTags = "Ετικέτες σε αυτό το κείμενο"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Λείπουν περιγραφές"
 mixedContent = "Το σχήμα περιλαμβάνει άλλο περιεχόμενο"
 mixedTags = "Μικτό"
 needsDescriptionBadge = "Χωρίς περιγραφή"
-nextImage = "Επόμενη εικόνα"
+nextToReview = "Επόμενο προς έλεγχο"
 notFigure = "Με ετικέτα ως μέρος του κειμένου"
 removeTag = "Αφαίρεση ετικέτας"
 saveFailed = "Δεν ήταν δυνατή η αποθήκευση των αλλαγών προσβασιμότητας, επομένως το αρχείο δεν αποθηκεύτηκε. Αναιρέστε τις και δοκιμάστε ξανά."
@@ -9661,10 +9640,6 @@ signInToStart = "Συνδεθείτε για να ξεκινήσετε τη δο
 stage = "Στάδιο {{current}} από {{total}}"
 stagesLabel = "Πρόοδος"
 
-[portal.enterprise.connect]
-ownerOnly = "Μόνο ο ιδιοκτήτης αυτού του διακομιστή μπορεί να το συνδέσει. Ζητήστε του να ανοίξει αυτήν τη σελίδα."
-unavailable = "Η σύνδεση σε λογαριασμό Stirling είναι απενεργοποιημένη σε αυτόν τον διακομιστή. Κλείστε ένα ραντεβού κλήσης και θα ρυθμίσουμε μαζί τη δοκιμή σας."
-
 [portal.enterprise.landing]
 lede = "Δοκιμάστε το δωρεάν για 14 ημέρες, μετά δημιουργήστε την προσφορά σας και υπογράψτε τη συμφωνία σας εδώ. Δεν απαιτείται κάρτα."
 tickAgreement = "Μία συμφωνία που καλύπτει το MSA, τη φόρμα παραγγελίας, την EULA και το DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Λήψη offline άδειας (.lic)"
 hint = "Επικολλήστε αυτό το κλειδί σε μια self-hosted παρουσία για να την ενεργοποιήσετε ή κρατήστε το για τα αρχεία σας. Φυλάξτε το με ασφάλεια."
 label = "Το κλειδί άδειάς σας"
 trialFileHint = "Αυτό είναι το αρχείο δοκιμαστικής άδειάς σας. Μόλις τεθεί σε ισχύ η συμφωνία σας, επιστρέψτε και κατεβάστε το ξανά — σε αντίθεση με το online κλειδί άδειας, το αρχείο .lic δεν θα ενημερωθεί μόνο του."
-
-[portal.procurement.link]
-cta = "Σύνδεση λογαριασμού"
-description = "Οι προμήθειες εκτελούνται στον συνδεδεμένο λογαριασμό Stirling σας: έτσι παρέχουμε τη δοκιμή, τιμολογούμε την προσφορά σας και ξεκινάμε τη χρέωση. Συνδέστε έναν λογαριασμό για να ξεκινήσετε."
-title = "Συνδέστε τον λογαριασμό σας για να ξεκινήσετε"
 
 [portal.procurement.live]
 description = "Η συνδρομή σας είναι ενεργή και η άδειά σας έχει εκδοθεί. Η ομάδα σας έχει διατεθεί και η χρέωση έχει ξεκινήσει."
@@ -14260,7 +14230,6 @@ toggleDetails = "Εναλλαγή λεπτομερειών"
 
 [tool]
 endpointUnavailable = "Αυτό το εργαλείο δεν είναι διαθέσιμο στον διακομιστή σας."
-endpointUnavailableClickable = "Μη διαθέσιμο σε αυτήν τη λειτουργία. Κάντε κλικ για να συνδεθείτε."
 filesLoading = "Τα αρχεία συνεχίζουν να φορτώνονται, παρακαλώ περιμένετε."
 filesLoadingProgress = "{{loaded}} / {{total}} αρχεία φορτώνονται..."
 invalidParams = "Συμπληρώστε τις απαιτούμενες ρυθμίσεις."
@@ -14268,6 +14237,8 @@ noFiles = "Προσθέστε ένα αρχείο για να ξεκινήσετ
 scopeFiles = "αρχεία"
 scopeThisFile = "αυτό το αρχείο"
 selectFilesHint = "Επιλέξτε αρχεία στα Ενεργά Αρχεία για να εκτελέσετε αυτό το εργαλείο"
+signInRequired = "Αυτό απαιτεί λογαριασμό Stirling. Συνδεθείτε για να συνεχίσετε."
+signInToUse = "Συνδεθείτε για να χρησιμοποιήσετε"
 singleFileScope = "Εφαρμογή μόνο σε: {{fileName}}"
 viewerMode = "Μεταβείτε στον επεξεργαστή αρχείων για να προσθέσετε πολλά αρχεία."
 

@@ -26,6 +26,10 @@ test.describe("PDF text editor - tables", () => {
       await openInTextEditor(
         page,
         path.join(import.meta.dirname, "../test-fixtures/paragraph-sample.pdf"),
+        // At a fixed zoom the page outgrows this window and its corner, where
+        // the table goes, slides under the file list; the viewer's fit keeps
+        // it in view.
+        { zoomPercent: null },
       );
       await page.waitForFunction(() => {
         const state = (

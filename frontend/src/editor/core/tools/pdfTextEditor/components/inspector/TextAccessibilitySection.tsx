@@ -15,7 +15,10 @@ import {
   FURNITURE,
   type Furniture,
 } from "@editor/tools/pdfTextEditor/model/artifactKind";
-import { TEXT_BLOCK_TYPES } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  TEXT_BLOCK_TYPES,
+  type DescribableType,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
   StructureRole,
   StructureType,
@@ -31,17 +34,22 @@ import {
 import type {
   InnerTagsControl,
   OtherPagesControl,
+  TextDescriptionControl,
   TextLanguageControl,
   UntaggedLinksControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
 import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { NextToReviewButton } from "@editor/tools/pdfTextEditor/components/inspector/NextToReviewButton";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 
 /**
  * What the selected text is tagged as and the language it is read in, with
  * pickers to change them: retagging its block, giving untagged text an
- * element of its own, or making it an artifact. Beneath them, the tags marking parts of the text, a
+ * element of its own, or making it an artifact. A formula or figure also
+ * takes a description, with a way on to the next image or text needing
+ * attention; `review` counts this text too. Beneath them, the tags marking parts of the text, a
  * way to tag the links over it, and pickers for characters selected in it.
  * With several runs selected, the tag they share and their language.
  */
@@ -51,14 +59,20 @@ export function TextAccessibilitySection({
   inner,
   language,
   otherPages,
+  description,
   untaggedLinks,
+  review,
+  onNext,
 }: {
   tag: TextTag | null;
   onSetTag: (choice: TextTagChoice) => void;
   inner: InnerTagsControl;
   language: TextLanguageControl | null;
   otherPages: OtherPagesControl | null;
+  description: TextDescriptionControl | null;
   untaggedLinks: UntaggedLinksControl | null;
+  review: AccessibilityReview;
+  onNext: () => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -68,6 +82,13 @@ export function TextAccessibilitySection({
       </SectionLabel>
       <Stack gap="xs">
         {tag && <TagField tag={tag} onSetTag={onSetTag} />}
+        {description && (
+          <DescriptionField
+            control={description}
+            review={review}
+            onNext={onNext}
+          />
+        )}
         {otherPages && <OtherPagesButton control={otherPages} />}
         {language && <TextLanguageField control={language} />}
         {tag && (
@@ -179,6 +200,71 @@ function BlockTagPicker({
 
 function artifactValue(furniture: Furniture | null): string {
   return `${ARTIFACT_VALUE}${furniture ?? ""}`;
+}
+
+/** What screen readers read out in place of the formula or figure the text makes up. */
+function DescriptionField({
+  control,
+  review,
+  onNext,
+}: {
+  control: TextDescriptionControl;
+  review: AccessibilityReview;
+  onNext: () => void;
+}) {
+  const { t } = useTranslation();
+  const label = descriptionLabel(t, control.type);
+  const othersPending =
+    review.needsDescription +
+    review.untagged -
+    (control.description?.trim() ? 0 : 1);
+  return (
+    <>
+      <Field label={label} hint={descriptionHint(t, control.type)}>
+        <Textarea
+          aria-label={label}
+          value={control.description ?? ""}
+          className={privateContentClassName}
+          onChange={(e) => control.onSet(e.currentTarget.value)}
+          autosize
+          minRows={2}
+          maxRows={6}
+          size="xs"
+          data-testid="pdf-editor-text-description"
+        />
+      </Field>
+      {othersPending > 0 && (
+        <NextToReviewButton
+          onClick={onNext}
+          testId="pdf-editor-text-description-next"
+        />
+      )}
+    </>
+  );
+}
+
+function descriptionLabel(t: TFunction, type: DescribableType): string {
+  return type === "Formula"
+    ? t(
+        "pdfTextEditor.inspector.accessibility.formulaDescription",
+        "Formula description",
+      )
+    : t(
+        "pdfTextEditor.inspector.accessibility.figureDescription",
+        "Figure description",
+      );
+}
+
+function descriptionHint(t: TFunction, type: DescribableType): string {
+  return type === "Formula"
+    ? t(
+        "pdfTextEditor.inspector.accessibility.formulaDescriptionInfo",
+        'Screen readers read this out in place of the formula. Say it as you would aloud, such as "x squared plus one".',
+      )
+    : t(
+        "pdfTextEditor.inspector.accessibility.figureDescriptionInfo",
+        "Screen readers read this out in place of the figure.",
+      );
 }
 
 /** Gives matching text on other pages the selected artifact's kind. */
@@ -552,7 +638,10 @@ function statusText(
   }
 }
 
-function artifactName(t: TFunction, furniture: Furniture | null): string {
+export function artifactName(
+  t: TFunction,
+  furniture: Furniture | null,
+): string {
   switch (furniture) {
     case null:
       return t(
@@ -583,7 +672,7 @@ function artifactName(t: TFunction, furniture: Furniture | null): string {
 }
 
 /** The type's name for a reader; the type itself where it has no plain-language name. */
-function typeName(t: TFunction, type: StructureType): string {
+export function typeName(t: TFunction, type: StructureType): string {
   switch (type) {
     case "Document":
       return t(

@@ -104,14 +104,26 @@ const procurement = {
   deal: null as Pick<ProcurementSnapshot, "dealId" | "stage"> | null,
   error: null as Error | null,
   refetch: vi.fn(),
+  enabled: undefined as boolean | undefined,
 };
 vi.mock("@editor/portal/components/procurement/useProcurement", () => ({
-  useProcurementSnapshot: () => ({
-    data: procurement.error ? undefined : procurement.deal,
-    error: procurement.error,
-    isSuccess: !procurement.error,
-    refetch: procurement.refetch,
-  }),
+  useProcurementSnapshot: (enabled?: boolean) => {
+    procurement.enabled = enabled;
+    return {
+      data: procurement.error ? undefined : procurement.deal,
+      error: procurement.error,
+      isSuccess: !procurement.error,
+      refetch: procurement.refetch,
+    };
+  },
+}));
+// Usage serves both builds; hostsDeal switches between their Enterprise entries.
+const enterprise = { hostsDeal: true, open: vi.fn() };
+vi.mock("@editor/portal/components/procurement/enterpriseEntry", () => ({
+  get HOSTS_ENTERPRISE_DEAL() {
+    return enterprise.hostsDeal;
+  },
+  useOpenEnterprise: () => enterprise.open,
 }));
 vi.mock("@editor/portal/components/procurement/DealStatusHero", () => ({
   DealStatusHero: ({ onOpen }: { onOpen?: () => void }) => (
@@ -218,6 +230,8 @@ describe("Usage — link-free wallet renderer", () => {
     procurement.deal = null;
     procurement.error = null;
     procurement.refetch.mockReset();
+    enterprise.hostsDeal = true;
+    enterprise.open.mockReset();
   });
 
   it("opens Team once for an over-capacity server and includes the actual allowance", async () => {
@@ -699,7 +713,22 @@ describe("Usage — link-free wallet renderer", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Get an enterprise quote" }),
     );
-    expect(screen.getByTestId("location")).toHaveTextContent("/enterprise");
+    expect(enterprise.open).toHaveBeenCalledOnce();
+  });
+
+  it("on a self-hosted server, always offers the hosted Enterprise page and shows no deal", async () => {
+    enterprise.hostsDeal = false;
+    procurement.deal = { dealId: 1, stage: "trial" };
+    procurement.error = new Error("Snapshot unavailable");
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Get an enterprise quote" }),
+    );
+    expect(enterprise.open).toHaveBeenCalledOnce();
+    expect(screen.queryByTestId("procurement-summary")).not.toBeInTheDocument();
+    expect(screen.queryByText("Snapshot unavailable")).not.toBeInTheDocument();
+    expect(procurement.enabled).toBe(false);
   });
 
   it("still offers the quote to a buyer who asked but never started a trial", async () => {

@@ -647,18 +647,16 @@ description = "DPI máximo para el procesamiento de imágenes (0 = ilimitado)"
 label = "DPI máximo"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configura límites de sesión y tiempos de espera para cada ejecutor de procesos"
 ghostscript = "Ghostscript"
 installApp = "Instalar aplicación"
 label = "Límites del ejecutor de procesos"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF a HTML"
+officeConvert = "Conversión de Office"
+officeConvertSessionLimit = "Máximo de conversiones simultáneas; 0 selecciona un límite según las CPU y la memoria"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Instancias concurrentes máximas"
@@ -667,10 +665,6 @@ label = "Límite de sesión"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Tiempo máximo de ejecución"
 label = "Tiempo de espera (minutos)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert está en beta. Ofrece conversiones mejores y más rápidas, con menos memoria que LibreOffice."
-label = "Usar la nueva conversión de Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configura el almacenamiento de archivos temporales y el comportamiento de limpieza"
@@ -688,11 +682,6 @@ label = "Intervalo de limpieza (minutos)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Si se debe limpiar el directorio temporal más amplio del sistema (usar con precaución)"
 label = "Limpiar temp del sistema"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directorio para archivos temporales de LibreOffice (dejar vacío para el valor predeterminado: baseTmpDir/libreoffice)"
-label = "Directorio temporal de LibreOffice"
-placeholder = "Predeterminado: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Edad máxima en horas antes de limpiar los archivos temporales"
@@ -1300,17 +1289,6 @@ label = "Productor predeterminado"
 [admin.settings.general.customPaths]
 description = "Configura rutas de sistema de archivos personalizadas para el procesamiento del pipeline y herramientas externas"
 label = "Rutas personalizadas"
-
-[admin.settings.general.customPaths.operations]
-label = "Rutas de herramientas externas"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Ruta a LibreOffice unoconvert para conversiones de documentos (dejar vacío para el valor predeterminado: /opt/venv/bin/unoconvert)"
-label = "Ejecutable de Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Ruta al ejecutable de WeasyPrint para la conversión de HTML a PDF (dejar vacío para el valor predeterminado: /opt/venv/bin/weasyprint)"
-label = "Ejecutable de WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Directorios del pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Título del documento"
 pdfUaTitleHelp = "Lo muestra un lector en lugar del nombre del archivo. Si se deja en blanco, se usa el primer encabezado."
 selectSourceFormatFirst = "Elige primero un formato de origen"
 settings = "Configuración"
+signInToUse = "Inicia sesión para usar"
 single = "Individual"
 sourceFormatPlaceholder = "Formato de origen"
-stirlingOfficeConvert = "Usar Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Conversiones mejores y más rápidas con menos memoria. Desactívalo para usar el conversor estándar."
 strictMode = "Modo Estricto"
 strictModeDesc = "Error si la conversión no es perfecta (usa verificación VeraPDF)"
 svgPdfOptions = "Opciones SVG a PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Opciones de Web a PDF"
 zoomLevel = "Nivel de Zoom"
 
 [convert.ebookOptions]
-embedAllFonts = "Incrustar todas las fuentes"
-embedAllFontsDesc = "Incrustar todas las fuentes del eBook en el PDF generado"
 includePageNumbers = "Incluir números de página"
 includePageNumbersDesc = "Añadir números de página al PDF generado"
 includeTableOfContents = "Incluir tabla de contenidos"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Imagen decorativa"
 description = "Descripción de la imagen"
 descriptionInfo = "Los lectores de pantalla leen esto en lugar de la imagen."
 encrypted = "Las etiquetas no se pueden editar en un archivo cifrado"
+figureDescription = "Descripción de la figura"
+figureDescriptionInfo = "Los lectores de pantalla leen esto en lugar de la figura."
 formFieldDescription = "Descripción del campo"
+formulaDescription = "Descripción de la fórmula"
+formulaDescriptionInfo = "Los lectores de pantalla leen esto en lugar de la fórmula. Exprésalo como lo dirías en voz alta, por ejemplo, «x al cuadrado más uno»."
 heading = "Accesibilidad"
 innerTagLabel = "Etiqueta {{number}}"
 innerTags = "Etiquetas en este texto"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Descripciones que faltan"
 mixedContent = "La figura incluye otro contenido"
 mixedTags = "Mixto"
 needsDescriptionBadge = "Sin descripción"
-nextImage = "Imagen siguiente"
+nextToReview = "Siguiente por revisar"
 notFigure = "Etiquetado como parte del texto"
 removeTag = "Eliminar etiqueta"
 saveFailed = "No se han podido guardar tus cambios de accesibilidad, por lo que el archivo no se ha guardado. Deshazlos e inténtalo de nuevo."
@@ -9661,10 +9640,6 @@ signInToStart = "Inicia sesión para comenzar tu prueba"
 stage = "Etapa {{current}} de {{total}}"
 stagesLabel = "Progreso"
 
-[portal.enterprise.connect]
-ownerOnly = "Solo el propietario de este servidor puede conectarlo. Pídele que abra esta página."
-unavailable = "Conectarse a una cuenta de Stirling está desactivado en este servidor. Reserva una llamada y configuraremos tu prueba contigo."
-
 [portal.enterprise.landing]
 lede = "Pruébalo gratis durante 14 días; luego crea tu presupuesto y firma tu acuerdo aquí. No se requiere tarjeta."
 tickAgreement = "Un único acuerdo que cubre el MSA, la orden de pedido, EULA y DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Descargar licencia sin conexión (.lic)"
 hint = "Pega esta clave en una instancia self-hosted para activarla, o guárdala para tus registros. Mantenla a salvo."
 label = "Tu clave de licencia"
 trialFileHint = "Este es tu archivo de licencia de prueba. Una vez que el acuerdo esté en vigor, vuelve y descárgalo de nuevo; a diferencia de la clave de licencia online, el archivo .lic no se actualizará por sí solo."
-
-[portal.procurement.link]
-cta = "Vincular cuenta"
-description = "Compras se ejecuta en tu cuenta de Stirling vinculada: así provisionamos la prueba, calculamos tu presupuesto e iniciamos la facturación. Vincula una cuenta para empezar."
-title = "Vincula tu cuenta para empezar"
 
 [portal.procurement.live]
 description = "Tu suscripción está activa y tu licencia se ha emitido. Tu equipo está provisionado y la facturación ha comenzado."
@@ -14260,7 +14230,6 @@ toggleDetails = "Alternar detalles"
 
 [tool]
 endpointUnavailable = "Esta herramienta no está disponible en tu servidor."
-endpointUnavailableClickable = "No disponible en este modo. Haz clic para iniciar sesión."
 filesLoading = "Los archivos aún se están cargando; espera, por favor."
 filesLoadingProgress = "{{loaded}} / {{total}} archivos cargándose..."
 invalidParams = "Rellena los ajustes obligatorios."
@@ -14268,6 +14237,8 @@ noFiles = "Añade un archivo para comenzar."
 scopeFiles = "archivos"
 scopeThisFile = "este archivo"
 selectFilesHint = "Seleccione archivos en Archivos activos para ejecutar esta herramienta"
+signInRequired = "Se necesita una cuenta de Stirling. Inicia sesión para continuar."
+signInToUse = "Inicia sesión para usar"
 singleFileScope = "Solo se aplica a: {{fileName}}"
 viewerMode = "Cambia al editor de archivos para añadir varios archivos."
 

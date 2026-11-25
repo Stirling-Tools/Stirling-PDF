@@ -2,30 +2,23 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Base64;
 
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.core.io.Resource;
@@ -34,10 +27,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.SPDF.service.OfficeToPdfService;
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -45,7 +35,6 @@ import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.SsrfProtectionService;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.EmlParser;
-import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 
@@ -61,27 +50,18 @@ class OfficeEmailConversionTest {
     void setUp() {
         properties.getSystem().getTempFileManagement().setBaseTmpDir(dir.toString());
         var tempFiles = new TempFileManager(new TempFileRegistry(), properties);
-        var office =
-                new OfficeConversionService(
-                        properties, mock(EndpointConfiguration.class), factory, tempFiles);
-        toPdf = spy(new OfficeToPdfService(office, properties, tempFiles));
-        var paths = mock(RuntimePathConfig.class);
-        when(paths.getWeasyPrintPath()).thenReturn("weasyprint");
+        toPdf = spy(new OfficeToPdfService(properties, tempFiles));
         controller =
                 new ConvertEmlToPDF(
                         factory,
-                        paths,
                         tempFiles,
                         new CustomHtmlSanitizer(mock(SsrfProtectionService.class), properties),
-                        office,
                         toPdf);
     }
 
     @ParameterizedTest
-    @CsvSource({"eml,true,", "msg,true,", "eml,false,true", "msg,false,true"})
-    void rendersBothFormatsWithExplicitAndInheritedChoices(
-            String format, boolean serverDefault, Boolean choice) throws Exception {
-        properties.getSystem().setStirlingOfficeConversion(serverDefault);
+    @ValueSource(strings = {"eml", "msg"})
+    void rendersBothFormats(String format) throws Exception {
         byte[] input = email(new byte[0]);
         if (format.equals("msg")) {
             try (var stream = getClass().getResourceAsStream("/eml/example.msg")) {
@@ -90,7 +70,6 @@ class OfficeEmailConversionTest {
             }
         }
         var request = request(input, format);
-        request.setUseStirlingOfficeConvert(choice);
         String subject = EmlParser.extractEmailContent(input, request, null).getSubject();
 
         try (var pdf = Loader.loadPDF(body(controller.convertEmlToPdf(request)))) {
@@ -100,44 +79,9 @@ class OfficeEmailConversionTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"false,", "true,false"})
-    void preservesTheStandardRendererAndAnExplicitOptOut(boolean serverDefault, Boolean choice)
-            throws Exception {
-        properties.getSystem().setStirlingOfficeConversion(serverDefault);
-        var request = request(email(new byte[0]), "eml");
-        request.setUseStirlingOfficeConvert(choice);
-        byte[] expected;
-        try (var pdf = new PDDocument();
-                var output = new ByteArrayOutputStream()) {
-            pdf.addPage(new PDPage());
-            pdf.save(output);
-            expected = output.toByteArray();
-        }
-        try (var standard = mockStatic(FileToPdf.class)) {
-            standard.when(
-                            () ->
-                                    FileToPdf.convertHtmlToPdf(
-                                            eq("weasyprint"),
-                                            any(),
-                                            any(),
-                                            anyString(),
-                                            any(),
-                                            any()))
-                    .thenReturn(expected);
-
-            assertThat(body(controller.convertEmlToPdf(request))).isEqualTo(expected);
-            standard.verify(
-                    () ->
-                            FileToPdf.convertHtmlToPdf(
-                                    eq("weasyprint"), any(), any(), anyString(), any(), any()));
-        }
-    }
-
-    @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void respectsAttachmentChoices(boolean include) throws Exception {
         var request = request(email("attached note".getBytes(StandardCharsets.UTF_8)), "eml");
-        request.setUseStirlingOfficeConvert(true);
         request.setIncludeAttachments(include);
         try (var pdf = Loader.loadPDF(body(controller.convertEmlToPdf(request)))) {
             String text = new PDFTextStripper().getText(pdf);
@@ -158,7 +102,6 @@ class OfficeEmailConversionTest {
     @Test
     void excludesAttachmentsExceedingTheSelectedLimit() throws Exception {
         var request = request(email(new byte[1024 * 1024 + 1]), "eml");
-        request.setUseStirlingOfficeConvert(true);
         request.setIncludeAttachments(true);
         request.setMaxAttachmentSizeMB(1);
         try (var pdf = Loader.loadPDF(body(controller.convertEmlToPdf(request)))) {
@@ -170,7 +113,6 @@ class OfficeEmailConversionTest {
     @Test
     void keepsHtmlDownloadAndSanitizationIndependentOfTheRenderer() throws Exception {
         var request = request(email(new byte[0]), "eml");
-        request.setUseStirlingOfficeConvert(true);
         request.setDownloadHtml(true);
         var response = controller.convertEmlToPdf(request);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_HTML);
@@ -190,7 +132,6 @@ class OfficeEmailConversionTest {
     @Test
     void rendererFailureReturnsTheConversionReason() throws Exception {
         var request = request(email(new byte[0]), "eml");
-        request.setUseStirlingOfficeConvert(true);
         doThrow(new IOException("Only part of email content could be converted"))
                 .when(toPdf)
                 .convertHtml(any(), eq(false));

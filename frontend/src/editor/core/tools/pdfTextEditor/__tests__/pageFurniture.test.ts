@@ -23,6 +23,19 @@ const LETTER: DisplayTransformData = {
   displayHeight: 792,
 };
 
+/** A Letter page turned a quarter for display. */
+const LETTER_TURNED: DisplayTransformData = {
+  ...LETTER,
+  a: 0,
+  b: 1,
+  c: -1,
+  d: 0,
+  e: 792,
+  rotate: 90,
+  displayWidth: 792,
+  displayHeight: 612,
+};
+
 /** `n` written in Arabic-Indic digits. */
 function arabicIndic(n: number): string {
   return String(n).replace(/\d/g, (digit) =>
@@ -61,6 +74,11 @@ function run(
     matrix: turned(look.angle ?? 0, x, y),
     fill: { r: 0, g: 0, b: 0, a: look.alpha ?? 255 },
   };
+}
+
+/** A table cell `width` points wide, its box starting at (x, y). */
+function cell(id: string, text: string, y: number, x: number, width = 100) {
+  return { ...run(id, text, y, x), bounds: { x, y, width, height: 10 } };
 }
 
 function image(id: string, x: number, y: number) {
@@ -151,9 +169,46 @@ describe("recogniseFurniture", () => {
     expect(found.get(0)?.has("m0")).toBe(false);
   });
 
-  it("needs two pages, however short the document", () => {
-    expect(recogniseFurniture([furnished(0)], 1).size).toBe(0);
+  it("needs two pages for headers and footers, however short the document", () => {
+    expect(recogniseFurniture([furnished(0)], 1).get(0)).toEqual(
+      new Map([["n0", "PageNum"]]),
+    );
   });
+
+  it("finds a page number shown once that numbers its own page", () => {
+    const found = recogniseFurniture(
+      [
+        page(2, [run("a", "Page 3", 30)]),
+        page(3, [run("b", "4 of 12", 30)]),
+        page(4, [run("c", "- 5 -", 760)]),
+      ],
+      12,
+    );
+    expect([kindsOn(found, 2), kindsOn(found, 3), kindsOn(found, 4)]).toEqual([
+      { a: "PageNum" },
+      { b: "PageNum" },
+      { c: "PageNum" },
+    ]);
+  });
+
+  it("leaves a lone number that is not its page's, or that opens a heading", () => {
+    const found = recogniseFurniture(
+      [page(0, [run("a", "Page 7", 30), run("b", "1 Introduction", 760)])],
+      12,
+    );
+    expect(found.size).toBe(0);
+  });
+
+  it.each(["Figure 3", "Fig. 3", "Part 3", "Step 3", "Table 3"])(
+    "leaves a lone %s that labels something else, at its own page's edge",
+    (text) => {
+      const found = recogniseFurniture(
+        [page(2, [run("a", text, 30), run("b", text, 760)])],
+        12,
+      );
+      expect(found.size).toBe(0);
+    },
+  );
 
   it.each([
     ["alone", (n: number) => `${n}`],
@@ -178,6 +233,174 @@ describe("recogniseFurniture", () => {
     const pages = [0, 1, 2].map((i) => page(i, [run(`p${i}`, text(i), 30)]));
     expect(recogniseFurniture(pages, 3).get(0)?.get("p0")).toBe("Footer");
   });
+
+  it("reads two page numbers to a sheet as a footer", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        run(`l${i}`, `${2 * i + 1}`, 30, 72),
+        run(`r${i}`, `${2 * i + 2}`, 30, 400),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      l1: "Footer",
+      r1: "Footer",
+    });
+  });
+
+  it("reads page numbers that skip an unnumbered page as a footer", () => {
+    const pages = [1, 2, null, 3, 4].map((n, i) =>
+      page(i, n === null ? [] : [run(`p${i}`, `Page ${n}`, 30)]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 5), 3)).toEqual({ p3: "Footer" });
+  });
+
+  it("reads a footer set in four parts as furniture, its page number included", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        run(`a${i}`, "Acme Ltd", 30, 72),
+        run(`c${i}`, "Confidential", 30, 200),
+        run(`w${i}`, "www.acme.example", 30, 320),
+        run(`n${i}`, `Page ${i + 1}`, 30, 440),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      a1: "Footer",
+      c1: "Footer",
+      w1: "Footer",
+      n1: "PageNum",
+    });
+  });
+
+  it("keeps the page number in a header set as a table, and leaves its other cells", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        run(`d${i}`, "Doc QP-01", 760, 72),
+        run(`v${i}`, "Rev 2", 760, 200),
+        run(`y${i}`, "2024", 760, 320),
+        run(`n${i}`, `Page ${i + 1} of 3`, 760, 440),
+        run(`o${i}`, "Owner", 745, 72),
+        run(`q${i}`, "Quality", 745, 200),
+        run(`s${i}`, "Approved", 745, 320),
+        run(`j${i}`, "J. Okafor", 745, 440),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      n1: "PageNum",
+    });
+  });
+
+  it("reads a turned page's footer along its displayed lines, beside text on its unturned line", () => {
+    const turnedRun = (id: string, text: string, x: number) => ({
+      ...run(id, text, 0),
+      bounds: { x, y: 72, width: 10, height: 120 },
+    });
+    const pages = [0, 1, 2].map((i) => ({
+      pageIndex: i,
+      display: LETTER_TURNED,
+      runs: [
+        turnedRun(`f${i}`, "Confidential", 30),
+        ...[200, 300, 400].map((x) => turnedRun(`b${i}-${x}`, `Body ${x}`, x)),
+      ],
+    }));
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      f1: "Footer",
+    });
+  });
+
+  it("leaves a table's header row that each page repeats near its top", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Ref", "Item", "Qty", "Total"].map((text, x) =>
+          run(`c${i}-${x}`, text, 720, 72 + x * 120),
+        ),
+        ...[
+          `A-${[25, 61, 47][i]}`,
+          "Widget",
+          `${[7, 2, 5][i]}`,
+          `${[12, 3, 8][i]}.50`,
+        ].map((text, x) => run(`r${i}-${x}`, text, 705, 72 + x * 120)),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves a value near an edge that each page shows twice and changes from page to page", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        run(`l${i}`, `PO-00${[25, 61, 47][i]}`, 40, 72),
+        run(`r${i}`, `PO-00${[25, 61, 47][i]}`, 40, 400),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves values near an edge whose number changes on every page without counting them", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [run(`v${i}`, `PO-00${[25, 61, 47][i]}`, 40)]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves a two-column table's header row that each page repeats near its top", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        cell(`h${i}-0`, "Name", 740, 72),
+        cell(`h${i}-1`, "Value", 740, 320),
+        cell(`d${i}-0`, ["Alpha", "Beta", "Gamma"][i], 725, 72),
+        cell(`d${i}-1`, ["High", "Low", "Medium"][i], 725, 320),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves a table's header row when the rows under it leave cells empty", () => {
+    const columns = [72, 200, 330, 460];
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Ref", "Item", "Qty", "Total"].map((text, c) =>
+          cell(`h${i}-${c}`, text, 740, columns[c]),
+        ),
+        cell(`d${i}-0`, ["A-25", "A-61", "A-47"][i], 725, columns[0]),
+        cell(`d${i}-3`, ["12.50", "3.50", "8.50"][i], 725, columns[3]),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves a table's heading rows that each page repeats word for word", () => {
+    const columns = [72, 200, 330, 460];
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Region", "Sales", "Costs", "Margin"].map((text, c) =>
+          cell(`h${i}-${c}`, text, 740, columns[c]),
+        ),
+        ...["", "(£k)", "(£k)", "(%)"].flatMap((text, c) =>
+          text ? [cell(`u${i}-${c}`, text, 725, columns[c])] : [],
+        ),
+        ...[["North", "South", "East"][i], "41", "17", "58"].map((text, c) =>
+          cell(`d${i}-${c}`, text, 710, columns[c]),
+        ),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves a footer set as a table in two rows, keeping its page number", () => {
+    const columns = [72, 200, 330, 460];
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Acme Ltd", "1 High Street", "London EC1A", "United Kingdom"].map(
+          (text, c) => cell(`a${i}-${c}`, text, 44, columns[c]),
+        ),
+        ...["T 020 7946", "info@acme", "www.acme", `Page ${i + 1}`].map(
+          (text, c) => cell(`b${i}-${c}`, text, 30, columns[c]),
+        ),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      "b1-3": "PageNum",
+    });
+  });
 });
 
 describe("recogniseFurniture watermarks", () => {
@@ -188,6 +411,20 @@ describe("recogniseFurniture watermarks", () => {
         run(`w${i}-${x}-${y}`, "DRAFT", y, x, { alpha: 128 }),
       ),
     );
+
+  it("reads a header in two parts as a header beside a row of watermark tiles", () => {
+    const pages = [0, 1].map((i) =>
+      page(i, [
+        run(`h${i}`, "Acme Corp", 760, 72),
+        run(`q${i}`, "Q3 report", 760, 400),
+        ...tiles(i),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 2), 0)).toMatchObject({
+      h0: "Header",
+      q0: "Header",
+    });
+  });
 
   it("reads tiled see-through text as a watermark, even at the page's edges", () => {
     const pages = [0, 1].map((i) =>
@@ -219,6 +456,71 @@ describe("recogniseFurniture watermarks", () => {
       t2: "Watermark",
       t3: "Watermark",
     });
+  });
+
+  it("reads text set at an angle on a one-page document as a watermark", () => {
+    const pages = [page(0, [run("w", "SAMPLE", 400, 200, { angle: 45 })])];
+    expect(kindsOn(recogniseFurniture(pages, 1), 0)).toEqual({
+      w: "Watermark",
+    });
+  });
+
+  it("reads large text set at an angle on one page of several as a watermark, but not a slanted label", () => {
+    const stamp = {
+      ...run("w", "COPY", 400, 200, { angle: 40 }),
+      bounds: { x: 200, y: 300, width: 220, height: 190 },
+    };
+    const label = {
+      ...run("l", "March", 300, 72, { angle: 45 }),
+      bounds: { x: 72, y: 300, width: 28, height: 28 },
+    };
+    const pages = [page(0, [stamp, label]), page(1, []), page(2, [])];
+    expect(kindsOn(recogniseFurniture(pages, 3), 0)).toEqual({
+      w: "Watermark",
+    });
+  });
+
+  it("leaves a table's number cells spread across the page", () => {
+    const cells = [100, 300, 500, 700].flatMap((y, row) =>
+      [72, 250, 450].map((x, col) =>
+        run(`c${row}-${col}`, String(row * 10 + col + 7), y, x),
+      ),
+    );
+    expect(recogniseFurniture([page(0, cells)], 1).size).toBe(0);
+  });
+
+  it("leaves a table's repeated answers that spread across the page", () => {
+    const rows = Array.from({ length: 31 }, (_, k) => 100 + k * 20);
+    const cells = rows.flatMap((y, k) => [
+      cell(`f${k}`, `Feature ${k}`, y, 72),
+      cell(`a${k}`, k % 2 ? "Yes" : "No", y, 200, 80),
+      cell(`b${k}`, k % 3 ? "No" : "Yes", y, 520, 80),
+    ]);
+    expect(recogniseFurniture([page(0, cells)], 1).size).toBe(0);
+  });
+
+  it("leaves a table's column headings set at an angle on every page", () => {
+    const columns = [72, 172, 272, 372];
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Speed", "Range", "Weight", "Price"].map((text, c) => ({
+          ...run(`h${i}-${c}`, text, 700, columns[c], { angle: 45 }),
+          bounds: { x: columns[c], y: 700, width: 60, height: 60 },
+        })),
+        ...["Fast", "Long", "Light", ["£9", "£7", "£5"][i]].map((text, c) =>
+          cell(`d${i}-${c}`, text, 680, columns[c], 60),
+        ),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves an image set at an angle, and see-through text, on a one-page document", () => {
+    const photo = { ...image("img", 100, 300), matrix: turned(8, 100, 300) };
+    const faded = [400, 380, 360].map((y) =>
+      run(`t${y}`, `Line at ${y}`, y, 72, { alpha: 230 }),
+    );
+    expect(recogniseFurniture([page(0, faded, [photo])], 1).size).toBe(0);
   });
 
   it("leaves copies of a label that do not spread across the page", () => {
