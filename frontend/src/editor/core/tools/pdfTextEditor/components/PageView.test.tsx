@@ -9,13 +9,18 @@ import {
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PDF_RENDER_FILTERS } from "@editor/components/viewer/pdfRenderFilters";
 
 vi.mock("@editor/tools/pdfTextEditor/components/TableOverlay", () => ({
   TableOverlay: () => null,
 }));
 
-function view(live: Page, document: EditorDocument) {
-  return stubbedPageView(document, pageSnapshot(live));
+function view(
+  live: Page,
+  document: EditorDocument,
+  props: Parameters<typeof stubbedPageView>[2] = {},
+) {
+  return stubbedPageView(document, pageSnapshot(live), props);
 }
 
 function editArea(live: Page): void {
@@ -112,5 +117,33 @@ describe("PageView partial redraw", () => {
       expect(queryByTestId("pdf-editor-page-0-error")).toBeNull(),
     );
     warn.mockRestore();
+  });
+
+  it("tints the page and its overlays with the viewer's reading mode", async () => {
+    const live = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    const document = stubDocument(live);
+    vi.spyOn(PdfiumPageRenderer, "render").mockImplementation(
+      async (_doc, page, scale) =>
+        PdfiumPageRenderer.rasterSize(
+          page.width,
+          page.height,
+          scale,
+        ) as ImageData,
+    );
+
+    const tinted = (root: HTMLElement, filter: string | undefined) =>
+      [...root.querySelectorAll<HTMLElement>("[style]")].filter(
+        (el) => el.style.filter === filter,
+      );
+
+    const { container, rerender } = render(
+      view(live, document, { renderMode: "dark" }),
+    );
+    await waitFor(() =>
+      expect(tinted(container, PDF_RENDER_FILTERS.dark)).toHaveLength(2),
+    );
+
+    rerender(view(live, document, { renderMode: "normal" }));
+    expect(tinted(container, PDF_RENDER_FILTERS.dark)).toHaveLength(0);
   });
 });
