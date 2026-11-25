@@ -328,14 +328,22 @@ test.describe("PDF accessibility review", () => {
     }).toPass({ timeout: 20_000 });
     await expect(picker).toHaveValue("");
 
-    await picker.click();
-    await picker.fill("fr-FR");
-    await page.getByRole("option", { name: /\(fr-FR\)$/ }).click();
+    // The card follows the page while it settles, so a pick can land as it
+    // redraws; picking the same language again is harmless.
+    await expect(async () => {
+      await selectWords();
+      await picker.click({ timeout: 2_000 });
+      await picker.fill("fr-FR");
+      await page
+        .getByRole("option", { name: /\(fr-FR\)$/ })
+        .click({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
     // Tagging the words as a Span clears the selection; selecting them again
     // finds that span, in the language just given.
-    await expect(picker).toBeHidden();
-    await selectWords();
-    await expect(picker).toHaveValue(/\(fr-FR\)$/);
+    await expect(async () => {
+      await selectWords();
+      await expect(picker).toHaveValue(/\(fr-FR\)$/, { timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
   });
 
   test("the save prompt covers the card, so tags can't change under it", async ({

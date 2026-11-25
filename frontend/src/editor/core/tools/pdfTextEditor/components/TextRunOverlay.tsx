@@ -566,11 +566,15 @@ export function TextRunOverlay({
       if (!el || !selection?.focusNode || !el.contains(selection.focusNode)) {
         return;
       }
-      onTextRangeChange(plainSelectionRange(el));
+      const range = plainSelectionRange(el);
+      // Read-only, a click clears the range by reselecting the box, so a
+      // collapse here is a repaint (a font arriving) replacing the selected nodes.
+      if (range === null && !focused) return;
+      onTextRangeChange(range);
     };
     document.addEventListener("selectionchange", report);
     return () => document.removeEventListener("selectionchange", report);
-  }, [tracksSelection, onTextRangeChange]);
+  }, [tracksSelection, focused, onTextRangeChange]);
   // Masking a run the user has only clicked into swaps real PDF ink for a
   // CSS approximation, so hold the pristine bitmap until an actual edit.
   const [touched, setTouchedState] = useState(false);
