@@ -62,26 +62,29 @@ export function ViewerEditToolbar() {
 
   return (
     <>
-      <TopBar
-        store={store}
-        state={bars.state}
-        selection={bars.selection}
-        mobile={isMobile}
-        editing={!reviewing}
-      />
+      {/* Positioned so the find bar can hang off the bar's lower edge. */}
+      <div style={{ position: "relative" }}>
+        <TopBar
+          store={store}
+          state={bars.state}
+          selection={bars.selection}
+          mobile={isMobile}
+          editing={!reviewing}
+        />
+        {state.findOpen && state.hasDocument && !reviewing && (
+          <FindBar
+            store={store}
+            pages={state.pages}
+            onClose={() => store.setFindOpen(false)}
+          />
+        )}
+      </div>
       {reviewing && store.document && (
         <ReviewOverlay
           store={store}
           doc={store.document}
           state={state}
           selection={selection}
-        />
-      )}
-      {state.findOpen && state.hasDocument && !reviewing && (
-        <FindBar
-          store={store}
-          pages={state.pages}
-          onClose={() => store.setFindOpen(false)}
         />
       )}
       <MarqueeSelector store={store} />
