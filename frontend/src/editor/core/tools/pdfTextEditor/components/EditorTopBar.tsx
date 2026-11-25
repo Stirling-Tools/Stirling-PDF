@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { Icon } from "@editor/ui/Icon";
 import { Group, Menu, Popover, Tooltip } from "@mantine/core";
@@ -99,6 +100,10 @@ interface EditorTopBarProps {
   onShowHelp: () => void;
   hasDocument: boolean;
   dirty: boolean;
+  /** Controls at the bar's end, before help. */
+  trail?: ReactNode;
+  /** False during an accessibility review: the bar keeps only undo, redo and its trail. */
+  editing: boolean;
 }
 
 export function EditorTopBar({
@@ -112,6 +117,8 @@ export function EditorTopBar({
   onShowHelp,
   hasDocument,
   dirty,
+  trail,
+  editing,
 }: EditorTopBarProps) {
   const { t } = useTranslation();
   const session = useEditorSession();
@@ -231,164 +238,177 @@ export function EditorTopBar({
           />
         </Tooltip>
 
-        <ToolbarSeparator />
-
-        {compact ? (
-          <Menu shadow="md" position="bottom-start" withinPortal>
-            <Menu.Target>
-              <Button
-                size="sm"
-                variant="tertiary"
-                accent="neutral"
-                aria-label={t("pdfTextEditor.toolbar.more", "More actions")}
-                disabled={!hasDocument}
-                data-testid="pdf-editor-overflow-menu"
-                style={NO_SHRINK}
-                leftSection={<Icon name="ellipsis-vertical" size={20} />}
-              />
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item
-                leftSection={<Icon name="type" size={20} />}
-                onClick={onToggleAddText}
-                data-testid="pdf-editor-add-text"
-              >
-                {addTextLabel}
-              </Menu.Item>
-              <Menu.Item
-                leftSection={<Icon name="table" size={20} />}
-                onClick={onToggleAddTable}
-                data-testid="pdf-editor-add-table"
-                aria-pressed={addTableArmed}
-              >
-                {addTableLabel}
-              </Menu.Item>
-              <Menu.Item
-                leftSection={<Icon name="image" size={20} />}
-                onClick={() => session?.pickImage()}
-                disabled={!session}
-                data-testid="pdf-editor-add-image"
-              >
-                {addImageLabel}
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item
-                leftSection={<Icon name="search" size={20} />}
-                onClick={onToggleFind}
-                data-testid="pdf-editor-open-find"
-              >
-                {findLabel}
-              </Menu.Item>
-              <Menu.Item
-                leftSection={<Icon name="circle-question-mark" size={20} />}
-                onClick={onShowHelp}
-                data-testid="pdf-editor-help"
-              >
-                {helpLabel}
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        ) : (
-          <>
-            <Tooltip
-              label={t(
-                "pdfTextEditor.toolbar.addTextTooltip",
-                "Add a text box - then click the page",
-              )}
-            >
-              <Button
-                size="sm"
-                variant={addTextArmed ? "primary" : "tertiary"}
-                accent={addTextArmed ? "default" : "neutral"}
-                leftSection={<Icon name="type" size={20} />}
-                onClick={onToggleAddText}
-                disabled={!hasDocument}
-                data-testid="pdf-editor-add-text"
-                style={NO_SHRINK}
-              >
-                {addTextArmed
-                  ? t(
-                      "pdfTextEditor.sidebar.clickPageToAddText",
-                      "Click page to add text",
-                    )
-                  : t("pdfTextEditor.sidebar.addText", "Add text")}
-              </Button>
-            </Tooltip>
-            <Tooltip label={addTableLabel}>
-              <Button
-                size="sm"
-                variant={addTableArmed ? "primary" : "tertiary"}
-                accent={addTableArmed ? "default" : "neutral"}
-                leftSection={<Icon name="table" size={20} />}
-                onClick={onToggleAddTable}
-                aria-label={addTableLabel}
-                aria-pressed={addTableArmed}
-                disabled={!hasDocument}
-                data-testid="pdf-editor-add-table"
-                style={NO_SHRINK}
-              />
-            </Tooltip>
-            <Tooltip label={t("pdfTextEditor.sidebar.addImage", "Add image")}>
-              <Button
-                size="sm"
-                variant="tertiary"
-                accent="neutral"
-                leftSection={<Icon name="image" size={20} />}
-                onClick={() => session?.pickImage()}
-                disabled={!session || !hasDocument}
-                aria-label={t("pdfTextEditor.sidebar.addImage", "Add image")}
-                data-testid="pdf-editor-add-image"
-                style={NO_SHRINK}
-              >
-                {t("pdfTextEditor.sidebar.image", "Image")}
-              </Button>
-            </Tooltip>
-            <Tooltip
-              label={t("pdfTextEditor.settings.findTooltip", {
-                defaultValue: "Find ({{shortcut}})",
-                shortcut: modShortcut("F"),
-              })}
-            >
-              <Button
-                variant={findOpen ? "primary" : "tertiary"}
-                accent={findOpen ? "default" : "neutral"}
-                size="sm"
-                aria-pressed={findOpen}
-                onClick={onToggleFind}
-                disabled={!hasDocument}
-                aria-label={t(
-                  "pdfTextEditor.settings.find",
-                  "Find in document",
-                )}
-                data-testid="pdf-editor-open-find"
-                style={NO_SHRINK}
-                leftSection={<Icon name="search" size={20} />}
-              />
-            </Tooltip>
-          </>
-        )}
-
-        {hasSelection && (
+        {editing && (
           <>
             <ToolbarSeparator />
-            {/* Ahead of the formatting group: the band scrolls sideways
-                  under macOS's hidden scrollbars, so anything past the edge
-                  is invisible rather than visibly clipped. */}
-            <ObjectGroup controller={controller} />
-            <ToolbarSeparator />
-            {foldFormat ? (
-              <FormatMenu controller={controller} />
+
+            {compact ? (
+              <Menu shadow="md" position="bottom-start" withinPortal>
+                <Menu.Target>
+                  <Button
+                    size="sm"
+                    variant="tertiary"
+                    accent="neutral"
+                    aria-label={t("pdfTextEditor.toolbar.more", "More actions")}
+                    disabled={!hasDocument}
+                    data-testid="pdf-editor-overflow-menu"
+                    style={NO_SHRINK}
+                    leftSection={<Icon name="ellipsis-vertical" size={20} />}
+                  />
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={<Icon name="type" size={20} />}
+                    onClick={onToggleAddText}
+                    data-testid="pdf-editor-add-text"
+                  >
+                    {addTextLabel}
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<Icon name="table" size={20} />}
+                    onClick={onToggleAddTable}
+                    data-testid="pdf-editor-add-table"
+                    aria-pressed={addTableArmed}
+                  >
+                    {addTableLabel}
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<Icon name="image" size={20} />}
+                    onClick={() => session?.pickImage()}
+                    disabled={!session}
+                    data-testid="pdf-editor-add-image"
+                  >
+                    {addImageLabel}
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Item
+                    leftSection={<Icon name="search" size={20} />}
+                    onClick={onToggleFind}
+                    data-testid="pdf-editor-open-find"
+                  >
+                    {findLabel}
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<Icon name="circle-question-mark" size={20} />}
+                    onClick={onShowHelp}
+                    data-testid="pdf-editor-help"
+                  >
+                    {helpLabel}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
             ) : (
-              <div className="pdf-editor-topbar__format" ref={setFormatGroup}>
-                <FormatGroup controller={controller} />
-              </div>
+              <>
+                <Tooltip
+                  label={t(
+                    "pdfTextEditor.toolbar.addTextTooltip",
+                    "Add a text box - then click the page",
+                  )}
+                >
+                  <Button
+                    size="sm"
+                    variant={addTextArmed ? "primary" : "tertiary"}
+                    accent={addTextArmed ? "default" : "neutral"}
+                    leftSection={<Icon name="type" size={20} />}
+                    onClick={onToggleAddText}
+                    disabled={!hasDocument}
+                    data-testid="pdf-editor-add-text"
+                    style={NO_SHRINK}
+                  >
+                    {addTextArmed
+                      ? t(
+                          "pdfTextEditor.sidebar.clickPageToAddText",
+                          "Click page to add text",
+                        )
+                      : t("pdfTextEditor.sidebar.addText", "Add text")}
+                  </Button>
+                </Tooltip>
+                <Tooltip label={addTableLabel}>
+                  <Button
+                    size="sm"
+                    variant={addTableArmed ? "primary" : "tertiary"}
+                    accent={addTableArmed ? "default" : "neutral"}
+                    leftSection={<Icon name="table" size={20} />}
+                    onClick={onToggleAddTable}
+                    aria-label={addTableLabel}
+                    aria-pressed={addTableArmed}
+                    disabled={!hasDocument}
+                    data-testid="pdf-editor-add-table"
+                    style={NO_SHRINK}
+                  />
+                </Tooltip>
+                <Tooltip
+                  label={t("pdfTextEditor.sidebar.addImage", "Add image")}
+                >
+                  <Button
+                    size="sm"
+                    variant="tertiary"
+                    accent="neutral"
+                    leftSection={<Icon name="image" size={20} />}
+                    onClick={() => session?.pickImage()}
+                    disabled={!session || !hasDocument}
+                    aria-label={t(
+                      "pdfTextEditor.sidebar.addImage",
+                      "Add image",
+                    )}
+                    data-testid="pdf-editor-add-image"
+                    style={NO_SHRINK}
+                  >
+                    {t("pdfTextEditor.sidebar.image", "Image")}
+                  </Button>
+                </Tooltip>
+                <Tooltip
+                  label={t("pdfTextEditor.settings.findTooltip", {
+                    defaultValue: "Find ({{shortcut}})",
+                    shortcut: modShortcut("F"),
+                  })}
+                >
+                  <Button
+                    variant={findOpen ? "primary" : "tertiary"}
+                    accent={findOpen ? "default" : "neutral"}
+                    size="sm"
+                    aria-pressed={findOpen}
+                    onClick={onToggleFind}
+                    disabled={!hasDocument}
+                    aria-label={t(
+                      "pdfTextEditor.settings.find",
+                      "Find in document",
+                    )}
+                    data-testid="pdf-editor-open-find"
+                    style={NO_SHRINK}
+                    leftSection={<Icon name="search" size={20} />}
+                  />
+                </Tooltip>
+              </>
+            )}
+
+            {hasSelection && (
+              <>
+                <ToolbarSeparator />
+                {/* Ahead of the formatting group: the band scrolls sideways
+                      under macOS's hidden scrollbars, so anything past the edge
+                      is invisible rather than visibly clipped. */}
+                <ObjectGroup controller={controller} />
+                <ToolbarSeparator />
+                {foldFormat ? (
+                  <FormatMenu controller={controller} />
+                ) : (
+                  <div
+                    className="pdf-editor-topbar__format"
+                    ref={setFormatGroup}
+                  >
+                    <FormatGroup controller={controller} />
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
       </div>
 
       <div className="pdf-editor-topbar__trail">
-        {!compact && (
+        {trail}
+        {editing && !compact && (
           <Tooltip
             label={t("pdfTextEditor.help.tooltip", "Keyboard shortcuts (?)")}
           >

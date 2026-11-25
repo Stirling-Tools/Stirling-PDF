@@ -58,6 +58,10 @@ html[data-app-theme="light"] {
   --c-text-on-light: var(--p-ink);
   --c-accent-on-light: var(--p-blue-700);
   --c-document-bg: var(--p-white);
+  /* A white page under each viewer page colour, for previewing the choice. */
+  --c-page-colour-normal: var(--p-white);
+  --c-page-colour-dark: var(--p-black);
+  --c-page-colour-sepia: var(--p-page-sepia);
   /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
   --c-highlight: var(--p-flash-yellow);
   /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */

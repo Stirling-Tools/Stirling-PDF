@@ -41,7 +41,7 @@
   transform: translateX(3px);
 }
 
-.attachment-item:focus-visible {
+.attachment-item:has(.attachment-item__content:focus-visible) {
   outline: 2px solid
     color-mix(in srgb, var(--c-text) 30%, var(--c-border-subtle));
   outline-offset: 2px;
@@ -61,6 +61,7 @@
 
 /* Content */
 .attachment-item__content {
+  outline: none;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;

@@ -40,6 +40,8 @@ export interface AccessibilitySummary {
   hasTitle: boolean;
   displaysDocTitle: boolean;
   hasLanguage: boolean;
+  /** The file's language tag; absent from servers that predate it. */
+  language?: string | null;
   allFontsEmbedded: boolean;
   unembeddedFonts: number;
   figures: number;
