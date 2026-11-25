@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Regeneration drops `sh` shadings, which the save-time repair puts back. It
@@ -9,14 +10,10 @@ test("a pattern colour space fill survives regeneration", async ({ page }) => {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(
-      path.join(
-        import.meta.dirname,
-        "../test-fixtures/pattern-fill-sample.pdf",
-      ),
-    );
+  await openInTextEditor(
+    page,
+    path.join(import.meta.dirname, "../test-fixtures/pattern-fill-sample.pdf"),
+  );
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });

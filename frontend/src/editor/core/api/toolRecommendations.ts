@@ -5,6 +5,14 @@ export interface ToolRecommendationDto {
   score: number;
 }
 
+export type ToolWorkflowScope = "USER" | "TEAM" | "GLOBAL";
+
+export interface ToolWorkflowDto {
+  tools: string[];
+  count: number;
+  scope: ToolWorkflowScope;
+}
+
 const BASE_PATH = "/api/v1/proprietary/ui-data/tool-recommendations";
 
 // Once the route has answered, a 404 is more likely a proxy hiccup mid-deploy
@@ -66,6 +74,27 @@ export async function fetchToolRecommendations(
     });
     noteSuccess();
     return response.data?.recommendations ?? [];
+  } catch (error) {
+    noteFailure(error);
+    return null;
+  }
+}
+
+export async function fetchToolWorkflows(
+  limit = 6,
+): Promise<ToolWorkflowDto[] | null> {
+  if (backendUnavailable) return null;
+  try {
+    const params = new URLSearchParams({
+      minLength: "2",
+      limit: String(limit),
+    });
+    const response = await apiClient.get<{ workflows: ToolWorkflowDto[] }>(
+      `${BASE_PATH}/workflows?${params}`,
+      { suppressErrorToast: true, skipAuthRedirect: true },
+    );
+    noteSuccess();
+    return response.data?.workflows ?? [];
   } catch (error) {
     noteFailure(error);
     return null;

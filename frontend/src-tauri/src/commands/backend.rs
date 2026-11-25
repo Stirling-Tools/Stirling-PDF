@@ -967,4 +967,29 @@ mod tests {
         assert_eq!(bundled_jemalloc(&dir), Some(vendor.join(name)));
         let _ = std::fs::remove_dir_all(&dir);
     }
+    #[cfg(not(windows))]
+    #[test]
+    fn jpdfium_native_dir_resolves_the_host_platform_inside_the_jre() {
+        let jre =
+            std::env::temp_dir().join(format!("stirling-jpdfium-natives-{}", std::process::id()));
+        let java = jre.join("bin").join("java");
+        assert_eq!(super::jpdfium_native_dir(&java), None);
+
+        let arch = if cfg!(target_arch = "aarch64") {
+            "arm64"
+        } else {
+            "x64"
+        };
+        let (os, bridge) = if cfg!(target_os = "macos") {
+            ("darwin", "libjpdfium.dylib")
+        } else {
+            ("linux", "libjpdfium.so")
+        };
+        let natives = jre.join("natives").join(format!("{os}-{arch}"));
+        std::fs::create_dir_all(&natives).unwrap();
+        std::fs::write(natives.join(bridge), b"").unwrap();
+
+        assert_eq!(super::jpdfium_native_dir(&java), Some(natives));
+        let _ = std::fs::remove_dir_all(&jre);
+    }
 }

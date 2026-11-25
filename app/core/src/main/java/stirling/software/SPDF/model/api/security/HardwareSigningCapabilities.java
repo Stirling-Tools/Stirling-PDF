@@ -5,12 +5,13 @@ import java.util.List;
 /**
  * Describes what hardware-backed signing the local backend can offer. Only meaningful on the
  * desktop bundle, where the backend runs as a local sidecar in the signed-in user's session and can
- * reach the Windows certificate store / a plugged-in USB PKCS#11 token.
+ * reach the Windows certificate store, the macOS keychain or a plugged-in USB PKCS#11 token.
  */
 public record HardwareSigningCapabilities(
         boolean desktop,
         String osName,
         boolean windowsStoreSupported,
+        boolean macKeychainSupported,
         boolean pkcs11Supported,
         List<Pkcs11LibraryInfo> detectedLibraries) {
 

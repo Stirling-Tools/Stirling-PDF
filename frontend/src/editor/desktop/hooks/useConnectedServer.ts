@@ -4,18 +4,37 @@ import {
   connectionModeService,
   type ConnectionMode,
 } from "@editor/services/connectionModeService";
+import { useConnectionMode } from "@editor/hooks/useConnectionMode";
 
 function isServerMode(mode: ConnectionMode | null): boolean {
   return mode === "saas" || mode === "selfhosted";
 }
 
-/** Whether the app is signed in to Stirling Cloud or a self-hosted server. Starts false: this
- *  gates surfaces that fetch on mount, and the bundled backend 404s every one of those calls. */
-export function useConnectedServer(): boolean {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isServer, setIsServer] = useState(() =>
-    isServerMode(connectionModeService.getCachedMode()),
-  );
+export interface ConnectedServerState {
+  connected: boolean;
+  /** The mode this answer was read from, so callers never pair it with another read. */
+  mode: ConnectionMode | null;
+  /** False until both the session and the mode have been read once. */
+  settled: boolean;
+}
+
+/** {@link useConnectedServer}, plus whether the answer is known yet: false at first means "not yet". */
+export function useConnectedServerState(): ConnectedServerState {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const mode = useConnectionMode();
+  // The mode stays null when the saved config cannot be read; settle as not connected then.
+  const [modeUnreadable, setModeUnreadable] = useState(false);
+
+  useEffect(() => {
+    if (mode !== null) return;
+    let active = true;
+    connectionModeService.getCurrentMode().catch(() => {
+      if (active) setModeUnreadable(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [mode]);
 
   useEffect(
     () =>
@@ -33,22 +52,15 @@ export function useConnectedServer(): boolean {
     [],
   );
 
-  useEffect(() => {
-    let current = true;
-    void connectionModeService.getCurrentMode().then((mode) => {
-      if (current) setIsServer(isServerMode(mode));
-    });
-    const unsubscribe = connectionModeService.subscribeToModeChanges(
-      (config) => {
-        current = false;
-        setIsServer(isServerMode(config.mode));
-      },
-    );
-    return () => {
-      current = false;
-      unsubscribe();
-    };
-  }, []);
+  return {
+    connected: isAuthenticated === true && isServerMode(mode),
+    mode,
+    settled: isAuthenticated !== null && (mode !== null || modeUnreadable),
+  };
+}
 
-  return isAuthenticated && isServer;
+/** Whether the app is signed in to Stirling Cloud or a self-hosted server. Starts false: this
+ *  gates surfaces that fetch on mount, and the bundled backend 404s every one of those calls. */
+export function useConnectedServer(): boolean {
+  return useConnectedServerState().connected;
 }
