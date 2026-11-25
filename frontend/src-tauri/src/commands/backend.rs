@@ -80,11 +80,22 @@ fn check_backend_status() -> Result<(), String> {
     Ok(())
 }
 
+const WINDOWS_LAUNCHER_NAME: &str = "stirling-pdf-backend.exe";
+
+fn windows_java_executable(jre_dir: &Path) -> PathBuf {
+    let launcher = jre_dir.join("bin").join(WINDOWS_LAUNCHER_NAME);
+    if launcher.is_file() {
+        launcher
+    } else {
+        jre_dir.join("bin").join("java.exe")
+    }
+}
+
 // Find the bundled JRE and return the java executable path
 fn find_bundled_jre(resource_dir: &Path) -> Result<PathBuf, String> {
     let jre_dir = resource_dir.join("runtime").join("jre");
     let java_executable = if cfg!(windows) {
-        jre_dir.join("bin").join("java.exe")
+        windows_java_executable(&jre_dir)
     } else {
         jre_dir.join("bin").join("java")
     };
@@ -715,6 +726,23 @@ pub fn cleanup_backend() {
 #[cfg(test)]
 mod tests {
     use super::{find_stirling_jar, version_key};
+
+    #[test]
+    fn windows_backend_prefers_the_named_launcher() {
+        let jre =
+            std::env::temp_dir().join(format!("stirling-win-launcher-{}", std::process::id()));
+        let bin = jre.join("bin");
+        std::fs::create_dir_all(&bin).unwrap();
+        std::fs::write(bin.join("java.exe"), b"").unwrap();
+        assert_eq!(super::windows_java_executable(&jre), bin.join("java.exe"));
+
+        std::fs::write(bin.join(super::WINDOWS_LAUNCHER_NAME), b"").unwrap();
+        assert_eq!(
+            super::windows_java_executable(&jre),
+            bin.join(super::WINDOWS_LAUNCHER_NAME)
+        );
+        let _ = std::fs::remove_dir_all(&jre);
+    }
 
     #[test]
     fn version_key_orders_numerically_not_lexically() {

@@ -175,6 +175,13 @@ tasks:
     cmds:
       - task: jlink:verify
       - task: jlink:natives
+      - task: jlink:windows-launcher
+
+  jlink:windows-launcher:
+    desc: "Add the named Windows backend launcher that firewall prompts and Task Manager show"
+    platforms: [windows]
+    cmds:
+      - node scripts/stage-windows-launcher.mjs src-tauri/runtime/jre src-tauri/icons/windows/app.ico
 
   jlink:natives:
     desc: "Install the JPDFium native libraries into the bundled JRE"
