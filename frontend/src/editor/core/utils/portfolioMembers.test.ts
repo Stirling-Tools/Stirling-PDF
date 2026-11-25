@@ -58,7 +58,7 @@ describe("readPortfolioMembers", () => {
     // An AES-128 portfolio with an empty user password, the way Acrobat Sign
     // ships one. See test-fixtures/README.md for how it was made.
     const bytes = new Uint8Array(await readFile(EMPTY_PASSWORD_PORTFOLIO));
-    const file = new File([bytes as BlobPart], "portfolio.pdf", {
+    const file = new File([bytes], "portfolio.pdf", {
       type: "application/pdf",
     });
     Object.defineProperty(file, "arrayBuffer", {
