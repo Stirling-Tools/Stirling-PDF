@@ -485,6 +485,45 @@ describe("SuperSearch", () => {
     });
   });
 
+  it("shows a disabled result with its reason but never selects it", async () => {
+    const onSelect = vi.fn();
+    const useResults: TestUseResultsHook = (query) => {
+      if (!query.trim()) {
+        return { groups: [], flatResults: [], loadingFiles: false };
+      }
+      const results = [
+        {
+          ...makeResult("tool-repair", "Repair", onSelect),
+          subtitle: "Disabled by server administrator: Repair a broken PDF",
+          disabledReason: "Disabled by server administrator:",
+        },
+      ];
+      return {
+        groups: [{ id: "tools", label: "Tools", results }],
+        flatResults: results,
+        loadingFiles: false,
+      };
+    };
+
+    renderSearch(useResults);
+
+    const input = screen.getByRole("combobox");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "repair" } });
+
+    const option = await screen.findByRole("option", { name: /Repair/ });
+    expect(option).toHaveAttribute("aria-disabled", "true");
+    expect(
+      screen.getByText("Disabled by server administrator: Repair a broken PDF"),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(input, { key: "Enter" });
+    fireEvent.click(option);
+    expect(onSelect).not.toHaveBeenCalled();
+    // The search stays open on the row rather than closing as if it worked.
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
   it("shows a cap+1 group in full with no show-more toggle", async () => {
     const useResults: TestUseResultsHook = (query) => {
       if (!query.trim()) {
