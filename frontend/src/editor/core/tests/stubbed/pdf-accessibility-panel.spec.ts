@@ -114,8 +114,6 @@ test("flags the document as tagged from the report's fix, saving it", async ({
   });
   await manual.getByText("Is the reading order correct?").click();
   await expect(readingOrder).toBeChecked();
-  // Marks the report's element, to tell after the save whether it was redrawn.
-  await report.evaluate((el) => el.setAttribute("data-before-save", ""));
   await report
     .getByRole("button", {
       name: "Tags & structure",
@@ -141,13 +139,11 @@ test("flags the document as tagged from the report's fix, saving it", async ({
   await expect(
     page.getByTestId("pdf-editor-review-summary").getByRole("checkbox"),
   ).toHaveCount(0);
-  await expect(page.getByTestId("check-accessibility-recheck")).toBeVisible();
-  expect(checks).toBe(1);
-  // The report shown for the saved version is the same one, ticks and all.
-  await expect(report).toHaveAttribute("data-before-save", "");
-  await expect(readingOrder).toBeChecked();
-  // It describes the version before the save, so it isn't offered as this one's.
-  await expect(page.getByTestId("a11y-download-report")).toBeDisabled();
+  // The save re-checks the saved version, keeping the manual checks answered.
+  await expect.poll(() => checks, { timeout: 30_000 }).toBe(2);
+  await expect(manual.getByTestId("a11y-manual-status")).toHaveText("Done", {
+    timeout: 30_000,
+  });
 });
 
 test("lays the panel out in reading order, and pauses the review from its footer", async ({

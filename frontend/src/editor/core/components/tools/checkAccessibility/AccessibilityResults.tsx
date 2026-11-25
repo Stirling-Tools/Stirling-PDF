@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import { Banner } from "@editor/ui/Banner";
@@ -36,6 +36,7 @@ import {
   type AccessibilityFixFn,
 } from "@editor/components/tools/checkAccessibility/AccessibilityFix";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { useAllFiles } from "@editor/contexts/FileContext";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { useReviewAvailable } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
@@ -43,19 +44,10 @@ import { reviewPanelSlot } from "@editor/tools/pdfTextEditor/store/reviewPanelSl
 
 const NO_TICKS: ReadonlySet<number> = new Set();
 
-/** Ticks and the open view follow the checked file, so a save keeps them. */
-function reportKey(entry: AccessibilityReportEntry): FileId {
-  return entry.checkedFileId ?? entry.fileId;
-}
-
 interface AccessibilityResultsProps {
   operation: CheckAccessibilityOperationHook;
-  /**
-   * The report to show, by the file it was checked as, which a save keeps; falls
-   * back to the first report when this file is not in the run.
-   */
+  /** Falls back to the first report when this file is not in the run. */
   selectedFileId: FileId | null;
-  /** Given the picked report's checked file, so the pick survives later saves. */
   onSelectFile: (fileId: FileId) => void;
 }
 
@@ -84,9 +76,23 @@ export function AccessibilityResults({
   const [manualTicks, setManualTicks] = useState<
     Partial<Record<FileId, ReadonlySet<number>>>
   >({});
-  // A new run starts a new checklist: the ticks were for the files as they were checked.
+  // A new run starts a new checklist, except for a file's saved version: the
+  // manual checks are the user's judgment of the document, which a save keeps.
+  const { fileStubs } = useAllFiles();
+  const stubs = useRef(fileStubs);
   useEffect(() => {
-    if (isLoading) setManualTicks({});
+    stubs.current = fileStubs;
+  }, [fileStubs]);
+  useEffect(() => {
+    if (!isLoading) return;
+    setManualTicks((current) => {
+      const kept: Partial<Record<FileId, ReadonlySet<number>>> = {};
+      for (const stub of stubs.current) {
+        const ticks = stub.parentFileId && current[stub.parentFileId];
+        if (ticks) kept[stub.id] = ticks;
+      }
+      return kept;
+    });
   }, [isLoading]);
   const toggleManual = (fileId: FileId, index: number) =>
     setManualTicks((current) => {
@@ -105,7 +111,7 @@ export function AccessibilityResults({
       const pdf = await createAccessibilityReportPdf(
         entry,
         t,
-        manualTicks[reportKey(entry)] ?? NO_TICKS,
+        manualTicks[entry.fileId] ?? NO_TICKS,
       );
       await downloadFile({ data: pdf, filename: pdf.name });
     } catch (error) {
@@ -117,10 +123,7 @@ export function AccessibilityResults({
   };
 
   const selected =
-    results.find(
-      (entry) =>
-        reportKey(entry) === selectedFileId || entry.fileId === selectedFileId,
-    ) ?? results[0];
+    results.find((entry) => entry.fileId === selectedFileId) ?? results[0];
   const claim = useCheckedFileClaim(
     selected?.fileId ?? null,
     selected?.report ?? null,
@@ -178,15 +181,10 @@ export function AccessibilityResults({
       onTag={() => openInReview("untagged", undefined, true)}
     />
   );
-  // A report kept from before a save describes the earlier version, so it is not
-  // offered as the saved file's report.
-  const outOfDate = selected.checkedFileId !== undefined;
-  const downloadLabel = outOfDate
-    ? t(
-        "checkAccessibility.downloadOutOfDate",
-        "Check again to download the report",
-      )
-    : t("checkAccessibility.download", "Download accessibility report");
+  const downloadLabel = t(
+    "checkAccessibility.download",
+    "Download accessibility report",
+  );
 
   return (
     <AccessibilityFixContext.Provider
@@ -205,7 +203,7 @@ export function AccessibilityResults({
                 value={selected.fileId}
                 onChange={(value) => {
                   const entry = results.find((item) => item.fileId === value);
-                  if (entry) onSelectFile(reportKey(entry));
+                  if (entry) onSelectFile(entry.fileId);
                 }}
                 allowDeselect={false}
                 searchable={results.length > 6}
@@ -221,18 +219,16 @@ export function AccessibilityResults({
 
           {selected.report ? (
             <AccessibilityReportView
-              key={reportKey(selected)}
+              key={selected.fileId}
               report={selected.report}
-              manualTicked={manualTicks[reportKey(selected)] ?? NO_TICKS}
+              manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
               fixes={reviewAvailable ? reportFixes(selected.report) : undefined}
               live={<div ref={reviewPanelSlot.attach} className="a11y-live" />}
-              onToggleManual={(index) =>
-                toggleManual(reportKey(selected), index)
-              }
+              onToggleManual={(index) => toggleManual(selected.fileId, index)}
               onSetAllManual={(done) =>
                 setManualTicks((current) => ({
                   ...current,
-                  [reportKey(selected)]: new Set(
+                  [selected.fileId]: new Set(
                     done
                       ? selected.report?.humanChecks.map((_, index) => index)
                       : [],
@@ -277,7 +273,6 @@ export function AccessibilityResults({
                     <Button
                       fullWidth
                       loading={buildingPdf}
-                      disabled={outOfDate}
                       leftSection={<Icon name="download" size={16} />}
                       onClick={() => void downloadReportPdf(selected)}
                       data-testid="a11y-download-report"
@@ -291,7 +286,6 @@ export function AccessibilityResults({
                         variant="secondary"
                         aria-label={downloadLabel}
                         loading={buildingPdf}
-                        disabled={outOfDate}
                         leftSection={<Icon name="download" size={16} />}
                         onClick={() => void downloadReportPdf(selected)}
                         data-testid="a11y-download-report"

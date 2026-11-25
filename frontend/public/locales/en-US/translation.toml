@@ -3393,7 +3393,6 @@ usage_limit_reached = "You've reached your usage limit. Check your plan options 
 aboutRow = "About {{label}}"
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Download accessibility report"
-downloadOutOfDate = "Check again to download the report"
 fileFailed = "failed"
 noFiles = "Select a PDF to check it."
 pickFile = "Show results for"
@@ -3513,10 +3512,6 @@ tag = "A {{name}} tag"
 tagTree = "The tag tree"
 textPiece = "A piece of text"
 translatedMetadata = "A metadata entry with translations"
-
-[checkAccessibility.outOfDate]
-description = "Check again to see your changes in the report."
-title = "Checked before your last save"
 
 [checkAccessibility.pdf]
 continued = "{{name}} (continued)"

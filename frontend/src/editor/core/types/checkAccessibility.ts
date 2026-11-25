@@ -78,9 +78,4 @@ export interface AccessibilityReportEntry {
   fileName: string;
   report: AccessibilityReport | null;
   error: string | null;
-  /**
-   * The file the check read, when the report is shown for a later saved version
-   * of it. The report's checklist ticks and view belong to this file across saves.
-   */
-  checkedFileId?: FileId;
 }
