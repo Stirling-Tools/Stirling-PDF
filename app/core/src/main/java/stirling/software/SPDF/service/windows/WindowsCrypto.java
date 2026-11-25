@@ -277,7 +277,11 @@ final class WindowsCrypto implements WindowsKeyLocation.ImplTypeLookup {
             }
             long hKey = keyHandle.get(JAVA_LONG, 0);
             try {
-                return nCryptImplType(arena, hKey);
+                // NCRYPT_IMPL_TYPE_PROPERTY is documented on the key storage provider; some
+                // providers answer it for a key too. Ask the key first, then its provider, so a
+                // provider that only answers at its own level still marks the ID.
+                OptionalInt keyType = nCryptImplType(arena, hKey);
+                return keyType.isPresent() ? keyType : nCryptImplType(arena, hProvider);
             } finally {
                 int ignored = (int) nCryptFreeObject.invokeExact(hKey);
             }
