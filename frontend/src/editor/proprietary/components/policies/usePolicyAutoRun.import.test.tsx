@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   downloadPolicyOutput: vi.fn(),
   listPolicyRuns: vi.fn(),
   createStirlingFilesAndStubs: vi.fn(),
+  securityPolicy: {} as Record<string, unknown>,
 }));
 
 vi.mock("@editor/contexts/FileContext", () => ({
@@ -33,19 +34,7 @@ vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: mocks.bumpRevision }),
 }));
 vi.mock("@editor/hooks/usePolicies", () => ({
-  usePolicies: () => ({
-    policies: {
-      security: {
-        configured: true,
-        runsOnEditor: true,
-        enabled: true,
-        backendId: "backend-1",
-        runOn: "upload",
-        outputMode: "new_version",
-        outputName: "",
-      },
-    },
-  }),
+  usePolicies: () => ({ policies: { security: mocks.securityPolicy } }),
 }));
 vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
@@ -100,6 +89,15 @@ async function runImport() {
 
 beforeEach(() => {
   localStorage.clear();
+  mocks.securityPolicy = {
+    configured: true,
+    runsOnEditor: true,
+    enabled: true,
+    backendId: "backend-1",
+    runOn: "upload",
+    outputMode: "new_version",
+    outputName: "",
+  };
   resetPolicyRuns();
   vi.clearAllMocks();
   mocks.fileStubs = [];
@@ -142,7 +140,7 @@ describe("auto-run import: new-version output delivery", () => {
   it("preserves a converted output's extension for subsequent policies", async () => {
     recordCompletedRun();
     updateRun("run-1", {
-      outputs: [{ fileId: "out-file-1", fileName: "doc_converted.png" }],
+      outputs: [{ fileId: "out-file-1", fileName: "doc.png" }],
     });
     mocks.downloadPolicyOutput.mockResolvedValue(new Blob(["image"]));
 
@@ -151,6 +149,50 @@ describe("auto-run import: new-version output delivery", () => {
     const file = mocks.addFiles.mock.calls[0][0][0] as File;
     expect(file.name).toBe("doc.png");
     expect(file.type).not.toBe("application/pdf");
+  });
+
+  it("keeps a name the tool chose, such as an auto-rename", async () => {
+    recordCompletedRun();
+    updateRun("run-1", {
+      outputs: [{ fileId: "out-file-1", fileName: "Quarterly Report.pdf" }],
+    });
+
+    await runImport();
+
+    const file = mocks.addFiles.mock.calls[0][0][0] as File;
+    expect(file.name).toBe("Quarterly Report.pdf");
+  });
+
+  it("names from the output's last path segment and falls back to the input's name", async () => {
+    recordCompletedRun();
+    updateRun("run-1", {
+      outputs: [
+        { fileId: "out-file-1", fileName: "C:\\out\\doc_1.pdf" },
+        { fileId: "out-file-2", fileName: "result-2" },
+      ],
+    });
+
+    await runImport();
+
+    const names = mocks.addFiles.mock.calls[0][0].map((f: File) => f.name);
+    expect(names).toEqual(["doc_1.pdf", "doc.pdf"]);
+  });
+
+  it("applies the rename rule on top of each output's name", async () => {
+    mocks.securityPolicy.outputName = "final";
+    mocks.securityPolicy.outputNamePosition = "suffix";
+    recordCompletedRun();
+    updateRun("run-1", {
+      outputs: [
+        { fileId: "out-file-1", fileName: "doc_1.pdf" },
+        { fileId: "out-file-2", fileName: "doc_2.pdf" },
+      ],
+    });
+
+    await runImport();
+
+    const names = mocks.addFiles.mock.calls[0][0].map((f: File) => f.name);
+    expect(names).toEqual(["doc_1_final.pdf", "doc_2_final.pdf"]);
   });
 
   it("versions the input in storage when it's recovered after a reload (no second file)", async () => {

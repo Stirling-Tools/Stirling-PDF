@@ -167,6 +167,20 @@ const SettingsPageInner: React.FC = () => {
     headings,
   );
 
+  // On phones the headings are listed on the nav pane, so a heading tap has to
+  // reveal the content before the scroll can measure it.
+  const jumpToHeading = useCallback(
+    (id: string) => {
+      if (!isMobile) {
+        focusHeading(id, { moveFocus: true });
+        return;
+      }
+      setMobilePane("content");
+      window.requestAnimationFrame(() => focusHeading(id, { moveFocus: true }));
+    },
+    [focusHeading, isMobile],
+  );
+
   const anchor = decodeURIComponent(location.hash.replace(/^#/, ""));
   const activeKey = activeItem?.key;
 
@@ -314,7 +328,7 @@ const SettingsPageInner: React.FC = () => {
                                   }
                                   onClick={(event) => {
                                     event.preventDefault();
-                                    focusHeading(h.id);
+                                    jumpToHeading(h.id);
                                   }}
                                 >
                                   {h.label}

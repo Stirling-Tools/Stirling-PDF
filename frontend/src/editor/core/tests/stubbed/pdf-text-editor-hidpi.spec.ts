@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -12,14 +13,11 @@ const SAMPLE = path.join(
   "../../../../../public/samples/Sample.pdf",
 );
 
+/** The viewer zoom the page is opened at. */
+const ZOOM = 1.5;
+
 async function open(page: Page): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE, { zoomPercent: ZOOM * 100 });
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -32,7 +30,6 @@ interface CanvasGeom {
   cssW: number;
   cssH: number;
   pageWidthPt: number;
-  renderScale: number;
   dpr: number;
 }
 
@@ -45,7 +42,6 @@ function canvasGeom(page: Page): Promise<CanvasGeom> {
       window as unknown as {
         __editor_store: {
           getState(): {
-            renderScale: number;
             pages: { width: number }[];
           };
         };
@@ -58,7 +54,6 @@ function canvasGeom(page: Page): Promise<CanvasGeom> {
       cssW: cb.width,
       cssH: cb.height,
       pageWidthPt: st.pages[0].width,
-      renderScale: st.renderScale,
       dpr: window.devicePixelRatio || 1,
     };
   });
@@ -75,11 +70,9 @@ test.describe("PDF text editor - HiDPI rendering", () => {
       const g = await canvasGeom(page);
       expect(g.dpr).toBe(2);
       // Layout stays at the zoom scale...
-      expect(g.cssW).toBeCloseTo(g.pageWidthPt * g.renderScale, 0);
+      expect(g.cssW).toBeCloseTo(g.pageWidthPt * ZOOM, 0);
       // ...while the bitmap renders at zoom x ratio - the whole fix.
-      expect(g.bitmapW).toBe(
-        Math.max(1, Math.round(g.pageWidthPt * g.renderScale * 2)),
-      );
+      expect(g.bitmapW).toBe(Math.max(1, Math.round(g.pageWidthPt * ZOOM * 2)));
       expect(g.bitmapW / g.cssW).toBeCloseTo(2, 1);
     });
   });
@@ -91,9 +84,7 @@ test.describe("PDF text editor - HiDPI rendering", () => {
       await open(page);
       const g = await canvasGeom(page);
       expect(g.dpr).toBe(1);
-      expect(g.bitmapW).toBe(
-        Math.max(1, Math.round(g.pageWidthPt * g.renderScale)),
-      );
+      expect(g.bitmapW).toBe(Math.max(1, Math.round(g.pageWidthPt * ZOOM)));
       expect(g.bitmapW / g.cssW).toBeCloseTo(1, 1);
     });
   });

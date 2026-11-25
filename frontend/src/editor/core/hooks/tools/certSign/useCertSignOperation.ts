@@ -39,6 +39,7 @@ export const certSignToApiParams = (
   // Non-file identifiers depend on the chosen certificate type.
   switch (parameters.certType) {
     case "WINDOWS_STORE":
+    case "MACOS_KEYCHAIN":
       if (parameters.alias) apiParams.alias = parameters.alias;
       break;
     case "PKCS11":

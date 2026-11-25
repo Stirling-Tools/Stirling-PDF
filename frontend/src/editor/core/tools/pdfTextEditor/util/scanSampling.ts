@@ -4,6 +4,7 @@ import type {
   TableSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { luma } from "@editor/tools/pdfTextEditor/model/Color";
 
 /** What a scan actually looks like inside one cell. */
 export interface CellColors {
@@ -81,7 +82,7 @@ function dominant(counts: Map<number, Bucket>): RGBA | null {
   return best ? meanOf(best) : null;
 }
 
-const luma = (c: RGBA): number => 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+const colourLuma = (c: RGBA): number => luma(c.r, c.g, c.b);
 
 const distance = (a: RGBA, b: RGBA): number =>
   Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b);
@@ -172,8 +173,8 @@ export function sampleTableColors(
   for (const entry of inside.values()) {
     // The rule colour has to be genuinely present, not one stray dark pixel.
     const c = meanOf(entry);
-    if (entry.n > 8 && luma(c) < darkest) {
-      darkest = luma(c);
+    if (entry.n > 8 && colourLuma(c) < darkest) {
+      darkest = colourLuma(c);
       rule = c;
     }
   }
@@ -255,7 +256,7 @@ function colorsOf(counts: Map<number, Bucket>): CellColors | null {
   if (!bg) return null;
   let total = 0;
   for (const entry of counts.values()) total += entry.n;
-  const light = luma(bg) > 128;
+  const light = colourLuma(bg) > 128;
   let ink: RGBA | null = null;
   let far = 0;
   for (const entry of counts.values()) {
@@ -264,7 +265,9 @@ function colorsOf(counts: Map<number, Bucket>): CellColors | null {
     // Ink on a pale cell is DARKER, ink on a dark cell is lighter. Without
     // that direction the paper showing through a shaded cell scores as its
     // ink, and the entry is painted in a colour close to its background.
-    const contrast = light ? luma(bg) - luma(c) : luma(c) - luma(bg);
+    const contrast = light
+      ? colourLuma(bg) - colourLuma(c)
+      : colourLuma(c) - colourLuma(bg);
     if (contrast < INK_MIN_CONTRAST) continue;
     const d = distance(c, bg);
     if (d > far) {
@@ -279,7 +282,7 @@ function colorsOf(counts: Map<number, Bucket>): CellColors | null {
 
 /** Fallback ink when a cell holds no text to sample: whatever reads on it. */
 function contrastTo(bg: RGBA): RGBA {
-  return luma(bg) > 128
+  return colourLuma(bg) > 128
     ? { r: 0, g: 0, b: 0, a: 255 }
     : { r: 255, g: 255, b: 255, a: 255 };
 }

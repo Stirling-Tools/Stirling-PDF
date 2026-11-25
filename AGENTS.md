@@ -88,15 +88,15 @@ The engine is a Python reasoning service for Stirling: it plans and interprets w
 
 #### Python Commands
 All engine commands run from the repo root using Task:
-- `task engine:check` — run all checks (typecheck + lint + format-check + test)
-- `task engine:fix` — auto-fix lint + formatting
-- `task engine:install` — install Python dependencies via uv
-- `task engine:dev` — start FastAPI with hot reload (localhost:5001)
-- `task engine:test` — run pytest
-- `task engine:lint` — run ruff linting
-- `task engine:typecheck` — run pyright
-- `task engine:format` — format code with ruff
-- `task engine:tool-models` — generate `tool_models.py` from the Java OpenAPI spec
+- `task engine:check` — run all checks
+- `task engine:fix` — auto-fix code issues
+- `task engine:install` — install Python dependencies
+- `task engine:dev` — start server in dev mode
+- `task engine:test` — run the tests
+- `task engine:lint` — run linters
+- `task engine:typecheck` — run type checkers
+- `task engine:format` — run formatters
+- `task engine:tool-models` — generate tool models from the Java OpenAPI spec
 
 The project structure is defined in `engine/pyproject.toml`. Any new dependencies should be listed there, followed by running `task engine:install`.
 
@@ -236,6 +236,15 @@ What goes where:
 Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@editor/*` path in a leaf (`saas/` or `desktop/`).
 
 **Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`desktop/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local mode and the server keeps the on/off switch (no desktop release needed to flip a flag). In self-hosted mode the connected server's own `AppConfigContext` is the authority instead. Gate a feature behind a per-platform seam - e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useAppConfig()` when signed in to a self-hosted server and `useSaasAppConfig()` otherwise) - rather than hardcoding the flag on.
+
+#### Processor Editions on Desktop
+
+Web builds pick the Processor's edition at build time (`processor/saas` → `processor/cloud` → `processor/proprietary`). The desktop app connects to either Stirling Cloud or a self-hosted server, so `processor/desktop` picks per connection at runtime:
+
+- When a seam has different `processor/cloud` and `processor/proprietary` implementations, add a `processor/desktop` file at the same path that picks between them with `editionFunction` (plain functions, chosen on each call), `editionHook` (hooks) or `editionComponent` (components). Without one, desktop runs the self-hosted implementation on Stirling Cloud.
+- Edition hooks and components render only inside a `ProcessorEditionBoundary`, which remounts its subtree when the mode, server or account changes. The Processor route and `PortalSettingsSectionHost` provide one. Outside a boundary they log an error in dev and test builds.
+- Processor queries on desktop use the per-connection client in `processor/desktop/queryClient.ts`, so one connection's data never shows on another.
+- The desktop startup prompts (cookie bar, analytics, first-run setup) run once in the frame from the app's own config, not per app.
 
 #### Component Override Pattern (Stub/Shadow)
 Use this pattern for desktop-specific or proprietary-specific features WITHOUT runtime checks or conditionals.
@@ -404,7 +413,7 @@ return useToolOperation({
 - **Frontend**: React-based SPA in `/frontend` directory
   - **File Storage**: IndexedDB for client-side file persistence and thumbnails
   - **Internationalization**: JSON-based translations (converted from backend .properties)
-- **PDF Processing**: PDFBox for core PDF operations, LibreOffice for conversions, PDF.js for client-side rendering
+- **PDF Processing**: PDFBox for core PDF operations, Stirling Office Convert for conversions, PDF.js for client-side rendering
 - **Security**: Spring Security with optional authentication (controlled by `DOCKER_ENABLE_SECURITY`)
 - **Configuration**: YAML-based configuration with environment variable overrides
 
@@ -507,6 +516,7 @@ Never sleep in tests (`page.waitForTimeout`, `Thread.sleep`, etc.) - it causes f
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
   - **Frontend**: Uses IndexedDB for client-side file storage and caching (with thumbnails)
 - **Security**: When `DOCKER_ENABLE_SECURITY=false`, security-related classes are excluded from compilation
+- **Fail Closed**: When a credential, owner, team or scope is missing or can't be resolved, refuse or use the narrowest option (the caller's own identity or personal scope). Never substitute a broader principal's credentials (the server's, an admin's or a service account's), treat an unknown caller as trusted, or widen scope. Open access (login disabled, desktop local mode, SaaS guests, share links) must come from explicit configuration or identity, never from a null or a failed request
 - **Import Paths**: ALWAYS use `@editor/*` for imports - never use `@editor-core/*` or `@editor-proprietary/*` unless explicitly wrapping/extending a lower layer
 - **FileContext**: All file operations MUST go through FileContext - never bypass with direct File handling
 - **Memory Management**: Manual cleanup required for PDF.js documents and blob URLs - don't remove cleanup code

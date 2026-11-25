@@ -6,9 +6,13 @@ env:
   UV_THREADPOOL_SIZE: "16"
 
 vars:
-  # jdk.dynalink is required by VeraPDF (PDF/A validation); without it the bundled JRE throws
-  # NoClassDefFoundError: jdk/dynalink/Namespace at runtime in get-info-on-pdf and verify-pdf
-  JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.dynalink"
+  # jdeps cannot see modules loaded by name at runtime, so these are listed by hand:
+  # - jdk.dynalink: VeraPDF (PDF/A validation); without it get-info-on-pdf and verify-pdf throw
+  #   NoClassDefFoundError: jdk/dynalink/Namespace
+  # - jdk.charsets: every non-core code page (Big5, GBK, Shift_JIS, windows-1255/1256...). POI's
+  #   .doc reader fails to initialise without Big5, and RTF and email text decodes as mojibake
+  # - jdk.localedata: number, date and month formats beyond English, and Thai line breaking
+  JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.dynalink,jdk.charsets,jdk.localedata"
 
   # Minimum Java major the bundled JRE must be. Keep in sync with build.gradle
   # `modernJavaVersion` - the app JAR is compiled for this, so an older runtime
@@ -128,12 +132,20 @@ tasks:
       - cargo clippy --all-targets -- -D warnings
 
   format:
-    desc: "Auto-fix Rust formatting (not implemented yet)"
-    cmds: []
+    desc: "Auto-fix Rust formatting"
+    dir: src-tauri
+    cmds:
+      - cargo fmt
+      - cargo fmt --manifest-path provisioner/Cargo.toml
+      - cargo fmt --manifest-path thumbnail-handler/Cargo.toml
 
   format:check:
-    desc: "Check Rust formatting (not implemented yet)"
-    cmds: []
+    desc: "Check Rust formatting"
+    dir: src-tauri
+    cmds:
+      - cargo fmt -- --check
+      - cargo fmt --manifest-path provisioner/Cargo.toml -- --check
+      - cargo fmt --manifest-path thumbnail-handler/Cargo.toml -- --check
 
   check:
     desc: "Full desktop quality gate"
@@ -162,6 +174,12 @@ tasks:
     # a stale, too-old JRE slips through.
     cmds:
       - task: jlink:verify
+      - task: jlink:natives
+
+  jlink:natives:
+    desc: "Install the JPDFium native libraries into the bundled JRE"
+    cmds:
+      - node scripts/stage-jpdfium-natives.mjs ../app/common/build/jpdfium-natives src-tauri/runtime/jre
 
   jlink:verify:
     desc: "Fail the build if the bundled JRE is older than the app JAR requires"
@@ -171,16 +189,16 @@ tasks:
       - node scripts/verify-bundled-jre.mjs src-tauri/runtime/jre/release
 
   jlink:jar:
-    desc: "Build backend JAR for Tauri bundling (host-OS natives only by default)"
+    desc: "Build backend JAR and JPDFium natives for Tauri bundling (host-OS natives only by default)"
     run: once
     dir: ..
     env:
       DISABLE_ADDITIONAL_FEATURES: "true"
     cmds:
-      - echo "Building bootJar with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
-      - cmd: cmd /c gradlew.bat bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
+      - echo "Building bootJar and extracting JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
+      - cmd: cmd /c gradlew.bat bootJar :common:stageJpdfiumNatives --no-daemon -PjpdfiumPlatforms=none -PjpdfiumNativePlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [windows]
-      - cmd: ./gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
+      - cmd: ./gradlew bootJar :common:stageJpdfiumNatives --no-daemon -PjpdfiumPlatforms=none -PjpdfiumNativePlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [linux, darwin]
       # The bundle globs libs/*.jar, so an old jar left behind would ship too
       # (and could be selected as the backend). The script stages only the jar
