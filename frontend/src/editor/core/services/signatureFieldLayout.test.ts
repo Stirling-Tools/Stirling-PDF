@@ -66,15 +66,34 @@ describe("readSignatureLayout", () => {
 
     expect(layout.emptyFields).toEqual([
       {
-        name: "Approver",
-        pageIndex: 1,
-        box: { x: 300, y: 400, width: 160, height: 60 },
-      },
-      {
         name: "Witness",
         pageIndex: 0,
         box: { x: 300, y: 40, width: 160, height: 60 },
       },
+      {
+        name: "Approver",
+        pageIndex: 1,
+        box: { x: 300, y: 400, width: 160, height: 60 },
+      },
+    ]);
+  });
+
+  test("lists fields in reading order whatever order the form stores them in", async () => {
+    const doc = await PDFDocument.create();
+    const first = doc.addPage([612, 792]);
+    const second = doc.addPage([612, 792]);
+    addSignatureField(doc, second, "Page two", [72, 600, 260, 660]);
+    addSignatureField(doc, first, "Bottom right", [335, 100, 523, 160]);
+    addSignatureField(doc, first, "Bottom left", [72, 100, 260, 160]);
+    addSignatureField(doc, first, "Top", [72, 600, 260, 660]);
+
+    const layout = await readSignatureLayout(await doc.save());
+
+    expect(layout.emptyFields.map((field) => field.name)).toEqual([
+      "Top",
+      "Bottom left",
+      "Bottom right",
+      "Page two",
     ]);
   });
 

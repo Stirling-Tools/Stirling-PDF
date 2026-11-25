@@ -27,8 +27,9 @@ export interface SignatureLayout {
 }
 
 /**
- * The unsigned, visible signature fields of a PDF and every page's crop box, both in PDF user
- * space. A field counts as signed once it has a /V, matching what the cert-sign endpoint rejects.
+ * The unsigned, visible signature fields of a PDF in reading order (by page, then top to bottom,
+ * then left to right) and every page's crop box, both in PDF user space. A field counts as signed
+ * once it has a /V, matching what the cert-sign endpoint rejects.
  */
 export async function readSignatureLayout(
   bytes: ArrayBuffer | Uint8Array,
@@ -77,6 +78,12 @@ export async function readSignatureLayout(
     });
   }
 
+  emptyFields.sort(
+    (a, b) =>
+      a.pageIndex - b.pageIndex ||
+      b.box.y + b.box.height - (a.box.y + a.box.height) ||
+      a.box.x - b.box.x,
+  );
   return { emptyFields, cropBoxes };
 }
 

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   FileInput,
   Group,
@@ -132,6 +132,15 @@ const SignatureDetails = ({
 }: SectionProps) => {
   const { t } = useTranslation();
   const [opened, setOpened] = useState<DetailKey[]>([]);
+  const [justOpened, setJustOpened] = useState<DetailKey | null>(null);
+  const inputs = useRef(new Map<DetailKey, HTMLInputElement>());
+  useEffect(() => {
+    if (!justOpened) return;
+    const input = inputs.current.get(justOpened);
+    input?.scrollIntoView({ block: "center", behavior: "smooth" });
+    input?.focus({ preventScroll: true });
+    setJustOpened(null);
+  }, [justOpened]);
   const details: { key: DetailKey; label: string; placeholder?: string }[] = [
     { key: "reason", label: t("certSign.reason", "Reason") },
     { key: "location", label: t("certSign.location", "Location") },
@@ -162,7 +171,10 @@ const SignatureDetails = ({
           placeholder={detail.placeholder}
           value={parameters[detail.key]}
           className={privateContentClassName}
-          autoFocus={opened.includes(detail.key) && !parameters[detail.key]}
+          ref={(input) => {
+            if (input) inputs.current.set(detail.key, input);
+            else inputs.current.delete(detail.key);
+          }}
           onChange={(event) =>
             onParameterChange(detail.key, event.currentTarget.value)
           }
@@ -193,7 +205,10 @@ const SignatureDetails = ({
               variant="tertiary"
               size="sm"
               leftSection={<Icon name="plus" size={14} />}
-              onClick={() => setOpened((keys) => [...keys, detail.key])}
+              onClick={() => {
+                setOpened((keys) => [...keys, detail.key]);
+                setJustOpened(detail.key);
+              }}
               disabled={disabled}
             >
               {detail.label}
