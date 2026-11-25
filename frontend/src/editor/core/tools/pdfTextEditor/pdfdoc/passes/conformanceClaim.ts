@@ -29,6 +29,9 @@ const PROPERTY_NS = "http://www.aiim.org/pdfa/ns/property#";
 /** The ISO 14289-2 edition year a PDF/UA-2 file declares as `pdfuaid:rev`. */
 const PDF_UA_2_REVISION = "2024";
 
+/** Fixed by the XMP packet wrapper (ISO 16684-1): every packet header carries this exact id. */
+const XMP_PACKET_ID = "W5M0MpCehiHzreSzNTczkc9d";
+
 /** Thrown when the claim cannot be written. */
 export class ConformanceClaimError extends Error {
   constructor(reason: string) {
@@ -136,7 +139,7 @@ function emptyPacket(): Element {
 function serializePacket(rdf: Element): string {
   const root = rdf.ownerDocument.documentElement;
   const body = new XMLSerializer().serializeToString(root);
-  return `<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?>\n${body}\n<?xpacket end="w"?>`;
+  return `<?xpacket begin="\uFEFF" id="${XMP_PACKET_ID}"?>\n${body}\n<?xpacket end="w"?>`;
 }
 
 function descriptions(rdf: Element): Element[] {
