@@ -48,6 +48,7 @@ import {
   ViewerGlobalPointerProvider,
   ViewerPagePointerProvider,
 } from "@editor/components/viewer/ViewerPointerProviders";
+import { PDF_RENDER_FILTERS } from "@editor/components/viewer/pdfRenderFilters";
 import { SpreadPluginPackage, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { SearchPluginPackage } from "@embedpdf/plugin-search/react";
 import { ThumbnailPluginPackage } from "@embedpdf/plugin-thumbnail/react";
@@ -78,6 +79,7 @@ import {
 import { CustomSearchLayer } from "@editor/components/viewer/CustomSearchLayer";
 import { useActiveUrlSource } from "@editor/components/viewer/useActiveUrlSource";
 import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
+import { VIEWER_VIEWPORT_ATTR } from "@editor/components/viewer/usePagesPastInset";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
 import { RenderFormsBridge } from "@editor/components/viewer/RenderFormsBridge";
@@ -428,12 +430,6 @@ type SignatureOverlayOptions = Omit<
 >;
 
 type PdfRenderMode = NonNullable<LocalEmbedPDFProps["pdfRenderMode"]>;
-
-const PDF_RENDER_FILTERS: Record<PdfRenderMode, string | undefined> = {
-  normal: undefined,
-  dark: "invert(1) hue-rotate(180deg)",
-  sepia: "sepia(0.7) brightness(0.85)",
-};
 
 const PAGE_PREVIEW_MAX_EDGE = 1024;
 
@@ -884,6 +880,7 @@ function DocumentViewport({
     <ViewerGlobalPointerProvider documentId={documentId}>
       <Viewport
         documentId={documentId}
+        {...{ [VIEWER_VIEWPORT_ATTR]: "" }}
         style={{
           backgroundColor: "var(--c-bg)",
           height: "100%",

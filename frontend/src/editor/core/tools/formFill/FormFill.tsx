@@ -178,11 +178,10 @@ const FormFill = (_props: BaseToolProps) => {
   const hasUncommittedRef = useRef(false);
   hasUncommittedRef.current = hasUncommittedChanges;
   useEffect(() => {
-    registerUnsavedChangesChecker(
-      () =>
-        hasUncommittedRef.current || isDirtyRef.current || savingRef.current,
-    );
-    return () => unregisterUnsavedChangesChecker();
+    const checker = () =>
+      hasUncommittedRef.current || isDirtyRef.current || savingRef.current;
+    registerUnsavedChangesChecker(checker);
+    return () => unregisterUnsavedChangesChecker(checker);
   }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   // requestNavigation gates on this flag rather than on the checker above.
