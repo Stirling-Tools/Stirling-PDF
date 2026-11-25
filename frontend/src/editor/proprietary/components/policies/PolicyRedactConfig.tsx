@@ -1,5 +1,11 @@
 import { useEffect } from "react";
-import { PolicyPiiField } from "@editor/components/policies/PolicyPiiField";
+import { RedactPresetSelect } from "@editor/components/tools/redact/RedactPresetSelect";
+import { selectedPresetIds } from "@editor/components/tools/redact/redactWords";
+import {
+  presetIdOfPattern,
+  presetPatterns,
+  type RedactPresetId,
+} from "@editor/data/redactPresets";
 import type { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 
 interface PolicyRedactConfigProps {
@@ -36,10 +42,26 @@ export function PolicyRedactConfig({
     }
   }, []);
 
+  // Custom entries stay as stored: they are already regexes, since a policy
+  // always runs with Use Regex on.
+  const handleChange = (ids: RedactPresetId[]) => {
+    onChange({
+      ...parameters,
+      mode: "automatic",
+      useRegex: true,
+      wordsToRedact: [
+        ...presetPatterns(ids),
+        ...parameters.wordsToRedact.filter(
+          (w) => presetIdOfPattern(w) === undefined,
+        ),
+      ],
+    });
+  };
+
   return (
-    <PolicyPiiField
-      parameters={parameters}
-      onChange={onChange}
+    <RedactPresetSelect
+      value={selectedPresetIds(parameters)}
+      onChange={handleChange}
       disabled={disabled}
     />
   );

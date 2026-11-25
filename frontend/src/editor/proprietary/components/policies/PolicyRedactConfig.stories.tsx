@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PolicyRedactConfig } from "@editor/components/policies/PolicyRedactConfig";
-import { PII_PRESETS } from "@editor/data/policyDefinitions";
+import { presetPatterns } from "@editor/data/redactPresets";
 import type { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 
 const BASE_PARAMETERS: RedactParameters = {
@@ -57,7 +57,7 @@ export const WithSelection: Story = {
   args: {
     initialParameters: {
       ...BASE_PARAMETERS,
-      wordsToRedact: [PII_PRESETS[0].pattern, PII_PRESETS[1].pattern],
+      wordsToRedact: presetPatterns(["ssn", "card"]),
     },
   },
 };

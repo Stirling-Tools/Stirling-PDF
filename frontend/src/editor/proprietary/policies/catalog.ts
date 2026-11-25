@@ -9,6 +9,7 @@ import {
   type UntypedPolicyEndpoint,
 } from "@editor/policies/operations";
 import type { ToolEndpoint } from "@editor/types/toolApiTypes";
+import { presetPatterns } from "@editor/data/redactPresets";
 import type {
   WirePipelineInput,
   WirePipelineStep,
@@ -155,10 +156,7 @@ export function humanizeEndpoint(
     .trim();
 }
 
-const DEFAULT_PII_PATTERNS: string[] = [
-  "\\b(?!000|666|9\\d{2})\\d{3}([- ])(?!00)\\d{2}\\1(?!0000)\\d{4}\\b",
-  "\\b(?:4\\d{12}(?:\\d{3})?|5[1-5]\\d{14}|3[47]\\d{13}|6(?:011|5\\d{2})\\d{12})\\b",
-];
+const DEFAULT_PII_PATTERNS = presetPatterns(["ssn", "card"]);
 
 export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
