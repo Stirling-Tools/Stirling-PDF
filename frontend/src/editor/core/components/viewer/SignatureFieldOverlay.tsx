@@ -18,6 +18,7 @@ import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSignatureFieldPicker } from "@editor/contexts/SignatureFieldPickerContext";
+import "@editor/components/viewer/SignatureFieldOverlay.css";
 import {
   renderSignatureFieldAppearances,
   extractSignatures,
@@ -244,8 +245,9 @@ function SignatureFieldOverlayInner({
         if (chosen && pick?.preview) {
           return (
             <div
-              key={`sig-${field.fieldName}-${idx}`}
+              key={`sig-${field.fieldName}-${idx}-${pick.flash}`}
               data-signature-field-chosen
+              className="signature-field-flash"
               style={{
                 position: "absolute",
                 left,

@@ -309,6 +309,7 @@ export function useCertSignStampPlacement({
     [fieldPreview, stampBox, renderStamp],
   );
   const chosenOnPage = useRef<string | null>(null);
+  const [flash, setFlash] = useState(0);
   useEffect(() => {
     if (!active || !parameters.showSignature || emptyFields.length === 0) {
       setPick(null);
@@ -318,6 +319,7 @@ export function useCertSignStampPlacement({
       fieldNames: new Set(emptyFields.map((field) => field.name)),
       selected: fieldName,
       preview: fieldPreview,
+      flash,
       choose: (name) => {
         chosenOnPage.current = name;
         onParameterChange("fieldName", name);
@@ -329,6 +331,7 @@ export function useCertSignStampPlacement({
     emptyFields,
     fieldName,
     fieldPreview,
+    flash,
     onParameterChange,
     setPick,
   ]);
@@ -341,11 +344,22 @@ export function useCertSignStampPlacement({
     const fromPage = chosenOnPage.current === chosenField.name;
     shownField.current = chosenField.name;
     chosenOnPage.current = null;
+    setFlash((count) => count + 1);
     if (first || fromPage) return;
     if (file && activeFileId !== file.fileId) setActiveFileId(file.fileId);
     setWorkbench("viewer");
-    scrollActions.scrollToPage(chosenField.pageIndex + 1);
+    const crop = layout?.cropBoxes[chosenField.pageIndex];
+    if (!crop) {
+      scrollActions.scrollToPage(chosenField.pageIndex + 1);
+      return;
+    }
+    const { box } = chosenField;
+    scrollActions.centrePagePoint(chosenField.pageIndex + 1, {
+      x: box.x - crop.x + box.width / 2,
+      y: crop.y + crop.height - (box.y + box.height / 2),
+    });
   }, [
+    layout,
     chosenField,
     file,
     activeFileId,

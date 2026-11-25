@@ -4,6 +4,7 @@ export interface SignatureFieldPick {
   fieldNames: ReadonlySet<string>;
   selected: string | null;
   preview: string | null;
+  flash: number;
   choose: (fieldName: string) => void;
 }
 
