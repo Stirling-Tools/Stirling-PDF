@@ -17,6 +17,7 @@ import { SetLinkContentsCommand } from "@editor/tools/pdfTextEditor/commands/Set
 import {
   TagLinkCommand,
   taggableLinks,
+  undescribedLinks,
 } from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import {
   TagPageContentCommand,
@@ -34,6 +35,7 @@ import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextR
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { innerTags } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { linkFixOnPage } from "@editor/tools/pdfTextEditor/util/reviewFix";
 import {
   buildClassicPdf,
   streamBody,
@@ -53,13 +55,17 @@ function linkAnnotation(extra = ""): FixtureObject {
   };
 }
 
-function page(content: string, extra = ""): FixtureObject[] {
+function page(
+  content: string,
+  extra = "",
+  annots: readonly number[] = [LINK],
+): FixtureObject[] {
   return [
     { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
     {
       num: 3,
       body:
-        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Annots [${LINK} 0 R]${extra} ` +
+        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Annots [${annots.map((num) => `${num} 0 R`).join(" ")}]${extra} ` +
         "/Resources << /Font << /F1 5 0 R >> >> >>",
     },
     { num: 4, body: streamBody("", content) },
@@ -87,6 +93,7 @@ function taggedPdf({
   linkElement = false,
   link = linkAnnotation(),
   parentTree = "",
+  otherLinks = [] as FixtureObject[],
 } = {}): Uint8Array {
   const content = linkElement
     ? "/P <</MCID 0>> BDC BT /F1 12 Tf 72 700 Td (Visit ) Tj ET EMC\n" +
@@ -100,7 +107,10 @@ function taggedPdf({
         num: 1,
         body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 7 0 R >>",
       },
-      ...page(content, " /StructParents 0"),
+      ...page(content, " /StructParents 0", [
+        LINK,
+        ...otherLinks.map(({ num }) => num),
+      ]),
       {
         num: 7,
         body: `<< /Type /StructTreeRoot /K 8 0 R /ParentTree << /Nums [0 ${slots}${parentTree}] >> /ParentTreeNextKey 2 >>`,
@@ -122,6 +132,7 @@ function taggedPdf({
           ]
         : []),
       link,
+      ...otherLinks,
     ],
     1,
   );
@@ -441,6 +452,76 @@ describe("describing links", () => {
     const pdf = await saved(doc);
     expect(contents(pdf)).toBe("New");
     expect(holder(pdf)).toBe(10);
+  });
+
+  test("lists a held link with no description, and gives it its text", async () => {
+    const doc = await open(
+      taggedPdf({
+        linkElement: true,
+        link: linkAnnotation(" /StructParent 1"),
+        parentTree: " 1 10 0 R",
+      }),
+    );
+    const run = doc.page(0).runs.find((r) => r.text.includes("stirlingpdf"))!;
+    const [link] = undescribedLinks(doc, 0, run.id);
+    expect(link).toMatchObject({
+      annotation: LINK,
+      contents: "stirlingpdf.com",
+    });
+    expect(undescribedLinks(doc, 0, "another run")).toEqual([]);
+    new HistoryStack().execute(
+      new SetLinkContentsCommand({
+        pageIndex: 0,
+        annotations: [LINK],
+        contents: link.contents,
+      }),
+      doc,
+    );
+    expect(undescribedLinks(doc, 0)).toEqual([]);
+    expect(contents(await saved(doc))).toBe("stirlingpdf.com");
+  });
+
+  test("lists no undescribed link where the link is untagged or described", async () => {
+    expect(undescribedLinks(await open(taggedPdf()), 0)).toEqual([]);
+    const described = await open(
+      taggedPdf({
+        linkElement: true,
+        link: linkAnnotation(" /StructParent 1 /Contents (Old)"),
+        parentTree: " 1 10 0 R",
+      }),
+    );
+    expect(undescribedLinks(described, 0)).toEqual([]);
+  });
+
+  test("fixes a tagged link with no description at its Describe link control", async () => {
+    const doc = await open(
+      taggedPdf({
+        linkElement: true,
+        link: linkAnnotation(" /StructParent 1"),
+        parentTree: " 1 10 0 R",
+        // An untagged link over no text: nothing to tag, so it must not win the fix.
+        otherLinks: [
+          {
+            num: 21,
+            body: "<< /Type /Annot /Subtype /Link /Rect [300 300 320 320] /A << /S /URI /URI (https://example.com) >> >>",
+          },
+        ],
+      }),
+    );
+    const run = doc.page(0).runs.find((r) => r.text.includes("stirlingpdf"))!;
+    expect(
+      doc
+        .structure(0)
+        .links()
+        .filter(({ annotation }) => !doc.structure(0).linkHeld(annotation)),
+    ).toHaveLength(1);
+    expect(linkFixOnPage(doc, 0)).toEqual({ runId: run.id, target: "link" });
+  });
+
+  test("fixes an untagged link at its Tag link control", async () => {
+    const doc = await open(taggedPdf());
+    const run = doc.page(0).runs.find((r) => r.text.includes("stirlingpdf"))!;
+    expect(linkFixOnPage(doc, 0)).toEqual({ runId: run.id, target: "link" });
   });
 
   test("lists a run's untagged links, and no other run's", async () => {
