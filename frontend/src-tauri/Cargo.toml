@@ -13,6 +13,9 @@ rust-version = "1.77.2"
 [lints.rust]
 warnings = "deny"
 
+[lints.clippy]
+all = "deny"
+
 [lib]
 name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
@@ -48,6 +51,8 @@ sha2 = "0.11"
 base64 = "0.23"
 rand = "0.10"
 tempfile = "3.27"
+fontdb = "0.24"
+ttf-parser = "0.25"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"

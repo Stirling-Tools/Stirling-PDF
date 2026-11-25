@@ -22,9 +22,10 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
-import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.InviteRedemptionService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.EmailAddresses;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @InviteApi
@@ -38,6 +39,7 @@ public class InviteLinkController {
     private final ApplicationProperties applicationProperties;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService userLicenseSettingsService;
+    private final InviteRedemptionService inviteRedemptionService;
 
     /**
      * Generate a new invite link (admin only)
@@ -72,8 +74,9 @@ public class InviteLinkController {
 
             // If email is provided, validate and check for conflicts
             if (email != null && !email.trim().isEmpty()) {
-                // Validate email format
-                if (!email.contains("@")) {
+                // The address becomes the account's username at redemption, so it has to be
+                // usable now: a link minted for "a@" only fails when someone tries to redeem it.
+                if (!EmailAddresses.isValidAccountAddress(email)) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Invalid email address"));
                 }
@@ -149,8 +152,11 @@ public class InviteLinkController {
                 }
             } else {
                 Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
-                if (selectedTeam != null
-                        && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
+                if (selectedTeam == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Map.of("error", "Team not found"));
+                }
+                if (TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Cannot assign users to Internal team"));
                 }
@@ -434,19 +440,25 @@ public class InviteLinkController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Email address is required"));
                 }
-
-                // Validate email format
-                if (!email.contains("@")) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of("error", "Invalid email address"));
-                }
-
-                effectiveEmail = email.trim().toLowerCase();
+                effectiveEmail = email;
             }
+
+            // Preset addresses on older invites were never validated, so check both sources
+            if (!EmailAddresses.isValidAccountAddress(effectiveEmail)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid email address"));
+            }
+            effectiveEmail = effectiveEmail.trim().toLowerCase(Locale.ROOT);
 
             // Check if user already exists
             if (userService.usernameExistsIgnoreCase(effectiveEmail)) {
                 return invalidInviteResponse();
+            }
+
+            // The team may have been deleted since the invite was issued
+            if (invite.getTeamId() != null && !teamRepository.existsById(invite.getTeamId())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Team not found"));
             }
 
             // Re-check the licence limit at redemption. The check when the link was generated
@@ -468,19 +480,11 @@ public class InviteLinkController {
                                                 + " then use this link again."));
             }
 
-            // Create the user account
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(effectiveEmail)
-                            .password(password)
-                            .teamId(invite.getTeamId())
-                            .role(invite.getRole());
-            userService.saveUserCore(builder.build());
-
-            // Mark invite as used
-            invite.setUsed(true);
-            invite.setUsedAt(LocalDateTime.now());
-            inviteTokenRepository.save(invite);
+            // Consume the token and create the account together, so two redemptions racing on
+            // one single-use link cannot both produce an account.
+            if (!inviteRedemptionService.redeem(invite, effectiveEmail, password)) {
+                return invalidInviteResponse();
+            }
 
             log.info(
                     "User account created via invite link: {} with role: {}",

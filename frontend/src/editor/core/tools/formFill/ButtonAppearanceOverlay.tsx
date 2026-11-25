@@ -23,6 +23,8 @@ interface ButtonAppearanceOverlayProps {
   pdfSource: File | Blob | null;
   pageWidth: number;
   pageHeight: number;
+  /** CSS filter matching the page render mode (dark, sepia). */
+  renderFilter?: string;
 }
 let _cachedSource: File | Blob | null = null;
 let _cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
@@ -70,6 +72,7 @@ function ButtonAppearanceOverlayInner({
   pdfSource,
   pageWidth,
   pageHeight,
+  renderFilter,
 }: ButtonAppearanceOverlayProps) {
   const staleNames = useStaleBakedFieldNames();
   const [appearances, setAppearances] = useState<SignatureFieldAppearance[]>(
@@ -114,6 +117,7 @@ function ButtonAppearanceOverlayInner({
         height: "100%",
         pointerEvents: "none",
         zIndex: 4,
+        filter: renderFilter,
       }}
       data-button-appearance-page={pageIndex}
     >

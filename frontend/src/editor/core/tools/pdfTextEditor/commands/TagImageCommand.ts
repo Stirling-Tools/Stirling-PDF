@@ -6,42 +6,45 @@ import {
 import { descriptionCoalesceKey } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
-import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type { DescribableType } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
   ARTIFACT_TAG,
   addTagMark,
   highestMcid,
+  innermostMcid,
+  readTagMarks,
   removeTagMark,
+  type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   retaggableTag,
   type RetaggableTag,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
-// Marked-content tags conventionally name the structure type they mark.
-const FIGURE_TAG: StructureType = "Figure";
-
 /**
- * Tag an image as a new Figure, or as an artifact, where retaggableTag allows.
- * Unlike a description this changes the image's marks, so the save
- * regenerates the content stream that draws it, and the save pass then gives
- * a new figure its element.
+ * Tag an image as a new Figure or Formula, or as an artifact, where
+ * retaggableTag allows. Unlike a description this changes the image's marks,
+ * so the save regenerates the content stream that draws it, and the save pass
+ * then gives a new element its place in the tree. The mark is named after the
+ * element's type, as marked-content tags conventionally are.
  */
 export class TagImageCommand implements Command {
   readonly type = "tag-image";
   private readonly pageIndex: number;
   private readonly imageId: string;
-  private readonly as: "figure" | "artifact";
+  private readonly as: DescribableType | "artifact";
   private readonly alt: string | null;
   /** Chosen on first apply, so a redo reuses it. */
   private mcid: number | null = null;
   private previous: RetaggableTag | undefined;
+  /** Marks with MCIDs no element owns, which tagging the image dropped and undo puts back. */
+  private dropped: TagMark[] = [];
 
   constructor(opts: {
     pageIndex: number;
     imageId: string;
-    as: "figure" | "artifact";
-    /** The new figure's description. */
+    as: DescribableType | "artifact";
+    /** The new element's description. */
     alt?: string | null;
   }) {
     this.pageIndex = opts.pageIndex;
@@ -65,12 +68,12 @@ export class TagImageCommand implements Command {
       );
     }
     this.previous ??= current;
-    if (this.as === "figure") {
+    if (this.as !== "artifact") {
       this.mcid ??= doc
         .structure(this.pageIndex)
         .freeMcid(highestMcid(doc.module, page.pagePtr));
     }
-    retag(doc, image, current, this.target());
+    this.dropped = retag(doc, image, current, this.target());
     page.markDirty();
     page.markNeedsGenerate();
   }
@@ -81,7 +84,7 @@ export class TagImageCommand implements Command {
     const image = page.findImage(this.imageId);
     const current = image ? retaggableTag(doc, image.snapshot()) : null;
     if (!image || !current) return;
-    retag(doc, image, current, this.previous);
+    retag(doc, image, current, this.previous, this.dropped);
     page.markDirty();
     page.markNeedsGenerate();
   }
@@ -94,24 +97,41 @@ export class TagImageCommand implements Command {
 
   private target(): RetaggableTag {
     if (this.as === "artifact") return { kind: "artifact" };
-    return { kind: "figure", mcid: this.mcid!, alt: this.alt };
+    return { kind: "element", type: this.as, mcid: this.mcid!, alt: this.alt };
   }
 }
 
+/**
+ * Move the image from one tag to another. Leaving "untagged" drops any marks
+ * with MCIDs no element owns, which it returns; returning to it puts `restore`
+ * back, outermost first.
+ */
 function retag(
   doc: EditorDocument,
   image: ImageObject,
   from: RetaggableTag,
   to: RetaggableTag,
-): void {
+  restore: readonly TagMark[] = [],
+): TagMark[] {
   const m = doc.module;
   const structure = doc.structure(image.pageIndex);
   const objPtr = image.pdfiumObjPtr;
+  const dropped =
+    from.kind === "untagged"
+      ? readTagMarks(m, objPtr).filter(
+          ({ mcid }) => mcid !== null && !structure.owns(mcid),
+        )
+      : [];
+  for (const mark of [...dropped].reverse()) {
+    marked(removeTagMark(m, objPtr, mark.name));
+  }
   if (from.kind === "artifact") {
     marked(removeTagMark(m, objPtr, ARTIFACT_TAG));
   }
-  if (from.kind === "figure") {
-    marked(removeTagMark(m, objPtr, FIGURE_TAG));
+  if (from.kind === "element") {
+    // A retag since it was added changed the element's type but not its mark.
+    const mark = readTagMarks(m, objPtr).find(({ mcid }) => mcid === from.mcid);
+    if (mark) marked(removeTagMark(m, objPtr, mark.name));
     structure.removeElement(from.mcid);
   }
   image.mcid = null;
@@ -122,14 +142,19 @@ function retag(
     );
     image.artifact = true;
   }
-  if (to.kind === "figure") {
-    marked(
-      addTagMark(m, doc.docPtr, objPtr, { name: FIGURE_TAG, mcid: to.mcid }),
-    );
-    structure.addElement(to.mcid, FIGURE_TAG);
+  if (to.kind === "element") {
+    marked(addTagMark(m, doc.docPtr, objPtr, { name: to.type, mcid: to.mcid }));
+    structure.addElement(to.mcid, to.type);
     if (to.alt !== null) structure.setAlt(to.mcid, to.alt);
     image.mcid = to.mcid;
   }
+  if (to.kind === "untagged") {
+    for (const mark of restore) {
+      marked(addTagMark(m, doc.docPtr, objPtr, mark));
+    }
+    image.mcid = innermostMcid(restore);
+  }
+  return dropped;
 }
 
 function marked(ok: boolean): void {

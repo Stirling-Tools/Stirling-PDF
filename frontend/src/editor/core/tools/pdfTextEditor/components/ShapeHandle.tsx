@@ -11,6 +11,8 @@ interface ShapeHandleProps {
   transform: DisplayTransform;
   scale: number;
   selected: boolean;
+  /** Selectable but not draggable, as a shape the editor cannot move is. */
+  fixed?: boolean;
   onSelect: (extend: boolean) => void;
   /** Fires when a drag completes. dx/dy are raw PDF points. */
   onMove: (dx: number, dy: number) => void;
@@ -28,9 +30,11 @@ export function ShapeHandle({
   transform,
   scale,
   selected,
+  fixed = false,
   onSelect,
   onMove,
 }: ShapeHandleProps) {
+  const movable = shape.movable && !fixed;
   const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
@@ -75,7 +79,7 @@ export function ShapeHandle({
       onSelect(true);
       return;
     }
-    if (!shape.movable) {
+    if (!movable) {
       onSelect(false);
       return;
     }
@@ -151,7 +155,7 @@ export function ShapeHandle({
         background:
           selected || dragging ? "var(--c-primary-subtle)" : "transparent",
         opacity: selected || dragging ? 0.6 : 1,
-        cursor: !shape.movable ? "pointer" : dragging ? "grabbing" : "move",
+        cursor: !movable ? "pointer" : dragging ? "grabbing" : "move",
         pointerEvents: "auto",
       }}
     />

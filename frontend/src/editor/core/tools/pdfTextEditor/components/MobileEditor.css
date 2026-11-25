@@ -26,6 +26,11 @@
   overflow: hidden;
 }
 
+/* Only the name gives way; a squeezed button clips its own label. */
+.pdf-editor-mtopbar > :not(.pdf-editor-mtopbar__file) {
+  flex-shrink: 0;
+}
+
 .pdf-editor-mtopbar__file .pdf-editor-topbar__file {
   max-width: 100%;
 }

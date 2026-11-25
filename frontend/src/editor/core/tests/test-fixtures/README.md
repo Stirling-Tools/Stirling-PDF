@@ -11,6 +11,17 @@ qpdf --encrypt annotation-test annotation-test 256 -- annotations_out_of_order.p
 qpdf --encrypt annotation-test annotation-test 256 -- link-annotations-sample.pdf encrypted-links.pdf
 ```
 
+## Signature probe fixtures
+
+`signature-*.pdf` exercise the local signature probe (`utils/pdfiumSignatures.ts`). They were signed by Stirling-PDF's `cert-sign` endpoint with `certs/valid-test.p12` (password `testpass`, signer `Test Signer`):
+
+- `signature-one.pdf`: one signature covering the whole file.
+- `signature-two.pdf`: `signature-one.pdf` countersigned, so the first signature no longer reaches the end of the file.
+- `signature-changed-after.pdf`: `signature-one.pdf` with an incremental metadata update appended after signing.
+- `signature-rewritten.pdf`: `signature-one.pdf` rewritten by `update-metadata`, so its byte range no longer fits the file.
+- `signature-timestamp.pdf`: an RFC 3161 document timestamp from `timestamp-pdf` (DigiCert TSA).
+- `signature-empty-field.pdf`: an empty signature field with no signature value.
+
 ## Required Test Files
 
 To run the full test suite, please add the following test files to this directory:

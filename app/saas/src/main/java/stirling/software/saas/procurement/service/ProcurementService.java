@@ -355,7 +355,7 @@ public class ProcurementService {
         // price a $0 enterprise quote, accept it, and be provisioned a committed licence.
         long floor = config.getMinAnnualNetMinor();
         if (floor > 0 && breakdown.annualNetMinor() < floor) {
-            throw new IllegalStateException(
+            throw new BelowMinimumDealException(
                     "Quoted annual fee "
                             + breakdown.annualNetMinor()
                             + " is below the minimum enterprise deal size "
@@ -478,9 +478,9 @@ public class ProcurementService {
      * version. Does not itself accept the quote into a subscription — the caller proceeds to accept
      * as before.
      *
-     * <p>Deliberately not {@code @Transactional}: rendering the PDF shells out to WeasyPrint, and
-     * holding the deal's row lock across an external process buys nothing here. The only write is a
-     * single insert, which {@code save} makes atomic on its own.
+     * <p>Deliberately not {@code @Transactional}: rendering the PDF is slow, and holding the deal's
+     * row lock across it buys nothing here. The only write is a single insert, which {@code save}
+     * makes atomic on its own.
      */
     public ProcurementAgreementSignature signAgreement(
             Long teamId, AgreementSigning signing, String signerIp) {
@@ -781,7 +781,19 @@ public class ProcurementService {
      * otherwise the trial's self-selected target. Paid entitlements must follow what was quoted.
      */
     private String entitledDeployment(ProcurementDeal deal) {
-        ProcurementQuote quote = currentQuote(deal.getTeamId()).orElse(null);
+        return entitledDeployment(deal, quotesForDeal(deal.getDealId()));
+    }
+
+    /**
+     * {@link #entitledDeployment(ProcurementDeal)} from the deal's quotes, newest first, for a
+     * caller that already has them loaded.
+     */
+    public String entitledDeployment(ProcurementDeal deal, List<ProcurementQuote> quotes) {
+        ProcurementQuote quote =
+                quotes.stream()
+                        .filter(q -> q.getQuoteId().equals(deal.getAcceptedQuoteId()))
+                        .findFirst()
+                        .orElse(quotes.isEmpty() ? null : quotes.get(0));
         if (quote != null && quote.getDeployment() != null && !quote.getDeployment().isBlank()) {
             return quote.getDeployment();
         }
