@@ -3,6 +3,7 @@ import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 let __singleton: EditorStore | null = null;
 let __disposeTimer: ReturnType<typeof setTimeout> | null = null;
+let __owners = 0;
 
 // The store is a module-level singleton, so a hot update to EditorStore.ts
 // swaps the CLASS but leaves this instance - built from the old code - running.
@@ -34,6 +35,7 @@ export function useEditorStore(): {
 } {
   const view = useEditorStoreView();
   useEffect(() => {
+    __owners += 1;
     // A pending disposal means we just remounted within the grace window
     // (StrictMode / sidebar toggle) - cancel it so the open doc survives.
     if (__disposeTimer) {
@@ -41,6 +43,10 @@ export function useEditorStore(): {
       __disposeTimer = null;
     }
     return () => {
+      __owners -= 1;
+      // Counted, not last-unmount-wins: the text editor can unmount after the
+      // review's editor has mounted, and freeing then drops its unsaved edits.
+      if (__owners > 0) return;
       if (__disposeTimer) clearTimeout(__disposeTimer);
       __disposeTimer = setTimeout(() => {
         __disposeTimer = null;

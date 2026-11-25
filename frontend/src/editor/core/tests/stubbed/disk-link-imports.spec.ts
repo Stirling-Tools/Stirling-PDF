@@ -137,6 +137,12 @@ test("the sidebar add button uses the native picker", async ({ page }) => {
 });
 
 test("a Finder-open event stores the link during import", async ({ page }) => {
+  // The editor mounts after the startup auth check; until then Rust keeps the queue.
+  await expect
+    .poll(() =>
+      page.evaluate(() => Reflect.get(window, "__listeners")["files-changed"]),
+    )
+    .toBeDefined();
   await page.evaluate((path) => {
     Reflect.set(window, "__openedPaths", [path]);
     const callbacks = Reflect.get(window, "__callbacks");
