@@ -4,7 +4,7 @@ import { AuthShell } from "@editor/auth/ui/AuthShell";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { RunLocationStepLayout } from "@editor/components/runLocation/RunLocationStepLayout";
-import { AnimatedHeight } from "@editor/components/runLocation/AnimatedHeight";
+import { AnimatedHeight } from "@editor/components/shared/setupCard/AnimatedHeight";
 import { DesktopDownloadStep } from "@editor/components/runLocation/DesktopDownloadStep";
 import { SelfHostStep } from "@editor/components/runLocation/SelfHostStep";
 import { markRunLocationChosen } from "@editor/components/runLocation/runLocationChosen";

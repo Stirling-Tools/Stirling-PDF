@@ -13,6 +13,7 @@ bootRun {
 }
 dependencies {
     implementation project(':common')
+    implementation "com.stirling:stirling-office-convert-lineart:$officeConvertVersion"
     api "com.google.guava:guava:${guavaVersion}"
 
     api 'org.springframework:spring-jdbc'

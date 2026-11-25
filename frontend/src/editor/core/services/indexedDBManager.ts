@@ -539,6 +539,12 @@ export const DATABASE_CONFIGS = {
       },
     ],
   } as DatabaseConfig,
+
+  PDF_PROBE: {
+    name: "stirling-pdf-probe",
+    version: 1,
+    stores: [{ name: "facts", keyPath: "fileId" }],
+  } as DatabaseConfig,
 } as const;
 
 export const indexedDBManager = IndexedDBManager.getInstance();

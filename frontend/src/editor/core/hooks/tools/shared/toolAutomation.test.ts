@@ -113,6 +113,32 @@ const dynamicRegistry: Partial<ToolRegistry> = {
 };
 
 describe("getExecutableTools", () => {
+  test("custom frontend processors need a backend mapping even when they declare an endpoint", () => {
+    const config = asRegistryConfig({
+      toolType: ToolType.custom,
+      operationType: "extractPages",
+      endpoint: "/api/v1/general/rearrange-pages",
+      customProcessor: async () => ({ files: [] }),
+    });
+    const customRegistry: Partial<ToolRegistry> = {
+      extractPages: entry({ name: "Extract pages", operationConfig: config }),
+    };
+
+    expect(getExecutableTools(customRegistry)).toEqual([]);
+
+    expect(
+      getExecutableTools({
+        extractPages: entry({
+          name: "Extract pages",
+          operationConfig: {
+            ...config,
+            toApiParams: () => ({ pageNumbers: "1" }),
+          },
+        }),
+      }).map((tool) => tool.toolId),
+    ).toEqual(["extractPages"]);
+  });
+
   test("lists automatable tools with a resolvable endpoint, classified by support", () => {
     const tools = getExecutableTools(registry);
     expect(tools.map((t) => t.toolId)).toEqual([

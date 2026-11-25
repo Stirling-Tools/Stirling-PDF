@@ -49,6 +49,8 @@ public class PolicyRun {
      */
     private final String triggeringUser;
 
+    private final String pipelineOwner;
+
     private final Instant createdAt = Instant.now();
 
     private volatile PolicyRunStatus status = PolicyRunStatus.PENDING;
@@ -92,7 +94,8 @@ public class PolicyRun {
             String sourceId,
             String fileIdentity,
             String triggeringUser,
-            String fileOwner) {
+            String fileOwner,
+            String pipelineOwner) {
         this.runId = runId;
         this.policyId = policyId;
         this.sourceId = sourceId;
@@ -100,6 +103,7 @@ public class PolicyRun {
         this.fileIdentity = fileIdentity;
         this.triggeringUser = triggeringUser;
         this.fileOwner = fileOwner;
+        this.pipelineOwner = pipelineOwner;
     }
 
     /**

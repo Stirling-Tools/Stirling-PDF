@@ -1,0 +1,60 @@
+.tag {
+  position: absolute;
+  /* A page's 1.5rem padding inside its scrollbar gutter. */
+  right: calc(var(--space-6) + var(--space-4));
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--c-border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  box-shadow: 0 -1px 4px rgb(0 0 0 / 6%);
+  overflow: hidden;
+}
+
+.open,
+.dismiss {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.open:hover,
+.dismiss:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.open {
+  gap: var(--space-1_5);
+  height: 1.625rem;
+  padding: 0 var(--space-1) 0 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.dismiss {
+  padding: 0 var(--space-2) 0 var(--space-1);
+  opacity: 0.75;
+}
+
+.dismiss:hover {
+  opacity: 1;
+}
+
+/* The mark's two paths are filled by class, not currentColor. */
+.mark :global(.sui-brandmark__a) {
+  fill: var(--c-brand-mark-soft);
+}
+
+.mark :global(.sui-brandmark__b) {
+  fill: var(--c-brand-mark);
+}

@@ -1,5 +1,6 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page } from "@playwright/test";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import type { Locator, Page } from "@playwright/test";
 import path from "path";
 import { readFile } from "node:fs/promises";
 import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
@@ -128,6 +129,22 @@ async function bitmapSig(page: Page): Promise<string> {
   }, PAGE_TESTID);
 }
 
+// The picker slides in for ~150ms; a click aimed while it moves can land beside the button.
+async function untilStill(target: Locator): Promise<void> {
+  let prev = "";
+  await expect
+    .poll(
+      async () => {
+        const box = JSON.stringify(await target.boundingBox());
+        const still = box !== "null" && box === prev;
+        prev = box;
+        return still;
+      },
+      { message: "control never stopped moving", intervals: [100] },
+    )
+    .toBe(true);
+}
+
 // Wait until the bitmap differs from `from` (when given), then holds still.
 async function settle(page: Page, from?: string): Promise<void> {
   let prev = "";
@@ -165,30 +182,34 @@ async function runs(page: Page): Promise<RunState[]> {
 }
 
 async function open(page: Page, file: string | Buffer): Promise<void> {
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(
-      typeof file === "string"
-        ? FIX(file)
-        : { name: "reopened.pdf", mimeType: "application/pdf", buffer: file },
-    );
+  await openInTextEditor(
+    page,
+    typeof file === "string"
+      ? FIX(file)
+      : { name: "reopened.pdf", mimeType: "application/pdf", buffer: file },
+  );
   await expect(page.getByTestId(PAGE_TESTID)).toBeVisible({ timeout: 60_000 });
   await waitForEditorReady(page, 60_000);
   await settle(page);
 }
 
-// The target line's band on the canvas, from its DOM overlay box.
-async function lineBox(page: Page, runId: string): Promise<Box> {
+// The target run's band on the canvas, from its DOM overlay box; with `line`,
+// only that line of the run.
+async function lineBox(page: Page, runId: string, line?: number): Promise<Box> {
   return page.evaluate(
-    ({ tid, id }) => {
+    ({ tid, id, line }) => {
       const c = Array.from(
         document.querySelectorAll<HTMLCanvasElement>(
           `[data-testid="${tid}"] canvas`,
         ),
       ).find((x) => x.width > 0 && x.height > 0)!;
-      const el = document.querySelector<HTMLElement>(
+      const run = document.querySelector<HTMLElement>(
         `[data-testid="pdf-editor-run-${id}"]`,
       )!;
+      const el =
+        line === undefined
+          ? run
+          : run.querySelector<HTMLElement>(`[data-pdf-editor-line="${line}"]`)!;
       const cr = c.getBoundingClientRect();
       const er = el.getBoundingClientRect();
       const k = c.width / cr.width;
@@ -199,7 +220,7 @@ async function lineBox(page: Page, runId: string): Promise<Box> {
         y1: Math.round((er.bottom - cr.bottom + cr.height) * k),
       };
     },
-    { tid: PAGE_TESTID, id: runId },
+    { tid: PAGE_TESTID, id: runId, line },
   );
 }
 
@@ -334,9 +355,9 @@ for (const fixture of ["scanned-ocr-hocr.pdf", "scanned-ocr-sandwich.pdf"]) {
   });
 }
 
-// Tight 11/13pt leading: the cover must span both OCR lines of the block yet
-// stop short of the next block's ascenders.
-test("a word edit in a scanned OCR paragraph covers the block and spares the next line", async ({
+// Tight leading: the cover must span the edited line of the paragraph yet
+// stop short of the ascenders of the line below it.
+test("a word edit in a scanned OCR paragraph covers its line and spares the next line", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -345,13 +366,15 @@ test("a word edit in a scanned OCR paragraph covers the block and spares the nex
     timeout: 30_000,
   });
   await open(page, "scanned-ocr-paragraph.pdf");
-  const all = await runs(page);
-  const block = all.find((r) => r.text.includes("fourteen"));
-  const next = all.find((r) => r.text.startsWith("date. Payment"));
-  expect(block && next, "OCR grouping changed").toBeTruthy();
-  const band = await lineBox(page, block!.id);
-  // The DOM boxes overlap by a few rows that hold this block's descenders.
-  const nextBand = { ...(await lineBox(page, next!.id)), y0: band.y1 + 1 };
+  const block = (await runs(page)).find((r) => r.text.includes("fourteen"));
+  expect(
+    block?.text.split("\n").map((l) => l.split(" ")[0]),
+    "OCR grouping changed",
+  ).toEqual(["This", "will", "date.", "interest"]);
+  const firstLine = await lineBox(page, block!.id, 0);
+  const band = await lineBox(page, block!.id, 1);
+  // The DOM line boxes overlap by a few rows that hold the edited line's descenders.
+  const nextBand = { ...(await lineBox(page, block!.id, 2)), y0: band.y1 + 1 };
   await snap(page, "loaded");
 
   await replaceRunText(
@@ -363,20 +386,15 @@ test("a word edit in a scanned OCR paragraph covers the block and spares the nex
 
   const edited = (await runs(page)).find((r) => r.id === block!.id)!;
   expect(edited.text).toContain("twenty-one");
-  // The block's first line is untouched and keeps its scanned pixels.
-  const firstLine = {
-    ...band,
-    y1: band.y0 + Math.round((band.y1 - band.y0) * 0.35),
-  };
   expect(
     await diff(page, "loaded", "edited", firstLine),
     "the unchanged first line was redrawn",
   ).toBe(0);
   expect(
     await diff(page, "loaded", "edited", band),
-    "the block did not change on screen",
+    "the edited line did not change on screen",
   ).toBeGreaterThan(500);
-  // New descenders may dip into the next box; erased scan ink may not.
+  // New descenders may dip into the next line; erased scan ink may not.
   expect(
     await diff(page, "loaded", "edited", nextBand, true),
     "the cover erased part of the next OCR line",
@@ -541,7 +559,7 @@ test("Enter in a scanned block moves later text down a line, Backspace rejoins i
 }) => {
   test.setTimeout(120_000);
   await openForm(page);
-  const addr = (await runs(page)).find((r) => r.text.startsWith("12-4"))!;
+  const addr = (await runs(page)).find((r) => r.text.includes("\n12-4"))!;
   await snap(page, "loaded");
 
   const loadedSig = await bitmapSig(page);
@@ -550,7 +568,7 @@ test("Enter in a scanned block moves later text down a line, Backspace rejoins i
   await settle(page, loadedSig);
   await snap(page, "split");
   const split = (await runs(page)).find((r) => r.id === addr.id)!;
-  expect(split.text.split("\n")).toHaveLength(3);
+  expect(split.text.split("\n")).toHaveLength(addr.text.split("\n").length + 1);
   // "EASTPORT" left the first line, and the TEL line now sits a row lower.
   expect(
     await diff(
@@ -631,8 +649,8 @@ test("deleting a scanned line hides it, and undo brings the scan back", async ({
   expect(await diff(page, "loaded", "undone")).toBeLessThan(20);
 });
 
-// Dragging a scanned block's frame: the scan is covered where it was and the
-// text is drawn where it was dropped.
+// Dragging a scanned block by the move grip just above its frame: the scan is
+// covered where it was and the text is drawn where it was dropped.
 test("dragging a scanned block moves its text off the scan", async ({
   page,
 }) => {
@@ -644,9 +662,10 @@ test("dragging a scanned block moves its text off the scan", async ({
     .getByTestId(`pdf-editor-run-${north.id}`)
     .boundingBox())!;
   const loadedSig = await bitmapSig(page);
-  await page.mouse.move(box.x + box.width / 2, box.y + 2);
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.move(box.x + box.width / 2, box.y - 3, { steps: 4 });
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2 + 120, box.y + 2, { steps: 8 });
+  await page.mouse.move(box.x + box.width / 2 + 120, box.y - 3, { steps: 8 });
   await page.mouse.up();
   await settle(page, loadedSig);
   await snap(page, "moved");
@@ -773,4 +792,55 @@ test("only blurry scans get softened edits", async ({ page }) => {
   const south = (await runs(page)).find((r) => r.text.startsWith("SOUTH"))!;
   await replaceRunText(page, south.id, south.text.replace("SOUTH", "EAST"));
   expect(await blockSoftness(page, south.id)).toBeGreaterThan(0);
+});
+
+test("a scanned edit applies the best font, the picker swaps it, and undo puts it back", async ({
+  page,
+}) => {
+  test.setTimeout(150_000);
+  await openForm(page);
+  const line = (await runs(page)).find((r) => r.renderMode === 3)!;
+  const runBox = page.getByTestId(`pdf-editor-run-${line.id}`);
+  const choices = page.getByTestId("pdf-editor-scan-font-choice");
+  const applied = choices.and(page.locator('[aria-pressed="true"]'));
+  const open = page.getByTestId("pdf-editor-scan-font-open");
+  const label = (i: number) => choices.nth(i).locator("p").first().innerText();
+  await runBox.click();
+  await expect(open).toHaveCount(0);
+
+  await replaceRunText(page, line.id, `${line.text}X`);
+  await expect(choices).toHaveCount(0);
+  await runBox.click();
+  await open.click();
+  await expect(choices.first()).toBeVisible({ timeout: 30_000 });
+  expect(await choices.count()).toBeGreaterThan(1);
+  await expect(choices.first()).toHaveAttribute("aria-pressed", "true");
+  const best = await label(0);
+  const runnerUp = await label(1);
+
+  await snap(page, "edited");
+  const edited = await bitmapSig(page);
+  await untilStill(choices.nth(1));
+  await choices.nth(1).click();
+  await expect(choices).toHaveCount(0);
+  await settle(page, edited);
+
+  await open.click();
+  await expect(applied).toHaveCount(1, { timeout: 30_000 });
+  await expect(applied).toContainText(runnerUp);
+  const done = page.getByTestId("pdf-editor-scan-font-done");
+  await untilStill(done);
+  await done.click();
+  await expect(choices).toHaveCount(0);
+
+  const picked = await bitmapSig(page);
+  await page.getByTestId("pdf-editor-undo").click();
+  await settle(page, picked);
+  await snap(page, "undone");
+  expect(await diff(page, "edited", "undone")).toBeLessThan(20);
+
+  await runBox.click();
+  await open.click();
+  await expect(applied).toHaveCount(1, { timeout: 30_000 });
+  await expect(applied).toContainText(best);
 });

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useCallback, useState, useRef } from "react";
 import { type StepType } from "@reactour/tour";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+import { TEAM_CHECKOUT_PATH } from "@editor/routes/teamCheckoutLink";
 import { isAuthRoute } from "@editor/constants/routes";
 import { dispatchTourState } from "@editor/constants/events";
 import { useOnboardingOrchestrator } from "@editor/components/onboarding/orchestrator/useOnboardingOrchestrator";
@@ -99,7 +101,7 @@ export default function Onboarding() {
         }
         case "open-processor":
           actions.complete();
-          navigate("/portal");
+          navigate(PORTAL_BASENAME);
           break;
         case "skip-to-license":
           actions.complete();
@@ -266,7 +268,7 @@ export default function Onboarding() {
       !serverExperience.hasPaidLicense &&
       serverExperience.overFreeTierLimit === true
     ) {
-      navigate("/settings/billing?upgrade=team");
+      navigate(TEAM_CHECKOUT_PATH);
     }
   }, [
     showLicenseSlide,
