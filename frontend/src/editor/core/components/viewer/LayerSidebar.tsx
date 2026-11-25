@@ -19,8 +19,6 @@ export type { LayerInfo };
 
 interface LayerSidebarProps {
   visible: boolean;
-  /** Right offset in rem (how far from the right edge). */
-  rightOffset: number;
   /** The current PDF file to read layers from. */
   file?: Blob | null;
   /** Stable key that changes when the document changes (used to avoid re-fetching). */
@@ -36,7 +34,6 @@ type LoadStatus = "idle" | "loading" | "ready" | "no-layers" | "error";
 
 export function LayerSidebar({
   visible,
-  rightOffset,
   file,
   documentCacheKey,
   onApplyLayers,
@@ -341,7 +338,6 @@ export function LayerSidebar({
       className="layer-sidebar"
       title={t("viewer.layers.title", "Layers")}
       icon={<Icon name="layers" size={20} />}
-      rightOffset={`${rightOffset}rem`}
       visible={visible}
       onClose={toggleLayerSidebar}
       closeLabel={t("viewer.layers.closeSidebar", "Close layers sidebar")}

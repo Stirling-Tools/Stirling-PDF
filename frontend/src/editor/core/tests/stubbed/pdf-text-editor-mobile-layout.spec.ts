@@ -31,7 +31,7 @@ async function addFile(
     timeout: 30_000,
   });
   await page
-    .locator('input[type="file"]:not([data-testid="pdf-editor-image-input"])')
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
     .first()
     .setInputFiles(file);
 }

@@ -79,6 +79,7 @@ import Clipboard from "lucide-static/icons/clipboard.svg?react";
 import ClipboardCheck from "lucide-static/icons/clipboard-check.svg?react";
 import ClipboardClock from "lucide-static/icons/clipboard-clock.svg?react";
 import ClipboardList from "lucide-static/icons/clipboard-list.svg?react";
+import ClipboardPenLine from "lucide-static/icons/clipboard-pen-line.svg?react";
 import ClipboardPlus from "lucide-static/icons/clipboard-plus.svg?react";
 import Clock from "lucide-static/icons/clock.svg?react";
 import Cloud from "lucide-static/icons/cloud.svg?react";
@@ -243,6 +244,8 @@ import Recycle from "lucide-static/icons/recycle.svg?react";
 import Redo2 from "lucide-static/icons/redo-2.svg?react";
 import RefreshCw from "lucide-static/icons/refresh-cw.svg?react";
 import RefreshCwOff from "lucide-static/icons/refresh-cw-off.svg?react";
+import Replace from "lucide-static/icons/replace.svg?react";
+import ReplaceAll from "lucide-static/icons/replace-all.svg?react";
 import Rocket from "lucide-static/icons/rocket.svg?react";
 import RotateCcw from "lucide-static/icons/rotate-ccw.svg?react";
 import RotateCcwClock from "lucide-static/icons/rotate-ccw-clock.svg?react";
@@ -515,6 +518,7 @@ export const ICONS = {
   "clipboard-check": { Component: ClipboardCheck, kind: "lucide" },
   "clipboard-clock": { Component: ClipboardClock, kind: "lucide" },
   "clipboard-list": { Component: ClipboardList, kind: "lucide" },
+  "clipboard-pen-line": { Component: ClipboardPenLine, kind: "lucide" },
   "clipboard-plus": { Component: ClipboardPlus, kind: "lucide" },
   clock: { Component: Clock, kind: "lucide" },
   cloud: { Component: Cloud, kind: "lucide" },
@@ -679,6 +683,8 @@ export const ICONS = {
   "redo-2": { Component: Redo2, kind: "lucide" },
   "refresh-cw": { Component: RefreshCw, kind: "lucide" },
   "refresh-cw-off": { Component: RefreshCwOff, kind: "lucide" },
+  replace: { Component: Replace, kind: "lucide" },
+  "replace-all": { Component: ReplaceAll, kind: "lucide" },
   rocket: { Component: Rocket, kind: "lucide" },
   "rotate-ccw": { Component: RotateCcw, kind: "lucide" },
   "rotate-ccw-clock": { Component: RotateCcwClock, kind: "lucide" },

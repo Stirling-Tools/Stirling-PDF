@@ -468,7 +468,7 @@ test.describe("Sign tool signature wallet", () => {
     await redact.click();
     await expect(page.getByText(/Apply Redactions/).first()).toBeVisible();
     await page
-      .getByRole("button", { name: "Exit Redaction Mode", exact: true })
+      .getByRole("button", { name: "Redact", exact: true, pressed: true })
       .click();
     await page.locator("#super-search-input").fill("Sign");
     await page.getByRole("option", { name: /^Sign Adds signature/ }).click();

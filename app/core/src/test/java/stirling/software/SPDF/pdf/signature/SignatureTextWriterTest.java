@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -14,6 +17,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
 import org.junit.jupiter.api.Test;
 
 class SignatureTextWriterTest {
@@ -87,5 +91,36 @@ class SignatureTextWriterTest {
     void aCharacterNoFaceCoversIsDrawnAsAQuestionMark() throws Exception {
         Rendered rendered = render("Signed by 😀");
         assertEquals("Signed by ?", rendered.text());
+    }
+
+    @Test
+    void aHebrewNameIsDrawnRightToLeftAfterALatinLabel() throws Exception {
+        Rendered rendered = render("Signed by \u05DE\u05E9\u05D4 2024");
+        Map<String, Float> x = new HashMap<>();
+        PDFTextStripper positions =
+                new PDFTextStripper() {
+                    @Override
+                    protected void writeString(String text, List<TextPosition> glyphs) {
+                        for (TextPosition glyph : glyphs) {
+                            x.putIfAbsent(glyph.getUnicode(), glyph.getXDirAdj());
+                        }
+                    }
+                };
+        try (PDDocument reloaded = Loader.loadPDF(rendered.pdf())) {
+            positions.getText(reloaded);
+        }
+        float label = x.get("S");
+        float first = x.get("\u05DE");
+        float last = x.get("\u05D4");
+        assertTrue(label < last && last < first, x.toString());
+        assertTrue(x.get("2") < x.get("0") && x.get("0") < x.get("4"), x.toString());
+    }
+
+    @Test
+    void visualOrderLeavesLeftToRightTextAlone() {
+        assertEquals("Signed by Anna", SignatureTextWriter.visualOrder("Signed by Anna"));
+        assertEquals(
+                "Signed by \u05D4\u05E9\u05DE",
+                SignatureTextWriter.visualOrder("Signed by \u05DE\u05E9\u05D4"));
     }
 }

@@ -6,6 +6,8 @@ import {
 } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import path from "path";
 
+test.use({ autoGoto: false });
+
 // Regression for the CropBox/rotation positioning bug (root-caused on
 // spirit-sx-user-guide.pdf, which is NEVER committed).
 

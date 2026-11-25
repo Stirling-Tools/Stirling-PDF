@@ -24,6 +24,8 @@ export class TauriBackendService {
   private hasBeenHealthy = false;
   private startupGraceUntil = 0;
   private static readonly STARTUP_GRACE_MS = 120_000;
+  /** From the bundled backend's app-config. Hardware signing always runs there, whichever server is connected. */
+  private hardwareSigningAvailable = false;
 
   static getInstance(): TauriBackendService {
     if (!TauriBackendService.instance) {
@@ -46,6 +48,10 @@ export class TauriBackendService {
 
   getBackendPort(): number | null {
     return this.backendPort;
+  }
+
+  isHardwareSigningAvailable(): boolean {
+    return this.hardwareSigningAvailable;
   }
 
   getBackendUrl(): string | null {
@@ -304,6 +310,7 @@ export class TauriBackendService {
       }
 
       const data = await response.json();
+      this.hardwareSigningAvailable = data.hardwareSigningAvailable === true;
       const dependenciesReady = data.dependenciesReady === true;
       console.debug(
         `[TauriBackendService] dependenciesReady=${dependenciesReady}`,
@@ -357,6 +364,7 @@ export class TauriBackendService {
     this.restartAttempts = 0;
     this.hasBeenHealthy = false;
     this.startupGraceUntil = 0;
+    this.hardwareSigningAvailable = false;
     if (this.recoveryTimer) {
       clearTimeout(this.recoveryTimer);
       this.recoveryTimer = null;
