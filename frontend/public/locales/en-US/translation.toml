@@ -12,9 +12,11 @@ comingSoon = "Coming soon"
 confirm = "Confirm"
 confirmClose = "Confirm Close"
 confirmCloseCancel = "Cancel"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Close File"
 confirmCloseDiscard = "Discard changes and close"
 confirmCloseMessage = "Are you sure you want to close this file?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Save and close"
 confirmCloseSaveFailed_one = "Saved with errors. {{count}} file could not be saved."
 confirmCloseSaveFailed_other = "Saved with errors. {{count}} files could not be saved."
@@ -13134,6 +13136,12 @@ title = "Keyboard Shortcuts"
 [settings.hotkeys.errorModifier]
 mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
+
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
 
 [settings.legal]
 description = "Terms, privacy policy and your cookie preferences."
