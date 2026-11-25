@@ -122,7 +122,6 @@ import type { FileId } from "@editor/types/file";
 import {
   pdfAllows,
   canPrintPdf,
-  pdfEditingLocked,
 } from "@editor/services/pdfPermissions";
 import { signedPdfEditsBlocked } from "@editor/services/pdfAccessService";
 
