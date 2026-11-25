@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
@@ -15,6 +15,7 @@ import { useSignatureAppearanceTips } from "@editor/components/tooltips/useSigna
 import { useSignModeTips } from "@editor/components/tooltips/useSignModeTips";
 import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import type { HardwareCertificateInfo } from "@editor/services/hardwareSigningService";
 
 const CertSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -57,11 +58,14 @@ const CertSign = (props: BaseToolProps) => {
     if (stampBox) base.params.updateParameter("stampBox", undefined);
   }, [signingFileId, base.params]);
 
+  const [deviceCertificate, setDeviceCertificate] =
+    useState<HardwareCertificateInfo | null>(null);
   const stampPlacement = useCertSignStampPlacement({
     file: singleFile,
     parameters: base.params.parameters,
     onParameterChange: base.params.updateParameter,
     active: !base.hasResults,
+    deviceCertificate,
   });
 
   const certTypeTips = useCertificateTypeTips();
@@ -169,6 +173,7 @@ const CertSign = (props: BaseToolProps) => {
                   parameters={base.params.parameters}
                   onParameterChange={base.params.updateParameter}
                   disabled={base.endpointLoading}
+                  onChosenCertificateChange={setDeviceCertificate}
                 />
               ),
             },

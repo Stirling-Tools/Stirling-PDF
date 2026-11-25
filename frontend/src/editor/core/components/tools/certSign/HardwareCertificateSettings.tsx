@@ -36,6 +36,7 @@ interface HardwareCertificateSettingsProps {
     value: CertSignParameters[K],
   ) => void;
   disabled?: boolean;
+  onChosenCertificateChange?: (cert: HardwareCertificateInfo | null) => void;
 }
 
 const CUSTOM_LIBRARY_VALUE = "__custom__";
@@ -46,6 +47,7 @@ const HardwareCertificateSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
+  onChosenCertificateChange,
 }: HardwareCertificateSettingsProps) => {
   const { t } = useTranslation();
   const isOsStore =
@@ -165,6 +167,9 @@ const HardwareCertificateSettings = ({
   const chosen = certs.find((cert) => cert.alias === parameters.alias);
   const chosenSha256 = chosen?.sha256;
   const chosenOnToken = chosen?.onToken === true;
+  useEffect(() => {
+    onChosenCertificateChange?.(chosen ?? null);
+  }, [chosen, onChosenCertificateChange]);
   // A refresh after the key is unplugged can list the login-keychain copy under the same alias;
   // the token requirement stays with the selection until the user picks something else.
   const tokenRequiredFor = useRef(parameters.alias);

@@ -11,7 +11,10 @@ import type { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSig
 import { stampLabels } from "@editor/hooks/tools/certSign/useCertSignOperation";
 import { useSignatureLogo } from "@editor/hooks/tools/certSign/useSignatureLogo";
 import { useImageFile } from "@editor/hooks/tools/certSign/useImageFile";
-import { getServerSigningCertificate } from "@editor/services/hardwareSigningService";
+import {
+  getServerSigningCertificate,
+  type HardwareCertificateInfo,
+} from "@editor/services/hardwareSigningService";
 import {
   DEFAULT_STAMP_SIZE,
   renderStampPreview,
@@ -35,6 +38,7 @@ interface StampPlacementOptions {
   onParameterChange: ParameterChange;
   /** False while results are shown: any parameter write would reset them. */
   active: boolean;
+  deviceCertificate: HardwareCertificateInfo | null;
 }
 
 export interface CertSignStampPlacement {
@@ -69,24 +73,26 @@ function useSignatureLayout(file: StirlingFile | null) {
   return layout;
 }
 
-interface ServerSigner {
+interface Signer {
   name: string | null;
   subject: string | null;
 }
 
-function useServerSigner(serverSigning: boolean): ServerSigner | null {
-  const [signer, setSigner] = useState<ServerSigner | null>(null);
+function signerOf(cert: HardwareCertificateInfo): Signer {
+  return {
+    name: cert.subjectCommonName || null,
+    subject: cert.displaySubject || null,
+  };
+}
+
+function useServerSigner(serverSigning: boolean): Signer | null {
+  const [signer, setSigner] = useState<Signer | null>(null);
   useEffect(() => {
     setSigner(null);
     if (!serverSigning) return;
     let cancelled = false;
     getServerSigningCertificate().then((cert) => {
-      if (!cancelled && cert) {
-        setSigner({
-          name: cert.subjectCommonName || null,
-          subject: cert.displaySubject || null,
-        });
-      }
+      if (!cancelled && cert) setSigner(signerOf(cert));
     });
     return () => {
       cancelled = true;
@@ -100,17 +106,27 @@ type StampRenderer = (width: number, height: number) => string | null;
 /**
  * Draws the stamp as the server will, at a given size in points, for the placement guide.
  */
-function useStampRenderer(parameters: CertSignParameters): StampRenderer {
+function useStampRenderer(
+  parameters: CertSignParameters,
+  deviceCertificate: HardwareCertificateInfo | null,
+): StampRenderer {
   const { t } = useTranslation();
   const logo = useSignatureLogo();
   const image = useImageFile(parameters.signatureImage ?? null);
   const server = useServerSigner(parameters.signMode === "AUTO");
+  const device =
+    parameters.signMode === "DEVICE" &&
+    deviceCertificate &&
+    deviceCertificate.alias === parameters.alias
+      ? signerOf(deviceCertificate)
+      : null;
+  const certificate = server ?? device;
   const signer =
     parameters.name.trim() ||
-    server?.name ||
+    certificate?.name ||
     t("certSign.appearance.placement.yourName", "Your name");
   const subject = parameters.showCertificateDetails
-    ? (server?.subject ??
+    ? (certificate?.subject ??
       t(
         "certSign.appearance.placement.yourSubject",
         "CN=Your name, O=Your organisation",
@@ -152,8 +168,9 @@ function useStampRenderer(parameters: CertSignParameters): StampRenderer {
 /** The stamp at the server's default box size, for showing where no box has been chosen. */
 export function useDefaultStampPreview(
   parameters: CertSignParameters,
+  deviceCertificate: HardwareCertificateInfo | null,
 ): string | null {
-  const renderStamp = useStampRenderer(parameters);
+  const renderStamp = useStampRenderer(parameters, deviceCertificate);
   return useMemo(
     () => renderStamp(DEFAULT_STAMP_SIZE.width, DEFAULT_STAMP_SIZE.height),
     [renderStamp],
@@ -170,6 +187,7 @@ export function useCertSignStampPlacement({
   parameters,
   onParameterChange,
   active,
+  deviceCertificate,
 }: StampPlacementOptions): CertSignStampPlacement {
   const { setWorkbench } = useNavigation();
   const { activeFileId, setActiveFileId } = useViewer();
@@ -186,7 +204,7 @@ export function useCertSignStampPlacement({
   const offeredFieldFor = useRef<SignatureLayout | null>(null);
 
   const placingActive = parameters.showSignature && !parameters.fieldName;
-  const renderStamp = useStampRenderer(parameters);
+  const renderStamp = useStampRenderer(parameters, deviceCertificate);
 
   useEffect(() => {
     if (!layout || offeredFieldFor.current === layout) return;
