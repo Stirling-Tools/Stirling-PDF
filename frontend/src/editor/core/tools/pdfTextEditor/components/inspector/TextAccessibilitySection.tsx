@@ -638,7 +638,10 @@ function statusText(
   }
 }
 
-function artifactName(t: TFunction, furniture: Furniture | null): string {
+export function artifactName(
+  t: TFunction,
+  furniture: Furniture | null,
+): string {
   switch (furniture) {
     case null:
       return t(
@@ -669,7 +672,7 @@ function artifactName(t: TFunction, furniture: Furniture | null): string {
 }
 
 /** The type's name for a reader; the type itself where it has no plain-language name. */
-function typeName(t: TFunction, type: StructureType): string {
+export function typeName(t: TFunction, type: StructureType): string {
   switch (type) {
     case "Document":
       return t(
