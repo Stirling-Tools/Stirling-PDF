@@ -66,16 +66,13 @@ export async function openInTextEditor(
   });
 
   const name = typeof file === "string" ? path.basename(file) : file.name;
-  // Phones have no file list; any of the app's own upload inputs adds the file.
+  // Phones have no file list; use the landing upload rather than a tool-specific picker.
   const hasSidebar = (await page.getByTestId("file-input").count()) > 0;
   let row = null;
   if (hasSidebar) {
     row = await addToFileList(page, file);
   } else {
-    await page
-      .locator('input[type="file"]:not([data-testid="pdf-editor-image-input"])')
-      .first()
-      .setInputFiles(file);
+    await page.getByTestId("landing-file-input").setInputFiles(file);
   }
 
   await expect

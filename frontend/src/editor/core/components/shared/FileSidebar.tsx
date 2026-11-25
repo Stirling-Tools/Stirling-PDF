@@ -8,6 +8,12 @@ import React, {
   type RefCallback,
 } from "react";
 import { Loader, Menu, Tooltip } from "@mantine/core";
+import { useCreatePdfMenu } from "@editor/components/createPdf/useCreatePdfMenu";
+import { CreatePdfSidebarRow } from "@editor/components/createPdf/CreatePdfSidebarRow";
+import {
+  CreatePdfMenuItems,
+  RichMenuItem,
+} from "@editor/components/createPdf/CreatePdfMenuItems";
 import { useNavigate } from "react-router-dom";
 import { useStableCallback } from "@editor/hooks/useStableCallback";
 import { ActionIcon } from "@editor/ui/ActionIcon";
@@ -253,6 +259,7 @@ function LibraryHeader({
   onClearRecents,
 }: LibraryHeaderProps) {
   const { t } = useTranslation();
+  const createPdf = useCreatePdfMenu();
   return (
     <div
       className="file-sidebar-section-header"
@@ -286,51 +293,42 @@ function LibraryHeader({
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
       {onClearRecents && <ClearRecentsButton onClick={onClearRecents} />}
-      {cloudPickers.length === 0 ? (
-        <ActionIcon
-          variant="quiet"
-          className="file-sidebar-section-btn file-sidebar-section-btn-add"
-          data-testid="pdf-library-add-files"
-          onClick={onAddFiles}
-          title={t("fileSidebar.addFiles", "Add files")}
-          aria-label={t("fileSidebar.addFiles", "Add files")}
-        >
-          <Icon name="plus" size={"1rem"} />
-        </ActionIcon>
-      ) : (
-        <Menu position="bottom-end" withinPortal shadow="md" width={220}>
-          <Menu.Target>
-            <ActionIcon
-              variant="quiet"
-              className="file-sidebar-section-btn file-sidebar-section-btn-add"
-              data-testid="pdf-library-add-files"
-              title={t("fileSidebar.addFiles", "Add files")}
-              aria-label={t("fileSidebar.addFiles", "Add files")}
-            >
-              <Icon name="plus" size={"1rem"} />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<Icon name="file-up" size={16} />}
-              onClick={onAddFiles}
-              data-testid="pdf-library-add-from-computer"
-            >
-              {t("fileSidebar.openFromComputer", "Open from computer")}
-            </Menu.Item>
-            {cloudPickers.map((picker) => (
-              <Menu.Item
-                key={picker.id}
-                leftSection={<Icon name={picker.icon} size={16} />}
-                onClick={() => onCloudPick(picker)}
-                data-testid={picker.testId}
-              >
-                {picker.actionLabel}
-              </Menu.Item>
-            ))}
-          </Menu.Dropdown>
-        </Menu>
-      )}
+      <Menu position="bottom-end" withinPortal shadow="md" width={300}>
+        <Menu.Target>
+          <ActionIcon
+            variant="quiet"
+            className="file-sidebar-section-btn file-sidebar-section-btn-add"
+            data-testid="pdf-library-add-files"
+            loading={createPdf.busyLabel !== null}
+            title={t("fileSidebar.addFiles", "Add files")}
+            aria-label={t("fileSidebar.addFiles", "Add files")}
+          >
+            <Icon name="plus" size={"1rem"} />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Label>{t("fileSidebar.addFiles", "Add files")}</Menu.Label>
+          <RichMenuItem
+            icon={<Icon name="file-up" size={16} />}
+            label={t("fileSidebar.openFromComputer", "Open from computer")}
+            onClick={onAddFiles}
+            testId="pdf-library-add-from-computer"
+          />
+          {cloudPickers.map((picker) => (
+            <RichMenuItem
+              key={picker.id}
+              icon={<Icon name={picker.icon} size={16} />}
+              label={picker.actionLabel}
+              onClick={() => onCloudPick(picker)}
+              testId={picker.testId}
+            />
+          ))}
+          <Menu.Divider />
+          <Menu.Label>{t("createPdf.button", "Create PDF")}</Menu.Label>
+          <CreatePdfMenuItems items={createPdf.items} />
+        </Menu.Dropdown>
+      </Menu>
+      {createPdf.dialogs}
     </div>
   );
 }
@@ -1269,6 +1267,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               label: t("fileSidebar.addFiles", "Add files"),
               onClick: openNativeFilePicker,
               testId: "pdf-library-add-files",
+            },
+            {
+              icon: null,
+              label: t("createPdf.button", "Create PDF"),
+              onClick: () => undefined,
+              render: () => <CreatePdfSidebarRow />,
             },
             ...cloudPickers.map((picker) => ({
               icon: <Icon name={picker.icon} />,

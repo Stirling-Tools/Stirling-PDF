@@ -4501,6 +4501,21 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Cover page title"
 coverTitlePlaceholder = "PDF Portfolio"
