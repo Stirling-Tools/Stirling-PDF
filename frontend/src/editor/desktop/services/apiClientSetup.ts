@@ -14,7 +14,10 @@ import {
 import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
 import i18n from "@editor/i18n";
 import { requireAutomationSession } from "@editor/services/serverAutomationSession";
-import { requiresBundledBackend } from "@editor/services/bundledBackendOnly";
+import {
+  requiresBundledBackend,
+  requiresConnectedServer,
+} from "@editor/services/bundledBackendOnly";
 
 /**
  * Auth headers for raw fetch() calls (the AI SSE stream) — desktop variant.
@@ -90,10 +93,16 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         );
         const baseUrl = bundledOnly
           ? bundledBackendUrl()
-          : await operationRouter.getBaseUrl(
-              originalUrl,
-              extendedConfig.endpointName,
-            );
+          : originalUrl &&
+              requiresConnectedServer(originalUrl, extendedConfig.data)
+            ? await operationRouter.getServerOnlyBaseUrl(
+                originalUrl,
+                extendedConfig.endpointName,
+              )
+            : await operationRouter.getBaseUrl(
+                originalUrl,
+                extendedConfig.endpointName,
+              );
 
         // Build the full URL
         if (extendedConfig.url && !extendedConfig.url.startsWith("http")) {

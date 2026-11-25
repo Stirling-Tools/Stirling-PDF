@@ -31,7 +31,12 @@ import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { canPrintPdf, pdfEditingLocked } from "@editor/services/pdfPermissions";
 import { PdfPreviewUnlockGate } from "@editor/components/viewer/PdfPreviewUnlockGate";
 import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
-import { ThumbnailSidebar } from "@editor/components/viewer/ThumbnailSidebar";
+import {
+  ThumbnailSidebar,
+  THUMBNAIL_SIDEBAR_WIDTH_REM,
+} from "@editor/components/viewer/ThumbnailSidebar";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { defaultZoomLevel } from "@editor/components/viewer/defaultZoom";
 import { BookmarkSidebar } from "@editor/components/viewer/BookmarkSidebar";
 import { AttachmentSidebar } from "@editor/components/viewer/AttachmentSidebar";
 import { LayerSidebar } from "@editor/components/viewer/LayerSidebar";
@@ -839,6 +844,30 @@ const EmbedPdfViewerContent = ({
 
   const viewerKeyCommand = useViewerKeyCommand();
 
+  // Ctrl +, - and 0 zoom the document while it has the user's attention: from
+  // opening, and after a click on the pages. A click on the bars, panels or
+  // anything else hands them back to the browser, which resizes the whole UI.
+  const keyZoomOnPagesRef = useRef(true);
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      // The comments panel and the form save bar render inside the pages
+      // area, but a click on either is a click on the bars, not the pages.
+      keyZoomOnPagesRef.current = Boolean(
+        target?.closest?.("[data-viewer-pages]") &&
+        !target.closest(".sidebar-base, .form-save-bar"),
+      );
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () =>
+      document.removeEventListener("pointerdown", onPointerDown, true);
+  }, []);
+  const { preferences } = usePreferences();
+  const defaultZoomRef = useRef(
+    defaultZoomLevel(preferences.defaultViewerZoom),
+  );
+  defaultZoomRef.current = defaultZoomLevel(preferences.defaultViewerZoom);
+
   const policyFileBadges = usePolicyFileBadges();
   const policyEnforcing =
     !!activeFileId &&
@@ -892,17 +921,21 @@ const EmbedPdfViewerContent = ({
                 return;
               case "=":
               case "+":
+                if (!keyZoomOnPagesRef.current) return;
                 event.preventDefault();
                 zoomActions.zoomIn();
                 return;
               case "-":
               case "_":
+                if (!keyZoomOnPagesRef.current) return;
                 event.preventDefault();
                 zoomActions.zoomOut();
                 return;
               case "0":
+                // Back to the default zoom, as the page bar's reset is.
+                if (!keyZoomOnPagesRef.current) return;
                 event.preventDefault();
-                zoomActions.requestZoom(ZoomMode.FitWidth);
+                zoomActions.requestZoom(defaultZoomRef.current);
                 return;
             }
           }
@@ -1967,14 +2000,18 @@ const EmbedPdfViewerContent = ({
     };
   }, [hasPages, getZoomState, zoomActions]);
 
-  const sidebarWidthRem = 15;
-  const commentsSidebarWidthRem = 15;
+  // One content panel at most, against the edge, with the thumbnails strip
+  // to its left.
+  const contentPanelWidthRem =
+    isBookmarkSidebarVisible ||
+    isAttachmentSidebarVisible ||
+    isLayerSidebarVisible ||
+    isCommentsSidebarVisible
+      ? 15
+      : 0;
   const sidebarsMarginRem =
-    (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
-    (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
-    (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
-    (isLayerSidebarVisible ? sidebarWidthRem : 0) +
-    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
+    contentPanelWidthRem +
+    (isThumbnailSidebarVisible ? THUMBNAIL_SIDEBAR_WIDTH_REM : 0);
   const rightInsetRem = pageTool?.rightInsetRem ?? 0;
   const pagesPastInset = usePagesPastInset(
     pdfContainerRef,
@@ -2146,7 +2183,6 @@ const EmbedPdfViewerContent = ({
               }
               fileId={currentFileId}
               isCommentsSidebarVisible={isCommentsSidebarVisible}
-              commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
@@ -2235,29 +2271,22 @@ const EmbedPdfViewerContent = ({
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
         activeFileId={activeFileId}
+        rightOffsetRem={contentPanelWidthRem}
       />
       <BookmarkSidebar
         visible={isBookmarkSidebarVisible}
-        thumbnailVisible={isThumbnailSidebarVisible}
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
       />
       {!portfolioPinned && (
         <AttachmentSidebar
           visible={isAttachmentSidebarVisible}
-          thumbnailVisible={isThumbnailSidebarVisible}
-          bookmarkVisible={isBookmarkSidebarVisible}
           documentCacheKey={bookmarkCacheKey}
           preloadCacheKeys={allBookmarkCacheKeys}
         />
       )}
       <LayerSidebar
         visible={isLayerSidebarVisible}
-        rightOffset={
-          (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
-          (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
-          (isAttachmentSidebarVisible ? sidebarWidthRem : 0)
-        }
         file={effectiveFile?.file ?? null}
         documentCacheKey={bookmarkCacheKey}
         onApplyLayers={handleLayerApply}
