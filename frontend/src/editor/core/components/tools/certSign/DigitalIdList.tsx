@@ -177,26 +177,33 @@ const DigitalIdList = ({
 
   const details = (cert: HardwareCertificateInfo) => describe(cert, certs);
 
-  const card = (cert: HardwareCertificateInfo) => {
-    const blocked = !isUsableDigitalId(cert);
-    return (
-      <Radio.Card
-        key={cert.alias}
-        value={cert.alias}
-        className="digital-id-card"
-        disabled={disabled || blocked}
-        data-disabled={blocked || undefined}
-      >
-        <Stack gap={0} className={privateContentClassName}>
-          <Text className="digital-id-name">{digitalIdName(cert)}</Text>
-          <DigitalIdDetails cert={cert} text={details(cert)} />
-        </Stack>
-      </Radio.Card>
-    );
-  };
+  const cardBody = (cert: HardwareCertificateInfo) => (
+    <Stack gap={0} className={privateContentClassName}>
+      <Text className="digital-id-name">{digitalIdName(cert)}</Text>
+      <DigitalIdDetails cert={cert} text={details(cert)} />
+    </Stack>
+  );
 
-  const visible =
-    allUnusable || showUnusable ? [...usable, ...unusable] : usable;
+  const card = (cert: HardwareCertificateInfo) => (
+    <Radio.Card
+      key={cert.alias}
+      value={cert.alias}
+      className="digital-id-card"
+      disabled={disabled}
+    >
+      {cardBody(cert)}
+    </Radio.Card>
+  );
+
+  // Not radios: Mantine's arrow keys step onto disabled cards in the group and stop there.
+  const blockedCard = (cert: HardwareCertificateInfo) => (
+    <div key={cert.alias} className="digital-id-card" data-disabled>
+      {cardBody(cert)}
+    </div>
+  );
+
+  const shownUnusable = allUnusable || showUnusable ? unusable : [];
+  const visibleCount = usable.length + shownUnusable.length;
 
   const list =
     loading && certs.length === 0 ? (
@@ -212,19 +219,24 @@ const DigitalIdList = ({
         )}
       </Text>
     ) : (
-      <Radio.Group
-        value={selectedAlias ?? null}
-        onChange={onSelect}
-        aria-label={t("certSign.hardware.digitalId", "Digital ID")}
+      <ScrollArea.Autosize
+        mah={visibleCount > SCROLL_AFTER ? 230 : undefined}
+        offsetScrollbars="y"
+        scrollbarSize={6}
       >
-        <ScrollArea.Autosize
-          mah={visible.length > SCROLL_AFTER ? 230 : undefined}
-          offsetScrollbars="y"
-          scrollbarSize={6}
-        >
-          <Stack gap={4}>{visible.map(card)}</Stack>
-        </ScrollArea.Autosize>
-      </Radio.Group>
+        <Stack gap={4}>
+          {usable.length > 0 && (
+            <Radio.Group
+              value={selectedAlias ?? null}
+              onChange={onSelect}
+              aria-label={t("certSign.hardware.digitalId", "Digital ID")}
+            >
+              <Stack gap={4}>{usable.map(card)}</Stack>
+            </Radio.Group>
+          )}
+          {shownUnusable.map(blockedCard)}
+        </Stack>
+      </ScrollArea.Autosize>
     );
 
   return (

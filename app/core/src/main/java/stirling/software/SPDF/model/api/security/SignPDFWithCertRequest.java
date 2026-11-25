@@ -68,6 +68,21 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description =
+                    "MACOS_KEYCHAIN only: refuse unless the alias's key is on a smart card or"
+                            + " security key. Set it when the ID the user picked was on one, so"
+                            + " signing fails instead of using a copy of the same certificate in"
+                            + " the login keychain once the token is removed.")
+    private Boolean requireToken;
+
+    @Schema(
+            description =
+                    "SHA-256 fingerprint (hex) of the certificate the user reviewed, from the"
+                            + " certificate listing or the server-certificate endpoint. Signing is"
+                            + " refused when the certificate that would sign differs.")
+    private String expectedCertificateSha256;
+
+    @Schema(
+            description =
                     "Absolute path to the PKCS#11 driver library (required for PKCS11 type). Must"
                             + " be an allowed driver - a detected one or configured via"
                             + " STIRLING_PKCS11_LIBRARIES.")

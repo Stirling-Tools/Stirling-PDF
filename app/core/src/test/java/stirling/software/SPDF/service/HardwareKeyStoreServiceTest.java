@@ -5,12 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.List;
@@ -170,7 +173,14 @@ class HardwareKeyStoreServiceTest {
     }
 
     private static X509Certificate withKeyUsage(boolean[] keyUsage) {
+        return withKey(keyUsage, "RSA");
+    }
+
+    private static X509Certificate withKey(boolean[] keyUsage, String algorithm) {
         X509Certificate cert = mock(X509Certificate.class);
+        PublicKey key = mock(PublicKey.class);
+        lenient().when(key.getAlgorithm()).thenReturn(algorithm);
+        lenient().when(cert.getPublicKey()).thenReturn(key);
         when(cert.getKeyUsage()).thenReturn(keyUsage);
         return cert;
     }
@@ -184,7 +194,7 @@ class HardwareKeyStoreServiceTest {
                         HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN)) {
             assertThrows(
                     IllegalArgumentException.class,
-                    () -> service(null).resolveSigningAlias(ks, " ", source));
+                    () -> service(null).resolveSigningAlias(ks, " ", source, false));
         }
     }
 
@@ -196,7 +206,9 @@ class HardwareKeyStoreServiceTest {
                         List.of(withKeyUsage(usage(2)), withKeyUsage(usage(0))));
         assertEquals(
                 "sign",
-                service(null).resolveSigningAlias(ks, null, HardwareKeyStoreService.SOURCE_PKCS11));
+                service(null)
+                        .resolveSigningAlias(
+                                ks, null, HardwareKeyStoreService.SOURCE_PKCS11, false));
     }
 
     @Test
@@ -208,7 +220,7 @@ class HardwareKeyStoreServiceTest {
                 () ->
                         service(null)
                                 .resolveSigningAlias(
-                                        ks, null, HardwareKeyStoreService.SOURCE_PKCS11));
+                                        ks, null, HardwareKeyStoreService.SOURCE_PKCS11, false));
     }
 
     @Test
@@ -224,7 +236,8 @@ class HardwareKeyStoreServiceTest {
                                 .resolveSigningAlias(
                                         ks,
                                         "encrypt",
-                                        HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN));
+                                        HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN,
+                                        false));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -232,12 +245,66 @@ class HardwareKeyStoreServiceTest {
                                 .resolveSigningAlias(
                                         ks,
                                         "missing",
-                                        HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN));
+                                        HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN,
+                                        false));
         assertEquals(
                 "sign",
                 service(null)
                         .resolveSigningAlias(
-                                ks, "sign", HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN));
+                                ks, "sign", HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN, false));
+    }
+
+    @Test
+    void theKeychainOffersOnlyRsaAndEcIdentities() throws Exception {
+        KeyStore ks =
+                keyStore(
+                        List.of("rsa", "ec", "dsa", "eddsa"),
+                        List.of(
+                                withKey(null, "RSA"),
+                                withKey(null, "EC"),
+                                withKey(null, "DSA"),
+                                withKey(null, "EdDSA")));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        service(null)
+                                .resolveSigningAlias(
+                                        ks,
+                                        "dsa",
+                                        HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN,
+                                        false));
+        assertEquals(
+                "ec",
+                service(null)
+                        .resolveSigningAlias(
+                                ks, "ec", HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN, false));
+        assertEquals(
+                "dsa",
+                service(null)
+                        .resolveSigningAlias(
+                                ks, "dsa", HardwareKeyStoreService.SOURCE_PKCS11, false));
+    }
+
+    @Test
+    void aKeychainIdentityThatMustBeOnATokenIsRefusedOnceItIsNot() throws Exception {
+        KeyStore ks = keyStore(List.of("id"), List.of(withKeyUsage(null)));
+        when(ks.getKey("id", null)).thenReturn(mock(PrivateKey.class));
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                service(null)
+                                        .resolveSigningAlias(
+                                                ks,
+                                                "id",
+                                                HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN,
+                                                true));
+        assertTrue(error.getMessage().contains("not connected"), error.getMessage());
+        assertEquals(
+                "id",
+                service(null)
+                        .resolveSigningAlias(
+                                ks, "id", HardwareKeyStoreService.SOURCE_MACOS_KEYCHAIN, false));
     }
 
     private static KeyStore keyStore(List<String> aliases, List<X509Certificate> certs)

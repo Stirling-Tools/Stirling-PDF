@@ -16,6 +16,8 @@ export interface HardwareCertificateInfo {
   notYetValid: boolean;
   /** True on a smart card or security key, false on this device, null when the source cannot tell. */
   onToken?: boolean | null;
+  /** SHA-256 fingerprint, lowercase hex; sent back so signing refuses any other certificate. */
+  sha256?: string;
 }
 
 export interface Pkcs11LibraryInfo {

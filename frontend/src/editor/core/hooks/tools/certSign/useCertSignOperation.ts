@@ -207,12 +207,32 @@ const withStampLanguage = (
       }
     : apiParams;
 
+// What the user reviewed belongs to this signing only: a saved step that pinned a fingerprint
+// would fail once the server certificate is regenerated, so it is never stored with the step.
+const withReviewedSigner = (
+  apiParams: CertSignApiParams,
+  parameters: CertSignParameters,
+): CertSignApiParams => ({
+  ...apiParams,
+  ...(parameters.signMode !== "MANUAL" && parameters.expectedCertificateSha256
+    ? { expectedCertificateSha256: parameters.expectedCertificateSha256 }
+    : {}),
+  ...(parameters.signMode === "DEVICE" &&
+  parameters.certType === "MACOS_KEYCHAIN" &&
+  parameters.requireToken
+    ? { requireToken: true }
+    : {}),
+});
+
 export const buildCertSignFormData = (
   parameters: CertSignParameters,
   file: File,
 ): FormData =>
   objectToFormData(
-    withStampLanguage(certSignToApiParams(parameters), parameters),
+    withReviewedSigner(
+      withStampLanguage(certSignToApiParams(parameters), parameters),
+      parameters,
+    ),
     {
       fileInput: file,
       ...certSignFiles(parameters),

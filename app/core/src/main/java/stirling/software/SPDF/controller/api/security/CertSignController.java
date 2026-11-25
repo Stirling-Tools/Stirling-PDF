@@ -6,6 +6,7 @@ import java.beans.PropertyEditorSupport;
 import java.io.*;
 import java.security.*;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -113,6 +114,9 @@ public class CertSignController {
                     }
                 });
     }
+
+    // The signed digest, attributes and an optional timestamp token beside the certificates.
+    private static final int SIGNATURE_HEADROOM = 8 * 1024;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ServerCertificateServiceInterface serverCertificateService;
@@ -228,6 +232,7 @@ public class CertSignController {
                     placement.field().getCOSObject().setItem(COSName.V, signature);
                 }
                 try (SignatureOptions signatureOptions = new SignatureOptions()) {
+                    signatureOptions.setPreferredSignatureSize(signatureSize(instance));
                     signatureOptions.setVisualSignature(
                             instance.createVisibleSignature(doc, signature, placement, showLogo));
                     signatureOptions.setPage(placement.pageIndex());
@@ -236,10 +241,44 @@ public class CertSignController {
                     doc.saveIncremental(output);
                 }
             } else {
-                doc.addSignature(signature, instance);
-                doc.saveIncremental(output);
+                try (SignatureOptions signatureOptions = new SignatureOptions()) {
+                    signatureOptions.setPreferredSignatureSize(signatureSize(instance));
+                    doc.addSignature(signature, instance, signatureOptions);
+                    doc.saveIncremental(output);
+                }
             }
         }
+    }
+
+    // The server certificate can be regenerated between showing it and signing; signing as a
+    // different identity than the one on screen must fail rather than go ahead.
+    private static void requireExpectedCertificate(
+            CreateSignatureBase instance, String expectedSha256) {
+        if (StringUtils.isBlank(expectedSha256)) {
+            return;
+        }
+        X509Certificate signer = (X509Certificate) instance.getCertificateChain()[0];
+        if (!HardwareKeyStoreService.sha256(signer).equalsIgnoreCase(expectedSha256.strip())) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.signingCertificateChanged",
+                    "The signing certificate is not the one you reviewed. Check it and sign again.");
+        }
+    }
+
+    /**
+     * Bytes to reserve for the signature: PDFBox's default fits a short chain, but a size that is
+     * too small only fails after the key has signed, when a token has already asked for its PIN.
+     */
+    static int signatureSize(CreateSignatureBase instance) throws IOException {
+        int chainBytes = 0;
+        for (Certificate certificate : instance.getCertificateChain()) {
+            try {
+                chainBytes += certificate.getEncoded().length;
+            } catch (CertificateEncodingException e) {
+                throw new IOException("Could not read the signing certificate chain", e);
+            }
+        }
+        return Math.max(SignatureOptions.DEFAULT_SIGNATURE_SIZE, chainBytes + SIGNATURE_HEADROOM);
     }
 
     @AutoJobPostMapping(
@@ -415,9 +454,13 @@ public class CertSignController {
             String alias =
                     HardwareKeyStoreService.isHardwareSource(certType)
                             ? hardwareKeyStoreService.resolveSigningAlias(
-                                    ks, request.getAlias(), certType)
+                                    ks,
+                                    request.getAlias(),
+                                    certType,
+                                    Boolean.TRUE.equals(request.getRequireToken()))
                             : request.getAlias();
             CreateSignature createSignature = new CreateSignature(ks, pin, alias, signingProvider);
+            requireExpectedCertificate(createSignature, request.getExpectedCertificateSha256());
             createSignature.setStampStyle(
                     StampStyle.of(
                             signatureLogoStore.effective(),

@@ -5,7 +5,8 @@ package stirling.software.SPDF.model.api.security;
  * token) the user can pick, or the server certificate shown for information. Never carries private
  * key material. {@code onToken} is true for a key on a smart card or security key, false for one
  * stored on this device, and null where the source cannot tell (the Windows store, and PKCS#11,
- * whose drivers include software tokens).
+ * whose drivers include software tokens). {@code sha256} is the certificate's SHA-256 fingerprint
+ * in lowercase hex, which a sign request can pass back as {@code expectedCertificateSha256}.
  */
 public record HardwareCertificateInfo(
         String alias,
@@ -20,4 +21,5 @@ public record HardwareCertificateInfo(
         String notAfter,
         boolean expired,
         boolean notYetValid,
-        Boolean onToken) {}
+        Boolean onToken,
+        String sha256) {}

@@ -1432,6 +1432,10 @@ export interface SignPDFWithCertRequest {
    */
   dateLabel?: string;
   /**
+   * SHA-256 fingerprint (hex) of the certificate the user reviewed, from the certificate listing or the server-certificate endpoint. Signing is refused when the certificate that would sign differs.
+   */
+  expectedCertificateSha256?: string;
+  /**
    * Fully qualified name of an empty signature field to sign into. The signature takes that field's page and box: pageNumber is ignored and x/y/width/height must be left out. Needs showSignature. Rejected when the field does not exist or is already signed.
    */
   fieldName?: string;
@@ -1478,6 +1482,10 @@ export interface SignPDFWithCertRequest {
    * Label before the reason on the visible signature. Defaults to "Reason:".
    */
   reasonLabel?: string;
+  /**
+   * MACOS_KEYCHAIN only: refuse unless the alias's key is on a smart card or security key. Set it when the ID the user picked was on one, so signing fails instead of using a copy of the same certificate in the login keychain once the token is removed.
+   */
+  requireToken?: boolean;
   /**
    * Older name for showWatermark, used when showWatermark is not set.
    */

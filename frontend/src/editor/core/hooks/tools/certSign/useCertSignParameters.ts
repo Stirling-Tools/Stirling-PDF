@@ -34,6 +34,11 @@ export interface CertSignParameters extends BaseParameters {
   pkcs11LibraryPath?: string;
   pkcs11Slot?: number;
 
+  /** Fingerprint of the certificate the user reviewed (server or digital ID); sent at signing only. */
+  expectedCertificateSha256?: string;
+  /** The chosen keychain ID was on a security key, so a copy elsewhere must not sign. */
+  requireToken?: boolean;
+
   // Signature appearance options
   showSignature: boolean;
   reason: string;

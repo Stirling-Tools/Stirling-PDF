@@ -309,3 +309,57 @@ describe("certSignFromApiParams - sign mode", () => {
     expect(certSignFromApiParams({ certType }).signMode).toBe(signMode);
   });
 });
+
+describe("buildCertSignFormData - reviewed signer", () => {
+  test("sends the reviewed fingerprint for the server and device sources", () => {
+    const server = buildCertSignFormData(
+      params({ signMode: "AUTO", expectedCertificateSha256: "ab12" }),
+      pdf(),
+    );
+    expect(server.get("expectedCertificateSha256")).toBe("ab12");
+    const upload = buildCertSignFormData(
+      params({
+        signMode: "MANUAL",
+        certType: "PKCS12",
+        expectedCertificateSha256: "ab12",
+      }),
+      pdf(),
+    );
+    expect(upload.get("expectedCertificateSha256")).toBeNull();
+  });
+
+  test("asks for the token only for a keychain ID that was on one", () => {
+    const keychain = buildCertSignFormData(
+      params({
+        signMode: "DEVICE",
+        certType: "MACOS_KEYCHAIN",
+        alias: "abc",
+        requireToken: true,
+      }),
+      pdf(),
+    );
+    expect(keychain.get("requireToken")).toBe("true");
+    const windows = buildCertSignFormData(
+      params({
+        signMode: "DEVICE",
+        certType: "WINDOWS_STORE",
+        alias: "abc",
+        requireToken: true,
+      }),
+      pdf(),
+    );
+    expect(windows.get("requireToken")).toBeNull();
+  });
+
+  test("a saved step never pins the reviewed certificate", () => {
+    const api = certSignToApiParams(
+      params({
+        signMode: "AUTO",
+        expectedCertificateSha256: "ab12",
+        requireToken: true,
+      }),
+    );
+    expect(api.expectedCertificateSha256).toBeUndefined();
+    expect(api.requireToken).toBeUndefined();
+  });
+});
