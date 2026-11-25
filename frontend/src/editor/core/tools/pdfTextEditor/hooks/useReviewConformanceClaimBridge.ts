@@ -33,18 +33,28 @@ export function useReviewConformanceClaimBridge(
     [store],
   );
 
+  // Published from the store's own notification rather than a render, so the
+  // report's controls re-render with the editor instead of a commit later.
   useEffect(() => {
     if (!ready || !sourceFileId) return;
-    const published = {
-      fileId: sourceFileId,
-      part: state.conformanceClaim,
-      editable,
-      set,
+    const publish = () => {
+      const part = store.getState().conformanceClaim;
+      const current = reviewConformanceClaim.get();
+      if (
+        current?.fileId === sourceFileId &&
+        current.part === part &&
+        current.editable === editable &&
+        current.set === set
+      )
+        return;
+      reviewConformanceClaim.set({ fileId: sourceFileId, part, editable, set });
     };
-    reviewConformanceClaim.set(published);
+    publish();
+    const unsubscribe = store.subscribe(publish);
     return () => {
-      if (reviewConformanceClaim.get() === published)
+      unsubscribe();
+      if (reviewConformanceClaim.get()?.fileId === sourceFileId)
         reviewConformanceClaim.set(null);
     };
-  }, [ready, sourceFileId, state.conformanceClaim, editable, set]);
+  }, [ready, sourceFileId, editable, set, store]);
 }

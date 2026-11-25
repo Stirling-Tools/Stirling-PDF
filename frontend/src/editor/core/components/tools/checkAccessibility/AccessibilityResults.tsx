@@ -14,7 +14,7 @@ import {
   ConformanceClaimContext,
   ConformanceClaimField,
 } from "@editor/components/tools/checkAccessibility/ConformanceClaimFix";
-import { useConformanceClaimControl } from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
+import { useCheckedFileClaim } from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
 import type { CheckAccessibilityOperationHook } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityOperation";
 import { createAccessibilityReportPdf } from "@editor/hooks/tools/checkAccessibility/accessibilityReportPdf";
 import { assessAccessibilityReport } from "@editor/utils/accessibilityAssessment";
@@ -109,7 +109,7 @@ export function AccessibilityResults({
 
   const selected =
     results.find((entry) => entry.fileId === selectedFileId) ?? results[0];
-  const claim = useConformanceClaimControl(
+  const claim = useCheckedFileClaim(
     selected?.fileId ?? null,
     selected?.report ?? null,
     onSelectFile,

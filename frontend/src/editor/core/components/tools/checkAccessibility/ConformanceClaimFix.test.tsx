@@ -1,14 +1,18 @@
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ConformanceClaimContext,
   ConformanceClaimField,
   DeclareConformanceButton,
 } from "@editor/components/tools/checkAccessibility/ConformanceClaimFix";
-import type { ConformanceClaimControl } from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
+import type { CheckedFileClaim } from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
+import { reviewConformanceClaim } from "@editor/tools/pdfTextEditor/store/reviewConformanceClaim";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
+import type { FileId } from "@editor/types/file";
+
+const CHECKED = "checked" as FileId;
 
 const NO_CLAIM: AccessibilityIssue = {
   clause: "5",
@@ -20,20 +24,23 @@ const NO_CLAIM: AccessibilityIssue = {
   autoFixable: false,
 };
 
-function control(
-  overrides: Partial<ConformanceClaimControl> = {},
-): ConformanceClaimControl {
+function control(overrides: Partial<CheckedFileClaim> = {}): CheckedFileClaim {
   return {
+    fileId: CHECKED,
     declared: false,
-    part: null,
     editable: true,
     writing: false,
-    set: vi.fn(),
+    write: vi.fn(),
     ...overrides,
   };
 }
 
-function renderWith(claim: ConformanceClaimControl | null, ui: ReactNode) {
+afterEach(() => {
+  cleanup();
+  reviewConformanceClaim.set(null);
+});
+
+function renderWith(claim: CheckedFileClaim | null, ui: ReactNode) {
   render(
     <MantineProvider env="test">
       <ConformanceClaimContext.Provider value={claim}>
@@ -48,14 +55,17 @@ describe("DeclareConformanceButton", () => {
     const claim = control();
     renderWith(claim, <DeclareConformanceButton issue={NO_CLAIM} />);
     fireEvent.click(screen.getByTestId("a11y-declare-conformance"));
-    expect(claim.set).toHaveBeenCalledWith(1);
+    expect(claim.write).toHaveBeenCalledWith(1);
   });
 
   it("shows a declaration the review already holds", () => {
-    renderWith(
-      control({ declared: true, part: 1 }),
-      <DeclareConformanceButton issue={NO_CLAIM} />,
-    );
+    reviewConformanceClaim.set({
+      fileId: CHECKED,
+      part: 1,
+      editable: true,
+      set: vi.fn(),
+    });
+    renderWith(control(), <DeclareConformanceButton issue={NO_CLAIM} />);
     const button = screen.getByTestId("a11y-declare-conformance");
     expect(button).toBeDisabled();
     expect(button).toHaveTextContent(
@@ -85,7 +95,7 @@ describe("ConformanceClaimField", () => {
     const claim = control();
     renderWith(claim, <ConformanceClaimField part={2} />);
     fireEvent.click(screen.getByRole("checkbox"));
-    expect(claim.set).toHaveBeenCalledWith(2);
+    expect(claim.write).toHaveBeenCalledWith(2);
   });
 
   it("withdraws the claim when unticked", () => {
@@ -94,7 +104,7 @@ describe("ConformanceClaimField", () => {
     const checkbox = screen.getByRole("checkbox");
     expect(checkbox).toBeChecked();
     fireEvent.click(checkbox);
-    expect(claim.set).toHaveBeenCalledWith(null);
+    expect(claim.write).toHaveBeenCalledWith(null);
   });
 
   it("is locked while the file is rewritten", () => {

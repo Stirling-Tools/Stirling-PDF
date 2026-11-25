@@ -20,35 +20,44 @@ import type { FileId } from "@editor/types/file";
 // The rewrite holds the whole file in memory twice, as read and as written.
 const MAX_REWRITE_BYTES = 256 * 1024 * 1024;
 
+/** A checked file's claim as its report has it, and a way to rewrite the file with another. */
+export interface CheckedFileClaim {
+  fileId: FileId;
+  /** Whether the file declares PDF/UA, or will once the rewrite in progress lands. */
+  declared: boolean;
+  /** False when the claim cannot be written, as for an encrypted file. */
+  editable: boolean;
+  /** True while the file is being rewritten. */
+  writing: boolean;
+  write: (part: PdfUaPart | null) => void;
+}
+
 /** A checked file's PDF/UA claim, and a way to change it. */
 export interface ConformanceClaimControl {
   /** Whether the file declares PDF/UA, the review's unsaved edits included. */
   declared: boolean;
   /** The declared part while the review has the file open; null otherwise, as the report does not say. */
   part: number | null;
-  /** False when the claim cannot be written, as for an encrypted file. */
   editable: boolean;
-  /** True while the file is being rewritten. */
   writing: boolean;
   set: (part: PdfUaPart | null) => void;
 }
 
 /**
- * The claim of a checked file. While the review has the file open a change joins
- * its unsaved edits, to be written by its Save. Otherwise the file is rewritten at
- * once as a new version, which the tool then checks again; `onWritten` gets its id.
- * Null when there is no report to show it against.
+ * The claim of a checked file, changed by rewriting the file at once as a new
+ * version, which the tool then checks again; `onWritten` gets its id. Null when
+ * there is no report to show it against.
  */
-export function useConformanceClaimControl(
+export function useCheckedFileClaim(
   fileId: FileId | null,
   report: AccessibilityReport | null,
   onWritten: (fileId: FileId) => void,
-): ConformanceClaimControl | null {
+): CheckedFileClaim | null {
   const { t } = useTranslation();
-  const review = useReviewConformanceClaim();
   const { consumeFiles, selectors } = useFileContext();
   const { activeFileId, setActiveFileId } = useViewer();
-  const [writing, setWriting] = useState(false);
+  // The claim being written; undefined when nothing is.
+  const [pending, setPending] = useState<PdfUaPart | null | undefined>();
 
   const write = useCallback(
     async (part: PdfUaPart | null) => {
@@ -56,7 +65,7 @@ export function useConformanceClaimControl(
       const parentStub = fileId ? selectors.getStirlingFileStub(fileId) : null;
       if (!fileId || !file || !parentStub) return;
       const policyIds = policySourceIds(parentStub);
-      setWriting(true);
+      setPending(part);
       try {
         assertFilesNotBlocked(policyIds);
         const bytes = new Uint8Array(await file.arrayBuffer());
@@ -86,7 +95,7 @@ export function useConformanceClaimControl(
           body: error instanceof PolicyBlockedError ? error.message : undefined,
         });
       } finally {
-        setWriting(false);
+        setPending(undefined);
       }
     },
     [
@@ -101,7 +110,28 @@ export function useConformanceClaimControl(
   );
 
   if (!fileId || !report) return null;
-  if (review?.fileId === fileId)
+  const size = selectors.getFile(fileId)?.size ?? Infinity;
+  return {
+    fileId,
+    declared:
+      pending === undefined ? report.declaresConformance : pending !== null,
+    editable: !report.summary.encrypted && size <= MAX_REWRITE_BYTES,
+    writing: pending !== undefined,
+    write: (part) => void write(part),
+  };
+}
+
+/**
+ * `file`'s claim, or the review's while the review has the file open: a change
+ * there joins its unsaved edits, to be written by its Save. Subscribes to the
+ * review, so call it in the controls that show the claim and only they re-render.
+ */
+export function useConformanceClaim(
+  file: CheckedFileClaim | null,
+): ConformanceClaimControl | null {
+  const review = useReviewConformanceClaim();
+  if (!file) return null;
+  if (review?.fileId === file.fileId)
     return {
       declared: review.part !== null,
       part: review.part,
@@ -109,12 +139,11 @@ export function useConformanceClaimControl(
       writing: false,
       set: review.set,
     };
-  const size = selectors.getFile(fileId)?.size ?? Infinity;
   return {
-    declared: report.declaresConformance,
+    declared: file.declared,
     part: null,
-    editable: !report.summary.encrypted && size <= MAX_REWRITE_BYTES,
-    writing,
-    set: (part) => void write(part),
+    editable: file.editable,
+    writing: file.writing,
+    set: file.write,
   };
 }

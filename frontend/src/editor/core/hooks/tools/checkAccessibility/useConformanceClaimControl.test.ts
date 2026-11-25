@@ -1,6 +1,9 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useConformanceClaimControl } from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
+import {
+  useCheckedFileClaim,
+  useConformanceClaim,
+} from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { readConformanceClaim } from "@editor/tools/pdfTextEditor/pdfdoc/passes/conformanceClaim";
 import { reviewConformanceClaim } from "@editor/tools/pdfTextEditor/store/reviewConformanceClaim";
@@ -63,7 +66,7 @@ const PDF = buildClassicPdf(
 function render(report: AccessibilityReport = REPORT) {
   const onWritten = vi.fn();
   const view = renderHook(() =>
-    useConformanceClaimControl(CHECKED, report, onWritten),
+    useConformanceClaim(useCheckedFileClaim(CHECKED, report, onWritten)),
   );
   return { view, onWritten };
 }
@@ -104,7 +107,7 @@ afterEach(() => {
   reviewConformanceClaim.set(null);
 });
 
-describe("useConformanceClaimControl", () => {
+describe("the checked file's claim", () => {
   it("writes the claim as a new version when the review does not have the file", async () => {
     viewer.activeFileId = CHECKED;
     const { view, onWritten } = render();
@@ -114,6 +117,10 @@ describe("useConformanceClaimControl", () => {
     });
 
     act(() => view.result.current!.set(1));
+    expect(view.result.current).toMatchObject({
+      declared: true,
+      writing: true,
+    });
 
     await waitFor(() => expect(onWritten).toHaveBeenCalledWith("written"));
     expect(await writtenClaim()).toBe(1);
@@ -172,5 +179,9 @@ describe("useConformanceClaimControl", () => {
     await waitFor(() => expect(toast.alert).toHaveBeenCalledOnce());
     expect(fileContext.consumeFiles).not.toHaveBeenCalled();
     expect(onWritten).not.toHaveBeenCalled();
+    expect(view.result.current).toMatchObject({
+      declared: false,
+      writing: false,
+    });
   });
 });

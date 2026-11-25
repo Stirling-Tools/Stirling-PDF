@@ -4,14 +4,18 @@ import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Button } from "@editor/ui/Button";
 import { Checkbox } from "@editor/ui/Checkbox";
 import { Icon } from "@editor/ui/Icon";
-import type { ConformanceClaimControl } from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
+import {
+  useConformanceClaim,
+  type CheckedFileClaim,
+} from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
 import type { PdfUaPart } from "@editor/tools/pdfTextEditor/pdfdoc/passes/conformanceClaim";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
 import { conformanceClaimFixFor } from "@editor/utils/accessibilityFixes";
 
 /** The report's file's claim; null where the report cannot change it. */
-export const ConformanceClaimContext =
-  createContext<ConformanceClaimControl | null>(null);
+export const ConformanceClaimContext = createContext<CheckedFileClaim | null>(
+  null,
+);
 
 /** Declares the part `issue` was checked against, for an issue declaring fixes. */
 export function DeclareConformanceButton({
@@ -20,7 +24,7 @@ export function DeclareConformanceButton({
   issue: AccessibilityIssue;
 }) {
   const { t } = useTranslation();
-  const claim = useContext(ConformanceClaimContext);
+  const claim = useConformanceClaim(useContext(ConformanceClaimContext));
   const part = conformanceClaimFixFor(issue);
   if (!claim?.editable || part === null) return null;
   const declared = claim.part === part;
@@ -52,7 +56,7 @@ export function DeclareConformanceButton({
 /** Declares `part` when ticked, and withdraws the claim when unticked. */
 export function ConformanceClaimField({ part }: { part: PdfUaPart }) {
   const { t } = useTranslation();
-  const claim = useContext(ConformanceClaimContext);
+  const claim = useConformanceClaim(useContext(ConformanceClaimContext));
   if (!claim) return null;
   const hint = t("checkAccessibility.claim.hint", {
     defaultValue:
