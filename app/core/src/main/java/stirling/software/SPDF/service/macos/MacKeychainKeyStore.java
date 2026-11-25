@@ -18,14 +18,18 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * Read-only view of the identities in the user's keychains and on inserted tokens. Aliases are the
- * certificate's SHA-1 fingerprint, which is stable across reloads and unique per identity.
+ * Read-only view of the RSA and EC identities in the user's keychains and on inserted tokens, the
+ * key types {@link MacKeychainProvider} can sign with. Aliases are the certificate's SHA-1
+ * fingerprint, which is stable across reloads and unique per identity.
  */
 public final class MacKeychainKeyStore extends KeyStoreSpi {
 
     private record Entry(X509Certificate certificate, MacKeychainPrivateKey key) {}
+
+    private static final Set<String> SIGNING_ALGORITHMS = Set.of("RSA", "EC");
 
     private final Map<String, Entry> entries = new LinkedHashMap<>();
 
@@ -44,6 +48,10 @@ public final class MacKeychainKeyStore extends KeyStoreSpi {
                         (X509Certificate)
                                 factory.generateCertificate(
                                         new ByteArrayInputStream(identity.certificateDer()));
+                String algorithm = cert.getPublicKey().getAlgorithm();
+                if (!SIGNING_ALGORITHMS.contains(algorithm)) {
+                    continue;
+                }
                 String alias =
                         HexFormat.of()
                                 .formatHex(
@@ -54,9 +62,7 @@ public final class MacKeychainKeyStore extends KeyStoreSpi {
                         new Entry(
                                 cert,
                                 new MacKeychainPrivateKey(
-                                        cert.getPublicKey().getAlgorithm(),
-                                        identity.ref(),
-                                        identity.onToken())));
+                                        algorithm, identity.ref(), identity.onToken())));
             }
         } catch (IllegalStateException e) {
             throw e;

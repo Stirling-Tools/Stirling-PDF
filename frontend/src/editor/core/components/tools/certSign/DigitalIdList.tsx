@@ -178,19 +178,32 @@ const DigitalIdList = ({
   const details = (cert: HardwareCertificateInfo) => describe(cert, certs);
 
   const card = (cert: HardwareCertificateInfo) => {
-    const blocked = !isUsableDigitalId(cert);
+    const content = (
+      <Stack gap={0} className={privateContentClassName}>
+        <Text className="digital-id-name">{digitalIdName(cert)}</Text>
+        <DigitalIdDetails cert={cert} text={details(cert)} />
+      </Stack>
+    );
+    if (!isUsableDigitalId(cert)) {
+      return (
+        <div
+          key={cert.alias}
+          className="digital-id-card"
+          data-disabled
+          aria-disabled="true"
+        >
+          {content}
+        </div>
+      );
+    }
     return (
       <Radio.Card
         key={cert.alias}
         value={cert.alias}
         className="digital-id-card"
-        disabled={disabled || blocked}
-        data-disabled={blocked || undefined}
+        disabled={disabled}
       >
-        <Stack gap={0} className={privateContentClassName}>
-          <Text className="digital-id-name">{digitalIdName(cert)}</Text>
-          <DigitalIdDetails cert={cert} text={details(cert)} />
-        </Stack>
+        {content}
       </Radio.Card>
     );
   };

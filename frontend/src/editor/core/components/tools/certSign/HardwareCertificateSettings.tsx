@@ -71,6 +71,8 @@ const HardwareCertificateSettings = ({
       ? "MACOS_KEYCHAIN"
       : null;
   const [capsReady, setCapsReady] = useState(false);
+  const [capsFailed, setCapsFailed] = useState(false);
+  const [capsAttempt, setCapsAttempt] = useState(0);
 
   const selectKind = (kind: OsStoreKind | "PKCS11") => {
     if (parameters.certType === kind) {
@@ -109,6 +111,7 @@ const HardwareCertificateSettings = ({
         if (cancelled) {
           return;
         }
+        setCapsFailed(false);
         setSupported({
           windows: caps.windowsStoreSupported,
           mac: caps.macKeychainSupported,
@@ -153,6 +156,7 @@ const HardwareCertificateSettings = ({
         }
         // Capabilities are best-effort: without them no OS store can be assumed, so fall
         // back to the token path, where the user can still type a driver path.
+        setCapsFailed(true);
         setSupported({ windows: false, mac: false, pkcs11: true });
         if (
           parameters.certType === "WINDOWS_STORE" ||
@@ -166,7 +170,7 @@ const HardwareCertificateSettings = ({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [capsAttempt]);
 
   const loadOsStoreCerts = useCallback(() => {
     setLoading(true);
@@ -351,6 +355,25 @@ const HardwareCertificateSettings = ({
               {t("certSign.hardware.driverSetup", "Read card directly")}
             </Text>
           </Group>
+          {capsFailed && (
+            <Alert color="yellow" variant="light">
+              <Stack gap="xs" align="flex-start">
+                <Text size="sm">
+                  {t(
+                    "certSign.hardware.capabilitiesError",
+                    "Could not check which certificate stores this device has. You can still read a card directly.",
+                  )}
+                </Text>
+                <Button
+                  variant="secondary"
+                  onClick={() => setCapsAttempt((attempt) => attempt + 1)}
+                  disabled={disabled}
+                >
+                  {t("certSign.hardware.retryCapabilities", "Try again")}
+                </Button>
+              </Stack>
+            </Alert>
+          )}
           <Text size="sm" c="dimmed">
             {t(
               "certSign.hardware.pkcs11Hint",
