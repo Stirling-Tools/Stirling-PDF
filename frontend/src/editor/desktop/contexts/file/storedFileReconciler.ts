@@ -12,6 +12,7 @@ import {
   hasDiskChanged,
   loadDiskVersion,
   refreshDiskBaselineAfterSave,
+  isSelfWrite,
   notifyFileVanished,
   notifyDiskReloaded,
   notifyDiskTooLarge,
@@ -37,7 +38,8 @@ import { hasUnsavedWork } from "@editor/services/unsavedWork";
 export type { OpenDecision, ReconcilePort };
 
 // Desktop side of the reconcile seam: here a stored record is a cache of a file
-// on disk, so every read re-checks disk and the workbench is told what changed.
+// on disk. Opening a record re-checks its content against disk; while a file is
+// open, only the loss of its original is tracked.
 
 /** Take the disk version of a conflicted file, discarding the unsaved in-app
  *  edits shadowing it. Only reachable from the conflict modal's action. */
@@ -264,74 +266,71 @@ export async function reconcileBeforeOpen(
   return { updates };
 }
 
-/** Re-check one open record against disk. Returns it when its original is gone,
- *  so the caller can report a whole batch's losses in one toast. */
+// Editors and sync clients that delete the original before moving the new file
+// in leave the path empty for a moment, and a detach is not undone.
+const GONE_RECHECK_MS = 500;
+
+// The watcher and the focus re-check fire together when the user changes a
+// file elsewhere and switches back. A record already being checked is left to
+// that pass, so one loss is not detached and reported twice.
+const checking = new Set<FileId>();
+
+/** Re-check one open record's disk original. Returns it when the original is
+ *  gone, so the caller can report a whole batch's losses in one toast.
+ *
+ *  Only whether the file is still there is checked. What is on screen is never
+ *  replaced or questioned while it is open: a reload resets the viewer and any
+ *  editor state the app cannot count as unsaved, and sync clients and indexers
+ *  touch files constantly. An edit made elsewhere is picked up the next time
+ *  the file is opened. */
 async function resyncRecord(
   stub: StirlingFileStub,
   port: ReconcilePort,
 ): Promise<StirlingFileStub | null> {
   const fileId = stub.id;
-  const outcome = await syncLinkedFileFromDisk(stub, hasUnsavedWork());
+  const path = stub.localFilePath;
+  // Our own save can leave the path briefly empty or locked.
+  if (!path || isSelfWrite(path) || checking.has(fileId)) return null;
+  checking.add(fileId);
+  try {
+    return await checkOriginal(stub, path, port);
+  } finally {
+    checking.delete(fileId);
+  }
+}
 
-  if (outcome.status === "missing") {
+async function checkOriginal(
+  stub: StirlingFileStub,
+  path: string,
+  port: ReconcilePort,
+): Promise<StirlingFileStub | null> {
+  const fileId = stub.id;
+  let state = await getDiskFileState(path);
+  if (state.availability === "gone") {
+    await new Promise((resolve) => setTimeout(resolve, GONE_RECHECK_MS));
+    state = await getDiskFileState(path);
+  }
+
+  if (state.availability === "gone") {
+    // A save may have started during the wait, or an earlier pass detached the
+    // record after this pass listed the stubs.
+    if (isSelfWrite(path) || port.getStub(fileId)?.localFilePath !== path) {
+      return null;
+    }
     // Never delete what is on screen: cutting the link leaves the document
     // intact and makes the next save ask for somewhere to put it.
-    port.updateStub(fileId, detachedFields(stub.localFilePath));
+    port.updateStub(fileId, detachedFields(path));
     return stub;
   }
 
-  if (outcome.status === "unavailable") {
-    port.updateStub(fileId, { diskUnavailableReason: outcome.reason });
+  if (state.availability === "unavailable") {
+    port.updateStub(fileId, { diskUnavailableReason: state.reason });
     return null;
   }
 
   if (stub.diskUnavailableReason) {
     port.updateStub(fileId, { diskUnavailableReason: undefined });
   }
-
-  // Nothing to reconcile: the change on disk is the child that superseded this
-  // version, and its bytes are not ours to replace.
-  if (outcome.status === "superseded") return null;
-
-  if (outcome.status === "too-large") {
-    notifyDiskTooLarge(stub.name, () => void useDiskVersion(stub, port));
-    return null;
-  }
-
-  if (outcome.status === "conflict") {
-    // Already flagged; re-toasting on every write the other app makes would be
-    // unusable.
-    if (stub.diskConflictAt) return null;
-    port.updateStub(fileId, { diskConflictAt: Date.now() });
-    requestDiskConflictChoice({
-      fileId,
-      name: stub.name,
-      onUseDisk: () => void useDiskVersion(stub, port),
-    });
-    return null;
-  }
-
-  if (outcome.status === "updated") {
-    // The stat, the read and this commit are all awaited, so the decision was
-    // made against a snapshot. Re-check before overwriting the user's bytes.
-    const latest = port.getStub(fileId);
-    if (
-      !latest ||
-      latest.isDirty ||
-      hasUnsavedWork() ||
-      latest.localFilePath !== stub.localFilePath
-    ) {
-      return null;
-    }
-    const { file, state } = outcome;
-    const reloadedAt = Date.now();
-    port.putFile(fileId, file);
-    await persistDiskUpdate(fileId, file, state, reloadedAt);
-    port.updateStub(fileId, pickedUpFields(file, state, reloadedAt));
-    port.reprocessFile(fileId);
-    notifyDiskReloaded(stub.name);
-  }
-
   return null;
 }
 

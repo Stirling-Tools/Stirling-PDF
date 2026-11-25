@@ -384,6 +384,7 @@ export type FileContextAction =
 
   // UI actions
   | { type: "SET_SELECTED_FILES"; payload: { fileIds: FileId[] } }
+  | { type: "ADD_SELECTED_FILES"; payload: { fileIds: FileId[] } }
   | { type: "SET_SELECTED_PAGES"; payload: { pageNumbers: number[] } }
   | { type: "CLEAR_SELECTIONS" }
   | {
@@ -450,6 +451,13 @@ export interface FileContextActions {
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
+  /** Delete unfiled files from storage and the workbench, with any ancestors no
+   *  kept file needs. Rejects before closing anything if storage fails.
+   *  Resolves to the ids removed. */
+  clearRecentFiles: (
+    fileIds: FileId[],
+    spare?: ReadonlySet<string>,
+  ) => Promise<FileId[]>;
 
   // File pinning - accepts StirlingFile for safer type checking
   pinFile: (file: StirlingFile) => void;

@@ -1,7 +1,9 @@
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
-import type { Affine } from "@editor/tools/pdfTextEditor/types";
+import type { Affine, PageRect } from "@editor/tools/pdfTextEditor/types";
+import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
   counterPageRotation,
@@ -16,6 +18,31 @@ import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+
+/**
+ * Raw-space rectangle for a new image that shows upright, centred on the
+ * visible page and no wider than `widthRatio` of it nor taller than it.
+ * InsertImageCommand counter-rotates this rectangle about its centre, so the
+ * centre is what has to map to the middle of the visible page.
+ */
+export function centredImageRect(
+  display: DisplayTransformData,
+  pixelWidth: number,
+  pixelHeight: number,
+  widthRatio: number,
+): PageRect {
+  const scale = Math.min(
+    (display.displayWidth * widthRatio) / pixelWidth,
+    display.displayHeight / pixelHeight,
+  );
+  const width = pixelWidth * scale;
+  const height = pixelHeight * scale;
+  const centre = DisplayTransform.fromData(display).invert(
+    display.displayWidth / 2,
+    display.displayHeight / 2,
+  );
+  return { x: centre.x - width / 2, y: centre.y - height / 2, width, height };
+}
 
 // Insert a decoded raster image onto a page at the given lower-left coordinate,
 // scaled to `(width, height)` PDF points.
@@ -33,8 +60,8 @@ export class InsertImageCommand implements Command {
   private readonly jpegBytes?: Uint8Array;
   private createdImageId: string | null;
   private createdObjPtr: number;
-  /** Matrix written on first embed; reused so redo re-inserts the same object. */
-  private appliedMatrix: Affine | null;
+  /** Matrix and bounds from the first embed; redo restores both unchanged. */
+  private applied: { matrix: Affine; bounds: PageRect } | null;
 
   constructor(opts: {
     pageIndex: number;
@@ -58,7 +85,7 @@ export class InsertImageCommand implements Command {
     this.jpegBytes = opts.jpegBytes;
     this.createdImageId = null;
     this.createdObjPtr = 0;
-    this.appliedMatrix = null;
+    this.applied = null;
   }
 
   get insertedImageId(): string | null {
@@ -72,25 +99,13 @@ export class InsertImageCommand implements Command {
     // The object was only detached (not destroyed), so this is safe and leak-free.
     if (this.createdObjPtr) {
       m.FPDFPage_InsertObject(page.pagePtr, this.createdObjPtr);
-      if (this.createdImageId) {
+      if (this.createdImageId && this.applied) {
         const restored = new ImageObject({
           id: this.createdImageId,
           pageIndex: page.index,
           pdfiumObjPtr: this.createdObjPtr,
-          bounds: {
-            x: this.x,
-            y: this.y,
-            width: this.width,
-            height: this.height,
-          },
-          matrix: this.appliedMatrix ?? {
-            a: this.width,
-            b: 0,
-            c: 0,
-            d: this.height,
-            e: this.x,
-            f: this.y,
-          },
+          bounds: { ...this.applied.bounds },
+          matrix: { ...this.applied.matrix },
         });
         page.setImages([...page.images, restored]);
       }
@@ -149,23 +164,19 @@ export class InsertImageCommand implements Command {
           e: this.x,
           f: this.y,
         };
-    this.appliedMatrix = matrix;
+    // On a /Rotate page the counter-rotated object's real AABB has swapped
+    // width/height vs the pre-rotation rect.
+    const bounds: PageRect = rot
+      ? imageMatrixBounds(matrix)
+      : { x: this.x, y: this.y, width: this.width, height: this.height };
+    this.applied = { matrix, bounds };
     const imageId = `p${page.index}-new-img-${page.images.length}-${newObjPtr}`;
     const created = new ImageObject({
       id: imageId,
       pageIndex: page.index,
       pdfiumObjPtr: newObjPtr,
-      // On a /Rotate page the counter-rotated object's real AABB has swapped
-      // width/height vs the pre-rotation rect.
-      bounds: rot
-        ? imageMatrixBounds(matrix)
-        : {
-            x: this.x,
-            y: this.y,
-            width: this.width,
-            height: this.height,
-          },
-      matrix,
+      bounds: { ...bounds },
+      matrix: { ...matrix },
     });
     page.setImages([...page.images, created]);
     page.markDirty();

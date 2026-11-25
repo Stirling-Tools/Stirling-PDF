@@ -23,10 +23,97 @@ vi.mock("@editor/services/serverPipeline", () => ({
   downloadServerPipelineOutput: mocks.download,
 }));
 import { executeAutomationSequence } from "@editor/utils/automationExecutor";
+import {
+  clearPdfAccess,
+  rememberUnencryptedPdf,
+  setSignedPdfEditPolicy,
+} from "@editor/services/pdfAccessService";
 import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
 
 beforeEach(() => {
   vi.resetAllMocks();
+  clearPdfAccess();
+  setSignedPdfEditPolicy(false);
+});
+
+test("refuses a signed input before submitting a pipeline that rewrites it", async () => {
+  setSignedPdfEditPolicy(true);
+  const signed = new File(["signed"], "signed.pdf", {
+    type: "application/pdf",
+  });
+  rememberUnencryptedPdf(signed, 1, true);
+  const onStepError = vi.fn();
+  const registry = {
+    rotate: {
+      operationConfig: {
+        toolType: ToolType.singleFile,
+        endpoint: "/api/v1/general/rotate-pdf",
+        buildFormData: () => new FormData(),
+        defaultParameters: {},
+      },
+    },
+  } as unknown as ToolRegistry;
+  await expect(
+    executeAutomationSequence(
+      {
+        id: "auto",
+        name: "Pipeline",
+        operations: [{ operation: "rotate", parameters: {} }],
+        createdAt: "",
+        updatedAt: "",
+      },
+      [signed],
+      registry,
+      undefined,
+      undefined,
+      onStepError,
+    ),
+  ).rejects.toThrow("digitally signed");
+  expect(mocks.submit).not.toHaveBeenCalled();
+  expect(onStepError).toHaveBeenCalledOnce();
+});
+
+test("lets a signed input through a pipeline whose first step converts it away from PDF", async () => {
+  setSignedPdfEditPolicy(true);
+  const signed = new File(["signed"], "signed.pdf", {
+    type: "application/pdf",
+  });
+  rememberUnencryptedPdf(signed, 1, true);
+  const registry = {
+    toImage: {
+      operationConfig: {
+        toolType: ToolType.singleFile,
+        endpoint: "/api/v1/convert/pdf/img",
+        buildFormData: () => new FormData(),
+        defaultParameters: {},
+      },
+    },
+    rotate: {
+      operationConfig: {
+        toolType: ToolType.singleFile,
+        endpoint: "/api/v1/general/rotate-pdf",
+        buildFormData: () => new FormData(),
+        defaultParameters: {},
+      },
+    },
+  } as unknown as ToolRegistry;
+  mocks.submit.mockResolvedValue("run");
+  mocks.wait.mockResolvedValue({ outputs: [] });
+  await executeAutomationSequence(
+    {
+      id: "auto",
+      name: "Pipeline",
+      operations: [
+        { operation: "toImage", parameters: {} },
+        { operation: "rotate", parameters: {} },
+      ],
+      createdAt: "",
+      updatedAt: "",
+    },
+    [signed],
+    registry,
+  );
+  expect(mocks.submit).toHaveBeenCalledOnce();
 });
 test("sends locally supported tool steps together and never calls the local executor", async () => {
   const buildFormData = () => {

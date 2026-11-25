@@ -23,6 +23,7 @@ export interface GeneralSettingsData {
     defaultLocale?: string;
     showUpdate?: boolean;
     showUpdateOnlyAdmin?: boolean;
+    enableFeedback?: boolean;
     customHTMLFiles?: boolean;
     fileUploadLimit?: string;
     frontendUrl?: string;
@@ -39,10 +40,6 @@ export interface GeneralSettingsData {
       watchedFoldersDir?: string;
       watchedFoldersDirs?: string[];
       finishedFoldersDir?: string;
-    };
-    operations?: {
-      weasyprint?: string;
-      unoconvert?: string;
     };
   };
   customMetadata?: {

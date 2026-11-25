@@ -1,17 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import {
-  PaymentStageCard,
-  LiveStageCard,
-  LicensePanel,
-} from "@processor/components/procurement/ProcurementStages";
+import { LicensePanel } from "@processor/components/procurement/ProcurementStages";
 import "@processor/views/Procurement.css";
 
-/**
- * The three small presentational pieces used inside the procurement takeover
- * modal once a quote exists: the payment step, the live confirmation, and the
- * licence panel shown alongside them. Grouped in one story file since none is
- * substantial enough to warrant its own.
- */
+/** The licence key panel on the Enterprise page, with and without the offline licence file. */
 const meta: Meta = {
   title: "Portal/Procurement/ProcurementStages",
   parameters: { layout: "padded" },
@@ -19,26 +10,6 @@ const meta: Meta = {
 export default meta;
 
 type Story = StoryObj;
-
-// Subscription created: both invoice link and PDF download are offered.
-export const Payment: Story = {
-  render: () => (
-    <PaymentStageCard
-      invoiceUrl="https://billing.example.com/invoices/inv_123"
-      invoicePdf="https://billing.example.com/invoices/inv_123.pdf"
-    />
-  ),
-};
-
-// Invoice not yet issued: no action row renders.
-export const PaymentPending: Story = {
-  render: () => <PaymentStageCard invoiceUrl={null} invoicePdf={null} />,
-};
-
-// Deal is active: terminal confirmation card.
-export const Live: Story = {
-  render: () => <LiveStageCard />,
-};
 
 // Licence key with the offline add-on available.
 export const License: Story = {

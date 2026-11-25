@@ -11,6 +11,8 @@ export interface StripeCheckoutProps {
   currentLimit?: number | null;
   /** Present only for a self-hosted server above its actual allowance. */
   capacityNotice?: { users: number; limit: number };
+  /** Where a buyer above the self-serve maximum is sent; without it the capacity step offers no way on. */
+  onContactSales?: () => void;
   opened: boolean;
   onClose: () => void;
   planGroup: PlanTierGroup;

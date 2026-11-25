@@ -8,11 +8,9 @@ import { CORE_LINK_TOOL_IDS } from "@editor/types/toolId";
 // Build tooling (plain ESM, node:fs only) - import the helpers for coverage.
 // oxlint-disable-next-line no-restricted-imports -- build script lives outside the @editor alias root
 import {
-  buildBodyContent,
   buildJsonLd,
   buildOgTags,
   buildSitemap,
-  injectBody,
   injectOg,
   prerenderOg,
   resolveDeployBases,
@@ -296,109 +294,8 @@ describe("buildSitemap", () => {
   });
 });
 
-describe("buildBodyContent + injectBody (crawlable landing content)", () => {
-  const entry = {
-    image: "/og_images/compress.png",
-    title: "PDF to Word Converter - Stirling PDF",
-    description: "Convert PDF files into editable Word documents.",
-  };
-  const navLinks = [
-    { path: "/compress", label: "Compress" },
-    { path: "/merge", label: "Merge" },
-  ];
-
-  it("emits an H1 (keyword, suffix stripped), the description, and relative tool links", () => {
-    const body = buildBodyContent(entry, { navLinks });
-    expect(body).toContain("<h1>PDF to Word Converter</h1>");
-    expect(body).toContain(
-      "<p>Convert PDF files into editable Word documents.</p>",
-    );
-    // links are relative (no leading slash) so they resolve against <base href>
-    expect(body).toContain('<a href="compress">Compress</a>');
-    expect(body).toContain('<a href="merge">Merge</a>');
-    expect(body).not.toContain('href="/compress"');
-  });
-
-  it("uses an explicit heading override for the H1 when given", () => {
-    const body = buildBodyContent(entry, {
-      navLinks,
-      heading: "Free Online PDF Tools",
-    });
-    expect(body).toContain("<h1>Free Online PDF Tools</h1>");
-    expect(body).not.toContain("<h1>PDF to Word Converter</h1>");
-  });
-
-  it("escapes HTML in the H1/description", () => {
-    const body = buildBodyContent(
-      { ...entry, title: "A & <B>", description: 'x "y"' },
-      { navLinks: [] },
-    );
-    expect(body).toContain("<h1>A &amp; &lt;B&gt;</h1>");
-    expect(body).toContain("x &quot;y&quot;");
-  });
-
-  it("injectBody fills the empty React mount point", () => {
-    const out = injectBody(
-      '<body><div id="root"></div><script></script></body>',
-      "<h1>hi</h1>",
-    );
-    expect(out).toContain('<div id="root"><h1>hi</h1></div>');
-  });
-
-  it("prerenderOg injects landing content on indexable pages but not noindex ones", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-body-"));
-    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
-    const manifest = {
-      default: {
-        image: "/og_images/home.png",
-        title: "Stirling PDF",
-        description: "home",
-      },
-      byTool: {
-        compress: {
-          image: "/og_images/compress.png",
-          title: "Compress - Stirling PDF",
-          description: "c",
-        },
-        "/settings/people": {
-          image: "/og_images/home.png",
-          title: "People Settings - Stirling PDF",
-          description: "p",
-          noindex: true,
-        },
-      },
-      byPath: {
-        "/compress": "compress",
-        "/settings/people": "/settings/people",
-      },
-      navLinks: [{ path: "/compress", label: "Compress" }],
-    };
-
-    await prerenderOg({
-      distDir: dir,
-      manifest,
-      ogBase: "",
-      baseHref: "/",
-      injectLanding: true,
-    });
-
-    const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
-    expect(compress).toContain('<div id="root"><div class="spdf-seo">');
-    expect(compress).toContain("<h1>Compress</h1>");
-
-    const settings = await fs.readFile(
-      path.join(dir, "settings", "people.html"),
-      "utf8",
-    );
-    expect(settings).toContain('<div id="root"></div>'); // noindex: bare shell
-
-    const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
-    expect(home).toContain("spdf-seo");
-
-    await fs.rm(dir, { recursive: true, force: true });
-  });
-
-  it("leaves the mount point empty when landing content is off (self-hosted)", async () => {
+describe("prerenderOg leaves the React mount point empty", () => {
+  it("bakes metadata into the head and adds no body content on a public deploy", async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-nobody-"));
     await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
     const manifest = {
@@ -415,45 +312,26 @@ describe("buildBodyContent + injectBody (crawlable landing content)", () => {
         },
       },
       byPath: { "/compress": "compress" },
-      navLinks: [{ path: "/compress", label: "Compress" }],
     };
 
-    await prerenderOg({ distDir: dir, manifest, ogBase: "", baseHref: "/" });
+    await prerenderOg({
+      distDir: dir,
+      manifest,
+      ogBase: "https://stirling.com",
+      canonicalBase: "https://stirling.com",
+      baseHref: "/",
+    });
 
+    for (const file of ["compress.html", "index.html"]) {
+      const html = await fs.readFile(path.join(dir, file), "utf8");
+      expect(html).toContain('<div id="root"></div>');
+      expect(html).not.toContain("<h1>");
+    }
     const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
-    expect(compress).toContain('<div id="root"></div>');
-    expect(compress).not.toContain("spdf-seo");
-    // OG/title metadata is still baked in - only the visible body is skipped.
     expect(compress).toContain("<title>Compress - Stirling PDF</title>");
-
-    const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
-    expect(home).not.toContain("spdf-seo");
-
-    await fs.rm(dir, { recursive: true, force: true });
-  });
-
-  it("refuses to bake landing content from a manifest with no navLinks", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-nonav-"));
-    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
-    const manifest = {
-      default: {
-        image: "/og_images/home.png",
-        title: "Stirling PDF",
-        description: "home",
-      },
-      byTool: {},
-      byPath: {},
-    };
-
-    await expect(
-      prerenderOg({
-        distDir: dir,
-        manifest,
-        ogBase: "https://stirling.com",
-        baseHref: "/",
-        injectLanding: true,
-      }),
-    ).rejects.toThrow(/navLinks/);
+    expect(compress).toContain(
+      '<link rel="canonical" href="https://stirling.com/compress" />',
+    );
 
     await fs.rm(dir, { recursive: true, force: true });
   });
@@ -649,7 +527,6 @@ describe("prerenderOg on a sub-path deploy", () => {
       },
     },
     byPath: { "/compress": "compress" },
-    navLinks: [{ path: "/compress", label: "Compress" }],
   };
 
   const run = async (
@@ -665,7 +542,6 @@ describe("prerenderOg on a sub-path deploy", () => {
       ogBase: bases.ogBase,
       canonicalBase: bases.canonicalBase,
       baseHref: env.baseHref,
-      injectLanding: true,
     });
     const html = await fs.readFile(path.join(dir, "compress.html"), "utf8");
     await fs.rm(dir, { recursive: true, force: true });
@@ -732,12 +608,6 @@ describe("prerender refuses a drifted HTML shell", () => {
     ).toThrow(/title/);
   });
 
-  it("throws when the React mount point is gone", () => {
-    expect(() =>
-      injectBody("<body><main></main></body>", "<h1>x</h1>"),
-    ).toThrow(/root/);
-  });
-
   it("prerenders the shipped editor/index.html, not just the test fixture", async () => {
     const here = import.meta.url;
     const shell = await fs.readFile(
@@ -760,7 +630,6 @@ describe("prerender refuses a drifted HTML shell", () => {
         },
       },
       byPath: { "/compress": "compress" },
-      navLinks: [{ path: "/compress", label: "Compress" }],
     };
 
     await prerenderOg({
@@ -769,7 +638,6 @@ describe("prerender refuses a drifted HTML shell", () => {
       ogBase: "https://stirling.com",
       canonicalBase: "https://stirling.com",
       baseHref: "/",
-      injectLanding: true,
     });
 
     const html = await fs.readFile(path.join(dir, "compress.html"), "utf8");
@@ -778,7 +646,7 @@ describe("prerender refuses a drifted HTML shell", () => {
     expect(html).toContain(
       '<link rel="canonical" href="https://stirling.com/compress" />',
     );
-    expect(html).toContain('<div id="root"><div class="spdf-seo">');
+    expect(html).toContain('<div id="root"></div>');
 
     await fs.rm(dir, { recursive: true, force: true });
   });

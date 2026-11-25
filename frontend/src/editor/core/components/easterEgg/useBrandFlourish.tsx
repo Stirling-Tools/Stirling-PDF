@@ -82,10 +82,9 @@ async function renderPlan(
     const file = files[fileIndex];
     if (!file) continue;
     try {
-      const buffer = await file.arrayBuffer();
       const results = await thumbnailGenerationService.generateThumbnails(
         file.fileId,
-        buffer,
+        file,
         planIndexes.map((index) => plan[index].pageNumber),
         { scale: THUMBNAIL_SCALE },
       );

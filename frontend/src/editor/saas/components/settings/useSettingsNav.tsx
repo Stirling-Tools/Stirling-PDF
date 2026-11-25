@@ -19,6 +19,7 @@ import { mergeSettingsGroups } from "@editor/components/settings/mergeSettingsGr
 import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import { BASE_SECTION_ALIASES } from "@editor/data/settingsAliases";
+import { useFeedback } from "@editor/hooks/useFeedback";
 import type { NavKey } from "@editor/components/shared/config/types";
 
 const ConnectedInstancesSection = lazy(
@@ -53,12 +54,14 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const openLogoutConfirm = useCallback(() => setConfirmOpen(true), []);
   const isAnonymous = user ? isUserAnonymous(user) : false;
+  const feedbackAvailable = useFeedback() !== null;
 
   const sections = useMemo(() => {
     let own = createSaasConfigNavSections(Overview, openLogoutConfirm, {
       isAnonymous,
       t,
       onRequestClose: onLeave,
+      feedbackAvailable,
     });
     if (isTeamLeader && !teamLoading && !isAnonymous) {
       own = mergeSettingsGroups(
@@ -108,6 +111,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     portalAccess,
     isTeamLeader,
     teamLoading,
+    feedbackAvailable,
   ]);
 
   const overlay = (

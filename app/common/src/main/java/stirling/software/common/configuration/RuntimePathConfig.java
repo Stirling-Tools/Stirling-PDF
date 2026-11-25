@@ -4,7 +4,6 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,8 +20,6 @@ import stirling.software.common.model.ApplicationProperties.CustomPaths;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Operations;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Pipeline;
 import stirling.software.common.model.ApplicationProperties.System;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.UnoServerPool;
 
 @Slf4j
 @Configuration
@@ -32,19 +29,13 @@ public class RuntimePathConfig {
     private final String basePath;
 
     // Operation paths
-    private final String weasyPrintPath;
-    private final String unoConvertPath;
-    private final String calibrePath;
     private final String ocrMyPdfPath;
-    private final String sOfficePath;
 
     // Tesseract data path
     private final String tessDataPath;
 
     // Auto Form Detection model directory
     private final String formDetectionModelPath;
-
-    private final List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> unoServerEndpoints;
 
     // Pipeline paths
     private final String pipelineWatchedFoldersPath;
@@ -93,31 +84,12 @@ public class RuntimePathConfig {
         boolean isDocker = isRunningInDocker();
 
         // Initialize Operation paths
-        String defaultWeasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
-        String defaultUnoConvertPath = isDocker ? "/usr/local/bin/unoconvert" : "unoconvert";
-        String defaultCalibrePath = isDocker ? "/opt/calibre/ebook-convert" : "ebook-convert";
         String defaultOcrMyPdfPath = isDocker ? "/opt/venv/bin/ocrmypdf" : "ocrmypdf";
-        String defaultSOfficePath = isDocker ? "/usr/bin/soffice" : "soffice";
 
         Operations operations = customPaths.getOperations();
-        this.weasyPrintPath =
-                resolvePath(
-                        defaultWeasyPrintPath,
-                        operations != null ? operations.getWeasyprint() : null);
-        this.unoConvertPath =
-                resolvePath(
-                        defaultUnoConvertPath,
-                        operations != null ? operations.getUnoconvert() : null);
-        this.calibrePath =
-                resolvePath(
-                        defaultCalibrePath, operations != null ? operations.getCalibre() : null);
         this.ocrMyPdfPath =
                 resolvePath(
                         defaultOcrMyPdfPath, operations != null ? operations.getOcrmypdf() : null);
-        this.sOfficePath =
-                resolvePath(
-                        defaultSOfficePath, operations != null ? operations.getSoffice() : null);
-
         // Initialize Tesseract data path
         // Priority: config setting > TESSDATA_PREFIX env var > default path
         String tessPath = system.getTessdataDir();
@@ -149,20 +121,6 @@ public class RuntimePathConfig {
                                         "form-detection")
                                 .toString();
         log.info("Using Auto Form Detection model path: {}", this.formDetectionModelPath);
-
-        ApplicationProperties.ProcessExecutor processExecutor = properties.getProcessExecutor();
-        int libreOfficeLimit = 1;
-        if (processExecutor != null && processExecutor.getSessionLimit() != null) {
-            libreOfficeLimit = processExecutor.getSessionLimit().getLibreOfficeSessionLimit();
-        }
-        this.unoServerEndpoints = buildUnoServerEndpoints(processExecutor, libreOfficeLimit);
-        ProcessExecutor.setUnoServerPool(new UnoServerPool(this.unoServerEndpoints));
-
-        ApplicationProperties.TempFileManagement tempFiles = system.getTempFileManagement();
-        if (tempFiles != null) {
-            ProcessExecutor.setLibreOfficeWorkRoots(
-                    Arrays.asList(tempFiles.getBaseTmpDir(), tempFiles.getLibreofficeDir()));
-        }
     }
 
     private String resolvePath(String defaultPath, String customPath) {
@@ -305,70 +263,5 @@ public class RuntimePathConfig {
 
     private boolean isRunningInDocker() {
         return Files.exists(Path.of("/.dockerenv"));
-    }
-
-    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> buildUnoServerEndpoints(
-            ApplicationProperties.ProcessExecutor processExecutor, int sessionLimit) {
-        if (processExecutor == null) {
-            log.warn("ProcessExecutor config missing; defaulting to a single UNO endpoint.");
-            return Collections.singletonList(
-                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
-        }
-        if (!processExecutor.isAutoUnoServer()) {
-            List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> configured =
-                    sanitizeUnoServerEndpoints(processExecutor.getUnoServerEndpoints());
-            if (!configured.isEmpty()) {
-                // Warn if manual endpoint count doesn't match sessionLimit
-                if (configured.size() != sessionLimit) {
-                    log.warn(
-                            "Manual UNO endpoint count ({}) differs from libreOfficeSessionLimit ({}). "
-                                    + "Concurrency will be limited by endpoint count, not sessionLimit.",
-                            configured.size(),
-                            sessionLimit);
-                }
-                return configured;
-            }
-            log.warn(
-                    "autoUnoServer disabled but no unoServerEndpoints configured; defaulting to 127.0.0.1:2003.");
-            return Collections.singletonList(
-                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
-        }
-        int count = sessionLimit > 0 ? sessionLimit : 1;
-        return buildAutoUnoServerEndpoints(count);
-    }
-
-    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint>
-            buildAutoUnoServerEndpoints(int count) {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = new ArrayList<>();
-        int basePort = 2003;
-        for (int i = 0; i < count; i++) {
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint =
-                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
-            endpoint.setHost("127.0.0.1");
-            endpoint.setPort(basePort + (i * 2));
-            endpoints.add(endpoint);
-        }
-        return endpoints;
-    }
-
-    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint>
-            sanitizeUnoServerEndpoints(
-                    List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints) {
-        if (endpoints == null || endpoints.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> sanitized = new ArrayList<>();
-        for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint : endpoints) {
-            if (endpoint == null) {
-                continue;
-            }
-            String host = endpoint.getHost();
-            int port = endpoint.getPort();
-            if (host == null || host.isBlank() || port <= 0) {
-                continue;
-            }
-            sanitized.add(endpoint);
-        }
-        return sanitized;
     }
 }

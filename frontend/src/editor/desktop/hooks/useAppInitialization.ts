@@ -12,6 +12,7 @@ import { pendingFilePathMappings } from "@editor/services/pendingFilePathMapping
 import { captureDroppedFilePaths } from "@editor/services/fileImportPaths";
 import { getDiskFileState } from "@editor/services/desktopFileLink";
 import { diskLastModified } from "@editor/services/diskFileSync";
+import { captureDropDiagnostics } from "@editor/services/dropDiagnostics";
 import { endLoadingLaunchFiles } from "@editor/services/launchFiles";
 
 /**
@@ -22,6 +23,7 @@ import { endLoadingLaunchFiles } from "@editor/services/launchFiles";
  */
 export function useAppInitialization(): void {
   useEffect(captureDroppedFilePaths, []);
+  useEffect(captureDropDiagnostics, []);
   // macOS captures dropped paths via a native swizzle installed against the live
   // webview; no-op on other platforms.
   useEffect(() => {

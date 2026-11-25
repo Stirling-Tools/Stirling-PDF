@@ -110,7 +110,7 @@ class ConfigControllerMoreTest {
 
             assertThat(body).containsEntry("storageEnabled", expectedStorage);
             assertThat(body).containsEntry("storageGroupSigningEnabled", expectedSigning);
-            assertThat(body).containsEntry("storageSharingEnabled", false);
+            assertThat(body).containsEntry("storageSharingEnabled", expectedStorage);
         }
 
         @Test
@@ -215,6 +215,30 @@ class ConfigControllerMoreTest {
             assertThat(body).containsEntry("googleDriveEnabled", true);
             assertThat(body).containsEntry("googleDriveClientId", "cid");
             assertThat(body).containsEntry("googleDriveApiKey", "key");
+        }
+
+        @Test
+        @DisplayName(
+                "exposes the Microsoft app but never its secret, and gates account connections")
+        void microsoftEnabled() {
+            ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
+                    applicationProperties.getPremium().getProFeatures().getMicrosoft();
+            microsoft.setClientId("app-id");
+            microsoft.setClientSecret("server-only");
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            assertThat(bodyOf(newController().getAppConfig(request)))
+                    .doesNotContainKey("microsoftClientId")
+                    .containsEntry("microsoftAccountConnections", false);
+
+            microsoft.setEnabled(true);
+            microsoft.setTenant("organizations");
+            Map<String, Object> body = bodyOf(newController().getAppConfig(request));
+
+            assertThat(body).containsEntry("microsoftEnabled", true);
+            assertThat(body).containsEntry("microsoftClientId", "app-id");
+            assertThat(body).containsEntry("microsoftTenant", "organizations");
+            assertThat(body).containsEntry("microsoftAllowEditorSaves", true);
+            assertThat(body.values()).doesNotContain("server-only");
         }
 
         @Test

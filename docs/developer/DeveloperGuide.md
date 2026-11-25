@@ -13,7 +13,7 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 **Backend:**
 - Spring Boot (requires JDK 25)
 - PDFBox for core PDF operations
-- LibreOffice for document conversions
+- Stirling Office Convert (in-process Java library) for document conversions
 - qpdf for PDF optimization
 - Spring Security (optional, controlled by `DOCKER_ENABLE_SECURITY`)
 - Lombok for reducing boilerplate code
@@ -49,8 +49,9 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - Node.js 22+ and npm (required for frontend development)
 - Gradle 9.0 or later (Included within the repo)
 - [uv](https://docs.astral.sh/uv/) — Python package manager (required for engine development)
-- Rust and Cargo (required for Tauri desktop app development)
+- Rust and Cargo (required for the `task check` quality gate and Tauri desktop development)
 - Tauri CLI (install with `cargo install tauri-cli`)
+- Linux only: Tauri system libraries (`libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`)
 
 ### Optional System Dependencies
 
@@ -58,9 +59,7 @@ These are not required to run the app but enable specific features. The app dete
 
 | Dependency | Feature | Install |
 |---|---|---|
-| LibreOffice | File-to-PDF conversions | `brew install libreoffice` / `apt install libreoffice` |
 | Tesseract | OCR | `brew install tesseract` / `apt install tesseract-ocr` |
-| WeasyPrint | AI document creation | `brew install weasyprint` / `apt install weasyprint` |
 | qpdf | PDF optimisation | `brew install qpdf` / `apt install qpdf` |
 
 ### Setup Steps
@@ -97,7 +96,7 @@ For local testing, you should generally be testing the full 'Security' version o
 
 ### Verify Setup
 
-Run `task install` to install all project dependencies (frontend npm packages, engine Python packages). Gradle manages its own dependencies automatically. Then run `task check` to verify everything builds and passes.
+Run `task install` to install all project dependencies (frontend npm packages, engine Python packages). Gradle manages its own dependencies automatically. Then run `task check` to verify everything builds and passes. `task check` includes `desktop:check`, which runs `desktop:lint`, so it needs Rust and Cargo, plus the Tauri system libraries on Linux.
 
 ## 4. Stirling 2.0 Development Workflow
 
@@ -377,7 +376,7 @@ To run Stirling-PDF locally:
 
 Important notes:
 
-- Local testing doesn't include features that depend on external tools like qpdf, LibreOffice, or Python scripts.
+- Local testing doesn't include features that depend on external tools like qpdf, Ghostscript, or Python scripts.
 - There are currently no automated unit tests. All testing is done manually through the UI or API calls. (You are welcome to add JUnits!)
 - Always verify your changes in the full Docker environment before submitting pull requests, as some integrations and features will only work in the complete setup.
 

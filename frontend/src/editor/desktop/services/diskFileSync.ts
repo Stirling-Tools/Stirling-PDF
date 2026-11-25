@@ -110,7 +110,8 @@ export function endSelfWrite(path: string): void {
   selfWrites.delete(path);
 }
 
-function isSelfWrite(path: string): boolean {
+/** Whether we are writing this path ourselves, so its disk state is ours. */
+export function isSelfWrite(path: string): boolean {
   const until = selfWrites.get(path);
   if (until == null) return false;
   // A save that never re-baselined must not blind us forever.
