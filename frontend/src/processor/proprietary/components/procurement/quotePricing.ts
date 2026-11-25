@@ -7,7 +7,7 @@
  */
 import type { QuoteConfigInput, RateCard } from "@processor/api/procurement";
 
-// Governance posture: the intensity (runs per PDF) fed to the committed-volume curve.
+// Automation posture: the pipelines each PDF runs through, fed to the committed-volume curve.
 export const POSTURES = [
   { intensity: 2, key: "essentials" },
   { intensity: 4, key: "governed" },
@@ -39,7 +39,7 @@ export function estimateVolume(users: number): number {
     : 0;
 }
 
-/** Committed runs a year: PDFs times the policies each one runs through. */
+/** Committed runs a year: PDFs times the pipelines each one runs through. */
 function runVolume(cfg: QuoteConfigInput): number {
   return Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
 }

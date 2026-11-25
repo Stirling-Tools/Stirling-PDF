@@ -43,6 +43,7 @@ import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
 import stirling.software.saas.model.TeamInvitation;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
+import stirling.software.saas.repository.SupabaseUserRepository;
 import stirling.software.saas.repository.TeamInvitationRepository;
 
 /**
@@ -83,6 +84,7 @@ class SaasTeamServiceTest {
     @Mock private SaasUserExtensionService saasUserExtensionService;
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private stirling.software.proprietary.security.service.UserService userService;
+    @Mock private SupabaseUserRepository supabaseUserRepository;
 
     @InjectMocks private SaasTeamService service;
 
@@ -118,6 +120,75 @@ class SaasTeamServiceTest {
         m.setUser(user);
         m.setRole(role);
         return m;
+    }
+
+    // =============================================================================================
+    @Nested
+    @DisplayName("provisionUser")
+    class ProvisionUser {
+
+        private User newAccount() {
+            User u = user(null, "new@x.com", "new@x.com");
+            u.setSupabaseId(SUPABASE_ID);
+            return u;
+        }
+
+        @Test
+        @DisplayName("adopts a row a parallel request committed instead of inserting again")
+        void committedRow_adoptedWithoutInsert() {
+            User committed = user(7L, "new@x.com", "new@x.com");
+            when(userRepository.findBySupabaseId(SUPABASE_ID)).thenReturn(Optional.of(committed));
+
+            User result = service.provisionUser(newAccount(), true);
+
+            assertThat(result).isSameAs(committed);
+            org.mockito.InOrder order =
+                    org.mockito.Mockito.inOrder(supabaseUserRepository, userRepository);
+            order.verify(supabaseUserRepository).lockById(SUPABASE_ID);
+            order.verify(userRepository).findBySupabaseId(SUPABASE_ID);
+            verify(userService, never()).saveUser(any());
+            verify(teamRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("first request saves the account with a personal team")
+        void firstRequest_savesWithPersonalTeam() {
+            User account = newAccount();
+            when(userRepository.findBySupabaseId(SUPABASE_ID)).thenReturn(Optional.empty());
+            when(userService.saveUser(account))
+                    .thenAnswer(
+                            i -> {
+                                account.setId(7L);
+                                return account;
+                            });
+            when(userRepository.findById(7L)).thenReturn(Optional.of(account));
+            when(teamRepository.save(any(Team.class)))
+                    .thenAnswer(
+                            i -> {
+                                Team t = i.getArgument(0);
+                                t.setId(70L);
+                                return t;
+                            });
+
+            User result = service.provisionUser(account, true);
+
+            assertThat(result.getTeam().getId()).isEqualTo(70L);
+            verify(supabaseUserRepository).lockById(SUPABASE_ID);
+        }
+
+        @Test
+        @DisplayName("guest accounts are saved without a team")
+        void guest_savedWithoutTeam() {
+            User account = newAccount();
+            when(userRepository.findBySupabaseId(SUPABASE_ID)).thenReturn(Optional.empty());
+            when(userService.saveUser(account)).thenReturn(account);
+
+            User result = service.provisionUser(account, false);
+
+            assertThat(result).isSameAs(account);
+            verify(supabaseUserRepository).lockById(SUPABASE_ID);
+            verify(teamRepository, never()).save(any());
+        }
     }
 
     // =============================================================================================

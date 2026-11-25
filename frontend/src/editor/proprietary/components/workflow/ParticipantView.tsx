@@ -17,6 +17,7 @@ import { useParticipantSession } from "@editor/hooks/workflow/useParticipantSess
 import { Icon } from "@editor/ui/Icon";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { uploadSafeFormData } from "@editor/utils/inMemoryUpload";
 interface ParticipantViewProps {
   token: string;
 }
@@ -85,7 +86,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
           "/api/v1/workflow/participant/validate-certificate",
           {
             method: "POST",
-            body: formData,
+            body: await uploadSafeFormData(formData),
           },
         );
         const data = await res.json();

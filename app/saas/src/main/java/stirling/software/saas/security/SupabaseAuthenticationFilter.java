@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static stirling.software.common.model.enumeration.Role.LIMITED_API_USER;
 import static stirling.software.common.model.enumeration.Role.USER;
 import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
+import static stirling.software.common.util.RequestUriUtils.isShareLinkRead;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.ANONYMOUS;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
@@ -101,7 +102,12 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (isPublicAuthEndpoint(request.getRequestURI(), request.getContextPath())) {
-            filterChain.doFilter(request, response);
+            HttpServletRequest forwarded = request;
+            if (isShareLinkRead(request.getRequestURI(), request.getContextPath())
+                    && !tryJwtAuthentication(request)) {
+                forwarded = new WithoutAuthorizationHeader(request);
+            }
+            filterChain.doFilter(forwarded, response);
             return;
         }
 
@@ -138,7 +144,22 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                 return true;
             }
         }
-        return isPublicAuthEndpoint(uri, contextPath);
+        return isPublicAuthEndpoint(uri, contextPath) && !isShareLinkRead(uri, contextPath);
+    }
+
+    /**
+     * Signs in from an optional bearer token. False when the token was rejected: the caller must
+     * then hide it, or the resource-server filter later in the chain accepts it on its own.
+     */
+    private boolean tryJwtAuthentication(HttpServletRequest request) {
+        try {
+            processJwtAuthentication(request);
+            return true;
+        } catch (AuthenticationException e) {
+            log.debug("Optional JWT on a share link ignored: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+            return false;
+        }
     }
 
     private void processJwtAuthentication(HttpServletRequest request)
@@ -376,11 +397,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         // Guests get NO team: the editor is free and needs none. Everyone else is provisioned
         // atomically, so a user visible to a parallel request always already has one.
         try {
-            return isAnonymous(jwt)
-                    ? userService.saveUser(newUser)
-                    : saasTeamService.saveUserWithPersonalTeam(newUser);
+            return saasTeamService.provisionUser(newUser, !isAnonymous(jwt));
         } catch (DataIntegrityViolationException dup) {
-            // Parallel filter won the race; fetch the winning row.
+            // Provisioning is serialised per account, so this is a collision on another unique
+            // column (e.g. email); adopt our row if one exists.
             return userService
                     .findBySupabaseId(supabaseId)
                     .orElseThrow(

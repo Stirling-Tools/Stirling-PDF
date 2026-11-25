@@ -14,6 +14,8 @@ import type { BackendPipelineStep } from "@editor/services/policyPipeline";
 import type { ToolId } from "@editor/types/toolId";
 import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
 import { objectToFormData } from "@editor/hooks/tools/shared/toolApiMapping";
+import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
+import { toolIOFor } from "@editor/types/toolIO";
 
 /** Desktop automation executes as one server pipeline, including locally available tools. */
 export const executeAutomationSequence: typeof CoreExecuteAutomationSequence =
@@ -78,6 +80,11 @@ export const executeAutomationSequence: typeof CoreExecuteAutomationSequence =
     );
     let currentStep = -1;
     try {
+      for (const step of steps) {
+        await assertSignedPdfsEditable(files, step.operation, false);
+        const produces = toolIOFor(step.operation)?.produces;
+        if (produces !== "PDF" && produces !== "PDF_ENCRYPTED") break;
+      }
       const runId = await submitServerPipeline(
         session,
         automation.name,

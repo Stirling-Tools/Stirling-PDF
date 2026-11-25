@@ -12,6 +12,7 @@ export class ImageObject {
   containerPtr: number;
   bounds: PageRect;
   matrix: Affine;
+  clip: PageRect | null;
   dirty: boolean;
   /** Session-only lock; see TextRun.locked. */
   locked: boolean;
@@ -35,6 +36,7 @@ export class ImageObject {
     this.containerPtr = init.containerPtr ?? 0;
     this.bounds = init.bounds;
     this.matrix = init.matrix;
+    this.clip = init.clip ?? null;
     this.dirty = false;
     this.locked = init.locked ?? false;
     this.mcid = init.mcid ?? null;
@@ -51,6 +53,7 @@ export class ImageObject {
       mcid: this.mcid ?? undefined,
       artifact: this.artifact || undefined,
       inForm: this.containerPtr !== 0 || undefined,
+      clip: this.clip ? { ...this.clip } : undefined,
     };
   }
 }
