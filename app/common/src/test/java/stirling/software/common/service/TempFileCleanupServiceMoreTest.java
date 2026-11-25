@@ -9,15 +9,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.AfterEach;
@@ -68,9 +64,6 @@ class TempFileCleanupServiceMoreTest {
         lenient().when(applicationProperties.getSystem()).thenReturn(system);
         lenient().when(system.getTempFileManagement()).thenReturn(tempFileManagement);
         lenient().when(tempFileManagement.getBaseTmpDir()).thenReturn(customTempDir.toString());
-        lenient()
-                .when(tempFileManagement.getLibreofficeDir())
-                .thenReturn(libreOfficeTempDir.toString());
         lenient().when(tempFileManagement.getSystemTempDir()).thenReturn(systemTempDir.toString());
         lenient().when(tempFileManagement.isStartupCleanup()).thenReturn(false);
         lenient().when(tempFileManagement.isCleanupSystemTemp()).thenReturn(false);
@@ -165,15 +158,12 @@ class TempFileCleanupServiceMoreTest {
         @DisplayName("creates configured temp directories that do not yet exist")
         void createsMissingDirectories() {
             Path newBase = tempDir.resolve("newBase");
-            Path newLo = tempDir.resolve("newLo");
             when(tempFileManagement.getBaseTmpDir()).thenReturn(newBase.toString());
-            when(tempFileManagement.getLibreofficeDir()).thenReturn(newLo.toString());
             when(tempFileManagement.isStartupCleanup()).thenReturn(false);
 
             cleanupService.init();
 
             assertThat(Files.exists(newBase)).isTrue();
-            assertThat(Files.exists(newLo)).isTrue();
         }
 
         @Test
@@ -189,169 +179,6 @@ class TempFileCleanupServiceMoreTest {
             withJvmTmpDir(tempDir.resolve("jvm-tmp-cleanup"), cleanupService::init);
 
             assertThat(Files.exists(stale)).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("cleanupStaleJpdfiumDirs")
-    class JpdfiumDirs {
-
-        @Test
-        @DisplayName("removes stale extraction dirs and keeps fresh ones at startup")
-        void removesStaleJpdfiumDirs() throws IOException {
-            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            Path stale = Files.createDirectories(systemTempDir.resolve("jpdfium-old"));
-            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
-            backdate(stale, 2L * 60 * 60 * 1000);
-            Path fresh = Files.createDirectories(systemTempDir.resolve("jpdfium-fresh"));
-
-            withJvmTmpDir(tempDir.resolve("jvm-tmp-a"), cleanupService::init);
-
-            assertThat(Files.exists(stale)).isFalse();
-            assertThat(Files.exists(fresh)).isTrue();
-        }
-
-        @Test
-        @DisplayName("also scans the configured base temp dir")
-        void scansBaseTempDir() throws IOException {
-            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            Path stale = Files.createDirectories(customTempDir.resolve("jpdfium-old"));
-            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
-            backdate(stale, 2L * 60 * 60 * 1000);
-
-            withJvmTmpDir(tempDir.resolve("jvm-tmp-b"), cleanupService::init);
-
-            assertThat(Files.exists(stale)).isFalse();
-        }
-
-        @Test
-        @DisplayName("scans the JVM temp dir even when the configured system temp dir differs")
-        void scansJvmTempDir() throws IOException {
-            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            Path jvmTmp = tempDir.resolve("jvm-tmp");
-            Path stale = Files.createDirectories(jvmTmp.resolve("jpdfium-old"));
-            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
-            backdate(stale, 2L * 60 * 60 * 1000);
-
-            withJvmTmpDir(jvmTmp, cleanupService::init);
-
-            assertThat(Files.exists(stale)).isFalse();
-        }
-
-        @Test
-        @DisplayName("keeps a prefixed dir whose content is not a JPDFium extraction")
-        void keepsUnrelatedContent() throws IOException {
-            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            Path impostor = Files.createDirectories(systemTempDir.resolve("jpdfium-notours"));
-            Files.writeString(impostor.resolve("jpdfium-notes.txt"), "unrelated");
-            backdate(impostor, 2L * 60 * 60 * 1000);
-
-            withJvmTmpDir(tempDir.resolve("jvm-tmp-c"), cleanupService::init);
-
-            assertThat(Files.exists(impostor)).isTrue();
-        }
-
-        @Test
-        @DisplayName("recognizes the bridge artifact name of every platform")
-        void recognizesBridgeNames() throws IOException {
-            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            Path linux = Files.createDirectories(systemTempDir.resolve("jpdfium-linux"));
-            Files.writeString(linux.resolve("libjpdfium.so"), "so");
-            Path mac = Files.createDirectories(systemTempDir.resolve("jpdfium-mac"));
-            Files.writeString(mac.resolve("libjpdfium.dylib"), "dylib");
-            Path win = Files.createDirectories(systemTempDir.resolve("jpdfium-win"));
-            Files.writeString(win.resolve("jpdfium.dll"), "dll");
-            for (Path dir : new Path[] {linux, mac, win}) {
-                backdate(dir, 2L * 60 * 60 * 1000);
-            }
-
-            withJvmTmpDir(tempDir.resolve("jvm-tmp-f"), cleanupService::init);
-
-            assertThat(Files.exists(linux)).isFalse();
-            assertThat(Files.exists(mac)).isFalse();
-            assertThat(Files.exists(win)).isFalse();
-        }
-
-        @Test
-        @DisplayName("skips an invalid configured root without aborting startup")
-        void skipsInvalidConfiguredRoot() throws IOException {
-            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
-            when(registry.contains(any(File.class))).thenReturn(false);
-            when(tempFileManagement.getSystemTempDir()).thenReturn("bad\u0000root");
-
-            Path stale = Files.createDirectories(customTempDir.resolve("jpdfium-old"));
-            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
-            backdate(stale, 2L * 60 * 60 * 1000);
-
-            withJvmTmpDir(tempDir.resolve("jvm-tmp-d"), cleanupService::init);
-
-            assertThat(Files.exists(stale)).isFalse();
-        }
-
-        @Test
-        @DisplayName("keeps an extraction dir whose lock is held by a running JVM")
-        void keepsLockedExtractionDir() throws IOException {
-            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            Path live = Files.createDirectories(systemTempDir.resolve("jpdfium-live"));
-            Files.writeString(live.resolve("jpdfium.dll"), "dll");
-            Path lockFile = live.resolve(".lock");
-            Files.writeString(lockFile, "");
-            backdate(live, 2L * 60 * 60 * 1000);
-
-            try (FileChannel channel =
-                            FileChannel.open(
-                                    lockFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
-                    FileLock lock = channel.lock()) {
-                withJvmTmpDir(tempDir.resolve("jvm-tmp-g"), cleanupService::init);
-                assertThat(Files.exists(live)).isTrue();
-            }
-        }
-
-        @Test
-        @DisplayName("removes an extraction dir whose lock is free")
-        void removesUnlockedExtractionDir() throws IOException {
-            when(tempFileManagement.isStartupCleanup()).thenReturn(true);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            Path leftover = Files.createDirectories(systemTempDir.resolve("jpdfium-left"));
-            Files.writeString(leftover.resolve("jpdfium.dll"), "dll");
-            Files.writeString(leftover.resolve(".lock"), "");
-            backdate(leftover, 2L * 60 * 60 * 1000);
-
-            withJvmTmpDir(tempDir.resolve("jvm-tmp-h"), cleanupService::init);
-
-            assertThat(Files.exists(leftover)).isFalse();
-        }
-
-        @Test
-        @DisplayName("reports how many extraction dirs it removed")
-        void reportsRemovedCount() throws IOException {
-            Path stale = Files.createDirectories(systemTempDir.resolve("jpdfium-old"));
-            Files.writeString(stale.resolve("jpdfium.dll"), "dll");
-            backdate(stale, 2L * 60 * 60 * 1000);
-            AtomicInteger removed = new AtomicInteger(-1);
-
-            withJvmTmpDir(
-                    tempDir.resolve("jvm-tmp-e"),
-                    () ->
-                            removed.set(
-                                    (Integer)
-                                            ReflectionTestUtils.invokeMethod(
-                                                    cleanupService, "cleanupStaleJpdfiumDirs")));
-
-            assertThat(removed.get()).isEqualTo(1);
         }
     }
 
@@ -488,43 +315,6 @@ class TempFileCleanupServiceMoreTest {
 
             // Depth guard hit: the file was not visited or deleted.
             assertThat(Files.exists(deepFile)).isTrue();
-        }
-    }
-
-    @Nested
-    @DisplayName("cleanupLibreOfficeTempFiles")
-    class LibreOfficeCleanup {
-
-        @Test
-        @DisplayName("clears contents of registered libreoffice directories but keeps the dir")
-        void clearsLibreOfficeContents() throws IOException {
-            Path loDir = Files.createDirectories(tempDir.resolve("libreoffice-conv"));
-            Path inside = Files.createFile(loDir.resolve("output_lo.pdf"));
-            Set<Path> dirs = new HashSet<>();
-            dirs.add(loDir);
-            when(registry.getTempDirectories()).thenReturn(dirs);
-            when(registry.contains(any(File.class))).thenReturn(false);
-
-            cleanupService.cleanupLibreOfficeTempFiles();
-
-            // The file is removed (age ignored), directory itself remains.
-            assertThat(Files.exists(inside)).isFalse();
-            assertThat(Files.exists(loDir)).isTrue();
-        }
-
-        @Test
-        @DisplayName("ignores registered directories that are not libreoffice dirs")
-        void ignoresNonLibreOfficeDirs() throws IOException {
-            Path other = Files.createDirectories(tempDir.resolve("other-dir"));
-            Path keep = Files.createFile(other.resolve("output_keep.pdf"));
-            Set<Path> dirs = new HashSet<>();
-            dirs.add(other);
-            when(registry.getTempDirectories()).thenReturn(dirs);
-
-            cleanupService.cleanupLibreOfficeTempFiles();
-
-            // Not a libreoffice dir, so its contents are untouched.
-            assertThat(Files.exists(keep)).isTrue();
         }
     }
 

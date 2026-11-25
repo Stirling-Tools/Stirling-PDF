@@ -2,6 +2,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { readFileSync } from "node:fs";
 import type { Locator, Page, Route } from "@playwright/test";
 import { DATABASE_CONFIGS } from "@editor/services/indexedDBManager";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 
 /** Stubbed coverage for the /files page UI invariants. */
 
@@ -12,6 +13,11 @@ interface SeedFile {
   folderId?: string;
   versionNumber?: number;
   toolHistory?: Array<{ toolId: string; timestamp: number }>;
+  /** Desktop disk link; with isDirty, edits not yet saved back to disk. */
+  localFilePath?: string;
+  isDirty?: boolean;
+  /** Defaults to the seed time; earlier means local edits newer than the cloud copy. */
+  remoteStorageUpdatedAt?: number;
 }
 
 /** Seed IDB + register the cloud entries with the server stub. */
@@ -120,13 +126,17 @@ async function seedFiles(
             toolHistory: f.toolHistory ?? [],
             folderId: f.folderId ?? null,
             remoteStorageId: f.remoteStorageId,
-            remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
+            remoteStorageUpdatedAt: f.remoteStorageId
+              ? (f.remoteStorageUpdatedAt ?? now)
+              : null,
             remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
             remoteOwnedByCurrentUser: f.remoteStorageId ? true : null,
             remoteAccessRole: f.remoteStorageId ? "owner" : null,
             remoteSharedViaLink: false,
             remoteHasShareLinks: false,
             remoteShareToken: null,
+            localFilePath: f.localFilePath,
+            isDirty: f.isDirty,
           });
         }
         tx.oncomplete = () => db.close();
@@ -1499,6 +1509,193 @@ test.describe("Files page", () => {
         .poll(async () => cards.first().textContent(), { timeout: 5_000 })
         .not.toBe(firstBefore);
       expect(await cards.count()).toBeLessThan(COUNT / 2);
+    });
+  });
+
+  test.describe("Clear recents", () => {
+    test.use({ autoGoto: false });
+
+    test("clears everything outside folders, including open and unsaved files, and never touches the cloud", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [
+          { id: "loose", name: "loose.pdf", remoteStorageId: null },
+          { id: "cloudy", name: "cloudy.pdf", remoteStorageId: 7 },
+          {
+            id: "filed",
+            name: "filed.pdf",
+            remoteStorageId: null,
+            folderId: "vf-1",
+          },
+          {
+            id: "dirty",
+            name: "dirty.pdf",
+            remoteStorageId: null,
+            localFilePath: "C:/docs/dirty.pdf",
+            isDirty: true,
+          },
+          {
+            id: "edited",
+            name: "edited.pdf",
+            remoteStorageId: 8,
+            remoteStorageUpdatedAt: 1,
+          },
+        ],
+        [{ id: "vf-1", name: "Kept" }],
+      );
+      const serverDeletes: string[] = [];
+      page.on("request", (req) => {
+        if (req.method() === "DELETE" && req.url().includes("/api/v1/storage"))
+          serverDeletes.push(req.url());
+      });
+
+      await page.goto("/editor", { waitUntil: "domcontentloaded" });
+      const rows = page.locator(".file-sidebar-file-item");
+      await expect(rows).toHaveCount(5, { timeout: 10_000 });
+      // An upload lands open in the workbench; the clear closes it too.
+      await uploadFiles(
+        page,
+        `${import.meta.dirname}/../test-fixtures/sample.pdf`,
+      );
+      await expect(rows).toHaveCount(6);
+
+      // The grouped sidebar shows it on the Recent header, revealed on hover.
+      await page
+        .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
+        .hover();
+      await page.getByTestId("file-sidebar-clear-recents").click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toContainText("Clear 5 files from recents?");
+      await expect(dialog).toContainText("This can't be undone.");
+      await expect(dialog).toContainText("1 of them is open in the workbench.");
+      await page.getByTestId("file-sidebar-clear-recents-confirm").click();
+
+      await expect(rows).toHaveCount(1);
+      await expect(rows.filter({ hasText: "filed.pdf" })).toHaveCount(1);
+      // Only kept files are left, so there is nothing more to clear.
+      await expect(page.getByTestId("file-sidebar-clear-recents")).toHaveCount(
+        0,
+      );
+      expect(serverDeletes).toEqual([]);
+    });
+
+    test("files another tab filed or built on while the dialog is open are kept", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [
+          { id: "loose", name: "loose.pdf", remoteStorageId: null },
+          { id: "moved", name: "moved.pdf", remoteStorageId: null },
+          { id: "base", name: "base.pdf", remoteStorageId: null },
+        ],
+        [{ id: "vf-1", name: "Kept" }],
+      );
+      await page.goto("/editor", { waitUntil: "domcontentloaded" });
+      const rows = page.locator(".file-sidebar-file-item");
+      await expect(rows).toHaveCount(3, { timeout: 10_000 });
+
+      await page
+        .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
+        .hover();
+      await page.getByTestId("file-sidebar-clear-recents").click();
+      await expect(page.getByRole("dialog")).toContainText(
+        "Clear 3 files from recents?",
+      );
+      // Written straight to storage, as another tab would: "moved" goes into a
+      // folder, and "base" gets a newer version on top of it.
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            const open = indexedDB.open("stirling-pdf-files");
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+              const db = open.result;
+              const tx = db.transaction("files", "readwrite");
+              const store = tx.objectStore("files");
+              const moved = store.get("moved");
+              moved.onsuccess = () =>
+                store.put({ ...moved.result, folderId: "vf-1" });
+              const base = store.get("base");
+              base.onsuccess = () => {
+                store.put({ ...base.result, isLeaf: false });
+                store.put({
+                  ...base.result,
+                  id: "base-v2",
+                  fileId: "base-v2",
+                  quickKey: "base-v2",
+                  parentFileId: "base",
+                  versionNumber: 2,
+                });
+              };
+              tx.oncomplete = () => {
+                db.close();
+                resolve();
+              };
+              tx.onerror = () => reject(tx.error);
+            };
+          }),
+      );
+      await page.getByTestId("file-sidebar-clear-recents-confirm").click();
+
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(rows.filter({ hasText: "loose.pdf" })).toHaveCount(0);
+      await expect(rows.filter({ hasText: "moved.pdf" })).toHaveCount(1);
+      // The new version still has the old one under it as history.
+      const history = await page.evaluate(
+        () =>
+          new Promise<boolean>((resolve, reject) => {
+            const open = indexedDB.open("stirling-pdf-files");
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+              const db = open.result;
+              const get = db
+                .transaction("files")
+                .objectStore("files")
+                .get("base");
+              get.onsuccess = () => {
+                db.close();
+                resolve(get.result != null);
+              };
+              get.onerror = () => reject(get.error);
+            };
+          }),
+      );
+      expect(history).toBe(true);
+    });
+
+    test("Skip open files clears the rest and leaves open files alone", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "loose", name: "loose.pdf", remoteStorageId: null },
+      ]);
+      await page.goto("/editor", { waitUntil: "domcontentloaded" });
+      const rows = page.locator(".file-sidebar-file-item");
+      await expect(rows).toHaveCount(1, { timeout: 10_000 });
+      await uploadFiles(
+        page,
+        `${import.meta.dirname}/../test-fixtures/sample.pdf`,
+      );
+      await expect(rows).toHaveCount(2);
+
+      await page
+        .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
+        .hover();
+      await page.getByTestId("file-sidebar-clear-recents").click();
+      await expect(page.getByRole("dialog")).toContainText(
+        "1 of them is open in the workbench.",
+      );
+      await page.getByTestId("file-sidebar-clear-recents-skip-open").click();
+
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(rows).toHaveCount(1);
+      await expect(rows.first()).toContainText("sample.pdf");
     });
   });
 });

@@ -102,3 +102,62 @@ describe("scan hint action", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+function outlinedPage(letters: number, height = 3): PageSnapshot {
+  return {
+    width: 612,
+    height: 792,
+    runs: [],
+    images: [{ bounds: { x: 40, y: 700, width: 80, height: 40 } }],
+    shapes: Array.from({ length: letters }, (_, i) => ({
+      bounds: {
+        x: 40 + (i % 90) * 6,
+        y: 600 - Math.floor(i / 90) * 12,
+        width: 4,
+        height,
+      },
+    })),
+  } as unknown as PageSnapshot;
+}
+
+describe("pages whose text is drawn as shapes", () => {
+  const renderHint = (pages: PageSnapshot[]) =>
+    render(
+      <MantineProvider env="test">
+        <ScanHint
+          pages={pages}
+          onRunOcr={vi.fn()}
+          ocrRunning={false}
+          ocrAvailable
+        />
+      </MantineProvider>,
+    );
+
+  it("offers OCR for a page of letter-sized outlines with no text", () => {
+    renderHint([outlinedPage(1600)]);
+    expect(screen.getByTestId("pdf-editor-scan-hint-ocr")).toBeEnabled();
+  });
+
+  it("does not call shape-drawn pages scanned images when both kinds are present", () => {
+    renderHint([scanPage(), outlinedPage(1600)]);
+    const hint = screen.getByTestId("pdf-editor-scan-hint");
+    expect(hint).toHaveTextContent("unreadPagesHint");
+    expect(hint).not.toHaveTextContent("scanHint");
+  });
+
+  it("does not offer OCR for a page with a few drawn shapes", () => {
+    renderHint([outlinedPage(20)]);
+    expect(
+      screen.queryByTestId("pdf-editor-scan-hint"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not offer OCR when the page has text", () => {
+    renderHint([
+      { ...outlinedPage(1600), runs: [{ id: "r" }] } as PageSnapshot,
+    ]);
+    expect(
+      screen.queryByTestId("pdf-editor-scan-hint"),
+    ).not.toBeInTheDocument();
+  });
+});

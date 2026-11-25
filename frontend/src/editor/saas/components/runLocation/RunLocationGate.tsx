@@ -28,24 +28,32 @@ const FLOW_PATHS = [
   ...LANDING_PATHS,
 ];
 
-// Signing in from a landing link detours through these, naming it as `next`.
+// Signing in from a landing link or a shared file detours through these, naming
+// it as `next` (or `from`).
 const AUTH_PATHS = ["/login", "/signup"];
+
+function authDestination(pathname: string, search: string): string | undefined {
+  if (!AUTH_PATHS.includes(normalizePath(pathname))) return undefined;
+  const params = new URLSearchParams(search);
+  return nextPathOf(params.get("next") ?? params.get("from"));
+}
+
+function isShareLink(path: string): boolean {
+  return path.startsWith("/share/");
+}
 
 /** On a landing link, or signing in on the way to one. */
 function isLanding(pathname: string, search: string): boolean {
-  const path = normalizePath(pathname);
-  if (LANDING_PATHS.includes(path)) return true;
-  const nextPath = nextPathOf(new URLSearchParams(search).get("next"));
-  return (
-    AUTH_PATHS.includes(path) &&
-    nextPath !== undefined &&
-    LANDING_PATHS.includes(nextPath)
-  );
+  if (LANDING_PATHS.includes(normalizePath(pathname))) return true;
+  const destination = authDestination(pathname, search);
+  return destination !== undefined && LANDING_PATHS.includes(destination);
 }
 
 export function bypassesRunLocation(pathname: string, search = ""): boolean {
   const path = normalizePath(pathname);
-  if (FLOW_PATHS.includes(path) || path.startsWith("/share/")) return true;
+  if (FLOW_PATHS.includes(path) || isShareLink(path)) return true;
+  const destination = authDestination(pathname, search);
+  if (destination !== undefined && isShareLink(destination)) return true;
   return isLanding(pathname, search);
 }
 

@@ -1,3 +1,5 @@
+import type { LinkAnnotation } from "@editor/tools/pdfTextEditor/model/LinkAnnotation";
+import type { WidgetAnnotation } from "@editor/tools/pdfTextEditor/model/WidgetAnnotation";
 import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
@@ -12,6 +14,9 @@ import {
   StructureNodes,
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
+import { staleKeyCheck } from "@editor/tools/pdfTextEditor/pdfdoc/parentTreeEntries";
+import { readLinks } from "@editor/tools/pdfTextEditor/pdfdoc/readLinks";
+import { readWidgets } from "@editor/tools/pdfTextEditor/pdfdoc/readWidgets";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import { isMarked } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
 
@@ -32,6 +37,7 @@ export interface FileBlock extends StructureRole {
   pageIndex: number | null;
   /** Its MCIDs on that page, its inline elements' included. */
   mcids: number[];
+  alt: string | null;
 }
 
 /** An element's /Lang, and its nearest ancestor's. */
@@ -56,6 +62,10 @@ export interface FileStructure {
   blocks: FileBlock[];
   /** By element key, for every element a page or block names. */
   languages: Map<string, ElementLanguage>;
+  /** The link annotations the save can give an element, by page index (see readLinks). */
+  links: Map<number, LinkAnnotation[]>;
+  /** The widget annotations the save can give a Form element, by page index (see readWidgets). */
+  widgets: Map<number, WidgetAnnotation[]>;
   /** Whether the file has a /StructTreeRoot at all. */
   hasTree: boolean;
   /** Whether the catalog declares the file tagged (/MarkInfo /Marked). */
@@ -71,7 +81,12 @@ export async function readFileStructure(
   bytes: Uint8Array,
 ): Promise<FileStructure | null> {
   const pdf = await RawPdf.parse(bytes);
-  if (!pdf || pdf.encrypted) return null;
+  return pdf ? fileStructureOf(pdf) : null;
+}
+
+/** As readFileStructure, from a file already parsed. */
+export function fileStructureOf(pdf: RawPdf): FileStructure | null {
+  if (pdf.encrypted) return null;
   const catalog = pdf.objectBody(pdf.rootNum);
   if (!catalog) return null;
   const treeRoot = pdf.dictRef(catalog, "StructTreeRoot");
@@ -82,6 +97,8 @@ export async function readFileStructure(
           pages: new Map(),
           blocks: [],
           languages: new Map(),
+          links: readLinks(pdf, null),
+          widgets: readWidgets(pdf, null),
           hasTree: false,
           marked: isMarked(pdf, catalog),
         };
@@ -100,6 +117,7 @@ export async function readFileStructure(
     return infos.get(num)!;
   };
 
+  const isStale = staleKeyCheck(pdf, rootBody);
   const byPage = new Map<number, FilePageStructure>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
@@ -109,7 +127,11 @@ export async function readFileStructure(
       byPage.set(pageIndex, { elements: [], slotCount: null });
       return;
     }
-    const items = pdf.parentTreeArray(treeRoot, key)?.items;
+    const array = pdf.parentTreeArray(treeRoot, key);
+    // A stale key, as on a page merged in after its tree was written: the page has
+    // no elements yet, and the save gives it a key of its own.
+    if (!array && isStale(pageNum, key)) return;
+    const items = array?.items;
     if (!items) {
       byPage.set(pageIndex, { elements: [], slotCount: null });
       return;
@@ -141,6 +163,8 @@ export async function readFileStructure(
     pages: byPage,
     blocks,
     languages,
+    links: readLinks(pdf, treeRoot),
+    widgets: readWidgets(pdf, treeRoot),
     hasTree: true,
     marked: isMarked(pdf, catalog),
   };
@@ -181,6 +205,7 @@ function readBlocks(
           type: node.type,
           pageIndex: at?.pageIndex ?? null,
           mcids: at ? [...at.mcids].sort((a, b) => a - b) : [],
+          alt: textEntry(pdf, kidBody, "Alt"),
         });
       }
       visit(kidBody);
@@ -197,10 +222,7 @@ function readElement(
 ): ElementInfo | null {
   const body = pdf.objectBody(num);
   if (!body) return null;
-  const text = (key: string): string | null => {
-    const value = pdf.resolve(body, key);
-    return value === null ? null : decodeTextString(value.trim());
-  };
+  const text = (key: string) => textEntry(pdf, body, key);
   return {
     role: node.role,
     type: node.type,
@@ -211,4 +233,9 @@ function readElement(
     lang: node.lang,
     onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),
   };
+}
+
+function textEntry(pdf: RawPdf, body: string, key: string): string | null {
+  const value = pdf.resolve(body, key);
+  return value === null ? null : decodeTextString(value.trim());
 }
