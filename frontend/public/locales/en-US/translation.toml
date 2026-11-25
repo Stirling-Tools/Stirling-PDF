@@ -4113,10 +4113,6 @@ title = "Image options"
 [compress.tooltip.linearize]
 text = "Reorganises the PDF so a browser can render the first page before downloading the whole file. It improves loading speed but does not change how the pages look."
 title = "Linearize for fast web viewing"
-[compress.tooltip.lineArt]
-text = "Convert images to high-contrast black and white. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
-title = "Line Art"
-
 [compress.tooltip.qualityAdjustment]
 text = "Drag the slider to adjust the compression strength. Lower values (1-3) preserve quality but result in larger files. Higher values (7-9) shrink the file more but reduce image clarity."
 title = "Quality Adjustment"
@@ -8111,27 +8107,6 @@ undo = "Undo"
 undoTooltip = "Undo ({{shortcut}})"
 unlock = "Unlock selection"
 unlockTooltip = "Unlock selection - makes it editable again"
-
-[pdfTextEditor.zoom]
-fit = "Fit"
-fitToWidth = "Fit to width"
-in = "Zoom in"
-out = "Zoom out"
-reset = "Reset zoom to 100%"
-[pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving-certain fonts, colors, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
-title = "Alpha Viewer"
-
-[pdfTextEditor.tooltip.header]
-title = "Preview Limitations"
-
-[pdfTextEditor.tooltip.previewVariance]
-text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
-title = "Preview Variance"
-
-[pdfTextEditor.tooltip.textFocus]
-text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
-title = "Text and Image Focus"
 
 [pdfTextEditor.trail]
 save = "Save"
@@ -13590,37 +13565,6 @@ rotateLeft = "Rotate left"
 rotateRight = "Rotate right"
 trim = "Trim to signature"
 trimHint = "Crops the empty space around it"
-
-[signatureSettings.tooltip]
-header = "Signature Appearance Settings"
-
-[signatureSettings.tooltip.location]
-bullet1 = "Examples: \"New York, USA\", \"London Office\", \"Remote\""
-bullet2 = "Not the same as page position"
-bullet3 = "May be required for certain legal jurisdictions"
-description = "Optional geographic location where the signature was applied. Stored in certificate metadata."
-title = "Signature Location"
-
-[signatureSettings.tooltip.logo]
-bullet1 = "Displayed alongside signature and text"
-bullet2 = "Supports PNG, JPG formats"
-bullet3 = "Enhances professional appearance"
-description = "Add a company logo to visible signatures for branding and authenticity."
-title = "Company Logo"
-
-[signatureSettings.tooltip.reason]
-bullet1 = "Examples: \"Approval\", \"Contract Agreement\", \"Review Complete\""
-bullet2 = "Visible in PDF signature properties"
-bullet3 = "Useful for audit trails and compliance"
-description = "Optional text explaining why the document is being signed. Stored in certificate metadata."
-title = "Signature Reason"
-
-[signatureSettings.tooltip.visibility]
-bullet1 = "<b>Visible</b>: Signature appears on PDF with custom appearance"
-bullet2 = "<b>Invisible</b>: Certificate embedded without visual mark"
-bullet3 = "Invisible signatures still provide cryptographic validation"
-description = "Controls whether the signature is visible on the document or embedded invisibly."
-title = "Signature Visibility"
 
 [signedPdf]
 editsBlocked = "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view or print it, convert it to another format, or sign it again."
