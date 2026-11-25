@@ -119,10 +119,7 @@ import { DocumentSwapBridge } from "@editor/components/viewer/DocumentSwapBridge
 import { PdfPasswordBridge } from "@editor/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
-import {
-  pdfAllows,
-  canPrintPdf,
-} from "@editor/services/pdfPermissions";
+import { pdfAllows, canPrintPdf } from "@editor/services/pdfPermissions";
 import { signedPdfEditsBlocked } from "@editor/services/pdfAccessService";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
