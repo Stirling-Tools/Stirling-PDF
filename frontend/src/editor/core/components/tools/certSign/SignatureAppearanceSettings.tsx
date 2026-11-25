@@ -32,6 +32,8 @@ interface SignatureAppearanceSettingsProps {
   disabled?: boolean;
   /** Field choice and on-page placement; absent where no single document is open. */
   placement?: CertSignStampPlacement;
+  /** The stamp as it will be drawn, shown above the options that change it. */
+  preview?: string | null;
 }
 
 const SignatureAppearanceSettings = ({
@@ -39,8 +41,17 @@ const SignatureAppearanceSettings = ({
   onParameterChange,
   disabled = false,
   placement,
+  preview,
 }: SignatureAppearanceSettingsProps) => {
   const { t } = useTranslation();
+
+  const details = (
+    <SignatureDetails
+      parameters={parameters}
+      onParameterChange={onParameterChange}
+      disabled={disabled}
+    />
+  );
 
   return (
     <Stack gap="md">
@@ -51,40 +62,17 @@ const SignatureAppearanceSettings = ({
         disabled={disabled}
       />
 
-      {parameters.showSignature && (
+      {parameters.showSignature ? (
         <Stack gap="sm">
-          {placement?.preview && (
+          {preview && (
             <StampPreviewFrame
-              src={placement.preview}
+              src={preview}
               alt={t(
                 "certSign.appearance.placement.stampPreview",
                 "How the signature will look",
               )}
             />
           )}
-          {placement && (
-            <FieldChoice
-              placement={placement}
-              parameters={parameters}
-              onParameterChange={onParameterChange}
-              disabled={disabled}
-            />
-          )}
-          {!parameters.fieldName &&
-            (placement ? (
-              <PlaceOnPage
-                placement={placement}
-                parameters={parameters}
-                onParameterChange={onParameterChange}
-                disabled={disabled}
-              />
-            ) : (
-              <PageNumberInput
-                parameters={parameters}
-                onParameterChange={onParameterChange}
-                disabled={disabled}
-              />
-            ))}
           <GraphicChoice
             parameters={parameters}
             onParameterChange={onParameterChange}
@@ -110,14 +98,34 @@ const SignatureAppearanceSettings = ({
             )}
             disabled={disabled}
           />
+          {details}
+          {placement && (
+            <FieldChoice
+              placement={placement}
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          )}
+          {!parameters.fieldName &&
+            (placement ? (
+              <PlaceOnPage
+                placement={placement}
+                parameters={parameters}
+                onParameterChange={onParameterChange}
+                disabled={disabled}
+              />
+            ) : (
+              <PageNumberInput
+                parameters={parameters}
+                onParameterChange={onParameterChange}
+                disabled={disabled}
+              />
+            ))}
         </Stack>
+      ) : (
+        details
       )}
-
-      <SignatureDetails
-        parameters={parameters}
-        onParameterChange={onParameterChange}
-        disabled={disabled}
-      />
     </Stack>
   );
 };

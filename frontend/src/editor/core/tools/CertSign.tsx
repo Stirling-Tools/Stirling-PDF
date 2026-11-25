@@ -178,6 +178,7 @@ const CertSign = (props: BaseToolProps) => {
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}
             placement={singleFile ? stampPlacement : undefined}
+            preview={stampPlacement.preview}
           />
         ),
       },

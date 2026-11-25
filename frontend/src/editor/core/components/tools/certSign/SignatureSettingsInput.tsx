@@ -1,12 +1,6 @@
-import {
-  Stack,
-  Text,
-  TextInput,
-  NumberInput,
-  Switch,
-  Group,
-} from "@mantine/core";
-import { Button } from "@editor/ui/Button";
+import { Stack, Text, TextInput, NumberInput, Group } from "@mantine/core";
+import { Checkbox } from "@editor/ui/Checkbox";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/ui/Tooltip";
@@ -65,44 +59,12 @@ const SignatureSettingsInput = ({
         </Tooltip>
       </Group>
 
-      <div style={{ display: "flex", gap: "4px" }}>
-        <Button
-          accent={!value.showSignature ? "default" : "neutral"}
-          variant={!value.showSignature ? "primary" : "secondary"}
-          onClick={() => handleChange("showSignature", false)}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            height: "auto",
-            minHeight: "40px",
-            fontSize: "11px",
-          }}
-        >
-          <div
-            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
-          >
-            {t("certSign.appearance.invisible", "Invisible")}
-          </div>
-        </Button>
-        <Button
-          accent={value.showSignature ? "default" : "neutral"}
-          variant={value.showSignature ? "primary" : "secondary"}
-          onClick={() => handleChange("showSignature", true)}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            height: "auto",
-            minHeight: "40px",
-            fontSize: "11px",
-          }}
-        >
-          <div
-            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
-          >
-            {t("certSign.appearance.visible", "Visible")}
-          </div>
-        </Button>
-      </div>
+      <ToggleSwitch
+        checked={value.showSignature || false}
+        onChange={(checked) => handleChange("showSignature", checked)}
+        label={t("certSign.appearance.showOnPage", "Show signature on page")}
+        disabled={disabled}
+      />
 
       {value.showSignature && (
         <Stack gap="sm">
@@ -134,7 +96,7 @@ const SignatureSettingsInput = ({
             disabled={disabled}
             size="xs"
           />
-          <Switch
+          <Checkbox
             label={t(
               "certSign.appearance.graphic.watermark",
               "Logo behind signature",
@@ -144,13 +106,12 @@ const SignatureSettingsInput = ({
               handleChange("showLogo", event.currentTarget.checked)
             }
             disabled={disabled}
-            size="sm"
           />
         </Stack>
       )}
 
       <Group gap="xs" wrap="nowrap" align="center">
-        <Switch
+        <Checkbox
           label={t(
             "certSign.collab.sessionCreation.includeSummaryPage",
             "Include Signature Summary Page",
@@ -160,7 +121,6 @@ const SignatureSettingsInput = ({
             handleChange("includeSummaryPage", event.currentTarget.checked)
           }
           disabled={disabled}
-          size="sm"
         />
         <Tooltip
           content={t(

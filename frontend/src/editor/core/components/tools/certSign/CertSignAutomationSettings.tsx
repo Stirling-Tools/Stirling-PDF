@@ -13,6 +13,7 @@ import CertificateFormatSettings from "@editor/components/tools/certSign/Certifi
 import CertificateFilesSettings from "@editor/components/tools/certSign/CertificateFilesSettings";
 import HardwareCertificateSettings from "@editor/components/tools/certSign/HardwareCertificateSettings";
 import SignatureAppearanceSettings from "@editor/components/tools/certSign/SignatureAppearanceSettings";
+import { useDefaultStampPreview } from "@editor/hooks/tools/certSign/useCertSignStampPlacement";
 
 interface CertSignAutomationSettingsProps {
   parameters: CertSignParameters;
@@ -28,6 +29,7 @@ const CertSignAutomationSettings = ({
   onParameterChange,
   disabled = false,
 }: CertSignAutomationSettingsProps) => {
+  const preview = useDefaultStampPreview(parameters);
   return (
     <Stack gap="lg">
       {/* Sign Mode Selection (Manual vs Auto) */}
@@ -69,6 +71,7 @@ const CertSignAutomationSettings = ({
         parameters={parameters}
         onParameterChange={onParameterChange}
         disabled={disabled}
+        preview={preview}
       />
     </Stack>
   );

@@ -148,6 +148,17 @@ function useStampRenderer(parameters: CertSignParameters): StampRenderer {
   ]);
 }
 
+/** The stamp at the server's default box size, for showing where no box has been chosen. */
+export function useDefaultStampPreview(
+  parameters: CertSignParameters,
+): string | null {
+  const renderStamp = useStampRenderer(parameters);
+  return useMemo(
+    () => renderStamp(DEFAULT_STAMP_SIZE.width, DEFAULT_STAMP_SIZE.height),
+    [renderStamp],
+  );
+}
+
 /**
  * Lets the user place the visible signature box with the Sign tool's stamp placement, and offers
  * the file's empty signature fields. The placed stamp lives only in the viewer as a guide; it is
