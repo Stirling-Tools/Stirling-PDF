@@ -48,7 +48,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 
 # Stage 4: Build Python venv
-FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS python-venv-build
+FROM ubuntu:26.04@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944 AS python-venv-build
 ARG TARGETPLATFORM
 ARG LXML_VERSION=6.1.3
 
@@ -69,7 +69,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     /opt/venv/bin/pip install --no-cache-dir --no-binary=lxml --force-reinstall \
       "lxml==${LXML_VERSION}" && \
     /opt/venv/bin/python -c \
-      "from lxml import etree; assert etree.LIBXML_VERSION == (2, 9, 14), etree.LIBXML_VERSION"
+      "from lxml import etree; assert etree.LIBXML_VERSION == (2, 15, 2), etree.LIBXML_VERSION"
 
 RUN find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
@@ -81,7 +81,7 @@ RUN find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || tr
 
 
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce AS runtime
+FROM eclipse-temurin:27-jre@sha256:d6bfa738df69e8dec9061b3e26f2ae564d92ad169faa36086dcfa33f0a901d35 AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -96,7 +96,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get upgrade -y --no-install-recommends; \
     apt-get install -y --no-install-recommends \
       # Core tools
-      ca-certificates tzdata tini bash fontconfig curl \
+      ca-certificates tzdata tini bash fontconfig curl libjemalloc2 \
       # ffmpeg disabled due to raised CVEs
       # ffmpeg \
       poppler-utils \
@@ -110,7 +110,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-freefont-ttf fonts-terminus \
       # Python runtime
       python3 python3-packaging \
-      libxml2 libxslt1.1 \
+      libxml2-16 libxslt1.1 \
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
@@ -158,11 +158,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /usr/share/i18n/locales /usr/share/i18n/charmaps; \
     \
-    rm -rf /usr/lib/python3.12/test \
-           /usr/lib/python3.12/idlelib \
-           /usr/lib/python3.12/tkinter \
-           /usr/lib/python3.12/lib2to3 \
-           /usr/lib/python3.12/pydoc_data; \
+    rm -rf /usr/lib/python3.14/test \
+           /usr/lib/python3.14/idlelib \
+           /usr/lib/python3.14/tkinter \
+           /usr/lib/python3.14/lib2to3 \
+           /usr/lib/python3.14/pydoc_data; \
     \
     rm -rf /usr/lib/python3/dist-packages/scipy \
            /usr/lib/python3/dist-packages/sympy \
