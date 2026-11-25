@@ -1,9 +1,7 @@
-// @vitest-environment node
-// jsdom's Blob cannot stream, so the fixture's object stream would not inflate.
+import { Blob as NodeBlob } from "node:buffer";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { JSDOM } from "jsdom";
 import {
   afterAll,
   afterEach,
@@ -55,9 +53,8 @@ beforeAll(async () => {
       ),
     ),
   );
-  const { window } = new JSDOM();
-  vi.stubGlobal("DOMParser", window.DOMParser);
-  vi.stubGlobal("XMLSerializer", window.XMLSerializer);
+  // jsdom's Blob cannot stream, so the fixture's object stream would not inflate.
+  vi.stubGlobal("Blob", NodeBlob);
 });
 
 afterEach(() => {

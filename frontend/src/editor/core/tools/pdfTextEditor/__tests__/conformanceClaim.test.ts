@@ -1,7 +1,6 @@
-// @vitest-environment node
+import { Blob as NodeBlob } from "node:buffer";
 import { deflateSync } from "node:zlib";
-import { JSDOM } from "jsdom";
-import { beforeAll, describe, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   ConformanceClaimError,
@@ -14,12 +13,13 @@ import {
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
-// Node, not jsdom, so CompressionStream can read the Flate fixture; the pass
-// still needs the browser's XML parser.
+// jsdom's Blob cannot stream, so the Flate fixture would not inflate.
 beforeAll(() => {
-  const { window } = new JSDOM();
-  vi.stubGlobal("DOMParser", window.DOMParser);
-  vi.stubGlobal("XMLSerializer", window.XMLSerializer);
+  vi.stubGlobal("Blob", NodeBlob);
+});
+
+afterAll(() => {
+  vi.unstubAllGlobals();
 });
 
 const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";

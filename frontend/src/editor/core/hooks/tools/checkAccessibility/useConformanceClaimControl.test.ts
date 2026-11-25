@@ -8,7 +8,10 @@ import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { readConformanceClaim } from "@editor/tools/pdfTextEditor/pdfdoc/passes/conformanceClaim";
 import { reviewConformanceClaim } from "@editor/tools/pdfTextEditor/store/reviewConformanceClaim";
 import { buildClassicPdf } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
-import type { AccessibilityReport } from "@editor/types/checkAccessibility";
+import type {
+  AccessibilityIssue,
+  AccessibilityReport,
+} from "@editor/types/checkAccessibility";
 import type { FileId } from "@editor/types/file";
 import { allowConsole } from "@editor/tests/failOnConsole";
 
@@ -45,12 +48,37 @@ vi.mock("@editor/services/fileStubHelpers", () => ({
 
 const CHECKED = "checked" as FileId;
 
-const REPORT = {
+const REPORT: AccessibilityReport = {
   profile: "PDF/UA-1",
+  tagged: true,
   declaresConformance: false,
+  passesAutomatedChecks: false,
   issues: [],
-  summary: { encrypted: false },
-} as AccessibilityReport;
+  humanChecks: [],
+  automaticallyFixable: 0,
+  needsInput: 0,
+  figuresNeedingDescription: [],
+  summary: {
+    pages: 1,
+    hasTitle: true,
+    displaysDocTitle: true,
+    hasLanguage: true,
+    allFontsEmbedded: true,
+    unembeddedFonts: 0,
+    figures: 0,
+    encrypted: false,
+  },
+};
+
+const CLAUSE_5_ISSUE: AccessibilityIssue = {
+  clause: "5",
+  testNumber: "2",
+  specification: "PDF/UA-1",
+  message: "",
+  severity: "error",
+  occurrences: 1,
+  autoFixable: false,
+};
 
 const PDF = buildClassicPdf(
   [
@@ -177,16 +205,16 @@ describe("the checked file's claim", () => {
     const { view } = render({
       ...REPORT,
       declaresConformance: true,
-      issues: [{ clause: "5", testNumber: "2" }],
-    } as AccessibilityReport);
+      issues: [CLAUSE_5_ISSUE],
+    });
     expect(view.result.current!.declared).toBe(false);
   });
 
   it("cannot change an encrypted file", () => {
     const { view } = render({
       ...REPORT,
-      summary: { encrypted: true },
-    } as AccessibilityReport);
+      summary: { ...REPORT.summary, encrypted: true },
+    });
     expect(view.result.current!.editable).toBe(false);
   });
 
