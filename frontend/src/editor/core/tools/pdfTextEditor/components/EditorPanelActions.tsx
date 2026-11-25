@@ -4,9 +4,11 @@ import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { modShortcut } from "@editor/utils/hotkeys";
+import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 interface Props {
   compact: boolean;
+  dirty: boolean;
   onSave: () => void;
   onDownload: () => void;
   onOpenFind: () => void;
@@ -15,6 +17,7 @@ interface Props {
 
 export const EditorPanelActions = memo(function EditorPanelActions({
   compact,
+  dirty,
   onSave,
   onDownload,
   onOpenFind,
@@ -47,6 +50,18 @@ export const EditorPanelActions = memo(function EditorPanelActions({
             onClick={onSave}
             data-testid="pdf-editor-save"
             style={{ flex: 1, minWidth: 0 }}
+            // Phones show the unsaved dot by the file name instead.
+            rightSection={
+              dirty && !compact ? (
+                <span
+                  className="pdf-editor-topbar__dirty"
+                  data-testid="pdf-editor-dirty-dot"
+                  role="status"
+                  aria-label={t("pdfTextEditor.unsaved", "(unsaved)")}
+                  title={t("pdfTextEditor.unsaved", "(unsaved)")}
+                />
+              ) : undefined
+            }
           >
             {t("pdfTextEditor.save", "Save PDF")}
           </Button>

@@ -15,6 +15,7 @@ import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
 import { ScanFontMatchRow } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import { imageTransforms } from "@editor/tools/pdfTextEditor/components/toolbar/ImageGroup";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 
@@ -29,6 +30,8 @@ interface Props {
   canUngroup: boolean;
   onGroup: () => void;
   onUngroup: () => void;
+  /** False where the floating selection bar carries the image tools instead. */
+  showImageTools?: boolean;
 }
 
 /**
@@ -49,6 +52,7 @@ export function SelectionInspector({
   canUngroup,
   onGroup,
   onUngroup,
+  showImageTools = true,
 }: Props) {
   const runCount = selection.runIds.length;
   const imageCount = selection.imageIds.length;
@@ -76,7 +80,9 @@ export function SelectionInspector({
           onUngroup={onUngroup}
         />
       )}
-      {hasImageSelection && <ImageSection controller={controller} />}
+      {hasImageSelection && showImageTools && (
+        <ImageSection controller={controller} />
+      )}
     </Stack>
   );
 }
@@ -328,42 +334,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
     onEditImageExternally,
     externalEditSupported,
   } = controller;
-  const transforms = useMemo(
-    () =>
-      [
-        {
-          mode: "rotate-ccw" as const,
-          testId: "pdf-editor-imgop-rotate-ccw",
-          icon: <Icon name="rotate-ccw" size={20} />,
-          label: t("pdfTextEditor.toolbar.rotateLeft", "Rotate 90° left"),
-        },
-        {
-          mode: "rotate-cw" as const,
-          testId: "pdf-editor-imgop-rotate-cw",
-          icon: <Icon name="rotate-cw" size={20} />,
-          label: t("pdfTextEditor.toolbar.rotateRight", "Rotate 90° right"),
-        },
-        {
-          mode: "flip-h" as const,
-          testId: "pdf-editor-imgop-flip-h",
-          icon: <Icon name="flip-horizontal-2" size={20} />,
-          label: t("pdfTextEditor.toolbar.flipHorizontal", "Flip horizontal"),
-        },
-        {
-          mode: "flip-v" as const,
-          testId: "pdf-editor-imgop-flip-v",
-          icon: (
-            <Icon
-              name="flip-horizontal-2"
-              size={20}
-              style={{ transform: "rotate(90deg)" }}
-            />
-          ),
-          label: t("pdfTextEditor.toolbar.flipVertical", "Flip vertical"),
-        },
-      ] as const,
-    [t],
-  );
+  const transforms = useMemo(() => imageTransforms(t), [t]);
 
   return (
     <Section testId="pdf-editor-imgop-menu">

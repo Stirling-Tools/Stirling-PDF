@@ -4,10 +4,18 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import {
   NO_SHRINK,
+  selectionBarMenuProps,
   type Controller,
 } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
-export function ObjectGroup({ controller }: { controller: Controller }) {
+export function ObjectGroup({
+  controller,
+  dropdownPosition = "bottom",
+}: {
+  controller: Controller;
+  /** Which way the Arrange menu opens, so it can open away from the selected text. */
+  dropdownPosition?: "top" | "bottom";
+}) {
   const { t } = useTranslation();
   const {
     selectionAllLocked,
@@ -73,22 +81,27 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
           leftSection={<Icon name="trash" size={20} />}
         />
       </Tooltip>
-      <Menu shadow="md" position="bottom-start" withinPortal closeOnItemClick>
+      <Menu
+        shadow="md"
+        position={`${dropdownPosition}-start`}
+        withinPortal
+        closeOnItemClick
+      >
         <Menu.Target>
-          <Button
-            size="sm"
-            disabled={!arrangeable}
-            variant="secondary"
-            accent="neutral"
-            leftSection={<Icon name="layers" size={20} />}
-            rightSection={<Icon name="chevron-down" size={20} />}
-            data-testid="pdf-editor-arrange-menu"
-            style={NO_SHRINK}
-          >
-            {t("pdfTextEditor.toolbar.arrange", "Arrange")}
-          </Button>
+          <Tooltip label={t("pdfTextEditor.toolbar.arrange", "Arrange")}>
+            <Button
+              size="sm"
+              disabled={!arrangeable}
+              variant="tertiary"
+              accent="neutral"
+              aria-label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
+              leftSection={<Icon name="layers" size={20} />}
+              data-testid="pdf-editor-arrange-menu"
+              style={NO_SHRINK}
+            />
+          </Tooltip>
         </Menu.Target>
-        <Menu.Dropdown>
+        <Menu.Dropdown {...selectionBarMenuProps}>
           <ArrangeMenuItems controller={controller} />
         </Menu.Dropdown>
       </Menu>

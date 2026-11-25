@@ -891,11 +891,18 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           </Text>
         </>
       ) : (
-        selectedTool === "pdfTextEditor" && <EditorSidebar {...sidebarProps} />
+        selectedTool === "pdfTextEditor" && (
+          <EditorSidebar
+            {...sidebarProps}
+            onOpenFind={onOpenFind}
+            onShowHelp={onShowHelp}
+          />
+        )
       )}
       {state.hasDocument && (
         <EditorPanelActions
           compact={isMobile}
+          dirty={state.dirty}
           onSave={handleSave}
           onDownload={handleDownload}
           onOpenFind={onOpenFind}

@@ -1,6 +1,7 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 // The fill colour picker (ColorInput, testid pdf-editor-colour) had three faults that
 // all trace back to Mantine driving onChange from its own dropdown lifecycle:
@@ -245,7 +246,11 @@ test.describe("PDF text editor - fill colour picker", () => {
       "nothing from the colour picker may cover the page after a pick",
     ).not.toContain("ColorInput");
 
-    // ...so one click - not a priming click - selects that run.
+    // ...so one click - not a priming click - selects that run, once the
+    // selection bar covering it is gone.
+    await page.evaluate(() =>
+      (window as unknown as EditorTestWindow).__editor_store.selection.clear(),
+    );
     await page
       .locator(`[data-testid="pdf-editor-run-${HEADING}"]`)
       .click({ timeout: 5_000 });

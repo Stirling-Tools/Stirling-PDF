@@ -14,6 +14,7 @@ import { MobileEditorTopBar } from "@editor/tools/pdfTextEditor/components/Mobil
 import { MobileActionBar } from "@editor/tools/pdfTextEditor/components/MobileActionBar";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { FindBar } from "@editor/tools/pdfTextEditor/components/FindBar";
+import { SelectionBar } from "@editor/tools/pdfTextEditor/components/SelectionBar";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
 import { QuickTagCard } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
 import { EditorTrailControls } from "@editor/tools/pdfTextEditor/components/EditorTrailControls";
@@ -29,7 +30,7 @@ import {
 const CONTROLS =
   "button, input, select, textarea, a, [role='button'], [role='slider']";
 
-/** The text editor's strip and find bar, docked above the viewer while editing. */
+/** The text editor's bars over the viewer: selection bar, find bar, and the phone or review bar. */
 export function ViewerEditToolbar() {
   const { store, state } = useEditorStoreView();
   const selection = useEditorSelection(store);
@@ -62,13 +63,22 @@ export function ViewerEditToolbar() {
 
   return (
     <>
-      <TopBar
-        store={store}
-        state={bars.state}
-        selection={bars.selection}
-        mobile={isMobile}
-        editing={!reviewing}
-      />
+      {(isMobile || reviewing) && (
+        <TopBar
+          store={store}
+          state={bars.state}
+          selection={bars.selection}
+          mobile={isMobile}
+        />
+      )}
+      {/* Small screens format from their own action bar's sheets. */}
+      {!isMobile && !reviewing && (
+        <SelectionBar
+          store={store}
+          state={bars.state}
+          selection={bars.selection}
+        />
+      )}
       {reviewing && store.document && (
         <ReviewOverlay
           store={store}
@@ -133,8 +143,7 @@ const TopBar = memo(function TopBar({
   state,
   selection,
   mobile,
-  editing,
-}: BarProps & { mobile: boolean; editing: boolean }) {
+}: BarProps & { mobile: boolean }) {
   const controller = useToolbarController(store, state, selection);
   if (mobile)
     return (
@@ -149,15 +158,7 @@ const TopBar = memo(function TopBar({
       controller={controller}
       hasDocument={state.hasDocument}
       dirty={state.dirty}
-      addTextArmed={state.mode === "addText"}
-      addTableArmed={state.mode === "addTable"}
-      onToggleAddTable={() => store.toggleMode("addTable")}
-      onToggleAddText={() => store.toggleMode("addText")}
-      findOpen={state.findOpen}
-      onToggleFind={() => store.toggleFindOpen()}
-      onShowHelp={() => store.setHelpOpen(true)}
-      editing={editing}
-      trail={editing ? undefined : <EditorTrailControls state={state} />}
+      trail={<EditorTrailControls state={state} />}
     />
   );
 });

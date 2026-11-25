@@ -127,9 +127,10 @@ for (const c of CASES) {
       await page.keyboard.type("QQ", { delay: 40 });
     }
     await page.waitForTimeout(1200);
-    await page
-      .locator('[data-testid="pdf-editor-page-0"]')
-      .click({ position: { x: 4, y: 4 } });
+    // Below the text: the selection bar covers the page above the run.
+    const pageZero = page.locator('[data-testid="pdf-editor-page-0"]');
+    const pageBox = await pageZero.boundingBox();
+    await pageZero.click({ position: { x: 4, y: pageBox!.height - 4 } });
     await page.waitForTimeout(1500);
 
     const objectsEdited = await objectCount(page);

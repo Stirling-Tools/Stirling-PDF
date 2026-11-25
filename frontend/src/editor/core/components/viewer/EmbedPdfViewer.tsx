@@ -78,8 +78,6 @@ import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { alert } from "@editor/components/toast";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
-import { useIsMobile } from "@editor/hooks/useIsMobile";
-import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 import {
   PAGES_PAST_INSET_ATTR,
   usePagesPastInset,
@@ -568,7 +566,6 @@ const EmbedPdfViewerContent = ({
   } = useNavigationGuard();
 
   const { selectedTool } = useNavigationState();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (selectedTool !== "redact") {
@@ -2056,20 +2053,7 @@ const EmbedPdfViewerContent = ({
           {currentFile && isStirlingFile(currentFile) && (
             <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
           )}
-          {pageTool ? (
-            <pageTool.Toolbar />
-          ) : (
-            selectedTool === "pdfTextEditor" &&
-            !isMobile &&
-            !previewFile && (
-              // Holds the editor bar's place while the editor loads, so the
-              // bar shows at once and the pages do not shift when it lands.
-              <div
-                className="pdf-editor-topbar pdf-editor-topbar--pending"
-                data-testid="pdf-editor-toolbar-pending"
-              />
-            )
-          )}
+          {pageTool && <pageTool.Toolbar />}
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}

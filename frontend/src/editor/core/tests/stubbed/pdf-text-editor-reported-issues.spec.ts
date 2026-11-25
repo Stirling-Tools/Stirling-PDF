@@ -24,10 +24,9 @@ async function arrangeItemDisabled(
   const item = page.getByTestId(testid);
   await item.waitFor({ state: "visible" });
   const disabled = await item.isDisabled();
-  // Close via a neutral click in the top bar, NOT Escape: the editor's global
-  // Escape handler also clears the selection, which would break the next check.
+  // A neutral click, not Escape: Escape also clears the selection.
   await page
-    .getByTestId("pdf-editor-toolbar")
+    .getByTestId("pdf-editor-selection-bar")
     .click({ position: { x: 2, y: 2 } });
   await item.waitFor({ state: "hidden" });
   return disabled;
