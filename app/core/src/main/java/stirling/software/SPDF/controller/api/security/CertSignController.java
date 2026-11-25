@@ -6,6 +6,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.security.*;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -108,6 +109,8 @@ import stirling.software.common.util.WebResponseUtils;
 @Tag(name = "Security", description = "Security APIs")
 public class CertSignController {
 
+    private static final int SIGNER_INFO_ALLOWANCE = 4096;
+
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
@@ -181,23 +184,35 @@ public class CertSignController {
             signature.setLocation(location);
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
-            if (Boolean.TRUE.equals(showSignature)) {
-                int pageIndex = resolveSignaturePage(pageNumber, doc.getNumberOfPages());
-                try (SignatureOptions signatureOptions = new SignatureOptions()) {
+            try (SignatureOptions signatureOptions = new SignatureOptions()) {
+                signatureOptions.setPreferredSignatureSize(
+                        signatureReservation(instance.getCertificateChain()));
+                if (Boolean.TRUE.equals(showSignature)) {
+                    int pageIndex = resolveSignaturePage(pageNumber, doc.getNumberOfPages());
                     signatureOptions.setVisualSignature(
                             instance.createVisibleSignature(doc, signature, pageIndex, showLogo));
                     signatureOptions.setPage(pageIndex);
-
-                    doc.addSignature(signature, instance, signatureOptions);
-                    makeSignatureWidgetAccessible(doc, signature, instance.signerName());
-                    doc.saveIncremental(output);
                 }
-            } else {
-                doc.addSignature(signature, instance);
+                doc.addSignature(signature, instance, signatureOptions);
                 makeSignatureWidgetAccessible(doc, signature, instance.signerName());
                 doc.saveIncremental(output);
             }
         }
+    }
+
+    static int signatureReservation(Certificate[] chain) throws IOException {
+        int certificateBytes = 0;
+        if (chain != null) {
+            try {
+                for (Certificate certificate : chain) {
+                    certificateBytes += certificate.getEncoded().length;
+                }
+            } catch (CertificateEncodingException e) {
+                throw new IOException("Could not encode the signing certificate chain", e);
+            }
+        }
+        return Math.max(
+                SignatureOptions.DEFAULT_SIGNATURE_SIZE, certificateBytes + SIGNER_INFO_ALLOWANCE);
     }
 
     /**
