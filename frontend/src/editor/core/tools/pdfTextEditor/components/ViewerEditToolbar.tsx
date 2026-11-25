@@ -63,14 +63,25 @@ export function ViewerEditToolbar() {
 
   return (
     <>
-      {(isMobile || reviewing) && (
-        <TopBar
-          store={store}
-          state={bars.state}
-          selection={bars.selection}
-          mobile={isMobile}
-        />
-      )}
+      {/* Positioned so the find bar can hang off the bar's lower edge, or off
+          the top of the pages when desktop editing shows no bar. */}
+      <div style={{ position: "relative" }}>
+        {(isMobile || reviewing) && (
+          <TopBar
+            store={store}
+            state={bars.state}
+            selection={bars.selection}
+            mobile={isMobile}
+          />
+        )}
+        {state.findOpen && state.hasDocument && !reviewing && (
+          <FindBar
+            store={store}
+            pages={state.pages}
+            onClose={() => store.setFindOpen(false)}
+          />
+        )}
+      </div>
       {/* Small screens format from their own action bar's sheets. */}
       {!isMobile && !reviewing && (
         <SelectionBar
@@ -85,13 +96,6 @@ export function ViewerEditToolbar() {
           doc={store.document}
           state={state}
           selection={selection}
-        />
-      )}
-      {state.findOpen && state.hasDocument && !reviewing && (
-        <FindBar
-          store={store}
-          pages={state.pages}
-          onClose={() => store.setFindOpen(false)}
         />
       )}
       <MarqueeSelector store={store} />

@@ -37,9 +37,6 @@ async function addToFileList(page: Page, file: Upload) {
 
 /** The zoom most specs' pixel geometry assumes. */
 const DEFAULT_ZOOM_PERCENT = 150;
-/** The viewer's zoom slider: 20% to 500% in steps of 5. */
-const SLIDER_MIN = 20;
-const SLIDER_MAX = 500;
 
 /**
  * Opens `file` in the PDF text editor the way a user does: add it to the
@@ -196,43 +193,22 @@ export async function scrollToEditorPage(
   }, pageIndex);
 }
 
-/** No-op where the slider is not shown: on a phone, or in a narrow viewer bar. */
+/** No-op where the zoom box is not shown, as on a phone. */
 export async function setViewerZoom(
   page: Page,
   percent: number,
 ): Promise<void> {
-  const thumb = page
-    .locator(".pdf-viewer-toolbar-zoom-slider [role=slider]")
-    .first();
-  if (!(await thumb.isVisible())) return;
-  const current = () =>
-    thumb.getAttribute("aria-valuenow").then((v) => Number(v));
-  // Every step the slider passes through re-renders the pages, so jump close
-  // with one click on the track and finish with the arrow keys. The viewer
-  // may still fit a newly opened document to its width just after, so the
-  // zoom is set again until it holds.
+  const input = page.getByTestId("viewer-zoom-input").first();
+  if (!(await input.isVisible())) return;
+  // The viewer may still fit a newly opened document to its width just after,
+  // so the zoom is set again until it holds.
   await expect(async () => {
-    if ((await current()) !== percent) {
-      const track = page
-        .locator(".pdf-viewer-toolbar-zoom-slider .mantine-Slider-track")
-        .first();
-      const box = await track.boundingBox();
-      if (box) {
-        const fraction = (percent - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN);
-        await page.mouse.click(
-          box.x + fraction * box.width,
-          box.y + box.height / 2,
-        );
-      }
-      await thumb.focus();
-      for (let i = 0; i < 20; i++) {
-        const value = await current();
-        if (value === percent) break;
-        await page.keyboard.press(value < percent ? "ArrowRight" : "ArrowLeft");
-      }
+    if ((await input.inputValue()) !== `${percent}%`) {
+      await input.fill(String(percent));
+      await input.press("Enter");
     }
     await page.waitForTimeout(800);
-    expect(await current()).toBe(percent);
+    expect(await input.inputValue()).toBe(`${percent}%`);
   }).toPass({ timeout: 30_000 });
   // Zoom keeps the scroll position; start from the top, as a fresh open does.
   await page

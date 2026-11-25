@@ -1,12 +1,5 @@
-import {
-  useMemo,
-  useState,
-  useEffect,
-  useCallback,
-  type ComponentProps,
-} from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Slider, Popover, Select } from "@mantine/core";
-import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@editor/i18n";
 import { useViewer } from "@editor/contexts/ViewerContext";
@@ -15,8 +8,12 @@ import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@editor/hooks/useWorkbenchBarButtons";
-import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import { BarButton } from "@editor/components/viewer/ViewerBarControls";
+import { ViewerDocumentMenu } from "@editor/components/viewer/ViewerDocumentMenu";
+import { ViewerPageViewMenu } from "@editor/components/viewer/ViewerPageViewMenu";
+import { AnnotationVisibilityToggle } from "@editor/components/viewer/AnnotationVisibilityToggle";
 import { SearchInterface } from "@editor/components/viewer/SearchInterface";
 import ViewerAnnotationControls from "@editor/components/viewer/ViewerAnnotationControls";
 import { useSidebarContext } from "@editor/contexts/SidebarContext";
@@ -67,6 +64,7 @@ export function useViewerWorkbenchBarButtons(
     registerImmediatePanUpdate,
   } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(false);
+  const isPhone = useIsPhone();
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useWorkbenchBarTooltipSide(
     sidebarRefs,
@@ -79,6 +77,7 @@ export function useViewerWorkbenchBarButtons(
     clearToolSelection,
     setLeftPanelView,
     setReaderMode,
+    readerMode,
     toolRegistry,
   } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
@@ -111,20 +110,17 @@ export function useViewerWorkbenchBarButtons(
     "workbenchBar.applyRedactionsFirst",
     "Apply redactions first",
   );
-  const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
-  const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
-  const sidebarLabel = t("workbenchBar.toggleSidebar", "Toggle Sidebar");
-  const bookmarkLabel = t(
-    "workbenchBar.toggleBookmarks",
-    "Bookmarks (Table of Contents)",
+  const pageViewLabel = t("workbenchBar.pageView", "View");
+  const annotationVisibilityLabel = t(
+    "workbenchBar.toggleAnnotations",
+    "Toggle Annotations Visibility",
   );
-  const attachmentLabel = t(
-    "workbenchBar.toggleAttachments",
-    "Toggle Attachments",
-  );
-  const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
+  const thumbnailsLabel = t("workbenchBar.thumbnails", "Pages");
+  const bookmarksLabel = t("workbenchBar.bookmarks", "Bookmarks");
+  const attachmentsLabel = t("workbenchBar.attachments", "Attachments");
+  const layersLabel = t("workbenchBar.layers", "Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
-  const annotationsLabel = t("workbenchBar.annotations", "Annotations");
+  const annotationsLabel = t("workbenchBar.annotate", "Annotate");
   const exitAnnotationsLabel = t(
     "workbenchBar.exitAnnotations",
     "Exit annotation mode",
@@ -177,6 +173,11 @@ export function useViewerWorkbenchBarButtons(
     ],
   );
 
+  const preloadTextEditor = useCallback(
+    () => void toolRegistry.pdfTextEditor?.preload?.(),
+    [toolRegistry],
+  );
+
   const handleStartScaleCalibration = useCallback(() => {
     startScaleCalibration?.();
     setIsRulerActive?.(true);
@@ -221,16 +222,85 @@ export function useViewerWorkbenchBarButtons(
     supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
 
   const viewerButtons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
+    const panRedactionBlocked =
+      !isPanning && pendingCount > 0 && redactionActiveType !== null;
+    // Search, pan, measure and read aloud work through the document in view,
+    // so they sit in the page bar below it. The side panels and how the pages
+    // are shown get a menu each, and the modes that work on the pages are
+    // named. A phone's page bar has no room, so there they join the tool row.
+    const pageSection = isPhone ? ("top" as const) : ("page-bar" as const);
+    const pageTooltip = isPhone ? tooltipPosition : ("top" as const);
+    const pageButtonSize = isPhone ? undefined : ("sm" as const);
+    // Reading mode's rail draws read aloud itself. A second copy in the page
+    // bar would share its open state, and each popover's outside click would
+    // close the other's.
+    const railOwned = readerMode && !isPhone;
+    const railSection = railOwned ? ("top" as const) : pageSection;
+    // A narrow page bar folds these into a menu, which acts through the
+    // registered action and shows the registered icon.
+    const foldsIntoMenu = pageSection === "page-bar";
+    const togglePan = () =>
+      leaveTextEditThen(() => {
+        viewer.panActions.togglePan();
+        if (!isPanning && isRulerActive) setIsRulerActive?.(false);
+      });
+    const toggleRuler = () =>
+      leaveTextEditThen(() => {
+        const next = !isRulerActive;
+        setIsRulerActive?.(next);
+        if (next && isPanning) {
+          viewer.panActions.disablePan();
+        }
+      });
+    const popoverPosition = isPhone
+      ? ("bottom-end" as const)
+      : railOwned
+        ? ("left-start" as const)
+        : ("top" as const);
+    const panelToggle = (
+      id: string,
+      icon: IconName,
+      label: string,
+      active: boolean,
+      onToggle: () => void,
+      section: "row-start" | "row-end",
+      order: number,
+    ): WorkbenchBarButtonWithAction => ({
+      id,
+      tooltip: label,
+      ariaLabel: label,
+      section,
+      order,
+      active,
+      // Registered as the action too, for reading mode's rail, which draws
+      // its own round button when no renderer is given.
+      onClick: onToggle,
+      render: railOwned
+        ? undefined
+        : ({ disabled }) => (
+            <BarButton
+              icon={icon}
+              label={label}
+              iconOnly
+              tooltipPosition={tooltipPosition}
+              active={active}
+              disabled={disabled}
+              onClick={onToggle}
+              testId={id}
+            />
+          ),
+    });
+
     const buttons: WorkbenchBarButtonWithAction[] = [
       {
         id: "viewer-search",
         tooltip: searchLabel,
         ariaLabel: searchLabel,
-        section: "top" as const,
+        section: pageSection,
         order: 10,
         render: ({ disabled }) => (
           <Popover
-            position={tooltipPosition}
+            position={isPhone ? "bottom-end" : "top"}
             withArrow
             shadow="md"
             offset={8}
@@ -238,32 +308,19 @@ export function useViewerWorkbenchBarButtons(
             onClose={viewer.searchInterfaceActions.close}
           >
             <Popover.Target>
-              <div style={{ display: "inline-flex" }}>
-                {/* Inside the Popover: Tooltip binds by cloning, and Popover passes no ref on. */}
-                <Tooltip
-                  content={searchLabel}
-                  position={tooltipPosition}
-                  offset={12}
-                  arrow
-                  portalTarget={document.body}
-                >
-                  <ActionIcon
-                    variant="tertiary"
-                    className="workbench-bar-action-icon"
-                    disabled={disabled}
-                    aria-label={searchLabel}
-                    onClick={() =>
-                      pageTool?.onToggleFind
-                        ? pageTool.onToggleFind()
-                        : leaveTextEditThen(
-                            viewer.searchInterfaceActions.toggle,
-                          )
-                    }
-                  >
-                    <Icon name="file-search" size="1.25rem" />
-                  </ActionIcon>
-                </Tooltip>
-              </div>
+              <BarButton
+                icon="file-search"
+                label={searchLabel}
+                iconOnly
+                size={pageButtonSize}
+                tooltipPosition={pageTooltip}
+                disabled={disabled}
+                onClick={() =>
+                  pageTool?.onToggleFind
+                    ? pageTool.onToggleFind()
+                    : leaveTextEditThen(viewer.searchInterfaceActions.toggle)
+                }
+              />
             </Popover.Target>
             <Popover.Dropdown>
               <div style={{ minWidth: "20rem" }}>
@@ -278,167 +335,65 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-pan-mode",
-        icon: <Icon name="hand" size="1rem" />,
-        tooltip:
-          !isPanning && pendingCount > 0 && redactionActiveType !== null
-            ? applyRedactionsLabel
-            : panLabel,
-        ariaLabel:
-          !isPanning && pendingCount > 0 && redactionActiveType !== null
-            ? applyRedactionsLabel
-            : panLabel,
-        section: "top" as const,
-        order: 20,
+        tooltip: panRedactionBlocked ? applyRedactionsLabel : panLabel,
+        ariaLabel: panRedactionBlocked ? applyRedactionsLabel : panLabel,
+        section: pageSection,
+        order: 12,
         active: isPanning,
-        disabled:
-          !isPanning && pendingCount > 0 && redactionActiveType !== null,
-        onClick: () =>
-          leaveTextEditThen(() => {
-            viewer.panActions.togglePan();
-            if (!isPanning && isRulerActive) setIsRulerActive?.(false);
-          }),
+        icon: <Icon name="hand" size="1rem" />,
+        disabled: panRedactionBlocked,
+        onClick: togglePan,
+        foldsIntoMenu,
+        render: ({ disabled }) => (
+          <BarButton
+            icon="hand"
+            label={panRedactionBlocked ? applyRedactionsLabel : panLabel}
+            iconOnly
+            size={pageButtonSize}
+            tooltipPosition={pageTooltip}
+            active={isPanning}
+            disabled={disabled || panRedactionBlocked}
+            onClick={togglePan}
+          />
+        ),
       },
       {
         id: "viewer-ruler",
-        icon: <Icon name="ruler" size={"1rem"} />,
         tooltip: rulerLabel,
         ariaLabel: rulerLabel,
-        section: "top" as const,
-        order: 25,
+        section: pageSection,
+        order: 14,
         active: Boolean(isRulerActive),
-        onClick: () =>
-          leaveTextEditThen(() => {
-            const next = !isRulerActive;
-            setIsRulerActive?.(next);
-            if (next && isPanning) {
-              viewer.panActions.disablePan();
-            }
-          }),
-      },
-      // Ruler scale settings button - only visible when ruler is active
-      ...(isRulerActive
-        ? [
-            {
-              id: "viewer-ruler-settings",
-              icon: <Icon name="settings" size={"1.5rem"} />,
-              tooltip: rulerSettingsLabel,
-              ariaLabel: rulerSettingsLabel,
-              section: "top" as const,
-              order: 25.5,
-              render: ({ disabled }: { disabled?: boolean }) => (
-                <RulerScaleSettingsButton
-                  disabled={disabled}
-                  label={rulerSettingsLabel}
-                  tooltipPosition={tooltipPosition}
-                  currentScale={customScale}
-                  onApplyScale={handleApplyRulerScale}
-                  onResetScale={handleResetRulerScale}
-                  onStartCalibration={handleStartScaleCalibration}
-                  onCancelCalibration={handleCancelScaleCalibration}
-                  isCalibrationActive={isScaleCalibrationActive}
-                />
-              ),
-            },
-          ]
-        : []),
-      {
-        id: "viewer-rotate-left",
-        icon: <Icon name="rotate-ccw" size="1rem" />,
-        tooltip: rotateLeftLabel,
-        ariaLabel: rotateLeftLabel,
-        section: "top" as const,
-        order: 30,
-        disabled: pageToolActive,
-        onClick: () => {
-          viewer.rotationActions.rotateBackward();
-        },
-      },
-      {
-        id: "viewer-rotate-right",
-        icon: <Icon name="rotate-cw" size="1rem" />,
-        tooltip: rotateRightLabel,
-        ariaLabel: rotateRightLabel,
-        section: "top" as const,
-        order: 40,
-        disabled: pageToolActive,
-        onClick: () => {
-          viewer.rotationActions.rotateForward();
-        },
-      },
-      {
-        id: "viewer-toggle-sidebar",
-        icon: <Icon name="rows-2" size="1rem" />,
-        tooltip: sidebarLabel,
-        ariaLabel: sidebarLabel,
-        section: "top" as const,
-        order: 50,
-        active: isThumbnailSidebarVisible,
-        onClick: () => {
-          viewer.toggleThumbnailSidebar();
-        },
-      },
-      {
-        id: "viewer-toggle-bookmarks",
-        icon: <Icon name="bookmark-plus" size="1.25rem" />,
-        tooltip: bookmarkLabel,
-        ariaLabel: bookmarkLabel,
-        section: "top" as const,
-        order: 55,
-        active: isBookmarkSidebarVisible,
-        onClick: () => {
-          viewer.toggleBookmarkSidebar();
-        },
-      },
-      {
-        id: "viewer-toggle-attachments",
-        icon: <Icon name="paperclip" size="1.25rem" />,
-        tooltip: attachmentLabel,
-        ariaLabel: attachmentLabel,
-        section: "top" as const,
-        order: 56,
-        active: isAttachmentSidebarVisible,
-        onClick: () => {
-          viewer.toggleAttachmentSidebar();
-        },
-      },
-      ...(hasLayers
-        ? [
-            {
-              id: "viewer-toggle-layers",
-              icon: <Icon name="layers" size={"1rem"} />,
-              tooltip: layersLabel,
-              ariaLabel: layersLabel,
-              section: "top" as const,
-              order: 56.3,
-              active: isLayerSidebarVisible,
-              onClick: () => {
-                viewer.toggleLayerSidebar();
-              },
-            },
-          ]
-        : []),
-      {
-        id: "viewer-toggle-comments",
-        icon: <Icon name="message-square" size="1rem" />,
-        tooltip: commentsLabel,
-        ariaLabel: commentsLabel,
-        section: "top" as const,
-        order: 56.5,
-        active: isCommentsSidebarVisible,
-        onClick: () => {
-          toggleCommentsSidebar();
-        },
+        icon: <Icon name="ruler" size="1rem" />,
+        onClick: toggleRuler,
+        foldsIntoMenu,
+        render: ({ disabled }) => (
+          <BarButton
+            icon="ruler"
+            label={rulerLabel}
+            iconOnly
+            size={pageButtonSize}
+            tooltipPosition={pageTooltip}
+            active={Boolean(isRulerActive)}
+            disabled={disabled}
+            onClick={toggleRuler}
+          />
+        ),
       },
       {
         id: "viewer-read-aloud",
         tooltip: readAloudLabel,
         ariaLabel: readAloudLabel,
-        section: "top" as const,
-        order: 57,
+        section: railSection,
+        order: 16,
         active: isReadingAloud,
+        icon: <Icon name="volume-2" size="1rem" />,
+        disabled: typeof window === "undefined" || !window.speechSynthesis,
+        onClick: handleReadAloud,
+        foldsIntoMenu: foldsIntoMenu && !railOwned,
         render: ({ disabled }) => (
           <Popover
-            position={tooltipPosition}
+            position={popoverPosition}
             withArrow
             shadow="md"
             offset={8}
@@ -447,33 +402,20 @@ export function useViewerWorkbenchBarButtons(
             withinPortal
           >
             <Popover.Target>
-              <div style={{ display: "inline-flex" }}>
-                <Tooltip
-                  content={readAloudLabel}
-                  position={tooltipPosition}
-                  offset={12}
-                  arrow
-                  portalTarget={document.body}
-                >
-                  <ActionIcon
-                    variant={isReadingAloud ? "primary" : "tertiary"}
-                    className="workbench-bar-action-icon"
-                    disabled={
-                      disabled ||
-                      typeof window === "undefined" ||
-                      !window.speechSynthesis
-                    }
-                    aria-label={readAloudLabel}
-                    onClick={handleReadAloud}
-                  >
-                    {isReadingAloud ? (
-                      <Icon name="square" size={"1rem"} />
-                    ) : (
-                      <Icon name="volume-2" size={"1rem"} />
-                    )}
-                  </ActionIcon>
-                </Tooltip>
-              </div>
+              <BarButton
+                icon={isReadingAloud ? "square" : "volume-2"}
+                label={readAloudLabel}
+                iconOnly
+                size={pageButtonSize}
+                tooltipPosition={pageTooltip}
+                active={isReadingAloud}
+                disabled={
+                  disabled ||
+                  typeof window === "undefined" ||
+                  !window.speechSynthesis
+                }
+                onClick={handleReadAloud}
+              />
             </Popover.Target>
             <Popover.Dropdown>
               <div style={{ width: "16rem", padding: "0.5rem" }}>
@@ -526,104 +468,126 @@ export function useViewerWorkbenchBarButtons(
           </Popover>
         ),
       },
+      // The side panels as plain toggles at the row's edges: the document's
+      // own content panels on the left, page thumbnails beside its menu.
+      panelToggle(
+        "viewer-toggle-bookmarks",
+        "bookmark",
+        bookmarksLabel,
+        isBookmarkSidebarVisible,
+        viewer.toggleBookmarkSidebar,
+        "row-start",
+        1,
+      ),
+      panelToggle(
+        "viewer-toggle-comments",
+        "message-square",
+        commentsLabel,
+        isCommentsSidebarVisible,
+        toggleCommentsSidebar,
+        "row-start",
+        2,
+      ),
+      panelToggle(
+        "viewer-toggle-attachments",
+        "paperclip",
+        attachmentsLabel,
+        isAttachmentSidebarVisible,
+        viewer.toggleAttachmentSidebar,
+        "row-start",
+        3,
+      ),
+      ...(hasLayers
+        ? [
+            panelToggle(
+              "viewer-toggle-layers",
+              "layers",
+              layersLabel,
+              isLayerSidebarVisible,
+              viewer.toggleLayerSidebar,
+              "row-start",
+              4,
+            ),
+          ]
+        : []),
+      panelToggle(
+        "viewer-toggle-sidebar",
+        "list",
+        thumbnailsLabel,
+        isThumbnailSidebarVisible,
+        viewer.toggleThumbnailSidebar,
+        "row-end",
+        59,
+      ),
       {
-        id: "viewer-annotations",
-        tooltip: annotationsLabel,
-        ariaLabel: annotationsLabel,
+        id: "viewer-page-view",
+        tooltip: pageViewLabel,
+        ariaLabel: pageViewLabel,
         section: "top" as const,
-        order: 58,
-        active: isAnnotationsActive,
-        render: ({ disabled }) => (
-          <Tooltip
-            content={
-              isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel
-            }
-            position={tooltipPosition}
-            offset={12}
-            arrow
-            portalTarget={document.body}
-          >
-            <ActionIcon
-              variant={isAnnotationsActive ? "primary" : "tertiary"}
-              className="workbench-bar-action-icon"
-              onClick={() => {
-                if (disabled) return;
-                if (isAnnotationsActive) {
-                  // The tool's own exit path, so pending annotations get the
-                  // same save warning Form Editor has always shown.
-                  handleBackToTools();
-                  return;
-                }
-                if (pendingCount > 0 || redactionsApplied) {
-                  // The redaction warning answers the save question, so the
-                  // forced selection here avoids a second modal.
-                  requestNavigation(() => handleToolSelectForced("annotate"));
-                } else {
-                  handleToolSelect("annotate");
-                }
-              }}
-              disabled={disabled}
-              aria-pressed={isAnnotationsActive}
-              aria-label={
-                isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel
-              }
-              data-testid="annotations-toggle"
-            >
-              <Icon name="pencil" size="1rem" />
-            </ActionIcon>
-          </Tooltip>
-        ),
+        order: 21,
+        render: ({ disabled }) => <ViewerPageViewMenu disabled={disabled} />,
       },
       {
-        id: "viewer-annotation-controls",
-        section: "top" as const,
-        order: 60,
+        id: "viewer-annotation-visibility",
+        tooltip: annotationVisibilityLabel,
+        ariaLabel: annotationVisibilityLabel,
+        section: pageSection,
+        order: 18,
         render: ({ disabled }) => (
-          <ViewerAnnotationControls currentView="viewer" disabled={disabled} />
-        ),
-      },
-      {
-        id: "viewer-form-fill",
-        tooltip: formFillLabel,
-        ariaLabel: formFillLabel,
-        section: "top" as const,
-        order: 62,
-        render: ({ disabled }) => (
-          <ToolModeToggle
-            label={formFillLabel}
-            icon="type"
-            active={isFormFillActive}
+          <AnnotationVisibilityToggle
             disabled={disabled}
-            tooltipPosition={tooltipPosition}
-            onToggle={() =>
-              isFormFillActive
-                ? handleBackToTools()
-                : handleToolSelect("formFill")
-            }
+            size={pageButtonSize}
           />
         ),
       },
+      // Scale settings belong to the ruler, so they sit beside it while it is
+      // on. They don't fold, so a narrow bar keeps them next to the Tools menu.
+      ...(isRulerActive
+        ? [
+            {
+              id: "viewer-ruler-settings",
+              tooltip: rulerSettingsLabel,
+              ariaLabel: rulerSettingsLabel,
+              section: pageSection,
+              order: 15,
+              render: ({ disabled }: { disabled?: boolean }) => (
+                <RulerScaleSettingsButton
+                  disabled={disabled}
+                  label={rulerSettingsLabel}
+                  tooltipPosition={pageTooltip}
+                  currentScale={customScale}
+                  onApplyScale={handleApplyRulerScale}
+                  onResetScale={handleResetRulerScale}
+                  onStartCalibration={handleStartScaleCalibration}
+                  onCancelCalibration={handleCancelScaleCalibration}
+                  isCalibrationActive={isScaleCalibrationActive}
+                />
+              ),
+            },
+          ]
+        : []),
       {
         id: "viewer-edit-text",
         tooltip: editTextLabel,
         ariaLabel: editTextLabel,
-        section: "top" as const,
-        order: 63,
+        section: "middle" as const,
+        order: 50,
         render: ({ disabled }) => (
-          <ToolModeToggle
-            label={editTextLabel}
+          <BarButton
             icon="square-pen"
+            label={editTextLabel}
+            tooltipPosition={tooltipPosition}
             active={isTextEditActive}
             disabled={disabled}
-            tooltipPosition={tooltipPosition}
-            onToggle={() =>
+            onClick={() =>
               isTextEditActive
                 ? handleBackToTools()
                 : reviewing
                   ? startEditing()
                   : handleToolSelect("pdfTextEditor")
             }
-            onIntent={() => void toolRegistry.pdfTextEditor?.preload?.()}
+            onPointerEnter={preloadTextEditor}
+            onFocus={preloadTextEditor}
             testId="viewer-edit-text"
           />
         ),
@@ -634,25 +598,117 @@ export function useViewerWorkbenchBarButtons(
               id: "viewer-review-accessibility",
               tooltip: reviewLabel,
               ariaLabel: reviewLabel,
-              section: "top" as const,
-              order: 64,
+              section: "middle" as const,
+              order: 50.5,
               render: ({ disabled }: { disabled?: boolean }) => (
-                <ToolModeToggle
-                  label={reviewLabel}
+                <BarButton
                   icon="universal-access"
+                  label={reviewLabel}
+                  tooltipPosition={tooltipPosition}
                   active={reviewing}
                   disabled={disabled}
-                  tooltipPosition={tooltipPosition}
-                  onToggle={() =>
+                  onClick={() =>
                     reviewing ? reviewMode.requestClose() : startReview()
                   }
-                  onIntent={() => void toolRegistry.pdfTextEditor?.preload?.()}
+                  onPointerEnter={preloadTextEditor}
+                  onFocus={preloadTextEditor}
                   testId="viewer-review-accessibility"
                 />
               ),
             },
           ]
         : []),
+      {
+        id: "viewer-annotations",
+        tooltip: isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel,
+        ariaLabel: isAnnotationsActive
+          ? exitAnnotationsLabel
+          : annotationsLabel,
+        section: "middle" as const,
+        order: 51,
+        active: isAnnotationsActive,
+        render: ({ disabled }) => (
+          <BarButton
+            icon="pencil"
+            label={annotationsLabel}
+            hint={isAnnotationsActive ? exitAnnotationsLabel : undefined}
+            tooltipPosition={tooltipPosition}
+            active={isAnnotationsActive}
+            disabled={disabled}
+            onClick={() => {
+              if (isAnnotationsActive) {
+                // The tool's own exit path, so pending annotations get the
+                // same save warning Form Editor has always shown.
+                handleBackToTools();
+                return;
+              }
+              if (pendingCount > 0 || redactionsApplied) {
+                // The redaction warning answers the save question, so the
+                // forced selection here avoids a second modal.
+                requestNavigation(() => handleToolSelectForced("annotate"));
+              } else {
+                handleToolSelect("annotate");
+              }
+            }}
+            testId="annotations-toggle"
+          />
+        ),
+      },
+      {
+        id: "viewer-annotation-controls",
+        section: "middle" as const,
+        order: 52,
+        render: ({ disabled }) => (
+          <ViewerAnnotationControls
+            currentView="viewer"
+            disabled={disabled}
+            tooltipPosition={tooltipPosition}
+          />
+        ),
+      },
+      {
+        id: "viewer-form-fill",
+        tooltip: formFillLabel,
+        ariaLabel: formFillLabel,
+        section: "middle" as const,
+        order: 53,
+        render: ({ disabled }) => (
+          <BarButton
+            icon="clipboard-pen-line"
+            label={formFillLabel}
+            tooltipPosition={tooltipPosition}
+            active={isFormFillActive}
+            disabled={disabled}
+            onClick={() =>
+              isFormFillActive
+                ? handleBackToTools()
+                : handleToolSelect("formFill")
+            }
+          />
+        ),
+      },
+      {
+        id: "viewer-doc-menu",
+        section: "row-end" as const,
+        order: 60,
+        render: ({ disabled }) => <ViewerDocumentMenu disabled={disabled} />,
+      },
+      // Not drawn in the bar, where the page bar holds them; registered for
+      // reading mode's rail, which acts on them by id.
+      ...(
+        [
+          {
+            id: "viewer-rotate-left",
+            disabled: pageToolActive,
+            onClick: () => viewer.rotationActions.rotateBackward(),
+          },
+          {
+            id: "viewer-rotate-right",
+            disabled: pageToolActive,
+            onClick: () => viewer.rotationActions.rotateForward(),
+          },
+        ] satisfies WorkbenchBarButtonWithAction[]
+      ).map((button) => ({ ...button, visible: false })),
     ];
 
     return buttons;
@@ -670,12 +726,18 @@ export function useViewerWorkbenchBarButtons(
     searchLabel,
     panLabel,
     applyRedactionsLabel,
-    rotateLeftLabel,
-    rotateRightLabel,
-    sidebarLabel,
-    bookmarkLabel,
-    attachmentLabel,
+    thumbnailsLabel,
+    bookmarksLabel,
+    attachmentsLabel,
     layersLabel,
+    commentsLabel,
+    isCommentsSidebarVisible,
+    toggleCommentsSidebar,
+    isPhone,
+    readerMode,
+    pageViewLabel,
+    annotationVisibilityLabel,
+    preloadTextEditor,
     tooltipPosition,
     annotationsLabel,
     exitAnnotationsLabel,
@@ -696,7 +758,6 @@ export function useViewerWorkbenchBarButtons(
     startEditing,
     reviewAvailable,
     isTextEditActive,
-    toolRegistry,
     pageTool,
     pageToolActive,
     leaveTextEditThen,
@@ -725,52 +786,4 @@ export function useViewerWorkbenchBarButtons(
   ]);
 
   useWorkbenchBarButtons(viewerButtons);
-}
-
-/** A bar button that enters a tool which works on the viewer's pages, or leaves it. */
-function ToolModeToggle({
-  label,
-  icon,
-  active,
-  disabled,
-  tooltipPosition,
-  onToggle,
-  onIntent,
-  testId,
-}: {
-  label: string;
-  icon: ComponentProps<typeof Icon>["name"];
-  active: boolean;
-  disabled?: boolean;
-  tooltipPosition: ComponentProps<typeof Tooltip>["position"];
-  onToggle: () => void;
-  /** The pointer or focus arrived: a click may follow, so start loading the tool. */
-  onIntent?: () => void;
-  testId?: string;
-}) {
-  return (
-    <Tooltip
-      content={label}
-      position={tooltipPosition}
-      offset={12}
-      arrow
-      portalTarget={document.body}
-    >
-      <ActionIcon
-        variant={active ? "primary" : "tertiary"}
-        className="workbench-bar-action-icon"
-        onClick={() => {
-          if (!disabled) onToggle();
-        }}
-        onPointerEnter={onIntent}
-        onFocus={onIntent}
-        disabled={disabled}
-        aria-pressed={active}
-        aria-label={label}
-        data-testid={testId}
-      >
-        <Icon name={icon} size="1rem" />
-      </ActionIcon>
-    </Tooltip>
-  );
 }
