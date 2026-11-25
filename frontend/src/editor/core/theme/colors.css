@@ -58,6 +58,10 @@ html[data-app-theme="light"] {
   --c-text-on-light: var(--p-ink);
   --c-accent-on-light: var(--p-blue-700);
   --c-document-bg: var(--p-white);
+  /* A white page under each viewer page colour, for previewing the choice. */
+  --c-page-colour-normal: var(--p-white);
+  --c-page-colour-dark: var(--p-black);
+  --c-page-colour-sepia: var(--p-page-sepia);
   /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
   --c-highlight: var(--p-flash-yellow);
   /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */
@@ -203,7 +207,7 @@ html[data-app-theme="custom"] {
   --c-primary-hover: color-mix(in srgb, var(--c-primary) 80%, var(--p-black));
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
   --c-text-on-primary: var(--p-white);
-  --c-accent-fg: var(--c-primary);
+  --c-accent-fg: var(--c-accent-text);
   /* Accent used as TEXT: --c-primary and its 80% hover both land under
      4.5:1 on the accent-tinted surfaces they appear on (chips, links,
      outline buttons), so accent copy takes a deeper step of the hue. */

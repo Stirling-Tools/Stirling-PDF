@@ -31,7 +31,6 @@ const ConvertToPdfxSettings = ({
       value: "pdfx",
       label: t("convert.pdfxDefault", "PDF/X-4:2008 (default)"),
     },
-    { value: "pdfx-4", label: "PDF/X-4:2008" },
     { value: "pdfx-6", label: "PDF/X-6:2020" },
   ];
 

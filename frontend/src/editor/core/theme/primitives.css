@@ -204,4 +204,6 @@
   --p-c-ffc107: #ffc107;
   --p-c-c2c8e0: #c2c8e0;
   --p-c-4f8ef5: #4f8ef5;
+  /* A white page under the viewer's sepia filter, for previewing that choice. */
+  --p-page-sepia: #d9d9cf;
 }

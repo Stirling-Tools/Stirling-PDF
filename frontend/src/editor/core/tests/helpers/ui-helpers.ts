@@ -44,62 +44,50 @@ export async function waitForModalClose(
   });
 }
 
-/** Uploads through the sidebar and waits for IndexedDB persistence before callers navigate. */
+/**
+ * Uploads through the sidebar and returns once the app has finished with it:
+ * every file stored, and the view switched to wherever an upload lands. Not for
+ * encrypted PDFs, whose upload stays open until the unlock prompt is answered.
+ */
 export async function uploadFiles(
   page: Page,
   filePaths: string | string[],
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
-  const names = paths.map((p) => p.split(/[\\/]/).pop() ?? p);
   await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
-  await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
-    timeout: 10_000,
-  });
-  await waitForStoredFiles(page, names);
+  // The pick marks the list busy inside the change event, before setInputFiles
+  // returns, so this cannot read the idle state from before the upload. No
+  // timeout of its own: under load an upload is slow, not stuck, and the test
+  // timeout still ends a real hang.
+  await expect(page.locator(".file-sidebar-scroll")).toHaveAttribute(
+    "aria-busy",
+    "false",
+    { timeout: 0 },
+  );
 }
 
-/** Polls an existing database without creating or upgrading it, so setup cannot race the app. */
-async function waitForStoredFiles(page: Page, names: string[]): Promise<void> {
-  await page.waitForFunction(
-    (expected) =>
-      new Promise<boolean>((resolve) => {
-        const open = indexedDB.open("stirling-pdf-files");
-        open.onupgradeneeded = () => {
-          open.transaction?.abort();
-          resolve(false);
-        };
-        open.onsuccess = () => {
-          const db = open.result;
-          if (!db.objectStoreNames.contains("files")) {
-            db.close();
-            resolve(false);
-            return;
-          }
-          const request = db
-            .transaction("files", "readonly")
-            .objectStore("files")
-            .getAll();
-          request.onsuccess = () => {
-            const stored = new Set(
-              (request.result as Array<{ name?: string }>).map((r) => r.name),
-            );
-            db.close();
-            resolve(expected.every((name) => stored.has(name)));
-          };
-          request.onerror = () => {
-            db.close();
-            resolve(false);
-          };
-        };
-        open.onerror = () => resolve(false);
-        open.onblocked = () => resolve(false);
-      }),
-    names,
-    // The IndexedDB write can lag the upload on WebKit under parallel CI load;
-    // it lands, just not always within 10s, so give the commit room to finish.
-    { timeout: 30_000, polling: 100 },
-  );
+/**
+ * Switches workbench view by clicking the label of its segment, since the radio
+ * itself is visually hidden. The selected view's label opens a beat after the
+ * selection changes and slides the other segments sideways, so this first waits
+ * for that to finish: mid-slide, the click lands on the neighbouring segment.
+ */
+export async function switchView(page: Page, label: string): Promise<void> {
+  const switcher = page.locator('[data-tour="view-switcher"]').first();
+  await expect(
+    switcher.locator(
+      ".mantine-SegmentedControl-control:has(input:checked) .workbench-bar-view-label.is-open",
+    ),
+  ).toHaveCount(1);
+  await expect
+    .poll(() =>
+      switcher.evaluate((el) => el.getAnimations({ subtree: true }).length),
+    )
+    .toBe(0);
+  await switcher
+    .locator(".mantine-SegmentedControl-label", { hasText: label })
+    .click();
 }
 
 /** Leaves upload-induced viewer mode when present, so tool controls can enable. */
@@ -130,12 +118,13 @@ export async function runToolAndWaitForReview(
 /** The settings page's root. Settings is a route, not a dialog. */
 export const SETTINGS_SURFACE = ".settings-page";
 
-/** Opens Settings through the avatar and returns its root for scoped queries. Defaults to Account. */
+/** Opens Settings through the avatar menu and returns its root for scoped queries. */
 export async function openSettings(
   page: Page,
   section?: string | RegExp,
 ): Promise<Locator> {
   await page.locator('[data-testid="config-button"]').first().click();
+  await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
   const surface = page.locator(SETTINGS_SURFACE);
   await expect(surface).toBeVisible({ timeout: 5_000 });
   if (section) {
@@ -218,4 +207,42 @@ export async function revealPickerTool(
     page,
     page.locator(`[data-tour="tool-button-${toolId}"]`),
   );
+}
+
+const VIEWER_PANEL_TOGGLES = {
+  Pages: "viewer-toggle-sidebar",
+  Bookmarks: "viewer-toggle-bookmarks",
+  Comments: "viewer-toggle-comments",
+  Attachments: "viewer-toggle-attachments",
+  Layers: "viewer-toggle-layers",
+} as const;
+
+/** Shows or hides one of the viewer's side panels from its toggle in the bar. */
+export async function toggleViewerPanel(
+  page: Page,
+  name: keyof typeof VIEWER_PANEL_TOGGLES,
+): Promise<void> {
+  await page.getByTestId(VIEWER_PANEL_TOGGLES[name]).click();
+}
+
+/** Picks a choice from the viewer's View menu, then puts the menu away. */
+export async function choosePageView(page: Page, name: string): Promise<void> {
+  await page.getByTestId("viewer-page-view-menu").click();
+  await page.getByRole("menuitem", { name, exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menuitem", { name, exact: true })).toBeHidden();
+}
+
+/** Whether a View menu choice is ticked, read by opening the menu. */
+export async function expectPageViewChecked(
+  page: Page,
+  name: string,
+  checked = true,
+): Promise<void> {
+  await page.getByTestId("viewer-page-view-menu").click();
+  const item = page.getByRole("menuitem", { name, exact: true });
+  if (checked) await expect(item).toHaveAttribute("data-checked", "true");
+  else await expect(item).not.toHaveAttribute("data-checked");
+  await page.keyboard.press("Escape");
+  await expect(item).toBeHidden();
 }

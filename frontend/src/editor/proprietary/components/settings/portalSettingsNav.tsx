@@ -46,6 +46,16 @@ const EncryptionSection = portalSection((m) => m.PortalEncryptionSection);
 const BillingSection = portalSection((m) => m.PortalBillingSection);
 const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
 
+/** Which of the processor's sections a build's settings carry. */
+export interface PortalSettingsOptions {
+  includeAccountLink?: boolean;
+  includeAudit?: boolean;
+  includeEncryption?: boolean;
+  includeBilling?: boolean;
+  includeRoster?: boolean;
+  includeApiKeys?: boolean;
+}
+
 /**
  * Deployment-administration sections; endpoints enforce the same access rules.
  * The roster is shared across builds and does not require the processor.
@@ -60,14 +70,7 @@ export function buildPortalSettingsSections(
     includeBilling = true,
     includeRoster = true,
     includeApiKeys = true,
-  }: {
-    includeAccountLink?: boolean;
-    includeAudit?: boolean;
-    includeEncryption?: boolean;
-    includeBilling?: boolean;
-    includeRoster?: boolean;
-    includeApiKeys?: boolean;
-  } = {},
+  }: PortalSettingsOptions = {},
 ): ConfigNavSection[] {
   const workspace: ConfigNavItem[] = [];
   if (UsersSection && includeRoster) {

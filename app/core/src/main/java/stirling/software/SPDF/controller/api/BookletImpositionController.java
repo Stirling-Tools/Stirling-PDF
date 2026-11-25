@@ -95,8 +95,7 @@ public class BookletImpositionController {
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
                         GeneralUtils.generateFilename(
-                                Filenames.toSimpleFileName(file.getOriginalFilename()),
-                                "_booklet.pdf"),
+                                Filenames.toSimpleFileName(file.getOriginalFilename()), ".pdf"),
                         tempFileManager);
             }
         }

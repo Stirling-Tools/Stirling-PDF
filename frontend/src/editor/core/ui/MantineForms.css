@@ -113,7 +113,7 @@
 
 /* ---- Dark mode: Mantine's own dark-mode vars beat ours when Mantine's
  * color-scheme is "dark". Reassert SUI tokens so the two systems stay in sync.
- * SuiProvider syncs forceColorScheme to SUI theme, so
+ * ThemeProvider forces Mantine's scheme to the app's, so
  * [data-mantine-color-scheme="dark"] === [data-theme="dark"] in practice. ---- */
 [data-mantine-color-scheme="dark"] .sui-mantine-wrapper {
   --input-bg: var(--c-input-bg);

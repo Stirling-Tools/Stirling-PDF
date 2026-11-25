@@ -44,6 +44,35 @@ function buildUrl(base: string): string {
   return `${base}${sep}hide_event_type_details=1&background_color=${WIDGET_COLORS.background}&text_color=${WIDGET_COLORS.text}&primary_color=${WIDGET_COLORS.primary}`;
 }
 
+// Origins the embed fetches from: the widget script, then the scheduler iframe.
+const CALENDLY_ORIGINS = [
+  "https://assets.calendly.com",
+  "https://calendly.com",
+];
+
+function preconnect(origin: string): void {
+  if (typeof document === "undefined") return;
+  if (document.querySelector(`link[rel="preconnect"][href="${origin}"]`))
+    return;
+  const link = document.createElement("link");
+  link.rel = "preconnect";
+  link.href = origin;
+  link.crossOrigin = "anonymous";
+  document.head.appendChild(link);
+}
+
+/**
+ * Open connections to Calendly and start fetching widget.js ahead of use, so the scheduler opens
+ * without a cold fetch. Idempotent; a failure is left for the embed's own load to show as the
+ * fallback link.
+ */
+export function warmCalendly(): void {
+  CALENDLY_ORIGINS.forEach(preconnect);
+  void loadScript({ src: CALENDLY_SCRIPT, id: "calendly-widget-script" }).catch(
+    () => {},
+  );
+}
+
 export function CalendlyInline({
   url = CALENDLY_URL,
   height = 760,

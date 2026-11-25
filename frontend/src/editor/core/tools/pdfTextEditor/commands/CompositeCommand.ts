@@ -19,6 +19,10 @@ export class CompositeCommand implements Command {
     this.commands.push(cmd);
   }
 
+  includes(cmd: Command): boolean {
+    return this.commands.includes(cmd);
+  }
+
   /** The most recent child - used to derive the group's coalesce key. */
   get last(): Command {
     return this.commands[this.commands.length - 1];
@@ -38,21 +42,24 @@ export class CompositeCommand implements Command {
     order: Command[],
     phase: "apply" | "revert",
   ): void {
+    if (this.last.moveGroup?.(doc, this.commands, phase)) return;
     const done: Command[] = [];
-    for (const cmd of order) {
-      try {
-        if (phase === "apply") cmd.apply(doc);
-        else cmd.revert(doc);
-      } catch (err) {
-        for (let i = done.length - 1; i >= 0; i--) {
-          try {
-            if (phase === "apply") done[i].revert(doc);
-            else done[i].apply(doc);
-          } catch {
-            throw err;
+    for (const [i, cmd] of order.entries()) {
+      if (!order[i + 1]?.supersedes?.(cmd)) {
+        try {
+          if (phase === "apply") cmd.apply(doc);
+          else cmd.revert(doc);
+        } catch (err) {
+          for (let j = done.length - 1; j >= 0; j--) {
+            try {
+              if (phase === "apply") done[j].revert(doc);
+              else done[j].apply(doc);
+            } catch {
+              throw err;
+            }
           }
+          throw new RolledBackError(err);
         }
-        throw new RolledBackError(err);
       }
       done.push(cmd);
     }
