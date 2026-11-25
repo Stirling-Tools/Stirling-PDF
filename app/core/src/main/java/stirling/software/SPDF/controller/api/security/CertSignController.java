@@ -239,6 +239,7 @@ public class CertSignController {
     private static void tagSignatureWidget(
             PDStructureTreeRoot root, PDPage page, PDAnnotationWidget widget, String description)
             throws IOException {
+        int key = parentTreeKey(root);
         PDStructureNode parent = root;
         for (Object kid : root.getKids()) {
             if (kid instanceof PDStructureElement element) {
@@ -254,7 +255,6 @@ public class CertSignController {
         form.appendKid(reference);
         parent.appendKid(form);
 
-        int key = Math.max(root.getParentTreeNextKey(), nextParentTreeKey(root.getParentTree()));
         widget.setStructParent(key);
         addParentTreeEntry(root, key, form);
         root.setParentTreeNextKey(key + 1);
@@ -266,11 +266,29 @@ public class CertSignController {
                 widget.getCOSObject());
     }
 
-    private static int nextParentTreeKey(PDNumberTreeNode parentTree) throws IOException {
+    /**
+     * The parent-tree key for a new entry: past every key in use and the root's next key.
+     *
+     * @throws IllegalArgumentException when no key is left whose successor still fits the
+     *     /ParentTreeNextKey integer, checked before anything is changed
+     */
+    static int parentTreeKey(PDStructureTreeRoot root) throws IOException {
+        long key = Math.max(root.getParentTreeNextKey(), nextParentTreeKey(root.getParentTree()));
+        if (key >= Integer.MAX_VALUE) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "fileInput - the PDF's structure tree has no parent-tree key left for the"
+                            + " signature");
+        }
+        return (int) key;
+    }
+
+    private static long nextParentTreeKey(PDNumberTreeNode parentTree) throws IOException {
         if (parentTree == null) {
             return 0;
         }
-        int max = -1;
+        long max = -1;
         Map<Integer, COSObjectable> numbers = parentTree.getNumbers();
         if (numbers != null) {
             for (Integer number : numbers.keySet()) {
