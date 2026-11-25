@@ -35,25 +35,11 @@ export function useToolCloudStatus(endpointName?: string): boolean {
           return;
         }
 
-        // Check if supported on SaaS first (if not, no point showing cloud badge)
-        const supportedOnSaaS =
-          await endpointAvailabilityService.isEndpointSupportedOnSaaS(
-            endpointName,
-          );
-
-        if (!supportedOnSaaS) {
-          // Not available on SaaS, don't show cloud badge
-          setUsesCloud(false);
-          return;
-        }
-
-        // Available on SaaS, check if also available locally
         const supportedLocally =
           await endpointAvailabilityService.isEndpointSupportedLocally(
             endpointName,
             tauriBackendService.getBackendUrl(),
           );
-        // Show cloud badge only if SaaS supports it but local doesn't
         setUsesCloud(!supportedLocally);
       } catch {
         setUsesCloud(false);

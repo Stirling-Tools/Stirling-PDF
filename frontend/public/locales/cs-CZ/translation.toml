@@ -512,6 +512,11 @@ submit = "Upravit měřítko stránky"
 tags = "změna velikosti,úprava,rozměry,přizpůsobit"
 title = "Upravit měřítko stránky"
 
+[adjustPageScale.customSize]
+height = "Výška"
+unit = "Jednotka"
+width = "Šířka"
+
 [adjustPageScale.error]
 failed = "Při úpravě měřítka stránky došlo k chybě."
 
@@ -521,6 +526,7 @@ landscape = "Na šířku"
 portrait = "Na výšku"
 
 [adjustPageScale.pageSize]
+custom = "Vlastní"
 keep = "Zachovat původní velikost"
 label = "Cílová velikost stránky"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "Maximální DPI pro zpracování obrázků (0 = neomezeně)"
 label = "Maximální DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Nastavte limity relací a časové limity pro každý vykonavatel procesu"
 ghostscript = "Ghostscript"
 installApp = "Nainstalovat aplikaci"
 label = "Limity vykonavatelů procesů"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF do HTML"
+officeConvert = "Konverze Office"
+officeConvertSessionLimit = "Maximální počet souběžných konverzí; 0 zvolí limit podle počtu CPU a paměti"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maximální počet současně běžících instancí"
@@ -661,10 +665,6 @@ label = "Limit relací"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maximální doba běhu"
 label = "Časový limit (minuty)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert je ve verzi beta. Nabízí lepší a rychlejší převody s menší spotřebou paměti než LibreOffice."
-label = "Použít nový převod Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Nakonfigurujte úložiště dočasných souborů a chování čištění"
@@ -682,11 +682,6 @@ label = "Interval čištění (minuty)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Zda čistit širší systémový dočasný adresář (používejte opatrně)"
 label = "Čistit systémový dočasný adresář"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Adresář pro dočasné soubory LibreOffice (ponechte prázdné pro výchozí: baseTmpDir/libreoffice)"
-label = "Dočasný adresář LibreOffice"
-placeholder = "Výchozí: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximální stáří v hodinách před vyčištěním dočasných souborů"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Roztáhne obrázky tak, aby vyplnily celou str�
 pageFormatA4 = "A4 (210×297 mm)"
 pageFormatKeep = "Ponechat (původní rozměry)"
 pageFormatLetter = "Letter (8,5×11 in)"
+setupSteps = "Jak nastavit {{name}}"
 title = "Připojení"
 unlinkedServices = "Nepropojené služby"
 
@@ -1294,17 +1290,6 @@ label = "Výchozí producent"
 description = "Nakonfigurujte vlastní cesty systému souborů pro zpracovatelské pipeline a externí nástroje"
 label = "Vlastní cesty"
 
-[admin.settings.general.customPaths.operations]
-label = "Cesty k externím nástrojům"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Cesta k LibreOffice unoconvert pro převody dokumentů (ponechte prázdné pro výchozí: /opt/venv/bin/unoconvert)"
-label = "Spustitelný soubor unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Cesta ke spustitelnému souboru WeasyPrint pro převod HTML do PDF (ponechte prázdné pro výchozí: /opt/venv/bin/weasyprint)"
-label = "Spustitelný soubor WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Adresáře pipeline"
 
@@ -1327,6 +1312,10 @@ label = "Adresáře sledovaných složek"
 [admin.settings.general.defaultLocale]
 description = "Výchozí jazyk pro nové uživatele (např. en_US, es_ES)"
 label = "Výchozí jazyk"
+
+[admin.settings.general.enableFeedback]
+description = "Umožní uživatelům posílat zpětnou vazbu týmu Stirling"
+label = "Povolit zpětnou vazbu"
 
 [admin.settings.general.fileUploadLimit]
 description = "Maximální velikost nahrávaného souboru (např. 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "Události STANDARD plus: průběžná dotazování, všechny požadav
 [admin.settings.security.audit.retentionDays]
 description = "Počet dnů uchování auditních logů (0 = neomezené uchování)"
 label = "Doba uchování auditů (dny)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "Podepsané PDF lze nadále zobrazovat, tisknout, převádět nebo znovu podepisovat, ale nelze je v aplikaci měnit. Volání API a serverové pipeline nejsou ovlivněny."
+label = "Blokovat změny podepsaných PDF"
 
 [admin.settings.security.csrfDisabled]
 description = "Zakázat ochranu proti Cross-Site Request Forgery (nedoporučuje se)"
@@ -2969,6 +2962,7 @@ loadError = "Nepodařilo se načíst uživatele"
 noTeam = "Žádný tým"
 noUsers = "Nebyli nalezeni žádní další uživatelé."
 placeholder = "Vyberte uživatele..."
+signInRequired = "Přihlaste se a požádejte ostatní o podpis."
 you = "{{name}} (Vy)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "Váš účet spravuje váš poskytovatel identity."
 title = "Změnit přihlašovací údaje"
 
 [changeMetadata]
-filenamePrefix = "metadata"
 submit = "Změnit"
 tags = "upravit,změnit,aktualizovat,metadata,vlastnosti,vlastnosti dokumentu,autor,název,předmět,klíčová slova,tvůrce,producent,info,informace o dokumentu,vlastnosti souboru"
 
@@ -3265,6 +3258,248 @@ not_found = "Požadované informace se nepodařilo najít."
 processing = "Zpracovávám ({{outcome}})..."
 unsupported_capability = "Nepodporovaná schopnost: {{capability}}"
 usage_limit_reached = "Dosáhli jste svého limitu používání. Zkontrolujte možnosti svého plánu, abyste mohli pokračovat."
+
+[checkAccessibility]
+aboutRow = "O {{label}}"
+checking = "Kontroluji..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Stáhnout zprávu o přístupnosti"
+fileFailed = "selhalo"
+pickFile = "Zobrazit výsledky pro"
+submit = "Zkontrolovat přístupnost"
+
+[checkAccessibility.category]
+altText = "Alternativní text"
+fonts = "Písma"
+language = "Jazyk"
+links = "Odkazy a anotace"
+metadata = "Metadata a nastavení"
+structure = "Tagy a struktura"
+
+[checkAccessibility.categoryTip]
+altText = "Obrázky potřebují krátký textový popis, aby jej čtečky obrazovky mohly přečíst místo obrázku."
+fonts = "Písma musí být v souboru, s každým znakem propojeným se skutečným textem, aby bylo možné text nahlas přečíst a kopírovat."
+language = "Čtečky obrazovky musí znát jazyk dokumentu, aby jej správně vyslovovaly."
+links = "Odkazy, komentáře a formulářová pole potřebují tagy a popisy a pořadí tabulátoru, které odpovídá stránce."
+metadata = "Název, PDF/UA prohlášení a další nastavení, která asistenční technologie čte ze souboru."
+structure = "Tagy říkají čtečkám obrazovky, co je která část stránky, například nadpis, seznam nebo tabulka, a v jakém pořadí ji číst."
+
+[checkAccessibility.checks]
+label = "{{passed}} z {{total}} kontrol úspěšně prošlo"
+
+[checkAccessibility.error]
+download = "Zprávu o přístupnosti se nepodařilo vytvořit. Zkuste to znovu."
+fileTitle = "Tento soubor se nepodařilo zkontrolovat"
+partial = "Některé soubory se nepodařilo zkontrolovat."
+
+[checkAccessibility.facts]
+declares = "Deklaruje PDF/UA"
+displaysTitle = "Zobrazuje svůj název"
+fonts = "Vložená písma"
+language = "Deklaruje jazyk"
+notEncrypted = "Nešifrováno"
+tagged = "Označeno tagy"
+title = "Má název"
+
+[checkAccessibility.factTip]
+declares = "Metadata souboru říkají, že odpovídá PDF/UA."
+displaysTitle = "Při otevření souboru čtečky PDF zobrazí název, ne název souboru."
+fonts = "Každé písmo použité v textu je součástí souboru."
+language = "Soubor uvádí, v jakém jazyce je jeho text."
+notEncrypted = "Soubor není šifrován. Šifrování může bránit asistenční technice v jeho čtení."
+tagged = "Soubor má tagy popisující jeho strukturu. Bez nich získají čtečky obrazovky jen prostý text."
+title = "Soubor má v metadatech název."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} obrázek potřebuje popis (strana {{pages}})"
+summary_other = "{{count}} obrázků potřebuje popis (strany {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Týká se"
+clauseValue = "{{spec}} §{{clause}}, test {{test}}"
+details = "Podrobnosti"
+instances_one = "{{count}} výskyt"
+instances_other = "{{count}} výskytů"
+onPages_one = "Strana {{pages}}"
+onPages_other = "Stránky {{pages}}"
+onPagesPartial_one = "Strana {{pages}} (seznam může být neúplný)"
+onPagesPartial_other = "Stránky {{pages}} (seznam může být neúplný)"
+pages = "Strany"
+pagesPartialValue = "{{pages}} (pouze první výskyty zaznamenávají stranu, proto může být seznam neúplný)"
+requirement = "Požadavek"
+rule = "Pravidlo"
+standard = "Standard"
+where = "Kde"
+
+[checkAccessibility.manual]
+clearAll = "Vymazat vše"
+done = "Hotovo"
+inProgress = "Probíhá"
+markAllDone = "Označit vše jako hotové"
+tip = "Věci, které může posoudit jen člověk, například pořadí čtení a zda dávají smysl popisy obrázků. Každou položku zaškrtněte, jakmile ji zkontrolujete, a vaše zaškrtnutí se zahrnou do stažené zprávy."
+title = "Ruční kontroky"
+
+[checkAccessibility.objects]
+annotation = "Anotace"
+bookmark = "Záložka"
+character = "Znak v písmu"
+contentPiece = "Část obsahu stránky"
+document = "Dokument"
+drawing = "Kresba"
+figure = "Obrázek"
+file = "Samotný soubor"
+font = "Písmo"
+form = "Formulář"
+formField = "Formulářové pole"
+link = "Odkaz"
+markedContent = "Označený obsah stránky"
+metadata = "Metadata dokumentu"
+page = "Strana"
+properties = "Vlastnosti dokumentu"
+tag = "Tag {{name}}"
+tagTree = "Strom tagů"
+textPiece = "Úsek textu"
+translatedMetadata = "Položka metadat s překlady"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (pokračování)"
+footer = "Zkontrolováno pomocí Stirling PDF"
+page = "Strana {{n}}"
+title = "Zpráva o přístupnosti"
+
+[checkAccessibility.result]
+fail = "Neprošlo"
+failSummary = "Čtečky obrazovky nemusí být schopny přečíst celý tento dokument."
+partial = "Částečně"
+partialSummary = "Čtečky obrazovky mohou dokument číst, ale některé kontroly selhávají."
+pass = "Prošlo"
+passSummary = "Projde všemi automatickými kontrolami PDF/UA."
+
+[checkAccessibility.rules]
+annotationLanguage = "Text komentáře nebo odkazu nemá nastaven jazyk, takže čtečky obrazovky nevědí, v jakém jazyce jej číst. Chcete-li to opravit, nastavte jazyk dokumentu."
+annotationNoDescription = "Komentář, odkaz nebo kresba nemá textový popis, takže čtečky obrazovky nemají co oznámit."
+annotationNotTagged = "Komentář nebo kresba není otagována jako anotace, takže se k ní čtečky obrazovky v pořadí čtení nedostanou."
+artifactInsideTagged = "Něco označené jako dekorace leží uvnitř otagovaného obsahu, takže je zároveň čteno i přeskočeno."
+bookmarkLanguage = "Záložky nemají nastaven jazyk, takže čtečky obrazovky nevědí, v jakém jazyce je číst. Chcete-li to opravit, nastavte jazyk dokumentu."
+conformancePrefix = "Prohlášení PDF/UA v metadatech používá nesprávnou předponu, takže jej čtečky PDF nemusí rozpoznat."
+contentLanguage = "Text nemá nastaven jazyk, takže čtečky obrazovky nevědí, v jakém jazyce jej číst. Chcete-li to opravit, nastavte jazyk dokumentu."
+customTagNotMapped = "Tag používá vlastní název, který není svázán se standardním tagem, takže čtečky obrazovky nevědí, co znamená."
+figureNoAlt = "Obrázek je otagován jako Figure, ale nemá popis, takže uživatelé čteček obrazovky nebudou vědět, co zobrazuje."
+fontMissingGlyphs = "Vloženému písmu chybí některé znaky, které dokument používá."
+fontNotEmbedded = "Písmo není součástí souboru, takže text může na jiném počítači vypadat nebo se číst jinak."
+formFieldNotTagged = "Formulářové pole není otagováno jako součást formuláře, takže jej čtečky obrazovky nemusí najít."
+genericHeading = "Nadpis používá tag H, který nemá úroveň. PDF/UA-2 vyžaduje H1 až H6, aby uživatelé čteček poznali hierarchii nadpisů."
+glyphWidths = "Šířky znaků písma v souboru neodpovídají samotnému písmu, takže může být text chybně rozestupován."
+headingSkipped = "Úrovně nadpisů přeskočí krok, například z Nadpisu 1 rovnou na Nadpis 3, což ztěžuje orientaci mezi nadpisy."
+linkNoDescription = "Odkaz nemá popis, takže čtečky obrazovky mohou přečíst jen jeho adresu, nebo nic."
+linkNotTagged = "Odkaz není otagován jako odkaz, takže jej čtečky obrazovky takto neoznámí."
+metadataLanguage = "Metadata, například název, nemají nastaven jazyk, takže čtečky obrazovky nevědí, v jakém jazyce je číst. Chcete-li to opravit, nastavte jazyk dokumentu."
+noConformanceClaim = "Soubor neuvádí, že se řídí PDF/UA. Jeho metadata potřebují identifikační položku PDF/UA."
+noDocumentTag = "Tagy potřebují nahoře jediný tag Document, se vším ostatním uvnitř něj."
+noLanguage = "Dokument neuvádí, v jakém je jazyce, takže jej čtečky obrazovky mohou číst ve špatném jazyce."
+noMetadataStream = "Soubor nemá XMP metadata, kde PDF/UA uchovává název dokumentu a podrobnosti o shodě."
+noTags = "Soubor nemá žádné tagy, takže čtečky obrazovky nerozliší nadpisy, odstavce, seznamy ani tabulky ani je nepřečtou ve správném pořadí."
+notdefGlyph = "Text používá zástupný znak „chybějící znak“, který se zobrazuje jako prázdné místo nebo rámeček a nelze jej přečíst nahlas."
+noteTag = "Soubor používá tag Note, který PDF/UA-2 nahrazuje FENote pro poznámky pod čarou a na konci."
+noTitle = "Dokument nemá v metadatech název."
+notMarkedTagged = "Soubor není označen jako otagovaný, takže asistenční technologie může jeho tagy ignorovat."
+notPdf2Tags = "PDF/UA-2 vyžaduje tagy, které používá soubor PDF 2.0. Tyto vypadají jako tagy PDF 1.7, což obvykle znamená, že soubor byl otagován pro PDF/UA-1."
+noUnicode = "Některé znaky nelze převést na čitelný text, takže je čtečky obrazovky a kopírování a vkládání mohou zobrazit chybně."
+replacementTextLanguage = "Některý náhradní text nemá nastaven jazyk, takže čtečky obrazovky nevědí, v jakém jazyce jej číst. Chcete-li to opravit, nastavte jazyk dokumentu."
+standardTagRemapped = "Standardní tag je svázán s vlastním tagem, takže čtečky obrazovky ztratí jeho význam."
+symbolicEncoding = "Symbolické písmo nese kódování, které by nemělo, takže se jeho znaky mohou měnit na nesprávná písmena."
+tabOrder = "Strana s odkazy nebo komentáři nemá pořadí tabulátoru nastavené tak, aby následovalo dokument, takže se uživatelé klávesnice mohou po stránce přeskakovat."
+taggedInsideArtifact = "Otagovaný obsah leží uvnitř něčeho označeného jako dekorace, takže jej čtečky obrazovky mohou přeskočit."
+titleNotDisplayed = "Čtečky PDF zobrazí místo názvu dokumentu název souboru. Je třeba zapnout nastavení „zobrazit název dokumentu“."
+untaggedContent = "Něco na stránce není ani otagováno jako obsah, ani označeno jako dekorace, takže čtečky obrazovky neví, zda to číst. Často jde o obrázek na pozadí, záhlaví, zápatí nebo číslo strany."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Bez jazyka pro komentáře nebo odkazy"
+annotationNoDescription = "Komentář, odkaz nebo kresba bez popisu"
+annotationNotTagged = "Komentář nebo kresba bez tagu"
+artifactInsideTagged = "Dekorace uvnitř otagovaného obsahu"
+bookmarkLanguage = "Bez jazyka pro záložky"
+conformancePrefix = "Prohlášení PDF/UA napsáno nesprávně"
+contentLanguage = "Bez jazyka pro text"
+customTagNotMapped = "Vlastní tag bez standardního významu"
+figureNoAlt = "Obrázek bez popisu"
+fontMissingGlyphs = "Písmu chybí znaky"
+fontNotEmbedded = "Písmo není vloženo"
+formFieldNotTagged = "Formulářové pole bez tagu"
+genericHeading = "Nadpis bez úrovně"
+glyphWidths = "Šířky znaků písma nesedí"
+headingSkipped = "Přeskočená úroveň nadpisu"
+linkNoDescription = "Odkaz bez popisu"
+linkNotTagged = "Odkaz bez tagu"
+metadataLanguage = "Bez jazyka pro metadata"
+noConformanceClaim = "Neuvádí PDF/UA"
+noDocumentTag = "Tagy nezačínají tagem Document"
+noLanguage = "Bez jazyka dokumentu"
+noMetadataStream = "Chybí XMP metadata"
+noTags = "Chybí tagy"
+notdefGlyph = "Použit zástupný symbol chybějícího znaku"
+noteTag = "Používá tag Note"
+noTitle = "Chybí název dokumentu"
+notMarkedTagged = "Není označeno jako otagované"
+notPdf2Tags = "Tagy nejsou tagy PDF 2.0"
+noUnicode = "Znaky, které nelze číst jako text"
+replacementTextLanguage = "Bez jazyka pro náhradní text"
+standardTagRemapped = "Standardní tag změněn na vlastní"
+symbolicEncoding = "Symbolické písmo má špatné kódování"
+tabOrder = "Pořadí tabulátoru nesleduje dokument"
+taggedInsideArtifact = "Otagovaný obsah skrytý jako dekorace"
+titleNotDisplayed = "Při otevření se nezobrazuje název"
+untaggedContent = "Obsah, který není otagovaný"
+
+[checkAccessibility.score]
+issues_one = "{{count}} problém"
+issues_other = "{{count}} problémů"
+noIssues = "Nebyly nalezeny žádné problémy"
+subtitle_one = "{{profile}} - {{count}} strana"
+subtitle_other = "{{profile}} - {{count}} stran"
+
+[checkAccessibility.sections]
+breakdown = "Rozdělení"
+
+[checkAccessibility.status]
+checking = "Kontroluji {{current}} z {{total}}..."
+complete = "Kontrola dokončena"
+
+[checkAccessibility.steps]
+results = "Výsledky"
+standard = "Standard"
+
+[checkAccessibility.tooltip.header]
+title = "Který standard kontrolovat"
+
+[checkAccessibility.tooltip.ua1]
+text = "První verze PDF/UA, vydaná v roce 2012 jako ISO 14289-1, pro soubory PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "Novější verze, vydaná v roce 2024 jako ISO 14289-2, pro soubory PDF 2.0. Soubor PDF 1.7 kontrolovaný podle ní neprojde pravidly, která platí jen pro PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Anotace {{n}}"
+bookmarks = "Záložky"
+character = "Znak v {{font}}"
+contentItem = "Položka obsahu {{n}}"
+drawingStep = "Krok kresby {{n}}"
+embeddedGraphic = "Vložená grafika"
+font = "Písmo {{name}}"
+metadata = "Metadata dokumentu"
+page = "Strana {{n}}"
+piece = "Úsek {{n}}"
+tag = "Tag {{tag}}"
+tagTree = "Strom tagů"
+wholeDocument = "Celý dokument"
+
+[checkAccessibility.where.properties]
+author = "Autor"
+description = "Popis"
+pdfUaPart = "Část PDF/UA"
+title = "Název"
 
 [classification.families]
 correspondence = "Korespondence"
@@ -3729,6 +3964,10 @@ message = "Jeden nebo oba poskytnuté dokumenty jsou příliš velké na zpracov
 body = "Tato PDF dohromady přesahují 2 000 stránek. Zpracování může trvat několik minut."
 title = "Probíhá rozsáhlé porovnání"
 
+[compare.mode]
+pixel = "Porovnání pixelů"
+text = "Porovnání textu"
+
 [compare.no.text]
 message = "Jeden nebo oba vybrané PDF soubory neobsahují textový obsah. Prosím vyberte PDF soubory s textem pro porovnání."
 
@@ -4046,6 +4285,30 @@ failed = "Vaše přihlášení se nepodařilo obnovit. Zkuste to znovu, nebo tut
 lead = "Tento server je již propojen s vaším účtem. Obnovte přihlášení a vraťte se k fakturaci a využití na svém serveru."
 title = "Obnovit přihlášení k serveru"
 
+[connectedAccounts]
+connect = "Připojit"
+connectAnother = "Připojit další"
+connectFailed = "Účet se nepodařilo připojit. Zkontrolujte, že je na serveru správně nastavena registrace aplikace, a zkuste to znovu."
+disconnect = "Odpojit"
+google = "Google Drive"
+intro = "Připojte si jednou své vlastní účty. Vaše pipeline pak mohou číst a ukládat do nich jako vy."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling už se k tomuto účtu nedostane, proto jsou pipeline, které jej používají, pozastaveny."
+none = "Váš správce nezapnul připojené účty."
+personal = "Osobní účet"
+popupBlocked = "Váš prohlížeč zablokoval přihlašovací okno. Povolte vyskakovací okna pro tento web a zkuste to znovu."
+reconnect = "Přihlásit se znovu"
+work = "Pracovní účet"
+
+[connectedAccounts.disconnectConfirm]
+body = "Zdroje a pipeline používající tento účet se zastaví, dokud jej znovu nepřipojíte."
+confirm = "Odpojit"
+title = "Odpojit {{account}}?"
+
+[connectedAccounts.status]
+connected = "Připojeno"
+needsSignIn = "Vyžaduje přihlášení"
+
 [convert]
 autoRotate = "Automaticky otočit"
 autoRotateDescription = "Automaticky otočit obrázky, aby lépe seděly na stránce PDF"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Název dokumentu"
 pdfUaTitleHelp = "Zobrazeno čtečkou místo názvu souboru. Pokud je ponecháno prázdné, použije se první nadpis."
 selectSourceFormatFirst = "Nejprve vyberte zdrojový formát"
 settings = "Nastavení"
+signInToUse = "Přihlaste se pro použití"
 single = "Jeden"
 sourceFormatPlaceholder = "Zdrojový formát"
-stirlingOfficeConvert = "Použít Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Lepší a rychlejší převody s menší spotřebou paměti. Vypněte pro použití standardního převodníku."
 strictMode = "Striktní režim"
 strictModeDesc = "Chyba, pokud převod není dokonalý (používá ověření VeraPDF)"
 svgPdfOptions = "Možnosti SVG na PDF"
@@ -4134,8 +4396,6 @@ webOptions = "Možnosti Web → PDF"
 zoomLevel = "Úroveň přiblížení"
 
 [convert.ebookOptions]
-embedAllFonts = "Vložit všechna písma"
-embedAllFontsDesc = "Vložit všechna písma z eBook do vygenerovaného PDF"
 includePageNumbers = "Zahrnout čísla stránek"
 includePageNumbersDesc = "Přidat čísla stránek do vygenerovaného PDF"
 includeTableOfContents = "Zahrnout obsah"
@@ -4648,6 +4908,17 @@ title = "Nastavení"
 [extractPages.tooltip]
 description = "Extrahuje vybrané stránky do nového PDF se zachováním pořadí."
 
+[feedback.page]
+open = "Odeslat zpětnou vazbu"
+sendMore = "Odeslat další zpětnou vazbu"
+sent = "Děkujeme za vaši zpětnou vazbu"
+title = "Pomozte vylepšit Stirling"
+unavailable = "Zpětná vazba není k dispozici"
+
+[feedback.tag]
+dismiss = "Skrýt tlačítko zpětné vazby"
+label = "Zpětná vazba"
+
 [fileCard]
 openInFileEditor = "Otevřít v editoru souborů"
 viewInViewer = "Zobrazit v prohlížeči"
@@ -4657,7 +4928,6 @@ closeFile = "Zavřít soubor"
 
 [fileEditor]
 closedFile = "Soubor {{name}} zavřen"
-couldNotSave = "Nepodařilo se uložit {{name}}"
 filesReordered_one = "Soubor přeřazen"
 filesReordered_other = "Přeřazeno {{count}} souborů"
 loadedFromStorage_one = "Načten {{count}} soubor z úložiště"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "Knihovna PDF"
 myFiles = "Knihovna souborů"
 noFiles = "Zatím žádné soubory"
+oneDrive = "Otevřít z OneDrive"
+oneDriveFailed = "Nepodařilo se otevřít OneDrive"
 openFileManager = "Procházet všechny soubory a složky"
 openFromComputer = "Otevřít z počítače"
 openSettings = "Otevřít nastavení"
@@ -4804,6 +5076,17 @@ searchFiles = "Hledat soubory"
 uploadFailedBody = "Vybrané soubory se nepodařilo přidat."
 uploadFailedTitle = "Nahrání selhalo"
 viewAll = "Zobrazit všech {{count}} souborů"
+
+[fileSidebar.clearRecents]
+body_one = "Odebrat 1 soubor z nedávných? Tuto akci nelze vrátit."
+body_other = "Odebrat {{count}} souborů z nedávných? Tuto akci nelze vrátit."
+button = "Vymazat nedávné"
+confirm = "Vymazat nedávné"
+error = "Nelze vymazat. Zkuste to znovu."
+openNote_one = "1 z nich je otevřený v pracovním prostoru."
+openNote_other = "{{count}} z nich je otevřeno v pracovním prostoru."
+skipOpen = "Přeskočit otevřené soubory"
+title = "Vymazat nedávné?"
 
 [fileSidebar.fileItem]
 closeViewer = "Zavřít prohlížeč"
@@ -5124,6 +5407,7 @@ diskFileHint = "Uloženo ve vašem počítači"
 diskHint = "Soubor v připojené složce na vašem disku"
 local = "Místní"
 localHint = "Nezálohováno"
+oneDrive = "OneDrive"
 shared = "Sdílené"
 sharedHint = "Sdíleno s vámi přes odkaz"
 
@@ -5672,6 +5956,11 @@ title = "Změnit metadata"
 desc = "Změnit omezení a oprávnění dokumentu"
 tags = "oprávnění,omezení,práva,řízení přístupu,povolit,zakázat,tisk,kopírování,úpravy,změnit oprávnění,nastavení zabezpečení,uživatelská práva"
 title = "Změnit oprávnění"
+
+[home.checkAccessibility]
+desc = "Ohodnoťte PDF podle PDF/UA a zjistěte, co brání čtečkám obrazovky, aniž byste jej měnili"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Zkontrolovat přístupnost PDF"
 
 [home.classify]
 desc = "Určete, o jaký druh dokumentu jde, a označte ho štítkem."
@@ -6521,6 +6810,32 @@ quickAccess = "Začněte na liště <strong>Rychlý přístup</strong> a rychle 
 topBar = "Horní lišta umožňuje přepínat mezi <strong>Prohlížečem</strong>, <strong>Editorem stránek</strong> a <strong>Aktivními soubory</strong>."
 wrapUp = "To je nového ve V2. Kdykoli otevřete menu <strong>Prohlídky</strong> a můžete si zopakovat tuto prohlídku, prohlídku Nástrojů nebo prohlídku Admin."
 
+[oneDriveSave]
+chooseFolder = "Vyberte složku na OneDrive pro nahrání"
+conflict = "Tento soubor se na OneDrive změnil od doby, kdy byla tato verze otevřena nebo uložena. Uložte svou verzi jako kopii."
+failedTitle = "Nepodařilo se uložit na OneDrive"
+fromOneDrive = "Z OneDrive"
+linkNotStored = "Tento prohlížeč si nedokázal zapamatovat odkaz na soubor na OneDrive. Po obnovení stránky jej uložte jako kopii."
+missing = "Tento soubor byl na OneDrive přesunut nebo smazán. Uložte svou verzi jako kopii."
+open = "Otevřít v OneDrive"
+personalUnsupported = "Nahrávání na OneDrive vyžaduje pracovní nebo školní účet Microsoft."
+reconnect = "Znovu připojit"
+replaces = "Nahradí {{name}}"
+saveCopyToOneDrive = "Uložit kopii na OneDrive"
+saved = "Uloženo na OneDrive"
+saving = "Ukládání na OneDrive..."
+signInToSave = "Přihlaste se ke svému serveru, abyste mohli ukládat na OneDrive."
+updateOriginal = "Aktualizovat na OneDrive"
+uploadToOneDrive = "Nahrát na OneDrive..."
+
+[oneDriveSave.status]
+saved = "Uloženo na OneDrive"
+unsaved = "Změny zatím neuloženy na OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "Aktualizovat {{name}} na OneDrive"
+saveAll = "Aktualizovat vše na OneDrive"
+
 [overlay-pdfs]
 desc = "Překryjte jedno PDF přes jiné"
 submit = "Odeslat"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Reset zítra"
 thisPeriod = "Toto fakturační období"
 
 [payment]
+annually = "Ročně"
 billingPeriod = "Fakturační období"
 cancelTeamChange = "Ponechat aktuální plán"
 canCloseWindow = "Toto okno můžete nyní zavřít."
@@ -7157,11 +7473,14 @@ title = "Upravit plán Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe před potvrzením zobrazí přesnou částku, případné poměrné účtování a datum další fakturace. Pokud je k dispozici uložená platební metoda, bude použita."
+billingLabel = "Fakturace"
 continue = "Pokračovat k platbě"
 currencyAtCheckout = "Stripe při dokončení platby potvrdí konečnou částku a měnu platby."
+custom = "Vlastní"
 customLabel = "Počet uživatelů"
 dueToday = "Splatné dnes"
 enterpriseQuote = "Získat firemní nabídku"
+enterUsers = "Zadejte počet uživatelů."
 estimatedTotal = "Odhadovaný celkem"
 lineItem = "Team · {{price}}{{period}} za {{block}} uživatelů"
 minimumForCurrentUsers = "Máte {{users}} uživatelů, takže plán musí pokrýt alespoň {{minimum}}."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "Stávající účty zůstanou na místě. Přidáván
 overCapacityTitle = "Váš server má více uživatelů, než váš plán pokrývá"
 perMonth = "/měs."
 perYear = "/rok"
+planName = "Stirling Team"
 reductionNote = "Nižší kapacita začne platit při dalším obnovení. Do té doby můžete používat aktuální limit. Stávající uživatelé zůstanou; noví uživatelé budou blokováni, pokud při vstupu změny v platnost překročíte kapacitu."
 renewalNote = "Obnovuje se za {{total}}{{period}}. Zrušit můžete kdykoli v části Použití a fakturace."
 reviewChange = "Zkontrolovat změnu ve Stripe"
-roundsTo = "zaokrouhlí se na {{users}}"
+roundsUp = "Zaokrouhluje se na {{users}} uživatelů."
+selfServeLimit = "Až {{users}} uživatelů zde."
 subheading = "Pokrývá všechny, které pozvete, v blocích po {{users}} uživatelích."
 subheadingAdd = "Váš plán dnes pokrývá {{current}} uživatelů. Vyberte nový celkový počet."
+talkToEnterprise = "Pro více nás kontaktujte ohledně Enterprise."
+usersCovered = "pokrytých uživatelů"
 usersLabel = "Uživatelé"
 userTotal = "{{users}} uživatelů"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Použít změny na soubor ve vašem pracovním prostoru ({{shortc
 tags = "upravit text,změnit text,upravit text,upravit obsah,aktualizovat text,přepsat,opravit,doplnit,redline,revidovat,textový editor,editor obsahu"
 title = "Editor textu PDF"
 unsaved = "(neuloženo)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Text anotace – není to text stránky, takže ho zde nelze upravit"
@@ -7261,12 +7583,18 @@ widget = "Pole formuláře – není to text stránky, takže ho zde nelze uprav
 
 [pdfTextEditor.commands]
 edit = "Upravit"
+markTagged = "Označit jako plně otagované"
+matchScanFont = "Přiřadit skenovaný text k písmu {{face}}"
 mergeRuns_one = "Sloučit {{count}} úsek do odstavce"
 mergeRuns_other = "Sloučit {{count}} úseků do odstavce"
 setColour = "Nastavit barvu na {{run}}"
 setOutline = "Nastavit obrys na {{run}}"
+tagFormField = "Označit pole formuláře"
+tagLink = "Otagovat odkaz"
+tagPageContent = "Automaticky otagovat stránku"
 typeInto = "Psát do {{run}}"
 ungroupParagraph = "Zrušit seskupení odstavce {{run}}"
+unmarkTagged = "Označit jako ne zcela otagované"
 wrap = "Zalomit {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Zahodit a otevřít"
 hint = "Nejprve zrušte akci a poté použijte Uložit PDF, abyste je uchovali ve svém pracovním prostoru."
 title = "Zahodit neuložené změny?"
 
-[pdfTextEditor.drop]
-hint = "Puštění na plochu editoru nahradí jakýkoli otevřený dokument."
-title = "Pusťte PDF pro otevření"
-
 [pdfTextEditor.error]
 decodeImage = "Vybraný obrázek se nepodařilo dekódovat."
+duplicateDropsLetters = "Tento text nelze duplikovat: žádné dostupné písmo nedokáže vykreslit všechny jeho znaky."
+formLiftChangesDrawing = "Nelze upravit: je vykresleno jako součást skupiny, jejíž ořez nebo grafické nastavení editor nedokáže při změně zachovat."
 insertImage = "Vybraný obrázek se nepodařilo vložit."
+needsShaping = "Editor zatím nedokáže správně vykreslit spojovaná písmena a samohláskové značky tohoto písma, proto tato změna nebyla provedena."
+replaceClippedImage = "Tento obrázek nelze nahradit: je oříznutý a náhrada by zobrazila části, které ořez skrývá."
+scanOffInk = "Tento text nelze upravit: rozpoznaná slova neodpovídají skenu. Spusťte znovu OCR."
+unsafeRtlEdit = "Tuto úpravu nelze provést: editor nedokáže překreslit text tohoto řádku zprava doleva bez jeho změny."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG obrázek"
@@ -7304,15 +7634,42 @@ wholeWord = "Celé slovo"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Vestavěná písma"
+closestMatch = "Tomuto písmu chybí některé z vybraných znaků, proto jsou vykresleny v nejbližším odpovídajícím písmu."
 deviceFontsNone = "Nebyla nalezena žádná další písma zařízení."
 deviceFontsUnavailable = "Písma zařízení nejsou dostupná. Vestavěná písma stále fungují."
 deviceGroup = "Písma zařízení"
+documentFontCannotDraw = "Editor nedokáže vykreslit tento text písmem dokumentu, proto byl ponechán ve stávajícím písmu."
 documentGroup = "Písmo dokumentu"
+embeddingForbidden = "Licence tohoto písma neumožňuje jeho vložení do PDF. Text zůstal nezměněn."
+embedFailed = "Toto písmo se nepodařilo vložit do PDF. Text zůstal nezměněn."
+includedGroup = "Vložená písma"
 label = "Rodina písem"
+matchedGroup = "Shodné písmo"
+missingGlyphs = "Tomuto písmu chybí některé z vybraných znaků a nebylo možné je ponechat v jejich stávajícím písmu. Text zůstal beze změny."
 mixed = "Smíšené"
+needsShaping = "Editor zatím nedokáže správně překreslit spojovaná písmena a samohláskové značky tohoto písma, proto byl daný text ponechán ve stávajícím písmu."
+noGlyphs = "Toto písmo nemá znaky pro vybraný text. Text zůstal nezměněn."
 noMatch = "Žádné odpovídající písmo"
+partOfRunUnsupported = "Tento text lze přeformátovat pouze jako celek. Vyberte celý rámeček místo některých slov."
 placeholder = "Rodina písem"
+scannedText = "Skenovaný text"
+serverFontFailed = "Toto serverové písmo se nepodařilo stáhnout. Text zůstal nezměněn."
+serverGroup = "Serverová písma"
+someLeftUnchanged = "Toto písmo nemá znaky pro část vybraného textu. Tento text byl ponechán beze změny."
+styleSkipped = "Část vybraného textu nemá verzi svého písma v tomto stylu, proto byla ponechána beze změny."
+styleUnavailable = "Vybraný text nemá verzi svého písma v tomto stylu, proto byl ponechán beze změny."
 useDeviceFonts = "Použít písma zařízení"
+weight = "Tloušťka písma"
+weightBlack = "Černé"
+weightBold = "Tučné"
+weightExtraBold = "Extra tučné"
+weightExtraLight = "Extra lehké"
+weightLight = "Lehké"
+weightMedium = "Střední"
+weightNumber = "Tloušťka {{weight}}"
+weightRegular = "Normální"
+weightSemibold = "Polotučné"
+weightThin = "Tenké"
 
 [pdfTextEditor.fonts]
 allPresent = "Všechna písmena a číslice jsou přítomny"
@@ -7357,6 +7714,7 @@ helpDesc = "Tato nápověda"
 saveDesc = "Uložit do vašeho pracovního prostoru"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Tučné / Kurzíva pro vybraná slova nebo celý rámeček"
 deleteDesc = "Odebrat vybrané"
 duplicateDesc = "Duplikovat vybrané"
 groupDesc = "Seskupit vybrané úseky do jednoho odstavce"
@@ -7380,8 +7738,12 @@ zoomDesc = "Přiblížit / oddálit"
 
 [pdfTextEditor.inspector]
 document = "Dokument"
+fontCompletedClosest = "Vložené písmo · chybějící znaky jsou vykresleny v {{name}}, nejbližší dostupné shodě."
+fontCompletedOriginal = "Vložené písmo · chybějící znaky jsou vykresleny v {{name}}, stejném písmu."
 fontEmbedded = "Vložené písmo · znak, který neobsahuje, se nahradí písmem Helvetica."
 fontGap = "{{name}} · chybí {{glyphs}} – při psaní těchto znaků se použije Helvetica."
+fontUnknownCoverage = "{{name}} · chybějící znak se nahrazuje {{fallback}}."
+formField = "Pole formuláře"
 geometry = "Poloha a velikost"
 height = "Výška"
 heightHint = "Výška textového pole se řídí velikostí písma a počtem řádků."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "OCR není na tomto serveru dostupné."
 oneImage = "Obrázek"
 oneShape = "Tvar"
 oneText = "Text"
+outlinedTextHint_one = "Text na této stránce je vykreslen jako tvary, takže zde není co upravovat. Nejprve spusťte OCR, aby byl upravitelný."
+outlinedTextHint_other = "{{count}} stránek má text vykreslený jako tvary, takže zde není co upravovat. Nejprve spusťte OCR, aby byl upravitelný."
 pages = "Stránky"
 runOcr = "Spustit OCR"
 scanHint_one = "Tato stránka je naskenovaný obrázek bez textu k úpravě. Nejprve spusťte OCR, aby bylo možné její text upravovat."
 scanHint_other = "Počet naskenovaných stránek bez textu k úpravě: {{count}}. Nejprve spusťte OCR, aby bylo možné jejich text upravovat."
 scannedText = "Naskenovaný text · změněná slova jsou překryta a překreslena odpovídajícím písmem."
+scannedTextMisaligned = "Skenovaný text · rozpoznaná slova neodpovídají skenu, takže tento blok nelze upravit ani smazat."
+scannedTextNoFont = "Skenovaný text · psaná slova v tomto písmu (písmové soustavě) zatím nelze vykreslit, takže se neuchovají. Mazání slov stále funguje."
+scannedTextOffInk = "Skenovaný text · rozpoznaná slova nesedí na naskenovaná slova, takže tento blok nelze upravit. Spusťte znovu OCR."
 tabDocument = "Dokument"
 tabSelected = "Vybrané"
 textBoxes = "Textová pole"
+unreadPagesHint = "{{count}} stránek nemá žádný text k úpravě: některé jsou skenované obrázky a některé vykreslují text jako tvary. Nejprve spusťte OCR, aby byly upravitelné."
 width = "Šířka"
 widthHint = "Text se znovu zalomí podle šířky."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Přidat tag"
+applyToOtherPages_one = "Použít na {{count}} další stránku"
+applyToOtherPages_other = "Použít na {{count}} další stránky"
+artifactGroup = "Přeskakováno čtečkami obrazovky"
 artifactText = "Dekorativní"
 cannotChange = "Přístupnost tohoto obrázku nelze změnit."
+cannotDescribeFormField = "Popis tohoto pole formuláře nelze změnit."
+cannotDescribeLink = "Popis tohoto odkazu nelze změnit."
 cannotRetag = "Tag tohoto textu nelze změnit."
+cannotSetDecorative = "Toto nelze označit ani odznačit jako dekoraci."
+cannotTagFormField = "Toto pole formuláře nelze označit."
+cannotTagLink = "Tento odkaz nelze otagovat."
+cannotTagPage = "Obsah této stránky nelze otagovat."
+contentGroup = "Obsah"
 customTag = "{{role}} (vlastní tag)"
 decorativeInfo = "Čtečky obrazovky přeskakují dekorativní obrázky. Použijte pro okraje, pozadí a jiné obrázky, které nenesou žádné informace."
 decorativeLabel = "Dekorativní obrázek"
 description = "Popis obrázku"
 descriptionInfo = "Čtečky obrazovky toto přečtou místo obrázku."
 encrypted = "Tagy nelze upravovat v šifrovaném souboru"
+figureDescription = "Popis obrázku"
+figureDescriptionInfo = "Čtečky obrazovky to čtou místo obrázku."
+formFieldDescription = "Popis pole"
+formulaDescription = "Popis vzorce"
+formulaDescriptionInfo = "Čtečky obrazovky to čtou místo vzorce. Napište to tak, jak byste to řekli nahlas, například \"x na druhou plus jedna\"."
 heading = "Přístupnost"
 innerTagLabel = "Tag {{number}}"
 innerTags = "Tagy v tomto textu"
+linkDescription = "Popis odkazu"
+markedTagged = "Dokument je plně otagován"
+markedTaggedHint = "Říká čtečkám PDF, aby používaly tagy přístupnosti. Zaškrtněte, až je vše otagováno."
+markedWithUntagged = "Některý obsah nemá tagy, proto jej mohou čtečky obrazovky přeskočit."
 missingDescriptions = "Chybějící popisy"
 mixedContent = "Obrázek obsahuje další obsah"
+mixedTags = "Smíšené"
 needsDescriptionBadge = "Bez popisu"
-nextImage = "Další obrázek"
+nextToReview = "Další ke kontrole"
 notFigure = "Označeno jako součást textu"
 removeTag = "Odebrat tag"
 saveFailed = "Vaše změny přístupnosti se nepodařilo uložit, soubor tedy nebyl uložen. Vraťte je zpět a zkuste to znovu."
 selectedText = "Vybraný text"
+tagFormField = "Označit pole formuláře"
+tagging = "Tagování stránek"
 tagLabel = "Tag"
+tagLinks_one = "Otagovat odkaz"
+tagLinks_other = "Otagovat {{count}} odkazů"
+tagUntagged = "Automaticky otagovat dokument"
+tagUntaggedHint = "Automaticky přidá tagy přístupnosti v celém dokumentu. Výsledek je hrubý: poté zkontrolujte nadpisy, seznamy a pořadí čtení."
 unknownTag = "Zde nelze přečíst"
+unmarkedWithTags = "Někteří prohlížeči PDF tagy i tak použijí a mohou přeskočit obsah bez nich."
 unreadable = "Tagy tohoto souboru nelze upravovat"
 untaggableImages = "Zde nelze označit tagem"
 untaggedBadge = "Bez tagu"
 untaggedDocument = "Dokument nemá žádné tagy"
 untaggedImage = "Zde nelze označit tagem"
 untaggedImages = "Obrázky bez tagu"
+untaggedPages = "Stránky k otagování"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Zápatí"
+header = "Záhlaví"
+pageNumber = "Číslo strany"
+watermark = "Vodoznak"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Nadpis bez textu"
@@ -7505,6 +7907,23 @@ tableHeader = "Záhlaví tabulky"
 tableRow = "Řádek tabulky"
 title = "Název"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Všechny jazyky"
+cannotSetDocument = "Jazyk tohoto dokumentu nelze změnit."
+cannotSetText = "Jazyk tohoto textu nelze změnit."
+documentHint = "Jazyk, který čtečky obrazovky použijí, pokud si část textu nenastaví vlastní."
+documentLabel = "Jazyk"
+documentLocked = "U šifrovaného dokumentu nelze jazyk změnit zde."
+inDocument = "V tomto dokumentu"
+innerLabel = "Jazyk tagu {{number}}"
+label = "Jazyk"
+missing = "Není nastaven žádný jazyk. Čtečky obrazovky budou hádat a mohou číst celý dokument špatným hlasem."
+mixed = "Smíšené"
+noMatch = "Žádný odpovídající jazyk. Zadejte místo toho jeho kód, například mt nebo en-IE."
+placeholder = "Vyberte jazyk"
+selectedText = "Jazyk vybraného textu"
+textHint = "Čtečky obrazovky přepnou hlas a výslovnost na tento jazyk."
+
 [pdfTextEditor.mobile]
 actions = "Akce editoru"
 addImage = "Obrázek"
@@ -7517,7 +7936,6 @@ done = "Hotovo"
 download = "Uložit a stáhnout"
 find = "Najít"
 lock = "Uzamknout"
-openPdf = "Otevřít PDF"
 panelHint = "Úpravy probíhají v zobrazení Pracovní prostor. Klepnutím na text na stránce jej změníte."
 save = "Uložit"
 style = "Styl"
@@ -7525,7 +7943,6 @@ tapToPlace = "Klepněte na stránku, kam má text přijít"
 unlock = "Odemknout"
 
 [pdfTextEditor.pageView]
-pageNumber = "Stránka {{page}}"
 renderFailed = "Nepodařilo se vykreslit stránku"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Svislé pravítko"
 
 [pdfTextEditor.run]
 lockedTitle = "Zamčeno – pro úpravy použijte tlačítko Odemknout"
+readOnlyOrderTitle = "Text tohoto řádku nelze upravit: kombinuje text zprava doleva a zleva doprava v pořadí, které editor nedokáže bezpečně překreslit"
+resizeHandle = "Tažením změňte šířku; text se znovu zalomí"
 
 [pdfTextEditor.saveRisk]
 cancel = "Zrušit"
@@ -7548,6 +7967,35 @@ intro = "Uložením upravené kopie se soubor změní. To znamená:"
 note = "Vaše úpravy zůstanou zachovány. Výše uvedené změny jsou při ukládání upravené kopie nevyhnutelné."
 saveAnyway = "Přesto uložit"
 title = "Uložení změní tento PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "Přibližná shoda"
+approximateHint = "Nejbližší nalezené písmo nemusí odpovídat skenu."
+change = "Nevypadá písmo správně?"
+choose = "Vyberte písmo"
+chooseMissing = "Vyberte písmo pro tento text…"
+compare = "Porovnat písma…"
+deviceAllow = "Povolit přístup k písmům pro lepší shodu"
+deviceBlocked = "Váš prohlížeč se už znovu nezeptá. Chcete-li to povolit, klikněte na ikonu vlevo od adresního řádku, zapněte Písma a zkuste to znovu."
+deviceBlockedTitle = "Přístup k písmům zablokován"
+deviceNone = "Žádné z obvyklých písem dokumentu nejsou na tomto počítači nainstalovány."
+deviceNote = "Váš prohlížeč se nejprve zeptá. Písma zůstávají na tomto zařízení."
+deviceOn_one = "Také porovnáno s {{count}} písmem na tomto počítači."
+deviceOn_other = "Také porovnáno s {{count}} písmy na tomto počítači."
+deviceReading = "Načítání písem na tomto počítači…"
+deviceRetry = "Zkusit znovu"
+done = "Hotovo"
+hint = "Vaše psaní je vykresleno v nejbližším nalezeném písmu. Pokud více odpovídá skenu, vyberte jiné."
+hintFromScan = "Vaše psaní je složeno z písmen nalezených ve skenu. Vyberte písmo, abyste je vykreslili v tomto písmu."
+hintOthers = "Vámi vybrané písmo se použije také pro skenovaný text, který jste ještě neupravili."
+matching = "Porovnávání písem…"
+noFont = "Žádné z dostupných písem neumí vykreslit tuto sadu znaků, takže psaný text zatím nelze překreslit."
+scan = "Původní sken"
+scanAlt = "Naskenovaný řádek"
+scanNote = "Skeny často vypadají rozmazaněji nebo tučněji, než písmo ve skutečnosti je. Porovnávejte tvary písmen, ne jejich tloušťku."
+score = "{{match}} % podobné"
+title = "Najít shodu skenovaného písma"
+unmeasurable = "Tento sken je příliš slabý nebo malý, aby šlo písmo spárovat."
 
 [pdfTextEditor.settings]
 advanced = "Pokročilé"
@@ -7564,7 +8012,6 @@ addTable = "Přidat tabulku"
 addText = "Přidat text"
 clickPageToAddTable = "Kliknutím na stránku přidáte tabulku"
 clickPageToAddText = "Klikněte na stránku pro přidání textu"
-document = "Dokument"
 group = "Seskupit"
 groupingAuto = "Automaticky"
 groupingAutoHint = "Seskupuje stejně rozmístěné řádky do odstavců. Změna tohoto nastavení znovu načte dokument a vymaže historii vrácení zpět."
@@ -7593,23 +8040,17 @@ auto = "Automaticky"
 enable = "Kontrolovat pravopis při psaní"
 language = "Jazyk slovníku"
 
-[pdfTextEditor.stage]
-loadingDocument = "Načítání dokumentu"
-loadingProgress = "Průběh načítání"
-noDocument = "Není načten žádný dokument."
-pickPrompt = "Začněte úpravy výběrem PDF z panelu Soubory vlevo."
-renderingPreview = "Vykreslování náhledu"
-
 [pdfTextEditor.table]
 addColumn = "Přidat sloupec"
 addRow = "Přidat řádek"
+cellNoGlyphs = "Tento text obsahuje znaky, které písma tabulky nedokážou vykreslit. Změňte je nebo odstraňte, aby bylo možné buňku vyplnit."
 column = "Sl."
 deleteColumn = "Odstranit sloupec"
 deleteRow = "Odstranit řádek"
 done = "Hotovo"
 doneHint = "Přestat upravovat jako tabulku"
-edit = "Upravit"
 editHint = "Upravit jako tabulku – psát do buněk, přidávat nebo odebírat řádky a sloupce"
+editTable = "Upravit tabulku"
 move = "Přesunout"
 moveTable = "Přetažením přesunete celou tabulku"
 recognizedHint = "Rozpoznaná tabulka – kliknutím vyberete celý její text"
@@ -7630,6 +8071,9 @@ alignMiddle = "Zarovnat doprostřed"
 alignRight = "Zarovnat doprava"
 alignTop = "Zarovnat nahoru"
 arrange = "Uspořádat"
+bold = "Tučné"
+boldOnly = "Toto písmo má pouze tučnou verzi"
+boldUnavailable = "Toto písmo nemá tučnou verzi"
 bringForward = "Přenést dopředu"
 bringToFront = "Přenést zcela dopředu"
 caseLower = "malá písmena"
@@ -7650,10 +8094,12 @@ fontColour = "Barva písma"
 fontSize = "Velikost písma"
 formatting = "Formátování textu"
 italic = "Kurzíva"
+italicOnly = "Toto písmo má pouze kurzívu"
 italicUnavailable = "Toto písmo nemá kurzívní verzi. Načtěte písma zařízení nebo vyberte jinou rodinu písem."
 lock = "Zamknout výběr"
 lockTooltip = "Zamknout výběr – zabraňuje nechtěným úpravám"
 more = "Další akce"
+noBoldItalic = "Toto písmo nemá tučnou kurzívu"
 order = "Pořadí"
 outlineColour = "Barva obrysu"
 outlineWidth = "Šířka obrysu (0 = žádný)"
@@ -7683,13 +8129,6 @@ title = "Odchylky náhledu"
 [pdfTextEditor.tooltip.textFocus]
 text = "Tento pracovní prostor se zaměřuje na úpravu textu a přemisťování vložených obrázků. Složité grafické prvky stránky, formulářové widgety a vrstvená grafika jsou pro export zachovány, ale zde nejsou plně upravitelné."
 title = "Zaměření na text a obrázky"
-
-[pdfTextEditor.zoom]
-fit = "Přizpůsobit"
-fitToWidth = "Přizpůsobit šířce"
-in = "Přiblížit"
-out = "Oddálit"
-reset = "Obnovit přiblížení na 100 %"
 
 [PDFToCSV]
 header = "PDF na CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Spouští se při importu"
 [policies.enforcement]
 applying = "Probíhá použití {{names}}"
 applyingProgress = "Probíhá použití {{names}} ({{done}} z {{total}})"
-exportFailureBody = "Zásady zabezpečení se nepodařilo použít. Soubory byly exportovány beze změny."
-exportFailureTitle = "Exportováno bez vynucení"
 failureBody = "Některé zásady se nepodařilo použít na {{failures}} z {{total}} souborů."
 failureTitle = "Exportováno bez úplného vynucení"
 printPolicyAppliedBody = "Tento soubor PDF byl upraven tak, aby vyhověl zásadě. Zkontrolujte změny a poté znovu vytiskněte."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Odeslat zprávu do prostoru Google Chat, když se spustí zásada."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Služební účet, který čte a zapisuje Google Drive pro organizaci."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Vložte JSON klíč služebního účtu z Google Cloud. Je šifrován a už se znovu nezobrazí."
+label = "Klíč služebního účtu (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Volitelné. S delegováním na úrovni domény jde o uživatele, jehož Drive se používá (vyhrazený bot uživatel funguje dál, i když lidé odcházejí). Prázdné zpřístupní pouze sdílené disky a složky sdílené se služebním účtem."
+label = "Jednat jako uživatel"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Připojit zpracované dokumenty k Jira issue."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Odeslat dokument nebo oznámení e-mailem, když se spustí zásada."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Vyžaduje aplikační oprávnění Microsoft Graph se souhlasem správce."
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com nebo tenant GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Heslo aplikace"
+
+[portal.connections.types.onedrive]
+description = "Číst a zapisovat OneDrive for Business jednoho uživatele."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Čí OneDrive toto připojení zpřístupní. Registrace aplikace vyžaduje aplikační oprávnění Files.ReadWrite.All."
+label = "Vlastník OneDrivu"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Ponechte prázdné, pokud se místo hesla ověřujete soukromým k
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Volitelné. Vložte soukromý klíč OpenSSH pro ověření klíčem místo hesla."
 label = "Soukromý klíč"
+
+[portal.connections.types.sharepoint]
+description = "Číst a zapisovat do knihovny dokumentů webu SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Volitelné. Ponechte prázdné pro výchozí knihovnu Dokumenty webu."
+label = "Knihovna dokumentů"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "URL webu"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Odeslat zprávu do Slack, když zásada zpracuje dokument."
@@ -9142,6 +9624,126 @@ status = "Stav"
 time = "Čas"
 user = "Uživatel"
 
+[portal.enterprise]
+backTo = "Zpět na {{stage}}"
+brandTag = "Enterprise"
+callInfo = "15minutový hovor. Přineste své dotazy k cenám, nasazení nebo zabezpečení, nebo společně naplánujte rollout."
+callTitle = "Promluvte si s inženýrem řešení"
+deployment = "Nasazení"
+footer = "Otázky ke Stirling Enterprise?"
+home = "Přejít na Stirling"
+member = "Vedoucí vašeho týmu spravuje dohodu Enterprise. Jakmile začne, můžete zde sledovat její průběh."
+memberDeal = "Vedoucí vašeho týmu spravuje tuto dohodu. Její průběh můžete sledovat zde."
+quotePanel = "Vaše nabídka"
+signIn = "Přihlásit se"
+signInToStart = "Přihlaste se a spusťte zkušební verzi"
+stage = "Fáze {{current}} z {{total}}"
+stagesLabel = "Postup"
+
+[portal.enterprise.landing]
+lede = "Vyzkoušejte zdarma na 14 dní, pak si zde sestavte nabídku a podepište dohodu. Není potřeba karta."
+tickAgreement = "Jedna smlouva pokrývající MSA, objednávkový formulář, EULA a DPA"
+tickCompliance = "SCIM, umístění dat a SLA dostupnosti"
+tickDeploy = "Provoz na Stirling Cloud, na vlastních serverech nebo zcela bez internetu"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Dokumentace k offline licenci"
+point1 = "Aktivováno licenčním souborem, který funguje offline, ne klíčem ověřovaným online"
+point2 = "Instalace jako self-hosted, z image, kterou přenesete"
+point3 = "Přihlášení zůstává uvnitř vaší sítě"
+tagline = "Self-hosted v síti bez přístupu k internetu."
+
+[portal.enterprise.options.cloud]
+more = "Dokumentace ke Stirling Cloud"
+point1 = "Váš tým se přihlašuje na stirling.com/app"
+point2 = "Běží na AWS, uložené soubory jsou šifrované při uložení"
+point3 = "Jednotné přihlášení přes vašeho poskytovatele identity vyžaduje self-hosting"
+tagline = "Hostované pro vás, bez potřeby cokoliv instalovat."
+
+[portal.enterprise.options.selfhost]
+more = "Dokumentace k self-hostingu"
+point1 = "Instalace pomocí Dockeru nebo Helm chartu na Kubernetes"
+point2 = "Dokumenty se zpracovávají na vaší vlastní infrastruktuře"
+point3 = "OAuth2, OIDC nebo SAML single sign-on"
+tagline = "Na vlastních serverech, on-premises nebo ve vašem cloudu."
+
+[portal.enterprise.review]
+back = "Vrátit se na {{stage}}"
+company = "Společnost"
+completed = "Dokončeno"
+extensions = "Použitá rozšíření"
+paid = "Zaplaceno. Vaše faktura zde zůstane k dispozici."
+people = "Lidé"
+started = "Zahájeno"
+trialEnds = "Konec zkušební verze"
+trialTitle = "Vaše zkušební verze"
+version = "Verze"
+viewInvoice = "Zobrazit fakturu"
+
+[portal.enterprise.setup]
+copied = "Zkopírováno"
+copy = "Kopírovat"
+markDone = "Označit “{{step}}” jako hotové"
+progress = "{{done}} z {{total}} hotovo"
+subtitle = "Využijte zkušební verzi naplno tak, že ji vyzkoušíte způsobem, jakým ji budete provozovat."
+subtitleLive = "Kroky, které je třeba dokončit před nasazením pro všechny."
+title = "Get set up"
+titleLive = "Kontrolní seznam pro spuštění"
+
+[portal.enterprise.setup.firstDocument]
+body = "Nahrajte PDF, se kterým váš tým pracuje, a vyzkoušejte nástroje, které byste denně používali, jako je začernění, komprese nebo OCR."
+title = "Zpracujte svůj první dokument"
+
+[portal.enterprise.setup.getApp]
+body = "Nainstalujte desktopovou aplikaci pro Windows, Mac nebo Linux a přihlaste se účtem, který jste právě vytvořili, nebo ji používejte přímo v prohlížeči."
+title = "Získat Stirling"
+
+[portal.enterprise.setup.install]
+body = "Spusťte to na svém serveru. Spustí Stirling s aplikovanou licencí a image obsahuje OCR i konverzi office dokumentů. Pro větší týmy použijte Kubernetes."
+title = "Nainstalovat a spustit Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Pozvěte lidi, kteří jej budou používat, aby zkušební verze odrážela reálnou práci."
+title = "Pozvěte svůj tým"
+
+[portal.enterprise.setup.licence]
+body = "Otevřete <code>http://your-server:8080/settings/adminPlan</code>, kde by se vaše licence Enterprise měla zobrazovat jako aktivní. Instalovali jste jinak? Přidejte klíč pod <code>premium.key</code> v <code>settings.yml</code> a restartujte."
+title = "Zkontrolujte, že je vaše licence aktivní"
+
+[portal.enterprise.setup.links]
+browser = "Použít v prohlížeči"
+docker = "Průvodce Dockerem"
+download = "Stáhnout aplikaci"
+downloadForTeam = "Získat aplikaci pro tým"
+downloading = "Stahování..."
+downloadLicence = "Stáhnout licenční soubor"
+invite = "Pozvat kolegy"
+kubernetes = "Průvodce Kubernetes"
+licence = "Aktivace licence"
+ocr = "OCR jazyky"
+openApp = "Otevřít Stirling"
+samlGuide = "Průvodce SAML"
+ssoGuide = "Průvodce SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Stáhněte plný image na připojeném stroji, přeneste jej i licenční soubor, poté jej načtěte a spusťte. Plný image přidává písma, která si offline server nemůže stáhnout."
+title = "Přeneste Stirling a spusťte jej"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Server bez přístupu k internetu se nedostane k naší licenční službě, proto místo toho ověřuje tento podepsaný soubor. Uchovejte jej spolu s image, kterou přenášíte."
+title = "Stáhněte si svou offline licenci"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Vytvořte účty na <code>/settings/people</code>, nebo nasměrujte Stirling na svého interního poskytovatele identity, aby přihlášení nikdy neopustilo vaši síť."
+bodySelfHosted = "Vytvořte účty na <code>/settings/people</code>, nebo připojte svého poskytovatele identity, aby se tým přihlašoval svými pracovními účty. Stirling budou používat v prohlížeči na adrese vašeho serveru, nebo v desktopové aplikaci nasměrované na něj."
+title = "Přidejte své lidi"
+
+[portal.enterprise.setup.signIn]
+body = "Otevřete <code>http://your-server:8080</code> a přihlaste se pomocí <code>admin</code> / <code>stirling</code>. Hned budete vyzváni ke změně hesla."
+bodyAirgap = "Otevřete <code>http://your-server:8080</code> a přihlaste se pomocí <code>admin</code> / <code>stirling</code>, změňte heslo a poté zkontrolujte, že <code>/settings/adminPlan</code> ukazuje vaši licenci jako aktivní."
+title = "Přihlaste se jako admin"
+
 [portal.errorBoundary]
 description = "V tomto zobrazení došlo k neočekávané chybě. Zkuste to znovu nebo vyberte jinou sekci z postranního panelu."
 retry = "Zkusit znovu"
@@ -9293,6 +9895,7 @@ title = "Nic ke kontrole"
 [portal.home.download]
 back = "Zpět"
 body = "Stáhněte si desktopovou aplikaci nebo provozujte server self-hosted."
+bodyDesktop = "Stáhněte desktopovou aplikaci a poté se přihlaste svým Stirling účtem."
 done = "Hotovo"
 guide = "Otevřít průvodce {{name}}"
 openInBrowser = "Místo toho otevřít v prohlížeči"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Příjem e-mailů"
 
 [portal.procurement]
-subtitle = "Nechte svůj tým vyhodnotit, uzavřít smlouvu a zahájit používání. Každý dokument na jednom místě."
 title = "Pořízení"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Dohodu se nepodařilo načíst. Zkuste to prosím znovu."
 loading = "Načítání dohody..."
 ref = "Ref. {{ref}} · {{version}}"
 requestChanges = "Požádat o změny"
-scrollHint = "Posuňte pro kontrolu"
 signatory = "Jméno podepisující osoby"
 signatoryPlaceholder = "Celé jméno"
 signatoryTitle = "Funkce podepisující osoby"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "např. General Counsel"
 signError = "Nepodařilo se zaznamenat váš podpis. Zkuste to prosím znovu."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} jednorázově"
+addonPerYear = "+{{amount}}/rok"
 addons = "Doplňky"
 addressLine1 = "Řádek adresy 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Řádek adresy 2"
 addressLine2Placeholder = "Apartmá, patro, budova"
 back = "Zpět"
+belowMinimum = "Tato nabídka je pod minimální velikostí pro dohodu Enterprise."
 businessName = "Název firmy"
 businessNamePlaceholder = "Vaše společnost"
 city = "Město"
 cityPlaceholder = "San Francisco"
 completeRequired = "Před vygenerováním nabídky prosím vyplňte povinná pole (označená *) platným e-mailem."
+conflict = "Tato dohoda se změnila od doby, kdy jste ji otevřeli. Zavřete konfigurátor a znovu načtěte stránku, abyste viděli, kde se nachází."
 contactEmail = "Kontaktní e-mail"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Kontaktní jméno"
 contactNamePlaceholder = "Jane Doe"
 continue = "Pokračovat"
 done = "Hotovo"
+editUsage = "Upravit použití"
 eula = "Přečetl(a) jsem si Stirling Enterprise EULA a souhlasím s ní. Řídí smlouvu vygenerovanou z této nabídky."
 generate = "Vygenerovat nabídku"
 indemnification = "Rozšířená ochrana IP"
 indemnificationSub = "Rozšiřuje naši obranu IP na patentové nároky. Základní odškodnění za autorská práva, ochranné známky a obchodní tajemství je zahrnuto zdarma."
+minimum = "Enterprise vyžaduje minimální roční útratu {{min}}."
+minimumBelow = "Tato nabídka dělá {{annual}} ročně. Pokud očekáváte vyšší využití, zvyšte odhadované použití; jinak je pro vás pravděpodobně lepší plán Team."
+minimumNear = "Enterprise vyžaduje minimální roční útratu {{min}}. Zvyšte odhadované použití, abyste jí dosáhli, nebo to s námi proberte."
+minimumNearTitle = "Chybí vám {{gap}} ročně do Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise nabídka"
 paperFor = "Připraveno pro"
 pdfSize = "Velikost PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "Regulovaný"
 posture_regulatedSub = "Každá kategorie — Compliance, Retention, Ingestion"
 qbr = "Čtvrtletní obchodní hodnocení"
 qbrSub = "Váš SE každý kvartál zkontroluje používání a roadmapu"
+raiseUsage = "Zvýšit odhadované použití"
 region = "Stát / region"
 regionPlaceholder = "Kalifornie"
-running = "{{annual}} / rok · {{years}}leté {{tcv}}"
+runningLabel = "Odhadovaná cena"
+runningLabelIssued = "Nabídková cena"
+runningOneYear = "{{annual}} ročně"
+runningTotal = "{{tcv}} celkem za {{years}} let"
 s1Sub = "Váš tým a PDFs, které očekáváte zpracovat každý rok."
 s1Title = "Kolik toho budete zpracovávat?"
 s2Sub = "Delší období snižují sazbu; úroveň služby určuje podporu."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "např. 1 000 000"
 years_one = "{{count}} rok"
 years_other = "{{count}} let"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} nasazení"
+indemnification = "Odškodnění za IP"
+multiYear_one = "Závazek na {{count}} rok"
+multiYear_other = "Závazek na {{count}} let"
+qbr = "Čtvrtletní business review"
+seats_one = "{{users}} dohodnutý uživatel + SSO / RBAC / audit"
+seats_other = "{{users}} dohodnutých uživatelů + SSO / RBAC / audit"
+seatsUnset = "Uživatelé + SSO / RBAC / audit"
+support = "Vyhrazený SE / CSM"
+training = "Onboarding a školení"
+usage = "PDF zpracování — {{volume}} PDF/rok při {{rate}}/PDF ({{posture}} automatizace)"
+
 [portal.procurement.documents]
 agreement = "Smlouva Enterprise"
 agreementSub = "MSA, Order Form a DPA v jednom podpisu."
@@ -10557,6 +11185,8 @@ invoice = "Faktura"
 invoiceSub = "Vaše první faktura za předplatné."
 laterInvoice = "Dostupné po přijetí"
 laterQuote = "Dostupné po vystavení vaší nabídky"
+laterSigning = "Dostupné po podpisu dohody"
+laterTitle = "Později v dohodě"
 quote = "Nabídka"
 quoteSub = "Vaše položková enterprise nabídka."
 sla = "SLA příloha"
@@ -10573,15 +11203,12 @@ title = "Něco se pokazilo"
 [portal.procurement.hero]
 barAria = "Fáze {{current}} z {{total}}"
 ctaAgreement = "Zkontrolovat a podepsat smlouvu"
-ctaExploring = "Nastavit zkušební verzi"
 ctaQuote = "Zkontrolovat nabídku"
 ctaReviewQuote = "Zkontrolovat nabídku"
 ctaTrial = "Sestavit nabídku"
-documents = "Dokumenty"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Pozvat členy týmu"
-licenseKey = "Licenční klíč"
 liveSub = "Vaše organizace je zprovozněna a vaše licence je aktivní."
 liveTitle = "Jste živě na Stirling Enterprise"
 next = "Další: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Offline licenční soubor zatím nešlo vygenerovat — zkuste 
 downloadOffline = "Stáhnout offline licenci (.lic)"
 hint = "Vložte tento klíč do self-hosted instance pro její aktivaci, nebo si ho ponechte pro své záznamy. Uchovejte ho v bezpečí."
 label = "Váš licenční klíč"
-subtitle = "Aktivujte self-hosted instanci tímto klíčem nebo si jej ponechte pro své záznamy."
-title = "Váš licenční klíč"
 trialFileHint = "Toto je váš soubor zkušební licence. Jakmile bude vaše dohoda uzavřena, vraťte se a stáhněte si jej znovu — na rozdíl od online licenčního klíče se soubor .lic sám neaktualizuje."
-
-[portal.procurement.link]
-cta = "Propojit účet"
-description = "Pořízení běží na vašem propojeném účtu Stirling: tak zřizujeme trial, oceňujeme vaši nabídku a spouštíme fakturaci. Propojte účet a začněte."
-eyebrow = "Enterprise"
-title = "Pro začátek propojte svůj účet"
 
 [portal.procurement.live]
 description = "Vaše předplatné je aktivní a licence byla vydána. Váš tým je zřízen a fakturace začala."
-eyebrow = "Živě"
 title = "Jste live na Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "PDF nabídky zatím nešlo stáhnout — zkuste to prosím za c
 
 [portal.procurement.payment]
 description = "Vaše nabídka je přijata a vaše licence je už aktivní — váš tým může začít hned. Zaplaťte první fakturu, až budete připraveni; můžete ji zaplatit nebo stáhnout zde, bez nutnosti e-mailu."
-downloadAgreement = "Stáhnout podepsanou dohodu"
 downloadInvoice = "Stáhnout fakturu"
-eyebrow = "Platba"
-title = "Předplatné vytvořeno"
 viewInvoice = "Zobrazit a zaplatit fakturu"
 
 [portal.procurement.review]
 acceptCta = "Přijmout nabídku"
 annual = "Roční poplatek (rok 1)"
 downloadCta = "Stáhnout nabídku"
+oneTime = "jednorázově"
 poNumber = "Objednávka: {{po}}"
 renewal = "Obnovuje se za {{amount}}/rok po skončení období (+{{pct}} % CPI)"
 tcv = "{{years}}leté období, zaplaceno celé předem: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Prodloužení přidá 7 dní a upozorní vašeho solutions engineera."
 bodyMaxed = "Využili jste všechna prodloužení — pokud potřebujete více času, obraťte se na svého solutions engineera."
-cancel = "Zrušit trial"
 extend = "Prodloužit o 7 dní"
 maxed = "Vyčerpáno"
 subtitle = "Váš bezplatný trial běží do {{date}}. Karta není vyžadována."
 title = "Zkušební verze Enterprise"
+
+[portal.procurement.validation]
+confirm = "Potvrďte, že jste oprávněni podepsat za organizaci."
+email = "Zadejte platnou e-mailovou adresu."
+eula = "Souhlaste s EULA, abyste mohli pokračovat."
+required = "Toto pole je povinné."
+seats = "Zadejte, kolik lidí bude zkoušet."
+volume = "Zadejte, kolik PDF očekáváte zpracovat ročně."
 
 [portal.review]
 subtitle = "Vše z běhů vašich zásad a editorů vašeho týmu, co vyžaduje vaši pozornost."
@@ -10735,6 +11358,7 @@ subtitle = "Opakovaně použitelná vstupní připojení, která předávají do
 title = "Zdroje"
 
 [portal.sources.actions]
+connectDestination = "Připojit cíl"
 connectSource = "Připojit zdroj"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Vyberte, kam půjdou zpracované dokumenty. Zašedlé konekt
 comingSoon = "Již brzy"
 comingSoonHeading = "Již brzy"
 create = "Vytvořit zdroj"
+createDestination = "Vytvořit cíl"
+createDestinationTitle = "Přidat cíl"
 createTitle = "Připojit zdroj"
 delete = "Smazat"
 editTitle = "Upravit zdroj"
@@ -10757,6 +11383,41 @@ save = "Uložit změny"
 description = "Automatizace složek mohou používat pouze složky, které povolil správce. Přidejte ji v nastavení přístupu ke složkám a zkuste to znovu."
 openSettings = "Nastavení přístupu ke složkám"
 title = "Tato složka není povolena"
+
+[portal.sources.cloudFields.account]
+connect = "Připojit účet"
+connectAnother = "Připojit další účet"
+connectFailed = "Účet se nepodařilo připojit. Zkuste to znovu, nebo požádejte správce o kontrolu registrace aplikace."
+label = "Účet"
+placeholder = "Vyberte účet"
+reconnect = "přihlaste se znovu"
+unavailable = "Připojení vlastního účtu je na tomto serveru vypnuto. Zvolte místo toho připojení organizace."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Osobní účty jsou na tomto serveru vypnuté."
+helperText = "Váš účet dosáhne na to, co můžete otevřít vy, a nevyžaduje administrátora. Připojení organizace funguje dál i po odchodu lidí a dosáhne jen na to, co nastavil správce."
+label = "Přihlásit se jako"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Můj účet"
+organisation = "Připojení organizace"
+
+[portal.sources.cloudFields.connection]
+helperText = "Nastaví správce v Integracích. Sdílí se mezi všemi místy, která jej používají."
+label = "Připojení organizace"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Vložte odkaz na složku nebo zadejte cestu od kořene My Drive. Nechte prázdné pro kořen My Drive. Složka už musí existovat."
+placeholder = "Odkaz na složku nebo Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Složka ve vašem OneDrive nebo vložte odkaz na složku (Copy link v OneDrive). Nechte prázdné pro kořen OneDrive. Složka už musí existovat."
+placeholder = "Scans/Inbox nebo odkaz na složku"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Se svým účtem vložte odkaz na složku (Copy link v SharePoint). S připojením organizace složka uvnitř její knihovny; nechte prázdné pro kořen knihovny. Složka už musí existovat."
+organisationPlaceholder = "Odkaz na složku nebo Scans/Inbox"
+placeholder = "Odkaz na složku"
 
 [portal.sources.delete]
 body = "Odstranit „{{name}}“? Tuto akci nelze vrátit zpět. Zásady, které na něj odkazují, bude potřeba aktualizovat."
@@ -10821,6 +11482,7 @@ label = "E-mailová schránka"
 [portal.sources.types.folder]
 description = "Sledovat adresář na serveru pro nové dokumenty."
 label = "Složka"
+outputDescription = "Uložit výsledky do složky na serveru."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Absolutní cesta ke složce, která se má sledovat pro nové soubory."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Načítejte dokumenty ze sdílených složek Google Drive."
 label = "Google Drive"
+outputDescription = "Uložit výsledky do složky v Google Drive."
 
 [portal.sources.types.network]
 description = "Sledujte SMB síťové sdílení pro nové dokumenty."
@@ -10867,10 +11530,12 @@ label = "Síťový disk"
 [portal.sources.types.onedrive]
 description = "Sledujte složky OneDrive pro nové dokumenty."
 label = "OneDrive"
+outputDescription = "Uložit výsledky do složky v OneDrive."
 
 [portal.sources.types.s3]
 description = "Načítejte dokumenty z bucketu Amazon S3 nebo S3-kompatibilního bucketu."
 label = "Amazon S3"
+outputDescription = "Uložit výsledky do bucketu Amazon S3 nebo kompatibilního se S3."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Uložené připojení s bucketem a přihlašovacími údaji. Sdílené každým zdrojem a výstupem pipeline, který jej používá."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Načítejte dokumenty z knihoven dokumentů SharePoint."
 label = "SharePoint"
+outputDescription = "Uložit výsledky do složky v knihovně dokumentů SharePoint."
 
 [portal.sources.types.unknown]
 label = "Zdroj"
@@ -11074,6 +11740,14 @@ waiting = "Ve frontě ..."
 name = "Google Drive"
 scope = "Import souborů"
 
+[provider.googledrive.accountScope]
+description = "drive dosáhne na každý soubor (Google musí pro to ověřit veřejnou aplikaci); drive.file pouze na soubory, které lidé vyberou, nebo které Stirling vytvoří"
+label = "Přístup k Google Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "Jedno přihlášení pro editor a jeho pracovní postupy. Vypněte pro povolení pouze připojení organizace."
+label = "Umožnit lidem připojit vlastní účet"
+
 [provider.googledrive.apiKey]
 description = "Google API Key pro Google Picker API z Google Cloud Console"
 label = "Klíč API"
@@ -11086,13 +11760,65 @@ label = "App ID"
 description = "Google OAuth 2.0 Client ID z Google Cloud Console"
 label = "Client ID"
 
+[provider.googledrive.clientSecret]
+description = "Umožní lidem připojit svůj účet Google pro jejich pracovní postupy. Přidejte níže uvedenou URI pro přesměrování jako autorizovanou URI pro přesměrování klienta OAuth."
+label = "Tajný klíč klienta"
+
 [provider.googledrive.enabled]
 description = "Umožnit uživatelům importovat soubory přímo z Google Drive"
 label = "Povolit výběr souborů z Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "Nepodařilo se připojit váš účet Google. Zkuste to znovu v Nastavení > Propojené účty."
 notConfigured = "Google Drive není nakonfigurován"
 pickerFailed = "Nepodařilo se otevřít výběr Google Drive"
+
+[provider.googledrive.redirectUri]
+description = "Přidejte toto jako autorizovanou URI pro přesměrování klienta OAuth v Google Cloud Console."
+label = "URI pro přesměrování"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Soubory a pracovní postupy"
+
+[provider.microsoft.allowAccountConnections]
+description = "Jedno přihlášení pro editor a jeho pracovní postupy. Vypněte pro povolení pouze připojení organizace."
+label = "Umožnit lidem připojit vlastní účet"
+
+[provider.microsoft.allowEditorSaves]
+description = "Vypněte, chcete-li ponechat úpravy ve Stirling: soubory otevřené z OneDrive se pak místo toho stáhnou a server odmítne ukládání na OneDrive."
+label = "Povolit editoru ukládat zpět na OneDrive"
+
+[provider.microsoft.clientId]
+description = "Z jedné registrace aplikace Microsoft Entra."
+label = "ID aplikace (klienta)"
+
+[provider.microsoft.clientSecret]
+description = "Potřebné pro připojené účty. Zůstává na serveru."
+label = "Tajný klíč klienta"
+
+[provider.microsoft.enabled]
+description = "Umožnit lidem používat OneDrive a SharePoint v pracovních postupech"
+label = "Povolit OneDrive a SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Přidejte toto jako redirect URI pro Single-page application u stejné registrace aplikace, aby bylo možné se přihlašovat z editoru."
+label = "Redirect URI pro Single-page application"
+
+[provider.microsoft.redirectUri]
+description = "Přidejte toto jako Web redirect URI v registraci aplikace Entra."
+label = "URI pro přesměrování"
+
+[provider.microsoft.setupSteps]
+connect = "Uložte, restartujte a poté připojte účet v části Propojené účty."
+permissions = "Přidejte delegovaná oprávnění Microsoft Graph Files.ReadWrite.All a Files.Read.All a delegovaná oprávnění SharePoint MyFiles.Read a AllSites.Read, aby pracovní a školní účty mohly otevřít výběr souborů."
+redirects = "Přidejte k ní dvě níže uvedená redirect URI: jedno jako Web a jedno jako Single-page application."
+register = "Zaregistrujte aplikaci v Microsoft Entra admin center. Povolte osobní účty Microsoft, pokud lidé používají osobní OneDrive."
+secret = "Vytvořte client secret, poté níže vložte jeho hodnotu a client ID aplikace."
+
+[provider.microsoft.tenant]
+description = "common pro pracovní, školní a osobní účty; organizations pouze pro pracovní a školní účty; nebo ID tenantu pro povolení jedné organizace"
+label = "ID adresáře (tenantu)"
 
 [provider.oauth2.generic]
 name = "Obecné OAuth2"
@@ -11195,6 +11921,19 @@ label = "Rozsahy"
 description = "Pole použité jako uživatelské jméno (email, name, given_name, family_name, preferred_username)"
 label = "Použít jako uživatelské jméno"
 
+[provider.onedrive]
+pickerLoading = "Připojování k OneDrive..."
+pickerTitle = "Vyberte soubory z OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Nepodařilo se připojit váš účet Microsoft. Zkuste to znovu v Nastavení > Propojené účty."
+notConfigured = "OneDrive není nakonfigurován"
+pickerFailed = "Nepodařilo se otevřít OneDrive"
+popupBlocked = "Váš prohlížeč zablokoval přihlašovací okno Microsoftu. Povolte vyskakovací okna pro tento web a zkuste to znovu."
+reconnect = "Váš účet Microsoft se musí znovu přihlásit. Znovu jej připojte v Nastavení > Propojené účty."
+serverError = "Na OneDrive nebo na serveru Stirling došlo k problému. Zkuste to znovu, nebo se obraťte na správce, pokud potíže přetrvávají."
+unreachable = "Nelze se připojit k OneDrive. Zkontrolujte připojení a zkuste to znovu."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Oznámení"
 processor = "Procesor"
 reader = "Čtečka"
 signInToUse = "Přihlaste se, abyste to mohli používat"
+
+[quickNav.accountMenu]
+localMode = "Místní režim"
+server = "Nastavení serveru"
+settings = "Nastavení"
+signedOut = "Nepřihlášeno"
+signIn = "Přihlásit se"
 
 [read]
 tags = "zobrazit,otevřít,zobrazení,číst,prohlížeč,PDF prohlížeč,PDF čtečka,otevřít PDF,zobrazit PDF,náhled,procházet"
@@ -11811,6 +12557,13 @@ title = "Sanitizovat PDF"
 [sanitizePdf]
 tags = "vyčistit,zabezpečit,bezpečný,odstranit-hrozby"
 
+[saveFile.menu]
+more = "Další možnosti uložení"
+saveCopy = "Uložit kopii..."
+
+[saveFile.toolbar]
+mixed = "Uložit vše"
+
 [scalePages]
 tags = "změnit velikost,upravit,škálovat,velikost stránky,změnit velikost stránky,škálovat stránku,změnit velikost,upravit velikost,zvětšit,zmenšit stránku,přizpůsobit stránce,A4,velikost letter"
 title = "Upravit měřítko stránky"
@@ -11905,6 +12658,162 @@ showTools = "Zobrazit nedostupné nástroje ▾"
 title = "Váš server Stirling-PDF je nedostupný"
 toolNotAvailableLocally = "Váš server Stirling-PDF je offline a \"{{endpoint}}\" není dostupný v místním backendu."
 
+[serverSetup]
+back = "Zpět"
+collapse = "Skrýt nastavení {{setting}}"
+configured = "Nakonfigurováno"
+continue = "Pokračovat"
+dialogLabel = "Nastavení serveru"
+expand = "Zobrazit nastavení {{setting}}"
+finishSetup = "Dokončit nastavení"
+loadErrorSubtitle = "Pro spuštění nastavení jsou potřeba aktuální nastavení serveru."
+loadErrorTitle = "Nepodařilo se načíst vaše nastavení"
+off = "Vypnuto"
+on = "Zapnuto"
+save = "Uložit"
+stepCount = "{{current}} z {{total}}"
+
+[serverSetup.account]
+failed = "Nepodařilo se uložit vaše údaje. Zkontrolujte, že je server dostupný, a zkuste to znovu."
+save = "Uložit a pokračovat"
+signIn = "Přihlásit se"
+signInAgainSubtitle = "Pro pokračování se znovu přihlaste novým uživatelským jménem a heslem."
+signInAgainTitle = "Vaše údaje jsou uloženy"
+subtitle = "Zvolte, jak se budete odteď přihlašovat."
+title = "Nastavit váš účet"
+updating = "Aktualizace"
+updatingSubtitle = "Chvilku."
+updatingTitle = "Aktualizace vašich údajů"
+username = "Uživatelské jméno"
+usernameHelp = "Čím se budete přihlašovat. Funguje i e-mailová adresa."
+
+[serverSetup.addresses]
+backendUrl = "Adresa serveru"
+backendUrlHelp = "Kam poskytovatelé přihlášení posílají lidi zpět. Obvykle stejné jako webová adresa."
+frontendUrl = "Webová adresa"
+frontendUrlHelp = "Kde lidé otevírají Stirling PDF. Používá se v e-mailech, odkazech ke sdílení a QR kódech."
+subtitle = "Jak se k tomuto serveru dostanou lidé a poskytovatelé přihlášení."
+title = "Adresy"
+
+[serverSetup.ai]
+apiKey = "API klíč"
+apiKeyHelp = "Nechte prázdné pro použití klíče, který už AI engine má."
+baseUrl = "Základní URL"
+engineUrl = "Adresa AI enginu"
+fastModel = "Rychlý model"
+label = "Vlastní hostovaná AI"
+provider = "Poskytovatel modelu"
+providerCustom = "Kompatibilní s OpenAI"
+smartModel = "Plný model"
+stirling = "Stirling AI"
+subtitle = "Dotazy k dokumentům, automatické úpravy a AI agenti."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Přijmout a pokračovat"
+acceptFinish = "Přijmout a dokončit"
+changeLater = "Toto můžete kdykoli změnit v {{path}}."
+decline = "Odmítnout a pokračovat"
+declineFinish = "Odmítnout a dokončit"
+learnMore = "Co sbíráme"
+note = "Sdílejte s námi data o používání tohoto serveru, abychom mohli vylepšovat Stirling PDF. Nikdy neshromažďujeme soubory ani jejich obsah."
+title = "Analytika serveru"
+
+[serverSetup.documents]
+label = "Dotazy k dokumentům"
+model = "Model pro embedding"
+provider = "Poskytovatel embeddingu"
+providerHelp = "Převádí text dokumentu na vyhledávací index, který odpovídá na dotazy."
+
+[serverSetup.email]
+from = "Adresa odesílatele"
+host = "SMTP host"
+label = "Odesílat e-mail"
+password = "Heslo"
+port = "Port"
+subtitle = "Pro pozvánky, žádosti o podpis a sdílení."
+title = "E-mail"
+username = "Uživatelské jméno"
+
+[serverSetup.error]
+email = "Zadejte e-mailovou adresu"
+issuerUnreachable = "Nepodařilo se kontaktovat tohoto vydavatele. Zkontrolujte adresu a že k němu tento server má přístup."
+passwordIncorrect = "Nesprávné heslo"
+passwordLength = "Použijte alespoň 8 znaků"
+passwordMismatch = "Hesla se neshodují"
+passwordRejected = "Server toto heslo nepřijal. Zkuste jiné."
+passwordUnchanged = "Zvolte heslo odlišné od aktuálního"
+port = "Zadejte port od 1 do 65535"
+providerName = "Používejte pouze písmena, čísla, pomlčky nebo podtržítka"
+required = "Povinné"
+url = "Zadejte úplnou adresu začínající http:// nebo https://"
+username = "Použijte 3 až 50 písmen, číslic nebo . _ + - @, nebo e-mailovou adresu"
+usernameTaken = "Toto uživatelské jméno je zabrané"
+
+[serverSetup.files]
+sharing = "Sdílení souborů"
+sharingOffWarning = "Při vypnutém sdílení přestanou fungovat existující odkazy ke sdílení."
+storage = "Ukládat soubory"
+storageOffWarning = "Při vypnutém úložišti nepůjde otevřít soubory, které si lidé uložili na server."
+subtitle = "Spravovat ukládání souborů a sdílení."
+title = "Soubory"
+
+[serverSetup.finish]
+errorNote = "Zkontrolujte, že je server dostupný a že jste stále přihlášeni jako administrátor."
+errorSubtitle = "Nic se nerestartovalo."
+errorTitle = "Nepodařilo se uložit vaše nastavení"
+manualSubtitle = "Tento server se nemůže restartovat sám. Restartujte jeho kontejner nebo službu, aby se změny projevily."
+manualTitle = "Nastavení uloženo"
+restartFailedSubtitle = "Server se nerestartoval. Restartujte jeho kontejner nebo službu, aby se změny projevily."
+restartingSubtitle = "Až bude server zpět, tato stránka se znovu načte, obvykle do minuty."
+restartingTitle = "Restartování serveru"
+retry = "Zkusit znovu"
+saving = "Ukládání"
+savingSubtitle = "Chvilku."
+savingTitle = "Ukládání vašeho nastavení"
+
+[serverSetup.language]
+auto = "Přizpůsobit jazyku prohlížeče"
+label = "Výchozí jazyk"
+subtitle = "Co noví návštěvníci uvidí jako první."
+title = "Jazyk"
+
+[serverSetup.mcp]
+label = "Server MCP"
+
+[serverSetup.password]
+confirm = "Potvrdit nové heslo"
+current = "Aktuální heslo"
+new = "Nové heslo"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "Přihlásit pomocí"
+oidc = "Jiný OpenID Connect"
+password = "Uživatelské jméno a heslo"
+providerName = "Název poskytovatele"
+providerNameHelp = "Zobrazuje se na tlačítku přihlášení, například okta nebo entra."
+redirectNote = "Přidejte tuto URI pro přesměrování u svého poskytovatele:"
+subtitle = "Jak se váš tým přihlašuje."
+title = "Přihlášení"
+
+[serverSetup.signingIn]
+button = "Přihlašování"
+title = "Přihlašování s výchozími přihlašovacími údaji"
+
+[serverSetup.start]
+custom = "Vlastní"
+quick = "Rychlý start"
+setupLabel = "Nastavení"
+subtitle = "Nastavte ho pro svůj tým v několika krocích."
+title = "Váš server běží"
+
+[serverSetup.summary]
+subtitle = "Zkontrolujte to podstatné. Ostatní zůstane ve výchozím nastavení."
+title = "Rychlý start"
+
 [session]
 expired = "Vaše relace vypršela. Obnovte prosím stránku a zkuste to znovu."
 
@@ -11939,6 +12848,10 @@ mcp = "MCP Server"
 privacy = "Soukromí"
 storageSharing = "Ukládání souborů a sdílení"
 systemSettings = "Systémová nastavení"
+
+[settings.connectedAccounts]
+description = "Vaše vlastní OneDrive, SharePoint a Google Drive pro vaše pracovní postupy."
+title = "Propojené účty"
 
 [settings.connectedInstances]
 confirmBody = "Tím se zruší přístup instance k vašemu týmu ve Stirling Cloud. Nesmaže to místní soubory ani neodstraní již zaznamenané využití. Chcete-li se znovu připojit, postupujte podle původních kroků připojení na instanci."
@@ -11992,6 +12905,13 @@ selfhosted = "Vlastní hosting"
 apiKeys = "API klíče"
 apiKeysDescription = "Osobní klíče pro volání Stirling API ze skriptů a integrací."
 title = "Vývojář"
+
+[settings.feedback]
+label = "Zpětná vazba"
+
+[settings.feedback.send]
+description = "Nahlaste problém nebo navrhněte zlepšení týmu Stirling."
+label = "Odeslat zpětnou vazbu"
 
 [settings.general]
 autoUnzip = "Automaticky rozbalovat odpovědi API"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Zkontrolovat aktualizace"
 currentBackendVersion = "Aktuální verze backendu"
 currentFrontendVersion = "Aktuální verze frontendu"
 description = "Zkontrolujte aktualizace a zobrazte informace o verzi"
+descriptionManaged = "Zobrazit informace o verzi"
 latestVersion = "Nejnovější verze"
 managedByAdmin = "Spravováno správcem"
 modeAuto = "Instalovat aktualizace automaticky"
@@ -12135,15 +13056,24 @@ title = "Právní dokumenty"
 backendDescription = "Licence pro backend závislosti přibalené s tímto serverem."
 backendLabel = "Backend licence"
 backendTitle = "Backend licence třetích stran"
+clearSearch = "Vymazat vyhledávání"
 empty = "Nebyly nalezeny žádné závislosti."
 frontendDescription = "Licence pro frontend závislosti přibalené do release buildu."
 frontendLabel = "Frontend licence"
 frontendTitle = "Frontend licence třetích stran"
 license = "Licence"
+licenseAbout = "O balíčku"
+licenseAboutCompound = "O {{short}}"
+licenseAboutTitle = "O {{short}}"
 listDescription = "Seznam se zobrazuje přímo v UI z release bundle nebo backend endpointu."
 listTitle = "Přibalené závislosti"
 loadError = "Nepodařilo se načíst licence třetích stran"
 module = "Modul"
+noMatch = "Žádné odpovídající závislosti."
+searchPlaceholder = "Hledat v závislostech"
+showingCount = "Zobrazuje se {{count}} závislostí"
+showingCount_one = "Zobrazuje se {{count}} závislost"
+showingCount_other = "Zobrazuje se {{count}} závislostí"
 version = "Verze"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Zadejte svůj e-mail"
 emptyPassword = "Zadejte své heslo"
 emptyUsername = "Zadejte své uživatelské jméno"
 oauthFailed = "Přihlášení přes OAuth selhalo. Zkuste to znovu."
+openResetFailed = "Nepodařilo se otevřít váš prohlížeč pro obnovení hesla."
 
 [setup.saas]
 title = "Přihlásit se do Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "Neviditelné podpisy stále poskytují kryptografické ověření"
 description = "Určuje, zda je podpis na dokumentu viditelný, nebo je vložen neviditelně."
 title = "Viditelnost podpisu"
 
+[signedPdf]
+editsBlocked = "Tento PDF je digitálně podepsán a úpravy podepsaných PDF jsou vypnuté. Stále si jej můžete prohlédnout nebo vytisknout, převést do jiného formátu nebo jej znovu podepsat."
+editsBlockedStatus = "Podepsáno: úpravy zablokovány"
+editsBlockedTitle = "Podepsané PDF nelze změnit"
+
 [signingDetail]
 allSigned = "Všichni podepsali. Zkontrolujte dokument a poté jej dokončete."
 awaitingOwner = "Vlastník dokument dokončí, jakmile bude připraven."
@@ -13110,7 +14046,6 @@ noLinks = "Zatím nejsou žádné aktivní odkazy ke sdílení."
 noSharedUsers = "Zatím nemá přístup žádný uživatel."
 openInApp = "Otevřít ve Stirling PDF"
 ownerLabel = "Vlastník"
-ownerUnknown = "Neznámý"
 removeLink = "Odebrat odkaz"
 removeUser = "Odebrat"
 requiresLogin = "Tento sdílený soubor vyžaduje přihlášení."
@@ -13249,6 +14184,11 @@ remove = "Odebrat"
 roleColumn = "Role"
 title = "Členové týmu"
 
+[teamWelcome]
+invite = "Pozvat lidi"
+message = "Pozvěte svůj tým, aby s vámi mohli začít pracovat."
+title = "Váš plán Team je aktivní."
+
 [textAlign]
 center = "Na střed"
 left = "Vlevo"
@@ -13290,7 +14230,6 @@ toggleDetails = "Přepnout podrobnosti"
 
 [tool]
 endpointUnavailable = "Tento nástroj není na vašem serveru dostupný."
-endpointUnavailableClickable = "V tomto režimu není k dispozici. Kliknutím se přihlaste."
 filesLoading = "Soubory se stále načítají, vyčkejte prosím."
 filesLoadingProgress = "{{loaded}} / {{total}} souborů se načítá..."
 invalidParams = "Vyplňte požadovaná nastavení."
@@ -13298,6 +14237,8 @@ noFiles = "Přidejte soubor pro začátek."
 scopeFiles = "soubory"
 scopeThisFile = "tento soubor"
 selectFilesHint = "Vyberte soubory v Aktivních souborech pro spuštění tohoto nástroje"
+signInRequired = "Toto vyžaduje účet Stirling. Přihlaste se pro pokračování."
+signInToUse = "Přihlaste se pro použití"
 singleFileScope = "Použije se pouze pro: {{fileName}}"
 viewerMode = "Chcete-li přidat více souborů, přepněte do editoru souborů."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Zobrazit titulní stránku samostatně"
 disableColorFilter = "Vypnout barevný filtr"
 documentUpdated = "Dokument aktualizován"
 dualPageView = "Zobrazení dvou stránek"
+editText = "Upravit text"
 enableDarkFilter = "Zapnout tmavý filtr"
 enableSepiaFilter = "Zapnout sépiový filtr"
 engineLoadError = "Nepodařilo se inicializovat engine prohlížeče PDF"
@@ -14158,8 +15100,10 @@ closeAll = "Zavřít všechny soubory"
 closePdf = "Zavřít PDF"
 deselectAll = "Zrušit výběr všech"
 downloadAll = "Stáhnout vše"
+editText = "Upravit text"
 exitAnnotations = "Ukončit režim anotací"
 exitRedaction = "Opustit režim začernění"
+findReplace = "Najít a nahradit"
 formFill = "Editor formulářů"
 hideToolbar = "Skrýt panel nástrojů"
 moreActions = "Další akce"

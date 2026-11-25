@@ -63,8 +63,10 @@ export interface TooltipProps {
 /** Split out so only tooltips with a header need the logo and the providers behind it. */
 function TooltipHeader({
   header,
+  action,
 }: {
   header: NonNullable<TooltipProps["header"]>;
+  action?: React.ReactNode;
 }) {
   const { tooltipLogo } = useLogoAssets();
   return (
@@ -79,6 +81,7 @@ function TooltipHeader({
         )}
       </div>
       <span className={styles["tooltip-title"]}>{header.title}</span>
+      {action}
     </div>
   );
 }
@@ -216,6 +219,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, [open, isPinned, handleDocumentClick]);
 
   useEffect(() => () => clearTimers(), [clearTimers]);
+
+  useEffect(() => {
+    if (disabled) {
+      clearTimers();
+      setInternalOpen(false);
+      setIsPinned(false);
+    }
+  }, [disabled, clearTimers]);
 
   const arrowClass = useMemo(() => {
     if (sidebarTooltip) return null;
@@ -399,6 +410,32 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   const shouldShowTooltip = open;
   const shouldShowCloseButton = showCloseButton || isPinned;
+  const floatingCloseButton = shouldShowCloseButton && !header;
+
+  // currentColor: the button takes the colour of whatever it sits on, so it
+  // reads white on the pinned header and follows the theme everywhere else.
+  const closeButton = shouldShowCloseButton ? (
+    <ActionIcon
+      variant="quiet"
+      size="sm"
+      className={`${styles["tooltip-close"]} ${floatingCloseButton ? styles["tooltip-close-floating"] : ""}`}
+      style={
+        {
+          "--ai-color": "currentColor",
+          "--ai-hover-color": "currentColor",
+        } as React.CSSProperties
+      }
+      onClick={(e) => {
+        e.stopPropagation();
+        setIsPinned(false);
+        setOpen(false);
+      }}
+      title={t("tooltip.close", "Close tooltip")}
+      aria-label={t("tooltip.close", "Close tooltip")}
+    >
+      <Icon name="x" size="1rem" />
+    </ActionIcon>
+  ) : null;
 
   const tooltipElement = shouldShowTooltip ? (
     <div
@@ -435,21 +472,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           : undefined
       }
     >
-      {shouldShowCloseButton && (
-        <ActionIcon
-          variant="tertiary"
-          className={styles["tooltip-pin-button"]}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsPinned(false);
-            setOpen(false);
-          }}
-          title={t("tooltip.close", "Close tooltip")}
-          aria-label={t("tooltip.close", "Close tooltip")}
-        >
-          <Icon name="x" size="1.25rem" />
-        </ActionIcon>
-      )}
+      {floatingCloseButton && closeButton}
       {arrow && !sidebarTooltip && (
         <div
           className={`${styles["tooltip-arrow"]} ${getArrowStyleClass(arrowClass!)}`}
@@ -464,11 +487,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
           }
         />
       )}
-      {header && <TooltipHeader header={header} />}
+      {header && <TooltipHeader header={header} action={closeButton} />}
       <TooltipContent
         content={content}
         tips={tips}
-        extraRightPadding={shouldShowCloseButton ? 48 : 0}
+        extraRightPadding={floatingCloseButton ? 32 : 0}
       />
     </div>
   ) : null;

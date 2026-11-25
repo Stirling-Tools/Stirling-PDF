@@ -72,6 +72,30 @@ describe("buildExactLines", () => {
     expect(lines?.[1].left).toBe(40);
   });
 
+  it.each([
+    ["after the last line", "ab\n", [40, 50, Number.NaN], 40],
+    [
+      "between two lines",
+      "ab\n\ncd",
+      [40, 50, Number.NaN, Number.NaN, 60, 70],
+      40,
+    ],
+    ["before the first line", "\nab", [Number.NaN, 40, 50], 40],
+  ])(
+    "starts an empty line %s where its neighbour starts, not at the page edge",
+    (_case, text, starts, left) => {
+      const positions: CharPositions = {
+        starts,
+        ends: starts.map((x) => x + 10),
+      };
+      const lines = buildExactLines(text, positions);
+      expect(
+        lines?.every((line) => line.left === left || line.tokens.length > 0),
+      ).toBe(true);
+      expect(lines?.find((line) => line.tokens.length === 0)?.left).toBe(left);
+    },
+  );
+
   it("drops the engine-trimmed trailing spaces into a zero-width token", () => {
     const positions: CharPositions = {
       starts: [0, 10, Number.NaN],

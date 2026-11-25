@@ -1,22 +1,30 @@
+/* Floats over the pages under the editor's top bar, so opening it never shifts
+   the document. FindBar aligns it under the find button; the end inset is the
+   fallback for bars without one. */
 .pdf-editor-findbar {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.4375rem 0.625rem;
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  inset-inline-end: 0.75rem;
+  z-index: 60;
+  width: min(26rem, calc(100% - 1.5rem));
+  padding: 0.375rem;
   background: var(--c-bg-raised);
-  border-bottom: 0.0625rem solid var(--c-border-subtle);
-  flex: 0 0 auto;
+  border: 0.0625rem solid var(--c-border-subtle);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-lg);
 }
 
+/* One grid for both rows keeps the find and replace fields the same width. */
 .pdf-editor-findbar__grid {
-  flex: 1 1 auto;
-  min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
   align-items: center;
-  column-gap: 0.25rem;
-  row-gap: 0.3125rem;
-  max-width: 44rem;
+  column-gap: 0.125rem;
+  row-gap: 0.25rem;
+}
+
+.pdf-editor-findbar__replace {
+  grid-column: 2;
 }
 
 .pdf-editor-findbar__inline {
@@ -64,22 +72,4 @@
 .pdf-editor-findbar__toggle[aria-pressed="true"] {
   background: var(--c-primary);
   color: var(--c-text-on-primary);
-}
-
-.pdf-editor-findbar__divider {
-  width: 0.0625rem;
-  align-self: stretch;
-  margin: 0.125rem 0.1875rem;
-  background: var(--c-border-strong);
-}
-
-.pdf-editor-findbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.pdf-editor-findbar__close {
-  flex: 0 0 auto;
-  margin-left: auto;
 }
