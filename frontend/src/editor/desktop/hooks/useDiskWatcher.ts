@@ -5,11 +5,13 @@ import {
   watchDiskPaths,
 } from "@editor/services/desktopFileLink";
 
-// Watches disk originals of open files: every other reconcile is user-triggered, so
-// an edit or delete under an open file otherwise goes unnoticed until a rebuild.
+// Watches disk originals of open files for being deleted, moved or going
+// offline; every other reconcile is user-triggered, so that loss would otherwise
+// go unnoticed until the next open. Content changes are deliberately left for
+// that next open.
 
 // Saves arrive as bursts (truncate-then-write, or temp file renamed over the
-// target); settling avoids reading a half-written PDF.
+// target); settling checks the path once the burst is over.
 const SETTLE_MS = 400;
 
 export function useDiskWatcher(): void {

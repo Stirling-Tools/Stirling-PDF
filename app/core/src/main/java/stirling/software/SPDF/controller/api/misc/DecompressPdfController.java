@@ -69,8 +69,7 @@ public class DecompressPdfController {
 
             // Return the PDF as a streaming response
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
+                    tempOut, GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"));
         }
     }
 

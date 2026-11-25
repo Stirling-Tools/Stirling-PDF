@@ -15,11 +15,11 @@ export function AdvancedProcessExecutorCard({
     <Paper withBorder p="md" radius="md">
       <Stack gap="md">
         <Accordion variant="separated">
-          <Accordion.Item value="libreOffice">
+          <Accordion.Item value="officeConvert">
             <Accordion.Control>
               {t(
-                "admin.settings.advanced.processExecutor.libreOffice",
-                "LibreOffice",
+                "admin.settings.advanced.processExecutor.officeConvert",
+                "Office conversion",
               )}
             </Accordion.Control>
             <Accordion.Panel>
@@ -28,8 +28,8 @@ export function AdvancedProcessExecutorCard({
                   label={
                     <SettingsFieldLabel
                       info={t(
-                        "admin.settings.advanced.processExecutor.sessionLimit.description",
-                        "Maximum concurrent instances",
+                        "admin.settings.advanced.processExecutor.officeConvertSessionLimit",
+                        "Maximum concurrent conversions; 0 picks a limit from CPUs and memory",
                       )}
                     >
                       {t(
@@ -40,7 +40,7 @@ export function AdvancedProcessExecutorCard({
                   }
                   value={
                     settings.processExecutor?.sessionLimit
-                      ?.libreOfficeSessionLimit ?? 1
+                      ?.officeConvertSessionLimit ?? 0
                   }
                   onChange={(value) =>
                     setSettings({
@@ -49,12 +49,12 @@ export function AdvancedProcessExecutorCard({
                         ...settings.processExecutor,
                         sessionLimit: {
                           ...settings.processExecutor?.sessionLimit,
-                          libreOfficeSessionLimit: Number(value),
+                          officeConvertSessionLimit: Number(value),
                         },
                       },
                     })
                   }
-                  min={1}
+                  min={0}
                   max={100}
                   disabled={!loginEnabled}
                 />
@@ -74,7 +74,7 @@ export function AdvancedProcessExecutorCard({
                   }
                   value={
                     settings.processExecutor?.timeoutMinutes
-                      ?.libreOfficetimeoutMinutes ?? 30
+                      ?.officeConvertTimeoutMinutes ?? 30
                   }
                   onChange={(value) =>
                     setSettings({
@@ -83,88 +83,7 @@ export function AdvancedProcessExecutorCard({
                         ...settings.processExecutor,
                         timeoutMinutes: {
                           ...settings.processExecutor?.timeoutMinutes,
-                          libreOfficetimeoutMinutes: Number(value),
-                        },
-                      },
-                    })
-                  }
-                  min={1}
-                  max={240}
-                  disabled={!loginEnabled}
-                />
-              </Stack>
-            </Accordion.Panel>
-          </Accordion.Item>
-
-          <Accordion.Item value="pdfToHtml">
-            <Accordion.Control>
-              {t(
-                "admin.settings.advanced.processExecutor.pdfToHtml",
-                "PDF to HTML",
-              )}
-            </Accordion.Control>
-            <Accordion.Panel>
-              <Stack gap="sm">
-                <NumberInput
-                  label={
-                    <SettingsFieldLabel
-                      info={t(
-                        "admin.settings.advanced.processExecutor.sessionLimit.description",
-                        "Maximum concurrent instances",
-                      )}
-                    >
-                      {t(
-                        "admin.settings.advanced.processExecutor.sessionLimit.label",
-                        "Session Limit",
-                      )}
-                    </SettingsFieldLabel>
-                  }
-                  value={
-                    settings.processExecutor?.sessionLimit
-                      ?.pdfToHtmlSessionLimit ?? 1
-                  }
-                  onChange={(value) =>
-                    setSettings({
-                      ...settings,
-                      processExecutor: {
-                        ...settings.processExecutor,
-                        sessionLimit: {
-                          ...settings.processExecutor?.sessionLimit,
-                          pdfToHtmlSessionLimit: Number(value),
-                        },
-                      },
-                    })
-                  }
-                  min={1}
-                  max={100}
-                  disabled={!loginEnabled}
-                />
-                <NumberInput
-                  label={
-                    <SettingsFieldLabel
-                      info={t(
-                        "admin.settings.advanced.processExecutor.timeout.description",
-                        "Maximum execution time",
-                      )}
-                    >
-                      {t(
-                        "admin.settings.advanced.processExecutor.timeout.label",
-                        "Timeout (minutes)",
-                      )}
-                    </SettingsFieldLabel>
-                  }
-                  value={
-                    settings.processExecutor?.timeoutMinutes
-                      ?.pdfToHtmltimeoutMinutes ?? 20
-                  }
-                  onChange={(value) =>
-                    setSettings({
-                      ...settings,
-                      processExecutor: {
-                        ...settings.processExecutor,
-                        timeoutMinutes: {
-                          ...settings.processExecutor?.timeoutMinutes,
-                          pdfToHtmltimeoutMinutes: Number(value),
+                          officeConvertTimeoutMinutes: Number(value),
                         },
                       },
                     })
@@ -341,7 +260,7 @@ export function AdvancedProcessExecutorCard({
             <Accordion.Control>
               {t(
                 "admin.settings.advanced.processExecutor.pythonOpenCv",
-                "Python OpenCV",
+                "Python",
               )}
             </Accordion.Control>
             <Accordion.Panel>
@@ -406,87 +325,6 @@ export function AdvancedProcessExecutorCard({
                         timeoutMinutes: {
                           ...settings.processExecutor?.timeoutMinutes,
                           pythonOpenCvtimeoutMinutes: Number(value),
-                        },
-                      },
-                    })
-                  }
-                  min={1}
-                  max={240}
-                  disabled={!loginEnabled}
-                />
-              </Stack>
-            </Accordion.Panel>
-          </Accordion.Item>
-
-          <Accordion.Item value="weasyPrint">
-            <Accordion.Control>
-              {t(
-                "admin.settings.advanced.processExecutor.weasyPrint",
-                "WeasyPrint",
-              )}
-            </Accordion.Control>
-            <Accordion.Panel>
-              <Stack gap="sm">
-                <NumberInput
-                  label={
-                    <SettingsFieldLabel
-                      info={t(
-                        "admin.settings.advanced.processExecutor.sessionLimit.description",
-                        "Maximum concurrent instances",
-                      )}
-                    >
-                      {t(
-                        "admin.settings.advanced.processExecutor.sessionLimit.label",
-                        "Session Limit",
-                      )}
-                    </SettingsFieldLabel>
-                  }
-                  value={
-                    settings.processExecutor?.sessionLimit
-                      ?.weasyPrintSessionLimit ?? 16
-                  }
-                  onChange={(value) =>
-                    setSettings({
-                      ...settings,
-                      processExecutor: {
-                        ...settings.processExecutor,
-                        sessionLimit: {
-                          ...settings.processExecutor?.sessionLimit,
-                          weasyPrintSessionLimit: Number(value),
-                        },
-                      },
-                    })
-                  }
-                  min={1}
-                  max={100}
-                  disabled={!loginEnabled}
-                />
-                <NumberInput
-                  label={
-                    <SettingsFieldLabel
-                      info={t(
-                        "admin.settings.advanced.processExecutor.timeout.description",
-                        "Maximum execution time",
-                      )}
-                    >
-                      {t(
-                        "admin.settings.advanced.processExecutor.timeout.label",
-                        "Timeout (minutes)",
-                      )}
-                    </SettingsFieldLabel>
-                  }
-                  value={
-                    settings.processExecutor?.timeoutMinutes
-                      ?.weasyPrinttimeoutMinutes ?? 30
-                  }
-                  onChange={(value) =>
-                    setSettings({
-                      ...settings,
-                      processExecutor: {
-                        ...settings.processExecutor,
-                        timeoutMinutes: {
-                          ...settings.processExecutor?.timeoutMinutes,
-                          weasyPrinttimeoutMinutes: Number(value),
                         },
                       },
                     })
@@ -568,84 +406,6 @@ export function AdvancedProcessExecutorCard({
                         timeoutMinutes: {
                           ...settings.processExecutor?.timeoutMinutes,
                           installApptimeoutMinutes: Number(value),
-                        },
-                      },
-                    })
-                  }
-                  min={1}
-                  max={240}
-                  disabled={!loginEnabled}
-                />
-              </Stack>
-            </Accordion.Panel>
-          </Accordion.Item>
-
-          <Accordion.Item value="calibre">
-            <Accordion.Control>
-              {t("admin.settings.advanced.processExecutor.calibre", "Calibre")}
-            </Accordion.Control>
-            <Accordion.Panel>
-              <Stack gap="sm">
-                <NumberInput
-                  label={
-                    <SettingsFieldLabel
-                      info={t(
-                        "admin.settings.advanced.processExecutor.sessionLimit.description",
-                        "Maximum concurrent instances",
-                      )}
-                    >
-                      {t(
-                        "admin.settings.advanced.processExecutor.sessionLimit.label",
-                        "Session Limit",
-                      )}
-                    </SettingsFieldLabel>
-                  }
-                  value={
-                    settings.processExecutor?.sessionLimit
-                      ?.calibreSessionLimit ?? 1
-                  }
-                  onChange={(value) =>
-                    setSettings({
-                      ...settings,
-                      processExecutor: {
-                        ...settings.processExecutor,
-                        sessionLimit: {
-                          ...settings.processExecutor?.sessionLimit,
-                          calibreSessionLimit: Number(value),
-                        },
-                      },
-                    })
-                  }
-                  min={1}
-                  max={100}
-                  disabled={!loginEnabled}
-                />
-                <NumberInput
-                  label={
-                    <SettingsFieldLabel
-                      info={t(
-                        "admin.settings.advanced.processExecutor.timeout.description",
-                        "Maximum execution time",
-                      )}
-                    >
-                      {t(
-                        "admin.settings.advanced.processExecutor.timeout.label",
-                        "Timeout (minutes)",
-                      )}
-                    </SettingsFieldLabel>
-                  }
-                  value={
-                    settings.processExecutor?.timeoutMinutes
-                      ?.calibretimeoutMinutes ?? 30
-                  }
-                  onChange={(value) =>
-                    setSettings({
-                      ...settings,
-                      processExecutor: {
-                        ...settings.processExecutor,
-                        timeoutMinutes: {
-                          ...settings.processExecutor?.timeoutMinutes,
-                          calibretimeoutMinutes: Number(value),
                         },
                       },
                     })

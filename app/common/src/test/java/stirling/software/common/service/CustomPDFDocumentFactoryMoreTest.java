@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,6 +13,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
@@ -26,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 class CustomPDFDocumentFactoryMoreTest {
 
@@ -175,6 +180,80 @@ class CustomPDFDocumentFactoryMoreTest {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             doc.save(out);
             return out.toByteArray();
+        }
+    }
+
+    @Nested
+    @DisplayName("MultipartFile streams")
+    class MultipartStreams {
+
+        @Test
+        @DisplayName("closes the stream it opens for large and password-protected loads")
+        void closesOpenedStream() throws IOException {
+            List<ClosingTracker> opened = new ArrayList<>();
+            MultipartFile file = mock(MultipartFile.class);
+            when(file.getSize()).thenReturn(CustomPDFDocumentFactory.SMALL_FILE_THRESHOLD + 1);
+            when(file.getInputStream())
+                    .thenAnswer(
+                            invocation -> {
+                                ClosingTracker in = new ClosingTracker(basePdfBytes);
+                                opened.add(in);
+                                return in;
+                            });
+
+            try (PDDocument doc = factory.load(file, false)) {
+                assertThat(doc.getNumberOfPages()).isPositive();
+            }
+            try (PDDocument doc = factory.load(file, (String) null)) {
+                assertThat(doc.getNumberOfPages()).isPositive();
+            }
+
+            assertThat(opened).hasSize(2).allMatch(in -> in.closed);
+        }
+
+        @Test
+        @DisplayName("fails before parsing when closing the stream fails")
+        void closeFailureLeavesNoDocument() throws IOException {
+            AtomicInteger parses = new AtomicInteger();
+            CustomPDFDocumentFactory countingFactory =
+                    new CustomPDFDocumentFactory(mock(PdfMetadataService.class)) {
+                        @Override
+                        protected StreamCacheCreateFunction getStreamCacheFunction(
+                                long contentSize, MemorySnapshot mem) {
+                            parses.incrementAndGet();
+                            return super.getStreamCacheFunction(contentSize, mem);
+                        }
+                    };
+            MultipartFile file = mock(MultipartFile.class);
+            when(file.getSize()).thenReturn(CustomPDFDocumentFactory.SMALL_FILE_THRESHOLD + 1);
+            when(file.getInputStream())
+                    .thenAnswer(
+                            invocation ->
+                                    new ByteArrayInputStream(basePdfBytes) {
+                                        @Override
+                                        public void close() throws IOException {
+                                            throw new IOException("close failed");
+                                        }
+                                    });
+
+            assertThatThrownBy(() -> countingFactory.load(file, false)).hasMessage("close failed");
+            assertThatThrownBy(() -> countingFactory.load(file, (String) null))
+                    .hasMessage("close failed");
+            assertThat(parses).hasValue(0);
+        }
+    }
+
+    private static final class ClosingTracker extends ByteArrayInputStream {
+        boolean closed;
+
+        ClosingTracker(byte[] bytes) {
+            super(bytes);
+        }
+
+        @Override
+        public void close() throws IOException {
+            closed = true;
+            super.close();
         }
     }
 }

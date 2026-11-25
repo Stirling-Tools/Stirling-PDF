@@ -1,0 +1,60 @@
+.pdf-editor-table-chip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: -1px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+
+.pdf-editor-table-chip[data-shown="true"],
+.pdf-editor-table-chip:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pdf-editor-table-chip button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--c-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pdf-editor-table-chip button:hover {
+  color: var(--c-text);
+  background: var(--c-hover);
+}
+
+.pdf-editor-table-chip button:focus-visible {
+  outline: 2px solid var(--c-accent-fg, var(--c-primary));
+  outline-offset: 1px;
+}
+
+.pdf-editor-table-chip-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 3px 0;
+  background: var(--c-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-editor-table-chip {
+    transition: none;
+  }
+}

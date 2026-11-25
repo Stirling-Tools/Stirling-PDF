@@ -15,6 +15,7 @@ interface ImportMetaEnv {
   readonly VITE_STRIPE_PUBLISHABLE_KEY: string;
   readonly VITE_PUBLIC_POSTHOG_KEY: string;
   readonly VITE_PUBLIC_POSTHOG_HOST: string;
+  readonly VITE_FEEDBACK_URL: string;
 
   // SaaS only (.env.saas)
   readonly VITE_USERBACK_TOKEN: string;

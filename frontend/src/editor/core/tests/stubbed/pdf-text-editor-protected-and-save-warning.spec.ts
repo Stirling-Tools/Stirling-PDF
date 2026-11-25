@@ -1,4 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  openInTextEditor,
+  viewInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { readFile, writeFile } from "node:fs/promises";
@@ -26,9 +30,7 @@ async function gotoEditor(page: Page): Promise<void> {
 }
 
 async function upload(page: Page, file: string): Promise<void> {
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+  await openInTextEditor(page, file);
 }
 
 test.describe("PDF text editor - encrypted PDF password prompt", () => {
@@ -75,7 +77,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-save-risk-confirm").click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe("encrypted_edited.pdf");
+    expect(download.suggestedFilename()).toBe("encrypted.pdf");
     const savedPath = test.info().outputPath("encrypted_edited.pdf");
     await download.saveAs(savedPath);
     const source = await readPdfProtection(
@@ -130,33 +132,31 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     test.setTimeout(90_000);
 
     await gotoEditor(page);
-    await upload(page, ENCRYPTED);
+    await page.getByTestId("file-input").setInputFiles(ENCRYPTED);
 
-    const submit = page.getByTestId("pdf-editor-password-submit");
-    await expect(submit).toBeVisible({ timeout: 20_000 });
-    const input = page
-      .getByTestId("pdf-editor-password-modal")
-      .locator("input")
-      .first();
+    const dialog = page.getByRole("dialog", { name: /^Open PDF/ });
+    const input = dialog.getByLabel("Password to open", { exact: true });
+    const submit = dialog.getByRole("button", {
+      name: "Open PDF",
+      exact: true,
+    });
+    await expect(input).toBeVisible({ timeout: 20_000 });
 
     // Wrong password -> prompt stays, shows the retry error.
     await input.fill("definitely-wrong");
     await submit.click();
-    await expect(page.getByText("Incorrect password - try again.")).toBeVisible(
-      { timeout: 20_000 },
-    );
-    await expect(submit).toBeVisible();
+    await expect(dialog.getByText("Incorrect password")).toBeVisible({
+      timeout: 20_000,
+    });
 
-    // Correct password -> prompt closes and the page renders.
+    // Correct password -> prompt closes and the editor opens the document.
     await input.fill(ENCRYPTED_PASSWORD);
     await submit.click();
-    await expect(submit).toBeHidden({ timeout: 20_000 });
+    await expect(dialog).toBeHidden({ timeout: 20_000 });
+    await viewInTextEditor(page, "encrypted.pdf");
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
-    await expect(
-      page.getByRole("button", { name: /^encrypted\.pdf/ }),
-    ).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
@@ -165,9 +165,9 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
   }) => {
     test.setTimeout(60_000);
     await gotoEditor(page);
-    await upload(page, ENCRYPTED);
+    await page.getByTestId("file-input").setInputFiles(ENCRYPTED);
 
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByRole("dialog", { name: /^Open PDF/ });
     await expect(dialog).toBeVisible({ timeout: 20_000 });
     await dialog.getByRole("button", { name: "Close", exact: true }).click();
     await expect(dialog).toBeHidden();

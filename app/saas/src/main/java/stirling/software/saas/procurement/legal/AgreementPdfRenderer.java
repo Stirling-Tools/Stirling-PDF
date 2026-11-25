@@ -1,6 +1,7 @@
 package stirling.software.saas.procurement.legal;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 
 import org.commonmark.Extension;
@@ -12,28 +13,26 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.TempFileManager;
 
 /**
  * Renders an assembled agreement's markdown to a PDF, dogfooding Stirling's own conversion path:
- * commonmark (markdown → HTML) then {@link FileToPdf#convertHtmlToPdf} (HTML → PDF via WeasyPrint),
- * the same pipeline as the product's Markdown-to-PDF tool.
+ * commonmark (markdown → HTML) then {@link FileToPdf#convertHtmlToPdf} (HTML → PDF via Stirling
+ * Office Convert), the same converter as the product's Markdown-to-PDF tool.
  *
  * <p>The signed PDF is a stored artifact, but it must never block signing: {@link #tryRender}
- * returns {@code null} if the conversion runtime (WeasyPrint) is unavailable, so the signature is
- * still recorded and the buyer keeps the on-the-fly download.
+ * returns {@code null} if the conversion fails, so the signature is still recorded and the buyer
+ * keeps the on-the-fly download.
  */
 @Service
 @RequiredArgsConstructor
 public class AgreementPdfRenderer {
 
-    private final RuntimePathConfig runtimePathConfig;
+    private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
-    private final CustomHtmlSanitizer customHtmlSanitizer;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private static final List<Extension> EXTENSIONS = List.of(TablesExtension.create());
@@ -60,12 +59,13 @@ public class AgreementPdfRenderer {
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
-                        runtimePathConfig.getWeasyPrintPath(),
-                        null,
                         html.getBytes(StandardCharsets.UTF_8),
-                        "agreement.html",
-                        tempFileManager,
-                        customHtmlSanitizer);
+                        Duration.ofMinutes(
+                                applicationProperties
+                                        .getProcessExecutor()
+                                        .getTimeoutMinutes()
+                                        .getOfficeConvertTimeoutMinutes()),
+                        tempFileManager);
         return pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
     }
 }
