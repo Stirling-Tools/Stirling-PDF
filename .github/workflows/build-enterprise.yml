@@ -58,7 +58,7 @@ jobs:
       SYSTEM_ENABLEANALYTICS: "false"
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -164,6 +164,8 @@ jobs:
           exit 1
       - name: Boot Stirling-PDF (frontend baked in, OAuth env)
         env:
+          # A fresh server signs in as the default admin and hides the SSO buttons.
+          SYSTEM_SETUPCOMPLETED: "true"
           SECURITY_ENABLELOGIN: "true"
           SECURITY_LOGINMETHOD: "all"
           SECURITY_OAUTH2_ENABLED: "true"
@@ -231,6 +233,8 @@ jobs:
           echo "✓ SAML certs prepared"
       - name: Boot Stirling-PDF (frontend baked in, SAML env)
         env:
+          # A fresh server signs in as the default admin and hides the SSO buttons.
+          SYSTEM_SETUPCOMPLETED: "true"
           SECURITY_ENABLELOGIN: "true"
           SECURITY_LOGINMETHOD: "all"
           SECURITY_SAML2_ENABLED: "true"
@@ -360,7 +364,7 @@ jobs:
       MN_FILES: -f docker-compose-multinode.yml ${{ matrix.valkey != 'standalone' && format('-f docker-compose-multinode.valkey-{0}.yml', matrix.valkey) || '' }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
       - name: Checkout repository

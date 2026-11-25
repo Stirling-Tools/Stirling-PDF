@@ -125,7 +125,7 @@ describe("wire conversion", () => {
 
 describe("compliance steps", () => {
   test.each([true, false, "true", "false"])(
-    "pdfa retains a stored office choice %s",
+    "pdfa drops a stored office choice %s",
     (choice) => {
       const step = policyStepFromWire({
         operation: "/api/v1/convert/pdf/pdfa",
@@ -138,7 +138,6 @@ describe("compliance steps", () => {
       if (!step) throw new Error("PDF/A policy step was not recognized");
       expect(policyStepToWire(step).parameters).toEqual({
         outputFormat: "pdfa-3b",
-        useStirlingOfficeConvert: choice === true || choice === "true",
       });
     },
   );

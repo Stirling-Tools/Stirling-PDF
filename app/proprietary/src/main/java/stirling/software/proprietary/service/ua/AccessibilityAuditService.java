@@ -61,7 +61,9 @@ public class AccessibilityAuditService {
         UaValidationResult validation = validationService.validate(pdfBytes, profile);
         report.setIssues(validation.issues());
         report.setPassesAutomatedChecks(validation.compliant());
+        report.setValidationError(validation.validationError());
         report.setHumanChecks(HUMAN_CHECKS);
+        report.setChecks(checksOf(validation));
 
         int fixable = 0;
         int needsInput = 0;
@@ -82,6 +84,16 @@ public class AccessibilityAuditService {
             log.debug("Could not inspect document for the summary: {}", e.getMessage());
         }
         return report;
+    }
+
+    private static AccessibilityReport.Checks checksOf(UaValidationResult validation) {
+        AccessibilityReport.Checks checks = new AccessibilityReport.Checks();
+        checks.setTotal(validation.totalChecks());
+        checks.setFailed(validation.totalFailures());
+        checks.setPassed(Math.max(0, validation.totalChecks() - validation.totalFailures()));
+        checks.setRulesInProfile(validation.rulesInProfile());
+        checks.setRulesFailed(validation.issues().size());
+        return checks;
     }
 
     /**
@@ -121,7 +133,10 @@ public class AccessibilityAuditService {
 
         summary.setPages(document.getNumberOfPages());
         summary.setEncrypted(document.isEncrypted());
-        summary.setHasLanguage(catalog.getLanguage() != null && !catalog.getLanguage().isBlank());
+        String language = catalog.getLanguage();
+        boolean hasLanguage = language != null && !language.isBlank();
+        summary.setHasLanguage(hasLanguage);
+        summary.setLanguage(hasLanguage ? language.strip() : null);
 
         String title = document.getDocumentInformation().getTitle();
         summary.setHasTitle(title != null && !title.isBlank());

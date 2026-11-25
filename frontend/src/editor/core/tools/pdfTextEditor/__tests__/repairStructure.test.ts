@@ -378,7 +378,7 @@ describe("repairStructure on the editor's own output", () => {
     page.markDirty();
     page.markNeedsGenerate();
 
-    const { blob } = await exportToBlob(doc, "sample.pdf");
+    const blob = await exportToBlob(doc);
     const pdf = (await RawPdf.parse(new Uint8Array(await blob.arrayBuffer())))!;
     const mcids = await contentMcids(pdf);
     expect(new Set(mcids).size).toBe(mcids.length);
@@ -466,7 +466,7 @@ describe("repairStructure on the editor's own output", () => {
     page.markDirty();
     page.markNeedsGenerate();
 
-    const { blob } = await exportToBlob(doc, "named.pdf");
+    const blob = await exportToBlob(doc);
     const pdf = (await RawPdf.parse(new Uint8Array(await blob.arrayBuffer())))!;
     // PDFium writes the untouched sequences back in named form.
     expect(await contentText(pdf)).toContain("/MC1 BDC");

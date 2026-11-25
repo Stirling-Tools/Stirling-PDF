@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -12,9 +13,7 @@ async function openEditor(page: Page): Promise<void> {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE_PDF);
+  await openInTextEditor(page, SAMPLE_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -44,15 +43,10 @@ test.describe("PDF text editor - top bar", () => {
     }
   });
 
-  test("names the open document, and marks it unsaved once edited", async ({
-    page,
-  }) => {
+  test("marks the document unsaved once edited", async ({ page }) => {
     test.setTimeout(120_000);
     await openEditor(page);
 
-    await expect(page.getByTestId("pdf-editor-filename")).toContainText(
-      "sample.pdf",
-    );
     expect(await page.getByTestId("pdf-editor-dirty-dot").count()).toBe(0);
 
     await page.evaluate(() => {
@@ -85,7 +79,6 @@ test.describe("PDF text editor - top bar", () => {
       "pdf-editor-open-find",
       "pdf-editor-help",
       "pdf-editor-save",
-      "pdf-editor-filename",
     ]) {
       expect(
         await page.locator(`[data-testid="${id}"]`).count(),
@@ -178,9 +171,12 @@ test.describe("PDF text editor - top bar", () => {
     const findBar = page.getByTestId("pdf-editor-find-bar");
     await expect(findBar).toBeVisible();
     const bar = await findBar.boundingBox();
-    const stage = await page.getByTestId("pdf-editor-stage").boundingBox();
+    const pages = await page.locator("[data-viewer-pages]").boundingBox();
     expect(bar).not.toBeNull();
-    expect(stage).not.toBeNull();
-    expect(bar!.y).toBeLessThan(stage!.y);
+    expect(pages).not.toBeNull();
+    // Floats over the top of the pages column, clear of the side panel.
+    expect(bar!.x).toBeGreaterThanOrEqual(pages!.x);
+    expect(bar!.x + bar!.width).toBeLessThanOrEqual(pages!.x + pages!.width);
+    expect(Math.abs(bar!.y - pages!.y)).toBeLessThan(24);
   });
 });
