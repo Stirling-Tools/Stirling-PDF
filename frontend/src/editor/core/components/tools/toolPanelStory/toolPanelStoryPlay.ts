@@ -299,6 +299,9 @@ export async function openSelect(
     // Found again on every try: a panel still settling can remount the field, which
     // closes a dropdown it opened, so a closed one is clicked open again.
     const select = await findEnabled(context, "textbox", name);
+    // The dropdown stays hidden while its field is scrolled out of the panel,
+    // and a click does not scroll.
+    select.scrollIntoView({ block: "center" });
     if (select.getAttribute("aria-expanded") !== "true")
       await userEvent.click(select);
     const id = select.getAttribute("aria-controls");

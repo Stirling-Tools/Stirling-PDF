@@ -3,6 +3,11 @@ type Flavor = "core" | "proprietary" | "saas" | "desktop";
 interface FlavorBuild {
   /** tsconfig projects for `@editor/*`, relative to frontend/, first match wins. */
   projects: string[];
+  /**
+   * Directories `@processor/*` tries in order, relative to frontend/. Matches
+   * the `@processor/*` paths of this flavour's tsconfig unless noted.
+   */
+  processorLayers: string[];
   /** Story globs relative to frontend/. */
   stories: string[];
 }
@@ -27,10 +32,12 @@ const FLAVORS: Record<Flavor, FlavorBuild> = {
       "tsconfig.storybook-proprietary.json",
       "tsconfig.core.vite.json",
     ],
+    processorLayers: ["src/processor/proprietary"],
     stories: ["src/editor/core/**/*.stories.@(ts|tsx)"],
   },
   proprietary: {
     projects: ["tsconfig.proprietary.vite.json"],
+    processorLayers: ["src/processor/proprietary"],
     stories: [
       "src/processor/proprietary/**/*.mdx",
       "src/processor/**/*.stories.@(ts|tsx)",
@@ -39,12 +46,16 @@ const FLAVORS: Record<Flavor, FlavorBuild> = {
   },
   saas: {
     projects: ["tsconfig.saas.vite.json"],
+    // Not the saas tsconfig's cascade: with the saas and cloud processor
+    // layers, stories hang at auth start-up against the mock SaaS.
+    processorLayers: ["src/processor/proprietary"],
     stories: [
       "src/editor/@(core|proprietary|cloud|saas)/**/*.stories.@(ts|tsx)",
     ],
   },
   desktop: {
     projects: ["tsconfig.desktop.vite.json"],
+    processorLayers: ["src/processor/desktop", "src/processor/proprietary"],
     stories: [
       "src/editor/@(core|proprietary|cloud|desktop)/**/*.stories.@(ts|tsx)",
     ],

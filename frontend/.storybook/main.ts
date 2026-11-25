@@ -23,6 +23,35 @@ function desktopFlavorSetup(): Plugin {
   };
 }
 
+/**
+ * Resolves `@processor/*` through the flavour's processor layers, first match
+ * wins. A plain alias can name one directory only, so a module that exists in
+ * a higher layer alone (desktop's `edition`) would not resolve. Runs before the
+ * tsconfig resolver so `.storybook/` files, which no tsconfig project covers,
+ * share one module instance with the stories.
+ */
+function processorCascade(): Plugin {
+  const layers = flavorBuild.processorLayers.map((layer) =>
+    resolve(__dirname, "..", layer),
+  );
+  return {
+    name: "storybook-processor-cascade",
+    enforce: "pre",
+    async resolveId(source, importer, options) {
+      if (!source.startsWith("@processor/")) return null;
+      const rest = source.slice("@processor".length);
+      for (const layer of layers) {
+        const resolved = await this.resolve(layer + rest, importer, {
+          ...options,
+          skipSelf: true,
+        });
+        if (resolved) return resolved;
+      }
+      return null;
+    },
+  };
+}
+
 /** Built per pass: the main bundle and the worker bundle each need their own. */
 const editorPathAliases = () =>
   tsconfigPaths({
@@ -64,8 +93,6 @@ const config: StorybookConfig = {
     // The auto-loaded app config's default publicDir is the same public/ that
     // staticDirs copies.
     config.publicDir = false;
-    // Wire the @processor/* alias directly on the Storybook bundler so portal
-    // story imports resolve without needing the portal's vite config.
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
@@ -73,7 +100,6 @@ const config: StorybookConfig = {
         __dirname,
         "billingSupabaseClient.ts",
       ),
-      "@processor": resolve(__dirname, "../src/processor/proprietary"),
       ...(flavor === "desktop" && {
         "@tauri-apps/plugin-http": resolve(__dirname, "tauriHttp.ts"),
       }),
@@ -112,6 +138,7 @@ const config: StorybookConfig = {
         ),
     );
     config.plugins.push(iconSvgr());
+    config.plugins.push(processorCascade());
     config.plugins.push(editorPathAliases());
     if (flavor === "desktop") config.plugins.push(desktopFlavorSetup());
     // Scanned at startup rather than committed, so the gallery's "in use" view cannot go stale.
@@ -121,7 +148,7 @@ const config: StorybookConfig = {
     // import works everywhere else. Mirrors editor/vite.config.ts.
     config.worker = {
       ...(config.worker ?? {}),
-      plugins: () => [editorPathAliases()],
+      plugins: () => [processorCascade(), editorPathAliases()],
     };
     // Point apiClient.saas at a mock origin so the SaaS-backed billing stories
     // (SubscribedPlanView, PaymentMethodCard, InvoicesList) resolve a base URL and
@@ -140,9 +167,16 @@ const config: StorybookConfig = {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
         flavor === "saas" ? "http://saas.mock" : "",
       ),
+      // Desktop's own client reads the key too, with its URL below; the empty
+      // VITE_SUPABASE_URL still keeps ensureSaasSupabase() a no-op there.
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY": JSON.stringify(
-        flavor === "saas" ? "storybook-anon-key" : "",
+        flavor === "saas" || flavor === "desktop" ? "storybook-anon-key" : "",
       ),
+      // Desktop creates its Supabase client on import and throws without a URL.
+      ...(flavor === "desktop" && {
+        "import.meta.env.VITE_SAAS_SERVER_URL":
+          JSON.stringify("http://saas.mock"),
+      }),
       // No story can reach Stripe: with a key, a checkout story would load
       // Stripe's real embedded checkout and hand it a made-up client secret.
       "import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY": JSON.stringify(""),
