@@ -1,6 +1,8 @@
+import { memo } from "react";
 import { Modal, Stack, Text, Group, List } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
+import { Z_INDEX_OVER_UNSAVED_PROMPT } from "@editor/styles/zIndex";
 import {
   describeSaveRisks,
   type SaveRisks,
@@ -14,7 +16,7 @@ interface SaveRiskModalProps {
 }
 
 /** Warns before a save that would damage signatures / XFA. */
-export function SaveRiskModal({
+export const SaveRiskModal = memo(function SaveRiskModal({
   risks,
   onConfirm,
   onCancel,
@@ -27,6 +29,7 @@ export function SaveRiskModal({
       onClose={onCancel}
       title={t("pdfTextEditor.saveRisk.title", "Saving will change this PDF")}
       size="md"
+      zIndex={Z_INDEX_OVER_UNSAVED_PROMPT}
       data-testid="pdf-editor-save-risk-modal"
     >
       <Stack gap="md">
@@ -68,4 +71,4 @@ export function SaveRiskModal({
       </Stack>
     </Modal>
   );
-}
+});

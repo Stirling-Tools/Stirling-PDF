@@ -31,6 +31,7 @@ vi.mock("@editor/services/authService", () => ({
 vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: vi.fn(),
+    getCachedMode: vi.fn(() => null),
     subscribeToModeChanges: vi.fn(),
   },
 }));
@@ -114,7 +115,8 @@ describe("desktop signing badge availability", () => {
       const authBlocked = new Promise<void>((resolve) => {
         releaseAuth = resolve;
       });
-      vi.mocked(connectionModeService.getCurrentMode).mockImplementationOnce(
+      // Every mode read waits: portal access reads the mode on remount as well.
+      vi.mocked(connectionModeService.getCurrentMode).mockImplementation(
         async () => {
           await modeBlocked;
           return "selfhosted";

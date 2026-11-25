@@ -7,7 +7,7 @@ dependencies {
     implementation project(':proprietary')
 
     // Markdown -> HTML for rendering versioned legal documents (agreement) to PDF via the
-    // shared FileToPdf/WeasyPrint path in :common. Same library the core Markdown-to-PDF tool uses.
+    // shared FileToPdf path in :common. Same library the core Markdown-to-PDF tool uses.
     implementation "org.commonmark:commonmark:$commonmarkVersion"
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
 
@@ -19,4 +19,6 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    testImplementation "org.testcontainers:postgresql:$testcontainersMinioVersion"
+    testImplementation "org.testcontainers:junit-jupiter:$testcontainersMinioVersion"
 }

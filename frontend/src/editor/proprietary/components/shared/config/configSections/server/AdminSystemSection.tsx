@@ -127,11 +127,6 @@ export default function AdminSystemSection() {
             watchedFoldersDirs: normalizedWatchedFoldersDirs,
             finishedFoldersDir: pipelinePaths.finishedFoldersDir || "",
           },
-          operations: {
-            ...(system.customPaths?.operations || {}),
-            weasyprint: system.customPaths?.operations?.weasyprint || "",
-            unoconvert: system.customPaths?.operations?.unoconvert || "",
-          },
         },
         customMetadata: premium.proFeatures?.customMetadata || {
           autoUpdateMetadata: false,
@@ -211,10 +206,6 @@ export default function AdminSystemSection() {
           settings.customPaths?.pipeline?.watchedFoldersDirs;
         deltaSettings["system.customPaths.pipeline.finishedFoldersDir"] =
           settings.customPaths?.pipeline?.finishedFoldersDir;
-        deltaSettings["system.customPaths.operations.weasyprint"] =
-          settings.customPaths?.operations?.weasyprint;
-        deltaSettings["system.customPaths.operations.unoconvert"] =
-          settings.customPaths?.operations?.unoconvert;
       }
 
       return {

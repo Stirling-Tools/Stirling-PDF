@@ -5,26 +5,37 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileRegistry;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -32,6 +43,8 @@ class MetadataControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @InjectMocks private MetadataController metadataController;
+
+    @TempDir private Path responseDirectory;
 
     private PDDocument mockDocument;
     private PDDocumentInformation mockInfo;
@@ -124,6 +137,132 @@ class MetadataControllerTest {
         verify(mockInfo).setCreator("TestCreator");
         verify(mockInfo).setProducer("TestProducer");
         verify(mockInfo).setTrapped("True");
+    }
+
+    @Test
+    void keepOmittedKeepsTheFieldsARequestLeavesOut() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        PDDocumentInformation info = source.getDocumentInformation();
+        info.setAuthor("Original Author");
+        info.setSubject("Original Subject");
+        info.getCOSObject().setString(COSName.CREATION_DATE, "D:20250102030405Z");
+
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setTitle("New Title");
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            PDDocumentInformation updated = result.getDocumentInformation();
+            assertEquals("New Title", updated.getTitle());
+            assertEquals("Original Author", updated.getAuthor());
+            assertEquals("Original Subject", updated.getSubject());
+            assertEquals(
+                    "D:20250102030405Z", updated.getCOSObject().getString(COSName.CREATION_DATE));
+        }
+    }
+
+    @Test
+    void keepOmittedPreservesPartialAndUnparseableDateEntriesVerbatim() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        source.getDocumentInformation().getCOSObject().setString(COSName.CREATION_DATE, "D:202501");
+        source.getDocumentInformation().getCOSObject().setString(COSName.MOD_DATE, "unparseable");
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setTitle("New Title");
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            COSDictionary info = result.getDocumentInformation().getCOSObject();
+            assertEquals("D:202501", info.getString(COSName.CREATION_DATE));
+            assertEquals("unparseable", info.getString(COSName.MOD_DATE));
+        }
+    }
+
+    @Test
+    void keepOmittedPreservesAnUnrecognizedTrappedEntry() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        source.getDocumentInformation().getCOSObject().setName(COSName.TRAPPED, "Maybe");
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setTitle("New Title");
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            assertEquals("New Title", result.getDocumentInformation().getTitle());
+            assertEquals(
+                    "Maybe",
+                    result.getDocumentInformation()
+                            .getCOSObject()
+                            .getNameAsString(COSName.TRAPPED));
+        }
+    }
+
+    @Test
+    void keepOmittedCanReplaceATrappedEntry() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        source.getDocumentInformation().getCOSObject().setName(COSName.TRAPPED, "Maybe");
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setTrapped("True");
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            assertEquals("True", result.getDocumentInformation().getTrapped());
+        }
+    }
+
+    @Test
+    void keepOmittedIgnoresCustomPairsNamedAfterStandardFields() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        source.getDocumentInformation().getCOSObject().setName(COSName.TRAPPED, "Maybe");
+        source.getDocumentInformation().getCOSObject().setString(COSName.CREATION_DATE, "D:202501");
+        Map<String, String> params = new HashMap<>();
+        params.put("customKey1", "Trapped");
+        params.put("customValue1", "True");
+        params.put("customKey2", "creationdate");
+        params.put("customValue2", "not a date");
+        params.put("customKey3", "Department");
+        params.put("customValue3", "Legal");
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setAllRequestParams(params);
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            COSDictionary info = result.getDocumentInformation().getCOSObject();
+            assertEquals("Maybe", info.getNameAsString(COSName.TRAPPED));
+            assertEquals("D:202501", info.getString(COSName.CREATION_DATE));
+            assertEquals(
+                    "Legal", result.getDocumentInformation().getCustomMetadataValue("Department"));
+        }
+    }
+
+    @Test
+    void deleteAllClearsDatesEvenWhenKeepOmittedIsEnabled() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        source.getDocumentInformation().setAuthor("Original Author");
+        source.getDocumentInformation().getCOSObject().setString(COSName.CREATION_DATE, "D:202501");
+        source.getDocumentInformation().getCOSObject().setString(COSName.MOD_DATE, "unparseable");
+        source.getDocumentInformation().getCOSObject().setName(COSName.TRAPPED, "Maybe");
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setDeleteAll(true);
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            PDDocumentInformation info = result.getDocumentInformation();
+            assertNull(info.getAuthor());
+            assertNull(info.getCOSObject().getItem(COSName.CREATION_DATE));
+            assertNull(info.getCOSObject().getItem(COSName.MOD_DATE));
+            assertNull(info.getCOSObject().getItem(COSName.TRAPPED));
+        }
     }
 
     @Test
@@ -298,5 +437,25 @@ class MetadataControllerTest {
         }
 
         verify(mockInfo).setCreationDate(any());
+    }
+
+    private PDDocument writeMetadata(PDDocument source, MetadataRequest request)
+            throws IOException {
+        when(pdfDocumentFactory.load(mockFile, true)).thenReturn(source);
+        TempFileRegistry registry = mock(TempFileRegistry.class);
+        when(registry.register(any(File.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getSystem().getTempFileManagement().setBaseTmpDir(responseDirectory.toString());
+        MetadataController controller =
+                new MetadataController(
+                        pdfDocumentFactory, new TempFileManager(registry, properties));
+        var response = controller.metadata(request);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(MediaType.APPLICATION_PDF, response.getHeaders().getContentType());
+        assertNotNull(response.getBody());
+        try (InputStream content = response.getBody().getInputStream()) {
+            return Loader.loadPDF(content.readAllBytes());
+        }
     }
 }
