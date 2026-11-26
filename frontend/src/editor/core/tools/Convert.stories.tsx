@@ -216,71 +216,10 @@ export const PdfToWord: Story = {
   },
 };
 
-export const PdfToPdfA: Story = {
-  play: async (context) => {
-    const panel = await convertTo("pdfa")(context);
-    await expectSection(panel, "pdfa-settings");
-    await expect(
-      panel.getByRole("checkbox", { name: /^Strict Mode/ }),
-    ).not.toBeChecked();
-  },
-};
-
-export const PdfAOutputFormats: Story = {
-  play: async (context) => {
-    await convertTo("pdfa")(context);
-    const formats = await openSelect(context, /^Output Format/);
-    await formats.findByRole("option", { name: "PDF/A-2a (accessible)" });
-  },
-};
-
-export const PdfAOutputFormatsWithoutTagging: Story = {
-  parameters: toolPanelServer(...endpointUnavailable("pdf-to-ua")),
-  play: async (context) => {
-    await convertTo("pdfa")(context);
-    const formats = await openSelect(context, /^Output Format/);
-    await formats.findByRole("option", { name: "PDF/A-3b" });
-    await expect(
-      formats.queryByRole("option", { name: /accessible/ }),
-    ).toBeNull();
-  },
-};
-
-export const PdfAOutputFormatTooltip: Story = {
-  play: openTooltip(
-    { info: /^PDF\/A-1b is more compatible/ },
-    { after: convertTo("pdfa") },
-  ),
-};
-
-export const PdfAStrictModeTooltip: Story = {
-  play: openTooltip(
-    { info: /^Error if conversion is not perfect/ },
-    { after: convertTo("pdfa") },
-  ),
-};
-
-export const PdfToPdfASigned: Story = {
-  args: { files: ["signed-sample.pdf"] },
-  play: async (context) => {
-    const panel = await convertTo("pdfa")(context);
-    await panel.findByText(
-      /contains a digital signature/,
-      undefined,
-      STAGE_TIMEOUT,
-    );
-  },
-};
-
 export const PdfToPdfX: Story = {
   play: async (context) => {
     await convertTo("pdfx")(context);
-    const panel = await expectFormat(
-      context,
-      "convert-to-dropdown",
-      "Document (PDF/X)",
-    );
-    await expect(panel.queryByTestId("pdfa-settings")).toBeNull();
+    await expectFormat(context, "convert-to-dropdown", "Document (PDF/X)");
   },
 };
 
@@ -676,24 +615,24 @@ export const UnlistedFileTypeToPdf: Story = {
   },
 };
 
-const convertsToPdfA = toolPanelServer(
+const convertsToPdfX = toolPanelServer(
   fixtureResponse("/api/v1/convert/pdf/pdfa", "sample.pdf"),
 );
 
 async function runConversion(context: PlayContext): Promise<void> {
-  await convertTo("pdfa")(context);
+  await convertTo("pdfx")(context);
   await runToResults(context);
 }
 
 export const ConversionResults: Story = {
   tags: NEEDS_ACCOUNT_ON_DESKTOP,
-  parameters: convertsToPdfA,
+  parameters: convertsToPdfX,
   play: runConversion,
 };
 
 export const UndoConversionTooltip: Story = {
   tags: NEEDS_ACCOUNT_ON_DESKTOP,
-  parameters: convertsToPdfA,
+  parameters: convertsToPdfX,
   play: openTooltip({ info: "Undo" }, { after: runConversion }),
 };
 
@@ -705,7 +644,7 @@ export const ConversionFailed: Story = {
     ),
   ),
   play: async (context) => {
-    await convertTo("pdfa")(context);
+    await convertTo("pdfx")(context);
     const panel = await runTool(context);
     await panel.findByText("Error", undefined, STAGE_TIMEOUT);
   },

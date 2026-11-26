@@ -1,26 +1,44 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useArchivePdfTips = (): TooltipContent => {
+export const useArchivePdfTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
     header: {
-      title: t("archivePdf.tooltip.header.title", "Archive PDF (PDF/A)"),
+      title: t("archivePdf.tooltip.header.title", "About PDF/A"),
     },
     tips: [
       {
         description: t(
           "archivePdf.tooltip.description.text",
-          "Converts your PDF to PDF/A, the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere.",
+          "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere.",
         ),
       },
       {
-        title: t("archivePdf.tooltip.outputFormat.title", "PDF/A version"),
+        title: t("archivePdf.tooltip.version.title", "PDF/A version"),
         description: t(
-          "archivePdf.tooltip.outputFormat.text",
-          "PDF/A-2b suits most archives. PDF/A-1b is the oldest and most widely accepted. PDF/A-3b also allows other files to be attached, such as the data behind an e-invoice. The accessible versions also tag the document so screen readers can follow it.",
+          "archivePdf.tooltip.version.text",
+          "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice.",
         ),
+        bullets: [
+          t(
+            "archivePdf.tooltip.version.bullet1",
+            "PDF/A-1b: the oldest version, accepted almost everywhere",
+          ),
+          t(
+            "archivePdf.tooltip.version.bullet2",
+            "PDF/A-2b: suits most archives",
+          ),
+          t(
+            "archivePdf.tooltip.version.bullet3",
+            "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice",
+          ),
+          t(
+            "archivePdf.tooltip.version.bullet4",
+            "Accessible versions: also tag the document so screen readers can follow it",
+          ),
+        ],
       },
       {
         title: t("archivePdf.tooltip.strict.title", "Strict mode"),

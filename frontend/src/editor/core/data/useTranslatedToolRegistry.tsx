@@ -992,7 +992,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       archivePdf: {
         icon: <Icon name="archive" size="1.5rem" />,
-        name: t("home.archivePdf.title", "Archive PDF (PDF/A)"),
+        name: t("home.archivePdf.title", "Prepare for Archive (PDF/A)"),
         component: lazy(() => import("@editor/tools/ArchivePdf")),
         description: t(
           "home.archivePdf.desc",

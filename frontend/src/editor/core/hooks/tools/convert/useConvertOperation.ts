@@ -438,7 +438,7 @@ const FIT_OPTION_VALUES = [
  * How each convert endpoint's stored options map back into the tool's parameter groups, keyed by the
  * endpoint the step targets. Only endpoints carrying configurable options appear; the rest are fully
  * described by their from/to pair. Convert only reaches `/api/v1/convert/pdf/pdfa` for PDF/X; its
- * PDF/A profiles belong to the Archive PDF tool. Groups a reader omits fall back to defaults via the
+ * PDF/A profiles belong to the Prepare for Archive tool. Groups a reader omits fall back to defaults via the
  * merge in deserializeToolStep.
  */
 const CONVERT_OPTION_READERS: ConvertOptionReaders = {

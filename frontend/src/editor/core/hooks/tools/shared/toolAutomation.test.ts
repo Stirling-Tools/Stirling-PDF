@@ -509,7 +509,7 @@ describe("archive PDF (shares the PDF/A endpoint with convert)", () => {
       operationConfig: asRegistryConfig(convertOperationConfig),
     }),
     archivePdf: entry({
-      name: "Archive PDF",
+      name: "Prepare for Archive (PDF/A)",
       automationSettings: NoopSettings,
       operationConfig: asRegistryConfig(archivePdfOperationConfig),
     }),

@@ -1,10 +1,8 @@
-import { Stack } from "@mantine/core";
+import { Checkbox, Select, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Checkbox } from "@editor/ui/Checkbox";
-import { FormField } from "@editor/ui/FormField";
-import { Select, type SelectOption } from "@editor/ui/Select";
 import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import {
   type ArchivePdfParameters,
   type PdfaOutputFormat,
@@ -32,7 +30,6 @@ const LEVEL_A_FORMATS: Partial<Record<PdfaOutputFormat, string>> = {
   "pdfa-3a": "PDF/A-3a",
 };
 
-// Explanatory copy for these controls lives in the step tooltip (useArchivePdfTips).
 const ArchivePdfSettings = ({
   parameters,
   onParameterChange,
@@ -42,7 +39,7 @@ const ArchivePdfSettings = ({
   // Level A needs the same tagger as PDF/UA, so it stands or falls with that endpoint.
   const { enabled: taggingAvailable } = useEndpointEnabled("pdf-to-ua");
 
-  const options: SelectOption[] = [
+  const options = [
     ...Object.entries(LEVEL_B_FORMATS).map(([value, label]) => ({
       value,
       label,
@@ -59,24 +56,32 @@ const ArchivePdfSettings = ({
 
   return (
     <Stack gap="md">
-      <FormField label={t("archivePdf.outputFormat", "PDF/A version")}>
-        <Select
-          options={options}
-          value={parameters.outputFormat}
-          onChange={(value) => {
-            if (isPdfaOutputFormat(value))
-              onParameterChange("outputFormat", value);
-          }}
-          allowDeselect={false}
-          disabled={disabled}
-          comboboxProps={{
-            withinPortal: true,
-            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-          }}
-        />
-      </FormField>
+      <Select
+        {...infoLabelProps(
+          t("archivePdf.outputFormat.label", "PDF/A version"),
+          t("archivePdf.outputFormat.desc", "PDF/A-2b suits most archives."),
+        )}
+        data={options}
+        value={parameters.outputFormat}
+        onChange={(value) => {
+          if (isPdfaOutputFormat(value))
+            onParameterChange("outputFormat", value);
+        }}
+        allowDeselect={false}
+        disabled={disabled}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
+      />
       <Checkbox
-        label={t("archivePdf.strict", "Strict mode")}
+        {...infoLabelProps(
+          t("archivePdf.strict.label", "Strict mode"),
+          t(
+            "archivePdf.strict.desc",
+            "Fails instead of returning a file that does not fully comply.",
+          ),
+        )}
         checked={parameters.strict}
         onChange={(event) =>
           onParameterChange("strict", event.currentTarget.checked)
