@@ -82,7 +82,7 @@ test.describe("The file library behaves like the other views", () => {
   test("a deep link to /files opens the library and keeps it", async ({
     page,
   }) => {
-    await page.goto("/files");
+    await page.goto("/files?view=all");
     const tree = page.getByRole("tree", { name: /Folders/i });
     await expect(tree).toBeVisible({ timeout: 15_000 });
 

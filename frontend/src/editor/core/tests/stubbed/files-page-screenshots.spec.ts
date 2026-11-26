@@ -148,7 +148,7 @@ test.describe("Files page screenshots", () => {
 
   test("01_empty_state_ctas", async ({ page }) => {
     await stubStorageApis(page);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".files-page-empty")).toBeVisible({
       timeout: 5_000,
     });
@@ -158,7 +158,7 @@ test.describe("Files page screenshots", () => {
 
   test("02_empty_state_storage_off", async ({ page }) => {
     await stubStorageApis(page, { storageEnabled: false });
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".files-page-empty")).toBeVisible({
       timeout: 5_000,
     });
@@ -210,7 +210,7 @@ test.describe("Files page screenshots", () => {
     await seedFiles(page, [
       { id: "cloud-c", name: "cloud-c.pdf", remoteStorageId: 1001 },
     ]);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
     ).toBeVisible({
@@ -380,7 +380,7 @@ test.describe("Files page screenshots", () => {
   test("11_dark_empty_state_ctas", async ({ page }) => {
     await enableDarkMode(page);
     await stubStorageApis(page);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".files-page-empty")).toBeVisible({
       timeout: 5_000,
     });
@@ -450,7 +450,7 @@ test.describe("Files page screenshots", () => {
   test("15_rtl_empty_state_ctas", async ({ page }) => {
     await enableRtl(page);
     await stubStorageApis(page);
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".files-page-empty")).toBeVisible({
       timeout: 5_000,
     });
@@ -580,7 +580,7 @@ test.describe("Files page screenshots", () => {
         ],
       });
     });
-    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
     await expect(page.getByText("Reports").first()).toBeVisible({
       timeout: 5_000,
     });

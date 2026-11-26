@@ -199,7 +199,7 @@ async function gotoFilesPage(
     view = "recent",
   }: { timeout?: number; view?: "all" | "recent" } = {},
 ): Promise<void> {
-  await page.goto(view === "recent" ? "/files?view=recent" : "/files", {
+  await page.goto(view === "recent" ? "/files" : "/files?view=all", {
     waitUntil: "domcontentloaded",
   });
   await expect(
@@ -622,7 +622,7 @@ test.describe("Files page", () => {
         });
       }
       await expect(cards).toHaveCount(4);
-      await expect(page).toHaveURL(/\/files\?view=recent$/);
+      await expect(page).toHaveURL(/\/files$/);
     });
 
     test("card thumbnail <img> is not natively draggable", async ({ page }) => {
@@ -705,7 +705,7 @@ test.describe("Files page", () => {
     }) => {
       await stubStorageApis(page);
       // No seedFiles - grid is empty so EmptyState renders.
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
       // Wait for the empty state itself rather than card visibility -
       // gotoFilesPage's card-visibility wait would time out here.
       await expect(page.locator(".files-page-empty")).toBeVisible({
@@ -730,7 +730,7 @@ test.describe("Files page", () => {
       // The CTA is the header's control, so it reports the same blocked reason
       // rather than offering a click that cannot land.
       await stubStorageApis(page, { storageEnabled: false });
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
       await expect(page.locator(".files-page-empty")).toBeVisible({
         timeout: 5_000,
       });
@@ -855,7 +855,7 @@ test.describe("Files page", () => {
           await uploadRequest;
           await expect(picker).toBeHidden();
           expect(uploaded).toBe(false);
-          await expect(page).toHaveURL(/\/files\?view=recent$/);
+          await expect(page).toHaveURL(/\/files$/);
         } finally {
           finishUpload();
         }
@@ -870,7 +870,7 @@ test.describe("Files page", () => {
         await expect(
           page.getByRole("menuitem", { name: /Add to Stirling library/i }),
         ).toHaveCount(0);
-        await expect(page).toHaveURL(/\/files\?view=recent$/);
+        await expect(page).toHaveURL(/\/files$/);
       });
     }
   });
@@ -956,7 +956,7 @@ test.describe("Files page", () => {
           });
         },
       );
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
       const card = page
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "cross-browser.pdf" });
@@ -1011,7 +1011,7 @@ test.describe("Files page", () => {
           });
         },
       );
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
       const card = page
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "shared-report.pdf" });
@@ -1050,7 +1050,7 @@ test.describe("Files page", () => {
           ],
         }),
       );
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
       // The file lands as a synthesised server stub.
       await expect(
         page
@@ -1226,7 +1226,7 @@ test.describe("Files page", () => {
         [{ id: "l-2", name: "l-2.pdf", remoteStorageId: null }],
         [{ id: FOLDER, name: "Scans" }],
       );
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
 
       const row = page
         .locator(".files-page-list-row")
@@ -1381,7 +1381,7 @@ test.describe("Files page", () => {
     test("clicking the active library tab returns to the root without throwing", async ({
       page,
     }) => {
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
       await intoFolder(page);
 
       const crumbs = page.getByRole("navigation", { name: /Folder path/i });
@@ -1394,7 +1394,7 @@ test.describe("Files page", () => {
         .getByRole("button", { name: "Stirling library", exact: true })
         .click();
 
-      await expect(page).toHaveURL(/\/files\/?$/, { timeout: 5_000 });
+      await expect(page).toHaveURL(/\/files\?view=all$/, { timeout: 5_000 });
       await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
       // Still a working library, not a husk.
       await expect(page.getByRole("tree", { name: /Folders/i })).toBeVisible();
@@ -1423,7 +1423,7 @@ test.describe("Files page", () => {
           { id: NESTED, name: "Paid", parentFolderId: FOLDER_ID },
         ],
       );
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
 
       const tree = page.getByRole("tree", { name: /Folders/i });
       await expect(tree).toBeVisible({ timeout: 10_000 });
@@ -1435,7 +1435,7 @@ test.describe("Files page", () => {
       await page.goBack();
       await expect(page).toHaveURL(new RegExp(FOLDER_ID), { timeout: 5_000 });
       await page.goBack();
-      await expect(page).toHaveURL(/\/files\/?$/, { timeout: 5_000 });
+      await expect(page).toHaveURL(/\/files\?view=all$/, { timeout: 5_000 });
       await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
     });
 
@@ -1444,12 +1444,12 @@ test.describe("Files page", () => {
     test("back leaves the folder rather than the library, and forward returns", async ({
       page,
     }) => {
-      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await page.goto("/files?view=all", { waitUntil: "domcontentloaded" });
       await intoFolder(page);
       const deep = page.url();
 
       await page.goBack();
-      await expect(page).toHaveURL(/\/files\/?$/, { timeout: 5_000 });
+      await expect(page).toHaveURL(/\/files\?view=all$/, { timeout: 5_000 });
       await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
 
       await page.goForward();
