@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
+import { CreateNewPdfButton } from "@editor/components/createPdf/CreateNewPdfButton";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -257,6 +258,7 @@ function EmptySidebar({
           "Pick a PDF from the Files panel on the left, or drop one in. The editor will open it automatically.",
         )}
       </Text>
+      {!loading && <CreateNewPdfButton />}
       {loading && (
         <Stack gap={4} data-testid="pdf-editor-loading">
           <Text size="xs" c="dimmed">

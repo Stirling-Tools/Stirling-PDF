@@ -8,6 +8,7 @@ import stirling.software.proprietary.mcp.McpToolAnnotations;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /** Exposes the {@code /api/v1/security/*} namespace as a single MCP tool. */
@@ -29,15 +30,47 @@ public class StirlingSecurityTool extends AbstractCategoryTool {
 
     @Override
     public String title() {
-        return "PDF security and signing";
+        return "Passwords, redaction and signing";
     }
 
     @Override
     public String description() {
-        return "Security-related PDF operations: password add/remove, redact, sanitize, certify"
-                + " / sign with cert, validate signature, add watermark. Call"
-                + " stirling_describe_operation with the chosen op to get its parameters schema"
-                + " before invoking this tool.";
+        String signing =
+                serverCertificateOffered()
+                        ? " digitally sign (with the user's certificate, or certType SERVER to sign"
+                                + " with this server's own certificate: no file or password"
+                                + " needed),"
+                        : " digitally sign with a certificate,";
+        return "Security and inspection: add or remove passwords and restrictions, redact,"
+                + " sanitize, watermark,"
+                + signing
+                + " timestamp, validate or remove signatures, and inspect a PDF (info,"
+                + " permissions, PDF/A and PDF/UA checks, accessibility report)."
+                + " Each operation lists its parameters in the 'operation' field; call"
+                + " stirling_describe_operation when an option you need is not shown.";
+    }
+
+    /** True when cert-sign offers this server's own certificate here. */
+    private boolean serverCertificateOffered() {
+        McpToolCatalog catalog = catalogProvider.getIfAvailable();
+        if (catalog == null) {
+            return false;
+        }
+        return catalog.findByOperationId("cert-sign")
+                .map(
+                        meta -> {
+                            for (JsonNode type :
+                                    meta.paramSchema()
+                                            .path("properties")
+                                            .path("certType")
+                                            .path("enum")) {
+                                if ("SERVER".equals(type.asText())) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
+                .orElse(false);
     }
 
     @Override

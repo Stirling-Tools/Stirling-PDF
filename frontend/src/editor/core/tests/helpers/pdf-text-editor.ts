@@ -1,5 +1,5 @@
 import path from "path";
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 type Upload = string | { name: string; mimeType: string; buffer: Buffer };
 
@@ -13,6 +13,13 @@ export function fileRows(page: Page, name: string) {
       exact: true,
     }),
   });
+}
+
+/** Dispatches the click on the row's own eye button: the Recent list can
+ * re-sort between the hover and a pointer click, hiding the button. */
+export async function viewFileRow(row: Locator): Promise<void> {
+  await row.hover();
+  await row.locator(".file-sidebar-eye-btn").dispatchEvent("click");
 }
 
 /**
@@ -66,16 +73,13 @@ export async function openInTextEditor(
   });
 
   const name = typeof file === "string" ? path.basename(file) : file.name;
-  // Phones have no file list; any of the app's own upload inputs adds the file.
+  // Phones have no file list; use the landing upload rather than a tool-specific picker.
   const hasSidebar = (await page.getByTestId("file-input").count()) > 0;
   let row = null;
   if (hasSidebar) {
     row = await addToFileList(page, file);
   } else {
-    await page
-      .locator('input[type="file"]:not([data-testid="pdf-editor-image-input"])')
-      .first()
-      .setInputFiles(file);
+    await page.getByTestId("landing-file-input").setInputFiles(file);
   }
 
   await expect
@@ -101,8 +105,7 @@ export async function openInTextEditor(
         if (opened || !row) return opened;
         // Viewing a row that is already shown closes it, so only ask once.
         if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
-          await row.hover();
-          await row.locator(".file-sidebar-eye-btn").click();
+          await viewFileRow(row);
         }
         return false;
       },
@@ -133,8 +136,7 @@ export async function showInTextEditor(
   });
   const row = await addToFileList(page, file);
   if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
-    await row.hover();
-    await row.locator(".file-sidebar-eye-btn").click();
+    await viewFileRow(row);
   }
 }
 
@@ -146,8 +148,7 @@ export async function viewInTextEditor(
   const row = fileRows(page, name).first();
   await expect(row).toBeVisible({ timeout: 30_000 });
   if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
-    await row.hover();
-    await row.locator(".file-sidebar-eye-btn").click();
+    await viewFileRow(row);
   }
 }
 
@@ -207,12 +208,11 @@ export async function setViewerZoom(
       await input.fill(String(percent));
       await input.press("Enter");
     }
-    await page.waitForTimeout(800);
-    expect(await input.inputValue()).toBe(`${percent}%`);
+    await expect(input).toHaveValue(`${percent}%`, { timeout: 10_000 });
   }).toPass({ timeout: 30_000 });
   // Zoom keeps the scroll position; start from the top, as a fresh open does.
-  await page
-    .getByTestId("pdf-editor-page-0")
-    .evaluate((el) => el.scrollIntoView({ block: "start" }));
-  await page.waitForTimeout(400);
+  const firstPage = page.getByTestId("pdf-editor-page-0");
+  await firstPage.evaluate((el) => el.scrollIntoView({ block: "start" }));
+  await expect(firstPage).toBeInViewport();
+  await expect(input).toHaveValue(`${percent}%`);
 }

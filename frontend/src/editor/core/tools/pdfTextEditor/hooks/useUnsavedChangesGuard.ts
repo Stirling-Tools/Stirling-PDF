@@ -41,15 +41,10 @@ export function useUnsavedChangesGuard(
   }, [dirty]);
 
   useEffect(() => {
-    const owner = {};
-    checkerOwner = owner;
     // Only covers the pending flag: once it has landed, a discard clears it while the store stays dirty.
-    registerUnsavedChangesChecker(() => isDirty() && !flagCaughtUpRef.current);
-    return () => {
-      if (checkerOwner !== owner) return;
-      checkerOwner = null;
-      unregisterUnsavedChangesChecker();
-    };
+    const checker = () => isDirty() && !flagCaughtUpRef.current;
+    registerUnsavedChangesChecker(checker);
+    return () => unregisterUnsavedChangesChecker(checker);
   }, [isDirty, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   useEffect(() => {
@@ -67,8 +62,7 @@ export function useUnsavedChangesGuard(
   }, [dirty, setHasUnsavedChanges]);
 }
 
-// The navigation guard holds one checker and one flag. Two editors overlap when
-// the text editor hands over to the review, and the one leaving unmounts last:
-// only the latest registration may withdraw them, or the review runs unguarded.
-let checkerOwner: object | null = null;
+// The navigation guard holds one flag. Two editors overlap when the text editor
+// hands over to the review, and the one leaving unmounts last: only the latest
+// registration may clear it, or the review runs unguarded.
 let flagOwner: object | null = null;
