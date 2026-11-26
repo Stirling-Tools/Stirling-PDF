@@ -12,20 +12,25 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -433,6 +438,60 @@ class MergeControllerGapTest {
             assertSame(merged, result);
             verify(pdfDocumentFactory).createNewDocument();
             verify(merged, never()).close();
+        }
+    }
+
+    @Nested
+    @DisplayName("mergeWithJpdfium")
+    class MergeWithJpdfium {
+
+        @TempDir Path dir;
+
+        private Path pdf(String name, int pages) throws IOException {
+            Path path = dir.resolve(name);
+            try (PDDocument doc = new PDDocument()) {
+                for (int i = 0; i < pages; i++) {
+                    doc.addPage(new PDPage());
+                }
+                doc.save(path.toFile());
+            }
+            return path;
+        }
+
+        private int[] merge(List<Path> inputs, Path output) throws Exception {
+            Method m =
+                    MergeController.class.getDeclaredMethod(
+                            "mergeWithJpdfium",
+                            List.class,
+                            MultipartFile[].class,
+                            boolean.class,
+                            Path.class);
+            m.setAccessible(true);
+            MultipartFile[] files = new MultipartFile[inputs.size()];
+            Arrays.fill(files, fileA);
+            return (int[]) m.invoke(mergeController, inputs, files, false, output);
+        }
+
+        @Test
+        @DisplayName("merges several files through qpdf with every page in order")
+        void mergesSeveralFiles() throws Exception {
+            Path output = dir.resolve("merged.pdf");
+            int[] counts = merge(List.of(pdf("a.pdf", 2), pdf("b.pdf", 3)), output);
+
+            assertArrayEquals(new int[] {2, 3}, counts);
+            try (PDDocument merged = Loader.loadPDF(output.toFile())) {
+                assertEquals(5, merged.getNumberOfPages());
+            }
+        }
+
+        @Test
+        @DisplayName("a single file without a table of contents is copied unchanged")
+        void copiesASingleFile() throws Exception {
+            Path input = pdf("only.pdf", 2);
+            Path output = dir.resolve("copy.pdf");
+            merge(List.of(input), output);
+
+            assertArrayEquals(Files.readAllBytes(input), Files.readAllBytes(output));
         }
     }
 }
