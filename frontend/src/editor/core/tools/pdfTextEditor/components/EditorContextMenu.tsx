@@ -173,6 +173,14 @@ function ContextMenuBody({
       .filter((run) => selection.runIds.includes(run.id))
       .map((run) => run.text)
       .join("\n");
+  // The browser can refuse clipboard access (permission denied, prompt dismissed).
+  const clipboardFailed = () =>
+    store.setError(
+      t(
+        "pdfTextEditor.contextMenu.clipboardBlocked",
+        "The browser did not allow access to the clipboard.",
+      ),
+    );
   const copy = async () => {
     const text = selectedText();
     if (text) await navigator.clipboard.writeText(text);
@@ -219,13 +227,16 @@ function ContextMenuBody({
       );
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   };
-  const copyImage = async (id: string) => {
-    const png = await imagePng(id);
-    if (png)
-      await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": png }),
-      ]);
-  };
+  // The item takes the PNG as a promise, so write() runs while the click still
+  // counts as a user gesture (Safari refuses it after an await).
+  const copyImage = (id: string) =>
+    navigator.clipboard.write([
+      new ClipboardItem({
+        "image/png": imagePng(id).then(
+          (png) => png ?? Promise.reject(new Error("No image pixels")),
+        ),
+      }),
+    ]);
   const saveImage = async (id: string) => {
     const png = await imagePng(id);
     if (!png) return;
@@ -234,7 +245,8 @@ function ContextMenuBody({
     link.href = url;
     link.download = "image.png";
     link.click();
-    URL.revokeObjectURL(url);
+    // Some browsers start reading the blob after click() returns.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const item = (
@@ -340,14 +352,17 @@ function ContextMenuBody({
       item(
         "scissors",
         t("pdfTextEditor.contextMenu.cut", "Cut"),
-        () => void copy().then(() => controller.onDelete()),
+        () =>
+          void copy()
+            .then(() => controller.onDelete())
+            .catch(clipboardFailed),
         "pdf-editor-context-cut",
         { shortcut: modShortcut("X") },
       ),
       item(
         "copy",
         t("pdfTextEditor.contextMenu.copy", "Copy"),
-        () => void copy(),
+        () => void copy().catch(clipboardFailed),
         "pdf-editor-context-copy",
         { shortcut: modShortcut("C") },
       ),
@@ -358,7 +373,7 @@ function ContextMenuBody({
       item(
         "copy",
         t("pdfTextEditor.contextMenu.copy", "Copy"),
-        () => void copyImage(imageId),
+        () => void copyImage(imageId).catch(clipboardFailed),
         "pdf-editor-context-copy-image",
       ),
     );
@@ -368,7 +383,7 @@ function ContextMenuBody({
       item(
         "clipboard",
         t("pdfTextEditor.contextMenu.paste", "Paste"),
-        () => void pasteAt(at),
+        () => void pasteAt(at).catch(clipboardFailed),
         "pdf-editor-context-paste",
         { shortcut: modShortcut("V") },
       ),
@@ -448,7 +463,7 @@ function ContextMenuBody({
   const empty = groups.length === 0;
   const items = groups.map((group, i) => (
     <Fragment key={i}>
-      {i > 0 && <Menu.Divider />}
+      {i > 0 && <Menu.Divider role="separator" />}
       {group.map((node, j) => (
         <Fragment key={j}>{node}</Fragment>
       ))}
@@ -472,6 +487,9 @@ function ContextMenuBody({
       shadow="md"
       withinPortal
       closeOnItemClick
+      // A menu may hold only items, groups and separators; Mantine's focus
+      // placeholder is none of those.
+      withInitialFocusPlaceholder={false}
     >
       <Menu.Target>
         <div

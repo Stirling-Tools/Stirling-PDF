@@ -28,22 +28,28 @@ export function ToolIconButton({
   const [clicked, setClicked] = useState(false);
   return (
     <Tooltip label={tooltip ?? label} disabled={clicked}>
-      <Button
-        size="sm"
-        variant={pressed ? "primary" : "tertiary"}
-        accent={pressed ? "default" : "neutral"}
-        onClick={() => {
-          setClicked(true);
-          onClick();
-        }}
-        onMouseLeave={() => setClicked(false)}
-        disabled={disabled}
-        aria-label={label}
-        aria-pressed={pressed}
-        data-testid={testId}
-        style={{ flexShrink: 0 }}
-        leftSection={<Icon name={icon} size={20} />}
-      />
+      {/* The reset sits on a wrapper: a button its click disabled (the last
+          undo) gets no pointer events, so its own leave would never fire. */}
+      <span
+        style={{ display: "inline-flex", flexShrink: 0 }}
+        onPointerLeave={() => setClicked(false)}
+      >
+        <Button
+          size="sm"
+          variant={pressed ? "primary" : "tertiary"}
+          accent={pressed ? "default" : "neutral"}
+          onClick={() => {
+            setClicked(true);
+            onClick();
+          }}
+          disabled={disabled}
+          aria-label={label}
+          aria-pressed={pressed}
+          data-testid={testId}
+          style={{ flexShrink: 0 }}
+          leftSection={<Icon name={icon} size={20} />}
+        />
+      </span>
     </Tooltip>
   );
 }

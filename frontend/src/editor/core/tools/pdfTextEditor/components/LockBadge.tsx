@@ -12,6 +12,9 @@ interface LockBadgeProps {
   scale: number;
   onUnlock: () => void;
   testId: string;
+  /** Layered under the page's text and tables, letting presses reach the stage
+   *  (a marquee can start over a locked background image). */
+  underContent?: boolean;
 }
 
 /**
@@ -26,6 +29,7 @@ export function LockBadge({
   scale,
   onUnlock,
   testId,
+  underContent = false,
 }: LockBadgeProps) {
   const { t } = useTranslation();
   // Through all four corners, so a rotated page still covers the box the user sees.
@@ -43,7 +47,11 @@ export function LockBadge({
 
   return (
     <div
-      className="pdf-editor-lock-zone"
+      className={
+        underContent
+          ? "pdf-editor-lock-zone pdf-editor-lock-zone--under"
+          : "pdf-editor-lock-zone"
+      }
       style={{
         left: minX * scale,
         top: (pageHeight - maxY) * scale,
@@ -51,7 +59,7 @@ export function LockBadge({
         height: (maxY - minY) * scale,
       }}
       // A press on a locked item stays inert, as it is on the item itself.
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={underContent ? undefined : (e) => e.stopPropagation()}
     >
       <Tooltip label={label} position="top" withArrow>
         <button

@@ -19,6 +19,7 @@ export function EditorPanelTools({ store, state }: Props) {
   const session = useEditorSession();
   const addTextArmed = state.mode === "addText";
   const addTableArmed = state.mode === "addTable";
+  const noDocument = !state.hasDocument;
   const insertButton = (
     label: string,
     icon: IconName,
@@ -53,6 +54,7 @@ export function EditorPanelTools({ store, state }: Props) {
           "pdf-editor-add-text",
           {
             armed: addTextArmed,
+            disabled: noDocument,
             tooltip: addTextArmed
               ? t(
                   "pdfTextEditor.sidebar.clickPageToAddText",
@@ -71,6 +73,7 @@ export function EditorPanelTools({ store, state }: Props) {
           "pdf-editor-add-table",
           {
             armed: addTableArmed,
+            disabled: noDocument,
             tooltip: addTableArmed
               ? t(
                   "pdfTextEditor.sidebar.clickPageToAddTable",
@@ -85,7 +88,7 @@ export function EditorPanelTools({ store, state }: Props) {
           () => session?.pickImage(),
           "pdf-editor-add-image",
           {
-            disabled: !session,
+            disabled: !session || noDocument,
             tooltip: t("pdfTextEditor.sidebar.addImage", "Add image"),
           },
         )}

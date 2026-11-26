@@ -580,6 +580,24 @@ export const PageView = memo(function PageView({
             pageRevision={paintedRevision}
           />
         ))}
+        {/* Locked images' zones sit with the images, under tables and text,
+            so anything drawn over a locked image still takes its clicks. */}
+        {onUnlock &&
+          !reviewing &&
+          page.images
+            .filter((image) => image.locked)
+            .map((image) => (
+              <LockBadge
+                key={`lock-${image.id}`}
+                rect={image.bounds}
+                pageHeight={page.height}
+                transform={transform}
+                scale={cssScale}
+                onUnlock={() => onUnlock(page.pageIndex, { imageId: image.id })}
+                testId={`pdf-editor-unlock-${image.id}`}
+                underContent
+              />
+            ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
             cells are edited through their own run. */}
         {!reviewing && (
@@ -657,32 +675,19 @@ export const PageView = memo(function PageView({
           ))}
         {onUnlock &&
           !reviewing &&
-          [
-            ...page.runs
-              .filter((run) => run.locked)
-              .map((run) => ({
-                id: run.id,
-                bounds: run.bounds,
-                target: { runId: run.id },
-              })),
-            ...page.images
-              .filter((image) => image.locked)
-              .map((image) => ({
-                id: image.id,
-                bounds: image.bounds,
-                target: { imageId: image.id },
-              })),
-          ].map((item) => (
-            <LockBadge
-              key={`lock-${item.id}`}
-              rect={item.bounds}
-              pageHeight={page.height}
-              transform={transform}
-              scale={cssScale}
-              onUnlock={() => onUnlock(page.pageIndex, item.target)}
-              testId={`pdf-editor-unlock-${item.id}`}
-            />
-          ))}
+          page.runs
+            .filter((run) => run.locked)
+            .map((run) => (
+              <LockBadge
+                key={`lock-${run.id}`}
+                rect={run.bounds}
+                pageHeight={page.height}
+                transform={transform}
+                scale={cssScale}
+                onUnlock={() => onUnlock(page.pageIndex, { runId: run.id })}
+                testId={`pdf-editor-unlock-${run.id}`}
+              />
+            ))}
         {showRulers && (
           <PageGuides
             pageIndex={page.pageIndex}

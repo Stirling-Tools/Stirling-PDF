@@ -9,6 +9,11 @@
   transition: outline-color 0.12s ease;
 }
 
+/* Painted by DOM order, like the images it covers. */
+.pdf-editor-lock-zone--under {
+  z-index: auto;
+}
+
 .pdf-editor-lock-zone:hover,
 .pdf-editor-lock-zone:focus-within {
   outline-color: var(--c-border-strong);

@@ -524,11 +524,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         decoded.height,
         INSERTED_IMAGE_RATIO,
       );
+      // Kept on the page: PDFium crops whatever hangs off it.
+      const clamp = (v: number, size: number, limit: number) =>
+        Math.min(Math.max(v, 0), Math.max(limit - size, 0));
       const rect = at
         ? {
             ...sized,
-            x: at.x - sized.width / 2,
-            y: at.y - sized.height / 2,
+            x: clamp(at.x - sized.width / 2, sized.width, page.width),
+            y: clamp(at.y - sized.height / 2, sized.height, page.height),
           }
         : sized;
       const cmd = new InsertImageCommand({
