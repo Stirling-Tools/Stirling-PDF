@@ -50,7 +50,9 @@ export interface FileConformanceClaim {
 export async function readConformanceClaim(
   pdf: RawPdf,
 ): Promise<FileConformanceClaim> {
-  const catalog = pdf.encrypted ? null : pdf.objectBody(pdf.rootNum);
+  // appendRevision refuses a file without a usable cross-reference section.
+  const catalog =
+    pdf.encrypted || pdf.startXref < 0 ? null : pdf.objectBody(pdf.rootNum);
   const metadata = catalog ? await readMetadata(pdf, catalog) : "unreadable";
   if (metadata === "unreadable") return { part: null, writable: false };
   return {
@@ -176,29 +178,31 @@ function propertyValue(
 }
 
 /**
- * Only a part under the pdfuaid prefix counts: clause 5 requires that prefix,
- * so a claim under another one fails it, and reading it as declared would make
+ * Only a claim clause 5 accepts counts: under the pdfuaid prefix, and for
+ * PDF/UA-2 with its rev. Reading a rejected claim as declared would make
  * declaring the same part a no-op that leaves the file failing.
  */
 function declaredPart(rdf: Element): number | null {
-  for (const description of descriptions(rdf)) {
-    const value = pdfUaPartValue(description);
-    if (value === null) continue;
-    const part = parseInt(value.trim(), 10);
-    return Number.isNaN(part) ? null : part;
-  }
-  return null;
+  const value = pdfUaValue(rdf, "part");
+  if (value === null) return null;
+  const part = parseInt(value.trim(), 10);
+  if (Number.isNaN(part)) return null;
+  if (part === 2 && pdfUaValue(rdf, "rev") === null) return null;
+  return part;
 }
 
-function pdfUaPartValue(description: Element): string | null {
-  const isPart = (node: Attr | Element) =>
+function pdfUaValue(rdf: Element, name: string): string | null {
+  const matches = (node: Attr | Element) =>
     node.namespaceURI === PDFUA_NS &&
-    node.localName === "part" &&
+    node.localName === name &&
     node.prefix === "pdfuaid";
-  const attribute = Array.from(description.attributes).find(isPart);
-  if (attribute) return attribute.value;
-  const child = Array.from(description.children).find(isPart);
-  return child?.textContent ?? null;
+  for (const description of descriptions(rdf)) {
+    const attribute = Array.from(description.attributes).find(matches);
+    if (attribute) return attribute.value;
+    const child = Array.from(description.children).find(matches);
+    if (child) return child.textContent;
+  }
+  return null;
 }
 
 function declaresPdfA(rdf: Element): boolean {

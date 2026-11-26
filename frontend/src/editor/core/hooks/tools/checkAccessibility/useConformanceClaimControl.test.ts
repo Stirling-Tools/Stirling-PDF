@@ -92,10 +92,14 @@ const PDF = buildClassicPdf(
   1,
 );
 
+const OTHER = "other" as FileId;
+
 function render(report: AccessibilityReport = REPORT) {
   const onWritten = vi.fn();
-  const view = renderHook(() =>
-    useConformanceClaim(useCheckedFileClaim(CHECKED, report, onWritten), 1),
+  const view = renderHook(
+    ({ fileId }: { fileId: FileId }) =>
+      useConformanceClaim(useCheckedFileClaim(fileId, report, onWritten), 1),
+    { initialProps: { fileId: CHECKED } },
   );
   return { view, onWritten };
 }
@@ -155,6 +159,28 @@ describe("the checked file's claim", () => {
     expect(await writtenClaim()).toBe(1);
     expect(viewer.setActiveFileId).toHaveBeenCalledWith("written");
     expect(view.result.current!.writing).toBe(false);
+  });
+
+  it("shows the write only on the file being written, and keeps where the user moved to", async () => {
+    viewer.activeFileId = CHECKED;
+    let finish: (ids: string[]) => void = () => {};
+    fileContext.consumeFiles.mockReturnValue(
+      new Promise((resolve) => (finish = resolve)),
+    );
+    const { view, onWritten } = render();
+
+    act(() => view.result.current!.set(1));
+    await waitFor(() => expect(fileContext.consumeFiles).toHaveBeenCalled());
+    viewer.activeFileId = OTHER;
+    view.rerender({ fileId: OTHER });
+    expect(view.result.current).toMatchObject({
+      declared: false,
+      writing: false,
+    });
+
+    await act(async () => finish(["written"]));
+    expect(viewer.setActiveFileId).not.toHaveBeenCalled();
+    expect(onWritten).not.toHaveBeenCalled();
   });
 
   it("hands the change to the review when it has the file open", () => {

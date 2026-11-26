@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { alert } from "@editor/components/toast";
 import { useFileContext } from "@editor/contexts/FileContext";
@@ -19,6 +19,11 @@ import type { FileId } from "@editor/types/file";
 
 // The rewrite holds the whole file in memory twice, as read and as written.
 const MAX_REWRITE_BYTES = 256 * 1024 * 1024;
+
+interface PendingClaim {
+  fileId: FileId;
+  part: PdfUaPart | null;
+}
 
 /** A checked file's claim as its report has it, and a way to rewrite the file with another. */
 export interface CheckedFileClaim {
@@ -54,8 +59,10 @@ export function useCheckedFileClaim(
   const { t } = useTranslation();
   const { consumeFiles, selectors } = useFileContext();
   const { activeFileId, setActiveFileId } = useViewer();
-  // The claim being written; undefined when nothing is.
-  const [pending, setPending] = useState<PdfUaPart | null | undefined>();
+  const [pending, setPending] = useState<PendingClaim | null>(null);
+  // Read after the write lands, so a file the user moved to meanwhile is kept.
+  const latest = useRef({ activeFileId, fileId });
+  latest.current = { activeFileId, fileId };
 
   const write = useCallback(
     async (part: PdfUaPart | null) => {
@@ -63,7 +70,7 @@ export function useCheckedFileClaim(
       const parentStub = fileId ? selectors.getStirlingFileStub(fileId) : null;
       if (!fileId || !file || !parentStub) return;
       const policyIds = policySourceIds(parentStub);
-      setPending(part);
+      setPending({ fileId, part });
       try {
         assertFilesNotBlocked(policyIds);
         const bytes = new Uint8Array(await file.arrayBuffer());
@@ -80,8 +87,8 @@ export function useCheckedFileClaim(
         assertFilesNotBlocked(policyIds);
         const [written] = await consumeFiles([fileId], stirlingFiles, stubs);
         if (!written) return;
-        if (activeFileId === fileId) setActiveFileId(written);
-        onWritten(written);
+        if (latest.current.activeFileId === fileId) setActiveFileId(written);
+        if (latest.current.fileId === fileId) onWritten(written);
       } catch (error) {
         console.error(error);
         alert({
@@ -93,28 +100,20 @@ export function useCheckedFileClaim(
           body: error instanceof PolicyBlockedError ? error.message : undefined,
         });
       } finally {
-        setPending(undefined);
+        setPending(null);
       }
     },
-    [
-      fileId,
-      selectors,
-      consumeFiles,
-      activeFileId,
-      setActiveFileId,
-      onWritten,
-      t,
-    ],
+    [fileId, selectors, consumeFiles, setActiveFileId, onWritten, t],
   );
 
   if (!fileId || !report) return null;
   const size = selectors.getFile(fileId)?.size ?? Infinity;
+  const writing = pending?.fileId === fileId;
   return {
     fileId,
-    declared:
-      pending === undefined ? declaresCheckedPart(report) : pending !== null,
+    declared: writing ? pending.part !== null : declaresCheckedPart(report),
     editable: !report.summary.encrypted && size <= MAX_REWRITE_BYTES,
-    writing: pending !== undefined,
+    writing,
     write: (part) => void write(part),
   };
 }

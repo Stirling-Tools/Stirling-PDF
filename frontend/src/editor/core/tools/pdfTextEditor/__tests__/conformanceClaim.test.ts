@@ -250,10 +250,25 @@ describe("readConformanceClaim", () => {
   test("reads a claim written as an attribute", async () => {
     const bytes = pdfWithPacket(
       packet(
-        `<rdf:Description rdf:about="" xmlns:pdfuaid="${PDFUA}" pdfuaid:part="2"/>`,
+        `<rdf:Description rdf:about="" xmlns:pdfuaid="${PDFUA}" pdfuaid:part="2" pdfuaid:rev="2024"/>`,
       ),
     );
     expect(await read(bytes)).toEqual({ part: 2, writable: true });
+  });
+
+  test("does not count PDF/UA-2 without its rev as declared", async () => {
+    const bytes = pdfWithPacket(
+      packet(
+        `<rdf:Description rdf:about="" xmlns:pdfuaid="${PDFUA}"><pdfuaid:part>2</pdfuaid:part></rdf:Description>`,
+      ),
+    );
+    expect(await read(bytes)).toEqual({ part: null, writable: true });
+  });
+
+  test("reports a file without a cross-reference section as not writable", async () => {
+    const full = pdf();
+    const bytes = full.slice(0, toLatin1(full).lastIndexOf("startxref"));
+    expect(await read(bytes)).toEqual({ part: null, writable: false });
   });
 
   test("does not count a claim under another prefix as declared", async () => {
