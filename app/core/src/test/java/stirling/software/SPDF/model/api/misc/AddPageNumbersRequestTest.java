@@ -24,6 +24,7 @@ class AddPageNumbersRequestTest {
             assertThat(req.getCustomMargin()).isEqualTo("medium");
             assertThat(req.getFontType()).isNull();
             assertThat(req.getFontColor()).isEqualTo("#000000");
+            assertThat(req.getNumberFormat()).isEqualTo("numeric");
             assertThat(req.getPagesToNumber()).isEqualTo("all");
             assertThat(req.getCustomText()).isEqualTo("{n}");
         }
@@ -44,6 +45,7 @@ class AddPageNumbersRequestTest {
             req.setZeroPad(4);
             req.setPosition(5);
             req.setStartingNumber(2);
+            req.setNumberFormat("roman-lowercase");
             req.setPagesToNumber("1,3-5");
             req.setCustomText("Page {n} of {total}");
 
@@ -54,6 +56,7 @@ class AddPageNumbersRequestTest {
             assertThat(req.getZeroPad()).isEqualTo(4);
             assertThat(req.getPosition()).isEqualTo(5);
             assertThat(req.getStartingNumber()).isEqualTo(2);
+            assertThat(req.getNumberFormat()).isEqualTo("roman-lowercase");
             assertThat(req.getPagesToNumber()).isEqualTo("1,3-5");
             assertThat(req.getCustomText()).isEqualTo("Page {n} of {total}");
         }

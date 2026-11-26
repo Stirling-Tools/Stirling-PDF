@@ -65,13 +65,7 @@ public class PageNumbersController {
         float fontSize = request.getFontSize();
         String fontType = request.getFontType();
         String fontColor = request.getFontColor();
-        // compute padded number string where requested
-        String formatN;
-        if (zeroPad > 0) {
-            formatN = String.format("%%0%dd", Math.max(0, zeroPad));
-        } else {
-            formatN = "%d";
-        }
+        String numberFormat = request.getNumberFormat();
 
         Color color = Color.BLACK;
         if (fontColor != null && !fontColor.trim().isEmpty()) {
@@ -118,11 +112,13 @@ public class PageNumbersController {
                                 ? new PDRectangle(cropBox.getHeight(), cropBox.getWidth())
                                 : new PDRectangle(cropBox.getWidth(), cropBox.getHeight());
 
-                String nFormatted = String.format(formatN, pageNumber);
+                String nFormatted = formatPageNumber(pageNumber, numberFormat, zeroPad);
+                String totalFormatted =
+                        PageNumberFormatter.format(document.getNumberOfPages(), numberFormat);
                 String text =
                         customText
                                 .replace("{n}", nFormatted)
-                                .replace("{total}", String.valueOf(document.getNumberOfPages()))
+                                .replace("{total}", totalFormatted)
                                 .replace(
                                         "{filename}",
                                         GeneralUtils.removeExtension(
@@ -221,5 +217,15 @@ public class PageNumbersController {
             return WebResponseUtils.pdfFileToWebResponse(
                     tempOut, GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"));
         }
+    }
+
+    private static String formatPageNumber(int pageNumber, String numberFormat, int zeroPad) {
+        String normalized =
+                numberFormat == null ? "" : numberFormat.trim().toLowerCase(Locale.ROOT);
+        boolean formatted = normalized.startsWith("roman-") || normalized.startsWith("alpha-");
+        if (zeroPad > 0 && !formatted) {
+            return String.format("%0" + zeroPad + "d", pageNumber);
+        }
+        return PageNumberFormatter.format(pageNumber, numberFormat);
     }
 }

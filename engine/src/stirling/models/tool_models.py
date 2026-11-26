@@ -63,6 +63,18 @@ class FontType(StrEnum):
     times = "times"
 
 
+class NumberFormat(StrEnum):
+    """
+    Format for page numbers: numeric (1, 2, 3), roman-lowercase (i, ii, iii), roman-uppercase (I, II, III), alpha-lowercase (a, b, c), alpha-uppercase (A, B, C). Applies to {n} and {total}.
+    """
+
+    numeric = "numeric"
+    roman_lowercase = "roman-lowercase"
+    roman_uppercase = "roman-uppercase"
+    alpha_lowercase = "alpha-lowercase"
+    alpha_uppercase = "alpha-uppercase"
+
+
 class Position(IntEnum):
     """
     Where to place the number on a 3x3 grid: 1=top-left, 2=top-center, 3=top-right, 4=middle-left, 5=center, 6=middle-right, 7=bottom-left, 8=bottom-center, 9=bottom-right
@@ -93,6 +105,10 @@ class AddPageNumbersParams(ApiModel):
     font_color: str = Field("#000000", description="Hex colour for page numbers (e.g. #FF0000)", examples=["#000000"])
     font_size: float = Field(12, description="Font size for page numbers", ge=1.0)
     font_type: FontType = Field(..., description="Font type for page numbers")
+    number_format: NumberFormat = Field(
+        NumberFormat.numeric,
+        description="Format for page numbers: numeric (1, 2, 3), roman-lowercase (i, ii, iii), roman-uppercase (I, II, III), alpha-lowercase (a, b, c), alpha-uppercase (A, B, C). Applies to {n} and {total}.",
+    )
     page_numbers: str = Field(
         "all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
