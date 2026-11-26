@@ -34,7 +34,7 @@ export function EditorTrailControls({ state }: { state: EditorViewState }) {
       >
         <Button
           size="sm"
-          variant="secondary"
+          variant={state.dirty ? "primary" : "secondary"}
           disabled={!ready || !state.dirty}
           onClick={() => session?.save()}
           leftSection={<Icon name="save" size={18} />}
