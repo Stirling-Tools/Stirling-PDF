@@ -37,14 +37,11 @@ describe("custom text variables", () => {
   });
 
   it("adds a variable at the end before the field has had a caret", async () => {
-    const onParameterChange = renderSettings("REF-2026-0412-");
+    const onParameterChange = renderSettings("Exhibit ");
     await userEvent.click(screen.getByRole("button", { name: "Variables" }));
     await userEvent.click(screen.getByRole("button", { name: "{n}" }));
 
-    expect(onParameterChange).toHaveBeenCalledWith(
-      "customText",
-      "REF-2026-0412-{n}",
-    );
+    expect(onParameterChange).toHaveBeenCalledWith("customText", "Exhibit {n}");
   });
 
   it("adds a variable at the caret", async () => {

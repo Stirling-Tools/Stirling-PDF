@@ -30,7 +30,7 @@ export const CustomTextBottomRight: Story = {
     parameters: {
       ...defaultParameters,
       position: 9,
-      customText: "REF-2026-0412-{n}",
+      customText: "Page {n} of {total}",
       zeroPad: 3,
     },
     onParameterChange: () => {},
