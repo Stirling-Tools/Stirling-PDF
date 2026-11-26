@@ -112,6 +112,30 @@ for (const [label, files] of [
   });
 }
 
+test("a PDF that only restricts actions opens without a password prompt", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    const flag = window as unknown as { prompted: boolean };
+    flag.prompted = false;
+    new MutationObserver(() => {
+      if (document.querySelector('[role="dialog"]')) flag.prompted = true;
+    }).observe(document.body, { subtree: true, childList: true });
+  });
+  await landingInput(page).setInputFiles(
+    ["owner-only-restricted.pdf", "sample.pdf"].map((f) =>
+      path.join(FIXTURES, f),
+    ),
+  );
+  await expect(page.locator("[data-file-id]")).toHaveCount(2, {
+    timeout: 15_000,
+  });
+  const prompted = await page.evaluate(
+    () => (window as unknown as { prompted: boolean }).prompted,
+  );
+  expect(prompted).toBe(false);
+});
+
 test("skipping every password leaves a later single file to open in the viewer", async ({
   page,
 }) => {

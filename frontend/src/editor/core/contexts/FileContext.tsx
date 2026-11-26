@@ -98,6 +98,9 @@ import apiClient from "@editor/services/apiClient";
 import { buildRemovePasswordFormData } from "@editor/hooks/tools/removePassword/buildRemovePasswordFormData";
 import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 
+/** How long the opening check may run before its prompt shows. */
+const OPENING_CHECK_PROMPT_DELAY_MS = 1000;
+
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
   children,
@@ -149,6 +152,8 @@ function FileContextInner({
     error?: string;
   } | null>(null);
   const [inspectionAttempt, setInspectionAttempt] = useState(0);
+  // A check still running after OPENING_CHECK_PROMPT_DELAY_MS, so its prompt shows to offer a cancel.
+  const [slowInspectionId, setSlowInspectionId] = useState<FileId | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [openingPasswordToRemove, setOpeningPasswordToRemove] = useState<
     string | null
@@ -836,7 +841,14 @@ function FileContextInner({
     if (!activeEncryptedFileId) return;
     const controller = new AbortController();
     inspectOpening(activeEncryptedFileId, controller);
-    return () => controller.abort();
+    const slow = window.setTimeout(
+      () => setSlowInspectionId(activeEncryptedFileId),
+      OPENING_CHECK_PROMPT_DELAY_MS,
+    );
+    return () => {
+      window.clearTimeout(slow);
+      controller.abort();
+    };
   }, [activeEncryptedFileId, inspectionAttempt]);
 
   const admitProtectionCopy = useCallback(
@@ -1389,8 +1401,20 @@ function FileContextInner({
     ? (pendingAdmissions.current.get(activeEncryptedFileId)?.stub ??
       state.files.byId[activeEncryptedFileId])
     : undefined;
+  // Most encrypted PDFs only restrict actions and open without a password, so
+  // the prompt waits for the empty-password check (inspectOpening) to fail or
+  // run long, rather than flashing up for each of them.
+  const checkingWithoutPrompt =
+    !!activeEncryptedFileId &&
+    !openingInspection?.error &&
+    slowInspectionId !== activeEncryptedFileId &&
+    // Running, or about to start on this file's first render as the active one.
+    (openingInspection?.fileId === activeEncryptedFileId ||
+      (!getPdfAccess(activeEncryptedFileId) &&
+        !ownerRequests.current.has(activeEncryptedFileId) &&
+        activeEncryptedStub?.processedFile?.requiresOpeningPassword !== true));
   const isUnlockModalOpen = Boolean(
-    activeEncryptedFileId && activeEncryptedStub,
+    activeEncryptedFileId && activeEncryptedStub && !checkingWithoutPrompt,
   );
 
   // Persistence loading disabled - files only loaded on explicit user action
