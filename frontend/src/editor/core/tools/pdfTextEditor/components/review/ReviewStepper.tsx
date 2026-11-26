@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
+import { CONTROL_HEIGHT, type ControlSize } from "@editor/ui/controlSizes";
 import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import {
   isFocusInContentEditable,
@@ -10,38 +11,69 @@ import {
 } from "@editor/tools/pdfTextEditor/util/dom";
 import "@editor/tools/pdfTextEditor/components/review/review.css";
 
+/** The label keeps the arrows' height, so the card holds still when they go. */
+const ARROW_SIZE: ControlSize = "sm";
+
 /**
- * The top of the review card: the arrows through what is left to tag. Gone once
- * nothing is: disabled arrows would read as a next item they can't reach.
+ * The top of the review card: the arrows through what is left to tag. Once
+ * nothing is, the arrows go (disabled ones would read as a next item they can't
+ * reach) and the label says so.
  */
 export function ReviewStepper({ review }: { review: ReviewProgress }) {
   const { t } = useTranslation();
   useNextKey(review);
-  if (review.todoCount === 0) return null;
+  const done = review.todoCount === 0;
+  // The label stays the same element throughout: a live region only announces
+  // changes to one already mounted, so tagging the last item is heard.
   return (
-    <div className="review-stepper" data-testid="pdf-editor-review-stepper">
-      <Button
-        variant="secondary"
-        disabled={!review.previous}
-        onClick={() => review.previous && review.select(review.previous)}
-        aria-label={t(
-          "pdfTextEditor.review.previous",
-          "Previous untagged (Shift+N)",
+    <div
+      className="review-stepper"
+      data-done={done}
+      data-testid="pdf-editor-review-stepper"
+    >
+      {!done && (
+        <Button
+          size={ARROW_SIZE}
+          variant="secondary"
+          disabled={!review.previous}
+          onClick={() => review.previous && review.select(review.previous)}
+          aria-label={t(
+            "pdfTextEditor.review.previous",
+            "Previous untagged (Shift+N)",
+          )}
+          leftSection={<Icon name="arrow-left" size={16} />}
+          data-testid="pdf-editor-review-previous"
+        />
+      )}
+      <span
+        className="review-stepper__label"
+        aria-live="polite"
+        style={{ minHeight: CONTROL_HEIGHT[ARROW_SIZE] }}
+        data-testid="pdf-editor-review-stepper-label"
+      >
+        {done ? (
+          <>
+            <Icon name="circle-check" size={16} />
+            {t(
+              "pdfTextEditor.review.allDone",
+              "All text and images are tagged",
+            )}
+          </>
+        ) : (
+          untaggedPosition(t, review)
         )}
-        leftSection={<Icon name="arrow-left" size={16} />}
-        data-testid="pdf-editor-review-previous"
-      />
-      <span className="review-stepper__label" aria-live="polite">
-        {untaggedPosition(t, review)}
       </span>
-      <Button
-        variant="primary"
-        disabled={!review.next}
-        onClick={() => review.next && review.select(review.next)}
-        aria-label={t("pdfTextEditor.review.next", "Next untagged (N)")}
-        leftSection={<Icon name="arrow-right" size={16} />}
-        data-testid="pdf-editor-review-next"
-      />
+      {!done && (
+        <Button
+          size={ARROW_SIZE}
+          variant="primary"
+          disabled={!review.next}
+          onClick={() => review.next && review.select(review.next)}
+          aria-label={t("pdfTextEditor.review.next", "Next untagged (N)")}
+          leftSection={<Icon name="arrow-right" size={16} />}
+          data-testid="pdf-editor-review-next"
+        />
+      )}
     </div>
   );
 }

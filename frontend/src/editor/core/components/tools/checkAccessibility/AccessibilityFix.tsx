@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useId } from "react";
 import { Tooltip } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
@@ -121,24 +121,53 @@ export function TagEverythingButton({
   );
 }
 
+/**
+ * Whether the report shown still finds untagged content. Readers that honour the
+ * tagged flag read only the tags, so the flag's fix says what it would hide.
+ */
+export const UntaggedContentContext = createContext(false);
+
 /** The editor's fix for `issue`; nothing when the editor cannot fix it. */
 export function IssueFixButton({ issue }: { issue: AccessibilityIssue }) {
   const { t } = useTranslation();
   const fix = useContext(AccessibilityFixContext);
+  const untaggedLeft = useContext(UntaggedContentContext);
+  const cautionId = useId();
   const target = fixTargetFor(issue);
   if (!fix || !target) return null;
   const page = PAGE_SCOPED_TARGETS.has(target) ? issue.pages?.[0] : undefined;
-  return (
+  const caution = target === "markedTagged" && untaggedLeft;
+  const button = (
     <Button
       size="sm"
       variant="secondary"
       leftSection={<Icon name="locate-fixed" size={14} />}
       onClick={() => fix(target, page)}
+      aria-describedby={caution ? cautionId : undefined}
       data-testid="a11y-fix-issue"
       data-fix={target}
     >
       {fixLabel(t, target, page)}
     </Button>
+  );
+  if (!caution) return button;
+  return (
+    <div className="a11y-issue__fix">
+      {button}
+      <p
+        id={cautionId}
+        className="a11y-issue__caution"
+        data-testid="a11y-fix-caution"
+      >
+        <Icon name="triangle-alert" size={14} />
+        <span>
+          {t(
+            "checkAccessibility.fix.markedTaggedUntagged",
+            "Some content isn't tagged yet. Once the document is marked, screen readers may skip it.",
+          )}
+        </span>
+      </p>
+    </div>
   );
 }
 

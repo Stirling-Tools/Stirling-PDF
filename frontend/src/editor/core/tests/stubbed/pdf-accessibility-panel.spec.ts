@@ -128,6 +128,8 @@ test("flags the document as tagged from the report's fix, saved with Save", asyn
       expanded: false,
     })
     .click();
+  // Nothing else fails, so there is no untagged content to warn about.
+  await expect(report.getByTestId("a11y-fix-caution")).toHaveCount(0);
   await page
     .locator('[data-testid="a11y-fix-issue"][data-fix="markedTagged"]')
     .click();

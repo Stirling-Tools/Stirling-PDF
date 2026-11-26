@@ -274,6 +274,29 @@
   color: var(--c-text-muted);
 }
 
+.a11y-issue__fix {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+
+.a11y-issue__caution {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+
+.a11y-issue__caution svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: var(--c-warning);
+}
+
 .a11y-issue__rule {
   margin: 0;
   font-size: 0.75rem;
