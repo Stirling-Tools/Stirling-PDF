@@ -3,6 +3,7 @@ package stirling.software.SPDF.pdf.signature;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.Bidi;
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +28,8 @@ import lombok.extern.slf4j.Slf4j;
  * display text, and the certificate itself is unaffected.
  *
  * <p>Lines are laid out in visual order (Unicode bidi), so Hebrew and Arabic read right to left
- * within a Latin line. Glyphs are not shaped, so Arabic and Indic letters are not joined. Not
- * thread-safe; use one instance per document.
+ * within a Latin line. Glyphs are not shaped, so Arabic and Indic text is legible letter by letter
+ * but not joined. Not thread-safe; use one instance per document.
  */
 @Slf4j
 public final class SignatureTextWriter {
@@ -97,23 +98,34 @@ public final class SignatureTextWriter {
     }
 
     static String visualOrder(String text) {
-        if (!Bidi.requiresBidi(text.toCharArray(), 0, text.length())) {
+        char[] chars = text.toCharArray();
+        if (!Bidi.requiresBidi(chars, 0, chars.length)) {
             return text;
         }
         Bidi bidi = new Bidi(text, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
         int count = bidi.getRunCount();
         byte[] levels = new byte[count];
-        String[] segments = new String[count];
-        for (int index = 0; index < count; index++) {
-            String segment = text.substring(bidi.getRunStart(index), bidi.getRunLimit(index));
-            levels[index] = (byte) bidi.getRunLevel(index);
-            segments[index] =
-                    (levels[index] & 1) == 1
-                            ? mirrored(new StringBuilder(segment).reverse().toString())
-                            : segment;
+        String[] runs = new String[count];
+        for (int i = 0; i < count; i++) {
+            levels[i] = (byte) bidi.getRunLevel(i);
+            String run = text.substring(bidi.getRunStart(i), bidi.getRunLimit(i));
+            runs[i] = (levels[i] & 1) == 1 ? mirrored(reverseClusters(run)) : run;
         }
-        Bidi.reorderVisually(levels, 0, segments, 0, count);
-        return String.join("", segments);
+        Bidi.reorderVisually(levels, 0, runs, 0, count);
+        return String.join("", runs);
+    }
+
+    private static String reverseClusters(String run) {
+        BreakIterator clusters = BreakIterator.getCharacterInstance();
+        clusters.setText(run);
+        StringBuilder reversed = new StringBuilder(run.length());
+        int end = clusters.last();
+        for (int start = clusters.previous();
+                start != BreakIterator.DONE;
+                end = start, start = clusters.previous()) {
+            reversed.append(run, start, end);
+        }
+        return reversed.toString();
     }
 
     // Unicode BidiMirroring pairs for the brackets and quotes a signer is likely to type: a

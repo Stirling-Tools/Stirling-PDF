@@ -152,7 +152,9 @@ export function useNavigationUrlSync(
         // A startup-view selection is a view preference, not a navigation, or
         // every visit to /editor becomes /read. The marker survives until the
         // selection moves off it (cleared below).
-        if (startupTool !== selectedTool) {
+        // Read names no address of its own: selecting it opens the reader, which
+        // moves to READER_PATH itself, and /read on top would close it again.
+        if (startupTool !== selectedTool && selectedTool !== "read") {
           const target = toolRoute(selectedTool, registry, here.current);
           if (target) navigate(target);
         }

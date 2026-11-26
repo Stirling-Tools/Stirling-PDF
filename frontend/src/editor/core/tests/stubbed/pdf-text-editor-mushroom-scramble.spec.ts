@@ -3,6 +3,8 @@ import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
+test.use({ autoGoto: false });
+
 /** Regression for the mushroom-life.pdf "paragraph scramble" report. */
 
 const MUSHROOM = path.join(

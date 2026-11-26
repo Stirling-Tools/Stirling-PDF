@@ -1,29 +1,23 @@
 import { render, screen, act } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
 
 let scrollCallback: ((page: number, total: number) => void) | null = null;
 let zoomCallback: ((percent: number) => void) | null = null;
-let spreadCallback: ((mode: SpreadMode) => void) | null = null;
 
 const unregisterScroll = vi.fn();
 const unregisterZoom = vi.fn();
-const unregisterSpread = vi.fn();
 
 const scrollState = { currentPage: 1, totalPages: 10 };
 const zoomState = { zoomPercent: 100, level: undefined };
-const spreadState = { spreadMode: SpreadMode.None };
 
 const viewer = vi.hoisted(() => ({
   getScrollState: () => scrollState,
   getZoomState: () => zoomState,
-  getSpreadState: () => spreadState,
   scrollActions: { scrollToPage: vi.fn() },
   zoomActions: { zoomIn: vi.fn(), zoomOut: vi.fn(), setZoomPercent: vi.fn() },
-  spreadActions: { setSpreadMode: vi.fn(), toggleSpreadMode: vi.fn() },
   zoomRestorePendingRef: { current: false },
   zoomRestoreSettledTick: 0,
   registerImmediateScrollUpdate: vi.fn((cb) => {
@@ -34,16 +28,31 @@ const viewer = vi.hoisted(() => ({
     zoomCallback = cb;
     return unregisterZoom;
   }),
-  registerImmediateSpreadUpdate: vi.fn((cb) => {
-    spreadCallback = cb;
-    return unregisterSpread;
-  }),
   pdfRenderMode: "normal",
   cyclePdfRenderMode: vi.fn(),
 }));
 
 vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => viewer,
+}));
+
+vi.mock("@editor/contexts/WorkbenchBarContext", () => ({
+  useWorkbenchBar: () => ({
+    buttons: [],
+    actions: {},
+    allButtonsDisabled: false,
+  }),
+}));
+
+vi.mock("@editor/contexts/viewer/ViewerPageTool", () => ({
+  useViewerPageTool: () => null,
+}));
+
+vi.mock("@editor/contexts/PreferencesContext", () => ({
+  usePreferences: () => ({
+    preferences: { defaultViewerZoom: "fitWidth" },
+    updatePreference: vi.fn(),
+  }),
 }));
 
 vi.mock("@editor/hooks/useIsMobile", () => ({
@@ -61,10 +70,8 @@ describe("PdfViewerToolbar", () => {
     vi.clearAllMocks();
     scrollCallback = null;
     zoomCallback = null;
-    spreadCallback = null;
     scrollState.currentPage = 1;
     zoomState.zoomPercent = 100;
-    spreadState.spreadMode = SpreadMode.None;
   });
 
   it("subscribes to immediate notifiers once and updates state when callbacks fire", () => {
@@ -76,14 +83,15 @@ describe("PdfViewerToolbar", () => {
 
     expect(viewer.registerImmediateScrollUpdate).toHaveBeenCalledTimes(1);
     expect(viewer.registerImmediateZoomUpdate).toHaveBeenCalledTimes(1);
-    expect(viewer.registerImmediateSpreadUpdate).toHaveBeenCalledTimes(1);
 
     // Immediate callback fires for scroll
     act(() => {
       scrollCallback?.(5, 10);
     });
 
-    const input = screen.getByRole("textbox") as HTMLInputElement;
+    const input = screen.getByRole("textbox", {
+      name: "Page number",
+    }) as HTMLInputElement;
     expect(input.value).toBe("5");
 
     // The subscription must NOT have been torn down and recreated
@@ -102,39 +110,8 @@ describe("PdfViewerToolbar", () => {
       zoomCallback?.(150);
     });
 
-    expect(screen.getByText("150%")).toBeInTheDocument();
+    expect(screen.getByTestId("viewer-zoom-input")).toHaveValue("150%");
     expect(unregisterZoom).not.toHaveBeenCalled();
-
-    act(() => {
-      spreadCallback?.(SpreadMode.Odd);
-    });
-
-    expect(
-      screen.getByRole("button", { name: "Single Page View" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Show Cover Page Separately" }),
-    ).toHaveAttribute("aria-pressed", "false");
-    expect(unregisterSpread).not.toHaveBeenCalled();
-  });
-
-  it("resyncs the spread mode from state without resubscribing", () => {
-    const { rerender } = render(
-      <MantineProvider>
-        <PdfViewerToolbar currentPage={1} totalPages={10} />
-      </MantineProvider>,
-    );
-
-    spreadState.spreadMode = SpreadMode.Even;
-    rerender(
-      <MantineProvider>
-        <PdfViewerToolbar currentPage={1} totalPages={10} />
-      </MantineProvider>,
-    );
-
-    expect(
-      screen.getByRole("button", { name: "Show Cover Page Separately" }),
-    ).toHaveAttribute("aria-pressed", "true");
-    expect(viewer.registerImmediateSpreadUpdate).toHaveBeenCalledTimes(1);
+    expect(viewer.registerImmediateZoomUpdate).toHaveBeenCalledTimes(1);
   });
 });

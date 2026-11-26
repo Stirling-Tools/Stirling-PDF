@@ -3,6 +3,7 @@ import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { Section } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import type {
   ScanFontChoice,
@@ -88,25 +89,17 @@ function ScanFontHint({
     );
   return (
     <>
-      <Stack gap={4}>
-        <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-hint">
-          {typedFromScan
-            ? t(
-                "pdfTextEditor.scanFont.hintFromScan",
-                "Your typing is built from letters found in the scan. Pick a font to draw it in that font instead.",
-              )
-            : t(
-                "pdfTextEditor.scanFont.hint",
-                "Your typing is drawn in the closest font found. Pick another if it looks more like the scan.",
-              )}
-        </Text>
-        <Text size="xs" c="dimmed">
-          {t(
-            "pdfTextEditor.scanFont.hintOthers",
-            "Your pick is also used for scanned text you have not edited yet.",
-          )}
-        </Text>
-      </Stack>
+      <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-hint">
+        {typedFromScan
+          ? t(
+              "pdfTextEditor.scanFont.hintFromScan",
+              "Your typing is built from letters found in the scan. Pick a font to draw it in that font instead.",
+            )
+          : t(
+              "pdfTextEditor.scanFont.hint",
+              "Your typing is drawn in the closest font found. Pick another if it looks more like the scan.",
+            )}
+      </Text>
       {status === "matching" && (
         <Group
           gap="xs"
@@ -140,18 +133,18 @@ function OriginalScanPreview({ scan }: { scan: string }) {
         <Text size="xs" fw={600} c="dimmed" tt="uppercase">
           {t("pdfTextEditor.scanFont.scan", "Original scan")}
         </Text>
+        <ToolInfoTooltip
+          label={t(
+            "pdfTextEditor.scanFont.scanNote",
+            "Scans often look blurrier or bolder than the font really is. Compare letter shapes rather than thickness.",
+          )}
+        />
       </Group>
       <img
         src={scan}
         alt={t("pdfTextEditor.scanFont.scanAlt", "The scanned line")}
         style={lineImage}
       />
-      <Text size="xs" c="dimmed" data-testid="pdf-editor-scan-font-note">
-        {t(
-          "pdfTextEditor.scanFont.scanNote",
-          "Scans often look blurrier or bolder than the font really is. Compare letter shapes rather than thickness.",
-        )}
-      </Text>
     </Stack>
   );
 }
@@ -167,9 +160,17 @@ function ScanFontChoices({
   const labelId = useId();
   return (
     <Stack gap={6} role="group" aria-labelledby={labelId}>
-      <Text id={labelId} size="xs" fw={600} c="dimmed" tt="uppercase">
-        {t("pdfTextEditor.scanFont.choose", "Choose a font")}
-      </Text>
+      <Group gap={4} wrap="nowrap">
+        <Text id={labelId} size="xs" fw={600} c="dimmed" tt="uppercase">
+          {t("pdfTextEditor.scanFont.choose", "Choose a font")}
+        </Text>
+        <ToolInfoTooltip
+          label={t(
+            "pdfTextEditor.scanFont.hintOthers",
+            "Your pick is also used for scanned text you have not edited yet.",
+          )}
+        />
+      </Group>
       {choices.map((choice, i) => (
         <ScanFontChoiceButton
           key={choice.label}
@@ -369,13 +370,15 @@ function DeviceFontsNote({
       style={{ border: "1px solid var(--c-border)", borderRadius: 6 }}
       data-testid="pdf-editor-scan-font-device"
     >
-      {allow}
-      <Text size="xs" c="dimmed" ta="center">
-        {t(
-          "pdfTextEditor.scanFont.deviceNote",
-          "Your browser asks first. Fonts stay on this device.",
-        )}
-      </Text>
+      <Group gap={4} wrap="nowrap">
+        {allow}
+        <ToolInfoTooltip
+          label={t(
+            "pdfTextEditor.scanFont.deviceNote",
+            "Your browser asks first. Fonts stay on this device.",
+          )}
+        />
+      </Group>
     </Stack>
   );
 }

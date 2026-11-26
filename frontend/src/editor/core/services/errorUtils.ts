@@ -37,6 +37,8 @@ export async function serverErrorReason(
       // Older Blob implementations lack text(); read it the long way.
       payload = tryParseJson(await readBlobText(payload));
     }
+    // The desktop HTTP client and text responses hand the body over unparsed.
+    if (typeof payload === "string") payload = tryParseJson(payload);
     if (payload && typeof payload === "object") {
       const { detail, message } = payload as {
         detail?: unknown;

@@ -42,15 +42,27 @@ export function useUnsavedChangesGuard(
 
   useEffect(() => {
     // Only covers the pending flag: once it has landed, a discard clears it while the store stays dirty.
-    registerUnsavedChangesChecker(() => isDirty() && !flagCaughtUpRef.current);
-    return () => unregisterUnsavedChangesChecker();
+    const checker = () => isDirty() && !flagCaughtUpRef.current;
+    registerUnsavedChangesChecker(checker);
+    return () => unregisterUnsavedChangesChecker(checker);
   }, [isDirty, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   useEffect(() => {
+    const owner = {};
+    flagOwner = owner;
     // The flag re-renders most of the app; urgent, it holds the first typed letter off screen.
     startTransition(() => setHasUnsavedChanges(dirty));
     // Clear on unmount so a stale flag cannot block navigation after the
     // editor is gone.
-    return () => setHasUnsavedChanges(false);
+    return () => {
+      if (flagOwner !== owner) return;
+      flagOwner = null;
+      setHasUnsavedChanges(false);
+    };
   }, [dirty, setHasUnsavedChanges]);
 }
+
+// The navigation guard holds one flag. Two editors overlap when the text editor
+// hands over to the review, and the one leaving unmounts last: only the latest
+// registration may clear it, or the review runs unguarded.
+let flagOwner: object | null = null;

@@ -15,6 +15,7 @@ import {
 import {
   TagLinkCommand,
   taggableLinks,
+  undescribedLinks,
 } from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import {
@@ -74,6 +75,12 @@ export interface InnerTagsControl {
 export interface UntaggedLinksControl {
   count: number;
   onTag: () => void;
+}
+
+/** Tagged links over the selected run with no description, and a way to give each its text as one. */
+export interface UndescribedLinksControl {
+  count: number;
+  onDescribe: () => void;
 }
 
 /** Matching text on other pages that the selected artifact's kind can be given, and a way to give it. */
@@ -219,6 +226,30 @@ export function useTextAccessibility(
       },
     };
     // state.pages: tagging republishes the pages, not the run.
+  }, [store, run, state.pages]);
+
+  const undescribed = useMemo((): UndescribedLinksControl | null => {
+    const doc = store.document;
+    const links =
+      doc && run ? undescribedLinks(doc, run.pageIndex, run.id) : [];
+    if (!doc || !run || links.length === 0) return null;
+    return {
+      count: links.length,
+      onDescribe: () => {
+        const commands = links.map(
+          ({ annotation, contents }) =>
+            new SetLinkContentsCommand({
+              pageIndex: run.pageIndex,
+              annotations: [annotation],
+              contents,
+            }),
+        );
+        store.dispatch(
+          commands.length === 1 ? commands[0] : new CompositeCommand(commands),
+        );
+      },
+    };
+    // state.pages: describing republishes the pages, not the run.
   }, [store, run, state.pages]);
 
   const activeInner = useMemo(
@@ -393,6 +424,7 @@ export function useTextAccessibility(
     otherPages,
     description,
     untaggedLinks,
+    undescribedLinks: undescribed,
   };
 }
 
@@ -465,7 +497,7 @@ export function setTextTagCommand(
   const commands = targets.flatMap(({ run, tag }) => {
     const command =
       typeof choice === "string"
-        ? typeCommand(run, tag, choice)
+        ? typeCommand(doc, run, tag, choice)
         : artifactCommand(doc, run, tag, choice.artifact);
     return command ? [command] : [];
   });
@@ -506,11 +538,17 @@ function artifactCommand(
 }
 
 function typeCommand(
+  doc: EditorDocument,
   run: TextRunSnapshot,
   tag: TextTag,
   type: StructureType,
 ): Command | null {
-  const { pageIndex, mcid } = run;
+  const { pageIndex } = run;
+  // An MCID no element owns marks untagged text, which is retagged like any other.
+  const mcid =
+    run.mcid !== undefined && doc.structure(pageIndex).owns(run.mcid)
+      ? run.mcid
+      : undefined;
   if (tag.kind === "tagged") {
     if (tag.cannotRetag !== null || mcid === undefined) return null;
     return new RetagBlockCommand({ pageIndex, mcid, type });

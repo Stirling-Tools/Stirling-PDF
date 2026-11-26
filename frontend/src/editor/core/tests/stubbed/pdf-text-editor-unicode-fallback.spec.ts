@@ -11,6 +11,8 @@ import {
 } from "@editor/tests/stubbed/saveHelpers";
 import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
 
+test.use({ autoGoto: false });
+
 /** Client-side Unicode fallback font (Noto Sans, embedded on demand). */
 
 const SAMPLE = path.join(

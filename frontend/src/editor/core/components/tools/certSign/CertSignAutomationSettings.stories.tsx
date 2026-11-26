@@ -7,7 +7,7 @@ import {
 } from "@editor/hooks/tools/certSign/useCertSignParameters";
 
 const meta = {
-  title: "Tools/CertSign/CertSignAutomationSettings",
+  title: "Tools/Sign with Certificate/Parts/CertSignAutomationSettings",
   component: CertSignAutomationSettings,
   parameters: { layout: "padded" },
   args: {

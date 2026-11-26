@@ -5,7 +5,7 @@ import type { SingleLargePageParameters } from "@editor/hooks/tools/singleLargeP
 const parameters: SingleLargePageParameters = {};
 
 const meta = {
-  title: "Tools/SingleLargePage/SingleLargePageSettings",
+  title: "Tools/PDF to Single Large Page/Parts/SingleLargePageSettings",
   component: SingleLargePageSettings,
 } satisfies Meta<typeof SingleLargePageSettings>;
 export default meta;

@@ -11,7 +11,7 @@ import {
 } from "@editor/hooks/tools/shared/toolOperationTypes";
 import { zipFileService } from "@editor/services/zipFileService";
 import { processResponse } from "@editor/utils/toolResponseProcessor";
-import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import { resolveToolErrorMessage } from "@editor/utils/toolErrorHandler";
 import { type AutomationConfig } from "@editor/types/automation";
 import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
 
@@ -215,7 +215,7 @@ export const executeToolOperationWithPrefix = async (
   } catch (error) {
     console.error(`❌ ${operationName} failed:`, error);
     throw new Error(
-      `${operationName} operation failed: ${extractErrorMessage(error)}`,
+      `${operationName} operation failed: ${await resolveToolErrorMessage(error)}`,
       {
         cause: error,
       },
@@ -242,9 +242,6 @@ export const executeAutomationSequence = async (
   }
 
   let currentFiles = [...initialFiles];
-  const automationPrefix = automation.name
-    ? `${automation.name}_`
-    : "automated_";
 
   for (let i = 0; i < automation.operations.length; i++) {
     const operation = automation.operations[i];
@@ -262,7 +259,7 @@ export const executeAutomationSequence = async (
         operation.parameters || {},
         currentFiles,
         toolRegistry,
-        i === automation.operations.length - 1 ? automationPrefix : "", // Only add prefix to final step
+        "",
       );
 
       console.log(

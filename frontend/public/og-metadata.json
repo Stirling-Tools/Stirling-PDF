@@ -475,6 +475,12 @@
       "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
+    "/settings/mcp": {
+      "image": "/og_images/home.png",
+      "title": "Mcp Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
     "/settings/connectedAccounts": {
       "image": "/og_images/home.png",
       "title": "Connected Accounts Settings - Stirling PDF",
@@ -923,6 +929,7 @@
     "/settings/requests": "/settings/requests",
     "/settings/developer": "/settings/developer",
     "/settings/api-keys": "/settings/api-keys",
+    "/settings/mcp": "/settings/mcp",
     "/settings/connectedAccounts": "/settings/connectedAccounts",
     "/settings/hotkeys": "/settings/hotkeys",
     "/settings/adminGeneral": "/settings/adminGeneral",

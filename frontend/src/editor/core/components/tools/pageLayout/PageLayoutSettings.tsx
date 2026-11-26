@@ -1,8 +1,7 @@
-import { Select, Stack, NumberInput } from "@mantine/core";
+import { Stack, NumberInput, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 import { getPagesPerSheetOptions } from "@editor/components/tools/pageLayout/constants";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 
 export default function PageLayoutSettings({
@@ -27,7 +26,7 @@ export default function PageLayoutSettings({
   return (
     <Stack gap="sm">
       <ButtonSelector
-        label={t("pageLayout.mode.label", "Mode:")}
+        label={t("pageLayout.mode.label", "Mode")}
         options={[
           { value: "DEFAULT", label: t("pageLayout.mode.default", "Default") },
           { value: "CUSTOM", label: t("pageLayout.mode.custom", "Custom") },
@@ -43,35 +42,20 @@ export default function PageLayoutSettings({
 
       {parameters.mode === "DEFAULT" && (
         <>
-          <Select
-            label={t("pageLayout.pagesPerSheet", "Pages per sheet:")}
-            data={pagesPerSheetOptions.map((o) => ({
-              value: String(o.value),
+          <ButtonSelector
+            label={t("pageLayout.pagesPerSheet", "Pages per sheet")}
+            options={pagesPerSheetOptions.map((o) => ({
+              value: o.value,
               label: o.label,
             }))}
-            value={String(parameters.pagesPerSheet)}
-            onChange={(v) => onParameterChange("pagesPerSheet", Number(v))}
-            allowDeselect={false}
+            value={parameters.pagesPerSheet}
+            onChange={(v) => onParameterChange("pagesPerSheet", v)}
             disabled={disabled}
-            comboboxProps={{
-              withinPortal: true,
-              zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-            }}
           />
           {selectedPagesPerSheetOption && (
-            <div
-              style={{
-                backgroundColor: "var(--c-surface)",
-                color: "var(--information-text-color)",
-                padding: "8px 12px",
-                borderRadius: "8px",
-                marginTop: "4px",
-                fontSize: "0.75rem",
-                textAlign: "center",
-              }}
-            >
+            <Text size="xs" c="dimmed">
               {selectedPagesPerSheetOption.description}
-            </div>
+            </Text>
           )}
         </>
       )}

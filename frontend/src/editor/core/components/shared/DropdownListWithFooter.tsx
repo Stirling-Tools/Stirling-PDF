@@ -127,6 +127,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
       )}
 
       <Popover
+        disabled={disabled}
         width={width}
         position={position}
         withArrow={withArrow}
@@ -141,6 +142,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
           <Box
             component="button"
             type="button"
+            disabled={disabled}
             style={{
               border:
                 "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",

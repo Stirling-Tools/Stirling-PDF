@@ -1,0 +1,4 @@
+/* A story shows one tool, so the header's close button is drawn but inert. */
+.frame :global(.sui-panelhdr__close) {
+  pointer-events: none;
+}

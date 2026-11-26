@@ -33,14 +33,14 @@ describe("ebook output settings", () => {
       );
       expect(onParameterChange).not.toHaveBeenCalled();
       fireEvent.click(
-        screen.getByRole("checkbox", { name: "Detect chapters" }),
+        screen.getByRole("checkbox", { name: /^Detect chapters/ }),
       );
       expect(onParameterChange).toHaveBeenLastCalledWith("epubOptions", {
         detectChapters: false,
         targetDevice: "TABLET_PHONE_IMAGES",
         outputFormat,
       });
-      fireEvent.click(screen.getByRole("textbox", { name: "Target device" }));
+      fireEvent.click(screen.getByRole("textbox", { name: /^Target device/ }));
       fireEvent.click(
         screen.getByRole("option", { name: "Kindle e-Ink (text optimized)" }),
       );
@@ -71,7 +71,7 @@ describe("ebook output settings", () => {
         />
       </MantineProvider>,
     );
-    fireEvent.click(screen.getByRole("textbox", { name: "Output format" }));
+    fireEvent.click(screen.getByRole("textbox", { name: /^Output format/ }));
     fireEvent.click(screen.getByRole("option", { name: "AZW3" }));
     expect(onParameterChange).toHaveBeenCalledWith("toExtension", "azw3");
     expect(onParameterChange).toHaveBeenCalledWith("epubOptions", {

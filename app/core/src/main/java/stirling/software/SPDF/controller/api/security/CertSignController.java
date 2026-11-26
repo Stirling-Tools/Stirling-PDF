@@ -13,15 +13,28 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSInteger;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSUpdateInfo;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.COSObjectable;
+import org.apache.pdfbox.pdmodel.common.PDNumberTreeNode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDObjectReference;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
+import org.apache.pdfbox.pdmodel.documentinterchange.taggedpdf.StandardStructureTypes;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -100,6 +113,8 @@ import stirling.software.common.util.WebResponseUtils;
 @Tag(name = "Security", description = "Security APIs")
 public class CertSignController {
 
+    private static final int SIGNER_INFO_ALLOWANCE = 4096;
+
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
@@ -115,9 +130,6 @@ public class CertSignController {
                     }
                 });
     }
-
-    // The signed digest, attributes and an optional timestamp token beside the certificates.
-    private static final int SIGNATURE_HEADROOM = 8 * 1024;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ServerCertificateServiceInterface serverCertificateService;
@@ -225,28 +237,205 @@ public class CertSignController {
             signature.setLocation(location);
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
-            if (Boolean.TRUE.equals(showSignature)) {
-                SignatureStampPlacement placement =
-                        SignatureStampPlacement.resolve(doc, pageNumber, box, fieldName);
-                if (placement.field() != null) {
-                    // addSignature signs into the existing field whose /V is this signature.
-                    placement.field().getCOSObject().setItem(COSName.V, signature);
-                }
-                try (SignatureOptions signatureOptions = new SignatureOptions()) {
-                    signatureOptions.setPreferredSignatureSize(signatureSize(instance));
+            try (SignatureOptions signatureOptions = new SignatureOptions()) {
+                signatureOptions.setPreferredSignatureSize(
+                        signatureReservation(instance.getCertificateChain()));
+                if (Boolean.TRUE.equals(showSignature)) {
+                    SignatureStampPlacement placement =
+                            SignatureStampPlacement.resolve(doc, pageNumber, box, fieldName);
+                    if (placement.field() != null) {
+                        // addSignature signs into the existing field whose /V is this signature.
+                        placement.field().getCOSObject().setItem(COSName.V, signature);
+                    }
                     signatureOptions.setVisualSignature(
                             instance.createVisibleSignature(doc, signature, placement, showLogo));
                     signatureOptions.setPage(placement.pageIndex());
+                }
+                doc.addSignature(signature, instance, signatureOptions);
+                makeSignatureWidgetAccessible(
+                        doc,
+                        signature,
+                        StringUtils.isNotBlank(name) ? name.strip() : instance.signerName());
+                doc.saveIncremental(output);
+            }
+        }
+    }
 
-                    doc.addSignature(signature, instance, signatureOptions);
-                    doc.saveIncremental(output);
+    static int signatureReservation(Certificate[] chain) throws IOException {
+        int certificateBytes = 0;
+        if (chain != null) {
+            try {
+                for (Certificate certificate : chain) {
+                    certificateBytes += certificate.getEncoded().length;
                 }
-            } else {
-                try (SignatureOptions signatureOptions = new SignatureOptions()) {
-                    signatureOptions.setPreferredSignatureSize(signatureSize(instance));
-                    doc.addSignature(signature, instance, signatureOptions);
-                    doc.saveIncremental(output);
+            } catch (CertificateEncodingException e) {
+                throw new IOException("Could not encode the signing certificate chain", e);
+            }
+        }
+        return Math.max(
+                SignatureOptions.DEFAULT_SIGNATURE_SIZE, certificateBytes + SIGNER_INFO_ALLOWANCE);
+    }
+
+    /**
+     * Gives the signature widget, visible or not, what PDF/UA-1 7.18 asks of every widget: a
+     * description (/TU and /Contents), structure tab order on its page, and, in a tagged document,
+     * a Form structure element that owns it. Incremental saving writes only objects flagged as
+     * updated, so every touched object is flagged.
+     */
+    private static void makeSignatureWidgetAccessible(
+            PDDocument doc, PDSignature signature, String signerName) throws IOException {
+        PDSignatureField field = findSignatureField(doc, signature);
+        if (field == null) {
+            return;
+        }
+        PDAnnotationWidget widget = field.getWidgets().getFirst();
+        PDPage page = pageOf(doc, widget);
+        String description = "Digital signature by " + signerName;
+        if (StringUtils.isBlank(field.getAlternateFieldName())) {
+            field.setAlternateFieldName(description);
+        }
+        if (StringUtils.isBlank(widget.getContents())) {
+            widget.setContents(description);
+        }
+        page.getCOSObject().setName(COSName.getPDFName("Tabs"), "S");
+        markUpdated(page.getCOSObject(), field.getCOSObject(), widget.getCOSObject());
+
+        PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
+        if (root != null && widget.getStructParent() < 0) {
+            tagSignatureWidget(root, page, widget, description);
+        }
+    }
+
+    private static PDPage pageOf(PDDocument doc, PDAnnotationWidget widget) throws IOException {
+        if (widget.getPage() != null) {
+            return widget.getPage();
+        }
+        for (PDPage page : doc.getPages()) {
+            for (var annotation : page.getAnnotations()) {
+                if (annotation.getCOSObject() == widget.getCOSObject()) {
+                    return page;
                 }
+            }
+        }
+        return doc.getPage(0);
+    }
+
+    private static PDSignatureField findSignatureField(PDDocument doc, PDSignature signature)
+            throws IOException {
+        for (PDSignatureField field : doc.getSignatureFields()) {
+            if (field.getCOSObject().getDictionaryObject(COSName.V) == signature.getCOSObject()) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    private static void tagSignatureWidget(
+            PDStructureTreeRoot root, PDPage page, PDAnnotationWidget widget, String description)
+            throws IOException {
+        int key = parentTreeKey(root);
+        PDStructureNode parent = root;
+        for (Object kid : root.getKids()) {
+            if (kid instanceof PDStructureElement element) {
+                parent = element;
+                break;
+            }
+        }
+        PDStructureElement form = new PDStructureElement(StandardStructureTypes.FORM, parent);
+        form.setPage(page);
+        form.setAlternateDescription(description);
+        PDObjectReference reference = new PDObjectReference();
+        reference.setReferencedObject(widget);
+        form.appendKid(reference);
+        parent.appendKid(form);
+
+        widget.setStructParent(key);
+        addParentTreeEntry(root, key, form);
+        root.setParentTreeNextKey(key + 1);
+
+        markUpdated(
+                root.getCOSObject(),
+                parent.getCOSObject(),
+                parent.getCOSObject().getDictionaryObject(COSName.K),
+                widget.getCOSObject());
+    }
+
+    /**
+     * The parent-tree key for a new entry: past every key in use and the root's next key.
+     *
+     * @throws IllegalArgumentException when no key is left whose successor still fits the
+     *     /ParentTreeNextKey integer, checked before anything is changed
+     */
+    static int parentTreeKey(PDStructureTreeRoot root) throws IOException {
+        long key = Math.max(root.getParentTreeNextKey(), nextParentTreeKey(root.getParentTree()));
+        if (key >= Integer.MAX_VALUE) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "fileInput - the PDF's structure tree has no parent-tree key left for the"
+                            + " signature");
+        }
+        return (int) key;
+    }
+
+    private static long nextParentTreeKey(PDNumberTreeNode parentTree) throws IOException {
+        if (parentTree == null) {
+            return 0;
+        }
+        long max = -1;
+        Map<Integer, COSObjectable> numbers = parentTree.getNumbers();
+        if (numbers != null) {
+            for (Integer number : numbers.keySet()) {
+                max = Math.max(max, number);
+            }
+        }
+        List<PDNumberTreeNode> kids = parentTree.getKids();
+        if (kids != null) {
+            for (PDNumberTreeNode kid : kids) {
+                max = Math.max(max, nextParentTreeKey(kid) - 1);
+            }
+        }
+        return max + 1;
+    }
+
+    // Appends past every existing key, so a new leaf at the end of /Kids keeps the tree sorted.
+    private static void addParentTreeEntry(
+            PDStructureTreeRoot root, int key, PDStructureElement value) {
+        PDNumberTreeNode parentTree = root.getParentTree();
+        if (parentTree == null) {
+            parentTree = new PDNumberTreeNode(COSBase.class);
+            root.setParentTree(parentTree);
+        }
+        COSDictionary treeDict = parentTree.getCOSObject();
+        COSArray kids = treeDict.getCOSArray(COSName.KIDS);
+        if (kids == null) {
+            COSArray nums = treeDict.getCOSArray(COSName.NUMS);
+            if (nums == null) {
+                nums = new COSArray();
+                treeDict.setItem(COSName.NUMS, nums);
+            }
+            nums.add(COSInteger.get(key));
+            nums.add(value);
+            markUpdated(treeDict, nums);
+            return;
+        }
+        COSArray nums = new COSArray();
+        nums.add(COSInteger.get(key));
+        nums.add(value);
+        COSArray limits = new COSArray();
+        limits.add(COSInteger.get(key));
+        limits.add(COSInteger.get(key));
+        COSDictionary leaf = new COSDictionary();
+        leaf.setItem(COSName.NUMS, nums);
+        leaf.setItem(COSName.LIMITS, limits);
+        kids.add(leaf);
+        markUpdated(treeDict, kids);
+    }
+
+    private static void markUpdated(COSBase... objects) {
+        for (COSBase object : objects) {
+            if (object instanceof COSUpdateInfo updatable) {
+                updatable.setNeedToBeUpdated(true);
             }
         }
     }
@@ -264,22 +453,6 @@ public class CertSignController {
                     "error.signingCertificateChanged",
                     "The signing certificate is not the one you reviewed. Check it and sign again.");
         }
-    }
-
-    /**
-     * Bytes to reserve for the signature: PDFBox's default fits a short chain, but a size that is
-     * too small only fails after the key has signed, when a token has already asked for its PIN.
-     */
-    static int signatureSize(CreateSignatureBase instance) throws IOException {
-        int chainBytes = 0;
-        for (Certificate certificate : instance.getCertificateChain()) {
-            try {
-                chainBytes += certificate.getEncoded().length;
-            } catch (CertificateEncodingException e) {
-                throw new IOException("Could not read the signing certificate chain", e);
-            }
-        }
-        return Math.max(SignatureOptions.DEFAULT_SIGNATURE_SIZE, chainBytes + SIGNATURE_HEADROOM);
     }
 
     @AutoJobPostMapping(
@@ -637,6 +810,16 @@ public class CertSignController {
             this.showCertificateDetails = showCertificateDetails;
         }
 
+        String signerName() {
+            X509Certificate cert = (X509Certificate) getCertificateChain()[0];
+            // https://stackoverflow.com/questions/2914521/
+            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+            RDN[] cns = x500Name.getRDNs(BCStyle.CN);
+            return cns.length > 0
+                    ? IETFUtils.valueToString(cns[0].getFirst().getValue())
+                    : cert.getSubjectX500Principal().getName();
+        }
+
         public InputStream createVisibleSignature(
                 PDDocument srcDoc,
                 PDSignature signature,
@@ -733,17 +916,6 @@ public class CertSignController {
                 doc.save(baos);
                 return new ByteArrayInputStream(baos.toByteArray());
             }
-        }
-
-        private String signerName() {
-            X509Certificate cert = (X509Certificate) getCertificateChain()[0];
-
-            // https://stackoverflow.com/questions/2914521/
-            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-            RDN[] cns = x500Name.getRDNs(BCStyle.CN);
-            return cns.length > 0
-                    ? IETFUtils.valueToString(cns[0].getFirst().getValue())
-                    : cert.getSubjectX500Principal().getName();
         }
 
         private List<String> detailLines(PDSignature signature, String name) {

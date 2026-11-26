@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { NumberInput, Stack } from "@mantine/core";
 import { ScannerImageSplitParameters } from "@editor/hooks/tools/scannerImageSplit/useScannerImageSplitParameters";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface ScannerImageSplitSettingsProps {
   parameters: ScannerImageSplitParameters;
@@ -22,10 +23,12 @@ const ScannerImageSplitSettings: React.FC<ScannerImageSplitSettingsProps> = ({
   return (
     <Stack gap="md">
       <NumberInput
-        label={t("ScannerImageSplit.selectText.1", "Angle Threshold:")}
-        description={t(
-          "ScannerImageSplit.selectText.2",
-          "Sets the minimum absolute angle required for the image to be rotated (default: 10).",
+        {...infoLabelProps(
+          t("ScannerImageSplit.selectText.1", "Angle Threshold"),
+          t(
+            "ScannerImageSplit.selectText.2",
+            "Tilt (in degrees) needed before we auto-straighten a photo.",
+          ),
         )}
         value={parameters.angle_threshold}
         onChange={(value) =>
@@ -37,10 +40,12 @@ const ScannerImageSplitSettings: React.FC<ScannerImageSplitSettingsProps> = ({
       />
 
       <NumberInput
-        label={t("ScannerImageSplit.selectText.3", "Tolerance:")}
-        description={t(
-          "ScannerImageSplit.selectText.4",
-          "Determines the range of colour variation around the estimated background colour (default: 30).",
+        {...infoLabelProps(
+          t("ScannerImageSplit.selectText.3", "Tolerance"),
+          t(
+            "ScannerImageSplit.selectText.4",
+            "How closely a color must match the page background to count as background. Higher = looser, lower = stricter.",
+          ),
         )}
         value={parameters.tolerance}
         onChange={(value) =>
@@ -52,10 +57,12 @@ const ScannerImageSplitSettings: React.FC<ScannerImageSplitSettingsProps> = ({
       />
 
       <NumberInput
-        label={t("ScannerImageSplit.selectText.5", "Minimum Area:")}
-        description={t(
-          "ScannerImageSplit.selectText.6",
-          "Sets the minimum area threshold for a photo (default: 10000).",
+        {...infoLabelProps(
+          t("ScannerImageSplit.selectText.5", "Minimum Area"),
+          t(
+            "ScannerImageSplit.selectText.6",
+            "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments.",
+          ),
         )}
         value={parameters.min_area}
         onChange={(value) =>
@@ -67,10 +74,12 @@ const ScannerImageSplitSettings: React.FC<ScannerImageSplitSettingsProps> = ({
       />
 
       <NumberInput
-        label={t("ScannerImageSplit.selectText.7", "Minimum Contour Area:")}
-        description={t(
-          "ScannerImageSplit.selectText.8",
-          "Sets the minimum contour area threshold for a photo.",
+        {...infoLabelProps(
+          t("ScannerImageSplit.selectText.7", "Minimum Contour Area"),
+          t(
+            "ScannerImageSplit.selectText.8",
+            "Smallest edge/shape we consider when finding photos (filters dust and specks).",
+          ),
         )}
         value={parameters.min_contour_area}
         onChange={(value) =>
@@ -82,10 +91,12 @@ const ScannerImageSplitSettings: React.FC<ScannerImageSplitSettingsProps> = ({
       />
 
       <NumberInput
-        label={t("ScannerImageSplit.selectText.9", "Border Size:")}
-        description={t(
-          "ScannerImageSplit.selectText.10",
-          "Sets the size of the border added and removed to prevent white borders in the output (default: 1).",
+        {...infoLabelProps(
+          t("ScannerImageSplit.selectText.9", "Border Size"),
+          t(
+            "ScannerImageSplit.selectText.10",
+            "Extra padding (in pixels) around each saved photo so edges aren't cut.",
+          ),
         )}
         value={parameters.border_size}
         onChange={(value) =>

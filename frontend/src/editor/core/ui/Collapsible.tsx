@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { Icon } from "@editor/ui/Icon";
 import "@editor/ui/Collapsible.css";
 
@@ -24,6 +24,7 @@ export function Collapsible({
   children,
   className,
 }: CollapsibleProps) {
+  const bodyId = useId();
   return (
     <div
       className={["sui-collapsible", className ?? ""].filter(Boolean).join(" ")}
@@ -33,6 +34,7 @@ export function Collapsible({
         className="sui-collapsible__head"
         onClick={onToggle}
         aria-expanded={open}
+        aria-controls={bodyId}
       >
         <Icon
           name="chevron-down"
@@ -42,7 +44,13 @@ export function Collapsible({
         />
         {header}
       </button>
-      <div className="sui-collapsible__body" data-open={open}>
+      {/* A closed body is only squashed to no height, so inert keeps Tab out of it. */}
+      <div
+        id={bodyId}
+        className="sui-collapsible__body"
+        data-open={open}
+        inert={!open}
+      >
         <div className="sui-collapsible__body-inner">{children}</div>
       </div>
     </div>

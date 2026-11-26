@@ -1,8 +1,9 @@
-import { Stack, Text, Select, Switch } from "@mantine/core";
+import { Stack, Text, Select, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { COLOR_TYPES, FIT_OPTIONS } from "@editor/constants/convertConstants";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface ConvertFromImageSettingsProps {
   parameters: ConvertParameters;
@@ -23,7 +24,7 @@ const ConvertFromImageSettings = ({
   return (
     <Stack gap="sm" data-testid="pdf-options-section">
       <Text size="sm" fw={500}>
-        {t("convert.pdfOptions", "PDF Options")}:
+        {t("convert.pdfOptions", "PDF Options")}
       </Text>
       <Select
         data-testid="color-type-select"
@@ -86,12 +87,14 @@ const ConvertFromImageSettings = ({
         }}
       />
 
-      <Switch
+      <Checkbox
         data-testid="auto-rotate-switch"
-        label={t("convert.autoRotate", "Auto Rotate")}
-        description={t(
-          "convert.autoRotateDescription",
-          "Automatically rotate images to better fit the PDF page",
+        {...infoLabelProps(
+          t("convert.autoRotate", "Auto Rotate"),
+          t(
+            "convert.autoRotateDescription",
+            "Automatically rotate images to better fit the PDF page",
+          ),
         )}
         checked={parameters.imageOptions.autoRotate}
         onChange={(event) =>
@@ -103,12 +106,14 @@ const ConvertFromImageSettings = ({
         disabled={disabled}
       />
 
-      <Switch
+      <Checkbox
         data-testid="combine-images-switch"
-        label={t("convert.combineImages", "Combine Images")}
-        description={t(
-          "convert.combineImagesDescription",
-          "Combine all images into one PDF, or create separate PDFs for each image",
+        {...infoLabelProps(
+          t("convert.combineImages", "Combine Images"),
+          t(
+            "convert.combineImagesDescription",
+            "Combine all images into one PDF, or create separate PDFs for each image",
+          ),
         )}
         checked={parameters.imageOptions.combineImages}
         onChange={(event) =>

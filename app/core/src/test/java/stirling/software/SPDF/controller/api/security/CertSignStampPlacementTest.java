@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +34,6 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
@@ -351,24 +349,6 @@ class CertSignStampPlacementTest {
         SignPDFWithCertRequest matching = request(blankLetter(0, null));
         matching.setExpectedCertificateSha256(HardwareKeyStoreService.sha256(signer).toUpperCase());
         assertTrue(sign(matching).length > 0);
-    }
-
-    @Test
-    void theSignatureReservationGrowsWithTheChain() throws Exception {
-        KeyStore keystore = KeyStore.getInstance("PKCS12");
-        keystore.load(new ByteArrayInputStream(pfxBytes), "password".toCharArray());
-        CertSignController.CreateSignature instance =
-                new CertSignController.CreateSignature(keystore, "password".toCharArray());
-        assertEquals(
-                SignatureOptions.DEFAULT_SIGNATURE_SIZE,
-                CertSignController.signatureSize(instance));
-        X509Certificate leaf = (X509Certificate) instance.getCertificateChain()[0];
-        Certificate[] longChain = new Certificate[12];
-        java.util.Arrays.fill(longChain, leaf);
-        instance.setCertificateChain(longChain);
-        assertTrue(
-                CertSignController.signatureSize(instance) >= 12 * leaf.getEncoded().length,
-                "reservation must cover every certificate");
     }
 
     @Test

@@ -140,6 +140,15 @@ const Merge = (props: BaseToolProps) => {
       {
         title: t("merge.sortFiles.title", "Sort Files"),
         isCollapsed: base.settingsCollapsed,
+        tooltip: {
+          header: {
+            title: t("merge.sortFiles.tooltip.header.title", "File Order"),
+          },
+          content: t(
+            "merge.sortBy.description",
+            "Files will be merged in the order shown. Drag to reorder or sort below.",
+          ),
+        },
         content: (
           <MergeFileSorter
             onSortFiles={sortFiles}

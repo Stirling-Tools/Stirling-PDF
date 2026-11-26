@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
 /**
  * Reusable tooltip for page selection functionality.
  * Can be used by any tool that uses the GeneralUtils.parsePageList syntax.
  */
-export const usePageSelectionTips = (): TooltipContent => {
+export const usePageSelectionTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
