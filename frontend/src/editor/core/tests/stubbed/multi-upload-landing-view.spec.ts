@@ -176,6 +176,10 @@ test("skipping every password leaves a later single file to open in the viewer",
   );
   for (let i = 0; i < locked.length; i++) {
     const prompt = await nextPrompt(page, locked);
+    // The prompt resizes once its check is done; a click during that misses.
+    await expect(prompt.locator('input[type="password"]')).toBeVisible({
+      timeout: 30_000,
+    });
     await prompt.getByRole("button", { name: "Close" }).click();
     await expect(prompt).toBeHidden({ timeout: 15_000 });
   }
