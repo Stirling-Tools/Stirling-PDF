@@ -104,7 +104,8 @@ export default function WordsToRedactInput({
           style={{ flex: 1 }}
         />
         <Button
-          size="sm"
+          size="md"
+          fontSize="sm"
           variant="secondary"
           onClick={addWord}
           disabled={disabled || !currentWord.trim()}
