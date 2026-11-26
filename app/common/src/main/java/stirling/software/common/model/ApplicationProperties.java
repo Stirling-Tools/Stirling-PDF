@@ -1553,11 +1553,14 @@ public class ApplicationProperties {
     public static class PdfWorkers {
         // auto = on for servers, off for the desktop app; false runs PDFium in this JVM only.
         private String enabled = "auto";
-        private int count = 2; // 0 or less = one per CPU core minus one
-        private String maxHeap = "512m"; // Markdown jobs hold every page's text on the heap
+        private int count = 2; // worker processes, started on demand
+        private int instancesPerWorker = 0; // 0 = CPU cores minus one, at most 4
+        private String maxHeap = "auto"; // auto = 384 MB plus 256 MB per extra instance
         private int maxJobsPerWorker = 500;
         private int idleTimeoutSeconds = 300;
         private int jobTimeoutMinutes = 10;
+        // false fails jobs when no worker can start, so PDFium never runs in the server
+        private boolean inProcessFallback = false;
     }
 
     @Data
