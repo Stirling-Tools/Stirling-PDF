@@ -15,6 +15,14 @@
   overflow: hidden;
 }
 
+/* Above the viewer's bottom toolbar: its gutter, its height, then a gap. */
+.lifted {
+  bottom: calc(var(--nav-gutter) + 2.75rem + var(--space-2));
+  border-bottom: 1px solid var(--c-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+}
+
 .open,
 .dismiss {
   display: flex;

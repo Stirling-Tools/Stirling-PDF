@@ -8,9 +8,10 @@ import styles from "@editor/components/feedback/FeedbackTag.module.css";
 /**
  * Tab on the bottom edge of the workbench that opens feedback. Must render
  * inside a positioned container. Dismissing it is permanent for this browser;
- * Settings keeps an entry that cannot be dismissed.
+ * Settings keeps an entry that cannot be dismissed. `lifted` floats it clear of
+ * a bar docked along that edge, such as the viewer's toolbar.
  */
-export function FeedbackTag() {
+export function FeedbackTag({ lifted = false }: { lifted?: boolean }) {
   const { t } = useTranslation();
   const openFeedback = useFeedback();
   const { preferences, updatePreference } = usePreferences();
@@ -24,7 +25,7 @@ export function FeedbackTag() {
   const dismissLabel = t("feedback.tag.dismiss", "Hide the feedback button");
 
   return (
-    <div className={styles.tag}>
+    <div className={lifted ? `${styles.tag} ${styles.lifted}` : styles.tag}>
       <button type="button" className={styles.open} onClick={openFeedback}>
         <Icon name="stirling-mark" size="0.875rem" className={styles.mark} />
         {t("feedback.tag.label", "Feedback")}
