@@ -90,7 +90,8 @@ interface ImageHandleProps {
   selected: boolean;
   /** Selectable but neither draggable nor resizable. */
   fixed?: boolean;
-  onSelect: () => void;
+  /** `extend` (a Shift press) adds or removes the image from the selection. */
+  onSelect: (extend: boolean) => void;
   onTransformCommit: (next: PageRect) => void;
   /** Why the image needs the user's attention, if it does. */
   attention?: ImageAttention | null;
@@ -323,7 +324,8 @@ export function ImageHandle({
             : null;
         setDragging(true);
         startLift();
-        onSelect();
+        // A Shift press already toggled the image into the selection.
+        if (!("shiftKey" in e && e.shiftKey)) onSelect(false);
       }}
       onDrag={(e) => {
         const at = draggedTo(dragOriginRef.current, e);
@@ -334,7 +336,7 @@ export function ImageHandle({
         setKeepRatio(e.shiftKey);
         if (locked) return;
         startLift();
-        onSelect();
+        onSelect(false);
       }}
       onResize={(e) => setKeepRatio(e.shiftKey)}
       onDragStop={(e, data) => {
@@ -392,12 +394,13 @@ export function ImageHandle({
         // it, so without this their pointerdown reaches the stage's
         // "empty space clears" handler and deselects mid-resize.
         e.stopPropagation();
-        onSelect();
+        onSelect(e.shiftKey);
       }}
       onClick={(e: React.MouseEvent) => {
         e.stopPropagation();
-        if (locked) return;
-        onSelect();
+        // A Shift press toggled the image on pointerdown; a second toggle would undo it.
+        if (locked || e.shiftKey) return;
+        onSelect(false);
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

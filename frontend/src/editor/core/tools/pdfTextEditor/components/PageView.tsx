@@ -73,7 +73,7 @@ interface PageViewProps {
   /** The AnnotationBox id of the selected form field widget. */
   selectedFormFieldId?: string | null;
   onSelectRun: (runId: string, shiftKey: boolean) => void;
-  onSelectImage: (imageId: string) => void;
+  onSelectImage: (imageId: string, extend: boolean) => void;
   onSelectShape: (shapeId: string, extend: boolean) => void;
   /** Selects a form field widget by its AnnotationBox id. */
   onSelectFormField?: (annotationId: string) => void;
@@ -567,7 +567,7 @@ export const PageView = memo(function PageView({
             scale={cssScale}
             selected={selectedImageIds.includes(image.id)}
             fixed={reviewing}
-            onSelect={() => onSelectImage(image.id)}
+            onSelect={(extend) => onSelectImage(image.id, extend)}
             onTransformCommit={(next) =>
               onTransformImage?.(page.pageIndex, image.id, next)
             }

@@ -138,6 +138,19 @@ export class Selection {
     });
   }
 
+  toggleImage(imageId: string): void {
+    const imageIds = this.state.imageIds.includes(imageId)
+      ? this.state.imageIds.filter((id) => id !== imageId)
+      : [...this.state.imageIds, imageId];
+    this.set({
+      ...this.state,
+      imageIds,
+      formFieldId: null,
+      caret: null,
+      textRange: null,
+    });
+  }
+
   toggleShape(shapeId: string): void {
     const shapeIds = this.state.shapeIds.includes(shapeId)
       ? this.state.shapeIds.filter((id) => id !== shapeId)

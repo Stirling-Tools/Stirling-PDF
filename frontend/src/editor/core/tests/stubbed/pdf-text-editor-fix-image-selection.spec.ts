@@ -184,6 +184,28 @@ test.describe("PDF text editor - selection survives resize, marquee never wipes 
     ).toEqual([]);
   });
 
+  test("Shift-click adds an image to the selection, and a second one takes it out", async ({
+    page,
+  }) => {
+    await openSample(page);
+    const run = page.locator(RUN_SEL).first();
+    const img = page.locator(IMG_SEL).first();
+    await expect(img).toBeVisible({ timeout: 30_000 });
+    await run.click();
+    expect((await selectedRunIds(page)).length).toBe(1);
+
+    await img.click({ modifiers: ["Shift"] });
+    expect(await selectedImageIds(page)).toHaveLength(1);
+    expect(
+      await selectedRunIds(page),
+      "the text stays selected beside the image",
+    ).toHaveLength(1);
+
+    await img.click({ modifiers: ["Shift"] });
+    expect(await selectedImageIds(page)).toEqual([]);
+    expect(await selectedRunIds(page)).toHaveLength(1);
+  });
+
   // (B) Before the fix: runIds went [id] -> [] because PageStage cleared at
   // the marquee's pointerdown, and the empty marquee never restored anything.
   test("a marquee that catches nothing leaves the existing selection alone", async ({
