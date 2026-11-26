@@ -82,8 +82,8 @@
     },
     "archivePdf": {
       "image": "/og_images/home.png",
-      "title": "Archive PDF (PDF/A) - Stirling PDF",
-      "description": "Convert PDFs to PDF/A for long-term archiving"
+      "title": "Convert PDF to PDF/A - Stirling PDF",
+      "description": "Convert PDFs to the PDF/A archival standard for long-term preservation"
     },
     "ocr": {
       "image": "/og_images/ocr.png",
@@ -741,11 +741,6 @@
       "title": "PDF to XML Converter - Stirling PDF",
       "description": "Convert PDF documents into structured XML. Free, fast, and private."
     },
-    "/pdf-to-pdfa": {
-      "image": "/og_images/convert.png",
-      "title": "PDF to PDF/A Converter - Stirling PDF",
-      "description": "Convert PDFs to the PDF/A archival standard for long-term preservation. Free and private."
-    },
     "/img-to-pdf": {
       "image": "/og_images/convert.png",
       "title": "Image to PDF Converter - Stirling PDF",
@@ -860,7 +855,7 @@
     "/merge-pdfs": "merge",
     "/compress-pdf": "compress",
     "/rotate-pdf": "rotate",
-    "/pdf-to-pdfa": "/pdf-to-pdfa",
+    "/pdf-to-pdfa": "archivePdf",
     "/convert-pdf": "convert",
     "/file-to-pdf": "/file-to-pdf",
     "/eml-to-pdf": "/eml-to-pdf",
@@ -983,6 +978,7 @@
     "/merge-pdfs": "/merge",
     "/compress-pdf": "/compress",
     "/rotate-pdf": "/rotate",
+    "/pdf-to-pdfa": "/archive-pdf",
     "/convert-pdf": "/convert",
     "/manage-signatures": "/cert-sign",
     "/sanitize-pdf": "/sanitize",

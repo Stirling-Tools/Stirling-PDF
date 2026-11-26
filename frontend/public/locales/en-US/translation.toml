@@ -6027,7 +6027,7 @@ tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,mar
 title = "Annotate"
 
 [home.archivePdf]
-desc = "Convert PDFs to PDF/A for long-term archiving"
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
 tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
 title = "Archive PDF (PDF/A)"
 

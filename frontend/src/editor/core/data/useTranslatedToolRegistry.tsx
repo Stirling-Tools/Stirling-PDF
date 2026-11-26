@@ -996,7 +996,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         component: lazy(() => import("@editor/tools/ArchivePdf")),
         description: t(
           "home.archivePdf.desc",
-          "Convert PDFs to PDF/A for long-term archiving",
+          "Convert PDFs to the PDF/A archival standard for long-term preservation",
         ),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,

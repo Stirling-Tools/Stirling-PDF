@@ -85,11 +85,6 @@ const CONVERT_SEO_PAGES = {
     description:
       "Convert PDF documents into structured XML. Free, fast, and private.",
   },
-  "/pdf-to-pdfa": {
-    name: "PDF to PDF/A Converter",
-    description:
-      "Convert PDFs to the PDF/A archival standard for long-term preservation. Free and private.",
-  },
   "/img-to-pdf": {
     name: "Image to PDF Converter",
     description:
@@ -157,6 +152,7 @@ const TOOL_SEO_TITLES = {
   crop: "Crop PDF",
   flatten: "Flatten PDF",
   repair: "Repair PDF",
+  archivePdf: "Convert PDF to PDF/A",
   compare: "Compare PDF Files",
   sanitize: "Sanitize PDF",
   addPassword: "Password Protect PDF",
