@@ -620,6 +620,8 @@ describe("table commands (fake PDFium)", () => {
     new FillTableCellCommand({ tableId, row: 2, col: 0, text: "Z" }).apply(doc);
 
     const model = page.tables[0];
+    const zRun = page.runs.find((run) => run.text === "Z")!;
+    const zYBefore = zRun.matrix.f;
     const del = new ModifyTableCommand({
       tableId,
       op: "delete-row",
@@ -630,6 +632,8 @@ describe("table commands (fake PDFium)", () => {
     expect(model.rows).toBe(3);
     expect(model.rowEdges).toEqual([700, 670, 640, 610]);
     expect(page.runs.map((run) => run.text)).toEqual(["A", "Z"]);
+    expect(model.cellRuns[1][0]).toBe(zRun.id);
+    expect(zRun.matrix.f).toBeCloseTo(zYBefore + 30, 5);
     expect(model.hLinePtrs).toHaveLength(model.rows + 1);
     expect(model.vLinePtrs).toHaveLength(model.cols + 1);
   });
