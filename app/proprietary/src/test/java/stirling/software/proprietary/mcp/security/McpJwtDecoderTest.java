@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.env.Environment;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
@@ -20,8 +21,11 @@ class McpJwtDecoderTest {
         properties.getMcp().getAuth().setIssuerUri(issuerUri);
         McpSecurityConfig config =
                 new McpSecurityConfig(
-                        properties, mock(UserService.class), mock(ObjectProvider.class));
-        return config.mcpJwtDecoder();
+                        properties,
+                        mock(UserService.class),
+                        mock(ObjectProvider.class),
+                        mock(Environment.class));
+        return config.mcpJwtDecoder(mock(ObjectProvider.class), mock(ObjectProvider.class));
     }
 
     @Test

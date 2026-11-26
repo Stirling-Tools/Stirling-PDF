@@ -208,3 +208,41 @@ export async function revealPickerTool(
     page.locator(`[data-tour="tool-button-${toolId}"]`),
   );
 }
+
+const VIEWER_PANEL_TOGGLES = {
+  Pages: "viewer-toggle-sidebar",
+  Bookmarks: "viewer-toggle-bookmarks",
+  Comments: "viewer-toggle-comments",
+  Attachments: "viewer-toggle-attachments",
+  Layers: "viewer-toggle-layers",
+} as const;
+
+/** Shows or hides one of the viewer's side panels from its toggle in the bar. */
+export async function toggleViewerPanel(
+  page: Page,
+  name: keyof typeof VIEWER_PANEL_TOGGLES,
+): Promise<void> {
+  await page.getByTestId(VIEWER_PANEL_TOGGLES[name]).click();
+}
+
+/** Picks a choice from the viewer's View menu, then puts the menu away. */
+export async function choosePageView(page: Page, name: string): Promise<void> {
+  await page.getByTestId("viewer-page-view-menu").click();
+  await page.getByRole("menuitem", { name, exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menuitem", { name, exact: true })).toBeHidden();
+}
+
+/** Whether a View menu choice is ticked, read by opening the menu. */
+export async function expectPageViewChecked(
+  page: Page,
+  name: string,
+  checked = true,
+): Promise<void> {
+  await page.getByTestId("viewer-page-view-menu").click();
+  const item = page.getByRole("menuitem", { name, exact: true });
+  if (checked) await expect(item).toHaveAttribute("data-checked", "true");
+  else await expect(item).not.toHaveAttribute("data-checked");
+  await page.keyboard.press("Escape");
+  await expect(item).toBeHidden();
+}

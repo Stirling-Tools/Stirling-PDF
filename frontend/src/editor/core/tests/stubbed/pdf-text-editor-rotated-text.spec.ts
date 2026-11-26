@@ -3,6 +3,12 @@ import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
+import {
+  downloadBytes,
+  reopenSavedBytes,
+} from "@editor/tests/stubbed/saveHelpers";
+
+test.use({ autoGoto: false });
 
 // Editing OBJECT-rotated text must keep the rotation, not force the re-emitted
 // glyphs upright.
@@ -74,19 +80,8 @@ test("editing rotated text keeps its rotation through save+reopen", async ({
   // Save + reopen, then confirm the run is STILL rotated (not forced upright).
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("pdf-editor-download").click();
-  const dl = await downloadPromise;
-  const stream = await dl.createReadStream();
-  const chunks: Buffer[] = [];
-  for await (const c of stream) chunks.push(c as Buffer);
-  await openInTextEditor(page, {
-    name: "round-trip.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.concat(chunks),
-  });
-  await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page.waitForTimeout(500);
+  const saved = await downloadBytes(await downloadPromise);
+  await reopenSavedBytes(page, saved, "round-trip.pdf");
 
   const after = await rotatedRunMatrix(page);
   expect(

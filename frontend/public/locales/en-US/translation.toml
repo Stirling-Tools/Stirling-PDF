@@ -12,9 +12,11 @@ comingSoon = "Coming soon"
 confirm = "Confirm"
 confirmClose = "Confirm Close"
 confirmCloseCancel = "Cancel"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Close File"
 confirmCloseDiscard = "Discard changes and close"
 confirmCloseMessage = "Are you sure you want to close this file?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Save and close"
 confirmCloseSaveFailed_one = "Saved with errors. {{count}} file could not be saved."
 confirmCloseSaveFailed_other = "Saved with errors. {{count}} files could not be saved."
@@ -1457,7 +1459,9 @@ label = "SMTP Username"
 
 [admin.settings.mcp]
 apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1472,22 +1476,45 @@ label = "Allowed tools"
 description = "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools."
 label = "Blocked tools"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded."
 label = "Enable MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Enter your OAuth issuer + resource ID above, Save, and restart."
 step1ApiKey = "Create an API key under Account > API Keys (each user uses their own)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "In your MCP client add a"
 step2b = "server pointing at:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "The client auto-discovers OAuth from:"
 step3ApiKey = "Send the key in an"
 step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
 step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
 tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
 tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Connect an MCP client"
 
 [admin.settings.mcp.issuerUri]
@@ -1501,7 +1528,8 @@ placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
 apikey = "API key (Stirling per-user key)"
-description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
+builtin = "Built-in OAuth 2.1"
+description = "Built-in runs Stirling's own OAuth server with no IdP - the mode ChatGPT and the claude.ai connector need. OAuth uses an external IdP. API key uses a Stirling per-user key (X-API-KEY) and publishes no OAuth metadata."
 label = "Authentication mode"
 oauth = "OAuth 2.1 (external IdP)"
 
@@ -1516,6 +1544,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops."
 label = "Enforce OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."
@@ -2361,6 +2401,10 @@ title = "Run Automation"
 [automate.selection]
 title = "Automation Selection"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Create New Automation"
 
@@ -2971,31 +3015,36 @@ stepTitle = "This device"
 [certSign.error]
 failed = "An error occurred while processing signatures."
 
-[certSign.format]
-pkcs11 = "USB Token"
-windowsStore = "Windows certificate store"
-
 [certSign.hardware]
-certificate = "Certificate"
-customLibrary = "Custom driver path…"
-driver = "PKCS#11 driver"
-driverPath = "Driver library path"
-driverPathPlaceholder = "Full path to your PKCS#11 driver (.dll, .so or .dylib)"
-expired = "expired"
-expires = "expires"
-listCerts = "List certificates"
-loading = "Reading certificates…"
-noCerts = "No signing certificates found"
-noDriver = "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC), then reopen this - or enter the driver path manually below."
-notYetValid = "not yet valid"
-pin = "Token PIN"
-pkcs11Hint = "Select your token's PKCS#11 driver, enter the PIN, then list the certificates on the token."
-pkcs11LoadError = "Could not read certificates from the token. Check the PIN and driver."
-refresh = "Refresh"
-selectCert = "Select certificate"
-selectDriver = "Select driver"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+customLibrary = "Other location…"
+digitalId = "Digital ID"
+driver = "Card software (PKCS#11)"
+driverPath = "Card software path"
+driverPathPlaceholder = "Full path to the PKCS#11 library (.dll, .so or .dylib)"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
+listCerts = "Show digital IDs"
+macLoadError = "Could not read the macOS keychain"
+noCerts = "No digital IDs found. Check your card is inserted, then refresh."
+noDriver = "No card software was detected. Install the software that came with your card, then reopen this - or enter its path below."
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
+pin = "PIN"
+pkcs11Hint = "For cards your computer doesn't list. Choose the software that came with your card and enter its PIN."
+pkcs11LoadError = "Could not read the card. Check the PIN and card software."
+refreshList = "Refresh list"
+selectDriver = "Select card software"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (optional)"
-windowsHint = "Pick a certificate from your Windows certificate store. Signing uses the key on your card/token - Windows will prompt for the PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Could not read the Windows certificate store"
 
 [certSign.sessions]
@@ -3035,6 +3084,8 @@ title = "Rule of thumb"
 device = "This device"
 noOtherSources = "No other certificate sources are available."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Certificate source"
 upload = "Upload"
 
@@ -3265,7 +3316,9 @@ checking = "Checking..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Download accessibility report"
 fileFailed = "failed"
+noFiles = "Select a PDF to check it."
 pickFile = "Show results for"
+retry = "Check again"
 submit = "Check accessibility"
 
 [checkAccessibility.category]
@@ -3291,6 +3344,7 @@ label = "{{passed}} of {{total}} checks passed"
 download = "The accessibility report could not be created. Try again."
 fileTitle = "This file could not be checked"
 partial = "Some files could not be checked."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Declares PDF/UA"
@@ -3313,6 +3367,21 @@ title = "The file has a title in its metadata."
 [checkAccessibility.figures]
 summary_one = "{{count}} image needs a description (page {{pages}})"
 summary_other = "{{count}} images need a description (pages {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Applies to"
@@ -4207,7 +4276,9 @@ title = "Refresh API Keys"
 warning = "⚠️ Warning: This action will generate new API keys and make your previous keys invalid."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts toward your usage, just like using Stirling PDF directly."
@@ -4222,11 +4293,26 @@ tooltip = "Copy {{label}}"
 tooltipCopied = "{{label}} copied"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Your MCP endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Add to"
 hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Connect your AI assistant"
 
 [config.overview]
@@ -4469,6 +4555,21 @@ description = "These cookies are essential for the website to function properly.
 [cookieBanner.services]
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
+
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
 
 [createPortfolio]
 coverTitle = "Cover page title"
@@ -5962,8 +6063,10 @@ title = "Change Permissions"
 
 [home.checkAccessibility]
 desc = "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
+descWithReview = "Check a PDF against PDF/UA, then tag and describe what screen readers miss"
 tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
 title = "Check PDF accessibility"
+titleWithReview = "PDF accessibility"
 
 [home.classify]
 desc = "Identify what kind of document this is and tag it."
@@ -6556,6 +6659,9 @@ title = "Authentication Failed"
 message = "You can close this window and return to Stirling PDF."
 title = "Authentication Successful"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Allow access"
 approving = "Allowing..."
@@ -6566,6 +6672,7 @@ loadFailed = "This authorization request is invalid or has expired. Close this t
 loading = "Loading authorization request..."
 missingId = "Missing authorization request. Start the connection from your app and try again."
 redirecting = "Returning you to the app..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} wants to access your Stirling PDF account"
 scopesIntro = "This will allow {{app}} to:"
 signedInAs = "Signed in as {{name}}"
@@ -6573,6 +6680,8 @@ signInButton = "Sign in to continue"
 signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
 title = "Authorize access"
 unknownApp = "A third-party application"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
@@ -6580,9 +6689,12 @@ tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secur
 
 [oauthConsent.scope]
 email = "See your email address"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Confirm your identity"
 phone = "See your phone number"
 profile = "See your basic profile information"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
@@ -7630,6 +7742,7 @@ pngFileType = "PNG image"
 close = "Close find bar"
 count = "{{current}} of {{total}}"
 findPlaceholder = "Find"
+hideReplace = "Hide replace"
 ignoreAccents = "Ignore accents"
 matchCase = "Match case"
 next = "Next match"
@@ -7639,6 +7752,7 @@ replace = "Replace"
 replaceAll = "Replace all"
 replaced = "{{count}} replaced"
 replacePlaceholder = "Replace with"
+showReplace = "Show replace"
 wholeWord = "Whole word"
 
 [pdfTextEditor.fontPicker]
@@ -7809,14 +7923,11 @@ cannotTagLink = "This link can't be tagged."
 cannotTagPage = "This page's content can't be tagged."
 contentGroup = "Content"
 customTag = "{{role}} (custom tag)"
-decorativeInfo = "Screen readers skip decorative images. Use it for borders, backgrounds and other images that carry no information."
-decorativeLabel = "Decorative image"
-description = "Image description"
-descriptionInfo = "Screen readers read this out in place of the image."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Tags can't be edited in an encrypted file"
 figureDescription = "Figure description"
 figureDescriptionInfo = "Screen readers read this out in place of the figure."
-formFieldDescription = "Field description"
 formulaDescription = "Formula description"
 formulaDescriptionInfo = "Screen readers read this out in place of the formula. Say it as you would aloud, such as \"x squared plus one\"."
 heading = "Accessibility"
@@ -7827,7 +7938,6 @@ markedTagged = "Document is fully tagged"
 markedTaggedHint = "Tells PDF readers to use the accessibility tags. Tick it once everything is tagged."
 markedWithUntagged = "Some content has no tags, so screen readers may skip it."
 missingDescriptions = "Missing descriptions"
-mixedContent = "Figure includes other content"
 mixedTags = "Mixed"
 needsDescriptionBadge = "No description"
 nextToReview = "Next to review"
@@ -7835,12 +7945,10 @@ notFigure = "Tagged as part of the text"
 removeTag = "Remove tag"
 saveFailed = "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again."
 selectedText = "Selected text"
-tagFormField = "Tag form field"
 tagging = "Tagging pages"
 tagLabel = "Tag"
 tagLinks_one = "Tag link"
 tagLinks_other = "Tag {{count}} links"
-tagUntagged = "Auto-tag document"
 tagUntaggedHint = "Automatically adds accessibility tags throughout the document. The result is rough: check headings, lists and reading order afterwards."
 unknownTag = "Can't be read here"
 unmarkedWithTags = "Some PDF viewers will use the tags anyway and may skip content without them."
@@ -7865,7 +7973,7 @@ heading = "Headings"
 mixedNumbering = "Mixes numbered and unnumbered headings"
 none = "No headings"
 onPage = "Heading on page {{page}}"
-problems = "Heading problems"
+problemCount = "{{count}} to fix"
 skippedLevel = "Skips a level after Heading {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7920,13 +8028,11 @@ title = "Title"
 allLanguages = "All languages"
 cannotSetDocument = "This document's language can't be changed."
 cannotSetText = "This text's language can't be changed."
-documentHint = "The language screen readers use unless a part of the text sets its own."
 documentLabel = "Language"
 documentLocked = "An encrypted document's language can't be changed here."
 inDocument = "In this document"
 innerLabel = "Tag {{number}} language"
 label = "Language"
-missing = "No language set. Screen readers will guess, and may read the whole document in the wrong voice."
 mixed = "Mixed"
 noMatch = "No matching language. Type its code instead, such as mt or en-IE."
 placeholder = "Select language"
@@ -7957,6 +8063,52 @@ renderFailed = "Failed to render page"
 [pdfTextEditor.password]
 incorrect = "Incorrect password - try again."
 label = "Password"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
@@ -8138,6 +8290,10 @@ title = "Preview Variance"
 [pdfTextEditor.tooltip.textFocus]
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF to CSV"
@@ -10341,6 +10497,10 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newCustomPipeline = "New custom pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "All pipelines"
 
@@ -12071,7 +12231,6 @@ label = "Reading tools"
 readAloud = "Read aloud"
 rotateLeft = "Rotate left"
 rotateRight = "Rotate right"
-search = "Find in document"
 switchDocument = "Switch document"
 thumbnails = "Pages"
 
@@ -12673,6 +12832,7 @@ title = "Search PDF"
 hideTools = "Hide unavailable tools ▴"
 messageNoFallback = "Tools are unavailable until your server comes back online."
 messageWithFallback = "Some tools require a server connection."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "View unavailable tools ▾"
 title = "Your Stirling-PDF server is unreachable"
 toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
@@ -13057,6 +13217,12 @@ title = "Keyboard Shortcuts"
 [settings.hotkeys.errorModifier]
 mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
+
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
 
 [settings.legal]
 description = "Terms, privacy policy and your cookie preferences."
@@ -14357,6 +14523,20 @@ noTools = "No tools available"
 [tooltip]
 close = "Close tooltip"
 
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
+
 [unlockPDFForms]
 description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."
 submit = "Unlock Forms"
@@ -14747,12 +14927,9 @@ cannotPreviewFile = "Cannot Preview File"
 copyRestricted = "Copying is disabled by this PDF's permissions."
 copyText = "Copy"
 coverPageView = "Show Cover Page Separately"
-disableColorFilter = "Disable Color Filter"
 documentUpdated = "Document updated"
 dualPageView = "Dual Page View"
 editText = "Edit text"
-enableDarkFilter = "Enable Dark Filter"
-enableSepiaFilter = "Enable Sepia Filter"
 engineLoadError = "Failed to initialize PDF viewer engine"
 engineSlowWarning = "PDF engine initialization is taking longer than expected. Please check your browser WebAssembly and Worker settings, or reload the page."
 firstPage = "First Page"
@@ -14760,20 +14937,27 @@ fitPage = "Fit to page"
 fitWidth = "Fit to width"
 lastPage = "Last Page"
 loadingEngine = "Loading PDF Engine..."
+menuSelected = "Selected"
 moreOptions = "More"
 nextPage = "Next Page"
 noPdfProvided = "No PDF provided"
 onlyPdfSupported = "This file format is not supported for preview."
 pageNavigation = "Page navigation"
+pageNumber = "Page number"
 previousPage = "Previous Page"
 readAloudFromHere = "Read aloud from here"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "The document could not be saved. Try again."
 saveChangesErrorTitle = "Could not save changes"
 singlePageView = "Single Page View"
+tools = "Tools"
 unknownFile = "Unknown file"
-view = "View"
 zoom = "Zoom"
 zoomIn = "Zoom In"
+zoomLevel = "Zoom level"
 zoomOut = "Zoom Out"
 
 [viewer.attachments]
@@ -15113,10 +15297,13 @@ partial = "Restored {{restored}} of {{total}} files. The rest are no longer stor
 
 [workbenchBar]
 activeFiles = "Active Files"
-annotations = "Annotations"
+annotate = "Annotate"
 applyRedactionsFirst = "Apply redactions first"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Close All Files"
 closePdf = "Close PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
 editText = "Edit Text"
@@ -15124,18 +15311,26 @@ exitAnnotations = "Exit annotation mode"
 exitRedaction = "Exit Redaction Mode"
 findReplace = "Find & replace"
 formFill = "Form Editor"
-hideToolbar = "Hide toolbar"
+layers = "Layers"
 moreActions = "More actions"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Page Editor"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Pan Mode"
 print = "Print PDF"
 readAloud = "Read Aloud"
 readAloudLanguage = "Language"
 readAloudSpeed = "Speed"
 redact = "Redact"
+reviewAccessibility = "Review accessibility"
 rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 ruler = "Ruler / Measure"
+rulerScaleUnset = "Not set"
 rulerSettings = "Scale Settings"
 save = "Save"
 saveAll = "Save All"
@@ -15147,14 +15342,23 @@ selectLanguage = "Select language"
 share = "Share"
 showAllTools = "Show all tools"
 showFewerTools = "Collapse toolbar"
-showToolbar = "Show toolbar"
+thumbnails = "Pages"
 toggleAnnotations = "Toggle Annotations Visibility"
-toggleAttachments = "Toggle Attachments"
-toggleBookmarks = "Bookmarks (Table of Contents)"
 toggleComments = "Comments"
-toggleLayers = "Toggle Layers"
-toggleSidebar = "Toggle Sidebar"
 viewer = "Viewer"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Your access to this document has expired."
