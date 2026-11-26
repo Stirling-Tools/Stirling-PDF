@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
-import { fixTargetFor } from "@editor/utils/accessibilityFixes";
+import {
+  conformanceClaimFixFor,
+  fixTargetFor,
+  profilePart,
+} from "@editor/utils/accessibilityFixes";
 
 function issue(
   specification: string,
@@ -45,5 +49,35 @@ describe("fixTargetFor", () => {
     ["content language", "PDF/UA-2", "8.4.4", "1"],
   ])("offers no fix for a %s rule", (_name, spec, clause, test) => {
     expect(fixTargetFor(issue(spec, clause, test))).toBeNull();
+  });
+});
+
+describe("conformanceClaimFixFor", () => {
+  it.each([
+    ["PDF/UA-1", "5", "1", 1],
+    ["PDF/UA-1", "5", "3", 1],
+    ["PDF/UA-1", "5", "5", 1],
+    ["PDF/UA-2", "5", "1", 2],
+    ["PDF/UA-2", "5", "4", 2],
+  ])(
+    "declares the part %s clause %s-%s was checked against",
+    (spec, clause, test, part) => {
+      expect(conformanceClaimFixFor(issue(spec, clause, test))).toBe(part);
+    },
+  );
+
+  it("offers no declaration for other rules", () => {
+    expect(conformanceClaimFixFor(issue("PDF/UA-1", "6.2", "1"))).toBeNull();
+  });
+});
+
+describe("profilePart", () => {
+  it.each([
+    ["PDF/UA-1", 1],
+    ["PDF/UA-2", 2],
+    ["PDF/A-2b", null],
+    [undefined, null],
+  ])("reads %s as %s", (profile, part) => {
+    expect(profilePart(profile)).toBe(part);
   });
 });

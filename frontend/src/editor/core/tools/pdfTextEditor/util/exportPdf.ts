@@ -13,6 +13,10 @@ import {
   applyMarked,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
 import {
+  ConformanceClaimError,
+  applyConformanceClaim,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/conformanceClaim";
+import {
   defineMissingGraphicsStates,
   type ObjectOpacity,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/defineMissingGraphicsStates";
@@ -38,6 +42,7 @@ export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
   const structureEdits = doc.structureEdits();
   const annotationEdits = doc.annotationEdits();
   const documentLanguage = doc.documentLanguageEdit();
+  const conformanceClaim = doc.conformanceClaimEdit();
   // A signed document is appended to rather than rewritten, so the bytes the
   // signature covers are still there and still verify for their revision.
   const incremental = documentIsSigned(doc);
@@ -51,6 +56,7 @@ export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
       structureEdits.length === 0 &&
       annotationEdits.length === 0 &&
       documentLanguage === undefined &&
+      conformanceClaim === undefined &&
       !doc.markedTaggedChanged()
     ) {
       return pdfBlob(doc.openedBytes);
@@ -92,6 +98,14 @@ export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
       bytes = await applyMarked(bytes, doc.markedTagged());
     } catch (err) {
       if (!(err instanceof MarkInfoError)) throw err;
+      throw accessibilitySaveFailed(err);
+    }
+  }
+  if (conformanceClaim !== undefined) {
+    try {
+      bytes = await applyConformanceClaim(bytes, conformanceClaim);
+    } catch (err) {
+      if (!(err instanceof ConformanceClaimError)) throw err;
       throw accessibilitySaveFailed(err);
     }
   }
