@@ -40,6 +40,11 @@ const SUBSET_FONT_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/subset-font-sample.pdf",
 );
+// Eight pages: more than the editor reads up front when it opens a file.
+const MANY_PAGES_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/many-pages-sample.pdf",
+);
 // 80-page synthetic fixture (generate-big-sample.mjs). The largest input
 // in the suite - exercises the loading overlay and the lazy page reader.
 const BIG_SAMPLE_PDF = path.join(
@@ -3209,22 +3214,96 @@ test.describe("PDF text editor - image click-through + delete", () => {
   });
 });
 
+interface EditorOpenTrace {
+  pageCount: number;
+  /** From the editor starting to load the file to it publishing the pages. */
+  openMs: number;
+  /** Pages whose content the editor had read when it first painted page 0. */
+  readAtFirstPaint: number[];
+}
+
+/**
+ * Records the editor's next document open from inside the page. Timed off the
+ * editor store, not the test's clock: that clock also covers the workspace
+ * upload, the viewer loading its own copy of the file and the open helper's
+ * poll back-off, none of which is the editor's work and all of which are slow
+ * on CI WebKit.
+ */
+async function traceNextEditorOpen(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __editor_store: {
+        document: {
+          pageCount: number;
+          page(i: number): { loaded: boolean };
+        } | null;
+        subscribe(
+          listener: (s: {
+            loading: boolean;
+            pages: unknown[];
+            firstPageRendered: boolean;
+          }) => void,
+        ): () => void;
+      };
+      __editorOpen?: Partial<EditorOpenTrace>;
+    };
+    const store = w.__editor_store;
+    const trace: Partial<EditorOpenTrace> = {};
+    w.__editorOpen = trace;
+    let loadStarted: number | null = null;
+    const unsubscribe = store.subscribe((s) => {
+      const doc = store.document;
+      if (s.loading && loadStarted == null) loadStarted = performance.now();
+      if (!doc || loadStarted == null) return;
+      if (s.pages.length > 0 && trace.openMs == null) {
+        trace.openMs = performance.now() - loadStarted;
+        trace.pageCount = doc.pageCount;
+      }
+      if (s.firstPageRendered) {
+        trace.readAtFirstPaint = Array.from(
+          { length: doc.pageCount },
+          (_, i) => i,
+        ).filter((i) => doc.page(i).loaded);
+        unsubscribe();
+      }
+    });
+  });
+}
+
 test.describe("PDF text editor - lazy page loading", () => {
   test("multi-page docs render their pages without blocking on every read", async ({
     page,
   }) => {
-    // We don't have a 60-page fixture in the repo so we time the load of the
-    // existing multi-page fixture as a guardrail.
     await gotoEditor(page);
-    const started = Date.now();
-    await openInTextEditor(page, MULTI_PAGE_PDF, { zoomPercent: null });
-    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-      timeout: 30_000,
-    });
-    const elapsedMs = Date.now() - started;
-    // Generous bound - the lazy load is a fraction of this in practice but CI
-    // machines vary.
-    expect(elapsedMs).toBeLessThan(10_000);
+    await traceNextEditorOpen(page);
+    await openInTextEditor(page, MANY_PAGES_PDF, { zoomPercent: null });
+    const trace = await page
+      .waitForFunction(
+        () => {
+          const t = (window as unknown as { __editorOpen?: EditorOpenTrace })
+            .__editorOpen;
+          return t?.readAtFirstPaint ? t : null;
+        },
+        undefined,
+        { timeout: 30_000 },
+      )
+      .then((h) => h.jsonValue() as Promise<EditorOpenTrace>);
+
+    expect(trace.pageCount).toBe(8);
+    expect(trace.readAtFirstPaint).toContain(0);
+    expect(
+      trace.readAtFirstPaint,
+      "page 0 waited for the last page to be read",
+    ).not.toContain(trace.pageCount - 1);
+    // Under a second locally: the bound is for an open that stalls, not for
+    // CI jitter.
+    expect(trace.openMs).toBeLessThan(10_000);
+
+    const lastPage = trace.pageCount - 1;
+    await scrollToEditorPage(page, lastPage);
+    await expect(
+      page.locator(`[data-testid^="pdf-editor-run-p${lastPage}-"]`).first(),
+    ).toBeVisible({ timeout: 30_000 });
   });
 
   test("big-sample.pdf renders within a bounded time, edits, and round-trips", async ({
