@@ -50,13 +50,13 @@ export const REDACT_PRESETS: readonly RedactPreset[] = [
   },
   {
     id: "routing",
-    label: "US routing numbers (ABA)",
+    label: "US routing numbers",
     // 9 digits constrained to valid Federal Reserve prefix ranges.
     pattern: "\\b(?:0[1-9]|1[0-2]|2[1-9]|3[0-2]|6[1-9]|7[0-2]|80)\\d{7}\\b",
   },
   {
     id: "account",
-    label: "Account numbers (labelled)",
+    label: "Labelled account numbers",
     // Context-anchored: only digits preceded by Account / Acct / A/C.
     pattern:
       "\\b(?:[Aa]cc(?:oun)?t|[Aa]/[Cc])(?:\\s+(?:[Nn]o\\.?|[Nn]umber|#))?\\s*[:#]?\\s*\\d{6,17}\\b",

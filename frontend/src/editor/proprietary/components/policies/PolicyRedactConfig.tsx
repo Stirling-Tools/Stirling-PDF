@@ -17,7 +17,7 @@ interface PolicyRedactConfigProps {
 /**
  * Redact configuration for a policy — reduced to just the PII type picker. The
  * runtime params are fixed (mode automatic, regex on, flatten-to-image on so the
- * redacted text is truly removed) and normalised once on mount; the dropdown
+ * redacted text is truly removed) and normalised once on mount; the picker
  * only chooses which PII patterns are redacted.
  */
 export function PolicyRedactConfig({
@@ -25,7 +25,7 @@ export function PolicyRedactConfig({
   onChange,
   disabled,
 }: PolicyRedactConfigProps) {
-  // Lock the non-PII params once on mount (empty deps); the dropdown manages the
+  // Lock the non-PII params once on mount (empty deps); the picker manages the
   // pattern list and preserves these via its spread.
   useEffect(() => {
     if (

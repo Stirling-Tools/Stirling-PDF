@@ -12261,12 +12261,12 @@ mode = "Mode"
 title = "Redaction Method"
 
 [redact.presets]
-account = "Account numbers (labelled)"
+account = "Labelled account numbers"
 card = "Credit / debit cards"
 email = "Email addresses"
 iban = "IBANs"
 phone = "Phone numbers"
-routing = "US routing numbers (ABA)"
+routing = "US routing numbers"
 ssn = "Social Security numbers"
 title = "Common types"
 
@@ -12324,16 +12324,8 @@ title = "Redaction Method"
 text = "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted."
 title = "Manual Redaction"
 
-[redact.tooltip.words.custom]
-text = "Each word or phrase is redacted wherever it appears. Type one and press Enter or click Add; click × to remove it."
-title = "Words to Redact"
-
 [redact.tooltip.words.header]
 title = "Redaction Settings"
-
-[redact.tooltip.words.presets]
-text = "Tick a type to redact every match of it, such as every email address. Words you add still match exactly as typed."
-title = "Common types"
 
 [releases]
 title = "Release Notes"

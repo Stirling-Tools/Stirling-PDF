@@ -47,6 +47,20 @@ async function addWords(context: PlayContext, ...words: string[]) {
   return panel;
 }
 
+async function tickTypes(context: PlayContext, ...types: string[]) {
+  for (const type of types) await toggle(context, "checkbox", type);
+  return panelOf(context);
+}
+
+async function openAdvancedWithTypes(context: PlayContext) {
+  await tickTypes(context, "Email addresses");
+  const panel = await openAdvanced(context);
+  const useRegex = panel.getByRole("checkbox", { name: "Use Regex" });
+  await expect(useRegex).toBeChecked();
+  await expect(useRegex).toBeDisabled();
+  return panel;
+}
+
 async function openAdvanced(context: PlayContext) {
   const panel = await openStep(context, "Advanced");
   await panel.findByRole("checkbox", { name: "Use Regex" }, STAGE_TIMEOUT);
@@ -82,6 +96,21 @@ export const WordRemoved: Story = {
     await userEvent.click(panel.getAllByRole("button", { name: "Remove" })[0]);
     await waitFor(() => expect(panel.queryByTitle("Confidential")).toBeNull());
     await expect(panel.getByTitle("Top-Secret")).toBeVisible();
+  },
+};
+
+export const CommonTypesSelected: Story = {
+  play: async (context) => {
+    await tickTypes(context, "Email addresses", "Phone numbers");
+    const panel = await addWords(context, "J. Smith (Jr.)");
+    const run = panel.getByRole("button", { name: /^Redact/ });
+    await waitFor(() => expect(run).toBeEnabled(), STAGE_TIMEOUT);
+  },
+};
+
+export const AdvancedSettingsWithCommonTypes: Story = {
+  play: async (context) => {
+    await openAdvancedWithTypes(context);
   },
 };
 
@@ -155,6 +184,13 @@ export const RedactionSettingsTooltip: Story = {
 
 export const WordsToRedactTooltip: Story = {
   play: openTooltip({ info: /^Each word or phrase is found and redacted/ }),
+};
+
+export const UseRegexLockedTooltip: Story = {
+  play: openTooltip(
+    { info: /^Common types are regular expressions/ },
+    { after: openAdvancedWithTypes },
+  ),
 };
 
 export const AdvancedTooltip: Story = {

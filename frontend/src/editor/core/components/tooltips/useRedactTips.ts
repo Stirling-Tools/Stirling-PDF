@@ -36,17 +36,10 @@ export const useRedactWordsTips = (): SidebarTooltipContent => {
     },
     tips: [
       {
-        title: t("redact.tooltip.words.presets.title", "Common types"),
+        title: t("redact.auto.wordsToRedact.title", "Words to Redact"),
         description: t(
-          "redact.tooltip.words.presets.text",
-          "Tick a type to redact every match of it, such as every email address. Words you add still match exactly as typed.",
-        ),
-      },
-      {
-        title: t("redact.tooltip.words.custom.title", "Words to Redact"),
-        description: t(
-          "redact.tooltip.words.custom.text",
-          "Each word or phrase is redacted wherever it appears. Type one and press Enter or click Add; click × to remove it.",
+          "redact.auto.wordsToRedact.info",
+          "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret.",
         ),
       },
     ],
