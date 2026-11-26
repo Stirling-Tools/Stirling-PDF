@@ -2,7 +2,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
-import { fileRows } from "@editor/tests/helpers/pdf-text-editor";
+import { fileRows, viewFileRow } from "@editor/tests/helpers/pdf-text-editor";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -20,9 +20,7 @@ function openFile(page: Page) {
 
 /** Shows `name` in the viewer from its file-list row; the editor follows. */
 async function viewFile(page: Page, name: string): Promise<void> {
-  const row = fileRows(page, name).first();
-  await row.hover();
-  await row.locator(".file-sidebar-eye-btn").click();
+  await viewFileRow(fileRows(page, name).first());
 }
 
 async function openEditorWithTwoFiles(page: Page): Promise<void> {

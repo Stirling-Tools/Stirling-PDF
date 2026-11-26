@@ -200,7 +200,10 @@ test("Edit text in the viewer's selection menu opens the editor on that text", a
 }) => {
   test.setTimeout(120_000);
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE_PDF);
   const firstPage = page.locator('[data-page-index="0"]').first();
   await expect(firstPage.locator(".pdf-selection-layer")).toBeAttached({
     timeout: 30_000,

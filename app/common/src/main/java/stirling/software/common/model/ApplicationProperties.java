@@ -1394,9 +1394,19 @@ public class ApplicationProperties {
             public static class Trust {
                 private boolean serverAsAnchor = true;
                 private boolean useSystemTrust = true;
+                private Boolean useOSTrust;
                 private boolean useMozillaBundle = true;
                 private boolean useAATL = false;
                 private boolean useEUTL = false;
+
+                /**
+                 * {@code useOSTrust}, where null means on in the desktop app and off on a server.
+                 */
+                public boolean trustsOSRoots() {
+                    return useOSTrust != null
+                            ? useOSTrust
+                            : Boolean.getBoolean("STIRLING_PDF_TAURI_MODE");
+                }
             }
 
             @Data

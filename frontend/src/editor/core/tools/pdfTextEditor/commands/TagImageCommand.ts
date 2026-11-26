@@ -11,8 +11,10 @@ import {
   ARTIFACT_TAG,
   addTagMark,
   highestMcid,
+  innermostMcid,
   readTagMarks,
   removeTagMark,
+  type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   retaggableTag,
@@ -35,6 +37,8 @@ export class TagImageCommand implements Command {
   /** Chosen on first apply, so a redo reuses it. */
   private mcid: number | null = null;
   private previous: RetaggableTag | undefined;
+  /** Marks with MCIDs no element owns, which tagging the image dropped and undo puts back. */
+  private dropped: TagMark[] = [];
 
   constructor(opts: {
     pageIndex: number;
@@ -69,7 +73,7 @@ export class TagImageCommand implements Command {
         .structure(this.pageIndex)
         .freeMcid(highestMcid(doc.module, page.pagePtr));
     }
-    retag(doc, image, current, this.target());
+    this.dropped = retag(doc, image, current, this.target());
     page.markDirty();
     page.markNeedsGenerate();
   }
@@ -80,7 +84,7 @@ export class TagImageCommand implements Command {
     const image = page.findImage(this.imageId);
     const current = image ? retaggableTag(doc, image.snapshot()) : null;
     if (!image || !current) return;
-    retag(doc, image, current, this.previous);
+    retag(doc, image, current, this.previous, this.dropped);
     page.markDirty();
     page.markNeedsGenerate();
   }
@@ -97,15 +101,30 @@ export class TagImageCommand implements Command {
   }
 }
 
+/**
+ * Move the image from one tag to another. Leaving "untagged" drops any marks
+ * with MCIDs no element owns, which it returns; returning to it puts `restore`
+ * back, outermost first.
+ */
 function retag(
   doc: EditorDocument,
   image: ImageObject,
   from: RetaggableTag,
   to: RetaggableTag,
-): void {
+  restore: readonly TagMark[] = [],
+): TagMark[] {
   const m = doc.module;
   const structure = doc.structure(image.pageIndex);
   const objPtr = image.pdfiumObjPtr;
+  const dropped =
+    from.kind === "untagged"
+      ? readTagMarks(m, objPtr).filter(
+          ({ mcid }) => mcid !== null && !structure.owns(mcid),
+        )
+      : [];
+  for (const mark of [...dropped].reverse()) {
+    marked(removeTagMark(m, objPtr, mark.name));
+  }
   if (from.kind === "artifact") {
     marked(removeTagMark(m, objPtr, ARTIFACT_TAG));
   }
@@ -129,6 +148,13 @@ function retag(
     if (to.alt !== null) structure.setAlt(to.mcid, to.alt);
     image.mcid = to.mcid;
   }
+  if (to.kind === "untagged") {
+    for (const mark of restore) {
+      marked(addTagMark(m, doc.docPtr, objPtr, mark));
+    }
+    image.mcid = innermostMcid(restore);
+  }
+  return dropped;
 }
 
 function marked(ok: boolean): void {

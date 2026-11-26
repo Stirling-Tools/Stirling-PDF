@@ -6,22 +6,34 @@ import java.io.*;
 import java.nio.file.Files;
 import java.security.*;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSInteger;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSUpdateInfo;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.COSObjectable;
+import org.apache.pdfbox.pdmodel.common.PDNumberTreeNode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDObjectReference;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
+import org.apache.pdfbox.pdmodel.documentinterchange.taggedpdf.StandardStructureTypes;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -74,8 +86,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
+import stirling.software.SPDF.pdf.signature.SignatureTextWriter;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -94,6 +108,8 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @Tag(name = "Security", description = "Security APIs")
 public class CertSignController {
+
+    private static final int SIGNER_INFO_ALLOWANCE = 4096;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -127,6 +143,23 @@ public class CertSignController {
         this.hardwareKeyStoreService = hardwareKeyStoreService;
     }
 
+    @GetMapping("/cert-sign/server-certificate")
+    @Operation(
+            summary = "Describe the server signing certificate",
+            description =
+                    "The identity that signing with certType=SERVER uses: name, issuer and validity."
+                            + " 404 when no server certificate is available.")
+    public ResponseEntity<HardwareCertificateInfo> getServerCertificate() throws Exception {
+        if (serverCertificateService == null
+                || !serverCertificateService.isEnabled()
+                || !serverCertificateService.hasServerCertificate()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(
+                HardwareKeyStoreService.toInfo(
+                        "server", serverCertificateService.getServerCertificate(), "SERVER", null));
+    }
+
     /**
      * Signs {@code input} into {@code output}. Failures propagate: {@code output} may hold partial
      * bytes afterwards, and catching them here would let the endpoint answer 200 with an empty PDF.
@@ -151,19 +184,179 @@ public class CertSignController {
             signature.setLocation(location);
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
-            if (Boolean.TRUE.equals(showSignature)) {
-                int pageIndex = resolveSignaturePage(pageNumber, doc.getNumberOfPages());
-                try (SignatureOptions signatureOptions = new SignatureOptions()) {
+            try (SignatureOptions signatureOptions = new SignatureOptions()) {
+                signatureOptions.setPreferredSignatureSize(
+                        signatureReservation(instance.getCertificateChain()));
+                if (Boolean.TRUE.equals(showSignature)) {
+                    int pageIndex = resolveSignaturePage(pageNumber, doc.getNumberOfPages());
                     signatureOptions.setVisualSignature(
                             instance.createVisibleSignature(doc, signature, pageIndex, showLogo));
                     signatureOptions.setPage(pageIndex);
-
-                    doc.addSignature(signature, instance, signatureOptions);
-                    doc.saveIncremental(output);
                 }
-            } else {
-                doc.addSignature(signature, instance);
+                doc.addSignature(signature, instance, signatureOptions);
+                makeSignatureWidgetAccessible(doc, signature, instance.signerName());
                 doc.saveIncremental(output);
+            }
+        }
+    }
+
+    static int signatureReservation(Certificate[] chain) throws IOException {
+        int certificateBytes = 0;
+        if (chain != null) {
+            try {
+                for (Certificate certificate : chain) {
+                    certificateBytes += certificate.getEncoded().length;
+                }
+            } catch (CertificateEncodingException e) {
+                throw new IOException("Could not encode the signing certificate chain", e);
+            }
+        }
+        return Math.max(
+                SignatureOptions.DEFAULT_SIGNATURE_SIZE, certificateBytes + SIGNER_INFO_ALLOWANCE);
+    }
+
+    /**
+     * Gives the signature widget, visible or not, what PDF/UA-1 7.18 asks of every widget: a
+     * description (/TU and /Contents), structure tab order on its page, and, in a tagged document,
+     * a Form structure element that owns it. Incremental saving writes only objects flagged as
+     * updated, so every touched object is flagged.
+     */
+    private static void makeSignatureWidgetAccessible(
+            PDDocument doc, PDSignature signature, String signerName) throws IOException {
+        PDSignatureField field = findSignatureField(doc, signature);
+        if (field == null) {
+            return;
+        }
+        PDAnnotationWidget widget = field.getWidgets().getFirst();
+        PDPage page = widget.getPage() != null ? widget.getPage() : doc.getPage(0);
+        String description = "Digital signature by " + signerName;
+        field.setAlternateFieldName(description);
+        widget.setContents(description);
+        page.getCOSObject().setName(COSName.getPDFName("Tabs"), "S");
+        markUpdated(page.getCOSObject(), field.getCOSObject(), widget.getCOSObject());
+
+        PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
+        if (root != null) {
+            tagSignatureWidget(root, page, widget, description);
+        }
+    }
+
+    private static PDSignatureField findSignatureField(PDDocument doc, PDSignature signature)
+            throws IOException {
+        for (PDSignatureField field : doc.getSignatureFields()) {
+            if (field.getCOSObject().getDictionaryObject(COSName.V) == signature.getCOSObject()) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    private static void tagSignatureWidget(
+            PDStructureTreeRoot root, PDPage page, PDAnnotationWidget widget, String description)
+            throws IOException {
+        int key = parentTreeKey(root);
+        PDStructureNode parent = root;
+        for (Object kid : root.getKids()) {
+            if (kid instanceof PDStructureElement element) {
+                parent = element;
+                break;
+            }
+        }
+        PDStructureElement form = new PDStructureElement(StandardStructureTypes.FORM, parent);
+        form.setPage(page);
+        form.setAlternateDescription(description);
+        PDObjectReference reference = new PDObjectReference();
+        reference.setReferencedObject(widget);
+        form.appendKid(reference);
+        parent.appendKid(form);
+
+        widget.setStructParent(key);
+        addParentTreeEntry(root, key, form);
+        root.setParentTreeNextKey(key + 1);
+
+        markUpdated(
+                root.getCOSObject(),
+                parent.getCOSObject(),
+                parent.getCOSObject().getDictionaryObject(COSName.K),
+                widget.getCOSObject());
+    }
+
+    /**
+     * The parent-tree key for a new entry: past every key in use and the root's next key.
+     *
+     * @throws IllegalArgumentException when no key is left whose successor still fits the
+     *     /ParentTreeNextKey integer, checked before anything is changed
+     */
+    static int parentTreeKey(PDStructureTreeRoot root) throws IOException {
+        long key = Math.max(root.getParentTreeNextKey(), nextParentTreeKey(root.getParentTree()));
+        if (key >= Integer.MAX_VALUE) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "fileInput - the PDF's structure tree has no parent-tree key left for the"
+                            + " signature");
+        }
+        return (int) key;
+    }
+
+    private static long nextParentTreeKey(PDNumberTreeNode parentTree) throws IOException {
+        if (parentTree == null) {
+            return 0;
+        }
+        long max = -1;
+        Map<Integer, COSObjectable> numbers = parentTree.getNumbers();
+        if (numbers != null) {
+            for (Integer number : numbers.keySet()) {
+                max = Math.max(max, number);
+            }
+        }
+        List<PDNumberTreeNode> kids = parentTree.getKids();
+        if (kids != null) {
+            for (PDNumberTreeNode kid : kids) {
+                max = Math.max(max, nextParentTreeKey(kid) - 1);
+            }
+        }
+        return max + 1;
+    }
+
+    // Appends past every existing key, so a new leaf at the end of /Kids keeps the tree sorted.
+    private static void addParentTreeEntry(
+            PDStructureTreeRoot root, int key, PDStructureElement value) {
+        PDNumberTreeNode parentTree = root.getParentTree();
+        if (parentTree == null) {
+            parentTree = new PDNumberTreeNode(COSBase.class);
+            root.setParentTree(parentTree);
+        }
+        COSDictionary treeDict = parentTree.getCOSObject();
+        COSArray kids = treeDict.getCOSArray(COSName.KIDS);
+        if (kids == null) {
+            COSArray nums = treeDict.getCOSArray(COSName.NUMS);
+            if (nums == null) {
+                nums = new COSArray();
+                treeDict.setItem(COSName.NUMS, nums);
+            }
+            nums.add(COSInteger.get(key));
+            nums.add(value);
+            markUpdated(treeDict, nums);
+            return;
+        }
+        COSArray nums = new COSArray();
+        nums.add(COSInteger.get(key));
+        nums.add(value);
+        COSArray limits = new COSArray();
+        limits.add(COSInteger.get(key));
+        limits.add(COSInteger.get(key));
+        COSDictionary leaf = new COSDictionary();
+        leaf.setItem(COSName.NUMS, nums);
+        leaf.setItem(COSName.LIMITS, limits);
+        kids.add(leaf);
+        markUpdated(treeDict, kids);
+    }
+
+    private static void markUpdated(COSBase... objects) {
+        for (COSBase object : objects) {
+            if (object instanceof COSUpdateInfo updatable) {
+                updatable.setNeedToBeUpdated(true);
             }
         }
     }
@@ -201,8 +394,8 @@ public class CertSignController {
                             + " SERVER signs with this server's own certificate, so no file or"
                             + " password is needed, and the signer shown is the server's"
                             + " organisation rather than the user. PEM, PKCS12/PFX and JKS sign"
-                            + " with an uploaded certificate and key; WINDOWS_STORE and PKCS11 work"
-                            + " only in the desktop app. Make signing the last change to the file:"
+                            + " with an uploaded certificate and key; WINDOWS_STORE, MACOS_KEYCHAIN and"
+                            + " PKCS11 work only in the desktop app. Make signing the last change to the file:"
                             + " any later edit (compress, watermark, add a password, flatten and"
                             + " so on) invalidates the signature. Set showSignature to add a"
                             + " visible signature box on pageNumber.")
@@ -296,6 +489,13 @@ public class CertSignController {
                 // PIN is prompted by the Windows CSP / token middleware, not passed here.
                 keystorePassword = password;
                 break;
+            case "MACOS_KEYCHAIN":
+                hardwareKeyStoreService.assertLocalDesktop(httpRequest);
+                ks = hardwareKeyStoreService.loadMacKeychain();
+                signingProvider = hardwareKeyStoreService.macKeychainProvider();
+                // macOS prompts for the card PIN or keychain access itself.
+                keystorePassword = null;
+                break;
             case "PKCS11":
                 hardwareKeyStoreService.assertLocalDesktop(httpRequest);
                 char[] pkcs11Pin = password != null ? password.toCharArray() : null;
@@ -322,24 +522,31 @@ public class CertSignController {
         }
 
         char[] pin = keystorePassword != null ? keystorePassword.toCharArray() : null;
-        CreateSignature createSignature =
-                new CreateSignature(ks, pin, request.getAlias(), signingProvider);
-        TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
-        try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
-            sign(
-                    pdfDocumentFactory,
-                    pdf,
-                    os,
-                    createSignature,
-                    showSignature,
-                    pageNumber,
-                    name,
-                    location,
-                    reason,
-                    showLogo);
-        } catch (IOException | RuntimeException e) {
-            signedOut.close();
-            throw e;
+        TempFile signedOut;
+        try {
+            String alias =
+                    HardwareKeyStoreService.isHardwareSource(certType)
+                            ? hardwareKeyStoreService.resolveSigningAlias(
+                                    ks, request.getAlias(), certType)
+                            : request.getAlias();
+            CreateSignature createSignature = new CreateSignature(ks, pin, alias, signingProvider);
+            signedOut = tempFileManager.createManagedTempFile(".pdf");
+            try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
+                sign(
+                        pdfDocumentFactory,
+                        pdf,
+                        os,
+                        createSignature,
+                        showSignature,
+                        pageNumber,
+                        name,
+                        location,
+                        reason,
+                        showLogo);
+            } catch (IOException | RuntimeException e) {
+                signedOut.close();
+                throw e;
+            }
         } finally {
             // Clear the PIN copy and log out the token session once signing is done.
             if (pin != null) {
@@ -479,6 +686,16 @@ public class CertSignController {
             }
         }
 
+        String signerName() {
+            X509Certificate cert = (X509Certificate) getCertificateChain()[0];
+            // https://stackoverflow.com/questions/2914521/
+            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+            RDN[] cns = x500Name.getRDNs(BCStyle.CN);
+            return cns.length > 0
+                    ? IETFUtils.valueToString(cns[0].getFirst().getValue())
+                    : cert.getSubjectX500Principal().getName();
+        }
+
         public InputStream createVisibleSignature(
                 PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
                 throws IOException {
@@ -509,7 +726,7 @@ public class CertSignController {
                 PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
-                PDFont font = new PDType1Font(FontName.TIMES_BOLD);
+                SignatureTextWriter text = new SignatureTextWriter(doc);
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
                 PDAppearanceDictionary appearance = new PDAppearanceDictionary();
@@ -536,27 +753,21 @@ public class CertSignController {
                     float fontSize = 10;
                     float leading = fontSize * 1.5f;
                     cs.beginText();
-                    cs.setFont(font, fontSize);
                     cs.setNonStrokingColor(Color.black);
                     cs.newLineAtOffset(fontSize, height - leading);
                     cs.setLeading(leading);
 
-                    X509Certificate cert = (X509Certificate) getCertificateChain()[0];
-
-                    // https://stackoverflow.com/questions/2914521/
-                    X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
+                    String name = signerName();
 
                     String date = signature.getSignDate().getTime().toString();
                     String reason = signature.getReason();
 
-                    cs.showText("Signed by " + name);
+                    text.showText(cs, "Signed by " + name, fontSize);
                     cs.newLine();
-                    cs.showText(date);
+                    text.showText(cs, date, fontSize);
                     if (StringUtils.isNotBlank(reason)) {
                         cs.newLine();
-                        cs.showText(reason);
+                        text.showText(cs, reason, fontSize);
                     }
 
                     cs.endText();
