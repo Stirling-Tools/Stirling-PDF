@@ -90,6 +90,7 @@ import {
   usePagesPastInset,
 } from "@editor/components/viewer/usePagesPastInset";
 import { shouldRefitOnResize } from "@editor/components/viewer/refitOnResize";
+import { registerFeedbackTagObstacle } from "@editor/components/feedback/feedbackTagObstacle";
 import "@editor/components/viewer/viewerPages.css";
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -2250,7 +2251,10 @@ const EmbedPdfViewerContent = ({
             background: "transparent",
           }}
         >
-          <div style={{ pointerEvents: "auto" }}>
+          <div
+            ref={registerFeedbackTagObstacle}
+            style={{ pointerEvents: "auto" }}
+          >
             <PdfViewerToolbar
               currentPage={scrollState.currentPage}
               totalPages={scrollState.totalPages}

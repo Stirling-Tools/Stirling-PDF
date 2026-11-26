@@ -284,7 +284,7 @@ export default function Workbench() {
           {renderMainContent()}
         </Suspense>
       </Box>
-      <FeedbackTag lifted={currentView === "viewer" && hasFiles} />
+      <FeedbackTag />
     </Box>
   );
 }
