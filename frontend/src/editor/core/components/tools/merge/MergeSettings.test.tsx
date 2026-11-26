@@ -18,7 +18,8 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 describe("MergeSettings", () => {
   const defaultParameters: MergeParameters = {
     removeDigitalSignature: false,
-    generateTableOfContents: false,
+    generateBookmarks: false,
+    generateTableOfContentsPage: false,
   };
 
   const mockOnParameterChange = vi.fn();
@@ -27,7 +28,7 @@ describe("MergeSettings", () => {
     vi.clearAllMocks();
   });
 
-  test("should render both merge option checkboxes", () => {
+  test("should render 3 merge option checkboxes", () => {
     render(
       <TestWrapper>
         <MergeSettings
@@ -80,10 +81,17 @@ describe("MergeSettings", () => {
       true,
     );
 
-    // Click the second checkbox (generateTableOfContents - should toggle from false to true)
+    // Click the second checkbox (generateBookmarks - should toggle from false to true)
     fireEvent.click(checkboxes[1]);
     expect(mockOnParameterChange).toHaveBeenCalledWith(
-      "generateTableOfContents",
+      "generateBookmarks",
+      true,
+    );
+
+    // Click the third checkbox (generateTableOfContentsPage - should toggle from false to true)
+    fireEvent.click(checkboxes[2]);
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "generateTableOfContentsPage",
       true,
     );
   });
@@ -104,8 +112,12 @@ describe("MergeSettings", () => {
       "Remove digital signature in the merged file?",
     );
     expect(mockT).toHaveBeenCalledWith(
-      "merge.generateTableOfContents.label",
-      "Generate table of contents in the merged file?",
+      "merge.generateBookmarks.label",
+      "Add a bookmark for each file",
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "merge.generateTableOfContentsPage.label",
+      "Add a contents page listing each file",
     );
   });
 });

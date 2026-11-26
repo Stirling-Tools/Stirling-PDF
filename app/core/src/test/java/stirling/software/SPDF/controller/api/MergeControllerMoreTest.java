@@ -9,8 +9,13 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -23,7 +28,9 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -55,6 +62,7 @@ class MergeControllerMoreTest {
     private CustomPDFDocumentFactory pdfDocumentFactory;
     private TempFileManager tempFileManager;
     private MergeController mergeController;
+    private static final Pattern TOC_ENTRY = Pattern.compile("(file-\\d+)[\\s.]+(\\d+)");
 
     @BeforeEach
     void setUp() {
@@ -120,12 +128,17 @@ class MergeControllerMoreTest {
     }
 
     private static MergePdfsRequest request(
-            MockMultipartFile[] files, String sortType, boolean removeCertSign, boolean toc) {
+            MockMultipartFile[] files,
+            String sortType,
+            boolean removeCertSign,
+            boolean toc,
+            boolean tocPage) {
         MergePdfsRequest req = new MergePdfsRequest();
         req.setFileInput(files);
         req.setSortType(sortType);
         req.setRemoveCertSign(removeCertSign);
-        req.setGenerateToc(toc);
+        req.setGenerateBookmarks(toc);
+        req.setGenerateTocPage(tocPage);
         return req;
     }
 
@@ -140,6 +153,18 @@ class MergeControllerMoreTest {
         return Loader.loadPDF(out);
     }
 
+    private static List<String> tocEntries(PDDocument document, int page) throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setStartPage(page);
+        stripper.setEndPage(page);
+        Matcher matcher = TOC_ENTRY.matcher(stripper.getText(document));
+        List<String> entries = new ArrayList<>();
+        while (matcher.find()) {
+            entries.add(matcher.group(1) + "=" + matcher.group(2));
+        }
+        return entries;
+    }
+
     @Nested
     @DisplayName("Basic merge")
     class BasicMerge {
@@ -149,7 +174,8 @@ class MergeControllerMoreTest {
         void mergesTwoFiles() throws Exception {
             MockMultipartFile[] files = {pdf("a.pdf", 2), pdf("b.pdf", 3)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(5);
             }
@@ -160,7 +186,8 @@ class MergeControllerMoreTest {
         void mergesThreeFiles() throws Exception {
             MockMultipartFile[] files = {pdf("a.pdf", 1), pdf("b.pdf", 2), pdf("c.pdf", 1)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(4);
             }
@@ -171,7 +198,8 @@ class MergeControllerMoreTest {
         void mergesSingleFile() throws Exception {
             MockMultipartFile[] files = {pdf("solo.pdf", 4)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(4);
             }
@@ -194,7 +222,8 @@ class MergeControllerMoreTest {
         void emptyFileArray() throws Exception {
             ResponseEntity<Resource> response =
                     mergeController.mergePdfs(
-                            request(new MockMultipartFile[0], "orderProvided", false, false), null);
+                            request(new MockMultipartFile[0], "orderProvided", false, false, false),
+                            null);
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
     }
@@ -221,7 +250,7 @@ class MergeControllerMoreTest {
                 pdf("bravo.pdf", 1, "Beta", 2_000L)
             };
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, sortType, false, false), null);
+                    mergeController.mergePdfs(request(files, sortType, false, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(3);
             }
@@ -232,7 +261,8 @@ class MergeControllerMoreTest {
         void byFileNameUsesFirstAlphabetical() throws Exception {
             MockMultipartFile[] files = {pdf("zebra.pdf", 1), pdf("apple.pdf", 1)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "byFileName", false, false), null);
+                    mergeController.mergePdfs(
+                            request(files, "byFileName", false, false, false), null);
             String disposition =
                     response.getHeaders()
                             .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
@@ -251,7 +281,8 @@ class MergeControllerMoreTest {
             MockMultipartFile[] files = {pdf("first.pdf", 1), pdf("second.pdf", 2)};
             ResponseEntity<Resource> response =
                     mergeController.mergePdfs(
-                            request(files, "byFileName", false, false), "second.pdf\nfirst.pdf");
+                            request(files, "byFileName", false, false, false),
+                            "second.pdf\nfirst.pdf");
             String disposition =
                     response.getHeaders()
                             .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
@@ -266,7 +297,8 @@ class MergeControllerMoreTest {
         void blankFileOrderUsesSort() throws Exception {
             MockMultipartFile[] files = {pdf("a.pdf", 1), pdf("b.pdf", 1)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, false), "   ");
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, false, false), "   ");
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(2);
             }
@@ -282,7 +314,8 @@ class MergeControllerMoreTest {
         void generatesToc() throws Exception {
             MockMultipartFile[] files = {pdf("intro.pdf", 1), pdf("body.pdf", 2)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, true), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, true, false), null);
             try (PDDocument result = readResponse(response)) {
                 PDDocumentOutline outline = result.getDocumentCatalog().getDocumentOutline();
                 assertThat(outline).isNotNull();
@@ -301,7 +334,8 @@ class MergeControllerMoreTest {
                             buildPdf(1, null, null));
             MockMultipartFile[] files = {blankName, pdf("named.pdf", 1)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, true), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, true, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(2);
             }
@@ -317,7 +351,8 @@ class MergeControllerMoreTest {
         void removeCertSignNoSignatures() throws Exception {
             MockMultipartFile[] files = {pdf("a.pdf", 1), pdf("b.pdf", 1)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", true, false), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", true, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(2);
             }
@@ -328,7 +363,8 @@ class MergeControllerMoreTest {
         void removeCertSignFalse() throws Exception {
             MockMultipartFile[] files = {pdf("a.pdf", 2), pdf("b.pdf", 1)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(3);
             }
@@ -355,7 +391,12 @@ class MergeControllerMoreTest {
                             MediaType.APPLICATION_PDF_VALUE,
                             "this is not a pdf at all".getBytes());
             MergePdfsRequest req =
-                    request(new MockMultipartFile[] {good, bad}, "orderProvided", false, false);
+                    request(
+                            new MockMultipartFile[] {good, bad},
+                            "orderProvided",
+                            false,
+                            false,
+                            false);
             try {
                 ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -371,7 +412,7 @@ class MergeControllerMoreTest {
                     new MockMultipartFile(
                             "fileInput", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0]);
             MergePdfsRequest req =
-                    request(new MockMultipartFile[] {empty}, "orderProvided", false, false);
+                    request(new MockMultipartFile[] {empty}, "orderProvided", false, false, false);
             try {
                 ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -390,7 +431,8 @@ class MergeControllerMoreTest {
         void mergesImageWithPdf() throws Exception {
             MockMultipartFile[] files = {png("scan.png"), pdf("doc.pdf", 2)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(3);
                 assertThat(pageContainsOrange(result, 0)).isTrue();
@@ -403,7 +445,8 @@ class MergeControllerMoreTest {
         void mergesTwoImages() throws Exception {
             MockMultipartFile[] files = {png("a.png"), png("b.png")};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+                    mergeController.mergePdfs(
+                            request(files, "orderProvided", false, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(2);
                 assertThat(pageContainsOrange(result, 0)).isTrue();
@@ -426,6 +469,98 @@ class MergeControllerMoreTest {
                 }
             }
             return false;
+        }
+    }
+
+    @Test
+    @DisplayName("merges 2 files and adds a table of contents page")
+    void tocPageGeneration() throws IOException {
+        MockMultipartFile[] files = {pdf("a.pdf", 1), pdf("b.pdf", 2)};
+        ResponseEntity<Resource> response =
+                mergeController.mergePdfs(
+                        request(files, "orderProvided", false, false, true), null);
+        try (PDDocument result = readResponse(response)) {
+            assertThat(result.getNumberOfPages()).isEqualTo(4);
+        }
+    }
+
+    @Test
+    @DisplayName("33 files spill onto a second contents page with correct entries")
+    void tocPageSpillsOntoSecondPage() throws IOException {
+        int perPage = MergeController.ENTRIES_PER_TOC_PAGE;
+        int fileCount = perPage + 1;
+        int tocPages = 2;
+
+        MockMultipartFile[] files = new MockMultipartFile[fileCount];
+        List<String> expectedEntries = new ArrayList<>(fileCount);
+        int nextStartPage = tocPages + 1;
+        for (int i = 0; i < fileCount; i++) {
+            String title = String.format(Locale.ROOT, "file-%02d", i + 1);
+            int pages = 1 + i % 2;
+            files[i] = pdf(title + ".pdf", pages);
+            expectedEntries.add(title + "=" + nextStartPage);
+            nextStartPage += pages;
+        }
+        int expectedTotalPages = nextStartPage - 1;
+
+        ResponseEntity<Resource> response =
+                mergeController.mergePdfs(
+                        request(files, "orderProvided", false, false, true), null);
+
+        try (PDDocument result = readResponse(response)) {
+            assertThat(result.getNumberOfPages()).isEqualTo(expectedTotalPages);
+            assertThat(tocEntries(result, 1))
+                    .containsExactlyElementsOf(expectedEntries.subList(0, perPage));
+            assertThat(tocEntries(result, 2))
+                    .containsExactlyElementsOf(expectedEntries.subList(perPage, fileCount));
+        }
+    }
+
+    @Test
+    @DisplayName("each bookmark points to the first page of its file when a contents page is added")
+    void bookmarksAccountForContentsPage() throws Exception {
+        MockMultipartFile[] files = {pdf("a.pdf", 1), pdf("b.pdf", 2)};
+        MergePdfsRequest req = request(files, "orderProvided", false, true, true);
+
+        ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
+
+        try (PDDocument result = readResponse(response)) {
+            List<Integer> targets = new ArrayList<>();
+            for (PDOutlineItem item : result.getDocumentCatalog().getDocumentOutline().children()) {
+                targets.add(result.getPages().indexOf(item.findDestinationPage(result)));
+            }
+            assertThat(targets).containsExactly(1, 2);
+        }
+    }
+
+    @Test
+    @DisplayName("filenames in non-Latin scripts do not break the contents page")
+    void tocPageWithNonLatinNames() throws Exception {
+        MockMultipartFile[] files = {pdf("報告.pdf", 1), pdf("Отчёт.pdf", 1), pdf("تقرير.pdf", 1)};
+        MergePdfsRequest req = request(files, "orderProvided", false, false, true);
+
+        ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
+
+        try (PDDocument result = readResponse(response)) {
+            assertThat(result.getNumberOfPages()).isEqualTo(4);
+
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setStartPage(1);
+            stripper.setEndPage(1);
+            assertThat(stripper.getText(result)).contains("Отчёт", "報告", "تقرير");
+        }
+    }
+
+    @Test
+    @DisplayName("a contents page works when an image is part of the merge")
+    void tocPageWithImageInput() throws Exception {
+        MockMultipartFile[] files = {png("scan.png"), pdf("doc.pdf", 2)};
+        MergePdfsRequest req = request(files, "orderProvided", false, false, true);
+
+        ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
+
+        try (PDDocument result = readResponse(response)) {
+            assertThat(result.getNumberOfPages()).isEqualTo(1 + 1 + 2);
         }
     }
 }

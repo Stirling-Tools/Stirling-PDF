@@ -64,7 +64,6 @@ describe("useMergeOperation", () => {
     vi.clearAllMocks();
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
-
   test("should build FormData correctly", () => {
     renderHook(() => useMergeOperation());
 
@@ -75,7 +74,8 @@ describe("useMergeOperation", () => {
     ];
     const parameters: MergeParameters = {
       removeDigitalSignature: true,
-      generateTableOfContents: false,
+      generateBookmarks: false,
+      generateTableOfContentsPage: false,
     };
 
     const formData = config.buildFormData(parameters, mockFiles);
@@ -88,7 +88,8 @@ describe("useMergeOperation", () => {
     // Verify parameters are appended correctly
     expect(formData.get("sortType")).toBe("orderProvided");
     expect(formData.get("removeCertSign")).toBe("true");
-    expect(formData.get("generateToc")).toBe("false");
+    expect(formData.get("generateBookmarks")).toBe("false");
+    expect(formData.get("generateTocPage")).toBe("false");
   });
 
   test("should return the hook result from useToolOperation", () => {
@@ -117,20 +118,24 @@ describe("useMergeOperation", () => {
     // Test case 1: All options disabled
     const params1: MergeParameters = {
       removeDigitalSignature: false,
-      generateTableOfContents: false,
+      generateBookmarks: false,
+      generateTableOfContentsPage: false,
     };
     const formData1 = config.buildFormData(params1, mockFiles);
     expect(formData1.get("removeCertSign")).toBe("false");
-    expect(formData1.get("generateToc")).toBe("false");
+    expect(formData1.get("generateBookmarks")).toBe("false");
+    expect(formData1.get("generateTocPage")).toBe("false");
 
     // Test case 2: All options enabled
     const params2: MergeParameters = {
       removeDigitalSignature: true,
-      generateTableOfContents: true,
+      generateBookmarks: true,
+      generateTableOfContentsPage: true,
     };
     const formData2 = config.buildFormData(params2, mockFiles);
     expect(formData2.get("removeCertSign")).toBe("true");
-    expect(formData2.get("generateToc")).toBe("true");
+    expect(formData2.get("generateBookmarks")).toBe("true");
+    expect(formData2.get("generateTocPage")).toBe("true");
   });
 
   test("should include client file IDs derived from the files", () => {
@@ -142,7 +147,11 @@ describe("useMergeOperation", () => {
       new File(["b"], "b.pdf", { type: "application/pdf" }),
     ];
     const formData = config.buildFormData(
-      { removeDigitalSignature: false, generateTableOfContents: false },
+      {
+        removeDigitalSignature: false,
+        generateBookmarks: false,
+        generateTableOfContentsPage: false,
+      },
       mockFiles,
     );
 
@@ -157,32 +166,41 @@ describe("merge mappers", () => {
     expect(
       mergeToApiParams({
         removeDigitalSignature: true,
-        generateTableOfContents: false,
+        generateBookmarks: false,
+        generateTableOfContentsPage: false,
       }),
     ).toEqual({
       sortType: "orderProvided",
       removeCertSign: true,
-      generateToc: false,
+      generateBookmarks: false,
+      generateTocPage: false,
     });
   });
 
   test("fromApiParams maps the backend request model back to UI fields", () => {
     expect(
-      mergeFromApiParams({ removeCertSign: false, generateToc: true }),
+      mergeFromApiParams({
+        removeCertSign: false,
+        generateBookmarks: true,
+        generateTocPage: false,
+      }),
     ).toEqual({
       removeDigitalSignature: false,
-      generateTableOfContents: true,
+      generateBookmarks: true,
+      generateTableOfContentsPage: false,
     });
   });
 
   test("round-trips backend params", () => {
     const api = mergeToApiParams({
       removeDigitalSignature: true,
-      generateTableOfContents: true,
+      generateBookmarks: true,
+      generateTableOfContentsPage: false,
     });
     const roundTripped = mergeToApiParams({
       removeDigitalSignature: false,
-      generateTableOfContents: false,
+      generateBookmarks: false,
+      generateTableOfContentsPage: false,
       ...mergeFromApiParams(api),
     });
 

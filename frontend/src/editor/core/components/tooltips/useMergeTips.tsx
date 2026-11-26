@@ -20,13 +20,20 @@ export const useMergeTips = (): TooltipContent => {
         ),
       },
       {
+        title: t("merge.generateBookmarks.tooltip.title", "Bookmarks"),
+        description: t(
+          "merge.generateBookmarks.tooltip.description",
+          "Adds a bookmark for every merged file to the PDF's bookmark panel, so you can jump to the start of each file.",
+        ),
+      },
+      {
         title: t(
-          "merge.generateTableOfContents.tooltip.title",
-          "Generate Table of Contents",
+          "merge.generateTableOfContentsPage.tooltip.title",
+          "Contents Page",
         ),
         description: t(
-          "merge.generateTableOfContents.tooltip.description",
-          "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers.",
+          "merge.generateTableOfContentsPage.tooltip.description",
+          "Inserts a page at the start of the merged PDF that lists every file and the page it starts on.",
         ),
       },
     ],

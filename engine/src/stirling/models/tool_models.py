@@ -738,9 +738,13 @@ class MergePdfsParams(ApiModel):
         None, description="JSON array of client-provided IDs for each uploaded file (same order as fileInput)"
     )
     file_order: str | None = None
-    generate_toc: bool = Field(
+    generate_bookmarks: bool = Field(
         False,
         description="Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.",
+    )
+    generate_toc_page: bool = Field(
+        False,
+        description="Flag indicating whether to generate a table of contents page for the merged PDF. If true, the table of contents page will be generated as the first page of the document.",
     )
     remove_cert_sign: bool = Field(
         True,

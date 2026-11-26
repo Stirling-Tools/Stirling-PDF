@@ -723,7 +723,11 @@ export interface MergePdfsRequest {
   /**
    * Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.
    */
-  generateToc?: boolean;
+  generateBookmarks?: boolean;
+  /**
+   * Flag indicating whether to generate a table of contents page for the merged PDF. If true, the table of contents page will be generated as the first page of the document.
+   */
+  generateTocPage?: boolean;
   /**
    * Flag indicating whether to remove certification signatures from the merged PDF. If true, all certification signatures will be removed from the final merged document.
    */

@@ -15,8 +15,8 @@ describe("useMergeParameters", () => {
   test.each([
     { paramName: "removeDigitalSignature" as const, value: true },
     { paramName: "removeDigitalSignature" as const, value: false },
-    { paramName: "generateTableOfContents" as const, value: true },
-    { paramName: "generateTableOfContents" as const, value: false },
+    { paramName: "generateBookmarks" as const, value: true },
+    { paramName: "generateBookmarks" as const, value: false },
   ])("should update parameter $paramName to $value", ({ paramName, value }) => {
     const { result } = renderHook(() => useMergeParameters());
 
@@ -33,11 +33,11 @@ describe("useMergeParameters", () => {
     // First, change some parameters
     act(() => {
       result.current.updateParameter("removeDigitalSignature", true);
-      result.current.updateParameter("generateTableOfContents", true);
+      result.current.updateParameter("generateBookmarks", true);
     });
 
     expect(result.current.parameters.removeDigitalSignature).toBe(true);
-    expect(result.current.parameters.generateTableOfContents).toBe(true);
+    expect(result.current.parameters.generateBookmarks).toBe(true);
 
     // Then reset
     act(() => {
@@ -56,7 +56,7 @@ describe("useMergeParameters", () => {
     // Change parameters and validate again
     act(() => {
       result.current.updateParameter("removeDigitalSignature", true);
-      result.current.updateParameter("generateTableOfContents", true);
+      result.current.updateParameter("generateBookmarks", true);
     });
 
     expect(result.current.validateParameters()).toBe(true);

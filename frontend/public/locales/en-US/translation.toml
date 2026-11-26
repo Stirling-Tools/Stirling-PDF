@@ -6487,12 +6487,19 @@ viewerModeHint = "Merge needs 2 or more files. Head to the file editor to add th
 [merge.error]
 failed = "An error occurred while merging the PDFs."
 
-[merge.generateTableOfContents]
-label = "Generate table of contents in the merged file?"
+[merge.generateBookmarks]
+label = "Add a bookmark for each file"
 
-[merge.generateTableOfContents.tooltip]
-description = "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers."
-title = "Generate Table of Contents"
+[merge.generateBookmarks.tooltip]
+description = "Adds a bookmark for every merged file to the PDF's bookmark panel, so you can jump to the start of each file."
+title = "Bookmarks"
+
+[merge.generateTableOfContentsPage]
+label = "Add a contents page listing each file"
+
+[merge.generateTableOfContentsPage.tooltip]
+title = "Contents Page"
+description = "Inserts a page at the start of the merged PDF that lists every file and the page it starts on."
 
 [merge.removeDigitalSignature]
 label = "Remove digital signature in the merged file?"

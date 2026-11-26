@@ -9,7 +9,8 @@ const meta = {
   args: {
     parameters: {
       removeDigitalSignature: false,
-      generateTableOfContents: false,
+      generateBookmarks: false,
+      generateTableOfContentsPage: false,
     },
     onParameterChange: () => {},
   },
@@ -21,7 +22,8 @@ type Story = StoryObj<typeof meta>;
 function MergeSettingsDemo({ disabled }: { disabled?: boolean }) {
   const [parameters, setParameters] = useState<MergeParameters>({
     removeDigitalSignature: false,
-    generateTableOfContents: false,
+    generateBookmarks: false,
+    generateTableOfContentsPage: false,
   });
 
   return (
