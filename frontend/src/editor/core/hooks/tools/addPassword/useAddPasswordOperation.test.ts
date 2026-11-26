@@ -153,7 +153,7 @@ describe("addPassword mappers", () => {
     const restored = addPasswordFromApiParams({
       password: "user-pw",
     });
-    expect(restored.keyLength).toBe(128);
+    expect(restored.keyLength).toBe(256);
   });
 
   test("round-trips backend params, including the flattened permissions", () => {

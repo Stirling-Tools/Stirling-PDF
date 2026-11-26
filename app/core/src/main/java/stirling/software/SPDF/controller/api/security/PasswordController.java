@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.util.HexFormat;
 
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
@@ -56,6 +58,10 @@ import stirling.software.jpdfium.exception.JPDFiumException;
 public class PasswordController {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final COSName EXTENSIONS = COSName.getPDFName("Extensions");
+    private static final COSName ADBE = COSName.getPDFName("ADBE");
+    private static final COSName BASE_VERSION = COSName.getPDFName("BaseVersion");
+    private static final COSName EXTENSION_LEVEL = COSName.getPDFName("ExtensionLevel");
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -132,6 +138,7 @@ public class PasswordController {
                                         "",
                                         permissions);
                         protection.setEncryptionKeyLength(256);
+                        declareAes256Support(document);
                         document.setAllSecurityToBeRemoved(false);
                         document.protect(protection);
                     }
@@ -195,7 +202,8 @@ public class PasswordController {
                             "",
                             new AccessPermission(document.getEncryption().getPermissions()));
             protection.setEncryptionKeyLength(document.getEncryption().getLength());
-            protection.setPreferAES(document.getEncryption().getVersion() >= 4);
+            protection.setPreferAES(true);
+            declareAesSupport(document, document.getEncryption().getLength());
             document.protect(protection);
         } else {
             if (!PdfPasswordRoles.isOpeningPassword(document, retainedOpeningPassword)) {
@@ -207,7 +215,8 @@ public class PasswordController {
                     new StandardProtectionPolicy(
                             "", retainedOpeningPassword, new AccessPermission());
             protection.setEncryptionKeyLength(document.getEncryption().getLength());
-            protection.setPreferAES(document.getEncryption().getVersion() >= 4);
+            protection.setPreferAES(true);
+            declareAesSupport(document, document.getEncryption().getLength());
             document.protect(protection);
         }
     }
@@ -284,7 +293,11 @@ public class PasswordController {
                     reader = credential;
                 }
                 request.setPassword(reader);
-                request.setKeyLength(document.getEncryption().getLength());
+                // Legacy 40/128-bit protection on a PDF 2.0 file is upgraded rather than rejected.
+                request.setKeyLength(
+                        document.getVersion() >= 2.0f || document.getEncryption().getVersion() == 5
+                                ? 256
+                                : document.getEncryption().getLength());
             }
             return applyProtection(document, request, permissions, explicitProtection);
         }
@@ -316,13 +329,25 @@ public class PasswordController {
             }
         }
         var protection = new StandardProtectionPolicy(owner, reader, permissions);
-        if (!owner.isEmpty() || !reader.isEmpty())
-            protection.setEncryptionKeyLength(request.getKeyLength());
-        if (validate
-                && document.isEncrypted()
-                && request.getKeyLength() == document.getEncryption().getLength()) {
-            protection.setPreferAES(document.getEncryption().getVersion() >= 4);
+        if (!owner.isEmpty() || !reader.isEmpty()) {
+            int keyLength = request.getKeyLength();
+            if (keyLength != 256 && document.getVersion() >= 2.0f) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "PDF 2.0 files only support 256-bit AES encryption");
+            }
+            if (keyLength < 256
+                    && document.isEncrypted()
+                    && document.getEncryption().getVersion() == 5) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "This PDF already uses 256-bit AES encryption and cannot be downgraded");
+            }
+            protection.setEncryptionKeyLength(keyLength);
+            declareAesSupport(document, keyLength);
         }
+        // RC4 is deprecated, so 128-bit keys always use AES.
+        protection.setPreferAES(true);
         document.protect(protection);
         String filename =
                 GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), ".pdf");
@@ -347,6 +372,36 @@ public class PasswordController {
             output.close();
             throw e;
         }
+    }
+
+    // AES-128 needs PDF 1.6; AES-256 (R6) needs PDF 2.0 or 1.7 with Adobe extension level 8.
+    private static void declareAesSupport(PDDocument document, int keyLength) {
+        if (keyLength == 128) raiseVersion(document, 1.6f);
+        if (keyLength == 256) declareAes256Support(document);
+    }
+
+    private static void raiseVersion(PDDocument document, float version) {
+        if (document.getVersion() < version) {
+            document.setVersion(version);
+            document.getDocument().setVersion(version);
+        }
+    }
+
+    private static void declareAes256Support(PDDocument document) {
+        if (document.getVersion() >= 2.0f) return;
+        raiseVersion(document, 1.7f);
+        COSDictionary catalog = document.getDocumentCatalog().getCOSObject();
+        COSDictionary extensions = catalog.getCOSDictionary(EXTENSIONS);
+        if (extensions == null) {
+            extensions = new COSDictionary();
+            catalog.setItem(EXTENSIONS, extensions);
+        }
+        COSDictionary adbe = extensions.getCOSDictionary(ADBE);
+        if (adbe != null && adbe.getInt(EXTENSION_LEVEL, 0) >= 8) return;
+        adbe = new COSDictionary();
+        adbe.setName(BASE_VERSION, "1.7");
+        adbe.setInt(EXTENSION_LEVEL, 8);
+        extensions.setItem(ADBE, adbe);
     }
 
     private AccessPermission requestedPermissions(AddPasswordRequest request) {

@@ -20,7 +20,7 @@ describe("useAddPasswordParameters", () => {
   test.each([
     { paramName: "password" as const, value: "test-password" },
     { paramName: "ownerPassword" as const, value: "owner-password" },
-    { paramName: "keyLength" as const, value: 256 },
+    { paramName: "keyLength" as const, value: 128 },
   ])("should update parameter $paramName", ({ paramName, value }) => {
     const { result } = renderHook(() => useAddPasswordParameters());
 
@@ -53,12 +53,12 @@ describe("useAddPasswordParameters", () => {
     // First, change some parameters
     act(() => {
       result.current.updateParameter("password", "test");
-      result.current.updateParameter("keyLength", 256);
+      result.current.updateParameter("keyLength", 128);
       result.current.permissions.updateParameter("preventAssembly", true);
     });
 
     expect(result.current.parameters.password).toBe("test");
-    expect(result.current.parameters.keyLength).toBe(256);
+    expect(result.current.parameters.keyLength).toBe(128);
     expect(result.current.permissions.parameters.preventAssembly).toBe(true);
 
     // Then reset

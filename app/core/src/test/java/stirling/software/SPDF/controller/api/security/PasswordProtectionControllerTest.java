@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
@@ -564,6 +565,153 @@ class PasswordProtectionControllerTest {
         assertThrows(ResponseStatusException.class, () -> setProtection(change, ""));
         try (var remaining = Files.list(directory)) {
             assertEquals(0, remaining.count());
+        }
+    }
+
+    private AddPasswordRequest newProtection(byte[] source, int bits) {
+        var request = new AddPasswordRequest();
+        request.setFileInput(upload(source));
+        request.setPassword(USER);
+        request.setOwnerPassword(OWNER);
+        request.setKeyLength(bits);
+        return request;
+    }
+
+    private byte[] pdfVersion(float version) throws IOException {
+        try (var document = new PDDocument();
+                var output = new ByteArrayOutputStream()) {
+            document.addPage(new PDPage());
+            document.setVersion(version);
+            document.save(output);
+            return output.toByteArray();
+        }
+    }
+
+    @Test
+    void addsAes128RatherThanRc4() throws Exception {
+        var response = controller.addPassword(newProtection(pdf(false, 128), 128));
+        try (var body = response.getBody().getInputStream();
+                var output = Loader.loadPDF(body.readAllBytes(), USER)) {
+            assertEquals(4, output.getEncryption().getVersion());
+            assertEquals(4, output.getEncryption().getRevision());
+            assertEquals(128, output.getEncryption().getLength());
+            assertTrue(output.getEncryption().getSecurityHandler().isAES());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"40", "128"})
+    void rejectsLegacyEncryptionForPdf20(int bits) throws Exception {
+        var request = newProtection(pdfVersion(2.0f), bits);
+        var rejected =
+                assertThrows(ResponseStatusException.class, () -> controller.addPassword(request));
+        assertEquals(400, rejected.getStatusCode().value());
+    }
+
+    @Test
+    void rejectsDowngradingAnAes256Source() throws Exception {
+        var request = newProtection(pdf(true, 256), 128);
+        var rejected =
+                assertThrows(ResponseStatusException.class, () -> setProtection(request, OWNER));
+        assertEquals(400, rejected.getStatusCode().value());
+    }
+
+    @Test
+    void removingOnePasswordFromAnRc4SourceReprotectsWithAes() throws Exception {
+        byte[] rc4 = pdf(true, 128, false, USER, OWNER, 1);
+        try (var stream =
+                        removePasswords(request(rc4, USER), "", OWNER, "")
+                                .getBody()
+                                .getInputStream();
+                var result = Loader.loadPDF(stream.readAllBytes())) {
+            assertEquals(4, result.getEncryption().getVersion());
+            assertTrue(result.getEncryption().getSecurityHandler().isAES());
+        }
+        try (var stream =
+                        removePasswords(request(rc4, ""), OWNER, OWNER, USER)
+                                .getBody()
+                                .getInputStream();
+                var result = Loader.loadPDF(stream.readAllBytes(), USER)) {
+            assertEquals(4, result.getEncryption().getVersion());
+            assertTrue(result.getEncryption().getSecurityHandler().isAES());
+        }
+    }
+
+    @Test
+    void replacingTheOwnerPasswordUpgradesAnRc4SourceToAes() throws Exception {
+        var request = new AddPasswordRequest();
+        request.setFileInput(upload(pdf(true, 128, false, USER, OWNER, 1)));
+        request.setOwnerPassword("new-owner");
+        request.setPassword(USER);
+        try (var body = changePermissions(request, OWNER).getBody().getInputStream();
+                var output = Loader.loadPDF(body.readAllBytes(), USER)) {
+            assertEquals(4, output.getEncryption().getVersion());
+            assertTrue(output.getEncryption().getSecurityHandler().isAES());
+        }
+    }
+
+    @Test
+    void replacingTheOwnerPasswordUpgradesLegacyPdf20ProtectionToAes256() throws Exception {
+        byte[] source;
+        try (var document = new PDDocument();
+                var output = new ByteArrayOutputStream()) {
+            document.addPage(new PDPage());
+            document.getDocument().setVersion(2.0f);
+            var policy = new StandardProtectionPolicy(OWNER, USER, new AccessPermission());
+            policy.setEncryptionKeyLength(128);
+            document.protect(policy);
+            document.save(output);
+            source = output.toByteArray();
+        }
+        var request = new AddPasswordRequest();
+        request.setFileInput(upload(source));
+        request.setOwnerPassword("new-owner");
+        request.setPassword(USER);
+        try (var body = changePermissions(request, OWNER).getBody().getInputStream();
+                var output = Loader.loadPDF(body.readAllBytes(), USER)) {
+            assertEquals(5, output.getEncryption().getVersion());
+            assertEquals(256, output.getEncryption().getLength());
+        }
+    }
+
+    @Test
+    void removingTheOpeningPasswordOfARestrictedPdfDeclaresAes256Support() throws Exception {
+        var request = new RemovePasswordRequest();
+        request.setFileInput(upload(pdf(true, 128)));
+        request.setPassword(USER);
+        byte[] bytes;
+        try (var body = controller.removePassword(request).getBody().getInputStream()) {
+            bytes = body.readAllBytes();
+        }
+        assertEquals("%PDF-1.7", new String(bytes, 0, 8, StandardCharsets.ISO_8859_1));
+        try (var output = Loader.loadPDF(bytes)) {
+            assertEquals(6, output.getEncryption().getRevision());
+            var adbe =
+                    output.getDocumentCatalog()
+                            .getCOSObject()
+                            .getCOSDictionary(COSName.getPDFName("Extensions"))
+                            .getCOSDictionary(COSName.getPDFName("ADBE"));
+            assertEquals(8, adbe.getInt(COSName.getPDFName("ExtensionLevel")));
+        }
+    }
+
+    @Test
+    void aes256DeclaresPdf17AdobeExtensionLevel8() throws Exception {
+        var response = controller.addPassword(newProtection(pdf(false, 256), 256));
+        byte[] bytes;
+        try (var body = response.getBody().getInputStream()) {
+            bytes = body.readAllBytes();
+        }
+        assertEquals("%PDF-1.7", new String(bytes, 0, 8, StandardCharsets.ISO_8859_1));
+        try (var output = Loader.loadPDF(bytes, USER)) {
+            assertEquals(6, output.getEncryption().getRevision());
+            var adbe =
+                    output.getDocumentCatalog()
+                            .getCOSObject()
+                            .getCOSDictionary(COSName.getPDFName("Extensions"))
+                            .getCOSDictionary(COSName.getPDFName("ADBE"));
+            assertEquals("1.7", adbe.getNameAsString(COSName.getPDFName("BaseVersion")));
+            assertEquals(8, adbe.getInt(COSName.getPDFName("ExtensionLevel")));
         }
     }
 
