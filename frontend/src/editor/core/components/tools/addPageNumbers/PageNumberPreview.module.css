@@ -43,6 +43,7 @@
 }
 
 .gridTile {
+  --tile-highlight: color-mix(in srgb, var(--c-primary) 20%, transparent);
   border: 1px dashed rgba(0, 0, 0, 0.15);
   background-color: transparent;
   border-radius: 10px;
@@ -73,7 +74,7 @@
 .gridTileSelected,
 .gridTileHovered {
   border: 2px solid var(--c-primary);
-  background-color: color-mix(in srgb, var(--c-primary) 20%, transparent);
+  background-color: var(--tile-highlight);
 }
 
 /* Preview header */

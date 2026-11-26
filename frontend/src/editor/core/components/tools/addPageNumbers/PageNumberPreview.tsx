@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { VisuallyHidden } from "@mantine/core";
 import { AddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
@@ -222,6 +228,12 @@ export default function PageNumberPreview({
                   onClick={() => onParameterChange("position", idx)}
                   onMouseEnter={() => setHoverTile(idx)}
                   onMouseLeave={() => setHoverTile(null)}
+                  // The tertiary button's own hover tint is near-black in dark mode.
+                  style={
+                    {
+                      "--button-hover": "var(--tile-highlight)",
+                    } as CSSProperties
+                  }
                 >
                   <VisuallyHidden>{idx}</VisuallyHidden>
                 </Button>

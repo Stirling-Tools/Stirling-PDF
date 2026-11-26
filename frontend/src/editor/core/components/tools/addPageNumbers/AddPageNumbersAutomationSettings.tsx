@@ -1,14 +1,10 @@
 /**
- * AddPageNumbersAutomationSettings - Used for automation only
- *
- * Combines both position and appearance settings into a single view
+ * AddPageNumbersAutomationSettings - the tool's settings for an automation
+ * step, without a file to preview.
  */
 
-import { Stack, Divider, Text } from "@mantine/core";
-import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
-import AddPageNumbersPositionSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
-import AddPageNumbersAppearanceSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
+import AddPageNumbersSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersSettings";
 
 interface AddPageNumbersAutomationSettingsProps {
   parameters: AddPageNumbersParameters;
@@ -23,40 +19,12 @@ const AddPageNumbersAutomationSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
-}: AddPageNumbersAutomationSettingsProps) => {
-  const { t } = useTranslation();
-
-  return (
-    <Stack gap="lg">
-      {/* Position & Pages Section */}
-      <Stack gap="md">
-        <Text size="sm" fw={600}>
-          {t("addPageNumbers.positionAndPages", "Position & Pages")}
-        </Text>
-        <AddPageNumbersPositionSettings
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={disabled}
-          file={null}
-          showQuickGrid={true}
-        />
-      </Stack>
-
-      <Divider />
-
-      {/* Appearance Section */}
-      <Stack gap="md">
-        <Text size="sm" fw={600}>
-          {t("addPageNumbers.customize", "Appearance")}
-        </Text>
-        <AddPageNumbersAppearanceSettings
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={disabled}
-        />
-      </Stack>
-    </Stack>
-  );
-};
+}: AddPageNumbersAutomationSettingsProps) => (
+  <AddPageNumbersSettings
+    parameters={parameters}
+    onParameterChange={onParameterChange}
+    disabled={disabled}
+  />
+);
 
 export default AddPageNumbersAutomationSettings;

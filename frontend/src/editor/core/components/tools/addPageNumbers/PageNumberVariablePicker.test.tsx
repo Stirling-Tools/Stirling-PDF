@@ -2,19 +2,22 @@ import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import AddPageNumbersAppearanceSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
+import AddPageNumbersSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersSettings";
 import { defaultParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback?: string) => fallback }),
   Trans: ({ defaults }: { defaults: string }) => defaults,
 }));
+vi.mock("@editor/components/tools/addPageNumbers/PageNumberPreview", () => ({
+  default: () => null,
+}));
 
 const renderSettings = (customText: string) => {
   const onParameterChange = vi.fn();
   render(
     <MantineProvider env="test">
-      <AddPageNumbersAppearanceSettings
+      <AddPageNumbersSettings
         parameters={{ ...defaultParameters, customText }}
         onParameterChange={onParameterChange}
       />
