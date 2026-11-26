@@ -318,10 +318,13 @@ async function canvasRect(page: P): Promise<Rect> {
   });
 }
 
-/** Runs whose box is fully inside the viewport, so they can be screenshotted. */
+/**
+ * Runs whose box is fully on screen and clear of the viewer's page-controls
+ * bar along the bottom, so their pixels can be screenshotted.
+ */
 function onScreen(runs: RunGeom[]): RunGeom[] {
   return runs.filter(
-    (r) => r.rect.y >= 120 && r.rect.y + r.rect.height <= 1050,
+    (r) => r.rect.y >= 120 && r.rect.y + r.rect.height <= 1010,
   );
 }
 

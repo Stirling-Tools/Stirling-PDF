@@ -7,6 +7,20 @@ import {
   visiblePageNumber,
 } from "@editor/tools/pdfTextEditor/util/dom";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { SELECTION_BAR_MENU_ATTR } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
+
+/**
+ * Escape pressed in a field, the selection bar or one of its menus belongs to
+ * that control. Read from the event's target: a menu closes on Escape before
+ * this runs, taking the focused field with it.
+ */
+function escapeBelongsToControl(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return true;
+  return !!target.closest(
+    `.pdf-editor-selection-bar, [${SELECTION_BAR_MENU_ATTR}]`,
+  );
+}
 
 interface KeyboardShortcutCallbacks {
   store: EditorStore;
@@ -143,7 +157,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
         return;
       }
       if (e.key === "Escape") {
-        if (isFocusInContentEditable()) return;
+        if (isFocusInContentEditable() || escapeBelongsToControl(e.target))
+          return;
         e.preventDefault();
         onEscape();
         return;

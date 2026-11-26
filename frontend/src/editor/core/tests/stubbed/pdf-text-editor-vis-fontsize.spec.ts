@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Font size and font family, judged on the PIXELS PDFium paints - not on the
@@ -187,6 +190,7 @@ async function setFamily(
   page: import("@playwright/test").Page,
   label: string,
 ): Promise<void> {
+  await openFormatMenu(page, "font");
   await page.getByTestId("pdf-editor-font-family").click();
   await page.getByRole("option", { name: label, exact: true }).click();
 }

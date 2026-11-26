@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // The italic button answered for every font, including ones we cannot make
@@ -164,6 +167,7 @@ test.describe("PDF text editor - font capability gating", () => {
 
     // Picking a standard family is the documented way out: from there the
     // italic cut genuinely exists, so the control must come back.
+    await openFormatMenu(page, "font");
     const picker = page.getByTestId("pdf-editor-font-family");
     await picker.click();
     await page.getByRole("option", { name: "Helvetica", exact: true }).click();

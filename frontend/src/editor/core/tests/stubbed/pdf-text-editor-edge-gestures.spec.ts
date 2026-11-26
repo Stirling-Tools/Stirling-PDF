@@ -179,17 +179,11 @@ test.describe("PDF text editor - edge gestures", () => {
     expect(words(after)).toEqual(words(before));
   });
 
-  test("the insert verbs live in the toolbar, not the panel", async ({
-    page,
-  }) => {
+  test("the insert verbs lead the panel, once each", async ({ page }) => {
     await open(page);
-    const toolbar = page.getByTestId("pdf-editor-toolbar");
-    await expect(toolbar.getByTestId("pdf-editor-add-text")).toBeVisible();
-    await expect(toolbar.getByTestId("pdf-editor-add-image")).toBeVisible();
-    await expect(
-      page
-        .locator('[data-sidebar="tool-panel"]')
-        .getByTestId("pdf-editor-add-text"),
-    ).toHaveCount(0);
+    const tools = page.getByTestId("pdf-editor-panel-tools");
+    await expect(tools.getByTestId("pdf-editor-add-text")).toBeVisible();
+    await expect(tools.getByTestId("pdf-editor-add-image")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-add-text")).toHaveCount(1);
   });
 });

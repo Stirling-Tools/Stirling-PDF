@@ -216,9 +216,10 @@ for (const which of ["single", "paragraph"] as const) {
       await caretToEndAndType(page, testId, textFor(which));
       const typed = await shapeOf(page, testId, runId);
 
-      await page
-        .getByTestId("pdf-editor-page-0")
-        .click({ position: { x: 5, y: 5 } });
+      // Below the text: the selection bar covers the page above the run.
+      const pageZero = page.getByTestId("pdf-editor-page-0");
+      const pageBox = await pageZero.boundingBox();
+      await pageZero.click({ position: { x: 5, y: pageBox!.height - 5 } });
       await page.waitForTimeout(3000);
       // Re-find rather than reuse the locator: a reflow can rebuild the run, so
       // click the text the way a user does instead of an id that may be stale.
@@ -298,9 +299,10 @@ for (const which of ["single", "paragraph"] as const) {
       await caretToEndAndType(page, testId, textFor(which));
       const typed = await shapeOf(page, testId, runId);
 
-      await page
-        .getByTestId("pdf-editor-page-0")
-        .click({ position: { x: 5, y: 5 } });
+      // Below the text: the selection bar covers the page above the run.
+      const pageZero = page.getByTestId("pdf-editor-page-0");
+      const pageBox = await pageZero.boundingBox();
+      await pageZero.click({ position: { x: 5, y: pageBox!.height - 5 } });
       await page.waitForTimeout(3000);
       // Re-find rather than reuse the locator: a reflow can rebuild the run, so
       // click the text the way a user does instead of an id that may be stale.

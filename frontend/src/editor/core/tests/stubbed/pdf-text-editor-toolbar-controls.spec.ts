@@ -51,10 +51,10 @@ function readRun(page: import("@playwright/test").Page, runId: string) {
 }
 
 test.describe("PDF text editor - bold is a toggle, not a list entry", () => {
-  test("the toolbar has Bold beside Italic", async ({ page }) => {
+  test("the selection bar has Bold beside Italic", async ({ page }) => {
     await openEditor(page, PARAGRAPH_PDF);
     await selectFirstRun(page);
-    await expect(page.getByTestId("pdf-editor-toolbar")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-selection-bar")).toBeVisible();
     await expect(page.getByTestId("pdf-editor-bold")).toBeVisible();
     await expect(page.getByTestId("pdf-editor-italic")).toBeVisible();
   });
@@ -74,26 +74,30 @@ test.describe("PDF text editor - bold is a toggle, not a list entry", () => {
 });
 
 test.describe("PDF text editor - one colour picker by default", () => {
-  test("outline colour and width are not in the toolbar", async ({ page }) => {
+  test("fill and outline wait behind the colour swatch", async ({ page }) => {
     await openEditor(page, PARAGRAPH_PDF);
     await selectFirstRun(page);
 
-    await expect(page.getByTestId("pdf-editor-colour")).toBeVisible();
-    await expect(
-      page.getByTestId("pdf-editor-outline-colour"),
-      "outline colour belongs behind the advanced control",
-    ).toHaveCount(0);
-    await expect(page.getByTestId("pdf-editor-outline-width")).toHaveCount(0);
-    await expect(page.getByTestId("pdf-editor-colour-advanced")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-colour-menu")).toBeVisible();
+    for (const id of [
+      "pdf-editor-colour",
+      "pdf-editor-outline-colour",
+      "pdf-editor-outline-width",
+    ]) {
+      await expect(
+        page.getByTestId(id),
+        `${id} belongs in the colour menu, not on the bar`,
+      ).toHaveCount(0);
+    }
   });
 
-  test("the advanced control opens the fill/stroke pair and it still works", async ({
+  test("the colour menu opens the fill/stroke pair and it still works", async ({
     page,
   }) => {
     await openEditor(page, PARAGRAPH_PDF);
     const runId = await selectFirstRun(page);
 
-    await page.getByTestId("pdf-editor-colour-advanced").click();
+    await page.getByTestId("pdf-editor-colour-menu").click();
     await expect(page.getByTestId("pdf-editor-outline-colour")).toBeVisible();
     const width = page.getByTestId("pdf-editor-outline-width");
     await expect(width).toBeVisible();

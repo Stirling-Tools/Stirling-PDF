@@ -76,10 +76,10 @@ test.describe("PDF text editor - inspector layout", () => {
     const arrange = page.getByTestId("pdf-editor-arrange-menu");
     await expect(arrange).toBeVisible();
     await expect(arrange).toBeEnabled();
-    // Arrange is a toolbar verb, beside the formatting it accompanies.
+    // Arrange sits in the selection bar, beside the formatting it accompanies.
     await expect(
       page
-        .getByTestId("pdf-editor-toolbar")
+        .getByTestId("pdf-editor-selection-bar")
         .getByTestId("pdf-editor-arrange-menu"),
     ).toHaveCount(1);
 
@@ -129,12 +129,14 @@ test.describe("PDF text editor - inspector layout", () => {
     }
   });
 
-  test("lock and delete are icon buttons in the toolbar", async ({ page }) => {
+  test("lock and delete are icon buttons in the selection bar", async ({
+    page,
+  }) => {
     await open(page, 0);
     const id = await runId(page, 0, "Downloads");
     await selectOne(page, id);
-    const toolbar = page.getByTestId("pdf-editor-toolbar");
-    // Icon-only: identified by aria-label, located inside the toolbar.
+    const toolbar = page.getByTestId("pdf-editor-selection-bar");
+    // Icon-only: identified by aria-label, located inside the bar.
     await expect(toolbar.getByTestId("pdf-editor-toggle-lock")).toBeVisible();
     await expect(toolbar.getByTestId("pdf-editor-delete")).toBeVisible();
     await expect(page.getByTestId("pdf-editor-toggle-lock")).toHaveAttribute(
@@ -143,31 +145,23 @@ test.describe("PDF text editor - inspector layout", () => {
     );
   });
 
-  test("the strip shows formatting only once something is selected", async ({
+  test("the selection bar shows formatting only once something is selected", async ({
     page,
   }) => {
     await open(page, 0);
-    const toolbar = page.getByTestId("pdf-editor-toolbar");
+    const toolbar = page.getByTestId("pdf-editor-selection-bar");
     // Always available, selection or not.
+    const footer = page.getByTestId("pdf-editor-panel-actions");
     for (const id of ["pdf-editor-undo", "pdf-editor-redo"]) {
-      await expect(toolbar.getByTestId(id)).toBeVisible();
+      await expect(footer.getByTestId(id)).toBeVisible();
     }
     // Contextual: absent, rather than present-and-greyed, with no selection.
-    for (const id of [
-      "pdf-editor-font-size",
-      "pdf-editor-colour",
-      "pdf-editor-italic",
-      "pdf-editor-arrange-menu",
-      "pdf-editor-toggle-lock",
-      "pdf-editor-delete",
-    ]) {
-      await expect(toolbar.getByTestId(id)).toHaveCount(0);
-    }
-    // ...and all of them appear in the strip once a run is picked.
+    await expect(toolbar).toHaveCount(0);
+    // ...and all of them appear in the bar once a run is picked.
     await selectOne(page, await runId(page, 0, "Downloads"));
     for (const id of [
       "pdf-editor-font-size",
-      "pdf-editor-colour",
+      "pdf-editor-colour-menu",
       "pdf-editor-italic",
       "pdf-editor-arrange-menu",
       "pdf-editor-toggle-lock",
@@ -193,10 +187,10 @@ test.describe("PDF text editor - inspector layout", () => {
     ]) {
       await expect(sidebar.getByTestId(id)).toBeVisible();
     }
-    // ...and the strip does not duplicate them.
+    // ...and the selection bar does not duplicate them.
     for (const id of ["pdf-editor-pos-x", "pdf-editor-group"]) {
       await expect(
-        page.getByTestId("pdf-editor-toolbar").getByTestId(id),
+        page.getByTestId("pdf-editor-selection-bar").getByTestId(id),
       ).toHaveCount(0);
     }
   });
@@ -213,7 +207,9 @@ test.describe("PDF text editor - inspector layout", () => {
   }) => {
     await open(page);
     // Find and the shortcuts sheet are everyday controls, not settings: they
-    await expect(page.getByTestId("pdf-editor-open-find")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Find & replace" }),
+    ).toBeVisible();
     await expect(page.getByTestId("pdf-editor-help")).toBeVisible();
 
     await openSettings(page);
@@ -238,7 +234,7 @@ test.describe("PDF text editor - inspector layout", () => {
     ).toBeVisible();
   });
 
-  test("Add text toggles its label and inserts from the toolbar", async ({
+  test("Add text arms, inserts on a page click, then disarms", async ({
     page,
   }) => {
     await open(page, 0);
@@ -246,12 +242,12 @@ test.describe("PDF text editor - inspector layout", () => {
     const before = await runs.count();
     const addText = page.getByTestId("pdf-editor-add-text");
     await addText.click();
-    await expect(addText).toContainText(/click page/i);
+    await expect(addText).toHaveAttribute("aria-pressed", "true");
     await page
       .getByTestId("pdf-editor-page-0")
       .click({ position: { x: 200, y: 400 } });
     await expect(runs).toHaveCount(before + 1, { timeout: 5_000 });
-    await expect(addText).toHaveText("Add text");
+    await expect(addText).toHaveAttribute("aria-pressed", "false");
   });
 
   test("the Document tab lists the page fonts with a status badge", async ({
