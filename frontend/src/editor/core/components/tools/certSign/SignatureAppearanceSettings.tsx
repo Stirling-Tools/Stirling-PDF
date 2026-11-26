@@ -14,8 +14,18 @@ import { Icon } from "@editor/ui/Icon";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
-import { SignatureImagePicker } from "@editor/components/shared/signatureFields/SignatureImagePicker";
-import { useSavedSignatures } from "@editor/hooks/tools/sign/useSavedSignatures";
+import {
+  SignatureImagePicker,
+  signatureImageFile,
+} from "@editor/components/shared/signatureFields/SignatureImagePicker";
+import { useSignatureLibrary } from "@editor/components/tools/sign/wallet/useSignatureLibrary";
+import { CreateSignatureModal } from "@editor/components/tools/sign/createSignature/CreateSignatureModal";
+import { defaultSignatureName } from "@editor/components/tools/sign/createSignature/createTabs";
+import type {
+  CreatedSignature,
+  SaveChoice,
+} from "@editor/components/tools/sign/createSignature/types";
+import { uniqueName } from "@editor/utils/uniqueName";
 import { SignatureFieldList } from "@editor/components/shared/signatureFields/SignatureFieldList";
 import { StampPreviewFrame } from "@editor/components/shared/signatureFields/StampPreviewFrame";
 
@@ -285,7 +295,7 @@ const GraphicChoice = ({
         ]}
       />
       {parameters.stampGraphic === "IMAGE" && (
-        <SavedOrUploadedImage
+        <SavedOrNewImage
           value={parameters.signatureImage}
           onChange={(file) => onParameterChange("signatureImage", file)}
           disabled={disabled}
@@ -295,7 +305,7 @@ const GraphicChoice = ({
   );
 };
 
-const SavedOrUploadedImage = ({
+const SavedOrNewImage = ({
   value,
   onChange,
   disabled,
@@ -305,29 +315,58 @@ const SavedOrUploadedImage = ({
   disabled: boolean;
 }) => {
   const { t } = useTranslation();
-  const { savedSignatures } = useSavedSignatures();
+  const library = useSignatureLibrary();
+  const [adding, setAdding] = useState(false);
   const saved = useMemo(
     () =>
-      [...savedSignatures]
-        .sort(
-          (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
-        )
-        .map((signature) => ({
-          id: signature.id,
-          label:
-            signature.label ||
-            t("certSign.appearance.graphic.savedLabel", "Signature"),
-          dataUrl: signature.dataUrl,
-        })),
-    [savedSignatures, t],
+      [...library.mine, ...library.shared].map((signature) => ({
+        id: signature.id,
+        label: signature.label,
+        dataUrl: signature.dataUrl,
+      })),
+    [library.mine, library.shared],
   );
+
+  const add = async (created: CreatedSignature, choice: SaveChoice | null) => {
+    const entry = choice ? await library.save(created, choice) : null;
+    onChange(
+      await signatureImageFile({
+        id: entry?.key,
+        label:
+          entry?.label ??
+          uniqueName(defaultSignatureName(t, created.source), library.labels),
+        dataUrl: created.dataUrl,
+      }),
+    );
+    setAdding(false);
+  };
+
   return (
-    <SignatureImagePicker
-      saved={saved}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-    />
+    <>
+      <SignatureImagePicker
+        saved={saved}
+        value={value}
+        onChange={onChange}
+        onAdd={() => setAdding(true)}
+        disabled={disabled}
+      />
+      {adding && (
+        <CreateSignatureModal
+          initialTab="draw"
+          onClose={() => setAdding(false)}
+          onCreate={add}
+          limits={{
+            canSave: !library.isFull,
+            maxLimit: library.maxLimit,
+            canShare: library.canShare,
+            browserStorage: library.browserStorage,
+            remainingSlots: library.maxLimit - library.count,
+          }}
+          showPhoneTab={false}
+          existingLabels={library.labels}
+        />
+      )}
+    </>
   );
 };
 

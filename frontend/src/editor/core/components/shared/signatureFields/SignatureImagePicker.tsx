@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Group, Text } from "@mantine/core";
 import {
@@ -19,13 +19,15 @@ interface SignatureImagePickerProps {
   saved: SignatureImageChoice[];
   value: File | undefined;
   onChange: (file: File | undefined) => void;
+  onAdd: () => void;
   disabled?: boolean;
 }
 
-const ACCEPT = "image/png,image/jpeg";
 const pickedFrom = new WeakMap<File, string>();
 
-async function toPngFile(choice: SignatureImageChoice): Promise<File> {
+export async function signatureImageFile(
+  choice: Omit<SignatureImageChoice, "id"> & { id?: string },
+): Promise<File> {
   const image = new Image();
   image.src = choice.dataUrl;
   await image.decode();
@@ -40,7 +42,7 @@ async function toPngFile(choice: SignatureImageChoice): Promise<File> {
   const file = new File([blob], `${choice.label || "signature"}.png`, {
     type: "image/png",
   });
-  pickedFrom.set(file, choice.id);
+  if (choice.id) pickedFrom.set(file, choice.id);
   return file;
 }
 
@@ -58,19 +60,19 @@ function useObjectUrl(file: File | undefined): string | null {
   return url;
 }
 
-/** Picks the image drawn beside the signature details: a saved signature or an uploaded PNG or JPEG. */
+/** Picks the image drawn beside the signature details: a saved signature or a new one. */
 export function SignatureImagePicker({
   saved,
   value,
   onChange,
+  onAdd,
   disabled = false,
 }: SignatureImagePickerProps) {
   const { t } = useTranslation();
-  const input = useRef<HTMLInputElement>(null);
   const [failed, setFailed] = useState(false);
   const selectedId = value ? pickedFrom.get(value) : undefined;
-  const uploaded = value && selectedId === undefined ? value : undefined;
-  const uploadedUrl = useObjectUrl(uploaded);
+  const unsaved = value && selectedId === undefined ? value : undefined;
+  const unsavedUrl = useObjectUrl(unsaved);
   const title = t("certSign.appearance.graphic.imageTitle", "Signature image");
   const tiles = useMemo(
     () => saved.filter((choice) => choice.dataUrl),
@@ -79,7 +81,7 @@ export function SignatureImagePicker({
 
   const choose = (choice: SignatureImageChoice) => {
     setFailed(false);
-    toPngFile(choice)
+    signatureImageFile(choice)
       .then(onChange)
       .catch(() => setFailed(true));
   };
@@ -112,44 +114,30 @@ export function SignatureImagePicker({
             onClick={() => choose(choice)}
           />
         ))}
-        {uploaded && uploadedUrl && (
+        {unsaved && unsavedUrl && (
           <SignatureTile
-            label={uploaded.name}
-            dataUrl={uploadedUrl}
+            label={unsaved.name.replace(/\.png$/, "")}
+            dataUrl={unsavedUrl}
             selected
             disabled={disabled}
             actions={[]}
-            onClick={() => input.current?.click()}
+            onClick={() => {}}
           />
         )}
         <NewSignatureTile
-          label={t("certSign.appearance.graphic.upload", "Upload")}
+          label={t("certSign.appearance.graphic.add", "Add")}
           disabled={disabled}
-          onClick={() => input.current?.click()}
+          onClick={onAdd}
         />
       </div>
       {failed && (
         <Text size="xs" c="var(--c-danger)" role="alert">
           {t(
             "certSign.appearance.graphic.savedFailed",
-            "That signature could not be used. Try another or upload an image.",
+            "That signature could not be used. Try another or add a new one.",
           )}
         </Text>
       )}
-      <input
-        ref={input}
-        type="file"
-        accept={ACCEPT}
-        hidden
-        onChange={(event) => {
-          const file = event.currentTarget.files?.[0];
-          event.currentTarget.value = "";
-          if (file) {
-            setFailed(false);
-            onChange(file);
-          }
-        }}
-      />
     </div>
   );
 }

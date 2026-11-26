@@ -28,7 +28,12 @@ const Demo = ({ saved }: { saved: typeof SAVED }) => {
   const [file, setFile] = useState<File | undefined>();
   return (
     <div style={{ width: 320 }}>
-      <SignatureImagePicker saved={saved} value={file} onChange={setFile} />
+      <SignatureImagePicker
+        saved={saved}
+        value={file}
+        onChange={setFile}
+        onAdd={() => {}}
+      />
     </div>
   );
 };

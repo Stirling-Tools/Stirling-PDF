@@ -2797,16 +2797,15 @@ visible = "Visible"
 remove = "Remove {{detail}}"
 
 [certSign.appearance.graphic]
+add = "Add"
 certificateDetails = "Certificate details"
 image = "Image"
 imageHint = "A handwritten signature or seal, PNG or JPEG"
 imageTitle = "Signature image"
 name = "Name"
 none = "None"
-savedFailed = "That signature could not be used. Try another or upload an image."
-savedLabel = "Signature"
+savedFailed = "That signature could not be used. Try another or add a new one."
 title = "Beside the details"
-upload = "Upload"
 watermark = "Logo behind signature"
 
 [certSign.appearance.options]

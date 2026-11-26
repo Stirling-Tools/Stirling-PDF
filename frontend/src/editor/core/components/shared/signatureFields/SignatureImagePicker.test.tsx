@@ -10,16 +10,22 @@ const saved = [
 
 function renderPicker(value?: File) {
   const onChange = vi.fn();
-  const { container } = render(
+  const onAdd = vi.fn();
+  render(
     <MantineProvider>
-      <SignatureImagePicker saved={saved} value={value} onChange={onChange} />
+      <SignatureImagePicker
+        saved={saved}
+        value={value}
+        onChange={onChange}
+        onAdd={onAdd}
+      />
     </MantineProvider>,
   );
-  return { onChange, container };
+  return { onChange, onAdd };
 }
 
 describe("SignatureImagePicker", () => {
-  test("offers every saved signature beside the upload tile", () => {
+  test("offers every saved signature beside the add tile", () => {
     renderPicker();
 
     expect(
@@ -28,31 +34,28 @@ describe("SignatureImagePicker", () => {
     expect(screen.getByRole("button", { name: "Initials" })).toBeTruthy();
     expect(
       screen.getByRole("button", {
-        name: "certSign.appearance.graphic.upload",
+        name: "certSign.appearance.graphic.add",
       }),
     ).toBeTruthy();
   });
 
-  test("reports an uploaded image", () => {
-    const { onChange, container } = renderPicker();
-    const file = new File(["x"], "seal.png", { type: "image/png" });
+  test("asks for a new signature from the add tile", () => {
+    const { onAdd } = renderPicker();
 
-    const input =
-      container.querySelector<HTMLInputElement>("input[type=file]")!;
-    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.click(
+      screen.getByRole("button", { name: "certSign.appearance.graphic.add" }),
+    );
 
-    expect(onChange).toHaveBeenCalledWith(file);
+    expect(onAdd).toHaveBeenCalled();
   });
 
-  test("shows an uploaded image as the chosen tile", () => {
+  test("shows a new unsaved signature as the chosen tile", () => {
     globalThis.URL.createObjectURL = vi.fn(() => "blob:seal");
     globalThis.URL.revokeObjectURL = vi.fn();
     renderPicker(new File(["x"], "seal.png", { type: "image/png" }));
 
     expect(
-      screen
-        .getByRole("button", { name: "seal.png" })
-        .getAttribute("aria-pressed"),
+      screen.getByRole("button", { name: "seal" }).getAttribute("aria-pressed"),
     ).toBe("true");
     expect(
       screen
