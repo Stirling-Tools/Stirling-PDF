@@ -5,7 +5,7 @@
 //! rotates pages for viewing only; the file is never modified.
 
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::c_void;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::Ordering;
@@ -49,7 +49,8 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WM_VSCROLL, WNDCLASSW, WS_CHILD, WS_CLIPCHILDREN, WS_VISIBLE, WS_VSCROLL,
 };
 
-use crate::{bytes_to_random_access_stream, read_istream_to_vec, render_page, DLL_REF_COUNT};
+use crate::render_worker::{RenderKey, RenderWorker, WM_RENDERED};
+use crate::{bytes_to_random_access_stream, read_istream_to_vec, DLL_REF_COUNT};
 
 // CLSID for the preview handler -- must match WiX registry entries
 pub(crate) const CLSID_STIRLING_PREVIEW: GUID =
@@ -137,6 +138,7 @@ impl PreviewHandler {
             scroll: 0,
             resizing: false,
             cache: HashMap::new(),
+            worker: None,
         });
         let hwnd = create_view_window(self.parent.get(), self.rect.get(), view)?;
         self.hwnd.set(hwnd);
@@ -300,6 +302,8 @@ struct View {
     resizing: bool,
     // page index -> (rendered width, rendered height, turns, bitmap)
     cache: HashMap<u32, (i32, i32, u8, HBITMAP)>,
+    // Renders pages off the window thread; started once the window exists
+    worker: Option<RenderWorker>,
 }
 
 struct PageSlot {
@@ -342,29 +346,50 @@ impl View {
         (slots, top - GAP + MARGIN)
     }
 
-    // Returns the bitmap and its pixel size, which differs from the slot while resizing
-    fn bitmap_for(&mut self, index: u32, width: i32, height: i32) -> Option<(HBITMAP, i32, i32)> {
-        let turns = self.turns[index as usize];
-        if let Some(&(cached_w, cached_h, cached_turns, bmp)) = self.cache.get(&index) {
-            if cached_turns == turns && (cached_w == width || self.resizing) {
-                return Some((bmp, cached_w, cached_h));
+    fn key_for(&self, index: u32, width: i32, height: i32) -> RenderKey {
+        RenderKey {
+            index,
+            width,
+            height,
+            turns: self.turns[index as usize],
+        }
+    }
+
+    // Best bitmap available now and its pixel size, which may differ from the slot
+    // (stretched) while a fresh render is pending. None shows a blank page.
+    fn bitmap_for(&mut self, key: RenderKey) -> Option<(HBITMAP, i32, i32)> {
+        let cached = self.cache.get(&key.index).copied();
+        let exact =
+            cached.is_some_and(|(w, h, t, _)| (w, h, t) == (key.width, key.height, key.turns));
+        if !exact && !self.resizing {
+            if let Some(worker) = &mut self.worker {
+                worker.request(key);
             }
         }
-        if let Some((_, _, _, old)) = self.cache.remove(&index) {
-            unsafe {
-                let _ = DeleteObject(old);
-            }
-        }
-        // Render unrotated, then turn the pixels so the result fills width x height
-        let (rw, rh) = if turns % 2 == 1 {
-            (height, width)
-        } else {
-            (width, height)
+        cached
+            .filter(|&(_, _, turns, _)| turns == key.turns)
+            .map(|(w, h, _, bmp)| (bmp, w, h))
+    }
+
+    // Collect finished renders; only keep ones still matching the page's rotation
+    fn collect_rendered(&mut self) {
+        let Some(worker) = &mut self.worker else {
+            return;
         };
-        let page = self.doc.GetPage(index).ok()?;
-        let bmp = render_page(&page, rw as u32, rh as u32, turns).ok()?;
-        self.cache.insert(index, (width, height, turns, bmp));
-        Some((bmp, width, height))
+        for (key, bmp) in worker.take_done() {
+            let current = self.turns.get(key.index as usize) == Some(&key.turns);
+            let old = if current {
+                self.cache
+                    .insert(key.index, (key.width, key.height, key.turns, bmp))
+            } else {
+                Some((0, 0, 0, bmp))
+            };
+            if let Some((_, _, _, old)) = old {
+                unsafe {
+                    let _ = DeleteObject(old);
+                }
+            }
+        }
     }
 
     fn page_at(&self, client_w: i32, client_y: i32) -> Option<u32> {
@@ -463,6 +488,8 @@ fn create_view_window(parent: HWND, rect: RECT, view: Box<View>) -> windows::cor
         .inspect_err(|_| {
             let _ = UnregisterClassW(CLASS_NAME, instance);
         })?;
+        let mut view = view;
+        view.worker = Some(RenderWorker::spawn(view.doc.clone(), hwnd));
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, Box::into_raw(view) as isize);
         update_scrollbar(hwnd);
         let _ = InvalidateRect(hwnd, None, true);
@@ -540,8 +567,20 @@ unsafe fn paint(hwnd: HWND) {
             .iter()
             .filter(|s| s.rect.bottom - view.scroll > 0 && s.rect.top - view.scroll < h)
             .collect();
+        let keys: Vec<RenderKey> = visible
+            .iter()
+            .map(|s| {
+                let (pw, ph) = (s.rect.right - s.rect.left, s.rect.bottom - s.rect.top);
+                view.key_for(s.index, pw, ph)
+            })
+            .collect();
+        if !view.resizing {
+            if let Some(worker) = &mut view.worker {
+                worker.set_wanted(keys.iter().copied().collect::<HashSet<_>>());
+            }
+        }
         let page_dc = CreateCompatibleDC(hdc);
-        for slot in &visible {
+        for (slot, key) in visible.iter().zip(&keys) {
             let r = RECT {
                 left: slot.rect.left,
                 top: slot.rect.top - view.scroll,
@@ -549,7 +588,7 @@ unsafe fn paint(hwnd: HWND) {
                 bottom: slot.rect.bottom - view.scroll,
             };
             let (pw, ph) = (r.right - r.left, r.bottom - r.top);
-            match view.bitmap_for(slot.index, pw, ph) {
+            match view.bitmap_for(*key) {
                 Some((bmp, bw, bh)) => {
                     let old = SelectObject(page_dc, bmp);
                     if (bw, bh) == (pw, ph) {
@@ -654,6 +693,12 @@ unsafe fn handle_message(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -
     match msg {
         WM_CONTEXTMENU => show_rotate_menu(hwnd, lparam),
         WM_PAINT => paint(hwnd),
+        WM_RENDERED => {
+            if let Some(view) = view_of(hwnd) {
+                view.collect_rendered();
+            }
+            let _ = InvalidateRect(hwnd, None, false);
+        }
         WM_ERASEBKGND => return Some(LRESULT(1)),
         WM_SIZE => {
             if let Some(view) = view_of(hwnd) {

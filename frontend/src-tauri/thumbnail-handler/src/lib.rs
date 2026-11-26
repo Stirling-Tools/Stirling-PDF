@@ -5,6 +5,7 @@
 //! Also hosts the Explorer preview pane handler (see `preview`).
 
 mod preview;
+mod render_worker;
 
 use std::cell::RefCell;
 use std::ffi::c_void;
