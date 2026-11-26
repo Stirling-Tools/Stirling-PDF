@@ -1,3 +1,4 @@
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import {
   Stack,
   TextInput,
@@ -72,10 +73,6 @@ const SplitSettings = ({
         onChange={(value) =>
           onParameterChange("splitMode", value || "SPLIT_ALL")
         }
-        description={t(
-          "split-by-sections.splitMode.description",
-          "Choose how to split the pages",
-        )}
         data={[
           {
             value: "SPLIT_ALL",
@@ -219,9 +216,12 @@ const SplitSettings = ({
       </Anchor>
 
       <Checkbox
-        label={t(
-          "autoSplitPDF.duplexMode",
-          "Duplex Mode (Front and back scanning)",
+        {...infoLabelProps(
+          t("autoSplitPDF.duplexMode", "Duplex mode"),
+          t(
+            "autoSplitPDF.duplexModeDesc",
+            "Turn on when the pages were scanned front and back.",
+          ),
         )}
         checked={parameters.duplexMode}
         onChange={(e) =>
@@ -235,10 +235,12 @@ const SplitSettings = ({
   const renderByPosterForm = () => (
     <Stack gap="sm">
       <Select
-        label={t("split.poster.pageSize.label", "Target Page Size")}
-        description={t(
-          "split.poster.pageSize.description",
-          "Size of output pages for printing",
+        {...infoLabelProps(
+          t("split.poster.pageSize.label", "Target Page Size"),
+          t(
+            "split.poster.pageSize.description",
+            "Size of output pages for printing",
+          ),
         )}
         value={parameters.pageSize || "A4"}
         onChange={(value) => onParameterChange("pageSize", value || "A4")}
@@ -284,10 +286,12 @@ const SplitSettings = ({
         }}
       />
       <TextInput
-        label={t("split.poster.xFactor.label", "Horizontal Divisions")}
-        description={t(
-          "split.poster.xFactor.description",
-          "Number of columns to split each page into",
+        {...infoLabelProps(
+          t("split.poster.xFactor.label", "Horizontal Divisions"),
+          t(
+            "split.poster.xFactor.description",
+            "Number of columns to split each page into",
+          ),
         )}
         type="number"
         min="1"
@@ -298,10 +302,12 @@ const SplitSettings = ({
         disabled={disabled}
       />
       <TextInput
-        label={t("split.poster.yFactor.label", "Vertical Divisions")}
-        description={t(
-          "split.poster.yFactor.description",
-          "Number of rows to split each page into",
+        {...infoLabelProps(
+          t("split.poster.yFactor.label", "Vertical Divisions"),
+          t(
+            "split.poster.yFactor.description",
+            "Number of rows to split each page into",
+          ),
         )}
         type="number"
         min="1"

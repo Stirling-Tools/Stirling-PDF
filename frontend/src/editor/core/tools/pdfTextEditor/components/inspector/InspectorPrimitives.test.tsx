@@ -13,18 +13,17 @@ function renderField() {
       </Field>
     </MantineProvider>,
   );
-  return screen.getByRole("img", { name: HINT });
+  return screen.getByRole("button", { name: HINT });
 }
 
 describe("Field hint", () => {
   it("shows the hint when the pointer rests on its icon", async () => {
-    fireEvent.mouseEnter(renderField());
+    fireEvent.pointerEnter(renderField());
     expect(await screen.findByRole("tooltip")).toHaveTextContent(HINT);
   });
 
   it("shows the hint when its icon takes keyboard focus", async () => {
     const icon = renderField();
-    expect(icon).toHaveAttribute("tabindex", "0");
     fireEvent.focus(icon);
     expect(await screen.findByRole("tooltip")).toHaveTextContent(HINT);
   });

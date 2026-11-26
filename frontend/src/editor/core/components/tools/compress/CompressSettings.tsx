@@ -3,12 +3,11 @@ import {
   Text,
   NumberInput,
   Select,
-  Divider,
   Checkbox,
   Slider,
-  Tooltip,
   Box,
 } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import SliderWithInput from "@editor/components/shared/sliderWithInput/SliderWithInput";
 import { useTranslation } from "react-i18next";
@@ -20,6 +19,7 @@ import {
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { useGroupEnabled } from "@editor/hooks/useGroupEnabled";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
@@ -41,8 +41,6 @@ const CompressSettings = ({
 
   return (
     <Stack gap="md">
-      <Divider ml="-md"></Divider>
-      {/* Compression Method */}
       <ButtonSelector
         label={t("compress.method.title", "Compression Method")}
         value={parameters.compressionMethod}
@@ -60,7 +58,6 @@ const CompressSettings = ({
       {/* Quality Adjustment */}
       {parameters.compressionMethod === "quality" && (
         <Stack gap="md">
-          <Divider />
           <SliderWithInput
             label={t(
               "compress.tooltip.qualityAdjustment.title",
@@ -94,8 +91,6 @@ const CompressSettings = ({
           </Text>
         </Stack>
       )}
-
-      <Divider />
 
       {/* File Size Input */}
       {parameters.compressionMethod === "filesize" && (
@@ -171,7 +166,7 @@ const CompressSettings = ({
         </Stack>
 
         <Tooltip
-          label={
+          content={
             lineArtReason ??
             t(
               "compress.lineArt.unavailable",
@@ -179,8 +174,9 @@ const CompressSettings = ({
             )
           }
           disabled={lineArtAvailable !== false}
-          multiline
-          maw={280}
+          position="top"
+          arrow
+          maxWidth={280}
         >
           <Box
             style={{
@@ -193,18 +189,15 @@ const CompressSettings = ({
                 onParameterChange("lineArt", event.currentTarget.checked)
               }
               disabled={disabled || lineArtAvailable === false}
-              label={t(
-                "compress.lineArt.label",
-                "Convert images to line art (bilevel)",
-              )}
-              description={
+              {...infoLabelProps(
+                t("compress.lineArt.label", "Convert images to line art"),
                 lineArtAvailable !== false
                   ? t(
                       "compress.lineArt.description",
                       "Reduces images to high-contrast black and white for maximum size reduction.",
                     )
-                  : undefined
-              }
+                  : undefined,
+              )}
               style={{
                 pointerEvents: lineArtAvailable === false ? "none" : undefined,
               }}

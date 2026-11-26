@@ -13,6 +13,7 @@ vi.mock("@editor/services/documentPrivacyService", () => ({
 }));
 
 import { create } from "@editor/services/tauriHttpClient";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
 function okJson() {
   return {
@@ -193,5 +194,68 @@ describe("tauriHttpClient - FormData uploads", () => {
 
     expect(sent.get("fileInput")).toBe(original);
     expect(sent.get("accountId")).toBe("33");
+  });
+});
+
+function failedJson(status: number, body: string) {
+  return {
+    ok: false,
+    status,
+    statusText: "",
+    headers: new Headers({ "content-type": "application/json" }),
+    text: async () => body,
+  };
+}
+
+async function errorData(
+  response: ReturnType<typeof failedJson>,
+  responseType?: "json" | "text" | "blob",
+): Promise<unknown> {
+  fetchMock.mockResolvedValue(response);
+  const client = create({ baseURL: "https://api.test" });
+  try {
+    await client.get("/api/v1/example", { responseType });
+  } catch (error) {
+    return (error as { response?: { data?: unknown } }).response?.data;
+  }
+  throw new Error("expected the request to fail");
+}
+
+// Core panels read the server's reason from error.response.data the way axios
+// shapes it; a raw string there loses the message on desktop.
+describe("tauriHttpClient — error response bodies", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    allowConsole.error(/\[TauriHttpClient\]/);
+  });
+
+  test("parses a JSON error body", async () => {
+    await expect(
+      errorData(failedJson(500, '{"message":"The form could not be saved."}')),
+    ).resolves.toEqual({ message: "The form could not be saved." });
+  });
+
+  test("keeps a body that is not JSON as text", async () => {
+    await expect(errorData(failedJson(400, "Bad page range"))).resolves.toBe(
+      "Bad page range",
+    );
+  });
+
+  test("gives a Blob for a blob request", async () => {
+    const data = await errorData(
+      failedJson(500, '{"message":"Detection failed"}'),
+      "blob",
+    );
+    expect(data).toBeInstanceOf(Blob);
+    await expect((data as Blob).text()).resolves.toBe(
+      '{"message":"Detection failed"}',
+    );
+    expect((data as Blob).type).toBe("application/json");
+  });
+
+  test("gives text for a text request", async () => {
+    await expect(
+      errorData(failedJson(500, '{"message":"x"}'), "text"),
+    ).resolves.toBe('{"message":"x"}');
   });
 });

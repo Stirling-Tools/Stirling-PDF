@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SignaturePlacementStep } from "@editor/components/tools/certSign/steps/SignaturePlacementStep";
 
 const meta = {
-  title: "Tools/CertSign/SignaturePlacementStep",
+  title: "Tools/Sign with Certificate/Parts/SignaturePlacementStep",
   component: SignaturePlacementStep,
 } satisfies Meta<typeof SignaturePlacementStep>;
 export default meta;

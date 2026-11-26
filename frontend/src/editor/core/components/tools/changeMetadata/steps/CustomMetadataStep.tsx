@@ -41,15 +41,6 @@ const CustomMetadataStep = ({
         </Button>
       </Group>
 
-      {parameters.customMetadata.length > 0 && (
-        <Text size="xs" c="dimmed">
-          {t(
-            "changeMetadata.customFields.description",
-            "Add custom metadata fields to the document",
-          )}
-        </Text>
-      )}
-
       {parameters.customMetadata.map((entry) => (
         <Stack key={entry.id} gap="xs">
           <TextInput

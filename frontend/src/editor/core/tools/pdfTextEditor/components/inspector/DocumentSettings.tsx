@@ -7,6 +7,7 @@ import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 import { Icon } from "@editor/ui/Icon";
 import { SpellcheckControl } from "@editor/tools/pdfTextEditor/components/SpellcheckControl";
 import {
+  Field,
   Section,
   SectionLabel,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
@@ -30,7 +31,7 @@ interface Props {
  * View toggles are everyday and sit in plain sight. The two parse options are
  * not: they change how the document was read, and switching grouping reloads
  * it and discards undo history - so they go behind a disclosure where nobody
- * flips one by accident, with the consequence spelled out next to the control.
+ * flips one by accident, with the consequence behind the control's (i).
  */
 export function DocumentSettings({
   groupingMode,
@@ -96,10 +97,14 @@ export function DocumentSettings({
         </Button>
         <Collapse in={advancedOpen}>
           <Stack gap="md" mt="sm">
-            <Stack gap={4} data-testid="pdf-editor-grouping-mode">
-              <Text size="xs" c="dimmed" fw={500}>
-                {t("pdfTextEditor.sidebar.textGrouping", "Text grouping")}
-              </Text>
+            <Field
+              label={t("pdfTextEditor.sidebar.textGrouping", "Text grouping")}
+              hint={t(
+                "pdfTextEditor.sidebar.groupingAutoHint",
+                "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history.",
+              )}
+              testId="pdf-editor-grouping-mode"
+            >
               <Box data-testid="pdf-editor-grouping-mode-control">
                 <SegmentedControl
                   size="xs"
@@ -118,17 +123,18 @@ export function DocumentSettings({
                   ]}
                 />
               </Box>
-              <Text size="xs" c="dimmed">
-                {t(
-                  "pdfTextEditor.sidebar.groupingAutoHint",
-                  "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history.",
-                )}
-              </Text>
-            </Stack>
-            <Stack gap={4} data-testid="pdf-editor-width-mode">
-              <Text size="xs" c="dimmed" fw={500}>
-                {t("pdfTextEditor.sidebar.textBoxWidth", "New text box width")}
-              </Text>
+            </Field>
+            <Field
+              label={t(
+                "pdfTextEditor.sidebar.textBoxWidth",
+                "New text box width",
+              )}
+              hint={t(
+                "pdfTextEditor.sidebar.widthGrowHint",
+                "Grow widens a box as you type; Wrap keeps its width and flows onto new lines.",
+              )}
+              testId="pdf-editor-width-mode"
+            >
               <Box data-testid="pdf-editor-width-mode-control">
                 <SegmentedControl
                   size="xs"
@@ -147,13 +153,7 @@ export function DocumentSettings({
                   ]}
                 />
               </Box>
-              <Text size="xs" c="dimmed">
-                {t(
-                  "pdfTextEditor.sidebar.widthGrowHint",
-                  "Grow widens a box as you type; Wrap keeps its width and flows onto new lines.",
-                )}
-              </Text>
-            </Stack>
+            </Field>
           </Stack>
         </Collapse>
       </Section>

@@ -1,7 +1,8 @@
-import { Divider, Select, Stack, TextInput } from "@mantine/core";
+import { Select, Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ReorganizePagesParameters } from "@editor/hooks/tools/reorganizePages/useReorganizePagesParameters";
 import { getReorganizePagesModeData } from "@editor/components/tools/reorganizePages/constants";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 export default function ReorganizePagesSettings({
@@ -25,9 +26,12 @@ export default function ReorganizePagesSettings({
     modeData.find((mode) => mode.value === parameters.customMode) ||
     modeData[0];
   return (
-    <Stack gap="sm">
+    <Stack gap="md">
       <Select
-        label={t("pdfOrganiser.mode._value", "Organization mode")}
+        {...infoLabelProps(
+          t("pdfOrganiser.mode._value", "Organization mode"),
+          selectedMode?.description,
+        )}
         data={modeData}
         value={parameters.customMode}
         onChange={(v) => onParameterChange("customMode", v ?? "")}
@@ -37,35 +41,26 @@ export default function ReorganizePagesSettings({
           zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
         }}
       />
-      {selectedMode && (
-        <div
-          style={{
-            backgroundColor: "var(--c-surface)",
-            color: "var(--information-text-color)",
-            padding: "8px 12px",
-            borderRadius: "8px",
-            marginTop: "4px",
-            fontSize: "0.75rem",
-            textAlign: "center",
-          }}
-        >
-          {selectedMode.description}
-        </div>
-      )}
 
       {requiresOrder && (
-        <>
-          <Divider />
-          <TextInput
-            label={t("pageOrderPrompt", "Page order / ranges")}
-            placeholder={t("pdfOrganiser.placeholder", "e.g. 1,3,2,4-6")}
-            value={parameters.pageNumbers}
-            onChange={(e) =>
-              onParameterChange("pageNumbers", e.currentTarget.value)
-            }
-            disabled={disabled}
-          />
-        </>
+        <TextInput
+          {...infoLabelProps(
+            t("pageOrderPrompt", "Page Order"),
+            t(
+              "reorganizePages.pageOrder.info",
+              "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make.",
+            ),
+          )}
+          placeholder={t(
+            "pdfOrganiser.placeholder",
+            "(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)",
+          )}
+          value={parameters.pageNumbers}
+          onChange={(e) =>
+            onParameterChange("pageNumbers", e.currentTarget.value)
+          }
+          disabled={disabled}
+        />
       )}
     </Stack>
   );

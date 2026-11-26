@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useCertificateTypeTips = (): TooltipContent => {
+export const useCertificateTypeTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {

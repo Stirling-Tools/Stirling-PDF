@@ -71,6 +71,9 @@ function Wizard({ owesPassword = false }: WizardProps) {
 /** First-run setup, rendered by the real wizard against a mocked new server;
  *  each story clicks through the flow to reach its card. */
 const meta = {
+  // On desktop the wizard runs for a signed-in self-hosted server, whose
+  // address fills the Addresses step; these stories start with no server.
+  tags: ["not-in-desktop"],
   title: "Server Setup/Steps",
   component: Wizard,
   parameters: { layout: "fullscreen", msw: { handlers: newServer } },

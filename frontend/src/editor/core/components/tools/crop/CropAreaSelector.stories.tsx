@@ -20,7 +20,7 @@ const pdfBounds: PDFBounds = {
 };
 
 const meta = {
-  title: "Tools/Crop/CropAreaSelector",
+  title: "Tools/Crop PDF/Parts/CropAreaSelector",
   component: CropAreaSelector,
   parameters: { layout: "padded" },
   // Every story below supplies its own `render`, which ignores these args, but

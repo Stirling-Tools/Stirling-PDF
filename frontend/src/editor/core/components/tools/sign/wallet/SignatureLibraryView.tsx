@@ -110,7 +110,7 @@ export function SignatureLibraryView({
       {library.shared.length > 0 && (
         <SignatureSection
           title={t("sign.wallet.shared", "Shared")}
-          meta={t("sign.wallet.sharedHint", "Everyone can use these")}
+          info={t("sign.wallet.sharedHint", "Everyone can use these")}
           icon="users"
         >
           {library.shared.map(savedTile)}

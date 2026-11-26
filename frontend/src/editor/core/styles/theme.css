@@ -187,6 +187,8 @@
   /* Colors for tooltips */
   --tooltip-header-bg: var(--p-blue-700);
   --tooltip-header-color: white;
+  --tooltip-pinned-header-bg: var(--tooltip-header-bg);
+  --tooltip-pinned-header-color: var(--tooltip-header-color);
   --tooltip-border: var(--c-border);
 
   /* Inactive icon colors for light mode */
@@ -453,6 +455,10 @@
   /* Dark mode tooltip colors */
   --tooltip-header-bg: var(--c-surface-raised);
   --tooltip-header-color: var(--c-text);
+  /* Light mode's header blue, so a pinned tooltip reads as pinned on a dark
+     surface too. White on blue 700 is 6.7:1; white on --c-primary fails 4.5:1. */
+  --tooltip-pinned-header-bg: var(--p-blue-700);
+  --tooltip-pinned-header-color: var(--p-white);
   --tooltip-border: var(--c-border);
 
   --text-brand-accent: var(--p-red-500);
@@ -549,7 +555,7 @@
   --dropdown-trigger-icon: var(--mantine-color-dark-2);
   --dropdown-panel-bg: var(--mantine-color-dark-7);
   --dropdown-panel-border: var(--mantine-color-dark-4);
-  --dropdown-group-label: var(--mantine-color-dark-2);
+  --dropdown-group-label: var(--c-text-muted);
 
   /* PDF Link Overlay (viewer) */
   --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 14%, transparent);

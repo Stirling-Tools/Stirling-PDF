@@ -104,14 +104,13 @@ const RemovePassword = (props: BaseToolProps) => {
         tooltip: removePasswordTips,
         content: (
           <Stack gap="sm">
-            <Text size="xs" c="dimmed">
+            <Text size="xs" style={{ color: "var(--c-text-muted)" }}>
               {t(
                 "removePassword.keepBlank",
                 "Leave a field blank to keep that password.",
               )}
             </Text>
             <PasswordInput
-              size="xs"
               label={t(
                 "encryptedPdfUnlock.openingPassword",
                 "Password to open",
@@ -125,7 +124,6 @@ const RemovePassword = (props: BaseToolProps) => {
               autoComplete="off"
             />
             <PasswordInput
-              size="xs"
               label={t(
                 "encryptedPdfUnlock.ownerPassword",
                 "Permissions password",

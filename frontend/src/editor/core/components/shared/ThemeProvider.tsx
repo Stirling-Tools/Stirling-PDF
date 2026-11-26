@@ -29,6 +29,7 @@ import "@editor/theme/index.css";
 interface ThemeContextType {
   themeMode: ThemeMode;
   setTheme: (mode: ThemeMode) => void;
+  forcedTheme?: ColorScheme;
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -45,12 +46,20 @@ interface ThemeProviderProps {
   children: ReactNode;
   /**
    * Pins the scheme without reading or saving the preference, for hosts that
-   * own the theme such as Storybook's toolbar. setTheme is a no-op while set.
+   * own the theme such as Storybook's toolbar. setTheme is a no-op while set,
+   * and a ThemeProvider nested inside inherits the pin.
    */
   forcedTheme?: ColorScheme;
 }
 
-export function ThemeProvider({ children, forcedTheme }: ThemeProviderProps) {
+export function ThemeProvider({
+  children,
+  forcedTheme: ownForcedTheme,
+}: ThemeProviderProps) {
+  // A nested provider (the editor's own, inside a story) keeps the outer pin, or it
+  // would rewrite <html> from the preference and undo the host's theme.
+  const outer = useContext(ThemeContext);
+  const forcedTheme = ownForcedTheme ?? outer?.forcedTheme;
   // preferences.theme is the single source of truth.
   const { preferences, updatePreference } = usePreferences();
   const themeMode = forcedTheme ?? preferences.theme;
@@ -93,8 +102,8 @@ export function ThemeProvider({ children, forcedTheme }: ThemeProviderProps) {
   }, [colorScheme]);
 
   const value = useMemo<ThemeContextType>(
-    () => ({ themeMode, setTheme }),
-    [themeMode, setTheme],
+    () => ({ themeMode, setTheme, forcedTheme }),
+    [themeMode, setTheme, forcedTheme],
   );
 
   return (

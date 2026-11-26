@@ -1,0 +1,32 @@
+/* Read as the field's description, not shown: the (i) shows it on demand. */
+.infoText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-inline-start: 0.25rem;
+}
+
+/* The description holds only hidden text, so it takes no room beside the label. */
+:global(.mantine-InputWrapper-description):has(> .infoText) {
+  display: inline;
+}
+
+:global([class*="-labelWrapper"]):has(> .infoButton) {
+  flex-direction: row;
+  align-items: center;
+}
+
+:global([class*="-labelWrapper"])
+  > :global([class*="-description"]):has(> .infoText) {
+  margin: 0;
+  padding: 0;
+}

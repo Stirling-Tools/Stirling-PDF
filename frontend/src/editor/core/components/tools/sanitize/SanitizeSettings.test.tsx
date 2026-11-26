@@ -165,22 +165,50 @@ describe("SanitizeSettings", () => {
       </TestWrapper>,
     );
 
-    // Verify that translation keys are being called (just check that it was called, not specific order)
     expect(mockT).toHaveBeenCalledWith(
-      "sanitize.options.title",
+      "sanitize.options.removeJavaScript.label",
       expect.any(String),
     );
     expect(mockT).toHaveBeenCalledWith(
-      "sanitize.options.removeJavaScript.label",
+      "sanitize.options.removeJavaScript.desc",
       expect.any(String),
     );
     expect(mockT).toHaveBeenCalledWith(
       "sanitize.options.removeEmbeddedFiles.label",
       expect.any(String),
     );
-    expect(mockT).toHaveBeenCalledWith(
-      "sanitize.options.note",
-      expect.any(String),
+  });
+
+  test("should warn only when no option is selected", () => {
+    const noneSelected: SanitizeParameters = {
+      removeJavaScript: false,
+      removeEmbeddedFiles: false,
+      removeXMPMetadata: false,
+      removeMetadata: false,
+      removeLinks: false,
+      removeFonts: false,
+    };
+
+    const { rerender } = render(
+      <TestWrapper>
+        <SanitizeSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    rerender(
+      <TestWrapper>
+        <SanitizeSettings
+          parameters={noneSelected}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "mock-sanitize.options.noneSelected",
     );
   });
 

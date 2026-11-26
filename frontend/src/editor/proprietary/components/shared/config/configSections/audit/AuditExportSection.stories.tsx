@@ -1,10 +1,24 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { http, HttpResponse } from "msw";
 import AuditExportSection from "@editor/components/shared/config/configSections/audit/AuditExportSection";
 
 const meta = {
   title: "Config/AuditExportSection",
   component: AuditExportSection,
-  parameters: { layout: "padded" },
+  parameters: {
+    layout: "padded",
+    // The filters read these on mount; an unanswered read is not a list.
+    msw: {
+      handlers: [
+        http.get("*/api/v1/proprietary/ui-data/audit-event-types", () =>
+          HttpResponse.json(["USER_LOGIN", "USER_LOGOUT", "PDF_PROCESS"]),
+        ),
+        http.get("*/api/v1/proprietary/ui-data/audit-users", () =>
+          HttpResponse.json(["admin", "editor"]),
+        ),
+      ],
+    },
+  },
   args: {
     loginEnabled: true,
     captureFileHash: false,

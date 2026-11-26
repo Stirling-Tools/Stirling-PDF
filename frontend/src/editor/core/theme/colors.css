@@ -41,8 +41,12 @@ html[data-app-theme="light"] {
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+  /* Danger as text: --c-danger is tuned for icons and borders (3:1). */
+  --c-danger-text: var(--p-red-700);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-600);
+  /* Warning as text: --c-warning is tuned for icons and borders (3:1). */
+  --c-warning-text: var(--p-amber-700);
   /* Solid fills that carry a white label. Deeper than the --c-<tone> values
      above, which are picked for surfaces, borders and icons where the 3:1
      non-text floor applies. Scheme-independent: a filled badge reads white on
@@ -158,7 +162,7 @@ html[data-app-theme="midnight"] {
   --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-650);
   --c-surface-sunken: var(--p-c-100f0e);
-  --c-input-bg: var(--c-surface);
+  --c-input-bg: var(--c-surface-raised);
   --c-modal-surface: var(--c-surface);
   --c-hover: var(--p-gray-800);
   --c-active: var(--p-gray-800);
@@ -186,8 +190,10 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
+  --c-danger-text: var(--p-red-400);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
+  --c-warning-text: var(--p-amber-400);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
   --c-file-header-resting: var(--p-navy-950);
@@ -371,7 +377,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   );
   /* Neutral recess (see light): no accent mix, so the sunken well stays a plain near-black. */
   --c-surface-sunken: var(--p-c-100f0e);
-  --c-input-bg: var(--c-surface);
+  --c-input-bg: var(--c-surface-raised);
   --c-hover: color-mix(in srgb, var(--c-primary) 12%, var(--p-zinc-750));
   --c-active: color-mix(in srgb, var(--c-primary) 15%, var(--p-zinc-700));
   --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-c-28282d));
@@ -384,8 +390,10 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
+  --c-danger-text: var(--p-red-400);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
+  --c-warning-text: var(--p-amber-400);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
   --c-file-header-resting: var(--p-navy-950);
@@ -435,7 +443,7 @@ html[data-app-theme="custom"][data-accent="default"][data-mantine-color-scheme="
   --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-775);
   --c-surface-sunken: var(--p-c-100f0e);
-  --c-input-bg: var(--c-surface);
+  --c-input-bg: var(--c-surface-raised);
   --c-hover: var(--p-zinc-750);
   --c-active: var(--p-zinc-700);
   --c-border: var(--p-c-28282d);

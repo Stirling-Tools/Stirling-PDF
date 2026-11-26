@@ -32,9 +32,13 @@ const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
   const formData = new FormData();
   formData.append("file", file);
 
+  // The backend lists bookmark extraction under this tool's endpoint; without
+  // the key, desktop routing finds no local `extract-bookmarks` endpoint and
+  // asks for an account instead of using the bundled backend.
   const response = await apiClient.post(
     "/api/v1/general/extract-bookmarks",
     formData,
+    { endpointName: "edit-table-of-contents" },
   );
 
   return response.data as BookmarkPayload[];
@@ -433,6 +437,32 @@ const EditTableOfContents = (props: BaseToolProps) => {
       {
         title: t("editTableOfContents.settings.title", "Bookmarks & outline"),
         isCollapsed: false,
+        tooltip: {
+          header: {
+            title: t(
+              "editTableOfContents.tooltip.header.title",
+              "About Bookmarks",
+            ),
+          },
+          tips: [
+            {
+              bullets: [
+                t(
+                  "editTableOfContents.info.line1",
+                  "Each bookmark needs a descriptive title and the page it should open.",
+                ),
+                t(
+                  "editTableOfContents.info.line2",
+                  "Use child bookmarks to build a hierarchy for chapters, sections, or subsections.",
+                ),
+                t(
+                  "editTableOfContents.info.line3",
+                  "Import bookmarks from the selected PDF or from a JSON file to save time.",
+                ),
+              ],
+            },
+          ],
+        },
         content: (
           <EditTableOfContentsSettings
             bookmarks={base.params.parameters.bookmarks}

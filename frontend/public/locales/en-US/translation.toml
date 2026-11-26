@@ -47,7 +47,6 @@ fileSelected = "{{filename}}"
 filesSelected = "{{count}} files"
 font = "Font"
 fontSizeTooltip = "Size of the page number text in points. Larger numbers create bigger text."
-fontTypeTooltip = "Font family for the page numbers. Choose based on your document style."
 green = "Green"
 help = "Help"
 incorrectPasswordMessage = "Current password is incorrect."
@@ -77,7 +76,7 @@ openInViewer = "Open in Viewer"
 operationCancelled = "Operation canceled"
 page = "Page"
 pageNum = "Page Number"
-pageOrderPrompt = "Custom Page Order (Enter a comma-separated list of page numbers or Functions like 2n+1) :"
+pageOrderPrompt = "Page Order"
 pages = "Pages"
 pageSelectionPrompt = "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)"
 password = "Password"
@@ -252,9 +251,7 @@ image = "Upload"
 text = "Text"
 
 [addImage.step]
-createDesc = "Upload the image you want to add"
 place = "Place image"
-placeDesc = "Click on the PDF to add your image"
 
 [addImage.steps]
 configure = "Configure Image"
@@ -273,20 +270,20 @@ saved = "Saved"
 text = "Text"
 
 [addPageNumbers]
-customize = "Customize Appearance"
+customize = "Appearance"
 customNumberDesc = "e.g., \"Page {n}\" or leave blank for just numbers"
 fontName = "Font Name"
 fontSize = "Font Size"
-numberPagesDesc = "e.g., 1,3,5-8 or leave blank for all pages"
+numberPagesDesc = "All pages"
 pagePreviewAlt = "Page preview"
-pagesAndStarting = "Pages & Starting Number"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Position & Pages"
 preview = "Position Selection"
 previewDisclaimer = "Preview is approximate. Final output may vary due to PDF font metrics."
 submit = "Add Page Numbers"
 tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
-zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPad = "Zero-pad Width"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.error]
@@ -296,21 +293,22 @@ failed = "Add page numbers operation failed"
 title = "Page Number Results"
 
 [addPageNumbers.selectText]
-2 = "Margin Size"
+2 = "Margin"
 4 = "Starting Number"
 5 = "Pages to Number"
 6 = "Custom Text Format"
 
 [addPassword]
 desc = "Encrypt your PDF document with a password."
+submit = "Add Password"
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Add Password"
 
 [addPassword.encryption.keyLength]
-128bit = "128-bit (Standard)"
-256bit = "256-bit (High)"
-40bit = "40-bit (Low)"
-label = "Encryption Key Length"
+128bit = "128-bit"
+256bit = "256-bit"
+40bit = "40-bit"
+label = "Encryption Strength"
 
 [addPassword.error]
 failed = "An error occurred while encrypting the PDF."
@@ -345,15 +343,14 @@ stampPreviewAlt = "Stamp preview"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alphabet"
-clickToExpand = "Click to expand"
 customColor = "Custom Text Color"
 customDateDesc = "Custom format"
 customPosition = "Drag the stamp to the desired location in the preview window."
 dateDesc = "Current date"
 datetimeDesc = "Date and time combined"
 dateTimeVars = "Date & Time"
-dynamicVariables = "Dynamic Variables"
 examples = "Examples"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
@@ -368,6 +365,8 @@ noStampSelected = "No stamp selected. Return to Step 1."
 opacity = "Opacity"
 otherVars = "Other"
 pageNumberDesc = "Current page number"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Page Information"
 position = "Position"
 positionAndFormatting = "Position & Formatting"
@@ -381,9 +380,10 @@ quickPosition = "Select a position on the page to place the stamp."
 rotation = "Rotation"
 selectedImageAlt = "Selected stamp image"
 selectTemplate = "Select a template..."
+size = "Size"
 stampSetup = "Stamp Setup"
 stampText = "Stamp Text"
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Stamp Type"
 submit = "Add Stamp"
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
@@ -392,7 +392,6 @@ title = "Stamp PDF"
 totalPagesDesc = "Total number of pages"
 useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
 yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
@@ -400,6 +399,12 @@ failed = "An error occurred while adding stamp to the PDF."
 
 [AddStampRequest.results]
 title = "Stamp Results"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Custom"
@@ -413,6 +418,11 @@ legal-footer = "Legal Footer"
 page-numbers = "Page Numbers"
 pageNumberFooter = "Page Number Footer"
 timestamp = "Timestamp"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Apply Text"
@@ -465,9 +475,7 @@ image = "Upload"
 text = "Text"
 
 [addText.step]
-createDesc = "Enter the text you want to add"
 place = "Place text"
-placeDesc = "Click on the PDF to add your text"
 
 [addText.steps]
 configure = "Configure Text"
@@ -490,16 +498,16 @@ text = "Text"
 tags = "color-correction,tune,modify,enhance"
 
 [adjustContrast]
-adjustColors = "Adjust Colors"
+adjustColors = "Colors"
 basic = "Basic Adjustments"
 blue = "Blue"
-brightness = "Brightness:"
-confirm = "Confirm"
-contrast = "Contrast:"
+brightness = "Brightness"
+confirm = "Apply Adjustments"
+contrast = "Contrast"
 green = "Green"
 noPreview = "Select a PDF to preview"
 red = "Red"
-saturation = "Saturation:"
+saturation = "Saturation"
 tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Adjust Colors/Contrast"
 
@@ -1984,9 +1992,6 @@ title = "Do you want to help make Stirling PDF better?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
-alignCenter = "Align center"
-alignLeft = "Align left"
-alignRight = "Align right"
 annotationStyle = "Annotation style"
 backgroundColor = "Background color"
 borderOff = "Border: Off"
@@ -2057,6 +2062,11 @@ underline = "Underline"
 undoDelete = "Undo"
 width = "Width"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "A free, private PDF editor you can run on any infrastructure."
 
@@ -2067,8 +2077,6 @@ dismiss = "Dismiss"
 addAttachments = "Add attachments..."
 convertToPdfA3b = "Convert to PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
-convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
-convertToPdfA3bTooltipTitle = "What it does"
 discardChanges = "Discard"
 downloadSingle = "Download attachment"
 duplicateName = "An attachment named '{{name}}' already exists."
@@ -2249,7 +2257,6 @@ guest = "Guest"
 user = "User"
 
 [auto-rename]
-description = "Automatically finds the title from your PDF content and uses it as the filename."
 submit = "Auto Rename"
 tags = "auto-detect,header-based,organize,relabel"
 title = "Auto Rename"
@@ -2259,21 +2266,6 @@ failed = "An error occurred while auto-renaming the PDF."
 
 [auto-rename.results]
 title = "Auto-Rename Results"
-
-[auto-rename.settings]
-title = "About"
-
-[auto-rename.tooltip.description]
-title = "What it does"
-
-[auto-rename.tooltip.header]
-title = "How Auto-Rename Works"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Looks for text that appears to be a title or heading"
-bullet2 = "Creates a clean, valid filename from the detected title"
-bullet3 = "Keeps the original name if no suitable title is found"
-title = "Smart Renaming"
 
 [autoFormDetection]
 loading = "Detecting form fields..."
@@ -2349,7 +2341,7 @@ intro = "Automations run tools sequentially. To get started, add tools in the or
 save = "Save Automation"
 
 [automate.creation.description]
-label = "Description (optional)"
+label = "Description"
 placeholder = "Describe what this automation does..."
 
 [automate.creation.icon]
@@ -2367,6 +2359,9 @@ notConfigured = "! Not Configured"
 remove = "Remove tool"
 selected = "Selected Tools"
 selectTool = "Select a tool..."
+
+[automate.creation.tooltip.header]
+title = "About Automations"
 
 [automate.creation.unsavedChanges]
 cancel = "Cancel"
@@ -2436,7 +2431,6 @@ secureWorkflow = "Security Workflow"
 secureWorkflowDesc = "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access. Password is set to 'password' by default."
 
 [autoRename]
-description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoRotate]
@@ -2511,7 +2505,8 @@ tags = "pdf,split,document,organization"
 
 [autoSplitPDF]
 dividerDownload2 = "Download 'Auto Splitter Divider (with instructions).pdf'"
-duplexMode = "Duplex Mode (Front and back scanning)"
+duplexMode = "Duplex mode"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-based,separate,scan-segment,organize"
 title = "Auto Split PDF"
 
@@ -2574,9 +2569,6 @@ tooltip = "Adds borders around each page section to help with cutting and alignm
 label = "Add gutter margin"
 tooltip = "Adds inner margin space for binding"
 
-[bookletImposition.advanced]
-toggle = "Advanced Options"
-
 [bookletImposition.doubleSided]
 label = "Double-sided printing"
 tooltip = "Creates both front and back sides for proper booklet printing"
@@ -2597,10 +2589,10 @@ manualNote = "Not needed in manual mode - you flip the stack yourself"
 tooltip = "Enable for short-edge duplex printing (automatic duplex only - ignored in manual mode)"
 
 [bookletImposition.gutterSize]
-label = "Gutter size (points)"
+label = "Gutter size"
 
 [bookletImposition.manualDuplex]
-instructions = "For printers without automatic duplex. You'll need to run this twice:"
+instructions = "For printers without automatic duplex. Run the tool twice, once for each Print Pass below."
 title = "Manual Duplex Mode"
 
 [bookletImposition.rtlBinding]
@@ -2763,10 +2755,13 @@ declined = "Declined"
 fetchFailed = "Failed to load signing data"
 finalized = "Finalized"
 location = "Location"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 logoTitle = "Logo"
 name = "Name"
+nameInfo = "Your name, stored in the signature's details. The visible signature shows the name on the certificate instead."
 noLogo = "No Logo"
 pageNumber = "Page Number"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Certificate Password"
 passwordOptional = "Leave empty if no password"
 pemCertificateLabel = "Certificate (.pem / .crt)"
@@ -2774,6 +2769,7 @@ pemPrivateKeyLabel = "Private key (.pem / .key)"
 pending = "Pending"
 readyToFinalize = "Ready to finalize"
 reason = "Reason"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Using server certificate - no files or password required"
 showLogo = "Show Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signatures"
@@ -2808,9 +2804,6 @@ bullet4 = "Optional logo can be included"
 text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
 title = "Visible Signatures"
 
-[certSign.certFiles]
-stepTitle = "Certificate Files"
-
 [certSign.certType.tooltip.convert]
 text = "Convert your file to a Java keystore (.jks) with keytool, then pick JKS."
 title = "Key not listed?"
@@ -2831,7 +2824,8 @@ text = "Choose the format that matches your certificate file:"
 title = "Which option should I use?"
 
 [certSign.certTypeStep]
-stepTitle = "Certificate Format"
+formatLabel = "Format"
+stepTitle = "Certificate"
 
 [certSign.collab.addParticipants]
 add_one = "Add {{count}} Participant"
@@ -3101,11 +3095,11 @@ ssoManaged = "Your account is managed by your identity provider."
 title = "Change Credentials"
 
 [changeMetadata]
-submit = "Change"
+submit = "Update Metadata"
 tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
 [changeMetadata.advanced]
-title = "Advanced Options"
+title = "Advanced"
 
 [changeMetadata.author]
 label = "Author"
@@ -3121,7 +3115,6 @@ placeholder = "Document creator"
 
 [changeMetadata.customFields]
 add = "Add Field"
-description = "Add custom metadata fields to the document"
 key = "Key"
 keyPlaceholder = "Custom key"
 remove = "Remove"
@@ -3187,10 +3180,6 @@ bullet1 = "Creation Date: When original document was made"
 bullet2 = "Modification Date: When last changed"
 text = "When the document was created and modified."
 title = "Date Fields"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Complete metadata deletion to ensure privacy."
-title = "Remove Existing Metadata"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Title: Document name or heading"
@@ -3938,6 +3927,7 @@ title = "Choose color"
 transparent = "Transparent"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Actions"
 back = "Back"
 cancel = "Cancel"
@@ -4434,9 +4424,10 @@ imageOptions = "Image Options"
 includeAllRecipients = "Include CC and BCC recipients in header"
 includeAttachments = "Include email attachments"
 maintainAspectRatio = "Maintain Aspect Ratio"
-maxAttachmentSize = "Maximum attachment size (MB)"
+maxAttachmentSize = "Maximum attachment size"
 multiple = "Multiple"
-optimizeForEbook = "Optimize PDF for ebook readers (uses Ghostscript)"
+optimizeForEbook = "Optimize PDF for ebook readers"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Output"
 outputFormat = "Output Format"
 pdfaAccessibleFormat = "{{format}} (accessible)"
@@ -4483,9 +4474,7 @@ zoomLevel = "Zoom Level"
 
 [convert.ebookOptions]
 includePageNumbers = "Include page numbers"
-includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"
-includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
@@ -4494,7 +4483,6 @@ detectChapters = "Detect chapters"
 detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
 kindleEink = "Kindle e-Ink (text optimized)"
 outputFormat = "Output format"
-outputFormatDesc = "Choose the output format for the ebook"
 tabletPhone = "Tablet/Phone (with images)"
 targetDevice = "Target device"
 targetDeviceDesc = "Choose an output profile optimized for the reader device"
@@ -4573,6 +4561,7 @@ sourceFilter = "Documents and images"
 
 [createPortfolio]
 coverTitle = "Cover page title"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
 goToFileEditor = "Go to file editor"
@@ -4590,6 +4579,9 @@ title = "What it does"
 
 [createPortfolio.tooltip.header]
 title = "About PDF Portfolios"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Auto-crop whitespace"
@@ -4776,12 +4768,13 @@ clipboardUnavailable = "Clipboard access is not available in this browser."
 export = "Export bookmarks"
 exportClipboard = "Copy JSON to clipboard"
 exportJson = "Download JSON"
+exportMenu = "Export"
 importClipboard = "Paste JSON from clipboard"
 importJson = "Import JSON"
+importMenu = "Import"
 loadFromPdf = "Load from selected PDF"
 noFile = "Select a PDF to extract existing bookmarks."
 selectedFile = "Loaded from {{file}}"
-source = "Load bookmarks"
 
 [editTableOfContents.editor]
 addTopLevel = "Add top-level bookmark"
@@ -4838,9 +4831,12 @@ subtitle = "Download the processed file or undo the operation below."
 title = "Updated PDF with bookmarks"
 
 [editTableOfContents.settings]
-replaceExisting = "Replace existing bookmarks (uncheck to append)"
-replaceExistingHint = "When disabled, the new outline is appended after the current bookmarks."
+replaceExisting = "Replace existing bookmarks"
+replaceExistingHint = "When unchecked, the new outline is appended after the current bookmarks."
 title = "Bookmarks & outline"
+
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
 
 [editTableOfContents.workbench]
 changeFile = "Change PDF"
@@ -4855,7 +4851,6 @@ title = "Open the tool to start editing"
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} restriction ignored"
 actionUnlocked = "{{action}} unlocked for this session"
-advanced = "Advanced"
 allowed = "Allowed"
 annotations = "Annotations"
 authoriseAction = "This PDF requires permission to use {{action}}."
@@ -4903,7 +4898,6 @@ restricted = "Restricted"
 restrictedActions = "restricted actions"
 restrictedOperation = "This action requires the permissions password."
 retainOwnerVerification = "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it."
-saveProtection = "Save protection"
 securityChangeFailed = "Unable to change protection. Check the permissions password and the new security settings."
 sessionDetails = "Open for this session. The PDF stays protected."
 sessionDetailsLabel = "About session unlocking"
@@ -4973,9 +4967,8 @@ title = "Something went wrong"
 tryAgain = "Try Again"
 
 [extractImages]
-allowDuplicates = "Save duplicate images"
-selectText = "Select image format to convert extracted images to"
-submit = "Extract"
+selectText = "Image Format"
+submit = "Extract Images"
 tags = "picture,photo,save,archive,zip,capture,grab"
 title = "Extract Images"
 
@@ -5634,7 +5627,7 @@ welcomeMessage = "For security reasons, you must change your password on your fi
 welcomeTitle = "Welcome!"
 
 [flatten]
-submit = "Flatten"
+submit = "Flatten PDF"
 tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Flatten"
 
@@ -5642,15 +5635,15 @@ title = "Flatten"
 failed = "An error occurred while flattening the PDF."
 
 [flatten.options]
-stepTitle = "Flatten Options"
+stepTitle = "Settings"
 
 [flatten.options.flattenOnlyForms]
 desc = "Only flatten form fields, leaving other interactive elements intact"
 label = "Flatten only forms"
 
 [flatten.renderDpi]
-help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
-label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Optional. Leave blank to use the system default; 150 DPI is recommended. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI"
 placeholder = "e.g. 150"
 
 [flatten.results]
@@ -5716,7 +5709,6 @@ removeField = "Remove field"
 
 [formFill.editor]
 action = "Button action"
-actionHelp = "What the button does when clicked."
 actionNone = "None"
 actionPrint = "Print"
 actionReset = "Reset form"
@@ -5733,12 +5725,11 @@ fontSize = "Font size"
 fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
 label = "Label"
 labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
-maxLength = "Max length (comb)"
+maxLength = "Max length"
 maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
 multiline = "Multi-line"
 multilineHelp = "Allows more than one line of text and wraps at the field's edge."
 multiSelect = "Allow multiple selection"
-multiSelectHelp = "Lets more than one option be chosen at once."
 name = "Field name"
 nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
 optionGap = "Option spacing"
@@ -6026,7 +6017,7 @@ title = "Automate"
 [home.autoRename]
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
-title = "Auto Rename PDF File"
+title = "Auto Rename File"
 
 [home.autoRotate]
 desc = "Detect each page's orientation and rotate it upright automatically."
@@ -6144,7 +6135,7 @@ title = "Form Editor"
 [home.getPdfInfo]
 desc = "Grabs any and all information possible on PDFs"
 tags = "info,metadata,details,PDF info,document info,properties,file info,get info,show info,view properties,document properties,statistics,page count,file details,inspect"
-title = "Get ALL Info on PDF"
+title = "Get all info on PDF"
 
 [home.manageCertificates]
 tags = "certificates,import,export,manage certificates,digital certificates,certificate management,PFX,P12,keystore,import certificate,export certificate,certificate store,PKI"
@@ -6516,6 +6507,9 @@ sort = "Sort"
 [merge.sortFiles]
 title = "Sort Files"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Merge Settings Overview"
 
@@ -6713,7 +6707,7 @@ loading = "Loading available languages..."
 viewSetupGuide = "View setup guide →"
 
 [ocr.operation]
-submit = "Process OCR and Review"
+submit = "Run OCR"
 
 [ocr.results]
 title = "OCR Results"
@@ -6953,13 +6947,13 @@ saveAll = "Update all in OneDrive"
 
 [overlay-pdfs]
 desc = "Overlay one PDF on top of another"
-submit = "Submit"
+submit = "Overlay PDFs"
 tags = "Overlay"
 title = "Overlay PDFs"
 
 [overlay-pdfs.counts]
 item = "Count for file"
-label = "Overlay Counts (for Fixed Repeat Mode)"
+label = "Overlay Counts"
 noFiles = "Add overlay files to configure counts"
 
 [overlay-pdfs.error]
@@ -6968,18 +6962,18 @@ failed = "An error occurred while overlaying PDFs."
 [overlay-pdfs.mode]
 fixedRepeat = "Fixed Repeat Overlay"
 interleaved = "Interleaved Overlay"
-label = "Select Overlay Mode"
+label = "Overlay Mode"
 sequential = "Sequential Overlay"
 
 [overlay-pdfs.overlayFiles]
 addMore = "Add more PDFs..."
-label = "Select Overlay PDF Files"
+label = "Overlay Files"
 placeholder = "Choose PDF(s)..."
 
 [overlay-pdfs.position]
 background = "Background"
 foreground = "Foreground"
-label = "Select Overlay Position"
+label = "Overlay Position"
 
 [overlay-pdfs.results]
 title = "Overlay Results"
@@ -7092,11 +7086,11 @@ cols = "Columns"
 colsPlaceholder = "Enter columns"
 innerMargin = "Inner Margin"
 left = "Left Margin"
-pagesPerSheet = "Pages per sheet:"
+pagesPerSheet = "Pages per sheet"
 right = "Right Margin"
 rows = "Rows"
 rowsPlaceholder = "Enter rows"
-submit = "Submit"
+submit = "Create Layout"
 tags = "merge,composite,single-view,organize"
 title = "Multi Page Layout"
 top = "Top Margin"
@@ -7123,7 +7117,7 @@ title = "Reading Direction"
 [pageLayout.arrangement]
 byColumns = "By Columns"
 byRows = "By Rows"
-label = "Page arrangement:"
+label = "Page arrangement"
 
 [pageLayout.desc]
 16 = "Place 16 pages on a single sheet (4 × 4 grid)."
@@ -7167,22 +7161,22 @@ title = "Margins"
 [pageLayout.mode]
 custom = "Custom"
 default = "Default"
-label = "Mode:"
+label = "Mode"
 
 [pageLayout.orientation]
-label = "Orientation:"
+label = "Orientation"
 landscape = "Landscape"
 portrait = "Portrait"
 
 [pageLayout.readingDirection]
-label = "Reading Direction:"
+label = "Reading Direction"
 ltr = "Left to Right"
 rtl = "Right to Left"
 
 [pageLayout.steps]
-advanced = "Advanced settings"
-layout = "Layout settings"
-marginsBorders = "Margins and borders"
+advanced = "Advanced"
+layout = "Layout"
+marginsBorders = "Margins & Borders"
 
 [pageLayout.tooltip.header]
 title = "Page Layout Guide"
@@ -12253,7 +12247,7 @@ title = "Redaction Settings"
 
 [redact.auto.wordsToRedact]
 add = "Add"
-examples = "Examples: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Enter a word"
 title = "Words to Redact"
 
@@ -12327,7 +12321,7 @@ title = "Automatic Redaction"
 title = "Redaction Method"
 
 [redact.tooltip.mode.manual]
-text = "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)"
+text = "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted."
 title = "Manual Redaction"
 
 [redact.tooltip.words]
@@ -12344,13 +12338,13 @@ text = "Typical words to redact include: bank details, email addresses, or speci
 title = "Common Examples"
 
 [redact.tooltip.words.header]
-title = "Words to Redact"
+title = "Redaction Settings"
 
 [releases]
 title = "Release Notes"
 
 [removeAnnotations]
-submit = "Remove"
+submit = "Remove Annotations"
 tags = "comments,highlight,notes,markup,remove"
 title = "Remove Annotations"
 
@@ -12360,17 +12354,8 @@ failed = "An error occurred while removing annotations from the PDF."
 [removeAnnotations.info]
 description = "This tool will remove all annotations (comments, highlights, notes, etc.) from your PDF documents."
 
-[removeAnnotations.settings]
-title = "Settings"
-
-[removeAnnotations.tooltip.description]
-title = "What it does"
-
-[removeAnnotations.tooltip.header]
-title = "About Remove Annotations"
-
 [removeBlanks]
-submit = "Remove blank pages"
+submit = "Remove Blank Pages"
 tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Remove Blanks"
 
@@ -12429,7 +12414,7 @@ failed = "An error occurred while removing certificate signatures."
 title = "Certificate Removal Results"
 
 [removeImage]
-submit = "Remove image"
+submit = "Remove Images"
 tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Remove image"
 
@@ -12508,6 +12493,9 @@ tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,a
 [reorganizePages.error]
 failed = "Failed to reorganize pages"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Pages Reorganized"
 
@@ -12527,7 +12515,7 @@ failed = "An error occurred while repairing the PDF."
 title = "Repair Results"
 
 [replace-color]
-submit = "Replace"
+submit = "Replace Colors"
 title = "Replace-Invert-Color"
 
 [replace-color.selectText]
@@ -12588,7 +12576,8 @@ title = "Invert All Colors"
 [rotate]
 rotateLeft = "Rotate Counterclockwise"
 rotateRight = "Rotate Clockwise"
-selectRotation = "Select Rotation Angle (Clockwise)"
+selectRotation = "Rotation Angle"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Apply Rotation"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,counterclockwise,counter-clockwise,fix orientation"
 title = "Rotate PDF"
@@ -12699,8 +12688,7 @@ title = "Sanitize"
 failed = "An error occurred while sanitizing the PDF."
 
 [sanitize.options]
-note = "Select the elements you want to remove from the PDF. At least one option must be selected."
-title = "Sanitization Options"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Remove any files embedded within the PDF"
@@ -12811,16 +12799,16 @@ whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned p
 whenToUse = "When to use"
 
 [ScannerImageSplit.selectText]
-1 = "Angle Threshold:"
+1 = "Angle Threshold"
 10 = "Extra padding (in pixels) around each saved photo so edges aren't cut."
 2 = "Tilt (in degrees) needed before we auto-straighten a photo."
-3 = "Tolerance:"
+3 = "Tolerance"
 4 = "How closely a color must match the page background to count as background. Higher = looser, lower = stricter."
-5 = "Minimum Area:"
+5 = "Minimum Area"
 6 = "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments."
-7 = "Minimum Contour Area:"
+7 = "Minimum Contour Area"
 8 = "Smallest edge/shape we consider when finding photos (filters dust and specks)."
-9 = "Border Size:"
+9 = "Border Size"
 
 [search]
 noResults = "No results found"
@@ -13475,7 +13463,7 @@ active = "Active"
 done = "JavaScript extracted"
 processing = "Extracting JavaScript..."
 results = "Result"
-submit = "Show"
+submit = "Show JavaScript"
 tags = "JS"
 title = "Show Javascript"
 
@@ -13608,9 +13596,7 @@ image = "Upload"
 text = "Text"
 
 [sign.step]
-createDesc = "Choose how you want to create the signature"
 place = "Place & save"
-placeDesc = "Position the signature on your PDF"
 
 [sign.steps]
 configure = "Configure Signature"
@@ -14149,7 +14135,6 @@ placeholder = "Enter number of horizontal divisions"
 
 [split-by-sections.splitMode]
 custom = "Custom pages"
-description = "Choose how to split the pages"
 label = "Split Mode"
 splitAll = "Split all pages"
 splitAllExceptFirst = "Split all except first"
@@ -14400,11 +14385,9 @@ failed = "An error occurred while timestamping the PDF."
 
 [timestampPdf.options]
 note = "Only a SHA-256 hash of your document is sent to the TSA server; the PDF file itself is never sent to the TSA server."
-title = "Timestamp Server (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Pick a trusted Time Stamp Authority"
-label = "Select a TSA server"
+label = "Timestamp server"
 
 [timestampPdf.steps]
 settings = "Settings"
@@ -14836,7 +14819,7 @@ noSignaturesShort = "No signatures"
 processing = "Validating signatures..."
 reason = "Reason"
 results = "Validation Results"
-selectCustomCert = "Custom Certificate File X.509 (Optional)"
+selectCustomCert = "Trusted certificate"
 signatureDate = "Signature Date"
 signer = "Signer"
 submit = "Validate Signatures"
@@ -14910,7 +14893,10 @@ signatureDate = "Signature Date"
 
 [validateSignature.settings]
 certHint = "Upload a trusted X.509 certificate to validate against a custom trust source."
-title = "Validation Settings"
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
+title = "Settings"
 
 [validateSignature.signature]
 _value = "Signature"
@@ -15163,8 +15149,8 @@ title = "Watermark Results"
 alphabet = "Font/Language"
 color = "Watermark Color"
 convertToImage = "Flatten PDF pages to images"
-opacity = "Opacity (%)"
-rotation = "Rotation (degrees)"
+opacity = "Opacity"
+rotation = "Rotation"
 size = "Size"
 
 [watermark.settings.image]

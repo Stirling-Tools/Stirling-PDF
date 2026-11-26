@@ -396,7 +396,15 @@ export const Tooltip: React.FC<TooltipProps> = ({
         else if (originalRef && typeof originalRef === "object")
           originalRef.current = node;
       },
-      "aria-describedby": open ? tooltipIdRef.current : undefined,
+      "aria-describedby":
+        [
+          (children.props as { "aria-describedby"?: string })[
+            "aria-describedby"
+          ],
+          open ? tooltipIdRef.current : undefined,
+        ]
+          .filter(Boolean)
+          .join(" ") || undefined,
       onPointerEnter: handlePointerEnter,
       onPointerLeave: handlePointerLeave,
       onMouseDown: handleMouseDown,

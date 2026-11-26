@@ -52,7 +52,7 @@ const PageLayout = (props: BaseToolProps) => {
     preview: <PageLayoutPreview parameters={base.params.parameters} />,
     steps: [
       {
-        title: t("pageLayout.steps.layout", "Layout settings"),
+        title: t("pageLayout.steps.layout", "Layout"),
         isCollapsed: accordion.getCollapsedState(PageLayoutStep.LAYOUT),
         onCollapsedClick: () =>
           accordion.handleStepToggle(PageLayoutStep.LAYOUT),
@@ -66,21 +66,7 @@ const PageLayout = (props: BaseToolProps) => {
         ),
       },
       {
-        title: t("pageLayout.steps.advanced", "Advanced settings"),
-        isCollapsed: accordion.getCollapsedState(PageLayoutStep.ADVANCED),
-        onCollapsedClick: () =>
-          accordion.handleStepToggle(PageLayoutStep.ADVANCED),
-        tooltip: pageLayoutAdvancedTips,
-        content: (
-          <PageLayoutAdvancedSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
-        ),
-      },
-      {
-        title: t("pageLayout.steps.marginsBorders", "Margins and borders"),
+        title: t("pageLayout.steps.marginsBorders", "Margins & Borders"),
         isCollapsed: accordion.getCollapsedState(
           PageLayoutStep.MARGINS_BORDERS,
         ),
@@ -89,6 +75,20 @@ const PageLayout = (props: BaseToolProps) => {
         tooltip: pageLayoutMarginsBordersTips,
         content: (
           <PageLayoutMarginsBordersSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      },
+      {
+        title: t("pageLayout.steps.advanced", "Advanced"),
+        isCollapsed: accordion.getCollapsedState(PageLayoutStep.ADVANCED),
+        onCollapsedClick: () =>
+          accordion.handleStepToggle(PageLayoutStep.ADVANCED),
+        tooltip: pageLayoutAdvancedTips,
+        content: (
+          <PageLayoutAdvancedSettings
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}

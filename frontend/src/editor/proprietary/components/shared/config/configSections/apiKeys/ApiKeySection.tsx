@@ -48,6 +48,7 @@ export default function ApiKeySection({
                 display: "flex",
                 alignItems: "center",
               }}
+              role="group"
               aria-label={t(
                 "config.apiKeys.publicKeyAriaLabel",
                 "Public API key",
