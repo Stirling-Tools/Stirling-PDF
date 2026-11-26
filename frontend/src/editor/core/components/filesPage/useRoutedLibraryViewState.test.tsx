@@ -71,7 +71,7 @@ describe("library browser history", () => {
     expect(result.current.currentTab).toBe("recent");
 
     act(() => result.current.setCurrentTab("all"));
-    expect(result.current.location.search).toBe("");
+    expect(result.current.location.search).toBe("?view=all");
     expect(result.current.currentTab).toBe("all");
 
     act(() => result.current.navigate(-1));
@@ -93,7 +93,7 @@ describe("library browser history", () => {
       result.current.setOriginFilter("local");
     });
     expect(result.current.location.pathname).toBe("/files");
-    expect(result.current.location.search).toBe("?view=recent");
+    expect(result.current.location.search).toBe("");
     expect(result.current.search).toBe("notes");
 
     act(() => result.current.navigate(-1));
@@ -167,9 +167,24 @@ describe("library browser history", () => {
     expect(result.current.currentFolderId).toBe("receipts");
   });
 
-  it("uses Stirling library for an unrecognized view", () => {
-    const { result } = setup(["/files?view=unknown"]);
+  it("opens Recents for bare /files and an unrecognized view", () => {
+    for (const entry of ["/files", "/files?view=unknown"]) {
+      const { result } = setup([entry]);
+      expect(result.current.currentTab).toBe("recent");
+      expect(result.current.currentFolderId).toBeNull();
+    }
+  });
+
+  it("opens Stirling library for a folder path and keeps its root addressable", () => {
+    const { result } = setup(["/files/invoices"]);
     expect(result.current.currentTab).toBe("all");
-    expect(result.current.currentFolderId).toBeNull();
+    act(() => result.current.openFolder(null));
+    expect(result.current.location.pathname).toBe("/files");
+    expect(result.current.location.search).toBe("?view=all");
+    expect(result.current.currentTab).toBe("all");
+
+    act(() => result.current.setCurrentTab("recent"));
+    expect(result.current.location.search).toBe("");
+    expect(result.current.currentTab).toBe("recent");
   });
 });
