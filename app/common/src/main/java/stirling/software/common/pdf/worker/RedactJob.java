@@ -44,6 +44,11 @@ public record RedactJob(
             Outcome outcome, int totalMatches, String unverifiedPages, String detail) {}
 
     @Override
+    public List<Path> inputFiles() {
+        return List.of(input);
+    }
+
+    @Override
     public String type() {
         return TYPE;
     }

@@ -37,11 +37,15 @@ class RedactAndMarkdownJobWorkerTest {
         pool =
                 new PdfWorkerPool(
                         new PdfWorkerPool.Config(
+                                true,
                                 1,
+                                3,
                                 100,
                                 Duration.ofMinutes(5),
                                 Duration.ofMinutes(2),
-                                PdfWorkerLauncher.command("256m", PdfWorkerMain.class)));
+                                PdfWorkerLauncher.command("256m", PdfWorkerMain.class, 3),
+                                PdfWorkerLauncher.command("256m", PdfWorkerMain.class, 1),
+                                false));
         return pool;
     }
 

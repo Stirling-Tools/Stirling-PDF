@@ -23,6 +23,11 @@ public record MarkdownJob(Path input, PdfMarkdownExtractor extractor)
     public record Result(int pageCount, List<MarkdownBlock> blocks) {}
 
     @Override
+    public List<Path> inputFiles() {
+        return List.of(input);
+    }
+
+    @Override
     public String type() {
         return TYPE;
     }

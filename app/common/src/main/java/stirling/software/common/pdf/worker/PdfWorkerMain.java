@@ -9,26 +9,38 @@ import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.instance.PdfiumInstance;
+import stirling.software.jpdfium.instance.PdfiumInstancePool;
 import stirling.software.jpdfium.panama.NativeLoader;
 
 /**
- * Entry point of a PDF worker process: one job at a time over stdin/stdout. Exits when stdin
- * closes, so a worker never outlives the server that started it.
+ * Entry point of a PDF worker process. Hosts a pool of PDFium instances and runs up to one job per
+ * instance at a time over stdin/stdout. Exits when stdin closes, so a worker never outlives the
+ * server that started it.
  */
 public final class PdfWorkerMain {
 
-    interface Handler {
-        void handle(DataInputStream in, DataOutputStream out) throws IOException;
-    }
+    static final String INSTANCES_PROPERTY = "stirling.pdfWorker.instances";
 
-    private static final Map<String, Handler> HANDLERS =
-            Map.of(
-                    MergeJob.TYPE, PdfWorkerMain::handleMerge,
-                    RedactJob.TYPE, PdfWorkerMain::handleRedact,
-                    MarkdownJob.TYPE, PdfWorkerMain::handleMarkdown);
+    // PDFium runs on the job thread and recurses on deeply nested files; the worker's -Xss is kept
+    // small for every other thread, so job threads get at least a server request thread's stack.
+    static final long JOB_STACK_BYTES = 8L << 20;
+
+    // Every class on a job's path that touches JPDFium types must load per instance; one left
+    // to the shared loader would see another instance's classes.
+    static final List<String> ISOLATED_PACKAGES =
+            List.of("stirling.software.common.pdf.", "stirling.software.proprietary.pdf.");
+
+    /** Runs one job and returns the response: status byte, then payload. */
+    interface Dispatcher {
+        byte[] dispatch(String type, byte[] request) throws Exception;
+    }
 
     private PdfWorkerMain() {}
 
@@ -36,94 +48,115 @@ public final class PdfWorkerMain {
         // Keep stdout for frames only; anything else that prints goes to stderr.
         FileOutputStream protocolOut = new FileOutputStream(FileDescriptor.out);
         System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.err), true));
-        warmUp();
+        // Fails before READY if the natives can't load, so the server reports the worker failed.
+        NativeLoader.ensureLoaded();
+        PdfiumInstancePool pool = openPool(Integer.getInteger(INSTANCES_PROPERTY, 1));
         serve(
                 new DataInputStream(new BufferedInputStream(System.in, 64 * 1024)),
                 new DataOutputStream(new BufferedOutputStream(protocolOut, 64 * 1024)),
-                HANDLERS);
+                pool.size(),
+                (type, request) -> runOnInstance(pool, type, request));
+        // Exit without running every PDFium copy's static destructors under jobs still in native
+        // code; the server only closes stdin when it no longer needs any result.
+        Runtime.getRuntime().halt(0);
     }
 
-    static void serve(DataInputStream in, DataOutputStream out, Map<String, Handler> handlers)
+    static PdfiumInstancePool openPool(int requested) {
+        int size = Math.max(1, Math.min(requested, PdfiumInstancePool.maxInstances()));
+        try {
+            return PdfiumInstancePool.builder()
+                    .size(size)
+                    .isolate(ISOLATED_PACKAGES.toArray(String[]::new))
+                    .build();
+        } catch (RuntimeException | LinkageError e) {
+            if (size == 1) {
+                throw e;
+            }
+            System.err.println(
+                    "PDF worker: isolated PDFium instances unavailable, running one instance: "
+                            + e);
+            return PdfiumInstancePool.builder().size(1).build();
+        }
+    }
+
+    private static byte[] runOnInstance(PdfiumInstancePool pool, String type, byte[] request)
+            throws InterruptedException {
+        PdfiumInstance instance = pool.acquire();
+        try {
+            return (byte[])
+                    instance.call(PdfWorkerTask.class.getName(), new Object[] {type, request});
+        } finally {
+            pool.release(instance);
+        }
+    }
+
+    static void serve(DataInputStream in, DataOutputStream out, int capacity, Dispatcher dispatcher)
             throws IOException {
-        PdfWorkerProtocol.writeHeader(out);
-        out.writeByte(PdfWorkerProtocol.STATUS_READY);
-        out.flush();
-        while (true) {
-            String type;
-            try {
-                PdfWorkerProtocol.readHeader(in);
-                type = PdfWorkerProtocol.readString(in);
-            } catch (EOFException closed) {
-                return;
-            }
-            Handler handler = handlers.get(type);
-            if (handler == null) {
-                // The payload can't be skipped without knowing its shape, so answer and stop.
-                writeError(out, new IOException("Unknown PDF worker job: " + type));
-                return;
-            }
-            handler.handle(in, out);
+        Object writeLock = new Object();
+        synchronized (writeLock) {
+            PdfWorkerProtocol.writeResponse(out, PdfWorkerProtocol.ready(capacity));
             out.flush();
         }
-    }
-
-    private static void handleMerge(DataInputStream in, DataOutputStream out) throws IOException {
-        MergeJob job = MergeJob.readRequest(in);
-        MergeJob.Result result;
+        AtomicInteger inFlight = new AtomicInteger();
+        ExecutorService jobs =
+                Executors.newFixedThreadPool(
+                        capacity,
+                        r -> {
+                            Thread t = new Thread(null, r, "pdf-job", JOB_STACK_BYTES);
+                            t.setDaemon(true);
+                            return t;
+                        });
         try {
-            result = job.run();
-        } catch (Exception | LinkageError e) {
-            writeError(out, e);
-            return;
+            while (true) {
+                PdfWorkerProtocol.Request request;
+                try {
+                    request = PdfWorkerProtocol.readRequest(in);
+                } catch (EOFException closed) {
+                    return;
+                }
+                inFlight.incrementAndGet();
+                jobs.execute(() -> answer(request, dispatcher, out, writeLock, inFlight));
+            }
+        } finally {
+            jobs.shutdownNow();
         }
-        PdfWorkerProtocol.writeHeader(out);
-        out.writeByte(PdfWorkerProtocol.STATUS_OK);
-        MergeJob.writeResult(out, result);
     }
 
-    private static void handleRedact(DataInputStream in, DataOutputStream out) throws IOException {
-        RedactJob job = RedactJob.readRequest(in);
-        RedactJob.Result result;
+    private static void answer(
+            PdfWorkerProtocol.Request request,
+            Dispatcher dispatcher,
+            DataOutputStream out,
+            Object writeLock,
+            AtomicInteger inFlight) {
+        byte[] result;
         try {
-            result = job.run();
-        } catch (Exception | LinkageError e) {
-            writeError(out, e);
-            return;
+            result = dispatcher.dispatch(request.type(), request.payload());
+        } catch (Throwable t) {
+            result = PdfWorkerTask.error(t);
         }
-        PdfWorkerProtocol.writeHeader(out);
-        out.writeByte(PdfWorkerProtocol.STATUS_OK);
-        RedactJob.writeResult(out, result);
-    }
-
-    private static void handleMarkdown(DataInputStream in, DataOutputStream out)
-            throws IOException {
-        MarkdownJob job;
-        MarkdownJob.Result result;
-        try {
-            job = MarkdownJob.readRequest(in);
-            result = job.run();
-        } catch (Exception | LinkageError e) {
-            writeError(out, e);
-            return;
+        if (result.length - 1 > PdfWorkerProtocol.MAX_PAYLOAD_BYTES) {
+            // The server rejects an oversized frame as a broken worker and would retry the job.
+            result =
+                    PdfWorkerTask.error(
+                            new IOException(
+                                    "The result is too large to return ("
+                                            + (result.length >> 20)
+                                            + " MB)"));
         }
-        PdfWorkerProtocol.writeHeader(out);
-        out.writeByte(PdfWorkerProtocol.STATUS_OK);
-        MarkdownJob.writeResult(out, result);
-    }
-
-    static void writeError(DataOutputStream out, Throwable error) throws IOException {
-        PdfWorkerProtocol.writeHeader(out);
-        out.writeByte(PdfWorkerProtocol.STATUS_ERROR);
-        PdfWorkerProtocol.writeString(out, String.valueOf(error.getMessage()));
-        PdfWorkerProtocol.writeString(out, PdfWorkerProtocol.describe(error));
-        out.flush();
-    }
-
-    private static void warmUp() {
-        // Fails before READY if the natives can't load, so the pool falls back in-process.
-        NativeLoader.ensureLoaded();
-        try (PdfDocument ignored = PdfDocument.open(new byte[0])) {
-        } catch (Exception | LinkageError ignored) {
+        PdfWorkerProtocol.Response response =
+                new PdfWorkerProtocol.Response(
+                        request.jobId(), result[0], Arrays.copyOfRange(result, 1, result.length));
+        synchronized (writeLock) {
+            try {
+                PdfWorkerProtocol.writeResponse(out, response);
+                out.flush();
+            } catch (IOException serverGone) {
+                Runtime.getRuntime().halt(1);
+            }
+        }
+        // An idle worker hands its heap back; -Xms is small and the free ratios let it shrink.
+        if (inFlight.decrementAndGet() == 0) {
+            System.gc();
         }
     }
 }

@@ -2,6 +2,7 @@ package stirling.software.common.pdf.worker;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileDescriptor;
@@ -10,13 +11,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Stream;
 
 /** Worker main for pool tests: speaks the real protocol with no PDFium behind it. */
 public final class FakePdfWorkerMain {
 
-    private static final Duration BARRIER_TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration WAIT_LIMIT = Duration.ofSeconds(30);
 
     private FakePdfWorkerMain() {}
 
@@ -25,26 +26,34 @@ public final class FakePdfWorkerMain {
         PdfWorkerMain.serve(
                 new DataInputStream(new BufferedInputStream(System.in)),
                 new DataOutputStream(new BufferedOutputStream(protocolOut)),
-                Map.of(TestJob.TYPE, FakePdfWorkerMain::handle));
+                Integer.getInteger(PdfWorkerMain.INSTANCES_PROPERTY, 1),
+                FakePdfWorkerMain::dispatch);
     }
 
-    private static void handle(DataInputStream in, DataOutputStream out) throws IOException {
-        TestJob job = TestJob.readRequest(in);
+    private static byte[] dispatch(String type, byte[] request) throws IOException {
+        TestJob job =
+                TestJob.readRequest(new DataInputStream(new java.io.ByteArrayInputStream(request)));
+        String pid = String.valueOf(ProcessHandle.current().pid());
         switch (job.action()) {
             case "crash" -> Runtime.getRuntime().halt(3);
             case "fail" -> {
-                PdfWorkerMain.writeError(out, new IOException("Invalid PDF: " + job.value()));
-                return;
+                return PdfWorkerTask.error(new IOException("Invalid PDF: " + job.value()));
             }
             case "noise" -> {
-                out.writeBytes("not a frame");
-                out.flush();
-                return;
+                FileOutputStream stray = new FileOutputStream(FileDescriptor.out);
+                stray.write("not a frame".getBytes());
+                stray.flush();
+                return ok(pid + ":" + job.value());
             }
             case "barrier" -> {
                 boolean met = awaitParties(Path.of(job.value()), job.sleepMillis());
-                writeOk(out, ProcessHandle.current().pid() + ":" + (met ? "met" : "missed"));
-                return;
+                return ok(pid + ":" + (met ? "met" : "missed"));
+            }
+            case "wait" -> {
+                Path dir = Path.of(job.value());
+                Files.writeString(dir.resolve("started-" + pid), "");
+                boolean released = awaitFile(dir.resolve("release"));
+                return ok(pid + ":" + (released ? "released" : "stuck"));
             }
             default -> {}
         }
@@ -53,23 +62,43 @@ public final class FakePdfWorkerMain {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        writeOk(out, ProcessHandle.current().pid() + ":" + job.value());
+        return ok(pid + ":" + job.value());
     }
 
-    private static void writeOk(DataOutputStream out, String result) throws IOException {
-        PdfWorkerProtocol.writeHeader(out);
-        out.writeByte(PdfWorkerProtocol.STATUS_OK);
-        PdfWorkerProtocol.writeString(out, result);
+    private static byte[] ok(String result) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (DataOutputStream out = new DataOutputStream(bytes)) {
+            out.writeByte(PdfWorkerProtocol.STATUS_OK);
+            PdfWorkerProtocol.writeString(out, result);
+        }
+        return bytes.toByteArray();
     }
 
     private static boolean awaitParties(Path directory, int parties) throws IOException {
-        Files.createFile(directory.resolve(String.valueOf(ProcessHandle.current().pid())));
-        long deadline = System.nanoTime() + BARRIER_TIMEOUT.toNanos();
+        Files.createFile(
+                directory.resolve(
+                        ProcessHandle.current().pid() + "-" + Thread.currentThread().threadId()));
+        return poll(
+                () -> {
+                    try (Stream<Path> arrived = Files.list(directory)) {
+                        return arrived.count() >= parties;
+                    }
+                });
+    }
+
+    private static boolean awaitFile(Path file) throws IOException {
+        return poll(() -> Files.exists(file));
+    }
+
+    private interface Check {
+        boolean done() throws IOException;
+    }
+
+    private static boolean poll(Check check) throws IOException {
+        long deadline = System.nanoTime() + WAIT_LIMIT.toNanos();
         while (System.nanoTime() - deadline < 0) {
-            try (Stream<Path> arrived = Files.list(directory)) {
-                if (arrived.count() >= parties) {
-                    return true;
-                }
+            if (check.done()) {
+                return true;
             }
             try {
                 Thread.sleep(10);
@@ -82,8 +111,18 @@ public final class FakePdfWorkerMain {
     }
 
     /** Echo job; the result is "pid:value", or "in-process:value" when run in this JVM. */
-    record TestJob(String action, String value, int sleepMillis) implements PdfWorkerJob<String> {
+    record TestJob(String action, String value, int sleepMillis, Path input)
+            implements PdfWorkerJob<String> {
         static final String TYPE = "test";
+
+        TestJob(String action, String value, int sleepMillis) {
+            this(action, value, sleepMillis, null);
+        }
+
+        @Override
+        public List<Path> inputFiles() {
+            return input == null ? List.of() : List.of(input);
+        }
 
         @Override
         public String type() {

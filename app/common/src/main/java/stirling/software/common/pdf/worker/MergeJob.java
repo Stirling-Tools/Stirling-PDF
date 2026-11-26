@@ -37,6 +37,11 @@ public record MergeJob(
     public record Result(int[] pageCounts, boolean hasSignatures, boolean signatureCheckFailed) {}
 
     @Override
+    public List<Path> inputFiles() {
+        return inputs;
+    }
+
+    @Override
     public String type() {
         return TYPE;
     }

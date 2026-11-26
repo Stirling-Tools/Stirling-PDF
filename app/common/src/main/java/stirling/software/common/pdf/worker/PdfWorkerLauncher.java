@@ -18,20 +18,38 @@ final class PdfWorkerLauncher {
     private PdfWorkerLauncher() {}
 
     /** Returns the java binary followed by the worker's JVM arguments. */
-    static List<String> command(String maxHeap, Class<?> mainClass) {
+    static List<String> command(String maxHeap, Class<?> mainClass, int instances) {
         List<String> args = new ArrayList<>();
         args.add("-Xmx" + maxHeap);
+        // The default initial heap is 1/64 of RAM, which on a large host commits the whole -Xmx
+        // at start; a small start and tight free ratios let an idle worker hand memory back.
+        args.add("-Xms16m");
+        args.add("-XX:MinHeapFreeRatio=10");
+        args.add("-XX:MaxHeapFreeRatio=20");
         args.add("-Xss512k");
         args.add("-XX:+UseSerialGC");
-        args.add("-XX:ReservedCodeCacheSize=24m");
-        args.add("-XX:MaxMetaspaceSize=128m");
+        // Every isolated instance defines its own copy of JPDFium's classes and compiles them anew.
+        args.add("-XX:ReservedCodeCacheSize=" + (16 + 8 * instances) + "m");
+        args.add("-XX:MaxMetaspaceSize=" + (80 + 48 * instances) + "m");
         args.add("-XX:TieredStopAtLevel=1");
         args.add("-XX:+ExitOnOutOfMemoryError");
+        args.add("-XX:-CreateCoredumpOnCrash");
+        args.add(
+                "-XX:ErrorFile="
+                        + Path.of(
+                                System.getProperty("java.io.tmpdir"),
+                                "stirling-pdf-worker-hs_err_%p.log"));
+        // stdout carries protocol frames; a JVM warning or crash banner printed there would read as
+        // a protocol error instead of a crash.
+        args.add("-Xlog:disable");
+        args.add("-Xlog:all=warning:stderr");
+        args.add("-XX:+DisplayVMOutputToStderr");
         args.add("--enable-native-access=ALL-UNNAMED");
         args.add("-Djava.awt.headless=true");
         args.add("-Dfile.encoding=UTF-8");
         args.add("-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"));
         args.add("-Dlogback.configurationFile=logback-pdf-worker.xml");
+        args.add("-D" + PdfWorkerMain.INSTANCES_PROPERTY + "=" + instances);
         System.getProperties().stringPropertyNames().stream()
                 .filter(name -> name.startsWith("jpdfium.") && !name.equals("jpdfium.native.sweep"))
                 .sorted()
