@@ -2,7 +2,7 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import AddPageNumbersPositionSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
+import AddPageNumbersSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersSettings";
 import {
   defaultParameters,
   type AddPageNumbersParameters,
@@ -10,6 +10,7 @@ import {
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback?: string) => fallback }),
+  Trans: ({ defaults }: { defaults: string }) => defaults,
 }));
 vi.mock("@editor/components/tools/addPageNumbers/PageNumberPreview", () => ({
   default: () => null,
@@ -19,7 +20,7 @@ const renderSettings = (parameters: AddPageNumbersParameters) => {
   const onParameterChange = vi.fn();
   render(
     <MantineProvider env="test">
-      <AddPageNumbersPositionSettings
+      <AddPageNumbersSettings
         parameters={parameters}
         onParameterChange={onParameterChange}
       />
@@ -53,13 +54,16 @@ describe("Bates style", () => {
     );
   });
 
-  it("asks for prefix, suffix and digits instead of pages to number", () => {
+  it("asks for prefix, suffix and digits instead of custom text and pages", () => {
     renderSettings({ ...defaultParameters, numberingStyle: "bates" });
 
     expect(screen.getByRole("textbox", { name: "Prefix" })).toBeTruthy();
     expect(screen.getByRole("textbox", { name: "Suffix" })).toBeTruthy();
     expect(screen.getByRole("textbox", { name: "Digits" })).toBeTruthy();
     expect(screen.queryByRole("textbox", { name: "Pages to Number" })).toBe(
+      null,
+    );
+    expect(screen.queryByRole("textbox", { name: "Custom Text Format" })).toBe(
       null,
     );
   });
