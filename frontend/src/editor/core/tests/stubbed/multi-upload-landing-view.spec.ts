@@ -25,6 +25,29 @@ const MANY = fs
 const landingInput = (page: import("@playwright/test").Page) =>
   page.locator('.landing-actions-enter input[type="file"]');
 
+/** Records whether `selector` matches at any moment from now on, however briefly. */
+async function watchFor(
+  page: import("@playwright/test").Page,
+  selector: string,
+) {
+  const key = `seen ${selector}`;
+  await page.evaluate(
+    ([k, sel]) => {
+      const seen = window as unknown as Record<string, boolean>;
+      seen[k] = !!document.querySelector(sel);
+      new MutationObserver(() => {
+        if (document.querySelector(sel)) seen[k] = true;
+      }).observe(document.body, { subtree: true, childList: true });
+    },
+    [key, selector] as const,
+  );
+  return () =>
+    page.evaluate(
+      (k) => (window as unknown as Record<string, boolean>)[k],
+      key,
+    );
+}
+
 /** The password prompts follow one another, so each is told apart by its file name. */
 async function nextPrompt(
   page: import("@playwright/test").Page,
@@ -41,13 +64,7 @@ test("several files from the landing page open in Active Files", async ({
 }) => {
   // The view switcher already reads "viewer" on the empty landing page, so a
   // detour through the viewer is caught by it drawing a page instead.
-  await page.evaluate(() => {
-    const flag = window as unknown as { viewerOpened: boolean };
-    flag.viewerOpened = false;
-    new MutationObserver(() => {
-      if (document.querySelector("[data-page-index]")) flag.viewerOpened = true;
-    }).observe(document.body, { subtree: true, childList: true });
-  });
+  const viewerOpened = await watchFor(page, "[data-page-index]");
 
   await landingInput(page).setInputFiles(MANY);
   await expect(page.locator("[data-file-id]")).toHaveCount(MANY.length, {
@@ -57,10 +74,7 @@ test("several files from the landing page open in Active Files", async ({
   await expect(
     page.getByRole("radio", { name: /Active Files/i }),
   ).toBeChecked();
-  const viewerOpened = await page.evaluate(
-    () => (window as unknown as { viewerOpened: boolean }).viewerOpened,
-  );
-  expect(viewerOpened).toBe(false);
+  expect(await viewerOpened()).toBe(false);
 });
 
 test("switching to the viewer during an upload survives its end", async ({
@@ -74,7 +88,8 @@ test("switching to the viewer during an upload survives its end", async ({
   await viewer.evaluate((el: HTMLInputElement) => el.click());
   await expect(viewer).toBeChecked();
   await expect(progress).toHaveCount(0, { timeout: 60_000 });
-  // The end of the upload is what used to switch it back.
+  // Nothing marks the moment the upload's end has been handled, and a frame
+  // or two is not always enough to see the switch back, so allow a second.
   await page.waitForTimeout(1000);
   await expect(viewer).toBeChecked();
 });
@@ -115,13 +130,7 @@ for (const [label, files] of [
 test("a PDF that only restricts actions opens without a password prompt", async ({
   page,
 }) => {
-  await page.evaluate(() => {
-    const flag = window as unknown as { prompted: boolean };
-    flag.prompted = false;
-    new MutationObserver(() => {
-      if (document.querySelector('[role="dialog"]')) flag.prompted = true;
-    }).observe(document.body, { subtree: true, childList: true });
-  });
+  const prompted = await watchFor(page, '[role="dialog"]');
   await landingInput(page).setInputFiles(
     ["owner-only-restricted.pdf", "sample.pdf"].map((f) =>
       path.join(FIXTURES, f),
@@ -130,10 +139,7 @@ test("a PDF that only restricts actions opens without a password prompt", async 
   await expect(page.locator("[data-file-id]")).toHaveCount(2, {
     timeout: 15_000,
   });
-  const prompted = await page.evaluate(
-    () => (window as unknown as { prompted: boolean }).prompted,
-  );
-  expect(prompted).toBe(false);
+  expect(await prompted()).toBe(false);
 });
 
 test("skipping every password leaves a later single file to open in the viewer", async ({

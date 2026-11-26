@@ -131,8 +131,7 @@ vi.mock("@editor/contexts/FilesPageContext", () => ({
   useFilesPage: () => ({}),
 }));
 vi.mock("@editor/services/bulkAddProgress", () => ({
-  useBulkAddProgress: () => ({ total: 0, done: 0 }),
-  BULK_ADD_INDICATOR_MIN: 8,
+  useVisibleBulkAddProgress: () => null,
 }));
 vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {},

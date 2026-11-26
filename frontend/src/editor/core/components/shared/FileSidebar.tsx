@@ -74,10 +74,8 @@ import { useOpenInNewWindow } from "@editor/extensions/openInNewWindow";
 import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
 import { alert } from "@editor/components/toast";
 import { libraryFileDate } from "@editor/components/filesPage/libraryFileDate";
-import {
-  BULK_ADD_INDICATOR_MIN,
-  useBulkAddProgress,
-} from "@editor/services/bulkAddProgress";
+import { useVisibleBulkAddProgress } from "@editor/services/bulkAddProgress";
+import { BulkAddProgressBar } from "@editor/components/shared/BulkAddProgressBar";
 import { useIsScrolled } from "@editor/hooks/useIsScrolled";
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { useCoalescedCallback } from "@editor/hooks/useCoalescedCallback";
@@ -125,29 +123,14 @@ export interface FileSidebarProps {
 
 /** Isolates per-file progress updates from the sidebar's file-list renders. */
 function BulkAddProgressRow() {
-  const { t } = useTranslation();
-  const bulkAdd = useBulkAddProgress();
-  if (bulkAdd.total < BULK_ADD_INDICATOR_MIN || bulkAdd.done >= bulkAdd.total) {
-    return null;
-  }
-  return (
-    <div className="file-sidebar-bulk-add" role="status" aria-live="polite">
-      <div className="file-sidebar-bulk-add-label">
-        <span>{t("fileSidebar.addingFiles", "Adding files…")}</span>
-        <span className="file-sidebar-bulk-add-count">
-          {bulkAdd.done}/{bulkAdd.total}
-        </span>
-      </div>
-      <div className="file-sidebar-bulk-add-track">
-        <div
-          className="file-sidebar-bulk-add-bar"
-          style={{
-            width: `${Math.round((bulkAdd.done / bulkAdd.total) * 100)}%`,
-          }}
-        />
-      </div>
-    </div>
-  );
+  const progress = useVisibleBulkAddProgress();
+  return progress ? (
+    <BulkAddProgressBar
+      progress={progress}
+      className="file-sidebar-bulk-add"
+      announce
+    />
+  ) : null;
 }
 
 /** Isolates library-state subscriptions from the sidebar used by every workspace. */
@@ -430,6 +413,8 @@ interface GroupedFileListProps {
   onViewAll: () => void;
   /** Absent when nothing is clearable, which hides the button. */
   onClearRecents?: () => void;
+  /** The group that shows upload progress under its header. */
+  progressGroupId?: string;
 }
 
 function GroupedFileList({
@@ -440,6 +425,7 @@ function GroupedFileList({
   total,
   onViewAll,
   onClearRecents,
+  progressGroupId,
 }: GroupedFileListProps) {
   const { t } = useTranslation();
   return (
@@ -461,7 +447,9 @@ function GroupedFileList({
                 />
               ) : undefined
             }
-            status={group.id === "recent" ? <BulkAddProgressRow /> : undefined}
+            status={
+              group.id === progressGroupId ? <BulkAddProgressRow /> : undefined
+            }
           />
         );
       })}
@@ -538,7 +526,7 @@ function LibraryFileList({
 
 interface FileLibrarySectionProps extends Omit<
   LibraryFileListProps,
-  "scrollRef"
+  "scrollRef" | "progressGroupId"
 > {
   cloudPickers: CloudFilePicker[];
   onCloudPick: (picker: CloudFilePicker) => void;
@@ -552,6 +540,9 @@ function FileLibrarySection({
   ...list
 }: FileLibrarySectionProps) {
   const { scrolled, scrollRef } = useIsScrolled();
+  // Under Recent when the list has one, as the newest files land there;
+  // otherwise above the list.
+  const progressGroupId = list.groups?.find((g) => g.id === "recent")?.id;
   return (
     <div className="file-sidebar-files-section sidebar-content-fade">
       <LibraryHeader
@@ -563,8 +554,12 @@ function FileLibrarySection({
         onOpenFilesPage={list.onOpenFilesPage}
         onClearRecents={list.groups ? undefined : list.onClearRecents}
       />
-      {!list.groups?.some((g) => g.id === "recent") && <BulkAddProgressRow />}
-      <LibraryFileList scrollRef={scrollRef} {...list} />
+      {!progressGroupId && <BulkAddProgressRow />}
+      <LibraryFileList
+        scrollRef={scrollRef}
+        progressGroupId={progressGroupId}
+        {...list}
+      />
     </div>
   );
 }

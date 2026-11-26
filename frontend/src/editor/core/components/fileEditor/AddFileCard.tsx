@@ -10,10 +10,8 @@ import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabl
 import { useIsWorkbenchFileDragOver } from "@editor/components/layout/useWorkbenchFileDrop";
 import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
-import {
-  BULK_ADD_INDICATOR_MIN,
-  useBulkAddProgress,
-} from "@editor/services/bulkAddProgress";
+import { useVisibleBulkAddProgress } from "@editor/services/bulkAddProgress";
+import { BulkAddProgressBar } from "@editor/components/shared/BulkAddProgressBar";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -25,41 +23,25 @@ interface AddFileCardProps {
   onFilesSelected: (files: File[]) => void;
 }
 
+/** Isolates per-file progress updates from the card's renders. */
+function AddFileCardHint() {
+  const { t } = useTranslation();
+  const progress = useVisibleBulkAddProgress();
+  // The sidebar's bar announces the same progress.
+  if (progress) return <BulkAddProgressBar progress={progress} />;
+  return (
+    <div className={styles.hint}>
+      {t("fileEditor.addCard.dropHint", "or drop files anywhere")}
+    </div>
+  );
+}
+
 /**
  * The workbench's standing "add files" slot in the thumbnail grid. Add Files
  * opens the file library; the overflow menu holds the direct computer and
  * mobile uploads. Drops are handled by the workbench, whose drag state this
  * card reflects.
  */
-/** Isolates per-file progress updates from the card's renders. */
-function AddFileCardHint() {
-  const { t } = useTranslation();
-  const { done, total } = useBulkAddProgress();
-  if (total < BULK_ADD_INDICATOR_MIN || done >= total) {
-    return (
-      <div className={styles.hint}>
-        {t("fileEditor.addCard.dropHint", "or drop files anywhere")}
-      </div>
-    );
-  }
-  return (
-    <div className={styles.progress} role="status" aria-live="polite">
-      <div className={styles.progressLabel}>
-        <span>{t("fileSidebar.addingFiles", "Adding files…")}</span>
-        <span className={styles.progressCount}>
-          {done}/{total}
-        </span>
-      </div>
-      <div className={styles.progressTrack}>
-        <div
-          className={styles.progressBar}
-          style={{ width: `${Math.round((done / total) * 100)}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();

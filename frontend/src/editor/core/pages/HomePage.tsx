@@ -37,10 +37,7 @@ import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
 import Workbench from "@editor/components/layout/Workbench";
 import FileSidebar from "@editor/components/shared/FileSidebar";
 import FileManager from "@editor/components/FileManager";
-import {
-  getStartupNavigationAction,
-  getDefaultWorkbenchForFileCount,
-} from "@editor/utils/homePageNavigation";
+import { getDefaultWorkbenchForFileCount } from "@editor/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import { READER_PATH } from "@editor/routes/readerRoute";
 import { PolicyAutoRunController } from "@editor/components/policies/PolicyAutoRunController";
@@ -70,12 +67,8 @@ import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@editor/hooks/useLibraryRefresh";
 import { useAuth } from "@editor/auth/UseSession";
 import { canPickDirectory } from "@editor/services/directoryPicker";
-import { useBulkAddProgress } from "@editor/services/bulkAddProgress";
-import {
-  hasPendingUnlocks,
-  subscribeToPendingUnlocks,
-} from "@editor/services/pendingUnlocks";
 import { useLibraryUpload } from "@editor/components/filesPage/useLibraryUpload";
+import { useStartupNavigation } from "@editor/hooks/useStartupNavigation";
 import { useProcessingFolderCreation } from "@editor/hooks/useProcessingFolderCreation";
 import { consumeProcessingFolderCreationRequest } from "@editor/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@editor/components/shared/FileSidebar";
@@ -337,93 +330,18 @@ export default function HomePage() {
   }, [readerMode, location.pathname, navigate]);
 
   const { setActiveFileIndex } = useViewer();
-  const prevFileCountRef = useRef(activeFiles.length);
-
-  // Startup/open transition behavior:
-  // - opening exactly 1 file from empty -> viewer (unless already in fileEditor)
-  // - opening 2+ files from empty -> fileEditor
-  // Files from one upload are published one at a time, and locked PDFs only
-  // once unlocked, so the published count can't tell one file from several.
-  // The upload's own size decides instead, and the view waits for it to end.
-  const importTotal = useBulkAddProgress().total;
-  const importingSeveral = importTotal > 1;
-  const severalIntoEmptyRef = useRef(false);
-  // Set once the upload has picked the view, so its end can't undo a switch
-  // the user made while it ran.
-  const viewChosenForUploadRef = useRef(false);
-  useEffect(() => {
-    if (importTotal === 0) return;
-    severalIntoEmptyRef.current =
-      importTotal > 1 && prevFileCountRef.current === 0;
-    // Switch now: the default view would otherwise show the first file
-    // arriving for as long as the rest take.
-    if (!severalIntoEmptyRef.current || isApplyingRestoredView()) return;
-    const action = getStartupNavigationAction(
-      0,
-      importTotal,
-      selectedToolKey,
-      navigationState.workbench,
-    );
-    if (action) actions.setWorkbench(action.workbench);
-    viewChosenForUploadRef.current = true;
-    // Keyed on the upload alone, so switching views mid-upload isn't undone.
-  }, [importTotal]);
-  // Skipping every prompt leaves nothing of the upload to open.
-  useEffect(
-    () =>
-      subscribeToPendingUnlocks(() => {
-        if (!hasPendingUnlocks()) severalIntoEmptyRef.current = false;
-      }),
-    [],
-  );
-  useEffect(() => {
-    if (importingSeveral) return;
-    const prevCount = prevFileCountRef.current;
-    const currentCount = activeFiles.length;
-
-    let action = getStartupNavigationAction(
-      prevCount,
-      currentCount,
-      selectedToolKey,
-      navigationState.workbench,
-    );
-    if (
-      action?.workbench === "viewer" &&
-      prevCount === 0 &&
-      severalIntoEmptyRef.current
-    ) {
-      action = { workbench: "fileEditor" };
-    }
-    if (currentCount > 0 || !hasPendingUnlocks()) {
-      severalIntoEmptyRef.current = false;
-    }
-    if (viewChosenForUploadRef.current) {
-      viewChosenForUploadRef.current = false;
-      if (prevCount === 0) action = null;
-    }
-
-    // A session restore fills an empty workbench too, but it already knows which view the user
-    // left - so it wins over this heuristic rather than being overwritten by it.
-    if (action && !isApplyingRestoredView()) {
+  useStartupNavigation(
+    activeFiles.length,
+    selectedToolKey,
+    navigationState.workbench,
+    (action) => {
       actions.setWorkbench(action.workbench);
       if (typeof action.activeFileIndex === "number") {
         setActiveFileIndex(action.activeFileIndex);
       }
-      if (isMobile) {
-        setActiveMobileView("workbench");
-      }
-    }
-
-    prevFileCountRef.current = currentCount;
-  }, [
-    importingSeveral,
-    activeFiles.length,
-    actions,
-    setActiveFileIndex,
-    selectedToolKey,
-    navigationState.workbench,
-    isMobile,
-  ]);
+      if (isMobile) setActiveMobileView("workbench");
+    },
+  );
 
   const isWorkspaceHub =
     navigationState.workbench === "myFiles" ||

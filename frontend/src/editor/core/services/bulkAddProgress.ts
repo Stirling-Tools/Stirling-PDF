@@ -21,7 +21,7 @@ export interface BulkAddProgress {
 }
 
 /** Show progress only for large drops; small imports finish before it paints. */
-export const BULK_ADD_INDICATOR_MIN = 8;
+const BULK_ADD_INDICATOR_MIN = 8;
 
 /** Null object — no bulk add in progress. */
 const IDLE: BulkAddProgress = { done: 0, total: 0 };
@@ -51,12 +51,19 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-/** Current bulk-add progress; `total === 0` means idle. Only shows for batches
- *  large enough that the scan is user-visible (small drops finish instantly). */
+/** Current bulk-add progress; `total === 0` means idle. */
 export function useBulkAddProgress(): BulkAddProgress {
   return useSyncExternalStore(
     subscribe,
     () => progress,
     () => IDLE,
   );
+}
+
+/** Progress worth showing: a batch large enough to take visible time, still running. */
+export function useVisibleBulkAddProgress(): BulkAddProgress | null {
+  const current = useBulkAddProgress();
+  return current.total >= BULK_ADD_INDICATOR_MIN && current.done < current.total
+    ? current
+    : null;
 }

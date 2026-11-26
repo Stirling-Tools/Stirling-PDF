@@ -152,8 +152,9 @@ function FileContextInner({
     error?: string;
   } | null>(null);
   const [inspectionAttempt, setInspectionAttempt] = useState(0);
-  // A check still running after OPENING_CHECK_PROMPT_DELAY_MS, so its prompt shows to offer a cancel.
-  const [slowInspectionId, setSlowInspectionId] = useState<FileId | null>(null);
+  // The file whose prompt has shown, because its check ran long or failed. It
+  // stays up through retries until another file becomes active.
+  const [promptShownFor, setPromptShownFor] = useState<FileId | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [openingPasswordToRemove, setOpeningPasswordToRemove] = useState<
     string | null
@@ -396,6 +397,7 @@ function FileContextInner({
     setUnlockPassword("");
     setUnlockError(null);
     setOpeningPasswordToRemove(null);
+    setPromptShownFor(null);
     const cancellation = new AbortController();
     protectionOperation.current = cancellation;
     return () => cancellation.abort();
@@ -789,12 +791,21 @@ function FileContextInner({
     [t],
   );
 
+  /** Whether opening the file starts with the empty-password check (inspectOpening). */
+  const needsOpeningCheck = (
+    fileId: FileId,
+    stub: StirlingFileStub | undefined,
+  ): stub is StirlingFileStub =>
+    !getPdfAccess(fileId) &&
+    !ownerRequests.current.has(fileId) &&
+    !!stub &&
+    stub.processedFile?.requiresOpeningPassword !== true;
+
   const inspectOpening = useEffectEvent(
     (fileId: FileId, controller: AbortController) => {
-      if (getPdfAccess(fileId) || ownerRequests.current.has(fileId)) return;
       const pending = pendingAdmissions.current.get(fileId);
       const stub = pending?.stub ?? stateRef.current.files.byId[fileId];
-      if (!stub || stub.processedFile?.requiresOpeningPassword === true) return;
+      if (!needsOpeningCheck(fileId, stub)) return;
       protectionOperation.current = controller;
       setOpeningInspection({ fileId });
       // Only the file being opened is parsed; library admission never allocates a PDF heap.
@@ -825,6 +836,7 @@ function FileContextInner({
                 .catch(() => {});
             setOpeningInspection(null);
           } else {
+            setPromptShownFor(fileId);
             setOpeningInspection({
               fileId,
               error: t(
@@ -842,7 +854,7 @@ function FileContextInner({
     const controller = new AbortController();
     inspectOpening(activeEncryptedFileId, controller);
     const slow = window.setTimeout(
-      () => setSlowInspectionId(activeEncryptedFileId),
+      () => setPromptShownFor(activeEncryptedFileId),
       OPENING_CHECK_PROMPT_DELAY_MS,
     );
     return () => {
@@ -1406,13 +1418,10 @@ function FileContextInner({
   // run long, rather than flashing up for each of them.
   const checkingWithoutPrompt =
     !!activeEncryptedFileId &&
-    !openingInspection?.error &&
-    slowInspectionId !== activeEncryptedFileId &&
+    promptShownFor !== activeEncryptedFileId &&
     // Running, or about to start on this file's first render as the active one.
     (openingInspection?.fileId === activeEncryptedFileId ||
-      (!getPdfAccess(activeEncryptedFileId) &&
-        !ownerRequests.current.has(activeEncryptedFileId) &&
-        activeEncryptedStub?.processedFile?.requiresOpeningPassword !== true));
+      needsOpeningCheck(activeEncryptedFileId, activeEncryptedStub));
   const isUnlockModalOpen = Boolean(
     activeEncryptedFileId && activeEncryptedStub && !checkingWithoutPrompt,
   );

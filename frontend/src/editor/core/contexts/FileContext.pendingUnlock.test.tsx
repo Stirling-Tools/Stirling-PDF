@@ -270,13 +270,20 @@ describe("deferred opening inspection", () => {
     );
     const file = new File(["encrypted"], "pending.pdf");
     let loading!: ReturnType<typeof result.current.actions.addFiles>;
-    await act(async () => {
-      loading = result.current.actions.addFiles([file]);
-    });
-    // The prompt holds back while a check is quick, then offers a cancel.
-    expect(
-      await screen.findByRole("status", {}, { timeout: 3000 }),
-    ).toHaveTextContent("Checking permissions");
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      await act(async () => {
+        loading = result.current.actions.addFiles([file]);
+      });
+      // The prompt holds back while a check is quick, then offers a cancel.
+      expect(screen.queryByRole("status")).toBeNull();
+      await act(async () => vi.runOnlyPendingTimers());
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Checking permissions",
+    );
     const signal = localInspection.mock.calls[0][2] as AbortSignal;
     await act(async () => fireEvent.click(screen.getByText("Cancel opening")));
     expect(signal.aborted).toBe(true);
