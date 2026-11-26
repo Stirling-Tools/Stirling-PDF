@@ -24,3 +24,16 @@ export const WithQuickGrid: Story = {
     showQuickGrid: true,
   },
 };
+
+export const CustomTextBottomRight: Story = {
+  args: {
+    parameters: {
+      ...defaultParameters,
+      position: 9,
+      customText: "REF-2026-0412-{n}",
+      zeroPad: 3,
+    },
+    onParameterChange: () => {},
+    showQuickGrid: true,
+  },
+};

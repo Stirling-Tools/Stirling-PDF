@@ -2,11 +2,14 @@
  * AddPageNumbersAppearanceSettings - Customize Appearance step
  */
 
-import { Stack, Select, TextInput, NumberInput } from "@mantine/core";
-import { useTranslation } from "react-i18next";
+import { useRef } from "react";
+import { Box, Stack, Select, TextInput, NumberInput } from "@mantine/core";
+import { Trans, useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { PageNumberVariablePicker } from "@editor/components/tools/addPageNumbers/PageNumberVariablePicker";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface AddPageNumbersAppearanceSettingsProps {
   parameters: AddPageNumbersParameters;
@@ -23,6 +26,28 @@ const AddPageNumbersAppearanceSettings = ({
   disabled = false,
 }: AddPageNumbersAppearanceSettingsProps) => {
   const { t } = useTranslation();
+  const customTextCaret = useRef<{ start: number; end: number } | null>(null);
+
+  const rememberCaret = (input: HTMLInputElement) => {
+    customTextCaret.current = {
+      start: input.selectionStart ?? input.value.length,
+      end: input.selectionEnd ?? input.value.length,
+    };
+  };
+
+  // At the caret the field last had, or at the end before it has had one.
+  const insertVariable = (token: string) => {
+    const text = parameters.customText || "";
+    const caret = customTextCaret.current;
+    const start = Math.min(caret?.start ?? text.length, text.length);
+    const end = Math.min(caret?.end ?? text.length, text.length);
+    onParameterChange(
+      "customText",
+      text.slice(0, start) + token + text.slice(end),
+    );
+    const after = start + token.length;
+    customTextCaret.current = { start: after, end: after };
+  };
 
   return (
     <Stack gap="md">
@@ -70,22 +95,6 @@ const AddPageNumbersAppearanceSettings = ({
         disabled={disabled}
       />
 
-      <NumberInput
-        {...infoLabelProps(
-          t("addPageNumbers.zeroPad", "Zero-pad Width"),
-          t(
-            "addPageNumbers.zeroPadTooltip",
-            "Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.",
-          ),
-        )}
-        value={parameters.zeroPad}
-        onChange={(v) =>
-          onParameterChange("zeroPad", typeof v === "number" ? v : 0)
-        }
-        min={0}
-        disabled={disabled}
-      />
-
       <Select
         label={t("addPageNumbers.fontName", "Font Type")}
         value={parameters.fontType}
@@ -107,20 +116,48 @@ const AddPageNumbersAppearanceSettings = ({
         }}
       />
 
-      <TextInput
+      <Box pos="relative">
+        <TextInput
+          {...infoLabelProps(
+            t("addPageNumbers.selectText.6", "Custom Text Format"),
+            <Trans
+              i18nKey="customTextTooltip"
+              defaults="Printed on each numbered page. <code>{n}</code> is the page number, <code>{total}</code> the number of pages in the file and <code>{filename}</code> the file name. Leave blank to print just the number."
+              components={{ code: <code /> }}
+            />,
+          )}
+          value={parameters.customText || ""}
+          className={privateContentClassName}
+          onChange={(e) => {
+            rememberCaret(e.currentTarget);
+            onParameterChange("customText", e.currentTarget.value);
+          }}
+          onSelect={(e) => rememberCaret(e.currentTarget)}
+          placeholder={t(
+            "addPageNumbers.customNumberDesc",
+            'e.g., "Page {n}" or leave blank for just numbers',
+          )}
+          disabled={disabled}
+        />
+        <PageNumberVariablePicker
+          onInsert={insertVariable}
+          disabled={disabled}
+        />
+      </Box>
+
+      <NumberInput
         {...infoLabelProps(
-          t("addPageNumbers.selectText.6", "Custom Text Format"),
+          t("addPageNumbers.zeroPad", "Zero-pad Width"),
           t(
-            "customTextTooltip",
-            'Optional custom format for page numbers. Use {n} as placeholder for the number. Example: "Page {n}" will show "Page 1", "Page 2", etc.',
+            "addPageNumbers.zeroPadTooltip",
+            "Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.",
           ),
         )}
-        value={parameters.customText || ""}
-        onChange={(e) => onParameterChange("customText", e.currentTarget.value)}
-        placeholder={t(
-          "addPageNumbers.customNumberDesc",
-          'e.g., "Page {n}" or leave blank for just numbers',
-        )}
+        value={parameters.zeroPad}
+        onChange={(v) =>
+          onParameterChange("zeroPad", typeof v === "number" ? v : 0)
+        }
+        min={0}
         disabled={disabled}
       />
     </Stack>

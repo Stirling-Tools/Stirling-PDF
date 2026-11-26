@@ -1,14 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { VisuallyHidden } from "@mantine/core";
 import { AddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 import { useThumbnailGeneration } from "@editor/hooks/useThumbnailGeneration";
 import styles from "@editor/components/tools/addPageNumbers/PageNumberPreview.module.css";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { Button } from "@editor/ui/Button";
+import {
+  fileNameWithoutExtension,
+  formatPageNumberLabel,
+  getPageNumberLabelStyle,
+  getPageNumberPlacement,
+} from "@editor/components/tools/addPageNumbers/pageNumberLabel";
 
 // Simple utilities for page numbers (adapted from stamp)
 const A4_ASPECT_RATIO = 0.707;
+const A4_WIDTH_PTS = 595.28;
+// A true-scale 12pt number is about 5px in the panel, too small to read.
+const MIN_LABEL_PX = 9;
 
 const getFirstSelectedPage = (input: string): number => {
   if (!input) return 1;
@@ -25,72 +35,6 @@ const getFirstSelectedPage = (input: string): number => {
     if (Number.isFinite(n) && n > 0) return n;
   }
   return 1;
-};
-
-const detectOverallBackgroundColor = async (
-  thumbnailSrc: string | null,
-): Promise<"light" | "dark"> => {
-  if (!thumbnailSrc) {
-    return "light"; // Default to light background if no thumbnail
-  }
-
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        if (!ctx) {
-          resolve("light");
-          return;
-        }
-
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-
-        // Sample the entire image at reduced resolution for performance
-        const sampleWidth = Math.min(100, img.width);
-        const sampleHeight = Math.min(100, img.height);
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-        const data = imageData.data;
-
-        let totalBrightness = 0;
-        let pixelCount = 0;
-
-        // Sample every nth pixel for performance
-        const step = Math.max(
-          1,
-          Math.floor((img.width * img.height) / (sampleWidth * sampleHeight)),
-        );
-
-        for (let i = 0; i < data.length; i += 4 * step) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-
-          // Calculate perceived brightness using luminance formula
-          const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          totalBrightness += brightness;
-          pixelCount++;
-        }
-
-        const averageBrightness = totalBrightness / pixelCount;
-
-        // Threshold: 128 is middle gray
-        resolve(averageBrightness > 128 ? "light" : "dark");
-      } catch (error) {
-        console.warn("Error detecting background color:", error);
-        resolve("light"); // Default fallback
-      }
-    };
-
-    img.onerror = () => resolve("light");
-    img.src = thumbnailSrc;
-  });
 };
 
 type Props = {
@@ -111,7 +55,10 @@ export default function PageNumberPreview({
 }: Props) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [, setContainerSize] = useState<{ width: number; height: number }>({
+  const [containerSize, setContainerSize] = useState<{
+    width: number;
+    height: number;
+  }>({
     width: 0,
     height: 0,
   });
@@ -119,10 +66,10 @@ export default function PageNumberPreview({
     widthPts: number;
     heightPts: number;
   } | null>(null);
+  const [pageCount, setPageCount] = useState<number | null>(null);
   const [pageThumbnail, setPageThumbnail] = useState<string | null>(null);
   const { requestThumbnail } = useThumbnailGeneration();
   const [hoverTile, setHoverTile] = useState<number | null>(null);
-  const [textColor, setTextColor] = useState<string>("#fff");
 
   // Observe container size for responsive positioning
   useEffect(() => {
@@ -149,6 +96,7 @@ export default function PageNumberPreview({
     const load = async () => {
       if (!file || file.type !== "application/pdf") {
         setPageSize(null);
+        setPageCount(null);
         return;
       }
       try {
@@ -161,10 +109,14 @@ export default function PageNumberPreview({
         const viewport = page.getViewport({ scale: 1 });
         if (!cancelled) {
           setPageSize({ widthPts: viewport.width, heightPts: viewport.height });
+          setPageCount(pdf.numPages);
         }
         pdfWorkerManager.destroyDocument(pdf);
       } catch {
-        if (!cancelled) setPageSize(null);
+        if (!cancelled) {
+          setPageSize(null);
+          setPageCount(null);
+        }
       }
     };
     load();
@@ -199,31 +151,37 @@ export default function PageNumberPreview({
     };
   }, [file, parameters.pagesToNumber, requestThumbnail]);
 
-  // Detect text color based on overall PDF background
-  useEffect(() => {
-    if (!pageThumbnail) {
-      setTextColor("#fff"); // Default to white for no thumbnail
-      return;
-    }
-
-    const detectColor = async () => {
-      const backgroundType = await detectOverallBackgroundColor(pageThumbnail);
-      setTextColor(backgroundType === "light" ? "#000" : "#fff");
-    };
-
-    detectColor();
-  }, [pageThumbnail]);
-
   const containerStyle = useMemo(
     () => ({
       position: "relative" as const,
       width: "100%",
-      aspectRatio: `${(pageSize?.widthPts ?? 595.28) / (pageSize?.heightPts ?? 841.89)} / 1`,
+      aspectRatio: `${(pageSize?.widthPts ?? A4_WIDTH_PTS) / (pageSize?.heightPts ?? 841.89)} / 1`,
       backgroundColor: pageThumbnail ? "white" : "rgba(255,255,255,0.03)",
       border: "1px solid var(--c-border, #333)",
       overflow: "hidden" as const,
     }),
     [pageSize, pageThumbnail],
+  );
+
+  // The first page the tool numbers gets the starting number. A hovered tile
+  // previews its position before it is picked.
+  const label = formatPageNumberLabel(parameters.customText, {
+    n: parameters.startingNumber,
+    zeroPad: parameters.zeroPad,
+    total: pageCount ?? undefined,
+    filename: file ? fileNameWithoutExtension(file.name) : undefined,
+  });
+  const labelStyle = getPageNumberLabelStyle(
+    getPageNumberPlacement(
+      hoverTile ?? parameters.position,
+      parameters.customMargin,
+    ),
+    parameters.fontType,
+    Math.max(
+      MIN_LABEL_PX,
+      (parameters.fontSize * containerSize.width) /
+        (pageSize?.widthPts ?? A4_WIDTH_PTS),
+    ),
   );
 
   return (
@@ -264,20 +222,23 @@ export default function PageNumberPreview({
                   onClick={() => onParameterChange("position", idx)}
                   onMouseEnter={() => setHoverTile(idx)}
                   onMouseLeave={() => setHoverTile(null)}
-                  style={{
-                    color: textColor,
-                    textShadow:
-                      textColor === "#fff"
-                        ? "1px 1px 2px rgba(0, 0, 0, 0.8)"
-                        : "1px 1px 2px rgba(255, 255, 255, 0.8)",
-                  }}
                 >
-                  {idx}
+                  <VisuallyHidden>{idx}</VisuallyHidden>
                 </Button>
               );
             })}
           </div>
         )}
+
+        <PrivateContent>
+          <span
+            className={`${styles.pageNumberLabel} ${pageThumbnail ? styles.pageNumberLabelOnPage : ""}`}
+            data-testid="page-number-preview-label"
+            style={labelStyle}
+          >
+            {label}
+          </span>
+        </PrivateContent>
       </div>
       <div className={styles.previewDisclaimer}>
         {t(

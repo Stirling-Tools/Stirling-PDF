@@ -26,7 +26,7 @@ confirmCloseUnsavedList_one = "You have {{count}} file with unsaved changes.\n\n
 confirmCloseUnsavedList_other = "You have {{count}} files with unsaved changes.\n\n{{fileList}}"
 custom = "Custom..."
 customPosition = "Custom Position"
-customTextTooltip = "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc."
+customTextTooltip = "Printed on each numbered page. <code>{n}</code> is the page number, <code>{total}</code> the number of pages in the file and <code>{filename}</code> the file name. Leave blank to print just the number."
 delete = "Delete"
 details = "Details"
 discardChanges = "Discard & Leave"
@@ -283,6 +283,7 @@ previewDisclaimer = "Preview is approximate. Final output may vary due to PDF fo
 submit = "Add Page Numbers"
 tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
+variablesButton = "Variables"
 zeroPad = "Zero-pad Width"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
@@ -297,6 +298,11 @@ title = "Page Number Results"
 4 = "Starting Number"
 5 = "Pages to Number"
 6 = "Custom Text Format"
+
+[addPageNumbers.variables]
+filename = "File name without the extension"
+n = "Page number"
+total = "Number of pages in the file"
 
 [addPassword]
 desc = "Encrypt your PDF document with a password."
