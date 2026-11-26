@@ -130,6 +130,10 @@ export function FormatGroup({
   // The colour under the picker's handle while it is dragged; one change is
   // applied when the drag ends, so a drag is one undo step.
   const [fillPending, setFillPending] = useState<string | null>(null);
+  // Mantine moves the handle on the next frame but can report a fast click's
+  // end before that frame, with the colour from before the click; the drag's
+  // last colour is read from here a frame later instead.
+  const fillPendingRef = useRef<string | null>(null);
   const fillFocusedRef = useRef(false);
   if (!hasRunSelection) return null;
 
@@ -535,10 +539,17 @@ export function FormatGroup({
                 size="sm"
                 fullWidth
                 value={swatch}
-                onChange={setFillPending}
+                onChange={(next) => {
+                  fillPendingRef.current = next;
+                  setFillPending(next);
+                }}
                 onChangeEnd={(next) => {
-                  setFillPending(null);
-                  applyFill(next);
+                  requestAnimationFrame(() => {
+                    const picked = fillPendingRef.current ?? next;
+                    fillPendingRef.current = null;
+                    setFillPending(null);
+                    applyFill(picked);
+                  });
                 }}
               />
               {fillInput}

@@ -313,6 +313,38 @@ test.describe("PDF text editor - formatting popovers stay open", () => {
     await expect.poll(() => fillOf(page, body)).not.toBe(before);
   });
 
+  // Mantine can report a fast click's end before the frame that moves the
+  // handle, so a press and release in the same instant must still apply the
+  // picked colour rather than the one from before the click.
+  test("an instant click in the picker applies the picked colour", async ({
+    page,
+  }) => {
+    await openEditor(page, TAGGED_PDF);
+    const body = await runId(page, "Revenue grew");
+    await runBox(page, body).click();
+    const before = await fillOf(page, body);
+
+    await openFormatMenu(page, "colour");
+    const saturation = page.locator(".mantine-ColorPicker-saturation").first();
+    await expect(saturation).toBeVisible();
+    await saturation.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const at = {
+        bubbles: true,
+        cancelable: true,
+        clientX: r.right - 4,
+        clientY: r.top + 4,
+      };
+      el.dispatchEvent(new MouseEvent("mousedown", at));
+      document.dispatchEvent(new MouseEvent("mouseup", at));
+    });
+
+    await expect.poll(() => fillOf(page, body)).not.toBe(before);
+    await expect(page.getByTestId("pdf-editor-colour")).not.toHaveValue(
+      "#000000",
+    );
+  });
+
   for (const width of [1920, 1280]) {
     test(`the change-case menu, outline colour and weight menu open at ${width}px`, async ({
       page,
