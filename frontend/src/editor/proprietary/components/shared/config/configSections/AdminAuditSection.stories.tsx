@@ -59,6 +59,40 @@ export const Enabled: Story = {
         capturePdfAuthor: true,
         captureOperationResults: true,
       });
+      // The dashboard's stat cards and charts fetch on mount too, and an
+      // unmocked read comes back in a shape they crash on.
+      auditService.getStats = async () => ({
+        totalEvents: 15234,
+        prevTotalEvents: 13870,
+        uniqueUsers: 42,
+        prevUniqueUsers: 38,
+        successRate: 98.4,
+        prevSuccessRate: 97.9,
+        avgLatencyMs: 220,
+        prevAvgLatencyMs: 245,
+        errorCount: 31,
+        topEventType: "PDF_PROCESS",
+        topUser: "admin",
+        eventsByType: {
+          PDF_PROCESS: 11020,
+          USER_LOGIN: 3104,
+          USER_LOGOUT: 1110,
+        },
+        eventsByUser: { admin: 6120, editor: 9114 },
+        topTools: { compress: 4210, merge: 3302, split: 2108 },
+        hourlyDistribution: { "09": 1820, "12": 2440, "15": 2105 },
+      });
+      auditService.getChartsData = async () => ({
+        eventsByType: {
+          labels: ["PDF_PROCESS", "USER_LOGIN", "USER_LOGOUT"],
+          values: [11020, 3104, 1110],
+        },
+        eventsByUser: { labels: ["admin", "editor"], values: [6120, 9114] },
+        eventsOverTime: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+          values: [2810, 3122, 2990, 3305, 3007],
+        },
+      });
       return (
         <AppConfigProvider
           autoFetch={false}

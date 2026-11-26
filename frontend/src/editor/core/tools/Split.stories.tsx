@@ -1,5 +1,5 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { expect, userEvent } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
 import {
   endpointUnavailable,
   toolPanelMeta,
@@ -12,6 +12,7 @@ import {
   openTooltip,
   type PlayContext,
   selectOption,
+  STAGE_TIMEOUT,
   toggle,
   typeInto,
   waitForPanelText,
@@ -42,8 +43,14 @@ type Method = (typeof METHODS)[keyof typeof METHODS];
 function pickMethod(method: Method) {
   return async (context: PlayContext) => {
     const panel = await waitForPanelText(context, method.card);
-    await userEvent.click(panel.getByText(method.card, { exact: true }));
-    return waitForPanelText(context, method.settings);
+    // The cards drop clicks until the endpoint check settles and expose no
+    // disabled state to wait on, so click until the settings step opens.
+    await waitFor(async () => {
+      if (!panel.queryByText(method.settings))
+        await userEvent.click(panel.getByText(method.card, { exact: true }));
+      await expect(panel.getByText(method.settings)).toBeVisible();
+    }, STAGE_TIMEOUT);
+    return panel;
   };
 }
 
