@@ -388,7 +388,8 @@ public class AttachmentService implements AttachmentServiceInterface {
         }
 
         PDComplexFileSpecification removed = allEmbeddedFiles.remove(keyToRemove);
-        COSArray associatedFiles = document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
+        COSArray associatedFiles =
+                document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
         if (associatedFiles != null && removed != null) {
             associatedFiles.removeObject(removed.getCOSObject());
         }

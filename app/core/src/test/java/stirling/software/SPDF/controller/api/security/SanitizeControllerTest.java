@@ -14,9 +14,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -415,9 +415,7 @@ class SanitizeControllerTest {
                 var spec = new COSDictionary();
                 var associatedFiles = new COSArray();
                 associatedFiles.add(spec);
-                doc.getDocumentCatalog()
-                        .getCOSObject()
-                        .setItem(COSName.AF, associatedFiles);
+                doc.getDocumentCatalog().getCOSObject().setItem(COSName.AF, associatedFiles);
                 doc.save(out);
                 withAssociatedFiles = out.toByteArray();
             }
@@ -441,9 +439,7 @@ class SanitizeControllerTest {
             try (PDDocument result =
                     Loader.loadPDF(response.getBody().getInputStream().readAllBytes())) {
                 assertNull(
-                        result.getDocumentCatalog()
-                                .getCOSObject()
-                                .getDictionaryObject(COSName.AF));
+                        result.getDocumentCatalog().getCOSObject().getDictionaryObject(COSName.AF));
             }
         }
 

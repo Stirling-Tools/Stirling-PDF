@@ -377,7 +377,8 @@ public class CustomPDFDocumentFactory {
             }
         }
         // Print ranges are page indices into the old page order.
-        COSDictionary viewerPreferences = targetCatalog.getCOSDictionary(COSName.VIEWER_PREFERENCES);
+        COSDictionary viewerPreferences =
+                targetCatalog.getCOSDictionary(COSName.VIEWER_PREFERENCES);
         if (viewerPreferences != null) {
             viewerPreferences.removeItem(COSName.getPDFName("PrintPageRange"));
         }
