@@ -66,6 +66,25 @@ export class OperationRouter {
     return url.replace(/\/$/, "");
   }
 
+  /** Like {@link getBaseUrl}, but an offline self-hosted server is an error, never the bundled backend. */
+  async getServerOnlyBaseUrl(
+    operation: string,
+    endpointName?: string,
+  ): Promise<string> {
+    if (
+      (await connectionModeService.getCurrentMode()) === "selfhosted" &&
+      selfHostedServerMonitor.getSnapshot().status === "offline"
+    ) {
+      throw new Error(
+        i18n.t(
+          "selfHosted.offline.serverSigning",
+          "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again.",
+        ),
+      );
+    }
+    return this.getBaseUrl(operation, endpointName);
+  }
+
   private signInRequiredError(): Error {
     // Open the connection settings so the user can sign in
     window.dispatchEvent(
@@ -233,6 +252,11 @@ export class OperationRouter {
     }
     if (this.isServerAutomationEndpoint(operation)) {
       return this.getConnectedServerBaseUrl();
+    }
+    // An absolute URL already names its server. Resolving it would fall through to
+    // the bundled backend in SaaS mode, which throws while that backend is starting.
+    if (operation?.startsWith("http")) {
+      return "";
     }
     const mode = await connectionModeService.getCurrentMode();
 

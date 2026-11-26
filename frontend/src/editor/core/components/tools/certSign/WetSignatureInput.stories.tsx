@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import WetSignatureInput from "@editor/components/tools/certSign/WetSignatureInput";
 
 const meta = {
-  title: "Tools/CertSign/WetSignatureInput",
+  title: "Tools/Sign with Certificate/Parts/WetSignatureInput",
   component: WetSignatureInput,
   parameters: { layout: "padded" },
   args: {

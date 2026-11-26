@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import {
   SanitizeParameters,
   defaultParameters,
+  validateSanitizeParameters,
 } from "@editor/hooks/tools/sanitize/useSanitizeParameters";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface SanitizeSettingsProps {
   parameters: SanitizeParameters;
@@ -27,42 +29,30 @@ const SanitizeSettings = ({
     key,
     label: t(`sanitize.options.${key}.label`, key),
     description: t(`sanitize.options.${key}.desc`, `${key} from the PDF`),
-    default: defaultParameters[key],
   }));
 
   return (
-    <Stack gap="md">
-      <Text size="sm" fw={500}>
-        {t("sanitize.options.title", "Sanitization Options")}
-      </Text>
+    <Stack gap="sm">
+      {options.map((option) => (
+        <Checkbox
+          key={option.key}
+          checked={parameters[option.key]}
+          onChange={(event) =>
+            onParameterChange(option.key, event.currentTarget.checked)
+          }
+          disabled={disabled}
+          {...infoLabelProps(option.label, option.description)}
+        />
+      ))}
 
-      <Stack gap="sm">
-        {options.map((option) => (
-          <Checkbox
-            key={option.key}
-            checked={parameters[option.key]}
-            onChange={(event) =>
-              onParameterChange(option.key, event.currentTarget.checked)
-            }
-            disabled={disabled}
-            label={
-              <div>
-                <Text size="sm">{option.label}</Text>
-                <Text size="xs" c="dimmed">
-                  {option.description}
-                </Text>
-              </div>
-            }
-          />
-        ))}
-      </Stack>
-
-      <Text size="xs" c="dimmed">
-        {t(
-          "sanitize.options.note",
-          "Select the elements you want to remove from the PDF. At least one option must be selected.",
-        )}
-      </Text>
+      {!validateSanitizeParameters(parameters) && (
+        <Text role="alert" size="sm" c="var(--c-warning-text)">
+          {t(
+            "sanitize.options.noneSelected",
+            "Select at least one element to remove.",
+          )}
+        </Text>
+      )}
     </Stack>
   );
 };

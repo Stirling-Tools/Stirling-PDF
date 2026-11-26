@@ -50,6 +50,9 @@ function TourStage(props: {
 const meta = {
   title: "Onboarding/OnboardingTour",
   component: TourStage,
+  // SaaS replaces this tour with one the editor's tour orchestration drives,
+  // which a standalone story does not mount.
+  tags: ["not-in-saas"],
 } satisfies Meta<typeof TourStage>;
 
 export default meta;

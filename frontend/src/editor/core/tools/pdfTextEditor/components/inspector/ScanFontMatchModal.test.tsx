@@ -68,7 +68,7 @@ describe("scan font picker hint", () => {
   it("says a pick also steers scanned text not yet edited", () => {
     renderModal(match());
     expect(
-      screen.getByText("pdfTextEditor.scanFont.hintOthers"),
+      screen.getByRole("button", { name: "pdfTextEditor.scanFont.hintOthers" }),
     ).toBeInTheDocument();
   });
 });
@@ -112,9 +112,12 @@ describe("scan font picker device fonts prompt", () => {
       ).toHaveTextContent("pdfTextEditor.scanFont.deviceAllow");
       expect(
         screen.getByTestId("pdf-editor-scan-font-device").textContent,
-      ).toBe(
-        "pdfTextEditor.scanFont.deviceAllowpdfTextEditor.scanFont.deviceNote",
-      );
+      ).toBe("pdfTextEditor.scanFont.deviceAllow");
+      expect(
+        screen.getByRole("button", {
+          name: "pdfTextEditor.scanFont.deviceNote",
+        }),
+      ).toBeInTheDocument();
       unmount();
     }
   });

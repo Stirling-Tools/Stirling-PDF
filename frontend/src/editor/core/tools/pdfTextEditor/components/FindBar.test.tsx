@@ -51,6 +51,7 @@ function setup(
     </MantineProvider>
   );
   const { rerender } = render(view(pages));
+  fireEvent.click(screen.getByTestId("pdf-editor-find-toggle-replace"));
   const showPages = (next: PageSnapshot[]) => rerender(view(next));
   return { dispatch, runs, highlight, showPages };
 }

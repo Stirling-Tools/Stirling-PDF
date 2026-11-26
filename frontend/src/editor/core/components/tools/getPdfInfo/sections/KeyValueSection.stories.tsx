@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import KeyValueSection from "@editor/components/tools/getPdfInfo/sections/KeyValueSection";
 
 const meta = {
-  title: "Tools/GetPdfInfo/KeyValueSection",
+  title: "Tools/Get all info on PDF/Parts/KeyValueSection",
   component: KeyValueSection,
   parameters: { layout: "padded" },
 } satisfies Meta<typeof KeyValueSection>;

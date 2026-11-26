@@ -176,23 +176,6 @@ export default function AutomationCreation({
 
   return (
     <div>
-      <Text
-        size="sm"
-        mb="md"
-        p="md"
-        style={{
-          borderRadius: "var(--mantine-radius-md)",
-          background: "var(--color-gray-200)",
-          color: "var(--mantine-color-text)",
-        }}
-      >
-        {t(
-          "automate.creation.intro",
-          "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
-        )}
-      </Text>
-      <Divider mb="md" />
-
       <Stack gap="md">
         <Group gap="xs" align="flex-end">
           <Stack gap="xs" style={{ flex: 1 }}>

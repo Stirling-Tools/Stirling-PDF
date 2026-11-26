@@ -174,23 +174,31 @@ test("restricted compression prompts at execution, preserves settings on cancel,
     page.getByText("Protection retained", { exact: true }),
   ).toBeVisible();
   expect(compressions).toBe(1);
-  await page
-    .getByRole("button", { name: "Manage protection", exact: true })
-    .click();
-  await expect(page.getByText("Not required", { exact: true })).toBeVisible();
-  const unlockedPrinting = page.getByRole("dialog").getByRole("button", {
-    name: "Printing unlocked for this session",
-    exact: true,
-  });
-  await expect(unlockedPrinting).toBeVisible();
-  await unlockedPrinting.focus();
-  await expect(unlockedPrinting).toBeFocused();
-  await expect(page.getByRole("tooltip")).toHaveText(
-    "Unlocked for this session using your permissions password.",
-  );
-  await expect(
-    page.getByRole("button", { name: "Remove Password", exact: true }),
-  ).toBeEnabled();
+  // The status bar is keyed to the file, so the compressed result swapping in just
+  // after "Protection retained" remounts it and closes a dialog opened that moment.
+  await expect(async () => {
+    const dialog = page.getByRole("dialog");
+    if (!(await dialog.isVisible()))
+      await page
+        .getByRole("button", { name: "Manage protection", exact: true })
+        .click();
+    await expect(dialog.getByText("Not required", { exact: true })).toBeVisible(
+      { timeout: 2000 },
+    );
+    const unlockedPrinting = dialog.getByRole("button", {
+      name: "Printing unlocked for this session",
+      exact: true,
+    });
+    await unlockedPrinting.focus({ timeout: 2000 });
+    await expect(unlockedPrinting).toBeFocused({ timeout: 2000 });
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "Unlocked for this session using your permissions password.",
+      { timeout: 2000 },
+    );
+    await expect(
+      dialog.getByRole("button", { name: "Remove Password", exact: true }),
+    ).toBeEnabled({ timeout: 2000 });
+  }).toPass({ timeout: 20000 });
 });
 
 test("unsupported tools keep the explanation in a tooltip and offer Remove Password", async ({

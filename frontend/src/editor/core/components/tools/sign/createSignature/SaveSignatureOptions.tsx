@@ -43,20 +43,27 @@ export function toSaveChoice(
   };
 }
 
-function saveHint(t: TFunction, limits: SaveLibraryLimits): string {
-  if (!limits.canSave) {
-    return t(
-      "sign.wallet.create.full",
-      "Your library is full ({{max}} signatures). Delete one to save more.",
-      { max: limits.maxLimit },
-    );
-  }
-  if (limits.browserStorage) {
-    return t(
-      "sign.wallet.create.saveBrowserHint",
-      "Kept in this browser, ready for next time.",
-    );
-  }
+function libraryFullWarning(t: TFunction, maxLimit: number): string {
+  return t(
+    "sign.wallet.create.full",
+    "Your library is full ({{max}} signatures). Delete one to save more.",
+    { max: maxLimit },
+  );
+}
+
+/** Stays visible rather than behind an (i): clearing this browser loses the signature. */
+function browserStorageNotice(
+  t: TFunction,
+  limits: SaveLibraryLimits,
+): string | undefined {
+  if (!limits.browserStorage) return undefined;
+  return t(
+    "sign.wallet.create.saveBrowserHint",
+    "Kept in this browser, ready for next time.",
+  );
+}
+
+function saveHint(t: TFunction): string {
   return t("sign.wallet.create.saveHint", "Ready to reuse next time you sign.");
 }
 
@@ -84,7 +91,12 @@ export function SaveSignatureOptions({
     <div className={styles.box}>
       <Checkbox
         label={t("sign.wallet.create.save", "Save to my signatures")}
-        description={saveHint(t, { ...limits, canSave })}
+        info={canSave && !limits.browserStorage ? saveHint(t) : undefined}
+        description={
+          canSave
+            ? browserStorageNotice(t, limits)
+            : libraryFullWarning(t, limits.maxLimit)
+        }
         checked={saving}
         disabled={!canSave}
         onChange={(event) => update({ enabled: event.currentTarget.checked })}

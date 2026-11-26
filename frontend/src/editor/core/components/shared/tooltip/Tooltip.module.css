@@ -29,10 +29,9 @@
     0 0 0 0.125rem color-mix(in srgb, var(--c-primary) 10%, transparent);
 }
 
-/* Pinned tooltip header */
 .tooltip-container.pinned .tooltip-header {
-  background-color: var(--primary-color, var(--c-primary));
-  color: white;
+  background-color: var(--tooltip-pinned-header-bg);
+  color: var(--tooltip-pinned-header-color);
   border-color: var(--primary-color, var(--c-primary));
 }
 

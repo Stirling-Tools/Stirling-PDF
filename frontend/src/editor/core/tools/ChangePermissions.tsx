@@ -109,7 +109,6 @@ const ChangePermissions = (props: BaseToolProps) => {
             {showOwnerPassword && (
               <PasswordInput
                 className={privateContentClassName}
-                size="xs"
                 label={t(
                   "encryptedPdfUnlock.newOwnerPassword",
                   "New permissions password",

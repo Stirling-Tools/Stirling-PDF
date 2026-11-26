@@ -21,7 +21,14 @@ async function open(page: Page): Promise<void> {
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
-  await page.waitForTimeout(1000);
+  await expect
+    .poll(async () => {
+      const g = await canvasGeom(page);
+      return (
+        g.bitmapW === Math.max(1, Math.round(g.pageWidthPt * ZOOM * g.dpr))
+      );
+    })
+    .toBe(true);
 }
 
 interface CanvasGeom {

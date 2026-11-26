@@ -83,7 +83,8 @@ export const splitToApiParams = (
       return { duplexMode: parameters.duplexMode ?? false };
     case SPLIT_METHODS.BY_POSTER:
       return {
-        pageSize: (parameters.pageSize || "A4") as PosterApiParams["pageSize"],
+        pageSize: (parameters.pageSize ||
+          defaultParameters.pageSize) as PosterApiParams["pageSize"],
         xFactor: Number(parameters.xFactor || "2"),
         yFactor: Number(parameters.yFactor || "2"),
         rightToLeft: parameters.rightToLeft ?? false,

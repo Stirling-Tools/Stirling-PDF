@@ -352,7 +352,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       formFill: {
-        icon: <Icon name="form-input" size="1.5rem" />,
+        icon: <Icon name="clipboard-pen-line" size="1.5rem" />,
         name: t("home.formFill.title", "Form Editor"),
         component: lazy(() => import("@editor/tools/formFill/FormFill")),
         description: t(
@@ -434,7 +434,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       getPdfInfo: {
         icon: <Icon name="clipboard-check" size="1.5rem" />,
-        name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
+        name: t("home.getPdfInfo.title", "Get all info on PDF"),
         component: lazy(() => import("@editor/tools/GetPdfInfo")),
         description: t(
           "home.getPdfInfo.desc",
@@ -938,7 +938,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       autoRename: {
         icon: <Icon name="whole-word" size="1.5rem" />,
-        name: t("home.autoRename.title", "Auto Rename PDF File"),
+        name: t("home.autoRename.title", "Auto Rename File"),
         component: lazy(() => import("@editor/tools/AutoRename")),
         maxFiles: -1,
         endpoints: ["auto-rename"],

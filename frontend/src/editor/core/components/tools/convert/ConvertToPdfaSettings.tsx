@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { Stack, Text, Select, Alert, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
@@ -6,6 +5,7 @@ import { usePdfSignatureDetection } from "@editor/hooks/usePdfSignatureDetection
 import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
 import { StirlingFile } from "@editor/types/fileContext";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface ConvertToPdfaSettingsProps {
   parameters: ConvertParameters;
@@ -26,7 +26,6 @@ const ConvertToPdfaSettings = ({
   const { t } = useTranslation();
   const { hasDigitalSignatures, isChecking } =
     usePdfSignatureDetection(selectedFiles);
-  const outputFormatLabelId = useId();
   // Level A needs the same tagger as PDF/UA, so it stands or falls with that endpoint.
   const { enabled: taggingAvailable } = useEndpointEnabled("pdf-to-ua");
 
@@ -74,7 +73,7 @@ const ConvertToPdfaSettings = ({
   return (
     <Stack gap="sm" data-testid="pdfa-settings">
       <Text size="sm" fw={500}>
-        {t("convert.pdfaOptions", "PDF/A Options")}:
+        {t("convert.pdfaOptions", "PDF/A Options")}
       </Text>
 
       {hasDigitalSignatures && (
@@ -88,40 +87,37 @@ const ConvertToPdfaSettings = ({
         </Alert>
       )}
 
-      <Stack gap="xs">
-        <Text id={outputFormatLabelId} size="xs" fw={500}>
-          {t("convert.outputFormat", "Output Format")}:
-        </Text>
-        <Select
-          aria-labelledby={outputFormatLabelId}
-          value={parameters.pdfaOptions.outputFormat}
-          onChange={(value) =>
-            onParameterChange("pdfaOptions", {
-              ...parameters.pdfaOptions,
-              outputFormat: value || "pdfa-2b",
-            })
-          }
-          data={pdfaFormatOptions}
-          disabled={disabled || isChecking}
-          data-testid="pdfa-output-format-select"
-          comboboxProps={{
-            withinPortal: true,
-            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-          }}
-        />
-        <Text size="xs" c="dimmed">
-          {t(
+      <Select
+        {...infoLabelProps(
+          t("convert.outputFormat", "Output Format"),
+          t(
             "convert.pdfaNote",
             "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files.",
-          )}
-        </Text>
-      </Stack>
+          ),
+        )}
+        value={parameters.pdfaOptions.outputFormat}
+        onChange={(value) =>
+          onParameterChange("pdfaOptions", {
+            ...parameters.pdfaOptions,
+            outputFormat: value || "pdfa-2b",
+          })
+        }
+        data={pdfaFormatOptions}
+        disabled={disabled || isChecking}
+        data-testid="pdfa-output-format-select"
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
+      />
 
       <Checkbox
-        label={t("convert.strictMode", "Strict Mode")}
-        description={t(
-          "convert.strictModeDesc",
-          "Error if conversion is not perfect (uses VeraPDF verification)",
+        {...infoLabelProps(
+          t("convert.strictMode", "Strict Mode"),
+          t(
+            "convert.strictModeDesc",
+            "Error if conversion is not perfect (uses VeraPDF verification)",
+          ),
         )}
         checked={parameters.pdfaOptions.strict}
         onChange={(event) =>
