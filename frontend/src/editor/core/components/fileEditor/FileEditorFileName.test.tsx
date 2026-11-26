@@ -1,14 +1,23 @@
-import React from "react";
-import { describe, expect, test } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { useState } from "react";
+import { describe, expect, test, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import FileEditorFileName from "@editor/components/fileEditor/FileEditorFileName";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
-const buildFileStub = (
-  overrides: Partial<StirlingFileStub> = {},
-): StirlingFileStub => ({
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (_key: string, fallback: string, values?: Record<string, string>) =>
+      fallback.replace(
+        /{{(\w+)}}/g,
+        (_match, name: string) => values?.[name] ?? "",
+      ),
+  }),
+}));
+
+const file: StirlingFileStub = {
   id: "file-1" as FileId,
   name: "report.pdf",
   type: "application/pdf",
@@ -17,37 +26,79 @@ const buildFileStub = (
   isLeaf: true,
   originalFileId: "file-1",
   versionNumber: 1,
-  ...overrides,
-});
+};
 
-const renderName = (file: StirlingFileStub) =>
+function Card({
+  onRename,
+  onCardClick,
+  onCardDoubleClick,
+}: {
+  onRename: (name: string) => Promise<void>;
+  onCardClick: () => void;
+  onCardDoubleClick: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <div onClick={onCardClick} onDoubleClick={onCardDoubleClick}>
+      <FileEditorFileName
+        file={file}
+        editing={editing}
+        onEditingChange={setEditing}
+        onRename={onRename}
+      />
+    </div>
+  );
+}
+
+function show() {
+  const props = {
+    onRename: vi.fn().mockResolvedValue(undefined),
+    onCardClick: vi.fn(),
+    onCardDoubleClick: vi.fn(),
+  };
   render(
-    <MantineProvider>
-      <FileEditorFileName file={file} />
+    <MantineProvider env="test">
+      <Card {...props} />
     </MantineProvider>,
   );
+  return { ...props, user: userEvent.setup() };
+}
 
-describe("FileEditorFileName (core / web)", () => {
-  test.each([
-    { name: "not-saved", file: buildFileStub() },
-    {
-      name: "dirty",
-      file: buildFileStub({ localFilePath: "/tmp/report.pdf", isDirty: true }),
-    },
-    {
-      name: "saved",
-      file: buildFileStub({ localFilePath: "/tmp/report.pdf", isDirty: false }),
-    },
-  ])("does not render a save indicator ($name)", ({ file }) => {
-    renderName(file);
+describe("FileEditorFileName", () => {
+  test("clicking the name edits it without clicking the card", async () => {
+    const { user, onCardClick } = show();
 
-    expect(screen.queryByLabelText("fileNotSavedToDisk")).toBeNull();
-    expect(screen.queryByLabelText("unsavedChanges")).toBeNull();
-    expect(screen.queryByLabelText("fileSavedToDisk")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Rename report.pdf" }));
+
+    expect(screen.getByRole("textbox", { name: "File name" })).toHaveValue(
+      "report",
+    );
+    expect(onCardClick).not.toHaveBeenCalled();
   });
 
-  test("renders the filename", () => {
-    renderName(buildFileStub({ name: "invoice.pdf" }));
-    expect(screen.getByText("invoice.pdf")).toBeInTheDocument();
+  test("renames on Enter and shows the name again", async () => {
+    const { user, onRename } = show();
+
+    await user.click(screen.getByRole("button", { name: "Rename report.pdf" }));
+    await user.clear(screen.getByRole("textbox", { name: "File name" }));
+    await user.keyboard("summary{Enter}");
+
+    expect(onRename).toHaveBeenCalledExactlyOnceWith("summary.pdf");
+    await waitFor(() =>
+      expect(screen.queryByRole("textbox")).not.toBeInTheDocument(),
+    );
+  });
+
+  test("double-clicking the name doesn't open the file", async () => {
+    const { user, onCardDoubleClick } = show();
+
+    await user.dblClick(
+      screen.getByRole("button", { name: "Rename report.pdf" }),
+    );
+
+    expect(onCardDoubleClick).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("textbox", { name: "File name" }),
+    ).toBeInTheDocument();
   });
 });

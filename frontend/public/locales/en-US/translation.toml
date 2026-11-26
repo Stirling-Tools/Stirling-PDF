@@ -3329,7 +3329,13 @@ structure = "Tags tell screen readers what each part of a page is, such as a hea
 [checkAccessibility.checks]
 label = "{{passed}} of {{total}} checks passed"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "The accessibility report could not be created. Try again."
 fileTitle = "This file could not be checked"
 partial = "Some files could not be checked."
@@ -5206,6 +5212,7 @@ subtitle = "Show or hide categories in the files sidebar."
 title = "Sidebar categories"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Cancel"
 error = "Could not rename the file."
 illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
@@ -7697,6 +7704,8 @@ stamp = "Stamp annotation - not page text, so it can't be edited here"
 widget = "Form field - not page text, so it can't be edited here"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Edit"
 markTagged = "Mark as fully tagged"
 matchScanFont = "Match scanned text to {{face}}"
@@ -7710,6 +7719,7 @@ tagPageContent = "Auto-tag page"
 typeInto = "Type into {{run}}"
 ungroupParagraph = "Ungroup paragraph {{run}}"
 unmarkTagged = "Mark as not fully tagged"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Wrap {{run}}"
 
 [pdfTextEditor.discard]
