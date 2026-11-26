@@ -21,7 +21,6 @@ interface MobileTransferModalProps {
   /** Called once per uploaded file; arrivals are untrusted, validate inside. */
   onFileReceived: (file: File) => void | Promise<void>;
   title: string;
-  description: string;
   instructions: string;
   expiryWarningTitle: string;
   /** Interpolates the seconds remaining into the feature's warning copy. */
@@ -43,7 +42,6 @@ export default function MobileTransferModal({
   routePath,
   onFileReceived,
   title,
-  description,
   instructions,
   expiryWarningTitle,
   formatExpiryWarning,
@@ -76,14 +74,6 @@ export default function MobileTransferModal({
       styles={{ body: { paddingTop: "1.5rem" } }}
     >
       <Stack gap="md">
-        <Alert
-          icon={<Icon name="info" size={"1rem"} />}
-          color="blue"
-          variant="light"
-        >
-          <Text size="sm">{description}</Text>
-        </Alert>
-
         {showExpiryWarning && timeRemaining !== null && (
           <Alert
             icon={<Icon name="triangle-alert" size={"1rem"} />}

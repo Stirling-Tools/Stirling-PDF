@@ -6586,8 +6586,6 @@ placeholder = "Your name"
 previewPlaceholder = "Signature preview"
 
 [mobileUpload]
-description = "Scan to upload photos. Images auto-convert to PDF."
-descriptionNoConvert = "Scan to upload photos from your mobile device."
 error = "Connection Error"
 expiryWarning = "Session Expiring Soon"
 expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
@@ -13540,7 +13538,6 @@ title = "How to add signature"
 
 [sign.mobile]
 createFromPhone = "Mobile upload"
-description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
 error = "Connection Error"
 expiryWarning = "QR Code Expiring Soon"
 expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."

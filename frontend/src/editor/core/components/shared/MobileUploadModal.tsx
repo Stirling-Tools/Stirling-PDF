@@ -68,17 +68,6 @@ export default function MobileUploadModal({
       onFileReceived={handleFileReceived}
       qrSize={256}
       title={t("mobileUpload.title", "Upload from Mobile")}
-      description={
-        convertToPdf
-          ? t(
-              "mobileUpload.description",
-              "Scan this QR code with your mobile device to upload photos. Images will be automatically converted to PDF.",
-            )
-          : t(
-              "mobileUpload.descriptionNoConvert",
-              "Scan this QR code with your mobile device to upload photos.",
-            )
-      }
       instructions={
         convertToPdf
           ? t(
