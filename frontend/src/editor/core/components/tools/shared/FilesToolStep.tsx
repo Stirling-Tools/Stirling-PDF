@@ -1,5 +1,6 @@
 import React from "react";
 import FileStatusIndicator from "@editor/components/tools/shared/FileStatusIndicator";
+import { AddFilesMenu } from "@editor/components/shared/AddFilesMenu";
 import { StirlingFile } from "@editor/types/fileContext";
 import i18n from "@editor/i18n";
 import { useViewScopedFileStubs } from "@editor/hooks/tools/shared/useViewScopedFiles";
@@ -47,6 +48,7 @@ interface StepBaseProps {
   isVisible?: boolean;
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
+  headerAction?: React.ReactNode;
 }
 
 export function createFilesToolStep<T>(
@@ -63,6 +65,11 @@ export function createFilesToolStep<T>(
       isVisible: true,
       isCollapsed: props.isCollapsed,
       onCollapsedClick: props.onCollapsedClick,
+      // Until the tool has enough files the step shows the sources inline.
+      headerAction:
+        props.selectedFiles.length >= (props.minFiles ?? 1) ? (
+          <AddFilesMenu />
+        ) : undefined,
     },
     <FilesStepContent {...props} />,
   );

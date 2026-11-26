@@ -5134,6 +5134,14 @@ title = "Files"
 upload = "Upload"
 uploadFiles = "Upload Files"
 
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
+
 [fileSelectorPicker]
 empty = "No files available"
 placeholder = "Select file"

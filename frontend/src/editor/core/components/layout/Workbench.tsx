@@ -78,7 +78,7 @@ export default function Workbench() {
   // Every view takes file drops on the whole canvas, not just the content it
   // happens to render. Views that do something of their own with a dropped file
   // (the file library, the PDF text editor) stop the events reaching here.
-  // The file sidebar shares this drop target and its overlay.
+  // The file sidebar and tool panel share this drop target and its overlay.
   const acceptsFileDrops = !takeover;
   const dropHandlers = useWorkbenchFileDrop(acceptsFileDrops);
   const isFileDragOver = useIsWorkbenchFileDragOver() && acceptsFileDrops;
