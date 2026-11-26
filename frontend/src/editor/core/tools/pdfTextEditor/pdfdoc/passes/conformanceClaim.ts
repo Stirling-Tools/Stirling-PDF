@@ -175,14 +175,30 @@ function propertyValue(
   return child?.textContent ?? null;
 }
 
+/**
+ * Only a part under the pdfuaid prefix counts: clause 5 requires that prefix,
+ * so a claim under another one fails it, and reading it as declared would make
+ * declaring the same part a no-op that leaves the file failing.
+ */
 function declaredPart(rdf: Element): number | null {
   for (const description of descriptions(rdf)) {
-    const value = propertyValue(description, PDFUA_NS, "part");
+    const value = pdfUaPartValue(description);
     if (value === null) continue;
     const part = parseInt(value.trim(), 10);
     return Number.isNaN(part) ? null : part;
   }
   return null;
+}
+
+function pdfUaPartValue(description: Element): string | null {
+  const isPart = (node: Attr | Element) =>
+    node.namespaceURI === PDFUA_NS &&
+    node.localName === "part" &&
+    node.prefix === "pdfuaid";
+  const attribute = Array.from(description.attributes).find(isPart);
+  if (attribute) return attribute.value;
+  const child = Array.from(description.children).find(isPart);
+  return child?.textContent ?? null;
 }
 
 function declaresPdfA(rdf: Element): boolean {

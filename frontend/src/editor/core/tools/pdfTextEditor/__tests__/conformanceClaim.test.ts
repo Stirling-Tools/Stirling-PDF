@@ -256,6 +256,15 @@ describe("readConformanceClaim", () => {
     expect(await read(bytes)).toEqual({ part: 2, writable: true });
   });
 
+  test("does not count a claim under another prefix as declared", async () => {
+    const bytes = pdfWithPacket(
+      packet(
+        `<rdf:Description rdf:about="" xmlns:ua="${PDFUA}"><ua:part>1</ua:part></rdf:Description>`,
+      ),
+    );
+    expect(await read(bytes)).toEqual({ part: null, writable: true });
+  });
+
   test("reports metadata it cannot parse as not writable", async () => {
     expect(await read(pdfWithPacket("<x:xmpmeta"))).toEqual({
       part: null,

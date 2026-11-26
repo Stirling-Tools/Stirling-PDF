@@ -13,6 +13,7 @@ import {
 } from "vitest";
 import { SetConformanceClaimCommand } from "@editor/tools/pdfTextEditor/commands/SetConformanceClaimCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { applyConformanceClaim } from "@editor/tools/pdfTextEditor/pdfdoc/passes/conformanceClaim";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 
@@ -94,6 +95,23 @@ describe("the PDF/UA claim", () => {
     history.undo(doc);
     expect(doc.conformanceClaimEdit()).toBeUndefined();
     expect(doc.conformanceClaim()).toBe(1);
+  });
+
+  test("is rewritten under the pdfuaid prefix when the file uses another", async () => {
+    const fixture = new Uint8Array(
+      await readFile(path.join(FIXTURES, "tagged-sample.pdf")),
+    );
+    const declared = await applyConformanceClaim(fixture, 1);
+    // Same length as "pdfuaid", so the xref offsets and stream Length still hold.
+    const misprefixed = Uint8Array.from(
+      Buffer.from(declared).toString("latin1").replaceAll("pdfuaid", "uaclaim"),
+      (char) => char.charCodeAt(0),
+    );
+    const doc = await open(misprefixed);
+    expect(doc.conformanceClaim()).toBeNull();
+
+    new HistoryStack().execute(new SetConformanceClaimCommand(1), doc);
+    expect((await saved(doc)).conformanceClaim()).toBe(1);
   });
 
   test("leaves an unchanged file byte for byte", async () => {
