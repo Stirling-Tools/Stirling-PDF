@@ -7614,9 +7614,6 @@ replaceClippedImage = "Δεν είναι δυνατή η αντικατάστα�
 scanOffInk = "Δεν είναι δυνατή η επεξεργασία αυτού του κειμένου: οι αναγνωρισμένες λέξεις του δεν ευθυγραμμίζονται με τη σάρωση. Εκτελέστε ξανά OCR."
 unsafeRtlEdit = "Δεν είναι δυνατή αυτή η επεξεργασία: ο επεξεργαστής δεν μπορεί να ανασχεδιάσει το κείμενο αυτής της γραμμής δεξιά-προς-αριστερά χωρίς να το αλλάξει."
 
-[pdfTextEditor.externalEdit]
-pngFileType = "Εικόνα PNG"
-
 [pdfTextEditor.find]
 close = "Κλείσιμο γραμμής εύρεσης"
 count = "{{current}} από {{total}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "Διαγραφή (Del ή Backspace)"
 distributeHorizontally = "Οριζόντια κατανομή"
 distributeLabel = "Κατανομή · απαιτούνται 3+ αντικείμενα"
 distributeVertically = "Κάθετη κατανομή"
-editImageExternally = "Επεξεργασία σε άλλη εφαρμογή"
 flipHorizontal = "Οριζόντια αναστροφή"
 flipVertical = "Κάθετη αναστροφή"
 fontColour = "Χρώμα γραμματοσειράς"

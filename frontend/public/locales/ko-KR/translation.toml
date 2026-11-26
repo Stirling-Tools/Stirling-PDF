@@ -7614,9 +7614,6 @@ replaceClippedImage = "이 이미지를 교체할 수 없습니다: 잘려 있�
 scanOffInk = "이 텍스트는 편집할 수 없습니다: 인식된 단어가 스캔과 맞지 않습니다. OCR을 다시 실행하세요."
 unsafeRtlEdit = "이 편집을 수행할 수 없습니다: 편집기가 이 줄의 오른쪽-왼쪽 텍스트를 변경 없이 다시 그릴 수 없습니다."
 
-[pdfTextEditor.externalEdit]
-pngFileType = "PNG 이미지"
-
 [pdfTextEditor.find]
 close = "찾기 표시줄 닫기"
 count = "{{total}}개 중 {{current}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "삭제 (Del 또는 Backspace)"
 distributeHorizontally = "가로로 분배"
 distributeLabel = "분배 · 개체 3개 이상 필요"
 distributeVertically = "세로로 분배"
-editImageExternally = "다른 앱에서 편집"
 flipHorizontal = "가로로 뒤집기"
 flipVertical = "세로로 뒤집기"
 fontColour = "글꼴 색상"

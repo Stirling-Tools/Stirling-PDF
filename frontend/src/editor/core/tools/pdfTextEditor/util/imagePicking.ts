@@ -41,14 +41,6 @@ export async function decodeImageForEmbed(file: File): Promise<PickedImage> {
   return { decoded };
 }
 
-/** Decode PNG bytes that came back from an external editor. */
-export async function decodeBytesForEmbed(
-  bytes: Uint8Array,
-  type = "image/png",
-): Promise<DecodedImage> {
-  return decodeToRgba(new File([bytes as BlobPart], "external", { type }));
-}
-
 function decodeToRgba(file: File): Promise<DecodedImage> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);

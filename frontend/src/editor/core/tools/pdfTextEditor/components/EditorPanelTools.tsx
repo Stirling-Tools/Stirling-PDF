@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Box, Group, Stack, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
-import { Icon } from "@editor/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { modShortcut } from "@editor/utils/hotkeys";
 import { SectionLabel } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import { useHistoryFlags } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
@@ -10,6 +11,50 @@ import type {
   EditorStore,
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
+
+/**
+ * An icon button whose tooltip goes away once it is clicked: the action has
+ * happened, and the tooltip would otherwise sit over what it opened until the
+ * pointer moves off.
+ */
+function ToolIconButton({
+  label,
+  icon,
+  onClick,
+  testId,
+  disabled,
+  pressed,
+  tooltip,
+}: {
+  label: string;
+  icon: IconName;
+  onClick: () => void;
+  testId: string;
+  disabled?: boolean;
+  pressed?: boolean;
+  tooltip?: string;
+}) {
+  const [clicked, setClicked] = useState(false);
+  return (
+    <Tooltip label={tooltip ?? label} disabled={clicked}>
+      <Button
+        size="sm"
+        variant={pressed ? "primary" : "tertiary"}
+        accent={pressed ? "default" : "neutral"}
+        onClick={() => {
+          setClicked(true);
+          onClick();
+        }}
+        onMouseLeave={() => setClicked(false)}
+        disabled={disabled}
+        aria-label={label}
+        aria-pressed={pressed}
+        data-testid={testId}
+        leftSection={<Icon name={icon} size={20} />}
+      />
+    </Tooltip>
+  );
+}
 
 interface Props {
   store: EditorStore;
@@ -32,28 +77,22 @@ export function EditorPanelTools({
   const addTableArmed = state.mode === "addTable";
   const iconButton = (
     label: string,
-    icon: Parameters<typeof Icon>[0]["name"],
+    icon: IconName,
     onClick: () => void,
     testId: string,
     extra: { disabled?: boolean; pressed?: boolean; tooltip?: string } = {},
   ) => (
-    <Tooltip label={extra.tooltip ?? label}>
-      <Button
-        size="sm"
-        variant={extra.pressed ? "primary" : "tertiary"}
-        accent={extra.pressed ? "default" : "neutral"}
-        onClick={onClick}
-        disabled={extra.disabled}
-        aria-label={label}
-        aria-pressed={extra.pressed}
-        data-testid={testId}
-        leftSection={<Icon name={icon} size={20} />}
-      />
-    </Tooltip>
+    <ToolIconButton
+      label={label}
+      icon={icon}
+      onClick={onClick}
+      testId={testId}
+      {...extra}
+    />
   );
   const insertButton = (
     label: string,
-    icon: Parameters<typeof Icon>[0]["name"],
+    icon: IconName,
     onClick: () => void,
     testId: string,
     extra: { armed?: boolean; disabled?: boolean; tooltip: string },
@@ -110,7 +149,7 @@ export function EditorPanelTools({
           <Group gap={2} wrap="nowrap">
             {iconButton(
               t("pdfTextEditor.settings.find", "Find in document"),
-              "search",
+              "file-search",
               onOpenFind,
               "pdf-editor-open-find",
               {

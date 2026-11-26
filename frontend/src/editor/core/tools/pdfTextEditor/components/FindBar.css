@@ -1,12 +1,9 @@
-/* Floats over the pages under the editor's top bar, so opening it never shifts
-   the document. FindBar aligns it under the find button; the end inset is the
-   fallback for bars without one. */
+/* Floats over the pages just above the viewer's bottom bar, so opening it
+   never shifts the document; FindBar sets its position. */
 .pdf-editor-findbar {
-  position: absolute;
-  top: calc(100% + 0.375rem);
-  inset-inline-end: 0.75rem;
-  z-index: 60;
-  width: min(26rem, calc(100% - 1.5rem));
+  position: fixed;
+  z-index: 160;
+  width: min(26rem, calc(100vw - 1.5rem));
   padding: 0.375rem;
   background: var(--c-bg-raised);
   border: 0.0625rem solid var(--c-border-subtle);

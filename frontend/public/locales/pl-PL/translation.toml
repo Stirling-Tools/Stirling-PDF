@@ -7614,9 +7614,6 @@ replaceClippedImage = "Nie można zastąpić tego obrazu: jest przycięty, a zam
 scanOffInk = "Nie można edytować tego tekstu: rozpoznane wyrazy nie pokrywają się ze skanem. Uruchom ponownie OCR."
 unsafeRtlEdit = "Nie można wykonać tej edycji: edytor nie potrafi przerysować tekstu w tym wierszu zapisanego od prawej do lewej bez jego zmiany."
 
-[pdfTextEditor.externalEdit]
-pngFileType = "Obraz PNG"
-
 [pdfTextEditor.find]
 close = "Zamknij pasek wyszukiwania"
 count = "{{current}} z {{total}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "Usuń (Del lub Backspace)"
 distributeHorizontally = "Rozmieść poziomo"
 distributeLabel = "Rozmieść · wymaga co najmniej 3 obiektów"
 distributeVertically = "Rozmieść pionowo"
-editImageExternally = "Edytuj w innej aplikacji"
 flipHorizontal = "Odwróć poziomo"
 flipVertical = "Odwróć pionowo"
 fontColour = "Kolor czcionki"

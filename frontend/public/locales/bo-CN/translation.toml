@@ -7614,9 +7614,6 @@ replaceClippedImage = "པར་རིས་འདི་བརྗེ་མི་
 scanOffInk = "ཡིག་ཚིག་འདི་ཞུན་དག་མི་ཐུབ། ངོས་འཛིན་གྲུབ་པའི་མིང་ཚིག་དྲས་བརྙན་དང་མཐུན་མི་འདུག ཡང་བསྐྱར OCR བཀོལ།"
 unsafeRtlEdit = "ཞུན་དག་འདི་མི་ཐུབ། ཞུན་དག་ཆས་ཀྱིས་འལོག་གཡས་ནས་གཡོན་ལ་ཡིག་ཚིག་ཕྲེང་འདི་བསྐྲུན་སེམས་བསྒྱུར་མི་ཐུབ།"
 
-[pdfTextEditor.externalEdit]
-pngFileType = "PNG image"
-
 [pdfTextEditor.find]
 close = "འཚོལ་བའི་སྒྲོམ་ཁ་རྒྱག"
 count = "{{current}} / {{total}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "སུབ (Del ཡང་ན Backspace)"
 distributeHorizontally = "འཕྲེད་ཕྱོགས་སུ་ཆ་སྙོམས་བཀྲམ"
 distributeLabel = "བཀྲམ · བྱ་ཡུལ 3+ དགོས"
 distributeVertically = "གཞུང་ཕྱོགས་སུ་ཆ་སྙོམས་བཀྲམ"
-editImageExternally = "app གཞན་ནང་རྩོམ་སྒྲིག"
 flipHorizontal = "འཕྲེད་ཕྱོགས་ལོག"
 flipVertical = "གཞུང་ཕྱོགས་ལོག"
 fontColour = "Font ཚོན"

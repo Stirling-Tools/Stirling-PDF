@@ -13,6 +13,7 @@ import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTe
 import { InsertTableCommand } from "@editor/tools/pdfTextEditor/commands/InsertTableCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
+import { SetLockCommand } from "@editor/tools/pdfTextEditor/commands/SetLockCommand";
 import type { TextRange } from "@editor/tools/pdfTextEditor/types";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
@@ -147,6 +148,14 @@ function createHandlers(store: EditorStore) {
     ) => {
       store.dispatch(
         new SetImageTransformCommand({ pageIndex, imageId, nextBounds }),
+      );
+    },
+    onUnlock: (
+      pageIndex: number,
+      target: { runId: string } | { imageId: string },
+    ) => {
+      store.dispatch(
+        new SetLockCommand({ pageIndex, ...target, locked: false }),
       );
     },
     onFirstVisible: (pageIndex: number) => ensurePageRead(store, pageIndex),

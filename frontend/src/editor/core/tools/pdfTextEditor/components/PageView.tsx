@@ -40,6 +40,7 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
 import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/AnnotationOutline";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { LockBadge } from "@editor/tools/pdfTextEditor/components/LockBadge";
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
@@ -117,6 +118,11 @@ interface PageViewProps {
     imageId: string,
     next: { x: number; y: number; width: number; height: number },
   ) => void;
+  /** Unlocks one locked run or image from its on-page badge. */
+  onUnlock?: (
+    pageIndex: number,
+    target: { runId: string } | { imageId: string },
+  ) => void;
 }
 
 // Nearest scrolling ancestor, or null when the page scrolls with the document.
@@ -166,6 +172,7 @@ export const PageView = memo(function PageView({
   onResizeRun,
   onPageClick,
   onTransformImage,
+  onUnlock,
   onFirstVisible,
   onFirstRendered,
   onFirstPainted,
@@ -628,6 +635,34 @@ export const PageView = memo(function PageView({
               attention="needs-description"
               testId={`pdf-editor-attention-run-${run.id}`}
               style={besideRun(run, transform, page.height, cssScale)}
+            />
+          ))}
+        {onUnlock &&
+          !reviewing &&
+          [
+            ...page.runs
+              .filter((run) => run.locked)
+              .map((run) => ({
+                id: run.id,
+                bounds: run.bounds,
+                target: { runId: run.id },
+              })),
+            ...page.images
+              .filter((image) => image.locked)
+              .map((image) => ({
+                id: image.id,
+                bounds: image.bounds,
+                target: { imageId: image.id },
+              })),
+          ].map((item) => (
+            <LockBadge
+              key={`lock-${item.id}`}
+              rect={item.bounds}
+              pageHeight={page.height}
+              transform={transform}
+              scale={cssScale}
+              onUnlock={() => onUnlock(page.pageIndex, item.target)}
+              testId={`pdf-editor-unlock-${item.id}`}
             />
           ))}
         {showRulers && (

@@ -7614,9 +7614,6 @@ replaceClippedImage = "Ní féidir an íomhá seo a chur in ionad: tá sí bearr
 scanOffInk = "Ní féidir an téacs seo a chur in eagar: ní ailíníonn a chuid focal aitheanta leis an scanadh. Rith OCR arís."
 unsafeRtlEdit = "Ní féidir an t-eagar seo a dhéanamh: ní féidir leis an eagarthóir téacs na líne seo ó dheis go clé a athrindreáil gan é a athrú."
 
-[pdfTextEditor.externalEdit]
-pngFileType = "Íomhá PNG"
-
 [pdfTextEditor.find]
 close = "Dún barra cuardaigh"
 count = "{{current}} as {{total}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "Scrios (Del nó Backspace)"
 distributeHorizontally = "Dáil go cothrománach"
 distributeLabel = "Dáil · teastaíonn 3+ réad"
 distributeVertically = "Dáil go hingearach"
-editImageExternally = "Cuir in eagar in aip eile"
 flipHorizontal = "Smeach go cothrománach"
 flipVertical = "Smeach go hingearach"
 fontColour = "Dath cló"

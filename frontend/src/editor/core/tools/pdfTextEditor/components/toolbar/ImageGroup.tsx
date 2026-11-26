@@ -51,22 +51,13 @@ export function imageTransforms(t: TFunction): ImageTransform[] {
   ];
 }
 
-/** Rotate, flip and the two ways to swap an image's pixels, as icon buttons. */
+/** Rotate, flip and replace for the selected image, as icon buttons. */
 export function ImageGroup({ controller }: { controller: Controller }) {
   const { t } = useTranslation();
-  const {
-    onTransformImage,
-    onReplaceImage,
-    onEditImageExternally,
-    externalEditSupported,
-  } = controller;
+  const { onTransformImage, onReplaceImage } = controller;
   const replaceLabel = t(
     "pdfTextEditor.toolbar.replaceImage",
     "Replace, keeping placement",
-  );
-  const externalLabel = t(
-    "pdfTextEditor.toolbar.editImageExternally",
-    "Edit in another app",
   );
 
   return (
@@ -95,19 +86,6 @@ export function ImageGroup({ controller }: { controller: Controller }) {
           data-testid="pdf-editor-imgop-replace"
           style={NO_SHRINK}
           leftSection={<Icon name="image" size={20} />}
-        />
-      </Tooltip>
-      <Tooltip label={externalLabel}>
-        <Button
-          size="sm"
-          variant="tertiary"
-          accent="neutral"
-          aria-label={externalLabel}
-          onClick={onEditImageExternally}
-          disabled={!externalEditSupported}
-          data-testid="pdf-editor-imgop-edit-externally"
-          style={NO_SHRINK}
-          leftSection={<Icon name="external-link" size={20} />}
         />
       </Tooltip>
     </Group>

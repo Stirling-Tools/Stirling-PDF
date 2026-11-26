@@ -7614,9 +7614,6 @@ replaceClippedImage = "ไม่สามารถแทนที่รูปภ
 scanOffInk = "ไม่สามารถแก้ไขข้อความนี้: คำที่รู้จำไม่ตรงกับภาพสแกน รัน OCR อีกครั้ง."
 unsafeRtlEdit = "ไม่สามารถทำการแก้ไขนี้ได้: ตัวแก้ไขไม่สามารถวาดข้อความแบบขวาไปซ้ายของบรรทัดนี้ใหม่โดยไม่เปลี่ยนแปลงข้อความ"
 
-[pdfTextEditor.externalEdit]
-pngFileType = "รูปภาพ PNG"
-
 [pdfTextEditor.find]
 close = "ปิดแถบค้นหา"
 count = "{{current}} จาก {{total}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "ลบ (Del หรือ Backspace)"
 distributeHorizontally = "กระจายแนวนอน"
 distributeLabel = "กระจาย · ต้องมี 3+ วัตถุ"
 distributeVertically = "กระจายแนวตั้ง"
-editImageExternally = "แก้ไขในแอปอื่น"
 flipHorizontal = "พลิกแนวนอน"
 flipVertical = "พลิกแนวตั้ง"
 fontColour = "สีฟอนต์"

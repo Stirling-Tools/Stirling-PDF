@@ -7614,9 +7614,6 @@ replaceClippedImage = "無法取代此影像：它已被裁切，替換後會顯
 scanOffInk = "無法編輯此文字：其辨識出的詞彙與掃描內容未對齊。請重新執行 OCR。"
 unsafeRtlEdit = "無法進行此編輯：編輯器無法在不改變內容的情況下重繪此行的由右至左文字。"
 
-[pdfTextEditor.externalEdit]
-pngFileType = "PNG 圖片"
-
 [pdfTextEditor.find]
 close = "關閉尋找列"
 count = "第 {{current}} 筆，共 {{total}} 筆"
@@ -8087,7 +8084,6 @@ deleteTooltip = "刪除（Del 或 Backspace）"
 distributeHorizontally = "水平平均分布"
 distributeLabel = "平均分布 · 需選取至少 3 個物件"
 distributeVertically = "垂直平均分布"
-editImageExternally = "使用其他應用程式編輯"
 flipHorizontal = "水平翻轉"
 flipVertical = "垂直翻轉"
 fontColour = "字型色彩"

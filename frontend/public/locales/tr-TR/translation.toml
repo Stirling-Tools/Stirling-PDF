@@ -7614,9 +7614,6 @@ replaceClippedImage = "Bu görüntü değiştirilemiyor: kırpılmış ve yenisi
 scanOffInk = "Bu metin düzenlenemiyor: tanınan kelimeler taramayla hizalı değil. OCR'ı tekrar çalıştırın."
 unsafeRtlEdit = "Bu düzenleme yapılamıyor: editör bu satırın sağdan sola metnini değiştirmeden yeniden çizemiyor."
 
-[pdfTextEditor.externalEdit]
-pngFileType = "PNG görüntüsü"
-
 [pdfTextEditor.find]
 close = "Bul çubuğunu kapat"
 count = "{{total}} içinden {{current}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "Sil (Del veya Backspace)"
 distributeHorizontally = "Yatay dağıt"
 distributeLabel = "Dağıt · 3+ nesne gerekir"
 distributeVertically = "Dikey dağıt"
-editImageExternally = "Başka bir uygulamada düzenle"
 flipHorizontal = "Yatay çevir"
 flipVertical = "Dikey çevir"
 fontColour = "Yazı tipi rengi"

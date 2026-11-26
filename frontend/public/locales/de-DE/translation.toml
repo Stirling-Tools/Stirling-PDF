@@ -7614,9 +7614,6 @@ replaceClippedImage = "Dieses Bild kann nicht ersetzt werden: Es ist beschnitten
 scanOffInk = "Dieser Text kann nicht bearbeitet werden: Seine erkannten Wörter stimmen nicht mit dem Scan überein. Führen Sie OCR erneut aus."
 unsafeRtlEdit = "Diese Bearbeitung kann nicht durchgeführt werden: Der Editor kann den Rechts-nach-Links-Text dieser Zeile nicht neu zeichnen, ohne ihn zu verändern."
 
-[pdfTextEditor.externalEdit]
-pngFileType = "PNG-Bild"
-
 [pdfTextEditor.find]
 close = "Suchleiste schließen"
 count = "{{current}} von {{total}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "Löschen (Entf oder Backspace)"
 distributeHorizontally = "Horizontal verteilen"
 distributeLabel = "Verteilen · benötigt 3+ Objekte"
 distributeVertically = "Vertikal verteilen"
-editImageExternally = "In anderer App bearbeiten"
 flipHorizontal = "Horizontal spiegeln"
 flipVertical = "Vertikal spiegeln"
 fontColour = "Schriftfarbe"

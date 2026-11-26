@@ -7,6 +7,7 @@ import {
   useState,
   type RefObject,
 } from "react";
+import { createPortal } from "react-dom";
 import { TextInput, Tooltip } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
@@ -38,63 +39,62 @@ interface FindBarProps {
   onClose: () => void;
 }
 
-/** The toolbar control find opens from: its own button, or the compact bar's overflow menu. */
-const ANCHOR =
-  '[data-testid="pdf-editor-open-find"], [data-testid="pdf-editor-overflow-menu"]';
+/** The bar at the foot of the viewer: its page controls, or a phone's editing actions. */
+const BOTTOM_BAR =
+  '.pdf-viewer-toolbar-dock > div, [data-testid="pdf-editor-mobile-actionbar"]';
 const EDGE_GAP_PX = 12;
+const BAR_GAP_PX = 8;
+
+type Placement = { left: number } & ({ bottom: number } | { top: number });
 
 /**
- * Inline offset that hangs the panel beneath its toolbar control, kept on
- * screen. Null when the bar has no such control (the mobile bar), leaving
- * the stylesheet's end-aligned fallback.
+ * Viewport position that sets the panel just above the viewer's bottom bar,
+ * centred on it and kept on screen; the top of the pages when there is no such
+ * bar. Re-measured every frame while open: the bar slides as side panels open.
  */
-function useAnchoredLeft(
+function useBottomPlacement(
   panelRef: RefObject<HTMLDivElement | null>,
-): number | null {
-  const [left, setLeft] = useState<number | null>(null);
+): Placement | null {
+  const [placement, setPlacement] = useState<Placement | null>(null);
   useLayoutEffect(() => {
-    const panel = panelRef.current;
-    const host = panel?.offsetParent;
-    if (!panel || !(host instanceof HTMLElement)) return;
-    // The control moves when the bar resizes or folds, when the unsaved dot
-    // narrows its band, and when that band scrolls sideways.
-    const observer =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(() => place());
-    let band: Element | null = null;
+    let frame = 0;
+    let last = "";
     const place = () => {
-      // Swapping between the mobile and desktop bars resizes the host and
-      // remounts the band, so follow whichever band is current.
-      const current = host.querySelector(".pdf-editor-topbar__band");
-      if (observer && current !== band) {
-        if (band) observer.unobserve(band);
-        if (current) observer.observe(current);
-        band = current;
+      frame = requestAnimationFrame(place);
+      const panel = panelRef.current;
+      if (!panel) return;
+      const half = panel.offsetWidth / 2;
+      const clampLeft = (centre: number) =>
+        Math.max(
+          EDGE_GAP_PX,
+          Math.min(centre - half, window.innerWidth - EDGE_GAP_PX - 2 * half),
+        );
+      const bar = document.querySelector(BOTTOM_BAR);
+      const pages = document.querySelector("[data-viewer-pages]");
+      let next: Placement | null = null;
+      if (bar) {
+        const b = bar.getBoundingClientRect();
+        next = {
+          left: clampLeft(b.left + b.width / 2),
+          bottom: window.innerHeight - b.top + BAR_GAP_PX,
+        };
+      } else if (pages) {
+        const p = pages.getBoundingClientRect();
+        next = {
+          left: clampLeft(p.left + p.width / 2),
+          top: p.top + EDGE_GAP_PX,
+        };
       }
-      const anchor = host.querySelector<HTMLElement>(ANCHOR);
-      if (!anchor) {
-        setLeft(null);
-        return;
+      const key = JSON.stringify(next);
+      if (key !== last) {
+        last = key;
+        setPlacement(next);
       }
-      const h = host.getBoundingClientRect();
-      const a = anchor.getBoundingClientRect();
-      const rtl = getComputedStyle(host).direction === "rtl";
-      const ideal = rtl
-        ? a.right - h.left - panel.offsetWidth
-        : a.left - h.left;
-      const max = h.width - panel.offsetWidth - EDGE_GAP_PX;
-      setLeft(Math.max(EDGE_GAP_PX, Math.min(ideal, max)));
     };
-    observer?.observe(host);
     place();
-    host.addEventListener("scroll", place, true);
-    return () => {
-      observer?.disconnect();
-      host.removeEventListener("scroll", place, true);
-    };
+    return () => cancelAnimationFrame(frame);
   }, [panelRef]);
-  return left;
+  return placement;
 }
 
 interface Match {
@@ -131,7 +131,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
   const [replaceCount, setReplaceCount] = useState<number | null>(null);
   const [showReplace, setShowReplace] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const anchoredLeft = useAnchoredLeft(panelRef);
+  const placement = useBottomPlacement(panelRef);
   const { busy: replacing, dispatch: dispatchAfterScanFit } =
     useDispatchAfterScanFit(store);
 
@@ -352,16 +352,15 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     ? t("pdfTextEditor.find.hideReplace", "Hide replace")
     : t("pdfTextEditor.find.showReplace", "Show replace");
 
-  return (
+  // Portalled: the viewer's paint containment would otherwise make the
+  // fixed position relative to the viewer rather than the window.
+  return createPortal(
     <div
       ref={panelRef}
       className="pdf-editor-findbar"
       data-testid="pdf-editor-find-bar"
-      style={
-        anchoredLeft === null
-          ? undefined
-          : { left: anchoredLeft, right: "auto" }
-      }
+      // Hidden for the frame before it is measured and placed.
+      style={placement ?? { visibility: "hidden", left: 0, top: 0 }}
     >
       <div className="pdf-editor-findbar__grid">
         <Tooltip label={replaceToggleLabel}>
@@ -537,6 +536,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

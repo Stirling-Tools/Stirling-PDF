@@ -7614,9 +7614,6 @@ replaceClippedImage = "Не можна замінити це зображенн�
 scanOffInk = "Не можна редагувати цей текст: розпізнані слова не збігаються зі сканом. Запустіть OCR ще раз."
 unsafeRtlEdit = "Неможливо внести цю зміну: редактор не може перемалювати текст цього рядка справа-наліво без змін."
 
-[pdfTextEditor.externalEdit]
-pngFileType = "PNG зображення"
-
 [pdfTextEditor.find]
 close = "Закрити панель пошуку"
 count = "{{current}} з {{total}}"
@@ -8087,7 +8084,6 @@ deleteTooltip = "Видалити (Del або Backspace)"
 distributeHorizontally = "Розподілити горизонтально"
 distributeLabel = "Розподілити · потрібно 3+ об’єкти"
 distributeVertically = "Розподілити вертикально"
-editImageExternally = "Редагувати в іншому застосунку"
 flipHorizontal = "Віддзеркалити горизонтально"
 flipVertical = "Віддзеркалити вертикально"
 fontColour = "Колір шрифту"

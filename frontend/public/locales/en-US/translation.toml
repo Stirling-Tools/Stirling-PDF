@@ -7656,9 +7656,6 @@ replaceClippedImage = "Can't replace this image: it is cropped, and the replacem
 scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."
 unsafeRtlEdit = "Can't make this edit: the editor can't redraw this line's right-to-left text without changing it."
 
-[pdfTextEditor.externalEdit]
-pngFileType = "PNG image"
-
 [pdfTextEditor.find]
 close = "Close find bar"
 count = "{{current}} of {{total}}"
@@ -7961,6 +7958,9 @@ placeholder = "Select language"
 selectedText = "Selected text language"
 textHint = "Screen readers switch voice and pronunciation to this language."
 
+[pdfTextEditor.lock]
+unlockTip = "Locked. Click to unlock"
+
 [pdfTextEditor.mobile]
 actions = "Editor actions"
 addImage = "Image"
@@ -8178,7 +8178,6 @@ deleteTooltip = "Delete (Del or Backspace)"
 distributeHorizontally = "Distribute horizontally"
 distributeLabel = "Distribute · needs 3+ objects"
 distributeVertically = "Distribute vertically"
-editImageExternally = "Edit in another app"
 flipHorizontal = "Flip horizontal"
 flipVertical = "Flip vertical"
 fontColour = "Font colour"
