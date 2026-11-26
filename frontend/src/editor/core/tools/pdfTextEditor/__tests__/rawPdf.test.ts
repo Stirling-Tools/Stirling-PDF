@@ -219,6 +219,22 @@ describe("RawPdf streams and pages", () => {
     expect(pdf?.pageNumbers()).toEqual([4]);
   });
 
+  it("follows a /Kids array written as a reference", async () => {
+    const pdf = await RawPdf.parse(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids 3 0 R /Count 2 >>" },
+          { num: 3, body: "[4 0 R 5 0 R]" },
+          { num: 4, body: "<< /Type /Page /Parent 2 0 R >>" },
+          { num: 5, body: "<< /Type /Page /Parent 2 0 R >>" },
+        ],
+        1,
+      ),
+    );
+    expect(pdf?.pageNumbers()).toEqual([4, 5]);
+  });
+
   it("inherits /Resources from an ancestor page-tree node", async () => {
     const pdf = await RawPdf.parse(
       buildClassicPdf(

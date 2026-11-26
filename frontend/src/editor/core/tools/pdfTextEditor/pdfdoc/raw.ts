@@ -594,12 +594,12 @@ export class RawPdf {
         out.push(num);
         return;
       }
-      const kids = this.valueSpan(body, "Kids");
-      if (!kids) {
+      if (!this.valueSpan(body, "Kids")) {
         if (type === null) out.push(num);
         return;
       }
-      for (const m of kids.text.matchAll(/(\d+)\s+\d+\s+R/g)) {
+      const kids = this.resolve(body, "Kids") ?? "";
+      for (const m of kids.matchAll(/(\d+)\s+\d+\s+R/g)) {
         visit(parseInt(m[1], 10), depth + 1);
       }
     };
