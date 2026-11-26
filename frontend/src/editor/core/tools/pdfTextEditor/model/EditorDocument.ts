@@ -67,7 +67,11 @@ import type { FieldTooltips } from "@editor/tools/pdfTextEditor/model/PageFormFi
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
-import { releaseScratch } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import {
+  SCRATCH,
+  releaseScratch,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // Lifetime-managed PDFium document wrapper for the PDF text editor. - Opens a
 // raw PDFium document pointer from bytes.
@@ -220,8 +224,25 @@ export class EditorDocument {
       .map((p) => p.index);
   }
 
+  /**
+   * PDFium's page count, cut short at the first page it cannot find. A page
+   * tree that loops, or whose /Count overstates it, lists pages that are not
+   * there, and one the editor cannot load would fail the whole open. Cutting
+   * rather than skipping keeps every index PDFium's own, and the pages past
+   * the cut stay in the file untouched.
+   */
   get pageCount(): number {
-    return this.module.FPDF_GetPageCount(this.docPtr);
+    const m = this.module;
+    const total = m.FPDF_GetPageCount(this.docPtr);
+    const size = scratchPtr(m, SCRATCH.documentPageSize, 8);
+    let found = 0;
+    while (
+      found < total &&
+      m.FPDF_GetPageSizeByIndexF(this.docPtr, found, size)
+    ) {
+      found++;
+    }
+    return found;
   }
 
   get disposed(): boolean {
