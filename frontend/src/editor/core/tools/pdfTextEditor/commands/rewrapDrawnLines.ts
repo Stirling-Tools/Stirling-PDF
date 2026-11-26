@@ -7,7 +7,10 @@ import {
   softStartsFor,
   softStartsOf,
 } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
-import { drawnText } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
+import {
+  drawnCodePoint,
+  drawnText,
+} from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 
 interface Token {
   start: number;
@@ -156,7 +159,7 @@ function letterBoxes(
     for (let i = 0; i < count; i++) {
       const object = m.FPDFText_GetTextObject(textPage, i);
       if (!ptrs.has(object)) continue;
-      const code = m.FPDFText_GetUnicode(textPage, i);
+      const code = drawnCodePoint(m.FPDFText_GetUnicode(textPage, i));
       if (code === 0 || /\s/.test(String.fromCodePoint(code))) continue;
       if (!m.FPDFText_GetCharBox(textPage, i, buf, buf + 8, buf + 16, buf + 24))
         return null;
