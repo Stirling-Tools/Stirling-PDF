@@ -7,7 +7,10 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { VisuallyHidden } from "@mantine/core";
-import { AddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
+import {
+  AddPageNumbersParameters,
+  pageNumberText,
+} from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 import { useThumbnailGeneration } from "@editor/hooks/useThumbnailGeneration";
 import styles from "@editor/components/tools/addPageNumbers/PageNumberPreview.module.css";
@@ -171,7 +174,7 @@ export default function PageNumberPreview({
 
   // The first page the tool numbers gets the starting number. A hovered tile
   // previews its position before it is picked.
-  const label = formatPageNumberLabel(parameters.customText, {
+  const label = formatPageNumberLabel(pageNumberText(parameters), {
     n: parameters.startingNumber,
     zeroPad: parameters.zeroPad,
     total: pageCount ?? undefined,

@@ -102,11 +102,14 @@ export function isFuzzyMatch(
   return scoreMatch(query, target) >= threshold;
 }
 
-// Convenience: rank a list of items by best score across provided getters
+// Convenience: rank a list of items by best score across provided getters.
+// A getter may return a list, such as tags, scored one entry at a time: a
+// substring match scores lower the longer its target, so a tag at the end of a
+// joined list would never match.
 export function rankByFuzzy<T>(
   items: T[],
   query: string,
-  getters: Array<(item: T) => string>,
+  getters: Array<(item: T) => string | readonly string[]>,
   minScore?: number,
 ): Array<{ item: T; score: number; matchedText?: string }> {
   const results: Array<{ item: T; score: number; matchedText?: string }> = [];
@@ -116,12 +119,14 @@ export function rankByFuzzy<T>(
     let best = 0;
     let matchedText = "";
     for (const get of getters) {
-      const value = get(item);
-      if (!value) continue;
-      const s = scoreMatch(query, value);
-      if (s > best) {
-        best = s;
-        matchedText = value;
+      const got = get(item);
+      for (const value of typeof got === "string" ? [got] : got) {
+        if (!value) continue;
+        const s = scoreMatch(query, value);
+        if (s > best) {
+          best = s;
+          matchedText = value;
+        }
       }
       if (best >= 95) {
         break;

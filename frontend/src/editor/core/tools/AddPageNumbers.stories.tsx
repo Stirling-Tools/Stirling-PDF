@@ -6,6 +6,7 @@ import {
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  choose,
   findEnabled,
   openSelect,
   openTooltip,
@@ -63,6 +64,13 @@ export const PagesAndStartingNumber: Story = {
   play: async (context) => {
     await typeInto(context, PAGES_TO_NUMBER, "2,4-5");
     await typeInto(context, STARTING_NUMBER, "10");
+  },
+};
+
+export const BatesNumbering: Story = {
+  play: async (context) => {
+    await choose(context, "Bates");
+    await typeInto(context, /^Prefix/, "ABC-");
   },
 };
 

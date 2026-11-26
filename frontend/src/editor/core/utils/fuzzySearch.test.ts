@@ -4,6 +4,7 @@ import {
   scoreMatch,
   minScoreForQuery,
   isFuzzyMatch,
+  rankByFuzzy,
 } from "@editor/utils/fuzzySearch";
 
 describe("scoreMatch", () => {
@@ -42,5 +43,30 @@ describe("minScoreForQuery", () => {
     expect(minScoreForQuery("rot")).toBe(40);
     expect(minScoreForQuery("rotate")).toBe(30);
     expect(minScoreForQuery("orientation")).toBe(30);
+  });
+});
+
+describe("rankByFuzzy", () => {
+  const tools = [
+    {
+      name: "Add Page Numbers",
+      tags: [
+        "number",
+        "pagination",
+        "page numbering",
+        "footer",
+        "header",
+        "sequential",
+        "bates",
+      ],
+    },
+    { name: "Annotate", tags: ["highlight", "shapes", "notes"] },
+  ];
+
+  it("finds a tag at the end of a long list", () => {
+    const ranked = rankByFuzzy(tools, "bates", [(t) => t.name, (t) => t.tags]);
+
+    expect(ranked[0]?.item.name).toBe("Add Page Numbers");
+    expect(ranked[0]?.matchedText).toBe("bates");
   });
 });
