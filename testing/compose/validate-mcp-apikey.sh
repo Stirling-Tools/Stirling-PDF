@@ -121,6 +121,21 @@ else
 fi
 echo ""
 
+echo -e "${YELLOW}[4] MCP conformance harness (testing/mcp: both official clients, 2026-07-28 rules, private links)${NC}"
+HARNESS_DIR="$SCRIPT_DIR/../mcp"
+if ! command -v node >/dev/null 2>&1; then
+    fail "node is not installed - cannot run the conformance harness"
+elif [ -z "$APIKEY" ]; then
+    fail "skipping the conformance harness - no API key"
+elif ! (cd "$HARNESS_DIR" && { [ -d node_modules ] || npm ci --silent --no-fund --no-audit >/dev/null 2>&1; }); then
+    fail "npm ci failed in testing/mcp"
+elif MCP_URL="$MCP_URL" MCP_API_KEY="$APIKEY" MCP_EXPECT_LINKS=private node "$HARNESS_DIR/run-all.mjs"; then
+    pass "conformance harness passed"
+else
+    fail "conformance harness reported failures (see the FAIL lines above)"
+fi
+echo ""
+
 echo -e "${YELLOW}▶ Restoring oauth mode...${NC}"
 PREMIUM_KEY="${PREMIUM_KEY:-}" docker compose -f "$COMPOSE" up -d --no-build --force-recreate stirling-pdf-mcp >/dev/null 2>&1
 wait_up && pass "restored oauth mode" || fail "Stirling not healthy after restoring oauth"
