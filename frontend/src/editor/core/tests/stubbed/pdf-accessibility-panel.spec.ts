@@ -43,7 +43,7 @@ const REPORT: AccessibilityReport = {
   },
 };
 
-test("flags the document as tagged from the report's fix, saving it", async ({
+test("flags the document as tagged from the report's fix, saved with Save", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -132,6 +132,15 @@ test("flags the document as tagged from the report's fix, saving it", async ({
     .locator('[data-testid="a11y-fix-issue"][data-fix="markedTagged"]')
     .click();
 
+  // An unsaved edit like a tag: saving it at once would also save every tag
+  // edit still pending, which Discard could then no longer drop.
+  await expect
+    .poll(store, { timeout: 30_000 })
+    .toEqual({ marked: true, dirty: true });
+  const save = page.getByTestId("pdf-editor-trail-save");
+  await expect(save).toBeEnabled();
+  expect(checks).toBe(1);
+  await save.click();
   await expect
     .poll(store, { timeout: 30_000 })
     .toEqual({ marked: true, dirty: false });

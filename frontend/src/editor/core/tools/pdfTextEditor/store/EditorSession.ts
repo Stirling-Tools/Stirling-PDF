@@ -3,11 +3,6 @@ import { useSyncExternalStore } from "react";
 export interface EditorSession {
   fileName: string | null;
   save: () => void;
-  /**
-   * Saves now for a document-wide setting, unsaved edits and all; a change made while
-   * a save runs is saved once it ends, where save would skip it.
-   */
-  autosave: () => void;
   download: () => void;
   pickImage: () => void;
   /** Brings a page on screen, mounted or not. */

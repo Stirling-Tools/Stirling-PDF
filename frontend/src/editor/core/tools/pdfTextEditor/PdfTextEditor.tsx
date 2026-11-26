@@ -200,8 +200,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   // Guards against re-entrant saves while a (synchronous) serialize runs.
   const savingRef = useRef(false);
-  /** Settles when the save savingRef marks ends, however it ends. */
-  const saveSettledRef = useRef<Promise<void>>(Promise.resolve());
   // Pending save-risk warning (signatures/XFA) shown before the actual save.
   const [saveRisks, setSaveRisks] = useState<SaveRisks | null>(null);
   // docPtr the user already acknowledged risks for, so we don't re-nag.
@@ -306,10 +304,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const doc = store.document;
       if (!doc || savingRef.current || store.getState().loading) return;
       savingRef.current = true;
-      let settle: () => void = () => {};
-      saveSettledRef.current = new Promise<void>((resolve) => {
-        settle = resolve;
-      });
       store.setError(null);
       const sourceId = sourceFileIdRef.current;
       // A file switch confirmed while the export runs must not get these bytes.
@@ -350,7 +344,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         store.setError(err instanceof Error ? err.message : String(err));
       } finally {
         savingRef.current = false;
-        settle();
       }
     },
     [store, openedFileName, applyToWorkbench],
@@ -445,17 +438,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
-  const autosaveQueued = useRef(false);
-  const handleAutosave = useCallback(async () => {
-    // One queued save covers every change made while the current one runs.
-    if (autosaveQueued.current) return;
-    autosaveQueued.current = true;
-    // Whatever started the running save (Save, a download, the leave prompt), it
-    // exported before this change, so wait it out and save again.
-    while (savingRef.current) await saveSettledRef.current;
-    autosaveQueued.current = false;
-    await runSave(false);
-  }, [runSave]);
   const handleDownload = useCallback(() => void runSave(true), [runSave]);
 
   const handleConfirmSaveRisk = useCallback(() => {
@@ -807,7 +789,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     const session = {
       fileName: openedFileName,
       save: handleSave,
-      autosave: () => void handleAutosave(),
       download: handleDownload,
       pickImage: openImagePicker,
       // The viewer mounts only the pages near the viewport.
@@ -820,7 +801,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     scrollActions,
     openedFileName,
     handleSave,
-    handleAutosave,
     handleDownload,
     openImagePicker,
   ]);

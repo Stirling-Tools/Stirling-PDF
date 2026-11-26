@@ -47,10 +47,10 @@ export function useReviewStart({
     if (!ready || !doc || !session) return;
     reviewMode.set({ startAt: null });
     if (startAt.target === "markedTagged") {
-      // A document-wide setting: applied and saved at once, nothing to go to.
+      // A document-wide setting with no control to go to. Like a tag, it waits
+      // for Save, so a save never carries tag edits the user has not chosen to keep.
       if (doc.canSetMarkedTagged() && !doc.markedTagged()) {
         store.dispatch(new SetMarkedTaggedCommand(true));
-        session.autosave();
       }
       return;
     }
