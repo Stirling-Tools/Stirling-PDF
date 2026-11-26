@@ -107,26 +107,71 @@ fn check_default_windows() -> Result<bool, String> {
     }
 }
 
+// Must match the RegisteredApplications value name written by the MSI
+#[cfg(target_os = "windows")]
+const WINDOWS_REGISTERED_APP_NAME: &str = "Stirling PDF";
+
 #[cfg(target_os = "windows")]
 fn set_default_windows() -> Result<String, String> {
-    use std::process::Command;
-
-    // Windows 10+ approach: Open Settings app directly to default apps
-    // This is more reliable than COM APIs which require pre-registration
-    // ms-settings:defaultapps opens the default apps settings page
-    let result = Command::new("cmd")
-        .args(["/C", "start", "ms-settings:defaultapps"])
-        .output()
-        .map_err(|e| format!("Failed to open Windows Settings: {}", e))?;
-
-    if result.status.success() {
-        add_log("Opened Windows default apps settings".to_string());
-        Ok("opened_dialog".to_string())
+    // Windows won't let apps set the default silently, so open Settings for the user.
+    // Where supported, deep-link to Stirling's own page, which has a one-click "Set default".
+    let url = if windows_supports_app_deep_link() {
+        format!(
+            "ms-settings:defaultapps?registeredAppMachine={}",
+            WINDOWS_REGISTERED_APP_NAME.replace(' ', "%20")
+        )
     } else {
-        let error = String::from_utf8_lossy(&result.stderr);
-        add_log(format!("Failed to open settings: {}", error));
-        Err(format!("Failed to open default apps settings: {}", error))
+        "ms-settings:defaultapps".to_string()
+    };
+
+    tauri_plugin_opener::open_url(&url, None::<&str>).map_err(|e| {
+        add_log(format!("Failed to open settings: {}", e));
+        format!("Failed to open default apps settings: {}", e)
+    })?;
+    add_log(format!("Opened Windows default apps settings: {}", url));
+    Ok("opened_dialog".to_string())
+}
+
+/// Per-app Default Apps pages need Windows 11 and the app's RegisteredApplications entry
+#[cfg(target_os = "windows")]
+fn windows_supports_app_deep_link() -> bool {
+    let build = read_hklm_string(
+        r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+        "CurrentBuildNumber",
+    )
+    .and_then(|b| b.trim().parse::<u32>().ok())
+    .unwrap_or(0);
+    build >= 22000
+        && read_hklm_string(
+            r"SOFTWARE\RegisteredApplications",
+            WINDOWS_REGISTERED_APP_NAME,
+        )
+        .is_some()
+}
+
+#[cfg(target_os = "windows")]
+fn read_hklm_string(subkey: &str, value: &str) -> Option<String> {
+    use windows::core::HSTRING;
+    use windows::Win32::System::Registry::{RegGetValueW, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ};
+
+    let mut buf = [0u16; 512];
+    let mut size = std::mem::size_of_val(&buf) as u32;
+    let status = unsafe {
+        RegGetValueW(
+            HKEY_LOCAL_MACHINE,
+            &HSTRING::from(subkey),
+            &HSTRING::from(value),
+            RRF_RT_REG_SZ,
+            None,
+            Some(buf.as_mut_ptr().cast()),
+            Some(&mut size),
+        )
+    };
+    if status.is_err() {
+        return None;
     }
+    let len = (size as usize / 2).saturating_sub(1).min(buf.len());
+    Some(String::from_utf16_lossy(&buf[..len]))
 }
 
 // ============================================================================

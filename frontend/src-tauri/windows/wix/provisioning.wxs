@@ -49,7 +49,24 @@
       </Component>
     </DirectoryRef>
 
+    <!-- Default Apps registration so Settings can deep-link to Stirling's page (default_app.rs) -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="DefaultAppsCapabilitiesComponent" Guid="*">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Stirling-PDF\Capabilities">
+          <RegistryValue Type="string" Name="ApplicationName" Value="Stirling PDF" KeyPath="yes" />
+          <RegistryValue Type="string" Name="ApplicationDescription" Value="View, edit and convert PDF documents" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Stirling-PDF\Capabilities\FileAssociations">
+          <RegistryValue Type="string" Name=".pdf" Value="Stirling PDF.pdf" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\RegisteredApplications">
+          <RegistryValue Type="string" Name="Stirling PDF" Value="SOFTWARE\Stirling-PDF\Capabilities" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+
     <ComponentGroup Id="ProvisioningComponentGroup">
+      <ComponentRef Id="DefaultAppsCapabilitiesComponent" />
       <ComponentRef Id="ProvisionerBinaryComponent" />
       <ComponentRef Id="ThumbnailHandlerDllComponent" />
       <ComponentRef Id="ThumbnailHandlerClsidComponent" />
