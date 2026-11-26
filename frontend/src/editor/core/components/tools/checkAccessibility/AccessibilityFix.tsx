@@ -6,6 +6,10 @@ import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
 import {
+  MarkedTaggedCaution,
+  useMarkedTagged,
+} from "@editor/components/tools/checkAccessibility/MarkedTaggedFix";
+import {
   reviewMode,
   useReviewMode,
   useReviewing,
@@ -132,41 +136,36 @@ export function IssueFixButton({ issue }: { issue: AccessibilityIssue }) {
   const { t } = useTranslation();
   const fix = useContext(AccessibilityFixContext);
   const untaggedLeft = useContext(UntaggedContentContext);
+  const markedTagged = useMarkedTagged();
   const cautionId = useId();
   const target = fixTargetFor(issue);
   if (!fix || !target) return null;
   const page = PAGE_SCOPED_TARGETS.has(target) ? issue.pages?.[0] : undefined;
+  const flag = target === "markedTagged" ? markedTagged : null;
   const caution = target === "markedTagged" && untaggedLeft;
   const button = (
     <Button
       size="sm"
       variant="secondary"
-      leftSection={<Icon name="locate-fixed" size={14} />}
-      onClick={() => fix(target, page)}
+      leftSection={
+        <Icon name={flag?.marked ? "check" : "locate-fixed"} size={14} />
+      }
+      disabled={flag ? flag.marked || !flag.editable : false}
+      onClick={() => (flag ? flag.set(true) : fix(target, page))}
       aria-describedby={caution ? cautionId : undefined}
       data-testid="a11y-fix-issue"
       data-fix={target}
     >
-      {fixLabel(t, target, page)}
+      {flag?.marked
+        ? t("checkAccessibility.fix.markedTaggedDone", "Marked as tagged")
+        : fixLabel(t, target, page)}
     </Button>
   );
   if (!caution) return button;
   return (
     <div className="a11y-issue__fix">
       {button}
-      <p
-        id={cautionId}
-        className="a11y-issue__caution"
-        data-testid="a11y-fix-caution"
-      >
-        <Icon name="triangle-alert" size={14} />
-        <span>
-          {t(
-            "checkAccessibility.fix.markedTaggedUntagged",
-            "Some content isn't tagged yet. Once the document is marked, screen readers may skip it.",
-          )}
-        </span>
-      </p>
+      <MarkedTaggedCaution id={cautionId} testId="a11y-fix-caution" />
     </div>
   );
 }

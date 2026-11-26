@@ -3460,6 +3460,7 @@ imageOnPage = "Describe the image on page {{page}}"
 link = "Tag the links"
 linkOnPage = "Tag the link on page {{page}}"
 markedTagged = "Mark the document as tagged"
+markedTaggedDone = "Marked as tagged"
 markedTaggedUntagged = "Some content isn't tagged yet. Once the document is marked, screen readers may skip it."
 show = "Show tagging tool"
 tagEverything = "Auto-tag"
@@ -3492,6 +3493,10 @@ markAllDone = "Mark all as done"
 tip = "Things only a person can judge, such as reading order and whether image descriptions make sense. Tick each one once you've checked it, and your ticks go into the downloaded report."
 title = "Manual checks"
 
+
+[checkAccessibility.markedTagged]
+hint = "Records in the file that its tags are complete. Screen readers that see it read the tags alone, so tick it once everything is tagged."
+label = "Mark the document as tagged"
 [checkAccessibility.objects]
 annotation = "An annotation"
 bookmark = "A bookmark"

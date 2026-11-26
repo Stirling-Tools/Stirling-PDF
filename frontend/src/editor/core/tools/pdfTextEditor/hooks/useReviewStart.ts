@@ -49,8 +49,9 @@ export function useReviewStart({
     if (startAt.target === "markedTagged") {
       // A document-wide setting with no control to go to. Like a tag, it waits
       // for Save, so a save never carries tag edits the user has not chosen to keep.
-      if (doc.canSetMarkedTagged() && !doc.markedTagged()) {
-        store.dispatch(new SetMarkedTaggedCommand(true));
+      const marked = startAt.marked ?? true;
+      if (doc.canSetMarkedTagged() && doc.markedTagged() !== marked) {
+        store.dispatch(new SetMarkedTaggedCommand(marked));
       }
       return;
     }

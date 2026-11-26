@@ -43,7 +43,7 @@ const REPORT: AccessibilityReport = {
   },
 };
 
-test("flags the document as tagged from the report's fix, saved with Save", async ({
+test("flags the document as tagged from the report's fix, saved with Save, and unflags it", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -130,15 +130,19 @@ test("flags the document as tagged from the report's fix, saved with Save", asyn
     .click();
   // Nothing else fails, so there is no untagged content to warn about.
   await expect(report.getByTestId("a11y-fix-caution")).toHaveCount(0);
-  await page
-    .locator('[data-testid="a11y-fix-issue"][data-fix="markedTagged"]')
-    .click();
+  const markFix = page.locator(
+    '[data-testid="a11y-fix-issue"][data-fix="markedTagged"]',
+  );
+  await markFix.click();
 
   // An unsaved edit like a tag: saving it at once would also save every tag
   // edit still pending, which Discard could then no longer drop.
   await expect
     .poll(store, { timeout: 30_000 })
     .toEqual({ marked: true, dirty: true });
+  // The report shows the unsaved flag, as it does an unsaved PDF/UA claim.
+  await expect(markFix).toBeDisabled();
+  await expect(markFix).toHaveText("Marked as tagged");
   const save = page.getByTestId("pdf-editor-trail-save");
   await expect(save).toBeEnabled();
   expect(checks).toBe(1);
@@ -155,6 +159,24 @@ test("flags the document as tagged from the report's fix, saved with Save", asyn
   await expect(manual.getByTestId("a11y-manual-status")).toHaveText("Done", {
     timeout: 30_000,
   });
+
+  // Unticking under the PDF/UA claim withdraws the flag, again as an unsaved edit.
+  await report
+    .getByRole("button", {
+      name: "Metadata & settings",
+      exact: true,
+      expanded: false,
+    })
+    .click();
+  const flag = report.getByTestId("a11y-marked-tagged");
+  await expect(flag).toBeChecked();
+  await report
+    .getByText("Mark the document as tagged", { exact: true })
+    .click();
+  await expect
+    .poll(store, { timeout: 30_000 })
+    .toEqual({ marked: false, dirty: true });
+  await expect(flag).not.toBeChecked();
 });
 
 test("lays the panel out in reading order, and pauses the review from its footer", async ({

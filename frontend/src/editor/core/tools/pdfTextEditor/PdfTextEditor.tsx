@@ -49,6 +49,7 @@ import { PasswordPromptModal } from "@editor/tools/pdfTextEditor/components/Pass
 import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/components/PermissionsPasswordButton";
 import { useReviewConformanceClaimBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewConformanceClaimBridge";
 import { ReopenLostDocumentButton } from "@editor/tools/pdfTextEditor/components/ReopenLostDocumentButton";
+import { useReviewMarkedTaggedBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewMarkedTaggedBridge";
 import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
 import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
@@ -408,6 +409,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useReviewStart({ store, startAt, sourceFileId, setActiveFileId });
   useReviewLanguageBridge(store, state, sourceFileId, reviewing);
   useReviewConformanceClaimBridge(store, state, sourceFileId, reviewing);
+  useReviewMarkedTaggedBridge(store, state, sourceFileId, reviewing);
 
   useRegisterViewerPageTool(
     useMemo(

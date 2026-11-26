@@ -57,6 +57,7 @@ function makeDoc(encrypted = false): EditorDocument {
     loadedPages: () => [],
     documentLanguage: () => null,
     conformanceClaim: () => null,
+    markedTagged: () => false,
     languagesInUse: () => [],
     onArtifactKinds: () => () => {},
     dispose: vi.fn(),
