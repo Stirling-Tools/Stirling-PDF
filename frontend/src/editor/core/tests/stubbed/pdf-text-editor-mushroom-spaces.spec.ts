@@ -2,6 +2,8 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
+test.use({ autoGoto: false });
+
 // Regression for the mushroom-life.pdf whitespace reports.
 
 const MUSHROOM = path.join(

@@ -60,6 +60,15 @@ describe("the dirty state the disk reconciliation reads", () => {
     expect(hasUnsavedWork()).toBe(true);
   });
 
+  it("keeps a checker's answer after another checker comes and goes", () => {
+    renderEditor();
+    const viewerChecker = () => false;
+    act(() => editor.registerUnsavedChangesChecker(() => true));
+    act(() => editor.registerUnsavedChangesChecker(viewerChecker));
+    act(() => editor.unregisterUnsavedChangesChecker(viewerChecker));
+    expect(hasUnsavedWork()).toBe(true);
+  });
+
   it("is clean again once the editor commits or closes", () => {
     renderEditor();
     act(() => editor.setHasUnsavedChanges(true));
