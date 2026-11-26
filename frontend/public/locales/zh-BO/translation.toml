@@ -7614,6 +7614,9 @@ replaceClippedImage = "无法替换此图像：它已被裁剪，替换后会显
 scanOffInk = "无法编辑此文本：其识别的词与扫描不对齐。请重新运行 OCR。"
 unsafeRtlEdit = "无法进行此编辑：编辑器在不改变内容的情况下无法重绘此行的从右到左文本。"
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG 图像"
+
 [pdfTextEditor.find]
 close = "关闭查找栏"
 count = "{{current}} / {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "删除（Del 或 Backspace）"
 distributeHorizontally = "水平分布"
 distributeLabel = "分布 · 需要 3+ 个对象"
 distributeVertically = "垂直分布"
+editImageExternally = "在其他应用中编辑"
 flipHorizontal = "水平翻转"
 flipVertical = "垂直翻转"
 fontColour = "字体颜色"

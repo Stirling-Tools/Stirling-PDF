@@ -7614,6 +7614,9 @@ replaceClippedImage = "Bu şəkli əvəz etmək mümkün deyil: o, qırpılıb v
 scanOffInk = "Bu mətni redaktə etmək olmur: tanınmış sözlər skanla üst-üstə düşmür. OCR-i yenidən işə salın."
 unsafeRtlEdit = "Bu redaktəni etmək mümkün deyil: redaktor bu sətirdəki sağdan-sola mətni onu dəyişdirmədən yenidən çəkə bilmir."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG şəkli"
+
 [pdfTextEditor.find]
 close = "Axtarış panelini bağla"
 count = "{{current}} / {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Sil (Del və ya Backspace)"
 distributeHorizontally = "Üfüqi payla"
 distributeLabel = "Payla · 3+ obyekt tələb olunur"
 distributeVertically = "Şaquli payla"
+editImageExternally = "Başqa tətbiqdə redaktə et"
 flipHorizontal = "Üfüqi çevir"
 flipVertical = "Şaquli çevir"
 fontColour = "Şrift rəngi"

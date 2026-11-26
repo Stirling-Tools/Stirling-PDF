@@ -47,9 +47,8 @@ export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
   initialTab?: SidebarTab;
-  /** Both given, the panel's head shows the history, find, help and insert tools. */
-  onOpenFind?: () => void;
-  onShowHelp?: () => void;
+  /** Desktop: the panel's head shows the insert tools, and the selection bar carries the image tools. */
+  desktop?: boolean;
 }
 
 export type SidebarTab = "selected" | "document";
@@ -71,8 +70,7 @@ export const EditorSidebar = memo(function EditorSidebar({
   ocrBlockedReason,
   onRemovePassword,
   initialTab = "selected",
-  onOpenFind,
-  onShowHelp,
+  desktop = false,
 }: SidebarProps) {
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
@@ -83,9 +81,6 @@ export const EditorSidebar = memo(function EditorSidebar({
     selection.shapeIds.length > 0 ||
     selection.formFieldId !== null;
   const [tab, setTab] = useState<SidebarTab>(initialTab);
-  // Desktop is where these are given, and where the selection bar carries the image tools.
-  const desktop = !!(onOpenFind && onShowHelp);
-
   // Picking something on the page is a request to see its properties, so the
   // panel follows. Clearing does NOT yank the tab back - a user who opened
   // Document then clicked bare page should stay where they were.
@@ -125,14 +120,7 @@ export const EditorSidebar = memo(function EditorSidebar({
           borderBottom: "1px solid var(--mantine-color-default-border)",
         }}
       >
-        {desktop && onOpenFind && onShowHelp && (
-          <EditorPanelTools
-            store={store}
-            state={state}
-            onOpenFind={onOpenFind}
-            onShowHelp={onShowHelp}
-          />
-        )}
+        {desktop && <EditorPanelTools store={store} state={state} />}
         <Group gap={0} wrap="nowrap" px="xs">
           <Tabs.List style={{ flex: 1, borderBottom: "none" }}>
             <Tabs.Tab value="selected" data-testid="pdf-editor-tab-selected">

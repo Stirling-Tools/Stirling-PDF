@@ -5,6 +5,7 @@ import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolb
 import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
 import { ObjectGroup } from "@editor/tools/pdfTextEditor/components/toolbar/ObjectGroup";
 import { ImageGroup } from "@editor/tools/pdfTextEditor/components/toolbar/ImageGroup";
+import { useEditorContextMenu } from "@editor/tools/pdfTextEditor/store/contextMenu";
 import {
   SELECTION_BAR_MENU_ATTR,
   ToolbarSeparator,
@@ -163,6 +164,7 @@ export const SelectionBar = memo(function SelectionBar({
   const barRef = useRef<HTMLDivElement | null>(null);
   const controller = useToolbarController(store, state, selection);
   const active = controller.selectionCount > 0;
+  const contextMenuOpen = useEditorContextMenu() !== null;
   const placement = useSelectionPlacement(selection, active, barRef);
 
   // Portalled to the end of the page, the bar is last in tab order; Alt+F10 is
@@ -182,7 +184,8 @@ export const SelectionBar = memo(function SelectionBar({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [active]);
 
-  if (!active) return null;
+  // One menu at a time: the right-click menu stands in for the bar while open.
+  if (!active || contextMenuOpen) return null;
   // Menus open on the side of the bar away from the selection, clear of its text.
   const dropdownPosition = placement?.below ? "bottom" : "top";
 

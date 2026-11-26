@@ -4,9 +4,13 @@ import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { modShortcut } from "@editor/utils/hotkeys";
+import { ToolIconButton } from "@editor/tools/pdfTextEditor/components/ToolIconButton";
+import { useHistoryFlags } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 interface Props {
+  store: EditorStore;
   compact: boolean;
   dirty: boolean;
   onSave: () => void;
@@ -16,6 +20,7 @@ interface Props {
 }
 
 export const EditorPanelActions = memo(function EditorPanelActions({
+  store,
   compact,
   dirty,
   onSave,
@@ -24,6 +29,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
   onShowHelp,
 }: Props) {
   const { t } = useTranslation();
+  const history = useHistoryFlags(store);
   return (
     <Box
       px="md"
@@ -31,6 +37,8 @@ export const EditorPanelActions = memo(function EditorPanelActions({
       style={{
         position: "sticky",
         bottom: 0,
+        // Pinned to the panel's foot even when what is above it is short.
+        marginTop: "auto",
         zIndex: 2,
         borderTop: "1px solid var(--mantine-color-default-border)",
         background: "var(--c-bg-raised)",
@@ -38,6 +46,34 @@ export const EditorPanelActions = memo(function EditorPanelActions({
       data-testid="pdf-editor-panel-actions"
     >
       <Group gap="xs" wrap="nowrap">
+        {/* Phones undo from their own top bar. */}
+        {!compact && (
+          // With the row's xs gap, the same 1rem after the pair as the padding before it.
+          <Group gap={2} wrap="nowrap" style={{ marginInlineEnd: "0.75rem" }}>
+            <ToolIconButton
+              label={t("pdfTextEditor.toolbar.undo", "Undo")}
+              icon="undo-2"
+              onClick={() => store.undo()}
+              testId="pdf-editor-undo"
+              disabled={!history.canUndo}
+              tooltip={t("pdfTextEditor.toolbar.undoTooltip", {
+                defaultValue: "Undo ({{shortcut}})",
+                shortcut: modShortcut("Z"),
+              })}
+            />
+            <ToolIconButton
+              label={t("pdfTextEditor.toolbar.redo", "Redo")}
+              icon="redo-2"
+              onClick={() => store.redo()}
+              testId="pdf-editor-redo"
+              disabled={!history.canRedo}
+              tooltip={t("pdfTextEditor.toolbar.redoTooltip", {
+                defaultValue: "Redo ({{shortcut}})",
+                shortcut: modShortcut("Y"),
+              })}
+            />
+          </Group>
+        )}
         <Tooltip
           label={t("pdfTextEditor.saveTooltip", {
             defaultValue:

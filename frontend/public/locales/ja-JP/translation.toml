@@ -7614,6 +7614,9 @@ replaceClippedImage = "この画像は置換できません。トリミングさ
 scanOffInk = "このテキストは編集できません: 認識された語がスキャンと一致しません。OCR を再実行してください。"
 unsafeRtlEdit = "この編集は行えません。エディターは、この行の右から左へのテキストを変更せずに再描画できません。"
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG画像"
+
 [pdfTextEditor.find]
 close = "検索バーを閉じる"
 count = "{{current}} / {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "削除（DelまたはBackspace）"
 distributeHorizontally = "水平方向に分布"
 distributeLabel = "分布 · 3つ以上のオブジェクトが必要"
 distributeVertically = "垂直方向に分布"
+editImageExternally = "別のアプリで編集"
 flipHorizontal = "水平方向に反転"
 flipVertical = "垂直方向に反転"
 fontColour = "フォント色"

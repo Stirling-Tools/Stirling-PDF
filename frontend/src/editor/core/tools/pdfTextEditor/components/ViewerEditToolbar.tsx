@@ -15,6 +15,7 @@ import { MobileActionBar } from "@editor/tools/pdfTextEditor/components/MobileAc
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { FindBar } from "@editor/tools/pdfTextEditor/components/FindBar";
 import { SelectionBar } from "@editor/tools/pdfTextEditor/components/SelectionBar";
+import { EditorContextMenu } from "@editor/tools/pdfTextEditor/components/EditorContextMenu";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
 import { QuickTagCard } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
 import { EditorTrailControls } from "@editor/tools/pdfTextEditor/components/EditorTrailControls";
@@ -80,11 +81,18 @@ export function ViewerEditToolbar() {
       )}
       {/* Small screens format from their own action bar's sheets. */}
       {!isMobile && !reviewing && (
-        <SelectionBar
-          store={store}
-          state={bars.state}
-          selection={bars.selection}
-        />
+        <>
+          <SelectionBar
+            store={store}
+            state={bars.state}
+            selection={bars.selection}
+          />
+          <EditorContextMenu
+            store={store}
+            state={bars.state}
+            selection={bars.selection}
+          />
+        </>
       )}
       {reviewing && store.document && (
         <ReviewOverlay

@@ -23,6 +23,10 @@ import BadgeCheck from "lucide-static/icons/badge-check.svg?react";
 import BadgeDollarSign from "lucide-static/icons/badge-dollar-sign.svg?react";
 import Banknote from "lucide-static/icons/banknote.svg?react";
 import Bell from "lucide-static/icons/bell.svg?react";
+import BetweenHorizontalEnd from "lucide-static/icons/between-horizontal-end.svg?react";
+import BetweenHorizontalStart from "lucide-static/icons/between-horizontal-start.svg?react";
+import BetweenVerticalEnd from "lucide-static/icons/between-vertical-end.svg?react";
+import BetweenVerticalStart from "lucide-static/icons/between-vertical-start.svg?react";
 import Blocks from "lucide-static/icons/blocks.svg?react";
 import Bold from "lucide-static/icons/bold.svg?react";
 import Bolt from "lucide-static/icons/bolt.svg?react";
@@ -462,6 +466,13 @@ export const ICONS = {
   "badge-dollar-sign": { Component: BadgeDollarSign, kind: "lucide" },
   banknote: { Component: Banknote, kind: "lucide" },
   bell: { Component: Bell, kind: "lucide" },
+  "between-horizontal-end": { Component: BetweenHorizontalEnd, kind: "lucide" },
+  "between-horizontal-start": {
+    Component: BetweenHorizontalStart,
+    kind: "lucide",
+  },
+  "between-vertical-end": { Component: BetweenVerticalEnd, kind: "lucide" },
+  "between-vertical-start": { Component: BetweenVerticalStart, kind: "lucide" },
   blocks: { Component: Blocks, kind: "lucide" },
   bold: { Component: Bold, kind: "lucide" },
   bolt: { Component: Bolt, kind: "lucide" },

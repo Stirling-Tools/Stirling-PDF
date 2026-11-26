@@ -51,11 +51,19 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
       tooltipDisabled,
       testId,
       className,
+      onClick,
       ...rest
     },
     ref,
   ) {
     const isMobile = useIsMobile();
+    // A click has done what the tooltip described; it would otherwise sit over
+    // whatever the button opened until the pointer leaves.
+    const [clicked, setClicked] = useState(false);
+    const handleClick = () => {
+      setClicked(true);
+      onClick?.();
+    };
     const compact = isMobile || iconOnly;
     // A narrow row hides the words in CSS; only then does the tooltip name it.
     const labelRef = useRef<HTMLSpanElement>(null);
@@ -83,6 +91,7 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
         aria-label={label}
         aria-pressed={active}
         data-testid={testId}
+        onClick={handleClick}
         {...rest}
       >
         <Icon name={icon} size={size ? 18 : "1rem"} />
@@ -101,6 +110,7 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
         aria-label={label}
         aria-pressed={active}
         data-testid={testId}
+        onClick={handleClick}
         {...rest}
       >
         <span ref={labelRef} className="viewer-bar-button__label">
@@ -113,14 +123,19 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
     return (
       <Tooltip
         content={tip}
-        disabled={tooltipDisabled || !tipShown}
+        disabled={tooltipDisabled || !tipShown || clicked}
         position={tooltipPosition}
         offset={12}
         arrow
         portalTarget={document.body}
       >
         {/* Mantine's Popover and Menu targets pass no ref through a Tooltip. */}
-        <span className="viewer-bar-button-wrap">{button}</span>
+        <span
+          className="viewer-bar-button-wrap"
+          onPointerLeave={() => setClicked(false)}
+        >
+          {button}
+        </span>
       </Tooltip>
     );
   },

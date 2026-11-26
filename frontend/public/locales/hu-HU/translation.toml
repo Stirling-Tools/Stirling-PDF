@@ -7614,6 +7614,9 @@ replaceClippedImage = "Nem cserélhető ez a kép: le van vágva, és a csere l�
 scanOffInk = "Ez a szöveg nem szerkeszthető: a felismert szavak nem esnek egybe a szkenneléssel. Futtassa újra az OCR-t."
 unsafeRtlEdit = "Ez a szerkesztés nem végezhető el: a szerkesztő nem tudja újrarajzolni ennek a sornak a jobbról balra írt szövegét anélkül, hogy megváltoztatná."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG-kép"
+
 [pdfTextEditor.find]
 close = "Keresősáv bezárása"
 count = "{{current}} / {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Törlés (Del vagy Backspace)"
 distributeHorizontally = "Vízszintes elosztás"
 distributeLabel = "Elosztás · legalább 3 objektum szükséges"
 distributeVertically = "Függőleges elosztás"
+editImageExternally = "Szerkesztés másik alkalmazásban"
 flipHorizontal = "Vízszintes tükrözés"
 flipVertical = "Függőleges tükrözés"
 fontColour = "Betűszín"

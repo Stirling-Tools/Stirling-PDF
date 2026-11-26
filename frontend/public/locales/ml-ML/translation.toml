@@ -7614,6 +7614,9 @@ replaceClippedImage = "ഈ ചിത്രം മാറ്റിസ്ഥാപ�
 scanOffInk = "ഈ ടെക്സ്റ്റ് എഡിറ്റ് ചെയ്യാനാകില്ല: തിരിച്ചറിഞ്ഞ വാക്കുകൾ സ്‌കാനുമായി പൊരുത്തപ്പെടുന്നില്ല. OCR വീണ്ടും പ്രവർത്തിപ്പിക്കുക."
 unsafeRtlEdit = "ഈ എഡിറ്റ് നടത്താനാകില്ല: ഈ വരിയിലെ വലത്തു നിന്ന് ഇടത്തേയ്ക്ക് ഉള്ള വാചകം മാറ്റമില്ലാതെ വീണ്ടും വരയ്ക്കാൻ എഡിറ്ററിന് കഴിയില്ല."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG ചിത്രം"
+
 [pdfTextEditor.find]
 close = "കണ്ടെത്തൽ ബാർ അടയ്ക്കുക"
 count = "{{total}}ൽ {{current}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "ഇല്ലാതാക്കുക (Del അല്ലെങ്
 distributeHorizontally = "തിരശ്ചീനമായി distribute ചെയ്യുക"
 distributeLabel = "Distribute · 3+ ഒബ്ജക്റ്റുകൾ ആവശ്യമാണ്"
 distributeVertically = "ലംബമായി distribute ചെയ്യുക"
+editImageExternally = "മറ്റൊരു ആപ്പിൽ എഡിറ്റ് ചെയ്യുക"
 flipHorizontal = "തിരശ്ചീനമായി flip ചെയ്യുക"
 flipVertical = "ലംബമായി flip ചെയ്യുക"
 fontColour = "ഫോണ്ട് നിറം"

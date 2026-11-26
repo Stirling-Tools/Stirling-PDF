@@ -7614,6 +7614,9 @@ replaceClippedImage = "No es pot substituir aquesta imatge: està retallada i la
 scanOffInk = "No es pot editar aquest text: les paraules reconegudes no s'alineen amb l'escaneig. Torna a executar l'OCR."
 unsafeRtlEdit = "No es pot fer aquesta edició: l'editor no pot redibuixar el text d'aquesta línia de dreta a esquerra sense canviar-lo."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "Imatge PNG"
+
 [pdfTextEditor.find]
 close = "Tanca la barra de cerca"
 count = "{{current}} de {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Suprimeix (Supr o Retrocés)"
 distributeHorizontally = "Distribueix horitzontalment"
 distributeLabel = "Distribueix · calen 3+ objectes"
 distributeVertically = "Distribueix verticalment"
+editImageExternally = "Edita en una altra aplicació"
 flipHorizontal = "Capgira horitzontalment"
 flipVertical = "Capgira verticalment"
 fontColour = "Color del tipus de lletra"

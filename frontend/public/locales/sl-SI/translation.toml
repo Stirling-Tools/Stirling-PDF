@@ -7614,6 +7614,9 @@ replaceClippedImage = "Te slike ni mogoče zamenjati: obrezana je in zamenjava b
 scanOffInk = "Tega besedila ni mogoče urejati: prepoznane besede se ne ujemajo s skenom. Znova zaženite OCR."
 unsafeRtlEdit = "Tega urejanja ni mogoče izvesti: urejevalnik ne more ponovno narisati besedila te vrstice z desne proti levi, ne da bi ga spremenil."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "Slika PNG"
+
 [pdfTextEditor.find]
 close = "Zapri vrstico za iskanje"
 count = "{{current}} od {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Izbriši (Del ali Backspace)"
 distributeHorizontally = "Porazdeli vodoravno"
 distributeLabel = "Porazdelitev · zahteva 3+ predmetov"
 distributeVertically = "Porazdeli navpično"
+editImageExternally = "Uredi v drugi aplikaciji"
 flipHorizontal = "Obrni vodoravno"
 flipVertical = "Obrni navpično"
 fontColour = "Barva pisave"

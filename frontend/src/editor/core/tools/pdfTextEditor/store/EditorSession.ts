@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import type { PagePoint } from "@editor/tools/pdfTextEditor/store/contextMenu";
 
 export interface EditorSession {
   fileName: string | null;
@@ -9,7 +10,8 @@ export interface EditorSession {
    */
   autosave: () => void;
   download: () => void;
-  pickImage: () => void;
+  /** Picks an image to insert: centred on `at` when given, else on the page in view. */
+  pickImage: (at?: PagePoint) => void;
   /** Brings a page on screen, mounted or not. */
   revealPage: (pageIndex: number) => void;
 }

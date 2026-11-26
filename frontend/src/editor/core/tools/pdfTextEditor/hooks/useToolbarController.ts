@@ -47,9 +47,16 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import {
+  isExternalImageEditSupported,
+  startExternalImageEdit,
+  type ExternalEditWatch,
+} from "@editor/tools/pdfTextEditor/util/externalImageEdit";
+import {
+  decodeBytesForEmbed,
   decodeImageForEmbed,
   pickImageFile,
 } from "@editor/tools/pdfTextEditor/util/imagePicking";
+import { readImageObjectPixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
 
 type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
@@ -535,6 +542,43 @@ export function useToolbarController(
     })();
   }, [sel, store]);
 
+  const watchRef = useRef<ExternalEditWatch | null>(null);
+  useEffect(() => () => watchRef.current?.stop(), []);
+
+  const onEditImageExternally = useCallback(() => {
+    void (async () => {
+      const doc = store.document;
+      const imageId = selection.imageIds[0];
+      if (!doc || !imageId) return;
+      const target = doc
+        .loadedPages()
+        .flatMap((page) => page.images)
+        .find((img) => img.id === imageId);
+      if (!target?.pdfiumObjPtr) return;
+      const pixels = readImageObjectPixels(
+        doc,
+        target.pageIndex,
+        target.pdfiumObjPtr,
+      );
+      if (!pixels) return;
+      // Only one image can be watched at a time; starting a second replaces
+      // the first rather than leaving two pollers racing over the document.
+      watchRef.current?.stop();
+      const outcome = await startExternalImageEdit({
+        pixels,
+        suggestedName: "pdf-image.png",
+        onChange: (bytes) => {
+          void decodeBytesForEmbed(bytes)
+            .then((decoded) =>
+              sel.replaceImageById(target.pageIndex, imageId, decoded),
+            )
+            .catch(() => undefined);
+        },
+      });
+      if (outcome.status === "watching") watchRef.current = outcome.watch;
+    })();
+  }, [sel, selection.imageIds, store]);
+
   return {
     state: toolbarState,
     scanFont,
@@ -550,6 +594,7 @@ export function useToolbarController(
     onToggleItalic: sel.toggleItalic,
     onChangeFontWeight: sel.changeFontWeight,
     onDelete: sel.deleteSelection,
+    onDuplicate: sel.duplicateFirstSelected,
     onToggleLock,
     onChangeCase,
     onChangeZOrder,
@@ -557,6 +602,8 @@ export function useToolbarController(
     onDistribute,
     onTransformImage,
     onReplaceImage,
+    onEditImageExternally,
+    externalEditSupported: isExternalImageEditSupported(),
     imageAccessibility: imageA11y.accessibility,
     onSetImageDescription: imageA11y.setDescription,
     onSetImageDecorative: imageA11y.setDecorative,

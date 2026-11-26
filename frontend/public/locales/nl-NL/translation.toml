@@ -7614,6 +7614,9 @@ replaceClippedImage = "Kan deze afbeelding niet vervangen: deze is bijgesneden e
 scanOffInk = "Kan deze tekst niet bewerken: de herkende woorden lijnen niet uit met de scan. Voer OCR opnieuw uit."
 unsafeRtlEdit = "Kan deze bewerking niet uitvoeren: de editor kan de tekst van deze regel van rechts-naar-links niet opnieuw tekenen zonder deze te veranderen."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG-afbeelding"
+
 [pdfTextEditor.find]
 close = "Zoekbalk sluiten"
 count = "{{current}} van {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Verwijderen (Del of Backspace)"
 distributeHorizontally = "Horizontaal verdelen"
 distributeLabel = "Verdelen · vereist 3+ objecten"
 distributeVertically = "Verticaal verdelen"
+editImageExternally = "Bewerken in een andere app"
 flipHorizontal = "Horizontaal spiegelen"
 flipVertical = "Verticaal spiegelen"
 fontColour = "Lettertypekleur"

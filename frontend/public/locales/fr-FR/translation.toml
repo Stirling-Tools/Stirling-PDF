@@ -7614,6 +7614,9 @@ replaceClippedImage = "Impossible de remplacer cette image : elle est recadrée,
 scanOffInk = "Impossible de modifier ce texte : ses mots reconnus ne s’alignent pas avec la numérisation. Relancez l’OCR."
 unsafeRtlEdit = "Impossible d’effectuer cette modification : l’éditeur ne peut pas redessiner le texte de cette ligne en écriture de droite à gauche sans le modifier."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "Image PNG"
+
 [pdfTextEditor.find]
 close = "Fermer la barre de recherche"
 count = "{{current}} sur {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Supprimer (Suppr ou Retour arrière)"
 distributeHorizontally = "Distribuer horizontalement"
 distributeLabel = "Distribuer · nécessite au moins 3 objets"
 distributeVertically = "Distribuer verticalement"
+editImageExternally = "Modifier dans une autre application"
 flipHorizontal = "Retourner horizontalement"
 flipVertical = "Retourner verticalement"
 fontColour = "Couleur de police"

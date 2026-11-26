@@ -7614,6 +7614,9 @@ replaceClippedImage = "نمی‌توان این تصویر را جایگزین �
 scanOffInk = "نمی‌توان این متن را ویرایش کرد: واژه‌های شناسایی‌شده با اسکن هم‌تراز نیستند. دوباره OCR اجرا کنید."
 unsafeRtlEdit = "نمی‌توان این ویرایش را انجام داد: ویرایشگر نمی‌تواند متن راست‌به‌چپ این خط را بدون تغییر، بازترسیم کند."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "تصویر PNG"
+
 [pdfTextEditor.find]
 close = "بستن نوار جستجو"
 count = "{{current}} از {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "حذف (Del یا Backspace)"
 distributeHorizontally = "توزیع افقی"
 distributeLabel = "توزیع · به 3+ شیء نیاز دارد"
 distributeVertically = "توزیع عمودی"
+editImageExternally = "ویرایش در برنامه‌ای دیگر"
 flipHorizontal = "وارونه‌سازی افقی"
 flipVertical = "وارونه‌سازی عمودی"
 fontColour = "رنگ فونت"

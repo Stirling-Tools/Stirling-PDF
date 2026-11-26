@@ -7718,6 +7718,21 @@ ungroupParagraph = "Ungroup paragraph {{run}}"
 unmarkTagged = "Mark as not fully tagged"
 wrap = "Wrap {{run}}"
 
+[pdfTextEditor.contextMenu]
+addImageHere = "Add image here"
+addTableHere = "Add table here"
+addTextHere = "Add text here"
+copy = "Copy"
+cut = "Cut"
+insertColumnLeft = "Insert column left"
+insertColumnRight = "Insert column right"
+insertRowAbove = "Insert row above"
+insertRowBelow = "Insert row below"
+paste = "Paste"
+saveImage = "Save image"
+table = "Table"
+unlock = "Unlock"
+
 [pdfTextEditor.discard]
 body = "Opening {{name}} closes the document you are editing. Your unsaved changes will be lost."
 cancel = "Cancel"
@@ -7734,6 +7749,9 @@ needsShaping = "The editor can't yet draw this script's joined letters and vowel
 replaceClippedImage = "Can't replace this image: it is cropped, and the replacement would show the parts the crop hides."
 scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."
 unsafeRtlEdit = "Can't make this edit: the editor can't redraw this line's right-to-left text without changing it."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
 
 [pdfTextEditor.find]
 close = "Close find bar"
@@ -8061,9 +8079,6 @@ unlock = "Unlock"
 [pdfTextEditor.pageView]
 renderFailed = "Failed to render page"
 
-[pdfTextEditor.panelTools]
-insert = "Insert"
-
 [pdfTextEditor.password]
 incorrect = "Incorrect password - try again."
 label = "Password"
@@ -8257,6 +8272,9 @@ deleteTooltip = "Delete (Del or Backspace)"
 distributeHorizontally = "Distribute horizontally"
 distributeLabel = "Distribute · needs 3+ objects"
 distributeVertically = "Distribute vertically"
+duplicate = "Duplicate"
+duplicateTooltip = "Duplicate ({{shortcut}})"
+editImageExternally = "Edit in another app"
 flipHorizontal = "Flip horizontal"
 flipVertical = "Flip vertical"
 fontColour = "Font colour"

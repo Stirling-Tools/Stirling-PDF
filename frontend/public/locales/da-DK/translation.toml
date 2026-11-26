@@ -7614,6 +7614,9 @@ replaceClippedImage = "Kan ikke erstatte dette billede: det er beskåret, og ers
 scanOffInk = "Kan ikke redigere denne tekst: De genkendte ord flugter ikke med scanningen. Kør OCR igen."
 unsafeRtlEdit = "Kan ikke udføre denne redigering: editoren kan ikke tegne linjens højre-til-venstre-tekst om uden at ændre den."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG-billede"
+
 [pdfTextEditor.find]
 close = "Luk søgelinje"
 count = "{{current}} af {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Slet (Del eller Backspace)"
 distributeHorizontally = "Fordel vandret"
 distributeLabel = "Fordel · kræver 3+ objekter"
 distributeVertically = "Fordel lodret"
+editImageExternally = "Rediger i en anden app"
 flipHorizontal = "Vend vandret"
 flipVertical = "Vend lodret"
 fontColour = "Skriftfarve"

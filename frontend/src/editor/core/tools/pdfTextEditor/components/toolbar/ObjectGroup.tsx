@@ -2,6 +2,7 @@ import { Menu, Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
+import { modShortcut } from "@editor/utils/hotkeys";
 import {
   NO_SHRINK,
   selectionBarMenuProps,
@@ -21,14 +22,38 @@ export function ObjectGroup({
     selectionAllLocked,
     onToggleLock,
     onDelete,
+    onDuplicate,
     hasRunSelection,
     hasImageSelection,
+    selectionCount,
   } = controller;
   // Lock and arrange act on text and images only; shapes can just be deleted.
   const arrangeable = hasRunSelection || hasImageSelection;
+  // Duplicating copies one text box or one image.
+  const duplicable =
+    selectionCount === 1 && (hasRunSelection || hasImageSelection);
 
   return (
     <>
+      {duplicable && (
+        <Tooltip
+          label={t("pdfTextEditor.toolbar.duplicateTooltip", {
+            defaultValue: "Duplicate ({{shortcut}})",
+            shortcut: modShortcut("D"),
+          })}
+        >
+          <Button
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            onClick={onDuplicate}
+            aria-label={t("pdfTextEditor.toolbar.duplicate", "Duplicate")}
+            data-testid="pdf-editor-duplicate"
+            style={NO_SHRINK}
+            leftSection={<Icon name="copy-plus" size={20} />}
+          />
+        </Tooltip>
+      )}
       <Tooltip
         label={
           selectionAllLocked

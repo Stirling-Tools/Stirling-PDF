@@ -50,6 +50,9 @@ import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/component
 import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
 import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
+import { EditorHeaderHelp } from "@editor/tools/pdfTextEditor/components/EditorHeaderHelp";
+import "@editor/tools/pdfTextEditor/PdfTextEditor.css";
+import type { PagePoint } from "@editor/tools/pdfTextEditor/store/contextMenu";
 import {
   EditorSidebar,
   type SidebarProps,
@@ -356,6 +359,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   // Which action the risk modal is currently gating.
   const pendingDownloadRef = useRef(false);
+  // Where the image being picked should land; set when the picker opens.
+  const imagePlacementRef = useRef<PagePoint | null>(null);
 
   const runSave = useCallback(
     async (download: boolean) => {
@@ -506,17 +511,26 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       // The document may have been reloaded while the image decoded; bail
       // rather than insert against geometry from the wrong document.
       if (store.document !== doc) return;
-      // Insert onto the page currently in view, read from fresh store state.
+      // Onto the point the picker was opened for, else the page in view.
+      const at = imagePlacementRef.current;
+      imagePlacementRef.current = null;
       const pages = store.getState().pages;
-      const visibleIndex = visiblePageNumber();
-      const page = pages.find((p) => p.pageIndex === visibleIndex) ?? pages[0];
+      const targetIndex = at?.pageIndex ?? visiblePageNumber();
+      const page = pages.find((p) => p.pageIndex === targetIndex) ?? pages[0];
       if (!page) return;
-      const rect = centredImageRect(
+      const sized = centredImageRect(
         page.display,
         decoded.width,
         decoded.height,
         INSERTED_IMAGE_RATIO,
       );
+      const rect = at
+        ? {
+            ...sized,
+            x: at.x - sized.width / 2,
+            y: at.y - sized.height / 2,
+          }
+        : sized;
       const cmd = new InsertImageCommand({
         pageIndex: page.pageIndex,
         rgba: decoded.data.data,
@@ -706,11 +720,19 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     insertPastedText: reviewing ? noop : insertPastedText,
   });
 
-  const openImagePicker = useCallback(() => {
-    document
-      .querySelector<HTMLInputElement>('[data-testid="pdf-editor-image-input"]')
-      ?.click();
-  }, []);
+  const openImagePicker = useCallback(
+    (at?: PagePoint) => {
+      // Adding an image replaces any armed text or table insert.
+      store.setMode("select");
+      imagePlacementRef.current = at ?? null;
+      document
+        .querySelector<HTMLInputElement>(
+          '[data-testid="pdf-editor-image-input"]',
+        )
+        ?.click();
+    },
+    [store],
+  );
 
   const handleSubmitPassword = useCallback(
     (password: string) => {
@@ -833,6 +855,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     <Stack
       gap={0}
       h="100%"
+      className="pdf-editor-panel"
       style={{ overflow: "hidden" }}
       data-testid="pdf-editor-root"
     >
@@ -892,15 +915,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         </>
       ) : (
         selectedTool === "pdfTextEditor" && (
-          <EditorSidebar
-            {...sidebarProps}
-            onOpenFind={onOpenFind}
-            onShowHelp={onShowHelp}
-          />
+          <>
+            <EditorHeaderHelp onShowHelp={onShowHelp} />
+            <EditorSidebar {...sidebarProps} desktop />
+          </>
         )
       )}
       {state.hasDocument && (
         <EditorPanelActions
+          store={store}
           compact={isMobile}
           dirty={state.dirty}
           onSave={handleSave}

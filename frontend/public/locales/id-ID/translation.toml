@@ -7614,6 +7614,9 @@ replaceClippedImage = "Tidak dapat mengganti gambar ini: gambar dipotong, dan pe
 scanOffInk = "Tidak dapat mengedit teks ini: kata yang dikenali tidak sejajar dengan hasil pindai. Jalankan OCR lagi."
 unsafeRtlEdit = "Tidak dapat melakukan pengeditan ini: editor tidak dapat menggambar ulang teks kanan-ke-kiri pada baris ini tanpa mengubahnya."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "Gambar PNG"
+
 [pdfTextEditor.find]
 close = "Tutup bilah pencarian"
 count = "{{current}} dari {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Hapus (Del atau Backspace)"
 distributeHorizontally = "Distribusikan secara horizontal"
 distributeLabel = "Distribusikan · memerlukan 3+ objek"
 distributeVertically = "Distribusikan secara vertikal"
+editImageExternally = "Edit di aplikasi lain"
 flipHorizontal = "Balik horizontal"
 flipVertical = "Balik vertikal"
 fontColour = "Warna font"

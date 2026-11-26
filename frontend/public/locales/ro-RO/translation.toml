@@ -7614,6 +7614,9 @@ replaceClippedImage = "Nu se poate înlocui această imagine: este decupată, ia
 scanOffInk = "Nu se poate edita acest text: cuvintele recunoscute nu se aliniază cu scanarea. Rulați din nou OCR."
 unsafeRtlEdit = "Nu se poate face această editare: editorul nu poate redesena textul acestui rând, de la dreapta la stânga, fără a-l modifica."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "Imagine PNG"
+
 [pdfTextEditor.find]
 close = "Închide bara de căutare"
 count = "{{current}} din {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Șterge (Del sau Backspace)"
 distributeHorizontally = "Distribuie orizontal"
 distributeLabel = "Distribuie · necesită 3+ obiecte"
 distributeVertically = "Distribuie vertical"
+editImageExternally = "Editează în altă aplicație"
 flipHorizontal = "Întoarce pe orizontală"
 flipVertical = "Întoarce pe verticală"
 fontColour = "Culoare font"

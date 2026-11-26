@@ -7614,6 +7614,9 @@ replaceClippedImage = "Không thể thay thế hình ảnh này: nó đã bị c
 scanOffInk = "Không thể chỉnh sửa văn bản này: các từ nhận dạng không thẳng hàng với bản quét. Hãy chạy OCR lại."
 unsafeRtlEdit = "Không thể thực hiện chỉnh sửa này: trình chỉnh sửa không thể hiển thị lại văn bản từ phải sang trái của dòng này mà không làm thay đổi nó."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "Hình ảnh PNG"
+
 [pdfTextEditor.find]
 close = "Đóng thanh tìm kiếm"
 count = "{{current}} trên {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Xóa (Del hoặc Backspace)"
 distributeHorizontally = "Phân bố theo chiều ngang"
 distributeLabel = "Phân bố · cần 3+ đối tượng"
 distributeVertically = "Phân bố theo chiều dọc"
+editImageExternally = "Chỉnh sửa trong ứng dụng khác"
 flipHorizontal = "Lật ngang"
 flipVertical = "Lật dọc"
 fontColour = "Màu phông chữ"

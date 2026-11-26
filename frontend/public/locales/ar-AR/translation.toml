@@ -7614,6 +7614,9 @@ replaceClippedImage = "لا يمكن استبدال هذه الصورة: فهي 
 scanOffInk = "لا يمكن تحرير هذا النص: الكلمات المُتعرَّف عليها لا تصطف مع المسح. شغّل OCR مرة أخرى."
 unsafeRtlEdit = "لا يمكن إجراء هذا التعديل: لا يستطيع المحرر إعادة رسم نص هذا السطر من اليمين إلى اليسار دون تغييره."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "صورة PNG"
+
 [pdfTextEditor.find]
 close = "إغلاق شريط البحث"
 count = "{{current}} من {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "حذف (Del أو Backspace)"
 distributeHorizontally = "توزيع أفقيًا"
 distributeLabel = "توزيع · يتطلب 3+ كائنات"
 distributeVertically = "توزيع عموديًا"
+editImageExternally = "تحرير في تطبيق آخر"
 flipHorizontal = "قلب أفقي"
 flipVertical = "قلب عمودي"
 fontColour = "لون الخط"

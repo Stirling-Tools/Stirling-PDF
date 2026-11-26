@@ -41,6 +41,7 @@ import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle"
 import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/AnnotationOutline";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { LockBadge } from "@editor/tools/pdfTextEditor/components/LockBadge";
+import type { ContextMenuEvent } from "@editor/tools/pdfTextEditor/store/contextMenu";
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
@@ -112,6 +113,13 @@ interface PageViewProps {
   onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
   onPageClick?: (pageIndex: number, pageX: number, pageY: number) => void;
+  /** A right-click anywhere on the page, with its point in page space. */
+  onPageContextMenu?: (
+    pageIndex: number,
+    pageX: number,
+    pageY: number,
+    event: ContextMenuEvent,
+  ) => void;
   /** Fires when an image's drag OR resize completes. */
   onTransformImage?: (
     pageIndex: number,
@@ -171,6 +179,7 @@ export const PageView = memo(function PageView({
   onMeasureRun,
   onResizeRun,
   onPageClick,
+  onPageContextMenu,
   onTransformImage,
   onUnlock,
   onFirstVisible,
@@ -422,6 +431,18 @@ export const PageView = memo(function PageView({
     return repaints;
   }
 
+  // CSS pixels (origin upper-left) to PDF page space (origin lower-left, points).
+  function toPagePoint(e: {
+    currentTarget: HTMLElement;
+    clientX: number;
+    clientY: number;
+  }) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const xd = (e.clientX - rect.left) / cssScale;
+    const yd = page.height - (e.clientY - rect.top) / cssScale;
+    return transform.invert(xd, yd);
+  }
+
   return (
     <Box
       // Fills the viewer's page box and stays transparent until painted, so
@@ -433,16 +454,13 @@ export const PageView = memo(function PageView({
       data-testid={`pdf-editor-page-${page.pageIndex}`}
       onClick={(e) => {
         if (!onPageClick) return;
-        // Convert from CSS pixel coords (origin upper-left) into PDF
-        // page-space coords (origin lower-left, points).
-        const rect = e.currentTarget.getBoundingClientRect();
-        const cssX = e.clientX - rect.left;
-        const cssY = e.clientY - rect.top;
-        // CSS px -> display-PDF.
-        const xd = cssX / cssScale;
-        const yd = page.height - cssY / cssScale;
-        const p = transform.invert(xd, yd);
+        const p = toPagePoint(e);
         onPageClick(page.pageIndex, p.x, p.y);
+      }}
+      onContextMenu={(e) => {
+        if (!onPageContextMenu) return;
+        const p = toPagePoint(e);
+        onPageContextMenu(page.pageIndex, p.x, p.y, e);
       }}
     >
       <canvas

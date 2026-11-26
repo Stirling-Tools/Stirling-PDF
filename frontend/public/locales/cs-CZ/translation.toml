@@ -7614,6 +7614,9 @@ replaceClippedImage = "Tento obrázek nelze nahradit: je oříznutý a náhrada 
 scanOffInk = "Tento text nelze upravit: rozpoznaná slova neodpovídají skenu. Spusťte znovu OCR."
 unsafeRtlEdit = "Tuto úpravu nelze provést: editor nedokáže překreslit text tohoto řádku zprava doleva bez jeho změny."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG obrázek"
+
 [pdfTextEditor.find]
 close = "Zavřít panel hledání"
 count = "{{current}} z {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Odstranit (Del nebo Backspace)"
 distributeHorizontally = "Rozmístit vodorovně"
 distributeLabel = "Rozmístit · vyžaduje 3+ objekty"
 distributeVertically = "Rozmístit svisle"
+editImageExternally = "Upravit v jiné aplikaci"
 flipHorizontal = "Překlopit vodorovně"
 flipVertical = "Překlopit svisle"
 fontColour = "Barva písma"

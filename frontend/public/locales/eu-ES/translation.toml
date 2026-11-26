@@ -7614,6 +7614,9 @@ replaceClippedImage = "Ezin da irudi hau ordezkatu: moztuta dago, eta ordezkoak 
 scanOffInk = "Ezin da testu hau editatu: aitortutako hitzak ez datoz bat eskanerrarekin. Exekutatu berriro OCR."
 unsafeRtlEdit = "Ezin da edizio hau egin: editoreak ezin du lerro honetako eskuinetik ezkerrera doan testua berriro marraztu hura aldatu gabe."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG irudia"
+
 [pdfTextEditor.find]
 close = "Itxi bilaketa-barra"
 count = "{{current}} / {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Ezabatu (Del edo Backspace)"
 distributeHorizontally = "Banatu horizontalki"
 distributeLabel = "Banatu · 3+ objektu behar dira"
 distributeVertically = "Banatu bertikalki"
+editImageExternally = "Editatu beste aplikazio batean"
 flipHorizontal = "Irauli horizontalki"
 flipVertical = "Irauli bertikalki"
 fontColour = "Letra-kolorea"

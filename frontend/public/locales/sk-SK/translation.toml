@@ -7614,6 +7614,9 @@ replaceClippedImage = "Tento obrázok nie je možné nahradiť: je orezaný a n�
 scanOffInk = "Tento text nemožno upraviť: rozpoznané slová sa nezhodujú so skenom. Spustite znova OCR."
 unsafeRtlEdit = "Túto úpravu nie je možné vykonať: editor nedokáže prekresliť text na tomto riadku sprava doľava bez zmeny."
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG obrázok"
+
 [pdfTextEditor.find]
 close = "Zavrieť panel hľadania"
 count = "{{current}} z {{total}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "Odstrániť (Del alebo Backspace)"
 distributeHorizontally = "Rozložiť vodorovne"
 distributeLabel = "Rozložiť · vyžaduje 3+ objekty"
 distributeVertically = "Rozložiť zvisle"
+editImageExternally = "Upraviť v inej aplikácii"
 flipHorizontal = "Prevrátiť vodorovne"
 flipVertical = "Prevrátiť zvisle"
 fontColour = "Farba písma"

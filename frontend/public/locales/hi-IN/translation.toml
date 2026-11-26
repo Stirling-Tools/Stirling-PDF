@@ -7614,6 +7614,9 @@ replaceClippedImage = "यह छवि बदली नहीं जा सक�
 scanOffInk = "यह टेक्स्ट संपादित नहीं हो सकता: इसके पहचाने गए शब्द स्कैन से मेल नहीं खाते। फिर से OCR चलाएँ।"
 unsafeRtlEdit = "यह संपादन नहीं किया जा सकता: संपादक इस पंक्ति के दाएँ-से-बाएँ टेक्स्ट को बदले बिना दोबारा नहीं बना सकता।"
 
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
+
 [pdfTextEditor.find]
 close = "find बार बंद करें"
 count = "{{total}} में से {{current}}"
@@ -8084,6 +8087,7 @@ deleteTooltip = "हटाएं (Del या Backspace)"
 distributeHorizontally = "क्षैतिज रूप से distribute करें"
 distributeLabel = "Distribute · 3+ ऑब्जेक्ट चाहिए"
 distributeVertically = "लंबवत रूप से distribute करें"
+editImageExternally = "किसी दूसरे ऐप में संपादित करें"
 flipHorizontal = "क्षैतिज flip करें"
 flipVertical = "लंबवत flip करें"
 fontColour = "फ़ॉन्ट रंग"

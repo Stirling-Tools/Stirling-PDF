@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
+import { toolPanelHeaderSlot } from "@editor/components/shared/toolPanelHeaderSlot";
 import "@editor/components/shared/ToolPanelHeader.css";
 
 export interface ToolPanelHeaderProps {
@@ -34,6 +35,10 @@ export function ToolPanelHeader({
       <div className="sui-panelhdr__bar">
         <span className="sui-panelhdr__icon">{icon}</span>
         <span className="sui-panelhdr__label">{title}</span>
+        <span
+          ref={toolPanelHeaderSlot.attach}
+          className="sui-panelhdr__actions"
+        />
       </div>
       {onClose && (
         <ActionIcon
