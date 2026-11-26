@@ -127,10 +127,7 @@ export function useViewerWorkbenchBarButtons(
   );
   const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const editTextLabel = t("workbenchBar.editText", "Edit Text");
-  const reviewLabel = t(
-    "workbenchBar.reviewAccessibility",
-    "Review accessibility",
-  );
+  const reviewLabel = t("workbenchBar.reviewAccessibility", "Accessibility");
   const { reviewing } = useReviewMode();
   const { startReview, startEditing } = useEditOrReview();
   const reviewAvailable = useReviewAvailable();
