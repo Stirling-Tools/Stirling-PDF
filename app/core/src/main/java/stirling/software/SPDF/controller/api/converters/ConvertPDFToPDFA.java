@@ -855,12 +855,15 @@ public class ConvertPDFToPDFA {
     private byte[] convertWithOfficeConvert(Path inputPath, Path workingDir, PdfaProfile profile)
             throws IOException {
         Path output = workingDir.resolve("office-pdfa.pdf");
+        // Level A converts at level B first; applyLevelA tags afterwards.
         PdfALevel level =
-                switch (profile.getPart()) {
-                    case 1 -> PdfALevel.A1B;
-                    case 2 -> PdfALevel.A2B;
-                    case 3 -> PdfALevel.A3B;
-                    default -> throw new IllegalArgumentException("Unsupported PDF/A part");
+                switch (profile) {
+                    case PDF_A_1B, PDF_A_1A -> PdfALevel.A1B;
+                    case PDF_A_2B, PDF_A_2A -> PdfALevel.A2B;
+                    case PDF_A_2U -> PdfALevel.A2U;
+                    case PDF_A_3B, PDF_A_3A -> PdfALevel.A3B;
+                    case PDF_A_3U -> PdfALevel.A3U;
+                    case PDF_A_4 -> PdfALevel.A4;
                 };
         try {
             PdfToPdfA.convert(
@@ -951,13 +954,21 @@ public class ConvertPDFToPDFA {
             return false;
         }
         String standard = result.getStandard();
-        if (standard == null || standard.length() < 2) {
+        // veraPDF ids are "2b", "3u" and so on, but plain "4" for PDF/A-4.
+        if (standard == null || standard.isEmpty()) {
             return false;
         }
         if (standard.charAt(0) != Character.forDigit(profile.getPart(), 10)) {
             return false;
         }
-        return !profile.requiresTagging() || Character.toLowerCase(standard.charAt(1)) == 'a';
+        char conformance = standard.length() > 1 ? Character.toLowerCase(standard.charAt(1)) : ' ';
+        if (profile.requiresTagging()) {
+            return conformance == 'a';
+        }
+        // Level A implies level U, but a level B pass says nothing about Unicode text.
+        return !"U".equals(profile.getConformanceLevel())
+                || conformance == 'u'
+                || conformance == 'a';
     }
 
     private void verifyStrictCompliance(byte[] pdfBytes, PdfaProfile profile, boolean levelAReached)
@@ -1663,7 +1674,11 @@ public class ConvertPDFToPDFA {
         // Level A = level B plus tagging, declared language and Unicode text; tagged post-convert.
         PDF_A_1A(1, "A", "PDF/A-1a", "1.4", Format.PDF_A1B, "pdfa-1a"),
         PDF_A_2A(2, "A", "PDF/A-2a", "1.7", null, "pdfa-2a"),
-        PDF_A_3A(3, "A", "PDF/A-3a", "1.7", null, "pdfa-3a");
+        PDF_A_3A(3, "A", "PDF/A-3a", "1.7", null, "pdfa-3a"),
+        PDF_A_2U(2, "U", "PDF/A-2u", "1.7", null, "pdfa-2u"),
+        PDF_A_3U(3, "U", "PDF/A-3u", "1.7", null, "pdfa-3u"),
+        // PDF/A-4 has no conformance levels, so it is untagged like level B.
+        PDF_A_4(4, "", "PDF/A-4", "2.0", null, "pdfa-4");
 
         private final int part;
         private final String conformanceLevel;
@@ -1695,7 +1710,7 @@ public class ConvertPDFToPDFA {
         }
 
         static PdfaProfile fromRequest(String requestToken) {
-            if (requestToken == null) {
+            if (requestToken == null || requestToken.isBlank()) {
                 return PDF_A_2B;
             }
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
@@ -1704,7 +1719,10 @@ public class ConvertPDFToPDFA {
                             .filter(profile -> profile.requestTokens.contains(normalized))
                             .findFirst();
 
-            return match.orElse(PDF_A_2B);
+            return match.orElseThrow(
+                    () ->
+                            new IllegalArgumentException(
+                                    "Unsupported PDF/A output format: " + requestToken));
         }
 
         Optional<Format> preflightFormat() {

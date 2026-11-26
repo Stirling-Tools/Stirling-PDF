@@ -5,8 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -50,15 +57,48 @@ class PdfUa2ProfileTest {
     @DisplayName("raises the file to PDF 2.0 and namespaces the structure tree")
     void producesPdf2WithNamespaces() throws Exception {
         PdfUaConversionOutcome outcome = convertUa2(PdfUaTestDocuments.headingHierarchy());
+        String header =
+                new String(outcome.pdfBytes(), 0, 8, java.nio.charset.StandardCharsets.US_ASCII);
+        assertEquals("%PDF-2.0", header, "UA-2 is defined on PDF 2.0, so the header must say so");
 
         try (PDDocument document = Loader.loadPDF(outcome.pdfBytes())) {
-            assertEquals(2.0f, document.getVersion(), "UA-2 is defined on PDF 2.0");
-
             var root = document.getDocumentCatalog().getStructureTreeRoot();
             assertNotNull(root, "no structure tree was written");
             assertNotNull(
                     root.getCOSObject().getDictionaryObject(COSName.getPDFName("Namespaces")),
                     "UA-2 requires the standard structure namespace to be declared");
+        }
+    }
+
+    @Test
+    @DisplayName("every structure element, annotation ones included, declares a namespace")
+    void everyElementIsNamespaced() throws Exception {
+        PdfUaConversionOutcome outcome = convertUa2(PdfUaTestDocuments.linkDocument());
+
+        try (PDDocument document = Loader.loadPDF(outcome.pdfBytes())) {
+            var root = document.getDocumentCatalog().getStructureTreeRoot();
+            List<String> missing = new ArrayList<>();
+            List<String> types = new ArrayList<>();
+            collectElements(root.getCOSObject().getDictionaryObject(COSName.K), missing, types);
+            assertTrue(types.contains("Link"), "the link annotation was not tagged: " + types);
+            assertTrue(missing.isEmpty(), "elements without /NS: " + missing);
+        }
+    }
+
+    private static void collectElements(COSBase node, List<String> missing, List<String> types) {
+        if (node instanceof COSArray array) {
+            for (COSBase kid : array) {
+                collectElements(kid, missing, types);
+            }
+        } else if (node instanceof COSObject object) {
+            collectElements(object.getObject(), missing, types);
+        } else if (node instanceof COSDictionary dict && dict.containsKey(COSName.S)) {
+            String type = dict.getNameAsString(COSName.S);
+            types.add(type);
+            if (dict.getDictionaryObject(COSName.getPDFName("NS")) == null) {
+                missing.add(type);
+            }
+            collectElements(dict.getDictionaryObject(COSName.K), missing, types);
         }
     }
 

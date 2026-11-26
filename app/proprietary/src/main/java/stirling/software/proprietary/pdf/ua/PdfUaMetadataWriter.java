@@ -83,6 +83,13 @@ public class PdfUaMetadataWriter {
         if (!preserveVersion && document.getVersion() < profile.pdfVersion()) {
             document.setVersion(profile.pdfVersion());
         }
+        // setVersion only writes catalog /Version; UA-2 needs a real %PDF-2.0 header.
+        if (!preserveVersion
+                && profile == PdfUaProfile.UA2
+                && document.getDocument().getVersion() < profile.pdfVersion()) {
+            document.getDocument().setVersion(profile.pdfVersion());
+            catalog.getCOSObject().removeItem(COSName.VERSION);
+        }
 
         warnings.addAll(describeFormFields(document));
         writeXmp(document, effectiveTitle, language, null);

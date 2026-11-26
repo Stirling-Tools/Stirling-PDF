@@ -4438,7 +4438,7 @@ output = "Output"
 outputFormat = "Output Format"
 pdfaAccessibleFormat = "{{format}} (accessible)"
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
-pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
+pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files, the u levels also guarantee searchable Unicode text, PDF/A-4 is based on PDF 2.0."
 pdfaOptions = "PDF/A Options"
 pdfOptions = "PDF Options"
 pdfToCbr = "PDF → CBR"
@@ -8600,7 +8600,10 @@ viewAnyway = "View file (policy still enforcing)"
 [policyOption]
 pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
+pdfa-2u = "PDF/A-2u"
 pdfa-3b = "PDF/A-3b"
+pdfa-3u = "PDF/A-3u"
+pdfa-4 = "PDF/A-4"
 
 [portal.accountLink]
 ownerRequired = "Only the org owner can link or unlink this server."
@@ -10801,7 +10804,7 @@ description = "Choose the documents to process, make their text searchable, and 
 3 = "Keep the original"
 
 [portal.policies.config.pdfa.fields.outputFormat]
-help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
+help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments; PDF/A-4 is the PDF 2.0 profile."
 label = "Archival profile"
 
 [portal.policies.config.purview]

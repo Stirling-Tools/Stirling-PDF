@@ -16,7 +16,10 @@ type PdfaApiParams = ToolApiParams[typeof ENDPOINT];
 export const PDFA_OUTPUT_FORMATS = [
   "pdfa-1",
   "pdfa-2b",
+  "pdfa-2u",
   "pdfa-3b",
+  "pdfa-3u",
+  "pdfa-4",
 ] as const satisfies readonly PdfaApiParams["outputFormat"][];
 
 export type PdfaOutputFormat = (typeof PDFA_OUTPUT_FORMATS)[number];

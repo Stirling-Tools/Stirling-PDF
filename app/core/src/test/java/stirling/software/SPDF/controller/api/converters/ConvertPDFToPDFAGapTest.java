@@ -238,9 +238,26 @@ class ConvertPDFToPDFAGapTest {
         }
 
         @Test
-        @DisplayName("unknown token falls back to PDF/A-2b")
-        void unknownFallsBack() throws Exception {
-            assertThat(partOf(resolveProfile("not-a-real-format"))).isEqualTo(2);
+        @DisplayName("'pdfa-4' resolves to PDF/A-4")
+        void pdfa4Resolves() throws Exception {
+            assertThat(partOf(resolveProfile("pdfa-4"))).isEqualTo(4);
+            assertThat(displayNameOf(resolveProfile("pdfa-4"))).isEqualTo("PDF/A-4");
+        }
+
+        @Test
+        @DisplayName("unknown token is rejected instead of silently becoming PDF/A-2b")
+        void unknownIsRejected() {
+            assertThatThrownBy(() -> resolveProfile("not-a-real-format"))
+                    .isInstanceOf(InvocationTargetException.class)
+                    .cause()
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("not-a-real-format");
+        }
+
+        @Test
+        @DisplayName("blank token defaults to PDF/A-2b like a missing one")
+        void blankDefaultsTo2b() throws Exception {
+            assertThat(displayNameOf(resolveProfile("  "))).isEqualTo("PDF/A-2b");
         }
     }
 
@@ -686,6 +703,31 @@ class ConvertPDFToPDFAGapTest {
             assertThat(ex).isNotNull();
             assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(ex.getReason()).contains("PDF/A-1a");
+        }
+
+        @Test
+        @DisplayName(
+                "a PDF/A-4 result, which has no conformance letter, satisfies a PDF/A-4 request")
+        void pdfa4ResultSatisfiesPdfa4() throws Exception {
+            PDFVerificationResult ok = new PDFVerificationResult();
+            ok.setCompliant(true);
+            ok.setStandard("4");
+            ok.setComplianceSummary("PDF/A-4 compliant");
+            when(veraPDFService.validatePDF(any())).thenReturn(List.of(ok));
+
+            assertThat(verify("pdfa-4", true)).isNull();
+        }
+
+        @Test
+        @DisplayName("a level B pass does not satisfy a level U request")
+        void levelBDoesNotSatisfyLevelU() throws Exception {
+            PDFVerificationResult ok = new PDFVerificationResult();
+            ok.setCompliant(true);
+            ok.setStandard("2b");
+            ok.setComplianceSummary("PDF/A-2b compliant");
+            when(veraPDFService.validatePDF(any())).thenReturn(List.of(ok));
+
+            assertThat(verify("pdfa-2u", true)).isInstanceOf(ResponseStatusException.class);
         }
 
         @Test
