@@ -348,6 +348,9 @@ export default function HomePage() {
   const importTotal = useBulkAddProgress().total;
   const importingSeveral = importTotal > 1;
   const severalIntoEmptyRef = useRef(false);
+  // Set once the upload has picked the view, so its end can't undo a switch
+  // the user made while it ran.
+  const viewChosenForUploadRef = useRef(false);
   useEffect(() => {
     if (importTotal === 0) return;
     severalIntoEmptyRef.current =
@@ -362,6 +365,7 @@ export default function HomePage() {
       navigationState.workbench,
     );
     if (action) actions.setWorkbench(action.workbench);
+    viewChosenForUploadRef.current = true;
     // Keyed on the upload alone, so switching views mid-upload isn't undone.
   }, [importTotal]);
   // Skipping every prompt leaves nothing of the upload to open.
@@ -392,6 +396,10 @@ export default function HomePage() {
     }
     if (currentCount > 0 || !hasPendingUnlocks()) {
       severalIntoEmptyRef.current = false;
+    }
+    if (viewChosenForUploadRef.current) {
+      viewChosenForUploadRef.current = false;
+      if (prevCount === 0) action = null;
     }
 
     // A session restore fills an empty workbench too, but it already knows which view the user

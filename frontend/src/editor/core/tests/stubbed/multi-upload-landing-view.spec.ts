@@ -63,6 +63,22 @@ test("several files from the landing page open in Active Files", async ({
   expect(viewerOpened).toBe(false);
 });
 
+test("switching to the viewer during an upload survives its end", async ({
+  page,
+}) => {
+  await landingInput(page).setInputFiles(MANY);
+  // Still uploading when the user switches.
+  const progress = page.locator(".file-sidebar-bulk-add");
+  await expect(progress).toBeVisible({ timeout: 30_000 });
+  const viewer = page.getByRole("radio", { name: /Viewer/i });
+  await viewer.evaluate((el: HTMLInputElement) => el.click());
+  await expect(viewer).toBeChecked();
+  await expect(progress).toHaveCount(0, { timeout: 60_000 });
+  // The end of the upload is what used to switch it back.
+  await page.waitForTimeout(1000);
+  await expect(viewer).toBeChecked();
+});
+
 // Locked PDFs join the workbench only once unlocked, after the upload itself
 // has finished, so these arrive one at a time however many were picked.
 for (const [label, files] of [
@@ -79,6 +95,8 @@ for (const [label, files] of [
     for (let i = 0; i < locked.length; i++) {
       const prompt = await nextPrompt(page, locked);
       const password = prompt.locator('input[type="password"]');
+      // Shown once the file's permissions have been checked.
+      await expect(password).toBeVisible({ timeout: 30_000 });
       await password.fill("annotation-test");
       await password.press("Enter");
       await expect(prompt).toBeHidden({ timeout: 30_000 });
@@ -128,6 +146,10 @@ test("skipping every password leaves a later single file to open in the viewer",
 
 test("one file from the landing page opens in the viewer", async ({ page }) => {
   await landingInput(page).setInputFiles(SAMPLES[0]);
+  // The empty landing page already reads "viewer", so wait for the page itself.
+  await expect(page.locator("[data-page-index]").first()).toBeVisible({
+    timeout: 30_000,
+  });
   await expect(page.getByRole("radio", { name: /Viewer/i })).toBeChecked({
     timeout: 15_000,
   });
