@@ -23,7 +23,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
@@ -110,8 +112,10 @@ public class AttachmentService implements AttachmentServiceInterface {
             fileSpecification.setFileDescription("Embedded attachment: " + filename);
             fileSpecification.setEmbeddedFile(embeddedFile);
             fileSpecification.setEmbeddedFileUnicode(embeddedFile);
+            fileSpecification.getCOSObject().setName(COSName.AF_RELATIONSHIP, "Unspecified");
 
-            existingNames.put(filename, fileSpecification);
+            PDComplexFileSpecification replaced = existingNames.put(filename, fileSpecification);
+            addToAssociatedFiles(document, fileSpecification, replaced);
 
             log.info("Added attachment: {} ({} bytes)", filename, attachment.getSize());
         }
@@ -120,6 +124,23 @@ public class AttachmentService implements AttachmentServiceInterface {
         setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
 
         return document;
+    }
+
+    // PDF 2.0 and PDF/A-3 find attachments through the catalog /AF array.
+    private static void addToAssociatedFiles(
+            PDDocument document,
+            PDComplexFileSpecification added,
+            PDComplexFileSpecification replaced) {
+        COSDictionary catalog = document.getDocumentCatalog().getCOSObject();
+        COSArray associatedFiles = catalog.getCOSArray(COSName.AF);
+        if (associatedFiles == null) {
+            associatedFiles = new COSArray();
+            catalog.setItem(COSName.AF, associatedFiles);
+        }
+        if (replaced != null) {
+            associatedFiles.removeObject(replaced.getCOSObject());
+        }
+        associatedFiles.add(added);
     }
 
     @Override
@@ -366,7 +387,11 @@ public class AttachmentService implements AttachmentServiceInterface {
                     attachmentName);
         }
 
-        allEmbeddedFiles.remove(keyToRemove);
+        PDComplexFileSpecification removed = allEmbeddedFiles.remove(keyToRemove);
+        COSArray associatedFiles = document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
+        if (associatedFiles != null && removed != null) {
+            associatedFiles.removeObject(removed.getCOSObject());
+        }
 
         embeddedFilesTree.setKids(null);
 

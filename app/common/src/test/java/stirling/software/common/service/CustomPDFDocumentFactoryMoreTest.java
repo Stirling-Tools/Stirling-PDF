@@ -6,23 +6,37 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.awt.color.ColorSpace;
+import java.awt.color.ICC_Profile;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
+import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -119,6 +133,108 @@ class CustomPDFDocumentFactoryMoreTest {
             File f = Files.write(tempDir.resolve("old.pdf"), basePdfBytes).toFile();
             try (PDDocument doc = factory.createNewDocumentBasedOnOldDocument(f)) {
                 assertThat(doc).isNotNull();
+            }
+        }
+
+        @Test
+        @DisplayName("createNewDocumentBasedOnOldDocument drops PDF/A and PDF/UA claims from XMP")
+        void newDocDropsConformanceClaims() throws IOException {
+            String xmp =
+                    "<?xpacket begin='' id='W5M0MpCehiHzreSzNTczkc9d'?>"
+                            + "<x:xmpmeta xmlns:x='adobe:ns:meta/'>"
+                            + "<rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>"
+                            + "<rdf:Description rdf:about=''"
+                            + " xmlns:dc='http://purl.org/dc/elements/1.1/'"
+                            + " xmlns:pdfaid='http://www.aiim.org/pdfa/ns/id/'"
+                            + " xmlns:pdfuaid='http://www.aiim.org/pdfua/ns/id/'>"
+                            + "<pdfaid:part>2</pdfaid:part><pdfaid:conformance>B</pdfaid:conformance>"
+                            + "<pdfuaid:part>1</pdfuaid:part>"
+                            + "<dc:title><rdf:Alt><rdf:li xml:lang='x-default'>Kept title</rdf:li>"
+                            + "</rdf:Alt></dc:title>"
+                            + "</rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end='w'?>";
+            byte[] source;
+            try (PDDocument src = new PDDocument()) {
+                src.addPage(new PDPage());
+                PDMetadata metadata = new PDMetadata(src);
+                metadata.importXMPMetadata(xmp.getBytes(StandardCharsets.UTF_8));
+                src.getDocumentCatalog().setMetadata(metadata);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                src.save(bos);
+                source = bos.toByteArray();
+            }
+
+            try (PDDocument doc = factory.createNewDocumentBasedOnOldDocument(source)) {
+                String kept =
+                        new String(
+                                doc.getDocumentCatalog().getMetadata().toByteArray(),
+                                StandardCharsets.UTF_8);
+                assertThat(kept).contains("Kept title");
+                assertThat(kept).doesNotContain("pdfa/ns/id").doesNotContain("pdfua/ns/id");
+            }
+        }
+
+        @Test
+        @DisplayName(
+                "createNewDocumentBasedOnOldDocument keeps PDF 2.0 version and page-free catalog entries")
+        void newDocKeepsVersionAndCatalogEntries() throws IOException {
+            byte[] source;
+            try (PDDocument src = new PDDocument()) {
+                src.addPage(new PDPage());
+                src.getDocument().setVersion(2.0f);
+                COSDictionary catalog = src.getDocumentCatalog().getCOSObject();
+                PDMetadata xmp = new PDMetadata(src);
+                xmp.importXMPMetadata(
+                        ("<x:xmpmeta xmlns:x='adobe:ns:meta/'><rdf:RDF"
+                                        + " xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'/>"
+                                        + "</x:xmpmeta>")
+                                .getBytes(StandardCharsets.UTF_8));
+                src.getDocumentCatalog().setMetadata(xmp);
+                src.getDocumentCatalog().setLanguage("en-GB");
+                PDOutputIntent intent =
+                        new PDOutputIntent(
+                                src,
+                                new ByteArrayInputStream(
+                                        ICC_Profile.getInstance(ColorSpace.CS_sRGB).getData()));
+                intent.setOutputConditionIdentifier("sRGB");
+                src.getDocumentCatalog().addOutputIntent(intent);
+                PDComplexFileSpecification spec = new PDComplexFileSpecification();
+                spec.setFile("data.csv");
+                spec.setEmbeddedFile(
+                        new PDEmbeddedFile(src, new ByteArrayInputStream("a,b".getBytes())));
+                COSArray af = new COSArray();
+                af.add(spec);
+                catalog.setItem(COSName.AF, af);
+                PDEmbeddedFilesNameTreeNode tree = new PDEmbeddedFilesNameTreeNode();
+                tree.setNames(Map.of("data.csv", spec));
+                PDDocumentNameDictionary names =
+                        new PDDocumentNameDictionary(src.getDocumentCatalog());
+                names.setEmbeddedFiles(tree);
+                src.getDocumentCatalog().setNames(names);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                src.save(bos);
+                source = bos.toByteArray();
+            }
+
+            byte[] saved;
+            try (PDDocument doc = factory.createNewDocumentBasedOnOldDocument(source)) {
+                doc.addPage(new PDPage());
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                doc.save(bos);
+                saved = bos.toByteArray();
+            }
+
+            assertThat(new String(saved, 0, 8, StandardCharsets.US_ASCII)).isEqualTo("%PDF-2.0");
+            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(saved)) {
+                PDDocumentCatalog catalog = doc.getDocumentCatalog();
+                assertThat(doc.getVersion()).isEqualTo(2.0f);
+                assertThat(catalog.getVersion()).isEqualTo("2.0");
+                assertThat(catalog.getMetadata().toByteArray()).isNotEmpty();
+                assertThat(catalog.getLanguage()).isEqualTo("en-GB");
+                assertThat(catalog.getOutputIntents()).hasSize(1);
+                assertThat(catalog.getCOSObject().getCOSArray(COSName.AF)).hasSize(1);
+                PDComplexFileSpecification kept =
+                        catalog.getNames().getEmbeddedFiles().getNames().get("data.csv");
+                assertThat(kept.getEmbeddedFile().toByteArray()).isEqualTo("a,b".getBytes());
             }
         }
     }

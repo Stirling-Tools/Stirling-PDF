@@ -1893,6 +1893,7 @@ export function LocalEmbedPDF({
                   ? (file ?? urlSource ?? undefined)
                   : undefined
             }
+            sourceFile={file ?? urlSource ?? undefined}
             disabled={
               pendingDocument !== null ||
               (pdfAccess?.encrypted && !file) ||

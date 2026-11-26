@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -86,6 +87,9 @@ public class FlattenController {
 
                 try (PDDocument newDocument =
                         pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
+                    // A rasterised copy carries no attachments, as before.
+                    newDocument.getDocumentCatalog().getCOSObject().removeItem(COSName.AF);
+                    newDocument.getDocumentCatalog().getCOSObject().removeItem(COSName.NAMES);
 
                     ApplicationProperties properties =
                             ApplicationContextProvider.getBean(ApplicationProperties.class);

@@ -1,5 +1,6 @@
 package stirling.software.common.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +22,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
+import javax.xml.transform.TransformerException;
+
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
@@ -31,7 +34,13 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 import org.apache.pdfbox.io.ScratchFile;
+import org.apache.pdfbox.multipdf.PDFCloneUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.schema.XMPSchema;
+import org.apache.xmpbox.xml.XmpParsingException;
+import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.stereotype.Component;
@@ -43,6 +52,7 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.DeletingRandomAccessFile;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.XmpUtils;
 
 @Component
 @Slf4j
@@ -335,10 +345,75 @@ public class CustomPDFDocumentFactory {
         try {
             pdfMetadataService.setMetadataToPdf(
                     document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
+            copyDocumentLevelState(oldDocument, document);
             return document;
-        } catch (RuntimeException ex) {
+        } catch (IOException | RuntimeException ex) {
             document.close();
             throw ex;
+        }
+    }
+
+    // Page-free catalog entries only; outlines, tags and labels point at the old pages.
+    private static final COSName[] PAGE_FREE_CATALOG_KEYS = {
+        COSName.LANG, COSName.OUTPUT_INTENTS, COSName.VIEWER_PREFERENCES, COSName.AF
+    };
+
+    private static void copyDocumentLevelState(PDDocument source, PDDocument target)
+            throws IOException {
+        float version = source.getVersion();
+        // New documents carry catalog /Version 1.4, so raise it with the header.
+        if (version > target.getVersion()) {
+            target.getDocument().setVersion(version);
+            target.getDocumentCatalog().setVersion(Float.toString(version));
+        }
+        COSDictionary sourceCatalog = source.getDocumentCatalog().getCOSObject();
+        COSDictionary targetCatalog = target.getDocumentCatalog().getCOSObject();
+        PDFCloneUtility cloner = new PDFCloneUtility(target) {};
+        copyMetadataWithoutConformanceClaims(source, target);
+        for (COSName key : PAGE_FREE_CATALOG_KEYS) {
+            COSBase value = sourceCatalog.getDictionaryObject(key);
+            if (value != null) {
+                targetCatalog.setItem(key, cloner.cloneForNewDocument(value));
+            }
+        }
+        // Print ranges are page indices into the old page order.
+        COSDictionary viewerPreferences = targetCatalog.getCOSDictionary(COSName.VIEWER_PREFERENCES);
+        if (viewerPreferences != null) {
+            viewerPreferences.removeItem(COSName.getPDFName("PrintPageRange"));
+        }
+        COSDictionary names = sourceCatalog.getCOSDictionary(COSName.NAMES);
+        COSBase embeddedFiles =
+                names == null ? null : names.getDictionaryObject(COSName.EMBEDDED_FILES);
+        if (embeddedFiles != null) {
+            COSDictionary targetNames = new COSDictionary();
+            targetNames.setItem(COSName.EMBEDDED_FILES, cloner.cloneForNewDocument(embeddedFiles));
+            targetCatalog.setItem(COSName.NAMES, targetNames);
+        }
+    }
+
+    private static final Set<String> CONFORMANCE_NAMESPACES =
+            Set.of("http://www.aiim.org/pdfa/ns/id/", "http://www.aiim.org/pdfua/ns/id/");
+
+    // Rebuilt documents lose tags and structure, so PDF/A and PDF/UA claims would be false.
+    private static void copyMetadataWithoutConformanceClaims(PDDocument source, PDDocument target) {
+        PDMetadata sourceMetadata = source.getDocumentCatalog().getMetadata();
+        if (sourceMetadata == null) {
+            return;
+        }
+        try {
+            XMPMetadata xmp = XmpUtils.parse(sourceMetadata, false);
+            for (XMPSchema schema : new ArrayList<>(xmp.getAllSchemas())) {
+                if (CONFORMANCE_NAMESPACES.contains(schema.getNamespace())) {
+                    xmp.removeSchema(schema);
+                }
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            new XmpSerializer().serialize(xmp, out, true);
+            PDMetadata metadata = new PDMetadata(target);
+            metadata.importXMPMetadata(out.toByteArray());
+            target.getDocumentCatalog().setMetadata(metadata);
+        } catch (IOException | XmpParsingException | TransformerException e) {
+            log.warn("Skipping unreadable XMP metadata on rebuilt document: {}", e.getMessage());
         }
     }
 

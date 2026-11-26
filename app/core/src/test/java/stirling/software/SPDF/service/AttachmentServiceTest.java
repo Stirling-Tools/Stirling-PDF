@@ -11,7 +11,10 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -43,6 +46,42 @@ class AttachmentServiceTest {
             assertNotNull(result);
             assertEquals(document.getDocumentId(), result.getDocumentId());
             assertNotNull(result.getDocumentCatalog().getNames());
+        }
+    }
+
+    @Test
+    void addAttachmentToPDF_MarksAssociatedFiles() throws IOException {
+        try (var document = new PDDocument()) {
+            var first = new MockMultipartFile("a", "data.csv", "text/csv", "a,b".getBytes());
+            var second = new MockMultipartFile("b", "data.csv", "text/csv", "c,d".getBytes());
+            attachmentService.addAttachment(document, List.of(first));
+            attachmentService.addAttachment(document, List.of(second));
+
+            COSArray associatedFiles =
+                    document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
+            assertEquals(1, associatedFiles.size());
+            PDComplexFileSpecification spec =
+                    document.getDocumentCatalog()
+                            .getNames()
+                            .getEmbeddedFiles()
+                            .getNames()
+                            .get("data.csv");
+            assertSame(spec.getCOSObject(), associatedFiles.getObject(0));
+            assertEquals(
+                    "Unspecified", spec.getCOSObject().getNameAsString(COSName.AF_RELATIONSHIP));
+        }
+    }
+
+    @Test
+    void deleteAttachment_RemovesAssociatedFileEntry() throws IOException {
+        try (var document = new PDDocument()) {
+            var file = new MockMultipartFile("a", "data.csv", "text/csv", "a,b".getBytes());
+            attachmentService.addAttachment(document, List.of(file));
+            attachmentService.deleteAttachment(document, "data.csv");
+
+            COSArray associatedFiles =
+                    document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
+            assertEquals(0, associatedFiles.size());
         }
     }
 
