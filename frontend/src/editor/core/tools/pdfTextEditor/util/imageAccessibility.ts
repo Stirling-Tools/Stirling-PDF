@@ -3,8 +3,12 @@ import type {
   DescribableType,
   DescriptionBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { ImageObjectSnapshot } from "@editor/tools/pdfTextEditor/types";
-import { sharesMarkList } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  markListKey,
+  sharedMarkLists,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** What can be said and done about one image's accessibility. */
 export type ImageAccessibility =
@@ -79,17 +83,40 @@ export function retaggableTag(
     // be tagged with it, which tagging that content does.
     const page = doc.page(image.pageIndex);
     const object = page.findImage(image.id);
-    if (
-      object &&
-      sharesMarkList(doc.module, page.pagePtr, object.pdfiumObjPtr)
-    ) {
-      return null;
-    }
+    if (object && sharesMarkList(doc, page, object.pdfiumObjPtr)) return null;
     return image.artifact ? { kind: "artifact" } : { kind: "untagged" };
   }
   const type = structure.describableType(mcid);
   if (!structure.isAdded(mcid) || !type) return null;
   return { kind: "element", type, mcid, alt: structure.alt(mcid) };
+}
+
+/**
+ * Each page's shared mark lists, as of its revision. Read once per page: a scan
+ * per image is quadratic and freezes the review on pages of thousands of images.
+ * Every edit that moves a mark bumps the revision.
+ */
+const sharedListsByPage = new WeakMap<
+  Page,
+  { revision: number; keys: Set<number> }
+>();
+
+function sharesMarkList(
+  doc: EditorDocument,
+  page: Page,
+  objPtr: number,
+): boolean {
+  const key = markListKey(doc.module, objPtr);
+  if (key === null) return false;
+  let shared = sharedListsByPage.get(page);
+  if (shared?.revision !== page.revision) {
+    shared = {
+      revision: page.revision,
+      keys: sharedMarkLists(doc.module, page.pagePtr),
+    };
+    sharedListsByPage.set(page, shared);
+  }
+  return shared.keys.has(key);
 }
 
 /** The image's MCID when an element owns it; undefined when none does, which leaves it untagged. */
