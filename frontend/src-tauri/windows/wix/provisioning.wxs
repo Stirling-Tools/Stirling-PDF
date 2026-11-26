@@ -49,11 +49,40 @@
       </Component>
     </DirectoryRef>
 
+    <!-- PDF Preview Handler (Explorer preview pane), same DLL hosted in prevhost.exe -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="PreviewHandlerClsidComponent" Guid="*">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{4175C0BD-22BB-466C-A099-721C6E8B8040}">
+          <RegistryValue Type="string" Value="Stirling-PDF Preview Handler" KeyPath="yes" />
+          <RegistryValue Type="string" Name="DisplayName" Value="Stirling-PDF Preview Handler" />
+          <RegistryValue Type="string" Name="AppID" Value="{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{4175C0BD-22BB-466C-A099-721C6E8B8040}\InprocServer32">
+          <RegistryValue Type="string" Value="[INSTALLDIR]stirling_thumbnail_handler.dll" />
+          <RegistryValue Type="string" Name="ThreadingModel" Value="Apartment" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\PreviewHandlers">
+          <RegistryValue Type="string" Name="{4175C0BD-22BB-466C-A099-721C6E8B8040}" Value="Stirling-PDF Preview Handler" />
+        </RegistryKey>
+      </Component>
+      <!-- Attached to our own ProgIDs only, so Adobe/Edge entries on .pdf stay untouched -->
+      <Component Id="PreviewHandlerShellexComponent" Guid="*">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Stirling PDF.pdf\ShellEx\{8895b1c6-b41f-4c1c-a562-0d564250836f}">
+          <RegistryValue Type="string" Value="{4175C0BD-22BB-466C-A099-721C6E8B8040}" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Applications\Stirling-PDF.exe\ShellEx\{8895b1c6-b41f-4c1c-a562-0d564250836f}">
+          <RegistryValue Type="string" Value="{4175C0BD-22BB-466C-A099-721C6E8B8040}" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+
     <ComponentGroup Id="ProvisioningComponentGroup">
       <ComponentRef Id="ProvisionerBinaryComponent" />
       <ComponentRef Id="ThumbnailHandlerDllComponent" />
       <ComponentRef Id="ThumbnailHandlerClsidComponent" />
       <ComponentRef Id="ThumbnailHandlerShellexComponent" />
+      <ComponentRef Id="PreviewHandlerClsidComponent" />
+      <ComponentRef Id="PreviewHandlerShellexComponent" />
     </ComponentGroup>
 
     <CustomAction

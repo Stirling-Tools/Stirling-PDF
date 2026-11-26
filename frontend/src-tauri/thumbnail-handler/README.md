@@ -17,6 +17,12 @@ When Stirling-PDF registers as the default PDF handler, Windows associates `.pdf
 
 All COM methods are wrapped in `catch_unwind` so a malformed PDF cannot crash Explorer.
 
+## Preview pane (Alt+P)
+
+The same DLL also implements `IPreviewHandler` (`src/preview.rs`) so the Explorer preview pane keeps working when Stirling-PDF is the default PDF app. Windows hosts it in `prevhost.exe`; it renders every page with `Windows.Data.Pdf` into a scrollable child window, lazily as pages scroll into view. Pages with a `/Rotate` entry display as their PDF says. Right-click offers view-only rotation of one page or all pages; the file is never modified.
+
+It is registered on Stirling's own ProgIDs only (`Stirling PDF.pdf` and `Applications\Stirling-PDF.exe`), so an existing Adobe/Edge previewer on `.pdf` is left alone.
+
 ## Technical details
 
 | | |
@@ -26,7 +32,7 @@ All COM methods are wrapped in `catch_unwind` so a malformed PDF cannot crash Ex
 | **External deps** | None — uses only Windows built-in APIs |
 | **PDF renderer** | `Windows.Data.Pdf` (WinRT, Windows 10+) |
 | **Image decode** | WIC (`IWICImagingFactory`) with BGRA32 format conversion |
-| **COM CLSID** | `{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}` |
+| **COM CLSID** | `{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}` (thumbnail), `{4175C0BD-22BB-466C-A099-721C6E8B8040}` (preview) |
 | **Threading model** | Apartment (STA — standard for shell extensions) |
 | **Min Windows** | Windows 10 |
 
@@ -36,6 +42,8 @@ The WiX installer (`provisioning.wxs`) registers:
 
 - **CLSID** at `HKLM\SOFTWARE\Classes\CLSID\{2D2FBE3A-...}\InprocServer32` pointing to the DLL
 - **Shellex** at `HKLM\SOFTWARE\Classes\.pdf\shellex\{E357FCCD-...}` linking `.pdf` thumbnails to our CLSID
+- **Preview CLSID** with `AppID` = prevhost surrogate, plus an entry in `HKLM\...\CurrentVersion\PreviewHandlers`
+- **Shellex** `{8895b1c6-...}` on the `Stirling PDF.pdf` and `Applications\Stirling-PDF.exe` ProgIDs linking previews to our CLSID
 
 Both are automatically removed on uninstall.
 

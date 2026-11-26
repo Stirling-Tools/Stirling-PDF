@@ -2,6 +2,9 @@
 //!
 //! A lightweight COM DLL that implements IThumbnailProvider for PDF files.
 //! Uses the built-in Windows.Data.Pdf WinRT API to render page 1 as a thumbnail.
+//! Also hosts the Explorer preview pane handler (see `preview`).
+
+mod preview;
 
 use std::cell::RefCell;
 use std::ffi::c_void;
@@ -31,13 +34,13 @@ use windows::Win32::UI::Shell::{
 };
 
 // WinRT imports for PDF rendering
-use windows::Data::Pdf::PdfDocument;
+use windows::Data::Pdf::{PdfDocument, PdfPage, PdfPageRenderOptions};
 use windows::Storage::Streams::{DataWriter, IRandomAccessStream, InMemoryRandomAccessStream};
 
 // CLSID for this thumbnail handler -- must match WiX registry entries
 const CLSID_STIRLING_THUMBNAIL: GUID = GUID::from_u128(0x2d2fbe3a_9a88_4308_a52e_7ef63ca7cf48);
 
-static DLL_REF_COUNT: AtomicU32 = AtomicU32::new(0);
+pub(crate) static DLL_REF_COUNT: AtomicU32 = AtomicU32::new(0);
 
 // Maximum PDF size we'll attempt to thumbnail (256 MB)
 const MAX_PDF_SIZE: usize = 256 * 1024 * 1024;
@@ -122,24 +125,12 @@ impl ThumbnailProvider_Impl {
 
         let page = pdf_doc.GetPage(0)?;
 
-        // Step 3: Render page 1 to a PNG stream
-        let output_stream = InMemoryRandomAccessStream::new()?;
-        let render_options = windows::Data::Pdf::PdfPageRenderOptions::new()?;
-
-        // Calculate dimensions preserving aspect ratio
+        // Step 3: Render page 1 at the requested size, preserving aspect ratio
         let page_size = page.Size()?;
         let scale = cx as f64 / f64::max(page_size.Width as f64, page_size.Height as f64);
         let render_w = (page_size.Width as f64 * scale).max(1.0) as u32;
         let render_h = (page_size.Height as f64 * scale).max(1.0) as u32;
-
-        render_options.SetDestinationWidth(render_w)?;
-        render_options.SetDestinationHeight(render_h)?;
-
-        page.RenderWithOptionsToStreamAsync(&output_stream, &render_options)?
-            .get()?;
-
-        // Step 4: Decode the PNG using WIC -> raw BGRA pixels -> HBITMAP
-        let hbitmap = png_stream_to_hbitmap(&output_stream, render_w, render_h)?;
+        let hbitmap = render_page(&page, render_w, render_h, 0)?;
 
         // Step 5: Return the HBITMAP
         unsafe {
@@ -153,10 +144,30 @@ impl ThumbnailProvider_Impl {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: render a PDF page to a top-down BGRA HBITMAP of the given size,
+// then turn it clockwise by `turns` quarter turns (view-only rotation)
+// ---------------------------------------------------------------------------
+
+pub(crate) fn render_page(
+    page: &PdfPage,
+    width: u32,
+    height: u32,
+    turns: u8,
+) -> windows::core::Result<HBITMAP> {
+    let output_stream = InMemoryRandomAccessStream::new()?;
+    let render_options = PdfPageRenderOptions::new()?;
+    render_options.SetDestinationWidth(width)?;
+    render_options.SetDestinationHeight(height)?;
+    page.RenderWithOptionsToStreamAsync(&output_stream, &render_options)?
+        .get()?;
+    png_stream_to_hbitmap(&output_stream, width, height, turns)
+}
+
+// ---------------------------------------------------------------------------
 // Helper: read IStream to Vec<u8> (with loop for short reads)
 // ---------------------------------------------------------------------------
 
-fn read_istream_to_vec(stream: &IStream) -> windows::core::Result<Vec<u8>> {
+pub(crate) fn read_istream_to_vec(stream: &IStream) -> windows::core::Result<Vec<u8>> {
     unsafe {
         // Get stream size
         let mut stat = std::mem::zeroed();
@@ -200,7 +211,9 @@ fn read_istream_to_vec(stream: &IStream) -> windows::core::Result<Vec<u8>> {
 // Helper: bytes -> WinRT IRandomAccessStream
 // ---------------------------------------------------------------------------
 
-fn bytes_to_random_access_stream(bytes: &[u8]) -> windows::core::Result<IRandomAccessStream> {
+pub(crate) fn bytes_to_random_access_stream(
+    bytes: &[u8],
+) -> windows::core::Result<IRandomAccessStream> {
     let mem_stream = InMemoryRandomAccessStream::new()?;
     let writer = DataWriter::CreateDataWriter(&mem_stream)?;
     writer.WriteBytes(bytes)?;
@@ -222,6 +235,7 @@ fn png_stream_to_hbitmap(
     winrt_stream: &InMemoryRandomAccessStream,
     width: u32,
     height: u32,
+    turns: u8,
 ) -> windows::core::Result<HBITMAP> {
     unsafe {
         // Seek to beginning and read PNG data
@@ -270,6 +284,7 @@ fn png_stream_to_hbitmap(
         let buf_size = (stride * height) as usize;
         let mut pixels = vec![0u8; buf_size];
         converter.CopyPixels(std::ptr::null(), stride, &mut pixels)?;
+        let (pixels, width, height) = rotate_bgra(pixels, width, height, turns);
 
         // Create a DIB section HBITMAP
         let bmi = BITMAPINFO {
@@ -304,13 +319,48 @@ fn png_stream_to_hbitmap(
 }
 
 // ---------------------------------------------------------------------------
+// Helper: rotate a BGRA buffer clockwise by quarter turns
+// ---------------------------------------------------------------------------
+
+fn rotate_bgra(pixels: Vec<u8>, width: u32, height: u32, turns: u8) -> (Vec<u8>, u32, u32) {
+    let turns = turns % 4;
+    if turns == 0 {
+        return (pixels, width, height);
+    }
+    let (w, h) = (width as usize, height as usize);
+    let (out_w, out_h) = if turns == 2 { (w, h) } else { (h, w) };
+    let mut out = vec![0u8; pixels.len()];
+    for y in 0..h {
+        for x in 0..w {
+            let (dx, dy) = match turns {
+                1 => (h - 1 - y, x),
+                2 => (w - 1 - x, h - 1 - y),
+                _ => (y, w - 1 - x),
+            };
+            let src = (y * w + x) * 4;
+            let dst = (dy * out_w + dx) * 4;
+            out[dst..dst + 4].copy_from_slice(&pixels[src..src + 4]);
+        }
+    }
+    (out, out_w as u32, out_h as u32)
+}
+
+// ---------------------------------------------------------------------------
 // ClassFactory
 // ---------------------------------------------------------------------------
 
-#[implement(IClassFactory)]
-struct ThumbnailProviderFactory;
+#[derive(Clone, Copy)]
+enum HandlerKind {
+    Thumbnail,
+    Preview,
+}
 
-impl IClassFactory_Impl for ThumbnailProviderFactory_Impl {
+#[implement(IClassFactory)]
+struct HandlerFactory {
+    kind: HandlerKind,
+}
+
+impl IClassFactory_Impl for HandlerFactory_Impl {
     fn CreateInstance(
         &self,
         punkouter: Option<&IUnknown>,
@@ -325,8 +375,10 @@ impl IClassFactory_Impl for ThumbnailProviderFactory_Impl {
             return Err(CLASS_E_NOAGGREGATION.into());
         }
 
-        let provider = ThumbnailProvider::new();
-        let unknown: IUnknown = provider.into();
+        let unknown: IUnknown = match self.kind {
+            HandlerKind::Thumbnail => ThumbnailProvider::new().into(),
+            HandlerKind::Preview => preview::PreviewHandler::new().into(),
+        };
 
         unsafe { unknown.query(&*riid, ppvobject).ok() }
     }
@@ -356,12 +408,15 @@ unsafe extern "system" fn DllGetClassObject(
     }
     *ppv = std::ptr::null_mut();
 
-    if *rclsid != CLSID_STIRLING_THUMBNAIL {
+    let kind = if *rclsid == CLSID_STIRLING_THUMBNAIL {
+        HandlerKind::Thumbnail
+    } else if *rclsid == preview::CLSID_STIRLING_PREVIEW {
+        HandlerKind::Preview
+    } else {
         return CLASS_E_CLASSNOTAVAILABLE;
-    }
+    };
 
-    let factory = ThumbnailProviderFactory;
-    let unknown: IUnknown = factory.into();
+    let unknown: IUnknown = HandlerFactory { kind }.into();
 
     match unknown.query(&*riid, ppv).ok() {
         Ok(()) => S_OK,
