@@ -1,4 +1,4 @@
-import { useRef, useState, type SyntheticEvent } from "react";
+import { useLayoutEffect, useRef, useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@editor/ui/Input";
 import { Tooltip } from "@editor/components/shared/Tooltip";
@@ -19,6 +19,8 @@ interface FileNameInputProps {
 
 const keepInField = (event: SyntheticEvent) => event.stopPropagation();
 
+const CARET_ROOM_PX = 2;
+
 /**
  * Edits a file name in place; mount it only while editing. Only the base name
  * is editable: the extension stays fixed so a rename can't leave the file
@@ -38,6 +40,15 @@ export function FileNameInput({
   // state: Enter and Escape are followed by a blur, from the field unmounting,
   // that must see it within the same tick.
   const settling = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Collapsed first so scrollWidth reads the text, not the current width.
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.style.width = "0";
+    input.style.width = `${input.scrollWidth + CARET_ROOM_PX}px`;
+  }, [draft]);
 
   const close = () => {
     settling.current = true;
@@ -78,6 +89,7 @@ export function FileNameInput({
   return (
     <Tooltip position="bottom" content={error} open={error != null}>
       <Input
+        ref={inputRef}
         className={[privateContentClassName, className]
           .filter(Boolean)
           .join(" ")}
