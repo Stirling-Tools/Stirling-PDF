@@ -484,7 +484,7 @@ subprojects {
             customBootRun { args = ["--server.port=${openApiPort}"] }
             outputDir = file("$projectDir")
             outputFileName = "SwaggerDoc.json"
-            waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
+            waitTimeInSeconds = 120
         }
 
         tasks.named("forkedSpringBootRun") {
