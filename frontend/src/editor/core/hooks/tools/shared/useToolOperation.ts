@@ -389,6 +389,7 @@ export const useToolOperation = <TParams>(
             const apiCallsConfig: ApiCallsConfig<TParams> = {
               endpoint: config.endpoint,
               buildFormData: config.buildFormData,
+              paramsPerFile: config.paramsPerFile,
               filePrefix: config.filePrefix,
               responseHandler: config.responseHandler,
               preserveBackendFilename: config.preserveBackendFilename,

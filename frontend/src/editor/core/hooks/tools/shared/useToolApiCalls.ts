@@ -33,6 +33,7 @@ export interface FailedInput {
 export interface ApiCallsConfig<TParams = void> {
   endpoint: string | null | ((params: TParams) => string | null);
   buildFormData: (params: TParams, file: File) => FormData;
+  paramsPerFile?: (params: TParams, files: File[]) => Promise<TParams[]>;
   filePrefix?: string;
   responseHandler?: ResponseHandler;
   preserveBackendFilename?: boolean;
@@ -85,6 +86,10 @@ export const useToolApiCalls = <TParams = void>() => {
         );
       }
 
+      const perFileParams = config.paramsPerFile
+        ? await config.paramsPerFile(params, validFiles)
+        : undefined;
+
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
 
@@ -111,7 +116,10 @@ export const useToolApiCalls = <TParams = void>() => {
             fileSignal,
             cancellation.token,
           );
-          const formData = config.buildFormData(params, workingFile);
+          const formData = config.buildFormData(
+            perFileParams?.[i] ?? params,
+            workingFile,
+          );
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response =
             endpoint === "/api/v1/security/add-password" ||

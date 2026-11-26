@@ -9,9 +9,11 @@ import {
   type ToolEndpoint,
 } from "@editor/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
+import { ensureLocalPdfAccess } from "@editor/services/pdfAccessService";
 import {
   AddPageNumbersParameters,
   defaultParameters,
+  pageNumberText,
   validateAddPageNumbersParameters,
 } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 
@@ -48,8 +50,9 @@ export const addPageNumbersToApiParams = (
   fontSize: parameters.fontSize,
   fontType: FONT_TYPE_TO_API[parameters.fontType],
   startingNumber: parameters.startingNumber,
-  pagesToNumber: parameters.pagesToNumber,
-  customText: parameters.customText,
+  pagesToNumber:
+    parameters.numberingStyle === "bates" ? "" : parameters.pagesToNumber,
+  customText: pageNumberText(parameters),
   zeroPad: parameters.zeroPad,
 });
 
@@ -68,6 +71,30 @@ export const addPageNumbersFromApiParams = (
   zeroPad: apiParams.zeroPad,
 });
 
+// Bates numbers every page and carries on across the batch, so each file starts
+// one past the last page of the file before it.
+export const addPageNumbersParamsPerFile = async (
+  parameters: AddPageNumbersParameters,
+  files: File[],
+): Promise<AddPageNumbersParameters[]> => {
+  if (parameters.numberingStyle !== "bates") {
+    return files.map(() => parameters);
+  }
+  const perFile: AddPageNumbersParameters[] = [];
+  let startingNumber = parameters.startingNumber;
+  for (const [index, file] of files.entries()) {
+    perFile.push({ ...parameters, startingNumber });
+    if (index < files.length - 1) {
+      const { pageCount } = await ensureLocalPdfAccess(file);
+      if (!(pageCount > 0)) {
+        throw new Error(`Could not count the pages of ${file.name}`);
+      }
+      startingNumber += pageCount;
+    }
+  }
+  return perFile;
+};
+
 export const buildAddPageNumbersFormData = (
   parameters: AddPageNumbersParameters,
   file: File,
@@ -77,6 +104,7 @@ export const buildAddPageNumbersFormData = (
 export const addPageNumbersOperationConfig = defineSingleFileTool({
   validateParams: validateAddPageNumbersParameters,
   buildFormData: buildAddPageNumbersFormData,
+  paramsPerFile: addPageNumbersParamsPerFile,
   toApiParams: addPageNumbersToApiParams,
   fromApiParams: addPageNumbersFromApiParams,
   operationType: "addPageNumbers",

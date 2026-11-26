@@ -171,6 +171,13 @@ interface SingleFileToolBody<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, file: File) => FormData;
 
+  /**
+   * Parameters for each file of a batch, in order, for a tool whose request for one
+   * file depends on the files before it (Bates numbers carry on from the previous
+   * file). Absent means every file gets the same parameters.
+   */
+  paramsPerFile?: (params: TParams, files: File[]) => Promise<TParams[]>;
+
   customProcessor?: undefined;
 }
 

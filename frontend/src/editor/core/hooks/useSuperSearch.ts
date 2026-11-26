@@ -276,7 +276,7 @@ export function rankToolResults(
     ([id]) => idToWords(id),
     ([, v]) => v?.name ?? "",
     ([, v]) => v?.description ?? "",
-    ([, v]) => v?.synonyms?.join(" ") ?? "",
+    ([, v]) => v?.synonyms ?? [],
   ])
     .slice(0, limit)
     .map(({ item: [id, tool], score }) => ({

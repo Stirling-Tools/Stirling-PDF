@@ -6,6 +6,13 @@ const SAMPLE_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/sample.pdf",
 );
+const SECOND_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/compare_sample_b.pdf",
+);
+
+const formField = (body: string, name: string) =>
+  body.match(new RegExp(`name="${name}"\r\n\r\n([^\r]*)`))?.[1];
 
 /**
  * Add Page Numbers walks the user through a multi-step config: position
@@ -61,5 +68,38 @@ test.describe("Add Page Numbers tool — config validation", () => {
         return ok ? "bottom-right margin" : `right ${right}, bottom ${bottom}`;
       });
     await expect.poll(placement).toBe("bottom-right margin");
+  });
+
+  test("Bates numbers carry on across the selected files", async ({ page }) => {
+    const requests: string[] = [];
+    await page.route("**/api/v1/misc/add-page-numbers", (route) => {
+      requests.push(route.request().postDataBuffer()?.toString("latin1") ?? "");
+      return route.fulfill({
+        status: 200,
+        contentType: "application/pdf",
+        path: SAMPLE_PDF,
+      });
+    });
+    await page.goto("/add-page-numbers");
+    await page.waitForLoadState("domcontentloaded");
+    await uploadFiles(page, [SAMPLE_PDF, SECOND_PDF]);
+
+    await page.getByText("Bates", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Prefix" }).fill("ABC");
+    await expect(page.getByTestId("page-number-preview-label")).toHaveText(
+      "ABC000001",
+    );
+
+    await page.locator('[data-tour="run-button"]').click();
+    await expect.poll(() => requests.length).toBe(2);
+
+    // Each sample has one page, so the second file starts at 2.
+    expect(requests.map((body) => formField(body, "startingNumber"))).toEqual([
+      "1",
+      "2",
+    ]);
+    expect(formField(requests[1], "customText")).toBe("ABC{n}");
+    expect(formField(requests[1], "zeroPad")).toBe("6");
+    expect(formField(requests[1], "position")).toBe("9");
   });
 });
