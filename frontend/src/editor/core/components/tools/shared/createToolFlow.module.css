@@ -20,3 +20,26 @@
   box-shadow: 0 var(--mantine-spacing-sm) 0 0
     var(--c-surface, var(--mantine-color-body));
 }
+
+/* Collapsible step header: a button, not a clickable row, so it is focusable
+   and reports its expanded state. */
+.stepHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: var(--mantine-spacing-sm);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.stepHeader:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}

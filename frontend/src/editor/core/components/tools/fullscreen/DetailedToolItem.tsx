@@ -109,7 +109,7 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({
             >
               {t("settings.hotkeys.shortcut", "Shortcut")}
             </span>
-            <HotkeyDisplay binding={binding} size="sm" />
+            <HotkeyDisplay binding={binding} size="sm" joined />
           </div>
         )}
       </span>
