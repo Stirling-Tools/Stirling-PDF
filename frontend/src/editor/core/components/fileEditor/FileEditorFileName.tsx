@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { StirlingFileStub } from "@editor/types/fileContext";
-import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { FileNameInput } from "@editor/components/shared/FileNameInput";
 import { truncateCenter } from "@editor/utils/textUtils";
 import styles from "@editor/components/fileEditor/FileEditorThumbnail.module.css";
@@ -38,8 +38,11 @@ const FileEditorFileName = ({
   return (
     <button
       type="button"
-      className={styles.fileNameButton}
-      aria-description={t("pageTracks.track.rename", "Rename file")}
+      // Private on the button itself: its label carries the name too.
+      className={`${privateContentClassName} ${styles.fileNameButton}`}
+      aria-label={t("fileSidebar.rename.action", "Rename {{name}}", {
+        name: file.name,
+      })}
       // The card opens the file on double-click and reacts to its own clicks.
       onClick={(event) => {
         event.stopPropagation();
@@ -48,7 +51,7 @@ const FileEditorFileName = ({
       onDoubleClick={(event) => event.stopPropagation()}
     >
       <span className={styles.fileNameText}>
-        <PrivateContent>{truncateCenter(file.name, maxLength)}</PrivateContent>
+        {truncateCenter(file.name, maxLength)}
       </span>
     </button>
   );

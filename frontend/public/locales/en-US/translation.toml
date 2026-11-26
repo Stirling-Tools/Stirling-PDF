@@ -5206,6 +5206,7 @@ subtitle = "Show or hide categories in the files sidebar."
 title = "Sidebar categories"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Cancel"
 error = "Could not rename the file."
 illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"

@@ -8,7 +8,13 @@ import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
+  useTranslation: () => ({
+    t: (_key: string, fallback: string, values?: Record<string, string>) =>
+      fallback.replace(
+        /{{(\w+)}}/g,
+        (_match, name: string) => values?.[name] ?? "",
+      ),
+  }),
 }));
 
 const file: StirlingFileStub = {
@@ -62,7 +68,7 @@ describe("FileEditorFileName", () => {
   test("clicking the name edits it without clicking the card", async () => {
     const { user, onCardClick } = show();
 
-    await user.click(screen.getByRole("button", { name: "report.pdf" }));
+    await user.click(screen.getByRole("button", { name: "Rename report.pdf" }));
 
     expect(screen.getByRole("textbox", { name: "File name" })).toHaveValue(
       "report",
@@ -73,7 +79,7 @@ describe("FileEditorFileName", () => {
   test("renames on Enter and shows the name again", async () => {
     const { user, onRename } = show();
 
-    await user.click(screen.getByRole("button", { name: "report.pdf" }));
+    await user.click(screen.getByRole("button", { name: "Rename report.pdf" }));
     await user.clear(screen.getByRole("textbox", { name: "File name" }));
     await user.keyboard("summary{Enter}");
 
@@ -86,7 +92,9 @@ describe("FileEditorFileName", () => {
   test("double-clicking the name doesn't open the file", async () => {
     const { user, onCardDoubleClick } = show();
 
-    await user.dblClick(screen.getByRole("button", { name: "report.pdf" }));
+    await user.dblClick(
+      screen.getByRole("button", { name: "Rename report.pdf" }),
+    );
 
     expect(onCardDoubleClick).not.toHaveBeenCalled();
     expect(
