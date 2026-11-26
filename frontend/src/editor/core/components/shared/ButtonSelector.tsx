@@ -70,7 +70,7 @@ const ButtonSelector = <T extends string | number>({
       label:
         option.tooltip && isDisabled ? (
           <Tooltip label={option.tooltip} position="top" withArrow>
-            <span>{fitText}</span>
+            <span className={classes.tooltipTarget}>{fitText}</span>
           </Tooltip>
         ) : (
           fitText
