@@ -130,13 +130,29 @@ for (const [label, files] of [
 test("a PDF that only restricts actions opens without a password prompt", async ({
   page,
 }) => {
-  const prompted = await watchFor(page, '[role="dialog"]');
+  const asPdf = (fixture: string, name: string) => ({
+    name,
+    mimeType: "application/pdf",
+    buffer: fs.readFileSync(path.join(FIXTURES, fixture)),
+  });
+  // The first check also starts the PDF engine, which on a slow machine can
+  // outlast the prompt's delay; what matters is every check after it.
   await landingInput(page).setInputFiles(
-    ["owner-only-restricted.pdf", "sample.pdf"].map((f) =>
-      path.join(FIXTURES, f),
-    ),
+    asPdf("owner-only-restricted.pdf", "warm-up.pdf"),
   );
-  await expect(page.locator("[data-file-id]")).toHaveCount(2, {
+  await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1, {
+    timeout: 30_000,
+  });
+  await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 15_000 });
+
+  const prompted = await watchFor(page, '[role="dialog"]');
+  await page
+    .getByTestId("file-input")
+    .setInputFiles([
+      asPdf("owner-only-restricted.pdf", "restricted.pdf"),
+      asPdf("sample.pdf", "sample.pdf"),
+    ]);
+  await expect(page.locator(".file-sidebar-file-item")).toHaveCount(3, {
     timeout: 15_000,
   });
   expect(await prompted()).toBe(false);

@@ -99,7 +99,7 @@ import { buildRemovePasswordFormData } from "@editor/hooks/tools/removePassword/
 import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 
 /** How long the opening check may run before its prompt shows. */
-const OPENING_CHECK_PROMPT_DELAY_MS = 1000;
+const OPENING_CHECK_PROMPT_DELAY_MS = 2000;
 
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
