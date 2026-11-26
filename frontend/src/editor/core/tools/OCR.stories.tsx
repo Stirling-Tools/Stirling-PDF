@@ -53,11 +53,13 @@ const PROCESSING_OPTIONS = [
 async function openLanguages(context: PlayContext, current: string) {
   const panel = await waitForPanelText(context, current);
   await userEvent.click(panel.getByRole("button", { name: current }));
-  await bodyOf(context).findByText(
+  const hint = await bodyOf(context).findByText(
     "Looking for additional languages?",
     undefined,
     STAGE_TIMEOUT,
   );
+  // Mounted is not open: the dropdown is hidden until its transition ends.
+  await waitFor(() => expect(hint).toBeVisible(), STAGE_TIMEOUT);
   return panel;
 }
 

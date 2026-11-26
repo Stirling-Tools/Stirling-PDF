@@ -196,15 +196,19 @@ export async function runTool(context: PlayContext): Promise<PanelQueries> {
 export async function runToResults(
   context: PlayContext,
 ): Promise<PanelQueries> {
-  const panel = await runTool(context);
-  await waitFor(
-    () =>
-      expect(
-        panel.queryByRole("button", { name: "Undo" }) ??
-          panel.queryByTestId("download-result-button"),
-      ).toBeVisible(),
-    STAGE_TIMEOUT,
-  );
+  const run = await findRunButton(context);
+  const panel = within(run.closest<HTMLElement>(PANEL)!);
+  // The run button can enable a moment before the tool has its files, and a
+  // click then does nothing, so click again while it still offers to run. A
+  // run in flight disables it, so a started run is never clicked twice.
+  await waitFor(async () => {
+    const result =
+      panel.queryByRole("button", { name: "Undo" }) ??
+      panel.queryByTestId("download-result-button");
+    if (!result && run.isConnected && !run.hasAttribute("disabled"))
+      await userEvent.click(run);
+    expect(result).toBeVisible();
+  }, STAGE_TIMEOUT);
   return panel;
 }
 
@@ -312,6 +316,9 @@ export async function openSelect(
     // Mounted is not open: mid-transition the dropdown is hidden, and its options
     // are not yet in the accessibility tree a role query reads.
     expect(found).toBeVisible();
+    // A dropdown that closes as it settles keeps its options mounted under a
+    // hidden parent, where a role query skips them.
+    expect(within(found!).queryAllByRole("option")).not.toHaveLength(0);
     return found!;
   }, STAGE_TIMEOUT);
   return within(listbox);
