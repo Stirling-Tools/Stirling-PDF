@@ -65,7 +65,11 @@ test.describe("8. Compress Tool", () => {
       await expect(compressButton).toBeDisabled();
 
       // Step 3: Verify the file upload area is displayed
-      await expect(page.getByText(/upload/i).first()).toBeVisible();
+      await expect(
+        page
+          .getByTestId("tool-file-list")
+          .getByRole("button", { name: "Computer", exact: true }),
+      ).toBeVisible();
     });
   });
 

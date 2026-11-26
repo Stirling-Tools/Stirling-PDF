@@ -136,25 +136,14 @@ const ToolStep = ({
 
           <Flex align="center" gap="xs">
             {!isCollapsed && headerAction}
-            {isCollapsed ? (
-              <Icon
-                name="chevron-right"
-                size="1.2rem"
-                style={{
-                  color: "var(--mantine-color-dimmed)",
-                  opacity: onCollapsedClick ? 1 : 0.5,
-                }}
-              />
-            ) : (
-              <Icon
-                name="chevron-down"
-                size="1.2rem"
-                style={{
-                  color: "var(--mantine-color-dimmed)",
-                  opacity: onCollapsedClick ? 1 : 0.5,
-                }}
-              />
-            )}
+            <Icon
+              name={isCollapsed ? "chevron-right" : "chevron-down"}
+              size="1.2rem"
+              style={{
+                color: "var(--mantine-color-dimmed)",
+                opacity: onCollapsedClick ? 1 : 0.5,
+              }}
+            />
           </Flex>
         </Flex>
 

@@ -59,7 +59,7 @@ import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
 import { ClearRecentsDialog } from "@editor/components/shared/ClearRecentsDialog";
-import { useFileSources } from "@editor/components/shared/AddFilesMenu";
+import { useFileSources } from "@editor/components/shared/useFileSources";
 import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@editor/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@editor/components/shared/SidebarChecklistSlot";

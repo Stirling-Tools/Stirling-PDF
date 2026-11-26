@@ -109,8 +109,8 @@ export default function RightSidebar() {
   const expandedWidth = useToolPanelWidth();
 
   // Shares the workbench's drop target, as the file sidebar does, so files
-  // dropped on the panel open too. Off in fullscreen, where the workbench is
-  // covered and takes no drops either.
+  // dropped on the panel open too. Off while the fullscreen tool picker covers
+  // the workbench, as the drop overlay the workbench draws would be hidden.
   const dropHandlers = useWorkbenchFileDrop(!fullscreenExpanded);
 
   return (

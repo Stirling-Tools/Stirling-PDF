@@ -1,7 +1,7 @@
 import { Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { useFileSources } from "@editor/components/shared/AddFilesMenu";
+import { useFileSources } from "@editor/components/shared/useFileSources";
 import { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { ProtectedPdfToolNotice } from "@editor/components/tools/shared/ProtectedPdfToolNotice";
@@ -11,6 +11,10 @@ export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];
   minFiles?: number;
   unavailableFiles?: readonly StirlingFileStub[];
+}
+
+export function needsMoreFiles(selectedCount: number, minFiles = 1): boolean {
+  return selectedCount < minFiles;
 }
 
 // Long enough to keep the extension and the last few characters, where names
@@ -43,7 +47,7 @@ function FileSourceTiles() {
             onClick={source.onClick}
           >
             <Icon name={source.icon} size="1.25rem" />
-            <span className={styles.label}>{source.label}</span>
+            <span className={styles.label}>{source.tileLabel}</span>
           </button>
         ))}
       </div>
@@ -58,7 +62,7 @@ const FileStatusIndicator = ({
   unavailableFiles = [],
 }: FileStatusIndicatorProps) => {
   const { t } = useTranslation();
-  const needsFiles = selectedFiles.length < minFiles;
+  const needsFiles = needsMoreFiles(selectedFiles.length, minFiles);
 
   return (
     <Stack gap="xs" data-testid="tool-file-list">

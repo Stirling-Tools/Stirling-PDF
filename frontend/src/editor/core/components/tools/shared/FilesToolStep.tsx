@@ -1,5 +1,7 @@
 import React from "react";
-import FileStatusIndicator from "@editor/components/tools/shared/FileStatusIndicator";
+import FileStatusIndicator, {
+  needsMoreFiles,
+} from "@editor/components/tools/shared/FileStatusIndicator";
 import { AddFilesMenu } from "@editor/components/shared/AddFilesMenu";
 import { StirlingFile } from "@editor/types/fileContext";
 import i18n from "@editor/i18n";
@@ -66,10 +68,12 @@ export function createFilesToolStep<T>(
       isCollapsed: props.isCollapsed,
       onCollapsedClick: props.onCollapsedClick,
       // Until the tool has enough files the step shows the sources inline.
-      headerAction:
-        props.selectedFiles.length >= (props.minFiles ?? 1) ? (
-          <AddFilesMenu />
-        ) : undefined,
+      headerAction: needsMoreFiles(
+        props.selectedFiles.length,
+        props.minFiles,
+      ) ? undefined : (
+        <AddFilesMenu />
+      ),
     },
     <FilesStepContent {...props} />,
   );
