@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Group, Stack, Text, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import type {
@@ -7,14 +7,15 @@ import type {
 } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import type { CertSignStampPlacement } from "@editor/hooks/tools/certSign/useCertSignStampPlacement";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import { Banner } from "@editor/ui/Banner";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
-import FileUploadButton from "@editor/components/shared/FileUploadButton";
-import { Tooltip } from "@editor/ui/Tooltip";
+import { SignatureImagePicker } from "@editor/components/shared/signatureFields/SignatureImagePicker";
+import { useSavedSignatures } from "@editor/hooks/tools/sign/useSavedSignatures";
 import { SignatureFieldList } from "@editor/components/shared/signatureFields/SignatureFieldList";
 import { StampPreviewFrame } from "@editor/components/shared/signatureFields/StampPreviewFrame";
 
@@ -148,12 +149,35 @@ const SignatureDetails = ({
     input?.focus({ preventScroll: true });
     setJustOpened(null);
   }, [justOpened]);
-  const details: { key: DetailKey; label: string; placeholder?: string }[] = [
-    { key: "reason", label: t("certSign.reason", "Reason") },
-    { key: "location", label: t("certSign.location", "Location") },
+  const details: {
+    key: DetailKey;
+    label: string;
+    info: string;
+    placeholder?: string;
+  }[] = [
+    {
+      key: "reason",
+      label: t("certSign.reason", "Reason"),
+      info: t(
+        "certSign.reasonInfo",
+        'Why you are signing, such as "Approval". Stored in the signature\'s details.',
+      ),
+    },
+    {
+      key: "location",
+      label: t("certSign.location", "Location"),
+      info: t(
+        "certSign.locationInfo",
+        'Where you signed, such as "London Office". Stored in the signature\'s details; it does not move the signature on the page.',
+      ),
+    },
     {
       key: "name",
       label: t("certSign.appearance.options.signerName", "Signer name"),
+      info: t(
+        "certSign.appearance.options.signerNameInfo",
+        "Shown on the signature instead of the name on the certificate. The certificate itself is unchanged.",
+      ),
       placeholder: t(
         "certSign.appearance.options.signerNamePlaceholder",
         "Uses the name on the certificate",
@@ -174,7 +198,7 @@ const SignatureDetails = ({
       {shown.map((detail) => (
         <TextInput
           key={detail.key}
-          label={detail.label}
+          {...infoLabelProps(detail.label, detail.info)}
           placeholder={detail.placeholder}
           value={parameters[detail.key]}
           className={privateContentClassName}
@@ -261,29 +285,49 @@ const GraphicChoice = ({
         ]}
       />
       {parameters.stampGraphic === "IMAGE" && (
-        <Tooltip
-          content={t(
-            "certSign.appearance.graphic.imageHint",
-            "A handwritten signature or seal, PNG or JPEG",
-          )}
-        >
-          <div className={privateContentClassName}>
-            <FileUploadButton
-              file={parameters.signatureImage}
-              onChange={(file) =>
-                onParameterChange("signatureImage", file ?? undefined)
-              }
-              accept="image/png,image/jpeg"
-              placeholder={t(
-                "certSign.appearance.graphic.chooseImage",
-                "Choose an image",
-              )}
-              disabled={disabled}
-            />
-          </div>
-        </Tooltip>
+        <SavedOrUploadedImage
+          value={parameters.signatureImage}
+          onChange={(file) => onParameterChange("signatureImage", file)}
+          disabled={disabled}
+        />
       )}
     </Stack>
+  );
+};
+
+const SavedOrUploadedImage = ({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: File | undefined;
+  onChange: (file: File | undefined) => void;
+  disabled: boolean;
+}) => {
+  const { t } = useTranslation();
+  const { savedSignatures } = useSavedSignatures();
+  const saved = useMemo(
+    () =>
+      [...savedSignatures]
+        .sort(
+          (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
+        )
+        .map((signature) => ({
+          id: signature.id,
+          label:
+            signature.label ||
+            t("certSign.appearance.graphic.savedLabel", "Signature"),
+          dataUrl: signature.dataUrl,
+        })),
+    [savedSignatures, t],
+  );
+  return (
+    <SignatureImagePicker
+      saved={saved}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+    />
   );
 };
 

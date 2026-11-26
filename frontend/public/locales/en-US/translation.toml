@@ -2769,6 +2769,7 @@ declined = "Declined"
 fetchFailed = "Failed to load signing data"
 finalized = "Finalized"
 location = "Location"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Page Number"
 pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Certificate Password"
@@ -2797,16 +2798,20 @@ remove = "Remove {{detail}}"
 
 [certSign.appearance.graphic]
 certificateDetails = "Certificate details"
-chooseImage = "Choose an image"
 image = "Image"
 imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
 name = "Name"
 none = "None"
+savedFailed = "That signature could not be used. Try another or upload an image."
+savedLabel = "Signature"
 title = "Beside the details"
+upload = "Upload"
 watermark = "Logo behind signature"
 
 [certSign.appearance.options]
 signerName = "Signer name"
+signerNameInfo = "Shown on the signature instead of the name on the certificate. The certificate itself is unchanged."
 signerNamePlaceholder = "Uses the name on the certificate"
 
 [certSign.appearance.placement]
