@@ -1,0 +1,28 @@
+/* "Adding files… X/Y" for a bulk drop's pre-scan, so a large folder never
+   looks frozen between the drop and its files appearing. */
+.bar {
+  width: 100%;
+}
+.label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--c-text-subtle);
+  margin-bottom: 4px;
+}
+.count {
+  font-variant-numeric: tabular-nums;
+}
+.track {
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-primary) 15%, transparent);
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--c-primary);
+  transition: width 0.15s ease-out;
+}
