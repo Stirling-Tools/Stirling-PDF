@@ -9,7 +9,7 @@ const parameters: RemovePasswordParameters = {
 };
 
 const meta = {
-  title: "Tools/RemovePassword/RemovePasswordSettings",
+  title: "Tools/Remove Password/Parts/RemovePasswordSettings",
   component: RemovePasswordSettings,
   parameters: { layout: "padded" },
   args: {

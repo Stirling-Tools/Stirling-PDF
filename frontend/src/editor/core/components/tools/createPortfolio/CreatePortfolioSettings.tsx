@@ -3,10 +3,11 @@
  *
  * Bundles the selected files into an Adobe PDF Portfolio behind a cover page.
  */
-import { Stack, Text, TextInput } from "@mantine/core";
+import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CreatePortfolioParameters } from "@editor/hooks/tools/createPortfolio/useCreatePortfolioParameters";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface CreatePortfolioSettingsProps {
   parameters: CreatePortfolioParameters;
@@ -27,7 +28,13 @@ const CreatePortfolioSettings = ({
   return (
     <Stack gap="md">
       <TextInput
-        label={t("createPortfolio.coverTitle", "Cover page title")}
+        {...infoLabelProps(
+          t("createPortfolio.coverTitle", "Cover page title"),
+          t(
+            "createPortfolio.coverTitleInfo",
+            "The heading on the cover page that readers without portfolio support open to.",
+          ),
+        )}
         placeholder={t(
           "createPortfolio.coverTitlePlaceholder",
           "PDF Portfolio",
@@ -39,12 +46,6 @@ const CreatePortfolioSettings = ({
         }
         disabled={disabled}
       />
-      <Text size="xs" c="dimmed">
-        {t(
-          "createPortfolio.description",
-          "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached.",
-        )}
-      </Text>
     </Stack>
   );
 };

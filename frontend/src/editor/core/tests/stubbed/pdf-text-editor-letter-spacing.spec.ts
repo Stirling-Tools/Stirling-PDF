@@ -3,6 +3,12 @@ import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
+import {
+  downloadBytes,
+  reopenSavedBytes,
+} from "@editor/tests/stubbed/saveHelpers";
+
+test.use({ autoGoto: false });
 
 // Letter-spacing (Tc) preservation through an edit. letter-spacing-sample.pdf
 // has an 18pt "SPACED HEADING" drawn with `2 Tc` plus a normal 12pt body line.
@@ -83,19 +89,8 @@ test("editing a letter-spaced heading keeps its tracking through save+reopen", a
   // Save + reopen the produced bytes.
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("pdf-editor-download").click();
-  const dl = await downloadPromise;
-  const stream = await dl.createReadStream();
-  const chunks: Buffer[] = [];
-  for await (const c of stream) chunks.push(c as Buffer);
-  await openInTextEditor(page, {
-    name: "round-trip.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.concat(chunks),
-  });
-  await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page.waitForTimeout(800);
+  const saved = await downloadBytes(await downloadPromise);
+  await reopenSavedBytes(page, saved, "round-trip.pdf");
 
   const after = await readRuns();
   const headingAfter = after.find((r) =>

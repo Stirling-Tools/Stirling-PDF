@@ -1,15 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
-import RemoveAnnotationsSettings from "@editor/components/tools/removeAnnotations/RemoveAnnotationsSettings";
 import { useRemoveAnnotationsParameters } from "@editor/hooks/tools/removeAnnotations/useRemoveAnnotationsParameters";
 import { useRemoveAnnotationsOperation } from "@editor/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
 import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
-import { useRemoveAnnotationsTips } from "@editor/components/tooltips/useRemoveAnnotationsTips";
 
 const RemoveAnnotations = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  const removeAnnotationsTips = useRemoveAnnotationsTips();
 
   const base = useBaseTool(
     "removeAnnotations",
@@ -23,17 +20,7 @@ const RemoveAnnotations = (props: BaseToolProps) => {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
     },
-    steps: [
-      {
-        title: t("removeAnnotations.settings.title", "Settings"),
-        isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed
-          ? base.handleSettingsReset
-          : undefined,
-        tooltip: removeAnnotationsTips,
-        content: <RemoveAnnotationsSettings />,
-      },
-    ],
+    steps: [],
     executeButton: {
       text: t("removeAnnotations.submit", "Remove Annotations"),
       isVisible: !base.hasResults,

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AddParticipantsFlow } from "@editor/components/tools/certSign/modals/AddParticipantsFlow";
 
 const meta = {
-  title: "Tools/CertSign/Modals/AddParticipantsFlow",
+  title: "Tools/Sign with Certificate/Parts/Modals/AddParticipantsFlow",
   component: AddParticipantsFlow,
   parameters: { layout: "padded" },
   args: {

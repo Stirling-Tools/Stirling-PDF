@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Group, Text, Stack, Select } from "@mantine/core";
+import { Group, Stack, Select } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
@@ -42,61 +42,53 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
 
   return (
     <Stack gap="xs">
-      <Text size="sm" fw={500}>
-        {t(
-          "merge.sortBy.description",
-          "Files will be merged in the order they're selected. Drag to reorder or sort below.",
-        )}
-      </Text>
-      <Stack gap="xs">
-        <Group gap="xs" align="end" justify="space-between">
-          <Select
-            data={sortOptions}
-            value={sortType}
-            onChange={(value) =>
-              setSortType(value as "filename" | "dateModified")
-            }
-            disabled={disabled}
-            label={t("merge.sortBy.label", "Sort By")}
-            size="xs"
-            style={{ flex: 1 }}
-            comboboxProps={{
-              withinPortal: true,
-              zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-            }}
-          />
+      <Group gap="xs" align="end" justify="space-between">
+        <Select
+          data={sortOptions}
+          value={sortType}
+          onChange={(value) =>
+            setSortType(value as "filename" | "dateModified")
+          }
+          disabled={disabled}
+          label={t("merge.sortBy.label", "Sort By")}
+          size="xs"
+          style={{ flex: 1 }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
+        />
 
-          <ActionIcon
-            variant="secondary"
-            size="sm"
-            onClick={handleDirectionToggle}
-            disabled={disabled}
-            title={
-              ascending
-                ? t("merge.sortBy.ascending", "Ascending")
-                : t("merge.sortBy.descending", "Descending")
-            }
-            aria-label={
-              ascending
-                ? t("merge.sortBy.ascending", "Ascending")
-                : t("merge.sortBy.descending", "Descending")
-            }
-          >
-            {ascending ? <Icon name="arrow-up" /> : <Icon name="arrow-down" />}
-          </ActionIcon>
-        </Group>
-
-        <Button
+        <ActionIcon
           variant="secondary"
           size="sm"
-          leftSection={<Icon name="list-sort-descending" />}
-          onClick={handleSort}
+          onClick={handleDirectionToggle}
           disabled={disabled}
-          fullWidth
+          title={
+            ascending
+              ? t("merge.sortBy.ascending", "Ascending")
+              : t("merge.sortBy.descending", "Descending")
+          }
+          aria-label={
+            ascending
+              ? t("merge.sortBy.ascending", "Ascending")
+              : t("merge.sortBy.descending", "Descending")
+          }
         >
-          {t("merge.sortBy.sort", "Sort")}
-        </Button>
-      </Stack>
+          {ascending ? <Icon name="arrow-up" /> : <Icon name="arrow-down" />}
+        </ActionIcon>
+      </Group>
+
+      <Button
+        variant="secondary"
+        size="sm"
+        leftSection={<Icon name="list-sort-descending" />}
+        onClick={handleSort}
+        disabled={disabled}
+        fullWidth
+      >
+        {t("merge.sortBy.sort", "Sort")}
+      </Button>
     </Stack>
   );
 };

@@ -40,7 +40,7 @@ const actions = [
 ];
 
 const meta = {
-  title: "Tools/Sign/SignatureTile",
+  title: "Tools/Sign/Parts/SignatureTile",
   component: SignatureTile,
   parameters: { layout: "padded" },
   decorators: [

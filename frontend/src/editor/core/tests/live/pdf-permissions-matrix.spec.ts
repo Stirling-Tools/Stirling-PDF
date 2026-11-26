@@ -141,7 +141,7 @@ for (const restriction of restrictions) {
         "**/api/v1/security/add-password",
       );
       await page
-        .getByRole("button", { name: "Save protection", exact: true })
+        .getByRole("button", { name: "Add Password", exact: true })
         .click();
       const result = await protectedResponse;
       expect(result.ok()).toBe(true);

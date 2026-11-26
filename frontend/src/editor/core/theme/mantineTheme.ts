@@ -275,6 +275,28 @@ export const mantineTheme = createTheme({
           "aria-label": "Pick a colour from the screen",
         },
       },
+      styles: {
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+      },
+    },
+    NumberInput: {
+      styles: {
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+      },
+    },
+    FileInput: {
+      styles: {
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+      },
     },
     Drawer: {
       defaultProps: { closeButtonProps: { "aria-label": "Close" } },
@@ -332,15 +354,6 @@ export const mantineTheme = createTheme({
 
     Textarea: {
       styles: (_theme: MantineTheme) => ({
-        input: {
-          backgroundColor: "var(--c-surface)",
-          borderColor: "var(--c-border)",
-          color: "var(--c-text)",
-          "&:focus": {
-            borderColor: "var(--color-primary-500)",
-            boxShadow: "0 0 0 1px var(--color-primary-500)",
-          },
-        },
         label: {
           color: "var(--c-text-muted)",
           fontWeight: "var(--font-weight-medium)",
@@ -350,15 +363,6 @@ export const mantineTheme = createTheme({
 
     TextInput: {
       styles: (_theme: MantineTheme) => ({
-        input: {
-          backgroundColor: "var(--c-surface)",
-          borderColor: "var(--c-border)",
-          color: "var(--c-text)",
-          "&:focus": {
-            borderColor: "var(--color-primary-500)",
-            boxShadow: "0 0 0 1px var(--color-primary-500)",
-          },
-        },
         label: {
           color: "var(--c-text-muted)",
           fontWeight: "var(--font-weight-medium)",
@@ -368,15 +372,6 @@ export const mantineTheme = createTheme({
 
     PasswordInput: {
       styles: (_theme: MantineTheme) => ({
-        input: {
-          backgroundColor: "var(--c-surface)",
-          borderColor: "var(--c-border)",
-          color: "var(--c-text)",
-          "&:focus": {
-            borderColor: "var(--color-primary-500)",
-            boxShadow: "0 0 0 1px var(--color-primary-500)",
-          },
-        },
         label: {
           color: "var(--c-text-muted)",
           fontWeight: "var(--font-weight-medium)",
@@ -386,15 +381,6 @@ export const mantineTheme = createTheme({
 
     Select: {
       styles: {
-        input: {
-          backgroundColor: "var(--c-surface)",
-          borderColor: "var(--c-border)",
-          color: "var(--c-text)",
-          "&:focus": {
-            borderColor: "var(--color-primary-500)",
-            boxShadow: "0 0 0 1px var(--color-primary-500)",
-          },
-        },
         label: {
           color: "var(--c-text-muted)",
           fontWeight: "var(--font-weight-medium)",
@@ -414,15 +400,6 @@ export const mantineTheme = createTheme({
 
     MultiSelect: {
       styles: {
-        input: {
-          backgroundColor: "var(--c-surface)",
-          borderColor: "var(--c-border)",
-          color: "var(--c-text)",
-          "&:focus": {
-            borderColor: "var(--color-primary-500)",
-            boxShadow: "0 0 0 1px var(--color-primary-500)",
-          },
-        },
         label: {
           color: "var(--c-text-muted)",
           fontWeight: "var(--font-weight-medium)",

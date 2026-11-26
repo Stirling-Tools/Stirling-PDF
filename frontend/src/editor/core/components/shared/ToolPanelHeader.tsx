@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import "@editor/components/shared/ToolPanelHeader.css";
 
 export interface ToolPanelHeaderProps {
@@ -8,6 +9,12 @@ export interface ToolPanelHeaderProps {
   icon: ReactNode;
   /** Header title. */
   title: ReactNode;
+  /**
+   * Shown when the title bar is hovered or focused, and read as its
+   * description; the same text the tool list shows. With one, the bar takes
+   * focus, since it has nothing else a keyboard can reach.
+   */
+  description?: ReactNode;
   /** Close (X) handler. The trailing close button renders only when supplied. */
   onClose?: () => void;
   /** aria-label for the close button. */
@@ -26,15 +33,43 @@ export interface ToolPanelHeaderProps {
 export function ToolPanelHeader({
   icon,
   title,
+  description,
   onClose,
   closeLabel,
 }: ToolPanelHeaderProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+  const bar = (
+    <div
+      className="sui-panelhdr__bar"
+      {...(description && {
+        role: "group",
+        tabIndex: 0,
+        "aria-labelledby": titleId,
+        "aria-describedby": descriptionId,
+      })}
+    >
+      <span className="sui-panelhdr__icon">{icon}</span>
+      <span id={titleId} className="sui-panelhdr__label">
+        {title}
+      </span>
+    </div>
+  );
+
   return (
     <div className="sui-panelhdr">
-      <div className="sui-panelhdr__bar">
-        <span className="sui-panelhdr__icon">{icon}</span>
-        <span className="sui-panelhdr__label">{title}</span>
-      </div>
+      {description ? (
+        <>
+          <Tooltip content={description} position="left" arrow delay={500}>
+            {bar}
+          </Tooltip>
+          <span id={descriptionId} hidden>
+            {description}
+          </span>
+        </>
+      ) : (
+        bar
+      )}
       {onClose && (
         <ActionIcon
           className="sui-panelhdr__close"

@@ -91,3 +91,13 @@
   font-size: 0.75rem;
   color: var(--c-text-subtle);
 }
+
+.sui-check-field {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+.sui-check-field > .sui-info {
+  /* Centres the (i) on the label's first line. */
+  margin-top: 0.125rem;
+}

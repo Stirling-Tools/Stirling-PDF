@@ -24,6 +24,7 @@ import {
 import { useToolResources } from "@editor/hooks/tools/shared/useToolResources";
 import {
   extractErrorMessage,
+  resolveToolErrorMessage,
   handle422Error,
   isSignupRequiredError,
 } from "@editor/utils/toolErrorHandler";
@@ -854,8 +855,11 @@ export const useToolOperation = <TParams>(
           params,
         );
 
-        const errorMessage =
-          config.getErrorMessage?.(error) || extractErrorMessage(error);
+        const errorMessage = await resolveToolErrorMessage(
+          error,
+          config.getErrorMessage,
+        );
+        if (cancellation.signal.aborted) return;
         actions.setError(errorMessage);
         actions.setStatus("");
       } finally {

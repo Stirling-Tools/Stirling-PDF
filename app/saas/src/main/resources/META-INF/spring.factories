@@ -1,0 +1,2 @@
+org.springframework.boot.EnvironmentPostProcessor=\
+stirling.software.saas.config.SaasMcpPinsPostProcessor

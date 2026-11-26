@@ -1,6 +1,8 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { brokenInFlavorTag, flavorBuild, notInFlavorTag } from "./flavor";
 
 /**
  * Dedicated Vitest config that turns every story into a browser test: it mounts
@@ -23,9 +25,14 @@ export default defineConfig({
     ),
   },
   optimizeDeps: {
-    // Pre-scan every story + the preview so Vite discovers the story set's large
-    // dep surface (embedpdf plugins, lucide svgs, …) in one pass up front.
-    entries: ["src/**/*.stories.@(ts|tsx)", ".storybook/preview.tsx"],
+    // Pre-scan the selected flavour's stories + the preview so Vite discovers
+    // the story set's large dep surface (embedpdf plugins, lucide svgs, …) in
+    // one pass up front. One unresolvable import fails the whole scan, so
+    // another flavour's stories must stay out of it.
+    entries: [
+      ...flavorBuild.stories.filter((glob) => !glob.endsWith(".mdx")),
+      ".storybook/preview.tsx",
+    ],
     // `entries` alone does not catch deps reached through a transformed JSX
     // runtime import, nor the preview's own dependency graph (the test plugin
     // injects the preview in a way the entry scanner doesn't crawl). Vite then
@@ -52,6 +59,15 @@ export default defineConfig({
       "@mantine/core",
       "@supabase/supabase-js",
       "axios",
+      // Reached through dynamic imports the entry scan does not follow, in at
+      // least one setup's build.
+      "posthog-js",
+      "react-rnd",
+      "@reactour/tour",
+      "@mantine/dates",
+      "@userback/widget",
+      "@tauri-apps/api/mocks",
+      "@tauri-apps/api/app",
     ],
   },
   test: {
@@ -60,7 +76,12 @@ export default defineConfig({
         extends: true,
         // Reads .storybook/main.ts (stories glob + viteFinal aliases) so every
         // discovered story becomes a test with the app's real module resolution.
-        plugins: [storybookTest({ configDir: resolve(__dirname) })],
+        plugins: [
+          storybookTest({
+            configDir: resolve(__dirname),
+            tags: { exclude: [notInFlavorTag], skip: [brokenInFlavorTag] },
+          }),
+        ],
         test: {
           name: "storybook",
           // Mounting a story and running a full axe pass over it takes well

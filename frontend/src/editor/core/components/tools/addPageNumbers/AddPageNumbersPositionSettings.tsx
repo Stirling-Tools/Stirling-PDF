@@ -2,10 +2,10 @@
  * AddPageNumbersPositionSettings - Position & Pages step
  */
 
-import { Stack, TextInput, NumberInput, Divider, Text } from "@mantine/core";
+import { Stack, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
-import { Tooltip } from "@editor/components/shared/Tooltip";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import PageNumberPreview from "@editor/components/tools/addPageNumbers/PageNumberPreview";
 
 interface AddPageNumbersPositionSettingsProps {
@@ -29,64 +29,45 @@ const AddPageNumbersPositionSettings = ({
   const { t } = useTranslation();
 
   return (
-    <Stack gap="lg">
-      {/* Position Selection */}
-      <Stack gap="md">
-        <PageNumberPreview
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          file={file}
-          showQuickGrid={showQuickGrid}
-        />
-      </Stack>
+    <Stack gap="md">
+      <PageNumberPreview
+        parameters={parameters}
+        onParameterChange={onParameterChange}
+        file={file}
+        showQuickGrid={showQuickGrid}
+      />
 
-      <Divider />
+      <TextInput
+        {...infoLabelProps(
+          t("addPageNumbers.selectText.5", "Pages to Number"),
+          t(
+            "addPageNumbers.pagesToNumberInfo",
+            "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page.",
+          ),
+        )}
+        value={parameters.pagesToNumber || ""}
+        onChange={(e) =>
+          onParameterChange("pagesToNumber", e.currentTarget.value)
+        }
+        placeholder={t("addPageNumbers.numberPagesDesc", "All pages")}
+        disabled={disabled}
+      />
 
-      {/* Pages & Starting Number Section */}
-      <Stack gap="md">
-        <Text size="sm" fw={500} mb="xs">
-          {t("addPageNumbers.pagesAndStarting", "Pages & Starting Number")}
-        </Text>
-
-        <Tooltip
-          position="left"
-          content={t(
-            "pageSelectionPrompt",
-            "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)",
-          )}
-        >
-          <TextInput
-            label={t("addPageNumbers.selectText.5", "Pages to Number")}
-            value={parameters.pagesToNumber || ""}
-            onChange={(e) =>
-              onParameterChange("pagesToNumber", e.currentTarget.value)
-            }
-            placeholder={t(
-              "addPageNumbers.numberPagesDesc",
-              "e.g., 1,3,5-8 or leave blank for all pages",
-            )}
-            disabled={disabled}
-          />
-        </Tooltip>
-
-        <Tooltip
-          position="left"
-          content={t(
+      <NumberInput
+        {...infoLabelProps(
+          t("addPageNumbers.selectText.4", "Starting Number"),
+          t(
             "startingNumberTooltip",
             "The first number to display. Subsequent pages will increment from this number.",
-          )}
-        >
-          <NumberInput
-            label={t("addPageNumbers.selectText.4", "Starting Number")}
-            value={parameters.startingNumber}
-            onChange={(v) =>
-              onParameterChange("startingNumber", typeof v === "number" ? v : 1)
-            }
-            min={1}
-            disabled={disabled}
-          />
-        </Tooltip>
-      </Stack>
+          ),
+        )}
+        value={parameters.startingNumber}
+        onChange={(v) =>
+          onParameterChange("startingNumber", typeof v === "number" ? v : 1)
+        }
+        min={1}
+        disabled={disabled}
+      />
     </Stack>
   );
 };

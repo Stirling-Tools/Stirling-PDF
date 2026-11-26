@@ -3,7 +3,7 @@ import PageLayoutPreview from "@editor/components/tools/pageLayout/PageLayoutPre
 import { defaultParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 
 const meta = {
-  title: "Tools/PageLayout/PageLayoutPreview",
+  title: "Tools/Multi-Page Layout/Parts/PageLayoutPreview",
   component: PageLayoutPreview,
   parameters: { layout: "padded" },
 } satisfies Meta<typeof PageLayoutPreview>;

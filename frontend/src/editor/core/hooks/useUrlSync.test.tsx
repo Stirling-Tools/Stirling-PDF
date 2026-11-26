@@ -84,11 +84,22 @@ describe("useNavigationUrlSync — startup-view selections", () => {
       ({ tool }: { tool: ToolId | null }) => useHarness(tool, null),
       { initialProps: { tool: null as ToolId | null }, wrapper },
     );
-    rerender({ tool: "read" as ToolId });
+    rerender({ tool: "compress" as ToolId });
     expect(h.toolRoute).toHaveBeenCalledWith(
-      "read",
+      "compress",
       registry,
       expect.anything(),
     );
+  });
+
+  // Picking Read opens the reader, which moves to /reader itself. Writing /read
+  // over it closed the reader again, so Read took two clicks.
+  it("never writes the URL for the Read tool", () => {
+    const { rerender } = renderHook(
+      ({ tool }: { tool: ToolId | null }) => useHarness(tool, null),
+      { initialProps: { tool: null as ToolId | null }, wrapper },
+    );
+    rerender({ tool: "read" as ToolId });
+    expect(h.toolRoute).not.toHaveBeenCalled();
   });
 });
