@@ -28,7 +28,6 @@ import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccess
 import type {
   InnerTagsControl,
   TextDescriptionControl,
-  TextLanguageControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
@@ -289,9 +288,6 @@ export function QuickTagCard({ store, controller, review }: Props) {
               </button>
             ))}
           </div>
-          {controller.textLanguage && (
-            <TextLanguageQuestion control={controller.textLanguage} />
-          )}
           <SelectedTextLanguageQuestion inner={controller.textInner} />
         </>
       )}
@@ -377,33 +373,6 @@ function TextDescriptionQuestion({
           {t("pdfTextEditor.review.card.saveDescription", "Save description")}
         </Button>
       </div>
-    </>
-  );
-}
-
-/** The language the selected text is read in, for a sentence or block in another language than the document. */
-function TextLanguageQuestion({ control }: { control: TextLanguageControl }) {
-  const { t } = useTranslation();
-  const label = t("pdfTextEditor.inspector.language.label", "Language");
-  const { language } = control;
-  return (
-    <>
-      <p className="review-card__label">{label}</p>
-      <LanguagePicker
-        own={language?.own ?? null}
-        inherited={language?.inherited ?? null}
-        placeholder={
-          language
-            ? t(
-                "pdfTextEditor.inspector.language.placeholder",
-                "Select language",
-              )
-            : t("pdfTextEditor.inspector.language.mixed", "Mixed")
-        }
-        onChange={control.onSet}
-        label={label}
-        testId="pdf-editor-quick-tag-language"
-      />
     </>
   );
 }
