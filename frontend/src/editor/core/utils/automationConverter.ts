@@ -9,7 +9,8 @@
  *
  * 2. **Folder Scanning JSON** — the format consumed by the backend
  *    PipelineDirectoryProcessor. Operation names are full backend endpoint
- *    paths (e.g. "/api/v1/general/merge-pdfs").
+ *    paths (e.g. "/api/v1/general/merge-pdfs") and parameters are that
+ *    endpoint's request fields, translated by each tool's API mappers.
  */
 
 import {
@@ -19,6 +20,11 @@ import {
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { downloadFile } from "@editor/services/downloadService";
 import { ToolId } from "@editor/types/toolId";
+import {
+  deserializeToolStep,
+  toolApiStep,
+  type ToolApiStep,
+} from "@editor/hooks/tools/shared/toolAutomation";
 
 /**
  * Pipeline configuration format used by folder scanning.
@@ -65,7 +71,50 @@ const sanitizeFilename = (name: string): string =>
   (name || "automation").replace(/[\\/:*?"<>|]+/g, "_").trim() || "automation";
 
 /**
- * Converts an AutomationConfig to a folder scanning pipeline configuration.
+ * One Automate step as the folder scanner runs it: the endpoint and its request fields, from the
+ * tool's `toApiParams`. A browser-only processor has no mapper, so its frontend parameters go out
+ * unchanged under its endpoint, or under its tool id when it has none, which still re-imports.
+ */
+function folderScanningStep(
+  op: AutomationOperation,
+  toolRegistry: Partial<ToolRegistry>,
+): ToolApiStep {
+  const apiStep = toolApiStep(
+    op.operation as ToolId,
+    op.parameters,
+    toolRegistry,
+  );
+  if (apiStep) return apiStep;
+
+  const endpointConfig =
+    toolRegistry[op.operation as ToolId]?.operationConfig?.endpoint;
+  let endpoint: string | undefined;
+  if (typeof endpointConfig === "string") {
+    endpoint = endpointConfig;
+  } else if (typeof endpointConfig === "function") {
+    try {
+      endpoint = endpointConfig(op.parameters) ?? undefined;
+    } catch (error) {
+      console.warn(
+        `Failed to resolve dynamic endpoint for operation "${op.operation}". ` +
+          `This may happen if the tool requires specific parameters. ` +
+          `Error: ${error}`,
+      );
+    }
+  }
+  if (!endpoint) {
+    console.warn(
+      `No endpoint found for operation "${op.operation}". ` +
+        `This operation may fail in folder scanning. ` +
+        `Using operation type as fallback.`,
+    );
+  }
+  return { operation: endpoint || op.operation, parameters: op.parameters };
+}
+
+/**
+ * Converts an AutomationConfig to a folder scanning pipeline configuration, with each step's
+ * parameters in the backend request shape its endpoint takes.
  */
 export function convertToFolderScanningConfig(
   automation: AutomationConfig,
@@ -76,40 +125,10 @@ export function convertToFolderScanningConfig(
     ...(automation.description ? { description: automation.description } : {}),
     ...(automation.icon ? { icon: automation.icon } : {}),
     pipeline: automation.operations.map((op) => {
-      const toolId = op.operation as ToolId;
-      const toolEntry = toolRegistry[toolId];
-      const endpointConfig = toolEntry?.operationConfig?.endpoint;
-
-      let endpoint: string | undefined;
-
-      if (typeof endpointConfig === "string") {
-        endpoint = endpointConfig;
-      } else if (typeof endpointConfig === "function") {
-        try {
-          endpoint = endpointConfig(op.parameters) ?? undefined;
-        } catch (error) {
-          console.warn(
-            `Failed to resolve dynamic endpoint for operation "${op.operation}". ` +
-              `This may happen if the tool requires specific parameters. ` +
-              `Error: ${error}`,
-          );
-        }
-      }
-
-      if (!endpoint) {
-        console.warn(
-          `No endpoint found for operation "${op.operation}". ` +
-            `This operation may fail in folder scanning. ` +
-            `Using operation type as fallback.`,
-        );
-      }
-
+      const step = folderScanningStep(op, toolRegistry);
       return {
-        operation: endpoint || op.operation,
-        parameters: {
-          ...op.parameters,
-          fileInput: "automated",
-        },
+        operation: step.operation,
+        parameters: { ...step.parameters, fileInput: "automated" },
       };
     }),
     _examples: {
@@ -170,48 +189,6 @@ export function downloadAutomationConfig(automation: AutomationConfig): void {
   });
 }
 
-/**
- * Build an inverse map of `endpoint string` → `frontend tool ID` from the
- * tool registry. Only static string endpoints are added — dynamic
- * (function) endpoints are matched at parse time by replaying them.
- */
-function buildEndpointToToolIdMap(
-  toolRegistry: Partial<ToolRegistry>,
-): Map<string, ToolId> {
-  const map = new Map<string, ToolId>();
-  for (const [toolId, entry] of Object.entries(toolRegistry)) {
-    const endpoint = entry?.operationConfig?.endpoint;
-    if (typeof endpoint === "string" && !map.has(endpoint)) {
-      map.set(endpoint, toolId as ToolId);
-    }
-  }
-  return map;
-}
-
-/**
- * Try every dynamic endpoint in the registry with the supplied parameters,
- * returning the first tool ID whose endpoint function produces `targetEndpoint`.
- */
-function findDynamicEndpointMatch(
-  targetEndpoint: string,
-  parameters: Record<string, unknown>,
-  toolRegistry: Partial<ToolRegistry>,
-): ToolId | undefined {
-  for (const [toolId, entry] of Object.entries(toolRegistry)) {
-    const endpoint = entry?.operationConfig?.endpoint;
-    if (typeof endpoint === "function") {
-      try {
-        if (endpoint(parameters) === targetEndpoint) {
-          return toolId as ToolId;
-        }
-      } catch {
-        // Endpoint function expected different parameters — ignore.
-      }
-    }
-  }
-  return undefined;
-}
-
 const isToolIdInRegistry = (
   candidate: string,
   toolRegistry: Partial<ToolRegistry>,
@@ -219,9 +196,9 @@ const isToolIdInRegistry = (
 
 /**
  * Parse a folder-scanning pipeline JSON into the native AutomationConfig
- * shape. Endpoint paths are reverse-mapped to frontend tool IDs via the
- * supplied registry; unmappable operations are kept verbatim and reported in
- * `unresolvedOperations`.
+ * shape. Each endpoint is mapped back to its tool, and its backend parameters
+ * back to that tool's frontend shape over its defaults; unmappable operations
+ * are kept verbatim and reported in `unresolvedOperations`.
  */
 export function parseFolderScanningConfig(
   raw: unknown,
@@ -239,7 +216,6 @@ export function parseFolderScanningConfig(
     throw new Error("Invalid folder scanning config: missing 'pipeline' array");
   }
 
-  const endpointMap = buildEndpointToToolIdMap(toolRegistry);
   const unresolved: string[] = [];
 
   const operations: AutomationOperation[] = pipeline.map(
@@ -261,27 +237,24 @@ export function parseFolderScanningConfig(
       // Strip the export-time marker so the imported automation runs cleanly.
       const { fileInput: _fileInput, ...parameters } = rawParameters;
 
-      // 1) Direct frontend-tool-id match (handles the converter's fallback when
-      //    no endpoint could be resolved at export time).
+      // A tool id is the export's fallback for a step with no endpoint, so
+      // its parameters are already in frontend shape.
       if (isToolIdInRegistry(rawOperation, toolRegistry)) {
         return { operation: rawOperation, parameters };
       }
 
-      // 2) Static endpoint string match.
-      const staticMatch = endpointMap.get(rawOperation);
-      if (staticMatch) {
-        return { operation: staticMatch, parameters };
-      }
-
-      // 3) Dynamic endpoint match — replay each function endpoint with the
-      //    parameters we have and look for a match.
-      const dynamicMatch = findDynamicEndpointMatch(
-        rawOperation,
-        parameters,
+      const toolStep = deserializeToolStep(
+        { operation: rawOperation, parameters },
         toolRegistry,
       );
-      if (dynamicMatch) {
-        return { operation: dynamicMatch, parameters };
+      if (toolStep.toolId !== null) {
+        return {
+          operation: toolStep.toolId,
+          // Without mappers there is no backend shape to translate from: the
+          // export wrote this tool's frontend parameters as they were.
+          parameters:
+            toolStep.support === "unsupported" ? parameters : toolStep.params,
+        };
       }
 
       unresolved.push(rawOperation);

@@ -4,9 +4,9 @@
  * shape and the backend step contract (endpoint + backend parameters).
  *
  * This is core behaviour shared by every surface that composes or replays tool operations against
- * the backend engine (portal pipelines today; backend-executed automations and AI plans later),
- * so the "is this tool usable, and how" decision lives with the tools rather than in any one
- * feature. It builds on each tool's `operationConfig` mappers (`toApiParams` / `fromApiParams`),
+ * the backend engine (portal pipelines, the Automate tool; AI plans later), so the "is this tool
+ * usable, and how" decision lives with the tools rather than in any one feature. It builds on
+ * each tool's `operationConfig` mappers (`toApiParams` / `fromApiParams`),
  * keeping the frontend<->backend parameter mapping single-sourced in the tools.
  */
 
@@ -338,10 +338,63 @@ export function stepNeedsConfiguring(
 ): boolean {
   if (step.toolId === null) return false;
   const config = registry[step.toolId]?.operationConfig;
-  if (!config || !config.validateParams) return false;
+  if (!config) return false;
   // Stored supporting files satisfy their field just as a fresh pick would, so validate against the
   // sentinel-injected params rather than the bare ones (which drop the file on reload).
-  return !config.validateParams(withStoredFileSentinels(step, config));
+  return toolParamsNeedConfiguring(
+    step.toolId,
+    withStoredFileSentinels(step, config),
+    registry,
+  );
+}
+
+/**
+ * The parameters a tool starts from, as its own editor panel does: its `operationConfig` defaults,
+ * or none. A fresh object, so the caller may edit it.
+ */
+export function defaultToolParams(
+  toolId: ToolId,
+  registry: Partial<ToolRegistry>,
+): ErasedToolParams {
+  return { ...(registry[toolId]?.operationConfig?.defaultParameters ?? {}) };
+}
+
+/**
+ * True if these parameters, merged over the tool's defaults, fail the tool's `validateParams` - the
+ * predicate its own Run button uses. False for a tool that declares no predicate or is not in the
+ * registry, since there is nothing to judge it by.
+ */
+export function toolParamsNeedConfiguring(
+  toolId: ToolId,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): boolean {
+  const config = registry[toolId]?.operationConfig;
+  if (!config?.validateParams) return false;
+  return !config.validateParams({
+    ...defaultToolParams(toolId, registry),
+    ...params,
+  });
+}
+
+/**
+ * The backend step for a tool's frontend parameters (merged over its defaults), or null when the
+ * tool has no backend form: no `toApiParams` mapper, or no endpoint these parameters resolve to.
+ */
+export function toolApiStep(
+  toolId: ToolId,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): ToolApiStep | null {
+  const config = registry[toolId]?.operationConfig;
+  if (!config?.toApiParams) return null;
+  const merged = { ...defaultToolParams(toolId, registry), ...params };
+  const operation = resolveEndpoint(config, merged);
+  if (!operation) return null;
+  return {
+    operation,
+    parameters: config.toApiParams(merged) as Record<string, unknown>,
+  };
 }
 
 /**
@@ -384,11 +437,10 @@ export function newWorkingToolStep(
   tool: ExecutableTool,
   registry: Partial<ToolRegistry>,
 ): KnownToolStep {
-  const config = registry[tool.toolId]?.operationConfig;
   return {
     toolId: tool.toolId,
     operation: tool.endpoint,
-    params: { ...(config?.defaultParameters ?? {}) },
+    params: defaultToolParams(tool.toolId, registry),
     support: tool.support,
   };
 }
