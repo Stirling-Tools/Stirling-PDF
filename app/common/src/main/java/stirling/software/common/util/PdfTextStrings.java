@@ -23,8 +23,7 @@ public final class PdfTextStrings {
                 && bytes[2] == (byte) 0xBF) {
             return new String(bytes, 3, bytes.length - 3, StandardCharsets.UTF_8);
         }
-        String text = value.getString();
-        return !text.isEmpty() && text.charAt(0) == 0xFEFF ? text.substring(1) : text;
+        return value.getString();
     }
 
     /**

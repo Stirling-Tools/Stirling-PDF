@@ -1,5 +1,6 @@
 package stirling.software.common.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +23,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
@@ -37,14 +46,17 @@ import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.multipdf.PDFCloneUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
-import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.schema.XMPSchema;
-import org.apache.xmpbox.xml.XmpParsingException;
-import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -341,11 +353,16 @@ public class CustomPDFDocumentFactory {
 
     public PDDocument createNewDocumentBasedOnOldDocument(PDDocument oldDocument)
             throws IOException {
+        return createNewDocumentBasedOnOldDocument(oldDocument, true);
+    }
+
+    public PDDocument createNewDocumentBasedOnOldDocument(
+            PDDocument oldDocument, boolean copyAttachments) throws IOException {
         PDDocument document = createNewDocument();
         try {
             pdfMetadataService.setMetadataToPdf(
                     document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
-            copyDocumentLevelState(oldDocument, document);
+            copyDocumentLevelState(oldDocument, document, copyAttachments);
             return document;
         } catch (IOException | RuntimeException ex) {
             document.close();
@@ -358,8 +375,8 @@ public class CustomPDFDocumentFactory {
         COSName.LANG, COSName.OUTPUT_INTENTS, COSName.VIEWER_PREFERENCES, COSName.AF
     };
 
-    private static void copyDocumentLevelState(PDDocument source, PDDocument target)
-            throws IOException {
+    private static void copyDocumentLevelState(
+            PDDocument source, PDDocument target, boolean copyAttachments) throws IOException {
         float version = source.getVersion();
         // New documents carry catalog /Version 1.4, so raise it with the header.
         if (version > target.getVersion()) {
@@ -372,7 +389,7 @@ public class CustomPDFDocumentFactory {
         copyMetadataWithoutConformanceClaims(source, target);
         for (COSName key : PAGE_FREE_CATALOG_KEYS) {
             COSBase value = sourceCatalog.getDictionaryObject(key);
-            if (value != null) {
+            if (value != null && (copyAttachments || !COSName.AF.equals(key))) {
                 targetCatalog.setItem(key, cloner.cloneForNewDocument(value));
             }
         }
@@ -385,7 +402,7 @@ public class CustomPDFDocumentFactory {
         COSDictionary names = sourceCatalog.getCOSDictionary(COSName.NAMES);
         COSBase embeddedFiles =
                 names == null ? null : names.getDictionaryObject(COSName.EMBEDDED_FILES);
-        if (embeddedFiles != null) {
+        if (embeddedFiles != null && copyAttachments) {
             COSDictionary targetNames = new COSDictionary();
             targetNames.setItem(COSName.EMBEDDED_FILES, cloner.cloneForNewDocument(embeddedFiles));
             targetCatalog.setItem(COSName.NAMES, targetNames);
@@ -401,21 +418,70 @@ public class CustomPDFDocumentFactory {
         if (sourceMetadata == null) {
             return;
         }
-        try {
-            XMPMetadata xmp = XmpUtils.parse(sourceMetadata, false);
-            for (XMPSchema schema : new ArrayList<>(xmp.getAllSchemas())) {
-                if (CONFORMANCE_NAMESPACES.contains(schema.getNamespace())) {
-                    xmp.removeSchema(schema);
-                }
+        try (InputStream in = sourceMetadata.createInputStream()) {
+            byte[] packet = in.readNBytes(XmpUtils.MAX_XMP_BYTES + 1);
+            if (packet.length > XmpUtils.MAX_XMP_BYTES) {
+                throw new IOException("XMP packet is too large to copy");
             }
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            new XmpSerializer().serialize(xmp, out, true);
+            Document xmp = parseXmlSecurely(packet);
+            removeConformanceClaims(xmp.getDocumentElement());
             PDMetadata metadata = new PDMetadata(target);
-            metadata.importXMPMetadata(out.toByteArray());
+            metadata.importXMPMetadata(serializeXml(xmp));
             target.getDocumentCatalog().setMetadata(metadata);
-        } catch (IOException | XmpParsingException | TransformerException e) {
+        } catch (IOException
+                | ParserConfigurationException
+                | SAXException
+                | TransformerException e) {
             log.warn("Skipping unreadable XMP metadata on rebuilt document: {}", e.getMessage());
         }
+    }
+
+    // Edits the XML tree directly so custom arrays and structures survive unchanged.
+    private static void removeConformanceClaims(Element element) {
+        NamedNodeMap attributes = element.getAttributes();
+        for (int i = attributes.getLength() - 1; i >= 0; i--) {
+            Node attribute = attributes.item(i);
+            boolean declaration =
+                    XMLConstants.XMLNS_ATTRIBUTE_NS_URI.equals(attribute.getNamespaceURI())
+                            && CONFORMANCE_NAMESPACES.contains(attribute.getNodeValue());
+            if (declaration || CONFORMANCE_NAMESPACES.contains(attribute.getNamespaceURI())) {
+                element.removeAttributeNode((Attr) attribute);
+            }
+        }
+        NodeList children = element.getChildNodes();
+        for (int i = children.getLength() - 1; i >= 0; i--) {
+            if (children.item(i) instanceof Element child) {
+                if (CONFORMANCE_NAMESPACES.contains(child.getNamespaceURI())) {
+                    element.removeChild(child);
+                } else {
+                    removeConformanceClaims(child);
+                }
+            }
+        }
+    }
+
+    private static Document parseXmlSecurely(byte[] xml)
+            throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+        factory.setNamespaceAware(true);
+        return factory.newDocumentBuilder().parse(new ByteArrayInputStream(xml));
+    }
+
+    private static byte[] serializeXml(Document document) throws TransformerException {
+        TransformerFactory factory = TransformerFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        Transformer transformer = factory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        transformer.transform(new DOMSource(document), new StreamResult(out));
+        return out.toByteArray();
     }
 
     public byte[] loadToBytes(File file) throws IOException {

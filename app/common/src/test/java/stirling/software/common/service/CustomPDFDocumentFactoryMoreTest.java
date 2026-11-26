@@ -146,7 +146,10 @@ class CustomPDFDocumentFactoryMoreTest {
                             + "<rdf:Description rdf:about=''"
                             + " xmlns:dc='http://purl.org/dc/elements/1.1/'"
                             + " xmlns:pdfaid='http://www.aiim.org/pdfa/ns/id/'"
-                            + " xmlns:pdfuaid='http://www.aiim.org/pdfua/ns/id/'>"
+                            + " xmlns:pdfuaid='http://www.aiim.org/pdfua/ns/id/'"
+                            + " xmlns:cust='http://example.com/cust/' pdfaid:rev='2020'>"
+                            + "<cust:Tags><rdf:Bag><rdf:li>A</rdf:li><rdf:li>B</rdf:li></rdf:Bag>"
+                            + "</cust:Tags>"
                             + "<pdfaid:part>2</pdfaid:part><pdfaid:conformance>B</pdfaid:conformance>"
                             + "<pdfuaid:part>1</pdfuaid:part>"
                             + "<dc:title><rdf:Alt><rdf:li xml:lang='x-default'>Kept title</rdf:li>"
@@ -169,6 +172,8 @@ class CustomPDFDocumentFactoryMoreTest {
                                 doc.getDocumentCatalog().getMetadata().toByteArray(),
                                 StandardCharsets.UTF_8);
                 assertThat(kept).contains("Kept title");
+                assertThat(kept).contains("<rdf:li>A</rdf:li><rdf:li>B</rdf:li>");
+                assertThat(kept).doesNotContain("pdfaid:rev");
                 assertThat(kept).doesNotContain("pdfa/ns/id").doesNotContain("pdfua/ns/id");
             }
         }

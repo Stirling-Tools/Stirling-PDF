@@ -34,9 +34,9 @@ class PdfTextStringsTest {
     }
 
     @Test
-    void stripsLeadingByteOrderMark() {
+    void keepsAContentByteOrderMarkAfterTheEncodingMarker() {
         byte[] utf16 = (BOM + BOM + "hi").getBytes(StandardCharsets.UTF_16BE);
-        assertThat(PdfTextStrings.decode(new COSString(utf16))).isEqualTo("hi");
+        assertThat(PdfTextStrings.decode(new COSString(utf16))).isEqualTo(BOM + "hi");
     }
 
     @Test

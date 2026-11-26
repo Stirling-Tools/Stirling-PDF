@@ -170,7 +170,7 @@ class FlattenControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         PDDocument newDoc = new PDDocument();
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc, false)).thenReturn(newDoc);
 
         ResponseEntity<Resource> response = controller.flatten(request);
 
@@ -188,7 +188,7 @@ class FlattenControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         PDDocument newDoc = new PDDocument();
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc, false)).thenReturn(newDoc);
 
         ResponseEntity<Resource> response = controller.flatten(request);
 
@@ -206,7 +206,7 @@ class FlattenControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         PDDocument newDoc = new PDDocument();
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc, false)).thenReturn(newDoc);
 
         ResponseEntity<Resource> response = controller.flatten(request);
 
@@ -224,7 +224,7 @@ class FlattenControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         PDDocument newDoc = new PDDocument();
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc, false)).thenReturn(newDoc);
 
         ResponseEntity<Resource> response = controller.flatten(request);
 

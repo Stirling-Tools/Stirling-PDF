@@ -126,6 +126,15 @@ public class AttachmentService implements AttachmentServiceInterface {
         return document;
     }
 
+    private static void removeFromAssociatedFiles(
+            PDDocument document, PDComplexFileSpecification spec) {
+        COSArray associatedFiles =
+                document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
+        if (associatedFiles != null) {
+            associatedFiles.removeObject(spec.getCOSObject());
+        }
+    }
+
     // PDF 2.0 and PDF/A-3 find attachments through the catalog /AF array.
     private static void addToAssociatedFiles(
             PDDocument document,
@@ -357,7 +366,10 @@ public class AttachmentService implements AttachmentServiceInterface {
         fileToRename.setFileUnicode(newName);
 
         allEmbeddedFiles.remove(keyToRename);
-        allEmbeddedFiles.put(newName, fileToRename);
+        PDComplexFileSpecification displaced = allEmbeddedFiles.put(newName, fileToRename);
+        if (displaced != null && displaced != fileToRename) {
+            removeFromAssociatedFiles(document, displaced);
+        }
 
         embeddedFilesTree.setKids(null);
 
@@ -388,10 +400,8 @@ public class AttachmentService implements AttachmentServiceInterface {
         }
 
         PDComplexFileSpecification removed = allEmbeddedFiles.remove(keyToRemove);
-        COSArray associatedFiles =
-                document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
-        if (associatedFiles != null && removed != null) {
-            associatedFiles.removeObject(removed.getCOSObject());
+        if (removed != null) {
+            removeFromAssociatedFiles(document, removed);
         }
 
         embeddedFilesTree.setKids(null);

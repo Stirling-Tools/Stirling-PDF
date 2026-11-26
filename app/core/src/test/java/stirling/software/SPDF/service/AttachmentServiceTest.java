@@ -73,11 +73,34 @@ class AttachmentServiceTest {
     }
 
     @Test
-    void deleteAttachment_RemovesAssociatedFileEntry() throws IOException {
+    void deleteAttachment_RemovesOnlyItsAssociatedFileEntry() throws IOException {
         try (var document = new PDDocument()) {
             var file = new MockMultipartFile("a", "data.csv", "text/csv", "a,b".getBytes());
-            attachmentService.addAttachment(document, List.of(file));
+            var keep = new MockMultipartFile("k", "keep.txt", "text/plain", "k".getBytes());
+            attachmentService.addAttachment(document, List.of(file, keep));
             attachmentService.deleteAttachment(document, "data.csv");
+
+            COSArray associatedFiles =
+                    document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);
+            assertEquals(1, associatedFiles.size());
+            PDComplexFileSpecification kept =
+                    document.getDocumentCatalog()
+                            .getNames()
+                            .getEmbeddedFiles()
+                            .getNames()
+                            .get("keep.txt");
+            assertSame(kept.getCOSObject(), associatedFiles.getObject(0));
+        }
+    }
+
+    @Test
+    void renameAttachment_OntoExistingNameDropsTheDisplacedAssociatedFile() throws IOException {
+        try (var document = new PDDocument()) {
+            var a = new MockMultipartFile("a", "a.txt", "text/plain", "a".getBytes());
+            var b = new MockMultipartFile("b", "b.txt", "text/plain", "b".getBytes());
+            attachmentService.addAttachment(document, List.of(a, b));
+            attachmentService.renameAttachment(document, "a.txt", "b.txt");
+            attachmentService.deleteAttachment(document, "b.txt");
 
             COSArray associatedFiles =
                     document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.AF);

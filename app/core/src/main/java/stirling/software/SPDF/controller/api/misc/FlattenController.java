@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -85,11 +84,9 @@ public class FlattenController {
                 pdfRenderer.setSubsamplingAllowed(
                         true); // Enable subsampling to reduce memory usage
 
+                // A rasterised copy carries no attachments, as before.
                 try (PDDocument newDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
-                    // A rasterised copy carries no attachments, as before.
-                    newDocument.getDocumentCatalog().getCOSObject().removeItem(COSName.AF);
-                    newDocument.getDocumentCatalog().getCOSObject().removeItem(COSName.NAMES);
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document, false)) {
 
                     ApplicationProperties properties =
                             ApplicationContextProvider.getBean(ApplicationProperties.class);
