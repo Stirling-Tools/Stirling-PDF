@@ -200,6 +200,7 @@ export default function PageNumberPreview({
       </div>
       <div
         ref={containerRef}
+        data-testid="page-number-preview-page"
         className={`${styles.container} ${styles.containerBorder} ${pageThumbnail ? styles.containerWithThumbnail : styles.containerWithoutThumbnail}`}
         style={containerStyle}
       >

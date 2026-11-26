@@ -270,7 +270,7 @@ saved = "Saved"
 text = "Text"
 
 [addPageNumbers]
-customNumberDesc = "e.g., \"Page {n}\" or leave blank for just numbers"
+customNumberDesc = "e.g. Page {n} of {total}"
 fontName = "Font Name"
 fontSize = "Font Size"
 numberPagesDesc = "All pages"
@@ -283,7 +283,7 @@ submit = "Add Page Numbers"
 tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
 variablesButton = "Variables"
-zeroPad = "Zero-pad Width"
+zeroPad = "Zero-pad"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.error]
@@ -294,7 +294,7 @@ title = "Page Number Results"
 
 [addPageNumbers.selectText]
 2 = "Margin"
-4 = "Starting Number"
+4 = "Start at"
 5 = "Pages to Number"
 6 = "Custom Text Format"
 

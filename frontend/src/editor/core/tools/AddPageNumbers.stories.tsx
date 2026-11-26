@@ -24,10 +24,10 @@ type Story = StoryObj<typeof meta>;
 
 /** A field's accessible name also carries its (i)'s text, so match the label as a prefix. */
 const PAGES_TO_NUMBER = /^Pages to Number/;
-const STARTING_NUMBER = /^Starting Number/;
+const STARTING_NUMBER = /^Start at/;
 const MARGIN = /^Margin/;
 const FONT_SIZE = /^Font Size/;
-const ZERO_PAD = /^Zero-pad Width/;
+const ZERO_PAD = /^Zero-pad/;
 const FONT_NAME = /^Font Name/;
 const CUSTOM_TEXT_FORMAT = /^Custom Text Format/;
 

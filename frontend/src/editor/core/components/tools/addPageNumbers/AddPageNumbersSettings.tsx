@@ -94,7 +94,7 @@ const AddPageNumbersSettings = ({
           onSelect={(e) => rememberCaret(e.currentTarget)}
           placeholder={t(
             "addPageNumbers.customNumberDesc",
-            'e.g., "Page {n}" or leave blank for just numbers',
+            "e.g. Page {n} of {total}",
           )}
           disabled={disabled}
         />
@@ -103,55 +103,6 @@ const AddPageNumbersSettings = ({
           disabled={disabled}
         />
       </Box>
-
-      <Group grow align="flex-end" wrap="nowrap">
-        <NumberInput
-          {...infoLabelProps(
-            t("addPageNumbers.selectText.4", "Starting Number"),
-            t(
-              "startingNumberTooltip",
-              "The first number to display. Subsequent pages will increment from this number.",
-            ),
-          )}
-          value={parameters.startingNumber}
-          onChange={(v) =>
-            onParameterChange("startingNumber", typeof v === "number" ? v : 1)
-          }
-          min={1}
-          disabled={disabled}
-        />
-        <NumberInput
-          {...infoLabelProps(
-            t("addPageNumbers.zeroPad", "Zero-pad Width"),
-            t(
-              "addPageNumbers.zeroPadTooltip",
-              "Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.",
-            ),
-          )}
-          value={parameters.zeroPad}
-          onChange={(v) =>
-            onParameterChange("zeroPad", typeof v === "number" ? v : 0)
-          }
-          min={0}
-          disabled={disabled}
-        />
-      </Group>
-
-      <TextInput
-        {...infoLabelProps(
-          t("addPageNumbers.selectText.5", "Pages to Number"),
-          t(
-            "addPageNumbers.pagesToNumberInfo",
-            "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page.",
-          ),
-        )}
-        value={parameters.pagesToNumber || ""}
-        onChange={(e) =>
-          onParameterChange("pagesToNumber", e.currentTarget.value)
-        }
-        placeholder={t("addPageNumbers.numberPagesDesc", "All pages")}
-        disabled={disabled}
-      />
 
       <Select
         label={t("addPageNumbers.fontName", "Font Type")}
@@ -212,6 +163,55 @@ const AddPageNumbersSettings = ({
           disabled={disabled}
         />
       </Group>
+
+      <Group grow align="flex-end" wrap="nowrap">
+        <NumberInput
+          {...infoLabelProps(
+            t("addPageNumbers.selectText.4", "Start at"),
+            t(
+              "startingNumberTooltip",
+              "The first number to display. Subsequent pages will increment from this number.",
+            ),
+          )}
+          value={parameters.startingNumber}
+          onChange={(v) =>
+            onParameterChange("startingNumber", typeof v === "number" ? v : 1)
+          }
+          min={1}
+          disabled={disabled}
+        />
+        <NumberInput
+          {...infoLabelProps(
+            t("addPageNumbers.zeroPad", "Zero-pad"),
+            t(
+              "addPageNumbers.zeroPadTooltip",
+              "Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.",
+            ),
+          )}
+          value={parameters.zeroPad}
+          onChange={(v) =>
+            onParameterChange("zeroPad", typeof v === "number" ? v : 0)
+          }
+          min={0}
+          disabled={disabled}
+        />
+      </Group>
+
+      <TextInput
+        {...infoLabelProps(
+          t("addPageNumbers.selectText.5", "Pages to Number"),
+          t(
+            "addPageNumbers.pagesToNumberInfo",
+            "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page.",
+          ),
+        )}
+        value={parameters.pagesToNumber || ""}
+        onChange={(e) =>
+          onParameterChange("pagesToNumber", e.currentTarget.value)
+        }
+        placeholder={t("addPageNumbers.numberPagesDesc", "All pages")}
+        disabled={disabled}
+      />
     </Stack>
   );
 };

@@ -41,21 +41,25 @@ test.describe("Add Page Numbers tool — config validation", () => {
     const label = page.getByTestId("page-number-preview-label");
     await expect(label).toHaveText("1", { timeout: 5_000 });
 
-    // The label's parent box is the preview page.
-    const preview = label.locator("xpath=ancestor::div[1]");
+    const preview = page.getByTestId("page-number-preview-page");
     await preview.getByRole("button", { name: "9", exact: true }).click();
     await page.mouse.move(0, 0);
 
-    const pageBox = await preview.boundingBox();
-    const labelBox = await label.boundingBox();
-    if (!pageBox || !labelBox) throw new Error("preview not laid out");
-    // Medium margin is 3.5% of the page; allow for font metrics.
-    const rightGap = pageBox.x + pageBox.width - (labelBox.x + labelBox.width);
-    const bottomGap =
-      pageBox.y + pageBox.height - (labelBox.y + labelBox.height);
-    expect(rightGap / pageBox.width).toBeGreaterThan(0.02);
-    expect(rightGap / pageBox.width).toBeLessThan(0.05);
-    expect(bottomGap / pageBox.height).toBeGreaterThan(0.01);
-    expect(bottomGap / pageBox.height).toBeLessThan(0.05);
+    // Both boxes in one read, polled: the panel can still be scrolling or
+    // resizing after the click. Medium margin is 3.5% of the page; the range
+    // allows for font metrics.
+    const placement = () =>
+      label.evaluate((el) => {
+        const pageBox = el
+          .closest('[data-testid="page-number-preview-page"]')!
+          .getBoundingClientRect();
+        const box = el.getBoundingClientRect();
+        const right = (pageBox.right - box.right) / pageBox.width;
+        const bottom = (pageBox.bottom - box.bottom) / pageBox.height;
+        const ok =
+          right > 0.02 && right < 0.05 && bottom > 0.01 && bottom < 0.05;
+        return ok ? "bottom-right margin" : `right ${right}, bottom ${bottom}`;
+      });
+    await expect.poll(placement).toBe("bottom-right margin");
   });
 });
