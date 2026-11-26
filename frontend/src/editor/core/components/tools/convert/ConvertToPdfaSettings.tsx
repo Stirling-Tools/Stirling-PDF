@@ -95,7 +95,7 @@ const ConvertToPdfaSettings = ({
           t("convert.outputFormat", "Output Format"),
           t(
             "convert.pdfaNote",
-            "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files, the u levels also guarantee searchable Unicode text, PDF/A-4 is based on PDF 2.0.",
+            "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files, the u levels also require Unicode mappings for existing text (they do not OCR scans), PDF/A-4 is based on PDF 2.0.",
           ),
         )}
         value={parameters.pdfaOptions.outputFormat}
