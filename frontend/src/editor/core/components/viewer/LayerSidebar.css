@@ -15,6 +15,11 @@
   gap: 0.125rem;
 }
 
+.layer-list[aria-busy="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 /* Layer Items */
 .layer-item-wrapper {
   display: flex;
@@ -83,11 +88,9 @@
 .layer-item--hidden .layer-item__label {
   color: var(--c-text-subtle);
   text-decoration: line-through;
-  text-decoration-color: color-mix(
-    in srgb,
-    var(--c-text-subtle) 60%,
-    transparent
-  );
+  text-decoration-thickness: 1px;
+  text-decoration-color: currentColor;
+  opacity: 0.8;
 }
 
 /* Children Container */
