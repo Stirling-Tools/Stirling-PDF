@@ -2810,7 +2810,7 @@ watermark = "Logo behind signature"
 
 [certSign.appearance.options]
 signerName = "Signer name"
-signerNameInfo = "Shown on the signature instead of the name on the certificate. The certificate itself is unchanged."
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
 signerNamePlaceholder = "Uses the name on the certificate"
 
 [certSign.appearance.placement]

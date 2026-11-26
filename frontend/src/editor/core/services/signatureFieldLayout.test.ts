@@ -78,6 +78,39 @@ describe("readSignatureLayout", () => {
     ]);
   });
 
+  test("treats a field as signed when its value sits higher in the field tree", async () => {
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([612, 792]);
+    const widget = doc.context.obj({
+      Type: "Annot",
+      Subtype: "Widget",
+      Rect: [100, 100, 260, 160],
+      F: 4,
+      P: page.ref,
+    });
+    const widgetRef = doc.context.register(widget);
+    page.node.addAnnot(widgetRef);
+    const outer = doc.context.obj({
+      FT: "Sig",
+      T: PDFString.of("Board"),
+      V: doc.context.register(doc.context.obj({ Type: "Sig" })),
+    });
+    const outerRef = doc.context.register(outer);
+    const inner = doc.context.obj({
+      T: PDFString.of("Chair"),
+      Parent: outerRef,
+      Kids: [widgetRef],
+    });
+    const innerRef = doc.context.register(inner);
+    outer.set(PDFName.of("Kids"), doc.context.obj([innerRef]));
+    widget.set(PDFName.of("Parent"), innerRef);
+    doc.getForm().acroForm.addField(outerRef);
+
+    const layout = await readSignatureLayout(await doc.save());
+
+    expect(layout.emptyFields).toEqual([]);
+  });
+
   test("lists fields in reading order whatever order the form stores them in", async () => {
     const doc = await PDFDocument.create();
     const first = doc.addPage([612, 792]);

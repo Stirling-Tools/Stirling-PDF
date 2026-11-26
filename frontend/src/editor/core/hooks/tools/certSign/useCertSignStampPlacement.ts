@@ -121,10 +121,10 @@ function useStampRenderer(
       ? signerOf(deviceCertificate)
       : null;
   const certificate = server ?? device;
-  const signer =
-    parameters.name.trim() ||
+  const holder =
     certificate?.name ||
     t("certSign.appearance.placement.yourName", "Your name");
+  const signer = parameters.name.trim() || holder;
   const subject = parameters.showCertificateDetails
     ? (certificate?.subject ??
       t(
@@ -139,7 +139,7 @@ function useStampRenderer(
     const content = {
       name: signer,
       details: stampDetails(stampLabels(t), {
-        name: signer,
+        name: holder,
         date: new Date(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         reason,
@@ -155,6 +155,7 @@ function useStampRenderer(
   }, [
     t,
     signer,
+    holder,
     subject,
     reason,
     location,
@@ -305,6 +306,12 @@ export function useCertSignStampPlacement({
       setPlaced(null);
     }
   }, [active, placingActive]);
+
+  useEffect(() => {
+    if (active && !placed && parameters.stampBox) {
+      onParameterChange("stampBox", undefined);
+    }
+  }, [active, placed, parameters.stampBox, onParameterChange]);
 
   const stampPage = placed?.pageIndex;
 

@@ -55,11 +55,11 @@ export async function readSignatureLayout(
   for (const [field, fieldRef] of doc.catalog.getAcroForm()?.getAllFields() ??
     []) {
     if (!(field instanceof PDFAcroSignature)) continue;
-    if (field.dict.has(PDFName.of("V"))) continue;
+    if (field.getInheritableAttribute(PDFName.of("V"))) continue;
 
     const widgetRef = firstWidgetRef(field.dict, fieldRef);
     const widgetDict = doc.context.lookupMaybe(widgetRef, PDFDict);
-    if (!widgetDict) continue;
+    if (!widgetDict || widgetDict.has(PDFName.of("V"))) continue;
     const rect = normalised(
       PDFWidgetAnnotation.fromDict(widgetDict).getRectangle(),
     );

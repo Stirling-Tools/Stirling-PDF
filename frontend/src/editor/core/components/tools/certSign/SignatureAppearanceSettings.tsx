@@ -186,7 +186,7 @@ const SignatureDetails = ({
       label: t("certSign.appearance.options.signerName", "Signer name"),
       info: t(
         "certSign.appearance.options.signerNameInfo",
-        "Shown on the signature instead of the name on the certificate. The certificate itself is unchanged.",
+        'Shown as the large name on the signature. "Digitally signed by" always names the certificate\'s holder.',
       ),
       placeholder: t(
         "certSign.appearance.options.signerNamePlaceholder",

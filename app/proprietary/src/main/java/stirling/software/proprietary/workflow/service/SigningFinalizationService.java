@@ -820,7 +820,7 @@ public class SigningFinalizationService {
                         password != null ? password.toCharArray() : new char[0],
                         showSignature != null ? showSignature : false,
                         pageNumber != null ? pageNumber - 1 : null,
-                        participant.getName() != null ? participant.getName() : "Shared Signing",
+                        participant.getName(),
                         location != null ? location : "",
                         reason != null ? reason : "Document Signing",
                         showLogo != null ? showLogo : false);

@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,6 +28,7 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
@@ -38,6 +40,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
@@ -352,6 +355,29 @@ class CertSignStampPlacementTest {
     }
 
     @Test
+    void signedByNamesTheCertificateHolderWhileATypedNameFillsTheGraphic() throws Exception {
+        SignPDFWithCertRequest request = request(blankLetter(0, null));
+        request.setName("Somebody Else");
+        String holder = certificateHolder();
+
+        String text = stampText(sign(request));
+
+        assertTrue(text.contains("Digitally signed by " + holder), text);
+        assertTrue(text.contains("Somebody Else"), text);
+        assertFalse(text.contains("signed by Somebody"), text);
+    }
+
+    @Test
+    void withoutATypedNameTheGraphicShowsTheCertificateHolder() throws Exception {
+        String holder = certificateHolder();
+
+        String text = stampText(sign(request(blankLetter(0, null))));
+
+        assertTrue(text.contains("Digitally signed by " + holder), text);
+        assertTrue(text.startsWith(holder), text);
+    }
+
+    @Test
     void eachSentenceOfTheReasonStartsANewLine() {
         assertEquals(
                 List.of("Reviewed.", "Approved for release, e.g. version 2.", "Ready!", "Go?"),
@@ -389,6 +415,37 @@ class CertSignStampPlacementTest {
             } else if (xObject instanceof PDFormXObject form) {
                 collectImages(form.getResources(), images);
             }
+        }
+    }
+
+    private String certificateHolder() throws Exception {
+        KeyStore keystore = KeyStore.getInstance("PKCS12");
+        keystore.load(new ByteArrayInputStream(pfxBytes), "password".toCharArray());
+        X509Certificate cert =
+                (X509Certificate) keystore.getCertificate(keystore.aliases().nextElement());
+        String subject = cert.getSubjectX500Principal().getName();
+        for (String part : subject.split(",")) {
+            if (part.startsWith("CN=")) {
+                return part.substring(3);
+            }
+        }
+        return subject;
+    }
+
+    private static String stampText(byte[] signedPdf) throws Exception {
+        try (PDDocument doc = Loader.loadPDF(signedPdf)) {
+            PDAnnotationWidget widget = doc.getSignatureFields().getFirst().getWidgets().getFirst();
+            PDFormXObject appearance = (PDFormXObject) widget.getNormalAppearanceStream();
+            PDPage sheet = new PDPage(appearance.getBBox());
+            doc.addPage(sheet);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, sheet)) {
+                cs.drawForm(appearance);
+            }
+            PDFTextStripper stripper = new PDFTextStripper();
+            int last = doc.getNumberOfPages();
+            stripper.setStartPage(last);
+            stripper.setEndPage(last);
+            return stripper.getText(doc).replaceAll("\\s+", " ").trim();
         }
     }
 

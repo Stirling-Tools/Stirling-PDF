@@ -54,10 +54,11 @@ const CertSign = (props: BaseToolProps) => {
   useEffect(() => {
     if (placedFor.current === signingFileId) return;
     placedFor.current = signingFileId;
+    if (base.hasResults) return;
     const { fieldName, stampBox } = base.params.parameters;
     if (fieldName) base.params.updateParameter("fieldName", undefined);
     if (stampBox) base.params.updateParameter("stampBox", undefined);
-  }, [signingFileId, base.params]);
+  }, [signingFileId, base.hasResults, base.params]);
 
   const [deviceCertificate, setDeviceCertificate] =
     useState<HardwareCertificateInfo | null>(null);

@@ -252,10 +252,7 @@ public class CertSignController {
                     signatureOptions.setPage(placement.pageIndex());
                 }
                 doc.addSignature(signature, instance, signatureOptions);
-                makeSignatureWidgetAccessible(
-                        doc,
-                        signature,
-                        StringUtils.isNotBlank(name) ? name.strip() : instance.signerName());
+                makeSignatureWidgetAccessible(doc, signature, instance.signerName());
                 doc.saveIncremental(output);
             }
         }
@@ -896,7 +893,7 @@ public class CertSignController {
                                     image == null
                                             ? 0
                                             : (float) image.getWidth() / image.getHeight(),
-                                    detailLines(signature, name),
+                                    detailLines(signature, signerName()),
                                     line -> widthAtSizeOne(text, line));
                     if (image != null) {
                         StampLayout.Rect area = layout.logo();
