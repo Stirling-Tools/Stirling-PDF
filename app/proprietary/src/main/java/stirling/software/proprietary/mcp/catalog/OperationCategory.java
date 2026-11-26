@@ -6,7 +6,7 @@ public enum OperationCategory {
     PAGES("/api/v1/general/", "stirling_pages"),
     MISC("/api/v1/misc/", "stirling_misc"),
     SECURITY("/api/v1/security/", "stirling_security"),
-    AI(null, "stirling_ai");
+    AI("/api/v1/ai/tools/", "stirling_ai");
 
     private final String urlPrefix;
     private final String toolName;

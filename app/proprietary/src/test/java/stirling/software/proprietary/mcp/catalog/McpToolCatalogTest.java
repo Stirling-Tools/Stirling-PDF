@@ -6,22 +6,26 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 
-/** Catalog tests: DELETE/GET exclusion and disabled-PDF-op AI fall-through. */
+/** Catalog tests: DELETE/GET exclusion, admin filters and AI feature switches. */
 class McpToolCatalogTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -41,60 +45,22 @@ class McpToolCatalogTest {
     }
 
     @Test
-    void findByOperationId_disabledPdfOp_doesNotFallThroughToAi() throws Exception {
-        ApplicationContext ctx = mock(ApplicationContext.class);
-        when(ctx.getBeansOfType(RequestMappingHandlerMapping.class)).thenReturn(Map.of());
-        EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
-        // The PDF op's endpoint is disabled.
-        when(endpoints.isEndpointEnabledForUri(anyString())).thenReturn(false);
+    void aiTools_followTheAiEngineFeatureSwitches() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
+        seed(catalog, "pdfOps", "math-auditor-agent", aiOp("math-auditor-agent"));
+        seed(catalog, "pdfOps", "unknown-agent", aiOp("unknown-agent"));
 
-        McpToolCatalog catalog =
-                new McpToolCatalog(ctx, endpoints, new ApplicationProperties(), mapper);
+        props.getAiEngine().setEnabled(false);
+        assertTrue(catalog.findByOperationId("math-auditor-agent").isEmpty());
 
-        ObjectNode schema = mapper.createObjectNode();
-        OperationMeta pdf =
-                new OperationMeta(
-                        "collide",
-                        OperationCategory.MISC,
-                        "pdf op",
-                        schema,
-                        "mcp.tools.write",
-                        OperationMeta.Target.JAVA_ENDPOINT,
-                        "/api/v1/misc/collide",
-                        null);
-        OperationMeta ai =
-                new OperationMeta(
-                        "collide",
-                        OperationCategory.AI,
-                        "ai op",
-                        schema,
-                        "mcp.tools.write",
-                        OperationMeta.Target.ENGINE_CAPABILITY,
-                        "collide",
-                        null);
-        seed(catalog, "pdfOps", "collide", pdf);
-        seed(catalog, "aiOps", "collide", ai);
+        props.getAiEngine().setEnabled(true);
+        assertEquals(
+                List.of("math-auditor-agent"),
+                catalog.enabledOps(OperationCategory.AI).stream().map(OperationMeta::id).toList());
 
-        // A disabled PDF op must resolve to empty, not a colliding AI capability of the same id.
-        assertTrue(
-                catalog.findByOperationId("collide").isEmpty(),
-                "disabled PDF op must not resolve to a colliding AI capability");
-
-        // A genuine AI-only id still resolves.
-        seed(
-                catalog,
-                "aiOps",
-                "ai-only",
-                new OperationMeta(
-                        "ai-only",
-                        OperationCategory.AI,
-                        "ai op",
-                        schema,
-                        "mcp.tools.write",
-                        OperationMeta.Target.ENGINE_CAPABILITY,
-                        "ai-only",
-                        null));
-        assertEquals("ai-only", catalog.findByOperationId("ai-only").orElseThrow().id());
+        props.getAiEngine().getFeatures().setMathAuditor(false);
+        assertTrue(catalog.findByOperationId("math-auditor-agent").isEmpty());
     }
 
     @Test
@@ -141,6 +107,37 @@ class McpToolCatalogTest {
     }
 
     @Test
+    void urlToPdfStaysHiddenEvenWhenAnAdminAllowsIt() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getMcp().setAllowedOperations(List.of("url-to-pdf", "compress-pdf"));
+        props.getMcp().setBlockedOperations(List.of());
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
+        seed(catalog, "pdfOps", "url-to-pdf", miscOp("url-to-pdf"));
+        seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
+
+        assertTrue(catalog.findByOperationId("url-to-pdf").isEmpty());
+        assertTrue(catalog.findByEndpointPath("/api/v1/misc/url-to-pdf").isEmpty());
+        assertEquals(List.of("compress-pdf"), idsOf(catalog));
+    }
+
+    @Test
+    void refusedOperationAtNamesBlockedStepsOnly() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getMcp().setBlockedOperations(List.of("ocr-pdf"));
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
+        seed(catalog, "pdfOps", "url-to-pdf", miscOp("url-to-pdf"));
+        seed(catalog, "pdfOps", "ocr-pdf", miscOp("ocr-pdf"));
+        seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
+
+        assertEquals(
+                "url-to-pdf", catalog.refusedOperationAt("/api/v1/misc/url-to-pdf").orElseThrow());
+        assertEquals("ocr-pdf", catalog.refusedOperationAt("/api/v1/misc/ocr-pdf").orElseThrow());
+        assertTrue(catalog.refusedOperationAt("/api/v1/misc/compress-pdf").isEmpty());
+        assertTrue(catalog.refusedOperationAt("/api/v1/not/an/operation").isEmpty());
+        assertTrue(catalog.refusedOperationAt(null).isEmpty());
+    }
+
+    @Test
     void emptyAllowAndBlockLists_exposeAllEnabledOps() throws Exception {
         McpToolCatalog catalog = catalogWithEndpointsEnabled(new ApplicationProperties());
         seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
@@ -165,6 +162,8 @@ class McpToolCatalogTest {
         assertNull(McpToolCatalog.extractOpId("/api/v1/convert//pdf", OperationCategory.CONVERT));
 
         assertNull(McpToolCatalog.extractOpId("/api/v1/convert/pdf/", OperationCategory.CONVERT));
+        assertNull(
+                McpToolCatalog.extractOpId("/api/v1/convert/pdf/word/", OperationCategory.CONVERT));
     }
 
     @Test
@@ -196,6 +195,18 @@ class McpToolCatalogTest {
                 null);
     }
 
+    private OperationMeta aiOp(String id) {
+        return new OperationMeta(
+                id,
+                OperationCategory.AI,
+                id,
+                mapper.createObjectNode(),
+                "mcp.tools.write",
+                OperationMeta.Target.JAVA_ENDPOINT,
+                "/api/v1/ai/tools/" + id,
+                null);
+    }
+
     private static List<String> idsOf(McpToolCatalog catalog) {
         return catalog.enabledOps(OperationCategory.MISC).stream().map(OperationMeta::id).toList();
     }
@@ -206,5 +217,64 @@ class McpToolCatalogTest {
         Field f = McpToolCatalog.class.getDeclaredField(field);
         f.setAccessible(true);
         ((Map<String, OperationMeta>) f.get(catalog)).put(id, meta);
+    }
+
+    @Test
+    void catalogIncludesBodyAndHandlerParametersWithAllRequiredNames() throws Exception {
+        ApplicationContext ctx = mock(ApplicationContext.class);
+        RequestMappingHandlerMapping mapping = mock(RequestMappingHandlerMapping.class);
+        HandlerMethod handler =
+                new HandlerMethod(
+                        new MixedHandler(),
+                        MixedHandler.class.getDeclaredMethod(
+                                "convert",
+                                MixedRequest.class,
+                                String.class,
+                                String.class,
+                                boolean.class));
+        RequestMappingInfo route =
+                RequestMappingInfo.paths("/api/v1/misc/mixed").methods(RequestMethod.POST).build();
+        when(mapping.getHandlerMethods()).thenReturn(Map.of(route, handler));
+        when(ctx.getBeansOfType(RequestMappingHandlerMapping.class))
+                .thenReturn(Map.of("api", mapping));
+        EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
+        when(endpoints.isEndpointEnabledForUri(anyString())).thenReturn(true);
+        McpToolCatalog catalog =
+                new McpToolCatalog(ctx, endpoints, new ApplicationProperties(), mapper);
+        catalog.discover();
+
+        var schema = catalog.findByOperationId("mixed").orElseThrow().paramSchema();
+        assertTrue(schema.path("properties").has("title"));
+        assertEquals(
+                "Body title", schema.path("properties").path("title").path("description").asText());
+        assertEquals("string", schema.path("properties").path("locale").path("type").asText());
+        assertEquals(
+                "boolean",
+                schema.path("properties").path("useStirlingOfficeConvert").path("type").asText());
+        assertFalse(
+                schema.path("properties")
+                        .path("useStirlingOfficeConvert")
+                        .path("default")
+                        .asBoolean(true));
+        Set<String> required = new HashSet<>();
+        schema.path("required").forEach(value -> required.add(value.asText()));
+        assertEquals(Set.of("title", "locale"), required);
+        assertEquals(required.size(), schema.path("required").size());
+        assertFalse(schema.path("additionalProperties").asBoolean());
+    }
+
+    static class MixedRequest {
+        @io.swagger.v3.oas.annotations.media.Schema(description = "Body title")
+        @jakarta.validation.constraints.NotBlank
+        String title;
+    }
+
+    static class MixedHandler {
+        public void convert(
+                @ModelAttribute MixedRequest body,
+                @RequestParam(name = "title") String title,
+                @RequestParam(name = "locale") String locale,
+                @RequestParam(name = "useStirlingOfficeConvert", defaultValue = "false")
+                        boolean office) {}
     }
 }
