@@ -60,8 +60,10 @@ export const archivePdfOperationConfig = defineSingleFileTool({
   buildFormData: buildArchivePdfFormData,
   toApiParams: archivePdfToApiParams,
   fromApiParams: archivePdfFromApiParams,
-  // PDF/X shares this endpoint but stays with Convert.
-  claimsStoredStep: (apiParams) => apiParams.outputFormat !== "pdfx",
+  // PDF/X shares this endpoint but stays with Convert. Convert saves "pdfx-3",
+  // and the backend reads any "pdfx" prefix as PDF/X.
+  claimsStoredStep: (apiParams) =>
+    !String(apiParams.outputFormat).toLowerCase().startsWith("pdfx"),
   operationType: "archivePdf",
   endpoint: ENDPOINT,
   defaultParameters,

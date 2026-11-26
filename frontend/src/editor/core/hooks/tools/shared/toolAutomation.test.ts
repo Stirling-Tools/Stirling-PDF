@@ -568,7 +568,7 @@ describe("archive PDF (shares the PDF/A endpoint with convert)", () => {
         parameters: {
           fromExtension: "pdf",
           toExtension: "pdfx",
-          outputFormat: "pdfx",
+          outputFormat: "pdfx-3",
         },
       },
       sharedRegistry,
