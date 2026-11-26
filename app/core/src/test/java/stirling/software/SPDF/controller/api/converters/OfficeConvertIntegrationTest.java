@@ -65,6 +65,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.TempFileManager;
@@ -137,7 +138,9 @@ class OfficeConvertIntegrationTest {
     void markdownConvertsInBothDirections(boolean packaged) throws Exception {
         var toMarkdown =
                 new ConvertPDFToMarkdown(
-                        tempFiles, new stirling.software.common.pdf.BasicPdfMarkdownExtractor());
+                        tempFiles,
+                        new stirling.software.common.pdf.BasicPdfMarkdownExtractor(),
+                        PdfWorkerPool.inProcess());
         PDFFile pdf = new PDFFile();
         pdf.setFileInput(uploadPdf());
         byte[] markdown = toMarkdown.processPdfToMarkdown(pdf).getBody();

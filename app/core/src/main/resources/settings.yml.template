@@ -264,6 +264,15 @@ system:
     cleanupIntervalMinutes: 30 # How often to run cleanup (in minutes)
     startupCleanup: true # Clean up old temp files on startup
     cleanupSystemTemp: false # Whether to clean broader system temp directory
+  pdfWorkers:
+    enabled: auto # auto (on for servers, off for desktop), true or false. Runs merge, auto-redact and PDF to Markdown in worker processes, so a PDFium crash in those jobs cannot take down the server
+    count: 2 # Number of worker processes; each starts only when the others are busy
+    instancesPerWorker: 0 # PDFium engines per worker process, each running one job at a time; 0 = CPU cores minus one, at most 4
+    maxHeap: auto # Java heap cap per worker; auto = 384m plus 256m per extra instance (PDFium memory is native and comes on top)
+    maxJobsPerWorker: 500 # Restart a worker after this many jobs
+    idleTimeoutSeconds: 300 # Stop a worker after it has been idle this long
+    jobTimeoutMinutes: 10 # Kill a worker whose job runs longer than this
+    inProcessFallback: false # true runs PDFium jobs in the server when no worker can start, at the risk of a crash taking the server down
   databaseBackup:
     cron: "0 0 0 * * ?" # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 

@@ -1368,6 +1368,7 @@ public class ApplicationProperties {
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
+        private PdfWorkers pdfWorkers = new PdfWorkers();
         private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
         private String backendUrl; // Backend base URL for SAML/OAuth/API callbacks (e.g.
@@ -1546,6 +1547,20 @@ public class ApplicationProperties {
         public static class Operations {
             private String ocrmypdf;
         }
+    }
+
+    @Data
+    public static class PdfWorkers {
+        // auto = on for servers, off for the desktop app; false runs PDFium in this JVM only.
+        private String enabled = "auto";
+        private int count = 2; // worker processes, started on demand
+        private int instancesPerWorker = 0; // 0 = CPU cores minus one, at most 4
+        private String maxHeap = "auto"; // auto = 384 MB plus 256 MB per extra instance
+        private int maxJobsPerWorker = 500;
+        private int idleTimeoutSeconds = 300;
+        private int jobTimeoutMinutes = 10;
+        // false fails jobs when no worker can start, so PDFium never runs in the server
+        private boolean inProcessFallback = false;
     }
 
     @Data
