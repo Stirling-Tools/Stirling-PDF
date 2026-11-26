@@ -285,6 +285,53 @@ test.describe("PDF accessibility review", () => {
       .toBe("a is the rate");
   });
 
+  test("sets the language of a selected block from the card", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    const card = page.getByTestId("pdf-editor-quick-tag");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+
+    const [first, second] = await page.evaluate(() =>
+      (window as unknown as EditorWindow).__editor_store.state.pages[0].runs
+        .filter((run) => run.text.trim().length >= 8)
+        .slice(0, 2)
+        .map((run) => run.id),
+    );
+    const run = page.getByTestId(`pdf-editor-run-${first}`);
+    const picker = card
+      .getByTestId("pdf-editor-quick-tag-block-language")
+      .getByRole("textbox");
+    await expect(async () => {
+      await run.click({ timeout: 2_000 });
+      await expect(picker).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    await expect(
+      card.getByTestId("pdf-editor-quick-tag-selected-language"),
+    ).toHaveCount(0);
+
+    await expect(async () => {
+      await run.click({ timeout: 2_000 });
+      await picker.click({ timeout: 2_000 });
+      await picker.fill("fr-FR");
+      await page
+        .getByRole("option", { name: /\(fr-FR\)$/ })
+        .click({ timeout: 2_000 });
+      await expect(picker).toHaveValue(/\(fr-FR\)$/, { timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+    // Another block, then back: the language is the block's own, not the picker's.
+    await expect(async () => {
+      await page
+        .getByTestId(`pdf-editor-run-${second}`)
+        .click({ timeout: 2_000 });
+      await expect(picker).not.toHaveValue(/\(fr-FR\)$/, { timeout: 2_000 });
+      await run.click({ timeout: 2_000 });
+      await expect(picker).toHaveValue(/\(fr-FR\)$/, { timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+  });
+
   test("sets the language of a few words inside a block from the card", async ({
     page,
   }) => {

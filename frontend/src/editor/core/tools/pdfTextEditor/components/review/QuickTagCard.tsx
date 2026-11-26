@@ -28,6 +28,7 @@ import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccess
 import type {
   InnerTagsControl,
   TextDescriptionControl,
+  TextLanguageControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
@@ -288,7 +289,10 @@ export function QuickTagCard({ store, controller, review }: Props) {
               </button>
             ))}
           </div>
-          <SelectedTextLanguageQuestion inner={controller.textInner} />
+          <SelectedTextLanguageQuestion
+            inner={controller.textInner}
+            block={controller.textLanguage}
+          />
         </>
       )}
 
@@ -378,39 +382,65 @@ function TextDescriptionQuestion({
 }
 
 /**
- * The language of the words selected inside the text, for a phrase in another
- * language than its block: the span they already are, else a new one. Shown
- * while some are selected and can take one.
+ * The language of the selected text: of the words selected inside a block, as
+ * the span they already are or a new one, else of the selected blocks
+ * themselves. Shown while either can take one.
  */
-function SelectedTextLanguageQuestion({ inner }: { inner: InnerTagsControl }) {
+function SelectedTextLanguageQuestion({
+  inner,
+  block,
+}: {
+  inner: InnerTagsControl;
+  block: TextLanguageControl | null;
+}) {
   const { t } = useTranslation();
   const active = inner.active;
   const span = active === null ? null : inner.tags[active];
   const onPick = inner.onLanguageSelection;
-  if (!span?.languageEditable && !onPick) return null;
+  const words = span?.languageEditable || onPick ? span : undefined;
+  if (words === undefined && !block) return null;
   const label = t(
     "pdfTextEditor.inspector.language.selectedText",
     "Selected text language",
   );
+  const placeholder = t(
+    "pdfTextEditor.inspector.language.placeholder",
+    "Select language",
+  );
   return (
     <>
       <p className="review-card__label">{label}</p>
-      <LanguagePicker
-        key={span?.key ?? "new"}
-        own={span?.language.own ?? null}
-        inherited={span?.language.inherited ?? null}
-        placeholder={t(
-          "pdfTextEditor.inspector.language.placeholder",
-          "Select language",
-        )}
-        onChange={(lang) => {
-          if (span?.languageEditable && active !== null) {
-            inner.onSetLanguage(active, lang);
-          } else if (lang) onPick?.(lang);
-        }}
-        label={label}
-        testId="pdf-editor-quick-tag-selected-language"
-      />
+      {words !== undefined ? (
+        <LanguagePicker
+          key={words?.key ?? "new"}
+          own={words?.language.own ?? null}
+          inherited={words?.language.inherited ?? null}
+          placeholder={placeholder}
+          onChange={(lang) => {
+            if (words?.languageEditable && active !== null) {
+              inner.onSetLanguage(active, lang);
+            } else if (lang) onPick?.(lang);
+          }}
+          label={label}
+          testId="pdf-editor-quick-tag-selected-language"
+        />
+      ) : (
+        block && (
+          <LanguagePicker
+            key="block"
+            own={block.language?.own ?? null}
+            inherited={block.language?.inherited ?? null}
+            placeholder={
+              block.language
+                ? placeholder
+                : t("pdfTextEditor.inspector.language.mixed", "Mixed")
+            }
+            onChange={block.onSet}
+            label={label}
+            testId="pdf-editor-quick-tag-block-language"
+          />
+        )
+      )}
     </>
   );
 }
