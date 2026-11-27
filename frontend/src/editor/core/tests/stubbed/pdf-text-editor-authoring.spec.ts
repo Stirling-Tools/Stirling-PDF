@@ -19,13 +19,6 @@ const FORM_PDF = path.join(
   "../test-fixtures/form-fields-sample.pdf",
 );
 
-async function openEditor(page: Page, file: string) {
-  await openInTextEditor(page, file);
-  await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-    timeout: 60_000,
-  });
-}
-
 interface AuthoringRun {
   id: string;
   text: string;
@@ -110,7 +103,7 @@ test.describe("PDF text editor: writing a new document", () => {
   test("a new text box takes typing straight over its placeholder", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const box = await addTextAt(page, 120, 300);
 
     await expect(box).toBeFocused();
@@ -121,7 +114,7 @@ test.describe("PDF text editor: writing a new document", () => {
   test("dragging out a text box sets its width, and typing wraps inside it", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const fresh = page.locator('[data-testid^="pdf-editor-run-p0-new-"]');
     await page.getByTestId("pdf-editor-add-text").click();
     const area = (await page.getByTestId("pdf-editor-page-0").boundingBox())!;
@@ -152,7 +145,7 @@ test.describe("PDF text editor: writing a new document", () => {
   test("clicking a placeholder selects all of it, and typed text is edited in place", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const box = await addTextAt(page, 120, 300);
     await page
       .getByTestId("pdf-editor-page-0")
@@ -177,7 +170,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("centring a title keeps it centred on the page as it is retyped, and undo puts it back", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const box = await addTextAt(page, 120, 300);
     await page.keyboard.type("Report title");
     await blurPage(page);
@@ -213,7 +206,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("a centred title can still be dragged to a new place", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const box = await addTextAt(page, 120, 300);
     await page.keyboard.type("Moving title");
     await blurPage(page);
@@ -250,7 +243,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("Ctrl+U and Ctrl+Shift+E format the box being typed in", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const box = await addTextAt(page, 120, 300);
     await page.keyboard.type("Shortcut title");
     await page.keyboard.press("ControlOrMeta+u");
@@ -270,7 +263,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("Enter continues a bulleted list, and Enter on an empty bullet ends it", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await addTextAt(page, 120, 250);
     await page.keyboard.type("Apples");
     await page.keyboard.press("ControlOrMeta+Shift+Digit8");
@@ -301,7 +294,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("Enter after ending a list adds a plain blank line, not a bullet", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await addTextAt(page, 120, 250);
     await page.keyboard.type("Apples");
     await page.keyboard.press("ControlOrMeta+Shift+Digit8");
@@ -329,7 +322,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("Enter inside a numbered list renumbers the items after it", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await addTextAt(page, 120, 250);
     await page.keyboard.type("Apples");
     await page.keyboard.press("ControlOrMeta+Shift+Digit7");
@@ -362,7 +355,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("Enter after the wrapped line of a bulleted item starts the next bullet", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
     await paragraphChoice(page, "pdf-editor-list-bullet");
@@ -398,7 +391,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("Enter inside a bulleted item makes the rest of it the next bullet", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await addTextAt(page, 120, 250);
     await page.keyboard.type("Apples");
     await page.keyboard.press("ControlOrMeta+Shift+Digit8");
@@ -434,7 +427,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("underline draws a rule under every line of a paragraph and toggles off", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
 
@@ -456,7 +449,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("lists mark the paragraph with a bullet or a number, and the same choice again removes it", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
 
@@ -479,7 +472,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("double line spacing sets the paragraph's baselines two single lines apart", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
 
@@ -495,7 +488,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
   test("a text style sets size and weight together, in one undo step", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
 
@@ -531,7 +524,7 @@ test.describe("PDF text editor: new text on any page", () => {
   test("a title too wide for a small page wraps inside it", async ({
     page,
   }) => {
-    await openEditor(page, SMALL_PAGE_PDF);
+    await openInTextEditor(page, SMALL_PAGE_PDF);
     const box = await addTextAt(page, 40, 40);
     await page.keyboard.type("A heading long enough to need two lines");
     await clickPageCorner(page);
@@ -554,7 +547,7 @@ test.describe("PDF text editor: new text on any page", () => {
   test("text can be added over a picture, such as a scanned page", async ({
     page,
   }) => {
-    await openEditor(page, SCANNED_PDF);
+    await openInTextEditor(page, SCANNED_PDF);
     await addTextAt(page, 60, 60);
     await page.keyboard.type("Approved");
     await clickPageCorner(page);
@@ -604,7 +597,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("the viewer's fill-and-save bar stays out of the way while the editor is open", async ({
     page,
   }) => {
-    await openEditor(page, FORM_PDF);
+    await openInTextEditor(page, FORM_PDF);
     await expect(page.locator("[data-run-id]").first()).toBeVisible();
     await pageAction(page, "pdf-editor-page-add");
     await expect
@@ -618,7 +611,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("pages can be added, duplicated and deleted from the editor", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await expect.poll(async () => (await docShape(page))?.pages).toBe(1);
 
     await pageAction(page, "pdf-editor-page-add");
@@ -643,7 +636,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("page setup opens on the size and orientation of the page in view", async ({
     page,
   }) => {
-    await openEditor(page, MANY_PAGES_PDF);
+    await openInTextEditor(page, MANY_PAGES_PDF);
     await pageAction(page, "pdf-editor-page-setup");
     const dialog = page.getByTestId("pdf-editor-page-setup-panel");
     await expect(dialog.locator('input[value="portrait"]')).toBeChecked();
@@ -662,7 +655,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("a right-click on bare page changes that page, not the one in view", async ({
     page,
   }) => {
-    await openEditor(page, MANY_PAGES_PDF);
+    await openInTextEditor(page, MANY_PAGES_PDF);
     const before = (await docShape(page))!.pages;
     const firstPage = page.getByTestId("pdf-editor-page-0");
     await firstPage.click({ button: "right", position: { x: 4, y: 4 } });
@@ -688,7 +681,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("Undo takes back a page change after the edits made since", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await pageAction(page, "pdf-editor-page-add");
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
@@ -712,7 +705,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   });
 
   test("Redo makes an undone page change again", async ({ page }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await pageAction(page, "pdf-editor-page-add");
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
@@ -731,7 +724,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("underline and alignment stay on a paragraph through a page change", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
     await page.getByTestId("pdf-editor-underline").click();
@@ -781,7 +774,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("Undo puts the page back to the size it was before page setup", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     const before = (await pageSizes(page))[0];
     await pageAction(page, "pdf-editor-page-setup");
     const dialog = page.getByTestId("pdf-editor-page-setup-panel");
@@ -801,7 +794,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   });
 
   test("page setup turns every page to landscape Letter", async ({ page }) => {
-    await openEditor(page, MANY_PAGES_PDF);
+    await openInTextEditor(page, MANY_PAGES_PDF);
     const count = (await pageSizes(page)).length;
     expect(count).toBeGreaterThan(1);
     await pageAction(page, "pdf-editor-page-setup");
@@ -818,7 +811,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   test("an unsigned signature field does not stop later page changes", async ({
     page,
   }) => {
-    await openEditor(page, EMPTY_SIGNATURE_PDF);
+    await openInTextEditor(page, EMPTY_SIGNATURE_PDF);
     const pages = (await docShape(page))!.pages;
     await pageAction(page, "pdf-editor-page-add");
     await expect
@@ -838,7 +831,7 @@ test.describe("PDF text editor: text that reaches the bottom of the page", () =>
   test("flows onto the blank page after it, and typing carries on there", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await pageAction(page, "pdf-editor-page-add");
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
@@ -865,7 +858,7 @@ test.describe("PDF text editor: text that reaches the bottom of the page", () =>
   test("typing carries straight on once a line has flowed onto a new page", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await page.evaluate(() => {
       (
         window as unknown as { __editor_store: { doc: { __opened?: boolean } } }
@@ -900,7 +893,7 @@ test.describe("PDF text editor: text that reaches the bottom of the page", () =>
   test("adds a page for the text as soon as it runs off the page", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await addTextAt(page, 60, 380);
     await page.keyboard.type("Line one");
     await page.keyboard.press("Enter");
@@ -919,7 +912,7 @@ test.describe("PDF text editor: text that reaches the bottom of the page", () =>
   test("a title that grows past the bottom carries on onto a new page", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await addTextAt(page, 60, 370);
     await page.keyboard.type("A closing heading long enough to need lines");
     await blurPage(page);
@@ -959,7 +952,7 @@ test.describe("PDF text editor: page actions on a longer document", () => {
   test("acts on the page in view and changes only that page's size when asked", async ({
     page,
   }) => {
-    await openEditor(page, MANY_PAGES_PDF);
+    await openInTextEditor(page, MANY_PAGES_PDF);
     const sizes = await pageSizes(page);
     expect(sizes.length).toBeGreaterThan(2);
 
@@ -987,7 +980,7 @@ test.describe("PDF text editor: saving a written document", () => {
   test("a page and new text both survive Save without an error", async ({
     page,
   }) => {
-    await openEditor(page, PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await pageAction(page, "pdf-editor-page-add");
     await expect
       .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
