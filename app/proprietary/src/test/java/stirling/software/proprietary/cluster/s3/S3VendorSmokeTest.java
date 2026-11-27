@@ -27,7 +27,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 /**
  * End-to-end smoke against the full {@link S3Clients#build} path. Defaults to a LocalStack
  * container so it runs in CI; if {@code S3_SMOKE_ENDPOINT} is set, swaps in a real vendor (AWS /
- * Supabase / R2 / MinIO over network) to validate live signing + DNS.
+ * Supabase / Neon / R2 / MinIO over network) to validate live signing + DNS.
  */
 @Testcontainers(disabledWithoutDocker = true)
 class S3VendorSmokeTest {
