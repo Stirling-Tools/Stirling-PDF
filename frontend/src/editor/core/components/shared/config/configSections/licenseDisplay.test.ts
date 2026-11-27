@@ -159,6 +159,16 @@ describe("resolveModuleUrl", () => {
     );
   });
 
+  it("matches a native title after its parenthetical qualifier changes", () => {
+    expect(
+      resolveModuleUrl(
+        dependency(
+          "Kvazaar (H.265/HEVC encoder, used for HEIC encoding on Linux/macOS/Windows)",
+        ),
+      ),
+    ).toBe("https://github.com/ultravideo/Kvazaar");
+  });
+
   it("prefers the module URL, then the homepage, then the license URL", () => {
     expect(
       resolveModuleUrl({
@@ -204,6 +214,20 @@ describe("dedupeDependencies", () => {
     const text = result.find((row) => row.moduleLicenseText === "full text");
     expect(bare?.moduleVersion).toBe("1.0");
     expect(text?.moduleVersion).toBeUndefined();
+  });
+
+  it("keeps a notice-only record separate from a bare record", () => {
+    const result = dedupeDependencies([
+      {
+        ...dependency("fileless-codec", "BSD-2-Clause"),
+        moduleNoticeText: "SLJIT notice",
+      },
+      dependency("fileless-codec", "BSD-2-Clause"),
+    ]);
+    expect(result).toHaveLength(2);
+    expect(result.some((row) => row.moduleNoticeText === "SLJIT notice")).toBe(
+      true,
+    );
   });
 
   it("attributes each version to the text it arrived with", () => {
