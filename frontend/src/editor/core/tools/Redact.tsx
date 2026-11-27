@@ -16,7 +16,7 @@ import {
   useRedactManualTips,
 } from "@editor/components/tooltips/useRedactTips";
 import RedactAdvancedSettings from "@editor/components/tools/redact/RedactAdvancedSettings";
-import WordsToRedactInput from "@editor/components/tools/redact/WordsToRedactInput";
+import RedactWordsSettings from "@editor/components/tools/redact/RedactWordsSettings";
 import ManualRedactionControls from "@editor/components/tools/redact/ManualRedactionControls";
 import {
   useNavigationActions,
@@ -206,11 +206,9 @@ const Redact = (props: BaseToolProps) => {
               : setWordsCollapsed(!wordsCollapsed),
           tooltip: wordsTips,
           content: (
-            <WordsToRedactInput
-              wordsToRedact={base.params.parameters.wordsToRedact}
-              onWordsChange={(words) =>
-                base.params.updateParameter("wordsToRedact", words)
-              }
+            <RedactWordsSettings
+              parameters={base.params.parameters}
+              onParameterChange={base.params.updateParameter}
               disabled={base.endpointLoading}
             />
           ),

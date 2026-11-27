@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
+import { selectedPresetIds } from "@editor/components/tools/redact/redactWords";
 
 interface RedactAdvancedSettingsProps {
   parameters: RedactParameters;
@@ -19,6 +20,7 @@ const RedactAdvancedSettings = ({
   disabled = false,
 }: RedactAdvancedSettingsProps) => {
   const { t } = useTranslation();
+  const regexLocked = selectedPresetIds(parameters).length > 0;
 
   return (
     <Stack gap="md">
@@ -51,12 +53,19 @@ const RedactAdvancedSettings = ({
         placeholder="0.1"
       />
 
-      {/* Use Regex */}
       <Checkbox
-        label={t("redact.auto.useRegexLabel", "Use Regex")}
+        {...infoLabelProps(
+          t("redact.auto.useRegexLabel", "Use Regex"),
+          regexLocked
+            ? t(
+                "redact.auto.useRegexLockedTooltip",
+                "Common types are regular expressions, so Use Regex stays on while any are selected.",
+              )
+            : undefined,
+        )}
         checked={parameters.useRegex}
         onChange={(e) => onParameterChange("useRegex", e.currentTarget.checked)}
-        disabled={disabled}
+        disabled={disabled || regexLocked}
         size="sm"
       />
 

@@ -8,13 +8,15 @@ import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip
 
 interface WordsToRedactInputProps {
   wordsToRedact: string[];
-  onWordsChange: (words: string[]) => void;
+  onAddWord: (word: string) => void;
+  onRemoveWord: (index: number) => void;
   disabled?: boolean;
 }
 
 export default function WordsToRedactInput({
   wordsToRedact,
-  onWordsChange,
+  onAddWord,
+  onRemoveWord,
   disabled,
 }: WordsToRedactInputProps) {
   const { t } = useTranslation();
@@ -22,13 +24,9 @@ export default function WordsToRedactInput({
 
   const addWord = () => {
     if (currentWord.trim() && !wordsToRedact.includes(currentWord.trim())) {
-      onWordsChange([...wordsToRedact, currentWord.trim()]);
+      onAddWord(currentWord.trim());
       setCurrentWord("");
     }
-  };
-
-  const removeWord = (index: number) => {
-    onWordsChange(wordsToRedact.filter((_, i) => i !== index));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -81,7 +79,7 @@ export default function WordsToRedactInput({
             size="sm"
             variant="tertiary"
             accent="danger"
-            onClick={() => removeWord(index)}
+            onClick={() => onRemoveWord(index)}
             disabled={disabled}
             aria-label={t("remove", "Remove")}
           >
@@ -106,7 +104,8 @@ export default function WordsToRedactInput({
           style={{ flex: 1 }}
         />
         <Button
-          size="sm"
+          size="md"
+          fontSize="sm"
           variant="secondary"
           onClick={addWord}
           disabled={disabled || !currentWord.trim()}

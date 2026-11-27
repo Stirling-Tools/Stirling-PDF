@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import RedactSingleStepSettings from "@editor/components/tools/redact/RedactSingleStepSettings";
 import { defaultParameters } from "@editor/hooks/tools/redact/useRedactParameters";
+import { presetPatterns } from "@editor/data/redactPresets";
 
 // Mock useTranslation
 vi.mock("react-i18next", () => ({
@@ -101,6 +102,54 @@ describe("RedactSingleStepSettings", () => {
 
     expect(mockOnParameterChange).toHaveBeenCalledWith("wordsToRedact", [
       "TestWord",
+    ]);
+  });
+
+  test("opens saved presets in the picker, not the words list", () => {
+    const [email] = presetPatterns(["email"]);
+    render(
+      <TestWrapper>
+        <RedactSingleStepSettings
+          parameters={{
+            ...defaultParameters,
+            useRegex: true,
+            wordsToRedact: [email, "Confidential"],
+          }}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+
+    expect(screen.getByLabelText("Email addresses")).toBeChecked();
+    expect(screen.getByLabelText("Phone numbers")).not.toBeChecked();
+    expect(screen.getByText("Confidential")).toBeInTheDocument();
+    expect(screen.queryByText(email)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Use Regex")).toBeDisabled();
+  });
+
+  test("escapes a word added while a preset is selected", () => {
+    const [email] = presetPatterns(["email"]);
+    render(
+      <TestWrapper>
+        <RedactSingleStepSettings
+          parameters={{
+            ...defaultParameters,
+            useRegex: true,
+            wordsToRedact: [email],
+          }}
+          onParameterChange={mockOnParameterChange}
+        />
+      </TestWrapper>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Enter a word"), {
+      target: { value: "J. Smith (Jr.)" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "+ Add" }));
+
+    expect(mockOnParameterChange).toHaveBeenCalledWith("wordsToRedact", [
+      email,
+      "J\\. Smith \\(Jr\\.\\)",
     ]);
   });
 

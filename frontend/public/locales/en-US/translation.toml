@@ -8558,17 +8558,6 @@ labelCount = "labels"
 sharedNote = "These labels are built in and shared across your whole team."
 showCategory = "Show category"
 
-[policies.pii]
-account = "Account numbers (labelled)"
-card = "Credit / debit cards"
-email = "Email addresses"
-fieldLabel = "PII to redact"
-iban = "IBANs"
-phone = "Phone numbers"
-placeholder = "Select PII types"
-routing = "US routing numbers (ABA)"
-ssn = "Social Security numbers"
-
 [policy]
 badgeEnforcing = "{{name}} enforcing..."
 badgeRan = "{{name}} policy ran on this file"
@@ -12249,6 +12238,7 @@ colorLabel = "Box Color"
 convertPDFToImageLabel = "Convert PDF to PDF-Image"
 customPaddingLabel = "Custom Extra Padding"
 useRegexLabel = "Use Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Whole Word Search"
 
 [redact.auto.settings]
@@ -12279,6 +12269,16 @@ automaticDisabledTooltip = "Select files in the file manager to redact multiple 
 manual = "Manual"
 mode = "Mode"
 title = "Redaction Method"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
@@ -12333,19 +12333,6 @@ title = "Redaction Method"
 [redact.tooltip.mode.manual]
 text = "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted."
 title = "Manual Redaction"
-
-[redact.tooltip.words]
-bullet1 = "Add one word at a time"
-bullet2 = "Press Enter or click 'Add Another' to add"
-bullet3 = "Click × to remove words"
-
-[redact.tooltip.words.description]
-text = "Enter words or phrases to find and redact in your document. Each word will be searched for separately."
-title = "Text Matching"
-
-[redact.tooltip.words.examples]
-text = "Typical words to redact include: bank details, email addresses, or specific names."
-title = "Common Examples"
 
 [redact.tooltip.words.header]
 title = "Redaction Settings"
