@@ -42,6 +42,7 @@ import {
   reconcileOpenFiles,
   sourceLinkForNewFile,
 } from "@editor/contexts/file/storedFileReconciler";
+import { fileWithOwnBytes } from "@editor/services/importedFileBytes";
 const DEBUG = process.env.NODE_ENV === "development";
 /** How long a file may sit unhydrated before the console says so. Reporting only:
  *  the read is never abandoned, because large files legitimately take time. */
@@ -346,7 +347,10 @@ export async function addFiles(
     const stirlingFiles: StirlingFile[] = [];
     // Hydration tasks are scheduled per-file to update thumbnails/metadata without blocking add flow
 
-    const { files = [], allowDuplicates = false } = options;
+    const { allowDuplicates = false } = options;
+    const files = await Promise.all(
+      (options.files ?? []).map(fileWithOwnBytes),
+    );
 
     // ZIP pre-processing: Extract ZIP files with configurable behavior
     // - File uploads: skipAutoUnzip=true → always extract (except HTML)

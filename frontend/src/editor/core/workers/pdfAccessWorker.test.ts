@@ -79,6 +79,28 @@ it("reports a compiled module initialization failure instead of hanging", async 
   await scope.onmessage!({ data: request });
   expect(scope.postMessage).toHaveBeenCalledWith({
     error: "Unable to inspect PDF security locally",
+    detail: "load: Error: Import mismatch",
+  });
+  expect(ready.FPDF_LoadMemDocument).not.toHaveBeenCalled();
+});
+
+it("says the file could not be read when its bytes are unavailable", async () => {
+  const file = new Blob(["PDF"]);
+  vi.spyOn(file, "stream").mockImplementation(() => {
+    throw new DOMException(
+      "The object can not be found here.",
+      "NotFoundError",
+    );
+  });
+  init.mockResolvedValue(ready);
+  vi.mocked(fetch).mockResolvedValue({
+    ok: true,
+    arrayBuffer: async () => new ArrayBuffer(8),
+  } as Response);
+  await scope.onmessage!({ data: { ...request, file, wasmModule: null } });
+  expect(scope.postMessage).toHaveBeenCalledWith({
+    error: "Unable to inspect PDF security locally",
+    detail: "read: NotFoundError: The object can not be found here.",
   });
   expect(ready.FPDF_LoadMemDocument).not.toHaveBeenCalled();
 });

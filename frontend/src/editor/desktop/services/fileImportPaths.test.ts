@@ -42,6 +42,20 @@ const PATH = "/Downloads/report.pdf";
 const BYTES = new Uint8Array([37, 80, 68, 70]);
 let stopCapturingDrops: () => void;
 
+function bytesOf(file: Blob): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function readableThroughWebview(file: File): File {
+  vi.spyOn(file, "arrayBuffer").mockResolvedValue(BYTES.slice().buffer);
+  return file;
+}
+
 function dropFiles(files: File[]) {
   const event = new Event("drop", { bubbles: true });
   Object.defineProperty(event, "dataTransfer", { value: { files } });
@@ -162,6 +176,68 @@ describe("desktop imports retain a save target on the initial stored record", ()
     expect(await importing).toEqual([
       expect.objectContaining({ localFilePath: PATH }),
     ]);
+  });
+
+  it("stores a dropped file with bytes the app read itself", async () => {
+    const dropped = new File([BYTES], "report.pdf", {
+      type: "application/pdf",
+      lastModified: 5000,
+    });
+    vi.spyOn(dropped, "arrayBuffer").mockRejectedValue(
+      new DOMException("The I/O read operation failed.", "NotReadableError"),
+    );
+    dropFiles([dropped]);
+    const [stub] = await importFiles([dropped]);
+    const [[stored]] = storeStirlingFile.mock.calls;
+    expect(readFile).toHaveBeenCalledWith(PATH);
+    expect(stored).not.toBe(dropped);
+    expect(await bytesOf(stored)).toEqual(BYTES);
+    expect(stored).toMatchObject({
+      name: "report.pdf",
+      type: "application/pdf",
+      lastModified: 5000,
+    });
+    expect(stub.localFilePath).toBe(PATH);
+  });
+
+  it("copies a dropped file through the webview when its path cannot be read", async () => {
+    readFile.mockRejectedValue(new Error("forbidden path"));
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const dropped = readableThroughWebview(
+      new File([BYTES], "report.pdf", { lastModified: 5000 }),
+    );
+    dropFiles([dropped]);
+    await importFiles([dropped]);
+    const [[stored]] = storeStirlingFile.mock.calls;
+    expect(stored).not.toBe(dropped);
+    expect(await bytesOf(stored)).toEqual(BYTES);
+    expect(consoleError).toHaveBeenCalledWith(
+      "[desktopFileLink] readFileFromDisk failed:",
+      PATH,
+      expect.any(Error),
+    );
+    consoleError.mockRestore();
+  });
+
+  it("ignores disk bytes that no longer match the dropped file", async () => {
+    readFile.mockResolvedValue(new Uint8Array([1, 2, 3, 4, 5]));
+    const dropped = readableThroughWebview(
+      new File([BYTES], "report.pdf", { lastModified: 5000 }),
+    );
+    dropFiles([dropped]);
+    await importFiles([dropped]);
+    const [[stored]] = storeStirlingFile.mock.calls;
+    expect(await bytesOf(stored)).toEqual(BYTES);
+  });
+
+  it("leaves files that were not dropped as they are", async () => {
+    const upload = new File([BYTES], "report.pdf", { lastModified: 5000 });
+    await importFiles([upload]);
+    const [[stored]] = storeStirlingFile.mock.calls;
+    expect(stored).toBe(upload);
+    expect(readFile).not.toHaveBeenCalled();
   });
 
   it("removes the global drop listener during app cleanup", async () => {
