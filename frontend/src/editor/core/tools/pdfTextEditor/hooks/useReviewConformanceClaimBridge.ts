@@ -1,5 +1,4 @@
 import { useCallback, useEffect } from "react";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import type { FileId } from "@editor/types/file";
 import { SetConformanceClaimCommand } from "@editor/tools/pdfTextEditor/commands/SetConformanceClaimCommand";
 import type { PdfUaPart } from "@editor/tools/pdfTextEditor/pdfdoc/passes/conformanceClaim";
@@ -21,11 +20,7 @@ export function useReviewConformanceClaimBridge(
 ): void {
   const doc = store.document;
   const ready =
-    ACCESSIBILITY_EDITING &&
-    reviewing &&
-    !state.loading &&
-    state.hasDocument &&
-    doc !== null;
+    reviewing && !state.loading && state.hasDocument && doc !== null;
   const editable = ready && doc.canSetConformanceClaim();
   const set = useCallback(
     (part: PdfUaPart | null) =>

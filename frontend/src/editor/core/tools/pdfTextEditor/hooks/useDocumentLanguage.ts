@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from "react";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { SetDocumentLanguageCommand } from "@editor/tools/pdfTextEditor/commands/SetDocumentLanguageCommand";
 import type {
   EditorStore,
@@ -15,7 +14,7 @@ export interface DocumentLanguageControl {
   onSet: (lang: string | null) => void;
 }
 
-/** The open document's language control; null when accessibility editing is off or nothing is open. */
+/** The open document's language control; null when nothing is open. */
 export function useDocumentLanguage(
   store: EditorStore,
   state: EditorViewState,
@@ -28,7 +27,7 @@ export function useDocumentLanguage(
   const doc = store.document;
   return useMemo(
     () =>
-      ACCESSIBILITY_EDITING && doc && state.hasDocument
+      doc && state.hasDocument
         ? {
             language: state.documentLanguage,
             editable: doc.cannotSetDocumentLanguage() === null,

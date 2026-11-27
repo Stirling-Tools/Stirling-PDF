@@ -3391,14 +3391,12 @@ usage_limit_reached = "You've reached your usage limit. Check your plan options 
 
 [checkAccessibility]
 aboutRow = "About {{label}}"
-checking = "Checking..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Download accessibility report"
 fileFailed = "failed"
 noFiles = "Select a PDF to check it."
 pickFile = "Show results for"
 retry = "Check again"
-submit = "Check accessibility"
 
 [checkAccessibility.category]
 altText = "Alternative text"
@@ -3620,19 +3618,7 @@ checking = "Checking {{current}} of {{total}}..."
 complete = "Check complete"
 
 [checkAccessibility.steps]
-results = "Results"
 standard = "Standard"
-
-[checkAccessibility.tooltip.header]
-title = "Which standard to check"
-
-[checkAccessibility.tooltip.ua1]
-text = "The first version of PDF/UA, published in 2012 as ISO 14289-1, for PDF 1.7 files."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "The newer version, published in 2024 as ISO 14289-2, for PDF 2.0 files. A PDF 1.7 file checked against it fails the rules that only apply to PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Annotation {{n}}"
@@ -6153,11 +6139,9 @@ tags = "permissions,restrictions,rights,access control,allow,deny,printing,copyi
 title = "Change Permissions"
 
 [home.checkAccessibility]
-desc = "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
-descWithReview = "Check a PDF against PDF/UA, then tag and describe what screen readers miss"
+desc = "Check a PDF against PDF/UA, then tag and describe what screen readers miss"
 tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
-title = "Check PDF accessibility"
-titleWithReview = "PDF accessibility"
+title = "PDF accessibility"
 
 [home.classify]
 desc = "Identify what kind of document this is and tag it."

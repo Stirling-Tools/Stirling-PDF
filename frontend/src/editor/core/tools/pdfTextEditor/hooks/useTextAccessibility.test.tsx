@@ -19,10 +19,6 @@ import {
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
-vi.mock("@editor/constants/featureFlags", () => ({
-  ACCESSIBILITY_EDITING: true,
-}));
-
 /** Three untagged pages, each with the same footer. */
 function footedPdf(): Uint8Array {
   const pages = [10, 12, 14];

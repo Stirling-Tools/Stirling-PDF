@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ReviewSummary } from "@editor/tools/pdfTextEditor/components/review/ReviewSummary";
 import type { Controller } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
@@ -30,7 +29,7 @@ export function ReviewDocumentPanel({
   const shown = slot !== null;
   const editorDocument = store.document;
   const treatedAsTagged = useMemo(
-    () => ACCESSIBILITY_EDITING && !!editorDocument?.treatAsTagged(),
+    () => !!editorDocument?.treatAsTagged(),
     [editorDocument],
   );
   const headings = useHeadingOutline(store, state, shown && treatedAsTagged);

@@ -27,7 +27,6 @@ import {
   type GrowEdge,
 } from "@editor/tools/pdfTextEditor/util/growEdge";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   pageAttention,
   type PageAttention,
@@ -175,7 +174,7 @@ export const PageView = memo(function PageView({
   // Accessibility belongs to the review: editing shows no attention badges.
   const attention = useMemo(
     (): PageAttention =>
-      ACCESSIBILITY_EDITING && reviewing
+      reviewing
         ? pageAttention(document, page)
         : { images: new Map(), runs: new Map() },
     [document, page, reviewing],
@@ -510,10 +509,7 @@ export const PageView = memo(function PageView({
             scale={cssScale}
             selected={annotation.id === selectedFormFieldId}
             onSelect={
-              ACCESSIBILITY_EDITING &&
-              reviewing &&
-              annotation.kind === "widget" &&
-              onSelectFormField
+              reviewing && annotation.kind === "widget" && onSelectFormField
                 ? () => onSelectFormField(annotation.id)
                 : undefined
             }
