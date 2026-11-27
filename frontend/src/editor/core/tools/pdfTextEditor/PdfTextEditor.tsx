@@ -479,6 +479,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     ),
   );
 
+  const revealPage = useCallback(
+    (pageIndex: number) => {
+      const position = store.document?.positionOf(pageIndex) ?? -1;
+      if (position >= 0) scrollActions.scrollToPage(position + 1);
+    },
+    [store, scrollActions],
+  );
+
   const changeDocument = useCallback(
     async (change: DocumentChange) => {
       const doc = store.document;
@@ -503,8 +511,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         const { command, focusPage } = pageChangeCommand(doc, change);
         if (change.kind === "deletePage") store.selection.clear();
         store.dispatch(command);
-        const position = doc.positionOf(focusPage);
-        if (position >= 0) scrollActions.scrollToPage(position + 1);
+        revealPage(focusPage);
       } catch (err) {
         if (!(err instanceof DocumentChangeRefused)) console.error(err);
         store.setError(
@@ -525,7 +532,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         );
       }
     },
-    [store, t, scrollActions],
+    [store, t, revealPage],
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
@@ -842,15 +849,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [store],
   );
 
-  const openTool = useCallback(
-    (tool: ToolId) => {
-      if (!sourceFileId) return;
-      setSelectedFiles([sourceFileId]);
-      handleToolSelect(tool);
-    },
-    [sourceFileId, setSelectedFiles, handleToolSelect],
-  );
-
   const handleSubmitPassword = useCallback(
     (password: string) => {
       const file = store.pendingPasswordFile;
@@ -884,10 +882,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const onRunOcr = useCallback(() => {
     if (!savingRef.current && !applying) void runOcr();
   }, [applying, runOcr]);
-  const removePassword = useCallback(
-    () => openTool("removePassword"),
-    [openTool],
-  );
+  const removePassword = useCallback(() => {
+    if (!sourceFileId) return;
+    setSelectedFiles([sourceFileId]);
+    handleToolSelect("removePassword");
+  }, [sourceFileId, setSelectedFiles, handleToolSelect]);
   const onOpenFind = useCallback(() => {
     if (store.toggleFindOpen()) pinWorkbench();
   }, [store, pinWorkbench]);
@@ -948,10 +947,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       mergeSelection: handleMergeSelection,
       ungroupSelection: handleUngroupSelection,
       // The viewer mounts only the pages near the viewport.
-      revealPage: (pageIndex: number) => {
-        const position = store.document?.positionOf(pageIndex) ?? -1;
-        if (position >= 0) scrollActions.scrollToPage(position + 1);
-      },
+      revealPage,
       changeDocument,
       pageSize: (pageIndex: number) => {
         const doc = store.document;
@@ -965,7 +961,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     setEditorSession(session);
     return () => clearEditorSession(session);
   }, [
-    scrollActions,
+    revealPage,
     openedFileName,
     handleSave,
     handleAutosave,
