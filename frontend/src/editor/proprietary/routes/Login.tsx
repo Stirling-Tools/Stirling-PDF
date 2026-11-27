@@ -196,11 +196,13 @@ export default function Login() {
         "Your identity provider sent a username that Stirling PDF can't use. Contact your administrator.",
       ),
     };
+    const tokenExchangeFailed = t(
+      "login.ssoError.tokenExchangeFailed",
+      "Stirling PDF couldn't complete sign-in with your identity provider. Check the client ID, client secret and token endpoint authentication method.",
+    );
     const providerErrorMessages: Record<string, string> = {
-      invalid_token_response: t(
-        "login.ssoError.tokenExchangeFailed",
-        "Stirling PDF couldn't complete sign-in with your identity provider. Check the client ID, client secret and token endpoint authentication method.",
-      ),
+      invalid_token_response: tokenExchangeFailed,
+      invalid_client: tokenExchangeFailed,
       invalid_user_info_response: t(
         "login.ssoError.userInfoUnreadable",
         "Stirling PDF couldn't read your profile from your identity provider. User info responses must be plain JSON, not signed or encrypted.",

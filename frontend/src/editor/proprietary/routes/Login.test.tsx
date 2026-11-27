@@ -660,6 +660,10 @@ describe("Login", () => {
       "Stirling PDF couldn't complete sign-in with your identity provider. Check the client ID, client secret and token endpoint authentication method. Error code: invalid_token_response",
     ],
     [
+      "invalid_client",
+      "Stirling PDF couldn't complete sign-in with your identity provider. Check the client ID, client secret and token endpoint authentication method. Error code: invalid_client",
+    ],
+    [
       "invalid_user_info_response",
       /must be plain JSON, not signed or encrypted\. Error code: invalid_user_info_response/,
     ],
