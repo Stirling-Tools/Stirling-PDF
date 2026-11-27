@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { Badge, Collapse, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@editor/ui/Button";
-import { Icon } from "@editor/ui/Icon";
 import {
+  DisclosureRow,
   Section,
   SectionLabel,
-  StatRow,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import {
   analyzePageFonts,
   type PageFont,
 } from "@editor/tools/pdfTextEditor/util/pageFonts";
-import { DocumentSettings } from "@editor/tools/pdfTextEditor/components/inspector/DocumentSettings";
+import {
+  AdvancedSettings,
+  ViewSettings,
+} from "@editor/tools/pdfTextEditor/components/inspector/DocumentSettings";
 import type {
   GroupingMode,
   PageSnapshot,
@@ -29,34 +30,41 @@ interface Props {
   onSetShowRulers: (show: boolean) => void;
 }
 
-/** Facts about the open document. Nothing here acts on a selection. */
-export function DocumentInspector({ pages, ...settings }: Props) {
+/** The open document's fonts and settings. Nothing here acts on a selection. */
+export function DocumentInspector({
+  pages,
+  groupingMode,
+  widthMode,
+  onSetGroupingMode,
+  onSetWidthMode,
+  ...view
+}: Props) {
   const { t } = useTranslation();
-  const runs = pages.reduce((n, p) => n + p.runs.length, 0);
-  const images = pages.reduce((n, p) => n + p.images.length, 0);
   return (
     <Stack gap={0} data-testid="pdf-editor-document-panel">
-      <Section first>
-        <SectionLabel>
+      <Section>
+        <SectionLabel
+          right={
+            <Text size="xs" c="dimmed" data-testid="pdf-editor-page-count">
+              {t("pdfTextEditor.inspector.pageCount", "{{count}} pages", {
+                count: pages.length,
+              })}
+            </Text>
+          }
+        >
           {t("pdfTextEditor.inspector.document", "Document")}
         </SectionLabel>
-        <Stack gap={4}>
-          <StatRow
-            label={t("pdfTextEditor.inspector.pages", "Pages")}
-            value={pages.length}
-          />
-          <StatRow
-            label={t("pdfTextEditor.inspector.textBoxes", "Text boxes")}
-            value={runs}
-          />
-          <StatRow
-            label={t("pdfTextEditor.inspector.images", "Images")}
-            value={images}
-          />
+        <Stack gap="sm">
+          <FontsRow pages={pages} />
+          <ViewSettings {...view} />
         </Stack>
       </Section>
-      <FontsSection pages={pages} />
-      <DocumentSettings {...settings} />
+      <AdvancedSettings
+        groupingMode={groupingMode}
+        widthMode={widthMode}
+        onSetGroupingMode={onSetGroupingMode}
+        onSetWidthMode={onSetWidthMode}
+      />
     </Stack>
   );
 }
@@ -68,13 +76,11 @@ const FONT_STATUS_COLOR = {
 } as const;
 
 /**
- * Font coverage, collapsed to a single status row.
- *
- * The old panel banner fired on every document to say nothing was wrong. Here
- * the headline is one pill; the per-font detail is one click away, and the row
- * only opens itself when a font is actually missing glyphs.
+ * Font coverage, collapsed to a single status row: one pill for the headline,
+ * the per-font detail a click away. It only opens itself when a font is
+ * actually missing glyphs.
  */
-function FontsSection({ pages }: { pages: PageSnapshot[] }) {
+function FontsRow({ pages }: { pages: PageSnapshot[] }) {
   const { t } = useTranslation();
   // Pure: the font list AND coverage both come from snapshot data + the cmap
   // cache the loader primed during its serialized read.
@@ -121,34 +127,17 @@ function FontsSection({ pages }: { pages: PageSnapshot[] }) {
 
   const expanded = open || tone === "warn";
   return (
-    <Section testId="pdf-editor-fonts-panel">
-      <Button
-        variant="tertiary"
-        accent="neutral"
-        size="sm"
-        fullWidth
-        justify="between"
-        px="none"
-        onClick={() => setOpen((v) => !v)}
-        data-testid="pdf-editor-fonts-toggle"
-        rightSection={
-          expanded ? (
-            <Icon name="chevron-down" size={20} />
-          ) : (
-            <Icon name="chevron-right" size={20} />
-          )
-        }
-      >
-        <Group gap="xs" wrap="nowrap">
-          <Text
-            size="xs"
-            fw={600}
-            c="dimmed"
-            tt="uppercase"
-            style={{ letterSpacing: "0.5px" }}
-          >
+    <div data-testid="pdf-editor-fonts-panel">
+      <DisclosureRow
+        open={expanded}
+        onToggle={() => setOpen((v) => !v)}
+        testId="pdf-editor-fonts-toggle"
+        label={
+          <Text size="xs">
             {t("pdfTextEditor.fonts.title", "Fonts")} · {fonts.length}
           </Text>
+        }
+        extra={
           <Tooltip
             label={summary.hint}
             multiline
@@ -167,8 +156,8 @@ function FontsSection({ pages }: { pages: PageSnapshot[] }) {
               {summary.label}
             </Badge>
           </Tooltip>
-        </Group>
-      </Button>
+        }
+      />
       <Collapse in={expanded}>
         <Stack gap="xs" mt="xs">
           {fonts.map((f) => (
@@ -176,7 +165,7 @@ function FontsSection({ pages }: { pages: PageSnapshot[] }) {
           ))}
         </Stack>
       </Collapse>
-    </Section>
+    </div>
   );
 }
 

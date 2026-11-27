@@ -1,5 +1,5 @@
-import { memo, useEffect, useState } from "react";
-import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
+import { memo } from "react";
+import { Box, Group, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { CreateNewPdfButton } from "@editor/components/createPdf/CreateNewPdfButton";
@@ -46,12 +46,9 @@ export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
-  initialTab?: SidebarTab;
   /** Desktop: the panel's head shows the insert tools, and the selection bar carries the image tools. */
   desktop?: boolean;
 }
-
-export type SidebarTab = "selected" | "document";
 
 export const EditorSidebar = memo(function EditorSidebar({
   store,
@@ -69,10 +66,8 @@ export const EditorSidebar = memo(function EditorSidebar({
   ocrAvailable,
   ocrBlockedReason,
   onRemovePassword,
-  initialTab = "selected",
   desktop = false,
 }: SidebarProps) {
-  const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
   const hasSelection =
@@ -80,14 +75,6 @@ export const EditorSidebar = memo(function EditorSidebar({
     selection.imageIds.length > 0 ||
     selection.shapeIds.length > 0 ||
     selection.formFieldId !== null;
-  const [tab, setTab] = useState<SidebarTab>(initialTab);
-  // Picking something on the page is a request to see its properties, so the
-  // panel follows. Clearing does NOT yank the tab back - a user who opened
-  // Document then clicked bare page should stay where they were.
-  useEffect(() => {
-    if (hasSelection) setTab("selected");
-  }, [hasSelection]);
-
   const fontNote = useSelectedFontNote(
     state,
     selection,
@@ -103,106 +90,89 @@ export const EditorSidebar = memo(function EditorSidebar({
     );
   }
 
+  // What is picked sits on top, where the eye already is. The document's own
+  // settings stay below it, in reach whatever is selected.
   return (
-    <Tabs
-      value={tab}
-      onChange={(next) => setTab((next as SidebarTab | null) ?? "selected")}
-      data-testid="pdf-editor-sidebar-status"
-    >
-      <Box
-        // Sticky for the same reason the footer is: the outer ScrollArea owns
-        // the scrolling, so the tools and tabs must hold themselves in place.
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 2,
-          background: "var(--c-bg-raised)",
-          borderBottom: "1px solid var(--mantine-color-default-border)",
-        }}
-      >
-        {desktop && <EditorPanelTools store={store} state={state} />}
-        <Group gap={0} wrap="nowrap" px="xs">
-          <Tabs.List style={{ flex: 1, borderBottom: "none" }}>
-            <Tabs.Tab value="selected" data-testid="pdf-editor-tab-selected">
-              {t("pdfTextEditor.inspector.tabSelected", "Selected")}
-            </Tabs.Tab>
-            <Tabs.Tab value="document" data-testid="pdf-editor-tab-document">
-              {t("pdfTextEditor.inspector.tabDocument", "Document")}
-            </Tabs.Tab>
-          </Tabs.List>
-        </Group>
-      </Box>
-
-      <LanguagesInUse.Provider value={state.languagesInUse}>
-        <Box>
-          <Tabs.Panel value="selected">
-            {hasSelection ? (
-              <SelectionInspector
-                controller={controller}
-                selection={selection}
-                geometry={geometry}
-                fontNote={fontNote}
-                scanFontMatch={scanFontMatch}
-                canGroup={canGroup}
-                canUngroup={canUngroup}
-                onGroup={onGroup}
-                onUngroup={onUngroup}
-                showImageTools={!desktop}
-              />
-            ) : (
-              <NothingSelected
-                pages={state.pages}
-                onRunOcr={onRunOcr}
-                ocrRunning={ocrRunning}
-                ocrAvailable={ocrAvailable}
-                ocrBlockedReason={ocrBlockedReason}
-                onRemovePassword={onRemovePassword}
-              />
-            )}
-          </Tabs.Panel>
-          <Tabs.Panel value="document">
-            {tab === "document" && (
-              <DocumentInspector
-                pages={state.pages}
-                groupingMode={state.groupingMode}
-                widthMode={state.widthMode}
-                showRulers={state.showRulers}
-                onSetGroupingMode={onSetGroupingMode}
-                onSetWidthMode={onSetWidthMode}
-                onSetShowRulers={onSetShowRulers}
-              />
-            )}
-          </Tabs.Panel>
+    <Stack gap={0} data-testid="pdf-editor-sidebar-status">
+      {desktop && (
+        <Box
+          // Sticky because the outer ScrollArea owns the scrolling, so the
+          // insert tools must hold themselves in place.
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            background: "var(--c-bg-raised)",
+            borderBottom: "1px solid var(--mantine-color-default-border)",
+          }}
+        >
+          <EditorPanelTools store={store} state={state} />
         </Box>
+      )}
+      <LanguagesInUse.Provider value={state.languagesInUse}>
+        {hasSelection ? (
+          <SelectionInspector
+            controller={controller}
+            selection={selection}
+            geometry={geometry}
+            fontNote={fontNote}
+            scanFontMatch={scanFontMatch}
+            canGroup={canGroup}
+            canUngroup={canUngroup}
+            onGroup={onGroup}
+            onUngroup={onUngroup}
+            showImageTools={!desktop}
+          />
+        ) : (
+          <NothingSelected
+            pages={state.pages}
+            onRunOcr={onRunOcr}
+            ocrRunning={ocrRunning}
+            ocrAvailable={ocrAvailable}
+            ocrBlockedReason={ocrBlockedReason}
+            onRemovePassword={onRemovePassword}
+          />
+        )}
+        <DocumentInspector
+          pages={state.pages}
+          groupingMode={state.groupingMode}
+          widthMode={state.widthMode}
+          showRulers={state.showRulers}
+          onSetGroupingMode={onSetGroupingMode}
+          onSetWidthMode={onSetWidthMode}
+          onSetShowRulers={onSetShowRulers}
+        />
       </LanguagesInUse.Provider>
       {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
-    </Tabs>
+    </Stack>
   );
 });
 
-/** What the Selected tab shows before the user has picked anything. */
+/** A single quiet line where a selection's properties would go. */
 function NothingSelected(props: ScanHintProps) {
   const { t } = useTranslation();
   return (
-    <Center p="xl" data-testid="pdf-editor-nothing-selected">
-      <Stack align="center" gap={6}>
+    <Box px="md" py="sm" data-testid="pdf-editor-nothing-selected">
+      <Group gap="sm" wrap="nowrap" align="flex-start">
         <Icon
           name="square-dashed"
-          size={34}
-          style={{ color: "var(--mantine-color-dimmed)", opacity: 0.5 }}
+          size={18}
+          style={{ color: "var(--c-text-muted)", flexShrink: 0, marginTop: 1 }}
         />
-        <Text size="sm" fw={500} c="dimmed">
-          {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
-        </Text>
-        <Text size="xs" c="dimmed" ta="center">
-          {t(
-            "pdfTextEditor.inspector.nothingSelectedHint",
-            "Click any text, image or shape on the page to edit it, or add something new with Insert above.",
-          )}
-        </Text>
-        <ScanHint {...props} />
-      </Stack>
-    </Center>
+        <Stack gap={2}>
+          <Text size="sm" fw={600}>
+            {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t(
+              "pdfTextEditor.inspector.nothingSelectedHint",
+              "Click any text, image or shape on the page to edit it, or add something new with Insert above.",
+            )}
+          </Text>
+        </Stack>
+      </Group>
+      <ScanHint {...props} />
+    </Box>
   );
 }
 

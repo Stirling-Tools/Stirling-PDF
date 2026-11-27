@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { Box, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
+import { Icon } from "@editor/ui/Icon";
 /** Shared layout atoms for the editor's properties inspector. */
 
-/** Uppercase section heading, optionally with an info affordance beside it and a trailing control. */
+/** Section heading, optionally with an info affordance beside it and a trailing control. */
 export function SectionLabel({
   children,
   info,
@@ -16,13 +17,7 @@ export function SectionLabel({
   return (
     <Group justify="space-between" wrap="nowrap" gap={4} mb={8}>
       <Group gap={6} wrap="nowrap">
-        <Text
-          size="xs"
-          fw={600}
-          c="dimmed"
-          tt="uppercase"
-          style={{ letterSpacing: "0.5px" }}
-        >
+        <Text size="sm" fw={600}>
           {children}
         </Text>
         {info}
@@ -32,7 +27,7 @@ export function SectionLabel({
   );
 }
 
-/** One bordered band. Sections stack with a hairline between them. */
+/** One band of the panel. Sections stack with a hairline between them. */
 export function Section({
   children,
   testId,
@@ -48,7 +43,7 @@ export function Section({
   return (
     <Box
       px="md"
-      py="sm"
+      py="md"
       data-testid={testId}
       style={{
         borderTop: first
@@ -88,7 +83,7 @@ export function Field({
   );
 }
 
-/** Read-only key/value line used by the Document tab. */
+/** Read-only key/value line. */
 export function StatRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <Group justify="space-between" wrap="nowrap" gap="xs">
@@ -102,8 +97,62 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+/** A row that shows or hides the content under it. */
+export function DisclosureRow({
+  label,
+  open,
+  onToggle,
+  extra,
+  testId,
+}: {
+  label: ReactNode;
+  open: boolean;
+  onToggle: () => void;
+  /** Shown beside the label, e.g. a status badge. */
+  extra?: ReactNode;
+  testId?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      data-testid={testId}
+      style={{
+        display: "block",
+        width: "100%",
+        padding: 0,
+        border: "none",
+        background: "none",
+        color: "inherit",
+        font: "inherit",
+        textAlign: "start",
+        cursor: "pointer",
+      }}
+    >
+      <Group justify="space-between" wrap="nowrap" gap="xs">
+        <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+          {label}
+          {extra}
+        </Group>
+        <Icon
+          name="chevron-right"
+          size={16}
+          style={{
+            color: "var(--c-text-muted)",
+            flexShrink: 0,
+            transform: open ? "rotate(90deg)" : undefined,
+            transition: "transform 150ms ease",
+          }}
+        />
+      </Group>
+    </button>
+  );
+}
+
 /**
- * A points field that only commits a real change.
+ * A points field that only commits a real change. Its short name (X, W) sits
+ * inside the field, so a pair of them fits side by side without labels above.
  *
  * Geometry edits dispatch undoable commands, so re-emitting the value the
  * field already shows would cost a spurious undo step on every blur.
@@ -112,13 +161,17 @@ export function PointsInput({
   value,
   onCommit,
   label,
+  prefix,
   testId,
   min,
   disabled,
 }: {
   value: number;
   onCommit: (next: number) => void;
+  /** Spoken name, e.g. "Width". */
   label: string;
+  /** Shown inside the field, e.g. "W". */
+  prefix: string;
   testId?: string;
   min?: number;
   disabled?: boolean;
@@ -126,6 +179,17 @@ export function PointsInput({
   return (
     <NumberInput
       size="xs"
+      hideControls
+      leftSection={
+        <Text size="xs" c="dimmed" fw={500} aria-hidden>
+          {prefix}
+        </Text>
+      }
+      rightSection={
+        <Text size="xs" c="dimmed" aria-hidden>
+          pt
+        </Text>
+      }
       min={min}
       decimalScale={1}
       fixedDecimalScale

@@ -816,7 +816,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const ocrAvailable =
     panel.state.loading && !ocr.running ? null : ocr.available;
   const inspector = useMemo<
-    Omit<SidebarProps, "store" | "state" | "selection" | "initialTab">
+    Omit<SidebarProps, "store" | "state" | "selection">
   >(
     () => ({
       canGroup: panel.selection.runIds.length >= 2,
