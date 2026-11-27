@@ -23,41 +23,52 @@ export function FeedbackTag() {
   const isPhone = useIsPhone();
   const obstacle = useFeedbackTagObstacle();
   const tagRef = useRef<HTMLDivElement>(null);
-  const [lifted, setLifted] = useState(false);
+  // Distance from the workbench's bottom edge, or null while on that edge.
+  const [lift, setLift] = useState<number | null>(null);
 
   // A phone has no edge to spare for it.
   const hidden =
     !openFeedback || preferences.hasDismissedFeedbackTag || isPhone;
 
   // Lifting only moves the tag vertically, so comparing horizontal spans
-  // cannot flip-flop. The bar shifts as its dock resizes and the tag as the
-  // workbench does, so both are watched.
+  // cannot flip-flop. The lift is measured from the bar rather than assumed,
+  // as the bar grows when its controls wrap. The bar shifts as its dock
+  // resizes, the tag as the workbench does or its label changes, and the
+  // dock slides in on mount, so all of those re-measure.
   useLayoutEffect(() => {
     const tag = tagRef.current;
-    if (!tag || !obstacle) {
-      setLifted(false);
+    const container = tag?.offsetParent;
+    if (!tag || !container || !obstacle) {
+      setLift(null);
       return;
     }
     const update = () => {
       const a = tag.getBoundingClientRect();
       const b = obstacle.getBoundingClientRect();
-      setLifted(
+      const overlaps =
         a.left < b.right + OBSTACLE_GAP_PX &&
-          b.left < a.right + OBSTACLE_GAP_PX,
+        b.left < a.right + OBSTACLE_GAP_PX;
+      setLift(
+        overlaps
+          ? Math.round(
+              container.getBoundingClientRect().bottom -
+                b.top +
+                OBSTACLE_GAP_PX,
+            )
+          : null,
       );
     };
     update();
     const observer = new ResizeObserver(update);
-    for (const element of [
-      obstacle,
-      obstacle.parentElement,
-      tag.offsetParent,
-    ]) {
+    for (const element of [obstacle, obstacle.parentElement, container, tag]) {
       if (element) observer.observe(element);
     }
+    const dock = obstacle.parentElement;
+    dock?.addEventListener("animationend", update);
     window.addEventListener("resize", update);
     return () => {
       observer.disconnect();
+      dock?.removeEventListener("animationend", update);
       window.removeEventListener("resize", update);
     };
   }, [obstacle, hidden]);
@@ -69,7 +80,8 @@ export function FeedbackTag() {
   return (
     <div
       ref={tagRef}
-      className={lifted ? `${styles.tag} ${styles.lifted}` : styles.tag}
+      className={lift == null ? styles.tag : `${styles.tag} ${styles.lifted}`}
+      style={lift == null ? undefined : { bottom: lift }}
     >
       <button type="button" className={styles.open} onClick={openFeedback}>
         <Icon name="stirling-mark" size="0.875rem" className={styles.mark} />
