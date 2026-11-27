@@ -249,6 +249,18 @@ jobs:
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:prepare
 
+      - name: Check the named Windows backend launcher
+        if: startsWith(matrix.platform, 'windows')
+        shell: pwsh
+        run: |
+          $launcher = "./frontend/src-tauri/runtime/jre/bin/stirling-pdf-backend.exe"
+          if (-not (Test-Path $launcher)) { throw "Backend launcher was not staged at $launcher" }
+          $info = (Get-Item $launcher).VersionInfo
+          Write-Host "FileDescription=$($info.FileDescription) ProductName=$($info.ProductName) CompanyName=$($info.CompanyName)"
+          if ($info.FileDescription -ne "Stirling PDF") { throw "Launcher FileDescription is '$($info.FileDescription)'" }
+          & $launcher -version
+          if ($LASTEXITCODE -ne 0) { throw "Launcher could not start the bundled JVM (exit $LASTEXITCODE)" }
+
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
