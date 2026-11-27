@@ -240,6 +240,11 @@ interface FamilyChange {
   restyle?: boolean;
 }
 
+interface StepAlongside {
+  fit: ScanFitTarget[];
+  build: (applies: (runId: string) => boolean) => Command[];
+}
+
 /** How many runs a font change reached, how many it left as they were and why, and how many of the changed ones the new font lacks letters of. */
 interface FamilyChangeOutcome {
   applied: number;
@@ -609,6 +614,7 @@ export function useSelectionActions(store: EditorStore) {
       stillApplies: () => (runId: string) => boolean,
       changes: FamilyChange[],
       fit: ScanFitTarget[],
+      alongside?: StepAlongside,
     ): Promise<FamilyChangeOutcome> => {
       const doc = store.document;
       const shapeable = changes.filter((change) => !needsShaping(change.text));
@@ -618,7 +624,10 @@ export function useSelectionActions(store: EditorStore) {
           isDocumentFontId(change.family) ||
           drawsSomeOf(familyCoverage(doc, change.family), change.text),
       );
-      const changing = new Set(drawable.map((change) => change.runId));
+      const changing = new Set([
+        ...drawable.map((change) => change.runId),
+        ...(alongside?.fit ?? []).map((target) => target.run.id),
+      ]);
       const outcome = {
         applied: 0,
         undrawable: shapeable.length - drawable.length,
@@ -630,7 +639,9 @@ export function useSelectionActions(store: EditorStore) {
       if (doc) await loadScriptFacesFor(doc, drawable);
       if (store.document !== doc) return outcome;
       await dispatchAfterScanFit(
-        fit.filter((target) => changing.has(target.run.id)),
+        [...fit, ...(alongside?.fit ?? [])].filter((target) =>
+          changing.has(target.run.id),
+        ),
         () => {
           // A font picked for a run while these bytes loaded wins; applying this one now would undo it.
           const applies = stillApplies();
@@ -659,11 +670,16 @@ export function useSelectionActions(store: EditorStore) {
           outcome.inClosestMatch = safe.filter(
             (c) => c.coverage === "some",
           ).length;
+          const extra = alongside?.build(applies) ?? [];
+          outcome.applied += extra.length;
           const live = liveRuns(store);
-          return safe.map(({ change, command }) => {
-            const run = live.get(change.runId);
-            return run ? keptOblique(run, command) : command;
-          });
+          return [
+            ...extra,
+            ...safe.map(({ change, command }) => {
+              const run = live.get(change.runId);
+              return run ? keptOblique(run, command) : command;
+            }),
+          ];
         },
       );
       return outcome;
@@ -951,9 +967,10 @@ export function useSelectionActions(store: EditorStore) {
         });
       }
       moveToLookalikeWhereFaceLacks(doc, targets);
-      const stillApplies = claimFontChange(
-        targets.map((target) => target.fit.run),
-      );
+      const stillApplies = claimFontChange([
+        ...targets.map((target) => target.fit.run),
+        ...[...outlined, ...slanted].map(({ fit }) => fit.run),
+      ]);
       const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
       for (const target of targets) {
         if (isDeviceFace(target.family)) {
@@ -966,13 +983,19 @@ export function useSelectionActions(store: EditorStore) {
         }
         ready.push(target);
       }
-      if (outlined.length > 0)
-        await dispatchAfterScanFit(
-          outlined.map(({ fit }) => fit),
-          () =>
-            fauxStyleCommands(
+      const claimed =
+        (applies: (runId: string) => boolean) => (change: FauxStyleChange) =>
+          applies(change.fit.run.id);
+      const outcome = await dispatchFamilyChanges(
+        stillApplies,
+        ready,
+        ready.map((target) => target.fit),
+        {
+          fit: [...outlined, ...slanted].map(({ fit }) => fit),
+          build: (applies) => [
+            ...fauxStyleCommands(
               store,
-              outlined,
+              outlined.filter(claimed(applies)),
               (run, bold) =>
                 new SetTextOutlineCommand({
                   pageIndex: run.pageIndex,
@@ -981,14 +1004,9 @@ export function useSelectionActions(store: EditorStore) {
                   width: bold ? fauxBoldWidth(run.fontSize) : 0,
                 }),
             ),
-        );
-      if (slanted.length > 0)
-        await dispatchAfterScanFit(
-          slanted.map(({ fit }) => fit),
-          () =>
-            fauxStyleCommands(
+            ...fauxStyleCommands(
               store,
-              slanted,
+              slanted.filter(claimed(applies)),
               (run, oblique) =>
                 new SetObliqueCommand({
                   pageIndex: run.pageIndex,
@@ -996,11 +1014,8 @@ export function useSelectionActions(store: EditorStore) {
                   oblique,
                 }),
             ),
-        );
-      const outcome = await dispatchFamilyChanges(
-        stillApplies,
-        ready,
-        ready.map((target) => target.fit),
+          ],
+        },
       );
       return changeFailure(
         outcome,
@@ -1016,7 +1031,6 @@ export function useSelectionActions(store: EditorStore) {
       claimFontChange,
       dispatchFamilyChanges,
       restyleSelectedPart,
-      dispatchAfterScanFit,
     ],
   );
 
@@ -1215,8 +1229,10 @@ export function useSelectionActions(store: EditorStore) {
       const editing = editedRunId();
       const caret = editing ? focusedRunCaret(editing) : null;
       const textBefore = editing ? liveRuns(store).get(editing)?.text : null;
+      const listedIn = store.document;
       if (isFocusInContentEditable())
         (document.activeElement as HTMLElement).blur();
+      const focusAfterBlur = document.activeElement;
       const listed = dispatchPerRun((run) => {
         const doc = store.document;
         const nextText = toggledListText(run.text, softStartsOf(run), kind);
@@ -1247,6 +1263,11 @@ export function useSelectionActions(store: EditorStore) {
       }, true);
       if (!editing || textBefore == null) return;
       void listed.then(() => {
+        if (
+          store.document !== listedIn ||
+          document.activeElement !== focusAfterBlur
+        )
+          return;
         const textAfter = liveRuns(store).get(editing)?.text;
         if (textAfter == null) return;
         const offset =

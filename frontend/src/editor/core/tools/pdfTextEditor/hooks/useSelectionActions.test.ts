@@ -64,6 +64,7 @@ vi.mock("@editor/tools/pdfTextEditor/commands/CompositeCommand", () => ({
 
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
+import { SetObliqueCommand } from "@editor/tools/pdfTextEditor/commands/SetObliqueCommand";
 import { FAUX_BOLD_EM } from "@editor/tools/pdfTextEditor/util/fauxBold";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
@@ -989,6 +990,71 @@ describe("useSelectionActions font changes", () => {
     expect(await actionsFor(store).toggleItalic()).toBe("styleSkipped");
 
     expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica-Oblique"]);
+  });
+
+  it("draws one bold and swaps another run's face in a single undo step", async () => {
+    documentFont(7, "ABCDEF+Calibri", 0);
+    documentFont(8, "GHIJKL+Calibri-Bold", 0);
+    documentFont(9, "MNOPQR+Garamond", 0);
+    const { store, dispatch } = fakeStore(
+      [
+        run("a", "pdf:9:Garamond"),
+        run("b", "pdf:7:Calibri"),
+        run("c", "pdf:8:Calibri"),
+      ],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).toggleBold()).toBeNull();
+
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    const step = dispatch.mock.calls[0][0] as { commands: unknown[] };
+    expect(
+      step.commands.find((cmd) => cmd instanceof SetTextOutlineCommand),
+    ).toMatchObject({ runId: "a" });
+    expect(dispatchedChanges(dispatch)).toContain("b:pdf:8:Calibri");
+  });
+
+  it("says only some of the selection changed when a drawn bold lands beside text it cannot bold", async () => {
+    documentFont(9, "MNOPQR+Garamond", 0);
+    const outlinedOnly = { ...run("b", "pdf:9:Garamond"), renderMode: 1 };
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:9:Garamond"), outlinedOnly],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).toggleBold()).toBe("styleSkipped");
+
+    expect(
+      dispatch.mock.calls.map(([cmd]) => cmd as { runId?: string }),
+    ).toMatchObject([{ runId: "a" }]);
+  });
+
+  it("drops a drawn slant when another family is picked for that run while a face downloads", async () => {
+    documentFont(9, "MNOPQR+Garamond", 0);
+    const finishDownload = holdDownloads();
+    await loadServerFonts();
+    const { store, dispatch, select } = fakeStore(
+      [run("g", "pdf:9:Garamond"), run("b", "device:Acme Sans")],
+      ["g", "b"],
+    );
+
+    const leaning = actionsFor(store).toggleItalic();
+    await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    select(["g"]);
+    expect(await actionsFor(store).changeFontFamily("Times-Roman")).toBeNull();
+    finishDownload(fontBytes());
+    await leaning;
+
+    const flatten = (cmd: { commands?: unknown[] }): unknown[] =>
+      cmd.commands
+        ? cmd.commands.flatMap((c) => flatten(c as { commands?: unknown[] }))
+        : [cmd];
+    const dispatched = dispatch.mock.calls.flatMap(([cmd]) => flatten(cmd));
+    expect(
+      dispatched.filter((cmd) => cmd instanceof SetObliqueCommand),
+    ).toEqual([]);
+    expect(dispatchedChanges(dispatch)).toContain("g:Times-Roman");
   });
 });
 
