@@ -75,6 +75,7 @@ import type { GrowEdge } from "@editor/tools/pdfTextEditor/util/growEdge";
 import {
   keepCaretInView,
   moveToLineEdge,
+  selectAllText,
 } from "@editor/tools/pdfTextEditor/util/dom";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
@@ -163,14 +164,6 @@ function contrastingMaskFor(fill: {
   // ITU-R BT.601 luma; 0 = black, 255 = white.
   const luma = (fill.r * 299 + fill.g * 587 + fill.b * 114) / 1000;
   return luma > 160 ? "rgba(30, 30, 30, 0.85)" : "rgba(255, 255, 255, 0.9)";
-}
-
-function selectAllText(el: HTMLElement): void {
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  const sel = window.getSelection();
-  sel?.removeAllRanges();
-  sel?.addRange(range);
 }
 
 // Put the caret at the end of the LAST painted line block rather than at the

@@ -112,17 +112,21 @@ export function focusRunWhenPainted(
       return;
     }
     el.focus({ preventScroll: true });
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    if (caretAtEnd) range.collapse(false);
-    const sel = window.getSelection();
-    sel?.removeAllRanges();
-    sel?.addRange(range);
+    selectAllText(el);
+    if (caretAtEnd) window.getSelection()?.collapseToEnd();
     if (caretOffset !== undefined) restoreCaretOffset(el, caretOffset);
     typeKeys(takeHeldKeys());
     if (revealOnPage !== undefined) keepCaretInView(el, REVEAL_MARGIN_PX);
   };
   requestAnimationFrame(attempt);
+}
+
+export function selectAllText(el: HTMLElement): void {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(range);
 }
 
 let latestFocusRequest = 0;
