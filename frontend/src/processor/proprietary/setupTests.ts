@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
 import i18n from "i18next";
+import { installEnUsIntlDefaults } from "@editor/tests/enUsIntlDefaults";
 
 // The shims `src/index.tsx` installs - see core/setupTests.ts.
 import "@editor/utils/engineShims";
@@ -12,6 +13,8 @@ void i18n.init({
   initAsync: false,
   interpolation: { escapeValue: false },
 });
+
+installEnUsIntlDefaults();
 
 // Mirrors the editor's setup: jsdom lacks a handful of browser APIs that shared
 // components (Mantine FocusTrap, responsive helpers) touch on render.
