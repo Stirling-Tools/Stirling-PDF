@@ -41,14 +41,10 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
             },
           },
           {
-            operation: "convert",
+            operation: "archivePdf",
             parameters: {
-              fromExtension: "pdf",
-              toExtension: "pdfa",
-              pdfaOptions: {
-                outputFormat: "pdfa-2b",
-                strict: false,
-              },
+              outputFormat: "pdfa-2b",
+              strict: false,
             },
           },
           {

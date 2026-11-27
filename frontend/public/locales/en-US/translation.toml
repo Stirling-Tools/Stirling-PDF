@@ -2085,6 +2085,46 @@ description = "A free, private PDF editor you can run on any infrastructure."
 [appBanner]
 dismiss = "Dismiss"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Add attachments..."
 convertToPdfA3b = "Convert to PDF/A-3b"
@@ -4485,11 +4525,6 @@ multiple = "Multiple"
 optimizeForEbook = "Optimize PDF for ebook readers"
 optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Output"
-outputFormat = "Output Format"
-pdfaAccessibleFormat = "{{format}} (accessible)"
-pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
-pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
-pdfaOptions = "PDF/A Options"
 pdfOptions = "PDF Options"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4517,8 +4552,6 @@ settings = "Settings"
 signInToUse = "Sign in to use"
 single = "Single"
 sourceFormatPlaceholder = "Source format"
-strictMode = "Strict Mode"
-strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
@@ -6059,6 +6092,11 @@ title = "Adjust Colors/Contrast"
 desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Automatically detect form fields with AI and make your PDF fillable."

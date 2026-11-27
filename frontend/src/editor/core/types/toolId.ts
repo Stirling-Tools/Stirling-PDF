@@ -22,6 +22,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "split",
   "merge",
   "convert",
+  "archivePdf",
   "ocr",
   "addImage",
   "rotate",

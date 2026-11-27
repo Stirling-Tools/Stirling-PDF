@@ -30,9 +30,6 @@ describe("useConvertParameters", () => {
       expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(
         false,
       );
-      expect(result.current.parameters.pdfaOptions.outputFormat).toBe(
-        "pdfa-2b",
-      );
     });
 
     test("should update individual parameters", () => {
@@ -108,19 +105,6 @@ describe("useConvertParameters", () => {
       expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(
         true,
       );
-    });
-
-    test("should update nested PDF/A options", () => {
-      const { result } = renderHook(() => useConvertParameters());
-
-      act(() => {
-        result.current.updateParameter("pdfaOptions", {
-          outputFormat: "pdfa",
-          strict: false,
-        });
-      });
-
-      expect(result.current.parameters.pdfaOptions.outputFormat).toBe("pdfa");
     });
 
     test("should reset parameters to defaults", () => {
