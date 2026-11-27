@@ -46,7 +46,7 @@ export function EditorPanelTools({ store, state }: Props) {
   );
 
   return (
-    <Box px="md" pt="sm" pb="sm" data-testid="pdf-editor-panel-tools">
+    <Box px="md" pt="xs" pb="sm" data-testid="pdf-editor-panel-tools">
       <SectionLabel>
         {t("pdfTextEditor.sidebar.addToPage", "Add to page")}
       </SectionLabel>

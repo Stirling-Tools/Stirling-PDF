@@ -107,3 +107,25 @@
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
+
+/* The tool panel's own header: a slim title row with a hairline under it, so
+   the tool's content starts as high as it can. Scoped by its own class, as the
+   AI chat and Policies headers share the base names. */
+.sui-panelhdr.sui-panelhdr--slim {
+  padding: 0.5rem 0.75rem 0.5rem 1rem;
+  border-bottom: 1px solid
+    var(--c-border-subtle, var(--mantine-color-default-border));
+}
+
+.sui-panelhdr--slim .sui-panelhdr__bar,
+[data-mantine-color-scheme="dark"] .sui-panelhdr--slim .sui-panelhdr__bar {
+  padding: 0;
+  border: none;
+  border-radius: var(--mantine-radius-sm);
+  background: none;
+}
+
+.sui-panelhdr--slim .sui-panelhdr__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
