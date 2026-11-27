@@ -26,11 +26,14 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.model.FlattenMode;
+import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.SaveOptions;
 
 @MiscApi
@@ -91,6 +94,13 @@ public class FlattenController {
         try (TempFile tempInputFile = tempFileManager.createManagedTempFile(".pdf")) {
             file.transferTo(tempInputFile.getFile());
             try (PdfDocument document = PdfDocument.open(tempInputFile.getPath())) {
+                for (int i = 0; i < document.pageCount(); i++) {
+                    try (PdfPage page = document.page(i)) {
+                        PageSize size = page.size();
+                        ImageMemoryLimit.requirePointSizeFits(
+                                size.width(), size.height(), i + 1, renderDpi);
+                    }
+                }
                 document.flatten(FlattenMode.FULL, renderDpi);
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             } catch (RuntimeException e) {
