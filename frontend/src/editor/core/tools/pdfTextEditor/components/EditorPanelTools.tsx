@@ -1,4 +1,5 @@
-import { Box, Group, Tooltip } from "@mantine/core";
+import { Box, Group } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
@@ -28,7 +29,7 @@ export function EditorPanelTools({ store, state }: Props) {
     testId: string,
     extra: { armed?: boolean; disabled?: boolean; tooltip: string },
   ) => (
-    <Tooltip label={extra.tooltip}>
+    <Tooltip content={extra.tooltip}>
       <Button
         size="sm"
         variant={extra.armed ? "primary" : "secondary"}

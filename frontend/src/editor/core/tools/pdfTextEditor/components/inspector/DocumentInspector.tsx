@@ -8,8 +8,8 @@ import {
   ScrollArea,
   Stack,
   Text,
-  Tooltip,
 } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Checkbox } from "@editor/ui/Checkbox";
@@ -164,7 +164,7 @@ function ChangeButton({
   testId: string;
 }) {
   return (
-    <Tooltip label={label} withArrow>
+    <Tooltip content={label} arrow>
       <ActionIcon
         size="sm"
         variant="secondary"
@@ -355,7 +355,7 @@ function CoveragePill({ fonts }: { fonts: PageFont[] }) {
     },
   }[tone];
   return (
-    <Tooltip label={summary.hint} multiline w={230} withArrow position="left">
+    <Tooltip content={summary.hint} maxWidth={230} arrow position="left">
       <Badge
         size="xs"
         color={summary.color}
@@ -420,7 +420,7 @@ function FontRow({
   return (
     <Group role="listitem" justify="space-between" wrap="nowrap" gap="sm">
       <Stack gap={2} style={{ minWidth: 0 }}>
-        <Tooltip label={name} withArrow position="top-start">
+        <Tooltip content={name} arrow position="top">
           <Text
             size="sm"
             style={{
@@ -486,11 +486,10 @@ function FontStatusTag({ font, name }: { font: PageFont; name: string }) {
       : t("pdfTextEditor.fonts.allPresent", "Has every letter and number.");
   return (
     <Tooltip
-      multiline
-      w={240}
-      withArrow
+      maxWidth={240}
+      arrow
       position="left"
-      label={
+      content={
         <Stack gap={4}>
           <Text size="xs" fw={600}>
             {name}
@@ -639,7 +638,7 @@ function FontChangePanel({
       : Promise.resolve(null);
   };
   const toggle = (key: "bold" | "italic", icon: IconName, label: string) => (
-    <Tooltip label={label} withArrow>
+    <Tooltip content={label} arrow>
       <Button
         size="sm"
         variant={style[key] ? "primary" : "secondary"}
@@ -889,7 +888,7 @@ function ColourSwatch({
     count,
   });
   return (
-    <Tooltip label={label} withArrow>
+    <Tooltip content={label} arrow>
       <button
         type="button"
         aria-label={label}

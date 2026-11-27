@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Group, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -121,7 +122,7 @@ function ParagraphSection({
       </SectionLabel>
       <Group grow gap="xs" wrap="nowrap">
         <Tooltip
-          label={
+          content={
             canGroup
               ? t("pdfTextEditor.sidebar.groupTooltip", {
                   defaultValue:
@@ -147,7 +148,7 @@ function ParagraphSection({
           </Button>
         </Tooltip>
         <Tooltip
-          label={
+          content={
             canUngroup
               ? t(
                   "pdfTextEditor.sidebar.ungroupTooltip",
@@ -239,13 +240,12 @@ export function GeometryFields({
         testId="pdf-editor-pos-y"
       />
       <Tooltip
-        label={t(
+        content={t(
           "pdfTextEditor.inspector.widthHint",
           "Text re-wraps to fit the width.",
         )}
         disabled={isImage || !setWidth}
-        multiline
-        w={200}
+        maxWidth={200}
       >
         <div>
           <PointsInput
@@ -260,13 +260,12 @@ export function GeometryFields({
         </div>
       </Tooltip>
       <Tooltip
-        label={t(
+        content={t(
           "pdfTextEditor.inspector.heightHint",
           "A text box's height follows its type size and line count.",
         )}
         disabled={!!setHeight}
-        multiline
-        w={200}
+        maxWidth={200}
       >
         <div>
           <PointsInput
@@ -301,7 +300,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
       <Stack gap="xs">
         <Group gap={4} wrap="nowrap">
           {transforms.map((tr) => (
-            <Tooltip key={tr.mode} label={tr.label}>
+            <Tooltip key={tr.mode} content={tr.label}>
               <Button
                 size="sm"
                 variant="secondary"

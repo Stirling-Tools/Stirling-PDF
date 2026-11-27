@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tooltip } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 
@@ -27,7 +27,7 @@ export function ToolIconButton({
 }) {
   const [clicked, setClicked] = useState(false);
   return (
-    <Tooltip label={tooltip ?? label} disabled={clicked}>
+    <Tooltip content={tooltip ?? label} disabled={clicked}>
       {/* The reset sits on a wrapper: a button its click disabled (the last
           undo) gets no pointer events, so its own leave would never fire. */}
       <span

@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Box, Group, Tooltip } from "@mantine/core";
+import { Box, Group } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -75,7 +76,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
           </Group>
         )}
         <Tooltip
-          label={t("pdfTextEditor.saveTooltip", {
+          content={t("pdfTextEditor.saveTooltip", {
             defaultValue:
               "Apply changes to the file in your workspace ({{shortcut}})",
             shortcut: modShortcut("S"),
@@ -101,7 +102,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
           </span>
         )}
         <Tooltip
-          label={t(
+          content={t(
             "pdfTextEditor.downloadTooltip",
             "Save and download the edited PDF",
           )}
@@ -119,7 +120,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
         {compact && (
           <>
             <Tooltip
-              label={t("pdfTextEditor.settings.find", "Find in document")}
+              content={t("pdfTextEditor.settings.find", "Find in document")}
             >
               <Button
                 size="sm"
@@ -135,7 +136,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
               />
             </Tooltip>
             <Tooltip
-              label={t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts")}
+              content={t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts")}
             >
               <Button
                 size="sm"
