@@ -21,6 +21,15 @@ import {
   MIN_ZOOM_PERCENT,
 } from "@editor/components/viewer/defaultZoom";
 
+/**
+ * `/PageLabels` can leave individual pages unlabelled (an entry with no `/S` or
+ * `/P`), and `getPageLabels` reports those as empty strings, so an empty label
+ * must fall back to the page index rather than render a blank field.
+ */
+function pageLabelOrIndex(label: string | undefined, index: number): string {
+  return label || String(index);
+}
+
 // Sizing constants for the page number input
 const MIN_PAGE_DIGITS = 2;
 const MIN_INPUT_WIDTH_PX = 48;
@@ -107,12 +116,15 @@ interface PdfViewerToolbarProps {
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
+  /** Per-page labels from `/PageLabels`, index-aligned with the page order. */
+  pageLabels?: string[] | null;
 }
 
 export function PdfViewerToolbar({
   currentPage = 1,
   totalPages: _totalPages = 1,
   onPageChange,
+  pageLabels = null,
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
   const isPhone = useIsPhone();
@@ -186,7 +198,32 @@ export function PdfViewerToolbar({
     () => zoomState.zoomPercent || 100,
   );
 
-  // Keep the subscription; sync live state in a separate effect.
+  const hasPageLabels = !!pageLabels?.some((label) => label.length > 0);
+  // Mirrors the visible page as a label ("iv") when the document defines them,
+  // otherwise as a plain index. Kept separate from `pageInput` because a label
+  // is not a number and must survive intermediate (non-numeric) typing.
+  const [labelInput, setLabelInput] = useState("");
+
+  const currentPageLabel = hasPageLabels
+    ? pageLabelOrIndex(
+        pageLabels?.[scrollState.currentPage - 1],
+        scrollState.currentPage,
+      )
+    : "";
+  const totalLabel = hasPageLabels
+    ? pageLabelOrIndex(
+        pageLabels?.[scrollState.totalPages - 1],
+        scrollState.totalPages,
+      )
+    : String(scrollState.totalPages);
+
+  useEffect(() => {
+    if (hasPageLabels) {
+      setLabelInput(currentPageLabel);
+    }
+  }, [hasPageLabels, currentPageLabel]);
+
+  // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
     const unregister = registerImmediateScrollUpdate(
       (currentPage, _totalPages) => {
@@ -235,6 +272,48 @@ export function PdfViewerToolbar({
       onPageChange(page);
     }
     setPageInput(page);
+    // Show the destination label right away: the scroll plugin only mirrors a
+    // programmatic jump into its scroll state once the smooth scroll settles,
+    // so reading the label back from there would leave the field stale.
+    if (hasPageLabels) {
+      setLabelInput(pageLabelOrIndex(pageLabels?.[page - 1], page));
+    }
+  };
+
+  // Accepts either a label ("iv") or a plain page index, matching what the
+  // field shows; anything else reverts to the current page.
+  const handleLabelNavigation = (raw: string) => {
+    const value = raw.trim();
+    const lower = value.toLowerCase();
+    // A document that restarts numbering gives two pages the same label; an
+    // unchanged field must keep the current page instead of resolving the
+    // duplicate to its first occurrence. Later occurrences stay reachable by
+    // typing the page index. Compare against the page's own label, not the
+    // displayed fallback, so the index of an unlabelled page still resolves
+    // the label it collides with.
+    const currentRawLabel = pageLabels?.[scrollState.currentPage - 1];
+    if (value && currentRawLabel && lower === currentRawLabel.toLowerCase()) {
+      return;
+    }
+    const byLabel =
+      value && pageLabels
+        ? pageLabels.findIndex((label) => label.toLowerCase() === lower)
+        : -1;
+    if (byLabel >= 0) {
+      handlePageNavigation(byLabel + 1);
+      return;
+    }
+    const page = Number(value);
+    if (
+      value.length > 0 &&
+      Number.isInteger(page) &&
+      page >= 1 &&
+      page <= scrollState.totalPages
+    ) {
+      handlePageNavigation(page);
+      return;
+    }
+    setLabelInput(currentPageLabel);
   };
 
   // Commit on Enter or blur so typing "120" scrolls once.
@@ -276,6 +355,10 @@ export function PdfViewerToolbar({
   const inputWidth = Math.max(
     MIN_INPUT_WIDTH_PX,
     BASE_INPUT_WIDTH_PX + totalPagesDigits * PX_PER_DIGIT,
+  );
+  const labelInputWidth = Math.max(
+    MIN_INPUT_WIDTH_PX,
+    BASE_INPUT_WIDTH_PX + Math.max(1, labelInput.length) * PX_PER_DIGIT,
   );
 
   return (
@@ -323,35 +406,69 @@ export function PdfViewerToolbar({
       </ActionIcon>
 
       {/* Page Input */}
-      <NumberInput
-        aria-label={t("viewer.pageNumber", "Page number")}
-        value={pageInput}
-        onChange={(value) => {
-          setPageInput(Number(value));
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && !event.nativeEvent.isComposing) {
-            commitPageInput();
-          }
-        }}
-        onBlur={commitPageInput}
-        min={1}
-        max={scrollState.totalPages}
-        allowDecimal={false}
-        hideControls
-        size="xs"
-        styles={{
-          input: {
-            width: inputWidth,
-            textAlign: "center",
-            fontWeight: 500,
-            fontSize: 13,
-            paddingLeft: 4,
-            paddingRight: 4,
-            boxSizing: "border-box",
-          },
-        }}
-      />
+      {hasPageLabels ? (
+        <TextInput
+          value={labelInput}
+          onChange={(event) => setLabelInput(event.currentTarget.value)}
+          onBlur={(event) => handleLabelNavigation(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            // Blur commits through onBlur; navigating here as well would run the
+            // jump twice. Skip while composing so an IME candidate is not taken
+            // as the page text.
+            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              event.currentTarget.blur();
+            }
+          }}
+          size="xs"
+          title={t("viewer.thumbnails.pageNumber", "Page {{page}}", {
+            page: labelInput || currentPageLabel,
+          })}
+          aria-label={t("viewer.thumbnails.pageNumber", "Page {{page}}", {
+            page: labelInput || currentPageLabel,
+          })}
+          styles={{
+            input: {
+              width: labelInputWidth,
+              textAlign: "center",
+              fontWeight: 500,
+              fontSize: 13,
+              paddingLeft: 4,
+              paddingRight: 4,
+              boxSizing: "border-box",
+            },
+          }}
+        />
+      ) : (
+        <NumberInput
+          aria-label={t("viewer.pageNumber", "Page number")}
+          value={pageInput}
+          onChange={(value) => {
+            setPageInput(Number(value));
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              commitPageInput();
+            }
+          }}
+          onBlur={commitPageInput}
+          min={1}
+          max={scrollState.totalPages}
+          allowDecimal={false}
+          hideControls
+          size="xs"
+          styles={{
+            input: {
+              width: inputWidth,
+              textAlign: "center",
+              fontWeight: 500,
+              fontSize: 13,
+              paddingLeft: 4,
+              paddingRight: 4,
+              boxSizing: "border-box",
+            },
+          }}
+        />
+      )}
 
       <span
         style={{
@@ -360,7 +477,7 @@ export function PdfViewerToolbar({
           color: "var(--c-text-subtle)",
         }}
       >
-        / {scrollState.totalPages}
+        / {totalLabel}
       </span>
 
       {/* Next Page Button */}

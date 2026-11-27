@@ -95,10 +95,10 @@ vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsPhone: () => device.isPhone,
 }));
 
-const renderToolbar = () =>
+const renderToolbar = (pageLabels?: string[]) =>
   render(
     <MantineProvider>
-      <PdfViewerToolbar />
+      <PdfViewerToolbar pageLabels={pageLabels} />
     </MantineProvider>,
   );
 
@@ -304,5 +304,77 @@ describe("PdfViewerToolbar zoom controls", () => {
     fireEvent.keyDown(input, { key: "Enter", isComposing: false });
     expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledTimes(1);
     expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledWith(5);
+  });
+});
+
+describe("PdfViewerToolbar page labels", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    viewer.scroll.totalPages = 3;
+  });
+
+  // `/PageLabels` can carry entries without `/S` or `/P`, which `getPageLabels`
+  // reports as "", so those pages must still show their index.
+  it("falls back to the page index for an unlabelled current page", () => {
+    viewer.scroll.currentPage = 2;
+    renderToolbar(["i", "", "iii"]);
+
+    expect(screen.getByRole("textbox", { name: /page/i })).toHaveValue("2");
+    expect(screen.getByText("/ iii")).toBeInTheDocument();
+  });
+
+  it("falls back to the page index for an unlabelled last page", () => {
+    viewer.scroll.currentPage = 2;
+    renderToolbar(["i", "ii", ""]);
+
+    expect(screen.getByRole("textbox", { name: /page/i })).toHaveValue("ii");
+    expect(screen.getByText("/ 3")).toBeInTheDocument();
+  });
+
+  // A restarted numbering makes page 2 carry the same label as page 1; blurring
+  // the unchanged field must keep the current page, not resolve the duplicate to
+  // the first occurrence.
+  it("keeps the current page when its repeated label is committed unchanged", () => {
+    viewer.scroll.currentPage = 2;
+    renderToolbar(["1", "1", "2"]);
+
+    const input = screen.getByRole("textbox", { name: /page/i });
+    expect(input).toHaveValue("1");
+
+    fireEvent.blur(input);
+
+    expect(viewer.value.scrollActions.scrollToPage).not.toHaveBeenCalled();
+  });
+
+  it("keeps the index path open for a later duplicate label", () => {
+    viewer.scroll.currentPage = 1;
+    renderToolbar(["1", "2", "1"]);
+
+    const input = screen.getByRole("textbox", { name: /page/i });
+    fireEvent.change(input, { target: { value: "3" } });
+    fireEvent.blur(input);
+
+    expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledWith(3);
+  });
+
+  it("navigates to a different label", () => {
+    viewer.scroll.currentPage = 1;
+    renderToolbar(["i", "ii", "iii"]);
+
+    const input = screen.getByRole("textbox", { name: /page/i });
+    fireEvent.change(input, { target: { value: "iii" } });
+    fireEvent.blur(input);
+    expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledWith(3);
+  });
+
+  it("rejects a fractional page index", () => {
+    viewer.scroll.currentPage = 1;
+    renderToolbar(["i", "ii", "iii"]);
+
+    const input = screen.getByRole("textbox", { name: /page/i });
+    fireEvent.change(input, { target: { value: "1.5" } });
+    fireEvent.blur(input);
+    expect(viewer.value.scrollActions.scrollToPage).not.toHaveBeenCalled();
+    expect(input).toHaveValue("i");
   });
 });

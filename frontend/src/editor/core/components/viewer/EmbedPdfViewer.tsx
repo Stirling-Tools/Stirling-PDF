@@ -37,6 +37,7 @@ import {
 } from "@editor/components/viewer/ThumbnailSidebar";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 import { defaultZoomLevel } from "@editor/components/viewer/defaultZoom";
+import { usePageLabels } from "@editor/components/viewer/hooks/usePageLabels";
 import { BookmarkSidebar } from "@editor/components/viewer/BookmarkSidebar";
 import { AttachmentSidebar } from "@editor/components/viewer/AttachmentSidebar";
 import { LayerSidebar } from "@editor/components/viewer/LayerSidebar";
@@ -131,6 +132,20 @@ export interface EmbedPdfViewerProps {
 const documentCacheKey = (file: StirlingFile): string =>
   `${file.fileId}|${file.quickKey}`;
 
+// An attachment switch hands the viewer a brand-new File, so a name/size/mtime
+// key can collide and reuse the previous preview's labels and outline. Identity
+// gives each preview object its own cache entry for as long as it is held.
+const previewFileCacheKeys = new WeakMap<File, string>();
+let nextPreviewFileCacheKey = 0;
+const previewFileCacheKey = (file: File): string => {
+  let key = previewFileCacheKeys.get(file);
+  if (!key) {
+    key = String(++nextPreviewFileCacheKey);
+    previewFileCacheKeys.set(file, key);
+  }
+  return key;
+};
+
 // Guards only; a restore completes on plugin events. A missed event costs a
 // wrong-scale frame after the hide cap, not a blank viewer until the other.
 const RESTORE_SETTLE_CAP_MS = 15_000;
@@ -194,6 +209,7 @@ const EmbedPdfViewerContent = ({
     getZoomState,
     registerImmediateZoomUpdate,
     registerImmediateRotationUpdate,
+    registerImmediateScrollUpdate,
     getRotationState,
     zoomRestorePendingRef,
     notifyZoomRestoreSettled,
@@ -213,6 +229,14 @@ const EmbedPdfViewerContent = ({
 
   const scrollState = getScrollState();
   const rotationState = getRotationState();
+
+  // The scroll bridge only reports once the document is open, so this doubles as
+  // the "safe to scan" signal that keeps the label read off the open path.
+  const [viewerDocumentReady, setViewerDocumentReady] = useState(false);
+  useEffect(
+    () => registerImmediateScrollUpdate(() => setViewerDocumentReady(true)),
+    [registerImmediateScrollUpdate],
+  );
 
   // Track initial rotation to detect changes
   const initialRotationRef = useRef<number | null>(null);
@@ -808,8 +832,7 @@ const EmbedPdfViewerContent = ({
     }
 
     if (previewFile) {
-      const uniquePreviewId = `${previewFile.name}-${previewFile.size}-${previewFile.lastModified ?? "na"}`;
-      return `preview-${uniquePreviewId}`;
+      return `preview-${previewFileCacheKey(previewFile)}`;
     }
 
     if (effectiveFile?.url) {
@@ -824,6 +847,17 @@ const EmbedPdfViewerContent = ({
     return undefined;
   }, [currentFile, effectiveFile, previewFile]);
 
+  // The readiness latch belongs to one document; a replacement file has to earn
+  // it again, or the label scan would race the new document's open.
+  useEffect(() => {
+    setViewerDocumentReady(false);
+  }, [bookmarkCacheKey]);
+
+  const pageLabels = usePageLabels(
+    effectiveFile?.file,
+    bookmarkCacheKey,
+    viewerDocumentReady,
+  );
   // Generate cache keys for all active files to enable preloading
   const allBookmarkCacheKeys = React.useMemo(() => {
     if (previewFile) {
@@ -2258,6 +2292,7 @@ const EmbedPdfViewerContent = ({
             <PdfViewerToolbar
               currentPage={scrollState.currentPage}
               totalPages={scrollState.totalPages}
+              pageLabels={pageLabels}
             />
           </div>
         </div>
