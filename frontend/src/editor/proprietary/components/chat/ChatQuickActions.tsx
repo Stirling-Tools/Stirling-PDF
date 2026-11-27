@@ -132,7 +132,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
         return [
           {
             key: "convert",
-            icon: <Icon name="file-pdf" size={18} />,
+            icon: <Icon name="file-convert" size={18} />,
             title: text,
             onClick: send(text),
           },
@@ -173,7 +173,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       );
       result.push({
         key: "convert",
-        icon: <Icon name="file-pdf" size={18} />,
+        icon: <Icon name="file-convert" size={18} />,
         title: text,
         onClick: send(text),
       });
@@ -188,7 +188,7 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
     );
     result.push({
       key: "merge",
-      icon: <Icon name="layers" size={18} />,
+      icon: <Icon name="merge" size={18} />,
       title: mergeText,
       onClick: send(mergeText),
     });

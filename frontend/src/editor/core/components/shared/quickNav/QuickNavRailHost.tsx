@@ -92,7 +92,7 @@ export function QuickNavRailHost() {
   const reader: QuickNavEntry = {
     id: "reader",
     label: t("quickNav.reader", "Reader"),
-    icon: <Icon name="book-open" size={SIZE} />,
+    icon: <Icon name="book-open-text" size={SIZE} />,
     // Current means the surface you are on, not a switch left on: reader mode set
     // from the processor does not count until you are in the editor.
     current: inEditor && Boolean(host?.readerMode),

@@ -164,7 +164,7 @@ export default function ViewerAnnotationControls({
   const redactLabel = t("workbenchBar.redact", "Redact");
   return (
     <BarButton
-      icon="file-x"
+      icon="redact"
       label={redactLabel}
       tooltipPosition={tooltipPosition}
       active={isRedactMode}

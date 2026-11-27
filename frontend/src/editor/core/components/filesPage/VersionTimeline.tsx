@@ -5,7 +5,7 @@ import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { FileId, ToolOperation } from "@editor/types/file";
-import { toolOperationLabel } from "@editor/utils/toolOperationLabel";
+import { useToolOperationLabel } from "@editor/utils/toolOperationLabel";
 import { StirlingFileStub } from "@editor/types/fileContext";
 import { formatFileSize, getFileDate } from "@editor/utils/fileUtils";
 import { downloadFileFromStorage } from "@editor/utils/downloadUtils";
@@ -59,8 +59,8 @@ function deltaToolFor(
 }
 
 function ToolLabel({ operation }: { operation: ToolOperation }) {
-  const { t } = useTranslation();
-  return <span>{toolOperationLabel(operation, t)}</span>;
+  const label = useToolOperationLabel();
+  return <span>{label(operation)}</span>;
 }
 
 export interface VersionTimelineProps {

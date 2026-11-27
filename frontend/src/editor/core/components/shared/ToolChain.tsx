@@ -6,8 +6,7 @@
 import React from "react";
 import { Text, Tooltip, Badge, Group } from "@mantine/core";
 import { ToolOperation } from "@editor/types/file";
-import { toolOperationLabel } from "@editor/utils/toolOperationLabel";
-import { useTranslation } from "react-i18next";
+import { useToolOperationLabel } from "@editor/utils/toolOperationLabel";
 
 interface ToolChainProps {
   toolChain: ToolOperation[];
@@ -26,10 +25,8 @@ const ToolChain: React.FC<ToolChainProps> = ({
   // token carries the readable step for whichever theme is active.
   color = "var(--c-accent-text)",
 }) => {
-  const { t } = useTranslation();
+  const getToolName = useToolOperationLabel();
   if (!toolChain || toolChain.length === 0) return null;
-
-  const getToolName = (tool: ToolOperation) => toolOperationLabel(tool, t);
 
   // Create full tool chain for tooltip
   const fullChainDisplay =

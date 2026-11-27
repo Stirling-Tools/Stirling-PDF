@@ -5971,7 +5971,7 @@ title = "Manage Attachments"
 [home.addImage]
 desc = "Adds a image onto a set location on the PDF"
 tags = "insert,embed,place,add image,insert image,place image,embed image,add photo,add picture,add logo,graphics,insert picture,place photo,PNG,JPG,JPEG"
-title = "Add image"
+title = "Add Image"
 
 [home.addPageNumbers]
 desc = "Add Page numbers throughout a document in a set location"
@@ -6135,7 +6135,7 @@ title = "Form Editor"
 [home.getPdfInfo]
 desc = "Grabs any and all information possible on PDFs"
 tags = "info,metadata,details,PDF info,document info,properties,file info,get info,show info,view properties,document properties,statistics,page count,file details,inspect"
-title = "Get all info on PDF"
+title = "Get All Info on PDF"
 
 [home.manageCertificates]
 tags = "certificates,import,export,manage certificates,digital certificates,certificate management,PFX,P12,keystore,import certificate,export certificate,certificate store,PKI"
@@ -6164,7 +6164,7 @@ title = "PDF Multi Tool"
 [home.ocr]
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
 tags = "extract,scan,OCR,optical character recognition,text recognition,scan to text,image to text,scanned document,searchable PDF,make searchable,extract text,recognize text,read scanned"
-title = "OCR / Cleanup scans"
+title = "OCR / Clean Up Scans"
 
 [home.overlay-pdfs]
 desc = "Overlay one PDF on top of another"
@@ -6208,17 +6208,17 @@ title = "Remove Annotations"
 [home.removeBlanks]
 desc = "Detects and removes blank pages from a document"
 tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
-title = "Remove Blank pages"
+title = "Remove Blank Pages"
 
 [home.removeCertSign]
 desc = "Remove certificate signature from PDF"
 tags = "remove,delete,unlock,remove certificate,remove signature,delete signature,unsigned,remove digital signature,strip signature,remove cert,unsign"
-title = "Remove Certificate Sign"
+title = "Remove Certificate Signature"
 
 [home.removeImage]
 desc = "Remove image from PDF to reduce file size"
 tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
-title = "Remove image"
+title = "Remove Images"
 
 [home.removePages]
 desc = "Remove specific pages from a PDF document"
@@ -6258,7 +6258,7 @@ title = "Sanitize"
 [home.scalePages]
 desc = "Change the size/scale of a page and/or its contents."
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
-title = "Adjust page size/scale"
+title = "Adjust Page Size/Scale"
 
 [home.scannerImageSplit]
 desc = "Detect and split scanned photos into separate pages"
@@ -6271,7 +6271,7 @@ title = "Shared Signing"
 [home.showJS]
 desc = "Searches and displays any JS injected into a PDF"
 tags = "javascript,code,script,show javascript,show JS,find javascript,detect javascript,view javascript,embedded scripts,malware,security,inspect,debug"
-title = "Show Javascript"
+title = "Show JavaScript"
 
 [home.sign]
 desc = "Adds signature to PDF by drawing, text or image"
@@ -12416,7 +12416,7 @@ title = "Certificate Removal Results"
 [removeImage]
 submit = "Remove Images"
 tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
-title = "Remove image"
+title = "Remove Images"
 
 [removeImage.error]
 failed = "Failed to remove images from the PDF."
@@ -13465,7 +13465,7 @@ processing = "Extracting JavaScript..."
 results = "Result"
 submit = "Show JavaScript"
 tags = "JS"
-title = "Show Javascript"
+title = "Show JavaScript"
 
 [showJS.view]
 title = "Extracted JavaScript"
@@ -14915,7 +14915,7 @@ copyText = "Copy"
 coverPageView = "Show Cover Page Separately"
 documentUpdated = "Document updated"
 dualPageView = "Dual Page View"
-editText = "Edit text"
+editText = "Edit Text"
 engineLoadError = "Failed to initialize PDF viewer engine"
 engineSlowWarning = "PDF engine initialization is taking longer than expected. Please check your browser WebAssembly and Worker settings, or reload the page."
 firstPage = "First Page"
@@ -15339,7 +15339,7 @@ compress = "Compress"
 document = "Document"
 duplicated = "Copy saved to your file library"
 info = "Document info"
-metadata = "Edit properties"
+metadata = "Change metadata"
 more = "More document actions"
 password = "Add password"
 protect = "Protect and optimise"
