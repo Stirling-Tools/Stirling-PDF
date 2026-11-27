@@ -1,4 +1,4 @@
-import { useState, type ReactElement, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Menu, Tooltip } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
@@ -7,7 +7,7 @@ import {
   selectionBarMenuProps,
 } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
-export type ToolbarMenuPosition = "bottom-start" | "top-start" | "top";
+export type ToolbarMenuPosition = "bottom-start" | "top-start";
 
 interface ToolbarMenuProps {
   label: string;
@@ -20,7 +20,6 @@ interface ToolbarMenuProps {
   pressed?: boolean;
   inPopover?: boolean;
   position?: ToolbarMenuPosition;
-  target?: ReactElement;
 }
 
 export function ToolbarMenu({
@@ -34,7 +33,6 @@ export function ToolbarMenu({
   pressed,
   inPopover = false,
   position = "bottom-start",
-  target,
 }: ToolbarMenuProps) {
   const [opened, setOpened] = useState(false);
   return (
@@ -46,25 +44,21 @@ export function ToolbarMenu({
       onOpen={() => setOpened(true)}
       onClose={() => setOpened(false)}
     >
-      {target ? (
-        <Menu.Target>{target}</Menu.Target>
-      ) : (
-        <Tooltip label={tooltip} disabled={opened}>
-          <Menu.Target>
-            <Button
-              variant={pressed ? "primary" : "tertiary"}
-              accent={pressed ? "default" : "neutral"}
-              size={size}
-              disabled={disabled}
-              aria-label={label}
-              aria-pressed={pressed}
-              data-testid={testId}
-              style={NO_SHRINK}
-              leftSection={<Icon name={icon} size={20} />}
-            />
-          </Menu.Target>
-        </Tooltip>
-      )}
+      <Tooltip label={tooltip} disabled={opened}>
+        <Menu.Target>
+          <Button
+            variant={pressed ? "primary" : "tertiary"}
+            accent={pressed ? "default" : "neutral"}
+            size={size}
+            disabled={disabled}
+            aria-label={label}
+            aria-pressed={pressed}
+            data-testid={testId}
+            style={NO_SHRINK}
+            leftSection={<Icon name={icon} size={20} />}
+          />
+        </Menu.Target>
+      </Tooltip>
       <Menu.Dropdown {...selectionBarMenuProps}>{children}</Menu.Dropdown>
     </Menu>
   );

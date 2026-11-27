@@ -1,6 +1,13 @@
 import { useState, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Group, Menu, Stack, Text, type PopoverProps } from "@mantine/core";
+import {
+  Group,
+  Menu,
+  Stack,
+  Text,
+  type MenuProps,
+  type PopoverProps,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PAGE_SIZES as PAGE_SIZE_POINTS } from "@editor/constants/pageSizeConstants";
 import { Button } from "@editor/ui/Button";
@@ -27,10 +34,7 @@ import {
   ChangePopover,
 } from "@editor/tools/pdfTextEditor/components/inspector/ChangeControls";
 import { Field } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import {
-  ToolbarMenu,
-  type ToolbarMenuPosition,
-} from "@editor/tools/pdfTextEditor/components/toolbar/ToolbarMenu";
+import { selectionBarMenuProps } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import { localPaperSize, orderPaperSizeOptions } from "@editor/utils/paperSize";
 
 const PAGE_SIZES: PageSizeName[] = ["A4", "LETTER", "LEGAL", "A5", "A3"];
@@ -298,31 +302,27 @@ function PageSetupPopover({
 }
 
 export function PagesMenu({
-  disabled = false,
   target,
-  position = "bottom-start",
+  position,
 }: {
-  disabled?: boolean;
-  target?: ReactElement;
-  position?: ToolbarMenuPosition;
+  target: ReactElement;
+  position: MenuProps["position"];
 }) {
-  const { t } = useTranslation();
   const [setupPage, setSetupPage] = useState<number | null>(null);
   return (
     <PageSetupPopover
       pageIndex={setupPage}
       onClose={() => setSetupPage(null)}
       anchor={
-        <ToolbarMenu
-          label={t("pdfTextEditor.pages.menu", "Pages")}
-          icon="files"
-          testId="pdf-editor-pages"
-          disabled={disabled}
-          position={position}
-          target={target}
-        >
-          <PageMenuItems pageAt={visiblePageIndex} onPageSetup={setSetupPage} />
-        </ToolbarMenu>
+        <Menu shadow="md" position={position} withinPortal>
+          <Menu.Target>{target}</Menu.Target>
+          <Menu.Dropdown {...selectionBarMenuProps}>
+            <PageMenuItems
+              pageAt={visiblePageIndex}
+              onPageSetup={setSetupPage}
+            />
+          </Menu.Dropdown>
+        </Menu>
       }
     />
   );
