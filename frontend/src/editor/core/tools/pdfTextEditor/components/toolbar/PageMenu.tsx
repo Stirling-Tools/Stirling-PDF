@@ -1,10 +1,10 @@
-import { useEffect, useState, type ReactElement } from "react";
-import { Menu } from "@mantine/core";
+import { useState, type ReactElement, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { Group, Menu, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PAGE_SIZES as PAGE_SIZE_POINTS } from "@editor/constants/pageSizeConstants";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
-import { Modal } from "@editor/ui/Modal";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import {
@@ -17,12 +17,26 @@ import type {
   PageOrientation,
   PageSizeName,
 } from "@editor/tools/pdfTextEditor/util/documentChanges";
-import { ToolbarMenu } from "@editor/tools/pdfTextEditor/components/toolbar/ToolbarMenu";
+import {
+  pageSetupRequest,
+  usePageSetupRequest,
+} from "@editor/tools/pdfTextEditor/store/pageSetupRequest";
+import {
+  BlockHeading,
+  ChangeButton,
+  ChangePopover,
+} from "@editor/tools/pdfTextEditor/components/inspector/ChangeControls";
+import {
+  ToolbarMenu,
+  type ToolbarMenuPosition,
+} from "@editor/tools/pdfTextEditor/components/toolbar/ToolbarMenu";
 import "@editor/tools/pdfTextEditor/components/toolbar/PageMenu.css";
 
 const PAGE_SIZES: PageSizeName[] = ["A4", "LETTER", "LEGAL", "A5", "A3"];
 
 const SIZE_TOLERANCE_PT = 2;
+
+const PAGE_SETUP_WIDTH = 380;
 
 function namedSize(width: number, height: number): PageSizeName | null {
   const [short, long] = width < height ? [width, height] : [height, width];
@@ -59,7 +73,13 @@ const PAGE_ACTIONS: Array<{
   },
 ];
 
-export function PageMenuItems({ onPageSetup }: { onPageSetup: () => void }) {
+export function PageMenuItems({
+  pageAt,
+  onPageSetup,
+}: {
+  pageAt: () => number;
+  onPageSetup: (pageIndex: number) => void;
+}) {
   const { t } = useTranslation();
   const change = useEditorSession()?.changeDocument;
   const pageCount = useEditorState(useSharedEditorStore(), (s) => s.pageCount);
@@ -77,7 +97,7 @@ export function PageMenuItems({ onPageSetup }: { onPageSetup: () => void }) {
           leftSection={<Icon name={action.icon} size={18} />}
           disabled={!change || (action.id === "delete" && pageCount <= 1)}
           color={action.id === "delete" ? "red" : undefined}
-          onClick={() => void change?.(action.change(visiblePageIndex()))}
+          onClick={() => void change?.(action.change(pageAt()))}
           data-testid={`pdf-editor-page-${action.id}`}
         >
           {labels[action.id]}
@@ -86,47 +106,11 @@ export function PageMenuItems({ onPageSetup }: { onPageSetup: () => void }) {
       <Menu.Item
         leftSection={<Icon name="file-sliders" size={18} />}
         disabled={!change}
-        onClick={onPageSetup}
+        onClick={() => onPageSetup(pageAt())}
         data-testid="pdf-editor-page-setup"
       >
         {t("pdfTextEditor.pages.setup", "Page size and orientation…")}
       </Menu.Item>
-    </>
-  );
-}
-
-export function usePageSetup(): { open: () => void; modal: ReactElement } {
-  const [open, setOpen] = useState(false);
-  return {
-    open: () => setOpen(true),
-    modal: <PageSetupModal open={open} onClose={() => setOpen(false)} />,
-  };
-}
-
-export function PagesMenu({
-  disabled = false,
-  target,
-  position = "bottom-start",
-}: {
-  disabled?: boolean;
-  target?: ReactElement;
-  position?: "bottom-start" | "top";
-}) {
-  const { t } = useTranslation();
-  const setup = usePageSetup();
-  return (
-    <>
-      <ToolbarMenu
-        label={t("pdfTextEditor.pages.menu", "Pages")}
-        icon="files"
-        testId="pdf-editor-pages"
-        disabled={disabled}
-        position={position}
-        target={target}
-      >
-        <PageMenuItems onPageSetup={setup.open} />
-      </ToolbarMenu>
-      {setup.modal}
     </>
   );
 }
@@ -156,32 +140,31 @@ function Choice<T extends string>({
   );
 }
 
-function PageSetupModal({
-  open,
+function PageSetupPanel({
+  pageIndex,
   onClose,
 }: {
-  open: boolean;
+  pageIndex: number;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
   const session = useEditorSession();
-  const [size, setSize] = useState<PageSizeName | "current">("A4");
-  const [ownSizeNamed, setOwnSizeNamed] = useState(true);
-  const [orientation, setOrientation] = useState<PageOrientation>("portrait");
+  const [initial] = useState(() => {
+    const current = session?.pageSize(pageIndex);
+    const named = current ? namedSize(current.width, current.height) : "A4";
+    const orientation: PageOrientation =
+      current && current.width > current.height ? "landscape" : "portrait";
+    return {
+      size: named ?? ("current" as const),
+      ownSizeNamed: named !== null,
+      orientation,
+    };
+  });
+  const [size, setSize] = useState<PageSizeName | "current">(initial.size);
+  const [orientation, setOrientation] = useState<PageOrientation>(
+    initial.orientation,
+  );
   const [scope, setScope] = useState<"page" | "all">("page");
-  const [pageIndex, setPageIndex] = useState(0);
-  useEffect(() => {
-    if (!open) return;
-    setScope("page");
-    const shown = visiblePageIndex();
-    setPageIndex(shown);
-    const current = session?.pageSize(shown);
-    if (!current) return;
-    setOrientation(current.width > current.height ? "landscape" : "portrait");
-    const named = namedSize(current.width, current.height);
-    setOwnSizeNamed(named !== null);
-    setSize(named ?? "current");
-  }, [open, session]);
   const sizeNames: Record<PageSizeName | "current", string> = {
     current: t("pdfTextEditor.pages.sizeCurrent", "Current"),
     A4: "A4",
@@ -201,26 +184,23 @@ function PageSetupModal({
     });
   };
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      width="sm"
-      title={t("pdfTextEditor.pages.setupTitle", "Page setup")}
-      subtitle={t(
-        "pdfTextEditor.pages.setupSubtitle",
-        "Content keeps its place from the top of the page.",
-      )}
-      footer={
-        <Button onClick={apply} data-testid="pdf-editor-page-setup-apply">
-          {t("pdfTextEditor.pages.apply", "Apply")}
-        </Button>
-      }
-    >
+    <Stack gap="sm" data-testid="pdf-editor-page-setup-panel">
+      <div>
+        <Text size="sm" fw={600}>
+          {t("pdfTextEditor.pages.setupTitle", "Page setup")}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t(
+            "pdfTextEditor.pages.setupSubtitle",
+            "Content keeps its place from the top of the page.",
+          )}
+        </Text>
+      </div>
       <div className="pdf-editor-page-setup">
         <Choice
           label={t("pdfTextEditor.pages.size", "Page size")}
           options={[
-            ...(ownSizeNamed ? [] : (["current"] as const)),
+            ...(initial.ownSizeNamed ? [] : (["current"] as const)),
             ...PAGE_SIZES,
           ].map((value) => ({ value, label: sizeNames[value] }))}
           value={size}
@@ -257,6 +237,139 @@ function PageSetupModal({
           onChange={setScope}
         />
       </div>
-    </Modal>
+      <Group gap="xs" justify="flex-end">
+        <Button
+          size="sm"
+          variant="secondary"
+          accent="neutral"
+          onClick={onClose}
+          data-testid="pdf-editor-page-setup-cancel"
+        >
+          {t("cancel", "Cancel")}
+        </Button>
+        <Button
+          size="sm"
+          onClick={apply}
+          data-testid="pdf-editor-page-setup-apply"
+        >
+          {t("pdfTextEditor.pages.apply", "Apply")}
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
+function PageSetupPopover({
+  pageIndex,
+  onClose,
+  anchor,
+}: {
+  pageIndex: number | null;
+  onClose: () => void;
+  anchor: ReactNode;
+}) {
+  return (
+    <ChangePopover
+      opened={pageIndex !== null}
+      width={PAGE_SETUP_WIDTH}
+      anchor={anchor}
+    >
+      {pageIndex !== null && (
+        <PageSetupPanel
+          key={pageIndex}
+          pageIndex={pageIndex}
+          onClose={onClose}
+        />
+      )}
+    </ChangePopover>
+  );
+}
+
+export function PagesMenu({
+  disabled = false,
+  target,
+  position = "bottom-start",
+}: {
+  disabled?: boolean;
+  target?: ReactElement;
+  position?: ToolbarMenuPosition;
+}) {
+  const { t } = useTranslation();
+  const [setupPage, setSetupPage] = useState<number | null>(null);
+  return (
+    <PageSetupPopover
+      pageIndex={setupPage}
+      onClose={() => setSetupPage(null)}
+      anchor={
+        <ToolbarMenu
+          label={t("pdfTextEditor.pages.menu", "Pages")}
+          icon="files"
+          testId="pdf-editor-pages"
+          disabled={disabled}
+          position={position}
+          target={target}
+        >
+          <PageMenuItems pageAt={visiblePageIndex} onPageSetup={setSetupPage} />
+        </ToolbarMenu>
+      }
+    />
+  );
+}
+
+export function PagesBlock() {
+  const { t } = useTranslation();
+  const pageCount = useEditorState(useSharedEditorStore(), (s) => s.pageCount);
+  const [setupPage, setSetupPage] = useState<number | null>(null);
+  return (
+    <div data-testid="pdf-editor-pages-panel">
+      <PageSetupPopover
+        pageIndex={setupPage}
+        onClose={() => setSetupPage(null)}
+        anchor={
+          <BlockHeading
+            action={
+              <Menu shadow="md" position="bottom-end" width={240}>
+                <Menu.Target>
+                  <ChangeButton
+                    icon="files"
+                    label={t("pdfTextEditor.pages.actions", "Page actions")}
+                    testId="pdf-editor-pages"
+                  />
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <PageMenuItems
+                    pageAt={visiblePageIndex}
+                    onPageSetup={setSetupPage}
+                  />
+                </Menu.Dropdown>
+              </Menu>
+            }
+          >
+            {t("pdfTextEditor.pages.menu", "Pages")} · {pageCount}
+          </BlockHeading>
+        }
+      />
+    </div>
+  );
+}
+
+export function PageSetupHost() {
+  const request = usePageSetupRequest();
+  if (!request) return null;
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        left: request.clientX,
+        top: request.clientY,
+      }}
+    >
+      <PageSetupPopover
+        pageIndex={request.pageIndex}
+        onClose={() => pageSetupRequest.close()}
+        anchor={<div style={{ width: 0, height: 0 }} />}
+      />
+    </div>,
+    document.body,
   );
 }

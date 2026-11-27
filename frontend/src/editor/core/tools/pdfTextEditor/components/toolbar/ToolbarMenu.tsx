@@ -2,7 +2,12 @@ import type { ReactElement, ReactNode } from "react";
 import { Menu, Tooltip } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
-import { NO_SHRINK } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
+import {
+  NO_SHRINK,
+  selectionBarMenuProps,
+} from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
+
+export type ToolbarMenuPosition = "bottom-start" | "top-start" | "top";
 
 interface ToolbarMenuProps {
   label: string;
@@ -14,7 +19,7 @@ interface ToolbarMenuProps {
   disabled?: boolean;
   pressed?: boolean;
   inPopover?: boolean;
-  position?: "bottom-start" | "top";
+  position?: ToolbarMenuPosition;
   target?: ReactElement;
 }
 
@@ -38,9 +43,11 @@ export function ToolbarMenu({
       withinPortal={!inPopover}
       disabled={disabled}
     >
-      <Menu.Target>
-        {target ?? (
-          <Tooltip label={tooltip}>
+      {target ? (
+        <Menu.Target>{target}</Menu.Target>
+      ) : (
+        <Tooltip label={tooltip}>
+          <Menu.Target>
             <Button
               variant={pressed ? "primary" : "tertiary"}
               accent={pressed ? "default" : "neutral"}
@@ -52,10 +59,10 @@ export function ToolbarMenu({
               style={NO_SHRINK}
               leftSection={<Icon name={icon} size={20} />}
             />
-          </Tooltip>
-        )}
-      </Menu.Target>
-      <Menu.Dropdown>{children}</Menu.Dropdown>
+          </Menu.Target>
+        </Tooltip>
+      )}
+      <Menu.Dropdown {...selectionBarMenuProps}>{children}</Menu.Dropdown>
     </Menu>
   );
 }

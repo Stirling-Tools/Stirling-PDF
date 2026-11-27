@@ -23,8 +23,14 @@ import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
 import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
 import {
+  ParagraphControls,
+  ParagraphPopover,
+  TextStyleMenu,
+} from "@editor/tools/pdfTextEditor/components/toolbar/ParagraphGroup";
+import {
   NO_SHRINK,
   selectionBarMenuProps,
+  toggleLook,
   type Controller,
 } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
@@ -75,14 +81,6 @@ const NO_BOLD_ITALIC: TranslatedText = [
   "pdfTextEditor.toolbar.noBoldItalic",
   "No bold italic version of this font",
 ];
-
-/** A style toggle's look: filled when the whole selection has the style, outlined when only some of it does. */
-function toggleLook(on: boolean, mixed: boolean) {
-  if (mixed) return { variant: "secondary", accent: "default" } as const;
-  return on
-    ? ({ variant: "primary", accent: "default" } as const)
-    : ({ variant: "tertiary", accent: "neutral" } as const);
-}
 
 interface FormatGroupProps {
   controller: Controller;
@@ -178,6 +176,13 @@ export function FormatGroup({
             ? texts.only
             : texts.unavailable),
     );
+
+  const paragraphProps = {
+    controller,
+    buttonSize,
+    inPopover,
+    disabled: selectionTextReadOnly,
+  } as const;
 
   const fontPicker = (
     <FontFamilySelect
@@ -398,6 +403,29 @@ export function FormatGroup({
           leftSection={<Icon name="italic" size={20} />}
         />
       </Tooltip>
+      <Tooltip
+        label={
+          readOnlyNote ??
+          (controller.paragraph.canFormat
+            ? t("pdfTextEditor.toolbar.underline", "Underline")
+            : t(
+                "pdfTextEditor.toolbar.cannotFormat",
+                "Not available for rotated or locked text",
+              ))
+        }
+      >
+        <Button
+          {...toggleLook(controller.paragraph.underline, false)}
+          size={buttonSize}
+          onClick={controller.onToggleUnderline}
+          disabled={!controller.paragraph.canFormat || selectionTextReadOnly}
+          aria-label={t("pdfTextEditor.toolbar.underline", "Underline")}
+          aria-pressed={controller.paragraph.underline}
+          data-testid="pdf-editor-underline"
+          style={NO_SHRINK}
+          leftSection={<Icon name="underline" size={20} />}
+        />
+      </Tooltip>
       <Menu shadow="md" position={menuPosition} withinPortal={!inPopover}>
         <Tooltip
           label={
@@ -458,6 +486,7 @@ export function FormatGroup({
     const swatch = fillPending ?? fillHex;
     return (
       <>
+        <TextStyleMenu {...paragraphProps} position={menuPosition} />
         <Popover position={dropdownPosition} withinPortal shadow="md" trapFocus>
           <Tooltip
             label={
@@ -567,12 +596,18 @@ export function FormatGroup({
           </Popover.Dropdown>
         </Popover>
         {toggles}
+        <ParagraphPopover
+          controller={controller}
+          disabled={selectionTextReadOnly}
+          dropdownPosition={dropdownPosition}
+        />
       </>
     );
   }
 
   return (
     <>
+      <TextStyleMenu {...paragraphProps} />
       {fontPicker}
       {weightSelect}
       {sizeInput}
@@ -606,6 +641,7 @@ export function FormatGroup({
         <Popover.Dropdown>{outlineControls}</Popover.Dropdown>
       </Popover>
       {toggles}
+      <ParagraphControls {...paragraphProps} />
     </>
   );
 }

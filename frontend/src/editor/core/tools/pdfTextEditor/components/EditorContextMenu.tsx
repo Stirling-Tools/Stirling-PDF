@@ -26,6 +26,8 @@ import {
   type TableHit,
 } from "@editor/tools/pdfTextEditor/store/contextMenu";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { pageSetupRequest } from "@editor/tools/pdfTextEditor/store/pageSetupRequest";
+import { PageMenuItems } from "@editor/tools/pdfTextEditor/components/toolbar/PageMenu";
 import type {
   EditorStore,
   EditorViewState,
@@ -81,7 +83,8 @@ function keyboardRequest(
 /**
  * The editor's right-click menu: the clipboard and Duplicate on a selection,
  * saving or externally editing an image, row and column edits in a table, Unlock
- * on a locked item, and adding at the clicked point on bare page. Everything
+ * on a locked item, and adding at the clicked point or changing the page on
+ * bare page. Everything
  * else stays in the selection bar. The menu key and Shift+F10 open it on the
  * selection.
  */
@@ -346,13 +349,14 @@ function ContextMenuBody({
   // Every menu is built from the same groups, in the same order and under the
   // same names, so a control sits in one place whatever was right-clicked:
   // clipboard, then Duplicate, then what is particular to the target, then
-  // Unlock. Empty groups drop out with their dividers.
+  // the page, then Unlock. Empty groups drop out with their dividers.
   const { hasRunSelection, selectionCount } = controller;
   const objects = request.kind === "objects";
   const onBarePage = request.kind === "page" && !request.table;
   const clipboard: ReactNode[] = [];
   const duplicate: ReactNode[] = [];
   const particular: ReactNode[] = [];
+  const page: ReactNode[] = [];
   const unlock: ReactNode[] = [];
 
   // Cut copies only text, and Delete would leave locked text in place, so it
@@ -434,7 +438,7 @@ function ContextMenuBody({
       particular.push(
         item(
           "merge",
-          t("pdfTextEditor.sidebar.group", "Group"),
+          t("pdfTextEditor.sidebar.group", "Join paragraph"),
           () => currentEditorSession()?.mergeSelection(),
           "pdf-editor-context-group",
           { shortcut: modShortcut("M") },
@@ -444,7 +448,7 @@ function ContextMenuBody({
       particular.push(
         item(
           "split",
-          t("pdfTextEditor.sidebar.ungroup", "Ungroup"),
+          t("pdfTextEditor.sidebar.ungroup", "Split into lines"),
           () => currentEditorSession()?.ungroupSelection(),
           "pdf-editor-context-ungroup",
         ),
@@ -492,6 +496,20 @@ function ContextMenuBody({
       ),
     );
   }
+  if (onBarePage && at) {
+    page.push(
+      <PageMenuItems
+        pageAt={() => at.pageIndex}
+        onPageSetup={(pageIndex) =>
+          pageSetupRequest.open({
+            pageIndex,
+            clientX: request.clientX,
+            clientY: request.clientY,
+          })
+        }
+      />,
+    );
+  }
   if (request.kind !== "locked" && request.table) {
     particular.push(tableItems(request.table));
   }
@@ -507,7 +525,7 @@ function ContextMenuBody({
     );
   }
 
-  const groups = [clipboard, duplicate, particular, unlock].filter(
+  const groups = [clipboard, duplicate, particular, page, unlock].filter(
     (group) => group.length > 0,
   );
   const empty = groups.length === 0;
