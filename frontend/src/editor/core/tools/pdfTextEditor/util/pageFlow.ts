@@ -117,7 +117,7 @@ export function flowPastBottom(
   const doc = store.document;
   const page = doc?.page(pageIndex);
   const run = page?.findRun(runId);
-  if (!doc || !page || !run || run.locked) return "none";
+  if (!doc || !page || !run || run.locked || run.textReadOnly) return "none";
   const { crossedRuns } = flowState(doc);
   const limit = bottomLimit(page);
   if (runBottom(run) >= limit) {
@@ -219,18 +219,28 @@ function prependOverflow(
         explicit: true,
       }),
     );
+    const wrapWidth = next.findRun(continued.id)?.wrapWidthPt;
+    if (wrapWidth)
+      store.dispatch(
+        new ReflowWrapCommand({
+          pageIndex: next.index,
+          runId: continued.id,
+          maxWidthPt: wrapWidth,
+          explicit: true,
+        }),
+      );
     store.dispatch(new SetFlowBoundaryCommand(run.id, split.softBreak));
+    const heldKeys = holdKeystrokes();
+    store.selection.selectOne(continued.id);
+    focusRunWhenPainted(
+      continued.id,
+      true,
+      heldKeys,
+      split.overflow.length,
+      next.index,
+    );
+    flowPastBottom(store, next.index, continued.id, bottomBefore);
   });
-  const heldKeys = holdKeystrokes();
-  store.selection.selectOne(continued.id);
-  focusRunWhenPainted(
-    continued.id,
-    true,
-    heldKeys,
-    split.overflow.length,
-    next.index,
-  );
-  flowPastBottom(store, next.index, continued.id, bottomBefore);
   return true;
 }
 
@@ -297,10 +307,15 @@ function moveOverflow(
   next: Page,
   split: Split,
 ): string | null {
-  const x =
+  const sourceX =
     (run.paragraphLineSlots[0]?.matrixE ?? run.bounds.x) -
     page.display.cropLeft +
     next.display.cropLeft;
+  const x =
+    next.display.cropRight - MIN_MARGIN_PT > sourceX
+      ? sourceX
+      : next.display.cropLeft + MIN_MARGIN_PT;
+  if (next.display.cropRight - MIN_MARGIN_PT <= x) return null;
   const y =
     next.display.cropBottom +
     next.display.cropHeight -
