@@ -1,12 +1,16 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { SetupWizard } from "@editor/components/SetupWizard";
 
-const { getConfig } = vi.hoisted(() => ({ getConfig: vi.fn() }));
+const { getConfig, nativeFetch } = vi.hoisted(() => ({
+  getConfig: vi.fn(),
+  nativeFetch: vi.fn(),
+}));
 vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: { getCurrentConfig: getConfig },
 }));
+vi.mock("@tauri-apps/plugin-http", () => ({ fetch: nativeFetch }));
 vi.mock("@editor/services/authService", () => ({
   authService: {},
   AuthServiceError: class extends Error {},
@@ -71,7 +75,31 @@ vi.mock("@editor/components/shared/DisabledButtonWithTooltip", () => ({
   DisabledButtonWithTooltip: () => null,
 }));
 
-beforeEach(() => getConfig.mockReset());
+beforeEach(() => {
+  getConfig.mockReset();
+  nativeFetch.mockReset();
+});
+
+it("checks a locked server through native HTTP, not the webview fetch", async () => {
+  const webviewFetch = vi.spyOn(globalThis, "fetch");
+  nativeFetch.mockResolvedValue({
+    ok: true,
+    json: async () => ({ loginMethod: "all", providerList: {} }),
+  });
+  getConfig.mockResolvedValue({
+    mode: "selfhosted",
+    lock_connection_mode: true,
+    server_config: { url: "https://pdf.example.com/" },
+  });
+  render(<SetupWizard onComplete={() => {}} />);
+  await waitFor(() =>
+    expect(nativeFetch).toHaveBeenCalledWith(
+      "https://pdf.example.com/api/v1/proprietary/ui-data/login",
+    ),
+  );
+  expect(webviewFetch).not.toHaveBeenCalled();
+  webviewFetch.mockRestore();
+});
 
 it.each([
   { required: true, cloudOnly: true, skip: false, selfHosted: false },
