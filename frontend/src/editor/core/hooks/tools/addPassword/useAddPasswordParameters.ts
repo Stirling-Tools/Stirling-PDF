@@ -28,7 +28,7 @@ export interface AddPasswordParametersHook extends BaseParametersHook<AddPasswor
 export const defaultParameters: AddPasswordParameters = {
   password: "",
   ownerPassword: "",
-  keyLength: 128,
+  keyLength: 256,
 };
 
 /**

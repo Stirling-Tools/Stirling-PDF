@@ -204,7 +204,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
             parameters: {
               password: "password",
               ownerPassword: "",
-              keyLength: 128,
+              keyLength: 256,
               permissions: {
                 preventAssembly: false,
                 preventExtractContent: false,

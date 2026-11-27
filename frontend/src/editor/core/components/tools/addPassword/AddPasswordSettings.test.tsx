@@ -100,10 +100,10 @@ describe("AddPasswordSettings", () => {
     );
 
     fireEvent.click(
-      screen.getByText("mock-addPassword.encryption.keyLength.256bit"),
+      screen.getByText("mock-addPassword.encryption.keyLength.128bit"),
     );
 
-    expect(mockOnParameterChange).toHaveBeenCalledWith("keyLength", 256);
+    expect(mockOnParameterChange).toHaveBeenCalledWith("keyLength", 128);
   });
 
   test("should disable all form elements when disabled prop is true", () => {
