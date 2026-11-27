@@ -8,11 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyList;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +40,16 @@ class ManualRedactionService {
     private static final float REDACTION_WIDTH_REDUCTION_FACTOR = 0.9f;
 
     private final TempFileManager tempFileManager;
+
+    static void beginRedactionArtifact(PDPageContentStream contentStream) throws IOException {
+        COSDictionary properties = new COSDictionary();
+        properties.setName(COSName.TYPE, "Layout");
+        contentStream.beginMarkedContent(COSName.ARTIFACT, PDPropertyList.create(properties));
+    }
+
+    static void endRedactionArtifact(PDPageContentStream contentStream) throws IOException {
+        contentStream.endMarkedContent();
+    }
 
     // -----------------------------------------------------------------------
     // Area and page redaction
@@ -81,6 +94,7 @@ class ManualRedactionService {
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                 contentStream.saveGraphicsState();
+                beginRedactionArtifact(contentStream);
                 for (RedactionArea redactionArea : areasForPage) {
                     Color redactColor = decodeOrDefault(redactionArea.getColor());
 
@@ -96,6 +110,7 @@ class ManualRedactionService {
                     contentStream.addRect(x, pdfY, width, height);
                     contentStream.fill();
                 }
+                endRedactionArtifact(contentStream);
                 contentStream.restoreGraphicsState();
             }
         }
@@ -113,11 +128,13 @@ class ManualRedactionService {
             try (PDPageContentStream contentStream =
                     new PDPageContentStream(
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                beginRedactionArtifact(contentStream);
                 contentStream.setNonStrokingColor(redactColor);
 
                 PDRectangle box = page.getBBox();
                 contentStream.addRect(0, 0, box.getWidth(), box.getHeight());
                 contentStream.fill();
+                endRedactionArtifact(contentStream);
             }
         }
     }
@@ -157,6 +174,7 @@ class ManualRedactionService {
                 contentStream.saveGraphicsState();
 
                 try {
+                    beginRedactionArtifact(contentStream);
                     contentStream.setNonStrokingColor(redactColor);
                     PDRectangle pageBox = page.getBBox();
 
@@ -186,6 +204,7 @@ class ManualRedactionService {
                     }
 
                     contentStream.fill();
+                    endRedactionArtifact(contentStream);
 
                 } finally {
                     contentStream.restoreGraphicsState();
@@ -251,12 +270,14 @@ class ManualRedactionService {
                     new PDPageContentStream(
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 cs.saveGraphicsState();
+                beginRedactionArtifact(cs);
                 cs.setNonStrokingColor(color);
                 for (float[] box : entry.getValue()) {
                     float x1 = box[1], y1 = box[2], x2 = box[3], y2 = box[4];
                     cs.addRect(x1, y1, x2 - x1, y2 - y1);
                 }
                 cs.fill();
+                endRedactionArtifact(cs);
                 cs.restoreGraphicsState();
             }
         }

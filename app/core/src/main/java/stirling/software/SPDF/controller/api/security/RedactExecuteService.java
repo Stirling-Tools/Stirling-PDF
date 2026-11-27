@@ -347,6 +347,7 @@ class RedactExecuteService {
                 page.getCOSObject().removeItem(COSName.CONTENTS);
                 page.setResources(new PDResources());
                 try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
+                    ManualRedactionService.beginRedactionArtifact(cs);
                     cs.setNonStrokingColor(pageColor);
                     if (elementBoxes.isEmpty()) {
                         PDRectangle box = page.getBBox();
@@ -361,6 +362,7 @@ class RedactExecuteService {
                         }
                     }
                     cs.fill();
+                    ManualRedactionService.endRedactionArtifact(cs);
                 }
             }
         }
