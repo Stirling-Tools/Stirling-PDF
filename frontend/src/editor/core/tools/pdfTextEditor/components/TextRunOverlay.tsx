@@ -73,6 +73,7 @@ import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWr
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import type { GrowEdge } from "@editor/tools/pdfTextEditor/util/growEdge";
 import {
+  applyPendingRunEdit,
   keepCaretInView,
   moveToLineEdge,
   selectAllText,
@@ -1414,6 +1415,7 @@ export function TextRunOverlay({
             : undefined
       }
       onKeyDown={(e) => {
+        applyPendingRunEdit();
         // A caret parked on the container (a click past the text lands there)
         // makes Firefox insert the keystroke as a sibling of the line blocks,
         // which reads back as a line the user never typed. Seat it in the

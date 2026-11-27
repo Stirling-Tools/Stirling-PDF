@@ -245,12 +245,20 @@ export function focusedRunCaret(runId: string): number | null {
   return el && document.activeElement === el ? plainCaretOffset(el) : null;
 }
 
+let pendingRunEdit: (() => void) | null = null;
+
+export function applyPendingRunEdit(): void {
+  const apply = pendingRunEdit;
+  pendingRunEdit = null;
+  apply?.();
+}
+
 export function editFocusedRun(
   runId: string,
   edit: ListEdit,
   typed: string,
 ): void {
-  requestAnimationFrame(() => {
+  const apply = () => {
     const el = runBox(runId);
     if (!el || document.activeElement !== el) return;
     if (readOverlayText(el).replace(/\u00A0/g, " ") !== typed) return;
@@ -266,6 +274,10 @@ export function editFocusedRun(
       else document.execCommand("delete");
     }
     restoreCaretOffset(el, edit.caret);
+  };
+  pendingRunEdit = apply;
+  requestAnimationFrame(() => {
+    if (pendingRunEdit === apply) applyPendingRunEdit();
   });
 }
 
