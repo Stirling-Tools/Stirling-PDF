@@ -8,7 +8,7 @@ ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 FROM gradle:9.8.2-jdk25@sha256:e46e15353757ef9c9be0197a243653e88d25ebcd4c3c841057cf839c11fcf898 AS app-build
 
 ARG TASK_VERSION=3.54.0
-ARG NODE_MAJOR_VERSION=24
+ARG NODE_MAJOR_VERSION=26
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
