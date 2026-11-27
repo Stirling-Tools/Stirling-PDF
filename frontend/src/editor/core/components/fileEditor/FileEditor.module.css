@@ -319,3 +319,8 @@
 :global([data-mantine-color-scheme="dark"]) .meta {
   color: var(--c-text-muted); /* subtitle text */
 }
+/* Empty grid items that reserve scroll height above and below the rendered rows. */
+.virtualPad {
+  grid-column: 1 / -1;
+  pointer-events: none;
+}
