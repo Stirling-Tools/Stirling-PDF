@@ -5,6 +5,8 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -195,29 +197,36 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
-    /**
-     * Checks whether the given IOException indicates that the client disconnected before the
-     * response could be written (broken pipe, connection reset, etc.). When this happens there is
-     * no point in serialising a {@link ProblemDetail} body because the socket is already closed -
-     * and attempting to do so may trigger a secondary {@code HttpMessageNotWritableException} if
-     * the response Content-Type was already committed as a non-JSON type (e.g. image/png).
-     */
-    private static boolean isClientDisconnectException(IOException ex) {
+    // Peer-gone connector exceptions by simple name (no container on the classpath); bare
+    // java.io.EOFException is left out because PDFBox throws it for truncated user input.
+    private static final Set<String> CLIENT_DISCONNECT_TYPE_NAMES =
+            Set.of(
+                    "AbortedException",
+                    "ClientAbortException",
+                    "EofException",
+                    "AsyncRequestNotUsableException");
+
+    // Broken pipe, reset or mid-write idle timeout: no point serialising a body to a closed socket.
+    private static Throwable clientDisconnectCause(IOException ex) {
         // Walk the causal chain - Jetty/Tomcat may wrap the low-level SocketException
         Throwable current = ex;
-        while (current != null) {
+        // Bounded so a cyclic cause chain cannot spin forever
+        for (int depth = 0; current != null && depth < 32; depth++) {
+            if (CLIENT_DISCONNECT_TYPE_NAMES.contains(current.getClass().getSimpleName())) {
+                return current;
+            }
             String msg = current.getMessage();
             if (msg != null) {
-                String lower = msg.toLowerCase(java.util.Locale.ROOT);
+                String lower = msg.toLowerCase(Locale.ROOT);
                 if (lower.contains("broken pipe")
                         || lower.contains("connection reset")
                         || lower.contains("an established connection was aborted")) {
-                    return true;
+                    return current;
                 }
             }
             current = current.getCause();
         }
-        return false;
+        return null;
     }
 
     /**
@@ -1306,12 +1315,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleIOException(
             IOException ex, HttpServletRequest request) {
 
-        // Broken pipe / connection reset means the client disconnected.
-        // Attempting to write a ProblemDetail response will fail because the
-        // response Content-Type may already be committed (e.g. image/png) and
-        // the client is gone anyway. Log at WARN and return an empty body.
-        if (isClientDisconnectException(ex)) {
-            log.warn("Client disconnected at {}: {}", request.getRequestURI(), ex.getMessage());
+        // The client is gone and the Content-Type may already be committed (e.g. image/png),
+        // so writing a ProblemDetail would fail; log at WARN and return an empty body.
+        Throwable disconnect = clientDisconnectCause(ex);
+        if (disconnect != null) {
+            log.warn(
+                    "Client disconnected at {}: {}",
+                    request.getRequestURI(),
+                    disconnect.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
