@@ -666,4 +666,62 @@ class ManualRedactionServiceTest {
             }
         }
     }
+
+    @Nested
+    @DisplayName("redaction boxes are Layout artifacts")
+    class RedactionBoxesAreArtifacts {
+
+        @Test
+        @DisplayName("area boxes")
+        void areaBoxes() throws Exception {
+            try (PDDocument doc = newDocumentWithText()) {
+                service.redactAreas(
+                        Arrays.asList(
+                                area(1, 10, 10, 100, 50, "#000000"),
+                                area(1, 200, 200, 50, 20, "#FF0000")),
+                        doc,
+                        doc.getPages());
+                assertReloadedFillsAreArtifacts(doc);
+            }
+        }
+
+        @Test
+        @DisplayName("whole-page boxes")
+        void pageBoxes() throws Exception {
+            try (PDDocument doc = newDocumentWithText()) {
+                ManualRedactPdfRequest req = new ManualRedactPdfRequest();
+                req.setPageNumbers("all");
+                req.setPageRedactionColor("#000000");
+                service.redactPages(req, doc, doc.getPages());
+                assertReloadedFillsAreArtifacts(doc);
+            }
+        }
+
+        @Test
+        @DisplayName("found-text boxes")
+        void foundTextBoxes() throws Exception {
+            try (PDDocument doc = newDocumentWithText()) {
+                service.redactFoundText(
+                        doc, Arrays.asList(text(0, 72, 690, 300, 710)), 0f, Color.BLACK, false);
+                assertReloadedFillsAreArtifacts(doc);
+            }
+        }
+
+        @Test
+        @DisplayName("image boxes")
+        void imageBoxes() throws Exception {
+            try (PDDocument doc = newDocumentWithText()) {
+                List<float[]> boxes = new ArrayList<>();
+                boxes.add(new float[] {0, 10, 10, 100, 100});
+                service.redactImageBoxes(doc, boxes, Color.BLACK);
+                assertReloadedFillsAreArtifacts(doc);
+            }
+        }
+
+        private void assertReloadedFillsAreArtifacts(PDDocument doc) throws Exception {
+            try (PDDocument reloaded = Loader.loadPDF(save(doc))) {
+                RedactionArtifactAssertions.assertFillsAreLayoutArtifacts(reloaded.getPage(0));
+            }
+        }
+    }
 }

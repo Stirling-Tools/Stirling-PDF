@@ -567,6 +567,9 @@ class RedactExecuteServiceMoreTest {
                 // After a wipe the page content is replaced with a filled rectangle, so the
                 // original words must be gone.
                 assertThat(extractText(out)).doesNotContain("whole page goes away");
+                try (PDDocument wiped = Loader.loadPDF(out.getFile())) {
+                    RedactionArtifactAssertions.assertFillsAreLayoutArtifacts(wiped.getPage(0));
+                }
             }
         }
 
