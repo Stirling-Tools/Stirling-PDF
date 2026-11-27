@@ -80,11 +80,70 @@ fn check_backend_status() -> Result<(), String> {
     Ok(())
 }
 
+// Named so a card PIN prompt reads "Stirling PDF Service", not "java". Must match
+// frontend/scripts/stage-mac-launcher.mjs, which builds it (a test checks).
+const MAC_LAUNCHER_NAME: &str = "Stirling PDF Service";
+
+// A launcher that is present but cannot run (signature stripped or rejected, a broken rpath)
+// must not stop the backend starting: check it first and fall back to bin/java.
+fn launcher_runs(launcher: &Path) -> bool {
+    let child = std::process::Command::new(launcher)
+        .arg("-version")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn();
+    let Ok(mut child) = child else {
+        return false;
+    };
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) => return status.success(),
+            Ok(None) if std::time::Instant::now() < deadline => {
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+            _ => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return false;
+            }
+        }
+    }
+}
+
+fn choose_mac_executable(
+    jre_dir: &Path,
+    launcher: PathBuf,
+    runs: impl Fn(&Path) -> bool,
+) -> PathBuf {
+    let java = jre_dir.join("bin").join("java");
+    if !launcher.is_file() {
+        add_log(format!(
+            "⚠️ No {MAC_LAUNCHER_NAME} launcher in the bundled JRE; card PIN prompts will say \"java\""
+        ));
+        return java;
+    }
+    if !runs(&launcher) {
+        add_log(format!(
+            "⚠️ {MAC_LAUNCHER_NAME} launcher would not run; starting the backend with bin/java"
+        ));
+        return java;
+    }
+    launcher
+}
+
 // Find the bundled JRE and return the java executable path
 fn find_bundled_jre(resource_dir: &Path) -> Result<PathBuf, String> {
     let jre_dir = resource_dir.join("runtime").join("jre");
+    let mac_launcher = jre_dir
+        .join(format!("{MAC_LAUNCHER_NAME}.app"))
+        .join("Contents")
+        .join("MacOS")
+        .join(MAC_LAUNCHER_NAME);
     let java_executable = if cfg!(windows) {
         jre_dir.join("bin").join("java.exe")
+    } else if cfg!(target_os = "macos") {
+        choose_mac_executable(&jre_dir, mac_launcher, launcher_runs)
     } else {
         jre_dir.join("bin").join("java")
     };
@@ -111,11 +170,10 @@ fn jpdfium_native_dir(java_path: &Path) -> Option<PathBuf> {
         "x86_64" => "x64",
         other => other,
     };
-    let dir = java_path
-        .parent()?
-        .parent()?
-        .join("natives")
-        .join(format!("{os}-{arch}"));
+    let jre = java_path
+        .ancestors()
+        .find(|dir| dir.join("release").is_file())?;
+    let dir = jre.join("natives").join(format!("{os}-{arch}"));
     dir.join(bridge).is_file().then_some(dir)
 }
 
@@ -859,6 +917,13 @@ mod tests {
         let jre =
             std::env::temp_dir().join(format!("stirling-jpdfium-natives-{}", std::process::id()));
         let java = jre.join("bin").join("java");
+        let mac_launcher = jre
+            .join(format!("{}.app", super::MAC_LAUNCHER_NAME))
+            .join("Contents")
+            .join("MacOS")
+            .join(super::MAC_LAUNCHER_NAME);
+        std::fs::create_dir_all(&jre).unwrap();
+        std::fs::write(jre.join("release"), b"").unwrap();
         assert_eq!(super::jpdfium_native_dir(&java), None);
 
         let arch = if cfg!(target_arch = "aarch64") {
@@ -875,7 +940,64 @@ mod tests {
         std::fs::create_dir_all(&natives).unwrap();
         std::fs::write(natives.join(bridge), b"").unwrap();
 
-        assert_eq!(super::jpdfium_native_dir(&java), Some(natives));
+        assert_eq!(super::jpdfium_native_dir(&java), Some(natives.clone()));
+        assert_eq!(super::jpdfium_native_dir(&mac_launcher), Some(natives));
         let _ = std::fs::remove_dir_all(&jre);
+    }
+
+    #[test]
+    fn mac_launcher_name_matches_the_staging_script() {
+        let script = include_str!("../../../scripts/stage-mac-launcher.mjs");
+        assert!(
+            script.contains(&format!(
+                "const MAC_LAUNCHER_NAME = \"{}\";",
+                super::MAC_LAUNCHER_NAME
+            )),
+            "backend.rs and stage-mac-launcher.mjs must name the launcher the same"
+        );
+    }
+
+    #[test]
+    fn mac_launcher_is_used_only_when_present_and_runnable() {
+        let jre = std::env::temp_dir().join(format!("stirling-launcher-{}", std::process::id()));
+        let launcher = jre.join("launcher");
+        let java = jre.join("bin").join("java");
+        std::fs::create_dir_all(jre.join("bin")).unwrap();
+
+        assert_eq!(
+            super::choose_mac_executable(&jre, launcher.clone(), |_| true),
+            java
+        );
+
+        std::fs::write(&launcher, b"").unwrap();
+        assert_eq!(
+            super::choose_mac_executable(&jre, launcher.clone(), |_| false),
+            java
+        );
+        assert_eq!(
+            super::choose_mac_executable(&jre, launcher.clone(), |_| true),
+            launcher
+        );
+        let _ = std::fs::remove_dir_all(&jre);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_launcher_that_exits_with_an_error_does_not_run() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir =
+            std::env::temp_dir().join(format!("stirling-launcher-run-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let failing = dir.join("failing");
+        let working = dir.join("working");
+        std::fs::write(&failing, b"#!/bin/sh\nexit 1\n").unwrap();
+        std::fs::write(&working, b"#!/bin/sh\nexit 0\n").unwrap();
+        for script in [&failing, &working] {
+            std::fs::set_permissions(script, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        assert!(!super::launcher_runs(&failing));
+        assert!(super::launcher_runs(&working));
+        assert!(!super::launcher_runs(&dir.join("missing")));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

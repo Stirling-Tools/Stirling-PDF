@@ -175,6 +175,13 @@ tasks:
     cmds:
       - task: jlink:verify
       - task: jlink:natives
+      - task: jlink:mac-launcher
+
+  jlink:mac-launcher:
+    desc: "Add the named macOS launcher that card PIN prompts show"
+    platforms: [darwin]
+    cmds:
+      - node scripts/stage-mac-launcher.mjs src-tauri/runtime/jre src-tauri/icons/macos/app.icns src-tauri/macos/backend-launcher.entitlements
 
   jlink:natives:
     desc: "Install the JPDFium native libraries into the bundled JRE"
