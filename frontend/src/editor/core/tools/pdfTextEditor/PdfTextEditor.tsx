@@ -689,7 +689,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         ? text.replace(/\r\n?/g, "\n").trim()
         : text.replace(/\r\n?/g, "\n");
       if (!normalised) return;
-      const pageIndex = visiblePageIndex();
+      const pages = store.getState().pages;
+      const visible = visiblePageIndex();
+      const pageIndex = (pages.find((p) => p.pageIndex === visible) ?? pages[0])
+        ?.pageIndex;
+      if (pageIndex === undefined) return;
       const page = doc.page(pageIndex);
       // Position roughly at the page centre, biased toward the upper third so
       // multi-line paste has room to flow downward.

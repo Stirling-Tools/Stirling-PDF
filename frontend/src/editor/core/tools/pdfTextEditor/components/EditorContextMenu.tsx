@@ -500,13 +500,16 @@ function ContextMenuBody({
     page.push(
       <PageMenuItems
         pageAt={() => at.pageIndex}
-        onPageSetup={(pageIndex) =>
-          pageSetupRequest.open({
-            pageIndex,
-            clientX: request.clientX,
-            clientY: request.clientY,
-          })
-        }
+        onPageSetup={(pageIndex) => {
+          const doc = store.document;
+          if (doc)
+            pageSetupRequest.open({
+              document: doc,
+              pageIndex,
+              clientX: request.clientX,
+              clientY: request.clientY,
+            });
+        }}
       />,
     );
   }

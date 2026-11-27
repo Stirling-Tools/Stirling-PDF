@@ -373,7 +373,9 @@ export function PagesBlock() {
 }
 
 export function PageSetupHost() {
-  const request = usePageSetupRequest();
+  const store = useSharedEditorStore();
+  const doc = useEditorState(store, () => store.document);
+  const request = usePageSetupRequest(doc);
   if (!request) return null;
   const viewer = document.querySelector("[data-viewer-pages]");
   const within = {

@@ -42,6 +42,7 @@ export function saveRewritten(
       throw new Error("PDFium could not save the changed document");
     const size = m.PDFiumExt_GetFileWriterSize(writer);
     const out = m.pdfium.wasmExports.malloc(size);
+    if (!out) throw new Error("Unable to allocate memory for the saved PDF");
     try {
       m.PDFiumExt_GetFileWriterData(writer, out, size);
       return heap(m).slice(out, out + size);
