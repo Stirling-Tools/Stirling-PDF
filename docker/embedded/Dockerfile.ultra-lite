@@ -62,12 +62,19 @@ RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locke
       --no-daemon
 
 # Stage 2: Runtime image
+FROM amazoncorretto:25-al2023 AS jdk
+ARG TARGETARCH
+RUN dnf install -y -q binutils tar gzip >/dev/null && A=$([ "$TARGETARCH" = arm64 ] && echo aarch64 || echo x64) && curl -fsSL "https://corretto.aws/downloads/resources/25.0.5.1.2/amazon-corretto-25.0.5.1.2-linux-${A}.tar.gz" | tar xz -C /opt && mv /opt/amazon-corretto-* /opt/jdk && /opt/jdk/bin/jlink --add-modules java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.dynalink,jdk.management,jdk.management.agent,jdk.jfr,jdk.zipfs,jdk.charsets,jdk.localedata,jdk.naming.dns,jdk.net,jdk.attach,jdk.jcmd,jdk.httpserver,jdk.security.auth,jdk.xml.dom --strip-debug --no-header-files --no-man-pages --output /opt/jre
+
 # glibc base (not Alpine/musl): JPDFium's PDFium natives are glibc-linked.
-FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+COPY --link --from=jdk /opt/jre /opt/java/openjdk
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+    LC_ALL=C.UTF-8 \
+    JAVA_HOME=/opt/java/openjdk \
+    PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ARG VERSION_TAG
 
@@ -109,6 +116,7 @@ RUN mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipelin
     apt-get install -y --no-install-recommends \
     ca-certificates \
     tzdata \
+    fontconfig \
     tini \
     bash \
     curl \

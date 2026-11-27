@@ -50,7 +50,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # Stage 4: Build Python venv
 FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS python-venv-build
 ARG TARGETPLATFORM
-ARG LXML_VERSION=6.1.3
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
@@ -64,13 +63,6 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
       pdf2image ocrmypdf \
       cryptography "pillow>=13.0.0" "Brotli>=1.2.1"
 
-# Use distribution XML libraries so their package updates also cover lxml.
-RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
-    /opt/venv/bin/pip install --no-cache-dir --no-binary=lxml --force-reinstall \
-      "lxml==${LXML_VERSION}" && \
-    /opt/venv/bin/python -c \
-      "from lxml import etree; assert etree.LIBXML_VERSION == (2, 9, 14), etree.LIBXML_VERSION"
-
 RUN find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
@@ -81,14 +73,46 @@ RUN find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || tr
 
 
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce AS runtime
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS unpaper-build
+RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends build-essential nasm pkg-config meson ninja-build curl ca-certificates xz-utils python3 python3-sphinx zlib1g-dev >/dev/null
+RUN curl -fsSL https://ffmpeg.org/releases/ffmpeg-7.1.2.tar.xz | tar xJ -C /tmp && cd /tmp/ffmpeg-7.1.2 && \
+    ./configure --prefix=/opt/ff --enable-static --disable-shared --disable-programs --disable-doc --disable-network \
+      --disable-autodetect --disable-everything --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample --disable-postproc \
+      --enable-protocol=file --enable-demuxer=image2 --enable-muxer=image2 \
+      --enable-zlib --enable-decoder=png,pbm,pgm,pgmyuv,ppm,pam --enable-parser=png --enable-encoder=pbm,pgm,pgmyuv,ppm,pam >/dev/null && \
+    make -j"$(nproc)" >/dev/null && make install >/dev/null
+RUN curl -fsSL https://github.com/unpaper/unpaper/archive/refs/tags/unpaper-7.0.0.tar.gz | tar xz -C /tmp && cd /tmp/unpaper-unpaper-7.0.0 && \
+    PKG_CONFIG_PATH=/opt/ff/lib/pkgconfig meson setup build --buildtype=release -Dprefer_static=true && ninja -C build && \
+    install -m755 build/unpaper /usr/local/bin/unpaper
+
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS tesseract-build
+RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends build-essential cmake pkg-config curl ca-certificates libpng-dev libjpeg-turbo8-dev zlib1g-dev libtiff-dev >/dev/null
+RUN curl -fsSL https://github.com/DanBloomberg/leptonica/archive/refs/tags/1.87.0.tar.gz | tar xz -C /tmp && cd /tmp/leptonica-1.87.0 && \
+    cmake -S . -B b -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_PROG=OFF -DCMAKE_INSTALL_PREFIX=/opt/lept \
+      -DENABLE_PNG=ON -DENABLE_JPEG=ON -DENABLE_ZLIB=ON -DENABLE_TIFF=ON -DENABLE_OPENJPEG=OFF -DENABLE_WEBP=OFF -DENABLE_GIF=OFF -DSW_BUILD=OFF >/dev/null && \
+    cmake --build b -j"$(nproc)" >/dev/null && cmake --install b >/dev/null
+RUN curl -fsSL https://github.com/tesseract-ocr/tesseract/archive/ddcd04239a19d3992ecc443dfa0aa025843a6614.tar.gz | tar xz -C /tmp && cd /tmp/tesseract-ddcd04239a19d3992ecc443dfa0aa025843a6614 && \
+    cmake -S . -B b -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TRAINING_TOOLS=OFF -DBUILD_TESTS=OFF \
+      -DDISABLE_CURL=ON -DDISABLE_ARCHIVE=ON -DGRAPHICS_DISABLED=ON -DOPENMP_BUILD=OFF -DSW_BUILD=OFF -DENABLE_LTO=OFF \
+      -DCMAKE_PREFIX_PATH=/opt/lept -DCMAKE_INSTALL_PREFIX=/opt/tess >/dev/null && \
+    cmake --build b -j"$(nproc)" >/dev/null && cmake --install b >/dev/null && \
+    strip /opt/tess/bin/tesseract
+
+FROM amazoncorretto:25-al2023 AS jdk
+ARG TARGETARCH
+RUN dnf install -y -q binutils tar gzip >/dev/null && A=$([ "$TARGETARCH" = arm64 ] && echo aarch64 || echo x64) && curl -fsSL "https://corretto.aws/downloads/resources/25.0.5.1.2/amazon-corretto-25.0.5.1.2-linux-${A}.tar.gz" | tar xz -C /opt && mv /opt/amazon-corretto-* /opt/jdk && /opt/jdk/bin/jlink --add-modules java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.dynalink,jdk.management,jdk.management.agent,jdk.jfr,jdk.zipfs,jdk.charsets,jdk.localedata,jdk.naming.dns,jdk.net,jdk.attach,jdk.jcmd,jdk.httpserver,jdk.security.auth,jdk.xml.dom --strip-debug --no-header-files --no-man-pages --output /opt/jre
+
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS runtime
+COPY --link --from=jdk /opt/jre /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
-    TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
+    TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata \
+    TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     set -eux; \
@@ -100,7 +124,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       # ffmpeg disabled due to raised CVEs
       # ffmpeg \
       poppler-utils \
-      unpaper pngquant \
+      pngquant \
       # Fonts: full coverage for standard + fat variants
       fonts-dejavu \
       fonts-liberation2 \
@@ -110,9 +134,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-freefont-ttf fonts-terminus \
       # Python runtime
       python3 python3-packaging \
-      libxml2 libxslt1.1 \
+      libxml2 \
       # OCR
-      tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
+      tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
       # Tesseract OSD for orientation detection
       tesseract-ocr-osd \
@@ -195,7 +219,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     \
     rm -rf /usr/share/bug /usr/share/lintian /usr/share/linda \
            /var/lib/dpkg/info/*.list \
-           /var/lib/dpkg/info/*.md5sums \
            /var/lib/dpkg/info/*.conffiles \
            /var/lib/dpkg/info/*.postinst \
            /var/lib/dpkg/info/*.preinst \
@@ -308,3 +331,8 @@ LABEL org.opencontainers.image.title="Stirling-PDF Base" \
       org.opencontainers.image.documentation="https://docs.stirlingpdf.com" \
       maintainer="Stirling-Tools" \
       org.opencontainers.image.authors="Stirling-Tools"
+
+COPY --from=unpaper-build /usr/local/bin/unpaper /usr/local/bin/unpaper
+COPY --from=tesseract-build /opt/tess/bin/tesseract /usr/local/bin/tesseract
+COPY --from=tesseract-build /opt/tess/share/tessdata/configs/ /usr/share/tesseract-ocr/5/tessdata/configs/
+RUN tesseract --version && tesseract --list-langs && unpaper --version
