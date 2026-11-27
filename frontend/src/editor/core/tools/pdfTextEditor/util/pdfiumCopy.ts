@@ -65,18 +65,3 @@ export function withFloats<T>(
     m.pdfium.wasmExports.free(ptr);
   }
 }
-
-export function withPage<T>(
-  m: WrappedPdfiumModule,
-  docPtr: number,
-  index: number,
-  use: (pagePtr: number) => T,
-): T {
-  const pagePtr = m.FPDF_LoadPage(docPtr, index);
-  if (!pagePtr) throw new Error(`PDFium could not load page ${index + 1}`);
-  try {
-    return use(pagePtr);
-  } finally {
-    m.FPDF_ClosePage(pagePtr);
-  }
-}

@@ -48,7 +48,7 @@ export function formatsUpright(
   );
 }
 
-export function canFormatParagraph(page: Page, run: TextRun): boolean {
+function canFormatParagraph(page: Page, run: TextRun): boolean {
   return run.containerPtr === 0 && formatsUpright(run, page.display.rotate);
 }
 
