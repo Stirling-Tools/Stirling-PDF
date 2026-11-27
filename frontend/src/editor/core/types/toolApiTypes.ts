@@ -921,7 +921,7 @@ export interface PageSizeRequest {
 }
 export interface PdfToPdfARequest {
   /**
-   * pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X.
+   * pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfa-2u/3u = level U (Unicode text); pdfa-4 = PDF/A-4 (PDF 2.0, no tagging); pdfx = PDF/X.
    */
   outputFormat:
     | "pdfa"
@@ -933,6 +933,9 @@ export interface PdfToPdfARequest {
     | "pdfa-1a"
     | "pdfa-2a"
     | "pdfa-3a"
+    | "pdfa-2u"
+    | "pdfa-3u"
+    | "pdfa-4"
     | "pdfx";
   /**
    * Also declare PDF/UA accessibility alongside PDF/A. Only applies to the level A formats, and the claim is written only if it validates.

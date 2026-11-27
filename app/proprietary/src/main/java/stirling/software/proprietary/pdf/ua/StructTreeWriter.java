@@ -66,7 +66,7 @@ public class StructTreeWriter {
         }
 
         root.appendKid(documentElement);
-        buildParentTree(document, root);
+        buildParentTree(document, root, profile);
         registerNamespaces(root);
 
         PDMarkInfo markInfo = new PDMarkInfo();
@@ -182,7 +182,8 @@ public class StructTreeWriter {
      * Builds {@code /ParentTree}: per page, an array indexed by marked content id keyed on {@code
      * /StructParents}, plus one entry per annotation keyed on {@code /StructParent}.
      */
-    private void buildParentTree(PDDocument document, PDStructureTreeRoot root) {
+    private void buildParentTree(
+            PDDocument document, PDStructureTreeRoot root, PdfUaProfile profile) {
         COSArray nums = new COSArray();
         nextParentKey = 0;
 
@@ -206,7 +207,7 @@ public class StructTreeWriter {
             nums.add(entries);
         }
 
-        List<COSBase> annotationEntries = tagAnnotations(document, root);
+        List<COSBase> annotationEntries = tagAnnotations(document, root, profile);
         for (int i = 0; i + 1 < annotationEntries.size(); i += 2) {
             nums.add(annotationEntries.get(i));
             nums.add(annotationEntries.get(i + 1));
@@ -222,7 +223,8 @@ public class StructTreeWriter {
      * Clause 7.18: every visible annotation needs a structure element so it is reachable from the
      * tree. Links become Link elements, anything else an Annot.
      */
-    private List<COSBase> tagAnnotations(PDDocument document, PDStructureTreeRoot root) {
+    private List<COSBase> tagAnnotations(
+            PDDocument document, PDStructureTreeRoot root, PdfUaProfile profile) {
         List<COSBase> entries = new ArrayList<>();
         PDStructureElement documentElement = firstDocumentElement(root);
         if (documentElement == null) {
@@ -247,6 +249,9 @@ public class StructTreeWriter {
                 PDStructureElement element =
                         new PDStructureElement(annotationType(annotation), documentElement);
                 element.setPage(page);
+                if (profile == PdfUaProfile.UA2) {
+                    applyNamespace(element, document);
+                }
 
                 PDObjectReference reference = new PDObjectReference();
                 reference.setReferencedObject(annotation);

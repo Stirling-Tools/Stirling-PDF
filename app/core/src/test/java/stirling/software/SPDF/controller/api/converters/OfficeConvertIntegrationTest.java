@@ -482,7 +482,14 @@ class OfficeConvertIntegrationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"pdfa-1,1,B", "pdfa-2b,2,B", "pdfa-3b,3,B"})
+    @CsvSource({
+        "pdfa-1,1,B",
+        "pdfa-2b,2,B",
+        "pdfa-3b,3,B",
+        "pdfa-2u,2,U",
+        "pdfa-3u,3,U",
+        "pdfa-4,4,"
+    })
     void pdfaRecordsTheProfileAndKeepsTheAuthorInXmp(String format, int part, String conformance)
             throws Exception {
         var controller = new ConvertPDFToPDFA(null, null, null, tempFiles, properties, office);
@@ -622,7 +629,7 @@ class OfficeConvertIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"pdfa-1", "pdfa-2b", "pdfa-3b"})
+    @ValueSource(strings = {"pdfa-1", "pdfa-2b", "pdfa-3b", "pdfa-2u", "pdfa-3u", "pdfa-4"})
     void pdfaPassesStrictVeraPdfValidationAndKeepsEligibleAttachments(String format)
             throws Exception {
         VeraPDFService validator = new VeraPDFService();

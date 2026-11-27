@@ -32,7 +32,10 @@ const ConvertToPdfaSettings = ({
   const pdfaFormatOptions = [
     { value: "pdfa-1", label: "PDF/A-1b" },
     { value: "pdfa-2b", label: "PDF/A-2b" },
+    { value: "pdfa-2u", label: "PDF/A-2u" },
     { value: "pdfa-3b", label: "PDF/A-3b" },
+    { value: "pdfa-3u", label: "PDF/A-3u" },
+    { value: "pdfa-4", label: "PDF/A-4" },
     // Level A is level B plus accessibility: it additionally tags the document.
     ...(taggingAvailable === false
       ? []
@@ -92,7 +95,7 @@ const ConvertToPdfaSettings = ({
           t("convert.outputFormat", "Output Format"),
           t(
             "convert.pdfaNote",
-            "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files.",
+            "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files, the u levels also require Unicode mappings for existing text (they do not OCR scans), PDF/A-4 is based on PDF 2.0.",
           ),
         )}
         value={parameters.pdfaOptions.outputFormat}
