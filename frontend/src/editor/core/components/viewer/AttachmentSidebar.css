@@ -21,7 +21,10 @@
   padding: 0.5rem 0.65rem;
   border-radius: 0.65rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
   background: color-mix(in srgb, var(--c-bg-raised) 86%, transparent);
   border: 1px solid transparent;
   width: 100%;
