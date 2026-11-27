@@ -99,6 +99,8 @@ import {
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
 import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
+import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { pageFontKey } from "@editor/tools/pdfTextEditor/util/pageFonts";
 
 function styleWithFauxFaces(fontId: string, run: TextRun): FaceStyle {
   const style = faceStyleOf(fontId);
@@ -128,8 +130,22 @@ function canFauxItalic(request: StyleRequest, run: TextRun): boolean {
   );
 }
 
-import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
-import { pageFontKey } from "@editor/tools/pdfTextEditor/util/pageFonts";
+interface FauxStyleChange {
+  fit: ScanFitTarget;
+  on: boolean;
+}
+
+function fauxStyleCommands(
+  store: EditorStore,
+  changes: FauxStyleChange[],
+  build: (run: TextRun, on: boolean) => Command,
+): Command[] {
+  const live = liveRuns(store);
+  return changes.flatMap(({ fit, on }) => {
+    const run = live.get(fit.run.id);
+    return run && run === fit.run && !run.locked ? [build(run, on)] : [];
+  });
+}
 
 /**
  * Bold and italic for a document-wide font change. With `keep`, text keeps
@@ -905,23 +921,23 @@ export function useSelectionActions(store: EditorStore) {
       );
       let leftAsIs = 0;
       const targets: Array<FamilyChange & { fit: ScanFitTarget }> = [];
-      const outlined: Array<{ fit: ScanFitTarget; bold: boolean }> = [];
-      const slanted: Array<{ fit: ScanFitTarget; oblique: boolean }> = [];
+      const outlined: FauxStyleChange[] = [];
+      const slanted: FauxStyleChange[] = [];
       for (const { run, fit } of runs) {
         if ("bold" in wanted && isFauxBold(fit.run)) {
-          if (!wanted.bold) outlined.push({ fit, bold: false });
+          if (!wanted.bold) outlined.push({ fit, on: false });
           continue;
         }
         if ("italic" in wanted && isFauxItalic(fit.run)) {
-          if (!wanted.italic) slanted.push({ fit, oblique: false });
+          if (!wanted.italic) slanted.push({ fit, on: false });
           continue;
         }
         const face = restyledFace(run.fontId, wanted, sources);
         if (face === undefined) continue;
         if (face === null) {
-          if (canFauxBold(wanted, fit.run)) outlined.push({ fit, bold: true });
+          if (canFauxBold(wanted, fit.run)) outlined.push({ fit, on: true });
           else if (canFauxItalic(wanted, fit.run))
-            slanted.push({ fit, oblique: true });
+            slanted.push({ fit, on: true });
           else leftAsIs++;
           continue;
         }
@@ -953,39 +969,33 @@ export function useSelectionActions(store: EditorStore) {
       if (outlined.length > 0)
         await dispatchAfterScanFit(
           outlined.map(({ fit }) => fit),
-          () => {
-            const live = liveRuns(store);
-            return outlined.flatMap(({ fit, bold }) => {
-              const run = live.get(fit.run.id);
-              if (!run || run !== fit.run || run.locked) return [];
-              return [
+          () =>
+            fauxStyleCommands(
+              store,
+              outlined,
+              (run, bold) =>
                 new SetTextOutlineCommand({
                   pageIndex: run.pageIndex,
                   runId: run.id,
                   stroke: bold ? { ...run.fill, a: 255 } : null,
                   width: bold ? fauxBoldWidth(run.fontSize) : 0,
                 }),
-              ];
-            });
-          },
+            ),
         );
       if (slanted.length > 0)
         await dispatchAfterScanFit(
           slanted.map(({ fit }) => fit),
-          () => {
-            const live = liveRuns(store);
-            return slanted.flatMap(({ fit, oblique }) => {
-              const run = live.get(fit.run.id);
-              if (!run || run !== fit.run || run.locked) return [];
-              return [
+          () =>
+            fauxStyleCommands(
+              store,
+              slanted,
+              (run, oblique) =>
                 new SetObliqueCommand({
                   pageIndex: run.pageIndex,
                   runId: run.id,
                   oblique,
                 }),
-              ];
-            });
-          },
+            ),
         );
       const outcome = await dispatchFamilyChanges(
         stillApplies,
