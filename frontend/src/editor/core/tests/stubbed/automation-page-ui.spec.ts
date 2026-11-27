@@ -168,9 +168,6 @@ test.describe("11. Automation Page", () => {
         .getByRole("button", { name: /Compress/ })
         .first()
         .click();
-      // Like Save, export waits until the step's settings are confirmed.
-      await expect(exportMenu).toBeDisabled();
-      await page.getByRole("button", { name: /^Done$/ }).click();
       await expect(exportMenu).toBeEnabled();
 
       await exportMenu.click();

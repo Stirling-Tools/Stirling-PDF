@@ -7,14 +7,12 @@ import { Icon } from "@editor/ui/Icon";
 import { AutomationTool } from "@editor/types/automation";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
+import { paramsOverDefaults } from "@editor/hooks/tools/shared/toolAutomation";
 import ToolSelector from "@editor/components/tools/automate/ToolSelector";
 import AutomationStepCard, {
   StepConnector,
 } from "@editor/components/tools/automate/AutomationStepCard";
-import {
-  defaultParametersFor,
-  toolDisplayName,
-} from "@editor/components/tools/automate/stepSummary";
+import { toolDisplayName } from "@editor/components/tools/automate/stepSummary";
 import classes from "@editor/components/tools/automate/Automate.module.css";
 
 function scrollIntoViewOnMount(element: HTMLElement | null) {
@@ -32,8 +30,6 @@ interface ToolListProps {
   initialFocusStepId?: string | null;
   isStepReady: (step: AutomationTool) => boolean;
   onToggleSettings: (stepId: string) => void;
-  /** The step's Done button: the user has reviewed its settings. */
-  onConfirmSettings: (stepId: string) => void;
   onSelectTool: (index: number, operation: string) => void;
   onParameterChange: (index: number, key: string, value: unknown) => void;
   onChangeTool: (index: number) => void;
@@ -51,7 +47,6 @@ export default function ToolList({
   initialFocusStepId = null,
   isStepReady,
   onToggleSettings,
-  onConfirmSettings,
   onSelectTool,
   onParameterChange,
   onChangeTool,
@@ -131,8 +126,7 @@ export default function ToolList({
     onRemove(index);
   };
 
-  const confirmSettings = (stepId: string) => {
-    onConfirmSettings(stepId);
+  const closeSettings = (stepId: string) => {
     setFocusRequest({ stepId, label: settingsLabel });
     onToggleSettings(stepId);
   };
@@ -299,10 +293,11 @@ export default function ToolList({
           <div className={classes.stepSettings}>
             <Suspense fallback={<Loader size="sm" />}>
               <SettingsComponent
-                parameters={{
-                  ...defaultParametersFor(toolRegistry, step.operation),
-                  ...(step.parameters ?? {}),
-                }}
+                parameters={paramsOverDefaults(
+                  step.operation as ToolId,
+                  step.parameters ?? {},
+                  toolRegistry,
+                )}
                 onParameterChange={(key, value) =>
                   onParameterChange(index, String(key), value)
                 }
@@ -312,7 +307,7 @@ export default function ToolList({
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => confirmSettings(step.id)}
+              onClick={() => closeSettings(step.id)}
               style={{ alignSelf: "flex-end" }}
             >
               {t("automate.steps.done", "Done")}

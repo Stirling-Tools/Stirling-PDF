@@ -8,9 +8,10 @@ import {
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import type { ToolId } from "@editor/types/toolId";
 import {
-  defaultParametersFor,
-  isStepReady,
-} from "@editor/components/tools/automate/stepSummary";
+  defaultToolParams,
+  paramsOverDefaults,
+  toolParamsNeedConfiguring,
+} from "@editor/hooks/tools/shared/toolAutomation";
 
 interface UseAutomationFormProps {
   mode: AutomationMode;
@@ -67,34 +68,14 @@ function buildInitialSnapshot(
       return {
         id: newStepId(),
         operation,
-        parameters: {
-          ...defaultParametersFor(toolRegistry, operation),
-          ...saved,
-        },
+        parameters: paramsOverDefaults(
+          operation as ToolId,
+          saved,
+          toolRegistry,
+        ),
       };
     }),
   };
-}
-
-function hasSettings(
-  toolRegistry: Partial<ToolRegistry>,
-  operation: string,
-): boolean {
-  return Boolean(toolRegistry[operation as ToolId]?.automationSettings);
-}
-
-/** A saved automation was already configured by whoever saved it; a suggestion was not. */
-function initialUnconfigured(
-  mode: AutomationMode,
-  steps: AutomationTool[],
-  toolRegistry: Partial<ToolRegistry>,
-): ReadonlySet<string> {
-  if (mode === AutomationMode.EDIT) return new Set();
-  return new Set(
-    steps
-      .filter((step) => hasSettings(toolRegistry, step.operation))
-      .map((step) => step.id),
-  );
 }
 
 function toOperations(steps: AutomationTool[]): AutomationOperation[] {
@@ -140,12 +121,6 @@ export function useAutomationForm({
   const [clearedStepIds, setClearedStepIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
-  // Steps whose settings the user has not yet confirmed with Done. Defaults are
-  // not assumed to suit the user's files, so each tool with settings is
-  // reviewed once before the automation can be saved.
-  const [unconfiguredStepIds, setUnconfiguredStepIds] = useState<
-    ReadonlySet<string>
-  >(() => initialUnconfigured(mode, initial.steps, toolRegistry));
 
   const addStep = useCallback((): string => {
     const step = emptyStep();
@@ -169,38 +144,23 @@ export function useAutomationForm({
 
   const setStepTool = useCallback(
     (index: number, operation: string) => {
-      const id = steps[index]?.id;
-      if (id) {
-        setUnconfiguredStepIds((prev) => {
-          const next = new Set(prev);
-          if (hasSettings(toolRegistry, operation)) next.add(id);
-          else next.delete(id);
-          return next;
-        });
-      }
       setSteps((prev) =>
         prev.map((step, i) =>
           i === index
             ? {
                 ...step,
                 operation,
-                parameters: defaultParametersFor(toolRegistry, operation),
+                parameters: defaultToolParams(
+                  operation as ToolId,
+                  toolRegistry,
+                ),
               }
             : step,
         ),
       );
     },
-    [steps, toolRegistry],
+    [toolRegistry],
   );
-
-  const markStepConfigured = useCallback((stepId: string) => {
-    setUnconfiguredStepIds((prev) => {
-      if (!prev.has(stepId)) return prev;
-      const next = new Set(prev);
-      next.delete(stepId);
-      return next;
-    });
-  }, []);
 
   const setStepParameter = useCallback(
     (index: number, key: string, value: unknown) => {
@@ -233,9 +193,13 @@ export function useAutomationForm({
 
   const stepReady = useCallback(
     (step: AutomationTool) =>
-      !unconfiguredStepIds.has(step.id) &&
-      isStepReady(toolRegistry, step.operation, step.parameters),
-    [toolRegistry, unconfiguredStepIds],
+      step.operation !== "" &&
+      !toolParamsNeedConfiguring(
+        step.operation as ToolId,
+        step.parameters ?? {},
+        toolRegistry,
+      ),
+    [toolRegistry],
   );
 
   const saveBlocker = useMemo((): SaveBlocker | null => {
@@ -288,7 +252,6 @@ export function useAutomationForm({
     moveStep,
     setStepTool,
     setStepParameter,
-    markStepConfigured,
     clearStepTool,
     stepReady,
     saveBlocker,

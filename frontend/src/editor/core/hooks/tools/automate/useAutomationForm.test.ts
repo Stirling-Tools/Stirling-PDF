@@ -99,42 +99,58 @@ describe("useAutomationForm", () => {
     expect(result.current.saveBlocker).toBeNull();
   });
 
-  test("a tool with settings blocks saving until its settings are confirmed", () => {
+  test("a tool with settings whose defaults are valid needs no configuring", () => {
     const { result } = create();
     act(() => result.current.setAutomationName("Clean"));
     act(() => result.current.setStepTool(0, "sanitize"));
+    expect(result.current.saveBlocker).toBeNull();
+  });
+
+  test("a step whose saved settings fail the tool's check blocks saving", () => {
+    const invalid: AutomationConfig = {
+      ...existing,
+      operations: [{ operation: "rotate", parameters: { angle: 45 } }],
+    };
+    for (const mode of [AutomationMode.SUGGESTED, AutomationMode.EDIT]) {
+      const { result } = renderHook(() =>
+        useAutomationForm({
+          mode,
+          existingAutomation: invalid,
+          toolRegistry: registry,
+        }),
+      );
+      expect(result.current.saveBlocker).toEqual({
+        kind: "stepNeedsConfiguration",
+        index: 0,
+      });
+    }
+  });
+
+  test("a validator that throws on a stored value counts as needing configuration", () => {
+    const throwing = {
+      ...registry,
+      rotate: {
+        name: "Rotate",
+        operationConfig: {
+          defaultParameters: { angle: 0 },
+          validateParams: (p: { angle: number }) => p.angle.toFixed(0) !== "",
+        },
+      },
+    } as unknown as Partial<ToolRegistry>;
+    const { result } = renderHook(() =>
+      useAutomationForm({
+        mode: AutomationMode.EDIT,
+        existingAutomation: {
+          ...existing,
+          operations: [{ operation: "rotate", parameters: { angle: null } }],
+        },
+        toolRegistry: throwing,
+      }),
+    );
     expect(result.current.saveBlocker).toEqual({
       kind: "stepNeedsConfiguration",
       index: 0,
     });
-    act(() => result.current.markStepConfigured(result.current.steps[0].id));
-    expect(result.current.saveBlocker).toBeNull();
-  });
-
-  test("a suggestion's steps need confirming, a saved automation's do not", () => {
-    const withSettings: AutomationConfig = {
-      ...existing,
-      operations: [{ operation: "sanitize", parameters: {} }],
-    };
-    const suggested = renderHook(() =>
-      useAutomationForm({
-        mode: AutomationMode.SUGGESTED,
-        existingAutomation: withSettings,
-        toolRegistry: registry,
-      }),
-    );
-    expect(suggested.result.current.saveBlocker).toEqual({
-      kind: "stepNeedsConfiguration",
-      index: 0,
-    });
-    const edit = renderHook(() =>
-      useAutomationForm({
-        mode: AutomationMode.EDIT,
-        existingAutomation: withSettings,
-        toolRegistry: registry,
-      }),
-    );
-    expect(edit.result.current.saveBlocker).toBeNull();
   });
 
   test("names the first problem that blocks saving", () => {

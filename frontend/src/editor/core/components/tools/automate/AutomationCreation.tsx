@@ -14,6 +14,7 @@ import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
 import { Icon } from "@editor/ui/Icon";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import type { ToolId } from "@editor/types/toolId";
+import { toolParamsNeedConfiguring } from "@editor/hooks/tools/shared/toolAutomation";
 import ToolList from "@editor/components/tools/automate/ToolList";
 import IconSelector from "@editor/components/tools/automate/IconSelector";
 import AutomatePanelHeader from "@editor/components/tools/automate/AutomatePanelHeader";
@@ -85,10 +86,13 @@ export default function AutomationCreation({
 
   const handleSelectTool = (index: number, operation: string) => {
     form.setStepTool(index, operation);
-    const hasSettings = Boolean(
-      toolRegistry[operation as ToolId]?.automationSettings,
+    // Open settings only where the defaults cannot run as they are.
+    const needsConfiguring = toolParamsNeedConfiguring(
+      operation as ToolId,
+      {},
+      toolRegistry,
     );
-    setExpandedStepId(hasSettings ? steps[index].id : null);
+    setExpandedStepId(needsConfiguring ? steps[index].id : null);
   };
 
   const saveAutomation = async () => {
@@ -248,7 +252,6 @@ export default function AutomationCreation({
         pickerStepId={pickerStepId}
         isStepReady={form.stepReady}
         onToggleSettings={toggleSettings}
-        onConfirmSettings={form.markStepConfigured}
         onSelectTool={handleSelectTool}
         onParameterChange={form.setStepParameter}
         onChangeTool={(index) => {

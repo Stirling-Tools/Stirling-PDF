@@ -1,4 +1,11 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Loader, Text, VisuallyHidden } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
@@ -21,6 +28,8 @@ import AutomationStepCard, {
   StepConnector,
 } from "@editor/components/tools/automate/AutomationStepCard";
 import { toolDisplayName } from "@editor/components/tools/automate/stepSummary";
+import { toolParamsNeedConfiguring } from "@editor/hooks/tools/shared/toolAutomation";
+import type { ToolId } from "@editor/types/toolId";
 import classes from "@editor/components/tools/automate/Automate.module.css";
 
 interface AutomationRunProps {
@@ -112,6 +121,32 @@ export default function AutomationRun({
   const signInReason = connectedServer
     ? null
     : t("automate.sequence.signInToRun", "Sign in to run automations.");
+
+  // A saved, imported or suggested automation can hold settings its tool no longer
+  // accepts; running it would only fail at the server, so it is blocked here instead.
+  const stepsNeedingConfiguration = useMemo(
+    () =>
+      new Set(
+        automation.operations.flatMap((op, index) =>
+          toolParamsNeedConfiguring(
+            op.operation as ToolId,
+            op.parameters ?? {},
+            toolRegistry,
+          )
+            ? [index]
+            : [],
+        ),
+      ),
+    [automation, toolRegistry],
+  );
+  const runBlockedReason =
+    signInReason ??
+    (stepsNeedingConfiguration.size > 0
+      ? t(
+          "automate.sequence.needsConfiguring",
+          "Edit this automation to finish configuring its steps.",
+        )
+      : null);
 
   useEffect(() => {
     setExecutionSteps(initialSteps(automation));
@@ -342,6 +377,17 @@ export default function AutomationRun({
                 index={index}
                 status={step?.status}
                 title={toolDisplayName(t, toolRegistry, op.operation)}
+                meta={
+                  stepsNeedingConfiguration.has(index) ? (
+                    <span className={classes.needsConfiguration}>
+                      {t(
+                        "automate.steps.needsConfiguration",
+                        "Needs configuration",
+                      )}
+                    </span>
+                  ) : undefined
+                }
+                needsSettings={stepsNeedingConfiguration.has(index)}
               >
                 {step?.error && (
                   <div className={classes.stepError} role="alert">
@@ -356,7 +402,7 @@ export default function AutomationRun({
                           size="sm"
                           leftSection={<Icon name="rotate-ccw" size={14} />}
                           onClick={executeAutomation}
-                          disabled={!hasFiles || Boolean(signInReason)}
+                          disabled={!hasFiles || Boolean(runBlockedReason)}
                           ref={retryRef}
                         >
                           {t("automate.run.retry", "Retry")}
@@ -412,7 +458,7 @@ export default function AutomationRun({
                 size="sm"
                 leftSection={<Icon name="rotate-ccw" size={14} />}
                 onClick={executeAutomation}
-                disabled={!hasFiles || isUndoing || Boolean(signInReason)}
+                disabled={!hasFiles || isUndoing || Boolean(runBlockedReason)}
               >
                 {t("automate.run.runAgain", "Run again")}
               </Button>
@@ -500,13 +546,13 @@ export default function AutomationRun({
                 )
               }
               onClick={executeAutomation}
-              disabled={isExecuting || !hasFiles || Boolean(signInReason)}
+              disabled={isExecuting || !hasFiles || Boolean(runBlockedReason)}
             >
               {runLabel}
             </Button>
-            {signInReason && (
+            {runBlockedReason && (
               <p className={classes.hint} role="status">
-                {signInReason}
+                {runBlockedReason}
               </p>
             )}
           </div>

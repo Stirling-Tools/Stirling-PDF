@@ -245,8 +245,8 @@ export const ToolSearchNoResults: Story = {
 export const StepSettings: Story = {
   play: async (context) => {
     const panel = await openCreation(context);
-    // A tool with settings opens them as soon as it is picked.
     await chooseTool(panel, "Compress");
+    await userEvent.click(panel.getByRole("button", { name: "Step settings" }));
     await panel.findByRole("button", { name: "Done" }, STAGE_TIMEOUT);
   },
 };
@@ -290,7 +290,7 @@ export const StepNeedsSettings: Story = {
   },
 };
 
-export const ConfigureBeforeSave: Story = {
+export const ValidDefaultsNeedNoConfiguring: Story = {
   play: async (context) => {
     const panel = await openCreation(context);
     await userEvent.type(
@@ -298,13 +298,9 @@ export const ConfigureBeforeSave: Story = {
       "Shrink",
     );
     await chooseTool(panel, "Compress");
-    const save = panel.getByRole("button", { name: "Save" });
-    // Valid defaults still have to be reviewed once before saving.
-    await expect(save).toBeDisabled();
-    await expect(panel.getByText("Needs configuration")).toBeVisible();
-    await userEvent.click(panel.getByRole("button", { name: "Done" }));
-    await waitFor(() => expect(save).toBeEnabled(), STAGE_TIMEOUT);
-    await expect(panel.queryByText("Needs configuration")).toBeNull();
+    await panel.findByText("Configured", undefined, STAGE_TIMEOUT);
+    await expect(panel.getByRole("button", { name: "Save" })).toBeEnabled();
+    await expect(panel.queryByRole("button", { name: "Done" })).toBeNull();
   },
 };
 

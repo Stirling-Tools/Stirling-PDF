@@ -47,7 +47,10 @@ vi.mock("@editor/contexts/ToolRegistryContext", () => ({
       },
       addPassword: {
         name: "Add Password",
-        operationConfig: { defaultParameters: { password: "" } },
+        operationConfig: {
+          defaultParameters: { password: "" },
+          validateParams: (p: { password: string }) => p.password !== "",
+        },
       },
     },
   }),
@@ -121,6 +124,28 @@ describe("AutomationRun", () => {
     expect(
       screen.getByRole("button", { name: "Run automation" }),
     ).toHaveProperty("disabled", true);
+  });
+
+  test("will not run a step whose settings its tool rejects", () => {
+    files.selected = [new File(["a"], "a.pdf")];
+    renderRun(operation(), {
+      automation: {
+        ...automation,
+        operations: [
+          automation.operations[0],
+          { operation: "addPassword", parameters: { password: "" } },
+        ],
+      },
+    });
+
+    expect(screen.getByRole("button", { name: /^Run on/ })).toHaveProperty(
+      "disabled",
+      true,
+    );
+    expect(
+      screen.getByText("Edit this automation to finish configuring its steps."),
+    ).toBeTruthy();
+    expect(screen.getAllByText("Needs configuration")).toHaveLength(1);
   });
 
   test("while running, shows that on the button and offers no way out", () => {
