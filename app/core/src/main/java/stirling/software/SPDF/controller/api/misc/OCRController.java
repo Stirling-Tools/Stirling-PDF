@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
+import stirling.software.SPDF.utils.OcrScanBackground;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -187,6 +188,8 @@ public class OCRController {
                 throw ExceptionUtils.createOcrToolsUnavailableException();
             }
 
+            markScanBackgroundsAsArtifacts(tempOutputFile);
+
             // Return the OCR processed PDF as a response
             String outputFilename =
                     GeneralUtils.removeExtension(
@@ -240,6 +243,21 @@ public class OCRController {
             if (tempZipFile != null && !zipOwnershipTransferred) {
                 tempZipFile.close();
             }
+        }
+    }
+
+    private void markScanBackgroundsAsArtifacts(TempFile ocrOutput) throws IOException {
+        try (TempFile marked = new TempFile(tempFileManager, ".pdf")) {
+            try (PDDocument document = pdfDocumentFactory.load(ocrOutput.getFile())) {
+                if (OcrScanBackground.markScanBackgrounds(document) == 0) {
+                    return;
+                }
+                document.save(marked.getFile());
+            }
+            Files.copy(
+                    marked.getPath(),
+                    ocrOutput.getPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
