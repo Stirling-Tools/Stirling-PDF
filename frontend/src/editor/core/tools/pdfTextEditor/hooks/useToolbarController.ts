@@ -98,6 +98,13 @@ export function useHistoryFlags(store: EditorStore): {
   };
 }
 
+function flowingStep(
+  store: EditorStore,
+  change: () => Promise<unknown>,
+): Promise<void> {
+  return store.batch(() => flowingSelection(store, change));
+}
+
 export function useToolbarController(
   store: EditorStore,
   state: EditorViewState,
@@ -193,7 +200,10 @@ export function useToolbarController(
         for (const p of doc.loadedPages()) {
           const run = p.runs.find((r) => r.id === runId);
           if (!run) continue;
-          if (run.paragraphLineSlots.length >= 2)
+          if (
+            run.paragraphLineSlots.length >= 2 &&
+            formatsUpright(run, p.display.rotate)
+          )
             store.dispatch(
               new SetParagraphFormatCommand({
                 pageIndex: p.index,
@@ -526,10 +536,15 @@ export function useToolbarController(
   const canAlignLines = useMemo(() => {
     if (selection.runIds.length !== 1 || selection.imageIds.length > 0)
       return false;
-    const run = state.pages
-      .flatMap((p) => p.runs)
-      .find((r) => r.id === selection.runIds[0]);
-    return !!run && (run.paragraphSlotCount ?? 0) >= 2 && !run.textReadOnly;
+    for (const p of state.pages) {
+      const run = p.runs.find((r) => r.id === selection.runIds[0]);
+      if (run)
+        return (
+          (run.paragraphSlotCount ?? 0) >= 2 &&
+          formatsUpright(run, p.display?.rotate ?? 0)
+        );
+    }
+    return false;
   }, [state.pages, selection]);
 
   const paragraph = useMemo(() => {
@@ -561,12 +576,11 @@ export function useToolbarController(
   }, [state.pages, selection.runIds]);
 
   const onChangeFontSize = useCallback(
-    (size: number) => flowingSelection(store, () => sel.changeFontSize(size)),
+    (size: number) => flowingStep(store, () => sel.changeFontSize(size)),
     [store, sel],
   );
   const onSetLineSpacing = useCallback(
-    (factor: number) =>
-      flowingSelection(store, () => sel.setLineSpacing(factor)),
+    (factor: number) => flowingStep(store, () => sel.setLineSpacing(factor)),
     [store, sel],
   );
 
@@ -576,17 +590,16 @@ export function useToolbarController(
       const setTag = textA11y.setTag;
       const tagged = ACCESSIBILITY_EDITING && !!textA11y.tag;
       let failure: FontPickFailure | null = null;
-      return flowingSelection(store, () =>
-        store.batch(async () => {
-          const selection = store.selection.value;
-          const doc = store.document;
-          await sel.changeFontSize(style.size);
-          if (store.document !== doc) return;
-          store.selection.set(selection);
-          failure = await sel.setBold(style.bold);
-          if (tagged && store.document?.treatAsTagged()) setTag(style.tag);
-        }),
-      ).then(() => failure);
+      return flowingStep(store, async () => {
+        const selection = store.selection.value;
+        const doc = store.document;
+        await sel.changeFontSize(style.size);
+        if (store.document !== doc) return;
+        store.selection.set(selection);
+        failure = await sel.setBold(style.bold);
+        if (store.document !== doc) return;
+        if (tagged && store.document?.treatAsTagged()) setTag(style.tag);
+      }).then(() => failure);
     },
     [store, sel, textA11y.setTag, textA11y.tag],
   );
