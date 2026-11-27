@@ -180,6 +180,9 @@ function ChangeButton({
 /** About four fonts; more scroll inside the list, so the panel itself never has to. */
 const FONT_LIST_MAX_HEIGHT = "12rem";
 
+/** Thin enough to fit in the panel's side margin. */
+const FONT_LIST_SCROLLBAR = 6;
+
 /** A font whose swap is being picked: one of the document's, or with no name, all of them. */
 interface FontTarget {
   fontName: string | null;
@@ -282,6 +285,10 @@ function FontsBlock({
           mah={FONT_LIST_MAX_HEIGHT}
           type="auto"
           offsetScrollbars
+          scrollbarSize={FONT_LIST_SCROLLBAR}
+          // The scrollbar sits in the panel's margin, so the rows keep the
+          // heading's width and their buttons line up under its button.
+          style={{ marginRight: -FONT_LIST_SCROLLBAR }}
         >
           <Stack role="list" gap="sm">
             {fonts.map((font) => (
