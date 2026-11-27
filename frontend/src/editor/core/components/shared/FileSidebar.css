@@ -294,6 +294,57 @@
   margin-top: 2px;
 }
 
+.file-sidebar-group-header-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.file-sidebar-group-header-row:hover {
+  background: var(--c-hover);
+}
+
+/* The row carries the hover tint, so the header and its action read as one. */
+.file-sidebar-group-header-row .file-sidebar-group-header:hover {
+  background: transparent;
+}
+
+/* Sits over the count and swaps with it on hover or focus, so counts stay aligned
+   across groups whether or not a group has an action. */
+.file-sidebar-group-action {
+  position: absolute;
+  right: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-sidebar-group-header-row:is(:hover, :has(:focus-visible))
+  .file-sidebar-group-action {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.file-sidebar-group-header-row:has(.file-sidebar-group-action):is(
+    :hover,
+    :has(:focus-visible)
+  )
+  .file-sidebar-group-count {
+  visibility: hidden;
+}
+
+/* Touch screens have no hover to reveal it, so it stays in place of the count. */
+@media (hover: none) {
+  .file-sidebar-group-action {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .file-sidebar-group-header-row:has(.file-sidebar-group-action)
+    .file-sidebar-group-count {
+    visibility: hidden;
+  }
+}
+
 .file-sidebar-group-header {
   display: flex;
   align-items: center;
@@ -503,33 +554,8 @@
   text-overflow: ellipsis;
 }
 
-/* Slim "Adding files… X/Y" progress row shown during a bulk drop's pre-scan,
-   so a 200-file folder never looks frozen between drop and rows appearing. */
 .file-sidebar-bulk-add {
   padding: 4px 14px 8px;
-}
-.file-sidebar-bulk-add-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--c-text-subtle);
-  margin-bottom: 4px;
-}
-.file-sidebar-bulk-add-count {
-  font-variant-numeric: tabular-nums;
-}
-.file-sidebar-bulk-add-track {
-  height: 3px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--c-primary) 15%, transparent);
-  overflow: hidden;
-}
-.file-sidebar-bulk-add-bar {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--c-primary);
-  transition: width 0.15s ease-out;
 }
 
 .file-sidebar-section-count {

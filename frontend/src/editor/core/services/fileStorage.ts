@@ -403,6 +403,7 @@ class FileStorageService {
       remoteSharedViaLink: stub.remoteSharedViaLink,
       remoteHasShareLinks: stub.remoteHasShareLinks,
       remoteShareToken: stub.remoteShareToken,
+      cloudOrigin: stub.cloudOrigin,
 
       // History data from stub
       versionNumber: stub.versionNumber ?? 1,
@@ -594,6 +595,7 @@ class FileStorageService {
         '"{{name}}" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it.',
         { name: record.name },
       ),
+      privateBody: true,
       expandable: false,
       durationMs: 8000,
     });
@@ -820,6 +822,7 @@ class FileStorageService {
           isDirty: record.isDirty,
           isLeaf: record.isLeaf,
           remoteStorageId: record.remoteStorageId,
+          cloudOrigin: record.cloudOrigin,
           remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
           remoteOwnerUsername: record.remoteOwnerUsername,
           remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
@@ -904,6 +907,7 @@ class FileStorageService {
               isDirty: record.isDirty,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
+              cloudOrigin: record.cloudOrigin,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
               remoteOwnerUsername: record.remoteOwnerUsername,
               remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
@@ -1020,6 +1024,7 @@ class FileStorageService {
               isDirty: record.isDirty,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
+              cloudOrigin: record.cloudOrigin,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
               remoteOwnerUsername: record.remoteOwnerUsername,
               remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,

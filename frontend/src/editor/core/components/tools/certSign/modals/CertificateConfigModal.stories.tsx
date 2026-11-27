@@ -3,7 +3,7 @@ import { CertificateConfigModal } from "@editor/components/tools/certSign/modals
 import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 
 const meta = {
-  title: "Tools/CertSign/Modals/CertificateConfigModal",
+  title: "Tools/Sign with Certificate/Parts/Modals/CertificateConfigModal",
   component: CertificateConfigModal,
   parameters: { layout: "fullscreen" },
   decorators: [

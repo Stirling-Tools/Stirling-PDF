@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Box, Divider, Group, Stack, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { BookmarkNode } from "@editor/utils/editTableOfContents";
@@ -9,6 +9,8 @@ import ResultsPreview from "@editor/components/tools/shared/ResultsPreview";
 import BookmarkEditor from "@editor/components/tools/editTableOfContents/BookmarkEditor";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { downloadFromUrl } from "@editor/services/downloadService";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import classes from "@editor/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView.module.css";
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -51,8 +53,8 @@ const EditTableOfContentsWorkbenchView = ({
 
   if (!data) {
     return (
-      <Box p="xl">
-        <Card withBorder radius="md">
+      <Box className={classes.workbench}>
+        <Box className={classes.page} maw={1200} mx="auto">
           <Stack gap="sm">
             <Text fw={600}>
               {t(
@@ -67,7 +69,7 @@ const EditTableOfContentsWorkbenchView = ({
               )}
             </Text>
           </Stack>
-        </Card>
+        </Box>
       </Box>
     );
   }
@@ -94,15 +96,7 @@ const EditTableOfContentsWorkbenchView = ({
   );
 
   return (
-    <Box
-      p="lg"
-      style={{
-        width: "100%",
-        height: "100%",
-        overflowY: "auto",
-        background: "var(--c-surface-raised)",
-      }}
-    >
+    <Box className={classes.workbench}>
       <Stack gap="xl" maw={1200} mx="auto">
         <Stack gap={4}>
           <Text size="xl" fw={700}>
@@ -116,22 +110,19 @@ const EditTableOfContentsWorkbenchView = ({
           </Text>
         </Stack>
 
-        <Card
-          withBorder
-          radius="md"
-          p="xl"
-          style={{
-            backgroundColor: "var(--c-surface)",
-            borderColor: "var(--c-border)",
-            boxShadow: "var(--shadow-md)",
-          }}
-        >
+        <Box className={classes.page}>
           <Stack gap="md">
             <Stack gap={2}>
               <Text fw={600}>
                 {t("editTableOfContents.editor.heading", "Bookmark editor")}
               </Text>
-              <Text size="sm" c="dimmed">
+              <Text
+                size="sm"
+                c="dimmed"
+                className={
+                  selectedFileName ? privateContentClassName : undefined
+                }
+              >
                 {selectedFileName
                   ? t("editTableOfContents.actions.selectedFile", {
                       file: selectedFileName,
@@ -159,19 +150,10 @@ const EditTableOfContentsWorkbenchView = ({
               </Button>
             </Group>
           </Stack>
-        </Card>
+        </Box>
 
         {showResults && (
-          <Card
-            withBorder
-            radius="md"
-            p="xl"
-            style={{
-              backgroundColor: "var(--c-surface)",
-              borderColor: "var(--c-border)",
-              boxShadow: "var(--shadow-md)",
-            }}
-          >
+          <Box className={classes.page}>
             <Stack gap="md">
               <Stack gap={4}>
                 <Text fw={600}>
@@ -222,7 +204,7 @@ const EditTableOfContentsWorkbenchView = ({
                 </Button>
               </Group>
             </Stack>
-          </Card>
+          </Box>
         )}
       </Stack>
     </Box>

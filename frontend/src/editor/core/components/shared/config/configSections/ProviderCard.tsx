@@ -12,8 +12,10 @@ import {
   NumberInput,
   TagsInput,
   Anchor,
+  List,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import EditableSecretField from "@editor/components/shared/EditableSecretField";
 import {
@@ -22,6 +24,8 @@ import {
 } from "@editor/components/shared/config/configSections/providerDefinitions";
 
 import { Icon, isIconName } from "@editor/ui/Icon";
+import { copyText } from "@editor/utils/copyText";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface ProviderCardProps {
   provider: Provider;
   isConfigured: boolean;
@@ -80,6 +84,18 @@ export default function ProviderCard({
     setExpanded(!expanded);
   };
 
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyField = async (key: string, value: string) => {
+    if (await copyText(value)) {
+      setCopiedField(key);
+      window.setTimeout(
+        () => setCopiedField((current) => (current === key ? null : current)),
+        1500,
+      );
+    }
+  };
+
   const handleFieldChange = (key: string, value: unknown) => {
     if (disabled) return; // Block changes when disabled
     const updated = { ...localSettings, [key]: value };
@@ -101,6 +117,39 @@ export default function ProviderCard({
     const raw = localSettings[field.key] ?? field.defaultValue;
 
     switch (field.type) {
+      case "copy":
+        return (
+          <TextInput
+            key={field.key}
+            label={field.label}
+            description={field.description}
+            value={field.value ?? ""}
+            readOnly
+            onFocus={(e) => e.currentTarget.select()}
+            data-testid={`provider-copy-${field.key}`}
+            rightSectionWidth="auto"
+            rightSectionPointerEvents="all"
+            rightSection={
+              <Button
+                size="sm"
+                variant="tertiary"
+                accent={copiedField === field.key ? "success" : undefined}
+                leftSection={
+                  <Icon
+                    name={copiedField === field.key ? "check" : "copy"}
+                    size={14}
+                  />
+                }
+                onClick={() => void copyField(field.key, field.value ?? "")}
+              >
+                {copiedField === field.key
+                  ? t("common.copied", "Copied!")
+                  : t("common.copy", "Copy")}
+              </Button>
+            }
+          />
+        );
+
       case "switch":
         return (
           <SettingsToggleRow
@@ -129,6 +178,7 @@ export default function ProviderCard({
       case "textarea":
         return (
           <Textarea
+            className={privateContentClassName}
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
@@ -166,6 +216,7 @@ export default function ProviderCard({
 
         return (
           <TagsInput
+            className={privateContentClassName}
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
@@ -183,6 +234,7 @@ export default function ProviderCard({
       default:
         return (
           <TextInput
+            className={privateContentClassName}
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
@@ -224,9 +276,28 @@ export default function ProviderCard({
           <Group gap="sm" style={{ flex: 1, minWidth: 0 }}>
             {renderProviderIcon()}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={600} size="sm">
-                {provider.name}
-              </Text>
+              <Group gap={4} wrap="nowrap">
+                <Text fw={600} size="sm">
+                  {provider.name}
+                </Text>
+                {provider.setupSteps && (
+                  <InfoTooltip
+                    label={
+                      <List type="ordered" size="xs" spacing={4}>
+                        {provider.setupSteps.map((step) => (
+                          <List.Item key={step}>{step}</List.Item>
+                        ))}
+                      </List>
+                    }
+                    ariaLabel={t(
+                      "admin.settings.connections.setupSteps",
+                      "How to set up {{name}}",
+                      { name: provider.name },
+                    )}
+                    position="right"
+                  />
+                )}
+              </Group>
               <Text size="xs" c="dimmed" truncate>
                 {provider.scope}
               </Text>

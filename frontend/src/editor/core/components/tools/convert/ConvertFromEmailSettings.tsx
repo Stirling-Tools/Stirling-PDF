@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { Stack, Text, NumberInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
@@ -18,12 +17,11 @@ const ConvertFromEmailSettings = ({
   disabled = false,
 }: ConvertFromEmailSettingsProps) => {
   const { t } = useTranslation();
-  const maxSizeLabelId = useId();
 
   return (
     <Stack gap="sm" data-testid="email-settings">
       <Text size="sm" fw={500}>
-        {t("convert.emailOptions", "Email to PDF Options")}:
+        {t("convert.emailOptions", "Email to PDF Options")}
       </Text>
 
       <Checkbox
@@ -40,26 +38,22 @@ const ConvertFromEmailSettings = ({
       />
 
       {parameters.emailOptions.includeAttachments && (
-        <Stack gap="xs">
-          <Text id={maxSizeLabelId} size="xs" fw={500}>
-            {t("convert.maxAttachmentSize", "Maximum attachment size (MB)")}:
-          </Text>
-          <NumberInput
-            aria-labelledby={maxSizeLabelId}
-            value={parameters.emailOptions.maxAttachmentSizeMB}
-            onChange={(value) =>
-              onParameterChange("emailOptions", {
-                ...parameters.emailOptions,
-                maxAttachmentSizeMB: Number(value) || 10,
-              })
-            }
-            min={1}
-            max={100}
-            step={1}
-            disabled={disabled}
-            data-testid="max-attachment-size-input"
-          />
-        </Stack>
+        <NumberInput
+          label={t("convert.maxAttachmentSize", "Maximum attachment size")}
+          suffix=" MB"
+          value={parameters.emailOptions.maxAttachmentSizeMB}
+          onChange={(value) =>
+            onParameterChange("emailOptions", {
+              ...parameters.emailOptions,
+              maxAttachmentSizeMB: Number(value) || 10,
+            })
+          }
+          min={1}
+          max={100}
+          step={1}
+          disabled={disabled}
+          data-testid="max-attachment-size-input"
+        />
       )}
 
       <Checkbox

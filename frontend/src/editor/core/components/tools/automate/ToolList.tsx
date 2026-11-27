@@ -62,12 +62,11 @@ export default function ToolList({
           <React.Fragment key={tool.id}>
             <div
               style={{
-                border: "1px solid var(--mantine-color-gray-2)",
+                border: "1px solid var(--c-border)",
                 borderRadius:
                   tool.operation && !tool.configured
                     ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
                     : "var(--mantine-radius-lg)",
-                backgroundColor: "var(--mantine-color-gray-2)",
                 position: "relative",
                 padding: "var(--mantine-spacing-xs)",
                 borderBottomWidth:
@@ -142,7 +141,7 @@ export default function ToolList({
               <div
                 style={{
                   width: "100%",
-                  border: "1px solid var(--mantine-color-gray-2)",
+                  border: "1px solid var(--c-border)",
                   borderTop: "none",
                   borderRadius:
                     "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",

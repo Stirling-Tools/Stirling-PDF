@@ -23,13 +23,6 @@ public class ConvertEbookToPdfRequest {
     private MultipartFile fileInput;
 
     @Schema(
-            description = "Embed all fonts from the eBook into the generated PDF",
-            allowableValues = {"true", "false"},
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "false")
-    private Boolean embedAllFonts = false;
-
-    @Schema(
             description = "Add a generated table of contents to the resulting PDF",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},

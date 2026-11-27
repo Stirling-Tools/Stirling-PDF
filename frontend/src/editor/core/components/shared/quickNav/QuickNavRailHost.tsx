@@ -27,8 +27,6 @@ import { Icon } from "@editor/ui/Icon";
 const SIZE = "1.125rem";
 
 /** Entries come from the URL, not either app's context, so the rail survives a switch. */
-/** Interpolated, not inlined: a literal "#acc…" reads as a hex colour to theme-lint. */
-const ACCOUNT_ANCHOR = "account";
 
 export function QuickNavRailHost() {
   const { t } = useTranslation();
@@ -131,19 +129,21 @@ export function QuickNavRailHost() {
     },
   };
 
+  // Without a connected server (desktop's local mode) signing in is the way in, not an admin.
+  const signInForProcessor = host?.isAnonymous || !connectedServer;
+  const noProcessorAccess =
+    HAS_PORTAL && !inPortal && !host?.portalAccess && !signInForProcessor;
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
     icon: <Icon name="cpu" size={SIZE} />,
     current: inPortal,
-    disabled:
-      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous,
-    reason:
-      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous
-        ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
-        : undefined,
+    disabled: noProcessorAccess,
+    reason: noProcessorAccess
+      ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
+      : undefined,
     onClick: () => {
-      if (host?.isAnonymous) {
+      if (signInForProcessor) {
         requestProcessorSignup();
         return;
       }
@@ -273,16 +273,24 @@ export function QuickNavRailHost() {
   // question mark rather than competing with the apps for the top.
   const openDocs = HAS_DOCS ? () => go(DOCS_PATH) : undefined;
 
-  // The avatar is the only way into settings now, so it lands on the account
-  // section and the page's own nav carries the rest. Inside settings it is a
-  // tab switch (replace); from an app it is a navigation.
-  const openAccount = () => {
-    const target = `/settings/general#${ACCOUNT_ANCHOR}`;
+  // Inside settings a section change is a tab switch (replace); from an app it
+  // is a navigation that remembers where to return to.
+  const openSettingsAt = (target: string) => {
     if (inSettings) {
-      navigate(target, { replace: true });
+      guarded(() => navigate(target, { replace: true }));
       return;
     }
     go(target);
+  };
+
+  const signOutGuarded = () => {
+    const signOut = host?.actions.current?.accountMenu?.signOut;
+    if (signOut) guarded(signOut);
+  };
+
+  const resolveAccountMenu = () => {
+    const menu = host?.actions.current?.accountMenu;
+    return menu && { ...menu, signOut: menu.signOut && signOutGuarded };
   };
 
   // A route that isn't the app hides the bar - see useSuppressQuickNavRail.
@@ -296,7 +304,9 @@ export function QuickNavRailHost() {
       ]}
       onReturnHome={() => guarded(goToStartupView)}
       identity={host?.identity ?? null}
-      onOpenAccount={openAccount}
+      onOpenAccount={() => openSettingsAt("/settings")}
+      onOpenAccountShortcut={openSettingsAt}
+      resolveAccountMenu={resolveAccountMenu}
       // The avatar stands for the whole page, not just its own section.
       accountActive={inSettings}
       onOpenDocs={openDocs}

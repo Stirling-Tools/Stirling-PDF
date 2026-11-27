@@ -43,9 +43,11 @@ import stirling.software.common.util.AppArgsCapture;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.JarPathUtil;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.proprietary.mcp.security.McpIdpPreflightService;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+import stirling.software.proprietary.security.service.IssuerDiscoveryProbe;
 import stirling.software.proprietary.service.AiEngineConfigSync;
 
 import tools.jackson.core.type.TypeReference;
@@ -61,6 +63,8 @@ public class AdminSettingsController {
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
     private final AiEngineConfigSync aiEngineConfigSync;
+    private final McpIdpPreflightService mcpPreflightService;
+    private final IssuerDiscoveryProbe issuerDiscoveryProbe;
 
     // Track settings that have been modified but not yet applied (require restart)
     private static final ConcurrentHashMap<String, Object> pendingChanges =
@@ -529,6 +533,79 @@ public class AdminSettingsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(GENERIC_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/mcp/preflight")
+    @Operation(
+            summary = "Check whether MCP clients can connect",
+            description =
+                    "Probes the current MCP configuration, and the external IdP when one is used, for what OAuth-only clients such as ChatGPT and Claude need: reachable metadata, client registration, PKCE, signing keys, token audience and account binding. Admin access required.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Preflight result"),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied - Admin role required")
+            })
+    public ResponseEntity<Map<String, Object>> mcpPreflight() {
+        return ResponseEntity.ok(mcpPreflightService.run());
+    }
+
+    @PostMapping("/check-issuer")
+    @Operation(
+            summary = "Check an OpenID Connect issuer answers discovery",
+            description =
+                    "Fetches <issuer>/.well-known/openid-configuration so a mistyped or"
+                            + " unreachable issuer is caught before it is saved. Admin access"
+                            + " required.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Check completed"),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied - Admin role required")
+            })
+    public ResponseEntity<Map<String, Object>> checkIssuer(
+            @RequestBody Map<String, String> request) {
+        String issuer = request.get("issuer");
+        return ResponseEntity.ok(
+                Map.of("reachable", issuerDiscoveryProbe.answersDiscovery(issuer)));
+    }
+
+    @PostMapping("/setup-complete")
+    @Operation(
+            summary = "Mark first-run setup as complete",
+            description =
+                    "Records that an admin has finished the first-run setup wizard, so it is not"
+                            + " shown again. Applies immediately, without a restart. Admin access"
+                            + " required. The response says whether it also reached the settings"
+                            + " file; when it did not, setup is complete until the next restart.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Setup marked complete"),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied - Admin role required")
+            })
+    public ResponseEntity<Map<String, Object>> completeSetup() {
+        // In memory first: the wizard must not come back because the settings file is
+        // read-only or the follow-up restart fails. The file only decides the next boot.
+        applicationProperties.getSystem().setSetupCompleted(true);
+        try {
+            GeneralUtils.saveKeyToSettings("system.setupCompleted", true);
+        } catch (IOException e) {
+            log.warn(
+                    "Setup is complete for this run but could not be recorded in the settings"
+                            + " file: {}",
+                    e.getMessage());
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Setup marked complete until the next restart.",
+                            "persisted",
+                            false));
+        }
+        return ResponseEntity.ok(Map.of("message", "Setup marked complete.", "persisted", true));
     }
 
     @PostMapping("/restart")

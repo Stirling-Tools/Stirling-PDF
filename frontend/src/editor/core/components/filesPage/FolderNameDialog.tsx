@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Alert, Group, Modal, Stack, TextInput } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { Button } from "@editor/ui/Button";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface FolderNameDialogProps {
   opened: boolean;
@@ -72,6 +73,7 @@ export function FolderNameDialog({
       <Stack gap="sm">
         <TextInput
           autoFocus
+          className={privateContentClassName}
           value={value}
           onChange={(e) => setValue(e.currentTarget.value)}
           placeholder={t("filesPage.folderName.placeholder", "Folder name")}

@@ -3,6 +3,7 @@ import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { CSSProperties } from "react";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ZipWarningModalProps {
   opened: boolean;
@@ -45,7 +46,7 @@ const ZipWarningModal = ({
           size={WARNING_ICON_SIZE}
           style={WARNING_ICON_STYLE}
         />
-        <Text size="md" fw={300}>
+        <Text size="md" fw={300} className={privateContentClassName}>
           {zipFileName}
         </Text>
         <Text size="lg" fw={500}>

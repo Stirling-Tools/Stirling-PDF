@@ -26,41 +26,6 @@ export const getEndpointName = (
   return endpointKey || "";
 };
 
-const OFFICE_ENGINE_ENDPOINTS = [
-  "pdf-to-word",
-  "pdf-to-presentation",
-  "pdf-to-text",
-  "pdf-to-rtf",
-  "pdf-to-xlsx",
-];
-
-const OFFICE_EXTENSIONS = [
-  "doc",
-  "docx",
-  "odt",
-  "rtf",
-  "txt",
-  "xls",
-  "xlsx",
-  "ods",
-  "csv",
-  "ppt",
-  "pptx",
-  "odp",
-];
-
-/** Whether the conversion can run on Stirling Office Convert instead of LibreOffice. */
-export const usesOfficeEngine = (
-  fromExtension: string,
-  toExtension: string,
-): boolean => {
-  const endpoint = getEndpointName(fromExtension, toExtension);
-  if (endpoint === "file-to-pdf") {
-    return OFFICE_EXTENSIONS.includes(fromExtension);
-  }
-  return OFFICE_ENGINE_ENDPOINTS.includes(endpoint);
-};
-
 /**
  * Resolves the full endpoint URL for a given conversion
  */
@@ -112,7 +77,7 @@ export const isWebFormat = (extension: string): boolean => {
 
 /**
  * Checks if the given extension is an office format (Word, Excel, PowerPoint, OpenOffice)
- * These formats use LibreOffice for conversion and require individual file processing
+ * These formats require individual file processing
  */
 export const isOfficeFormat = (extension: string): boolean => {
   return [

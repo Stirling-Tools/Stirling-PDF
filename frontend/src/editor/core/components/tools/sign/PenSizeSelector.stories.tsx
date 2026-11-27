@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import PenSizeSelector from "@editor/components/tools/sign/PenSizeSelector";
 
 const meta = {
-  title: "Tools/Sign/PenSizeSelector",
+  title: "Tools/Sign/Parts/PenSizeSelector",
   component: PenSizeSelector,
   args: {
     value: 5,

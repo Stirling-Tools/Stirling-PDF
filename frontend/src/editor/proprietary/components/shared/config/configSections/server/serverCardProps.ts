@@ -26,7 +26,9 @@ export type UiDefaultsCardProps = ServerCardProps<UiDefaultsSettingsData>;
 export type EndpointsCardProps = ServerCardProps<EndpointsSettingsData>;
 export type StorageSharingCardProps =
   ServerCardProps<StorageSharingSettingsData>;
-export type McpCardProps = ServerCardProps<McpSettingsData>;
+export interface McpCardProps extends ServerCardProps<McpSettingsData> {
+  savedSettings: McpSettingsData;
+}
 
 /**
  * The "add a root" box is page state: Discard clears it alongside the draft,

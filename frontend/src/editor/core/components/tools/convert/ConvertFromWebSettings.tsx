@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { Stack, Text, NumberInput, Slider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
@@ -18,21 +17,17 @@ const ConvertFromWebSettings = ({
   disabled = false,
 }: ConvertFromWebSettingsProps) => {
   const { t } = useTranslation();
-  const zoomLabelId = useId();
   const zoomLabel = t("convert.zoomLevel", "Zoom Level");
 
   return (
     <Stack gap="sm" data-testid="web-settings">
       <Text size="sm" fw={500}>
-        {t("convert.webOptions", "Web to PDF Options")}:
+        {t("convert.webOptions", "Web to PDF Options")}
       </Text>
 
       <Stack gap="xs">
-        <Text id={zoomLabelId} size="xs" fw={500}>
-          {zoomLabel}:
-        </Text>
         <NumberInput
-          aria-labelledby={zoomLabelId}
+          label={zoomLabel}
           value={parameters.htmlOptions.zoomLevel}
           onChange={(value) =>
             onParameterChange("htmlOptions", {

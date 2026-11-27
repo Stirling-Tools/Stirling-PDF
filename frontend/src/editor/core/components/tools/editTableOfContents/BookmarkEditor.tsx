@@ -19,6 +19,7 @@ import {
 } from "@editor/utils/editTableOfContents";
 
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface BookmarkEditorProps {
   bookmarks: BookmarkNode[];
   onChange: (bookmarks: BookmarkNode[]) => void;
@@ -242,7 +243,7 @@ export default function BookmarkEditor({
               </ActionIcon>
               <Stack gap={2}>
                 <Group gap="xs" align="center">
-                  <Text fw={600}>
+                  <Text fw={600} className={privateContentClassName}>
                     {bookmark.title ||
                       t(
                         "editTableOfContents.editor.untitled",
@@ -342,6 +343,7 @@ export default function BookmarkEditor({
                 value={
                   editingId === bookmark.id ? currentTitleInput : bookmark.title
                 }
+                className={privateContentClassName}
                 onFocus={() => {
                   setEditingId(bookmark.id);
                   setCurrentTitleInput(bookmark.title);

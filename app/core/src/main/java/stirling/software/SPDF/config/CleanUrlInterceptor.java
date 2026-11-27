@@ -48,6 +48,10 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
         if (requestURI.contains("/api/")) {
             return true;
         }
+        // The MCP OAuth pages need the protocol parameters (client_id, state, PKCE) intact.
+        if (requestURI.startsWith(request.getContextPath() + "/oauth/")) {
+            return true;
+        }
 
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
@@ -56,6 +60,8 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
             // The frontend needs state to bind the SaaS response to the initiating browser.
             boolean accountLinkCallback =
                     requestURI.equals(request.getContextPath() + "/account-link/callback");
+            // Share links carry ?action=download|open for the share page to run once.
+            boolean shareLink = requestURI.startsWith(request.getContextPath() + "/share/");
 
             // Keep only the allowed parameters
             String[] queryParameters = queryString.split("&");
@@ -65,7 +71,9 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     continue;
                 }
                 String key = keyValuePair[0];
-                if (ALLOWED_PARAMS.contains(key) || (accountLinkCallback && "state".equals(key))) {
+                if (ALLOWED_PARAMS.contains(key)
+                        || (accountLinkCallback && "state".equals(key))
+                        || (shareLink && "action".equals(key))) {
                     allowedParameters.put(key, keyValuePair.length == 2 ? keyValuePair[1] : null);
                 }
             }

@@ -34,6 +34,10 @@ export function isAwaitingUnlock(fileId: string): boolean {
   return pending.has(fileId);
 }
 
+export function hasPendingUnlocks(): boolean {
+  return pending.size > 0;
+}
+
 let version = 0;
 
 /** Changes whenever the set does, so a subscriber can re-run work it skipped. */

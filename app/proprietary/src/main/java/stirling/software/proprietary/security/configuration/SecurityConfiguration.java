@@ -56,6 +56,7 @@ import stirling.software.proprietary.security.oauth2.TauriAuthorizationRequestRe
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
+import stirling.software.proprietary.security.scim.ScimTokenFilter;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
@@ -200,11 +201,17 @@ public class SecurityConfiguration {
                         "X-API-KEY",
                         "X-CSRF-TOKEN",
                         "X-XSRF-TOKEN",
-                        "X-Browser-Id"));
+                        "X-Browser-Id",
+                        // MCP Streamable HTTP headers, for browser-based MCP clients
+                        "MCP-Protocol-Version",
+                        "Mcp-Method",
+                        "Mcp-Name",
+                        "Mcp-Session-Id"));
 
         cfg.setExposedHeaders(
                 List.of(
                         "WWW-Authenticate",
+                        "Mcp-Session-Id",
                         "X-Total-Count",
                         "X-Page-Number",
                         "X-Page-Size",
@@ -301,6 +308,9 @@ public class SecurityConfiguration {
                     // OncePerRequestFilter with proper config-driven limits.
                     // .addFilterBefore(rateLimitingFilter,
                     // UsernamePasswordAuthenticationFilter.class)
+                    // Same order as the JWT filter; registered first so SCIM's bearer token wins.
+                    .addFilterBefore(
+                            new ScimTokenFilter(securityProperties), UserAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             http.sessionManagement(

@@ -73,6 +73,10 @@ test.describe("Workbench survives the editor/processor switch", () => {
     await expect(
       page.getByRole("radio", { name: /Active Files/i }),
     ).toBeChecked();
+    // The sidebar lists files as they arrive; the grid only once all have.
+    await expect(page.locator("[data-file-id]")).toHaveCount(SAMPLES.length, {
+      timeout: 15000,
+    });
 
     // Out through the rail's processor mark, the only chrome that offers the switch.
     const processorMark = page.getByRole("button", { name: /^Processor$/i });

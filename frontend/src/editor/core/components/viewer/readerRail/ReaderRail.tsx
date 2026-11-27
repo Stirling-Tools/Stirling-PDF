@@ -16,6 +16,7 @@ import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { isStirlingFile } from "@editor/types/fileContext";
 import "@editor/components/viewer/readerRail/ReaderRail.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The quick-nav rail's icon size, so the two rails read as one family. */
 const SIZE = "1.125rem";
@@ -44,10 +45,6 @@ const RAIL_GROUPS: readonly (readonly RailItem[])[] = [
     {
       id: "viewer-toggle-sidebar",
       icon: <Icon name="rows-2" size={SIZE} />,
-    },
-    {
-      id: "viewer-search",
-      icon: <Icon name="search" size={SIZE} />,
     },
   ],
   [
@@ -103,7 +100,6 @@ export function ReaderRail() {
     () => ({
       "viewer-toggle-bookmarks": t("reader.rail.bookmarks", "Bookmarks"),
       "viewer-toggle-sidebar": t("reader.rail.thumbnails", "Pages"),
-      "viewer-search": t("reader.rail.search", "Find in document"),
       "viewer-rotate-left": t("reader.rail.rotateLeft", "Rotate left"),
       "viewer-rotate-right": t("reader.rail.rotateRight", "Rotate right"),
       "viewer-toggle-comments": t("reader.rail.comment", "Comments"),
@@ -155,24 +151,32 @@ export function ReaderRail() {
           styles={{ dropdown: { maxHeight: "70vh", overflowY: "auto" } }}
         >
           <Menu.Target>
-            {/* Labelled like every other control in the rail: icons only, so the
-                tooltip is the only name a pointer ever sees. */}
-            <AppTooltip
-              content={t("reader.rail.switchDocument", "Switch document")}
-              position="left"
-              arrow
-              delay={0}
-            >
-              <ActionIcon
-                variant="tertiary"
-                size="md"
-                shape="circle"
-                // The name is in the dropdown; the trigger says what it opens.
-                aria-label={t("reader.rail.switchDocument", "Switch document")}
+            {/* The wrapper takes the click handler and ref Menu.Target injects;
+                AppTooltip does not forward either, so without it the menu never
+                opens. */}
+            <div className="reader-rail__item">
+              {/* Labelled like every other control in the rail: icons only, so
+                  the tooltip is the only name a pointer ever sees. */}
+              <AppTooltip
+                content={t("reader.rail.switchDocument", "Switch document")}
+                position="left"
+                arrow
+                delay={0}
               >
-                <Icon name="file-text" size={SIZE} />
-              </ActionIcon>
-            </AppTooltip>
+                <ActionIcon
+                  variant="tertiary"
+                  size="md"
+                  shape="circle"
+                  // The name is in the dropdown; the trigger says what it opens.
+                  aria-label={t(
+                    "reader.rail.switchDocument",
+                    "Switch document",
+                  )}
+                >
+                  <Icon name="file-text" size={SIZE} />
+                </ActionIcon>
+              </AppTooltip>
+            </div>
           </Menu.Target>
           <Menu.Dropdown>
             {documents.map((doc) => (
@@ -184,7 +188,10 @@ export function ReaderRail() {
                 data-current={doc.id === activeFileId || undefined}
                 onClick={() => setActiveFileId(doc.id)}
               >
-                <span className="reader-rail__doc-name" title={doc.name}>
+                <span
+                  className={`reader-rail__doc-name ${privateContentClassName}`}
+                  title={doc.name}
+                >
                   {truncateCenter(doc.name, 48)}
                 </span>
               </Menu.Item>
@@ -211,7 +218,7 @@ export function ReaderRail() {
             const action = button ? actions[button.id] : undefined;
 
             // A control that brought its own renderer keeps it: that is where the
-            // search field and the read-aloud controls live.
+            // read-aloud controls live.
             if (button?.render) {
               return (
                 <div className="reader-rail__item" key={item.id}>

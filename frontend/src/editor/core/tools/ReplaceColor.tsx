@@ -41,7 +41,7 @@ const ReplaceColor = (props: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t("replace-color.submit", "Replace"),
+      text: t("replace-color.submit", "Replace Colors"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,

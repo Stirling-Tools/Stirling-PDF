@@ -1,0 +1,8 @@
+{
+  "name": "Compress and rotate",
+  "description": "Compresses each file, then rotates it a quarter turn.",
+  "operations": [
+    { "operation": "compress", "parameters": {} },
+    { "operation": "rotate", "parameters": { "angle": 90 } }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  // The core Storybook build still loads the preview's own setup: portal
+  // providers and the proprietary auth client, reached by explicit
+  // @processor / @editor-proprietary aliases. Those files resolve through the
+  // proprietary cascade, while core files keep core's: .storybook/main.ts lists
+  // this project ahead of core's, and it sits here because vite-tsconfig-paths
+  // applies a project only below its own folder.
+  "extends": "./tsconfig.proprietary.vite.json",
+  "include": ["src/processor/proprietary/**/*", "src/editor/proprietary/**/*"]
+}

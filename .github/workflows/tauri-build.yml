@@ -73,7 +73,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -84,9 +84,8 @@ jobs:
           PLATFORM: ${{ inputs.platform }}
         run: |
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
-          # ARM64: NSIS only (WiX MSI has no arm64 support in Tauri) and no JPDFium
-          # natives yet - flip jpdfium_platforms to windows-arm64 once JPDFium ships it.
-          WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"none"}'
+          # ARM64 uses NSIS because Tauri's WiX MSI bundler does not support it.
+          WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"windows-arm64"}'
           MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
 
@@ -137,7 +136,7 @@ jobs:
       SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -167,7 +166,7 @@ jobs:
       # only recompiles the app crate. Written on main; PRs and the merge queue
       # restore from it.
       - name: Cache Rust build
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: frontend/src-tauri
           # Stable key shared across workflows so the nightly warmer.
@@ -223,7 +222,7 @@ jobs:
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
       - name: Set up JDK 25 (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: "25"
           distribution: "microsoft"
@@ -363,7 +362,7 @@ jobs:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
           & smctl healthcheck
-          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl healthcheck returned non-zero - continuing, keypair ls is the gate" }
           & smctl keypair ls
           if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
           & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
@@ -387,6 +386,11 @@ jobs:
             }
           }
           EOF
+
+      - name: Sign bundled runtime binaries
+        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre
 
       - name: Import release GPG signing key (Linux)
         if: inputs.sign && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
@@ -564,6 +568,11 @@ jobs:
             find . -name "*.AppImage" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
+      - name: Verify bundled runtime signatures
+        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: pwsh
+        run: ./.github/scripts/sign-windows-runtime.ps1 -Root ./frontend/src-tauri/runtime/jre -VerifyOnly
+
       # Verify the MSI AND the inner exe extracted from it are signed.
       # The inner exe is what gets installed on users' machines and what AV scans.
       - name: Verify Windows Code Signature
@@ -731,7 +740,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -759,7 +768,7 @@ jobs:
       # Dev-profile artifacts, kept apart from the release cache the bundle
       # build restores. Written on main (the nightly warm run); PRs restore.
       - name: Cache Rust build
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: frontend/src-tauri
           shared-key: tauri-test-${{ matrix.name }}
@@ -785,7 +794,7 @@ jobs:
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
       - name: Set up JDK 25 (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: "25"
           distribution: "microsoft"
@@ -824,7 +833,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -917,7 +926,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 

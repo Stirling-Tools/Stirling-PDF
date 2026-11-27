@@ -103,7 +103,25 @@ vi.mock("../../services/thumbnailGenerationService", () => ({
       .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
     cleanup: vi.fn(),
     destroy: vi.fn(),
+    forgetFile: vi.fn(),
   },
+}));
+
+vi.mock("@editor/utils/thumbnailUtils", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@editor/utils/thumbnailUtils")>()),
+  generateThumbnailForFile: vi
+    .fn()
+    .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
+  generateThumbnailPairWithMetadata: vi.fn().mockResolvedValue({
+    unrotated: {
+      thumbnail: "data:image/png;base64,fake-thumbnail",
+      pageCount: 1,
+    },
+    rotated: {
+      thumbnail: "data:image/png;base64,fake-thumbnail",
+      pageCount: 1,
+    },
+  }),
 }));
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -304,7 +322,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       expect(files).toHaveLength(3);
     });
 
-    test("should detect mixed file types and use file-to-pdf endpoint", async () => {
+    test("converts mixed Office uploads individually and keeps the existing PDF", async () => {
       const { result: paramsResult } = renderHook(
         () => useConvertParameters(),
         {
@@ -361,6 +379,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       });
 
       expect(onToolRunComplete).toHaveBeenCalledTimes(1);
+      expect(mockedApiClient.post).toHaveBeenCalledTimes(2);
       expect(mockedApiClient.post).toHaveBeenCalledWith(
         "/api/v1/convert/file/pdf",
         expect.any(FormData),
@@ -452,7 +471,6 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         "text/html",
       );
 
-      // Set up HTML conversion parameters
       act(() => {
         paramsResult.current.analyzeFileTypes([htmlFile]);
         paramsResult.current.updateParameter("htmlOptions", {

@@ -21,6 +21,7 @@ import {
   useRef,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   FileContextProviderProps,
@@ -70,6 +71,7 @@ import EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnloc
 import { useTranslation } from "react-i18next";
 import {
   inspectLocalPdfAccess,
+  ensureLocalPdfAccess,
   bindPdfAccess,
   clearPdfAccess,
   forgetPdfAccess,
@@ -77,6 +79,9 @@ import {
   getPdfAccess,
   pdfAccessLifetime,
   rememberPdfAccess,
+  signedPdfEditPolicyOn,
+  signedPdfEditsBlocked,
+  subscribePdfAccess,
   type PdfAccess,
 } from "@editor/services/pdfAccessService";
 import { alert } from "@editor/components/toast";
@@ -88,9 +93,13 @@ import {
   setPendingUnlocks,
 } from "@editor/services/pendingUnlocks";
 import { handlePasswordError } from "@editor/utils/toolErrorHandler";
+import { SignedPdfEditsBlockedError } from "@editor/services/pdfSessionUnlock";
 import apiClient from "@editor/services/apiClient";
 import { buildRemovePasswordFormData } from "@editor/hooks/tools/removePassword/buildRemovePasswordFormData";
 import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
+
+/** How long the opening check may run before its prompt shows. */
+const OPENING_CHECK_PROMPT_DELAY_MS = 2000;
 
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
@@ -143,6 +152,9 @@ function FileContextInner({
     error?: string;
   } | null>(null);
   const [inspectionAttempt, setInspectionAttempt] = useState(0);
+  // The file whose prompt has shown, because its check ran long or failed. It
+  // stays up through retries until another file becomes active.
+  const [promptShownFor, setPromptShownFor] = useState<FileId | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [openingPasswordToRemove, setOpeningPasswordToRemove] = useState<
     string | null
@@ -385,6 +397,7 @@ function FileContextInner({
     setUnlockPassword("");
     setUnlockError(null);
     setOpeningPasswordToRemove(null);
+    setPromptShownFor(null);
     const cancellation = new AbortController();
     protectionOperation.current = cancellation;
     return () => cancellation.abort();
@@ -470,6 +483,54 @@ function FileContextInner({
     [], // Empty deps - selectors are stable
   );
 
+  // While signed PDFs are locked, selected files are read before a tool needs them, so a signed
+  // file shows as locked rather than being refused at Run. Known-encrypted files wait for the
+  // unlock prompt instead.
+  const selectionProbes = useRef(new Map<FileId, AbortController>());
+  const readSelectedFiles = useSyncExternalStore(
+    subscribePdfAccess,
+    signedPdfEditPolicyOn,
+  );
+  useEffect(() => {
+    const probes = selectionProbes.current;
+    const selected = new Set(readSelectedFiles ? state.ui.selectedFileIds : []);
+    for (const [fileId, probe] of probes)
+      if (!selected.has(fileId)) {
+        probe.abort();
+        probes.delete(fileId);
+      }
+    for (const fileId of selected) {
+      const file = selectors.getFile(fileId);
+      if (
+        probes.has(fileId) ||
+        !file ||
+        getPdfAccess(file) ||
+        state.files.byId[fileId]?.processedFile?.isEncrypted ||
+        (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name))
+      )
+        continue;
+      const probe = new AbortController();
+      probes.set(fileId, probe);
+      void ensureLocalPdfAccess(file, probe.signal)
+        .catch(() => {})
+        .finally(() => {
+          if (probes.get(fileId) === probe) probes.delete(fileId);
+        });
+    }
+  }, [
+    readSelectedFiles,
+    state.ui.selectedFileIds,
+    state.files.byId,
+    selectors,
+  ]);
+  useEffect(() => {
+    const probes = selectionProbes.current;
+    return () => {
+      for (const probe of probes.values()) probe.abort();
+      probes.clear();
+    };
+  }, []);
+
   // Navigation management removed - moved to NavigationContext
 
   // Navigation guard system functions
@@ -478,11 +539,11 @@ function FileContextInner({
   }, []);
 
   const selectFiles = (stirlingFiles: StirlingFile[]) => {
-    const currentSelection = stateRef.current.ui.selectedFileIds;
-    const newFileIds = stirlingFiles.map((stirlingFile) => stirlingFile.fileId);
     dispatch({
-      type: "SET_SELECTED_FILES",
-      payload: { fileIds: [...currentSelection, ...newFileIds] },
+      type: "ADD_SELECTED_FILES",
+      payload: {
+        fileIds: stirlingFiles.map((stirlingFile) => stirlingFile.fileId),
+      },
     });
   };
 
@@ -730,12 +791,21 @@ function FileContextInner({
     [t],
   );
 
+  /** Whether opening the file starts with the empty-password check (inspectOpening). */
+  const needsOpeningCheck = (
+    fileId: FileId,
+    stub: StirlingFileStub | undefined,
+  ): stub is StirlingFileStub =>
+    !getPdfAccess(fileId) &&
+    !ownerRequests.current.has(fileId) &&
+    !!stub &&
+    stub.processedFile?.requiresOpeningPassword !== true;
+
   const inspectOpening = useEffectEvent(
     (fileId: FileId, controller: AbortController) => {
-      if (getPdfAccess(fileId) || ownerRequests.current.has(fileId)) return;
       const pending = pendingAdmissions.current.get(fileId);
       const stub = pending?.stub ?? stateRef.current.files.byId[fileId];
-      if (!stub || stub.processedFile?.requiresOpeningPassword === true) return;
+      if (!needsOpeningCheck(fileId, stub)) return;
       protectionOperation.current = controller;
       setOpeningInspection({ fileId });
       // Only the file being opened is parsed; library admission never allocates a PDF heap.
@@ -766,6 +836,7 @@ function FileContextInner({
                 .catch(() => {});
             setOpeningInspection(null);
           } else {
+            setPromptShownFor(fileId);
             setOpeningInspection({
               fileId,
               error: t(
@@ -782,7 +853,14 @@ function FileContextInner({
     if (!activeEncryptedFileId) return;
     const controller = new AbortController();
     inspectOpening(activeEncryptedFileId, controller);
-    return () => controller.abort();
+    const slow = window.setTimeout(
+      () => setPromptShownFor(activeEncryptedFileId),
+      OPENING_CHECK_PROMPT_DELAY_MS,
+    );
+    return () => {
+      window.clearTimeout(slow);
+      controller.abort();
+    };
   }, [activeEncryptedFileId, inspectionAttempt]);
 
   const admitProtectionCopy = useCallback(
@@ -844,6 +922,7 @@ function FileContextInner({
             "Enter the permissions password to continue.",
           ),
         );
+      if (signedPdfEditsBlocked(access)) throw new SignedPdfEditsBlockedError();
       const file = filesRef.current.get(fileId);
       if (!file)
         throw new Error(
@@ -860,13 +939,18 @@ function FileContextInner({
       const response = await apiClient.post<Blob>(
         "/api/v1/security/remove-password",
         form,
-        { responseType: "blob", suppressErrorToast: true },
+        {
+          responseType: "blob",
+          suppressErrorToast: true,
+        },
       );
       if (filesRef.current.get(fileId) !== file) return;
       const copy = new File(
         [response.data],
         `${file.name.replace(/\.pdf$/i, "")}_unprotected.pdf`,
-        { type: "application/pdf" },
+        {
+          type: "application/pdf",
+        },
       );
       const copyAccess = await inspectLocalPdfAccess(
         copy,
@@ -904,6 +988,7 @@ function FileContextInner({
     try {
       const access = await inspectLocalPdfAccess(file, unlockPassword, signal);
       if (filesRef.current.get(fileId) !== file) return;
+      if (signedPdfEditsBlocked(access)) throw new SignedPdfEditsBlockedError();
       if (openingPasswordToRemove === null) {
         if (!access.ownerAuthenticated) {
           setOpeningPasswordToRemove(unlockPassword);
@@ -927,13 +1012,19 @@ function FileContextInner({
       const response = await apiClient.post<Blob>(
         "/api/v1/security/remove-password",
         form,
-        { responseType: "blob", suppressErrorToast: true, signal },
+        {
+          responseType: "blob",
+          suppressErrorToast: true,
+          signal,
+        },
       );
       if (filesRef.current.get(fileId) !== file) return;
       const copy = new File(
         [response.data],
         `${file.name.replace(/\.pdf$/i, "")}_password_removed.pdf`,
-        { type: "application/pdf" },
+        {
+          type: "application/pdf",
+        },
       );
       const copyAccess = await inspectLocalPdfAccess(copy, "", signal);
       await admitProtectionCopy(fileId, file, copy, copyAccess);
@@ -941,14 +1032,16 @@ function FileContextInner({
     } catch (error) {
       if (signal.aborted) return;
       setUnlockError(
-        await handlePasswordError(
-          error,
-          t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
-          t(
-            "removePassword.error.failed",
-            "An error occurred while removing the password from the PDF.",
-          ),
-        ),
+        error instanceof SignedPdfEditsBlockedError
+          ? error.message
+          : await handlePasswordError(
+              error,
+              t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
+              t(
+                "removePassword.error.failed",
+                "An error occurred while removing the password from the PDF.",
+              ),
+            ),
       );
     } finally {
       dispose();
@@ -996,6 +1089,7 @@ function FileContextInner({
                 "encryptedPdfUnlock.sessionSuccessBody",
                 "Protection retained.",
               ),
+          privateBody: Boolean(fileName),
           expandable: false,
           isPersistentPopup: false,
         });
@@ -1093,6 +1187,7 @@ function FileContextInner({
         filesRef,
         dispatchWithUnlock,
         indexedDB,
+        outputFileIds.map((id) => stateRef.current.files.byId[id]),
       );
     },
     [indexedDB, dispatchWithUnlock],
@@ -1176,6 +1271,35 @@ function FileContextInner({
 
         // Don't clear IndexedDB automatically - only clear in-memory state
         // IndexedDB should only be cleared when explicitly requested by user
+      },
+      clearRecentFiles: async (
+        fileIds: FileId[],
+        spare: ReadonlySet<string> = new Set(),
+      ) => {
+        // Re-read, since another tab may have filed a target into a folder or
+        // built a newer version on it. A file not stored yet stays a target.
+        const stored = new Map(
+          (await fileStorage.getAllStirlingFileStubs()).map((s) => [s.id, s]),
+        );
+        const targets = fileIds.filter((id) => {
+          const stub = stored.get(id);
+          return (
+            !spare.has(id) && stub?.folderId == null && stub?.isLeaf !== false
+          );
+        });
+        // A spared open file can be an older version no kept file needs.
+        const orphans = (await fileStorage.orphanedAncestorIds(targets)).filter(
+          (id) => !spare.has(id),
+        );
+        const doomed = [...targets, ...orphans];
+        if (indexedDB && enablePersistence) {
+          await indexedDB.deleteMultiple(doomed);
+        }
+        cancelPendingAdmissions(doomed);
+        forgetPdfAccess(doomed);
+        lifecycleManager.removeFiles(doomed, stateRef);
+        void reportFilesRemoved(doomed);
+        return doomed;
       },
       clearAllData: async () => {
         for (const request of ownerRequests.current.values())
@@ -1289,8 +1413,17 @@ function FileContextInner({
     ? (pendingAdmissions.current.get(activeEncryptedFileId)?.stub ??
       state.files.byId[activeEncryptedFileId])
     : undefined;
+  // Most encrypted PDFs only restrict actions and open without a password, so
+  // the prompt waits for the empty-password check (inspectOpening) to fail or
+  // run long, rather than flashing up for each of them.
+  const checkingWithoutPrompt =
+    !!activeEncryptedFileId &&
+    promptShownFor !== activeEncryptedFileId &&
+    // Running, or about to start on this file's first render as the active one.
+    (openingInspection?.fileId === activeEncryptedFileId ||
+      needsOpeningCheck(activeEncryptedFileId, activeEncryptedStub));
   const isUnlockModalOpen = Boolean(
-    activeEncryptedFileId && activeEncryptedStub,
+    activeEncryptedFileId && activeEncryptedStub && !checkingWithoutPrompt,
   );
 
   // Persistence loading disabled - files only loaded on explicit user action

@@ -1,6 +1,7 @@
 /* oxlint-disable typescript/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
 import { enforceDocumentPrivacy } from "@editor/services/documentPrivacyService";
+import { uploadSafeFormData } from "@editor/utils/inMemoryUpload";
 import {
   shouldUseFastLocalTransport,
   fetchViaLocalProxy,
@@ -77,6 +78,37 @@ interface Interceptors {
       onRejected?: ErrorInterceptor,
     ) => number;
   };
+}
+
+/**
+ * An error response's body in the shape axios gives it, so the core readers of
+ * `error.response.data` (a server `message`, a Blob for blob requests) find the
+ * server's reason on desktop as they do on the web: a Blob for blob requests,
+ * bytes for arraybuffer, text for text, and otherwise JSON when the body parses,
+ * falling back to the text as axios does.
+ */
+function errorResponseData(
+  body: string,
+  responseType: TauriHttpRequestConfig["responseType"],
+  contentType: string | null,
+): unknown {
+  switch (responseType) {
+    case "blob":
+      return new Blob([body], {
+        type: contentType || "application/octet-stream",
+      });
+    case "arraybuffer":
+      return new TextEncoder().encode(body).buffer;
+    case "text":
+      return body;
+    default:
+      if (!body) return body;
+      try {
+        return JSON.parse(body);
+      } catch {
+        return body;
+      }
+  }
 }
 
 class TauriHttpClient {
@@ -227,8 +259,7 @@ class TauriHttpClient {
 
     if (finalConfig.data) {
       if (finalConfig.data instanceof FormData) {
-        // FormData can be passed directly
-        body = finalConfig.data;
+        body = await uploadSafeFormData(finalConfig.data);
         // Drop any caller-supplied Content-Type so the native fetch generates
         // multipart/form-data WITH its boundary (matches axios's FormData
         // handling). A boundary-less "multipart/form-data" header makes the
@@ -393,7 +424,11 @@ class TauriHttpClient {
         });
 
         const errorResponse: TauriHttpResponse<T> = {
-          data: errorBody as T,
+          data: errorResponseData(
+            errorBody,
+            finalConfig.responseType,
+            response.headers.get("content-type"),
+          ) as T,
           status: response.status,
           statusText: response.statusText || "",
           headers: responseHeaders,

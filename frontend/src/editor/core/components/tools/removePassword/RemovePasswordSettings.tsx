@@ -1,6 +1,7 @@
 import { Stack, PasswordInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemovePasswordParameters } from "@editor/hooks/tools/removePassword/useRemovePasswordParameters";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface RemovePasswordSettingsProps {
   parameters: RemovePasswordParameters;
@@ -22,6 +23,7 @@ const RemovePasswordSettings = ({
     <Stack gap="md">
       <Stack gap="sm">
         <PasswordInput
+          className={privateContentClassName}
           label={t("removePassword.password.label", "Current Password")}
           placeholder={t(
             "removePassword.password.placeholder",

@@ -37,6 +37,7 @@ import com.nimbusds.jwt.SignedJWT;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.McpAnalytics;
 import stirling.software.proprietary.mcp.McpServerController;
+import stirling.software.proprietary.mcp.McpWidget;
 import stirling.software.proprietary.mcp.tools.DescribeOperationTool;
 import stirling.software.proprietary.mcp.tools.StirlingAiTool;
 import stirling.software.proprietary.mcp.tools.StirlingConvertTool;
@@ -188,7 +189,18 @@ class McpOAuthIntegrationTest {
                 new StringBuilder("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"x\",\"params\":\"");
         big.append("A".repeat(300 * 1024));
         big.append("\"}");
-        HttpResponse<String> response = postMcp(token, big.toString());
+        // Expect: 100-continue holds the body back until the server answers the headers. The filter
+        // rejects on Content-Length alone and closes the connection, so a client already streaming
+        // the body would hit a broken pipe instead of reading the 413.
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(base() + "/mcp"))
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Bearer " + token)
+                        .expectContinue(true)
+                        .POST(HttpRequest.BodyPublishers.ofString(big.toString()))
+                        .build();
+        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode()).isEqualTo(413);
     }
 
@@ -316,6 +328,7 @@ class McpOAuthIntegrationTest {
     @Import({
         McpSecurityConfig.class,
         McpServerController.class,
+        McpWidget.class,
         McpAnalytics.class,
         DescribeOperationTool.class,
         StirlingConvertTool.class,

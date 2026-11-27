@@ -17,7 +17,7 @@ test.describe("9. Add Password Tool", () => {
       ).toBeVisible();
 
       const saveButton = page.getByRole("button", {
-        name: "Save protection",
+        name: "Add Password",
         exact: true,
       });
       await expect(saveButton).toBeVisible();

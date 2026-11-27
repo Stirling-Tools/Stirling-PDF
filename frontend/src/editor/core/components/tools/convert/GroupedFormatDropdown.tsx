@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useId, useState, useMemo, type ReactNode } from "react";
 import {
   Stack,
   Text,
   Group,
   Box,
+  Input,
+  InputBase,
   Popover,
-  useMantineTheme,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
@@ -20,9 +21,11 @@ interface FormatOption {
   group: string;
   enabled?: boolean;
   usesCloud?: boolean;
+  needsSignIn?: boolean;
 }
 
 interface GroupedFormatDropdownProps {
+  label?: ReactNode;
   value?: string;
   placeholder?: string;
   options: FormatOption[];
@@ -35,6 +38,7 @@ interface GroupedFormatDropdownProps {
 }
 
 const GroupedFormatDropdown = ({
+  label,
   value,
   placeholder,
   options,
@@ -48,7 +52,8 @@ const GroupedFormatDropdown = ({
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t("dropdownList.selectOption");
   const [dropdownOpened, setDropdownOpened] = useState(false);
-  const theme = useMantineTheme();
+  const labelId = useId();
+  const valueId = useId();
 
   const getOptionLabel = (option: FormatOption) =>
     option.labelKey ? t(option.labelKey, option.label) : option.label;
@@ -71,12 +76,12 @@ const GroupedFormatDropdown = ({
   }, [options]);
 
   const selectedLabel = useMemo(() => {
-    if (!value) return resolvedPlaceholder;
+    if (!value) return null;
     const selected = options.find((opt) => opt.value === value);
     return selected
       ? `${getGroupLabel(selected.group)} (${getOptionLabel(selected)})`
       : value.toUpperCase();
-  }, [value, options, resolvedPlaceholder, t]);
+  }, [value, options, t]);
 
   const handleOptionSelect = (selectedValue: string) => {
     onChange(selectedValue);
@@ -97,43 +102,44 @@ const GroupedFormatDropdown = ({
       zIndex={zIndex}
     >
       <Popover.Target>
-        <Button
-          variant="tertiary"
-          hover={false}
-          fullWidth
+        <InputBase
+          component="button"
+          type="button"
+          pointer
+          label={label}
+          labelProps={{ id: labelId }}
+          // The <label> would otherwise be the whole name, hiding the chosen format.
+          aria-labelledby={label ? `${labelId} ${valueId}` : undefined}
           name={name}
           data-testid={name}
           onClick={() => setDropdownOpened(!dropdownOpened)}
           disabled={disabled}
-          style={{
-            padding: "0.5rem 0.75rem",
-            border: `0.0625rem solid ${theme.colors.gray[4]}`,
-            borderRadius: theme.radius.sm,
-            backgroundColor: disabled
-              ? theme.colors.gray[1]
-              : "var(--dropdown-trigger-bg)",
-            cursor: disabled ? "not-allowed" : "pointer",
-            width: "100%",
-            color: disabled
-              ? "var(--c-text-subtle)"
-              : "var(--dropdown-trigger-text)",
-          }}
-        >
-          <Group justify="space-between" style={{ width: "100%" }}>
-            <Text size="sm" c={value ? undefined : "dimmed"}>
-              {selectedLabel}
-            </Text>
+          rightSection={
             <Icon
               name="chevron-down"
-              size={"1rem"}
+              size="1rem"
               style={{
                 transform: dropdownOpened ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform 0.2s ease",
-                color: "var(--dropdown-trigger-icon)",
+                color: "var(--c-text-muted)",
               }}
             />
-          </Group>
-        </Button>
+          }
+          rightSectionPointerEvents="none"
+          styles={{
+            input: { textAlign: "start" },
+            label: {
+              color: "var(--c-text-muted)",
+              fontWeight: "var(--font-weight-medium)",
+            },
+          }}
+        >
+          <span id={valueId}>
+            {selectedLabel ?? (
+              <Input.Placeholder>{resolvedPlaceholder}</Input.Placeholder>
+            )}
+          </span>
+        </InputBase>
       </Popover.Target>
       <Popover.Dropdown
         style={{
@@ -165,8 +171,19 @@ const GroupedFormatDropdown = ({
                     size="sm"
                     onClick={() => handleOptionSelect(option.value)}
                     disabled={option.enabled === false}
+                    title={
+                      option.needsSignIn
+                        ? t("convert.signInToUse", "Sign in to use")
+                        : undefined
+                    }
                     rightSection={
-                      option.usesCloud ? (
+                      option.needsSignIn ? (
+                        <Icon
+                          name="lock"
+                          size={"0.625rem"}
+                          style={{ marginLeft: "0.25rem", opacity: 0.7 }}
+                        />
+                      ) : option.usesCloud ? (
                         <Icon
                           name="cloud"
                           size={"0.625rem"}

@@ -62,10 +62,9 @@ function preconnect(origin: string): void {
 }
 
 /**
- * Warm the Calendly embed ahead of use: open connections to its origins and start fetching
- * widget.js, so opening the scheduler initialises near-instantly instead of paying a cold
- * script + iframe fetch on click. Idempotent and safe to call repeatedly; failures are left
- * for the modal's own load to surface as the fallback link.
+ * Open connections to Calendly and start fetching widget.js ahead of use, so the scheduler opens
+ * without a cold fetch. Idempotent; a failure is left for the embed's own load to show as the
+ * fallback link.
  */
 export function warmCalendly(): void {
   CALENDLY_ORIGINS.forEach(preconnect);

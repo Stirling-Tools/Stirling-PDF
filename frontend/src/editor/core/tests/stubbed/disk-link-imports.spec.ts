@@ -61,6 +61,37 @@ async function expectLinked(page: Page) {
     ]);
 }
 
+// Save leaves a file alone when its disk copy is already current, so a save
+// in place needs an unsaved change to write.
+async function markStoredFileUnsaved(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open("stirling-pdf-files");
+        request.onsuccess = () => {
+          const db = request.result;
+          const store = db
+            .transaction("files", "readwrite")
+            .objectStore("files");
+          const read = store.getAll();
+          read.onsuccess = () => {
+            for (const record of read.result)
+              store.put({ ...record, isDirty: true });
+            store.transaction.oncomplete = () => {
+              db.close();
+              resolve();
+            };
+          };
+          read.onerror = () => {
+            db.close();
+            reject(read.error);
+          };
+        };
+        request.onerror = () => reject(request.error);
+      }),
+  );
+}
+
 test.beforeEach(async ({ page }) => {
   await installTauri(page);
   await page.goto("/editor");
@@ -77,6 +108,7 @@ test("the sidebar native picker keeps its path after reload and saves in place",
   await page.getByTestId("files-button").click();
   await expectLinked(page);
   await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1);
+  await markStoredFileUnsaved(page);
   await page.reload();
   await dismissModals(page);
   await expectLinked(page);
@@ -92,6 +124,11 @@ test("the sidebar native picker keeps its path after reload and saves in place",
 
 test("the Files page upload uses the native picker", async ({ page }) => {
   await page.getByTestId("my-files-button").click();
+  // Recents is read-only; the upload CTA lives in the library view.
+  await page
+    .getByRole("navigation", { name: "File sources", exact: true })
+    .getByRole("button", { name: /^(Stirling library|Local files)$/ })
+    .click();
   await page
     .getByRole("button", { name: "Upload files", exact: true })
     .first()
@@ -101,10 +138,17 @@ test("the Files page upload uses the native picker", async ({ page }) => {
 
 test("the sidebar add button uses the native picker", async ({ page }) => {
   await page.getByTestId("pdf-library-add-files").click();
+  await page.getByTestId("pdf-library-add-from-computer").click();
   await expectLinked(page);
 });
 
 test("a Finder-open event stores the link during import", async ({ page }) => {
+  // The editor mounts after the startup auth check; until then Rust keeps the queue.
+  await expect
+    .poll(() =>
+      page.evaluate(() => Reflect.get(window, "__listeners")["files-changed"]),
+    )
+    .toBeDefined();
   await page.evaluate((path) => {
     Reflect.set(window, "__openedPaths", [path]);
     const callbacks = Reflect.get(window, "__callbacks");

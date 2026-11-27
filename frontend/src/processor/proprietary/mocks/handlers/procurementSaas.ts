@@ -1,4 +1,5 @@
 import { http, HttpResponse } from "msw";
+import { QUOTE_BELOW_MINIMUM, type RateCard } from "@processor/api/procurement";
 
 /**
  * MSW mock for the real SaaS procurement endpoints (`apiClient.saas` → VITE_SAAS_API_URL, which is
@@ -6,6 +7,12 @@ import { http, HttpResponse } from "msw";
  * backend (Storybook + mocks-on dev). Pricing mirrors ProcurementPricingService.
  */
 const SAAS = "http://saas.mock";
+
+/** The server's default cap on trial extensions. */
+const MAX_TRIAL_EXTENSIONS = 2;
+
+/** The server's default floor on a quote's annual fee: USD 12,000. */
+const MIN_ANNUAL_NET_MINOR = 1_200_000;
 
 const EMPTY = {
   dealId: null,
@@ -48,36 +55,70 @@ let deal: typeof EMPTY | (Record<string, unknown> & { latestQuote: unknown }) =
   EMPTY;
 let seq = 0;
 
-const TERM = [0, 0.03, 0.05, 0.06, 0.07]; // meter-only, 1..5 years
+/** The deployment the licence follows: the quote's once there is one, else the trial's. */
+function entitledDeployment(): string | null {
+  const d = deal as {
+    dealId: unknown;
+    deployment?: string;
+    latestQuote: { config?: Cfg } | null;
+  };
+  if (d.dealId == null) return null;
+  return d.latestQuote?.config?.deployment ?? d.deployment ?? null;
+}
 
-// Mirror of ProcurementPricingService (D71): run-based curve, flat priced needs, USD.
+/** The server's default rate card (PricingRates.defaults()), sent with the deal like the real one. */
+export const RATE_CARD: RateCard = {
+  listRatePerRun: 0.01,
+  floorRatePerRun: 0.005,
+  runCurveKnee: 1_000_000,
+  discountPerDoubling: 0.06,
+  maxVolumeDiscount: 0.5,
+  termDiscountByYear: [0, 0.03, 0.05, 0.06, 0.07],
+  indemnificationRate: 0.05,
+  dedicatedSupportMinor: 3_000_000,
+  selfHostDeployMinor: 1_200_000,
+  airgapDeployMinor: 3_600_000,
+  qbrAnnualMinor: 800_000,
+  trainingOneTimeMinor: 750_000,
+};
+
+// Mirror of ProcurementPricingService: run-based curve, flat priced needs, USD.
 // Exported for the pricing-parity test (see pricingParity.test.ts).
 export function priceQuote(cfg: Cfg) {
-  const LIST = 0.01;
-  const FLOOR = 0.005;
+  const R = RATE_CARD;
   const intensity = Math.max(1, cfg.intensity || 4);
   const runVol = Math.max(0, cfg.volume) * intensity;
   const volDisc =
-    runVol > 1_000_000
-      ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
+    runVol > R.runCurveKnee
+      ? Math.min(
+          R.maxVolumeDiscount,
+          R.discountPerDoubling * Math.log2(runVol / R.runCurveKnee),
+        )
       : 0;
-  // File-size tier (D93) scales the rate after the floor; snap to a known multiplier.
+  // The PDF-size tier scales the rate after the floor; snap to a known multiplier.
   const sizeMult = [1.0, 1.4, 2.4].includes(cfg.sizeMult) ? cfg.sizeMult : 1.0;
-  const rate = Math.max(FLOOR, LIST * (1 - volDisc)) * sizeMult;
-  const termDisc = TERM[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
+  const rate =
+    Math.max(R.floorRatePerRun, R.listRatePerRun * (1 - volDisc)) * sizeMult;
+  const termDisc =
+    R.termDiscountByYear[
+      Math.min(Math.max(cfg.termYears, 1), R.termDiscountByYear.length) - 1
+    ];
   const annualBase = Math.round(runVol * rate) * 100; // whole $ → minor
   const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100;
   const termDiscount = meterNet - annualBase; // <= 0
-  const support = cfg.serviceLevel === "dedicated" ? 3_000_000 : 0;
+  const support =
+    cfg.serviceLevel === "dedicated" ? R.dedicatedSupportMinor : 0;
   const deploy =
     cfg.deployment === "airgap"
-      ? 3_600_000
+      ? R.airgapDeployMinor
       : cfg.deployment === "selfhost"
-        ? 1_200_000
+        ? R.selfHostDeployMinor
         : 0;
-  const indemnity = cfg.indemnification ? Math.round(meterNet * 0.05) : 0;
-  const qbr = cfg.qbr ? 800_000 : 0;
-  const training = cfg.training ? 750_000 : 0;
+  const indemnity = cfg.indemnification
+    ? Math.round(meterNet * R.indemnificationRate)
+    : 0;
+  const qbr = cfg.qbr ? R.qbrAnnualMinor : 0;
+  const training = cfg.training ? R.trainingOneTimeMinor : 0;
   const annualNetMinor = meterNet + support + deploy + indemnity + qbr;
   const tcvMinor = annualNetMinor * cfg.termYears + training;
 
@@ -88,7 +129,7 @@ export function priceQuote(cfg: Cfg) {
         ? "Regulated"
         : intensity === 4
           ? "Governed"
-          : `${intensity}-policy`;
+          : `${intensity}-pipeline`;
   const deployName =
     cfg.deployment === "airgap"
       ? "Air-gapped"
@@ -178,7 +219,7 @@ export function priceQuote(cfg: Cfg) {
     invoicePdf: null,
     config: {
       volume: cfg.volume,
-      users: 0,
+      users: cfg.users ?? 0,
       intensity,
       sizeMult,
       deployment: cfg.deployment || "cloud",
@@ -206,15 +247,109 @@ export function resetProcurementSaasStore() {
   seq = 0;
 }
 
+/** The stages a demo can jump straight to. */
+export type DemoStage =
+  | "trial"
+  | "quote"
+  | "security"
+  | "procurement"
+  | "active";
+
+const DEMO_QUOTE: Cfg = {
+  volume: 500_000,
+  users: 250,
+  intensity: 4,
+  sizeMult: 1.4,
+  // Cloud, not self-hosted: the self-hosted fee alone meets the minimum spend, so a self-hosted
+  // deal could never show the builder's minimum guidance.
+  deployment: "cloud",
+  serviceLevel: "priority",
+  termYears: 3,
+  indemnification: false,
+  training: true,
+  qbr: false,
+  businessName: "Northwind Logistics",
+  contactName: "Dana Lee",
+  contactEmail: "dana@northwind.example",
+  addressLine1: "500 Howard St",
+  city: "San Francisco",
+  region: "California",
+  postalCode: "94105",
+};
+
+/** A trial team far under the minimum spend, so building its quote opens on the minimum check. */
+const DEMO_TRIAL_SEATS = 1;
+
+/**
+ * Puts the deal straight at a stage with believable data, as if the buyer had walked there, so a
+ * demo can skip past steps it doesn't need to show.
+ */
+export function seedProcurementSaasStage(stage: DemoStage) {
+  const day = 86_400_000;
+  const now = Date.now();
+  const paid = stage === "procurement" || stage === "active";
+  const quote =
+    stage === "trial"
+      ? null
+      : {
+          ...priceQuote(DEMO_QUOTE),
+          status: paid ? "accepted" : "sent",
+          stripeQuoteId: "qt_mock_demo",
+          quoteNumber: "QT-MOCKPFX-0001-1",
+          invoiceUrl: paid
+            ? "https://invoice.stripe.com/i/mock_procurement"
+            : null,
+          invoicePdf: paid
+            ? "https://invoice.stripe.com/i/mock_procurement/pdf"
+            : null,
+        };
+  deal = {
+    dealId: 1,
+    stage,
+    deployment: DEMO_QUOTE.deployment,
+    seats: stage === "trial" ? DEMO_TRIAL_SEATS : (DEMO_QUOTE.users ?? 0),
+    trialStartedAt: new Date(now - 4 * day).toISOString(),
+    trialEndsAt: new Date(now + 10 * day).toISOString(),
+    trialExtensionsUsed: 0,
+    licensed: true,
+    licenseKey:
+      stage === "active" ? "MOCK-ENTERPRISE-KEY-0001" : "MOCK-TRIAL-KEY-0001",
+    agreementSignedVersion: paid ? "SEA v0.9.1" : null,
+    businessName: DEMO_QUOTE.businessName,
+    contactName: DEMO_QUOTE.contactName,
+    contactEmail: DEMO_QUOTE.contactEmail,
+    latestQuote: quote,
+  };
+}
+
+/** The buyer pays their first invoice: the deal goes live, as Stripe's webhook would make it. */
+export function markProcurementSaasPaid() {
+  const d = deal as Record<string, unknown>;
+  if (d.stage !== "procurement") return;
+  d.stage = "active";
+  d.licenseKey = "MOCK-ENTERPRISE-KEY-0001";
+}
+
+/** The deal as the backend returns it from every read and deal-changing call. */
+function snapshot() {
+  return {
+    ...deal,
+    minAnnualNetMinor: MIN_ANNUAL_NET_MINOR,
+    entitledDeployment: entitledDeployment(),
+    rateCard: RATE_CARD,
+    maxTrialExtensions: MAX_TRIAL_EXTENSIONS,
+  };
+}
+
 export const procurementSaasHandlers = [
-  http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(deal)),
+  http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(snapshot())),
   // Interest: creates the deal at `exploring` when there is none, and never disturbs one that
   // already exists — so the enterprise surface only appears for accounts that asked for it.
   http.post(`${SAAS}/api/v1/procurement/interest`, () => {
     if (deal.dealId == null) {
       deal = { ...deal, dealId: 1, stage: "exploring" };
     }
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.post(`${SAAS}/api/v1/procurement/trial/start`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as Partial<{
@@ -243,11 +378,14 @@ export const procurementSaasHandlers = [
       contactEmail: body.contactEmail ?? null,
       latestQuote: null,
     };
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.post(`${SAAS}/api/v1/procurement/quote`, async ({ request }) => {
     const cfg = (await request.json()) as Cfg;
     const quote = priceQuote(cfg);
+    if (quote.annualNetMinor < MIN_ANNUAL_NET_MINOR) {
+      return HttpResponse.json({ error: QUOTE_BELOW_MINIMUM }, { status: 409 });
+    }
     const d = (
       deal.dealId ? deal : { dealId: 1, trialExtensionsUsed: 0 }
     ) as Record<string, unknown>;
@@ -268,16 +406,36 @@ export const procurementSaasHandlers = [
       d.trialEndsAt = new Date(base + 7 * 86_400_000).toISOString();
       d.trialExtensionsUsed = ((d.trialExtensionsUsed as number) ?? 0) + 1;
     }
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.post(`${SAAS}/api/v1/procurement/agreement`, () => {
     (deal as Record<string, unknown>).stage = "security";
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.get(`${SAAS}/api/v1/procurement/agreement/document`, () => {
-    const q = (deal as { latestQuote: { quoteNumber?: string } | null })
-      .latestQuote;
+    const q = (
+      deal as {
+        latestQuote: {
+          quoteNumber?: string;
+          annualNetMinor: number;
+          config: {
+            businessName?: string;
+            deployment: string;
+            termYears: number;
+            users: number;
+          };
+        } | null;
+      }
+    ).latestQuote;
     if (!q) return new HttpResponse(null, { status: 404 });
+    const usd = (minor: number) =>
+      `$${Math.round(minor / 100).toLocaleString("en-US")}`;
+    const deployName =
+      q.config.deployment === "airgap"
+        ? "Air-gapped"
+        : q.config.deployment === "selfhost"
+          ? "Self-hosted"
+          : "Stirling Cloud";
     return HttpResponse.json({
       docId: "enterprise-agreement",
       version: "0.9.1",
@@ -290,10 +448,17 @@ export const procurementSaasHandlers = [
         "## Part A — Master Services Agreement",
         "Provider will provide the Stirling PDF Processor and Editor as described in the Order Form.",
         `## Part B — Order Form · ${q.quoteNumber ?? "Q-MOCK"}`,
-        "| Term | Value |",
-        "| --- | --- |",
-        "| Subscription | Enterprise · Stirling Cloud |",
-        "| Escalator | +3% at each anniversary during the Term |",
+        // One block: a blank line between rows would end the table.
+        [
+          "| Term | Value |",
+          "| --- | --- |",
+          `| Customer | ${q.config.businessName?.trim() || "Customer"} |`,
+          `| Subscription | Stirling Enterprise · ${deployName} |`,
+          `| Users | ${q.config.users.toLocaleString("en-US")} |`,
+          `| Initial term | ${q.config.termYears} year${q.config.termYears === 1 ? "" : "s"} |`,
+          `| Annual fee | ${usd(q.annualNetMinor)} |`,
+          "| Escalator | +3% at each anniversary during the Term |",
+        ].join("\n"),
         "## Part C — Data Processing Addendum",
         "Provider processes Personal Data only on Customer's documented instructions.",
       ].join("\n\n"),
@@ -353,7 +518,7 @@ export const procurementSaasHandlers = [
       d.licensed = true;
       d.licenseKey = "MOCK-ENTERPRISE-KEY-0001";
     }
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.get(`${SAAS}/api/v1/procurement/license/file`, () => {
     const q = (deal as { latestQuote: { config?: Cfg } | null }).latestQuote;
@@ -368,7 +533,7 @@ export const procurementSaasHandlers = [
   }),
   http.post(`${SAAS}/api/v1/procurement/reset`, () => {
     resetProcurementSaasStore();
-    return HttpResponse.json(EMPTY);
+    return HttpResponse.json(snapshot());
   }),
   http.get(`${SAAS}/api/v1/legal/:docId`, ({ params }) => {
     const docId = String(params.docId);

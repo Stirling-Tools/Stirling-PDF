@@ -124,7 +124,7 @@ const ValidateSignature = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("validateSignature.settings.title", "Validation Settings"),
+        title: t("validateSignature.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset

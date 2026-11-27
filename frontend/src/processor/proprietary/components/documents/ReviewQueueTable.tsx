@@ -30,6 +30,7 @@ export function ReviewQueueTable({
         key: "document",
         header: t("portal.documents.table.columns.document"),
         sortable: true,
+        privateContent: true,
         primary: (d) => d.name,
         note: (d) => d.note,
       }),
@@ -78,12 +79,14 @@ export function ReviewQueueTable({
         key: "user",
         header: t("portal.documents.table.columns.user"),
         sortable: true,
+        privateContent: true,
         get: (d) => d.user,
       }),
       column.badge({
         key: "status",
         header: t("portal.documents.table.columns.status"),
         sortable: true,
+        privateContent: true,
         get: (d) => ({
           tone: DOCUMENT_STATUS_TONE[d.status],
           label:

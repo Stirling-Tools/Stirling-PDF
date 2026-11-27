@@ -78,7 +78,7 @@ const mockTool: ToolRegistryEntry = {
 };
 
 const meta = {
-  title: "Tools/Fullscreen/DetailedToolItem",
+  title: "Tools/Shared/DetailedToolItem",
   component: DetailedToolItem,
   decorators: [withProviders],
   args: {

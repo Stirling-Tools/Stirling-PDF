@@ -11,7 +11,10 @@ const SAMPLE_PDF = path.join(
 test("disabled floating buttons do not look interactive", async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE_PDF);
   await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
     timeout: 30_000,
   });

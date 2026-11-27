@@ -157,6 +157,58 @@ export function appendRevision(
   return concatBytes(parts);
 }
 
+/** Rewrite `objects` in place, for when a new revision would keep the old bytes; null unless the file has one classic xref table. */
+export function replaceObjects(
+  pdf: RawPdf,
+  objects: RevisionObject[],
+): Uint8Array | null {
+  const xref = pdf.startXref;
+  if (xref < 0 || pdf.src.slice(xref, xref + 4) !== "xref") return null;
+  const tail = pdf.src.slice(xref);
+  const trailerAt = tail.indexOf("trailer");
+  const startxrefAt = tail.lastIndexOf("startxref");
+  if (trailerAt < 0 || startxrefAt < trailerAt) return null;
+  const trailer = tail.slice(trailerAt, startxrefAt);
+  if (/\/(Prev|XRefStm)\b/.test(trailer)) return null;
+
+  const spans: Array<{
+    start: number;
+    end: number;
+    bytes: Uint8Array;
+    delta: number;
+  }> = [];
+  for (const { num, body } of objects) {
+    const extent = pdf.objectExtent(num);
+    if (!extent || extent.end < 0 || extent.end > xref) return null;
+    const { start, end } = extent;
+    const bytes = concatBytes([fromLatin1("\n"), body, fromLatin1("\n")]);
+    spans.push({ start, end, bytes, delta: bytes.length - (end - start) });
+  }
+  spans.sort((a, b) => a.start - b.start);
+  const shifted = (offset: number): number =>
+    spans.reduce((at, s) => (s.start < offset ? at + s.delta : at), offset);
+
+  const parts: Uint8Array[] = [];
+  let cursor = 0;
+  for (const span of spans) {
+    if (span.start < cursor) return null;
+    parts.push(pdf.bytes.subarray(cursor, span.start), span.bytes);
+    cursor = span.end;
+  }
+  parts.push(pdf.bytes.subarray(cursor, xref));
+  const table = tail
+    .slice(0, trailerAt)
+    .replace(
+      /(\d{10}) (\d{5}) n/g,
+      (_entry, offset: string, generation: string) =>
+        `${String(shifted(parseInt(offset, 10))).padStart(10, "0")} ${generation} n`,
+    );
+  parts.push(
+    fromLatin1(`${table}${trailer}startxref\n${shifted(xref)}\n%%EOF\n`),
+  );
+  return concatBytes(parts);
+}
+
 /** Group sorted object numbers into consecutive runs for xref subsections. */
 function* runsOf(nums: number[]): Generator<[number, number[]]> {
   let run: number[] = [];

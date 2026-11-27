@@ -1,5 +1,5 @@
-use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_updater::UpdaterExt;
 
@@ -52,14 +52,20 @@ pub async fn check_for_update(app: AppHandle) -> Result<Option<UpdateInfo>, Stri
     let updater = match app.updater() {
         Ok(u) => u,
         Err(e) => {
-            add_log(format!("⚠️ Updater not available (plugin not configured?): {}", e));
+            add_log(format!(
+                "⚠️ Updater not available (plugin not configured?): {}",
+                e
+            ));
             return Ok(None);
         }
     };
 
     match updater.check().await {
         Ok(Some(update)) => {
-            add_log(format!("✅ Update available: {} → {}", current_version, update.version));
+            add_log(format!(
+                "✅ Update available: {} → {}",
+                current_version, update.version
+            ));
             Ok(Some(UpdateInfo {
                 version: update.version.clone(),
                 current_version,
@@ -212,11 +218,11 @@ pub struct CanInstallResult {
 pub fn can_install_updates() -> CanInstallResult {
     #[cfg(not(target_os = "windows"))]
     {
-        return CanInstallResult {
+        CanInstallResult {
             can_install: true,
             reason: None,
             install_dir: None,
-        };
+        }
     }
 
     #[cfg(target_os = "windows")]

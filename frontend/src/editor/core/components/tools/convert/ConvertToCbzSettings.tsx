@@ -21,7 +21,7 @@ const ConvertToCbzSettings = ({
   return (
     <Stack gap="sm" data-testid="cbz-output-settings">
       <Text size="sm" fw={500}>
-        {t("convert.cbzOutputOptions", "PDF to CBZ Options")}:
+        {t("convert.cbzOutputOptions", "PDF to CBZ Options")}
       </Text>
 
       <NumberInput

@@ -206,7 +206,8 @@ public class JobQueue implements SmartLifecycle {
                     log.warn("Queue full, rejecting job {}", jobId);
                     rejectedJobs++;
                     future.completeExceptionally(
-                            new RuntimeException("Job queue full, please try again later"));
+                            new RejectedExecutionException(
+                                    "Job queue full, please try again later"));
                     jobMap.remove(jobId);
                     return future;
                 }
@@ -220,7 +221,8 @@ public class JobQueue implements SmartLifecycle {
                 return future;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                future.completeExceptionally(new RuntimeException("Job queue interrupted"));
+                future.completeExceptionally(
+                        new RejectedExecutionException("Job queue interrupted", e));
                 jobMap.remove(jobId);
                 return future;
             }

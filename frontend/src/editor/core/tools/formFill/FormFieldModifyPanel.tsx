@@ -31,6 +31,7 @@ import { isTextEntryTarget } from "@editor/tools/formFill/usePageScale";
 import { PendingFields } from "@editor/tools/formFill/PendingFields";
 import { SkippedEditsAlert } from "@editor/tools/formFill/SkippedEditsAlert";
 import styles from "@editor/tools/formFill/FormFill.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface FormFieldModifyPanelProps {
   currentFile: File | Blob | null;
@@ -234,7 +235,7 @@ function FieldGeometryInputs({
   const stageGeometry = (patch: Partial<FieldGeometry>) =>
     stageModification(field.name, { pageIndex: pageIdx, ...coords, ...patch });
   return (
-    <Group gap={6} mt="xs" grow>
+    <Group gap={6} mt="xs" grow align="flex-start">
       <NumberInput
         size="xs"
         label="X"
@@ -337,7 +338,12 @@ function FieldRow({ field, pageIdx, selectedRowRef }: FieldRowProps) {
           >
             <Icon name={FIELD_TYPE_ICON[field.type]} size={16} />
           </span>
-          <Text size="xs" truncate td={deleted ? "line-through" : undefined}>
+          <Text
+            size="xs"
+            truncate
+            td={deleted ? "line-through" : undefined}
+            className={privateContentClassName}
+          >
             {field.label || field.name}
           </Text>
         </Group>

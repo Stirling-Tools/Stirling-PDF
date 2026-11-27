@@ -36,11 +36,7 @@ describe("RedactAdvancedSettings", () => {
     expect(screen.getByText("Custom Extra Padding")).toBeInTheDocument();
     expect(screen.getByText("Use Regex")).toBeInTheDocument();
     expect(screen.getByText("Whole Word Search")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Convert PDF to PDF-Image (Used to remove text behind the box)",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/^Convert PDF to PDF-Image/)).toBeInTheDocument();
   });
 
   test("should display current parameter values", () => {
@@ -73,9 +69,9 @@ describe("RedactAdvancedSettings", () => {
     // Check checkbox states
     const useRegexCheckbox = screen.getByLabelText("Use Regex");
     const wholeWordCheckbox = screen.getByLabelText("Whole Word Search");
-    const convertCheckbox = screen.getByLabelText(
-      "Convert PDF to PDF-Image (Used to remove text behind the box)",
-    );
+    const convertCheckbox = screen.getByRole("checkbox", {
+      name: /^Convert PDF to PDF-Image/,
+    });
 
     expect(useRegexCheckbox).toBeChecked();
     expect(wholeWordCheckbox).toBeChecked();
@@ -161,7 +157,7 @@ describe("RedactAdvancedSettings", () => {
     },
     {
       paramName: "convertPDFToImage" as const,
-      label: "Convert PDF to PDF-Image (Used to remove text behind the box)",
+      label: /^Convert PDF to PDF-Image/,
       initialValue: true,
       expectedValue: false,
     },
@@ -182,7 +178,7 @@ describe("RedactAdvancedSettings", () => {
         </TestWrapper>,
       );
 
-      const checkbox = screen.getByLabelText(label);
+      const checkbox = screen.getByRole("checkbox", { name: label });
       fireEvent.click(checkbox);
 
       expect(mockOnParameterChange).toHaveBeenCalledWith(
@@ -212,9 +208,7 @@ describe("RedactAdvancedSettings", () => {
     {
       controlType: "convertPDFToImage checkbox",
       getValue: () =>
-        screen.getByLabelText(
-          "Convert PDF to PDF-Image (Used to remove text behind the box)",
-        ),
+        screen.getByRole("checkbox", { name: /^Convert PDF to PDF-Image/ }),
     },
   ])(
     "should disable $controlType when disabled prop is true",

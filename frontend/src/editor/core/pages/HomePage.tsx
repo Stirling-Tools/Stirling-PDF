@@ -37,13 +37,9 @@ import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
 import Workbench from "@editor/components/layout/Workbench";
 import FileSidebar from "@editor/components/shared/FileSidebar";
 import FileManager from "@editor/components/FileManager";
-import {
-  getStartupNavigationAction,
-  getDefaultWorkbenchForFileCount,
-} from "@editor/utils/homePageNavigation";
+import { getDefaultWorkbenchForFileCount } from "@editor/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import { READER_PATH } from "@editor/routes/readerRoute";
-import { HomePageExtensions } from "@editor/components/home/HomePageExtensions";
 import { PolicyAutoRunController } from "@editor/components/policies/PolicyAutoRunController";
 import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
@@ -72,6 +68,7 @@ import { useLibraryRefresh } from "@editor/hooks/useLibraryRefresh";
 import { useAuth } from "@editor/auth/UseSession";
 import { canPickDirectory } from "@editor/services/directoryPicker";
 import { useLibraryUpload } from "@editor/components/filesPage/useLibraryUpload";
+import { useStartupNavigation } from "@editor/hooks/useStartupNavigation";
 import { useProcessingFolderCreation } from "@editor/hooks/useProcessingFolderCreation";
 import { consumeProcessingFolderCreationRequest } from "@editor/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@editor/components/shared/FileSidebar";
@@ -333,43 +330,18 @@ export default function HomePage() {
   }, [readerMode, location.pathname, navigate]);
 
   const { setActiveFileIndex } = useViewer();
-  const prevFileCountRef = useRef(activeFiles.length);
-
-  // Startup/open transition behavior:
-  // - opening exactly 1 file from empty -> viewer (unless already in fileEditor)
-  // - opening 2+ files from empty -> fileEditor
-  useEffect(() => {
-    const prevCount = prevFileCountRef.current;
-    const currentCount = activeFiles.length;
-
-    const action = getStartupNavigationAction(
-      prevCount,
-      currentCount,
-      selectedToolKey,
-      navigationState.workbench,
-    );
-
-    // A session restore fills an empty workbench too, but it already knows which view the user
-    // left - so it wins over this heuristic rather than being overwritten by it.
-    if (action && !isApplyingRestoredView()) {
+  useStartupNavigation(
+    activeFiles.length,
+    selectedToolKey,
+    navigationState.workbench,
+    (action) => {
       actions.setWorkbench(action.workbench);
       if (typeof action.activeFileIndex === "number") {
         setActiveFileIndex(action.activeFileIndex);
       }
-      if (isMobile) {
-        setActiveMobileView("workbench");
-      }
-    }
-
-    prevFileCountRef.current = currentCount;
-  }, [
-    activeFiles.length,
-    actions,
-    setActiveFileIndex,
-    selectedToolKey,
-    navigationState.workbench,
-    isMobile,
-  ]);
+      if (isMobile) setActiveMobileView("workbench");
+    },
+  );
 
   const isWorkspaceHub =
     navigationState.workbench === "myFiles" ||
@@ -695,7 +667,6 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
-      <HomePageExtensions />
       {processingFolderCreation.dialog}
       {policiesEnabled && <PolicyAutoRunController />}
       <QuickNavHostBridge
@@ -896,7 +867,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
           ref={ref}
           {...props}
           onUploadFiles={handleUpload}
-          onPickGoogleDriveFiles={handleUpload}
+          onPickCloudFiles={handleUpload}
           extraActions={[
             {
               icon: <Icon name="folder-plus" />,

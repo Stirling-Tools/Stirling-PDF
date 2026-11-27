@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { fn } from "storybook/test";
 import FileEditorFileName from "@editor/components/fileEditor/FileEditorFileName";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
@@ -20,6 +21,11 @@ const buildFileStub = (
 const meta = {
   title: "FileEditor/FileEditorFileName",
   component: FileEditorFileName,
+  args: {
+    editing: false,
+    onEditingChange: fn(),
+    onRename: fn(async () => {}),
+  },
 } satisfies Meta<typeof FileEditorFileName>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -36,5 +42,12 @@ export const LongFileName: Story = {
       name: "annual-financial-report-quarter-four-2026-final-version.pdf",
     }),
     maxLength: 30,
+  },
+};
+
+export const Editing: Story = {
+  args: {
+    file: buildFileStub(),
+    editing: true,
   },
 };

@@ -9,6 +9,7 @@ import {
   type FolderRecord,
 } from "@editor/types/folder";
 import { processingFolderPath } from "@editor/components/policies/processingFolderSetup";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ProcessingFolderLocationPickerProps {
   folders: FolderRecord[];
@@ -109,11 +110,12 @@ export function ProcessingFolderLocationPicker({
                 type="button"
                 disabled={blocked}
                 title={blocked ? t("filesPage.moveAcrossKindsBlocked") : path}
+                className={blocked ? undefined : privateContentClassName}
                 aria-pressed={parentId === folder.id}
                 onClick={() => select(folder.id)}
               >
                 <Icon name={blocked ? "monitor" : "folder"} size={16} />
-                <span>{path}</span>
+                <span className={privateContentClassName}>{path}</span>
               </button>
             );
           })}

@@ -1,5 +1,5 @@
-import { SimpleGrid } from "@mantine/core";
-import { Button } from "@editor/ui/Button";
+import { useTranslation } from "react-i18next";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 
 interface CertificateFormatSettingsProps {
@@ -12,26 +12,31 @@ interface CertificateFormatSettingsProps {
 }
 
 const FORMATS = ["PKCS12", "PFX", "PEM", "JKS"] as const;
+type CertificateFileFormat = (typeof FORMATS)[number];
+
+function isFileFormat(
+  certType: CertSignParameters["certType"],
+): certType is CertificateFileFormat {
+  return (FORMATS as readonly string[]).includes(certType);
+}
 
 const CertificateFormatSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
 }: CertificateFormatSettingsProps) => {
+  const { t } = useTranslation();
+
   return (
-    <SimpleGrid cols={2} spacing="xs">
-      {FORMATS.map((format) => (
-        <Button
-          key={format}
-          variant={parameters.certType === format ? "primary" : "secondary"}
-          accent="default"
-          fullWidth
-          disabled={disabled}
-          onClick={() => onParameterChange("certType", format)}
-          text={format}
-        />
-      ))}
-    </SimpleGrid>
+    <ButtonSelector<CertificateFileFormat>
+      label={t("certSign.certTypeStep.formatLabel", "Format")}
+      value={
+        isFileFormat(parameters.certType) ? parameters.certType : undefined
+      }
+      onChange={(format) => onParameterChange("certType", format)}
+      options={FORMATS.map((format) => ({ value: format, label: format }))}
+      disabled={disabled}
+    />
   );
 };
 

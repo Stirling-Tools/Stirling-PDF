@@ -1,7 +1,7 @@
-import { Divider, Select, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 
 export default function PageLayoutAdvancedSettings({
   parameters,
@@ -18,9 +18,9 @@ export default function PageLayoutAdvancedSettings({
   const { t } = useTranslation();
   return (
     <Stack gap="sm">
-      <Select
-        label={t("pageLayout.orientation.label", "Orientation:")}
-        data={[
+      <ButtonSelector
+        label={t("pageLayout.orientation.label", "Orientation")}
+        options={[
           {
             value: "PORTRAIT",
             label: t("pageLayout.orientation.portrait", "Portrait"),
@@ -30,24 +30,18 @@ export default function PageLayoutAdvancedSettings({
             label: t("pageLayout.orientation.landscape", "Landscape"),
           },
         ]}
-        value={String(parameters.orientation)}
+        value={parameters.orientation}
         onChange={(v) => {
           if (v === "PORTRAIT" || v === "LANDSCAPE") {
             onParameterChange("orientation", v);
           }
         }}
         disabled={disabled}
-        comboboxProps={{
-          withinPortal: true,
-          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-        }}
       />
 
-      <Divider />
-
-      <Select
-        label={t("pageLayout.arrangement.label", "Page arrangement:")}
-        data={[
+      <ButtonSelector
+        label={t("pageLayout.arrangement.label", "Page arrangement")}
+        options={[
           {
             value: "BY_ROWS",
             label: t("pageLayout.arrangement.byRows", "By Rows"),
@@ -57,22 +51,18 @@ export default function PageLayoutAdvancedSettings({
             label: t("pageLayout.arrangement.byColumns", "By Columns"),
           },
         ]}
-        value={String(parameters.arrangement)}
+        value={parameters.arrangement}
         onChange={(v) => {
           if (v === "BY_COLUMNS" || v === "BY_ROWS") {
             onParameterChange("arrangement", v);
           }
         }}
         disabled={disabled}
-        comboboxProps={{
-          withinPortal: true,
-          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-        }}
       />
 
-      <Select
-        label={t("pageLayout.readingDirection.label", "Reading Direction:")}
-        data={[
+      <ButtonSelector
+        label={t("pageLayout.readingDirection.label", "Reading Direction")}
+        options={[
           {
             value: "LTR",
             label: t("pageLayout.readingDirection.ltr", "Left to Right"),
@@ -82,17 +72,13 @@ export default function PageLayoutAdvancedSettings({
             label: t("pageLayout.readingDirection.rtl", "Right to Left"),
           },
         ]}
-        value={String(parameters.readingDirection)}
+        value={parameters.readingDirection}
         onChange={(v) => {
           if (v === "LTR" || v === "RTL") {
             onParameterChange("readingDirection", v);
           }
         }}
         disabled={disabled}
-        comboboxProps={{
-          withinPortal: true,
-          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-        }}
       />
     </Stack>
   );

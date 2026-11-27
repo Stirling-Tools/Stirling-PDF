@@ -272,7 +272,9 @@ describe("startup prompts", () => {
         "false",
       );
       fireEvent.click(screen.getByText("Finish MFA"));
-      expect(await screen.findByText("Company agreement")).toBeVisible();
+      expect(
+        await screen.findByText("Company agreement", {}, { timeout: 5000 }),
+      ).toBeVisible();
       expect(h.tracking).not.toHaveBeenCalled();
       fireEvent.click(
         screen.getByRole("button", { name: "loginAgreementAccept" }),

@@ -23,6 +23,7 @@ export interface GeneralSettingsData {
     defaultLocale?: string;
     showUpdate?: boolean;
     showUpdateOnlyAdmin?: boolean;
+    enableFeedback?: boolean;
     customHTMLFiles?: boolean;
     fileUploadLimit?: string;
     frontendUrl?: string;
@@ -39,10 +40,6 @@ export interface GeneralSettingsData {
       watchedFoldersDir?: string;
       watchedFoldersDirs?: string[];
       finishedFoldersDir?: string;
-    };
-    operations?: {
-      weasyprint?: string;
-      unoconvert?: string;
     };
   };
   customMetadata?: {
@@ -97,6 +94,13 @@ export interface McpAuthData {
   acceptedAudiences?: string[];
   usernameClaim?: string;
   requireExistingAccount?: boolean;
+  autoProvisionUsers?: boolean;
+  builtin?: McpBuiltinAuthData;
+}
+
+export interface McpBuiltinAuthData {
+  allowDynamicRegistration?: boolean;
+  allowClientMetadataDocuments?: boolean;
 }
 
 export interface McpSettingsData {
@@ -104,5 +108,7 @@ export interface McpSettingsData {
   scopesEnabled?: boolean;
   allowedOperations?: string[];
   blockedOperations?: string[];
+  downloadLinks?: string;
+  fileUrlAllowedHosts?: string[];
   auth?: McpAuthData;
 }

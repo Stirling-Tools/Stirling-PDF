@@ -5,7 +5,7 @@ import { invokeSaasFunction } from "@editor/portal/auth/saasFunctions";
 
 /*
  * Procurement models the enterprise commercial journey: trial → quote → agreement → payment →
- * implementation. Usage & Billing hosts the deal summary and its flow dialogs.
+ * implementation. The Enterprise page hosts it; billing shows where the deal stands.
  */
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -128,6 +128,37 @@ export interface AcceptResult {
   invoicePdf: string | null;
 }
 
+/** Where a buyer can run Stirling Enterprise. */
+export const DEPLOYMENTS = ["cloud", "selfhost", "airgap"] as const;
+export type Deployment = (typeof DEPLOYMENTS)[number];
+
+/** The error code the server answers a quote under the minimum deal size with (a 409). */
+export const QUOTE_BELOW_MINIMUM = "quote_below_minimum";
+
+/**
+ * The rates the server prices quotes from (its PricingRates), sent so the quote builder's live
+ * estimate uses the same ones. Per-run rates are in dollars; flat fees in minor units (cents).
+ */
+export interface RateCard {
+  listRatePerRun: number;
+  floorRatePerRun: number;
+  /** Committed runs a year past which the per-run rate starts to fall. */
+  runCurveKnee: number;
+  /** Share taken off the per-run rate for each doubling of committed runs past the knee. */
+  discountPerDoubling: number;
+  /** The most the committed-volume curve takes off the list rate. */
+  maxVolumeDiscount: number;
+  /** Meter-only discount by term; index 0 is a one-year term. */
+  termDiscountByYear: number[];
+  /** Share of the net meter charged for indemnification. */
+  indemnificationRate: number;
+  dedicatedSupportMinor: number;
+  selfHostDeployMinor: number;
+  airgapDeployMinor: number;
+  qbrAnnualMinor: number;
+  trainingOneTimeMinor: number;
+}
+
 /** One shape for every state; an unstarted procurement has {@link ProcurementSnapshot.dealId} null. */
 export interface ProcurementSnapshot {
   dealId: number | null;
@@ -149,12 +180,23 @@ export interface ProcurementSnapshot {
   contactName: string | null;
   contactEmail: string | null;
   latestQuote: QuoteResult | null;
+  /** Smallest annual fee a quote may come to (minor units); 0 when there is no floor. */
+  minAnnualNetMinor: number;
+  /**
+   * The deployment the licence is issued for: the current quote's once there is one, else the
+   * trial's. Setup steps and the offline licence follow this; null on an unstarted deal.
+   */
+  entitledDeployment: string | null;
+  /** What quotes are priced from; the builder's live estimate runs the same formula over it. */
+  rateCard: RateCard;
+  /** How many times the trial may be extended. */
+  maxTrialExtensions: number;
 }
 
 export interface QuoteConfigInput {
   volume: number;
   users: number;
-  /** Policy posture (governance) as runs per PDF: Essentials 2, Governed 4, Regulated 7. */
+  /** Automation posture as pipeline runs per PDF: Essentials 2, Governed 4, Regulated 7. */
   intensity: number;
   /** PDF-size tier multiplier on the rate: Compact 1.0, Standard 1.4, Heavy 2.4. */
   sizeMult: number;
@@ -306,9 +348,14 @@ export function recordAgreementSignature(
   );
 }
 
-/** Fetch a static legal document (eula, sla, subprocessors) by id for in-product viewing. */
+/**
+ * Fetch a static legal document (eula, sla, subprocessors) by id for in-product viewing. Public, so a
+ * visitor can read the terms they are asked to agree to before they have an account.
+ */
 export function fetchLegalDocument(docId: string): Promise<AgreementDocument> {
-  return apiClient.saas.json<AgreementDocument>(`/api/v1/legal/${docId}`);
+  return apiClient.saas.json<AgreementDocument>(`/api/v1/legal/${docId}`, {
+    anonymous: true,
+  });
 }
 
 /** Download the stored, signed enterprise-agreement PDF for the team (post-signing). */
@@ -409,11 +456,4 @@ export function goLive(): Promise<ProcurementSnapshot> {
     "/api/v1/procurement/go-live",
     { method: "POST" },
   );
-}
-
-/** Reset the team's procurement (delete the deal) and get the fresh empty snapshot. */
-export function resetProcurement(): Promise<ProcurementSnapshot> {
-  return apiClient.saas.json<ProcurementSnapshot>("/api/v1/procurement/reset", {
-    method: "POST",
-  });
 }

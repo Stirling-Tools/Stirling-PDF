@@ -5,7 +5,7 @@ import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 const emptyToolRegistry: Partial<ToolRegistry> = {};
 
 const meta = {
-  title: "Tools/Automate/AutomationImportModal",
+  title: "Tools/Automate/Parts/AutomationImportModal",
   component: AutomationImportModal,
 } satisfies Meta<typeof AutomationImportModal>;
 export default meta;
