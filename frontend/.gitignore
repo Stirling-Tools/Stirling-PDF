@@ -6,6 +6,7 @@
 .pnp.js
 
 # testing
+/editor/coverage
 /coverage
 /editor/coverage
 
