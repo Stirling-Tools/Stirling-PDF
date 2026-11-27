@@ -50,6 +50,7 @@ export interface PdfAccessWarmup {
 }
 
 export type PdfAccessResponse =
+  | { ready: true }
   | { access: PdfAccess; background: boolean }
   | { details: Partial<PdfProbeDetails> }
   | { done: true }
@@ -101,6 +102,8 @@ self.onmessage = async ({
       pdfium = undefined;
       throw error;
     });
+    // Loading is network-bound; tell the caller so its deadline only covers parsing.
+    self.postMessage({ ready: true } satisfies PdfAccessResponse);
     const length = data.file.size;
     const pointer = module.pdfium.wasmExports.malloc(Math.max(length, 1));
     if (!pointer) throw new Error("Unable to allocate memory for this PDF");

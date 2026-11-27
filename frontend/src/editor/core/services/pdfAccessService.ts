@@ -240,6 +240,8 @@ interface Inspection {
 
 const inspections = new WeakMap<Blob, Map<string, Inspection>>();
 const INSPECTION_TIMEOUT_MS = 30_000;
+// Fetching the worker and pdfium WASM can be slow on real networks; only cap a true stall.
+const READER_LOAD_TIMEOUT_MS = 180_000;
 const MAX_INSPECTION_WORKERS = 2;
 // Each worker holds the input buffer and a WASM copy. Larger files run alone.
 const INSPECTION_BYTE_BUDGET = 100 * 1024 * 1024;
@@ -345,17 +347,14 @@ function runInspection(
     };
     const abort = () =>
       fail(new DOMException("Operation cancelled", "AbortError"));
-    const startTimer = () => {
+    const startTimer = (
+      ms = INSPECTION_TIMEOUT_MS,
+      message = "PDF permission inspection timed out. Try opening the file again.",
+    ) => {
       clearTimeout(timer);
       timer = setTimeout(
-        () =>
-          fail(
-            new DOMException(
-              "PDF permission inspection timed out. Try opening the file again.",
-              "TimeoutError",
-            ),
-          ),
-        INSPECTION_TIMEOUT_MS,
+        () => fail(new DOMException(message, "TimeoutError")),
+        ms,
       );
     };
     const reusable = () =>
@@ -365,7 +364,8 @@ function runInspection(
       file.size <= WORKER_REUSE_MAX_BYTES;
     const onMessage = ({ data }: MessageEvent<PdfAccessResponse>) => {
       if (finished) return;
-      if ("access" in data) {
+      if ("ready" in data) startTimer();
+      else if ("access" in data) {
         delivered = data.access;
         signal.removeEventListener("abort", abort);
         resolve(data.access);
@@ -399,7 +399,10 @@ function runInspection(
         holdsSlot = true;
         activeInspections++;
         inspectingBytes += file.size;
-        startTimer();
+        startTimer(
+          READER_LOAD_TIMEOUT_MS,
+          "Loading the PDF reader timed out. Check your connection and try again.",
+        );
         try {
           worker = idleWorkers.pop() ?? new PdfAccessWorker();
           worker.onmessage = onMessage;

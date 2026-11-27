@@ -67,7 +67,48 @@ describe("signed PDFs nobody has opened yet", () => {
         true,
       ),
     ).rejects.toThrow("digitally signed");
-    expect(ensure).toHaveBeenCalledWith(file, undefined);
+    expect(ensure).toHaveBeenCalledWith(file, expect.any(AbortSignal));
+  });
+
+  it("refuses a timed-out file instead of letting it through unread", async () => {
+    ensure.mockRejectedValue(new DOMException("timed out", "TimeoutError"));
+    await expect(
+      preflightPdfOperation([unread()], "/api/v1/misc/repair", false, vi.fn()),
+    ).rejects.toMatchObject({ name: "TimeoutError" });
+  });
+
+  it("inspects again after a read-only preflight let a timed-out file through", async () => {
+    const file = unread();
+    ensure.mockRejectedValueOnce(new DOMException("timed out", "TimeoutError"));
+    await expect(
+      preflightPdfOperation([file], undefined, false, vi.fn()),
+    ).resolves.toBe(true);
+    await expect(
+      assertSignedPdfsEditable([file], "/api/v1/misc/repair", false),
+    ).rejects.toThrow("digitally signed");
+  });
+
+  it("inspects again in a signed preflight after an unused timeout verdict", async () => {
+    const file = unread();
+    ensure.mockRejectedValueOnce(new DOMException("timed out", "TimeoutError"));
+    await expect(
+      preflightPdfOperation([file], undefined, false, vi.fn()),
+    ).resolves.toBe(true);
+    await expect(
+      preflightPdfOperation([file], "/api/v1/misc/repair", false, vi.fn()),
+    ).rejects.toThrow("digitally signed");
+  });
+
+  it("reads damaged bytes once, without a second inspection", async () => {
+    ensure.mockRejectedValue(
+      Object.assign(new Error("Unable to open PDF"), {
+        code: PdfErrorCode.WrongFormat,
+      }),
+    );
+    await expect(
+      preflightPdfOperation([unread()], "/api/v1/misc/repair", false, vi.fn()),
+    ).resolves.toBe(true);
+    expect(ensure).toHaveBeenCalledOnce();
   });
 
   it("lets a tool with no endpoint that only reads the file through", async () => {
