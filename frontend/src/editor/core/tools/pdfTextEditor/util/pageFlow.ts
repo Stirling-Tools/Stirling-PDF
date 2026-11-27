@@ -166,15 +166,19 @@ function flowInto(
   next: Page,
   split: Split,
 ): FlowResult {
-  const inserted = moveOverflow(store, page, run, next, split);
-  if (!inserted) return "none";
-  flowState(store.document!).continuations.set(run.id, {
-    pageIndex: next.index,
-    runId: inserted,
-    softBreak: split.softBreak,
+  let result: FlowResult = "none";
+  store.batchNow(() => {
+    const inserted = moveOverflow(store, page, run, next, split);
+    if (!inserted) return;
+    flowState(store.document!).continuations.set(run.id, {
+      pageIndex: next.index,
+      runId: inserted,
+      softBreak: split.softBreak,
+    });
+    flowPastBottom(store, next.index, inserted, Number.POSITIVE_INFINITY);
+    result = "moved";
   });
-  flowPastBottom(store, next.index, inserted, Number.POSITIVE_INFINITY);
-  return "moved";
+  return result;
 }
 
 function continuationOn(

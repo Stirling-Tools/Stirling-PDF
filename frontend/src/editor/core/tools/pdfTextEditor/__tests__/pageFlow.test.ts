@@ -329,3 +329,34 @@ test("text wrapped onto a narrower page continues on the page after once it reac
   const carried = flowed.flatMap((page) => page.runs.map((run) => run.text));
   expect(carried.join(" ").replace(/\s+/g, " ")).toBe(long);
 });
+
+test("one undo takes back text that flowed across several existing pages", async () => {
+  const pdf = await PDFDocument.create();
+  pdf.addPage([400, 300]);
+  pdf.addPage([150, 300]);
+  pdf.addPage([150, 300]);
+  pdf.addPage([150, 300]);
+  const store = await storeWith(await pdf.save());
+  for (const index of [1, 2, 3]) ensurePageRead(store, index);
+  const insert = new InsertTextCommand({
+    pageIndex: 0,
+    x: 40,
+    y: 50,
+    text: "Line one",
+  });
+  store.dispatch(insert);
+  const runId = insert.insertedRunId!;
+  const long = Array.from({ length: 40 }, (_, i) => `word${i}`).join(" ");
+  expect(edit(store, runId, `Line one\n${long}`)).toBe("moved");
+  const doc = store.document!;
+  const following = () =>
+    doc
+      .displayOrder()
+      .slice(1)
+      .filter((index) => doc.page(index).runs.length > 0);
+  expect(following().length).toBeGreaterThan(1);
+
+  store.undo();
+
+  expect(following()).toEqual([]);
+});
