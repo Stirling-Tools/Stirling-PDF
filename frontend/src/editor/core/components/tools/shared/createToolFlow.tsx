@@ -11,7 +11,7 @@ import {
   ToolWorkflowTitleProps,
 } from "@editor/components/tools/shared/ToolWorkflowTitle";
 import { StirlingFile } from "@editor/types/fileContext";
-import type { TooltipTip } from "@editor/types/tips";
+import type { SidebarTooltipContent } from "@editor/types/tips";
 import type { ExecuteDisabledReason } from "@editor/hooks/tools/shared/toolOperationTypes";
 import classes from "@editor/components/tools/shared/createToolFlow.module.css";
 import { ToolFileEligibility } from "@editor/contexts/ToolFileEligibilityContext";
@@ -31,14 +31,7 @@ export interface MiddleStepConfig {
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
   content: React.ReactNode;
-  tooltip?: {
-    content?: React.ReactNode;
-    tips?: TooltipTip[];
-    header?: {
-      title: string;
-      logo?: React.ReactNode;
-    };
-  };
+  tooltip?: SidebarTooltipContent;
 }
 
 export interface ExecuteButtonConfig {

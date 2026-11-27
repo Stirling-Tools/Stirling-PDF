@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import ScrollableCodeBlock from "@editor/components/tools/getPdfInfo/shared/ScrollableCodeBlock";
 
 const meta = {
-  title: "Tools/GetPdfInfo/Shared/ScrollableCodeBlock",
+  title: "Tools/Get all info on PDF/Parts/Shared/ScrollableCodeBlock",
   component: ScrollableCodeBlock,
   parameters: { layout: "padded" },
 } satisfies Meta<typeof ScrollableCodeBlock>;

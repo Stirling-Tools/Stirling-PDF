@@ -42,6 +42,71 @@ export const LoginDisabled: Story = {
 };
 
 /**
+ * The dashboard's stat cards, charts and events table each fetch on mount,
+ * and an unmocked read comes back in a shape they crash on.
+ */
+function stubDashboardReads() {
+  auditService.getStats = async () => ({
+    totalEvents: 15234,
+    prevTotalEvents: 13870,
+    uniqueUsers: 42,
+    prevUniqueUsers: 38,
+    successRate: 98.4,
+    prevSuccessRate: 97.9,
+    avgLatencyMs: 220,
+    prevAvgLatencyMs: 245,
+    errorCount: 31,
+    topEventType: "PDF_PROCESS",
+    topUser: "admin",
+    eventsByType: { PDF_PROCESS: 11020, USER_LOGIN: 3104, USER_LOGOUT: 1110 },
+    eventsByUser: { admin: 6120, editor: 9114 },
+    topTools: { compress: 4210, merge: 3302, split: 2108 },
+    hourlyDistribution: { "09": 1820, "12": 2440, "15": 2105 },
+  });
+  auditService.getChartsData = async () => ({
+    eventsByType: {
+      labels: ["PDF_PROCESS", "USER_LOGIN", "USER_LOGOUT"],
+      values: [11020, 3104, 1110],
+    },
+    eventsByUser: { labels: ["admin", "editor"], values: [6120, 9114] },
+    eventsOverTime: {
+      labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      values: [2810, 3122, 2990, 3305, 3007],
+    },
+  });
+  auditService.getEvents = async () => ({
+    events: [
+      {
+        id: "1",
+        timestamp: "2026-11-24T09:12:00Z",
+        eventType: "PDF_PROCESS",
+        username: "editor",
+        ipAddress: "10.0.0.12",
+        details: { tool: "compress" },
+      },
+      {
+        id: "2",
+        timestamp: "2026-11-24T08:47:00Z",
+        eventType: "USER_LOGIN",
+        username: "admin",
+        ipAddress: "10.0.0.4",
+        details: {},
+      },
+    ],
+    totalEvents: 2,
+    page: 0,
+    pageSize: 20,
+    totalPages: 1,
+  });
+  auditService.getEventTypes = async () => [
+    "PDF_PROCESS",
+    "USER_LOGIN",
+    "USER_LOGOUT",
+  ];
+  auditService.getUsers = async () => ["admin", "editor"];
+}
+
+/**
  * Login enabled with an ENTERPRISE license: both banners are hidden, the
  * dashboard tabs are active, and the fetched (mocked) status backs the page
  * instead of the built-in demo data.
@@ -59,6 +124,7 @@ export const Enabled: Story = {
         capturePdfAuthor: true,
         captureOperationResults: true,
       });
+      stubDashboardReads();
       return (
         <AppConfigProvider
           autoFetch={false}
@@ -86,6 +152,7 @@ export const AuditLoggingDisabled: Story = {
         capturePdfAuthor: false,
         captureOperationResults: false,
       });
+      stubDashboardReads();
       return (
         <AppConfigProvider
           autoFetch={false}

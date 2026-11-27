@@ -3,7 +3,7 @@ import StampPreview from "@editor/components/tools/addStamp/StampPreview";
 import { defaultParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
 
 const meta = {
-  title: "Tools/AddStamp/StampPreview",
+  title: "Tools/Add Stamp to PDF/Parts/StampPreview",
   component: StampPreview,
 } satisfies Meta<typeof StampPreview>;
 export default meta;

@@ -7,7 +7,7 @@ import {
 } from "@editor/hooks/tools/redact/useRedactParameters";
 
 const meta = {
-  title: "Tools/Redact/RedactSingleStepSettings",
+  title: "Tools/Redact/Parts/RedactSingleStepSettings",
   component: RedactSingleStepSettings,
   parameters: { layout: "padded" },
   args: {

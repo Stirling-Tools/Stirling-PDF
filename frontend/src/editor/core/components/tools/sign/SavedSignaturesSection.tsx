@@ -22,6 +22,7 @@ import {
 } from "@mantine/core";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { ActionIcon } from "@editor/ui/ActionIcon";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import {
   SavedSignature,
   SavedSignatureType,
@@ -70,18 +71,16 @@ function typeLabel(translate: ScopedTranslate, type: SavedSignatureType) {
 
 function SavedSignaturesHeader({ translate }: { translate: ScopedTranslate }) {
   return (
-    <Group justify="space-between" align="flex-start">
-      <Stack gap={0}>
-        <Text fw={600} size="md">
-          {translate("saved.heading", "Saved signatures")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {translate(
-            "saved.description",
-            "Reuse saved signatures at any time.",
-          )}
-        </Text>
-      </Stack>
+    <Group gap={4} wrap="nowrap">
+      <Text fw={600} size="md">
+        {translate("saved.heading", "Saved signatures")}
+      </Text>
+      <ToolInfoTooltip
+        label={translate(
+          "saved.description",
+          "Reuse saved signatures at any time.",
+        )}
+      />
     </Group>
   );
 }
@@ -147,17 +146,15 @@ function SignatureGroupHeading({
   description,
 }: SignatureGroupHeadingProps) {
   return (
-    <>
-      <Group gap="xs">
-        <Icon name={icon} size={18} />
+    <Group gap="xs" wrap="nowrap">
+      <Icon name={icon} size={18} />
+      <Group gap={4} wrap="nowrap">
         <Text fw={600} size="sm">
           {title}
         </Text>
+        <ToolInfoTooltip label={description} />
       </Group>
-      <Text size="xs" c="dimmed">
-        {description}
-      </Text>
-    </>
+    </Group>
   );
 }
 

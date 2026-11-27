@@ -151,6 +151,55 @@
   min-width: 0;
 }
 
+/* .fileText ignores the pointer so the card stays clickable around the text. */
+.fileNameButton {
+  min-width: 0;
+  padding: 0 var(--space-1);
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: text;
+  pointer-events: auto;
+}
+
+.fileNameButton:hover {
+  background: var(--c-hover);
+}
+
+/* Inset: .fileName clips anything drawn outside it. */
+.fileNameButton:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
+}
+
+/* Two classes to outrank .sui-input--sm. Centred on the name's line, so the
+   text doesn't move and the badges stay level with it. */
+.fileName .fileNameInput {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 0;
+  height: calc(var(--file-name-line-height) + 4px);
+  margin-top: -2px;
+  gap: 0;
+  padding: 0 var(--space-1);
+  pointer-events: auto;
+}
+
+/* The field's border and focus ring reach past the name's line box. */
+.fileName:has(.fileNameInput) {
+  overflow: visible;
+}
+
+/* The card is select-none, which WebKit lets reach into the field. */
+.fileNameInput input {
+  font-weight: 600;
+  user-select: text;
+}
+
 /* Layout-only wrapper for the shared PolicyBadges row in the file-name line. */
 .fileNameBadges {
   padding-top: 2px;

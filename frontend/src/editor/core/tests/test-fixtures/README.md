@@ -11,6 +11,27 @@ qpdf --encrypt annotation-test annotation-test 256 -- annotations_out_of_order.p
 qpdf --encrypt annotation-test annotation-test 256 -- link-annotations-sample.pdf encrypted-links.pdf
 ```
 
+## Encrypted portfolio fixture
+
+`portfolio-aes-empty-password.pdf` is a one-page portfolio with two attached text
+files (`first.txt`, `second.txt`), AES-128 encrypted with an empty user password
+and `owner` as the owner password - the shape Acrobat Sign exports. It is what
+`portfolioMembers.test.ts` reads to check that members of a portfolio are listed
+without asking for a password. Regenerate it with:
+
+```sh
+# portfolio.pdf: a page plus two attached files and a /Collection, e.g. made with
+# pdf-lib's PDFDocument.attach() and doc.catalog.set(PDFName.of("Collection"), ...)
+qpdf --encrypt "" owner 128 --use-aes=y -- portfolio.pdf portfolio-aes-empty-password.pdf
+```
+## Restricted encrypted fixture
+
+`encrypted-restricted.pdf` is `sample.pdf` opened by `open-pass` with a different permissions (owner) password, `owner-pass`, and printing, modifying and copying restricted. Opening it does not grant the owner's rights, so the permissions password has to be verified separately. Regenerate it with qpdf:
+
+```sh
+qpdf --encrypt open-pass owner-pass 256 --print=none --modify=none --extract=n -- sample.pdf encrypted-restricted.pdf
+```
+
 ## Signature probe fixtures
 
 `signature-*.pdf` exercise the local signature probe (`utils/pdfiumSignatures.ts`). They were signed by Stirling-PDF's `cert-sign` endpoint with `certs/valid-test.p12` (password `testpass`, signer `Test Signer`):
@@ -150,3 +171,25 @@ When updating the convert tool with new formats:
 1. Add corresponding test files to this directory
 2. Update the test files list above
 3. Update the test cases to include the new formats
+
+## PEM and CRT fixtures
+
+`certs/valid-test-key.pem.txt`, `certs/valid-test-cert.pem.txt` and `certs/valid-test-cert.crt.txt` carry a `.txt` suffix because Vite's dev server refuses to serve `*.pem` and `*.crt` files (`server.fs.deny`), which Storybook and its tests load through. Stories and the Storybook file chooser hand them to panels under their real names.
+
+## One fixture per accepted file type
+
+Storybook offers these files when a file input is clicked (`.storybook/storybookFilePicker.ts`), so every type a tool accepts has at least one real file:
+
+- `sample.odt`, `sample.odp`, `sample.rtf`, `sample.msg` and `sample-html.zip` are copies of `testing/cucumber/exampleFiles/example.*` and `example_html.zip`.
+- `certs/valid-test.pfx` and `certs/valid-test.keystore` are copies of `valid-test.p12` and `valid-test.jks` under the extensions the certificate inputs also accept (same password, `testpass`).
+- `certs/valid-test-cert.der`, `.crt.txt` and `.cer`, and `certs/valid-test.key`, are the PEM certificate and key in the other encodings those inputs take, so the key and certificate still match:
+
+  ```sh
+  openssl x509 -in valid-test-cert.pem.txt -outform der -out valid-test-cert.der
+  openssl x509 -in valid-test-cert.pem.txt -outform der -out valid-test-cert.cer
+  cp valid-test-cert.pem.txt valid-test-cert.crt.txt
+  cp valid-test-key.pem.txt valid-test.key
+  ```
+
+- `sample.gif`, `sample.bmp`, `sample.tiff` and `sample.webp` are `sample.png` re-encoded (`sips -s format gif|bmp|tiff`, Pillow for WebP; BMP and TIFF scaled to 200 px wide).
+- `bookmarks.json` is the outline the Edit Table of Contents stories import; `automation.json` is a two-step automation in the importer's `{ name, operations }` format; `sample.fb2` is a minimal FictionBook 2 document.

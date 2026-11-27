@@ -12,7 +12,7 @@ export async function openRecents(page: Page): Promise<void> {
     .getByRole("navigation", { name: "File sources", exact: true })
     .getByRole("button", { name: "Recents", exact: true })
     .click();
-  await expect(page).toHaveURL(/\/files\?view=recent$/);
+  await expect(page).toHaveURL(/\/files$/);
 }
 
 /**

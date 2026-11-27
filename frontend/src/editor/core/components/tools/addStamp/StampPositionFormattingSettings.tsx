@@ -9,11 +9,9 @@ import {
   NumberInput,
 } from "@mantine/core";
 import { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
-import { Icon } from "@editor/ui/Icon";
 import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
-import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Button } from "@editor/ui/Button";
-import { ActionIcon } from "@editor/ui/ActionIcon";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {
@@ -83,51 +81,28 @@ const StampPositionFormattingSettings = ({
           </div>
         </Stack>
       )}
-      {/* Icon pill buttons row */}
-      <div className="flex justify-between gap-[0.5rem]">
-        <Tooltip
-          content={t("AddStampRequest.rotation", "Rotation")}
-          position="top"
-        >
-          <ActionIcon
-            aria-label={t("AddStampRequest.rotation", "Rotation")}
-            variant={
-              parameters._activePill === "rotation" ? "primary" : "secondary"
-            }
-            className="flex-1"
-            onClick={() => onParameterChange("_activePill", "rotation")}
-          >
-            <Icon name="rotate-cw" size="1.1rem" />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip
-          content={t("AddStampRequest.opacity", "Opacity")}
-          position="top"
-        >
-          <ActionIcon
-            aria-label={t("AddStampRequest.opacity", "Opacity")}
-            variant={
-              parameters._activePill === "opacity" ? "primary" : "secondary"
-            }
-            className="flex-1"
-            onClick={() => onParameterChange("_activePill", "opacity")}
-          >
-            <Icon name="droplet" size="1.1rem" />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip content={sizeLabel} position="top">
-          <ActionIcon
-            aria-label={sizeLabel}
-            variant={
-              parameters._activePill === "fontSize" ? "primary" : "secondary"
-            }
-            className="flex-1"
-            onClick={() => onParameterChange("_activePill", "fontSize")}
-          >
-            <Icon name="shrink" size="1.1rem" />
-          </ActionIcon>
-        </Tooltip>
-      </div>
+      <ButtonSelector
+        ariaLabel={t("AddStampRequest.adjustSetting", "Setting to adjust")}
+        value={parameters._activePill}
+        onChange={(pill) => onParameterChange("_activePill", pill)}
+        options={[
+          {
+            value: "rotation",
+            label: t("AddStampRequest.rotation", "Rotation"),
+            icon: "rotate-cw",
+          },
+          {
+            value: "opacity",
+            label: t("AddStampRequest.opacity", "Opacity"),
+            icon: "droplet",
+          },
+          {
+            value: "fontSize",
+            label: t("AddStampRequest.size", "Size"),
+            icon: "shrink",
+          },
+        ]}
+      />
 
       {/* Single slider bound to selected pill */}
       {parameters._activePill === "fontSize" && (

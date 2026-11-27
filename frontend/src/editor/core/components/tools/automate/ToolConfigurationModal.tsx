@@ -4,6 +4,7 @@ import { Modal, Title, Group, Stack, Text, Alert, Loader } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
 import { Icon } from "@editor/ui/Icon";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
 import { ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
@@ -83,13 +84,19 @@ export default function ToolConfigurationModal({
       opened={opened}
       onClose={onCancel}
       title={
-        <Group gap="xs">
+        <Group gap="xs" wrap="nowrap">
           <Icon name="settings" />
           <Title order={3}>
             {t("automate.config.title", "Configure {{toolName}}", {
               toolName: tool.name,
             })}
           </Title>
+          <ToolInfoTooltip
+            label={t(
+              "automate.config.description",
+              "Configure the settings for this tool. These settings will be applied when the automation runs.",
+            )}
+          />
         </Group>
       }
       size="lg"
@@ -97,13 +104,6 @@ export default function ToolConfigurationModal({
       zIndex={Z_INDEX_AUTOMATE_MODAL}
     >
       <Stack gap="md">
-        <Text size="sm" c="dimmed">
-          {t(
-            "automate.config.description",
-            "Configure the settings for this tool. These settings will be applied when the automation runs.",
-          )}
-        </Text>
-
         <div
           style={{ maxHeight: "60vh", overflowY: "auto", overflowX: "hidden" }}
         >

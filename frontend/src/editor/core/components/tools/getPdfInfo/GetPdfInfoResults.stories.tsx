@@ -33,7 +33,7 @@ const baseOperation: GetPdfInfoOperationHook = {
 };
 
 const meta = {
-  title: "Tools/GetPdfInfo/GetPdfInfoResults",
+  title: "Tools/Get all info on PDF/Parts/GetPdfInfoResults",
   component: GetPdfInfoResults,
 } satisfies Meta<typeof GetPdfInfoResults>;
 export default meta;

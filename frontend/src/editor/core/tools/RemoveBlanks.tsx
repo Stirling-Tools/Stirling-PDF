@@ -47,7 +47,7 @@ const RemoveBlanks = (props: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t("removeBlanks.submit", "Remove blank pages"),
+      text: t("removeBlanks.submit", "Remove Blank Pages"),
       loadingText: t("loading"),
       onClick: base.handleExecute,
       isVisible: !base.hasResults,

@@ -17,7 +17,7 @@ export function FolderClassificationRailItem() {
       total={activeSweep.total}
       status={activeSweep.status === "done" ? "done" : "running"}
       folderName={activeSweep.folderName}
-      onClick={() => navigate("/files")}
+      onClick={() => navigate("/files?view=all")}
       onSettled={dismissBackgroundClassification}
     />
   );

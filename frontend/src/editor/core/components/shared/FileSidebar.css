@@ -554,33 +554,8 @@
   text-overflow: ellipsis;
 }
 
-/* Slim "Adding files… X/Y" progress row shown during a bulk drop's pre-scan,
-   so a 200-file folder never looks frozen between drop and rows appearing. */
 .file-sidebar-bulk-add {
   padding: 4px 14px 8px;
-}
-.file-sidebar-bulk-add-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--c-text-subtle);
-  margin-bottom: 4px;
-}
-.file-sidebar-bulk-add-count {
-  font-variant-numeric: tabular-nums;
-}
-.file-sidebar-bulk-add-track {
-  height: 3px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--c-primary) 15%, transparent);
-  overflow: hidden;
-}
-.file-sidebar-bulk-add-bar {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--c-primary);
-  transition: width 0.15s ease-out;
 }
 
 .file-sidebar-section-count {

@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Stack, Select } from "@mantine/core";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { ExtractImagesParameters } from "@editor/hooks/tools/extractImages/useExtractImagesParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface ExtractImagesSettingsProps {
   parameters: ExtractImagesParameters;
@@ -20,35 +19,17 @@ const ExtractImagesSettings = ({
   const { t } = useTranslation();
 
   return (
-    <Stack gap="md">
-      <Select
-        label={t("extractImages.selectText", "Output Format")}
-        value={parameters.format}
-        onChange={(value) => {
-          const allowedFormats = ["png", "jpg", "gif"] as const;
-          const candidate = value as (typeof allowedFormats)[number];
-          const format = allowedFormats.includes(candidate) ? candidate : "png";
-          onParameterChange("format", format);
-        }}
-        data={[
-          { value: "png", label: "PNG" },
-          { value: "jpg", label: "JPG" },
-          { value: "gif", label: "GIF" },
-        ]}
-        disabled={disabled}
-        comboboxProps={{
-          withinPortal: true,
-          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-        }}
-      />
-
-      {/* <Checkbox
-        label={t('extractImages.allowDuplicates', 'Allow Duplicate Images')}
-        checked={parameters.allowDuplicates}
-        onChange={(event) => onParameterChange('allowDuplicates', event.currentTarget.checked)}
-        disabled={disabled}
-      /> */}
-    </Stack>
+    <ButtonSelector<ExtractImagesParameters["format"]>
+      label={t("extractImages.selectText", "Image Format")}
+      value={parameters.format}
+      onChange={(format) => onParameterChange("format", format)}
+      options={[
+        { value: "png", label: "PNG" },
+        { value: "jpg", label: "JPG" },
+        { value: "gif", label: "GIF" },
+      ]}
+      disabled={disabled}
+    />
   );
 };
 

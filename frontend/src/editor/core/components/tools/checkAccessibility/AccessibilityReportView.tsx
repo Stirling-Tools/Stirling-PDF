@@ -20,6 +20,7 @@ import type { AccessibilityReport } from "@editor/types/checkAccessibility";
 import {
   assessAccessibilityReport,
   type AccessibilityBasicId,
+  type AccessibilityCategoryId,
 } from "@editor/utils/accessibilityAssessment";
 
 const BASIC_ICON: Record<AccessibilityBasicId, IconName> = {
@@ -38,8 +39,8 @@ interface AccessibilityReportViewProps {
   manualTicked: ReadonlySet<number>;
   onToggleManual: (index: number) => void;
   onSetAllManual: (done: boolean) => void;
-  /** Sets the document language, under the Language area. */
-  languageFix?: ReactNode;
+  /** Controls that fix an area, each shown under it. */
+  fixes?: Partial<Record<AccessibilityCategoryId, ReactNode>>;
   /** Shown under the breakdown: the review's live view of the document. */
   live?: ReactNode;
 }
@@ -49,7 +50,7 @@ export function AccessibilityReportView({
   manualTicked,
   onToggleManual,
   onSetAllManual,
-  languageFix,
+  fixes,
   live,
 }: AccessibilityReportViewProps) {
   const { t } = useTranslation();
@@ -103,7 +104,7 @@ export function AccessibilityReportView({
               area={area}
               profile={report.profile}
               note={area.id === "altText" ? figures : null}
-              fix={area.id === "language" ? languageFix : undefined}
+              fix={fixes?.[area.id]}
             />
           ))}
           {basics.map((basic) => (

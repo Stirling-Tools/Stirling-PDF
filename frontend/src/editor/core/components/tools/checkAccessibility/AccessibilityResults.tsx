@@ -10,13 +10,24 @@ import { downloadFile } from "@editor/services/downloadService";
 import { ToolPanelFooter } from "@editor/components/tools/ToolPanelFooter";
 import { AccessibilityReportView } from "@editor/components/tools/checkAccessibility/AccessibilityReportView";
 import { ReportLanguageField } from "@editor/components/tools/checkAccessibility/ReportLanguageField";
+import {
+  ConformanceClaimContext,
+  ConformanceClaimField,
+} from "@editor/components/tools/checkAccessibility/ConformanceClaimFix";
+import { useCheckedFileClaim } from "@editor/hooks/tools/checkAccessibility/useConformanceClaimControl";
 import type { CheckAccessibilityOperationHook } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityOperation";
 import { createAccessibilityReportPdf } from "@editor/hooks/tools/checkAccessibility/accessibilityReportPdf";
 import { assessAccessibilityReport } from "@editor/utils/accessibilityAssessment";
 import { resultLabel } from "@editor/utils/accessibilityReportContent";
 import type { FileId } from "@editor/types/file";
-import type { AccessibilityFixTarget } from "@editor/utils/accessibilityFixes";
-import type { AccessibilityReportEntry } from "@editor/types/checkAccessibility";
+import {
+  profilePart,
+  type AccessibilityFixTarget,
+} from "@editor/utils/accessibilityFixes";
+import type {
+  AccessibilityReport,
+  AccessibilityReportEntry,
+} from "@editor/types/checkAccessibility";
 import "@editor/components/tools/checkAccessibility/CheckAccessibility.css";
 import {
   AccessibilityFixContext,
@@ -98,6 +109,11 @@ export function AccessibilityResults({
 
   const selected =
     results.find((entry) => entry.fileId === selectedFileId) ?? results[0];
+  const claim = useCheckedFileClaim(
+    selected?.fileId ?? null,
+    selected?.report ?? null,
+    onSelectFile,
+  );
 
   if (!selected) {
     return isLoading ? (
@@ -127,6 +143,19 @@ export function AccessibilityResults({
   };
   const fixInDocument: AccessibilityFixFn = (target, page) =>
     openInReview(target, page);
+  const reportFixes = (report: AccessibilityReport) => {
+    const part = profilePart(report.profile);
+    return {
+      language: (
+        <ReportLanguageField
+          fileId={selected.fileId}
+          report={report}
+          onOpenInReview={() => openInReview(null)}
+        />
+      ),
+      metadata: part !== null && <ConformanceClaimField part={part} />,
+    };
+  };
   const passing =
     !!selected.report &&
     assessAccessibilityReport(selected.report).result === "pass";
@@ -146,117 +175,114 @@ export function AccessibilityResults({
     <AccessibilityFixContext.Provider
       value={reviewAvailable ? fixInDocument : null}
     >
-      <div className="a11y-results" data-testid="a11y-results">
-        {(results.length > 1 || isLoading) && (
-          <div className="a11y-picker">
-            <Select
-              aria-label={t("checkAccessibility.pickFile", "Show results for")}
-              options={options}
-              value={selected.fileId}
-              onChange={(value) => {
-                const entry = results.find((item) => item.fileId === value);
-                if (entry) onSelectFile(entry.fileId);
-              }}
-              allowDeselect={false}
-              searchable={results.length > 6}
-            />
-            {isLoading && (
-              <div className="a11y-loading">
-                <Spinner size="sm" />
-                <span>{status}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {selected.report ? (
-          <AccessibilityReportView
-            key={selected.fileId}
-            report={selected.report}
-            manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
-            languageFix={
-              reviewAvailable && (
-                <ReportLanguageField
-                  fileId={selected.fileId}
-                  report={selected.report}
-                  onOpenInReview={() => openInReview(null)}
-                />
-              )
-            }
-            live={<div ref={reviewPanelSlot.attach} className="a11y-live" />}
-            onToggleManual={(index) => toggleManual(selected.fileId, index)}
-            onSetAllManual={(done) =>
-              setManualTicks((current) => ({
-                ...current,
-                [selected.fileId]: new Set(
-                  done
-                    ? selected.report?.humanChecks.map((_, index) => index)
-                    : [],
-                ),
-              }))
-            }
-          />
-        ) : (
-          <Banner
-            tone="danger"
-            title={t(
-              "checkAccessibility.error.fileTitle",
-              "This file could not be checked",
-            )}
-            description={selected.error}
-          />
-        )}
-
-        {!isLoading && (selected.report || tagEverything) && (
-          <ToolPanelFooter>
-            <div className="a11y-footer">
-              {downloadFailed && (
-                <Banner
-                  tone="danger"
-                  title={t(
-                    "checkAccessibility.error.download",
-                    "The accessibility report could not be created. Try again.",
-                  )}
-                  onDismiss={() => setDownloadFailed(false)}
-                />
+      <ConformanceClaimContext.Provider value={reviewAvailable ? claim : null}>
+        <div className="a11y-results" data-testid="a11y-results">
+          {(results.length > 1 || isLoading) && (
+            <div className="a11y-picker">
+              <Select
+                aria-label={t(
+                  "checkAccessibility.pickFile",
+                  "Show results for",
+                )}
+                options={options}
+                value={selected.fileId}
+                onChange={(value) => {
+                  const entry = results.find((item) => item.fileId === value);
+                  if (entry) onSelectFile(entry.fileId);
+                }}
+                allowDeselect={false}
+                searchable={results.length > 6}
+              />
+              {isLoading && (
+                <div className="a11y-loading">
+                  <Spinner size="sm" />
+                  <span>{status}</span>
+                </div>
               )}
-              <div className="a11y-actions">
-                {selected.report && (
-                  <FixInDocumentButton
-                    className="a11y-actions__cta"
-                    passing={passing}
+            </div>
+          )}
+
+          {selected.report ? (
+            <AccessibilityReportView
+              key={selected.fileId}
+              report={selected.report}
+              manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
+              fixes={reviewAvailable ? reportFixes(selected.report) : undefined}
+              live={<div ref={reviewPanelSlot.attach} className="a11y-live" />}
+              onToggleManual={(index) => toggleManual(selected.fileId, index)}
+              onSetAllManual={(done) =>
+                setManualTicks((current) => ({
+                  ...current,
+                  [selected.fileId]: new Set(
+                    done
+                      ? selected.report?.humanChecks.map((_, index) => index)
+                      : [],
+                  ),
+                }))
+              }
+            />
+          ) : (
+            <Banner
+              tone="danger"
+              title={t(
+                "checkAccessibility.error.fileTitle",
+                "This file could not be checked",
+              )}
+              description={selected.error}
+            />
+          )}
+
+          {!isLoading && (selected.report || tagEverything) && (
+            <ToolPanelFooter>
+              <div className="a11y-footer">
+                {downloadFailed && (
+                  <Banner
+                    tone="danger"
+                    title={t(
+                      "checkAccessibility.error.download",
+                      "The accessibility report could not be created. Try again.",
+                    )}
+                    onDismiss={() => setDownloadFailed(false)}
                   />
                 )}
-                {tagEverything}
-                {/* Alone, the download is the report's only action and keeps its label. */}
-                {selected.report && !reviewAvailable && (
-                  <Button
-                    fullWidth
-                    loading={buildingPdf}
-                    leftSection={<Icon name="download" size={16} />}
-                    onClick={() => void downloadReportPdf(selected)}
-                    data-testid="a11y-download-report"
-                  >
-                    {downloadLabel}
-                  </Button>
-                )}
-                {selected.report && reviewAvailable && (
-                  <Tooltip label={downloadLabel}>
+                <div className="a11y-actions">
+                  {selected.report && (
+                    <FixInDocumentButton
+                      className="a11y-actions__cta"
+                      passing={passing}
+                    />
+                  )}
+                  {tagEverything}
+                  {/* Alone, the download is the report's only action and keeps its label. */}
+                  {selected.report && !reviewAvailable && (
                     <Button
-                      variant="secondary"
-                      aria-label={downloadLabel}
+                      fullWidth
                       loading={buildingPdf}
                       leftSection={<Icon name="download" size={16} />}
                       onClick={() => void downloadReportPdf(selected)}
                       data-testid="a11y-download-report"
-                    />
-                  </Tooltip>
-                )}
+                    >
+                      {downloadLabel}
+                    </Button>
+                  )}
+                  {selected.report && reviewAvailable && (
+                    <Tooltip label={downloadLabel}>
+                      <Button
+                        variant="secondary"
+                        aria-label={downloadLabel}
+                        loading={buildingPdf}
+                        leftSection={<Icon name="download" size={16} />}
+                        onClick={() => void downloadReportPdf(selected)}
+                        data-testid="a11y-download-report"
+                      />
+                    </Tooltip>
+                  )}
+                </div>
               </div>
-            </div>
-          </ToolPanelFooter>
-        )}
-      </div>
+            </ToolPanelFooter>
+          )}
+        </div>
+      </ConformanceClaimContext.Provider>
     </AccessibilityFixContext.Provider>
   );
 }

@@ -87,6 +87,7 @@
   overscroll-behavior: contain;
 }
 .ownership-flow__option {
+  --combobox-option-selected-color: var(--c-text);
   height: 2.5rem;
   box-sizing: border-box;
   display: block;

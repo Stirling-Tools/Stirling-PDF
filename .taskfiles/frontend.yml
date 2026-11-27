@@ -245,15 +245,83 @@ tasks:
 
   storybook:
     desc: "Start Storybook dev server"
-    deps: [prepare]
     cmds:
-      - npx storybook dev -p 6006 {{.CLI_ARGS}}
+      - task: storybook:proprietary
+
+  storybook:core:
+    desc: "Start Storybook dev server in core mode"
+    cmds:
+      - task: storybook:_dev
+        vars: { FLAVOR: core, DEFAULT_PORT: "6007" }
+
+  storybook:proprietary:
+    desc: "Start Storybook dev server in proprietary mode"
+    cmds:
+      - task: storybook:_dev
+        vars: { FLAVOR: proprietary, DEFAULT_PORT: "6006" }
+
+  storybook:saas:
+    desc: "Start Storybook dev server in SaaS mode"
+    cmds:
+      - task: storybook:_dev
+        vars: { FLAVOR: saas, DEFAULT_PORT: "6008" }
+
+  storybook:desktop:
+    desc: "Start Storybook dev server in desktop mode"
+    cmds:
+      - task: storybook:_dev
+        vars: { FLAVOR: desktop, DEFAULT_PORT: "6009" }
+
+  storybook:_dev:
+    internal: true
+    summary: |
+      Renders the stories through one app build's own layers, so the same story
+      shows that build's real components. Each mode has its own port, so all
+      four can run side by side; pass PORT to override.
+    deps: [prepare]
+    vars:
+      PORT: '{{.PORT | default .DEFAULT_PORT}}'
+    env:
+      STORYBOOK_FLAVOR: '{{.FLAVOR}}'
+    cmds:
+      - npx storybook dev -p {{.PORT}} {{.CLI_ARGS}}
 
   storybook:build:
     desc: "Build static Storybook"
-    deps: [prepare]
     cmds:
-      - npx storybook build {{.CLI_ARGS}}
+      - task: storybook:build:proprietary
+
+  storybook:build:core:
+    desc: "Build static Storybook for core mode"
+    cmds:
+      - task: storybook:_build
+        vars: { FLAVOR: core }
+
+  storybook:build:proprietary:
+    desc: "Build static Storybook for proprietary mode"
+    cmds:
+      - task: storybook:_build
+        vars: { FLAVOR: proprietary }
+
+  storybook:build:saas:
+    desc: "Build static Storybook for SaaS mode"
+    cmds:
+      - task: storybook:_build
+        vars: { FLAVOR: saas }
+
+  storybook:build:desktop:
+    desc: "Build static Storybook for desktop mode"
+    cmds:
+      - task: storybook:_build
+        vars: { FLAVOR: desktop }
+
+  storybook:_build:
+    internal: true
+    deps: [prepare]
+    env:
+      STORYBOOK_FLAVOR: '{{.FLAVOR}}'
+    cmds:
+      - npx storybook build {{if ne .FLAVOR "proprietary"}}-o storybook-static-{{.FLAVOR}} {{end}}{{.CLI_ARGS}}
 
   storybook:browser:
     internal: true
@@ -265,11 +333,119 @@ tasks:
 
   storybook:test:
     desc: "Scan every story in real Chromium: it must render and pass axe"
-    deps: [prepare, storybook:browser]
     cmds:
-      # Runs each story as a browser test. Pass a filter through, e.g.
-      #   task frontend:storybook:test -- Button
-      - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
+      - task: storybook:test:proprietary
+
+  storybook:test:core:
+    desc: "Scan every story in core mode"
+    cmds:
+      - task: storybook:_test
+        vars: { FLAVOR: core }
+
+  storybook:test:proprietary:
+    desc: "Scan every story in proprietary mode"
+    cmds:
+      - task: storybook:_test
+        vars: { FLAVOR: proprietary }
+
+  storybook:test:saas:
+    desc: "Scan every story in SaaS mode"
+    cmds:
+      - task: storybook:_test
+        vars: { FLAVOR: saas }
+
+  storybook:test:desktop:
+    desc: "Scan every story in desktop mode"
+    cmds:
+      - task: storybook:_test
+        vars: { FLAVOR: desktop }
+
+  storybook:_test:
+    internal: true
+    summary: |
+      Runs each story as a browser test and writes a JSON report to
+      storybook-setups-report/<mode>.json. Arguments pass through to vitest,
+      e.g. a filter or --shard=1/2:
+        task frontend:storybook:test:desktop -- Button
+    deps: [prepare, storybook:browser]
+    env:
+      STORYBOOK_FLAVOR: '{{.FLAVOR}}'
+    cmds:
+      - mkdir -p storybook-setups-report
+      - npx vitest run --config .storybook/vitest.config.ts --reporter=default --reporter=json --outputFile.json=storybook-setups-report/{{.FLAVOR}}.json {{.CLI_ARGS}}
+
+  storybook:test:changed:core:
+    desc: "Scan the stories this branch affects in core mode (default base origin/main)"
+    cmds:
+      - task: storybook:_test:changed
+        vars: { FLAVOR: core, BASE: '{{.CLI_ARGS | default "origin/main"}}', SHARD: '{{.SHARD}}' }
+
+  storybook:test:changed:proprietary:
+    desc: "Scan the stories this branch affects in proprietary mode (default base origin/main)"
+    cmds:
+      - task: storybook:_test:changed
+        vars: { FLAVOR: proprietary, BASE: '{{.CLI_ARGS | default "origin/main"}}', SHARD: '{{.SHARD}}' }
+
+  storybook:test:changed:saas:
+    desc: "Scan the stories this branch affects in SaaS mode (default base origin/main)"
+    cmds:
+      - task: storybook:_test:changed
+        vars: { FLAVOR: saas, BASE: '{{.CLI_ARGS | default "origin/main"}}', SHARD: '{{.SHARD}}' }
+
+  storybook:test:changed:desktop:
+    desc: "Scan the stories this branch affects in desktop mode (default base origin/main)"
+    cmds:
+      - task: storybook:_test:changed
+        vars: { FLAVOR: desktop, BASE: '{{.CLI_ARGS | default "origin/main"}}', SHARD: '{{.SHARD}}' }
+
+  storybook:_test:changed:
+    internal: true
+    summary: |
+      The stories storybook:a11y:changed picks, in one mode; a mode that does
+      not load a changed story skips it. SHARD splits the run (vitest's
+      --shard). Writes a JSON report to storybook-setups-report/.
+    deps: [prepare, storybook:browser]
+    vars:
+      CHANGED:
+        sh: node .storybook/a11y-changed.mjs {{.BASE}}
+    env:
+      STORYBOOK_FLAVOR: '{{.FLAVOR}}'
+    cmds:
+      - cmd: |
+          if [ -z '{{.CHANGED}}' ]; then
+            echo "stories: no story files affected vs {{.BASE}} — nothing to check"
+            exit 0
+          fi
+          mkdir -p storybook-setups-report
+          npx vitest run --config .storybook/vitest.config.ts --passWithNoTests \
+            --reporter=default --reporter=json \
+            --outputFile.json=storybook-setups-report/{{.FLAVOR}}-changed.json \
+            {{if .SHARD}}--shard={{.SHARD}}{{end}} {{.CHANGED}}
+
+  storybook:setups:
+    desc: "Scan every story in core, SaaS and desktop modes"
+    summary: |
+      storybook:test and the a11y gate cover proprietary mode. This runs the
+      same stories, plus each mode's own, in the other three, so a panel that
+      breaks in only one mode fails. One mode failing still runs the next;
+      arguments pass through to vitest.
+    cmds:
+      - cmd: |
+          rc=0
+          for mode in core saas desktop; do
+            task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:test:$mode -- {{.CLI_ARGS}} || rc=1
+          done
+          exit $rc
+
+  storybook:setups:changed:
+    desc: "Scan the stories this branch affects in core, SaaS and desktop modes (default base origin/main)"
+    cmds:
+      - cmd: |
+          rc=0
+          for mode in core saas desktop; do
+            task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:test:changed:$mode -- {{.CLI_ARGS | default "origin/main"}} || rc=1
+          done
+          exit $rc
 
   storybook:a11y:light:
     desc: "a11y gate over every story in light mode"
@@ -318,6 +494,7 @@ tasks:
         vars:
           THEMES: light
           BASE: '{{.CLI_ARGS | default "origin/main"}}'
+          SHARD: '{{.SHARD | default ""}}'
 
   storybook:a11y:changed:dark:
     desc: "a11y gate over the stories this branch affects in dark mode (default base origin/main)"
@@ -326,6 +503,7 @@ tasks:
         vars:
           THEMES: dark
           BASE: '{{.CLI_ARGS | default "origin/main"}}'
+          SHARD: '{{.SHARD | default ""}}'
 
   storybook:a11y:changed:themes:
     internal: true
@@ -341,7 +519,7 @@ tasks:
           fi
           rc=0
           for theme in {{.THEMES}}; do
-            task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:$theme -- {{.CHANGED}} || rc=1
+            task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:$theme -- {{.CHANGED}} {{if .SHARD}}--shard={{.SHARD}}{{end}} || rc=1
           done
           exit $rc
 

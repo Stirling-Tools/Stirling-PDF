@@ -486,7 +486,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
           }, legacy),
         )
         .toBe(true);
-      await page.goto("/files");
+      await page.goto("/files?view=all");
       await page.getByRole("button", { name: "Recents", exact: true }).click();
       await page
         .locator('.files-page-view-toggle-icon[title="Grid view"]')

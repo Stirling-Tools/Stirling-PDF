@@ -3,7 +3,7 @@
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   padding: 0.5rem 0.75rem;
-  background: var(--c-surface);
+  background: var(--c-input-bg);
   cursor: pointer;
   flex: 1;
   min-width: 0;

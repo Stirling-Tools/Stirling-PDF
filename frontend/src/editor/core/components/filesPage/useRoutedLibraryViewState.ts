@@ -4,16 +4,27 @@ import { useLibraryViewState } from "@editor/components/filesPage/useLibraryView
 import type { FilesPageTab } from "@editor/contexts/FilesPageContext";
 import type { FolderId } from "@editor/types/folder";
 
-function tabFromSearch(search: string): FilesPageTab {
+/** Bare /files opens Recents; a folder path only makes sense in Stirling library. */
+function defaultTab(folderId: FolderId | null): FilesPageTab {
+  return folderId === null ? "recent" : "all";
+}
+
+function folderFromPath(pathname: string): FolderId | null {
+  const match = pathname.match(/^\/files\/([^/]+)\/?$/);
+  return (match?.[1] as FolderId | undefined) ?? null;
+}
+
+function tabFromRoute(pathname: string, search: string): FilesPageTab {
   const view = new URLSearchParams(search).get("view");
   switch (view) {
+    case "all":
     case "recent":
     case "cloud":
     case "shared":
     case "sharedByMe":
       return view;
     default:
-      return "all";
+      return defaultTab(folderFromPath(pathname));
   }
 }
 
@@ -21,7 +32,7 @@ function tabFromSearch(search: string): FilesPageTab {
 export function useRoutedLibraryViewState() {
   const location = useLocation();
   const navigate = useNavigate();
-  const routeTab = tabFromSearch(location.search);
+  const routeTab = tabFromRoute(location.pathname, location.search);
   const view = useLibraryViewState(routeTab, routeTab);
   const {
     currentTab,
@@ -39,7 +50,8 @@ export function useRoutedLibraryViewState() {
   const navigateToView = useCallback(
     (tab: FilesPageTab, folderId: FolderId | null) => {
       const path = folderId === null ? "/files" : `/files/${folderId}`;
-      const target = tab === "all" ? path : `${path}?view=${tab}`;
+      const target =
+        tab === defaultTab(folderId) ? path : `${path}?view=${tab}`;
       selectTab(tab);
       if (target !== `${location.pathname}${location.search}`) navigate(target);
     },

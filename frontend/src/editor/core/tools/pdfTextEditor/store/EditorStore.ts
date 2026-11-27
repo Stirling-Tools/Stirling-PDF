@@ -89,6 +89,8 @@ export interface EditorViewState {
   documentLanguage: string | null;
   /** Every language the document is read in: its own and each element's. */
   languagesInUse: string[];
+  /** The PDF/UA part the session declares; null for none. */
+  conformanceClaim: number | null;
   /** Async lifecycle markers. */
   loading: boolean;
   /** True once the first page's bitmap has actually painted in PageView. */
@@ -128,6 +130,7 @@ const INITIAL: EditorViewState = {
   dirty: false,
   documentLanguage: null,
   languagesInUse: [],
+  conformanceClaim: null,
   loading: false,
   firstPageRendered: false,
   progress: null,
@@ -364,6 +367,7 @@ export class EditorStore {
       dirty: false,
       documentLanguage: doc.documentLanguage(),
       languagesInUse: doc.languagesInUse(),
+      conformanceClaim: doc.conformanceClaim(),
       loading: false,
       firstPageRendered: false,
       error: null,
@@ -728,6 +732,10 @@ export class EditorStore {
     const languagesInUse = doc.languagesInUse();
     if (languagesInUse.join() !== this.state.languagesInUse.join()) {
       this.patch({ languagesInUse });
+    }
+    const conformanceClaim = doc.conformanceClaim();
+    if (conformanceClaim !== this.state.conformanceClaim) {
+      this.patch({ conformanceClaim });
     }
     let changed = false;
     const pages: PageSnapshot[] = this.state.pages.map((p) => {

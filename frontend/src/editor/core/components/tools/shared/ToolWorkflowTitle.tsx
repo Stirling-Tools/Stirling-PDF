@@ -2,19 +2,12 @@ import React from "react";
 import { Flex, Text, Divider } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
-import { TooltipTip } from "@editor/types/tips";
+import type { SidebarTooltipContent } from "@editor/types/tips";
 
 export interface ToolWorkflowTitleProps {
   title: string;
   description?: string;
-  tooltip?: {
-    content?: React.ReactNode;
-    tips?: TooltipTip[];
-    header?: {
-      title: string;
-      logo?: React.ReactNode;
-    };
-  };
+  tooltip?: SidebarTooltipContent;
 }
 
 export function ToolWorkflowTitle({

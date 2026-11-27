@@ -142,7 +142,7 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
                     paddingLeft: showLineNumbers ? 12 : 0,
                   }}
                 >
-                  {line || " "}
+                  {line || "\u00A0"}
                 </Box>
               </Box>
             ))}
