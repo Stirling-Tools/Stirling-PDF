@@ -2,7 +2,6 @@ import { lazy, useMemo } from "react";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@editor/constants/links";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { reorganizePagesOperationConfig } from "@editor/hooks/tools/reorganizePages/useReorganizePagesOperation";
 import {
   SubcategoryId,
@@ -451,22 +450,12 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       checkAccessibility: {
         icon: <Icon name="universal-access" size="1.5rem" />,
-        // The accessibility-editing build replaces the report with the tool that also fixes tags.
-        name: ACCESSIBILITY_EDITING
-          ? t("home.checkAccessibility.titleWithReview", "PDF accessibility")
-          : t("home.checkAccessibility.title", "Check PDF accessibility"),
-        component: ACCESSIBILITY_EDITING
-          ? lazy(() => import("@editor/tools/PdfAccessibility"))
-          : lazy(() => import("@editor/tools/CheckAccessibility")),
-        description: ACCESSIBILITY_EDITING
-          ? t(
-              "home.checkAccessibility.descWithReview",
-              "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
-            )
-          : t(
-              "home.checkAccessibility.desc",
-              "Score a PDF against PDF/UA and see what blocks screen readers, without changing it",
-            ),
+        name: t("home.checkAccessibility.title", "PDF accessibility"),
+        component: lazy(() => import("@editor/tools/PdfAccessibility")),
+        description: t(
+          "home.checkAccessibility.desc",
+          "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
+        ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
         maxFiles: -1,
