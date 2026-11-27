@@ -76,6 +76,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
           </Group>
         )}
         <Tooltip
+          position="top"
           content={t("pdfTextEditor.saveTooltip", {
             defaultValue:
               "Apply changes to the file in your workspace ({{shortcut}})",
@@ -102,6 +103,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
           </span>
         )}
         <Tooltip
+          position="top"
           content={t(
             "pdfTextEditor.downloadTooltip",
             "Save and download the edited PDF",
@@ -120,6 +122,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
         {compact && (
           <>
             <Tooltip
+              position="top"
               content={t("pdfTextEditor.settings.find", "Find in document")}
             >
               <Button
@@ -136,6 +139,7 @@ export const EditorPanelActions = memo(function EditorPanelActions({
               />
             </Tooltip>
             <Tooltip
+              position="top"
               content={t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts")}
             >
               <Button

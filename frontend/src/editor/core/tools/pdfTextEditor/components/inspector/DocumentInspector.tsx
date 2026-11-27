@@ -164,7 +164,7 @@ function ChangeButton({
   testId: string;
 }) {
   return (
-    <Tooltip content={label} arrow>
+    <Tooltip position="left" content={label} arrow>
       <ActionIcon
         size="sm"
         variant="secondary"
@@ -638,7 +638,7 @@ function FontChangePanel({
       : Promise.resolve(null);
   };
   const toggle = (key: "bold" | "italic", icon: IconName, label: string) => (
-    <Tooltip content={label} arrow>
+    <Tooltip position="top" content={label} arrow>
       <Button
         size="sm"
         variant={style[key] ? "primary" : "secondary"}
@@ -888,7 +888,7 @@ function ColourSwatch({
     count,
   });
   return (
-    <Tooltip content={label} arrow>
+    <Tooltip position="top" content={label} arrow>
       <button
         type="button"
         aria-label={label}

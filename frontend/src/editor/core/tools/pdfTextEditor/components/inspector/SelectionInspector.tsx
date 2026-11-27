@@ -122,6 +122,7 @@ function ParagraphSection({
       </SectionLabel>
       <Group grow gap="xs" wrap="nowrap">
         <Tooltip
+          position="top"
           content={
             canGroup
               ? t("pdfTextEditor.sidebar.groupTooltip", {
@@ -148,6 +149,7 @@ function ParagraphSection({
           </Button>
         </Tooltip>
         <Tooltip
+          position="top"
           content={
             canUngroup
               ? t(
@@ -240,6 +242,7 @@ export function GeometryFields({
         testId="pdf-editor-pos-y"
       />
       <Tooltip
+        position="top"
         content={t(
           "pdfTextEditor.inspector.widthHint",
           "Text re-wraps to fit the width.",
@@ -260,6 +263,7 @@ export function GeometryFields({
         </div>
       </Tooltip>
       <Tooltip
+        position="top"
         content={t(
           "pdfTextEditor.inspector.heightHint",
           "A text box's height follows its type size and line count.",
@@ -300,7 +304,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
       <Stack gap="xs">
         <Group gap={4} wrap="nowrap">
           {transforms.map((tr) => (
-            <Tooltip key={tr.mode} content={tr.label}>
+            <Tooltip position="top" key={tr.mode} content={tr.label}>
               <Button
                 size="sm"
                 variant="secondary"

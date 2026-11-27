@@ -29,7 +29,7 @@ export function EditorPanelTools({ store, state }: Props) {
     testId: string,
     extra: { armed?: boolean; disabled?: boolean; tooltip: string },
   ) => (
-    <Tooltip content={extra.tooltip}>
+    <Tooltip position="top" content={extra.tooltip}>
       <Button
         size="sm"
         variant={extra.armed ? "primary" : "secondary"}

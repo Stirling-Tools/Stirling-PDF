@@ -27,7 +27,7 @@ export function ToolIconButton({
 }) {
   const [clicked, setClicked] = useState(false);
   return (
-    <Tooltip content={tooltip ?? label} disabled={clicked}>
+    <Tooltip position="top" content={tooltip ?? label} disabled={clicked}>
       {/* The reset sits on a wrapper: a button its click disabled (the last
           undo) gets no pointer events, so its own leave would never fire. */}
       <span
