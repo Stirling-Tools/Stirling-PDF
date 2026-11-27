@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Box, Group, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon } from "@editor/ui/Icon";
+import { Box, Group, NumberInput, Stack, Text } from "@mantine/core";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 /** Shared layout atoms for the editor's properties inspector. */
 
 /** Uppercase section heading, optionally with an info affordance beside it and a trailing control. */
@@ -66,54 +66,25 @@ export function Section({
 export function Field({
   label,
   hint,
+  testId,
   children,
 }: {
   label: string;
+  /** Explanation shown behind an (i) beside the label. */
   hint?: string;
+  testId?: string;
   children: ReactNode;
 }) {
   return (
-    <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+    <Stack gap={4} style={{ flex: 1, minWidth: 0 }} data-testid={testId}>
       <Group gap={4} wrap="nowrap">
         <Text size="xs" c="dimmed" fw={500}>
           {label}
         </Text>
-        {hint && <HintIcon label={hint} />}
+        {hint && <ToolInfoTooltip label={hint} position="left" />}
       </Group>
       {children}
     </Stack>
-  );
-}
-
-/**
- * The `?` that replaced the panel's permanent explanatory paragraphs, its
- * hint shown on hover or keyboard focus and read out as its name.
- */
-export function HintIcon({ label }: { label: string }) {
-  return (
-    <Tooltip
-      label={label}
-      multiline
-      w={220}
-      withArrow
-      position="left"
-      events={{ hover: true, focus: true, touch: true }}
-    >
-      {/* Tooltip anchors to its child's ref and handlers, which Icon drops. */}
-      <span
-        role="img"
-        aria-label={label}
-        tabIndex={0}
-        style={{
-          display: "inline-flex",
-          cursor: "help",
-          color: "var(--mantine-color-dimmed)",
-          flexShrink: 0,
-        }}
-      >
-        <Icon name="circle-question-mark" size="1em" />
-      </span>
-    </Tooltip>
   );
 }
 

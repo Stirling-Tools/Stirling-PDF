@@ -2,7 +2,6 @@ import { memo, useState } from "react";
 import {
   Stack,
   Text,
-  Group,
   ScrollArea,
   Checkbox,
   Skeleton,
@@ -10,12 +9,12 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Button as DSButton } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { FilePicker } from "@editor/ui/FilePicker";
 import { AttachmentRow } from "@editor/components/tools/addAttachments/AttachmentRow";
 import { DraftAttachmentRow } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 export interface AttachmentManagerUIProps {
   rows: DraftAttachmentRow[];
@@ -173,41 +172,13 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
 
       <Checkbox
         size="sm"
-        label={
-          <Group gap={4}>
-            <Text size="sm" c="dimmed">
-              {t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}
-            </Text>
-            <Tooltip
-              header={{
-                title: t(
-                  "attachments.convertToPdfA3bTooltipHeader",
-                  "About PDF/A-3b Conversion",
-                ),
-              }}
-              tips={[
-                {
-                  title: t(
-                    "attachments.convertToPdfA3bTooltipTitle",
-                    "What it does",
-                  ),
-                  description: t(
-                    "attachments.convertToPdfA3bTooltip",
-                    "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files.",
-                  ),
-                },
-              ]}
-              sidebarTooltip={true}
-              pinOnClick={true}
-            >
-              <Icon
-                name="info"
-                size={14}
-                style={{ color: "var(--icon-files-color)", cursor: "help" }}
-              />
-            </Tooltip>
-          </Group>
-        }
+        {...infoLabelProps(
+          t("attachments.convertToPdfA3b", "Convert to PDF/A-3b"),
+          t(
+            "attachments.convertToPdfA3bTooltip",
+            "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files.",
+          ),
+        )}
         checked={convertToPdfA3b}
         onChange={(event) =>
           onConvertToPdfA3bChange(event.currentTarget.checked)

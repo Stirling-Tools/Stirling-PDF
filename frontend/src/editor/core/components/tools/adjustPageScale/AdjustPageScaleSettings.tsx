@@ -14,6 +14,7 @@ import {
   customSideLimits,
 } from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { orderPaperSizeOptions } from "@editor/utils/paperSize";
 
 const CUSTOM_UNIT_OPTIONS: SegmentedOption<CustomSizeUnit>[] = [
   { value: "mm", label: "mm" },
@@ -88,7 +89,7 @@ const AdjustPageScaleSettings = ({
   const isKeepSelected = parameters.pageSize === PageSize.KEEP;
   const isCustomSelected = parameters.pageSize === PageSize.CUSTOM;
 
-  const pageSizeOptions = [
+  const pageSizeOptions = orderPaperSizeOptions([
     {
       value: PageSize.KEEP,
       label: t("adjustPageScale.pageSize.keep", "Keep Original Size"),
@@ -112,7 +113,7 @@ const AdjustPageScaleSettings = ({
       value: PageSize.CUSTOM,
       label: t("adjustPageScale.pageSize.custom", "Custom"),
     },
-  ];
+  ]);
 
   const sideLimits = customSideLimits(parameters.customUnit);
 

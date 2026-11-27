@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { PDFDocument, PDFName } from "@cantoo/pdf-lib";
 
@@ -6,6 +8,11 @@ import {
   readPortfolioMemberBytes,
   readPortfolioMembers,
 } from "@editor/utils/portfolioMembers";
+
+const EMPTY_PASSWORD_PORTFOLIO = path.join(
+  import.meta.dirname,
+  "../tests/test-fixtures/portfolio-aes-empty-password.pdf",
+);
 
 const buildPdf = async (options: {
   collection: boolean;
@@ -29,7 +36,7 @@ const buildPdf = async (options: {
   Object.defineProperty(file, "arrayBuffer", {
     configurable: true,
     writable: true,
-    value: async () => bytes.buffer.slice(0) as ArrayBuffer,
+    value: async () => bytes.buffer.slice(0),
   });
   return file;
 };
@@ -45,6 +52,30 @@ describe("readPortfolioMembers", () => {
 
     expect(members).toHaveLength(1);
     expect(members?.[0].mimeType).toBe("text/plain");
+  });
+
+  it("lists the members of a portfolio that is encrypted with an empty user password", async () => {
+    // An AES-128 portfolio with an empty user password, the way Acrobat Sign
+    // ships one. See test-fixtures/README.md for how it was made.
+    const bytes = new Uint8Array(await readFile(EMPTY_PASSWORD_PORTFOLIO));
+    const file = new File([bytes], "portfolio.pdf", {
+      type: "application/pdf",
+    });
+    Object.defineProperty(file, "arrayBuffer", {
+      configurable: true,
+      writable: true,
+      value: async () => bytes.buffer.slice(0),
+    });
+
+    const members = await readPortfolioMembers(file);
+
+    expect(members?.map((member) => member.name)).toEqual([
+      "first.txt",
+      "second.txt",
+    ]);
+    expect(await readPortfolioMemberBytes(file, "first.txt")).toEqual(
+      new TextEncoder().encode("first member body"),
+    );
   });
 
   it("returns null for a PDF that is not a portfolio", async () => {

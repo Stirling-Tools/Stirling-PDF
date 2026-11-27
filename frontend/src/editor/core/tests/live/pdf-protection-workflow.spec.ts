@@ -39,13 +39,11 @@ test("saving protection opens the result as a reader and changing permissions pr
     page.getByText("The two passwords must be different."),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Save protection", exact: true }),
+    page.getByRole("button", { name: "Add Password", exact: true }),
   ).toBeDisabled();
   await ownerInput.fill(owner);
   const protection = page.waitForResponse("**/api/v1/security/add-password");
-  await page
-    .getByRole("button", { name: "Save protection", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Add Password", exact: true }).click();
   const protectedResponse = await protection;
   expect(protectedResponse.ok()).toBe(true);
   const protectedBytes = await protectedResponse.body();
@@ -325,9 +323,7 @@ test("a PDF with only an opening password opens and prints after removing its op
   const protectedResponse = page.waitForResponse(
     "**/api/v1/security/add-password",
   );
-  await page
-    .getByRole("button", { name: "Save protection", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Add Password", exact: true }).click();
   const result = await protectedResponse;
   expect(result.ok()).toBe(true);
   expect(await inspect(page, await result.body(), reader)).toMatchObject({

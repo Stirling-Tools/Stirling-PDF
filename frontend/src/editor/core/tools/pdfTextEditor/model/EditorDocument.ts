@@ -46,6 +46,11 @@ import {
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { unnamedFontDrawOrder } from "@editor/tools/pdfTextEditor/pdfdoc/descriptorFontNames";
 import {
+  readConformanceClaim,
+  type FileConformanceClaim,
+  type PdfUaPart,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/conformanceClaim";
+import {
   fileStructureOf,
   type FileStructure,
 } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
@@ -120,6 +125,10 @@ export class EditorDocument {
   private readonly formHazards: Map<number, FormNode[]> | null;
   private readonly unnamedFontOrder: Map<number, Array<string | null>>;
   private marked: boolean;
+  /** The PDF/UA claim as the file has it; null when the file was not read. */
+  private readonly fileClaim: FileConformanceClaim | null;
+  /** The session's PDF/UA claim; undefined when unchanged. */
+  private claimEdit: PdfUaPart | null | undefined;
   private readonly ownedFonts: Map<string, FontRef>;
   private readonly _embeddedFontFiles: Uint8Array[] = [];
   private _disposed: boolean;
@@ -155,8 +164,10 @@ export class EditorDocument {
     fileStructure: FileStructure | null,
     formHazards: Map<number, FormNode[]> | null,
     unnamedFontOrder: Map<number, Array<string | null>>,
+    fileClaim: FileConformanceClaim | null,
   ) {
     this.module = module;
+    this.fileClaim = fileClaim;
     this.formHazards = formHazards;
     this.unnamedFontOrder = unnamedFontOrder;
     this.docPtr = docPtr;
@@ -197,6 +208,9 @@ export class EditorDocument {
     const unnamedFontOrder = raw
       ? await unnamedFontDrawOrder(raw).catch(() => null)
       : null;
+    const fileClaim = raw
+      ? await readConformanceClaim(raw).catch(() => null)
+      : null;
     return new EditorDocument(
       module,
       docPtr,
@@ -204,6 +218,7 @@ export class EditorDocument {
       fileStructure,
       formHazards,
       unnamedFontOrder ?? new Map(),
+      fileClaim,
     );
   }
 
@@ -863,6 +878,34 @@ export class EditorDocument {
     );
   }
 
+  /** The PDF/UA part the saved file will declare (ISO 14289 clause 5); null for none. */
+  conformanceClaim(): number | null {
+    return this.claimEdit === undefined
+      ? (this.fileClaim?.part ?? null)
+      : this.claimEdit;
+  }
+
+  /** False when the save cannot write the claim: the file was too large to keep, is encrypted, or has metadata that cannot be read. */
+  canSetConformanceClaim(): boolean {
+    return this.fileClaim?.writable ?? false;
+  }
+
+  /**
+   * Declare `part`, withdraw the claim with null, or with undefined go back to
+   * the file's own claim. Throws when canSetConformanceClaim() is false.
+   */
+  setConformanceClaim(part: PdfUaPart | null | undefined): void {
+    if (!this.canSetConformanceClaim()) {
+      throw new Error("this file's PDF/UA claim can't be changed");
+    }
+    this.claimEdit = part === (this.fileClaim?.part ?? null) ? undefined : part;
+  }
+
+  /** The claim the save must write; undefined when unchanged. */
+  conformanceClaimEdit(): PdfUaPart | null | undefined {
+    return this.claimEdit;
+  }
+
   /** True when the saved file will have a structure tree, the file's own or one the save creates. */
   hasStructureTree(): boolean {
     if (this.fileStructure?.hasTree) return true;
@@ -1108,6 +1151,7 @@ export class EditorDocument {
       null,
       new Map(),
       new Map(),
+      null,
     );
     return { doc: this.scratch, page: this.scratch.blankPageLike(page) };
   }

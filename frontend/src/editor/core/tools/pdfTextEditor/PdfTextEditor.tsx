@@ -48,6 +48,7 @@ import { DiscardChangesModal } from "@editor/tools/pdfTextEditor/components/Disc
 import { HelpOverlay } from "@editor/tools/pdfTextEditor/components/HelpOverlay";
 import { PasswordPromptModal } from "@editor/tools/pdfTextEditor/components/PasswordPromptModal";
 import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/components/PermissionsPasswordButton";
+import { useReviewConformanceClaimBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewConformanceClaimBridge";
 import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
 import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
@@ -436,6 +437,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   useReviewStart({ store, startAt, sourceFileId, setActiveFileId });
   useReviewLanguageBridge(store, state, sourceFileId, reviewing);
+  useReviewConformanceClaimBridge(store, state, sourceFileId, reviewing);
 
   const pageLayout = useMemo(() => editorPageLayout(store), [store]);
   useRegisterViewerPageTool(

@@ -41,7 +41,7 @@ export interface CommentSourceEntry<
 }
 
 // Without it Excel reads the CSV in the system codepage and mangles non-ASCII text.
-const EXCEL_UTF8_BOM = "﻿";
+const EXCEL_UTF8_BOM = "\uFEFF";
 
 const FORMULA_TRIGGERS = new Set(["=", "+", "-", "@", "\t", "\r"]);
 

@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import { useMemo, useRef } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
   Textarea,
@@ -7,12 +7,8 @@ import {
   Select,
   Text,
   Divider,
-  Accordion,
-  Code,
-  Group,
-  Badge,
-  Box,
   Paper,
+  Box,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import {
@@ -21,7 +17,8 @@ import {
   isQrContentWithinLimit,
 } from "@editor/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
-import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
+import { StampVariablePicker } from "@editor/components/tools/addStamp/StampVariablePicker";
 import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp/StampPreviewUtils";
 import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
@@ -134,36 +131,6 @@ const resolveVariablesForPreview = (
   return result;
 };
 
-interface ClickableCodeProps {
-  children: React.ReactNode;
-  onClick: () => void;
-  block?: boolean;
-}
-
-const ClickableCode = ({
-  children,
-  onClick,
-  block = false,
-}: ClickableCodeProps) => (
-  <Code
-    tabIndex={0}
-    role="button"
-    style={{
-      cursor: "pointer",
-      display: block ? "block" : undefined,
-    }}
-    onClick={onClick}
-    onKeyDown={(e: React.KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        onClick();
-      }
-    }}
-  >
-    {children}
-  </Code>
-);
-
 const StampTextPreview = ({
   stampText,
   filename,
@@ -217,16 +184,41 @@ const StampSetupSettings = ({
   filename,
 }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
+  const stampTextCaret = useRef<{ start: number; end: number } | null>(null);
   const stampImageWithUrl = useFileWithUrl(
     parameters.stampType === "image" ? (parameters.stampImage ?? null) : null,
   );
 
+  const rememberCaret = (textarea: HTMLTextAreaElement) => {
+    stampTextCaret.current = {
+      start: textarea.selectionStart,
+      end: textarea.selectionEnd,
+    };
+  };
+
+  // At the caret the field last had, or at the end before it has had one.
+  const insertVariable = (token: string) => {
+    const text = parameters.stampText;
+    const caret = stampTextCaret.current;
+    const start = Math.min(caret?.start ?? text.length, text.length);
+    const end = Math.min(caret?.end ?? text.length, text.length);
+    onParameterChange(
+      "stampText",
+      text.slice(0, start) + token + text.slice(end),
+    );
+    const after = start + token.length;
+    stampTextCaret.current = { start: after, end: after };
+  };
+
   return (
     <Stack gap="md">
       <TextInput
-        label={t(
-          "pageSelectionPrompt",
-          "Page Selection (e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)",
+        {...infoLabelProps(
+          t("AddStampRequest.pagesToStamp", "Pages to Stamp"),
+          t(
+            "AddStampRequest.pagesToStampInfo",
+            "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1.",
+          ),
         )}
         value={parameters.pageNumbers}
         onChange={(e) =>
@@ -235,27 +227,22 @@ const StampSetupSettings = ({
         disabled={disabled}
       />
       <Divider />
-      <div>
-        <Text size="sm" fw={500} mb="xs">
-          {t("AddStampRequest.stampType", "Stamp Type")}
-        </Text>
-        <ButtonSelector
-          value={parameters.stampType}
-          onChange={(v: "text" | "image" | "qr") => {
-            onParameterChange("stampType", v);
-            if (v === "qr" && parameters.fontSize < DEFAULT_QR_SIZE) {
-              onParameterChange("fontSize", DEFAULT_QR_SIZE);
-            }
-          }}
-          options={[
-            { value: "text", label: t("watermark.type.1", "Text") },
-            { value: "image", label: t("watermark.type.2", "Image") },
-            { value: "qr", label: t("AddStampRequest.qrCode", "QR Code") },
-          ]}
-          disabled={disabled}
-          textClassName={styles.modeToggleButtonText}
-        />
-      </div>
+      <ButtonSelector
+        label={t("AddStampRequest.stampType", "Stamp Type")}
+        value={parameters.stampType}
+        onChange={(v: "text" | "image" | "qr") => {
+          onParameterChange("stampType", v);
+          if (v === "qr" && parameters.fontSize < DEFAULT_QR_SIZE) {
+            onParameterChange("fontSize", DEFAULT_QR_SIZE);
+          }
+        }}
+        options={[
+          { value: "text", label: t("watermark.type.1", "Text") },
+          { value: "image", label: t("watermark.type.2", "Image") },
+          { value: "qr", label: t("AddStampRequest.qrCode", "QR Code") },
+        ]}
+        disabled={disabled}
+      />
 
       {parameters.stampType === "text" && (
         <>
@@ -277,6 +264,7 @@ const StampSetupSettings = ({
             onChange={(value) => {
               const template = STAMP_TEMPLATES.find((t) => t.id === value);
               if (template) {
+                stampTextCaret.current = null;
                 onParameterChange("stampText", template.text);
                 onParameterChange(
                   "position",
@@ -292,21 +280,36 @@ const StampSetupSettings = ({
             }}
           />
 
-          <Textarea
-            label={t("AddStampRequest.stampText", "Stamp Text")}
-            description={t(
-              "AddStampRequest.stampTextDescription",
-              "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines.",
-            )}
-            value={parameters.stampText}
-            className={privateContentClassName}
-            onChange={(e) =>
-              onParameterChange("stampText", e.currentTarget.value)
-            }
-            autosize
-            minRows={2}
-            disabled={disabled}
-          />
+          <Box pos="relative">
+            <Textarea
+              {...infoLabelProps(
+                t("AddStampRequest.stampText", "Stamp Text"),
+                <Trans
+                  i18nKey="AddStampRequest.stampTextInfo"
+                  defaults="Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\n</code> for a new line and <code>@@</code> for a literal @."
+                  components={{ code: <code /> }}
+                />,
+              )}
+              value={parameters.stampText}
+              className={privateContentClassName}
+              onChange={(e) => {
+                rememberCaret(e.currentTarget);
+                onParameterChange("stampText", e.currentTarget.value);
+              }}
+              onSelect={(e) => rememberCaret(e.currentTarget)}
+              autosize
+              minRows={2}
+              disabled={disabled}
+            />
+            <StampVariablePicker
+              onInsert={insertVariable}
+              onUseExample={(text) => {
+                stampTextCaret.current = null;
+                onParameterChange("stampText", text);
+              }}
+              disabled={disabled}
+            />
+          </Box>
 
           {/* Live Preview */}
           <StampTextPreview
@@ -314,345 +317,6 @@ const StampSetupSettings = ({
             filename={filename}
           />
 
-          <Accordion variant="contained" radius="sm">
-            <Accordion.Item value="variables">
-              <Accordion.Control>
-                <Group gap="xs">
-                  <Text size="sm" fw={500}>
-                    {t("AddStampRequest.dynamicVariables", "Dynamic Variables")}
-                  </Text>
-                  <Badge size="xs" variant="light" color="blue">
-                    {t("AddStampRequest.clickToExpand", "Click to expand")}
-                  </Badge>
-                </Group>
-              </Accordion.Control>
-              <Accordion.Panel>
-                <Stack gap="xs">
-                  <Text size="xs" c="dimmed" mb="xs">
-                    {t(
-                      "AddStampRequest.variablesHelp",
-                      "Click on any variable to insert it into your stamp text. Use @@ for literal @.",
-                    )}
-                  </Text>
-                  <Box>
-                    <Text size="xs" fw={600} mb={4}>
-                      {t("AddStampRequest.dateTimeVars", "Date & Time")}
-                    </Text>
-                    <Group gap="xs">
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@date",
-                          )
-                        }
-                      >
-                        @date
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.dateDesc", "Current date")}{" "}
-                        (YYYY-MM-DD)
-                      </Text>
-                    </Group>
-                    <Group gap="xs" mt={4}>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@time",
-                          )
-                        }
-                      >
-                        @time
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.timeDesc", "Current time")}{" "}
-                        (HH:mm:ss)
-                      </Text>
-                    </Group>
-                    <Group gap="xs" mt={4}>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@datetime",
-                          )
-                        }
-                      >
-                        @datetime
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        —{" "}
-                        {t(
-                          "AddStampRequest.datetimeDesc",
-                          "Date and time combined",
-                        )}
-                      </Text>
-                    </Group>
-                    <Group gap="xs" mt={4}>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@date{dd/MM/yyyy}",
-                          )
-                        }
-                      >
-                        @date&#123;format&#125;
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.customDateDesc", "Custom format")}
-                      </Text>
-                    </Group>
-                    <Group gap="xs" mt={4}>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@year",
-                          )
-                        }
-                      >
-                        @year
-                      </ClickableCode>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@month",
-                          )
-                        }
-                      >
-                        @month
-                      </ClickableCode>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@day",
-                          )
-                        }
-                      >
-                        @day
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        —{" "}
-                        {t(
-                          "AddStampRequest.yearMonthDayDesc",
-                          "Individual date parts",
-                        )}
-                      </Text>
-                    </Group>
-                  </Box>
-                  <Divider my="xs" />
-                  <Box>
-                    <Text size="xs" fw={600} mb={4}>
-                      {t("AddStampRequest.pageVars", "Page Information")}
-                    </Text>
-                    <Group gap="xs">
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@page_number",
-                          )
-                        }
-                      >
-                        @page_number
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        —{" "}
-                        {t(
-                          "AddStampRequest.pageNumberDesc",
-                          "Current page number",
-                        )}
-                      </Text>
-                    </Group>
-                    <Group gap="xs" mt={4}>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@total_pages",
-                          )
-                        }
-                      >
-                        @total_pages
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        —{" "}
-                        {t(
-                          "AddStampRequest.totalPagesDesc",
-                          "Total number of pages",
-                        )}
-                      </Text>
-                    </Group>
-                  </Box>
-                  <Divider my="xs" />
-                  <Box>
-                    <Text size="xs" fw={600} mb={4}>
-                      {t("AddStampRequest.fileVars", "File Information")}
-                    </Text>
-                    <Group gap="xs">
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@filename",
-                          )
-                        }
-                      >
-                        @filename
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        —{" "}
-                        {t(
-                          "AddStampRequest.filenameDesc",
-                          "Filename without extension",
-                        )}
-                      </Text>
-                    </Group>
-                    <Group gap="xs" mt={4}>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@filename_full",
-                          )
-                        }
-                      >
-                        @filename_full
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        —{" "}
-                        {t(
-                          "AddStampRequest.filenameFullDesc",
-                          "Filename with extension",
-                        )}
-                      </Text>
-                    </Group>
-                  </Box>
-                  <Divider my="xs" />
-                  <Box>
-                    <Text size="xs" fw={600} mb={4}>
-                      {t("AddStampRequest.metadataVars", "Document Metadata")}
-                    </Text>
-                    <Group gap="xs">
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@author",
-                          )
-                        }
-                      >
-                        @author
-                      </ClickableCode>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@title",
-                          )
-                        }
-                      >
-                        @title
-                      </ClickableCode>
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@subject",
-                          )
-                        }
-                      >
-                        @subject
-                      </ClickableCode>
-                    </Group>
-                    <Text size="xs" c="dimmed" mt={4}>
-                      —{" "}
-                      {t(
-                        "AddStampRequest.metadataDesc",
-                        "From PDF document properties",
-                      )}
-                    </Text>
-                  </Box>
-                  <Divider my="xs" />
-                  <Box>
-                    <Text size="xs" fw={600} mb={4}>
-                      {t("AddStampRequest.otherVars", "Other")}
-                    </Text>
-                    <Group gap="xs">
-                      <ClickableCode
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            parameters.stampText + "@uuid",
-                          )
-                        }
-                      >
-                        @uuid
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        —{" "}
-                        {t(
-                          "AddStampRequest.uuidDesc",
-                          "Short unique identifier (8 chars)",
-                        )}
-                      </Text>
-                    </Group>
-                  </Box>
-                  <Divider my="xs" />
-                  <Box>
-                    <Text size="xs" fw={600} mb={4}>
-                      {t("AddStampRequest.examples", "Examples")}
-                    </Text>
-                    <Stack gap={4}>
-                      <ClickableCode
-                        block
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            "Page @page_number of @total_pages",
-                          )
-                        }
-                      >
-                        Page @page_number of @total_pages
-                      </ClickableCode>
-                      <ClickableCode
-                        block
-                        onClick={() =>
-                          onParameterChange(
-                            "stampText",
-                            "Created: @date{dd/MM/yyyy HH:mm}",
-                          )
-                        }
-                      >
-                        Created: @date&#123;dd/MM/yyyy HH:mm&#125;
-                      </ClickableCode>
-                      <ClickableCode
-                        block
-                        onClick={() =>
-                          onParameterChange("stampText", "© @year @author")
-                        }
-                      >
-                        © @year @author
-                      </ClickableCode>
-                      <ClickableCode
-                        block
-                        onClick={() =>
-                          onParameterChange("stampText", "@filename\\n@date")
-                        }
-                      >
-                        @filename\n@date (
-                        {t("AddStampRequest.multiLine", "multi-line")})
-                      </ClickableCode>
-                    </Stack>
-                  </Box>
-                </Stack>
-              </Accordion.Panel>
-            </Accordion.Item>
-          </Accordion>
           <Select
             label={t("AddStampRequest.alphabet", "Alphabet")}
             value={parameters.alphabet}
@@ -678,10 +342,12 @@ const StampSetupSettings = ({
 
       {parameters.stampType === "qr" && (
         <Textarea
-          label={t("AddStampRequest.qrContent", "QR Code Content")}
-          description={t(
-            "AddStampRequest.qrContentDescription",
-            "Text or link to encode. Dynamic variables such as @filename and @page_number are supported.",
+          {...infoLabelProps(
+            t("AddStampRequest.qrContent", "QR Code Content"),
+            t(
+              "AddStampRequest.qrContentDescription",
+              "Text or link to encode. Dynamic variables such as @filename and @page_number are supported.",
+            ),
           )}
           value={parameters.stampText}
           className={privateContentClassName}
@@ -716,7 +382,7 @@ const StampSetupSettings = ({
             id="stamp-image-input"
           />
           <Button
-            size="sm"
+            variant="secondary"
             as="label"
             htmlFor="stamp-image-input"
             disabled={disabled}

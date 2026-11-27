@@ -197,6 +197,7 @@ export default function RightSidebar() {
                           />
                         }
                         title={activeTool.name}
+                        description={activeTool.description}
                         onClose={handleClose}
                         closeLabel={t(
                           "toolPanel.backToAllTools",

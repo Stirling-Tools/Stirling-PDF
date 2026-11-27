@@ -41,7 +41,7 @@ describe("AddPasswordSettings", () => {
     ).toBeInTheDocument();
   });
 
-  test("should render encryption key length select", () => {
+  test("should render encryption strength as a segmented control", () => {
     render(
       <TestWrapper>
         <AddPasswordSettings
@@ -51,10 +51,7 @@ describe("AddPasswordSettings", () => {
       </TestWrapper>,
     );
 
-    // Should render key length select input
-    expect(
-      screen.getByRole("textbox", { name: /keyLength/i }),
-    ).toBeInTheDocument();
+    expect(screen.getAllByRole("radio")).toHaveLength(3);
   });
 
   test("should render main component sections", () => {
@@ -102,22 +99,15 @@ describe("AddPasswordSettings", () => {
       </TestWrapper>,
     );
 
-    // Find key length select and change it
-    const keyLengthSelect = screen.getByText(
-      "mock-addPassword.encryption.keyLength.128bit",
+    fireEvent.click(
+      screen.getByText("mock-addPassword.encryption.keyLength.256bit"),
     );
-
-    fireEvent.mouseDown(keyLengthSelect);
-    const option256 = screen.getByText(
-      "mock-addPassword.encryption.keyLength.256bit",
-    );
-    fireEvent.click(option256);
 
     expect(mockOnParameterChange).toHaveBeenCalledWith("keyLength", 256);
   });
 
   test("should disable all form elements when disabled prop is true", () => {
-    render(
+    const { container } = render(
       <TestWrapper>
         <AddPasswordSettings
           parameters={defaultParameters}
@@ -127,20 +117,13 @@ describe("AddPasswordSettings", () => {
       </TestWrapper>,
     );
 
-    // Check password inputs are disabled
-    const passwordInputs = screen.getAllByRole("textbox");
-    passwordInputs.forEach((input) => {
+    container.querySelectorAll("input").forEach((input) => {
       expect(input).toBeDisabled();
     });
-
-    // Check key length select is disabled - simplified test due to Mantine complexity
-    expect(
-      screen.getByText("mock-addPassword.encryption.keyLength.128bit"),
-    ).toBeInTheDocument();
   });
 
   test("should enable all form elements when disabled prop is false", () => {
-    render(
+    const { container } = render(
       <TestWrapper>
         <AddPasswordSettings
           parameters={defaultParameters}
@@ -150,34 +133,9 @@ describe("AddPasswordSettings", () => {
       </TestWrapper>,
     );
 
-    // Check password inputs are enabled
-    const passwordInputs = screen.getAllByRole("textbox");
-    passwordInputs.forEach((input) => {
+    container.querySelectorAll("input").forEach((input) => {
       expect(input).not.toBeDisabled();
     });
-
-    // Check key length select is enabled - simplified test due to Mantine complexity
-    expect(
-      screen.getByText("mock-addPassword.encryption.keyLength.128bit"),
-    ).toBeInTheDocument();
-  });
-
-  test("should toggle the advanced disclosure", () => {
-    render(
-      <TestWrapper>
-        <AddPasswordSettings
-          parameters={defaultParameters}
-          onParameterChange={mockOnParameterChange}
-        />
-      </TestWrapper>,
-    );
-
-    const toggle = screen.getByRole("button", {
-      name: "mock-encryptedPdfUnlock.advanced",
-    });
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(toggle);
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
 
   test("should call translation function with correct keys", () => {
@@ -201,22 +159,9 @@ describe("AddPasswordSettings", () => {
     );
   });
 
-  test.each([
-    {
-      keyLength: 40,
-      expectedLabel: "mock-addPassword.encryption.keyLength.40bit",
-    },
-    {
-      keyLength: 128,
-      expectedLabel: "mock-addPassword.encryption.keyLength.128bit",
-    },
-    {
-      keyLength: 256,
-      expectedLabel: "mock-addPassword.encryption.keyLength.256bit",
-    },
-  ])(
-    "should handle key length $keyLength correctly",
-    ({ keyLength, expectedLabel }) => {
+  test.each([40, 128, 256])(
+    "should mark key length %i as selected",
+    (keyLength) => {
       render(
         <TestWrapper>
           <AddPasswordSettings
@@ -226,7 +171,11 @@ describe("AddPasswordSettings", () => {
         </TestWrapper>,
       );
 
-      expect(screen.getByText(expectedLabel)).toBeInTheDocument();
+      const checked = screen
+        .getAllByRole("radio")
+        .filter((radio) => (radio as HTMLInputElement).checked);
+      expect(checked).toHaveLength(1);
+      expect(checked[0]).toHaveAttribute("value", String(keyLength));
     },
   );
 });

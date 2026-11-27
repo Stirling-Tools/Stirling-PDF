@@ -10,6 +10,8 @@ import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabl
 import { useIsWorkbenchFileDragOver } from "@editor/components/layout/useWorkbenchFileDrop";
 import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
+import { useVisibleBulkAddProgress } from "@editor/services/bulkAddProgress";
+import { BulkAddProgressBar } from "@editor/components/shared/BulkAddProgressBar";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -19,6 +21,19 @@ import styles from "@editor/components/fileEditor/AddFileCard.module.css";
 interface AddFileCardProps {
   /** Receives files from the computer and mobile sources; the library adds its own. */
   onFilesSelected: (files: File[]) => void;
+}
+
+/** Isolates per-file progress updates from the card's renders. */
+function AddFileCardHint() {
+  const { t } = useTranslation();
+  const progress = useVisibleBulkAddProgress();
+  // The sidebar's bar announces the same progress.
+  if (progress) return <BulkAddProgressBar progress={progress} />;
+  return (
+    <div className={styles.hint}>
+      {t("fileEditor.addCard.dropHint", "or drop files anywhere")}
+    </div>
+  );
 }
 
 /**
@@ -137,9 +152,7 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
               </Tooltip>
             )}
           </div>
-          <div className={styles.hint}>
-            {t("fileEditor.addCard.dropHint", "or drop files anywhere")}
-          </div>
+          <AddFileCardHint />
         </div>
       </div>
 

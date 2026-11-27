@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
-import { Stack, Text, Select } from "@mantine/core";
+import { Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
   TimestampPdfParameters,
   FALLBACK_TSA_PRESETS,
 } from "@editor/hooks/tools/timestampPdf/useTimestampPdfParameters";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface TimestampPdfSettingsProps {
   parameters: TimestampPdfParameters;
@@ -50,32 +51,19 @@ const TimestampPdfSettings = ({
   }, [config?.timestampDefaultTsaUrl]);
 
   return (
-    <Stack gap="md">
-      <Text size="sm" fw={500}>
-        {t("timestampPdf.options.title", "Timestamp Server (TSA)")}
-      </Text>
-
-      <Select
-        label={t("timestampPdf.options.tsaUrl.label", "Select a TSA server")}
-        description={t(
-          "timestampPdf.options.tsaUrl.desc",
-          "Pick a trusted Time Stamp Authority",
-        )}
-        data={selectData}
-        value={parameters.tsaUrl}
-        onChange={(value) =>
-          onParameterChange("tsaUrl", value ?? presets[0].url)
-        }
-        disabled={disabled}
-      />
-
-      <Text size="xs" c="dimmed">
-        {t(
+    <Select
+      {...infoLabelProps(
+        t("timestampPdf.options.tsaUrl.label", "Timestamp server"),
+        t(
           "timestampPdf.options.note",
           "Only a SHA-256 hash of your document is sent to the TSA server; the PDF file itself is never sent to the TSA server.",
-        )}
-      </Text>
-    </Stack>
+        ),
+      )}
+      data={selectData}
+      value={parameters.tsaUrl}
+      onChange={(value) => onParameterChange("tsaUrl", value ?? presets[0].url)}
+      disabled={disabled}
+    />
   );
 };
 

@@ -5,7 +5,7 @@ import SignatureSettingsInput, {
 } from "@editor/components/tools/certSign/SignatureSettingsInput";
 
 const meta = {
-  title: "Tools/CertSign/SignatureSettingsInput",
+  title: "Tools/Sign with Certificate/Parts/SignatureSettingsInput",
   component: SignatureSettingsInput,
   parameters: { layout: "padded" },
   args: {

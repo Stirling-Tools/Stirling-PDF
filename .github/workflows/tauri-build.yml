@@ -222,7 +222,7 @@ jobs:
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
       - name: Set up JDK 25 (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: "25"
           distribution: "microsoft"
@@ -794,7 +794,7 @@ jobs:
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
       - name: Set up JDK 25 (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: "25"
           distribution: "microsoft"

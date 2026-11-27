@@ -11,10 +11,10 @@ engine = [
     "cryptography>=50.0.2",
     "fastapi>=0.162.2",
     "opentelemetry-sdk>=1.45.2",
-    "pgvector>=0.5.0",
+    "pgvector>=0.5.1",
     "posthog>=7.53.0",
     "psycopg[binary,pool]>=3.3.6",
-    "pydantic>=2.13.5",
+    "pydantic>=2.14.3",
     # Keep the supported 1.x API while including its security backports.
     # Explicit extras: the `pydantic-ai` meta-package pulls all 20 providers (~230MB).
     # No `voyageai` extra either; stirling.documents.voyage speaks its API directly.
@@ -28,8 +28,8 @@ engine = [
 ]
 # Type checking, testing, model generation, and formatting tools for the engine.
 engine-dev = [
-    "anyio>=4.14.2",
-    "datamodel-code-generator[ruff]==0.64.0",
+    "anyio>=4.16.0",
+    "datamodel-code-generator[ruff]==0.97.0",
     "pyrefly==1.4.1",
     "pytest>=9.1.1",
     "referencing>=0.37.0",

@@ -351,48 +351,60 @@ it("acknowledges a request only after its detail and PDF have opened", async () 
   ).toBe(false);
 });
 
-it("acknowledges an expired invitation even when the empty document error arrives first", async () => {
-  expectConsole.error(/Failed to load sign request/);
-  let failDetail!: (reason: unknown) => void;
-  mocks.get.mockImplementation((url: string) =>
-    url.endsWith("/document")
-      ? Promise.reject({
-          isAxiosError: true,
-          response: { status: 403, data: new Blob() },
-        })
-      : new Promise((_, reject) => {
-          failDetail = reject;
-        }),
-  );
-  const { result } = renderHook(() => useSigningSessionController(true));
-  let opening!: Promise<void>;
-  act(() => {
-    opening = result.current.openSignRequest(request);
-  });
-  await act(async () => {
-    failDetail({
-      isAxiosError: true,
-      response: {
-        status: 403,
-        data: 'Access denied or sign request not found: 403 FORBIDDEN "Participant access expired"',
-      },
+const EXPIRED_REASON =
+  'Access denied or sign request not found: 403 FORBIDDEN "Participant access expired"';
+
+it.each([
+  ["raw text", EXPIRED_REASON],
+  [
+    "a ProblemDetail",
+    { title: "Forbidden", status: 403, detail: EXPIRED_REASON },
+  ],
+])(
+  "acknowledges an expired invitation sent as %s even when the empty document error arrives first",
+  async (_form, expiredBody) => {
+    expectConsole.error(/Failed to load sign request/);
+    let failDetail!: (reason: unknown) => void;
+    mocks.get.mockImplementation((url: string) =>
+      url.endsWith("/document")
+        ? Promise.reject({
+            isAxiosError: true,
+            response: { status: 403, data: new Blob() },
+          })
+        : new Promise((_, reject) => {
+            failDetail = reject;
+          }),
+    );
+    const { result } = renderHook(() => useSigningSessionController(true));
+    let opening!: Promise<void>;
+    act(() => {
+      opening = result.current.openSignRequest(request);
     });
-    await opening;
-  });
-  expect(result.current.view).toBe("list");
-  expect(result.current.requestData).toBeNull();
-  expect(
-    hasUnseenSigningActivity("alice", { ...request, kind: "request" }),
-  ).toBe(false);
-  expect(mocks.alert).toHaveBeenLastCalledWith(
-    expect.objectContaining({ body: "signRequest.accessExpired" }),
-  );
-  expect(mocks.refetch).toHaveBeenCalledOnce();
-  expect(mocks.get).toHaveBeenCalledWith(expect.stringContaining("/document"), {
-    responseType: "blob",
-    suppressErrorToast: true,
-  });
-});
+    await act(async () => {
+      failDetail({
+        isAxiosError: true,
+        response: { status: 403, data: expiredBody },
+      });
+      await opening;
+    });
+    expect(result.current.view).toBe("list");
+    expect(result.current.requestData).toBeNull();
+    expect(
+      hasUnseenSigningActivity("alice", { ...request, kind: "request" }),
+    ).toBe(false);
+    expect(mocks.alert).toHaveBeenLastCalledWith(
+      expect.objectContaining({ body: "signRequest.accessExpired" }),
+    );
+    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(mocks.get).toHaveBeenCalledWith(
+      expect.stringContaining("/document"),
+      {
+        responseType: "blob",
+        suppressErrorToast: true,
+      },
+    );
+  },
+);
 
 it.each([
   { isAxiosError: true, response: { status: 500, data: "Server unavailable" } },

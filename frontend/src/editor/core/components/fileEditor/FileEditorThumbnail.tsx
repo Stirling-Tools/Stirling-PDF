@@ -29,7 +29,6 @@ import ToolChain from "@editor/components/shared/ToolChain";
 import HoverActionMenu, {
   HoverAction,
 } from "@editor/components/shared/HoverActionMenu";
-import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { CloseFilesConfirmModal } from "@editor/components/shared/CloseFilesConfirmModal";
 import UploadToServerModal from "@editor/components/shared/UploadToServerModal";
 import ShareFileModal from "@editor/components/shared/ShareFileModal";
@@ -41,8 +40,9 @@ import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { Tooltip as StirlingTooltip } from "@editor/components/shared/Tooltip";
 import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
 import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
-import { truncateCenter } from "@editor/utils/textUtils";
 import { FileEditorStatusDot } from "@editor/components/fileEditor/FileEditorStatusDot";
+import FileEditorFileName from "@editor/components/fileEditor/FileEditorFileName";
+import { renameStoredFile } from "@editor/services/renameStoredFile";
 import type { SaveTarget } from "@editor/services/saveTargets";
 import { SAVES_TO_DISK } from "@editor/services/downloadService";
 import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityContext";
@@ -187,6 +187,7 @@ const FileEditorThumbnail = ({
   }, [file.lastModified]);
 
   const [isDragging, setIsDragging] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -199,17 +200,21 @@ const FileEditorThumbnail = ({
 
       dragElementRef.current = element;
 
-      const dragCleanup = draggable({
-        element,
-        getInitialData: () => ({
-          type: "file",
-          fileId: file.id,
-          fileName: file.name,
-          selectedFiles: [file.id],
-        }),
-        onDragStart: () => setIsDragging(true),
-        onDrop: () => setIsDragging(false),
-      });
+      // Text in an input inside a native draggable can't be selected with
+      // the mouse, so the card stops being draggable while it's renamed.
+      const dragCleanup = renaming
+        ? undefined
+        : draggable({
+            element,
+            getInitialData: () => ({
+              type: "file",
+              fileId: file.id,
+              fileName: file.name,
+              selectedFiles: [file.id],
+            }),
+            onDragStart: () => setIsDragging(true),
+            onDrop: () => setIsDragging(false),
+          });
 
       const dropCleanup = dropTargetForElements({
         element,
@@ -232,11 +237,27 @@ const FileEditorThumbnail = ({
       });
 
       return () => {
-        dragCleanup();
+        dragCleanup?.();
         dropCleanup();
       };
     },
-    [file.id, file.name, onReorderFiles],
+    [file.id, file.name, onReorderFiles, renaming],
+  );
+
+  const renameFile = useCallback(
+    async (name: string) => {
+      const saved = await renameStoredFile(
+        file,
+        name,
+        fileActions.updateStirlingFileStub,
+      );
+      if (!saved) {
+        throw new Error(
+          t("fileSidebar.rename.error", "Could not rename the file."),
+        );
+      }
+    },
+    [file, fileActions, t],
   );
 
   const handleCloseWithConfirmation = useCallback(
@@ -737,9 +758,12 @@ const FileEditorThumbnail = ({
       {/* File name + meta */}
       <div className={styles.fileText}>
         <p className={styles.fileName}>
-          <span className={styles.fileNameText}>
-            <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
-          </span>
+          <FileEditorFileName
+            file={file}
+            editing={renaming}
+            onEditingChange={setRenaming}
+            onRename={renameFile}
+          />
           {pdfAccess?.encrypted && (
             <StirlingTooltip
               content={t(

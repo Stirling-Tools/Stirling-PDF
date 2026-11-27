@@ -44,6 +44,10 @@ export interface SegmentedControlProps<T extends string> {
   loading?: boolean;
   /** Accessible name for the radiogroup. */
   ariaLabel?: string;
+  /** Id of the element that names the radiogroup, when it has a visible label. */
+  ariaLabelledBy?: string;
+  /** Id of the element that describes the radiogroup. */
+  ariaDescribedBy?: string;
   className?: string;
   style?: CSSProperties;
 }
@@ -60,6 +64,8 @@ export function SegmentedControl<T extends string>({
   disabled = false,
   loading = false,
   ariaLabel,
+  ariaLabelledBy,
+  ariaDescribedBy,
   className,
   style,
 }: SegmentedControlProps<T>) {
@@ -97,6 +103,8 @@ export function SegmentedControl<T extends string>({
       fullWidth={fullWidth}
       disabled={disabled || loading}
       aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
     />
   );
 }

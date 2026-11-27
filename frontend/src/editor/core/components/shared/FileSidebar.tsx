@@ -73,7 +73,9 @@ import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
 import { useOpenInNewWindow } from "@editor/extensions/openInNewWindow";
 import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
 import { alert } from "@editor/components/toast";
-import { useBulkAddProgress } from "@editor/services/bulkAddProgress";
+import { libraryFileDate } from "@editor/components/filesPage/libraryFileDate";
+import { useVisibleBulkAddProgress } from "@editor/services/bulkAddProgress";
+import { BulkAddProgressBar } from "@editor/components/shared/BulkAddProgressBar";
 import { useIsScrolled } from "@editor/hooks/useIsScrolled";
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { useCoalescedCallback } from "@editor/hooks/useCoalescedCallback";
@@ -96,9 +98,6 @@ const SIDEBAR_WIDTH = "var(--sidebar-w)";
 // Stable empty props for rows without policies, so the memoized
 // FileItem isn't re-rendered by a fresh `?? []` identity on every list render.
 const NO_POLICIES: never[] = [];
-
-/** Show pre-dispatch progress only for large drops; small imports finish before it paints. */
-const BULK_ADD_INDICATOR_MIN = 8;
 
 export interface FileSidebarProps {
   onOpenSettings?: () => void;
@@ -124,29 +123,14 @@ export interface FileSidebarProps {
 
 /** Isolates per-file progress updates from the sidebar's file-list renders. */
 function BulkAddProgressRow() {
-  const { t } = useTranslation();
-  const bulkAdd = useBulkAddProgress();
-  if (bulkAdd.total < BULK_ADD_INDICATOR_MIN || bulkAdd.done >= bulkAdd.total) {
-    return null;
-  }
-  return (
-    <div className="file-sidebar-bulk-add" role="status" aria-live="polite">
-      <div className="file-sidebar-bulk-add-label">
-        <span>{t("fileSidebar.addingFiles", "Adding files…")}</span>
-        <span className="file-sidebar-bulk-add-count">
-          {bulkAdd.done}/{bulkAdd.total}
-        </span>
-      </div>
-      <div className="file-sidebar-bulk-add-track">
-        <div
-          className="file-sidebar-bulk-add-bar"
-          style={{
-            width: `${Math.round((bulkAdd.done / bulkAdd.total) * 100)}%`,
-          }}
-        />
-      </div>
-    </div>
-  );
+  const progress = useVisibleBulkAddProgress();
+  return progress ? (
+    <BulkAddProgressBar
+      progress={progress}
+      className="file-sidebar-bulk-add"
+      announce
+    />
+  ) : null;
 }
 
 /** Isolates library-state subscriptions from the sidebar used by every workspace. */
@@ -372,6 +356,8 @@ interface FileGroupProps {
   renderFileRow: RenderFileRow;
   /** A control beside the header; the header is itself a button, so it can't nest. */
   action?: React.ReactNode;
+  /** Shown under the header, open or collapsed. */
+  status?: React.ReactNode;
 }
 
 function FileGroup({
@@ -380,6 +366,7 @@ function FileGroup({
   onToggle,
   renderFileRow,
   action,
+  status,
 }: FileGroupProps) {
   return (
     <div className="file-sidebar-group">
@@ -408,6 +395,7 @@ function FileGroup({
         </Button>
         {action}
       </div>
+      {status}
       <div className="file-sidebar-group-items">
         {isOpen && group.stubs.map(renderFileRow)}
       </div>
@@ -425,6 +413,8 @@ interface GroupedFileListProps {
   onViewAll: () => void;
   /** Absent when nothing is clearable, which hides the button. */
   onClearRecents?: () => void;
+  /** The group that shows upload progress under its header. */
+  progressGroupId?: string;
 }
 
 function GroupedFileList({
@@ -435,6 +425,7 @@ function GroupedFileList({
   total,
   onViewAll,
   onClearRecents,
+  progressGroupId,
 }: GroupedFileListProps) {
   const { t } = useTranslation();
   return (
@@ -455,6 +446,9 @@ function GroupedFileList({
                   className="file-sidebar-group-action"
                 />
               ) : undefined
+            }
+            status={
+              group.id === progressGroupId ? <BulkAddProgressRow /> : undefined
             }
           />
         );
@@ -532,7 +526,7 @@ function LibraryFileList({
 
 interface FileLibrarySectionProps extends Omit<
   LibraryFileListProps,
-  "scrollRef"
+  "scrollRef" | "progressGroupId"
 > {
   cloudPickers: CloudFilePicker[];
   onCloudPick: (picker: CloudFilePicker) => void;
@@ -546,6 +540,9 @@ function FileLibrarySection({
   ...list
 }: FileLibrarySectionProps) {
   const { scrolled, scrollRef } = useIsScrolled();
+  // Under Recent when the list has one, as the newest files land there;
+  // otherwise above the list.
+  const progressGroupId = list.groups?.find((g) => g.id === "recent")?.id;
   return (
     <div className="file-sidebar-files-section sidebar-content-fade">
       <LibraryHeader
@@ -557,8 +554,12 @@ function FileLibrarySection({
         onOpenFilesPage={list.onOpenFilesPage}
         onClearRecents={list.groups ? undefined : list.onClearRecents}
       />
-      <BulkAddProgressRow />
-      <LibraryFileList scrollRef={scrollRef} {...list} />
+      {!progressGroupId && <BulkAddProgressRow />}
+      <LibraryFileList
+        scrollRef={scrollRef}
+        progressGroupId={progressGroupId}
+        {...list}
+      />
     </div>
   );
 }
@@ -650,10 +651,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the user is signed in (guests have no cloud library).
     const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
-    // Only the newest read may publish: coalesced refreshes overlap when a scan
-    // outlasts the window, and a slow one finishing last would otherwise
-    // overwrite the newer library with the state it started from.
+    // Coalesced refreshes overlap when a scan outlasts the window. A read may
+    // publish unless a newer one already has: dropping every superseded read
+    // would leave the list frozen for as long as a long upload keeps them coming.
     const stubsGenRef = useRef(0);
+    const publishedGenRef = useRef(0);
     const refreshStubs = useCallback(async () => {
       const gen = ++stubsGenRef.current;
       // `stubsLoaded` gates the spinner, so the `finally` below must set it on
@@ -666,7 +668,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         // should cost the user their history, not the file they're working on.
         console.error("Failed to read the file library from storage:", error);
       }
-      if (gen !== stubsGenRef.current) return;
+      if (gen <= publishedGenRef.current) return;
+      publishedGenRef.current = gen;
 
       try {
         const idbIds = new Set(stubs.map((s) => s.id as string));
@@ -688,11 +691,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         );
         setAllFileStubs(
           currentStubs.sort(
-            (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
+            (a, b) =>
+              libraryFileDate(b, "recent") - libraryFileDate(a, "recent"),
           ),
         );
       } finally {
-        if (gen === stubsGenRef.current) setStubsLoaded(true);
+        setStubsLoaded(true);
       }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
@@ -702,8 +706,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // The hook cancels timers but cannot cancel a started run, so unmount has to
     // invalidate it here or a late scan would publish into a gone tree.
     useEffect(() => {
+      publishedGenRef.current = stubsGenRef.current;
       return () => {
-        stubsGenRef.current++;
+        publishedGenRef.current = Infinity;
       };
     }, []);
 

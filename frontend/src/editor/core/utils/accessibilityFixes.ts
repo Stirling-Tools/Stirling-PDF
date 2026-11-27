@@ -1,4 +1,5 @@
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
+import type { PdfUaPart } from "@editor/tools/pdfTextEditor/pdfdoc/passes/conformanceClaim";
 import { knownRuleKey } from "@editor/utils/accessibilityPlainLanguage";
 
 /**
@@ -40,4 +41,32 @@ export function fixTargetFor(
 ): AccessibilityFixTarget | null {
   const key = knownRuleKey(issue);
   return key ? (FIX_TARGETS[key] ?? null) : null;
+}
+
+/** Rule keys a fresh declaration fixes: it is written under the prefix the standard requires. */
+const CLAIM_RULES: ReadonlySet<string> = new Set([
+  "noConformanceClaim",
+  "conformancePrefix",
+]);
+
+/** The PDF/UA part whose declaration fixes `issue`; null when declaring does not. */
+export function conformanceClaimFixFor(
+  issue: AccessibilityIssue,
+): PdfUaPart | null {
+  const key = knownRuleKey(issue);
+  return key && CLAIM_RULES.has(key) ? profilePart(issue.specification) : null;
+}
+
+/** The part a report's profile name, such as "PDF/UA-1", checks against. */
+export function profilePart(
+  profile: string | null | undefined,
+): PdfUaPart | null {
+  switch (profile) {
+    case "PDF/UA-1":
+      return 1;
+    case "PDF/UA-2":
+      return 2;
+    default:
+      return null;
+  }
 }

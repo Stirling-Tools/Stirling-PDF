@@ -24,6 +24,15 @@ import { PreferencesProvider } from "@editor-core/contexts/PreferencesContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
 import { handlers } from "@processor/mocks/handlers";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import { mockDesktopIpc } from "./desktopIpc";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import { flavorHandlers, startFlavor } from "./flavorSetup";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import {
+  installStorybookFilePicker,
+  withStorybookFilePicker,
+} from "./storybookFilePicker";
 import { configureSupabase } from "@editor-proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -97,7 +106,18 @@ if (!i18next.isInitialized) {
 }
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
-initialize({ onUnhandledRequest: "bypass" }, handlers);
+initialize({ onUnhandledRequest: "bypass" }, [...handlers, ...flavorHandlers]);
+
+installStorybookFilePicker();
+
+if (import.meta.env.STORYBOOK_FLAVOR === "desktop") {
+  mockDesktopIpc();
+  // The app's own onboarding bypass (?bypassOnboarding=true). Desktop shows its
+  // welcome flow over everything on a fresh profile, which every story run is.
+  sessionStorage.setItem("onboarding::bypass-all", "true");
+}
+
+startFlavor();
 
 // PortalApp wraps the app in a QueryClientProvider, so any component reaching a
 // shared query hook throws "No QueryClient set" without one here. `retry: false`
@@ -240,9 +260,33 @@ const preview: Preview = {
   // the run. Unset — the Storybook UI — falls back to the toolbar default.
   initialGlobals: {
     theme: import.meta.env.VITE_SCAN_THEME === "dark" ? "dark" : "light",
+    // Stories open at the size the story tests render at. The editor switches
+    // to its narrow layout at 1024px and below, and a preview squeezed beside
+    // the sidebar and addons panel is often that narrow, so stories written
+    // against the desktop layout would wait out their timeouts there.
+    viewport: { value: "testRunner", isRotated: false },
   },
   parameters: {
     layout: "padded",
+    viewport: {
+      options: {
+        // The size the story test runner renders every story at (the vitest
+        // plugin's default), so a story looks here as it does there.
+        testRunner: {
+          name: "Story tests (1200 × 900)",
+          styles: { width: "1200px", height: "900px" },
+          type: "desktop",
+        },
+      },
+    },
+    options: {
+      // Alphabetical, so each tool's Panel sits above its Parts; parts no one
+      // tool owns go last within Tools. Stories keep their order in the file.
+      storySort: {
+        method: "alphabetical",
+        order: ["*", "Tools", ["*", "Shared"]],
+      },
+    },
     controls: {
       matchers: { color: /(background|color)$/i, date: /Date$/i },
     },
@@ -263,8 +307,10 @@ const preview: Preview = {
         // document — their stamp text, their watermark, in the colour and
         // opacity they chose. WCAG contrast governs the interface, not the
         // content authored through it, and the controls that set those values
-        // are checked normally.
-        exclude: ["[data-user-content-preview]"],
+        // are checked normally. A placed annotation's appearance is that same
+        // content drawn on the page: embedpdf renders it as an <img> it gives
+        // no alt, inside its annotation wrapper.
+        exclude: ["[data-user-content-preview]", "[data-no-interaction] img"],
       },
     },
   },
@@ -312,6 +358,7 @@ const preview: Preview = {
     },
   },
   decorators: [
+    withStorybookFilePicker,
     withLocale,
     withProviders,
     withThemeByDataAttribute({

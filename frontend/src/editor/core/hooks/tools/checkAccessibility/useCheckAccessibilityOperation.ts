@@ -5,8 +5,7 @@ import apiClient from "@editor/services/apiClient";
 import { handleHttpError } from "@editor/services/httpErrorHandler";
 import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@editor/types/fileContext";
-import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
-import { serverErrorReason } from "@editor/services/errorUtils";
+import { resolveToolErrorMessage } from "@editor/utils/toolErrorHandler";
 import type {
   AccessibilityReport,
   AccessibilityReportEntry,
@@ -127,9 +126,7 @@ export const useCheckAccessibilityOperation =
                       "checkAccessibility.error.unreachable",
                       "The server didn't answer. Check it's running, then check again.",
                     )
-                  : // The server says why in a JSON body, such as a file over the size limit.
-                    ((await serverErrorReason(error)) ??
-                    extractErrorMessage(error)),
+                  : await resolveToolErrorMessage(error),
               });
             }
             if (!isCurrent()) return;

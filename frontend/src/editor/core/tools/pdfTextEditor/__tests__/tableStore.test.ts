@@ -32,6 +32,7 @@ async function makeStore() {
     page: () => page,
     loadedPages: () => [page],
     documentLanguage: () => null,
+    conformanceClaim: () => null,
     languagesInUse: () => [],
     onArtifactKinds: () => () => {},
     module: {},
