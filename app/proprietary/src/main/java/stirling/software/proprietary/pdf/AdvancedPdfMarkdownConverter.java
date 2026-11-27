@@ -56,29 +56,31 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
         String prevPageTrailingTableHeader = null;
 
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-            PageLines page = pageLines(doc, allPageText, pageIndex);
-            if (page.lines().isEmpty()) {
-                PageImages.emit(doc, pageIndex, pageIndex + 1, output);
-                prevPageTrailingTableHeader = null;
-                continue;
-            }
+            try (PdfPage pdfPage = doc.page(pageIndex)) {
+                PageLines page = pageLines(pdfPage, allPageText, pageIndex);
+                if (page.lines().isEmpty()) {
+                    PageImages.emit(pdfPage, pageIndex, pageIndex + 1, output);
+                    prevPageTrailingTableHeader = null;
+                    continue;
+                }
 
-            List<Element> pageItems =
-                    buildPageItems(
-                            doc,
-                            page,
-                            pageIndex,
-                            medianSize,
-                            medianHeight,
-                            bodyFont,
-                            prevPageTrailingTableHeader);
-            if (pageItems.isEmpty()) {
-                continue;
-            }
+                List<Element> pageItems =
+                        buildPageItems(
+                                pdfPage,
+                                page,
+                                pageIndex,
+                                medianSize,
+                                medianHeight,
+                                bodyFont,
+                                prevPageTrailingTableHeader);
+                if (pageItems.isEmpty()) {
+                    continue;
+                }
 
-            PageStitcher.mergeAcrossPageBoundary(output, pageItems);
-            output.addAll(pageItems);
-            prevPageTrailingTableHeader = PageStitcher.trailingTableHeader(pageItems);
+                PageStitcher.mergeAcrossPageBoundary(output, pageItems);
+                output.addAll(pageItems);
+                prevPageTrailingTableHeader = PageStitcher.trailingTableHeader(pageItems);
+            }
         }
 
         // Stitch tables split across page breaks; callers decide how to realise the elements.
@@ -96,13 +98,13 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
     }
 
     /** Assembled lines for one page, sorted top-to-bottom (PDF y=0 is the page bottom). */
-    private static PageLines pageLines(PdfDocument doc, List<PageText> allPageText, int pageIndex) {
+    private static PageLines pageLines(PdfPage pdfPage, List<PageText> allPageText, int pageIndex) {
         List<TextLine> rawLines =
                 pageIndex < allPageText.size() ? allPageText.get(pageIndex).lines() : List.of();
         List<Line> stitched = GlyphStitcher.stitchGlyphs(rawLines);
         List<Float> gutters = ColumnLayout.detectGutters(stitched);
         List<Line> lines = LineMerger.mergeLineFragments(stitched, gutters);
-        lines.addAll(FormValues.lines(doc, pageIndex, lines));
+        lines.addAll(FormValues.lines(pdfPage, pageIndex, lines));
         lines.sort(Comparator.comparingDouble((Line l) -> l.y).reversed());
         return new PageLines(lines, gutters);
     }
@@ -112,7 +114,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
      * {@code continuationHeader} is the previous page's trailing table header, or null.
      */
     private List<Element> buildPageItems(
-            PdfDocument doc,
+            PdfPage pdfPage,
             PageLines page,
             int pageIndex,
             float medianSize,
@@ -140,7 +142,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
         // Two detectors: ruling lines give exact boundaries and see single-word cells; the word
         // grid covers what the rules do not, i.e. borderless and whitespace-aligned tables.
         Set<String> tableRowTexts = new HashSet<>();
-        PageRules rules = readRules(doc, pageIndex);
+        PageRules rules = readRules(pdfPage, pageIndex);
         List<TableBlock> blocks = TableFinder.find(lines, rules, pageIndex + 1);
         if (log.isDebugEnabled()) {
             log.debug(
@@ -233,7 +235,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
             }
         }
 
-        PageImages.emit(doc, pageIndex, pageIndex + 1, pageItems);
+        PageImages.emit(pdfPage, pageIndex, pageIndex + 1, pageItems);
         return pageItems;
     }
 
@@ -262,9 +264,9 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
         return segments;
     }
 
-    /** Ruling lines of one page, or {@link PageRules#EMPTY} if the page cannot be opened. */
-    private static PageRules readRules(PdfDocument doc, int pageIndex) {
-        try (PdfPage page = doc.page(pageIndex)) {
+    /** Ruling lines of one page, or {@link PageRules#EMPTY} if they cannot be read. */
+    private static PageRules readRules(PdfPage page, int pageIndex) {
+        try {
             return PageRules.of(page);
         } catch (Exception e) {
             log.debug(

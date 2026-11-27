@@ -684,13 +684,16 @@ class PasswordProtectionControllerTest {
     @Test
     void missingNativeSupportReturnsNoResultAndCleansTemporaryFiles() throws Exception {
         try (var security = mockStatic(PdfSecurity.class)) {
-            security.when(() -> PdfSecurity.copyEncryption(any(), any(), any(), anyString()))
+            security.when(() -> PdfSecurity.copyEncryption(any(), any(), any(), anyString(), any()))
                     .thenThrow(new JPDFiumException("Native PDF protection is unavailable"));
-            assertThrows(
-                    IOException.class,
-                    () ->
-                            controller.restore(
-                                    upload(pdf(false, 256)), upload(pdf(true, 256)), USER));
+            IOException failure =
+                    assertThrows(
+                            IOException.class,
+                            () ->
+                                    controller.restore(
+                                            upload(pdf(false, 256)), upload(pdf(true, 256)), USER));
+            assertEquals("Unable to restore PDF protection", failure.getMessage());
+            assertInstanceOf(JPDFiumException.class, failure.getCause());
         }
         try (var remaining = Files.list(directory)) {
             assertEquals(0, remaining.count());

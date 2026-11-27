@@ -129,6 +129,9 @@ class RedactControllerMoreTest {
         lenient()
                 .when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
+        lenient()
+                .when(pdfDocumentFactory.load(any(File.class)))
+                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
     }
 
     private PDFont helvetica(PDDocument doc) throws IOException {
@@ -286,7 +289,8 @@ class RedactControllerMoreTest {
         }
 
         @Test
-        @DisplayName("no-match returns the original document unchanged and never reloads")
+        @DisplayName(
+                "no-match returns the original document unchanged without loading it in PDFBox")
         void noMatchReturnsOriginal() throws IOException {
             byte[] bytes = singlePageTextPdf("nothing sensitive here");
             factoryReturns(bytes);
@@ -300,8 +304,8 @@ class RedactControllerMoreTest {
 
             assertThat(response.getStatusCode().value()).isEqualTo(200);
             assertThat(pdfText(drainBody(response))).contains("nothing sensitive here");
-            // Only the initial load happens; the box-only fallback reload path is not taken.
-            verify(pdfDocumentFactory, times(1)).load(any(MultipartFile.class));
+            verify(pdfDocumentFactory, never()).load(any(MultipartFile.class));
+            verify(pdfDocumentFactory, never()).load(any(File.class));
         }
 
         @Test
