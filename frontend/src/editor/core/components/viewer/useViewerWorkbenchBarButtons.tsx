@@ -57,7 +57,6 @@ export function useViewerWorkbenchBarButtons(
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
     isLayerSidebarVisible,
-    hasLayers,
     isCommentsSidebarVisible,
     toggleCommentsSidebar,
     isSearchInterfaceVisible,
@@ -497,19 +496,15 @@ export function useViewerWorkbenchBarButtons(
         "row-start",
         3,
       ),
-      ...(hasLayers
-        ? [
-            panelToggle(
-              "viewer-toggle-layers",
-              "layers",
-              layersLabel,
-              isLayerSidebarVisible,
-              viewer.toggleLayerSidebar,
-              "row-start",
-              4,
-            ),
-          ]
-        : []),
+      panelToggle(
+        "viewer-toggle-layers",
+        "layers",
+        layersLabel,
+        isLayerSidebarVisible,
+        viewer.toggleLayerSidebar,
+        "row-start",
+        4,
+      ),
       panelToggle(
         "viewer-toggle-sidebar",
         "list",
@@ -720,7 +715,6 @@ export function useViewerWorkbenchBarButtons(
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
     isLayerSidebarVisible,
-    hasLayers,
     isSearchInterfaceVisible,
     isPanning,
     searchLabel,

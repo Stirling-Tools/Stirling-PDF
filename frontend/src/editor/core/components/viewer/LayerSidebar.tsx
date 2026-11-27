@@ -25,8 +25,7 @@ interface LayerSidebarProps {
   documentCacheKey?: string;
   /** Called when the user applies layer visibility changes. Receives the modified PDF blob. */
   onApplyLayers: (modifiedBlob: Blob) => Promise<void>;
-  /** Called when layer detection completes, reporting whether the PDF has layers. */
-  onLayersDetected?: (hasLayers: boolean) => void;
+  /** When true, layer visibility cannot be changed. */
   readOnly?: boolean;
 }
 
@@ -38,7 +37,6 @@ export function LayerSidebar({
   documentCacheKey,
   onApplyLayers,
   readOnly = false,
-  onLayersDetected,
 }: LayerSidebarProps) {
   const { t } = useTranslation();
   const { toggleLayerSidebar } = useViewer();
@@ -52,7 +50,8 @@ export function LayerSidebar({
   // Track whether visibility was set by user interaction (not initial load)
   const userChangedRef = useRef(false);
 
-  // Load layers when the document changes
+  // Parse on panel open, not on document open: the layer worker reads the
+  // whole file, so plain viewer opens must not pay for it.
   useEffect(() => {
     if (!file || !documentCacheKey) {
       setStatus("idle");
@@ -60,28 +59,31 @@ export function LayerSidebar({
       setVisibility({});
       loadedKeyRef.current = null;
       userChangedRef.current = false;
-      onLayersDetected?.(false);
       return;
     }
+
+    if (!visible) return;
 
     if (loadedKeyRef.current === documentCacheKey) return;
 
     setStatus("loading");
     setLoadError(null);
     userChangedRef.current = false;
+    loadedKeyRef.current = documentCacheKey;
 
     let cancelled = false;
+    let settled = false;
+    const controller = new AbortController();
 
-    readPdfLayers(file)
+    readPdfLayers(file, controller.signal)
       .then((layerList) => {
+        settled = true;
         if (cancelled) return;
 
         if (layerList.length === 0) {
           setStatus("no-layers");
           setLayers([]);
           setVisibility({});
-          loadedKeyRef.current = documentCacheKey;
-          onLayersDetected?.(false);
           return;
         }
 
@@ -101,24 +103,29 @@ export function LayerSidebar({
         setLayers(layerList);
         setVisibility(visMap);
         setStatus("ready");
-        loadedKeyRef.current = documentCacheKey;
-        onLayersDetected?.(true);
       })
       .catch((err) => {
+        settled = true;
         if (cancelled) return;
+        loadedKeyRef.current = null;
         setStatus("error");
         setLoadError(
           err instanceof Error
             ? err.message
             : t("viewer.layers.readFailed", "Failed to read PDF layers"),
         );
-        onLayersDetected?.(false);
       });
 
     return () => {
       cancelled = true;
+      controller.abort();
+      // A canceled load must not keep its marker: reopening the same document
+      // would hit the loaded guard with status stuck at "loading".
+      if (!settled && loadedKeyRef.current === documentCacheKey) {
+        loadedKeyRef.current = null;
+      }
     };
-  }, [file, documentCacheKey, onLayersDetected]);
+  }, [file, documentCacheKey, visible]);
 
   // Reset when document changes
   useEffect(() => {
@@ -223,42 +230,21 @@ export function LayerSidebar({
           marginLeft: layer.depth > 0 ? `${layer.depth * 0.875}rem` : "0",
         }}
       >
-        <div
-          className={`layer-item ${!isVisible ? "layer-item--hidden" : ""}`}
-          onClick={() => {
-            if (hasChildren) {
-              toggleExpanded(layer.id);
-            } else {
-              toggleLayerVisibility(layer.id);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              if (hasChildren) {
-                toggleExpanded(layer.id);
-              } else {
-                toggleLayerVisibility(layer.id);
-              }
-            }
-          }}
-        >
+        <div className={`layer-item ${!isVisible ? "layer-item--hidden" : ""}`}>
           {hasChildren ? (
-            <span
+            <button
+              type="button"
               className="layer-item__expand-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpanded(layer.id);
-              }}
+              aria-expanded={isExpanded}
+              aria-label={layer.name}
+              onClick={() => toggleExpanded(layer.id)}
             >
               {isExpanded ? (
                 <Icon name="chevron-down" size={12} strokeWidth={2.5} />
               ) : (
                 <Icon name="chevron-right" size={12} strokeWidth={2.5} />
               )}
-            </span>
+            </button>
           ) : (
             <span className="layer-item__expand-placeholder" />
           )}
@@ -266,6 +252,7 @@ export function LayerSidebar({
           {isLeaf && (
             <Checkbox
               size="xs"
+              aria-label={layer.name}
               checked={visibility[layer.id] ?? layer.visible}
               disabled={readOnly}
               onChange={() => toggleLayerVisibility(layer.id)}
@@ -280,9 +267,26 @@ export function LayerSidebar({
             withinPortal
             disabled={layer.name.length < 20}
           >
-            <span className={`layer-item__label ${privateContentClassName}`}>
+            <button
+              type="button"
+              className={`layer-item__label ${privateContentClassName}`}
+              style={{
+                background: "none",
+                border: 0,
+                padding: 0,
+                color: "inherit",
+                font: "inherit",
+                textAlign: "left",
+                cursor: "pointer",
+              }}
+              onClick={() =>
+                hasChildren
+                  ? toggleExpanded(layer.id)
+                  : toggleLayerVisibility(layer.id)
+              }
+            >
               {layer.name}
-            </span>
+            </button>
           </Tooltip>
         </div>
 
@@ -305,7 +309,9 @@ export function LayerSidebar({
 
   const layerHeaderActions = (
     <>
-      {isApplying && <Loader size="xs" type="dots" />}
+      {(isApplying || (status === "loading" && layers.length > 0)) && (
+        <Loader size="xs" type="dots" />
+      )}
       {status === "ready" && leafIds.length > 0 && (
         <>
           <ActionIcon
@@ -351,7 +357,7 @@ export function LayerSidebar({
         </div>
       )}
 
-      {status === "loading" && (
+      {status === "loading" && layers.length === 0 && (
         <Stack
           gap="md"
           align="center"
@@ -383,8 +389,11 @@ export function LayerSidebar({
         </div>
       )}
 
-      {status === "ready" && layers.length > 0 && (
-        <div className="layer-list">
+      {(status === "ready" || status === "loading") && layers.length > 0 && (
+        <div
+          className="layer-list"
+          aria-busy={status === "loading" || undefined}
+        >
           {layers.map((layer) => renderLayer({ ...layer, depth: 0 }))}
         </div>
       )}
