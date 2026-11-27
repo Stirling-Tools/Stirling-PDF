@@ -206,11 +206,6 @@
   white-space: pre;
 }
 
-.file-sidebar-name-tooltip {
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
 .file-sidebar-file-item.selected .file-sidebar-file-name {
   color: var(--c-accent-text);
 }

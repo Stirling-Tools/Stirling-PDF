@@ -18,6 +18,8 @@ import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology
 import { formatFileSize, IMAGE_EXTENSIONS } from "@editor/utils/fileUtils";
 import "@editor/components/shared/FileSidebarFileItem.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { Tooltip as AppTooltip } from "@editor/components/shared/Tooltip";
 import { OneDriveOriginTooltip } from "@editor/components/shared/OneDriveOriginTooltip";
 
 export function getFileExtension(name: string): string {
@@ -379,9 +381,9 @@ export const FileItem = React.memo(function FileItem({
     const nameLeft = head.getBoundingClientRect().left;
     const room = info.getBoundingClientRect().right - reserve - nameLeft;
     if (head.scrollWidth + tail.offsetWidth <= room) return;
-    // From the name to the row's edge, so it stays clear of the thumbnail
-    // preview that opens beside the row.
-    setNameTooltipWidth(row.getBoundingClientRect().right - nameLeft);
+    // As wide as the row: centred on the name, that still ends inside the row,
+    // clear of the thumbnail preview that opens beside it.
+    setNameTooltipWidth(row.getBoundingClientRect().width);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
@@ -427,16 +429,13 @@ export const FileItem = React.memo(function FileItem({
           )}
         </div>
         <div ref={infoRef} className="file-sidebar-file-info">
-          <Tooltip
-            label={name}
-            opened={nameTooltipWidth !== null && !menuOpened}
-            position="top-start"
-            offset={6}
-            multiline
-            maw={nameTooltipWidth ?? undefined}
-            withArrow
-            arrowPosition="side"
-            className={`file-sidebar-name-tooltip ${privateContentClassName}`}
+          <AppTooltip
+            content={<PrivateContent>{name}</PrivateContent>}
+            open={nameTooltipWidth !== null && !menuOpened}
+            position="top"
+            arrow
+            maxWidth={nameTooltipWidth ?? undefined}
+            containerStyle={{ pointerEvents: "none", overflowWrap: "anywhere" }}
           >
             <span
               className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
@@ -448,7 +447,7 @@ export const FileItem = React.memo(function FileItem({
                 {nameTail}
               </span>
             </span>
-          </Tooltip>
+          </AppTooltip>
           <span className="file-sidebar-file-meta-row">
             <span className="file-sidebar-file-meta">
               {primaryLabel ? (
