@@ -3,19 +3,25 @@ package stirling.software.SPDF.controller.api;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.junit.jupiter.api.BeforeEach;
@@ -271,22 +277,64 @@ class AnalysisControllerTest {
     @Test
     void getFontInfo_withFonts() throws IOException {
         PDFFile request = createRequest();
-        PDDocument doc = mock(PDDocument.class);
-        PDPageTree pages = mock(PDPageTree.class);
-        PDPage page = mock(PDPage.class);
-        PDResources resources = mock(PDResources.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(doc);
-        when(doc.getPages()).thenReturn(pages);
-        when(pages.iterator()).thenReturn(List.of(page).iterator());
-        when(page.getResources()).thenReturn(resources);
-        when(resources.getFontNames())
-                .thenReturn(Set.of(COSName.getPDFName("F1"), COSName.getPDFName("F2")));
+        ByteArrayOutputStream saved = new ByteArrayOutputStream();
+        try (PDDocument doc = new PDDocument()) {
+            // Each page numbers its own resources from F1, so the keys repeat across pages.
+            addPageUsing(doc, FontName.HELVETICA, FontName.TIMES_ROMAN);
+            addPageUsing(doc, FontName.COURIER, FontName.HELVETICA);
+            doc.save(saved);
+        }
+        // Reloaded so the fonts are indirect objects, as in any PDF read from a file.
+        when(pdfDocumentFactory.load(mockFile)).thenReturn(Loader.loadPDF(saved.toByteArray()));
 
         ResponseEntity<?> response = analysisController.getFontInfo(request);
 
         @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) response.getBody();
-        assertThat(body).containsEntry("fontCount", 2);
+        assertThat(body).containsEntry("fontCount", 3);
+        @SuppressWarnings("unchecked")
+        Set<String> fonts = (Set<String>) body.get("fonts");
+        assertThat(fonts).containsExactlyInAnyOrder("Helvetica", "Times-Roman", "Courier");
+    }
+
+    @Test
+    void getFontInfo_fontWithoutNameListedByResourceKey() throws IOException {
+        PDFFile request = createRequest();
+        try (PDDocument doc = new PDDocument()) {
+            COSDictionary type3Font = new COSDictionary();
+            type3Font.setItem(COSName.TYPE, COSName.FONT);
+            type3Font.setItem(COSName.SUBTYPE, COSName.TYPE3);
+            COSDictionary fontResources = new COSDictionary();
+            fontResources.setItem(COSName.getPDFName("T3_0"), type3Font);
+            PDResources resources = new PDResources();
+            resources.getCOSObject().setItem(COSName.FONT, fontResources);
+            PDPage page = new PDPage();
+            page.setResources(resources);
+            doc.addPage(page);
+            when(pdfDocumentFactory.load(mockFile)).thenReturn(doc);
+
+            ResponseEntity<?> response = analysisController.getFontInfo(request);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = (Map<String, Object>) response.getBody();
+            assertThat(body).containsEntry("fontCount", 1);
+            @SuppressWarnings("unchecked")
+            Set<String> fonts = (Set<String>) body.get("fonts");
+            assertThat(fonts).containsExactly("T3_0");
+        }
+    }
+
+    private static void addPageUsing(PDDocument doc, FontName... fontNames) throws IOException {
+        PDPage page = new PDPage();
+        doc.addPage(page);
+        try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+            content.beginText();
+            for (FontName fontName : fontNames) {
+                content.setFont(new PDType1Font(fontName), 12);
+                content.showText("x");
+            }
+            content.endText();
+        }
     }
 
     @Test
