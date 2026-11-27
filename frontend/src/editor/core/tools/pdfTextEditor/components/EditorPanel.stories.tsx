@@ -102,3 +102,41 @@ export const TextArmed: Story = { args: { mode: "addText" } };
 
 /** Save is live only once there are unsaved edits. */
 export const Unsaved: Story = { args: { dirty: true } };
+
+/**
+ * Phones have no floating selection bar, so their details sheet keeps the
+ * selection's position, size and paragraph controls above the document.
+ */
+function PhoneDetailsDemo() {
+  const store = useMemo(() => storyStore({ runIds: ["r2"] }), []);
+  const state = storyState(store, { paragraph: true });
+  return (
+    <Box
+      w={360}
+      style={{
+        border: "1px solid var(--c-border-subtle)",
+        background: "var(--c-bg-raised)",
+      }}
+    >
+      <EditorSidebar
+        store={store}
+        state={state}
+        selection={store.selection.value}
+        canGroup={false}
+        canUngroup
+        onGroup={() => {}}
+        onUngroup={() => {}}
+        onSetGroupingMode={() => {}}
+        onSetWidthMode={() => {}}
+        onSetShowRulers={() => {}}
+        onRunOcr={() => {}}
+        ocrRunning={false}
+        ocrAvailable={null}
+        ocrBlockedReason={null}
+      />
+    </Box>
+  );
+}
+
+/** The phone details sheet's contents with a text box selected. */
+export const PhoneDetails: Story = { render: () => <PhoneDetailsDemo /> };

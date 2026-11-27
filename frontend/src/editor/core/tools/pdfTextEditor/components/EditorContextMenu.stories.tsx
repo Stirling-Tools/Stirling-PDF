@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { EditorContextMenu } from "@editor/tools/pdfTextEditor/components/EditorContextMenu";
 import {
   editorContextMenu,
@@ -11,11 +12,20 @@ import {
   storyStore,
 } from "@editor/tools/pdfTextEditor/components/editorStorySupport";
 
-type Target = "text" | "image" | "page" | "table" | "locked";
+type Target =
+  | "text"
+  | "twoText"
+  | "paragraph"
+  | "image"
+  | "page"
+  | "table"
+  | "locked";
 
 /** The mock page element each story right-clicks, by test id. */
 const ANCHOR: Record<Target, string> = {
   text: "pdf-editor-run-r2",
+  twoText: "pdf-editor-run-r2",
+  paragraph: "pdf-editor-run-r2",
   image: "pdf-editor-image-i1",
   page: "pdf-editor-run-r2",
   table: "pdf-editor-run-r2",
@@ -26,6 +36,8 @@ function requestFor(target: Target, x: number, y: number): ContextMenuRequest {
   const at = { pageIndex: 0, x: 300, y: 60 };
   switch (target) {
     case "text":
+    case "twoText":
+    case "paragraph":
     case "image":
       return { kind: "objects", clientX: x, clientY: y, at };
     case "page":
@@ -58,17 +70,20 @@ function ContextMenuDemo({ target }: { target: Target }) {
   const store = useMemo(
     () =>
       storyStore(
-        target === "text"
+        target === "text" || target === "paragraph"
           ? { runIds: ["r2"] }
-          : target === "image"
-            ? { imageIds: ["i1"] }
-            : {},
+          : target === "twoText"
+            ? { runIds: ["r1", "r2"] }
+            : target === "image"
+              ? { imageIds: ["i1"] }
+              : {},
       ),
     [target],
   );
   const state = storyState(store, {
     table: target === "table",
     lockedImage: target === "locked",
+    paragraph: target === "paragraph",
   });
 
   useEffect(() => {
@@ -103,6 +118,30 @@ type Story = StoryObj<typeof meta>;
 
 /** Cut, Copy, Paste and Duplicate; formatting stays in the selection bar. */
 export const Text: Story = { args: { target: "text" } };
+
+/** Two text boxes: Group merges them into one paragraph. */
+export const TwoTextBoxes: Story = {
+  args: { target: "twoText" },
+  play: async ({ canvasElement }) => {
+    await expect(
+      await within(canvasElement.ownerDocument.body).findByTestId(
+        "pdf-editor-context-group",
+      ),
+    ).toBeVisible();
+  },
+};
+
+/** A paragraph of several lines: Ungroup splits it back into lines. */
+export const Paragraph: Story = {
+  args: { target: "paragraph" },
+  play: async ({ canvasElement }) => {
+    await expect(
+      await within(canvasElement.ownerDocument.body).findByTestId(
+        "pdf-editor-context-ungroup",
+      ),
+    ).toBeVisible();
+  },
+};
 
 /** Adds Save image and, where the browser allows, Edit in another app. */
 export const Image: Story = { args: { target: "image" } };
