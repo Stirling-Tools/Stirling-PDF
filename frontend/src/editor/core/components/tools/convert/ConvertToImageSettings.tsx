@@ -26,7 +26,7 @@ const ConvertToImageSettings = ({
   return (
     <Stack gap="sm" data-testid="image-options-section">
       <Text size="sm" fw={500} data-testid="image-options-title">
-        {t("convert.imageOptions", "Image Options")}:
+        {t("convert.imageOptions", "Image Options")}
       </Text>
       <Group grow>
         <Select

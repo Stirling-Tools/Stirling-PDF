@@ -152,7 +152,6 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             />
             {hasRestrictions && (
               <PasswordInput
-                size="xs"
                 label={t(
                   "encryptedPdfUnlock.newOwnerPassword",
                   "New permissions password",
@@ -185,7 +184,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t("encryptedPdfUnlock.saveProtection", "Save protection"),
+      text: t("addPassword.submit", "Add Password"),
       isVisible: !hasResults,
       loadingText: t("loading"),
       onClick: handleAddPassword,

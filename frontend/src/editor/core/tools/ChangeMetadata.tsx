@@ -11,7 +11,6 @@ import { useMetadataExtraction } from "@editor/hooks/tools/changeMetadata/useMet
 import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import {
-  useDeleteAllTips,
   useStandardMetadataTips,
   useDocumentDatesTips,
   useAdvancedOptionsTips,
@@ -29,7 +28,6 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   // Individual tooltips for each step
-  const deleteAllTips = useDeleteAllTips();
   const standardMetadataTips = useStandardMetadataTips();
   const documentDatesTips = useDocumentDatesTips();
   const advancedOptionsTips = useAdvancedOptionsTips();
@@ -87,7 +85,7 @@ const ChangeMetadata = (props: BaseToolProps) => {
   });
 
   const createAdvancedOptionsStep = () => ({
-    title: t("changeMetadata.advanced.title", "Advanced Options"),
+    title: t("changeMetadata.advanced.title", "Advanced"),
     isCollapsed: accordion.getCollapsedState(MetadataStep.ADVANCED_OPTIONS),
     onCollapsedClick: () =>
       accordion.handleStepToggle(MetadataStep.ADVANCED_OPTIONS),
@@ -112,7 +110,6 @@ const ChangeMetadata = (props: BaseToolProps) => {
         isCollapsed: accordion.getCollapsedState(MetadataStep.DELETE_ALL),
         onCollapsedClick: () =>
           accordion.handleStepToggle(MetadataStep.DELETE_ALL),
-        tooltip: deleteAllTips,
         content: (
           <DeleteAllStep
             parameters={base.params.parameters}

@@ -235,7 +235,7 @@ function FieldGeometryInputs({
   const stageGeometry = (patch: Partial<FieldGeometry>) =>
     stageModification(field.name, { pageIndex: pageIdx, ...coords, ...patch });
   return (
-    <Group gap={6} mt="xs" grow>
+    <Group gap={6} mt="xs" grow align="flex-start">
       <NumberInput
         size="xs"
         label="X"

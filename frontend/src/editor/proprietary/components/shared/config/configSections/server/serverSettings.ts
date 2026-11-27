@@ -41,10 +41,6 @@ export interface GeneralSettingsData {
       watchedFoldersDirs?: string[];
       finishedFoldersDir?: string;
     };
-    operations?: {
-      weasyprint?: string;
-      unoconvert?: string;
-    };
   };
   customMetadata?: {
     autoUpdateMetadata?: boolean;
@@ -98,6 +94,13 @@ export interface McpAuthData {
   acceptedAudiences?: string[];
   usernameClaim?: string;
   requireExistingAccount?: boolean;
+  autoProvisionUsers?: boolean;
+  builtin?: McpBuiltinAuthData;
+}
+
+export interface McpBuiltinAuthData {
+  allowDynamicRegistration?: boolean;
+  allowClientMetadataDocuments?: boolean;
 }
 
 export interface McpSettingsData {
@@ -105,5 +108,7 @@ export interface McpSettingsData {
   scopesEnabled?: boolean;
   allowedOperations?: string[];
   blockedOperations?: string[];
+  downloadLinks?: string;
+  fileUrlAllowedHosts?: string[];
   auth?: McpAuthData;
 }

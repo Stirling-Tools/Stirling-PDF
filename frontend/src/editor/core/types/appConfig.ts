@@ -16,7 +16,6 @@ export interface AppConfig {
   isAdmin?: boolean;
   shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
-  stirlingOfficeConversion?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
@@ -26,6 +25,10 @@ export interface AppConfig {
   enableFeedback?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
+  /** MCP endpoint state, so the connection guide shows the right URL and auth steps. */
+  mcpEnabled?: boolean;
+  mcpAuthMode?: string;
+  mcpResourceId?: string;
   paygEnabled?: boolean;
   /**
    * Whether this instance can link a Stirling (SaaS) account. False means the account-link

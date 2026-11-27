@@ -3,12 +3,11 @@ import {
   Text,
   NumberInput,
   Select,
-  Divider,
   Checkbox,
   Slider,
-  Tooltip,
   Box,
 } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import SliderWithInput from "@editor/components/shared/sliderWithInput/SliderWithInput";
 import { useTranslation } from "react-i18next";
@@ -20,6 +19,7 @@ import {
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { useGroupEnabled } from "@editor/hooks/useGroupEnabled";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
@@ -36,15 +36,11 @@ const CompressSettings = ({
   disabled = false,
 }: CompressSettingsProps) => {
   const { t } = useTranslation();
-  const {
-    enabled: imageMagickAvailable,
-    unavailableReason: imageMagickReason,
-  } = useGroupEnabled("ImageMagick");
+  const { enabled: lineArtAvailable, unavailableReason: lineArtReason } =
+    useGroupEnabled("LineArt");
 
   return (
     <Stack gap="md">
-      <Divider ml="-md"></Divider>
-      {/* Compression Method */}
       <ButtonSelector
         label={t("compress.method.title", "Compression Method")}
         value={parameters.compressionMethod}
@@ -62,7 +58,6 @@ const CompressSettings = ({
       {/* Quality Adjustment */}
       {parameters.compressionMethod === "quality" && (
         <Stack gap="md">
-          <Divider />
           <SliderWithInput
             label={t(
               "compress.tooltip.qualityAdjustment.title",
@@ -96,8 +91,6 @@ const CompressSettings = ({
           </Text>
         </Stack>
       )}
-
-      <Divider />
 
       {/* File Size Input */}
       {parameters.compressionMethod === "filesize" && (
@@ -173,21 +166,21 @@ const CompressSettings = ({
         </Stack>
 
         <Tooltip
-          label={
-            imageMagickReason ??
+          content={
+            lineArtReason ??
             t(
               "compress.lineArt.unavailable",
-              "ImageMagick is not installed or enabled on this server",
+              "Line art conversion is not available on this server",
             )
           }
-          disabled={imageMagickAvailable !== false}
-          multiline
-          maw={280}
+          disabled={lineArtAvailable !== false}
+          position="top"
+          arrow
+          maxWidth={280}
         >
           <Box
             style={{
-              cursor:
-                imageMagickAvailable === false ? "not-allowed" : undefined,
+              cursor: lineArtAvailable === false ? "not-allowed" : undefined,
             }}
           >
             <Checkbox
@@ -195,22 +188,18 @@ const CompressSettings = ({
               onChange={(event) =>
                 onParameterChange("lineArt", event.currentTarget.checked)
               }
-              disabled={disabled || imageMagickAvailable === false}
-              label={t(
-                "compress.lineArt.label",
-                "Convert images to line art (bilevel)",
-              )}
-              description={
-                imageMagickAvailable !== false
+              disabled={disabled || lineArtAvailable === false}
+              {...infoLabelProps(
+                t("compress.lineArt.label", "Convert images to line art"),
+                lineArtAvailable !== false
                   ? t(
                       "compress.lineArt.description",
-                      "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.",
+                      "Reduces images to high-contrast black and white for maximum size reduction.",
                     )
-                  : undefined
-              }
+                  : undefined,
+              )}
               style={{
-                pointerEvents:
-                  imageMagickAvailable === false ? "none" : undefined,
+                pointerEvents: lineArtAvailable === false ? "none" : undefined,
               }}
             />
           </Box>
@@ -221,7 +210,7 @@ const CompressSettings = ({
             style={{
               // Dimmed enough to read as inactive, but not so far that the
               // muted labels inside drop below the 4.5:1 text floor.
-              opacity: disabled || imageMagickAvailable === false ? 0.8 : 1,
+              opacity: disabled || lineArtAvailable === false ? 0.8 : 1,
             }}
           >
             <Text size="sm" fw={600}>
@@ -249,7 +238,7 @@ const CompressSettings = ({
                 const thresholdMap = [20, 35, 50, 65, 80];
                 onParameterChange("lineArtThreshold", thresholdMap[value - 1]);
               }}
-              disabled={disabled || imageMagickAvailable === false}
+              disabled={disabled || lineArtAvailable === false}
               label={null}
               // The thumb is a div, so the heading above cannot name it.
               thumbLabel={t("compress.lineArt.detailLevel", "Detail level")}
@@ -271,17 +260,17 @@ const CompressSettings = ({
                 {
                   value: "1",
                   label: t("compress.lineArt.edgeLow", "Gentle"),
-                  disabled: disabled || imageMagickAvailable === false,
+                  disabled: disabled || lineArtAvailable === false,
                 },
                 {
                   value: "2",
                   label: t("compress.lineArt.edgeMedium", "Balanced"),
-                  disabled: disabled || imageMagickAvailable === false,
+                  disabled: disabled || lineArtAvailable === false,
                 },
                 {
                   value: "3",
                   label: t("compress.lineArt.edgeHigh", "Strong"),
-                  disabled: disabled || imageMagickAvailable === false,
+                  disabled: disabled || lineArtAvailable === false,
                 },
               ]}
               value={parameters.lineArtEdgeLevel.toString()}

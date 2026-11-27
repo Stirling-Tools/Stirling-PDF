@@ -119,7 +119,7 @@ const ChangeMetadataSingleStep = ({
         {/* Advanced Options */}
         <Stack gap="md">
           <Text size="sm" fw={500}>
-            {t("changeMetadata.advanced.title", "Advanced Options")}
+            {t("changeMetadata.advanced.title", "Advanced")}
           </Text>
           <AdvancedOptionsStep
             parameters={parameters}

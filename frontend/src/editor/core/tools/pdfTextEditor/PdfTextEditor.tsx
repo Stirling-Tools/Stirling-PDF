@@ -14,6 +14,7 @@ import {
 import { useFileContext, useFileSelection } from "@editor/contexts/FileContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
 import type { FileId } from "@editor/types/file";
 import type { ToolId } from "@editor/types/toolId";
@@ -21,7 +22,10 @@ import type { BaseToolProps } from "@editor/types/tool";
 import { useEditorStore } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import { useEditorSelection } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { useEditorOcr } from "@editor/tools/pdfTextEditor/hooks/useEditorOcr";
-import { setEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import {
+  clearEditorSession,
+  setEditorSession,
+} from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import {
   useDocumentLoader,
@@ -43,8 +47,21 @@ import { DiscardChangesModal } from "@editor/tools/pdfTextEditor/components/Disc
 import { HelpOverlay } from "@editor/tools/pdfTextEditor/components/HelpOverlay";
 import { PasswordPromptModal } from "@editor/tools/pdfTextEditor/components/PasswordPromptModal";
 import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/components/PermissionsPasswordButton";
+import { useReviewConformanceClaimBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewConformanceClaimBridge";
+import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
+import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
-import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
+import {
+  EditorSidebar,
+  type SidebarProps,
+} from "@editor/tools/pdfTextEditor/components/EditorSidebar";
+import { useReviewStart } from "@editor/tools/pdfTextEditor/hooks/useReviewStart";
+import {
+  reviewMode,
+  useReviewMode,
+} from "@editor/tools/pdfTextEditor/store/reviewMode";
+import { reviewLanguage } from "@editor/tools/pdfTextEditor/store/reviewLanguage";
+import { REVIEW_COLUMN_REM } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
 import { MobileEditorSheets } from "@editor/tools/pdfTextEditor/components/MobileEditorSheets";
 import { EditorFileInputs } from "@editor/tools/pdfTextEditor/components/EditorFileInputs";
 import { ViewerEditLayer } from "@editor/tools/pdfTextEditor/components/ViewerEditLayer";
@@ -77,6 +94,8 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 
 const INSERTED_IMAGE_RATIO = 0.4;
+/** Stands in for an editing action while a review is on, where the editor only tags. */
+const noop = () => {};
 
 export default function PdfTextEditor(_props: BaseToolProps) {
   const { t } = useTranslation();
@@ -86,6 +105,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const { activeFileId, setActiveFileId, scrollActions } = useViewer();
 
   const selection = useEditorSelection(store);
+  const { reviewing, startAt } = useReviewMode();
   // A remount over a document still open carries on with its file, while the
   // viewer still shows it.
   const [initialSource] = useState(() =>
@@ -127,6 +147,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const { addFiles, consumeFiles, selectors } = useFileContext();
   const { setSelectedFiles } = useFileSelection();
   const { handleToolSelect } = useToolWorkflowActions();
+  const { selectedTool, workbench } = useNavigationState();
   // Saving replaces the workbench file, so for a moment the selection points at
   // a file the editor has not adopted yet. Auto-load must sit that out.
   const [applying, setApplying] = useState(false);
@@ -178,6 +199,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   // Guards against re-entrant saves while a (synchronous) serialize runs.
   const savingRef = useRef(false);
+  /** Settles when the save savingRef marks ends, however it ends. */
+  const saveSettledRef = useRef<Promise<void>>(Promise.resolve());
   // Pending save-risk warning (signatures/XFA) shown before the actual save.
   const [saveRisks, setSaveRisks] = useState<SaveRisks | null>(null);
   // docPtr the user already acknowledged risks for, so we don't re-nag.
@@ -282,6 +305,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const doc = store.document;
       if (!doc || savingRef.current || store.getState().loading) return;
       savingRef.current = true;
+      let settle: () => void = () => {};
+      saveSettledRef.current = new Promise<void>((resolve) => {
+        settle = resolve;
+      });
       store.setError(null);
       const sourceId = sourceFileIdRef.current;
       // A file switch confirmed while the export runs must not get these bytes.
@@ -322,6 +349,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         store.setError(err instanceof Error ? err.message : String(err));
       } finally {
         savingRef.current = false;
+        settle();
       }
     },
     [store, openedFileName, applyToWorkbench],
@@ -383,6 +411,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [store],
   );
 
+  useReviewStart({ store, startAt, sourceFileId, setActiveFileId });
+  useReviewLanguageBridge(store, state, sourceFileId, reviewing);
+  useReviewConformanceClaimBridge(store, state, sourceFileId, reviewing);
+
   useRegisterViewerPageTool(
     useMemo(
       () => ({
@@ -395,10 +427,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           isMobile && state.hasDocument ? ViewerEditActionBar : undefined,
         onDiscard: discardEdits,
         onSave: saveBeforeLeaving,
-        onToggleFind: toggleFind,
+        onToggleFind: reviewing ? undefined : toggleFind,
+        rightInsetRem: reviewing && !isMobile ? REVIEW_COLUMN_REM : undefined,
+        hidesFormNotice: reviewing,
       }),
       [
         isMobile,
+        reviewing,
         state.hasDocument,
         sourceFileId,
         discardEdits,
@@ -409,6 +444,17 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
+  const autosaveQueued = useRef(false);
+  const handleAutosave = useCallback(async () => {
+    // One queued save covers every change made while the current one runs.
+    if (autosaveQueued.current) return;
+    autosaveQueued.current = true;
+    // Whatever started the running save (Save, a download, the leave prompt), it
+    // exported before this change, so wait it out and save again.
+    while (savingRef.current) await saveSettledRef.current;
+    autosaveQueued.current = false;
+    await runSave(false);
+  }, [runSave]);
   const handleDownload = useCallback(() => void runSave(true), [runSave]);
 
   const handleConfirmSaveRisk = useCallback(() => {
@@ -621,11 +667,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   useEditorKeyboardShortcuts({
     store,
+    enabled: workbench === "viewer",
     onUndo: useCallback(() => store.undo(), [store]),
     onRedo: useCallback(() => store.redo(), [store]),
     onSave: handleSave,
-    onDelete: sel.deleteSelection,
-    onDuplicate: sel.duplicateFirstSelected,
+    onDelete: reviewing ? noop : sel.deleteSelection,
+    onDuplicate: reviewing ? noop : sel.duplicateFirstSelected,
     onSelectAll: useCallback(() => {
       // Pages past the eager window hold no runs until they scroll into view,
       // so reading the model as-is would select only part of the document.
@@ -639,25 +686,26 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       () => store.setHelpOpen(!store.getState().helpOpen),
       [store],
     ),
-    onOpenFind: useCallback(() => store.setFindOpen(true), [store]),
-    onFindNext: handleFindNext,
+    onOpenFind: useCallback(() => {
+      if (!reviewing) store.setFindOpen(true);
+    }, [store, reviewing]),
+    onFindNext: reviewing ? noop : handleFindNext,
     onEscape: handleEscape,
-    onMergeSelection: handleMergeSelection,
-    onToggleBold: useCallback(
-      () => void warnAboutFontChange(sel.toggleBold),
-      [warnAboutFontChange, sel.toggleBold],
-    ),
-    onToggleItalic: useCallback(
-      () => void warnAboutFontChange(sel.toggleItalic),
-      [warnAboutFontChange, sel.toggleItalic],
-    ),
+    onMergeSelection: reviewing ? noop : handleMergeSelection,
+    onToggleBold: useCallback(() => {
+      if (!reviewing) void warnAboutFontChange(sel.toggleBold);
+    }, [reviewing, warnAboutFontChange, sel.toggleBold]),
+    onToggleItalic: useCallback(() => {
+      if (!reviewing) void warnAboutFontChange(sel.toggleItalic);
+    }, [reviewing, warnAboutFontChange, sel.toggleItalic]),
   });
 
   useEditorClipboard({
+    enabled: workbench === "viewer",
     hasSelection,
     getSelectedText,
-    deleteSelection: sel.deleteSelection,
-    insertPastedText,
+    deleteSelection: reviewing ? noop : sel.deleteSelection,
+    insertPastedText: reviewing ? noop : insertPastedText,
   });
 
   const openImagePicker = useCallback(() => {
@@ -665,24 +713,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       .querySelector<HTMLInputElement>('[data-testid="pdf-editor-image-input"]')
       ?.click();
   }, []);
-
-  useEffect(() => {
-    setEditorSession({
-      fileName: openedFileName,
-      save: handleSave,
-      download: handleDownload,
-      pickImage: openImagePicker,
-      // The viewer mounts only the pages near the viewport.
-      revealPage: (pageIndex) => scrollActions.scrollToPage(pageIndex + 1),
-    });
-    return () => setEditorSession(null);
-  }, [
-    scrollActions,
-    openedFileName,
-    handleSave,
-    handleDownload,
-    openImagePicker,
-  ]);
 
   const handleSubmitPassword = useCallback(
     (password: string) => {
@@ -693,6 +723,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   );
 
   const handleCancelPassword = useCallback(() => {
+    // A fix or a language waiting on the cancelled file would apply to it later.
+    reviewMode.set({ startAt: null });
+    reviewLanguage.set({ requested: null });
     const file = store.pendingPasswordFile;
     if (file) cancelAutoLoad(file);
     store.clearPasswordPrompt();
@@ -734,22 +767,68 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       .find((r) => r.id === ids[0]);
     return !!run && (run.paragraphLineCount ?? 0) > 1;
   }, [panel]);
+  const ocrAvailable =
+    panel.state.loading && !ocr.running ? null : ocr.available;
+  const inspector = useMemo<
+    Omit<SidebarProps, "store" | "state" | "selection" | "initialTab">
+  >(
+    () => ({
+      canGroup: panel.selection.runIds.length >= 2,
+      canUngroup,
+      onGroup: handleMergeSelection,
+      onUngroup: handleUngroupSelection,
+      onRunOcr,
+      ocrRunning: ocr.running,
+      ocrAvailable,
+      ocrBlockedReason: ocr.blockedReason,
+      onRemovePassword: sourceFileId ? removePassword : undefined,
+      onSetGroupingMode,
+      onSetWidthMode,
+      onSetShowRulers,
+    }),
+    [
+      panel.selection.runIds.length,
+      canUngroup,
+      handleMergeSelection,
+      handleUngroupSelection,
+      onRunOcr,
+      ocr.running,
+      ocrAvailable,
+      ocr.blockedReason,
+      sourceFileId,
+      removePassword,
+      onSetGroupingMode,
+      onSetWidthMode,
+      onSetShowRulers,
+    ],
+  );
+  useEffect(() => {
+    const session = {
+      fileName: openedFileName,
+      save: handleSave,
+      autosave: () => void handleAutosave(),
+      download: handleDownload,
+      pickImage: openImagePicker,
+      // The viewer mounts only the pages near the viewport.
+      revealPage: (pageIndex: number) =>
+        scrollActions.scrollToPage(pageIndex + 1),
+    };
+    setEditorSession(session);
+    return () => clearEditorSession(session);
+  }, [
+    scrollActions,
+    openedFileName,
+    handleSave,
+    handleAutosave,
+    handleDownload,
+    openImagePicker,
+  ]);
+
   const sidebarProps = {
     store,
     state: panel.state,
     selection: panel.selection,
-    canGroup: panel.selection.runIds.length >= 2,
-    canUngroup,
-    onGroup: handleMergeSelection,
-    onUngroup: handleUngroupSelection,
-    onSetGroupingMode,
-    onSetWidthMode,
-    onSetShowRulers,
-    onRunOcr,
-    ocrRunning: ocr.running,
-    ocrAvailable: panel.state.loading && !ocr.running ? null : ocr.available,
-    ocrBlockedReason: ocr.blockedReason,
-    onRemovePassword: sourceFileId ? removePassword : undefined,
+    ...inspector,
   };
 
   return (
@@ -760,15 +839,17 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       data-testid="pdf-editor-root"
     >
       {state.error && (
-        <Alert color="red" m="sm" data-testid="pdf-editor-error">
-          <Stack gap="xs">
-            <Text size="sm">{state.error}</Text>
-            <PermissionsPasswordButton
-              file={sourceFileId ? selectors.getFile(sourceFileId) : null}
-              onVerified={(file) => void load(file)}
-            />
-          </Stack>
-        </Alert>
+        <ReviewErrorPortal active={reviewing}>
+          <Alert color="red" m="sm" data-testid="pdf-editor-error">
+            <Stack gap="xs">
+              <Text size="sm">{state.error}</Text>
+              <PermissionsPasswordButton
+                file={sourceFileId ? selectors.getFile(sourceFileId) : null}
+                onVerified={(file) => void load(file)}
+              />
+            </Stack>
+          </Alert>
+        </ReviewErrorPortal>
       )}
       <EditorFileInputs onPickImage={handleInsertImage} />
       <HelpOverlay
@@ -789,7 +870,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       <DiscardChangesModal
         incomingFileName={pendingSwitch?.name ?? null}
         onConfirm={confirmSwitch}
-        onCancel={cancelSwitch}
+        onCancel={() => {
+          // A fix or a language waiting on the declined file would apply to it later.
+          reviewMode.set({ startAt: null });
+          reviewLanguage.set({ requested: null });
+          cancelSwitch();
+        }}
       />
       {isMobile ? (
         <>
@@ -807,7 +893,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           </Text>
         </>
       ) : (
-        <EditorSidebar {...sidebarProps} />
+        selectedTool === "pdfTextEditor" && <EditorSidebar {...sidebarProps} />
       )}
       {state.hasDocument && (
         <EditorPanelActions

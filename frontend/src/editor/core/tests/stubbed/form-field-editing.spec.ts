@@ -452,7 +452,7 @@ test.describe("Form field editor", () => {
     await page.getByTestId("form-modify-row-firstName").click();
 
     // The property editor reveals the label input; change it.
-    const labelInput = page.getByLabel("Label").first();
+    const labelInput = page.getByLabel("Label", { exact: true });
     await expect(labelInput).toBeVisible();
     await labelInput.fill("Given name");
 

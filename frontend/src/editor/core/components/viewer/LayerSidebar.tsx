@@ -19,8 +19,6 @@ export type { LayerInfo };
 
 interface LayerSidebarProps {
   visible: boolean;
-  /** Right offset in rem (how far from the right edge). */
-  rightOffset: number;
   /** The current PDF file to read layers from. */
   file?: Blob | null;
   /** Stable key that changes when the document changes (used to avoid re-fetching). */
@@ -36,7 +34,6 @@ type LoadStatus = "idle" | "loading" | "ready" | "no-layers" | "error";
 
 export function LayerSidebar({
   visible,
-  rightOffset,
   file,
   documentCacheKey,
   onApplyLayers,
@@ -52,6 +49,12 @@ export function LayerSidebar({
   const [isApplying, setIsApplying] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const loadedKeyRef = useRef<string | null>(null);
+  // The effect re-runs while a read is pending (the blob's identity changes
+  // during an open); reusing the read keeps it to one pdf.js parse per key.
+  const pendingReadRef = useRef<{
+    key: string;
+    read: Promise<LayerInfo[]>;
+  } | null>(null);
   // Track whether visibility was set by user interaction (not initial load)
   const userChangedRef = useRef(false);
 
@@ -62,6 +65,7 @@ export function LayerSidebar({
       setLayers([]);
       setVisibility({});
       loadedKeyRef.current = null;
+      pendingReadRef.current = null;
       userChangedRef.current = false;
       onLayersDetected?.(false);
       return;
@@ -75,8 +79,19 @@ export function LayerSidebar({
 
     let cancelled = false;
 
-    readPdfLayers(file)
+    let pending = pendingReadRef.current;
+    if (pending?.key !== documentCacheKey) {
+      pending = { key: documentCacheKey, read: readPdfLayers(file) };
+      pendingReadRef.current = pending;
+    }
+    const inFlight = pending;
+    const clearPending = () => {
+      if (pendingReadRef.current === inFlight) pendingReadRef.current = null;
+    };
+
+    inFlight.read
       .then((layerList) => {
+        clearPending();
         if (cancelled) return;
 
         if (layerList.length === 0) {
@@ -108,6 +123,7 @@ export function LayerSidebar({
         onLayersDetected?.(true);
       })
       .catch((err) => {
+        clearPending();
         if (cancelled) return;
         setStatus("error");
         setLoadError(
@@ -341,7 +357,6 @@ export function LayerSidebar({
       className="layer-sidebar"
       title={t("viewer.layers.title", "Layers")}
       icon={<Icon name="layers" size={20} />}
-      rightOffset={`${rightOffset}rem`}
       visible={visible}
       onClose={toggleLayerSidebar}
       closeLabel={t("viewer.layers.closeSidebar", "Close layers sidebar")}

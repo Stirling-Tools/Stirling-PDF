@@ -17,7 +17,10 @@ test.beforeEach(async ({ page }) => {
 
 async function loadViewer(page: import("@playwright/test").Page, pages = 3) {
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(MULTIPAGE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(MULTIPAGE_PDF);
 
   // Narrow viewports put the viewer behind the Workspace tab.
   const workspaceTab = page.getByRole("tab", { name: "Workspace" });

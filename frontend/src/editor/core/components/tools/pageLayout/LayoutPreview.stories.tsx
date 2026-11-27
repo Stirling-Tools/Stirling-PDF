@@ -3,7 +3,7 @@ import LayoutPreview from "@editor/components/tools/pageLayout/LayoutPreview";
 import { defaultParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 
 const meta = {
-  title: "Tools/PageLayout/LayoutPreview",
+  title: "Tools/Multi-Page Layout/Parts/LayoutPreview",
   component: LayoutPreview,
 } satisfies Meta<typeof LayoutPreview>;
 export default meta;

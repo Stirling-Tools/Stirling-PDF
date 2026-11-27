@@ -1,4 +1,4 @@
-import { Stack, Select, Divider } from "@mantine/core";
+import { Stack, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { TrappedStatus } from "@editor/types/metadata";
@@ -29,7 +29,6 @@ const AdvancedOptionsStep = ({
 
   return (
     <Stack gap="md">
-      {/* Trapped Status */}
       <Select
         label={t("changeMetadata.trapped.label", "Trapped Status")}
         value={parameters.trapped}
@@ -59,9 +58,6 @@ const AdvancedOptionsStep = ({
         }}
       />
 
-      <Divider />
-
-      {/* Custom Metadata */}
       <CustomMetadataStep
         parameters={parameters}
         onParameterChange={onParameterChange}

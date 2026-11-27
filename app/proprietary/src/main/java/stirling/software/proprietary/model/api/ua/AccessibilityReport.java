@@ -78,6 +78,10 @@ public class AccessibilityReport {
         private boolean hasTitle;
         private boolean displaysDocTitle;
         private boolean hasLanguage;
+
+        /** The catalog's /Lang as written, or null when there is none. */
+        private String language;
+
         private boolean allFontsEmbedded;
         private int unembeddedFonts;
         private int figures;

@@ -1,6 +1,8 @@
-import { Stack, Text, Switch } from "@mantine/core";
+import { Stack, Text, Checkbox, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface ConvertFromSvgSettingsProps {
   parameters: ConvertParameters;
@@ -20,16 +22,26 @@ const ConvertFromSvgSettings = ({
 
   return (
     <Stack gap="sm" data-testid="svg-pdf-options-section">
-      <Text size="sm" fw={500}>
-        {t("convert.svgPdfOptions", "SVG to PDF Options")}:
-      </Text>
+      <Group gap={4}>
+        <Text size="sm" fw={500}>
+          {t("convert.svgPdfOptions", "SVG to PDF Options")}
+        </Text>
+        <ToolInfoTooltip
+          label={t(
+            "convert.svgVectorNote",
+            "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size.",
+          )}
+        />
+      </Group>
 
-      <Switch
+      <Checkbox
         data-testid="combine-svgs-switch"
-        label={t("convert.combineSvgs", "Combine SVGs into single PDF")}
-        description={t(
-          "convert.combineSvgsDescription",
-          "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG",
+        {...infoLabelProps(
+          t("convert.combineSvgs", "Combine SVGs into single PDF"),
+          t(
+            "convert.combineSvgsDescription",
+            "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG",
+          ),
         )}
         checked={parameters.imageOptions.combineImages}
         onChange={(event) =>
@@ -40,13 +52,6 @@ const ConvertFromSvgSettings = ({
         }
         disabled={disabled}
       />
-
-      <Text size="xs" c="dimmed" mt="xs">
-        {t(
-          "convert.svgVectorNote",
-          "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size.",
-        )}
-      </Text>
     </Stack>
   );
 };

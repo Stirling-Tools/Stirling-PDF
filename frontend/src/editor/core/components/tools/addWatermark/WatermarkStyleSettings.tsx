@@ -28,7 +28,7 @@ const WatermarkStyleSettings = ({
       {/* Appearance Settings */}
       <Stack gap="sm">
         <Text id={rotationLabelId} size="sm" fw={500}>
-          {t("watermark.settings.rotation", "Rotation (degrees)")}
+          {t("watermark.settings.rotation", "Rotation")}
         </Text>
         <NumberInput
           aria-labelledby={rotationLabelId}
@@ -41,11 +41,12 @@ const WatermarkStyleSettings = ({
           }
           min={-360}
           max={360}
+          suffix="°"
           disabled={disabled}
         />
 
         <Text id={opacityLabelId} size="sm" fw={500}>
-          {t("watermark.settings.opacity", "Opacity (%)")}
+          {t("watermark.settings.opacity", "Opacity")}
         </Text>
         <NumberInput
           aria-labelledby={opacityLabelId}
@@ -58,6 +59,7 @@ const WatermarkStyleSettings = ({
           }
           min={0}
           max={100}
+          suffix="%"
           disabled={disabled}
         />
       </Stack>

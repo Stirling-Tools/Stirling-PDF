@@ -21,7 +21,10 @@ async function openClearDialog(page: Page): Promise<void> {
 }
 
 async function openInViewer(page: Page): Promise<void> {
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE);
   const firstPage = page.locator('[data-page-index="0"]').first();
   await expect(firstPage).toBeVisible({ timeout: 30_000 });
   await expect(firstPage.locator(".pdf-selection-layer")).toBeAttached({

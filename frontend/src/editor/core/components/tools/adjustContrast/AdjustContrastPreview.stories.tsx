@@ -3,7 +3,7 @@ import AdjustContrastPreview from "@editor/components/tools/adjustContrast/Adjus
 import { defaultParameters } from "@editor/hooks/tools/adjustContrast/useAdjustContrastParameters";
 
 const meta = {
-  title: "Tools/AdjustContrast/AdjustContrastPreview",
+  title: "Tools/Adjust Colors & Contrast/Parts/AdjustContrastPreview",
   component: AdjustContrastPreview,
 } satisfies Meta<typeof AdjustContrastPreview>;
 export default meta;

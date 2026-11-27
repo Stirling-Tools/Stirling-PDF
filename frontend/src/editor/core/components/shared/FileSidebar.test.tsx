@@ -110,6 +110,14 @@ vi.mock("@editor/extensions/openInNewWindow", () => ({
 vi.mock("@editor/hooks/usePolicyFileBadges", () => ({
   usePolicyFileBadges: () => new Map(),
 }));
+vi.mock("@editor/components/createPdf/useCreatePdfMenu", () => ({
+  useCreatePdfMenu: () => ({
+    items: [],
+    dialogs: null,
+    stage: "idle",
+    busyLabel: null,
+  }),
+}));
 vi.mock("@editor/contexts/ToolFileEligibilityContext", () => ({
   useToolEligibleFileIds: () => null,
 }));
@@ -123,7 +131,7 @@ vi.mock("@editor/contexts/FilesPageContext", () => ({
   useFilesPage: () => ({}),
 }));
 vi.mock("@editor/services/bulkAddProgress", () => ({
-  useBulkAddProgress: () => ({ total: 0, done: 0 }),
+  useVisibleBulkAddProgress: () => null,
 }));
 vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {},

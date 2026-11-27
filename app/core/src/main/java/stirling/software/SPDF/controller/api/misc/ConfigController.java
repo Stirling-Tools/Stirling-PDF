@@ -213,6 +213,12 @@ public class ConfigController {
                     "mobileScannerStretchToFit",
                     applicationProperties.getSystem().getMobileScannerSettings().isStretchToFit());
 
+            // Lets the user-facing MCP guide show the right endpoint and auth instructions.
+            ApplicationProperties.Mcp mcp = applicationProperties.getMcp();
+            configData.put("mcpEnabled", mcp.isEnabled());
+            configData.put("mcpAuthMode", mcp.getAuth().getMode());
+            configData.put("mcpResourceId", mcp.getAuth().getResourceId());
+
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
@@ -356,9 +362,6 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
-            configData.put(
-                    "stirlingOfficeConversion",
-                    applicationProperties.getSystem().isStirlingOfficeConversion());
             boolean shouldShowUpdate =
                     applicationProperties.getSystem().isShowUpdate()
                             && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());

@@ -66,7 +66,7 @@ const emptySections: ParsedPdfSections = {
 };
 
 const meta = {
-  title: "Tools/GetPdfInfo/SummarySection",
+  title: "Tools/Get all info on PDF/Parts/SummarySection",
   component: SummarySection,
 } satisfies Meta<typeof SummarySection>;
 export default meta;

@@ -3,7 +3,7 @@ import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBloc
 import KeyValueList from "@editor/components/tools/getPdfInfo/shared/KeyValueList";
 
 const meta = {
-  title: "Tools/GetPdfInfo/Shared/SectionBlock",
+  title: "Tools/Get all info on PDF/Parts/Shared/SectionBlock",
   component: SectionBlock,
   parameters: { layout: "padded" },
 } satisfies Meta<typeof SectionBlock>;

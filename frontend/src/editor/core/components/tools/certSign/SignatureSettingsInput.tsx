@@ -6,11 +6,12 @@ import {
   Switch,
   Group,
 } from "@mantine/core";
-import { Button } from "@editor/ui/Button";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/ui/Tooltip";
 import { useTranslation } from "react-i18next";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 export interface SignatureSettings {
   showSignature?: boolean;
@@ -65,49 +66,33 @@ const SignatureSettingsInput = ({
         </Tooltip>
       </Group>
 
-      <div style={{ display: "flex", gap: "4px" }}>
-        <Button
-          accent={!value.showSignature ? "default" : "neutral"}
-          variant={!value.showSignature ? "primary" : "secondary"}
-          onClick={() => handleChange("showSignature", false)}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            height: "auto",
-            minHeight: "40px",
-            fontSize: "11px",
-          }}
-        >
-          <div
-            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
-          >
-            {t("certSign.appearance.invisible", "Invisible")}
-          </div>
-        </Button>
-        <Button
-          accent={value.showSignature ? "default" : "neutral"}
-          variant={value.showSignature ? "primary" : "secondary"}
-          onClick={() => handleChange("showSignature", true)}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            height: "auto",
-            minHeight: "40px",
-            fontSize: "11px",
-          }}
-        >
-          <div
-            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
-          >
-            {t("certSign.appearance.visible", "Visible")}
-          </div>
-        </Button>
-      </div>
+      <ButtonSelector
+        ariaLabel={t("certSign.appearance.visibility", "Visibility")}
+        value={value.showSignature ? "visible" : "invisible"}
+        onChange={(next) => handleChange("showSignature", next === "visible")}
+        options={[
+          {
+            value: "invisible",
+            label: t("certSign.appearance.invisible", "Invisible"),
+          },
+          {
+            value: "visible",
+            label: t("certSign.appearance.visible", "Visible"),
+          },
+        ]}
+        disabled={disabled}
+      />
 
       {value.showSignature && (
         <Stack gap="sm">
           <TextInput
-            label={t("certSign.reason", "Reason")}
+            {...infoLabelProps(
+              t("certSign.reason", "Reason"),
+              t(
+                "certSign.reasonInfo",
+                'Why you are signing, such as "Approval". Stored in the signature\'s details.',
+              ),
+            )}
             value={value.reason || ""}
             onChange={(event) =>
               handleChange("reason", event.currentTarget.value)
@@ -116,7 +101,13 @@ const SignatureSettingsInput = ({
             size="xs"
           />
           <TextInput
-            label={t("certSign.location", "Location")}
+            {...infoLabelProps(
+              t("certSign.location", "Location"),
+              t(
+                "certSign.locationInfo",
+                'Where you signed, such as "London Office". Stored in the signature\'s details; it does not move the signature on the page.',
+              ),
+            )}
             value={value.location || ""}
             onChange={(event) =>
               handleChange("location", event.currentTarget.value)
@@ -125,7 +116,13 @@ const SignatureSettingsInput = ({
             size="xs"
           />
           <NumberInput
-            label={t("certSign.pageNumber", "Page Number")}
+            {...infoLabelProps(
+              t("certSign.pageNumber", "Page Number"),
+              t(
+                "certSign.pageNumberInfo",
+                "The page the visible signature is drawn on. The first page is 1.",
+              ),
+            )}
             value={value.pageNumber || 1}
             onChange={(val) =>
               handleChange("pageNumber", typeof val === "number" ? val : 1)

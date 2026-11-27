@@ -647,18 +647,16 @@ description = "حداکثر DPI برای پردازش تصویر (0 = نامحد
 label = "حداکثر DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "پیکربندی محدودیت نشست و مهلت‌ها برای هر مجری فرایند"
 ghostscript = "Ghostscript"
 installApp = "نصب برنامه"
 label = "محدودیت‌های مجری فرایند"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF به HTML"
+officeConvert = "تبدیل Office"
+officeConvertSessionLimit = "حداکثر تبدیل‌های همزمان؛ 0 محدودیت را بر اساس CPUها و حافظه انتخاب می‌کند"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "حداکثر نمونه‌های همزمان"
@@ -667,10 +665,6 @@ label = "محدودیت نشست"
 [admin.settings.advanced.processExecutor.timeout]
 description = "حداکثر زمان اجرا"
 label = "مهلت (دقیقه)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert در نسخه بتا است. تبدیل‌های بهتر و سریع‌تری را با مصرف حافظه کمتر نسبت به LibreOffice ارائه می‌دهد."
-label = "استفاده از تبدیل جدید Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "پیکربندی ذخیره‌سازی فایل‌های موقت و رفتار پاکسازی"
@@ -688,11 +682,6 @@ label = "بازه پاکسازی (دقیقه)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "این‌که آیا دایرکتوری موقت سراسری سیستم پاکسازی شود (با احتیاط استفاده کنید)"
 label = "پاکسازی موقت سیستم"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "دایرکتوری فایل‌های موقت LibreOffice (خالی بگذارید برای پیش‌فرض: baseTmpDir/libreoffice)"
-label = "دایرکتوری موقت LibreOffice"
-placeholder = "پیش‌فرض: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "حداکثر سن بر حسب ساعت قبل از پاکسازی فایل‌های موقت"
@@ -1300,17 +1289,6 @@ label = "تولیدکننده پیش‌فرض"
 [admin.settings.general.customPaths]
 description = "پیکربندی مسیرهای فایل سیستم سفارشی برای پردازش پایپلاین و ابزارهای خارجی"
 label = "مسیرهای سفارشی"
-
-[admin.settings.general.customPaths.operations]
-label = "مسیر ابزارهای خارجی"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "مسیر LibreOffice unoconvert برای تبدیل اسناد (خالی بگذارید برای پیش‌فرض: /opt/venv/bin/unoconvert)"
-label = "فایل اجرایی Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "مسیر فایل اجرایی WeasyPrint برای تبدیل HTML به PDF (خالی بگذارید برای پیش‌فرض: /opt/venv/bin/weasyprint)"
-label = "فایل اجرایی WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "دایرکتوری‌های پایپلاین"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "عنوان سند"
 pdfUaTitleHelp = "به‌جای نام فایل توسط خواننده نمایش داده می‌شود. اگر خالی بماند، اولین تیتر استفاده می‌شود."
 selectSourceFormatFirst = "ابتدا یک قالب مبدأ انتخاب کنید"
 settings = "تنظیمات"
+signInToUse = "برای استفاده وارد شوید"
 single = "تکی"
 sourceFormatPlaceholder = "قالب مبدأ"
-stirlingOfficeConvert = "استفاده از Stirling Office Convert (بتا)"
-stirlingOfficeConvertDescription = "تبدیل‌های بهتر و سریع‌تر با مصرف حافظه کمتر. برای استفاده از مبدل استاندارد، آن را خاموش کنید."
 strictMode = "حالت سخت‌گیرانه"
 strictModeDesc = "در صورت کامل نبودن تبدیل خطا بده (از تأیید VeraPDF استفاده می‌کند)"
 svgPdfOptions = "گزینه‌های SVG به PDF"
@@ -4419,8 +4396,6 @@ webOptions = "گزینه‌های Web به PDF"
 zoomLevel = "سطح بزرگ‌نمایی"
 
 [convert.ebookOptions]
-embedAllFonts = "جاسازی همه فونت‌ها"
-embedAllFontsDesc = "همه فونت‌های eBook را در PDF تولیدشده جاسازی کن"
 includePageNumbers = "شامل شماره صفحات"
 includePageNumbersDesc = "افزودن شماره صفحات به PDF تولیدشده"
 includeTableOfContents = "شامل فهرست مطالب"
@@ -7830,7 +7805,11 @@ decorativeLabel = "تصویر تزئینی"
 description = "توضیح تصویر"
 descriptionInfo = "صفحه‌خوان‌ها این متن را به جای تصویر می‌خوانند."
 encrypted = "برچسب‌ها در فایل رمزگذاری‌شده قابل ویرایش نیستند"
+figureDescription = "توضیح شکل"
+figureDescriptionInfo = "صفحه‌خوان‌ها این را به‌جای شکل می‌خوانند."
 formFieldDescription = "توضیح فیلد"
+formulaDescription = "توضیح فرمول"
+formulaDescriptionInfo = "صفحه‌خوان‌ها این را به‌جای فرمول می‌خوانند. آن را همان‌طور که با صدای بلند می‌گویید بیان کنید، مانند \"x squared plus one\"."
 heading = "دسترس‌پذیری"
 innerTagLabel = "برچسب {{number}}"
 innerTags = "برچسب‌های این متن"
@@ -7842,7 +7821,7 @@ missingDescriptions = "توضیحات ناموجود"
 mixedContent = "شکل شامل محتوای دیگری است"
 mixedTags = "مخلوط"
 needsDescriptionBadge = "بدون توضیح"
-nextImage = "تصویر بعدی"
+nextToReview = "مورد بعدی برای بازبینی"
 notFigure = "به‌عنوان بخشی از متن برچسب‌گذاری شده است"
 removeTag = "حذف برچسب"
 saveFailed = "تغییرات دسترس‌پذیری شما ذخیره نشد، بنابراین فایل ذخیره نشد. آن‌ها را واگرد کنید و دوباره تلاش کنید."
@@ -9661,10 +9640,6 @@ signInToStart = "برای شروع آزمایشی وارد شوید"
 stage = "مرحله {{current}} از {{total}}"
 stagesLabel = "پیشرفت"
 
-[portal.enterprise.connect]
-ownerOnly = "فقط مالک این سرور می‌تواند آن را متصل کند. از او بخواهید این صفحه را باز کند."
-unavailable = "اتصال به یک حساب Stirling در این سرور خاموش است. یک تماس رزرو کنید و ما آزمون شما را با شما راه‌اندازی می‌کنیم."
-
 [portal.enterprise.landing]
 lede = "۱۴ روز رایگان امتحان کنید، سپس همین‌جا پیشنهاد خود را بسازید و قرارداد خود را امضا کنید. نیاز به کارت نیست."
 tickAgreement = "یک قرارداد که MSA، فرم سفارش، EULA و DPA را پوشش می‌دهد"
@@ -11283,11 +11258,6 @@ downloadOffline = "دانلود مجوز آفلاین (.lic)"
 hint = "این کلید را برای فعال‌سازی در یک نمونه self-hosted وارد کنید، یا برای سوابق خود نگه دارید. آن را امن نگه دارید."
 label = "کلید مجوز شما"
 trialFileHint = "این فایل مجوز آزمایشی شماست. وقتی توافق‌نامه شما برقرار شد، برگردید و دوباره آن را دانلود کنید — برخلاف کلید مجوز آنلاین، فایل .lic به‌خودی‌خود به‌روزرسانی نمی‌شود."
-
-[portal.procurement.link]
-cta = "پیوند دادن حساب"
-description = "خرید سازمانی روی حساب Stirling پیوندشده شما اجرا می‌شود: از این طریق دوره آزمایشی را آماده می‌کنیم، پیشنهاد قیمت را تعیین می‌کنیم و صورتحساب را شروع می‌کنیم. برای شروع، یک حساب را پیوند دهید."
-title = "برای شروع، حساب خود را پیوند دهید"
 
 [portal.procurement.live]
 description = "اشتراک شما فعال است و مجوز شما صادر شده است. تیم شما آماده شده و صورتحساب آغاز شده است."
@@ -14260,7 +14230,6 @@ toggleDetails = "تغییر نمایش جزئیات"
 
 [tool]
 endpointUnavailable = "این ابزار روی سرور شما در دسترس نیست."
-endpointUnavailableClickable = "در این حالت در دسترس نیست. برای ورود کلیک کنید."
 filesLoading = "فایل‌ها همچنان در حال بارگذاری هستند، لطفاً صبر کنید."
 filesLoadingProgress = "{{loaded}} / {{total}} فایل در حال بارگذاری..."
 invalidParams = "تنظیمات لازم را تکمیل کنید."
@@ -14268,6 +14237,8 @@ noFiles = "برای شروع یک فایل اضافه کنید."
 scopeFiles = "پرونده‌ها"
 scopeThisFile = "این پرونده"
 selectFilesHint = "برای اجرای این ابزار، پرونده‌ها را در «پرونده‌های فعال» انتخاب کنید"
+signInRequired = "این به یک حساب Stirling نیاز دارد. برای ادامه وارد شوید."
+signInToUse = "برای استفاده وارد شوید"
 singleFileScope = "فقط اعمال می‌شود روی: {{fileName}}"
 viewerMode = "برای افزودن چند فایل به ویرایشگر فایل بروید."
 

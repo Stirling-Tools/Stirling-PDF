@@ -1,9 +1,16 @@
-import { Button } from "@editor/ui/Button";
-import { useEffect } from "react";
-import { Stack } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import ButtonSelector, {
+  type ButtonOption,
+} from "@editor/components/shared/ButtonSelector";
+import {
+  getServerSigningCertificate,
+  HardwareCertificateInfo,
+} from "@editor/services/hardwareSigningService";
+import { DigitalIdSummary } from "@editor/components/tools/certSign/DigitalIdList";
 
 interface CertificateTypeSettingsProps {
   parameters: CertSignParameters;
@@ -13,13 +20,6 @@ interface CertificateTypeSettingsProps {
   ) => void;
   disabled?: boolean;
 }
-
-const sourceButtonStyle = {
-  flex: 1,
-  height: "auto",
-  minHeight: "44px",
-  fontSize: "11px",
-} as const;
 
 const CertificateTypeSettings = ({
   parameters,
@@ -48,6 +48,22 @@ const CertificateTypeSettings = ({
     onParameterChange,
   ]);
 
+  const [serverCert, setServerCert] = useState<
+    HardwareCertificateInfo | null | undefined
+  >(undefined);
+  useEffect(() => {
+    if (parameters.signMode !== "AUTO" || serverCert !== undefined) {
+      return;
+    }
+    let cancelled = false;
+    getServerSigningCertificate().then((cert) => {
+      if (!cancelled) setServerCert(cert);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [parameters.signMode, serverCert]);
+
   const selectUpload = () => {
     onParameterChange("signMode", "MANUAL");
     if (parameters.signMode !== "MANUAL") {
@@ -56,15 +72,17 @@ const CertificateTypeSettings = ({
   };
 
   const selectServer = () => {
+    if (serverCert === null) setServerCert(undefined);
     onParameterChange("signMode", "AUTO");
     onParameterChange("certType", "");
   };
 
   const selectDevice = () => {
     onParameterChange("signMode", "DEVICE");
-    // Default to the Windows store; the device step lets the user switch to a token.
+    // Default to the OS store; the device step swaps in this platform's store or a token.
     if (
       parameters.certType !== "WINDOWS_STORE" &&
+      parameters.certType !== "MACOS_KEYCHAIN" &&
       parameters.certType !== "PKCS11"
     ) {
       onParameterChange("certType", "WINDOWS_STORE");
@@ -88,41 +106,58 @@ const CertificateTypeSettings = ({
     );
   }
 
+  const sourceOptions: ButtonOption<CertSignParameters["signMode"]>[] = [
+    { value: "MANUAL", label: t("certSign.source.upload", "Upload") },
+    ...(isServerCertificateEnabled
+      ? [
+          {
+            value: "AUTO" as const,
+            label: t("certSign.source.server", "Server"),
+          },
+        ]
+      : []),
+    ...(isHardwareAvailable
+      ? [
+          {
+            value: "DEVICE" as const,
+            label: t("certSign.source.device", "This device"),
+          },
+        ]
+      : []),
+  ];
+
+  const selectSource = (mode: CertSignParameters["signMode"]) => {
+    if (mode === "AUTO") selectServer();
+    else if (mode === "DEVICE") selectDevice();
+    else selectUpload();
+  };
+
   return (
     <Stack gap="md">
-      <div style={{ display: "flex", gap: "4px" }}>
-        <Button
-          variant={parameters.signMode === "MANUAL" ? "primary" : "secondary"}
-          accent={parameters.signMode === "MANUAL" ? "default" : "neutral"}
-          onClick={selectUpload}
-          disabled={disabled}
-          style={sourceButtonStyle}
-        >
-          {t("certSign.source.upload", "Upload")}
-        </Button>
-        {isServerCertificateEnabled && (
-          <Button
-            variant={parameters.signMode === "AUTO" ? "primary" : "secondary"}
-            accent={parameters.signMode === "AUTO" ? "default" : "neutral"}
-            onClick={selectServer}
-            disabled={disabled}
-            style={sourceButtonStyle}
-          >
-            {t("certSign.source.server", "Server")}
-          </Button>
-        )}
-        {isHardwareAvailable && (
-          <Button
-            variant={parameters.signMode === "DEVICE" ? "primary" : "secondary"}
-            accent={parameters.signMode === "DEVICE" ? "default" : "neutral"}
-            onClick={selectDevice}
-            disabled={disabled}
-            style={sourceButtonStyle}
-          >
-            {t("certSign.source.device", "This device")}
-          </Button>
-        )}
-      </div>
+      <ButtonSelector
+        ariaLabel={t("certSign.source.stepTitle", "Certificate source")}
+        value={parameters.signMode}
+        onChange={selectSource}
+        options={sourceOptions}
+        disabled={disabled}
+      />
+      {parameters.signMode === "AUTO" && serverCert !== undefined && (
+        <Stack gap={6}>
+          <Text size="sm" fw={500}>
+            {t("certSign.source.signsAs", "Signs as")}
+          </Text>
+          {serverCert ? (
+            <DigitalIdSummary cert={serverCert} />
+          ) : (
+            <Text size="sm" c="dimmed">
+              {t(
+                "certSign.source.serverCertUnavailable",
+                "The server's signing certificate isn't available.",
+              )}
+            </Text>
+          )}
+        </Stack>
+      )}
     </Stack>
   );
 };

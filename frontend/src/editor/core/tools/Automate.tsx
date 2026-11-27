@@ -157,6 +157,13 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 );
               }
             }}
+            onCreateFromActivity={(automation: AutomationConfig) =>
+              handleStepChange({
+                step: AUTOMATION_STEPS.CREATION,
+                mode: AutomationMode.SUGGESTED,
+                automation,
+              })
+            }
             onImportAutomation={importAutomation}
             onImportError={(message) => onError?.(message)}
             toolRegistry={toolRegistry}
@@ -240,6 +247,18 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       {
         isVisible: currentStep === AUTOMATION_STEPS.CREATION,
         isCollapsed: false,
+        tooltip: {
+          header: {
+            title: t(
+              "automate.creation.tooltip.header.title",
+              "About Automations",
+            ),
+          },
+          content: t(
+            "automate.creation.intro",
+            "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
+          ),
+        },
       },
       currentStep === AUTOMATION_STEPS.CREATION ? renderCurrentStep() : null,
     ),

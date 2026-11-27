@@ -647,18 +647,16 @@ description = "DPI maxim pentru procesarea imaginilor (0 = nelimitat)"
 label = "DPI maxim"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configurați limitele de sesiune și timpii de expirare pentru fiecare executor de procese"
 ghostscript = "Ghostscript"
 installApp = "Instalare aplicație"
 label = "Limite executor procese"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF în HTML"
+officeConvert = "Conversie Office"
+officeConvertSessionLimit = "Număr maxim de conversii simultane; 0 selectează o limită pe baza CPU-urilor și memoriei"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Număr maxim de instanțe simultane"
@@ -667,10 +665,6 @@ label = "Limită sesiune"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Timp maxim de execuție"
 label = "Timp de expirare (minute)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert este în beta. Oferă conversii mai bune, mai rapide și cu mai puțină memorie decât LibreOffice."
-label = "Utilizează noua conversie Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configurați stocarea fișierelor temporare și comportamentul de curățare"
@@ -688,11 +682,6 @@ label = "Interval de curățare (minute)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Dacă se curăță directorul temporar mai larg al sistemului (utilizați cu atenție)"
 label = "Curățare temp sistem"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directorul pentru fișiere temporare LibreOffice (lăsați gol pentru implicit: baseTmpDir/libreoffice)"
-label = "Director temporar LibreOffice"
-placeholder = "Implicit: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Vârsta maximă în ore înainte ca fișierele temporare să fie curățate"
@@ -1300,17 +1289,6 @@ label = "Producător implicit"
 [admin.settings.general.customPaths]
 description = "Configurați căi personalizate ale sistemului de fișiere pentru procesarea pipeline și instrumente externe"
 label = "Căi personalizate"
-
-[admin.settings.general.customPaths.operations]
-label = "Căi pentru instrumente externe"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Calea către LibreOffice unoconvert pentru conversia documentelor (lăsați gol pentru implicit: /opt/venv/bin/unoconvert)"
-label = "Executabil Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Calea către executabilul WeasyPrint pentru conversia HTML în PDF (lăsați gol pentru implicit: /opt/venv/bin/weasyprint)"
-label = "Executabil WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Directoare pipeline"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "Titlul documentului"
 pdfUaTitleHelp = "Afișat de un cititor în locul numelui fișierului. Dacă este lăsat necompletat, se folosește primul titlu."
 selectSourceFormatFirst = "Alegeți mai întâi un format sursă"
 settings = "Setări"
+signInToUse = "Autentificați-vă pentru a utiliza"
 single = "Unic"
 sourceFormatPlaceholder = "Format sursă"
-stirlingOfficeConvert = "Utilizează Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Conversii mai bune și mai rapide, cu mai puțină memorie. Dezactivează pentru a utiliza convertorul standard."
 strictMode = "Mod strict"
 strictModeDesc = "Eroare dacă conversia nu este perfectă (folosește verificarea VeraPDF)"
 svgPdfOptions = "Opțiuni SVG în PDF"
@@ -4419,8 +4396,6 @@ webOptions = "Opțiuni Web la PDF"
 zoomLevel = "Nivel de zoom"
 
 [convert.ebookOptions]
-embedAllFonts = "Încorporează toate fonturile"
-embedAllFontsDesc = "Încorporează toate fonturile din eBook în PDF-ul generat"
 includePageNumbers = "Include numerele de pagină"
 includePageNumbersDesc = "Adaugă numere de pagină în PDF-ul generat"
 includeTableOfContents = "Include cuprins"
@@ -7830,7 +7805,11 @@ decorativeLabel = "Imagine decorativă"
 description = "Descrierea imaginii"
 descriptionInfo = "Cititoarele de ecran citesc acest text în locul imaginii."
 encrypted = "Etichetele nu pot fi editate într-un fișier criptat"
+figureDescription = "Descrierea figurii"
+figureDescriptionInfo = "Cititoarele de ecran citesc acest text în locul figurii."
 formFieldDescription = "Descriere câmp"
+formulaDescription = "Descrierea formulei"
+formulaDescriptionInfo = "Cititoarele de ecran citesc acest text în locul formulei. Formulați-l așa cum l-ați rosti cu voce tare, de exemplu \"x la pătrat plus unu\"."
 heading = "Accesibilitate"
 innerTagLabel = "Eticheta {{number}}"
 innerTags = "Etichete în acest text"
@@ -7842,7 +7821,7 @@ missingDescriptions = "Descrieri lipsă"
 mixedContent = "Figura include alt conținut"
 mixedTags = "Mixt"
 needsDescriptionBadge = "Fără descriere"
-nextImage = "Imaginea următoare"
+nextToReview = "Următorul de revizuit"
 notFigure = "Etichetat ca parte a textului"
 removeTag = "Elimină eticheta"
 saveFailed = "Modificările de accesibilitate nu au putut fi salvate, așa că fișierul nu a fost salvat. Anulați-le și încercați din nou."
@@ -9661,10 +9640,6 @@ signInToStart = "Autentificați-vă pentru a începe proba"
 stage = "Etapa {{current}} din {{total}}"
 stagesLabel = "Progres"
 
-[portal.enterprise.connect]
-ownerOnly = "Numai proprietarul acestui server îl poate conecta. Rugați-l să deschidă această pagină."
-unavailable = "Conectarea la un cont Stirling este dezactivată pe acest server. Programați un apel și vă configurăm împreună perioada de probă."
-
 [portal.enterprise.landing]
 lede = "Încercați gratuit timp de 14 zile, apoi construiți-vă oferta și semnați acordul aici. Nu este necesar card."
 tickAgreement = "Un singur acord care acoperă MSA, ordinul, EULA și DPA"
@@ -11283,11 +11258,6 @@ downloadOffline = "Descarcă licența offline (.lic)"
 hint = "Lipește această cheie într-o instanță self-hosted pentru a o activa sau păstreaz-o pentru evidențele tale. Păstreaz-o în siguranță."
 label = "Cheia ta de licență"
 trialFileHint = "Acesta este fișierul dvs. de licență de probă. După ce acordul este în vigoare, reveniți și descărcați-l din nou — spre deosebire de cheia de licență online, fișierul .lic nu se actualizează singur."
-
-[portal.procurement.link]
-cta = "Conectează contul"
-description = "Achizițiile rulează pe contul tău Stirling conectat: așa provisionăm trialul, stabilim prețul ofertei și pornim facturarea. Conectează un cont pentru a începe."
-title = "Conectează-ți contul pentru a începe"
 
 [portal.procurement.live]
 description = "Abonamentul tău este activ și licența ta a fost emisă. Echipa ta este provisionată și facturarea a început."
@@ -14260,7 +14230,6 @@ toggleDetails = "Comutați detaliile"
 
 [tool]
 endpointUnavailable = "Acest instrument nu este disponibil pe serverul dvs."
-endpointUnavailableClickable = "Nu este disponibil în acest mod. Faceți clic pentru a vă autentifica."
 filesLoading = "Fișierele încă se încarcă, te rugăm să aștepți."
 filesLoadingProgress = "{{loaded}} / {{total}} fișiere se încarcă..."
 invalidParams = "Completați setările obligatorii."
@@ -14268,6 +14237,8 @@ noFiles = "Adăugați un fișier pentru a începe."
 scopeFiles = "fișiere"
 scopeThisFile = "acest fișier"
 selectFilesHint = "Selectați fișiere din Fișiere active pentru a rula acest instrument"
+signInRequired = "Este necesar un cont Stirling. Autentificați-vă pentru a continua."
+signInToUse = "Autentificați-vă pentru a utiliza"
 singleFileScope = "Se aplică numai pentru: {{fileName}}"
 viewerMode = "Comută la editorul de fișiere pentru a adăuga mai multe fișiere."
 

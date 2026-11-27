@@ -26,9 +26,9 @@ services:
       MCP_AUTH_RESOURCEID: "http://localhost:8080/mcp"
       # Supabase's OAuth server cannot mint RFC 8707 resource audiences; its tokens always
       # carry aud=authenticated. Accept it in addition to the resource id.
-      MCP_AUTH_ACCEPTEDAUDIENCES: "${MCP_AUTH_ACCEPTEDAUDIENCES:-}"
+      MCP_AUTH_ACCEPTEDAUDIENCES: "${MCP_AUTH_ACCEPTEDAUDIENCES:-authenticated}"
       MCP_AUTH_USERNAMECLAIM: "${MCP_AUTH_USERNAMECLAIM:-email}"
       MCP_AUTH_REQUIREEXISTINGACCOUNT: "${MCP_AUTH_REQUIREEXISTINGACCOUNT:-true}"
       # Supabase only issues openid/profile/email/phone scopes, never mcp.tools.*; SaaS-style
       # deployments therefore run with scope enforcement off.
-      MCP_SCOPESENABLED: "${MCP_SCOPESENABLED:-true}"
+      MCP_SCOPESENABLED: "${MCP_SCOPESENABLED:-false}"

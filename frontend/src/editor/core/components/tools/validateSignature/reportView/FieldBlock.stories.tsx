@@ -6,7 +6,7 @@ import FieldBlock from "@editor/components/tools/validateSignature/reportView/Fi
 // props, so every story renders it through a `render` override instead of
 // `args`.
 const meta = {
-  title: "Tools/ValidateSignature/ReportView/FieldBlock",
+  title: "Tools/Validate PDF Signature/Parts/ReportView/FieldBlock",
 } satisfies Meta;
 export default meta;
 

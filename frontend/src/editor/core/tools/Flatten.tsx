@@ -25,7 +25,7 @@ const Flatten = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("flatten.options.stepTitle", "Flatten Options"),
+        title: t("flatten.options.stepTitle", "Settings"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset

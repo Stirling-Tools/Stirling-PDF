@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 import {
   SPLIT_METHODS,
   type SplitMethod,
@@ -7,12 +7,12 @@ import {
 
 export const useSplitSettingsTips = (
   method: SplitMethod | null,
-): TooltipContent | null => {
+): SidebarTooltipContent | null => {
   const { t } = useTranslation();
 
   if (!method) return null;
 
-  const tooltipMap: Record<SplitMethod, TooltipContent> = {
+  const tooltipMap: Record<SplitMethod, SidebarTooltipContent> = {
     [SPLIT_METHODS.BY_PAGES]: {
       header: {
         title: t("split.tooltip.byPages.title", "Split at Page Numbers"),

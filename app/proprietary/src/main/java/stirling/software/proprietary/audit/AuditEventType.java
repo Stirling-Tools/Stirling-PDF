@@ -31,7 +31,10 @@ public enum AuditEventType {
     UI_DATA("UI data request"),
 
     // HTTP requests - STANDARD level
-    HTTP_REQUEST("HTTP request");
+    HTTP_REQUEST("HTTP request"),
+
+    // MCP tool calls from AI assistants - STANDARD level
+    MCP_TOOL_CALL("MCP tool call");
 
     private final String description;
 

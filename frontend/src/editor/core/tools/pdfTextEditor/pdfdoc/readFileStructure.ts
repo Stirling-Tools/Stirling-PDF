@@ -14,6 +14,7 @@ import {
   StructureNodes,
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
+import { staleKeyCheck } from "@editor/tools/pdfTextEditor/pdfdoc/parentTreeEntries";
 import { readLinks } from "@editor/tools/pdfTextEditor/pdfdoc/readLinks";
 import { readWidgets } from "@editor/tools/pdfTextEditor/pdfdoc/readWidgets";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
@@ -116,6 +117,7 @@ export function fileStructureOf(pdf: RawPdf): FileStructure | null {
     return infos.get(num)!;
   };
 
+  const isStale = staleKeyCheck(pdf, rootBody);
   const byPage = new Map<number, FilePageStructure>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
@@ -125,7 +127,11 @@ export function fileStructureOf(pdf: RawPdf): FileStructure | null {
       byPage.set(pageIndex, { elements: [], slotCount: null });
       return;
     }
-    const items = pdf.parentTreeArray(treeRoot, key)?.items;
+    const array = pdf.parentTreeArray(treeRoot, key);
+    // A stale key, as on a page merged in after its tree was written: the page has
+    // no elements yet, and the save gives it a key of its own.
+    if (!array && isStale(pageNum, key)) return;
+    const items = array?.items;
     if (!items) {
       byPage.set(pageIndex, { elements: [], slotCount: null });
       return;

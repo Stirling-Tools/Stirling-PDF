@@ -6,7 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
-import { embedpdfFontFallbackPlugin } from "./scripts/embedpdfFontFallbackPatch.mts";
+import { embedpdfEnginesPlugin } from "./scripts/embedpdfEnginesPatch.mts";
 
 const frontendPackage: { dependencies: Record<string, string> } = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
@@ -100,7 +100,7 @@ export default defineConfig({
           },
         },
         plugins: [
-          embedpdfFontFallbackPlugin(),
+          embedpdfEnginesPlugin(),
           iconSvgr(),
           react(),
           tsconfigPaths({
@@ -184,7 +184,10 @@ export default defineConfig({
           ...TEST_DEFAULTS,
           testTimeout: 60000,
           hookTimeout: 60000,
-          include: ["src/editor/desktop/**/*.test.{ts,tsx}"],
+          include: [
+            "src/editor/desktop/**/*.test.{ts,tsx}",
+            "src/processor/desktop/**/*.test.{ts,tsx}",
+          ],
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/editor/core/setupTests.ts"],
@@ -213,12 +216,14 @@ export default defineConfig({
           ...TEST_DEFAULTS,
           testTimeout: 60000,
           hookTimeout: 60000,
-          // src/editor/saas = editor-saas layer; src/processor/saas = the portal's saas
-          // overrides (sibling to src/processor/proprietary). Both build under the saas flavor,
-          // so both resolve @processor via the saas cascade (tsconfig.saas.vite.json).
+          // src/editor/saas = editor-saas layer; src/processor/saas = the processor's
+          // saas overrides and src/processor/cloud = the hosted edition it shares with
+          // desktop. All build under the saas flavor, so all resolve @processor via the
+          // saas cascade (tsconfig.saas.vite.json).
           include: [
             "src/editor/saas/**/*.test.{ts,tsx}",
             "src/processor/saas/**/*.test.{ts,tsx}",
+            "src/processor/cloud/**/*.test.{ts,tsx}",
           ],
           environment: "jsdom",
           globals: true,
@@ -235,6 +240,21 @@ export default defineConfig({
         esbuild: {
           target: "es2020",
         },
+      },
+      {
+        test: {
+          name: "scripts",
+          include: ["scripts/**/*.test.ts"],
+          environment: "node",
+          testTimeout: 10000,
+          hookTimeout: 10000,
+          pool: process.env.CI ? "forks" : "threads",
+        },
+        plugins: [
+          tsconfigPaths({
+            projects: ["./tsconfig.core.vite.json"],
+          }),
+        ],
       },
     ],
   },

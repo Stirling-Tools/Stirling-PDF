@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import {
   ColorPicker,
   ColorSwatchButton,
@@ -35,6 +36,7 @@ import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters"
 import type { BuildToolOptionsExtras } from "@editor/tools/annotate/useAnnotationStyleState";
 
 import { Icon, type IconName } from "@editor/ui/Icon";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface StyleState {
   inkColor: string;
@@ -427,15 +429,17 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       <Stack gap="sm">
         {activeTool === "select" ? (
           <>
-            <Text size="sm" fw={600}>
-              {t("annotation.selectAndMove", "Select and Edit")}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {t(
-                "annotation.editSelectDescription",
-                "Click an existing annotation to edit its color, opacity, text, or size.",
-              )}
-            </Text>
+            <Group gap={4} wrap="nowrap">
+              <Text size="sm" fw={600}>
+                {t("annotation.selectAndMove", "Select and Edit")}
+              </Text>
+              <ToolInfoTooltip
+                label={t(
+                  "annotation.editSelectDescription",
+                  "Click an existing annotation to edit its color, opacity, text, or size.",
+                )}
+              />
+            </Group>
           </>
         ) : activeTool === "stamp" ? (
           <>
@@ -675,43 +679,28 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     onChange={setTextSize}
                   />
                 </Box>
-                <Box>
-                  <Text size="xs" c="dimmed" mb={4}>
-                    {t("annotation.textAlignment", "Text Alignment")}
-                  </Text>
-                  <Group gap="xs">
-                    <ActionIcon
-                      variant={
-                        textAlignment === "left" ? "primary" : "secondary"
-                      }
-                      onClick={() => setTextAlignment("left")}
-                      size="md"
-                      aria-label={t("annotation.alignLeft", "Align left")}
-                    >
-                      <Icon name="text-align-start" size={18} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant={
-                        textAlignment === "center" ? "primary" : "secondary"
-                      }
-                      onClick={() => setTextAlignment("center")}
-                      size="md"
-                      aria-label={t("annotation.alignCenter", "Align center")}
-                    >
-                      <Icon name="text-align-center" size={18} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant={
-                        textAlignment === "right" ? "primary" : "secondary"
-                      }
-                      onClick={() => setTextAlignment("right")}
-                      size="md"
-                      aria-label={t("annotation.alignRight", "Align right")}
-                    >
-                      <Icon name="text-align-end" size={18} />
-                    </ActionIcon>
-                  </Group>
-                </Box>
+                <ButtonSelector
+                  label={t("annotation.textAlignment", "Text Alignment")}
+                  value={textAlignment}
+                  onChange={setTextAlignment}
+                  options={[
+                    {
+                      value: "left",
+                      label: t("annotation.align.left", "Left"),
+                      icon: "text-align-start",
+                    },
+                    {
+                      value: "center",
+                      label: t("annotation.align.center", "Center"),
+                      icon: "text-align-center",
+                    },
+                    {
+                      value: "right",
+                      label: t("annotation.align.right", "Right"),
+                      icon: "text-align-end",
+                    },
+                  ]}
+                />
                 <Box>
                   <Text size="xs" c="dimmed" mb={4}>
                     {t("annotation.backgroundColor", "Background color")}
@@ -1252,7 +1241,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Item
-                  color="red"
+                  color="var(--c-danger-text)"
                   disabled={isClearingDocumentAnnotations || isApplyingChanges}
                   leftSection={<Icon name="trash" size={18} />}
                   onClick={() => setIsClearDocumentModalOpen(true)}

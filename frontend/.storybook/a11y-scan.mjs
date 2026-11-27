@@ -28,7 +28,9 @@ import { join } from "node:path";
 
 const OUT = ".a11y-scan";
 const CHUNK = 20;
-const BATCH_TIMEOUT_MS = 300_000;
+// The heaviest batches (twenty tool-panel story files, 40-70 stories each)
+// run past five minutes on a CI runner; a killed batch leaves no report.
+const BATCH_TIMEOUT_MS = 600_000;
 
 const git = (...args) =>
   execFileSync("git", args, { encoding: "utf8" })
@@ -55,6 +57,14 @@ function parseShard(arg) {
   return { index, count };
 }
 
+/**
+ * The scan runs the self-hosted (proprietary) build, which does not load a
+ * setup's own stories: those run in the per-build story jobs. Must match the
+ * proprietary story globs in flavor.ts.
+ */
+const OTHER_BUILDS_ONLY = /^src\/editor\/(saas|desktop|cloud)\//;
+const inThisBuild = (file) => !OTHER_BUILDS_ONLY.test(file);
+
 const args = process.argv.slice(2);
 const shardArg = args.find((a) => a.startsWith("--shard="));
 const shard = shardArg ? parseShard(shardArg) : null;
@@ -64,7 +74,9 @@ if (fileArgs.length > 0) {
   // Explicit list (the pull-request path passes just the stories a branch
   // affects). Anything that no longer exists is dropped, so a deleted story
   // doesn't fail the manifest check.
-  files = [...new Set(fileArgs.filter((f) => existsSync(f)))].sort();
+  files = [
+    ...new Set(fileArgs.filter((f) => existsSync(f) && inThisBuild(f))),
+  ].sort();
   if (files.length === 0) {
     console.log(
       "a11y-scan: no existing story files in the given list — nothing to scan",
@@ -87,7 +99,9 @@ if (fileArgs.length > 0) {
         "src/**/*.stories.tsx",
       ),
     ]),
-  ].sort();
+  ]
+    .filter(inThisBuild)
+    .sort();
   if (files.length === 0) {
     console.error("a11y-scan: no story files found — check the glob");
     process.exit(2);
