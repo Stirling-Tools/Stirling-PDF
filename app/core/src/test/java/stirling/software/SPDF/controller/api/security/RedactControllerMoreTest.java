@@ -58,12 +58,11 @@ import stirling.software.jpdfium.redact.RedactResult;
 /**
  * End-to-end coverage tests for {@link RedactController} that drive the controller against real
  * in-memory PDFs and real {@link TextRedactionService} / {@link ManualRedactionService} instances.
- * The factory is mocked to return a freshly-parsed {@link PDDocument} on every {@code load()} (the
- * auto-redact fallback path loads twice), and {@code tempFileManager} hands back real temp files.
- * This complements {@code RedactControllerTest}, which exercises the controller against a mocked
- * {@link PDDocument}; here the actual redaction pipeline runs so the no-match, found-and-replace,
- * manual-area, page, convert-to-image, validation, and delegation branches are all covered for
- * real.
+ * The factory is mocked to return a freshly-parsed {@link PDDocument} on every {@code load()}, and
+ * {@code tempFileManager} hands back real temp files. This complements {@code
+ * RedactControllerTest}, which exercises the controller against a mocked {@link PDDocument}; here
+ * the actual redaction pipeline runs so the no-match, found-and-replace, manual-area, page,
+ * convert-to-image, validation, and delegation branches are all covered for real.
  */
 @DisplayName("RedactController end-to-end coverage")
 class RedactControllerMoreTest {
@@ -286,6 +285,33 @@ class RedactControllerMoreTest {
         }
 
         @Test
+        @DisplayName("an engine failure fails the request instead of returning a weaker redaction")
+        void engineFailureFailsTheRequest() throws IOException {
+            byte[] bytes = singlePageTextPdf("public CONFIDENTIAL data");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("CONFIDENTIAL");
+            request.setRedactColor("#000000");
+
+            for (boolean rasterise : new boolean[] {false, true}) {
+                request.setConvertPDFToImage(rasterise);
+                try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                    redactor.when(
+                                    () ->
+                                            PdfRedactor.redact(
+                                                    any(Path.class), any(RedactOptions.class)))
+                            .thenThrow(new IllegalStateException("engine crashed"));
+
+                    assertThatThrownBy(() -> controller.redactPdf(request))
+                            .hasMessageContaining("Failed to perform PDF redaction")
+                            .hasMessageContaining("engine crashed");
+                }
+            }
+        }
+
+        @Test
         @DisplayName("no-match returns the original document unchanged and never reloads")
         void noMatchReturnsOriginal() throws IOException {
             byte[] bytes = singlePageTextPdf("nothing sensitive here");
@@ -300,7 +326,6 @@ class RedactControllerMoreTest {
 
             assertThat(response.getStatusCode().value()).isEqualTo(200);
             assertThat(pdfText(drainBody(response))).contains("nothing sensitive here");
-            // Only the initial load happens; the box-only fallback reload path is not taken.
             verify(pdfDocumentFactory, times(1)).load(any(MultipartFile.class));
         }
 
@@ -370,7 +395,9 @@ class RedactControllerMoreTest {
             assertThat(jpdfiumOptionsFor(true).caseSensitive()).isTrue();
         }
 
-        /** The options the controller hands JPDFium; the call then fails so the fallback runs. */
+        /**
+         * The options the controller hands JPDFium; the call then fails and the request with it.
+         */
         private RedactOptions jpdfiumOptionsFor(Boolean caseSensitive) throws IOException {
             byte[] bytes = singlePageTextPdf("ticket FS-01 and fs-02 here");
             factoryReturns(bytes);
@@ -386,7 +413,8 @@ class RedactControllerMoreTest {
             try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
                 redactor.when(() -> PdfRedactor.redact(any(Path.class), options.capture()))
                         .thenThrow(new IllegalStateException("native redaction unavailable"));
-                drainBody(controller.redactPdf(request));
+                assertThatThrownBy(() -> controller.redactPdf(request))
+                        .hasMessageContaining("native redaction unavailable");
             }
             return options.getValue();
         }

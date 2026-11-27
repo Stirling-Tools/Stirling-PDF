@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -26,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
-import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.ImageBox;
@@ -278,27 +276,10 @@ public class RedactController {
                 } catch (Exception e) {
                     tempOutput.close();
                     TextRedactionService.rejectUnverifiable(e);
-                    log.warn(
-                            "JPDFium native redaction fell back to manual redaction service: {}",
-                            e.getMessage());
-                    Map<Integer, List<PDFText>> foundTexts =
-                            textRedactionService.findTextToRedact(
-                                    document,
-                                    terms.toArray(new String[0]),
-                                    useRegex,
-                                    wholeWordSearchBool,
-                                    caseSensitive);
-                    TempFile finalized =
-                            manualRedactionService.finalizeRedaction(
-                                    document,
-                                    foundTexts,
-                                    request.getRedactColor(),
-                                    request.getCustomPadding(),
-                                    request.getConvertPDFToImage(),
-                                    false);
-                    int matches = foundTexts.values().stream().mapToInt(List::size).sum();
-                    return withMatchCount(
-                            WebResponseUtils.pdfFileToWebResponse(finalized, filename), matches);
+                    // No fallback redaction: one that finds text the way PDFBox reads it
+                    // cannot prove it removed what the engine would have, and returning it risks
+                    // leaking the text.
+                    throw e;
                 }
             }
         } catch (IllegalArgumentException | ToolFailedException e) {
