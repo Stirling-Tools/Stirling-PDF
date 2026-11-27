@@ -124,6 +124,16 @@ test.describe("Compare tool slot selection", () => {
       "compare_sample_b.pdf",
     );
 
+    // Keep the remove action outside the filename's text box.
+    const firstName = baseSlot.getByText("compare_sample_a.pdf");
+    const firstRemove = baseSlot.getByRole("button", { name: "Remove file" });
+    await expect(firstName).toBeVisible();
+    const nameBox = await firstName.boundingBox();
+    const removeBox = await firstRemove.boundingBox();
+    expect(nameBox).not.toBeNull();
+    expect(removeBox).not.toBeNull();
+    expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(removeBox!.x);
+
     // Compare button should be enabled now that both slots are set.
     const compareButton = page.getByRole("button", {
       name: "Compare",

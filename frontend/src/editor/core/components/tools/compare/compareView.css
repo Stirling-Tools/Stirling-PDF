@@ -507,12 +507,6 @@
   width: 100%;
 }
 
-.compare-step-selection__clear-row {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
-
 /* Stacked file cards fill the full available width */
 .compare-step-selection__thumbs-col {
   width: 100%;
@@ -520,6 +514,30 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.compare-slot {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  padding: 0.75rem;
+  width: 100%;
+}
+
+.compare-slot__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.compare-slot__name,
+.compare-slot__details {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-slot__remove {
+  flex: 0 0 auto;
 }
 
 /* Pixel compare mode */

@@ -20,7 +20,6 @@ import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import type { FileId } from "@editor/types/file";
 import type { StirlingFile } from "@editor/types/fileContext";
-import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
 import type { CompareMode, CompareWorkbenchData } from "@editor/types/compare";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { getDefaultWorkbench } from "@editor/types/workbench";
@@ -361,58 +360,38 @@ const Compare = (props: BaseToolProps) => {
             data-testid={`compare-slot-${role}`}
             data-slot-state="filled"
             data-slot-filename={stub?.name}
-            className={privateContentClassName}
-            style={{
-              border: "1px solid var(--c-border)",
-              borderRadius: "var(--radius-md)",
-              padding: "0.75rem 1rem",
-              background: "var(--c-surface)",
-              width: "100%",
-              minHeight: "9rem",
-              position: "relative",
-            }}
+            className={`compare-slot ${privateContentClassName}`}
           >
-            <ActionIcon
-              variant="tertiary"
-              accent="neutral"
-              size="sm"
-              style={{
-                position: "absolute",
-                top: "0.5rem",
-                right: "0.5rem",
-              }}
-              onClick={() => clearSlot(role)}
-              aria-label={t("compare.clearSlot", "Remove file")}
-            >
-              <Icon name="x" size={20} />
-            </ActionIcon>
-            <Group align="flex-start" wrap="nowrap" gap="md">
-              <Box style={{ alignSelf: "center" }}>
-                <DocumentThumbnail
-                  file={stub}
-                  thumbnail={stub.thumbnailUrl || null}
-                />
-              </Box>
-              <Stack style={{ minWidth: 0, overflow: "hidden", flex: 1 }}>
-                <Text fw={600} title={stub.name}>
+            <Group align="center" wrap="nowrap" gap="xs">
+              <Stack gap={2} className="compare-slot__meta">
+                <Text
+                  size="sm"
+                  fw={600}
+                  title={stub.name}
+                  className="compare-slot__name"
+                >
                   {truncateCenter(stub.name || "", 50)}
                 </Text>
-                {pageCount && dateText && (
-                  <Text
-                    size="xs"
-                    c="dimmed"
-                    style={{
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {pageCount} {t("compare.pages", "pages")}
-                    <br />
+                {pageCount || dateText ? (
+                  <Text size="xs" c="dimmed" className="compare-slot__details">
+                    {pageCount
+                      ? `${pageCount} ${t("compare.pages", "pages")}`
+                      : null}
+                    {pageCount && dateText ? " · " : null}
                     {dateText}
                   </Text>
-                )}
+                ) : null}
               </Stack>
+              <ActionIcon
+                variant="tertiary"
+                accent="danger"
+                size="sm"
+                className="compare-slot__remove"
+                onClick={() => clearSlot(role)}
+                aria-label={t("compare.clearSlot", "Remove file")}
+              >
+                <Icon name="x" size={14} />
+              </ActionIcon>
             </Group>
           </Box>
         );
@@ -480,23 +459,9 @@ const Compare = (props: BaseToolProps) => {
         isVisible: true,
         content: (
           <Stack gap="sm" className="compare-step-selection">
-            <div className="compare-step-selection__clear-row">
-              <Button
-                variant="tertiary"
-                size="sm"
-                onClick={() => setClearConfirmOpen(true)}
-                disabled={!hasAnySelected}
-                style={{
-                  textDecoration: "underline",
-                  background: !hasAnySelected ? "transparent" : undefined,
-                  color: !hasAnySelected
-                    ? "var(--spdf-clear-disabled-text)"
-                    : undefined,
-                }}
-              >
-                {t("compare.clearSelected", "Clear selected")}
-              </Button>
-            </div>
+            <Text fw={500} size="sm">
+              {t("compare.mode.label", "Comparison mode")}
+            </Text>
 
             <ButtonSelector<CompareMode>
               value={params.mode}
@@ -516,7 +481,7 @@ const Compare = (props: BaseToolProps) => {
               ]}
             />
 
-            <Text fw={700} size="sm" style={{ margin: 0 }}>
+            <Text fw={500} size="sm">
               {t("compare.original.label", "Original PDF")}
             </Text>
 
@@ -536,10 +501,24 @@ const Compare = (props: BaseToolProps) => {
                 </Button>
               )}
 
-              <Text fw={700} size="sm" style={{ margin: 0 }}>
+              <Text fw={500} size="sm">
                 {t("compare.edited.label", "Edited PDF")}
               </Text>
               {renderSlot("comparison")}
+
+              {hasAnySelected && (
+                <Group justify="flex-end">
+                  <Button
+                    variant="quiet"
+                    accent="neutral"
+                    size="sm"
+                    leftSection={<Icon name="circle-x" size={14} />}
+                    onClick={() => setClearConfirmOpen(true)}
+                  >
+                    {t("compare.clearSelected", "Clear selected")}
+                  </Button>
+                </Group>
+              )}
             </Stack>
 
             <Modal
