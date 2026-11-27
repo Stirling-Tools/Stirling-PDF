@@ -6,12 +6,12 @@ type Upload = string | { name: string; mimeType: string; buffer: Buffer };
 /** Marks the file list's rows from before an upload, so the new row stands out. */
 const SEEN_ROW = "data-test-seen-row";
 
-/** The file-list rows whose file is named exactly `name`. */
+/** The file-list rows whose file is named exactly `name`. Matched on the whole
+ * name: the row splits it into parts, and "sample.pdf" is the end of others. */
 export function fileRows(page: Page, name: string) {
+  const exact = new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`);
   return page.locator(".file-sidebar-file-item").filter({
-    has: page.locator(".file-sidebar-file-name").getByText(name, {
-      exact: true,
-    }),
+    has: page.locator(".file-sidebar-file-name", { hasText: exact }),
   });
 }
 

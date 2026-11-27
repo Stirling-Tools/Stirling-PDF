@@ -18,11 +18,38 @@ import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology
 import { formatFileSize, IMAGE_EXTENSIONS } from "@editor/utils/fileUtils";
 import "@editor/components/shared/FileSidebarFileItem.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { Tooltip as AppTooltip } from "@editor/components/shared/Tooltip";
 import { OneDriveOriginTooltip } from "@editor/components/shared/OneDriveOriginTooltip";
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
   return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
+}
+
+/** Characters of the name kept beside the extension when the middle is cut. */
+const NAME_TAIL_CHARS = 6;
+
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+/**
+ * Splits a file name for middle truncation: the head takes the ellipsis, the tail
+ * always shows. The end of a name (extension, "v2", "final", a date) is usually
+ * what tells similar files apart, so it is the part worth keeping.
+ */
+export function splitFileName(name: string): [head: string, tail: string] {
+  const dot = name.lastIndexOf(".");
+  // A long "extension" is just a dot inside the name, not a file type.
+  const extLength = dot > 0 && name.length - dot <= 10 ? name.length - dot : 0;
+  const target = Math.max(0, name.length - extLength - NAME_TAIL_CHARS);
+  // Back to the nearest whole character, so an emoji or accented letter is
+  // never split across the two parts.
+  let cut = 0;
+  for (const { index } of graphemes.segment(name)) {
+    if (index > target) break;
+    cut = index;
+  }
+  return [name.slice(0, cut), name.slice(cut)];
 }
 
 export type DateGroup =
@@ -332,12 +359,60 @@ export const FileItem = React.memo(function FileItem({
 
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
   const [menuOpened, setMenuOpened] = useState(false);
+  // Width the full-name tooltip may take, or null while it is closed.
+  const [nameTooltipWidth, setNameTooltipWidth] = useState<number | null>(null);
+  const nameHeadRef = useRef<HTMLSpanElement>(null);
+  const nameTailRef = useRef<HTMLSpanElement>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
+  const [nameHead, nameTail] = splitFileName(name);
+
+  // Hovering or focusing slides the name in to clear the buttons, so whether it
+  // gets cut is judged against the room it will have, not the width it has now.
+  const openNameTooltipIfCut = useCallback(() => {
+    const row = itemRef.current;
+    const head = nameHeadRef.current;
+    const tail = nameTailRef.current;
+    const info = infoRef.current;
+    if (!row || !head || !tail || !info) return;
+    // Hovered and viewed rows show both buttons; a focused one only the kebab.
+    const bothButtons = row.matches(":hover, .viewed");
+    const reserve = parseFloat(
+      getComputedStyle(row).getPropertyValue(
+        bothButtons
+          ? "--file-sidebar-actions-reserve"
+          : "--file-sidebar-kebab-reserve",
+      ),
+    );
+    const nameLeft = head.getBoundingClientRect().left;
+    const room = info.getBoundingClientRect().right - reserve - nameLeft;
+    if (head.scrollWidth + tail.offsetWidth <= room) return;
+    // As wide as the row: centred on the name, that still ends inside the row,
+    // clear of the thumbnail preview that opens beside it.
+    setNameTooltipWidth(row.getBoundingClientRect().width);
+  }, []);
 
   const handleMouseEnter = useCallback(() => {
     setHoverRect(itemRef.current?.getBoundingClientRect() ?? null);
+    openNameTooltipIfCut();
+  }, [openNameTooltipIfCut]);
+
+  // Pointer and keyboard each keep the tooltip open while the other leaves.
+  const handleMouseLeave = useCallback(() => {
+    setHoverRect(null);
+    if (!itemRef.current?.matches(":focus-visible")) setNameTooltipWidth(null);
   }, []);
 
-  const handleMouseLeave = useCallback(() => setHoverRect(null), []);
+  const handleFocus = useCallback(
+    (e: React.FocusEvent) => {
+      if (e.target === e.currentTarget) openNameTooltipIfCut();
+    },
+    [openNameTooltipIfCut],
+  );
+
+  const handleBlur = useCallback((e: React.FocusEvent) => {
+    if (e.target === e.currentTarget && !e.currentTarget.matches(":hover"))
+      setNameTooltipWidth(null);
+  }, []);
 
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready.
   // The kebab suppresses it - two cards floating off one row read as a glitch.
@@ -363,6 +438,8 @@ export const FileItem = React.memo(function FileItem({
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
       >
         <div className="file-sidebar-file-icon-wrapper">
           {isSelected ? (
@@ -376,12 +453,26 @@ export const FileItem = React.memo(function FileItem({
             </>
           )}
         </div>
-        <div className="file-sidebar-file-info">
-          <span
-            className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
+        <div ref={infoRef} className="file-sidebar-file-info">
+          <AppTooltip
+            content={<PrivateContent>{name}</PrivateContent>}
+            open={nameTooltipWidth !== null && !menuOpened}
+            position="top"
+            arrow
+            maxWidth={nameTooltipWidth ?? undefined}
+            containerStyle={{ pointerEvents: "none", overflowWrap: "anywhere" }}
           >
-            {name}
-          </span>
+            <span
+              className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
+            >
+              <span ref={nameHeadRef} className="file-sidebar-file-name-head">
+                {nameHead}
+              </span>
+              <span ref={nameTailRef} className="file-sidebar-file-name-tail">
+                {nameTail}
+              </span>
+            </span>
+          </AppTooltip>
           <span className="file-sidebar-file-meta-row">
             <span className="file-sidebar-file-meta">
               {primaryLabel ? (
