@@ -3,12 +3,14 @@ import {
   openRawDocumentSafe,
   closeRawDocument,
   saveRawDocument,
+  getRawDocumentVersion,
   importPages,
   setPageRotation,
   degreesToPdfiumRotation,
   addNewPage,
 } from "@editor/services/pdfiumService";
 import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
+import { highestPdfVersion } from "@editor/utils/pdfHeaderVersion";
 import { PDFDocument, PDFPage } from "@editor/types/pageEditor";
 
 // A4 dimensions in PDF points (72 dpi)
@@ -191,8 +193,13 @@ export class PDFExportService {
         insertIdx++;
       }
 
-      // Save the assembled document
-      const resultBuf = await saveRawDocument(destDocPtr);
+      const sourceVersions = await Promise.all(
+        [...loadedDocs.values()].map((docPtr) => getRawDocumentVersion(docPtr)),
+      );
+      const resultBuf = await saveRawDocument(
+        destDocPtr,
+        highestPdfVersion(sourceVersions),
+      );
       return new Blob([resultBuf], { type: "application/pdf" });
     } finally {
       // Cleanup all loaded source documents
@@ -272,7 +279,10 @@ export class PDFExportService {
         insertIdx++;
       }
 
-      const resultBuf = await saveRawDocument(destDocPtr);
+      const resultBuf = await saveRawDocument(
+        destDocPtr,
+        await getRawDocumentVersion(srcDocPtr),
+      );
       return new Blob([resultBuf], { type: "application/pdf" });
     } finally {
       await closeRawDocument(srcDocPtr);

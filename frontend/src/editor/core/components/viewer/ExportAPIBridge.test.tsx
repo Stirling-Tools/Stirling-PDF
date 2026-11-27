@@ -80,3 +80,25 @@ it("never falls back to native export when a protected source is unavailable", (
   expect(mock.register).not.toHaveBeenCalled();
   expect(mock.saveAsCopy).not.toHaveBeenCalled();
 });
+
+function sourceWithHeader(header: string): Blob {
+  const head = new TextEncoder().encode(`${header}\n`).buffer;
+  return {
+    slice: () => ({ arrayBuffer: async () => head }),
+  } as unknown as Blob;
+}
+
+it("takes the version of the file open when the export started", async () => {
+  let finish: (bytes: ArrayBuffer) => void = () => {};
+  mock.saveAsCopy.mockReturnValue({
+    toPromise: () => new Promise<ArrayBuffer>((resolve) => (finish = resolve)),
+  });
+  const view = render(
+    <ExportAPIBridge sourceFile={sourceWithHeader("%PDF-2.0")} />,
+  );
+  const pending = exportApi().saveAsCopy().toPromise();
+  view.rerender(<ExportAPIBridge sourceFile={sourceWithHeader("%PDF-1.4")} />);
+  finish(new TextEncoder().encode("%PDF-1.0\n").buffer);
+  const output = new Uint8Array(await pending);
+  expect(new TextDecoder().decode(output.subarray(0, 8))).toBe("%PDF-2.0");
+});

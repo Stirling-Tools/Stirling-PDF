@@ -9,6 +9,7 @@ interface FakeOptions {
   saveResult?: number;
   flaggedResult?: boolean | null;
   output?: string;
+  fileVersion?: number | null;
 }
 
 function fakeDoc(opts: FakeOptions = {}) {
@@ -36,8 +37,10 @@ function fakeDoc(opts: FakeOptions = {}) {
     PDFiumExt_GetFileWriterData: (_w: number, out: number, size: number) => {
       heap.copyWithin(out, BASE, BASE + size);
     },
+    FPDF_GetFileVersion: () => opts.fileVersion != null,
     pdfium: {
       wasmExports: { malloc: () => 8192, free: vi.fn(), memory },
+      getValue: () => opts.fileVersion,
     },
   };
   if (opts.flaggedResult !== null) module.FPDF_SaveAsCopy = flagged;
@@ -45,6 +48,7 @@ function fakeDoc(opts: FakeOptions = {}) {
   const doc = {
     module,
     docPtr: 42,
+    openedBytes: new Uint8Array(0),
     loadedPages: () => [],
   } as unknown as EditorDocument;
   return { doc, saveAsCopy, flagged };
@@ -98,5 +102,14 @@ describe("PdfiumSave failure detection", () => {
     PdfiumSave.serialize(doc);
     expect(saveAsCopy).toHaveBeenCalledWith(42, 7);
     expect(flagged).not.toHaveBeenCalled();
+  });
+
+  it("restores PDFium's file version when the opened bytes were not kept", () => {
+    const { doc } = fakeDoc({
+      output: `%PDF-1.0\n${"x".repeat(400)}\n%%EOF\n`,
+      fileVersion: 20,
+    });
+    const saved = PdfiumSave.serialize(doc);
+    expect(new TextDecoder().decode(saved.subarray(0, 8))).toBe("%PDF-2.0");
   });
 });
