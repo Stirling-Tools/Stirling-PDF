@@ -22,7 +22,6 @@
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 2px;
   pointer-events: none;
 }
 
@@ -156,22 +155,57 @@
 }
 
 /* File info */
+/* The name runs the full width until the row's buttons show, then makes room
+   for exactly the buttons on screen: both (eye + kebab) or the kebab alone. */
 .file-sidebar-file-info {
   flex: 1;
   min-width: 0;
-  /* Always reserve space for action buttons so file name truncation dots (...)
-     never bleed under action buttons or overlap their outline/focus box. */
-  padding-right: 3.75rem;
+  padding-right: 0;
+  transition: padding-right 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.file-sidebar-file-item.selected .file-sidebar-file-info,
+.file-sidebar-file-item:focus-within .file-sidebar-file-info {
+  padding-right: 1.75rem;
+}
+
+.file-sidebar-file-item:hover .file-sidebar-file-info,
+.file-sidebar-file-item.viewed .file-sidebar-file-info {
+  padding-right: 3.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar-file-info {
+    transition: none;
+  }
+}
+
+/* Cut from the middle: the head takes the ellipsis, the tail (end of the name
+   and its extension) always shows. `pre` keeps a space at the split visible. */
 .file-sidebar-file-name {
-  display: block;
+  display: flex;
+  min-width: 0;
   font-size: 13px;
   font-weight: 500;
   color: var(--c-text);
-  white-space: nowrap;
+  overflow: hidden;
+}
+
+.file-sidebar-file-name-head {
+  min-width: 0;
+  white-space: pre;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.file-sidebar-file-name-tail {
+  flex-shrink: 0;
+  white-space: pre;
+}
+
+.file-sidebar-name-tooltip {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .file-sidebar-file-item.selected .file-sidebar-file-name {
@@ -224,6 +258,7 @@
   justify-content: center;
   flex-shrink: 0;
   width: 24px;
+  min-width: 24px;
   height: 24px;
   border: none;
   background: transparent;
@@ -232,14 +267,19 @@
   color: var(--c-text-subtle);
   padding: 0;
   opacity: 0;
+  translate: 6px 0;
   transition:
-    opacity 0.12s ease,
+    opacity 0.18s ease,
+    translate 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
     color 0.12s ease;
 }
 
-/* Show eye on hover (for any non-viewed file) */
+/* Show eye on hover (for any non-viewed file). It follows the kebab in by a
+   beat, so the pair reads as sliding out from the row's edge. */
 .file-sidebar-file-item:hover .file-sidebar-eye-btn {
   opacity: 1;
+  translate: 0 0;
+  transition-delay: 0.04s;
 }
 
 /* Pin the viewed item when scrolled out of view in either direction */
@@ -276,6 +316,7 @@
 /* Always show eye for the currently viewed file */
 .file-sidebar-file-item.viewed .file-sidebar-eye-btn {
   opacity: 1;
+  translate: 0 0;
   color: var(--color-green-dark);
 }
 
@@ -302,7 +343,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 24px;
+  /* The dots glyph is a thin column, so a narrower button closes the gap to
+     the eye without shrinking the hit area's height. */
+  width: 20px;
+  min-width: 20px;
   height: 24px;
   border: none;
   background: transparent;
@@ -311,8 +355,10 @@
   color: var(--c-text-subtle);
   padding: 0;
   opacity: 0;
+  translate: 6px 0;
   transition:
-    opacity 0.12s ease,
+    opacity 0.18s ease,
+    translate 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
     color 0.12s ease;
 }
 
@@ -322,6 +368,14 @@
 .file-sidebar-file-item.selected .file-sidebar-kebab-btn,
 .file-sidebar-kebab-btn[aria-expanded="true"] {
   opacity: 1;
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar-eye-btn,
+  .file-sidebar-kebab-btn {
+    translate: none;
+  }
 }
 
 .file-sidebar-kebab-btn:hover {

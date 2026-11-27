@@ -25,6 +25,22 @@ export function getFileExtension(name: string): string {
   return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
 }
 
+/** Characters of the name kept beside the extension when the middle is cut. */
+const NAME_TAIL_CHARS = 6;
+
+/**
+ * Splits a file name for middle truncation: the head takes the ellipsis, the tail
+ * always shows. The end of a name (extension, "v2", "final", a date) is usually
+ * what tells similar files apart, so it is the part worth keeping.
+ */
+export function splitFileName(name: string): [head: string, tail: string] {
+  const dot = name.lastIndexOf(".");
+  // A long "extension" is just a dot inside the name, not a file type.
+  const extLength = dot > 0 && name.length - dot <= 10 ? name.length - dot : 0;
+  const cut = Math.max(0, name.length - extLength - NAME_TAIL_CHARS);
+  return [name.slice(0, cut), name.slice(cut)];
+}
+
 export type DateGroup =
   | "today"
   | "yesterday"
@@ -332,12 +348,34 @@ export const FileItem = React.memo(function FileItem({
 
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
   const [menuOpened, setMenuOpened] = useState(false);
+  // Width the full-name tooltip may take, or null while it is closed.
+  const [nameTooltipWidth, setNameTooltipWidth] = useState<number | null>(null);
+  const nameHeadRef = useRef<HTMLSpanElement>(null);
+  const nameTailRef = useRef<HTMLSpanElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const [nameHead, nameTail] = splitFileName(name);
 
   const handleMouseEnter = useCallback(() => {
-    setHoverRect(itemRef.current?.getBoundingClientRect() ?? null);
+    const row = itemRef.current;
+    setHoverRect(row?.getBoundingClientRect() ?? null);
+    const head = nameHeadRef.current;
+    const tail = nameTailRef.current;
+    const actions = actionsRef.current;
+    if (!row || !head || !tail || !actions) return;
+    // Hovering slides the name in to clear the buttons, so whether it gets cut
+    // is judged against where the buttons sit, not the width it has right now.
+    const nameLeft = head.getBoundingClientRect().left;
+    const room = actions.getBoundingClientRect().left - nameLeft;
+    if (head.scrollWidth + tail.offsetWidth <= room) return;
+    // From the name to the row's edge, so it stays clear of the thumbnail
+    // preview that opens beside the row.
+    setNameTooltipWidth(row.getBoundingClientRect().right - nameLeft);
   }, []);
 
-  const handleMouseLeave = useCallback(() => setHoverRect(null), []);
+  const handleMouseLeave = useCallback(() => {
+    setHoverRect(null);
+    setNameTooltipWidth(null);
+  }, []);
 
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready.
   // The kebab suppresses it - two cards floating off one row read as a glitch.
@@ -377,11 +415,28 @@ export const FileItem = React.memo(function FileItem({
           )}
         </div>
         <div className="file-sidebar-file-info">
-          <span
-            className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
+          <Tooltip
+            label={name}
+            opened={nameTooltipWidth !== null && !menuOpened}
+            position="top-start"
+            offset={6}
+            multiline
+            maw={nameTooltipWidth ?? undefined}
+            withArrow
+            arrowPosition="side"
+            className={`file-sidebar-name-tooltip ${privateContentClassName}`}
           >
-            {name}
-          </span>
+            <span
+              className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
+            >
+              <span ref={nameHeadRef} className="file-sidebar-file-name-head">
+                {nameHead}
+              </span>
+              <span ref={nameTailRef} className="file-sidebar-file-name-tail">
+                {nameTail}
+              </span>
+            </span>
+          </Tooltip>
           <span className="file-sidebar-file-meta-row">
             <span className="file-sidebar-file-meta">
               {primaryLabel ? (
@@ -466,7 +521,7 @@ export const FileItem = React.memo(function FileItem({
             <PolicyBadges policies={policies} />
           </span>
         </div>
-        <div className="file-sidebar-file-actions">
+        <div ref={actionsRef} className="file-sidebar-file-actions">
           <ActionIcon
             variant="tertiary"
             size="sm"

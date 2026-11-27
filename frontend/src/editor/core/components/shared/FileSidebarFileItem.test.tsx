@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { expect, it, vi } from "vitest";
-import { FileItem } from "@editor/components/shared/FileSidebarFileItem";
+import {
+  FileItem,
+  splitFileName,
+} from "@editor/components/shared/FileSidebarFileItem";
 import type { FileId } from "@editor/types/file";
 
 vi.mock("@editor/hooks/useLazyThumbnail", () => ({
@@ -87,4 +90,19 @@ it("offers only an upload to OneDrive for a local file", async () => {
   expect(upload.textContent).toContain("oneDriveSave.uploadToOneDrive");
   expect(screen.queryByTestId("file-save-onedrive")).toBeNull();
   expect(screen.queryByTestId("file-open-onedrive")).toBeNull();
+});
+
+// The tail is what stays visible when a long name is cut, so it must carry the
+// extension and the end of the name, where similar files usually differ.
+it("keeps the extension and the end of the name in the tail", () => {
+  expect(splitFileName("Quarterly report final v3.pdf")).toEqual([
+    "Quarterly report fi",
+    "nal v3.pdf",
+  ]);
+  expect(splitFileName("notes")).toEqual(["", "notes"]);
+  expect(splitFileName("README")).toEqual(["", "README"]);
+  expect(splitFileName("Minutes 2024.03.14 board meeting")).toEqual([
+    "Minutes 2024.03.14 board m",
+    "eeting",
+  ]);
 });
