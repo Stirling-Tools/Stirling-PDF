@@ -1,20 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { getLocalFontFallbackConfig } from "@editor/services/pdfiumFontFallback";
-import { subscribeToFontBaseUrl } from "@editor/services/fontBaseUrl";
 
 /**
- * PDFium fallback-font configuration, recomputed when the font base URL changes.
- * The desktop webview only learns the backend port after startup, so a config
- * memoized at mount would keep an empty base URL; `subscribeToFontBaseUrl` is a
- * no-op in the web build, where the base is known immediately.
+ * PDFium fallback-font configuration. Stable for the viewer's lifetime: a new
+ * object recreates the PDFium engine.
  */
 export function useFontFallbackConfig() {
-  const [revision, setRevision] = useState(0);
-
-  useEffect(
-    () => subscribeToFontBaseUrl(() => setRevision((current) => current + 1)),
-    [],
-  );
-
-  return useMemo(() => getLocalFontFallbackConfig(), [revision]);
+  return useMemo(() => getLocalFontFallbackConfig(), []);
 }

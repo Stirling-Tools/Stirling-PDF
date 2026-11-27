@@ -1,28 +1,10 @@
-import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { BASE_PATH } from "@editor/constants/app";
 
 /**
- * Desktop shadow: the webview has no /fonts of its own, but the bundled backend
- * runs in every connection mode and serves the font set from the JAR. Empty
- * while the backend port is still unknown; the engine then falls back to
- * same-origin URLs, which fail gracefully.
+ * Desktop shadow: the fallback fonts ship inside the app bundle, so they load
+ * from the webview's own origin rather than over HTTP from a backend. The API
+ * base is deliberately ignored, since in server mode it points at a remote host.
  */
 export function getFontBaseUrl(): string {
-  const base = tauriBackendService.getBackendUrl();
-  return base ? `${base.replace(/\/$/, "")}/fonts` : "";
-}
-
-/**
- * The webview learns the backend port after startup, so the base URL moves from
- * empty to a real origin. Consumers memoize the font config; this lets them
- * recompute it, but only when the resolved URL actually changes so an unrelated
- * health flap does not churn the engine.
- */
-export function subscribeToFontBaseUrl(onChange: () => void): () => void {
-  let previous = getFontBaseUrl();
-  return tauriBackendService.subscribeToStatus(() => {
-    const next = getFontBaseUrl();
-    if (next === previous) return;
-    previous = next;
-    onChange();
-  });
+  return `${window.location.origin}${BASE_PATH}/fonts`;
 }

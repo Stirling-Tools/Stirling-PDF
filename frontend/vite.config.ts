@@ -660,17 +660,15 @@ export default defineConfig(async ({ mode, command }) => {
             src: "src/editor/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
-          // The compression pass writes the .br/.gz siblings the backend JAR
-          // serves from classpath:/static/fonts/; desktop is embedded and gets
-          // them from the bundled backend instead.
-          ...(effectiveMode === "desktop"
-            ? []
-            : [
-                {
-                  src: "../app/core/src/main/resources/static/fonts/*.ttf",
-                  dest: "fonts",
-                },
-              ]),
+          // The web compression pass writes the .br/.gz siblings the backend
+          // JAR serves from classpath:/static/fonts/. Desktop keeps the whole
+          // set in its bundle: PDFium loads these with a blocking request from
+          // every new viewer worker, and fetching them from the bundled
+          // backend held text back for seconds on each opened file.
+          {
+            src: "../app/core/src/main/resources/static/fonts/*.ttf",
+            dest: "fonts",
+          },
         ],
       }),
       ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
