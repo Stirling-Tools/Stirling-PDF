@@ -15,6 +15,9 @@ type TokenClientWithCallback = google.accounts.oauth2.TokenClient & {
 
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 const SESSION_STORAGE_ID = "googleDrivePickerAccessToken";
+const DRIVE_DISCOVERY_DOC =
+  "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
+const GAPI_LOAD_TIMEOUT_MS = 20_000;
 
 interface GoogleDriveConfig {
   clientId: string;
@@ -129,13 +132,32 @@ class GoogleDrivePickerService {
       id: "gapi-script",
     });
 
-    return new Promise((resolve) => {
-      window.gapi.load("client:picker", async () => {
-        await window.gapi.client.load(
-          "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
-        );
-        this.gapiLoaded = true;
-        resolve();
+    // Without onerror/ontimeout, a module that fails to load leaves this promise
+    // pending and the picker hangs with no error.
+    return new Promise((resolve, reject) => {
+      window.gapi.load("client:picker", {
+        callback: async () => {
+          try {
+            // The loader can call back without having installed gapi.client
+            // (seen in the macOS desktop WebView).
+            if (window.gapi.client === undefined) {
+              throw new Error("Google API client module did not load");
+            }
+            await window.gapi.client.load(DRIVE_DISCOVERY_DOC);
+            this.gapiLoaded = true;
+            resolve();
+          } catch (error) {
+            reject(
+              error instanceof Error
+                ? error
+                : new Error("Failed to load Google Drive API"),
+            );
+          }
+        },
+        onerror: () => reject(new Error("Failed to load Google API modules")),
+        timeout: GAPI_LOAD_TIMEOUT_MS,
+        ontimeout: () =>
+          reject(new Error("Timed out loading Google API modules")),
       });
     });
   }

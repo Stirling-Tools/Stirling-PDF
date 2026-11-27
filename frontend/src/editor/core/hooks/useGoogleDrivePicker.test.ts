@@ -37,3 +37,26 @@ it("clears a failed Drive attempt and can retry without reinitializing the servi
   });
   expect(service.initialize).toHaveBeenCalledOnce();
 });
+
+it("shows a load error and retries initialization when the Google APIs fail to load", async () => {
+  allowConsole.error(/Google Drive picker error/);
+  service.initialize.mockClear();
+  service.openPicker.mockClear();
+  service.initialize.mockRejectedValueOnce(
+    new Error("Google API client module did not load"),
+  );
+  service.openPicker.mockResolvedValueOnce([]);
+  const { result } = renderHook(useGoogleDrivePicker);
+  await waitFor(() => expect(result.current.isEnabled).toBe(true));
+  await act(async () => {
+    expect(await result.current.openPicker()).toEqual([]);
+  });
+  expect(result.current.error).toBe("provider.googledrive.errors.loadFailed");
+  expect(result.current.isLoading).toBe(false);
+  expect(service.openPicker).not.toHaveBeenCalled();
+  await act(async () => {
+    await result.current.openPicker();
+  });
+  expect(service.initialize).toHaveBeenCalledTimes(2);
+  expect(result.current.error).toBeNull();
+});

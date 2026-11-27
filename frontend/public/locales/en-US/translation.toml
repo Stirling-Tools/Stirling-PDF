@@ -12021,6 +12021,7 @@ label = "Enable Google Drive"
 
 [provider.googledrive.errors]
 connectFailed = "Couldn't connect your Google account. Try again from Settings > Connected accounts."
+loadFailed = "Couldn't load Google Drive. Try again later."
 notConfigured = "Google Drive is not configured"
 pickerFailed = "Failed to open Google Drive picker"
 
