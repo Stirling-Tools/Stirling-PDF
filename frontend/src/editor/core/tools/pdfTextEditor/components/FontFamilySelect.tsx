@@ -79,6 +79,8 @@ interface FontFamilySelectProps {
   touch?: boolean;
   /** False renders the list inside the toolbar's own popover rather than portalled out of it. */
   withinPortal?: boolean;
+  /** Fills the row it sits in rather than the toolbar's fixed width. */
+  fullWidth?: boolean;
 }
 
 /** Font picker. Device fonts are additive: no prompt until the user asks. */
@@ -93,6 +95,7 @@ export function FontFamilySelect({
   disabled = false,
   touch = false,
   withinPortal = true,
+  fullWidth = false,
 }: FontFamilySelectProps) {
   const { t } = useTranslation();
   const warnAbout = useFontChangeWarning();
@@ -326,12 +329,14 @@ export function FontFamilySelect({
       gap="xs"
       align="center"
       wrap="nowrap"
-      style={touch ? { flex: "1 1 100%" } : undefined}
+      style={touch || fullWidth ? { flex: "1 1 100%" } : undefined}
     >
       <Select
         size={touch ? "lg" : "xs"}
-        w={touch ? undefined : 138}
-        style={touch ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }}
+        w={touch || fullWidth ? undefined : 138}
+        style={
+          touch || fullWidth ? { flex: 1, minWidth: 0 } : { flexShrink: 0 }
+        }
         searchable
         comboboxProps={{ withinPortal }}
         data={data}

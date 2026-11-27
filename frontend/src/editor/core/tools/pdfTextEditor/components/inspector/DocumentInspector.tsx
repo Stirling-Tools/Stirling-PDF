@@ -180,6 +180,9 @@ function ChangeButton({
 /** About four fonts; more scroll inside the list, so the panel itself never has to. */
 const FONT_LIST_MAX_HEIGHT = "12rem";
 
+/** Room for the font picker at full width beside Bold and Italic. */
+const FONT_POPOVER_WIDTH = 440;
+
 /** Thin enough to fit in the panel's side margin. */
 const FONT_LIST_SCROLLBAR = 6;
 
@@ -215,6 +218,7 @@ function FontsBlock({
     <Stack gap="xs" data-testid="pdf-editor-fonts-panel">
       <ChangePopover
         opened={target !== null}
+        width={FONT_POPOVER_WIDTH}
         // The Fonts row, not the row of the font being replaced, which goes
         // from the list as soon as its text previews in another font.
         anchor={
@@ -513,17 +517,20 @@ function FontStatusTag({ font, name }: { font: PageFont; name: string }) {
 function ChangePopover({
   opened,
   anchor,
+  width = "target",
   children,
 }: {
   opened: boolean;
   anchor: ReactNode;
+  /** Wider than the panel reaches out over the page from its right edge. */
+  width?: number | "target";
   children: ReactNode;
 }) {
   return (
     <Popover
       opened={opened}
-      position="bottom"
-      width="target"
+      position={width === "target" ? "bottom" : "bottom-end"}
+      width={width}
       shadow="md"
       withinPortal
       trapFocus
@@ -534,7 +541,13 @@ function ChangePopover({
       <Popover.Target>
         <div>{anchor}</div>
       </Popover.Target>
-      <Popover.Dropdown>{children}</Popover.Dropdown>
+      <Popover.Dropdown>
+        {/* Focus lands on the popover, not its first field: the font list
+            opens on focus and would cover what the popover offers. */}
+        <div tabIndex={-1} data-autofocus style={{ outline: "none" }}>
+          {children}
+        </div>
+      </Popover.Dropdown>
     </Popover>
   );
 }
@@ -649,6 +662,7 @@ function FontChangePanel({
       <Group gap="xs" wrap="nowrap">
         <FontFamilySelect
           value={family}
+          fullWidth
           // Inside the popover, so picking from its list is not a click outside it.
           withinPortal={false}
           onChange={(next) => tryOut(next, style)}
