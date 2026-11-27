@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -51,6 +52,40 @@ class SamlRedirectTest {
     void deniedUsersStayOnTheApplicationOrigin() throws Exception {
         assertThat(login(null, "//attacker.example", true))
                 .isEqualTo("/logout?saml2RequiresLicense=true");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "true, true, oAuth2AdminBlockedUser",
+        "true, false, oAuth2AdminBlockedUser",
+        "false, false, oAuth2AutoCreateDisabled"
+    })
+    void unknownUsersGetTheMatchingRejection(
+            boolean blockRegistration, boolean autoCreateUser, String errorCode) throws Exception {
+        var properties = new ApplicationProperties();
+        var saml2 = properties.getSecurity().getSaml2();
+        saml2.setBlockRegistration(blockRegistration);
+        saml2.setAutoCreateUser(autoCreateUser);
+        var eligibility = mock(UserLicenseSettingsService.class);
+        when(eligibility.isSamlEligible(any())).thenReturn(true);
+        var users = mock(UserService.class);
+        var handler =
+                new CustomSaml2AuthenticationSuccessHandler(
+                        mock(LoginAttemptService.class),
+                        saml2,
+                        users,
+                        mock(JwtServiceInterface.class),
+                        eligibility,
+                        properties);
+        var principal =
+                new CustomSaml2AuthenticatedPrincipal(
+                        "new-user", Map.of(), "name", List.of(), "signed-response");
+        var authentication =
+                UsernamePasswordAuthenticationToken.authenticated(principal, null, List.of());
+        var response = new MockHttpServletResponse();
+        handler.onAuthenticationSuccess(new MockHttpServletRequest(), response, authentication);
+        assertThat(response.getRedirectedUrl()).isEqualTo("/login?errorOAuth=" + errorCode);
+        verify(users, never()).processSSOPostLogin(any(), any(), any(), anyBoolean(), any());
     }
 
     private String login(String frontend, String path, boolean denied) throws Exception {

@@ -14,9 +14,15 @@ import { configureSpringAuth } from "@editor/auth/config";
 // Mock i18n to return fallback text
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string | Record<string, unknown>) => {
-      if (typeof fallback === "string") return fallback;
-      return key;
+    t: (
+      key: string,
+      fallback?: string | Record<string, unknown>,
+      values?: Record<string, unknown>,
+    ) => {
+      if (typeof fallback !== "string") return key;
+      return fallback.replace(/{{(\w+)}}/g, (_, name: string) =>
+        String(values?.[name] ?? ""),
+      );
     },
   }),
   initReactI18next: {
@@ -638,6 +644,116 @@ describe("Login", () => {
 
     expect(screen.getByText(/session.*expired/i)).toBeInTheDocument();
   });
+
+  it.each([
+    ["oAuth2AutoCreateDisabled", /automatic account creation is disabled/i],
+    ["oAuth2AdminBlockedUser", /registration of new users is blocked/i],
+    ["maxUsersReached", /maximum number of users/i],
+    ["userIsDisabled", /this account has been disabled/i],
+    ["saml2RequiresLicense", /saml sign-in requires an enterprise license/i],
+    ["oAuth2RequiresLicense", /oauth sign-in requires a license/i],
+    ["locked", /locked after too many failed sign-in attempts/i],
+    ["badCredentials", /sign-in details were not accepted/i],
+    ["invalidUsername", /sent a username that Stirling PDF can't use/i],
+    [
+      "invalid_token_response",
+      "Stirling PDF couldn't complete sign-in with your identity provider. Check the client ID, client secret and token endpoint authentication method. Error code: invalid_token_response",
+    ],
+    [
+      "invalid_client",
+      "Stirling PDF couldn't complete sign-in with your identity provider. Check the client ID, client secret and token endpoint authentication method. Error code: invalid_client",
+    ],
+    [
+      "invalid_user_info_response",
+      /must be plain JSON, not signed or encrypted\. Error code: invalid_user_info_response/,
+    ],
+    ["invalid_id_token", /ID token was rejected.*Error code: invalid_id_token/],
+    [
+      "authorization_request_not_found",
+      /expired or was started in another tab.*Error code: authorization_request_not_found/,
+    ],
+    ["__proto__", /Check the server log for details\. Error code: __proto__$/],
+    ["constructor", /Error code: constructor$/],
+    ["toString", /Error code: toString$/],
+    ["hasOwnProperty", /Error code: hasOwnProperty$/],
+    [
+      "unexpected_provider_error",
+      "Single sign-on failed. Check the server log for details. Error code: unexpected_provider_error",
+    ],
+  ])("should display the SSO error %s", async (code, message) => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={[`/login?errorOAuth=${code}`]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
+
+    expect(screen.getByText(message)).toBeInTheDocument();
+  });
+
+  it.each([
+    ["locked", /locked after too many failed sign-in attempts/i],
+    ["badCredentials", /sign-in details were not accepted/i],
+    ["access_denied", /denied the sign-in\. Error code: access_denied$/],
+    ["__proto__", /Error code: __proto__$/],
+  ])("should display the login error %s", async (code, message) => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={[`/login?error=${code}`]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
+
+    expect(screen.getByText(message)).toBeInTheDocument();
+  });
+
+  it.each([
+    [
+      "all",
+      /already uses password sign-in\. Sign in with your password instead/i,
+    ],
+    [
+      "normal",
+      /already uses password sign-in\. Sign in with your password instead/i,
+    ],
+    [
+      "oauth2",
+      /can't be used with single sign-on\. Contact your administrator/i,
+    ],
+    [
+      "saml2",
+      /can't be used with single sign-on\. Contact your administrator/i,
+    ],
+  ])(
+    "should explain userAlreadyExistsWeb for login method %s",
+    async (loginMethod, message) => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: { enableLogin: true, loginMethod, providerList: {} },
+      });
+
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <MemoryRouter
+              initialEntries={["/login?errorOAuth=userAlreadyExistsWeb"]}
+            >
+              <Login />
+            </MemoryRouter>
+          </TestWrapper>,
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(message)).toBeInTheDocument();
+      });
+    },
+  );
 
   it("should display account created success message", async () => {
     await act(async () => {

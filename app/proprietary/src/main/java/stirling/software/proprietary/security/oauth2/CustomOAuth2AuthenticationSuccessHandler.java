@@ -3,9 +3,10 @@ package stirling.software.proprietary.security.oauth2;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -36,7 +37,6 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
-import stirling.software.proprietary.security.util.RedirectBaseUrl;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -69,7 +69,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
         boolean userExists = userService.usernameExistsIgnoreCase(username);
 
         if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
-            response.sendRedirect(request.getContextPath() + "/logout?maxUsersReached=true");
+            redirectToLogout(request, response, "maxUsersReached");
             return;
         }
 
@@ -81,35 +81,41 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
                         : null;
 
+        if (loginAttemptService.isBlocked(username)) {
+            if (session != null) {
+                session.removeAttribute("SPRING_SECURITY_SAVED_REQUEST");
+            }
+            throw new LockedException(
+                    "Your account has been locked due to too many failed login attempts.");
+        }
+        if (userService.isUserDisabled(username)) {
+            redirectToLogout(request, response, "userIsDisabled");
+            return;
+        }
+        boolean isSsoUser = userService.isSsoAuthenticationTypeByUsername(username);
+        if (userExists && userService.hasPassword(username) && !isSsoUser) {
+            redirectToLogout(request, response, "oAuth2AuthenticationErrorWeb");
+            return;
+        }
+        if (!userExists && oauth2Properties.getBlockRegistration()) {
+            redirectToLogout(request, response, "oAuth2AdminBlockedUser");
+            return;
+        }
+        if (!userExists && !oauth2Properties.getAutoCreateUser()) {
+            redirectToLogout(request, response, "oAuth2AutoCreateDisabled");
+            return;
+        }
+        if (!userExists && !userService.isUsernameValid(username)) {
+            redirectToLogout(request, response, "invalidUsername");
+            return;
+        }
+
         if (savedRequest != null
                 && !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
-            if (loginAttemptService.isBlocked(username)) {
-                if (session != null) {
-                    session.removeAttribute("SPRING_SECURITY_SAVED_REQUEST");
-                }
-                throw new LockedException(
-                        "Your account has been locked due to too many failed login attempts.");
-            }
-            if (userService.isUserDisabled(username)) {
-                getRedirectStrategy()
-                        .sendRedirect(request, response, "/logout?userIsDisabled=true");
-                return;
-            }
-            boolean isSsoUser = userService.isSsoAuthenticationTypeByUsername(username);
-            if (userExists && userService.hasPassword(username) && !isSsoUser) {
-                response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
-                return;
-            }
-
             try {
-                if (oauth2Properties.getBlockRegistration()
-                        && !userService.usernameExistsIgnoreCase(username)) {
-                    response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
-                    return;
-                }
                 if (principal instanceof OAuth2User oAuth2User) {
                     // Extract SSO provider information from OAuth2User
                     String ssoProviderId = oAuth2User.getAttribute("sub"); // OIDC ID
@@ -150,8 +156,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     }
 
                     // Build context-aware redirect URL based on the original request
-                    String redirectUrl =
-                            buildContextAwareRedirectUrl(request, response, contextPath, jwt);
+                    String redirectUrl = buildContextAwareRedirectUrl(request, response, jwt);
 
                     response.sendRedirect(redirectUrl);
                 } else {
@@ -159,9 +164,23 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     response.sendRedirect(contextPath + "/");
                 }
             } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
-                response.sendRedirect(contextPath + "/logout?invalidUsername=true");
+                redirectToLogout(request, response, "invalidUsername");
             }
         }
+    }
+
+    private void redirectToLogout(
+            HttpServletRequest request, HttpServletResponse response, String errorParameter)
+            throws IOException {
+        String redirectUrl = request.getContextPath() + "/logout?" + errorParameter + "=true";
+        // Keep Spring's logout cleanup before returning a desktop rejection to the app.
+        if (TauriOAuthUtils.isTauriState(request)) {
+            redirectUrl +=
+                    "&state="
+                            + URLEncoder.encode(
+                                    request.getParameter("state"), StandardCharsets.UTF_8);
+        }
+        response.sendRedirect(redirectUrl);
     }
 
     /**
@@ -182,32 +201,21 @@ public class CustomOAuth2AuthenticationSuccessHandler
      *
      * @param request The HTTP request
      * @param response HTTP response (used to clear redirect cookies)
-     * @param contextPath The application context path
      * @param jwt The JWT token to include
      * @return The appropriate redirect URL
      */
     private String buildContextAwareRedirectUrl(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            String contextPath,
-            String jwt) {
-        Optional<String> landingBase =
-                RedirectBaseUrl.landingBase(
+            HttpServletRequest request, HttpServletResponse response, String jwt) {
+        String callbackUrl =
+                OAuth2CallbackUrl.resolve(
+                        request,
                         oauth2Properties.getRedirectBaseUrl(),
                         applicationProperties.getSystem().getFrontendUrl());
-        // The SPA cookie path already includes the browser-side base path, so only add an origin.
-        boolean usesCookiePath =
-                !TauriOAuthUtils.isTauriState(request) && cookieRedirectPath(request) != null;
-        String pathPrefix = landingBase.isPresent() && !usesCookiePath ? "" : contextPath;
-        String redirectPath = resolveRedirectPath(request, pathPrefix);
-        Optional<String> configuredBase =
-                usesCookiePath ? landingBase.flatMap(RedirectBaseUrl::origin) : landingBase;
-        String origin = configuredBase.orElse("");
         clearRedirectCookie(response);
 
         // Extract nonce from state for CSRF validation in callback
         String nonce = TauriOAuthUtils.extractNonceFromRequest(request);
-        String url = origin + redirectPath + "#access_token=" + jwt;
+        String url = callbackUrl + "#access_token=" + jwt;
         if (nonce != null) {
             url +=
                     "&nonce="
@@ -215,21 +223,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
                                     nonce, java.nio.charset.StandardCharsets.UTF_8);
         }
         return url;
-    }
-
-    private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
-        if (TauriOAuthUtils.isTauriState(request)) {
-            return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
-        }
-        String cookiePath = cookieRedirectPath(request);
-        return cookiePath != null ? cookiePath : TauriOAuthUtils.defaultCallbackPath(contextPath);
-    }
-
-    private String cookieRedirectPath(HttpServletRequest request) {
-        String cookiePath = TauriOAuthUtils.extractRedirectPathFromCookie(request);
-        return cookiePath != null && TauriOAuthUtils.isLocalRedirectPath(cookiePath)
-                ? cookiePath
-                : null;
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {
