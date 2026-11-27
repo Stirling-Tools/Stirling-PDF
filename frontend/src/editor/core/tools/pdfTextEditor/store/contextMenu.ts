@@ -20,7 +20,7 @@ export interface TableHit {
 /** The parts of a right-click the editor reads; a DOM or React mouse event. */
 export type ContextMenuEvent = Pick<
   MouseEvent,
-  "target" | "clientX" | "clientY" | "preventDefault"
+  "target" | "clientX" | "clientY" | "preventDefault" | "ctrlKey" | "shiftKey"
 >;
 
 /** What a right-click (or the menu key) asked the editor's menu to show. */

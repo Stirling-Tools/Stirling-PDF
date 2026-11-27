@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Group, Menu, Popover, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
@@ -234,9 +234,17 @@ export function ParagraphPopover({
   const names = alignNames(t);
   const label = t("pdfTextEditor.toolbar.paragraph", "Paragraph");
   const align = paragraph.align ?? "left";
+  const [opened, setOpened] = useState(false);
   return (
-    <Popover position={dropdownPosition} withinPortal shadow="md" trapFocus>
-      <Tooltip label={label}>
+    <Popover
+      position={dropdownPosition}
+      withinPortal
+      shadow="md"
+      trapFocus
+      onOpen={() => setOpened(true)}
+      onClose={() => setOpened(false)}
+    >
+      <Tooltip label={label} disabled={opened}>
         <Popover.Target>
           <Button
             variant="tertiary"

@@ -254,6 +254,10 @@ function createHandlers(store: EditorStore) {
       event: ContextMenuEvent,
     ) => {
       if (!editorContextMenu.hasHost() || reviewMode.get().reviewing) return;
+      if (event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+        return;
+      }
       const target = event.target as Element;
       // Inside the text being typed the browser's menu stays: it alone offers
       // spelling corrections.

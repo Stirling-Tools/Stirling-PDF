@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import { useState, type ReactElement, type ReactNode } from "react";
 import { Menu, Tooltip } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
@@ -36,17 +36,20 @@ export function ToolbarMenu({
   position = "bottom-start",
   target,
 }: ToolbarMenuProps) {
+  const [opened, setOpened] = useState(false);
   return (
     <Menu
       shadow="md"
       position={position}
       withinPortal={!inPopover}
       disabled={disabled}
+      onOpen={() => setOpened(true)}
+      onClose={() => setOpened(false)}
     >
       {target ? (
         <Menu.Target>{target}</Menu.Target>
       ) : (
-        <Tooltip label={tooltip}>
+        <Tooltip label={tooltip} disabled={opened}>
           <Menu.Target>
             <Button
               variant={pressed ? "primary" : "tertiary"}

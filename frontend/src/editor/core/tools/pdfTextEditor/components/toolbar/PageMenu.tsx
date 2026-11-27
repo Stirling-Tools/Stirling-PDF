@@ -1,6 +1,6 @@
 import { useState, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Group, Menu, Stack, Text } from "@mantine/core";
+import { Group, Menu, Stack, Text, type PopoverProps } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PAGE_SIZES as PAGE_SIZE_POINTS } from "@editor/constants/pageSizeConstants";
 import { Button } from "@editor/ui/Button";
@@ -37,6 +37,8 @@ const PAGE_SIZES: PageSizeName[] = ["A4", "LETTER", "LEGAL", "A5", "A3"];
 const SIZE_TOLERANCE_PT = 2;
 
 const PAGE_SETUP_WIDTH = 380;
+
+const VIEWER_EDGE_PX = 8;
 
 function namedSize(width: number, height: number): PageSizeName | null {
   const [short, long] = width < height ? [width, height] : [height, width];
@@ -263,16 +265,22 @@ function PageSetupPopover({
   pageIndex,
   onClose,
   anchor,
+  position,
+  middlewares,
 }: {
   pageIndex: number | null;
   onClose: () => void;
   anchor: ReactNode;
+  position?: PopoverProps["position"];
+  middlewares?: PopoverProps["middlewares"];
 }) {
   return (
     <ChangePopover
       opened={pageIndex !== null}
       width={PAGE_SETUP_WIDTH}
       anchor={anchor}
+      position={position}
+      middlewares={middlewares}
     >
       {pageIndex !== null && (
         <PageSetupPanel
@@ -320,6 +328,7 @@ export function PagesBlock() {
   const { t } = useTranslation();
   const pageCount = useEditorState(useSharedEditorStore(), (s) => s.pageCount);
   const [setupPage, setSetupPage] = useState<number | null>(null);
+  const [menuOpened, setMenuOpened] = useState(false);
   return (
     <div data-testid="pdf-editor-pages-panel">
       <PageSetupPopover
@@ -328,12 +337,18 @@ export function PagesBlock() {
         anchor={
           <BlockHeading
             action={
-              <Menu shadow="md" position="bottom-end" width={240}>
+              <Menu
+                shadow="md"
+                position="bottom-end"
+                width={240}
+                opened={menuOpened}
+                onChange={setMenuOpened}
+              >
                 <Menu.Target>
                   <ChangeButton
-                    icon="files"
-                    label={t("pdfTextEditor.pages.actions", "Page actions")}
+                    label={t("pdfTextEditor.pages.actions", "Change pages")}
                     testId="pdf-editor-pages"
+                    menuOpened={menuOpened}
                   />
                 </Menu.Target>
                 <Menu.Dropdown>
@@ -356,6 +371,11 @@ export function PagesBlock() {
 export function PageSetupHost() {
   const request = usePageSetupRequest();
   if (!request) return null;
+  const viewer = document.querySelector("[data-viewer-pages]");
+  const within = {
+    boundary: viewer ?? ("clippingAncestors" as const),
+    padding: VIEWER_EDGE_PX,
+  };
   return createPortal(
     <div
       style={{
@@ -368,6 +388,8 @@ export function PageSetupHost() {
         pageIndex={request.pageIndex}
         onClose={() => pageSetupRequest.close()}
         anchor={<div style={{ width: 0, height: 0 }} />}
+        position="bottom-start"
+        middlewares={{ flip: within, shift: within }}
       />
     </div>,
     document.body,

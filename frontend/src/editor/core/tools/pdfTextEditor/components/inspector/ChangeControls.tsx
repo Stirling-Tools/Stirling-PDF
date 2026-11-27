@@ -1,9 +1,10 @@
 import {
   forwardRef,
+  useState,
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from "react";
-import { Group, Popover, Text } from "@mantine/core";
+import { Group, Popover, Text, type PopoverProps } from "@mantine/core";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon, type IconName } from "@editor/ui/Icon";
@@ -35,25 +36,51 @@ type ChangeButtonProps = {
   icon?: IconName;
   label: string;
   testId: string;
+  menuOpened?: boolean;
 } & Omit<ComponentPropsWithoutRef<"button">, "children">;
 
 /** One icon button for every document-wide change, named by its tooltip. */
 export const ChangeButton = forwardRef<HTMLButtonElement, ChangeButtonProps>(
-  function ChangeButton({ icon = "pencil", label, testId, ...rest }, ref) {
+  function ChangeButton(
+    { icon = "pencil", label, testId, menuOpened, onClick, ...rest },
+    ref,
+  ) {
+    const [quiet, setQuiet] = useState(false);
+    const opensMenu = menuOpened !== undefined;
+    const wake = () => {
+      if (!menuOpened) setQuiet(false);
+    };
     return (
-      <Tooltip position="left" content={label} arrow>
-        <ActionIcon
-          ref={ref}
-          size="sm"
-          variant="secondary"
-          accent="neutral"
-          aria-label={label}
-          data-testid={testId}
-          style={{ flexShrink: 0 }}
-          {...rest}
+      <Tooltip
+        position="left"
+        content={label}
+        arrow
+        disabled={Boolean(menuOpened) || quiet}
+      >
+        <span
+          style={{ display: "inline-flex", flexShrink: 0 }}
+          onPointerLeave={wake}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) wake();
+          }}
         >
-          <Icon name={icon} size={16} />
-        </ActionIcon>
+          <ActionIcon
+            ref={ref}
+            size="sm"
+            variant="secondary"
+            accent="neutral"
+            aria-label={label}
+            data-testid={testId}
+            style={{ flexShrink: 0 }}
+            onClick={(e) => {
+              if (opensMenu) setQuiet(true);
+              onClick?.(e);
+            }}
+            {...rest}
+          >
+            <Icon name={icon} size={16} />
+          </ActionIcon>
+        </span>
       </Tooltip>
     );
   },
@@ -67,18 +94,23 @@ export function ChangePopover({
   opened,
   anchor,
   width = "target",
+  position,
+  middlewares,
   children,
 }: {
   opened: boolean;
   anchor: ReactNode;
   /** Wider than the panel reaches out over the page from its right edge. */
   width?: number | "target";
+  position?: PopoverProps["position"];
+  middlewares?: PopoverProps["middlewares"];
   children: ReactNode;
 }) {
   return (
     <Popover
       opened={opened}
-      position={width === "target" ? "bottom" : "bottom-end"}
+      position={position ?? (width === "target" ? "bottom" : "bottom-end")}
+      middlewares={middlewares}
       // Never wider than the screen, which a phone's is.
       width={width === "target" ? width : `min(${width}px, calc(100vw - 2rem))`}
       // Clear, but it stops edits to the page and panel while a change is
