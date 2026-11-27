@@ -164,9 +164,8 @@ springBoot {
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
-// The processor ships in every editor build by default; -PbuildWithPortal=false leaves it out.
-// An explicit -PbuildWithPortal=true also forces the editor build.
-def buildWithPortal = project.findProperty('buildWithPortal')?.toString() != 'false'
+// PSS: the processor (admin portal) is proprietary and removed from this fork, so it never ships.
+def buildWithPortal = false
 if (project.findProperty('buildWithPortal')?.toString() == 'true') {
     buildWithFrontend = true
 }

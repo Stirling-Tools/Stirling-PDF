@@ -1,0 +1,12 @@
+# Paths removed from the PSS build. Every entry is under the Stirling PDF User
+# License (see the upstream root LICENSE) or only builds/ships that code.
+# scripts/pss-prune.sh deletes each one; scripts/pss-license-guard.sh fails CI if any return.
+app/proprietary
+app/saas
+engine
+frontend/src/editor/proprietary
+frontend/src/editor/desktop
+frontend/src/editor/saas
+frontend/src/editor/cloud
+frontend/src/processor
+docker/engine

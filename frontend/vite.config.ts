@@ -498,7 +498,7 @@ export default defineConfig(async ({ mode, command }) => {
   // Relative to this config, not process.cwd(), so .env* load wherever vite is run from.
   const env = loadEnv(mode, import.meta.dirname, "");
 
-  // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > DISABLE_ADDITIONAL_FEATURES > proprietary.
+  // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > core (PSS: no proprietary layer in this fork).
   const explicitMode = (VALID_MODES as readonly string[]).includes(mode)
     ? (mode as BuildMode)
     : null;
@@ -512,9 +512,7 @@ export default defineConfig(async ({ mode, command }) => {
     flavorMode ??
     (process.env.ENABLE_SAAS === "true"
       ? "saas"
-      : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
-        ? "core"
-        : "proprietary");
+      : "core");
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 

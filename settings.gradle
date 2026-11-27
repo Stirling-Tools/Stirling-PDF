@@ -49,7 +49,8 @@ def lookupEnvOrProperty = { String name ->
 
 def asBool = { String value -> 'true'.equalsIgnoreCase(value) }
 
-def stirlingFlavor = lookupEnvOrProperty('STIRLING_FLAVOR')?.toLowerCase()
+// PSS: the proprietary and SaaS modules are removed from this fork, so core is the only flavor.
+def stirlingFlavor = (lookupEnvOrProperty('STIRLING_FLAVOR') ?: 'core').toLowerCase()
 
 boolean disableAdditional
 boolean enableSaas
@@ -83,14 +84,18 @@ if (enableSaas && disableAdditional) {
         "(SaaS builds on top of :proprietary and cannot stand alone).")
 }
 
+if (!disableAdditional) {
+    throw new GradleException(
+        "PSS PDF builds only the MIT core flavor; got STIRLING_FLAVOR='${stirlingFlavor}'.")
+}
+
 gradle.ext.disableAdditional = disableAdditional
 gradle.ext.enableSaas = enableSaas
 
-include 'stirling-pdf', 'common', 'proprietary'
+include 'stirling-pdf', 'common'
 
 project(':stirling-pdf').projectDir = file('app/core')
 project(':common'      ).projectDir = file('app/common')
-project(':proprietary' ).projectDir = file('app/proprietary')
 
 if (enableSaas) {
     include 'saas'

@@ -615,7 +615,7 @@ tasks:
   typecheck:
     desc: "Typecheck default build of the app"
     cmds:
-      - task: typecheck:proprietary
+      - task: typecheck:core
 
   typecheck:_run:
     internal: true

@@ -1,0 +1,29 @@
+# PSS PDF editor. Bound to localhost only: it has no login of its own, so it must
+# only be reached through the PSS nginx, which requires a pss.edu.mh Google sign-in.
+#   docker compose -f docker/pss/docker-compose.yml up -d --build
+services:
+  pss-pdf:
+    build:
+      context: ../..
+      dockerfile: docker/pss/Dockerfile
+    image: pss-pdf:latest
+    container_name: pss-pdf
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8080"
+    volumes:
+      - ./data/configs:/configs
+      - ./data/logs:/logs
+      - ./data/customFiles:/customFiles
+      - ./data/tessdata:/usr/share/tessdata
+    environment:
+      UI_APPNAMENAVBAR: "PSS PDF"
+      SYSTEM_DEFAULTLOCALE: "en-US"
+      SYSTEM_GOOGLEVISIBILITY: "false"
+      SYSTEM_SHOWUPDATE: "false"
+      SYSTEM_ENABLEANALYTICS: "false"
+      SYSTEM_ENABLEPOSTHOG: "false"
+      SYSTEM_ENABLESCARF: "false"
+      # Hidden from staff; add tool ids here to trim the menu further, e.g. "compare,booklet-imposition".
+      ENDPOINTS_GROUPSTOREMOVE: "DeveloperTools,DeveloperDocs"
+      ENDPOINTS_TOREMOVE: ""

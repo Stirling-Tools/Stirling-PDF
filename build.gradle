@@ -489,7 +489,6 @@ subprojects {
 
         tasks.named("forkedSpringBootRun") {
             dependsOn(":common:jar")
-            dependsOn(":proprietary:jar")
         }
 
         tasks.register("copySwaggerDoc", Copy) {
@@ -694,9 +693,6 @@ repositories {
 dependencies {
     implementation project(':stirling-pdf')
     implementation project(':common')
-    if (rootProject.ext.isSecurityDisabled()) {
-        implementation project(':proprietary')
-    }
     rootProject.ext.getEnv()
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

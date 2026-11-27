@@ -106,6 +106,10 @@
   --p-flash-yellow: #ffeb3b;
 
   /* Onboarding hero gradient stops (dark decorative navies + light tints). */
+  /* PSS (RMI Public School System) brand: navy #003366, accent blue #0066cc. */
+  --p-pss-navy: #003366;
+  --p-pss-blue: #0066cc;
+  --p-pss-blue-light: #6fa8e6;
   --p-navy-850: #1a2236;
   --p-navy-880: #171e30;
   --p-navy-900: #0f1626;
