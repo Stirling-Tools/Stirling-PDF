@@ -70,6 +70,9 @@ public class CertificateValidationService {
 
     // EUTL (EU Trusted List) constants
     private static final String NS_TSL = "http://uri.etsi.org/02231/v2#";
+    private static final String NS_TSL_ADDITIONAL_TYPES =
+            "http://uri.etsi.org/02231/v2/additionaltypes#";
+    private static final String TSL_XML_MIME_TYPE = "application/vnd.etsi.tsl+xml";
 
     // Qualified CA service types to import as trust anchors (per ETSI TS 119 612)
     private static final Set<String> EUTL_SERVICE_TYPES =
@@ -78,7 +81,10 @@ public class CertificateValidationService {
                             "http://uri.etsi.org/TrstSvc/Svctype/CA/QC",
                             "http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC"));
 
-    // Active statuses to accept (per ETSI TS 119 612)
+    // Active statuses to accept (per ETSI TS 119 612). "granted" is the eIDAS status that current
+    // trusted lists use; "undersupervision" and "accredited" are from the pre-eIDAS lists.
+    private static final String STATUS_GRANTED =
+            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted";
     private static final String STATUS_UNDER_SUPERVISION =
             "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision";
     private static final String STATUS_ACCREDITED =
@@ -758,7 +764,10 @@ public class CertificateValidationService {
         }
     }
 
-    /** Parse LOTL and return all TSL URLs from PointersToOtherTSL. */
+    /**
+     * Parse LOTL and return the TSL URLs from PointersToOtherTSL. Pointers whose MimeType is not
+     * the XML trusted list format (member states also publish a PDF copy) are skipped.
+     */
     private List<String> parseLotlForTslLocations(byte[] lotlBytes) throws Exception {
         DocumentBuilderFactory dbf = secureDbfWithNamespaces();
         DocumentBuilder db = dbf.newDocumentBuilder();
@@ -769,10 +778,18 @@ public class CertificateValidationService {
         if (ptrs.getLength() == 0) return out;
 
         org.w3c.dom.Element ptrRoot = (org.w3c.dom.Element) ptrs.item(0);
-        NodeList locations = ptrRoot.getElementsByTagNameNS(NS_TSL, "TSLLocation");
-        for (int i = 0; i < locations.getLength(); i++) {
-            String url = locations.item(i).getTextContent().trim();
-            if (!url.isEmpty()) out.add(url);
+        NodeList pointers = ptrRoot.getElementsByTagNameNS(NS_TSL, "OtherTSLPointer");
+        for (int i = 0; i < pointers.getLength(); i++) {
+            org.w3c.dom.Element pointer = (org.w3c.dom.Element) pointers.item(i);
+            String url = textOf(pointer, "TSLLocation");
+            if (url.isEmpty()) continue;
+            NodeList mimeTypes =
+                    pointer.getElementsByTagNameNS(NS_TSL_ADDITIONAL_TYPES, "MimeType");
+            if (mimeTypes.getLength() > 0
+                    && !TSL_XML_MIME_TYPE.equals(mimeTypes.item(0).getTextContent().trim())) {
+                continue;
+            }
+            out.add(url);
         }
         return out;
     }
@@ -849,6 +866,7 @@ public class CertificateValidationService {
 
     /** Check if service status is active (per ETSI TS 119 612). */
     private boolean isActiveStatus(String statusUri) {
+        if (STATUS_GRANTED.equals(statusUri)) return true;
         if (STATUS_UNDER_SUPERVISION.equals(statusUri)) return true;
         if (STATUS_ACCREDITED.equals(statusUri)) return true;
         boolean acceptTransitional =
