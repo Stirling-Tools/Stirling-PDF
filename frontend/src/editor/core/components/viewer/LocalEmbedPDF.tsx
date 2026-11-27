@@ -677,7 +677,12 @@ function AnnotationEditingLayers({
         style={
           !showBakedAnnotations
             ? {
-                opacity: 0,
+                // Keep the layer mounted so its page handlers and cached
+                // appearances stay warm, but take it out of paint. opacity
+                // leaves a full-page transparent layer in the compositor, where
+                // it can change how the page underneath is rasterized;
+                // visibility drops it from paint without touching plugin state.
+                visibility: "hidden",
                 pointerEvents: "none",
               }
             : undefined
