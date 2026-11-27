@@ -26,11 +26,11 @@ import {
   ChangeButton,
   ChangePopover,
 } from "@editor/tools/pdfTextEditor/components/inspector/ChangeControls";
+import { Field } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import {
   ToolbarMenu,
   type ToolbarMenuPosition,
 } from "@editor/tools/pdfTextEditor/components/toolbar/ToolbarMenu";
-import "@editor/tools/pdfTextEditor/components/toolbar/PageMenu.css";
 import { localPaperSize, orderPaperSizeOptions } from "@editor/utils/paperSize";
 
 const PAGE_SIZES: PageSizeName[] = ["A4", "LETTER", "LEGAL", "A5", "A3"];
@@ -130,8 +130,7 @@ function Choice<T extends string>({
   options: Array<{ value: T; label: string }>;
 }) {
   return (
-    <>
-      <span className="pdf-editor-page-setup__label">{label}</span>
+    <Field label={label}>
       <SegmentedControl
         ariaLabel={label}
         options={options}
@@ -139,7 +138,7 @@ function Choice<T extends string>({
         onChange={onChange}
         fullWidth
       />
-    </>
+    </Field>
   );
 }
 
@@ -201,7 +200,7 @@ function PageSetupPanel({
           )}
         </Text>
       </div>
-      <div className="pdf-editor-page-setup">
+      <Stack gap="xs">
         <Choice
           label={t("pdfTextEditor.pages.size", "Page size")}
           options={orderPaperSizeOptions(
@@ -243,7 +242,7 @@ function PageSetupPanel({
           value={scope}
           onChange={setScope}
         />
-      </div>
+      </Stack>
       <Group gap="xs" justify="flex-end">
         <Button
           size="sm"
