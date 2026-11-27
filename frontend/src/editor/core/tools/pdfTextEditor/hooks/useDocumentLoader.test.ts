@@ -9,7 +9,10 @@ vi.mock("react", async (importOriginal) => ({
   useCallback: <T>(fn: T) => fn,
 }));
 
-import { useDocumentLoader } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import {
+  readPageOnceVisible,
+  useDocumentLoader,
+} from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
@@ -139,6 +142,35 @@ describe("opening a document", () => {
       expect(await newer).toBe(false);
       expect(store.document).toBe(doc);
       expect(store.getState().pages[0].runs.length).toBeGreaterThan(0);
+    } finally {
+      spy.mockRestore();
+      store.dispose();
+    }
+  });
+
+  test("holds a visible page's text read until the first page has painted", async () => {
+    const store = new EditorStore();
+    const spy = vi.spyOn(PdfiumTextReader, "populate");
+    try {
+      const loading = useDocumentLoader(store)(
+        new File([await readFile(SAMPLE)], "multi.pdf", {
+          type: "application/pdf",
+        }),
+      );
+      await vi.waitFor(
+        () => expect(store.getState().pages.length).toBeGreaterThan(0),
+        { timeout: 15_000 },
+      );
+
+      readPageOnceVisible(store, 0);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(spy).not.toHaveBeenCalled();
+
+      store.markFirstPageRendered();
+      await vi.waitFor(() =>
+        expect(store.getState().pages[0].runs.length).toBeGreaterThan(0),
+      );
+      await loading;
     } finally {
       spy.mockRestore();
       store.dispose();

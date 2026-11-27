@@ -207,10 +207,7 @@ export function readAllPagesInBackground(store: EditorStore): () => void {
   void (async () => {
     const doc = store.document;
     if (!doc) return;
-    const pending = store
-      .getState()
-      .pages.map((p) => p.pageIndex)
-      .filter((i) => !doc.page(i).loaded);
+    const pending = store.getState().pages.map((p) => p.pageIndex);
     let any = false;
     // Yield before the first slice so whatever asked for the read paints first.
     let sliceStart = -Infinity;
@@ -281,6 +278,20 @@ function readButUnpublished(
  * reader has loaded but not yet published is published here, so a lookup in
  * the store's snapshot right after this sees it.
  */
+export function readPageOnceVisible(
+  store: EditorStore,
+  pageIndex: number,
+): void {
+  if (store.getState().firstPageRendered) {
+    ensurePageRead(store, pageIndex);
+    return;
+  }
+  const doc = store.document;
+  void firstPagePainted(store).then(() => {
+    if (store.document === doc) ensurePageRead(store, pageIndex);
+  });
+}
+
 export function ensurePageRead(store: EditorStore, pageIndex: number): void {
   const doc = store.document;
   if (!doc) return;
