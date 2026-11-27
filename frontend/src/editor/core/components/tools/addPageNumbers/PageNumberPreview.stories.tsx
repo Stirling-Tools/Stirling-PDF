@@ -3,7 +3,7 @@ import PageNumberPreview from "@editor/components/tools/addPageNumbers/PageNumbe
 import { defaultParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 
 const meta = {
-  title: "Tools/AddPageNumbers/PageNumberPreview",
+  title: "Tools/Add Page Numbers/Parts/PageNumberPreview",
   component: PageNumberPreview,
 } satisfies Meta<typeof PageNumberPreview>;
 export default meta;

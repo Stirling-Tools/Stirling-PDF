@@ -3,6 +3,8 @@ import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
+test.use({ autoGoto: false });
+
 // End-to-end coverage for the fonts panel's client-side glyph-coverage probe.
 
 const SUBSET = path.join(

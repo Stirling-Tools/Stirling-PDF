@@ -512,6 +512,11 @@ submit = "Axustar a escala da páxina"
 tags = "redimensionar,modificar,dimensión,adaptar"
 title = "Axustar a escala da páxina"
 
+[adjustPageScale.customSize]
+height = "Altura"
+unit = "Unidade"
+width = "Largura"
+
 [adjustPageScale.error]
 failed = "Produciuse un erro ao axustar a escala da páxina."
 
@@ -521,6 +526,7 @@ landscape = "Horizontal"
 portrait = "Vertical"
 
 [adjustPageScale.pageSize]
+custom = "Personalizado"
 keep = "Manter o tamaño orixinal"
 label = "Tamaño de páxina de destino"
 legal = "Legal"
@@ -641,18 +647,16 @@ description = "DPI máximo para o procesamento de imaxes (0 = ilimitado)"
 label = "DPI máximo"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configura os límites de sesión e os tempos de espera de cada executor de procesos"
 ghostscript = "Ghostscript"
 installApp = "Instalar aplicación"
 label = "Límites do executor de procesos"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF a HTML"
+officeConvert = "Conversión de Office"
+officeConvertSessionLimit = "Número máximo de conversións simultáneas; 0 establece un límite en función das CPUs e da memoria"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Máximo de instancias simultáneas"
@@ -661,10 +665,6 @@ label = "Límite de sesións"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Tempo máximo de execución"
 label = "Tempo de espera (minutos)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert está en beta. Ofrece mellores conversións, máis rápidas e con menos memoria ca LibreOffice."
-label = "Usar a nova conversión de Stirling Office"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configura o almacenamento de ficheiros temporais e o comportamento da limpeza"
@@ -682,11 +682,6 @@ label = "Intervalo de limpeza (minutos)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Se se debe limpar o directorio temporal xeral do sistema (usar con precaución)"
 label = "Limpar temporais do sistema"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directorio para os ficheiros temporais de LibreOffice (déixao baleiro para o predeterminado: baseTmpDir/libreoffice)"
-label = "Directorio temporal de LibreOffice"
-placeholder = "Predeterminado: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Idade máxima en horas antes de limpar os ficheiros temporais"
@@ -1014,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Estirar as imaxes para encher toda a páxina. S
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Manter (dimensións orixinais)"
 pageFormatLetter = "Carta (8.5×11in)"
+setupSteps = "Como configurar {{name}}"
 title = "Conexións"
 unlinkedServices = "Servizos non vinculados"
 
@@ -1294,17 +1290,6 @@ label = "Produtor predeterminado"
 description = "Configura rutas personalizadas do sistema de ficheiros para o procesamento da canalización e as ferramentas externas"
 label = "Rutas personalizadas"
 
-[admin.settings.general.customPaths.operations]
-label = "Rutas das ferramentas externas"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Ruta ao unoconvert de LibreOffice para as conversións de documentos (déixao baleiro para usar o predeterminado: /opt/venv/bin/unoconvert)"
-label = "Executable de Unoconvert"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Ruta ao executable de WeasyPrint para a conversión de HTML a PDF (déixao baleiro para usar o predeterminado: /opt/venv/bin/weasyprint)"
-label = "Executable de WeasyPrint"
-
 [admin.settings.general.customPaths.pipeline]
 label = "Directorios da canalización"
 
@@ -1327,6 +1312,10 @@ label = "Directorios de cartafoles vixiados"
 [admin.settings.general.defaultLocale]
 description = "O idioma predeterminado para os novos usuarios (p. ex., en_US, es_ES)"
 label = "Configuración rexional predeterminada"
+
+[admin.settings.general.enableFeedback]
+description = "Permitir que os usuarios envíen feedback ao equipo de Stirling"
+label = "Activar Feedback"
 
 [admin.settings.general.fileUploadLimit]
 description = "Tamaño máximo de carga de ficheiros (p. ex., 100MB, 1GB)"
@@ -1656,6 +1645,10 @@ verbose = "Eventos STANDARD e ademais: chamadas de consulta periódica continua,
 [admin.settings.security.audit.retentionDays]
 description = "Número de días durante os que se conservan os rexistros de auditoría (0 = conservación indefinida)"
 label = "Conservación da auditoría (días)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "Os PDFs asinados pódense seguir vendo, imprimindo, convertendo ou asinando de novo, pero non cambiar na app. As chamadas á API e os pipelines do servidor non se ven afectados."
+label = "Bloquear cambios en PDFs asinados"
 
 [admin.settings.security.csrfDisabled]
 description = "Desactivar a protección contra a falsificación de solicitudes entre sitios (non recomendado)"
@@ -2969,6 +2962,7 @@ loadError = "Non se puideron cargar os usuarios"
 noTeam = "Sen equipo"
 noUsers = "Non se atoparon outros usuarios."
 placeholder = "Seleccionar usuarios..."
+signInRequired = "Inicia sesión para solicitar sinaturas doutras persoas."
 you = "{{name}} (ti)"
 
 [certSign.device]
@@ -3056,7 +3050,6 @@ ssoManaged = "A túa conta está xestionada polo teu provedor de identidade."
 title = "Cambiar credenciais"
 
 [changeMetadata]
-filenamePrefix = "metadatos"
 submit = "Cambiar"
 tags = "editar,modificar,actualizar,metadatos,propiedades,propiedades do documento,autor,título,asunto,palabras clave,creador,produtor,información,información do documento,propiedades do ficheiro"
 
@@ -3265,6 +3258,248 @@ not_found = "Non atopei a información solicitada."
 processing = "Procesando ({{outcome}})..."
 unsupported_capability = "Capacidade non admitida: {{capability}}"
 usage_limit_reached = "Alcanzaches o teu límite de uso. Consulta as opcións do teu plan para continuar."
+
+[checkAccessibility]
+aboutRow = "Sobre {{label}}"
+checking = "Comprobando..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Descargar o informe de accesibilidade"
+fileFailed = "fallou"
+pickFile = "Amosar os resultados de"
+submit = "Comprobar accesibilidade"
+
+[checkAccessibility.category]
+altText = "Texto alternativo"
+fonts = "Fontes"
+language = "Idioma"
+links = "Ligazóns e anotacións"
+metadata = "Metadatos e axustes"
+structure = "Etiquetas e estrutura"
+
+[checkAccessibility.categoryTip]
+altText = "As imaxes necesitan unha breve descrición textual para que os lectores de pantalla a lean no seu lugar."
+fonts = "As fontes teñen que estar no ficheiro, con cada carácter ligado a texto real, para que se poida ler en voz alta e copiar."
+language = "Os lectores de pantalla precisan saber o idioma do documento para pronuncialo correctamente."
+links = "As ligazóns, os comentarios e os campos de formulario necesitan etiquetas e descricións, e unha orde de tabulación que siga a páxina."
+metadata = "O título, a declaración PDF/UA e outros axustes que a tecnoloxía de asistencia le do ficheiro."
+structure = "As etiquetas dinlle aos lectores de pantalla que é cada parte dunha páxina, como un título, unha lista ou unha táboa, e en que orde lela."
+
+[checkAccessibility.checks]
+label = "{{passed}} de {{total}} comprobacións superadas"
+
+[checkAccessibility.error]
+download = "Non se puido crear o informe de accesibilidade. Téntao de novo."
+fileTitle = "Non se puido comprobar este ficheiro"
+partial = "Non se puideron comprobar algúns ficheiros."
+
+[checkAccessibility.facts]
+declares = "Declara PDF/UA"
+displaysTitle = "Amosa o seu título"
+fonts = "Fontes incrustadas"
+language = "Declara un idioma"
+notEncrypted = "Non cifrado"
+tagged = "Etiquetado"
+title = "Ten un título"
+
+[checkAccessibility.factTip]
+declares = "Os metadatos do ficheiro din que segue PDF/UA."
+displaysTitle = "Os lectores de PDF amosan o título, non o nome do ficheiro, ao abrirse."
+fonts = "Inclúese no ficheiro cada fonte que use o texto."
+language = "O ficheiro indica en que idioma está o seu texto."
+notEncrypted = "O ficheiro non está cifrado. O cifrado pode impedir que a tecnoloxía de asistencia o lea."
+tagged = "O ficheiro ten etiquetas que describen a súa estrutura. Sen elas, os lectores de pantalla só obteñen texto simple."
+title = "O ficheiro ten un título nos seus metadatos."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} imaxe precisa dunha descrición (páxina {{pages}})"
+summary_other = "{{count}} imaxes precisan dunha descrición (páxinas {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Aplícase a"
+clauseValue = "{{spec}} §{{clause}}, proba {{test}}"
+details = "Detalles"
+instances_one = "{{count}} instancia"
+instances_other = "{{count}} instancias"
+onPages_one = "Páxina {{pages}}"
+onPages_other = "Páxinas {{pages}}"
+onPagesPartial_one = "Páxina {{pages}} (a lista pode estar incompleta)"
+onPagesPartial_other = "Páxinas {{pages}} (a lista pode estar incompleta)"
+pages = "Páxinas"
+pagesPartialValue = "{{pages}} (só os primeiros casos rexistran unha páxina, así que esta lista pode estar incompleta)"
+requirement = "Requisito"
+rule = "Regra"
+standard = "Norma"
+where = "Onde"
+
+[checkAccessibility.manual]
+clearAll = "Limpar todo"
+done = "Feito"
+inProgress = "En proceso"
+markAllDone = "Marcar todo como feito"
+tip = "Cousas que só unha persoa pode xulgar, como a orde de lectura e se as descricións das imaxes teñen sentido. Marca cada unha cando a comprobes, e as túas marcas incluiranse no informe descargado."
+title = "Comprobacións manuais"
+
+[checkAccessibility.objects]
+annotation = "Unha anotación"
+bookmark = "Un marcador"
+character = "Un carácter nunha fonte"
+contentPiece = "Un anaco de contido da páxina"
+document = "O documento"
+drawing = "Un debuxo"
+figure = "Unha figura"
+file = "O propio ficheiro"
+font = "Unha fonte"
+form = "O formulario"
+formField = "Un campo de formulario"
+link = "Unha ligazón"
+markedContent = "Contido da páxina marcado"
+metadata = "Os metadatos do documento"
+page = "Unha páxina"
+properties = "As propiedades do documento"
+tag = "Unha etiqueta {{name}}"
+tagTree = "A árbore de etiquetas"
+textPiece = "Un anaco de texto"
+translatedMetadata = "Unha entrada de metadatos con traducións"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (continúa)"
+footer = "Comprobado con Stirling PDF"
+page = "Páxina {{n}}"
+title = "Informe de accesibilidade"
+
+[checkAccessibility.result]
+fail = "Falla"
+failSummary = "É posible que os lectores de pantalla non poidan ler todo este documento."
+partial = "Parcial"
+partialSummary = "Os lectores de pantalla poden ler este documento, pero algunhas comprobacións fallan."
+pass = "Superado"
+passSummary = "Supera todas as comprobacións automatizadas de PDF/UA."
+
+[checkAccessibility.rules]
+annotationLanguage = "O texto dun comentario ou dunha ligazón non ten un idioma establecido, polo que os lectores de pantalla non saben en que idioma lelo. Define o idioma do documento para arranxalo."
+annotationNoDescription = "Un comentario, unha ligazón ou un debuxo non teñen descrición textual, así que os lectores de pantalla non teñen nada que anunciar."
+annotationNotTagged = "Un comentario ou debuxo non está etiquetado como anotación, polo que os lectores de pantalla non poden chegar a el na orde de lectura."
+artifactInsideTagged = "Algo marcado como decoración está dentro de contido etiquetado, polo que se le e se omite ao mesmo tempo."
+bookmarkLanguage = "Os marcadores non teñen un idioma establecido, polo que os lectores de pantalla non saben en que idioma lelos. Define o idioma do documento para arranxalo."
+conformancePrefix = "A declaración PDF/UA nos metadatos usa o prefixo incorrecto, polo que os lectores de PDF poden non recoñecela."
+contentLanguage = "O texto non ten un idioma establecido, polo que os lectores de pantalla non saben en que idioma lelo. Define o idioma do documento para arranxalo."
+customTagNotMapped = "Unha etiqueta usa un nome personalizado que non está ligado a unha etiqueta estándar, polo que os lectores de pantalla non saben o que é."
+figureNoAlt = "Unha imaxe está etiquetada como figura pero non ten descrición, polo que os usuarios de lectores de pantalla non saberán que amosa."
+fontMissingGlyphs = "Unha fonte incluída carece dalgúns dos caracteres que usa o documento."
+fontNotEmbedded = "Unha fonte non está incluída no ficheiro, así que o texto pode verse distinto, ou lerse de xeito diferente, noutro computador."
+formFieldNotTagged = "Un campo de formulario non está etiquetado como parte dun formulario, polo que os lectores de pantalla poden non atopalo."
+genericHeading = "Un título usa a etiqueta H, que non ten nivel. PDF/UA-2 necesita H1 a H6 para que os usuarios de lectores de pantalla poidan entender como se aniñan os títulos."
+glyphWidths = "As anchuras de caracteres dunha fonte no ficheiro non coinciden coa fonte en si, polo que o texto pode ter un espazado incorrecto."
+headingSkipped = "Os niveis de título saltan un paso, por exemplo de Título 1 directamente a Título 3, o que fai confusa a navegación entre títulos."
+linkNoDescription = "Unha ligazón non ten descrición, polo que os lectores de pantalla só poden ler o seu enderezo, ou nada."
+linkNotTagged = "Unha ligazón non está etiquetada como ligazón, polo que os lectores de pantalla non a anunciarán como tal."
+metadataLanguage = "Os metadatos, como o título, non teñen un idioma establecido, polo que os lectores de pantalla non saben en que idioma lelos. Define o idioma do documento para arranxalo."
+noConformanceClaim = "O ficheiro non declara que segue PDF/UA. Os seus metadatos necesitan unha entrada de identificación de PDF/UA."
+noDocumentTag = "As etiquetas necesitan unha única etiqueta Document na parte superior, co resto dentro dela."
+noLanguage = "O documento non indica en que idioma está, polo que os lectores de pantalla poden lelo no idioma incorrecto."
+noMetadataStream = "O ficheiro non ten metadatos XMP, onde PDF/UA garda o título do documento e os detalles de conformidade."
+noTags = "O ficheiro non ten ningunha etiqueta, polo que os lectores de pantalla non poden distinguir títulos, parágrafos, listas ou táboas, nin lelos na orde correcta."
+notdefGlyph = "O texto usa un marcador de \"carácter ausente\", que se amosa como un oco ou unha caixa e non se pode ler en voz alta."
+noteTag = "O ficheiro usa a etiqueta Note, que PDF/UA-2 substitúe por FENote para notas ao pé e finais."
+noTitle = "O documento non ten título nos seus metadatos."
+notMarkedTagged = "O ficheiro non está sinalado como etiquetado, polo que a tecnoloxía de asistencia pode ignorar as etiquetas que ten."
+notPdf2Tags = "PDF/UA-2 necesita as etiquetas que usa un ficheiro PDF 2.0. Estas semellan etiquetas de PDF 1.7, o que adoita significar que o ficheiro se etiquetou para PDF/UA-1."
+noUnicode = "Algúns caracteres non se poden converter en texto lexible, polo que os lectores de pantalla e o copiar e pegar poden tratalos mal."
+replacementTextLanguage = "Algún texto de substitución non ten un idioma establecido, polo que os lectores de pantalla non saben en que idioma lelo. Define o idioma do documento para arranxalo."
+standardTagRemapped = "Unha etiqueta estándar está ligada a unha etiqueta personalizada, polo que perde o seu significado para os lectores de pantalla."
+symbolicEncoding = "Unha fonte de símbolos leva unha codificación que non debería, polo que os seus caracteres poden saír como letras incorrectas."
+tabOrder = "Unha páxina con ligazóns ou comentarios non establece a súa orde de tabulación para seguir o documento, polo que os usuarios de teclado poden saltar pola páxina."
+taggedInsideArtifact = "Contido etiquetado está dentro de algo marcado como decoración, polo que os lectores de pantalla poden omitilo."
+titleNotDisplayed = "Os lectores de PDF amosarán o nome do ficheiro no canto do título do documento. O ficheiro precisa ter activado o axuste \"display document title\"."
+untaggedContent = "Algo na páxina non está nin etiquetado como contido nin marcado como decoración, polo que os lectores de pantalla non saben se deben lelo. Adoita ser unha imaxe de fondo, cabeceira, pé de páxina ou número de páxina."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Sen idioma para comentarios ou ligazóns"
+annotationNoDescription = "Comentario, ligazón ou debuxo sen descrición"
+annotationNotTagged = "Comentario ou debuxo sen etiquetar"
+artifactInsideTagged = "Decoración dentro de contido etiquetado"
+bookmarkLanguage = "Sen idioma para marcadores"
+conformancePrefix = "Declaración PDF/UA escrita incorrectamente"
+contentLanguage = "Sen idioma para o texto"
+customTagNotMapped = "Etiqueta personalizada sen significado estándar"
+figureNoAlt = "Imaxe sen descrición"
+fontMissingGlyphs = "Fonte con caracteres ausentes"
+fontNotEmbedded = "Fonte non incrustada"
+formFieldNotTagged = "Campo de formulario sen etiquetar"
+genericHeading = "Título sen nivel"
+glyphWidths = "Anchuras de caracteres da fonte non coinciden"
+headingSkipped = "Nivel de título omitido"
+linkNoDescription = "Ligazón sen descrición"
+linkNotTagged = "Ligazón sen etiquetar"
+metadataLanguage = "Sen idioma para os metadatos"
+noConformanceClaim = "Non declara PDF/UA"
+noDocumentTag = "As etiquetas non comezan cunha etiqueta Document"
+noLanguage = "Sen idioma do documento"
+noMetadataStream = "Sen metadatos XMP"
+noTags = "Sen etiquetas"
+notdefGlyph = "Usouse un marcador de carácter ausente"
+noteTag = "Usa a etiqueta Note"
+noTitle = "Sen título do documento"
+notMarkedTagged = "Non sinalado como etiquetado"
+notPdf2Tags = "As etiquetas non son de PDF 2.0"
+noUnicode = "Caracteres que non se poden ler como texto"
+replacementTextLanguage = "Sen idioma para o texto de substitución"
+standardTagRemapped = "Etiqueta estándar convertida en personalizada"
+symbolicEncoding = "Fonte de símbolos coa codificación incorrecta"
+tabOrder = "A orde de tabulación non segue o documento"
+taggedInsideArtifact = "Contido etiquetado oculto como decoración"
+titleNotDisplayed = "O título non se amosa ao abrir"
+untaggedContent = "Contido sen etiquetar"
+
+[checkAccessibility.score]
+issues_one = "{{count}} incidencia"
+issues_other = "{{count}} incidencias"
+noIssues = "Non se atoparon incidencias"
+subtitle_one = "{{profile}} - {{count}} páxina"
+subtitle_other = "{{profile}} - {{count}} páxinas"
+
+[checkAccessibility.sections]
+breakdown = "Desglose"
+
+[checkAccessibility.status]
+checking = "Comprobando {{current}} de {{total}}..."
+complete = "Comprobación completada"
+
+[checkAccessibility.steps]
+results = "Resultados"
+standard = "Norma"
+
+[checkAccessibility.tooltip.header]
+title = "Que norma comprobar"
+
+[checkAccessibility.tooltip.ua1]
+text = "A primeira versión de PDF/UA, publicada en 2012 como ISO 14289-1, para ficheiros PDF 1.7."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "A versión máis recente, publicada en 2024 como ISO 14289-2, para ficheiros PDF 2.0. Un ficheiro PDF 1.7 comprobado contra ela falla nas regras que só aplican a PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Anotación {{n}}"
+bookmarks = "Marcadores"
+character = "Un carácter en {{font}}"
+contentItem = "Elemento de contido {{n}}"
+drawingStep = "Paso de debuxo {{n}}"
+embeddedGraphic = "Gráfico incrustado"
+font = "Fonte {{name}}"
+metadata = "Metadatos do documento"
+page = "Páxina {{n}}"
+piece = "Anaco {{n}}"
+tag = "Etiqueta {{tag}}"
+tagTree = "Árbore de etiquetas"
+wholeDocument = "Documento completo"
+
+[checkAccessibility.where.properties]
+author = "Autor"
+description = "Descrición"
+pdfUaPart = "Parte de PDF/UA"
+title = "Título"
 
 [classification.families]
 correspondence = "Correspondencia"
@@ -3729,6 +3964,10 @@ message = "Un ou ambos os documentos fornecidos son demasiado grandes para proce
 body = "Estes PDF superan en conxunto as 2000 páxinas. O procesamento pode levar varios minutos."
 title = "Comparación grande en curso"
 
+[compare.mode]
+pixel = "Comparación de píxeles"
+text = "Comparación de texto"
+
 [compare.no.text]
 message = "Un ou ambos os PDF seleccionados non teñen contido de texto. Escolle PDF con texto para a comparación."
 
@@ -4046,6 +4285,30 @@ failed = "Non se puido renovar o teu inicio de sesión. Téntao de novo ou desca
 lead = "Este servidor xa está vinculado á túa conta. Renova o teu inicio de sesión para volver á facturación e ao uso no teu servidor."
 title = "Renova o inicio de sesión do teu servidor"
 
+[connectedAccounts]
+connect = "Conectar"
+connectAnother = "Conectar outra"
+connectFailed = "Non se puido conectar a conta. Comproba que o rexistro da aplicación do servidor está configurado e téntao de novo."
+disconnect = "Desconectar"
+google = "Google Drive"
+intro = "Conecta as túas propias contas unha vez. Despois, os teus pipelines poderán ler delas e gardar nelas no teu nome."
+microsoft = "Microsoft (OneDrive e SharePoint)"
+needsReconnect = "Stirling xa non pode acceder a esta conta, así que se pausaron os pipelines que a usan."
+none = "O teu administrador non activou as contas conectadas."
+personal = "Conta persoal"
+popupBlocked = "O teu navegador bloqueou a xanela de inicio de sesión. Permite as xanelas emerxentes para este sitio e téntao de novo."
+reconnect = "Inicia sesión de novo"
+work = "Conta de traballo"
+
+[connectedAccounts.disconnectConfirm]
+body = "As orixes e os pipelines que usan esta conta deteranse ata que a volvas conectar."
+confirm = "Desconectar"
+title = "Desconectar {{account}}?"
+
+[connectedAccounts.status]
+connected = "Conectada"
+needsSignIn = "Require inicio de sesión"
+
 [convert]
 autoRotate = "Rotación automática"
 autoRotateDescription = "Rotar automaticamente as imaxes para que se axusten mellor á páxina PDF"
@@ -4118,10 +4381,9 @@ pdfUaTitle = "Título do documento"
 pdfUaTitleHelp = "Móstrao un lector no canto do nome do ficheiro. Se se deixa baleiro, úsase o primeiro encabezado."
 selectSourceFormatFirst = "Escolle primeiro un formato de orixe"
 settings = "Configuración"
+signInToUse = "Inicia sesión para usar"
 single = "Único"
 sourceFormatPlaceholder = "Formato de orixe"
-stirlingOfficeConvert = "Usar Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Conversións mellores e máis rápidas con menos memoria. Desactívao para usar o conversor estándar."
 strictMode = "Modo estrito"
 strictModeDesc = "Erro se a conversión non é perfecta (usa a verificación de VeraPDF)"
 svgPdfOptions = "Opcións de SVG a PDF"
@@ -4134,8 +4396,6 @@ webOptions = "Opcións de web a PDF"
 zoomLevel = "Nivel de zoom"
 
 [convert.ebookOptions]
-embedAllFonts = "Incrustar todas as fontes"
-embedAllFontsDesc = "Incrustar todas as fontes do libro electrónico no PDF xerado"
 includePageNumbers = "Incluír números de páxina"
 includePageNumbersDesc = "Engadir números de páxina ao PDF xerado"
 includeTableOfContents = "Incluír índice"
@@ -4648,6 +4908,17 @@ title = "Configuración"
 [extractPages.tooltip]
 description = "Extrae as páxinas seleccionadas nun novo PDF, conservando a orde."
 
+[feedback.page]
+open = "Enviar feedback"
+sendMore = "Enviar máis feedback"
+sent = "Grazas polo teu feedback"
+title = "Axúdanos a mellorar Stirling"
+unavailable = "O feedback non está dispoñible"
+
+[feedback.tag]
+dismiss = "Agochar o botón de feedback"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "Abrir no editor de ficheiros"
 viewInViewer = "Ver no visor"
@@ -4657,7 +4928,6 @@ closeFile = "Pechar ficheiro"
 
 [fileEditor]
 closedFile = "Pechouse {{name}}"
-couldNotSave = "Non se puido gardar {{name}}"
 filesReordered_one = "Ficheiro reordenado"
 filesReordered_other = "{{count}} ficheiros reordenados"
 loadedFromStorage_one = "Cargouse {{count}} ficheiro desde o almacenamento"
@@ -4795,6 +5065,8 @@ googleDrive = "Google Drive"
 library = "Biblioteca de PDF"
 myFiles = "Biblioteca de ficheiros"
 noFiles = "Aínda non hai ficheiros"
+oneDrive = "Abrir desde OneDrive"
+oneDriveFailed = "Non se puido abrir OneDrive"
 openFileManager = "Explorar todos os ficheiros e cartafoles"
 openFromComputer = "Abrir desde o ordenador"
 openSettings = "Abrir configuración"
@@ -4804,6 +5076,17 @@ searchFiles = "Buscar ficheiros"
 uploadFailedBody = "Non se puideron engadir os ficheiros seleccionados."
 uploadFailedTitle = "Erro na carga"
 viewAll = "Ver os {{count}} ficheiros"
+
+[fileSidebar.clearRecents]
+body_one = "Limpar 1 ficheiro de recentes? Isto non se pode desfacer."
+body_other = "Limpar {{count}} ficheiros de recentes? Isto non se pode desfacer."
+button = "Limpar recentes"
+confirm = "Limpar recentes"
+error = "Non se puido limpar. Téntao de novo."
+openNote_one = "1 deles está aberto no banco de traballo."
+openNote_other = "{{count}} deles están abertos no banco de traballo."
+skipOpen = "Omitir os ficheiros abertos"
+title = "Limpar recentes?"
 
 [fileSidebar.fileItem]
 closeViewer = "Pechar visor"
@@ -5124,6 +5407,7 @@ diskFileHint = "Almacenado no teu ordenador"
 diskHint = "Un ficheiro do cartafol montado no teu disco"
 local = "Local"
 localHint = "Sen copia de seguranza"
+oneDrive = "OneDrive"
 shared = "Compartido"
 sharedHint = "Compartido contigo mediante ligazón"
 
@@ -5672,6 +5956,11 @@ title = "Cambiar metadatos"
 desc = "Cambia as restricións e os permisos do documento"
 tags = "permisos,restricións,dereitos,control de acceso,permitir,denegar,impresión,copia,edición,modificar permisos,configuración de seguranza,dereitos de usuario"
 title = "Cambiar permisos"
+
+[home.checkAccessibility]
+desc = "Puntúa un PDF fronte a PDF/UA e ve que bloquea aos lectores de pantalla, sen cambialo"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Comprobar a accesibilidade do PDF"
 
 [home.classify]
 desc = "Identifica que tipo de documento é e etiquétao."
@@ -6521,6 +6810,32 @@ quickAccess = "Comeza na barra de <strong>Acceso rápido</strong> para saltar en
 topBar = "A barra superior permíteche alternar entre <strong>Visor</strong>, <strong>Editor de páxinas</strong> e <strong>Ficheiros activos</strong>."
 wrapUp = "Isto é o novo da V2. Abre o menú <strong>Visitas guiadas</strong> cando queiras para repetir esta, a visita das ferramentas ou a de administración."
 
+[oneDriveSave]
+chooseFolder = "Escolle un cartafol de OneDrive no que subir"
+conflict = "Este ficheiro cambiou en OneDrive desde que se abriu ou gardou esta versión. Garda a túa versión como copia no seu lugar."
+failedTitle = "Non se puido gardar en OneDrive"
+fromOneDrive = "Desde OneDrive"
+linkNotStored = "Este navegador non puido lembrar a ligazón ao ficheiro de OneDrive. Despois de recargar, gárdao como copia no seu lugar."
+missing = "Este ficheiro moveuse ou eliminouse en OneDrive. Garda a túa versión como copia no seu lugar."
+open = "Abrir en OneDrive"
+personalUnsupported = "Para subir a OneDrive precísase unha conta Microsoft de traballo ou escola."
+reconnect = "Volver conectar"
+replaces = "Substitúe {{name}}"
+saveCopyToOneDrive = "Gardar unha copia en OneDrive"
+saved = "Gardado en OneDrive"
+saving = "Gardando en OneDrive..."
+signInToSave = "Inicia sesión no teu servidor para gardar en OneDrive."
+updateOriginal = "Actualizar en OneDrive"
+uploadToOneDrive = "Subir a OneDrive..."
+
+[oneDriveSave.status]
+saved = "Gardado en OneDrive"
+unsaved = "Cambios aínda non gardados en OneDrive"
+
+[oneDriveSave.toolbar]
+replace = "Actualizar {{name}} en OneDrive"
+saveAll = "Actualizar todo en OneDrive"
+
 [overlay-pdfs]
 desc = "Superpón un PDF enriba doutro"
 submit = "Enviar"
@@ -7110,6 +7425,7 @@ resetsTomorrow = "Restablécese mañá"
 thisPeriod = "Este período de facturación"
 
 [payment]
+annually = "Anualmente"
 billingPeriod = "Período de facturación"
 cancelTeamChange = "Manter o plan actual"
 canCloseWindow = "Xa podes pechar esta xanela."
@@ -7157,11 +7473,14 @@ title = "Axustar o plan Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe amosará o cargo exacto, os posibles prorrateos e a túa próxima data de facturación antes de que confirmes. Usarase o teu método de pagamento gardado se está dispoñible."
+billingLabel = "Facturación"
 continue = "Continuar ao pagamento"
 currencyAtCheckout = "Stripe confirma o importe final e a moeda do pagamento ao pagar."
+custom = "Personalizado"
 customLabel = "Número de usuarios"
 dueToday = "A pagar hoxe"
 enterpriseQuote = "Solicitar un orzamento empresarial"
+enterUsers = "Introduce un número de usuarios."
 estimatedTotal = "Total estimado"
 lineItem = "Team · {{price}}{{period}} por cada {{block}} usuarios"
 minimumForCurrentUsers = "Tes {{users}} usuarios, así que o plan debe cubrir polo menos {{minimum}}."
@@ -7173,12 +7492,16 @@ overCapacityConsequence = "As contas existentes mantéñense. Engadir ou convida
 overCapacityTitle = "O teu servidor ten máis usuarios dos que cobre o teu plan"
 perMonth = "/mes"
 perYear = "/ano"
+planName = "Stirling Team"
 reductionNote = "A capacidade inferior comeza na túa próxima renovación. Ata entón, podes usar a túa asignación actual. Os usuarios existentes mantéñense; os novos usuarios bloquéanse se superas a capacidade cando o cambio entre en vigor."
 renewalNote = "Renóvase por {{total}}{{period}}. Cancela cando queiras en Uso e facturación."
 reviewChange = "Revisar o cambio en Stripe"
-roundsTo = "arredondase a {{users}}"
+roundsUp = "Redondea a {{users}} usuarios."
+selfServeLimit = "Ata {{users}} usuarios aquí."
 subheading = "Cobre a todas as persoas que convides, en bloques de {{users}} usuarios."
 subheadingAdd = "O teu plan cobre hoxe {{current}} usuarios. Escolle o novo total."
+talkToEnterprise = "Para máis, fala connosco sobre Enterprise."
+usersCovered = "usuarios cubertos"
 usersLabel = "Usuarios"
 userTotal = "{{users}} usuarios"
 
@@ -7252,7 +7575,6 @@ saveTooltip = "Aplicar os cambios ao ficheiro do teu espazo de traballo ({{short
 tags = "editar texto,modificar texto,cambiar texto,editar contido,actualizar texto,reescribir,corrixir,emendar,marcar cambios,revisar,editor de texto,editor de contido"
 title = "Editor de texto PDF"
 unsaved = "(sen gardar)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Texto de anotación: non é texto da páxina, así que non se pode editar aquí"
@@ -7261,12 +7583,18 @@ widget = "Campo de formulario: non é texto da páxina, así que non se pode edi
 
 [pdfTextEditor.commands]
 edit = "Editar"
+markTagged = "Marcar como totalmente etiquetado"
+matchScanFont = "Igualar o texto escaneado a {{face}}"
 mergeRuns_one = "Combinar {{count}} fragmento nun parágrafo"
 mergeRuns_other = "Combinar {{count}} fragmentos nun parágrafo"
 setColour = "Definir a cor en {{run}}"
 setOutline = "Definir o contorno en {{run}}"
+tagFormField = "Etiquetar o campo do formulario"
+tagLink = "Etiquetar ligazón"
+tagPageContent = "Etiquetar páxina automaticamente"
 typeInto = "Escribir en {{run}}"
 ungroupParagraph = "Desagrupar o parágrafo {{run}}"
+unmarkTagged = "Marcar como non totalmente etiquetado"
 wrap = "Axustar {{run}}"
 
 [pdfTextEditor.discard]
@@ -7276,13 +7604,15 @@ confirm = "Descartar e abrir"
 hint = "Cancela e despois preme Gardar PDF para conservalos primeiro no teu espazo de traballo."
 title = "Descartar os cambios sen gardar?"
 
-[pdfTextEditor.drop]
-hint = "Ao soltar no editor substitúese calquera documento aberto."
-title = "Solta un PDF para abrilo"
-
 [pdfTextEditor.error]
 decodeImage = "Non se puido descodificar a imaxe seleccionada."
+duplicateDropsLetters = "Non se pode duplicar este texto: ningunha fonte dispoñíbel debuxa todas as súas letras."
+formLiftChangesDrawing = "Non se pode editar isto: está debuxado como parte dun grupo cuxas opcións de recorte ou de gráficos o editor non pode manter ao cambialo."
 insertImage = "Non se puido inserir a imaxe seleccionada."
+needsShaping = "O editor aínda non pode debuxar correctamente as letras unidas e os signos vocálicos deste sistema de escritura, así que non se fixo este cambio."
+replaceClippedImage = "Non se pode substituír esta imaxe: está recortada e a substitución amosaría as partes que o recorte agocha."
+scanOffInk = "Non se pode editar este texto: as súas palabras recoñecidas non se aliñan co escaneo. Executa OCR de novo."
+unsafeRtlEdit = "Non se pode facer esta edición: o editor non pode debuxar de novo o texto de dereita a esquerda desta liña sen cambialo."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "Imaxe PNG"
@@ -7304,15 +7634,42 @@ wholeWord = "Palabra completa"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Tipos de letra incorporados"
+closestMatch = "Esta fonte non contén algunhas das letras seleccionadas, polo que se debuxan na fonte máis próxima."
 deviceFontsNone = "Non se atoparon tipos de letra adicionais no dispositivo."
 deviceFontsUnavailable = "Os tipos de letra do dispositivo non están dispoñibles. Os tipos de letra incorporados seguen funcionando."
 deviceGroup = "Tipos de letra do dispositivo"
+documentFontCannotDraw = "O editor non pode debuxar este texto coa fonte propia do documento, así que deixouse na súa fonte actual."
 documentGroup = "Tipo de letra do documento"
+embeddingForbidden = "A licenza desta fonte non permite incrustala nun PDF. O texto deixouse sen cambios."
+embedFailed = "Non se puido incrustar esta fonte no PDF. O texto deixouse sen cambios."
+includedGroup = "Fontes incluídas"
 label = "Familia tipográfica"
+matchedGroup = "Fonte coincidente"
+missingGlyphs = "Esta fonte non contén algúns dos caracteres seleccionados e non se puideron manter na súa fonte actual. O texto deixouse sen cambios."
 mixed = "Mesturado"
+needsShaping = "O editor aínda non pode debuxar correctamente as letras unidas e os signos vocálicos deste sistema de escritura, así que ese texto deixouse na súa fonte actual."
+noGlyphs = "Esta fonte non ten caracteres para o texto seleccionado. O texto deixouse sen cambios."
 noMatch = "Ningún tipo de letra coincide"
+partOfRunUnsupported = "Este texto só se pode cambiar de estilo como un todo. Selecciona a caixa no canto de algunhas das súas palabras."
 placeholder = "Familia tipográfica"
+scannedText = "Texto escaneado"
+serverFontFailed = "Non se puido descargar esa fonte do servidor. O texto deixouse sen cambios."
+serverGroup = "Fontes do servidor"
+someLeftUnchanged = "Esta fonte non ten os caracteres para parte do texto seleccionado. Ese texto deixouse sen cambios."
+styleSkipped = "Parte do texto seleccionado non ten ningunha versión da súa fonte nese estilo, así que deixouse sen cambios."
+styleUnavailable = "O texto seleccionado non ten ningunha versión da súa fonte nese estilo, así que deixouse sen cambios."
 useDeviceFonts = "Usar os tipos de letra do dispositivo"
+weight = "Peso da fonte"
+weightBlack = "Supernegra"
+weightBold = "Negra"
+weightExtraBold = "Extra negra"
+weightExtraLight = "Extra lixeira"
+weightLight = "Lixeira"
+weightMedium = "Media"
+weightNumber = "Peso {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Seminegra"
+weightThin = "Fina"
 
 [pdfTextEditor.fonts]
 allPresent = "Están todas as letras e números"
@@ -7357,6 +7714,7 @@ helpDesc = "Esta axuda"
 saveDesc = "Gardar no teu espazo de traballo"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Negra / Cursiva, para as palabras seleccionadas ou para toda a caixa"
 deleteDesc = "Eliminar o seleccionado"
 duplicateDesc = "Duplicar o seleccionado"
 groupDesc = "Agrupar os fragmentos seleccionados nun parágrafo"
@@ -7380,8 +7738,12 @@ zoomDesc = "Ampliar / reducir"
 
 [pdfTextEditor.inspector]
 document = "Documento"
+fontCompletedClosest = "Fonte incrustada · os caracteres que lle faltan debúxanse en {{name}}, a coincidencia máis próxima dispoñible."
+fontCompletedOriginal = "Fonte incrustada · os caracteres que lle faltan debúxanse en {{name}}, a mesma fonte."
 fontEmbedded = "Tipo de letra incrustado · un carácter que lle falte substitúese por Helvetica."
 fontGap = "{{name}} · faltan {{glyphs}}: ao escribilos úsase Helvetica."
+fontUnknownCoverage = "{{name}} · un carácter que lle falta recae en {{fallback}}."
+formField = "Campo do formulario"
 geometry = "Posición e tamaño"
 height = "Altura"
 heightHint = "A altura dunha caixa de texto depende do tamaño da letra e do número de liñas."
@@ -7403,14 +7765,20 @@ ocrUnavailable = "O OCR non está dispoñible neste servidor."
 oneImage = "Imaxe"
 oneShape = "Forma"
 oneText = "Texto"
+outlinedTextHint_one = "O texto desta páxina está debuxado como formas, polo que non hai texto para editar. Executa primeiro o OCR para facelo editábel."
+outlinedTextHint_other = "{{count}} páxinas teñen o seu texto debuxado como formas, polo que non hai texto para editar. Executa primeiro o OCR para facelas editábeis."
 pages = "Páxinas"
 runOcr = "Executar OCR"
 scanHint_one = "Esta páxina é unha imaxe dixitalizada sen texto que editar. Executa primeiro o OCR para que o seu texto sexa editable."
 scanHint_other = "{{count}} páxinas son imaxes dixitalizadas sen texto que editar. Executa primeiro o OCR para que o seu texto sexa editable."
 scannedText = "Texto dixitalizado · as palabras modificadas cóbrense e vólvense debuxar cun tipo de letra semellante."
+scannedTextMisaligned = "Texto escaneado · as súas palabras recoñecidas non se aliñan co escaneo, así que este bloque non se pode editar nin eliminar."
+scannedTextNoFont = "Texto escaneado · as palabras tecleadas neste sistema de escritura aínda non se poden debuxar, así que non se conservan. Eliminar palabras segue funcionando."
+scannedTextOffInk = "Texto escaneado · as súas palabras recoñecidas están fóra das palabras escaneadas, así que este bloque non se pode editar. Executa OCR de novo."
 tabDocument = "Documento"
 tabSelected = "Seleccionado"
 textBoxes = "Caixas de texto"
+unreadPagesHint = "{{count}} páxinas non teñen texto para editar: algunhas son imaxes escaneadas e outras debuxan o texto como formas. Executa primeiro o OCR para facelas editábeis."
 width = "Largura"
 widthHint = "O texto axústase de novo á largura."
 x = "X"
@@ -7418,34 +7786,68 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Engadir etiqueta"
+applyToOtherPages_one = "Aplicar a {{count}} outra páxina"
+applyToOtherPages_other = "Aplicar a outras {{count}} páxinas"
+artifactGroup = "Omitido polos lectores de pantalla"
 artifactText = "Decorativo"
 cannotChange = "Non se pode cambiar a accesibilidade desta imaxe."
+cannotDescribeFormField = "Non se pode cambiar a descrición deste campo do formulario."
+cannotDescribeLink = "A descrición desta ligazón non se pode cambiar."
 cannotRetag = "Non se pode cambiar a etiqueta deste texto."
+cannotSetDecorative = "Isto non se pode marcar nin desmarcar como decorativo."
+cannotTagFormField = "Non se pode etiquetar este campo do formulario."
+cannotTagLink = "Esta ligazón non se pode etiquetar."
+cannotTagPage = "O contido desta páxina non se pode etiquetar."
+contentGroup = "Contido"
 customTag = "{{role}} (etiqueta personalizada)"
 decorativeInfo = "Os lectores de pantalla omiten as imaxes decorativas. Úsaa para bordos, fondos e outras imaxes que non conteñen información."
 decorativeLabel = "Imaxe decorativa"
 description = "Descrición da imaxe"
 descriptionInfo = "Os lectores de pantalla len isto no lugar da imaxe."
 encrypted = "Non se poden editar as etiquetas nun ficheiro cifrado"
+figureDescription = "Descrición da figura"
+figureDescriptionInfo = "Os lectores de pantalla len isto no canto da figura."
+formFieldDescription = "Descrición do campo"
+formulaDescription = "Descrición da fórmula"
+formulaDescriptionInfo = "Os lectores de pantalla len isto no canto da fórmula. Dío como o dirías en voz alta, por exemplo, «x ao cadrado máis un»."
 heading = "Accesibilidade"
 innerTagLabel = "Etiqueta {{number}}"
 innerTags = "Etiquetas neste texto"
+linkDescription = "Descrición da ligazón"
+markedTagged = "O documento está totalmente etiquetado"
+markedTaggedHint = "Indícalles aos lectores de PDF que usen as etiquetas de accesibilidade. Márcao cando todo estea etiquetado."
+markedWithUntagged = "Algo de contido non ten etiquetas, polo que os lectores de pantalla poden omitilo."
 missingDescriptions = "Descricións que faltan"
 mixedContent = "A figura inclúe outro contido"
+mixedTags = "Mesturado"
 needsDescriptionBadge = "Sen descrición"
-nextImage = "Imaxe seguinte"
+nextToReview = "Seguinte para revisar"
 notFigure = "Etiquetado como parte do texto"
 removeTag = "Eliminar etiqueta"
 saveFailed = "Non se puideron gardar os cambios de accesibilidade, polo que o ficheiro non se gardou. Desfainos e téntao de novo."
 selectedText = "Texto seleccionado"
+tagFormField = "Etiquetar o campo do formulario"
+tagging = "Etiquetando páxinas"
 tagLabel = "Etiqueta"
+tagLinks_one = "Etiquetar ligazón"
+tagLinks_other = "Etiquetar {{count}} ligazóns"
+tagUntagged = "Etiquetar documento automaticamente"
+tagUntaggedHint = "Engade automaticamente etiquetas de accesibilidade por todo o documento. O resultado é aproximado: comproba despois os títulos, as listas e a orde de lectura."
 unknownTag = "Non se pode ler aquí"
+unmarkedWithTags = "Algúns visores de PDF usarán as etiquetas igualmente e poden omitir contido que non as teña."
 unreadable = "Non se poden editar as etiquetas deste ficheiro"
 untaggableImages = "Non se pode etiquetar aquí"
 untaggedBadge = "Sen etiquetar"
 untaggedDocument = "O documento non ten etiquetas"
 untaggedImage = "Non se pode etiquetar aquí"
 untaggedImages = "Imaxes sen etiquetar"
+untaggedPages = "Páxinas para etiquetar"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Pé de páxina"
+header = "Cabeceira"
+pageNumber = "Número de páxina"
+watermark = "Marca de auga"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Título sen texto"
@@ -7505,6 +7907,23 @@ tableHeader = "Cabeceira de táboa"
 tableRow = "Fila da táboa"
 title = "Título"
 
+[pdfTextEditor.inspector.language]
+allLanguages = "Todos os idiomas"
+cannotSetDocument = "O idioma deste documento non se pode cambiar."
+cannotSetText = "O idioma deste texto non se pode cambiar."
+documentHint = "O idioma que usarán os lectores de pantalla salvo que parte do texto estableza o seu propio."
+documentLabel = "Idioma"
+documentLocked = "O idioma dun documento cifrado non se pode cambiar aquí."
+inDocument = "Neste documento"
+innerLabel = "Idioma da etiqueta {{number}}"
+label = "Idioma"
+missing = "Sen idioma establecido. Os lectores de pantalla han adiviñar e poden ler todo o documento coa voz incorrecta."
+mixed = "Mesturado"
+noMatch = "Non hai idioma coincidente. Escribe o seu código, como mt ou en-IE."
+placeholder = "Selecciona un idioma"
+selectedText = "Idioma do texto seleccionado"
+textHint = "Os lectores de pantalla cambian a voz e a pronunciación a este idioma."
+
 [pdfTextEditor.mobile]
 actions = "Accións do editor"
 addImage = "Imaxe"
@@ -7517,7 +7936,6 @@ done = "Feito"
 download = "Gardar e descargar"
 find = "Buscar"
 lock = "Bloquear"
-openPdf = "Abrir un PDF"
 panelHint = "A edición faise na vista Espazo de traballo. Toca o texto da páxina para cambialo."
 save = "Gardar"
 style = "Estilo"
@@ -7525,7 +7943,6 @@ tapToPlace = "Toca a páxina onde debe ir o texto"
 unlock = "Desbloquear"
 
 [pdfTextEditor.pageView]
-pageNumber = "Páxina {{page}}"
 renderFailed = "Non se puido renderizar a páxina"
 
 [pdfTextEditor.password]
@@ -7541,6 +7958,8 @@ vertical = "Regra vertical"
 
 [pdfTextEditor.run]
 lockedTitle = "Bloqueado: usa o botón Desbloquear para editar"
+readOnlyOrderTitle = "Non se pode editar o texto desta liña: mestura texto de dereita a esquerda e de esquerda a dereita nunha orde que o editor non pode debuxar de novo con seguridade"
+resizeHandle = "Arrastra para cambiar a largura; o texto reaxústase"
 
 [pdfTextEditor.saveRisk]
 cancel = "Cancelar"
@@ -7548,6 +7967,35 @@ intro = "Gardar a copia editada modifica o ficheiro. Isto significa que:"
 note = "As túas edicións consérvanse. Os cambios indicados arriba son inevitables ao gardar a copia editada."
 saveAnyway = "Gardar de todos os xeitos"
 title = "Gardar modificará este PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "Coincidencia aproximada"
+approximateHint = "É posible que a fonte máis próxima atopada non coincida co escaneo."
+change = "A fonte non se ve ben?"
+choose = "Elixe unha fonte"
+chooseMissing = "Elixe unha fonte para este texto…"
+compare = "Comparar fontes…"
+deviceAllow = "Permitir acceso ás fontes para mellorar a coincidencia"
+deviceBlocked = "O teu navegador non volverá preguntar. Para permitilo, fai clic na icona á esquerda da barra de enderezos, activa Fontes e téntao de novo."
+deviceBlockedTitle = "O acceso ás fontes está bloqueado"
+deviceNone = "Ningunha das fontes habituais do documento está instalada neste ordenador."
+deviceNote = "O teu navegador pregunta primeiro. As fontes quedan neste dispositivo."
+deviceOn_one = "Tamén comparado con {{count}} fonte neste ordenador."
+deviceOn_other = "Tamén comparado con {{count}} fontes neste ordenador."
+deviceReading = "Lendo as fontes deste ordenador…"
+deviceRetry = "Téntao de novo"
+done = "Feito"
+hint = "O que escribas debúxase coa fonte máis próxima atopada. Escolle outra se se asemella máis ao escaneo."
+hintFromScan = "O que escribas constrúese con letras atopadas no escaneo. Escolle unha fonte para debuxalo nesa fonte no seu lugar."
+hintOthers = "A túa escolla tamén se usa para o texto escaneado que aínda non editaches."
+matching = "Buscando fontes coincidentes…"
+noFont = "Ningunha das fontes dispoñibles pode debuxar este sistema de escritura, así que o texto tecleado aínda non se pode redeseñar."
+scan = "Escaneo orixinal"
+scanAlt = "A liña escaneada"
+scanNote = "Os escaneos adoitan verse máis borrosos ou máis grosos do que é realmente a fonte. Compara as formas das letras máis ca o grosor."
+score = "{{match}}% parecido"
+title = "Iguala a fonte escaneada"
+unmeasurable = "Este escaneo é demasiado tenue ou pequeno para igualalo cunha fonte."
 
 [pdfTextEditor.settings]
 advanced = "Avanzado"
@@ -7564,7 +8012,6 @@ addTable = "Engadir táboa"
 addText = "Engadir texto"
 clickPageToAddTable = "Fai clic na páxina para engadir unha táboa"
 clickPageToAddText = "Fai clic na páxina para engadir texto"
-document = "Documento"
 group = "Agrupar"
 groupingAuto = "Automático"
 groupingAutoHint = "Agrupa as liñas co mesmo espazado en parágrafos. Cambiar isto volve ler o documento e borra o historial de desfacer."
@@ -7593,23 +8040,17 @@ auto = "Automático"
 enable = "Revisar a ortografía mentres escribes"
 language = "Idioma do dicionario"
 
-[pdfTextEditor.stage]
-loadingDocument = "Cargando o documento"
-loadingProgress = "Progreso da carga"
-noDocument = "Non hai ningún documento cargado."
-pickPrompt = "Escolle un PDF do panel Ficheiros da esquerda para comezar a editar."
-renderingPreview = "Renderizando a vista previa"
-
 [pdfTextEditor.table]
 addColumn = "Engadir columna"
 addRow = "Engadir fila"
+cellNoGlyphs = "Este texto ten caracteres que as fontes da táboa non poden debuxar. Cámbiaos ou retíraos para encher a cela."
 column = "Col"
 deleteColumn = "Eliminar columna"
 deleteRow = "Eliminar fila"
 done = "Feito"
 doneHint = "Deixar de editar isto como táboa"
-edit = "Editar"
 editHint = "Editar como táboa: escribe nas celas, engade ou quita filas e columnas"
+editTable = "Editar táboa"
 move = "Mover"
 moveTable = "Arrastra para mover toda a táboa"
 recognizedHint = "Táboa recoñecida: fai clic para seleccionar todo o seu texto"
@@ -7630,6 +8071,9 @@ alignMiddle = "Aliñar ao medio"
 alignRight = "Aliñar á dereita"
 alignTop = "Aliñar arriba"
 arrange = "Organizar"
+bold = "Negra"
+boldOnly = "Esta fonte só ten versión en negra"
+boldUnavailable = "Non hai versión en negra desta fonte"
 bringForward = "Traer cara adiante"
 bringToFront = "Traer ao primeiro plano"
 caseLower = "minúsculas"
@@ -7650,10 +8094,12 @@ fontColour = "Cor da letra"
 fontSize = "Tamaño da letra"
 formatting = "Formato do texto"
 italic = "Cursiva"
+italicOnly = "Esta fonte só ten versión en cursiva"
 italicUnavailable = "Este tipo de letra non ten versión en cursiva. Carga os tipos de letra do teu dispositivo ou escolle outra familia tipográfica."
 lock = "Bloquear a selección"
 lockTooltip = "Bloquear a selección: evita edicións accidentais"
 more = "Máis accións"
+noBoldItalic = "Non hai versión en negra e cursiva desta fonte"
 order = "Orde"
 outlineColour = "Cor do contorno"
 outlineWidth = "Grosor do contorno (0 = ningún)"
@@ -7683,13 +8129,6 @@ title = "Variacións da vista previa"
 [pdfTextEditor.tooltip.textFocus]
 text = "Este espazo de traballo céntrase na edición de texto e no reposicionamento de imaxes incrustadas. As ilustracións complexas da páxina, os widgets de formulario e os gráficos en capas consérvanse na exportación, pero aquí non son totalmente editables."
 title = "Foco en texto e imaxes"
-
-[pdfTextEditor.zoom]
-fit = "Axustar"
-fitToWidth = "Axustar á largura"
-in = "Ampliar"
-out = "Reducir"
-reset = "Restablecer o zoom ao 100%"
 
 [PDFToCSV]
 header = "PDF a CSV"
@@ -7935,8 +8374,6 @@ triggerImport = "Execútase ao importar"
 [policies.enforcement]
 applying = "Aplicando {{names}}"
 applyingProgress = "Aplicando {{names}} ({{done}} de {{total}})"
-exportFailureBody = "Non se puideron aplicar as políticas de seguranza. Os ficheiros exportáronse tal como estaban."
-exportFailureTitle = "Exportado sen aplicar as políticas"
 failureBody = "Non se puideron aplicar algunhas políticas a {{failures}} de {{total}} ficheiro(s)."
 failureTitle = "Exportado sen aplicar completamente as políticas"
 printPolicyAppliedBody = "Este PDF actualizouse para cumprir unha política. Revisa os cambios e despois imprime de novo."
@@ -8787,6 +9224,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Publica unha mensaxe nun espazo de Google Chat cando se executa unha política."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "Unha conta de servizo que le e escribe en Google Drive para a organización."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Pega a clave JSON da conta de servizo desde Google Cloud. Cífrase e non se volverá amosar."
+label = "Clave da conta de servizo (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Opcional. Con delegación en todo o dominio, o usuario cuxo Drive se imita (un usuario bot dedicado segue funcionando cando a xente marcha). En branco só chega ás unidades compartidas e a cartafoles compartidos coa conta de servizo."
+label = "Actuar como usuario"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Anexa os documentos procesados a unha incidencia de Jira."
@@ -8795,6 +9245,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Envía por correo electrónico un documento ou unha notificación cando se executa unha política."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Requere permisos de aplicación de Microsoft Graph con consentimento de administrador."
+label = "ID da aplicación (cliente)"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Segredo de cliente"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "ID de directorio (tenant)"
+placeholder = "contoso.onmicrosoft.com ou GUID do tenant"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9290,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Contrasinal da aplicación"
+
+[portal.connections.types.onedrive]
+description = "Ler e escribir no OneDrive for Business dun usuario."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "De quen é o OneDrive ao que chega esta conexión. O rexistro da aplicación precisa o permiso de aplicación Files.ReadWrite.All."
+label = "Propietario de OneDrive"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9364,18 @@ helperText = "Déixao baleiro se te autenticas cunha chave privada."
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Opcional. Pega unha chave privada OpenSSH para autenticarte cunha chave en lugar dun contrasinal."
 label = "Chave privada"
+
+[portal.connections.types.sharepoint]
+description = "Ler e escribir na biblioteca de documentos dun sitio de SharePoint."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Opcional. Deixar en branco para a biblioteca Documents predeterminada do sitio."
+label = "Biblioteca de documentos"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "URL do sitio"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Publica unha mensaxe en Slack cando unha política procesa un documento."
@@ -9142,6 +9624,126 @@ status = "Estado"
 time = "Hora"
 user = "Usuario"
 
+[portal.enterprise]
+backTo = "Volver a {{stage}}"
+brandTag = "Enterprise"
+callInfo = "Unha chamada de 15 minutos. Trae as túas preguntas sobre prezos, despregamento ou seguridade, ou planifica connosco o despregue."
+callTitle = "Fala cun enxeñeiro de solucións"
+deployment = "Despregamento"
+footer = "Tes preguntas sobre Stirling Enterprise?"
+home = "Ir a Stirling"
+member = "O teu líder de equipo leva o acordo Enterprise. Unha vez comece, poderás seguir aquí o seu progreso."
+memberDeal = "O teu líder de equipo leva este acordo. Podes seguir aquí o seu progreso."
+quotePanel = "A túa cotización"
+signIn = "Iniciar sesión"
+signInToStart = "Inicia sesión para comezar a túa proba"
+stage = "Etapa {{current}} de {{total}}"
+stagesLabel = "Progreso"
+
+[portal.enterprise.landing]
+lede = "Próbao gratis durante 14 días; despois crea a túa cotización e asina aquí o teu acordo. Sen tarxeta."
+tickAgreement = "Un só acordo que cobre o MSA, formulario de pedido, EULA e DPA"
+tickCompliance = "SCIM, residencia de datos e SLA de dispoñibilidade"
+tickDeploy = "Execútao en Stirling Cloud, nos teus propios servidores, ou totalmente air-gapped"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Documentación de licenza offline"
+point1 = "Actívase cun ficheiro de licenza que funciona sen conexión, non cunha chave verificada en liña"
+point2 = "Instálase como autohospedado, desde unha imaxe que levas"
+point3 = "O inicio de sesión permanece dentro da túa rede"
+tagline = "Autohospedado nunha rede sen acceso a internet."
+
+[portal.enterprise.options.cloud]
+more = "Documentación de Stirling Cloud"
+point1 = "O teu equipo inicia sesión en stirling.com/app"
+point2 = "Funciona en AWS, con ficheiros almacenados cifrados en repouso"
+point3 = "O inicio de sesión único a través do teu propio fornecedor de identidade require autohospedaxe"
+tagline = "Aloxado para ti, sen nada que instalar."
+
+[portal.enterprise.options.selfhost]
+more = "Documentación de autohospedaxe"
+point1 = "Instala con Docker, ou coa chart de Helm en Kubernetes"
+point2 = "Os documentos procésanse na túa propia infraestrutura"
+point3 = "OAuth2, OIDC ou SAML single sign-on"
+tagline = "Nos teus propios servidores, nas túas instalacións ou na túa propia nube."
+
+[portal.enterprise.review]
+back = "Volver a {{stage}}"
+company = "Empresa"
+completed = "Completado"
+extensions = "Extensións usadas"
+paid = "Pagado. A túa factura queda dispoñible aquí."
+people = "Persoas"
+started = "Iniciado"
+trialEnds = "Data de fin da proba"
+trialTitle = "A túa proba"
+version = "Versión"
+viewInvoice = "Ver factura"
+
+[portal.enterprise.setup]
+copied = "Copiado"
+copy = "Copiar"
+markDone = "Marcar «{{step}}» como feito"
+progress = "{{done}} de {{total}} feitos"
+subtitle = "Sácalle o máximo á túa proba probándoo do xeito no que o vas executar."
+subtitleLive = "Os pasos que cumprir antes de despregar a todo o mundo."
+title = "Configúrao"
+titleLive = "Lista para a posta en produción"
+
+[portal.enterprise.setup.firstDocument]
+body = "Carga un PDF co que traballe o teu equipo e proba as ferramentas que usariades no día a día, como ocultar contido, comprimir ou OCR."
+title = "Procesa o teu primeiro documento"
+
+[portal.enterprise.setup.getApp]
+body = "Instala a app de escritorio para Windows, Mac ou Linux e inicia sesión coa conta que acabas de crear, ou úsao directamente desde o teu navegador."
+title = "Obter Stirling"
+
+[portal.enterprise.setup.install]
+body = "Execútao no teu servidor. Inicia Stirling coa túa licenza aplicada, e a imaxe inclúe OCR e conversión de office. Para equipos máis grandes, usa Kubernetes."
+title = "Instalar e iniciar Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Incorpora as persoas que o usarán, para que a proba reflicta traballo real."
+title = "Convida o teu equipo"
+
+[portal.enterprise.setup.licence]
+body = "Abre <code>http://your-server:8080/settings/adminPlan</code>, onde a túa licenza Enterprise debería aparecer como activa. Instaláchelo doutro xeito? Engade a chave en <code>premium.key</code> en <code>settings.yml</code> e reinicia."
+title = "Comproba que a túa licenza está activa"
+
+[portal.enterprise.setup.links]
+browser = "Usalo no navegador"
+docker = "Guía de Docker"
+download = "Descargar a app"
+downloadForTeam = "Obter a app para o teu equipo"
+downloading = "Descargando..."
+downloadLicence = "Descargar ficheiro de licenza"
+invite = "Convidar compañeiros"
+kubernetes = "Guía de Kubernetes"
+licence = "Activación da licenza"
+ocr = "Idiomas de OCR"
+openApp = "Abrir Stirling"
+samlGuide = "Guía de SAML"
+ssoGuide = "Guía de SSO"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Tira da imaxe completa nunha máquina conectada, lévaa xunto co ficheiro de licenza e despois cárgaa e iníciana. A imaxe completa engade as fontes que un servidor sen conexión non pode descargar."
+title = "Leva Stirling e inícialo"
+
+[portal.enterprise.setup.offlineLicence]
+body = "Un servidor illado non pode chegar ao noso servizo de licenzas, así que comproba este ficheiro asinado no seu lugar. Gárdao xunto coa imaxe que levas."
+title = "Descarga a túa licenza offline"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Crea contas en <code>/settings/people</code>, ou apunta Stirling ao teu fornecedor de identidade interno para que o inicio de sesión nunca saia da túa rede."
+bodySelfHosted = "Crea contas en <code>/settings/people</code>, ou conecta o teu fornecedor de identidade para que o teu equipo inicie sesión coas súas contas de traballo. Usan Stirling no navegador no enderezo do teu servidor, ou na app de escritorio apuntada a el."
+title = "Engade a túa xente"
+
+[portal.enterprise.setup.signIn]
+body = "Abre <code>http://your-server:8080</code> e inicia sesión con <code>admin</code> / <code>stirling</code>. Pedirase que elixas un novo contrasinal de inmediato."
+bodyAirgap = "Abre <code>http://your-server:8080</code> e inicia sesión con <code>admin</code> / <code>stirling</code>, escolle un novo contrasinal, e despois comproba que <code>/settings/adminPlan</code> amosa a túa licenza como activa."
+title = "Inicia sesión como admin"
+
 [portal.errorBoundary]
 description = "Esta vista atopou un erro inesperado. Téntao de novo ou escolle outra sección da barra lateral."
 retry = "Tentar de novo"
@@ -9293,6 +9895,7 @@ title = "Nada que revisar"
 [portal.home.download]
 back = "Atrás"
 body = "Descarga a aplicación de escritorio ou autoaloxa o servidor."
+bodyDesktop = "Descarga a app de escritorio e despois inicia sesión coa túa conta de Stirling."
 done = "Feito"
 guide = "Abrir a guía de {{name}}"
 openInBrowser = "Abrir no navegador"
@@ -10442,7 +11045,6 @@ cloud = "Drive · Box · S3"
 email = "Recepción por correo electrónico"
 
 [portal.procurement]
-subtitle = "Consegue que o teu equipo sexa avaliado, contratado e incorporado. Todos os documentos nun só lugar."
 title = "Adquisicións"
 
 [portal.procurement.agreement]
@@ -10460,7 +11062,6 @@ loadError = "Non se puido cargar o acordo. Téntao de novo."
 loading = "Cargando o acordo..."
 ref = "Ref. {{ref}} · {{version}}"
 requestChanges = "Solicitar cambios"
-scrollHint = "Despraza para revisar"
 signatory = "Nome do asinante"
 signatoryPlaceholder = "Nome completo"
 signatoryTitle = "Cargo do asinante"
@@ -10468,27 +11069,37 @@ signatoryTitlePlaceholder = "p. ex. Asesor xurídico xeral"
 signError = "Non se puido rexistrar a túa sinatura. Téntao de novo."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} pago único"
+addonPerYear = "+{{amount}}/ano"
 addons = "Complementos"
 addressLine1 = "Liña de enderezo 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Liña de enderezo 2"
 addressLine2Placeholder = "Oficina, andar, edificio"
 back = "Volver"
+belowMinimum = "Esta cotización está por debaixo do tamaño mínimo para un acordo Enterprise."
 businessName = "Nome da empresa"
 businessNamePlaceholder = "A túa empresa"
 city = "Cidade"
 cityPlaceholder = "San Francisco"
 completeRequired = "Completa os campos obrigatorios (marcados con *) cun correo electrónico válido antes de xerar o orzamento."
+conflict = "Este acordo cambiou desde que o abriches. Pecha o construtor e recarga a páxina para ver en que punto está."
 contactEmail = "Correo electrónico de contacto"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Nome de contacto"
 contactNamePlaceholder = "Jane Doe"
 continue = "Continuar"
 done = "Feito"
+editUsage = "Editar uso"
 eula = "Lin e acepto o EULA de Stirling Enterprise. Rexe o acordo xerado a partir deste orzamento."
 generate = "Xerar o orzamento"
 indemnification = "Protección de PI ampliada"
 indemnificationSub = "Amplía a nosa defensa da PI ás reclamacións de patentes. A indemnización básica por dereitos de autor, marcas e segredos comerciais inclúese de balde."
+minimum = "Enterprise require un gasto anual mínimo de {{min}}."
+minimumBelow = "Esta cotización suma {{annual}} ao ano. Se agardas usar máis, sobe o uso estimado; se non, o plan Team probabelmente se axuste mellor."
+minimumNear = "Enterprise require un gasto anual mínimo de {{min}}. Sobe o uso estimado para alcancialo, ou coméntao connosco."
+minimumNearTitle = "Quédanche {{gap}} ao ano para Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Orzamento Enterprise"
 paperFor = "Preparado para"
 pdfSize = "Tamaño dos PDF"
@@ -10506,9 +11117,13 @@ posture_regulated = "Regulado"
 posture_regulatedSub = "Todas as categorías: Cumprimento normativo, Retención, Inxestión"
 qbr = "Revisións de negocio trimestrais"
 qbrSub = "O teu SE revisa o uso e a folla de ruta cada trimestre"
+raiseUsage = "Aumentar uso estimado"
 region = "Estado / rexión"
 regionPlaceholder = "California"
-running = "{{annual}} / ano · {{tcv}} en {{years}} anos"
+runningLabel = "Prezo estimado"
+runningLabelIssued = "Prezo orzado"
+runningOneYear = "{{annual}} ao ano"
+runningTotal = "{{tcv}} en total durante {{years}} anos"
 s1Sub = "O teu equipo e os PDF que prevés procesar cada ano."
 s1Title = "Canto vas procesar?"
 s2Sub = "Os prazos máis longos rebaixan a tarifa; o teu nivel de servizo determina a asistencia."
@@ -10547,6 +11162,19 @@ volumePlaceholder = "p. ex. 1.000.000"
 years_one = "{{count}} ano"
 years_other = "{{count}} anos"
 
+[portal.procurement.builder.line]
+deployment = "Despregamento {{deployment}}"
+indemnification = "Indemnización de IP"
+multiYear_one = "Compromiso de {{count}} ano"
+multiYear_other = "Compromiso de {{count}} anos"
+qbr = "Revisións trimestrais do negocio"
+seats_one = "{{users}} usuario acordado + SSO / RBAC / auditoría"
+seats_other = "{{users}} usuarios acordados + SSO / RBAC / auditoría"
+seatsUnset = "Usuarios + SSO / RBAC / auditoría"
+support = "SE / CSM dedicados"
+training = "Onboarding e formación"
+usage = "Procesamento de PDF — {{volume}} PDFs/ano a {{rate}}/PDF (automatización {{posture}})"
+
 [portal.procurement.documents]
 agreement = "Acordo Enterprise"
 agreementSub = "MSA, formulario de pedido e DPA nunha única sinatura."
@@ -10557,6 +11185,8 @@ invoice = "Factura"
 invoiceSub = "A túa primeira factura da subscrición."
 laterInvoice = "Dispoñible despois de aceptar"
 laterQuote = "Dispoñible cando se emita o teu orzamento"
+laterSigning = "Dispoñible unha vez que se asine o acordo"
+laterTitle = "Máis adiante no teu acordo"
 quote = "Orzamento"
 quoteSub = "O teu orzamento Enterprise detallado."
 sla = "Anexo de SLA"
@@ -10573,15 +11203,12 @@ title = "Algo saíu mal"
 [portal.procurement.hero]
 barAria = "Etapa {{current}} de {{total}}"
 ctaAgreement = "Revisar e asinar o acordo"
-ctaExploring = "Configura a túa proba"
 ctaQuote = "Revisa o teu orzamento"
 ctaReviewQuote = "Revisar o orzamento"
 ctaTrial = "Crea o teu orzamento"
-documents = "Documentos"
 eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Convidar compañeiros"
-licenseKey = "Clave de licenza"
 liveSub = "A túa organización está aprovisionada e a túa licenza está activa."
 liveTitle = "Xa estás en produción con Stirling Enterprise"
 next = "Seguinte: {{stage}}"
@@ -10630,19 +11257,10 @@ downloadError = "Aínda non se puido xerar o ficheiro de licenza sen conexión; 
 downloadOffline = "Descargar a licenza sen conexión (.lic)"
 hint = "Pega esta clave nunha instancia autoaloxada para activala ou consérvaa para os teus rexistros. Gárdaa nun lugar seguro."
 label = "A túa clave de licenza"
-subtitle = "Activa unha instancia autoaloxada con esta clave ou consérvaa para os teus rexistros."
-title = "A túa clave de licenza"
 trialFileHint = "Este é o teu ficheiro de licenza de proba. Unha vez que o teu acordo estea en vigor, volve e descárgao de novo; ao contrario que a clave de licenza en liña, o ficheiro .lic non se actualiza por si só."
-
-[portal.procurement.link]
-cta = "Vincular a conta"
-description = "As adquisicións funcionan coa túa conta de Stirling vinculada: é como aprovisionamos a proba, calculamos o prezo do teu orzamento e iniciamos a facturación. Vincula unha conta para comezar."
-eyebrow = "Enterprise"
-title = "Vincula a túa conta para comezar"
 
 [portal.procurement.live]
 description = "A túa subscrición está activa e a túa licenza emitida. O teu equipo está aprovisionado e a facturación comezou."
-eyebrow = "En produción"
 title = "Xa estás en produción con Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10650,16 +11268,14 @@ downloadError = "Aínda non se puido descargar o PDF do orzamento; téntao de no
 
 [portal.procurement.payment]
 description = "O teu orzamento está aceptado e a túa licenza xa está activa: o teu equipo pode comezar xa. Paga a primeira factura cando esteas listo; podes pagala ou descargala aquí, sen necesidade de correo electrónico."
-downloadAgreement = "Descargar o acordo asinado"
 downloadInvoice = "Descargar a factura"
-eyebrow = "Pagamento"
-title = "Subscrición creada"
 viewInvoice = "Ver e pagar a factura"
 
 [portal.procurement.review]
 acceptCta = "Aceptar o orzamento"
 annual = "Cota anual (ano 1)"
 downloadCta = "Descargar o orzamento"
+oneTime = "pago único"
 poNumber = "Pedido de compra: {{po}}"
 renewal = "Renóvase a {{amount}}/ano despois do prazo (+{{pct}}% IPC)"
 tcv = "Prazo de {{years}} anos, pagado integramente por adiantado: {{tcv}}"
@@ -10705,11 +11321,18 @@ workEmailPlaceholder = "ti@empresa.com"
 [portal.procurement.trial]
 body = "Ampliar engade 7 días e notifícao ao teu enxeñeiro de solucións."
 bodyMaxed = "Usaches todas as túas ampliacións; fala co teu enxeñeiro de solucións se precisas máis tempo."
-cancel = "Cancelar a proba"
 extend = "Ampliar 7 días"
 maxed = "Límite alcanzado"
 subtitle = "A túa proba gratuíta dura ata o {{date}}. Sen tarxeta."
 title = "Proba Enterprise"
+
+[portal.procurement.validation]
+confirm = "Confirma que estás autorizado para asinar en nome da organización."
+email = "Introduce un enderezo de correo electrónico válido."
+eula = "Acepta a EULA para continuar."
+required = "Este campo é obrigatorio."
+seats = "Introduce cantas persoas o probarán."
+volume = "Introduce cantos PDFs agardas procesar ao ano."
 
 [portal.review]
 subtitle = "Todo o que require a túa atención das execucións das túas políticas e dos editores do teu equipo."
@@ -10735,6 +11358,7 @@ subtitle = "Conexións de entrada reutilizables que envían documentos a Stirlin
 title = "Orixes"
 
 [portal.sources.actions]
+connectDestination = "Conectar destino"
 connectSource = "Conectar orixe"
 
 [portal.sources.builder]
@@ -10748,6 +11372,8 @@ chooseOutputHint = "Escolle a onde van os documentos procesados. Os conectores a
 comingSoon = "Proximamente"
 comingSoonHeading = "Proximamente"
 create = "Crear orixe"
+createDestination = "Crear destino"
+createDestinationTitle = "Engadir un destino"
 createTitle = "Conectar unha orixe"
 delete = "Eliminar"
 editTitle = "Editar orixe"
@@ -10757,6 +11383,41 @@ save = "Gardar cambios"
 description = "As automatizacións de cartafoles só poden usar cartafoles que un administrador permitise. Engádeo na configuración de acceso a cartafoles e téntao de novo."
 openSettings = "Configuración de acceso a cartafoles"
 title = "Este cartafol non está permitido"
+
+[portal.sources.cloudFields.account]
+connect = "Conecta a túa conta"
+connectAnother = "Conectar outra conta"
+connectFailed = "Non se puido conectar a conta. Téntao de novo, ou pídelle ao teu administrador que comprobe o rexistro da aplicación."
+label = "Conta"
+placeholder = "Escolle unha conta"
+reconnect = "inicia sesión de novo"
+unavailable = "Conectar a túa propia conta está desactivado neste servidor. Escolle no seu lugar unha conexión da organización."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "As contas persoais están desactivadas neste servidor."
+helperText = "A túa conta chega ao que ti podes abrir e non precisa administrador. Unha conexión da organización segue funcionando cando a xente marcha, e só chega ao que configurou un administrador."
+label = "Iniciar sesión como"
+
+[portal.sources.cloudFields.authMode.options]
+account = "A miña conta"
+organisation = "Conexión da organización"
+
+[portal.sources.cloudFields.connection]
+helperText = "Configurada por un administrador en Integracións. Compártena todas as localizacións que a usen."
+label = "Conexión da organización"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Pegue a ligazón do cartafol, ou escriba unha ruta desde a raíz de A miña unidade. Déixeo baleiro para a raíz de A miña unidade. O cartafol debe existir xa."
+placeholder = "Ligazón do cartafol, ou Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "Un cartafol no seu OneDrive, ou pegue unha ligazón de cartafol (Copy link en OneDrive). Déixeo baleiro para a raíz de OneDrive. O cartafol debe existir xa."
+placeholder = "Scans/Inbox, ou unha ligazón de cartafol"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Coa súa conta, pegue a ligazón do cartafol (Copy link en SharePoint). Cunha conexión de organización, un cartafol dentro da súa biblioteca; déixeo baleiro para a raíz da biblioteca. O cartafol debe existir xa."
+organisationPlaceholder = "Ligazón do cartafol, ou Scans/Inbox"
+placeholder = "Ligazón do cartafol"
 
 [portal.sources.delete]
 body = "Eliminar \"{{name}}\"? Isto non se pode desfacer. As políticas que a referencien terían que actualizarse."
@@ -10821,6 +11482,7 @@ label = "Caixa de entrada de correo"
 [portal.sources.types.folder]
 description = "Vixía un directorio do servidor por se chegan novos documentos."
 label = "Cartafol"
+outputDescription = "Gardar os resultados nun directorio no servidor."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "A ruta absoluta ao cartafol que vixiar por se chegan novos ficheiros."
@@ -10859,6 +11521,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Obtén documentos de cartafoles compartidos de Google Drive."
 label = "Google Drive"
+outputDescription = "Gardar os resultados nun cartafol de Google Drive."
 
 [portal.sources.types.network]
 description = "Vixía un recurso compartido de rede SMB por se chegan novos documentos."
@@ -10867,10 +11530,12 @@ label = "Unidade de rede"
 [portal.sources.types.onedrive]
 description = "Vixía cartafoles de OneDrive por se chegan novos documentos."
 label = "OneDrive"
+outputDescription = "Gardar os resultados nun cartafol de OneDrive."
 
 [portal.sources.types.s3]
 description = "Obtén documentos dun bucket de Amazon S3 ou compatible con S3."
 label = "Amazon S3"
+outputDescription = "Gardar os resultados nun bucket de Amazon S3 ou compatíbel con S3."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "A conexión gardada co bucket e as credenciais. Compártena todas as orixes e saídas de pipeline que a usan."
@@ -10896,6 +11561,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Obtén documentos de bibliotecas de documentos de SharePoint."
 label = "SharePoint"
+outputDescription = "Gardar os resultados nun cartafol dunha biblioteca de documentos de SharePoint."
 
 [portal.sources.types.unknown]
 label = "Orixe"
@@ -11074,6 +11740,14 @@ waiting = "En cola ..."
 name = "Google Drive"
 scope = "Importación de ficheiros"
 
+[provider.googledrive.accountScope]
+description = "drive abrangue todos os ficheiros (Google debe verificar unha aplicación pública para iso); drive.file só ficheiros que a xente escolle ou que Stirling crea"
+label = "Acceso a Drive"
+
+[provider.googledrive.allowAccountConnections]
+description = "Un único inicio de sesión para o editor e as súas pipelines. Desactíveo para permitir só conexións de organización."
+label = "Permitir que as persoas conecten a súa propia conta"
+
 [provider.googledrive.apiKey]
 description = "Chave da API de Google para a API Google Picker, desde Google Cloud Console"
 label = "Chave da API"
@@ -11086,13 +11760,65 @@ label = "ID da aplicación"
 description = "ID de cliente OAuth 2.0 de Google desde Google Cloud Console"
 label = "ID de cliente"
 
+[provider.googledrive.clientSecret]
+description = "Permite que as persoas conecten a súa conta de Google para as súas pipelines. Engada o URI de redirección de abaixo como un URI de redirección autorizado do cliente OAuth."
+label = "Segredo do cliente"
+
 [provider.googledrive.enabled]
 description = "Permite aos usuarios importar ficheiros directamente desde Google Drive"
 label = "Activar o selector de ficheiros de Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "Non se puido conectar a túa conta de Google. Téntao de novo en Configuración > Contas conectadas."
 notConfigured = "Google Drive non está configurado"
 pickerFailed = "Non se puido abrir o selector de Google Drive"
+
+[provider.googledrive.redirectUri]
+description = "Engada isto como un URI de redirección autorizado do cliente OAuth en Google Cloud Console."
+label = "URI de redirección"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive e SharePoint)"
+scope = "Ficheiros e pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "Un único inicio de sesión para o editor e as súas pipelines. Desactíveo para permitir só conexións de organización."
+label = "Permitir que as persoas conecten a súa propia conta"
+
+[provider.microsoft.allowEditorSaves]
+description = "Desactiva para manter as edicións en Stirling: os ficheiros abertos desde OneDrive pasarán a descargarse no seu lugar, e o servidor rexeitará gardar en OneDrive."
+label = "Permitir que o editor garde de novo en OneDrive"
+
+[provider.microsoft.clientId]
+description = "Dun único rexistro de aplicación en Microsoft Entra."
+label = "ID de aplicación (cliente)"
+
+[provider.microsoft.clientSecret]
+description = "Necesario para contas conectadas. Mantense no servidor."
+label = "Segredo do cliente"
+
+[provider.microsoft.enabled]
+description = "Permitir que as persoas usen OneDrive e SharePoint nas pipelines"
+label = "Activar OneDrive e SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Engade isto como un URI de redirección de Single-page application no mesmo rexistro de aplicación, para iniciar sesión desde o editor."
+label = "URI de redirección de Single-page application"
+
+[provider.microsoft.redirectUri]
+description = "Engada isto como un URI de redirección Web no rexistro da aplicación en Entra."
+label = "URI de redirección"
+
+[provider.microsoft.setupSteps]
+connect = "Gardar, reiniciar e despois conectar unha conta en Contas conectadas."
+permissions = "Engade os permisos delegados de Microsoft Graph Files.ReadWrite.All e Files.Read.All, e os permisos delegados de SharePoint MyFiles.Read e AllSites.Read para que as contas de traballo e escola poidan abrir o selector de ficheiros."
+redirects = "Engádele os dous URI de redirección de abaixo: un como Web, un como Single-page application."
+register = "Rexistra unha aplicación no centro de administración de Microsoft Entra. Permite contas Microsoft persoais se a xente usa OneDrive persoal."
+secret = "Crea un segredo de cliente e despois pega o seu valor e o ID de cliente da aplicación abaixo."
+
+[provider.microsoft.tenant]
+description = "common para contas de traballo, escola e persoais; organizations para traballo e escola só; ou un ID de inquilino para admitir unha organización"
+label = "ID de directorio (inquilino)"
 
 [provider.oauth2.generic]
 name = "OAuth2 xenérico"
@@ -11195,6 +11921,19 @@ label = "Ámbitos"
 description = "Campo que usar como nome de usuario (email, name, given_name, family_name, preferred_username)"
 label = "Usar como nome de usuario"
 
+[provider.onedrive]
+pickerLoading = "Conectando con OneDrive..."
+pickerTitle = "Escolle ficheiros de OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Non se puido conectar a túa conta de Microsoft. Téntao de novo en Configuración > Contas conectadas."
+notConfigured = "OneDrive non está configurado"
+pickerFailed = "Erro ao abrir OneDrive"
+popupBlocked = "O teu navegador bloqueou a xanela de inicio de sesión de Microsoft. Permite as xanelas emerxentes para este sitio e téntao de novo."
+reconnect = "A túa conta de Microsoft necesita iniciar sesión de novo. Vólvea conectar en Configuración > Contas conectadas."
+serverError = "OneDrive ou o servidor de Stirling PDF tivo un problema. Téntao de novo, ou pregunta ao teu administrador se segue ocorrendo."
+unreachable = "Non se puido acceder a OneDrive. Comproba a conexión e téntao de novo."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11293,6 +12032,13 @@ notifications = "Notificacións"
 processor = "Procesador"
 reader = "Lector"
 signInToUse = "Inicia sesión para usar isto"
+
+[quickNav.accountMenu]
+localMode = "Modo local"
+server = "Configuración do servidor"
+settings = "Configuración"
+signedOut = "Sen iniciar sesión"
+signIn = "Iniciar sesión"
 
 [read]
 tags = "ver,abrir,mostrar,ler,visor,visor de PDF,lector de PDF,abrir PDF,ver PDF,mostrar PDF,vista previa,explorar"
@@ -11811,6 +12557,13 @@ title = "Sanitizar PDF"
 [sanitizePdf]
 tags = "limpar,seguro,seguridade,quitar ameazas"
 
+[saveFile.menu]
+more = "Máis opcións para gardar"
+saveCopy = "Gardar unha copia..."
+
+[saveFile.toolbar]
+mixed = "Gardar todo"
+
 [scalePages]
 tags = "redimensionar,axustar,escalar,tamaño de páxina,redimensionar páxina,escalar páxina,cambiar tamaño,axustar tamaño,ampliar,reducir páxina,axustar á páxina,A4,tamaño carta"
 title = "Axustar a escala da páxina"
@@ -11905,6 +12658,162 @@ showTools = "Ver as ferramentas non dispoñibles ▾"
 title = "Non se pode acceder ao teu servidor de Stirling-PDF"
 toolNotAvailableLocally = "O teu servidor de Stirling-PDF está sen conexión e \"{{endpoint}}\" non está dispoñible no backend local."
 
+[serverSetup]
+back = "Volver"
+collapse = "Agochar a configuración de {{setting}}"
+configured = "Configurado"
+continue = "Continuar"
+dialogLabel = "Configuración do servidor"
+expand = "Amosar a configuración de {{setting}}"
+finishSetup = "Rematar configuración"
+loadErrorSubtitle = "A configuración precisa dos axustes actuais do servidor para comezar."
+loadErrorTitle = "Non se puido cargar a súa configuración"
+off = "Desactivado"
+on = "Activado"
+save = "Gardar"
+stepCount = "{{current}} de {{total}}"
+
+[serverSetup.account]
+failed = "Non se puideron gardar os seus datos. Comprobe que o servidor é accesible e ténteo de novo."
+save = "Gardar e continuar"
+signIn = "Iniciar sesión"
+signInAgainSubtitle = "Inicie sesión de novo co seu novo nome de usuario e contrasinal para continuar."
+signInAgainTitle = "Gardáronse os seus datos"
+subtitle = "Escolla como iniciará sesión a partir de agora."
+title = "Configurar a súa conta"
+updating = "Actualizando"
+updatingSubtitle = "Un momento."
+updatingTitle = "Actualizando os seus datos"
+username = "Nome de usuario"
+usernameHelp = "Co que iniciará sesión. Un enderezo de correo electrónico tamén serve."
+
+[serverSetup.addresses]
+backendUrl = "Enderezo do servidor"
+backendUrlHelp = "Onde os provedores de inicio de sesión devolven as persoas. Xeralmente é o mesmo ca o enderezo web."
+frontendUrl = "Enderezo web"
+frontendUrlHelp = "Onde a xente abre Stirling PDF. Úsase en correos, ligazóns para compartir e códigos QR."
+subtitle = "Como as persoas e os provedores de inicio de sesión chegan a este servidor."
+title = "Enderezos"
+
+[serverSetup.ai]
+apiKey = "Chave API"
+apiKeyHelp = "Déixeo baleiro para usar a chave que o motor de IA xa ten."
+baseUrl = "URL base"
+engineUrl = "Enderezo do motor de IA"
+fastModel = "Modelo rápido"
+label = "IA autoaloxada"
+provider = "Fornecedor do modelo"
+providerCustom = "Compatíbel con OpenAI"
+smartModel = "Modelo completo"
+stirling = "Stirling AI"
+subtitle = "Preguntas sobre documentos, edicións automatizadas e axentes de IA."
+title = "IA"
+
+[serverSetup.analytics]
+accept = "Aceptar e continuar"
+acceptFinish = "Aceptar e rematar"
+changeLater = "Pode cambialo en calquera momento en {{path}}."
+decline = "Rexeitar e continuar"
+declineFinish = "Rexeitar e rematar"
+learnMore = "Que recollemos"
+note = "Compartir datos de uso deste servidor connosco para axudarnos a mellorar Stirling PDF. Nunca recollemos ficheiros nin o seu contido."
+title = "Analítica do servidor"
+
+[serverSetup.documents]
+label = "Preguntas sobre documentos"
+model = "Modelo de incrustacións"
+provider = "Fornecedor de incrustacións"
+providerHelp = "Converte o texto do documento no índice de busca que responde ás preguntas."
+
+[serverSetup.email]
+from = "Enderezo do remitente"
+host = "Servidor SMTP"
+label = "Enviar correo"
+password = "Contrasinal"
+port = "Porto"
+subtitle = "Para invitacións, solicitudes de sinatura e comparticións."
+title = "Correo electrónico"
+username = "Nome de usuario"
+
+[serverSetup.error]
+email = "Introduza un enderezo de correo electrónico"
+issuerUnreachable = "Non se puido contactar con este emisor. Comprobe o enderezo e que este servidor pode acceder a el."
+passwordIncorrect = "Contrasinal incorrecto"
+passwordLength = "Use polo menos 8 caracteres"
+passwordMismatch = "Os contrasinais non coinciden"
+passwordRejected = "O servidor non aceptou este contrasinal. Probe outro."
+passwordUnchanged = "Escolla un contrasinal diferente do actual"
+port = "Introduza un porto de 1 a 65535"
+providerName = "Use só letras, números, guións ou guións baixos"
+required = "Obrigatorio"
+url = "Introduza un enderezo completo, que comece por http:// ou https://"
+username = "Use de 3 a 50 letras, números ou . _ + - @, ou un enderezo de correo electrónico"
+usernameTaken = "Ese nome de usuario xa está en uso"
+
+[serverSetup.files]
+sharing = "Compartición de ficheiros"
+sharingOffWarning = "Coa compartición desactivada, as ligazóns para compartir existentes deixan de funcionar."
+storage = "Almacenar ficheiros"
+storageOffWarning = "Co almacenamento desactivado, os ficheiros que a xente gardou no servidor xa non se poderán abrir."
+subtitle = "Xestionar o almacenamento e a compartición de ficheiros."
+title = "Ficheiros"
+
+[serverSetup.finish]
+errorNote = "Comprobe que o servidor é accesible e que segue autenticado como administrador."
+errorSubtitle = "Non se reiniciou nada."
+errorTitle = "Non se puido gardar a súa configuración"
+manualSubtitle = "Este servidor non pode reiniciarse só. Reinicie o seu contedor ou servizo para aplicalos."
+manualTitle = "Configuración gardada"
+restartFailedSubtitle = "O servidor non se reiniciou. Reinicie o seu contedor ou servizo para aplicalos."
+restartingSubtitle = "Esta páxina recargarase cando volva, normalmente nun minuto."
+restartingTitle = "Reiniciando o seu servidor"
+retry = "Tentar de novo"
+saving = "Gardando"
+savingSubtitle = "Un momento."
+savingTitle = "Gardando a súa configuración"
+
+[serverSetup.language]
+auto = "Coincidir con cada navegador"
+label = "Idioma predeterminado"
+subtitle = "O que verán primeiro os novos visitantes."
+title = "Idioma"
+
+[serverSetup.mcp]
+label = "Servidor MCP"
+
+[serverSetup.password]
+confirm = "Confirmar o novo contrasinal"
+current = "Contrasinal actual"
+new = "Novo contrasinal"
+
+[serverSetup.signIn]
+clientId = "ID do cliente"
+clientSecret = "Segredo do cliente"
+issuer = "URL do emisor"
+label = "Iniciar sesión con"
+oidc = "Outro OpenID Connect"
+password = "Nome de usuario e contrasinal"
+providerName = "Nome do provedor"
+providerNameHelp = "Amósase no botón de inicio de sesión, por exemplo okta ou entra."
+redirectNote = "Engada este URI de redirección no seu provedor:"
+subtitle = "Como inicia sesión o seu equipo."
+title = "Inicio de sesión"
+
+[serverSetup.signingIn]
+button = "Iniciando sesión"
+title = "Iniciando sesión coas credenciais predeterminadas"
+
+[serverSetup.start]
+custom = "Personalizado"
+quick = "Inicio rápido"
+setupLabel = "Configuración"
+subtitle = "Configúreo para o seu equipo en poucos pasos."
+title = "O seu servidor está activo"
+
+[serverSetup.summary]
+subtitle = "Revise o esencial. O resto mantén o valor predeterminado."
+title = "Inicio rápido"
+
 [session]
 expired = "A túa sesión caducou. Actualiza a páxina e téntao de novo."
 
@@ -11939,6 +12848,10 @@ mcp = "Servidor MCP"
 privacy = "Privacidade"
 storageSharing = "Almacenamento e compartición de ficheiros"
 systemSettings = "Configuración do sistema"
+
+[settings.connectedAccounts]
+description = "O seu propio OneDrive, SharePoint e Google Drive, para as súas pipelines."
+title = "Contas conectadas"
 
 [settings.connectedInstances]
 confirmBody = "Isto revoga o acceso da instancia ao teu equipo en Stirling Cloud. Non elimina ficheiros locais nin quita o uso xa rexistrado. Para conectala de novo, segue os pasos de conexión orixinais na instancia."
@@ -11992,6 +12905,13 @@ selfhosted = "Autoaloxado"
 apiKeys = "Chaves da API"
 apiKeysDescription = "Chaves persoais para chamar á API de Stirling desde scripts e integracións."
 title = "Programador"
+
+[settings.feedback]
+label = "Comentarios"
+
+[settings.feedback.send]
+description = "Informe dun problema ou suxira unha mellora ao equipo de Stirling."
+label = "Enviar comentarios"
 
 [settings.general]
 autoUnzip = "Descomprimir automaticamente as respostas da API"
@@ -12058,6 +12978,7 @@ checkForUpdates = "Buscar actualizacións"
 currentBackendVersion = "Versión actual do backend"
 currentFrontendVersion = "Versión actual do frontend"
 description = "Busca actualizacións e consulta a información da versión"
+descriptionManaged = "Ver información da versión"
 latestVersion = "Última versión"
 managedByAdmin = "Xestionado polo administrador"
 modeAuto = "Instalar as actualizacións automaticamente"
@@ -12135,15 +13056,24 @@ title = "Documentos legais"
 backendDescription = "Licenzas das dependencias do backend incluídas neste servidor."
 backendLabel = "Licenzas do backend"
 backendTitle = "Licenzas de terceiros do backend"
+clearSearch = "Limpar busca"
 empty = "Non se atoparon dependencias."
 frontendDescription = "Licenzas das dependencias do frontend incluídas na compilación da versión."
 frontendLabel = "Licenzas do frontend"
 frontendTitle = "Licenzas de terceiros do frontend"
 license = "Licenza"
+licenseAbout = "Información"
+licenseAboutCompound = "Información sobre {{short}}"
+licenseAboutTitle = "Información sobre {{short}}"
 listDescription = "A lista móstrase directamente na interface a partir do paquete da versión ou do endpoint do backend."
 listTitle = "Dependencias incluídas"
 loadError = "Non se puideron cargar as licenzas de terceiros"
 module = "Módulo"
+noMatch = "Non hai dependencias que coincidan."
+searchPlaceholder = "Buscar dependencias"
+showingCount = "{{count}} dependencias"
+showingCount_one = "{{count}} dependencia"
+showingCount_other = "{{count}} dependencias"
 version = "Versión"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13223,7 @@ emptyEmail = "Introduce o teu correo electrónico"
 emptyPassword = "Introduce o teu contrasinal"
 emptyUsername = "Introduce o teu nome de usuario"
 oauthFailed = "Fallou o inicio de sesión con OAuth. Téntao de novo."
+openResetFailed = "Non se puido abrir o seu navegador para restablecer o seu contrasinal."
 
 [setup.saas]
 title = "Inicia sesión en Stirling"
@@ -12703,6 +13634,11 @@ bullet3 = "As sinaturas invisibles tamén proporcionan validación criptográfic
 description = "Controla se a sinatura é visible no documento ou se incrusta de forma invisible."
 title = "Visibilidade da sinatura"
 
+[signedPdf]
+editsBlocked = "Este PDF está asinado dixitalmente e as modificacións nos PDF asinados están desactivadas. Aínda pode velo ou imprimilo, convertelo a outro formato ou asinalo de novo."
+editsBlockedStatus = "Asinado: edicións bloqueadas"
+editsBlockedTitle = "O PDF asinado non se pode cambiar"
+
 [signingDetail]
 allSigned = "Todas as persoas asinaron. Revisa o documento e despois finalízao."
 awaitingOwner = "O propietario finalizará o documento cando estea listo."
@@ -13110,7 +14046,6 @@ noLinks = "Aínda non hai ligazóns para compartir activas."
 noSharedUsers = "Aínda ningún usuario ten acceso."
 openInApp = "Abrir en Stirling PDF"
 ownerLabel = "Propietario"
-ownerUnknown = "Descoñecido"
 removeLink = "Quitar ligazón"
 removeUser = "Quitar"
 requiresLogin = "Este ficheiro compartido require iniciar sesión."
@@ -13249,6 +14184,11 @@ remove = "Quitar"
 roleColumn = "Rol"
 title = "Membros do equipo"
 
+[teamWelcome]
+invite = "Invitar persoas"
+message = "Convide o seu equipo para que poidan comezar a traballar con vostede."
+title = "O seu plan Team está activo."
+
 [textAlign]
 center = "Centro"
 left = "Esquerda"
@@ -13290,7 +14230,6 @@ toggleDetails = "Amosar/agochar detalles"
 
 [tool]
 endpointUnavailable = "Esta ferramenta non está dispoñible no teu servidor."
-endpointUnavailableClickable = "Non dispoñible neste modo. Preme para iniciar sesión."
 filesLoading = "Os ficheiros aínda se están cargando, agarda."
 filesLoadingProgress = "Cargando {{loaded}} / {{total}} ficheiros..."
 invalidParams = "Completa a configuración obrigatoria."
@@ -13298,6 +14237,8 @@ noFiles = "Engade un ficheiro para comezar."
 scopeFiles = "ficheiros"
 scopeThisFile = "este ficheiro"
 selectFilesHint = "Selecciona ficheiros en Ficheiros activos para executar esta ferramenta"
+signInRequired = "Isto require unha conta de Stirling. Inicia sesión para continuar."
+signInToUse = "Inicia sesión para usar"
 singleFileScope = "Aplicando só a: {{fileName}}"
 viewerMode = "Cambia ao editor de ficheiros para engadir varios ficheiros."
 
@@ -13790,6 +14731,7 @@ coverPageView = "Mostrar a portada por separado"
 disableColorFilter = "Desactivar o filtro de cor"
 documentUpdated = "Documento actualizado"
 dualPageView = "Vista de dobre páxina"
+editText = "Editar texto"
 enableDarkFilter = "Activar o filtro escuro"
 enableSepiaFilter = "Activar o filtro sepia"
 engineLoadError = "Non se puido inicializar o motor do visor de PDF"
@@ -14158,8 +15100,10 @@ closeAll = "Pechar todos os ficheiros"
 closePdf = "Pechar PDF"
 deselectAll = "Deseleccionar todo"
 downloadAll = "Descargar todo"
+editText = "Editar texto"
 exitAnnotations = "Saír do modo de anotación"
 exitRedaction = "Saír do modo de censura"
+findReplace = "Buscar e substituír"
 formFill = "Editor de formularios"
 hideToolbar = "Agochar a barra de ferramentas"
 moreActions = "Máis accións"

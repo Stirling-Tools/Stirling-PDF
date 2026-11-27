@@ -133,7 +133,7 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t("ocr.operation.submit", "Process OCR and Review"),
+      text: t("ocr.operation.submit", "Run OCR"),
       loadingText: t("loading"),
       onClick: handleOCR,
       isVisible: !hasResults,

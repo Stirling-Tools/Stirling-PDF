@@ -1,4 +1,11 @@
-﻿import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+﻿import {
+  Fragment,
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -34,6 +41,10 @@ import {
   AddSignatureResult,
 } from "@editor/hooks/tools/sign/useSavedSignatures";
 import { SavedSignaturesSection } from "@editor/components/tools/sign/SavedSignaturesSection";
+import {
+  signatureSaveButtons,
+  type SignatureSaveButton,
+} from "@editor/components/tools/sign/signatureSaveButtons";
 import MobileSignatureModal, {
   type MobileSignaturePayload,
 } from "@editor/components/tools/sign/MobileSignatureModal";
@@ -41,7 +52,7 @@ import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { buildSignaturePreview } from "@editor/utils/signaturePreview";
 
-import { Icon, type IconName } from "@editor/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 type SignatureDrafts = {
   canvas?: string;
@@ -404,23 +415,13 @@ const SignSettings = ({
     type: SavedSignatureType,
     isReady: boolean,
     onClick: (scope: "personal" | "shared") => void,
-    scope: "personal" | "shared",
-    icon: IconName,
-    label: string,
+    { scope, icon, label }: SignatureSaveButton,
+    fullWidth: boolean,
   ) => {
-    if (!canUseSavedLibrary) {
-      return null;
-    }
     const currentKey = signatureKeysByType[type];
     const lastSavedKey = lastSavedSignatureKeys[type];
     const hasChanges = Boolean(currentKey && currentKey !== lastSavedKey);
     const isSaved = isReady && !hasChanges;
-
-    // Only show backend storage buttons when backend is available
-    const showButton = storageType === "backend" || storageType === null;
-    if (!showButton) {
-      return null;
-    }
 
     let tooltipMessage: string | undefined;
     if (!isReady) {
@@ -447,6 +448,7 @@ const SignSettings = ({
       <Button
         size="sm"
         variant="secondary"
+        fullWidth={fullWidth}
         accent={isSaved ? "success" : undefined}
         onClick={() => onClick(scope)}
         disabled={
@@ -461,7 +463,9 @@ const SignSettings = ({
     if (tooltipMessage) {
       return (
         <Tooltip label={tooltipMessage}>
-          <span style={{ display: "inline-block" }}>{button}</span>
+          <span style={{ display: fullWidth ? "block" : "inline-block" }}>
+            {button}
+          </span>
         </Tooltip>
       );
     }
@@ -477,33 +481,26 @@ const SignSettings = ({
     if (!canUseSavedLibrary) {
       return null;
     }
-
-    const personalButton = renderSaveButton(
-      type,
-      isReady,
-      onClick,
-      "personal",
-      "user",
-      translate("saved.savePersonal", "Save Personal"),
-    );
-
-    const sharedButton = renderSaveButton(
-      type,
-      isReady,
-      onClick,
-      "shared",
-      "users",
-      translate("saved.saveShared", "Save Shared"),
-    );
-
-    if (!personalButton && !sharedButton) {
+    const saveButtons = signatureSaveButtons(storageType, translate);
+    if (saveButtons.length === 0) {
       return null;
     }
-
+    // A lone button spans the row; a pair sits side by side.
+    const fullWidth = saveButtons.length === 1;
     return (
-      <Group gap="xs" style={{ alignSelf: "flex-start", marginTop: "0.4rem" }}>
-        {personalButton}
-        {sharedButton}
+      <Group
+        gap="xs"
+        grow={fullWidth}
+        style={{
+          alignSelf: fullWidth ? "stretch" : "flex-start",
+          marginTop: "0.4rem",
+        }}
+      >
+        {saveButtons.map((saveButton) => (
+          <Fragment key={saveButton.scope}>
+            {renderSaveButton(type, isReady, onClick, saveButton, fullWidth)}
+          </Fragment>
+        ))}
       </Group>
     );
   };
@@ -1197,43 +1194,33 @@ const SignSettings = ({
   const placementToggleControl =
     onActivateSignaturePlacement || onDeactivateSignature ? (
       isPlacementMode ? (
-        <Tooltip label={translate("mode.pause", "Pause placement")}>
-          <Button
-            variant="secondary"
-            aria-label={translate("mode.pause", "Pause placement")}
-            onClick={handlePausePlacement}
-            disabled={disabled || !onDeactivateSignature}
-            leftSection={<Icon name="circle-pause" size={20} />}
-          >
-            {translate("mode.pause", "Pause placement")}
-          </Button>
-        </Tooltip>
+        <Button
+          variant="secondary"
+          aria-label={translate("mode.pause", "Pause placement")}
+          onClick={handlePausePlacement}
+          disabled={disabled || !onDeactivateSignature}
+          leftSection={<Icon name="circle-pause" size={20} />}
+        >
+          {translate("mode.pause", "Pause placement")}
+        </Button>
       ) : (
-        <Tooltip label={translate("mode.resume", "Resume placement")}>
-          <Button
-            variant="secondary"
-            aria-label={translate("mode.resume", "Resume placement")}
-            onClick={handleResumePlacement}
-            disabled={
-              disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
-            }
-            leftSection={<Icon name="play" size={20} />}
-          >
-            {translate("mode.resume", "Resume placement")}
-          </Button>
-        </Tooltip>
+        <Button
+          variant="secondary"
+          aria-label={translate("mode.resume", "Resume placement")}
+          onClick={handleResumePlacement}
+          disabled={
+            disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
+          }
+          leftSection={<Icon name="play" size={20} />}
+        >
+          {translate("mode.resume", "Resume placement")}
+        </Button>
       )
     ) : null;
 
   return (
     <Stack>
       <Stack gap="sm">
-        <Text size="sm" c="dimmed">
-          {translate(
-            "step.createDesc",
-            "Choose how you want to create the signature",
-          )}
-        </Text>
         {canDrawOnPhone && (
           <>
             <Button
@@ -1268,9 +1255,6 @@ const SignSettings = ({
       <Stack gap="sm">
         <Text fw={600} size="md">
           {translate("step.place", "Place & save")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {translate("step.placeDesc", "Position the signature on your PDF")}
         </Text>
 
         <Group gap="xs" wrap="nowrap" align="center">

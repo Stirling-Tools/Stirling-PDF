@@ -14,6 +14,7 @@ import {
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { ConnectionsCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
+import { localPaperSize, orderPaperSizeOptions } from "@editor/utils/paperSize";
 
 /** QR-code handoff so a phone can push files into this session. */
 export function MobileUploadQrCard({
@@ -213,15 +214,19 @@ export function MobileUploadQrCard({
                   </Text>
                   <Group gap="xs">
                     <Select
-                      value={settings?.mobileScannerPageFormat || "A4"}
+                      value={
+                        settings?.mobileScannerPageFormat ||
+                        localPaperSize("A4", "letter")
+                      }
                       onChange={(value) => {
                         if (!loginEnabled) return;
                         setSettings({
                           ...settings,
-                          mobileScannerPageFormat: value || "A4",
+                          mobileScannerPageFormat:
+                            value || localPaperSize("A4", "letter"),
                         });
                       }}
-                      data={[
+                      data={orderPaperSizeOptions([
                         {
                           value: "keep",
                           label: t(
@@ -243,7 +248,7 @@ export function MobileUploadQrCard({
                             "Letter (8.5×11in)",
                           ),
                         },
-                      ]}
+                      ])}
                       disabled={!loginEnabled}
                       style={{ width: "250px" }}
                       comboboxProps={{

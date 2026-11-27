@@ -4,6 +4,8 @@ import { Collapsible } from "@editor/ui/Collapsible";
 import { DataRow } from "@editor/ui/DataRow";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
 import { describeIssue } from "@editor/utils/accessibilityReportContent";
+import { IssueFixButton } from "@editor/components/tools/checkAccessibility/AccessibilityFix";
+import { DeclareConformanceButton } from "@editor/components/tools/checkAccessibility/ConformanceClaimFix";
 
 const LABEL_WIDTH = "6rem";
 
@@ -31,6 +33,8 @@ export function AccessibilityIssueItem({ issue }: AccessibilityIssueItemProps) {
       >
         <div className="a11y-issue__body">
           {explanation && <p className="a11y-issue__rule">{explanation}</p>}
+          <IssueFixButton issue={issue} />
+          <DeclareConformanceButton issue={issue} />
           <Collapsible
             open={showDetails}
             onToggle={() => setShowDetails((value) => !value)}

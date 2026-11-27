@@ -28,16 +28,6 @@ vi.mock("react-i18next", () => ({
 
 const state = vi.hoisted(() => ({
   controller: null as unknown as ProcurementController,
-  gate: {
-    loading: false,
-    gated: false,
-    available: true,
-    error: null as string | null,
-    retry: () => {},
-    connect: () => {},
-  },
-  owner: true,
-  linkProvider: true as boolean,
   role: "leader",
   signedIn: true,
   draft: null as TrialDraft | null,
@@ -70,23 +60,11 @@ vi.mock("@processor/components/procurement/CalendlyInline", async (actual) => ({
 vi.mock("@processor/components/procurement/useProcurement", () => ({
   useProcurement: () => state.useProcurement(),
 }));
-vi.mock("@processor/hooks/useConnectGate", () => ({
-  useConnectGate: () => state.gate,
-}));
-vi.mock("@processor/hooks/useAccountLinkOwner", () => ({
-  useAccountLinkOwner: () => state.owner,
-}));
 vi.mock("@processor/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => null,
 }));
-vi.mock("@processor/contexts/LinkContext", () => ({
-  useLinkOptional: () => (state.linkProvider ? {} : null),
-}));
 vi.mock("@processor/contexts/UIContext", () => ({
   useUI: () => ({ openSettings: vi.fn() }),
-}));
-vi.mock("@processor/components/account-link/SaasSessionBanner", () => ({
-  SaasSessionBanner: () => null,
 }));
 vi.mock("@processor/components/procurement/ProcurementFlow", () => ({
   ProcurementFlow: () => null,
@@ -185,9 +163,6 @@ function mount() {
 }
 
 beforeEach(() => {
-  state.gate = { ...state.gate, available: true, connect: vi.fn() };
-  state.owner = true;
-  state.linkProvider = true;
   state.role = "leader";
   state.signedIn = true;
   state.draft = null;
@@ -198,30 +173,6 @@ beforeEach(() => {
 });
 
 describe("Enterprise page", () => {
-  it("asks a server's owner to connect before anything else", () => {
-    state.controller = controller({ isLinked: false, data: null });
-    mount();
-    fireEvent.click(
-      screen.getByRole("button", { name: "portal.procurement.link.cta" }),
-    );
-    expect(state.gate.connect).toHaveBeenCalledOnce();
-    expect(state.controller.onExploreEnterprise).not.toHaveBeenCalled();
-  });
-
-  it("tells another administrator that only the owner can connect", () => {
-    state.owner = false;
-    state.controller = controller({ isLinked: false, data: null });
-    mount();
-    expect(
-      screen.queryByRole("button", { name: "portal.procurement.link.cta" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Only this server’s owner can connect it. Ask them to open this page.",
-      ),
-    ).toBeInTheDocument();
-  });
-
   it("records interest once and offers the trial setup to a leader with no deal", async () => {
     state.controller = controller({ data: null });
     mount();

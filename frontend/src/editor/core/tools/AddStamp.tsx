@@ -78,7 +78,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const getSteps = () => {
     const steps: MiddleStepConfig[] = [];
 
-    // Step 1: Stamp Setup
     steps.push({
       title: t("AddStampRequest.stampSetup", "Stamp Setup"),
       isCollapsed: accordion.getCollapsedState(AddStampStep.STAMP_SETUP),
@@ -95,7 +94,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       ),
     });
 
-    // Step 2: Formatting & Position
     steps.push({
       title: t(
         "AddStampRequest.positionAndFormatting",
@@ -125,7 +123,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 },
               ]}
               disabled={endpointLoading}
-              textClassName={styles.modeToggleButtonText}
             />
           )}
 

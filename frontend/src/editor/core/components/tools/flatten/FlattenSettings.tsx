@@ -1,6 +1,7 @@
-import { Stack, Text, Checkbox, NumberInput } from "@mantine/core";
+import { Stack, Checkbox, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { FlattenParameters } from "@editor/hooks/tools/flatten/useFlattenParameters";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface FlattenSettingsProps {
   parameters: FlattenParameters;
@@ -20,38 +21,29 @@ const FlattenSettings = ({
 
   return (
     <Stack gap="md">
-      <Stack gap="sm">
-        <Checkbox
-          checked={parameters.flattenOnlyForms}
-          onChange={(event) =>
-            onParameterChange("flattenOnlyForms", event.currentTarget.checked)
-          }
-          disabled={disabled}
-          label={
-            <div>
-              <Text size="sm">
-                {t(
-                  "flatten.options.flattenOnlyForms.label",
-                  "Flatten only forms",
-                )}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {t(
-                  "flatten.options.flattenOnlyForms.desc",
-                  "Only flatten form fields, leaving other interactive elements intact",
-                )}
-              </Text>
-            </div>
-          }
-        />
-      </Stack>
+      <Checkbox
+        checked={parameters.flattenOnlyForms}
+        onChange={(event) =>
+          onParameterChange("flattenOnlyForms", event.currentTarget.checked)
+        }
+        disabled={disabled}
+        {...infoLabelProps(
+          t("flatten.options.flattenOnlyForms.label", "Flatten only forms"),
+          t(
+            "flatten.options.flattenOnlyForms.desc",
+            "Only flatten form fields, leaving other interactive elements intact",
+          ),
+        )}
+      />
 
       {!parameters.flattenOnlyForms && (
         <NumberInput
-          label={t("flatten.renderDpi.label", "Rendering DPI")}
-          description={t(
-            "flatten.renderDpi.help",
-            "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size.",
+          {...infoLabelProps(
+            t("flatten.renderDpi.label", "Rendering DPI"),
+            t(
+              "flatten.renderDpi.help",
+              "Optional. Leave blank to use the system default; 150 DPI is recommended. Higher DPI sharpens output but increases processing time and file size.",
+            ),
           )}
           placeholder={t("flatten.renderDpi.placeholder", "e.g. 150")}
           value={parameters.renderDpi ?? undefined}

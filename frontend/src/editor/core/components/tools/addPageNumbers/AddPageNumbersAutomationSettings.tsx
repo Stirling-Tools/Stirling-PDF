@@ -47,7 +47,7 @@ const AddPageNumbersAutomationSettings = ({
       {/* Appearance Section */}
       <Stack gap="md">
         <Text size="sm" fw={600}>
-          {t("addPageNumbers.customize", "Customize Appearance")}
+          {t("addPageNumbers.customize", "Appearance")}
         </Text>
         <AddPageNumbersAppearanceSettings
           parameters={parameters}

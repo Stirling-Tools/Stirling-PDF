@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import ComplianceSection from "@editor/components/tools/getPdfInfo/sections/ComplianceSection";
 
 const meta = {
-  title: "Tools/GetPdfInfo/ComplianceSection",
+  title: "Tools/Get all info on PDF/Parts/ComplianceSection",
   component: ComplianceSection,
   parameters: { layout: "padded" },
 } satisfies Meta<typeof ComplianceSection>;

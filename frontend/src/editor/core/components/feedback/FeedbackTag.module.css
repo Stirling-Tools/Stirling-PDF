@@ -15,6 +15,13 @@
   overflow: hidden;
 }
 
+/* Floating above the viewer's bottom toolbar; the height is set inline. */
+.lifted {
+  border-bottom: 1px solid var(--c-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+}
+
 .open,
 .dismiss {
   display: flex;

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+  <description>
+    <title-info>
+      <genre>reference</genre>
+      <author><first-name>Stirling</first-name><last-name>PDF</last-name></author>
+      <book-title>Sample FictionBook</book-title>
+      <lang>en</lang>
+    </title-info>
+  </description>
+  <body>
+    <section>
+      <title><p>Chapter one</p></title>
+      <p>A short FictionBook 2 file for conversion tests.</p>
+    </section>
+  </body>
+</FictionBook>

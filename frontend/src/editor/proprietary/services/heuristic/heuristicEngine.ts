@@ -59,7 +59,7 @@ const WORD = /[\p{L}']+/gu;
 
 // ASCII whitespace plus the no-break spaces pdf.js extraction commonly emits.
 // oxlint-disable-next-line no-control-regex -- vertical tab is intentional ASCII whitespace
-const WHITESPACE = /[\t\n\x0B\f\r    ]+/g;
+const WHITESPACE = /[\t\n\x0B\f\r \u00A0\u2007\u202F]+/g;
 const CURLY_APOSTROPHE = /[‘’]/g;
 const COMBINING_MARKS = /[\u0300-\u036F]/g;
 const FOLD_PAIRS: [RegExp, string][] = [

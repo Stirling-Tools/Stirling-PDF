@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import apiClient from "@editor/services/apiClient";
+import { serverErrorReason } from "@editor/services/errorUtils";
 import { alert } from "@editor/components/toast";
 import { fileStorage } from "@editor/services/fileStorage";
 import { createFileFromApiResponse } from "@editor/utils/fileResponseUtils";
@@ -113,13 +114,13 @@ function acknowledgeRequest(
   });
 }
 
-function isParticipantAccessExpired(error: unknown): boolean {
-  return (
-    isAxiosError(error) &&
-    error.response?.status === 403 &&
-    typeof error.response.data === "string" &&
-    error.response.data.includes("Participant access expired")
-  );
+/** True for the 403 the server sends once a participant's access has lapsed, raw text or ProblemDetail. */
+async function isParticipantAccessExpired(error: unknown): Promise<boolean> {
+  if (!isAxiosError(error) || error.response?.status !== 403) return false;
+  const data = error.response.data;
+  const reason =
+    typeof data === "string" ? data : await serverErrorReason(error);
+  return reason?.includes("Participant access expired") ?? false;
 }
 
 /** Fetches sessions, creates requests and supplies documents and overlays to the signing workspace. */
@@ -451,7 +452,8 @@ export function useSigningSessionController(
       );
     } catch (error) {
       if (version !== openVersion.current) return;
-      const accessExpired = isParticipantAccessExpired(error);
+      const accessExpired = await isParticipantAccessExpired(error);
+      if (version !== openVersion.current) return;
       if (accessExpired) {
         markSigningItemSeen(accountId, { ...request, kind: "request" });
         void refetch();

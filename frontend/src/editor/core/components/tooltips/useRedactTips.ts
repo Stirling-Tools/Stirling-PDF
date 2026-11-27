@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useRedactModeTips = (): TooltipContent => {
+export const useRedactModeTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -20,19 +20,19 @@ export const useRedactModeTips = (): TooltipContent => {
         title: t("redact.tooltip.mode.manual.title", "Manual Redaction"),
         description: t(
           "redact.tooltip.mode.manual.text",
-          "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)",
+          "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted.",
         ),
       },
     ],
   };
 };
 
-export const useRedactWordsTips = (): TooltipContent => {
+export const useRedactWordsTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
     header: {
-      title: t("redact.tooltip.words.header.title", "Words to Redact"),
+      title: t("redact.tooltip.words.header.title", "Redaction Settings"),
     },
     tips: [
       {
@@ -61,7 +61,7 @@ export const useRedactWordsTips = (): TooltipContent => {
   };
 };
 
-export const useRedactAdvancedTips = (): TooltipContent => {
+export const useRedactAdvancedTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -130,7 +130,7 @@ export const useRedactAdvancedTips = (): TooltipContent => {
   };
 };
 
-export const useRedactManualTips = (): TooltipContent => {
+export const useRedactManualTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {

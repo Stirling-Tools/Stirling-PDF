@@ -10,7 +10,7 @@ import {
   type CommentsCsvHeaders,
 } from "@editor/utils/commentsCsv";
 
-const BOM = "﻿";
+const BOM = "\uFEFF";
 
 const HEADERS: CommentsCsvHeaders = {
   page: "Page",

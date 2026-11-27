@@ -2,6 +2,7 @@ import { Stack, Select, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface ConvertToEpubSettingsProps {
   parameters: ConvertParameters;
@@ -54,10 +55,12 @@ const ConvertToEpubSettings = ({
   return (
     <Stack gap="sm" data-testid="epub-settings">
       <Checkbox
-        label={t("convert.epubOptions.detectChapters", "Detect chapters")}
-        description={t(
-          "convert.epubOptions.detectChaptersDesc",
-          "Detect headings that look like chapters and insert EPUB page breaks",
+        {...infoLabelProps(
+          t("convert.epubOptions.detectChapters", "Detect chapters"),
+          t(
+            "convert.epubOptions.detectChaptersDesc",
+            "Detect headings that look like chapters and insert EPUB page breaks",
+          ),
         )}
         checked={epubOptions.detectChapters}
         onChange={(event) =>
@@ -67,10 +70,12 @@ const ConvertToEpubSettings = ({
       />
 
       <Select
-        label={t("convert.epubOptions.targetDevice", "Target device")}
-        description={t(
-          "convert.epubOptions.targetDeviceDesc",
-          "Choose an output profile optimized for the reader device",
+        {...infoLabelProps(
+          t("convert.epubOptions.targetDevice", "Target device"),
+          t(
+            "convert.epubOptions.targetDeviceDesc",
+            "Choose an output profile optimized for the reader device",
+          ),
         )}
         value={epubOptions.targetDevice}
         onChange={handleTargetDeviceChange}
@@ -99,10 +104,6 @@ const ConvertToEpubSettings = ({
 
       <Select
         label={t("convert.epubOptions.outputFormat", "Output format")}
-        description={t(
-          "convert.epubOptions.outputFormatDesc",
-          "Choose the output format for the ebook",
-        )}
         value={epubOptions.outputFormat}
         onChange={handleOutputFormatChange}
         disabled={disabled}

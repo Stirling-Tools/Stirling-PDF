@@ -1,28 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useDeleteAllTips = (): TooltipContent => {
-  const { t } = useTranslation();
-
-  return {
-    header: {
-      title: t(
-        "changeMetadata.tooltip.deleteAll.title",
-        "Remove Existing Metadata",
-      ),
-    },
-    tips: [
-      {
-        description: t(
-          "changeMetadata.tooltip.deleteAll.text",
-          "Complete metadata deletion to ensure privacy.",
-        ),
-      },
-    ],
-  };
-};
-
-export const useStandardMetadataTips = (): TooltipContent => {
+export const useStandardMetadataTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -65,7 +44,7 @@ export const useStandardMetadataTips = (): TooltipContent => {
   };
 };
 
-export const useDocumentDatesTips = (): TooltipContent => {
+export const useDocumentDatesTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -93,7 +72,7 @@ export const useDocumentDatesTips = (): TooltipContent => {
   };
 };
 
-export const useAdvancedOptionsTips = (): TooltipContent => {
+export const useAdvancedOptionsTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {

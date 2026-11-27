@@ -322,10 +322,6 @@ export interface ConvertCbzToPdfRequest {
 }
 export interface ConvertEbookToPdfRequest {
   /**
-   * Embed all fonts from the eBook into the generated PDF
-   */
-  embedAllFonts?: true | false;
-  /**
    * Add page numbers to the generated PDF
    */
   includePageNumbers?: true | false;
@@ -337,17 +333,9 @@ export interface ConvertEbookToPdfRequest {
    * Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)
    */
   optimizeForEbook?: true | false;
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
 }
-export interface ConvertPdfHtmlRequest {
-  useStirlingOfficeConvert?: boolean;
-}
-export interface ConvertPdfMarkdownRequest {
-  useStirlingOfficeConvert?: boolean;
-}
+export type ConvertPdfHtmlRequest = Record<string, never>;
+export type ConvertPdfMarkdownRequest = Record<string, never>;
 export interface ConvertPdfToCbrRequest {
   /**
    * The DPI (Dots Per Inch) for rendering PDF pages as images
@@ -373,14 +361,8 @@ export interface ConvertPdfToEpubRequest {
    * Choose an output profile optimized for the reader device.
    */
   targetDevice?: "TABLET_PHONE_IMAGES" | "KINDLE_EINK_TEXT";
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
 }
-export interface ConvertPdfXmlRequest {
-  useStirlingOfficeConvert?: boolean;
-}
+export type ConvertPdfXmlRequest = Record<string, never>;
 export interface ConvertToImageRequest {
   /**
    * The color type of the output image(s)
@@ -498,10 +480,6 @@ export interface EmlToPdfRequest {
    * Maximum attachment size in MB to include (default 10MB, range: 1-100)
    */
   maxAttachmentSizeMB?: number;
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
@@ -564,16 +542,10 @@ export interface FormFormDetectionDetectRequest {
   confThreshold?: number;
 }
 export type GeneralExtractBookmarksRequest = Record<string, never>;
-export interface GeneralFile {
-  useStirlingOfficeConvert?: boolean;
-}
+export type GeneralFile = Record<string, never>;
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
   /**
    * Zoom level for displaying the website. Default is '1'.
    */
@@ -835,11 +807,11 @@ export interface OptimizePdfRequest {
    */
   grayscale?: boolean;
   /**
-   * Whether to convert images to high-contrast line art using ImageMagick. Default is false.
+   * Whether to convert images to high-contrast black and white line art. Default is false.
    */
   lineArt?: boolean;
   /**
-   * Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
+   * Edge detection strength to use for line art conversion (1-3): the radius of the edge filter applied before thresholding.
    */
   lineArtEdgeLevel?: 1 | 2 | 3;
   /**
@@ -970,10 +942,6 @@ export interface PdfToPdfARequest {
    * If true, the conversion will fail if the output is not perfectly compliant
    */
   strict?: boolean;
-  /**
-   * Use Stirling Office Convert; when omitted, follow the server setting
-   */
-  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToPdfUaRequest {
   /**
@@ -1014,21 +982,18 @@ export interface PdfToPresentationRequest {
    * The output Presentation format
    */
   outputFormat: "ppt" | "pptx" | "odp";
-  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToTextOrRTFRequest {
   /**
    * The output Text or RTF format
    */
   outputFormat: "rtf" | "txt";
-  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToWordRequest {
   /**
    * The output Word document format
    */
-  outputFormat: "doc" | "docx" | "odt";
-  useStirlingOfficeConvert?: boolean;
+  outputFormat: "docx" | "odt";
 }
 export interface Pkcs11CertificatesRequest {
   libraryPath?: string;
@@ -1446,12 +1411,12 @@ export type SecurityRemoveCertSignRequest = Record<string, never>;
 export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
-   * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
+   * The alias of the certificate to sign with. Required for WINDOWS_STORE and MACOS_KEYCHAIN, and recommended for PKCS11 tokens holding multiple certificates.
    */
   alias?: string;
   certFile?: File;
   /**
-   * SERVER: this server's own certificate, no file or password. Signer shown is the server's organisation, not the user; self-signed by default, so other PDF readers may show it unverified. PEM needs certFile+privateKeyFile, PKCS12/PFX p12File, JKS jksFile. WINDOWS_STORE/PKCS11: desktop app only.
+   * SERVER: this server's own certificate, no file or password. Signer shown is the server's organisation, not the user; self-signed by default, so other PDF readers may show it unverified. PEM needs certFile+privateKeyFile, PKCS12/PFX p12File, JKS jksFile. WINDOWS_STORE/MACOS_KEYCHAIN/PKCS11: desktop app only.
    */
   certType:
     | "SERVER"
@@ -1460,6 +1425,7 @@ export interface SignPDFWithCertRequest {
     | "PFX"
     | "JKS"
     | "WINDOWS_STORE"
+    | "MACOS_KEYCHAIN"
     | "PKCS11";
   jksFile?: File;
   /**
@@ -1476,7 +1442,7 @@ export interface SignPDFWithCertRequest {
    */
   pageNumber?: number;
   /**
-   * Password for the PKCS12/PFX or JKS keystore or an encrypted PEM key, or the PKCS11 token PIN. Leave empty if the key has none. Not needed for SERVER or WINDOWS_STORE.
+   * Password for the PKCS12/PFX or JKS keystore or an encrypted PEM key, or the PKCS11 token PIN. Leave empty if the key has none. Not needed for SERVER, WINDOWS_STORE or MACOS_KEYCHAIN.
    */
   password?: string;
   /**

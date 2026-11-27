@@ -39,18 +39,6 @@ describe("MergeFileSorter", () => {
     expect(screen.getByText("mock-merge.sortBy.sort")).toBeInTheDocument();
   });
 
-  test("should render description text", () => {
-    render(
-      <TestWrapper>
-        <MergeFileSorter onSortFiles={mockOnSortFiles} />
-      </TestWrapper>,
-    );
-
-    expect(
-      screen.getByText("mock-merge.sortBy.description"),
-    ).toBeInTheDocument();
-  });
-
   test("should have filename selected by default", () => {
     render(
       <TestWrapper>

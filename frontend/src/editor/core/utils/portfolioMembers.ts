@@ -90,6 +90,9 @@ const load = async (file: File): Promise<LoadedPortfolio | null> => {
       ignoreEncryption: true,
       throwOnInvalidObject: false,
       updateMetadata: false,
+      // Portfolio producers such as Acrobat Sign encrypt with an empty user
+      // password; without it the name tree stays encrypted and reads as empty.
+      password: "",
     });
     const specs = new Map<string, PDFDict>();
     collectSpecs(

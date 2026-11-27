@@ -74,6 +74,7 @@ export function LandingActions({
       </Group>
       <input
         ref={fileInputRef}
+        data-testid="landing-file-input"
         type="file"
         multiple
         onChange={onFileSelect}

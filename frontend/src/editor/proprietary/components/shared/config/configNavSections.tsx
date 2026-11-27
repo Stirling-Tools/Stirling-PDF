@@ -7,6 +7,7 @@ import {
   ConfigNavSection,
 } from "@editor-core/components/shared/config/configNavSections";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 // Lazy, and rendered inside one Suspense below: these five pages are the bulk of
 // the settings tree, and pulling them all eagerly starved the i18n fetch on a
@@ -43,8 +44,8 @@ import AccountCards from "@editor-core/components/shared/config/configSections/p
 import AdminAuditSection from "@editor/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@editor/components/shared/config/configSections/AdminUsageSection";
 import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
+import McpSection from "@editor/components/shared/config/configSections/mcp/McpSection";
 import ConnectedAccountsSection from "@editor/components/shared/config/configSections/ConnectedAccountsSection";
-import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { accountConnectionsOffered } from "@editor/hooks/useConnectedAccounts";
 
 /**
@@ -95,6 +96,18 @@ export const useConfigNavSections = (
         component: <ApiKeys />,
       });
     }
+    if (loginEnabled && config?.mcpEnabled) {
+      preferences.items.push({
+        key: "mcp",
+        label: t("config.mcp.navLabel", "MCP Server"),
+        description: t(
+          "config.mcp.description",
+          "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf.",
+        ),
+        icon: "bot",
+        component: <McpSection />,
+      });
+    }
     if (loginEnabled && accountConnectionsOffered(config)) {
       preferences.items.push({
         key: "connectedAccounts",
@@ -133,7 +146,7 @@ export const useConfigNavSections = (
               "admin.settings.general.description",
               "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
             ),
-            icon: "settings",
+            icon: "server",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminSystemSection />

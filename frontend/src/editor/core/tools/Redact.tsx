@@ -216,7 +216,7 @@ const Redact = (props: BaseToolProps) => {
           ),
         },
         {
-          title: t("redact.auto.settings.advancedTitle", "Advanced Settings"),
+          title: t("redact.auto.settings.advancedTitle", "Advanced"),
           isCollapsed: getActualCollapsedState(advancedCollapsed),
           onCollapsedClick: () =>
             base.settingsCollapsed

@@ -126,7 +126,7 @@ test.describe("Super search — bar basics", () => {
   test("selecting a tool from the /files page leaves the file manager", async ({
     page,
   }) => {
-    await page.goto("/files");
+    await page.goto("/files?view=all");
     const input = page.locator(INPUT).first();
     await expect(input).toBeVisible({ timeout: 15000 });
     await input.click();

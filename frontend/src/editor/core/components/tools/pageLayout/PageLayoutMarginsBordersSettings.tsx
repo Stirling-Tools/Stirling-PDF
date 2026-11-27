@@ -1,4 +1,4 @@
-import { Divider, Stack, NumberInput, Switch } from "@mantine/core";
+import { Stack, NumberInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 
@@ -135,9 +135,7 @@ export default function PageLayoutMarginsBordersSettings({
         error={innerError}
       />
 
-      <Divider />
-
-      <Switch
+      <Checkbox
         checked={parameters.addBorder}
         onChange={(e) =>
           onParameterChange("addBorder", e.currentTarget.checked)

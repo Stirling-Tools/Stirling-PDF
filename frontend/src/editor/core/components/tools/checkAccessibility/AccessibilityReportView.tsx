@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@editor/ui/Card";
 import type { IconName } from "@editor/ui/Icon";
@@ -20,6 +20,7 @@ import type { AccessibilityReport } from "@editor/types/checkAccessibility";
 import {
   assessAccessibilityReport,
   type AccessibilityBasicId,
+  type AccessibilityCategoryId,
 } from "@editor/utils/accessibilityAssessment";
 
 const BASIC_ICON: Record<AccessibilityBasicId, IconName> = {
@@ -38,6 +39,10 @@ interface AccessibilityReportViewProps {
   manualTicked: ReadonlySet<number>;
   onToggleManual: (index: number) => void;
   onSetAllManual: (done: boolean) => void;
+  /** Controls that fix an area, each shown under it. */
+  fixes?: Partial<Record<AccessibilityCategoryId, ReactNode>>;
+  /** Shown under the breakdown: the review's live view of the document. */
+  live?: ReactNode;
 }
 
 export function AccessibilityReportView({
@@ -45,6 +50,8 @@ export function AccessibilityReportView({
   manualTicked,
   onToggleManual,
   onSetAllManual,
+  fixes,
+  live,
 }: AccessibilityReportViewProps) {
   const { t } = useTranslation();
   const { result, areas, basics, checks } = useMemo(
@@ -71,7 +78,10 @@ export function AccessibilityReportView({
             {t(
               "checkAccessibility.score.subtitle",
               "{{profile}} - {{count}} pages",
-              { profile: report.profile, count: report.summary.pages },
+              {
+                profile: report.profile,
+                count: report.summary.pages,
+              },
             )}
             {" - "}
             {report.issues.length === 0
@@ -94,6 +104,7 @@ export function AccessibilityReportView({
               area={area}
               profile={report.profile}
               note={area.id === "altText" ? figures : null}
+              fix={fixes?.[area.id]}
             />
           ))}
           {basics.map((basic) => (
@@ -117,6 +128,8 @@ export function AccessibilityReportView({
           )}
         </ul>
       </section>
+
+      {live}
     </div>
   );
 }

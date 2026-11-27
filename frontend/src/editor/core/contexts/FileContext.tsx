@@ -98,6 +98,9 @@ import apiClient from "@editor/services/apiClient";
 import { buildRemovePasswordFormData } from "@editor/hooks/tools/removePassword/buildRemovePasswordFormData";
 import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 
+/** How long the opening check may run before its prompt shows. */
+const OPENING_CHECK_PROMPT_DELAY_MS = 2000;
+
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
   children,
@@ -149,6 +152,9 @@ function FileContextInner({
     error?: string;
   } | null>(null);
   const [inspectionAttempt, setInspectionAttempt] = useState(0);
+  // The file whose prompt has shown, because its check ran long or failed. It
+  // stays up through retries until another file becomes active.
+  const [promptShownFor, setPromptShownFor] = useState<FileId | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [openingPasswordToRemove, setOpeningPasswordToRemove] = useState<
     string | null
@@ -391,6 +397,7 @@ function FileContextInner({
     setUnlockPassword("");
     setUnlockError(null);
     setOpeningPasswordToRemove(null);
+    setPromptShownFor(null);
     const cancellation = new AbortController();
     protectionOperation.current = cancellation;
     return () => cancellation.abort();
@@ -784,12 +791,21 @@ function FileContextInner({
     [t],
   );
 
+  /** Whether opening the file starts with the empty-password check (inspectOpening). */
+  const needsOpeningCheck = (
+    fileId: FileId,
+    stub: StirlingFileStub | undefined,
+  ): stub is StirlingFileStub =>
+    !getPdfAccess(fileId) &&
+    !ownerRequests.current.has(fileId) &&
+    !!stub &&
+    stub.processedFile?.requiresOpeningPassword !== true;
+
   const inspectOpening = useEffectEvent(
     (fileId: FileId, controller: AbortController) => {
-      if (getPdfAccess(fileId) || ownerRequests.current.has(fileId)) return;
       const pending = pendingAdmissions.current.get(fileId);
       const stub = pending?.stub ?? stateRef.current.files.byId[fileId];
-      if (!stub || stub.processedFile?.requiresOpeningPassword === true) return;
+      if (!needsOpeningCheck(fileId, stub)) return;
       protectionOperation.current = controller;
       setOpeningInspection({ fileId });
       // Only the file being opened is parsed; library admission never allocates a PDF heap.
@@ -820,6 +836,7 @@ function FileContextInner({
                 .catch(() => {});
             setOpeningInspection(null);
           } else {
+            setPromptShownFor(fileId);
             setOpeningInspection({
               fileId,
               error: t(
@@ -836,7 +853,14 @@ function FileContextInner({
     if (!activeEncryptedFileId) return;
     const controller = new AbortController();
     inspectOpening(activeEncryptedFileId, controller);
-    return () => controller.abort();
+    const slow = window.setTimeout(
+      () => setPromptShownFor(activeEncryptedFileId),
+      OPENING_CHECK_PROMPT_DELAY_MS,
+    );
+    return () => {
+      window.clearTimeout(slow);
+      controller.abort();
+    };
   }, [activeEncryptedFileId, inspectionAttempt]);
 
   const admitProtectionCopy = useCallback(
@@ -1389,8 +1413,17 @@ function FileContextInner({
     ? (pendingAdmissions.current.get(activeEncryptedFileId)?.stub ??
       state.files.byId[activeEncryptedFileId])
     : undefined;
+  // Most encrypted PDFs only restrict actions and open without a password, so
+  // the prompt waits for the empty-password check (inspectOpening) to fail or
+  // run long, rather than flashing up for each of them.
+  const checkingWithoutPrompt =
+    !!activeEncryptedFileId &&
+    promptShownFor !== activeEncryptedFileId &&
+    // Running, or about to start on this file's first render as the active one.
+    (openingInspection?.fileId === activeEncryptedFileId ||
+      needsOpeningCheck(activeEncryptedFileId, activeEncryptedStub));
   const isUnlockModalOpen = Boolean(
-    activeEncryptedFileId && activeEncryptedStub,
+    activeEncryptedFileId && activeEncryptedStub && !checkingWithoutPrompt,
   );
 
   // Persistence loading disabled - files only loaded on explicit user action

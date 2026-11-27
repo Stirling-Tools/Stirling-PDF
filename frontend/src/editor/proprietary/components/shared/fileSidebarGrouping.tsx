@@ -76,9 +76,13 @@ export function useFileSidebarGroups(
       void (async () => {
         let wrote = false;
         for (const stub of pending) {
-          const labels = await readStubClassificationLabels(stub);
-          if (cancelled) return;
+          if (cancelled) break;
+          // Marked before the await: stubs change many times during an upload,
+          // and each re-run would otherwise re-read a file still being read.
           attempted.current.add(attemptKey(stub));
+          const labels = await readStubClassificationLabels(stub);
+          // Kept even if this pass was cancelled meanwhile: the stub is marked,
+          // so no later pass would read it again.
           if (labels) {
             const ok = await fileStorage.updateFileMetadata(stub.id, {
               classificationLabels: labels,
@@ -87,7 +91,7 @@ export function useFileSidebarGroups(
           }
         }
         // One revision bump per batch → the sidebar re-reads and re-groups.
-        if (!cancelled && wrote) bumpRevision();
+        if (wrote) bumpRevision();
       })();
     });
     return () => {

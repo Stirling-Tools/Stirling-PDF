@@ -1,7 +1,15 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useReviewing } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { Button } from "@editor/ui/Button";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -21,9 +29,10 @@ import {
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
-  imageAttention,
-  type ImageAttention,
-} from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+  pageAttention,
+  type PageAttention,
+} from "@editor/tools/pdfTextEditor/util/accessibilityReview";
+import { AttentionBadge } from "@editor/tools/pdfTextEditor/components/AttentionBadge";
 import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
 import { readShownImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
 import { visibleImageBounds } from "@editor/tools/pdfTextEditor/util/imageClip";
@@ -34,6 +43,8 @@ import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTrans
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import type { PdfRenderMode } from "@editor/services/preferencesService";
+import { PDF_RENDER_FILTERS } from "@editor/components/viewer/pdfRenderFilters";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -46,6 +57,8 @@ interface PageViewProps {
   onFirstRendered?: (pageIndex: number) => void;
   /** Fires the first time the page's bitmap is painted, including on a retry. */
   onFirstPainted?: () => void;
+  /** The viewer's reading mode; tints the page the same way the viewer does. */
+  renderMode?: PdfRenderMode;
   scale: number;
   widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
@@ -130,6 +143,7 @@ export const PageView = memo(function PageView({
   document,
   store,
   page,
+  renderMode = "normal",
   scale,
   widthMode,
   showRulers,
@@ -157,15 +171,15 @@ export const PageView = memo(function PageView({
   onFirstPainted,
 }: PageViewProps) {
   const { t } = useTranslation();
-  const imageAttentions = useMemo(() => {
-    const out = new Map<string, ImageAttention>();
-    if (!ACCESSIBILITY_EDITING) return out;
-    for (const image of page.images) {
-      const attention = imageAttention(document, image);
-      if (attention) out.set(image.id, attention);
-    }
-    return out;
-  }, [document, page]);
+  const reviewing = useReviewing();
+  // Accessibility belongs to the review: editing shows no attention badges.
+  const attention = useMemo(
+    (): PageAttention =>
+      ACCESSIBILITY_EDITING && reviewing
+        ? pageAttention(document, page)
+        : { images: new Map(), runs: new Map() },
+    [document, page, reviewing],
+  );
   const runGrowEdges = useMemo(
     () =>
       widthMode === "grow" ? growEdges(page.runs) : new Map<string, GrowEdge>(),
@@ -189,6 +203,9 @@ export const PageView = memo(function PageView({
   // Raw-PDF -> display (CropBox/rotation) transform for this page. Identity for
   // normal pages, so every overlay/click computation below is unchanged there.
   const transform = DisplayTransform.fromData(page.display);
+  // The overlay's editing mask is sampled from the untinted bitmap, so both
+  // surfaces get the same filter or the mask reads as a patch on the page.
+  const pageFilter = PDF_RENDER_FILTERS[renderMode];
   // Per document: a newly opened file reuses this view for its page of the same index.
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
@@ -429,6 +446,8 @@ export const PageView = memo(function PageView({
           display: "block",
           width: raster.width,
           height: raster.height,
+          transition: "filter 0.25s ease",
+          filter: pageFilter,
         }}
       />
       {renderError && (
@@ -475,7 +494,11 @@ export const PageView = memo(function PageView({
         left={0}
         right={0}
         bottom={0}
-        style={{ pointerEvents: "none" }}
+        style={{
+          pointerEvents: "none",
+          transition: "filter 0.25s ease",
+          filter: pageFilter,
+        }}
       >
         {/* Before the runs: a run overlapping an annotation still wins clicks. */}
         {(page.annotations ?? []).map((annotation) => (
@@ -488,6 +511,7 @@ export const PageView = memo(function PageView({
             selected={annotation.id === selectedFormFieldId}
             onSelect={
               ACCESSIBILITY_EDITING &&
+              reviewing &&
               annotation.kind === "widget" &&
               onSelectFormField
                 ? () => onSelectFormField(annotation.id)
@@ -504,6 +528,7 @@ export const PageView = memo(function PageView({
             transform={transform}
             scale={cssScale}
             selected={selectedShapeIds.includes(shape.id)}
+            fixed={reviewing}
             onSelect={(extend) => onSelectShape(shape.id, extend)}
             onMove={(dx, dy) => onMoveShape?.(page.pageIndex, shape.id, dx, dy)}
           />
@@ -516,11 +541,12 @@ export const PageView = memo(function PageView({
             transform={transform}
             scale={cssScale}
             selected={selectedImageIds.includes(image.id)}
+            fixed={reviewing}
             onSelect={() => onSelectImage(image.id)}
             onTransformCommit={(next) =>
               onTransformImage?.(page.pageIndex, image.id, next)
             }
-            attention={imageAttentions.get(image.id) ?? null}
+            attention={attention.images.get(image.id) ?? null}
             readPixels={() =>
               readShownImagePixels(store, page.pageIndex, image.id)
             }
@@ -531,13 +557,15 @@ export const PageView = memo(function PageView({
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
             cells are edited through their own run. */}
-        <TableOverlay
-          page={page}
-          transform={transform}
-          scale={cssScale}
-          store={store}
-          selectedRunIds={selectedRunIds}
-        />
+        {!reviewing && (
+          <TableOverlay
+            page={page}
+            transform={transform}
+            scale={cssScale}
+            store={store}
+            selectedRunIds={selectedRunIds}
+          />
+        )}
         {/* Every run's move/width grips, after the objects beneath the text and
             before all runs, so a grip never takes a click aimed at any run. */}
         <div ref={setGripLayer} style={{ display: "contents" }} />
@@ -552,9 +580,10 @@ export const PageView = memo(function PageView({
             widthMode={widthMode}
             growEdge={runGrowEdges.get(run.id) ?? null}
             pageRevision={paintedRevision}
-            gripLayer={gripLayer}
+            gripLayer={reviewing ? null : gripLayer}
             selected={selectedRunIds.includes(run.id)}
             findRange={findMatch?.runId === run.id ? findMatch.range : null}
+            readOnly={reviewing}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
             onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
@@ -563,9 +592,21 @@ export const PageView = memo(function PageView({
                 ? selectedTextRange
                 : null
             }
-            onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
-            onWrap={(maxWidthPt, keepClearBelow) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt, keepClearBelow)
+            onMove={
+              reviewing
+                ? undefined
+                : (dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)
+            }
+            onWrap={
+              reviewing
+                ? undefined
+                : (maxWidthPt, keepClearBelow) =>
+                    onWrapRun?.(
+                      page.pageIndex,
+                      run.id,
+                      maxWidthPt,
+                      keepClearBelow,
+                    )
             }
             onMeasure={
               onMeasureRun
@@ -573,12 +614,22 @@ export const PageView = memo(function PageView({
                 : undefined
             }
             onResize={
-              onResizeRun && canResizeRun(run)
+              onResizeRun && !reviewing && canResizeRun(run)
                 ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
                 : undefined
             }
           />
         ))}
+        {page.runs
+          .filter((run) => attention.runs.has(run.id))
+          .map((run) => (
+            <AttentionBadge
+              key={run.id}
+              attention="needs-description"
+              testId={`pdf-editor-attention-run-${run.id}`}
+              style={besideRun(run, transform, page.height, cssScale)}
+            />
+          ))}
         {showRulers && (
           <PageGuides
             pageIndex={page.pageIndex}
@@ -592,6 +643,23 @@ export const PageView = memo(function PageView({
     </Box>
   );
 });
+
+/** Just past the top-right corner of a run's box, in page pixels. */
+function besideRun(
+  run: TextRunSnapshot,
+  transform: DisplayTransform,
+  pageHeight: number,
+  scale: number,
+): CSSProperties {
+  const { x, y, width, height } = run.bounds;
+  const corners = [
+    transform.apply(x, y),
+    transform.apply(x + width, y + height),
+  ];
+  const right = Math.max(...corners.map((c) => c.x));
+  const top = Math.max(...corners.map((c) => c.y));
+  return { left: right * scale + 4, top: (pageHeight - top) * scale };
+}
 
 // Long enough a typing pause to draw the page whole, repairing anything a partial redraw missed.
 const FULL_REDRAW_AFTER_TYPING_MS = 400;

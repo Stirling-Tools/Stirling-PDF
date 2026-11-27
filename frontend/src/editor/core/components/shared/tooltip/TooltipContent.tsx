@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import styles from "@editor/components/shared/tooltip/Tooltip.module.css";
 import { TooltipTip } from "@editor/types/tips";
 
@@ -13,8 +13,13 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
   tips,
   extraRightPadding = 0,
 }) => {
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const scrolls = useScrolls(bodyRef);
   return (
     <div
+      ref={bodyRef}
+      // A body that scrolls takes focus, so a keyboard can scroll it too.
+      tabIndex={scrolls ? 0 : undefined}
       className={`${styles["tooltip-body"]}`}
       style={{
         color: "var(--c-text)",
@@ -89,3 +94,19 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
     </div>
   );
 };
+
+function useScrolls(ref: React.RefObject<HTMLElement | null>): boolean {
+  const [scrolls, setScrolls] = useState(false);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const measure = () =>
+      setScrolls(element.scrollHeight > element.clientHeight);
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    if (element.firstElementChild) observer.observe(element.firstElementChild);
+    measure();
+    return () => observer.disconnect();
+  }, [ref]);
+  return scrolls;
+}
