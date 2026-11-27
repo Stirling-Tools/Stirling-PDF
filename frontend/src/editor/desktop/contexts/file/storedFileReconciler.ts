@@ -18,6 +18,7 @@ import {
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
 } from "@editor/services/diskFileSync";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   getDiskFileState,
   type PresentDiskFileState,
@@ -35,6 +36,34 @@ export type { OpenDecision, ReconcilePort };
 // Desktop side of the reconcile seam: here a stored record is a cache of a file
 // on disk. Opening a record re-checks its content against disk; while a file is
 // open, only the loss of its original is tracked.
+
+const MAX_VERSION_HOPS = 50;
+
+/** Copies disk may still hold: the record's own stored bytes, and those of the
+ *  newest version on the same path that no in-app edit has changed. A tool
+ *  output is dirty, so the walk skips it to the version it was derived from;
+ *  an undo marks a restored version dirty even when its bytes are what disk
+ *  holds. */
+function heldCopies(stub: StirlingFileStub): () => Promise<Blob[]> {
+  return async () => {
+    const own = await fileStorage.getStirlingFile(stub.id);
+    const clean = stub.isDirty ? await lastCleanCopy(stub) : own;
+    return [own, clean].filter(
+      (copy, i, all): copy is Blob => copy != null && all.indexOf(copy) === i,
+    );
+  };
+}
+
+async function lastCleanCopy(stub: StirlingFileStub): Promise<Blob | null> {
+  let version: StirlingFileStub | null | undefined = stub;
+  for (let hop = 0; version && hop < MAX_VERSION_HOPS; hop++) {
+    if (version.localFilePath !== stub.localFilePath) return null;
+    if (!version.isDirty) return fileStorage.getStirlingFile(version.id);
+    const parentId: FileId | undefined = version.parentFileId;
+    version = parentId ? await fileStorage.getStirlingFileStub(parentId) : null;
+  }
+  return null;
+}
 
 /** Take the disk version of a conflicted file, discarding the unsaved in-app
  *  edits shadowing it. Only reachable from the conflict modal's action. */
@@ -135,7 +164,21 @@ export async function reconcileBeforeOpen(
   port: ReconcilePort,
 ): Promise<OpenDecision> {
   const fileId = stub.id;
-  const outcome = await syncLinkedFileFromDisk(stub, hasUnsavedWork());
+  const outcome = await syncLinkedFileFromDisk(
+    stub,
+    hasUnsavedWork(),
+    heldCopies(stub),
+  );
+
+  if (outcome.status === "touched") {
+    const baseline = diskBaseline(outcome.state);
+    void fileStorage
+      .updateFileMetadata(fileId, baseline)
+      .catch((error) =>
+        console.error(`[Reconcile] Failed to re-baseline ${fileId}:`, error),
+      );
+    return { updates: { ...baseline, diskUnavailableReason: undefined } };
+  }
 
   if (outcome.status === "missing") {
     // Only an unedited v1 passthrough holds nothing the disk file did not;
