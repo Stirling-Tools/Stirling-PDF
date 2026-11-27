@@ -14,6 +14,7 @@ import {
   UPGRADE_BANNER_ALERT_EVENT,
 } from "@editor-core/constants/events";
 import { useServerExperience } from "@editor/hooks/useServerExperience";
+import { useCloudTeamLink } from "@editor/hooks/useCloudTeamLink";
 import { isOnboardingCompleted } from "@editor-core/components/onboarding/orchestrator/onboardingStorage";
 
 const FRIENDLY_LAST_SEEN_KEY = "upgradeBannerFriendlyLastShownAt";
@@ -26,6 +27,7 @@ const UpgradeBanner: React.FC = () => {
   // Check if we're on an auth route (evaluated after hooks, used in render)
   const onAuthRoute = isAuthRoute(location.pathname);
   const { openCheckout } = useCheckout();
+  const cloudTeamLink = useCloudTeamLink();
   const {
     loginEnabled,
     totalUsers,
@@ -222,6 +224,11 @@ const UpgradeBanner: React.FC = () => {
     recordFriendlyLastShown();
 
     const hideBanner = () => setFriendlyVisible(false);
+    if (cloudTeamLink) {
+      window.open(cloudTeamLink, "_blank", "noopener,noreferrer");
+      hideBanner();
+      return;
+    }
     const navigateFallback = () => {
       navigate("/settings/adminPlan");
       hideBanner();

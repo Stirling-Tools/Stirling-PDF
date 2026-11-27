@@ -113,7 +113,10 @@ public class InstanceController {
             LocalDateTime periodEnd,
             int automationStepLimit,
             long prepaidRemainingUnits,
-            Integer fleetUserLimit) {}
+            Integer fleetUserLimit,
+            // Size of the free grant per period, so a key-linked instance can show "X of N" the
+            // way the cloud wallet does. A plan figure, not team data.
+            long freeAllowanceUnits) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -257,7 +260,8 @@ public class InstanceController {
                 snap.periodEnd(),
                 policy.resolveStepLimit(JobSource.PIPELINE),
                 prepaidBundleService.prepaidRemainingUnits(teamId),
-                fleetSeats.allowance(teamId, instanceId));
+                fleetSeats.allowance(teamId, instanceId),
+                billing.freeGrantUnits());
     }
 
     /**

@@ -38,6 +38,15 @@ public class AccountLinkProperties {
     private int requestTimeoutSeconds = 10;
 
     /**
+     * A one-time link key from Stirling Cloud, redeemed at startup while the server is unlinked.
+     * Lets a deployment link without anyone signing in on it; ignored once linked.
+     */
+    private String key;
+
+    /** Name to show for this server in Stirling Cloud; blank keeps the name the key was given. */
+    private String name;
+
+    /**
      * Units granted each month while unlinked. Matches the SaaS default policy, so linking raises
      * the allowance rather than introducing one. 0 means billable work needs a link.
      */

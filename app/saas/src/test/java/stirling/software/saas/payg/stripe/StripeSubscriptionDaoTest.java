@@ -16,6 +16,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,38 @@ import stirling.software.saas.payg.stripe.StripeSubscriptionDao.SubscriptionBill
 class StripeSubscriptionDaoTest {
 
     @Mock private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void mirrorPresent() {
+        org.mockito.Mockito.lenient()
+                .when(
+                        jdbcTemplate.queryForObject(
+                                StripeSubscriptionDao.BILLING_TABLES_PRESENT, Boolean.class))
+                .thenReturn(true);
+        org.mockito.Mockito.lenient()
+                .when(
+                        jdbcTemplate.queryForObject(
+                                StripeSubscriptionDao.PRICES_TABLE_PRESENT, Boolean.class))
+                .thenReturn(true);
+    }
+
+    @Test
+    @DisplayName("a missing stripe schema is never queried, so the caller's transaction survives")
+    void absentMirror_skipsTheQueryThatWouldAbortTheTransaction() {
+        when(jdbcTemplate.queryForObject(
+                        StripeSubscriptionDao.BILLING_TABLES_PRESENT, Boolean.class))
+                .thenReturn(false);
+        when(jdbcTemplate.queryForObject(StripeSubscriptionDao.PRICES_TABLE_PRESENT, Boolean.class))
+                .thenReturn(false);
+
+        assertThat(dao().findBilling("sub_1")).isEmpty();
+        assertThat(dao().findRateByLookupKey("plan:processor", "usd")).isEmpty();
+        org.mockito.Mockito.verify(jdbcTemplate)
+                .queryForObject(StripeSubscriptionDao.BILLING_TABLES_PRESENT, Boolean.class);
+        org.mockito.Mockito.verify(jdbcTemplate)
+                .queryForObject(StripeSubscriptionDao.PRICES_TABLE_PRESENT, Boolean.class);
+        org.mockito.Mockito.verifyNoMoreInteractions(jdbcTemplate);
+    }
 
     private StripeSubscriptionDao dao() {
         return new StripeSubscriptionDao(jdbcTemplate);
