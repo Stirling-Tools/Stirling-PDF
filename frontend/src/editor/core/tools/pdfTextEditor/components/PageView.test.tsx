@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   pageSnapshot,
@@ -9,6 +9,7 @@ import {
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { PDF_RENDER_FILTERS } from "@editor/components/viewer/pdfRenderFilters";
 
 vi.mock("@editor/tools/pdfTextEditor/components/TableOverlay", () => ({
@@ -145,5 +146,61 @@ describe("PageView partial redraw", () => {
 
     rerender(view(live, document, { renderMode: "normal" }));
     expect(tinted(container, PDF_RENDER_FILTERS.dark)).toHaveLength(0);
+  });
+});
+
+describe("PageView text box drawing", () => {
+  const originalObserver = globalThis.IntersectionObserver;
+
+  beforeEach(() => {
+    globalThis.IntersectionObserver =
+      VisibleObserver as unknown as typeof IntersectionObserver;
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    vi.spyOn(PdfiumPageRenderer, "render").mockReturnValue(
+      new Promise<ImageData>(() => {}),
+    );
+  });
+
+  afterEach(() => {
+    globalThis.IntersectionObserver = originalObserver;
+    for (const spy of [
+      HTMLCanvasElement.prototype.getContext,
+      HTMLElement.prototype.getBoundingClientRect,
+      PdfiumPageRenderer.render,
+    ])
+      if (vi.isMockFunction(spy)) spy.mockRestore();
+  });
+
+  it("keeps a box dragged past the page's edges inside the page", () => {
+    const live = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    const onDrawTextBox = vi.fn();
+    const store = {
+      setPageNearViewport: () => {},
+      getState: () => ({ mode: "addText" }),
+      subscribe: () => () => {},
+    } as unknown as EditorStore;
+    const { getByTestId } = render(
+      view(live, stubDocument(live), { store, onDrawTextBox }),
+    );
+    const surface = getByTestId("pdf-editor-page-0");
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+      DOMRect.fromRect({ x: 0, y: 0, width: 600, height: 800 }),
+    );
+    surface.setPointerCapture = () => {};
+
+    fireEvent.pointerDown(surface, {
+      button: 0,
+      pointerId: 1,
+      clientX: 100,
+      clientY: 300,
+    });
+    fireEvent.pointerMove(surface, {
+      pointerId: 1,
+      clientX: 900,
+      clientY: -200,
+    });
+    fireEvent.pointerUp(surface, { pointerId: 1, clientX: 900, clientY: -200 });
+
+    expect(onDrawTextBox).toHaveBeenCalledWith(0, 100, 800, 500);
   });
 });

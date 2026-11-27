@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import { Box } from "@mantine/core";
+import { clamp } from "@editor/utils/genericUtils";
 import { useTranslation } from "react-i18next";
 import { useReviewing } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { Button } from "@editor/ui/Button";
@@ -464,6 +465,18 @@ export const PageView = memo(function PageView({
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
+  function cssPointOnPage(e: {
+    clientX: number;
+    clientY: number;
+    currentTarget: Element;
+  }) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return {
+      x: clamp(e.clientX - rect.left, 0, rect.width),
+      y: clamp(e.clientY - rect.top, 0, rect.height),
+    };
+  }
+
   // CSS pixels (origin upper-left) to PDF page space (origin lower-left, points).
   function toPdf(cssX: number, cssY: number) {
     return transform.invert(cssX / cssScale, page.height - cssY / cssScale);
@@ -497,14 +510,14 @@ export const PageView = memo(function PageView({
       }}
       onPointerMove={(e) => {
         if (!textBoxDraft) return;
-        const at = cssPoint(e);
+        const at = cssPointOnPage(e);
         setTextBoxDraft({ ...textBoxDraft, x1: at.x, y1: at.y });
       }}
       onPointerUp={(e) => {
         const draft = textBoxDraft;
         if (!draft) return;
         setTextBoxDraft(null);
-        const at = cssPoint(e);
+        const at = cssPointOnPage(e);
         if (Math.abs(at.x - draft.x0) < MIN_TEXT_BOX_PX || !onDrawTextBox)
           return;
         drewTextBoxRef.current = true;
