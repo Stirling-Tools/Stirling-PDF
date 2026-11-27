@@ -265,6 +265,7 @@ test.describe("PDF text editor - inspector layout", () => {
     await expect(compat).toBeVisible();
     const tone = await compat.getAttribute("data-compat");
     expect(["ok", "info", "warn"]).toContain(tone);
+    await panel.getByTestId("pdf-editor-fonts-toggle").click();
     const badges = panel.locator('[data-testid^="pdf-editor-font-"]');
     expect(await badges.count()).toBeGreaterThan(0);
   });

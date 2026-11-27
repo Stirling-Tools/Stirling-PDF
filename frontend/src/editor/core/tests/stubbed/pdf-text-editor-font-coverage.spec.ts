@@ -38,6 +38,8 @@ test("fonts panel reports concrete a-zA-Z0-9 coverage gaps client-side", async (
 
   const panel = page.getByTestId("pdf-editor-fonts-panel");
   await expect(panel).toBeVisible();
+  // The list opens from its row; the headline pill shows while it is closed.
+  await panel.getByTestId("pdf-editor-fonts-toggle").click();
 
   // A subset TrueType font with a parseable cmap => concrete missing chars.
   const missing = panel.getByTestId("pdf-editor-font-missing").first();
