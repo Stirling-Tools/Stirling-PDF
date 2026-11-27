@@ -3,6 +3,7 @@ import {
   DisplayTransform,
   type DisplayTransformData,
 } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { transformRectAABB } from "@editor/tools/pdfTextEditor/model/affine";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import {
   canResizeRun,
@@ -70,16 +71,10 @@ export function displayedTopLeft(
   display: DisplayTransformData,
   bounds: PageRect,
 ): { left: number; top: number } {
-  const transform = DisplayTransform.fromData(display);
-  const corners = [
-    [bounds.x, bounds.y],
-    [bounds.x + bounds.width, bounds.y],
-    [bounds.x, bounds.y + bounds.height],
-    [bounds.x + bounds.width, bounds.y + bounds.height],
-  ].map(([x, y]) => transform.apply(x, y));
+  const shown = transformRectAABB(display, bounds);
   return {
-    left: Math.min(...corners.map((c) => c.x)),
-    top: transform.displayHeight - Math.max(...corners.map((c) => c.y)),
+    left: shown.x,
+    top: display.displayHeight - (shown.y + shown.height),
   };
 }
 
