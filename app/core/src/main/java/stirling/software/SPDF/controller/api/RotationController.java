@@ -57,8 +57,9 @@ public class RotationController {
         }
 
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
-        try {
-            try (PdfDocument document = PdfDocument.open(pdfFile.getBytes())) {
+        try (TempFile tempInputFile = tempFileManager.createManagedTempFile(".pdf")) {
+            pdfFile.transferTo(tempInputFile.getFile());
+            try (PdfDocument document = PdfDocument.open(tempInputFile.getPath())) {
                 for (int i = 0; i < document.pageCount(); i++) {
                     int rotation =
                             Math.floorMod(PdfPageGeometry.getRotation(document, i) + angle, 360);
