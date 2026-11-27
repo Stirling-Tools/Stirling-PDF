@@ -1,5 +1,15 @@
+import {
+  type AlignFrame,
+  type TextAlign,
+} from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import {
+  listKindOf,
+  mayBeList,
+} from "@editor/tools/pdfTextEditor/util/listText";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import type { ScanEditState } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { furnitureOf } from "@editor/tools/pdfTextEditor/model/artifactKind";
+import { drawsSubstitutes } from "@editor/tools/pdfTextEditor/util/substitutedGlyphs";
 import {
   ARTIFACT_TAG,
   innermostMcid,
@@ -137,6 +147,11 @@ export class TextRun {
    * text rarely fills its box, so the box would shrink back to the ink.
    */
   wrapWidthPt: number | null;
+  placeholderText: string | null;
+  align: TextAlign | null;
+  alignFrame: AlignFrame | null;
+  underline: boolean;
+  listIndent: number;
 
   /** True when an edit of the text would be refused; invisible OCR text is redrawn from its scan, not from its reading order. */
   get textReadOnly(): boolean {
@@ -194,6 +209,11 @@ export class TextRun {
     this.locked = init.locked ?? false;
     this.readingOrderUnsure = false;
     this.wrapWidthPt = init.wrapWidthPt ?? null;
+    this.placeholderText = null;
+    this.align = null;
+    this.alignFrame = null;
+    this.underline = false;
+    this.listIndent = 0;
   }
 
   // Captured pen positions are only valid for the text AND face they were
@@ -241,14 +261,31 @@ export class TextRun {
       paragraphLineLefts: this.lineLefts(),
       paragraphLineRights: this.lineRights(),
       locked: this.locked || undefined,
+      placeholder:
+        (this.placeholderText !== null && this.text === this.placeholderText) ||
+        undefined,
       textReadOnly: this.textReadOnly || undefined,
+      align: this.align ?? undefined,
+      underline: this.underline || undefined,
+      listKind: mayBeList(this.text)
+        ? (listKindOf(this.text, softStartsOf(this)) ?? undefined)
+        : undefined,
       wrapWidthPt: this.wrapWidthPt ?? undefined,
       mcid: innermostMcid(this.tagMarks) ?? undefined,
       artifact: artifactMark(this.tagMarks) !== undefined || undefined,
       furniture:
         furnitureOf(artifactMark(this.tagMarks)?.artifact) ?? undefined,
       inForm: this.containerPtr !== 0 || undefined,
+      substitutedGlyphs: drawsSubstitutes(this.drawnPtrs()),
     };
+  }
+
+  private *drawnPtrs(): Generator<number> {
+    yield this.pdfiumObjPtr;
+    yield* this.mergedFromPtrs;
+    yield* this.paragraphMemberPtrs;
+    yield* this.paragraphLeafPtrs;
+    for (const slot of this.paragraphLineSlots) yield* slot.mergedFromPtrs;
   }
 
   private lineBaselines(): number[] | undefined {

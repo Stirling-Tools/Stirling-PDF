@@ -6,15 +6,17 @@ import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
-import type { PageRect } from "@editor/tools/pdfTextEditor/types";
-import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
 import type {
   ParagraphLineSlot,
   TextRun,
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@editor/services/pdfiumService";
-import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  collectMemberPtrs,
+  measureObjSpanPt,
+  rotationFromMatrix,
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
@@ -24,6 +26,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import {
+  landsOnUnmoved,
   type PushRecord,
   pushRecords,
   runsPulledBack,
@@ -35,6 +38,12 @@ import {
   groupWords,
   type Word as GenericWord,
 } from "@editor/tools/pdfTextEditor/util/wordGrouping";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { joinSoftLines } from "@editor/tools/pdfTextEditor/commands/scanLayout";
+import {
+  lineWidthIn,
+  wrapEachLine,
+} from "@editor/tools/pdfTextEditor/util/wrapText";
 
 /** Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`. */
 
@@ -55,6 +64,8 @@ type Word = GenericWord<Leaf>;
  * that does not match it.
  */
 export const MIN_WRAP_WIDTH_EM = 4;
+
+const PULL_UP_SLACK_EM = 0.25;
 
 interface RunSnapshot {
   text: string;
@@ -85,11 +96,17 @@ export class ReflowWrapCommand implements Command {
   private readonly maxWidthPt: number;
   private readonly explicit: boolean;
   private readonly keepClearBelow: boolean;
+  private readonly relayout: boolean;
+  private readonly pullUp: boolean;
   private applied = false;
   private refused = false;
   /** Per-object translation applied, so revert can undo it exactly. */
   private moves: Array<{ ptr: number; dx: number; dy: number }> = [];
   private prev: RunSnapshot | null = null;
+  private textWrap: {
+    edit: EditTextCommand | null;
+    wrapWidthPt: number | null;
+  } | null = null;
   // The runs below the lines this reflow added or removed moved, chosen on the first apply so a redo moves the same ones.
   private pushes: MoveTextRunCommand[] | null = null;
   private pushRecords: {
@@ -107,6 +124,9 @@ export class ReflowWrapCommand implements Command {
    * would land on something the push cannot move out of the way: a line,
    * fill, shape or image, or text that is locked, rotated, scanned, in a
    * table or would leave the page. `refusedForSpaceBelow` then reads true.
+   *
+   * Without `explicit`, a word that starts a line stays there; `pullUp` lets
+   * it rejoin the line above once it fits there, as after a deletion.
    */
   constructor(opts: {
     pageIndex: number;
@@ -114,12 +134,16 @@ export class ReflowWrapCommand implements Command {
     maxWidthPt: number;
     explicit?: boolean;
     keepClearBelow?: boolean;
+    pullUp?: boolean;
+    relayout?: boolean;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.maxWidthPt = opts.maxWidthPt;
     this.explicit = opts.explicit ?? false;
     this.keepClearBelow = opts.keepClearBelow ?? false;
+    this.pullUp = opts.pullUp ?? false;
+    this.relayout = opts.relayout ?? false;
   }
 
   get refusedForSpaceBelow(): boolean {
@@ -153,34 +177,42 @@ export class ReflowWrapCommand implements Command {
     } finally {
       m.FPDFText_ClosePage(textPage);
     }
-    if (leaves.length === 0) return;
-    // The reflow lines objects up left to right and rebuilds the text in that
-    // order. A line that does not read in that order, such as right-to-left
-    // text or marks drawn apart from their letters, would come back scrambled.
-    if (!readsInObjectOrder(leaves, run.text)) return;
-
     const fontSize = run.fontSize > 0 ? run.fontSize : 12;
     const lineHeight =
       run.paragraphLineHeight > 0 ? run.paragraphLineHeight : fontSize * 1.2;
-    const startX = Math.min(...leaves.map((l) => l.x));
-    const topBaseline = Math.max(...leaves.map((l) => l.baseline));
-    // Clamp the wrap width to the page measured from OUR OWN left edge - but
-    // to the edge itself, with no margin held back. The caller's width is the
-    // box the paragraph was already laid out in, so shaving a font-size margin
+    const startX =
+      leaves.length > 0 ? Math.min(...leaves.map((l) => l.x)) : run.bounds.x;
+    // Clamp the wrap width to the page measured from OUR OWN left edge, or the
+    // aligned box's for a width the user set - but to the edge itself, with no
+    // margin held back. The caller's width is the box the paragraph was
+    // already laid out in, so shaving a font-size margin
     // off it wraps at LESS than the document's own measure and every line
     // loses its last word: "...carry out various" drops "various" onto a line
     // of its own, on lines the user never touched.
-    const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
+    const rawRightEdge = page.display.cropRight;
     const minWidth = fontSize * MIN_WRAP_WIDTH_EM;
     const requested = this.explicit
       ? Math.max(this.maxWidthPt, minWidth)
       : this.maxWidthPt;
+    const boxLeft =
+      this.explicit && run.alignFrame
+        ? Math.min(startX, run.alignFrame.left)
+        : startX;
     const maxWidth = Math.min(
       requested,
-      Math.max(minWidth, rawRightEdge - startX),
+      Math.max(minWidth, rawRightEdge - boxLeft),
     );
+    if (onlyRetypingWraps(leaves, maxWidth)) {
+      this.wrapByRetyping(doc, page, run, maxWidth);
+      return;
+    }
+    // The reflow lines objects up left to right and rebuilds the text in that
+    // order. A line that does not read in that order, such as right-to-left
+    // text or marks drawn apart from their letters, would come back scrambled.
+    if (!readsInObjectOrder(leaves, run.text)) return;
+    const topBaseline = Math.max(...leaves.map((l) => l.baseline));
 
-    // Reflow is only NEEDED when some line actually overflows the wrap width.
+    let overflows = false;
     if (!this.explicit) {
       const rightByLine = new Map<number, number>();
       for (const l of leaves) {
@@ -188,14 +220,12 @@ export class ReflowWrapCommand implements Command {
         const prev = rightByLine.get(key);
         if (prev === undefined || l.right > prev) rightByLine.set(key, l.right);
       }
-      let overflows = false;
       for (const right of rightByLine.values()) {
         if (right - startX > maxWidth + 0.5) {
           overflows = true;
           break;
         }
       }
-      if (!overflows) return;
     }
 
     const words = groupWords(leaves, fontSize);
@@ -220,6 +250,36 @@ export class ReflowWrapCommand implements Command {
       return gap > 0 ? gap : spaceWidth;
     };
     const hardBreaks = hardBreakNonWsCounts(run.text, softStartsOf(run));
+    const pullUpSlack = fontSize * PULL_UP_SLACK_EM;
+    const startsOwnLine = (index: number): boolean =>
+      index > 0 &&
+      Math.abs(words[index - 1].baseline - words[index].baseline) > 2;
+    const pullsUp = (): boolean => {
+      let nonWs = 0;
+      return words.some((w, index) => {
+        const softStart = startsOwnLine(index) && !hardBreaks.has(nonWs);
+        nonWs += w.glyphs.reduce(
+          (n, g) => n + g.text.replace(/\s+/g, "").length,
+          0,
+        );
+        return (
+          softStart &&
+          words[index - 1].right +
+            gapAfter(index - 1) +
+            (w.right - w.x) +
+            pullUpSlack <=
+            startX + maxWidth
+        );
+      });
+    };
+    // A live wrap runs only when a line overflows the width, or with pullUp when a line's first word now fits on the line above.
+    if (
+      !this.explicit &&
+      !this.relayout &&
+      !overflows &&
+      !(this.pullUp && pullsUp())
+    )
+      return;
 
     this.prev = snapshotRun(run);
 
@@ -241,8 +301,15 @@ export class ReflowWrapCommand implements Command {
     let cursorX = startX;
     let lineIdx = lines.length - 1;
     let cumNonWs = 0;
+    let previous: { baseline: number; dy: number } | null = null;
     for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
       const w = words[wordIndex];
+      const keepsLineStart =
+        !this.explicit &&
+        previous !== null &&
+        (this.relayout || Math.abs(previous.dy) <= 0.001) &&
+        Math.abs(previous.baseline - w.baseline) > 2;
+      const slack = !keepsLineStart ? 0 : this.pullUp ? pullUpSlack : Infinity;
       const width = w.right - w.x;
       const wordNonWs = w.glyphs.reduce(
         (n, g) => n + g.text.replace(/\s+/g, "").length,
@@ -254,7 +321,7 @@ export class ReflowWrapCommand implements Command {
       // (a standalone space object) must not re-apply the same break.
       if (hardBreakHere) hardBreaks.delete(cumNonWs);
       const widthBreak =
-        cursorX > startX && cursorX + width > startX + maxWidth;
+        cursorX > startX && cursorX + width + slack > startX + maxWidth;
       if (hardBreakHere || widthBreak) {
         // k consecutive newlines = k-1 blank lines + 1 content line; emit
         // empties so an intentional blank line survives reflow.
@@ -272,6 +339,7 @@ export class ReflowWrapCommand implements Command {
       const targetBaseline = virtualTop - lineIdx * lineHeight;
       const dx = targetX - w.x;
       const dy = targetBaseline - w.baseline;
+      previous = { baseline: w.baseline, dy };
       if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
         for (const g of w.glyphs) {
           try {
@@ -327,39 +395,12 @@ export class ReflowWrapCommand implements Command {
 
   // What the added lines now cover that was clear of the run before and did not move out of their way.
   private landsOnUnmoved(page: Page, run: TextRun): boolean {
-    const prev = this.prev;
-    if (!prev) return false;
-    const added = {
-      x: run.bounds.x,
-      y: run.bounds.y,
-      width: run.bounds.width,
-      height: prev.bounds.y - run.bounds.y,
-    };
-    if (added.height <= 0) return false;
-    const covers = (r: PageRect) =>
-      overlaps(r, added) && !overlaps(r, prev.bounds);
-    // Text is allowed the slack runsPushedBelow gives it: lines set tighter than their boxes already overlap a little.
-    const slack = run.fontSize * TEXT_OVERLAP_EM;
-    const textBand = {
-      ...added,
-      y: added.y + slack,
-      height: added.height - slack,
-    };
-    const moved = new Set(this.pushes?.map((p) => p.runId) ?? []);
-    const textHit = page.runs.some(
-      (r) =>
-        r !== run &&
-        !moved.has(r.id) &&
-        textBand.height > 0 &&
-        overlaps(r.bounds, textBand) &&
-        !overlaps(r.bounds, prev.bounds),
-    );
-    return (
-      textHit ||
-      page.rules.some(covers) ||
-      page.fills.some(covers) ||
-      page.shapes.some((s) => covers(s.bounds)) ||
-      page.images.some((i) => covers(i.bounds))
+    if (!this.prev) return false;
+    return landsOnUnmoved(
+      page,
+      run,
+      this.prev.bounds,
+      this.pushes?.map((p) => p.runId) ?? [],
     );
   }
 
@@ -391,7 +432,58 @@ export class ReflowWrapCommand implements Command {
     } else this.pushes = [];
   }
 
+  private wrapByRetyping(
+    doc: EditorDocument,
+    page: Page,
+    run: TextRun,
+    maxWidth: number,
+  ): void {
+    if (!this.textWrap) {
+      const width = lineWidthIn(doc, page, run);
+      const fits = (line: string) =>
+        line === "" || width(line) <= maxWidth + 0.5;
+      const joinable =
+        this.explicit || this.pullUp || this.relayout ? softStartsOf(run) : [];
+      const wrapped = wrapEachLine(
+        joinSoftLines(run.text, joinable, fits),
+        fits,
+      );
+      if (wrapped === run.text && !this.explicit && !this.relayout) return;
+      this.textWrap = {
+        edit:
+          wrapped === run.text
+            ? null
+            : new EditTextCommand({
+                pageIndex: this.pageIndex,
+                runId: this.runId,
+                nextText: wrapped,
+              }),
+        wrapWidthPt: run.wrapWidthPt,
+      };
+    }
+    const before = snapshotRun(run);
+    this.textWrap.edit?.apply(doc);
+    if (this.keepClearBelow && this.textWrap.edit) {
+      this.prev = before;
+      const blocked = this.landsOnUnmoved(page, run);
+      this.prev = null;
+      if (blocked) {
+        this.textWrap.edit.revert(doc);
+        this.textWrap = null;
+        this.refused = true;
+        return;
+      }
+    }
+    if (this.explicit) run.wrapWidthPt = maxWidth;
+  }
+
   revert(doc: EditorDocument): void {
+    if (this.textWrap) {
+      this.textWrap.edit?.revert(doc);
+      const run = doc.page(this.pageIndex).findRun(this.runId);
+      if (run) run.wrapWidthPt = this.textWrap.wrapWidthPt;
+      return;
+    }
     if (!this.applied || !this.prev) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
@@ -435,7 +527,48 @@ export class ReflowWrapCommand implements Command {
   }
 }
 
-const TEXT_OVERLAP_EM = 0.25;
+export function wrapAtPageEdge(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+): ReflowWrapCommand | null {
+  if (rotationFromMatrix(run.matrix)) return null;
+  const ink = measureObjSpanPt(doc.module, collectMemberPtrs(run));
+  const right = page.display.cropRight;
+  if (!ink || ink.right <= right + 0.5) return null;
+  const reflow = new ReflowWrapCommand({
+    pageIndex: page.index,
+    runId: run.id,
+    maxWidthPt: right - ink.left,
+  });
+  reflow.apply(doc);
+  return reflow;
+}
+
+export function wrapToWidthBefore(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  before: { width: number; lines: number },
+  pullUp = true,
+): ReflowWrapCommand | null {
+  if (before.lines < 2 || rotationFromMatrix(run.matrix))
+    return wrapAtPageEdge(doc, page, run);
+  const reflow = new ReflowWrapCommand({
+    pageIndex: page.index,
+    runId: run.id,
+    maxWidthPt: run.wrapWidthPt ?? before.width,
+    pullUp,
+  });
+  reflow.apply(doc);
+  return reflow;
+}
+
+export function layoutBefore(run: TextRun): { width: number; lines: number } {
+  return { width: run.bounds.width, lines: lineCount(run.text) };
+}
+
+const BOX_ASCENT_EM = 0.95;
 
 function lineCount(text: string): number {
   return text.split(/\r?\n/).length;
@@ -479,6 +612,16 @@ function extractLeaves(
     return a.x - b.x;
   });
   return leaves;
+}
+
+function onlyRetypingWraps(leaves: Leaf[], maxWidth: number): boolean {
+  return (
+    leaves.length === 0 ||
+    leaves.some(
+      (leaf) =>
+        leaf.right - leaf.x > maxWidth + 0.5 && /\S\s+\S/.test(leaf.text),
+    )
+  );
 }
 
 function readsInObjectOrder(leaves: Leaf[], text: string): boolean {
@@ -644,11 +787,13 @@ function rebuildRunFromLines(
   }
 
   run.matrix = { ...run.matrix, e: startX, f: topBaseline };
+  const bottom =
+    topBaseline - (lines.length - 1) * lineHeight - fontSize * 0.25;
   run.bounds = {
     x: startX,
-    y: topBaseline - (lines.length - 1) * lineHeight - fontSize * 0.25,
+    y: bottom,
     width: Math.max(0, maxRight - startX),
-    height: lines.length * lineHeight + fontSize * 0.25,
+    height: topBaseline + fontSize * BOX_ASCENT_EM - bottom,
   };
 }
 

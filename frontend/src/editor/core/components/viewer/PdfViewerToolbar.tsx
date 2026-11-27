@@ -185,11 +185,14 @@ export function PdfViewerToolbar({
     () => zoomState.zoomPercent || 100,
   );
 
+  const [pageTotal, setPageTotal] = useState(() => scrollState.totalPages);
+
   // Keep the subscription; sync live state in a separate effect.
   useEffect(() => {
     const unregister = registerImmediateScrollUpdate(
-      (currentPage, _totalPages) => {
+      (currentPage, totalPages) => {
         setPageInput(currentPage);
+        setPageTotal(totalPages);
       },
     );
     return () => {
@@ -239,7 +242,7 @@ export function PdfViewerToolbar({
   // Commit on Enter or blur so typing "120" scrolls once.
   const commitPageInput = () => {
     const page = Number(pageInput);
-    if (Number.isInteger(page) && page >= 1 && page <= scrollState.totalPages) {
+    if (Number.isInteger(page) && page >= 1 && page <= pageTotal) {
       // Enter already committed; don't scroll again on the following blur.
       if (page !== committedPageRef.current) {
         committedPageRef.current = page;
@@ -270,7 +273,7 @@ export function PdfViewerToolbar({
 
   const totalPagesDigits = Math.max(
     MIN_PAGE_DIGITS,
-    (scrollState.totalPages || 1).toString().length,
+    (pageTotal || 1).toString().length,
   );
   const inputWidth = Math.max(
     MIN_INPUT_WIDTH_PX,
@@ -335,7 +338,7 @@ export function PdfViewerToolbar({
         }}
         onBlur={commitPageInput}
         min={1}
-        max={scrollState.totalPages}
+        max={pageTotal}
         allowDecimal={false}
         hideControls
         size="xs"
@@ -359,7 +362,7 @@ export function PdfViewerToolbar({
           color: "var(--c-text-subtle)",
         }}
       >
-        / {scrollState.totalPages}
+        / {pageTotal}
       </span>
 
       {/* Next Page Button */}

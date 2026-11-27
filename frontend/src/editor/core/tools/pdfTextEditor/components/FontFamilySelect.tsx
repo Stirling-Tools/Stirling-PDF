@@ -329,7 +329,13 @@ export function FontFamilySelect({
       gap="xs"
       align="center"
       wrap="nowrap"
-      style={touch || fullWidth ? { flex: "1 1 100%" } : undefined}
+      style={
+        touch
+          ? { flex: "1 1 calc(100% - 3.5rem)" }
+          : fullWidth
+            ? { flex: "1 1 100%" }
+            : undefined
+      }
     >
       <Select
         size={touch ? "lg" : "xs"}

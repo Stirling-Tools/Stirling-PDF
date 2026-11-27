@@ -132,6 +132,14 @@ test.describe("PDF text editor - document font recognition", () => {
     expect(run).toBeTruthy();
     await page.locator(`[data-testid="pdf-editor-run-${run!.id}"]`).click();
 
+    await expect
+      .poll(() => completionFamily(page, run!.fontId), {
+        message: "no lookalike was found for the embedded subset",
+        timeout: 30_000,
+      })
+      .not.toBeNull();
+    const closest = (await completionFamily(page, run!.fontId))!;
+
     const before = await pageFontNames(page);
 
     await page.keyboard.press("ControlOrMeta+ArrowRight");
@@ -157,18 +165,33 @@ test.describe("PDF text editor - document font recognition", () => {
       )
       .toContain("Q");
 
-    // A new face joined the page for the typed character, and it is a
-    // lookalike rather than the generic fallback.
+    // A new face joined the page for the typed character, and it is the
+    // lookalike the matcher found rather than the generic fallback.
     const added = (await pageFontNames(page)).filter(
       (n) => !before.includes(n),
     );
-    expect(added, "the typed character added no font").not.toHaveLength(0);
+    const squashed = (name: string) => name.replace(/[^a-z0-9]/gi, "");
     expect(
-      added.filter((n) => !/helvetica/i.test(n)),
-      `the typed character fell back to ${added.join(", ")}`,
-    ).not.toHaveLength(0);
+      added.map(squashed),
+      `the typed character was drawn in ${added.join(", ")}, not ${closest}`,
+    ).toContain(squashed(closest));
   });
 });
+
+function completionFamily(
+  page: import("@playwright/test").Page,
+  fontId: string,
+): Promise<string | null> {
+  return page.evaluate(
+    (id) =>
+      (
+        window as unknown as {
+          __editor_font_completion: (id: string) => { family: string } | null;
+        }
+      ).__editor_font_completion(id)?.family ?? null,
+    fontId,
+  );
+}
 
 /** Base font names of the text objects on the first page, as PDFium reads them. */
 function pageFontNames(

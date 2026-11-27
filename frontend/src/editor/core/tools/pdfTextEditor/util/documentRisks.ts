@@ -11,17 +11,44 @@ export interface SaveRisks {
   droppedChars: string[];
 }
 
+export function signedSignatureCount(doc: EditorDocument): number {
+  const m = doc.module;
+  let count: number;
+  try {
+    count = m.FPDF_GetSignatureCount(doc.docPtr);
+  } catch {
+    return 1;
+  }
+  if (count < 0) return 1;
+  let signed = 0;
+  for (let i = 0; i < count; i++) {
+    try {
+      const signature = m.FPDF_GetSignatureObject(doc.docPtr, i);
+      if (
+        !signature ||
+        m.FPDFSignatureObj_GetContents(signature, 0, 0) !== 0 ||
+        m.FPDFSignatureObj_GetByteRange(signature, 0, 0) !== 0 ||
+        m.FPDFSignatureObj_GetSubFilter(signature, 0, 0) !== 0
+      )
+        signed++;
+    } catch {
+      signed++;
+    }
+  }
+  return signed;
+}
+
+export function locksPages(risks: SaveRisks): boolean {
+  return risks.signatures > 0 || risks.xfaForm || risks.encrypted;
+}
+
 /** Inspect the open document for content a full rewrite would damage. */
 export function detectSaveRisks(doc: EditorDocument): SaveRisks {
   const m = doc.module;
   let signatures = 0;
   let xfaForm = false;
   let encrypted = false;
-  try {
-    signatures = Math.max(0, m.FPDF_GetSignatureCount(doc.docPtr));
-  } catch {
-    /* API absent in older builds - treat as no signatures */
-  }
+  signatures = signedSignatureCount(doc);
   try {
     // FORMTYPE: 0 none, 1 acroform, 2 xfa-full, 3 xfa-foreground.
     const formType = m.FPDF_GetFormType(doc.docPtr);

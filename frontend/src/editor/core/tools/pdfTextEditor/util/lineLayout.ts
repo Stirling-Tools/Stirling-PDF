@@ -1,3 +1,5 @@
+import { clamp } from "@editor/utils/genericUtils";
+
 export interface TokenFit {
   letterSpacingPx: number;
   marginRightPx: number;
@@ -26,12 +28,8 @@ export function fitTokenAdvance(
   const delta = targetPx - naturalPx;
   if (Math.abs(delta) < EPSILON_PX) return NO_TOKEN_FIT;
 
-  let letterSpacingPx = 0;
-  if (charCount > 1) {
-    const cap = MAX_TRACK_EM * Math.max(0, fontSizePx);
-    const even = delta / (charCount - 1);
-    letterSpacingPx = Math.max(-cap, Math.min(cap, even));
-  }
+  const cap = MAX_TRACK_EM * Math.max(0, fontSizePx);
+  const letterSpacingPx = clamp(delta / charCount, -cap, cap);
   return {
     letterSpacingPx,
     marginRightPx: delta - charCount * letterSpacingPx,

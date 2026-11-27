@@ -27,14 +27,32 @@ const SCRATCH_GRID = 16;
 const SCRATCH_STEP_PT = 30;
 
 const outlines = new Map<number, Map<string, string | null>>();
+const strokelessFonts = new Set<string>();
 const missingOutlines = new Map<number, string | null>();
 const codeTexts = new Map<number, Map<string, number>>();
 
 /** Font pointers are reused across documents, so every document starts empty. */
 export function resetFontGlyphs(): void {
   outlines.clear();
+  strokelessFonts.clear();
   missingOutlines.clear();
   codeTexts.clear();
+}
+
+export function noteFontStrokes(
+  m: WrappedPdfiumModule,
+  font: number,
+  fontId: string,
+): void {
+  if (strokelessFonts.has(fontId) || !m.FPDFFont_GetIsEmbedded(font)) return;
+  const length = scratchPtr(m, SCRATCH.glyphPoint, 8);
+  m.pdfium.setValue(length, 0, "i32");
+  if (!m.FPDFFont_GetFontData(font, 0, 0, length)) return;
+  if (m.pdfium.getValue(length, "i32") === 0) strokelessFonts.add(fontId);
+}
+
+export function ignoresTextStroke(fontId: string): boolean {
+  return strokelessFonts.has(fontId);
 }
 
 function outlineOf(
@@ -105,6 +123,29 @@ function glyphOf(m: WrappedPdfiumModule, font: number, ch: string): Glyph {
   const outline = outlineOf(m, font, ch);
   if (outline === null) return "none";
   return outline === missingOutlineOf(m, font) ? "box" : "outline";
+}
+
+const FLAT_LOWERCASE = "xzvwunmr";
+const PLAUSIBLE_X_HEIGHT_EM = { min: 0.3, max: 0.8 };
+
+function outlineTop(outline: string): number {
+  return Math.max(
+    ...outline.split(";").map((point) => Number(point.split(" ")[2])),
+  );
+}
+
+/** The height of `font`'s lower-case letters in ems, read from the first flat-topped letter it has a glyph for; null when it has none. */
+export function xHeightEm(m: WrappedPdfiumModule, font: number): number | null {
+  if (!font) return null;
+  const box = missingOutlineOf(m, font);
+  for (const ch of FLAT_LOWERCASE) {
+    const outline = outlineOf(m, font, ch);
+    if (!outline || outline === box) continue;
+    const em = outlineTop(outline);
+    if (em > PLAUSIBLE_X_HEIGHT_EM.min && em < PLAUSIBLE_X_HEIGHT_EM.max)
+      return em;
+  }
+  return null;
 }
 
 /**

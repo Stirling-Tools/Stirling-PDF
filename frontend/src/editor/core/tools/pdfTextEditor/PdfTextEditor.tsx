@@ -2,6 +2,7 @@ import {
   assertFilesNotBlocked,
   policySourceIds,
 } from "@editor/services/policyFileGuard";
+import { editorPageLayout } from "@editor/tools/pdfTextEditor/util/editorPageLayout";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -87,17 +88,22 @@ import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { assertEditorOcrAllowed } from "@editor/tools/pdfTextEditor/util/ocrProtection";
 import {
   detectSaveRisks,
+  locksPages,
   hasSaveRisks,
   type SaveRisks,
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { useScanPrefit } from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
-import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
+import { visiblePageIndex } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
-
+import {
+  DocumentChangeRefused,
+  pageChangeCommand,
+  type DocumentChange,
+} from "@editor/tools/pdfTextEditor/util/documentChanges";
 const INSERTED_IMAGE_RATIO = 0.4;
 /** Stands in for an editing action while a review is on, where the editor only tags. */
 const noop = () => {};
@@ -204,6 +210,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   // Guards against re-entrant saves while a (synchronous) serialize runs.
   const savingRef = useRef(false);
+  const afterSavingRef = useRef<Array<() => void>>([]);
+  const doneSaving = useCallback(() => {
+    savingRef.current = false;
+    for (const resume of afterSavingRef.current.splice(0)) resume();
+  }, []);
   /** Settles when the save savingRef marks ends, however it ends. */
   const saveSettledRef = useRef<Promise<void>>(Promise.resolve());
   // Pending save-risk warning (signatures/XFA) shown before the actual save.
@@ -353,12 +364,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         // must not believe a broken save succeeded.
         store.setError(err instanceof Error ? err.message : String(err));
       } finally {
-        savingRef.current = false;
+        doneSaving();
         settle();
       }
     },
-    [store, openedFileName, applyToWorkbench],
+    [store, openedFileName, applyToWorkbench, doneSaving],
   );
+  const doSaveRef = useRef(doSave);
+  doSaveRef.current = doSave;
 
   // Which action the risk modal is currently gating.
   const pendingDownloadRef = useRef(false);
@@ -367,17 +380,22 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   const runSave = useCallback(
     async (download: boolean) => {
+      const lineage = store.lineage;
+      while (savingRef.current)
+        await new Promise<void>((resume) =>
+          afterSavingRef.current.push(resume),
+        );
       const doc = store.document;
-      if (!doc || savingRef.current || store.getState().loading) return;
+      if (!doc || store.getState().loading || store.lineage !== lineage) return;
       const risks = unackedRisks(doc);
       if (risks) {
         pendingDownloadRef.current = download;
         setSaveRisks(risks);
         return;
       }
-      await doSave(download);
+      await doSaveRef.current(download);
     },
-    [store, doSave, unackedRisks],
+    [store, unackedRisks],
   );
 
   // Answers a risk warning raised from the app's unsaved-changes prompt.
@@ -392,20 +410,28 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [],
   );
 
-  const saveBeforeLeaving = useCallback(async () => {
-    const doc = store.document;
-    const risks = doc && unackedRisks(doc);
-    if (risks) {
-      const save = await new Promise<boolean>((resolve) => {
+  const confirmRisks = useCallback(
+    (doc: EditorDocument) => {
+      const risks = unackedRisks(doc);
+      if (!risks) return Promise.resolve(true);
+      return new Promise<boolean>((resolve) => {
         riskAnswerRef.current = resolve;
         setSaveRisks(risks);
       });
-      if (!save) throw new Error("Save cancelled at the risk warning");
-    }
+    },
+    [unackedRisks],
+  );
+
+  const saveBeforeLeaving = useCallback(async () => {
+    while (savingRef.current) await saveSettledRef.current;
+    const doc = store.document;
+    if (doc && !(await confirmRisks(doc)))
+      throw new Error("Save cancelled at the risk warning");
+    while (savingRef.current) await saveSettledRef.current;
     await doSave(false);
     // doSave reports its failures in the editor; the prompt must stay open.
     if (store.getState().dirty) throw new Error("Edits not saved");
-  }, [store, doSave, unackedRisks]);
+  }, [store, doSave, confirmRisks]);
 
   const handleCancelSaveRisk = useCallback(() => {
     setSaveRisks(null);
@@ -422,11 +448,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useReviewLanguageBridge(store, state, sourceFileId, reviewing);
   useReviewConformanceClaimBridge(store, state, sourceFileId, reviewing);
 
+  const pageLayout = useMemo(() => editorPageLayout(store), [store]);
   useRegisterViewerPageTool(
     useMemo(
       () => ({
         fileId: sourceFileId,
         PageLayer: ViewerEditLayer,
+        pageLayout,
         Toolbar: ViewerEditToolbar,
         // Small screens trade the viewer's page bar for the editing actions,
         // once there is a document to act on.
@@ -443,11 +471,68 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         reviewing,
         state.hasDocument,
         sourceFileId,
+        pageLayout,
         discardEdits,
         saveBeforeLeaving,
         toggleFind,
       ],
     ),
+  );
+
+  const revealPage = useCallback(
+    (pageIndex: number) => {
+      const position = store.document?.positionOf(pageIndex) ?? -1;
+      if (position >= 0) scrollActions.scrollToPage(position + 1);
+    },
+    [store, scrollActions],
+  );
+
+  const changeDocument = useCallback(
+    async (change: DocumentChange) => {
+      const doc = store.document;
+      if (!doc || store.getState().loading) return;
+      await store.settleRedraws();
+      if (store.document !== doc) return;
+      try {
+        const access = getPdfAccess(sourceFileIdRef.current);
+        assertPdfSessionEditable(access);
+        if (access?.encrypted || locksPages(detectSaveRisks(doc)))
+          throw new Error(
+            t(
+              "pdfTextEditor.pages.protected",
+              "Pages can't be changed in a signed, encrypted or XFA PDF.",
+            ),
+          );
+      } catch (err) {
+        store.setError(err instanceof Error ? err.message : String(err));
+        return;
+      }
+      try {
+        const { command, focusPage } = pageChangeCommand(doc, change);
+        if (change.kind === "deletePage") store.selection.clear();
+        store.dispatch(command);
+        revealPage(focusPage);
+      } catch (err) {
+        if (!(err instanceof DocumentChangeRefused)) console.error(err);
+        store.setError(
+          err instanceof DocumentChangeRefused
+            ? err.reason === "saving"
+              ? t(
+                  "pdfTextEditor.pages.saving",
+                  "Wait for the save to finish, then change the pages.",
+                )
+              : t(
+                  "pdfTextEditor.pages.lastPage",
+                  "A PDF needs at least one page.",
+                )
+            : t(
+                "pdfTextEditor.pages.failed",
+                "The pages couldn't be changed. Your edits are unchanged.",
+              ),
+        );
+      }
+    },
+    [store, t, revealPage],
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
@@ -520,7 +605,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       // rather than insert against geometry from the wrong document.
       if (store.document !== doc) return;
       const pages = store.getState().pages;
-      const targetIndex = at?.pageIndex ?? visiblePageNumber();
+      const targetIndex = at?.pageIndex ?? visiblePageIndex();
       const page = pages.find((p) => p.pageIndex === targetIndex) ?? pages[0];
       if (!page) return;
       const sized = centredImageRect(
@@ -604,7 +689,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         ? text.replace(/\r\n?/g, "\n").trim()
         : text.replace(/\r\n?/g, "\n");
       if (!normalised) return;
-      const pageIndex = visiblePageNumber();
+      const pages = store.getState().pages;
+      const visible = visiblePageIndex();
+      const pageIndex = (pages.find((p) => p.pageIndex === visible) ?? pages[0])
+        ?.pageIndex;
+      if (pageIndex === undefined) return;
       const page = doc.page(pageIndex);
       // Position roughly at the page centre, biased toward the upper third so
       // multi-line paste has room to flow downward.
@@ -737,6 +826,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     onToggleItalic: useCallback(() => {
       if (!reviewing) void warnAboutFontChange(sel.toggleItalic);
     }, [reviewing, warnAboutFontChange, sel.toggleItalic]),
+    onToggleUnderline: reviewing ? noop : sel.toggleUnderline,
+    onSetAlign: reviewing ? noop : sel.setAlign,
+    onToggleList: reviewing ? noop : sel.toggleList,
   });
 
   useEditorClipboard({
@@ -859,13 +951,21 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       mergeSelection: handleMergeSelection,
       ungroupSelection: handleUngroupSelection,
       // The viewer mounts only the pages near the viewport.
-      revealPage: (pageIndex: number) =>
-        scrollActions.scrollToPage(pageIndex + 1),
+      revealPage,
+      changeDocument,
+      pageSize: (pageIndex: number) => {
+        const doc = store.document;
+        if (!doc || doc.positionOf(pageIndex) < 0) return null;
+        const { cropWidth, cropHeight, rotate } = doc.page(pageIndex).display;
+        return rotate % 2 === 0
+          ? { width: cropWidth, height: cropHeight }
+          : { width: cropHeight, height: cropWidth };
+      },
     };
     setEditorSession(session);
     return () => clearEditorSession(session);
   }, [
-    scrollActions,
+    revealPage,
     openedFileName,
     handleSave,
     handleAutosave,
@@ -873,6 +973,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     openImagePicker,
     handleMergeSelection,
     handleUngroupSelection,
+    changeDocument,
+    store,
   ]);
 
   const sidebarProps = {

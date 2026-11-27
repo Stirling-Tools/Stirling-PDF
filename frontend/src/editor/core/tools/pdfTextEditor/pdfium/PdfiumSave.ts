@@ -29,7 +29,7 @@ export class PdfiumSave {
         page.flushGenerate(m);
         page.clearDirty();
       } catch {
-        failedPages.push(page.index + 1);
+        failedPages.push(doc.positionOf(page.index) + 1);
       }
     }
     if (failedPages.length > 0) {

@@ -186,16 +186,18 @@ export class StyleTextRangeCommand implements Command {
 
   /**
    * How much of the selection that is not already in its new face that face
-   * has glyphs for. The rest stays in the font that drew it.
+   * has glyphs for. The rest stays in the font that drew it; only a letter or
+   * digit left behind makes it "some".
    */
   coverage(doc: EditorDocument): "all" | "some" | "none" | "unchanged" {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     const lines = run && linesOf(doc, page, run);
     if (!run || !lines) return "unchanged";
-    const { targets, kept } = this.changes(doc, page, run, lines);
+    const { targets, kept, keptLetters } = this.changes(doc, page, run, lines);
     if (kept === 0) return targets.size === 0 ? "unchanged" : "all";
-    return targets.size === 0 ? "none" : "some";
+    if (targets.size === 0) return "none";
+    return keptLetters === 0 ? "all" : "some";
   }
 
   apply(doc: EditorDocument): void {
@@ -318,7 +320,7 @@ export class StyleTextRangeCommand implements Command {
     page: Page,
     run: TextRun,
     lines: readonly Line[],
-  ): { targets: Map<number, Target>; kept: number } {
+  ): { targets: Map<number, Target>; kept: number; keptLetters: number } {
     const m = doc.module;
     const fontAt = new Map<number, number>();
     for (const line of lines)
@@ -330,6 +332,7 @@ export class StyleTextRangeCommand implements Command {
     const targets = new Map<number, Target>();
     const idOf = fontIdNamer(doc);
     let kept = 0;
+    let keptLetters = 0;
     for (const { start, end, face } of this.faces) {
       const target = targetOf(face);
       const draws = facesDraw(doc, page, face, target);
@@ -346,12 +349,13 @@ export class StyleTextRangeCommand implements Command {
         if (already) continue;
         if (!draws(ch)) {
           kept++;
+          if (isLetterOrDigit(ch)) keptLetters++;
           continue;
         }
         for (let u = at; u < c; u++) targets.set(u, target);
       }
     }
-    return { targets, kept };
+    return { targets, kept, keptLetters };
   }
 
   private redrawLine(
@@ -933,7 +937,7 @@ function cannotRestyleMessage(): string {
 function missingGlyphsMessage(): string {
   return i18n.t(
     "pdfTextEditor.fontPicker.missingGlyphs",
-    "This font is missing some of the selected characters, and they could not be kept in their current font. The text was left unchanged.",
+    "Some of these characters aren't in that font, so the text keeps its current font.",
   );
 }
 
@@ -958,4 +962,8 @@ export function selectedPartOfRun(
     return /\S/.test(outside) ? { page, run, range: { start, end } } : null;
   }
   return null;
+}
+
+function isLetterOrDigit(ch: string): boolean {
+  return /[\p{L}\p{N}]/u.test(ch);
 }

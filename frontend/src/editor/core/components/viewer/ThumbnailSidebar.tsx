@@ -1,19 +1,28 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Box, ScrollArea, Text } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { Icon } from "@editor/ui/Icon";
+import { useLaidOutPages } from "@editor/components/viewer/PageLayoutBridge";
+import type { ViewerPageLayout } from "@editor/contexts/viewer/ViewerPageTool";
 import "@editor/components/viewer/SidebarBase.css";
 
 /** A narrow strip: it only has to show which page is which. */
 export const THUMBNAIL_SIDEBAR_WIDTH_REM = 7.5;
 
+function revokeThumbnails(thumbnails: { [key: number]: string }) {
+  Object.values(thumbnails).forEach((thumbUrl) => {
+    if (thumbUrl.startsWith("blob:")) URL.revokeObjectURL(thumbUrl);
+  });
+}
+
 interface ThumbnailSidebarProps {
   visible: boolean;
   onToggle: () => void;
   activeFileId?: string | null;
+  pageLayout?: ViewerPageLayout | null;
   /** Room left at the edge for the panel the strip sits beside. */
   rightOffsetRem?: number;
 }
@@ -22,55 +31,37 @@ export function ThumbnailSidebar({
   visible,
   onToggle,
   activeFileId,
+  pageLayout = null,
   rightOffsetRem = 0,
 }: ThumbnailSidebarProps) {
   const { t } = useTranslation();
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
+  const laidOutPages = useLaidOutPages(pageLayout);
 
   const scrollState = getScrollState();
   const thumbnailAPI = getThumbnailAPI();
 
-  // Clear thumbnails when active file changes
-  useEffect(() => {
-    // Revoke old blob URLs to prevent memory leaks
-    Object.values(thumbnails).forEach((thumbUrl) => {
-      if (typeof thumbUrl === "string" && thumbUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(thumbUrl);
-      }
-    });
-    setThumbnails({});
-  }, [activeFileId]);
-
-  // Keep a ref to thumbnails for cleanup on unmount
   const thumbnailsRef = useRef(thumbnails);
   useEffect(() => {
     thumbnailsRef.current = thumbnails;
   }, [thumbnails]);
 
-  // Clear thumbnails when sidebar closes and revoke blob URLs to prevent memory leaks
-  useEffect(() => {
-    if (!visible) {
-      Object.values(thumbnailsRef.current).forEach((thumbUrl) => {
-        // Only revoke if it's a blob URL (not 'error')
-        if (typeof thumbUrl === "string" && thumbUrl.startsWith("blob:")) {
-          URL.revokeObjectURL(thumbUrl);
-        }
-      });
-      setThumbnails({});
-    }
-  }, [visible]);
-
-  // Cleanup all blob URLs on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      Object.values(thumbnailsRef.current).forEach((thumbUrl) => {
-        if (typeof thumbUrl === "string" && thumbUrl.startsWith("blob:")) {
-          URL.revokeObjectURL(thumbUrl);
-        }
-      });
-    };
+  const dropThumbnails = useCallback(() => {
+    revokeThumbnails(thumbnailsRef.current);
+    thumbnailsRef.current = {};
+    setThumbnails({});
   }, []);
+
+  useEffect(() => {
+    dropThumbnails();
+  }, [activeFileId, laidOutPages, dropThumbnails]);
+
+  useEffect(() => {
+    if (!visible) dropThumbnails();
+  }, [visible, dropThumbnails]);
+
+  useEffect(() => () => revokeThumbnails(thumbnailsRef.current), []);
 
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
@@ -152,7 +143,13 @@ export function ThumbnailSidebar({
     return () => {
       isCancelled = true;
     };
-  }, [visible, scrollState.totalPages, thumbnailAPI, scrollState.currentPage]);
+  }, [
+    visible,
+    scrollState.totalPages,
+    thumbnailAPI,
+    scrollState.currentPage,
+    laidOutPages,
+  ]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based

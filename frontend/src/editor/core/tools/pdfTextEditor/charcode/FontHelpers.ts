@@ -5,6 +5,7 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
+import { unnamedFontName } from "@editor/tools/pdfTextEditor/pdfium/unnamedFontNames";
 
 /**
  * Client-side font helpers for the charcode emit path.
@@ -242,7 +243,7 @@ export function readFontName(
 ): string | undefined {
   if (!fontPtr) return undefined;
   if (fontNameCache.has(fontPtr)) return fontNameCache.get(fontPtr);
-  const name = loadFontName(m, fontPtr);
+  const name = loadFontName(m, fontPtr) ?? unnamedFontName(fontPtr);
   fontNameCache.set(fontPtr, name);
   return name;
 }

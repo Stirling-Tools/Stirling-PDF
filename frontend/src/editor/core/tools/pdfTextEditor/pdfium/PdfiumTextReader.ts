@@ -1,4 +1,5 @@
 import { claimFormNodes } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { noteFontStrokes } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   readPageGlyphs,
@@ -21,6 +22,7 @@ import {
   LineGrouper,
   lineFontIds,
   type BlockKey,
+  type SpaceObject,
 } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
 import { PdfiumAnnotationReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
@@ -50,6 +52,11 @@ import {
   innermostMcid,
   readTagMarks,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { restoreCarriedFormats } from "@editor/tools/pdfTextEditor/util/carriedFormats";
+import {
+  nameUnnamedFonts,
+  unnamedFontName,
+} from "@editor/tools/pdfTextEditor/pdfium/unnamedFontNames";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;
@@ -75,6 +82,8 @@ export class PdfiumTextReader {
     mode: GroupingMode = "auto",
   ): void {
     if (page.loaded) return;
+    const fontOrder = doc.claimUnnamedFontOrder(page.index);
+    if (fontOrder) nameUnnamedFonts(doc.module, page.pagePtr, fontOrder);
     doc.claimArtifactMarks(page.index);
     claimFormNodes(doc, page);
     const m = doc.module;
@@ -87,6 +96,7 @@ export class PdfiumTextReader {
     const fills: PageRuleSnapshot[] = [];
     const shapes: ShapeObject[] = [];
     const companions = new Map<number, number[]>();
+    const spaces = new Map<number, SpaceObject[]>();
 
     // ONE text page for the whole walk: FPDFText_LoadPage runs full page text
     // extraction, so opening it per text object made population O.
@@ -110,6 +120,7 @@ export class PdfiumTextReader {
         IDENTITY,
         textPagePtr,
         companions,
+        spaces,
       );
 
       page.setRuns(runs);
@@ -125,7 +136,8 @@ export class PdfiumTextReader {
         ...shapes.map((shape) => shape.bounds),
         ...fills,
       ]);
-      groupAndMeasure(doc, page, mode, textPagePtr, companions);
+      groupAndMeasure(doc, page, mode, textPagePtr, companions, spaces);
+      restoreCarriedFormats(doc, page);
     } finally {
       closeTextPage(m, textPagePtr);
     }
@@ -204,6 +216,7 @@ function groupAndMeasure(
   mode: GroupingMode,
   textPagePtr: number,
   companions: ReadonlyMap<number, readonly number[]>,
+  spaces: ReadonlyMap<number, readonly SpaceObject[]> = new Map(),
 ): void {
   // LineGrouper always runs (merges per-glyph/per-word source objects into
   // one line).
@@ -218,6 +231,7 @@ function groupAndMeasure(
         ? glyphsWithCompanions(doc.module, page, textPagePtr, companions)
         : null,
       companions,
+      spaces,
     },
   );
   if (mode === "auto") {
@@ -643,6 +657,7 @@ function walkObjects(
   transform: Affine,
   textPagePtr: number,
   companions: Map<number, number[]>,
+  spaces: Map<number, SpaceObject[]>,
 ): void {
   const MAX_DEPTH = 4;
   const formModule = m as PdfiumWithForms;
@@ -653,6 +668,7 @@ function walkObjects(
   const topLevelContainerPtr =
     path.length === 0 ? 0 : m.FPDFPage_GetObject(pagePtr, path[0]);
   const span = new ActualTextSpan(companions);
+  let spaceOwner: TextRun | null = null;
   for (let i = 0; i < count; i++) {
     const objPtr =
       path.length === 0
@@ -677,6 +693,16 @@ function walkObjects(
         run?.text ?? null,
         (ptr) => readTextObjString(m, textPagePtr, ptr) === "",
       );
+      const space =
+        !run && spaceOwner
+          ? spaceAfter(m, textPagePtr, objPtr, transform, spaceOwner)
+          : null;
+      if (space) {
+        const owner = spaceOwner!.pdfiumObjPtr;
+        spaces.set(owner, [...(spaces.get(owner) ?? []), space]);
+        continue;
+      }
+      spaceOwner = run && !repeatsSpanText ? run : null;
       if (run && !repeatsSpanText) {
         run.containerPtr = containerPtr;
         run.topLevelContainerPtr = topLevelContainerPtr;
@@ -744,10 +770,31 @@ function walkObjects(
           childTransform,
           textPagePtr,
           companions,
+          spaces,
         );
       }
     }
   }
+}
+
+function spaceAfter(
+  m: WrappedPdfiumModule,
+  textPagePtr: number,
+  objPtr: number,
+  transform: Affine,
+  owner: TextRun,
+): SpaceObject | null {
+  const text = readTextObjString(m, textPagePtr, objPtr);
+  if (!text || text.trim().length > 0) return null;
+  const local = readMatrix(m, objPtr);
+  const origin = isIdentity(transform)
+    ? local
+    : composeAffine(transform, local);
+  const onBaseline =
+    Math.abs(origin.f - owner.matrix.f) <= owner.fontSize * 0.25;
+  return onBaseline && origin.e >= owner.bounds.x
+    ? { ptr: objPtr, x: origin.e }
+    : null;
 }
 
 /**
@@ -1156,8 +1203,13 @@ function readFontFamily(
   // still names the face, and that name is what decides the fallback's
   // serif/sans class - calling it "Unknown" silently substituted Helvetica
   // into serif documents.
-  const nameRaw = familyRaw ?? baseRaw;
-  if (nameRaw == null) return { family: "Unknown", subset: false };
+  const nameRaw = familyRaw ?? baseRaw ?? null;
+  if (nameRaw == null) {
+    const described = unnamedFontName(fontPtr);
+    return described
+      ? { family: described.replace(SUBSET_TAG_RE, ""), subset: false }
+      : { family: "Unknown", subset: false };
+  }
   const tagged = SUBSET_TAG_RE.test(nameRaw);
   const family = tagged ? nameRaw.slice(7) : nameRaw;
   if (tagged) return { family, subset: true };
@@ -1267,6 +1319,7 @@ function readTextRun(
     }
 
     const { stroke, strokeWidth } = readStroke(m, objPtr, renderMode);
+    if (fontPtr) noteFontStrokes(m, fontPtr, `${fontId}:${family}`);
 
     return new TextRun({
       id,

@@ -78,6 +78,34 @@ function shortcutSections(t: TFunction): Section[] {
           ),
         },
         {
+          bindings: [mod("KeyU")],
+          description: t(
+            "pdfTextEditor.help.editing.underlineDesc",
+            "Underline",
+          ),
+        },
+        {
+          bindings: [
+            mod("KeyL", { shift: true }),
+            mod("KeyE", { shift: true }),
+            mod("KeyR", { shift: true }),
+          ],
+          description: t(
+            "pdfTextEditor.help.editing.alignDesc",
+            "Align text left / centre / right",
+          ),
+        },
+        {
+          bindings: [
+            mod("Digit8", { shift: true }),
+            mod("Digit7", { shift: true }),
+          ],
+          description: t(
+            "pdfTextEditor.help.editing.listsDesc",
+            "Bulleted / numbered list",
+          ),
+        },
+        {
           bindings: [mod("KeyD")],
           description: t(
             "pdfTextEditor.help.editing.duplicateDesc",

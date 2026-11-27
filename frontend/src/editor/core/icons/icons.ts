@@ -120,9 +120,11 @@ import Factory from "lucide-static/icons/factory.svg?react";
 import File from "lucide-static/icons/file.svg?react";
 import FileDigit from "lucide-static/icons/file-digit.svg?react";
 import FileLock from "lucide-static/icons/file-lock.svg?react";
+import FileMinus from "lucide-static/icons/file-minus.svg?react";
 import FilePen from "lucide-static/icons/file-pen.svg?react";
 import FilePlus from "lucide-static/icons/file-plus.svg?react";
 import FileSearch from "lucide-static/icons/file-search.svg?react";
+import FileSliders from "lucide-static/icons/file-sliders.svg?react";
 import FileText from "lucide-static/icons/file-text.svg?react";
 import FileUp from "lucide-static/icons/file-up.svg?react";
 import FileX from "lucide-static/icons/file-x.svg?react";
@@ -154,6 +156,7 @@ import Hand from "lucide-static/icons/hand.svg?react";
 import Handshake from "lucide-static/icons/handshake.svg?react";
 import HardDrive from "lucide-static/icons/hard-drive.svg?react";
 import HardHat from "lucide-static/icons/hard-hat.svg?react";
+import Heading from "lucide-static/icons/heading.svg?react";
 import HeartHandshake from "lucide-static/icons/heart-handshake.svg?react";
 import HeartPulse from "lucide-static/icons/heart-pulse.svg?react";
 import Highlighter from "lucide-static/icons/highlighter.svg?react";
@@ -183,6 +186,7 @@ import LineSquiggle from "lucide-static/icons/line-squiggle.svg?react";
 import Link from "lucide-static/icons/link.svg?react";
 import List from "lucide-static/icons/list.svg?react";
 import ListChecks from "lucide-static/icons/list-checks.svg?react";
+import ListOrdered from "lucide-static/icons/list-ordered.svg?react";
 import ListSortDescending from "lucide-static/icons/list-sort-descending.svg?react";
 import ListTodo from "lucide-static/icons/list-todo.svg?react";
 import LocateFixed from "lucide-static/icons/locate-fixed.svg?react";
@@ -566,9 +570,11 @@ export const ICONS = {
   file: { Component: File, kind: "lucide" },
   "file-digit": { Component: FileDigit, kind: "lucide" },
   "file-lock": { Component: FileLock, kind: "lucide" },
+  "file-minus": { Component: FileMinus, kind: "lucide" },
   "file-pen": { Component: FilePen, kind: "lucide" },
   "file-plus": { Component: FilePlus, kind: "lucide" },
   "file-search": { Component: FileSearch, kind: "lucide" },
+  "file-sliders": { Component: FileSliders, kind: "lucide" },
   "file-text": { Component: FileText, kind: "lucide" },
   "file-up": { Component: FileUp, kind: "lucide" },
   "file-x": { Component: FileX, kind: "lucide" },
@@ -600,6 +606,7 @@ export const ICONS = {
   handshake: { Component: Handshake, kind: "lucide" },
   "hard-drive": { Component: HardDrive, kind: "lucide" },
   "hard-hat": { Component: HardHat, kind: "lucide" },
+  heading: { Component: Heading, kind: "lucide" },
   "heart-handshake": { Component: HeartHandshake, kind: "lucide" },
   "heart-pulse": { Component: HeartPulse, kind: "lucide" },
   highlighter: { Component: Highlighter, kind: "lucide" },
@@ -629,6 +636,7 @@ export const ICONS = {
   link: { Component: Link, kind: "lucide" },
   list: { Component: List, kind: "lucide" },
   "list-checks": { Component: ListChecks, kind: "lucide" },
+  "list-ordered": { Component: ListOrdered, kind: "lucide" },
   "list-sort-descending": { Component: ListSortDescending, kind: "lucide" },
   "list-todo": { Component: ListTodo, kind: "lucide" },
   "locate-fixed": { Component: LocateFixed, kind: "lucide" },

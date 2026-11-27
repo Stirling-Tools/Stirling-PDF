@@ -8,6 +8,14 @@ export const NO_SHRINK = { flexShrink: 0 } as const;
 export const SELECTION_BAR_MENU_ATTR = "data-selection-bar-menu";
 export const selectionBarMenuProps = { [SELECTION_BAR_MENU_ATTR]: "" };
 
+/** A style toggle's look: filled when the whole selection has the style, outlined when only some of it does. */
+export function toggleLook(on: boolean, mixed: boolean) {
+  if (mixed) return { variant: "secondary", accent: "default" } as const;
+  return on
+    ? ({ variant: "primary", accent: "default" } as const)
+    : ({ variant: "tertiary", accent: "neutral" } as const);
+}
+
 export function ToolbarSeparator() {
   return (
     <span

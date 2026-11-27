@@ -50,7 +50,7 @@ export function resizeRunCommand(
   }
   const rewrapped = rewrapDrawnLines(doc, page, run, maxWidthPt);
   if (rewrapped !== null)
-    return rewrapped === run.text
+    return rewrapped === run.text && run.wrapWidthPt === maxWidthPt
       ? null
       : new RewrapTextCommand(pageIndex, runId, rewrapped, maxWidthPt);
   return new ReflowWrapCommand({

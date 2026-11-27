@@ -39,6 +39,7 @@ interface SelectedRuns {
   subsetFontIds: Set<string>;
   text: string;
   scanned: number;
+  drawnFromDocument: boolean;
 }
 
 function collectSelectedRuns(
@@ -50,16 +51,18 @@ function collectSelectedRuns(
   const subsetFontIds = new Set<string>();
   let text = "";
   let scanned = 0;
+  let drawnFromDocument = true;
   for (const page of pages)
     for (const run of page.runs)
       if (picked.has(run.id)) {
         fontIds.add(run.fontId);
+        drawnFromDocument &&= run.substitutedGlyphs === false;
         if (run.fontSubset) subsetFontIds.add(run.fontId);
         text += run.text;
         if (run.renderMode === RENDER_MODE_INVISIBLE && !run.hiddenText)
           scanned++;
       }
-  return { fontIds, subsetFontIds, text, scanned };
+  return { fontIds, subsetFontIds, text, scanned, drawnFromDocument };
 }
 
 function standardFallbackName(family: string): string {
@@ -120,6 +123,7 @@ function documentFontNote(
   pages: PageSnapshot[],
   fontIds: Set<string>,
   allSubset: boolean,
+  drawnFromDocument: boolean,
 ): SelectedFontNote | null {
   const fonts = analyzePageFonts(pages).filter((f) =>
     Array.from(fontIds).some((id) => id.endsWith(f.name)),
@@ -130,7 +134,8 @@ function documentFontNote(
   const complete = !!font && (font.status === "standard" || !!coverage?.known);
   // A subset says so itself, whatever the page-wide coverage scan concludes.
   const mayLack = allSubset || (!!font && (gaps.length > 0 || !complete));
-  const completed = mayLack ? completedNote(fontIds) : null;
+  const completed =
+    mayLack && !drawnFromDocument ? completedNote(fontIds) : null;
   if (completed) return completed;
   if (!font) return null;
   if (gaps.length > 0) {
@@ -149,10 +154,8 @@ export function selectedFontNote(
   runIds: string[],
 ): SelectedFontNote | null {
   if (runIds.length === 0) return null;
-  const { fontIds, subsetFontIds, text, scanned } = collectSelectedRuns(
-    pages,
-    runIds,
-  );
+  const { fontIds, subsetFontIds, text, scanned, drawnFromDocument } =
+    collectSelectedRuns(pages, runIds);
   if (fontIds.size === 0) return null;
   if (scanned === runIds.length) return { kind: "scanned" };
   const ids = [...fontIds];
@@ -161,5 +164,10 @@ export function selectedFontNote(
     return families.length === 1 ? deviceFontNote(families[0], text) : null;
   }
   if (ids.some(isDeviceFontId)) return null;
-  return documentFontNote(pages, fontIds, subsetFontIds.size === fontIds.size);
+  return documentFontNote(
+    pages,
+    fontIds,
+    subsetFontIds.size === fontIds.size,
+    drawnFromDocument,
+  );
 }

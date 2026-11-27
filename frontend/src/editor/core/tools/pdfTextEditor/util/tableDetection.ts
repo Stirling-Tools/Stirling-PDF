@@ -48,6 +48,7 @@ const INSET_EDGE_SLACK_PT = 0.5;
 const STACK_LONE_ROWS_MIN = 2;
 const STACK_OFFSET_SPREAD_EM = 0.25;
 const STACK_OFFSET_SAMPLES_MIN = 3;
+const SECTION_HEADING_SCALE = 1.15;
 
 export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
   rowTolFactor: 0.6,
@@ -894,6 +895,12 @@ function buildTable(
   if (!snappedRows.drawn && proseColumns(columns) > PROSE_COLUMNS_MAX)
     return null;
   if (!snappedRows.drawn && sideBySideStacks(block, colEdges)) return null;
+  if (
+    !snappedRows.drawn &&
+    !snappedCols.drawn &&
+    headsSections(block, colEdges)
+  )
+    return null;
 
   const bounds: PageRect = {
     x: colEdges[0],
@@ -926,6 +933,26 @@ function buildTable(
     columnStyles: [],
     headerStyle: null,
   };
+}
+
+function headsSections(block: Row[], colEdges: number[]): boolean {
+  const body = block.slice(1);
+  const bodySizes = new Map<number, number[]>();
+  for (const row of body) {
+    for (const c of row.cands) {
+      const col = edgeIndex(colEdges, c.cx);
+      bodySizes.set(col, [...(bodySizes.get(col) ?? []), c.run.fontSize]);
+    }
+  }
+  const usual = new Map(
+    [...bodySizes].map(([col, sizes]) => [col, median(sizes)]),
+  );
+  return body.some((row) => {
+    if (row.cands.length !== 1) return false;
+    const [c] = row.cands;
+    const size = usual.get(edgeIndex(colEdges, c.cx)) ?? c.run.fontSize;
+    return c.run.fontSize >= size * SECTION_HEADING_SCALE;
+  });
 }
 
 function sideBySideStacks(block: Row[], colEdges: number[]): boolean {

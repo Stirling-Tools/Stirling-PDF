@@ -72,6 +72,12 @@ import {
 import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import type { GrowEdge } from "@editor/tools/pdfTextEditor/util/growEdge";
+import {
+  applyPendingRunEdit,
+  keepCaretInView,
+  moveToLineEdge,
+  selectAllText,
+} from "@editor/tools/pdfTextEditor/util/dom";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const SETTLE_MS = 400;
@@ -371,12 +377,14 @@ interface TextRunOverlayProps {
   /**
    * Fires when typed text overflows the box: past the locked width in Wrap,
    * past the page edge in Grow, which asks to keep clear of what lies below.
-   * Runs synchronously and returns the run's text after the wrap, or null when
-   * the wrap was refused.
+   * With `pullUp`, fires after an edit that shortened the text, so a line's
+   * first word can rejoin the line above. Runs synchronously and returns the
+   * run's text after the wrap, or null when the wrap was refused.
    */
   onWrap?: (
     maxWidthPt: number,
     keepClearBelow?: boolean,
+    pullUp?: boolean,
   ) => string | null | void;
   /**
    * The run with the engine's pen positions for its current text, read
@@ -596,6 +604,7 @@ export function TextRunOverlay({
   // Text content captured when the box gains focus, so blur can tell whether
   // the user actually edited it (and a Wrap reflow is warranted).
   const focusTextRef = useRef<string>("");
+  const committedTextRef = useRef<string>("");
   // Drag-to-move state. `dragOffset` is the live cursor delta applied as a
   // CSS transform so the box follows the cursor during the drag.
   const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
@@ -933,13 +942,15 @@ export function TextRunOverlay({
   // the box reaches the page edge or the text set beside it, never narrower
   // than the run already is.
   const pageCap = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
-  const growCap = Math.min(
-    pageCap,
-    Math.max(
-      growEdgeRoomPx(growEdge, run, transform, scale, left),
-      originalBoundsWidthRef.current * scale,
-    ),
-  );
+  const growCap = run.wrapWidthPt
+    ? Math.min(pageCap, run.wrapWidthPt * scale)
+    : Math.min(
+        pageCap,
+        Math.max(
+          growEdgeRoomPx(growEdge, run, transform, scale, left),
+          originalBoundsWidthRef.current * scale,
+        ),
+      );
   // Wrapping cannot break inside a word, so a box narrower than the longest one
   // hides its tail however the lines are broken - 707px of a held-down key
   // measured invisible, with the caret out there past the box edge.
@@ -1120,6 +1131,8 @@ export function TextRunOverlay({
 
   function commitTypedText(el: HTMLDivElement, raw: string): void {
     const text = raw.replace(/\u00A0/g, " ");
+    const shortened = text.length < committedTextRef.current.length;
+    committedTextRef.current = text;
     onEdit(text);
     priceTypedLetters(text);
     // Re-fit the token the user just typed into. Its painted width is the
@@ -1127,7 +1140,31 @@ export function TextRunOverlay({
     // new text out at the browser's own advances and the caret drifts off
     // the glyphs on the page, a pixel or so per keystroke.
     if (isLinePainted(el)) refitEditedTokens(el, livePaintOpts());
+    if (shortened && pullUpShortenedText(el, text)) return;
     if (!wrapTypedText(el, text)) fitTypedText(el);
+  }
+
+  function pullUpTarget(): { widthPx: number; keepClearBelow: boolean } | null {
+    if (!onWrap) return null;
+    if (wantWrap) return { widthPx: wrapWidth, keepClearBelow: false };
+    if (growWraps && run.wrapWidthPt)
+      return { widthPx: growWrapWidth, keepClearBelow: true };
+    return null;
+  }
+
+  function pullUpShortenedText(el: HTMLDivElement, text: string): boolean {
+    const target = pullUpTarget();
+    if (!target || !onWrap) return false;
+    const caret = plainCaretOffset(el);
+    const wrapped = onWrap(target.widthPx / scale, target.keepClearBelow, true);
+    if (typeof wrapped !== "string" || wrapped === text) return false;
+    committedTextRef.current = wrapped;
+    unwrappedLineRef.current = null;
+    paintMeasured(el, wrapped);
+    if (caret !== null)
+      restoreCaretOffset(el, offsetAcrossRewrap(text, caret, wrapped));
+    setFitWidthPx(null);
+    return true;
   }
 
   // Widen the box to keep the caret in it when the line it is typing on did
@@ -1378,12 +1415,14 @@ export function TextRunOverlay({
             : undefined
       }
       onKeyDown={(e) => {
+        applyPendingRunEdit();
         // A caret parked on the container (a click past the text lands there)
         // makes Firefox insert the keystroke as a sibling of the line blocks,
         // which reads back as a line the user never typed. Seat it in the
         // block it sits beside before the input applies.
         const sel = window.getSelection();
         if (sel) normalizeContainerCaret(e.currentTarget, sel);
+        moveToLineEdge(e);
       }}
       onPaste={(e) => {
         // Paste as PLAIN TEXT.
@@ -1410,6 +1449,13 @@ export function TextRunOverlay({
           onSelect(true);
           return;
         }
+        if (run.placeholder) {
+          e.preventDefault();
+          e.currentTarget.focus({ preventScroll: true });
+          selectAllText(e.currentTarget);
+          onSelect(false);
+          return;
+        }
         const caret = caretBesideLines(e.currentTarget, e.clientX, e.clientY);
         if (caret) e.preventDefault();
         pointerFocusRef.current = true;
@@ -1428,6 +1474,7 @@ export function TextRunOverlay({
         const el = e.currentTarget;
         // Remember the text at focus so blur can tell if the user edited it.
         focusTextRef.current = readOverlayText(el);
+        committedTextRef.current = focusTextRef.current;
         setGrowBlocked(false);
         setFitWidthPx(null);
         unwrappedLineRef.current = null;
@@ -1445,7 +1492,8 @@ export function TextRunOverlay({
           sel &&
           !(sel.rangeCount > 0 && el.contains(sel.anchorNode))
         ) {
-          caretToEnd(el, sel);
+          if (run.placeholder) selectAllText(el);
+          else caretToEnd(el, sel);
         }
       }}
       onBlur={(e) => {
@@ -1474,9 +1522,12 @@ export function TextRunOverlay({
         const domText = readOverlayText(el);
         if (domText === focusTextRef.current) return; // not edited
         const widest = measureMaxLineWidth(domText, font);
+        const shortened = domText.length < focusTextRef.current.length;
         if (!wantWrap) {
           if (widest > growOverflowWidth + 1)
             onWrap(growWrapWidth / scale, true);
+          else if (shortened && run.wrapWidthPt)
+            onWrap(growWrapWidth / scale, true, true);
           return;
         }
         // Reflow to the box the user locked, NOT to `width` - with an exact
@@ -1490,12 +1541,14 @@ export function TextRunOverlay({
         // onto a line of its own, on lines the user never touched. The locked
         // width is by definition one the text fitted in.
         const target = wrapLockWidth;
-        // Only when something actually overflows. Reflowing a paragraph
-        // unconditionally re-breaks lines the user never touched: the reflow
-        // rebuilds every line, so a two-character edit that still fits could
-        // still move words between lines the moment the box lost focus.
-        if (widest <= target + 1) return;
-        onWrap(target / scale);
+        // Only when something actually overflows, or an edit shortened the
+        // text so a line's first word may fit on the line above. Reflowing a
+        // paragraph unconditionally re-breaks lines the user never touched:
+        // the reflow rebuilds every line, so a two-character edit that still
+        // fits could still move words between lines the moment the box lost
+        // focus.
+        if (widest > target + 1) onWrap(target / scale);
+        else if (shortened) onWrap(target / scale, false, true);
       }}
       onCompositionStart={() => {
         composingRef.current = true;
@@ -1516,6 +1569,9 @@ export function TextRunOverlay({
         // Always read hard breaks only - never synthesise newlines from browser
         // soft-wraps.
         commitTypedText(el, readOverlayText(el));
+        requestAnimationFrame(() => {
+          if (document.activeElement === el) keepCaretInView(el);
+        });
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={leaveHover}

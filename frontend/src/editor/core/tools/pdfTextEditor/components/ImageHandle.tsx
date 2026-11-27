@@ -92,6 +92,7 @@ interface ImageHandleProps {
   fixed?: boolean;
   /** `extend` (a Shift press) adds or removes the image from the selection. */
   onSelect: (extend: boolean) => void;
+  passesClicks?: boolean;
   onTransformCommit: (next: PageRect) => void;
   /** Why the image needs the user's attention, if it does. */
   attention?: ImageAttention | null;
@@ -120,6 +121,7 @@ export function ImageHandle({
   selected,
   fixed = false,
   onSelect,
+  passesClicks = false,
   onTransformCommit,
   attention = null,
   readPixels,
@@ -337,6 +339,7 @@ export function ImageHandle({
       }}
       lockAspectRatio={keepRatio}
       onResizeStart={(e) => {
+        shiftDeselectRef.current = false;
         setKeepRatio(e.shiftKey);
         if (locked) return;
         startLift();
@@ -387,7 +390,7 @@ export function ImageHandle({
           selected || dragging ? "rgba(44,123,229,0.08)" : "transparent",
         cursor: locked ? "default" : fixed ? "pointer" : "move",
         // No explicit zIndex - text overlays paint on top via DOM order.
-        pointerEvents: "auto",
+        pointerEvents: passesClicks ? "none" : "auto",
       }}
       onPointerDown={(e: React.PointerEvent) => {
         // Locked images are inert - the press belongs to the stage.

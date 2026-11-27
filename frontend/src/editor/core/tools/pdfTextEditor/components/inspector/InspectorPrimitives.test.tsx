@@ -1,7 +1,11 @@
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { Field } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import { describe, expect, it, vi } from "vitest";
+import {
+  Field,
+  PointsInput,
+  lengthUnitFor,
+} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 
 const HINT = "Screen readers switch voice to this language.";
 
@@ -26,5 +30,36 @@ describe("Field hint", () => {
     const icon = renderField();
     fireEvent.focus(icon);
     expect(await screen.findByRole("tooltip")).toHaveTextContent(HINT);
+  });
+});
+
+describe("lengths", () => {
+  it("uses inches where letter paper is the norm and mm elsewhere", () => {
+    expect(lengthUnitFor(["en-US"])).toBe("in");
+    expect(lengthUnitFor(["en-CA"])).toBe("in");
+    expect(lengthUnitFor(["en-GB"])).toBe("mm");
+    expect(lengthUnitFor(["de"])).toBe("mm");
+    expect(lengthUnitFor(["en-Latn-US"])).toBe("in");
+    expect(lengthUnitFor(["zh-Hant"])).toBe("mm");
+  });
+
+  it("shows points as mm and commits a typed mm value as points", () => {
+    const onCommit = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <PointsInput
+          value={72}
+          unit="mm"
+          label="X"
+          prefix="X"
+          onCommit={onCommit}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByLabelText("X") as HTMLInputElement;
+    expect(input.value).toBe("25.4");
+    expect(screen.getByText("mm")).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "50.8" } });
+    expect(onCommit).toHaveBeenCalledWith(expect.closeTo(144, 3));
   });
 });

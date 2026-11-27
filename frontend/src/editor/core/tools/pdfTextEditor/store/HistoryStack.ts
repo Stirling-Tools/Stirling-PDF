@@ -34,6 +34,7 @@ export class HistoryStack {
   private readonly limit: number;
   /** Coalesce key of the last executed command, or null if not coalescable. */
   private lastCoalesceKey: string | null = null;
+  private stepsAdded = 0;
   /** Timestamp (ms) of the last execute(), for the coalesce time window. */
   private lastExecuteAt = 0;
 
@@ -74,7 +75,8 @@ export class HistoryStack {
     const top = this.undoStack[this.undoStack.length - 1];
     // The command a merge would join. Unwrap a group to its most recent
     // child so the hook compares against a real edit, not the wrapper.
-    const previous = (top instanceof CompositeCommand ? top.last : top) ?? null;
+    const previous =
+      (top instanceof CompositeCommand ? top.lastLead : top) ?? null;
     // Group with the previous command when it shares a coalesce key and ran
     // within the time window.
     const inWindow =
@@ -91,6 +93,7 @@ export class HistoryStack {
       }
     } else {
       this.undoStack.push(cmd);
+      this.stepsAdded++;
       if (this.undoStack.length > this.limit) {
         this.undoStack.shift();
       }
@@ -101,9 +104,48 @@ export class HistoryStack {
     this.redoStack.length = 0;
   }
 
+  get mark(): number {
+    return this.stepsAdded;
+  }
+
+  mergeSince(mark: number): void {
+    const started = Math.min(this.stepsAdded - mark, this.undoStack.length);
+    if (started <= 0) return;
+    const steps = this.undoStack.splice(this.undoStack.length - started);
+    if (steps.length === 0) return;
+    this.undoStack.push(
+      steps.length === 1 ? steps[0] : new CompositeCommand(steps),
+    );
+    this.stepsAdded -= steps.length - 1;
+    this.lastCoalesceKey = null;
+  }
+
+  get lastKey(): string | null {
+    return this.lastCoalesceKey;
+  }
+
+  attachToLast(cmd: Command, doc: EditorDocument): void {
+    try {
+      cmd.apply(doc);
+    } catch (err) {
+      throw new HistoryStepError("apply", err);
+    }
+    const top = this.undoStack[this.undoStack.length - 1];
+    if (!top) {
+      this.undoStack.push(cmd);
+      this.stepsAdded++;
+    } else if (top instanceof CompositeCommand) top.push(cmd);
+    else
+      this.undoStack[this.undoStack.length - 1] = new CompositeCommand([
+        top,
+        cmd,
+      ]);
+  }
+
   /** Push a command the caller already applied, as its own undo step. */
   record(cmd: Command): void {
     this.undoStack.push(cmd);
+    this.stepsAdded++;
     if (this.undoStack.length > this.limit) this.undoStack.shift();
     this.lastCoalesceKey = null;
     this.redoStack.length = 0;

@@ -18,6 +18,7 @@ import {
 import { embeddedFontProgram } from "@editor/tools/pdfTextEditor/util/embeddedFace";
 import { compareFontPrograms } from "@editor/tools/pdfTextEditor/util/fontProgramMatch";
 import { readFontName } from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
+import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
 import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 // Which font draws the characters an embedded subset lacks: the same typeface when installed or served, else the closest available one.
@@ -222,4 +223,34 @@ export async function resolveOriginalFonts(
   // A call made while this one was reading skipped the fonts it was looking up.
   if (stillOpen() && loadedExternalFonts() !== fonts)
     await resolveOriginalFonts(m, ids, stillOpen);
+}
+
+const SYSTEM_UI_FACE =
+  /^\.?(sfns|sfpro|sfui|sf-pro|sf-ui)|-apple-system|san ?francisco/i;
+const SYSTEM_UI_LOOKALIKE = "Helvetica Neue";
+
+function isSystemUiFace(family: string): boolean {
+  return SYSTEM_UI_FACE.test(family);
+}
+
+export async function lookalikeFamilyFor(
+  fontId: string,
+): Promise<string | null> {
+  const family = familyOf(fontId);
+  if (!family || !isSystemUiFace(family)) return null;
+  const fonts = loadedExternalFonts();
+  const bold = /bold|black|heavy|semibold/i.test(family);
+  const italic = /italic|oblique/i.test(family);
+  const request = [
+    SYSTEM_UI_LOOKALIKE,
+    bold ? "Bold" : "",
+    italic ? "Italic" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  if (fonts && pickLocalFontFace(fonts, request)) {
+    const bytes = await loadExternalFontBytes(request);
+    if (bytes) return request;
+  }
+  return helveticaVariantFor(fontId);
 }

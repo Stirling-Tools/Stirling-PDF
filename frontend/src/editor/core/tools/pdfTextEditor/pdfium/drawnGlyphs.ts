@@ -11,6 +11,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type { CharOriginModule } from "@editor/tools/pdfTextEditor/pdfium/objectTexts";
 import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
+import { slantOf } from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import {
   SCRATCH,
   scratchPtr,
@@ -92,6 +93,15 @@ function glyphsOf(chars: readonly PlacedChar[]): DrawnGlyph[] {
 }
 
 /** The glyphs of every text object on a text page; null when this build cannot place a character. */
+function uprightSlant(m: WrappedPdfiumModule, ptr: number): number {
+  const matrix = scratchPtr(m, SCRATCH.emitMatrix, 24);
+  if (!m.FPDFPageObj_GetMatrix(ptr, matrix)) return 0;
+  const [a, b, c, d] = [0, 1, 2, 3].map((k) =>
+    m.pdfium.getValue(matrix + k * 4, "float"),
+  );
+  return Math.abs(b) > 1e-3 ? 0 : slantOf({ a, b, c, d });
+}
+
 export function readPageGlyphs(
   m: WrappedPdfiumModule,
   textPagePtr: number,
@@ -105,6 +115,7 @@ export function readPageGlyphs(
   const xPtr = scratchPtr(m, SCRATCH.readerCharX, 8);
   const yPtr = scratchPtr(m, SCRATCH.readerCharY, 8);
   const chars = new Map<number, PlacedChar[]>();
+  const slantByObject = new Map<number, number>();
   const count = m.FPDFText_CountChars(textPagePtr);
   for (let i = 0; i < count; i++) {
     const ptr = m.FPDFText_GetTextObject(textPagePtr, i);
@@ -116,12 +127,23 @@ export function readPageGlyphs(
     const boxed = looseBox(textPagePtr, i, rect);
     const list = chars.get(ptr) ?? [];
     if (list.length === 0) chars.set(ptr, list);
+    let slant = slantByObject.get(ptr);
+    if (slant === undefined) {
+      slant = uprightSlant(m, ptr);
+      slantByObject.set(ptr, slant);
+    }
+    const top = boxed ? m.pdfium.getValue(rect + 4, "float") : y;
+    const bottom = boxed ? m.pdfium.getValue(rect + 12, "float") : y;
     list.push({
       char: String.fromCodePoint(codePoint),
       x,
       y,
-      boxLeft: boxed ? m.pdfium.getValue(rect, "float") : x,
-      boxRight: boxed ? m.pdfium.getValue(rect + 8, "float") : x,
+      boxLeft: boxed
+        ? m.pdfium.getValue(rect, "float") - slant * (bottom - y)
+        : x,
+      boxRight: boxed
+        ? m.pdfium.getValue(rect + 8, "float") - slant * (top - y)
+        : x,
     });
   }
   const byObject = new Map<number, DrawnGlyph[]>();

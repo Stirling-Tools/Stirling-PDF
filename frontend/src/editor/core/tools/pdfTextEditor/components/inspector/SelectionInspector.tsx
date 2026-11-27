@@ -5,11 +5,15 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import {
+  lengthUnitFor,
   PointsInput,
   Section,
   SectionLabel,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import type { SelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
+import {
+  displayedTopLeft,
+  type SelectionGeometry,
+} from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
@@ -215,7 +219,7 @@ function GeometrySection({
   );
 }
 
-/** X, Y, width and height of one selected object, in PDF points. */
+/** X and Y of the object's displayed top-left corner, width and height, in the reader's length unit. */
 export function GeometryFields({
   single,
   isImage,
@@ -224,19 +228,23 @@ export function GeometryFields({
   isImage: boolean;
 }) {
   const { t } = useTranslation();
-  const { bounds, setX, setY, setWidth, setHeight } = single;
+  const { bounds, display, moveDisplayed, setWidth, setHeight } = single;
+  const unit = lengthUnitFor();
+  const { left, top } = displayedTopLeft(display, bounds);
   return (
     <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
       <PointsInput
-        value={bounds.x}
-        onCommit={setX}
+        unit={unit}
+        value={left}
+        onCommit={(next) => moveDisplayed({ left: next })}
         label={t("pdfTextEditor.inspector.x", "X")}
         prefix={t("pdfTextEditor.inspector.x", "X")}
         testId="pdf-editor-pos-x"
       />
       <PointsInput
-        value={bounds.y}
-        onCommit={setY}
+        unit={unit}
+        value={top}
+        onCommit={(next) => moveDisplayed({ top: next })}
         label={t("pdfTextEditor.inspector.y", "Y")}
         prefix={t("pdfTextEditor.inspector.y", "Y")}
         testId="pdf-editor-pos-y"
@@ -252,6 +260,7 @@ export function GeometryFields({
       >
         <div>
           <PointsInput
+            unit={unit}
             value={bounds.width}
             onCommit={setWidth ?? (() => undefined)}
             min={1}
@@ -273,6 +282,7 @@ export function GeometryFields({
       >
         <div>
           <PointsInput
+            unit={unit}
             value={bounds.height}
             onCommit={setHeight ?? (() => undefined)}
             min={1}

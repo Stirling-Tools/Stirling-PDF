@@ -2010,6 +2010,10 @@ const EmbedPdfViewerContent = ({
     contentPanelWidthRem +
     (isThumbnailSidebarVisible ? THUMBNAIL_SIDEBAR_WIDTH_REM : 0);
   const rightInsetRem = pageTool?.rightInsetRem ?? 0;
+  const toolPageLayout =
+    pageTool && pageTool.fileId === currentFileStableId
+      ? (pageTool.pageLayout ?? null)
+      : null;
   const pagesPastInset = usePagesPastInset(
     pdfContainerRef,
     rightInsetRem,
@@ -2153,6 +2157,7 @@ const EmbedPdfViewerContent = ({
                   ? pageTool.PageLayer
                   : null
               }
+              pageLayout={toolPageLayout}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
               annotationApiRef={annotationApiRef}
@@ -2178,7 +2183,9 @@ const EmbedPdfViewerContent = ({
             {/* Floating save bar for form-filled PDFs (like Chrome/Firefox PDF viewers) */}
             <FormSaveBar
               file={currentFile ?? null}
-              isFormFillToolActive={isFormFillToolActive}
+              hiddenByTool={
+                isFormFillToolActive || selectedTool === "pdfTextEditor"
+              }
               hidden={!!pageTool?.hidesFormNotice}
               onApply={handleFormApply}
               policyEnforcing={policyEnforcing}
@@ -2248,6 +2255,7 @@ const EmbedPdfViewerContent = ({
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
         activeFileId={activeFileId}
+        pageLayout={toolPageLayout}
         rightOffsetRem={contentPanelWidthRem}
       />
       <BookmarkSidebar

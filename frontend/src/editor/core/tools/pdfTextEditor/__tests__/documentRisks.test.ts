@@ -8,8 +8,13 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 
 function mkDoc(opts: {
   signatures?: number;
+  unsignedFields?: number;
   formType?: number;
   throwOnSig?: boolean;
+  missingSignature?: boolean;
+  throwOnContents?: boolean;
+  byteRangeLength?: number;
+  subFilterLength?: number;
   secHandlerRev?: number;
   throwOnEncrypt?: boolean;
 }): EditorDocument {
@@ -19,8 +24,16 @@ function mkDoc(opts: {
     module: {
       FPDF_GetSignatureCount: () => {
         if (opts.throwOnSig) throw new Error("no API");
-        return opts.signatures ?? 0;
+        return (opts.signatures ?? 0) + (opts.unsignedFields ?? 0);
       },
+      FPDF_GetSignatureObject: (_doc: number, index: number) =>
+        opts.missingSignature ? 0 : index + 1,
+      FPDFSignatureObj_GetContents: (signature: number) => {
+        if (opts.throwOnContents) throw new Error("unreadable contents");
+        return signature <= (opts.signatures ?? 0) ? 512 : 0;
+      },
+      FPDFSignatureObj_GetByteRange: () => opts.byteRangeLength ?? 0,
+      FPDFSignatureObj_GetSubFilter: () => opts.subFilterLength ?? 0,
       FPDF_GetFormType: () => opts.formType ?? 0,
       FPDF_GetSecurityHandlerRevision: () => {
         if (opts.throwOnEncrypt) throw new Error("no API");
@@ -49,6 +62,23 @@ describe("detectSaveRisks", () => {
     expect(describeSaveRisks(r)).toEqual([
       "This document carries 2 digital signatures. Your changes are appended as a new revision, so the signed version stays verifiable, but the document will report as modified since it was signed.",
     ]);
+  });
+
+  it("does not count signature fields nobody has signed", () => {
+    const r = detectSaveRisks(mkDoc({ signatures: 1, unsignedFields: 2 }));
+    expect(r.signatures).toBe(1);
+    expect(detectSaveRisks(mkDoc({ unsignedFields: 1 })).signatures).toBe(0);
+  });
+
+  it.each([
+    { missingSignature: true },
+    { throwOnContents: true },
+    { byteRangeLength: 4 },
+    { subFilterLength: 20 },
+  ])("protects a signature with inconclusive contents: %j", (inspection) => {
+    const risks = detectSaveRisks(mkDoc({ unsignedFields: 1, ...inspection }));
+    expect(risks.signatures).toBe(1);
+    expect(hasSaveRisks(risks)).toBe(true);
   });
 
   it("flags XFA forms (formType 2/3) but not plain AcroForm (1)", () => {
@@ -96,9 +126,9 @@ describe("detectSaveRisks", () => {
     expect(line).toContain("(+3 more)");
   });
 
-  it("clamps negative signature counts and survives a missing API", () => {
-    expect(detectSaveRisks(mkDoc({ signatures: -1 })).signatures).toBe(0);
-    expect(detectSaveRisks(mkDoc({ throwOnSig: true })).signatures).toBe(0);
+  it("treats a signature count it cannot read as signed", () => {
+    expect(detectSaveRisks(mkDoc({ signatures: -1 })).signatures).toBe(1);
+    expect(detectSaveRisks(mkDoc({ throwOnSig: true })).signatures).toBe(1);
   });
 
   it("combines both risks", () => {

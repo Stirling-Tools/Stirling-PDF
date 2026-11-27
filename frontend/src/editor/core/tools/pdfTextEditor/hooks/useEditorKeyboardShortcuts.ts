@@ -3,10 +3,13 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 import {
   isFocusInContentEditable,
   isFocusInFormField,
+  isChangePreviewOpen,
   isModalOpen,
-  visiblePageNumber,
+  visiblePageIndex,
 } from "@editor/tools/pdfTextEditor/util/dom";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import type { TextAlign } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import type { ListKind } from "@editor/tools/pdfTextEditor/util/listText";
 import { SELECTION_BAR_MENU_ATTR } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
 /**
@@ -39,7 +42,20 @@ interface KeyboardShortcutCallbacks {
   onMergeSelection: () => void;
   onToggleBold: () => void;
   onToggleItalic: () => void;
+  onToggleUnderline: () => void;
+  onSetAlign: (align: TextAlign) => void;
+  onToggleList: (kind: ListKind) => void;
 }
+
+const ALIGN_KEYS: Record<string, TextAlign> = {
+  KeyL: "left",
+  KeyE: "center",
+  KeyR: "right",
+};
+const LIST_KEYS: Record<string, ListKind> = {
+  Digit8: "bullet",
+  Digit7: "number",
+};
 
 /** Bind every editor-level keyboard shortcut to `window` for the session. */
 export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
@@ -59,6 +75,9 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onMergeSelection,
     onToggleBold,
     onToggleItalic,
+    onToggleUnderline,
+    onSetAlign,
+    onToggleList,
   } = cbs;
 
   useEffect(() => {
@@ -68,7 +87,23 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       if (!meta) return;
       // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
       const key = e.key.toLowerCase();
+      if (key === "s" && isChangePreviewOpen()) {
+        e.preventDefault();
+        return;
+      }
       if (key !== "s" && isModalOpen()) return;
+      const hasRuns = store.selection.value.runIds.length > 0;
+      const typesCharacter = e.altKey;
+      if (e.shiftKey && hasRuns && !typesCharacter && !isFocusInFormField()) {
+        const align = ALIGN_KEYS[e.code];
+        const list = LIST_KEYS[e.code];
+        if (align || list) {
+          e.preventDefault();
+          if (align) onSetAlign(align);
+          else onToggleList(list);
+          return;
+        }
+      }
       switch (key) {
         case "z":
           // Form fields (Find/Replace/password) keep their NATIVE undo.
@@ -134,6 +169,11 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           if (key === "b") onToggleBold();
           else onToggleItalic();
           return;
+        case "u":
+          if (isFocusInFormField() || !hasRuns || typesCharacter) return;
+          e.preventDefault();
+          onToggleUnderline();
+          return;
         case "m":
           if (store.selection.value.runIds.length < 2) return;
           e.preventDefault();
@@ -190,21 +230,22 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       if (e.key !== "PageDown" && e.key !== "PageUp" && !isHome && !isEnd) {
         return;
       }
-      const { pageCount } = store.getState();
-      if (pageCount === 0) return;
+      const order = store.getState().pages.map((page) => page.pageIndex);
+      if (order.length === 0) return;
       // The viewer mounts only the pages near the viewport, so it does the
       // navigating.
       const session = currentEditorSession();
       if (!session) return;
-      const current = visiblePageNumber();
+      const current = Math.max(0, order.indexOf(visiblePageIndex()));
       let target = current;
-      if (e.key === "PageDown") target = Math.min(pageCount - 1, current + 1);
+      if (e.key === "PageDown")
+        target = Math.min(order.length - 1, current + 1);
       else if (e.key === "PageUp") target = Math.max(0, current - 1);
       else if (isHome) target = 0;
-      else if (isEnd) target = pageCount - 1;
+      else if (isEnd) target = order.length - 1;
       if (target === current) return;
       e.preventDefault();
-      session.revealPage(target);
+      session.revealPage(order[target]);
     }
 
     window.addEventListener("keydown", onMetaKey);
@@ -231,5 +272,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onMergeSelection,
     onToggleBold,
     onToggleItalic,
+    onToggleUnderline,
+    onSetAlign,
+    onToggleList,
   ]);
 }

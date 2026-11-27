@@ -1,4 +1,6 @@
 import i18n from "i18next";
+import { withoutStructParents } from "@editor/tools/pdfTextEditor/pdfdoc/passes/copiedPageTags";
+import { writeDisplayOrder } from "@editor/tools/pdfTextEditor/util/documentChanges";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   AnnotationEditError,
@@ -36,9 +38,22 @@ import {
   assertIncrementalAppend,
   assertSavedPdf,
 } from "@editor/tools/pdfTextEditor/util/savedBytes";
+import { signedSignatureCount } from "@editor/tools/pdfTextEditor/util/documentRisks";
 
 /** Serialize the editor document to a Blob. */
 export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
+  const endSave = doc.beginSave();
+  try {
+    return await serializeDocument(doc);
+  } finally {
+    endSave();
+  }
+}
+
+async function serializeDocument(doc: EditorDocument): Promise<Blob> {
+  const order = [...doc.displayOrder()];
+  const copies = [...doc.copiedPages()];
+  const pagesChanged = doc.pagesChanged();
   const structureEdits = doc.structureEdits();
   const annotationEdits = doc.annotationEdits();
   const documentLanguage = doc.documentLanguageEdit();
@@ -69,6 +84,8 @@ export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
     } catch (err) {
       throw accessibilitySaveFailed(err);
     }
+    for (const index of copies)
+      bytes = await withoutStructParents(bytes, index);
   }
 
   // Throws rather than dropping them: a description the user wrote that the
@@ -113,7 +130,9 @@ export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
   // After the edits: when the content an element described was deleted, the
   // repair removes the ParentTree slot an edit to that element is addressed by,
   // and the edit would then fail the save.
-  const regenerated = doc.regeneratedPages();
+  const regenerated = doc
+    .regeneratedPages()
+    .filter((index) => !copies.includes(index));
   if (regenerated.length > 0) {
     try {
       const repaired = await repairStructure(bytes, {
@@ -125,6 +144,8 @@ export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
       /* the unrepaired tags are what every save wrote before this pass */
     }
   }
+
+  if (pagesChanged) bytes = await writeDisplayOrder(bytes, order);
 
   // Re-checked after the repairs: `PdfiumSave.serialize` validated its own
   // output, but the passes since may have swapped in a different buffer, and
@@ -231,16 +252,12 @@ function pdfBlob(bytes: Uint8Array): Blob {
  * pre-edit bytes and silently revert the first.
  */
 function documentIsPristine(doc: EditorDocument): boolean {
-  if (doc.openedBytes.length === 0) return false;
+  if (doc.openedBytes.length === 0 || doc.pagesChanged()) return false;
   return doc
     .loadedPages()
     .every((p) => !p.regenerated && !p.needsGenerateContent);
 }
 
 function documentIsSigned(doc: EditorDocument): boolean {
-  try {
-    return doc.module.FPDF_GetSignatureCount(doc.docPtr) > 0;
-  } catch {
-    return false;
-  }
+  return signedSignatureCount(doc) > 0;
 }

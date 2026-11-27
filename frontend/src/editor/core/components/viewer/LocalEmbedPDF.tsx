@@ -150,7 +150,14 @@ import { pdfiumWasmUrl } from "@editor/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@editor/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@editor/tools/formFill/FormCreationInteractionLock";
 import { ViewerInteractionLock } from "@editor/components/viewer/ViewerInteractionLock";
-import type { ViewerPageLayerProps } from "@editor/contexts/viewer/ViewerPageTool";
+import type {
+  ViewerPageLayerProps,
+  ViewerPageLayout,
+} from "@editor/contexts/viewer/ViewerPageTool";
+import {
+  PageLayoutBridge,
+  useToolOwnsPages,
+} from "@editor/components/viewer/PageLayoutBridge";
 import { FormFieldCreationOverlay } from "@editor/tools/formFill/FormFieldCreationOverlay";
 import { FormFieldEditOverlay } from "@editor/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@editor/tools/formFill/ButtonAppearanceOverlay";
@@ -173,6 +180,7 @@ interface LocalEmbedPDFProps {
   formEditingActive?: boolean;
   /** A tool's layer that replaces each page's own, or null for the viewer's layers. */
   pageLayer?: ComponentType<ViewerPageLayerProps> | null;
+  pageLayout?: ViewerPageLayout | null;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
@@ -452,6 +460,7 @@ interface PageLayerOptions {
   formsInBitmap: boolean;
   formEditingActive: boolean;
   pageLayer: ComponentType<ViewerPageLayerProps> | null;
+  toolOwnsPages: boolean;
   enableAnnotations: boolean;
   annotationsReadOnly: boolean;
   canCopy: boolean;
@@ -705,6 +714,7 @@ function PageLayers({
   formsInBitmap,
   formEditingActive,
   pageLayer: PageLayer,
+  toolOwnsPages,
   enableAnnotations,
   annotationsReadOnly,
   canCopy,
@@ -787,23 +797,28 @@ function PageLayers({
     </>
   );
   // The preview and tiles keep their place in the tree and stay mounted, only
-  // hidden, under a page tool: remounting them blanks the page while they
-  // reload, on the way into the tool and again on the way out.
+  // hidden, under a page tool showing the file's own pages: remounting them
+  // blanks the page while they reload, on the way into the tool and again on
+  // the way out.
   return (
     <>
-      <PagePreview
-        documentId={documentId}
-        pageIndex={pageIndex}
-        renderMode={pdfRenderMode}
-        hidden={toolCovers}
-      />
-      <PageTiles
-        documentId={documentId}
-        pageIndex={pageIndex}
-        renderMode={pdfRenderMode}
-        hidden={toolCovers}
-      />
-      {!toolCovers && overlays}
+      {!toolOwnsPages && (
+        <>
+          <PagePreview
+            documentId={documentId}
+            pageIndex={pageIndex}
+            renderMode={pdfRenderMode}
+            hidden={toolCovers}
+          />
+          <PageTiles
+            documentId={documentId}
+            pageIndex={pageIndex}
+            renderMode={pdfRenderMode}
+            hidden={toolCovers}
+          />
+        </>
+      )}
+      {!toolCovers && !toolOwnsPages && overlays}
       {PageLayer && (
         <PageLayer
           pageIndex={pageIndex}
@@ -1044,6 +1059,7 @@ export function LocalEmbedPDF({
   pdfAccessPending = false,
   formEditingActive = false,
   pageLayer = null,
+  pageLayout = null,
   isManualRedactionMode = false,
   showBakedAnnotations = true,
   onSignatureAdded,
@@ -1078,6 +1094,7 @@ export function LocalEmbedPDF({
   restoreRequest = null,
   onRestoreEvent,
 }: LocalEmbedPDFProps) {
+  const toolOwnsPages = useToolOwnsPages(pageLayer ? pageLayout : null);
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const {
@@ -1791,6 +1808,7 @@ export function LocalEmbedPDF({
     formsInBitmap,
     formEditingActive,
     pageLayer,
+    toolOwnsPages,
     enableAnnotations: true,
     annotationsReadOnly,
     canCopy: pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents),
@@ -1862,7 +1880,7 @@ export function LocalEmbedPDF({
           <PanAPIBridge />
           <SpreadAPIBridge />
           <SearchAPIBridge />
-          <ThumbnailAPIBridge />
+          <ThumbnailAPIBridge layout={pageLayer ? pageLayout : null} />
           <RotateAPIBridge />
           <EditingBridges
             enableAnnotations={enableAnnotations}
@@ -1933,6 +1951,10 @@ export function LocalEmbedPDF({
                 <AnnotationInteractionLock
                   documentId={documentId}
                   readOnly={annotationsReadOnly}
+                />
+                <PageLayoutBridge
+                  documentId={documentId}
+                  layout={pageLayer ? pageLayout : null}
                 />
                 <DocumentViewport
                   documentId={documentId}

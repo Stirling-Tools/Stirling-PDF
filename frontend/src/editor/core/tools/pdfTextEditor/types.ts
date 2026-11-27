@@ -76,6 +76,7 @@ export interface TextRunSnapshot {
   documentFontId?: string;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
+  substitutedGlyphs?: boolean;
   /** Invisible text with nothing drawn behind it: hidden text, not an OCR layer over a scan. */
   hiddenText?: boolean;
   /** Outline colour, when the run's render mode strokes its glyphs. */
@@ -100,6 +101,10 @@ export interface TextRunSnapshot {
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
+  placeholder?: boolean;
+  align?: "left" | "center" | "right";
+  underline?: boolean;
+  listKind?: "bullet" | "number";
   /** The text cannot be changed, though the run can still be selected, moved and deleted: the reader could not tell the order its line was drawn in. */
   textReadOnly?: boolean;
   /** Box width the user set by resize, in PDF points; absent = follow the ink. */

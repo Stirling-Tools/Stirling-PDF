@@ -44,6 +44,7 @@ import {
   type FormNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/formLocalResources";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { unnamedFontDrawOrder } from "@editor/tools/pdfTextEditor/pdfdoc/descriptorFontNames";
 import {
   readConformanceClaim,
   type FileConformanceClaim,
@@ -85,6 +86,11 @@ export class EditorDocument {
   /** Empty when the file was too large to keep a second copy of. */
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
+  private order: number[];
+  private readonly openedOrder: string;
+  private readonly copies = new Set<number>();
+  private readonly resizedPages = new Set<number>();
+  private saves = 0;
   private readonly structureCache = new Map<number, PageStructure>();
   /** Held here rather than per page: a field's widgets can sit on several pages. */
   private readonly fieldTooltips: FieldTooltips = new Map();
@@ -117,6 +123,7 @@ export class EditorDocument {
   private readonly fileStructure: FileStructure | null;
   /** See formLiftHazards; null when the file was not kept, so they are unknown. */
   private readonly formHazards: Map<number, FormNode[]> | null;
+  private readonly unnamedFontOrder: Map<number, Array<string | null>>;
   private marked: boolean;
   /** The PDF/UA claim as the file has it; null when the file was not read. */
   private readonly fileClaim: FileConformanceClaim | null;
@@ -130,6 +137,7 @@ export class EditorDocument {
   // being visible everywhere else in the app. Created lazily and left null when
   // the build lacks the entry points.
   private formEnvPtr: number | null = null;
+  private formInfoPtr: number | null = null;
   private formEnvTried = false;
   private readonly formLoadedPages = new Set<number>();
   private scratch: EditorDocument | null = null;
@@ -155,11 +163,13 @@ export class EditorDocument {
     openedBytes: Uint8Array,
     fileStructure: FileStructure | null,
     formHazards: Map<number, FormNode[]> | null,
+    unnamedFontOrder: Map<number, Array<string | null>>,
     fileClaim: FileConformanceClaim | null,
   ) {
     this.module = module;
     this.fileClaim = fileClaim;
     this.formHazards = formHazards;
+    this.unnamedFontOrder = unnamedFontOrder;
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
@@ -171,6 +181,11 @@ export class EditorDocument {
     this.pageCache = new Map();
     this.ownedFonts = new Map();
     this._disposed = false;
+    this.order = Array.from(
+      { length: module.FPDF_GetPageCount(docPtr) },
+      (_, i) => i,
+    );
+    this.openedOrder = this.order.join();
   }
 
   static async open(
@@ -190,6 +205,9 @@ export class EditorDocument {
     const formHazards = raw
       ? await formLiftHazards(raw).catch(() => null)
       : null;
+    const unnamedFontOrder = raw
+      ? await unnamedFontDrawOrder(raw).catch(() => null)
+      : null;
     const fileClaim = raw
       ? await readConformanceClaim(raw).catch(() => null)
       : null;
@@ -199,8 +217,15 @@ export class EditorDocument {
       keep,
       fileStructure,
       formHazards,
+      unnamedFontOrder ?? new Map(),
       fileClaim,
     );
+  }
+
+  claimUnnamedFontOrder(pageIndex: number): Array<string | null> | null {
+    const order = this.unnamedFontOrder.get(pageIndex) ?? null;
+    this.unnamedFontOrder.delete(pageIndex);
+    return order;
   }
 
   /**
@@ -224,6 +249,94 @@ export class EditorDocument {
     return this.module.FPDF_GetPageCount(this.docPtr);
   }
 
+  get saving(): boolean {
+    return this.saves > 0;
+  }
+
+  beginSave(): () => void {
+    this.saves++;
+    let ended = false;
+    return () => {
+      if (ended) return;
+      ended = true;
+      this.saves--;
+    };
+  }
+
+  displayOrder(): readonly number[] {
+    return this.order;
+  }
+
+  setDisplayOrder(order: readonly number[]): void {
+    this.order = [...order];
+  }
+
+  nextPage(index: number): number | null {
+    const at = this.order.indexOf(index);
+    return at >= 0 && at + 1 < this.order.length ? this.order[at + 1] : null;
+  }
+
+  positionOf(index: number): number {
+    return this.order.indexOf(index);
+  }
+
+  appendBlankPage(width: number, height: number): number {
+    const index = this.pageCount;
+    const pagePtr = this.module.FPDFPage_New(this.docPtr, index, width, height);
+    if (!pagePtr) throw new Error("PDFium could not add a page");
+    this.module.FPDF_ClosePage(pagePtr);
+    return index;
+  }
+
+  appendCopyFrom(sourceDoc: number, sourceIndex: number): number {
+    const index = this.pageCount;
+    const indices = this.module.pdfium.wasmExports.malloc(4);
+    try {
+      this.module.pdfium.setValue(indices, sourceIndex, "i32");
+      if (
+        !this.module.FPDF_ImportPagesByIndex(
+          this.docPtr,
+          sourceDoc,
+          indices,
+          1,
+          index,
+        )
+      )
+        throw new Error("PDFium could not copy the page");
+    } finally {
+      this.module.pdfium.wasmExports.free(indices);
+    }
+    this.copies.add(index);
+    return index;
+  }
+
+  copiedPages(): ReadonlySet<number> {
+    return this.copies;
+  }
+
+  noteResized(index: number): void {
+    this.resizedPages.add(index);
+    const page = this.pageCache.get(index);
+    if (!page) return;
+    page.width = this.module.FPDF_GetPageWidthF(page.pagePtr);
+    page.height = this.module.FPDF_GetPageHeightF(page.pagePtr);
+    page.display = DisplayTransform.fromPage(
+      this.module,
+      page.pagePtr,
+      page.width,
+      page.height,
+    );
+    page.bumpRevision();
+  }
+
+  pagesChanged(): boolean {
+    return (
+      this.order.join() !== this.openedOrder ||
+      this.pageCount !== this.order.length ||
+      this.resizedPages.size > 0
+    );
+  }
+
   get disposed(): boolean {
     return this._disposed;
   }
@@ -241,13 +354,29 @@ export class EditorDocument {
       return null;
     }
     try {
-      const info = m.PDFiumExt_OpenFormFillInfo();
-      const env = m.PDFiumExt_InitFormFillEnvironment(this.docPtr, info);
+      this.formInfoPtr = m.PDFiumExt_OpenFormFillInfo() || null;
+      const env = this.formInfoPtr
+        ? m.PDFiumExt_InitFormFillEnvironment(this.docPtr, this.formInfoPtr)
+        : 0;
       this.formEnvPtr = env || null;
     } catch {
       this.formEnvPtr = null;
     }
+    if (!this.formEnvPtr) this.closeFormInfo();
     return this.formEnvPtr;
+  }
+
+  private closeFormInfo(): void {
+    if (!this.formInfoPtr) return;
+    const m = this.module as unknown as {
+      PDFiumExt_CloseFormFillInfo?: (info: number) => void;
+    };
+    try {
+      m.PDFiumExt_CloseFormFillInfo?.(this.formInfoPtr);
+    } catch {
+      /* best-effort */
+    }
+    this.formInfoPtr = null;
   }
 
   /** Tell the form layer about a page once, before its first form draw. */
@@ -456,8 +585,9 @@ export class EditorDocument {
         applyCut(blocks, pageIndex, edit, owner, structure);
       }
     }
+    const shown = new Set(this.order);
     return blocks.flatMap(({ type, pageIndex, mcids, partOf }) =>
-      isHeadingType(type)
+      isHeadingType(type) && (pageIndex === null || shown.has(pageIndex))
         ? [{ type, pageIndex, mcids, ...(partOf && { partOf }) }]
         : [],
     );
@@ -1007,7 +1137,10 @@ export class EditorDocument {
 
   /** Iterate loaded pages without forcing more page loads. */
   loadedPages(): Page[] {
-    return Array.from(this.pageCache.values());
+    const shown = new Set(this.order);
+    return Array.from(this.pageCache.values()).filter((page) =>
+      shown.has(page.index),
+    );
   }
 
   scratchPageFor(page: Page): { doc: EditorDocument; page: Page } {
@@ -1016,6 +1149,7 @@ export class EditorDocument {
       this.module.FPDF_CreateNewDocument(),
       EMPTY,
       null,
+      new Map(),
       new Map(),
       null,
     );
@@ -1074,6 +1208,7 @@ export class EditorDocument {
       }
       this.formEnvPtr = null;
     }
+    this.closeFormInfo();
     this.formLoadedPages.clear();
     for (const page of this.pageCache.values()) {
       try {

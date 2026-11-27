@@ -109,7 +109,7 @@ export async function tagAllPages(store: EditorStore): Promise<void> {
       const { display, runs, images } = doc.page(pageIndex);
       return { pageIndex, display, runs, images };
     });
-    const furniture = recogniseFurniture(read, doc.pageCount);
+    const furniture = recogniseFurniture(read, doc.displayOrder().length);
     // A page that has tags already gets paragraphs only: guessed levels could not
     // follow the headings it has, nor where its tree puts new elements. Pages with
     // none, such as one merged into a tagged file, are levelled among themselves.

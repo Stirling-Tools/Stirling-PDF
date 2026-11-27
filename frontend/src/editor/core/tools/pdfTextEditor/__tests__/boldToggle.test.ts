@@ -99,41 +99,43 @@ test("Bold off moves a heading to the document's regular face, keeps its text, a
   expect(fonts(saved, heading)).toEqual(["LMRoman12-Regular"]);
 });
 
-test("a letter the regular subset lacks stays in the bold face it was drawn in, and the user is told", async () => {
+test("Bold off draws the whole word in one lookalike when the regular subset lacks a letter", async () => {
   const store = await fixture("mushroom-life.pdf");
   select(store, "Introduction");
 
-  expect(await toggleBold(store)).toBe("closestMatch");
+  expect(await toggleBold(store)).toBeNull();
 
-  expect(pieces(store, "Introduction")).toEqual([
-    "I@LMRoman12-Bold",
-    "ntroduction@LMRoman12-Regular",
-  ]);
+  expect(pieces(store, "Introduction")).toEqual(["Introduction@Times-Roman"]);
 });
 
-test("Bold on draws the letters the bold subset lacks in the closest match and says so", async () => {
+test("Bold on draws the whole line in one lookalike when the bold subset lacks letters, and undoes", async () => {
   const store = await fixture("coloured-word-sample.pdf");
   const line = "Total due today  by card";
   expect(fonts(store, line)).toEqual(["LiberationSans", "LiberationSans-Bold"]);
   select(store, line);
 
-  expect(await toggleBold(store)).toBe("closestMatch");
+  expect(await toggleBold(store)).toBeNull();
 
-  const bold = () =>
-    pieces(store, line)
-      .filter((p) => p.endsWith("@LiberationSans-Bold"))
-      .map((p) => p.split("@")[0])
-      .join("");
-  expect(bold()).toMatch(/otal.*d.*e.*today.*y.*ca.*d/);
-  expect(bold()).not.toMatch(/[Tubr]/);
+  expect(fonts(store, line)).toEqual(["Helvetica-Bold"]);
   expect(drawnText(store, line)).toBe("Totalduetodaybycard");
-  expect(
-    store.document!.page(0).runs.find((r) => r.text === line)?.fontId,
-  ).toMatch(/^pdf:\d+:/);
 
   store.undo();
-  expect(bold()).toBe("today ");
+  expect(fonts(store, line)).toEqual(["LiberationSans", "LiberationSans-Bold"]);
   store.redo();
-  expect(bold()).not.toMatch(/[Tubr]/);
+  expect(fonts(store, line)).toEqual(["Helvetica-Bold"]);
   expect(drawnText(store, line)).toBe("Totalduetodaybycard");
+});
+
+test("Bold on a line whose symbols the bold face lacks bolds every letter without a notice", async () => {
+  const store = await fixture("mixed-style-sample.pdf");
+  const line = store.document!.page(0).runs.find((r) => r.text.includes("≥"))!;
+  store.selection.selectOne(line.id);
+
+  expect(await toggleBold(store)).toBeNull();
+
+  const letters = pieces(store, line.text).filter((p) =>
+    /\p{L}/u.test(p.split("@")[0]),
+  );
+  expect(letters.length).toBeGreaterThan(0);
+  for (const piece of letters) expect(piece).toMatch(/Bold/);
 });

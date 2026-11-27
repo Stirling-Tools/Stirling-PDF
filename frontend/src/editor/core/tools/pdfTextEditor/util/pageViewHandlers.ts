@@ -1,3 +1,9 @@
+import { continueList } from "@editor/tools/pdfTextEditor/util/listText";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
+import {
+  flowPastBottom,
+  runBottom,
+} from "@editor/tools/pdfTextEditor/util/pageFlow";
 import i18n from "i18next";
 import { alert } from "@editor/components/toast";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
@@ -22,8 +28,14 @@ import {
 import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import type { TextRange } from "@editor/tools/pdfTextEditor/types";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import {
+  editFocusedRun,
+  focusedRunCaret,
+  focusRunWhenPainted,
+} from "@editor/tools/pdfTextEditor/util/dom";
 
 const cache = new WeakMap<EditorStore, PageViewHandlers>();
+const NEW_TEXT_SIZE = 12;
 
 /** The cell of an editable table under a page point, if any. */
 function tableCellAt(
@@ -95,7 +107,18 @@ function createHandlers(store: EditorStore) {
       // contentEditable can fire several input events per keystroke burst.
       const current = store.document?.page(pageIndex).findRun(runId);
       if (current && current.text === nextText) return;
+      const bottomBefore = current ? runBottom(current) : -Infinity;
+      const list = current
+        ? continueList(
+            current.text,
+            nextText,
+            softStartsOf(current),
+            focusedRunCaret(runId),
+          )
+        : null;
       store.dispatch(new EditTextCommand({ pageIndex, runId, nextText }));
+      const flowed = flowPastBottom(store, pageIndex, runId, bottomBefore);
+      if (list && flowed !== "moved") editFocusedRun(runId, list, nextText);
       const doc = store.document;
       const run = doc?.page(pageIndex).findRun(runId);
       if (doc && run && scanBlockOffInk(doc, run))
@@ -118,6 +141,7 @@ function createHandlers(store: EditorStore) {
       runId: string,
       maxWidthPt: number,
       keepClearBelow?: boolean,
+      pullUp?: boolean,
     ): string | null | undefined => {
       const doc = store.document;
       const page = doc?.page(pageIndex);
@@ -131,14 +155,17 @@ function createHandlers(store: EditorStore) {
           );
         return page.findRun(runId)?.text ?? wrapped;
       }
+      const bottomBefore = runBottom(run);
       const reflow = new ReflowWrapCommand({
         pageIndex,
         runId,
         maxWidthPt,
         keepClearBelow,
+        pullUp,
       });
       store.dispatch(reflow);
       if (reflow.refusedForSpaceBelow) return null;
+      flowPastBottom(store, pageIndex, runId, bottomBefore);
       return page.findRun(runId)?.text ?? run.text;
     },
     onResizeRun: (pageIndex: number, runId: string, widthPt: number) => {
@@ -168,9 +195,47 @@ function createHandlers(store: EditorStore) {
         x: pageX,
         y: pageY,
         text: "New text",
+        placeholder: true,
       });
       store.dispatch(cmd);
-      if (cmd.insertedRunId) store.selection.selectOne(cmd.insertedRunId);
+      if (cmd.insertedRunId) {
+        store.selection.selectOne(cmd.insertedRunId);
+        focusRunWhenPainted(cmd.insertedRunId);
+      }
+      store.setMode("select");
+    },
+    onDrawTextBox: (
+      pageIndex: number,
+      x: number,
+      top: number,
+      widthPt: number,
+    ) => {
+      let inserted: string | null = null;
+      store.batchNow(() => {
+        const cmd = new InsertTextCommand({
+          pageIndex,
+          x,
+          y: top - NEW_TEXT_SIZE,
+          text: "New text",
+          fontSize: NEW_TEXT_SIZE,
+          placeholder: true,
+        });
+        store.dispatch(cmd);
+        inserted = cmd.insertedRunId;
+        if (inserted)
+          store.dispatch(
+            new ReflowWrapCommand({
+              pageIndex,
+              runId: inserted,
+              maxWidthPt: widthPt,
+              explicit: true,
+            }),
+          );
+      });
+      if (inserted) {
+        store.selection.selectOne(inserted);
+        focusRunWhenPainted(inserted);
+      }
       store.setMode("select");
     },
     onTransformImage: (
@@ -189,6 +254,10 @@ function createHandlers(store: EditorStore) {
       event: ContextMenuEvent,
     ) => {
       if (!editorContextMenu.hasHost() || reviewMode.get().reviewing) return;
+      if (event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+        return;
+      }
       const target = event.target as Element;
       // Inside the text being typed the browser's menu stays: it alone offers
       // spelling corrections.

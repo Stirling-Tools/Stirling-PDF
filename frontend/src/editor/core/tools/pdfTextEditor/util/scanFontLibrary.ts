@@ -170,7 +170,8 @@ export type Script =
   | "thai"
   | "devanagari"
   | "malayalam"
-  | "tibetan";
+  | "tibetan"
+  | "symbols";
 
 interface ScriptFonts {
   script: Script;
@@ -178,6 +179,7 @@ interface ScriptFonts {
   server: RegExp;
   device: string[];
   servedBy?: Script;
+  bundled?: string;
   clones?: Record<string, { label: string; twin: Face }>;
 }
 
@@ -285,6 +287,13 @@ const SCRIPTS: ScriptFonts[] = [
     chars: /[\u0f00-\u0fff]/,
     server: /Tibetan/i,
     device: ["Noto Serif Tibetan", "Microsoft Himalaya"],
+  },
+  {
+    script: "symbols",
+    chars: /[\u2190-\u23ff\u2460-\u27bf\u2900-\u2bff]/,
+    server: /^DejaVu Sans$/i,
+    device: [],
+    bundled: "DejaVu Sans",
   },
 ];
 
@@ -404,7 +413,10 @@ export function rankedWithCurrentFaces(ranked: object): boolean {
 }
 
 export function scanFaces(): Face[] {
-  return [...BASE14_FACES, ...bundled, ...scriptFaces, ...device];
+  const faces = [...BASE14_FACES, ...bundled, ...scriptFaces, ...device];
+  return faces.filter(
+    (face, i) => faces.findIndex((f) => f.family === face.family) === i,
+  );
 }
 
 /** CSS `font-family` list that draws a scan face by its family or bold name; give a bold name weight 700, as the regular family's CSS face carries the bold cut. */
@@ -583,6 +595,30 @@ function serverCandidates(script: ScriptFonts, fonts: LocalFont[]): string[] {
   return [...new Set([...named, ...matched])];
 }
 
+async function loadBundledScript(script: ScriptFonts): Promise<boolean> {
+  if (scriptFaces.some((face) => script.server.test(face.family))) return true;
+  const spec = BUNDLED_SCAN_FONTS.find((f) => f.family === script.bundled);
+  if (!spec) return false;
+  if (scriptFaces.some((face) => face.family === spec.family)) return true;
+  const started = serverFontsGeneration();
+  const face = await loadFace(
+    {
+      label: spec.label,
+      family: spec.family,
+      bold: spec.bold,
+      source: "bundled",
+    },
+    bundledFontBytes(spec),
+  );
+  if (started !== serverFontsGeneration() || face === null) return false;
+  if (face === "unusable") return true;
+  if (!scriptFaces.some((f) => f.family === face.family)) {
+    scriptFaces = [...scriptFaces, face];
+    notify();
+  }
+  return true;
+}
+
 async function loadServerScript(script: ScriptFonts): Promise<boolean> {
   const started = serverFontsGeneration();
   const fonts = await loadServerFonts();
@@ -640,6 +676,9 @@ function scriptJob(script: ScriptFonts): Promise<void> {
   let job = scriptJobs.get(script.script);
   if (!job) {
     job = loadServerScript(script)
+      .then((settled) =>
+        settled && !script.bundled ? settled : loadBundledScript(script),
+      )
       .catch(() => false)
       .then((settled) => {
         if (!settled && scriptJobs.get(script.script) === job)

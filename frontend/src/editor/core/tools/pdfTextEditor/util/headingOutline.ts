@@ -39,6 +39,7 @@ export interface OutlineEntry {
   /** Null for H, which has no number. */
   level: number | null;
   pageIndex: number | null;
+  pageNumber: number | null;
   /** The run showing the heading; null until its page has been read, or when it draws no text. */
   run: TextRunSnapshot | null;
   /** The part of the run's text that is the heading's; null for all of it. */
@@ -63,12 +64,16 @@ export function headingOutline(
   locate: (heading: DocumentHeading) => HeadingText | null = () => null,
 ): HeadingOutline {
   let previous: number | null = null;
+  const positions = new Map(pages.map((page, at) => [page.pageIndex, at]));
   const entries = headings.map((heading): OutlineEntry => {
     const level = headingLevel(heading.type);
+    const pageIndex = heading.pageIndex;
     const entry = {
       type: heading.type,
       level,
-      pageIndex: heading.pageIndex,
+      pageIndex,
+      pageNumber:
+        pageIndex === null ? null : (positions.get(pageIndex) ?? pageIndex) + 1,
       ...runShowing(heading, pages, locate),
       issue: null,
     };

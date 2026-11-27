@@ -1,4 +1,9 @@
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
+import {
+  fauxBoldWidth,
+  isFauxBold,
+} from "@editor/tools/pdfTextEditor/util/fauxBold";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
@@ -10,9 +15,12 @@ import {
   setScanOverride,
   type ScanOverride,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 
 /** Scale a text run so its effective on-page size matches `nextSize`. */
 export class SetFontSizeCommand implements Command {
+  private outline: SetTextOutlineCommand | null = null;
   readonly type = "set-font-size";
   private readonly pageIndex: number;
   private readonly runId: string;
@@ -21,6 +29,7 @@ export class SetFontSizeCommand implements Command {
   /** Set when the run was scanned text, resized by redrawing it. */
   private scanPrev: ScanOverride | null = null;
   private scanTarget: number | null = null;
+  private rewrap: ReflowWrapCommand | null = null;
 
   constructor(opts: { pageIndex: number; runId: string; nextSize: number }) {
     this.pageIndex = opts.pageIndex;
@@ -54,7 +63,10 @@ export class SetFontSizeCommand implements Command {
     if (this.prevSize === null) {
       this.prevSize = run.fontSize;
     }
+    const bold = isFauxBold(run);
     const ratio = this.nextSize / Math.max(0.01, run.fontSize);
+    if (this.rewrap) this.rewrap.apply(doc);
+    else if (ratio > 1) this.rewrap = wrapToFitGrown(doc, page, run, ratio);
     // Scale about the run's own baseline anchor, NOT the page origin - scaling
     // about moves the glyphs diagonally and the move persists on save.
     this.scaleAllPtrs(
@@ -76,6 +88,15 @@ export class SetFontSizeCommand implements Command {
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
+    this.outline = bold
+      ? new SetTextOutlineCommand({
+          pageIndex: this.pageIndex,
+          runId: this.runId,
+          stroke: { ...run.fill, a: 255 },
+          width: fauxBoldWidth(run.fontSize),
+        })
+      : null;
+    this.outline?.apply(doc);
   }
 
   revert(doc: EditorDocument): void {
@@ -88,6 +109,8 @@ export class SetFontSizeCommand implements Command {
       return;
     }
     if (this.prevSize === null) return;
+    this.outline?.revert(doc);
+    this.outline = null;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || !run.pdfiumObjPtr) return;
@@ -106,6 +129,7 @@ export class SetFontSizeCommand implements Command {
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
+    this.rewrap?.revert(doc);
   }
 
   private scaleAllPtrs(
@@ -197,4 +221,25 @@ function scaleMatrix(
     e: m.e,
     f: m.f,
   };
+}
+
+function wrapToFitGrown(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  ratio: number,
+): ReflowWrapCommand | null {
+  const toPageEdge = page.display.cropRight - run.bounds.x;
+  const room = run.text.includes("\n")
+    ? Math.min(toPageEdge, run.wrapWidthPt ?? run.bounds.width)
+    : toPageEdge;
+  if (run.bounds.width * ratio <= room + 0.5) return null;
+  if (room < run.fontSize * ratio * 2) return null;
+  const reflow = new ReflowWrapCommand({
+    pageIndex: page.index,
+    runId: run.id,
+    maxWidthPt: room / ratio,
+  });
+  reflow.apply(doc);
+  return reflow;
 }

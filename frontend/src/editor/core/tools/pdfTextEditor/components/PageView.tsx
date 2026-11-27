@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import { Box } from "@mantine/core";
+import { clamp } from "@editor/utils/genericUtils";
 import { useTranslation } from "react-i18next";
 import { useReviewing } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { Button } from "@editor/ui/Button";
@@ -45,9 +46,20 @@ import { LockBadge } from "@editor/tools/pdfTextEditor/components/LockBadge";
 import type { ContextMenuEvent } from "@editor/tools/pdfTextEditor/store/contextMenu";
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
+import { useEditorState } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import type { PdfRenderMode } from "@editor/services/preferencesService";
 import { PDF_RENDER_FILTERS } from "@editor/components/viewer/pdfRenderFilters";
+
+interface TextBoxDraft {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+const MIN_TEXT_BOX_PX = 16;
+const NEW_TEXT_LINE_PX = 16;
 
 interface PageViewProps {
   document: EditorDocument;
@@ -107,6 +119,7 @@ interface PageViewProps {
     runId: string,
     maxWidthPt: number,
     keepClearBelow?: boolean,
+    pullUp?: boolean,
   ) => string | null | void;
   /** The run with the engine's pen positions for its current text, read now. */
   onMeasureRun?: (pageIndex: number, runId: string) => TextRunSnapshot | null;
@@ -114,6 +127,12 @@ interface PageViewProps {
   onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
   onPageClick?: (pageIndex: number, pageX: number, pageY: number) => void;
+  onDrawTextBox?: (
+    pageIndex: number,
+    x: number,
+    top: number,
+    widthPt: number,
+  ) => void;
   /** A right-click anywhere on the page, with its point in page space. */
   onPageContextMenu?: (
     pageIndex: number,
@@ -180,6 +199,7 @@ export const PageView = memo(function PageView({
   onMeasureRun,
   onResizeRun,
   onPageClick,
+  onDrawTextBox,
   onPageContextMenu,
   onTransformImage,
   onUnlock,
@@ -227,6 +247,10 @@ export const PageView = memo(function PageView({
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
   const [gripLayer, setGripLayer] = useState<HTMLDivElement | null>(null);
+  const placing = useEditorState(store, (s) => s.mode !== "select");
+  const addingText = useEditorState(store, (s) => s.mode === "addText");
+  const [textBoxDraft, setTextBoxDraft] = useState<TextBoxDraft | null>(null);
+  const drewTextBoxRef = useRef(false);
   const firstPaintedDocRef = useRef<typeof document | null>(null);
   const [paintedRevision, setPaintedRevision] = useState(-1);
   // Read by the render effect, which must not re-run when it changes.
@@ -432,16 +456,39 @@ export const PageView = memo(function PageView({
     return repaints;
   }
 
+  function cssPoint(e: {
+    clientX: number;
+    clientY: number;
+    currentTarget: Element;
+  }) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function cssPointOnPage(e: {
+    clientX: number;
+    clientY: number;
+    currentTarget: Element;
+  }) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return {
+      x: clamp(e.clientX - rect.left, 0, rect.width),
+      y: clamp(e.clientY - rect.top, 0, rect.height),
+    };
+  }
+
   // CSS pixels (origin upper-left) to PDF page space (origin lower-left, points).
+  function toPdf(cssX: number, cssY: number) {
+    return transform.invert(cssX / cssScale, page.height - cssY / cssScale);
+  }
+
   function toPagePoint(e: {
-    currentTarget: HTMLElement;
+    currentTarget: Element;
     clientX: number;
     clientY: number;
   }) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const xd = (e.clientX - rect.left) / cssScale;
-    const yd = page.height - (e.clientY - rect.top) / cssScale;
-    return transform.invert(xd, yd);
+    const at = cssPoint(e);
+    return toPdf(at.x, at.y);
   }
 
   return (
@@ -453,7 +500,43 @@ export const PageView = memo(function PageView({
       className={privateContentClassName}
       style={{ inset: 0 }}
       data-testid={`pdf-editor-page-${page.pageIndex}`}
+      onPointerDown={(e) => {
+        drewTextBoxRef.current = false;
+        if (!addingText || !onDrawTextBox || e.button !== 0) return;
+        if (page.display.rotate % 4 !== 0) return;
+        const at = cssPoint(e);
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setTextBoxDraft({ x0: at.x, y0: at.y, x1: at.x, y1: at.y });
+      }}
+      onPointerMove={(e) => {
+        if (!textBoxDraft) return;
+        const at = cssPointOnPage(e);
+        setTextBoxDraft({ ...textBoxDraft, x1: at.x, y1: at.y });
+      }}
+      onPointerUp={(e) => {
+        const draft = textBoxDraft;
+        if (!draft) return;
+        setTextBoxDraft(null);
+        const at = cssPointOnPage(e);
+        if (Math.abs(at.x - draft.x0) < MIN_TEXT_BOX_PX || !onDrawTextBox)
+          return;
+        drewTextBoxRef.current = true;
+        const a = toPdf(Math.min(draft.x0, at.x), Math.min(draft.y0, at.y));
+        const b = toPdf(Math.max(draft.x0, at.x), Math.min(draft.y0, at.y));
+        onDrawTextBox(
+          page.pageIndex,
+          Math.min(a.x, b.x),
+          Math.max(a.y, b.y),
+          Math.abs(b.x - a.x),
+        );
+      }}
+      onPointerCancel={() => setTextBoxDraft(null)}
+      onLostPointerCapture={() => setTextBoxDraft(null)}
       onClick={(e) => {
+        if (drewTextBoxRef.current) {
+          drewTextBoxRef.current = false;
+          return;
+        }
         if (!onPageClick) return;
         const p = toPagePoint(e);
         onPageClick(page.pageIndex, p.x, p.y);
@@ -464,6 +547,24 @@ export const PageView = memo(function PageView({
         onPageContextMenu(page.pageIndex, p.x, p.y, e);
       }}
     >
+      {textBoxDraft && (
+        <Box
+          pos="absolute"
+          data-testid="pdf-editor-text-box-draft"
+          style={{
+            left: Math.min(textBoxDraft.x0, textBoxDraft.x1),
+            top: Math.min(textBoxDraft.y0, textBoxDraft.y1),
+            width: Math.abs(textBoxDraft.x1 - textBoxDraft.x0),
+            height: Math.max(
+              Math.abs(textBoxDraft.y1 - textBoxDraft.y0),
+              NEW_TEXT_LINE_PX * cssScale,
+            ),
+            border: "1px dashed var(--c-primary)",
+            pointerEvents: "none",
+            zIndex: 5,
+          }}
+        />
+      )}
       <canvas
         ref={canvasRef}
         // Lets a rebuild sample the scan's own colours off the rendered page.
@@ -571,6 +672,7 @@ export const PageView = memo(function PageView({
               selected={selectedImageIds.includes(image.id)}
               fixed={reviewing}
               onSelect={(extend) => onSelectImage(image.id, extend)}
+              passesClicks={placing}
               onTransformCommit={(next) =>
                 onTransformImage?.(page.pageIndex, image.id, next)
               }
@@ -584,7 +686,7 @@ export const PageView = memo(function PageView({
             />
             {onUnlock && !reviewing && image.locked && (
               <LockBadge
-                rect={image.bounds}
+                rect={visibleImageBounds(image)}
                 pageHeight={page.height}
                 transform={transform}
                 scale={cssScale}
@@ -610,55 +712,68 @@ export const PageView = memo(function PageView({
             before all runs, so a grip never takes a click aimed at any run. */}
         <div ref={setGripLayer} style={{ display: "contents" }} />
         {page.runs.map((run) => (
-          <TextRunOverlay
-            key={run.id}
-            run={run}
-            pageHeight={page.height}
-            pageWidth={page.width}
-            transform={transform}
-            scale={cssScale}
-            widthMode={widthMode}
-            growEdge={runGrowEdges.get(run.id) ?? null}
-            pageRevision={paintedRevision}
-            gripLayer={reviewing ? null : gripLayer}
-            selected={selectedRunIds.includes(run.id)}
-            findRange={findMatch?.runId === run.id ? findMatch.range : null}
-            readOnly={reviewing}
-            onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
-            onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
-            onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
-            textRange={
-              selectedRunIds.length === 1 && selectedRunIds[0] === run.id
-                ? selectedTextRange
-                : null
-            }
-            onMove={
-              reviewing
-                ? undefined
-                : (dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)
-            }
-            onWrap={
-              reviewing
-                ? undefined
-                : (maxWidthPt, keepClearBelow) =>
-                    onWrapRun?.(
-                      page.pageIndex,
-                      run.id,
-                      maxWidthPt,
-                      keepClearBelow,
-                    )
-            }
-            onMeasure={
-              onMeasureRun
-                ? () => onMeasureRun(page.pageIndex, run.id)
-                : undefined
-            }
-            onResize={
-              onResizeRun && !reviewing && canResizeRun(run)
-                ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
-                : undefined
-            }
-          />
+          <Fragment key={run.id}>
+            <TextRunOverlay
+              run={run}
+              pageHeight={page.height}
+              pageWidth={page.width}
+              transform={transform}
+              scale={cssScale}
+              widthMode={widthMode}
+              growEdge={runGrowEdges.get(run.id) ?? null}
+              pageRevision={paintedRevision}
+              gripLayer={reviewing ? null : gripLayer}
+              selected={selectedRunIds.includes(run.id)}
+              findRange={findMatch?.runId === run.id ? findMatch.range : null}
+              readOnly={reviewing}
+              onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
+              onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
+              onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
+              textRange={
+                selectedRunIds.length === 1 && selectedRunIds[0] === run.id
+                  ? selectedTextRange
+                  : null
+              }
+              onMove={
+                reviewing
+                  ? undefined
+                  : (dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)
+              }
+              onWrap={
+                reviewing
+                  ? undefined
+                  : (maxWidthPt, keepClearBelow, pullUp) =>
+                      onWrapRun?.(
+                        page.pageIndex,
+                        run.id,
+                        maxWidthPt,
+                        keepClearBelow,
+                        pullUp,
+                      )
+              }
+              onMeasure={
+                onMeasureRun
+                  ? () => onMeasureRun(page.pageIndex, run.id)
+                  : undefined
+              }
+              onResize={
+                onResizeRun && !reviewing && canResizeRun(run)
+                  ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
+                  : undefined
+              }
+            />
+            {onUnlock && !reviewing && run.locked && (
+              <LockBadge
+                rect={run.bounds}
+                pageHeight={page.height}
+                transform={transform}
+                scale={cssScale}
+                onUnlock={() => onUnlock(page.pageIndex, { runId: run.id })}
+                testId={`pdf-editor-unlock-${run.id}`}
+                underContent
+              />
+            )}
+          </Fragment>
         ))}
         {page.runs
           .filter((run) => attention.runs.has(run.id))
@@ -670,21 +785,6 @@ export const PageView = memo(function PageView({
               style={besideRun(run, transform, page.height, cssScale)}
             />
           ))}
-        {onUnlock &&
-          !reviewing &&
-          page.runs
-            .filter((run) => run.locked)
-            .map((run) => (
-              <LockBadge
-                key={`lock-${run.id}`}
-                rect={run.bounds}
-                pageHeight={page.height}
-                transform={transform}
-                scale={cssScale}
-                onUnlock={() => onUnlock(page.pageIndex, { runId: run.id })}
-                testId={`pdf-editor-unlock-${run.id}`}
-              />
-            ))}
         {showRulers && (
           <PageGuides
             pageIndex={page.pageIndex}

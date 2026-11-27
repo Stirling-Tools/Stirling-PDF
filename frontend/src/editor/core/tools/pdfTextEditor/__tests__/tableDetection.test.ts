@@ -73,6 +73,21 @@ describe("detectTables", () => {
     expect(t.rowEdges).toHaveLength(4);
   });
 
+  it("keeps a complete grid whose body has one larger cell", () => {
+    const runs = grid([50, 200], 700, 24, [
+      ["Name", "Value"],
+      ["Alpha", "1"],
+      ["Beta", "2"],
+      ["Gamma", "3"],
+    ]);
+    const larger = runs.find((r) => r.text === "Beta");
+    if (larger) larger.fontSize = 16;
+    const tables = detectTables(runs, 0);
+    expect(tables).toHaveLength(1);
+    expect(tables[0].rows).toBe(4);
+    expect(tables[0].cols).toBe(2);
+  });
+
   it("does not treat a paragraph of prose as a table", () => {
     // One run per line, all starting at the same left margin: a single column.
     const runs: TextRunSnapshot[] = [];

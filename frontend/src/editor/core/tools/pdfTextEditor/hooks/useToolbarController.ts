@@ -33,19 +33,23 @@ import {
   ChangeZOrderCommand,
   type ZOrderMode,
 } from "@editor/tools/pdfTextEditor/commands/ChangeZOrderCommand";
+import { KeepWidthCommand } from "@editor/tools/pdfTextEditor/commands/KeepWidthCommand";
+import { lineSpacingFactor } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
 import { SetLockCommand } from "@editor/tools/pdfTextEditor/commands/SetLockCommand";
-import { AlignParagraphLinesCommand } from "@editor/tools/pdfTextEditor/commands/AlignParagraphLinesCommand";
 import {
   TransformImageObjectCommand,
   type ImageTransformMode,
 } from "@editor/tools/pdfTextEditor/commands/TransformImageObjectCommand";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import type {
+  SelectionState,
+  TextRunSnapshot,
+} from "@editor/tools/pdfTextEditor/types";
 import {
   isExternalImageEditSupported,
   startExternalImageEdit,
@@ -57,6 +61,15 @@ import {
   pickImageFile,
 } from "@editor/tools/pdfTextEditor/util/imagePicking";
 import { readImageObjectPixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
+import { flowingSelection } from "@editor/tools/pdfTextEditor/util/pageFlow";
+import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import {
+  formatsUpright,
+  SetParagraphFormatCommand,
+  TEXT_STYLES,
+  type TextStyleName,
+} from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 
 type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
@@ -75,9 +88,7 @@ export function useHistoryFlags(store: EditorStore): {
     [store],
   );
   const read = useCallback(
-    () =>
-      (store.history.canUndo ? CAN_UNDO : 0) |
-      (store.history.canRedo ? CAN_REDO : 0),
+    () => (store.canUndo ? CAN_UNDO : 0) | (store.canRedo ? CAN_REDO : 0),
     [store],
   );
   const flags = useSyncExternalStore(subscribe, read, read);
@@ -85,6 +96,13 @@ export function useHistoryFlags(store: EditorStore): {
     canUndo: (flags & CAN_UNDO) !== 0,
     canRedo: (flags & CAN_REDO) !== 0,
   };
+}
+
+function flowingStep(
+  store: EditorStore,
+  change: () => Promise<unknown>,
+): Promise<void> {
+  return store.batch(() => flowingSelection(store, change));
 }
 
 export function useToolbarController(
@@ -182,15 +200,17 @@ export function useToolbarController(
         for (const p of doc.loadedPages()) {
           const run = p.runs.find((r) => r.id === runId);
           if (!run) continue;
-          if (AlignParagraphLinesCommand.canAlign(run)) {
+          if (
+            run.paragraphLineSlots.length >= 2 &&
+            formatsUpright(run, p.display.rotate)
+          )
             store.dispatch(
-              new AlignParagraphLinesCommand({
+              new SetParagraphFormatCommand({
                 pageIndex: p.index,
-                runId,
-                mode,
+                runIds: [runId],
+                align: mode === "center-h" ? "center" : mode,
               }),
             );
-          }
           return;
         }
       }
@@ -421,18 +441,21 @@ export function useToolbarController(
       };
       // One composite = one undo step for the whole selection, and locked
       // runs are exempt like every other bulk mutation.
-      const cmds: EditTextCommand[] = [];
+      const cmds: KeepWidthCommand[] = [];
       for (const p of doc.loadedPages()) {
         for (const r of p.runs) {
           if (!selIds.has(r.id) || r.locked || r.textReadOnly) continue;
           const next = transform(r.text);
           if (next === r.text) continue;
           cmds.push(
-            new EditTextCommand({
-              pageIndex: p.index,
-              runId: r.id,
-              nextText: next,
-            }),
+            new KeepWidthCommand(
+              new EditTextCommand({
+                pageIndex: p.index,
+                runId: r.id,
+                nextText: next,
+              }),
+              { pageIndex: p.index, runId: r.id },
+            ),
           );
         }
       }
@@ -513,13 +536,73 @@ export function useToolbarController(
   const canAlignLines = useMemo(() => {
     if (selection.runIds.length !== 1 || selection.imageIds.length > 0)
       return false;
-    const run = state.pages
-      .flatMap((p) => p.runs)
-      .find((r) => r.id === selection.runIds[0]);
-    // Mirrors AlignParagraphLinesCommand.canAlign, which gates on SLOTS: line
-    // count enabled the item for paragraphs the command then refused.
-    return !!run && (run.paragraphSlotCount ?? 0) >= 2 && !run.textReadOnly;
+    for (const p of state.pages) {
+      const run = p.runs.find((r) => r.id === selection.runIds[0]);
+      if (run)
+        return (
+          (run.paragraphSlotCount ?? 0) >= 2 &&
+          formatsUpright(run, p.display?.rotate ?? 0)
+        );
+    }
+    return false;
   }, [state.pages, selection]);
+
+  const paragraph = useMemo(() => {
+    const ids = new Set(selection.runIds);
+    const rotateOf = new Map(
+      state.pages.map((p) => [p.pageIndex, p.display?.rotate ?? 0]),
+    );
+    const runs = state.pages
+      .flatMap((p) => p.runs)
+      .filter((r) => ids.has(r.id));
+    const first = runs[0];
+    const canFormat =
+      runs.length > 0 &&
+      runs.every((r) => formatsUpright(r, rotateOf.get(r.pageIndex) ?? 0));
+    const same = <T>(read: (r: TextRunSnapshot) => T) =>
+      first && runs.every((r) => read(r) === read(first)) ? read(first) : null;
+    const multiLine = runs.some((r) => (r.paragraphSlotCount ?? 0) >= 2);
+    const spacing = same((r) =>
+      lineSpacingFactor(r.fontSize, r.paragraphLineHeight ?? 0),
+    );
+    return {
+      align: same((r) => r.align ?? null),
+      underline: runs.length > 0 && runs.every((r) => r.underline),
+      list: same((r) => r.listKind ?? null),
+      lineSpacing: multiLine ? spacing : null,
+      canSpace: multiLine,
+      canFormat,
+    };
+  }, [state.pages, selection.runIds]);
+
+  const onChangeFontSize = useCallback(
+    (size: number) => flowingStep(store, () => sel.changeFontSize(size)),
+    [store, sel],
+  );
+  const onSetLineSpacing = useCallback(
+    (factor: number) => flowingStep(store, () => sel.setLineSpacing(factor)),
+    [store, sel],
+  );
+
+  const onApplyTextStyle = useCallback(
+    (name: TextStyleName) => {
+      const style = TEXT_STYLES[name];
+      const setTag = textA11y.setTag;
+      const tagged = ACCESSIBILITY_EDITING && !!textA11y.tag;
+      let failure: FontPickFailure | null = null;
+      return flowingStep(store, async () => {
+        const selection = store.selection.value;
+        const doc = store.document;
+        await sel.changeFontSize(style.size);
+        if (store.document !== doc) return;
+        store.selection.set(selection);
+        failure = await sel.setBold(style.bold);
+        if (store.document !== doc) return;
+        if (tagged && store.document?.treatAsTagged()) setTag(style.tag);
+      }).then(() => failure);
+    },
+    [store, sel, textA11y.setTag, textA11y.tag],
+  );
 
   const selectionTextReadOnly = useMemo(() => {
     const ids = new Set(selection.runIds);
@@ -586,7 +669,13 @@ export function useToolbarController(
     canRedo: history.canRedo,
     onUndo: () => store.undo(),
     onRedo: () => store.redo(),
-    onChangeFontSize: sel.changeFontSize,
+    paragraph,
+    onApplyTextStyle,
+    onSetAlign: sel.setAlign,
+    onToggleUnderline: sel.toggleUnderline,
+    onSetLineSpacing,
+    onToggleList: sel.toggleList,
+    onChangeFontSize,
     onChangeFill: sel.changeFill,
     onChangeOutline: sel.changeOutline,
     onChangeFontFamily: sel.changeFontFamily,

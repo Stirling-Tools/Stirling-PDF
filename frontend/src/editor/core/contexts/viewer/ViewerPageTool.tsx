@@ -24,6 +24,18 @@ export interface ViewerPageLayerProps {
   onCovered: (covered: boolean) => void;
 }
 
+export interface ViewerLayoutPage {
+  width: number;
+  height: number;
+  quarterTurns: 0 | 1 | 2 | 3;
+}
+
+export interface ViewerPageLayout {
+  subscribe: (listener: () => void) => () => void;
+  pages: () => readonly ViewerLayoutPage[] | null;
+  renderThumbnail: (pageIndex: number, widthPx: number) => Promise<Blob>;
+}
+
 /**
  * A tool that works directly on the viewer's pages, replacing their layers.
  *
@@ -35,6 +47,7 @@ export interface ViewerPageTool {
   /** Workbench file the tool is working on; pages of any other file stay the viewer's own. */
   fileId: string | null;
   PageLayer: ComponentType<ViewerPageLayerProps>;
+  pageLayout?: ViewerPageLayout;
   /** Docked above the pages. */
   Toolbar: ComponentType;
   /** Docked below the pages, in place of the viewer's page and zoom bar. */

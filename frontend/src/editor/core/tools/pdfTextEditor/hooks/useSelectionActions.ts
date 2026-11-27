@@ -1,4 +1,12 @@
+import { wholeFaceLookalike } from "@editor/tools/pdfTextEditor/util/wholeFaceLookalike";
 import { useCallback } from "react";
+import { ignoresTextStroke } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
+import { BOLD_WEIGHT } from "@editor/tools/pdfTextEditor/util/faceNames";
+import {
+  fauxBoldWidth,
+  isFauxBold,
+} from "@editor/tools/pdfTextEditor/util/fauxBold";
+import { KeepWidthCommand } from "@editor/tools/pdfTextEditor/commands/KeepWidthCommand";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
 import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
@@ -10,6 +18,11 @@ import { readShownImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixe
 import { unsafeRtlEditMessage } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
+import {
+  KeepObliqueCommand,
+  SetObliqueCommand,
+} from "@editor/tools/pdfTextEditor/commands/SetObliqueCommand";
+import { isFauxItalic } from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
 import {
@@ -60,13 +73,79 @@ import {
 import { serverFaceFor } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { Affine } from "@editor/tools/pdfTextEditor/types";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
 import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
+import { lineWidthIn } from "@editor/tools/pdfTextEditor/util/wrapText";
+import {
+  focusedRunCaret,
+  focusRunWhenPainted,
+  isFocusInContentEditable,
+} from "@editor/tools/pdfTextEditor/util/dom";
+import {
+  SetParagraphFormatCommand,
+  type TextAlign,
+} from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import {
+  caretAfterListToggle,
+  listIndentFor,
+  mayBeList,
+  toggledListText,
+  type ListKind,
+} from "@editor/tools/pdfTextEditor/util/listText";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { pageFontKey } from "@editor/tools/pdfTextEditor/util/pageFonts";
+
+function styleWithFauxFaces(fontId: string, run: TextRun): FaceStyle {
+  const style = faceStyleOf(fontId);
+  return {
+    ...style,
+    weight: isFauxBold(run) ? BOLD_WEIGHT : style.weight,
+    italic: style.italic || isFauxItalic(run),
+  };
+}
+
+function canFauxBold(request: StyleRequest, run: TextRun): boolean {
+  return (
+    "bold" in request &&
+    request.bold &&
+    (run.renderMode ?? 0) === 0 &&
+    !run.textReadOnly &&
+    !ignoresTextStroke(run.fontId)
+  );
+}
+
+function canFauxItalic(request: StyleRequest, run: TextRun): boolean {
+  return (
+    "italic" in request &&
+    request.italic &&
+    !isScanRun(run) &&
+    !run.textReadOnly
+  );
+}
+
+interface FauxStyleChange {
+  fit: ScanFitTarget;
+  on: boolean;
+}
+
+function fauxStyleCommands(
+  store: EditorStore,
+  changes: FauxStyleChange[],
+  build: (run: TextRun, on: boolean) => Command,
+): Command[] {
+  const live = liveRuns(store);
+  return changes.flatMap(({ fit, on }) => {
+    const run = live.get(fit.run.id);
+    return run && run === fit.run && !run.locked ? [build(run, on)] : [];
+  });
+}
 
 /**
  * Bold and italic for a document-wide font change. With `keep`, text keeps
@@ -80,7 +159,6 @@ export interface DocumentFontStyle {
 }
 
 const REGULAR_WEIGHT = 400;
-const BOLD_WEIGHT = 700;
 
 function styleWanted(current: FaceStyle, style: DocumentFontStyle): FaceStyle {
   if (!style.keep)
@@ -122,6 +200,16 @@ interface SelectedRun {
   fill: { r: number; g: number; b: number; a: number };
   textReadOnly: boolean;
   renderMode?: number;
+  matrix: Affine;
+}
+
+function keptOblique(run: SelectedRun, command: Command): Command {
+  return isFauxItalic(run)
+    ? new KeepObliqueCommand(command, {
+        pageIndex: run.pageIndex,
+        runId: run.id,
+      })
+    : command;
 }
 
 /** `redraws` is for an action that redraws, rescales or restyles text: it leaves out the lines the editor cannot redraw and says so. */
@@ -149,6 +237,12 @@ interface FamilyChange {
   runId: string;
   family: string;
   text: string;
+  restyle?: boolean;
+}
+
+interface StepAlongside {
+  fit: ScanFitTarget[];
+  build: (applies: (runId: string) => boolean) => Command[];
 }
 
 /** How many runs a font change reached, how many it left as they were and why, and how many of the changed ones the new font lacks letters of. */
@@ -235,6 +329,7 @@ function familyCommand(change: FamilyChange): SetFontFamilyCommand {
     pageIndex: change.pageIndex,
     runId: change.runId,
     nextFamily: change.family,
+    keepLineStarts: change.restyle,
   });
 }
 
@@ -262,6 +357,23 @@ async function loadScriptFacesFor(
   const scripts = scanScriptsOf(lost);
   if (scripts.length > 0)
     await loadScriptScanFaces(scripts).catch(() => undefined);
+}
+
+/** Moves every run headed for a document face to one lookalike when the face lacks letters of any of them, so runs restyled together match. */
+function moveToLookalikeWhereFaceLacks(
+  doc: EditorDocument,
+  targets: Array<FamilyChange & { fit: ScanFitTarget }>,
+): void {
+  for (const face of new Set(targets.map((t) => t.family))) {
+    const sharing = targets.filter((t) => t.family === face);
+    const lookalike = wholeFaceLookalike(
+      doc,
+      sharing[0].fit.page,
+      face,
+      sharing.map((t) => t.text).join(" "),
+    );
+    if (lookalike) for (const target of sharing) target.family = lookalike;
+  }
 }
 
 function faceSources(doc: EditorDocument | null): FaceSources {
@@ -404,7 +516,7 @@ export function useSelectionActions(store: EditorStore) {
   );
 
   const dispatchPerRun = useCallback(
-    (build: (run: SelectedRun) => Command | null, redraws = false) => {
+    (build: (run: TextRun) => Command | null, redraws = false) => {
       const targets: ScanFitTarget[] = [];
       forEachSelectedRun((run, page) => {
         targets.push({ page, run: run as TextRun });
@@ -422,17 +534,19 @@ export function useSelectionActions(store: EditorStore) {
   );
 
   const changeFontSize = useCallback(
-    (size: number) => {
-      void dispatchPerRun(
+    (size: number) =>
+      dispatchPerRun(
         (run) =>
-          new SetFontSizeCommand({
-            pageIndex: run.pageIndex,
-            runId: run.id,
-            nextSize: size,
-          }),
+          keptOblique(
+            run,
+            new SetFontSizeCommand({
+              pageIndex: run.pageIndex,
+              runId: run.id,
+              nextSize: size,
+            }),
+          ),
         true,
-      );
-    },
+      ),
     [dispatchPerRun],
   );
 
@@ -500,6 +614,7 @@ export function useSelectionActions(store: EditorStore) {
       stillApplies: () => (runId: string) => boolean,
       changes: FamilyChange[],
       fit: ScanFitTarget[],
+      alongside?: StepAlongside,
     ): Promise<FamilyChangeOutcome> => {
       const doc = store.document;
       const shapeable = changes.filter((change) => !needsShaping(change.text));
@@ -509,7 +624,10 @@ export function useSelectionActions(store: EditorStore) {
           isDocumentFontId(change.family) ||
           drawsSomeOf(familyCoverage(doc, change.family), change.text),
       );
-      const changing = new Set(drawable.map((change) => change.runId));
+      const changing = new Set([
+        ...drawable.map((change) => change.runId),
+        ...(alongside?.fit ?? []).map((target) => target.run.id),
+      ]);
       const outcome = {
         applied: 0,
         undrawable: shapeable.length - drawable.length,
@@ -521,15 +639,18 @@ export function useSelectionActions(store: EditorStore) {
       if (doc) await loadScriptFacesFor(doc, drawable);
       if (store.document !== doc) return outcome;
       await dispatchAfterScanFit(
-        fit.filter((target) => changing.has(target.run.id)),
+        [...fit, ...(alongside?.fit ?? [])].filter((target) =>
+          changing.has(target.run.id),
+        ),
         () => {
           // A font picked for a run while these bytes loaded wins; applying this one now would undo it.
           const applies = stillApplies();
           const open = store.document;
           const commands = drawable
             .filter((change) => applies(change.runId))
-            .map(familyCommand)
-            .map((command) => ({
+            .map((change) => ({ change, command: familyCommand(change) }))
+            .map(({ change, command }) => ({
+              change,
               command,
               coverage: open ? command.coverage(open) : "all",
             }));
@@ -549,7 +670,16 @@ export function useSelectionActions(store: EditorStore) {
           outcome.inClosestMatch = safe.filter(
             (c) => c.coverage === "some",
           ).length;
-          return safe.map(({ command }) => command);
+          const extra = alongside?.build(applies) ?? [];
+          outcome.applied += extra.length;
+          const live = liveRuns(store);
+          return [
+            ...extra,
+            ...safe.map(({ change, command }) => {
+              const run = live.get(change.runId);
+              return run ? keptOblique(run, command) : command;
+            }),
+          ];
         },
       );
       return outcome;
@@ -786,26 +916,45 @@ export function useSelectionActions(store: EditorStore) {
       const doc = store.document;
       const sources = faceSources(doc);
       const part = selectedPartOfRun(doc, store.selection.value);
-      if (part)
+      if (part) {
+        const selected = part.run.text.slice(part.range.start, part.range.end);
         return restyleSelectedPart(part, (fontIds) => {
           const wanted = request(fontIds.map(faceStyleOf));
-          return (fontId) => restyledFace(fontId, wanted, sources);
+          return (fontId) => {
+            const face = restyledFace(fontId, wanted, sources);
+            if (!face || !doc) return face;
+            return wholeFaceLookalike(doc, part.page, face, selected) ?? face;
+          };
         });
+      }
       const runs: Array<{ run: SelectedRun; fit: ScanFitTarget }> = [];
       forEachSelectedRun((run, page) => {
         runs.push({ run, fit: { page, run: run as TextRun } });
       }, true);
       if (!doc || runs.length === 0) return null;
-      const wanted = request(runs.map(({ run }) => faceStyleOf(run.fontId)));
+      const wanted = request(
+        runs.map(({ run, fit }) => styleWithFauxFaces(run.fontId, fit.run)),
+      );
       let leftAsIs = 0;
       const targets: Array<FamilyChange & { fit: ScanFitTarget }> = [];
+      const outlined: FauxStyleChange[] = [];
+      const slanted: FauxStyleChange[] = [];
       for (const { run, fit } of runs) {
+        if ("bold" in wanted && isFauxBold(fit.run)) {
+          if (!wanted.bold) outlined.push({ fit, on: false });
+          continue;
+        }
+        if ("italic" in wanted && isFauxItalic(fit.run)) {
+          if (!wanted.italic) slanted.push({ fit, on: false });
+          continue;
+        }
         const face = restyledFace(run.fontId, wanted, sources);
         if (face === undefined) continue;
-        // No real face in that style. Leave it alone: swapping the document's
-        // own font for Helvetica-Oblique is not making it italic.
         if (face === null) {
-          leftAsIs++;
+          if (canFauxBold(wanted, fit.run)) outlined.push({ fit, on: true });
+          else if (canFauxItalic(wanted, fit.run))
+            slanted.push({ fit, on: true });
+          else leftAsIs++;
           continue;
         }
         targets.push({
@@ -813,12 +962,15 @@ export function useSelectionActions(store: EditorStore) {
           runId: run.id,
           family: face,
           text: run.text,
+          restyle: true,
           fit,
         });
       }
-      const stillApplies = claimFontChange(
-        targets.map((target) => target.fit.run),
-      );
+      moveToLookalikeWhereFaceLacks(doc, targets);
+      const stillApplies = claimFontChange([
+        ...targets.map((target) => target.fit.run),
+        ...[...outlined, ...slanted].map(({ fit }) => fit.run),
+      ]);
       const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
       for (const target of targets) {
         if (isDeviceFace(target.family)) {
@@ -831,10 +983,39 @@ export function useSelectionActions(store: EditorStore) {
         }
         ready.push(target);
       }
+      const claimed =
+        (applies: (runId: string) => boolean) => (change: FauxStyleChange) =>
+          applies(change.fit.run.id);
       const outcome = await dispatchFamilyChanges(
         stillApplies,
         ready,
         ready.map((target) => target.fit),
+        {
+          fit: [...outlined, ...slanted].map(({ fit }) => fit),
+          build: (applies) => [
+            ...fauxStyleCommands(
+              store,
+              outlined.filter(claimed(applies)),
+              (run, bold) =>
+                new SetTextOutlineCommand({
+                  pageIndex: run.pageIndex,
+                  runId: run.id,
+                  stroke: bold ? { ...run.fill, a: 255 } : null,
+                  width: bold ? fauxBoldWidth(run.fontSize) : 0,
+                }),
+            ),
+            ...fauxStyleCommands(
+              store,
+              slanted.filter(claimed(applies)),
+              (run, oblique) =>
+                new SetObliqueCommand({
+                  pageIndex: run.pageIndex,
+                  runId: run.id,
+                  oblique,
+                }),
+            ),
+          ],
+        },
       );
       return changeFailure(
         outcome,
@@ -859,6 +1040,11 @@ export function useSelectionActions(store: EditorStore) {
       restyle((styles) => ({
         bold: !styles.every((style) => isBoldWeight(style.weight)),
       })),
+    [restyle],
+  );
+
+  const setBold = useCallback(
+    (bold: boolean) => restyle(() => ({ bold })),
     [restyle],
   );
 
@@ -990,14 +1176,128 @@ export function useSelectionActions(store: EditorStore) {
     }
   }, [store]);
 
+  const setAlign = useCallback(
+    (align: TextAlign) => {
+      void dispatchPerRun(
+        (run) =>
+          new SetParagraphFormatCommand({
+            pageIndex: run.pageIndex,
+            runIds: [run.id],
+            align,
+          }),
+        true,
+      );
+    },
+    [dispatchPerRun],
+  );
+
+  const toggleUnderline = useCallback(() => {
+    const live = liveRuns(store);
+    const selected = store.selection.value.runIds.flatMap((id) => {
+      const run = live.get(id);
+      return run && !run.locked && !run.textReadOnly ? [run] : [];
+    });
+    if (selected.length === 0) return;
+    const underline = !selected.every((run) => run.underline);
+    void dispatchPerRun(
+      (run) =>
+        new SetParagraphFormatCommand({
+          pageIndex: run.pageIndex,
+          runIds: [run.id],
+          underline,
+        }),
+      true,
+    );
+  }, [dispatchPerRun, store]);
+
+  const setLineSpacing = useCallback(
+    (factor: number) =>
+      dispatchPerRun(
+        (run) =>
+          new SetLineSpacingCommand({
+            pageIndex: run.pageIndex,
+            runId: run.id,
+            factor,
+          }),
+        true,
+      ),
+    [dispatchPerRun],
+  );
+
+  const toggleList = useCallback(
+    (kind: ListKind) => {
+      const editing = editedRunId();
+      const caret = editing ? focusedRunCaret(editing) : null;
+      const textBefore = editing ? liveRuns(store).get(editing)?.text : null;
+      const listedIn = store.document;
+      if (isFocusInContentEditable())
+        (document.activeElement as HTMLElement).blur();
+      const focusAfterBlur = document.activeElement;
+      const listed = dispatchPerRun((run) => {
+        const doc = store.document;
+        const nextText = toggledListText(run.text, softStartsOf(run), kind);
+        if (nextText === run.text) return null;
+        const list = new CompositeCommand([
+          new EditTextCommand({
+            pageIndex: run.pageIndex,
+            runId: run.id,
+            nextText,
+            explicit: true,
+          }),
+          new SetParagraphFormatCommand({
+            pageIndex: run.pageIndex,
+            runIds: [run.id],
+            listIndent:
+              doc && mayBeList(nextText)
+                ? listIndentFor(
+                    nextText,
+                    lineWidthIn(doc, doc.page(run.pageIndex), run),
+                  )
+                : 0,
+          }),
+        ]);
+        return new KeepWidthCommand(keptOblique(run, list), {
+          pageIndex: run.pageIndex,
+          runId: run.id,
+        });
+      }, true);
+      if (!editing || textBefore == null) return;
+      void listed.then(() => {
+        if (
+          store.document !== listedIn ||
+          document.activeElement !== focusAfterBlur
+        )
+          return;
+        const textAfter = liveRuns(store).get(editing)?.text;
+        if (textAfter == null) return;
+        const offset =
+          caret === null
+            ? null
+            : caretAfterListToggle(textBefore, textAfter, caret);
+        focusRunWhenPainted(
+          editing,
+          offset === null,
+          undefined,
+          offset ?? undefined,
+        );
+      });
+    },
+    [dispatchPerRun, store],
+  );
+
   return {
     fittingScan,
+    setAlign,
+    toggleUnderline,
+    setLineSpacing,
+    toggleList,
     changeFontSize,
     changeFill,
     changeOutline,
     changeFontFamily,
     changeFontFamilyEverywhere,
     toggleBold,
+    setBold,
     toggleItalic,
     changeFontWeight,
     deleteSelection,
@@ -1005,4 +1305,12 @@ export function useSelectionActions(store: EditorStore) {
     replaceImageById,
     duplicateFirstSelected,
   };
+}
+
+function editedRunId(): string | null {
+  if (!isFocusInContentEditable()) return null;
+  const box = (document.activeElement as HTMLElement).closest<HTMLElement>(
+    "[data-run-id]",
+  );
+  return box?.dataset.runId ?? null;
 }

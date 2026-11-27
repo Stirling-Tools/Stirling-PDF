@@ -1,4 +1,4 @@
-import { Fragment, useEffect, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -26,6 +26,8 @@ import {
   type TableHit,
 } from "@editor/tools/pdfTextEditor/store/contextMenu";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { pageSetupRequest } from "@editor/tools/pdfTextEditor/store/pageSetupRequest";
+import { PageMenuItems } from "@editor/tools/pdfTextEditor/components/toolbar/PageMenu";
 import type {
   EditorStore,
   EditorViewState,
@@ -81,14 +83,29 @@ function keyboardRequest(
 /**
  * The editor's right-click menu: the clipboard and Duplicate on a selection,
  * saving or externally editing an image, row and column edits in a table, Unlock
- * on a locked item, and adding at the clicked point on bare page. Everything
+ * on a locked item, and adding at the clicked point or changing the page on
+ * bare page. Everything
  * else stays in the selection bar. The menu key and Shift+F10 open it on the
  * selection.
  */
 export function EditorContextMenu({ store, state, selection }: Props) {
   const request = useEditorContextMenu();
+  // Held here, not in the menu body: the body unmounts as an item is picked,
+  // and an external image edit it started must still be stoppable.
+  const controller = useToolbarController(store, state, selection);
 
   useEffect(() => editorContextMenu.attachHost(), []);
+
+  const openedOn = useMemo(
+    () => (request ? store.document : null),
+    [request, store],
+  );
+  useEffect(() => {
+    if (!request) return;
+    return store.subscribe(() => {
+      if (store.document !== openedOn) editorContextMenu.close();
+    });
+  }, [request, store, openedOn]);
 
   // A right press on something already selected keeps the whole selection for
   // the menu: each object's own press handling would select it alone, and a
@@ -158,6 +175,7 @@ export function EditorContextMenu({ store, state, selection }: Props) {
       state={state}
       selection={selection}
       request={request}
+      controller={controller}
     />
   );
 }
@@ -167,9 +185,12 @@ function ContextMenuBody({
   state,
   selection,
   request,
-}: Props & { request: ContextMenuRequest }) {
+  controller,
+}: Props & {
+  request: ContextMenuRequest;
+  controller: ReturnType<typeof useToolbarController>;
+}) {
   const { t } = useTranslation();
-  const controller = useToolbarController(store, state, selection);
   const close = () => editorContextMenu.close();
   const at = request.kind === "locked" ? null : request.at;
 
@@ -346,13 +367,14 @@ function ContextMenuBody({
   // Every menu is built from the same groups, in the same order and under the
   // same names, so a control sits in one place whatever was right-clicked:
   // clipboard, then Duplicate, then what is particular to the target, then
-  // Unlock. Empty groups drop out with their dividers.
+  // the page, then Unlock. Empty groups drop out with their dividers.
   const { hasRunSelection, selectionCount } = controller;
   const objects = request.kind === "objects";
   const onBarePage = request.kind === "page" && !request.table;
   const clipboard: ReactNode[] = [];
   const duplicate: ReactNode[] = [];
   const particular: ReactNode[] = [];
+  const page: ReactNode[] = [];
   const unlock: ReactNode[] = [];
 
   // Cut copies only text, and Delete would leave locked text in place, so it
@@ -369,10 +391,17 @@ function ContextMenuBody({
         item(
           "scissors",
           t("pdfTextEditor.contextMenu.cut", "Cut"),
-          () =>
+          () => {
+            const doc = store.document;
+            const copied = selection;
             void copy()
-              .then(() => controller.onDelete())
-              .catch(clipboardFailed),
+              .then(() => {
+                // Delete what was copied, not whatever is selected by now.
+                if (store.document === doc && store.selection.value === copied)
+                  controller.onDelete();
+              })
+              .catch(clipboardFailed);
+          },
           "pdf-editor-context-cut",
           { shortcut: modShortcut("X") },
         ),
@@ -434,7 +463,7 @@ function ContextMenuBody({
       particular.push(
         item(
           "merge",
-          t("pdfTextEditor.sidebar.group", "Group"),
+          t("pdfTextEditor.sidebar.group", "Join paragraph"),
           () => currentEditorSession()?.mergeSelection(),
           "pdf-editor-context-group",
           { shortcut: modShortcut("M") },
@@ -444,7 +473,7 @@ function ContextMenuBody({
       particular.push(
         item(
           "split",
-          t("pdfTextEditor.sidebar.ungroup", "Ungroup"),
+          t("pdfTextEditor.sidebar.ungroup", "Split into lines"),
           () => currentEditorSession()?.ungroupSelection(),
           "pdf-editor-context-ungroup",
         ),
@@ -492,6 +521,23 @@ function ContextMenuBody({
       ),
     );
   }
+  if (onBarePage && at) {
+    page.push(
+      <PageMenuItems
+        pageAt={() => at.pageIndex}
+        onPageSetup={(pageIndex) => {
+          const doc = store.document;
+          if (doc)
+            pageSetupRequest.open({
+              document: doc,
+              pageIndex,
+              clientX: request.clientX,
+              clientY: request.clientY,
+            });
+        }}
+      />,
+    );
+  }
   if (request.kind !== "locked" && request.table) {
     particular.push(tableItems(request.table));
   }
@@ -507,7 +553,7 @@ function ContextMenuBody({
     );
   }
 
-  const groups = [clipboard, duplicate, particular, unlock].filter(
+  const groups = [clipboard, duplicate, particular, page, unlock].filter(
     (group) => group.length > 0,
   );
   const empty = groups.length === 0;

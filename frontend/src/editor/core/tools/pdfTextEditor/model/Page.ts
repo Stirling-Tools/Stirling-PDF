@@ -19,11 +19,11 @@ const MAX_TRACKED_REPAINTS = 64;
 export class Page {
   readonly index: number;
   readonly pagePtr: number;
-  readonly width: number;
-  readonly height: number;
+  width: number;
+  height: number;
   // Maps this page's raw PDF object coords (MediaBox, y-up) to the rendered
   // bitmap's display space (CropBox-cropped + /Rotate-applied).
-  readonly display: DisplayTransform;
+  display: DisplayTransform;
   runs: TextRun[];
   images: ImageObject[];
   shapes: ShapeObject[];
@@ -57,6 +57,10 @@ export class Page {
    * drawing one that cannot be lifted faithfully (see claimFormNodes).
    */
   formNodes: Map<number, FormNode> | null = null;
+  readonly paragraphFormats = new Set<string>();
+  readonly underlines = new Map<string, number[]>();
+  readonly formatSignatures = new Map<string, string>();
+  readonly formatLayouts = new Map<string, { text: string; lefts: number[] }>();
   // Consecutive bounded edits, oldest first: each changed nothing outside its area.
   private repaints: Array<{ from: number; to: number; area: PageRect }> = [];
 
@@ -86,6 +90,13 @@ export class Page {
     this.needsGenerateContent = false;
     this.regenerated = false;
     this.shownInViewer = false;
+  }
+
+  forgetParagraphFormats(): void {
+    this.paragraphFormats.clear();
+    this.underlines.clear();
+    this.formatSignatures.clear();
+    this.formatLayouts.clear();
   }
 
   setRuns(runs: TextRun[]): void {

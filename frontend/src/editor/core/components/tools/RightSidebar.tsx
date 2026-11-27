@@ -136,7 +136,10 @@ export default function RightSidebar() {
           }}
         >
           <>
-            {policiesEnabled && <EditorPipelinesPanel />}
+            {policiesEnabled &&
+              !(inToolView && selectedToolKey === "pdfTextEditor") && (
+                <EditorPipelinesPanel />
+              )}
             <div className="tool-panel__stage">
               {!toolLayerCovers && (
                 <div

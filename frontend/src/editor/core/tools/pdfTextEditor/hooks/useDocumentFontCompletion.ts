@@ -13,6 +13,7 @@ import {
   fontCanBeCompleted,
   fontCompletionFor,
   fontCompletionsGeneration,
+  lookalikeFamilyFor,
   originalFontLookedUp,
   resolveOriginalFonts,
   setClosestFont,
@@ -145,6 +146,13 @@ export function useDocumentFontCompletion(
         while (live()) {
           const fontId = nextFont();
           if (!fontId) break;
+          const lookalike = await lookalikeFamilyFor(fontId);
+          if (!live()) break;
+          if (lookalike) {
+            tried.add(fontId);
+            setClosestFont(fontId, lookalike);
+            continue;
+          }
           const sample = matchableSample(doc, fontId);
           if (!sample) {
             unsampled.set(fontId, doc.loadedPages().length);

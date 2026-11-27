@@ -90,7 +90,9 @@ function run(id: string, fontId: string, text: string) {
   };
 }
 
-function page(runs: ReturnType<typeof run>[]): PageSnapshot[] {
+function page(
+  runs: Array<ReturnType<typeof run> & { substitutedGlyphs?: boolean }>,
+): PageSnapshot[] {
   return [
     {
       pageIndex: 0,
@@ -180,6 +182,23 @@ describe("selectedFontNote", () => {
     });
     resetFontCompletions();
     expect(selectedFontNote(pages, ["a"])).toEqual({ kind: "embeddedUnknown" });
+  });
+
+  it("says nothing of a completion once an edit drew every glyph from the document", () => {
+    const edited = { ...run("a", "pdf:44:Acme Sans", "Hi"), fontSubset: true };
+    setClosestFont("pdf:44:Acme Sans", "Times-Roman");
+
+    try {
+      expect(
+        selectedFontNote(page([{ ...edited, substitutedGlyphs: false }]), ["a"])
+          ?.kind,
+      ).not.toBe("completed");
+      expect(
+        selectedFontNote(page([{ ...edited, substitutedGlyphs: true }]), ["a"]),
+      ).toEqual({ kind: "completed", name: "Times-Roman", source: "closest" });
+    } finally {
+      resetFontCompletions();
+    }
   });
 
   it("claims the same font only when every selected font is completed by it", () => {

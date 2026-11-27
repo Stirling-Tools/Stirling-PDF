@@ -16,6 +16,7 @@ import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { FindBar } from "@editor/tools/pdfTextEditor/components/FindBar";
 import { SelectionBar } from "@editor/tools/pdfTextEditor/components/SelectionBar";
 import { EditorContextMenu } from "@editor/tools/pdfTextEditor/components/EditorContextMenu";
+import { PageSetupHost } from "@editor/tools/pdfTextEditor/components/toolbar/PageMenu";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
 import { QuickTagCard } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
 import { EditorTrailControls } from "@editor/tools/pdfTextEditor/components/EditorTrailControls";
@@ -92,6 +93,7 @@ export function ViewerEditToolbar() {
             state={bars.state}
             selection={bars.selection}
           />
+          <PageSetupHost />
         </>
       )}
       {reviewing && store.document && (
@@ -193,8 +195,7 @@ const ActionBar = memo(function ActionBar({
     <MobileActionBar
       store={store}
       controller={controller}
-      addTextArmed={state.mode === "addText"}
-      addTableArmed={state.mode === "addTable"}
+      mode={state.mode}
       findOpen={state.findOpen}
     />
   );

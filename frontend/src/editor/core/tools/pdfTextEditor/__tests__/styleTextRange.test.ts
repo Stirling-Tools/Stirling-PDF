@@ -313,50 +313,46 @@ test("a range spanning two lines of a paragraph restyles both parts and leaves t
   expect(pageText(store)).toContain("grouped together.");
 });
 
-test("letters the bold subset lacks stay in the regular face and the user is told", async () => {
+test("a selected word the bold subset lacks letters of is bolded whole in one lookalike", async () => {
   const store = await fixture("mushroom-life.pdf");
   const run = runStarting(store, "Mushrooms represent");
   selectText(store, run, "unique");
 
-  expect(await perform(store, (a) => a.toggleBold())).toBe("closestMatch");
+  expect(await perform(store, (a) => a.toggleBold())).toBeNull();
 
-  const bold = wordsIn(store, run, "LMRoman12-Bold").join("");
-  expect(bold.length).toBeGreaterThan(0);
-  expect(bold).toBe("uniue");
-  expect(
-    faces(store, run)
-      .map((face) => face.split("@")[0])
-      .join(""),
-  ).toContain("unique");
+  expect(wordsIn(store, run, "Times-Bold")).toEqual(["unique"]);
+  expect(wordsIn(store, run, "LMRoman12-Bold")).toEqual([]);
   expect(run.text).toContain("a unique posi-");
 });
 
+test("a quote mark the bold subset lacks abuts the bold letters around it without a notice and reads as one word, on the page and after a save", async () => {
+  const store = await fixture("mushroom-life.pdf");
+  const run = runStarting(store, "Mushrooms represent");
+  selectText(store, run, "represent one of nature’s");
+
+  expect(await perform(store, (a) => a.toggleBold())).toBeNull();
+
+  const seams = seamsIn(store, run, "nature’s");
+  expect(seams.length).toBeGreaterThan(0);
+  for (const seam of seams) expect(Math.abs(seam)).toBeLessThan(0.01);
+  expect(pageText(store)).toContain("of nature’s most");
+  const reopened = await storeWith(await savedBytes(store));
+  expect(pageText(reopened)).toContain("of nature’s most");
+});
+
 test.each([
-  [
-    "before its last letter",
-    "represent one of nature’s",
-    "nature’s",
-    "of nature’s most",
-  ],
-  ["mid-word", "unique", "unique", "a unique posi"],
-  [
-    "at the start of a word",
-    "biological",
-    "biological",
-    "the biological world",
-  ],
+  ["mid-word", "unique", "a unique posi"],
+  ["at the start of a word", "biological", "the biological world"],
 ])(
-  "a letter the bold subset lacks %s abuts the letters around it and reads as one word, on the page and after a save",
-  async (_where, part, word, reads) => {
+  "a word whose letters the bold subset lacks, bolded %s, is drawn as one piece and reads as one word, on the page and after a save",
+  async (_where, word, reads) => {
     const store = await fixture("mushroom-life.pdf");
     const run = runStarting(store, "Mushrooms represent");
-    selectText(store, run, part);
+    selectText(store, run, word);
 
-    expect(await perform(store, (a) => a.toggleBold())).toBe("closestMatch");
+    expect(await perform(store, (a) => a.toggleBold())).toBeNull();
 
-    const seams = seamsIn(store, run, word);
-    expect(seams.length).toBeGreaterThan(0);
-    for (const seam of seams) expect(Math.abs(seam)).toBeLessThan(0.01);
+    expect(seamsIn(store, run, word)).toEqual([]);
     expect(pageText(store)).toContain(reads);
     const reopened = await storeWith(await savedBytes(store));
     expect(pageText(reopened)).toContain(reads);

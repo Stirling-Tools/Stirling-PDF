@@ -39,6 +39,8 @@ function EditorPanelDemo({
       revealPage: noop,
       mergeSelection: noop,
       ungroupSelection: noop,
+      changeDocument: async () => {},
+      pageSize: () => ({ width: 612, height: 792 }),
     };
     setEditorSession(session);
     return () => clearEditorSession(session);

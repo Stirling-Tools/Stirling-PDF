@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  landsOnUnmoved,
   runsPulledBack,
   runsPushedBelow,
   setPushRecords,
@@ -25,6 +26,10 @@ function page(runs: TextRun[], cellRuns: (string | null)[][] = []): Page {
   return {
     runs,
     findRun: (id: string) => runs.find((r) => r.id === id),
+    rules: [],
+    fills: [],
+    shapes: [],
+    images: [],
     tables: cellRuns.length
       ? [
           {
@@ -256,5 +261,25 @@ describe("invisible text", () => {
     expect(
       runsPushedBelow(page([edited(), invisible(false)]), edited(), 500).runIds,
     ).toEqual([]);
+  });
+});
+
+describe("landsOnUnmoved", () => {
+  const before = { x: 50, y: 100, width: 300, height: 12 };
+  const landsOn = (other: TextRun, moved: string[] = []) => {
+    const grown = run("edited", 50, 86, 300, 26);
+    return landsOnUnmoved(page([grown, other]), grown, before, moved);
+  };
+
+  it("reports text the added lines cover deeper than the slack, though it touched the run before", () => {
+    expect(landsOn(run("below", 50, 90, 300, 11))).toBe(true);
+  });
+
+  it("leaves text that touched the run before and stays within the slack", () => {
+    expect(landsOn(run("beside", 50, 98, 300, 4))).toBe(false);
+  });
+
+  it("leaves text the push moved", () => {
+    expect(landsOn(run("below", 50, 90, 300, 11), ["below"])).toBe(false);
   });
 });

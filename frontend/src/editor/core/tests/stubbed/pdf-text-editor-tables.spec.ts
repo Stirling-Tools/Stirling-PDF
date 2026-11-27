@@ -14,8 +14,8 @@ const STORE = `(window).__editor_store`;
 
 test.describe("PDF text editor - tables", () => {
   for (const layout of [
-    { name: "side panel", width: 1100, height: 900 },
-    { name: "phone action bar", width: 390, height: 844 },
+    { name: "side panel", width: 1100, height: 900, mobile: false },
+    { name: "phone action bar", width: 390, height: 844, mobile: true },
   ]) {
     test(`inserts a table from the ${layout.name}`, async ({ page }) => {
       test.setTimeout(120_000);
@@ -37,6 +37,7 @@ test.describe("PDF text editor - tables", () => {
         ).__editor_store.getState();
         return state.firstPageRendered && !state.loading;
       });
+      if (layout.mobile) await page.getByTestId("pdf-editor-insert").click();
       await page.getByTestId("pdf-editor-add-table").click();
       await page.waitForFunction(
         () =>

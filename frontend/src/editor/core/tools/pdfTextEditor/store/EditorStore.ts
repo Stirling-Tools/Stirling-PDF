@@ -50,6 +50,11 @@ import {
   scriptFacesCover,
   takeUndrawnScriptText,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import { SyncParagraphFormatCommand } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
+import {
+  captureFormats,
+  carryFormats,
+} from "@editor/tools/pdfTextEditor/util/carriedFormats";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
@@ -149,6 +154,9 @@ const INITIAL: EditorViewState = {
 // into PDFium directly - they dispatch commands.
 export class EditorStore {
   readonly history: HistoryStack;
+  private readonly pendingRedraws = new Set<Promise<void>>();
+  private lineageId = 0;
+  private batching = 0;
   readonly selection: Selection;
   /**
    * The workbench file the document was opened from and the name it saves
@@ -310,6 +318,7 @@ export class EditorStore {
     // and is cleared.
     const wasDirty = this.isDirty();
     // Flushes first: the rebuilt runs must reflect the user's current edits.
+    carryFormats(doc, captureFormats(doc));
     this.repopulateAllPages(doc, mode);
     this.history.clear();
     this.savedTop = null;
@@ -347,7 +356,12 @@ export class EditorStore {
     return this.loadToken === token;
   }
 
+  get lineage(): number {
+    return this.lineageId;
+  }
+
   async setDocument(doc: EditorDocument): Promise<void> {
+    this.lineageId++;
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.doc = doc;
@@ -468,6 +482,38 @@ export class EditorStore {
     this.patch({ dirty: this.isDirty() });
   }
 
+  batchNow(changes: () => void): void {
+    this.history.breakCoalescing();
+    const mark = this.history.mark;
+    try {
+      changes();
+    } finally {
+      this.endBatch(mark);
+    }
+  }
+
+  async batch(changes: () => Promise<unknown>): Promise<void> {
+    this.history.breakCoalescing();
+    const mark = this.history.mark;
+    this.batching++;
+    try {
+      await changes();
+    } finally {
+      this.batching--;
+      this.endBatch(mark);
+    }
+  }
+
+  private endBatch(mark: number): void {
+    this.history.mergeSince(mark);
+    this.patch({ dirty: this.isDirty() });
+  }
+
+  private get historyDoc(): EditorDocument | null {
+    const busy = this.state.loading || this.batching;
+    return busy ? null : this.doc;
+  }
+
   /** Apply a command via the history stack, re-snapshot, and notify. */
   dispatch(cmd: Command): void {
     if (!this.doc) return;
@@ -488,15 +534,45 @@ export class EditorStore {
       this.recoverFromBrokenStep(err);
       return;
     }
-    if (before) noteRepaintArea(this.doc, cmd, before, fromRevision);
+    let reformatted = false;
+    try {
+      reformatted = this.syncParagraphFormats();
+    } catch (err) {
+      this.recoverFromBrokenStep(err);
+      return;
+    }
+    if (before && !reformatted)
+      noteRepaintArea(this.doc, cmd, before, fromRevision);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
     const undrawn = takeUndrawnScriptText();
-    if (undrawn) void this.redrawOnceScriptFontsLoad(cmd, undrawn);
+    if (undrawn) {
+      const redraw = this.redrawOnceScriptFontsLoad(cmd, undrawn);
+      this.pendingRedraws.add(redraw);
+      void redraw.finally(() => this.pendingRedraws.delete(redraw));
+    }
   }
 
-  /** Redraw `cmd` and every step after it once fonts for `undrawn`'s scripts are in, so typed text its emit dropped appears. */
+  private syncParagraphFormats(): boolean {
+    const doc = this.doc;
+    if (!doc) return false;
+    let synced = false;
+    for (const page of doc.loadedPages()) {
+      if (page.paragraphFormats.size === 0) continue;
+      if (!SyncParagraphFormatCommand.needed(doc, page.index)) continue;
+      this.history.attachToLast(
+        new SyncParagraphFormatCommand({
+          pageIndex: page.index,
+          followsKey: this.history.lastKey,
+        }),
+        doc,
+      );
+      synced = true;
+    }
+    return synced;
+  }
+
   private async redrawOnceScriptFontsLoad(
     cmd: Command,
     undrawn: string,
@@ -504,14 +580,17 @@ export class EditorStore {
     const doc = this.doc;
     await loadScriptScanFaces(scanScriptsOf(undrawn)).catch(() => undefined);
     if (this.doc !== doc || !doc || this.state.loading) return;
-    if (!scriptFacesCover(undrawn)) return;
+    const drawable = [...undrawn]
+      .filter((ch) => /\S/.test(ch) && scriptFacesCover(ch))
+      .join("");
+    if (!drawable) return;
     try {
       if (!this.history.replayFrom(cmd, doc)) return;
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
     }
-    forgetDroppedChars(undrawn);
+    forgetDroppedChars(drawable);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
   }
@@ -617,12 +696,24 @@ export class EditorStore {
     });
   }
 
-  // Ignored while loading: a long operation is mid-way through the document,
-  // and an undo would revert under it.
+  get canUndo(): boolean {
+    return this.history.canUndo;
+  }
+
+  settleRedraws(): Promise<void> {
+    return Promise.all(this.pendingRedraws).then(() => undefined);
+  }
+
+  get canRedo(): boolean {
+    return this.history.canRedo;
+  }
+
   undo(): void {
-    if (!this.doc || this.state.loading) return;
+    const doc = this.historyDoc;
+    if (!doc) return;
+    if (!this.history.canUndo) return;
     try {
-      this.history.undo(this.doc);
+      this.history.undo(doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
@@ -633,9 +724,11 @@ export class EditorStore {
   }
 
   redo(): void {
-    if (!this.doc || this.state.loading) return;
+    const doc = this.historyDoc;
+    if (!doc) return;
+    if (!this.history.canRedo) return;
     try {
-      this.history.redo(this.doc);
+      this.history.redo(doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
@@ -689,6 +782,7 @@ export class EditorStore {
       });
       return;
     }
+    carryFormats(doc, captureFormats(doc));
     this.repopulateAllPages(doc, this.state.groupingMode);
     // Rebuilt runs get fresh ids, so no existing history entry can apply.
     this.history.clear();
@@ -709,6 +803,7 @@ export class EditorStore {
       page.setImages([]);
       page.tables = [];
       page.setShapes([]);
+      page.forgetParagraphFormats();
       PdfiumTextReader.populate(doc, page, mode);
     }
   }
@@ -737,13 +832,23 @@ export class EditorStore {
     if (conformanceClaim !== this.state.conformanceClaim) {
       this.patch({ conformanceClaim });
     }
-    let changed = false;
-    const pages: PageSnapshot[] = this.state.pages.map((p) => {
-      const live = doc.page(p.pageIndex);
-      if (live.revision === p.revision) return p;
+    if (this.state.pages.length === 0) return;
+    const order = doc.displayOrder();
+    const published = new Map(this.state.pages.map((p) => [p.pageIndex, p]));
+    let changed =
+      order.length !== this.state.pages.length ||
+      order.some((index, at) => this.state.pages[at].pageIndex !== index);
+    const pages: PageSnapshot[] = order.map((index) => {
+      const live = doc.page(index);
+      const p = published.get(index);
+      if (p && live.revision === p.revision) return p;
       changed = true;
       return {
         ...p,
+        pageIndex: index,
+        width: live.width,
+        height: live.height,
+        display: live.display.toData(),
         dirty: live.dirty,
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
@@ -753,10 +858,11 @@ export class EditorStore {
           .map((tbl) => tbl.snapshot()),
         rules: live.rules,
         shapes: live.shapes.map((shape) => shape.snapshot()),
+        annotations: live.loaded ? live.annotations : p?.annotations,
       };
     });
     if (!changed) return;
-    this.patch({ pages });
+    this.patch({ pages, pageCount: pages.length });
   }
 
   // Push a fresh page snapshot list into the store - called by the React loader

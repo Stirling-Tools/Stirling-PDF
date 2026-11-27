@@ -151,11 +151,11 @@ export function pageFontKey(fontId: string, fontSubset: boolean): string {
 // fonts with an editability status.
 export function analyzePageFonts(pages: PageSnapshot[]): PageFont[] {
   const map = new Map<string, PageFont>();
-  for (const page of pages) {
+  for (const [position, page] of pages.entries()) {
     for (const run of page.runs) {
       const { name, status } = fontNameAndStatus(run.fontId, run.fontSubset);
       const key = `${name}|${status}`;
-      const pageNo = page.pageIndex + 1;
+      const pageNo = position + 1;
       const existing = map.get(key);
       if (existing) {
         if (!existing.pages.includes(pageNo)) existing.pages.push(pageNo);

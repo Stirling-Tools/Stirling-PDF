@@ -20,12 +20,22 @@ export class CompositeCommand implements Command {
   }
 
   includes(cmd: Command): boolean {
-    return this.commands.includes(cmd);
+    return this.commands.some(
+      (child) =>
+        child === cmd ||
+        (child instanceof CompositeCommand && child.includes(cmd)),
+    );
   }
 
   /** The most recent child - used to derive the group's coalesce key. */
   get last(): Command {
     return this.commands[this.commands.length - 1];
+  }
+
+  get lastLead(): Command {
+    for (let i = this.commands.length - 1; i >= 0; i--)
+      if (!this.commands[i].followsPrevious) return this.commands[i];
+    return this.last;
   }
 
   apply(doc: EditorDocument): void {
@@ -42,7 +52,23 @@ export class CompositeCommand implements Command {
     order: Command[],
     phase: "apply" | "revert",
   ): void {
-    if (this.last.moveGroup?.(doc, this.commands, phase)) return;
+    const leads = this.commands.filter((cmd) => !cmd.followsPrevious);
+    const followers = this.commands.filter((cmd) => cmd.followsPrevious);
+    if (
+      phase === "revert" &&
+      followers.length > 0 &&
+      this.canMoveGroup(doc, leads)
+    ) {
+      this.lastLead.moveGroup?.(doc, leads, phase);
+      for (const follower of [...followers].reverse())
+        follower.revertBesideGroup?.(doc);
+      for (const follower of followers) follower.relayoutAfterGroup?.(doc);
+      return;
+    }
+    if (this.lastLead.moveGroup?.(doc, leads, phase)) {
+      for (const follower of followers) follower.relayoutAfterGroup?.(doc);
+      return;
+    }
     const done: Command[] = [];
     for (const [i, cmd] of order.entries()) {
       if (!order[i + 1]?.supersedes?.(cmd)) {
@@ -63,6 +89,10 @@ export class CompositeCommand implements Command {
       }
       done.push(cmd);
     }
+  }
+
+  private canMoveGroup(doc: EditorDocument, leads: Command[]): boolean {
+    return !!this.lastLead.wouldMoveGroup?.(doc, leads, "revert");
   }
 
   coalesceKey(): string | null {

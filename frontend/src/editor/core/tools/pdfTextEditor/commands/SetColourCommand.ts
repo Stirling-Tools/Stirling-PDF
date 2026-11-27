@@ -1,4 +1,9 @@
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
+import {
+  fauxBoldWidth,
+  isFauxBold,
+} from "@editor/tools/pdfTextEditor/util/fauxBold";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -19,6 +24,7 @@ export class SetColourCommand implements Command {
   private prevFill: RGBA | null;
   /** Each member object's OWN pre-apply fill. */
   private prevMemberFills: Array<{ ptr: number; fill: RGBA }> | null;
+  private outline: SetTextOutlineCommand | null = null;
   /** Set when the run was scanned text, recoloured by redrawing it. */
   private scanPrev: ScanOverride | null = null;
 
@@ -35,6 +41,7 @@ export class SetColourCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run) return;
     liftRunToPage(doc, page, run);
+    const bold = isFauxBold(run);
     const scanPrev = setScanOverride(doc, page, run, (o) => ({
       ...o,
       fill: { ...this.nextFill },
@@ -60,6 +67,15 @@ export class SetColourCommand implements Command {
     run.dirty = true;
     page.markDirty();
     PdfiumTextWriter.commitRunFill(doc, page, run);
+    this.outline = bold
+      ? new SetTextOutlineCommand({
+          pageIndex: this.pageIndex,
+          runId: this.runId,
+          stroke: { ...this.nextFill, a: 255 },
+          width: fauxBoldWidth(run.fontSize),
+        })
+      : null;
+    this.outline?.apply(doc);
   }
 
   revert(doc: EditorDocument): void {
@@ -72,6 +88,7 @@ export class SetColourCommand implements Command {
       return;
     }
     if (this.prevFill === null) return;
+    this.outline?.revert(doc);
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;

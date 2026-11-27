@@ -6,6 +6,7 @@ import {
   SelectionNotices,
 } from "@editor/tools/pdfTextEditor/components/toolbar/DetailsGroup";
 import type { SelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
 
 const noop = () => {};
@@ -14,8 +15,10 @@ const noop = () => {};
 const ONE_TEXT_BOX: SelectionGeometry = {
   single: {
     bounds: { x: 72, y: 640, width: 120, height: 18 },
+    display: DisplayTransform.identity(612, 792).toData(),
     setX: noop,
     setY: noop,
+    moveDisplayed: noop,
     setWidth: noop,
   },
 };

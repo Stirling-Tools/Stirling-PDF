@@ -3,6 +3,7 @@ import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
 
 // Lines set tighter than their own boxes already overlap the line above a little; that much is the document's layout, not a collision.
 const TOUCH_TOLERANCE_EM = 0.25;
@@ -11,6 +12,8 @@ const BOX_ESTIMATE_EM = 0.5;
 // The room a line keeps under it, where the document gave it at least that: lines that only just clear each other read as touching.
 const CLEARANCE_EM = 0.1;
 const AMONG_LINES_SHARE = 0.5;
+const ATTACHED_EM = 0.6;
+const TEXT_OVERLAP_EM = 0.25;
 
 const top = (run: TextRun) => run.bounds.y + run.bounds.height;
 
@@ -93,7 +96,69 @@ export function runsPushedBelow(
     }
   }
   const runIds = withRunsLandedOn(page, edited, pushed, drop);
-  return runIds ? { runIds, dy: -drop } : none;
+  if (!runIds || drawnWith(page, edited, runIds)) return none;
+  return { runIds, dy: -drop };
+}
+
+export function landsOnUnmoved(
+  page: Page,
+  edited: TextRun,
+  before: PageRect,
+  movedRunIds: Iterable<string>,
+): boolean {
+  const added = {
+    x: edited.bounds.x,
+    y: edited.bounds.y,
+    width: edited.bounds.width,
+    height: before.y - edited.bounds.y,
+  };
+  if (added.height <= 0) return false;
+  const covers = (r: PageRect) => overlaps(r, added) && !overlaps(r, before);
+  // Text is allowed the slack runsPushedBelow gives it: lines set tighter than their boxes already overlap a little.
+  const slack = edited.fontSize * TEXT_OVERLAP_EM;
+  const textBand = {
+    ...added,
+    y: added.y + slack,
+    height: added.height - slack,
+  };
+  const moved = new Set(movedRunIds);
+  const textHit = page.runs.some(
+    (r) =>
+      r !== edited &&
+      !moved.has(r.id) &&
+      textBand.height > 0 &&
+      overlaps(r.bounds, textBand) &&
+      !(overlaps(r.bounds, before) && r.bounds.y >= before.y - slack),
+  );
+  return (
+    textHit ||
+    page.rules.some(covers) ||
+    page.fills.some(covers) ||
+    page.shapes.some((s) => covers(s.bounds)) ||
+    page.images.some((i) => covers(i.bounds))
+  );
+}
+
+function drawnWith(page: Page, edited: TextRun, runIds: string[]): boolean {
+  const graphics = [...page.rules, ...page.fills].filter(
+    (g) => !touches(g, edited.bounds, 0),
+  );
+  if (graphics.length === 0) return false;
+  const moving = new Set(runIds);
+  return page.runs.some(
+    (run) =>
+      moving.has(run.id) &&
+      graphics.some((g) => touches(g, run.bounds, run.fontSize * ATTACHED_EM)),
+  );
+}
+
+function touches(a: PageRect, b: PageRect, reach: number): boolean {
+  return (
+    a.x <= b.x + b.width + reach &&
+    a.x + a.width >= b.x - reach &&
+    a.y <= b.y + b.height + reach &&
+    a.y + a.height >= b.y - reach
+  );
 }
 
 // How much of their height two boxes share, where they share any width.

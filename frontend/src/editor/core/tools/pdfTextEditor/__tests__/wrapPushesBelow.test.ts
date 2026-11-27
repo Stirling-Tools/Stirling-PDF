@@ -255,3 +255,42 @@ test("a wrap with clear space below is not refused", async () => {
   expect(heading.text.includes("\n")).toBe(true);
   expect(bodyInk()).toBeLessThan(startTop - 10);
 });
+
+test("a wrap leaves text in place rather than pull it away from the rules drawn with it", async () => {
+  const doc = await EditorDocument.open(
+    new Uint8Array(
+      await readFile(
+        path.join(
+          import.meta.dirname,
+          "../../../tests/test-fixtures/cairo-styles.pdf",
+        ),
+      ),
+    ),
+  );
+  opened.push(doc);
+  const page = doc.page(0);
+  PdfiumTextReader.populate(doc, page);
+  const para = page.runs.find((r) => r.text.startsWith("Justified paragraph"))!;
+  const underlined = page.runs.find((r) => r.text.startsWith("Underlined"))!;
+  const before = underlined.bounds.y;
+  const width = para.bounds.width;
+  const history = new HistoryStack();
+  history.execute(
+    new EditTextCommand({
+      pageIndex: 0,
+      runId: para.id,
+      nextText: `${para.text} and a good many more words typed on to the end of it`,
+    }),
+    doc,
+  );
+  history.execute(
+    new ReflowWrapCommand({
+      pageIndex: 0,
+      runId: para.id,
+      maxWidthPt: width,
+    }),
+    doc,
+  );
+  expect(para.text.split("\n").length).toBeGreaterThan(1);
+  expect(underlined.bounds.y).toBeCloseTo(before, 1);
+});

@@ -23,6 +23,7 @@ vi.mock("@editor/tools/pdfTextEditor/util/documentFontCompletion", () => ({
   fontCanBeCompleted: vi.fn(() => true),
   fontCompletionFor: () => null,
   fontCompletionsGeneration: () => 0,
+  lookalikeFamilyFor: () => Promise.resolve(null),
   originalFontLookedUp: () => true,
   resolveOriginalFonts: vi.fn(() => Promise.resolve()),
   setClosestFont: vi.fn(),

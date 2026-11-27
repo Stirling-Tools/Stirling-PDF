@@ -34,16 +34,16 @@ describe("fitTokenAdvance", () => {
     expect(renderedAdvance(10, 70, fit)).toBeCloseTo(76.7, 6);
   });
 
-  it("spreads the correction between glyphs, not after the last one", () => {
+  it("spreads the correction over every glyph's advance, so a caret after the token sits on the PDF's pen end", () => {
     const fit = fitTokenAdvance(3, 30, 24, 20);
-    expect(fit.letterSpacingPx).toBeCloseTo(-3, 6);
-    expect(fit.marginRightPx).toBeCloseTo(3, 6);
+    expect(fit.letterSpacingPx).toBeCloseTo(-2, 6);
+    expect(fit.marginRightPx).toBeCloseTo(0, 6);
   });
 
-  it("puts the whole correction in the margin for a single glyph", () => {
+  it("gives a single glyph the whole correction as its own spacing", () => {
     const fit = fitTokenAdvance(1, 10, 14, 16);
-    expect(fit.letterSpacingPx).toBe(0);
-    expect(fit.marginRightPx).toBeCloseTo(4, 6);
+    expect(fit.letterSpacingPx).toBeCloseTo(4, 6);
+    expect(fit.marginRightPx).toBeCloseTo(0, 6);
     expect(renderedAdvance(1, 10, fit)).toBeCloseTo(14, 6);
   });
 

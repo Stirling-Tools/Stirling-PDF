@@ -1,3 +1,4 @@
+import { buildSlotsFromOverlayEmit } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
 import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
@@ -54,6 +55,11 @@ import {
   setScanOverride,
   type ScanOverride,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  ReflowWrapCommand,
+  layoutBefore,
+  wrapToWidthBefore,
+} from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 
 interface LineToEmit {
   text: string;
@@ -74,6 +80,8 @@ export class SetFontFamilyCommand implements Command {
   private readonly pageIndex: number;
   private readonly runId: string;
   private readonly nextFamily: string;
+  private readonly keepLineStarts: boolean;
+  private rewrap: ReflowWrapCommand | null = null;
   /** Set when the run was scanned text, re-set by redrawing it. */
   private scanPrev: ScanOverride | null = null;
   /** The run as this apply found it, for revert. */
@@ -85,10 +93,17 @@ export class SetFontFamilyCommand implements Command {
   /** Every object this command created (removed on revert). */
   private createdPtrs: number[];
 
-  constructor(opts: { pageIndex: number; runId: string; nextFamily: string }) {
+  constructor(opts: {
+    pageIndex: number;
+    runId: string;
+    nextFamily: string;
+    /** Only push down words that no longer fit, as a bold or italic toggle should, rather than reflow the paragraph. */
+    keepLineStarts?: boolean;
+  }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.nextFamily = opts.nextFamily;
+    this.keepLineStarts = opts.keepLineStarts ?? false;
     this.prev = null;
     this.prevMemberPtrs = [];
     this.prevContentOrder = [];
@@ -119,6 +134,7 @@ export class SetFontFamilyCommand implements Command {
 
     // Read on every apply: redoing an earlier step draws the run in new objects.
     this.prev = snapshotRun(run);
+    const laidOut = layoutBefore(run);
     this.prevMemberPtrs = collectMemberPtrs(run).slice();
     this.prevContentOrder = [
       ...contentIndices(m, page.pagePtr, this.prevMemberPtrs),
@@ -169,8 +185,9 @@ export class SetFontFamilyCommand implements Command {
     const notInTarget =
       toDocumentFont &&
       !created.some((ptr) => m.FPDFTextObj_GetFont(ptr) === targetFont);
-    if (created.length === 0 || notInTarget || losesLetters(dropped)) {
-      // Nothing usable emitted (e.g. all-whitespace dropped), or a letter went undrawn - restore and bail.
+    const losesText =
+      losesLetters(dropped) && losesLetters(this.newlyDropped(doc, dropped));
+    if (created.length === 0 || notInTarget || losesText) {
       for (const ptr of created) removeAndDestroyObject(m, page.pagePtr, ptr);
       this.reinsertOriginals(m, page);
       restoreRun(run, this.prev);
@@ -207,7 +224,10 @@ export class SetFontFamilyCommand implements Command {
     run.mergedFromTexts = [];
     run.mergedFromBounds = [];
     run.mergedFromCharStarts = [];
-    run.paragraphLineSlots = [];
+    run.paragraphLineSlots =
+      emitted.length > 1
+        ? buildSlotsFromOverlayEmit(m, run, emitted, run.fontId)
+        : [];
     // Track every per-word leaf so later recolour/resize/move hit all words,
     // not just the anchor. Line height stays paragraph-only (>1 line).
     run.paragraphMemberPtrs = lineAnchors;
@@ -222,6 +242,13 @@ export class SetFontFamilyCommand implements Command {
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
+    this.rewrap = wrapToWidthBefore(
+      doc,
+      page,
+      run,
+      laidOut,
+      !this.keepLineStarts,
+    );
   }
 
   wouldLoseText(doc: EditorDocument): boolean {
@@ -241,6 +268,28 @@ export class SetFontFamilyCommand implements Command {
     if (!run || isScanRun(run) || run.scanEdit) return null;
     const restoring = isDocumentFontId(this.nextFamily);
     if (restoring && !documentFontHandle(this.nextFamily)) return null;
+    const { dropped, drawsNextFont } = this.trialEmit(doc, page, run);
+    if (losesLetters(dropped) && losesLetters(this.newlyDropped(doc, dropped)))
+      return "losesText";
+    return restoring && !drawsNextFont ? "notRestored" : null;
+  }
+
+  private newlyDropped(doc: EditorDocument, dropped: string[]): string[] {
+    const page = doc.page(this.pageIndex);
+    const run = page.findRun(this.runId);
+    if (!run || isDocumentFontId(run.fontId)) return dropped;
+    const family = familyOf(run.fontId);
+    if (family === this.nextFamily) return dropped;
+    const current = new SetFontFamilyCommand({
+      pageIndex: this.pageIndex,
+      runId: this.runId,
+      nextFamily: family,
+    });
+    const undrawn = new Set(current.trialEmit(doc, page, run).dropped);
+    return dropped.filter((ch) => !undrawn.has(ch));
+  }
+
+  private trialEmit(doc: EditorDocument, page: Page, run: TextRun) {
     const emitLines = linesToEmit(run, readRunTags(doc, page, run));
     const keptFonts = this.keptFontSpans(doc, page, run, emitLines);
     warmOnPageAdvances(doc.module, page.pagePtr);
@@ -248,22 +297,22 @@ export class SetFontFamilyCommand implements Command {
     const dropped = droppedCharsOf(() => {
       emitted = this.emit(doc, page, run, emitLines, keptFonts);
     });
-    const restoreFont = documentFontHandle(this.nextFamily);
-    let drawsRestoreFont = false;
+    const nextFont = documentFontHandle(this.nextFamily);
+    let drawsNextFont = false;
     for (const line of emitted)
       for (const ptr of line.ptrs) {
-        if (doc.module.FPDFTextObj_GetFont(ptr) === restoreFont)
-          drawsRestoreFont = true;
+        if (doc.module.FPDFTextObj_GetFont(ptr) === nextFont)
+          drawsNextFont = true;
         removeAndDestroyObject(doc.module, page.pagePtr, ptr);
       }
-    if (losesLetters(dropped)) return "losesText";
-    return restoring && !drawsRestoreFont ? "notRestored" : null;
+    return { dropped, drawsNextFont };
   }
 
   /**
    * How much of the run's visible text the next font has glyphs for: the rest
    * is drawn in the closest font that has them, and none means the change
-   * would not put the run in that font at all.
+   * would not put the run in that font at all. Only a missing letter or digit
+   * makes it "some": a symbol from another font is not a visible mismatch.
    */
   coverage(doc: EditorDocument): "all" | "some" | "none" {
     const page = doc.page(this.pageIndex);
@@ -274,9 +323,9 @@ export class SetFontFamilyCommand implements Command {
     const visible = [...run.text].filter(
       (ch) => !/\s/.test(ch) && !DRAWS_NOTHING.test(ch),
     );
-    const drawn = visible.filter(draws).length;
-    if (drawn === visible.length) return "all";
-    return drawn === 0 ? "none" : "some";
+    const missing = visible.filter((ch) => !draws(ch));
+    if (missing.length === visible.length && visible.length > 0) return "none";
+    return missing.some((ch) => /[\p{L}\p{N}]/u.test(ch)) ? "some" : "all";
   }
 
   /** Whether the next font has a glyph for a character; null when that cannot be known. */
@@ -379,6 +428,8 @@ export class SetFontFamilyCommand implements Command {
       this.scanPrev = null;
       return;
     }
+    this.rewrap?.revert(doc);
+    this.rewrap = null;
     if (!this.prev) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
@@ -431,8 +482,7 @@ function familyDraws(
 const NEEDS_SHAPING =
   /\p{M}|\u200c|\u200d|[\u1100-\u11ff]|\p{Script=Arabic}|\p{Script=Syriac}|\p{Script=Nko}|\p{Script=Mandaic}|\p{Script=Mongolian}|\p{Script=Phags_Pa}|\p{Script=Adlam}/u;
 export const ATTACHES_TO_PREVIOUS = /\p{M}|\u200c|\u200d/u;
-/** Format and control characters draw nothing, so losing one loses no letter. */
-const DRAWS_NOTHING = /[\p{Cf}\p{Cc}]/u;
+const DRAWS_NOTHING = /\p{Cf}/u;
 
 export function isSubsetFont(m: WrappedPdfiumModule, font: number): boolean {
   return /^[A-Z]{6}\+/.test(readFontName(m, font) ?? "");

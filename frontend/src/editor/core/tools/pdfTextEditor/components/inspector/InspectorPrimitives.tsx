@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 import { Box, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
+import {
+  POINT_TO_UNIT,
+  type MeasurementUnit,
+} from "@editor/utils/measurementUtils";
+import { localPaperSize } from "@editor/utils/paperSize";
 /** Shared layout atoms for the editor's properties inspector. */
 
 /** Section heading, optionally with an info affordance beside it and a trailing control. */
@@ -96,6 +101,16 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+type LengthUnit = Extract<MeasurementUnit, "mm" | "in">;
+
+export const LENGTH_DECIMALS: Record<LengthUnit, number> = { mm: 1, in: 2 };
+
+export const LENGTH_STEP: Record<LengthUnit, number> = { mm: 1, in: 0.1 };
+
+export function lengthUnitFor(locales?: readonly string[]): LengthUnit {
+  return localPaperSize<LengthUnit>("mm", "in", locales);
+}
+
 /**
  * A points field that only commits a real change. Its short name (X, W) sits
  * inside the field, so a pair of them fits side by side without labels above.
@@ -108,6 +123,7 @@ export function PointsInput({
   onCommit,
   label,
   prefix,
+  unit,
   testId,
   min,
   disabled,
@@ -118,10 +134,14 @@ export function PointsInput({
   label: string;
   /** Shown inside the field, e.g. "W". */
   prefix: string;
+  unit: LengthUnit;
   testId?: string;
   min?: number;
   disabled?: boolean;
 }) {
+  const perPoint = POINT_TO_UNIT[unit];
+  const decimals = LENGTH_DECIMALS[unit];
+  const shown = Number((value * perPoint).toFixed(decimals));
   return (
     <NumberInput
       size="xs"
@@ -133,22 +153,21 @@ export function PointsInput({
       }
       rightSection={
         <Text size="xs" c="dimmed" aria-hidden>
-          pt
+          {unit}
         </Text>
       }
-      min={min}
-      decimalScale={1}
+      min={min === undefined ? undefined : min * perPoint}
+      decimalScale={decimals}
       fixedDecimalScale
-      step={1}
-      value={Number(value.toFixed(1))}
+      step={LENGTH_STEP[unit]}
+      value={shown}
       disabled={disabled}
       aria-label={label}
       data-testid={testId}
       onChange={(next) => {
         const n = typeof next === "number" ? next : Number(next);
-        if (!Number.isFinite(n)) return;
-        if (Math.abs(n - value) < 0.05) return;
-        onCommit(n);
+        if (!Number.isFinite(n) || n === shown) return;
+        onCommit(n / perPoint);
       }}
     />
   );

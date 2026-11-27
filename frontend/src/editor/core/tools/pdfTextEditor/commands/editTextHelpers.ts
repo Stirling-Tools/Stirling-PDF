@@ -2,6 +2,10 @@ import {
   drawnCodePoint,
   drawnText,
 } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
+import {
+  slantOf,
+  withSlant,
+} from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import { readUtf16 } from "@editor/services/pdfiumService";
 import type {
   ParagraphLineSlot,
@@ -22,6 +26,10 @@ import {
   ligatureCodes,
   resetFontGlyphs,
 } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
+import {
+  fallbackSizeMatching,
+  standInSizeMatching,
+} from "@editor/tools/pdfTextEditor/util/fallbackSize";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import {
   deviceFamilyOf,
@@ -68,6 +76,17 @@ import {
   insertPageObjectAt,
 } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
+import {
+  forgetEmitted,
+  isSubstitute,
+  noteEmitted,
+  noteSubstitute,
+} from "@editor/tools/pdfTextEditor/util/substitutedGlyphs";
+import {
+  sameFaceFontForChar,
+  sameFaceFontsFor,
+  sameFaceFontsForChar,
+} from "@editor/tools/pdfTextEditor/charcode/sameFaceFonts";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.
@@ -77,6 +96,7 @@ export function removeAndDestroyObject(
   ptr: number,
 ): void {
   if (!ptr) return;
+  forgetEmitted(ptr);
   try {
     m.FPDFPage_RemoveObject(pagePtr, ptr);
   } catch {
@@ -256,6 +276,33 @@ export function charcodesResolveFully(
   return true;
 }
 
+export function faceDrawsAll(
+  m: WrappedPdfiumModule,
+  fontPtr: number,
+  text: string,
+  pagePtr: number,
+  docPtr: number,
+): boolean {
+  if (charcodesResolveFully(m, fontPtr, text, pagePtr, docPtr)) return true;
+  const visible = text.replace(/\s+/g, "");
+  return (
+    visible.length > 0 &&
+    sameFaceFontsFor(visible, fontPtr, { module: m, pagePtr, docPtr }) !== null
+  );
+}
+
+export function faceDrawsChar(
+  m: WrappedPdfiumModule,
+  fontPtr: number,
+  ch: string,
+  pagePtr: number,
+  docPtr: number,
+): boolean {
+  return (
+    sameFaceFontForChar(ch, fontPtr, { module: m, pagePtr, docPtr }) !== null
+  );
+}
+
 /** True when `fontPtr` has no glyph of its own for one of `text`'s letters, as {@link lettersWithoutGlyph} judges it. */
 export function lacksGlyphsFor(
   m: WrappedPdfiumModule,
@@ -381,6 +428,8 @@ interface CreatedTextOptions {
   originalFontSubset?: boolean;
   /** Base-14 family used when `originalFontPtr` is zero. Defaults to Helvetica. */
   fallbackFamily?: string;
+  /** The document font whose lower-case height the fallback is sized to, when `originalFontPtr` is zero. */
+  matchFontPtr?: number;
   /** The source run's PDF text render mode (Tr). */
   renderMode?: number;
   /** Glyph outline colour; only paints under a stroking render mode. */
@@ -388,6 +437,7 @@ interface CreatedTextOptions {
   strokeWidth?: number;
   /** The run's on-page rotation (normalised cos/sin of its text matrix). */
   rotation?: { cos: number; sin: number };
+  slant?: number;
   // Required so every emit decides: a re-emit of existing text passes that
   // text's tags, new content passes none. Each stretch with tags of its own
   // is drawn as objects of its own.
@@ -805,6 +855,22 @@ export function counterPageRotation(
   }
 }
 
+export function leanObject(
+  m: WrappedPdfiumModule,
+  ptr: number,
+  slant: number,
+): void {
+  const buf = scratchPtr(m, SCRATCH.emitMatrix, 24);
+  if (!m.FPDFPageObj_GetMatrix(ptr, buf)) return;
+  const [a, b, c, d] = [0, 1, 2, 3].map((i) =>
+    m.pdfium.getValue(buf + i * 4, "float"),
+  );
+  const leaned = withSlant({ a, b, c, d }, slant);
+  m.pdfium.setValue(buf + 8, leaned.c, "float");
+  m.pdfium.setValue(buf + 12, leaned.d, "float");
+  m.FPDFPageObj_SetMatrix(ptr, buf);
+}
+
 /** Rotate a page object about (ax, ay). Identity (no-op) when cos=1, sin=0. */
 export function rotateObjectAbout(
   m: WrappedPdfiumModule,
@@ -837,6 +903,18 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   const family = opts.fallbackFamily ?? "Helvetica";
   const m2 = m as unknown as CreateTextObjModule;
   const canReuse = opts.originalFontPtr !== 0 && !!m2.FPDFPageObj_CreateTextObj;
+  const standIn =
+    !!opts.matchFontPtr &&
+    opts.originalFontPtr !== 0 &&
+    opts.originalFontPtr !== opts.matchFontPtr &&
+    (!!opts.doc.ownedFontAt(opts.originalFontPtr) ||
+      !m.FPDFFont_GetIsEmbedded(opts.originalFontPtr));
+  const sizeMatchFont = standIn
+    ? opts.matchFontPtr!
+    : opts.originalFontPtr || (opts.matchFontPtr ?? 0);
+  const reuseSize = standIn
+    ? standInSizeMatching(m, opts.matchFontPtr!, opts.originalFontPtr, size)
+    : size;
 
   // Words are laid out horizontally from (opts.x, opts.y).
   const withRotation = (ptrs: number[]): number[] => {
@@ -846,10 +924,12 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         if (p) rotateObjectAbout(m, p, opts.x, opts.y, rot.cos, rot.sin);
       }
     }
+    if (opts.slant) for (const p of ptrs) if (p) leanObject(m, p, opts.slant);
     // Every successful emit funnels through here, so this is the one place to
     // re-apply the source run's ink state - new objects default to a flat fill.
     applyInkState(m, ptrs, opts);
     applyTagMarks(m, opts.doc.docPtr, ptrs, tagMarks);
+    noteEmitted(ptrs);
     return ptrs;
   };
 
@@ -860,19 +940,144 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       (ch) => onPageAdvanceEm(m, opts.page.pagePtr, font, ch) !== null,
     );
 
+  const resolverCtx = {
+    module: m,
+    pagePtr: opts.page.pagePtr,
+    docPtr: opts.doc.docPtr,
+  };
+  const faceAdvancePt = (font: number, ch: string): number => {
+    const em =
+      onPageAdvanceEm(m, opts.page.pagePtr, font, ch) ??
+      onPageAdvanceEm(m, opts.page.pagePtr, opts.originalFontPtr, ch);
+    return em != null ? em * size : measureAdvancePt(ch, family, size);
+  };
+  const drawsAs = (ptr: number, ch: string): boolean =>
+    readBackTextObj(m, opts.page.pagePtr, ptr)?.trim() === ch;
+  const emitFaceChar = (font: number, ch: string, x: number): number => {
+    const ptr = m2.FPDFPageObj_CreateTextObj!(opts.doc.docPtr, font, size);
+    if (!ptr) return 0;
+    applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
+    setTextOn(m, ptr, ch);
+    if (drawsAs(ptr, ch)) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: getActiveCharcodeStrategy(),
+        text: ch,
+        fontPtr: font,
+        resolved: [],
+        missing: [ch],
+        note: "same-face font drew it with SetText",
+        outcome: "partial-coverage-fallback",
+      });
+      perCharBranchPtrs.add(ptr);
+      return ptr;
+    }
+    const resolved = tryResolveCharcodes(
+      font,
+      ch,
+      resolverCtx,
+      !!opts.originalFontSubset,
+    );
+    const codes = resolved?.result;
+    if (
+      !resolved ||
+      !codes ||
+      codes.coverage !== 1 ||
+      codes.charcodes.length !== 1 ||
+      !setCharcodesOn(m, ptr, codes.charcodes) ||
+      !drawsAs(ptr, ch)
+    ) {
+      removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+      return 0;
+    }
+    emitCharcodeEvent({
+      timestamp: 0,
+      strategy: resolved.strategy,
+      text: ch,
+      fontPtr: font,
+      resolved: [...codes.charcodes],
+      missing: [],
+      note: "same-face font drew it by charcode",
+      outcome: "charcodes-ok",
+    });
+    perCharBranchPtrs.add(ptr);
+    return ptr;
+  };
+  const emitAcrossFaces = (
+    text: string,
+    x: number,
+  ): { ptrs: number[]; texts: string[] } | null => {
+    if (!canReuse || opts.rotation || !text || /\s/.test(text)) return null;
+    const candidates = [...text].map((ch) =>
+      sameFaceFontsForChar(ch, opts.originalFontPtr, resolverCtx),
+    );
+    if (candidates.some((fonts) => fonts.length === 0)) return null;
+    const ptrs: number[] = [];
+    const texts: string[] = [];
+    let cursor = x;
+    for (const [i, ch] of [...text].entries()) {
+      let ptr = 0;
+      let font = 0;
+      for (const candidate of candidates[i]) {
+        ptr = emitFaceChar(candidate, ch, cursor);
+        font = candidate;
+        if (ptr) break;
+      }
+      if (!ptr) {
+        for (const drawn of ptrs)
+          removeAndDestroyObject(m, opts.page.pagePtr, drawn);
+        return null;
+      }
+      ptrs.push(ptr);
+      texts.push(ch);
+      cursor += faceAdvancePt(font, ch) + (opts.charSpacingPt ?? 0);
+    }
+    return { ptrs, texts };
+  };
+  const emitWordInFace = (
+    text: string,
+    x: number,
+  ): { ptrs: number[]; texts: string[] } => {
+    const wholeFontDraws = fontDraws(opts.originalFontPtr, text);
+    const acrossFirst = wholeFontDraws ? null : emitAcrossFaces(text, x);
+    if (acrossFirst) return acrossFirst;
+    const ptr = emitWord(text, x);
+    if (wholeFontDraws && (!ptr || isSubstitute(ptr))) {
+      const across = emitAcrossFaces(text, x);
+      if (across) {
+        removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+        return across;
+      }
+    }
+    return ptr ? { ptrs: [ptr], texts: [text] } : { ptrs: [], texts: [] };
+  };
+
   const emitBase14 = (text: string, x: number): number => {
+    const ptr = emitSubstitute(text, x);
+    noteSubstitute(ptr);
+    return ptr;
+  };
+  const emitSubstitute = (text: string, x: number): number => {
     // base-14 can only render WinAnsi; drop the rest so PDFium never emits
     // U+00FF tofu.
     const base14Text = sanitizeForBase14(text);
     const newBase14 = (): number => {
-      const ptr = m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
+      const ptr = m.FPDFPageObj_NewTextObj(
+        opts.doc.docPtr,
+        family,
+        fallbackSizeMatching(m, sizeMatchFont, family, size),
+      );
       if (ptr) return ptr;
       // PDFium only knows the standard font names, so any other family fails
       // here. Substituting is what editors do; returning 0 would drop the text.
       const substitute = nearestStandardFont(family);
       return substitute === family
         ? 0
-        : m.FPDFPageObj_NewTextObj(opts.doc.docPtr, substitute, size);
+        : m.FPDFPageObj_NewTextObj(
+            opts.doc.docPtr,
+            substitute,
+            fallbackSizeMatching(m, sizeMatchFont, substitute, size),
+          );
     };
     // A pre-warmed device font emits with its REAL face. Standard names skip
     // this and a cold cache returns 0, so existing emits are unchanged.
@@ -882,7 +1087,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         opts.page,
         family,
         text,
-        size,
+        fallbackSizeMatching(m, sizeMatchFont, family, size),
         opts.fill,
         x,
         opts.y,
@@ -956,7 +1161,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     const ptr = m2.FPDFPageObj_CreateTextObj!(
       opts.doc.docPtr,
       opts.originalFontPtr,
-      size,
+      reuseSize,
     );
     if (!ptr) return emitBase14(text, x);
     // Reuse path: resolve real font charcodes so the embedded subset font
@@ -1063,7 +1268,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // A guessed code that reads back as another character drew that character. A font that reads back nothing has no mapping to judge by.
   function readsBackAs(ptr: number, text: string): boolean {
     const got = readBackTextObj(m, opts.page.pagePtr, ptr);
-    if (got === null || got.trim() === "") return true;
+    if (got === null || got === "") return true;
     return got.trim() === text.trim();
   }
 
@@ -1073,7 +1278,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     const ptr = m2.FPDFPageObj_CreateTextObj!(
       opts.doc.docPtr,
       opts.originalFontPtr,
-      size,
+      reuseSize,
     );
     if (!ptr) return 0;
     setTextOn(m, ptr, text);
@@ -1214,6 +1419,13 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     Math.abs(spacingPt) > 0.05 &&
     [...opts.text].length > 1
   ) {
+    const acrossFaces = fontDraws(opts.originalFontPtr, opts.text)
+      ? null
+      : emitAcrossFaces(opts.text, opts.x);
+    if (acrossFaces) {
+      opts.outTexts?.push(...acrossFaces.texts);
+      return withRotation(acrossFaces.ptrs);
+    }
     const ptrs: number[] = [];
     let cursor = opts.x;
     // One face for the whole word: letters the source font has would otherwise keep it while the rest fall back.
@@ -1244,9 +1456,9 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // Fast path: no whitespace at all → one text object holds the whole word.
   // A turned line stays one object too: words drawn apart along a turned baseline read back as separate lines.
   if (!hasAnyWhitespace || opts.oneObject || opts.rotation) {
-    const ptr = emitWord(opts.text, opts.x);
-    if (ptr) opts.outTexts?.push(opts.text);
-    return withRotation(ptr ? [ptr] : []);
+    const drawn = emitWordInFace(opts.text, opts.x);
+    opts.outTexts?.push(...drawn.texts);
+    return withRotation(drawn.ptrs);
   }
 
   // Per-chunk emit (split on ANY whitespace run).
@@ -1260,6 +1472,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     opts.x +
     (chunks.leadingGapPt ?? 0) +
     spacing * (chunks.leadingGapChars ?? 0);
+  // A reader counts the spaces in a gap by the size of the word before it, which a stand-in face may be drawn larger or smaller at.
+  let gapScale = 1;
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
       // Recurse per word.
@@ -1282,11 +1496,12 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       const advanced = rightEdge > cursor ? rightEdge - cursor : 0;
       cursor += advanced >= metric * 0.35 ? advanced : metric;
       ptrs.push(...wordPtrs);
+      gapScale = (objFontSizePt(m, wordPtrs.at(-1)!) ?? size) / size;
     }
     // Word gaps stretch with the run's letter-spacing too: the source layout
     // applies Tc after the glyph preceding the gap AND after each space.
     cursor +=
-      chunk.gapAfterPt +
+      chunk.gapAfterPt * gapScale +
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
   }
   return withRotation(ptrs);
@@ -1663,6 +1878,13 @@ function glyphAdvancePt(
   return total;
 }
 
+function objFontSizePt(m: WrappedPdfiumModule, objPtr: number): number | null {
+  const sizePtr = scratchPtr(m, SCRATCH.emitGlyphWidth, 4);
+  if (!m.FPDFTextObj_GetFontSize(objPtr, sizePtr)) return null;
+  const size = m.pdfium.getValue(sizePtr, "float");
+  return size > 0 ? size : null;
+}
+
 /**
  * Where the next text drawn after `ptrs` should start: each object's origin plus
  * its font's advances, or its ink edge when the font cannot say. Ink alone stops
@@ -1681,12 +1903,16 @@ export function drawnEndPt(
     const ink = measureObjRightEdgePt(m, ptr);
     let right = ink;
     const text = texts.length === ptrs.length ? texts[i].trimEnd() : "";
-    const glyphs = text ? glyphAdvancePt(m, ptr, text, size) : null;
+    const glyphs = text
+      ? glyphAdvancePt(m, ptr, text, objFontSizePt(m, ptr) ?? size)
+      : null;
     if (glyphs !== null && m.FPDFPageObj_GetMatrix(ptr, matrix)) {
-      const scale = m.pdfium.getValue(matrix, "float");
-      const fromGlyphs =
-        m.pdfium.getValue(matrix + 16, "float") + glyphs * scale;
-      if (fromGlyphs >= ink - 0.5 && fromGlyphs <= ink + size * 0.5)
+      const [a, b, c, d] = [0, 1, 2, 3].map((k) =>
+        m.pdfium.getValue(matrix + k * 4, "float"),
+      );
+      const fromGlyphs = m.pdfium.getValue(matrix + 16, "float") + glyphs * a;
+      const lean = Math.abs(slantOf({ a, b, c, d })) * size;
+      if (fromGlyphs >= ink - 0.5 - lean && fromGlyphs <= ink + size * 0.5)
         right = fromGlyphs;
     }
     end = Math.max(end, right);
@@ -1985,6 +2211,7 @@ export function emitRunLines(opts: {
       fallbackFamily: wholeLine?.fallbackFamily ?? opts.fallbackFamily,
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
+      slant: slantOf(opts.run.matrix),
       tags,
       fontSpans,
     });

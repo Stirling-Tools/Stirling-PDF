@@ -1,4 +1,6 @@
+import { documentFontHandle } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { slantOf } from "@editor/tools/pdfTextEditor/util/fauxItalic";
 import {
   softStartsFor,
   softStartsOf,
@@ -29,6 +31,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   charcodesResolveFully,
+  faceDrawsAll,
   objectTexts,
   collectContainersByPtr,
   contentIndices,
@@ -1348,10 +1351,12 @@ export class EditTextCommand implements Command {
             x: rem.x,
             y: rem.y,
             fontSize: rem.fontSize,
+            slant: slantOf(run.matrix),
             fill: run.fill,
             ...inkFromRun(run),
             tags: rem.tags,
             originalFontPtr: 0,
+            matchFontPtr: documentFontHandle(run.fontId),
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
           });
@@ -1641,10 +1646,12 @@ export class EditTextCommand implements Command {
         x: line.x,
         y: line.y,
         fontSize: line.fontSize,
+        slant: slantOf(run.matrix),
         fill: line.fill,
         // The run's own font, not a base-14 stand-in: re-emitting an embedded
         // face as Helvetica is what made undo look like it changed the font.
         originalFontPtr: this.prevFontPtr,
+        matchFontPtr: documentFontHandle(run.fontId),
         charSpacingPt: line.charSpacingPt,
         fallbackFamily: revertFallback,
         // Keep the run's original orientation - without this, undoing an
@@ -1809,11 +1816,13 @@ export class EditTextCommand implements Command {
           x: lineX,
           y,
           fontSize: run.fontSize,
+          slant: slantOf(run.matrix),
           fill: lineSpans?.[0]?.fill ?? run.fill,
           ...inkFromRun(run),
           tags: sliceTags(nextTags, cursor, cursor + text.length),
           fontSpans: lineSpans,
           originalFontPtr: lineSpans?.[0]?.fontPtr || reuseFontPtr,
+          matchFontPtr: documentFontHandle(run.fontId),
           originalFontSubset: run.fontSubset,
           originalFontForCoveredWords: reuseFontPtr !== 0,
           charSpacingPt: run.charSpacingPt,
@@ -1970,10 +1979,12 @@ export class EditTextCommand implements Command {
           x: leftX,
           y,
           fontSize: run.fontSize,
+          slant: slantOf(run.matrix),
           fill: run.fill,
           ...inkFromRun(run),
           tags: sliceTags(nextTags, cursor, cursor + text.length),
           originalFontPtr: 0,
+          matchFontPtr: documentFontHandle(run.fontId),
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
           outTexts: emittedTexts,
@@ -2068,10 +2079,12 @@ export class EditTextCommand implements Command {
             x: sr.x,
             y: line.baselineY,
             fontSize: line.fontSize,
+            slant: slantOf(run.matrix),
             fill: run.fill,
             ...inkFromRun(run),
             tags: sr.tags,
             originalFontPtr: 0,
+            matchFontPtr: documentFontHandle(run.fontId),
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
           });
@@ -2106,13 +2119,12 @@ export class EditTextCommand implements Command {
     });
   }
 
-  /** Undo or redo a burst as one edit: each step's undo names objects a later step replaced. */
-  moveGroup(
+  private groupedEdits(
     doc: EditorDocument,
     group: readonly Command[],
     phase: "apply" | "revert",
-  ): boolean {
-    if (group.length < 2) return false;
+  ): EditTextCommand[] | null {
+    if (group.length < 2) return null;
     const edits: EditTextCommand[] = [];
     for (const cmd of group) {
       if (
@@ -2121,7 +2133,7 @@ export class EditTextCommand implements Command {
         cmd.runId !== this.runId ||
         cmd.scanEdited
       )
-        return false;
+        return null;
       edits.push(cmd);
     }
     // Every step puts back exactly the objects the step before it drew, so stepping through keeps each piece's own font and glyphs.
@@ -2130,10 +2142,30 @@ export class EditTextCommand implements Command {
         ? edits.every((edit) => edit.revertsExactly())
         : edits.every((edit) => edit.revertedExactly)
     )
-      return false;
-    const first = edits[0].prevText;
+      return null;
     const run = doc.page(this.pageIndex).findRun(this.runId);
-    if (first === null || !run || isScanRun(run)) return false;
+    if (edits[0].prevText === null || !run || isScanRun(run)) return null;
+    return edits;
+  }
+
+  wouldMoveGroup(
+    doc: EditorDocument,
+    group: readonly Command[],
+    phase: "apply" | "revert",
+  ): boolean {
+    return this.groupedEdits(doc, group, phase) !== null;
+  }
+
+  /** Undo or redo a burst as one edit: each step's undo names objects a later step replaced. */
+  moveGroup(
+    doc: EditorDocument,
+    group: readonly Command[],
+    phase: "apply" | "revert",
+  ): boolean {
+    const edits = this.groupedEdits(doc, group, phase);
+    if (!edits) return false;
+    const first = edits[0].prevText!;
+    const run = doc.page(this.pageIndex).findRun(this.runId)!;
     // A later step may have redrawn the run in a fallback; undo goes back to the face the burst started from.
     const { startFont } = edits[0];
     const firstFont =
@@ -2352,7 +2384,7 @@ function editedFontSpans(
 ): FontSpan[] | undefined {
   const m = doc.module;
   return sourceFontSpans(m, pieces, prevText, nextText, (font, text) =>
-    charcodesResolveFully(m, font, text, page.pagePtr, doc.docPtr),
+    faceDrawsAll(m, font, text, page.pagePtr, doc.docPtr),
   )?.map((span) => ({
     ...span,
     fallbackFamily: deviceFamilyOf(doc, span.fontPtr) ?? span.fallbackFamily,
@@ -2372,7 +2404,7 @@ function spansByLine(spans: readonly FontSpan[], text: string): FontSpan[][] {
 }
 
 // Reconstruct `paragraphLineSlots` from the data the overlay loop just emitted.
-function buildSlotsFromOverlayEmit(
+export function buildSlotsFromOverlayEmit(
   m: WrappedPdfiumModule,
   run: TextRun,
   perLineEmits: Array<{
