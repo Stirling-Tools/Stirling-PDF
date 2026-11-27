@@ -72,17 +72,23 @@ export function SpellcheckControl({
         />
       </Group>
       {pref.enabled && (
-        <Select
-          size="xs"
-          data={options}
-          value={pref.lang}
-          onChange={(value) => setSpellcheckLang(value ?? SPELLCHECK_AUTO)}
-          aria-label={t(
-            "pdfTextEditor.spellcheck.language",
-            "Dictionary language",
-          )}
-          data-testid="pdf-editor-spellcheck-language"
-        />
+        <Group justify="space-between" wrap="nowrap" gap="sm" mt="xs">
+          <Text size="sm" c="dimmed">
+            {t("pdfTextEditor.spellcheck.languageShort", "Language")}
+          </Text>
+          <Select
+            size="xs"
+            w={150}
+            data={options}
+            value={pref.lang}
+            onChange={(value) => setSpellcheckLang(value ?? SPELLCHECK_AUTO)}
+            aria-label={t(
+              "pdfTextEditor.spellcheck.language",
+              "Dictionary language",
+            )}
+            data-testid="pdf-editor-spellcheck-language"
+          />
+        </Group>
       )}
     </Stack>
   );

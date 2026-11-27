@@ -8232,6 +8232,7 @@ widthWrap = "Wrap"
 auto = "Automatic"
 enable = "Check spelling as you type"
 language = "Dictionary language"
+languageShort = "Language"
 
 [pdfTextEditor.table]
 addColumn = "Add column"
