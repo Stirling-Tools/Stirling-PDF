@@ -54,17 +54,6 @@ export const AutomaticWithWords: Story = {
   ),
 };
 
-export const ManualMode: Story = {
-  render: () => (
-    <SettingsDemo
-      initialParameters={{
-        ...defaultParameters,
-        mode: "manual",
-      }}
-    />
-  ),
-};
-
 export const Disabled: Story = {
   render: () => (
     <SettingsDemo

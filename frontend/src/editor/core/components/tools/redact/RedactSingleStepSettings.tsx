@@ -1,7 +1,5 @@
 import { Stack, Divider } from "@mantine/core";
-import { useTranslation } from "react-i18next";
 import { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
-import RedactModeSelector from "@editor/components/tools/redact/RedactModeSelector";
 import RedactWordsSettings from "@editor/components/tools/redact/RedactWordsSettings";
 import RedactAdvancedSettings from "@editor/components/tools/redact/RedactAdvancedSettings";
 
@@ -18,61 +16,22 @@ const RedactSingleStepSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
-}: RedactSingleStepSettingsProps) => {
-  const { t } = useTranslation();
-  return (
-    <Stack gap="md">
-      {/* Mode Selection */}
-      <RedactModeSelector
-        mode={parameters.mode}
-        onModeChange={(mode) => onParameterChange("mode", mode)}
-        disabled={disabled}
-      />
+}: RedactSingleStepSettingsProps) => (
+  <Stack gap="md">
+    <RedactWordsSettings
+      parameters={parameters}
+      onParameterChange={onParameterChange}
+      disabled={disabled}
+    />
 
-      {/* Automatic Mode Settings */}
-      {parameters.mode === "automatic" && (
-        <>
-          <Divider />
+    <Divider />
 
-          <RedactWordsSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-
-          <Divider />
-
-          {/* Advanced Settings */}
-          <RedactAdvancedSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-        </>
-      )}
-
-      {/* Manual Mode Placeholder */}
-      {parameters.mode === "manual" && (
-        <>
-          <Divider />
-          <Stack gap="md">
-            <div
-              style={{
-                padding: "20px",
-                textAlign: "center",
-                color: "var(--c-text-muted)",
-              }}
-            >
-              {t(
-                "redact.manual.notImplemented",
-                "Manual redaction interface will be available here when implemented.",
-              )}
-            </div>
-          </Stack>
-        </>
-      )}
-    </Stack>
-  );
-};
+    <RedactAdvancedSettings
+      parameters={parameters}
+      onParameterChange={onParameterChange}
+      disabled={disabled}
+    />
+  </Stack>
+);
 
 export default RedactSingleStepSettings;
