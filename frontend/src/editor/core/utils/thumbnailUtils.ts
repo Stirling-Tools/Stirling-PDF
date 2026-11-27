@@ -13,6 +13,7 @@ import {
 } from "@editor/services/pdfRenderWorkerClient";
 import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
 import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { readBlobSlice } from "@editor/utils/blobSlice";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 import { isDamagedPdfError } from "@editor/utils/pdfDamage";
@@ -153,6 +154,11 @@ async function renderPdfThumbnails(
   );
 }
 
+/** The first `bytes` of `file` as an in-memory Blob, since a Blob built over a stored one kills the renderer. */
+async function prefixBlob(file: Blob, bytes: number): Promise<Blob> {
+  return new Blob([await readBlobSlice(file, 0, bytes)], { type: file.type });
+}
+
 async function renderPdfThumbnail(
   source: Blob,
   scale: number,
@@ -193,9 +199,7 @@ async function readImageDimensions(
 ): Promise<{ width: number; height: number } | null> {
   let bytes: Uint8Array;
   try {
-    bytes = new Uint8Array(
-      await file.slice(0, IMAGE_HEADER_PROBE_BYTES).arrayBuffer(),
-    );
+    bytes = await readBlobSlice(file, 0, IMAGE_HEADER_PROBE_BYTES);
   } catch {
     return null;
   }
@@ -277,9 +281,7 @@ async function readImageDimensions(
     const limit = Math.min(file.size, IMAGE_HEADER_PROBE_LIMIT);
     for (let end = bytes.length; ; end = Math.min(end * 2, limit)) {
       const window =
-        end === bytes.length
-          ? bytes
-          : new Uint8Array(await file.slice(0, end).arrayBuffer());
+        end === bytes.length ? bytes : await readBlobSlice(file, 0, end);
       const dimensions = readJpegDimensions(
         window,
         new DataView(window.buffer, window.byteOffset, window.byteLength),
@@ -456,7 +458,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
     const scale = calculateScaleFromFileSize(file.size);
 
     // Only read first 2MB for thumbnail generation to save memory
-    const chunk = file.slice(0, Math.min(LINEARIZED_PREFIX_BYTES, file.size));
+    const chunk = await prefixBlob(file, LINEARIZED_PREFIX_BYTES);
 
     try {
       return await generatePDFThumbnail(
@@ -512,7 +514,7 @@ export async function generateThumbnailWithMetadata(
         return { thumbnail: "", pageCount: 1, isEncrypted: true };
       }
       const result = await renderPdfThumbnail(
-        file.slice(0, LINEARIZED_PREFIX_BYTES),
+        await prefixBlob(file, LINEARIZED_PREFIX_BYTES),
         scale,
         applyRotation,
         false,
@@ -591,7 +593,9 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
       };
       return { unrotated: encrypted, rotated: { ...encrypted } };
     }
-    const source = isLarge ? file.slice(0, LINEARIZED_PREFIX_BYTES) : file;
+    const source = isLarge
+      ? await prefixBlob(file, LINEARIZED_PREFIX_BYTES)
+      : file;
     const read = { bytes: 0 };
     let pair: Awaited<ReturnType<typeof renderPdfThumbnails>>;
     try {

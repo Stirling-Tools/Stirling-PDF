@@ -7,6 +7,7 @@ import {
   fetchViaLocalProxy,
   markFastTransportUnavailable,
 } from "@editor/services/tauriLocalProxy";
+import { detachedFormData } from "@editor/utils/storedBlob";
 
 /**
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
@@ -291,6 +292,11 @@ class TauriHttpClient {
     }
 
     try {
+      // Both transports build a Request from it, which builds a Blob over each
+      // file entry: see detachedFormData. Inside the try, so a failed read
+      // reaches the error interceptors like any other request failure.
+      if (body instanceof FormData) body = await detachedFormData(body);
+
       // Convert withCredentials to fetch API's credentials option
       const credentials: RequestCredentials = finalConfig.withCredentials
         ? "include"
