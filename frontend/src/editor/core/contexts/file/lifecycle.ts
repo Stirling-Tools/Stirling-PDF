@@ -184,7 +184,7 @@ export class FileLifecycleManager {
     // release runs behind the queue. The byte cache entry is keyed by the file
     // and cannot be reused once it leaves the workbench.
     releaseSharedDocumentWhenIdle();
-    if (file) releaseDocumentBytes(file);
+    if (file) void releaseDocumentBytes(file);
     thumbnailGenerationService.forgetFile(fileId);
 
     // Clean up blob URLs from file record if we have access to state

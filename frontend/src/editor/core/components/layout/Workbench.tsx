@@ -29,9 +29,9 @@ import { NotificationBell } from "@editor/components/notifications/NotificationB
 import { FeedbackTag } from "@editor/components/feedback/FeedbackTag";
 import { ReviewHost } from "@editor/tools/pdfTextEditor/components/review/ReviewHost";
 
-// Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
-// full @embedpdf plugin set; FileEditor/PageTracks are only needed once a file
-// is open. Lazy-loading keeps all of that out of the initial bundle.
+// Workbench panels are loaded on demand. Viewer pulls in the full @embedpdf
+// plugin set; FileEditor/PageTracks are only needed once a file is open.
+// Lazy-loading keeps all of that out of the initial bundle.
 const SigningWorkspace = lazy(
   () => import("@editor/components/shared/signing/SigningWorkspace"),
 );

@@ -88,8 +88,9 @@ public class FlattenController {
         // JPDFium flattens in place, so there is no extract-and-rebuild round-trip:
         // FULL rasterizes each page at the requested DPI.
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
-        try {
-            try (PdfDocument document = PdfDocument.open(file.getBytes())) {
+        try (TempFile tempInputFile = tempFileManager.createManagedTempFile(".pdf")) {
+            file.transferTo(tempInputFile.getFile());
+            try (PdfDocument document = PdfDocument.open(tempInputFile.getPath())) {
                 document.flatten(FlattenMode.FULL, renderDpi);
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             } catch (RuntimeException e) {
