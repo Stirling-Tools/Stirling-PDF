@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AutomationTool,
   AutomationConfig,
@@ -8,8 +9,10 @@ import {
 import { AUTOMATION_CONSTANTS } from "@editor/constants/automation";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
   defaultToolParams,
+  resolveToolDefaults,
   toolParamsNeedConfiguring,
 } from "@editor/hooks/tools/shared/toolAutomation";
 
@@ -24,7 +27,9 @@ export function useAutomationForm({
   existingAutomation,
   toolRegistry,
 }: UseAutomationFormProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { config: appConfig } = useAppConfig();
+  const queryClient = useQueryClient();
 
   const [automationName, setAutomationName] = useState("");
   const [automationDescription, setAutomationDescription] = useState("");
@@ -124,6 +129,32 @@ export function useAutomationForm({
     setSelectedTools(updatedTools);
   };
 
+  /**
+   * Put a tool in a step with its static defaults, then fill in any defaults the tool resolves from
+   * the server or browser, so it reads as configured without its settings being opened.
+   */
+  const selectTool = (index: number, operation: string) => {
+    const { id } = selectedTools[index];
+    const parameters = getToolDefaultParameters(operation);
+    updateTool(index, { operation, name: getToolName(operation), parameters });
+    void resolveToolDefaults(operation as ToolId, toolRegistry, {
+      appConfig,
+      language: i18n.language,
+      queryClient,
+    }).then((resolved) => {
+      if (Object.keys(resolved).length === 0) return;
+      // Only a step still holding the exact object it was picked with: a settings save or another
+      // pick since then is the user's choice and outranks a late lookup.
+      setSelectedTools((tools) =>
+        tools.map((tool) =>
+          tool.id === id && tool.parameters === parameters
+            ? { ...tool, parameters: { ...parameters, ...resolved } }
+            : tool,
+        ),
+      );
+    });
+  };
+
   const hasUnsavedChanges = () => {
     return (
       automationName.trim() !== "" ||
@@ -151,6 +182,7 @@ export function useAutomationForm({
     addTool,
     removeTool,
     updateTool,
+    selectTool,
     hasUnsavedChanges,
     canSaveAutomation,
     isToolConfigured,

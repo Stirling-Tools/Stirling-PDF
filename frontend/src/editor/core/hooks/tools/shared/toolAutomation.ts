@@ -27,6 +27,7 @@ import {
   ToolType,
   type ErasedToolParams,
   type RegistryToolOperationConfig,
+  type ToolDefaultsContext,
 } from "@editor/hooks/tools/shared/toolOperationTypes";
 
 /**
@@ -357,6 +358,25 @@ export function defaultToolParams(
   registry: Partial<ToolRegistry>,
 ): ErasedToolParams {
   return { ...(registry[toolId]?.operationConfig?.defaultParameters ?? {}) };
+}
+
+/**
+ * The tool's server- or browser-dependent defaults from its `resolveDefaultParameters`. Empty when
+ * it declares none or the lookup fails, since the static defaults still stand; never rejects.
+ */
+export async function resolveToolDefaults(
+  toolId: ToolId,
+  registry: Partial<ToolRegistry>,
+  context: ToolDefaultsContext,
+): Promise<ErasedToolParams> {
+  const resolve = registry[toolId]?.operationConfig?.resolveDefaultParameters;
+  if (!resolve) return {};
+  try {
+    return await resolve(context);
+  } catch (error) {
+    console.warn(`Could not resolve defaults for ${toolId}:`, error);
+    return {};
+  }
 }
 
 /**

@@ -25,6 +25,7 @@ import { UpdateStartupPopup } from "@editor/components/shared/UpdateStartupPopup
 import { RedactionProvider } from "@editor/contexts/RedactionContext";
 import { FormFillProvider } from "@editor/tools/formFill/FormFillContext";
 import { FolderProvider } from "@editor/contexts/FolderContext";
+import { OcrLanguagesPrefetch } from "@editor/components/tools/ocr/OcrLanguagesPrefetch";
 import { WorkbenchSessionPersistence } from "@editor/components/session/WorkbenchSessionPersistence";
 import { retireLegacyFolderWorker } from "@editor/services/retireLegacyFolderWorker";
 import type { UserPreferences } from "@editor/services/preferencesService";
@@ -111,6 +112,7 @@ export function AppProviders({ children }: AppProvidersProps) {
       <BannerProvider>
         <AppConfigLoader />
         <ServerDefaultsSync />
+        <OcrLanguagesPrefetch />
         {/* Auto-popup on startup when a newer Stirling-PDF release is available.
               No-ops inside Tauri — the desktop popup handles that flow. */}
         <UpdateStartupPopup />

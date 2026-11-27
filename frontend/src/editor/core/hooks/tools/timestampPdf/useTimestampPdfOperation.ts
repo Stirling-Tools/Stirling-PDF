@@ -11,6 +11,7 @@ import {
 import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   validateTimestampPdfParameters,
+  resolveTimestampPdfDefaultParameters,
   TimestampPdfParameters,
   defaultParameters,
 } from "@editor/hooks/tools/timestampPdf/useTimestampPdfParameters";
@@ -44,6 +45,7 @@ export const timestampPdfOperationConfig = defineSingleFileTool({
   operationType: "timestampPdf",
   endpoint: ENDPOINT,
   defaultParameters,
+  resolveDefaultParameters: resolveTimestampPdfDefaultParameters,
 });
 
 export const useTimestampPdfOperation = () => {

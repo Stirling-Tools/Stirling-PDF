@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Text, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
-  getAutoOcrLanguage,
   getBrowserLanguagesForOcr,
   getOcrDisplayName,
 } from "@editor/utils/languageMapping";
-import apiClient from "@editor/services/apiClient";
+import {
+  OCR_LANGUAGES_ENDPOINT,
+  autoOcrLanguage,
+  ocrLanguagesQuery,
+} from "@editor/hooks/tools/ocr/ocrLanguages";
 import DropdownListWithFooter, {
   DropdownItem,
 } from "@editor/components/shared/DropdownListWithFooter";
@@ -32,85 +36,62 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   placeholder,
   disabled = false,
   label,
-  languagesEndpoint = "/api/v1/ui-data/ocr-pdf",
+  languagesEndpoint = OCR_LANGUAGES_ENDPOINT,
   autoFillFromBrowserLanguage = true,
 }) => {
   const { t, i18n } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t("dropdownList.selectLanguages");
-  const [availableLanguages, setAvailableLanguages] = useState<DropdownItem[]>(
-    [],
-  );
-  const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
+  const {
+    data: languages,
+    isPending: isLoadingLanguages,
+    error,
+  } = useQuery(ocrLanguagesQuery(languagesEndpoint));
 
   useEffect(() => {
-    let cancelled = false;
-    // Fetch available languages from backend
-    const fetchLanguages = async () => {
-      try {
-        const { data } = await apiClient.get<{ languages: string[] }>(
-          languagesEndpoint,
-        );
-        if (cancelled) {
-          return;
-        }
+    if (error) {
+      console.error("[LanguagePicker] Fetch failed with error:", error);
+    }
+  }, [error]);
 
-        const displayNames =
-          typeof Intl.DisplayNames !== "undefined"
-            ? new Intl.DisplayNames([i18n.language], { type: "language" })
-            : null;
+  const availableLanguages = useMemo<DropdownItem[]>(() => {
+    if (!languages) {
+      return [];
+    }
 
-        const languageOptions = [...new Set(data.languages)]
-          .map((lang) => {
-            const displayName = getOcrDisplayName(lang);
-            const browserLanguageCodes = getBrowserLanguagesForOcr(lang);
+    const displayNames =
+      typeof Intl.DisplayNames !== "undefined"
+        ? new Intl.DisplayNames([i18n.language], { type: "language" })
+        : null;
 
-            const langKey = `lang.${lang}`;
-            const translatedFromKey = t(langKey);
-            const hasKeyTranslation = translatedFromKey !== langKey;
+    return [...new Set(languages)]
+      .map((lang) => {
+        const displayName = getOcrDisplayName(lang);
+        const browserLanguageCodes = getBrowserLanguagesForOcr(lang);
 
-            const intlTranslatedName = displayNames
-              ? browserLanguageCodes
-                  .map((code) => displayNames.of(code))
-                  .find((name): name is string => Boolean(name))
-              : null;
+        const langKey = `lang.${lang}`;
+        const translatedFromKey = t(langKey);
+        const hasKeyTranslation = translatedFromKey !== langKey;
 
-            const translatedName =
-              (hasKeyTranslation ? translatedFromKey : null) ||
-              intlTranslatedName ||
-              t(`ocr.languages.${lang}`, displayName);
+        const intlTranslatedName = displayNames
+          ? browserLanguageCodes
+              .map((code) => displayNames.of(code))
+              .find((name): name is string => Boolean(name))
+          : null;
 
-            return {
-              value: lang,
-              name: translatedName,
-              label: translatedName,
-            };
-          })
-          .sort((a, b) => a.name.localeCompare(b.name, i18n.language));
+        const translatedName =
+          (hasKeyTranslation ? translatedFromKey : null) ||
+          intlTranslatedName ||
+          t(`ocr.languages.${lang}`, displayName);
 
-        setAvailableLanguages(languageOptions);
-      } catch (error) {
-        if (cancelled) {
-          return;
-        }
-        console.error("[LanguagePicker] Fetch failed with error:", error);
-        console.error("[LanguagePicker] Error details:", {
-          name: error instanceof Error ? error.name : "Unknown",
-          message: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-        });
-      } finally {
-        if (!cancelled) {
-          setIsLoadingLanguages(false);
-        }
-      }
-    };
-
-    fetchLanguages();
-    return () => {
-      cancelled = true;
-    };
-  }, [languagesEndpoint, i18n.language, t]);
+        return {
+          value: lang,
+          name: translatedName,
+          label: translatedName,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name, i18n.language));
+  }, [languages, i18n.language, t]);
 
   // Auto-fill OCR language based on browser language when languages are loaded
   useEffect(() => {
@@ -122,18 +103,12 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
       value.length === 0;
 
     if (shouldAutoFillLanguage) {
-      // Use the comprehensive language mapping from languageMapping.ts
-      const suggestedOcrLanguages = getAutoOcrLanguage(i18n.language);
-
-      if (suggestedOcrLanguages.length > 0) {
-        // Find the first suggested language that's available in the backend
-        const matchingLanguage = availableLanguages.find((lang) =>
-          suggestedOcrLanguages.includes(lang.value),
-        );
-
-        if (matchingLanguage) {
-          onChange([matchingLanguage.value]);
-        }
+      const matchingLanguage = autoOcrLanguage(
+        availableLanguages.map((lang) => lang.value),
+        i18n.language,
+      );
+      if (matchingLanguage) {
+        onChange([matchingLanguage]);
       }
 
       setHasAutoFilled(true);

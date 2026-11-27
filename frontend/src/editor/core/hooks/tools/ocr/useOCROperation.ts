@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   OCRParameters,
   defaultParameters,
+  resolveOCRDefaultParameters,
   validateOCRParameters,
 } from "@editor/hooks/tools/ocr/useOCRParameters";
 import {
@@ -160,6 +161,7 @@ export const ocrOperationConfig = defineSingleFileTool({
   operationType: "ocr",
   endpoint: ENDPOINT,
   defaultParameters,
+  resolveDefaultParameters: resolveOCRDefaultParameters,
 });
 
 export const useOCROperation = () => {

@@ -11,35 +11,23 @@ import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 interface ToolListProps {
   tools: AutomationTool[];
   toolRegistry: Partial<ToolRegistry>;
-  onToolUpdate: (index: number, updates: Partial<AutomationTool>) => void;
   onToolRemove: (index: number) => void;
   onToolConfigure: (index: number) => void;
   onToolAdd: () => void;
-  getToolName: (operation: string) => string;
-  getToolDefaultParameters: (operation: string) => Record<string, unknown>;
+  onToolSelect: (index: number, operation: string) => void;
   isToolConfigured: (tool: AutomationTool) => boolean;
 }
 
 export default function ToolList({
   tools,
   toolRegistry,
-  onToolUpdate,
   onToolRemove,
   onToolConfigure,
   onToolAdd,
-  getToolName,
-  getToolDefaultParameters,
+  onToolSelect,
   isToolConfigured,
 }: ToolListProps) {
   const { t } = useTranslation();
-
-  const handleToolSelect = (index: number, newOperation: string) => {
-    onToolUpdate(index, {
-      operation: newOperation,
-      name: getToolName(newOperation),
-      parameters: getToolDefaultParameters(newOperation),
-    });
-  };
 
   return (
     <div>
@@ -100,7 +88,7 @@ export default function ToolList({
                     <ToolSelector
                       key={`tool-selector-${tool.id}`}
                       onSelect={(newOperation) =>
-                        handleToolSelect(index, newOperation)
+                        onToolSelect(index, newOperation)
                       }
                       excludeTools={["automate"]}
                       toolRegistry={toolRegistry}

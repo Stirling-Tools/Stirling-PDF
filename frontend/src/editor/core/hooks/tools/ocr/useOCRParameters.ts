@@ -3,6 +3,11 @@ import {
   useBaseParameters,
   BaseParametersHook,
 } from "@editor/hooks/tools/shared/useBaseParameters";
+import type { ToolDefaultsContext } from "@editor/hooks/tools/shared/toolOperationTypes";
+import {
+  autoOcrLanguage,
+  ocrLanguagesQuery,
+} from "@editor/hooks/tools/ocr/ocrLanguages";
 
 export interface OCRParameters extends BaseParameters {
   languages: string[];
@@ -25,6 +30,16 @@ export const defaultParameters: OCRParameters = {
 export function validateOCRParameters(params: OCRParameters): boolean {
   // At minimum, we need at least one language selected
   return params.languages.length > 0;
+}
+
+/** The server's language matching the UI language, which LanguagePicker also applies on mount. */
+export async function resolveOCRDefaultParameters({
+  language,
+  queryClient,
+}: ToolDefaultsContext): Promise<Partial<OCRParameters>> {
+  const languages = await queryClient.ensureQueryData(ocrLanguagesQuery());
+  const match = autoOcrLanguage(languages, language);
+  return match ? { languages: [match] } : {};
 }
 
 export const useOCRParameters = (): OCRParametersHook => {

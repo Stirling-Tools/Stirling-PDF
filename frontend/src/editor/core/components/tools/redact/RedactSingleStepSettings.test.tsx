@@ -24,7 +24,7 @@ describe("RedactSingleStepSettings", () => {
     vi.clearAllMocks();
   });
 
-  test("should render mode selector", () => {
+  test("renders the automatic redaction settings with no mode choice", () => {
     render(
       <TestWrapper>
         <RedactSingleStepSettings
@@ -34,53 +34,11 @@ describe("RedactSingleStepSettings", () => {
       </TestWrapper>,
     );
 
-    expect(screen.getByText("Mode")).toBeInTheDocument();
-    // Mode selector renders as a radio-group (shared SegmentedControl)
-    expect(screen.getByText("Automatic")).toBeInTheDocument();
-    expect(screen.getByText("Manual")).toBeInTheDocument();
-  });
-
-  test("should render automatic mode settings when mode is automatic", () => {
-    render(
-      <TestWrapper>
-        <RedactSingleStepSettings
-          parameters={defaultParameters}
-          onParameterChange={mockOnParameterChange}
-        />
-      </TestWrapper>,
-    );
-
-    // Default mode is automatic, so these should be visible
     expect(screen.getByText("Words to Redact")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Enter a word")).toBeInTheDocument();
     expect(screen.getByText("Box Colour")).toBeInTheDocument();
     expect(screen.getByText("Use Regex")).toBeInTheDocument();
-  });
-
-  test("should render manual mode settings when mode is manual", () => {
-    const manualParameters = {
-      ...defaultParameters,
-      mode: "manual" as const,
-    };
-
-    render(
-      <TestWrapper>
-        <RedactSingleStepSettings
-          parameters={manualParameters}
-          onParameterChange={mockOnParameterChange}
-        />
-      </TestWrapper>,
-    );
-
-    // Manual mode should show placeholder text
-    expect(
-      screen.getByText(
-        "Manual redaction interface will be available here when implemented.",
-      ),
-    ).toBeInTheDocument();
-
-    // Automatic mode settings should not be visible
-    expect(screen.queryByText("Words to Redact")).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
   });
 
   test("should pass through parameter changes from automatic settings", () => {
@@ -174,7 +132,7 @@ describe("RedactSingleStepSettings", () => {
   });
 
   test("should disable all controls when disabled prop is true", () => {
-    const { container } = render(
+    render(
       <TestWrapper>
         <RedactSingleStepSettings
           parameters={defaultParameters}
@@ -184,16 +142,6 @@ describe("RedactSingleStepSettings", () => {
       </TestWrapper>,
     );
 
-    // Mode selector renders as radio inputs (shared SegmentedControl); both
-    // radios should be disabled when the control is disabled.
-    expect(
-      container.querySelector('input[type="radio"][value="automatic"]'),
-    ).toBeDisabled();
-    expect(
-      container.querySelector('input[type="radio"][value="manual"]'),
-    ).toBeDisabled();
-
-    // Automatic settings controls should be disabled
     expect(screen.getByPlaceholderText("Enter a word")).toBeDisabled();
     expect(screen.getByRole("button", { name: "+ Add" })).toBeDisabled();
     expect(screen.getByDisplayValue("#000000")).toBeDisabled();
@@ -243,7 +191,9 @@ describe("RedactSingleStepSettings", () => {
     );
 
     // Check that the Stack container exists
-    const container = screen.getByText("Mode").closest(".mantine-Stack-root");
+    const container = screen
+      .getByText("Words to Redact")
+      .closest(".mantine-Stack-root");
     expect(container).toBeInTheDocument();
   });
 });

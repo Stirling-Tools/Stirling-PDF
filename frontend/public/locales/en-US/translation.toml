@@ -12351,7 +12351,6 @@ applyWarning = "⚠️ Permanent application, cannot be undone and the data unde
 colorLabel = "Redaction Color"
 controlsTitle = "Manual Redaction Controls"
 instructions = "Select text or draw areas on the PDF to mark content for redaction."
-notImplemented = "Manual redaction interface will be available here when implemented."
 title = "Redaction Tools"
 
 [redact.modeSelector]
