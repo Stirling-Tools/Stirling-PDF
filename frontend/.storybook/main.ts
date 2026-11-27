@@ -1,4 +1,5 @@
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/react-vite";
 import type { Plugin } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -59,6 +60,8 @@ const editorPathAliases = () =>
       resolve(__dirname, "..", project),
     ),
   });
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the

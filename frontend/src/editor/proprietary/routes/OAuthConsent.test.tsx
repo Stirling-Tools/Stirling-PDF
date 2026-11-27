@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { MantineProvider } from "@mantine/core";
 import { StrictMode, type ReactNode } from "react";
 
 const getMock = vi.fn();
@@ -69,6 +68,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 let OAuthConsent: typeof import("@editor/routes/OAuthConsent").default;
+let MantineProvider: typeof import("@mantine/core").MantineProvider;
 
 const assign = vi.fn();
 
@@ -86,6 +86,8 @@ function renderPage(strict = false) {
 describe("OAuthConsent (built-in MCP authorization server)", () => {
   beforeEach(async () => {
     vi.resetModules();
+    // The provider and route must share the same Mantine context after the reset.
+    ({ MantineProvider } = await import("@mantine/core"));
     OAuthConsent = (await import("@editor/routes/OAuthConsent")).default;
     session = { access_token: "token-abc" };
     getMock.mockReset();

@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
+import { playwright } from "@vitest/browser-playwright";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { brokenInFlavorTag, flavorBuild, notInFlavorTag } from "./flavor";
@@ -94,7 +95,7 @@ export default defineConfig({
           browser: {
             enabled: true,
             headless: true,
-            provider: "playwright",
+            provider: playwright(),
             instances: [{ browser: "chromium" }],
           },
           setupFiles: [resolve(__dirname, "vitest.setup.ts")],

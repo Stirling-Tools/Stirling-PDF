@@ -24,7 +24,8 @@
       "@processor-cloud/*": ["../../processor/cloud/*"],
       "@editor-cloud/*": ["../../editor/cloud/*"],
       "@editor-proprietary/*": ["../../editor/proprietary/*"],
-      "@editor-core/*": ["../../editor/core/*"]
+      "@editor-core/*": ["../../editor/core/*"],
+      "@editor-test/*": ["../../editor/test/*"]
     }
   },
   "include": [

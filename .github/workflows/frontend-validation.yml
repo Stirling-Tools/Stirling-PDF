@@ -1,7 +1,7 @@
 name: Frontend lint, type-check, and build
 
 # Reusable workflow called from build.yml when frontend / testing sources
-# change. Runs `task frontend:check:all` and uploads the 
+# change. Runs `task frontend:check:all` and uploads the
 # coverage + dist artifacts for downstream jobs.
 on:
   workflow_call:

@@ -11,6 +11,7 @@
       "@editor-cloud/*": ["../../editor/cloud/*"],
       "@editor-proprietary/*": ["../../editor/proprietary/*"],
       "@editor-core/*": ["../../editor/core/*"],
+      "@editor-test/*": ["../../editor/test/*"],
       "@editor/portal/*": [
         "../../editor/cloud/portal/*",
         "../../editor/proprietary/portal/*",
