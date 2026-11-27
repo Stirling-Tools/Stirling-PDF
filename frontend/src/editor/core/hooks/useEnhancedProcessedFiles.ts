@@ -188,6 +188,17 @@ export function useEnhancedProcessedFiles(
       }
     };
 
+    // Only poll while the loop can act on a state: a "processing" file that may finish
+    // or a "completed" one whose result has not been reconciled yet. Failed entries
+    // linger for 10 seconds but the loop ignores them, so they must not keep the timer
+    // (and the per-file hash lookups) alive.
+    const hasPollableState = Array.from(processingStates.values()).some(
+      (state) => state.status === "processing" || state.status === "completed",
+    );
+    if (activeFiles.length === 0 || !hasPollableState) {
+      return;
+    }
+
     // Check every 500ms for completed processing
     const interval = setInterval(checkForCompletedFiles, 500);
     return () => clearInterval(interval);
