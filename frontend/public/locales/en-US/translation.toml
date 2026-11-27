@@ -4714,8 +4714,8 @@ message = "Failed to set default PDF handler"
 title = "Error"
 
 [defaultApp.settingsOpened]
-message = "In Windows Settings, search for 'PDF' and select Stirling PDF as your default app"
-title = "Settings Opened"
+message = "Click Set default, or choose Stirling PDF next to .pdf."
+title = "One more step"
 
 [defaultApp.success]
 message = "Stirling PDF is now your default PDF editor"

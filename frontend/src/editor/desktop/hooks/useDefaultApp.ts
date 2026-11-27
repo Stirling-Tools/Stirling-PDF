@@ -19,6 +19,10 @@ export const useDefaultApp = () => {
 
   useEffect(() => {
     void checkDefaultStatus();
+    // Re-check when the user comes back from Windows Settings
+    const onFocus = () => void checkDefaultStatus();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [checkDefaultStatus]);
 
   const handleSetDefault = async () => {
@@ -39,10 +43,10 @@ export const useDefaultApp = () => {
       } else if (result === "opened_dialog") {
         alert({
           alertType: "neutral",
-          title: t("defaultApp.settingsOpened.title", "Settings Opened"),
+          title: t("defaultApp.settingsOpened.title", "One more step"),
           body: t(
             "defaultApp.settingsOpened.message",
-            "Please select Stirling PDF in the file association dialogue",
+            "Click Set default, or choose Stirling PDF next to .pdf.",
           ),
         });
       }
