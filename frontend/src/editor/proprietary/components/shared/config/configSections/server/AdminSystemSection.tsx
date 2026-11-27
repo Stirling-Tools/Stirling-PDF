@@ -30,6 +30,7 @@ import { FolderAccessCard } from "@editor/components/shared/config/configSection
 import { CustomPathsCard } from "@editor/components/shared/config/configSections/server/CustomPathsCard";
 import { CustomMetadataCard } from "@editor/components/shared/config/configSections/server/CustomMetadataCard";
 import { ServerCertificateCard } from "@editor/components/shared/config/configSections/server/ServerCertificateCard";
+import { SignatureLogoCard } from "@editor/components/shared/config/configSections/server/SignatureLogoCard";
 import AdminFormDetectionSection from "@editor/components/shared/config/configSections/AdminFormDetectionSection";
 import "@editor/components/shared/config/configSections/server/AdminSystemSection.css";
 
@@ -538,6 +539,7 @@ export default function AdminSystemSection() {
           )}
         >
           <ServerCertificateCard {...generalCard} />
+          <SignatureLogoCard loginEnabled={loginEnabled} />
         </SettingsCard>
 
         <SettingsCard

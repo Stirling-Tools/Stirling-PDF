@@ -184,7 +184,7 @@ it("guides mobile creation through three pages and retains the draft when going 
     }),
   );
   await user.click(
-    await screen.findByRole("switch", {
+    await screen.findByRole("checkbox", {
       name: "Include Signature Summary Page",
     }),
   );
@@ -201,7 +201,7 @@ it("guides mobile creation through three pages and retains the draft when going 
     "2026-10-25",
   );
   expect(
-    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+    screen.getByRole("checkbox", { name: "Include Signature Summary Page" }),
   ).toBeChecked();
   expect(onSubmit).not.toHaveBeenCalled();
   await user.click(
@@ -221,7 +221,7 @@ it("preserves the mobile page and signature settings across desktop resizing", a
     }),
   );
   await user.click(
-    await screen.findByRole("switch", {
+    await screen.findByRole("checkbox", {
       name: "Include Signature Summary Page",
     }),
   );
@@ -229,14 +229,14 @@ it("preserves the mobile page and signature settings across desktop resizing", a
   expect(screen.getByRole("button", { name: "Change PDF" })).toBeVisible();
   expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeChecked();
   expect(
-    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+    screen.getByRole("checkbox", { name: "Include Signature Summary Page" }),
   ).toBeChecked();
   resize(true);
   expect(
     screen.getByRole("button", { name: "Dates & options" }),
   ).toHaveAttribute("aria-current", "step");
   expect(
-    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+    screen.getByRole("checkbox", { name: "Include Signature Summary Page" }),
   ).toBeChecked();
   expect(
     screen.queryByRole("button", { name: "Change PDF" }),
@@ -353,7 +353,7 @@ it("moves signing guidance into focusable tooltips while preserving submitted si
     screen.getByRole("button", { name: "Include Signature Summary Page" }),
   );
   await user.click(
-    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+    screen.getByRole("checkbox", { name: "Include Signature Summary Page" }),
   );
   await user.click(
     screen.getByRole("button", { name: "Send signing request" }),

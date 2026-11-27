@@ -1605,6 +1605,8 @@ export interface SignatureFieldAppearance {
   /** Height in PDF points. */
   height: number;
   fieldName: string;
+  /** Whether the field carries a /V, i.e. has been signed. */
+  signed: boolean;
   /**
    * RGBA pixel data of the rendered appearance stream, or `null` when the
    * annotation has no visible appearance (e.g. unsigned fields).
@@ -1882,8 +1884,10 @@ export async function renderSignatureFieldAppearances(
           );
           m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
 
-          // Build user→device matrix: maps annotation rect to bitmap.
-          // PDF coords: origin bottom-left, y-up. Device: origin top-left, y-down.
+          // EPDF_RenderAnnotBitmap applies this matrix after its own flip into
+          // crop-relative, y-down page space, so it only scales and shifts the
+          // annotation's CSS rect onto the bitmap; flipping y here too draws the
+          // appearance upside down.
           const sx = wDev / pdfW;
           const sy = hDev / pdfH;
           const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
@@ -1894,7 +1898,7 @@ export async function renderSignatureFieldAppearances(
             matrixPtr,
             6,
           );
-          matrixView.set([sx, 0, 0, -sy, -sx * annotLeft, sy * annotTop]);
+          matrixView.set([sx, 0, 0, sy, -sx * cssX, -sy * cssY]);
 
           let ok = false;
           try {
@@ -1991,6 +1995,15 @@ export async function renderSignatureFieldAppearances(
           }
         }
 
+        let signed = m.FPDFAnnot_HasKey(annotPtr, "V");
+        if (!signed) {
+          const parentPtr = m.FPDFAnnot_GetLinkedAnnot(annotPtr, "Parent");
+          if (parentPtr) {
+            signed = m.FPDFAnnot_HasKey(parentPtr, "V");
+            m.FPDFPage_CloseAnnot(parentPtr);
+          }
+        }
+
         m.FPDFPage_CloseAnnot(annotPtr);
 
         results.push({
@@ -2000,6 +2013,7 @@ export async function renderSignatureFieldAppearances(
           width: pdfW,
           height: pdfH,
           fieldName: name,
+          signed,
           imageData,
           sourcePageWidth: cropWidth,
           sourcePageHeight: cropHeight,
@@ -2169,6 +2183,7 @@ export async function renderButtonFieldAppearances(
           width: pdfW,
           height: pdfH,
           fieldName: btnName,
+          signed: false,
           imageData,
           sourcePageWidth: cropWidth,
           sourcePageHeight: cropHeight,

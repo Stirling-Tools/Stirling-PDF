@@ -63,6 +63,7 @@ final class MacSecurity {
     private final MethodHandle secPolicyCreateBasicX509;
     private final MethodHandle secTrustCreateWithCertificates;
     private final MethodHandle secTrustEvaluateWithError;
+    private final MethodHandle secTrustSetNetworkFetchAllowed;
     private final MethodHandle secTrustCopyCertificateChain;
     private final MethodHandle secTrustGetCertificateCount;
     private final MethodHandle secTrustGetCertificateAtIndex;
@@ -142,6 +143,11 @@ final class MacSecurity {
                         linker,
                         "SecTrustEvaluateWithError",
                         FunctionDescriptor.of(JAVA_BYTE, ADDRESS, ADDRESS));
+        secTrustSetNetworkFetchAllowed =
+                sec(
+                        linker,
+                        "SecTrustSetNetworkFetchAllowed",
+                        FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_BYTE));
         secTrustCopyCertificateChain =
                 security.find("SecTrustCopyCertificateChain")
                         .map(
@@ -304,6 +310,10 @@ final class MacSecurity {
                 }
                 MemorySegment trust = trustOut.get(ADDRESS, 0);
                 try {
+                    // A basic X.509 policy leaves fetching off, so an intermediate published
+                    // only at the certificate's issuer URL would be missing from the chain.
+                    int fetchIgnored =
+                            (int) secTrustSetNetworkFetchAllowed.invokeExact(trust, (byte) 1);
                     byte ignored =
                             (byte) secTrustEvaluateWithError.invokeExact(trust, MemorySegment.NULL);
                     List<byte[]> chain = trustChain(trust);

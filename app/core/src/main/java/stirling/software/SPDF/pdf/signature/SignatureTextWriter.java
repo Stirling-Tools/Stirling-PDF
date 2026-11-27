@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.text.Bidi;
 import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.fontbox.ttf.CmapLookup;
 import org.apache.fontbox.ttf.TTFParser;
@@ -25,15 +27,16 @@ import lombok.extern.slf4j.Slf4j;
  * as subsets. A character no bundled face covers is drawn as {@code ?}: signing must not fail over
  * display text, and the certificate itself is unaffected.
  *
- * <p>Right-to-left runs are reordered for display, but glyphs are not shaped, so Arabic and Indic
- * text is legible letter by letter but not joined. Not thread-safe; use one instance per document.
+ * <p>Lines are laid out in visual order (Unicode bidi), so Hebrew and Arabic read right to left
+ * within a Latin line. Glyphs are not shaped, so Arabic and Indic text is legible letter by letter
+ * but not joined. Not thread-safe; use one instance per document.
  */
 @Slf4j
 public final class SignatureTextWriter {
 
     private static final List<String> FACES =
             List.of(
-                    "static/fonts/NotoSans-Bold.ttf",
+                    "static/fonts/NotoSans-Regular.ttf",
                     "static/fonts/NotoSansSC-Regular.ttf",
                     "static/fonts/NotoSansJP-Regular.ttf",
                     "static/fonts/NotoSansKR-Regular.ttf",
@@ -80,10 +83,18 @@ public final class SignatureTextWriter {
     /** Shows {@code text} at the current text position; the caller is inside BT/ET. */
     public void showText(PDPageContentStream stream, String text, float fontSize)
             throws IOException {
-        for (Run run : runs(visualOrder(text))) {
+        for (Run run : runs(text)) {
             stream.setFont(run.face().font(document), fontSize);
             stream.showText(run.text());
         }
+    }
+
+    public float width(String text, float fontSize) throws IOException {
+        float units = 0;
+        for (Run run : runs(text)) {
+            units += run.face().font(document).getStringWidth(run.text());
+        }
+        return units / 1000 * fontSize;
     }
 
     static String visualOrder(String text) {
@@ -98,7 +109,7 @@ public final class SignatureTextWriter {
         for (int i = 0; i < count; i++) {
             levels[i] = (byte) bidi.getRunLevel(i);
             String run = text.substring(bidi.getRunStart(i), bidi.getRunLimit(i));
-            runs[i] = (levels[i] & 1) == 1 ? reverseClusters(run) : run;
+            runs[i] = (levels[i] & 1) == 1 ? mirrored(reverseClusters(run)) : run;
         }
         Bidi.reorderVisually(levels, 0, runs, 0, count);
         return String.join("", runs);
@@ -117,7 +128,32 @@ public final class SignatureTextWriter {
         return reversed.toString();
     }
 
-    private List<Run> runs(String text) throws IOException {
+    // Unicode BidiMirroring pairs for the brackets and quotes a signer is likely to type: a
+    // reversed right-to-left run must show each one facing the other way (UAX #9 rule L4).
+    private static final Map<Integer, Integer> MIRRORS =
+            mirrorPairs("()<>[]{}«»‹›⁅⁆⁽⁾₍₎≤≥〈〉《》「」『』【】");
+
+    private static Map<Integer, Integer> mirrorPairs(String pairs) {
+        Map<Integer, Integer> mirrors = new HashMap<>();
+        int[] codePoints = pairs.codePoints().toArray();
+        for (int index = 0; index + 1 < codePoints.length; index += 2) {
+            mirrors.put(codePoints[index], codePoints[index + 1]);
+            mirrors.put(codePoints[index + 1], codePoints[index]);
+        }
+        return Map.copyOf(mirrors);
+    }
+
+    private static String mirrored(String text) {
+        StringBuilder out = new StringBuilder(text.length());
+        text.codePoints()
+                .forEach(
+                        codePoint ->
+                                out.appendCodePoint(MIRRORS.getOrDefault(codePoint, codePoint)));
+        return out.toString();
+    }
+
+    private List<Run> runs(String logical) throws IOException {
+        String text = visualOrder(logical);
         List<Run> runs = new ArrayList<>();
         Face current = null;
         StringBuilder pending = new StringBuilder();

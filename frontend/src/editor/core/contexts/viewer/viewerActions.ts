@@ -11,6 +11,7 @@ import { FormattedSelection } from "@embedpdf/plugin-selection";
 
 export interface ScrollActions {
   scrollToPage: (page: number, behavior?: "smooth" | "instant") => void;
+  centrePagePoint: (page: number, point: { x: number; y: number }) => void;
   scrollToFirstPage: () => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;
@@ -135,6 +136,21 @@ export function createViewerActions({
               error,
             );
           }
+        }
+      }
+    },
+    centrePagePoint: (page, point) => {
+      try {
+        registry.current.scroll?.api?.scrollToPage({
+          pageNumber: page,
+          pageCoordinates: point,
+          alignX: 50,
+          alignY: 50,
+          behavior: "smooth",
+        });
+      } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("[ScrollActions] centrePagePoint failed:", error);
         }
       }
     },

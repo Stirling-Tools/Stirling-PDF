@@ -47,6 +47,8 @@ import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import lombok.Getter;
 import lombok.Setter;
 
+import stirling.software.common.util.ExceptionUtils;
+
 public abstract class CreateSignatureBase implements SignatureInterface {
     private PrivateKey privateKey;
     @Getter private Certificate[] certificateChain;
@@ -96,7 +98,7 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      * Initialize the signature creator, optionally selecting a specific certificate by alias. A
      * hardware token / the Windows store can hold several certificates, so the caller picks one;
      * when {@code requestedAlias} is null the first usable entry is used (software keystore
-     * behaviour).
+     * behaviour). A named alias that is absent is refused rather than replaced by another key.
      *
      * @param keystore the keystore (software, PKCS#11 or Windows-MY)
      * @param pin the keystore / token PIN, may be null for the Windows store
@@ -108,9 +110,13 @@ public abstract class CreateSignatureBase implements SignatureInterface {
                     NoSuchAlgorithmException,
                     IOException,
                     CertificateException {
-        if (requestedAlias != null
-                && !requestedAlias.isBlank()
-                && keystore.containsAlias(requestedAlias)) {
+        if (requestedAlias != null && !requestedAlias.isBlank()) {
+            if (!keystore.containsAlias(requestedAlias)) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.signingCertificateNotFound",
+                        "The selected signing certificate was not found: {0}",
+                        requestedAlias);
+            }
             privateKey = (PrivateKey) keystore.getKey(requestedAlias, pin);
             certificateChain = resolveChain(keystore, requestedAlias);
             if (certificateChain == null) {

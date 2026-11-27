@@ -43,6 +43,7 @@ async function mockHardwareEndpoints(page: Page) {
             alias: "Anthony Stirling",
             source: "WINDOWS_STORE",
             subject: "CN=Anthony Stirling",
+            displaySubject: "CN=Anthony Stirling",
             issuer: "CN=Anthony Stirling",
             subjectCommonName: "Anthony Stirling",
             issuerCommonName: "Anthony Stirling",

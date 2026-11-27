@@ -64,6 +64,27 @@ const CertificateTypeSettings = ({
     };
   }, [parameters.signMode, serverCert]);
 
+  // Server certificates can be regenerated, so signing is tied to the one shown here.
+  const serverSha256 =
+    parameters.signMode === "AUTO"
+      ? (serverCert?.sha256 ?? undefined)
+      : undefined;
+  useEffect(() => {
+    if (
+      parameters.signMode === "AUTO" &&
+      serverCert !== undefined &&
+      parameters.expectedCertificateSha256 !== serverSha256
+    ) {
+      onParameterChange("expectedCertificateSha256", serverSha256);
+    }
+  }, [
+    parameters.signMode,
+    parameters.expectedCertificateSha256,
+    serverCert,
+    serverSha256,
+    onParameterChange,
+  ]);
+
   const selectUpload = () => {
     onParameterChange("signMode", "MANUAL");
     if (parameters.signMode !== "MANUAL") {

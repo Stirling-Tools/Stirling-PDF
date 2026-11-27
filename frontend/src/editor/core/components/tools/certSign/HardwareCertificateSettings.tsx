@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Anchor,
@@ -36,6 +36,7 @@ interface HardwareCertificateSettingsProps {
     value: CertSignParameters[K],
   ) => void;
   disabled?: boolean;
+  onChosenCertificateChange?: (cert: HardwareCertificateInfo | null) => void;
 }
 
 const CUSTOM_LIBRARY_VALUE = "__custom__";
@@ -46,6 +47,7 @@ const HardwareCertificateSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
+  onChosenCertificateChange,
 }: HardwareCertificateSettingsProps) => {
   const { t } = useTranslation();
   const isOsStore =
@@ -71,6 +73,8 @@ const HardwareCertificateSettings = ({
       ? "MACOS_KEYCHAIN"
       : null;
   const [capsReady, setCapsReady] = useState(false);
+  const [capsFailed, setCapsFailed] = useState(false);
+  const [capsAttempt, setCapsAttempt] = useState(0);
 
   const selectKind = (kind: OsStoreKind | "PKCS11") => {
     if (parameters.certType === kind) {
@@ -104,6 +108,7 @@ const HardwareCertificateSettings = ({
   // PKCS#11 driver libraries.
   useEffect(() => {
     let cancelled = false;
+    setCapsFailed(false);
     getHardwareSigningCapabilities()
       .then((caps) => {
         if (cancelled) {
@@ -148,25 +153,45 @@ const HardwareCertificateSettings = ({
         }
       })
       .catch(() => {
-        if (cancelled) {
-          return;
-        }
-        // Capabilities are best-effort: without them no OS store can be assumed, so fall
-        // back to the token path, where the user can still type a driver path.
-        setSupported({ windows: false, mac: false, pkcs11: true });
-        if (
-          parameters.certType === "WINDOWS_STORE" ||
-          parameters.certType === "MACOS_KEYCHAIN"
-        ) {
-          onParameterChange("certType", "PKCS11");
-          onParameterChange("alias", undefined);
-        }
-        setCapsReady(true);
+        // Keep the user's choice: a failed check (the backend still starting, say) says
+        // nothing about which stores exist, so offer a retry rather than switch paths.
+        if (!cancelled) setCapsFailed(true);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [capsAttempt]);
+
+  // What the user reviewed, so signing refuses another certificate or a copy of this one
+  // that is no longer on their security key.
+  const chosen = certs.find((cert) => cert.alias === parameters.alias);
+  const chosenSha256 = chosen?.sha256;
+  const chosenOnToken = chosen?.onToken === true;
+  useEffect(() => {
+    onChosenCertificateChange?.(chosen ?? null);
+  }, [chosen, onChosenCertificateChange]);
+  // A refresh after the key is unplugged can list the login-keychain copy under the same alias;
+  // the token requirement stays with the selection until the user picks something else.
+  const tokenRequiredFor = useRef(parameters.alias);
+  useEffect(() => {
+    if (parameters.expectedCertificateSha256 !== chosenSha256) {
+      onParameterChange("expectedCertificateSha256", chosenSha256);
+    }
+    const sameSelection = tokenRequiredFor.current === parameters.alias;
+    tokenRequiredFor.current = parameters.alias;
+    const required =
+      chosenOnToken || (sameSelection && Boolean(parameters.requireToken));
+    if (Boolean(parameters.requireToken) !== required) {
+      onParameterChange("requireToken", required || undefined);
+    }
+  }, [
+    chosenSha256,
+    chosenOnToken,
+    parameters.alias,
+    parameters.expectedCertificateSha256,
+    parameters.requireToken,
+    onParameterChange,
+  ]);
 
   const loadOsStoreCerts = useCallback(() => {
     setLoading(true);
@@ -180,7 +205,6 @@ const HardwareCertificateSettings = ({
       .catch(async (e) => {
         setError(
           (await serverErrorReason(e)) ||
-            (e as { message?: string })?.message ||
             (osStoreKind === "MACOS_KEYCHAIN"
               ? t(
                   "certSign.hardware.macLoadError",
@@ -203,12 +227,17 @@ const HardwareCertificateSettings = ({
     }
   }, [isOsStore, osStoreKind, parameters.certType, capsReady]);
 
-  const onLibraryChange = (value: string | null) => {
-    const selection = value ?? "";
-    setLibrarySelection(selection);
+  // A list read with another slot, driver or PIN may not be this card's.
+  const forgetPkcs11Certs = () => {
     setCerts([]);
     setPkcs11Loaded(false);
     onParameterChange("alias", undefined);
+  };
+
+  const onLibraryChange = (value: string | null) => {
+    const selection = value ?? "";
+    setLibrarySelection(selection);
+    forgetPkcs11Certs();
     if (selection === CUSTOM_LIBRARY_VALUE) {
       onParameterChange("pkcs11LibraryPath", customLibrary || "");
     } else {
@@ -236,7 +265,6 @@ const HardwareCertificateSettings = ({
         applyCerts([]);
         setError(
           (await serverErrorReason(e)) ||
-            (e as { message?: string })?.message ||
             t(
               "certSign.hardware.pkcs11LoadError",
               "Could not read the card. Check the PIN and card software.",
@@ -285,6 +313,26 @@ const HardwareCertificateSettings = ({
     librarySelection && librarySelection !== CUSTOM_LIBRARY_VALUE
       ? librarySelection
       : null;
+
+  if (capsFailed) {
+    return (
+      <Stack gap="sm">
+        <Alert color="red" variant="light" role="alert">
+          {t(
+            "certSign.hardware.capabilitiesError",
+            "Could not check which digital IDs this device can use.",
+          )}
+        </Alert>
+        <Button
+          variant="secondary"
+          onClick={() => setCapsAttempt((attempt) => attempt + 1)}
+          disabled={disabled}
+        >
+          {t("certSign.hardware.retry", "Try again")}
+        </Button>
+      </Stack>
+    );
+  }
 
   // Hold the UI until capabilities are known, so the OS-store picker doesn't render
   // and then vanish on Linux (no flicker).
@@ -391,6 +439,7 @@ const HardwareCertificateSettings = ({
               value={customLibrary}
               onChange={(e) => {
                 setCustomLibrary(e.currentTarget.value);
+                forgetPkcs11Certs();
                 onParameterChange("pkcs11LibraryPath", e.currentTarget.value);
               }}
               disabled={disabled || loading}
@@ -400,9 +449,10 @@ const HardwareCertificateSettings = ({
             <PasswordInput
               label={t("certSign.hardware.pin", "PIN")}
               value={parameters.password}
-              onChange={(e) =>
-                onParameterChange("password", e.currentTarget.value)
-              }
+              onChange={(e) => {
+                forgetPkcs11Certs();
+                onParameterChange("password", e.currentTarget.value);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") loadPkcs11Certs();
               }}
@@ -411,12 +461,13 @@ const HardwareCertificateSettings = ({
             <NumberInput
               label={t("certSign.hardware.slot", "Slot (optional)")}
               value={parameters.pkcs11Slot ?? ""}
-              onChange={(v) =>
+              onChange={(v) => {
+                forgetPkcs11Certs();
                 onParameterChange(
                   "pkcs11Slot",
                   v === "" || v == null ? undefined : Number(v),
-                )
-              }
+                );
+              }}
               min={0}
               disabled={disabled || loading}
             />

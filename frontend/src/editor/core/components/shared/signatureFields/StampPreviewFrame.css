@@ -1,0 +1,17 @@
+.stamp-preview-frame {
+  display: flex;
+  justify-content: center;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+}
+
+.stamp-preview-frame img {
+  display: block;
+  max-width: 100%;
+  max-height: 84px;
+  width: auto;
+  height: auto;
+  outline: 1px dashed var(--c-border-strong);
+}

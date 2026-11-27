@@ -155,6 +155,7 @@ import { FormFieldCreationOverlay } from "@editor/tools/formFill/FormFieldCreati
 import { FormFieldEditOverlay } from "@editor/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@editor/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@editor/components/viewer/SignatureFieldOverlay";
+import { StampGuideLayer } from "@editor/components/viewer/StampGuideLayer";
 import { CommentsSidebar } from "@editor/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@editor/contexts/CommentAuthorContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
@@ -764,6 +765,14 @@ function PageLayers({
         selectionActive={isAnnotationMode && !annotationsReadOnly}
         readOnly={annotationsReadOnly}
       />
+      {file && (
+        <StampGuideLayer
+          pageIndex={pageIndex}
+          pdfSource={file}
+          pageWidth={width}
+          pageHeight={height}
+        />
+      )}
       {readOnlySignaturePreviews && (
         <SignaturePreviewLayer
           pageIndex={pageIndex}

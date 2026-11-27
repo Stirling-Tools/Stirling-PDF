@@ -1,3 +1,4 @@
+import i18n, { type TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
@@ -10,6 +11,7 @@ import {
   type ToolEndpoint,
 } from "@editor/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
+import type { StampLabels } from "@editor/services/signatureStampPreview";
 import {
   validateCertSignParameters,
   CertSignParameters,
@@ -56,26 +58,47 @@ export const certSignToApiParams = (
   return withSignatureAppearance(apiParams, parameters);
 };
 
-// Signature appearance fields are only sent when the visible signature is
-// enabled, matching the original form behaviour.
+// Name, reason and location go into the signature dictionary, so they are sent
+// for invisible signatures too; placement and logo only affect the visible stamp.
 const withSignatureAppearance = (
   apiParams: CertSignApiParams,
   parameters: CertSignParameters,
 ): CertSignApiParams => {
+  if (parameters.reason) apiParams.reason = parameters.reason;
+  if (parameters.location) apiParams.location = parameters.location;
+  if (parameters.name) apiParams.name = parameters.name;
   if (parameters.showSignature) {
     apiParams.showSignature = true;
-    apiParams.reason = parameters.reason;
-    apiParams.location = parameters.location;
-    apiParams.name = parameters.name;
-    apiParams.pageNumber = parameters.pageNumber;
-    apiParams.showLogo = parameters.showLogo;
+    apiParams.stampGraphic = parameters.stampGraphic;
+    apiParams.showWatermark = parameters.showWatermark;
+    if (parameters.showCertificateDetails) {
+      apiParams.showCertificateDetails = true;
+    }
+    if (parameters.fieldName) {
+      apiParams.fieldName = parameters.fieldName;
+    } else {
+      apiParams.pageNumber = parameters.pageNumber;
+      if (parameters.stampBox) {
+        apiParams.x = parameters.stampBox.x;
+        apiParams.y = parameters.stampBox.y;
+        apiParams.width = parameters.stampBox.width;
+        apiParams.height = parameters.stampBox.height;
+      }
+    }
   }
   return apiParams;
 };
 
 // Select the keystore File uploads for the chosen certificate type. AUTO mode
 // (server certificate) uploads no keystore.
-const certSignFiles = (parameters: CertSignParameters): FormDataFiles => {
+const certSignFiles = (parameters: CertSignParameters): FormDataFiles => ({
+  ...keystoreFiles(parameters),
+  ...(parameters.showSignature && parameters.stampGraphic === "IMAGE"
+    ? { signatureImage: parameters.signatureImage }
+    : {}),
+});
+
+const keystoreFiles = (parameters: CertSignParameters): FormDataFiles => {
   if (parameters.signMode === "AUTO") return {};
 
   switch (parameters.certType) {
@@ -94,6 +117,21 @@ const certSignFiles = (parameters: CertSignParameters): FormDataFiles => {
   }
 };
 
+const signModeForCertType = (
+  certType: CertSignApiParams["certType"],
+): CertSignParameters["signMode"] => {
+  switch (certType) {
+    case "SERVER":
+      return "AUTO";
+    case "WINDOWS_STORE":
+    case "MACOS_KEYCHAIN":
+    case "PKCS11":
+      return "DEVICE";
+    default:
+      return "MANUAL";
+  }
+};
+
 // Reconstruct the tool's UI parameters from a cert-sign request body, so a stored
 // or AI-authored step can be re-rendered in the settings UI. Uploaded keystore
 // files cannot be recovered from the request model.
@@ -101,7 +139,7 @@ export const certSignFromApiParams = (
   apiParams: CertSignApiParams,
 ): Partial<CertSignParameters> => {
   const result: Partial<CertSignParameters> = {
-    signMode: apiParams.certType === "SERVER" ? "AUTO" : "MANUAL",
+    signMode: signModeForCertType(apiParams.certType),
     showSignature: apiParams.showSignature ?? defaultParameters.showSignature,
   };
 
@@ -122,20 +160,90 @@ export const certSignFromApiParams = (
   if (apiParams.pageNumber !== undefined) {
     result.pageNumber = apiParams.pageNumber;
   }
-  if (apiParams.showLogo !== undefined) result.showLogo = apiParams.showLogo;
+  // An image graphic cannot be restored without its file, so it comes back as the name.
+  if (apiParams.stampGraphic === "NONE") result.stampGraphic = "NONE";
+  if (apiParams.showWatermark !== undefined) {
+    result.showWatermark = apiParams.showWatermark;
+  } else if (apiParams.showLogo !== undefined) {
+    result.showWatermark = apiParams.showLogo;
+  }
+  if (apiParams.showCertificateDetails !== undefined) {
+    result.showCertificateDetails = apiParams.showCertificateDetails;
+  }
+  if (apiParams.fieldName !== undefined) result.fieldName = apiParams.fieldName;
+  if (
+    apiParams.x !== undefined &&
+    apiParams.y !== undefined &&
+    apiParams.width !== undefined &&
+    apiParams.height !== undefined
+  ) {
+    result.stampBox = {
+      x: apiParams.x,
+      y: apiParams.y,
+      width: apiParams.width,
+      height: apiParams.height,
+    };
+  }
 
   return result;
 };
 
-// Build form data for signing
+/** The stamp's labels in the UI language; the signed-by one keeps the {name} slot the server fills. */
+export const stampLabels = (t: TFunction = i18n.t): StampLabels => ({
+  signedByLabel: t("certSign.stamp.signedBy", "Digitally signed by {{name}}", {
+    name: "{name}",
+    interpolation: { escapeValue: false },
+  }),
+  dateLabel: t("certSign.stamp.date", "Date:"),
+  reasonLabel: t("certSign.stamp.reason", "Reason:"),
+  locationLabel: t("certSign.stamp.location", "Location:"),
+});
+
+// The stamp's words are fixed when signing, in the signer's language and time zone, so they
+// are added here rather than stored with the step: a saved automation signs in whoever runs it.
+const withStampLanguage = (
+  apiParams: CertSignApiParams,
+  parameters: CertSignParameters,
+): CertSignApiParams =>
+  parameters.showSignature
+    ? {
+        ...apiParams,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ...stampLabels(),
+      }
+    : apiParams;
+
+// What the user reviewed belongs to this signing only: a saved step that pinned a fingerprint
+// would fail once the server certificate is regenerated, so it is never stored with the step.
+const withReviewedSigner = (
+  apiParams: CertSignApiParams,
+  parameters: CertSignParameters,
+): CertSignApiParams => ({
+  ...apiParams,
+  ...(parameters.signMode !== "MANUAL" && parameters.expectedCertificateSha256
+    ? { expectedCertificateSha256: parameters.expectedCertificateSha256 }
+    : {}),
+  ...(parameters.signMode === "DEVICE" &&
+  parameters.certType === "MACOS_KEYCHAIN" &&
+  parameters.requireToken
+    ? { requireToken: true }
+    : {}),
+});
+
 export const buildCertSignFormData = (
   parameters: CertSignParameters,
   file: File,
 ): FormData =>
-  objectToFormData(certSignToApiParams(parameters), {
-    fileInput: file,
-    ...certSignFiles(parameters),
-  });
+  objectToFormData(
+    withReviewedSigner(
+      withStampLanguage(certSignToApiParams(parameters), parameters),
+      parameters,
+    ),
+    {
+      fileInput: file,
+      ...certSignFiles(parameters),
+    },
+  );
 
 // Static configuration object
 export const certSignOperationConfig = defineSingleFileTool({

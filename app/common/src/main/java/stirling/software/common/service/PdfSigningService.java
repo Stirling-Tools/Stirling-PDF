@@ -19,7 +19,7 @@ public interface PdfSigningService {
      * @param name signer name embedded in the signature
      * @param location location string embedded in the signature
      * @param reason reason string embedded in the signature
-     * @param showLogo whether to include the Stirling-PDF logo in the visible signature
+     * @param showLogo whether to draw the signature logo faded behind the visible signature
      * @return signed PDF bytes
      * @throws Exception on any signing failure
      */

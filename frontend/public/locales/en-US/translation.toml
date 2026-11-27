@@ -1244,6 +1244,18 @@ label = "Regenerate on Startup"
 description = "Number of days the certificate will be valid"
 label = "Certificate Validity (days)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Directories that folder sources and folder outputs are allowed to read from and write to. This is a security boundary: automations can never be pointed at a server path outside this list."
 securityNote = "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory, server file storage and the pipeline watched folders are always off-limits, and folder access is always disabled in hosted (SaaS) mode."
@@ -2751,15 +2763,13 @@ chooseJksFile = "Choose JKS File"
 chooseP12File = "Choose PKCS12 File"
 choosePfxFile = "Choose PFX File"
 choosePrivateKey = "Choose Private Key File"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Declined"
 fetchFailed = "Failed to load signing data"
 finalized = "Finalized"
 location = "Location"
 locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
-logoTitle = "Logo"
-name = "Name"
-nameInfo = "Your name, stored in the signature's details. The visible signature shows the name on the certificate instead."
-noLogo = "No Logo"
 pageNumber = "Page Number"
 pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Certificate Password"
@@ -2771,7 +2781,6 @@ readyToFinalize = "Ready to finalize"
 reason = "Reason"
 reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Using server certificate - no files or password required"
-showLogo = "Show Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signatures"
 tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto"
 title = "Certificate Signing"
@@ -2779,12 +2788,45 @@ viewed = "Viewed"
 
 [certSign.appearance]
 invisible = "Invisible"
+showOnPage = "Show signature on page"
 stepTitle = "Signature Appearance"
 visibility = "Visibility"
 visible = "Visible"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Signature Details"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "About Signature Appearance"
@@ -2799,7 +2841,7 @@ title = "Invisible Signatures"
 [certSign.appearance.tooltip.visible]
 bullet1 = "Shows signer name and date on the document"
 bullet2 = "Can include reason and location for signing"
-bullet3 = "Choose which page to place the signature"
+bullet3 = "Sign into an empty signature field, or place and size the box on the page"
 bullet4 = "Optional logo can be included"
 text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
 title = "Visible Signatures"
@@ -3012,6 +3054,7 @@ failed = "An error occurred while processing signatures."
 [certSign.hardware]
 allExpired = "None of the digital IDs here can sign today."
 backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Other location…"
 digitalId = "Digital ID"
 driver = "Card software (PKCS#11)"
@@ -3033,6 +3076,7 @@ pin = "PIN"
 pkcs11Hint = "For cards your computer doesn't list. Choose the software that came with your card and enter its PIN."
 pkcs11LoadError = "Could not read the card. Check the PIN and card software."
 refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Select card software"
 serial = "Serial …{{serial}}"
 showExpired = "Show {{count}} expired"
@@ -3082,6 +3126,12 @@ serverCertUnavailable = "The server's signing certificate isn't available."
 signsAs = "Signs as"
 stepTitle = "Certificate source"
 upload = "Upload"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Update your username. You will be logged out after updating."
@@ -13771,6 +13821,10 @@ rotateRight = "Rotate right"
 trim = "Trim to signature"
 trimHint = "Crops the empty space around it"
 
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
+
 [signatureSettings.tooltip]
 header = "Signature Appearance Settings"
 
@@ -15110,9 +15164,11 @@ previewAlt = "Signature preview"
 
 [viewer.signatureField]
 badge = "Signature"
+clickToSign = "Click to sign here"
 fieldTitle = "Signature field: {{name}}"
 signed = "Signed"
 signedWithReason = "Signed: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Unsigned signature field: {{name}}"
 withTime = "{{label}} ({{time}})"
 

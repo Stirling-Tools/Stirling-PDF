@@ -39,6 +39,9 @@ export interface ScrollAPIWrapper {
   scrollToPage: (params: {
     pageNumber: number;
     behavior?: ScrollBehavior;
+    pageCoordinates?: { x: number; y: number };
+    alignX?: number;
+    alignY?: number;
   }) => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;
