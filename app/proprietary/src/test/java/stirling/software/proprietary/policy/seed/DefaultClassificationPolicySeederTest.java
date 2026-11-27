@@ -22,6 +22,7 @@ import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
@@ -30,9 +31,11 @@ class DefaultClassificationPolicySeederTest {
 
     @Mock private PolicyStore policyStore;
     @Mock private TeamRepository teamRepository;
+    @Mock private PolicyTriggerManager policyTriggerManager;
 
     private DefaultClassificationPolicySeeder seeder() {
-        return new DefaultClassificationPolicySeeder(policyStore, teamRepository);
+        return new DefaultClassificationPolicySeeder(
+                policyStore, teamRepository, policyTriggerManager);
     }
 
     private static Policy classificationPolicy(Long teamId) {
@@ -72,6 +75,7 @@ class DefaultClassificationPolicySeederTest {
         assertThat(policy.steps()).hasSize(1);
         assertThat(policy.steps().get(0).operation())
                 .isEqualTo("/api/v1/ai/tools/classify-and-label");
+        verify(policyTriggerManager).notifyPoliciesChanged();
     }
 
     @Test
@@ -96,6 +100,7 @@ class DefaultClassificationPolicySeederTest {
         seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
 
         verify(policyStore, never()).save(any());
+        verify(policyTriggerManager, never()).notifyPoliciesChanged();
     }
 
     @Test
@@ -110,6 +115,7 @@ class DefaultClassificationPolicySeederTest {
         verify(policyStore).save(saved.capture());
         assertThat(saved.getValue().owner()).isNull();
         assertThat(saved.getValue().id()).isEqualTo("p1");
+        verify(policyTriggerManager).notifyPoliciesChanged();
     }
 
     @Test
