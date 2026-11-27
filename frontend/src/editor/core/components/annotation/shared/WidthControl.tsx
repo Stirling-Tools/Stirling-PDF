@@ -1,7 +1,9 @@
-import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
+import { Tooltip, Popover, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Icon } from "@editor/ui/Icon";
+import { ValueSlider } from "@editor/components/annotation/shared/ValueSlider";
+import { useEventCallback } from "@editor/hooks/useEventCallback";
 
 interface WidthControlProps {
   value: number;
@@ -20,6 +22,7 @@ export function WidthControl({
 }: WidthControlProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
+  const handleChange = useEventCallback(onChange);
 
   return (
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
@@ -41,12 +44,12 @@ export function WidthControl({
           <Text size="xs" fw={500}>
             {t("annotation.width", "Width")}
           </Text>
-          <Slider
+          <ValueSlider
             value={value}
-            onChange={onChange}
             min={min}
             max={max}
-            label={(val) => `${val}pt`}
+            onChange={handleChange}
+            suffix="pt"
           />
         </Stack>
       </Popover.Dropdown>

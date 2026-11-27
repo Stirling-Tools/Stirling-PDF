@@ -112,18 +112,14 @@ import { isPdfFile } from "@editor/utils/fileUtils";
 import { useTranslation } from "react-i18next";
 import { LinkLayer } from "@editor/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@editor/components/viewer/TextSelectionHandler";
-import { RedactionSelectionMenu } from "@editor/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@editor/components/viewer/AnnotationSelectionMenu";
+import { RedactionSelectionMenu } from "@editor/components/viewer/RedactionSelectionMenu";
 import { AnnotationMenuEvents } from "@editor/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@editor/components/viewer/DocumentSwapBridge";
 import { PdfPasswordBridge } from "@editor/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
-import {
-  pdfAllows,
-  canPrintPdf,
-  pdfEditingLocked,
-} from "@editor/services/pdfPermissions";
+import { pdfAllows, canPrintPdf } from "@editor/services/pdfPermissions";
 import { signedPdfEditsBlocked } from "@editor/services/pdfAccessService";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
@@ -1098,7 +1094,18 @@ export function LocalEmbedPDF({
   const permissionOverride =
     pdfAccess?.ownerAuthenticated === true ||
     (pdfAccess?.honorOwnerPasswords ?? config?.honorOwnerPasswords) === false;
-  const annotationsReadOnly = pdfEditingLocked(pdfAccess) || !enableAnnotations;
+  // Unknown access must not read as restricted: the permission inspection is
+  // async, and treating its pending state as locked would kill annotation
+  // editing, links and the selection menu for the whole inspection. A positive
+  // encrypted verdict still locks once it resolves.
+  const annotationsReadOnly =
+    !enableAnnotations || Boolean(pdfAccess?.encrypted);
+  // The edit scope keeps the stricter reading: an unknown access still locks,
+  // because the save/replace flow settles against that lock.
+  const annotationsLocked = !pdfAccess || pdfAccess.encrypted;
+  // The layers keep the stricter reading too: flapping them off while access is
+  // unknown unmounts the viewer's engine document and reloads it.
+  const showAnnotations = enableAnnotations || annotationsLocked;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
@@ -1941,7 +1948,7 @@ export function LocalEmbedPDF({
               <>
                 <AnnotationInteractionLock
                   documentId={documentId}
-                  readOnly={annotationsReadOnly}
+                  readOnly={annotationsLocked}
                 />
                 <DocumentViewport
                   documentId={documentId}
@@ -1949,7 +1956,7 @@ export function LocalEmbedPDF({
                   onScrollbarWidthChange={onScrollbarWidthChange}
                 />
                 <DocumentComments
-                  enabled
+                  enabled={showAnnotations}
                   readOnly={annotationsReadOnly}
                   documentId={documentId}
                   fileName={exportFileName}
