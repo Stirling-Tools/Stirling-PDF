@@ -35,6 +35,7 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.NothingToExtractException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -143,9 +144,8 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(blankPages(1));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            assertThatThrownBy(() -> controller.pdfToExcel(request))
+                    .isInstanceOf(NothingToExtractException.class);
         }
 
         @Test
@@ -157,9 +157,8 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(blankPages(3));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            assertThatThrownBy(() -> controller.pdfToExcel(request))
+                    .isInstanceOf(NothingToExtractException.class);
         }
     }
 
@@ -177,19 +176,20 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(borderedTableDoc());
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
-
             // Table detection may not find this grid; accept either outcome but assert the
             // success path produced a real, non-empty xlsx body.
-            if (response.getStatusCode() == HttpStatus.OK) {
-                assertThat(response.getHeaders().getContentType().toString())
-                        .contains("spreadsheetml.sheet");
-                assertThat(response.getHeaders().getContentDisposition().getFilename())
-                        .isEqualTo("table.xlsx");
-                assertThat(response.getBody()).isNotNull();
-            } else {
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            ResponseEntity<Resource> response;
+            try {
+                response = controller.pdfToExcel(request);
+            } catch (NothingToExtractException e) {
+                return;
             }
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getHeaders().getContentType().toString())
+                    .contains("spreadsheetml.sheet");
+            assertThat(response.getHeaders().getContentDisposition().getFilename())
+                    .isEqualTo("table.xlsx");
+            assertThat(response.getBody()).isNotNull();
         }
     }
 

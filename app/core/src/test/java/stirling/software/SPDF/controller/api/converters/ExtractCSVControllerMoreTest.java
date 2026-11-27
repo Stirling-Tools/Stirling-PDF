@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -14,6 +16,9 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,6 +36,7 @@ import stirling.software.SPDF.pdf.parser.PdfModels.Bounds;
 import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.NothingToExtractException;
 
 /**
  * Additional coverage for {@link ExtractCSVController}. The Tabula parser is mocked so
@@ -49,6 +55,19 @@ class ExtractCSVControllerMoreTest {
         PDDocument doc = new PDDocument();
         for (int i = 0; i < pages; i++) {
             doc.addPage(new PDPage());
+        }
+        return doc;
+    }
+
+    private static PDDocument imageOnlyDoc() throws IOException {
+        PDDocument doc = new PDDocument();
+        PDPage page = new PDPage();
+        doc.addPage(page);
+        PDImageXObject image =
+                LosslessFactory.createFromImage(
+                        doc, new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB));
+        try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+            cs.drawImage(image, 50, 50);
         }
         return doc;
     }
@@ -78,8 +97,8 @@ class ExtractCSVControllerMoreTest {
     class ResponseShape {
 
         @Test
-        @DisplayName("returns no content when no tables are found")
-        void noTablesNoContent() throws Exception {
+        @DisplayName("refuses when no tables are found")
+        void noTablesRefuses() throws Exception {
             PDFWithPageNums request = new PDFWithPageNums();
             request.setFileInput(pdf("data.pdf"));
             request.setPageNumbers("all");
@@ -87,9 +106,24 @@ class ExtractCSVControllerMoreTest {
             when(pdfDocumentFactory.load(request)).thenReturn(docWithPages(1));
             when(tabulaTableParser.parse(any(PDDocument.class), eq(1))).thenReturn(List.of());
 
-            ResponseEntity<?> response = controller.pdfToCsv(request);
+            assertThatThrownBy(() -> controller.pdfToCsv(request))
+                    .isInstanceOf(NothingToExtractException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", "E088");
+        }
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        @Test
+        @DisplayName("points a scanned page with no text layer at OCR")
+        void imageOnlyPageAsksForOcr() throws Exception {
+            PDFWithPageNums request = new PDFWithPageNums();
+            request.setFileInput(pdf("scan.pdf"));
+            request.setPageNumbers("all");
+
+            when(pdfDocumentFactory.load(request)).thenReturn(imageOnlyDoc());
+            when(tabulaTableParser.parse(any(PDDocument.class), eq(1))).thenReturn(List.of());
+
+            assertThatThrownBy(() -> controller.pdfToCsv(request))
+                    .isInstanceOf(NothingToExtractException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", "E090");
         }
 
         @Test

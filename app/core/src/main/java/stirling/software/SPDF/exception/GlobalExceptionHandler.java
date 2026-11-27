@@ -375,6 +375,18 @@ public class GlobalExceptionHandler {
                 ex, HttpStatus.UNPROCESSABLE_ENTITY, ErrorTypes.COMPLIANCE_NOT_MET, title, request);
     }
 
+    /** An extraction found nothing; 422 so callers get a message, not an empty file. */
+    @ExceptionHandler(NothingToExtractException.class)
+    public ResponseEntity<ProblemDetail> handleNothingToExtract(
+            NothingToExtractException ex, HttpServletRequest request) {
+        logException("warn", "Nothing to extract", request, ex, ex.getErrorCode());
+        String title =
+                getLocalizedMessage(
+                        "error.nothingToExtract.title", ErrorTitles.NOTHING_TO_EXTRACT_DEFAULT);
+        return createProblemDetailResponse(
+                ex, HttpStatus.UNPROCESSABLE_ENTITY, ErrorTypes.NOTHING_TO_EXTRACT, title, request);
+    }
+
     /**
      * Handle a damaged document that every available repair tool has declined.
      *
@@ -1214,6 +1226,8 @@ public class GlobalExceptionHandler {
                 return handleComplianceNotMet(complianceEx, request);
             } else if (appEx instanceof PdfUnrepairableException unrepairableEx) {
                 return handlePdfUnrepairable(unrepairableEx, request);
+            } else if (appEx instanceof NothingToExtractException nothingEx) {
+                return handleNothingToExtract(nothingEx, request);
             } else if (appEx instanceof PdfCorruptedException
                     || appEx instanceof PdfEncryptionException
                     || appEx instanceof OutOfMemoryDpiException) {
@@ -1549,6 +1563,7 @@ public class GlobalExceptionHandler {
         static final String IO_ERROR = "/errors/io-error";
         static final String COMPLIANCE_NOT_MET = "/errors/compliance-not-met";
         static final String PDF_UNREPAIRABLE = "/errors/pdf-unrepairable";
+        static final String NOTHING_TO_EXTRACT = "/errors/nothing-to-extract";
         static final String UNEXPECTED = "/errors/unexpected";
     }
 
@@ -1565,6 +1580,7 @@ public class GlobalExceptionHandler {
         static final String APPLICATION_DEFAULT = "Application Error";
         static final String COMPLIANCE_NOT_MET_DEFAULT = "Compliance Standard Not Met";
         static final String PDF_UNREPAIRABLE_DEFAULT = "PDF Could Not Be Repaired";
+        static final String NOTHING_TO_EXTRACT_DEFAULT = "Nothing Found to Extract";
         static final String CBR_FORMAT_DEFAULT = "Invalid CBR File Format";
         static final String CBZ_FORMAT_DEFAULT = "Invalid CBZ File Format";
         static final String EML_FORMAT_DEFAULT = "Invalid EML File Format";

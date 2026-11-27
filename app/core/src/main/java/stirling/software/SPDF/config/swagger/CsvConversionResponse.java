@@ -41,12 +41,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                     }),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Invalid PDF file or no tables found for extraction",
+                    description = "Invalid PDF file",
                     content =
                             @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "204", description = "No tables found in the PDF"),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "No tables found in the selected pages",
+                    content =
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
                     responseCode = "500",
                     description = "Internal server error during table extraction",

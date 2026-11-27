@@ -31,7 +31,9 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -69,8 +71,9 @@ public class ConvertPDFToExcelController {
         try (PDDocument document = pdfDocumentFactory.load(request)) {
             List<Integer> pages = request.getPageNumbersList(document, true);
             if (!writeTabula(document, pages, tempOut.getPath())) {
-                tempOut.close();
-                return ResponseEntity.noContent().build();
+                throw PdfUtils.looksImageOnly(document, pages)
+                        ? ExceptionUtils.createNoTextLayerException()
+                        : ExceptionUtils.createNoTablesFoundException();
             }
         } catch (Exception e) {
             tempOut.close();
