@@ -16,7 +16,7 @@ const DRAWING_TOOLS: ReadonlySet<ToolId> = new Set<ToolId>([
   "addText",
 ]);
 
-/** Shows or hides the document's annotations, in the viewer only. */
+/** Shows or hides the document's annotations and their outlines in every page view, including the text editor. */
 export function AnnotationVisibilityToggle({
   disabled,
   size,

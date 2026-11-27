@@ -58,6 +58,8 @@ interface PageViewProps {
   onFirstPainted?: () => void;
   /** The viewer's reading mode; tints the page the same way the viewer does. */
   renderMode?: PdfRenderMode;
+  /** Whether annotation appearances and their outlines are drawn. */
+  showAnnotations?: boolean;
   scale: number;
   widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
@@ -144,6 +146,7 @@ export const PageView = memo(function PageView({
   page,
   renderMode = "normal",
   scale,
+  showAnnotations = true,
   widthMode,
   showRulers,
   selectedRunIds,
@@ -292,7 +295,7 @@ export const PageView = memo(function PageView({
       onFirstPainted?.();
     };
     const paintFull = () => {
-      PdfiumPageRenderer.render(document, live, deviceScale)
+      PdfiumPageRenderer.render(document, live, deviceScale, showAnnotations)
         .then((image) => {
           if (cancelled || !canvasRef.current) return;
           canvas.width = image.width;
@@ -325,7 +328,13 @@ export const PageView = memo(function PageView({
     );
     if (area) {
       // Redrawing the whole page, scan image and all, is most of what a keystroke costs.
-      PdfiumPageRenderer.renderArea(document, live, deviceScale, area)
+      PdfiumPageRenderer.renderArea(
+        document,
+        live,
+        deviceScale,
+        area,
+        showAnnotations,
+      )
         .then((image) => {
           if (cancelled || !canvasRef.current) return;
           canvas.getContext("2d")?.putImageData(image, area.x, area.y);
@@ -356,6 +365,7 @@ export const PageView = memo(function PageView({
     page.width,
     page.height,
     deviceScale,
+    showAnnotations,
     page.revision,
     retryToken,
   ]);
@@ -389,6 +399,7 @@ export const PageView = memo(function PageView({
       deviceScale,
       area,
       image.pdfiumObjPtr,
+      showAnnotations,
     );
     if (!without) return;
     liftRef.current = {
@@ -500,21 +511,22 @@ export const PageView = memo(function PageView({
         }}
       >
         {/* Before the runs: a run overlapping an annotation still wins clicks. */}
-        {(page.annotations ?? []).map((annotation) => (
-          <AnnotationOutline
-            key={annotation.id}
-            annotation={annotation}
-            pageHeight={page.height}
-            transform={transform}
-            scale={cssScale}
-            selected={annotation.id === selectedFormFieldId}
-            onSelect={
-              reviewing && annotation.kind === "widget" && onSelectFormField
-                ? () => onSelectFormField(annotation.id)
-                : undefined
-            }
-          />
-        ))}
+        {showAnnotations &&
+          (page.annotations ?? []).map((annotation) => (
+            <AnnotationOutline
+              key={annotation.id}
+              annotation={annotation}
+              pageHeight={page.height}
+              transform={transform}
+              scale={cssScale}
+              selected={annotation.id === selectedFormFieldId}
+              onSelect={
+                reviewing && annotation.kind === "widget" && onSelectFormField
+                  ? () => onSelectFormField(annotation.id)
+                  : undefined
+              }
+            />
+          ))}
         {/* Before images and runs: anything drawn over a shape wins its clicks. */}
         {page.shapes.map((shape) => (
           <ShapeHandle
