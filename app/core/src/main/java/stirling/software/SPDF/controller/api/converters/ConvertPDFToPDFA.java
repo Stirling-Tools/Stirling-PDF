@@ -418,25 +418,31 @@ public class ConvertPDFToPDFA {
      * dpi image, so the PDF/X output is valid but its text is no longer selectable.
      */
     private void flattenUnsupportedFontPages(Path pdfPath, Set<Integer> pages) throws IOException {
-        byte[] input = Files.readAllBytes(pdfPath);
-        try (PdfDocument document = PdfDocument.open(input)) {
-            int flattened = 0;
-            for (int pageIndex : pages) {
-                if (pageIndex >= 0 && pageIndex < document.pageCount()) {
-                    try (PdfPage page = document.page(pageIndex)) {
-                        PageSize size = page.size();
-                        ImageMemoryLimit.requirePointSizeFits(
-                                size.width(), size.height(), pageIndex + 1, FLATTEN_DPI);
+        Path flattenedPath = Files.createTempFile(pdfPath.getParent(), "pdfx-flat-", ".pdf");
+        int flattened = 0;
+        try {
+            try (PdfDocument document = PdfDocument.open(pdfPath)) {
+                for (int pageIndex : pages) {
+                    if (pageIndex >= 0 && pageIndex < document.pageCount()) {
+                        try (PdfPage page = document.page(pageIndex)) {
+                            PageSize size = page.size();
+                            ImageMemoryLimit.requirePointSizeFits(
+                                    size.width(), size.height(), pageIndex + 1, FLATTEN_DPI);
+                        }
+                        document.flattenPage(pageIndex, FlattenMode.FULL, FLATTEN_DPI);
+                        flattened++;
                     }
-                    document.flattenPage(pageIndex, FlattenMode.FULL, FLATTEN_DPI);
-                    flattened++;
                 }
+                if (flattened == 0) {
+                    throw new IOException(
+                            "No PDF/X page could be rasterized for unsupported fonts");
+                }
+                document.saveTo(flattenedPath, SaveOptions.validated());
             }
-            if (flattened == 0) {
-                throw new IOException("No PDF/X page could be rasterized for unsupported fonts");
-            }
-            document.saveTo(pdfPath, SaveOptions.validated());
+            Files.move(flattenedPath, pdfPath, StandardCopyOption.REPLACE_EXISTING);
             log.info("Rasterized {} PDF/X page(s) with unsupported fonts", flattened);
+        } finally {
+            Files.deleteIfExists(flattenedPath);
         }
     }
 
