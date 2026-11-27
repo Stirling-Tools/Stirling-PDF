@@ -233,7 +233,7 @@ function FontsBlock({
           }
           testId="pdf-editor-all-fonts"
         >
-          {t("pdfTextEditor.document.changeAllFonts", "Change all fonts")}
+          {t("pdfTextEditor.document.changeAll", "Change all")}
         </ChangeButton>
       )}
       {open && (
