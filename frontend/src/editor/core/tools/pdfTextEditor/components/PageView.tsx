@@ -686,7 +686,7 @@ export const PageView = memo(function PageView({
             />
             {onUnlock && !reviewing && image.locked && (
               <LockBadge
-                rect={image.bounds}
+                rect={visibleImageBounds(image)}
                 pageHeight={page.height}
                 transform={transform}
                 scale={cssScale}
@@ -712,56 +712,68 @@ export const PageView = memo(function PageView({
             before all runs, so a grip never takes a click aimed at any run. */}
         <div ref={setGripLayer} style={{ display: "contents" }} />
         {page.runs.map((run) => (
-          <TextRunOverlay
-            key={run.id}
-            run={run}
-            pageHeight={page.height}
-            pageWidth={page.width}
-            transform={transform}
-            scale={cssScale}
-            widthMode={widthMode}
-            growEdge={runGrowEdges.get(run.id) ?? null}
-            pageRevision={paintedRevision}
-            gripLayer={reviewing ? null : gripLayer}
-            selected={selectedRunIds.includes(run.id)}
-            findRange={findMatch?.runId === run.id ? findMatch.range : null}
-            readOnly={reviewing}
-            onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
-            onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
-            onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
-            textRange={
-              selectedRunIds.length === 1 && selectedRunIds[0] === run.id
-                ? selectedTextRange
-                : null
-            }
-            onMove={
-              reviewing
-                ? undefined
-                : (dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)
-            }
-            onWrap={
-              reviewing
-                ? undefined
-                : (maxWidthPt, keepClearBelow, pullUp) =>
-                    onWrapRun?.(
-                      page.pageIndex,
-                      run.id,
-                      maxWidthPt,
-                      keepClearBelow,
-                      pullUp,
-                    )
-            }
-            onMeasure={
-              onMeasureRun
-                ? () => onMeasureRun(page.pageIndex, run.id)
-                : undefined
-            }
-            onResize={
-              onResizeRun && !reviewing && canResizeRun(run)
-                ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
-                : undefined
-            }
-          />
+          <Fragment key={run.id}>
+            <TextRunOverlay
+              run={run}
+              pageHeight={page.height}
+              pageWidth={page.width}
+              transform={transform}
+              scale={cssScale}
+              widthMode={widthMode}
+              growEdge={runGrowEdges.get(run.id) ?? null}
+              pageRevision={paintedRevision}
+              gripLayer={reviewing ? null : gripLayer}
+              selected={selectedRunIds.includes(run.id)}
+              findRange={findMatch?.runId === run.id ? findMatch.range : null}
+              readOnly={reviewing}
+              onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
+              onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
+              onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
+              textRange={
+                selectedRunIds.length === 1 && selectedRunIds[0] === run.id
+                  ? selectedTextRange
+                  : null
+              }
+              onMove={
+                reviewing
+                  ? undefined
+                  : (dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)
+              }
+              onWrap={
+                reviewing
+                  ? undefined
+                  : (maxWidthPt, keepClearBelow, pullUp) =>
+                      onWrapRun?.(
+                        page.pageIndex,
+                        run.id,
+                        maxWidthPt,
+                        keepClearBelow,
+                        pullUp,
+                      )
+              }
+              onMeasure={
+                onMeasureRun
+                  ? () => onMeasureRun(page.pageIndex, run.id)
+                  : undefined
+              }
+              onResize={
+                onResizeRun && !reviewing && canResizeRun(run)
+                  ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
+                  : undefined
+              }
+            />
+            {onUnlock && !reviewing && run.locked && (
+              <LockBadge
+                rect={run.bounds}
+                pageHeight={page.height}
+                transform={transform}
+                scale={cssScale}
+                onUnlock={() => onUnlock(page.pageIndex, { runId: run.id })}
+                testId={`pdf-editor-unlock-${run.id}`}
+                underContent
+              />
+            )}
+          </Fragment>
         ))}
         {page.runs
           .filter((run) => attention.runs.has(run.id))
@@ -773,21 +785,6 @@ export const PageView = memo(function PageView({
               style={besideRun(run, transform, page.height, cssScale)}
             />
           ))}
-        {onUnlock &&
-          !reviewing &&
-          page.runs
-            .filter((run) => run.locked)
-            .map((run) => (
-              <LockBadge
-                key={`lock-${run.id}`}
-                rect={run.bounds}
-                pageHeight={page.height}
-                transform={transform}
-                scale={cssScale}
-                onUnlock={() => onUnlock(page.pageIndex, { runId: run.id })}
-                testId={`pdf-editor-unlock-${run.id}`}
-              />
-            ))}
         {showRulers && (
           <PageGuides
             pageIndex={page.pageIndex}

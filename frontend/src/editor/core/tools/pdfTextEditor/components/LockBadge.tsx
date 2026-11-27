@@ -12,8 +12,9 @@ interface LockBadgeProps {
   scale: number;
   onUnlock: () => void;
   testId: string;
-  /** Layered under the page's text and tables, letting presses reach the stage
-   *  (a marquee can start over a locked background image). */
+  /** Painted in DOM order, so content placed after it stays on top, and
+   *  letting presses reach the stage (a marquee can start over a locked
+   *  background image). */
   underContent?: boolean;
 }
 

@@ -105,19 +105,21 @@ function useSelectionPlacement(
         let bottom = -Infinity;
         let left = Infinity;
         let right = -Infinity;
+        // Any one object in view; their combined box can straddle the view
+        // with every object outside it.
+        let onScreen = false;
         for (const el of els) {
           const r = el.getBoundingClientRect();
+          onScreen ||=
+            r.bottom > clip.top &&
+            r.top < clip.bottom &&
+            r.right > clip.left &&
+            r.left < clip.right;
           top = Math.min(top, r.top);
           bottom = Math.max(bottom, r.bottom);
           left = Math.min(left, r.left);
           right = Math.max(right, r.right);
         }
-        const onScreen =
-          els.length > 0 &&
-          bottom > clip.top &&
-          top < clip.bottom &&
-          right > clip.left &&
-          left < clip.right;
         // Scrolled away or on an unmounted page: pinned to the top of the pages.
         const centre = onScreen
           ? (left + right) / 2

@@ -339,6 +339,7 @@ export function ImageHandle({
       }}
       lockAspectRatio={keepRatio}
       onResizeStart={(e) => {
+        shiftDeselectRef.current = false;
         setKeepRatio(e.shiftKey);
         if (locked) return;
         startLift();

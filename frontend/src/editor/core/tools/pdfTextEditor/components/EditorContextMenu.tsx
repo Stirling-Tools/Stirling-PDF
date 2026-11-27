@@ -90,6 +90,9 @@ function keyboardRequest(
  */
 export function EditorContextMenu({ store, state, selection }: Props) {
   const request = useEditorContextMenu();
+  // Held here, not in the menu body: the body unmounts as an item is picked,
+  // and an external image edit it started must still be stoppable.
+  const controller = useToolbarController(store, state, selection);
 
   useEffect(() => editorContextMenu.attachHost(), []);
 
@@ -161,6 +164,7 @@ export function EditorContextMenu({ store, state, selection }: Props) {
       state={state}
       selection={selection}
       request={request}
+      controller={controller}
     />
   );
 }
@@ -170,9 +174,12 @@ function ContextMenuBody({
   state,
   selection,
   request,
-}: Props & { request: ContextMenuRequest }) {
+  controller,
+}: Props & {
+  request: ContextMenuRequest;
+  controller: ReturnType<typeof useToolbarController>;
+}) {
   const { t } = useTranslation();
-  const controller = useToolbarController(store, state, selection);
   const close = () => editorContextMenu.close();
   const at = request.kind === "locked" ? null : request.at;
 
@@ -373,10 +380,17 @@ function ContextMenuBody({
         item(
           "scissors",
           t("pdfTextEditor.contextMenu.cut", "Cut"),
-          () =>
+          () => {
+            const doc = store.document;
+            const copied = selection;
             void copy()
-              .then(() => controller.onDelete())
-              .catch(clipboardFailed),
+              .then(() => {
+                // Delete what was copied, not whatever is selected by now.
+                if (store.document === doc && store.selection.value === copied)
+                  controller.onDelete();
+              })
+              .catch(clipboardFailed);
+          },
           "pdf-editor-context-cut",
           { shortcut: modShortcut("X") },
         ),
