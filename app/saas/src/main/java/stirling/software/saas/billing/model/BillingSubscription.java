@@ -4,12 +4,9 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -25,8 +22,6 @@ import lombok.Setter;
  */
 @Entity
 @Table(name = "billing_subscriptions", schema = "public")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-subscriptions")
 @NoArgsConstructor
 @Getter
 @Setter

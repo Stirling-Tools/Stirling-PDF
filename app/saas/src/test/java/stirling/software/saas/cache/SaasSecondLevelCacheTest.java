@@ -2,9 +2,11 @@ package stirling.software.saas.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,10 +21,13 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
 
+import stirling.software.saas.billing.model.BillingSubscription;
 import stirling.software.saas.legal.LegalConsent;
-import stirling.software.saas.legal.LegalConsentRepository;
+import stirling.software.saas.payg.policy.PricingPolicy;
 
 /**
  * Boots the SaaS entities under the same fail-fast cache strategy production uses. A typo in a SaaS
@@ -42,11 +47,11 @@ import stirling.software.saas.legal.LegalConsentRepository;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class SaasSecondLevelCacheTest {
 
-    @Autowired private LegalConsentRepository consentRepository;
-
     @Autowired private EntityManagerFactory entityManagerFactory;
 
     @Autowired private PlatformTransactionManager transactionManager;
+
+    @PersistenceContext private EntityManager entityManager;
 
     private Statistics statistics;
     private TransactionTemplate txTemplate;
@@ -60,37 +65,41 @@ class SaasSecondLevelCacheTest {
     }
 
     @Test
-    void saasConsentRegionCachesAcrossTransactions() {
-        AtomicReference<Long> consentIdRef = new AtomicReference<>();
-
+    void pricingPolicyRegionCachesAcrossTransactions() {
+        AtomicReference<Long> policyId = new AtomicReference<>();
         txTemplate.executeWithoutResult(
                 status -> {
-                    LegalConsent consent = new LegalConsent();
-                    consent.setTeamId(7L);
-                    consent.setUserId(42L);
-                    consent.setDocumentId("eula");
-                    consent.setDocumentVersion("2026.09");
-                    consent.setContext("trial");
-                    consentIdRef.set(consentRepository.save(consent).getConsentId());
+                    PricingPolicy policy = new PricingPolicy();
+                    policy.setVersion("v-cache-test");
+                    policy.setEffectiveFrom(LocalDateTime.now());
+                    policy.setDocPagesPerUnit(25);
+                    policy.setDocBytesPerUnit(5_242_880L);
+                    policy.setCreatedAt(LocalDateTime.now());
+                    entityManager.persist(policy);
+                    policyId.set(policy.getId());
                 });
-
         txTemplate.executeWithoutResult(
-                status -> {
-                    LegalConsent loaded =
-                            consentRepository.findById(consentIdRef.get()).orElseThrow();
-                    assertThat(loaded.getDocumentId()).isEqualTo("eula");
-                });
+                status -> entityManager.find(PricingPolicy.class, policyId.get()));
 
         long hitsBefore = statistics.getSecondLevelCacheHitCount();
-
         txTemplate.executeWithoutResult(
-                status -> {
-                    LegalConsent loaded =
-                            consentRepository.findById(consentIdRef.get()).orElseThrow();
-                    assertThat(loaded.getDocumentVersion()).isEqualTo("2026.09");
-                });
+                status ->
+                        assertThat(entityManager.find(PricingPolicy.class, policyId.get()))
+                                .extracting(PricingPolicy::getVersion)
+                                .isEqualTo("v-cache-test"));
 
         assertThat(statistics.getSecondLevelCacheHitCount()).isGreaterThan(hitsBefore);
+    }
+
+    @Test
+    void consentsAndSubscriptionsStayOutOfTheCache() {
+        var metamodel =
+                entityManagerFactory.unwrap(SessionFactoryImplementor.class).getMappingMetamodel();
+
+        assertThat(metamodel.getEntityDescriptor(LegalConsent.class).canReadFromCache()).isFalse();
+        assertThat(metamodel.getEntityDescriptor(BillingSubscription.class).canReadFromCache())
+                .isFalse();
+        assertThat(metamodel.getEntityDescriptor(PricingPolicy.class).canReadFromCache()).isTrue();
     }
 
     @SpringBootConfiguration
