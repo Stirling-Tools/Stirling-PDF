@@ -100,6 +100,8 @@ it("keeps the extension and the end of the name in the tail", () => {
     "nal v3.pdf",
   ]);
   expect(splitFileName("notes")).toEqual(["", "notes"]);
+  // The cut would land inside the emoji's two halves; it moves back to keep it whole.
+  expect(splitFileName("report😀12345.pdf")).toEqual(["report", "😀12345.pdf"]);
   expect(splitFileName("README")).toEqual(["", "README"]);
   expect(splitFileName("Minutes 2024.03.14 board meeting")).toEqual([
     "Minutes 2024.03.14 board m",

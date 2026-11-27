@@ -1,5 +1,8 @@
 /* ---- File item ---- */
 .file-sidebar-file-item {
+  /* Room the name leaves for the eye and kebab while both show (24px + 20px
+     buttons, 8px gap). Read by the row's full-name tooltip as well. */
+  --file-sidebar-actions-reserve: 52px;
   position: relative;
   display: flex;
   align-items: center;
@@ -171,7 +174,7 @@
 
 .file-sidebar-file-item:hover .file-sidebar-file-info,
 .file-sidebar-file-item.viewed .file-sidebar-file-info {
-  padding-right: 3.25rem;
+  padding-right: var(--file-sidebar-actions-reserve);
 }
 
 @media (prefers-reduced-motion: reduce) {

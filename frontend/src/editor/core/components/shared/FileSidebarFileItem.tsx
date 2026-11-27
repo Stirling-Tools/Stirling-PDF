@@ -28,6 +28,8 @@ export function getFileExtension(name: string): string {
 /** Characters of the name kept beside the extension when the middle is cut. */
 const NAME_TAIL_CHARS = 6;
 
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
 /**
  * Splits a file name for middle truncation: the head takes the ellipsis, the tail
  * always shows. The end of a name (extension, "v2", "final", a date) is usually
@@ -37,7 +39,14 @@ export function splitFileName(name: string): [head: string, tail: string] {
   const dot = name.lastIndexOf(".");
   // A long "extension" is just a dot inside the name, not a file type.
   const extLength = dot > 0 && name.length - dot <= 10 ? name.length - dot : 0;
-  const cut = Math.max(0, name.length - extLength - NAME_TAIL_CHARS);
+  const target = Math.max(0, name.length - extLength - NAME_TAIL_CHARS);
+  // Back to the nearest whole character, so an emoji or accented letter is
+  // never split across the two parts.
+  let cut = 0;
+  for (const { index } of graphemes.segment(name)) {
+    if (index > target) break;
+    cut = index;
+  }
   return [name.slice(0, cut), name.slice(cut)];
 }
 
@@ -352,7 +361,7 @@ export const FileItem = React.memo(function FileItem({
   const [nameTooltipWidth, setNameTooltipWidth] = useState<number | null>(null);
   const nameHeadRef = useRef<HTMLSpanElement>(null);
   const nameTailRef = useRef<HTMLSpanElement>(null);
-  const actionsRef = useRef<HTMLDivElement>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
   const [nameHead, nameTail] = splitFileName(name);
 
   const handleMouseEnter = useCallback(() => {
@@ -360,12 +369,15 @@ export const FileItem = React.memo(function FileItem({
     setHoverRect(row?.getBoundingClientRect() ?? null);
     const head = nameHeadRef.current;
     const tail = nameTailRef.current;
-    const actions = actionsRef.current;
-    if (!row || !head || !tail || !actions) return;
+    const info = infoRef.current;
+    if (!row || !head || !tail || !info) return;
     // Hovering slides the name in to clear the buttons, so whether it gets cut
-    // is judged against where the buttons sit, not the width it has right now.
+    // is judged against the room it has once hovered, not the width it has now.
+    const reserve = parseFloat(
+      getComputedStyle(row).getPropertyValue("--file-sidebar-actions-reserve"),
+    );
     const nameLeft = head.getBoundingClientRect().left;
-    const room = actions.getBoundingClientRect().left - nameLeft;
+    const room = info.getBoundingClientRect().right - reserve - nameLeft;
     if (head.scrollWidth + tail.offsetWidth <= room) return;
     // From the name to the row's edge, so it stays clear of the thumbnail
     // preview that opens beside the row.
@@ -414,7 +426,7 @@ export const FileItem = React.memo(function FileItem({
             </>
           )}
         </div>
-        <div className="file-sidebar-file-info">
+        <div ref={infoRef} className="file-sidebar-file-info">
           <Tooltip
             label={name}
             opened={nameTooltipWidth !== null && !menuOpened}
@@ -521,7 +533,7 @@ export const FileItem = React.memo(function FileItem({
             <PolicyBadges policies={policies} />
           </span>
         </div>
-        <div ref={actionsRef} className="file-sidebar-file-actions">
+        <div className="file-sidebar-file-actions">
           <ActionIcon
             variant="tertiary"
             size="sm"
