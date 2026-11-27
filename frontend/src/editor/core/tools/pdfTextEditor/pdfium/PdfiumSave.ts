@@ -1,5 +1,9 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { assertSavedPdf } from "@editor/tools/pdfTextEditor/util/savedBytes";
+import {
+  keepSourcePdfVersion,
+  readPdfHeaderVersion,
+} from "@editor/utils/pdfHeaderVersion";
 
 /** `FPDF_SaveAsCopy` flags. */
 const FPDF_INCREMENTAL = 1;
@@ -77,7 +81,10 @@ export class PdfiumSave {
         );
         view.set(heap);
         assertSavedPdf(view);
-        return view;
+        return keepSourcePdfVersion(
+          view,
+          readPdfHeaderVersion(doc.openedBytes),
+        );
       } finally {
         m.pdfium.wasmExports.free(outBuf);
       }
