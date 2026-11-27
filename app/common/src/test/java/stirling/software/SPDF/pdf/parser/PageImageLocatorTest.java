@@ -75,6 +75,8 @@ class PageImageLocatorTest {
                 assertThat(box.y1()).isCloseTo(200f, within(0.5f));
                 assertThat(box.x2()).isCloseTo(150f, within(0.5f));
                 assertThat(box.y2()).isCloseTo(280f, within(0.5f));
+                assertThat(box.pixelWidth()).isEqualTo(4);
+                assertThat(box.pixelHeight()).isEqualTo(4);
             }
         }
 

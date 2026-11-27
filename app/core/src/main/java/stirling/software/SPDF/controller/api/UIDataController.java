@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.Dependency;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SharedSignatureService;
+import stirling.software.SPDF.service.ocr.OcrLanguages;
 import stirling.software.SPDF.util.NativeLicenseLoader;
 import stirling.software.common.annotations.api.UiDataApi;
 import stirling.software.common.configuration.InstallationPathConfig;
@@ -210,17 +211,7 @@ public class UIDataController {
     }
 
     private List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = runtimePathConfig.getTessDataPath();
-        java.io.File[] files = new java.io.File(tessdataDir).listFiles();
-        if (files == null) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(files)
-                .filter(file -> file.getName().endsWith(".traineddata"))
-                .map(file -> file.getName().replace(".traineddata", ""))
-                .filter(lang -> !"osd".equalsIgnoreCase(lang))
-                .sorted()
-                .toList();
+        return OcrLanguages.installed(runtimePathConfig.getTessDataPath());
     }
 
     private List<FontResource> getFontNames() {
