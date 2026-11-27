@@ -116,6 +116,15 @@ const selectParagraph = selectOnPage({ testId: "pdf-editor-run-p1-t23" });
 
 const selectImage = selectOnPage({ testId: "pdf-editor-image-p0-i46" });
 
+/** On desktop an image's tools sit in the selection bar over the page. */
+function selectionBarButton(context: PlayContext, name: string) {
+  return within(context.canvasElement.ownerDocument.body).findByRole(
+    "button",
+    { name },
+    STAGE_TIMEOUT,
+  );
+}
+
 const selectShape = selectOnPage({ testId: "pdf-editor-shape-p0-s7" });
 
 const selectMixed = selectOnPage(
@@ -343,12 +352,8 @@ export const ImageSelected: Story = {
   ...onCanvas(),
   play: async (context) => {
     await selectImage(context);
-    const panel = await panelOf(context);
     await expect(
-      panel.getByRole("button", { name: "Replace, keeping placement" }),
-    ).toBeVisible();
-    await expect(
-      panel.getByRole("button", { name: "Edit in another app" }),
+      await selectionBarButton(context, "Replace, keeping placement"),
     ).toBeVisible();
   },
 };
@@ -429,22 +434,34 @@ export const UngroupTooltip: Story = {
 
 export const RotateLeftTooltip: Story = {
   ...onCanvas(),
-  play: openTooltip({ info: "Rotate 90° left" }, { after: selectImage }),
+  play: openTooltip(
+    { element: (context) => selectionBarButton(context, "Rotate 90° left") },
+    { after: selectImage },
+  ),
 };
 
 export const RotateRightTooltip: Story = {
   ...onCanvas(),
-  play: openTooltip({ info: "Rotate 90° right" }, { after: selectImage }),
+  play: openTooltip(
+    { element: (context) => selectionBarButton(context, "Rotate 90° right") },
+    { after: selectImage },
+  ),
 };
 
 export const FlipHorizontalTooltip: Story = {
   ...onCanvas(),
-  play: openTooltip({ info: "Flip horizontal" }, { after: selectImage }),
+  play: openTooltip(
+    { element: (context) => selectionBarButton(context, "Flip horizontal") },
+    { after: selectImage },
+  ),
 };
 
 export const FlipVerticalTooltip: Story = {
   ...onCanvas(),
-  play: openTooltip({ info: "Flip vertical" }, { after: selectImage }),
+  play: openTooltip(
+    { element: (context) => selectionBarButton(context, "Flip vertical") },
+    { after: selectImage },
+  ),
 };
 
 export const RemovePasswordTooltip: Story = {

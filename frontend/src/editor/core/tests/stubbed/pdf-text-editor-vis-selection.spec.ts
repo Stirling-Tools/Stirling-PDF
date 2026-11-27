@@ -638,6 +638,10 @@ test.describe("PDF text editor - selection affordances, visually", () => {
     await page.waitForTimeout(250);
     expect(await selectedIds(page)).toEqual([target.id]);
 
+    // The selection bar floats just above the run, inside the padded clip.
+    await page.addStyleTag({
+      content: ".pdf-editor-selection-bar { visibility: hidden !important; }",
+    });
     const a = await analyse(page, clip);
     expect(a.ink, "ink is needed to bracket").toBeGreaterThan(50);
     expect(a.tinted).toBeGreaterThan(a.ink);
