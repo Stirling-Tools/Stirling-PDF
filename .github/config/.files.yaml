@@ -114,6 +114,11 @@ tauri: &tauri
   - .github/workflows/rust-lint.yml
   - Taskfile.yml
   - .taskfiles/desktop.yml
+  - frontend/scripts/stage-*.mjs
+  - frontend/scripts/verify-bundled-jre.mjs
+  - frontend/scripts/build-provisioner.mjs
+  - frontend/scripts/build-universal-mac-jre.sh
+  - frontend/scripts/use-vendor-signed-jdk-binaries.mjs
 
 # Files that affect the AI engine, including its Python tool models, fixers,
 # and tests. The engine validation job also runs when the Java tool surfaces
