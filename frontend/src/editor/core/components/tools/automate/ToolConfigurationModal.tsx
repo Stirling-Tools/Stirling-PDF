@@ -1,13 +1,30 @@
 import { Suspense, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal, Title, Group, Stack, Text, Alert, Loader } from "@mantine/core";
+import {
+  Modal,
+  Title,
+  Group,
+  Stack,
+  Text,
+  Alert,
+  Loader,
+  Tooltip,
+} from "@mantine/core";
 import { Button } from "@editor/ui/Button";
-import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
+import {
+  Z_INDEX_AUTOMATE_DROPDOWN,
+  Z_INDEX_AUTOMATE_MODAL,
+} from "@editor/styles/zIndex";
 import { Icon } from "@editor/ui/Icon";
 import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
 import { ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
+import {
+  paramsOverDefaults,
+  toolParamsNeedConfiguring,
+} from "@editor/hooks/tools/shared/toolAutomation";
+
 interface ToolConfigurationModalProps {
   opened: boolean;
   tool: {
@@ -32,22 +49,19 @@ export default function ToolConfigurationModal({
 
   const [parameters, setParameters] = useState<ErasedToolParams>({});
 
-  // Get tool info from registry
-  const toolInfo = toolRegistry[tool.operation as ToolId];
-  const SettingsComponent = toolInfo?.automationSettings;
+  const toolId = tool.operation as ToolId;
+  const SettingsComponent = toolRegistry[toolId]?.automationSettings;
+  const needsConfiguring = toolParamsNeedConfiguring(
+    toolId,
+    parameters,
+    toolRegistry,
+  );
 
-  // Initialize parameters from tool (which should contain defaults from registry)
   useEffect(() => {
-    const toolConfig = toolRegistry[tool.operation as ToolId]?.operationConfig;
-    const defaultParams = toolConfig?.defaultParameters || {};
-
-    if (tool.parameters) {
-      setParameters({ ...defaultParams, ...tool.parameters });
-    } else {
-      // Fallback to default parameters if none provided
-      setParameters({ ...defaultParams });
-    }
-  }, [tool.parameters, tool.operation, toolRegistry]);
+    setParameters(
+      paramsOverDefaults(toolId, tool.parameters ?? {}, toolRegistry),
+    );
+  }, [tool.parameters, toolId, toolRegistry]);
 
   // Render the settings component
   const renderToolSettings = () => {
@@ -120,9 +134,23 @@ export default function ToolConfigurationModal({
           >
             {t("automate.config.cancel", "Cancel")}
           </Button>
-          <Button leftSection={<Icon name="check" />} onClick={handleSave}>
-            {t("automate.config.save", "Save Configuration")}
-          </Button>
+          <Tooltip
+            label={t("tool.invalidParams", "Fill in the required settings.")}
+            disabled={!needsConfiguring}
+            zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
+            withArrow
+          >
+            {/* Wrapper keeps the tooltip reachable while the button is disabled. */}
+            <span style={{ display: "inline-flex" }}>
+              <Button
+                leftSection={<Icon name="check" />}
+                onClick={handleSave}
+                disabled={needsConfiguring}
+              >
+                {t("automate.config.save", "Save Configuration")}
+              </Button>
+            </span>
+          </Tooltip>
         </Group>
       </Stack>
     </Modal>

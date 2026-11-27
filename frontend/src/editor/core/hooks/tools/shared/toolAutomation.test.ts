@@ -13,11 +13,15 @@ import {
 import { objectToFormData } from "@editor/hooks/tools/shared/toolApiMapping";
 import {
   activeFileFields,
+  defaultToolParams,
   deserializeToolStep,
   extractStepFiles,
   getExecutableTools,
+  paramsOverDefaults,
   serializeToolStep,
   stepNeedsConfiguring,
+  toolApiStep,
+  toolParamsNeedConfiguring,
   type WorkingToolStep,
 } from "@editor/hooks/tools/shared/toolAutomation";
 import { compressOperationConfig } from "@editor/hooks/tools/compress/useCompressOperation";
@@ -740,5 +744,67 @@ describe("supporting files", () => {
     expect(activeFileFields(step({ certFile: "asset:x" }), registry)).toEqual([
       "certFile",
     ]);
+  });
+});
+
+describe("tool-id keyed helpers", () => {
+  test("defaultToolParams is a fresh copy of the tool's defaults, or empty", () => {
+    const params = defaultToolParams("compress", registry);
+    expect(params).toEqual(compressDefaults);
+    expect(params).not.toBe(compressOperationConfig.defaultParameters);
+    expect(defaultToolParams("extractPages", registry)).toEqual({});
+  });
+
+  test("toolParamsNeedConfiguring judges params over the tool's defaults", () => {
+    expect(toolParamsNeedConfiguring("compress", {}, registry)).toBe(false);
+    expect(
+      toolParamsNeedConfiguring(
+        "compress",
+        { compressionMethod: "filesize", fileSizeValue: "" },
+        registry,
+      ),
+    ).toBe(true);
+    expect(
+      toolParamsNeedConfiguring(
+        "compress",
+        { compressionMethod: "filesize", fileSizeValue: "2" },
+        registry,
+      ),
+    ).toBe(false);
+  });
+
+  test("paramsOverDefaults keeps a default under an undefined field", () => {
+    expect(
+      paramsOverDefaults("compress", { compressionLevel: undefined }, registry),
+    ).toEqual(compressDefaults);
+  });
+
+  test("toolParamsNeedConfiguring flags params its validator throws on", () => {
+    expect(
+      toolParamsNeedConfiguring(
+        "compress",
+        { compressionMethod: "filesize", fileSizeValue: null },
+        registry,
+      ),
+    ).toBe(true);
+  });
+
+  test("toolParamsNeedConfiguring has nothing to judge without a predicate or a tool", () => {
+    expect(toolParamsNeedConfiguring("repair", {}, registry)).toBe(false);
+    expect(toolParamsNeedConfiguring("merge", {}, registry)).toBe(false);
+  });
+
+  test("toolApiStep maps frontend params to the endpoint's backend fields", () => {
+    expect(
+      toolApiStep("compress", { compressionLevel: 9 }, registry),
+    ).toMatchObject({
+      operation: "/api/v1/misc/compress-pdf",
+      parameters: { optimizeLevel: 9 },
+    });
+  });
+
+  test("toolApiStep is null for a tool with no backend form", () => {
+    expect(toolApiStep("changeMetadata", {}, registry)).toBeNull();
+    expect(toolApiStep("extractPages", {}, registry)).toBeNull();
   });
 });

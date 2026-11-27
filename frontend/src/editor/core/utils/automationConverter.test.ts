@@ -15,8 +15,15 @@ import {
 } from "@editor/utils/automationConverter";
 import { AutomationConfig } from "@editor/types/automation";
 import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { asRegistryConfig } from "@editor/hooks/tools/shared/toolOperationTypes";
+import { compressOperationConfig } from "@editor/hooks/tools/compress/useCompressOperation";
+import { splitOperationConfig } from "@editor/hooks/tools/split/useSplitOperation";
+import { convertOperationConfig } from "@editor/hooks/tools/convert/useConvertOperation";
+import { defaultParameters as convertDefaults } from "@editor/hooks/tools/convert/useConvertParameters";
+import { SPLIT_METHODS } from "@editor/constants/splitConstants";
 
-// Minimal stub registry — only the fields automationConverter actually reads.
+// Minimal stub registry of tools with no API mappers, so their frontend
+// parameters pass through the export unchanged.
 const registry = {
   merge: {
     operationConfig: {
@@ -33,13 +40,13 @@ const registry = {
       endpoint: "/api/v1/misc/ocr-pdf",
     },
   },
-  // Dynamic endpoint — endpoint depends on parameters.
-  convert: {
-    operationConfig: {
-      endpoint: (params: Record<string, string>) =>
-        `/api/v1/convert/${params.fromExtension}-to-${params.toExtension}`,
-    },
-  },
+} as unknown as Partial<ToolRegistry>;
+
+// Real tool configs, so the export and import run each tool's own mappers.
+const mappedRegistry = {
+  compress: { operationConfig: asRegistryConfig(compressOperationConfig) },
+  split: { operationConfig: asRegistryConfig(splitOperationConfig) },
+  convert: { operationConfig: asRegistryConfig(convertOperationConfig) },
 } as unknown as Partial<ToolRegistry>;
 
 const sampleAutomation: AutomationConfig = {
@@ -122,33 +129,24 @@ describe("automationConverter", () => {
       expect(config.pipeline[0].operation).toBe("unknownTool");
     });
 
-    test("preserves frontend params on export, even for a tool with a toApiParams mapper", () => {
-      // The folder-scan export keeps frontend param shape; toApiParams runs at
-      // execution time, not here. A tool with a mapper still exports its UI
-      // field name (compressionLevel), not the backend one (optimizeLevel).
-      const withMapper = {
-        ...registry,
-        compress: {
-          operationConfig: {
-            endpoint: "/api/v1/misc/compress-pdf",
-            toApiParams: (p: Record<string, string>) => ({
-              optimizeLevel: p.compressionLevel,
-            }),
-          },
-        },
-      } as unknown as Partial<ToolRegistry>;
+    test("exports the backend request fields a mapped tool's endpoint takes", () => {
+      // The backend runs folder-scan steps without the frontend, so it must
+      // receive optimizeLevel, not the settings UI's compressionLevel.
       const automation: AutomationConfig = {
         ...sampleAutomation,
         operations: [
           { operation: "compress", parameters: { compressionLevel: 9 } },
         ],
       };
-      const config = convertToFolderScanningConfig(automation, withMapper);
-      // The UI field name and value are preserved as-is (not optimizeLevel).
-      expect(config.pipeline[0].parameters).toEqual({
-        compressionLevel: 9,
+      const config = convertToFolderScanningConfig(automation, mappedRegistry);
+      expect(config.pipeline[0].operation).toBe("/api/v1/misc/compress-pdf");
+      expect(config.pipeline[0].parameters).toMatchObject({
+        optimizeLevel: 9,
         fileInput: "automated",
       });
+      expect(config.pipeline[0].parameters).not.toHaveProperty(
+        "compressionLevel",
+      );
     });
   });
 
@@ -219,92 +217,79 @@ describe("automationConverter", () => {
       }
     });
 
-    test("resolves a dynamic endpoint by replaying it with the imported parameters", () => {
+    test("reads a backend step back into the tool's frontend parameters", () => {
       const config = {
         name: "Convert",
         pipeline: [
           {
-            operation: "/api/v1/convert/pdf-to-docx",
+            operation: "/api/v1/convert/pdf/word",
             parameters: {
               fromExtension: "pdf",
               toExtension: "docx",
+              outputFormat: "docx",
               fileInput: "automated",
             },
           },
         ],
       };
-      const parsed = parseFolderScanningConfig(config, registry);
+      const parsed = parseFolderScanningConfig(config, mappedRegistry);
       expect(parsed.unresolvedOperations).toEqual([]);
       expect(parsed.automation.operations[0].operation).toBe("convert");
-      expect(parsed.automation.operations[0].parameters).toEqual({
+      expect(parsed.automation.operations[0].parameters).toMatchObject({
+        ...convertDefaults,
         fromExtension: "pdf",
         toExtension: "docx",
       });
     });
 
-    test("round-trips frontend params losslessly, even for a tool with a mapper", () => {
-      // A value set in the UI survives an export then import unchanged. Because
-      // the export keeps frontend shape, a tool with a toApiParams mapper
-      // round-trips just like one without.
-      const withMapper = {
-        ...registry,
-        compress: {
-          operationConfig: {
-            endpoint: "/api/v1/misc/compress-pdf",
-            toApiParams: (p: Record<string, string>) => ({
-              optimizeLevel: p.compressionLevel,
-            }),
-          },
-        },
-      } as unknown as Partial<ToolRegistry>;
+    test("round-trips a mapped tool through its backend request shape", () => {
       const automation: AutomationConfig = {
         ...sampleAutomation,
         operations: [
           { operation: "compress", parameters: { compressionLevel: 9 } },
         ],
       };
-      const exported = convertToFolderScanningConfig(automation, withMapper);
-      const parsed = parseFolderScanningConfig(exported, withMapper);
-      expect(parsed.automation.operations[0]).toEqual({
-        operation: "compress",
-        parameters: { compressionLevel: 9 },
+      const exported = convertToFolderScanningConfig(
+        automation,
+        mappedRegistry,
+      );
+      const parsed = parseFolderScanningConfig(exported, mappedRegistry);
+      expect(parsed.automation.operations[0].operation).toBe("compress");
+      expect(parsed.automation.operations[0].parameters).toMatchObject({
+        compressionLevel: 9,
       });
     });
 
     test("round-trips a tool whose endpoint depends on a frontend-only field", () => {
-      // Split-style tool: the endpoint is chosen from a frontend-only `method`
-      // field. Keeping frontend shape on export lets import replay the endpoint
-      // and resolve the tool.
-      const splitLike = {
-        ...registry,
-        splitLike: {
-          operationConfig: {
-            endpoint: (p: Record<string, string>) =>
-              p.method === "size"
-                ? "/api/v1/general/split-by-size"
-                : "/api/v1/general/split-pages",
-          },
-        },
-      } as unknown as Partial<ToolRegistry>;
+      // Split's method picks the endpoint and never reaches the backend body,
+      // so the import has to recover it from the endpoint and fields present.
       const automation: AutomationConfig = {
         ...sampleAutomation,
         operations: [
           {
-            operation: "splitLike",
-            parameters: { method: "size", value: "10MB" },
+            operation: "split",
+            parameters: { method: SPLIT_METHODS.BY_SIZE, splitValue: "10MB" },
           },
         ],
       };
-      const exported = convertToFolderScanningConfig(automation, splitLike);
+      const exported = convertToFolderScanningConfig(
+        automation,
+        mappedRegistry,
+      );
       expect(exported.pipeline[0]).toEqual({
-        operation: "/api/v1/general/split-by-size",
-        parameters: { method: "size", value: "10MB", fileInput: "automated" },
+        operation: "/api/v1/general/split-by-size-or-count",
+        parameters: {
+          splitType: 0,
+          splitValue: "10MB",
+          fileInput: "automated",
+        },
       });
-      const parsed = parseFolderScanningConfig(exported, splitLike);
+      const parsed = parseFolderScanningConfig(exported, mappedRegistry);
       expect(parsed.unresolvedOperations).toEqual([]);
-      expect(parsed.automation.operations[0]).toEqual({
-        operation: "splitLike",
-        parameters: { method: "size", value: "10MB" },
+      expect(parsed.automation.operations[0].operation).toBe("split");
+      expect(parsed.automation.operations[0].parameters).toMatchObject({
+        method: SPLIT_METHODS.BY_SIZE,
+        splitValue: "10MB",
       });
     });
 
