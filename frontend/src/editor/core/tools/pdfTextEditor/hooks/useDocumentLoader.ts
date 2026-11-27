@@ -308,7 +308,11 @@ export function readPageOnceVisible(
     return;
   }
   const doc = store.document;
-  void firstPagePainted(store).then(() => {
-    if (store.document === doc) ensurePageRead(store, pageIndex);
-  });
+  void firstPagePainted(store)
+    .then(() => {
+      if (store.document === doc) ensurePageRead(store, pageIndex);
+    })
+    .catch((err) => {
+      store.reportError(err instanceof Error ? err.message : String(err));
+    });
 }

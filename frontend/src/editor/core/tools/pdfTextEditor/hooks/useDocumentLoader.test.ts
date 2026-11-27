@@ -233,4 +233,32 @@ describe("opening a document", () => {
       store.dispose();
     }
   });
+
+  test("a page that cannot be opened after the first paint is reported", async () => {
+    const store = new EditorStore();
+    try {
+      const loading = useDocumentLoader(store)(
+        new File([await readFile(SAMPLE)], "multi.pdf", {
+          type: "application/pdf",
+        }),
+      );
+      await vi.waitFor(
+        () => expect(store.getState().pages.length).toBeGreaterThan(0),
+        { timeout: 15_000 },
+      );
+      const doc = store.document!;
+      const page = vi.spyOn(doc, "page").mockImplementation(() => {
+        throw new Error("page will not open");
+      });
+      readPageOnceVisible(store, 0);
+      store.markFirstPageRendered();
+      await vi.waitFor(() =>
+        expect(store.getState().error).toBe("page will not open"),
+      );
+      page.mockRestore();
+      await loading;
+    } finally {
+      store.dispose();
+    }
+  });
 });
