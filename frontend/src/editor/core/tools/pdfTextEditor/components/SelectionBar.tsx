@@ -205,90 +205,92 @@ export const SelectionBar = memo(function SelectionBar({
     <ScanFontMatchModal match={scanFontMatch} />
   );
   // One menu at a time: the right-click menu stands in for the bar while open.
-  if (!active || contextMenuOpen) return scanFontModal;
+  const hidden = !active || contextMenuOpen;
   // Menus open on the side of the bar away from the selection, clear of its text.
   const dropdownPosition = placement?.below ? "bottom" : "top";
 
   const { hasRunSelection, hasImageSelection } = controller;
-  const bar = createPortal(
-    <div
-      ref={barRef}
-      role="toolbar"
-      aria-label={t("pdfTextEditor.selectionBar.label", "Selection")}
-      className="pdf-editor-selection-bar"
-      data-below={placement?.below ? "true" : "false"}
-      data-testid="pdf-editor-selection-bar"
-      onFocus={(e) => {
-        const from = e.relatedTarget;
-        if (
-          from instanceof HTMLElement &&
-          !barRef.current?.contains(from) &&
-          !from.closest(`[${SELECTION_BAR_MENU_ATTR}]`)
-        )
-          cameFromRef.current = from;
-      }}
-      onKeyDown={(e) => {
-        // Open menus close on their own Escape; elsewhere Escape leaves the bar.
-        const target = e.target as HTMLElement;
-        if (
-          e.key !== "Escape" ||
-          !barRef.current?.contains(target) ||
-          target.getAttribute("aria-expanded") === "true"
-        )
-          return;
-        const back = cameFromRef.current;
-        cameFromRef.current = null;
-        if (back?.isConnected) back.focus({ preventScroll: true });
-        else target.blur();
-      }}
-      // Hidden until placed: placing it needs its own size.
-      style={
-        placement
-          ? {
-              left: placement.left,
-              top: placement.top,
-              maxWidth: placement.maxWidth,
-            }
-          : { visibility: "hidden", left: 0, top: 0 }
-      }
-    >
-      {controller.hasRunSelection && (
-        <>
-          <FormatGroup
+  const bar = hidden
+    ? null
+    : createPortal(
+        <div
+          ref={barRef}
+          role="toolbar"
+          aria-label={t("pdfTextEditor.selectionBar.label", "Selection")}
+          className="pdf-editor-selection-bar"
+          data-below={placement?.below ? "true" : "false"}
+          data-testid="pdf-editor-selection-bar"
+          onFocus={(e) => {
+            const from = e.relatedTarget;
+            if (
+              from instanceof HTMLElement &&
+              !barRef.current?.contains(from) &&
+              !from.closest(`[${SELECTION_BAR_MENU_ATTR}]`)
+            )
+              cameFromRef.current = from;
+          }}
+          onKeyDown={(e) => {
+            // Open menus close on their own Escape; elsewhere Escape leaves the bar.
+            const target = e.target as HTMLElement;
+            if (
+              e.key !== "Escape" ||
+              !barRef.current?.contains(target) ||
+              target.getAttribute("aria-expanded") === "true"
+            )
+              return;
+            const back = cameFromRef.current;
+            cameFromRef.current = null;
+            if (back?.isConnected) back.focus({ preventScroll: true });
+            else target.blur();
+          }}
+          // Hidden until placed: placing it needs its own size.
+          style={
+            placement
+              ? {
+                  left: placement.left,
+                  top: placement.top,
+                  maxWidth: placement.maxWidth,
+                }
+              : { visibility: "hidden", left: 0, top: 0 }
+          }
+        >
+          {controller.hasRunSelection && (
+            <>
+              <FormatGroup
+                controller={controller}
+                compact
+                dropdownPosition={dropdownPosition}
+              />
+              <ToolbarSeparator />
+            </>
+          )}
+          {controller.hasImageSelection && (
+            <>
+              <ImageGroup controller={controller} />
+              <ToolbarSeparator />
+            </>
+          )}
+          {(hasRunSelection || hasImageSelection) && (
+            <>
+              <GeometryMenu
+                geometry={geometry}
+                isImage={!hasRunSelection}
+                dropdownPosition={dropdownPosition}
+              />
+              <SelectionNotices
+                note={hasRunSelection ? note : null}
+                scanFontMatch={scanFontMatch}
+              />
+              <ToolbarSeparator />
+            </>
+          )}
+          <ObjectGroup
             controller={controller}
-            compact
             dropdownPosition={dropdownPosition}
           />
-          <ToolbarSeparator />
-        </>
-      )}
-      {controller.hasImageSelection && (
-        <>
-          <ImageGroup controller={controller} />
-          <ToolbarSeparator />
-        </>
-      )}
-      {(hasRunSelection || hasImageSelection) && (
-        <>
-          <GeometryMenu
-            geometry={geometry}
-            isImage={!hasRunSelection}
-            dropdownPosition={dropdownPosition}
-          />
-          <SelectionNotices
-            note={hasRunSelection ? note : null}
-            scanFontMatch={scanFontMatch}
-          />
-          <ToolbarSeparator />
-        </>
-      )}
-      <ObjectGroup
-        controller={controller}
-        dropdownPosition={dropdownPosition}
-      />
-    </div>,
-    document.body,
-  );
+        </div>,
+        document.body,
+      );
   return (
     <>
       {bar}

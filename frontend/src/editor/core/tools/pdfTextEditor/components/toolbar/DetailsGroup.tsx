@@ -23,24 +23,38 @@ export function GeometryMenu({
   const { t } = useTranslation();
   const title = t("pdfTextEditor.inspector.geometry", "Position & size");
   const single = geometry.single;
+  if (!single) {
+    const why = t(
+      "pdfTextEditor.inspector.multiGeometry",
+      "Select a single object to edit its position and size.",
+    );
+    // A disabled button takes no hover or focus, so the wrapper carries the
+    // reason to both.
+    return (
+      <Tooltip label={why}>
+        <span tabIndex={0} aria-label={why} style={NO_SHRINK}>
+          <Button
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            disabled
+            aria-label={title}
+            data-testid="pdf-editor-geometry-menu"
+            leftSection={<Icon name="move" size={20} />}
+            style={{ pointerEvents: "none" }}
+          />
+        </span>
+      </Tooltip>
+    );
+  }
   return (
     <Popover position={dropdownPosition} withinPortal shadow="md" trapFocus>
-      <Tooltip
-        label={
-          single
-            ? title
-            : t(
-                "pdfTextEditor.inspector.multiGeometry",
-                "Select a single object to edit its position and size.",
-              )
-        }
-      >
+      <Tooltip label={title}>
         <Popover.Target>
           <Button
             variant="tertiary"
             accent="neutral"
             size="sm"
-            disabled={!single}
             aria-label={title}
             data-testid="pdf-editor-geometry-menu"
             style={NO_SHRINK}
@@ -49,14 +63,12 @@ export function GeometryMenu({
         </Popover.Target>
       </Tooltip>
       <Popover.Dropdown {...selectionBarMenuProps}>
-        {single && (
-          <Stack gap="xs" w={240} data-testid="pdf-editor-geometry-section">
-            <Text size="xs" fw={500}>
-              {title}
-            </Text>
-            <GeometryFields single={single} isImage={isImage} />
-          </Stack>
-        )}
+        <Stack gap="xs" w={240} data-testid="pdf-editor-geometry-section">
+          <Text size="xs" fw={500}>
+            {title}
+          </Text>
+          <GeometryFields single={single} isImage={isImage} />
+        </Stack>
       </Popover.Dropdown>
     </Popover>
   );

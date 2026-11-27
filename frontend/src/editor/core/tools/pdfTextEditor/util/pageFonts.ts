@@ -119,24 +119,41 @@ function isStandard14(fontId: string): boolean {
   );
 }
 
+/** The name the font list gives a font the PDF does not name. */
+export const UNNAMED_FONT = "Unknown font";
+
+function fontNameAndStatus(
+  fontId: string,
+  fontSubset: boolean,
+): { name: string; status: FontStatus } {
+  const name = stripSubsetTag(familyOf(fontId)) || UNNAMED_FONT;
+  let status: FontStatus;
+  if (
+    isBase14FontId(fontId) ||
+    (!isDeviceFontId(fontId) && isStandard14(fontId))
+  ) {
+    status = "standard";
+  } else if (fontSubset) {
+    status = "subset";
+  } else {
+    status = "embedded";
+  }
+  return { name, status };
+}
+
+/** The {@link PageFont.key} a run's font is listed under. */
+export function pageFontKey(fontId: string, fontSubset: boolean): string {
+  const { name, status } = fontNameAndStatus(fontId, fontSubset);
+  return `${name}|${status}`;
+}
+
 // Group every run across the given (loaded) pages into a de-duplicated list of
 // fonts with an editability status.
 export function analyzePageFonts(pages: PageSnapshot[]): PageFont[] {
   const map = new Map<string, PageFont>();
   for (const page of pages) {
     for (const run of page.runs) {
-      const name = stripSubsetTag(familyOf(run.fontId)) || "Unknown font";
-      let status: FontStatus;
-      if (
-        isBase14FontId(run.fontId) ||
-        (!isDeviceFontId(run.fontId) && isStandard14(run.fontId))
-      ) {
-        status = "standard";
-      } else if (run.fontSubset) {
-        status = "subset";
-      } else {
-        status = "embedded";
-      }
+      const { name, status } = fontNameAndStatus(run.fontId, run.fontSubset);
       const key = `${name}|${status}`;
       const pageNo = page.pageIndex + 1;
       const existing = map.get(key);

@@ -57,7 +57,7 @@ export function useDocumentActions(store: EditorStore) {
       unlockAll: () => {
         const doc = store.document;
         if (!doc) return;
-        ensureAllPagesRead(store);
+        // Locks belong to this session, so only pages already read hold any.
         const cmds: Command[] = [];
         for (const page of doc.loadedPages()) {
           for (const run of page.runs) {

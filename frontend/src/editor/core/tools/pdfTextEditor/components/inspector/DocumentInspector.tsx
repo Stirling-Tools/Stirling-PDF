@@ -17,6 +17,7 @@ import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import ToolStep from "@editor/components/tools/shared/ToolStep";
 import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
+import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
 import { useDocumentActions } from "@editor/tools/pdfTextEditor/hooks/useDocumentActions";
 import { useLivePreview } from "@editor/tools/pdfTextEditor/hooks/useLivePreview";
 import type {
@@ -27,6 +28,8 @@ import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
   analyzePageFonts,
+  pageFontKey,
+  UNNAMED_FONT,
   type PageFont,
 } from "@editor/tools/pdfTextEditor/util/pageFonts";
 import {
@@ -42,7 +45,7 @@ import type {
 /** Sets text in a family across the document: in one font, or with none, all of it. */
 type ChangeFontEverywhere = (
   family: string,
-  fontName: string | null,
+  fontKey: string | null,
   style: DocumentFontStyle,
 ) => Promise<FontPickFailure | null>;
 
@@ -188,7 +191,8 @@ const FONT_LIST_SCROLLBAR = 6;
 
 /** A font whose swap is being picked: one of the document's, or with no name, all of them. */
 interface FontTarget {
-  fontName: string | null;
+  /** The font list's key for the font, or null for all text. */
+  fontKey: string | null;
   label: string;
 }
 
@@ -264,7 +268,7 @@ function FontsBlock({
               )}
               onClick={() =>
                 setTarget({
-                  fontName: null,
+                  fontKey: null,
                   label: t("pdfTextEditor.document.allText", "All text"),
                 })
               }
@@ -277,9 +281,7 @@ function FontsBlock({
           <FontChangePanel
             store={store}
             target={target}
-            onApply={(family, style) =>
-              onChange(family, target.fontName, style)
-            }
+            onApply={(family, style) => onChange(family, target.fontKey, style)}
             onDone={() => setTarget(null)}
           />
         )}
@@ -299,8 +301,12 @@ function FontsBlock({
               <FontRow
                 key={font.key}
                 font={font}
-                uses={runs.filter((r) => r.fontId.endsWith(font.name)).length}
-                onReplace={(label) => setTarget({ fontName: font.name, label })}
+                uses={
+                  runs.filter(
+                    (r) => pageFontKey(r.fontId, r.fontSubset) === font.key,
+                  ).length
+                }
+                onReplace={(label) => setTarget({ fontKey: font.key, label })}
               />
             ))}
           </Stack>
@@ -407,9 +413,8 @@ function FontRow({
 }) {
   const { t, i18n } = useTranslation();
   const { known, missing } = font.coverage;
-  // A font the PDF gives no readable name reads as "Unknown".
   const name =
-    font.name === "Unknown"
+    font.name === UNNAMED_FONT
       ? t("pdfTextEditor.document.unnamedFont", "Embedded font")
       : font.name;
   return (
@@ -530,7 +535,12 @@ function ChangePopover({
     <Popover
       opened={opened}
       position={width === "target" ? "bottom" : "bottom-end"}
-      width={width}
+      // Never wider than the screen, which a phone's is.
+      width={width === "target" ? width : `min(${width}px, calc(100vw - 2rem))`}
+      // Clear, but it stops edits to the page and panel while a change is
+      // previewing, so Cancel always has the preview to undo.
+      withOverlay
+      overlayProps={{ backgroundOpacity: 0 }}
       shadow="md"
       withinPortal
       trapFocus
@@ -613,6 +623,7 @@ function FontChangePanel({
 }) {
   const { t } = useTranslation();
   const live = useLivePreview(store);
+  const warnAbout = useFontChangeWarning();
   const [family, setFamily] = useState<string | null>(null);
   const [style, setStyle] = useState<DocumentFontStyle>({
     keep: true,
@@ -635,7 +646,9 @@ function FontChangePanel({
         accent={style[key] ? "default" : "neutral"}
         aria-label={label}
         aria-pressed={style[key]}
-        onClick={() => void tryOut(family, { ...style, [key]: !style[key] })}
+        onClick={() =>
+          void warnAbout(() => tryOut(family, { ...style, [key]: !style[key] }))
+        }
         data-testid={`pdf-editor-font-change-${key}`}
         leftSection={<Icon name={icon} size={18} />}
       />
@@ -652,7 +665,7 @@ function FontChangePanel({
         </Text>
       </div>
       <Text size="xs" c="dimmed">
-        {target.fontName === null
+        {target.fontKey === null
           ? t(
               "pdfTextEditor.document.changeAllFontsHint",
               "All text in the document will change to the font you pick. Locked text stays the same.",
@@ -683,9 +696,10 @@ function FontChangePanel({
       </Group>
       <Checkbox
         checked={style.keep}
-        onChange={(e) =>
-          void tryOut(family, { ...style, keep: e.currentTarget.checked })
-        }
+        onChange={(e) => {
+          const keep = e.currentTarget.checked;
+          void warnAbout(() => tryOut(family, { ...style, keep }));
+        }}
         label={t(
           "pdfTextEditor.document.keepStyle",
           "Keep bold and italic text as it is",
@@ -693,7 +707,7 @@ function FontChangePanel({
         data-testid="pdf-editor-font-change-keep"
       />
       <PreviewFooter
-        canKeep={family !== null}
+        canKeep={live.active}
         testIdPrefix="pdf-editor-font-change"
         onCancel={() => {
           live.cancel();
@@ -911,7 +925,6 @@ function ColourChangePanel({
   const { t } = useTranslation();
   const live = useLivePreview(store);
   const [value, setValue] = useState(target.initial);
-  const [tried, setTried] = useState(false);
   return (
     <Stack gap="sm" data-testid="pdf-editor-colour-change-panel">
       <div>
@@ -934,10 +947,7 @@ function ColourChangePanel({
         value={value}
         onChange={setValue}
         // Once per drag, not per frame: each preview redraws every page.
-        onChangeEnd={(next) => {
-          setTried(true);
-          void live.preview(() => onApply(next));
-        }}
+        onChangeEnd={(next) => void live.preview(() => onApply(next))}
       />
       <Group gap="xs">
         <span
@@ -955,7 +965,7 @@ function ColourChangePanel({
         </Text>
       </Group>
       <PreviewFooter
-        canKeep={tried}
+        canKeep={live.active}
         testIdPrefix="pdf-editor-colour-change"
         onCancel={() => {
           live.cancel();

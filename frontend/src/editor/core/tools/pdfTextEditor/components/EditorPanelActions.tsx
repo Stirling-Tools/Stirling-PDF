@@ -93,6 +93,13 @@ export const EditorPanelActions = memo(function EditorPanelActions({
             {t("pdfTextEditor.save", "Save PDF")}
           </Button>
         </Tooltip>
+        {/* Save coming alive is silent, so screen readers hear the change
+            here. Phones announce it with the dot by the file name. */}
+        {!compact && (
+          <span className="sr-only" role="status">
+            {dirty ? t("pdfTextEditor.unsaved", "(unsaved)") : ""}
+          </span>
+        )}
         <Tooltip
           label={t(
             "pdfTextEditor.downloadTooltip",

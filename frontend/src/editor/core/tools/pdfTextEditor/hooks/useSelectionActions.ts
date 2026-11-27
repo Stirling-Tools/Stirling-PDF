@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
 import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
@@ -66,6 +66,7 @@ import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFit
 import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { pageFontKey } from "@editor/tools/pdfTextEditor/util/pageFonts";
 
 /**
  * Bold and italic for a document-wide font change. With `keep`, text keeps
@@ -91,6 +92,25 @@ function styleWanted(current: FaceStyle, style: DocumentFontStyle): FaceStyle {
     weight: style.bold ? Math.max(current.weight, BOLD_WEIGHT) : current.weight,
     italic: style.italic || current.italic,
   };
+}
+
+/**
+ * Which font change last claimed each run. Kept per editor, not per hook, so
+ * a pick from the selection bar and a document-wide change from the panel
+ * cannot overwrite each other out of order.
+ */
+const fontRequestsByStore = new WeakMap<
+  EditorStore,
+  { last: number; latestByRun: Map<string, number> }
+>();
+
+function fontRequestsFor(store: EditorStore) {
+  let requests = fontRequestsByStore.get(store);
+  if (!requests) {
+    requests = { last: 0, latestByRun: new Map() };
+    fontRequestsByStore.set(store, requests);
+  }
+  return requests;
 }
 
 /** The fields the selection actions read off a run they are about to change. */
@@ -451,13 +471,9 @@ export function useSelectionActions(store: EditorStore) {
     [dispatchPerRun],
   );
 
-  const fontRequests = useRef({
-    last: 0,
-    latestByRun: new Map<string, number>(),
-  });
   const claimFontChange = useCallback(
     (runs: SelectedRun[]) => {
-      const requests = fontRequests.current;
+      const requests = fontRequestsFor(store);
       const request = ++requests.last;
       const doc = store.document;
       const claimed = new Map(runs.map((run) => [run.id, run]));
@@ -725,13 +741,14 @@ export function useSelectionActions(store: EditorStore) {
   );
 
   /**
-   * Sets every unlocked run the editor can redraw in `family`: those in
-   * `fontName`, or with none, the whole document. One undo step.
+   * Sets every unlocked run the editor can redraw in `family`: those listed
+   * under the font list's `fontKey`, or with none, the whole document. One
+   * undo step.
    */
   const changeFontFamilyEverywhere = useCallback(
     async (
       family: string,
-      fontName: string | null,
+      fontKey: string | null,
       style?: DocumentFontStyle,
     ): Promise<FontPickFailure | null> => {
       const doc = store.document;
@@ -743,7 +760,11 @@ export function useSelectionActions(store: EditorStore) {
       for (const page of doc.loadedPages()) {
         for (const run of page.runs) {
           if (run.locked || run.textReadOnly) continue;
-          if (fontName !== null && !run.fontId.endsWith(fontName)) continue;
+          if (
+            fontKey !== null &&
+            pageFontKey(run.fontId, run.fontSubset) !== fontKey
+          )
+            continue;
           targets.push(run);
           fit.push({ page, run });
         }
