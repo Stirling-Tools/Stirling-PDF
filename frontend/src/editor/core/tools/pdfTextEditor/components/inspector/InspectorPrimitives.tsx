@@ -75,7 +75,7 @@ export function Field({
         <Text size="xs" c="dimmed" fw={500}>
           {label}
         </Text>
-        {hint && <ToolInfoTooltip label={hint} position="left" />}
+        {hint && <ToolInfoTooltip label={hint} />}
       </Group>
       {children}
     </Stack>
