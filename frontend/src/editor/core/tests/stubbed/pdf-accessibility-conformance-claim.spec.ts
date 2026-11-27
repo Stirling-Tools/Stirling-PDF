@@ -1,5 +1,5 @@
 import path from "path";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { AccessibilityReport } from "@editor/types/checkAccessibility";
 
@@ -64,6 +64,16 @@ function editorClaim(page: Page) {
   });
 }
 
+async function expandFully(toggle: Locator) {
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const bodyId = await toggle.getAttribute("aria-controls");
+  const body = toggle.page().locator(`[id="${bodyId}"]`);
+  await expect
+    .poll(() => body.evaluate((element) => element.getAnimations().length))
+    .toBe(0);
+}
+
 test("declares PDF/UA from the report as an unsaved edit in the review", async ({
   page,
 }) => {
@@ -87,17 +97,21 @@ test("declares PDF/UA from the report as an unsaved edit in the review", async (
     .toEqual({ part: null, dirty: false });
 
   const report = page.getByTestId("a11y-report");
-  await report
-    .getByRole("button", {
+  await expandFully(
+    report.getByRole("button", {
       name: "Metadata & settings",
       exact: true,
-      expanded: false,
-    })
-    .click();
+    }),
+  );
   const checkbox = page.getByTestId("a11y-conformance-claim");
   await expect(checkbox).not.toBeChecked();
 
-  await report.getByText("Doesn't declare PDF/UA", { exact: true }).click();
+  await expandFully(
+    report.getByRole("button", {
+      name: "Doesn't declare PDF/UA",
+      exact: true,
+    }),
+  );
   await page.getByTestId("a11y-declare-conformance").click();
 
   await expect
