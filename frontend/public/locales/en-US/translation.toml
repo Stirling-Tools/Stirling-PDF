@@ -7758,7 +7758,7 @@ replace = "Replace"
 unlockAll = "Unlock all"
 unnamedFont = "Embedded font"
 usedTimes_one = "Used once"
-usedTimes_other = "Used {{count}} times"
+usedTimes_other = "Used {{uses}} times"
 
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."

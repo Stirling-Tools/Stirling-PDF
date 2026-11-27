@@ -344,6 +344,11 @@ function formatMissing(missing: string[]): string {
   return missing.length > 12 ? `${shown} +${missing.length - 12}` : shown;
 }
 
+/** 1234 as "1.2K": a font used across a long document still fits its row. */
+function compactCount(count: number, locale: string): string {
+  return new Intl.NumberFormat(locale, { notation: "compact" }).format(count);
+}
+
 function FontRow({
   font,
   uses,
@@ -353,7 +358,7 @@ function FontRow({
   uses: number;
   onReplace: (label: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { known, missing } = font.coverage;
   // A font the PDF gives no readable name reads as "Unknown".
   const name =
@@ -375,13 +380,23 @@ function FontRow({
             {name}
           </Text>
         </Tooltip>
-        <Group gap={6} wrap="nowrap">
+        <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
           <FontStatusTag font={font} name={name} />
-          <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+          <Text
+            size="xs"
+            c="dimmed"
+            style={{
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             {t("pdfTextEditor.document.usedTimes", {
               defaultValue_one: "Used once",
-              defaultValue_other: "Used {{count}} times",
+              defaultValue_other: "Used {{uses}} times",
               count: uses,
+              uses: compactCount(uses, i18n.language),
             })}
           </Text>
         </Group>
