@@ -103,6 +103,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "pdfTextEditor"),
         supportsAutomate: false,
         automationSettings: null,
+        updatedInVersion: "3.3.0",
       },
       multiTool: {
         icon: <Icon name="rows-3" size="1.5rem" />,
@@ -120,6 +121,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "multiTool"),
         supportsAutomate: false,
         automationSettings: null,
+        updatedInVersion: "3.2.0",
       },
       merge: {
         icon: <Icon name="copy-plus" size="1.5rem" />,
@@ -378,6 +380,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "modify",
           "builder",
         ],
+        updatedInVersion: "3.0.0",
       },
       autoFormDetection: {
         icon: <Icon name="form-scan" size="1.5rem" />,
@@ -601,6 +604,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             import("@editor/components/tools/autoRotate/AutoRotateAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "autoRotate"),
+        newInVersion: "3.0.0",
       },
       split: {
         icon: <Icon name="scissors" size="1.5rem" />,
