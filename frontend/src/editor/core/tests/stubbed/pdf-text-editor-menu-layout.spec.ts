@@ -217,7 +217,9 @@ test.describe("PDF text editor - inspector layout", () => {
 
     await openSettings(page);
     // View toggles are on show - no disclosure to discover first.
-    await expect(page.getByTestId("pdf-editor-toggle-rulers")).toBeVisible();
+    await expect(
+      page.getByText("Rulers and guides", { exact: true }),
+    ).toBeVisible();
     await expect(page.getByTestId("pdf-editor-spellcheck")).toBeVisible();
 
     // The two options that change how the document was PARSED start folded,

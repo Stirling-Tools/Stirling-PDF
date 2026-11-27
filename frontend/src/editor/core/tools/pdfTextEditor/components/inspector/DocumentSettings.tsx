@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Box, Group, Stack, Text } from "@mantine/core";
+import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
-import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
+import { Checkbox } from "@editor/ui/Checkbox";
 import { SpellcheckControl } from "@editor/tools/pdfTextEditor/components/SpellcheckControl";
 import ToolStep from "@editor/components/tools/shared/ToolStep";
 import { Field } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
@@ -31,20 +31,12 @@ export function ViewSettings({
   const { t } = useTranslation();
   return (
     <Stack gap="sm" data-testid="pdf-editor-view-settings">
-      <Group justify="space-between" wrap="nowrap" gap="sm">
-        {/* The row's own text names the switch; passing `label` too would
-            print it twice, once either side of the control. */}
-        <Text size="sm" id="pdf-editor-rulers-label">
-          {t("pdfTextEditor.sidebar.rulers", "Rulers and guides")}
-        </Text>
-        <ToggleSwitch
-          size="sm"
-          checked={showRulers}
-          onChange={onSetShowRulers}
-          aria-labelledby="pdf-editor-rulers-label"
-          data-testid="pdf-editor-toggle-rulers"
-        />
-      </Group>
+      <Checkbox
+        checked={showRulers}
+        onChange={(e) => onSetShowRulers(e.currentTarget.checked)}
+        label={t("pdfTextEditor.sidebar.rulers", "Rulers and guides")}
+        data-testid="pdf-editor-toggle-rulers"
+      />
       <SpellcheckControl />
     </Stack>
   );

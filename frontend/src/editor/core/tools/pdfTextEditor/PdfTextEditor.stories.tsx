@@ -226,7 +226,7 @@ export const FontList: Story = {
       panel.getAllByTestId("pdf-editor-font-missing")[0],
     ).toBeVisible();
     await expect(
-      panel.getByRole("switch", { name: "Rulers and guides" }),
+      panel.getByRole("checkbox", { name: "Rulers and guides" }),
     ).not.toBeChecked();
   },
 };
@@ -275,7 +275,7 @@ export const ChangeColour: Story = {
 export const RulersOn: Story = {
   play: async (context) => {
     const panel = await waitForDocument(context);
-    const rulers = panel.getByRole("switch", { name: "Rulers and guides" });
+    const rulers = panel.getByRole("checkbox", { name: "Rulers and guides" });
     await userEvent.click(rulers);
     await waitFor(() => expect(rulers).toBeChecked());
   },
@@ -284,7 +284,7 @@ export const RulersOn: Story = {
 export const SpellcheckOff: Story = {
   play: async (context) => {
     const panel = await waitForDocument(context);
-    const spellcheck = panel.getByRole("switch", {
+    const spellcheck = panel.getByRole("checkbox", {
       name: "Check spelling as you type",
     });
     await expect(spellcheck).toBeChecked();

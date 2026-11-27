@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { Group, Select, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
+import { Checkbox } from "@editor/ui/Checkbox";
 import {
   SPELLCHECK_AUTO,
   SPELLCHECK_LANGUAGES,
@@ -57,20 +57,15 @@ export function SpellcheckControl({
       style={style}
       data-testid="pdf-editor-spellcheck"
     >
-      <Group justify="space-between" wrap="nowrap" gap="sm">
-        {/* The row's own text names the switch; passing `label` too would
-            print it twice, once either side of the control. */}
-        <Text size="sm" id="pdf-editor-spellcheck-label">
-          {t("pdfTextEditor.spellcheck.enable", "Check spelling as you type")}
-        </Text>
-        <ToggleSwitch
-          size="sm"
-          checked={pref.enabled}
-          onChange={setSpellcheckEnabled}
-          aria-labelledby="pdf-editor-spellcheck-label"
-          data-testid="pdf-editor-spellcheck-toggle"
-        />
-      </Group>
+      <Checkbox
+        checked={pref.enabled}
+        onChange={(e) => setSpellcheckEnabled(e.currentTarget.checked)}
+        label={t(
+          "pdfTextEditor.spellcheck.enable",
+          "Check spelling as you type",
+        )}
+        data-testid="pdf-editor-spellcheck-toggle"
+      />
       {pref.enabled && (
         <Group justify="space-between" wrap="nowrap" gap="sm" mt="xs">
           <Text size="sm" c="dimmed">
