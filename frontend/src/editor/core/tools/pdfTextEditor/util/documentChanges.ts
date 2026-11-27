@@ -14,6 +14,7 @@ import { carryCopiedPageFormats } from "@editor/tools/pdfTextEditor/util/carried
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { clamp } from "@editor/utils/genericUtils";
 
 export type PageSizeName = keyof typeof PAGE_SIZES;
 export type PageOrientation = "portrait" | "landscape";
@@ -84,7 +85,7 @@ export function pageChangeCommand(
       const next = order.filter((index) => index !== change.page);
       return {
         command: new PageOrderCommand(next, null, "delete"),
-        focusPage: next[Math.min(Math.max(at, 0), next.length - 1)],
+        focusPage: next[clamp(at, 0, next.length - 1)],
       };
     }
     case "pageSetup": {

@@ -6,6 +6,7 @@ import {
   restoreCaretOffset,
 } from "@editor/tools/pdfTextEditor/util/overlayPainter";
 import type { ListEdit } from "@editor/tools/pdfTextEditor/util/listText";
+import { clamp } from "@editor/utils/genericUtils";
 
 /** True when focus is in a typing surface (contenteditable, input, etc). */
 export function isFocusInContentEditable(): boolean {
@@ -197,7 +198,7 @@ function coveredFrom(
   caret: DOMRect,
   view: DOMRect,
 ): number {
-  const x = Math.min(Math.max(caret.left + 1, view.left + 1), view.right - 1);
+  const x = clamp(caret.left + 1, view.left + 1, view.right - 1);
   const y = Math.min(caret.top + caret.height / 2, view.bottom - 1);
   const hit = document.elementFromPoint(x, y);
   return hit && !scroller.contains(hit)
