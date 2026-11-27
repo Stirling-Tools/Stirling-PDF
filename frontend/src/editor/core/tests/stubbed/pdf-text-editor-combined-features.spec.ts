@@ -167,7 +167,10 @@ async function undoSize(page: Page): Promise<number> {
 }
 
 function words(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text
+    .split(/\n[^\S\n]*\n/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .join("\n\n");
 }
 
 test.describe("PDF text editor - combined feature set", () => {

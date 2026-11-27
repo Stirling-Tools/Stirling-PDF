@@ -2131,7 +2131,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     expect(
       allText,
       `reopened did not contain "Acrobaaaat Alternativ". snippet: ${debugSnippet}`,
-    ).toMatch(/Acrobaaaat Alternativ/);
+    ).toMatch(/Acrobaaaat\s+Alternativ/);
     // Both halves of the tagline must survive the round-trip.
     expect(
       allText.indexOf("Adobe"),

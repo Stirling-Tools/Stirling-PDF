@@ -657,15 +657,17 @@ test.describe("PDF text editor: pages and form fields", () => {
   }) => {
     await openInTextEditor(page, MANY_PAGES_PDF);
     const before = (await docShape(page))!.pages;
-    const firstPage = page.getByTestId("pdf-editor-page-0");
-    await firstPage.click({ button: "right", position: { x: 4, y: 4 } });
-    await expect(page.getByTestId("pdf-editor-context-menu")).toBeVisible();
+    expect(before).toBeGreaterThan(2);
+
+    await rightClickBareBottom(page, 1, 2);
     await page.getByTestId("pdf-editor-page-duplicate").click();
     await expect
-      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .poll(async () => (await displayOrder(page)).length, { timeout: 30_000 })
       .toBe(before + 1);
+    const copy = before;
+    expect((await displayOrder(page)).slice(0, 4)).toEqual([0, 1, copy, 2]);
 
-    await firstPage.click({ button: "right", position: { x: 4, y: 4 } });
+    await rightClickBareBottom(page, copy, 2);
     await page.getByTestId("pdf-editor-page-setup").click();
     const setup = page.getByTestId("pdf-editor-page-setup-panel");
     await expect(setup.locator('input[value="portrait"]')).toBeChecked();
@@ -673,9 +675,13 @@ test.describe("PDF text editor: pages and form fields", () => {
     await page.getByTestId("pdf-editor-page-setup-apply").click();
     await expect(setup).toHaveCount(0);
     await expect
-      .poll(async () => (await pageSizes(page))[0], { timeout: 30_000 })
+      .poll(async () => (await pageSizes(page))[2], { timeout: 30_000 })
       .toEqual([792, 612]);
-    expect((await pageSizes(page))[1]).toEqual([612, 792]);
+    const sizes = await pageSizes(page);
+    expect([sizes[1], sizes[3]]).toEqual([
+      [612, 792],
+      [612, 792],
+    ]);
   });
 
   test("Undo takes back a page change after the edits made since", async ({
@@ -936,6 +942,60 @@ const MANY_PAGES_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/many-pages-sample.pdf",
 );
+
+function displayOrder(page: Page): Promise<number[]> {
+  return page.evaluate(() => {
+    const doc = (window as unknown as DocWindow).__editor_store.doc;
+    return doc ? [...doc.displayOrder()] : [];
+  });
+}
+
+function pageNearestViewportCentre(page: Page): Promise<number | null> {
+  return page.evaluate(() => {
+    const centre = window.innerHeight / 2;
+    let best: number | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (const el of document.querySelectorAll<HTMLElement>(
+      '[data-testid^="pdf-editor-page-"]',
+    )) {
+      const match = /^pdf-editor-page-(\d+)$/.exec(el.dataset.testid ?? "");
+      if (!match) continue;
+      const rect = el.getBoundingClientRect();
+      const distance = Math.abs(rect.top + rect.height / 2 - centre);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = Number(match[1]);
+      }
+    }
+    return best;
+  });
+}
+
+async function rightClickBareBottom(
+  page: Page,
+  clicked: number,
+  inView: number,
+) {
+  const target = page.getByTestId(`pdf-editor-page-${clicked}`);
+  await page
+    .getByTestId(`pdf-editor-page-${inView}`)
+    .evaluate((el: HTMLElement) => {
+      el.scrollIntoView({ block: "start" });
+      let scroller = el.parentElement;
+      while (scroller && scroller.scrollHeight <= scroller.clientHeight)
+        scroller = scroller.parentElement;
+      scroller?.scrollBy(0, -window.innerHeight * 0.4);
+    });
+  await expect.poll(() => pageNearestViewportCentre(page)).toBe(inView);
+  const box = (await target.boundingBox())!;
+  expect(box.y + box.height).toBeGreaterThan(0);
+  await target.click({
+    button: "right",
+    position: { x: 4, y: box.height - 4 },
+  });
+  await expect(page.getByTestId("pdf-editor-context-menu")).toBeVisible();
+  expect(await pageNearestViewportCentre(page)).toBe(inView);
+}
 
 function pageSizes(page: Page) {
   return page.evaluate(() => {
