@@ -802,6 +802,14 @@ const EmbedPdfViewerContent = ({
   const isCurrentFileLocked = isCurrentFileEncrypted && !pdfAccess;
   const canPrint = !isCurrentFileLocked && canPrintPdf(pdfAccess);
 
+  // Reuse the sidebar's already-generated page-1 thumbnail as a poster: a second
+  // pdfium render would cost a frame on the very path this is meant to smooth.
+  const viewerPosterUrl = useFileSelector((s) =>
+    currentFile && isStirlingFile(currentFile)
+      ? s.files.byId[currentFile.fileId]?.thumbnailUrl
+      : undefined,
+  );
+
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
       return documentCacheKey(currentFile);
@@ -2178,6 +2186,7 @@ const EmbedPdfViewerContent = ({
                 redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>
               }
               fileId={currentFileId}
+              posterUrl={viewerPosterUrl}
               isCommentsSidebarVisible={isCommentsSidebarVisible}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
