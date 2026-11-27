@@ -31,8 +31,7 @@ function inkRight(store: EditorStore, runId: string): number {
 }
 
 function pageRight(store: EditorStore): number {
-  const { display } = store.document!.page(0);
-  return display.cropLeft + display.cropWidth;
+  return store.document!.page(0).display.cropRight;
 }
 
 describe("text kept inside the page", () => {
