@@ -259,11 +259,5 @@ function documentIsPristine(doc: EditorDocument): boolean {
 }
 
 function documentIsSigned(doc: EditorDocument): boolean {
-  let count: number;
-  try {
-    count = doc.module.FPDF_GetSignatureCount(doc.docPtr);
-  } catch {
-    return false;
-  }
-  return count > 0 && signedSignatureCount(doc) > 0;
+  return signedSignatureCount(doc) > 0;
 }

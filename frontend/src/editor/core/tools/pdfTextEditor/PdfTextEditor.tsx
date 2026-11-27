@@ -420,6 +420,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     const doc = store.document;
     if (doc && !(await confirmRisks(doc)))
       throw new Error("Save cancelled at the risk warning");
+    while (savingRef.current) await saveSettledRef.current;
     await doSave(false);
     // doSave reports its failures in the editor; the prompt must stay open.
     if (store.getState().dirty) throw new Error("Edits not saved");

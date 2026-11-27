@@ -83,3 +83,18 @@ test("an older pending focus is dropped when a newer one starts", () => {
   expect(execCommand).toHaveBeenCalledTimes(1);
   expect(execCommand).toHaveBeenCalledWith("insertText", false, "a");
 });
+
+test("keys held by a pending focus go to the focused run when a request without held keys replaces it", () => {
+  const source = runElement("source");
+  source.focus();
+  focusRunWhenPainted("first", true, holdKeystrokes(), undefined, 1);
+  press(source, "h");
+  focusRunWhenPainted("second", true);
+
+  expect(execCommand).toHaveBeenCalledWith("insertText", false, "h");
+  runElement("first");
+  const second = runElement("second");
+  frames(3);
+  expect(document.activeElement).toBe(second);
+  expect(execCommand).toHaveBeenCalledTimes(1);
+});

@@ -2,6 +2,7 @@ import {
   detectSaveRisks,
   locksPages,
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
@@ -172,6 +173,7 @@ function flowInto(
     runId: inserted,
     softBreak: split.softBreak,
   });
+  flowPastBottom(store, next.index, inserted, Number.POSITIVE_INFINITY);
   return "moved";
 }
 
@@ -194,8 +196,7 @@ function prependOverflow(
   split: Split,
 ): boolean {
   const bottomBefore = runBottom(continued);
-  const continuations = flowState(store.document!).continuations;
-  const known = continuations.get(run.id);
+  const known = flowState(store.document!).continuations.get(run.id);
   const join = known?.softBreak ? " " : "\n";
   store.batchNow(() => {
     store.dispatch(
@@ -214,9 +215,8 @@ function prependOverflow(
         explicit: true,
       }),
     );
+    store.dispatch(new SetFlowBoundaryCommand(run.id, split.softBreak));
   });
-  if (known)
-    continuations.set(run.id, { ...known, softBreak: split.softBreak });
   const heldKeys = holdKeystrokes();
   store.selection.selectOne(continued.id);
   focusRunWhenPainted(
@@ -249,6 +249,37 @@ function flowState(doc: EditorDocument): FlowState {
     flowStates.set(doc, state);
   }
   return state;
+}
+
+class SetFlowBoundaryCommand implements Command {
+  readonly type = "set-flow-boundary";
+  private readonly runId: string;
+  private readonly softBreak: boolean;
+  private previous: boolean | null = null;
+
+  constructor(runId: string, softBreak: boolean) {
+    this.runId = runId;
+    this.softBreak = softBreak;
+  }
+
+  apply(doc: EditorDocument): void {
+    this.previous = this.setSoftBreak(doc, this.softBreak);
+  }
+
+  revert(doc: EditorDocument): void {
+    if (this.previous !== null) this.setSoftBreak(doc, this.previous);
+  }
+
+  private setSoftBreak(
+    doc: EditorDocument,
+    softBreak: boolean,
+  ): boolean | null {
+    const { continuations } = flowState(doc);
+    const known = continuations.get(this.runId);
+    if (!known) return null;
+    continuations.set(this.runId, { ...known, softBreak });
+    return known.softBreak;
+  }
 }
 
 function canAddPages(doc: EditorDocument): boolean {

@@ -276,3 +276,56 @@ test("a wrapped paragraph that flows again rejoins its continuation with a space
     `${kept} extra words here ${flat(continuation)}`,
   );
 });
+
+test("undoing a soft flow restores the line break before the continuation", async () => {
+  const { store, runId } = await typedNearBottom();
+  expect(edit(store, runId, "Line one\nLine two")).toBe("moved");
+  const doc = store.document!;
+  const words = Array.from({ length: 30 }, (_, i) => `w${i}`).join(" ");
+  expect(editWrapped(store, runId, `Line one ${words}`)).toBe("moved");
+
+  for (
+    let i = 0;
+    i < 10 && doc.page(0).findRun(runId)!.text !== "Line one";
+    i++
+  )
+    store.undo();
+  expect(doc.page(0).findRun(runId)!.text).toBe("Line one");
+  expect(doc.page(1).runs.map((run) => run.text)).toEqual(["Line two"]);
+
+  expect(edit(store, runId, "Line one\nLine one and a half")).toBe("moved");
+  expect(doc.page(1).runs.map((run) => run.text)).toEqual([
+    "Line one and a half\nLine two",
+  ]);
+});
+
+test("text wrapped onto a narrower page continues on the page after once it reaches the bottom", async () => {
+  const pdf = await PDFDocument.create();
+  pdf.addPage([400, 300]);
+  pdf.addPage([150, 300]);
+  const store = await storeWith(await pdf.save());
+  ensurePageRead(store, 1);
+  const insert = new InsertTextCommand({
+    pageIndex: 0,
+    x: 40,
+    y: 50,
+    text: "Line one",
+  });
+  store.dispatch(insert);
+  const runId = insert.insertedRunId!;
+  const long = Array.from({ length: 40 }, (_, i) => `word${i}`).join(" ");
+  expect(edit(store, runId, `Line one\n${long}`)).toBe("moved");
+
+  const doc = store.document!;
+  const flowed = doc
+    .displayOrder()
+    .slice(1)
+    .map((index) => doc.page(index))
+    .filter((page) => page.runs.length > 0);
+  expect(flowed.length).toBeGreaterThan(1);
+  for (const page of flowed)
+    for (const run of page.runs)
+      expect(runBottom(run)).toBeGreaterThanOrEqual(bottomLimit(page));
+  const carried = flowed.flatMap((page) => page.runs.map((run) => run.text));
+  expect(carried.join(" ").replace(/\s+/g, " ")).toBe(long);
+});

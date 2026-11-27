@@ -182,9 +182,10 @@ export class ReflowWrapCommand implements Command {
       run.paragraphLineHeight > 0 ? run.paragraphLineHeight : fontSize * 1.2;
     const startX =
       leaves.length > 0 ? Math.min(...leaves.map((l) => l.x)) : run.bounds.x;
-    // Clamp the wrap width to the page measured from OUR OWN left edge - but
-    // to the edge itself, with no margin held back. The caller's width is the
-    // box the paragraph was already laid out in, so shaving a font-size margin
+    // Clamp the wrap width to the page measured from OUR OWN left edge, or the
+    // aligned box's for a width the user set - but to the edge itself, with no
+    // margin held back. The caller's width is the box the paragraph was
+    // already laid out in, so shaving a font-size margin
     // off it wraps at LESS than the document's own measure and every line
     // loses its last word: "...carry out various" drops "various" onto a line
     // of its own, on lines the user never touched.
@@ -193,9 +194,13 @@ export class ReflowWrapCommand implements Command {
     const requested = this.explicit
       ? Math.max(this.maxWidthPt, minWidth)
       : this.maxWidthPt;
+    const boxLeft =
+      this.explicit && run.alignFrame
+        ? Math.min(startX, run.alignFrame.left)
+        : startX;
     const maxWidth = Math.min(
       requested,
-      Math.max(minWidth, rawRightEdge - startX),
+      Math.max(minWidth, rawRightEdge - boxLeft),
     );
     if (onlyRetypingWraps(leaves, maxWidth)) {
       this.wrapByRetyping(doc, page, run, maxWidth);

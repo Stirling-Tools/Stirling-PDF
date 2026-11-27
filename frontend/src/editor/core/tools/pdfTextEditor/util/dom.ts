@@ -82,17 +82,24 @@ export function focusRunWhenPainted(
   caretOffset?: number,
   revealOnPage?: number,
 ): void {
+  releasePendingKeys?.();
   let frames = 0;
+  let released = false;
+  const takeHeldKeys = () => {
+    if (released) return "";
+    released = true;
+    if (releasePendingKeys === giveBackKeys) releasePendingKeys = null;
+    return heldKeys?.() ?? "";
+  };
+  const giveBackKeys = () => typeIntoFocusedRun(takeHeldKeys());
+  releasePendingKeys = giveBackKeys;
   const request = ++latestFocusRequest;
   const origin = document.activeElement;
   const attempt = () => {
+    if (request !== latestFocusRequest) return;
     const el = runBox(runId);
-    if (request !== latestFocusRequest) {
-      heldKeys?.();
-      return;
-    }
     if (!stillFocused(origin, el)) {
-      typeIntoFocusedRun(heldKeys?.() ?? "");
+      giveBackKeys();
       return;
     }
     if (!el) {
@@ -101,7 +108,7 @@ export function focusRunWhenPainted(
       const limit =
         revealOnPage === undefined ? FOCUS_WAIT_FRAMES : REVEAL_WAIT_FRAMES;
       if (++frames < limit) requestAnimationFrame(attempt);
-      else typeIntoFocusedRun(heldKeys?.() ?? "");
+      else giveBackKeys();
       return;
     }
     el.focus({ preventScroll: true });
@@ -112,13 +119,14 @@ export function focusRunWhenPainted(
     sel?.removeAllRanges();
     sel?.addRange(range);
     if (caretOffset !== undefined) restoreCaretOffset(el, caretOffset);
-    typeKeys(heldKeys?.() ?? "");
+    typeKeys(takeHeldKeys());
     if (revealOnPage !== undefined) keepCaretInView(el, REVEAL_MARGIN_PX);
   };
   requestAnimationFrame(attempt);
 }
 
 let latestFocusRequest = 0;
+let releasePendingKeys: (() => void) | null = null;
 
 function stillFocused(
   origin: Element | null,

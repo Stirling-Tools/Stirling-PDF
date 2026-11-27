@@ -128,7 +128,7 @@ export function landsOnUnmoved(
       !moved.has(r.id) &&
       textBand.height > 0 &&
       overlaps(r.bounds, textBand) &&
-      !overlaps(r.bounds, before),
+      !(overlaps(r.bounds, before) && r.bounds.y >= before.y - slack),
   );
   return (
     textHit ||

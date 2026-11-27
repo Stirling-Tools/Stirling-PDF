@@ -88,3 +88,21 @@ test("a box that was never aligned keeps its lines where they are when widened",
   expect(run.alignFrame).toBeNull();
   expect(ink().left).toBeCloseTo(before.left, 1);
 });
+
+test("narrowing a right-aligned box at the page edge keeps the width the user asked for", async () => {
+  const cropRight = (await fixture("paragraph-sample.pdf")).document!.page(0)
+    .display.cropRight;
+  const { store, doc, run, ink } = await rightAlignedBox(
+    "Short",
+    cropRight - 45,
+  );
+  const left = run.alignFrame!.left;
+  expect(ink().right).toBeCloseTo(left + cropRight - 45, 0);
+  expect(ink().left).toBeGreaterThan(cropRight - 150);
+
+  store.dispatch(resizeRunCommand(doc, 0, run.id, 200)!);
+  expect(run.wrapWidthPt).toBe(200);
+  expect(run.alignFrame!.left).toBeCloseTo(left, 3);
+  expect(run.alignFrame!.right).toBeCloseTo(left + 200, 3);
+  expect(ink().right).toBeCloseTo(left + 200, 0);
+});
