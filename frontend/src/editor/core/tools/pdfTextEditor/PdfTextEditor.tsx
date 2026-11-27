@@ -51,6 +51,7 @@ import { useReviewConformanceClaimBridge } from "@editor/tools/pdfTextEditor/hoo
 import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
 import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
+import { ToolPanelFooter } from "@editor/components/tools/ToolPanelFooter";
 import { EditorHeaderHelp } from "@editor/tools/pdfTextEditor/components/EditorHeaderHelp";
 import "@editor/tools/pdfTextEditor/PdfTextEditor.css";
 import type { PagePoint } from "@editor/tools/pdfTextEditor/store/contextMenu";
@@ -948,15 +949,17 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         )
       )}
       {state.hasDocument && (
-        <EditorPanelActions
-          store={store}
-          compact={isMobile}
-          dirty={state.dirty}
-          onSave={handleSave}
-          onDownload={handleDownload}
-          onOpenFind={onOpenFind}
-          onShowHelp={onShowHelp}
-        />
+        <ToolPanelFooter>
+          <EditorPanelActions
+            store={store}
+            compact={isMobile}
+            dirty={state.dirty}
+            onSave={handleSave}
+            onDownload={handleDownload}
+            onOpenFind={onOpenFind}
+            onShowHelp={onShowHelp}
+          />
+        </ToolPanelFooter>
       )}
     </Stack>
   );
