@@ -856,6 +856,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       autosave: () => void handleAutosave(),
       download: handleDownload,
       pickImage: openImagePicker,
+      mergeSelection: handleMergeSelection,
+      ungroupSelection: handleUngroupSelection,
       // The viewer mounts only the pages near the viewport.
       revealPage: (pageIndex: number) =>
         scrollActions.scrollToPage(pageIndex + 1),
@@ -869,6 +871,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     handleAutosave,
     handleDownload,
     openImagePicker,
+    handleMergeSelection,
+    handleUngroupSelection,
   ]);
 
   const sidebarProps = {

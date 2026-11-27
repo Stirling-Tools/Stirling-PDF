@@ -36,6 +36,8 @@ function EditorPanelDemo({
       download: noop,
       pickImage: noop,
       revealPage: noop,
+      mergeSelection: noop,
+      ungroupSelection: noop,
     };
     setEditorSession(session);
     return () => clearEditorSession(session);

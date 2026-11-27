@@ -1,6 +1,14 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type {
+  EditorStore,
+  EditorViewState,
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
+import {
+  scanBlockMisaligned,
+  scanBlockOffInk,
+  scanTypingDropped,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontNote";
 import { useFontCompletionsGeneration } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
@@ -63,4 +71,38 @@ export function useSelectedFontNote(
     completions,
     t,
   ]);
+}
+
+/** Why typing into the selected text will not come out as expected, or null when it will. */
+export function useSelectionNote(
+  store: EditorStore,
+  state: EditorViewState,
+  selection: SelectionState,
+): string | null {
+  return useSelectedFontNote(
+    state,
+    selection,
+    selectedScanNote(store, state, selection),
+  );
+}
+
+function selectedScanNote(
+  store: EditorStore,
+  state: EditorViewState,
+  selection: SelectionState,
+): ScanNote {
+  const doc = store.document;
+  if (!doc) return null;
+  const picked = new Set(selection.runIds);
+  const runs = state.pages.flatMap((page) =>
+    page.runs.flatMap((r) => {
+      if (!picked.has(r.id)) return [];
+      const run = doc.page(page.pageIndex).findRun(r.id);
+      return run ? [run] : [];
+    }),
+  );
+  if (runs.some((run) => scanBlockMisaligned(doc, run))) return "misaligned";
+  if (runs.some((run) => scanBlockOffInk(doc, run))) return "offInk";
+  if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
+  return null;
 }

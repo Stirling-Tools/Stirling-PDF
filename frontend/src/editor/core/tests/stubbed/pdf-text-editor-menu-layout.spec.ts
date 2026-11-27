@@ -111,9 +111,11 @@ test.describe("PDF text editor - inspector layout", () => {
     page,
   }) => {
     await open(page, 0);
-    // No object picked: the panel offers an empty state, not a wall of
-    // disabled controls the user has to learn to ignore.
-    await expect(page.getByTestId("pdf-editor-nothing-selected")).toBeVisible();
+    // No object picked: no selection controls anywhere, not a wall of
+    // disabled ones the user has to learn to ignore.
+    await expect(
+      page.getByTestId("pdf-editor-selection-inspector"),
+    ).toHaveCount(0);
     for (const id of [
       "pdf-editor-arrange-menu",
       "pdf-editor-imgop-menu",
@@ -175,23 +177,25 @@ test.describe("PDF text editor - inspector layout", () => {
   }) => {
     await open(page, 0);
     await selectOne(page, await runId(page, 0, "Downloads"));
-    const sidebar = page.getByTestId("pdf-editor-sidebar-status");
-    // Labelled numeric fields need the panel's vertical room, so they live
-    // here rather than in the horizontal strip.
+    // Position and size open from the selection bar; the panel keeps only
+    // the document.
+    await page
+      .getByTestId("pdf-editor-selection-bar")
+      .getByTestId("pdf-editor-geometry-menu")
+      .click();
     for (const id of [
       "pdf-editor-pos-x",
       "pdf-editor-pos-y",
       "pdf-editor-size-w",
-      "pdf-editor-group",
+      "pdf-editor-size-h",
     ]) {
-      await expect(sidebar.getByTestId(id)).toBeVisible();
+      await expect(page.getByTestId(id)).toBeVisible();
     }
-    // ...and the selection bar does not duplicate them.
-    for (const id of ["pdf-editor-pos-x", "pdf-editor-group"]) {
-      await expect(
-        page.getByTestId("pdf-editor-selection-bar").getByTestId(id),
-      ).toHaveCount(0);
-    }
+    await expect(
+      page
+        .getByTestId("pdf-editor-sidebar-status")
+        .getByTestId("pdf-editor-pos-x"),
+    ).toHaveCount(0);
   });
 
   test("save is pinned to the panel", async ({ page }) => {

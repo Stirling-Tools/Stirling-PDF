@@ -202,71 +202,85 @@ function GeometrySection({
       </Section>
     );
   }
-  const { bounds, setX, setY, setWidth, setHeight } = geometry.single;
   return (
     <Section testId="pdf-editor-geometry-section" first={first}>
       <SectionLabel>
         {t("pdfTextEditor.inspector.geometry", "Position & size")}
       </SectionLabel>
-      <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
-        <PointsInput
-          value={bounds.x}
-          onCommit={setX}
-          label={t("pdfTextEditor.inspector.x", "X")}
-          prefix={t("pdfTextEditor.inspector.x", "X")}
-          testId="pdf-editor-pos-x"
-        />
-        <PointsInput
-          value={bounds.y}
-          onCommit={setY}
-          label={t("pdfTextEditor.inspector.y", "Y")}
-          prefix={t("pdfTextEditor.inspector.y", "Y")}
-          testId="pdf-editor-pos-y"
-        />
-        <Tooltip
-          label={t(
-            "pdfTextEditor.inspector.widthHint",
-            "Text re-wraps to fit the width.",
-          )}
-          disabled={isImage || !setWidth}
-          multiline
-          w={200}
-        >
-          <div>
-            <PointsInput
-              value={bounds.width}
-              onCommit={setWidth ?? (() => undefined)}
-              min={1}
-              disabled={!setWidth}
-              label={t("pdfTextEditor.inspector.width", "Width")}
-              prefix={t("pdfTextEditor.inspector.widthShort", "W")}
-              testId="pdf-editor-size-w"
-            />
-          </div>
-        </Tooltip>
-        <Tooltip
-          label={t(
-            "pdfTextEditor.inspector.heightHint",
-            "A text box's height follows its type size and line count.",
-          )}
-          disabled={!!setHeight}
-          multiline
-          w={200}
-        >
-          <div>
-            <PointsInput
-              value={bounds.height}
-              onCommit={setHeight ?? (() => undefined)}
-              min={1}
-              disabled={!setHeight}
-              label={t("pdfTextEditor.inspector.height", "Height")}
-              prefix={t("pdfTextEditor.inspector.heightShort", "H")}
-              testId="pdf-editor-size-h"
-            />
-          </div>
-        </Tooltip>
-      </SimpleGrid>
+      <GeometryFields single={geometry.single} isImage={isImage} />
     </Section>
+  );
+}
+
+/** X, Y, width and height of one selected object, in PDF points. */
+export function GeometryFields({
+  single,
+  isImage,
+}: {
+  single: NonNullable<SelectionGeometry["single"]>;
+  isImage: boolean;
+}) {
+  const { t } = useTranslation();
+  const { bounds, setX, setY, setWidth, setHeight } = single;
+  return (
+    <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+      <PointsInput
+        value={bounds.x}
+        onCommit={setX}
+        label={t("pdfTextEditor.inspector.x", "X")}
+        prefix={t("pdfTextEditor.inspector.x", "X")}
+        testId="pdf-editor-pos-x"
+      />
+      <PointsInput
+        value={bounds.y}
+        onCommit={setY}
+        label={t("pdfTextEditor.inspector.y", "Y")}
+        prefix={t("pdfTextEditor.inspector.y", "Y")}
+        testId="pdf-editor-pos-y"
+      />
+      <Tooltip
+        label={t(
+          "pdfTextEditor.inspector.widthHint",
+          "Text re-wraps to fit the width.",
+        )}
+        disabled={isImage || !setWidth}
+        multiline
+        w={200}
+      >
+        <div>
+          <PointsInput
+            value={bounds.width}
+            onCommit={setWidth ?? (() => undefined)}
+            min={1}
+            disabled={!setWidth}
+            label={t("pdfTextEditor.inspector.width", "Width")}
+            prefix={t("pdfTextEditor.inspector.widthShort", "W")}
+            testId="pdf-editor-size-w"
+          />
+        </div>
+      </Tooltip>
+      <Tooltip
+        label={t(
+          "pdfTextEditor.inspector.heightHint",
+          "A text box's height follows its type size and line count.",
+        )}
+        disabled={!!setHeight}
+        multiline
+        w={200}
+      >
+        <div>
+          <PointsInput
+            value={bounds.height}
+            onCommit={setHeight ?? (() => undefined)}
+            min={1}
+            disabled={!setHeight}
+            label={t("pdfTextEditor.inspector.height", "Height")}
+            prefix={t("pdfTextEditor.inspector.heightShort", "H")}
+            testId="pdf-editor-size-h"
+          />
+        </div>
+      </Tooltip>
+    </SimpleGrid>
   );
 }
 

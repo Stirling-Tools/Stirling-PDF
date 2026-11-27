@@ -14,6 +14,10 @@ export interface EditorSession {
   pickImage: (at?: PagePoint) => void;
   /** Brings a page on screen, mounted or not. */
   revealPage: (pageIndex: number) => void;
+  /** Merges the selected runs into one paragraph. */
+  mergeSelection: () => void;
+  /** Splits the one selected paragraph back into a run per line. */
+  ungroupSelection: () => void;
 }
 
 let current: EditorSession | null = null;

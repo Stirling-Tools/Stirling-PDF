@@ -9,21 +9,13 @@ import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspec
 import { EditorPanelTools } from "@editor/tools/pdfTextEditor/components/EditorPanelTools";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import {
-  useSelectedFontNote,
-  type ScanNote,
-} from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
+import { useSelectionNote } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
 import {
   ScanHint,
   type ScanHintProps,
 } from "@editor/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { useScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
-import {
-  scanBlockMisaligned,
-  scanBlockOffInk,
-  scanTypingDropped,
-} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type {
   EditorViewState,
@@ -46,7 +38,11 @@ export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
-  /** Desktop: the panel's head shows the insert tools, and the selection bar carries the image tools. */
+  /**
+   * Desktop: the panel's head shows the insert tools, and the floating
+   * selection bar carries everything about the selection, so the panel holds
+   * only the document. Elsewhere the selection's details lead the panel.
+   */
   desktop?: boolean;
 }
 
@@ -72,18 +68,11 @@ export const EditorSidebar = memo(function EditorSidebar({
   desktop = false,
 }: SidebarProps) {
   const controller = useToolbarController(store, state, selection);
-  const geometry = useSelectionGeometry(store, state, selection);
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
     selection.shapeIds.length > 0 ||
     selection.formFieldId !== null;
-  const fontNote = useSelectedFontNote(
-    state,
-    selection,
-    selectedScanNote(store, state, selection),
-  );
-  const scanFontMatch = useScanFontMatch(store, state, selection);
 
   if (!state.hasDocument) {
     return (
@@ -93,8 +82,14 @@ export const EditorSidebar = memo(function EditorSidebar({
     );
   }
 
-  // What is picked sits on top, where the eye already is. The document's own
-  // settings stay below it, in reach whatever is selected.
+  const scanHint = {
+    pages: state.pages,
+    onRunOcr,
+    ocrRunning,
+    ocrAvailable,
+    ocrBlockedReason,
+    onRemovePassword,
+  };
   return (
     <Stack gap={0} data-testid="pdf-editor-sidebar-status">
       {desktop && (
@@ -113,28 +108,23 @@ export const EditorSidebar = memo(function EditorSidebar({
         </Box>
       )}
       <LanguagesInUse.Provider value={state.languagesInUse}>
-        {hasSelection ? (
-          <SelectionInspector
-            controller={controller}
+        {desktop ? (
+          <div className="pdf-editor-panel-hint">
+            <ScanHint {...scanHint} />
+          </div>
+        ) : hasSelection ? (
+          <SelectionPanel
+            store={store}
+            state={state}
             selection={selection}
-            geometry={geometry}
-            fontNote={fontNote}
-            scanFontMatch={scanFontMatch}
+            controller={controller}
             canGroup={canGroup}
             canUngroup={canUngroup}
             onGroup={onGroup}
             onUngroup={onUngroup}
-            showImageTools={!desktop}
           />
         ) : (
-          <NothingSelected
-            pages={state.pages}
-            onRunOcr={onRunOcr}
-            ocrRunning={ocrRunning}
-            ocrAvailable={ocrAvailable}
-            ocrBlockedReason={ocrBlockedReason}
-            onRemovePassword={onRemovePassword}
-          />
+          <NothingSelected {...scanHint} />
         )}
         <DocumentInspector
           store={store}
@@ -148,10 +138,50 @@ export const EditorSidebar = memo(function EditorSidebar({
           onSetShowRulers={onSetShowRulers}
         />
       </LanguagesInUse.Provider>
-      {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
     </Stack>
   );
 });
+
+/** The selection's details where no floating bar carries them. */
+function SelectionPanel({
+  store,
+  state,
+  selection,
+  controller,
+  canGroup,
+  canUngroup,
+  onGroup,
+  onUngroup,
+}: Pick<
+  SidebarProps,
+  | "store"
+  | "state"
+  | "selection"
+  | "canGroup"
+  | "canUngroup"
+  | "onGroup"
+  | "onUngroup"
+> & { controller: ReturnType<typeof useToolbarController> }) {
+  const geometry = useSelectionGeometry(store, state, selection);
+  const fontNote = useSelectionNote(store, state, selection);
+  const scanFontMatch = useScanFontMatch(store, state, selection);
+  return (
+    <>
+      <SelectionInspector
+        controller={controller}
+        selection={selection}
+        geometry={geometry}
+        fontNote={fontNote}
+        scanFontMatch={scanFontMatch}
+        canGroup={canGroup}
+        canUngroup={canUngroup}
+        onGroup={onGroup}
+        onUngroup={onUngroup}
+      />
+      {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
+    </>
+  );
+}
 
 /** A single quiet line where a selection's properties would go. */
 function NothingSelected(props: ScanHintProps) {
@@ -190,27 +220,6 @@ function NothingSelected(props: ScanHintProps) {
       <ScanHint {...props} />
     </Box>
   );
-}
-
-function selectedScanNote(
-  store: EditorStore,
-  state: EditorViewState,
-  selection: SelectionState,
-): ScanNote {
-  const doc = store.document;
-  if (!doc) return null;
-  const picked = new Set(selection.runIds);
-  const runs = state.pages.flatMap((page) =>
-    page.runs.flatMap((r) => {
-      if (!picked.has(r.id)) return [];
-      const run = doc.page(page.pageIndex).findRun(r.id);
-      return run ? [run] : [];
-    }),
-  );
-  if (runs.some((run) => scanBlockMisaligned(doc, run))) return "misaligned";
-  if (runs.some((run) => scanBlockOffInk(doc, run))) return "offInk";
-  if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
-  return null;
 }
 
 function EmptySidebar({

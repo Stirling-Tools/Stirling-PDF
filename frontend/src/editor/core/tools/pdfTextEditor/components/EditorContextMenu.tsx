@@ -419,6 +419,37 @@ function ContextMenuBody({
       ),
     );
   }
+  if (objects && hasRunSelection) {
+    // Merging and splitting paragraphs have no control of their own on the page.
+    const selectedRuns = selection.runIds;
+    const ungroupable =
+      selectedRuns.length === 1 &&
+      state.pages.some((page) =>
+        page.runs.some(
+          (run) =>
+            run.id === selectedRuns[0] && (run.paragraphLineCount ?? 0) > 1,
+        ),
+      );
+    if (selectedRuns.length >= 2)
+      particular.push(
+        item(
+          "merge",
+          t("pdfTextEditor.sidebar.group", "Group"),
+          () => currentEditorSession()?.mergeSelection(),
+          "pdf-editor-context-group",
+          { shortcut: modShortcut("M") },
+        ),
+      );
+    if (ungroupable)
+      particular.push(
+        item(
+          "split",
+          t("pdfTextEditor.sidebar.ungroup", "Ungroup"),
+          () => currentEditorSession()?.ungroupSelection(),
+          "pdf-editor-context-ungroup",
+        ),
+      );
+  }
   if (objects && imageId) {
     particular.push(
       item(

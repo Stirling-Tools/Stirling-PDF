@@ -3796,7 +3796,7 @@ test.describe("PDF text editor - marquee + merge", () => {
     expect(selected).toBe(totalRuns);
   });
 
-  test("Group / Ungroup toolbar buttons merge and split paragraphs", async ({
+  test("Group / Ungroup in the right-click menu merge and split paragraphs", async ({
     page,
   }) => {
     await gotoEditor(page);
@@ -3828,15 +3828,18 @@ test.describe("PDF text editor - marquee + merge", () => {
     }, ids);
     await page.waitForTimeout(100);
 
-    await expect(page.getByTestId("pdf-editor-group")).toBeEnabled();
-    await page.getByTestId("pdf-editor-group").click();
+    await page
+      .getByTestId(`pdf-editor-run-${ids[0]}`)
+      .click({ button: "right" });
+    await page.getByTestId("pdf-editor-context-group").click();
     await page.waitForTimeout(200);
 
     const merged = await runs.count();
     expect(merged).toBe(initial - 1);
 
-    await expect(page.getByTestId("pdf-editor-ungroup")).toBeEnabled();
-    await page.getByTestId("pdf-editor-ungroup").click();
+    // The merged paragraph stays selected; its menu offers the split.
+    await runs.first().click({ button: "right" });
+    await page.getByTestId("pdf-editor-context-ungroup").click();
     await page.waitForTimeout(200);
 
     const split = await runs.count();

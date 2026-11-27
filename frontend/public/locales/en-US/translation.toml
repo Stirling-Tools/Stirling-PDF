@@ -7744,18 +7744,21 @@ hint = "Cancel, then Save PDF to keep them in your workspace first."
 title = "Discard unsaved changes?"
 
 [pdfTextEditor.document]
-allFontsTo = "Set all text in"
+allText = "All text"
+apply = "Apply"
 changeAll = "Change all"
+changeColour = "Change colour"
+changeFont = "Change font"
+changeFontHint = "Every text box in this font, on every page, changes to the one you pick. Locked text stays as it is."
 colourUses_one = "{{hex}} · {{count}} text box"
 colourUses_other = "{{hex}} · {{count}} text boxes"
 colours = "Text colours"
+fontColumn = "Font"
 locked = "{{count}} locked"
 replace = "Replace"
-replaceWith = "Replace everywhere with"
 unlockAll = "Unlock all"
 unnamedFont = "Embedded font"
-uses_one = "{{count}} text box"
-uses_other = "{{count}} text boxes"
+usesColumn = "Uses"
 
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
@@ -7828,6 +7831,7 @@ weightThin = "Thin"
 
 [pdfTextEditor.fonts]
 allPresent = "All letters & numbers present"
+coverageUnknown = "Which letters it has could not be read."
 missing = "Missing: {{glyphs}}"
 title = "Fonts"
 
@@ -7842,12 +7846,15 @@ ok = "All glyphs"
 warn = "{{count}} with gaps"
 
 [pdfTextEditor.fonts.status.embedded]
+hint = "The whole font is stored in the PDF, so text you add draws in it."
 label = "Embedded"
 
 [pdfTextEditor.fonts.status.standard]
+hint = "One of the fonts every PDF reader has, so anything you type draws in it."
 label = "Standard"
 
 [pdfTextEditor.fonts.status.subset]
+hint = "Only the letters this PDF uses are stored. A letter it lacks is drawn in the closest matching font."
 label = "Subset"
 
 [pdfTextEditor.help]
