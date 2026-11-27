@@ -224,7 +224,7 @@ public class PageNumbersController {
                 numberFormat == null ? "" : numberFormat.trim().toLowerCase(Locale.ROOT);
         boolean formatted = normalized.startsWith("roman-") || normalized.startsWith("alpha-");
         if (zeroPad > 0 && !formatted) {
-            return String.format("%0" + zeroPad + "d", pageNumber);
+            return String.format(Locale.ROOT, "%0" + zeroPad + "d", pageNumber);
         }
         return PageNumberFormatter.format(pageNumber, numberFormat);
     }
