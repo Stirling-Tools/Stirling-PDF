@@ -2,6 +2,7 @@ import { lazy, type ComponentType } from "react";
 import { StirlingFile } from "@editor/types/fileContext";
 import type { ResponseHandler } from "@editor/utils/toolResponseProcessor";
 import { ToolId } from "@editor/types/toolId";
+import type { AppConfig } from "@editor/types/appConfig";
 import type { ProcessingProgress } from "@editor/hooks/tools/shared/useToolState";
 import {
   TOOL_FILE_FIELDS,
@@ -10,6 +11,14 @@ import {
 } from "@editor/types/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
+
+/** What a tool's `resolveDefaultParameters` may read, supplied by whatever composes the tool. */
+export interface ToolDefaultsContext {
+  /** The server's app config, or null while it has not loaded. */
+  appConfig: AppConfig | null;
+  /** The UI language, as i18next reports it. */
+  language: string;
+}
 
 /**
  * A tool operation's backend endpoint, checked against the generated ToolEndpoint
@@ -115,6 +124,16 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * Defaults that depend on the server or the browser, for adding the tool
+   * without mounting its settings. The settings component applies the same
+   * values itself when it mounts, so the two must agree. Resolves to the fields
+   * to set over `defaultParameters`; empty when none apply.
+   */
+  resolveDefaultParameters?: (
+    context: ToolDefaultsContext,
+  ) => Promise<Partial<TParams>>;
 
   /**
    * Rename overrides for supporting-file params. The set of a tool's file fields is derived from the

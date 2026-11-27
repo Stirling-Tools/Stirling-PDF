@@ -54,10 +54,9 @@ export default function AutomationCreation({
     selectedTools,
     removeTool,
     updateTool,
+    selectTool,
     canSaveAutomation,
     isToolConfigured,
-    getToolName,
-    getToolDefaultParameters,
   } = useAutomationForm({ mode, existingAutomation, toolRegistry });
 
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -213,12 +212,10 @@ export default function AutomationCreation({
           <ToolList
             tools={selectedTools}
             toolRegistry={toolRegistry}
-            onToolUpdate={updateTool}
+            onToolSelect={selectTool}
             onToolRemove={removeTool}
             onToolConfigure={configureTool}
             onToolAdd={handleToolAdd}
-            getToolName={getToolName}
-            getToolDefaultParameters={getToolDefaultParameters}
             isToolConfigured={isToolConfigured}
           />
         )}

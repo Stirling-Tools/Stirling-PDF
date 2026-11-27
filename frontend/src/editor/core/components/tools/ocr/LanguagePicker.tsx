@@ -2,11 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Text, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
-  getAutoOcrLanguage,
   getBrowserLanguagesForOcr,
   getOcrDisplayName,
 } from "@editor/utils/languageMapping";
-import apiClient from "@editor/services/apiClient";
+import {
+  OCR_LANGUAGES_ENDPOINT,
+  autoOcrLanguage,
+  fetchOcrLanguages,
+} from "@editor/hooks/tools/ocr/ocrLanguages";
 import DropdownListWithFooter, {
   DropdownItem,
 } from "@editor/components/shared/DropdownListWithFooter";
@@ -32,7 +35,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   placeholder,
   disabled = false,
   label,
-  languagesEndpoint = "/api/v1/ui-data/ocr-pdf",
+  languagesEndpoint = OCR_LANGUAGES_ENDPOINT,
   autoFillFromBrowserLanguage = true,
 }) => {
   const { t, i18n } = useTranslation();
@@ -48,9 +51,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     // Fetch available languages from backend
     const fetchLanguages = async () => {
       try {
-        const { data } = await apiClient.get<{ languages: string[] }>(
-          languagesEndpoint,
-        );
+        const languages = await fetchOcrLanguages(languagesEndpoint);
         if (cancelled) {
           return;
         }
@@ -60,7 +61,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
             ? new Intl.DisplayNames([i18n.language], { type: "language" })
             : null;
 
-        const languageOptions = [...new Set(data.languages)]
+        const languageOptions = [...new Set(languages)]
           .map((lang) => {
             const displayName = getOcrDisplayName(lang);
             const browserLanguageCodes = getBrowserLanguagesForOcr(lang);
@@ -122,18 +123,12 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
       value.length === 0;
 
     if (shouldAutoFillLanguage) {
-      // Use the comprehensive language mapping from languageMapping.ts
-      const suggestedOcrLanguages = getAutoOcrLanguage(i18n.language);
-
-      if (suggestedOcrLanguages.length > 0) {
-        // Find the first suggested language that's available in the backend
-        const matchingLanguage = availableLanguages.find((lang) =>
-          suggestedOcrLanguages.includes(lang.value),
-        );
-
-        if (matchingLanguage) {
-          onChange([matchingLanguage.value]);
-        }
+      const matchingLanguage = autoOcrLanguage(
+        availableLanguages.map((lang) => lang.value),
+        i18n.language,
+      );
+      if (matchingLanguage) {
+        onChange([matchingLanguage]);
       }
 
       setHasAutoFilled(true);

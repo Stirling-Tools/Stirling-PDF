@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { expectConsole } from "@editor/tests/failOnConsole";
 import {
   ToolCategoryId,
   SubcategoryId,
@@ -18,6 +19,7 @@ import {
   extractStepFiles,
   getExecutableTools,
   paramsOverDefaults,
+  resolveToolDefaults,
   serializeToolStep,
   stepNeedsConfiguring,
   toolApiStep,
@@ -801,6 +803,26 @@ describe("tool-id keyed helpers", () => {
       operation: "/api/v1/misc/compress-pdf",
       parameters: { optimizeLevel: 9 },
     });
+  });
+
+  test("resolveToolDefaults is empty when a tool has no resolver or it fails", async () => {
+    const context = { appConfig: null, language: "en" };
+    const failing = {
+      compress: entry({
+        name: "Compress",
+        operationConfig: {
+          ...asRegistryConfig(compressOperationConfig),
+          resolveDefaultParameters: () => Promise.reject(new Error("offline")),
+        },
+      }),
+    };
+    await expect(
+      resolveToolDefaults("compress", registry, context),
+    ).resolves.toEqual({});
+    expectConsole.warn(/Could not resolve defaults for compress/);
+    await expect(
+      resolveToolDefaults("compress", failing, context),
+    ).resolves.toEqual({});
   });
 
   test("toolApiStep is null for a tool with no backend form", () => {

@@ -3,6 +3,7 @@ import {
   useBaseParameters,
   BaseParametersHook,
 } from "@editor/hooks/tools/shared/useBaseParameters";
+import type { ToolDefaultsContext } from "@editor/hooks/tools/shared/toolOperationTypes";
 
 // Fallback presets used only when AppConfig hasn't loaded yet.
 // The real presets are served by the backend via /api/v1/config/app-config
@@ -32,6 +33,14 @@ export function validateTimestampPdfParameters(
   params: TimestampPdfParameters,
 ): boolean {
   return params.tsaUrl.trim().length > 0;
+}
+
+/** The admin's default timestamp authority, which TimestampPdfSettings also applies on mount. */
+export function resolveTimestampPdfDefaultParameters({
+  appConfig,
+}: ToolDefaultsContext): Promise<Partial<TimestampPdfParameters>> {
+  const adminDefault = appConfig?.timestampDefaultTsaUrl;
+  return Promise.resolve(adminDefault ? { tsaUrl: adminDefault } : {});
 }
 
 export const useTimestampPdfParameters = (): TimestampPdfParametersHook => {
