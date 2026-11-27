@@ -13,6 +13,9 @@ vi.mock("@editor/tools/pdfTextEditor/hooks/useEditorStore", async (orig) => ({
   ...(await orig<object>()),
   useSharedEditorStore: () => store,
 }));
+vi.mock("@editor/contexts/ViewerContext", () => ({
+  useViewer: () => ({ pdfRenderMode: "normal" }),
+}));
 vi.mock("@editor/tools/pdfTextEditor/components/PageView", () => ({
   PageView: () => <div data-testid="page-view" />,
 }));
