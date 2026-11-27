@@ -87,6 +87,9 @@ class OCRControllerMoreTest {
         // A real ocrmypdf binary path that exists; ProcessExecutor is mocked so it is never run.
         Path fakeBinary = Files.createTempFile(baseTmpDir, "ocrmypdf", ".bin");
         lenient().when(runtimePathConfig.getOcrMyPdfPath()).thenReturn(fakeBinary.toString());
+        lenient()
+                .when(pdfDocumentFactory.load(any(java.io.File.class)))
+                .thenAnswer(invocation -> new PDDocument());
 
         ocrController =
                 new OCRController(
