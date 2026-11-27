@@ -366,17 +366,22 @@ export const FileItem = React.memo(function FileItem({
   const infoRef = useRef<HTMLDivElement>(null);
   const [nameHead, nameTail] = splitFileName(name);
 
-  const handleMouseEnter = useCallback(() => {
+  // Hovering or focusing slides the name in to clear the buttons, so whether it
+  // gets cut is judged against the room it will have, not the width it has now.
+  const openNameTooltipIfCut = useCallback(() => {
     const row = itemRef.current;
-    setHoverRect(row?.getBoundingClientRect() ?? null);
     const head = nameHeadRef.current;
     const tail = nameTailRef.current;
     const info = infoRef.current;
     if (!row || !head || !tail || !info) return;
-    // Hovering slides the name in to clear the buttons, so whether it gets cut
-    // is judged against the room it has once hovered, not the width it has now.
+    // Hovered and viewed rows show both buttons; a focused one only the kebab.
+    const bothButtons = row.matches(":hover, .viewed");
     const reserve = parseFloat(
-      getComputedStyle(row).getPropertyValue("--file-sidebar-actions-reserve"),
+      getComputedStyle(row).getPropertyValue(
+        bothButtons
+          ? "--file-sidebar-actions-reserve"
+          : "--file-sidebar-kebab-reserve",
+      ),
     );
     const nameLeft = head.getBoundingClientRect().left;
     const room = info.getBoundingClientRect().right - reserve - nameLeft;
@@ -386,9 +391,27 @@ export const FileItem = React.memo(function FileItem({
     setNameTooltipWidth(row.getBoundingClientRect().width);
   }, []);
 
+  const handleMouseEnter = useCallback(() => {
+    setHoverRect(itemRef.current?.getBoundingClientRect() ?? null);
+    openNameTooltipIfCut();
+  }, [openNameTooltipIfCut]);
+
+  // Pointer and keyboard each keep the tooltip open while the other leaves.
   const handleMouseLeave = useCallback(() => {
     setHoverRect(null);
-    setNameTooltipWidth(null);
+    if (!itemRef.current?.matches(":focus-visible")) setNameTooltipWidth(null);
+  }, []);
+
+  const handleFocus = useCallback(
+    (e: React.FocusEvent) => {
+      if (e.target === e.currentTarget) openNameTooltipIfCut();
+    },
+    [openNameTooltipIfCut],
+  );
+
+  const handleBlur = useCallback((e: React.FocusEvent) => {
+    if (e.target === e.currentTarget && !e.currentTarget.matches(":hover"))
+      setNameTooltipWidth(null);
   }, []);
 
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready.
@@ -415,6 +438,8 @@ export const FileItem = React.memo(function FileItem({
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
       >
         <div className="file-sidebar-file-icon-wrapper">
           {isSelected ? (
