@@ -976,21 +976,13 @@ public class SigningFinalizationService {
 
         if (workflowMetadata != null && !workflowMetadata.isEmpty()) {
             showSignature =
-                    workflowMetadata.containsKey("showSignature")
-                            ? (Boolean) workflowMetadata.get("showSignature")
-                            : false;
-            pageNumber =
-                    workflowMetadata.containsKey("pageNumber")
-                            ? ((Number) workflowMetadata.get("pageNumber")).intValue()
-                            : null;
-            showLogo =
-                    workflowMetadata.containsKey("showLogo")
-                            ? (Boolean) workflowMetadata.get("showLogo")
-                            : false;
+                    WorkflowMetadataValidator.booleanValue(
+                            workflowMetadata, "showSignature", false);
+            pageNumber = WorkflowMetadataValidator.integerValue(workflowMetadata, "pageNumber");
+            showLogo = WorkflowMetadataValidator.booleanValue(workflowMetadata, "showLogo", false);
             includeSummaryPage =
-                    workflowMetadata.containsKey("includeSummaryPage")
-                            ? (Boolean) workflowMetadata.get("includeSummaryPage")
-                            : false;
+                    WorkflowMetadataValidator.booleanValue(
+                            workflowMetadata, "includeSummaryPage", false);
         }
 
         return new SessionSignatureSettings(
