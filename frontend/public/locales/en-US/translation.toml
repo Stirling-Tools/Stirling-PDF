@@ -536,6 +536,7 @@ portrait = "Portrait"
 
 [adjustPageScale.pageSize]
 custom = "Custom"
+description = "Choose a standard size to fit every page proportionally; mixed sizes and orientations become consistent."
 keep = "Keep Original Size"
 label = "Target Page Size"
 legal = "Legal"
@@ -6341,7 +6342,7 @@ title = "Sanitize"
 
 [home.scalePages]
 desc = "Change the size/scale of a page and/or its contents."
-tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
+tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,A5,letter size,normalize page size,normalize pages,mixed page sizes,unify page size,consistent page size,book scan,scanned book"
 title = "Adjust page size/scale"
 
 [home.scannerImageSplit]
