@@ -17,6 +17,7 @@ import {
   deserializeToolStep,
   extractStepFiles,
   getExecutableTools,
+  paramsOverDefaults,
   serializeToolStep,
   stepNeedsConfiguring,
   toolApiStep,
@@ -690,6 +691,22 @@ describe("tool-id keyed helpers", () => {
         registry,
       ),
     ).toBe(false);
+  });
+
+  test("paramsOverDefaults keeps a default under an undefined field", () => {
+    expect(
+      paramsOverDefaults("compress", { compressionLevel: undefined }, registry),
+    ).toEqual(compressDefaults);
+  });
+
+  test("toolParamsNeedConfiguring flags params its validator throws on", () => {
+    expect(
+      toolParamsNeedConfiguring(
+        "compress",
+        { compressionMethod: "filesize", fileSizeValue: null },
+        registry,
+      ),
+    ).toBe(true);
   });
 
   test("toolParamsNeedConfiguring has nothing to judge without a predicate or a tool", () => {

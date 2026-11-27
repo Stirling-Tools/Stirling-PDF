@@ -360,9 +360,27 @@ export function defaultToolParams(
 }
 
 /**
+ * These parameters over the tool's defaults, as a fresh object. A field set to `undefined` keeps
+ * its default: mappers and older stored automations carry missing fields that way.
+ */
+export function paramsOverDefaults(
+  toolId: ToolId,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): ErasedToolParams {
+  return {
+    ...defaultToolParams(toolId, registry),
+    ...Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined),
+    ),
+  };
+}
+
+/**
  * True if these parameters, merged over the tool's defaults, fail the tool's `validateParams` - the
- * predicate its own Run button uses. False for a tool that declares no predicate or is not in the
- * registry, since there is nothing to judge it by.
+ * predicate its own Run button uses - or make it throw. False for a tool that declares no predicate
+ * or is not in the registry, since there is nothing to judge it by. Never throws, so it is safe to
+ * call during render on stored or imported parameters.
  */
 export function toolParamsNeedConfiguring(
   toolId: ToolId,
@@ -371,10 +389,13 @@ export function toolParamsNeedConfiguring(
 ): boolean {
   const config = registry[toolId]?.operationConfig;
   if (!config?.validateParams) return false;
-  return !config.validateParams({
-    ...defaultToolParams(toolId, registry),
-    ...params,
-  });
+  try {
+    return !config.validateParams(paramsOverDefaults(toolId, params, registry));
+  } catch {
+    // Validators assume the field types their own panel writes; an imported or stored value of
+    // another type (e.g. `pages: null` reaching `.trim()`) means the step needs reconfiguring.
+    return true;
+  }
 }
 
 /**
@@ -388,7 +409,7 @@ export function toolApiStep(
 ): ToolApiStep | null {
   const config = registry[toolId]?.operationConfig;
   if (!config?.toApiParams) return null;
-  const merged = { ...defaultToolParams(toolId, registry), ...params };
+  const merged = paramsOverDefaults(toolId, params, registry);
   const operation = resolveEndpoint(config, merged);
   if (!operation) return null;
   return {
@@ -573,22 +594,10 @@ export function deserializeToolStep(
   if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
-  // Mappers echo missing stored fields as explicit `undefined`, which would
-  // clobber the default underneath; strip those so defaults always win.
   const mapped = config?.fromApiParams
-    ? Object.fromEntries(
-        Object.entries(
-          config.fromApiParams(step.parameters as never) as Record<
-            string,
-            unknown
-          >,
-        ).filter(([, value]) => value !== undefined),
-      )
+    ? config.fromApiParams(step.parameters)
     : {};
-  const params: ErasedToolParams = {
-    ...(config?.defaultParameters ?? {}),
-    ...mapped,
-  };
+  const params = paramsOverDefaults(toolId, mapped, registry);
   // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
     resolveEndpoint(config, params) ??

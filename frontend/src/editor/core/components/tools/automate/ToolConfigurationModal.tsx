@@ -21,7 +21,7 @@ import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
 import { ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
 import {
-  defaultToolParams,
+  paramsOverDefaults,
   toolParamsNeedConfiguring,
 } from "@editor/hooks/tools/shared/toolAutomation";
 
@@ -58,10 +58,9 @@ export default function ToolConfigurationModal({
   );
 
   useEffect(() => {
-    setParameters({
-      ...defaultToolParams(toolId, toolRegistry),
-      ...tool.parameters,
-    });
+    setParameters(
+      paramsOverDefaults(toolId, tool.parameters ?? {}, toolRegistry),
+    );
   }, [tool.parameters, toolId, toolRegistry]);
 
   // Render the settings component
