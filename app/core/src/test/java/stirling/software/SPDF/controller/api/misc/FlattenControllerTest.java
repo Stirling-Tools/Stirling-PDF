@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -22,6 +23,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -78,6 +81,20 @@ class FlattenControllerTest {
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
                         });
+        lenient()
+                .when(tempFileManager.convertMultipartFileToFile(any()))
+                .thenAnswer(
+                        inv -> {
+                            File f = Files.createTempFile("test", ".pdf").toFile();
+                            try (java.io.InputStream in =
+                                    inv.<MultipartFile>getArgument(0).getInputStream()) {
+                                Files.copy(
+                                        in,
+                                        f.toPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            return f;
+                        });
     }
 
     private MockMultipartFile createPdf() throws IOException {
@@ -112,10 +129,8 @@ class FlattenControllerTest {
         assertThat(out).isNotEmpty();
         try (PDDocument flattened = Loader.loadPDF(out)) {
             assertThat(flattened.getNumberOfPages()).isEqualTo(1);
-            // Form-only flattening must not discard non-widget annotations; the dedicated
-            // regression test below covers that contract.
-            assertThat(flattened.getPage(0).getAnnotations())
-                    .allMatch(a -> a instanceof PDAnnotationWidget);
+            assertThat(flattened.getPage(0).getAnnotations()).isEmpty();
+            assertThat(new PDFTextStripper().getText(flattened)).contains("sample");
         }
     }
 
@@ -228,6 +243,57 @@ class FlattenControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
+    @Test
+    void flatten_fullFlatten_deletesSpooledUpload() throws Exception {
+        java.util.concurrent.atomic.AtomicReference<File> spooled =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        org.mockito.Mockito.doAnswer(
+                        inv -> {
+                            File f = Files.createTempFile("test", ".pdf").toFile();
+                            try (java.io.InputStream in =
+                                    inv.<MultipartFile>getArgument(0).getInputStream()) {
+                                Files.copy(
+                                        in,
+                                        f.toPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            spooled.set(f);
+                            return f;
+                        })
+                .when(tempFileManager)
+                .convertMultipartFileToFile(any());
+
+        FlattenRequest request = new FlattenRequest();
+        request.setFileInput(createPdf());
+        request.setFlattenOnlyForms(false);
+
+        assertThat(controller.flatten(request).getStatusCode()).isEqualTo(HttpStatus.OK);
+        org.mockito.Mockito.verify(tempFileManager).deleteTempFile(spooled.get());
+    }
+
+    @Test
+    void flatten_fullFlatten_oversizedPageRejectedBeforeRasterizing() throws Exception {
+        Path path = tempDir.resolve("huge.pdf");
+        try (PDDocument doc = new PDDocument()) {
+            // ~100000 x 100000 px at the default 300 dpi; far over any render budget
+            PDPage page = new PDPage(new PDRectangle(50000f, 50000f));
+            doc.addPage(page);
+            doc.save(path.toFile());
+        }
+        FlattenRequest request = new FlattenRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "huge.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        Files.readAllBytes(path)));
+        request.setFlattenOnlyForms(false);
+
+        assertThatThrownBy(() -> controller.flatten(request))
+                .isInstanceOf(ExceptionUtils.OutOfMemoryDpiException.class)
+                .hasMessageContaining("Page 1 at 300 DPI");
+    }
+
     private MockMultipartFile createPdfWithForm() throws IOException {
         Path path = tempDir.resolve("form.pdf");
         try (PDDocument doc = new PDDocument()) {
@@ -249,7 +315,7 @@ class FlattenControllerTest {
             widget.setRectangle(new PDRectangle(50, 700, 200, 20));
             widget.setPage(page);
             page.getAnnotations().add(widget);
-            field.getWidgets().add(widget);
+            field.setWidgets(List.of(widget));
             acroForm.getFields().add(field);
             field.setValue("sample");
             doc.save(path.toFile());

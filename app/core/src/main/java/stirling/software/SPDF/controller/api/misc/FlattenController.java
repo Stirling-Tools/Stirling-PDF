@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -90,10 +91,10 @@ public class FlattenController {
 
         // JPDFium flattens in place, so there is no extract-and-rebuild round-trip:
         // FULL rasterizes each page at the requested DPI.
+        File tempInput = tempFileManager.convertMultipartFileToFile(file);
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
-        try (TempFile tempInputFile = tempFileManager.createManagedTempFile(".pdf")) {
-            file.transferTo(tempInputFile.getFile());
-            try (PdfDocument document = PdfDocument.open(tempInputFile.getPath())) {
+        try {
+            try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
                 for (int i = 0; i < document.pageCount(); i++) {
                     try (PdfPage page = document.page(i)) {
                         PageSize size = page.size();
@@ -115,6 +116,7 @@ public class FlattenController {
             if (tempOutputFile != null) {
                 tempOutputFile.close();
             }
+            tempFileManager.deleteTempFile(tempInput);
         }
     }
 

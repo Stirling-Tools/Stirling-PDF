@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.BitSet;
 
@@ -21,12 +22,18 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.exception.PdfCorruptException;
+import stirling.software.jpdfium.exception.PdfPasswordException;
+import stirling.software.jpdfium.exception.RedactIncompleteException;
+import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.Rect;
 import stirling.software.jpdfium.model.SaveOptions;
 import stirling.software.jpdfium.transform.PdfPageGeometry;
@@ -181,14 +188,17 @@ public class CropController {
 
     private ResponseEntity<Resource> cropWithAutomaticDetection(CropPdfForm request)
             throws IOException {
-        byte[] pdfBytes = request.getFileInput().getBytes();
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+        File tempInput = spoolInput(request);
 
         try {
-            try (PdfDocument document = PdfDocument.open(pdfBytes)) {
+            try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
                 BitSet pagesToCrop = pageSelection(request, document.pageCount());
                 for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
                     try (PdfPage page = document.page(i)) {
+                        PageSize size = page.size();
+                        ImageMemoryLimit.requirePointSizeFits(
+                                size.width(), size.height(), i + 1, DEFAULT_RENDER_DPI);
                         BufferedImage image = page.renderImage(DEFAULT_RENDER_DPI);
                         int[] bounds = detectContentBounds(image);
                         Rect crop =
@@ -197,60 +207,102 @@ public class CropController {
                                         image,
                                         page,
                                         PdfPageGeometry.getRotation(document, i));
-                        // Non-strict: a word or object crossing the crop edge survives whole.
-                        PdfPageGeometry.cropAndRemoveContent(document, i, crop);
+                        applyCrop(document, i, crop, true);
                     }
                 }
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             }
             return WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename(request));
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             tempOutputFile.close();
             throw e;
-        } catch (IllegalArgumentException e) {
+        } catch (PdfPasswordException e) {
             tempOutputFile.close();
-            throw e;
+            throw ExceptionUtils.createPdfPasswordException(e);
+        } catch (PdfCorruptException e) {
+            tempOutputFile.close();
+            throw ExceptionUtils.createPdfCorruptedException("during cropping", e);
         } catch (RuntimeException | LinkageError e) {
             tempOutputFile.close();
             throw new IOException("JPDFium crop failed", e);
+        } finally {
+            tempFileManager.deleteTempFile(tempInput);
         }
     }
 
     private ResponseEntity<Resource> cropWithJpdfium(CropPdfForm request) throws IOException {
-        byte[] pdfBytes = request.getFileInput().getBytes();
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
         Rect crop =
                 new Rect(request.getX(), request.getY(), request.getWidth(), request.getHeight());
+        File tempInput = spoolInput(request);
 
         try {
-            try (PdfDocument document = PdfDocument.open(pdfBytes)) {
+            try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
                 BitSet pagesToCrop = pageSelection(request, document.pageCount());
                 for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
-                    if (request.isRemoveDataOutsideCrop()) {
-                        // Non-strict: content crossing the crop edge is preserved and clipped.
-                        PdfPageGeometry.cropAndRemoveContent(document, i, crop);
-                    } else {
-                        try (PdfPage page = document.page(i)) {
-                            page.setMediaBox(crop);
-                            page.setCropBox(crop);
-                            page.setTrimBox(crop);
-                            page.setBleedBox(crop);
-                            page.setArtBox(crop);
-                        }
-                    }
+                    applyCrop(document, i, crop, request.isRemoveDataOutsideCrop());
                 }
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             }
             return WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename(request));
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             tempOutputFile.close();
             throw e;
-        } catch (IllegalArgumentException e) {
+        } catch (PdfPasswordException e) {
             tempOutputFile.close();
-            throw e;
+            throw ExceptionUtils.createPdfPasswordException(e);
+        } catch (PdfCorruptException e) {
+            tempOutputFile.close();
+            throw ExceptionUtils.createPdfCorruptedException("during cropping", e);
         } catch (RuntimeException | LinkageError e) {
             tempOutputFile.close();
             throw new IOException("JPDFium crop failed", e);
+        } finally {
+            tempFileManager.deleteTempFile(tempInput);
+        }
+    }
+
+    /**
+     * Spools the upload like {@code CustomPDFDocumentFactory.load(MultipartFile)} does for PDFBox:
+     * JPDFium pins whatever backs the document for its lifetime, so a byte array would hold the
+     * whole upload on the heap for the entire request.
+     */
+    /**
+     * Spools the upload like {@code CustomPDFDocumentFactory.load(MultipartFile)} does for PDFBox:
+     * JPDFium pins whatever backs the document for its lifetime, so a byte array would hold the
+     * whole upload on the heap for the entire request. Callers must hand the returned file back to
+     * {@link TempFileManager#deleteTempFile(File)} once the document is closed, or every crop
+     * request leaks a temp file.
+     */
+    private File spoolInput(CropPdfForm request) throws IOException {
+        return tempFileManager.convertMultipartFileToFile(request.getFileInput());
+    }
+
+    /**
+     * Crops one page. Removal runs non-strict, so content crossing the crop edge survives whole
+     * inside the crop; when the post-removal audit still finds content it could not remove (a
+     * shared image straddling the edge on JPDFium ≤ 1.3.1), the page keeps the plain box crop
+     * instead of failing the request — the pre-JPDFium path served these pages the same way.
+     */
+    private static void applyCrop(PdfDocument document, int pageIndex, Rect crop, boolean remove) {
+        if (remove) {
+            try {
+                PdfPageGeometry.cropAndRemoveContent(document, pageIndex, crop);
+                return;
+            } catch (RedactIncompleteException e) {
+                log.warn(
+                        "page {}: content outside the crop could not be removed, keeping the crop"
+                                + " box only",
+                        pageIndex + 1,
+                        e);
+            }
+        }
+        try (PdfPage page = document.page(pageIndex)) {
+            page.setMediaBox(crop);
+            page.setCropBox(crop);
+            page.setTrimBox(crop);
+            page.setBleedBox(crop);
+            page.setArtBox(crop);
         }
     }
 
@@ -295,7 +347,8 @@ public class CropController {
         float boxHeight = cropBox.height();
 
         return switch (rotation) {
-            case 90 -> new Rect(cropBox.x() + dy, cropBox.y() + dx, height, width);
+            case 90 ->
+                    new Rect(cropBox.x() + boxWidth - dy - height, cropBox.y() + dx, height, width);
             case 180 ->
                     new Rect(
                             cropBox.x() + boxWidth - dx - width,
@@ -303,11 +356,7 @@ public class CropController {
                             width,
                             height);
             case 270 ->
-                    new Rect(
-                            cropBox.x() + boxWidth - dy - height,
-                            cropBox.y() + boxHeight - dx - width,
-                            height,
-                            width);
+                    new Rect(cropBox.x() + dy, cropBox.y() + boxHeight - dx - width, height, width);
             default -> new Rect(cropBox.x() + dx, cropBox.y() + dy, width, height);
         };
     }
