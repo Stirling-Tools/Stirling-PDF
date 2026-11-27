@@ -216,3 +216,35 @@ export async function setViewerZoom(
   await expect(firstPage).toBeInViewport();
   await expect(input).toHaveValue(`${percent}%`);
 }
+
+/**
+ * The selection bar keeps font family and weight behind its font button, and
+ * fill and outline behind its colour swatch. Opens that menu unless it is
+ * already showing, so a spec can reach the controls inside it.
+ */
+export async function openFormatMenu(
+  page: Page,
+  menu: "font" | "colour",
+): Promise<void> {
+  const inside = page.getByTestId(
+    menu === "font" ? "pdf-editor-font-family" : "pdf-editor-outline-width",
+  );
+  if (await inside.isVisible()) return;
+  await page.getByTestId(`pdf-editor-${menu}-menu`).click();
+  await expect(inside).toBeVisible();
+}
+
+/**
+ * Drops the editor's selection, which also puts away the selection bar and
+ * any menu open from it: both float over the page and would otherwise take a
+ * click aimed at the text beneath them.
+ */
+export async function clearEditorSelection(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __editor_store: { selection: { clear(): void } };
+      }
+    ).__editor_store.selection.clear(),
+  );
+}

@@ -2,6 +2,7 @@ import { useId, type ReactNode } from "react";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
+import { toolPanelHeaderSlot } from "@editor/components/shared/toolPanelHeaderSlot";
 import "@editor/components/shared/ToolPanelHeader.css";
 
 export interface ToolPanelHeaderProps {
@@ -22,13 +23,12 @@ export interface ToolPanelHeaderProps {
 }
 
 /**
- * Header for the active-tool rail surface: a tinted icon badge + title in a
- * rounded bar with a trailing close button.
+ * Header for the active-tool rail surface: a tinted icon badge and title on a
+ * slim row with a trailing close button.
  *
- * Core-owned so the OSS build carries no design-system dependency. It mirrors
- * the shared rail header's styling for the simple (non-menu) case the tool panel
- * needs; the richer variant (dropdown menu, accents, loading dot) lives in the
- * design system for the AI chat and Policies surfaces.
+ * Core-owned so the OSS build carries no design-system dependency; the richer
+ * variant (dropdown menu, accents, loading dot) lives in the design system for
+ * the AI chat and Policies surfaces.
  */
 export function ToolPanelHeader({
   icon,
@@ -53,11 +53,15 @@ export function ToolPanelHeader({
       <span id={titleId} className="sui-panelhdr__label">
         {title}
       </span>
+      <span
+        ref={toolPanelHeaderSlot.attach}
+        className="sui-panelhdr__actions"
+      />
     </div>
   );
 
   return (
-    <div className="sui-panelhdr">
+    <div className="sui-panelhdr sui-panelhdr--slim">
       {description ? (
         <>
           <Tooltip content={description} position="left" arrow delay={500}>

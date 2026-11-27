@@ -113,6 +113,13 @@ function shortcutSections(t: TFunction): Section[] {
           ),
         },
         {
+          bindings: [{ code: "F10", alt: true }],
+          description: t(
+            "pdfTextEditor.help.editing.focusSelectionBarDesc",
+            "Move to the formatting bar of the selection",
+          ),
+        },
+        {
           bindings: [{ code: "Delete" }, { code: "Backspace" }],
           description: t(
             "pdfTextEditor.help.editing.deleteDesc",

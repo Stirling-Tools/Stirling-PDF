@@ -1,5 +1,4 @@
-import { memo, useCallback, useEffect } from "react";
-import { setFormatFolded } from "@editor/tools/pdfTextEditor/hooks/useFormatFolded";
+import { memo, useEffect } from "react";
 import { useEditorStoreView } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import { useEditorSelection } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
@@ -15,6 +14,8 @@ import { MobileEditorTopBar } from "@editor/tools/pdfTextEditor/components/Mobil
 import { MobileActionBar } from "@editor/tools/pdfTextEditor/components/MobileActionBar";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { FindBar } from "@editor/tools/pdfTextEditor/components/FindBar";
+import { SelectionBar } from "@editor/tools/pdfTextEditor/components/SelectionBar";
+import { EditorContextMenu } from "@editor/tools/pdfTextEditor/components/EditorContextMenu";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
 import { QuickTagCard } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
 import { EditorTrailControls } from "@editor/tools/pdfTextEditor/components/EditorTrailControls";
@@ -30,7 +31,7 @@ import {
 const CONTROLS =
   "button, input, select, textarea, a, [role='button'], [role='slider']";
 
-/** The text editor's strip and find bar, docked above the viewer while editing. */
+/** The text editor's bars over the viewer: selection bar, find bar, and the phone or review bar. */
 export function ViewerEditToolbar() {
   const { store, state } = useEditorStoreView();
   const selection = useEditorSelection(store);
@@ -63,23 +64,36 @@ export function ViewerEditToolbar() {
 
   return (
     <>
-      {/* Positioned so the find bar can hang off the bar's lower edge. */}
-      <div style={{ position: "relative" }}>
+      {(isMobile || reviewing) && (
         <TopBar
           store={store}
           state={bars.state}
           selection={bars.selection}
           mobile={isMobile}
-          editing={!reviewing}
         />
-        {state.findOpen && state.hasDocument && !reviewing && (
-          <FindBar
+      )}
+      {state.findOpen && state.hasDocument && !reviewing && (
+        <FindBar
+          store={store}
+          pages={state.pages}
+          onClose={() => store.setFindOpen(false)}
+        />
+      )}
+      {/* Small screens format from their own action bar's sheets. */}
+      {!isMobile && !reviewing && (
+        <>
+          <SelectionBar
             store={store}
-            pages={state.pages}
-            onClose={() => store.setFindOpen(false)}
+            state={bars.state}
+            selection={bars.selection}
           />
-        )}
-      </div>
+          <EditorContextMenu
+            store={store}
+            state={bars.state}
+            selection={bars.selection}
+          />
+        </>
+      )}
       {reviewing && store.document && (
         <ReviewOverlay
           store={store}
@@ -137,13 +151,8 @@ const TopBar = memo(function TopBar({
   state,
   selection,
   mobile,
-  editing,
-}: BarProps & { mobile: boolean; editing: boolean }) {
+}: BarProps & { mobile: boolean }) {
   const controller = useToolbarController(store, state, selection);
-  const onFormatFolded = useCallback(
-    (folded: boolean) => setFormatFolded(store, folded),
-    [store],
-  );
   if (mobile)
     return (
       <MobileEditorTopBar
@@ -157,16 +166,7 @@ const TopBar = memo(function TopBar({
       controller={controller}
       hasDocument={state.hasDocument}
       dirty={state.dirty}
-      addTextArmed={state.mode === "addText"}
-      addTableArmed={state.mode === "addTable"}
-      onToggleAddTable={() => store.toggleMode("addTable")}
-      onToggleAddText={() => store.toggleMode("addText")}
-      findOpen={state.findOpen}
-      onToggleFind={() => store.toggleFindOpen()}
-      onShowHelp={() => store.setHelpOpen(true)}
-      onFormatFolded={onFormatFolded}
-      editing={editing}
-      trail={editing ? undefined : <EditorTrailControls state={state} />}
+      trail={<EditorTrailControls state={state} />}
     />
   );
 });

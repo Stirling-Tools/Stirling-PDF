@@ -719,6 +719,7 @@ export class EditorStore {
       return;
     }
     this.resnapshot();
+    this.dropVanishedFromSelection();
     this.patch({ dirty: this.isDirty() });
   }
 
@@ -733,7 +734,38 @@ export class EditorStore {
       return;
     }
     this.resnapshot();
+    this.dropVanishedFromSelection();
     this.patch({ dirty: this.isDirty() });
+  }
+
+  // Undoing an insert removes what it added, often while still selected; a
+  // selection naming objects that no longer exist keeps the selection tools
+  // up over nothing.
+  private dropVanishedFromSelection(): void {
+    const pages = this.state.pages;
+    const runs = new Set(pages.flatMap((p) => p.runs.map((r) => r.id)));
+    const images = new Set(pages.flatMap((p) => p.images.map((i) => i.id)));
+    const shapes = new Set(pages.flatMap((p) => p.shapes.map((s) => s.id)));
+    const sel = this.selection.value;
+    const runIds = sel.runIds.filter((id) => runs.has(id));
+    const imageIds = sel.imageIds.filter((id) => images.has(id));
+    const shapeIds = sel.shapeIds.filter((id) => shapes.has(id));
+    if (
+      runIds.length === sel.runIds.length &&
+      imageIds.length === sel.imageIds.length &&
+      shapeIds.length === sel.shapeIds.length
+    ) {
+      return;
+    }
+    const runsKept = runIds.length === sel.runIds.length;
+    this.selection.set({
+      ...sel,
+      runIds,
+      imageIds,
+      shapeIds,
+      caret: runsKept ? sel.caret : null,
+      textRange: runsKept ? sel.textRange : null,
+    });
   }
 
   // A half-applied command leaves the run model describing objects that no

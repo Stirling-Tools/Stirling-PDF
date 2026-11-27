@@ -14,7 +14,7 @@ const STORE = `(window).__editor_store`;
 
 test.describe("PDF text editor - tables", () => {
   for (const layout of [
-    { name: "compact toolbar", width: 1100, height: 900, mobile: false },
+    { name: "side panel", width: 1100, height: 900, mobile: false },
     { name: "phone action bar", width: 390, height: 844, mobile: true },
   ]) {
     test(`inserts a table from the ${layout.name}`, async ({ page }) => {
@@ -37,15 +37,7 @@ test.describe("PDF text editor - tables", () => {
         ).__editor_store.getState();
         return state.firstPageRendered && !state.loading;
       });
-      if (!layout.mobile) {
-        await expect(page.getByTestId("pdf-editor-toolbar")).toHaveAttribute(
-          "data-compact",
-          "true",
-        );
-        await page.getByTestId("pdf-editor-overflow-menu").click();
-      } else {
-        await page.getByTestId("pdf-editor-insert").click();
-      }
+      if (layout.mobile) await page.getByTestId("pdf-editor-insert").click();
       await page.getByTestId("pdf-editor-add-table").click();
       await page.waitForFunction(
         () =>

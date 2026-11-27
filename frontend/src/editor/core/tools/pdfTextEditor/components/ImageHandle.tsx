@@ -90,7 +90,8 @@ interface ImageHandleProps {
   selected: boolean;
   /** Selectable but neither draggable nor resizable. */
   fixed?: boolean;
-  onSelect: () => void;
+  /** `extend` (a Shift press) adds or removes the image from the selection. */
+  onSelect: (extend: boolean) => void;
   passesClicks?: boolean;
   onTransformCommit: (next: PageRect) => void;
   /** Why the image needs the user's attention, if it does. */
@@ -135,6 +136,9 @@ export function ImageHandle({
   const [keepRatio, setKeepRatio] = useState(false);
   const [ghost, setGhost] = useState<ImagePixels | null>(null);
   const dragOriginRef = useRef<DragOrigin | null>(null);
+  // A Shift press on a selected image deselects it only on release without a
+  // drag, so Shift-dragging a multi-selection keeps it.
+  const shiftDeselectRef = useRef(false);
   const [dragPosition, setDragPosition] = useState<{
     x: number;
     y: number;
@@ -325,9 +329,11 @@ export function ImageHandle({
             : null;
         setDragging(true);
         startLift();
-        onSelect();
+        // A Shift press already toggled the image into the selection.
+        if (!("shiftKey" in e && e.shiftKey)) onSelect(false);
       }}
       onDrag={(e) => {
+        shiftDeselectRef.current = false;
         const at = draggedTo(dragOriginRef.current, e);
         if (at) setDragPosition(at);
       }}
@@ -336,7 +342,7 @@ export function ImageHandle({
         setKeepRatio(e.shiftKey);
         if (locked) return;
         startLift();
-        onSelect();
+        onSelect(false);
       }}
       onResize={(e) => setKeepRatio(e.shiftKey)}
       onDragStop={(e, data) => {
@@ -394,12 +400,20 @@ export function ImageHandle({
         // it, so without this their pointerdown reaches the stage's
         // "empty space clears" handler and deselects mid-resize.
         e.stopPropagation();
-        onSelect();
+        shiftDeselectRef.current = e.shiftKey && selected;
+        if (!shiftDeselectRef.current) onSelect(e.shiftKey);
+      }}
+      onPointerUp={() => {
+        // A Shift press on a selected image takes it out on release, unless
+        // it was dragged.
+        if (shiftDeselectRef.current) onSelect(true);
+        shiftDeselectRef.current = false;
       }}
       onClick={(e: React.MouseEvent) => {
         e.stopPropagation();
-        if (locked) return;
-        onSelect();
+        // A Shift press added the image on pointerdown, or takes it out on release.
+        if (locked || e.shiftKey) return;
+        onSelect(false);
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

@@ -3,7 +3,7 @@ import { Box, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 /** Shared layout atoms for the editor's properties inspector. */
 
-/** Uppercase section heading, optionally with an info affordance beside it and a trailing control. */
+/** Section heading, optionally with an info affordance beside it and a trailing control. */
 export function SectionLabel({
   children,
   info,
@@ -16,13 +16,7 @@ export function SectionLabel({
   return (
     <Group justify="space-between" wrap="nowrap" gap={4} mb={8}>
       <Group gap={6} wrap="nowrap">
-        <Text
-          size="xs"
-          fw={600}
-          c="dimmed"
-          tt="uppercase"
-          style={{ letterSpacing: "0.5px" }}
-        >
+        <Text size="sm" fw={500}>
           {children}
         </Text>
         {info}
@@ -32,7 +26,7 @@ export function SectionLabel({
   );
 }
 
-/** One bordered band. Sections stack with a hairline between them. */
+/** One band of the panel. Sections stack with a hairline between them. */
 export function Section({
   children,
   testId,
@@ -48,7 +42,7 @@ export function Section({
   return (
     <Box
       px="md"
-      py="sm"
+      py="md"
       data-testid={testId}
       style={{
         borderTop: first
@@ -81,14 +75,14 @@ export function Field({
         <Text size="xs" c="dimmed" fw={500}>
           {label}
         </Text>
-        {hint && <ToolInfoTooltip label={hint} position="left" />}
+        {hint && <ToolInfoTooltip label={hint} />}
       </Group>
       {children}
     </Stack>
   );
 }
 
-/** Read-only key/value line used by the Document tab. */
+/** Read-only key/value line. */
 export function StatRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <Group justify="space-between" wrap="nowrap" gap="xs">
@@ -103,7 +97,8 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
 }
 
 /**
- * A points field that only commits a real change.
+ * A points field that only commits a real change. Its short name (X, W) sits
+ * inside the field, so a pair of them fits side by side without labels above.
  *
  * Geometry edits dispatch undoable commands, so re-emitting the value the
  * field already shows would cost a spurious undo step on every blur.
@@ -127,6 +122,7 @@ export function PointsInput({
   value,
   onCommit,
   label,
+  prefix,
   unit,
   testId,
   min,
@@ -134,7 +130,10 @@ export function PointsInput({
 }: {
   value: number;
   onCommit: (next: number) => void;
+  /** Spoken name, e.g. "Width". */
   label: string;
+  /** Shown inside the field, e.g. "W". */
+  prefix: string;
   unit: LengthUnit;
   testId?: string;
   min?: number;
@@ -146,11 +145,21 @@ export function PointsInput({
   return (
     <NumberInput
       size="xs"
+      hideControls
+      leftSection={
+        <Text size="xs" c="dimmed" fw={500} aria-hidden>
+          {prefix}
+        </Text>
+      }
+      rightSection={
+        <Text size="xs" c="dimmed" aria-hidden>
+          {unit}
+        </Text>
+      }
       min={min === undefined ? undefined : min / perUnit}
       decimalScale={decimals}
       fixedDecimalScale
       step={unit === "in" ? 0.1 : 1}
-      suffix={` ${unit}`}
       value={shown}
       disabled={disabled}
       aria-label={label}

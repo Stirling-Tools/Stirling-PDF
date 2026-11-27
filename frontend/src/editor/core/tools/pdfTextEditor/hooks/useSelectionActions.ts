@@ -1,5 +1,5 @@
 import { wholeFaceLookalike } from "@editor/tools/pdfTextEditor/util/wholeFaceLookalike";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { ignoresTextStroke } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
 import { BOLD_WEIGHT } from "@editor/tools/pdfTextEditor/util/faceNames";
 import {
@@ -13,6 +13,8 @@ import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import { DeleteShapeCommand } from "@editor/tools/pdfTextEditor/commands/DeleteShapeCommand";
 import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
+import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
+import { readShownImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
 import { unsafeRtlEditMessage } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
@@ -124,6 +126,53 @@ function canFauxItalic(request: StyleRequest, run: TextRun): boolean {
     !isScanRun(run) &&
     !run.textReadOnly
   );
+}
+
+import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { pageFontKey } from "@editor/tools/pdfTextEditor/util/pageFonts";
+
+/**
+ * Bold and italic for a document-wide font change. With `keep`, text keeps
+ * its own and a pressed `bold` or `italic` only adds to it; without, every
+ * text is set to exactly what is pressed.
+ */
+export interface DocumentFontStyle {
+  keep: boolean;
+  bold: boolean;
+  italic: boolean;
+}
+
+const REGULAR_WEIGHT = 400;
+
+function styleWanted(current: FaceStyle, style: DocumentFontStyle): FaceStyle {
+  if (!style.keep)
+    return {
+      weight: style.bold ? BOLD_WEIGHT : REGULAR_WEIGHT,
+      italic: style.italic,
+    };
+  return {
+    weight: style.bold ? Math.max(current.weight, BOLD_WEIGHT) : current.weight,
+    italic: style.italic || current.italic,
+  };
+}
+
+/**
+ * Which font change last claimed each run. Kept per editor, not per hook, so
+ * a pick from the selection bar and a document-wide change from the panel
+ * cannot overwrite each other out of order.
+ */
+const fontRequestsByStore = new WeakMap<
+  EditorStore,
+  { last: number; latestByRun: Map<string, number> }
+>();
+
+function fontRequestsFor(store: EditorStore) {
+  let requests = fontRequestsByStore.get(store);
+  if (!requests) {
+    requests = { last: 0, latestByRun: new Map() };
+    fontRequestsByStore.set(store, requests);
+  }
+  return requests;
 }
 
 /** The fields the selection actions read off a run they are about to change. */
@@ -386,6 +435,40 @@ function refusePart(
   );
 }
 
+/** Matches a duplicated text box's step right and down, in points. */
+const DUPLICATE_OFFSET = 12;
+
+/**
+ * Copies an image as the page shows it, one step right and down, and selects
+ * the copy. The copy embeds the rendered pixels, so any crop or mask is baked
+ * in rather than carried over.
+ */
+function duplicateImage(
+  store: EditorStore,
+  doc: EditorDocument,
+  imageId: string,
+): void {
+  const image = doc
+    .loadedPages()
+    .flatMap((page) => page.images)
+    .find((img) => img.id === imageId);
+  if (!image) return;
+  const pixels = readShownImagePixels(store, image.pageIndex, imageId);
+  if (!pixels) return;
+  const cmd = new InsertImageCommand({
+    pageIndex: image.pageIndex,
+    rgba: new Uint8ClampedArray(pixels.rgba),
+    pixelWidth: pixels.width,
+    pixelHeight: pixels.height,
+    x: image.bounds.x + DUPLICATE_OFFSET,
+    y: image.bounds.y - DUPLICATE_OFFSET,
+    width: image.bounds.width,
+    height: image.bounds.height,
+  });
+  store.dispatch(cmd);
+  if (cmd.insertedImageId) store.selection.selectImage(cmd.insertedImageId);
+}
+
 /** Bundle of callbacks that operate on the current selection. */
 export function useSelectionActions(store: EditorStore) {
   const { busy: fittingScan, dispatch: dispatchAfterScanFit } =
@@ -481,13 +564,9 @@ export function useSelectionActions(store: EditorStore) {
     [dispatchPerRun],
   );
 
-  const fontRequests = useRef({
-    last: 0,
-    latestByRun: new Map<string, number>(),
-  });
   const claimFontChange = useCallback(
     (runs: SelectedRun[]) => {
-      const requests = fontRequests.current;
+      const requests = fontRequestsFor(store);
       const request = ++requests.last;
       const doc = store.document;
       const claimed = new Map(runs.map((run) => [run.id, run]));
@@ -643,33 +722,18 @@ export function useSelectionActions(store: EditorStore) {
     [store],
   );
 
-  const changeFontFamily = useCallback(
-    async (family: string): Promise<FontPickFailure | null> => {
+  /**
+   * Sets `targets` in `family`, in the face nearest the style `styleFor` asks
+   * of each one's current style: by default the same weight and slant.
+   */
+  const changeFamilyOf = useCallback(
+    async (
+      targets: SelectedRun[],
+      fit: ScanFitTarget[],
+      family: string,
+      styleFor: (current: FaceStyle) => FaceStyle = (current) => current,
+    ): Promise<FontPickFailure | null> => {
       const doc = store.document;
-      const part = selectedPartOfRun(doc, store.selection.value);
-      if (part) {
-        const refused = refusePart(store, part);
-        if (refused !== undefined) return refused;
-        const text = part.run.text.slice(part.range.start, part.range.end);
-        if (!isDocumentFontId(family)) {
-          const failure = await prepareFamily(store, doc, family, [text]);
-          if (failure) return failure;
-          if (store.document !== doc) return null;
-        }
-        const picked = listedFamily(doc, family);
-        return restyleSelectedPart(
-          part,
-          () => (fontId) =>
-            picked ? faceKeepingStyle(picked, faceStyleOf(fontId)) : family,
-          family,
-        );
-      }
-      const targets: SelectedRun[] = [];
-      const fit: ScanFitTarget[] = [];
-      forEachSelectedRun((run, page) => {
-        targets.push(run);
-        fit.push({ page, run: run as TextRun });
-      }, true);
       const stillApplies = claimFontChange(targets);
       const picked = listedFamily(doc, family);
       const changes = targets.map((run) => ({
@@ -677,7 +741,7 @@ export function useSelectionActions(store: EditorStore) {
         runId: run.id,
         family:
           picked && !isScanRun(run)
-            ? faceKeepingStyle(picked, faceStyleOf(run.fontId))
+            ? faceKeepingStyle(picked, styleFor(faceStyleOf(run.fontId)))
             : family,
         text: run.text,
       }));
@@ -739,13 +803,78 @@ export function useSelectionActions(store: EditorStore) {
       if (notRestored > 0) return "documentFontCannotDraw";
       return wouldLoseText > 0 ? "missingGlyphs" : "noGlyphs";
     },
-    [
-      store,
-      forEachSelectedRun,
-      claimFontChange,
-      dispatchFamilyChanges,
-      restyleSelectedPart,
-    ],
+    [store, claimFontChange, dispatchFamilyChanges],
+  );
+
+  const changeFontFamily = useCallback(
+    async (family: string): Promise<FontPickFailure | null> => {
+      const doc = store.document;
+      const part = selectedPartOfRun(doc, store.selection.value);
+      if (part) {
+        const refused = refusePart(store, part);
+        if (refused !== undefined) return refused;
+        const text = part.run.text.slice(part.range.start, part.range.end);
+        if (!isDocumentFontId(family)) {
+          const failure = await prepareFamily(store, doc, family, [text]);
+          if (failure) return failure;
+          if (store.document !== doc) return null;
+        }
+        const picked = listedFamily(doc, family);
+        return restyleSelectedPart(
+          part,
+          () => (fontId) =>
+            picked ? faceKeepingStyle(picked, faceStyleOf(fontId)) : family,
+          family,
+        );
+      }
+      const targets: SelectedRun[] = [];
+      const fit: ScanFitTarget[] = [];
+      forEachSelectedRun((run, page) => {
+        targets.push(run);
+        fit.push({ page, run: run as TextRun });
+      }, true);
+      return changeFamilyOf(targets, fit, family);
+    },
+    [store, forEachSelectedRun, changeFamilyOf, restyleSelectedPart],
+  );
+
+  /**
+   * Sets every unlocked run the editor can redraw in `family`: those listed
+   * under the font list's `fontKey`, or with none, the whole document. One
+   * undo step.
+   */
+  const changeFontFamilyEverywhere = useCallback(
+    async (
+      family: string,
+      fontKey: string | null,
+      style?: DocumentFontStyle,
+    ): Promise<FontPickFailure | null> => {
+      const doc = store.document;
+      if (!doc) return null;
+      // Pages past the eager read hold no runs until read.
+      ensureAllPagesRead(store);
+      const targets: SelectedRun[] = [];
+      const fit: ScanFitTarget[] = [];
+      for (const page of doc.loadedPages()) {
+        for (const run of page.runs) {
+          if (run.locked || run.textReadOnly) continue;
+          if (
+            fontKey !== null &&
+            pageFontKey(run.fontId, run.fontSubset) !== fontKey
+          )
+            continue;
+          targets.push(run);
+          fit.push({ page, run });
+        }
+      }
+      return changeFamilyOf(
+        targets,
+        fit,
+        family,
+        style && ((current) => styleWanted(current, style)),
+      );
+    },
+    [store, changeFamilyOf],
   );
 
   const restyle = useCallback(
@@ -1001,9 +1130,13 @@ export function useSelectionActions(store: EditorStore) {
 
   const duplicateFirstSelected = useCallback(() => {
     const sel = store.selection.value;
-    if (sel.runIds.length === 0) return;
     const doc = store.document;
     if (!doc) return;
+    if (sel.runIds.length === 0 && sel.imageIds.length === 1) {
+      duplicateImage(store, doc, sel.imageIds[0]);
+      return;
+    }
+    if (sel.runIds.length === 0) return;
     const targetId = sel.runIds[0];
     for (const page of doc.loadedPages()) {
       for (const r of page.runs) {
@@ -1131,6 +1264,7 @@ export function useSelectionActions(store: EditorStore) {
     changeFill,
     changeOutline,
     changeFontFamily,
+    changeFontFamilyEverywhere,
     toggleBold,
     setBold,
     toggleItalic,

@@ -57,9 +57,8 @@ async function selectOne(page: Page, id: string): Promise<void> {
   );
 }
 
-/** Switch to the Document tab, which owns the document-level preferences. */
+/** Wait for the document-level preferences in the sidebar. */
 async function openSettings(page: Page): Promise<void> {
-  await page.getByTestId("pdf-editor-tab-document").click();
   await expect(page.getByTestId("pdf-editor-view-settings")).toBeVisible();
 }
 
@@ -76,10 +75,10 @@ test.describe("PDF text editor - inspector layout", () => {
     const arrange = page.getByTestId("pdf-editor-arrange-menu");
     await expect(arrange).toBeVisible();
     await expect(arrange).toBeEnabled();
-    // Arrange is a toolbar verb, beside the formatting it accompanies.
+    // Arrange sits in the selection bar, beside the formatting it accompanies.
     await expect(
       page
-        .getByTestId("pdf-editor-toolbar")
+        .getByTestId("pdf-editor-selection-bar")
         .getByTestId("pdf-editor-arrange-menu"),
     ).toHaveCount(1);
 
@@ -112,9 +111,11 @@ test.describe("PDF text editor - inspector layout", () => {
     page,
   }) => {
     await open(page, 0);
-    // No object picked: the panel offers an empty state, not a wall of
-    // disabled controls the user has to learn to ignore.
-    await expect(page.getByTestId("pdf-editor-nothing-selected")).toBeVisible();
+    // No object picked: no selection controls anywhere, not a wall of
+    // disabled ones the user has to learn to ignore.
+    await expect(
+      page.getByTestId("pdf-editor-selection-inspector"),
+    ).toHaveCount(0);
     for (const id of [
       "pdf-editor-arrange-menu",
       "pdf-editor-imgop-menu",
@@ -129,12 +130,14 @@ test.describe("PDF text editor - inspector layout", () => {
     }
   });
 
-  test("lock and delete are icon buttons in the toolbar", async ({ page }) => {
+  test("lock and delete are icon buttons in the selection bar", async ({
+    page,
+  }) => {
     await open(page, 0);
     const id = await runId(page, 0, "Downloads");
     await selectOne(page, id);
-    const toolbar = page.getByTestId("pdf-editor-toolbar");
-    // Icon-only: identified by aria-label, located inside the toolbar.
+    const toolbar = page.getByTestId("pdf-editor-selection-bar");
+    // Icon-only: identified by aria-label, located inside the bar.
     await expect(toolbar.getByTestId("pdf-editor-toggle-lock")).toBeVisible();
     await expect(toolbar.getByTestId("pdf-editor-delete")).toBeVisible();
     await expect(page.getByTestId("pdf-editor-toggle-lock")).toHaveAttribute(
@@ -143,31 +146,23 @@ test.describe("PDF text editor - inspector layout", () => {
     );
   });
 
-  test("the strip shows formatting only once something is selected", async ({
+  test("the selection bar shows formatting only once something is selected", async ({
     page,
   }) => {
     await open(page, 0);
-    const toolbar = page.getByTestId("pdf-editor-toolbar");
+    const toolbar = page.getByTestId("pdf-editor-selection-bar");
     // Always available, selection or not.
+    const footer = page.getByTestId("pdf-editor-panel-actions");
     for (const id of ["pdf-editor-undo", "pdf-editor-redo"]) {
-      await expect(toolbar.getByTestId(id)).toBeVisible();
+      await expect(footer.getByTestId(id)).toBeVisible();
     }
     // Contextual: absent, rather than present-and-greyed, with no selection.
-    for (const id of [
-      "pdf-editor-font-size",
-      "pdf-editor-colour",
-      "pdf-editor-italic",
-      "pdf-editor-arrange-menu",
-      "pdf-editor-toggle-lock",
-      "pdf-editor-delete",
-    ]) {
-      await expect(toolbar.getByTestId(id)).toHaveCount(0);
-    }
-    // ...and all of them appear in the strip once a run is picked.
+    await expect(toolbar).toHaveCount(0);
+    // ...and all of them appear in the bar once a run is picked.
     await selectOne(page, await runId(page, 0, "Downloads"));
     for (const id of [
       "pdf-editor-font-size",
-      "pdf-editor-colour",
+      "pdf-editor-colour-menu",
       "pdf-editor-italic",
       "pdf-editor-arrange-menu",
       "pdf-editor-toggle-lock",
@@ -182,23 +177,25 @@ test.describe("PDF text editor - inspector layout", () => {
   }) => {
     await open(page, 0);
     await selectOne(page, await runId(page, 0, "Downloads"));
-    const sidebar = page.getByTestId("pdf-editor-sidebar-status");
-    // Labelled numeric fields need the panel's vertical room, so they live
-    // here rather than in the horizontal strip.
+    // Position and size open from the selection bar; the panel keeps only
+    // the document.
+    await page
+      .getByTestId("pdf-editor-selection-bar")
+      .getByTestId("pdf-editor-geometry-menu")
+      .click();
     for (const id of [
       "pdf-editor-pos-x",
       "pdf-editor-pos-y",
       "pdf-editor-size-w",
-      "pdf-editor-group",
+      "pdf-editor-size-h",
     ]) {
-      await expect(sidebar.getByTestId(id)).toBeVisible();
+      await expect(page.getByTestId(id)).toBeVisible();
     }
-    // ...and the strip does not duplicate them.
-    for (const id of ["pdf-editor-pos-x", "pdf-editor-group"]) {
-      await expect(
-        page.getByTestId("pdf-editor-toolbar").getByTestId(id),
-      ).toHaveCount(0);
-    }
+    await expect(
+      page
+        .getByTestId("pdf-editor-sidebar-status")
+        .getByTestId("pdf-editor-pos-x"),
+    ).toHaveCount(0);
   });
 
   test("save is pinned to the panel", async ({ page }) => {
@@ -213,12 +210,16 @@ test.describe("PDF text editor - inspector layout", () => {
   }) => {
     await open(page);
     // Find and the shortcuts sheet are everyday controls, not settings: they
-    await expect(page.getByTestId("pdf-editor-open-find")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Find & replace" }),
+    ).toBeVisible();
     await expect(page.getByTestId("pdf-editor-help")).toBeVisible();
 
     await openSettings(page);
     // View toggles are on show - no disclosure to discover first.
-    await expect(page.getByTestId("pdf-editor-toggle-rulers")).toBeVisible();
+    await expect(
+      page.getByText("Rulers and guides", { exact: true }),
+    ).toBeVisible();
     await expect(page.getByTestId("pdf-editor-spellcheck")).toBeVisible();
 
     // The two options that change how the document was PARSED start folded,
@@ -238,7 +239,7 @@ test.describe("PDF text editor - inspector layout", () => {
     ).toBeVisible();
   });
 
-  test("Add text toggles its label and inserts from the toolbar", async ({
+  test("Add text arms, inserts on a page click, then disarms", async ({
     page,
   }) => {
     await open(page, 0);
@@ -246,28 +247,26 @@ test.describe("PDF text editor - inspector layout", () => {
     const before = await runs.count();
     const addText = page.getByTestId("pdf-editor-add-text");
     await addText.click();
-    await expect(addText).toContainText(/click page/i);
+    await expect(addText).toHaveAttribute("aria-pressed", "true");
     await page
       .getByTestId("pdf-editor-page-0")
       .click({ position: { x: 200, y: 400 } });
     await expect(runs).toHaveCount(before + 1, { timeout: 5_000 });
-    await expect(addText).toHaveText("Add text");
+    await expect(addText).toHaveAttribute("aria-pressed", "false");
   });
 
-  test("the Document tab lists the page fonts with a status badge", async ({
+  test("the sidebar lists the page fonts with a status badge", async ({
     page,
   }) => {
     await open(page, 0);
-    await page.getByTestId("pdf-editor-tab-document").click();
     const panel = page.getByTestId("pdf-editor-fonts-panel");
     await expect(panel).toBeVisible();
-    // Collapsed by default: one headline row carrying an honest tone
-    // (ok / info / warn), never a blanket "no issues" for embedded fonts.
+    // A headline pill carrying an honest tone (ok / info / warn), never a
+    // blanket "no issues" for embedded fonts, above each font's own status.
     const compat = panel.getByTestId("pdf-editor-font-compat");
     await expect(compat).toBeVisible();
     const tone = await compat.getAttribute("data-compat");
     expect(["ok", "info", "warn"]).toContain(tone);
-    // The per-font detail is one click away.
     await panel.getByTestId("pdf-editor-fonts-toggle").click();
     const badges = panel.locator('[data-testid^="pdf-editor-font-"]');
     expect(await badges.count()).toBeGreaterThan(0);

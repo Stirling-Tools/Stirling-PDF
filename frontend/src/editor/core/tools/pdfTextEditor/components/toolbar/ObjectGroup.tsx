@@ -2,26 +2,58 @@ import { Menu, Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
+import { modShortcut } from "@editor/utils/hotkeys";
 import {
   NO_SHRINK,
+  selectionBarMenuProps,
   type Controller,
 } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
-import { ToolbarMenu } from "@editor/tools/pdfTextEditor/components/toolbar/ToolbarMenu";
 
-export function ObjectGroup({ controller }: { controller: Controller }) {
+export function ObjectGroup({
+  controller,
+  dropdownPosition = "bottom",
+}: {
+  controller: Controller;
+  /** Which way the Arrange menu opens, so it can open away from the selected text. */
+  dropdownPosition?: "top" | "bottom";
+}) {
   const { t } = useTranslation();
   const {
     selectionAllLocked,
     onToggleLock,
     onDelete,
+    onDuplicate,
     hasRunSelection,
     hasImageSelection,
+    selectionCount,
   } = controller;
   // Lock and arrange act on text and images only; shapes can just be deleted.
   const arrangeable = hasRunSelection || hasImageSelection;
+  // Duplicating copies one text box or one image.
+  const duplicable =
+    selectionCount === 1 && (hasRunSelection || hasImageSelection);
 
   return (
     <>
+      {duplicable && (
+        <Tooltip
+          label={t("pdfTextEditor.toolbar.duplicateTooltip", {
+            defaultValue: "Duplicate ({{shortcut}})",
+            shortcut: modShortcut("D"),
+          })}
+        >
+          <Button
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            onClick={onDuplicate}
+            aria-label={t("pdfTextEditor.toolbar.duplicate", "Duplicate")}
+            data-testid="pdf-editor-duplicate"
+            style={NO_SHRINK}
+            leftSection={<Icon name="copy-plus" size={20} />}
+          />
+        </Tooltip>
+      )}
       <Tooltip
         label={
           selectionAllLocked
@@ -74,14 +106,30 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
           leftSection={<Icon name="trash" size={20} />}
         />
       </Tooltip>
-      <ToolbarMenu
-        label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
-        icon="layers"
-        testId="pdf-editor-arrange-menu"
-        disabled={!arrangeable}
+      <Menu
+        shadow="md"
+        position={`${dropdownPosition}-start`}
+        withinPortal
+        closeOnItemClick
       >
-        <ArrangeMenuItems controller={controller} />
-      </ToolbarMenu>
+        <Tooltip label={t("pdfTextEditor.toolbar.arrange", "Arrange")}>
+          <Menu.Target>
+            <Button
+              size="sm"
+              disabled={!arrangeable}
+              variant="tertiary"
+              accent="neutral"
+              aria-label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
+              leftSection={<Icon name="layers" size={20} />}
+              data-testid="pdf-editor-arrange-menu"
+              style={NO_SHRINK}
+            />
+          </Menu.Target>
+        </Tooltip>
+        <Menu.Dropdown {...selectionBarMenuProps}>
+          <ArrangeMenuItems controller={controller} />
+        </Menu.Dropdown>
+      </Menu>
     </>
   );
 }

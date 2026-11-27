@@ -1,0 +1,19 @@
+/* Centred on the selection and lifted clear of it; SelectionBar sets left/top. */
+.pdf-editor-selection-bar {
+  position: fixed;
+  z-index: 150;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.375rem;
+  background: var(--c-bg-raised);
+  border: 0.0625rem solid var(--c-border-subtle);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-lg);
+  transform: translate(-50%, -100%);
+}
+
+.pdf-editor-selection-bar[data-below="true"] {
+  transform: translate(-50%, 0);
+}

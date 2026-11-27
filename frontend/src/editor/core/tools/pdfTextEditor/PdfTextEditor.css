@@ -1,0 +1,20 @@
+/* The tool panel's scroll content only grows with what it holds; for the
+   editor it fills the panel, so the save footer can sit at its foot. */
+.mantine-ScrollArea-content:has(> .pdf-editor-panel) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.pdf-editor-panel {
+  flex: 1 0 auto;
+}
+
+/* The scan hint is often empty; empty, it takes no room. */
+.pdf-editor-panel-hint {
+  padding: var(--mantine-spacing-md);
+}
+
+.pdf-editor-panel-hint:empty {
+  display: none;
+}

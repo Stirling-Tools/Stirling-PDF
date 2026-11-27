@@ -1,6 +1,7 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import {
+  openFormatMenu,
   openInTextEditor,
   scrollToEditorPage,
 } from "@editor/tests/helpers/pdf-text-editor";
@@ -66,6 +67,7 @@ async function gotoEditor(page: Page) {
 
 /** Change the selected run's font family through the real toolbar dropdown. */
 async function selectFontFamily(page: Page, optionLabel: string) {
+  await openFormatMenu(page, "font");
   await page.getByTestId("pdf-editor-font-family").click();
   await page.getByRole("option", { name: optionLabel, exact: true }).click();
 }
@@ -82,6 +84,7 @@ async function setBold(page: Page, on: boolean) {
 /** Put the selected text in Helvetica Bold: the family from the list, then the Bold toggle. */
 async function selectHelveticaBold(page: Page) {
   await selectFontFamily(page, "Helvetica");
+  await openFormatMenu(page, "font");
   await expect(page.getByTestId("pdf-editor-font-family")).toHaveValue(
     "Helvetica",
   );
@@ -237,7 +240,7 @@ test.describe("PDF text editor - selection + properties", () => {
     await loadSamplePdf(page);
 
     const fontSize = page.getByTestId("pdf-editor-font-size");
-    const colour = page.getByTestId("pdf-editor-colour");
+    const colour = page.getByTestId("pdf-editor-colour-menu");
 
     // Before selection the inspector has nothing to act on, so the type
     // controls are absent rather than present-but-greyed.
@@ -2566,7 +2569,8 @@ test.describe("PDF text editor - colour", () => {
 
     // Mantine's ColorInput stamps the testid on the wrapper, not the underlying
     // <input>.
-    const colourInput = page.getByLabel("Font colour").first();
+    await openFormatMenu(page, "colour");
+    const colourInput = page.getByTestId("pdf-editor-colour");
     await expect(colourInput).toBeEnabled();
     await colourInput.fill("#ff0000"); // theme-allow-color test input value
     await colourInput.press("Enter");
@@ -2632,7 +2636,8 @@ test.describe("PDF text editor - delete + multi-select", () => {
 
     // After a multi-select with two different fills, the colour input is null
     // (mixed).
-    const colourInput = page.getByLabel("Font colour").first();
+    await openFormatMenu(page, "colour");
+    const colourInput = page.getByTestId("pdf-editor-colour");
     await expect(colourInput).toBeEnabled();
     await colourInput.fill("#00aa00"); // theme-allow-color test input value
     await colourInput.press("Enter");
@@ -2697,7 +2702,8 @@ test.describe("PDF text editor - font family", () => {
 
     const fontIdBefore = await readFontId(runId);
 
-    const family = page.getByLabel("Font family").first();
+    await openFormatMenu(page, "font");
+    const family = page.getByTestId("pdf-editor-font-family");
     await expect(family).toBeEnabled();
     await family.click();
     // Mantine Select dropdown - pick "Helvetica" option by visible text.
@@ -2801,7 +2807,8 @@ test.describe("PDF text editor - bold/italic", () => {
     await firstRun.click();
     // First we must swap to a base-14 font (Helvetica) since the source PDF's
     // runs use unknown families that the bold flip doesn't know how to map.
-    const family = page.getByLabel("Font family").first();
+    await openFormatMenu(page, "font");
+    const family = page.getByTestId("pdf-editor-font-family");
     await family.click();
     await page
       .getByRole("option", { name: /^Helvetica$/i })
@@ -3006,9 +3013,9 @@ test.describe("PDF text editor - add text box", () => {
     expect(before).toBeGreaterThan(0);
 
     await page.getByTestId("pdf-editor-add-text").click();
-    // The mode toggle changes the button label.
-    await expect(page.getByTestId("pdf-editor-add-text")).toContainText(
-      /click page to add text/i,
+    await expect(page.getByTestId("pdf-editor-add-text")).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
 
     // Click somewhere on page 0. The click handler converts to PDF
@@ -3018,8 +3025,9 @@ test.describe("PDF text editor - add text box", () => {
 
     await expect(runs).toHaveCount(before + 1, { timeout: 5_000 });
     // Mode resets back to select after the insertion.
-    await expect(page.getByTestId("pdf-editor-add-text")).toHaveText(
-      "Add text",
+    await expect(page.getByTestId("pdf-editor-add-text")).toHaveAttribute(
+      "aria-pressed",
+      "false",
     );
   });
 });
@@ -3587,11 +3595,11 @@ test.describe("PDF text editor - workbench tab UX", () => {
 });
 
 test.describe("PDF text editor - dirty state", () => {
-  test("top bar marks the file dirty after an edit", async ({ page }) => {
+  test("Save comes alive after an edit", async ({ page }) => {
     await gotoEditor(page);
     await loadSamplePdf(page);
 
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0);
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled();
 
     const firstRunTestId = await page
       .locator('[data-testid^="pdf-editor-run-p0-"]')
@@ -3599,7 +3607,7 @@ test.describe("PDF text editor - dirty state", () => {
       .getAttribute("data-testid");
     await typeIntoRun(page, firstRunTestId!, "X");
 
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
   });
 });
 
@@ -3787,7 +3795,7 @@ test.describe("PDF text editor - marquee + merge", () => {
     expect(selected).toBe(totalRuns);
   });
 
-  test("Group / Ungroup toolbar buttons merge and split paragraphs", async ({
+  test("Group / Ungroup in the right-click menu merge and split paragraphs", async ({
     page,
   }) => {
     await gotoEditor(page);
@@ -3819,15 +3827,18 @@ test.describe("PDF text editor - marquee + merge", () => {
     }, ids);
     await page.waitForTimeout(100);
 
-    await expect(page.getByTestId("pdf-editor-group")).toBeEnabled();
-    await page.getByTestId("pdf-editor-group").click();
+    await page
+      .getByTestId(`pdf-editor-run-${ids[0]}`)
+      .click({ button: "right" });
+    await page.getByTestId("pdf-editor-context-group").click();
     await page.waitForTimeout(200);
 
     const merged = await runs.count();
     expect(merged).toBe(initial - 1);
 
-    await expect(page.getByTestId("pdf-editor-ungroup")).toBeEnabled();
-    await page.getByTestId("pdf-editor-ungroup").click();
+    // The merged paragraph stays selected; its menu offers the split.
+    await runs.first().click({ button: "right" });
+    await page.getByTestId("pdf-editor-context-ungroup").click();
     await page.waitForTimeout(200);
 
     const split = await runs.count();
@@ -3900,25 +3911,6 @@ test.describe("PDF text editor - help overlay", () => {
     await expect(
       page.getByRole("heading", { name: "Keyboard shortcuts" }),
     ).toBeVisible();
-  });
-});
-
-test.describe("PDF text editor - selection count panel", () => {
-  test("sidebar shows N runs selected after multi-select", async ({ page }) => {
-    await gotoEditor(page);
-    await loadSamplePdf(page);
-
-    const ids = await page
-      .locator('[data-testid^="pdf-editor-run-p0-"]')
-      .evaluateAll((els) => els.map((el) => el.getAttribute("data-testid")!));
-    expect(ids.length).toBeGreaterThan(1);
-
-    await page.getByTestId(ids[0]).click();
-    await page.getByTestId(ids[1]).click({ modifiers: ["Shift"] });
-
-    const countNode = page.getByTestId("pdf-editor-selection-count");
-    await expect(countNode).toBeVisible();
-    await expect(countNode).toContainText(/2 boxes/);
   });
 });
 

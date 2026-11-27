@@ -1,4 +1,5 @@
 import {
+  Fragment,
   memo,
   useEffect,
   useMemo,
@@ -40,6 +41,8 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
 import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/AnnotationOutline";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { LockBadge } from "@editor/tools/pdfTextEditor/components/LockBadge";
+import type { ContextMenuEvent } from "@editor/tools/pdfTextEditor/store/contextMenu";
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
 import { useEditorState } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
@@ -82,7 +85,7 @@ interface PageViewProps {
   /** The AnnotationBox id of the selected form field widget. */
   selectedFormFieldId?: string | null;
   onSelectRun: (runId: string, shiftKey: boolean) => void;
-  onSelectImage: (imageId: string) => void;
+  onSelectImage: (imageId: string, extend: boolean) => void;
   onSelectShape: (shapeId: string, extend: boolean) => void;
   /** Selects a form field widget by its AnnotationBox id. */
   onSelectFormField?: (annotationId: string) => void;
@@ -129,11 +132,23 @@ interface PageViewProps {
     top: number,
     widthPt: number,
   ) => void;
+  /** A right-click anywhere on the page, with its point in page space. */
+  onPageContextMenu?: (
+    pageIndex: number,
+    pageX: number,
+    pageY: number,
+    event: ContextMenuEvent,
+  ) => void;
   /** Fires when an image's drag OR resize completes. */
   onTransformImage?: (
     pageIndex: number,
     imageId: string,
     next: { x: number; y: number; width: number; height: number },
+  ) => void;
+  /** Unlocks one locked run or image from its on-page badge. */
+  onUnlock?: (
+    pageIndex: number,
+    target: { runId: string } | { imageId: string },
   ) => void;
 }
 
@@ -184,7 +199,9 @@ export const PageView = memo(function PageView({
   onResizeRun,
   onPageClick,
   onDrawTextBox,
+  onPageContextMenu,
   onTransformImage,
+  onUnlock,
   onFirstVisible,
   onFirstRendered,
   onFirstPainted,
@@ -447,8 +464,18 @@ export const PageView = memo(function PageView({
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
+  // CSS pixels (origin upper-left) to PDF page space (origin lower-left, points).
   function toPdf(cssX: number, cssY: number) {
     return transform.invert(cssX / cssScale, page.height - cssY / cssScale);
+  }
+
+  function toPagePoint(e: {
+    currentTarget: Element;
+    clientX: number;
+    clientY: number;
+  }) {
+    const at = cssPoint(e);
+    return toPdf(at.x, at.y);
   }
 
   return (
@@ -498,9 +525,13 @@ export const PageView = memo(function PageView({
           return;
         }
         if (!onPageClick) return;
-        const at = cssPoint(e);
-        const p = toPdf(at.x, at.y);
+        const p = toPagePoint(e);
         onPageClick(page.pageIndex, p.x, p.y);
+      }}
+      onContextMenu={(e) => {
+        if (!onPageContextMenu) return;
+        const p = toPagePoint(e);
+        onPageContextMenu(page.pageIndex, p.x, p.y, e);
       }}
     >
       {textBoxDraft && (
@@ -616,28 +647,42 @@ export const PageView = memo(function PageView({
             onMove={(dx, dy) => onMoveShape?.(page.pageIndex, shape.id, dx, dy)}
           />
         ))}
+        {/* A locked image's zone follows its own image, under tables, text and
+            any later image, so whatever is drawn over it still takes clicks. */}
         {page.images.map((image) => (
-          <ImageHandle
-            key={image.id}
-            image={image}
-            pageHeight={page.height}
-            transform={transform}
-            scale={cssScale}
-            selected={selectedImageIds.includes(image.id)}
-            fixed={reviewing}
-            onSelect={() => onSelectImage(image.id)}
-            passesClicks={placing}
-            onTransformCommit={(next) =>
-              onTransformImage?.(page.pageIndex, image.id, next)
-            }
-            attention={attention.images.get(image.id) ?? null}
-            readPixels={() =>
-              readShownImagePixels(store, page.pageIndex, image.id)
-            }
-            onLift={() => liftImage(image.id)}
-            onSettle={settleImage}
-            pageRevision={paintedRevision}
-          />
+          <Fragment key={image.id}>
+            <ImageHandle
+              image={image}
+              pageHeight={page.height}
+              transform={transform}
+              scale={cssScale}
+              selected={selectedImageIds.includes(image.id)}
+              fixed={reviewing}
+              onSelect={(extend) => onSelectImage(image.id, extend)}
+              passesClicks={placing}
+              onTransformCommit={(next) =>
+                onTransformImage?.(page.pageIndex, image.id, next)
+              }
+              attention={attention.images.get(image.id) ?? null}
+              readPixels={() =>
+                readShownImagePixels(store, page.pageIndex, image.id)
+              }
+              onLift={() => liftImage(image.id)}
+              onSettle={settleImage}
+              pageRevision={paintedRevision}
+            />
+            {onUnlock && !reviewing && image.locked && (
+              <LockBadge
+                rect={image.bounds}
+                pageHeight={page.height}
+                transform={transform}
+                scale={cssScale}
+                onUnlock={() => onUnlock(page.pageIndex, { imageId: image.id })}
+                testId={`pdf-editor-unlock-${image.id}`}
+                underContent
+              />
+            )}
+          </Fragment>
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
             cells are edited through their own run. */}
@@ -715,6 +760,21 @@ export const PageView = memo(function PageView({
               style={besideRun(run, transform, page.height, cssScale)}
             />
           ))}
+        {onUnlock &&
+          !reviewing &&
+          page.runs
+            .filter((run) => run.locked)
+            .map((run) => (
+              <LockBadge
+                key={`lock-${run.id}`}
+                rect={run.bounds}
+                pageHeight={page.height}
+                transform={transform}
+                scale={cssScale}
+                onUnlock={() => onUnlock(page.pageIndex, { runId: run.id })}
+                testId={`pdf-editor-unlock-${run.id}`}
+              />
+            ))}
         {showRulers && (
           <PageGuides
             pageIndex={page.pageIndex}

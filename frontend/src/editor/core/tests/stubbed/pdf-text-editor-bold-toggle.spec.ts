@@ -2,7 +2,10 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import path from "path";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 
 // The font list names each family once; the Bold and Italic toggles move text
 // between the faces that family really has, and never make one up.
@@ -62,46 +65,35 @@ async function serveFonts(page: Page) {
   });
 }
 
-const FORMAT_CONTROLS = [
-  "pdf-editor-font-family",
-  "pdf-editor-font-weight",
+/** On the selection bar itself. */
+const BAR_CONTROLS = [
+  "pdf-editor-font-menu",
   "pdf-editor-font-size",
-  "pdf-editor-colour",
+  "pdf-editor-colour-menu",
   "pdf-editor-bold",
   "pdf-editor-italic",
   "pdf-editor-change-case",
 ];
+/** In the font menu the bar opens. */
+const FONT_MENU_CONTROLS = ["pdf-editor-font-family", "pdf-editor-font-weight"];
 
-/** The formatting controls a user cannot see: past the toolbar's edge, or missing from the inspector that takes them when it folds. */
+/** The formatting controls a user cannot see: off the window's edge, or missing from the font menu. */
 async function unreachableControls(page: Page): Promise<string[]> {
-  const section = page.getByTestId("pdf-editor-format-section");
-  if ((await section.count()) > 0) {
-    const missing: string[] = [];
-    for (const id of FORMAT_CONTROLS) {
-      const control = section.getByTestId(id);
-      if ((await control.count()) === 0) {
-        missing.push(id);
-        continue;
-      }
-      const shown = await control
-        .scrollIntoViewIfNeeded({ timeout: 1_000 })
-        .then(() => control.isVisible())
-        .catch(() => false);
-      if (!shown) missing.push(id);
-    }
-    return missing;
-  }
-  return page.evaluate((ids) => {
-    const band = document
-      .querySelector(".pdf-editor-topbar__band")!
-      .getBoundingClientRect();
-    return ids.filter((id) => {
-      const control = document.querySelector(`[data-testid="${id}"]`);
-      if (!control) return true;
-      const box = control.getBoundingClientRect();
-      return box.left < band.left - 0.5 || box.right > band.right + 0.5;
-    });
-  }, FORMAT_CONTROLS);
+  const missing = await page.evaluate(
+    (ids) =>
+      ids.filter((id) => {
+        const control = document.querySelector(`[data-testid="${id}"]`);
+        if (!control) return true;
+        const box = control.getBoundingClientRect();
+        return box.width === 0 || box.left < 0 || box.right > window.innerWidth;
+      }),
+    BAR_CONTROLS,
+  );
+  if (!(await page.getByTestId("pdf-editor-font-family").isVisible()))
+    await page.getByTestId("pdf-editor-font-menu").click();
+  for (const id of FONT_MENU_CONTROLS)
+    if (!(await page.getByTestId(id).isVisible())) missing.push(id);
+  return missing;
 }
 
 async function openEditor(page: Page, file: string) {
@@ -152,6 +144,7 @@ function runBox(page: Page, id: string) {
 /** Put the run in the served family, whose extra weights bring up the weight menu. */
 async function pickServerFamily(page: Page, id: string) {
   await runBox(page, id).click();
+  await openFormatMenu(page, "font");
   await page.getByTestId("pdf-editor-font-family").click();
   await page
     .getByRole("option", { name: SERVER_FAMILY.family, exact: true })
@@ -176,6 +169,7 @@ test.describe("PDF text editor - Bold toggle", () => {
         .locator("xpath=preceding-sibling::*[1]"),
     ).toHaveAttribute("data-testid", "pdf-editor-bold");
 
+    await openFormatMenu(page, "font");
     await page.getByTestId("pdf-editor-font-family").click();
     await expect(
       page.getByRole("option", { name: "Helvetica", exact: true }),
@@ -228,38 +222,34 @@ test.describe("PDF text editor - Bold toggle", () => {
     );
   });
 
-  test("Bold draws a bold for a font that has no bold face, and takes it off again", async ({
+  test("Bold is off with a reason for a font that has no bold face", async ({
     page,
   }) => {
     await openEditor(page, COLOURED_PDF);
-    const line = await runId(page, "הטלפון");
-    const font = await fontIdOf(page, line);
-    await runBox(page, line).click();
+    await runBox(page, await runId(page, "הטלפון")).click();
 
     const bold = page.getByTestId("pdf-editor-bold");
-    await expect(bold).toBeEnabled();
-    await bold.click();
-    await expect(bold).toHaveAttribute("aria-pressed", "true");
-    expect(await fontIdOf(page, line)).toBe(font);
-
-    await bold.click();
-    await expect(bold).toHaveAttribute("aria-pressed", "false");
-    expect(await fontIdOf(page, line)).toBe(font);
+    await expect(bold).toBeDisabled();
+    await bold.hover();
+    await expect(page.getByRole("tooltip")).toContainText(
+      "No bold version of this font",
+    );
   });
 
-  test("Bold onto a subset that lacks some letters draws the whole line in one lookalike bold", async ({
+  test("Bold onto a subset that lacks some letters draws them in the closest match and says so", async ({
     page,
   }) => {
     await openEditor(page, COLOURED_PDF);
     const line = await runId(page, "Total due today");
+    const before = await fontIdOf(page, line);
     await runBox(page, line).click();
 
     await page.getByTestId("pdf-editor-bold").click();
 
-    await expect.poll(() => fontIdOf(page, line)).toMatch(/Helvetica-Bold$/);
     await expect(
       page.getByText(/drawn in the closest matching font/),
-    ).toHaveCount(0);
+    ).toBeVisible();
+    await expect.poll(() => fontIdOf(page, line)).not.toBe(before);
     expect((await runs(page)).find((r) => r.id === line)?.text).toBe(
       "Total due today  by card",
     );
@@ -305,48 +295,54 @@ function fillOf(page: Page, id: string): Promise<string | undefined> {
   }, id);
 }
 
-/** Narrow the window until the formatting controls fit inline with `slack` pixels to spare. */
-async function fitInlineWithSlack(page: Page, slack: number) {
-  const spare = await page.evaluate(() => {
-    const band = document.querySelector(".pdf-editor-topbar__band")!;
-    const last = document.querySelector(
-      '[data-testid="pdf-editor-line-spacing"]',
-    )!;
-    return Math.floor(
-      band.getBoundingClientRect().right - last.getBoundingClientRect().right,
-    );
-  });
-  const size = page.viewportSize()!;
-  await page.setViewportSize({
-    width: size.width - spare + slack,
-    height: size.height,
-  });
-}
-
 test.describe("PDF text editor - formatting popovers stay open", () => {
-  test("the colour picker stays open when opening it widens the field past the toolbar's edge", async ({
+  test("a pick in the colour menu's picker recolours the run", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 2200, height: 1000 });
     await openEditor(page, TAGGED_PDF);
     const body = await runId(page, "Revenue grew");
     await runBox(page, body).click();
-    await expect(page.getByTestId("pdf-editor-colour")).toBeVisible();
-    // Narrower than the open colour field needs, wider than the closed one.
-    await fitInlineWithSlack(page, 12);
-    await expect(page.getByTestId("pdf-editor-format-section")).toHaveCount(0);
-    await expect(page.getByTestId("pdf-editor-change-case")).toBeInViewport({
-      ratio: 1,
-    });
     const before = await fillOf(page, body);
 
-    await page.getByTestId("pdf-editor-colour").click();
-    const saturation = page.locator(".mantine-ColorInput-saturation").first();
+    await openFormatMenu(page, "colour");
+    const saturation = page.locator(".mantine-ColorPicker-saturation").first();
     await expect(saturation).toBeVisible();
     const box = (await saturation.boundingBox())!;
     await saturation.click({ position: { x: box.width - 4, y: 4 } });
 
     await expect.poll(() => fillOf(page, body)).not.toBe(before);
+  });
+
+  // Mantine can report a fast click's end before the frame that moves the
+  // handle, so a press and release in the same instant must still apply the
+  // picked colour rather than the one from before the click.
+  test("an instant click in the picker applies the picked colour", async ({
+    page,
+  }) => {
+    await openEditor(page, TAGGED_PDF);
+    const body = await runId(page, "Revenue grew");
+    await runBox(page, body).click();
+    const before = await fillOf(page, body);
+
+    await openFormatMenu(page, "colour");
+    const saturation = page.locator(".mantine-ColorPicker-saturation").first();
+    await expect(saturation).toBeVisible();
+    await saturation.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const at = {
+        bubbles: true,
+        cancelable: true,
+        clientX: r.right - 4,
+        clientY: r.top + 4,
+      };
+      el.dispatchEvent(new MouseEvent("mousedown", at));
+      document.dispatchEvent(new MouseEvent("mouseup", at));
+    });
+
+    await expect.poll(() => fillOf(page, body)).not.toBe(before);
+    await expect(page.getByTestId("pdf-editor-colour")).not.toHaveValue(
+      "#000000",
+    );
   });
 
   for (const width of [1920, 1280]) {
@@ -359,14 +355,8 @@ test.describe("PDF text editor - formatting popovers stay open", () => {
       const body = await runId(page, "Revenue grew");
       await pickServerFamily(page, body);
       await page.setViewportSize({ width, height: 1000 });
-      const bold = page.getByTestId("pdf-editor-bold");
-      const openFormatting = () =>
-        expect(async () => {
-          await bold.scrollIntoViewIfNeeded({ timeout: 2_000 });
-          await expect(bold).toBeVisible({ timeout: 2_000 });
-        }).toPass();
 
-      await openFormatting();
+      await openFormatMenu(page, "font");
       await page.getByTestId("pdf-editor-font-weight").click();
       await expect(
         page.getByRole("option", { name: /Semibold/ }),
@@ -374,7 +364,6 @@ test.describe("PDF text editor - formatting popovers stay open", () => {
       await page.getByRole("option", { name: /Semibold/ }).click();
       await expect.poll(() => fontIdOf(page, body)).toMatch(/Semibold/);
 
-      await openFormatting();
       await page.getByTestId("pdf-editor-change-case").click();
       await expect(
         page.getByTestId("pdf-editor-change-case-upper"),
@@ -384,8 +373,7 @@ test.describe("PDF text editor - formatting popovers stay open", () => {
         .poll(async () => (await runs(page)).find((r) => r.id === body)?.text)
         .toMatch(/^REVENUE GREW/);
 
-      await openFormatting();
-      await page.getByTestId("pdf-editor-colour-advanced").click();
+      await openFormatMenu(page, "colour");
       await expect(page.getByTestId("pdf-editor-outline-width")).toBeVisible();
     });
   }

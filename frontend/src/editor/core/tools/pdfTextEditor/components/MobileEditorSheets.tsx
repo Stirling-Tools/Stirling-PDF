@@ -20,7 +20,7 @@ const SHEET_STYLES = {
 } as const;
 
 export const MobileEditorSheets = memo(function MobileEditorSheets(
-  props: Omit<SidebarProps, "initialTab">,
+  props: SidebarProps,
 ) {
   const { t } = useTranslation();
   const { store, state, selection } = props;
@@ -70,10 +70,7 @@ export const MobileEditorSheets = memo(function MobileEditorSheets(
         styles={SHEET_STYLES}
         data-testid="pdf-editor-mobile-details-sheet"
       >
-        <EditorSidebar
-          {...props}
-          initialTab={hasSelection ? "selected" : "document"}
-        />
+        <EditorSidebar {...props} />
       </Drawer>
     </>
   );

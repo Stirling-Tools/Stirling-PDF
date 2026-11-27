@@ -81,7 +81,6 @@ test.describe("PDF accessibility review", () => {
     await openFixture(page);
 
     // The editor itself offers no accessibility controls.
-    await page.getByTestId("pdf-editor-tab-document").click();
     await expect(
       page.getByTestId("pdf-editor-document-accessibility"),
     ).toHaveCount(0);

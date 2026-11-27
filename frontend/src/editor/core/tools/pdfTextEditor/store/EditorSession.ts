@@ -1,6 +1,6 @@
-import type { ToolId } from "@editor/types/toolId";
 import { useSyncExternalStore } from "react";
 import type { DocumentChange } from "@editor/tools/pdfTextEditor/util/documentChanges";
+import type { PagePoint } from "@editor/tools/pdfTextEditor/store/contextMenu";
 
 export interface EditorSession {
   fileName: string | null;
@@ -11,12 +11,16 @@ export interface EditorSession {
    */
   autosave: () => void;
   download: () => void;
-  pickImage: () => void;
+  /** Picks an image to insert: centred on `at` when given, else on the page in view. */
+  pickImage: (at?: PagePoint) => void;
   /** Brings a page on screen, mounted or not. */
   revealPage: (pageIndex: number) => void;
   changeDocument: (change: DocumentChange) => Promise<void>;
-  openTool: (tool: ToolId) => void;
   pageSize: (pageIndex: number) => { width: number; height: number } | null;
+  /** Merges the selected runs into one paragraph. */
+  mergeSelection: () => void;
+  /** Splits the one selected paragraph back into a run per line. */
+  ungroupSelection: () => void;
 }
 
 let current: EditorSession | null = null;

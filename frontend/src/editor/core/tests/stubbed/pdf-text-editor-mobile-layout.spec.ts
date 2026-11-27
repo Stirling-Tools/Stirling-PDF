@@ -453,12 +453,35 @@ test.describe("PDF text editor - resizing", () => {
       window.getSelection()?.addRange(range);
       document.execCommand("insertText", false, "KEPT");
     });
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    // The unsaved state itself: desktop shows it on Save, phones as a dot.
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (
+              window as unknown as {
+                __editor_store: { state: { dirty: boolean } };
+              }
+            ).__editor_store.state.dirty,
+        ),
+      )
+      .toBe(true);
 
     for (const width of [900, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible();
-      await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              (
+                window as unknown as {
+                  __editor_store: { state: { dirty: boolean } };
+                }
+              ).__editor_store.state.dirty,
+          ),
+        )
+        .toBe(true);
       // The panel remounts in the other layout; it must not take its own
       // file for a new one and offer to discard the edits.
       await expect(page.getByRole("dialog")).toHaveCount(0);

@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Selecting text set in an embedded or subset face left the font picker showing
@@ -57,6 +60,7 @@ test.describe("PDF text editor - document font recognition", () => {
     await page.locator(`[data-testid="pdf-editor-run-${run!.id}"]`).click();
     await page.waitForTimeout(400);
 
+    await openFormatMenu(page, "font");
     const picker = page.getByTestId("pdf-editor-font-family");
     await expect(picker).toBeVisible();
     await expect(
@@ -80,6 +84,7 @@ test.describe("PDF text editor - document font recognition", () => {
 
     // The recognised face must be listed - that is the recognition - and the
     // entry must be inert, since we hold no bytes to actually re-emit with.
+    await openFormatMenu(page, "font");
     await page.getByTestId("pdf-editor-font-family").click();
     await page.waitForTimeout(400);
     const entry = page
@@ -118,7 +123,7 @@ test.describe("PDF text editor - document font recognition", () => {
   });
 
   // Without the original installed, a character the subset lacks is drawn in the closest available face.
-  test("draws a character the subset lacks in the closest face, and names it", async ({
+  test("draws a character the subset lacks in a lookalike face", async ({
     page,
   }) => {
     await openEditor(page, SUBSET_PDF);
@@ -127,15 +132,7 @@ test.describe("PDF text editor - document font recognition", () => {
     expect(run).toBeTruthy();
     await page.locator(`[data-testid="pdf-editor-run-${run!.id}"]`).click();
 
-    const note = page.getByText(/closest match available/);
-    await expect(
-      note,
-      "no lookalike was found for the embedded subset",
-    ).toBeVisible({ timeout: 30_000 });
-    const face = /drawn in (.+), the closest match/.exec(
-      (await note.textContent()) ?? "",
-    )?.[1];
-    expect(face, "the note did not name the face").toBeTruthy();
+    const before = await pageFontNames(page);
 
     await page.keyboard.press("ControlOrMeta+ArrowRight");
     await page.keyboard.type(" Q", { delay: 60 });
@@ -160,56 +157,67 @@ test.describe("PDF text editor - document font recognition", () => {
       )
       .toContain("Q");
 
-    const drawnIn = await page.evaluate(async () => {
-      const w = window as unknown as {
-        __editor_store: {
-          document: {
-            docPtr: number;
-            module: {
-              FPDF_GetPageCount: (doc: number) => number;
-              FPDF_LoadPage: (doc: number, index: number) => number;
-              FPDF_ClosePage: (page: number) => void;
-              FPDFPage_CountObjects: (page: number) => number;
-              FPDFPage_GetObject: (page: number, index: number) => number;
-              FPDFPageObj_GetType: (obj: number) => number;
-              FPDFTextObj_GetFont: (obj: number) => number;
-              FPDFFont_GetBaseFontName: (
-                font: number,
-                buffer: number,
-                length: number,
-              ) => number;
-              pdfium: {
-                wasmExports: {
-                  malloc: (size: number) => number;
-                  free: (at: number) => void;
-                };
-                UTF8ToString: (at: number) => string;
-              };
-            };
-            page: (index: number) => { pagePtr: number };
-          };
-        };
-      };
-      const doc = w.__editor_store.document;
-      const m = doc.module;
-      const pagePtr = doc.page(0).pagePtr;
-      const names = new Set<string>();
-      for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++) {
-        const obj = m.FPDFPage_GetObject(pagePtr, i);
-        if (m.FPDFPageObj_GetType(obj) !== 1) continue;
-        const font = m.FPDFTextObj_GetFont(obj);
-        const length = m.FPDFFont_GetBaseFontName(font, 0, 0);
-        const buffer = m.pdfium.wasmExports.malloc(length);
-        m.FPDFFont_GetBaseFontName(font, buffer, length);
-        names.add(m.pdfium.UTF8ToString(buffer));
-        m.pdfium.wasmExports.free(buffer);
-      }
-      return [...names];
-    });
-    const squashed = (name: string) => name.replace(/[^a-z0-9]/gi, "");
+    // A new face joined the page for the typed character, and it is a
+    // lookalike rather than the generic fallback.
+    const added = (await pageFontNames(page)).filter(
+      (n) => !before.includes(n),
+    );
+    expect(added, "the typed character added no font").not.toHaveLength(0);
     expect(
-      drawnIn.map(squashed),
-      `the typed character was not drawn in ${face}`,
-    ).toContain(squashed(face!));
+      added.filter((n) => !/helvetica/i.test(n)),
+      `the typed character fell back to ${added.join(", ")}`,
+    ).not.toHaveLength(0);
   });
 });
+
+/** Base font names of the text objects on the first page, as PDFium reads them. */
+function pageFontNames(
+  page: import("@playwright/test").Page,
+): Promise<string[]> {
+  return page.evaluate(async () => {
+    const w = window as unknown as {
+      __editor_store: {
+        document: {
+          docPtr: number;
+          module: {
+            FPDF_GetPageCount: (doc: number) => number;
+            FPDF_LoadPage: (doc: number, index: number) => number;
+            FPDF_ClosePage: (page: number) => void;
+            FPDFPage_CountObjects: (page: number) => number;
+            FPDFPage_GetObject: (page: number, index: number) => number;
+            FPDFPageObj_GetType: (obj: number) => number;
+            FPDFTextObj_GetFont: (obj: number) => number;
+            FPDFFont_GetBaseFontName: (
+              font: number,
+              buffer: number,
+              length: number,
+            ) => number;
+            pdfium: {
+              wasmExports: {
+                malloc: (size: number) => number;
+                free: (at: number) => void;
+              };
+              UTF8ToString: (at: number) => string;
+            };
+          };
+          page: (index: number) => { pagePtr: number };
+        };
+      };
+    };
+    const doc = w.__editor_store.document;
+    const m = doc.module;
+    const pagePtr = doc.page(0).pagePtr;
+    const names = new Set<string>();
+    for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++) {
+      const obj = m.FPDFPage_GetObject(pagePtr, i);
+      if (m.FPDFPageObj_GetType(obj) !== 1) continue;
+      const font = m.FPDFTextObj_GetFont(obj);
+      const length = m.FPDFFont_GetBaseFontName(font, 0, 0);
+      const buffer = m.pdfium.wasmExports.malloc(length);
+      m.FPDFFont_GetBaseFontName(font, buffer, length);
+      names.add(m.pdfium.UTF8ToString(buffer));
+      m.pdfium.wasmExports.free(buffer);
+    }
+    return [...names];
+  });
+}

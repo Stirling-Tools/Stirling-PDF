@@ -56,7 +56,7 @@
 }
 
 .sui-panelhdr__label {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: 0.9rem;
   font-weight: 600;
@@ -64,6 +64,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--mantine-color-text);
+}
+
+/* The active tool's own controls, just after its title. */
+.sui-panelhdr__actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sui-panelhdr__actions:empty {
+  display: none;
 }
 
 /* Dark mode: let the header blend into the rail — just a thin border, no fill —
@@ -95,4 +106,26 @@
 .sui-panelhdr__bar:focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
+}
+
+/* The tool panel's own header: a slim title row with a hairline under it, so
+   the tool's content starts as high as it can. Scoped by its own class, as the
+   AI chat and Policies headers share the base names. */
+.sui-panelhdr.sui-panelhdr--slim {
+  padding: 0.5rem 0.75rem 0.5rem 1rem;
+  border-bottom: 1px solid
+    var(--c-border-subtle, var(--mantine-color-default-border));
+}
+
+.sui-panelhdr--slim .sui-panelhdr__bar,
+[data-mantine-color-scheme="dark"] .sui-panelhdr--slim .sui-panelhdr__bar {
+  padding: 0;
+  border: none;
+  border-radius: var(--mantine-radius-sm);
+  background: none;
+}
+
+.sui-panelhdr--slim .sui-panelhdr__icon {
+  width: 1.5rem;
+  height: 1.5rem;
 }

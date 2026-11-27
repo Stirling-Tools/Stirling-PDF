@@ -1,6 +1,14 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type {
+  EditorStore,
+  EditorViewState,
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
+import {
+  scanBlockMisaligned,
+  scanBlockOffInk,
+  scanTypingDropped,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontNote";
 import { useFontCompletionsGeneration } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
@@ -26,6 +34,8 @@ export function useSelectedFontNote(
   return useMemo(() => {
     const note = selectedFontNote(state.pages, selection.runIds);
     if (!note) return null;
+    // Only what will go wrong: a note on every selection that is fine
+    // crowds out the controls it sits above.
     switch (note.kind) {
       case "scanned":
         if (scanNote === "misaligned")
@@ -43,39 +53,15 @@ export function useSelectedFontNote(
               "pdfTextEditor.inspector.scannedTextNoFont",
               "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works.",
             )
-          : t(
-              "pdfTextEditor.inspector.scannedText",
-              "Scanned text · changed words are covered and redrawn in a matching font.",
-            );
-      case "embeddedUnknown":
-        return t(
-          "pdfTextEditor.inspector.fontEmbedded",
-          "Embedded font · a character it lacks falls back to Helvetica.",
-        );
-      case "deviceUnknown":
-        return t(
-          "pdfTextEditor.inspector.fontUnknownCoverage",
-          "{{name}} · a character it lacks falls back to {{fallback}}.",
-          { name: note.name, fallback: note.fallback },
-        );
-      case "completed":
-        return note.source === "original"
-          ? t(
-              "pdfTextEditor.inspector.fontCompletedOriginal",
-              "Embedded font · characters it lacks are drawn in {{name}}, the same font.",
-              { name: note.name },
-            )
-          : t(
-              "pdfTextEditor.inspector.fontCompletedClosest",
-              "Embedded font · characters it lacks are drawn in {{name}}, the closest match available.",
-              { name: note.name },
-            );
+          : null;
       case "gap":
         return t(
           "pdfTextEditor.inspector.fontGap",
           "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}.",
           { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
         );
+      default:
+        return null;
     }
   }, [
     state.pages,
@@ -85,4 +71,38 @@ export function useSelectedFontNote(
     completions,
     t,
   ]);
+}
+
+/** Why typing into the selected text will not come out as expected, or null when it will. */
+export function useSelectionNote(
+  store: EditorStore,
+  state: EditorViewState,
+  selection: SelectionState,
+): string | null {
+  return useSelectedFontNote(
+    state,
+    selection,
+    selectedScanNote(store, state, selection),
+  );
+}
+
+function selectedScanNote(
+  store: EditorStore,
+  state: EditorViewState,
+  selection: SelectionState,
+): ScanNote {
+  const doc = store.document;
+  if (!doc) return null;
+  const picked = new Set(selection.runIds);
+  const runs = state.pages.flatMap((page) =>
+    page.runs.flatMap((r) => {
+      if (!picked.has(r.id)) return [];
+      const run = doc.page(page.pageIndex).findRun(r.id);
+      return run ? [run] : [];
+    }),
+  );
+  if (runs.some((run) => scanBlockMisaligned(doc, run))) return "misaligned";
+  if (runs.some((run) => scanBlockOffInk(doc, run))) return "offInk";
+  if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
+  return null;
 }

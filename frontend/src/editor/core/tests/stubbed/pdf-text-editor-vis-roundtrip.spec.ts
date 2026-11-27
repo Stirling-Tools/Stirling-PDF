@@ -2,6 +2,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   openInTextEditor,
   scrollToEditorPage,
+  openFormatMenu,
 } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
@@ -624,7 +625,7 @@ test.describe("PDF text editor - save round-trip fidelity (pixels)", () => {
 
     await page.locator('[data-testid^="pdf-editor-run-p0-"]').first().click();
     await page.waitForTimeout(300);
-    await page.getByTestId("pdf-editor-colour-advanced").click();
+    await openFormatMenu(page, "colour");
     const width = page.getByTestId("pdf-editor-outline-width");
     await expect(width).toBeVisible();
     await width.fill("1.5");

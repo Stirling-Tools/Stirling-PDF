@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import { Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import {
-  Field,
-  PointsInput,
   lengthUnitFor,
+  PointsInput,
   Section,
   SectionLabel,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
@@ -17,9 +17,9 @@ import {
 import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
-import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
 import { ScanFontMatchRow } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import { imageTransforms } from "@editor/tools/pdfTextEditor/components/toolbar/ImageGroup";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 
@@ -27,21 +27,24 @@ interface Props {
   controller: InspectorController;
   selection: SelectionState;
   geometry: SelectionGeometry;
-  /** Font status for the selected runs, e.g. "Embedded · full alphabet". */
+  /** Why typing into the selected text will not come out as expected, if it won't. */
   fontNote: string | null;
   scanFontMatch?: ScanFontMatch | null;
-  showFormatting?: boolean;
   canGroup: boolean;
   canUngroup: boolean;
   onGroup: () => void;
   onUngroup: () => void;
+  /** False where the floating selection bar carries the image tools instead. */
+  showImageTools?: boolean;
 }
 
 /**
  * Properties of whatever is selected right now.
  *
- * Character formatting moves here only when the canvas toolbar is too narrow
- * for it; the arrange/lock/delete verbs stay in the toolbar.
+ * Deliberately NOT the whole of the selection's UI: character formatting and
+ * the arrange/lock/delete verbs sit in the canvas toolbar, where document
+ * editors have always put them. What lands here is what needs a label and a
+ * number - geometry and paragraph structure.
  */
 export function SelectionInspector({
   controller,
@@ -49,32 +52,28 @@ export function SelectionInspector({
   geometry,
   fontNote,
   scanFontMatch,
-  showFormatting = false,
   canGroup,
   canUngroup,
   onGroup,
   onUngroup,
+  showImageTools = true,
 }: Props) {
   const runCount = selection.runIds.length;
   const imageCount = selection.imageIds.length;
-  const shapeCount = selection.shapeIds.length;
   const { hasRunSelection, hasImageSelection } = controller;
+  const note = hasRunSelection ? fontNote : null;
+  const showScanFont = !!scanFontMatch?.canShow;
 
   return (
     <Stack gap={0} data-testid="pdf-editor-selection-inspector">
-      <SelectionHeader
-        runCount={runCount}
-        imageCount={imageCount}
-        shapeCount={shapeCount}
-        formField={selection.formFieldId !== null}
-        fontNote={hasRunSelection ? fontNote : null}
-      />
-      {scanFontMatch?.canShow && <ScanFontMatchRow match={scanFontMatch} />}
-      {hasRunSelection && showFormatting && (
-        <TextFormatSection controller={controller} />
-      )}
+      {note && <FontWarning note={note} />}
+      {showScanFont && <ScanFontMatchRow match={scanFontMatch} />}
       {runCount + imageCount > 0 && (
-        <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+        <GeometrySection
+          geometry={geometry}
+          isImage={!hasRunSelection}
+          first={!note && !showScanFont}
+        />
       )}
       {hasRunSelection && (
         <ParagraphSection
@@ -84,90 +83,25 @@ export function SelectionInspector({
           onUngroup={onUngroup}
         />
       )}
-      {hasImageSelection && <ImageSection controller={controller} />}
+      {hasImageSelection && showImageTools && (
+        <ImageSection controller={controller} />
+      )}
     </Stack>
   );
 }
 
-function TextFormatSection({
-  controller,
-}: {
-  controller: InspectorController;
-}) {
-  const { t } = useTranslation();
+/** Shown only when typing into the selection will not come out as expected. */
+function FontWarning({ note }: { note: string }) {
   return (
-    <Section testId="pdf-editor-format-section">
-      <SectionLabel>{t("pdfTextEditor.inspector.text", "Text")}</SectionLabel>
-      <Group gap="xs" wrap="wrap">
-        <FormatGroup controller={controller} />
+    <Section first testId="pdf-editor-inspector-font-note">
+      <Group gap={6} wrap="nowrap" align="flex-start">
+        <Icon
+          name="circle-alert"
+          size={16}
+          style={{ flexShrink: 0, marginTop: 1, color: "var(--c-warning)" }}
+        />
+        <Text size="xs">{note}</Text>
       </Group>
-    </Section>
-  );
-}
-
-/** Names what is selected, and how its font will treat new characters. */
-function SelectionHeader({
-  runCount,
-  imageCount,
-  shapeCount,
-  formField,
-  fontNote,
-}: {
-  runCount: number;
-  imageCount: number;
-  shapeCount: number;
-  /** A form field is only ever selected alone. */
-  formField: boolean;
-  fontNote: string | null;
-}) {
-  const { t } = useTranslation();
-  const kinds = [runCount, imageCount, shapeCount].filter((n) => n > 0).length;
-  let title: string;
-  if (formField) {
-    title = t("pdfTextEditor.inspector.formField", "Form field");
-  } else if (kinds > 1) {
-    title = t("pdfTextEditor.inspector.mixed", "{{count}} objects", {
-      count: runCount + imageCount + shapeCount,
-    });
-  } else if (shapeCount > 0) {
-    title =
-      shapeCount === 1
-        ? t("pdfTextEditor.inspector.oneShape", "Shape")
-        : t("pdfTextEditor.inspector.manyShapes", "{{count}} shapes", {
-            count: shapeCount,
-          });
-  } else if (runCount > 0) {
-    title =
-      runCount === 1
-        ? t("pdfTextEditor.inspector.oneText", "Text")
-        : t("pdfTextEditor.inspector.manyText", "Text · {{count}} boxes", {
-            count: runCount,
-          });
-  } else {
-    title =
-      imageCount === 1
-        ? t("pdfTextEditor.inspector.oneImage", "Image")
-        : t("pdfTextEditor.inspector.manyImages", "{{count}} images", {
-            count: imageCount,
-          });
-  }
-  return (
-    <Section tinted first>
-      {/* Doubles as the old sidebar's selection readout, moved from the very
-          bottom of the panel to the top where the user is already looking. */}
-      <Text size="sm" fw={600} data-testid="pdf-editor-selection-count">
-        {title}
-      </Text>
-      {fontNote && (
-        <Text
-          size="xs"
-          c="dimmed"
-          mt={4}
-          data-testid="pdf-editor-inspector-font-note"
-        >
-          {fontNote}
-        </Text>
-      )}
     </Section>
   );
 }
@@ -192,16 +126,17 @@ function ParagraphSection({
       </SectionLabel>
       <Group grow gap="xs" wrap="nowrap">
         <Tooltip
-          label={
+          position="top"
+          content={
             canGroup
               ? t("pdfTextEditor.sidebar.groupTooltip", {
                   defaultValue:
-                    "Join the selected text into one paragraph ({{shortcut}})",
+                    "Merge selected runs into one paragraph ({{shortcut}})",
                   shortcut: modShortcut("M"),
                 })
               : t(
                   "pdfTextEditor.sidebar.groupTooltipDisabled",
-                  "Select two or more pieces of text to join",
+                  "Select 2+ runs to merge",
                 )
           }
         >
@@ -214,19 +149,20 @@ function ParagraphSection({
             disabled={!canGroup}
             data-testid="pdf-editor-group"
           >
-            {t("pdfTextEditor.sidebar.group", "Join paragraph")}
+            {t("pdfTextEditor.sidebar.group", "Group")}
           </Button>
         </Tooltip>
         <Tooltip
-          label={
+          position="top"
+          content={
             canUngroup
               ? t(
                   "pdfTextEditor.sidebar.ungroupTooltip",
-                  "Split this paragraph into separate lines",
+                  "Split this paragraph into one run per line",
                 )
               : t(
                   "pdfTextEditor.sidebar.ungroupTooltipDisabled",
-                  "Select a paragraph of several lines to split",
+                  "Select a multi-line paragraph to ungroup",
                 )
           }
         >
@@ -239,7 +175,7 @@ function ParagraphSection({
             disabled={!canUngroup}
             data-testid="pdf-editor-ungroup"
           >
-            {t("pdfTextEditor.sidebar.ungroup", "Split into lines")}
+            {t("pdfTextEditor.sidebar.ungroup", "Ungroup")}
           </Button>
         </Tooltip>
       </Group>
@@ -247,17 +183,20 @@ function ParagraphSection({
   );
 }
 
+/** Position and size, in PDF points, for a single selected object. */
 function GeometrySection({
   geometry,
   isImage,
+  first,
 }: {
   geometry: SelectionGeometry;
   isImage: boolean;
+  first: boolean;
 }) {
   const { t } = useTranslation();
   if (!geometry.single) {
     return (
-      <Section>
+      <Section first={first}>
         <SectionLabel>
           {t("pdfTextEditor.inspector.geometry", "Position & size")}
         </SectionLabel>
@@ -270,82 +209,91 @@ function GeometrySection({
       </Section>
     );
   }
-  const { bounds, display, moveDisplayed, setWidth, setHeight } =
-    geometry.single;
-  const unit = lengthUnitFor(navigator.language);
-  const { left, top } = displayedTopLeft(display, bounds);
   return (
-    <Section testId="pdf-editor-geometry-section">
+    <Section testId="pdf-editor-geometry-section" first={first}>
       <SectionLabel>
         {t("pdfTextEditor.inspector.geometry", "Position & size")}
       </SectionLabel>
-      <Stack gap="xs">
-        <Group gap="xs" wrap="nowrap" align="flex-end">
-          <Field label={t("pdfTextEditor.inspector.x", "X")}>
-            <PointsInput
-              unit={unit}
-              value={left}
-              onCommit={(next) => moveDisplayed({ left: next })}
-              label={t("pdfTextEditor.inspector.x", "X")}
-              testId="pdf-editor-pos-x"
-            />
-          </Field>
-          <Field label={t("pdfTextEditor.inspector.y", "Y")}>
-            <PointsInput
-              unit={unit}
-              value={top}
-              onCommit={(next) => moveDisplayed({ top: next })}
-              label={t("pdfTextEditor.inspector.y", "Y")}
-              testId="pdf-editor-pos-y"
-            />
-          </Field>
-        </Group>
-        <Group gap="xs" wrap="nowrap" align="flex-end">
-          <Field
-            label={t("pdfTextEditor.inspector.width", "Width")}
-            hint={
-              isImage || !setWidth
-                ? undefined
-                : t(
-                    "pdfTextEditor.inspector.widthHint",
-                    "Text re-wraps to fit the width.",
-                  )
-            }
-          >
-            <PointsInput
-              unit={unit}
-              value={bounds.width}
-              onCommit={setWidth ?? (() => undefined)}
-              min={1}
-              disabled={!setWidth}
-              label={t("pdfTextEditor.inspector.width", "Width")}
-              testId="pdf-editor-size-w"
-            />
-          </Field>
-          <Field
-            label={t("pdfTextEditor.inspector.height", "Height")}
-            hint={
-              setHeight
-                ? undefined
-                : t(
-                    "pdfTextEditor.inspector.heightHint",
-                    "A text box's height follows its type size and line count.",
-                  )
-            }
-          >
-            <PointsInput
-              unit={unit}
-              value={bounds.height}
-              onCommit={setHeight ?? (() => undefined)}
-              min={1}
-              disabled={!setHeight}
-              label={t("pdfTextEditor.inspector.height", "Height")}
-              testId="pdf-editor-size-h"
-            />
-          </Field>
-        </Group>
-      </Stack>
+      <GeometryFields single={geometry.single} isImage={isImage} />
     </Section>
+  );
+}
+
+/** X and Y of the object's displayed top-left corner, width and height, in the reader's length unit. */
+export function GeometryFields({
+  single,
+  isImage,
+}: {
+  single: NonNullable<SelectionGeometry["single"]>;
+  isImage: boolean;
+}) {
+  const { t } = useTranslation();
+  const { bounds, display, moveDisplayed, setWidth, setHeight } = single;
+  const unit = lengthUnitFor(navigator.language);
+  const { left, top } = displayedTopLeft(display, bounds);
+  return (
+    <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+      <PointsInput
+        unit={unit}
+        value={left}
+        onCommit={(next) => moveDisplayed({ left: next })}
+        label={t("pdfTextEditor.inspector.x", "X")}
+        prefix={t("pdfTextEditor.inspector.x", "X")}
+        testId="pdf-editor-pos-x"
+      />
+      <PointsInput
+        unit={unit}
+        value={top}
+        onCommit={(next) => moveDisplayed({ top: next })}
+        label={t("pdfTextEditor.inspector.y", "Y")}
+        prefix={t("pdfTextEditor.inspector.y", "Y")}
+        testId="pdf-editor-pos-y"
+      />
+      <Tooltip
+        position="top"
+        content={t(
+          "pdfTextEditor.inspector.widthHint",
+          "Text re-wraps to fit the width.",
+        )}
+        disabled={isImage || !setWidth}
+        maxWidth={200}
+      >
+        <div>
+          <PointsInput
+            unit={unit}
+            value={bounds.width}
+            onCommit={setWidth ?? (() => undefined)}
+            min={1}
+            disabled={!setWidth}
+            label={t("pdfTextEditor.inspector.width", "Width")}
+            prefix={t("pdfTextEditor.inspector.widthShort", "W")}
+            testId="pdf-editor-size-w"
+          />
+        </div>
+      </Tooltip>
+      <Tooltip
+        position="top"
+        content={t(
+          "pdfTextEditor.inspector.heightHint",
+          "A text box's height follows its type size and line count.",
+        )}
+        disabled={!!setHeight}
+        maxWidth={200}
+      >
+        <div>
+          <PointsInput
+            unit={unit}
+            value={bounds.height}
+            onCommit={setHeight ?? (() => undefined)}
+            min={1}
+            disabled={!setHeight}
+            label={t("pdfTextEditor.inspector.height", "Height")}
+            prefix={t("pdfTextEditor.inspector.heightShort", "H")}
+            testId="pdf-editor-size-h"
+          />
+        </div>
+      </Tooltip>
+    </SimpleGrid>
   );
 }
 
@@ -358,42 +306,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
     onEditImageExternally,
     externalEditSupported,
   } = controller;
-  const transforms = useMemo(
-    () =>
-      [
-        {
-          mode: "rotate-ccw" as const,
-          testId: "pdf-editor-imgop-rotate-ccw",
-          icon: <Icon name="rotate-ccw" size={20} />,
-          label: t("pdfTextEditor.toolbar.rotateLeft", "Rotate 90° left"),
-        },
-        {
-          mode: "rotate-cw" as const,
-          testId: "pdf-editor-imgop-rotate-cw",
-          icon: <Icon name="rotate-cw" size={20} />,
-          label: t("pdfTextEditor.toolbar.rotateRight", "Rotate 90° right"),
-        },
-        {
-          mode: "flip-h" as const,
-          testId: "pdf-editor-imgop-flip-h",
-          icon: <Icon name="flip-horizontal-2" size={20} />,
-          label: t("pdfTextEditor.toolbar.flipHorizontal", "Flip horizontal"),
-        },
-        {
-          mode: "flip-v" as const,
-          testId: "pdf-editor-imgop-flip-v",
-          icon: (
-            <Icon
-              name="flip-horizontal-2"
-              size={20}
-              style={{ transform: "rotate(90deg)" }}
-            />
-          ),
-          label: t("pdfTextEditor.toolbar.flipVertical", "Flip vertical"),
-        },
-      ] as const,
-    [t],
-  );
+  const transforms = useMemo(() => imageTransforms(t), [t]);
 
   return (
     <Section testId="pdf-editor-imgop-menu">
@@ -401,7 +314,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
       <Stack gap="xs">
         <Group gap={4} wrap="nowrap">
           {transforms.map((tr) => (
-            <Tooltip key={tr.mode} label={tr.label}>
+            <Tooltip position="top" key={tr.mode} content={tr.label}>
               <Button
                 size="sm"
                 variant="secondary"

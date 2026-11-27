@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Every toolbar action walks the selection and dispatches one command PER RUN.
@@ -110,6 +113,7 @@ test.describe("PDF text editor - a restyle of many runs is one undo step", () =>
     const familyBefore = new Map(before.map((r) => [r.id, r.fontId]));
     const depthBefore = await undoDepth(page);
 
+    await openFormatMenu(page, "font");
     const picker = page.getByTestId("pdf-editor-font-family");
     await picker.click();
     await page.getByRole("option", { name: "Times", exact: true }).click();
@@ -190,6 +194,7 @@ test.describe("PDF text editor - a restyle of many runs is one undo step", () =>
     await selectAll(page);
     const depthBefore = await undoDepth(page);
 
+    await openFormatMenu(page, "colour");
     await page.getByTestId("pdf-editor-colour").fill("#c02020"); // theme-allow-color test input for the picker, not a UI colour
     await page.getByTestId("pdf-editor-colour").blur();
     await page.waitForTimeout(2000);

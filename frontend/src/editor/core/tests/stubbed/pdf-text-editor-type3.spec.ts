@@ -1,10 +1,18 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
+import type { Page } from "@playwright/test";
 
 // PDFium's generator cannot emit Type 3 glyph procedures, so an edited run
 // cannot keep its original face. It is NOT lost: the edit path substitutes a
 // standard font, so the characters survive.
+/** Blurs the edited run with a click below the text: the selection bar covers the page above it. */
+async function clickPageBelowText(page: Page): Promise<void> {
+  const pageZero = page.locator('[data-testid="pdf-editor-page-0"]');
+  const box = await pageZero.boundingBox();
+  await pageZero.click({ position: { x: 5, y: box!.height - 5 } });
+}
+
 test.describe("PDF text editor - Type 3 fonts", () => {
   test("editing a Type 3 run keeps the text, substituting a standard font", async ({
     page,
@@ -43,9 +51,7 @@ test.describe("PDF text editor - Type 3 fonts", () => {
     await target.click();
     await page.keyboard.press("End");
     await page.keyboard.type("Z");
-    await page
-      .locator('[data-testid="pdf-editor-page-0"]')
-      .click({ position: { x: 5, y: 5 } });
+    await clickPageBelowText(page);
     await page.waitForTimeout(600);
 
     const after = await page.evaluate(() => {
@@ -105,9 +111,7 @@ test.describe("PDF text editor - Type 3 fonts", () => {
     await page.keyboard.press("ControlOrMeta+A");
     await page.keyboard.press("Delete");
     await page.keyboard.type(NEXT, { delay: 10 });
-    await page
-      .locator('[data-testid="pdf-editor-page-0"]')
-      .click({ position: { x: 5, y: 5 } });
+    await clickPageBelowText(page);
     await page.waitForTimeout(1500);
 
     const after = await page.evaluate((id: string) => {

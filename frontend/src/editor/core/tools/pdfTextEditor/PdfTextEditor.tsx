@@ -52,6 +52,10 @@ import { useReviewConformanceClaimBridge } from "@editor/tools/pdfTextEditor/hoo
 import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
 import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
+import { ToolPanelFooter } from "@editor/components/tools/ToolPanelFooter";
+import { EditorHeaderHelp } from "@editor/tools/pdfTextEditor/components/EditorHeaderHelp";
+import "@editor/tools/pdfTextEditor/PdfTextEditor.css";
+import type { PagePoint } from "@editor/tools/pdfTextEditor/store/contextMenu";
 import {
   EditorSidebar,
   type SidebarProps,
@@ -75,6 +79,7 @@ import {
   centredImageRect,
   InsertImageCommand,
 } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
 import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
 import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
@@ -370,6 +375,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   // Which action the risk modal is currently gating.
   const pendingDownloadRef = useRef(false);
+  // Where the image being picked should land; set when the picker opens.
+  const imagePlacementRef = useRef<PagePoint | null>(null);
 
   const runSave = useCallback(
     async (download: boolean) => {
@@ -554,6 +561,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     async (file: File) => {
       const doc = store.document;
       if (!doc) return;
+      // Onto the point the picker was opened for, else the page in view. Read
+      // now: another pick may set a new point while this image decodes.
+      const at = imagePlacementRef.current;
+      imagePlacementRef.current = null;
       // Decode via an <img> element rather than createImageBitmap: the latter
       // lacks codec support in some environments.
       let decoded: { data: ImageData; width: number; height: number };
@@ -586,17 +597,37 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       // The document may have been reloaded while the image decoded; bail
       // rather than insert against geometry from the wrong document.
       if (store.document !== doc) return;
-      // Insert onto the page currently in view, read from fresh store state.
       const pages = store.getState().pages;
-      const visibleIndex = visiblePageIndex();
-      const page = pages.find((p) => p.pageIndex === visibleIndex) ?? pages[0];
+      const targetIndex = at?.pageIndex ?? visiblePageIndex();
+      const page = pages.find((p) => p.pageIndex === targetIndex) ?? pages[0];
       if (!page) return;
-      const rect = centredImageRect(
+      const sized = centredImageRect(
         page.display,
         decoded.width,
         decoded.height,
         INSERTED_IMAGE_RATIO,
       );
+      // Kept on the visible page, where the image shows upright: PDFium crops
+      // whatever hangs off it.
+      let rect = sized;
+      if (at) {
+        const view = DisplayTransform.fromData(page.display);
+        const clamp = (v: number, size: number, limit: number) =>
+          Math.min(
+            Math.max(v, size / 2),
+            Math.max(limit - size / 2, limit / 2),
+          );
+        const shown = view.apply(at.x, at.y);
+        const centre = view.invert(
+          clamp(shown.x, sized.width, page.display.displayWidth),
+          clamp(shown.y, sized.height, page.display.displayHeight),
+        );
+        rect = {
+          ...sized,
+          x: centre.x - sized.width / 2,
+          y: centre.y - sized.height / 2,
+        };
+      }
       const cmd = new InsertImageCommand({
         pageIndex: page.pageIndex,
         rgba: decoded.data.data,
@@ -765,7 +796,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       [store],
     ),
     onOpenFind: useCallback(() => {
-      if (!reviewing) store.setFindOpen(true);
+      if (reviewing) return;
+      // Already open: take the cursor back to the search box.
+      if (store.getState().findOpen)
+        document
+          .querySelector<HTMLInputElement>(
+            '[data-testid="pdf-editor-find-input"]',
+          )
+          ?.focus();
+      else store.setFindOpen(true);
     }, [store, reviewing]),
     onFindNext: reviewing ? noop : handleFindNext,
     onEscape: handleEscape,
@@ -789,11 +828,19 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     insertPastedText: reviewing ? noop : insertPastedText,
   });
 
-  const openImagePicker = useCallback(() => {
-    document
-      .querySelector<HTMLInputElement>('[data-testid="pdf-editor-image-input"]')
-      ?.click();
-  }, []);
+  const openImagePicker = useCallback(
+    (at?: PagePoint) => {
+      // Adding an image replaces any armed text or table insert.
+      store.setMode("select");
+      imagePlacementRef.current = at ?? null;
+      document
+        .querySelector<HTMLInputElement>(
+          '[data-testid="pdf-editor-image-input"]',
+        )
+        ?.click();
+    },
+    [store],
+  );
 
   const openTool = useCallback(
     (tool: ToolId) => {
@@ -859,7 +906,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const ocrAvailable =
     panel.state.loading && !ocr.running ? null : ocr.available;
   const inspector = useMemo<
-    Omit<SidebarProps, "store" | "state" | "selection" | "initialTab">
+    Omit<SidebarProps, "store" | "state" | "selection">
   >(
     () => ({
       canGroup: panel.selection.runIds.length >= 2,
@@ -898,13 +945,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       autosave: () => void handleAutosave(),
       download: handleDownload,
       pickImage: openImagePicker,
+      mergeSelection: handleMergeSelection,
+      ungroupSelection: handleUngroupSelection,
       // The viewer mounts only the pages near the viewport.
       revealPage: (pageIndex: number) => {
         const position = store.document?.positionOf(pageIndex) ?? -1;
         if (position >= 0) scrollActions.scrollToPage(position + 1);
       },
       changeDocument,
-      openTool,
       pageSize: (pageIndex: number) => {
         const doc = store.document;
         if (!doc || doc.positionOf(pageIndex) < 0) return null;
@@ -923,8 +971,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     handleAutosave,
     handleDownload,
     openImagePicker,
+    handleMergeSelection,
+    handleUngroupSelection,
     changeDocument,
-    openTool,
     store,
   ]);
 
@@ -939,6 +988,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     <Stack
       gap={0}
       h="100%"
+      className="pdf-editor-panel"
       style={{ overflow: "hidden" }}
       data-testid="pdf-editor-root"
     >
@@ -997,16 +1047,25 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           </Text>
         </>
       ) : (
-        selectedTool === "pdfTextEditor" && <EditorSidebar {...sidebarProps} />
+        selectedTool === "pdfTextEditor" && (
+          <>
+            <EditorHeaderHelp onShowHelp={onShowHelp} />
+            <EditorSidebar {...sidebarProps} desktop />
+          </>
+        )
       )}
       {state.hasDocument && (
-        <EditorPanelActions
-          compact={isMobile}
-          onSave={handleSave}
-          onDownload={handleDownload}
-          onOpenFind={onOpenFind}
-          onShowHelp={onShowHelp}
-        />
+        <ToolPanelFooter>
+          <EditorPanelActions
+            store={store}
+            compact={isMobile}
+            dirty={state.dirty}
+            onSave={handleSave}
+            onDownload={handleDownload}
+            onOpenFind={onOpenFind}
+            onShowHelp={onShowHelp}
+          />
+        </ToolPanelFooter>
       )}
     </Stack>
   );

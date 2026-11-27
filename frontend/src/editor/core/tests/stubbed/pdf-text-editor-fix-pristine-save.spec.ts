@@ -54,9 +54,10 @@ async function editFirstRun(page: Page, text: string): Promise<void> {
   await run.click();
   await page.keyboard.press("End");
   await page.keyboard.type(text, { delay: 25 });
-  await page
-    .locator('[data-testid="pdf-editor-page-0"]')
-    .click({ position: { x: 5, y: 5 } });
+  // Below the text: the selection bar covers the page above the run.
+  const pageZero = page.locator('[data-testid="pdf-editor-page-0"]');
+  const pageBox = await pageZero.boundingBox();
+  await pageZero.click({ position: { x: 5, y: pageBox!.height - 5 } });
   await page.waitForTimeout(600);
 }
 

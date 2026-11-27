@@ -1,5 +1,9 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  clearEditorSelection,
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Colour, judged on the page BITMAP rather than on the model.
@@ -219,22 +223,24 @@ async function closePickerDropdown(page: import("@playwright/test").Page) {
 /** Click a run so the toolbar targets it, and confirm the toolbar woke up. */
 async function selectRun(page: import("@playwright/test").Page, runId: string) {
   await closePickerDropdown(page);
+  await clearEditorSelection(page);
   await page.locator(`[data-testid="pdf-editor-run-${runId}"]`).click();
   await page.waitForTimeout(350);
   await expect(
-    page.getByTestId("pdf-editor-colour"),
+    page.getByTestId("pdf-editor-colour-menu"),
     `colour picker should be enabled once ${runId} is selected`,
   ).toBeEnabled();
 }
 
 async function setFill(page: import("@playwright/test").Page, hex: string) {
+  await openFormatMenu(page, "colour");
   const colour = page.getByTestId("pdf-editor-colour");
   await colour.fill(hex);
   await colour.press("Enter");
 }
 
 async function openAdvanced(page: import("@playwright/test").Page) {
-  await page.getByTestId("pdf-editor-colour-advanced").click();
+  await openFormatMenu(page, "colour");
   await expect(page.getByTestId("pdf-editor-outline-colour")).toBeVisible();
   await expect(page.getByTestId("pdf-editor-outline-width")).toBeVisible();
 }

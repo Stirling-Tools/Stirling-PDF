@@ -43,7 +43,7 @@ async function makeAnEdit(page: Page): Promise<void> {
     selection.addRange(range);
     document.execCommand("insertText", false, "RULED");
   });
-  await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible({
+  await expect(page.getByTestId("pdf-editor-save")).toBeEnabled({
     timeout: 15_000,
   });
 }
@@ -77,7 +77,7 @@ test.describe("PDF text editor - viewer tools", () => {
     await page.getByRole("button", { name: "Keep Working" }).click();
 
     await expect(editText(page)).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
     await expect(ruler(page)).not.toHaveAttribute("aria-pressed", "true");
   });
 
@@ -137,7 +137,7 @@ test.describe("PDF text editor - viewer tools", () => {
     // Cancelling the warning keeps the prompt and the edits.
     await page.getByTestId("pdf-editor-save-risk-cancel").click();
     await expect(page.getByTestId("unsaved-save")).toBeVisible();
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
 
     await page.getByTestId("unsaved-save").click();
     await expect(page.getByTestId("pdf-editor-save-risk-modal")).toContainText(
@@ -176,7 +176,7 @@ test.describe("PDF text editor - viewer tools", () => {
     await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
     await expect(page.getByTestId("unsaved-discard")).toBeHidden();
     await expect(editText(page)).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
 
     await search.click();
     await expect(page.getByTestId("pdf-editor-find-bar")).toBeHidden();

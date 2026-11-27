@@ -19,35 +19,41 @@ async function openEditor(page: Page): Promise<void> {
   });
 }
 
-test.describe("PDF text editor - top bar", () => {
-  test("carries the document actions that used to live in the panel", async ({
+test.describe("PDF text editor - desktop layout", () => {
+  test("the panel carries insert, history and save; no strip over the pages", async ({
     page,
   }) => {
     test.setTimeout(120_000);
     await openEditor(page);
 
-    const toolbar = page.getByTestId("pdf-editor-toolbar");
-    await expect(toolbar).toBeVisible();
+    // Formatting floats beside the selection, so the pages have nothing above them.
+    expect(await page.getByTestId("pdf-editor-toolbar").count()).toBe(0);
+    const tools = page.getByTestId("pdf-editor-panel-tools");
     for (const id of [
-      "pdf-editor-undo",
-      "pdf-editor-redo",
       "pdf-editor-add-text",
+      "pdf-editor-add-table",
       "pdf-editor-add-image",
-      "pdf-editor-open-find",
-      "pdf-editor-help",
     ]) {
       await expect(
-        toolbar.locator(`[data-testid="${id}"]`),
-        `${id} must be in the top bar`,
+        tools.locator(`[data-testid="${id}"]`),
+        `${id} must lead the panel`,
       ).toBeVisible();
     }
+    const footer = page.getByTestId("pdf-editor-panel-actions");
+    for (const id of ["pdf-editor-undo", "pdf-editor-redo"]) {
+      await expect(
+        footer.locator(`[data-testid="${id}"]`),
+        `${id} must sit in the panel footer`,
+      ).toBeVisible();
+    }
+    await expect(page.getByTestId("pdf-editor-help")).toBeVisible();
   });
 
-  test("marks the document unsaved once edited", async ({ page }) => {
+  test("Save comes alive once the document is edited", async ({ page }) => {
     test.setTimeout(120_000);
     await openEditor(page);
 
-    expect(await page.getByTestId("pdf-editor-dirty-dot").count()).toBe(0);
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled();
 
     await page.evaluate(() => {
       const el = document.querySelector<HTMLElement>(
@@ -65,7 +71,7 @@ test.describe("PDF text editor - top bar", () => {
       document.execCommand("insertText", false, "X");
     });
 
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible({
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled({
       timeout: 15_000,
     });
   });
@@ -76,7 +82,6 @@ test.describe("PDF text editor - top bar", () => {
 
     for (const id of [
       "pdf-editor-add-text",
-      "pdf-editor-open-find",
       "pdf-editor-help",
       "pdf-editor-save",
     ]) {
@@ -101,12 +106,6 @@ test.describe("PDF text editor - top bar", () => {
     await expect(
       footer.locator('[data-testid="pdf-editor-download"]'),
     ).toBeVisible();
-    expect(
-      await page
-        .getByTestId("pdf-editor-toolbar")
-        .locator('[data-testid="pdf-editor-save"]')
-        .count(),
-    ).toBe(0);
   });
 
   test("a phone-width layout also gets find and help in the panel", async ({
@@ -124,59 +123,28 @@ test.describe("PDF text editor - top bar", () => {
     await expect(page.getByTestId("pdf-editor-help-panel")).toBeVisible();
   });
 
-  test("a narrow bar folds insert, find and help into one menu", async ({
+  test("Find opens from the viewer's bottom bar and sits just above it", async ({
     page,
   }) => {
     test.setTimeout(120_000);
-    await page.setViewportSize({ width: 1150, height: 900 });
     await openEditor(page);
 
-    const bar = page.getByTestId("pdf-editor-toolbar");
-    await expect(bar).toHaveAttribute("data-compact", "true");
-    expect(await page.getByTestId("pdf-editor-add-text").count()).toBe(0);
-    expect(await page.getByTestId("pdf-editor-open-find").count()).toBe(0);
-
-    await expect(bar.locator('[data-testid="pdf-editor-undo"]')).toBeVisible();
-    await expect(page.getByTestId("pdf-editor-panel-actions")).toBeVisible();
-
-    await page.getByTestId("pdf-editor-overflow-menu").click();
-    for (const id of [
-      "pdf-editor-add-text",
-      "pdf-editor-add-image",
-      "pdf-editor-open-find",
-      "pdf-editor-help",
-    ]) {
-      await expect(
-        page.getByTestId(id),
-        `${id} must be reachable from the overflow menu`,
-      ).toBeVisible();
-    }
-  });
-
-  test("a wide bar keeps every control on show", async ({ page }) => {
-    test.setTimeout(120_000);
-    await openEditor(page);
-    await expect(page.getByTestId("pdf-editor-toolbar")).toHaveAttribute(
-      "data-compact",
-      "false",
-    );
-    expect(await page.getByTestId("pdf-editor-overflow-menu").count()).toBe(0);
-  });
-
-  test("Find opens beside the pages, not in the panel", async ({ page }) => {
-    test.setTimeout(120_000);
-    await openEditor(page);
-
-    await page.getByTestId("pdf-editor-open-find").click();
+    await page.getByRole("button", { name: "Find & replace" }).click();
     const findBar = page.getByTestId("pdf-editor-find-bar");
     await expect(findBar).toBeVisible();
     const bar = await findBar.boundingBox();
     const pages = await page.locator("[data-viewer-pages]").boundingBox();
+    const dock = await page
+      .locator(".pdf-viewer-toolbar-dock > div")
+      .first()
+      .boundingBox();
     expect(bar).not.toBeNull();
     expect(pages).not.toBeNull();
-    // Floats over the top of the pages column, clear of the side panel.
+    expect(dock).not.toBeNull();
+    // Over the pages column, clear of the side panel, and clear of the bar below.
     expect(bar!.x).toBeGreaterThanOrEqual(pages!.x);
     expect(bar!.x + bar!.width).toBeLessThanOrEqual(pages!.x + pages!.width);
-    expect(Math.abs(bar!.y - pages!.y)).toBeLessThan(24);
+    expect(bar!.y + bar!.height).toBeLessThanOrEqual(dock!.y);
+    expect(dock!.y - (bar!.y + bar!.height)).toBeLessThan(24);
   });
 });

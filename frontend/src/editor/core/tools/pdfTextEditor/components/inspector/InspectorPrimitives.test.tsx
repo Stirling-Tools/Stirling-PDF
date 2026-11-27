@@ -46,11 +46,18 @@ describe("lengths", () => {
     const onCommit = vi.fn();
     render(
       <MantineProvider env="test">
-        <PointsInput value={72} unit="mm" label="X" onCommit={onCommit} />
+        <PointsInput
+          value={72}
+          unit="mm"
+          label="X"
+          prefix="X"
+          onCommit={onCommit}
+        />
       </MantineProvider>,
     );
     const input = screen.getByLabelText("X") as HTMLInputElement;
-    expect(input.value).toBe("25.4 mm");
+    expect(input.value).toBe("25.4");
+    expect(screen.getByText("mm")).toBeInTheDocument();
     fireEvent.change(input, { target: { value: "50.8" } });
     expect(onCommit).toHaveBeenCalledWith(expect.closeTo(144, 3));
   });

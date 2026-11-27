@@ -1,6 +1,11 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  clearEditorSelection,
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 // The fill colour picker (ColorInput, testid pdf-editor-colour) had three faults that
 // all trace back to Mantine driving onChange from its own dropdown lifecycle:
@@ -162,12 +167,14 @@ function topmostAt(
 }
 
 async function selectRun(page: import("@playwright/test").Page, runId: string) {
+  await clearEditorSelection(page);
   await page.locator(`[data-testid="pdf-editor-run-${runId}"]`).click();
   await page.waitForTimeout(350);
-  await expect(page.getByTestId("pdf-editor-colour")).toBeEnabled();
+  await expect(page.getByTestId("pdf-editor-colour-menu")).toBeEnabled();
 }
 
 async function setFill(page: import("@playwright/test").Page, hex: string) {
+  await openFormatMenu(page, "colour");
   const colour = page.getByTestId("pdf-editor-colour");
   await colour.fill(hex);
   await colour.press("Enter");
@@ -245,7 +252,11 @@ test.describe("PDF text editor - fill colour picker", () => {
       "nothing from the colour picker may cover the page after a pick",
     ).not.toContain("ColorInput");
 
-    // ...so one click - not a priming click - selects that run.
+    // ...so one click - not a priming click - selects that run, once the
+    // selection bar covering it is gone.
+    await page.evaluate(() =>
+      (window as unknown as EditorTestWindow).__editor_store.selection.clear(),
+    );
     await page
       .locator(`[data-testid="pdf-editor-run-${HEADING}"]`)
       .click({ timeout: 5_000 });
@@ -272,6 +283,7 @@ test.describe("PDF text editor - fill colour picker", () => {
 
     // Heading (red) + body (black): a mixed fill, so the picker falls back to
     // #000000 and reports nothing as the selection's colour.
+    await clearEditorSelection(page);
     await page.locator(`[data-testid="pdf-editor-run-${HEADING}"]`).click();
     await page
       .locator(`[data-testid="pdf-editor-run-${BODY}"]`)
@@ -281,18 +293,14 @@ test.describe("PDF text editor - fill colour picker", () => {
       (await selectedRunIds(page)).length,
       "the selection must span both runs",
     ).toBe(2);
+    await openFormatMenu(page, "colour");
     expect(await page.getByTestId("pdf-editor-colour").inputValue()).toBe(
       "#000000",
     );
 
-    // Open the picker and pick out of the saturation square itself.
-    await page.getByTestId("pdf-editor-colour").click();
-    const overlay = page
-      .locator(".mantine-ColorInput-saturationOverlay")
-      .first();
-    await expect(overlay).toBeVisible({ timeout: 3_000 });
+    // Pick out of the colour menu's saturation square itself.
     // The saturation area stacks three overlays; click the container itself.
-    const saturation = page.locator(".mantine-ColorInput-saturation").first();
+    const saturation = page.locator(".mantine-ColorPicker-saturation").first();
     const box = (await saturation.boundingBox())!;
     await saturation.click({ position: { x: box.width - 4, y: 4 } });
     await page.waitForTimeout(1500);
@@ -313,9 +321,9 @@ test.describe("PDF text editor - fill colour picker", () => {
     await selectRun(page, HEADING);
 
     const overlay = page
-      .locator(".mantine-ColorInput-saturationOverlay")
+      .locator(".mantine-ColorPicker-saturationOverlay")
       .first();
-    await page.getByTestId("pdf-editor-colour").click();
+    await page.getByTestId("pdf-editor-colour-menu").click();
     await expect(
       overlay,
       "clicking the swatch should open the picker",
