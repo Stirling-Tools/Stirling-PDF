@@ -197,40 +197,40 @@ function FontsBlock({
   return (
     <Stack gap="xs" data-testid="pdf-editor-fonts-panel">
       <Group justify="space-between" wrap="nowrap" gap="sm">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        data-testid="pdf-editor-fonts-toggle"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--mantine-spacing-xs)",
-          width: "100%",
-          minWidth: 0,
-          padding: 0,
-          border: "none",
-          background: "none",
-          color: "inherit",
-          font: "inherit",
-          cursor: "pointer",
-        }}
-      >
-        <Icon
-          name="chevron-right"
-          size={16}
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          data-testid="pdf-editor-fonts-toggle"
           style={{
-            flexShrink: 0,
-            color: "var(--c-text-muted)",
-            transform: open ? "rotate(90deg)" : undefined,
-            transition: "transform 150ms ease",
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--mantine-spacing-xs)",
+            width: "100%",
+            minWidth: 0,
+            padding: 0,
+            border: "none",
+            background: "none",
+            color: "inherit",
+            font: "inherit",
+            cursor: "pointer",
           }}
-        />
-        <Text size="sm" fw={500} style={{ whiteSpace: "nowrap" }}>
-          {t("pdfTextEditor.fonts.title", "Fonts")} · {fonts.length}
-        </Text>
-        <CoveragePill fonts={fonts} />
-      </button>
+        >
+          <Icon
+            name="chevron-right"
+            size={16}
+            style={{
+              flexShrink: 0,
+              color: "var(--c-text-muted)",
+              transform: open ? "rotate(90deg)" : undefined,
+              transition: "transform 150ms ease",
+            }}
+          />
+          <Text size="sm" fw={500} style={{ whiteSpace: "nowrap" }}>
+            {t("pdfTextEditor.fonts.title", "Fonts")} · {fonts.length}
+          </Text>
+          <CoveragePill fonts={fonts} />
+        </button>
         <ChangeButton
           label={t("pdfTextEditor.document.changeAllFonts", "Change all fonts")}
           onClick={() =>
@@ -522,10 +522,15 @@ function FontChangeModal({
     >
       <Stack gap="sm" data-testid="pdf-editor-font-change-modal">
         <Text size="sm" c="dimmed">
-          {t(
-            "pdfTextEditor.document.changeFontHint",
-            "All text in this font will change. Locked text stays the same.",
-          )}
+          {target?.fontName === null
+            ? t(
+                "pdfTextEditor.document.changeAllFontsHint",
+                "All text in the document will change to the font you pick. Locked text stays the same.",
+              )
+            : t(
+                "pdfTextEditor.document.changeFontHint",
+                "All text in this font will change. Locked text stays the same.",
+              )}
         </Text>
         <FontFamilySelect
           value={family}
