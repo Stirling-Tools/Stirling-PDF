@@ -14,11 +14,10 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon, type IconName } from "@editor/ui/Icon";
-import { Modal } from "@editor/ui/Modal";
 import ToolStep from "@editor/components/tools/shared/ToolStep";
 import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
-import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
 import { useDocumentActions } from "@editor/tools/pdfTextEditor/hooks/useDocumentActions";
+import { useLivePreview } from "@editor/tools/pdfTextEditor/hooks/useLivePreview";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
@@ -90,8 +89,16 @@ export function DocumentInspector({
         onCollapsedClick={() => setDocumentOpen((v) => !v)}
         headerTestId="pdf-editor-document-toggle"
       >
-        <FontsBlock pages={pages} onChange={onChangeFontEverywhere} />
-        <ColoursBlock pages={pages} onRecolour={actions.recolour} />
+        <FontsBlock
+          store={store}
+          pages={pages}
+          onChange={onChangeFontEverywhere}
+        />
+        <ColoursBlock
+          store={store}
+          pages={pages}
+          onRecolour={actions.recolour}
+        />
         <LockedRow pages={pages} onUnlockAll={actions.unlockAll} />
       </ToolStep>
       <ToolStep
@@ -180,9 +187,11 @@ interface FontTarget {
  * its height.
  */
 function FontsBlock({
+  store,
   pages,
   onChange,
 }: {
+  store: EditorStore;
   pages: PageSnapshot[];
   onChange: ChangeFontEverywhere;
 }) {
@@ -196,52 +205,71 @@ function FontsBlock({
   if (fonts.length === 0) return null;
   return (
     <Stack gap="xs" data-testid="pdf-editor-fonts-panel">
-      <Group justify="space-between" wrap="nowrap" gap="sm">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          data-testid="pdf-editor-fonts-toggle"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--mantine-spacing-xs)",
-            width: "100%",
-            minWidth: 0,
-            padding: 0,
-            border: "none",
-            background: "none",
-            color: "inherit",
-            font: "inherit",
-            cursor: "pointer",
-          }}
-        >
-          <Icon
-            name="chevron-right"
-            size={16}
-            style={{
-              flexShrink: 0,
-              color: "var(--c-text-muted)",
-              transform: open ? "rotate(90deg)" : undefined,
-              transition: "transform 150ms ease",
-            }}
+      <ChangePopover
+        opened={target !== null}
+        // The Fonts row, not the row of the font being replaced, which goes
+        // from the list as soon as its text previews in another font.
+        anchor={
+          <Group justify="space-between" wrap="nowrap" gap="sm">
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              data-testid="pdf-editor-fonts-toggle"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--mantine-spacing-xs)",
+                width: "100%",
+                minWidth: 0,
+                padding: 0,
+                border: "none",
+                background: "none",
+                color: "inherit",
+                font: "inherit",
+                cursor: "pointer",
+              }}
+            >
+              <Icon
+                name="chevron-right"
+                size={16}
+                style={{
+                  flexShrink: 0,
+                  color: "var(--c-text-muted)",
+                  transform: open ? "rotate(90deg)" : undefined,
+                  transition: "transform 150ms ease",
+                }}
+              />
+              <Text size="sm" fw={500} style={{ whiteSpace: "nowrap" }}>
+                {t("pdfTextEditor.fonts.title", "Fonts")} · {fonts.length}
+              </Text>
+              <CoveragePill fonts={fonts} />
+            </button>
+            <ChangeButton
+              label={t(
+                "pdfTextEditor.document.changeAllFonts",
+                "Change all fonts",
+              )}
+              onClick={() =>
+                setTarget({
+                  fontName: null,
+                  label: t("pdfTextEditor.document.allText", "All text"),
+                })
+              }
+              testId="pdf-editor-all-fonts"
+            />
+          </Group>
+        }
+      >
+        {target && (
+          <FontChangePanel
+            store={store}
+            target={target}
+            onApply={(family) => onChange(family, target.fontName)}
+            onDone={() => setTarget(null)}
           />
-          <Text size="sm" fw={500} style={{ whiteSpace: "nowrap" }}>
-            {t("pdfTextEditor.fonts.title", "Fonts")} · {fonts.length}
-          </Text>
-          <CoveragePill fonts={fonts} />
-        </button>
-        <ChangeButton
-          label={t("pdfTextEditor.document.changeAllFonts", "Change all fonts")}
-          onClick={() =>
-            setTarget({
-              fontName: null,
-              label: t("pdfTextEditor.document.allText", "All text"),
-            })
-          }
-          testId="pdf-editor-all-fonts"
-        />
-      </Group>
+        )}
+      </ChangePopover>
       {open && (
         <ScrollArea.Autosize
           mah={FONT_LIST_MAX_HEIGHT}
@@ -260,11 +288,6 @@ function FontsBlock({
           </Stack>
         </ScrollArea.Autosize>
       )}
-      <FontChangeModal
-        target={target}
-        onClose={() => setTarget(null)}
-        onApply={(family) => onChange(family, target?.fontName ?? null)}
-      />
     </Stack>
   );
 }
@@ -469,77 +492,133 @@ function FontStatusTag({ font, name }: { font: PageFont; name: string }) {
   );
 }
 
-/** Picks a family for a font's text, applying only once the user confirms. */
-function FontChangeModal({
-  target,
-  onClose,
-  onApply,
+/**
+ * A change picked over the panel: opens below its block's heading and covers
+ * the panel rather than the page, so the page shows the change as it is tried.
+ */
+function ChangePopover({
+  opened,
+  anchor,
+  children,
 }: {
-  target: FontTarget | null;
-  onClose: () => void;
-  onApply: (family: string) => Promise<FontPickFailure | null>;
+  opened: boolean;
+  anchor: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Popover
+      opened={opened}
+      position="bottom"
+      width="target"
+      shadow="md"
+      withinPortal
+      trapFocus
+      // Done and Cancel close it, each saying what happens to the preview.
+      closeOnClickOutside={false}
+      closeOnEscape={false}
+    >
+      <Popover.Target>
+        <div>{anchor}</div>
+      </Popover.Target>
+      <Popover.Dropdown>{children}</Popover.Dropdown>
+    </Popover>
+  );
+}
+
+/** Cancel puts the document back; Done keeps what the page now shows. */
+function PreviewFooter({
+  onCancel,
+  onDone,
+  canKeep,
+  testIdPrefix,
+}: {
+  onCancel: () => void;
+  onDone: () => void;
+  canKeep: boolean;
+  testIdPrefix: string;
 }) {
   const { t } = useTranslation();
-  const warnAbout = useFontChangeWarning();
-  const [family, setFamily] = useState<string | null>(null);
-  const [applying, setApplying] = useState(false);
-  const close = () => {
-    setFamily(null);
-    onClose();
-  };
-  const apply = async () => {
-    if (!family) return;
-    setApplying(true);
-    try {
-      await warnAbout(() => onApply(family));
-    } finally {
-      setApplying(false);
-    }
-    close();
-  };
   return (
-    <Modal
-      open={target !== null}
-      onClose={close}
-      width="sm"
-      title={t("pdfTextEditor.document.changeFont", "Change font")}
-      subtitle={target?.label}
-      footer={
-        <Group gap="xs" justify="flex-end">
-          <Button variant="secondary" accent="neutral" onClick={close}>
-            {t("cancel", "Cancel")}
-          </Button>
-          <Button
-            onClick={() => void apply()}
-            disabled={!family}
-            loading={applying}
-            data-testid="pdf-editor-font-change-apply"
-          >
-            {t("pdfTextEditor.document.apply", "Apply")}
-          </Button>
-        </Group>
-      }
-    >
-      <Stack gap="sm" data-testid="pdf-editor-font-change-modal">
-        <Text size="sm" c="dimmed">
-          {target?.fontName === null
-            ? t(
-                "pdfTextEditor.document.changeAllFontsHint",
-                "All text in the document will change to the font you pick. Locked text stays the same.",
-              )
-            : t(
-                "pdfTextEditor.document.changeFontHint",
-                "All text in this font will change. Locked text stays the same.",
-              )}
+    <Group gap="xs" justify="flex-end">
+      <Button
+        size="sm"
+        variant="secondary"
+        accent="neutral"
+        onClick={onCancel}
+        data-testid={`${testIdPrefix}-cancel`}
+      >
+        {t("cancel", "Cancel")}
+      </Button>
+      <Button
+        size="sm"
+        onClick={onDone}
+        disabled={!canKeep}
+        data-testid={`${testIdPrefix}-done`}
+      >
+        {t("pdfTextEditor.document.done", "Done")}
+      </Button>
+    </Group>
+  );
+}
+
+/** Picks a family for a font's text, the page showing each pick as it is made. */
+function FontChangePanel({
+  store,
+  target,
+  onApply,
+  onDone,
+}: {
+  store: EditorStore;
+  target: FontTarget;
+  onApply: (family: string) => Promise<FontPickFailure | null>;
+  onDone: () => void;
+}) {
+  const { t } = useTranslation();
+  const live = useLivePreview(store);
+  const [family, setFamily] = useState<string | null>(null);
+  return (
+    <Stack gap="sm" data-testid="pdf-editor-font-change-panel">
+      <div>
+        <Text size="sm" fw={500}>
+          {t("pdfTextEditor.document.changeFont", "Change font")}
         </Text>
-        <FontFamilySelect
-          value={family}
-          // Inside the modal, so picking from its list is not a click outside it.
-          withinPortal={false}
-          onChange={(next) => setFamily(next)}
-        />
-      </Stack>
-    </Modal>
+        <Text size="xs" c="dimmed">
+          {target.label}
+        </Text>
+      </div>
+      <Text size="xs" c="dimmed">
+        {target.fontName === null
+          ? t(
+              "pdfTextEditor.document.changeAllFontsHint",
+              "All text in the document will change to the font you pick. Locked text stays the same.",
+            )
+          : t(
+              "pdfTextEditor.document.changeFontHint",
+              "All text in this font will change. Locked text stays the same.",
+            )}
+      </Text>
+      <FontFamilySelect
+        value={family}
+        // Inside the popover, so picking from its list is not a click outside it.
+        withinPortal={false}
+        onChange={(next) => {
+          setFamily(next);
+          return live.preview(() => onApply(next));
+        }}
+      />
+      <PreviewFooter
+        canKeep={family !== null}
+        testIdPrefix="pdf-editor-font-change"
+        onCancel={() => {
+          live.cancel();
+          onDone();
+        }}
+        onDone={() => {
+          live.keep();
+          onDone();
+        }}
+      />
+    </Stack>
   );
 }
 
@@ -555,11 +634,13 @@ interface ColourTarget {
 
 /** Every text colour in use, each swatch recolouring only the text in it. */
 function ColoursBlock({
+  store,
   pages,
   onRecolour,
 }: {
+  store: EditorStore;
   pages: PageSnapshot[];
-  onRecolour: (fromHex: string | null, toHex: string) => void;
+  onRecolour: (fromHex: string | null, toHex: string) => Promise<void>;
 }) {
   const { t } = useTranslation();
   const [target, setTarget] = useState<ColourTarget | null>(null);
@@ -583,26 +664,41 @@ function ColoursBlock({
     setTarget({ fromHex: hex, initial: hex, label });
   return (
     <Stack gap="xs" data-testid="pdf-editor-document-colours">
-      <BlockHeading
-        action={
-          <ChangeButton
-            label={t(
-              "pdfTextEditor.document.changeAllColours",
-              "Change all colours",
-            )}
-            onClick={() =>
-              setTarget({
-                fromHex: null,
-                initial: colours[0][0],
-                label: t("pdfTextEditor.document.allText", "All text"),
-              })
+      <ChangePopover
+        opened={target !== null}
+        // The heading, not the swatch, which goes as its colour previews.
+        anchor={
+          <BlockHeading
+            action={
+              <ChangeButton
+                label={t(
+                  "pdfTextEditor.document.changeAllColours",
+                  "Change all colours",
+                )}
+                onClick={() =>
+                  setTarget({
+                    fromHex: null,
+                    initial: colours[0][0],
+                    label: t("pdfTextEditor.document.allText", "All text"),
+                  })
+                }
+                testId="pdf-editor-all-colours"
+              />
             }
-            testId="pdf-editor-all-colours"
-          />
+          >
+            {t("pdfTextEditor.document.colours", "Text colours")}
+          </BlockHeading>
         }
       >
-        {t("pdfTextEditor.document.colours", "Text colours")}
-      </BlockHeading>
+        {target && (
+          <ColourChangePanel
+            store={store}
+            target={target}
+            onApply={(next) => onRecolour(target.fromHex, next)}
+            onDone={() => setTarget(null)}
+          />
+        )}
+      </ChangePopover>
       <Group gap={8} wrap="nowrap">
         {shown.map(([hex, count]) => (
           <ColourSwatch
@@ -614,11 +710,6 @@ function ColoursBlock({
         ))}
         {rest.length > 0 && <MoreColours colours={rest} onPick={pick} />}
       </Group>
-      <ColourChangeModal
-        target={target}
-        onClose={() => setTarget(null)}
-        onApply={(next) => onRecolour(target?.fromHex ?? null, next)}
-      />
     </Stack>
   );
 }
@@ -719,79 +810,77 @@ function ColourSwatch({
   );
 }
 
-/** Picks a new colour for a colour's text, applying only once the user confirms. */
-function ColourChangeModal({
+/** Picks a new colour for a colour's text, the page showing it as each pick lands. */
+function ColourChangePanel({
+  store,
   target,
-  onClose,
   onApply,
+  onDone,
 }: {
-  target: ColourTarget | null;
-  onClose: () => void;
-  onApply: (next: string) => void;
+  store: EditorStore;
+  target: ColourTarget;
+  onApply: (next: string) => Promise<void>;
+  onDone: () => void;
 }) {
   const { t } = useTranslation();
-  const [picked, setPicked] = useState<string | null>(null);
-  const value = picked ?? target?.initial ?? "#000000";
-  const close = () => {
-    setPicked(null);
-    onClose();
-  };
-  const unchanged =
-    !picked || picked.toLowerCase() === target?.initial.toLowerCase();
+  const live = useLivePreview(store);
+  const [value, setValue] = useState(target.initial);
+  const [tried, setTried] = useState(false);
   return (
-    <Modal
-      open={target !== null}
-      onClose={close}
-      width="sm"
-      title={t("pdfTextEditor.document.changeColour", "Change colour")}
-      subtitle={target?.label}
-      footer={
-        <Group gap="xs" justify="flex-end">
-          <Button variant="secondary" accent="neutral" onClick={close}>
-            {t("cancel", "Cancel")}
-          </Button>
-          <Button
-            onClick={() => {
-              onApply(value);
-              close();
-            }}
-            disabled={unchanged}
-            data-testid="pdf-editor-colour-change-apply"
-          >
-            {t("pdfTextEditor.document.apply", "Apply")}
-          </Button>
-        </Group>
-      }
-    >
-      <Stack gap="sm" data-testid="pdf-editor-colour-change-modal">
-        <ColorPicker
-          format="hex"
-          fullWidth
-          saturationLabel={t(
-            "colorPicker.saturation",
-            "Saturation and brightness",
-          )}
-          hueLabel={t("colorPicker.hue", "Hue")}
-          value={value}
-          onChange={setPicked}
+    <Stack gap="sm" data-testid="pdf-editor-colour-change-panel">
+      <div>
+        <Text size="sm" fw={500}>
+          {t("pdfTextEditor.document.changeColour", "Change colour")}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {target.label}
+        </Text>
+      </div>
+      <ColorPicker
+        format="hex"
+        fullWidth
+        size="sm"
+        saturationLabel={t(
+          "colorPicker.saturation",
+          "Saturation and brightness",
+        )}
+        hueLabel={t("colorPicker.hue", "Hue")}
+        value={value}
+        onChange={setValue}
+        // Once per drag, not per frame: each preview redraws every page.
+        onChangeEnd={(next) => {
+          setTried(true);
+          void live.preview(() => onApply(next));
+        }}
+      />
+      <Group gap="xs">
+        <span
+          aria-hidden
+          style={{
+            width: "1.25rem",
+            height: "1.25rem",
+            borderRadius: "50%",
+            background: value,
+            border: "0.0625rem solid var(--c-border-strong)",
+          }}
         />
-        <Group gap="xs">
-          <span
-            aria-hidden
-            style={{
-              width: "1.25rem",
-              height: "1.25rem",
-              borderRadius: "50%",
-              background: value,
-              border: "0.0625rem solid var(--c-border-strong)",
-            }}
-          />
-          <Text size="sm" ff="monospace">
-            {value.toUpperCase()}
-          </Text>
-        </Group>
-      </Stack>
-    </Modal>
+        <Text size="sm" ff="monospace">
+          {value.toUpperCase()}
+        </Text>
+      </Group>
+      <PreviewFooter
+        canKeep={tried}
+        testIdPrefix="pdf-editor-colour-change"
+        onCancel={() => {
+          live.cancel();
+          onDone();
+        }}
+        onDone={() => {
+          live.keep();
+          onDone();
+        }}
+      />
+    </Stack>
   );
 }
 

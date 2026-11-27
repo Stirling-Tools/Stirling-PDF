@@ -7745,7 +7745,6 @@ title = "Discard unsaved changes?"
 
 [pdfTextEditor.document]
 allText = "All text"
-apply = "Apply"
 changeAllColours = "Change all colours"
 changeAllFonts = "Change all fonts"
 changeAllFontsHint = "All text in the document will change to the font you pick. Locked text stays the same."
@@ -7755,6 +7754,7 @@ changeFontHint = "All text in this font will change. Locked text stays the same.
 colourUses_one = "{{hex}} · {{count}} text box"
 colourUses_other = "{{hex}} · {{count}} text boxes"
 colours = "Text colours"
+done = "Done"
 locked = "{{count}} locked"
 moreColours = "{{count}} more colours"
 replaceFont = "Replace this font"

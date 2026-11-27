@@ -26,7 +26,7 @@ export function useDocumentActions(store: EditorStore) {
        * Recolour every unlocked run filled `fromHex`, keeping its own alpha;
        * with no `fromHex`, every unlocked run.
        */
-      recolour: (fromHex: string | null, toHex: string) => {
+      recolour: async (fromHex: string | null, toHex: string) => {
         const next = parseCssColor(toHex);
         const doc = store.document;
         if (!next || !doc) return;
@@ -41,7 +41,7 @@ export function useDocumentActions(store: EditorStore) {
             targets.push({ page, run });
           }
         }
-        void dispatchAfterScanFit(targets, () =>
+        await dispatchAfterScanFit(targets, () =>
           targets.map(
             ({ run }) =>
               new SetColourCommand({
