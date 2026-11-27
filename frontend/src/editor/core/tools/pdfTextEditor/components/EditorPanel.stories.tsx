@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Box } from "@mantine/core";
-import { EditorPanelTools } from "@editor/tools/pdfTextEditor/components/EditorPanelTools";
+import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
@@ -15,8 +15,9 @@ import {
 } from "@editor/tools/pdfTextEditor/components/editorStorySupport";
 
 /**
- * The editor's side panel frame: the insert row at its head, and undo, redo
- * and Save pinned to its foot however little sits between them.
+ * The editor's side panel on desktop: the insert row at its head, the
+ * document's fonts, colours and settings, and undo, redo and Save pinned to
+ * its foot. The selection's own controls live in the floating bar, not here.
  */
 function EditorPanelDemo({
   mode = "select",
@@ -46,7 +47,7 @@ function EditorPanelDemo({
   return (
     <Box
       w={320}
-      h={480}
+      h={620}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -54,7 +55,25 @@ function EditorPanelDemo({
         background: "var(--c-bg-raised)",
       }}
     >
-      <EditorPanelTools store={store} state={state} />
+      <Box style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+        <EditorSidebar
+          store={store}
+          state={state}
+          selection={store.selection.value}
+          desktop
+          canGroup={false}
+          canUngroup={false}
+          onGroup={() => {}}
+          onUngroup={() => {}}
+          onSetGroupingMode={() => {}}
+          onSetWidthMode={() => {}}
+          onSetShowRulers={() => {}}
+          onRunOcr={() => {}}
+          ocrRunning={false}
+          ocrAvailable={null}
+          ocrBlockedReason={null}
+        />
+      </Box>
       <EditorPanelActions
         store={store}
         compact={false}
@@ -81,5 +100,5 @@ export const Default: Story = {};
 /** Text is armed: the next click on the page adds a text box. */
 export const TextArmed: Story = { args: { mode: "addText" } };
 
-/** Unsaved edits put a dot on Save. */
+/** Save is live only once there are unsaved edits. */
 export const Unsaved: Story = { args: { dirty: true } };

@@ -534,6 +534,9 @@ function ChangePopover({
       shadow="md"
       withinPortal
       trapFocus
+      // The block's pencil buttons open it, not the heading it hangs from,
+      // so the heading carries no popup roles of its own.
+      withRoles={false}
       // Done and Cancel close it, each saying what happens to the preview.
       closeOnClickOutside={false}
       closeOnEscape={false}
