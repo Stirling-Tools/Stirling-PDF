@@ -188,8 +188,8 @@ public class CropController {
 
     private ResponseEntity<Resource> cropWithAutomaticDetection(CropPdfForm request)
             throws IOException {
-        TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
         File tempInput = spoolInput(request);
+        TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
 
         try {
             try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
@@ -231,10 +231,10 @@ public class CropController {
     }
 
     private ResponseEntity<Resource> cropWithJpdfium(CropPdfForm request) throws IOException {
-        TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
         Rect crop =
                 new Rect(request.getX(), request.getY(), request.getWidth(), request.getHeight());
         File tempInput = spoolInput(request);
+        TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
 
         try {
             try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
