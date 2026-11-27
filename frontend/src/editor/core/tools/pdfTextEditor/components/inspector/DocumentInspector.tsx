@@ -12,13 +12,17 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
+import { Checkbox } from "@editor/ui/Checkbox";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import ToolStep from "@editor/components/tools/shared/ToolStep";
 import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
 import { useDocumentActions } from "@editor/tools/pdfTextEditor/hooks/useDocumentActions";
 import { useLivePreview } from "@editor/tools/pdfTextEditor/hooks/useLivePreview";
-import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import type {
+  DocumentFontStyle,
+  FontPickFailure,
+} from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
@@ -39,6 +43,7 @@ import type {
 type ChangeFontEverywhere = (
   family: string,
   fontName: string | null,
+  style: DocumentFontStyle,
 ) => Promise<FontPickFailure | null>;
 
 interface Props {
@@ -265,7 +270,9 @@ function FontsBlock({
           <FontChangePanel
             store={store}
             target={target}
-            onApply={(family) => onChange(family, target.fontName)}
+            onApply={(family, style) =>
+              onChange(family, target.fontName, style)
+            }
             onDone={() => setTarget(null)}
           />
         )}
@@ -561,7 +568,12 @@ function PreviewFooter({
   );
 }
 
-/** Picks a family for a font's text, the page showing each pick as it is made. */
+/**
+ * Picks a family for a font's text, the page showing each pick as it is made.
+ * The simple path is just the font: each text keeps its own bold and italic.
+ * Bold and Italic make all of it bold or italic, and unticking "keep" sets
+ * every text to exactly what is pressed.
+ */
 function FontChangePanel({
   store,
   target,
@@ -570,12 +582,42 @@ function FontChangePanel({
 }: {
   store: EditorStore;
   target: FontTarget;
-  onApply: (family: string) => Promise<FontPickFailure | null>;
+  onApply: (
+    family: string,
+    style: DocumentFontStyle,
+  ) => Promise<FontPickFailure | null>;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
   const live = useLivePreview(store);
   const [family, setFamily] = useState<string | null>(null);
+  const [style, setStyle] = useState<DocumentFontStyle>({
+    keep: true,
+    bold: false,
+    italic: false,
+  });
+  const tryOut = (nextFamily: string | null, nextStyle: DocumentFontStyle) => {
+    setFamily(nextFamily);
+    setStyle(nextStyle);
+    // Bold and italic are faces of a font, so they wait for one to be picked.
+    return nextFamily
+      ? live.preview(() => onApply(nextFamily, nextStyle))
+      : Promise.resolve(null);
+  };
+  const toggle = (key: "bold" | "italic", icon: IconName, label: string) => (
+    <Tooltip label={label} withArrow>
+      <Button
+        size="sm"
+        variant={style[key] ? "primary" : "secondary"}
+        accent={style[key] ? "default" : "neutral"}
+        aria-label={label}
+        aria-pressed={style[key]}
+        onClick={() => void tryOut(family, { ...style, [key]: !style[key] })}
+        data-testid={`pdf-editor-font-change-${key}`}
+        leftSection={<Icon name={icon} size={18} />}
+      />
+    </Tooltip>
+  );
   return (
     <Stack gap="sm" data-testid="pdf-editor-font-change-panel">
       <div>
@@ -597,14 +639,34 @@ function FontChangePanel({
               "All text in this font will change. Locked text stays the same.",
             )}
       </Text>
-      <FontFamilySelect
-        value={family}
-        // Inside the popover, so picking from its list is not a click outside it.
-        withinPortal={false}
-        onChange={(next) => {
-          setFamily(next);
-          return live.preview(() => onApply(next));
-        }}
+      <Group gap="xs" wrap="nowrap">
+        <FontFamilySelect
+          value={family}
+          // Inside the popover, so picking from its list is not a click outside it.
+          withinPortal={false}
+          onChange={(next) => tryOut(next, style)}
+        />
+        {toggle(
+          "bold",
+          "bold",
+          t("pdfTextEditor.document.makeBold", "Make it all bold"),
+        )}
+        {toggle(
+          "italic",
+          "italic",
+          t("pdfTextEditor.document.makeItalic", "Make it all italic"),
+        )}
+      </Group>
+      <Checkbox
+        checked={style.keep}
+        onChange={(e) =>
+          void tryOut(family, { ...style, keep: e.currentTarget.checked })
+        }
+        label={t(
+          "pdfTextEditor.document.keepStyle",
+          "Keep bold and italic text as it is",
+        )}
+        data-testid="pdf-editor-font-change-keep"
       />
       <PreviewFooter
         canKeep={family !== null}

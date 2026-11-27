@@ -67,6 +67,32 @@ import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDi
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 
+/**
+ * Bold and italic for a document-wide font change. With `keep`, text keeps
+ * its own and a pressed `bold` or `italic` only adds to it; without, every
+ * text is set to exactly what is pressed.
+ */
+export interface DocumentFontStyle {
+  keep: boolean;
+  bold: boolean;
+  italic: boolean;
+}
+
+const REGULAR_WEIGHT = 400;
+const BOLD_WEIGHT = 700;
+
+function styleWanted(current: FaceStyle, style: DocumentFontStyle): FaceStyle {
+  if (!style.keep)
+    return {
+      weight: style.bold ? BOLD_WEIGHT : REGULAR_WEIGHT,
+      italic: style.italic,
+    };
+  return {
+    weight: style.bold ? Math.max(current.weight, BOLD_WEIGHT) : current.weight,
+    italic: style.italic || current.italic,
+  };
+}
+
 /** The fields the selection actions read off a run they are about to change. */
 interface SelectedRun {
   id: string;
@@ -582,12 +608,16 @@ export function useSelectionActions(store: EditorStore) {
     [store],
   );
 
-  /** Sets `targets` in `family`, keeping each one's weight and slant where the family has them. */
+  /**
+   * Sets `targets` in `family`, in the face nearest the style `styleFor` asks
+   * of each one's current style: by default the same weight and slant.
+   */
   const changeFamilyOf = useCallback(
     async (
       targets: SelectedRun[],
       fit: ScanFitTarget[],
       family: string,
+      styleFor: (current: FaceStyle) => FaceStyle = (current) => current,
     ): Promise<FontPickFailure | null> => {
       const doc = store.document;
       const stillApplies = claimFontChange(targets);
@@ -597,7 +627,7 @@ export function useSelectionActions(store: EditorStore) {
         runId: run.id,
         family:
           picked && !isScanRun(run)
-            ? faceKeepingStyle(picked, faceStyleOf(run.fontId))
+            ? faceKeepingStyle(picked, styleFor(faceStyleOf(run.fontId)))
             : family,
         text: run.text,
       }));
@@ -702,6 +732,7 @@ export function useSelectionActions(store: EditorStore) {
     async (
       family: string,
       fontName: string | null,
+      style?: DocumentFontStyle,
     ): Promise<FontPickFailure | null> => {
       const doc = store.document;
       if (!doc) return null;
@@ -717,7 +748,12 @@ export function useSelectionActions(store: EditorStore) {
           fit.push({ page, run });
         }
       }
-      return changeFamilyOf(targets, fit, family);
+      return changeFamilyOf(
+        targets,
+        fit,
+        family,
+        style && ((current) => styleWanted(current, style)),
+      );
     },
     [store, changeFamilyOf],
   );
