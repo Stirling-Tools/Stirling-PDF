@@ -26,6 +26,14 @@ describe("toolOperationLabel", () => {
     expect(toolOperationLabel(op({}), t)).toBe("Automate");
   });
 
+  // A tool whose translation key doesn't follow home.<toolId>.title (overlayPdfs) would
+  // otherwise show its raw id.
+  it("prefers the registry name over the translation lookup", () => {
+    expect(
+      toolOperationLabel(op({ toolId: "overlayPdfs" }), t, "Overlay PDFs"),
+    ).toBe("Overlay PDFs");
+  });
+
   it("keeps the fallback for an empty label rather than rendering a blank", () => {
     expect(toolOperationLabel(op({ label: "" }), t)).toBe("Automate");
   });

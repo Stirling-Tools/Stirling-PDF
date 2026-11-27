@@ -571,14 +571,14 @@ function TextSelectionMenuInner({
                   onClick={handleRedact}
                   aria-label={t("workbenchBar.redact", "Redact")}
                 >
-                  <Icon name="file-x" size={20} />
+                  <Icon name="redact" size={20} />
                 </button>
               </Tooltip>
             </>
           )}
 
           {canEditText && (
-            <Tooltip label={t("viewer.editText", "Edit text")} withArrow>
+            <Tooltip label={t("viewer.editText", "Edit Text")} withArrow>
               <button
                 type="button"
                 className="embedpdf-text-selection-btn"
@@ -586,7 +586,7 @@ function TextSelectionMenuInner({
                 onPointerEnter={() =>
                   void toolRegistry.pdfTextEditor?.preload?.()
                 }
-                aria-label={t("viewer.editText", "Edit text")}
+                aria-label={t("viewer.editText", "Edit Text")}
                 data-testid="text-selection-edit-text"
               >
                 <Icon name="square-pen" size={20} />

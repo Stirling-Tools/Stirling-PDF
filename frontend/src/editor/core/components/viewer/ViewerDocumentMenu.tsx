@@ -145,21 +145,21 @@ export function ViewerDocumentMenu({ disabled }: { disabled?: boolean }) {
             {t("fileSidebar.fileItem.versionHistory", "Version history")}
           </Menu.Item>
           {tool(
-            "info",
+            "clipboard-check",
             "getPdfInfo",
             t("workbenchBar.docMenu.info", "Document info"),
           )}
           {tool(
-            "file-pen",
+            "clipboard-list",
             "changeMetadata",
-            t("workbenchBar.docMenu.metadata", "Edit properties"),
+            t("workbenchBar.docMenu.metadata", "Change metadata"),
           )}
           <Menu.Divider />
           <Menu.Label>
             {t("workbenchBar.docMenu.protect", "Protect and optimise")}
           </Menu.Label>
           {tool(
-            "lock",
+            "lock-password",
             "addPassword",
             t("workbenchBar.docMenu.password", "Add password"),
           )}

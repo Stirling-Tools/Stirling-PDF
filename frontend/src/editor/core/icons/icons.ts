@@ -117,6 +117,7 @@ import Factory from "lucide-static/icons/factory.svg?react";
 import File from "lucide-static/icons/file.svg?react";
 import FileDigit from "lucide-static/icons/file-digit.svg?react";
 import FileLock from "lucide-static/icons/file-lock.svg?react";
+import FileOutput from "lucide-static/icons/file-output.svg?react";
 import FilePen from "lucide-static/icons/file-pen.svg?react";
 import FilePlus from "lucide-static/icons/file-plus.svg?react";
 import FileSearch from "lucide-static/icons/file-search.svg?react";
@@ -217,6 +218,7 @@ import PaintBucket from "lucide-static/icons/paint-bucket.svg?react";
 import Palette from "lucide-static/icons/palette.svg?react";
 import PanelLeft from "lucide-static/icons/panel-left.svg?react";
 import PanelRight from "lucide-static/icons/panel-right.svg?react";
+import PanelsTopLeft from "lucide-static/icons/panels-top-left.svg?react";
 import Paperclip from "lucide-static/icons/paperclip.svg?react";
 import PartyPopper from "lucide-static/icons/party-popper.svg?react";
 import Pause from "lucide-static/icons/pause.svg?react";
@@ -374,6 +376,7 @@ import Ftp from "@editor/icons/svg/stirling/ftp.svg?react";
 import ImageCompare from "@editor/icons/svg/stirling/image-compare.svg?react";
 import LineWeight from "@editor/icons/svg/stirling/line-weight.svg?react";
 import LockOpenPassword from "@editor/icons/svg/stirling/lock-open-password.svg?react";
+import LockPassword from "@editor/icons/svg/stirling/lock-password.svg?react";
 import MoveItemDown from "@editor/icons/svg/stirling/move-item-down.svg?react";
 import OverlayPages from "@editor/icons/svg/stirling/overlay-pages.svg?react";
 import Password from "@editor/icons/svg/stirling/password.svg?react";
@@ -557,6 +560,7 @@ export const ICONS = {
   file: { Component: File, kind: "lucide" },
   "file-digit": { Component: FileDigit, kind: "lucide" },
   "file-lock": { Component: FileLock, kind: "lucide" },
+  "file-output": { Component: FileOutput, kind: "lucide" },
   "file-pen": { Component: FilePen, kind: "lucide" },
   "file-plus": { Component: FilePlus, kind: "lucide" },
   "file-search": { Component: FileSearch, kind: "lucide" },
@@ -657,6 +661,7 @@ export const ICONS = {
   palette: { Component: Palette, kind: "lucide" },
   "panel-left": { Component: PanelLeft, kind: "lucide" },
   "panel-right": { Component: PanelRight, kind: "lucide" },
+  "panels-top-left": { Component: PanelsTopLeft, kind: "lucide" },
   paperclip: { Component: Paperclip, kind: "lucide" },
   "party-popper": { Component: PartyPopper, kind: "lucide" },
   pause: { Component: Pause, kind: "lucide" },
@@ -813,6 +818,7 @@ export const ICONS = {
   "image-compare": { Component: ImageCompare, kind: "stirling" },
   "line-weight": { Component: LineWeight, kind: "stirling" },
   "lock-open-password": { Component: LockOpenPassword, kind: "stirling" },
+  "lock-password": { Component: LockPassword, kind: "stirling" },
   "move-item-down": { Component: MoveItemDown, kind: "stirling" },
   "overlay-pages": { Component: OverlayPages, kind: "stirling" },
   password: { Component: Password, kind: "stirling" },

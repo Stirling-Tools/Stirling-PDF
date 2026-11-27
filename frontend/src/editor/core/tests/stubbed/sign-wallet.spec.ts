@@ -386,7 +386,7 @@ test.describe("Sign tool signature wallet", () => {
     await expect(page.getByTestId("apply-signatures")).toBeEnabled();
 
     await page.locator("#super-search-input").fill("Adjust page size");
-    await page.getByRole("option", { name: /Adjust page size/ }).click();
+    await page.getByRole("option", { name: /Adjust page size/i }).click();
     await expect(page.getByTestId("unsaved-save")).toBeVisible();
     await page.getByTestId("unsaved-save").click();
     await expect(page.getByRole("dialog")).toBeHidden();
@@ -475,7 +475,7 @@ test.describe("Sign tool signature wallet", () => {
     await expect(page.getByTestId("signature-wallet")).toBeVisible();
 
     await page.locator("#super-search-input").fill("Adjust page size");
-    await page.getByRole("option", { name: /Adjust page size/ }).click();
+    await page.getByRole("option", { name: /Adjust page size/i }).click();
     await page.getByTestId("unsaved-save").click();
     await expect(page).toHaveURL(/\/scale-pages$/);
     const bytes = await expectSavedSignatures(page, 1);

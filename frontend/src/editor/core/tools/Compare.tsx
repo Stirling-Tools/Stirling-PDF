@@ -60,7 +60,10 @@ const Compare = (props: BaseToolProps) => {
   const operation = base.operation as CompareOperationHook;
   const params = base.params.parameters;
 
-  const compareIcon = useMemo(() => <Icon name="columns-2" size={20} />, []);
+  const compareIcon = useMemo(
+    () => <Icon name="image-compare" size={20} />,
+    [],
+  );
   const [swapConfirmOpen, setSwapConfirmOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 

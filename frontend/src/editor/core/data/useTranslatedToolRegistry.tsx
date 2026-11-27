@@ -106,7 +106,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       multiTool: {
         icon: <Icon name="rows-3" size="1.5rem" />,
-        name: t("home.multiTool.title", "Multi-Tool"),
+        name: t("home.multiTool.title", "PDF Multi Tool"),
         component: null,
         workbench: "pageEditor",
         description: t(
@@ -122,7 +122,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       merge: {
-        icon: <Icon name="copy-plus" size="1.5rem" />,
+        icon: <Icon name="merge" size="1.5rem" />,
         name: t("home.merge.title", "Merge"),
         component: lazy(() => import("@editor/tools/Merge")),
         description: t(
@@ -142,7 +142,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Signing
       certSign: {
         icon: <Icon name="award" size="1.5rem" />,
-        name: t("home.certSign.title", "Certificate Sign"),
+        name: t("home.certSign.title", "Sign with Certificate"),
         component: lazy(() => import("@editor/tools/CertSign")),
         description: t(
           "home.certSign.desc",
@@ -176,7 +176,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "timestampPdf"),
       },
       sign: {
-        icon: <Icon name="signature" size="1.5rem" />,
+        icon: <Icon name="pen-tool" size="1.5rem" />,
         name: t("home.sign.title", "Sign"),
         component: lazy(() => import("@editor/tools/Sign")),
         description: t(
@@ -243,7 +243,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Document Security
 
       addPassword: {
-        icon: <Icon name="password" size="1.5rem" />,
+        icon: <Icon name="lock-password" size="1.5rem" />,
         name: t("home.addPassword.title", "Add Password"),
         component: lazy(() => import("@editor/tools/AddPassword")),
         description: t(
@@ -434,7 +434,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       getPdfInfo: {
         icon: <Icon name="clipboard-check" size="1.5rem" />,
-        name: t("home.getPdfInfo.title", "Get all info on PDF"),
+        name: t("home.getPdfInfo.title", "Get All Info on PDF"),
         component: lazy(() => import("@editor/tools/GetPdfInfo")),
         description: t(
           "home.getPdfInfo.desc",
@@ -627,7 +627,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       scalePages: {
         icon: <Icon name="scan" size="1.5rem" />,
-        name: t("home.scalePages.title", "Adjust page size/scale"),
+        name: t("home.scalePages.title", "Adjust Page Size/Scale"),
         component: lazy(() => import("@editor/tools/AdjustPageScale")),
         description: t(
           "home.scalePages.desc",
@@ -763,7 +763,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Extraction
 
       extractPages: {
-        icon: <Icon name="upload" size="1.5rem" />,
+        icon: <Icon name="file-output" size="1.5rem" />,
         name: t("home.extractPages.title", "Extract Pages"),
         component: lazy(() => import("@editor/tools/ExtractPages")),
         description: t(
@@ -893,7 +893,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       removeCertSign: {
         icon: <Icon name="shield-off" size="1.5rem" />,
-        name: t("home.removeCertSign.title", "Remove Certificate Sign"),
+        name: t("home.removeCertSign.title", "Remove Certificate Signature"),
         component: lazy(() => import("@editor/tools/RemoveCertificateSign")),
         description: t(
           "home.removeCertSign.desc",
@@ -911,7 +911,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Automation
 
       automate: {
-        icon: <Icon name="automate" size="1.5rem" />,
+        icon: <Icon name="git-branch" size="1.5rem" />,
         name: t("home.automate.title", "Automate"),
         component: lazy(() => import("@editor/tools/Automate")),
         description: t(
@@ -1254,7 +1254,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
 
       ocr: {
         icon: <Icon name="scan-text" size="1.5rem" />,
-        name: t("home.ocr.title", "OCR"),
+        name: t("home.ocr.title", "OCR / Clean Up Scans"),
         component: lazy(() => import("@editor/tools/OCR")),
         description: t(
           "home.ocr.desc",

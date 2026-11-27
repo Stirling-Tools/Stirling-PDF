@@ -30,7 +30,7 @@ function RemovePasswordAction() {
         aria-label={t("removePassword.submit", "Remove Password")}
         onClick={() => handleToolSelect("removePassword")}
       >
-        <Icon name="lock-open" size={16} />
+        <Icon name="lock-open-password" size={16} />
       </ActionIcon>
     </Tooltip>
   );

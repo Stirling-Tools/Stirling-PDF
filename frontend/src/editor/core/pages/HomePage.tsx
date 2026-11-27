@@ -634,7 +634,7 @@ export default function HomePage() {
             }
           }}
         >
-          <Icon name="automate" size="1.5rem" />
+          <Icon name="git-branch" size="1.5rem" />
           <span className="mobile-bottom-button-label">
             {t("quickAccess.automate", "Automate")}
           </span>
