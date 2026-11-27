@@ -47,18 +47,25 @@ export class PdfiumPageRenderer {
     doc: EditorDocument,
     page: Page,
     scale: number,
+    showAnnotations = true,
   ): Promise<ImageData> {
     const { width, height } = PdfiumPageRenderer.rasterSize(
       page.width,
       page.height,
       scale,
     );
-    return PdfiumPageRenderer.renderArea(doc, page, scale, {
-      x: 0,
-      y: 0,
-      width,
-      height,
-    });
+    return PdfiumPageRenderer.renderArea(
+      doc,
+      page,
+      scale,
+      {
+        x: 0,
+        y: 0,
+        width,
+        height,
+      },
+      showAnnotations,
+    );
   }
 
   /** The bitmap pixels {@link render} at `scale` draws raw page-space `raw` into, or null when none. */
@@ -94,8 +101,9 @@ export class PdfiumPageRenderer {
     page: Page,
     scale: number,
     area: PageRect,
+    showAnnotations = true,
   ): Promise<ImageData> {
-    return drawArea(doc, page, scale, area);
+    return drawArea(doc, page, scale, area, showAnnotations);
   }
 
   /**
@@ -110,12 +118,13 @@ export class PdfiumPageRenderer {
     scale: number,
     area: PageRect,
     objPtr: number,
+    showAnnotations = true,
   ): ImageData | null {
     const setActive = (doc.module as unknown as ActivityModule)
       .FPDFPageObj_SetIsActive;
     if (!setActive || !objPtr || !setActive(objPtr, false)) return null;
     try {
-      return drawArea(doc, page, scale, area);
+      return drawArea(doc, page, scale, area, showAnnotations);
     } finally {
       setActive(objPtr, true);
     }
@@ -131,6 +140,7 @@ function drawArea(
   page: Page,
   scale: number,
   area: PageRect,
+  showAnnotations: boolean,
 ): ImageData {
   const m = doc.module;
   // No flush needed: rendering reads the in-memory objects; the page is offset to the area and clipped.
@@ -143,7 +153,10 @@ function drawArea(
   const bitmapPtr = m.FPDFBitmap_Create(w, h, 1);
   try {
     m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, w, h, 0xffffffff);
-    // FPDF_REVERSE_BYTE_ORDER = 0x10, FPDF_ANNOT = 0x01
+    // FPDF_REVERSE_BYTE_ORDER = 0x10, FPDF_ANNOT = 0x01. The annot flag is
+    // also what draws annotation text, so it is the only switch that hides
+    // annotations without touching the page's own content.
+    const renderFlags = 0x10 | (showAnnotations ? 0x01 : 0);
     m.FPDF_RenderPageBitmap(
       bitmapPtr,
       page.pagePtr,
@@ -152,14 +165,15 @@ function drawArea(
       full.width,
       full.height,
       0,
-      0x01 | 0x10,
+      renderFlags,
     );
     page.shownInViewer = true;
 
     // Second pass for the form layer. A widget with no appearance stream is
     // drawn ONLY here - FPDF_ANNOT alone leaves such fields blank, which is
-    // why they were invisible in the editor but fine in the viewer.
-    const formEnv = doc.formEnvironment();
+    // why they were invisible in the editor but fine in the viewer. Widgets
+    // are annotations, so they follow the same visibility switch.
+    const formEnv = showAnnotations ? doc.formEnvironment() : null;
     if (formEnv) {
       doc.notifyFormPageLoaded(page);
       const formMod = m as unknown as {

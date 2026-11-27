@@ -38,7 +38,7 @@ export function ViewerEditLayer({
   onCovered,
 }: ViewerPageLayerProps) {
   const store = useSharedEditorStore();
-  const { pdfRenderMode } = useViewer();
+  const { pdfRenderMode, isAnnotationsVisible } = useViewer();
   // Each page watches only its own snapshot, so an edit re-renders one page.
   // A new or closed document replaces every snapshot, so `store.document`
   // below stays current.
@@ -86,6 +86,7 @@ export function ViewerEditLayer({
         page={page}
         scale={displayWidth / page.width}
         renderMode={pdfRenderMode}
+        showAnnotations={isAnnotationsVisible}
         onPainted={onPainted}
       />
     </div>
@@ -98,6 +99,7 @@ function EditablePage({
   page,
   scale,
   renderMode,
+  showAnnotations,
   onPainted,
 }: {
   store: EditorStore;
@@ -105,6 +107,7 @@ function EditablePage({
   page: PageSnapshot;
   scale: number;
   renderMode: PdfRenderMode;
+  showAnnotations: boolean;
   onPainted: () => void;
 }) {
   const widthMode = useEditorState(store, (s) => s.widthMode);
@@ -131,6 +134,7 @@ function EditablePage({
       page={page}
       scale={scale}
       renderMode={renderMode}
+      showAnnotations={showAnnotations}
       widthMode={widthMode}
       showRulers={showRulers}
       selectedRunIds={runIds}
