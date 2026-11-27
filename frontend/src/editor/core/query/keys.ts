@@ -12,6 +12,8 @@ export const qk = {
   formDetectionModelStatus: () =>
     ["editor", "formDetectionModelStatus"] as const,
   groupEnabled: (group: string) => ["editor", "groupEnabled", group] as const,
+  ocrLanguages: (endpoint: string) =>
+    ["editor", "ocrLanguages", endpoint] as const,
   signingSessions: (userId: string | null) =>
     ["editor", "signingSessions", userId] as const,
   /** The PAYG wallet: usage, allowance and cap for the signed-in team. */

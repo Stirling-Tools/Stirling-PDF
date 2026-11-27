@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
 import { expectConsole } from "@editor/tests/failOnConsole";
 import {
   ToolCategoryId,
@@ -806,7 +807,11 @@ describe("tool-id keyed helpers", () => {
   });
 
   test("resolveToolDefaults is empty when a tool has no resolver or it fails", async () => {
-    const context = { appConfig: null, language: "en" };
+    const context = {
+      appConfig: null,
+      language: "en",
+      queryClient: new QueryClient(),
+    };
     const failing = {
       compress: entry({
         name: "Compress",

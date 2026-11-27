@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
+import { createElement, type ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { AutomationMode } from "@editor/types/automation";
 import { useAutomationForm } from "@editor/hooks/tools/automate/useAutomationForm";
@@ -26,8 +28,13 @@ function ocrLikeRegistry(resolved: Promise<{ languages: string[] }>) {
 }
 
 function renderForm(toolRegistry: Partial<ToolRegistry>) {
-  return renderHook(() =>
-    useAutomationForm({ mode: AutomationMode.CREATE, toolRegistry }),
+  const queryClient = new QueryClient();
+  return renderHook(
+    () => useAutomationForm({ mode: AutomationMode.CREATE, toolRegistry }),
+    {
+      wrapper: ({ children }: { children: ReactNode }) =>
+        createElement(QueryClientProvider, { client: queryClient }, children),
+    },
   );
 }
 

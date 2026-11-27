@@ -6,7 +6,7 @@ import {
 import type { ToolDefaultsContext } from "@editor/hooks/tools/shared/toolOperationTypes";
 import {
   autoOcrLanguage,
-  fetchOcrLanguages,
+  ocrLanguagesQuery,
 } from "@editor/hooks/tools/ocr/ocrLanguages";
 
 export interface OCRParameters extends BaseParameters {
@@ -35,8 +35,10 @@ export function validateOCRParameters(params: OCRParameters): boolean {
 /** The server's language matching the UI language, which LanguagePicker also applies on mount. */
 export async function resolveOCRDefaultParameters({
   language,
+  queryClient,
 }: ToolDefaultsContext): Promise<Partial<OCRParameters>> {
-  const match = autoOcrLanguage(await fetchOcrLanguages(), language);
+  const languages = await queryClient.ensureQueryData(ocrLanguagesQuery());
+  const match = autoOcrLanguage(languages, language);
   return match ? { languages: [match] } : {};
 }
 

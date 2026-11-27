@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AutomationTool,
   AutomationConfig,
@@ -28,6 +29,7 @@ export function useAutomationForm({
 }: UseAutomationFormProps) {
   const { t, i18n } = useTranslation();
   const { config: appConfig } = useAppConfig();
+  const queryClient = useQueryClient();
 
   const [automationName, setAutomationName] = useState("");
   const [automationDescription, setAutomationDescription] = useState("");
@@ -138,6 +140,7 @@ export function useAutomationForm({
     void resolveToolDefaults(operation as ToolId, toolRegistry, {
       appConfig,
       language: i18n.language,
+      queryClient,
     }).then((resolved) => {
       if (Object.keys(resolved).length === 0) return;
       // Only a step still holding the exact object it was picked with: a settings save or another

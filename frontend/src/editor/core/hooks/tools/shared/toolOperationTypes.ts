@@ -1,4 +1,5 @@
 import { lazy, type ComponentType } from "react";
+import type { QueryClient } from "@tanstack/react-query";
 import { StirlingFile } from "@editor/types/fileContext";
 import type { ResponseHandler } from "@editor/utils/toolResponseProcessor";
 import { ToolId } from "@editor/types/toolId";
@@ -18,6 +19,8 @@ export interface ToolDefaultsContext {
   appConfig: AppConfig | null;
   /** The UI language, as i18next reports it. */
   language: string;
+  /** The app's query cache, holding server data loaded at app start. */
+  queryClient: QueryClient;
 }
 
 /**
