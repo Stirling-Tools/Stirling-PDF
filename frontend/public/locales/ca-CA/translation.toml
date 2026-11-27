@@ -12,9 +12,11 @@ comingSoon = "Properament"
 confirm = "Confirmar"
 confirmClose = "Confirma el tancament"
 confirmCloseCancel = "Cancel·la"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Tanca el fitxer"
 confirmCloseDiscard = "Descarta els canvis i tanca"
 confirmCloseMessage = "Segur que vols tancar aquest fitxer?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Desa i tanca"
 confirmCloseSaveFailed_one = "S'ha desat amb errors. No s'ha pogut desar {{count}} fitxer."
 confirmCloseSaveFailed_other = "S'ha desat amb errors. {{count}} fitxers no s'han pogut desar."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Fitxer desat al disc"
 filesSelected = "{{count}} fitxers"
 font = "Tipus de lletra"
 fontSizeTooltip = "Mida del text del número de pàgina en punts. Valors més alts generen text més gran."
-fontTypeTooltip = "Família del tipus de lletra per als números de pàgina. Tria-la segons l'estil del teu document."
 green = "Verd"
 help = "Ajuda"
 incorrectPasswordMessage = "La contrasenya actual és incorrecta."
@@ -249,9 +250,7 @@ image = "Càrrega"
 text = "Text"
 
 [addImage.step]
-createDesc = "Puja la imatge que vols afegir"
 place = "Col·loca la imatge"
-placeDesc = "Fes clic al PDF per afegir la imatge"
 
 [addImage.steps]
 configure = "Configura la imatge"
@@ -276,7 +275,7 @@ fontName = "Nom del tipus de lletra"
 fontSize = "Mida del tipus de lletra"
 numberPagesDesc = "p. ex., 1,3,5-8 o deixa-ho en blanc per a totes les pàgines"
 pagePreviewAlt = "Previsualització de la pàgina"
-pagesAndStarting = "Pàgines i número inicial"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Posició i pàgines"
 preview = "Selecció de posició"
 previewDisclaimer = "La previsualització és aproximada. El resultat final pot variar a causa de les mètriques del tipus de lletra del PDF."
@@ -300,6 +299,7 @@ title = "Resultats de numeració de pàgina"
 
 [addPassword]
 desc = "Xifra el vostre document PDF amb una contrasenya."
+submit = "Add Password"
 tags = "xifrar,contrasenya,bloquejar,segur,protegir,seguretat,xifrat,protecció,confidencial,privat,restringir l'accés"
 title = "Afegir Contrasenya"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Previsualització del segell"
 tags = "segell,marca,sellar,aprovat,rebutjat,confidencial,eina de segell,segell de cautxú,segell de data,segell d'aprovació,rebut,nul,còpia,original"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabet"
-clickToExpand = "Fes clic per ampliar"
 customColor = "Color de Text Personalitzat"
 customDateDesc = "Format personalitzat"
 customPosition = "Arrossegueu el segell a la ubicació desitjada a la finestra de previsualització."
 dateDesc = "Data actual"
 datetimeDesc = "Data i hora combinades"
 dateTimeVars = "Data i hora"
-dynamicVariables = "Variables dinàmiques"
 examples = "Exemples"
 filenameDesc = "Nom del fitxer sense extensió"
 filenameFullDesc = "Nom del fitxer amb extensió"
@@ -365,6 +364,8 @@ noStampSelected = "Cap segell seleccionat. Torneu al pas 1."
 opacity = "Opacitat"
 otherVars = "Altres"
 pageNumberDesc = "Número de pàgina actual"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Informació de la pàgina"
 position = "Posició"
 positionAndFormatting = "Posició i format"
@@ -378,9 +379,10 @@ quickPosition = "Seleccioneu una posició a la pàgina per col·locar el segell.
 rotation = "Rotació"
 selectedImageAlt = "Imatge de segell seleccionada"
 selectTemplate = "Selecciona una plantilla..."
+size = "Size"
 stampSetup = "Configuració del segell"
 stampText = "Text del Segell"
-stampTextDescription = "Utilitza les variables dinàmiques següents. Utilitza @@ per a @ literal. Utilitza \\n per a línies noves."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Tipus de Segell"
 submit = "Afegeix segell"
 tags = "Segell, Afegeix imatge, Centra imatge, Marca d'aigua, PDF, Insereix, Personalitza"
@@ -389,7 +391,6 @@ title = "Segella PDF"
 totalPagesDesc = "Nombre total de pàgines"
 useTemplate = "Utilitza plantilla"
 uuidDesc = "Identificador únic curt (8 caràcters)"
-variablesHelp = "Fes clic a qualsevol variable per inserir-la al text del segell. Utilitza @@ per a @ literal."
 yearMonthDayDesc = "Parts individuals de la data"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "S'ha produït un error en afegir el segell al PDF."
 
 [AddStampRequest.results]
 title = "Resultats del segell"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Personalitzat"
@@ -410,6 +417,11 @@ legal-footer = "Peu de pàgina legal"
 page-numbers = "Números de pàgina"
 pageNumberFooter = "Peu de pàgina amb número de pàgina"
 timestamp = "Marca de temps"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Aplica el text"
@@ -462,9 +474,7 @@ image = "Càrrega"
 text = "Text"
 
 [addText.step]
-createDesc = "Introdueix el text que vols afegir"
 place = "Col·loca el text"
-placeDesc = "Fes clic al PDF per afegir-hi el text"
 
 [addText.steps]
 configure = "Configura el text"
@@ -1233,6 +1243,18 @@ label = "Regenera a l'arrencada"
 description = "Nombre de dies que el certificat serà vàlid"
 label = "Validesa del certificat (dies)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Directoris des dels quals les fonts de carpetes i les sortides de carpetes poden llegir i als quals poden escriure. Això és un límit de seguretat: les automatitzacions mai no poden apuntar a una ruta del servidor fora d'aquesta llista."
 securityNote = "Deixa-ho buit per desactivar completament les fonts i sortides de carpetes. El directori de configuració propi de Stirling sempre està fora de límits."
@@ -1456,7 +1478,9 @@ label = "Nom d'usuari SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Els clients envien una clau API de Stirling a la capçalera X-API-KEY (o Authorization: Bearer <key>). La clau s'associa al seu usuari de Stirling propietari: només hi accedeixen els comptes proveïts, i les accions s'auditen com aquest usuari. Gestiona les claus a Compte > Claus API."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Exposa les eines PDF i els agents AI de Stirling als clients MCP mitjançant un endpoint protegit amb OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "Servidor MCP"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Eines permeses"
 description = "Ids d'operació que s'han d'ocultar de MCP (separats per comes o espais), p. ex. add-password remove-password. Deixa-ho en blanc per exposar totes les eines activades."
 label = "Eines bloquejades"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Quan està desactivat (per defecte), no es carrega cap endpoint /mcp, metadades ni beans MCP."
 label = "Activa el servidor MCP"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Introdueix l'emissor OAuth + Resource ID a dalt, desa i reinicia."
 step1ApiKey = "Crea una clau API a Compte > Claus API (cada usuari utilitza la seva)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Al teu client MCP, afegeix un"
 step2b = "servidor que apunti a:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "El client descobreix automàticament OAuth des de:"
 step3ApiKey = "Envia la clau en una capçalera"
 step3ApiKeyb = "(o Authorization: Bearer <key>). No s'utilitza OAuth ni descobriment de metadades."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Aprova l'inici de sessió; el client ho torna a provar amb un token. Les eines apareixen agrupades: convert, pages, misc, security, ai."
 step4ApiKey = "Les eines apareixen agrupades: convert, pages, misc, security, ai, i cada crida s'audita com el propietari de la clau."
 tip = "Consell: registra el Resource ID com a audiència permesa al teu IdP. Provat amb MCP Inspector i Claude Desktop."
 tipApiKey = "Consell: el mode de clau API no necessita cap IdP extern; és el més senzill per a self-host. La clau s'associa al seu usuari de Stirling propietari."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Connecta un client MCP"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Descoberta automàticament des de l'emissor"
 
 [admin.settings.mcp.mode]
 apikey = "Clau API (clau de Stirling per usuari)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth necessita un IdP extern. La clau API utilitza una clau API de Stirling per usuari (X-API-KEY), el més senzill per a self-host."
 label = "Mode d'autenticació"
 oauth = "OAuth 2.1 (IdP extern)"
@@ -1515,6 +1563,18 @@ label = "ID del recurs"
 [admin.settings.mcp.scopes]
 description = "Requereix mcp.tools.read per a operacions de lectura i mcp.tools.write per a operacions d'escriptura/AI."
 label = "Aplica scopes OAuth"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim comparat amb un nom d'usuari de Stirling (p. ex. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Vols ajudar a fer que Stirling PDF sigui millor?"
 tags = "anotar,ressaltar,dibuixar,marcatge,comentari,notes,revisió,redline,feedback,eines de marcatge,notes adhesives,formes,fletxes,quadre de text,mà alçada"
 
 [annotation]
-alignCenter = "Alinea al centre"
-alignLeft = "Alinea a l'esquerra"
-alignRight = "Alinea a la dreta"
 annotationStyle = "Estil d’anotació"
 backgroundColor = "Color de fons"
 borderOff = "Vora: desactivada"
@@ -2016,18 +2073,61 @@ underline = "Subratllat"
 undoDelete = "Desfés"
 width = "Amplada"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Un editor PDF gratuït i privat que pots executar en qualsevol infraestructura."
 
 [appBanner]
 dismiss = "Descarta"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Afegeix adjunts..."
 convertToPdfA3b = "Converteix a PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b és un format d'arxiu que garanteix la preservació a llarg termini. Permet incrustar formats de fitxer arbitraris com a adjunts. La conversió requereix Ghostscript i pot trigar més amb fitxers grans."
-convertToPdfA3bTooltipHeader = "Sobre la conversió a PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Què fa"
 discardChanges = "Descarta"
 downloadSingle = "Baixa l'adjunt"
 duplicateName = "Ja existeix un adjunt anomenat '{{name}}'."
@@ -2208,7 +2308,6 @@ guest = "Convidat"
 user = "Usuari"
 
 [auto-rename]
-description = "Troba automàticament el títol del contingut del vostre PDF i l'utilitza com a nom de fitxer."
 submit = "Canvi de Nom Automàtic"
 tags = "autodetect,basat en capçalera,organitzar,reetiquetar"
 title = "Canvi de Nom Automàtic"
@@ -2218,21 +2317,6 @@ failed = "S'ha produït un error en canviar automàticament el nom del PDF."
 
 [auto-rename.results]
 title = "Resultats del canvi de nom automàtic"
-
-[auto-rename.settings]
-title = "Quant a"
-
-[auto-rename.tooltip.description]
-title = "Què fa"
-
-[auto-rename.tooltip.header]
-title = "Com funciona el canvi de nom automàtic"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Cerca text que sembli un títol o capçalera"
-bullet2 = "Crea un nom de fitxer net i vàlid a partir del títol detectat"
-bullet3 = "Manté el nom original si no es troba cap títol adequat"
-title = "Canvi de nom intel·ligent"
 
 [autoFormDetection]
 loading = "S'estan detectant camps de formulari..."
@@ -2327,6 +2411,9 @@ remove = "Elimina l’eina"
 selected = "Eines seleccionades"
 selectTool = "Seleccioneu una eina..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Cancel·la"
 confirm = "Torna enrere"
@@ -2360,6 +2447,10 @@ title = "Executa l’automatització"
 [automate.selection]
 title = "Selecció d’automatització"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Crea una automatització nova"
 
@@ -2371,6 +2462,7 @@ title = "Suggerits"
 
 [automate.sequence]
 finish = "Finalitza"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Executa l’automatització"
 running = "Executant l’automatització..."
 signInToRun = "Inicieu la sessió per executar automatitzacions."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Flux de seguretat"
 secureWorkflowDesc = "Assegura els documents PDF eliminant contingut potencialment maliciós com JavaScript i fitxers incrustats, i després afegeix protecció amb contrasenya per evitar accessos no autoritzats. Per defecte, la contrasenya és 'password'."
 
 [autoRename]
-description = "Aquesta eina canviarà automàticament el nom dels fitxers PDF segons el seu contingut. Analitza el document per trobar el títol més adequat a partir del text."
 tags = "detecció automàtica,basat en capçalera,organitzar,reetiquetar,canvi de nom automàtic,canvi de nom intel·ligent,canviar nom per contingut,nom de fitxer,nomenclatura de fitxers,detectar títol"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,dividir,document,organització"
 [autoSplitPDF]
 dividerDownload2 = "Descarrega 'Divisor Automàtic (amb instruccions).pdf'"
 duplexMode = "Mode Dúplex (Escaneig de davant i darrere)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "basat en QR,separar,segmentació d'escaneig,organitzar"
 title = "Divisió Automàtica de PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Afegeix vores al voltant de cada secció de pàgina per ajudar amb el
 [bookletImposition.addGutter]
 label = "Afegeix marge de relligat"
 tooltip = "Afegeix espai interior per a l'enquadernació"
-
-[bookletImposition.advanced]
-toggle = "Opcions avançades"
 
 [bookletImposition.doubleSided]
 label = "Impressió a doble cara"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Trieu el fitxer JKS"
 chooseP12File = "Trieu el fitxer PKCS12"
 choosePfxFile = "Trieu el fitxer PFX"
 choosePrivateKey = "Trieu el fitxer de clau privada"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Rebutjada"
 fetchFailed = "No s'han pogut carregar les dades de signatura"
 finalized = "Finalitzat"
 location = "Ubicació"
-logoTitle = "Logotip"
-name = "Nom"
-noLogo = "Sense logotip"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Número de pàgina"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Contrasenya del certificat"
 passwordOptional = "Deixeu en blanc si no hi ha contrasenya"
 pemCertificateLabel = "Certificat (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Clau privada (.pem / .key)"
 pending = "Pendent"
 readyToFinalize = "A punt per finalitzar"
 reason = "Motiu"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "S'usa el certificat del servidor: no calen fitxers ni contrasenya"
-showLogo = "Mostra el logotip"
 signatureProgress = "{{signedCount}}/{{totalCount}} signatures"
 tags = "autenticar,PEM,P12,oficial,xifrar,signar,certificat,PKCS12,JKS,servidor,manual,auto"
 title = "Signatura amb Certificat"
@@ -2738,12 +2828,45 @@ viewed = "Vist"
 
 [certSign.appearance]
 invisible = "Invisible"
+showOnPage = "Show signature on page"
 stepTitle = "Aparença de la signatura"
 visibility = "Visibilitat"
 visible = "Visible"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Detalls de la signatura"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Sobre l'aparença de la signatura"
@@ -2762,9 +2885,6 @@ bullet3 = "Tria en quina pàgina col·locar la signatura"
 bullet4 = "Es pot incloure un logotip opcional"
 text = "Mostra un bloc de signatura al PDF amb el teu nom, data i detalls opcionals. Útil quan vols que els lectors vegin clarament que el document està signat."
 title = "Signatures visibles"
-
-[certSign.certFiles]
-stepTitle = "Fitxers de certificat"
 
 [certSign.certType.tooltip.convert]
 text = "Convertiu el vostre fitxer a un magatzem de claus de Java (.jks) amb keytool i després trieu JKS."
@@ -2786,6 +2906,7 @@ text = "Trieu el format que coincideixi amb el vostre fitxer de certificat:"
 title = "Quina opció hauria d'utilitzar?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Format del certificat"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Aquest dispositiu"
 [certSign.error]
 failed = "S'ha produït un error en processar les signatures."
 
-[certSign.format]
-pkcs11 = "Token USB"
-windowsStore = "Magatzem de certificats de Windows"
-
 [certSign.hardware]
-certificate = "Certificat"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Camí personalitzat del controlador…"
+digitalId = "Digital ID"
 driver = "Controlador PKCS#11"
 driverPath = "Camí de la biblioteca del controlador"
 driverPathPlaceholder = "Camí complet al vostre controlador PKCS#11 (.dll, .so o .dylib)"
-expired = "caducat"
-expires = "caduca"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Llista els certificats"
-loading = "S'estan llegint els certificats…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "No s'han trobat certificats de signatura"
 noDriver = "No s'ha detectat cap controlador PKCS#11. Instal·leu el controlador del vostre token (p. ex., OpenSC), després torneu a obrir això - o introduïu manualment el camí del controlador a continuació."
-notYetValid = "encara no vàlid"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN del token"
 pkcs11Hint = "Seleccioneu el controlador PKCS#11 del vostre token, introduïu el PIN i, a continuació, llisteu els certificats del token."
 pkcs11LoadError = "No s'han pogut llegir els certificats del token. Comproveu el PIN i el controlador."
-refresh = "Actualitza"
-selectCert = "Seleccioneu el certificat"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Seleccioneu el controlador"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Ranura (opcional)"
-windowsHint = "Trieu un certificat del vostre magatzem de certificats de Windows. La signatura utilitza la clau de la vostra targeta/token - Windows us demanarà el PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "No s'ha pogut llegir el magatzem de certificats de Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Regla general"
 device = "Aquest dispositiu"
 noOtherSources = "No hi ha altres fonts de certificats disponibles."
 server = "Servidor"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Origen del certificat"
 upload = "Puja"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Actualitza el nom d'usuari. Es tancarà la sessió després d’actualitzar."
@@ -3069,7 +3205,6 @@ placeholder = "Creador del document"
 
 [changeMetadata.customFields]
 add = "Afegeix camp"
-description = "Afegeix camps de metadades personalitzats al document"
 key = "Clau"
 keyPlaceholder = "Clau personalitzada"
 remove = "Elimina"
@@ -3135,10 +3270,6 @@ bullet1 = "Data de creació: quan es va fer el document original"
 bullet2 = "Data de modificació: quan es va canviar per últim cop"
 text = "Quan es va crear i modificar el document."
 title = "Camps de data"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Supressió completa de metadades per garantir la privadesa."
-title = "Elimina les metadades existents"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Títol: nom o encapçalament del document"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Has assolit el teu límit d'ús. Consulta les opcions del
 
 [checkAccessibility]
 aboutRow = "Quant a {{label}}"
-checking = "Comprovant..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Descarrega l'informe d'accessibilitat"
 fileFailed = "ha fallat"
+noFiles = "Select a PDF to check it."
 pickFile = "Mostra els resultats de"
-submit = "Comprova l'accessibilitat"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Text alternatiu"
@@ -3286,10 +3417,17 @@ structure = "Les etiquetes indiquen als lectors de pantalla què és cada part d
 [checkAccessibility.checks]
 label = "{{passed}} de {{total}} comprovacions superades"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "No s'ha pogut crear l'informe d'accessibilitat. Torna-ho a intentar."
 fileTitle = "No s'ha pogut comprovar aquest fitxer"
 partial = "Alguns fitxers no s'han pogut comprovar."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Declara PDF/UA"
@@ -3312,6 +3450,21 @@ title = "El fitxer té un títol a les seves metadades."
 [checkAccessibility.figures]
 summary_one = "{{count}} imatge necessita una descripció (pàgina {{pages}})"
 summary_other = "{{count}} imatges necessiten una descripció (pàgines {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "S'aplica a"
@@ -3465,19 +3618,7 @@ checking = "Comprovant {{current}} de {{total}}..."
 complete = "Comprovació completada"
 
 [checkAccessibility.steps]
-results = "Resultats"
 standard = "Estàndard"
-
-[checkAccessibility.tooltip.header]
-title = "Quin estàndard comprovar"
-
-[checkAccessibility.tooltip.ua1]
-text = "La primera versió de PDF/UA, publicada el 2012 com a ISO 14289-1, per a fitxers PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "La versió més nova, publicada el 2024 com a ISO 14289-2, per a fitxers PDF 2.0. Un fitxer PDF 1.7 comprovat segons aquesta falla les regles que només s'apliquen a PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Anotació {{n}}"
@@ -3868,6 +4009,7 @@ title = "Tria el color"
 transparent = "Transparent"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Accions"
 back = "Enrere"
 cancel = "Cancel·la"
@@ -4206,7 +4348,9 @@ title = "Actualitza les claus API"
 warning = "⚠️ Avís: Aquesta acció generarà claus API noves i invalidarà les anteriors."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) permet que assistents AI com Claude utilitzin directament les teves eines de Stirling PDF. Connecta un client una vegada i el teu assistent podrà convertir, editar, protegir i processar documents en nom teu."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Els usuaris convidats no poden connectar clients MCP. Crea un compte per utilitzar el servidor MCP i permetre que el teu assistent AI executi eines de Stirling PDF en nom teu."
 navLabel = "Servidor MCP"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Copia {{label}}"
 tooltipCopied = "{{label}} copiat"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "El teu endpoint MCP"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Afegeix a"
 hint = "Tria el teu client, enganxa el fragment al fitxer indicat i reinicia'l. Iniciaràs la sessió amb el teu compte de Stirling en el primer ús; no cal copiar claus."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Connecta el teu assistent AI"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Mantén la relació d'aspecte"
 maxAttachmentSize = "Mida màxima de l'adjunt (MB)"
 multiple = "Múltiples"
 optimizeForEbook = "Optimitza el PDF per a lectors d'ebook (usa Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Sortida"
-outputFormat = "Format de sortida"
-pdfaAccessibleFormat = "{{format}} (accessible)"
-pdfaDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
-pdfaNote = "PDF/A-1b és més compatible, PDF/A-2b admet més funcions, PDF/A-3b admet fitxers incrustats."
-pdfaOptions = "Opcions de PDF/A"
 pdfOptions = "Opcions de PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Opcions"
 signInToUse = "Inicia sessió per utilitzar"
 single = "Únic"
 sourceFormatPlaceholder = "Format d'origen"
-strictMode = "Mode estricte"
-strictModeDesc = "Error si la conversió no és perfecta (utilitza la verificació VeraPDF)"
 svgPdfOptions = "Opcions de SVG a PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Els fitxers SVG es renderitzen com a gràfics vectorials per obtenir un resultat nítid a qualsevol resolució. Les dimensions del SVG determinen la mida de la pàgina PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Nivell de zoom"
 
 [convert.ebookOptions]
 includePageNumbers = "Inclou números de pàgina"
-includePageNumbersDesc = "Afegeix números de pàgina al PDF generat"
 includeTableOfContents = "Inclou la taula de continguts"
-includeTableOfContentsDesc = "Afegeix una taula de continguts generada al PDF resultant"
 optimizeForEbookPdf = "Optimitza per a lectors d'eBook"
 optimizeForEbookPdfDesc = "Optimitza el PDF per a la lectura en eBook (mida de fitxer menor, millor renderitzat en dispositius eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Detecta capítols"
 detectChaptersDesc = "Detecta encapçalaments que semblin capítols i insereix salts de pàgina EPUB"
 kindleEink = "Kindle e-Ink (text optimitzat)"
 outputFormat = "Format de sortida"
-outputFormatDesc = "Tria el format de sortida per a l'eBook"
 tabletPhone = "Tauleta/Telèfon (amb imatges)"
 targetDevice = "Dispositiu de destinació"
 targetDeviceDesc = "Tria un perfil de sortida optimitzat per al dispositiu lector"
@@ -4469,8 +4619,24 @@ description = "Aquestes cookies són essencials perquè el lloc web funcioni cor
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Títol de la pàgina de portada"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "Cartera PDF"
 description = "Cada fitxer seleccionat es conserva sencer dins del nou PDF, sigui quin sigui el seu tipus. Els lectors que no admeten portafolis mostren una pàgina de portada amb els fitxers adjunts."
 goToFileEditor = "Ves a l'editor de fitxers"
@@ -4488,6 +4654,9 @@ title = "Què fa"
 
 [createPortfolio.tooltip.header]
 title = "Sobre els portafolis PDF"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Retalla automàticament els espais en blanc"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Aquest navegador no permet accedir al porta-retalls."
 export = "Exporta marcadors"
 exportClipboard = "Copia JSON al porta-retalls"
 exportJson = "Baixa JSON"
+exportMenu = "Export"
 importClipboard = "Enganxa JSON del porta-retalls"
 importJson = "Importa JSON"
+importMenu = "Import"
 loadFromPdf = "Carrega des del PDF seleccionat"
 noFile = "Selecciona un PDF per extreure els marcadors existents."
 selectedFile = "Carregat des de {{file}}"
-source = "Carrega marcadors"
 
 [editTableOfContents.editor]
 addTopLevel = "Afegeix un marcador de primer nivell"
@@ -4740,6 +4910,9 @@ replaceExisting = "Substitueix els marcadors existents (desmarca per afegir)"
 replaceExistingHint = "Si està desactivat, l'esquema nou s'afegirà després dels marcadors actuals."
 title = "Marcadors i esquema"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Canvia el PDF"
 filePrompt = "Selecciona un PDF de la biblioteca o puja'n un de nou per començar."
@@ -4753,7 +4926,6 @@ title = "Obre l'eina per començar a editar"
 [encryptedPdfUnlock]
 actionIgnored = "S'ha ignorat la restricció de {{action}}"
 actionUnlocked = "{{action}} desbloquejat per a aquesta sessió"
-advanced = "Avançat"
 allowed = "Permès"
 annotations = "Anotacions"
 authoriseAction = "Aquest PDF requereix permís per utilitzar {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Restringit"
 restrictedActions = "accions restringides"
 restrictedOperation = "Aquesta acció requereix la contrasenya de permisos."
 retainOwnerVerification = "Verifica la contrasenya de permisos per mantenir-la sense canvis mentre elimines la contrasenya d'obertura. Això no l'eliminarà."
-saveProtection = "Desa la protecció"
 securityChangeFailed = "No s'ha pogut canviar la protecció. Comprova la contrasenya de permisos i la configuració de seguretat nova."
 sessionDetails = "Obert per a aquesta sessió. El PDF continua protegit."
 sessionDetailsLabel = "Sobre el desbloqueig de sessió"
@@ -4871,7 +5042,6 @@ title = "Alguna cosa ha anat malament"
 tryAgain = "Torna-ho a provar"
 
 [extractImages]
-allowDuplicates = "Desa imatges duplicades"
 selectText = "Selecciona el format d'imatge al qual convertir les imatges extretes"
 submit = "Extreu"
 tags = "imatge,foto,desa,arxiva,zip,captura,agafa"
@@ -4927,12 +5097,15 @@ closeFile = "Tanca el fitxer"
 
 [fileEditor]
 closedFile = "S'ha tancat {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Fitxer reordenat"
 filesReordered_other = "{{count}} fitxers reordenats"
 loadedFromStorage_one = "S'ha carregat {{count}} fitxer de l'emmagatzematge"
 loadedFromStorage_other = "S'han carregat {{count}} fitxers de l'emmagatzematge"
 loadFromStorageFailed = "No s'han pogut carregar alguns fitxers de l'emmagatzematge"
 pinnedFile = "S'ha fixat {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "S'ha desat i tancat {{name}}"
 saveFailed = "Ha fallat el desament"
 unpinnedFile = "S'ha deixat de fixar {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Bloquejat"
 previewOf = "Previsualització de {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Afegeix fitxers"
 created = "Creat"
 notIncludedInToolRun = "No inclòs en aquesta execució de l'eina"
 size = "Mida del fitxer"
 title = "Fitxers"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "No hi ha fitxers disponibles"
@@ -5104,6 +5286,7 @@ subtitle = "Mostra o amaga categories a la barra lateral de fitxers."
 title = "Categories de la barra lateral"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Cancel·la"
 error = "No s'ha pogut canviar el nom del fitxer."
 illegalCharacters = "Un nom de fitxer no pot contenir \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Elimina el camp"
 
 [formFill.editor]
 action = "Acció del botó"
-actionHelp = "Què fa el botó quan s'hi fa clic."
 actionNone = "Cap"
 actionPrint = "Imprimeix"
 actionReset = "Restableix el formulari"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Limita el nombre de caràcters que hi caben, dibuixats com a ca
 multiline = "Diverses línies"
 multilineHelp = "Permet més d'una línia de text i fa salt de línia a la vora del camp."
 multiSelect = "Permet la selecció múltiple"
-multiSelectHelp = "Permet triar més d'una opció alhora."
 name = "Nom del camp"
 nameHelp = "El nom intern del camp. S'utilitza en exportar dades o en emplenar el formulari des d'un altre sistema, així que mantén-lo únic i sense espais."
 optionGap = "Espaiat de les opcions"
@@ -5902,6 +6083,11 @@ title = "Ajusta Colors/Contrast"
 desc = "Ressalta, dibuixa i afegeix notes i formes al visor"
 tags = "anotar,ressaltar,dibuixar,marcatge,comentari,notes,revisar,redline,comentaris,eines de marcatge,notes adhesives,formes,fletxes,quadre de text,mà alçada"
 title = "Anota"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Detecta automàticament els camps de formulari amb IA i fa que el PDF es pugui emplenar."
@@ -6405,6 +6591,9 @@ sort = "Ordena"
 [merge.sortFiles]
 title = "Ordena els fitxers"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Resum de la configuració de combinació"
 
@@ -6548,6 +6737,9 @@ title = "Ha fallat l'autenticació"
 message = "Pots tancar aquesta finestra i tornar a Stirling PDF."
 title = "Autenticació correcta"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Permet l'accés"
 approving = "S'està permetent..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Tornant a l'app..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} vol accedir al teu compte de Stirling PDF"
 scopesIntro = "Això permetrà a {{app}}:"
 signedInAs = "Sessió iniciada com a {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Inicia la sessió per continuar"
 signInPrompt = "Inicia la sessió al teu compte de Stirling PDF per continuar connectant l'app."
 title = "Authorise access"
 unknownApp = "Una aplicació de tercers"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Actuar com tu: tot el que faci {{app}} s'executa amb el teu compte i compta per al teu ús"
@@ -6572,9 +6767,12 @@ tools = "Utilitzar les teves eines de Stirling PDF en nom teu: convertir, editar
 
 [oauthConsent.scope]
 email = "Veure la teva adreça electrònica"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Confirmar la teva identitat"
 phone = "Veure el teu número de telèfon"
 profile = "Veure la informació bàsica del teu perfil"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Neteja escanejats i detecta text d'imatges dins d'un PDF, tornant-lo a afegir com a text."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Passareu a ser membre de l'equip i perdreu l'accés de propie
 [pageEdit]
 deselectAll = "Cap"
 selectAll = "Marca-ho tot"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Extreu Pàgines"
@@ -7577,6 +7779,8 @@ stamp = "Anotació de segell: no és text de pàgina, així que no es pot editar
 widget = "Camp de formulari: no és text de pàgina, així que no es pot editar aquí"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Edita"
 markTagged = "Marca com a totalment etiquetat"
 matchScanFont = "Fes coincidir el text escanejat amb {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Etiqueta automàticament la pàgina"
 typeInto = "Escriu a {{run}}"
 ungroupParagraph = "Desagrupa el paràgraf {{run}}"
 unmarkTagged = "Marca com a no totalment etiquetat"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Ajusta {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Voleu descartar els canvis no desats?"
 
 [pdfTextEditor.error]
 decodeImage = "No s'ha pogut descodificar la imatge seleccionada."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "No es pot duplicar aquest text: cap tipus de lletra disponible pot representar totes les seves lletres."
 formLiftChangesDrawing = "No es pot editar això: es dibuixa com a part d'un grup amb retall o configuracions gràfiques que l'editor no pot mantenir en canviar-lo."
 insertImage = "No s'ha pogut inserir la imatge seleccionada."
 needsShaping = "L'editor encara no pot representar correctament les lletres unides i els signes vocàlics d'aquesta escriptura, de manera que no s'ha fet aquest canvi."
+reopenLost = "Open again"
 replaceClippedImage = "No es pot substituir aquesta imatge: està retallada i la substitució mostraria les parts que el retall amaga."
 scanOffInk = "No es pot editar aquest text: les paraules reconegudes no s'alineen amb l'escaneig. Torna a executar l'OCR."
 unsafeRtlEdit = "No es pot fer aquesta edició: l'editor no pot redibuixar el text d'aquesta línia de dreta a esquerra sense canviar-lo."
@@ -7616,6 +7823,7 @@ pngFileType = "Imatge PNG"
 close = "Tanca la barra de cerca"
 count = "{{current}} de {{total}}"
 findPlaceholder = "Cerca"
+hideReplace = "Hide replace"
 ignoreAccents = "Ignora els accents"
 matchCase = "Distingeix majúscules i minúscules"
 next = "Coincidència següent"
@@ -7625,6 +7833,7 @@ replace = "Substitueix"
 replaceAll = "Substitueix-ho tot"
 replaced = "{{count}} substituïts"
 replacePlaceholder = "Substitueix per"
+showReplace = "Show replace"
 wholeWord = "Paraula sencera"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Aquest enllaç no es pot etiquetar."
 cannotTagPage = "El contingut d'aquesta pàgina no es pot etiquetar."
 contentGroup = "Contingut"
 customTag = "{{role}} (etiqueta personalitzada)"
-decorativeInfo = "Els lectors de pantalla ometen les imatges decoratives. Utilitzeu-ho per a vores, fons i altres imatges que no transmeten informació."
-decorativeLabel = "Imatge decorativa"
-description = "Descripció de la imatge"
-descriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la imatge."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "No es poden editar les etiquetes en un fitxer xifrat"
 figureDescription = "Descripció de la figura"
 figureDescriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la figura."
-formFieldDescription = "Descripció del camp"
 formulaDescription = "Descripció de la fórmula"
 formulaDescriptionInfo = "Els lectors de pantalla ho llegeixen en lloc de la fórmula. Digueu-ho com ho diríeu en veu alta, per exemple, «x al quadrat més u»."
 heading = "Accessibilitat"
@@ -7813,7 +8019,6 @@ markedTagged = "El document està totalment etiquetat"
 markedTaggedHint = "Indica als lectors de PDF que utilitzin les etiquetes d'accessibilitat. Marca-ho quan estigui tot etiquetat."
 markedWithUntagged = "Alguns continguts no tenen etiquetes, de manera que els lectors de pantalla poden ometre'ls."
 missingDescriptions = "Descripcions que falten"
-mixedContent = "La figura inclou altres continguts"
 mixedTags = "Barrejat"
 needsDescriptionBadge = "Sense descripció"
 nextToReview = "Següent per revisar"
@@ -7821,12 +8026,10 @@ notFigure = "Etiquetat com a part del text"
 removeTag = "Elimina etiqueta"
 saveFailed = "No s'han pogut desar els canvis d'accessibilitat, de manera que el fitxer no s'ha desat. Desfeu-los i torneu-ho a provar."
 selectedText = "Text seleccionat"
-tagFormField = "Etiqueta el camp de formulari"
 tagging = "Etiquetant pàgines"
 tagLabel = "Etiqueta"
 tagLinks_one = "Etiqueta l'enllaç"
 tagLinks_other = "Etiqueta {{count}} enllaços"
-tagUntagged = "Etiqueta automàticament el document"
 tagUntaggedHint = "Afegeix automàticament etiquetes d'accessibilitat a tot el document. El resultat és aproximat: comprova després els encapçalaments, les llistes i l'ordre de lectura."
 unknownTag = "No es pot llegir aquí"
 unmarkedWithTags = "Alguns visualitzadors de PDF utilitzaran igualment les etiquetes i poden ometre el contingut sense elles."
@@ -7851,7 +8054,7 @@ heading = "Encapçalaments"
 mixedNumbering = "Barreja encapçalaments numerats i no numerats"
 none = "No hi ha encapçalaments"
 onPage = "Encapçalament a la pàgina {{page}}"
-problems = "Problemes d'encapçalaments"
+problemCount = "{{count}} to fix"
 skippedLevel = "Se salta un nivell després d'Encapçalament {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Títol"
 allLanguages = "Tots els idiomes"
 cannotSetDocument = "L'idioma d'aquest document no es pot canviar."
 cannotSetText = "L'idioma d'aquest text no es pot canviar."
-documentHint = "L'idioma que utilitzaran els lectors de pantalla tret que una part del text en defineixi un altre."
 documentLabel = "Idioma"
 documentLocked = "L'idioma d'un document xifrat no es pot canviar aquí."
 inDocument = "En aquest document"
 innerLabel = "Idioma de l'etiqueta {{number}}"
 label = "Idioma"
-missing = "Sense idioma definit. Els lectors de pantalla el deduiran i poden llegir tot el document amb una veu incorrecta."
 mixed = "Barrejat"
 noMatch = "No hi ha cap idioma coincident. Escriu-ne el codi, com ara mt o en-IE."
 placeholder = "Selecciona l'idioma"
@@ -7943,6 +8144,52 @@ renderFailed = "No s'ha pogut renderitzar la pàgina"
 [pdfTextEditor.password]
 incorrect = "Contrasenya incorrecta; torneu-ho a provar."
 label = "Contrasenya"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Guia d'alineació a {{value}} {{unit}}; arrossegueu-la a un regle per eliminar-la"
@@ -8124,6 +8371,10 @@ title = "Variacions de previsualització"
 [pdfTextEditor.tooltip.textFocus]
 text = "Aquest espai de treball se centra en l’edició de text i el reposicionament d’imatges incrustades. Els elements gràfics complexos, els ginys de formulari i els gràfics amb capes es conserven per a l’exportació però no són totalment editables aquí."
 title = "Enfocament en text i imatge"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF a CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Amaga la categoria"
 labelCount = "etiquetes"
 sharedNote = "Aquestes etiquetes són integrades i compartides amb tot el teu equip."
 showCategory = "Mostra la categoria"
-
-[policies.pii]
-account = "Números de compte (etiquetats)"
-card = "Targetes de crèdit / dèbit"
-email = "Adreces de correu electrònic"
-fieldLabel = "PII per redactar"
-iban = "IBAN"
-phone = "Números de telèfon"
-placeholder = "Selecciona tipus de PII"
-routing = "Números d'encaminament bancari dels EUA (ABA)"
-ssn = "Números de la Seguretat Social"
 
 [policy]
 badgeEnforcing = "S'està aplicant {{name}}..."
@@ -10317,6 +10557,10 @@ title = "Canalitzacions"
 [portal.pipelines.actions]
 newCustomPipeline = "Canalització personalitzada nova"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Totes les canalitzacions"
 
@@ -12047,7 +12291,6 @@ label = "Eines de lectura"
 readAloud = "Llegeix en veu alta"
 rotateLeft = "Gira a l’esquerra"
 rotateRight = "Gira a la dreta"
-search = "Cerca al document"
 switchDocument = "Canvia de document"
 thumbnails = "Pàgines"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Color del quadre"
 convertPDFToImageLabel = "Converteix PDF a PDF-imatge"
 customPaddingLabel = "Farciment extra personalitzat"
 useRegexLabel = "Utilitza Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Cerca paraula completa"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Configuració de redacció"
 
 [redact.auto.wordsToRedact]
 add = "Afegeix"
-examples = "Exemples: Confidencial, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Introduïu una paraula"
 title = "Paraules a redactar"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Selecciona fitxers al gestor de fitxers per redactar
 manual = "Manual"
 mode = "Mode"
 title = "Mètode de redacció"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Només fa coincidir text amb la mateixa capitalització. 'Secret' no coincidirà amb 'SECRET' quan estigui activat, i [A-Z] en una regex només coincideix amb majúscules."
@@ -12147,19 +12401,6 @@ title = "Mètode de redacció"
 text = "Feu clic i arrossegueu per seleccionar manualment àrees específiques a redactar. Us dona control precís sobre què es redacta. (Properament)"
 title = "Redacció manual"
 
-[redact.tooltip.words]
-bullet1 = "Afegiu una paraula cada vegada"
-bullet2 = "Premeu Retorn o feu clic a 'Afegeix-ne una altra' per afegir"
-bullet3 = "Feu clic a × per eliminar paraules"
-
-[redact.tooltip.words.description]
-text = "Introduïu paraules o frases per trobar i redactar al vostre document. Cada paraula es buscarà per separat."
-title = "Coincidència de text"
-
-[redact.tooltip.words.examples]
-text = "Paraules típiques a redactar inclouen: dades bancàries, adreces de correu o noms específics."
-title = "Exemples habituals"
-
 [redact.tooltip.words.header]
 title = "Paraules a redactar"
 
@@ -12176,15 +12417,6 @@ failed = "S'ha produït un error en eliminar les anotacions del PDF."
 
 [removeAnnotations.info]
 description = "Aquesta eina eliminarà totes les anotacions (comentaris, ressaltats, notes, etc.) dels teus documents PDF."
-
-[removeAnnotations.settings]
-title = "Configuració"
-
-[removeAnnotations.tooltip.description]
-title = "Què fa"
-
-[removeAnnotations.tooltip.header]
-title = "Quant a Eliminar anotacions"
 
 [removeBlanks]
 submit = "Elimina pàgines en blanc"
@@ -12325,6 +12557,9 @@ tags = "reordenar,reorganitzar,organitzar,reorganitzar,moure pàgines,ordre de p
 [reorganizePages.error]
 failed = "No s’han pogut reorganitzar les pàgines"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Pàgines reorganitzades"
 
@@ -12406,6 +12641,7 @@ title = "Inverteix tots els colors"
 rotateLeft = "Gira en sentit antihorari"
 rotateRight = "Gira en sentit horari"
 selectRotation = "Selecciona l'angle de rotació (en sentit horari)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Aplica la rotació"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rota PDF"
@@ -12516,8 +12752,7 @@ title = "Sanititza"
 failed = "S'ha produït un error en sanititzar el PDF."
 
 [sanitize.options]
-note = "Seleccioneu els elements que voleu eliminar del PDF. Cal seleccionar almenys una opció."
-title = "Opcions de sanitització"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Elimina qualsevol fitxer incrustat dins del PDF"
@@ -12649,6 +12884,7 @@ title = "Cerca al PDF"
 hideTools = "Amaga les eines no disponibles ▴"
 messageNoFallback = "Les eines no estaran disponibles fins que el teu servidor torni en línia."
 messageWithFallback = "Algunes eines requereixen connexió al servidor."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Mostra les eines no disponibles ▾"
 title = "No es pot accedir al teu servidor de Stirling-PDF"
 toolNotAvailableLocally = "El teu servidor de Stirling-PDF és fora de línia i \"{{endpoint}}\" no està disponible al backend local."
@@ -13034,6 +13270,12 @@ title = "Dreceres de teclat"
 mac = "Inclou ⌘ (Command), ⌥ (Option) o un altre modificador a la drecera."
 windows = "Inclou Ctrl, Alt o un altre modificador a la drecera."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Condicions, política de privadesa i preferències de cookies."
 label = "Legal"
@@ -13418,9 +13660,7 @@ image = "Pujada"
 text = "Text"
 
 [sign.step]
-createDesc = "Tria com vols crear la signatura"
 place = "Col·loca i desa"
-placeDesc = "Posiciona la signatura al teu PDF"
 
 [sign.steps]
 configure = "Configura la signatura"
@@ -13597,6 +13837,10 @@ rotateLeft = "Gira a l'esquerra"
 rotateRight = "Gira a la dreta"
 trim = "Retalla fins a la signatura"
 trimHint = "Retalla l'espai buit del voltant"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Paràmetres d'aparença de la signatura"
@@ -13959,7 +14203,6 @@ placeholder = "Introdueix el nombre de divisions horitzontals"
 
 [split-by-sections.splitMode]
 custom = "Pàgines personalitzades"
-description = "Tria com dividir les pàgines"
 label = "Mode de divisió"
 splitAll = "Divideix totes les pàgines"
 splitAllExceptFirst = "Divideix totes excepte la primera"
@@ -14210,10 +14453,8 @@ failed = "S’ha produït un error en aplicar la marca de temps al PDF."
 
 [timestampPdf.options]
 note = "Només s’envia un resum SHA-256 del document al servidor TSA; el fitxer PDF no s’envia mai al servidor TSA."
-title = "Servidor de marques de temps (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Tria una autoritat de marques de temps de confiança"
 label = "Selecciona un servidor TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "No hi ha eines disponibles"
 
 [tooltip]
 close = "Tanca el missatge emergent"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Aquesta eina eliminarà les restriccions de només lectura dels camps de formulari del PDF, fent-los editables i emplenables."
@@ -14706,6 +14961,9 @@ signatureDate = "Data de la signatura"
 
 [validateSignature.settings]
 certHint = "Pugeu un certificat X.509 de confiança per validar amb una font de confiança personalitzada."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Configuració de validació"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "No es pot previsualitzar el fitxer"
 copyRestricted = "La còpia està desactivada pels permisos d'aquest PDF."
 copyText = "Copia"
 coverPageView = "Mostra la portada per separat"
-disableColorFilter = "Desactiva el filtre de color"
 documentUpdated = "Document actualitzat"
 dualPageView = "Vista de dues pàgines"
 editText = "Edita el text"
-enableDarkFilter = "Activa el filtre fosc"
-enableSepiaFilter = "Activa el filtre sèpia"
 engineLoadError = "No s’ha pogut inicialitzar el motor del visor de PDF"
 engineSlowWarning = "La inicialització del motor PDF està trigant més del previst. Comprova la configuració de WebAssembly i Worker del navegador, o torna a carregar la pàgina."
 firstPage = "Primera pàgina"
@@ -14736,20 +14991,27 @@ fitPage = "Ajustar a la pàgina"
 fitWidth = "Ajustar a l'amplada"
 lastPage = "Última pàgina"
 loadingEngine = "Carregant el motor PDF..."
+menuSelected = "Selected"
 moreOptions = "Més"
 nextPage = "Pàgina següent"
 noPdfProvided = "No s'ha proporcionat cap PDF"
 onlyPdfSupported = "Aquest format de fitxer no és compatible amb la previsualització."
 pageNavigation = "Navegació per pàgines"
+pageNumber = "Page number"
 previousPage = "Pàgina anterior"
 readAloudFromHere = "Llegeix en veu alta des d'aquí"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "No s'ha pogut desar el document. Torneu-ho a provar."
 saveChangesErrorTitle = "No s'han pogut desar els canvis"
 singlePageView = "Vista d'una sola pàgina"
+tools = "Tools"
 unknownFile = "Fitxer desconegut"
-view = "Vista"
 zoom = "Zoom"
 zoomIn = "Amplia"
+zoomLevel = "Zoom level"
 zoomOut = "Redueix"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Previsualització de la signatura"
 
 [viewer.signatureField]
 badge = "Signatura"
+clickToSign = "Click to sign here"
 fieldTitle = "Camp de signatura: {{name}}"
 signed = "Signat"
 signedWithReason = "Signat: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Camp de signatura sense signar: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "S’han restaurat {{restored}} de {{total}} fitxers. La resta ja no s
 
 [workbenchBar]
 activeFiles = "Fitxers actius"
-annotations = "Anotacions"
+annotate = "Annotate"
 applyRedactionsFirst = "Aplica primer les censures"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Tanca tots els fitxers"
 closePdf = "Tanca el PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Desselecciona-ho tot"
 downloadAll = "Descarrega-ho tot"
 editText = "Edita el text"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Surt del mode d'anotació"
 exitRedaction = "Surt del mode de censura"
 findReplace = "Cerca i substitueix"
 formFill = "Editor de formularis"
-hideToolbar = "Amaga la barra d'eines"
+layers = "Layers"
 moreActions = "Més accions"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Editor de pàgines"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Mode de desplaçament"
 print = "Imprimeix el PDF"
 readAloud = "Llegeix en veu alta"
 readAloudLanguage = "Idioma"
 readAloudSpeed = "Velocitat"
 redact = "Censura"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Gira a l’esquerra"
 rotateRight = "Gira a la dreta"
 ruler = "Regle / Mesura"
+rulerScaleUnset = "Not set"
 rulerSettings = "Configuració de l'escala"
 save = "Desa"
 saveAll = "Desa-ho tot"
@@ -15123,14 +15398,23 @@ selectLanguage = "Selecciona l’idioma"
 share = "Comparteix"
 showAllTools = "Mostra totes les eines"
 showFewerTools = "Replega la barra d'eines"
-showToolbar = "Mostra la barra d'eines"
+thumbnails = "Pages"
 toggleAnnotations = "Mostra/oculta les anotacions"
-toggleAttachments = "Mostra/oculta els adjunts"
-toggleBookmarks = "Marcadors (taula de continguts)"
 toggleComments = "Comentaris"
-toggleLayers = "Mostra/oculta les capes"
-toggleSidebar = "Mostra/oculta la barra lateral"
 viewer = "Visor"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "El teu accés a aquest document ha vençut."

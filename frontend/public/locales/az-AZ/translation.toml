@@ -12,9 +12,11 @@ comingSoon = "Tezliklə"
 confirm = "Təsdiqlə"
 confirmClose = "Bağlamağı təsdiq et"
 confirmCloseCancel = "Ləğv et"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Faylı bağla"
 confirmCloseDiscard = "Dəyişiklikləri at və bağla"
 confirmCloseMessage = "Bu faylı bağlamaq istədiyinizə əminsiniz?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Yadda saxla və bağla"
 confirmCloseSaveFailed_one = "Xətalarla yadda saxlanılıb. {{count}} fayl yadda saxlanıla bilmədi."
 confirmCloseSaveFailed_other = "Xətalarla saxlanıldı. {{count}} fayl saxlanıla bilmədi."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Fayl diskə yadda saxlanıldı"
 filesSelected = "{{count}} fayl"
 font = "Şrift"
 fontSizeTooltip = "Səhifə nömrəsi mətninin ölçüsü (pt). Daha böyük rəqəmlər daha böyük mətn yaradır."
-fontTypeTooltip = "Səhifə nömrələri üçün şrift ailəsi. Sənəd üslubunuza uyğun seçin."
 green = "Yaşıl"
 help = "Yardım"
 incorrectPasswordMessage = "Cari şifr yanlışdır."
@@ -249,9 +250,7 @@ image = "Yükləmə"
 text = "Mətn"
 
 [addImage.step]
-createDesc = "Əlavə etmək istədiyiniz şəkli yükləyin"
 place = "Şəkli yerləşdirin"
-placeDesc = "Şəkli əlavə etmək üçün PDF üzərinə klikləyin"
 
 [addImage.steps]
 configure = "Şəkili tənzimlə"
@@ -276,7 +275,7 @@ fontName = "Şrift Adı"
 fontSize = "Şrift Ölçüsü"
 numberPagesDesc = "məs., 1,3,5-8 və ya bütün səhifələr üçün boş buraxın"
 pagePreviewAlt = "Səhifəyə önbaxış"
-pagesAndStarting = "Səhifələr və başlanğıc nömrəsi"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Mövqe və səhifələr"
 preview = "Mövqe seçimi"
 previewDisclaimer = "Önizləmə təxmindir. Son çıxış PDF şrift metriklərinə görə dəyişə bilər."
@@ -300,6 +299,7 @@ title = "Səhifə nömrəsi nəticələri"
 
 [addPassword]
 desc = "PDF sənədinizi parolla şifrələyin."
+submit = "Add Password"
 tags = "şifrələ,parol,kilidlə,təhlükəsiz,qoru,təhlükəsizlik,şifrələmə,mühafizə,məxfi,özəl,girişi məhdudlaşdır"
 title = "Şifr Əlavə Et"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Möhürə önbaxış"
 tags = "möhür,işarə,möhür, təsdiqlənmiş,rədd edilmiş,məxfi,möhür aləti,rezin möhür,tarix möhürü,təsdiq möhürü,qəbul edilib,etibarsız,kopya,orijinal"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Əlifba"
-clickToExpand = "Genişləndirmək üçün klikləyin"
 customColor = "Fərdi Mətn Rəngi"
 customDateDesc = "Fərdi format"
 customPosition = "Möhürü önbaxış pəncərəsində istədiyiniz yerə sürüşdürün."
 dateDesc = "Cari tarix"
 datetimeDesc = "Tarix və vaxt birlikdə"
 dateTimeVars = "Tarix və vaxt"
-dynamicVariables = "Dinamik dəyişənlər"
 examples = "Nümunələr"
 filenameDesc = "Genişləndirməsiz fayl adı"
 filenameFullDesc = "Genişləndirməli fayl adı"
@@ -365,6 +364,8 @@ noStampSelected = "Möhür seçilməyib. 1-ci addıma qayıdın."
 opacity = "Şəffaflıq"
 otherVars = "Digər"
 pageNumberDesc = "Cari səhifə nömrəsi"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Səhifə məlumatı"
 position = "Yerləşmə"
 positionAndFormatting = "Mövqe və formatlama"
@@ -378,9 +379,10 @@ quickPosition = "Möhürü yerləşdirmək üçün səhifədə bir mövqe seçin
 rotation = "İstiqamət"
 selectedImageAlt = "Seçilmiş möhür şəkli"
 selectTemplate = "Şablon seçin..."
+size = "Size"
 stampSetup = "Möhür qurulumu"
 stampText = "Möhür Yazısı"
-stampTextDescription = "Aşağıdakı dinamik dəyişənlərdən istifadə edin. Hərfi @ üçün @@ istifadə edin. Yeni sətirlər üçün \\n istifadə edin."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Möhür Tipi"
 submit = "Möhür əlavə et"
 tags = "Möhür, Şəkil əlavə et, şəkli ortala, Watermark, PDF, Embed, Fərdiləşdir"
@@ -389,7 +391,6 @@ title = "PDF-i Möhürlə"
 totalPagesDesc = "Səhifələrin ümumi sayı"
 useTemplate = "Şablondan istifadə et"
 uuidDesc = "Qısa unikal identifikator (8 simvol)"
-variablesHelp = "Möhür mətninizə daxil etmək üçün istənilən dəyişənə klikləyin. Hərfi @ üçün @@ istifadə edin."
 yearMonthDayDesc = "Ayrı-ayrı tarix hissələri"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "PDF-ə möhür əlavə edilərkən xəta baş verdi."
 
 [AddStampRequest.results]
 title = "Möhür nəticələri"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Fərdi"
@@ -410,6 +417,11 @@ legal-footer = "Hüquqi altbilgi"
 page-numbers = "Səhifə nömrələri"
 pageNumberFooter = "Səhifə nömrəsi altbilgisi"
 timestamp = "Vaxt möhürü"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Mətni tətbiq et"
@@ -462,9 +474,7 @@ image = "Yükləmə"
 text = "Mətn"
 
 [addText.step]
-createDesc = "Əlavə etmək istədiyiniz mətni daxil edin"
 place = "Mətni yerləşdir"
-placeDesc = "Mətni əlavə etmək üçün PDF üzərinə klikləyin"
 
 [addText.steps]
 configure = "Mətni tənzimlə"
@@ -1233,6 +1243,18 @@ label = "Başlanğıcda yenidən yarat"
 description = "Sertifikatın etibarlı olacağı gün sayı"
 label = "Sertifikatın etibarlılığı (gün)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Qovluq mənbələri və qovluq çıxışlarının oxuya və yaza biləcəyi direktoriyalar. Bu təhlükəsizlik sərhədidir: avtomatlaşdırmalar heç vaxt bu siyahıdan kənar server yoluna yönəldilə bilməz."
 securityNote = "Qovluq mənbələri və çıxışlarını tamamilə deaktiv etmək üçün bunu boş buraxın. Stirling-in öz konfiqurasiya direktoriyası həmişə qadağandır."
@@ -1456,7 +1478,9 @@ label = "SMTP İstifadəçi adı"
 
 [admin.settings.mcp]
 apikeyNote = "Müştərilər X-API-KEY başlığında (və ya Authorization: Bearer <key>) Stirling API açarı göndərir. Açar öz Stirling istifadəçisinə uyğunlaşdırılır - yalnız təmin edilmiş hesablar daxil ola bilər və əməliyyatlar həmin istifadəçi kimi audit olunur. Açarları Hesab > API açarları altında idarə edin."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Stirling-in PDF alətlərini və AI agentlərini OAuth ilə qorunan endpoint üzərindən MCP müştərilərinə təqdim edin."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "İcazə verilən alətlər"
 description = "MCP-dən gizlədiləcək əməliyyat id-ləri (vergül və ya boşluqla ayrılmış), məsələn add-password remove-password. Bütün aktiv alətləri göstərmək üçün boş buraxın."
 label = "Bloklanmış alətlər"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Söndürülü olduqda (standart), /mcp endpoint, metadata və ya MCP beans yüklənmir."
 label = "MCP Server-i aktiv et"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Yuxarıda OAuth issuer + resource ID daxil edin, Saxla seçin və yenidən başladın."
 step1ApiKey = "Hesab > API açarları altında API açarı yaradın (hər istifadəçi öz açarından istifadə edir)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "MCP müştərinizdə əlavə edin"
 step2b = "server bu ünvana yönəlsin:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Müştəri OAuth-u avtomatik olaraq buradan aşkarlayır:"
 step3ApiKey = "Açarı"
 step3ApiKeyb = "başlığında göndərin (və ya Authorization: Bearer <key>). OAuth və ya metadata aşkarlanması istifadə olunmur."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Girişi təsdiqləyin; müştəri token ilə yenidən cəhd edir. Alətlər qruplaşdırılmış görünür: convert, pages, misc, security, ai."
 step4ApiKey = "Alətlər qruplaşdırılmış görünür: convert, pages, misc, security, ai - və hər çağırış açarın sahibinin adına audit olunur."
 tip = "İpucu: resource ID-ni IdP-də icazə verilən auditoriya kimi qeydiyyatdan keçirin. MCP Inspector və Claude Desktop ilə sınaqdan keçirilib."
 tipApiKey = "İpucu: API açarı rejimi xarici IdP tələb etmir - self-host üçün ən sadədir. Açar öz Stirling istifadəçisinə uyğunlaşdırılır."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "MCP müştərisini qoşun"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Issuer-dən avtomatik aşkarlanır"
 
 [admin.settings.mcp.mode]
 apikey = "API açarı (Stirling-in hər istifadəçi üçün açarı)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth xarici IdP tələb edir. API açarı hər istifadəçi üçün Stirling API açarından (X-API-KEY) istifadə edir - self-host üçün ən sadədir."
 label = "Autentifikasiya rejimi"
 oauth = "OAuth 2.1 (xarici IdP)"
@@ -1515,6 +1563,18 @@ label = "Resurs ID"
 [admin.settings.mcp.scopes]
 description = "Oxuma əməliyyatları üçün mcp.tools.read, yazma/AI əməliyyatları üçün mcp.tools.write tələb edin."
 label = "OAuth scope-larını tətbiq et"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "Stirling istifadəçi adı ilə uyğunlaşdırılan JWT claim (məs., sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Stirling PDF-i daha yaxşı etməyimizə kömək etmək istəyirsiniz?"
 tags = "annotasiya,vurğula,çək,işarələmə,şərh,qeydlər,nəzərdən keçir,redline,geribildirim,işarələmə alətləri,yapışqan qeydlər,fiqurlar,oxlar,mətn qutusu,sərbəst əl"
 
 [annotation]
-alignCenter = "Mərkəzə hizala"
-alignLeft = "Sola hizala"
-alignRight = "Sağa hizala"
 annotationStyle = "Annotasiya üslubu"
 backgroundColor = "Arxa fon rəngi"
 borderOff = "Kənarlıq: Bağlı"
@@ -2016,18 +2073,61 @@ underline = "Altını cız"
 undoDelete = "Geri al"
 width = "Genişlik"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "İstənilən infrastrukturda işlədə biləcəyiniz pulsuz, məxfi PDF redaktoru."
 
 [appBanner]
 dismiss = "Bağla"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Qoşmalar əlavə et..."
 convertToPdfA3b = "PDF/A-3b-ə çevir"
 convertToPdfA3bTooltip = "PDF/A-3b uzunmüddətli saxlanmanı təmin edən arxiv formatıdır. Qoşma kimi istənilən fayl formatlarının əlavə edilməsinə imkan verir. Çevirmə üçün Ghostscript tələb olunur və böyük fayllar üçün daha uzun çəkə bilər."
-convertToPdfA3bTooltipHeader = "PDF/A-3b çevirməsi haqqında"
-convertToPdfA3bTooltipTitle = "Nə edir"
 discardChanges = "Ləğv et"
 downloadSingle = "Qoşmanı endir"
 duplicateName = "‘{{name}}’ adlı qoşma artıq mövcuddur."
@@ -2208,7 +2308,6 @@ guest = "Qonaq"
 user = "İstifadəçi"
 
 [auto-rename]
-description = "PDF məzmunundan başlığı avtomatik tapır və onu fayl adı kimi istifadə edir."
 submit = "Avtomatik Yenidən Adlandır"
 tags = "avtodetektə,başlıq-əsaslı,səliqələ,yenidən adlandır"
 title = "Avtomatik Yenidən Adlandır"
@@ -2218,21 +2317,6 @@ failed = "PDF avtomatik adlandırılarkən xəta baş verdi."
 
 [auto-rename.results]
 title = "Avto-adlandırma nəticələri"
-
-[auto-rename.settings]
-title = "Haqqında"
-
-[auto-rename.tooltip.description]
-title = "Nə edir"
-
-[auto-rename.tooltip.header]
-title = "Avto-adlandırma necə işləyir"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Başlıq və ya başlıq kimi görünən mətni axtarır"
-bullet2 = "Aşkarlanmış başlıqdan təmiz və düzgün fayl adı yaradır"
-bullet3 = "Uyğun başlıq tapılmazsa orijinal adı saxlayır"
-title = "Ağıllı adlandırma"
 
 [autoFormDetection]
 loading = "Forma sahələri aşkarlanır..."
@@ -2327,6 +2411,9 @@ remove = "Aləti sil"
 selected = "Seçilmiş Alətlər"
 selectTool = "Alət seçin..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Ləğv et"
 confirm = "Geri qayıt"
@@ -2360,6 +2447,10 @@ title = "Avtomatlaşdırmanı İşə sal"
 [automate.selection]
 title = "Avtomatlaşdırma Seçimi"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Yeni Avtomatlaşdırma Yaradın"
 
@@ -2371,6 +2462,7 @@ title = "Təklif olunan"
 
 [automate.sequence]
 finish = "Bitir"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Avtomatlaşdırmanı işə sal"
 running = "Avtomatlaşdırma işə salınır..."
 signInToRun = "Avtomatlaşdırmaları işə salmaq üçün daxil olun."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Təhlükəsizlik İş Axını"
 secureWorkflowDesc = "PDF sənədlərini JavaScript və daxil edilmiş fayllar kimi potensial zərərli məzmunu silməklə təhlükəsizləşdirir, sonra icazəsiz girişin qarşısını almaq üçün parol mühafizəsi əlavə edir. Parol standart olaraq 'password' olaraq təyin edilir."
 
 [autoRename]
-description = "Bu alət məzmununa əsasən PDF fayllarını avtomatik olaraq yenidən adlandırır. Sənədi analiz edərək mətndən ən uyğun başlığı tapır."
 tags = "avtomatik aşkarlama,başlığa əsaslanan,təşkil et,yenidən etiketlə,avtomatik ad dəyişmə,ağıllı ad dəyişmə,məzmuna görə ad dəyişmə,fayl adı,fayl adlandırma,başlığı aşkarla"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,ayır,sənəd,nizamla"
 [autoSplitPDF]
 dividerDownload2 = "'Auto Splitter Divider (with instructions).pdf'-ı yükləyin"
 duplexMode = "Dupleks rejimi (Ön və arxa skanlama)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-əsaslı,ayrı,skan-seqment,nizamla"
 title = "PDF-i avtomatik bölmə"
 
@@ -2528,9 +2620,6 @@ tooltip = "Kəsmə və hizalama üçün kömək məqsədilə hər səhifə bölm
 [bookletImposition.addGutter]
 label = "Gutter kənarı əlavə et"
 tooltip = "Cildləmə üçün daxili kənar boşluğu əlavə edir"
-
-[bookletImposition.advanced]
-toggle = "Genişləndirilmiş seçimlər"
 
 [bookletImposition.doubleSided]
 label = "İkitaraflı çap"
@@ -2714,14 +2803,15 @@ chooseJksFile = "JKS faylını seçin"
 chooseP12File = "PKCS12 faylını seçin"
 choosePfxFile = "PFX faylını seçin"
 choosePrivateKey = "Məxfi açar faylını seçin"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "İmtina edildi"
 fetchFailed = "İmzalama məlumatlarını yükləmək mümkün olmadı"
 finalized = "Yekunlaşdırılıb"
 location = "Məkan"
-logoTitle = "Loqo"
-name = "Ad"
-noLogo = "Loqo yoxdur"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Səhifə nömrəsi"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Sertifikat parolu"
 passwordOptional = "Parol yoxdursa boş buraxın"
 pemCertificateLabel = "Sertifikat (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Şəxsi açar (.pem / .key)"
 pending = "Gözləmədə"
 readyToFinalize = "Yekunlaşdırmağa hazır"
 reason = "Səbəb"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Server sertifikatından istifadə olunur - fayl və ya parol tələb olunmur"
-showLogo = "Loqonu Göstər"
 signatureProgress = "{{signedCount}}/{{totalCount}} imza"
 tags = "autentifikasiya,PEM,P12,rəsmi,şifrələ,imzala,sertifikat,PKCS12,JKS,server,manual,avtomatik"
 title = "Sertifikatla İmzala"
@@ -2738,12 +2828,45 @@ viewed = "Baxılıb"
 
 [certSign.appearance]
 invisible = "Görünməz"
+showOnPage = "Show signature on page"
 stepTitle = "İmza görünüşü"
 visibility = "Görünürlük"
 visible = "Görünən"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "İmza detalları"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "İmza görünüşü haqqında"
@@ -2762,9 +2885,6 @@ bullet3 = "İmzanın qoyulacağı səhifəni seçin"
 bullet4 = "İstəyə bağlı loqo əlavə edilə bilər"
 text = "PDF-də adınız, tarix və istəyə bağlı detallarla imza bloku göstərir. Oxucuların sənədin imzalandığını aydın görməsini istədikdə faydalıdır."
 title = "Görünən imzalar"
-
-[certSign.certFiles]
-stepTitle = "Sertifikat faylları"
 
 [certSign.certType.tooltip.convert]
 text = "Faylınızı keytool ilə Java keystore-a (.jks) çevirin və sonra JKS seçin."
@@ -2786,6 +2906,7 @@ text = "Sertifikat faylınıza uyğun formatı seçin:"
 title = "Hansı seçimi istifadə etməliyəm?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Sertifikat formatı"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Bu cihaz"
 [certSign.error]
 failed = "İmzaları emal edərkən xəta baş verdi."
 
-[certSign.format]
-pkcs11 = "USB Token"
-windowsStore = "Windows sertifikat anbarı"
-
 [certSign.hardware]
-certificate = "Sertifikat"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Xüsusi sürücü yolu…"
+digitalId = "Digital ID"
 driver = "PKCS#11 sürücüsü"
 driverPath = "Sürücü kitabxanasının yolu"
 driverPathPlaceholder = "PKCS#11 sürücünüzə tam yol (.dll, .so və ya .dylib)"
-expired = "müddəti bitib"
-expires = "başа çatır"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Sertifikatları siyahıya al"
-loading = "Sertifikatlar oxunur…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "İmzalama sertifikatları tapılmadı"
 noDriver = "Heç bir PKCS#11 sürücüsü aşkar edilmədi. Tokeninizin sürücüsünü (məs., OpenSC) quraşdırın, sonra bunu yenidən açın — və ya aşağıda sürücünün yolunu əl ilə daxil edin."
-notYetValid = "hələ etibarlı deyil"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "Token PIN-i"
 pkcs11Hint = "Tokeniniz üçün PKCS#11 sürücüsünü seçin, PIN-i daxil edin, sonra tokendəki sertifikatları siyahıya alın."
 pkcs11LoadError = "Tokendən sertifikatları oxumaq mümkün olmadı. PIN-i və sürücünü yoxlayın."
-refresh = "Yenilə"
-selectCert = "Sertifikatı seçin"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Sürücünü seçin"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (istəyə bağlı)"
-windowsHint = "Windows sertifikat anbarınızdan bir sertifikat seçin. İmzalama kartınızdakı/tokeninizdəki açardan istifadə edəcək — Windows PIN-i soruşacaq."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Windows sertifikat anbarını oxumaq mümkün olmadı"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Qayda"
 device = "Bu cihaz"
 noOtherSources = "Başqa sertifikat mənbələri mövcud deyil."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Sertifikat mənbəyi"
 upload = "Yüklə"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "İstifadəçi adınızı yeniləyin. Yenilədikdən sonra çıxış ediləcəksiniz."
@@ -3069,7 +3205,6 @@ placeholder = "Sənədin yaradıcısı"
 
 [changeMetadata.customFields]
 add = "Sahə əlavə et"
-description = "Sənədə xüsusi metadata sahələri əlavə edin"
 key = "Açar"
 keyPlaceholder = "Xüsusi açar"
 remove = "Sil"
@@ -3135,10 +3270,6 @@ bullet1 = "Yaradılma tarixi: Orijinal sənədin yaradıldığı vaxt"
 bullet2 = "Dəyişdirilmə tarixi: Son dəyişiklik vaxtı"
 text = "Sənədin yaradıldığı və dəyişdirildiyi zaman."
 title = "Tarix sahələri"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Məxfilik üçün metadatanın tam silinməsi."
-title = "Mövcud metadatanı sil"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Başlıq: Sənədin adı və ya başlığı"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "İstifadə limitinizə çatmısınız. Davam etmək üç�
 
 [checkAccessibility]
 aboutRow = "{{label}} haqqında"
-checking = "Yoxlanılır..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Əlçatanlıq hesabatını yüklə"
 fileFailed = "uğursuz oldu"
+noFiles = "Select a PDF to check it."
 pickFile = "Nəticələri göstər"
-submit = "Əlçatanlığı yoxla"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Alternativ mətn"
@@ -3286,10 +3417,17 @@ structure = "Teqlər səhifənin hər hissəsinin nə olduğunu (məsələn, ba�
 [checkAccessibility.checks]
 label = "{{total}} yoxlamadan {{passed}}-i keçdi"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Əlçatanlıq hesabatı yaradıla bilmədi. Yenidən cəhd edin."
 fileTitle = "Bu fayl yoxlana bilmədi"
 partial = "Bəzi faylları yoxlamaq mümkün olmadı."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA elan edir"
@@ -3312,6 +3450,21 @@ title = "Faylın metaməlumatında başlıq var."
 [checkAccessibility.figures]
 summary_one = "{{count}} şəkilə təsvir lazımdır (səhifə {{pages}})"
 summary_other = "{{count}} şəkilə təsvir lazımdır (səhifələr {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Aiddir"
@@ -3465,19 +3618,7 @@ checking = "{{total}}-dan {{current}} yoxlanılır..."
 complete = "Yoxlama tamamlandı"
 
 [checkAccessibility.steps]
-results = "Nəticələr"
 standard = "Standart"
-
-[checkAccessibility.tooltip.header]
-title = "Hansı standart üzrə yoxlama"
-
-[checkAccessibility.tooltip.ua1]
-text = "2012-ci ildə ISO 14289-1 kimi dərc edilən ilk PDF/UA versiyası, PDF 1.7 faylları üçün."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "2024-cü ildə ISO 14289-2 kimi dərc edilən daha yeni versiya, PDF 2.0 faylları üçün. Ona qarşı yoxlanan PDF 1.7 faylı yalnız PDF 2.0-a aid qaydalardan keçməyəcək."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Anotasiya {{n}}"
@@ -3868,6 +4009,7 @@ title = "Rəng seçin"
 transparent = "Şəffaf"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Əməliyyatlar"
 back = "Geri"
 cancel = "Ləğv et"
@@ -4206,7 +4348,9 @@ title = "API Açarlarını Yenilə"
 warning = "⚠️ Xəbərdarlıq: Bu əməliyyat yeni API açarları yaradacaq və əvvəlki açarları etibarsız edəcək."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) Claude kimi AI köməkçilərinə Stirling PDF alətlərinizdən birbaşa istifadə etməyə imkan verir. Müştərini bir dəfə qoşun və köməkçiniz sizin adınıza sənədləri çevirə, redaktə edə, qoruya və emal edə bilər."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Qonaq istifadəçilər MCP müştərilərini qoşa bilməz. MCP serverindən istifadə etmək və AI köməkçinizə sizin adınıza Stirling PDF alətlərini işlətmək üçün hesab yaradın."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "{{label}} kopyala"
 tooltipCopied = "{{label}} kopyalandı"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "MCP endpoint-iniz"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Əlavə et"
 hint = "Müştərinizi seçin, parçanı göstərilən fayla yapışdırın, sonra onu yenidən başladın. İlk istifadədə Stirling hesabınızla daxil olacaqsınız - kopyalanacaq açar yoxdur."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "AI köməkçinizi qoşun"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Nisbəti qoruyun"
 maxAttachmentSize = "Maksimum əlavə ölçüsü (MB)"
 multiple = "Çoxlu"
 optimizeForEbook = "PDF-i e-oxuyucular üçün optimallaşdır (Ghostscript istifadə olunur)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Çıxış"
-outputFormat = "Çıxış formatı"
-pdfaAccessibleFormat = "{{format}} (əlçatan)"
-pdfaDigitalSignatureWarning = "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək."
-pdfaNote = "PDF/A-1b daha uyğundur, PDF/A-2b daha çox funksiyanı dəstəkləyir, PDF/A-3b daxil edilmiş faylları dəstəkləyir."
-pdfaOptions = "PDF/A seçimləri"
 pdfOptions = "PDF seçimləri"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Parametrlər"
 signInToUse = "İstifadə etmək üçün daxil olun"
 single = "Tək"
 sourceFormatPlaceholder = "Mənbə formatı"
-strictMode = "Ciddi rejim"
-strictModeDesc = "Çevirmə mükəmməl deyilsə xəta ver (VeraPDF yoxlamasından istifadə edir)"
 svgPdfOptions = "SVG to PDF seçimləri"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG faylları istənilən ayırdetmədə aydın nəticə üçün vektor qrafikası kimi render edilir. SVG-dən ölçülər PDF səhifə ölçüsünü müəyyən edir."
@@ -4396,9 +4549,7 @@ zoomLevel = "Miqyas səviyyəsi"
 
 [convert.ebookOptions]
 includePageNumbers = "Səhifə nömrələrini daxil et"
-includePageNumbersDesc = "Yaradılan PDF-ə səhifə nömrələri əlavə edin"
 includeTableOfContents = "Mündəricatı daxil et"
-includeTableOfContentsDesc = "Nəticə PDF-ə yaradılmış mündəricat əlavə edin"
 optimizeForEbookPdf = "eBook oxuyucular üçün optimallaşdır"
 optimizeForEbookPdfDesc = "PDF-i eBook oxuma üçün optimallaşdır (kiçik fayl ölçüsü, eInk cihazlarda daha yaxşı göstərmə)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Fəsilləri aşkar et"
 detectChaptersDesc = "Fəsilə bənzər başlıqları aşkar edib EPUB səhifə qırılmaları əlavə et"
 kindleEink = "Kindle e-Ink (mətn üçün optimallaşdırılıb)"
 outputFormat = "Çıxış formatı"
-outputFormatDesc = "eBook üçün çıxış formatını seçin"
 tabletPhone = "Planşet/Telefon (şəkillərlə)"
 targetDevice = "Hədəf cihaz"
 targetDeviceDesc = "Oxuyucu cihaz üçün optimallaşdırılmış çıxış profilini seçin"
@@ -4469,8 +4619,24 @@ description = "Bu cookies vebsaytın düzgün işləməsi üçün vacibdir. Məx
 posthog = "PostHog Analitika"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Üzlük səhifəsinin başlığı"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "Seçilmiş hər fayl növündən asılı olmayaraq yeni PDF-in içində bütöv saxlanılır. Portfelləri dəstəkləməyən oxuyucular faylların əlavə olunduğu üzlük səhifəsini göstərir."
 goToFileEditor = "Fayl redaktoruna keç"
@@ -4488,6 +4654,9 @@ title = "Nə edir"
 
 [createPortfolio.tooltip.header]
 title = "PDF Portfolio-ları haqqında"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Boşluqları avtomatik qırp"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Bu brauzerdə mübadilə buferinə çıxış mövcud dey
 export = "Əlfəcinləri ixrac et"
 exportClipboard = "JSON-u mübadilə buferinə kopyala"
 exportJson = "JSON yüklə"
+exportMenu = "Export"
 importClipboard = "JSON-u mübadilə buferindən yapışdır"
 importJson = "JSON idxal et"
+importMenu = "Import"
 loadFromPdf = "Seçilmiş PDF-dən yüklə"
 noFile = "Mövcud əlfəcinləri çıxarmaq üçün PDF seçin."
 selectedFile = "{{file}} faylından yükləndi"
-source = "Əlfəcinləri yüklə"
 
 [editTableOfContents.editor]
 addTopLevel = "Yüksək səviyyəli əlfəcin əlavə et"
@@ -4740,6 +4910,9 @@ replaceExisting = "Mövcud əlfəcinləri əvəz et (əlavə etmək üçün işa
 replaceExistingHint = "Söndürüləndə yeni mündəricat mövcud əlfəcinlərin ardınca əlavə olunur."
 title = "Əlfəcinlər və mündəricat"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "PDF-i dəyiş"
 filePrompt = "Başlamaq üçün kitabxanadan PDF seçin və ya yenisini yükləyin."
@@ -4753,7 +4926,6 @@ title = "Redaktəyə başlamaq üçün aləti açın"
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} məhdudiyyəti nəzərə alınmadı"
 actionUnlocked = "{{action}} bu sessiya üçün açıldı"
-advanced = "Təkmil"
 allowed = "İcazə verilib"
 annotations = "Annotasiyalar"
 authoriseAction = "Bu PDF {{action}} istifadəsi üçün icazə tələb edir."
@@ -4801,7 +4973,6 @@ restricted = "Məhdudlaşdırılıb"
 restrictedActions = "məhdudlaşdırılmış əməliyyatlar"
 restrictedOperation = "Bu əməliyyat icazələr parolunu tələb edir."
 retainOwnerVerification = "Açma parolunu silərkən icazələr parolunu dəyişmədən saxlamaq üçün onu təsdiqləyin. Bu, onu silməyəcək."
-saveProtection = "Qorumanı saxla"
 securityChangeFailed = "Qoruma dəyişdirilə bilmədi. İcazələr parolunu və yeni təhlükəsizlik ayarlarını yoxlayın."
 sessionDetails = "Bu sessiya üçün açıqdır. PDF qorunmuş qalır."
 sessionDetailsLabel = "Sessiya açılması haqqında"
@@ -4871,7 +5042,6 @@ title = "Nəsə səhv getdi"
 tryAgain = "Yenidən cəhd et"
 
 [extractImages]
-allowDuplicates = "Dublikat şəkilləri yadda saxlayın"
 selectText = "Çıxarılan şəkilləri çevirmək üçün şəkil formatını seçin"
 submit = "Çıxarış"
 tags = "şəkil,foto,saxla,arxiv,zip,çək,götür"
@@ -4927,12 +5097,15 @@ closeFile = "Faylı bağla"
 
 [fileEditor]
 closedFile = "{{name}} bağlandı"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Faylın sırası dəyişdirildi"
 filesReordered_other = "{{count}} faylın sırası dəyişdirildi"
 loadedFromStorage_one = "Yaddaşdan {{count}} fayl yükləndi"
 loadedFromStorage_other = "Yaddaşdan {{count}} fayl yükləndi"
 loadFromStorageFailed = "Bəzi faylları yaddaşdan yükləmək alınmadı"
 pinnedFile = "{{name}} sabitləndi"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} saxlanıldı və bağlandı"
 saveFailed = "Saxlama alınmadı"
 unpinnedFile = "{{name}} sabitlənmədən çıxarıldı"
@@ -5019,11 +5192,20 @@ locked = "Kilidlənib"
 previewOf = "{{name}} üçün önbaxış"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Fayllar əlavə et"
 created = "Yaradıldı"
 notIncludedInToolRun = "Bu alət icrasına daxil edilməyib"
 size = "Fayl ölçüsü"
 title = "Fayllar"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Fayl yoxdur"
@@ -5104,6 +5286,7 @@ subtitle = "Fayllar yan panelində kateqoriyaları göstərin və ya gizlədin."
 title = "Yan panel kateqoriyaları"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Ləğv et"
 error = "Faylın adı dəyişdirilə bilmədi."
 illegalCharacters = "Fayl adında \\ / : * ? \" < > | ola bilməz"
@@ -5607,7 +5790,6 @@ removeField = "Sahəni sil"
 
 [formFill.editor]
 action = "Düymə əməliyyatı"
-actionHelp = "Düyməyə kliklənəndə nə baş verəcəyi."
 actionNone = "Heç nə"
 actionPrint = "Çap et"
 actionReset = "Formanı sıfırla"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Neçə simvolun sığacağını məhdudlaşdırır, bərabər a
 multiline = "Çoxsətirli"
 multilineHelp = "Birdən çox mətn sətrinə icazə verir və sahənin kənarında sətirə keçirir."
 multiSelect = "Çoxlu seçimə icazə ver"
-multiSelectHelp = "Eyni anda birdən çox seçimin seçilməsinə imkan verir."
 name = "Sahə adı"
 nameHelp = "Sahənin daxili adı. Məlumat ixrac edilərkən və ya forma başqa sistemdən doldurularkən istifadə olunur, buna görə unikal və boşluqsuz saxlayın."
 optionGap = "Seçim aralığı"
@@ -5902,6 +6083,11 @@ title = "Rəngləri/Kontrastı Tənzimlə"
 desc = "Vurğulayın, çəkin, qeydlər və fiqurlar əlavə edin görüntüləyicidə"
 tags = "annotasiya et,vurğula,çək,işarələ,şərh,qeydlər,nəzərdən keçir,düzəliş,geri bildirim,işarələmə alətləri,yapışqan qeydlər,fiqurlar,oxlar,mətn qutusu,sərbəst əl"
 title = "Annotasiya"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Form sahələrini AI ilə avtomatik aşkarlayın və PDF-inizi doldurula bilən edin."
@@ -6405,6 +6591,9 @@ sort = "Sırala"
 [merge.sortFiles]
 title = "Faylları sırala"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Birləşdirmə ayarlarına ümumi baxış"
 
@@ -6548,6 +6737,9 @@ title = "Təsdiqləmə uğursuz oldu"
 message = "Bu pəncərəni bağlayıb Stirling PDF-ə qayıda bilərsiniz."
 title = "Təsdiqləmə uğurlu oldu"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Girişə icazə ver"
 approving = "İcazə verilir..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Siz tətbiqə qaytarılırsınız..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} Stirling PDF hesabınıza giriş istəyir"
 scopesIntro = "Bu, {{app}} üçün bunlara icazə verəcək:"
 signedInAs = "{{name}} kimi daxil olunub"
@@ -6565,6 +6758,8 @@ signInButton = "Davam etmək üçün daxil olun"
 signInPrompt = "Tətbiqi qoşmağa davam etmək üçün Stirling PDF hesabınıza daxil olun."
 title = "Authorise access"
 unknownApp = "Üçüncü tərəf tətbiqi"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Sizin kimi hərəkət et - {{app}} tərəfindən edilən hər şey hesabınız altında işləyir və istifadənizə hesablanır"
@@ -6572,9 +6767,12 @@ tools = "Stirling PDF alətlərinizi sizin adınıza istifadə et - sənədləri
 
 [oauthConsent.scope]
 email = "Email ünvanınızı görmək"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Kimliyinizi təsdiqləmək"
 phone = "Telefon nömrənizi görmək"
 profile = "Əsas profil məlumatlarınızı görmək"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Skanları təmizləyir və PDF-in içərisindəki şəkillərdəki yazını tapıb mətn olaraq əlavə edir."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Siz komanda üzvü olacaqsınız və sahib girişini itirəc�
 [pageEdit]
 deselectAll = "Heç biri"
 selectAll = "Hamısını işarələ"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Səhifələri çıxar"
@@ -7577,6 +7779,8 @@ stamp = "Möhür annotasiyası - səhifə mətni deyil, buna görə burada redak
 widget = "Form sahəsi - səhifə mətni deyil, buna görə burada redaktə edilə bilməz"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Redaktə et"
 markTagged = "Tam teqlənmiş kimi işarələ"
 matchScanFont = "Skan olunmuş mətni {{face}} ilə uyğunlaşdır"
@@ -7590,6 +7794,7 @@ tagPageContent = "Səhifəni avtomatik teqlə"
 typeInto = "{{run}} daxilinə yaz"
 ungroupParagraph = "{{run}} abzasını qrupdan çıxar"
 unmarkTagged = "Tam teqlənməmiş kimi işarələ"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "{{run}} sar"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Saxlanılmamış dəyişikliklər ləğv edilsin?"
 
 [pdfTextEditor.error]
 decodeImage = "Seçilmiş şəkli dekodlamaq mümkün olmadı."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Bu mətn çoxaldıla bilmir: mövcud heç bir şrift onun bütün hərflərini göstərə bilmir."
 formLiftChangesDrawing = "Bunu redaktə etmək mümkün deyil: o, qırpma və ya qrafik ayarları dəyişəndə redaktorun saxlaya bilmədiyi bir qrupun hissəsi kimi çəkilib."
 insertImage = "Seçilmiş şəkli daxil etmək mümkün olmadı."
 needsShaping = "Redaktor hələ bu yazı sisteminin bitişik hərflərini və sait işarələrini düzgün çəkə bilmir, buna görə bu dəyişiklik edilmədi."
+reopenLost = "Open again"
 replaceClippedImage = "Bu şəkli əvəz etmək mümkün deyil: o, qırpılıb və əvəzləmə qırpıntının gizlətdiyi hissələri göstərəcək."
 scanOffInk = "Bu mətni redaktə etmək olmur: tanınmış sözlər skanla üst-üstə düşmür. OCR-i yenidən işə salın."
 unsafeRtlEdit = "Bu redaktəni etmək mümkün deyil: redaktor bu sətirdəki sağdan-sola mətni onu dəyişdirmədən yenidən çəkə bilmir."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG şəkli"
 close = "Axtarış panelini bağla"
 count = "{{current}} / {{total}}"
 findPlaceholder = "Axtar"
+hideReplace = "Hide replace"
 ignoreAccents = "Vurğuları nəzərə alma"
 matchCase = "Böyük/kiçik hərfi uyğunlaşdır"
 next = "Növbəti uyğunluq"
@@ -7625,6 +7833,7 @@ replace = "Əvəz et"
 replaceAll = "Hamısını əvəz et"
 replaced = "{{count}} əvəz edildi"
 replacePlaceholder = "Bununla əvəz et"
+showReplace = "Show replace"
 wholeWord = "Bütöv söz"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Bu keçidi teqləmək olmur."
 cannotTagPage = "Bu səhifənin məzmununu teqləmək olmur."
 contentGroup = "Məzmun"
 customTag = "{{role}} (xüsusi teq)"
-decorativeInfo = "Ekran oxuyucuları dekorativ şəkilləri ötürür. Bunu haşiyələr, fonlar və məlumat daşımayan digər şəkillər üçün istifadə edin."
-decorativeLabel = "Dekorativ şəkil"
-description = "Şəkil təsviri"
-descriptionInfo = "Ekran oxuyucuları bunu şəklin əvəzinə oxuyur."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Şifrələnmiş faylda teqlər redaktə edilə bilməz"
 figureDescription = "Şəkil təsviri"
 figureDescriptionInfo = "Ekran oxuyucuları bunu şəkil əvəzinə səsləndirir."
-formFieldDescription = "Sahənin təsviri"
 formulaDescription = "Formula təsviri"
 formulaDescriptionInfo = "Ekran oxuyucuları bunu formula əvəzinə səsləndirir. Bunu sanki ucadan deyirmiş kimi ifadə edin, məsələn, \"x kvadrat üstəgəl bir\"."
 heading = "Əlçatanlıq"
@@ -7813,7 +8019,6 @@ markedTagged = "Sənəd tam teqlənib"
 markedTaggedHint = "PDF oxuyucularına əlçatanlıq teqlərindən istifadə etməyi bildirir. Hər şey teqləndikdən sonra bunu işarələyin."
 markedWithUntagged = "Bəzi məzmun teqlənməyib, buna görə ekran oxuyucuları onu ötürə bilər."
 missingDescriptions = "Çatışmayan təsvirlər"
-mixedContent = "Şəkil digər məzmunu ehtiva edir"
 mixedTags = "Qarışıq"
 needsDescriptionBadge = "Təsvir yoxdur"
 nextToReview = "Baxış üçün növbəti"
@@ -7821,12 +8026,10 @@ notFigure = "Mətnin bir hissəsi kimi teqlənib"
 removeTag = "Teqi sil"
 saveFailed = "Əlçatanlıq dəyişiklikləriniz yadda saxlanıla bilmədi, buna görə də fayl yadda saxlanmadı. Onları geri alın və yenidən cəhd edin."
 selectedText = "Seçilmiş mətn"
-tagFormField = "Forma sahəsini teqləyin"
 tagging = "Səhifələrin teqlənməsi"
 tagLabel = "Teq"
 tagLinks_one = "Keçidi teqlə"
 tagLinks_other = "{{count}} keçidi teqlə"
-tagUntagged = "Sənədi avtomatik teqlə"
 tagUntaggedHint = "Sənəd boyunca əlçatanlıq teqlərini avtomatik əlavə edir. Nəticə təxmindir: sonra başlıqları, siyahıları və oxunuş ardıcıllığını yoxlayın."
 unknownTag = "Burada oxuna bilməz"
 unmarkedWithTags = "Bəzi PDF oxuyucuları yenə də teqlərdən istifadə edəcək və teqsiz məzmunu ötürə bilər."
@@ -7851,7 +8054,7 @@ heading = "Başlıqlar"
 mixedNumbering = "Nömrəli və nömrəsiz başlıqlar qarışıqdır"
 none = "Başlıq yoxdur"
 onPage = "{{page}} səhifəsində başlıq"
-problems = "Başlıq problemləri"
+problemCount = "{{count}} to fix"
 skippedLevel = "Başlıq {{previous}}-dən sonra bir səviyyəni buraxır"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Başlıq"
 allLanguages = "Bütün dillər"
 cannotSetDocument = "Bu sənədin dilini dəyişmək olmur."
 cannotSetText = "Bu mətnin dilini dəyişmək olmur."
-documentHint = "Mətnin bir hissəsi öz dilini təyin etmədikcə, ekran oxuyucularının istifadə etdiyi dildir."
 documentLabel = "Dil"
 documentLocked = "Şifrələnmiş sənədin dilini burada dəyişmək olmur."
 inDocument = "Bu sənəddə"
 innerLabel = "Teq {{number}} dili"
 label = "Dil"
-missing = "Dil təyin edilməyib. Ekran oxuyucuları təxmin edəcək və bütün sənədi səhv səslə oxuya bilər."
 mixed = "Qarışıq"
 noMatch = "Uyğun dil yoxdur. Onun kodunu yazın, məsələn mt və ya en-IE."
 placeholder = "Dil seçin"
@@ -7943,6 +8144,52 @@ renderFailed = "Səhifəni göstərmək alınmadı"
 [pdfTextEditor.password]
 incorrect = "Yanlış parol - yenidən cəhd edin."
 label = "Parol"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} mövqeyində düzləndirmə bələdçisi - silmək üçün xətkeşin üzərinə sürükləyin"
@@ -8124,6 +8371,10 @@ title = "Ön baxış fərqliliyi"
 [pdfTextEditor.tooltip.textFocus]
 text = "Bu iş sahəsi mətni redaktə etməyə və daxil edilmiş şəkilləri yenidən yerləşdirməyə fokuslanır. Mürəkkəb səhifə qrafikası, forma vidcetləri və laylı qrafika ixrac üçün qorunur, lakin burada tam redaktə edilə bilmir."
 title = "Mətn və şəkil fokuslanması"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF-i CSV-ə"
@@ -8383,17 +8634,6 @@ hideCategory = "Kateqoriyanı gizlət"
 labelCount = "etiketlər"
 sharedNote = "Bu etiketlər daxili quruludur və bütün komandanızla paylaşılır."
 showCategory = "Kateqoriyanı göstər"
-
-[policies.pii]
-account = "Hesab nömrələri (etiketlənmiş)"
-card = "Kredit / debet kartları"
-email = "E-poçt ünvanları"
-fieldLabel = "Redaktə ediləcək PII"
-iban = "IBAN-lar"
-phone = "Telefon nömrələri"
-placeholder = "PII növlərini seçin"
-routing = "ABŞ routing nömrələri (ABA)"
-ssn = "Sosial Təminat nömrələri"
 
 [policy]
 badgeEnforcing = "{{name}} tətbiq edilir..."
@@ -10317,6 +10557,10 @@ title = "Pipeline-lar"
 [portal.pipelines.actions]
 newCustomPipeline = "Yeni xüsusi pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Bütün pipeline-lar"
 
@@ -12047,7 +12291,6 @@ label = "Oxuma alətləri"
 readAloud = "Səslə oxu"
 rotateLeft = "Sola döndər"
 rotateRight = "Sağa döndər"
-search = "Sənəddə tap"
 switchDocument = "Sənədi dəyiş"
 thumbnails = "Səhifələr"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Qutu rəngi"
 convertPDFToImageLabel = "PDF-i PDF-Image-ə çevir"
 customPaddingLabel = "Xüsusi əlavə boşluq"
 useRegexLabel = "Regex istifadə et"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Tam söz üzrə axtarış"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Məxfiləşdirmə ayarları"
 
 [redact.auto.wordsToRedact]
 add = "Əlavə et"
-examples = "Nümunələr: Məxfi, Çox məxfi"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Bir söz daxil edin"
 title = "Məxfiləşdiriləcək sözlər"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Birdən çox faylı birdən məxfiləşdirmək üç�
 manual = "Əl ilə"
 mode = "Rejim"
 title = "Məxfiləşdirmə üsulu"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Yalnız eyni hərf registrində olan mətn uyğunlaşdırılır. Aktiv olduqda 'Secret' 'SECRET' ilə uyğun gəlməyəcək və regex-də [A-Z] yalnız böyük hərflərlə uyğunlaşır."
@@ -12147,19 +12401,6 @@ title = "Məxfiləşdirmə üsulu"
 text = "Məxfiləşdiriləcək xüsusi sahələri əl ilə seçmək üçün klikləyin və sürüşdürün. Nəyin məxfiləşdirildiyinə dəqiq nəzarət verir. (Tezliklə)"
 title = "Əl ilə məxfiləşdirmə"
 
-[redact.tooltip.words]
-bullet1 = "Hər dəfə bir söz əlavə edin"
-bullet2 = "Əlavə etmək üçün Enter basın və ya 'Başqasını əlavə et' klikləyin"
-bullet3 = "Sözləri silmək üçün × düyməsinə klikləyin"
-
-[redact.tooltip.words.description]
-text = "Sənədinizdə tapılıb məxfiləşdiriləcək söz və ya ifadələri daxil edin. Hər söz ayrı-ayrılıqda axtarılacaq."
-title = "Mətn uyğunluğu"
-
-[redact.tooltip.words.examples]
-text = "Tipik məxfiləşdirmə sözləri: bank məlumatları, e-poçt ünvanları və ya konkret adlar."
-title = "Yayğın nümunələr"
-
 [redact.tooltip.words.header]
 title = "Məxfiləşdiriləcək sözlər"
 
@@ -12176,15 +12417,6 @@ failed = "PDF-dən annotasiyalar silinərkən xəta baş verdi."
 
 [removeAnnotations.info]
 description = "Bu alət PDF sənədlərinizdən bütün annotasiyaları (şərhlər, vurğular, qeydlər və s.) siləcək."
-
-[removeAnnotations.settings]
-title = "Ayarlar"
-
-[removeAnnotations.tooltip.description]
-title = "Nə edir"
-
-[removeAnnotations.tooltip.header]
-title = "Annotasiyaların silinməsi haqqında"
 
 [removeBlanks]
 submit = "Boş səhifələri sil"
@@ -12325,6 +12557,9 @@ tags = "yenidən düz, sırala, təşkil et, yenidən təşkil et, səhifələri
 [reorganizePages.error]
 failed = "Səhifələri yenidən düzəltmək alınmadı"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Səhifələr yenidən düzüldü"
 
@@ -12406,6 +12641,7 @@ title = "Bütün rəngləri tərsinə çevir"
 rotateLeft = "Saat əksinə döndür"
 rotateRight = "Saat istiqamətində döndür"
 selectRotation = "Döndürmə bucağını seçin (saat istiqamətində)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Fırlatmanı tətbiq et"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "PDF fırladın"
@@ -12516,8 +12752,7 @@ title = "Sanitizasiya"
 failed = "PDF sanitizasiyası zamanı xəta baş verdi."
 
 [sanitize.options]
-note = "PDF-dən silmək istədiyiniz elementləri seçin. Ən azı bir seçim seçilməlidir."
-title = "Sanitizasiya Seçimləri"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "PDF daxilində yerləşdirilmiş istənilən faylları silin"
@@ -12649,6 +12884,7 @@ title = "PDF-də axtar"
 hideTools = "Mövcud olmayan alətləri gizlət ▴"
 messageNoFallback = "Serveriniz onlayn olana qədər alətlər mövcud deyil."
 messageWithFallback = "Bəzi alətlər server bağlantısı tələb edir."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Mövcud olmayan alətləri göstər ▾"
 title = "Sizin Stirling-PDF serveriniz əlçatmazdır"
 toolNotAvailableLocally = "Sizin Stirling-PDF serveriniz oflayndır və \"{{endpoint}}\" yerli arxa xidmətində mövcud deyil."
@@ -13034,6 +13270,12 @@ title = "Klaviatura qısayolları"
 mac = "Qısayolda ⌘ (Command), ⌥ (Option) və ya başqa bir modifikator daxil edin."
 windows = "Qısayolda Ctrl, Alt və ya başqa bir modifikator daxil edin."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Şərtlər, məxfilik siyasəti və cookie tərcihləriniz."
 label = "Hüquqi"
@@ -13418,9 +13660,7 @@ image = "Yükləmə"
 text = "Mətn"
 
 [sign.step]
-createDesc = "İmzanı necə yaratmaq istədiyinizi seçin"
 place = "Yerləşdir və saxla"
-placeDesc = "İmzanı PDF üzərində yerləşdirin"
 
 [sign.steps]
 configure = "İmzanı konfiqurasiya et"
@@ -13597,6 +13837,10 @@ rotateLeft = "Sola döndür"
 rotateRight = "Sağa döndür"
 trim = "İmzaya qədər kəs"
 trimHint = "Ətrafındakı boş sahəni kəsir"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "İmzanın Görünüşü Tənzimləmələri"
@@ -13959,7 +14203,6 @@ placeholder = "Üfüqi bölmələrin sayını daxil edin"
 
 [split-by-sections.splitMode]
 custom = "Fərdi səhifələr"
-description = "Səhifələri necə bölmək istədiyinizi seçin"
 label = "Bölmə rejimi"
 splitAll = "Bütün səhifələri böl"
 splitAllExceptFirst = "Birincidən başqa hamısını böl"
@@ -14210,10 +14453,8 @@ failed = "PDF-ə zaman damğası tətbiq edilərkən xəta baş verdi."
 
 [timestampPdf.options]
 note = "Sənədinizin yalnız SHA-256 heşi TSA serverinə göndərilir; PDF faylının özü heç vaxt TSA serverinə göndərilmir."
-title = "Zaman damğası serveri (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Etibarlı Zaman Damğası Orqanı seçin"
 label = "TSA serveri seçin"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Heç bir alət mövcud deyil"
 
 [tooltip]
 close = "İpucunu bağla"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Bu alət PDF forma sahələrindəki yalnız-oxu məhdudiyyətlərini siləcək, beləliklə onlar redaktə və doldurula bilən olacaq."
@@ -14706,6 +14961,9 @@ signatureDate = "İmza tarixi"
 
 [validateSignature.settings]
 certHint = "Xüsusi etibar mənbəyinə qarşı doğrulamaq üçün etibarlı X.509 sertifikatı yükləyin."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Doğrulama ayarları"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"
 copyRestricted = "Bu PDF-in icazələri kopyalamağı deaktiv edib."
 copyText = "Kopyala"
 coverPageView = "Üz qabığı səhifəsini ayrıca göstər"
-disableColorFilter = "Rəng filtrini söndür"
 documentUpdated = "Sənəd yeniləndi"
 dualPageView = "İki Səhifə Görünüşü"
 editText = "Mətni redaktə edin"
-enableDarkFilter = "Qaranlıq filtrini aktiv et"
-enableSepiaFilter = "Sepiya filtrini aktiv et"
 engineLoadError = "PDF viewer mühərrikini başlatmaq alınmadı"
 engineSlowWarning = "PDF mühərrikinin başladılması gözləniləndən uzun çəkir. Brauzerinizin WebAssembly və Worker parametrlərini yoxlayın və ya səhifəni yenidən yükləyin."
 firstPage = "Birinci səhifə"
@@ -14736,20 +14991,27 @@ fitPage = "Səhifəyə sığdır"
 fitWidth = "Enə sığdır"
 lastPage = "Son səhifə"
 loadingEngine = "PDF Engine yüklənir..."
+menuSelected = "Selected"
 moreOptions = "Daha çox"
 nextPage = "Növbəti səhifə"
 noPdfProvided = "PDF təqdim edilməyib"
 onlyPdfSupported = "Bu fayl formatı önbaxış üçün dəstəklənmir."
 pageNavigation = "Səhifə naviqasiyası"
+pageNumber = "Page number"
 previousPage = "Əvvəlki səhifə"
 readAloudFromHere = "Buradan ucadan oxu"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Sənədi yadda saxlamaq mümkün olmadı. Yenidən cəhd edin."
 saveChangesErrorTitle = "Dəyişiklikləri yadda saxlamaq mümkün olmadı"
 singlePageView = "Tək Səhifə Görünüşü"
+tools = "Tools"
 unknownFile = "Naməlum fayl"
-view = "Baxış"
 zoom = "Yaxınlaşdırma"
 zoomIn = "Böyüt"
+zoomLevel = "Zoom level"
 zoomOut = "Kiçilt"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "İmzaya önbaxış"
 
 [viewer.signatureField]
 badge = "İmza"
+clickToSign = "Click to sign here"
 fieldTitle = "İmza sahəsi: {{name}}"
 signed = "İmzalanıb"
 signedWithReason = "İmzalanıb: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "İmzalanmamış imza sahəsi: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{total}} fayldan {{restored}} bərpa edildi. Qalanları artıq bu ci
 
 [workbenchBar]
 activeFiles = "Aktiv fayllar"
-annotations = "Annotasiyalar"
+annotate = "Annotate"
 applyRedactionsFirst = "Əvvəlcə gizlətmələri tətbiq et"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Bütün faylları bağla"
 closePdf = "PDF-i bağla"
+defaultZoom = "Default zoom"
 deselectAll = "Hamısını seçmə"
 downloadAll = "Hamısını endir"
 editText = "Mətni Redaktə Et"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Annotasiya rejimindən çıx"
 exitRedaction = "Gizlətmə rejimindən çıx"
 findReplace = "Tap və əvəz et"
 formFill = "Forma Redaktoru"
-hideToolbar = "Alətlər panelini gizlət"
+layers = "Layers"
 moreActions = "Daha çox əməliyyat"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Səhifə redaktoru"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Sürüşdürmə rejimi"
 print = "PDF-i çap et"
 readAloud = "Səsləndir"
 readAloudLanguage = "Dil"
 readAloudSpeed = "Sürət"
 redact = "Gizlət"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Sola çevir"
 rotateRight = "Sağa çevir"
 ruler = "Xətkeş / Ölçmə"
+rulerScaleUnset = "Not set"
 rulerSettings = "Miqyas ayarları"
 save = "Yadda saxla"
 saveAll = "Hamısını yadda saxla"
@@ -15123,14 +15398,23 @@ selectLanguage = "Dili seçin"
 share = "Paylaş"
 showAllTools = "Bütün alətləri göstər"
 showFewerTools = "Alətlər panelini yığ"
-showToolbar = "Alətlər panelini göstər"
+thumbnails = "Pages"
 toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
-toggleAttachments = "Qoşmaları aç/bağla"
-toggleBookmarks = "Əlfəcinlər (Mündəricat)"
 toggleComments = "Şərhlər"
-toggleLayers = "Qatları aç/bağla"
-toggleSidebar = "Yan paneli aç/bağla"
 viewer = "Görüntüləyici"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Bu sənədə çıxışınızın müddəti bitib."

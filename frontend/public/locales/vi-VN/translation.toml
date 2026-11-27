@@ -12,9 +12,11 @@ comingSoon = "Sắp ra mắt"
 confirm = "Xác nhận"
 confirmClose = "Xác nhận đóng"
 confirmCloseCancel = "Hủy"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Đóng tệp"
 confirmCloseDiscard = "Bỏ các thay đổi và đóng"
 confirmCloseMessage = "Bạn có chắc muốn đóng tệp này không?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Lưu và đóng"
 confirmCloseSaveFailed_one = "Đã lưu nhưng có lỗi. {{count}} tệp không thể lưu."
 confirmCloseSaveFailed_other = "Đã lưu với lỗi. Không thể lưu {{count}} tệp."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Tệp đã được lưu vào ổ đĩa"
 filesSelected = "{{count}} tệp"
 font = "Phông chữ"
 fontSizeTooltip = "Kích thước chữ số trang theo point. Số lớn hơn sẽ tạo chữ lớn hơn."
-fontTypeTooltip = "Họ phông chữ cho số trang. Chọn theo phong cách tài liệu của bạn."
 green = "Xanh lá"
 help = "Trợ giúp"
 incorrectPasswordMessage = "Mật khẩu hiện tại không chính xác."
@@ -249,9 +250,7 @@ image = "Tải lên"
 text = "Văn bản"
 
 [addImage.step]
-createDesc = "Tải lên ảnh bạn muốn thêm"
 place = "Đặt ảnh"
-placeDesc = "Nhấp vào PDF để thêm ảnh"
 
 [addImage.steps]
 configure = "Cấu hình ảnh"
@@ -276,7 +275,7 @@ fontName = "Tên phông"
 fontSize = "Cỡ phông"
 numberPagesDesc = "ví dụ: 1,3,5-8 hoặc để trống cho tất cả các trang"
 pagePreviewAlt = "Bản xem trước trang"
-pagesAndStarting = "Trang & số bắt đầu"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Vị trí & trang"
 preview = "Chọn vị trí"
 previewDisclaimer = "Bản xem trước chỉ mang tính ước lượng. Kết quả cuối có thể khác do thông số phông chữ của PDF."
@@ -300,6 +299,7 @@ title = "Kết quả đánh số trang"
 
 [addPassword]
 desc = "Mã hóa tài liệu PDF của bạn bằng mật khẩu."
+submit = "Add Password"
 tags = "mã hóa,mật khẩu,khóa,bảo mật,bảo vệ,an ninh,mã hóa,bảo vệ,bí mật,riêng tư,hạn chế truy cập"
 title = "Thêm mật khẩu"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Bản xem trước con dấu"
 tags = "đóng dấu,đánh dấu,con dấu,đã phê duyệt,bị từ chối,bí mật,công cụ đóng dấu,dấu cao su,dấu ngày,dấu phê duyệt,đã nhận,vô hiệu,bản sao,bản gốc"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Bảng chữ cái"
-clickToExpand = "Nhấp để mở rộng"
 customColor = "Màu văn bản tùy chỉnh"
 customDateDesc = "Định dạng tùy chỉnh"
 customPosition = "Kéo con dấu đến vị trí mong muốn trong cửa sổ xem trước."
 dateDesc = "Ngày hiện tại"
 datetimeDesc = "Ngày và giờ kết hợp"
 dateTimeVars = "Ngày & Giờ"
-dynamicVariables = "Biến động"
 examples = "Ví dụ"
 filenameDesc = "Tên tệp không có phần mở rộng"
 filenameFullDesc = "Tên tệp có phần mở rộng"
@@ -365,6 +364,8 @@ noStampSelected = "Chưa chọn con dấu. Quay lại Bước 1."
 opacity = "Độ mờ"
 otherVars = "Khác"
 pageNumberDesc = "Số trang hiện tại"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Thông tin trang"
 position = "Vị trí"
 positionAndFormatting = "Vị trí & định dạng"
@@ -378,9 +379,10 @@ quickPosition = "Chọn một vị trí trên trang để đặt con dấu."
 rotation = "Xoay"
 selectedImageAlt = "Hình ảnh con dấu đã chọn"
 selectTemplate = "Chọn một mẫu..."
+size = "Size"
 stampSetup = "Thiết lập con dấu"
 stampText = "Văn bản dấu"
-stampTextDescription = "Sử dụng các biến động bên dưới. Dùng @@ cho ký tự @. Dùng \\n cho dòng mới."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Loại dấu"
 submit = "Thêm dấu"
 tags = "Dấu,Thêm hình ảnh,căn giữa hình ảnh,Hình mờ,PDF,Nhúng,Tùy chỉnh"
@@ -389,7 +391,6 @@ title = "Đóng dấu PDF"
 totalPagesDesc = "Tổng số trang"
 useTemplate = "Dùng mẫu"
 uuidDesc = "Mã định danh duy nhất ngắn (8 ký tự)"
-variablesHelp = "Nhấp vào bất kỳ biến nào để chèn vào văn bản dấu của bạn. Dùng @@ cho ký tự @."
 yearMonthDayDesc = "Các phần ngày riêng lẻ"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Đã xảy ra lỗi khi thêm con dấu vào PDF."
 
 [AddStampRequest.results]
 title = "Kết quả đóng dấu"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Tùy chỉnh"
@@ -410,6 +417,11 @@ legal-footer = "Chân trang pháp lý"
 page-numbers = "Số trang"
 pageNumberFooter = "Chân trang số trang"
 timestamp = "Dấu thời gian"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Áp dụng văn bản"
@@ -462,9 +474,7 @@ image = "Tải lên"
 text = "Văn bản"
 
 [addText.step]
-createDesc = "Nhập văn bản bạn muốn thêm"
 place = "Đặt văn bản"
-placeDesc = "Nhấp vào PDF để thêm văn bản của bạn"
 
 [addText.steps]
 configure = "Thiết lập văn bản"
@@ -1233,6 +1243,18 @@ label = "Tạo lại khi khởi động"
 description = "Số ngày chứng chỉ còn hiệu lực"
 label = "Hiệu lực chứng chỉ (ngày)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Các thư mục mà nguồn thư mục và đầu ra thư mục được phép đọc và ghi. Đây là ranh giới bảo mật: tự động hóa không bao giờ có thể được trỏ tới đường dẫn máy chủ nằm ngoài danh sách này."
 securityNote = "Để trống mục này để tắt hoàn toàn nguồn thư mục và đầu ra thư mục. Thư mục cấu hình riêng của Stirling luôn bị cấm truy cập."
@@ -1456,7 +1478,9 @@ label = "Tên người dùng SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Client gửi Stirling API key trong header X-API-KEY (hoặc Authorization: Bearer <key>). Khóa ánh xạ tới người dùng Stirling sở hữu nó - chỉ các tài khoản đã được cấp quyền mới truy cập được, và các hành động được kiểm tra với tư cách người dùng đó. Quản lý khóa trong Tài khoản > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Cung cấp các công cụ PDF và tác tử AI của Stirling cho MCP client qua endpoint được bảo vệ bằng OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Công cụ được phép"
 description = "Operation id cần ẩn khỏi MCP (phân tách bằng dấu phẩy hoặc khoảng trắng), ví dụ: add-password remove-password. Để trống để hiển thị tất cả công cụ đã bật."
 label = "Công cụ bị chặn"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Khi tắt (mặc định), không tải endpoint /mcp, metadata hoặc MCP beans."
 label = "Bật MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Nhập OAuth issuer + resource ID của bạn ở trên, Lưu và khởi động lại."
 step1ApiKey = "Tạo API key trong Tài khoản > API Keys (mỗi người dùng dùng khóa riêng)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Trong MCP client của bạn, thêm một"
 step2b = "server trỏ đến:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Client tự động phát hiện OAuth từ:"
 step3ApiKey = "Gửi khóa trong header"
 step3ApiKeyb = "(hoặc Authorization: Bearer <key>). Không dùng OAuth hoặc phát hiện metadata."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Phê duyệt đăng nhập; client thử lại với token. Công cụ xuất hiện theo nhóm: chuyển đổi, trang, khác, bảo mật, ai."
 step4ApiKey = "Công cụ xuất hiện theo nhóm: chuyển đổi, trang, khác, bảo mật, ai - và mọi lệnh gọi được kiểm tra với tư cách chủ sở hữu khóa."
 tip = "Mẹo: đăng ký resource ID làm audience được phép trong IdP của bạn. Đã thử nghiệm với MCP Inspector và Claude Desktop."
 tipApiKey = "Mẹo: chế độ API-key không cần IdP bên ngoài - đơn giản nhất cho self-host. Khóa ánh xạ tới người dùng Stirling sở hữu nó."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Kết nối MCP client"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Tự động phát hiện từ issuer"
 
 [admin.settings.mcp.mode]
 apikey = "API key (khóa theo người dùng của Stirling)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth cần IdP bên ngoài. API key dùng API key theo từng người dùng của Stirling (X-API-KEY) - đơn giản nhất cho self-host."
 label = "Chế độ xác thực"
 oauth = "OAuth 2.1 (IdP bên ngoài)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "Yêu cầu mcp.tools.read cho thao tác đọc và mcp.tools.write cho thao tác ghi/AI."
 label = "Bắt buộc OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim được khớp với username Stirling (ví dụ: sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Bạn có muốn giúp Stirling PDF tốt hơn không?"
 tags = "chú thích,tô sáng,vẽ,đánh dấu,bình luận,ghi chú,đánh giá,redline,phản hồi,công cụ đánh dấu,ghi chú dán,hình dạng,mũi tên,hộp văn bản,vẽ tay"
 
 [annotation]
-alignCenter = "Căn giữa"
-alignLeft = "Căn trái"
-alignRight = "Căn phải"
 annotationStyle = "Kiểu chú thích"
 backgroundColor = "Màu nền"
 borderOff = "Viền: Tắt"
@@ -2016,18 +2073,61 @@ underline = "Gạch dưới"
 undoDelete = "Hoàn tác"
 width = "Độ rộng"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Trình chỉnh sửa PDF miễn phí, riêng tư mà bạn có thể chạy trên bất kỳ hạ tầng nào."
 
 [appBanner]
 dismiss = "Bỏ qua"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Thêm tệp đính kèm..."
 convertToPdfA3b = "Chuyển sang PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b là định dạng lưu trữ đảm bảo bảo quản lâu dài. Nó cho phép nhúng các định dạng tệp bất kỳ dưới dạng tệp đính kèm. Chuyển đổi yêu cầu Ghostscript và có thể mất nhiều thời gian hơn với tệp lớn."
-convertToPdfA3bTooltipHeader = "Giới thiệu về chuyển đổi PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Chức năng"
 discardChanges = "Hủy bỏ"
 downloadSingle = "Tải xuống tệp đính kèm"
 duplicateName = "Tệp đính kèm tên '{{name}}' đã tồn tại."
@@ -2208,7 +2308,6 @@ guest = "Khách"
 user = "Người dùng"
 
 [auto-rename]
-description = "Tự động tìm tiêu đề từ nội dung PDF của bạn và dùng làm tên tệp."
 submit = "Tự động đổi tên"
 tags = "tự động phát hiện,dựa trên tiêu đề,sắp xếp,đổi nhãn"
 title = "Tự động đổi tên"
@@ -2218,21 +2317,6 @@ failed = "Đã xảy ra lỗi khi tự động đổi tên PDF."
 
 [auto-rename.results]
 title = "Kết quả tự động đổi tên"
-
-[auto-rename.settings]
-title = "Giới thiệu"
-
-[auto-rename.tooltip.description]
-title = "Chức năng"
-
-[auto-rename.tooltip.header]
-title = "Cách tự động đổi tên hoạt động"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Tìm văn bản có vẻ là tiêu đề hoặc đề mục"
-bullet2 = "Tạo tên tệp sạch, hợp lệ từ tiêu đề phát hiện được"
-bullet3 = "Giữ tên gốc nếu không tìm thấy tiêu đề phù hợp"
-title = "Đổi tên thông minh"
 
 [autoFormDetection]
 loading = "Đang phát hiện các trường biểu mẫu..."
@@ -2327,6 +2411,9 @@ remove = "Xóa công cụ"
 selected = "Công cụ đã chọn"
 selectTool = "Chọn một công cụ..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Hủy"
 confirm = "Quay lại"
@@ -2360,6 +2447,10 @@ title = "Chạy tự động hóa"
 [automate.selection]
 title = "Chọn tự động hóa"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Tạo tự động hóa mới"
 
@@ -2371,6 +2462,7 @@ title = "Đề xuất"
 
 [automate.sequence]
 finish = "Hoàn tất"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Chạy tự động hóa"
 running = "Đang chạy tự động hóa..."
 signInToRun = "Đăng nhập để chạy tự động hóa."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Quy trình bảo mật"
 secureWorkflowDesc = "Bảo vệ tài liệu PDF bằng cách loại bỏ nội dung có thể gây hại như JavaScript và tệp nhúng, sau đó thêm bảo vệ bằng mật khẩu để ngăn truy cập trái phép. Mật khẩu mặc định là 'password'."
 
 [autoRename]
-description = "Công cụ này sẽ tự động đổi tên tệp PDF dựa trên nội dung của chúng. Nó phân tích tài liệu để tìm tiêu đề phù hợp nhất từ văn bản."
 tags = "tự phát hiện,dựa trên tiêu đề,tổ chức,gắn nhãn lại,tự động đổi tên,đổi tên tự động,đổi tên thông minh,đổi tên theo nội dung,tên tệp,đặt tên tệp,phát hiện tiêu đề"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,chia,tài liệu,tổ chức"
 [autoSplitPDF]
 dividerDownload2 = "Tải xuống 'Trang phân cách tự động (có hướng dẫn).pdf'"
 duplexMode = "Chế độ hai mặt (Quét mặt trước và sau)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "Dựa trên QR,tách,phân đoạn quét,sắp xếp"
 title = "Tự động chia PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Thêm viền quanh từng phần trang để hỗ trợ cắt và can
 [bookletImposition.addGutter]
 label = "Thêm lề gáy"
 tooltip = "Thêm khoảng lề trong để đóng gáy"
-
-[bookletImposition.advanced]
-toggle = "Tùy chọn nâng cao"
 
 [bookletImposition.doubleSided]
 label = "In hai mặt"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Chọn tệp JKS"
 chooseP12File = "Chọn tệp PKCS12"
 choosePfxFile = "Chọn tệp PFX"
 choosePrivateKey = "Chọn tệp khóa riêng"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Đã từ chối"
 fetchFailed = "Không tải được dữ liệu ký"
 finalized = "Đã hoàn tất"
 location = "Vị trí"
-logoTitle = "Logo"
-name = "Tên"
-noLogo = "Không logo"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Số trang"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Mật khẩu chứng chỉ"
 passwordOptional = "Để trống nếu không có mật khẩu"
 pemCertificateLabel = "Chứng chỉ (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Khóa riêng (.pem / .key)"
 pending = "Đang chờ"
 readyToFinalize = "Sẵn sàng hoàn tất"
 reason = "Lý do"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Dùng chứng chỉ máy chủ - không cần tệp hoặc mật khẩu"
-showLogo = "Hiển thị logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} chữ ký"
 tags = "xác thực,PEM,P12,chính thức,mã hóa,ký,chứng chỉ,PKCS12,JKS,server,thủ công,tự động"
 title = "Ký bằng chứng chỉ"
@@ -2738,12 +2828,45 @@ viewed = "Đã xem"
 
 [certSign.appearance]
 invisible = "Ẩn"
+showOnPage = "Show signature on page"
 stepTitle = "Hiển thị chữ ký"
 visibility = "Mức hiển thị"
 visible = "Hiển thị"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Chi tiết chữ ký"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Giới thiệu về hiển thị chữ ký"
@@ -2762,9 +2885,6 @@ bullet3 = "Chọn trang để đặt chữ ký"
 bullet4 = "Có thể kèm logo tùy chọn"
 text = "Hiển thị một khối chữ ký trên PDF với tên, ngày và thông tin tùy chọn. Hữu ích khi bạn muốn người đọc thấy rõ tài liệu đã được ký."
 title = "Chữ ký hiển thị"
-
-[certSign.certFiles]
-stepTitle = "Tệp chứng chỉ"
 
 [certSign.certType.tooltip.convert]
 text = "Chuyển tệp của bạn sang Java keystore (.jks) bằng keytool, rồi chọn JKS."
@@ -2786,6 +2906,7 @@ text = "Chọn định dạng khớp với tệp chứng chỉ của bạn:"
 title = "Nên dùng tùy chọn nào?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Định dạng chứng chỉ"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Thiết bị này"
 [certSign.error]
 failed = "Đã xảy ra lỗi khi xử lý chữ ký."
 
-[certSign.format]
-pkcs11 = "USB Token"
-windowsStore = "Kho chứng chỉ Windows"
-
 [certSign.hardware]
-certificate = "Chứng chỉ"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Đường dẫn trình điều khiển tùy chỉnh…"
+digitalId = "Digital ID"
 driver = "Trình điều khiển PKCS#11"
 driverPath = "Đường dẫn thư viện trình điều khiển"
 driverPathPlaceholder = "Đường dẫn đầy đủ tới trình điều khiển PKCS#11 của bạn (.dll, .so hoặc .dylib)"
-expired = "đã hết hạn"
-expires = "hết hạn vào"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Liệt kê chứng chỉ"
-loading = "Đang đọc chứng chỉ…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Không tìm thấy chứng chỉ ký"
 noDriver = "Không phát hiện trình điều khiển PKCS#11. Hãy cài đặt trình điều khiển cho token của bạn (ví dụ: OpenSC), sau đó mở lại phần này - hoặc nhập thủ công đường dẫn trình điều khiển bên dưới."
-notYetValid = "chưa có hiệu lực"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN của token"
 pkcs11Hint = "Chọn trình điều khiển PKCS#11 của token, nhập PIN, rồi liệt kê các chứng chỉ trên token."
 pkcs11LoadError = "Không thể đọc chứng chỉ từ token. Hãy kiểm tra PIN và trình điều khiển."
-refresh = "Làm mới"
-selectCert = "Chọn chứng chỉ"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Chọn trình điều khiển"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Khe (tùy chọn)"
-windowsHint = "Chọn một chứng chỉ từ kho chứng chỉ Windows của bạn. Việc ký sử dụng khóa trên thẻ/token của bạn - Windows sẽ yêu cầu nhập PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Không thể đọc kho chứng chỉ Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Nguyên tắc chung"
 device = "Thiết bị này"
 noOtherSources = "Không có nguồn chứng chỉ nào khác."
 server = "Máy chủ"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Nguồn chứng chỉ"
 upload = "Tải lên"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Cập nhật tên người dùng. Bạn sẽ bị đăng xuất sau khi cập nhật."
@@ -3069,7 +3205,6 @@ placeholder = "Trình tạo tài liệu"
 
 [changeMetadata.customFields]
 add = "Thêm trường"
-description = "Thêm các trường siêu dữ liệu tùy chỉnh vào tài liệu"
 key = "Khóa"
 keyPlaceholder = "Khóa tùy chỉnh"
 remove = "Xóa"
@@ -3135,10 +3270,6 @@ bullet1 = "Ngày tạo: Khi tài liệu gốc được tạo"
 bullet2 = "Ngày sửa đổi: Lần thay đổi cuối"
 text = "Thời điểm tài liệu được tạo và sửa đổi."
 title = "Trường ngày"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Xóa toàn bộ siêu dữ liệu để đảm bảo quyền riêng tư."
-title = "Xóa siêu dữ liệu hiện có"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Tiêu đề: Tên hoặc tiêu đề tài liệu"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Bạn đã đạt giới hạn sử dụng. Kiểm tra c�
 
 [checkAccessibility]
 aboutRow = "Thông tin về {{label}}"
-checking = "Đang kiểm tra..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Tải báo cáo khả năng truy cập"
 fileFailed = "không thành công"
+noFiles = "Select a PDF to check it."
 pickFile = "Hiển thị kết quả cho"
-submit = "Kiểm tra khả năng truy cập"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Văn bản thay thế"
@@ -3286,10 +3417,17 @@ structure = "Thẻ cho trình đọc màn hình biết từng phần của trang
 [checkAccessibility.checks]
 label = "{{passed}} trên {{total}} kiểm tra đạt"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Không thể tạo báo cáo khả năng truy cập. Hãy thử lại."
 fileTitle = "Không thể kiểm tra tệp này"
 partial = "Một số tệp không thể kiểm tra."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Khai báo PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Tệp có tiêu đề trong siêu dữ liệu."
 [checkAccessibility.figures]
 summary_one = "{{count}} hình ảnh cần mô tả (trang {{pages}})"
 summary_other = "{{count}} hình ảnh cần mô tả (trang {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Áp dụng cho"
@@ -3465,19 +3618,7 @@ checking = "Đang kiểm tra {{current}} trên {{total}}..."
 complete = "Kiểm tra hoàn tất"
 
 [checkAccessibility.steps]
-results = "Kết quả"
 standard = "Tiêu chuẩn"
-
-[checkAccessibility.tooltip.header]
-title = "Tiêu chuẩn cần kiểm tra"
-
-[checkAccessibility.tooltip.ua1]
-text = "Phiên bản đầu tiên của PDF/UA, phát hành năm 2012 dưới tên ISO 14289-1, dành cho tệp PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Phiên bản mới hơn, phát hành năm 2024 dưới tên ISO 14289-2, dành cho tệp PDF 2.0. Tệp PDF 1.7 kiểm tra theo tiêu chuẩn này sẽ không đạt các quy tắc chỉ áp dụng cho PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Chú thích {{n}}"
@@ -3868,6 +4009,7 @@ title = "Chọn màu"
 transparent = "Trong suốt"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Hành động"
 back = "Quay lại"
 cancel = "Hủy"
@@ -4206,7 +4348,9 @@ title = "Làm mới khóa API"
 warning = "⚠️ Cảnh báo: Thao tác này sẽ tạo khóa API mới và khiến các khóa trước đó không còn hiệu lực."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) cho phép trợ lý AI như Claude dùng trực tiếp các công cụ Stirling PDF của bạn. Kết nối client một lần và trợ lý của bạn có thể chuyển đổi, chỉnh sửa, bảo mật và xử lý tài liệu thay mặt bạn."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Người dùng khách không thể kết nối MCP client. Tạo tài khoản để dùng MCP server và cho phép trợ lý AI chạy công cụ Stirling PDF thay mặt bạn."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Sao chép {{label}}"
 tooltipCopied = "Đã sao chép {{label}}"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "MCP endpoint của bạn"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Thêm vào"
 hint = "Chọn client của bạn, dán đoạn snippet vào tệp được hiển thị, rồi khởi động lại. Bạn sẽ đăng nhập bằng tài khoản Stirling khi dùng lần đầu - không cần sao chép khóa."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Kết nối trợ lý AI của bạn"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Giữ tỉ lệ khung hình"
 maxAttachmentSize = "Kích thước tệp đính kèm tối đa (MB)"
 multiple = "Nhiều tệp"
 optimizeForEbook = "Tối ưu PDF cho thiết bị đọc sách điện tử (dùng Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Đầu ra"
-outputFormat = "Định dạng đầu ra"
-pdfaAccessibleFormat = "{{format}} (có thể truy cập)"
-pdfaDigitalSignatureWarning = "PDF chứa chữ ký số. Điều này sẽ bị xóa trong bước tiếp theo."
-pdfaNote = "PDF/A-1b tương thích hơn, PDF/A-2b hỗ trợ nhiều tính năng hơn, PDF/A-3b hỗ trợ tệp nhúng."
-pdfaOptions = "Tùy chọn PDF/A"
 pdfOptions = "Tùy chọn PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Cài đặt"
 signInToUse = "Đăng nhập để sử dụng"
 single = "Một tệp"
 sourceFormatPlaceholder = "Định dạng nguồn"
-strictMode = "Chế độ nghiêm ngặt"
-strictModeDesc = "Báo lỗi nếu chuyển đổi không hoàn hảo (dùng xác minh VeraPDF)"
 svgPdfOptions = "Tùy chọn SVG sang PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Tệp SVG được kết xuất dưới dạng đồ họa vector để đầu ra sắc nét ở mọi độ phân giải. Kích thước từ SVG xác định kích thước trang PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Mức thu phóng"
 
 [convert.ebookOptions]
 includePageNumbers = "Bao gồm số trang"
-includePageNumbersDesc = "Thêm số trang vào PDF được tạo"
 includeTableOfContents = "Bao gồm mục lục"
-includeTableOfContentsDesc = "Thêm mục lục được tạo vào PDF kết quả"
 optimizeForEbookPdf = "Tối ưu cho thiết bị đọc eBook"
 optimizeForEbookPdfDesc = "Tối ưu PDF cho việc đọc eBook (kích thước tệp nhỏ hơn, hiển thị tốt hơn trên thiết bị eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Phát hiện chương"
 detectChaptersDesc = "Phát hiện các tiêu đề giống chương và chèn ngắt trang EPUB"
 kindleEink = "Kindle e‑Ink (tối ưu văn bản)"
 outputFormat = "Định dạng đầu ra"
-outputFormatDesc = "Chọn định dạng đầu ra cho ebook"
 tabletPhone = "Máy tính bảng/Điện thoại (có hình ảnh)"
 targetDevice = "Thiết bị đích"
 targetDeviceDesc = "Chọn cấu hình đầu ra tối ưu cho thiết bị đọc"
@@ -4469,8 +4619,24 @@ description = "Những cookies này rất cần thiết để website hoạt đ�
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Tiêu đề trang bìa"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "Mọi tệp đã chọn được giữ nguyên toàn bộ bên trong PDF mới, bất kể loại tệp. Trình đọc không hỗ trợ portfolio sẽ hiển thị trang bìa với các tệp đính kèm."
 goToFileEditor = "Đi tới trình chỉnh sửa tệp"
@@ -4488,6 +4654,9 @@ title = "Chức năng"
 
 [createPortfolio.tooltip.header]
 title = "Giới thiệu về PDF Portfolio"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Tự động cắt khoảng trắng"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Trình duyệt này không cho phép truy cập bộ nh�
 export = "Xuất dấu trang"
 exportClipboard = "Sao chép JSON vào bộ nhớ tạm"
 exportJson = "Tải JSON"
+exportMenu = "Export"
 importClipboard = "Dán JSON từ bộ nhớ tạm"
 importJson = "Nhập JSON"
+importMenu = "Import"
 loadFromPdf = "Tải từ PDF đã chọn"
 noFile = "Chọn một PDF để trích xuất dấu trang hiện có."
 selectedFile = "Đã tải từ {{file}}"
-source = "Tải dấu trang"
 
 [editTableOfContents.editor]
 addTopLevel = "Thêm dấu trang cấp cao"
@@ -4740,6 +4910,9 @@ replaceExisting = "Thay thế dấu trang hiện có (bỏ chọn để nối th
 replaceExistingHint = "Khi tắt, đề cương mới sẽ được nối thêm sau các dấu trang hiện tại."
 title = "Dấu trang & đề cương"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Đổi PDF"
 filePrompt = "Chọn một PDF từ thư viện hoặc tải lên tệp mới để bắt đầu."
@@ -4753,7 +4926,6 @@ title = "Mở công cụ để bắt đầu chỉnh sửa"
 [encryptedPdfUnlock]
 actionIgnored = "Đã bỏ qua hạn chế {{action}}"
 actionUnlocked = "Đã mở khóa {{action}} cho phiên này"
-advanced = "Nâng cao"
 allowed = "Được phép"
 annotations = "Chú thích"
 authoriseAction = "PDF này yêu cầu quyền để sử dụng {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Bị hạn chế"
 restrictedActions = "hành động bị hạn chế"
 restrictedOperation = "Hành động này yêu cầu mật khẩu quyền."
 retainOwnerVerification = "Xác minh mật khẩu quyền để giữ nguyên mật khẩu đó trong khi xóa mật khẩu mở. Thao tác này sẽ không xóa mật khẩu quyền."
-saveProtection = "Lưu bảo vệ"
 securityChangeFailed = "Không thể thay đổi bảo vệ. Hãy kiểm tra mật khẩu quyền và cài đặt bảo mật mới."
 sessionDetails = "Mở cho phiên này. PDF vẫn được bảo vệ."
 sessionDetailsLabel = "Giới thiệu về mở khóa phiên"
@@ -4871,7 +5042,6 @@ title = "Đã xảy ra lỗi"
 tryAgain = "Thử lại"
 
 [extractImages]
-allowDuplicates = "Lưu hình ảnh trùng lặp"
 selectText = "Chọn định dạng hình ảnh để chuyển đổi hình ảnh đã trích xuất"
 submit = "Trích xuất"
 tags = "hình ảnh,ảnh,lưu,lưu trữ,zip,chụp,lấy"
@@ -4927,12 +5097,15 @@ closeFile = "Đóng tệp"
 
 [fileEditor]
 closedFile = "Đã đóng {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Tệp đã được sắp xếp lại"
 filesReordered_other = "{{count}} tệp đã được sắp xếp lại"
 loadedFromStorage_one = "Đã tải {{count}} tệp từ bộ nhớ"
 loadedFromStorage_other = "Đã tải {{count}} tệp từ bộ nhớ"
 loadFromStorageFailed = "Không thể tải một số tệp từ bộ nhớ"
 pinnedFile = "Đã ghim {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Đã lưu và đóng {{name}}"
 saveFailed = "Lưu thất bại"
 unpinnedFile = "Đã bỏ ghim {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Đã khóa"
 previewOf = "Bản xem trước của {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Thêm tệp"
 created = "Đã tạo"
 notIncludedInToolRun = "Không được bao gồm trong lần chạy công cụ này"
 size = "Kích thước tệp"
 title = "Tệp"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Không có tệp nào"
@@ -5104,6 +5286,7 @@ subtitle = "Hiển thị hoặc ẩn danh mục trong thanh bên tệp."
 title = "Danh mục thanh bên"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Hủy"
 error = "Không thể đổi tên tệp."
 illegalCharacters = "Tên tệp không được chứa \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Xóa trường"
 
 [formFill.editor]
 action = "Hành động của nút"
-actionHelp = "Điều nút sẽ thực hiện khi được bấm."
 actionNone = "Không có"
 actionPrint = "In"
 actionReset = "Đặt lại biểu mẫu"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Giới hạn số ký tự có thể nhập, được vẽ thà
 multiline = "Nhiều dòng"
 multilineHelp = "Cho phép nhiều hơn một dòng văn bản và tự xuống dòng ở cạnh trường."
 multiSelect = "Cho phép chọn nhiều"
-multiSelectHelp = "Cho phép chọn nhiều hơn một lựa chọn cùng lúc."
 name = "Tên trường"
 nameHelp = "Tên nội bộ của trường. Được dùng khi xuất dữ liệu hoặc điền biểu mẫu từ hệ thống khác, vì vậy hãy giữ tên này duy nhất và không có khoảng trắng."
 optionGap = "Khoảng cách lựa chọn"
@@ -5902,6 +6083,11 @@ title = "Điều chỉnh màu sắc/tương phản"
 desc = "Tô sáng, vẽ, thêm ghi chú và hình dạng trong trình xem"
 tags = "chú thích,tô sáng,vẽ,đánh dấu,bình luận,ghi chú,xem xét,redline,phản hồi,công cụ đánh dấu,ghi chú dán,hình dạng,mũi tên,hộp văn bản,vẽ tự do"
 title = "Chú thích"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Tự động phát hiện trường biểu mẫu bằng AI và làm cho PDF của bạn có thể điền được."
@@ -6405,6 +6591,9 @@ sort = "Sắp xếp"
 [merge.sortFiles]
 title = "Sắp xếp tệp"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Tổng quan cài đặt gộp"
 
@@ -6548,6 +6737,9 @@ title = "Xác thực thất bại"
 message = "Bạn có thể đóng cửa sổ này và quay lại Stirling PDF."
 title = "Xác thực thành công"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Cho phép truy cập"
 approving = "Đang cho phép..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Đang đưa bạn trở lại ứng dụng..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} muốn truy cập tài khoản Stirling PDF của bạn"
 scopesIntro = "Điều này sẽ cho phép {{app}}:"
 signedInAs = "Đã đăng nhập với {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Đăng nhập để tiếp tục"
 signInPrompt = "Đăng nhập vào tài khoản Stirling PDF của bạn để tiếp tục kết nối ứng dụng."
 title = "Authorise access"
 unknownApp = "Một ứng dụng bên thứ ba"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Hành động như bạn - mọi việc {{app}} thực hiện đều chạy dưới tài khoản của bạn và được tính vào mức sử dụng của bạn"
@@ -6572,9 +6767,12 @@ tools = "Sử dụng các công cụ Stirling PDF thay mặt bạn - chuyển đ
 
 [oauthConsent.scope]
 email = "Xem địa chỉ email của bạn"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Xác nhận danh tính của bạn"
 phone = "Xem số điện thoại của bạn"
 profile = "Xem thông tin hồ sơ cơ bản của bạn"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Dọn dẹp bản quét và phát hiện văn bản từ hình ảnh trong PDF và thêm lại dưới dạng văn bản."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Bạn sẽ trở thành thành viên nhóm và mất quyền 
 [pageEdit]
 deselectAll = "Không chọn"
 selectAll = "Chọn tất cả"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Trích xuất trang"
@@ -7577,6 +7779,8 @@ stamp = "Chú thích dấu đóng - không phải văn bản trang, nên không 
 widget = "Trường biểu mẫu - không phải văn bản trang, nên không thể chỉnh sửa tại đây"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Chỉnh sửa"
 markTagged = "Đánh dấu là đã gắn thẻ đầy đủ"
 matchScanFont = "Khớp văn bản quét với {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Tự động gắn thẻ trang"
 typeInto = "Nhập vào {{run}}"
 ungroupParagraph = "Bỏ nhóm đoạn văn {{run}}"
 unmarkTagged = "Đánh dấu là chưa gắn thẻ đầy đủ"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Ngắt dòng {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Hủy các thay đổi chưa lưu?"
 
 [pdfTextEditor.error]
 decodeImage = "Không thể giải mã hình ảnh đã chọn."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Không thể nhân đôi văn bản này: không có phông chữ nào có thể hiển thị tất cả các chữ cái của nó."
 formLiftChangesDrawing = "Không thể chỉnh sửa mục này: nó được hiển thị như một phần của nhóm có cài đặt cắt xén hoặc đồ họa mà trình chỉnh sửa không thể giữ nguyên khi thay đổi."
 insertImage = "Không thể chèn hình ảnh đã chọn."
 needsShaping = "Trình chỉnh sửa vẫn chưa thể hiển thị đúng các chữ cái nối và dấu nguyên âm của hệ chữ này, nên thay đổi này không được thực hiện."
+reopenLost = "Open again"
 replaceClippedImage = "Không thể thay thế hình ảnh này: nó đã bị cắt, và ảnh thay thế sẽ hiển thị các phần mà phần cắt đang ẩn."
 scanOffInk = "Không thể chỉnh sửa văn bản này: các từ nhận dạng không thẳng hàng với bản quét. Hãy chạy OCR lại."
 unsafeRtlEdit = "Không thể thực hiện chỉnh sửa này: trình chỉnh sửa không thể hiển thị lại văn bản từ phải sang trái của dòng này mà không làm thay đổi nó."
@@ -7616,6 +7823,7 @@ pngFileType = "Hình ảnh PNG"
 close = "Đóng thanh tìm kiếm"
 count = "{{current}} trên {{total}}"
 findPlaceholder = "Tìm"
+hideReplace = "Hide replace"
 ignoreAccents = "Bỏ qua dấu"
 matchCase = "Phân biệt chữ hoa/thường"
 next = "Kết quả tiếp theo"
@@ -7625,6 +7833,7 @@ replace = "Thay thế"
 replaceAll = "Thay thế tất cả"
 replaced = "Đã thay thế {{count}}"
 replacePlaceholder = "Thay thế bằng"
+showReplace = "Show replace"
 wholeWord = "Toàn bộ từ"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Không thể gắn thẻ liên kết này."
 cannotTagPage = "Không thể gắn thẻ nội dung của trang này."
 contentGroup = "Nội dung"
 customTag = "{{role}} (thẻ tùy chỉnh)"
-decorativeInfo = "Trình đọc màn hình bỏ qua hình ảnh trang trí. Dùng cho đường viền, nền và các hình ảnh khác không chứa thông tin."
-decorativeLabel = "Hình ảnh trang trí"
-description = "Mô tả hình ảnh"
-descriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho hình ảnh."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Không thể chỉnh sửa thẻ trong tệp được mã hóa"
 figureDescription = "Mô tả hình ảnh"
 figureDescriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho hình."
-formFieldDescription = "Mô tả trường"
 formulaDescription = "Mô tả công thức"
 formulaDescriptionInfo = "Trình đọc màn hình sẽ đọc nội dung này thay cho công thức. Hãy viết như cách bạn sẽ đọc to, ví dụ: \"x bình phương cộng một\"."
 heading = "Trợ năng"
@@ -7813,7 +8019,6 @@ markedTagged = "Tài liệu đã được gắn thẻ đầy đủ"
 markedTaggedHint = "Báo cho trình đọc PDF dùng các thẻ khả năng truy cập. Đánh dấu khi mọi thứ đã được gắn thẻ."
 markedWithUntagged = "Một số nội dung không có thẻ, nên trình đọc màn hình có thể bỏ qua."
 missingDescriptions = "Thiếu mô tả"
-mixedContent = "Hình bao gồm nội dung khác"
 mixedTags = "Hỗn hợp"
 needsDescriptionBadge = "Không có mô tả"
 nextToReview = "Tiếp theo cần xem lại"
@@ -7821,12 +8026,10 @@ notFigure = "Được gắn thẻ là một phần của văn bản"
 removeTag = "Xóa thẻ"
 saveFailed = "Không thể lưu các thay đổi trợ năng của bạn, vì vậy tệp chưa được lưu. Hãy hoàn tác chúng và thử lại."
 selectedText = "Văn bản đã chọn"
-tagFormField = "Gắn thẻ trường biểu mẫu"
 tagging = "Đang gắn thẻ trang"
 tagLabel = "Thẻ"
 tagLinks_one = "Gắn thẻ liên kết"
 tagLinks_other = "Gắn thẻ {{count}} liên kết"
-tagUntagged = "Tự động gắn thẻ tài liệu"
 tagUntaggedHint = "Tự động thêm các thẻ khả năng truy cập trên toàn tài liệu. Kết quả còn thô: hãy kiểm tra lại tiêu đề, danh sách và thứ tự đọc sau đó."
 unknownTag = "Không thể đọc ở đây"
 unmarkedWithTags = "Một số trình xem PDF vẫn sẽ dùng các thẻ và có thể bỏ qua nội dung không có thẻ."
@@ -7851,7 +8054,7 @@ heading = "Đề mục"
 mixedNumbering = "Trộn đề mục có đánh số và không đánh số"
 none = "Không có đề mục"
 onPage = "Đề mục trên trang {{page}}"
-problems = "Vấn đề về đề mục"
+problemCount = "{{count}} to fix"
 skippedLevel = "Bỏ qua một cấp sau Đề mục {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Tiêu đề"
 allLanguages = "Tất cả ngôn ngữ"
 cannotSetDocument = "Không thể thay đổi ngôn ngữ của tài liệu này."
 cannotSetText = "Không thể thay đổi ngôn ngữ của văn bản này."
-documentHint = "Ngôn ngữ mà trình đọc màn hình sử dụng, trừ khi một phần văn bản đặt ngôn ngữ riêng."
 documentLabel = "Ngôn ngữ"
 documentLocked = "Không thể thay đổi ngôn ngữ của tài liệu đã mã hóa tại đây."
 inDocument = "Trong tài liệu này"
 innerLabel = "Ngôn ngữ của thẻ {{number}}"
 label = "Ngôn ngữ"
-missing = "Chưa đặt ngôn ngữ. Trình đọc màn hình sẽ đoán và có thể đọc toàn bộ tài liệu bằng giọng sai."
 mixed = "Hỗn hợp"
 noMatch = "Không có ngôn ngữ khớp. Hãy nhập mã của nó, ví dụ mt hoặc en-IE."
 placeholder = "Chọn ngôn ngữ"
@@ -7943,6 +8144,52 @@ renderFailed = "Không thể kết xuất trang"
 [pdfTextEditor.password]
 incorrect = "Mật khẩu không đúng - hãy thử lại."
 label = "Mật khẩu"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Đường căn chỉnh tại {{value}} {{unit}} - kéo lên thước để xóa"
@@ -8124,6 +8371,10 @@ title = "Sai lệch khi xem trước"
 [pdfTextEditor.tooltip.textFocus]
 text = "Không gian làm việc này tập trung vào chỉnh sửa văn bản và thay đổi vị trí hình ảnh nhúng. Tác phẩm trang phức tạp, tiện ích biểu mẫu và đồ họa nhiều lớp sẽ được giữ lại khi xuất nhưng không thể chỉnh sửa đầy đủ tại đây."
 title = "Tập trung Văn bản và Hình ảnh"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF sang CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Ẩn danh mục"
 labelCount = "nhãn"
 sharedNote = "Các nhãn này được tích hợp sẵn và chia sẻ trên toàn bộ đội ngũ của bạn."
 showCategory = "Hiển thị danh mục"
-
-[policies.pii]
-account = "Số tài khoản (được gắn nhãn)"
-card = "Thẻ tín dụng / thẻ ghi nợ"
-email = "Địa chỉ email"
-fieldLabel = "PII cần redact"
-iban = "IBAN"
-phone = "Số điện thoại"
-placeholder = "Chọn loại PII"
-routing = "Số routing của Mỹ (ABA)"
-ssn = "Số An sinh Xã hội"
 
 [policy]
 badgeEnforcing = "Đang thực thi {{name}}..."
@@ -10317,6 +10557,10 @@ title = "Pipeline"
 [portal.pipelines.actions]
 newCustomPipeline = "Pipeline tùy chỉnh mới"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Tất cả pipeline"
 
@@ -12047,7 +12291,6 @@ label = "Công cụ đọc"
 readAloud = "Đọc to"
 rotateLeft = "Xoay trái"
 rotateRight = "Xoay phải"
-search = "Tìm trong tài liệu"
 switchDocument = "Chuyển tài liệu"
 thumbnails = "Trang"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Màu hộp"
 convertPDFToImageLabel = "Chuyển PDF thành PDF-Image"
 customPaddingLabel = "Đệm bổ sung tùy chỉnh"
 useRegexLabel = "Dùng Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Tìm cả từ"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Thiết lập che"
 
 [redact.auto.wordsToRedact]
 add = "Thêm"
-examples = "Ví dụ: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Nhập một từ"
 title = "Từ cần che"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Chọn tệp trong trình quản lý tệp để bô
 manual = "Thủ công"
 mode = "Chế độ"
 title = "Phương thức che"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Chỉ khớp văn bản có cùng kiểu chữ hoa/thường. Khi bật, 'Secret' sẽ không khớp với 'SECRET', và [A-Z] trong regex chỉ khớp với chữ hoa."
@@ -12147,19 +12401,6 @@ title = "Phương thức che"
 text = "Nhấp và kéo để tự chọn vùng cần che. Cho bạn quyền kiểm soát chính xác nội dung được che. (Sắp có)"
 title = "Che thủ công"
 
-[redact.tooltip.words]
-bullet1 = "Thêm từng từ một"
-bullet2 = "Nhấn Enter hoặc bấm 'Thêm nữa' để thêm"
-bullet3 = "Bấm × để xóa từ"
-
-[redact.tooltip.words.description]
-text = "Nhập các từ hoặc cụm từ để tìm và che trong tài liệu của bạn. Mỗi từ sẽ được tìm riêng."
-title = "Khớp văn bản"
-
-[redact.tooltip.words.examples]
-text = "Các từ thường che gồm: thông tin ngân hàng, địa chỉ email hoặc tên cụ thể."
-title = "Ví dụ thường gặp"
-
 [redact.tooltip.words.header]
 title = "Từ cần che"
 
@@ -12176,15 +12417,6 @@ failed = "Đã xảy ra lỗi khi xóa chú thích khỏi PDF."
 
 [removeAnnotations.info]
 description = "Công cụ này sẽ xóa tất cả chú thích (bình luận, tô sáng, ghi chú, v.v.) khỏi tài liệu PDF của bạn."
-
-[removeAnnotations.settings]
-title = "Cài đặt"
-
-[removeAnnotations.tooltip.description]
-title = "Chức năng"
-
-[removeAnnotations.tooltip.header]
-title = "Giới thiệu về Xóa chú thích"
 
 [removeBlanks]
 submit = "Xóa trang trống"
@@ -12325,6 +12557,9 @@ tags = "sắp xếp lại,đổi thứ tự,tổ chức,tái tổ chức,di chuy
 [reorganizePages.error]
 failed = "Không thể sắp xếp lại các trang"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Đã sắp xếp lại trang"
 
@@ -12406,6 +12641,7 @@ title = "Đảo tất cả màu"
 rotateLeft = "Xoay ngược chiều kim đồng hồ"
 rotateRight = "Xoay theo chiều kim đồng hồ"
 selectRotation = "Chọn góc xoay (theo chiều kim đồng hồ)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Áp dụng xoay"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Xoay PDF"
@@ -12516,8 +12752,7 @@ title = "Làm sạch"
 failed = "Đã xảy ra lỗi khi làm sạch PDF."
 
 [sanitize.options]
-note = "Chọn các thành phần bạn muốn loại bỏ khỏi PDF. Phải chọn ít nhất một tùy chọn."
-title = "Tùy chọn làm sạch"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Gỡ bỏ mọi tệp được nhúng trong PDF"
@@ -12649,6 +12884,7 @@ title = "Tìm kiếm PDF"
 hideTools = "Ẩn các công cụ không khả dụng ▴"
 messageNoFallback = "Các công cụ sẽ không khả dụng cho đến khi máy chủ của bạn trực tuyến trở lại."
 messageWithFallback = "Một số công cụ cần kết nối máy chủ."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Xem các công cụ không khả dụng ▾"
 title = "Máy chủ Stirling-PDF của bạn không thể truy cập"
 toolNotAvailableLocally = "Máy chủ Stirling-PDF của bạn đang ngoại tuyến và \"{{endpoint}}\" không có sẵn trên backend cục bộ."
@@ -13034,6 +13270,12 @@ title = "Phím tắt"
 mac = "Bao gồm ⌘ (Command), ⌥ (Option), hoặc một phím bổ trợ khác trong phím tắt của bạn."
 windows = "Bao gồm Ctrl, Alt, hoặc phím bổ trợ khác trong phím tắt của bạn."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Điều khoản, chính sách quyền riêng tư và tùy chọn cookie của bạn."
 label = "Pháp lý"
@@ -13418,9 +13660,7 @@ image = "Tải lên"
 text = "Chữ"
 
 [sign.step]
-createDesc = "Chọn cách bạn muốn tạo chữ ký"
 place = "Đặt & lưu"
-placeDesc = "Đặt vị trí chữ ký trên PDF"
 
 [sign.steps]
 configure = "Cấu hình chữ ký"
@@ -13597,6 +13837,10 @@ rotateLeft = "Xoay trái"
 rotateRight = "Xoay phải"
 trim = "Cắt gọn theo chữ ký"
 trimHint = "Cắt bỏ khoảng trống xung quanh"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Cài đặt giao diện chữ ký"
@@ -13959,7 +14203,6 @@ placeholder = "Nhập số lượng phân chia theo chiều ngang"
 
 [split-by-sections.splitMode]
 custom = "Trang tùy chỉnh"
-description = "Chọn cách tách các trang"
 label = "Chế độ tách"
 splitAll = "Tách tất cả các trang"
 splitAllExceptFirst = "Tách tất cả trừ trang đầu"
@@ -14210,10 +14453,8 @@ failed = "Đã xảy ra lỗi khi đóng dấu thời gian cho PDF."
 
 [timestampPdf.options]
 note = "Chỉ có băm SHA-256 của tài liệu của bạn được gửi đến máy chủ TSA; chính tệp PDF sẽ không bao giờ được gửi tới máy chủ TSA."
-title = "Máy chủ dấu thời gian (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Chọn Cơ quan Dấu thời gian đáng tin cậy"
 label = "Chọn máy chủ TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Không có công cụ nào"
 
 [tooltip]
 close = "Đóng chú giải"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Công cụ này sẽ gỡ hạn chế chỉ đọc khỏi các trường biểu mẫu PDF, cho phép chúng có thể chỉnh sửa và điền."
@@ -14706,6 +14961,9 @@ signatureDate = "Ngày ký"
 
 [validateSignature.settings]
 certHint = "Tải lên chứng chỉ X.509 tin cậy để xác thực với nguồn tin cậy tùy chỉnh."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Thiết lập xác thực"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Không thể xem trước tệp"
 copyRestricted = "Tính năng sao chép bị tắt bởi quyền của PDF này."
 copyText = "Sao chép"
 coverPageView = "Hiển thị trang bìa riêng"
-disableColorFilter = "Tắt bộ lọc màu"
 documentUpdated = "Tài liệu đã được cập nhật"
 dualPageView = "Chế độ xem hai trang"
 editText = "Chỉnh sửa văn bản"
-enableDarkFilter = "Bật bộ lọc tối"
-enableSepiaFilter = "Bật bộ lọc sepia"
 engineLoadError = "Không thể khởi tạo công cụ xem PDF"
 engineSlowWarning = "Việc khởi tạo công cụ PDF đang mất nhiều thời gian hơn dự kiến. Vui lòng kiểm tra cài đặt WebAssembly và Worker của trình duyệt, hoặc tải lại trang."
 firstPage = "Trang đầu"
@@ -14736,20 +14991,27 @@ fitPage = "Vừa với trang"
 fitWidth = "Vừa theo chiều rộng"
 lastPage = "Trang cuối"
 loadingEngine = "Đang tải PDF Engine..."
+menuSelected = "Selected"
 moreOptions = "Thêm"
 nextPage = "Trang tiếp"
 noPdfProvided = "Chưa cung cấp PDF"
 onlyPdfSupported = "Định dạng tệp này không được hỗ trợ để xem trước."
 pageNavigation = "Điều hướng trang"
+pageNumber = "Page number"
 previousPage = "Trang trước"
 readAloudFromHere = "Đọc to từ đây"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Không thể lưu tài liệu. Vui lòng thử lại."
 saveChangesErrorTitle = "Không thể lưu thay đổi"
 singlePageView = "Chế độ xem trang đơn"
+tools = "Tools"
 unknownFile = "Tệp không xác định"
-view = "Xem"
 zoom = "Thu phóng"
 zoomIn = "Phóng to"
+zoomLevel = "Zoom level"
 zoomOut = "Thu nhỏ"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Bản xem trước chữ ký"
 
 [viewer.signatureField]
 badge = "Chữ ký"
+clickToSign = "Click to sign here"
 fieldTitle = "Trường chữ ký: {{name}}"
 signed = "Đã ký"
 signedWithReason = "Đã ký: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Trường chữ ký chưa ký: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Đã khôi phục {{restored}} trong tổng số {{total}} tệp. Ph�
 
 [workbenchBar]
 activeFiles = "Tệp đang mở"
-annotations = "Chú thích"
+annotate = "Annotate"
 applyRedactionsFirst = "Áp dụng bôi đen trước"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Đóng tất cả tệp"
 closePdf = "Đóng PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Bỏ chọn tất cả"
 downloadAll = "Tải xuống tất cả"
 editText = "Chỉnh sửa văn bản"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Thoát chế độ chú thích"
 exitRedaction = "Thoát chế độ bôi đen"
 findReplace = "Tìm và thay thế"
 formFill = "Trình chỉnh sửa biểu mẫu"
-hideToolbar = "Ẩn thanh công cụ"
+layers = "Layers"
 moreActions = "Thêm hành động"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Trình chỉnh sửa trang"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Chế độ di chuyển"
 print = "In PDF"
 readAloud = "Đọc to"
 readAloudLanguage = "Ngôn ngữ"
 readAloudSpeed = "Tốc độ"
 redact = "Bôi đen"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Xoay trái"
 rotateRight = "Xoay phải"
 ruler = "Thước / Đo"
+rulerScaleUnset = "Not set"
 rulerSettings = "Cài đặt tỷ lệ"
 save = "Lưu"
 saveAll = "Lưu tất cả"
@@ -15123,14 +15398,23 @@ selectLanguage = "Chọn ngôn ngữ"
 share = "Chia sẻ"
 showAllTools = "Hiển thị tất cả công cụ"
 showFewerTools = "Thu gọn thanh công cụ"
-showToolbar = "Hiện thanh công cụ"
+thumbnails = "Pages"
 toggleAnnotations = "Bật/Tắt hiển thị chú thích"
-toggleAttachments = "Bật/Tắt tệp đính kèm"
-toggleBookmarks = "Dấu trang (Mục lục)"
 toggleComments = "Bình luận"
-toggleLayers = "Bật/Tắt lớp"
-toggleSidebar = "Bật/Tắt thanh bên"
 viewer = "Trình xem"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Quyền truy cập của bạn vào tài liệu này đã hết hạn."

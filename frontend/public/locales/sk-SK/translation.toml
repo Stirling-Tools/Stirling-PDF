@@ -12,9 +12,11 @@ comingSoon = "Už čoskoro"
 confirm = "Potvrdiť"
 confirmClose = "Potvrdiť zatvorenie"
 confirmCloseCancel = "Zrušiť"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Zatvoriť súbor"
 confirmCloseDiscard = "Zahodiť zmeny a zavrieť"
 confirmCloseMessage = "Naozaj chcete zatvoriť tento súbor?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Uložiť a zavrieť"
 confirmCloseSaveFailed_one = "Uložené s chybami. {{count}} súbor sa nepodarilo uložiť."
 confirmCloseSaveFailed_other = "Uložené s chybami. {{count}} súborov sa nepodarilo uložiť."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Súbor uložený na disk"
 filesSelected = "{{count}} súborov"
 font = "Písmo"
 fontSizeTooltip = "Veľkosť textu čísla strany v bodoch. Väčšie čísla vytvoria väčší text."
-fontTypeTooltip = "Rodina písma pre čísla strán. Vyberte podľa štýlu vášho dokumentu."
 green = "Zelená"
 help = "Pomoc"
 incorrectPasswordMessage = "Aktuálne heslo je nesprávne."
@@ -249,9 +250,7 @@ image = "Nahranie"
 text = "Text"
 
 [addImage.step]
-createDesc = "Nahrajte obrázok, ktorý chcete pridať"
 place = "Umiestniť obrázok"
-placeDesc = "Kliknite na PDF a pridajte svoj obrázok"
 
 [addImage.steps]
 configure = "Nastaviť obrázok"
@@ -276,7 +275,7 @@ fontName = "Názov písma"
 fontSize = "Veľkosť písma"
 numberPagesDesc = "napr. 1,3,5-8 alebo nechajte prázdne pre všetky strany"
 pagePreviewAlt = "Náhľad strany"
-pagesAndStarting = "Strany a počiatočné číslo"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Pozícia a strany"
 preview = "Výber pozície"
 previewDisclaimer = "Náhľad je približný. Konečný výstup sa môže líšiť kvôli metrikám písma PDF."
@@ -300,6 +299,7 @@ title = "Výsledky číslovania strán"
 
 [addPassword]
 desc = "Zašifrujte svoj dokument PDF heslom."
+submit = "Add Password"
 tags = "šifrovať,heslo,zamknúť,zabezpečiť,chrániť,bezpečnosť,šifrovanie,ochrana,dôverné,súkromné,obmedziť prístup"
 title = "Pridať heslo"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Náhľad pečiatky"
 tags = "pečiatka,značka,pečať,schválené,zamietnuté,dôverné,nástroj pečiatky,gumená pečiatka,dátumová pečiatka,schvaľovacia pečiatka,prijaté,neplatné,kópia,originál"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Abeceda"
-clickToExpand = "Kliknutím rozbalíte"
 customColor = "Vlastná farba textu"
 customDateDesc = "Vlastný formát"
 customPosition = "Pretiahnite pečiatku na požadované miesto v okne náhľadu."
 dateDesc = "Aktuálny dátum"
 datetimeDesc = "Dátum a čas spolu"
 dateTimeVars = "Dátum a čas"
-dynamicVariables = "Dynamické premenné"
 examples = "Príklady"
 filenameDesc = "Názov súboru bez prípony"
 filenameFullDesc = "Názov súboru s príponou"
@@ -365,6 +364,8 @@ noStampSelected = "Nie je vybraná žiadna pečiatka. Vráťte sa do kroku 1."
 opacity = "Priehľadnosť"
 otherVars = "Ostatné"
 pageNumberDesc = "Číslo aktuálnej strany"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Informácie o strane"
 position = "Poloha"
 positionAndFormatting = "Poloha a formátovanie"
@@ -378,9 +379,10 @@ quickPosition = "Vyberte polohu na stránke pre umiestnenie pečiatky."
 rotation = "Rotácia"
 selectedImageAlt = "Vybraný obrázok pečiatky"
 selectTemplate = "Vyberte šablónu..."
+size = "Size"
 stampSetup = "Nastavenie pečiatky"
 stampText = "Text pečiatky"
-stampTextDescription = "Použite dynamické premenné nižšie. Použite @@ pre doslovné @. Použite \\n pre nové riadky."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Typ pečiatky"
 submit = "Pridať pečiatku"
 tags = "pečiatka, pridať obrázok, stred obrázka, vodotlač, PDF, vložiť, prispôsobiť"
@@ -389,7 +391,6 @@ title = "Pečiatka PDF"
 totalPagesDesc = "Celkový počet strán"
 useTemplate = "Použiť šablónu"
 uuidDesc = "Krátky jedinečný identifikátor (8 znakov)"
-variablesHelp = "Kliknite na ľubovoľnú premennú a vložte ju do textu pečiatky. Použite @@ pre doslovné @."
 yearMonthDayDesc = "Jednotlivé časti dátumu"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Počas pridávania pečiatky do PDF došlo k chybe."
 
 [AddStampRequest.results]
 title = "Výsledky pečiatky"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Vlastné"
@@ -410,6 +417,11 @@ legal-footer = "Právna päta"
 page-numbers = "Čísla strán"
 pageNumberFooter = "Päta s číslom strany"
 timestamp = "Časová pečiatka"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Použiť text"
@@ -462,9 +474,7 @@ image = "Nahranie"
 text = "Text"
 
 [addText.step]
-createDesc = "Zadajte text, ktorý chcete pridať"
 place = "Umiestniť text"
-placeDesc = "Kliknite na PDF a pridajte text"
 
 [addText.steps]
 configure = "Nastaviť text"
@@ -1233,6 +1243,18 @@ label = "Znovu vygenerovať pri štarte"
 description = "Počet dní, počas ktorých bude certifikát platný"
 label = "Platnosť certifikátu (dni)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Adresáre, z ktorých môžu zdroje priečinkov a výstupy priečinkov čítať a do ktorých môžu zapisovať. Ide o bezpečnostnú hranicu: automatizácie nikdy nemožno nasmerovať na serverovú cestu mimo tohto zoznamu."
 securityNote = "Nechajte prázdne, ak chcete úplne vypnúť zdroje a výstupy priečinkov. Vlastný konfiguračný adresár Stirling je vždy zakázaný."
@@ -1456,7 +1478,9 @@ label = "SMTP používateľské meno"
 
 [admin.settings.mcp]
 apikeyNote = "Klienti odosielajú Stirling API key v hlavičke X-API-KEY (alebo Authorization: Bearer <key>). Kľúč sa mapuje na vlastníckeho používateľa Stirling - prístup získajú iba pripravené účty a akcie sa auditujú ako tento používateľ. Spravujte kľúče v Účet > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Sprístupnite PDF nástroje a AI agentov Stirling klientom MCP cez endpoint chránený OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Povolené nástroje"
 description = "Operation ids, ktoré sa majú skryť pred MCP (oddelené čiarkou alebo medzerou), napr. add-password remove-password. Nechajte prázdne na sprístupnenie všetkých povolených nástrojov."
 label = "Blokované nástroje"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Keď je vypnuté (predvolené), nenačíta sa žiadny /mcp endpoint, metadata ani MCP beans."
 label = "Povoliť MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Zadajte vyššie svoj OAuth issuer + resource ID, uložte a reštartujte."
 step1ApiKey = "Vytvorte API key v Účet > API Keys (každý používateľ používa vlastný)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Vo svojom MCP klientovi pridajte"
 step2b = "server smerujúci na:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Klient automaticky zistí OAuth z:"
 step3ApiKey = "Odošlite kľúč v"
 step3ApiKeyb = "hlavičke (alebo Authorization: Bearer <key>). Nepoužíva sa OAuth ani zisťovanie metadata."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Schváľte prihlásenie; klient to skúsi znova s tokenom. Nástroje sa zobrazia zoskupené: convert, pages, misc, security, ai."
 step4ApiKey = "Nástroje sa zobrazia zoskupené: convert, pages, misc, security, ai - a každé volanie sa audituje ako vlastník kľúča."
 tip = "Tip: zaregistrujte resource ID ako povolenú audience vo svojom IdP. Testované s MCP Inspector a Claude Desktop."
 tipApiKey = "Tip: režim API-key nepotrebuje externé IdP - najjednoduchšie pre self-host. Kľúč sa mapuje na vlastníckeho používateľa Stirling."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Pripojiť MCP klienta"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Automaticky zistené od issuer"
 
 [admin.settings.mcp.mode]
 apikey = "API key (kľúč Stirling pre používateľa)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth potrebuje externé IdP. API key používa Stirling API key pre používateľa (X-API-KEY) - najjednoduchšie pre self-host."
 label = "Režim autentifikácie"
 oauth = "OAuth 2.1 (externý IdP)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "Vyžadovať mcp.tools.read pre operácie čítania a mcp.tools.write pre zápis/AI operácie."
 label = "Vynucovať OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim porovnávaný s používateľským menom Stirling (napr. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Chcete pomôcť zlepšiť Stirling PDF?"
 tags = "anotovať,zvýrazniť,kresliť,označenie,komentár,poznámky,revízia,redline,spätná väzba,nástroje označovania,lepiace poznámky,tvary,šípky,textové pole,voľnou rukou"
 
 [annotation]
-alignCenter = "Zarovnať na stred"
-alignLeft = "Zarovnať doľava"
-alignRight = "Zarovnať doprava"
 annotationStyle = "Štýl anotácie"
 backgroundColor = "Farba pozadia"
 borderOff = "Okraj: Vypnuté"
@@ -2016,18 +2073,61 @@ underline = "Podčiarknutie"
 undoDelete = "Späť"
 width = "Šírka"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Bezplatný, súkromný PDF editor, ktorý môžete spustiť na akejkoľvek infraštruktúre."
 
 [appBanner]
 dismiss = "Zavrieť"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Pridať prílohy..."
 convertToPdfA3b = "Konvertovať na PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b je archívny formát zabezpečujúci dlhodobé uchovanie. Umožňuje vkladať ľubovoľné formáty súborov ako prílohy. Konverzia vyžaduje Ghostscript a pri veľkých súboroch môže trvať dlhšie."
-convertToPdfA3bTooltipHeader = "O konverzii PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Čo to robí"
 discardChanges = "Zahodiť"
 downloadSingle = "Stiahnuť prílohu"
 duplicateName = "Príloha s názvom „{{name}}“ už existuje."
@@ -2208,7 +2308,6 @@ guest = "Hosť"
 user = "Používateľ"
 
 [auto-rename]
-description = "Automaticky nájde názov z obsahu vášho PDF a použije ho ako názov súboru."
 submit = "Automaticky premenovať"
 tags = "auto-detekcia, založené na záhlaví, organizovať, premenovať"
 title = "Automatické premenovanie"
@@ -2218,21 +2317,6 @@ failed = "Počas automatického premenovania PDF došlo k chybe."
 
 [auto-rename.results]
 title = "Výsledky automatického premenovania"
-
-[auto-rename.settings]
-title = "O nástroji"
-
-[auto-rename.tooltip.description]
-title = "Čo robí"
-
-[auto-rename.tooltip.header]
-title = "Ako funguje automatické premenovanie"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Hľadá text, ktorý vyzerá ako názov alebo nadpis"
-bullet2 = "Vytvorí čistý, platný názov súboru z detegovaného názvu"
-bullet3 = "Ponechá pôvodný názov, ak sa nenájde vhodný titulok"
-title = "Inteligentné premenovanie"
 
 [autoFormDetection]
 loading = "Rozpoznávajú sa polia formulára..."
@@ -2327,6 +2411,9 @@ remove = "Odstrániť nástroj"
 selected = "Vybrané nástroje"
 selectTool = "Vyberte nástroj..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Zrušiť"
 confirm = "Vrátiť sa späť"
@@ -2360,6 +2447,10 @@ title = "Spustiť automatizáciu"
 [automate.selection]
 title = "Výber automatizácie"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Vytvoriť novú automatizáciu"
 
@@ -2371,6 +2462,7 @@ title = "Odporúčané"
 
 [automate.sequence]
 finish = "Dokončiť"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Spustiť automatizáciu"
 running = "Prebieha automatizácia..."
 signInToRun = "Na spustenie automatizácií sa prihláste."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Bezpečnostný pracovný postup"
 secureWorkflowDesc = "Zabezpečí dokumenty PDF odstránením potenciálne škodlivého obsahu ako JavaScript a vložené súbory, potom pridá ochranu heslom na zabránenie neoprávnenému prístupu. Heslo je predvolene nastavené na 'password'."
 
 [autoRename]
-description = "Tento nástroj automaticky premenuje súbory PDF na základe ich obsahu. Analyzuje dokument, aby našiel najvhodnejší názov z textu."
 tags = "automatická detekcia,na základe hlavičky,organizovať,preoznačiť,automaticky premenovať,automatické premenovanie,inteligentné premenovanie,premenovať podľa obsahu,názov súboru,pomenovanie súboru,detegovať názov"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf, rozdelenie, dokument, organizácia"
 [autoSplitPDF]
 dividerDownload2 = "Stiahnuť 'Auto Splitter Divider (s inštrukciami).pdf'"
 duplexMode = "Duplex režim (skanovanie prednej a zadnej strany)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-založené, rozdeľ, skenovanie-segment, organizovať"
 title = "Automatické rozdelenie PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Pridá okraje okolo každej sekcie strany, čo pomôže pri orezávan
 [bookletImposition.addGutter]
 label = "Pridať vnútorný okraj (gutter)"
 tooltip = "Pridá vnútorný okraj pre väzbu"
-
-[bookletImposition.advanced]
-toggle = "Rozšírené možnosti"
 
 [bookletImposition.doubleSided]
 label = "Obojstranná tlač"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Vybrať súbor JKS"
 chooseP12File = "Vybrať súbor PKCS12"
 choosePfxFile = "Vybrať súbor PFX"
 choosePrivateKey = "Vybrať súbor súkromného kľúča"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Odmietnuté"
 fetchFailed = "Nepodarilo sa načítať údaje o podpisovaní"
 finalized = "Finalizované"
 location = "Miesto"
-logoTitle = "Logo"
-name = "Meno"
-noLogo = "Bez loga"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Číslo strany"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Heslo certifikátu"
 passwordOptional = "Nechajte prázdne, ak nie je heslo"
 pemCertificateLabel = "Certifikát (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Súkromný kľúč (.pem / .key)"
 pending = "Čaká"
 readyToFinalize = "Pripravené na finalizáciu"
 reason = "Dôvod"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Používa sa serverový certifikát – nie sú potrebné súbory ani heslo"
-showLogo = "Zobraziť logo"
 signatureProgress = "Podpisy: {{signedCount}}/{{totalCount}}"
 tags = "autentifikovať,PEM,P12,oficiálne,šifrovať,podpísať,certifikát,PKCS12,JKS,server,manuálne,auto"
 title = "Podpis certifikátom"
@@ -2738,12 +2828,45 @@ viewed = "Zobrazené"
 
 [certSign.appearance]
 invisible = "Neviditeľný"
+showOnPage = "Show signature on page"
 stepTitle = "Vzhľad podpisu"
 visibility = "Viditeľnosť"
 visible = "Viditeľný"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Podrobnosti podpisu"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "O vzhľade podpisu"
@@ -2762,9 +2885,6 @@ bullet3 = "Zvoľte, na ktorej strane umiestniť podpis"
 bullet4 = "Možno pridať voliteľné logo"
 text = "Zobrazí blok podpisu v PDF s vaším menom, dátumom a voliteľnými údajmi. Užitočné, keď chcete, aby čitatelia jasne videli, že dokument je podpísaný."
 title = "Viditeľné podpisy"
-
-[certSign.certFiles]
-stepTitle = "Súbory certifikátu"
 
 [certSign.certType.tooltip.convert]
 text = "Konvertujte svoj súbor na Java keystore (.jks) pomocou nástroja keytool a potom vyberte JKS."
@@ -2786,6 +2906,7 @@ text = "Vyberte formát, ktorý zodpovedá vášmu súboru certifikátu:"
 title = "Ktorú možnosť mám použiť?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Formát certifikátu"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Toto zariadenie"
 [certSign.error]
 failed = "Počas spracovania podpisov došlo k chybe."
 
-[certSign.format]
-pkcs11 = "USB token"
-windowsStore = "Úložisko certifikátov Windows"
-
 [certSign.hardware]
-certificate = "Certifikát"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Vlastná cesta ovládača…"
+digitalId = "Digital ID"
 driver = "Ovládač PKCS#11"
 driverPath = "Cesta ku knižnici ovládača"
 driverPathPlaceholder = "Úplná cesta k vášmu ovládaču PKCS#11 (.dll, .so alebo .dylib)"
-expired = "platnosť uplynula"
-expires = "vyprší"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Zobraziť certifikáty"
-loading = "Načítavajú sa certifikáty…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Nenašli sa žiadne podpisové certifikáty"
 noDriver = "Nebol zistený žiadny ovládač PKCS#11. Nainštalujte ovládač pre váš token (napr. OpenSC), potom to znova otvorte – alebo nižšie zadajte cestu k ovládaču manuálne."
-notYetValid = "ešte neplatný"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN tokenu"
 pkcs11Hint = "Vyberte ovládač PKCS#11 pre váš token, zadajte PIN a potom zobrazte certifikáty na tokene."
 pkcs11LoadError = "Nepodarilo sa prečítať certifikáty z tokenu. Skontrolujte PIN a ovládač."
-refresh = "Obnoviť"
-selectCert = "Vybrať certifikát"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Vybrať ovládač"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (voliteľné)"
-windowsHint = "Vyberte certifikát z vášho úložiska certifikátov Windows. Podpisovanie používa kľúč na vašej karte/tokene – Windows vyzve na zadanie PIN-u."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Nepodarilo sa prečítať úložisko certifikátov Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Všeobecné pravidlo"
 device = "Toto zariadenie"
 noOtherSources = "Nie sú dostupné žiadne ďalšie zdroje certifikátov."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Zdroj certifikátu"
 upload = "Nahrať"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Aktualizujte svoje používateľské meno. Po aktualizácii budete odhlásení."
@@ -3069,7 +3205,6 @@ placeholder = "Tvorca dokumentu"
 
 [changeMetadata.customFields]
 add = "Pridať pole"
-description = "Pridajte do dokumentu vlastné polia metadát"
 key = "Kľúč"
 keyPlaceholder = "Vlastný kľúč"
 remove = "Odstrániť"
@@ -3135,10 +3270,6 @@ bullet1 = "Dátum vytvorenia: Kedy bol pôvodný dokument vytvorený"
 bullet2 = "Dátum zmeny: Kedy bol naposledy upravený"
 text = "Kedy bol dokument vytvorený a upravený."
 title = "Dátumové polia"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Úplné odstránenie metadát na zabezpečenie súkromia."
-title = "Odstrániť existujúce metadáta"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Názov: Názov dokumentu alebo nadpis"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Dosiahli ste svoj limit používania. Skontrolujte možno
 
 [checkAccessibility]
 aboutRow = "O {{label}}"
-checking = "Kontroluje sa..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Stiahnuť správu o prístupnosti"
 fileFailed = "zlyhalo"
+noFiles = "Select a PDF to check it."
 pickFile = "Zobraziť výsledky pre"
-submit = "Skontrolovať prístupnosť"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Alternatívny text"
@@ -3286,10 +3417,17 @@ structure = "Značky hovoria čítačkám, čo je ktorá časť stránky, naprí
 [checkAccessibility.checks]
 label = "Prešlo {{passed}} z {{total}} kontrol"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Správu o prístupnosti sa nepodarilo vytvoriť. Skúste znova."
 fileTitle = "Tento súbor sa nepodarilo skontrolovať"
 partial = "Niektoré súbory sa nepodarilo skontrolovať."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Deklaruje PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Súbor má v metadátach názov."
 [checkAccessibility.figures]
 summary_one = "{{count}} obrázok potrebuje popis (strana {{pages}})"
 summary_other = "{{count}} obrázkov potrebuje popis (strany {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Vzťahuje sa na"
@@ -3465,19 +3618,7 @@ checking = "Kontroluje sa {{current}} z {{total}}..."
 complete = "Kontrola dokončená"
 
 [checkAccessibility.steps]
-results = "Výsledky"
 standard = "Štandard"
-
-[checkAccessibility.tooltip.header]
-title = "Ktorý štandard kontrolovať"
-
-[checkAccessibility.tooltip.ua1]
-text = "Prvá verzia PDF/UA, publikovaná v roku 2012 ako ISO 14289-1, pre súbory PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Novšia verzia, publikovaná v roku 2024 ako ISO 14289-2, pre súbory PDF 2.0. Súbor PDF 1.7 kontrolovaný voči nej zlyhá v pravidlách, ktoré platia iba pre PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Anotácia {{n}}"
@@ -3868,6 +4009,7 @@ title = "Vyberte farbu"
 transparent = "Priehľadné"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Akcie"
 back = "Späť"
 cancel = "Zrušiť"
@@ -4206,7 +4348,9 @@ title = "Obnoviť API kľúče"
 warning = "⚠️ Upozornenie: Táto akcia vygeneruje nové API kľúče a vaše predchádzajúce kľúče zneplatní."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) umožňuje AI asistentom, ako je Claude, používať vaše nástroje Stirling PDF priamo. Pripojte klienta raz a váš asistent bude môcť vo vašom mene konvertovať, upravovať, zabezpečovať a spracovávať dokumenty."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Hosťovskí používatelia nemôžu pripájať MCP klientov. Vytvorte si účet, aby ste mohli používať MCP server a nechať svojho AI asistenta spúšťať nástroje Stirling PDF vo vašom mene."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Kopírovať {{label}}"
 tooltipCopied = "{{label}} skopírované"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Váš MCP endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Pridať do"
 hint = "Vyberte svojho klienta, vložte snippet do zobrazeného súboru a potom ho reštartujte. Pri prvom použití sa prihlásite svojím účtom Stirling - netreba kopírovať žiadne kľúče."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Pripojte svojho AI asistenta"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Zachovať pomer strán"
 maxAttachmentSize = "Maximálna veľkosť prílohy (MB)"
 multiple = "Viacero"
 optimizeForEbook = "Optimalizovať PDF pre čítačky e‑kníh (používa Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Výstup"
-outputFormat = "Výstupný formát"
-pdfaAccessibleFormat = "{{format}} (prístupný)"
-pdfaDigitalSignatureWarning = "PDF obsahuje digitálny podpis. V ďalšom kroku bude odstránený."
-pdfaNote = "PDF/A-1b je kompatibilnejší, PDF/A-2b podporuje viac funkcií, PDF/A-3b podporuje vložené súbory."
-pdfaOptions = "Možnosti PDF/A"
 pdfOptions = "Možnosti PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Nastavenia"
 signInToUse = "Prihláste sa na používanie"
 single = "Jeden"
 sourceFormatPlaceholder = "Zdrojový formát"
-strictMode = "Prísny režim"
-strictModeDesc = "Chyba, ak konverzia nie je dokonalá (používa overenie VeraPDF)"
 svgPdfOptions = "Možnosti SVG na PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Súbory SVG sa vykresľujú ako vektorová grafika pre ostrý výstup pri akomkoľvek rozlíšení. Rozmery zo SVG určujú veľkosť strany PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Úroveň priblíženia"
 
 [convert.ebookOptions]
 includePageNumbers = "Zahrnúť čísla strán"
-includePageNumbersDesc = "Pridať čísla strán do generovaného PDF"
 includeTableOfContents = "Zahrnúť obsah"
-includeTableOfContentsDesc = "Pridať vygenerovaný obsah do výsledného PDF"
 optimizeForEbookPdf = "Optimalizovať pre čítačky eBookov"
 optimizeForEbookPdfDesc = "Optimalizovať PDF na čítanie eBookov (menšia veľkosť, lepšie vykresľovanie na eInk zariadeniach)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Rozpoznať kapitoly"
 detectChaptersDesc = "Rozpoznať nadpisy, ktoré vyzerajú ako kapitoly, a vložiť zalomenia strán EPUB"
 kindleEink = "Kindle e-Ink (optimalizované pre text)"
 outputFormat = "Výstupný formát"
-outputFormatDesc = "Vyberte výstupný formát pre eBook"
 tabletPhone = "Tablet/Telefón (s obrázkami)"
 targetDevice = "Cieľové zariadenie"
 targetDeviceDesc = "Vyberte výstupný profil optimalizovaný pre čítačku"
@@ -4469,8 +4619,24 @@ description = "Tieto cookies sú nevyhnutné na správne fungovanie webovej str�
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Názov titulnej strany"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF portfólio"
 description = "Každý vybraný súbor zostane v novom PDF celý, bez ohľadu na jeho typ. Čítačky, ktoré nepodporujú portfóliá, zobrazia titulnú stranu s priloženými súbormi."
 goToFileEditor = "Prejsť do editora súborov"
@@ -4488,6 +4654,9 @@ title = "Čo robí"
 
 [createPortfolio.tooltip.header]
 title = "O PDF portfóliách"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Automaticky orezať biele okraje"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Prístup k schránke nie je v tomto prehliadači dostupn
 export = "Exportovať záložky"
 exportClipboard = "Kopírovať JSON do schránky"
 exportJson = "Stiahnuť JSON"
+exportMenu = "Export"
 importClipboard = "Vložiť JSON zo schránky"
 importJson = "Importovať JSON"
+importMenu = "Import"
 loadFromPdf = "Načítať z vybraného PDF"
 noFile = "Vyberte PDF na extrahovanie existujúcich záložiek."
 selectedFile = "Načítané zo {{file}}"
-source = "Načítať záložky"
 
 [editTableOfContents.editor]
 addTopLevel = "Pridať záložku najvyššej úrovne"
@@ -4740,6 +4910,9 @@ replaceExisting = "Nahradiť existujúce záložky (odškrtnite pre pripojenie)"
 replaceExistingHint = "Keď je vypnuté, nová osnova sa pripojí za aktuálne záložky."
 title = "Záložky a osnova"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Zmeniť PDF"
 filePrompt = "Vyberte PDF zo svojej knižnice alebo nahrajte nové a začnite."
@@ -4753,7 +4926,6 @@ title = "Otvorte nástroj a začnite upravovať"
 [encryptedPdfUnlock]
 actionIgnored = "Obmedzenie {{action}} ignorované"
 actionUnlocked = "{{action}} odomknuté pre túto reláciu"
-advanced = "Rozšírené"
 allowed = "Povolené"
 annotations = "Anotácie"
 authoriseAction = "Toto PDF vyžaduje oprávnenie na použitie {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Obmedzené"
 restrictedActions = "obmedzené akcie"
 restrictedOperation = "Táto akcia vyžaduje heslo oprávnení."
 retainOwnerVerification = "Overte heslo oprávnení, aby zostalo nezmenené pri odstraňovaní hesla na otvorenie. Týmto sa neodstráni."
-saveProtection = "Uložiť ochranu"
 securityChangeFailed = "Nepodarilo sa zmeniť ochranu. Skontrolujte heslo oprávnení a nové nastavenia zabezpečenia."
 sessionDetails = "Otvorené pre túto reláciu. PDF zostáva chránené."
 sessionDetailsLabel = "O odomknutí relácie"
@@ -4871,7 +5042,6 @@ title = "Niečo sa pokazilo"
 tryAgain = "Skúsiť znova"
 
 [extractImages]
-allowDuplicates = "Uložiť duplicitné obrázky"
 selectText = "Vyberte formát obrázka na konverziu extrahovaných obrázkov"
 submit = "Extrahovať"
 tags = "obrázok,fotografia,uložiť,archív,zip,zachytiť,chytiť"
@@ -4927,12 +5097,15 @@ closeFile = "Zavrieť súbor"
 
 [fileEditor]
 closedFile = "Zatvorené {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Súbor bol presunutý"
 filesReordered_other = "Presunutých {{count}} súborov"
 loadedFromStorage_one = "Načítaný {{count}} súbor z úložiska"
 loadedFromStorage_other = "Načítaných {{count}} súborov z úložiska"
 loadFromStorageFailed = "Niektoré súbory sa nepodarilo načítať z úložiska"
 pinnedFile = "Pripnuté {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Uložené a zatvorené {{name}}"
 saveFailed = "Uloženie zlyhalo"
 unpinnedFile = "Odopnuté {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Zamknuté"
 previewOf = "Náhľad {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Pridať súbory"
 created = "Vytvorené"
 notIncludedInToolRun = "Nie je zahrnuté v tomto spustení nástroja"
 size = "Veľkosť súboru"
 title = "Súbory"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Žiadne dostupné súbory"
@@ -5104,6 +5286,7 @@ subtitle = "Zobrazte alebo skryte kategórie v bočnom paneli súborov."
 title = "Kategórie bočného panela"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Zrušiť"
 error = "Súbor sa nepodarilo premenovať."
 illegalCharacters = "Názov súboru nemôže obsahovať \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Odstrániť pole"
 
 [formFill.editor]
 action = "Akcia tlačidla"
-actionHelp = "Čo tlačidlo urobí po kliknutí."
 actionNone = "Žiadna"
 actionPrint = "Tlačiť"
 actionReset = "Resetovať formulár"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Obmedzuje počet znakov, ktoré sa zmestia; zobrazia sa ako rov
 multiline = "Viacriadkové"
 multilineHelp = "Umožňuje viac ako jeden riadok textu a zalamovanie na okraji poľa."
 multiSelect = "Povoliť viacnásobný výber"
-multiSelectHelp = "Umožňuje vybrať viac ako jednu možnosť naraz."
 name = "Názov poľa"
 nameHelp = "Interný názov poľa. Používa sa pri exporte údajov alebo vypĺňaní formulára z iného systému, preto musí byť jedinečný a bez medzier."
 optionGap = "Rozostup možností"
@@ -5902,6 +6083,11 @@ title = "Upraviť farby/kontrast"
 desc = "Zvýrazňujte, kreslite, pridávajte poznámky a tvary vo videní"
 tags = "anotovať,zvýrazniť,kresliť,označovanie,komentár,poznámky,revízia,redline,spätná väzba,nástroje označovania,lepiace poznámky,tvary,šípky,textové pole,voľná ruka"
 title = "Anotovať"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Automaticky rozpoznajte polia formulára pomocou AI a urobte svoj PDF vyplniteľným."
@@ -6405,6 +6591,9 @@ sort = "Zoradiť"
 [merge.sortFiles]
 title = "Zoradiť súbory"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Prehľad nastavení zlúčenia"
 
@@ -6548,6 +6737,9 @@ title = "Overenie zlyhalo"
 message = "Môžete zavrieť toto okno a vrátiť sa do Stirling PDF."
 title = "Overenie úspešné"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Povoliť prístup"
 approving = "Povoľuje sa..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Vraciame vás do aplikácie..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} chce získať prístup k vášmu účtu Stirling PDF"
 scopesIntro = "Toto umožní aplikácii {{app}}:"
 signedInAs = "Prihlásený ako {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Pokračujte prihlásením"
 signInPrompt = "Ak chcete pokračovať v pripájaní aplikácie, prihláste sa do svojho účtu Stirling PDF."
 title = "Authorise access"
 unknownApp = "Aplikácia tretej strany"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Konať ako vy – všetko, čo {{app}} urobí, prebieha pod vaším účtom a započítava sa do vášho používania"
@@ -6572,9 +6767,12 @@ tools = "Používať vaše nástroje Stirling PDF vo vašom mene – konvertova�
 
 [oauthConsent.scope]
 email = "Zobraziť vašu emailovú adresu"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Potvrdiť vašu identitu"
 phone = "Zobraziť vaše telefónne číslo"
 profile = "Zobraziť základné informácie o vašom profile"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Čistenie skenov a rozpoznanie textu z obrázkov v PDF a opätovné pridanie ako text."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Stanete sa členom tímu a stratíte prístup vlastníka."
 [pageEdit]
 deselectAll = "Žiadne"
 selectAll = "Zaškrtnúť všetko"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Extrahovať stránky"
@@ -7577,6 +7779,8 @@ stamp = "Anotácia pečiatky – nie text stránky, preto ju tu nemožno upravi�
 widget = "Pole formulára – nie text stránky, preto ho tu nemožno upraviť"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Upraviť"
 markTagged = "Označiť ako plne označkované"
 matchScanFont = "Priradiť skenovaný text k {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Automaticky označiť stranu"
 typeInto = "Písať do {{run}}"
 ungroupParagraph = "Zrušiť zoskupenie odseku {{run}}"
 unmarkTagged = "Označiť ako nie plne označkované"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Zalomiť {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Zahodiť neuložené zmeny?"
 
 [pdfTextEditor.error]
 decodeImage = "Vybraný obrázok sa nepodarilo dekódovať."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Tento text nie je možné duplikovať: žiadne dostupné písmo nezobrazuje všetky jeho písmená."
 formLiftChangesDrawing = "Toto nie je možné upraviť: je vykreslené ako súčasť skupiny, ktorej orezanie alebo grafické nastavenia editor nedokáže zachovať pri zmene."
 insertImage = "Vybraný obrázok sa nepodarilo vložiť."
 needsShaping = "Editor zatiaľ nedokáže správne vykresliť spojené písmená a diakritické znaky tohto písma, preto sa zmena neaplikovala."
+reopenLost = "Open again"
 replaceClippedImage = "Tento obrázok nie je možné nahradiť: je orezaný a náhrada by zobrazila časti, ktoré orez skrýva."
 scanOffInk = "Tento text nemožno upraviť: rozpoznané slová sa nezhodujú so skenom. Spustite znova OCR."
 unsafeRtlEdit = "Túto úpravu nie je možné vykonať: editor nedokáže prekresliť text na tomto riadku sprava doľava bez zmeny."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG obrázok"
 close = "Zavrieť panel hľadania"
 count = "{{current}} z {{total}}"
 findPlaceholder = "Nájsť"
+hideReplace = "Hide replace"
 ignoreAccents = "Ignorovať diakritiku"
 matchCase = "Rozlišovať veľkosť písmen"
 next = "Ďalšia zhoda"
@@ -7625,6 +7833,7 @@ replace = "Nahradiť"
 replaceAll = "Nahradiť všetko"
 replaced = "Nahradené: {{count}}"
 replacePlaceholder = "Nahradiť za"
+showReplace = "Show replace"
 wholeWord = "Celé slovo"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Tento odkaz nemožno označiť."
 cannotTagPage = "Obsah tejto strany nemožno označiť."
 contentGroup = "Obsah"
 customTag = "{{role}} (vlastná značka)"
-decorativeInfo = "Čítačky obrazovky preskakujú dekoratívne obrázky. Použite to pre okraje, pozadia a iné obrázky, ktoré nenesú žiadne informácie."
-decorativeLabel = "Dekoratívny obrázok"
-description = "Popis obrázka"
-descriptionInfo = "Čítačky obrazovky to prečítajú namiesto obrázka."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Značky nemožno upravovať v šifrovanom súbore"
 figureDescription = "Popis obrázka"
 figureDescriptionInfo = "Čítačky obrazovky to prečítajú namiesto obrázka."
-formFieldDescription = "Popis poľa"
 formulaDescription = "Popis vzorca"
 formulaDescriptionInfo = "Čítačky obrazovky to prečítajú namiesto vzorca. Povedzte to tak, ako by ste to vyslovili nahlas, napríklad \"x na druhú plus jedna\"."
 heading = "Prístupnosť"
@@ -7813,7 +8019,6 @@ markedTagged = "Dokument je plne označkovaný"
 markedTaggedHint = "Povie PDF čítačkám, aby použili značky prístupnosti. Zaškrtnite po úplnom označkovaní."
 markedWithUntagged = "Časť obsahu nemá značky, takže čítačky obrazovky ho môžu preskočiť."
 missingDescriptions = "Chýbajúce popisy"
-mixedContent = "Obrázok obsahuje iný obsah"
 mixedTags = "Zmiešané"
 needsDescriptionBadge = "Bez popisu"
 nextToReview = "Ďalšie na kontrolu"
@@ -7821,12 +8026,10 @@ notFigure = "Označené ako súčasť textu"
 removeTag = "Odstrániť značku"
 saveFailed = "Vaše zmeny prístupnosti sa nepodarilo uložiť, preto súbor nebol uložený. Vráťte ich späť a skúste to znova."
 selectedText = "Vybraný text"
-tagFormField = "Označiť formulárové pole"
 tagging = "Označovanie strán"
 tagLabel = "Značka"
 tagLinks_one = "Označiť odkaz"
 tagLinks_other = "Označiť {{count}} odkazov"
-tagUntagged = "Automaticky označiť dokument"
 tagUntaggedHint = "Automaticky pridá značky prístupnosti v celom dokumente. Výsledok je hrubý: následne skontrolujte nadpisy, zoznamy a poradie čítania."
 unknownTag = "Tu sa nedá prečítať"
 unmarkedWithTags = "Niektoré prehliadače PDF aj tak použijú značky a môžu preskakovať obsah bez nich."
@@ -7851,7 +8054,7 @@ heading = "Nadpisy"
 mixedNumbering = "Mieša číslované a nečíslované nadpisy"
 none = "Žiadne nadpisy"
 onPage = "Nadpis na strane {{page}}"
-problems = "Problémy s nadpismi"
+problemCount = "{{count}} to fix"
 skippedLevel = "Preskočí úroveň po nadpise {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Názov"
 allLanguages = "Všetky jazyky"
 cannotSetDocument = "Jazyk tohto dokumentu nemožno zmeniť."
 cannotSetText = "Jazyk tohto textu nemožno zmeniť."
-documentHint = "Jazyk, ktorý čítačky obrazovky používajú, pokiaľ si ho časť textu nenastaví sama."
 documentLabel = "Jazyk"
 documentLocked = "Jazyk šifrovaného dokumentu tu nemožno zmeniť."
 inDocument = "V tomto dokumente"
 innerLabel = "Jazyk značky {{number}}"
 label = "Jazyk"
-missing = "Nie je nastavený jazyk. Čítačky obrazovky ho budú hádať a môžu čítať celý dokument nesprávnym hlasom."
 mixed = "Zmiešané"
 noMatch = "Žiadny zodpovedajúci jazyk. Zadajte jeho kód, napríklad mt alebo en-IE."
 placeholder = "Vyberte jazyk"
@@ -7943,6 +8144,52 @@ renderFailed = "Nepodarilo sa vykresliť stranu"
 [pdfTextEditor.password]
 incorrect = "Nesprávne heslo – skúste to znova."
 label = "Heslo"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Zarovnávacia vodiaca čiara na {{value}} {{unit}} – odstránite ju potiahnutím na pravítko"
@@ -8124,6 +8371,10 @@ title = "Odchýlky náhľadu"
 [pdfTextEditor.tooltip.textFocus]
 text = "Tento pracovný priestor sa zameriava na úpravu textu a premiestňovanie vložených obrázkov. Zložitá grafika strán, formulárové widgety a vrstvená grafika sú zachované na export, ale nie sú tu plne upraviteľné."
 title = "Zameranie na text a obrázky"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF na CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Skryť kategóriu"
 labelCount = "štítkov"
 sharedNote = "Tieto štítky sú vstavané a zdieľané v celom vašom tíme."
 showCategory = "Zobraziť kategóriu"
-
-[policies.pii]
-account = "Čísla účtov (označené)"
-card = "Kreditné/debetné karty"
-email = "E-mailové adresy"
-fieldLabel = "PII na redigovanie"
-iban = "IBANy"
-phone = "Telefónne čísla"
-placeholder = "Vyberte typy PII"
-routing = "US smerovacie čísla (ABA)"
-ssn = "Čísla sociálneho zabezpečenia"
 
 [policy]
 badgeEnforcing = "{{name}} sa vynucuje..."
@@ -10317,6 +10557,10 @@ title = "Pipeline"
 [portal.pipelines.actions]
 newCustomPipeline = "Nový vlastný pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Všetky pipeline"
 
@@ -12047,7 +12291,6 @@ label = "Nástroje na čítanie"
 readAloud = "Čítať nahlas"
 rotateLeft = "Otočiť doľava"
 rotateRight = "Otočiť doprava"
-search = "Nájsť v dokumente"
 switchDocument = "Prepnúť dokument"
 thumbnails = "Strany"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Farba rámčeka"
 convertPDFToImageLabel = "Konvertovať PDF na PDF-Image"
 customPaddingLabel = "Vlastné dodatočné odsadenie"
 useRegexLabel = "Použiť Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Hľadať celé slová"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Nastavenia redigovania"
 
 [redact.auto.wordsToRedact]
 add = "Pridať"
-examples = "Príklady: Dôverné, Prísne tajné"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Zadajte slovo"
 title = "Slová na redigovanie"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Vyberte súbory v správcovi súborov, aby ste zači
 manual = "Manuálne"
 mode = "Režim"
 title = "Metóda redigovania"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Zhodovať iba text s rovnakou veľkosťou písmen. Keď je zapnuté, 'Secret' sa nebude zhodovať s 'SECRET' a [A-Z] v regexe sa zhoduje iba s veľkými písmenami."
@@ -12147,19 +12401,6 @@ title = "Metóda redigovania"
 text = "Kliknite a ťahajte na manuálny výber konkrétnych oblastí na redigovanie. Poskytuje presnú kontrolu nad tým, čo sa zrediguje. (Už čoskoro)"
 title = "Manuálne redigovanie"
 
-[redact.tooltip.words]
-bullet1 = "Pridávajte po jednom slove"
-bullet2 = "Stlačte Enter alebo kliknite na 'Pridať ďalšie'"
-bullet3 = "Kliknite na × pre odstránenie slov"
-
-[redact.tooltip.words.description]
-text = "Zadajte slová alebo frázy, ktoré chcete v dokumente nájsť a zredigovať. Každé slovo sa bude vyhľadávať samostatne."
-title = "Zhoda textu"
-
-[redact.tooltip.words.examples]
-text = "Typické slová na redigovanie zahŕňajú: bankové údaje, e-mailové adresy alebo konkrétne mená."
-title = "Bežné príklady"
-
 [redact.tooltip.words.header]
 title = "Slová na redigovanie"
 
@@ -12176,15 +12417,6 @@ failed = "Počas odstraňovania anotácií z PDF došlo k chybe."
 
 [removeAnnotations.info]
 description = "Tento nástroj odstráni všetky anotácie (komentáre, zvýraznenia, poznámky atď.) z vašich PDF dokumentov."
-
-[removeAnnotations.settings]
-title = "Nastavenia"
-
-[removeAnnotations.tooltip.description]
-title = "Čo robí"
-
-[removeAnnotations.tooltip.header]
-title = "O nástroji Odstrániť anotácie"
 
 [removeBlanks]
 submit = "Odstrániť prázdne strany"
@@ -12325,6 +12557,9 @@ tags = "preusporiadať,zmeniť poradie,organizovať,reorganizovať,presunúť st
 [reorganizePages.error]
 failed = "Nepodarilo sa reorganizovať stránky"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Stránky reorganizované"
 
@@ -12406,6 +12641,7 @@ title = "Invertovať všetky farby"
 rotateLeft = "Otočiť proti smeru hodinových ručičiek"
 rotateRight = "Otočiť v smere hodinových ručičiek"
 selectRotation = "Vyberte uhol otočenia (v smere hodinových ručičiek)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Použiť otočenie"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Otočiť PDF"
@@ -12516,8 +12752,7 @@ title = "Očistenie"
 failed = "Pri očisťovaní PDF došlo k chybe."
 
 [sanitize.options]
-note = "Vyberte prvky, ktoré chcete z PDF odstrániť. Musíte vybrať aspoň jednu možnosť."
-title = "Možnosti očistenia"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Odstrániť všetky súbory vložené v PDF"
@@ -12649,6 +12884,7 @@ title = "Hľadať v PDF"
 hideTools = "Skryť nedostupné nástroje ▴"
 messageNoFallback = "Nástroje nebudú dostupné, kým sa váš server znovu nepripojí."
 messageWithFallback = "Niektoré nástroje vyžadujú pripojenie k serveru."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Zobraziť nedostupné nástroje ▾"
 title = "Váš server Stirling-PDF je nedostupný"
 toolNotAvailableLocally = "Váš server Stirling-PDF je offline a \"{{endpoint}}\" nie je dostupný na lokálnom backende."
@@ -13034,6 +13270,12 @@ title = "Klávesové skratky"
 mac = "Do skratky zahrňte ⌘ (Command), ⌥ (Option) alebo iný modifikátor."
 windows = "Do skratky zahrňte Ctrl, Alt alebo iný modifikátor."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Podmienky, zásady ochrany osobných údajov a vaše preferencie súborov cookie."
 label = "Právne"
@@ -13418,9 +13660,7 @@ image = "Nahranie"
 text = "Text"
 
 [sign.step]
-createDesc = "Vyberte, ako chcete vytvoriť podpis"
 place = "Umiestniť a uložiť"
-placeDesc = "Umiestnite podpis do svojho PDF"
 
 [sign.steps]
 configure = "Nastaviť podpis"
@@ -13597,6 +13837,10 @@ rotateLeft = "Otočiť doľava"
 rotateRight = "Otočiť doprava"
 trim = "Orezať na podpis"
 trimHint = "Oreže prázdny priestor okolo neho"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Nastavenia vzhľadu podpisu"
@@ -13959,7 +14203,6 @@ placeholder = "Zadajte počet horizontálnych delení"
 
 [split-by-sections.splitMode]
 custom = "Vlastné strany"
-description = "Vyberte, ako rozdeliť strany"
 label = "Režim rozdelenia"
 splitAll = "Rozdeliť všetky strany"
 splitAllExceptFirst = "Rozdeliť všetko okrem prvej"
@@ -14210,10 +14453,8 @@ failed = "Počas označovania PDF časovou pečiatkou došlo k chybe."
 
 [timestampPdf.options]
 note = "Na server TSA sa odosiela iba hash SHA-256 vášho dokumentu; samotný súbor PDF sa na server TSA nikdy neposiela."
-title = "Server časovej pečiatky (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Vyberte dôveryhodnú autoritu časovej pečiatky"
 label = "Vyberte server TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Nie sú dostupné žiadne nástroje"
 
 [tooltip]
 close = "Zavrieť tooltip"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Tento nástroj odstráni obmedzenia len na čítanie z polí PDF formulárov, čím ich sprístupní na úpravu a vypĺňanie."
@@ -14706,6 +14961,9 @@ signatureDate = "Dátum podpisu"
 
 [validateSignature.settings]
 certHint = "Nahrajte dôveryhodný certifikát X.509 na overenie voči vlastnému zdroju dôvery."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Nastavenia overenia"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"
 copyRestricted = "Kopírovanie je zakázané oprávneniami tohto PDF."
 copyText = "Kopírovať"
 coverPageView = "Zobraziť titulnú stranu samostatne"
-disableColorFilter = "Zakázať farebný filter"
 documentUpdated = "Dokument aktualizovaný"
 dualPageView = "Dvojstranové zobrazenie"
 editText = "Upraviť text"
-enableDarkFilter = "Povoliť tmavý filter"
-enableSepiaFilter = "Povoliť sépiový filter"
 engineLoadError = "Nepodarilo sa inicializovať engine prehliadača PDF"
 engineSlowWarning = "Inicializácia enginu PDF trvá dlhšie, než sa očakávalo. Skontrolujte nastavenia WebAssembly a Worker vo svojom prehliadači alebo stránku znova načítajte."
 firstPage = "Prvá strana"
@@ -14736,20 +14991,27 @@ fitPage = "Prispôsobiť stránke"
 fitWidth = "Prispôsobiť šírke"
 lastPage = "Posledná strana"
 loadingEngine = "Načítava sa PDF Engine..."
+menuSelected = "Selected"
 moreOptions = "Viac"
 nextPage = "Nasledujúca strana"
 noPdfProvided = "Nebolo poskytnuté žiadne PDF"
 onlyPdfSupported = "Tento formát súboru nie je podporovaný pre náhľad."
 pageNavigation = "Navigácia strán"
+pageNumber = "Page number"
 previousPage = "Predchádzajúca strana"
 readAloudFromHere = "Čítať nahlas odtiaľto"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Dokument sa nepodarilo uložiť. Skúste to znova."
 saveChangesErrorTitle = "Zmeny sa nepodarilo uložiť"
 singlePageView = "Zobrazenie jednej strany"
+tools = "Tools"
 unknownFile = "Neznámy súbor"
-view = "Zobrazenie"
 zoom = "Priblíženie"
 zoomIn = "Priblížiť"
+zoomLevel = "Zoom level"
 zoomOut = "Oddialiť"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Náhľad podpisu"
 
 [viewer.signatureField]
 badge = "Podpis"
+clickToSign = "Click to sign here"
 fieldTitle = "Pole podpisu: {{name}}"
 signed = "Podpísané"
 signedWithReason = "Podpísané: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Nepodpísané pole podpisu: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Obnovených {{restored}} z {{total}} súborov. Zvyšok už nie je ulo
 
 [workbenchBar]
 activeFiles = "Aktívne súbory"
-annotations = "Anotácie"
+annotate = "Annotate"
 applyRedactionsFirst = "Najprv použiť začiernenia"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Zavrieť všetky súbory"
 closePdf = "Zavrieť PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Zrušiť výber všetkých"
 downloadAll = "Stiahnuť všetko"
 editText = "Upraviť text"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Ukončiť režim anotácií"
 exitRedaction = "Ukončiť režim začiernenia"
 findReplace = "Vyhľadať a nahradiť"
 formFill = "Editor formulárov"
-hideToolbar = "Skryť panel nástrojov"
+layers = "Layers"
 moreActions = "Ďalšie akcie"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Editor stránok"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Režim posunu"
 print = "Tlačiť PDF"
 readAloud = "Čítať nahlas"
 readAloudLanguage = "Jazyk"
 readAloudSpeed = "Rýchlosť"
 redact = "Začierniť"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Otočiť doľava"
 rotateRight = "Otočiť doprava"
 ruler = "Pravítko / Meranie"
+rulerScaleUnset = "Not set"
 rulerSettings = "Nastavenia mierky"
 save = "Uložiť"
 saveAll = "Uložiť všetko"
@@ -15123,14 +15398,23 @@ selectLanguage = "Vybrať jazyk"
 share = "Zdieľať"
 showAllTools = "Zobraziť všetky nástroje"
 showFewerTools = "Zbaliť panel nástrojov"
-showToolbar = "Zobraziť panel nástrojov"
+thumbnails = "Pages"
 toggleAnnotations = "Prepnúť viditeľnosť anotácií"
-toggleAttachments = "Prepnúť prílohy"
-toggleBookmarks = "Záložky (obsah)"
 toggleComments = "Komentáre"
-toggleLayers = "Prepnúť vrstvy"
-toggleSidebar = "Prepnúť bočný panel"
 viewer = "Prehliadač"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Váš prístup k tomuto dokumentu vypršal."

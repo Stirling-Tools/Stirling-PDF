@@ -12,9 +12,11 @@ comingSoon = "เร็วๆ นี้"
 confirm = "ยืนยัน"
 confirmClose = "ยืนยันการปิด"
 confirmCloseCancel = "ยกเลิก"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "ปิดไฟล์"
 confirmCloseDiscard = "ยกเลิกการเปลี่ยนแปลงและปิด"
 confirmCloseMessage = "แน่ใจหรือไม่ว่าต้องการปิดไฟล์นี้?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "บันทึกและปิด"
 confirmCloseSaveFailed_one = "บันทึกพร้อมข้อผิดพลาด มี {{count}} ไฟล์ ที่ไม่สามารถบันทึกได้"
 confirmCloseSaveFailed_other = "บันทึกพร้อมข้อผิดพลาด ไม่สามารถบันทึกไฟล์ {{count}} ไฟล์ได้"
@@ -44,7 +46,6 @@ fileSavedToDisk = "บันทึกไฟล์ลงดิสก์แล้�
 filesSelected = "{{count}} ไฟล์"
 font = "ฟอนต์"
 fontSizeTooltip = "ขนาดข้อความหมายเลขหน้าเป็นหน่วยพอยต์ ตัวเลขใหญ่ทำให้ข้อความใหญ่ขึ้น"
-fontTypeTooltip = "ตระกูลฟอนต์สำหรับหมายเลขหน้า เลือกให้เหมาะกับสไตล์เอกสารของคุณ"
 green = "เขียว"
 help = "ช่วยเหลือ"
 incorrectPasswordMessage = "รหัสผ่านปัจจุบันไม่ถูกต้อง"
@@ -249,9 +250,7 @@ image = "อัปโหลด"
 text = "ข้อความ"
 
 [addImage.step]
-createDesc = "อัปโหลดรูปภาพที่คุณต้องการเพิ่ม"
 place = "วางรูปภาพ"
-placeDesc = "คลิกบน PDF เพื่อวางรูปภาพของคุณ"
 
 [addImage.steps]
 configure = "ตั้งค่ารูปภาพ"
@@ -276,7 +275,7 @@ fontName = "ชื่อฟอนต์"
 fontSize = "ขนาดตัวอักษร"
 numberPagesDesc = "เช่น 1,3,5-8 หรือเว้นว่างไว้สำหรับทุกหน้า"
 pagePreviewAlt = "ตัวอย่างหน้า"
-pagesAndStarting = "หน้าและเลขเริ่มต้น"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "ตำแหน่งและหน้า"
 preview = "การเลือกตำแหน่ง"
 previewDisclaimer = "ภาพตัวอย่างเป็นการประมาณ ผลลัพธ์สุดท้ายอาจแตกต่างเนื่องจากเมตริกฟอนต์ของ PDF"
@@ -300,6 +299,7 @@ title = "ผลลัพธ์หมายเลขหน้า"
 
 [addPassword]
 desc = "เข้ารหัสเอกสาร PDF ของคุณด้วยรหัสผ่าน"
+submit = "Add Password"
 tags = "เข้ารหัส,รหัสผ่าน,ล็อก,ปลอดภัย,ป้องกัน,ความปลอดภัย,encryption,ปกป้อง,ลับ,ส่วนตัว,จำกัดการเข้าถึง"
 title = "เพิ่มรหัสผ่าน"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "ตัวอย่างตราประทับ"
 tags = "ตราประทับ,ทำเครื่องหมาย,ตรา,อนุมัติ,ปฏิเสธ,ลับ,เครื่องมือตราประทับ,ตรายาง,ตราวันที่,ตราอนุมัติ,ได้รับแล้ว,โมฆะ,สำเนา,ต้นฉบับ"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "ตัวอักษร"
-clickToExpand = "คลิกเพื่อขยาย"
 customColor = "สีข้อความที่กำหนดเอง"
 customDateDesc = "รูปแบบแบบกำหนดเอง"
 customPosition = "ลากตราประทับไปยังตำแหน่งที่ต้องการในหน้าตัวอย่าง"
 dateDesc = "วันที่ปัจจุบัน"
 datetimeDesc = "วันที่และเวลารวมกัน"
 dateTimeVars = "วันที่และเวลา"
-dynamicVariables = "ตัวแปรแบบไดนามิก"
 examples = "ตัวอย่าง"
 filenameDesc = "ชื่อไฟล์ไม่มีนามสกุล"
 filenameFullDesc = "ชื่อไฟล์พร้อมนามสกุล"
@@ -365,6 +364,8 @@ noStampSelected = "ยังไม่ได้เลือกตราประ�
 opacity = "ความทึบ"
 otherVars = "อื่น ๆ"
 pageNumberDesc = "หมายเลขหน้าปัจจุบัน"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "ข้อมูลหน้า"
 position = "ตำแหน่ง"
 positionAndFormatting = "ตำแหน่งและการจัดรูปแบบ"
@@ -378,9 +379,10 @@ quickPosition = "เลือกตำแหน่งบนหน้าสำห
 rotation = "การหมุน"
 selectedImageAlt = "รูปภาพตราประทับที่เลือก"
 selectTemplate = "เลือกเทมเพลต..."
+size = "Size"
 stampSetup = "ตั้งค่าตราประทับ"
 stampText = "ข้อความตราประทับ"
-stampTextDescription = "ใช้ตัวแปรแบบไดนามิกด้านล่าง ใช้ @@ สำหรับ @ แบบตัวอักษร ใช้ \\n สำหรับขึ้นบรรทัดใหม่"
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "ประเภทตราประทับ"
 submit = "เพิ่มตราประทับ"
 tags = "ตราประทับ, เพิ่มรูปภาพ, รูปภาพกึ่งกลาง, ลายน้ำ, PDF, ฝัง, ปรับแต่ง"
@@ -389,7 +391,6 @@ title = "ตราประทับ PDF"
 totalPagesDesc = "จำนวนหน้าทั้งหมด"
 useTemplate = "ใช้เทมเพลต"
 uuidDesc = "ตัวระบุเฉพาะแบบสั้น (8 อักขระ)"
-variablesHelp = "คลิกตัวแปรใดก็ได้เพื่อแทรกลงในข้อความตราประทับของคุณ ใช้ @@ สำหรับ @ แบบตัวอักษร"
 yearMonthDayDesc = "ส่วนวันที่แยกกัน"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "เกิดข้อผิดพลาดขณะเพิ่มต�
 
 [AddStampRequest.results]
 title = "ผลการประทับตรา"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "กำหนดเอง"
@@ -410,6 +417,11 @@ legal-footer = "ส่วนท้ายทางกฎหมาย"
 page-numbers = "หมายเลขหน้า"
 pageNumberFooter = "ส่วนท้ายหมายเลขหน้า"
 timestamp = "ประทับเวลา"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "ใช้ข้อความ"
@@ -462,9 +474,7 @@ image = "อัปโหลด"
 text = "ข้อความ"
 
 [addText.step]
-createDesc = "ป้อนข้อความที่ต้องการเพิ่ม"
 place = "วางข้อความ"
-placeDesc = "คลิกบน PDF เพื่อเพิ่มข้อความ"
 
 [addText.steps]
 configure = "ตั้งค่าข้อความ"
@@ -1233,6 +1243,18 @@ label = "สร้างใหม่เมื่อเริ่มต้น"
 description = "จำนวนวันที่ใบรับรองจะยังคงใช้ได้"
 label = "อายุใบรับรอง (วัน)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "ไดเรกทอรีที่แหล่งที่มาของโฟลเดอร์และเอาต์พุตโฟลเดอร์ได้รับอนุญาตให้อ่านและเขียน นี่คือขอบเขตความปลอดภัย: automations ไม่สามารถชี้ไปยังเส้นทางเซิร์ฟเวอร์นอกเหนือจากรายการนี้ได้"
 securityNote = "เว้นว่างไว้เพื่อปิดใช้งานแหล่งที่มาของโฟลเดอร์และเอาต์พุตทั้งหมด ไดเรกทอรีการกำหนดค่าของ Stirling เองจะถูกห้ามใช้เสมอ"
@@ -1456,7 +1478,9 @@ label = "ชื่อผู้ใช้ SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Clients ส่ง Stirling API key ใน header X-API-KEY (หรือ Authorization: Bearer <key>) key จะเชื่อมโยงกับผู้ใช้ Stirling ที่เป็นเจ้าของ - เฉพาะบัญชีที่จัดเตรียมไว้เท่านั้นที่เข้าได้ และการกระทำจะถูก audit ในฐานะผู้ใช้นั้น จัดการ keys ได้ที่ บัญชี > API Keys"
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "เปิดเผยเครื่องมือ PDF และ AI agents ของ Stirling ให้กับ MCP clients ผ่าน endpoint ที่ป้องกันด้วย OAuth"
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "เครื่องมือที่อนุญาต"
 description = "Operation ids ที่ต้องการซ่อนจาก MCP (คั่นด้วยจุลภาคหรือช่องว่าง) เช่น add-password remove-password เว้นว่างเพื่อแสดงเครื่องมือที่เปิดใช้ทั้งหมด"
 label = "เครื่องมือที่ถูกบล็อก"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "เมื่อปิด (ค่าเริ่มต้น) จะไม่มี /mcp endpoint, metadata หรือ MCP beans ถูกโหลด"
 label = "เปิดใช้ MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "ป้อน OAuth issuer + resource ID ของคุณด้านบน บันทึก แล้วรีสตาร์ท"
 step1ApiKey = "สร้าง API key ที่ บัญชี > API Keys (ผู้ใช้แต่ละคนใช้ของตนเอง)"
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "ใน MCP client ของคุณ ให้เพิ่ม"
 step2b = "server ที่ชี้ไปยัง:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Client ค้นพบ OAuth อัตโนมัติจาก:"
 step3ApiKey = "ส่ง key ใน"
 step3ApiKeyb = "header (หรือ Authorization: Bearer <key>) ไม่มีการใช้ OAuth หรือการค้นพบ metadata"
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "อนุมัติการลงชื่อเข้าใช้; client จะลองใหม่พร้อม token เครื่องมือจะปรากฏเป็นกลุ่ม: convert, pages, misc, security, ai"
 step4ApiKey = "เครื่องมือจะปรากฏเป็นกลุ่ม: convert, pages, misc, security, ai - และทุกการเรียกจะถูก audit ในฐานะเจ้าของ key"
 tip = "เคล็ดลับ: ลงทะเบียน resource ID เป็น audience ที่อนุญาตใน IdP ของคุณ ทดสอบแล้วกับ MCP Inspector และ Claude Desktop"
 tipApiKey = "เคล็ดลับ: โหมด API-key ไม่ต้องใช้ IdP ภายนอก - ง่ายที่สุดสำหรับ self-host key จะเชื่อมโยงกับผู้ใช้ Stirling ที่เป็นเจ้าของ"
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "เชื่อมต่อ MCP client"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "ค้นพบอัตโนมัติจาก issuer"
 
 [admin.settings.mcp.mode]
 apikey = "API key (คีย์ต่อผู้ใช้ของ Stirling)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth ต้องใช้ IdP ภายนอก API key ใช้ Stirling API key ต่อผู้ใช้ (X-API-KEY) - ง่ายที่สุดสำหรับ self-host"
 label = "โหมดการยืนยันตัวตน"
 oauth = "OAuth 2.1 (IdP ภายนอก)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "ต้องมี mcp.tools.read สำหรับ read ops และ mcp.tools.write สำหรับ write/AI ops"
 label = "บังคับใช้ OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim ที่จับคู่กับชื่อผู้ใช้ Stirling (เช่น sub, email, preferred_username)"
@@ -1943,9 +2003,6 @@ title = "คุณต้องการช่วยทำให้ Stirling PDF 
 tags = "คำอธิบายประกอบ,ไฮไลต์,วาด,มาร์กอัป,ความคิดเห็น,บันทึก,ตรวจทาน,redline,feedback,เครื่องมือมาร์กอัป,โน้ตติด,รูปร่าง,ลูกศร,กล่องข้อความ,วาดอิสระ"
 
 [annotation]
-alignCenter = "จัดกึ่งกลาง"
-alignLeft = "จัดชิดซ้าย"
-alignRight = "จัดชิดขวา"
 annotationStyle = "สไตล์คำอธิบายประกอบ"
 backgroundColor = "สีพื้นหลัง"
 borderOff = "เส้นขอบ: ปิด"
@@ -2016,18 +2073,61 @@ underline = "ขีดเส้นใต้"
 undoDelete = "เลิกทำ"
 width = "ความกว้าง"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "ตัวแก้ไข PDF ฟรีและเป็นส่วนตัวที่คุณสามารถรันบนโครงสร้างพื้นฐานใดก็ได้"
 
 [appBanner]
 dismiss = "ปิด"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "เพิ่มไฟล์แนบ..."
 convertToPdfA3b = "แปลงเป็น PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b เป็นรูปแบบเพื่อการเก็บถาวรที่รับรองการเก็บรักษาระยะยาว สามารถฝังไฟล์แนบได้หลายรูปแบบ การแปลงต้องใช้ Ghostscript และอาจใช้เวลานานสำหรับไฟล์ขนาดใหญ่"
-convertToPdfA3bTooltipHeader = "เกี่ยวกับการแปลงเป็น PDF/A-3b"
-convertToPdfA3bTooltipTitle = "สิ่งที่ทำ"
 discardChanges = "ยกเลิก"
 downloadSingle = "ดาวน์โหลดไฟล์แนบ"
 duplicateName = "มีไฟล์แนบชื่อ '{{name}}' อยู่แล้ว"
@@ -2208,7 +2308,6 @@ guest = "ผู้เยี่ยมชม"
 user = "ผู้ใช้"
 
 [auto-rename]
-description = "ค้นหาชื่อเรื่องจากเนื้อหา PDF ของคุณโดยอัตโนมัติและใช้เป็นชื่อไฟล์"
 submit = "เปลี่ยนชื่ออัตโนมัติ"
 tags = "ตรวจจับอัตโนมัติ, ตั้งชื่อใหม่, จัดระเบียบ, ป้าย"
 title = "เปลี่ยนชื่ออัตโนมัติ"
@@ -2218,21 +2317,6 @@ failed = "เกิดข้อผิดพลาดขณะตั้งชื�
 
 [auto-rename.results]
 title = "ผลการตั้งชื่ออัตโนมัติ"
-
-[auto-rename.settings]
-title = "เกี่ยวกับ"
-
-[auto-rename.tooltip.description]
-title = "การทำงาน"
-
-[auto-rename.tooltip.header]
-title = "วิธีการตั้งชื่ออัตโนมัติทำงาน"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "ค้นหาข้อความที่น่าจะเป็นชื่อเรื่องหรือหัวเรื่อง"
-bullet2 = "สร้างชื่อไฟล์ที่สะอาดและถูกต้องจากชื่อที่ตรวจพบ"
-bullet3 = "คงชื่อเดิมไว้หากไม่พบชื่อที่เหมาะสม"
-title = "การตั้งชื่ออัจฉริยะ"
 
 [autoFormDetection]
 loading = "กำลังตรวจจับช่องแบบฟอร์ม..."
@@ -2327,6 +2411,9 @@ remove = "ลบเครื่องมือ"
 selected = "เครื่องมือที่เลือก"
 selectTool = "เลือกเครื่องมือ..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "ยกเลิก"
 confirm = "กลับไป"
@@ -2360,6 +2447,10 @@ title = "เรียกใช้ระบบอัตโนมัติ"
 [automate.selection]
 title = "การเลือกระบบอัตโนมัติ"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "สร้างระบบอัตโนมัติใหม่"
 
@@ -2371,6 +2462,7 @@ title = "ที่แนะนำ"
 
 [automate.sequence]
 finish = "เสร็จสิ้น"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "เรียกใช้ระบบอัตโนมัติ"
 running = "กำลังเรียกใช้ระบบอัตโนมัติ..."
 signInToRun = "ลงชื่อเข้าใช้เพื่อเรียกใช้ระบบอัตโนมัติ"
@@ -2391,7 +2483,6 @@ secureWorkflow = "เวิร์กโฟลว์ด้านความป�
 secureWorkflowDesc = "ทำให้เอกสาร PDF ปลอดภัยโดยลบเนื้อหาที่อาจเป็นอันตราย เช่น JavaScript และไฟล์ที่ฝังไว้ จากนั้นเพิ่มการป้องกันด้วยรหัสผ่านเพื่อป้องกันการเข้าถึงโดยไม่ได้รับอนุญาต รหัสผ่านเริ่มต้นคือ 'password'"
 
 [autoRename]
-description = "เครื่องมือนี้จะเปลี่ยนชื่อไฟล์ PDF โดยอัตโนมัติตามเนื้อหา มันวิเคราะห์เอกสารเพื่อค้นหาชื่อเรื่องที่เหมาะสมที่สุดจากข้อความ"
 tags = "ตรวจจับอัตโนมัติ,ตามส่วนหัว,จัดระเบียบ,ติดป้ายใหม่,เปลี่ยนชื่ออัตโนมัติ,เปลี่ยนชื่อแบบอัตโนมัติ,เปลี่ยนชื่ออัจฉริยะ,เปลี่ยนชื่อตามเนื้อหา,ชื่อไฟล์,การตั้งชื่อไฟล์,ตรวจจับชื่อเรื่อง"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf, แยก, เอกสาร, การจัดระเบีย
 [autoSplitPDF]
 dividerDownload2 = "ดาวน์โหลด 'Auto Splitter Divider (with instructions).pdf'"
 duplexMode = "โหมด Duplex (การสแกนหน้าและหลัง)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "แยกโดย QR, แยก, ส่วนสแกน, จัดระเบียบ"
 title = "แยกหน้าอัตโนมัติ"
 
@@ -2528,9 +2620,6 @@ tooltip = "เพิ่มเส้นขอบรอบแต่ละส่ว
 [bookletImposition.addGutter]
 label = "เพิ่มระยะสัน"
 tooltip = "เพิ่มช่องว่างด้านในสำหรับการเข้าเล่ม"
-
-[bookletImposition.advanced]
-toggle = "ตัวเลือกขั้นสูง"
 
 [bookletImposition.doubleSided]
 label = "พิมพ์สองหน้า"
@@ -2714,14 +2803,15 @@ chooseJksFile = "เลือกไฟล์ JKS"
 chooseP12File = "เลือกไฟล์ PKCS12"
 choosePfxFile = "เลือกไฟล์ PFX"
 choosePrivateKey = "เลือกไฟล์กุญแจส่วนตัว"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "ปฏิเสธแล้ว"
 fetchFailed = "ไม่สามารถโหลดข้อมูลการลงนามได้"
 finalized = "สรุปผลแล้ว"
 location = "ตำแหน่ง"
-logoTitle = "โลโก้"
-name = "ชื่อ"
-noLogo = "ไม่มีโลโก้"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "หมายเลขหน้า"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "รหัสผ่านใบรับรอง"
 passwordOptional = "เว้นว่างหากไม่มีรหัสผ่าน"
 pemCertificateLabel = "ใบรับรอง (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "คีย์ส่วนตัว (.pem / .key)"
 pending = "รอดำเนินการ"
 readyToFinalize = "พร้อมสรุปผล"
 reason = "เหตุผล"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "กำลังใช้ใบรับรองของเซิร์ฟเวอร์ - ไม่ต้องใช้ไฟล์หรือรหัสผ่าน"
-showLogo = "แสดงโลโก้"
 signatureProgress = "{{signedCount}}/{{totalCount}} ลายเซ็น"
 tags = "ยืนยันตัวตน,PEM,P12,ทางการ,เข้ารหัส,ลงนาม,ใบรับรอง,PKCS12,JKS,server,manual,auto"
 title = "การเซ็นชื่อด้วยใบรับรอง"
@@ -2738,12 +2828,45 @@ viewed = "เปิดดูแล้ว"
 
 [certSign.appearance]
 invisible = "มองไม่เห็น"
+showOnPage = "Show signature on page"
 stepTitle = "ลักษณะลายเซ็น"
 visibility = "การแสดงผล"
 visible = "มองเห็นได้"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "รายละเอียดลายเซ็น"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "เกี่ยวกับลักษณะลายเซ็น"
@@ -2762,9 +2885,6 @@ bullet3 = "เลือกหน้าที่จะวางลายเซ็
 bullet4 = "สามารถใส่โลโก้เพิ่มเติมได้"
 text = "แสดงบล็อกลายเซ็นบน PDF พร้อมชื่อ วันที่ และรายละเอียดเพิ่มเติมตามต้องการ มีประโยชน์เมื่อคุณต้องการให้ผู้อ่านเห็นชัดเจนว่าเอกสารถูกลงนามแล้ว"
 title = "ลายเซ็นที่มองเห็นได้"
-
-[certSign.certFiles]
-stepTitle = "ไฟล์ใบรับรอง"
 
 [certSign.certType.tooltip.convert]
 text = "แปลงไฟล์ของคุณเป็น Java keystore (.jks) ด้วย keytool แล้วเลือก JKS"
@@ -2786,6 +2906,7 @@ text = "เลือกรูปแบบที่ตรงกับไฟล์
 title = "ควรใช้ตัวเลือกใด?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "รูปแบบใบรับรอง"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "อุปกรณ์นี้"
 [certSign.error]
 failed = "เกิดข้อผิดพลาดขณะประมวลผลลายเซ็น"
 
-[certSign.format]
-pkcs11 = "โทเค็น USB"
-windowsStore = "ที่เก็บใบรับรอง Windows"
-
 [certSign.hardware]
-certificate = "ใบรับรอง"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "เส้นทางไดรเวอร์แบบกำหนดเอง…"
+digitalId = "Digital ID"
 driver = "ไดรเวอร์ PKCS#11"
 driverPath = "เส้นทางไลบรารีไดรเวอร์"
 driverPathPlaceholder = "เส้นทางแบบเต็มไปยังไดรเวอร์ PKCS#11 ของคุณ (.dll, .so หรือ .dylib)"
-expired = "หมดอายุ"
-expires = "หมดอายุ"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "แสดงรายการใบรับรอง"
-loading = "กำลังอ่านใบรับรอง…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "ไม่พบใบรับรองสำหรับการลงนาม"
 noDriver = "ไม่พบไดรเวอร์ PKCS#11 ติดตั้งไดรเวอร์ของโทเค็นของคุณ (เช่น OpenSC) แล้วเปิดหน้านี้อีกครั้ง หรือป้อนเส้นทางไดรเวอร์ด้านล่างด้วยตนเอง"
-notYetValid = "ยังไม่เริ่มมีผล"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN ของโทเค็น"
 pkcs11Hint = "เลือกไดรเวอร์ PKCS#11 ของโทเค็นของคุณ ป้อน PIN แล้วแสดงรายการใบรับรองบนโทเค็น"
 pkcs11LoadError = "ไม่สามารถอ่านใบรับรองจากโทเค็น ตรวจสอบ PIN และไดรเวอร์"
-refresh = "รีเฟรช"
-selectCert = "เลือกใบรับรอง"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "เลือกไดรเวอร์"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "สล็อต (ไม่บังคับ)"
-windowsHint = "เลือกใบรับรองจากที่เก็บใบรับรอง Windows ของคุณ การลงนามจะใช้คีย์บนบัตร/โทเค็นของคุณ Windows จะขอ PIN"
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "ไม่สามารถอ่านที่เก็บใบรับรอง Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "หลักโดยทั่วไป"
 device = "อุปกรณ์นี้"
 noOtherSources = "ไม่มีแหล่งใบรับรองอื่นที่พร้อมใช้งาน"
 server = "เซิร์ฟเวอร์"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "แหล่งที่มาของใบรับรอง"
 upload = "อัปโหลด"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "อัปเดตชื่อผู้ใช้ของคุณ คุณจะถูกออกจากระบบหลังจากอัปเดต"
@@ -3069,7 +3205,6 @@ placeholder = "ผู้สร้างเอกสาร"
 
 [changeMetadata.customFields]
 add = "เพิ่มฟิลด์"
-description = "เพิ่มฟิลด์เมทาดาทากำหนดเองให้กับเอกสาร"
 key = "คีย์"
 keyPlaceholder = "คีย์กำหนดเอง"
 remove = "ลบ"
@@ -3135,10 +3270,6 @@ bullet1 = "วันที่สร้าง: เมื่อเอกสาร�
 bullet2 = "วันที่แก้ไข: เวลาที่แก้ไขล่าสุด"
 text = "เมื่อเอกสารถูกสร้างและแก้ไข"
 title = "ฟิลด์วันที่"
-
-[changeMetadata.tooltip.deleteAll]
-text = "ลบเมทาดาทาทั้งหมดเพื่อให้มั่นใจเรื่องความเป็นส่วนตัว"
-title = "ลบเมทาดาทาที่มีอยู่"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "ชื่อเรื่อง: ชื่อหรือหัวเรื่องของเอกสาร"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "คุณถึงขีดจำกัดการใช
 
 [checkAccessibility]
 aboutRow = "เกี่ยวกับ {{label}}"
-checking = "กำลังตรวจสอบ..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "ดาวน์โหลดรายงานการช่วยการเข้าถึง"
 fileFailed = "ล้มเหลว"
+noFiles = "Select a PDF to check it."
 pickFile = "แสดงผลลัพธ์สำหรับ"
-submit = "ตรวจสอบการช่วยการเข้าถึง"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "ข้อความแสดงแทน"
@@ -3286,10 +3417,17 @@ structure = "แท็กบอกโปรแกรมอ่านหน้า�
 [checkAccessibility.checks]
 label = "{{passed}} จาก {{total}} รายการผ่าน"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "ไม่สามารถสร้างรายงานการช่วยการเข้าถึงได้ โปรดลองอีกครั้ง."
 fileTitle = "ไม่สามารถตรวจสอบไฟล์นี้ได้"
 partial = "ไม่สามารถตรวจสอบไฟล์บางไฟล์ได้."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "ระบุ PDF/UA"
@@ -3312,6 +3450,21 @@ title = "ไฟล์มีชื่อเรื่องในข้อมู�
 [checkAccessibility.figures]
 summary_one = "{{count}} รูปภาพต้องมีคำอธิบาย (หน้า {{pages}})"
 summary_other = "{{count}} รูปภาพต้องมีคำอธิบาย (หน้า {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "ใช้กับ"
@@ -3465,19 +3618,7 @@ checking = "กำลังตรวจสอบ {{current}} จาก {{total}}
 complete = "ตรวจสอบเสร็จสิ้น"
 
 [checkAccessibility.steps]
-results = "ผลลัพธ์"
 standard = "มาตรฐาน"
-
-[checkAccessibility.tooltip.header]
-title = "ตรวจสอบตามมาตรฐานใด"
-
-[checkAccessibility.tooltip.ua1]
-text = "เวอร์ชันแรกของ PDF/UA เผยแพร่ปี 2012 เป็น ISO 14289-1 สำหรับไฟล์ PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "เวอร์ชันใหม่กว่า เผยแพร่ปี 2024 เป็น ISO 14289-2 สำหรับไฟล์ PDF 2.0 ไฟล์ PDF 1.7 ที่ตรวจตามนี้จะไม่ผ่านกฎที่ใช้เฉพาะกับ PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "คำอธิบายประกอบ {{n}}"
@@ -3868,6 +4009,7 @@ title = "เลือกสี"
 transparent = "โปร่งใส"
 
 [common]
+aboutField = "About {{field}}"
 actions = "การดำเนินการ"
 back = "ย้อนกลับ"
 cancel = "ยกเลิก"
@@ -4206,7 +4348,9 @@ title = "รีเฟรช API Keys"
 warning = "⚠️ คำเตือน: การดำเนินการนี้จะสร้างคีย์ API ใหม่และทำให้คีย์ก่อนหน้าใช้ไม่ได้"
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) ช่วยให้ AI assistants เช่น Claude ใช้เครื่องมือ Stirling PDF ของคุณได้โดยตรง เชื่อมต่อ client เพียงครั้งเดียว แล้วผู้ช่วยของคุณจะสามารถแปลง แก้ไข รักษาความปลอดภัย และประมวลผลเอกสารในนามของคุณได้"
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "ผู้ใช้ Guest ไม่สามารถเชื่อมต่อ MCP clients ได้ สร้างบัญชีเพื่อใช้ MCP server และให้ AI assistant ของคุณรันเครื่องมือ Stirling PDF ในนามของคุณ"
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "คัดลอก {{label}}"
 tooltipCopied = "คัดลอก {{label}} แล้ว"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "MCP endpoint ของคุณ"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "เพิ่มไปยัง"
 hint = "เลือก client ของคุณ วาง snippet ลงในไฟล์ที่แสดง แล้วรีสตาร์ท คุณจะลงชื่อเข้าใช้ด้วยบัญชี Stirling ของคุณเมื่อใช้งานครั้งแรก - ไม่ต้องคัดลอก keys"
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "เชื่อมต่อ AI assistant ของคุณ"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "รักษาอัตราส่วนภาพ"
 maxAttachmentSize = "ขนาดไฟล์แนบสูงสุด (MB)"
 multiple = "หลายรายการ"
 optimizeForEbook = "ปรับ PDF ให้เหมาะกับเครื่องอ่าน ebook (ใช้ Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "ผลลัพธ์"
-outputFormat = "รูปแบบผลลัพธ์"
-pdfaAccessibleFormat = "{{format}} (เข้าถึงได้)"
-pdfaDigitalSignatureWarning = "PDF มีลายเซ็นดิจิทัล ซึ่งจะถูกลบในขั้นตอนถัดไป"
-pdfaNote = "PDF/A-1b เข้ากันได้มากกว่า, PDF/A-2b รองรับฟีเจอร์มากกว่า, PDF/A-3b รองรับไฟล์ฝัง"
-pdfaOptions = "ตัวเลือก PDF/A"
 pdfOptions = "ตัวเลือก PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "การตั้งค่า"
 signInToUse = "ลงชื่อเข้าใช้เพื่อใช้งาน"
 single = "เดี่ยว"
 sourceFormatPlaceholder = "รูปแบบต้นทาง"
-strictMode = "โหมดเข้มงวด"
-strictModeDesc = "เกิดข้อผิดพลาดหากการแปลงไม่สมบูรณ์แบบ (ใช้การตรวจสอบ VeraPDF)"
 svgPdfOptions = "ตัวเลือก SVG to PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "ไฟล์ SVG จะแสดงผลเป็นกราฟิกเวกเตอร์เพื่อให้คมชัดในทุกความละเอียด ขนาดจาก SVG จะกำหนดขนาดหน้า PDF"
@@ -4396,9 +4549,7 @@ zoomLevel = "ระดับการซูม"
 
 [convert.ebookOptions]
 includePageNumbers = "ใส่หมายเลขหน้า"
-includePageNumbersDesc = "เพิ่มหมายเลขหน้าลงใน PDF ที่สร้าง"
 includeTableOfContents = "รวมสารบัญ"
-includeTableOfContentsDesc = "เพิ่มสารบัญที่สร้างขึ้นไปยัง PDF ที่ได้"
 optimizeForEbookPdf = "ปรับให้เหมาะกับเครื่องอ่าน eBook"
 optimizeForEbookPdfDesc = "ปรับ PDF ให้เหมาะกับการอ่าน eBook (ขนาดไฟล์เล็กลง แสดงผลดีกว่าบนอุปกรณ์ eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "ตรวจจับบท"
 detectChaptersDesc = "ตรวจจับหัวข้อที่เหมือนเป็นบท และแทรกตัวแบ่งหน้า EPUB"
 kindleEink = "Kindle e-Ink (ปรับเหมาะสำหรับข้อความ)"
 outputFormat = "รูปแบบเอาต์พุต"
-outputFormatDesc = "เลือกรูปแบบเอาต์พุตสำหรับ eBook"
 tabletPhone = "แท็บเล็ต/โทรศัพท์ (พร้อมรูปภาพ)"
 targetDevice = "อุปกรณ์เป้าหมาย"
 targetDeviceDesc = "เลือกโปรไฟล์เอาต์พุตที่ปรับให้เหมาะกับอุปกรณ์อ่าน"
@@ -4469,8 +4619,24 @@ description = "cookies เหล่านี้จำเป็นต่อกา
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "ชื่อหน้าปก"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "ไฟล์ที่เลือกทุกไฟล์จะถูกเก็บไว้ครบถ้วนภายใน PDF ใหม่ ไม่ว่าจะเป็นประเภทใดก็ตาม โปรแกรมอ่านที่ไม่รองรับพอร์ตโฟลิโอจะแสดงหน้าปกพร้อมไฟล์ที่แนบมา"
 goToFileEditor = "ไปที่ตัวแก้ไขไฟล์"
@@ -4488,6 +4654,9 @@ title = "สิ่งที่ทำ"
 
 [createPortfolio.tooltip.header]
 title = "เกี่ยวกับ PDF Portfolios"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "ครอบตัดช่องว่างอัตโนมัติ"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "เบราว์เซอร์นี้ไม่ร�
 export = "ส่งออกที่คั่นหน้า"
 exportClipboard = "คัดลอก JSON ไปยังคลิปบอร์ด"
 exportJson = "ดาวน์โหลด JSON"
+exportMenu = "Export"
 importClipboard = "วาง JSON จากคลิปบอร์ด"
 importJson = "นำเข้า JSON"
+importMenu = "Import"
 loadFromPdf = "โหลดจาก PDF ที่เลือก"
 noFile = "เลือก PDF เพื่อดึงที่คั่นหน้าที่มีอยู่"
 selectedFile = "โหลดจาก {{file}}"
-source = "โหลดที่คั่นหน้า"
 
 [editTableOfContents.editor]
 addTopLevel = "เพิ่มที่คั่นหน้าระดับบนสุด"
@@ -4740,6 +4910,9 @@ replaceExisting = "แทนที่ที่คั่นหน้าที่�
 replaceExistingHint = "เมื่อปิดใช้งาน โครงร่างใหม่จะถูกเพิ่มต่อท้ายหลังที่คั่นหน้าปัจจุบัน"
 title = "ที่คั่นหน้าและโครงร่าง"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "เปลี่ยน PDF"
 filePrompt = "เลือก PDF จากไลบรารีของคุณหรืออัปโหลดใหม่เพื่อเริ่ม"
@@ -4753,7 +4926,6 @@ title = "เปิดเครื่องมือเพื่อเริ่�
 [encryptedPdfUnlock]
 actionIgnored = "ข้อจำกัด {{action}} ถูกละเว้น"
 actionUnlocked = "ปลดล็อก {{action}} สำหรับเซสชันนี้แล้ว"
-advanced = "ขั้นสูง"
 allowed = "อนุญาต"
 annotations = "คำอธิบายประกอบ"
 authoriseAction = "PDF นี้ต้องได้รับสิทธิ์เพื่อใช้ {{action}}"
@@ -4801,7 +4973,6 @@ restricted = "ถูกจำกัด"
 restrictedActions = "การดำเนินการที่ถูกจำกัด"
 restrictedOperation = "การดำเนินการนี้ต้องใช้รหัสผ่านสิทธิ์"
 retainOwnerVerification = "ตรวจสอบรหัสผ่านสิทธิ์เพื่อคงไว้ไม่เปลี่ยนแปลงขณะลบรหัสผ่านสำหรับเปิด การดำเนินการนี้จะไม่ลบรหัสผ่านสิทธิ์"
-saveProtection = "บันทึกการป้องกัน"
 securityChangeFailed = "ไม่สามารถเปลี่ยนการป้องกันได้ ตรวจสอบรหัสผ่านสิทธิ์และการตั้งค่าความปลอดภัยใหม่"
 sessionDetails = "เปิดสำหรับเซสชันนี้ PDF ยังคงได้รับการป้องกัน"
 sessionDetailsLabel = "เกี่ยวกับการปลดล็อกเซสชัน"
@@ -4871,7 +5042,6 @@ title = "มีบางอย่างผิดพลาด"
 tryAgain = "ลองอีกครั้ง"
 
 [extractImages]
-allowDuplicates = "บันทึกลายซ้ำ"
 selectText = "เลือกรูปแบบภาพที่จะใช้ในการแปลงรูปภาพที่แยกได้"
 submit = "แยก"
 tags = "รูปภาพ, ภาพ, บันทึก, เก็บถาวร, zip, จับ, รับ"
@@ -4927,12 +5097,15 @@ closeFile = "ปิดไฟล์"
 
 [fileEditor]
 closedFile = "ปิด {{name}} แล้ว"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "จัดลำดับไฟล์ใหม่แล้ว"
 filesReordered_other = "จัดลำดับไฟล์ใหม่ {{count}} ไฟล์แล้ว"
 loadedFromStorage_one = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
 loadedFromStorage_other = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
 loadFromStorageFailed = "โหลดบางไฟล์จากที่เก็บข้อมูลไม่สำเร็จ"
 pinnedFile = "ปักหมุด {{name}} แล้ว"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "บันทึกและปิด {{name}} แล้ว"
 saveFailed = "บันทึกไม่สำเร็จ"
 unpinnedFile = "เลิกปักหมุด {{name}} แล้ว"
@@ -5019,11 +5192,20 @@ locked = "ถูกล็อก"
 previewOf = "ตัวอย่างของ {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "เพิ่มไฟล์"
 created = "สร้างเมื่อ"
 notIncludedInToolRun = "ไม่รวมอยู่ในการเรียกใช้เครื่องมือนี้"
 size = "ขนาดไฟล์"
 title = "ไฟล์"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "ไม่มีไฟล์"
@@ -5104,6 +5286,7 @@ subtitle = "แสดงหรือซ่อนหมวดหมู่ใน�
 title = "หมวดหมู่แถบด้านข้าง"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "ยกเลิก"
 error = "ไม่สามารถเปลี่ยนชื่อไฟล์ได้"
 illegalCharacters = "ชื่อไฟล์ต้องไม่มี \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "ลบฟิลด์"
 
 [formFill.editor]
 action = "การทำงานของปุ่ม"
-actionHelp = "สิ่งที่ปุ่มทำเมื่อถูกคลิก"
 actionNone = "ไม่มี"
 actionPrint = "พิมพ์"
 actionReset = "รีเซ็ตฟอร์ม"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "จำกัดจำนวนอักขระที่ใส
 multiline = "หลายบรรทัด"
 multilineHelp = "อนุญาตให้มีข้อความมากกว่าหนึ่งบรรทัดและตัดบรรทัดที่ขอบฟิลด์"
 multiSelect = "อนุญาตให้เลือกหลายรายการ"
-multiSelectHelp = "ให้เลือกตัวเลือกได้มากกว่าหนึ่งรายการพร้อมกัน"
 name = "ชื่อฟิลด์"
 nameHelp = "ชื่อภายในของฟิลด์ ใช้เมื่อส่งออกข้อมูลหรือกรอกฟอร์มจากระบบอื่น ดังนั้นควรไม่ซ้ำกันและไม่มีช่องว่าง"
 optionGap = "ระยะห่างตัวเลือก"
@@ -5902,6 +6083,11 @@ title = "ปรับสี/คอนทราสต์"
 desc = "ไฮไลต์ วาด เพิ่มโน้ตและรูปร่างในตัวดูเอกสาร"
 tags = "ใส่คำอธิบายประกอบ,ไฮไลต์,วาด,มาร์กอัป,ความคิดเห็น,โน้ต,ตรวจทาน,redline,ข้อเสนอแนะ,เครื่องมือมาร์กอัป,sticky notes,รูปร่าง,ลูกศร,กล่องข้อความ,วาดอิสระ"
 title = "ใส่คำอธิบายประกอบ"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "ตรวจจับช่องฟอร์มโดยอัตโนมัติด้วย AI และทำให้ PDF ของคุณกรอกได้"
@@ -6405,6 +6591,9 @@ sort = "เรียงลำดับ"
 [merge.sortFiles]
 title = "จัดเรียงไฟล์"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "ภาพรวมการตั้งค่าการรวม"
 
@@ -6548,6 +6737,9 @@ title = "ยืนยันตัวตนล้มเหลว"
 message = "คุณสามารถปิดหน้าต่างนี้และกลับไปที่ Stirling PDF"
 title = "ยืนยันตัวตนสำเร็จ"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "อนุญาตการเข้าถึง"
 approving = "กำลังอนุญาต..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "กำลังพาคุณกลับไปยังแอป..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} ต้องการเข้าถึงบัญชี Stirling PDF ของคุณ"
 scopesIntro = "สิ่งนี้จะอนุญาตให้ {{app}}:"
 signedInAs = "ลงชื่อเข้าใช้เป็น {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "ลงชื่อเข้าใช้เพื่อดำเ�
 signInPrompt = "ลงชื่อเข้าใช้บัญชี Stirling PDF ของคุณเพื่อเชื่อมต่อแอปต่อ"
 title = "Authorise access"
 unknownApp = "แอปพลิเคชันของบุคคลที่สาม"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "ดำเนินการในนามคุณ - ทุกสิ่งที่ {{app}} ทำจะทำภายใต้บัญชีของคุณและนับรวมในการใช้งานของคุณ"
@@ -6572,9 +6767,12 @@ tools = "ใช้เครื่องมือ Stirling PDF ของคุณ
 
 [oauthConsent.scope]
 email = "ดูที่อยู่ email ของคุณ"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "ยืนยันตัวตนของคุณ"
 phone = "ดูหมายเลขโทรศัพท์ของคุณ"
 profile = "ดูข้อมูลโปรไฟล์พื้นฐานของคุณ"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "ทำความสะอาดการสแกนและตรวจจับข้อความจากภาพภายใน PDF และเพิ่มเป็นข้อความอีกครั้ง"
@@ -6956,6 +7154,10 @@ yourCloudAccess = "คุณจะกลายเป็นสมาชิกท�
 [pageEdit]
 deselectAll = "ไม่มี"
 selectAll = "เลือกทั้งหมด"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "แยกหน้า"
@@ -7577,6 +7779,8 @@ stamp = "คำอธิบายประกอบแบบตราประ�
 widget = "ช่องฟอร์ม - ไม่ใช่ข้อความบนหน้า จึงแก้ไขที่นี่ไม่ได้"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "แก้ไข"
 markTagged = "ทำเครื่องหมายว่าแท็กครบถ้วน"
 matchScanFont = "จับคู่ข้อความที่สแกนกับ {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "แท็กหน้าอัตโนมัติ"
 typeInto = "พิมพ์ลงใน {{run}}"
 ungroupParagraph = "ยกเลิกการจัดกลุ่มย่อหน้า {{run}}"
 unmarkTagged = "ทำเครื่องหมายว่าแท็กไม่ครบถ้วน"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "ตัดบรรทัด {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "ละทิ้งการเปลี่ยนแปลงที่�
 
 [pdfTextEditor.error]
 decodeImage = "ไม่สามารถถอดรหัสรูปภาพที่เลือกได้"
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "ไม่สามารถทำสำเนาข้อความนี้ได้: ไม่มีฟอนต์ที่ใช้ได้ที่สามารถแสดงอักษรทั้งหมดของมัน"
 formLiftChangesDrawing = "ไม่สามารถแก้ไขรายการนี้ได้: มันถูกวาดเป็นส่วนหนึ่งของกลุ่มที่มีการครอบตัดหรือการตั้งค่ากราฟิกที่ตัวแก้ไขไม่สามารถคงไว้ได้เมื่อแก้ไข"
 insertImage = "ไม่สามารถแทรกรูปภาพที่เลือกได้"
 needsShaping = "ตัวแก้ไขยังไม่สามารถแสดงอักษรต่อเนื่องและสัญลักษณ์สระของสคริปต์นี้ได้อย่างถูกต้อง จึงไม่ได้ทำการเปลี่ยนแปลงนี้"
+reopenLost = "Open again"
 replaceClippedImage = "ไม่สามารถแทนที่รูปภาพนี้ได้: รูปถูกครอบตัดไว้ และรูปที่แทนที่จะทำให้ส่วนที่การครอบตัดซ่อนไว้แสดงขึ้นมา"
 scanOffInk = "ไม่สามารถแก้ไขข้อความนี้: คำที่รู้จำไม่ตรงกับภาพสแกน รัน OCR อีกครั้ง."
 unsafeRtlEdit = "ไม่สามารถทำการแก้ไขนี้ได้: ตัวแก้ไขไม่สามารถวาดข้อความแบบขวาไปซ้ายของบรรทัดนี้ใหม่โดยไม่เปลี่ยนแปลงข้อความ"
@@ -7616,6 +7823,7 @@ pngFileType = "รูปภาพ PNG"
 close = "ปิดแถบค้นหา"
 count = "{{current}} จาก {{total}}"
 findPlaceholder = "ค้นหา"
+hideReplace = "Hide replace"
 ignoreAccents = "ไม่สนใจเครื่องหมายกำกับเสียง"
 matchCase = "ตรงตามตัวพิมพ์ใหญ่เล็ก"
 next = "รายการที่ตรงกันถัดไป"
@@ -7625,6 +7833,7 @@ replace = "แทนที่"
 replaceAll = "แทนที่ทั้งหมด"
 replaced = "แทนที่แล้ว {{count}} รายการ"
 replacePlaceholder = "แทนที่ด้วย"
+showReplace = "Show replace"
 wholeWord = "ทั้งคำ"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "ไม่สามารถแท็กลิงก์นี้
 cannotTagPage = "ไม่สามารถแท็กเนื้อหาของหน้านี้ได้."
 contentGroup = "เนื้อหา"
 customTag = "{{role}} (แท็กกำหนดเอง)"
-decorativeInfo = "โปรแกรมอ่านหน้าจอจะข้ามรูปภาพตกแต่ง ใช้สำหรับเส้นขอบ พื้นหลัง และรูปภาพอื่น ๆ ที่ไม่มีข้อมูล"
-decorativeLabel = "รูปภาพตกแต่ง"
-description = "คำอธิบายรูปภาพ"
-descriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนรูปภาพ"
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "ไม่สามารถแก้ไขแท็กในไฟล์ที่เข้ารหัสได้"
 figureDescription = "คำอธิบายรูปภาพ"
 figureDescriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนรูปภาพ."
-formFieldDescription = "คำอธิบายฟิลด์"
 formulaDescription = "คำอธิบายสูตร"
 formulaDescriptionInfo = "โปรแกรมอ่านหน้าจอจะอ่านข้อความนี้แทนสูตร บรรยายตามที่คุณจะพูดออกเสียง เช่น \"x กำลังสองบวกหนึ่ง\"."
 heading = "การช่วยสำหรับการเข้าถึง"
@@ -7813,7 +8019,6 @@ markedTagged = "เอกสารมีแท็กครบถ้วน"
 markedTaggedHint = "บอกโปรแกรมอ่าน PDF ให้ใช้แท็กการช่วยการเข้าถึง ติ๊กเมื่อทุกอย่างถูกแท็กแล้ว."
 markedWithUntagged = "เนื้อหาบางส่วนไม่มีแท็ก โปรแกรมอ่านหน้าจออาจข้ามไป."
 missingDescriptions = "ไม่มีคำอธิบาย"
-mixedContent = "ภาพประกอบมีเนื้อหาอื่นรวมอยู่ด้วย"
 mixedTags = "ผสม"
 needsDescriptionBadge = "ไม่มีคำอธิบาย"
 nextToReview = "ถัดไปเพื่อตรวจทาน"
@@ -7821,12 +8026,10 @@ notFigure = "ถูกแท็กเป็นส่วนหนึ่งขอ�
 removeTag = "ลบแท็ก"
 saveFailed = "ไม่สามารถบันทึกการเปลี่ยนแปลงการช่วยสำหรับการเข้าถึงของคุณได้ จึงไม่ได้บันทึกไฟล์ ย้อนกลับการเปลี่ยนแปลงแล้วลองอีกครั้ง"
 selectedText = "ข้อความที่เลือก"
-tagFormField = "ติดแท็กฟิลด์แบบฟอร์ม"
 tagging = "การแท็กหน้า"
 tagLabel = "แท็ก"
 tagLinks_one = "แท็กลิงก์"
 tagLinks_other = "แท็ก {{count}} ลิงก์"
-tagUntagged = "แท็กเอกสารอัตโนมัติ"
 tagUntaggedHint = "เพิ่มแท็กการช่วยการเข้าถึงให้ทั่วทั้งเอกสารโดยอัตโนมัติ ผลลัพธ์ยังหยาบ: ตรวจสอบหัวข้อ รายการ และลำดับการอ่านภายหลัง."
 unknownTag = "ไม่สามารถอ่านได้ที่นี่"
 unmarkedWithTags = "โปรแกรมดู PDF บางตัวจะใช้แท็กอยู่ดี และอาจข้ามเนื้อหาที่ไม่มีแท็ก."
@@ -7851,7 +8054,7 @@ heading = "หัวเรื่อง"
 mixedNumbering = "ผสมหัวเรื่องแบบมีหมายเลขและไม่มีหมายเลข"
 none = "ไม่มีหัวเรื่อง"
 onPage = "หัวเรื่องในหน้า {{page}}"
-problems = "ปัญหาเกี่ยวกับหัวเรื่อง"
+problemCount = "{{count}} to fix"
 skippedLevel = "ข้ามระดับหลังจากหัวเรื่อง {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "ชื่อเรื่อง"
 allLanguages = "ทุกภาษา"
 cannotSetDocument = "ไม่สามารถเปลี่ยนภาษาของเอกสารนี้ได้."
 cannotSetText = "ไม่สามารถเปลี่ยนภาษาของข้อความนี้ได้."
-documentHint = "ภาษาที่โปรแกรมอ่านหน้าจอจะใช้ เว้นแต่ส่วนของข้อความจะกำหนดของตัวเอง."
 documentLabel = "ภาษา"
 documentLocked = "ไม่สามารถเปลี่ยนภาษาของเอกสารที่เข้ารหัสได้ที่นี่."
 inDocument = "ในเอกสารนี้"
 innerLabel = "ภาษาแท็ก {{number}}"
 label = "ภาษา"
-missing = "ไม่ได้ตั้งค่าภาษา โปรแกรมอ่านหน้าจอจะคาดเดา และอาจอ่านเอกสารทั้งฉบับด้วยน้ำเสียงที่ไม่ถูกต้อง."
 mixed = "ผสม"
 noMatch = "ไม่มีภาษาที่ตรงกัน ให้พิมพ์รหัสภาษาแทน เช่น mt หรือ en-IE."
 placeholder = "เลือกภาษา"
@@ -7943,6 +8144,52 @@ renderFailed = "เรนเดอร์หน้าไม่สำเร็จ"
 [pdfTextEditor.password]
 incorrect = "รหัสผ่านไม่ถูกต้อง - ลองอีกครั้ง"
 label = "รหัสผ่าน"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "เส้นนำแนวที่ {{value}} {{unit}} - ลากไปยังไม้บรรทัดเพื่อลบ"
@@ -8124,6 +8371,10 @@ title = "ความแตกต่างระหว่างการแส�
 [pdfTextEditor.tooltip.textFocus]
 text = "พื้นที่ทำงานนี้เน้นการแก้ไขข้อความและปรับตำแหน่งรูปภาพที่ฝังไว้ งานกราฟิกของหน้าแบบซับซ้อน วิดเจ็ตฟอร์ม และกราฟิกแบบหลายชั้นจะคงไว้สำหรับการส่งออก แต่ไม่สามารถแก้ไขได้ทั้งหมดที่นี่"
 title = "เน้นข้อความและรูปภาพ"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF เป็น CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "ซ่อนหมวดหมู่"
 labelCount = "ป้ายกำกับ"
 sharedNote = "ป้ายกำกับเหล่านี้มีมาให้ในระบบและแชร์ทั่วทั้งทีมของคุณ"
 showCategory = "แสดงหมวดหมู่"
-
-[policies.pii]
-account = "หมายเลขบัญชี (มีป้ายกำกับ)"
-card = "บัตรเครดิต/เดบิต"
-email = "ที่อยู่อีเมล"
-fieldLabel = "PII ที่จะปกปิด"
-iban = "หมายเลข IBAN"
-phone = "หมายเลขโทรศัพท์"
-placeholder = "เลือกประเภท PII"
-routing = "หมายเลข Routing ของสหรัฐฯ (ABA)"
-ssn = "หมายเลขประกันสังคม"
 
 [policy]
 badgeEnforcing = "{{name}} กำลังบังคับใช้..."
@@ -10317,6 +10557,10 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newCustomPipeline = "Pipeline แบบกำหนดเองใหม่"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Pipeline ทั้งหมด"
 
@@ -12047,7 +12291,6 @@ label = "เครื่องมืออ่าน"
 readAloud = "อ่านออกเสียง"
 rotateLeft = "หมุนซ้าย"
 rotateRight = "หมุนขวา"
-search = "ค้นหาในเอกสาร"
 switchDocument = "สลับเอกสาร"
 thumbnails = "หน้า"
 
@@ -12062,6 +12305,7 @@ colorLabel = "สีกรอบ"
 convertPDFToImageLabel = "แปลง PDF เป็น PDF-Image"
 customPaddingLabel = "ระยะขอบเพิ่มพิเศษแบบกำหนดเอง"
 useRegexLabel = "ใช้ Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "ค้นหาแบบทั้งคำ"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "การตั้งค่าการปกปิด"
 
 [redact.auto.wordsToRedact]
 add = "เพิ่ม"
-examples = "ตัวอย่าง: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "ป้อนคำ"
 title = "คำที่จะปกปิด"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "เลือกไฟล์ในตัวจัด�
 manual = "แมนนวล"
 mode = "โหมด"
 title = "วิธีการปกปิด"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "จับคู่เฉพาะข้อความที่มีตัวพิมพ์เล็ก-ใหญ่เหมือนกันเท่านั้น เมื่อเปิดใช้งาน 'Secret' จะไม่ตรงกับ 'SECRET' และ [A-Z] ใน regex จะจับคู่เฉพาะตัวพิมพ์ใหญ่เท่านั้น"
@@ -12147,19 +12401,6 @@ title = "วิธีการปกปิด"
 text = "คลิกและลากเพื่อเลือกพื้นที่เฉพาะที่ต้องการปกปิดด้วยตนเอง ให้การควบคุมอย่างแม่นยำว่าจะปกปิดสิ่งใด (เร็ว ๆ นี้)"
 title = "การปกปิดแบบแมนนวล"
 
-[redact.tooltip.words]
-bullet1 = "เพิ่มครั้งละหนึ่งคำ"
-bullet2 = "กด Enter หรือคลิก 'เพิ่มอีก' เพื่อเพิ่ม"
-bullet3 = "คลิก × เพื่อลบคำ"
-
-[redact.tooltip.words.description]
-text = "ป้อนคำหรือวลีเพื่อค้นหาและปกปิดในเอกสารของคุณ แต่ละคำจะถูกค้นหาแยกกัน"
-title = "การจับคู่ข้อความ"
-
-[redact.tooltip.words.examples]
-text = "คำที่มักปกปิด ได้แก่ รายละเอียดธนาคาร ที่อยู่อีเมล หรือชื่อเฉพาะ"
-title = "ตัวอย่างที่พบบ่อย"
-
 [redact.tooltip.words.header]
 title = "คำที่จะปกปิด"
 
@@ -12176,15 +12417,6 @@ failed = "เกิดข้อผิดพลาดขณะลบคำอธ�
 
 [removeAnnotations.info]
 description = "เครื่องมือนี้จะลบคำอธิบายประกอบทั้งหมด (ความคิดเห็น ไฮไลต์ บันทึก ฯลฯ) ออกจากเอกสาร PDF ของคุณ"
-
-[removeAnnotations.settings]
-title = "การตั้งค่า"
-
-[removeAnnotations.tooltip.description]
-title = "การทำงาน"
-
-[removeAnnotations.tooltip.header]
-title = "เกี่ยวกับการลบคำอธิบายประกอบ"
 
 [removeBlanks]
 submit = "ลบหน้าว่าง"
@@ -12325,6 +12557,9 @@ tags = "จัดเรียงใหม่,เรียงลำดับใ�
 [reorganizePages.error]
 failed = "ล้มเหลวในการจัดเรียงหน้าขึ้นใหม่"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "จัดเรียงหน้าใหม่แล้ว"
 
@@ -12406,6 +12641,7 @@ title = "กลับสีทั้งหมด"
 rotateLeft = "หมุนทวนเข็มนาฬิกา"
 rotateRight = "หมุนตามเข็มนาฬิกา"
 selectRotation = "เลือกมุมการหมุน (ตามเข็มนาฬิกา)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "ใช้การหมุน"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "หมุน PDF"
@@ -12516,8 +12752,7 @@ title = "ทำให้ปลอดภัย"
 failed = "เกิดข้อผิดพลาดระหว่างการทำให้ PDF ปลอดภัย"
 
 [sanitize.options]
-note = "เลือกองค์ประกอบที่ต้องการลบออกจาก PDF ต้องเลือกอย่างน้อยหนึ่งตัวเลือก"
-title = "ตัวเลือกการทำให้ปลอดภัย"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "ลบไฟล์ที่ฝังไว้ภายใน PDF"
@@ -12649,6 +12884,7 @@ title = "ค้นหาใน PDF"
 hideTools = "ซ่อนเครื่องมือที่ใช้งานไม่ได้ ▴"
 messageNoFallback = "เครื่องมือจะไม่พร้อมใช้งานจนกว่าเซิร์ฟเวอร์ของคุณจะกลับมาออนไลน์"
 messageWithFallback = "เครื่องมือบางอย่างต้องการการเชื่อมต่อกับเซิร์ฟเวอร์"
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "ดูเครื่องมือที่ใช้งานไม่ได้ ▾"
 title = "ไม่สามารถเข้าถึงเซิร์ฟเวอร์ Stirling-PDF ของคุณ"
 toolNotAvailableLocally = "เซิร์ฟเวอร์ Stirling-PDF ของคุณออฟไลน์และ \"{{endpoint}}\" ไม่มีในแบ็กเอนด์ภายในเครื่อง"
@@ -13034,6 +13270,12 @@ title = "แป้นพิมพ์ลัด"
 mac = "ให้มี ⌘ (Command), ⌥ (Option) หรือปุ่มดัดแปลงอื่นในชุดแป้นลัดของคุณ"
 windows = "ให้มี Ctrl, Alt หรือปุ่มดัดแปลงอื่นในชุดแป้นลัดของคุณ"
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "ข้อกำหนด นโยบายความเป็นส่วนตัว และการตั้งค่าคุกกี้ของคุณ"
 label = "กฎหมาย"
@@ -13418,9 +13660,7 @@ image = "อัปโหลด"
 text = "ข้อความ"
 
 [sign.step]
-createDesc = "เลือกวิธีที่ต้องการสร้างลายเซ็น"
 place = "วางและบันทึก"
-placeDesc = "กำหนดตำแหน่งลายเซ็นบน PDF"
 
 [sign.steps]
 configure = "กำหนดค่าลายเซ็น"
@@ -13597,6 +13837,10 @@ rotateLeft = "หมุนซ้าย"
 rotateRight = "หมุนขวา"
 trim = "ตัดขอบให้พอดีกับลายเซ็น"
 trimHint = "ครอบตัดพื้นที่ว่างรอบ ๆ ออก"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "การตั้งค่าลักษณะลายเซ็น"
@@ -13959,7 +14203,6 @@ placeholder = "ป้อนจำนวนการแบ่งแนวนอ�
 
 [split-by-sections.splitMode]
 custom = "หน้ากำหนดเอง"
-description = "เลือกวิธีการแยกหน้า"
 label = "โหมดการแยก"
 splitAll = "แยกทุกหน้า"
 splitAllExceptFirst = "แยกทั้งหมดยกเว้นหน้าแรก"
@@ -14210,10 +14453,8 @@ failed = "เกิดข้อผิดพลาดระหว่างกา�
 
 [timestampPdf.options]
 note = "จะส่งเพียงแฮชแบบ SHA-256 ของเอกสารของคุณไปยังเซิร์ฟเวอร์ TSA; ไฟล์ PDF จะไม่ถูกส่งไปยังเซิร์ฟเวอร์ TSA"
-title = "เซิร์ฟเวอร์การประทับเวลา (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "เลือก Time Stamp Authority ที่เชื่อถือได้"
 label = "เลือกเซิร์ฟเวอร์ TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "ไม่มีเครื่องมือให้ใช้"
 
 [tooltip]
 close = "ปิดคำแนะนำ"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "เครื่องมือนี้จะลบข้อจำกัดอ่านอย่างเดียวจากช่องฟอร์มใน PDF ทำให้สามารถแก้ไขและกรอกได้"
@@ -14706,6 +14961,9 @@ signatureDate = "วันที่ลงนาม"
 
 [validateSignature.settings]
 certHint = "อัปโหลดใบรับรอง X.509 ที่เชื่อถือได้เพื่อใช้ตรวจสอบกับแหล่งความเชื่อถือแบบกำหนดเอง"
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "การตั้งค่าการตรวจสอบ"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "ไม่สามารถแสดงตัวอย่�
 copyRestricted = "การคัดลอกถูกปิดใช้งานโดยสิทธิ์อนุญาตของ PDF นี้"
 copyText = "คัดลอก"
 coverPageView = "แสดงหน้าปกแยกต่างหาก"
-disableColorFilter = "ปิดใช้งานตัวกรองสี"
 documentUpdated = "อัปเดตเอกสารแล้ว"
 dualPageView = "มุมมองสองหน้า"
 editText = "แก้ไขข้อความ"
-enableDarkFilter = "เปิดใช้งานตัวกรองโทนมืด"
-enableSepiaFilter = "เปิดใช้งานตัวกรองเซเปีย"
 engineLoadError = "ไม่สามารถเริ่มต้นเอนจินตัวดู PDF ได้"
 engineSlowWarning = "การเริ่มต้นเอนจิน PDF ใช้เวลานานกว่าที่คาดไว้ โปรดตรวจสอบการตั้งค่า WebAssembly และ Worker ของเบราว์เซอร์ของคุณ หรือโหลดหน้าใหม่"
 firstPage = "หน้าแรก"
@@ -14736,20 +14991,27 @@ fitPage = "พอดีกับหน้า"
 fitWidth = "พอดีกับความกว้าง"
 lastPage = "หน้าสุดท้าย"
 loadingEngine = "กำลังโหลด PDF Engine..."
+menuSelected = "Selected"
 moreOptions = "เพิ่มเติม"
 nextPage = "หน้าถัดไป"
 noPdfProvided = "ไม่ได้ระบุ PDF"
 onlyPdfSupported = "ไม่รองรับรูปแบบไฟล์นี้สำหรับการแสดงตัวอย่าง"
 pageNavigation = "การนำทางหน้า"
+pageNumber = "Page number"
 previousPage = "หน้าก่อนหน้า"
 readAloudFromHere = "อ่านออกเสียงจากตรงนี้"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "ไม่สามารถบันทึกเอกสารได้ โปรดลองอีกครั้ง"
 saveChangesErrorTitle = "ไม่สามารถบันทึกการเปลี่ยนแปลงได้"
 singlePageView = "มุมมองหน้าเดียว"
+tools = "Tools"
 unknownFile = "ไฟล์ไม่รู้จัก"
-view = "มุมมอง"
 zoom = "ซูม"
 zoomIn = "ซูมเข้า"
+zoomLevel = "Zoom level"
 zoomOut = "ซูมออก"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "ตัวอย่างลายเซ็น"
 
 [viewer.signatureField]
 badge = "ลายเซ็น"
+clickToSign = "Click to sign here"
 fieldTitle = "ช่องลายเซ็น: {{name}}"
 signed = "ลงนามแล้ว"
 signedWithReason = "ลงนามแล้ว: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "ช่องลายเซ็นที่ยังไม่ได้ลงนาม: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "กู้คืนไฟล์ {{restored}} จาก {{total}} ไ�
 
 [workbenchBar]
 activeFiles = "ไฟล์ที่ใช้งานอยู่"
-annotations = "คำอธิบายประกอบ"
+annotate = "Annotate"
 applyRedactionsFirst = "ใช้การปกปิดข้อมูลก่อน"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "ปิดไฟล์ทั้งหมด"
 closePdf = "ปิด PDF"
+defaultZoom = "Default zoom"
 deselectAll = "ยกเลิกการเลือกทั้งหมด"
 downloadAll = "ดาวน์โหลดทั้งหมด"
 editText = "แก้ไขข้อความ"
@@ -15100,18 +15367,26 @@ exitAnnotations = "ออกจากโหมดคำอธิบายปร�
 exitRedaction = "ออกจากโหมดปกปิดข้อมูล"
 findReplace = "ค้นหาและแทนที่"
 formFill = "ตัวแก้ไขฟอร์ม"
-hideToolbar = "ซ่อนแถบเครื่องมือ"
+layers = "Layers"
 moreActions = "การดำเนินการเพิ่มเติม"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "ตัวแก้ไขหน้า"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "โหมดเลื่อน"
 print = "พิมพ์ PDF"
 readAloud = "อ่านออกเสียง"
 readAloudLanguage = "ภาษา"
 readAloudSpeed = "ความเร็ว"
 redact = "ปกปิดข้อมูล"
+reviewAccessibility = "Accessibility"
 rotateLeft = "หมุนซ้าย"
 rotateRight = "หมุนขวา"
 ruler = "ไม้บรรทัด / วัดระยะ"
+rulerScaleUnset = "Not set"
 rulerSettings = "การตั้งค่ามาตราส่วน"
 save = "บันทึก"
 saveAll = "บันทึกทั้งหมด"
@@ -15123,14 +15398,23 @@ selectLanguage = "เลือกภาษา"
 share = "แชร์"
 showAllTools = "แสดงเครื่องมือทั้งหมด"
 showFewerTools = "ยุบแถบเครื่องมือ"
-showToolbar = "แสดงแถบเครื่องมือ"
+thumbnails = "Pages"
 toggleAnnotations = "สลับการแสดงคำอธิบายประกอบ"
-toggleAttachments = "สลับไฟล์แนบ"
-toggleBookmarks = "บุ๊กมาร์ก (สารบัญ)"
 toggleComments = "ความคิดเห็น"
-toggleLayers = "สลับเลเยอร์"
-toggleSidebar = "สลับแถบข้าง"
 viewer = "ตัวดู"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "การเข้าถึงเอกสารนี้ของคุณหมดอายุแล้ว."

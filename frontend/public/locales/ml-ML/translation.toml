@@ -12,9 +12,11 @@ comingSoon = "ഉടൻ വരുന്നു"
 confirm = "സ്ഥിരീകരിക്കുക"
 confirmClose = "അടയ്ക്കൽ സ്ഥിരീകരിക്കുക"
 confirmCloseCancel = "റദ്ദാക്കുക"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "ഫയൽ അടയ്ക്കുക"
 confirmCloseDiscard = "മാറ്റങ്ങൾ ഉപേക്ഷിച്ച് അടയ്ക്കുക"
 confirmCloseMessage = "ഈ ഫയൽ അടയ്ക്കണമെന്ന് നിങ്ങൾക്ക് തീർച്ചയാണോ?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "സംരക്ഷിച്ച് അടയ്ക്കുക"
 confirmCloseSaveFailed_one = "പിശകുകളോടെ സംരക്ഷിച്ചു. {{count}} ഫയൽ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല."
 confirmCloseSaveFailed_other = "പിശകുകളോടെ സംരക്ഷിച്ചു. {{count}} ഫയലുകൾ സംരക്ഷിക്കാനായില്ല."
@@ -44,7 +46,6 @@ fileSavedToDisk = "ഫയൽ ഡിസ്കിലേക്ക് സംരക�
 filesSelected = "{{count}} ഫയലുകൾ"
 font = "അക്ഷരം"
 fontSizeTooltip = "പേജ് നമ്പർ ടെക്സ്റ്റിന്റെ പോയിന്റ് സൈസ്. വലിയ നമ്പറുകൾ വലുതായ ടെക്സ്റ്റ് സൃഷ്ടിക്കും."
-fontTypeTooltip = "പേജ് നമ്പറുകളുടെ ഫോണ്ട് കുടുംബം. നിങ്ങളുടെ ഡോക്യുമെന്റിന്റെ ശൈലിയനുസരിച്ച് തിരഞ്ഞെടുക്കുക."
 green = "പച്ച"
 help = "സഹായം"
 incorrectPasswordMessage = "നിലവിലെ പാസ്‌വേഡ് തെറ്റാണ്."
@@ -249,9 +250,7 @@ image = "അപ്‌ലോഡ്"
 text = "ടെക്സ്റ്റ്"
 
 [addImage.step]
-createDesc = "ചേർക്കാൻ ഉദ്ദേശിക്കുന്ന ചിത്രം അപ്‌ലോഡ് ചെയ്യുക"
 place = "ചിത്രം സ്ഥാപിക്കുക"
-placeDesc = "PDF-ൽ ക്ലിക്ക് ചെയ്ത് നിങ്ങളുടെ ചിത്രം ചേർക്കുക"
 
 [addImage.steps]
 configure = "ചിത്രം ക്രമീകരിക്കുക"
@@ -276,7 +275,7 @@ fontName = "അക്ഷരത്തിന്റെ പേര്"
 fontSize = "അക്ഷര വലുപ്പം"
 numberPagesDesc = "ഉദാ., 1,3,5-8 അല്ലെങ്കിൽ എല്ലാ പേജുകൾക്കായി ശൂന്യമാക്കുക"
 pagePreviewAlt = "പേജ് പ്രിവ്യൂ"
-pagesAndStarting = "പേജുകളും ആരംഭ നമ്പറും"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "സ്ഥാനം & പേജുകൾ"
 preview = "സ്ഥാനം തിരഞ്ഞെടുപ്പ്"
 previewDisclaimer = "പ്രിവ്യൂ ഏകദേശമാണ്. PDF ഫോണ്ട് മീട്രിക്‌സിന്റെ കാരണമായി അന്തിമ ഔട്ട്പുട്ട് വ്യത്യാസപ്പെട്ടേക്കാം."
@@ -300,6 +299,7 @@ title = "പേജ് നമ്പർ ഫലങ്ങൾ"
 
 [addPassword]
 desc = "നിങ്ങളുടെ PDF ഡോക്യുമെന്റ് ഒരു പാസ്‌വേഡോടെ എൻക്രിപ്റ്റ് ചെയ്യുക."
+submit = "Add Password"
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,access നിയന്ത്രിക്കുക"
 title = "പാസ്‌വേഡ് ചേർക്കുക"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "സ്റ്റാമ്പ് പ്രിവ്യൂ"
 tags = "സ്റ്റാമ്പ്,അടയാളം,മുദ്ര,അംഗീകരിച്ചു,നിരസിച്ചു,രഹസ്യം,സ്റ്റാമ്പ് ടൂൾ,റബ്ബർ സ്റ്റാമ്പ്,തീയതി സ്റ്റാമ്പ്,അംഗീകാര സ്റ്റാമ്പ്,ലഭിച്ചു,അസാധു,പകർപ്പ്,ഒറിജിനൽ"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "അക്ഷരമാല"
-clickToExpand = "വിപുലീകരിക്കാൻ click ചെയ്യുക"
 customColor = "ഇഷ്ടാനുസൃത ടെക്സ്റ്റ് നിറം"
 customDateDesc = "ഇഷ്ടാനുസൃത format"
 customPosition = "പ്രിവ്യൂ വിൻഡോയിൽ സ്റ്റാമ്പ് ആവശ്യമായ സ്ഥാനത്തേക്ക് ഡ്രാഗ് ചെയ്യുക."
 dateDesc = "നിലവിലെ തീയതി"
 datetimeDesc = "തീയതിയും സമയവും ചേർന്നത്"
 dateTimeVars = "തീയതിയും സമയവും"
-dynamicVariables = "ഡൈനാമിക് വേരിയബിളുകൾ"
 examples = "ഉദാഹരണങ്ങൾ"
 filenameDesc = "Extension ഇല്ലാത്ത Filename"
 filenameFullDesc = "Extension ഉള്ള Filename"
@@ -365,6 +364,8 @@ noStampSelected = "സ്റ്റാമ്പ് ഒന്നും തിര�
 opacity = "അതാര്യത"
 otherVars = "മറ്റ്"
 pageNumberDesc = "നിലവിലെ പേജ് നമ്പർ"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "പേജ് വിവരങ്ങൾ"
 position = "സ്ഥാനം"
 positionAndFormatting = "സ്ഥാനം & ഫോർമാറ്റിംഗ്"
@@ -378,9 +379,10 @@ quickPosition = "സ്റ്റാമ്പ് വയ്ക്കാൻ പേ�
 rotation = "തിരിക്കൽ"
 selectedImageAlt = "തിരഞ്ഞെടുത്ത സ്റ്റാമ്പ് ചിത്രം"
 selectTemplate = "ഒരു template തിരഞ്ഞെടുക്കുക..."
+size = "Size"
 stampSetup = "സ്റ്റാമ്പ് സജ്ജീകരണം"
 stampText = "സ്റ്റാമ്പ് ടെക്സ്റ്റ്"
-stampTextDescription = "താഴെയുള്ള dynamic variables ഉപയോഗിക്കുക. യഥാർത്ഥ @-ന് @@ ഉപയോഗിക്കുക. പുതിയ വരികൾക്ക് \\n ഉപയോഗിക്കുക."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "സ്റ്റാമ്പ് തരം"
 submit = "Stamp ചേർക്കുക"
 tags = "സ്റ്റാമ്പ്, ചിത്രം ചേർക്കുക, ചിത്രം മധ്യത്തിലാക്കുക, വാട്ടർമാർക്ക്, PDF, ഉൾപ്പെടുത്തുക, ഇഷ്ടാനുസൃതമാക്കുക"
@@ -389,7 +391,6 @@ title = "PDF സ്റ്റാമ്പ് ചെയ്യുക"
 totalPagesDesc = "മൊത്തം പേജുകളുടെ എണ്ണം"
 useTemplate = "Template ഉപയോഗിക്കുക"
 uuidDesc = "ചുരുങ്ങിയ unique identifier (8 chars)"
-variablesHelp = "നിങ്ങളുടെ stamp text-ലേക്ക് insert ചെയ്യാൻ ഏതെങ്കിലും variable-ൽ click ചെയ്യുക. യഥാർത്ഥ @-ന് @@ ഉപയോഗിക്കുക."
 yearMonthDayDesc = "വ്യക്തിഗത തീയതി ഭാഗങ്ങൾ"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "PDF-ലേക്ക് സ്റ്റാമ്പ് ചേർക്�
 
 [AddStampRequest.results]
 title = "സ്റ്റാമ്പ് ഫലങ്ങൾ"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "ഇഷ്ടാനുസൃതം"
@@ -410,6 +417,11 @@ legal-footer = "നിയമപരമായ ഫൂട്ടർ"
 page-numbers = "പേജ് നമ്പറുകൾ"
 pageNumberFooter = "പേജ് നമ്പർ ഫൂട്ടർ"
 timestamp = "ടൈംസ്റ്റാമ്പ്"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "ടെക്സ്റ്റ് പ്രയോഗിക്കുക"
@@ -462,9 +474,7 @@ image = "അപ്‌ലോഡ്"
 text = "ടെക്സ്റ്റ്"
 
 [addText.step]
-createDesc = "ചേർക്കാൻ വേണ്ട ടെക്സ്റ്റ് നൽകുക"
 place = "ടെക്സ്റ്റ് സ്ഥാപിക്കുക"
-placeDesc = "നിങ്ങളുടെ ടെക്സ്റ്റ് ചേർക്കാൻ PDF-ൽ ക്ലിക്ക് ചെയ്യുക"
 
 [addText.steps]
 configure = "ടെക്സ്റ്റ് ക്രമീകരിക്കുക"
@@ -1233,6 +1243,18 @@ label = "സ്റ്റാർട്ടപ്പിൽ വീണ്ടും സ
 description = "സർട്ടിഫിക്കറ്റ് പ്രാബല്യത്തിൽ നിൽക്കുന്ന ദിവസങ്ങൾ"
 label = "സർട്ടിഫിക്കറ്റ് പ്രാബല്യം (ദിവസങ്ങൾ)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "folder sources-നും folder outputs-നും വായിക്കാനും എഴുതാനും അനുവദിച്ചിരിക്കുന്ന directories. ഇത് ഒരു security boundary ആണ്: automations ഈ പട്ടികയ്ക്ക് പുറത്തുള്ള server path-ലേക്ക് ഒരിക്കലും പോയിന്റ് ചെയ്യാൻ കഴിയില്ല."
 securityNote = "folder sources-ും outputs-ും പൂർണ്ണമായി പ്രവർത്തനരഹിതമാക്കാൻ ഇത് ശൂന്യമായി വിടുക. Stirling-ന്റെ സ്വന്തം configuration directory എപ്പോഴും off-limits ആണ്."
@@ -1456,7 +1478,9 @@ label = "SMTP യൂസർനെയിം"
 
 [admin.settings.mcp]
 apikeyNote = "Clients X-API-KEY header-ൽ (അല്ലെങ്കിൽ Authorization: Bearer <key>) Stirling API key അയക്കും. Key അതിന്റെ ഉടമയായ Stirling user-ുമായി map ചെയ്യുന്നു - provision ചെയ്ത accounts-ക്കേ പ്രവേശനം ലഭിക്കൂ, actions ആ user ആയി audit ചെയ്യും. Account > API Keys-ൽ keys നിയന്ത്രിക്കുക."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "OAuth-protected endpoint വഴി Stirling-ന്റെ PDF tools-ഉം AI agents-ഉം MCP clients-ക്ക് expose ചെയ്യുക."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "അനുവദിച്ച tools"
 description = "MCP-യിൽ നിന്ന് മറയ്ക്കേണ്ട Operation ids (comma അല്ലെങ്കിൽ space separated), ഉദാ. add-password remove-password. എല്ലാ enabled tools-ഉം expose ചെയ്യാൻ ശൂന്യമാക്കുക."
 label = "തടഞ്ഞ ടൂളുകൾ"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Off ആയിരിക്കുമ്പോൾ (default), /mcp endpoint, metadata, അല്ലെങ്കിൽ MCP beans ഒന്നും load ചെയ്യില്ല."
 label = "MCP Server പ്രവർത്തനക്ഷമമാക്കുക"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "മുകളിലുള്ള നിങ്ങളുടെ OAuth issuer + resource ID നൽകുക, Save ചെയ്യുക, restart ചെയ്യുക."
 step1ApiKey = "Account > API Keys-ൽ ഒരു API key സൃഷ്ടിക്കുക (ഓരോ user-ും സ്വന്തം key ഉപയോഗിക്കുന്നു)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "നിങ്ങളുടെ MCP client-ൽ ഒരു"
 step2b = "server ചേർക്കുക, ഇതിലേക്ക് pointing:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Client OAuth auto-discover ചെയ്യുന്നത് ഇവിടെ നിന്ന്:"
 step3ApiKey = "Key ഒരു"
 step3ApiKeyb = "header-ൽ അയയ്ക്കുക (അല്ലെങ്കിൽ Authorization: Bearer <key>). OAuth അല്ലെങ്കിൽ metadata discovery ഉപയോഗിക്കുന്നില്ല."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Sign-in approve ചെയ്യുക; client token-ുമായി വീണ്ടും ശ്രമിക്കും. Tools ഗ്രൂപ്പുകളായി പ്രത്യക്ഷപ്പെടും: convert, pages, misc, security, ai."
 step4ApiKey = "Tools ഗ്രൂപ്പുകളായി പ്രത്യക്ഷപ്പെടും: convert, pages, misc, security, ai - ഓരോ call-ും key-യുടെ owner ആയി audit ചെയ്യും."
 tip = "Tip: നിങ്ങളുടെ IdP-യിൽ allowed audience ആയി resource ID register ചെയ്യുക. MCP Inspector, Claude Desktop എന്നിവയിൽ tested."
 tipApiKey = "Tip: API-key mode-ന് external IdP ആവശ്യമില്ല - self-host-ന് ഏറ്റവും ലളിതം. Key അതിന്റെ ഉടമയായ Stirling user-ിലേക്ക് map ചെയ്യുന്നു."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "ഒരു MCP client connect ചെയ്യുക"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Issuer-ൽ നിന്ന് auto-discovered"
 
 [admin.settings.mcp.mode]
 apikey = "API key (Stirling ഓരോ-ഉപയോക്തൃ കീ)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth-ന് external IdP ആവശ്യമുണ്ട്. API key ഒരു Stirling per-user API key (X-API-KEY) ഉപയോഗിക്കുന്നു - self-host-ന് ഏറ്റവും ലളിതം."
 label = "ഓതന്റിക്കേഷൻ മോഡ്"
 oauth = "OAuth 2.1 (ബാഹ്യ IdP)"
@@ -1515,6 +1563,18 @@ label = "റിസോഴ്‌സ് ID"
 [admin.settings.mcp.scopes]
 description = "Read ops-ന് mcp.tools.read, write/AI ops-ന് mcp.tools.write ആവശ്യപ്പെടുക."
 label = "OAuth scopes നിർബന്ധമാക്കുക"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "Stirling username-ുമായി പൊരുത്തപ്പെടുത്തുന്ന JWT claim (ഉദാ. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Stirling PDF മെച്ചപ്പെടുത്താൻ സഹാ
 tags = "അനോട്ടേറ്റ്,ഹൈലൈറ്റ്,വരയ്‌ക്കുക,മാർക്കപ്പ്,കമന്റ്,കുറിപ്പുകൾ,റിവ്യൂ,റെഡ്‌ലൈൻ,ഫീഡ്‌ബാക്ക്,മാർക്കപ്പ് ടൂളുകൾ,സ്റ്റിക്കി നോട്ടുകൾ,ആകൃതികൾ,അമ്പുകൾ,ടെക്സ്റ്റ് ബോക്സ്,ഫ്രീഹാൻഡ്"
 
 [annotation]
-alignCenter = "മധ്യത്തിലേക്ക് നിരത്തുക"
-alignLeft = "ഇടത്തേക്ക് നിരത്തുക"
-alignRight = "വലത്തേക്ക് നിരത്തുക"
 annotationStyle = "അനോട്ടേഷൻ ശൈലി"
 backgroundColor = "ബാക്ക്ഗ്രൗണ്ട് നിറം"
 borderOff = "ബോർഡർ: ഓഫ്"
@@ -2016,18 +2073,61 @@ underline = "അടിവര"
 undoDelete = "പൂർവസ്ഥിതിയിലാക്കുക"
 width = "വീതി"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "ഏത് infrastructure-ലും പ്രവർത്തിപ്പിക്കാവുന്ന സൗജന്യ, സ്വകാര്യ PDF editor."
 
 [appBanner]
 dismiss = "ഒഴിവാക്കുക"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Attachments ചേർക്കുക..."
 convertToPdfA3b = "PDF/A-3b ആയി മാറ്റുക"
 convertToPdfA3bTooltip = "PDF/A-3b ദീർഘകാല സംരക്ഷണം ഉറപ്പാക്കുന്ന ഒരു ആർക്കൈവൽ ഫോർമാറ്റാണ്. ഇത് ഇച്ഛാനുസൃത ഫയൽ ഫോർമാറ്റുകൾ അറ്റാച്ച്മെന്റുകളായി ഉൾചേർക്കാൻ അനുവദിക്കുന്നു. പരിവർത്തനത്തിന് Ghostscript ആവശ്യമാണ്, വലിയ ഫയലുകൾക്ക് കൂടുതൽ സമയം വേണ്ടിവരാം."
-convertToPdfA3bTooltipHeader = "PDF/A-3b പരിവർത്തനത്തെക്കുറിച്ച്"
-convertToPdfA3bTooltipTitle = "ഇത് ചെയ്യുന്നത്"
 discardChanges = "ഉപേക്ഷിക്കുക"
 downloadSingle = "Attachment download ചെയ്യുക"
 duplicateName = " '{{name}}' എന്ന പേരിലുള്ള attachment ഇതിനകം നിലവിലുണ്ട്."
@@ -2208,7 +2308,6 @@ guest = "അതിഥി"
 user = "ഉപയോക്താവ്"
 
 [auto-rename]
-description = "നിങ്ങളുടെ PDF ഉള്ളടക്കത്തിൽ നിന്ന് തലക്കെട്ട് സ്വയം കണ്ടെത്തി അത് ഫയൽനാമമായി ഉപയോഗിക്കും."
 submit = "സ്വയം പുനർനാമകരണം ചെയ്യുക"
 tags = "സ്വയം-കണ്ടെത്തുക,തലക്കെട്ട്-അടിസ്ഥാനമാക്കിയുള്ള,ക്രമീകരിക്കുക,പുനർലേബൽ ചെയ്യുക"
 title = "സ്വയം പുനർനാമകരണം ചെയ്യുക"
@@ -2218,21 +2317,6 @@ failed = "PDF സ്വയമേവ പുനർനാമകരണം ചെയ�
 
 [auto-rename.results]
 title = "സ്വയം പുനർനാമകരണം ഫലങ്ങൾ"
-
-[auto-rename.settings]
-title = "കുറിച്ച്"
-
-[auto-rename.tooltip.description]
-title = "ഇത് എന്താണ് ചെയ്യുന്നത്"
-
-[auto-rename.tooltip.header]
-title = "ഓട്ടോ-റിനെയിം എങ്ങനെ പ്രവർത്തിക്കുന്നു"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "തലക്കെട്ടായോ ഹെഡിംഗായോ തോന്നുന്ന ടെക്സ്റ്റ് അന്വേഷിക്കുന്നു"
-bullet2 = "കണ്ടെത്തിയ തലക്കെട്ടിൽ നിന്ന് വൃത്തിയുള്ള, സാധുവായ ഫയൽനാമം സൃഷ്ടിക്കുന്നു"
-bullet3 = "ചിട്ടയായ തലക്കെട്ട് ഒന്നും കണ്ടെത്താനാകാതെയെങ്കിൽ യഥാർത്ഥ പേര് നിലനിർത്തും"
-title = "സ്മാർട്ട് പുനർനാമകരണം"
 
 [autoFormDetection]
 loading = "ഫോം ഫീൽഡുകൾ കണ്ടെത്തുന്നു..."
@@ -2327,6 +2411,9 @@ remove = "ടൂൾ നീക്കംചെയ്യുക"
 selected = "തിരഞ്ഞെടുത്ത ടൂളുകൾ"
 selectTool = "ഒരു ടൂൾ തിരഞ്ഞെടുക്കുക..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "റദ്ദാക്കുക"
 confirm = "തിരികെ പോകുക"
@@ -2360,6 +2447,10 @@ title = "ഓട്ടോമേഷൻ നടത്തുക"
 [automate.selection]
 title = "ഓട്ടോമേഷൻ തിരഞ്ഞെടുക്കൽ"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "പുതിയ ഓട്ടോമേഷൻ സൃഷ്ടിക്കുക"
 
@@ -2371,6 +2462,7 @@ title = "നിർദ്ദേശിച്ചത്"
 
 [automate.sequence]
 finish = "പൂർത്തിയാക്കുക"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "ഓട്ടോമേഷൻ നടത്തുക"
 running = "ഓട്ടോമേഷൻ നടക്കുന്നുണ്ട്..."
 signInToRun = "ഓട്ടോമേഷനുകൾ പ്രവർത്തിപ്പിക്കാൻ സൈൻ ഇൻ ചെയ്യുക."
@@ -2391,7 +2483,6 @@ secureWorkflow = "സുരക്ഷാ വർക്ക്‌ഫ്ലോ"
 secureWorkflowDesc = "JavaScript, എംബെഡഡ് ഫയലുകൾ പോലുള്ള അപകടകരമായ ഉള്ളടക്കം നീക്കംചെയ്ത് PDF ഡോക്യുമെന്റുകൾ സുരക്ഷിതമാക്കുന്നു, പിന്നീട് അനധികൃത പ്രവേശനം തടയാൻ പാസ്‌വേഡ് സംരക്ഷണം ചേർക്കുന്നു. ഡിഫോൾട്ടായി പാസ്‌വേഡ് 'password' ആയി ക്രമീകരിച്ചിരിക്കുന്നു."
 
 [autoRename]
-description = "ഈ ടൂൾ ഉള്ളടക്കത്തെ അടിസ്ഥാനമാക്കി PDF ഫയലുകൾ സ്വയം പുനർനാമകരണം ചെയ്യും. രേഖയിലെ ടെക്സ്റ്റിൽ നിന്ന് ഏറ്റവും അനുയോജ്യമായ ശീർഷകം കണ്ടെത്താൻ ഇത് വിശകലനം ചെയ്യും."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,content പ്രകാരം rename,filename,file naming,title detect ചെയ്യുക"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,വിഭജിക്കുക,പ്രമാണം,സംഘടന
 [autoSplitPDF]
 dividerDownload2 = "'ഓട്ടോ സ്പ്ലിറ്റർ ഡിവൈഡർ (നിർദ്ദേശങ്ങളോടുകൂടി).pdf' ഡൗൺലോഡ് ചെയ്യുക"
 duplexMode = "ഡ്യൂപ്ലെക്സ് മോഡ് (മുന്നിലും പിന്നിലും സ്കാനിംഗ്)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-അടിസ്ഥാനമാക്കിയുള്ള,വേർതിരിക്കുക,സ്കാൻ-സെഗ്മെന്റ്,ക്രമീകരിക്കുക"
 title = "PDF സ്വയം വിഭജിക്കുക"
 
@@ -2528,9 +2620,6 @@ tooltip = "കട്ടിംഗിനും അലൈന്മെന്റി�
 [bookletImposition.addGutter]
 label = "ഗട്ടർ മാർജിൻ ചേർക്കുക"
 tooltip = "ബൈൻഡിംഗിനായി ഉള്ളിലെ മാർജിൻ സ്ഥലം കൂട്ടുന്നു"
-
-[bookletImposition.advanced]
-toggle = "അഡ്വാൻസ്ഡ് ഓപ്ഷനുകൾ"
 
 [bookletImposition.doubleSided]
 label = "ഡബിൾ-സൈഡഡ് പ്രിന്റിംഗ്"
@@ -2714,14 +2803,15 @@ chooseJksFile = "JKS ഫയൽ തിരഞ്ഞെടുക്കുക"
 chooseP12File = "PKCS12 ഫയൽ തിരഞ്ഞെടുക്കുക"
 choosePfxFile = "PFX ഫയൽ തിരഞ്ഞെടുക്കുക"
 choosePrivateKey = "പ്രൈവറ്റ് കീ ഫയൽ തിരഞ്ഞെടുക്കുക"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "നിരസിച്ചു"
 fetchFailed = "സൈൻ ചെയ്യുന്ന ഡാറ്റ ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല"
 finalized = "അന്തിമീകരിച്ചു"
 location = "സ്ഥലം"
-logoTitle = "ലോഗോ"
-name = "പേര്"
-noLogo = "ലോഗോ ഇല്ല"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "പേജ് നമ്പർ"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "സർട്ടിഫിക്കറ്റ് പാസ്‌വേഡ്"
 passwordOptional = "പാസ്‌വേഡ് ഇല്ലെങ്കിൽ ഒഴിവാക്കുക"
 pemCertificateLabel = "സർട്ടിഫിക്കറ്റ് (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "സ്വകാര്യ കീ (.pem / .key)"
 pending = "കാത്തിരിപ്പിൽ"
 readyToFinalize = "അന്തിമീകരിക്കാൻ തയ്യാറാണ്"
 reason = "കാരണം"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "സെർവർ സർട്ടിഫിക്കറ്റ് ഉപയോഗിക്കുന്നു - ഫയലുകളും പാസ്‌വേഡും ആവശ്യമില്ല"
-showLogo = "ലോഗോ കാണിക്കുക"
 signatureProgress = "{{signedCount}}/{{totalCount}} ഒപ്പുകൾ"
 tags = "അംഗീകരിക്കുക,PEM,P12,ഔദ്യോഗികം,എൻക്രിപ്റ്റ്,സൈൻ,സർട്ടിഫിക്കറ്റ്,PKCS12,JKS,സെർവർ,മാനുവൽ,ഓട്ടോ"
 title = "സർട്ടിഫിക്കറ്റ് ഒപ്പിടൽ"
@@ -2738,12 +2828,45 @@ viewed = "കണ്ടു"
 
 [certSign.appearance]
 invisible = "അദൃശ്യ"
+showOnPage = "Show signature on page"
 stepTitle = "ഒപ്പിന്റെ ദൃശ്യരൂപം"
 visibility = "ദൃശ്യത"
 visible = "ദൃശ്യം"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "ഒപ്പിന്റെ വിശദാംശങ്ങൾ"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "ഒപ്പിന്റെ ദൃശ്യരൂപം കുറിച്ച്"
@@ -2762,9 +2885,6 @@ bullet3 = "ഒപ്പ് ഏത് പേജിൽ സ്ഥാപിക്ക
 bullet4 = "ഐച്ഛിക ലോഗോ ഉൾപ്പെടുത്താം"
 text = "നിങ്ങളുടെ പേര്, തീയതി, ഐച്ഛിക വിശദാംശങ്ങൾ എന്നിവയുള്ള ഒപ്പു ബ്ലോക്ക് PDF-ൽ കാണിക്കുന്നു. ഡോക്യുമെന്റ് ഒപ്പിട്ടതാണെന്ന് വായനക്കാർക്കു വ്യക്തമായി കാണണമെന്ന് നിങ്ങൾ ആഗ്രഹിക്കുന്നപ്പോൾ ഉപകാരപ്രദം."
 title = "ദൃശ്യമാകുന്ന ഒപ്പുകൾ"
-
-[certSign.certFiles]
-stepTitle = "സർട്ടിഫിക്കറ്റ് ഫയലുകൾ"
 
 [certSign.certType.tooltip.convert]
 text = "keytool ഉപയോഗിച്ച് നിങ്ങളുടെ ഫയൽ Java keystore (.jks) ആയി മാറ്റി, തുടർന്ന് JKS തിരഞ്ഞെടുക്കുക."
@@ -2786,6 +2906,7 @@ text = "നിങ്ങളുടെ സർട്ടിഫിക്കറ്റ�
 title = "ഞാൻ ഏത് ഓപ്ഷൻ ഉപയോഗിക്കണം?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "സർട്ടിഫിക്കറ്റ് ഫോർമാറ്റ്"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "ഈ ഉപകരണം"
 [certSign.error]
 failed = "സിഗ്നേച്ചറുകൾ പ്രോസസ്സ് ചെയ്യുന്നതിനിടെ ഒരു പിശക് സംഭവിച്ചു."
 
-[certSign.format]
-pkcs11 = "USB ടോക്കൺ"
-windowsStore = "Windows സർട്ടിഫിക്കറ്റ് സ്റ്റോർ"
-
 [certSign.hardware]
-certificate = "സർട്ടിഫിക്കറ്റ്"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "ഇച്ഛാനുസൃത ഡ്രൈവർ പാത്ത്…"
+digitalId = "Digital ID"
 driver = "PKCS#11 ഡ്രൈവർ"
 driverPath = "ഡ്രൈവർ ലൈബ്രറി പാത്ത്"
 driverPathPlaceholder = "നിങ്ങളുടെ PKCS#11 ഡ്രൈവറിലേക്കുള്ള പൂർണ്ണ പാത്ത് (.dll, .so അല്ലെങ്കിൽ .dylib)"
-expired = "കാലഹരണപ്പെട്ടു"
-expires = "കാലഹരണപ്പെടും"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "സർട്ടിഫിക്കറ്റുകൾ പട്ടികപ്പെടുത്തുക"
-loading = "സർട്ടിഫിക്കറ്റുകൾ വായിക്കുന്നു…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "സൈൻ ചെയ്യാനുള്ള സർട്ടിഫിക്കറ്റുകൾ കണ്ടെത്തിയില്ല"
 noDriver = "ഒരു PKCS#11 ഡ്രൈവർ കണ്ടെത്തിയില്ല. നിങ്ങളുടെ ടോക്കണിന്റെ ഡ്രൈവർ (ഉദാ. OpenSC) ഇൻസ്റ്റാൾ ചെയ്ത് ഇത് വീണ്ടും തുറക്കുക - അല്ലെങ്കിൽ താഴെ ഡ്രൈവർ പാത്ത് കൈയോടെ നൽകുക."
-notYetValid = "ഇനിയും സാധുവല്ല"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "ടോക്കൺ PIN"
 pkcs11Hint = "നിങ്ങളുടെ ടോക്കണിന്റെ PKCS#11 ഡ്രൈവർ തിരഞ്ഞെടുക്കുക, PIN നൽകുക, പിന്നെ ടോക്കണിലുള്ള സർട്ടിഫിക്കറ്റുകൾ പട്ടികപ്പെടുത്തുക."
 pkcs11LoadError = "ടോക്കണിലிருந்து സർട്ടിഫിക്കറ്റുകൾ വായിക്കാൻ കഴിഞ്ഞില്ല. PINയും ഡ്രൈവറും പരിശോധന ചെയ്യുക."
-refresh = "പുതുക്കുക"
-selectCert = "സർട്ടിഫിക്കറ്റ് തിരഞ്ഞെടുക്കുക"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "ഡ്രൈവർ തിരഞ്ഞെടുക്കുക"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "സ്ലോട്ട് (ഐച്ഛികം)"
-windowsHint = "നിങ്ങളുടെ Windows സർട്ടിഫിക്കറ്റ് സ്റ്റോറിൽ നിന്ന് ഒരു സർട്ടിഫിക്കറ്റ് തിരഞ്ഞെടുക്കുക. സൈൻ ചെയ്യുന്നതിന് നിങ്ങളുടെ കാർഡ്/ടോക്കണിലെ കീ ഉപയോഗിക്കും - Windows PIN ആവശ്യപ്പെടും."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Windows സർട്ടിഫിക്കറ്റ് സ്റ്റോർ വായിക്കാൻ കഴിഞ്ഞില്ല"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "പൊതു മാർഗ്ഗസൂചന"
 device = "ഈ ഉപകരണം"
 noOtherSources = "മറ്റ് സർട്ടിഫിക്കറ്റ് ഉറവിടങ്ങൾ ലഭ്യമല്ല."
 server = "സെർവർ"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "സർട്ടിഫിക്കറ്റിന്റെ ഉറവിടം"
 upload = "അപ്‌ലോഡ്"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "നിങ്ങളുടെ യൂസർനെയിം അപ്‌ഡേറ്റ് ചെയ്യുക. അപ്‌ഡേറ്റിന് ശേഷം നിങ്ങൾ ലോഗ് ഔട്ട് ചെയ്യപ്പെടും."
@@ -3069,7 +3205,6 @@ placeholder = "ഡോക്യുമെന്റ് സ്രഷ്ടാവ്"
 
 [changeMetadata.customFields]
 add = "ഫീൽഡ് ചേർക്കുക"
-description = "ഡോക്യുമെന്റിൽ ഇച്ഛാനുസൃത മെറ്റാഡേറ്റ ഫീൽഡുകൾ ചേർക്കുക"
 key = "കീ"
 keyPlaceholder = "ഇച്ഛാനുസൃത കീ"
 remove = "നീക്കംചെയ്യുക"
@@ -3135,10 +3270,6 @@ bullet1 = "സൃഷ്ടിച്ച തീയതി: ആദ്യമായി
 bullet2 = "മാറ്റം ചെയ്ത തീയതി: അവസാനമായി മാറ്റം വരുത്തിയ സമയം"
 text = "ഡോക്യുമെന്റ് എപ്പോൾ സൃഷ്ടിച്ചു, എപ്പോൾ മാറ്റം വരുത്തി."
 title = "തീയതി ഫീൽഡുകൾ"
-
-[changeMetadata.tooltip.deleteAll]
-text = "സ്വകാര്യത ഉറപ്പാക്കാൻ പൂർണ്ണമായ മെറ്റാഡേറ്റ ഇല്ലാതാക്കൽ."
-title = "നിലവിലുള്ള മെറ്റാഡേറ്റ നീക്കംചെയ്യുക"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "ശീർഷകം: ഡോക്യുമെന്റ് പേര് അല്ലെങ്കിൽ തലക്കെട്ട്"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "നിങ്ങളുടെ usage limit എത്തി. 
 
 [checkAccessibility]
 aboutRow = "{{label}} ബന്ധപ്പെട്ട്"
-checking = "പരിശോധിക്കുന്നു..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "പ്രവേശനക്ഷമത റിപ്പോർട്ട് ഡൗൺലോഡ് ചെയ്യുക"
 fileFailed = "പരാജയപ്പെട്ടു"
+noFiles = "Select a PDF to check it."
 pickFile = "ഇതിനായുള്ള ഫലങ്ങൾ കാണിക്കുക"
-submit = "പ്രവേശനക്ഷമത പരിശോധിക്കുക"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "പര്യായ വാചകം"
@@ -3286,10 +3417,17 @@ structure = "ടാഗുകൾ പേജിലെ ഓരോ ഭാഗവും 
 [checkAccessibility.checks]
 label = "{{total}} പരിശോധനകളിൽ {{passed}} എണ്ണം പാസായി"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "പ്രവേശനക്ഷമത റിപ്പോർട്ട് സൃഷ്ടിക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക."
 fileTitle = "ഈ ഫയൽ പരിശോധിക്കാൻ കഴിഞ്ഞില്ല"
 partial = "ചില ഫയലുകൾ പരിശോധിക്കാൻ കഴിഞ്ഞില്ല."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA പ്രഖ്യാപിക്കുന്നു"
@@ -3312,6 +3450,21 @@ title = "ഫയലിന്റെ മെറ്റാഡാറ്റയിൽ ഒ
 [checkAccessibility.figures]
 summary_one = "{{count}} ചിത്രം വിവരണം ആവശ്യമുണ്ട് (പേജ് {{pages}})"
 summary_other = "{{count}} ചിത്രങ്ങൾക്ക് വിവരണം ആവശ്യമുണ്ട് (പേജുകൾ {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "പ്രയോഗിക്കുന്നത്"
@@ -3465,19 +3618,7 @@ checking = "{{total}} ൽ {{current}} പരിശോധിക്കുന്ന
 complete = "പരിശോധനം പൂർത്തിയായി"
 
 [checkAccessibility.steps]
-results = "ഫലങ്ങൾ"
 standard = "സ്റ്റാൻഡാർഡ്"
-
-[checkAccessibility.tooltip.header]
-title = "ഏത് സ്റ്റാൻഡാർഡ് പരിശോധിക്കണം"
-
-[checkAccessibility.tooltip.ua1]
-text = "PDF 1.7 ഫയലുകൾക്കുള്ള, 2012-ൽ ISO 14289-1 ആയി പ്രസിദ്ധീകരിച്ച PDF/UA യുടെ ആദ്യ പതിപ്പ്."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "പുതിയ പതിപ്പ്, 2024-ൽ ISO 14289-2 ആയി പ്രസിദ്ധീകരിച്ചത്, PDF 2.0 ഫയലുകൾക്കായി. അതിനെതിരെ പരിശോധിച്ച PDF 1.7 ഫയലുകൾക്ക് PDF 2.0-ക്കു മാത്രം ബാധകമായ നിയമങ്ങളിൽ പരാജയം വരും."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "അനോട്ടേഷൻ {{n}}"
@@ -3868,6 +4009,7 @@ title = "നിറം തിരഞ്ഞെടുക്കുക"
 transparent = "സുതാര്യം"
 
 [common]
+aboutField = "About {{field}}"
 actions = "പ്രവർത്തനങ്ങൾ"
 back = "തിരികെ"
 cancel = "റദ്ദാക്കുക"
@@ -4206,7 +4348,9 @@ title = "API കീകൾ റിഫ്രെഷ് ചെയ്യുക"
 warning = "⚠️ മുന്നറിയിപ്പ്: ഈ പ്രവർത്തനം പുതിയ API കീകൾ സൃഷ്ടിക്കുകയും നിങ്ങളുടെ പഴയ കീകൾ അസാധുവാക്കുകയും ചെയ്യും."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) Claude പോലുള്ള AI assistants-നെ നിങ്ങളുടെ Stirling PDF tools നേരിട്ട് ഉപയോഗിക്കാൻ അനുവദിക്കുന്നു. ഒരു client ഒരിക്കൽ connect ചെയ്താൽ നിങ്ങളുടെ assistant നിങ്ങളുടെ പേരിൽ documents convert, edit, secure, process ചെയ്യാം."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Guest users-ക്ക് MCP clients connect ചെയ്യാൻ കഴിയില്ല. MCP server ഉപയോഗിക്കാനും നിങ്ങളുടെ AI assistant-നെ നിങ്ങളുടെ പേരിൽ Stirling PDF tools run ചെയ്യാൻ അനുവദിക്കാനും account സൃഷ്ടിക്കുക."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "{{label}} copy ചെയ്യുക"
 tooltipCopied = "{{label}} പകർത്തി"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "നിങ്ങളുടെ MCP endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "ഇതിലേക്ക് ചേർക്കുക"
 hint = "നിങ്ങളുടെ client തിരഞ്ഞെടുക്കുക, snippet കാണിച്ചിരിക്കുന്ന file-ലേക്ക് paste ചെയ്യുക, പിന്നെ restart ചെയ്യുക. ആദ്യ ഉപയോഗത്തിൽ Stirling account ഉപയോഗിച്ച് sign in ചെയ്യും - copy ചെയ്യാൻ keys ഇല്ല."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "നിങ്ങളുടെ AI assistant connect ചെയ്യുക"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "അസ്പെക്റ്റ് അനുപാതം �
 maxAttachmentSize = "പരമാവധി അറ്റാച്ച്മെന്റ് വലുപ്പം (MB)"
 multiple = "പല"
 optimizeForEbook = "ഇബുക്ക് റീഡറുകൾക്കായി PDF ഓപ്റ്റിമൈസ് ചെയ്യുക (Ghostscript ഉപയോഗിക്കുന്നു)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "ഔട്ട്പുട്ട്"
-outputFormat = "ഔട്ട്പുട്ട് ഫോർമാറ്റ്"
-pdfaAccessibleFormat = "{{format}} (ആക്സസ് ചെയ്യാവുന്നത്)"
-pdfaDigitalSignatureWarning = "ഈ PDF-ൽ ഡിജിറ്റൽ ഒപ്പ് ഉണ്ട്. ഇത് അടുത്ത ഘട്ടത്തിൽ നീക്കം ചെയ്യപ്പെടും."
-pdfaNote = "PDF/A-1b കൂടുതൽ compatible ആണ്, PDF/A-2b കൂടുതൽ features പിന്തുണയ്ക്കുന്നു, PDF/A-3b embedded files പിന്തുണയ്ക്കുന്നു."
-pdfaOptions = "PDF/A ഓപ്ഷനുകൾ"
 pdfOptions = "PDF ഓപ്ഷനുകൾ"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "ക്രമീകരണങ്ങൾ"
 signInToUse = "ഉപയോഗിക്കാൻ സൈൻ ഇൻ ചെയ്യുക"
 single = "ഒറ്റ"
 sourceFormatPlaceholder = "ഉറവിട ഫോർമാറ്റ്"
-strictMode = "കർശന മോഡ്"
-strictModeDesc = "Conversion perfect അല്ലെങ്കിൽ error (VeraPDF verification ഉപയോഗിക്കുന്നു)"
 svgPdfOptions = "SVG to PDF ഓപ്ഷനുകൾ"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "ഏത് resolution-ലും വ്യക്തമായ output ലഭിക്കാൻ SVG files vector graphics ആയി render ചെയ്യുന്നു. SVG-യിലെ dimensions PDF page size നിർണ്ണയിക്കുന്നു."
@@ -4396,9 +4549,7 @@ zoomLevel = "സൂം ലെവൽ"
 
 [convert.ebookOptions]
 includePageNumbers = "പേജ് നമ്പറുകൾ ഉൾപ്പെടുത്തുക"
-includePageNumbersDesc = "സൃഷ്ടിച്ച PDF-ൽ പേജ് നമ്പറുകൾ ചേർക്കുക"
 includeTableOfContents = "വിഷയ സൂചി ഉൾപ്പെടുത്തുക"
-includeTableOfContentsDesc = "ഫലം ലഭിക്കുന്ന PDF-ൽ സൃഷ്ടിച്ച വിഷയം സൂചിക ചേർക്കുക"
 optimizeForEbookPdf = "eBook റീഡറുകൾക്കായി ഒപ്റ്റിമൈസ് ചെയ്യുക"
 optimizeForEbookPdfDesc = "eBook വായനയ്ക്ക് PDF ഒപ്റ്റിമൈസ് ചെയ്യുക (ചെറുതായ ഫയൽ വലിപ്പം, eInk ഉപകരണങ്ങളിൽ മെച്ചപ്പെട്ട റെൻഡറിംഗ്)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "അധ്യായങ്ങൾ കണ്ടെത്തുക"
 detectChaptersDesc = "അധ്യായങ്ങളായി തോന്നുന്ന തലക്കെട്ടുകൾ കണ്ടെത്തി EPUB പേജ് ബ്രേക്കുകൾ ചേർക്കുക"
 kindleEink = "Kindle e-Ink (ടെക്സ്റ്റ് ഒപ്റ്റിമൈസ്ഡ്)"
 outputFormat = "ഔട്ട്പുട്ട് ഫോർമാറ്റ്"
-outputFormatDesc = "eBook-ന്റെ ഔട്ട്പുട്ട് ഫോർമാറ്റ് തിരഞ്ഞെടുക്കുക"
 tabletPhone = "ടാബ്ലെറ്റ്/ഫോൺ (ചിത്രങ്ങളോടെ)"
 targetDevice = "ലക്ഷ്യ ഉപകരണം"
 targetDeviceDesc = "റീഡർ ഉപകരണത്തിന് ഒപ്റ്റിമൈസ് ചെയ്ത ഔട്ട്പുട്ട് പ്രൊഫൈൽ തിരഞ്ഞെടുക്കുക"
@@ -4469,8 +4619,24 @@ description = "Website ശരിയായി പ്രവർത്തിക്�
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "കവർ പേജ് തലക്കെട്ട്"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "തിരഞ്ഞെടുത്ത ഓരോ ഫയലും അതിന്റെ തരം എന്തായാലും പുതിയ PDF-നുള്ളിൽ പൂർണ്ണമായി സൂക്ഷിക്കും. Portfolios പിന്തുണയ്ക്കാത്ത readers attached files ഉള്ള cover page കാണിക്കും."
 goToFileEditor = "File editor-ലേക്ക് പോകുക"
@@ -4488,6 +4654,9 @@ title = "ഇത് എന്ത് ചെയ്യുന്നു"
 
 [createPortfolio.tooltip.header]
 title = "PDF Portfolios കുറിച്ച്"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "ശൂന്യസ്ഥലം സ്വയം ക്രോപ്പ് ചെയ്യുക"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "ഈ ബ്രൗസറിൽ ക്ലിപ്പ്ബ
 export = "ബുക്ക്‌മാർക്കുകൾ എക്സ്പോർട്ട് ചെയ്യുക"
 exportClipboard = "JSON ക്ലിപ്പ്ബോർഡിലേക്ക് കോപ്പി ചെയ്യുക"
 exportJson = "JSON ഡൗൺലോഡ് ചെയ്യുക"
+exportMenu = "Export"
 importClipboard = "ക്ലിപ്പ്ബോർഡിൽ നിന്ന് JSON പേസ്റ്റ് ചെയ്യുക"
 importJson = "JSON ഇംപോർട്ട് ചെയ്യുക"
+importMenu = "Import"
 loadFromPdf = "തിരഞ്ഞെടുത്ത PDF-യിൽ നിന്ന് ലോഡ് ചെയ്യുക"
 noFile = "നിലവിലുള്ള ബുക്ക്‌മാർക്കുകൾ എടുക്കാൻ ഒരു PDF തിരഞ്ഞെടുക്കുക."
 selectedFile = "{{file}}-യിൽ നിന്ന് ലോഡ് ചെയ്തു"
-source = "ബുക്ക്‌മാർക്കുകൾ ലോഡ് ചെയ്യുക"
 
 [editTableOfContents.editor]
 addTopLevel = "മുകളിൽ-തല ബുക്ക്‌മാർക്ക് ചേർക്കുക"
@@ -4740,6 +4910,9 @@ replaceExisting = "നിലവിലുള്ള ബുക്ക്‌മാർ
 replaceExistingHint = "പ്രവർത്തനരഹിതമാക്കിയാൽ, പുതിയ ഔട്ട്‌ലൈൻ നിലവിലുള്ള ബുക്ക്‌മാർക്കുകൾക്ക് ശേഷം അപ്പെൻഡ് ചെയ്യും."
 title = "ബുക്ക്‌മാർക്കുകളും ഔട്ട്‌ലൈൻ"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "PDF മാറ്റുക"
 filePrompt = "തുടങ്ങാൻ നിങ്ങളുടെ ലൈബ്രറിയിൽ നിന്ന് ഒരു PDF തിരഞ്ഞെടുക്കുക അല്ലെങ്കിൽ പുതിയത് അപ്‌ലോഡ് ചെയ്യുക."
@@ -4753,7 +4926,6 @@ title = "എഡിറ്റിങ്ങ് ആരംഭിക്കാൻ ടൂ
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} നിയന്ത്രണം അവഗണിച്ചു"
 actionUnlocked = "ഈ സെഷനായി {{action}} അൺലോക്ക് ചെയ്തു"
-advanced = "അഡ്വാൻസ്ഡ്"
 allowed = "അനുവദിച്ചു"
 annotations = "അനോട്ടേഷനുകൾ"
 authoriseAction = "{{action}} ഉപയോഗിക്കാൻ ഈ PDF-ന് അനുമതി ആവശ്യമാണ്."
@@ -4801,7 +4973,6 @@ restricted = "നിയന്ത്രിതം"
 restrictedActions = "നിയന്ത്രിത പ്രവർത്തനങ്ങൾ"
 restrictedOperation = "ഈ പ്രവർത്തനത്തിന് അനുമതികളുടെ പാസ്‌വേഡ് ആവശ്യമാണ്."
 retainOwnerVerification = "തുറക്കാനുള്ള പാസ്‌വേഡ് നീക്കംചെയ്യുമ്പോൾ അനുമതികളുടെ പാസ്‌വേഡ് മാറ്റമില്ലാതെ നിലനിർത്താൻ അത് പരിശോധിക്കുക. ഇത് അത് നീക്കംചെയ്യില്ല."
-saveProtection = "സംരക്ഷണം സംരക്ഷിക്കുക"
 securityChangeFailed = "സംരക്ഷണം മാറ്റാനായില്ല. അനുമതികളുടെ പാസ്‌വേഡും പുതിയ സുരക്ഷാ ക്രമീകരണങ്ങളും പരിശോധിക്കുക."
 sessionDetails = "ഈ സെഷനായി തുറന്നിരിക്കുന്നു. PDF സംരക്ഷിതമായിത്തന്നെ തുടരുന്നു."
 sessionDetailsLabel = "സെഷൻ അൺലോക്കിംഗിനെക്കുറിച്ച്"
@@ -4871,7 +5042,6 @@ title = "എന്തോ തെറ്റായി"
 tryAgain = "വീണ്ടും ശ്രമിക്കുക"
 
 [extractImages]
-allowDuplicates = "തനിപ്പകർപ്പ് ചിത്രങ്ങൾ സംരക്ഷിക്കുക"
 selectText = "വേർതിരിച്ചെടുത്ത ചിത്രങ്ങൾ പരിവർത്തനം ചെയ്യേണ്ട ഇമേജ് ഫോർമാറ്റ് തിരഞ്ഞെടുക്കുക"
 submit = "വേർതിരിച്ചെടുക്കുക"
 tags = "ചിത്രം,ഫോട്ടോ,സംരക്ഷിക്കുക,ആർക്കൈവ്,സിപ്പ്,പിടിച്ചെടുക്കുക,നേടുക"
@@ -4927,12 +5097,15 @@ closeFile = "ഫയൽ അടയ്ക്കുക"
 
 [fileEditor]
 closedFile = "{{name}} അടച്ചു"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "ഫയൽ പുനഃക്രമീകരിച്ചു"
 filesReordered_other = "{{count}} ഫയലുകൾ പുനഃക്രമീകരിച്ചു"
 loadedFromStorage_one = "സ്റ്റോറേജിൽ നിന്ന് {{count}} ഫയൽ ലോഡ് ചെയ്തു"
 loadedFromStorage_other = "സ്റ്റോറേജിൽ നിന്ന് {{count}} ഫയലുകൾ ലോഡ് ചെയ്തു"
 loadFromStorageFailed = "സ്റ്റോറേജിൽ നിന്ന് ചില ഫയലുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 pinnedFile = "{{name}} പിൻ ചെയ്തു"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} സംരക്ഷിച്ച് അടച്ചു"
 saveFailed = "സംരക്ഷണം പരാജയപ്പെട്ടു"
 unpinnedFile = "{{name}} പിൻ ഒഴിവാക്കി"
@@ -5019,11 +5192,20 @@ locked = "ലോക്ക് ചെയ്‌തു"
 previewOf = "{{name}}-ന്റെ പ്രിവ്യൂ"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "ഫയലുകൾ ചേർക്കുക"
 created = "സൃഷ്ടിച്ചത്"
 notIncludedInToolRun = "ഈ ടൂൾ റണ്ണിൽ ഉൾപ്പെടുത്തിയിട്ടില്ല"
 size = "ഫയൽ വലുപ്പം"
 title = "ഫയലുകൾ"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "ഫയലുകളൊന്നും ലഭ്യമല്ല"
@@ -5104,6 +5286,7 @@ subtitle = "ഫയൽ സൈഡ്‌ബാറിലെ വിഭാഗങ്ങ
 title = "സൈഡ്‌ബാർ വിഭാഗങ്ങൾ"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "റദ്ദാക്കുക"
 error = "ഫയലിന്റെ പേര് മാറ്റാൻ കഴിഞ്ഞില്ല."
 illegalCharacters = "ഫയൽ പേരിൽ \\ / : * ? \" < > | ഉൾപ്പെടരുത്"
@@ -5607,7 +5790,6 @@ removeField = "ഫീൽഡ് നീക്കംചെയ്യുക"
 
 [formFill.editor]
 action = "ബട്ടൺ പ്രവർത്തനം"
-actionHelp = "ക്ലിക്ക് ചെയ്യുമ്പോൾ ബട്ടൺ ചെയ്യുന്നത്."
 actionNone = "ഒന്നുമില്ല"
 actionPrint = "പ്രിന്റ് ചെയ്യുക"
 actionReset = "ഫോം റീസെറ്റ് ചെയ്യുക"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "എത്ര അക്ഷരങ്ങൾ ഉൾക്കൊള�
 multiline = "ഒന്നിലധികം വരികൾ"
 multilineHelp = "ഒന്നിൽ കൂടുതൽ ടെക്സ്റ്റ് വരികൾ അനുവദിക്കുകയും ഫീൽഡിന്റെ അരികിൽ വരി മടക്കുകയും ചെയ്യുന്നു."
 multiSelect = "ഒന്നിലധികം തിരഞ്ഞെടുക്കൽ അനുവദിക്കുക"
-multiSelectHelp = "ഒരേ സമയം ഒന്നിൽ കൂടുതൽ ഓപ്ഷനുകൾ തിരഞ്ഞെടുക്കാൻ അനുവദിക്കുന്നു."
 name = "ഫീൽഡ് പേര്"
 nameHelp = "ഫീൽഡിന്റെ ആന്തരിക പേര്. ഡാറ്റ എക്സ്പോർട്ട് ചെയ്യുമ്പോഴോ മറ്റൊരു സിസ്റ്റത്തിൽ നിന്ന് ഫോം പൂരിപ്പിക്കുമ്പോഴോ ഉപയോഗിക്കുന്നു, അതിനാൽ ഇത് സവിശേഷവും സ്പേസുകളില്ലാത്തതുമാക്കുക."
 optionGap = "ഓപ്ഷൻ ഇടവേള"
@@ -5902,6 +6083,11 @@ title = "നിറങ്ങൾ/കോൺട്രാസ്റ്റ് ക്ര
 desc = "വ്യൂവറിൽ ഹൈലൈറ്റ് ചെയ്യുക, വരയ്ക്കുക, കുറിപ്പുകളും രൂപങ്ങളും ചേർക്കുക"
 tags = "അനോട്ടേറ്റ്,ഹൈലൈറ്റ്,വരയ്‌ക്കുക,മാർക്കപ്പ്,കമന്റ്,കുറിപ്പുകൾ,റിവ്യൂ,റെഡ്‌ലൈൻ,ഫീഡ്‌ബാക്ക്,മാർക്കപ്പ് ടൂളുകൾ,സ്റ്റിക്കി നോട്ടുകൾ,ആകൃതികൾ,അമ്പുകൾ,ടെക്സ്റ്റ് ബോക്സ്,ഫ്രീഹാൻഡ്"
 title = "അനോട്ടേറ്റ്"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "AI ഉപയോഗിച്ച് ഫോം ഫീൽഡുകൾ സ്വയം കണ്ടെത്തി നിങ്ങളുടെ PDF പൂരിപ്പിക്കാവുന്നതാക്കുക."
@@ -6405,6 +6591,9 @@ sort = "സോർട്ട്"
 [merge.sortFiles]
 title = "ഫയലുകൾ ക്രമീകരിക്കുക"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "മർജ് സെറ്റിങ്ങുകളുടെ അവലോകനം"
 
@@ -6548,6 +6737,9 @@ title = "ഓതന്റിക്കേഷൻ പരാജയപ്പെട്�
 message = "ഈ വിൻഡോ അടച്ച് Stirling PDF-ലേക്ക് മടങ്ങാം."
 title = "ഓതന്റിക്കേഷൻ വിജയകരം"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "ആക്‌സസ് അനുവദിക്കുക"
 approving = "അനുവദിക്കുന്നു..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "നിങ്ങളെ app-ലേക്ക് തിരികെ കൊണ്ടുപോകുന്നു..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} നിങ്ങളുടെ Stirling PDF അക്കൗണ്ടിലേക്ക് ആക്‌സസ് ആഗ്രഹിക്കുന്നു"
 scopesIntro = "ഇത് {{app}}-നെ ഇനിപ്പറയുന്നതിന് അനുവദിക്കും:"
 signedInAs = "{{name}} ആയി സൈൻ ഇൻ ചെയ്തു"
@@ -6565,6 +6758,8 @@ signInButton = "തുടരാൻ സൈൻ ഇൻ ചെയ്യുക"
 signInPrompt = "app കണക്റ്റുചെയ്യുന്നത് തുടരാൻ നിങ്ങളുടെ Stirling PDF അക്കൗണ്ടിലേക്ക് സൈൻ ഇൻ ചെയ്യുക."
 title = "Authorise access"
 unknownApp = "ഒരു third-party application"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "നിങ്ങളെ പോലെ പ്രവർത്തിക്കുക - {{app}} ചെയ്യുന്നതെല്ലാം നിങ്ങളുടെ അക്കൗണ്ടിന് കീഴിൽ പ്രവർത്തിക്കുകയും നിങ്ങളുടെ ഉപയോഗത്തിൽ ഉൾപ്പെടുകയും ചെയ്യും"
@@ -6572,9 +6767,12 @@ tools = "നിങ്ങൾക്ക് വേണ്ടി നിങ്ങളു
 
 [oauthConsent.scope]
 email = "നിങ്ങളുടെ email address കാണുക"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "നിങ്ങളുടെ തിരിച്ചറിയൽ സ്ഥിരീകരിക്കുക"
 phone = "നിങ്ങളുടെ phone number കാണുക"
 profile = "നിങ്ങളുടെ അടിസ്ഥാന profile വിവരങ്ങൾ കാണുക"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "സ്കാൻ ചെയ്ത പേജുകൾ ശുചിയാക്കി PDF-ലുള്ള ചിത്രങ്ങളിൽ നിന്ന് വാചകം കണ്ടെത്തി അത് വീണ്ടും ടെക്സ്റ്റായി ചേർക്കുന്നു."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "നിങ്ങൾ ടീം അംഗമാകും, ഉട
 [pageEdit]
 deselectAll = "ഒന്നുമില്ല"
 selectAll = "എല്ലാം തിരഞ്ഞെടുക്കുക"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "പേജുകൾ വേർതിരിച്ചെടുക്കുക"
@@ -7577,6 +7779,8 @@ stamp = "Stamp annotation - പേജ് ടെക്സ്റ്റ് അല�
 widget = "ഫോം ഫീൽഡ് - പേജ് ടെക്സ്റ്റ് അല്ല, അതിനാൽ ഇവിടെ എഡിറ്റ് ചെയ്യാനാകില്ല"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "എഡിറ്റ് ചെയ്യുക"
 markTagged = "പൂർണ്ണമായി ടാഗ് ചെയ്തതായി മാർക്ക് ചെയ്യുക"
 matchScanFont = "സ്കാൻ ചെയ്ത ടെക്സ്റ്റ് {{face}}-നുമായി പൊരുത്തപ്പെടുത്തുക"
@@ -7590,6 +7794,7 @@ tagPageContent = "പേജ് ഓട്ടോ-ടാഗ് ചെയ്യു�
 typeInto = "{{run}}-ൽ type ചെയ്യുക"
 ungroupParagraph = "Paragraph {{run}} ungroup ചെയ്യുക"
 unmarkTagged = "പൂർണ്ണമായി ടാഗ് ചെയ്തതായി മാർക്ക് നീക്കുക"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "{{run}} wrap ചെയ്യുക"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "സേവ് ചെയ്യാത്ത മാറ്റങ്ങൾ �
 
 [pdfTextEditor.error]
 decodeImage = "തിരഞ്ഞെടുത്ത ചിത്രം ഡീകോഡ് ചെയ്യാനായില്ല."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "ഈ ടെക്സ്റ്റ് പകർത്താനാകില്ല: ലഭ്യമായ ഫോണ്ടുകളിൽ ഒന്നും ഇതിലെ എല്ലാ അക്ഷരങ്ങളും വരയ്ക്കാൻ കഴിയുന്നില്ല."
 formLiftChangesDrawing = "ഇത് എഡിറ്റ് ചെയ്യാനാകില്ല: ഇത് ഒരു ഗ്രൂപ്പിന്റെ ഭാഗമായാണ് വരച്ചിരിക്കുന്നത്; മാറ്റുമ്പോൾ അതിന്റെ ക്ലിപ്പിംഗ് അല്ലെങ്കിൽ ഗ്രാഫിക്സ് ക്രമീകരണങ്ങൾ എഡിറ്റർ നിലനിർത്താൻ കഴിയില്ല."
 insertImage = "തിരഞ്ഞെടുത്ത ചിത്രം ചേർക്കാനായില്ല."
 needsShaping = "ഈ ലിപിയിലെ ചേർന്ന അക്ഷരങ്ങളും സ്വരചിഹ്നങ്ങളും ശരിയായി വരയ്ക്കാൻ എഡിറ്ററിന് ഇനിയും സാധിക്കില്ല, അതിനാൽ ഈ മാറ്റം നടപ്പാക്കിയില്ല."
+reopenLost = "Open again"
 replaceClippedImage = "ഈ ചിത്രം മാറ്റിസ്ഥാപിക്കാനാകില്ല: ഇത് ക്രോപ്പ് ചെയ്തതാണ്, പുതിയ ചിത്രം ക്രോപ്പ് മറച്ച ഭാഗങ്ങൾ കാണിക്കും."
 scanOffInk = "ഈ ടെക്സ്റ്റ് എഡിറ്റ് ചെയ്യാനാകില്ല: തിരിച്ചറിഞ്ഞ വാക്കുകൾ സ്‌കാനുമായി പൊരുത്തപ്പെടുന്നില്ല. OCR വീണ്ടും പ്രവർത്തിപ്പിക്കുക."
 unsafeRtlEdit = "ഈ എഡിറ്റ് നടത്താനാകില്ല: ഈ വരിയിലെ വലത്തു നിന്ന് ഇടത്തേയ്ക്ക് ഉള്ള വാചകം മാറ്റമില്ലാതെ വീണ്ടും വരയ്ക്കാൻ എഡിറ്ററിന് കഴിയില്ല."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG ചിത്രം"
 close = "കണ്ടെത്തൽ ബാർ അടയ്ക്കുക"
 count = "{{total}}ൽ {{current}}"
 findPlaceholder = "കണ്ടെത്തുക"
+hideReplace = "Hide replace"
 ignoreAccents = "ആക്സന്റുകൾ അവഗണിക്കുക"
 matchCase = "കേസ് പൊരുത്തപ്പെടുത്തുക"
 next = "അടുത്ത പൊരുത്തം"
@@ -7625,6 +7833,7 @@ replace = "മാറ്റിസ്ഥാപിക്കുക"
 replaceAll = "എല്ലാം മാറ്റിസ്ഥാപിക്കുക"
 replaced = "{{count}} മാറ്റിസ്ഥാപിച്ചു"
 replacePlaceholder = "ഇതോടെ മാറ്റിസ്ഥാപിക്കുക"
+showReplace = "Show replace"
 wholeWord = "മുഴുവൻ വാക്ക്"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "ഈ ലിങ്ക് ടാഗ് ചെയ്യാനാക
 cannotTagPage = "ഈ പേജിന്റെ ഉള്ളടക്കം ടാഗ് ചെയ്യാനാകില്ല."
 contentGroup = "ഉള്ളടക്കം"
 customTag = "{{role}} (ഇഷ്ടാനുസൃത ടാഗ്)"
-decorativeInfo = "സ്ക്രീൻ റീഡറുകൾ അലങ്കാര ചിത്രങ്ങൾ ഒഴിവാക്കുന്നു. അതിരുകൾ, പശ്ചാത്തലങ്ങൾ, വിവരങ്ങളൊന്നും നൽകാത്ത മറ്റ് ചിത്രങ്ങൾ എന്നിവയ്‌ക്ക് ഇത് ഉപയോഗിക്കുക."
-decorativeLabel = "അലങ്കാര ചിത്രം"
-description = "ചിത്ര വിവരണം"
-descriptionInfo = "സ്ക്രീൻ റീഡറുകൾ ചിത്രത്തിന് പകരം ഇത് വായിക്കും."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "എൻക്രിപ്റ്റ് ചെയ്ത ഫയലിൽ ടാഗുകൾ എഡിറ്റ് ചെയ്യാൻ കഴിയില്ല"
 figureDescription = "ചിത്രത്തിന്റെ വിവരണം"
 figureDescriptionInfo = "സ്ക്രീൻ റീഡറുകൾ ചിത്രത്തിനുപകരം ഇത് വായിക്കും."
-formFieldDescription = "ഫീൽഡ് വിവരണം"
 formulaDescription = "സൂത്രത്തിന്റെ വിവരണം"
 formulaDescriptionInfo = "സ്ക്രീൻ റീഡറുകൾ സൂത്രത്തിനുപകരം ഇത് വായിക്കും. നിങ്ങൾ ശബ്ദമായി പറയുന്നതുപോലെ എഴുതുക; ഉദാഹരണത്തിന്, “x ന്റെ വർഗം പ്ലസ് ഒന്ന്”."
 heading = "പ്രവേശനക്ഷമത"
@@ -7813,7 +8019,6 @@ markedTagged = "ഡോക്യുമെന്റ് പൂർണ്ണമായ
 markedTaggedHint = "PDF റീഡറുകൾ പ്രവേശനക്ഷമത ടാഗുകൾ ഉപയോഗിക്കണമെന്ന് പറയുന്നു. എല്ലാം ടാഗ് ചെയ്ത് കഴിഞ്ഞാൽ ടിക്ക് ചെയ്യുക."
 markedWithUntagged = "ചില ഉള്ളടക്കങ്ങൾക്ക് ടാഗുകൾ ഇല്ല, അതിനാൽ സ്ക്രീൻ റീഡറുകൾ അവ ഒഴിവാക്കാം."
 missingDescriptions = "വിവരണങ്ങൾ ഇല്ല"
-mixedContent = "ഫിഗറിൽ മറ്റ് ഉള്ളടക്കം ഉൾപ്പെടുന്നു"
 mixedTags = "മിശ്രിതം"
 needsDescriptionBadge = "വിവരണം ഇല്ല"
 nextToReview = "അവലോകനത്തിനുള്ള അടുത്തത്"
@@ -7821,12 +8026,10 @@ notFigure = "ടെക്സ്റ്റിന്റെ ഭാഗമായി �
 removeTag = "ടാഗ് നീക്കം ചെയ്യുക"
 saveFailed = "നിങ്ങളുടെ പ്രവേശനക്ഷമത മാറ്റങ്ങൾ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല, അതിനാൽ ഫയൽ സംരക്ഷിച്ചില്ല. അവ പഴയപടിയാക്കി വീണ്ടും ശ്രമിക്കുക."
 selectedText = "തിരഞ്ഞെടുത്ത ടെക്സ്റ്റ്"
-tagFormField = "ഫോം ഫീൽഡ് ടാഗ് ചെയ്യുക"
 tagging = "പേജുകൾ ടാഗ് ചെയ്യുന്നു"
 tagLabel = "ടാഗ്"
 tagLinks_one = "ലിങ്ക് ടാഗ് ചെയ്യുക"
 tagLinks_other = "{{count}} ലിങ്കുകൾ ടാഗ് ചെയ്യുക"
-tagUntagged = "ഡോക്യുമെന്റ് ഓട്ടോ-ടാഗ് ചെയ്യുക"
 tagUntaggedHint = "ഡോക്യുമെന്റിന് മുഴുവൻ പ്രവേശനക്ഷമത ടാഗുകൾ സ്വയമേവ ചേർക്കുന്നു. ഫലം ഏകദേശമാണ്: പിന്നാലെ തലക്കെട്ടുകൾ, ലിസ്റ്റുകൾ, വായനാക്രമം എന്നിവ പരിശോധിക്കുക."
 unknownTag = "ഇവിടെ വായിക്കാൻ കഴിയില്ല"
 unmarkedWithTags = "ചില PDF വ്യൂവറുകൾ എങ്കിലും ടാഗുകൾ ഉപയോഗിക്കും, ടാഗില്ലാത്ത ഉള്ളടക്കം ഒഴിവാക്കാം."
@@ -7851,7 +8054,7 @@ heading = "തലക്കെട്ടുകൾ"
 mixedNumbering = "നമ്പർ ചെയ്തതും നമ്പർ ചെയ്യാത്തതുമായ തലക്കെട്ടുകൾ കലർത്തുന്നു"
 none = "തലക്കെട്ടുകളില്ല"
 onPage = "പേജ് {{page}}-ലെ തലക്കെട്ട്"
-problems = "തലക്കെട്ട് പ്രശ്നങ്ങൾ"
+problemCount = "{{count}} to fix"
 skippedLevel = "തലക്കെട്ട് {{previous}}-ന് ശേഷം ഒരു ലെവൽ ഒഴിവാക്കുന്നു"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "ശീർഷകം"
 allLanguages = "എല്ലാ ഭാഷകളും"
 cannotSetDocument = "ഈ ഡോക്യുമെന്റിന്റെ ഭാഷ മാറ്റാനാവില്ല."
 cannotSetText = "ഈ ടെക്സ്റ്റിന്റെ ഭാഷ മാറ്റാനാകില്ല."
-documentHint = "ഒരു ഭാഗം സ്വന്തം ഭാഷ സജ്ജമാക്കുന്നില്ലെങ്കിൽ സ്ക്രീൻ റീഡറുകൾ ഉപയോഗിക്കുന്ന ഭാഷ."
 documentLabel = "ഭാഷ"
 documentLocked = "എൻക്രിപ്റ്റ് ചെയ്ത ഡോക്യുമെന്റിന്റെ ഭാഷ ഇവിടെ മാറ്റാനാകില്ല."
 inDocument = "ഈ ഡോക്യുമെന്റിൽ"
 innerLabel = "ടാഗ് {{number}}-ന്റെ ഭാഷ"
 label = "ഭാഷ"
-missing = "ഭാഷ സജ്ജമാക്കിയിട്ടില്ല. സ്ക്രീൻ റീഡറുകൾ അനുമാനിക്കും, മുഴുവൻ ഡോക്യുമെന്റ് തെറ്റായ ശബ്ദത്തിൽ വായിച്ചേക്കാം."
 mixed = "മിശ്രിതം"
 noMatch = "ഒത്ത ഭാഷയില്ല. പകരം അതിന്റെ കോഡ് ടൈപ്പ് ചെയ്യുക, ഉദാ: mt അല്ലെങ്കിൽ en-IE."
 placeholder = "ഭാഷ തിരഞ്ഞെടുക്കുക"
@@ -7943,6 +8144,52 @@ renderFailed = "പേജ് റെൻഡർ ചെയ്യാൻ പരാജ�
 [pdfTextEditor.password]
 incorrect = "തെറ്റായ പാസ്‌വേഡ് - വീണ്ടും ശ്രമിക്കുക."
 label = "പാസ്‌വേഡ്"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}}ൽ alignment guide - നീക്കംചെയ്യാൻ rulerലേക്ക് വലിച്ചിടുക"
@@ -8124,6 +8371,10 @@ title = "പ്രിവ്യൂ വ്യത്യാസങ്ങൾ"
 [pdfTextEditor.tooltip.textFocus]
 text = "ഈ വർക്‌സ്‌പേസ് ടെക്സ്റ്റ് എഡിറ്റിംഗിലും എംബെഡുചെയ്ത ചിത്രങ്ങളുടെ സ്ഥാനമാറ്റത്തിലും ശ്രദ്ധ കേന്ദ്രീകരിക്കുന്നു. സങ്കീർണ്ണമായ പേജ് ആർട്ട്‌വർക്ക്, ഫോം വിഡ്ജറ്റുകൾ, ലെയേർഡ് ഗ്രാഫിക്സ് എന്നിവ എക്സ്പോർട്ടിനായി നിലനിർത്തും, പക്ഷേ ഇവിടെ പൂർണ്ണമായി എഡിറ്റ് ചെയ്യാനാകില്ല."
 title = "ടെക്സ്റ്റും ചിത്രവും കേന്ദ്രീകരിക്കുന്നത്"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF CSV-ലേക്ക്"
@@ -8383,17 +8634,6 @@ hideCategory = "category മറയ്ക്കുക"
 labelCount = "ലേബലുകൾ"
 sharedNote = "ഈ labels built in ആണ്, നിങ്ങളുടെ മുഴുവൻ team-ലും പങ്കിടുന്നു."
 showCategory = "category കാണിക്കുക"
-
-[policies.pii]
-account = "അക്കൗണ്ട് നമ്പറുകൾ (ലേബൽ ചെയ്തവ)"
-card = "ക്രെഡിറ്റ് / ഡെബിറ്റ് കാർഡുകൾ"
-email = "ഇമെയിൽ വിലാസങ്ങൾ"
-fieldLabel = "Redact ചെയ്യേണ്ട PII"
-iban = "IBAN നമ്പറുകൾ"
-phone = "ഫോൺ നമ്പറുകൾ"
-placeholder = "PII types തിരഞ്ഞെടുക്കുക"
-routing = "US റൂട്ടിങ് നമ്പറുകൾ (ABA)"
-ssn = "സോഷ്യൽ സെക്യൂരിറ്റി നമ്പറുകൾ"
 
 [policy]
 badgeEnforcing = "{{name}} നടപ്പിലാക്കുന്നു..."
@@ -10317,6 +10557,10 @@ title = "പൈപ്പ്‌ലൈനുകൾ"
 [portal.pipelines.actions]
 newCustomPipeline = "പുതിയ custom pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "എല്ലാ Pipelines"
 
@@ -12047,7 +12291,6 @@ label = "വായന ഉപകരണങ്ങൾ"
 readAloud = "ഉച്ചത്തിൽ വായിക്കുക"
 rotateLeft = "ഇടത്തേക്ക് തിരിക്കുക"
 rotateRight = "വലത്തേക്ക് തിരിക്കുക"
-search = "പ്രമാണത്തിൽ കണ്ടെത്തുക"
 switchDocument = "പ്രമാണം മാറ്റുക"
 thumbnails = "പേജുകൾ"
 
@@ -12062,6 +12305,7 @@ colorLabel = "ബോക്സ് നിറം"
 convertPDFToImageLabel = "PDF-നെ PDF-Image ആയി മാറ്റുക"
 customPaddingLabel = "കസ്റ്റം അധിക പാഡിംഗ്"
 useRegexLabel = "Regex ഉപയോഗിക്കുക"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "പൂർണ്ണ വാക്ക് തിരയൽ"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "റിഡാക്ഷൻ സെറ്റിങ്ങുകൾ"
 
 [redact.auto.wordsToRedact]
 add = "ചേർക്കുക"
-examples = "ഉദാഹരണങ്ങൾ: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "ഒരു വാക്ക് നൽകുക"
 title = "റിഡാക്റ്റ് ചെയ്യേണ്ട വാക്കുകൾ"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "ഒരുമിച്ചു ഒന്നിലധി
 manual = "മാനുവൽ"
 mode = "മോഡ്"
 title = "റിഡാക്ഷൻ രീതി"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "അതേ കേസിലുള്ള ടെക്സ്റ്റ് മാത്രം പൊരുത്തപ്പെടുത്തുക. പ്രവർത്തനക്ഷമമാക്കിയാൽ 'Secret' എന്നത് 'SECRET' എന്നതുമായി പൊരുത്തപ്പെടില്ല, കൂടാതെ regex-ലെ [A-Z] വലിയക്ഷരങ്ങളുമായി മാത്രം പൊരുത്തപ്പെടും."
@@ -12147,19 +12401,6 @@ title = "റിഡാക്ഷൻ രീതി"
 text = "കൈയോടെ നിർദ്ദിഷ്ട പ്രദേശങ്ങൾ തിരഞ്ഞെടുക്കാൻ ക്ലിക്ക് ചെയ്ത് ഡ്രാഗ് ചെയ്യുക. എന്താണ് റിഡാക്റ്റ് ചെയ്യപ്പെടുന്നത് എന്നതിൽ കൃത്യമായ നിയന്ത്രണം നൽകുന്നു. (ഉടൻ വരുന്നു)"
 title = "മാനുവൽ റിഡാക്ഷൻ"
 
-[redact.tooltip.words]
-bullet1 = "ഒരു സമയം ഒരു വാക്ക് ചേർക്കുക"
-bullet2 = "ചേർക്കാൻ Enter അമർത്തുക അല്ലെങ്കിൽ 'Add Another' ക്ലിക്ക് ചെയ്യുക"
-bullet3 = "വാക്കുകൾ നീക്കാൻ × ക്ലിക്ക് ചെയ്യുക"
-
-[redact.tooltip.words.description]
-text = "നിങ്ങളുടെ ഡോക്യുമെന്റിൽ കണ്ടെത്തി റിഡാക്റ്റ് ചെയ്യേണ്ട വാക്കുകളോ വാക്യങ്ങളോ നൽകുക. ഓരോ വാക്കും വേർതിരിച്ച് തിരയപ്പെടും."
-title = "ടെക്സ്റ്റ് മാച്ചിംഗ്"
-
-[redact.tooltip.words.examples]
-text = "സാധാരണയായി റിഡാക്റ്റ് ചെയ്യുന്നത്: ബാങ്ക് വിവരങ്ങൾ, ഇമെയിൽ വിലാസങ്ങൾ, അല്ലെങ്കിൽ പ്രത്യേക പേരുകൾ."
-title = "സാധാരണ ഉദാഹരണങ്ങൾ"
-
 [redact.tooltip.words.header]
 title = "റിഡാക്റ്റ് ചെയ്യേണ്ട വാക്കുകൾ"
 
@@ -12176,15 +12417,6 @@ failed = "PDF-ിൽ നിന്ന് അനോട്ടേഷനുകൾ ന
 
 [removeAnnotations.info]
 description = "ഈ ടൂൾ നിങ്ങളുടെ PDF ഡോക്യുമെന്റുകളിൽ നിന്ന് എല്ലാ അനോട്ടേഷനുകളും (കമന്റുകൾ, ഹൈലൈറ്റുകൾ, കുറിപ്പുകൾ മുതലായവ) നീക്കംചെയ്യും."
-
-[removeAnnotations.settings]
-title = "ക്രമീകരണങ്ങൾ"
-
-[removeAnnotations.tooltip.description]
-title = "ഇത് എന്താണ് ചെയ്യുന്നത്"
-
-[removeAnnotations.tooltip.header]
-title = "Remove Annotations കുറിച്ച്"
 
 [removeBlanks]
 submit = "ശൂന്യ പേജുകൾ നീക്കംചെയ്യുക"
@@ -12325,6 +12557,9 @@ tags = "പുനഃക്രമീകരിക്കുക,ക്രമം മ�
 [reorganizePages.error]
 failed = "പേജുകൾ പുനഃസംഘടിപ്പിക്കാൻ പരാജയപ്പെട്ടു"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "പേജുകൾ പുനഃസംഘടിപ്പിച്ചു"
 
@@ -12406,6 +12641,7 @@ title = "എല്ലാ നിറങ്ങളും ഇൻവേർട്ട്
 rotateLeft = "ആന്റി-ക്ലോക്ക്വൈസ് തിരിക്കുക"
 rotateRight = "ക്ലോക്ക്വൈസ് തിരിക്കുക"
 selectRotation = "റോട്ടേഷൻ ആംഗിൾ തിരഞ്ഞെടുക്കുക (ക്ലോക്ക്വൈസ്)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Rotation പ്രയോഗിക്കുക"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "PDF തിരിക്കുക"
@@ -12516,8 +12752,7 @@ title = "സാനിറ്റൈസ്"
 failed = "PDF സാനിറ്റൈസ് ചെയ്യുന്നതിനിടെ പിശക് സംഭവിച്ചു."
 
 [sanitize.options]
-note = "PDF-യിൽ നിന്ന് നീക്കം ചെയ്യാൻ ആഗ്രഹിക്കുന്ന ഘടകങ്ങൾ തിരഞ്ഞെടുക്കുക. കുറഞ്ഞത് ഒരു ഓപ്‌ഷൻ എങ്കിലും തിരഞ്ഞെടുക്കണം."
-title = "സാനിറ്റൈസേഷൻ ഓപ്ഷനുകൾ"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "PDFയ്ക്കുള്ളിൽ എംബെഡ് ചെയ്തിരിക്കുന്ന ഏതൊരു ഫയലുകളും നീക്കംചെയ്യുക"
@@ -12649,6 +12884,7 @@ title = "PDF തിരയുക"
 hideTools = "ലഭ്യമല്ലാത്ത ഉപകരണങ്ങൾ മറയ്ക്കുക ▴"
 messageNoFallback = "നിങ്ങളുടെ സെർവർ ഓൺലൈനാകുന്നതുവരെ ഉപകരണങ്ങൾ ലഭ്യമല്ല."
 messageWithFallback = "ചില ഉപകരണങ്ങൾക്ക് സെർവർ കണക്ഷൻ ആവശ്യമാണ്."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "ലഭ്യമല്ലാത്ത ഉപകരണങ്ങൾ കാണിക്കുക ▾"
 title = "നിങ്ങളുടെ Stirling-PDF സെർവർ എത്തിച്ചേരാനായില്ല"
 toolNotAvailableLocally = "നിങ്ങളുടെ Stirling-PDF സെർവർ ഓഫ്ലൈനാണ്, കൂടാതെ ലോക്കൽ ബാക്ക്‌എൻഡിൽ \"{{endpoint}}\" ലഭ്യമല്ല."
@@ -13034,6 +13270,12 @@ title = "കീബോർഡ് ഷോർട്ട്‌കട്ടുകൾ"
 mac = "നിങ്ങളുടെ ഷോർട്ട്‌കട്ടിൽ ⌘ (Command), ⌥ (Option) അല്ലെങ്കിൽ മറ്റൊരു മൊഡിഫയർ ഉൾപ്പെടുത്തുക."
 windows = "നിങ്ങളുടെ ഷോർട്ട്‌കട്ടിൽ Ctrl, Alt അല്ലെങ്കിൽ മറ്റൊരു മൊഡിഫയർ ഉൾപ്പെടുത്തുക."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Terms, privacy policy, നിങ്ങളുടെ cookie preferences."
 label = "നിയമപരമായത്"
@@ -13418,9 +13660,7 @@ image = "അപ്‌ലോഡ്"
 text = "ടെക്സ്റ്റ്"
 
 [sign.step]
-createDesc = "ഒപ്പ് എങ്ങനെ സൃഷ്ടിക്കണമെന്ന് തിരഞ്ഞെടുക്കുക"
 place = "സ്ഥാപിച്ച് സേവ് ചെയ്യുക"
-placeDesc = "നിങ്ങളുടെ PDF-ൽ ഒപ്പ് സ്ഥാനം നിശ്ചയിക്കുക"
 
 [sign.steps]
 configure = "ഒപ്പ് ക്രമീകരിക്കുക"
@@ -13597,6 +13837,10 @@ rotateLeft = "ഇടത്തേക്ക് rotate ചെയ്യുക"
 rotateRight = "വലത്തേക്ക് തിരിക്കുക"
 trim = "ഒപ്പിലേക്ക് ട്രിം ചെയ്യുക"
 trimHint = "അതിന്റെ ചുറ്റുമുള്ള ശൂന്യസ്ഥലം ക്രോപ്പ് ചെയ്യുന്നു"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "ഒപ്പിന്റെ രൂപഭാവ ക്രമീകരണങ്ങൾ"
@@ -13959,7 +14203,6 @@ placeholder = "തിരശ്ചീന വിഭജനങ്ങളുടെ എ
 
 [split-by-sections.splitMode]
 custom = "ഇഷ്ടാനുസൃത പേജുകൾ"
-description = "പേജുകൾ എങ്ങനെ വിഭജിക്കണമെന്ന് തിരഞ്ഞെടുക്കുക"
 label = "സ്പ്ലിറ്റ് മോഡ്"
 splitAll = "എല്ലാ പേജുകളും വിഭജിക്കുക"
 splitAllExceptFirst = "ആദ്യത്തെ ഒഴികെ എല്ലാം വിഭജിക്കുക"
@@ -14210,10 +14453,8 @@ failed = "PDF-ന് ടൈംസ്റ്റാംപ് നൽകുന്ന�
 
 [timestampPdf.options]
 note = "നിങ്ങളുടെ ഡോക്യുമെന്റിലെ SHA-256 ഹാഷ് മാത്രമേ TSA സെർവറിലേക്ക് അയക്കൂ; PDF ഫയൽ തന്നെ TSA സെർവറിലേക്ക് ഒരിക്കലും അയക്കില്ല."
-title = "ടൈംസ്റ്റാംപ് സെർവർ (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "വിശ്വസനീയമായ Time Stamp Authority തിരഞ്ഞെടുക്കുക"
 label = "ഒരു TSA സെർവർ തിരഞ്ഞെടുക്കുക"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "ടൂളുകൾ ലഭ്യമല്ല"
 
 [tooltip]
 close = "ടൂൾടിപ്പ് അടയ്ക്കുക"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "ഈ ടൂൾ PDF ഫോമിലെ read-only നിയന്ത്രണങ്ങൾ നീക്കം ചെയ്ത് അവ എഡിറ്റുചെയ്യാവുന്നതും പൂരിപ്പിക്കാവുന്നതുമാക്കും."
@@ -14706,6 +14961,9 @@ signatureDate = "ഒപ്പ് തീയതി"
 
 [validateSignature.settings]
 certHint = "കസ്റ്റം ട്രസ്റ്റ് സോഴ്‌സിനോടു താരതമ്യം ചെയ്ത് പരിശോധിക്കാൻ വിശ്വസനീയമായ X.509 സർട്ടിഫിക്കറ്റ് അപ്‌ലോഡ് ചെയ്യുക."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "സ്ഥിരീകരണ സെറ്റിങ്ങുകൾ"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "ഫയൽ പ്രിവ്യൂ ചെയ്യാൻ �
 copyRestricted = "ഈ PDF-ന്റെ അനുമതികൾ പ്രകാരം പകർത്തൽ പ്രവർത്തനരഹിതമാക്കിയിരിക്കുന്നു."
 copyText = "പകർത്തുക"
 coverPageView = "കവർ പേജ് പ്രത്യേകം കാണിക്കുക"
-disableColorFilter = "നിറ ഫിൽട്ടർ പ്രവർത്തനരഹിതമാക്കുക"
 documentUpdated = "പ്രമാണം അപ്‌ഡേറ്റ് ചെയ്തു"
 dualPageView = "രണ്ടുപേജ് ദൃശ്യം"
 editText = "ടെക്സ്റ്റ് എഡിറ്റ് ചെയ്യുക"
-enableDarkFilter = "ഡാർക്ക് ഫിൽട്ടർ പ്രവർത്തനക്ഷമമാക്കുക"
-enableSepiaFilter = "സെപിയ ഫിൽട്ടർ പ്രവർത്തനക്ഷമമാക്കുക"
 engineLoadError = "PDF viewer engine initialize ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
 engineSlowWarning = "PDF engine initialization പ്രതീക്ഷിച്ചതിലും കൂടുതൽ സമയം എടുക്കുന്നു. നിങ്ങളുടെ browser WebAssembly, Worker settings പരിശോധിക്കുക, അല്ലെങ്കിൽ page reload ചെയ്യുക."
 firstPage = "ആദ്യ പേജ്"
@@ -14736,20 +14991,27 @@ fitPage = "പേജിൽ ഒതുക്കുക"
 fitWidth = "വീതിയിൽ ഒതുക്കുക"
 lastPage = "അവസാന പേജ്"
 loadingEngine = "PDF Engine ലോഡ് ചെയ്യുന്നു..."
+menuSelected = "Selected"
 moreOptions = "കൂടുതൽ"
 nextPage = "അടുത്ത പേജ്"
 noPdfProvided = "PDF നൽകിയിട്ടില്ല"
 onlyPdfSupported = "ഈ file format preview-ക്കായി പിന്തുണയ്ക്കുന്നില്ല."
 pageNavigation = "പേജ് നാവിഗേഷൻ"
+pageNumber = "Page number"
 previousPage = "മുൻപത്തെ പേജ്"
 readAloudFromHere = "ഇവിടെ നിന്ന് ശബ്ദമായി വായിക്കുക"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "ഡോക്യുമെന്റ് സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക."
 saveChangesErrorTitle = "മാറ്റങ്ങൾ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല"
 singlePageView = "ഒറ്റ പേജ് ദൃശ്യം"
+tools = "Tools"
 unknownFile = "അപരിചിതമായ ഫയൽ"
-view = "കാഴ്‌ച"
 zoom = "സൂം"
 zoomIn = "സൂം ഇൻ"
+zoomLevel = "Zoom level"
 zoomOut = "സൂം ഔട്ട്"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "ഒപ്പ് പ്രിവ്യൂ"
 
 [viewer.signatureField]
 badge = "ഒപ്പ്"
+clickToSign = "Click to sign here"
 fieldTitle = "ഒപ്പ് ഫീൽഡ്: {{name}}"
 signed = "ഒപ്പിട്ടു"
 signedWithReason = "ഒപ്പിട്ടു: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "ഒപ്പിടാത്ത ഒപ്പ് ഫീൽഡ്: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{total}} ഫയലുകളിൽ {{restored}} പുനഃസ്ഥ
 
 [workbenchBar]
 activeFiles = "സജീവ ഫയലുകൾ"
-annotations = "അനോട്ടേഷനുകൾ"
+annotate = "Annotate"
 applyRedactionsFirst = "ആദ്യം റെഡാക്ഷനുകൾ പ്രയോഗിക്കുക"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "എല്ലാ ഫയലുകളും അടയ്ക്കുക"
 closePdf = "PDF അടയ്ക്കുക"
+defaultZoom = "Default zoom"
 deselectAll = "എല്ലാം തിരഞ്ഞെടുക്കൽ ഒഴിവാക്കുക"
 downloadAll = "എല്ലാം ഡൗൺലോഡ് ചെയ്യുക"
 editText = "ടെക്സ്റ്റ് എഡിറ്റ് ചെയ്യുക"
@@ -15100,18 +15367,26 @@ exitAnnotations = "അനോട്ടേഷൻ മോഡിൽ നിന്ന�
 exitRedaction = "റെഡാക്ഷൻ മോഡിൽ നിന്ന് പുറത്തിറങ്ങുക"
 findReplace = "തിരയുക & മാറ്റിസ്ഥാപിക്കുക"
 formFill = "ഫോം എഡിറ്റർ"
-hideToolbar = "toolbar മറയ്ക്കുക"
+layers = "Layers"
 moreActions = "കൂടുതൽ പ്രവർത്തനങ്ങൾ"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "പേജ് എഡിറ്റർ"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "പാൻ മോഡ്"
 print = "PDF അച്ചടിക്കുക"
 readAloud = "വായിച്ച് കേൾപ്പിക്കുക"
 readAloudLanguage = "ഭാഷ"
 readAloudSpeed = "വേഗം"
 redact = "റെഡാക്റ്റ്"
+reviewAccessibility = "Accessibility"
 rotateLeft = "ഇടത്തേക്ക് തിരിക്കുക"
 rotateRight = "വലത്തേക്ക് തിരിക്കുക"
 ruler = "റൂളർ / അളക്കൽ"
+rulerScaleUnset = "Not set"
 rulerSettings = "സ്കെയിൽ ക്രമീകരണങ്ങൾ"
 save = "സേവ്"
 saveAll = "എല്ലാം സേവ് ചെയ്യുക"
@@ -15123,14 +15398,23 @@ selectLanguage = "ഭാഷ തിരഞ്ഞെടുക്കുക"
 share = "പങ്കിടുക"
 showAllTools = "എല്ലാ ടൂളുകളും കാണിക്കുക"
 showFewerTools = "ടൂൾബാർ ചുരുക്കുക"
-showToolbar = "toolbar കാണിക്കുക"
+thumbnails = "Pages"
 toggleAnnotations = "അനോട്ടേഷനുകളുടെ ദൃശ്യത ടോഗിൾ ചെയ്യുക"
-toggleAttachments = "അറ്റാച്ച്മെന്റുകൾ ടോഗിൾ ചെയ്യുക"
-toggleBookmarks = "ബുക്ക്മാർക്കുകൾ (ഉള്ളടക്കപ്പട്ടിക)"
 toggleComments = "കമന്റുകൾ"
-toggleLayers = "ലെയറുകൾ ടോഗിൾ ചെയ്യുക"
-toggleSidebar = "സൈഡ്ബാർ ടോഗിൾ ചെയ്യുക"
 viewer = "വ്യൂവർ"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "ഈ ഡോക്യുമെന്റിലേക്കുള്ള നിങ്ങളുടെ ആക്സസ് കാലാവധി കഴിഞ്ഞിരിക്കുന്നു."

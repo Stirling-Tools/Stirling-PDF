@@ -12,9 +12,11 @@ comingSoon = "Очаквайте скоро"
 confirm = "Потвърди"
 confirmClose = "Потвърди затваряне"
 confirmCloseCancel = "Отказ"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Затвори файла"
 confirmCloseDiscard = "Отхвърли промените и затвори"
 confirmCloseMessage = "Сигурни ли сте, че искате да затворите този файл?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Запази и затвори"
 confirmCloseSaveFailed_one = "Записано с грешки. Неуспешно записване на {{count}} файл."
 confirmCloseSaveFailed_other = "Запазено с грешки. {{count}} файла не можаха да бъдат запазени."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Файлът е записан на диска"
 filesSelected = "{{count}} файла"
 font = "Шрифт"
 fontSizeTooltip = "Размер на текста за номера на страници в точки. По-големите числа правят по-голям текст."
-fontTypeTooltip = "Семейство шрифтове за номерата на страниците. Изберете спрямо стила на документа."
 green = "Зелено"
 help = "Помощ"
 incorrectPasswordMessage = "Текущата парола е неправилна."
@@ -249,9 +250,7 @@ image = "Качване"
 text = "Текст"
 
 [addImage.step]
-createDesc = "Качете изображението, което искате да добавите"
 place = "Постави изображението"
-placeDesc = "Щракнете върху PDF, за да добавите изображението"
 
 [addImage.steps]
 configure = "Конфигурирай изображението"
@@ -276,7 +275,7 @@ fontName = "Име на шрифт"
 fontSize = "Размер на шрифт"
 numberPagesDesc = "напр. 1,3,5-8 или оставете празно за всички страници"
 pagePreviewAlt = "Преглед на страницата"
-pagesAndStarting = "Страници и начално число"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Позиция и страници"
 preview = "Избор на позиция"
 previewDisclaimer = "Прегледът е ориентировъчен. Крайният резултат може да се различава заради метриките на PDF шрифтовете."
@@ -300,6 +299,7 @@ title = "Резултати за номера на страници"
 
 [addPassword]
 desc = "Криптирайте вашия PDF документ с парола."
+submit = "Add Password"
 tags = "криптиране,парола,заключване,сигурност,защита,сигурност,криптиране,предпазване,поверително,частно,ограничаване на достъпа"
 title = "Добавяне на парола"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Преглед на печата"
 tags = "печат,маркировка,клеймо,одобрено,отхвърлено,поверително,инструмент за печат,гумен печат,печат с дата,печат за одобрение,получено,невалидно,копие,оригинал"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Азбука"
-clickToExpand = "Щракнете за разгъване"
 customColor = "Персонализиран цвят на текста"
 customDateDesc = "Персонализиран формат"
 customPosition = "Плъзнете печата до желаното място в прозореца за предварителен преглед."
 dateDesc = "Текуща дата"
 datetimeDesc = "Дата и час комбинирани"
 dateTimeVars = "Дата и час"
-dynamicVariables = "Динамични променливи"
 examples = "Примери"
 filenameDesc = "Име на файл без разширение"
 filenameFullDesc = "Име на файл с разширение"
@@ -365,6 +364,8 @@ noStampSelected = "Няма избран печат. Върнете се към 
 opacity = "Непрозрачност"
 otherVars = "Други"
 pageNumberDesc = "Номер на текущата страница"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Информация за страницата"
 position = "Позиция"
 positionAndFormatting = "Позиция и форматиране"
@@ -378,9 +379,10 @@ quickPosition = "Изберете позиция на страницата, къ
 rotation = "Ротация"
 selectedImageAlt = "Избрано изображение за печат"
 selectTemplate = "Изберете шаблон..."
+size = "Size"
 stampSetup = "Настройки на печата"
 stampText = "Поставяне на текст"
-stampTextDescription = "Използвайте динамичните променливи по-долу. Използвайте @@ за буквален @. Използвайте \\n за нови редове."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Тип печат"
 submit = "Добавяне на печат"
 tags = "Печат,добавяне на изображение,централно изображение,воден знак,PDF,вграждане,персонализиране"
@@ -389,7 +391,6 @@ title = "Поставяне на печат на PDF"
 totalPagesDesc = "Общ брой страници"
 useTemplate = "Използване на шаблон"
 uuidDesc = "Кратък уникален идентификатор (8 знака)"
-variablesHelp = "Щракнете върху която и да е променлива, за да я вмъкнете в текста на печата. Използвайте @@ за буквален @."
 yearMonthDayDesc = "Отделни части на датата"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Възникна грешка при добавяне на печат 
 
 [AddStampRequest.results]
 title = "Резултати от печата"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Персонализиран"
@@ -410,6 +417,11 @@ legal-footer = "Правен долен колонтитул"
 page-numbers = "Номера на страници"
 pageNumberFooter = "Долен колонтитул с номер на страница"
 timestamp = "Времеви печат"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Приложи текста"
@@ -462,9 +474,7 @@ image = "Качване"
 text = "Текст"
 
 [addText.step]
-createDesc = "Въведете текста, който искате да добавите"
 place = "Поставяне на текст"
-placeDesc = "Щракнете върху PDF, за да добавите текста"
 
 [addText.steps]
 configure = "Настройване на текста"
@@ -1233,6 +1243,18 @@ label = "Генерирай наново при стартиране"
 description = "Брой дни, през които сертификатът ще е валиден"
 label = "Валидност на сертификата (дни)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Директории, от които папковите източници и папковите изходи могат да четат и в които могат да записват. Това е граница за сигурност: автоматизациите никога не могат да бъдат насочени към server път извън този списък."
 securityNote = "Оставете това празно, за да деактивирате напълно папковите източници и изходи. Собствената конфигурационна директория на Stirling винаги е забранена."
@@ -1456,7 +1478,9 @@ label = "SMTP потребителско име"
 
 [admin.settings.mcp]
 apikeyNote = "Клиентите изпращат Stirling API key в X-API-KEY header (или Authorization: Bearer <key>). Ключът се свързва със собствения му Stirling потребител - достъп получават само предварително създадени акаунти, а действията се одитират като този потребител. Управлявайте ключовете от Акаунт > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Предоставете PDF инструментите и AI агентите на Stirling на MCP клиенти през защитена с OAuth крайна точка."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Разрешени инструменти"
 description = "Operation ids за скриване от MCP (разделени със запетая или интервал), напр. add-password remove-password. Оставете празно, за да покажете всички активирани инструменти."
 label = "Блокирани инструменти"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Когато е изключено (по подразбиране), не се зареждат /mcp endpoint, metadata или MCP beans."
 label = "Активиране на MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Въведете вашия OAuth issuer + resource ID по-горе, запазете и рестартирайте."
 step1ApiKey = "Създайте API key от Акаунт > API Keys (всеки потребител използва собствен)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Във вашия MCP клиент добавете"
 step2b = "сървър, сочещ към:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Клиентът автоматично открива OAuth от:"
 step3ApiKey = "Изпратете ключа в"
 step3ApiKeyb = "header (или Authorization: Bearer <key>). Не се използва OAuth или откриване на metadata."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Одобрете входа; клиентът опитва отново с токен. Инструментите се появяват групирани: convert, pages, misc, security, ai."
 step4ApiKey = "Инструментите се появяват групирани: convert, pages, misc, security, ai - и всяко извикване се одитира като собственик на ключа."
 tip = "Съвет: регистрирайте resource ID като разрешена аудитория във вашия IdP. Тествано с MCP Inspector и Claude Desktop."
 tipApiKey = "Съвет: режимът с API-key не изисква външен IdP - най-лесно за self-host. Ключът се свързва със собствения му Stirling потребител."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Свързване на MCP клиент"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Автоматично открит от issuer"
 
 [admin.settings.mcp.mode]
 apikey = "API ключ (ключ на потребител в Stirling)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth изисква външен IdP. API key използва Stirling API key за всеки потребител (X-API-KEY) - най-лесно за self-host."
 label = "Режим на удостоверяване"
 oauth = "OAuth 2.1 (външен IdP)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "Изисквайте mcp.tools.read за операции за четене и mcp.tools.write за операции за запис/AI."
 label = "Налагане на OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim, сравняван с Stirling потребителско име (напр. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Искате ли да помогнете Stirling PDF да стане 
 tags = "анотиране,маркиране,рисуване,разметка,коментар,бележки,преглед,червени корекции,обратна връзка,инструменти за разметка,лепящи бележки,фигури,стрелки,текстово поле,свободна ръка"
 
 [annotation]
-alignCenter = "Подравни центрирано"
-alignLeft = "Подравни вляво"
-alignRight = "Подравни вдясно"
 annotationStyle = "Стил на анотацията"
 backgroundColor = "Цвят на фона"
 borderOff = "Рамка: Изкл."
@@ -2016,18 +2073,61 @@ underline = "Подчертаване"
 undoDelete = "Отмяна"
 width = "Ширина"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Безплатен, поверителен PDF редактор, който можете да стартирате на всякаква инфраструктура."
 
 [appBanner]
 dismiss = "Отхвърляне"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Добавяне на прикачени файлове..."
 convertToPdfA3b = "Конвертиране в PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b е архивен формат, който осигурява дългосрочно съхранение. Позволява вграждане на произволни файлови формати като прикачени файлове. Конвертирането изисква Ghostscript и може да отнеме повече време при големи файлове."
-convertToPdfA3bTooltipHeader = "За конвертирането в PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Какво прави"
 discardChanges = "Отхвърляне"
 downloadSingle = "Изтегляне на прикачен файл"
 duplicateName = "Прикачен файл с име „{{name}}“ вече съществува."
@@ -2208,7 +2308,6 @@ guest = "Гост"
 user = "Потребител"
 
 [auto-rename]
-description = "Автоматично открива заглавието от съдържанието на вашия PDF и го използва като име на файла."
 submit = "Автоматично преименуване"
 tags = "автоматично откриване,базирано на заглавка,организиране,преетикетиране"
 title = "Автоматично преименуване"
@@ -2218,21 +2317,6 @@ failed = "Възникна грешка при автоматичното пре
 
 [auto-rename.results]
 title = "Резултати от авто-преименуване"
-
-[auto-rename.settings]
-title = "Относно"
-
-[auto-rename.tooltip.description]
-title = "Какво прави"
-
-[auto-rename.tooltip.header]
-title = "Как работи авто-преименуването"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Търси текст, който изглежда като заглавие или рубрика"
-bullet2 = "Създава чисто и валидно име на файл от засеченото заглавие"
-bullet3 = "Запазва оригиналното име, ако не бъде намерено подходящо заглавие"
-title = "Умно преименуване"
 
 [autoFormDetection]
 loading = "Откриване на полета на формуляр..."
@@ -2327,6 +2411,9 @@ remove = "Премахване на инструмент"
 selected = "Избрани инструменти"
 selectTool = "Изберете инструмент..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Отказ"
 confirm = "Назад"
@@ -2360,6 +2447,10 @@ title = "Стартиране на автоматизация"
 [automate.selection]
 title = "Избор на автоматизация"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Създаване на нова автоматизация"
 
@@ -2371,6 +2462,7 @@ title = "Предложени"
 
 [automate.sequence]
 finish = "Готово"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Стартиране на автоматизация"
 running = "Изпълняване на автоматизация..."
 signInToRun = "Влезте, за да стартирате автоматизации."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Работен поток за сигурност"
 secureWorkflowDesc = "Защитава PDF документи чрез премахване на потенциално злонамерено съдържание като JavaScript и вградени файлове, след което добавя защита с парола за предотвратяване на неоторизиран достъп. По подразбиране паролата е 'password'."
 
 [autoRename]
-description = "Този инструмент автоматично ще преименува PDF файлове според тяхното съдържание. Анализира документа, за да намери най-подходящото заглавие от текста."
 tags = "автоматично откриване,на базата на заглавка,организиране,преетикетиране,автоматично преименуване,интелигентно преименуване,преименуване по съдържание,име на файл,именуване на файл,откриване на заглавие"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,разделяне,документ,организация"
 [autoSplitPDF]
 dividerDownload2 = "Изтеглете 'Автоматичен сплитер разделител (с инструкции).pdf'"
 duplexMode = "Дуплексен режим (сканиране отпред и отзад)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-базиран,отделен,сканиране-сегмент,организиране"
 title = "Автоматично разделяне на PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Добавя рамки около всеки участък от с�
 [bookletImposition.addGutter]
 label = "Добави вътрешен отстъп"
 tooltip = "Добавя вътрешно място за подвързване"
-
-[bookletImposition.advanced]
-toggle = "Разширени настройки"
 
 [bookletImposition.doubleSided]
 label = "Двустранен печат"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Изберете JKS файл"
 chooseP12File = "Изберете PKCS12 файл"
 choosePfxFile = "Изберете PFX файл"
 choosePrivateKey = "Изберете файл с частен ключ"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Отказано"
 fetchFailed = "Неуспешно зареждане на данните за подписване"
 finalized = "Финализирано"
 location = "Местоположение"
-logoTitle = "Лого"
-name = "Име"
-noLogo = "Без лого"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Номер на страница"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Парола за сертификат"
 passwordOptional = "Оставете празно, ако няма парола"
 pemCertificateLabel = "Сертификат (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Частен ключ (.pem / .key)"
 pending = "В изчакване"
 readyToFinalize = "Готово за финализиране"
 reason = "Причина"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Използва се сървърен сертификат — не са необходими файлове или парола"
-showLogo = "Покажи лого"
 signatureProgress = "{{signedCount}}/{{totalCount}} подписа"
 tags = "удостоверяване,PEM,P12,официален,криптиране,подписване,сертификат,PKCS12,JKS,сървър,ръчно,автоматично"
 title = "Подписване със сертификат"
@@ -2738,12 +2828,45 @@ viewed = "Прегледано"
 
 [certSign.appearance]
 invisible = "Невидим"
+showOnPage = "Show signature on page"
 stepTitle = "Външен вид на подписа"
 visibility = "Видимост"
 visible = "Видим"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Детайли на подписа"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "За външния вид на подписа"
@@ -2762,9 +2885,6 @@ bullet3 = "Изберете на коя страница да поставите
 bullet4 = "По избор може да се включи лого"
 text = "Показва блок за подпис в PDF с вашето име, дата и незадължителни детайли. Полезно, когато искате читателите ясно да виждат, че документът е подписан."
 title = "Видими подписи"
-
-[certSign.certFiles]
-stepTitle = "Файлове със сертификат"
 
 [certSign.certType.tooltip.convert]
 text = "Конвертирайте файла си в Java keystore (.jks) с keytool, след това изберете JKS."
@@ -2786,6 +2906,7 @@ text = "Изберете формат, който съответства на в
 title = "Кой вариант да използвам?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Формат на сертификата"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Това устройство"
 [certSign.error]
 failed = "Възникна грешка при обработката на подписите."
 
-[certSign.format]
-pkcs11 = "USB токен"
-windowsStore = "Хранилище на сертификати на Windows"
-
 [certSign.hardware]
-certificate = "Сертификат"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Персонализиран път към драйвер…"
+digitalId = "Digital ID"
 driver = "PKCS#11 драйвер"
 driverPath = "Път към библиотеката на драйвера"
 driverPathPlaceholder = "Пълен път до вашия PKCS#11 драйвер (.dll, .so или .dylib)"
-expired = "изтекъл"
-expires = "изтича"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Покажи сертификатите"
-loading = "Четене на сертификати…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Не са намерени сертификати за подписване"
 noDriver = "Не е открит PKCS#11 драйвер. Инсталирайте драйвера на вашия токен (напр. OpenSC), после отворете това отново – или въведете ръчно пътя до драйвера по-долу."
-notYetValid = "още не е валиден"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN на токена"
 pkcs11Hint = "Изберете PKCS#11 драйвера на вашия токен, въведете PIN, след това покажете сертификатите на токена."
 pkcs11LoadError = "Неуспешно прочитане на сертификатите от токена. Проверете PIN и драйвера."
-refresh = "Опреснете"
-selectCert = "Изберете сертификат"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Изберете драйвер"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Слот (по избор)"
-windowsHint = "Изберете сертификат от хранилището на сертификати на Windows. Подписването използва ключа на вашата карта/токен – Windows ще поиска PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Не можа да се прочете хранилището на сертификати на Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Общо правило"
 device = "Това устройство"
 noOtherSources = "Няма други налични източници на сертификати."
 server = "Сървър"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Източник на сертификата"
 upload = "Качване"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Актуализирайте потребителското си име. След актуализиране ще бъдете изведени от профила."
@@ -3069,7 +3205,6 @@ placeholder = "Създател на документа"
 
 [changeMetadata.customFields]
 add = "Добавяне на поле"
-description = "Добавете персонализирани полета с метаданни към документа"
 key = "Ключ"
 keyPlaceholder = "Потребителски ключ"
 remove = "Премахване"
@@ -3135,10 +3270,6 @@ bullet1 = "Дата на създаване: Кога е създаден ори
 bullet2 = "Дата на промяна: Кога е последно променен"
 text = "Кога е създаден и променен документът."
 title = "Полета за дата"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Пълно изтриване на метаданните за гарантиране на поверителност."
-title = "Премахване на съществуващите метаданни"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Заглавие: Име или заглавие на документа"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Достигнахте лимита си за изпол�
 
 [checkAccessibility]
 aboutRow = "Относно {{label}}"
-checking = "Проверка..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Изтегляне на доклад за достъпност"
 fileFailed = "неуспешно"
+noFiles = "Select a PDF to check it."
 pickFile = "Показване на резултати за"
-submit = "Провери достъпността"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Алтернативен текст"
@@ -3286,10 +3417,17 @@ structure = "Таговете казват на екранните четци к
 [checkAccessibility.checks]
 label = "Преминати {{passed}} от {{total}} проверки"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Докладът за достъпност не можа да бъде създаден. Опитайте отново."
 fileTitle = "Този файл не можа да бъде проверен"
 partial = "Някои файлове не можаха да бъдат проверени."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Декларира PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Файлът има заглавие в метаданните си."
 [checkAccessibility.figures]
 summary_one = "{{count}} изображение се нуждае от описание (страница {{pages}})"
 summary_other = "{{count}} изображения се нуждаят от описание (страници {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Отнася се за"
@@ -3465,19 +3618,7 @@ checking = "Проверка {{current}} от {{total}}..."
 complete = "Проверката завърши"
 
 [checkAccessibility.steps]
-results = "Резултати"
 standard = "Стандарт"
-
-[checkAccessibility.tooltip.header]
-title = "Кой стандарт да се провери"
-
-[checkAccessibility.tooltip.ua1]
-text = "Първата версия на PDF/UA, публикувана през 2012 г. като ISO 14289-1, за файлове PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "По-новата версия, публикувана през 2024 г. като ISO 14289-2, за файлове PDF 2.0. Файл PDF 1.7, проверен спрямо нея, не издържа правилата, които важат само за PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Анотация {{n}}"
@@ -3868,6 +4009,7 @@ title = "Изберете цвят"
 transparent = "Прозрачно"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Действия"
 back = "Назад"
 cancel = "Отказ"
@@ -4206,7 +4348,9 @@ title = "Опресняване на API ключове"
 warning = "⚠️ Внимание: Това действие ще генерира нови API ключове и ще направи предишните невалидни."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) позволява на AI асистенти като Claude да използват директно вашите Stirling PDF инструменти. Свържете клиент веднъж и вашият асистент може да конвертира, редактира, защитава и обработва документи от ваше име."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Гост потребителите не могат да свързват MCP клиенти. Създайте акаунт, за да използвате MCP server и да позволите на вашия AI асистент да изпълнява Stirling PDF инструменти от ваше име."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Копиране на {{label}}"
 tooltipCopied = "{{label}} копирано"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Вашият MCP endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Добавяне към"
 hint = "Изберете вашия клиент, поставете фрагмента във файла, показан тук, след което го рестартирайте. При първа употреба ще влезете с вашия Stirling акаунт - няма ключове за копиране."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Свързване на вашия AI асистент"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Запази съотношението"
 maxAttachmentSize = "Максимален размер на прикачен файл (MB)"
 multiple = "Няколко"
 optimizeForEbook = "Оптимизиране на PDF за четци на електронни книги (използва Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Изход"
-outputFormat = "Изходен формат"
-pdfaAccessibleFormat = "{{format}} (достъпен)"
-pdfaDigitalSignatureWarning = "PDF файлът съдържа цифров подпис. Това ще бъде премахнато в следващата стъпка."
-pdfaNote = "PDF/A-1b е по-съвместим, PDF/A-2b поддържа повече функции, PDF/A-3b поддържа вградени файлове."
-pdfaOptions = "Опции за PDF/A"
 pdfOptions = "Опции за PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Настройки"
 signInToUse = "Влезте, за да използвате"
 single = "Единичен"
 sourceFormatPlaceholder = "Изходен формат"
-strictMode = "Строг режим"
-strictModeDesc = "Грешка, ако конвертирането не е перфектно (използва VeraPDF проверка)"
 svgPdfOptions = "Опции за SVG към PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG файловете се рендерират като векторна графика за ясен резултат при всяка резолюция. Размерите от SVG определят размера на PDF страницата."
@@ -4396,9 +4549,7 @@ zoomLevel = "Ниво на мащабиране"
 
 [convert.ebookOptions]
 includePageNumbers = "Включване на номера на страници"
-includePageNumbersDesc = "Добавяне на номера на страници към генерирания PDF"
 includeTableOfContents = "Включване на съдържание"
-includeTableOfContentsDesc = "Добавяне на генерирано съдържание към получения PDF"
 optimizeForEbookPdf = "Оптимизиране за eBook четци"
 optimizeForEbookPdfDesc = "Оптимизиране на PDF за четене на eBook (по-малък размер на файла, по-добро рендериране на eInk устройства)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Откриване на глави"
 detectChaptersDesc = "Откриване на заглавия, които изглеждат като глави, и вмъкване на прекъсвания на страници в EPUB"
 kindleEink = "Kindle e-Ink (оптимизиран за текст)"
 outputFormat = "Формат на изхода"
-outputFormatDesc = "Изберете изходния формат за eBook"
 tabletPhone = "Таблет/Телефон (с изображения)"
 targetDevice = "Целево устройство"
 targetDeviceDesc = "Изберете изходен профил, оптимизиран за устройството-четец"
@@ -4469,8 +4619,24 @@ description = "Тези cookies са от съществено значение 
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Заглавие на корицата"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF портфолио"
 description = "Всеки избран файл се запазва цял в новия PDF, независимо от типа му. Четци, които не поддържат портфолиа, показват корица с прикачените файлове."
 goToFileEditor = "Към редактора на файлове"
@@ -4488,6 +4654,9 @@ title = "Какво прави"
 
 [createPortfolio.tooltip.header]
 title = "Относно PDF портфолиата"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Автоматично изрязване на бели полета"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Достъпът до клипборда не е нал�
 export = "Експортирай отметки"
 exportClipboard = "Копирай JSON в клипборда"
 exportJson = "Изтегли JSON"
+exportMenu = "Export"
 importClipboard = "Постави JSON от клипборда"
 importJson = "Импортирай JSON"
+importMenu = "Import"
 loadFromPdf = "Зареди от избрания PDF"
 noFile = "Изберете PDF, за да извлечете съществуващите отметки."
 selectedFile = "Заредено от {{file}}"
-source = "Зареди отметки"
 
 [editTableOfContents.editor]
 addTopLevel = "Добави отметка на най-горно ниво"
@@ -4740,6 +4910,9 @@ replaceExisting = "Замени съществуващите отметки (м�
 replaceExistingHint = "Когато е изключено, новата структура се добавя след текущите отметки."
 title = "Отметки и структура"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Смени PDF"
 filePrompt = "Изберете PDF от библиотеката си или качете нов, за да започнете."
@@ -4753,7 +4926,6 @@ title = "Отворете инструмента, за да започнете �
 [encryptedPdfUnlock]
 actionIgnored = "Ограничението за {{action}} е игнорирано"
 actionUnlocked = "{{action}} е отключено за тази сесия"
-advanced = "Разширени"
 allowed = "Разрешено"
 annotations = "Анотации"
 authoriseAction = "Този PDF изисква разрешение за използване на {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Ограничено"
 restrictedActions = "ограничени действия"
 restrictedOperation = "Това действие изисква паролата за разрешенията."
 retainOwnerVerification = "Потвърдете паролата за разрешенията, за да я запазите без промяна, докато премахвате паролата за отваряне. Това няма да я премахне."
-saveProtection = "Запазване на защитата"
 securityChangeFailed = "Защитата не може да бъде променена. Проверете паролата за разрешенията и новите настройки за сигурност."
 sessionDetails = "Отворен за тази сесия. PDF остава защитен."
 sessionDetailsLabel = "Относно отключването за сесия"
@@ -4871,7 +5042,6 @@ title = "Нещо се обърка"
 tryAgain = "Опитайте отново"
 
 [extractImages]
-allowDuplicates = "Запазване на дублирани изображения"
 selectText = "Изберете формат на изображението, в който да преобразувате извлечените изображения"
 submit = "Извличане"
 tags = "изображение,снимка,запазване,архивиране,архив,заснемане,грабване"
@@ -4927,12 +5097,15 @@ closeFile = "Затворете файла"
 
 [fileEditor]
 closedFile = "Затворен {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Файлът е пренареден"
 filesReordered_other = "{{count}} файла са пренаредени"
 loadedFromStorage_one = "Зареден {{count}} файл от хранилището"
 loadedFromStorage_other = "Заредени {{count}} файла от хранилището"
 loadFromStorageFailed = "Неуспешно зареждане на някои файлове от хранилището"
 pinnedFile = "Закачен {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Записан и затворен {{name}}"
 saveFailed = "Записването е неуспешно"
 unpinnedFile = "Откачен {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Заключен"
 previewOf = "Преглед на {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Добавяне на файлове"
 created = "Създаден"
 notIncludedInToolRun = "Не е включено в това изпълнение на инструмента"
 size = "Размер на файла"
 title = "Файлове"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Няма налични файлове"
@@ -5104,6 +5286,7 @@ subtitle = "Показвайте или скривайте категории в
 title = "Категории в страничната лента"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Отказ"
 error = "Файлът не можа да бъде преименуван."
 illegalCharacters = "Името на файл не може да съдържа \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Премахване на поле"
 
 [formFill.editor]
 action = "Действие на бутона"
-actionHelp = "Какво прави бутонът при щракване."
 actionNone = "Няма"
 actionPrint = "Печат"
 actionReset = "Нулиране на формуляра"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Ограничава броя знаци, които се по�
 multiline = "Многоредово"
 multilineHelp = "Позволява повече от един ред текст и пренасяне в края на полето."
 multiSelect = "Разрешаване на множествен избор"
-multiSelectHelp = "Позволява да бъде избрана повече от една опция едновременно."
 name = "Име на поле"
 nameHelp = "Вътрешното име на полето. Използва се при експортиране на данни или попълване на формуляра от друга система, затова го направете уникално и без интервали."
 optionGap = "Разстояние между опциите"
@@ -5902,6 +6083,11 @@ title = "Корекция на цвят/контраст"
 desc = "Откроявайте, рисувайте, добавяйте бележки и форми във визуализатора"
 tags = "анотиране,подчертаване,рисуване,маркиране,коментар,бележки,преглед,червени корекции,обратна връзка,инструменти за маркиране,залепващи бележки,фигури,стрелки,текстово поле,свободна ръка"
 title = "Анотиране"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Автоматично откривайте полета на формуляри с AI и направете своя PDF попълваем."
@@ -6405,6 +6591,9 @@ sort = "Сортиране"
 [merge.sortFiles]
 title = "Сортиране на файлове"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Преглед на настройките за сливане"
 
@@ -6548,6 +6737,9 @@ title = "Удостоверяването неуспешно"
 message = "Можете да затворите този прозорец и да се върнете в Stirling PDF."
 title = "Удостоверяването е успешно"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Разреши достъп"
 approving = "Разрешаване..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Връщаме ви към приложението..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} иска достъп до вашия акаунт в Stirling PDF"
 scopesIntro = "Това ще позволи на {{app}} да:"
 signedInAs = "Влезли сте като {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Влезте, за да продължите"
 signInPrompt = "Влезте в акаунта си в Stirling PDF, за да продължите свързването на приложението."
 title = "Authorise access"
 unknownApp = "Приложение на трета страна"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Действа като вас - всичко, което {{app}} прави, се изпълнява под вашия акаунт и се отчита към използването ви"
@@ -6572,9 +6767,12 @@ tools = "Използва вашите инструменти на Stirling PDF 
 
 [oauthConsent.scope]
 email = "Вижда вашия email адрес"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Потвърждава вашата самоличност"
 phone = "Вижда вашия телефонен номер"
 profile = "Вижда основната информация от профила ви"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Почиства, сканира и открива текст от изображения в PDF и го добавя отново като текст."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Ще станете член на екипа и ще загу
 [pageEdit]
 deselectAll = "Нито един"
 selectAll = "Маркиране на всички"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Извличане на страници"
@@ -7577,6 +7779,8 @@ stamp = "Анотация с печат - не е текст на страниц
 widget = "Поле на формуляр - не е текст на страницата, затова не може да се редактира тук"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Редактирай"
 markTagged = "Отбележи като напълно тагнат"
 matchScanFont = "Напасни сканирания текст към {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Авто-тагни страница"
 typeInto = "Въведи в {{run}}"
 ungroupParagraph = "Разгрупирай абзац {{run}}"
 unmarkTagged = "Отбележи като не напълно тагнат"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Пренасяне на {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Отхвърляне на незапазените промени?"
 
 [pdfTextEditor.error]
 decodeImage = "Избраното изображение не можа да бъде декодирано."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Този текст не може да се дублира: нито един наличен шрифт не изобразява всички негови знаци."
 formLiftChangesDrawing = "Не може да се редактира: изобразено е като част от група, чиито изрязване или графични настройки редакторът не може да запази при промяна."
 insertImage = "Избраното изображение не можа да бъде вмъкнато."
 needsShaping = "Редакторът все още не може правилно да изобразява свързаните букви и огласовки на тази писменост, затова тази промяна не беше направена."
+reopenLost = "Open again"
 replaceClippedImage = "Това изображение не може да бъде заменено: то е изрязано и замяната би показала части, скрити от изрязването."
 scanOffInk = "Не може да се редактира този текст: разпознатите думи не съвпадат със скана. Стартирайте OCR отново."
 unsafeRtlEdit = "Редакцията не може да се извърши: редакторът не може да прерисува текста отдясно наляво на този ред без да го промени."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG изображение"
 close = "Затваряне на лентата за търсене"
 count = "{{current}} от {{total}}"
 findPlaceholder = "Търсене"
+hideReplace = "Hide replace"
 ignoreAccents = "Игнориране на ударения"
 matchCase = "Съвпадение на регистъра"
 next = "Следващо съвпадение"
@@ -7625,6 +7833,7 @@ replace = "Замяна"
 replaceAll = "Замяна на всички"
 replaced = "Заменени {{count}}"
 replacePlaceholder = "Замяна с"
+showReplace = "Show replace"
 wholeWord = "Цяла дума"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Тази връзка не може да бъде тагнат�
 cannotTagPage = "Съдържанието на тази страница не може да бъде тагнато."
 contentGroup = "Съдържание"
 customTag = "{{role}} (персонализиран таг)"
-decorativeInfo = "Екранните четци пропускат декоративните изображения. Използвайте го за рамки, фонове и други изображения, които не носят информация."
-decorativeLabel = "Декоративно изображение"
-description = "Описание на изображението"
-descriptionInfo = "Екранните четци прочитат това вместо изображението."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Таговете не могат да се редактират в шифрован файл"
 figureDescription = "Описание на фигурата"
 figureDescriptionInfo = "Екранните четци ще прочетат това вместо фигурата."
-formFieldDescription = "Описание на полето"
 formulaDescription = "Описание на формулата"
 formulaDescriptionInfo = "Екранните четци ще прочетат това вместо формулата. Опишете я така, както бихте я казали на глас, например \"x на квадрат плюс едно\"."
 heading = "Достъпност"
@@ -7813,7 +8019,6 @@ markedTagged = "Документът е напълно тагнат"
 markedTaggedHint = "Казва на PDF четците да използват таговете за достъпност. Отбележете го, след като всичко е тагнато."
 markedWithUntagged = "Част от съдържанието няма тагове, затова екранните четци може да го пропуснат."
 missingDescriptions = "Липсващи описания"
-mixedContent = "Фигурата включва друго съдържание"
 mixedTags = "Смесено"
 needsDescriptionBadge = "Няма описание"
 nextToReview = "Следващо за преглед"
@@ -7821,12 +8026,10 @@ notFigure = "Тагнато като част от текста"
 removeTag = "Премахване на таг"
 saveFailed = "Промените ви за достъпност не можаха да бъдат запазени, затова файлът не беше запазен. Отменете ги и опитайте отново."
 selectedText = "Избран текст"
-tagFormField = "Етикетирай поле на формуляр"
 tagging = "Тагване на страници"
 tagLabel = "Таг"
 tagLinks_one = "Тагни връзка"
 tagLinks_other = "Тагни {{count}} връзки"
-tagUntagged = "Авто-тагни документ"
 tagUntaggedHint = "Автоматично добавя тагове за достъпност в целия документ. Резултатът е груб: проверете заглавия, списъци и реда на четене след това."
 unknownTag = "Не може да се прочете тук"
 unmarkedWithTags = "Някои PDF четци така или иначе ще използват таговете и може да пропуснат съдържание без тях."
@@ -7851,7 +8054,7 @@ heading = "Заглавия"
 mixedNumbering = "Смесва номерирани и неномерирани заглавия"
 none = "Няма заглавия"
 onPage = "Заглавие на страница {{page}}"
-problems = "Проблеми със заглавията"
+problemCount = "{{count}} to fix"
 skippedLevel = "Пропуска ниво след Заглавие {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Заглавие"
 allLanguages = "Всички езици"
 cannotSetDocument = "Езикът на този документ не може да се променя."
 cannotSetText = "Езикът на този текст не може да се променя."
-documentHint = "Езикът, който екранните четци използват, освен ако част от текста не зададе свой."
 documentLabel = "Език"
 documentLocked = "Езикът на шифриран документ не може да се променя тук."
 inDocument = "В този документ"
 innerLabel = "Език на таг {{number}}"
 label = "Език"
-missing = "Няма зададен език. Екранните четци ще налучкват и може да прочетат целия документ с неправилен глас."
 mixed = "Смесено"
 noMatch = "Няма съвпадащ език. Въведете кода му вместо това, напр. mt или en-IE."
 placeholder = "Изберете език"
@@ -7943,6 +8144,52 @@ renderFailed = "Неуспешно рендиране на страницата"
 [pdfTextEditor.password]
 incorrect = "Неправилна парола - опитайте отново."
 label = "Парола"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Водач за подравняване при {{value}} {{unit}} - плъзнете върху линийка, за да премахнете"
@@ -8124,6 +8371,10 @@ title = "Разлики в предварителния преглед"
 [pdfTextEditor.tooltip.textFocus]
 text = "Това работно пространство е насочено към редактиране на текст и преместване на вградени изображения. Сложни графики на страницата, формуляри и многослойна графика се запазват за експорт, но не са напълно редактируеми тук."
 title = "Фокус върху текст и изображения"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF към CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Скриване на категория"
 labelCount = "етикети"
 sharedNote = "Тези етикети са вградени и споделени в целия ви екип."
 showCategory = "Показване на категория"
-
-[policies.pii]
-account = "Номера на сметки (с етикет)"
-card = "Кредитни/дебитни карти"
-email = "Имейл адреси"
-fieldLabel = "PII за редактиране"
-iban = "IBAN номера"
-phone = "Телефонни номера"
-placeholder = "Изберете типове PII"
-routing = "Номера за маршрутизация в САЩ (ABA)"
-ssn = "Социалноосигурителни номера"
 
 [policy]
 badgeEnforcing = "{{name}} се прилага..."
@@ -10317,6 +10557,10 @@ title = "Пайплайни"
 [portal.pipelines.actions]
 newCustomPipeline = "Нов персонализиран конвейер"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Всички конвейери"
 
@@ -12047,7 +12291,6 @@ label = "Инструменти за четене"
 readAloud = "Четене на глас"
 rotateLeft = "Завъртане наляво"
 rotateRight = "Завъртане надясно"
-search = "Търсене в документа"
 switchDocument = "Превключване на документ"
 thumbnails = "Страници"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Цвят на полето"
 convertPDFToImageLabel = "Конвертиране на PDF в PDF-Image"
 customPaddingLabel = "Персонализирано допълнително отстояние"
 useRegexLabel = "Използвай регулярни изрази"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Търсене по цели думи"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Настройки за заличаване"
 
 [redact.auto.wordsToRedact]
 add = "Добави"
-examples = "Примери: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Въведете дума"
 title = "Думи за заличаване"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Изберете файлове във файлов�
 manual = "Ръчен"
 mode = "Режим"
 title = "Метод на заличаване"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Съвпада само с текст със същия регистър. Когато е активирано, „Secret“ няма да съвпадне със „SECRET“, а [A-Z] в regex съвпада само с главни букви."
@@ -12147,19 +12401,6 @@ title = "Метод на заличаване"
 text = "Щракнете и плъзнете, за да изберете ръчно конкретни области за заличаване. Дава прецизен контрол над това какво да се заличи. (Очаквайте скоро)"
 title = "Ръчно заличаване"
 
-[redact.tooltip.words]
-bullet1 = "Добавяйте по една дума наведнъж"
-bullet2 = "Натиснете Enter или щракнете 'Добави още', за да добавите"
-bullet3 = "Щракнете ×, за да премахвате думи"
-
-[redact.tooltip.words.description]
-text = "Въведете думи или фрази за търсене и заличаване във вашия документ. Всяка дума се търси отделно."
-title = "Съответствие на текст"
-
-[redact.tooltip.words.examples]
-text = "Типични думи за заличаване: банкови данни, имейл адреси или конкретни имена."
-title = "Чести примери"
-
 [redact.tooltip.words.header]
 title = "Думи за заличаване"
 
@@ -12176,15 +12417,6 @@ failed = "Възникна грешка при премахването на а�
 
 [removeAnnotations.info]
 description = "Този инструмент ще премахне всички анотации (коментари, подчертавания, бележки и др.) от вашите PDF документи."
-
-[removeAnnotations.settings]
-title = "Настройки"
-
-[removeAnnotations.tooltip.description]
-title = "Какво прави"
-
-[removeAnnotations.tooltip.header]
-title = "Относно Remove Annotations"
 
 [removeBlanks]
 submit = "Премахване на празни страници"
@@ -12325,6 +12557,9 @@ tags = "пренареждане,преподреждане,организира
 [reorganizePages.error]
 failed = "Неуспешно реорганизиране на страниците"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Страниците са реорганизирани"
 
@@ -12406,6 +12641,7 @@ title = "Инвертирай всички цветове"
 rotateLeft = "Завъртане обратно на часовниковата стрелка"
 rotateRight = "Завъртане по часовниковата стрелка"
 selectRotation = "Изберете ъгъл на завъртане (по часовниковата стрелка)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Прилагане на завъртане"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Завъртане на PDF"
@@ -12516,8 +12752,7 @@ title = "Саниране"
 failed = "Възникна грешка при санирането на PDF."
 
 [sanitize.options]
-note = "Изберете елементите, които искате да премахнете от PDF. Трябва да е избрана поне една опция."
-title = "Опции за саниране"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Премахни всички файлове, вградени в PDF"
@@ -12649,6 +12884,7 @@ title = "Търсене в PDF"
 hideTools = "Скриване на недостъпните инструменти ▴"
 messageNoFallback = "Инструментите са недостъпни, докато вашият сървър не се върне онлайн."
 messageWithFallback = "Някои инструменти изискват връзка със сървър."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Показване на недостъпните инструменти ▾"
 title = "Вашият Stirling-PDF сървър е недостъпен"
 toolNotAvailableLocally = "Вашият Stirling-PDF сървър е офлайн и „{{endpoint}}“ не е наличен в локалния бекенд."
@@ -13034,6 +13270,12 @@ title = "Клавишни комбинации"
 mac = "Включете ⌘ (Command), ⌥ (Option) или друг модификатор в комбинацията."
 windows = "Включете Ctrl, Alt или друг модификатор в комбинацията."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Условия, политика за поверителност и вашите предпочитания за бисквитки."
 label = "Правни"
@@ -13418,9 +13660,7 @@ image = "Качване"
 text = "Текст"
 
 [sign.step]
-createDesc = "Изберете как искате да създадете подписа"
 place = "Постави и запази"
-placeDesc = "Позиционирайте подписа в PDF"
 
 [sign.steps]
 configure = "Конфигуриране на подпис"
@@ -13597,6 +13837,10 @@ rotateLeft = "Завърти наляво"
 rotateRight = "Завърти надясно"
 trim = "Изрязване до подписа"
 trimHint = "Изрязва празното пространство около него"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Настройки за външен вид на подписа"
@@ -13959,7 +14203,6 @@ placeholder = "Въведете брой хоризонтални деления
 
 [split-by-sections.splitMode]
 custom = "Потребителски страници"
-description = "Изберете как да разделите страниците"
 label = "Режим на разделяне"
 splitAll = "Разделяне на всички страници"
 splitAllExceptFirst = "Разделяне на всички с изключение на първата"
@@ -14210,10 +14453,8 @@ failed = "Възникна грешка при прилагане на врем�
 
 [timestampPdf.options]
 note = "Към сървъра на TSA се изпраща само SHA-256 хеш на вашия документ; самият PDF файл никога не се изпраща."
-title = "Сървър за времеви печати (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Изберете доверен орган за времеви печати"
 label = "Изберете TSA сървър"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Няма налични инструменти"
 
 [tooltip]
 close = "Затворете подсказката"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Този инструмент ще премахне ограниченията „само за четене“ от полетата във PDF формуляри, за да станат редактируеми и попълваеми."
@@ -14706,6 +14961,9 @@ signatureDate = "Дата на подписване"
 
 [validateSignature.settings]
 certHint = "Качете доверен X.509 сертификат, за да валидирате спрямо персонален източник на доверие."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Настройки за валидиране"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Не може да се визуализира файлът
 copyRestricted = "Копирането е деактивирано от разрешенията на този PDF."
 copyText = "Копирай"
 coverPageView = "Показване на корицата отделно"
-disableColorFilter = "Изключи цветови филтър"
 documentUpdated = "Документът е актуализиран"
 dualPageView = "Изглед: две страници"
 editText = "Редактиране на текст"
-enableDarkFilter = "Включи тъмен филтър"
-enableSepiaFilter = "Включи сепия филтър"
 engineLoadError = "Неуспешно инициализиране на PDF viewer engine"
 engineSlowWarning = "Инициализирането на PDF engine отнема повече време от очакваното. Проверете настройките за WebAssembly и Worker на браузъра си или презаредете страницата."
 firstPage = "Първа страница"
@@ -14736,20 +14991,27 @@ fitPage = "Напасване към страницата"
 fitWidth = "Напасване по ширина"
 lastPage = "Последна страница"
 loadingEngine = "Зареждане на PDF Engine..."
+menuSelected = "Selected"
 moreOptions = "Още"
 nextPage = "Следваща страница"
 noPdfProvided = "Не е предоставен PDF"
 onlyPdfSupported = "Този файлов формат не се поддържа за предварителен преглед."
 pageNavigation = "Навигация по страници"
+pageNumber = "Page number"
 previousPage = "Предишна страница"
 readAloudFromHere = "Четене на глас оттук"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Документът не можа да бъде записан. Опитайте отново."
 saveChangesErrorTitle = "Неуспешно записване на промените"
 singlePageView = "Изглед: една страница"
+tools = "Tools"
 unknownFile = "Непознат файл"
-view = "Изглед"
 zoom = "Мащаб"
 zoomIn = "Увеличи"
+zoomLevel = "Zoom level"
 zoomOut = "Намали"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Преглед на подписа"
 
 [viewer.signatureField]
 badge = "Подпис"
+clickToSign = "Click to sign here"
 fieldTitle = "Поле за подпис: {{name}}"
 signed = "Подписано"
 signedWithReason = "Подписано: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Неподписано поле за подпис: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Възстановени са {{restored}} от {{total}} файла.
 
 [workbenchBar]
 activeFiles = "Активни файлове"
-annotations = "Анотации"
+annotate = "Annotate"
 applyRedactionsFirst = "Първо приложете заличаванията"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Затваряне на всички файлове"
 closePdf = "Затваряне на PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Премахване на избора от всички"
 downloadAll = "Изтегляне на всички"
 editText = "Редактиране на текст"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Изход от режим на анотации"
 exitRedaction = "Изход от режим на заличаване"
 findReplace = "Търсене и замяна"
 formFill = "Редактор на формуляри"
-hideToolbar = "Скриване на лентата с инструменти"
+layers = "Layers"
 moreActions = "Още действия"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Редактор на страници"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Режим на преместване"
 print = "Печат на PDF"
 readAloud = "Четене на глас"
 readAloudLanguage = "Език"
 readAloudSpeed = "Скорост"
 redact = "Заличаване"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Завъртане наляво"
 rotateRight = "Завъртане надясно"
 ruler = "Линийка / Измерване"
+rulerScaleUnset = "Not set"
 rulerSettings = "Настройки на мащаба"
 save = "Запазване"
 saveAll = "Запазване на всички"
@@ -15123,14 +15398,23 @@ selectLanguage = "Избор на език"
 share = "Сподели"
 showAllTools = "Показване на всички инструменти"
 showFewerTools = "Свиване на лентата с инструменти"
-showToolbar = "Показване на лентата с инструменти"
+thumbnails = "Pages"
 toggleAnnotations = "Превключване на видимостта на анотациите"
-toggleAttachments = "Превключване на прикачените файлове"
-toggleBookmarks = "Отметки (Съдържание)"
 toggleComments = "Коментари"
-toggleLayers = "Превключване на слоевете"
-toggleSidebar = "Превключване на страничната лента"
 viewer = "Преглед"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Достъпът ви до този документ е изтекъл."

@@ -12,9 +12,11 @@ comingSoon = "Yakında"
 confirm = "Onayla"
 confirmClose = "Kapatmayı Onayla"
 confirmCloseCancel = "İptal"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Dosyayı Kapat"
 confirmCloseDiscard = "Değişiklikleri at ve kapat"
 confirmCloseMessage = "Bu dosyayı kapatmak istediğinizden emin misiniz?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Kaydet ve kapat"
 confirmCloseSaveFailed_one = "Hatalarla kaydedildi. {{count}} dosya kaydedilemedi."
 confirmCloseSaveFailed_other = "Hatalarla kaydedildi. {{count}} dosya kaydedilemedi."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Dosya diske kaydedildi"
 filesSelected = "{{count}} dosya"
 font = "Yazı tipi"
 fontSizeTooltip = "Sayfa numarası metninin punto cinsinden boyutu. Daha büyük sayılar daha büyük metin oluşturur."
-fontTypeTooltip = "Sayfa numaraları için yazı tipi ailesi. Belgenizin stiline göre seçin."
 green = "Yeşil"
 help = "Yardım"
 incorrectPasswordMessage = "Mevcut şifre yanlış."
@@ -249,9 +250,7 @@ image = "Yükleme"
 text = "Metin"
 
 [addImage.step]
-createDesc = "Eklemek istediğiniz resmi yükleyin"
 place = "Resmi yerleştir"
-placeDesc = "Resminizi eklemek için PDF'e tıklayın"
 
 [addImage.steps]
 configure = "Resmi Yapılandır"
@@ -276,7 +275,7 @@ fontName = "Font İsmi"
 fontSize = "Font Büyüklüğü"
 numberPagesDesc = "örn. 1,3,5-8 veya tüm sayfalar için boş bırakın"
 pagePreviewAlt = "Sayfa önizlemesi"
-pagesAndStarting = "Sayfalar ve Başlangıç Numarası"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Konum ve Sayfalar"
 preview = "Konum Seçimi"
 previewDisclaimer = "Önizleme yaklaşıktır. Nihai çıktı PDF yazı tipi metrikleri nedeniyle değişebilir."
@@ -300,6 +299,7 @@ title = "Sayfa Numarası Sonuçları"
 
 [addPassword]
 desc = "PDF belgenizi bir parola ile şifreleyin."
+submit = "Add Password"
 tags = "şifrele,parola,kilitle,güvenli,koru,güvenlik,şifreleme,koruma,gizli,özel,erişimi kısıtla"
 title = "Parola Ekle"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Damga önizlemesi"
 tags = "damga,işaret,mühür,onaylandı,reddedildi,gizli,damga aracı,lastik damga,tarih damgası,onay damgası,alındı,geçersiz,kopya,orijinal"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabe"
-clickToExpand = "Genişletmek için tıklayın"
 customColor = "Özel Metin Rengi"
 customDateDesc = "Özel biçim"
 customPosition = "Damgayı önizleme penceresinde istediğiniz konuma sürükleyin."
 dateDesc = "Geçerli tarih"
 datetimeDesc = "Tarih ve saat birlikte"
 dateTimeVars = "Tarih ve Saat"
-dynamicVariables = "Dinamik Değişkenler"
 examples = "Örnekler"
 filenameDesc = "Uzantısız dosya adı"
 filenameFullDesc = "Uzantılı dosya adı"
@@ -365,6 +364,8 @@ noStampSelected = "Damga seçilmedi. 1. Adıma dönün."
 opacity = "Opaklık"
 otherVars = "Diğer"
 pageNumberDesc = "Geçerli sayfa numarası"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Sayfa Bilgileri"
 position = "Konum"
 positionAndFormatting = "Konum ve Biçimlendirme"
@@ -378,9 +379,10 @@ quickPosition = "Damgayı yerleştirmek için sayfada bir konum seçin."
 rotation = "Döndürme"
 selectedImageAlt = "Seçilen damga görseli"
 selectTemplate = "Bir şablon seçin..."
+size = "Size"
 stampSetup = "Damga Ayarları"
 stampText = "Damga Metni"
-stampTextDescription = "Aşağıdaki dinamik değişkenleri kullanın. Değişmez @ karakteri için @@, yeni satırlar için \\n kullanın."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Damga Türü"
 submit = "Damga Ekle"
 tags = "Damga, Görüntü ekle, Görüntüyü ortala, Filigran, PDF, Göm, Özelleştir"
@@ -389,7 +391,6 @@ title = "Damga PDF"
 totalPagesDesc = "Toplam sayfa sayısı"
 useTemplate = "Şablon Kullan"
 uuidDesc = "Kısa benzersiz tanımlayıcı (8 karakter)"
-variablesHelp = "Damga metninize eklemek için herhangi bir değişkene tıklayın. Değişmez @ karakteri için @@ kullanın."
 yearMonthDayDesc = "Ayrı tarih bölümleri"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "PDF'ye damga eklenirken bir hata oluştu."
 
 [AddStampRequest.results]
 title = "Damga Sonuçları"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Özel"
@@ -410,6 +417,11 @@ legal-footer = "Yasal Alt Bilgi"
 page-numbers = "Sayfa Numaraları"
 pageNumberFooter = "Sayfa Numarası Alt Bilgisi"
 timestamp = "Zaman Damgası"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Metni Uygula"
@@ -462,9 +474,7 @@ image = "Yükleme"
 text = "Metin"
 
 [addText.step]
-createDesc = "Ekleyeceğiniz metni girin"
 place = "Metni Yerleştir"
-placeDesc = "Metninizi eklemek için PDF'ye tıklayın"
 
 [addText.steps]
 configure = "Metni Yapılandır"
@@ -1233,6 +1243,18 @@ label = "Başlangıçta Yeniden Oluştur"
 description = "Sertifikanın geçerli olacağı gün sayısı"
 label = "Sertifika Geçerliliği (gün)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Klasör kaynaklarının ve klasör çıktılarının okuma ve yazma izni olan dizinler. Bu bir güvenlik sınırıdır: otomasyonlar asla bu listenin dışındaki bir sunucu yoluna yönlendirilemez."
 securityNote = "Klasör kaynaklarını ve çıktılarını tamamen devre dışı bırakmak için bunu boş bırakın. Stirling'in kendi yapılandırma dizini her zaman erişime kapalıdır."
@@ -1456,7 +1478,9 @@ label = "SMTP Kullanıcı Adı"
 
 [admin.settings.mcp]
 apikeyNote = "İstemciler, X-API-KEY üst bilgisinde (veya Authorization: Bearer <key> biçiminde) bir Stirling API anahtarı gönderir. Anahtar, sahibi olan Stirling kullanıcısıyla eşleştirilir; yalnızca tanımlanmış hesaplar erişebilir ve işlemler o kullanıcı adına denetlenir. Anahtarları Hesap > API Anahtarları bölümünden yönetin."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Stirling'in PDF araçlarını ve yapay zekâ ajanlarını OAuth korumalı bir uç nokta üzerinden MCP istemcilerine sunun."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Sunucusu"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "İzin verilen araçlar"
 description = "MCP'den gizlenecek işlem kimlikleri (virgül veya boşlukla ayrılmış), ör. add-password remove-password. Tüm etkin araçları sunmak için boş bırakın."
 label = "Engellenen araçlar"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Kapalıyken (varsayılan), /mcp uç noktası, meta veriler veya MCP bileşenleri yüklenmez."
 label = "MCP Sunucusunu Etkinleştir"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Yukarıya OAuth sağlayıcınızı ve kaynak kimliğini girin, kaydedin ve yeniden başlatın."
 step1ApiKey = "Hesap > API Anahtarları bölümünde bir API anahtarı oluşturun (her kullanıcı kendi anahtarını kullanır)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "MCP istemcinize şuraya işaret eden bir"
 step2b = "sunucu ekleyin:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "İstemci OAuth'u şuradan otomatik olarak keşfeder:"
 step3ApiKey = "Anahtarı bir"
 step3ApiKeyb = "üst bilgisinde gönderin (veya Authorization: Bearer <key>). OAuth veya meta veri keşfi kullanılmaz."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Oturum açmayı onaylayın; istemci bir belirteçle yeniden dener. Araçlar şu gruplarda görünür: dönüştürme, sayfalar, çeşitli, güvenlik, yapay zekâ."
 step4ApiKey = "Araçlar dönüştürme, sayfalar, çeşitli, güvenlik ve yapay zekâ gruplarında görünür; her çağrı anahtarın sahibi adına denetlenir."
 tip = "İpucu: Kaynak kimliğini, kimlik sağlayıcınızda izin verilen hedef kitle olarak kaydedin. MCP Inspector ve Claude Desktop ile test edilmiştir."
 tipApiKey = "İpucu: API anahtarı modu harici bir kimlik sağlayıcı gerektirmez ve kendi sunucunuzda barındırma için en basit seçenektir. Anahtar, sahibi olan Stirling kullanıcısıyla eşleştirilir."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Bir MCP istemcisi bağlayın"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Sağlayıcıdan otomatik keşfedilir"
 
 [admin.settings.mcp.mode]
 apikey = "API anahtarı (Stirling kullanıcı başına anahtar)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth harici bir kimlik sağlayıcı gerektirir. API anahtarı, kullanıcı başına bir Stirling API anahtarı (X-API-KEY) kullanır ve kendi sunucunuzda barındırma için en basit seçenektir."
 label = "Kimlik doğrulama modu"
 oauth = "OAuth 2.1 (harici kimlik sağlayıcı)"
@@ -1515,6 +1563,18 @@ label = "Kaynak Kimliği"
 [admin.settings.mcp.scopes]
 description = "Okuma işlemleri için mcp.tools.read, yazma/yapay zekâ işlemleri için mcp.tools.write kapsamını zorunlu tutun."
 label = "OAuth kapsamlarını zorunlu tut"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "Bir Stirling kullanıcı adıyla eşleştirilen JWT talebi (ör. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Stirling PDF'yi daha iyi hale getirmeye yardımcı olmak ister misiniz?
 tags = "açıklama ekle,vurgula,çiz,işaretle,yorum,notlar,incele,düzeltme,geri bildirim,işaretleme araçları,yapışkan notlar,şekiller,oklar,metin kutusu,serbest çizim"
 
 [annotation]
-alignCenter = "Ortaya hizala"
-alignLeft = "Sola hizala"
-alignRight = "Sağa hizala"
 annotationStyle = "Açıklama stili"
 backgroundColor = "Arka plan rengi"
 borderOff = "Kenarlık: Kapalı"
@@ -2016,18 +2073,61 @@ underline = "Altını çiz"
 undoDelete = "Geri al"
 width = "Genişlik"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Herhangi bir altyapıda çalıştırabileceğiniz ücretsiz, özel bir PDF düzenleyici."
 
 [appBanner]
 dismiss = "Kapat"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Ekler ekle..."
 convertToPdfA3b = "PDF/A-3b'ye dönüştür"
 convertToPdfA3bTooltip = "PDF/A-3b, uzun süreli saklama sağlayan bir arşivleme biçimidir. Ek olarak rastgele dosya biçimlerinin gömülmesine izin verir. Dönüştürme için Ghostscript gerekir ve büyük dosyalarda daha uzun sürebilir."
-convertToPdfA3bTooltipHeader = "PDF/A-3b Dönüştürme Hakkında"
-convertToPdfA3bTooltipTitle = "Ne yapar"
 discardChanges = "Vazgeç"
 downloadSingle = "Eki indir"
 duplicateName = "{{name}} adlı bir ek zaten var."
@@ -2208,7 +2308,6 @@ guest = "Konuk"
 user = "Kullanıcı"
 
 [auto-rename]
-description = "PDF içeriğinizden başlığı otomatik olarak bulur ve dosya adı olarak kullanır."
 submit = "Otomatik Yeniden Adlandır"
 tags = "otomatik-tespit,başlık-tabanlı,düzenle,yeniden-etiketle"
 title = "Otomatik Yeniden Adlandır"
@@ -2218,21 +2317,6 @@ failed = "PDF otomatik yeniden adlandırılırken bir hata oluştu."
 
 [auto-rename.results]
 title = "Otomatik Yeniden Adlandırma Sonuçları"
-
-[auto-rename.settings]
-title = "Hakkında"
-
-[auto-rename.tooltip.description]
-title = "Ne yapar"
-
-[auto-rename.tooltip.header]
-title = "Otomatik Yeniden Adlandırma Nasıl Çalışır"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Başlık veya başlık gibi görünen metni arar"
-bullet2 = "Tespit edilen başlıktan temiz ve geçerli bir dosya adı oluşturur"
-bullet3 = "Uygun bir başlık bulunmazsa orijinal adı korur"
-title = "Akıllı Yeniden Adlandırma"
 
 [autoFormDetection]
 loading = "Form alanları algılanıyor..."
@@ -2327,6 +2411,9 @@ remove = "Aracı kaldır"
 selected = "Seçili Araçlar"
 selectTool = "Bir araç seçin..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "İptal"
 confirm = "Geri Dön"
@@ -2360,6 +2447,10 @@ title = "Otomasyonu Çalıştır"
 [automate.selection]
 title = "Otomasyon Seçimi"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Yeni Otomasyon Oluştur"
 
@@ -2371,6 +2462,7 @@ title = "Önerilen"
 
 [automate.sequence]
 finish = "Bitir"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Otomasyonu Çalıştır"
 running = "Otomasyon Çalıştırılıyor..."
 signInToRun = "Otomasyonları çalıştırmak için oturum açın."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Güvenlik İş Akışı"
 secureWorkflowDesc = "JavaScript ve gömülü dosyalar gibi potansiyel olarak kötü amaçlı içeriği kaldırarak PDF belgelerini güvenceye alır, ardından yetkisiz erişimi önlemek için parola koruması ekler. Varsayılan parola 'password' olarak ayarlanır."
 
 [autoRename]
-description = "Bu araç, PDF dosyalarını içeriklerine göre otomatik olarak yeniden adlandırır. Metinden en uygun başlığı bulmak için belgeyi analiz eder."
 tags = "otomatik algıla,üst bilgiye göre,düzenle,yeniden etiketle,otomatik yeniden adlandır,akıllı yeniden adlandır,içeriğe göre yeniden adlandır,dosya adı,dosya adlandırma,başlığı algıla"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,bölme,belge,organizasyon"
 [autoSplitPDF]
 dividerDownload2 = "'Otomatik Ayırıcı Ayırıcı (talimatlarla).pdf' indir"
 duplexMode = "Çift Taraflı Mod (Ön ve arka tarama)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-tabanlı,ayır,tarama-segmenti,düzenle"
 title = "PDF'i Otomatik Böl"
 
@@ -2528,9 +2620,6 @@ tooltip = "Kesme ve hizalamaya yardımcı olmak için her sayfa bölümünün et
 [bookletImposition.addGutter]
 label = "İç pay ekle"
 tooltip = "Ciltleme için iç boşluk ekler"
-
-[bookletImposition.advanced]
-toggle = "Gelişmiş Seçenekler"
 
 [bookletImposition.doubleSided]
 label = "Çift taraflı yazdırma"
@@ -2714,14 +2803,15 @@ chooseJksFile = "JKS Dosyası Seç"
 chooseP12File = "PKCS12 Dosyası Seç"
 choosePfxFile = "PFX Dosyası Seç"
 choosePrivateKey = "Özel Anahtar Dosyası Seç"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Reddedildi"
 fetchFailed = "İmzalama verileri yüklenemedi"
 finalized = "Sonlandırıldı"
 location = "Konum"
-logoTitle = "Logo"
-name = "İsim"
-noLogo = "Logo Yok"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Sayfa Numarası"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Sertifika Parolası"
 passwordOptional = "Parola yoksa boş bırakın"
 pemCertificateLabel = "Sertifika (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Özel anahtar (.pem / .key)"
 pending = "Beklemede"
 readyToFinalize = "Sonlandırmaya hazır"
 reason = "Neden"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Sunucu sertifikası kullanılıyor - dosya veya parola gerekmez"
-showLogo = "Logo Göster"
 signatureProgress = "{{signedCount}}/{{totalCount}} imza"
 tags = "kimlik doğrula,PEM,P12,resmi,şifrele,imzala,sertifika,PKCS12,JKS,sunucu,manuel,otomatik"
 title = "Sertifika İmzalama"
@@ -2738,12 +2828,45 @@ viewed = "Görüntülendi"
 
 [certSign.appearance]
 invisible = "Görünmez"
+showOnPage = "Show signature on page"
 stepTitle = "İmza Görünümü"
 visibility = "Görünürlük"
 visible = "Görünür"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "İmza Ayrıntıları"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "İmza Görünümü Hakkında"
@@ -2762,9 +2885,6 @@ bullet3 = "İmzanın hangi sayfaya yerleştirileceğini seçin"
 bullet4 = "İsteğe bağlı logo eklenebilir"
 text = "PDF üzerinde adınız, tarih ve isteğe bağlı ayrıntılarla bir imza bloğu gösterir. Okuyucuların belgenin imzalı olduğunu açıkça görmesini istediğinizde kullanışlıdır."
 title = "Görünür İmzalar"
-
-[certSign.certFiles]
-stepTitle = "Sertifika Dosyaları"
 
 [certSign.certType.tooltip.convert]
 text = "Dosyanızı keytool ile Java anahtar deposuna (.jks) dönüştürün, ardından JKS'yi seçin."
@@ -2786,6 +2906,7 @@ text = "Sertifika dosyanıza uyan biçimi seçin:"
 title = "Hangi seçeneği kullanmalıyım?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Sertifika Biçimi"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Bu cihaz"
 [certSign.error]
 failed = "İmzalar işlenirken bir hata oluştu."
 
-[certSign.format]
-pkcs11 = "USB Belirteci"
-windowsStore = "Windows sertifika deposu"
-
 [certSign.hardware]
-certificate = "Sertifika"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Özel sürücü yolu…"
+digitalId = "Digital ID"
 driver = "PKCS#11 sürücüsü"
 driverPath = "Sürücü kitaplığı yolu"
 driverPathPlaceholder = "PKCS#11 sürücünüzün tam yolu (.dll, .so veya .dylib)"
-expired = "süresi dolmuş"
-expires = "sona eriyor"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Sertifikaları listele"
-loading = "Sertifikalar okunuyor…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "İmzalama sertifikası bulunamadı"
 noDriver = "Herhangi bir PKCS#11 sürücüsü tespit edilmedi. Token sürücünüzü (örn. OpenSC) yükleyin, ardından bunu yeniden açın - veya aşağıya sürücü yolunu elle girin."
-notYetValid = "henüz geçerli değil"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "Token PIN'i"
 pkcs11Hint = "Token'ınızın PKCS#11 sürücüsünü seçin, PIN'i girin, sonra token üzerindeki sertifikaları listeleyin."
 pkcs11LoadError = "Sertifikalar token'dan okunamadı. PIN'i ve sürücüyü kontrol edin."
-refresh = "Yenile"
-selectCert = "Sertifika seçin"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Sürücü seçin"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (isteğe bağlı)"
-windowsHint = "Windows sertifika deponuzdan bir sertifika seçin. İmzalama, kartınızdaki/token'ınızdaki anahtarı kullanır - Windows PIN'i isteyecektir."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Windows sertifika deposu okunamadı"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Genel kural"
 device = "Bu cihaz"
 noOtherSources = "Başka sertifika kaynağı mevcut değil."
 server = "Sunucu"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Sertifika kaynağı"
 upload = "Yükle"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Kullanıcı adınızı güncelleyin. Güncellemeden sonra oturumunuz kapatılacak."
@@ -3069,7 +3205,6 @@ placeholder = "Belgeyi oluşturan"
 
 [changeMetadata.customFields]
 add = "Alan Ekle"
-description = "Belgeye özel meta veri alanları ekleyin"
 key = "Anahtar"
 keyPlaceholder = "Özel anahtar"
 remove = "Kaldır"
@@ -3135,10 +3270,6 @@ bullet1 = "Oluşturulma Tarihi: Orijinal belgenin ne zaman yapıldığı"
 bullet2 = "Değiştirilme Tarihi: En son ne zaman değiştirildiği"
 text = "Belgenin ne zaman oluşturulduğu ve değiştirildiği."
 title = "Tarih Alanları"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Gizliliği sağlamak için meta verileri tamamen silin."
-title = "Mevcut Meta Verileri Kaldır"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Başlık: Belge adı veya başlığı"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Kullanım sınırınıza ulaştınız. Devam etmek için 
 
 [checkAccessibility]
 aboutRow = "{{label}} hakkında"
-checking = "Kontrol ediliyor..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Erişilebilirlik raporunu indir"
 fileFailed = "başarısız"
+noFiles = "Select a PDF to check it."
 pickFile = "Şunun sonuçlarını göster"
-submit = "Erişilebilirliği kontrol et"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Alternatif metin"
@@ -3286,10 +3417,17 @@ structure = "Etiketler, ekran okuyuculara sayfadaki her bölümün ne olduğunu 
 [checkAccessibility.checks]
 label = "{{total}} kontrolden {{passed}} geçti"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Erişilebilirlik raporu oluşturulamadı. Tekrar deneyin."
 fileTitle = "Bu dosya kontrol edilemedi"
 partial = "Bazı dosyalar kontrol edilemedi."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA beyan eder"
@@ -3312,6 +3450,21 @@ title = "Dosyanın meta verilerinde bir başlık var."
 [checkAccessibility.figures]
 summary_one = "{{count}} görsel için açıklama gerekli (sayfa {{pages}})"
 summary_other = "{{count}} görsel için açıklama gerekli (sayfalar {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Şunlar için geçerli"
@@ -3465,19 +3618,7 @@ checking = "Toplam {{total}} öğeden {{current}} kontrol ediliyor..."
 complete = "Kontrol tamamlandı"
 
 [checkAccessibility.steps]
-results = "Sonuçlar"
 standard = "Standart"
-
-[checkAccessibility.tooltip.header]
-title = "Hangi standardın kontrol edileceği"
-
-[checkAccessibility.tooltip.ua1]
-text = "2012'de ISO 14289-1 olarak yayımlanan ilk PDF/UA sürümü; PDF 1.7 dosyaları için."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "2024'te ISO 14289-2 olarak yayımlanan daha yeni sürüm; PDF 2.0 dosyaları için. Buna karşı kontrol edilen bir PDF 1.7 dosyası, yalnızca PDF 2.0'a özgü kurallardan kalır."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Ek açıklama {{n}}"
@@ -3868,6 +4009,7 @@ title = "Renk seçin"
 transparent = "Şeffaf"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Eylemler"
 back = "Geri"
 cancel = "İptal"
@@ -4206,7 +4348,9 @@ title = "API Anahtarlarını Yenile"
 warning = "⚠️ Uyarı: Bu işlem yeni API anahtarları oluşturur ve önceki anahtarlarınızı geçersiz kılar."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP), Claude gibi AI asistanlarının Stirling PDF araçlarınızı doğrudan kullanmasını sağlar. Bir istemciyi bir kez bağlayın; asistanınız sizin adınıza belgeleri dönüştürebilir, düzenleyebilir, güvenceye alabilir ve işleyebilir."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Misafir kullanıcılar MCP istemcilerini bağlayamaz. MCP server'ı kullanmak ve AI asistanınızın sizin adınıza Stirling PDF araçlarını çalıştırmasını sağlamak için bir hesap oluşturun."
 navLabel = "MCP Sunucusu"
 tip = "Asistanınızın çalıştırdığı her işlem sizin hesabınız üzerinden yapılır ve tıpkı Stirling PDF'i doğrudan kullanmak gibi kullanımınıza sayılır."
@@ -4221,11 +4365,26 @@ tooltip = "{{label}} kopyala"
 tooltipCopied = "{{label}} kopyalandı"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "MCP endpoint'iniz"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Şuna ekle"
 hint = "İstemcinizi seçin, parçacığı gösterilen dosyaya yapıştırın ve ardından yeniden başlatın. İlk kullanımda Stirling hesabınızla oturum açacaksınız; kopyalanacak anahtar yok."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "AI asistanınızı bağlayın"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "En-boy oranını koru"
 maxAttachmentSize = "Azami ek boyutu (MB)"
 multiple = "Çoklu"
 optimizeForEbook = "PDF'yi e-kitap okuyucular için optimize et (Ghostscript kullanır)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Çıktı"
-outputFormat = "Çıktı Biçimi"
-pdfaAccessibleFormat = "{{format}} (erişilebilir)"
-pdfaDigitalSignatureWarning = "PDF dijital imza içeriyor. Bu bir sonraki adımda kaldırılacak."
-pdfaNote = "PDF/A-1b daha uyumludur, PDF/A-2b daha fazla özelliği destekler, PDF/A-3b gömülü dosyaları destekler."
-pdfaOptions = "PDF/A Seçenekleri"
 pdfOptions = "PDF Seçenekleri"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Ayarlar"
 signInToUse = "Kullanmak için oturum açın"
 single = "Tek"
 sourceFormatPlaceholder = "Kaynak biçim"
-strictMode = "Katı Mod"
-strictModeDesc = "Dönüştürme mükemmel değilse hata ver (VeraPDF doğrulaması kullanır)"
 svgPdfOptions = "SVG'den PDF'ye Seçenekleri"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG dosyaları, herhangi bir çözünürlükte net çıktı için vektör grafik olarak işlenir. SVG'den gelen boyutlar PDF sayfa boyutunu belirler."
@@ -4396,9 +4549,7 @@ zoomLevel = "Yakınlaştırma Düzeyi"
 
 [convert.ebookOptions]
 includePageNumbers = "Sayfa numaralarını ekle"
-includePageNumbersDesc = "Oluşturulan PDF'ye sayfa numaraları ekle"
 includeTableOfContents = "İçindekiler tablosunu ekle"
-includeTableOfContentsDesc = "Ortaya çıkan PDF'ye oluşturulmuş bir içindekiler tablosu ekle"
 optimizeForEbookPdf = "eBook okuyucular için optimize et"
 optimizeForEbookPdfDesc = "PDF'yi eBook okumaya göre optimize et (daha küçük dosya boyutu, eInk cihazlarda daha iyi işleme)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Bölümleri algıla"
 detectChaptersDesc = "Bölüm gibi görünen başlıkları algıla ve EPUB sayfa sonları ekle"
 kindleEink = "Kindle e-Ink (metin için optimize edilmiş)"
 outputFormat = "Çıktı biçimi"
-outputFormatDesc = "eBook için çıktı biçimini seçin"
 tabletPhone = "Tablet/Telefon (görsellerle)"
 targetDevice = "Hedef cihaz"
 targetDeviceDesc = "Okuyucu cihaz için optimize edilmiş bir çıktı profili seçin"
@@ -4469,8 +4619,24 @@ description = "Bu çerezler web sitesinin düzgün çalışması için gereklidi
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Kapak sayfası başlığı"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portföyü"
 description = "Seçilen her dosya, türü ne olursa olsun yeni PDF içinde bütün olarak tutulur. Portföyleri desteklemeyen okuyucular, dosyaların ekli olduğu bir kapak sayfası gösterir."
 goToFileEditor = "Dosya düzenleyiciye git"
@@ -4488,6 +4654,9 @@ title = "Ne yapar"
 
 [createPortfolio.tooltip.header]
 title = "PDF Portföyleri hakkında"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Boşlukları otomatik kırp"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Bu tarayıcıda pano erişimi mevcut değil."
 export = "Yer imlerini dışa aktar"
 exportClipboard = "JSON'u panoya kopyala"
 exportJson = "JSON İndir"
+exportMenu = "Export"
 importClipboard = "Panodan JSON yapıştır"
 importJson = "JSON İçeri Al"
+importMenu = "Import"
 loadFromPdf = "Seçilen PDF'den yükle"
 noFile = "Mevcut yer imlerini çıkarmak için bir PDF seçin."
 selectedFile = "Şuradan yüklendi: {{file}}"
-source = "Yer imlerini yükle"
 
 [editTableOfContents.editor]
 addTopLevel = "Üst düzey yer imi ekle"
@@ -4740,6 +4910,9 @@ replaceExisting = "Mevcut yer imlerini değiştir (eklemek için işareti kaldı
 replaceExistingHint = "Devre dışı bırakıldığında, yeni ana hat mevcut yer imlerinin sonuna eklenir."
 title = "Yer imleri ve ana hat"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "PDF'yi Değiştir"
 filePrompt = "Başlamak için kitaplığınızdan bir PDF seçin veya yeni bir tane yükleyin."
@@ -4753,7 +4926,6 @@ title = "Düzenlemeye başlamak için aracı açın"
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} kısıtlaması yok sayıldı"
 actionUnlocked = "{{action}} bu oturum için kilidi açıldı"
-advanced = "Gelişmiş"
 allowed = "İzin verildi"
 annotations = "Açıklamalar"
 authoriseAction = "Bu PDF, {{action}} kullanmak için izin gerektiriyor."
@@ -4801,7 +4973,6 @@ restricted = "Kısıtlı"
 restrictedActions = "kısıtlı eylemler"
 restrictedOperation = "Bu eylem izinler parolasını gerektirir."
 retainOwnerVerification = "Açma parolasını kaldırırken izinler parolasını değişmeden tutmak için doğrulayın. Bu işlem onu kaldırmaz."
-saveProtection = "Korumayı kaydet"
 securityChangeFailed = "Koruma değiştirilemedi. İzinler parolasını ve yeni güvenlik ayarlarını kontrol edin."
 sessionDetails = "Bu oturum için açık. PDF korumalı kalır."
 sessionDetailsLabel = "Oturum kilidi açma hakkında"
@@ -4871,7 +5042,6 @@ title = "Bir şeyler ters gitti"
 tryAgain = "Tekrar Dene"
 
 [extractImages]
-allowDuplicates = "Yinelenen görselleri kaydet"
 selectText = "Çıkarılan resimleri dönüştürmek için resim formatını seçin"
 submit = "Çıkar"
 tags = "fotoğraf,resim,kaydet,arşiv,zip,yakala,al"
@@ -4927,12 +5097,15 @@ closeFile = "Dosyayı kapat"
 
 [fileEditor]
 closedFile = "{{name}} kapatıldı"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Dosya yeniden sıralandı"
 filesReordered_other = "{{count}} dosya yeniden sıralandı"
 loadedFromStorage_one = "Depolamadan {{count}} dosya yüklendi"
 loadedFromStorage_other = "Depolamadan {{count}} dosya yüklendi"
 loadFromStorageFailed = "Bazı dosyalar depolamadan yüklenemedi"
 pinnedFile = "{{name}} sabitlendi"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} kaydedildi ve kapatıldı"
 saveFailed = "Kaydetme başarısız"
 unpinnedFile = "{{name}} sabitlemesi kaldırıldı"
@@ -5019,11 +5192,20 @@ locked = "Kilitli"
 previewOf = "{{name}} önizlemesi"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Dosya ekle"
 created = "Oluşturuldu"
 notIncludedInToolRun = "Bu araç çalıştırmasına dahil edilmedi"
 size = "Dosya Boyutu"
 title = "Dosyalar"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Kullanılabilir dosya yok"
@@ -5104,6 +5286,7 @@ subtitle = "Dosyalar kenar çubuğunda kategorileri gösterin veya gizleyin."
 title = "Kenar çubuğu kategorileri"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "İptal"
 error = "Dosya yeniden adlandırılamadı."
 illegalCharacters = "Bir dosya adı \\ / : * ? \" < > | içeremez"
@@ -5607,7 +5790,6 @@ removeField = "Alanı kaldır"
 
 [formFill.editor]
 action = "Düğme eylemi"
-actionHelp = "Düğmeye tıklandığında ne yapacağı."
 actionNone = "Yok"
 actionPrint = "Yazdır"
 actionReset = "Formu sıfırla"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Kaç karakterin sığacağını sınırlar; eşit aralıklı ku
 multiline = "Çok satırlı"
 multilineHelp = "Birden fazla metin satırına izin verir ve alanın kenarında satırı kaydırır."
 multiSelect = "Birden çok seçime izin ver"
-multiSelectHelp = "Aynı anda birden fazla seçeneğin seçilmesine izin verir."
 name = "Alan adı"
 nameHelp = "Alanın dahili adı. Veri dışa aktarırken veya formu başka bir sistemden doldururken kullanılır; bu nedenle benzersiz ve boşluksuz tutun."
 optionGap = "Seçenek aralığı"
@@ -5902,6 +6083,11 @@ title = "Renk ve Kontrast Ayarla"
 desc = "Görüntüleyicide vurgulayın, çizin, not ve şekil ekleyin"
 tags = "not ekle,vurgula,çiz,işaretle,yorum,notlar,inceleme,düzeltme,geri bildirim,işaretleme araçları,yapışkan notlar,şekiller,oklar,metin kutusu,serbest çizim"
 title = "Açıklama Ekle"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Form alanlarını AI ile otomatik olarak algılayın ve PDF'nizi doldurulabilir hale getirin."
@@ -6405,6 +6591,9 @@ sort = "Sırala"
 [merge.sortFiles]
 title = "Dosyaları Sırala"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Birleştirme Ayarlarına Genel Bakış"
 
@@ -6548,6 +6737,9 @@ title = "Kimlik Doğrulama Başarısız"
 message = "Bu pencereyi kapatabilir ve Stirling PDF'ye dönebilirsiniz."
 title = "Kimlik Doğrulama Başarılı"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Erişime izin ver"
 approving = "İzin veriliyor..."
@@ -6558,6 +6750,7 @@ loadFailed = "Bu yetkilendirme isteği geçersiz veya süresi dolmuş. Bu sekmey
 loading = "Yetkilendirme isteği yükleniyor..."
 missingId = "Yetkilendirme isteği eksik. Bağlantıyı uygulamanızdan başlatın ve tekrar deneyin."
 redirecting = "Uygulamaya geri döndürülüyorsunuz..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} Stirling PDF hesabınıza erişmek istiyor"
 scopesIntro = "Bu, {{app}} uygulamasına şunları yapma izni verir:"
 signedInAs = "{{name}} olarak oturum açıldı"
@@ -6565,6 +6758,8 @@ signInButton = "Devam etmek için oturum aç"
 signInPrompt = "Uygulamayı bağlamaya devam etmek için Stirling PDF hesabınızda oturum açın."
 title = "Erişimi yetkilendir"
 unknownApp = "Üçüncü taraf bir uygulama"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Sizin adınıza hareket eder - {{app}} tarafından yapılan her şey hesabınız altında çalışır ve kullanımınıza dahil edilir"
@@ -6572,9 +6767,12 @@ tools = "Stirling PDF araçlarınızı sizin adınıza kullanır - belgelerinizi
 
 [oauthConsent.scope]
 email = "Email adresinizi görme"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Kimliğinizi doğrulama"
 phone = "Telefon numaranızı görme"
 profile = "Temel profil bilgilerinizi görme"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Taramaları temizler ve bir PDF içindeki resimlerden metni algılar ve tekrar metin olarak ekler."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Ekip üyesi olacaksınız ve sahip erişimini kaybedeceksiniz
 [pageEdit]
 deselectAll = "Hiçbiri"
 selectAll = "Tümünü İşaretle"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Sayfaları Çıkar"
@@ -7577,6 +7779,8 @@ stamp = "Damga açıklaması - sayfa metni değildir, bu yüzden burada düzenle
 widget = "Form alanı - sayfa metni değildir, bu yüzden burada düzenlenemez"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Düzenle"
 markTagged = "Tamamen etiketli olarak işaretle"
 matchScanFont = "Taranan metni {{face}} ile eşle"
@@ -7590,6 +7794,7 @@ tagPageContent = "Sayfayı otomatik etiketle"
 typeInto = "{{run}} içine yaz"
 ungroupParagraph = "{{run}} paragrafının grubunu çöz"
 unmarkTagged = "Tamamen etiketli değil olarak işaretle"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "{{run}} kaydır"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Kaydedilmemiş değişikliklerden vazgeçilsin mi?"
 
 [pdfTextEditor.error]
 decodeImage = "Seçilen resim çözümlenemedi."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Bu metin çoğaltılamıyor: kullanılabilir hiçbir yazı tipi tüm harflerini çizemiyor."
 formLiftChangesDrawing = "Bu öğe düzenlenemiyor: Kırpma veya grafik ayarları, değiştirildiğinde editörün koruyamayacağı bir grubun parçası olarak çizilmiş."
 insertImage = "Seçilen resim eklenemedi."
 needsShaping = "Editör, bu yazı sisteminin bitişik harflerini ve ünlü işaretlerini henüz doğru çizemiyor; bu nedenle bu değişiklik yapılmadı."
+reopenLost = "Open again"
 replaceClippedImage = "Bu görüntü değiştirilemiyor: kırpılmış ve yenisi kırpmanın gizlediği kısımları gösterecek."
 scanOffInk = "Bu metin düzenlenemiyor: tanınan kelimeler taramayla hizalı değil. OCR'ı tekrar çalıştırın."
 unsafeRtlEdit = "Bu düzenleme yapılamıyor: editör bu satırın sağdan sola metnini değiştirmeden yeniden çizemiyor."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG görüntüsü"
 close = "Bul çubuğunu kapat"
 count = "{{total}} içinden {{current}}"
 findPlaceholder = "Bul"
+hideReplace = "Hide replace"
 ignoreAccents = "Aksanları yok say"
 matchCase = "Büyük/küçük harf eşleştir"
 next = "Sonraki eşleşme"
@@ -7625,6 +7833,7 @@ replace = "Değiştir"
 replaceAll = "Tümünü değiştir"
 replaced = "{{count}} değiştirildi"
 replacePlaceholder = "Şununla değiştir"
+showReplace = "Show replace"
 wholeWord = "Tam sözcük"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Bu bağlantı etiketlenemez."
 cannotTagPage = "Bu sayfanın içeriği etiketlenemez."
 contentGroup = "İçerik"
 customTag = "{{role}} (özel etiket)"
-decorativeInfo = "Ekran okuyucular dekoratif görselleri atlar. Bunu kenarlıklar, arka planlar ve bilgi taşımayan diğer görseller için kullanın."
-decorativeLabel = "Dekoratif görsel"
-description = "Görsel açıklaması"
-descriptionInfo = "Ekran okuyucular bunu görselin yerine okur."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Şifrelenmiş bir dosyada etiketler düzenlenemez"
 figureDescription = "Şekil açıklaması"
 figureDescriptionInfo = "Ekran okuyucular bunu şeklin yerine okur."
-formFieldDescription = "Alan açıklaması"
 formulaDescription = "Formül açıklaması"
 formulaDescriptionInfo = "Ekran okuyucular bunu formülün yerine okur. Bunu yüksek sesle söyler gibi yazın; örneğin \"x kare artı bir\"."
 heading = "Erişilebilirlik"
@@ -7813,7 +8019,6 @@ markedTagged = "Belge tamamen etiketli"
 markedTaggedHint = "PDF okuyuculara erişilebilirlik etiketlerini kullanmalarını söyler. Her şey etiketlendikten sonra işaretleyin."
 markedWithUntagged = "Bazı içeriklerin etiketi yok; bu yüzden ekran okuyucular atlayabilir."
 missingDescriptions = "Eksik açıklamalar"
-mixedContent = "Şekil başka içerik içeriyor"
 mixedTags = "Karışık"
 needsDescriptionBadge = "Açıklama yok"
 nextToReview = "İnceleme için sonraki"
@@ -7821,12 +8026,10 @@ notFigure = "Metnin parçası olarak etiketlendi"
 removeTag = "Etiketi kaldır"
 saveFailed = "Erişilebilirlik değişiklikleriniz kaydedilemedi, bu nedenle dosya kaydedilmedi. Bunları geri alın ve tekrar deneyin."
 selectedText = "Seçili metin"
-tagFormField = "Form alanını etiketle"
 tagging = "Sayfalar etiketleniyor"
 tagLabel = "Etiket"
 tagLinks_one = "Bağlantıyı etiketle"
 tagLinks_other = "{{count}} bağlantıyı etiketle"
-tagUntagged = "Belgeyi otomatik etiketle"
 tagUntaggedHint = "Belgenin tamamına otomatik erişilebilirlik etiketleri ekler. Sonuç kabadır: ardından başlıkları, listeleri ve okuma sırasını kontrol edin."
 unknownTag = "Burada okunamaz"
 unmarkedWithTags = "Bazı PDF görüntüleyicileri etiketleri yine de kullanır ve etiketsiz içeriği atlayabilir."
@@ -7851,7 +8054,7 @@ heading = "Başlıklar"
 mixedNumbering = "Numaralı ve numarasız başlıkları karıştırıyor"
 none = "Başlık yok"
 onPage = "{{page}} sayfasındaki başlık"
-problems = "Başlık sorunları"
+problemCount = "{{count}} to fix"
 skippedLevel = "Başlık {{previous}} sonrasında bir düzeyi atlıyor"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Başlık"
 allLanguages = "Tüm diller"
 cannotSetDocument = "Bu belgenin dili değiştirilemez."
 cannotSetText = "Bu metnin dili değiştirilemez."
-documentHint = "Bir bölüm kendi dilini ayarlamazsa ekran okuyucuların kullanacağı dil."
 documentLabel = "Dil"
 documentLocked = "Şifreli bir belgenin dili burada değiştirilemez."
 inDocument = "Bu belgede"
 innerLabel = "Etiket {{number}} dili"
 label = "Dil"
-missing = "Dil ayarlı değil. Ekran okuyucular tahmin edecek ve tüm belgeyi yanlış sesle okuyabilir."
 mixed = "Karışık"
 noMatch = "Eşleşen dil yok. Bunun yerine kodunu yazın; örn. mt veya en-IE."
 placeholder = "Dil seçin"
@@ -7943,6 +8144,52 @@ renderFailed = "Sayfa render edilemedi"
 [pdfTextEditor.password]
 incorrect = "Yanlış parola - tekrar deneyin."
 label = "Parola"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} konumunda hizalama kılavuzu - kaldırmak için bir cetvelin üzerine sürükleyin"
@@ -8124,6 +8371,10 @@ title = "Önizleme Farklılıkları"
 [pdfTextEditor.tooltip.textFocus]
 text = "Bu çalışma alanı, metin düzenlemeye ve gömülü görselleri yeniden konumlandırmaya odaklanır. Karmaşık sayfa illüstrasyonları, form bileşenleri ve katmanlı grafikler dışa aktarım için korunur ancak burada tam olarak düzenlenemez."
 title = "Metin ve Görsel Odak"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF'den CSV'ye"
@@ -8383,17 +8634,6 @@ hideCategory = "Kategoriyi gizle"
 labelCount = "etiket"
 sharedNote = "Bu etiketler yerleşiktir ve tüm ekibiniz genelinde paylaşılır."
 showCategory = "Kategoriyi göster"
-
-[policies.pii]
-account = "Hesap numaraları (etiketli)"
-card = "Kredi / banka kartları"
-email = "E-posta adresleri"
-fieldLabel = "Redakte edilecek PII"
-iban = "IBAN'lar"
-phone = "Telefon numaraları"
-placeholder = "PII türlerini seçin"
-routing = "ABD yönlendirme numaraları (ABA)"
-ssn = "Sosyal Güvenlik numaraları"
 
 [policy]
 badgeEnforcing = "{{name}} uygulanıyor..."
@@ -10317,6 +10557,10 @@ title = "İşlem hatları"
 [portal.pipelines.actions]
 newCustomPipeline = "Yeni özel iş hattı"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Tüm iş hatları"
 
@@ -12047,7 +12291,6 @@ label = "Okuma araçları"
 readAloud = "Sesli oku"
 rotateLeft = "Sola döndür"
 rotateRight = "Sağa döndür"
-search = "Belgede bul"
 switchDocument = "Belge değiştir"
 thumbnails = "Sayfalar"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Kutu Rengi"
 convertPDFToImageLabel = "PDF'yi PDF-Image'a dönüştür"
 customPaddingLabel = "Özel Ek Dolgu"
 useRegexLabel = "Regex Kullan"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Tam Kelime Arama"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Sansürleme Ayarları"
 
 [redact.auto.wordsToRedact]
 add = "Ekle"
-examples = "Örnekler: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Bir kelime girin"
 title = "Sansürlenecek Kelimeler"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Birden fazla dosyayı aynı anda karartmak için dos
 manual = "Manuel"
 mode = "Mod"
 title = "Sansürleme Yöntemi"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Yalnızca aynı büyük/küçük harf kullanımındaki metinleri eşleştir. Etkinleştirildiğinde 'Secret', 'SECRET' ile eşleşmez ve bir regex içindeki [A-Z] yalnızca büyük harflerle eşleşir."
@@ -12147,19 +12401,6 @@ title = "Sansürleme Yöntemi"
 text = "Sansürlemek için belirli alanları elle seçmek üzere tıklayıp sürükleyin. Neyin sansürleneceği üzerinde hassas kontrol sağlar. (Yakında)"
 title = "Manuel Sansürleme"
 
-[redact.tooltip.words]
-bullet1 = "Her seferinde bir kelime ekleyin"
-bullet2 = "Eklemek için Enter'a basın veya 'Bir Başka Ekle'ye tıklayın"
-bullet3 = "Kelimeleri kaldırmak için ×'a tıklayın"
-
-[redact.tooltip.words.description]
-text = "Belgenizde bulup sansürlemek istediğiniz kelime veya ifadeleri girin. Her kelime ayrı ayrı aranacaktır."
-title = "Metin Eşleştirme"
-
-[redact.tooltip.words.examples]
-text = "Tipik sansürlenecek kelimeler: banka bilgileri, e-posta adresleri veya belirli isimler."
-title = "Yaygın Örnekler"
-
 [redact.tooltip.words.header]
 title = "Sansürlenecek Kelimeler"
 
@@ -12176,15 +12417,6 @@ failed = "PDF'den açıklamalar kaldırılırken bir hata oluştu."
 
 [removeAnnotations.info]
 description = "Bu araç, PDF belgelerinizden tüm açıklamaları (yorumlar, vurgular, notlar vb.) kaldırır."
-
-[removeAnnotations.settings]
-title = "Ayarlar"
-
-[removeAnnotations.tooltip.description]
-title = "Ne yapar"
-
-[removeAnnotations.tooltip.header]
-title = "Ek Açıklamaları Kaldır Hakkında"
 
 [removeBlanks]
 submit = "Boş sayfaları kaldır"
@@ -12325,6 +12557,9 @@ tags = "yeniden düzenle,sırala,düzenle,yeniden organize et,sayfaları taşı,
 [reorganizePages.error]
 failed = "Sayfalar yeniden düzenlenemedi"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Sayfalar Yeniden Düzenlendi"
 
@@ -12406,6 +12641,7 @@ title = "Tüm Renkleri Ters Çevir"
 rotateLeft = "Saat yönünün tersine döndür"
 rotateRight = "Saat yönünde döndür"
 selectRotation = "Döndürme Açısını Seçin (Saat yönünde)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Döndürmeyi Uygula"
 tags = "çevir,ters çevir,yönlendir,döndür,yön,yatay,dikey,90 derece,180 derece,saat yönü,saat yönünün tersi,yönü düzelt"
 title = "PDF Döndür"
@@ -12516,8 +12752,7 @@ title = "Temizle"
 failed = "PDF temizlenirken bir hata oluştu."
 
 [sanitize.options]
-note = "PDF’den kaldırmak istediğiniz öğeleri seçin. En az bir seçenek seçilmelidir."
-title = "Temizleme Seçenekleri"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "PDF içine gömülü tüm dosyaları kaldır"
@@ -12649,6 +12884,7 @@ title = "PDF Ara"
 hideTools = "Kullanılamayan araçları gizle ▴"
 messageNoFallback = "Sunucunuz geri gelene kadar araçlar kullanılamaz."
 messageWithFallback = "Bazı araçlar sunucu bağlantısı gerektirir."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Kullanılamayan araçları görüntüle ▾"
 title = "Stirling-PDF sunucunuza ulaşılamıyor"
 toolNotAvailableLocally = "Stirling-PDF sunucunuz çevrimdışı ve \"{{endpoint}}\" yerel arka uçta kullanılamıyor."
@@ -13034,6 +13270,12 @@ title = "Klavye Kısayolları"
 mac = "Kısayolunuza ⌘ (Command), ⌥ (Option) veya başka bir değiştirici ekleyin."
 windows = "Kısayolunuza Ctrl, Alt veya başka bir değiştirici ekleyin."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Şartlar, gizlilik politikası ve cookie tercihleriniz."
 label = "Yasal"
@@ -13418,9 +13660,7 @@ image = "Yükleme"
 text = "Metin"
 
 [sign.step]
-createDesc = "İmzayı nasıl oluşturmak istediğinizi seçin"
 place = "Yerleştir ve kaydet"
-placeDesc = "İmzayı PDF'iniz üzerinde konumlandırın"
 
 [sign.steps]
 configure = "İmzayı Yapılandır"
@@ -13597,6 +13837,10 @@ rotateLeft = "Sola döndür"
 rotateRight = "Sağa döndür"
 trim = "İmzaya kırp"
 trimHint = "Etrafındaki boş alanı kırpar"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "İmza Görünümü Ayarları"
@@ -13959,7 +14203,6 @@ placeholder = "Yatay bölme sayısını girin"
 
 [split-by-sections.splitMode]
 custom = "Özel sayfalar"
-description = "Sayfaların nasıl bölüneceğini seçin"
 label = "Bölme Modu"
 splitAll = "Tüm sayfaları böl"
 splitAllExceptFirst = "İlk hariç tümünü böl"
@@ -14210,10 +14453,8 @@ failed = "PDF zaman damgalanırken bir hata oluştu."
 
 [timestampPdf.options]
 note = "Yalnızca belgenizin SHA-256 özeti TSA sunucusuna gönderilir; PDF dosyasının kendisi asla TSA sunucusuna gönderilmez."
-title = "Zaman Damgası Sunucusu (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Güvenilir bir Zaman Damgası Otoritesi seçin"
 label = "Bir TSA sunucusu seçin"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Kullanılabilir araç yok"
 
 [tooltip]
 close = "Araç ipucunu kapat"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Bu araç PDF form alanlarındaki salt okunur kısıtlamalarını kaldırarak onları düzenlenebilir ve doldurulabilir hale getirir."
@@ -14706,6 +14961,9 @@ signatureDate = "İmza Tarihi"
 
 [validateSignature.settings]
 certHint = "Özel bir güven kaynağına karşı doğrulamak için güvenilir bir X.509 sertifikası yükleyin."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Doğrulama Ayarları"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Dosya önizlenemiyor"
 copyRestricted = "Bu PDF'nin izinleri nedeniyle kopyalama devre dışı."
 copyText = "Kopyala"
 coverPageView = "Kapak sayfasını ayrı göster"
-disableColorFilter = "Renk Filtresini Devre Dışı Bırak"
 documentUpdated = "Belge güncellendi"
 dualPageView = "Çift Sayfa Görünümü"
 editText = "Metni düzenle"
-enableDarkFilter = "Karanlık Filtresini Etkinleştir"
-enableSepiaFilter = "Sepya Filtresini Etkinleştir"
 engineLoadError = "PDF görüntüleyici motoru başlatılamadı"
 engineSlowWarning = "PDF motorunun başlatılması beklenenden uzun sürüyor. Lütfen tarayıcınızın WebAssembly ve Worker ayarlarını kontrol edin veya sayfayı yeniden yükleyin."
 firstPage = "İlk Sayfa"
@@ -14736,20 +14991,27 @@ fitPage = "Sayfaya sığdır"
 fitWidth = "Genişliğe sığdır"
 lastPage = "Son Sayfa"
 loadingEngine = "PDF Engine yükleniyor..."
+menuSelected = "Selected"
 moreOptions = "Daha fazla"
 nextPage = "Sonraki Sayfa"
 noPdfProvided = "PDF sağlanmadı"
 onlyPdfSupported = "Bu dosya formatı önizleme için desteklenmiyor."
 pageNavigation = "Sayfa gezintisi"
+pageNumber = "Page number"
 previousPage = "Önceki Sayfa"
 readAloudFromHere = "Buradan sesli oku"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Belge kaydedilemedi. Tekrar deneyin."
 saveChangesErrorTitle = "Değişiklikler kaydedilemedi"
 singlePageView = "Tek Sayfa Görünümü"
+tools = "Tools"
 unknownFile = "Bilinmeyen dosya"
-view = "Görünüm"
 zoom = "Yakınlaştır"
 zoomIn = "Yakınlaştır"
+zoomLevel = "Zoom level"
 zoomOut = "Uzaklaştır"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "İmza önizlemesi"
 
 [viewer.signatureField]
 badge = "İmza"
+clickToSign = "Click to sign here"
 fieldTitle = "İmza alanı: {{name}}"
 signed = "İmzalandı"
 signedWithReason = "İmzalandı: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "İmzalanmamış imza alanı: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{total}} dosyadan {{restored}} tanesi geri yüklendi. Geri kalanı a
 
 [workbenchBar]
 activeFiles = "Etkin dosyalar"
-annotations = "Ek açıklamalar"
+annotate = "Annotate"
 applyRedactionsFirst = "Önce karartmaları uygula"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Tüm dosyaları kapat"
 closePdf = "PDF'yi kapat"
+defaultZoom = "Default zoom"
 deselectAll = "Tümünün seçimini kaldır"
 downloadAll = "Tümünü indir"
 editText = "Metni Düzenle"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Açıklama modundan çık"
 exitRedaction = "Karartma modundan çık"
 findReplace = "Bul ve Değiştir"
 formFill = "Form Düzenleyici"
-hideToolbar = "Araç çubuğunu gizle"
+layers = "Layers"
 moreActions = "Daha fazla eylem"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Sayfa Düzenleyici"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Kaydırma modu"
 print = "PDF'yi yazdır"
 readAloud = "Sesli oku"
 readAloudLanguage = "Dil"
 readAloudSpeed = "Hız"
 redact = "Karart"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Sola döndür"
 rotateRight = "Sağa döndür"
 ruler = "Cetvel / Ölçüm"
+rulerScaleUnset = "Not set"
 rulerSettings = "Ölçek Ayarları"
 save = "Kaydet"
 saveAll = "Tümünü kaydet"
@@ -15123,14 +15398,23 @@ selectLanguage = "Dil seç"
 share = "Paylaş"
 showAllTools = "Tüm araçları göster"
 showFewerTools = "Araç çubuğunu daralt"
-showToolbar = "Araç çubuğunu göster"
+thumbnails = "Pages"
 toggleAnnotations = "Ek açıklamaların görünürlüğünü değiştir"
-toggleAttachments = "Ekleri göster/gizle"
-toggleBookmarks = "Yer imleri (İçindekiler)"
 toggleComments = "Yorumlar"
-toggleLayers = "Katmanları göster/gizle"
-toggleSidebar = "Kenar çubuğunu göster/gizle"
 viewer = "Görüntüleyici"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Bu belgeye erişiminizin süresi doldu."

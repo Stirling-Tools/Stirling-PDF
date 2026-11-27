@@ -12,9 +12,11 @@ comingSoon = "Kmalu na voljo"
 confirm = "Potrdi"
 confirmClose = "Potrdi zapiranje"
 confirmCloseCancel = "Prekliči"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Zapri datoteko"
 confirmCloseDiscard = "Zavrzi spremembe in zapri"
 confirmCloseMessage = "Ali ste prepričani, da želite zapreti to datoteko?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Shrani in zapri"
 confirmCloseSaveFailed_one = "Shranjeno z napakami. {{count}} file ni bilo mogoče shraniti."
 confirmCloseSaveFailed_other = "Shranjeno z napakami. {{count}} datotek ni bilo mogoče shraniti."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Datoteka shranjena na disk"
 filesSelected = "{{count}} datotek"
 font = "Pisava"
 fontSizeTooltip = "Velikost besedila številke strani v točkah. Večje številke ustvarijo večje besedilo."
-fontTypeTooltip = "Družina pisave za številke strani. Izberite glede na slog dokumenta."
 green = "zelena"
 help = "Pomoč"
 incorrectPasswordMessage = "Trenutno geslo ni pravilno."
@@ -249,9 +250,7 @@ image = "Nalaganje"
 text = "Besedilo"
 
 [addImage.step]
-createDesc = "Naložite sliko, ki jo želite dodati"
 place = "Postavi sliko"
-placeDesc = "Kliknite na PDF, da dodate svojo sliko"
 
 [addImage.steps]
 configure = "Nastavi sliko"
@@ -276,7 +275,7 @@ fontName = "Ime pisave"
 fontSize = "Velikost pisave"
 numberPagesDesc = "npr. 1,3,5-8 ali pustite prazno za vse strani"
 pagePreviewAlt = "Predogled strani"
-pagesAndStarting = "Strani in začetna številka"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Položaj in strani"
 preview = "Izbira položaja"
 previewDisclaimer = "Predogled je približen. Končni rezultat se lahko razlikuje zaradi metrik pisav PDF."
@@ -300,6 +299,7 @@ title = "Rezultati številčenja strani"
 
 [addPassword]
 desc = "Šifrirajte svoj dokument PDF z geslom."
+submit = "Add Password"
 tags = "šifriraj,geslo,zakleni,varno,zaščiti,varnost,šifriranje,varovanje,zaupno,zasebno,omeji dostop"
 title = "Dodaj geslo"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Predogled žiga"
 tags = "žig,oznaka,pečat,odobreno,zavrnjeno,zaupno,orodje za žige,gumijasti žig,datumski žig,žig odobritve,prejeto,neveljavno,kopija,izvirnik"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Abeceda"
-clickToExpand = "Kliknite za razširitev"
 customColor = "Barva besedila po meri"
 customDateDesc = "Oblika po meri"
 customPosition = "Povlecite žig na želeno mesto v oknu predogleda."
 dateDesc = "Trenutni datum"
 datetimeDesc = "Združen datum in čas"
 dateTimeVars = "Datum in čas"
-dynamicVariables = "Dinamične spremenljivke"
 examples = "Primeri"
 filenameDesc = "Ime datoteke brez končnice"
 filenameFullDesc = "Ime datoteke s končnico"
@@ -365,6 +364,8 @@ noStampSelected = "Žig ni izbran. Vrnite se na 1. korak."
 opacity = "Neprosojnost"
 otherVars = "Drugo"
 pageNumberDesc = "Številka trenutne strani"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Podatki o strani"
 position = "Položaj"
 positionAndFormatting = "Položaj in oblikovanje"
@@ -378,9 +379,10 @@ quickPosition = "Izberite položaj na strani za postavitev žiga."
 rotation = "Rotacija"
 selectedImageAlt = "Izbrana slika žiga"
 selectTemplate = "Izberite predlogo ..."
+size = "Size"
 stampSetup = "Nastavitev žiga"
 stampText = "Označi besedilo"
-stampTextDescription = "Uporabite spodnje dinamične spremenljivke. Uporabite @@ za dobesedni @. Uporabite \\n za nove vrstice."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Vrsta žiga"
 submit = "Dodaj žig"
 tags = "Žig, Dodaj sliko, sredinska slika, Vodni žig, PDF, Vdelaj, Prilagodi, Prilagodi"
@@ -389,7 +391,6 @@ title = "Ožigosajte PDF"
 totalPagesDesc = "Skupno število strani"
 useTemplate = "Uporabi predlogo"
 uuidDesc = "Kratek enolični identifikator (8 znakov)"
-variablesHelp = "Kliknite katero koli spremenljivko, da jo vstavite v besedilo žiga. Uporabite @@ za dobesedni @."
 yearMonthDayDesc = "Posamezni deli datuma"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Pri dodajanju žiga v PDF je prišlo do napake."
 
 [AddStampRequest.results]
 title = "Rezultati žiga"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Po meri"
@@ -410,6 +417,11 @@ legal-footer = "Pravna noga"
 page-numbers = "Številke strani"
 pageNumberFooter = "Noga s številko strani"
 timestamp = "Časovni žig"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Uporabi besedilo"
@@ -462,9 +474,7 @@ image = "Nalaganje"
 text = "Besedilo"
 
 [addText.step]
-createDesc = "Vnesite besedilo, ki ga želite dodati"
 place = "Postavi besedilo"
-placeDesc = "Kliknite v PDF, da dodate besedilo"
 
 [addText.steps]
 configure = "Nastavi besedilo"
@@ -1233,6 +1243,18 @@ label = "Znova ustvari ob zagonu"
 description = "Število dni veljavnosti potrdila"
 label = "Veljavnost potrdila (dni)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Imeniki, iz katerih lahko viri map in izhodi map berejo ter v katere lahko pišejo. To je varnostna meja: avtomatizacij nikoli ni mogoče usmeriti na strežniško pot zunaj tega seznama."
 securityNote = "Pustite prazno, da v celoti onemogočite vire map in izhode. Lastni konfiguracijski imenik Stirling je vedno nedostopen."
@@ -1456,7 +1478,9 @@ label = "Uporabniško ime SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Odjemalci pošljejo Stirling API ključ v glavi X-API-KEY (ali Authorization: Bearer <key>). Ključ se preslika na lastnika, uporabnika Stirling - dostop dobijo samo pripravljeni računi, dejanja pa se revidirajo kot ta uporabnik. Ključe upravljajte pod Račun > API ključi."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Izpostavite Stirlingova orodja PDF in agente AI odjemalcem MCP prek končne točke, zaščitene z OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "MCP strežnik"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Dovoljena orodja"
 description = "ID-ji operacij, ki jih želite skriti pred MCP (ločeni z vejico ali presledkom), npr. add-password remove-password. Pustite prazno, da izpostavite vsa omogočena orodja."
 label = "Blokirana orodja"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Ko je izklopljeno (privzeto), se ne naložijo nobena končna točka /mcp, metapodatki ali MCP beans."
 label = "Omogoči MCP strežnik"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Zgoraj vnesite izdajatelja OAuth + ID vira, shranite in znova zaženite."
 step1ApiKey = "Ustvarite API ključ pod Račun > API ključi (vsak uporabnik uporablja svojega)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "V odjemalcu MCP dodajte"
 step2b = "strežnik, ki kaže na:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Odjemalec samodejno odkrije OAuth iz:"
 step3ApiKey = "Pošljite ključ v glavi"
 step3ApiKeyb = "(ali Authorization: Bearer <key>). OAuth ali odkrivanje metapodatkov se ne uporablja."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Odobrite prijavo; odjemalec poskusi znova z žetonom. Orodja se prikažejo združena: convert, pages, misc, security, ai."
 step4ApiKey = "Orodja se prikažejo združena: convert, pages, misc, security, ai - in vsak klic se revidira kot lastnik ključa."
 tip = "Namig: registrirajte ID vira kot dovoljeno občinstvo v svojem IdP. Preizkušeno z MCP Inspector in Claude Desktop."
 tipApiKey = "Namig: način z API ključem ne potrebuje zunanjega IdP - najpreprosteje za samostojno gostovanje. Ključ se preslika na svojega lastnika, uporabnika Stirling."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Povežite odjemalca MCP"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Samodejno odkrito pri izdajatelju"
 
 [admin.settings.mcp.mode]
 apikey = "API key (ključ Stirling za posameznega uporabnika)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth potrebuje zunanji IdP. API ključ uporablja Stirling API ključ na uporabnika (X-API-KEY) - najpreprosteje za samostojno gostovanje."
 label = "Način preverjanja pristnosti"
 oauth = "OAuth 2.1 (zunanji IdP)"
@@ -1515,6 +1563,18 @@ label = "ID vira"
 [admin.settings.mcp.scopes]
 description = "Zahtevaj mcp.tools.read za bralne operacije in mcp.tools.write za pisalne/AI operacije."
 label = "Uveljavi obsege OAuth"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim, ki se ujema z uporabniškim imenom Stirling (npr. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Želite pomagati izboljšati Stirling PDF?"
 tags = "opombe,označi,nariši,markup,komentar,zapisi,pregled,redline,povratne informacije,orodja za označevanje,lepljivi listki,oblike,puščice,besedilno polje,prostoročno"
 
 [annotation]
-alignCenter = "Poravnaj na sredino"
-alignLeft = "Poravnaj levo"
-alignRight = "Poravnaj desno"
 annotationStyle = "Slog pripombe"
 backgroundColor = "Barva ozadja"
 borderOff = "Obroba: Izklopljeno"
@@ -2016,18 +2073,61 @@ underline = "Podčrtaj"
 undoDelete = "Razveljavi"
 width = "Širina"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Brezplačen, zaseben urejevalnik PDF, ki ga lahko izvajate na kateri koli infrastrukturi."
 
 [appBanner]
 dismiss = "Opusti"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Dodaj priloge ..."
 convertToPdfA3b = "Pretvori v PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b je arhivski format, ki zagotavlja dolgoročno ohranitev. Omogoča vdelavo poljubnih vrst datotek kot priloge. Pretvorba zahteva Ghostscript in je lahko daljša pri velikih datotekah."
-convertToPdfA3bTooltipHeader = "O pretvorbi v PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Kaj počne"
 discardChanges = "Zavrzi"
 downloadSingle = "Prenesi prilogo"
 duplicateName = "Priloga z imenom '{{name}}' že obstaja."
@@ -2208,7 +2308,6 @@ guest = "Gost"
 user = "Uporabnik"
 
 [auto-rename]
-description = "Samodejno najde naslov iz vsebine vašega PDF-ja in ga uporabi kot ime datoteke."
 submit = "Samodejno preimenuj"
 tags = "samodejno zaznaj,na podlagi glave,organiziraj,preoznači"
 title = "Samodejno preimenuj"
@@ -2218,21 +2317,6 @@ failed = "Pri samodejnem preimenovanju PDF-ja je prišlo do napake."
 
 [auto-rename.results]
 title = "Rezultati samodejnega preimenovanja"
-
-[auto-rename.settings]
-title = "O tem"
-
-[auto-rename.tooltip.description]
-title = "Kaj počne"
-
-[auto-rename.tooltip.header]
-title = "Kako deluje samodejno preimenovanje"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Išče besedilo, ki je videti kot naslov ali glava"
-bullet2 = "Ustvari čisto, veljavno ime datoteke iz zaznanega naslova"
-bullet3 = "Ohrani izvirno ime, če primernega naslova ne najde"
-title = "Pametno preimenovanje"
 
 [autoFormDetection]
 loading = "Zaznavanje polj obrazca ..."
@@ -2327,6 +2411,9 @@ remove = "Odstrani orodje"
 selected = "Izbrana orodja"
 selectTool = "Izberite orodje..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Prekliči"
 confirm = "Nazaj"
@@ -2360,6 +2447,10 @@ title = "Zaženi avtomatizacijo"
 [automate.selection]
 title = "Izbira avtomatizacije"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Ustvari novo avtomatizacijo"
 
@@ -2371,6 +2462,7 @@ title = "Predlagano"
 
 [automate.sequence]
 finish = "Dokončaj"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Zaženi avtomatizacijo"
 running = "Avtomatizacija se izvaja..."
 signInToRun = "Prijavite se za zagon avtomatizacij."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Varnostni potek dela"
 secureWorkflowDesc = "Zavaruje PDF dokumente tako, da odstrani potencialno zlonamerno vsebino, kot sta JavaScript in vdelane datoteke, nato doda zaščito z geslom za preprečitev nepooblaščenega dostopa. Geslo je privzeto nastavljeno na 'password'."
 
 [autoRename]
-description = "To orodje bo samodejno preimenovalo PDF datoteke na podlagi njihove vsebine. Analizira dokument, da iz besedila najde najbolj ustrezen naslov."
 tags = "samodejno zaznaj,na osnovi glave,organiziraj,preoznači,samodejno preimenuj,samodejno preimenovanje,pametno preimenovanje,preimenuj po vsebini,ime datoteke,poimenovanje datotek,zaznaj naslov"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,razdelitev,dokument,organizacija"
 [autoSplitPDF]
 dividerDownload2 = "Prenesi 'Samodejni razdelilnik (z navodili).pdf'"
 duplexMode = "Dupleksni način (skeniranje spredaj in zadaj)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "Na osnovi QR,ločeno,skeniranje-segment,organiziranje"
 title = "Samodejno razdeli PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Doda obrobe okoli vsakega dela strani za pomoč pri rezanju in poravn
 [bookletImposition.addGutter]
 label = "Dodaj vpenjalni rob"
 tooltip = "Doda notranji rob za vezavo"
-
-[bookletImposition.advanced]
-toggle = "Napredne možnosti"
 
 [bookletImposition.doubleSided]
 label = "Obojestransko tiskanje"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Izberite datoteko JKS"
 chooseP12File = "Izberite datoteko PKCS12"
 choosePfxFile = "Izberite datoteko PFX"
 choosePrivateKey = "Izberite datoteko zasebnega ključa"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Zavrnjeno"
 fetchFailed = "Podatkov o podpisovanju ni bilo mogoče naložiti"
 finalized = "Zaključeno"
 location = "Lokacija"
-logoTitle = "Logotip"
-name = "Ime"
-noLogo = "Brez logotipa"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Številka strani"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Geslo potrdila"
 passwordOptional = "Pustite prazno, če ni gesla"
 pemCertificateLabel = "Potrdilo (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Zasebni ključ (.pem / .key)"
 pending = "Na čakanju"
 readyToFinalize = "Pripravljeno za zaključek"
 reason = "Razlog"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Uporablja se strežniško potrdilo – datoteke ali geslo niso potrebni"
-showLogo = "Prikaži logotip"
 signatureProgress = "{{signedCount}}/{{totalCount}} podpisov"
 tags = "preveri pristnost,PEM,P12,uradno,šifriraj,podpiši,potrdilo,PKCS12,JKS,strežnik,ročno,samodejno"
 title = "Podpisovanje potrdila"
@@ -2738,12 +2828,45 @@ viewed = "Ogledano"
 
 [certSign.appearance]
 invisible = "Neviden"
+showOnPage = "Show signature on page"
 stepTitle = "Videz podpisa"
 visibility = "Vidnost"
 visible = "Viden"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Podrobnosti podpisa"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "O videzu podpisa"
@@ -2762,9 +2885,6 @@ bullet3 = "Izberite, na kateri strani postaviti podpis"
 bullet4 = "Lahko vključite logotip"
 text = "Na PDF prikaže blok podpisa z vašim imenom, datumom in izbirnimi podrobnostmi. Uporabno, ko želite, da bralci jasno vidijo, da je dokument podpisan."
 title = "Vidni podpisi"
-
-[certSign.certFiles]
-stepTitle = "Datoteke potrdila"
 
 [certSign.certType.tooltip.convert]
 text = "S programom keytool pretvorite svojo datoteko v Java keystore (.jks) in nato izberite JKS."
@@ -2786,6 +2906,7 @@ text = "Izberite format, ki ustreza vaši datoteki potrdila:"
 title = "Katero možnost izbrati?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Format potrdila"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Ta naprava"
 [certSign.error]
 failed = "Pri obdelavi podpisov je prišlo do napake."
 
-[certSign.format]
-pkcs11 = "USB žeton"
-windowsStore = "Shramba potrdil Windows"
-
 [certSign.hardware]
-certificate = "Potrdilo"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Pot do gonilnika po meri…"
+digitalId = "Digital ID"
 driver = "Gonilnik PKCS#11"
 driverPath = "Pot do knjižnice gonilnika"
 driverPathPlaceholder = "Celotna pot do vašega gonilnika PKCS#11 (.dll, .so ali .dylib)"
-expired = "poteklo"
-expires = "poteče"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Prikaži potrdila"
-loading = "Branje potrdil…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Ni najdenih potrdil za podpisovanje"
 noDriver = "Ni zaznanega gonilnika PKCS#11. Namestite gonilnik za vaš žeton (npr. OpenSC), nato to znova odprite - ali spodaj ročno vnesite pot do gonilnika."
-notYetValid = "še ni veljavno"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN žetona"
 pkcs11Hint = "Izberite gonilnik PKCS#11 za svoj žeton, vnesite PIN, nato prikažite potrdila na žetonu."
 pkcs11LoadError = "Ni mogoče prebrati potrdil z žetona. Preverite PIN in gonilnik."
-refresh = "Osveži"
-selectCert = "Izberite potrdilo"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Izberite gonilnik"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Reža (neobvezno)"
-windowsHint = "Izberite potrdilo iz shrambe potrdil Windows. Pri podpisovanju se uporabi ključ na vaši kartici/žetonu - Windows vas bo pozval k vnosu PIN-a."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Ni mogoče prebrati shrambe potrdil Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Splošno pravilo"
 device = "Ta naprava"
 noOtherSources = "Drugih virov potrdil ni na voljo."
 server = "Strežnik"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Vir potrdila"
 upload = "Naloži"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Posodobite uporabniško ime. Po posodobitvi boste odjavljeni."
@@ -3069,7 +3205,6 @@ placeholder = "Ustvarjalec dokumenta"
 
 [changeMetadata.customFields]
 add = "Dodaj polje"
-description = "Dodajte dokumentu polja metapodatkov po meri"
 key = "Ključ"
 keyPlaceholder = "Ključ po meri"
 remove = "Odstrani"
@@ -3135,10 +3270,6 @@ bullet1 = "Datum ustvarjanja: kdaj je bil izvirni dokument narejen"
 bullet2 = "Datum spremembe: kdaj je bil nazadnje spremenjen"
 text = "Kdaj je bil dokument ustvarjen in spremenjen."
 title = "Polja datuma"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Popolni izbris metapodatkov za zagotavljanje zasebnosti."
-title = "Odstrani obstoječe metapodatke"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Naslov: ime ali glava dokumenta"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Dosegli ste omejitev uporabe. Preverite možnosti paketa,
 
 [checkAccessibility]
 aboutRow = "O {{label}}"
-checking = "Preverjanje..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Prenesi poročilo o dostopnosti"
 fileFailed = "neuspešno"
+noFiles = "Select a PDF to check it."
 pickFile = "Prikaži rezultate za"
-submit = "Preveri dostopnost"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Nadomestno besedilo"
@@ -3286,10 +3417,17 @@ structure = "Oznake povedo bralnikom zaslona, kaj je vsak del strani (npr. naslo
 [checkAccessibility.checks]
 label = "Uspešnih {{passed}} od {{total}} preverjanj"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Poročila o dostopnosti ni bilo mogoče ustvariti. Poskusite znova."
 fileTitle = "Te datoteke ni bilo mogoče preveriti"
 partial = "Nekaterih datotek ni bilo mogoče preveriti."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Navaja PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Datoteka ima naslov v svojih metapodatkih."
 [checkAccessibility.figures]
 summary_one = "{{count}} slika potrebuje opis (stran {{pages}})"
 summary_other = "{{count}} slik potrebuje opis (strani {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Velja za"
@@ -3465,19 +3618,7 @@ checking = "Preverjanje {{current}} od {{total}}..."
 complete = "Preverjanje končano"
 
 [checkAccessibility.steps]
-results = "Rezultati"
 standard = "Standard"
-
-[checkAccessibility.tooltip.header]
-title = "Kateri standard preveriti"
-
-[checkAccessibility.tooltip.ua1]
-text = "Prva različica PDF/UA, objavljena leta 2012 kot ISO 14289-1, za datoteke PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Novejša različica, objavljena leta 2024 kot ISO 14289-2, za datoteke PDF 2.0. Datoteka PDF 1.7, preverjena po njej, ne prestane pravil, ki veljajo le za PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Anotacija {{n}}"
@@ -3868,6 +4009,7 @@ title = "Izberite barvo"
 transparent = "Prosojno"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Dejanja"
 back = "Nazaj"
 cancel = "Prekliči"
@@ -4206,7 +4348,9 @@ title = "Osveži API ključe"
 warning = "⚠️ Opozorilo: To dejanje bo ustvarilo nove API ključe in vaše prejšnje ključe naredilo neveljavne."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) omogoča AI pomočnikom, kot je Claude, neposredno uporabo vaših orodij Stirling PDF. Enkrat povežite odjemalca in vaš pomočnik lahko v vašem imenu pretvarja, ureja, zaščiti in obdeluje dokumente."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Gostujoči uporabniki ne morejo povezati odjemalcev MCP. Ustvarite račun za uporabo strežnika MCP in dovolite svojemu AI pomočniku, da v vašem imenu izvaja orodja Stirling PDF."
 navLabel = "MCP strežnik"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Kopiraj {{label}}"
 tooltipCopied = "{{label}} kopirano"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Vaša MCP končna točka"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Dodaj v"
 hint = "Izberite odjemalca, prilepite izsek v prikazano datoteko in ga nato znova zaženite. Ob prvi uporabi se boste prijavili s svojim računom Stirling - brez kopiranja ključev."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Povežite svojega AI pomočnika"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Ohrani razmerje stranic"
 maxAttachmentSize = "Največja velikost priloge (MB)"
 multiple = "Več"
 optimizeForEbook = "Optimiziraj PDF za e-bralnike (uporablja Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Izhod"
-outputFormat = "Izhodni format"
-pdfaAccessibleFormat = "{{format}} (dostopno)"
-pdfaDigitalSignatureWarning = "PDF vsebuje digitalni podpis. To bo odstranjeno v naslednjem koraku."
-pdfaNote = "PDF/A-1b je bolj združljiv, PDF/A-2b podpira več funkcij, PDF/A-3b podpira vdelane datoteke."
-pdfaOptions = "Možnosti PDF/A"
 pdfOptions = "Možnosti PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Nastavitve"
 signInToUse = "Prijavite se za uporabo"
 single = "Posamezna"
 sourceFormatPlaceholder = "Izvorni format"
-strictMode = "Strogi način"
-strictModeDesc = "Napaka, če pretvorba ni popolna (uporablja preverjanje VeraPDF)"
 svgPdfOptions = "Možnosti SVG v PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Datoteke SVG so upodobljene kot vektorska grafika za oster izhod pri kateri koli ločljivosti. Mere iz SVG določajo velikost strani PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Raven povečave"
 
 [convert.ebookOptions]
 includePageNumbers = "Vključi številke strani"
-includePageNumbersDesc = "Dodaj številke strani v ustvarjeni PDF"
 includeTableOfContents = "Vključi kazalo"
-includeTableOfContentsDesc = "Dodaj ustvarjeno kazalo v rezultatni PDF"
 optimizeForEbookPdf = "Optimiziraj za bralnike e-knjig"
 optimizeForEbookPdfDesc = "Optimiziraj PDF za branje eBook (manjša velikost datoteke, boljše upodabljanje na napravah eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Zaznaj poglavja"
 detectChaptersDesc = "Zaznaj naslove, ki so videti kot poglavja, in vstavi prelome strani EPUB"
 kindleEink = "Kindle e-Ink (optimizirano za besedilo)"
 outputFormat = "Izhodni format"
-outputFormatDesc = "Izberite izhodni format za e-knjigo"
 tabletPhone = "Tablica/Telefon (s slikami)"
 targetDevice = "Ciljna naprava"
 targetDeviceDesc = "Izberite izhodni profil, optimiziran za bralno napravo"
@@ -4469,8 +4619,24 @@ description = "Ti piškotki so nujni za pravilno delovanje spletnega mesta. Omog
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Naslov naslovnice"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF portfelj"
 description = "Vsaka izbrana datoteka se v novem PDF ohrani v celoti, ne glede na njeno vrsto. Bralniki, ki ne podpirajo portfeljev, prikažejo naslovnico s priloženimi datotekami."
 goToFileEditor = "Pojdi v urejevalnik datotek"
@@ -4488,6 +4654,9 @@ title = "Kaj naredi"
 
 [createPortfolio.tooltip.header]
 title = "O PDF portfeljih"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Samodejno obreži prazne robove"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Dostop do odložišča v tem brskalniku ni na voljo."
 export = "Izvozi zaznamke"
 exportClipboard = "Kopiraj JSON v odložišče"
 exportJson = "Prenesi JSON"
+exportMenu = "Export"
 importClipboard = "Prilepi JSON iz odložišča"
 importJson = "Uvozi JSON"
+importMenu = "Import"
 loadFromPdf = "Naloži iz izbranega PDF"
 noFile = "Izberite PDF za izvlek obstoječih zaznamkov."
 selectedFile = "Naloženo iz {{file}}"
-source = "Naloži zaznamke"
 
 [editTableOfContents.editor]
 addTopLevel = "Dodaj zaznamek na najvišji ravni"
@@ -4740,6 +4910,9 @@ replaceExisting = "Zamenjaj obstoječe zaznamke (odkljukajte za dodajanje)"
 replaceExistingHint = "Ko je onemogočeno, se nov oris doda za trenutnimi zaznamki."
 title = "Zaznamki in oris"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Zamenjaj PDF"
 filePrompt = "Izberite PDF iz knjižnice ali naložite novega za začetek."
@@ -4753,7 +4926,6 @@ title = "Odprite orodje za začetek urejanja"
 [encryptedPdfUnlock]
 actionIgnored = "Omejitev za {{action}} je prezrta"
 actionUnlocked = "Dejanje {{action}} je odklenjeno za to sejo"
-advanced = "Napredno"
 allowed = "Dovoljeno"
 annotations = "Opombe"
 authoriseAction = "Ta PDF zahteva dovoljenje za uporabo dejanja {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Omejeno"
 restrictedActions = "omejena dejanja"
 restrictedOperation = "Za to dejanje je potrebno geslo za dovoljenja."
 retainOwnerVerification = "Preverite geslo za dovoljenja, da ga ob odstranjevanju gesla za odpiranje ohranite nespremenjenega. S tem ga ne boste odstranili."
-saveProtection = "Shrani zaščito"
 securityChangeFailed = "Zaščite ni mogoče spremeniti. Preverite geslo za dovoljenja in nove varnostne nastavitve."
 sessionDetails = "Odprt za to sejo. PDF ostane zaščiten."
 sessionDetailsLabel = "O odklepanju za sejo"
@@ -4871,7 +5042,6 @@ title = "Nekaj je šlo narobe"
 tryAgain = "Poskusi znova"
 
 [extractImages]
-allowDuplicates = "Shrani podvojene slike"
 selectText = "Izberite format slike za pretvorbo ekstrahiranih slik"
 submit = "Izvleček"
 tags = "slika,fotografija,shrani,arhiv,zip,zajemi,zgrabi"
@@ -4927,12 +5097,15 @@ closeFile = "Zapri datoteko"
 
 [fileEditor]
 closedFile = "Zaprto: {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Datoteka prerazporejena"
 filesReordered_other = "{{count}} datotek prerazporejenih"
 loadedFromStorage_one = "Naložena {{count}} datoteka iz shrambe"
 loadedFromStorage_other = "Naloženih {{count}} datotek iz shrambe"
 loadFromStorageFailed = "Nalaganje nekaterih datotek iz shrambe ni uspelo"
 pinnedFile = "Pripeto: {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Shranjeno in zaprto: {{name}}"
 saveFailed = "Shranjevanje ni uspelo"
 unpinnedFile = "Odpeto: {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Zaklenjeno"
 previewOf = "Predogled {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Dodaj datoteke"
 created = "Ustvarjeno"
 notIncludedInToolRun = "Ni vključeno v ta zagon orodja"
 size = "Velikost datoteke"
 title = "Datoteke"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Na voljo ni nobenih datotek"
@@ -5104,6 +5286,7 @@ subtitle = "Prikažite ali skrijte kategorije v stranski vrstici datotek."
 title = "Kategorije stranske vrstice"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Prekliči"
 error = "Datoteke ni bilo mogoče preimenovati."
 illegalCharacters = "Ime datoteke ne sme vsebovati \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Odstrani polje"
 
 [formFill.editor]
 action = "Dejanje gumba"
-actionHelp = "Kaj gumb naredi ob kliku."
 actionNone = "Brez"
 actionPrint = "Natisni"
 actionReset = "Ponastavi obrazec"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Omeji število znakov; prikazani so kot enakomerno razporejena 
 multiline = "Večvrstično"
 multilineHelp = "Omogoča več kot eno vrstico besedila in prelomi besedilo na robu polja."
 multiSelect = "Dovoli več izbir"
-multiSelectHelp = "Omogoča izbiro več kot ene možnosti hkrati."
 name = "Ime polja"
 nameHelp = "Notranje ime polja. Uporablja se pri izvozu podatkov ali izpolnjevanju obrazca iz drugega sistema, zato naj bo enolično in brez presledkov."
 optionGap = "Razmik med možnostmi"
@@ -5902,6 +6083,11 @@ title = "Prilagodi barve/kontrast"
 desc = "Poudarjajte, rišite, dodajajte opombe in like v pregledovalniku"
 tags = "opomba,poudari,riši,označevanje,komentar,opombe,pregled,rdeče označevanje,povratne informacije,orodja za označevanje,lepljive opombe,oblike,puščice,besedilno polje,prostoročno"
 title = "Opombe"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Samodejno zaznajte polja obrazca z AI in naredite svoj PDF izpolnljiv."
@@ -6405,6 +6591,9 @@ sort = "Razvrsti"
 [merge.sortFiles]
 title = "Razvrsti datoteke"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Pregled nastavitev združevanja"
 
@@ -6548,6 +6737,9 @@ title = "Overjanje ni uspelo"
 message = "To okno lahko zaprete in se vrnete v Stirling PDF."
 title = "Overjanje uspešno"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Dovoli dostop"
 approving = "Dovoljevanje ..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Vračanje v aplikacijo ..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} želi dostopati do vašega računa Stirling PDF"
 scopesIntro = "To bo omogočilo {{app}}, da:"
 signedInAs = "Vpisani kot {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Prijavite se za nadaljevanje"
 signInPrompt = "Prijavite se v svoj račun Stirling PDF, da nadaljujete povezovanje aplikacije."
 title = "Authorise access"
 unknownApp = "Aplikacija tretje osebe"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Deluje v vašem imenu - vse, kar {{app}} naredi, se izvaja v okviru vašega računa in šteje v vašo uporabo"
@@ -6572,9 +6767,12 @@ tools = "Uporablja vaša orodja Stirling PDF v vašem imenu - pretvarja, ureja, 
 
 [oauthConsent.scope]
 email = "Ogled vašega email naslova"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Potrditev vaše identitete"
 phone = "Ogled vaše telefonske številke"
 profile = "Ogled osnovnih podatkov vašega profila"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Cleanup skenira in zazna besedilo iz slik znotraj PDF-ja in ga ponovno doda kot besedilo."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Postali boste član ekipe in izgubili lastniški dostop."
 [pageEdit]
 deselectAll = "Nič"
 selectAll = "Označi vse"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Izvleči strani"
@@ -7577,6 +7779,8 @@ stamp = "Pripomba žiga - ni besedilo strani, zato je tukaj ni mogoče urejati"
 widget = "Polje obrazca - ni besedilo strani, zato ga tukaj ni mogoče urejati"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Uredi"
 markTagged = "Označi kot v celoti označeno"
 matchScanFont = "Uskladi skenirano besedilo s {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Samodejno označi stran"
 typeInto = "Vtipkaj v {{run}}"
 ungroupParagraph = "Razdruži odstavek {{run}}"
 unmarkTagged = "Označi kot ni v celoti označeno"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Prelomi {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Zavreči neshranjene spremembe?"
 
 [pdfTextEditor.error]
 decodeImage = "Izbrane slike ni bilo mogoče dekodirati."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Besedila ni mogoče podvojiti: nobena razpoložljiva pisava ne izriše vseh njegovih črk."
 formLiftChangesDrawing = "Tega ni mogoče urejati: narisano je kot del skupine, katere izrezovanje ali grafičnih nastavitev urejevalnik ob spremembi ne more ohraniti."
 insertImage = "Izbrane slike ni bilo mogoče vstaviti."
 needsShaping = "Urejevalnik še ne more pravilno izrisati zvezanih črk in samoglasniških znakov tega pisnega sistema, zato ta sprememba ni bila izvedena."
+reopenLost = "Open again"
 replaceClippedImage = "Te slike ni mogoče zamenjati: obrezana je in zamenjava bi pokazala dele, ki jih obrezava skriva."
 scanOffInk = "Tega besedila ni mogoče urejati: prepoznane besede se ne ujemajo s skenom. Znova zaženite OCR."
 unsafeRtlEdit = "Tega urejanja ni mogoče izvesti: urejevalnik ne more ponovno narisati besedila te vrstice z desne proti levi, ne da bi ga spremenil."
@@ -7616,6 +7823,7 @@ pngFileType = "Slika PNG"
 close = "Zapri vrstico za iskanje"
 count = "{{current}} od {{total}}"
 findPlaceholder = "Najdi"
+hideReplace = "Hide replace"
 ignoreAccents = "Prezri naglase"
 matchCase = "Ujemanje velikosti črk"
 next = "Naslednje ujemanje"
@@ -7625,6 +7833,7 @@ replace = "Zamenjaj"
 replaceAll = "Zamenjaj vse"
 replaced = "{{count}} zamenjanih"
 replacePlaceholder = "Zamenjaj z"
+showReplace = "Show replace"
 wholeWord = "Cela beseda"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Te povezave ni mogoče označiti."
 cannotTagPage = "Vsebine te strani ni mogoče označiti."
 contentGroup = "Vsebina"
 customTag = "{{role}} (oznaka po meri)"
-decorativeInfo = "Bralniki zaslona preskočijo dekorativne slike. Uporabite za obrobe, ozadja in druge slike, ki ne prenašajo informacij."
-decorativeLabel = "Dekorativna slika"
-description = "Opis slike"
-descriptionInfo = "Bralniki zaslona to preberejo namesto slike."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Oznak ni mogoče urejati v šifrirani datoteki"
 figureDescription = "Opis slike"
 figureDescriptionInfo = "Bralniki zaslona to preberejo namesto slike."
-formFieldDescription = "Opis polja"
 formulaDescription = "Opis formule"
 formulaDescriptionInfo = "Bralniki zaslona to preberejo namesto formule. Povejte, kot bi povedali na glas, npr. \"x na kvadrat plus ena\"."
 heading = "Dostopnost"
@@ -7813,7 +8019,6 @@ markedTagged = "Dokument je v celoti označen"
 markedTaggedHint = "Pove bralnikom PDF, naj uporabijo oznake za dostopnost. Okljukajte, ko je vse označeno."
 markedWithUntagged = "Del vsebine nima oznak, zato jo lahko bralniki zaslona preskočijo."
 missingDescriptions = "Manjkajoči opisi"
-mixedContent = "Slika vključuje drugo vsebino"
 mixedTags = "Mešano"
 needsDescriptionBadge = "Brez opisa"
 nextToReview = "Naslednje za pregled"
@@ -7821,12 +8026,10 @@ notFigure = "Označeno kot del besedila"
 removeTag = "Odstrani oznako"
 saveFailed = "Vaših sprememb dostopnosti ni bilo mogoče shraniti, zato datoteka ni bila shranjena. Razveljavite jih in poskusite znova."
 selectedText = "Izbrano besedilo"
-tagFormField = "Označi polje obrazca"
 tagging = "Označevanje strani"
 tagLabel = "Oznaka"
 tagLinks_one = "Označi povezavo"
 tagLinks_other = "Označi {{count}} povezav"
-tagUntagged = "Samodejno označi dokument"
 tagUntaggedHint = "Samodejno doda oznake za dostopnost po celotnem dokumentu. Rezultat je grob: po tem preverite naslove, sezname in vrstni red branja."
 unknownTag = "Tukaj ni mogoče prebrati"
 unmarkedWithTags = "Nekateri pregledovalniki PDF bodo vseeno uporabljali oznake in lahko preskočili vsebino brez njih."
@@ -7851,7 +8054,7 @@ heading = "Naslovi"
 mixedNumbering = "Meša oštevilčene in neoštevilčene naslove"
 none = "Brez naslovov"
 onPage = "Naslov na strani {{page}}"
-problems = "Težave z naslovi"
+problemCount = "{{count}} to fix"
 skippedLevel = "Preskoči raven po naslovu {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Naslov"
 allLanguages = "Vsi jeziki"
 cannotSetDocument = "Jezika tega dokumenta ni mogoče spremeniti."
 cannotSetText = "Jezika tega besedila ni mogoče spremeniti."
-documentHint = "Jezik, ki ga uporabljajo bralniki zaslona, razen če del besedila nastavi svojega."
 documentLabel = "Jezik"
 documentLocked = "Jezika šifriranega dokumenta tukaj ni mogoče spremeniti."
 inDocument = "V tem dokumentu"
 innerLabel = "Jezik oznake {{number}}"
 label = "Jezik"
-missing = "Ni nastavljenega jezika. Bralniki zaslona bodo ugibali in morda prebrali celoten dokument z napačnim glasom."
 mixed = "Mešano"
 noMatch = "Ni ujemajočega jezika. Vnesite njegovo kodo, npr. mt ali en-IE."
 placeholder = "Izberite jezik"
@@ -7943,6 +8144,52 @@ renderFailed = "Upodabljanje strani ni uspelo"
 [pdfTextEditor.password]
 incorrect = "Napačno geslo - poskusite znova."
 label = "Geslo"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Vodilo poravnave pri {{value}} {{unit}} - povlecite ga na ravnilo za odstranitev"
@@ -8124,6 +8371,10 @@ title = "Razlike v predogledu"
 [pdfTextEditor.tooltip.textFocus]
 text = "To delovno okolje je osredotočeno na urejanje besedila in prestavljanje vdelanih slik. Zapleteni elementi strani, obrazci in slojevita grafika se ohranijo za izvoz, vendar tukaj niso v celoti urejljivi."
 title = "Osredotočeno na besedilo in slike"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF v CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Skrij kategorijo"
 labelCount = "oznak"
 sharedNote = "Te oznake so vgrajene in v skupni rabi za celotno ekipo."
 showCategory = "Pokaži kategorijo"
-
-[policies.pii]
-account = "Številke računov (označene)"
-card = "Kreditne / debetne kartice"
-email = "E-poštni naslovi"
-fieldLabel = "PII za redakcijo"
-iban = "IBAN-i"
-phone = "Telefonske številke"
-placeholder = "Izberite vrste PII"
-routing = "Ameriške bančne usmerjevalne številke (ABA)"
-ssn = "Številke socialnega zavarovanja"
 
 [policy]
 badgeEnforcing = "{{name}} se uveljavlja..."
@@ -10317,6 +10557,10 @@ title = "Cevovodi"
 [portal.pipelines.actions]
 newCustomPipeline = "Nov cevovod po meri"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Vsi cevovodi"
 
@@ -12047,7 +12291,6 @@ label = "Orodja za branje"
 readAloud = "Preberi na glas"
 rotateLeft = "Zavrti levo"
 rotateRight = "Zavrti desno"
-search = "Najdi v dokumentu"
 switchDocument = "Preklopi dokument"
 thumbnails = "Strani"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Barva polja"
 convertPDFToImageLabel = "Pretvori PDF v PDF-Image"
 customPaddingLabel = "Dodatni odmik po meri"
 useRegexLabel = "Uporabi Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Iskanje celih besed"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Nastavitve redakcije"
 
 [redact.auto.wordsToRedact]
 add = "Dodaj"
-examples = "Primeri: Zaupno, Strogo zaupno"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Vnesite besedo"
 title = "Besede za redakcijo"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Izberite datoteke v upravljalniku datotek za prekriv
 manual = "Ročno"
 mode = "Način"
 title = "Način redakcije"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Ujemanje samo z besedilom z enako velikostjo črk. Ko je omogočeno, se 'Secret' ne ujema z 'SECRET', [A-Z] v regex pa se ujema samo z velikimi črkami."
@@ -12147,19 +12401,6 @@ title = "Način redakcije"
 text = "Kliknite in povlecite, da ročno izberete specifična območja za redakcijo. Omogoča natančen nadzor nad tem, kaj se redigira. (Kmalu)"
 title = "Ročna redakcija"
 
-[redact.tooltip.words]
-bullet1 = "Dodajajte eno besedo naenkrat"
-bullet2 = "Pritisnite Enter ali kliknite »Dodaj še«, da dodate"
-bullet3 = "Kliknite × za odstranitev besed"
-
-[redact.tooltip.words.description]
-text = "Vnesite besede ali besedne zveze za iskanje in redakcijo v vašem dokumentu. Vsaka beseda se išče ločeno."
-title = "Ujemanje besedila"
-
-[redact.tooltip.words.examples]
-text = "Tipične besede za redakcijo vključujejo: bančne podatke, e-poštne naslove ali specifična imena."
-title = "Pogosti primeri"
-
 [redact.tooltip.words.header]
 title = "Besede za redakcijo"
 
@@ -12176,15 +12417,6 @@ failed = "Pri odstranjevanju pripomb iz PDF je prišlo do napake."
 
 [removeAnnotations.info]
 description = "To orodje bo odstranilo vse pripombe (komentarje, poudarke, opombe itd.) iz vaših dokumentov PDF."
-
-[removeAnnotations.settings]
-title = "Nastavitve"
-
-[removeAnnotations.tooltip.description]
-title = "Kaj počne"
-
-[removeAnnotations.tooltip.header]
-title = "O odstranitvi pripomb"
 
 [removeBlanks]
 submit = "Odstrani prazne strani"
@@ -12325,6 +12557,9 @@ tags = "prerazporedi,preuredi,organiziraj,reorganiziraj,premakni strani,vrstni r
 [reorganizePages.error]
 failed = "Preurejanje strani ni uspelo"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Strani preurejene"
 
@@ -12406,6 +12641,7 @@ title = "Preobrni vse barve"
 rotateLeft = "Zavrti v nasprotni smeri urinega kazalca"
 rotateRight = "Zavrti v smeri urinega kazalca"
 selectRotation = "Izberite kot vrtenja (v smeri urinega kazalca)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Uporabi vrtenje"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Zasukaj PDF"
@@ -12516,8 +12752,7 @@ title = "Saniraj"
 failed = "Pri saniranju PDF-ja je prišlo do napake."
 
 [sanitize.options]
-note = "Izberite elemente, ki jih želite odstraniti iz PDF-ja. Izbrana mora biti vsaj ena možnost."
-title = "Možnosti saniranja"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Odstrani vse datoteke, vdelane v PDF"
@@ -12649,6 +12884,7 @@ title = "Iskanje v PDF"
 hideTools = "Skrij nedosegljiva orodja ▴"
 messageNoFallback = "Orodja niso na voljo, dokler vaš strežnik ne bo spet na spletu."
 messageWithFallback = "Nekatera orodja zahtevajo povezavo s strežnikom."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Prikaži nedosegljiva orodja ▾"
 title = "Vaš strežnik Stirling-PDF ni dosegljiv"
 toolNotAvailableLocally = "Vaš strežnik Stirling-PDF je brez povezave in \"{{endpoint}}\" ni na voljo v lokalnem zaledju."
@@ -13034,6 +13270,12 @@ title = "Bližnjice na tipkovnici"
 mac = "Vključite ⌘ (Command), ⌥ (Option) ali drug modifikator v bližnjici."
 windows = "Vključite Ctrl, Alt ali drug modifikator v bližnjici."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Pogoji, pravilnik o zasebnosti in vaše nastavitve piškotkov."
 label = "Pravno"
@@ -13418,9 +13660,7 @@ image = "Naloženo"
 text = "Besedilo"
 
 [sign.step]
-createDesc = "Izberite, kako želite ustvariti podpis"
 place = "Postavi in shrani"
-placeDesc = "Postavite podpis na svoj PDF"
 
 [sign.steps]
 configure = "Nastavitev podpisa"
@@ -13597,6 +13837,10 @@ rotateLeft = "Zavrti levo"
 rotateRight = "Zavrti desno"
 trim = "Obreži na podpis"
 trimHint = "Obreže prazen prostor okoli njega"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Nastavitve videza podpisa"
@@ -13959,7 +14203,6 @@ placeholder = "Vnesite število vodoravnih delitev"
 
 [split-by-sections.splitMode]
 custom = "Strani po meri"
-description = "Izberite, kako razdeliti strani"
 label = "Način razdelitve"
 splitAll = "Razdeli vse strani"
 splitAllExceptFirst = "Razdeli vse razen prve"
@@ -14210,10 +14453,8 @@ failed = "Pri časovnem žigosanju PDF je prišlo do napake."
 
 [timestampPdf.options]
 note = "Samo zgoščena vrednost SHA-256 vašega dokumenta se pošlje na strežnik TSA; datoteka PDF se nikoli ne pošlje na strežnik TSA."
-title = "Strežnik za časovne žige (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Izberite zaupanja vredno Time Stamp Authority"
 label = "Izberite strežnik TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Ni razpoložljivih orodij"
 
 [tooltip]
 close = "Zapri namig"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "To orodje bo odstranilo omejitve »samo za branje« iz polj obrazcev PDF, da bodo urejana in izpolnljiva."
@@ -14706,6 +14961,9 @@ signatureDate = "Datum podpisa"
 
 [validateSignature.settings]
 certHint = "Naložite zaupanja vredno potrdilo X.509 za preverjanje glede na vir zaupanja po meri."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Nastavitve preverjanja"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Predogled datoteke ni mogoč"
 copyRestricted = "Kopiranje je onemogočeno z dovoljenji tega PDF-ja."
 copyText = "Kopiraj"
 coverPageView = "Prikaži naslovnico ločeno"
-disableColorFilter = "Onemogoči barvni filter"
 documentUpdated = "Dokument posodobljen"
 dualPageView = "Dvo-stranski pogled"
 editText = "Uredi besedilo"
-enableDarkFilter = "Omogoči temni filter"
-enableSepiaFilter = "Omogoči sepia filter"
 engineLoadError = "Inicializacija mehanizma pregledovalnika PDF ni uspela"
 engineSlowWarning = "Inicializacija mehanizma PDF traja dlje od pričakovanega. Preverite nastavitve WebAssembly in Worker v brskalniku ali znova naložite stran."
 firstPage = "Prva stran"
@@ -14736,20 +14991,27 @@ fitPage = "Prilagodi na stran"
 fitWidth = "Prilagodi širini"
 lastPage = "Zadnja stran"
 loadingEngine = "Nalaganje mehanizma PDF ..."
+menuSelected = "Selected"
 moreOptions = "Več"
 nextPage = "Naslednja stran"
 noPdfProvided = "PDF ni naveden"
 onlyPdfSupported = "Ta format datoteke ni podprt za predogled."
 pageNavigation = "Krmarjenje po straneh"
+pageNumber = "Page number"
 previousPage = "Prejšnja stran"
 readAloudFromHere = "Beri naglas od tukaj"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Dokumenta ni bilo mogoče shraniti. Poskusite znova."
 saveChangesErrorTitle = "Sprememb ni bilo mogoče shraniti"
 singlePageView = "Enostranski pogled"
+tools = "Tools"
 unknownFile = "Neznana datoteka"
-view = "Pogled"
 zoom = "Povečava"
 zoomIn = "Povečaj"
+zoomLevel = "Zoom level"
 zoomOut = "Pomanjšaj"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Predogled podpisa"
 
 [viewer.signatureField]
 badge = "Podpis"
+clickToSign = "Click to sign here"
 fieldTitle = "Polje za podpis: {{name}}"
 signed = "Podpisano"
 signedWithReason = "Podpisano: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Nepodpisano polje za podpis: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Obnovljenih {{restored}} od {{total}} datotek. Preostale niso več sh
 
 [workbenchBar]
 activeFiles = "Aktivne datoteke"
-annotations = "Anotacije"
+annotate = "Annotate"
 applyRedactionsFirst = "Najprej uporabi redakcije"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Zapri vse datoteke"
 closePdf = "Zapri PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Prekliči izbor vseh"
 downloadAll = "Prenesi vse"
 editText = "Uredi besedilo"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Zapusti način opomb"
 exitRedaction = "Izhod iz načina redakcije"
 findReplace = "Najdi in zamenjaj"
 formFill = "Urejevalnik obrazcev"
-hideToolbar = "Skrij orodno vrstico"
+layers = "Layers"
 moreActions = "Več dejanj"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Urejevalnik strani"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Način premikanja"
 print = "Natisni PDF"
 readAloud = "Glasno branje"
 readAloudLanguage = "Jezik"
 readAloudSpeed = "Hitrost"
 redact = "Redakcija"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Zavrti levo"
 rotateRight = "Zavrti desno"
 ruler = "Ravnilo / Merjenje"
+rulerScaleUnset = "Not set"
 rulerSettings = "Nastavitve merila"
 save = "Shrani"
 saveAll = "Shrani vse"
@@ -15123,14 +15398,23 @@ selectLanguage = "Izberi jezik"
 share = "Delite"
 showAllTools = "Prikaži vsa orodja"
 showFewerTools = "Strni orodno vrstico"
-showToolbar = "Prikaži orodno vrstico"
+thumbnails = "Pages"
 toggleAnnotations = "Preklopi vidnost anotacij"
-toggleAttachments = "Preklopi priloge"
-toggleBookmarks = "Zaznamki (kazalo vsebine)"
 toggleComments = "Komentarji"
-toggleLayers = "Preklopi plasti"
-toggleSidebar = "Preklopi stransko vrstico"
 viewer = "Pregledovalnik"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Vaš dostop do tega dokumenta je potekel."

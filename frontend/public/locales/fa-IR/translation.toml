@@ -12,9 +12,11 @@ comingSoon = "به‌زودی"
 confirm = "تأیید"
 confirmClose = "تأیید بستن"
 confirmCloseCancel = "انصراف"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "بستن فایل"
 confirmCloseDiscard = "لغو تغییرات و بستن"
 confirmCloseMessage = "مطمئنید می‌خواهید این فایل را ببندید؟"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "ذخیره و بستن"
 confirmCloseSaveFailed_one = "با خطا ذخیره شد. {{count}} فایل ذخیره نشد."
 confirmCloseSaveFailed_other = "با خطا ذخیره شد. {{count}} فایل ذخیره نشد."
@@ -44,7 +46,6 @@ fileSavedToDisk = "فایل روی دیسک ذخیره شد"
 filesSelected = "{{count}} فایل"
 font = "فونت"
 fontSizeTooltip = "اندازه متن شماره صفحه بر حسب پوینت. اعداد بزرگ‌تر متن بزرگ‌تری ایجاد می‌کنند."
-fontTypeTooltip = "خانواده فونت برای شماره صفحات. بر اساس سبک سند خود انتخاب کنید."
 green = "سبز"
 help = "راهنما"
 incorrectPasswordMessage = "رمز عبور فعلی نادرست است."
@@ -249,9 +250,7 @@ image = "آپلود"
 text = "متن"
 
 [addImage.step]
-createDesc = "تصویری را که می‌خواهید اضافه کنید بارگذاری کنید"
 place = "جانمایی تصویر"
-placeDesc = "برای افزودن تصویر روی PDF کلیک کنید"
 
 [addImage.steps]
 configure = "پیکربندی تصویر"
@@ -276,7 +275,7 @@ fontName = "نام فونت"
 fontSize = "اندازه فونت"
 numberPagesDesc = "مثلاً 1,3,5-8 یا برای همه صفحات خالی بگذارید"
 pagePreviewAlt = "پیش‌نمایش صفحه"
-pagesAndStarting = "صفحات و شماره آغازین"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "موقعیت و صفحات"
 preview = "انتخاب موقعیت"
 previewDisclaimer = "پیش‌نمایش تقریبی است. خروجی نهایی ممکن است به دلیل معیارهای فونت PDF متفاوت باشد."
@@ -300,6 +299,7 @@ title = "نتایج شماره‌گذاری صفحات"
 
 [addPassword]
 desc = "PDF خود را با گذرواژه رمزگذاری کنید."
+submit = "Add Password"
 tags = "رمزگذاری,رمز عبور,قفل,امن,محافظت,امنیت,رمزنگاری,حفاظت,محرمانه,خصوصی,محدود کردن دسترسی"
 title = "افزودن گذرواژه"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "پیش‌نمایش مهر"
 tags = "مهر,علامت,مهر رسمی,تأییدشده,ردشده,محرمانه,ابزار مهر,مهر لاستیکی,مهر تاریخ,مهر تأیید,دریافت‌شده,باطل,کپی,اصل"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "الفبا"
-clickToExpand = "برای باز کردن کلیک کنید"
 customColor = "رنگ متن سفارشی"
 customDateDesc = "قالب سفارشی"
 customPosition = "مهر را در پنجره پیش‌نمایش به مکان دلخواه بکشید."
 dateDesc = "تاریخ فعلی"
 datetimeDesc = "تاریخ و زمان ترکیب‌شده"
 dateTimeVars = "تاریخ و زمان"
-dynamicVariables = "متغیرهای پویا"
 examples = "مثال‌ها"
 filenameDesc = "نام فایل بدون پسوند"
 filenameFullDesc = "نام فایل با پسوند"
@@ -365,6 +364,8 @@ noStampSelected = "هیچ مهری انتخاب نشده است. به مرحله
 opacity = "شفافیت"
 otherVars = "سایر"
 pageNumberDesc = "شماره صفحه فعلی"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "اطلاعات صفحه"
 position = "موقعیت"
 positionAndFormatting = "موقعیت و قالب‌بندی"
@@ -378,9 +379,10 @@ quickPosition = "یک موقعیت روی صفحه برای قرار دادن م
 rotation = "چرخش"
 selectedImageAlt = "تصویر مهر انتخاب‌شده"
 selectTemplate = "یک قالب انتخاب کنید..."
+size = "Size"
 stampSetup = "تنظیمات مهر"
 stampText = "متن مهر"
-stampTextDescription = "از متغیرهای پویای زیر استفاده کنید. برای @ واقعی از @@ استفاده کنید. برای خطوط جدید از \\n استفاده کنید."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "نوع مهر"
 submit = "افزودن مهر"
 tags = "مهر، افزودن تصویر، واترمارک، PDF، سفارشی‌سازی"
@@ -389,7 +391,6 @@ title = "مهر زدن به PDF"
 totalPagesDesc = "تعداد کل صفحات"
 useTemplate = "استفاده از قالب"
 uuidDesc = "شناسه یکتای کوتاه (8 نویسه)"
-variablesHelp = "برای درج هر متغیر در متن مهر خود روی آن کلیک کنید. برای @ واقعی از @@ استفاده کنید."
 yearMonthDayDesc = "بخش‌های جداگانه تاریخ"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "هنگام افزودن مهر به PDF خطایی رخ داد."
 
 [AddStampRequest.results]
 title = "نتایج مهر"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "سفارشی"
@@ -410,6 +417,11 @@ legal-footer = "پاورقی حقوقی"
 page-numbers = "شماره صفحات"
 pageNumberFooter = "پاورقی شماره صفحه"
 timestamp = "برچسب زمانی"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "اعمال متن"
@@ -462,9 +474,7 @@ image = "آپلود"
 text = "متن"
 
 [addText.step]
-createDesc = "متنی را که می‌خواهید اضافه کنید وارد کنید"
 place = "قراردهی متن"
-placeDesc = "برای افزودن متن روی PDF کلیک کنید"
 
 [addText.steps]
 configure = "پیکربندی متن"
@@ -1233,6 +1243,18 @@ label = "تولید مجدد هنگام راه‌اندازی"
 description = "تعداد روزهای اعتبار گواهی"
 label = "اعتبار گواهی (روز)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "دایرکتوری‌هایی که منابع پوشه و خروجی‌های پوشه اجازه خواندن از آن‌ها و نوشتن در آن‌ها را دارند. این یک مرز امنیتی است: اتوماسیون‌ها هرگز نمی‌توانند به مسیر سروری خارج از این فهرست اشاره کنند."
 securityNote = "برای غیرفعال‌سازی کامل منابع و خروجی‌های پوشه، این را خالی بگذارید. دایرکتوری پیکربندی خود Stirling همیشه ممنوع است."
@@ -1456,7 +1478,9 @@ label = "نام کاربری SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "کلاینت‌ها یک کلید Stirling API را در هدر X-API-KEY ارسال می‌کنند (یا Authorization: Bearer <key>). کلید به کاربر مالک آن در Stirling نگاشت می‌شود - فقط حساب‌های provisioned اجازه ورود دارند و اقدامات به نام همان کاربر ممیزی می‌شوند. کلیدها را در Account > API Keys مدیریت کنید."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "ابزارهای PDF و عامل‌های AI در Stirling را از طریق یک endpoint محافظت‌شده با OAuth در اختیار کلاینت‌های MCP قرار دهید."
+endpointUrl = "MCP endpoint URL"
 title = "سرور MCP"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "ابزارهای مجاز"
 description = "شناسه‌های عملیات برای پنهان کردن از MCP (جداشده با کاما یا فاصله)، مثلاً add-password remove-password. برای نمایش همه ابزارهای فعال، خالی بگذارید."
 label = "ابزارهای مسدودشده"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "وقتی خاموش باشد (پیش‌فرض)، هیچ endpoint /mcp، metadata یا beanهای MCP بارگذاری نمی‌شوند."
 label = "فعال‌سازی سرور MCP"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "OAuth issuer + resource ID خود را در بالا وارد کنید، ذخیره کنید و راه‌اندازی مجدد انجام دهید."
 step1ApiKey = "در Account > API Keys یک کلید API ایجاد کنید (هر کاربر از کلید خودش استفاده می‌کند)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "در کلاینت MCP خود یک"
 step2b = "سرور اضافه کنید که به این نشانی اشاره کند:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "کلاینت به‌صورت خودکار OAuth را از اینجا کشف می‌کند:"
 step3ApiKey = "کلید را در یک"
 step3ApiKeyb = "هدر ارسال کنید (یا Authorization: Bearer <key>). از OAuth یا کشف metadata استفاده نمی‌شود."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "ورود را تأیید کنید؛ کلاینت با یک توکن دوباره تلاش می‌کند. ابزارها به‌صورت گروه‌بندی‌شده ظاهر می‌شوند: convert، pages، misc، security، ai."
 step4ApiKey = "ابزارها به‌صورت گروه‌بندی‌شده ظاهر می‌شوند: convert، pages، misc، security، ai - و هر فراخوانی به نام مالک کلید ممیزی می‌شود."
 tip = "نکته: resource ID را به‌عنوان یک audience مجاز در IdP خود ثبت کنید. با MCP Inspector و Claude Desktop آزمایش شده است."
 tipApiKey = "نکته: حالت کلید API به IdP خارجی نیاز ندارد - ساده‌ترین گزینه برای self-host. کلید به کاربر مالک آن در Stirling نگاشت می‌شود."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "اتصال یک کلاینت MCP"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "به‌صورت خودکار از issuer کشف می‌شود"
 
 [admin.settings.mcp.mode]
 apikey = "کلید API (کلید هر کاربر Stirling)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth به IdP خارجی نیاز دارد. کلید API از یک کلید API کاربرمحور Stirling (X-API-KEY) استفاده می‌کند - ساده‌ترین گزینه برای self-host."
 label = "حالت احراز هویت"
 oauth = "OAuth 2.1 (IdP خارجی)"
@@ -1515,6 +1563,18 @@ label = "شناسه منبع"
 [admin.settings.mcp.scopes]
 description = "برای عملیات خواندن mcp.tools.read و برای عملیات نوشتن/AI mcp.tools.write را الزامی کنید."
 label = "اعمال OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "claim در JWT که با نام کاربری Stirling مطابقت داده می‌شود (مثلاً sub، email، preferred_username)."
@@ -1943,9 +2003,6 @@ title = "می‌خواهید به بهتر شدن Stirling PDF کمک کنید؟
 tags = "حاشیه‌نویسی,هایلایت,رسم,نشانه‌گذاری,نظر,یادداشت‌ها,بازبینی,خط قرمز,بازخورد,ابزارهای نشانه‌گذاری,یادداشت چسبان,شکل‌ها,فلش‌ها,کادر متن,دست‌آزاد"
 
 [annotation]
-alignCenter = "تراز در مرکز"
-alignLeft = "تراز چپ"
-alignRight = "تراز راست"
 annotationStyle = "سبک حاشیه‌نویسی"
 backgroundColor = "رنگ پس‌زمینه"
 borderOff = "حاشیه: خاموش"
@@ -2016,18 +2073,61 @@ underline = "زیرخط"
 undoDelete = "واگرد"
 width = "عرض"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "یک ویرایشگر PDF رایگان و خصوصی که می‌توانید روی هر زیرساختی اجرا کنید."
 
 [appBanner]
 dismiss = "نادیده گرفتن"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "افزودن پیوست‌ها..."
 convertToPdfA3b = "تبدیل به PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b یک فرمت آرشیوی برای حفظ بلندمدت است. این فرمت اجازه می‌دهد هر نوع فرمت فایلی را به‌عنوان پیوست جاسازی کنید. تبدیل نیازمند Ghostscript است و ممکن است برای فایل‌های بزرگ بیشتر زمان ببرد."
-convertToPdfA3bTooltipHeader = "درباره تبدیل PDF/A-3b"
-convertToPdfA3bTooltipTitle = "عملکرد آن"
 discardChanges = "دور انداختن"
 downloadSingle = "دانلود پیوست"
 duplicateName = "پیوستی با نام '{{name}}' از قبل وجود دارد."
@@ -2208,7 +2308,6 @@ guest = "مهمان"
 user = "کاربر"
 
 [auto-rename]
-description = "به‌صورت خودکار عنوان را از محتوای PDF شما پیدا کرده و آن را به‌عنوان نام فایل استفاده می‌کند."
 submit = "تغییر نام خودکار"
 tags = "تشخیص خودکار،بر اساس سربرگ،سازماندهی،تغییر نام"
 title = "تغییر نام خودکار"
@@ -2218,21 +2317,6 @@ failed = "هنگام تغییر نام خودکار PDF خطایی رخ داد."
 
 [auto-rename.results]
 title = "نتایج تغییر نام خودکار"
-
-[auto-rename.settings]
-title = "درباره"
-
-[auto-rename.tooltip.description]
-title = "کاری که انجام می‌دهد"
-
-[auto-rename.tooltip.header]
-title = "نحوه کار تغییر نام خودکار"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "به‌دنبال متنی می‌گردد که شبیه عنوان یا سرفصل باشد"
-bullet2 = "یک نام فایل تمیز و معتبر از عنوان شناسایی‌شده ایجاد می‌کند"
-bullet3 = "اگر عنوان مناسبی پیدا نشود، نام اصلی حفظ می‌شود"
-title = "نام‌گذاری هوشمند"
 
 [autoFormDetection]
 loading = "در حال شناسایی فیلدهای فرم..."
@@ -2327,6 +2411,9 @@ remove = "حذف ابزار"
 selected = "ابزارهای انتخاب‌شده"
 selectTool = "یک ابزار انتخاب کنید..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "انصراف"
 confirm = "بازگشت"
@@ -2360,6 +2447,10 @@ title = "اجرای اتوماسیون"
 [automate.selection]
 title = "انتخاب اتوماسیون"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "ایجاد اتوماسیون جدید"
 
@@ -2371,6 +2462,7 @@ title = "پیشنهادی"
 
 [automate.sequence]
 finish = "پایان"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "اجرای اتوماسیون"
 running = "در حال اجرای اتوماسیون..."
 signInToRun = "برای اجرای خودکارسازی‌ها وارد شوید."
@@ -2391,7 +2483,6 @@ secureWorkflow = "گردش‌کار امنیتی"
 secureWorkflowDesc = "اسناد PDF را با حذف محتوای بالقوه مخرب مانند JavaScript و فایل‌های تعبیه‌شده ایمن می‌کند، سپس حفاظت با رمز عبور اضافه می‌کند تا از دسترسی غیرمجاز جلوگیری شود. رمز عبور به‌طور پیش‌فرض 'password' تنظیم شده است."
 
 [autoRename]
-description = "این ابزار فایل‌های PDF را بر اساس محتوایشان به‌صورت خودکار تغییر نام می‌دهد. سند را تحلیل می‌کند تا مناسب‌ترین عنوان را از متن بیابد."
 tags = "تشخیص خودکار,بر اساس سربرگ,سازماندهی,برچسب‌گذاری دوباره,تغییر نام خودکار,تغییر نام هوشمند,تغییر نام بر اساس محتوا,نام فایل,نام‌گذاری فایل,تشخیص عنوان"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "PDF، تقسیم، سند، سازماندهی"
 [autoSplitPDF]
 dividerDownload2 = "دانلود 'Auto Splitter Divider (with instructions).pdf'"
 duplexMode = "حالت دوبلکس (اسکن جلو و عقب)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "بر اساس QR،جداسازی،تقسیم اسکن‌شده،سازماندهی"
 title = "جدا سازی خودکار PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "برای کمک به برش و هم‌ترازی، دور هر بخش
 [bookletImposition.addGutter]
 label = "افزودن حاشیه عطف"
 tooltip = "فضای حاشیه داخلی برای صحافی اضافه می‌کند"
-
-[bookletImposition.advanced]
-toggle = "تنظیمات پیشرفته"
 
 [bookletImposition.doubleSided]
 label = "چاپ دورو"
@@ -2714,14 +2803,15 @@ chooseJksFile = "انتخاب فایل JKS"
 chooseP12File = "انتخاب فایل PKCS12"
 choosePfxFile = "انتخاب فایل PFX"
 choosePrivateKey = "انتخاب فایل کلید خصوصی"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "رد شده"
 fetchFailed = "بارگذاری داده‌های امضا ناموفق بود"
 finalized = "نهایی شد"
 location = "موقعیت"
-logoTitle = "لوگو"
-name = "نام"
-noLogo = "بدون لوگو"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "شماره صفحه"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "رمز عبور گواهی"
 passwordOptional = "اگر گذرواژه‌ای ندارید خالی بگذارید"
 pemCertificateLabel = "گواهی (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "کلید خصوصی (.pem / .key)"
 pending = "در انتظار"
 readyToFinalize = "آماده نهایی‌سازی"
 reason = "دلیل"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "در حال استفاده از گواهی سرور - نیازی به فایل یا گذرواژه نیست"
-showLogo = "نمایش لوگو"
 signatureProgress = "{{signedCount}}/{{totalCount}} امضا"
 tags = "احراز هویت,PEM,P12,رسمی,رمزگذاری,امضا,گواهی,PKCS12,JKS,سرور,دستی,خودکار"
 title = "امضای گواهی"
@@ -2738,12 +2828,45 @@ viewed = "مشاهده شد"
 
 [certSign.appearance]
 invisible = "نامرئی"
+showOnPage = "Show signature on page"
 stepTitle = "ظاهر امضا"
 visibility = "قابلیت مشاهده"
 visible = "مرئی"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "جزئیات امضا"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "درباره ظاهر امضا"
@@ -2762,9 +2885,6 @@ bullet3 = "انتخاب صفحه برای قرار دادن امضا"
 bullet4 = "لوگوی اختیاری قابل افزودن است"
 text = "بلوک امضا را با نام شما، تاریخ و جزئیات اختیاری روی PDF نمایش می‌دهد. زمانی مفید است که می‌خواهید خوانندگان به‌وضوح ببینند سند امضا شده است."
 title = "امضاهای مرئی"
-
-[certSign.certFiles]
-stepTitle = "فایل‌های گواهی"
 
 [certSign.certType.tooltip.convert]
 text = "فایل خود را با keytool به یک کی‌استور جاوا (.jks) تبدیل کنید و سپس JKS را انتخاب نمایید."
@@ -2786,6 +2906,7 @@ text = "فرمتی را انتخاب کنید که با فایل گواهی شم
 title = "کدام گزینه را باید استفاده کنم؟"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "قالب گواهی"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "این دستگاه"
 [certSign.error]
 failed = "هنگام پردازش امضاها خطایی رخ داد."
 
-[certSign.format]
-pkcs11 = "توکن USB"
-windowsStore = "فروشگاه گواهی Windows"
-
 [certSign.hardware]
-certificate = "گواهی"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "مسیر درایور سفارشی…"
+digitalId = "Digital ID"
 driver = "درایور PKCS#11"
 driverPath = "مسیر کتابخانه درایور"
 driverPathPlaceholder = "مسیر کامل به درایور PKCS#11 شما (.dll، .so یا .dylib)"
-expired = "منقضی شده"
-expires = "منقضی می‌شود"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "فهرست گواهی‌ها"
-loading = "در حال خواندن گواهی‌ها…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "هیچ گواهی امضایی یافت نشد"
 noDriver = "هیچ درایور PKCS#11 شناسایی نشد. درایور توکن خود را نصب کنید (مثلاً OpenSC)، سپس این را دوباره باز کنید - یا مسیر درایور را در پایین به‌صورت دستی وارد کنید."
-notYetValid = "هنوز معتبر نیست"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN توکن"
 pkcs11Hint = "درایور PKCS#11 توکن خود را انتخاب کنید، PIN را وارد کنید، سپس گواهی‌های موجود روی توکن را فهرست کنید."
 pkcs11LoadError = "امکان خواندن گواهی‌ها از توکن نبود. PIN و درایور را بررسی کنید."
-refresh = "تازه‌سازی"
-selectCert = "انتخاب گواهی"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "انتخاب درایور"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "اسلات (اختیاری)"
-windowsHint = "یک گواهی از فروشگاه گواهی Windows خود انتخاب کنید. امضا از کلید روی کارت/توکن شما استفاده می‌کند - Windows برای PIN از شما درخواست می‌کند."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "امکان خواندن فروشگاه گواهی Windows نبود"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "قاعده سرانگشتی"
 device = "این دستگاه"
 noOtherSources = "هیچ منبع گواهی دیگری در دسترس نیست."
 server = "سرور"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "منبع گواهی"
 upload = "بارگذاری"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "نام کاربری خود را به‌روزرسانی کنید. پس از به‌روزرسانی از حساب خارج خواهید شد."
@@ -3069,7 +3205,6 @@ placeholder = "سازنده سند"
 
 [changeMetadata.customFields]
 add = "افزودن فیلد"
-description = "افزودن فیلدهای فراداده سفارشی به سند"
 key = "کلید"
 keyPlaceholder = "کلید سفارشی"
 remove = "حذف"
@@ -3135,10 +3270,6 @@ bullet1 = "تاریخ ایجاد: زمان ایجاد سند اصلی"
 bullet2 = "تاریخ ویرایش: زمان آخرین تغییر"
 text = "زمان ایجاد و ویرایش سند."
 title = "فیلدهای تاریخ"
-
-[changeMetadata.tooltip.deleteAll]
-text = "حذف کامل فراداده برای تضمین حریم خصوصی."
-title = "حذف فراداده موجود"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "عنوان: نام یا سربرگ سند"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "به حد مجاز استفاده خود رسیده‌ا�
 
 [checkAccessibility]
 aboutRow = "درباره {{label}}"
-checking = "در حال بررسی..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "دانلود گزارش دسترس‌پذیری"
 fileFailed = "ناموفق"
+noFiles = "Select a PDF to check it."
 pickFile = "نمایش نتایج برای"
-submit = "بررسی دسترس‌پذیری"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "متن جایگزین"
@@ -3286,10 +3417,17 @@ structure = "برچسب‌ها به صفحه‌خوان‌ها می‌گویند
 [checkAccessibility.checks]
 label = "{{passed}} از {{total}} بررسی با موفقیت گذرانده شد"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "گزارش دسترس‌پذیری ایجاد نشد. دوباره تلاش کنید."
 fileTitle = "این فایل قابل بررسی نبود"
 partial = "برخی فایل‌ها قابل بررسی نبودند."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA را اعلام می‌کند"
@@ -3312,6 +3450,21 @@ title = "فایل در فراداده‌اش یک عنوان دارد."
 [checkAccessibility.figures]
 summary_one = "{{count}} تصویر به توضیح نیاز دارد (صفحه {{pages}})"
 summary_other = "{{count}} تصویر به توضیح نیاز دارند (صفحات {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "مربوط به"
@@ -3465,19 +3618,7 @@ checking = "در حال بررسی {{current}} از {{total}}..."
 complete = "بررسی کامل شد"
 
 [checkAccessibility.steps]
-results = "نتایج"
 standard = "استاندارد"
-
-[checkAccessibility.tooltip.header]
-title = "کدام استاندارد بررسی شود"
-
-[checkAccessibility.tooltip.ua1]
-text = "اولین نسخه PDF/UA، منتشرشده در 2012 به‌عنوان ISO 14289-1، برای فایل‌های PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "نسخهٔ جدیدتر، منتشرشده در 2024 به‌عنوان ISO 14289-2، برای فایل‌های PDF 2.0. یک فایل PDF 1.7 که با آن سنجیده شود، قوانینی را که فقط برای PDF 2.0 اعمال می‌شوند رد می‌کند."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "حاشیه‌نویسی {{n}}"
@@ -3868,6 +4009,7 @@ title = "انتخاب رنگ"
 transparent = "شفاف"
 
 [common]
+aboutField = "About {{field}}"
 actions = "اقدامات"
 back = "بازگشت"
 cancel = "انصراف"
@@ -4206,7 +4348,9 @@ title = "تازه‌سازی کلیدهای API"
 warning = "⚠️ هشدار: این اقدام کلیدهای API جدیدی ایجاد کرده و کلیدهای قبلی شما را نامعتبر می‌کند."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) به دستیارهای AI مانند Claude اجازه می‌دهد مستقیماً از ابزارهای Stirling PDF شما استفاده کنند. یک‌بار کلاینت را متصل کنید تا دستیار شما بتواند از طرف شما اسناد را تبدیل، ویرایش، ایمن و پردازش کند."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "کاربران مهمان نمی‌توانند کلاینت‌های MCP را متصل کنند. برای استفاده از سرور MCP و اجازه دادن به دستیار AI خود برای اجرای ابزارهای Stirling PDF از طرف شما، یک حساب ایجاد کنید."
 navLabel = "سرور MCP"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "کپی {{label}}"
 tooltipCopied = "{{label}} کپی شد"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "endpoint MCP شما"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "افزودن به"
 hint = "کلاینت خود را انتخاب کنید، snippet را در فایل نشان‌داده‌شده بچسبانید، سپس آن را راه‌اندازی مجدد کنید. در اولین استفاده با حساب Stirling خود وارد می‌شوید - نیازی به کپی کلید نیست."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "اتصال دستیار AI شما"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "حفظ نسبت تصویر"
 maxAttachmentSize = "حداکثر اندازه ضمیمه (MB)"
 multiple = "چندگانه"
 optimizeForEbook = "بهینه‌سازی PDF برای کتاب‌خوان‌ها (از Ghostscript استفاده می‌کند)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "خروجی"
-outputFormat = "قالب خروجی"
-pdfaAccessibleFormat = "{{format}} (دسترس‌پذیر)"
-pdfaDigitalSignatureWarning = "PDF حاوی یک امضای دیجیتال است. این در مرحله بعد حذف خواهد شد."
-pdfaNote = "PDF/A-1b سازگاری بیشتری دارد، PDF/A-2b از قابلیت‌های بیشتری پشتیبانی می‌کند، PDF/A-3b از فایل‌های جاسازی‌شده پشتیبانی می‌کند."
-pdfaOptions = "گزینه‌های PDF/A"
 pdfOptions = "گزینه‌های PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "تنظیمات"
 signInToUse = "برای استفاده وارد شوید"
 single = "تکی"
 sourceFormatPlaceholder = "قالب مبدأ"
-strictMode = "حالت سخت‌گیرانه"
-strictModeDesc = "در صورت کامل نبودن تبدیل خطا بده (از تأیید VeraPDF استفاده می‌کند)"
 svgPdfOptions = "گزینه‌های SVG به PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "فایل‌های SVG به‌صورت گرافیک برداری رندر می‌شوند تا خروجی در هر وضوحی شفاف باشد. ابعاد SVG اندازه صفحه PDF را تعیین می‌کند."
@@ -4396,9 +4549,7 @@ zoomLevel = "سطح بزرگ‌نمایی"
 
 [convert.ebookOptions]
 includePageNumbers = "شامل شماره صفحات"
-includePageNumbersDesc = "افزودن شماره صفحات به PDF تولیدشده"
 includeTableOfContents = "شامل فهرست مطالب"
-includeTableOfContentsDesc = "افزودن فهرست مطالب تولیدشده به PDF حاصل"
 optimizeForEbookPdf = "بهینه‌سازی برای خوانندگان eBook"
 optimizeForEbookPdfDesc = "بهینه‌سازی PDF برای خواندن eBook (حجم فایل کمتر، رندر بهتر روی دستگاه‌های eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "شناسایی فصل‌ها"
 detectChaptersDesc = "شناسایی عناوینی که شبیه فصل هستند و درج شکست صفحه EPUB"
 kindleEink = "Kindle e-Ink (بهینه‌شده برای متن)"
 outputFormat = "فرمت خروجی"
-outputFormatDesc = "فرمت خروجی eBook را انتخاب کنید"
 tabletPhone = "تبلت/گوشی (به‌همراه تصاویر)"
 targetDevice = "دستگاه هدف"
 targetDeviceDesc = "یک پروفایل خروجی بهینه‌شده برای دستگاه خوانش انتخاب کنید"
@@ -4469,8 +4619,24 @@ description = "این cookies برای عملکرد درست وب‌سایت ض�
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "عنوان صفحه جلد"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "پورتفولیوی PDF"
 description = "هر فایل انتخاب‌شده، صرف‌نظر از نوع آن، به‌طور کامل داخل PDF جدید نگه داشته می‌شود. خواننده‌هایی که از portfolio پشتیبانی نمی‌کنند، یک صفحه جلد با فایل‌های پیوست‌شده نشان می‌دهند."
 goToFileEditor = "رفتن به ویرایشگر فایل"
@@ -4488,6 +4654,9 @@ title = "کارکرد آن"
 
 [createPortfolio.tooltip.header]
 title = "درباره PDF Portfolios"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "برش خودکار فضاهای خالی"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "دسترسی به کلیپ‌بورد در این مرو
 export = "خروجی گرفتن از نشانک‌ها"
 exportClipboard = "کپی JSON در کلیپ‌بورد"
 exportJson = "دانلود JSON"
+exportMenu = "Export"
 importClipboard = "چسباندن JSON از کلیپ‌بورد"
 importJson = "وارد کردن JSON"
+importMenu = "Import"
 loadFromPdf = "بارگذاری از PDF انتخاب‌شده"
 noFile = "یک PDF انتخاب کنید تا نشانک‌های موجود استخراج شوند."
 selectedFile = "از {{file}} بارگذاری شد"
-source = "بارگذاری نشانک‌ها"
 
 [editTableOfContents.editor]
 addTopLevel = "افزودن نشانک سطح‌بالا"
@@ -4740,6 +4910,9 @@ replaceExisting = "جایگزینی نشانک‌های موجود (برای ا�
 replaceExistingHint = "وقتی غیرفعال باشد، طرح کلی جدید پس از نشانک‌های فعلی افزوده می‌شود."
 title = "نشانک‌ها و طرح کلی"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "تغییر PDF"
 filePrompt = "برای شروع، یک PDF از کتابخانه انتخاب یا یک فایل جدید بارگذاری کنید."
@@ -4753,7 +4926,6 @@ title = "برای شروع ویرایش، ابزار را باز کنید"
 [encryptedPdfUnlock]
 actionIgnored = "محدودیت {{action}} نادیده گرفته شد"
 actionUnlocked = "{{action}} برای این جلسه باز شد"
-advanced = "پیشرفته"
 allowed = "مجاز"
 annotations = "حاشیه‌نویسی‌ها"
 authoriseAction = "این PDF برای استفاده از {{action}} به مجوز نیاز دارد."
@@ -4801,7 +4973,6 @@ restricted = "محدودشده"
 restrictedActions = "اقدامات محدودشده"
 restrictedOperation = "این اقدام به رمز عبور مجوزها نیاز دارد."
 retainOwnerVerification = "برای نگه داشتن رمز عبور مجوزها بدون تغییر هنگام حذف رمز عبور باز کردن، آن را تأیید کنید. این کار آن را حذف نمی‌کند."
-saveProtection = "ذخیره حفاظت"
 securityChangeFailed = "امکان تغییر حفاظت وجود ندارد. رمز عبور مجوزها و تنظیمات امنیتی جدید را بررسی کنید."
 sessionDetails = "برای این جلسه باز است. PDF حفاظت‌شده باقی می‌ماند."
 sessionDetailsLabel = "درباره باز کردن قفل جلسه"
@@ -4871,7 +5042,6 @@ title = "مشکلی پیش آمد"
 tryAgain = "دوباره تلاش کنید"
 
 [extractImages]
-allowDuplicates = "ذخیره تصاویر تکراری"
 selectText = "فرمت تصویری را که تصاویر استخراج شده به آن تبدیل شوند انتخاب کنید"
 submit = "استخراج"
 tags = "عکس،عکس،ذخیره،آرشیو،زیپ،گرفتن،برداشتن"
@@ -4927,12 +5097,15 @@ closeFile = "بستن فایل"
 
 [fileEditor]
 closedFile = "{{name}} بسته شد"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "فایل دوباره مرتب شد"
 filesReordered_other = "{{count}} فایل دوباره مرتب شدند"
 loadedFromStorage_one = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شد"
 loadedFromStorage_other = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شدند"
 loadFromStorageFailed = "بارگیری برخی فایل‌ها از فضای ذخیره‌سازی ناموفق بود"
 pinnedFile = "{{name}} سنجاق شد"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} ذخیره و بسته شد"
 saveFailed = "ذخیره ناموفق بود"
 unpinnedFile = "{{name}} از حالت سنجاق خارج شد"
@@ -5019,11 +5192,20 @@ locked = "قفل‌شده"
 previewOf = "پیش‌نمایش {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "افزودن فایل‌ها"
 created = "ایجاد شده"
 notIncludedInToolRun = "در این اجرای ابزار گنجانده نشده است"
 size = "اندازه فایل"
 title = "فایل‌ها"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "هیچ فایلی موجود نیست"
@@ -5104,6 +5286,7 @@ subtitle = "دسته‌ها را در نوار کناری فایل‌ها نما
 title = "دسته‌های نوار کناری"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "لغو"
 error = "تغییر نام فایل ممکن نبود."
 illegalCharacters = "نام فایل نمی‌تواند شامل \\ / : * ? \" < > | باشد"
@@ -5607,7 +5790,6 @@ removeField = "حذف فیلد"
 
 [formFill.editor]
 action = "عملکرد دکمه"
-actionHelp = "کاری که دکمه هنگام کلیک انجام می‌دهد."
 actionNone = "هیچ‌کدام"
 actionPrint = "چاپ"
 actionReset = "بازنشانی فرم"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "تعداد نویسه‌هایی را که جا می‌شوند
 multiline = "چندخطی"
 multilineHelp = "اجازه می‌دهد بیش از یک خط متن وارد شود و متن در لبه فیلد به خط بعد برود."
 multiSelect = "اجازه انتخاب چندگانه"
-multiSelectHelp = "امکان انتخاب بیش از یک گزینه را هم‌زمان فراهم می‌کند."
 name = "نام فیلد"
 nameHelp = "نام داخلی فیلد. هنگام خروجی گرفتن از داده‌ها یا پر کردن فرم از سامانه‌ای دیگر استفاده می‌شود، بنابراین آن را یکتا و بدون فاصله نگه دارید."
 optionGap = "فاصله گزینه‌ها"
@@ -5902,6 +6083,11 @@ title = "تنظیم رنگ‌ها/کنتراست"
 desc = "هایلایت، رسم، افزودن یادداشت و شکل‌ها در نمایشگر"
 tags = "حاشیه‌نویسی،هایلایت،رسم،نشانه‌گذاری،نظر،یادداشت‌ها،بازبینی،خط قرمز،بازخورد،ابزارهای نشانه‌گذاری،یادداشت‌های چسبان،شکل‌ها،فلش‌ها،کادر متن،دست‌آزاد"
 title = "حاشیه‌نویسی"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "فیلدهای فرم را به‌طور خودکار با AI تشخیص دهید و PDF خود را قابل پر کردن کنید."
@@ -6405,6 +6591,9 @@ sort = "مرتب‌سازی"
 [merge.sortFiles]
 title = "مرتب‌سازی فایل‌ها"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "نمای کلی تنظیمات ادغام"
 
@@ -6548,6 +6737,9 @@ title = "احراز هویت ناموفق بود"
 message = "می‌توانید این پنجره را ببندید و به Stirling PDF برگردید."
 title = "احراز هویت موفق بود"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "اجازه دسترسی"
 approving = "در حال اجازه دادن..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "در حال بازگرداندن شما به برنامه..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} می‌خواهد به حساب Stirling PDF شما دسترسی داشته باشد"
 scopesIntro = "این به {{app}} اجازه می‌دهد:"
 signedInAs = "وارد شده به‌عنوان {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "برای ادامه وارد شوید"
 signInPrompt = "برای ادامه اتصال برنامه، وارد حساب Stirling PDF خود شوید."
 title = "Authorise access"
 unknownApp = "یک برنامه شخص ثالث"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "به جای شما عمل کند - هر کاری که {{app}} انجام می‌دهد تحت حساب شما اجرا می‌شود و در مصرف شما محاسبه می‌شود"
@@ -6572,9 +6767,12 @@ tools = "از ابزارهای Stirling PDF شما از طرف شما استفا
 
 [oauthConsent.scope]
 email = "آدرس ایمیل شما را ببیند"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "هویت شما را تأیید کند"
 phone = "شماره تلفن شما را ببیند"
 profile = "اطلاعات پایه پروفایل شما را ببیند"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "پاکسازی اسکن‌ها و تشخیص متن از تصاویر درون یک فایل PDF و بازافزودن آن به عنوان متن."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "شما به عضو تیم تبدیل می‌شوید و دس�
 [pageEdit]
 deselectAll = "هیچ‌کدام"
 selectAll = "انتخاب همه"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "استخراج صفحات"
@@ -7577,6 +7779,8 @@ stamp = "حاشیه‌نویسی مهر - متن صفحه نیست، بنابر�
 widget = "فیلد فرم - متن صفحه نیست، بنابراین اینجا قابل ویرایش نیست"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "ویرایش"
 markTagged = "علامت‌گذاری به‌عنوان کاملاً برچسب‌گذاری‌شده"
 matchScanFont = "تطبیق متن اسکن‌شده با {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "برچسب‌گذاری خودکار صفحه"
 typeInto = "تایپ در {{run}}"
 ungroupParagraph = "خارج کردن پاراگراف {{run}} از گروه"
 unmarkTagged = "علامت‌گذاری به‌عنوان برچسب‌گذاری‌نشده"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Wrap کردن {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "تغییرات ذخیره‌نشده دور انداخته شوند؟"
 
 [pdfTextEditor.error]
 decodeImage = "تصویر انتخاب‌شده رمزگشایی نشد."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "نمی‌توان این متن را تکثیر کرد: هیچ فونتِ موجودی قادر به رسم همهٔ حروف آن نیست."
 formLiftChangesDrawing = "نمی‌توان این مورد را ویرایش کرد: به‌صورت بخشی از یک گروه با تنظیمات برش یا گرافیک رسم شده که ویرایشگر هنگام تغییر نمی‌تواند آن‌ها را حفظ کند."
 insertImage = "تصویر انتخاب‌شده درج نشد."
 needsShaping = "ویرایشگر هنوز نمی‌تواند حروف پیوسته و نشانه‌های مصوت این خط نوشتاری را به‌درستی رسم کند، بنابراین این تغییر اعمال نشد."
+reopenLost = "Open again"
 replaceClippedImage = "نمی‌توان این تصویر را جایگزین کرد: برش خورده است و تصویر جایگزین بخش‌هایی را که برش پنهان کرده نمایش می‌دهد."
 scanOffInk = "نمی‌توان این متن را ویرایش کرد: واژه‌های شناسایی‌شده با اسکن هم‌تراز نیستند. دوباره OCR اجرا کنید."
 unsafeRtlEdit = "نمی‌توان این ویرایش را انجام داد: ویرایشگر نمی‌تواند متن راست‌به‌چپ این خط را بدون تغییر، بازترسیم کند."
@@ -7616,6 +7823,7 @@ pngFileType = "تصویر PNG"
 close = "بستن نوار جستجو"
 count = "{{current}} از {{total}}"
 findPlaceholder = "یافتن"
+hideReplace = "Hide replace"
 ignoreAccents = "نادیده گرفتن اعراب و نشانه‌ها"
 matchCase = "تطبیق بزرگی و کوچکی حروف"
 next = "تطبیق بعدی"
@@ -7625,6 +7833,7 @@ replace = "جایگزینی"
 replaceAll = "جایگزینی همه"
 replaced = "{{count}} جایگزین شد"
 replacePlaceholder = "جایگزینی با"
+showReplace = "Show replace"
 wholeWord = "کل واژه"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "این پیوند را نمی‌توان برچسب‌گذار�
 cannotTagPage = "محتوای این صفحه را نمی‌توان برچسب‌گذاری کرد."
 contentGroup = "محتوا"
 customTag = "{{role}} (برچسب سفارشی)"
-decorativeInfo = "صفحه‌خوان‌ها تصاویر تزئینی را نادیده می‌گیرند. از آن برای حاشیه‌ها، پس‌زمینه‌ها و تصاویر دیگری که اطلاعاتی ندارند استفاده کنید."
-decorativeLabel = "تصویر تزئینی"
-description = "توضیح تصویر"
-descriptionInfo = "صفحه‌خوان‌ها این متن را به جای تصویر می‌خوانند."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "برچسب‌ها در فایل رمزگذاری‌شده قابل ویرایش نیستند"
 figureDescription = "توضیح شکل"
 figureDescriptionInfo = "صفحه‌خوان‌ها این را به‌جای شکل می‌خوانند."
-formFieldDescription = "توضیح فیلد"
 formulaDescription = "توضیح فرمول"
 formulaDescriptionInfo = "صفحه‌خوان‌ها این را به‌جای فرمول می‌خوانند. آن را همان‌طور که با صدای بلند می‌گویید بیان کنید، مانند \"x squared plus one\"."
 heading = "دسترس‌پذیری"
@@ -7813,7 +8019,6 @@ markedTagged = "سند کاملاً برچسب‌گذاری‌شده است"
 markedTaggedHint = "به نمایشگرهای PDF می‌گوید از برچسب‌های دسترس‌پذیری استفاده کنند. زمانی آن را تیک بزنید که همه‌چیز برچسب‌گذاری شده باشد."
 markedWithUntagged = "برخی محتوا برچسب ندارند، بنابراین صفحه‌خوان‌ها ممکن است از آن‌ها بگذرند."
 missingDescriptions = "توضیحات ناموجود"
-mixedContent = "شکل شامل محتوای دیگری است"
 mixedTags = "مخلوط"
 needsDescriptionBadge = "بدون توضیح"
 nextToReview = "مورد بعدی برای بازبینی"
@@ -7821,12 +8026,10 @@ notFigure = "به‌عنوان بخشی از متن برچسب‌گذاری شد
 removeTag = "حذف برچسب"
 saveFailed = "تغییرات دسترس‌پذیری شما ذخیره نشد، بنابراین فایل ذخیره نشد. آن‌ها را واگرد کنید و دوباره تلاش کنید."
 selectedText = "متن انتخاب‌شده"
-tagFormField = "برچسب‌گذاری فیلد فرم"
 tagging = "در حال برچسب‌گذاری صفحات"
 tagLabel = "برچسب"
 tagLinks_one = "برچسب‌گذاری پیوند"
 tagLinks_other = "برچسب‌گذاری {{count}} پیوند"
-tagUntagged = "برچسب‌گذاری خودکار سند"
 tagUntaggedHint = "به‌طور خودکار برچسب‌های دسترس‌پذیری را در سراسر سند اضافه می‌کند. نتیجه خام است: پس از آن سرعنوان‌ها، فهرست‌ها و ترتیب خواندن را بررسی کنید."
 unknownTag = "اینجا قابل خواندن نیست"
 unmarkedWithTags = "برخی نمایشگرهای PDF به‌هرحال از برچسب‌ها استفاده می‌کنند و ممکن است از محتوای بدون برچسب بگذرند."
@@ -7851,7 +8054,7 @@ heading = "سرفصل‌ها"
 mixedNumbering = "سرفصل‌های شماره‌دار و بدون شماره را با هم ترکیب می‌کند"
 none = "بدون سرفصل"
 onPage = "سرفصل در صفحه {{page}}"
-problems = "مشکلات سرفصل"
+problemCount = "{{count}} to fix"
 skippedLevel = "پس از سرفصل {{previous}} یک سطح را رد می‌کند"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "عنوان"
 allLanguages = "همهٔ زبان‌ها"
 cannotSetDocument = "زبان این سند را نمی‌توان تغییر داد."
 cannotSetText = "زبان این متن را نمی‌توان تغییر داد."
-documentHint = "زبانی که صفحه‌خوان‌ها استفاده می‌کنند مگر اینکه بخشی از متن زبان خودش را تنظیم کند."
 documentLabel = "زبان"
 documentLocked = "زبان یک سند رمزنگاری‌شده را نمی‌توان اینجا تغییر داد."
 inDocument = "در این سند"
 innerLabel = "زبان برچسب {{number}}"
 label = "زبان"
-missing = "هیچ زبانی تنظیم نشده است. صفحه‌خوان‌ها حدس می‌زنند و ممکن است کل سند را با صدای نادرست بخوانند."
 mixed = "مخلوط"
 noMatch = "هیچ زبان مطابقی نیست. به‌جای آن کدش را تایپ کنید، مانند mt یا en-IE."
 placeholder = "انتخاب زبان"
@@ -7943,6 +8144,52 @@ renderFailed = "رندر صفحه ناموفق بود"
 [pdfTextEditor.password]
 incorrect = "رمز عبور نادرست است - دوباره تلاش کنید."
 label = "رمز عبور"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "راهنمای تراز در {{value}} {{unit}} - برای حذف، آن را روی خط‌کش بکشید"
@@ -8124,6 +8371,10 @@ title = "تفاوت پیش‌نمایش"
 [pdfTextEditor.tooltip.textFocus]
 text = "این فضای کاری بر ویرایش متن و جابه‌جایی تصاویر توکار تمرکز دارد. آثار هنری پیچیده صفحه، ابزارک‌های فرم و گرافیک‌های لایه‌ای برای خروجی حفظ می‌شوند اما در اینجا کاملاً قابل ویرایش نیستند."
 title = "تمرکز متن و تصویر"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF به CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "پنهان کردن دسته"
 labelCount = "برچسب‌ها"
 sharedNote = "این برچسب‌ها داخلی هستند و در سراسر تیم شما مشترک‌اند."
 showCategory = "نمایش دسته"
-
-[policies.pii]
-account = "شماره‌های حساب (برچسب‌دار)"
-card = "کارت‌های اعتباری / نقدی"
-email = "آدرس‌های ایمیل"
-fieldLabel = "PII برای سانسور"
-iban = "IBANها"
-phone = "شماره‌های تلفن"
-placeholder = "انتخاب انواع PII"
-routing = "شماره‌های مسیریابی بانکی ایالات متحده (ABA)"
-ssn = "شماره‌های تأمین اجتماعی"
 
 [policy]
 badgeEnforcing = "{{name}} در حال اعمال..."
@@ -10317,6 +10557,10 @@ title = "پایپ‌لاین‌ها"
 [portal.pipelines.actions]
 newCustomPipeline = "Pipeline سفارشی جدید"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "همه pipelineها"
 
@@ -12047,7 +12291,6 @@ label = "ابزارهای خواندن"
 readAloud = "بلند خواندن"
 rotateLeft = "چرخاندن به چپ"
 rotateRight = "چرخاندن به راست"
-search = "یافتن در سند"
 switchDocument = "تعویض سند"
 thumbnails = "صفحات"
 
@@ -12062,6 +12305,7 @@ colorLabel = "رنگ کادر"
 convertPDFToImageLabel = "تبدیل PDF به PDF-Image"
 customPaddingLabel = "فاصله اضافی سفارشی"
 useRegexLabel = "استفاده از Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "جستجوی کلمه کامل"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "تنظیمات پنهان‌سازی"
 
 [redact.auto.wordsToRedact]
 add = "اضافه کردن"
-examples = "مثال‌ها: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "یک کلمه وارد کنید"
 title = "کلمات برای پنهان‌سازی"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "برای سانسور چند فایل به‌صور�
 manual = "دستی"
 mode = "حالت"
 title = "روش پنهان‌سازی"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "فقط متن‌هایی را تطبیق دهید که از نظر حروف بزرگ و کوچک یکسان باشند. وقتی فعال باشد، 'Secret' با 'SECRET' تطبیق داده نمی‌شود، و [A-Z] در یک regex فقط با حروف بزرگ تطبیق داده می‌شود."
@@ -12147,19 +12401,6 @@ title = "روش پنهان‌سازی"
 text = "برای انتخاب دستی نواحی خاص جهت پنهان‌سازی کلیک و درگ کنید. کنترل دقیقی بر آنچه پنهان می‌شود به شما می‌دهد. (به‌زودی)"
 title = "پنهان‌سازی دستی"
 
-[redact.tooltip.words]
-bullet1 = "هر بار یک کلمه اضافه کنید"
-bullet2 = "برای افزودن، Enter را بزنید یا روی 'Add Another' کلیک کنید"
-bullet3 = "برای حذف کلمات روی × کلیک کنید"
-
-[redact.tooltip.words.description]
-text = "کلمات یا عبارات را برای یافتن و پنهان‌سازی در سند خود وارد کنید. هر کلمه به‌صورت جداگانه جستجو می‌شود."
-title = "همسان‌سازی متن"
-
-[redact.tooltip.words.examples]
-text = "کلمات معمول برای پنهان‌سازی شامل: جزئیات بانکی، آدرس‌های ایمیل، یا نام‌های مشخص است."
-title = "نمونه‌های رایج"
-
 [redact.tooltip.words.header]
 title = "کلمات برای پنهان‌سازی"
 
@@ -12176,15 +12417,6 @@ failed = "هنگام حذف حاشیه‌نویسی‌ها از PDF خطایی �
 
 [removeAnnotations.info]
 description = "این ابزار تمام حاشیه‌نویسی‌ها (نظرها، هایلایت‌ها، یادداشت‌ها و غیره) را از اسناد PDF شما حذف می‌کند."
-
-[removeAnnotations.settings]
-title = "تنظیمات"
-
-[removeAnnotations.tooltip.description]
-title = "کاری که انجام می‌دهد"
-
-[removeAnnotations.tooltip.header]
-title = "درباره حذف حاشیه‌نویسی‌ها"
 
 [removeBlanks]
 submit = "حذف صفحات خالی"
@@ -12325,6 +12557,9 @@ tags = "چینش مجدد,مرتب‌سازی مجدد,سازمان‌دهی,ب�
 [reorganizePages.error]
 failed = "سازمان‌دهی مجدد صفحات ناموفق بود"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "صفحات دوباره سازمان‌دهی شدند"
 
@@ -12406,6 +12641,7 @@ title = "وارونه‌سازی همه رنگ‌ها"
 rotateLeft = "چرخش پادساعت‌گرد"
 rotateRight = "چرخش ساعت‌گرد"
 selectRotation = "انتخاب زاویه چرخش (ساعت‌گرد)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "اعمال چرخش"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "چرخش PDF"
@@ -12516,8 +12752,7 @@ title = "پاک‌سازی"
 failed = "هنگام پاک‌سازی PDF خطایی رخ داد."
 
 [sanitize.options]
-note = "عناصری را که می‌خواهید از PDF حذف شوند انتخاب کنید. حداقل باید یک گزینه انتخاب شود."
-title = "گزینه‌های پاک‌سازی"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "حذف هر فایل جاسازی‌شده در PDF"
@@ -12649,6 +12884,7 @@ title = "جستجوی PDF"
 hideTools = "مخفی کردن ابزارهای ناموجود ▴"
 messageNoFallback = "ابزارها تا زمان بازگشت سرور شما به حالت آنلاین در دسترس نخواهند بود."
 messageWithFallback = "برخی ابزارها به اتصال سرور نیاز دارند."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "نمایش ابزارهای ناموجود ▾"
 title = "سرور Stirling-PDF شما در دسترس نیست"
 toolNotAvailableLocally = "سرور Stirling-PDF شما آفلاین است و \"{{endpoint}}\" در بک‌اند محلی در دسترس نیست."
@@ -13034,6 +13270,12 @@ title = "میانبرهای صفحه‌کلید"
 mac = "در میانبر خود ⌘ (Command)، ⌥ (Option) یا یک کلید اصلاحی دیگر را بگنجانید."
 windows = "در میانبر خود Ctrl، Alt یا یک کلید اصلاحی دیگر را بگنجانید."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "شرایط، سیاست حریم خصوصی و ترجیحات cookie شما."
 label = "حقوقی"
@@ -13418,9 +13660,7 @@ image = "بارگذاری"
 text = "متن"
 
 [sign.step]
-createDesc = "روش ساخت امضا را انتخاب کنید"
 place = "جانمایی و ذخیره"
-placeDesc = "امضا را روی PDF جانمایی کنید"
 
 [sign.steps]
 configure = "پیکربندی امضا"
@@ -13597,6 +13837,10 @@ rotateLeft = "چرخاندن به چپ"
 rotateRight = "چرخاندن به راست"
 trim = "برش تا محدوده امضا"
 trimHint = "فضای خالی اطراف آن را برش می‌دهد"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "تنظیمات ظاهر امضا"
@@ -13959,7 +14203,6 @@ placeholder = "تعداد تقسیمات افقی را وارد کنید"
 
 [split-by-sections.splitMode]
 custom = "صفحات سفارشی"
-description = "نحوه تقسیم صفحات را انتخاب کنید"
 label = "حالت تقسیم"
 splitAll = "تقسیم همه صفحات"
 splitAllExceptFirst = "تقسیم همه به‌جز اول"
@@ -14210,10 +14453,8 @@ failed = "هنگام مُهر زمانی PDF خطایی رخ داد."
 
 [timestampPdf.options]
 note = "فقط هش SHA-256 سند شما به سرور TSA ارسال می‌شود؛ خود فایل PDF هرگز به سرور TSA ارسال نمی‌شود."
-title = "سرور مُهر زمانی (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "یک مرجع مُهر زمانی مورد اعتماد انتخاب کنید"
 label = "انتخاب سرور TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "هیچ ابزاری موجود نیست"
 
 [tooltip]
 close = "بستن راهنما"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "این ابزار محدودیت‌های فقط‌خواندنی را از فیلدهای فرم PDF حذف می‌کند تا قابل ویرایش و پرشدن شوند."
@@ -14706,6 +14961,9 @@ signatureDate = "تاریخ امضا"
 
 [validateSignature.settings]
 certHint = "یک گواهی X.509 مورد اعتماد بارگذاری کنید تا با منبع اعتماد سفارشی اعتبارسنجی شود."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "تنظیمات اعتبارسنجی"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "امکان پیش‌نمایش فایل نیست"
 copyRestricted = "کپی کردن به‌دلیل مجوزهای این PDF غیرفعال است."
 copyText = "کپی"
 coverPageView = "نمایش صفحه جلد به‌صورت جداگانه"
-disableColorFilter = "غیرفعال کردن فیلتر رنگ"
 documentUpdated = "سند به‌روزرسانی شد"
 dualPageView = "نمای دوصفحه‌ای"
 editText = "ویرایش متن"
-enableDarkFilter = "فعال‌سازی فیلتر تیره"
-enableSepiaFilter = "فعال‌سازی فیلتر سپیا"
 engineLoadError = "راه‌اندازی موتور نمایشگر PDF ناموفق بود"
 engineSlowWarning = "راه‌اندازی موتور PDF بیشتر از حد انتظار طول می‌کشد. لطفاً تنظیمات WebAssembly و Worker مرورگر خود را بررسی کنید، یا صفحه را دوباره بارگذاری کنید."
 firstPage = "صفحه نخست"
@@ -14736,20 +14991,27 @@ fitPage = "متناسب با صفحه"
 fitWidth = "متناسب با عرض"
 lastPage = "صفحه آخر"
 loadingEngine = "در حال بارگذاری موتور PDF..."
+menuSelected = "Selected"
 moreOptions = "بیشتر"
 nextPage = "صفحه بعد"
 noPdfProvided = "هیچ PDF ارائه نشده است"
 onlyPdfSupported = "این قالب فایل برای پیش‌نمایش پشتیبانی نمی‌شود."
 pageNavigation = "پیمایش صفحه"
+pageNumber = "Page number"
 previousPage = "صفحه قبل"
 readAloudFromHere = "خواندن با صدای بلند از اینجا"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "سند ذخیره نشد. دوباره تلاش کنید."
 saveChangesErrorTitle = "ذخیرهٔ تغییرات ممکن نشد"
 singlePageView = "نمای تک‌صفحه‌ای"
+tools = "Tools"
 unknownFile = "فایل ناشناخته"
-view = "نمایش"
 zoom = "بزرگ‌نمایی"
 zoomIn = "بزرگ‌نمایی"
+zoomLevel = "Zoom level"
 zoomOut = "کوچک‌نمایی"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "پیش‌نمایش امضا"
 
 [viewer.signatureField]
 badge = "امضا"
+clickToSign = "Click to sign here"
 fieldTitle = "فیلد امضا: {{name}}"
 signed = "امضاشده"
 signedWithReason = "امضاشده: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "فیلد امضای امضانشده: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{restored}} از {{total}} فایل بازیابی شد. بقیه د
 
 [workbenchBar]
 activeFiles = "فایل‌های فعال"
-annotations = "حاشیه‌نویسی‌ها"
+annotate = "Annotate"
 applyRedactionsFirst = "ابتدا پنهان‌سازی‌ها را اعمال کنید"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "بستن همهٔ فایل‌ها"
 closePdf = "بستن PDF"
+defaultZoom = "Default zoom"
 deselectAll = "لغو انتخاب همه"
 downloadAll = "دانلود همه"
 editText = "ویرایش متن"
@@ -15100,18 +15367,26 @@ exitAnnotations = "خروج از حالت حاشیه‌نویسی"
 exitRedaction = "خروج از حالت پنهان‌سازی"
 findReplace = "یافتن و جایگزینی"
 formFill = "ویرایشگر فرم"
-hideToolbar = "پنهان کردن نوار ابزار"
+layers = "Layers"
 moreActions = "اقدامات بیشتر"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "ویرایشگر صفحه"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "حالت جابه‌جایی"
 print = "چاپ PDF"
 readAloud = "خواندن با صدای بلند"
 readAloudLanguage = "زبان"
 readAloudSpeed = "سرعت"
 redact = "پنهان‌سازی"
+reviewAccessibility = "Accessibility"
 rotateLeft = "چرخش به چپ"
 rotateRight = "چرخش به راست"
 ruler = "خط‌کش / اندازه‌گیری"
+rulerScaleUnset = "Not set"
 rulerSettings = "تنظیمات مقیاس"
 save = "ذخیره"
 saveAll = "ذخیره همه"
@@ -15123,14 +15398,23 @@ selectLanguage = "انتخاب زبان"
 share = "اشتراک‌گذاری"
 showAllTools = "نمایش همه ابزارها"
 showFewerTools = "جمع کردن نوار ابزار"
-showToolbar = "نمایش نوار ابزار"
+thumbnails = "Pages"
 toggleAnnotations = "نمایش/مخفی کردن حاشیه‌نویسی‌ها"
-toggleAttachments = "نمایش/مخفی کردن پیوست‌ها"
-toggleBookmarks = "نشانک‌ها (فهرست مطالب)"
 toggleComments = "دیدگاه‌ها"
-toggleLayers = "نمایش/مخفی کردن لایه‌ها"
-toggleSidebar = "نمایش/مخفی کردن نوار کناری"
 viewer = "نمایشگر"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "دسترسی شما به این سند منقضی شده است."

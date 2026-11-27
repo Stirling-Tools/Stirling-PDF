@@ -12,9 +12,11 @@ comingSoon = "În curând"
 confirm = "Confirmați"
 confirmClose = "Confirmare închidere"
 confirmCloseCancel = "Anulare"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Închideți fișierul"
 confirmCloseDiscard = "Renunță la modificări și închide"
 confirmCloseMessage = "Sigur doriți să închideți acest fișier?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Salvează și închide"
 confirmCloseSaveFailed_one = "Salvat cu erori. Salvarea a eșuat pentru {{count}} file."
 confirmCloseSaveFailed_other = "Salvat cu erori. {{count}} fișiere nu au putut fi salvate."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Fișier salvat pe disc"
 filesSelected = "{{count}} fișiere"
 font = "Font"
 fontSizeTooltip = "Dimensiunea textului numărului de pagină în puncte. Numere mai mari creează text mai mare."
-fontTypeTooltip = "Familia de font pentru numerele de pagină. Alegeți în funcție de stilul documentului."
 green = "Verde"
 help = "Ajutor"
 incorrectPasswordMessage = "Parola curentă este incorectă."
@@ -249,9 +250,7 @@ image = "Încărcare"
 text = "Text"
 
 [addImage.step]
-createDesc = "Încarcă imaginea pe care vrei să o adaugi"
 place = "Plasează imaginea"
-placeDesc = "Fă clic pe PDF pentru a adăuga imaginea"
 
 [addImage.steps]
 configure = "Configurează imaginea"
@@ -276,7 +275,7 @@ fontName = "Nume Font"
 fontSize = "Dimensiune Font"
 numberPagesDesc = "de ex., 1,3,5-8 sau lăsați necompletat pentru toate paginile"
 pagePreviewAlt = "Previzualizare pagină"
-pagesAndStarting = "Pagini și număr de start"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Poziție și pagini"
 preview = "Selecție poziție"
 previewDisclaimer = "Previzualizarea este aproximativă. Rezultatul final poate varia din cauza metricilor de font ale PDF-ului."
@@ -300,6 +299,7 @@ title = "Rezultatele numerotării paginilor"
 
 [addPassword]
 desc = "Criptați documentul PDF cu o parolă."
+submit = "Add Password"
 tags = "criptează,parolă,blocare,securizat,protejează,securitate,criptare,protecție,confidențial,privat,restricționează accesul"
 title = "Adaugă parolă"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Previzualizare ștampilă"
 tags = "ștampilă,marcaj,sigiliu,aprobat,respins,confidențial,instrument ștampilă,ștampilă cauciuc,ștampilă dată,ștampilă aprobare,primit,nul,copie,original"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabet"
-clickToExpand = "Faceți clic pentru a extinde"
 customColor = "Culoare Text Personalizată"
 customDateDesc = "Format personalizat"
 customPosition = "Trageți ștampila în locația dorită în fereastra de previzualizare."
 dateDesc = "Data curentă"
 datetimeDesc = "Dată și oră combinate"
 dateTimeVars = "Dată și oră"
-dynamicVariables = "Variabile dinamice"
 examples = "Exemple"
 filenameDesc = "Nume fișier fără extensie"
 filenameFullDesc = "Nume fișier cu extensie"
@@ -365,6 +364,8 @@ noStampSelected = "Nu a fost selectată nicio ștampilă. Reveniți la Pasul 1."
 opacity = "Opacitate"
 otherVars = "Altele"
 pageNumberDesc = "Numărul paginii curente"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Informații pagină"
 position = "Poziție"
 positionAndFormatting = "Poziție și formatare"
@@ -378,9 +379,10 @@ quickPosition = "Selectați o poziție pe pagină pentru a plasa ștampila."
 rotation = "Rotație"
 selectedImageAlt = "Imaginea ștampilei selectate"
 selectTemplate = "Selectați un șablon..."
+size = "Size"
 stampSetup = "Configurare ștampilă"
 stampText = "Text Ștampilă"
-stampTextDescription = "Folosiți variabilele dinamice de mai jos. Folosiți @@ pentru @ literal. Folosiți \\n pentru linii noi."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Tip Ștampilă"
 submit = "Adaugă ștampilă"
 tags = "Ștampilă, Adaugă imagine, centrează imagine, Filigran, PDF, Încorporează, Personalizează"
@@ -389,7 +391,6 @@ title = "Ștampilează PDF"
 totalPagesDesc = "Numărul total de pagini"
 useTemplate = "Folosește șablon"
 uuidDesc = "Identificator unic scurt (8 caractere)"
-variablesHelp = "Faceți clic pe orice variabilă pentru a o insera în textul ștampilei. Folosiți @@ pentru @ literal."
 yearMonthDayDesc = "Părți individuale ale datei"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "A apărut o eroare la adăugarea ștampilei în PDF."
 
 [AddStampRequest.results]
 title = "Rezultatele ștampilării"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Personalizat"
@@ -410,6 +417,11 @@ legal-footer = "Subsol juridic"
 page-numbers = "Numere de pagină"
 pageNumberFooter = "Subsol cu număr de pagină"
 timestamp = "Marcaj temporal"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Aplicați textul"
@@ -462,9 +474,7 @@ image = "Încărcare"
 text = "Text"
 
 [addText.step]
-createDesc = "Introduceți textul pe care doriți să-l adăugați"
 place = "Plasați textul"
-placeDesc = "Faceți clic pe PDF pentru a adăuga textul"
 
 [addText.steps]
 configure = "Configurați textul"
@@ -1233,6 +1243,18 @@ label = "Regenerare la pornire"
 description = "Numărul de zile pentru care certificatul va fi valabil"
 label = "Valabilitate certificat (zile)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Directoare din care sursele de folder și ieșirile de folder au permisiunea să citească și în care să scrie. Aceasta este o limită de securitate: automatizările nu pot fi niciodată direcționate către o cale de server din afara acestei liste."
 securityNote = "Lăsați necompletat pentru a dezactiva complet sursele și ieșirile de folder. Directorul de configurare propriu al Stirling este întotdeauna interzis."
@@ -1456,7 +1478,9 @@ label = "Utilizator SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Clienții trimit o cheie API Stirling în antetul X-API-KEY (sau Authorization: Bearer <key>). Cheia este asociată utilizatorului Stirling care o deține - doar conturile provisionate au acces, iar acțiunile sunt auditate ca acel utilizator. Gestionați cheile în Cont > Chei API."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Expuneți instrumentele PDF și agenții AI Stirling către clienți MCP printr-un endpoint protejat cu OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "Server MCP"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Instrumente permise"
 description = "Operation ids de ascuns din MCP (separate prin virgulă sau spațiu), de ex. add-password remove-password. Lăsați necompletat pentru a expune toate instrumentele activate."
 label = "Instrumente blocate"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Când este dezactivat (implicit), nu se încarcă endpointul /mcp, metadatele sau bean-urile MCP."
 label = "Activează serverul MCP"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Introduceți mai sus issuer-ul OAuth + resource ID, salvați și reporniți."
 step1ApiKey = "Creați o cheie API în Cont > Chei API (fiecare utilizator o folosește pe a sa)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "În clientul MCP adăugați un"
 step2b = "server care indică spre:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Clientul descoperă automat OAuth din:"
 step3ApiKey = "Trimiteți cheia într-un"
 step3ApiKeyb = "antet (sau Authorization: Bearer <key>). Nu se folosește OAuth sau descoperirea metadatelor."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Aprobați autentificarea; clientul reîncearcă folosind un token. Instrumentele apar grupate: convert, pages, misc, security, ai."
 step4ApiKey = "Instrumentele apar grupate: convert, pages, misc, security, ai - și fiecare apel este auditat ca proprietarul cheii."
 tip = "Sfat: înregistrați resource ID ca audience permis în IdP. Testat cu MCP Inspector și Claude Desktop."
 tipApiKey = "Sfat: modul cu cheie API nu necesită IdP extern - cel mai simplu pentru self-host. Cheia este asociată utilizatorului Stirling care o deține."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Conectați un client MCP"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Descoperit automat din issuer"
 
 [admin.settings.mcp.mode]
 apikey = "Cheie API (cheie Stirling per utilizator)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth necesită un IdP extern. Cheia API folosește o cheie API Stirling per utilizator (X-API-KEY) - cel mai simplu pentru self-host."
 label = "Mod de autentificare"
 oauth = "OAuth 2.1 (IdP extern)"
@@ -1515,6 +1563,18 @@ label = "ID resursă"
 [admin.settings.mcp.scopes]
 description = "Necesită mcp.tools.read pentru operații de citire și mcp.tools.write pentru operații de scriere/AI."
 label = "Aplică scope-uri OAuth"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim comparat cu un nume de utilizator Stirling (de ex. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Doriți să ajutați la îmbunătățirea Stirling PDF?"
 tags = "adnotează,evidențiază,desenează,marcaj,comentariu,notițe,revizuire,redline,feedback,instrumente marcaj,notițe lipicioase,forme,săgeți,casetă text,mână liberă"
 
 [annotation]
-alignCenter = "Aliniază la centru"
-alignLeft = "Aliniază la stânga"
-alignRight = "Aliniază la dreapta"
 annotationStyle = "Stil adnotare"
 backgroundColor = "Culoare fundal"
 borderOff = "Chenar: Inactiv"
@@ -2016,18 +2073,61 @@ underline = "Subliniere"
 undoDelete = "Anulează"
 width = "Lățime"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Un editor PDF gratuit și privat, pe care îl puteți rula pe orice infrastructură."
 
 [appBanner]
 dismiss = "Închide"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Adăugați atașamente..."
 convertToPdfA3b = "Convertește la PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b este un format de arhivare care asigură păstrarea pe termen lung. Permite încorporarea oricăror formate de fișiere ca atașamente. Conversia necesită Ghostscript și poate dura mai mult pentru fișiere mari."
-convertToPdfA3bTooltipHeader = "Despre conversia PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Ce face"
 discardChanges = "Renunță"
 downloadSingle = "Descarcă atașamentul"
 duplicateName = "Există deja un atașament numit „{{name}}”."
@@ -2208,7 +2308,6 @@ guest = "Invitat"
 user = "Utilizator"
 
 [auto-rename]
-description = "Găsește automat titlul din conținutul PDF-ului și îl folosește ca nume de fișier."
 submit = "Redenumire Automată"
 tags = "auto-detectare,bazat-pe-antet,organizează,reetichetează"
 title = "Redenumire Automată"
@@ -2218,21 +2317,6 @@ failed = "A apărut o eroare la redenumirea automată a PDF-ului."
 
 [auto-rename.results]
 title = "Rezultatele redenumirii automate"
-
-[auto-rename.settings]
-title = "Despre"
-
-[auto-rename.tooltip.description]
-title = "Ce face"
-
-[auto-rename.tooltip.header]
-title = "Cum funcționează redenumirea automată"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Caută text care pare a fi titlu sau antet"
-bullet2 = "Creează un nume de fișier curat și valid din titlul detectat"
-bullet3 = "Păstrează numele original dacă nu se găsește un titlu potrivit"
-title = "Redenumire inteligentă"
 
 [autoFormDetection]
 loading = "Se detectează câmpurile formularului..."
@@ -2327,6 +2411,9 @@ remove = "Eliminați instrumentul"
 selected = "Instrumente selectate"
 selectTool = "Selectați un instrument..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Anulați"
 confirm = "Înapoi"
@@ -2360,6 +2447,10 @@ title = "Rulați automatizarea"
 [automate.selection]
 title = "Selecția automatizării"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Creați automatizare nouă"
 
@@ -2371,6 +2462,7 @@ title = "Sugestii"
 
 [automate.sequence]
 finish = "Finalizați"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Rulați automatizarea"
 running = "Se rulează automatizarea..."
 signInToRun = "Autentificați-vă pentru a rula automatizări."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Flux de securitate"
 secureWorkflowDesc = "Asigură documentele PDF prin eliminarea conținutului potențial malițios precum JavaScript și fișierele încorporate, apoi adaugă protecție cu parolă pentru a preveni accesul neautorizat. Parola este setată la 'password' în mod implicit."
 
 [autoRename]
-description = "Acest instrument va redenumi automat fișierele PDF pe baza conținutului lor. Analizează documentul pentru a găsi cel mai potrivit titlu din text."
 tags = "detectare automată,bazat pe antet,organizează,reetichetează,redenumire automată,redenumire inteligentă,redenumire după conținut,nume fișier,denumire fișier,detectează titlu"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,împarte,document,organizare"
 [autoSplitPDF]
 dividerDownload2 = "Descarcă 'Separator Auto Splitter (cu instrucțiuni).pdf'"
 duplexMode = "Mod Duplex (Scanare față-verso)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "bazat-pe-QR,separă,segment-scanat,organizează"
 title = "Împarte Automat PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Adaugă chenare în jurul fiecărei secțiuni de pagină pentru a aju
 [bookletImposition.addGutter]
 label = "Adaugă margine de prindere"
 tooltip = "Adaugă spațiu interior pentru legare"
-
-[bookletImposition.advanced]
-toggle = "Opțiuni avansate"
 
 [bookletImposition.doubleSided]
 label = "Tipărire față-verso"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Alegeți fișierul JKS"
 chooseP12File = "Alegeți fișierul PKCS12"
 choosePfxFile = "Alegeți fișierul PFX"
 choosePrivateKey = "Alegeți fișierul cheii private"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Refuzat"
 fetchFailed = "Nu s-au putut încărca datele de semnare"
 finalized = "Finalizat"
 location = "Locația"
-logoTitle = "Logo"
-name = "Numele"
-noLogo = "Fără logo"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Numărul paginii"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Parolă certificat"
 passwordOptional = "Lăsați gol dacă nu există parolă"
 pemCertificateLabel = "Certificat (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Cheie privată (.pem / .key)"
 pending = "În așteptare"
 readyToFinalize = "Gata de finalizare"
 reason = "Motivul"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Se utilizează certificatul serverului - nu sunt necesare fișiere sau parolă"
-showLogo = "Afișează logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} semnături"
 tags = "autentifică,PEM,P12,oficial,criptează,semnează,certificat,PKCS12,JKS,server,manual,auto"
 title = "Semnare certificat"
@@ -2738,12 +2828,45 @@ viewed = "Vizualizat"
 
 [certSign.appearance]
 invisible = "Invizibil"
+showOnPage = "Show signature on page"
 stepTitle = "Aspectul semnăturii"
 visibility = "Vizibilitate"
 visible = "Vizibil"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Detalii semnătură"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Despre aspectul semnăturii"
@@ -2762,9 +2885,6 @@ bullet3 = "Alegeți pagina pe care să plasați semnătura"
 bullet4 = "Se poate include un logo opțional"
 text = "Afișează un bloc de semnătură în PDF cu numele, data și detalii opționale. Util când doriți ca cititorii să vadă clar că documentul este semnat."
 title = "Semnături vizibile"
-
-[certSign.certFiles]
-stepTitle = "Fișiere certificat"
 
 [certSign.certType.tooltip.convert]
 text = "Convertiți fișierul într-un Java keystore (.jks) cu keytool, apoi alegeți JKS."
@@ -2786,6 +2906,7 @@ text = "Alegeți formatul care se potrivește fișierului certificatului dvs.:"
 title = "Ce opțiune ar trebui să folosesc?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Formatul certificatului"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Acest dispozitiv"
 [certSign.error]
 failed = "A apărut o eroare la procesarea semnăturilor."
 
-[certSign.format]
-pkcs11 = "Token USB"
-windowsStore = "Stocarea de certificate Windows"
-
 [certSign.hardware]
-certificate = "Certificat"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Cale către driver personalizat…"
+digitalId = "Digital ID"
 driver = "Driver PKCS#11"
 driverPath = "Calea bibliotecii driverului"
 driverPathPlaceholder = "Calea completă către driverul PKCS#11 (.dll, .so sau .dylib)"
-expired = "expirat"
-expires = "expiră"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Listează certificatele"
-loading = "Se citesc certificatele…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Nu s-au găsit certificate de semnare"
 noDriver = "Nu a fost detectat niciun driver PKCS#11. Instalați driverul tokenului (de ex. OpenSC), apoi redeschideți aceasta - sau introduceți manual mai jos calea driverului."
-notYetValid = "încă nevalid"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN token"
 pkcs11Hint = "Selectați driverul PKCS#11 al tokenului, introduceți PIN-ul, apoi listați certificatele de pe token."
 pkcs11LoadError = "Nu s-au putut citi certificatele de pe token. Verificați PIN-ul și driverul."
-refresh = "Reîmprospătează"
-selectCert = "Selectați certificatul"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Selectați driverul"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (opțional)"
-windowsHint = "Alegeți un certificat din stocarea de certificate Windows. Semnarea folosește cheia de pe card/token - Windows va solicita PIN-ul."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Nu s-a putut citi stocarea de certificate Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Regulă generală"
 device = "Acest dispozitiv"
 noOtherSources = "Nu sunt disponibile alte surse de certificate."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Sursa certificatului"
 upload = "Încărcare"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Actualizați numele de utilizator. Veți fi deconectat(ă) după actualizare."
@@ -3069,7 +3205,6 @@ placeholder = "Creatorul documentului"
 
 [changeMetadata.customFields]
 add = "Adaugă câmp"
-description = "Adăugați câmpuri de metadate personalizate în document"
 key = "Cheie"
 keyPlaceholder = "Cheie personalizată"
 remove = "Elimină"
@@ -3135,10 +3270,6 @@ bullet1 = "Data creării: Când a fost realizat documentul original"
 bullet2 = "Data modificării: Când a fost modificat ultima dată"
 text = "Când a fost creat și modificat documentul."
 title = "Câmpuri de dată"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Ștergere completă a metadatelor pentru a asigura confidențialitatea."
-title = "Elimină metadatele existente"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Titlu: Numele sau antetul documentului"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Ați atins limita de utilizare. Verificați opțiunile pl
 
 [checkAccessibility]
 aboutRow = "Despre {{label}}"
-checking = "Se verifică..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Descărcați raportul de accesibilitate"
 fileFailed = "eșuat"
+noFiles = "Select a PDF to check it."
 pickFile = "Afișați rezultatele pentru"
-submit = "Verificați accesibilitatea"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Text alternativ"
@@ -3286,10 +3417,17 @@ structure = "Etichetele indică cititoarelor de ecran ce este fiecare parte a un
 [checkAccessibility.checks]
 label = "{{passed}} din {{total}} verificări reușite"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Raportul de accesibilitate nu a putut fi creat. Încercați din nou."
 fileTitle = "Acest fișier nu a putut fi verificat"
 partial = "Unele fișiere nu au putut fi verificate."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Declară PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Fișierul are un titlu în metadate."
 [checkAccessibility.figures]
 summary_one = "{{count}} imagine are nevoie de o descriere (pagina {{pages}})"
 summary_other = "{{count}} imagini au nevoie de o descriere (paginile {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Se aplică la"
@@ -3465,19 +3618,7 @@ checking = "Se verifică {{current}} din {{total}}..."
 complete = "Verificare finalizată"
 
 [checkAccessibility.steps]
-results = "Rezultate"
 standard = "Standard"
-
-[checkAccessibility.tooltip.header]
-title = "Ce standard să verificați"
-
-[checkAccessibility.tooltip.ua1]
-text = "Prima versiune a PDF/UA, publicată în 2012 ca ISO 14289-1, pentru fișiere PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Versiunea mai nouă, publicată în 2024 ca ISO 14289-2, pentru fișiere PDF 2.0. Un fișier PDF 1.7 verificat după ea va eșua regulilor care se aplică doar la PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Adnotarea {{n}}"
@@ -3868,6 +4009,7 @@ title = "Alege culoarea"
 transparent = "Transparent"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Acțiuni"
 back = "Înapoi"
 cancel = "Anulați"
@@ -4206,7 +4348,9 @@ title = "Reîmprospătați cheile API"
 warning = "⚠️ Avertisment: Această acțiune va genera chei API noi și va face cheile anterioare invalide."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) permite asistenților AI precum Claude să folosească direct instrumentele dvs. Stirling PDF. Conectați un client o singură dată, iar asistentul dvs. poate converti, edita, securiza și procesa documente în numele dvs."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Utilizatorii invitați nu pot conecta clienți MCP. Creați un cont pentru a folosi serverul MCP și pentru a permite asistentului AI să ruleze instrumente Stirling PDF în numele dvs."
 navLabel = "Server MCP"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Copiază {{label}}"
 tooltipCopied = "{{label}} copiat"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Endpointul dvs. MCP"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Adaugă la"
 hint = "Alegeți clientul, lipiți fragmentul în fișierul indicat, apoi reporniți-l. Vă veți autentifica cu contul Stirling la prima utilizare - fără chei de copiat."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Conectați asistentul AI"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Păstrează raportul de aspect"
 maxAttachmentSize = "Dimensiune maximă atașament (MB)"
 multiple = "Multiple"
 optimizeForEbook = "Optimizați PDF pentru e-readere (folosește Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Ieșire"
-outputFormat = "Format de ieșire"
-pdfaAccessibleFormat = "{{format}} (accesibil)"
-pdfaDigitalSignatureWarning = "PDF-ul conține o semnătură digitală. Aceasta va fi eliminată în pasul următor."
-pdfaNote = "PDF/A-1b este mai compatibil, PDF/A-2b acceptă mai multe funcții, PDF/A-3b acceptă fișiere încorporate."
-pdfaOptions = "Opțiuni PDF/A"
 pdfOptions = "Opțiuni PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Setări"
 signInToUse = "Autentificați-vă pentru a utiliza"
 single = "Unic"
 sourceFormatPlaceholder = "Format sursă"
-strictMode = "Mod strict"
-strictModeDesc = "Eroare dacă conversia nu este perfectă (folosește verificarea VeraPDF)"
 svgPdfOptions = "Opțiuni SVG în PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Fișierele SVG sunt randate ca grafică vectorială pentru rezultate clare la orice rezoluție. Dimensiunile din SVG determină dimensiunea paginii PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Nivel de zoom"
 
 [convert.ebookOptions]
 includePageNumbers = "Include numerele de pagină"
-includePageNumbersDesc = "Adaugă numere de pagină în PDF-ul generat"
 includeTableOfContents = "Include cuprins"
-includeTableOfContentsDesc = "Adaugă un cuprins generat în PDF-ul rezultat"
 optimizeForEbookPdf = "Optimizează pentru cititoare de eBook"
 optimizeForEbookPdfDesc = "Optimizează PDF-ul pentru citirea pe eBook (dimensiune de fișier mai mică, randare mai bună pe dispozitive eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Detectează capitolele"
 detectChaptersDesc = "Detectează titlurile care par capitole și inserează întreruperi de pagină EPUB"
 kindleEink = "Kindle e-Ink (text optimizat)"
 outputFormat = "Format de ieșire"
-outputFormatDesc = "Alege formatul de ieșire pentru eBook"
 tabletPhone = "Tabletă/Telefon (cu imagini)"
 targetDevice = "Dispozitiv țintă"
 targetDeviceDesc = "Alege un profil de ieșire optimizat pentru dispozitivul de citire"
@@ -4469,8 +4619,24 @@ description = "Aceste cookie-uri sunt esențiale pentru funcționarea corectă a
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Titlul paginii de copertă"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "Portofoliu PDF"
 description = "Fiecare fișier selectat este păstrat integral în noul PDF, indiferent de tipul său. Cititoarele care nu acceptă portofolii afișează o pagină de copertă cu fișierele atașate."
 goToFileEditor = "Mergi la editorul de fișiere"
@@ -4488,6 +4654,9 @@ title = "Ce face"
 
 [createPortfolio.tooltip.header]
 title = "Despre portofoliile PDF"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Decupare automată a spațiilor albe"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Accesul la clipboard nu este disponibil în acest browse
 export = "Exportă semnele de carte"
 exportClipboard = "Copiază JSON în clipboard"
 exportJson = "Descarcă JSON"
+exportMenu = "Export"
 importClipboard = "Lipește JSON din clipboard"
 importJson = "Importă JSON"
+importMenu = "Import"
 loadFromPdf = "Încarcă din PDF-ul selectat"
 noFile = "Selectează un PDF pentru a extrage semnele de carte existente."
 selectedFile = "Încărcat din {{file}}"
-source = "Încarcă semnele de carte"
 
 [editTableOfContents.editor]
 addTopLevel = "Adaugă semn de carte de nivel superior"
@@ -4740,6 +4910,9 @@ replaceExisting = "Înlocuiește semnele de carte existente (debifează pentru a
 replaceExistingHint = "Când este dezactivat, noul cuprins este adăugat după semnele de carte curente."
 title = "Semne de carte și cuprins"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Schimbă PDF-ul"
 filePrompt = "Selectează un PDF din bibliotecă sau încarcă unul nou pentru a începe."
@@ -4753,7 +4926,6 @@ title = "Deschide instrumentul pentru a începe editarea"
 [encryptedPdfUnlock]
 actionIgnored = "Restricția {{action}} a fost ignorată"
 actionUnlocked = "{{action}} deblocat pentru această sesiune"
-advanced = "Avansat"
 allowed = "Permis"
 annotations = "Adnotări"
 authoriseAction = "Acest PDF necesită permisiune pentru a utiliza {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Restricționat"
 restrictedActions = "acțiuni restricționate"
 restrictedOperation = "Această acțiune necesită parola pentru permisiuni."
 retainOwnerVerification = "Verificați parola pentru permisiuni pentru a o păstra nemodificată în timp ce eliminați parola de deschidere. Aceasta nu o va elimina."
-saveProtection = "Salvați protecția"
 securityChangeFailed = "Nu s-a putut schimba protecția. Verificați parola pentru permisiuni și noile setări de securitate."
 sessionDetails = "Deschis pentru această sesiune. PDF-ul rămâne protejat."
 sessionDetailsLabel = "Despre deblocarea sesiunii"
@@ -4871,7 +5042,6 @@ title = "Ceva nu a funcționat corect"
 tryAgain = "Încercați din nou"
 
 [extractImages]
-allowDuplicates = "Salvează imaginile duplicate"
 selectText = "Selectați formatul imaginii în care să se convertească imaginile extrase"
 submit = "Extrage"
 tags = "poză,fotografie,salvează,arhivă,zip,captură,extrage"
@@ -4927,12 +5097,15 @@ closeFile = "Închideți fișierul"
 
 [fileEditor]
 closedFile = "{{name}} închis"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Fișier reordonat"
 filesReordered_other = "{{count}} fișiere reordonate"
 loadedFromStorage_one = "S-a încărcat {{count}} fișier din stocare"
 loadedFromStorage_other = "S-au încărcat {{count}} fișiere din stocare"
 loadFromStorageFailed = "Nu s-au putut încărca unele fișiere din stocare"
 pinnedFile = "{{name}} fixat"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} salvat și închis"
 saveFailed = "Salvarea a eșuat"
 unpinnedFile = "{{name}} nefixat"
@@ -5019,11 +5192,20 @@ locked = "Blocat"
 previewOf = "Previzualizare pentru {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Adăugați fișiere"
 created = "Creat"
 notIncludedInToolRun = "Neinclus în această rulare a instrumentului"
 size = "Dimensiune fișier"
 title = "Fișiere"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Nu sunt fișiere disponibile"
@@ -5104,6 +5286,7 @@ subtitle = "Afișați sau ascundeți categorii în bara laterală de fișiere."
 title = "Categorii bară laterală"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Anulează"
 error = "Fișierul nu a putut fi redenumit."
 illegalCharacters = "Un nume de fișier nu poate conține \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Elimină câmpul"
 
 [formFill.editor]
 action = "Acțiune buton"
-actionHelp = "Ce face butonul când este apăsat."
 actionNone = "Niciuna"
 actionPrint = "Tipărește"
 actionReset = "Resetează formularul"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Limitează câte caractere încap, desenate ca niște casete sp
 multiline = "Pe mai multe linii"
 multilineHelp = "Permite mai mult de o linie de text și trece la rând la marginea câmpului."
 multiSelect = "Permite selecție multiplă"
-multiSelectHelp = "Permite alegerea mai multor opțiuni simultan."
 name = "Nume câmp"
 nameHelp = "Numele intern al câmpului. Folosit la exportarea datelor sau la completarea formularului din alt sistem, așa că păstrează-l unic și fără spații."
 optionGap = "Spațiere opțiuni"
@@ -5902,6 +6083,11 @@ title = "Ajustează Culorile/Contrastul"
 desc = "Evidențiați, desenați, adăugați note și forme în vizualizator"
 tags = "adnotare,evidențiere,desenare,marcare,comentariu,note,revizuire,redline,feedback,instrumente de marcare,note adezive,forme,săgeți,casetă text,mână liberă"
 title = "Anotare"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Detectează automat câmpurile de formular cu AI și fă PDF-ul tău completabil."
@@ -6405,6 +6591,9 @@ sort = "Sortați"
 [merge.sortFiles]
 title = "Sortează fișierele"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Prezentare setări de îmbinare"
 
@@ -6548,6 +6737,9 @@ title = "Autentificare eșuată"
 message = "Puteți închide această fereastră și reveni la Stirling PDF."
 title = "Autentificare reușită"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Permite accesul"
 approving = "Se permite..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Te întoarcem la aplicație..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} dorește să acceseze contul tău Stirling PDF"
 scopesIntro = "Aceasta va permite {{app}} să:"
 signedInAs = "Autentificat ca {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Autentifică-te pentru a continua"
 signInPrompt = "Autentifică-te în contul tău Stirling PDF pentru a continua conectarea aplicației."
 title = "Authorise access"
 unknownApp = "O aplicație terță"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Acționeze în numele tău - tot ce face {{app}} rulează sub contul tău și se contorizează în utilizarea ta"
@@ -6572,9 +6767,12 @@ tools = "Folosească instrumentele tale Stirling PDF în numele tău - să conve
 
 [oauthConsent.scope]
 email = "Vadă adresa ta de email"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Confirme identitatea ta"
 phone = "Vadă numărul tău de telefon"
 profile = "Vadă informațiile de bază ale profilului tău"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Curăță scanările și detectează textul din imaginile dintr-un PDF și îl adaugă ca text."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Veți deveni membru al echipei și veți pierde accesul de pr
 [pageEdit]
 deselectAll = "Niciunul"
 selectAll = "Bifează tot"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Extrage Pagini"
@@ -7577,6 +7779,8 @@ stamp = "Adnotare ștampilă - nu text de pagină, deci nu poate fi editată aic
 widget = "Câmp de formular - nu text de pagină, deci nu poate fi editat aici"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Editează"
 markTagged = "Marcați ca complet etichetat"
 matchScanFont = "Potriviți textul scanat cu {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Etichetați automat pagina"
 typeInto = "Tastează în {{run}}"
 ungroupParagraph = "Degrupează paragraful {{run}}"
 unmarkTagged = "Marcați ca nu complet etichetat"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Încadrează {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Renunți la modificările nesalvate?"
 
 [pdfTextEditor.error]
 decodeImage = "Imaginea selectată nu a putut fi decodificată."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Nu se poate duplica acest text: niciun font disponibil nu redă toate literele."
 formLiftChangesDrawing = "Nu se poate edita: este desenat ca parte a unui grup ale cărui setări de decupare sau grafice editorul nu le poate păstra la modificare."
 insertImage = "Imaginea selectată nu a putut fi inserată."
 needsShaping = "Editorul încă nu poate reda corect literele unite și semnele vocalice ale acestui sistem de scriere, astfel că această modificare nu a fost făcută."
+reopenLost = "Open again"
 replaceClippedImage = "Nu se poate înlocui această imagine: este decupată, iar înlocuirea ar afișa părțile pe care decuparea le ascunde."
 scanOffInk = "Nu se poate edita acest text: cuvintele recunoscute nu se aliniază cu scanarea. Rulați din nou OCR."
 unsafeRtlEdit = "Nu se poate face această editare: editorul nu poate redesena textul acestui rând, de la dreapta la stânga, fără a-l modifica."
@@ -7616,6 +7823,7 @@ pngFileType = "Imagine PNG"
 close = "Închide bara de căutare"
 count = "{{current}} din {{total}}"
 findPlaceholder = "Caută"
+hideReplace = "Hide replace"
 ignoreAccents = "Ignoră accentele"
 matchCase = "Potrivește majusculele/minusculele"
 next = "Următoarea potrivire"
@@ -7625,6 +7833,7 @@ replace = "Înlocuiește"
 replaceAll = "Înlocuiește tot"
 replaced = "{{count}} înlocuite"
 replacePlaceholder = "Înlocuiește cu"
+showReplace = "Show replace"
 wholeWord = "Cuvânt întreg"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Acest link nu poate fi etichetat."
 cannotTagPage = "Conținutul acestei pagini nu poate fi etichetat."
 contentGroup = "Conținut"
 customTag = "{{role}} (etichetă personalizată)"
-decorativeInfo = "Cititoarele de ecran ignoră imaginile decorative. Folosiți-le pentru borduri, fundaluri și alte imagini care nu transmit informații."
-decorativeLabel = "Imagine decorativă"
-description = "Descrierea imaginii"
-descriptionInfo = "Cititoarele de ecran citesc acest text în locul imaginii."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Etichetele nu pot fi editate într-un fișier criptat"
 figureDescription = "Descrierea figurii"
 figureDescriptionInfo = "Cititoarele de ecran citesc acest text în locul figurii."
-formFieldDescription = "Descriere câmp"
 formulaDescription = "Descrierea formulei"
 formulaDescriptionInfo = "Cititoarele de ecran citesc acest text în locul formulei. Formulați-l așa cum l-ați rosti cu voce tare, de exemplu \"x la pătrat plus unu\"."
 heading = "Accesibilitate"
@@ -7813,7 +8019,6 @@ markedTagged = "Documentul este complet etichetat"
 markedTaggedHint = "Indică cititoarelor PDF să folosească etichetele de accesibilitate. Bifați după ce totul este etichetat."
 markedWithUntagged = "O parte din conținut nu are etichete, astfel încât cititoarele de ecran îl pot omite."
 missingDescriptions = "Descrieri lipsă"
-mixedContent = "Figura include alt conținut"
 mixedTags = "Mixt"
 needsDescriptionBadge = "Fără descriere"
 nextToReview = "Următorul de revizuit"
@@ -7821,12 +8026,10 @@ notFigure = "Etichetat ca parte a textului"
 removeTag = "Elimină eticheta"
 saveFailed = "Modificările de accesibilitate nu au putut fi salvate, așa că fișierul nu a fost salvat. Anulați-le și încercați din nou."
 selectedText = "Text selectat"
-tagFormField = "Etichetează câmpul de formular"
 tagging = "Etichetarea paginilor"
 tagLabel = "Etichetă"
 tagLinks_one = "Etichetați linkul"
 tagLinks_other = "Etichetați {{count}} linkuri"
-tagUntagged = "Etichetați automat documentul"
 tagUntaggedHint = "Adaugă automat etichete de accesibilitate în tot documentul. Rezultatul este aproximativ: verificați ulterior titlurile, listele și ordinea de citire."
 unknownTag = "Nu poate fi citit aici"
 unmarkedWithTags = "Unele cititoare PDF vor folosi oricum etichetele și pot omite conținutul fără ele."
@@ -7851,7 +8054,7 @@ heading = "Titluri"
 mixedNumbering = "Combină titluri numerotate și nenumerotate"
 none = "Fără titluri"
 onPage = "Titlu pe pagina {{page}}"
-problems = "Probleme cu titlurile"
+problemCount = "{{count}} to fix"
 skippedLevel = "Omite un nivel după Titlul {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Titlu"
 allLanguages = "Toate limbile"
 cannotSetDocument = "Limba acestui document nu poate fi schimbată."
 cannotSetText = "Limba acestui text nu poate fi schimbată."
-documentHint = "Limba folosită de cititoarele de ecran, cu excepția cazului în care o parte a textului își setează propria."
 documentLabel = "Limbă"
 documentLocked = "Limba unui document criptat nu poate fi schimbată aici."
 inDocument = "În acest document"
 innerLabel = "Limbă etichetă {{number}}"
 label = "Limbă"
-missing = "Nicio limbă setată. Cititoarele de ecran vor ghici și pot citi întregul document cu voce greșită."
 mixed = "Mixt"
 noMatch = "Nicio limbă corespondentă. Introduceți codul ei, de exemplu mt sau en-IE."
 placeholder = "Selectați limba"
@@ -7943,6 +8144,52 @@ renderFailed = "Nu s-a putut reda pagina"
 [pdfTextEditor.password]
 incorrect = "Parolă incorectă - încearcă din nou."
 label = "Parolă"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Ghid de aliniere la {{value}} {{unit}} - trage-l pe o riglă pentru a-l elimina"
@@ -8124,6 +8371,10 @@ title = "Variații în previzualizare"
 [pdfTextEditor.tooltip.textFocus]
 text = "Acest spațiu de lucru se concentrează pe editarea textului și repoziționarea imaginilor încorporate. Elementele grafice complexe ale paginii, widgeturile de formular și grafica stratificată sunt păstrate pentru export, dar nu sunt pe deplin editabile aici."
 title = "Focalizare pe text și imagine"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF în CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Ascundeți categoria"
 labelCount = "etichete"
 sharedNote = "Aceste etichete sunt integrate și partajate în întreaga echipă."
 showCategory = "Afișați categoria"
-
-[policies.pii]
-account = "Numere de cont (etichetate)"
-card = "Carduri de credit / debit"
-email = "Adrese de email"
-fieldLabel = "PII de redactat"
-iban = "IBAN-uri"
-phone = "Numere de telefon"
-placeholder = "Selectează tipurile PII"
-routing = "Numere de rutare din SUA (ABA)"
-ssn = "Numere de securitate socială"
 
 [policy]
 badgeEnforcing = "{{name}} se aplică..."
@@ -10317,6 +10557,10 @@ title = "Pipeline-uri"
 [portal.pipelines.actions]
 newCustomPipeline = "Pipeline personalizat nou"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Toate pipeline-urile"
 
@@ -12047,7 +12291,6 @@ label = "Instrumente de citire"
 readAloud = "Citește cu voce tare"
 rotateLeft = "Rotește la stânga"
 rotateRight = "Rotește la dreapta"
-search = "Găsește în document"
 switchDocument = "Schimbă documentul"
 thumbnails = "Pagini"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Culoarea casetei"
 convertPDFToImageLabel = "Convertește PDF în PDF-imagine"
 customPaddingLabel = "Spațiere suplimentară personalizată"
 useRegexLabel = "Folosește Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Căutare cuvânt întreg"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Setări de redactare"
 
 [redact.auto.wordsToRedact]
 add = "Adaugă"
-examples = "Exemple: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Introduceți un cuvânt"
 title = "Cuvinte de redactat"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Selectați fișiere în managerul de fișiere pentru
 manual = "Manual"
 mode = "Mod"
 title = "Metoda de redactare"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Potrivește doar textul cu aceeași capitalizare. „Secret” nu se va potrivi cu „SECRET” când este activat, iar [A-Z] într-un regex se potrivește doar cu majuscule."
@@ -12147,19 +12401,6 @@ title = "Metoda de redactare"
 text = "Faceți clic și trageți pentru a selecta manual zone specifice de redactat. Oferă control precis asupra a ceea ce este redactat. (În curând)"
 title = "Redactare manuală"
 
-[redact.tooltip.words]
-bullet1 = "Adăugați câte un cuvânt pe rând"
-bullet2 = "Apăsați Enter sau faceți clic pe „Adaugă altul” pentru a adăuga"
-bullet3 = "Faceți clic pe × pentru a elimina cuvintele"
-
-[redact.tooltip.words.description]
-text = "Introduceți cuvinte sau expresii de găsit și redactat în document. Fiecare cuvânt va fi căutat separat."
-title = "Potrivirea textului"
-
-[redact.tooltip.words.examples]
-text = "Cuvinte tipice de redactat includ: detalii bancare, adrese de email sau nume specifice."
-title = "Exemple comune"
-
 [redact.tooltip.words.header]
 title = "Cuvinte de redactat"
 
@@ -12176,15 +12417,6 @@ failed = "A apărut o eroare la eliminarea adnotărilor din PDF."
 
 [removeAnnotations.info]
 description = "Acest instrument va elimina toate adnotările (comentarii, evidențieri, note etc.) din documentele PDF."
-
-[removeAnnotations.settings]
-title = "Setări"
-
-[removeAnnotations.tooltip.description]
-title = "Ce face"
-
-[removeAnnotations.tooltip.header]
-title = "Despre eliminarea adnotărilor"
 
 [removeBlanks]
 submit = "Elimină paginile goale"
@@ -12325,6 +12557,9 @@ tags = "rearanjează,reordonează,organizează,reorganizează,mută pagini,ordin
 [reorganizePages.error]
 failed = "Reorganizarea paginilor a eșuat"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Pagini reorganizate"
 
@@ -12406,6 +12641,7 @@ title = "Inversează toate culorile"
 rotateLeft = "Rotiți în sens antiorar"
 rotateRight = "Rotiți în sens orar"
 selectRotation = "Selectați unghiul de rotație (sens orar)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Aplică rotația"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotește PDF"
@@ -12516,8 +12752,7 @@ title = "Sanitizare"
 failed = "A apărut o eroare în timpul sanitizării PDF-ului."
 
 [sanitize.options]
-note = "Selectați elementele pe care doriți să le eliminați din PDF. Trebuie selectată cel puțin o opțiune."
-title = "Opțiuni de sanitizare"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Eliminați orice fișiere încorporate în PDF"
@@ -12649,6 +12884,7 @@ title = "Căutați în PDF"
 hideTools = "Ascunde instrumentele indisponibile ▴"
 messageNoFallback = "Instrumentele sunt indisponibile până când serverul revine online."
 messageWithFallback = "Unele instrumente necesită o conexiune la server."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Afișează instrumentele indisponibile ▾"
 title = "Serverul dvs. Stirling-PDF este inaccesibil"
 toolNotAvailableLocally = "Serverul dvs. Stirling-PDF este offline, iar \"{{endpoint}}\" nu este disponibil pe backendul local."
@@ -13034,6 +13270,12 @@ title = "Scurtături de tastatură"
 mac = "Includeți ⌘ (Command), ⌥ (Option) sau un alt modificator în scurtătură."
 windows = "Includeți Ctrl, Alt sau un alt modificator în scurtătură."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Termeni, politică de confidențialitate și preferințele dvs. privind cookie-urile."
 label = "Legal"
@@ -13418,9 +13660,7 @@ image = "Încărcare"
 text = "Text"
 
 [sign.step]
-createDesc = "Alege cum vrei să creezi semnătura"
 place = "Plasează și salvează"
-placeDesc = "Plasează semnătura pe PDF"
 
 [sign.steps]
 configure = "Configurează semnătura"
@@ -13597,6 +13837,10 @@ rotateLeft = "Rotește la stânga"
 rotateRight = "Rotește la dreapta"
 trim = "Decupează la semnătură"
 trimHint = "Decupează spațiul gol din jurul acesteia"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Setări de aspect ale semnăturii"
@@ -13959,7 +14203,6 @@ placeholder = "Introdu numărul de diviziuni orizontale"
 
 [split-by-sections.splitMode]
 custom = "Pagini personalizate"
-description = "Alegeți cum să împărțiți paginile"
 label = "Mod de împărțire"
 splitAll = "Împarte toate paginile"
 splitAllExceptFirst = "Împarte toate în afară de prima"
@@ -14210,10 +14453,8 @@ failed = "A apărut o eroare la marcarea temporală a PDF-ului."
 
 [timestampPdf.options]
 note = "Doar un hash SHA-256 al documentului dvs. este trimis către serverul TSA; fișierul PDF în sine nu este trimis niciodată către serverul TSA."
-title = "Server de marcaj temporal (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Alegeți o autoritate de marcare temporală de încredere"
 label = "Selectați un server TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Niciun instrument disponibil"
 
 [tooltip]
 close = "Închideți tooltipul"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Acest instrument va elimina restricțiile de tip doar citire din câmpurile de formular PDF, făcându-le editabile și completabile."
@@ -14706,6 +14961,9 @@ signatureDate = "Data semnăturii"
 
 [validateSignature.settings]
 certHint = "Încărcați un certificat X.509 de încredere pentru a valida față de o sursă de încredere personalizată."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Setări de validare"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Nu se poate previzualiza fișierul"
 copyRestricted = "Copierea este dezactivată de permisiunile acestui PDF."
 copyText = "Copiază"
 coverPageView = "Afișează pagina de copertă separat"
-disableColorFilter = "Dezactivați filtrul de culoare"
 documentUpdated = "Document actualizat"
 dualPageView = "Vizualizare cu două pagini"
 editText = "Editați textul"
-enableDarkFilter = "Activați filtrul întunecat"
-enableSepiaFilter = "Activați filtrul sepia"
 engineLoadError = "Inițializarea motorului de vizualizare PDF a eșuat"
 engineSlowWarning = "Inițializarea motorului PDF durează mai mult decât se aștepta. Verificați setările WebAssembly și Worker ale browserului sau reîncărcați pagina."
 firstPage = "Prima pagină"
@@ -14736,20 +14991,27 @@ fitPage = "Încadrare la pagină"
 fitWidth = "Încadrare la lățime"
 lastPage = "Ultima pagină"
 loadingEngine = "Se încarcă motorul PDF..."
+menuSelected = "Selected"
 moreOptions = "Mai multe"
 nextPage = "Pagina următoare"
 noPdfProvided = "Nu a fost furnizat niciun PDF"
 onlyPdfSupported = "Acest format de fișier nu este acceptat pentru previzualizare."
 pageNavigation = "Navigare în pagină"
+pageNumber = "Page number"
 previousPage = "Pagina anterioară"
 readAloudFromHere = "Citește cu voce tare de aici"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Documentul nu a putut fi salvat. Încercați din nou."
 saveChangesErrorTitle = "Nu s-au putut salva modificările"
 singlePageView = "Vizualizare cu o singură pagină"
+tools = "Tools"
 unknownFile = "Fișier necunoscut"
-view = "Vizualizare"
 zoom = "Zoom"
 zoomIn = "Măriți"
+zoomLevel = "Zoom level"
 zoomOut = "Micșorați"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Previzualizare semnătură"
 
 [viewer.signatureField]
 badge = "Semnătură"
+clickToSign = "Click to sign here"
 fieldTitle = "Câmp semnătură: {{name}}"
 signed = "Semnat"
 signedWithReason = "Semnat: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Câmp de semnătură nesemnat: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "S-au restaurat {{restored}} din {{total}} fișiere. Restul nu mai sun
 
 [workbenchBar]
 activeFiles = "Fișiere active"
-annotations = "Adnotări"
+annotate = "Annotate"
 applyRedactionsFirst = "Aplică mai întâi redactările"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Închide toate fișierele"
 closePdf = "Închide PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Deselectează tot"
 downloadAll = "Descarcă tot"
 editText = "Editare text"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Ieși din modul de adnotare"
 exitRedaction = "Ieși din modul de redactare"
 findReplace = "Căutare și înlocuire"
 formFill = "Editor de formulare"
-hideToolbar = "Ascunde bara de instrumente"
+layers = "Layers"
 moreActions = "Mai multe acțiuni"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Editor de pagini"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Mod panoramare"
 print = "Tipărește PDF"
 readAloud = "Citește cu voce tare"
 readAloudLanguage = "Limbă"
 readAloudSpeed = "Viteză"
 redact = "Redactează"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Rotește la stânga"
 rotateRight = "Rotește la dreapta"
 ruler = "Riglă / Măsurare"
+rulerScaleUnset = "Not set"
 rulerSettings = "Setări scară"
 save = "Salvează"
 saveAll = "Salvează tot"
@@ -15123,14 +15398,23 @@ selectLanguage = "Selectează limba"
 share = "Partajează"
 showAllTools = "Afișează toate instrumentele"
 showFewerTools = "Restrânge bara de instrumente"
-showToolbar = "Arată bara de instrumente"
+thumbnails = "Pages"
 toggleAnnotations = "Comută vizibilitatea adnotărilor"
-toggleAttachments = "Comută atașamentele"
-toggleBookmarks = "Marcaje (Cuprins)"
 toggleComments = "Comentarii"
-toggleLayers = "Comută straturile"
-toggleSidebar = "Comută bara laterală"
 viewer = "Vizualizator"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Accesul dvs. la acest document a expirat."

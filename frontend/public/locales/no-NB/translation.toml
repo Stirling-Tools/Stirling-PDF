@@ -12,9 +12,11 @@ comingSoon = "Kommer snart"
 confirm = "Bekreft"
 confirmClose = "Bekreft lukking"
 confirmCloseCancel = "Avbryt"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Lukk fil"
 confirmCloseDiscard = "Forkast endringer og lukk"
 confirmCloseMessage = "Er du sikker på at du vil lukke denne filen?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Lagre og lukk"
 confirmCloseSaveFailed_one = "Lagret med feil. {{count}} fil kunne ikke lagres."
 confirmCloseSaveFailed_other = "Lagret med feil. {{count}} filer kunne ikke lagres."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Fil lagret til disk"
 filesSelected = "{{count}} filer"
 font = "Skrifttype"
 fontSizeTooltip = "Størrelse på sidetalltekst i punkter. Større tall gir større tekst."
-fontTypeTooltip = "Skrifttype for sidetall. Velg basert på dokumentstilen din."
 green = "Grønn"
 help = "Hjelp"
 incorrectPasswordMessage = "Nåværende passord er feil."
@@ -249,9 +250,7 @@ image = "Last opp"
 text = "Tekst"
 
 [addImage.step]
-createDesc = "Last opp bildet du vil legge til"
 place = "Plasser bilde"
-placeDesc = "Klikk på PDF-en for å legge til bildet"
 
 [addImage.steps]
 configure = "Konfigurer bilde"
@@ -276,7 +275,7 @@ fontName = "Skrifttype"
 fontSize = "Skriftstørrelse"
 numberPagesDesc = "f.eks. 1,3,5-8 eller la stå tomt for alle sider"
 pagePreviewAlt = "Forhåndsvisning av side"
-pagesAndStarting = "Sider og startnummer"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Plassering og sider"
 preview = "Valg av plassering"
 previewDisclaimer = "Forhåndsvisningen er omtrentlig. Endelig resultat kan variere på grunn av PDF-skriftmetrikker."
@@ -300,6 +299,7 @@ title = "Resultater for sidetall"
 
 [addPassword]
 desc = "Krypter PDF-dokumentet ditt med et passord."
+submit = "Add Password"
 tags = "krypter,passord,lås,sikker,beskytt,sikkerhet,kryptering,sikre,konfidensiell,privat,begrens tilgang"
 title = "Legg til passord"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Forhåndsvisning av stempel"
 tags = "stempel,merke,segl,godkjent,avvist,konfidensiell,stempelverktøy,gummistempel,datostempel,godkjenningsstempel,mottatt,ugyldig,kopi,original"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabet"
-clickToExpand = "Klikk for å utvide"
 customColor = "Tilpasset Tekstfarge"
 customDateDesc = "Egendefinert format"
 customPosition = "Dra stempelet til ønsket plassering i forhåndsvisningen."
 dateDesc = "Gjeldende dato"
 datetimeDesc = "Dato og klokkeslett kombinert"
 dateTimeVars = "Dato og klokkeslett"
-dynamicVariables = "Dynamiske variabler"
 examples = "Eksempler"
 filenameDesc = "Filnavn uten filtype"
 filenameFullDesc = "Filnavn med filtype"
@@ -365,6 +364,8 @@ noStampSelected = "Ingen stempel valgt. Gå tilbake til trinn 1."
 opacity = "Gjennomsiktighet"
 otherVars = "Annet"
 pageNumberDesc = "Gjeldende sidetall"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Sideinformasjon"
 position = "Posisjon"
 positionAndFormatting = "Plassering og formatering"
@@ -378,9 +379,10 @@ quickPosition = "Velg en posisjon på siden for å plassere stempelet."
 rotation = "Rotasjon"
 selectedImageAlt = "Valgt stempelbilde"
 selectTemplate = "Velg en mal..."
+size = "Size"
 stampSetup = "Stempeloppsett"
 stampText = "Stempele tekst"
-stampTextDescription = "Bruk dynamiske variabler nedenfor. Bruk @@ for bokstavelig @. Bruk \\n for nye linjer."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Stempeltype"
 submit = "Legg til stempel"
 tags = "stempel,legg til bilde,senter bilde,vannmerke,PDF,embed,tilpass"
@@ -389,7 +391,6 @@ title = "Stemple PDF"
 totalPagesDesc = "Totalt antall sider"
 useTemplate = "Bruk mal"
 uuidDesc = "Kort unik identifikator (8 tegn)"
-variablesHelp = "Klikk på en variabel for å sette den inn i stempelteksten. Bruk @@ for bokstavelig @."
 yearMonthDayDesc = "Individuelle datodeler"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Det oppstod en feil under tillegg av stempel til PDF-en."
 
 [AddStampRequest.results]
 title = "Stempelresultater"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Egendefinert"
@@ -410,6 +417,11 @@ legal-footer = "Juridisk bunntekst"
 page-numbers = "Sidetall"
 pageNumberFooter = "Sidetall i bunntekst"
 timestamp = "Tidsstempel"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Bruk tekst"
@@ -462,9 +474,7 @@ image = "Last opp"
 text = "Tekst"
 
 [addText.step]
-createDesc = "Skriv inn teksten du vil legge til"
 place = "Plasser tekst"
-placeDesc = "Klikk på PDF-en for å legge til teksten"
 
 [addText.steps]
 configure = "Konfigurer tekst"
@@ -1233,6 +1243,18 @@ label = "Regenerer ved oppstart"
 description = "Antall dager sertifikatet skal være gyldig"
 label = "Sertifikatets gyldighet (dager)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Kataloger som mappekilder og mappeutdata har lov til å lese fra og skrive til. Dette er en sikkerhetsgrense: automatiseringer kan aldri pekes mot en serversti utenfor denne listen."
 securityNote = "La dette stå tomt for å deaktivere mappekilder og mappeutdata helt. Stirlings egen konfigurasjonskatalog er alltid forbudt."
@@ -1456,7 +1478,9 @@ label = "SMTP-brukernavn"
 
 [admin.settings.mcp]
 apikeyNote = "Klienter sender en Stirling API key i X-API-KEY-headeren (eller Authorization: Bearer <key>). Nøkkelen kobles til den tilhørende Stirling-brukeren – bare klargjorte kontoer får tilgang, og handlinger revideres som den brukeren. Administrer nøkler under Konto > API-nøkler."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Gjør Stirlings PDF-verktøy og AI-agenter tilgjengelige for MCP-klienter over et OAuth-beskyttet endepunkt."
+endpointUrl = "MCP endpoint URL"
 title = "MCP-server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Tillatte verktøy"
 description = "Operasjons-ID-er som skal skjules fra MCP (kommaseparert eller mellomromsseparert), f.eks. add-password remove-password. La stå tomt for å eksponere alle aktiverte verktøy."
 label = "Blokkerte verktøy"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Når av (standard), lastes ikke /mcp-endepunkt, metadata eller MCP beans."
 label = "Aktiver MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Skriv inn OAuth-utsteder + resource ID ovenfor, lagre og start på nytt."
 step1ApiKey = "Opprett en API key under Konto > API-nøkler (hver bruker bruker sin egen)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Legg til en i MCP-klienten din"
 step2b = "server som peker til:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Klienten oppdager OAuth automatisk fra:"
 step3ApiKey = "Send nøkkelen i en"
 step3ApiKeyb = "header (eller Authorization: Bearer <key>). Ingen OAuth- eller metadataoppdagelse brukes."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Godkjenn innloggingen; klienten prøver på nytt med et token. Verktøy vises gruppert: konverter, sider, diverse, sikkerhet, ai."
 step4ApiKey = "Verktøy vises gruppert: konverter, sider, diverse, sikkerhet, ai – og hvert kall revideres som nøkkelens eier."
 tip = "Tips: registrer resource ID som en tillatt audience i IdP-en din. Testet med MCP Inspector og Claude Desktop."
 tipApiKey = "Tips: API-key-modus trenger ingen ekstern IdP – enklest for selvhosting. Nøkkelen kobles til den tilhørende Stirling-brukeren."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Koble til en MCP-klient"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Oppdages automatisk fra utsteder"
 
 [admin.settings.mcp.mode]
 apikey = "API-nøkkel (Stirling-nøkkel per bruker)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth trenger en ekstern IdP. API key bruker en Stirling API key per bruker (X-API-KEY) – enklest for selvhosting."
 label = "Autentiseringsmodus"
 oauth = "OAuth 2.1 (ekstern IdP)"
@@ -1515,6 +1563,18 @@ label = "Ressurs-ID"
 [admin.settings.mcp.scopes]
 description = "Krev mcp.tools.read for leseoperasjoner og mcp.tools.write for skrive-/AI-operasjoner."
 label = "Håndhev OAuth-scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim som matches mot et Stirling-brukernavn (f.eks. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Vil du hjelpe til med å gjøre Stirling PDF bedre?"
 tags = "annoter,marker,tegn,markup,kommentar,notater,gjennomgang,redline,tilbakemelding,markup-verktøy,klistrelapper,figurer,piler,tekstboks,frihånd"
 
 [annotation]
-alignCenter = "Midtstill"
-alignLeft = "Venstrejuster"
-alignRight = "Høyrejuster"
 annotationStyle = "Merknadsstil"
 backgroundColor = "Bakgrunnsfarge"
 borderOff = "Kant: Av"
@@ -2016,18 +2073,61 @@ underline = "Understrek"
 undoDelete = "Angre"
 width = "Bredde"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "En gratis, privat PDF-redigerer du kan kjøre på hvilken som helst infrastruktur."
 
 [appBanner]
 dismiss = "Avvis"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Legg til vedlegg..."
 convertToPdfA3b = "Konverter til PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b er et arkivformat som sikrer langtidsbevaring. Det tillater å bygge inn vilkårlige filformater som vedlegg. Konvertering krever Ghostscript og kan ta lengre tid for store filer."
-convertToPdfA3bTooltipHeader = "Om PDF/A-3b-konvertering"
-convertToPdfA3bTooltipTitle = "Hva det gjør"
 discardChanges = "Forkast"
 downloadSingle = "Last ned vedlegg"
 duplicateName = "Et vedlegg med navnet '{{name}}' finnes allerede."
@@ -2208,7 +2308,6 @@ guest = "Gjest"
 user = "Bruker"
 
 [auto-rename]
-description = "Finner automatisk tittelen fra PDF-innholdet ditt og bruker den som filnavn."
 submit = "Auto Navngi"
 tags = "auto-oppdag,overskrift-basert,organisere,omdøp"
 title = "Auto Navngi"
@@ -2218,21 +2317,6 @@ failed = "Det oppstod en feil under automatisk navngivning av PDF-en."
 
 [auto-rename.results]
 title = "Resultater for automatisk navngivning"
-
-[auto-rename.settings]
-title = "Om"
-
-[auto-rename.tooltip.description]
-title = "Hva den gjør"
-
-[auto-rename.tooltip.header]
-title = "Slik fungerer automatisk navngivning"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Ser etter tekst som fremstår som en tittel eller overskrift"
-bullet2 = "Lager et rent, gyldig filnavn fra den oppdagede tittelen"
-bullet3 = "Beholder det opprinnelige navnet hvis ingen egnet tittel finnes"
-title = "Smart navngivning"
 
 [autoFormDetection]
 loading = "Oppdager skjemafelt..."
@@ -2327,6 +2411,9 @@ remove = "Fjern verktøy"
 selected = "Valgte verktøy"
 selectTool = "Velg et verktøy..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Avbryt"
 confirm = "Gå tilbake"
@@ -2360,6 +2447,10 @@ title = "Kjør automatisering"
 [automate.selection]
 title = "Valg av automatisering"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Opprett ny automatisering"
 
@@ -2371,6 +2462,7 @@ title = "Foreslått"
 
 [automate.sequence]
 finish = "Fullfør"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Kjør automatisering"
 running = "Kjører automatisering..."
 signInToRun = "Logg inn for å kjøre automatiseringer."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Sikkerhetsarbeidsflyt"
 secureWorkflowDesc = "Sikrer PDF-dokumenter ved å fjerne potensielt ondsinnet innhold som JavaScript og innebygde filer, og legger deretter til passordbeskyttelse for å hindre uautorisert tilgang. Passordet er satt til 'password' som standard."
 
 [autoRename]
-description = "Dette verktøyet vil automatisk gi PDF-filer nytt navn basert på innholdet. Det analyserer dokumentet for å finne den mest passende tittelen fra teksten."
 tags = "auto-detect,overskriftsbasert,organiser,gi ny etikett,auto rename,automatisk nytt navn,smart nytt navn,gi navn etter innhold,filnavn,filnavngiving,oppdag tittel"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,del,dokument,organisering"
 [autoSplitPDF]
 dividerDownload2 = "Last ned 'Auto Splitter Divider (med instruksjoner).pdf'"
 duplexMode = "Dupleksmodus (Front- og bakskanning)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-basert,separere,skann-segment,organisere"
 title = "Automatisk Del PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Legger til rammer rundt hver sidseksjon for å hjelpe med kutting og 
 [bookletImposition.addGutter]
 label = "Legg til innbindingsmarg"
 tooltip = "Legger til innermarg for innbinding"
-
-[bookletImposition.advanced]
-toggle = "Avanserte alternativer"
 
 [bookletImposition.doubleSided]
 label = "Tosidig utskrift"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Velg JKS-fil"
 chooseP12File = "Velg PKCS12-fil"
 choosePfxFile = "Velg PFX-fil"
 choosePrivateKey = "Velg fil for privat nøkkel"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Avslått"
 fetchFailed = "Kunne ikke laste signeringsdata"
 finalized = "Ferdigstilt"
 location = "Sted"
-logoTitle = "Logo"
-name = "Navn"
-noLogo = "Ingen logo"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Sidenummer"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Sertifikatpassord"
 passwordOptional = "La stå tomt hvis ingen passord"
 pemCertificateLabel = "Sertifikat (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Privat nøkkel (.pem / .key)"
 pending = "Avventer"
 readyToFinalize = "Klar til å ferdigstille"
 reason = "Årsak"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Bruker serversertifikat – ingen filer eller passord kreves"
-showLogo = "Vis logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signaturer"
 tags = "autentiser,PEM,P12,offisiell,krypter,signer,sertifikat,PKCS12,JKS,server,manuell,auto"
 title = "Sertifikatsignering"
@@ -2738,12 +2828,45 @@ viewed = "Vist"
 
 [certSign.appearance]
 invisible = "Usynlig"
+showOnPage = "Show signature on page"
 stepTitle = "Signaturutseende"
 visibility = "Synlighet"
 visible = "Synlig"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Signaturdetaljer"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Om signaturutseende"
@@ -2762,9 +2885,6 @@ bullet3 = "Velg hvilken side signaturen skal plasseres"
 bullet4 = "Valgfritt logo kan inkluderes"
 text = "Viser en signaturblokk på PDF-en med navnet ditt, dato og valgfrie detaljer. Nyttig når du vil at lesere tydelig skal se at dokumentet er signert."
 title = "Synlige signaturer"
-
-[certSign.certFiles]
-stepTitle = "Sertifikatfiler"
 
 [certSign.certType.tooltip.convert]
 text = "Konverter filen din til et Java nøkkellager (.jks) med keytool, velg deretter JKS."
@@ -2786,6 +2906,7 @@ text = "Velg formatet som samsvarer med sertifikatfilen din:"
 title = "Hvilket alternativ bør jeg bruke?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Sertifikatformat"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Denne enheten"
 [certSign.error]
 failed = "Det oppstod en feil under behandling av signaturer."
 
-[certSign.format]
-pkcs11 = "USB-token"
-windowsStore = "Windows-sertifikatlager"
-
 [certSign.hardware]
-certificate = "Sertifikat"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Egendefinert driversti …"
+digitalId = "Digital ID"
 driver = "PKCS#11-driver"
 driverPath = "Sti til driverbiblioteket"
 driverPathPlaceholder = "Full sti til PKCS#11-driveren din (.dll, .so eller .dylib)"
-expired = "utløpt"
-expires = "utløper"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Vis sertifikater"
-loading = "Leser inn sertifikater …"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Ingen signeringssertifikater funnet"
 noDriver = "Ingen PKCS#11-driver ble oppdaget. Installer driveren for tokenet ditt (f.eks. OpenSC), åpne dette på nytt - eller skriv inn driverstien manuelt nedenfor."
-notYetValid = "ikke gyldig ennå"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "Token-PIN"
 pkcs11Hint = "Velg PKCS#11-driveren for tokenet ditt, angi PIN-koden, og vis deretter sertifikatene på tokenet."
 pkcs11LoadError = "Kunne ikke lese sertifikater fra tokenet. Kontroller PIN-koden og driveren."
-refresh = "Oppdater"
-selectCert = "Velg sertifikat"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Velg driver"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Spor (valgfritt)"
-windowsHint = "Velg et sertifikat fra Windows-sertifikatlageret ditt. Signering bruker nøkkelen på kortet/tokenet ditt - Windows vil be om PIN-koden."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Kunne ikke lese Windows-sertifikatlageret"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Tommelfingerregel"
 device = "Denne enheten"
 noOtherSources = "Ingen andre sertifikatkilder er tilgjengelige."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Sertifikatkilde"
 upload = "Last opp"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Oppdater brukernavnet ditt. Du blir logget ut etter oppdatering."
@@ -3069,7 +3205,6 @@ placeholder = "Dokumentoppretter"
 
 [changeMetadata.customFields]
 add = "Legg til felt"
-description = "Legg til egendefinerte metadatafelt i dokumentet"
 key = "Nøkkel"
 keyPlaceholder = "Egendefinert nøkkel"
 remove = "Fjern"
@@ -3135,10 +3270,6 @@ bullet1 = "Opprettelsesdato: Når originaldokumentet ble laget"
 bullet2 = "Endringsdato: Når det sist ble endret"
 text = "Når dokumentet ble opprettet og endret."
 title = "Datofelt"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Fullstendig sletting av metadata for å sikre personvern."
-title = "Fjern eksisterende metadata"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Tittel: Dokumentnavn eller overskrift"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Du har nådd bruksgrensen din. Sjekk planalternativene di
 
 [checkAccessibility]
 aboutRow = "Om {{label}}"
-checking = "Kontrollerer..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Last ned tilgjengelighetsrapport"
 fileFailed = "mislyktes"
+noFiles = "Select a PDF to check it."
 pickFile = "Vis resultater for"
-submit = "Kontroller tilgjengelighet"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Alternativ tekst"
@@ -3286,10 +3417,17 @@ structure = "Tagger forteller skjermlesere hva hver del av en side er, for eksem
 [checkAccessibility.checks]
 label = "{{passed}} av {{total}} kontroller bestått"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Tilgjengelighetsrapporten kunne ikke opprettes. Prøv igjen."
 fileTitle = "Denne filen kunne ikke kontrolleres"
 partial = "Noen filer kunne ikke kontrolleres."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Erklærer PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Filen har en tittel i metadataene."
 [checkAccessibility.figures]
 summary_one = "{{count}} bilde trenger en beskrivelse (side {{pages}})"
 summary_other = "{{count}} bilder trenger en beskrivelse (sider {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Gjelder"
@@ -3465,19 +3618,7 @@ checking = "Kontrollerer {{current}} av {{total}}..."
 complete = "Kontroll fullført"
 
 [checkAccessibility.steps]
-results = "Resultater"
 standard = "Standard"
-
-[checkAccessibility.tooltip.header]
-title = "Hvilken standard som skal sjekkes"
-
-[checkAccessibility.tooltip.ua1]
-text = "Den første versjonen av PDF/UA, utgitt i 2012 som ISO 14289-1, for PDF 1.7-filer."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Den nyere versjonen, utgitt i 2024 som ISO 14289-2, for PDF 2.0-filer. En PDF 1.7-fil sjekket mot den feiler reglene som bare gjelder for PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Annotasjon {{n}}"
@@ -3868,6 +4009,7 @@ title = "Velg farge"
 transparent = "Gjennomsiktig"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Handlinger"
 back = "Tilbake"
 cancel = "Avbryt"
@@ -4206,7 +4348,9 @@ title = "Oppdater API-nøkler"
 warning = "⚠️ Advarsel: Denne handlingen vil generere nye API-nøkler og gjøre de tidligere nøklene ugyldige."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) lar AI-assistenter som Claude bruke Stirling PDF-verktøyene dine direkte. Koble til en klient én gang, så kan assistenten konvertere, redigere, sikre og behandle dokumenter på dine vegne."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Gjestebrukere kan ikke koble til MCP-klienter. Opprett en konto for å bruke MCP-serveren og la AI-assistenten din kjøre Stirling PDF-verktøy på dine vegne."
 navLabel = "MCP-server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Kopier {{label}}"
 tooltipCopied = "{{label}} kopiert"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Ditt MCP-endepunkt"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Legg til i"
 hint = "Velg klienten din, lim inn utdraget i filen som vises, og start den på nytt. Du logger inn med Stirling-kontoen din ved første bruk – ingen nøkler å kopiere."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Koble til AI-assistenten din"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Bevar sideforhold"
 maxAttachmentSize = "Maksimal vedleggsstørrelse (MB)"
 multiple = "Flere"
 optimizeForEbook = "Optimaliser PDF for e-boklesere (bruker Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Utdata"
-outputFormat = "Utdataformat"
-pdfaAccessibleFormat = "{{format}} (tilgjengelig)"
-pdfaDigitalSignatureWarning = "PDFen inneholder en digital signatur. Denne vil bli fjernet i neste steg."
-pdfaNote = "PDF/A-1b er mer kompatibel, PDF/A-2b støtter flere funksjoner, PDF/A-3b støtter innebygde filer."
-pdfaOptions = "PDF/A-alternativer"
 pdfOptions = "PDF-alternativer"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Innstillinger"
 signInToUse = "Logg inn for å bruke"
 single = "Enkel"
 sourceFormatPlaceholder = "Kildeformat"
-strictMode = "Streng modus"
-strictModeDesc = "Feil hvis konverteringen ikke er perfekt (bruker VeraPDF-verifisering)"
 svgPdfOptions = "Alternativer for SVG til PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG-filer gjengis som vektorgrafikk for skarpt resultat i alle oppløsninger. Dimensjoner fra SVG bestemmer PDF-sidestørrelsen."
@@ -4396,9 +4549,7 @@ zoomLevel = "Zoomnivå"
 
 [convert.ebookOptions]
 includePageNumbers = "Inkluder sidenummer"
-includePageNumbersDesc = "Legg til sidenummer i den genererte PDF-en"
 includeTableOfContents = "Inkluder innholdsfortegnelse"
-includeTableOfContentsDesc = "Legg til en generert innholdsfortegnelse i den resulterende PDF-en"
 optimizeForEbookPdf = "Optimaliser for eBook-lesere"
 optimizeForEbookPdfDesc = "Optimaliser PDF-en for eBook-lesing (mindre filstørrelse, bedre gjengivelse på eInk-enheter)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Oppdag kapitler"
 detectChaptersDesc = "Oppdag overskrifter som ser ut som kapitler og sett inn EPUB-sideskift"
 kindleEink = "Kindle e-Ink (tekstoptimalisert)"
 outputFormat = "Utdataformat"
-outputFormatDesc = "Velg utdataformat for eBook-en"
 tabletPhone = "Nettbrett/mobil (med bilder)"
 targetDevice = "Målenhet"
 targetDeviceDesc = "Velg en utdata-profil optimalisert for leserenheten"
@@ -4469,8 +4619,24 @@ description = "Disse cookies er nødvendige for at nettstedet skal fungere rikti
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Tittel på forside"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF-portefølje"
 description = "Hver valgte fil beholdes hel inne i den nye PDF-en, uansett type. Lesere som ikke støtter porteføljer, viser en forside med filene vedlagt."
 goToFileEditor = "Gå til filredigering"
@@ -4488,6 +4654,9 @@ title = "Hva den gjør"
 
 [createPortfolio.tooltip.header]
 title = "Om PDF-porteføljer"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Beskjær hvite mellomrom automatisk"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Tilgang til utklippstavlen er ikke tilgjengelig i denne 
 export = "Eksporter bokmerker"
 exportClipboard = "Kopier JSON til utklippstavlen"
 exportJson = "Last ned JSON"
+exportMenu = "Export"
 importClipboard = "Lim inn JSON fra utklippstavlen"
 importJson = "Importer JSON"
+importMenu = "Import"
 loadFromPdf = "Last fra valgt PDF"
 noFile = "Velg en PDF for å hente eksisterende bokmerker."
 selectedFile = "Lastet fra {{file}}"
-source = "Last bokmerker"
 
 [editTableOfContents.editor]
 addTopLevel = "Legg til toppnivå-bokmerke"
@@ -4740,6 +4910,9 @@ replaceExisting = "Erstatt eksisterende bokmerker (fjern haken for å legge til)
 replaceExistingHint = "Når deaktivert, legges den nye strukturen til etter gjeldende bokmerker."
 title = "Bokmerker og struktur"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Bytt PDF"
 filePrompt = "Velg en PDF fra biblioteket ditt eller last opp en ny for å begynne."
@@ -4753,7 +4926,6 @@ title = "Åpne verktøyet for å begynne å redigere"
 [encryptedPdfUnlock]
 actionIgnored = "{{action}}-begrensning ignorert"
 actionUnlocked = "{{action}} låst opp for denne økten"
-advanced = "Avansert"
 allowed = "Tillatt"
 annotations = "Merknader"
 authoriseAction = "Denne PDF-en krever tillatelse for å bruke {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Begrenset"
 restrictedActions = "begrensede handlinger"
 restrictedOperation = "Denne handlingen krever tillatelsespassordet."
 retainOwnerVerification = "Bekreft tillatelsespassordet for å beholde det uendret mens åpningspassordet fjernes. Dette fjerner det ikke."
-saveProtection = "Lagre beskyttelse"
 securityChangeFailed = "Kan ikke endre beskyttelse. Kontroller tillatelsespassordet og de nye sikkerhetsinnstillingene."
 sessionDetails = "Åpen for denne økten. PDF-en forblir beskyttet."
 sessionDetailsLabel = "Om opplåsing for økt"
@@ -4871,7 +5042,6 @@ title = "Noe gikk galt"
 tryAgain = "Prøv igjen"
 
 [extractImages]
-allowDuplicates = "Lagre dupliserte bilder"
 selectText = "Velg bildeformat for å konvertere de hentede bildene til"
 submit = "Hent ut"
 tags = "bilde,foto,lagre,arkiv,zip,fangst,hent"
@@ -4927,12 +5097,15 @@ closeFile = "Lukk fil"
 
 [fileEditor]
 closedFile = "Lukket {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Fil omorganisert"
 filesReordered_other = "{{count}} filer omorganisert"
 loadedFromStorage_one = "Lastet {{count}} fil fra lagring"
 loadedFromStorage_other = "Lastet {{count}} filer fra lagring"
 loadFromStorageFailed = "Kunne ikke laste noen filer fra lagring"
 pinnedFile = "Festet {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Lagret og lukket {{name}}"
 saveFailed = "Lagring mislyktes"
 unpinnedFile = "Løsnet {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Låst"
 previewOf = "Forhåndsvisning av {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Legg til filer"
 created = "Opprettet"
 notIncludedInToolRun = "Ikke inkludert i denne verktøykjøringen"
 size = "Filstørrelse"
 title = "Filer"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Ingen filer tilgjengelig"
@@ -5104,6 +5286,7 @@ subtitle = "Vis eller skjul kategorier i filsidelinjen."
 title = "Sidefeltkategorier"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Avbryt"
 error = "Kunne ikke gi filen nytt navn."
 illegalCharacters = "Et filnavn kan ikke inneholde \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Fjern felt"
 
 [formFill.editor]
 action = "Knappehandling"
-actionHelp = "Hva knappen gjør når den klikkes."
 actionNone = "Ingen"
 actionPrint = "Skriv ut"
 actionReset = "Tilbakestill skjema"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Begrenser hvor mange tegn som får plass, tegnet som jevnt ford
 multiline = "Flere linjer"
 multilineHelp = "Tillater mer enn én tekstlinje og bryter ved feltets kant."
 multiSelect = "Tillat flere valg"
-multiSelectHelp = "Lar mer enn ett alternativ velges samtidig."
 name = "Feltnavn"
 nameHelp = "Feltets interne navn. Brukes ved eksport av data eller utfylling av skjemaet fra et annet system, så hold det unikt og uten mellomrom."
 optionGap = "Avstand mellom alternativer"
@@ -5902,6 +6083,11 @@ title = "Juster Farger/Kontrast"
 desc = "Uthev, tegn, legg til notater og figurer i visningen"
 tags = "kommenter,marker,tegn,markup,kommentar,notater,gjennomgå,redline,tilbakemelding,markup-verktøy,klistrelapper,former,piler,tekstboks,frihånd"
 title = "Annoter"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Oppdag skjemafelt automatisk med AI og gjør PDF-en utfyllbar."
@@ -6405,6 +6591,9 @@ sort = "Sorter"
 [merge.sortFiles]
 title = "Sorter filer"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Oversikt over fletteinnstillinger"
 
@@ -6548,6 +6737,9 @@ title = "Autentisering mislyktes"
 message = "Du kan lukke dette vinduet og gå tilbake til Stirling PDF."
 title = "Autentisering vellykket"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Tillat tilgang"
 approving = "Tillater..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Sender deg tilbake til appen..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} vil ha tilgang til Stirling PDF-kontoen din"
 scopesIntro = "Dette vil tillate {{app}} å:"
 signedInAs = "Logget inn som {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Logg inn for å fortsette"
 signInPrompt = "Logg inn på Stirling PDF-kontoen din for å fortsette å koble til appen."
 title = "Authorise access"
 unknownApp = "En tredjepartsapplikasjon"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Handle som deg – alt {{app}} gjør, kjøres under kontoen din og teller mot bruken din"
@@ -6572,9 +6767,12 @@ tools = "Bruke Stirling PDF-verktøyene dine på dine vegne – konvertere, redi
 
 [oauthConsent.scope]
 email = "Se e-postadressen din"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Bekreft identiteten din"
 phone = "Se telefonnummeret ditt"
 profile = "Se grunnleggende profilinformasjon"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Rydd opp skanninger og oppdag tekst fra bilder i en PDF og legg den til som tekst."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Du blir et teammedlem og mister eiertilgang."
 [pageEdit]
 deselectAll = "Ingen"
 selectAll = "Merk alle"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Trekk ut Sider"
@@ -7577,6 +7779,8 @@ stamp = "Stempelannotasjon – ikke sidetekst, så den kan ikke redigeres her"
 widget = "Skjemafelt – ikke sidetekst, så det kan ikke redigeres her"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Rediger"
 markTagged = "Marker som fullstendig tagget"
 matchScanFont = "Tilpass skannet tekst til {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Autotagg side"
 typeInto = "Skriv i {{run}}"
 ungroupParagraph = "Del opp avsnitt {{run}}"
 unmarkTagged = "Marker som ikke fullstendig tagget"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Bryt {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Forkaste ulagrede endringer?"
 
 [pdfTextEditor.error]
 decodeImage = "Kunne ikke dekode det valgte bildet."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Kan ikke duplisere denne teksten: ingen tilgjengelig skrift tegner alle bokstavene."
 formLiftChangesDrawing = "Kan ikke redigere dette: det er tegnet som en del av en gruppe hvis klipping eller grafikkinnstillinger redigeringsprogrammet ikke kan bevare når det endres."
 insertImage = "Kunne ikke sette inn det valgte bildet."
 needsShaping = "Redigeringsprogrammet kan ennå ikke tegne dette skriftsystemets sammenkoblede bokstaver og vokaltegn korrekt, så denne endringen ble ikke gjort."
+reopenLost = "Open again"
 replaceClippedImage = "Kan ikke erstatte dette bildet: det er beskåret, og erstatningen vil vise delene beskjæringen skjuler."
 scanOffInk = "Kan ikke redigere denne teksten: de gjenkjente ordene stemmer ikke overens med skanningen. Kjør OCR på nytt."
 unsafeRtlEdit = "Kan ikke utføre denne endringen: redigeringsprogrammet kan ikke tegne denne linjens høyre-til-venstre-tekst på nytt uten å endre den."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG-bilde"
 close = "Lukk søkelinjen"
 count = "{{current}} av {{total}}"
 findPlaceholder = "Finn"
+hideReplace = "Hide replace"
 ignoreAccents = "Ignorer aksenter"
 matchCase = "Skill mellom store og små bokstaver"
 next = "Neste treff"
@@ -7625,6 +7833,7 @@ replace = "Erstatt"
 replaceAll = "Erstatt alle"
 replaced = "{{count}} erstattet"
 replacePlaceholder = "Erstatt med"
+showReplace = "Show replace"
 wholeWord = "Hele ord"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Denne lenken kan ikke tagges."
 cannotTagPage = "Innholdet på denne siden kan ikke tagges."
 contentGroup = "Innhold"
 customTag = "{{role}} (egendefinert tagg)"
-decorativeInfo = "Skjermlesere hopper over dekorative bilder. Bruk det for rammer, bakgrunner og andre bilder som ikke inneholder informasjon."
-decorativeLabel = "Dekorativt bilde"
-description = "Bildebeskrivelse"
-descriptionInfo = "Skjermlesere leser dette opp i stedet for bildet."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Tagger kan ikke redigeres i en kryptert fil"
 figureDescription = "Figurbeskrivelse"
 figureDescriptionInfo = "Skjermlesere leser dette i stedet for figuren."
-formFieldDescription = "Feltbeskrivelse"
 formulaDescription = "Formelbeskrivelse"
 formulaDescriptionInfo = "Skjermlesere leser dette i stedet for formelen. Si det slik du ville sagt det høyt, for eksempel «x i andre pluss én»."
 heading = "Tilgjengelighet"
@@ -7813,7 +8019,6 @@ markedTagged = "Dokumentet er fullstendig tagget"
 markedTaggedHint = "Forteller PDF-lesere å bruke tilgjengelighetstaggene. Huk av når alt er tagget."
 markedWithUntagged = "Noe innhold har ingen tagger, så skjermlesere kan hoppe over det."
 missingDescriptions = "Manglende beskrivelser"
-mixedContent = "Figur inneholder annet innhold"
 mixedTags = "Blandet"
 needsDescriptionBadge = "Ingen beskrivelse"
 nextToReview = "Neste til gjennomgang"
@@ -7821,12 +8026,10 @@ notFigure = "Tagget som del av teksten"
 removeTag = "Fjern tagg"
 saveFailed = "Tilgjengelighetsendringene dine kunne ikke lagres, så filen ble ikke lagret. Angre dem og prøv igjen."
 selectedText = "Valgt tekst"
-tagFormField = "Tagg skjemafelt"
 tagging = "Tagger sider"
 tagLabel = "Tagg"
 tagLinks_one = "Tagg lenke"
 tagLinks_other = "Tagg {{count}} lenker"
-tagUntagged = "Autotagg dokument"
 tagUntaggedHint = "Legger automatisk til tilgjengelighetstagger i hele dokumentet. Resultatet er grovt: sjekk overskrifter, lister og leserekkefølge etterpå."
 unknownTag = "Kan ikke leses her"
 unmarkedWithTags = "Noen PDF-lesere vil bruke taggene uansett og kan hoppe over innhold uten dem."
@@ -7851,7 +8054,7 @@ heading = "Overskrifter"
 mixedNumbering = "Blander nummererte og unummererte overskrifter"
 none = "Ingen overskrifter"
 onPage = "Overskrift på side {{page}}"
-problems = "Overskriftsproblemer"
+problemCount = "{{count}} to fix"
 skippedLevel = "Hopper over et nivå etter Overskrift {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Tittel"
 allLanguages = "Alle språk"
 cannotSetDocument = "Dette dokumentets språk kan ikke endres."
 cannotSetText = "Språket for denne teksten kan ikke endres."
-documentHint = "Språket skjermlesere bruker med mindre en del av teksten angir sitt eget."
 documentLabel = "Språk"
 documentLocked = "Språket til et kryptert dokument kan ikke endres her."
 inDocument = "I dette dokumentet"
 innerLabel = "Språk for tagg {{number}}"
 label = "Språk"
-missing = "Ikke angitt språk. Skjermlesere vil gjette, og kan lese hele dokumentet med feil stemme."
 mixed = "Blandet"
 noMatch = "Ingen samsvarende språk. Skriv inn koden i stedet, for eksempel mt eller en-IE."
 placeholder = "Velg språk"
@@ -7943,6 +8144,52 @@ renderFailed = "Kunne ikke gjengi side"
 [pdfTextEditor.password]
 incorrect = "Feil passord – prøv igjen."
 label = "Passord"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Justeringshjelpelinje ved {{value}} {{unit}} – dra til en linjal for å fjerne"
@@ -8124,6 +8371,10 @@ title = "Forhåndsvisningsavvik"
 [pdfTextEditor.tooltip.textFocus]
 text = "Dette arbeidsområdet fokuserer på å redigere tekst og reposisjonere innebygde bilder. Kompleks sidegrafikk, skjemawidgets og lagdelte grafikk bevares for eksport, men er ikke fullt redigerbare her."
 title = "Fokus på tekst og bilder"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF til CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Skjul kategori"
 labelCount = "etiketter"
 sharedNote = "Disse etikettene er innebygde og deles på tvers av hele teamet ditt."
 showCategory = "Vis kategori"
-
-[policies.pii]
-account = "Kontonumre (merket)"
-card = "Kreditt-/debetkort"
-email = "E-postadresser"
-fieldLabel = "PII å sladde"
-iban = "IBAN-er"
-phone = "Telefonnumre"
-placeholder = "Velg PII-typer"
-routing = "Amerikanske routing-numre (ABA)"
-ssn = "Social Security-numre"
 
 [policy]
 badgeEnforcing = "{{name}} håndheves..."
@@ -10317,6 +10557,10 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newCustomPipeline = "Ny egendefinert pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Alle pipelines"
 
@@ -12047,7 +12291,6 @@ label = "Leseverktøy"
 readAloud = "Les høyt"
 rotateLeft = "Roter mot venstre"
 rotateRight = "Roter mot høyre"
-search = "Finn i dokument"
 switchDocument = "Bytt dokument"
 thumbnails = "Sider"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Boksfarge"
 convertPDFToImageLabel = "Konverter PDF til PDF-bilde"
 customPaddingLabel = "Egendefinert ekstra utfylling"
 useRegexLabel = "Bruk Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Søk etter hele ord"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Innstillinger for sladding"
 
 [redact.auto.wordsToRedact]
 add = "Legg til"
-examples = "Eksempler: Konfidensielt, Topphemmelig"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Skriv inn et ord"
 title = "Ord som skal sladdes"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Velg filer i filbehandleren for å sladde flere file
 manual = "Manuell"
 mode = "Modus"
 title = "Sladdemetode"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Matcher bare tekst med samme bruk av store og små bokstaver. 'Secret' matcher ikke 'SECRET' når dette er aktivert, og [A-Z] i en regex matcher bare store bokstaver."
@@ -12147,19 +12401,6 @@ title = "Sladdemetode"
 text = "Klikk og dra for å manuelt velge bestemte områder som skal sladdes. Gir deg presis kontroll over hva som blir sladdet. (Kommer snart)"
 title = "Manuell sladding"
 
-[redact.tooltip.words]
-bullet1 = "Legg til ett ord om gangen"
-bullet2 = "Trykk Enter eller klikk «Legg til en til» for å legge til"
-bullet3 = "Klikk × for å fjerne ord"
-
-[redact.tooltip.words.description]
-text = "Skriv inn ord eller fraser som skal finnes og sladdes i dokumentet ditt. Hvert ord søkes etter separat."
-title = "Tekstmatching"
-
-[redact.tooltip.words.examples]
-text = "Typiske ord å sladde inkluderer: bankdetaljer, e-postadresser eller spesifikke navn."
-title = "Vanlige eksempler"
-
 [redact.tooltip.words.header]
 title = "Ord som skal sladdes"
 
@@ -12176,15 +12417,6 @@ failed = "Det oppstod en feil under fjerning av merknader fra PDF-en."
 
 [removeAnnotations.info]
 description = "Dette verktøyet fjerner alle merknader (kommentarer, uthevinger, notater osv.) fra PDF-dokumentene dine."
-
-[removeAnnotations.settings]
-title = "Innstillinger"
-
-[removeAnnotations.tooltip.description]
-title = "Hva den gjør"
-
-[removeAnnotations.tooltip.header]
-title = "Om Fjern merknader"
 
 [removeBlanks]
 submit = "Fjern tomme sider"
@@ -12325,6 +12557,9 @@ tags = "omorganiser,endre rekkefølge,organiser,reorganiser,flytt sider,siderekk
 [reorganizePages.error]
 failed = "Kunne ikke omorganisere sider"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Sider omorganisert"
 
@@ -12406,6 +12641,7 @@ title = "Inverter alle farger"
 rotateLeft = "Roter mot klokken"
 rotateRight = "Roter med klokken"
 selectRotation = "Velg rotasjonsvinkel (med klokken)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Bruk rotasjon"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Roter PDF"
@@ -12516,8 +12752,7 @@ title = "Saniter"
 failed = "Det oppstod en feil under sanitering av PDF-en."
 
 [sanitize.options]
-note = "Velg elementene du vil fjerne fra PDF-en. Minst ett alternativ må være valgt."
-title = "Saniteringsalternativer"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Fjern alle filer som er innebygd i PDF-en"
@@ -12649,6 +12884,7 @@ title = "Søk i PDF"
 hideTools = "Skjul utilgjengelige verktøy ▴"
 messageNoFallback = "Verktøy er utilgjengelige til serveren din er tilbake på nett."
 messageWithFallback = "Noen verktøy krever servertilkobling."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Vis utilgjengelige verktøy ▾"
 title = "Stirling-PDF-serveren din kan ikke nås"
 toolNotAvailableLocally = "Stirling-PDF-serveren din er frakoblet og \"{{endpoint}}\" er ikke tilgjengelig på det lokale backend."
@@ -13034,6 +13270,12 @@ title = "Tastatursnarveier"
 mac = "Inkluder ⌘ (Command), ⌥ (Option) eller en annen modifikator i snarveien."
 windows = "Inkluder Ctrl, Alt eller en annen modifikator i snarveien."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Vilkår, personvernerklæring og informasjonskapselinnstillingene dine."
 label = "Juridisk"
@@ -13418,9 +13660,7 @@ image = "Opplasting"
 text = "Tekst"
 
 [sign.step]
-createDesc = "Velg hvordan du vil opprette signaturen"
 place = "Plasser og lagre"
-placeDesc = "Plasser signaturen på PDF-en"
 
 [sign.steps]
 configure = "Konfigurer signatur"
@@ -13597,6 +13837,10 @@ rotateLeft = "Roter mot venstre"
 rotateRight = "Roter mot høyre"
 trim = "Beskjær til signatur"
 trimHint = "Beskjærer det tomme området rundt den"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Innstillinger for signaturutforming"
@@ -13959,7 +14203,6 @@ placeholder = "Skriv inn antall horisontale delinger"
 
 [split-by-sections.splitMode]
 custom = "Egendefinerte sider"
-description = "Velg hvordan sidene skal deles"
 label = "Delingsmodus"
 splitAll = "Del alle sider"
 splitAllExceptFirst = "Del alle unntatt første"
@@ -14210,10 +14453,8 @@ failed = "Det oppsto en feil under tidsstempling av PDF-en."
 
 [timestampPdf.options]
 note = "Bare en SHA-256-hash av dokumentet ditt sendes til TSA-serveren; selve PDF-filen sendes aldri til TSA-serveren."
-title = "Tidsstempelserver (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Velg en pålitelig Time Stamp Authority"
 label = "Velg en TSA-server"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Ingen verktøy tilgjengelig"
 
 [tooltip]
 close = "Lukk verktøytips"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Dette verktøyet vil fjerne skrivebeskyttelse fra PDF-skjemaer, slik at de kan redigeres og fylles ut."
@@ -14706,6 +14961,9 @@ signatureDate = "Signeringsdato"
 
 [validateSignature.settings]
 certHint = "Last opp et klarert X.509-sertifikat for å validere mot en egendefinert tillitskilde."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Valideringsinnstillinger"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Kan ikke forhåndsvise fil"
 copyRestricted = "Kopiering er deaktivert av tillatelsene i denne PDF-en."
 copyText = "Kopier"
 coverPageView = "Vis forside separat"
-disableColorFilter = "Deaktiver fargefilter"
 documentUpdated = "Dokument oppdatert"
 dualPageView = "Dobbelsidevisning"
 editText = "Rediger tekst"
-enableDarkFilter = "Aktiver mørkt filter"
-enableSepiaFilter = "Aktiver sepiafilter"
 engineLoadError = "Kunne ikke initialisere PDF-visningsmotoren"
 engineSlowWarning = "Initialisering av PDF-motoren tar lengre tid enn forventet. Kontroller innstillingene for WebAssembly og Worker i nettleseren, eller last inn siden på nytt."
 firstPage = "Første side"
@@ -14736,20 +14991,27 @@ fitPage = "Tilpass til side"
 fitWidth = "Tilpass til bredde"
 lastPage = "Siste side"
 loadingEngine = "Laster PDF-motor ..."
+menuSelected = "Selected"
 moreOptions = "Mer"
 nextPage = "Neste side"
 noPdfProvided = "Ingen PDF oppgitt"
 onlyPdfSupported = "Dette filformatet støttes ikke for forhåndsvisning."
 pageNavigation = "Sidenavigasjon"
+pageNumber = "Page number"
 previousPage = "Forrige side"
 readAloudFromHere = "Les høyt herfra"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Dokumentet kunne ikke lagres. Prøv igjen."
 saveChangesErrorTitle = "Kunne ikke lagre endringer"
 singlePageView = "Enkeltsidevisning"
+tools = "Tools"
 unknownFile = "Ukjent fil"
-view = "Visning"
 zoom = "Zoom"
 zoomIn = "Zoom inn"
+zoomLevel = "Zoom level"
 zoomOut = "Zoom ut"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Forhåndsvisning av signatur"
 
 [viewer.signatureField]
 badge = "Signatur"
+clickToSign = "Click to sign here"
 fieldTitle = "Signaturfelt: {{name}}"
 signed = "Signert"
 signedWithReason = "Signert: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Usignert signaturfelt: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Gjenopprettet {{restored}} av {{total}} filer. Resten er ikke lenger 
 
 [workbenchBar]
 activeFiles = "Aktive filer"
-annotations = "Annoteringer"
+annotate = "Annotate"
 applyRedactionsFirst = "Bruk sladdingene først"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Lukk alle filer"
 closePdf = "Lukk PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Opphev valg av alle"
 downloadAll = "Last ned alt"
 editText = "Rediger tekst"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Avslutt annoteringsmodus"
 exitRedaction = "Avslutt sladdemodus"
 findReplace = "Finn og erstatt"
 formFill = "Skjemaredigerer"
-hideToolbar = "Skjul verktøylinje"
+layers = "Layers"
 moreActions = "Flere handlinger"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Sideredigerer"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Panoreringsmodus"
 print = "Skriv ut PDF"
 readAloud = "Les opp"
 readAloudLanguage = "Språk"
 readAloudSpeed = "Hastighet"
 redact = "Sladd"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Roter til venstre"
 rotateRight = "Roter til høyre"
 ruler = "Linjal / Måling"
+rulerScaleUnset = "Not set"
 rulerSettings = "Målestokkinnstillinger"
 save = "Lagre"
 saveAll = "Lagre alt"
@@ -15123,14 +15398,23 @@ selectLanguage = "Velg språk"
 share = "Del"
 showAllTools = "Vis alle verktøy"
 showFewerTools = "Skjul verktøylinje"
-showToolbar = "Vis verktøylinje"
+thumbnails = "Pages"
 toggleAnnotations = "Veksle synlighet for annoteringer"
-toggleAttachments = "Veksle vedlegg"
-toggleBookmarks = "Bokmerker (innholdsfortegnelse)"
 toggleComments = "Kommentarer"
-toggleLayers = "Veksle lag"
-toggleSidebar = "Veksle sidepanel"
 viewer = "Visning"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Tilgangen din til dette dokumentet er utløpt."

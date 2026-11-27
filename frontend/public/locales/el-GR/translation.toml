@@ -12,9 +12,11 @@ comingSoon = "Σύντομα διαθέσιμο"
 confirm = "Επιβεβαίωση"
 confirmClose = "Επιβεβαίωση κλεισίματος"
 confirmCloseCancel = "Άκυρο"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Κλείσιμο αρχείου"
 confirmCloseDiscard = "Απόρριψη αλλαγών και κλείσιμο"
 confirmCloseMessage = "Είστε βέβαιοι ότι θέλετε να κλείσετε αυτό το αρχείο;"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Αποθήκευση και κλείσιμο"
 confirmCloseSaveFailed_one = "Αποθηκεύτηκε με σφάλματα. {{count}} αρχείο δεν μπόρεσε να αποθηκευτεί."
 confirmCloseSaveFailed_other = "Αποθηκεύτηκαν με σφάλματα. {{count}} αρχεία δεν ήταν δυνατό να αποθηκευτούν."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Το αρχείο αποθηκεύτηκε στον δίσκ�
 filesSelected = "{{count}} αρχεία"
 font = "Γραμματοσειρά"
 fontSizeTooltip = "Μέγεθος του κειμένου του αριθμού σελίδας σε σημεία. Μεγαλύτεροι αριθμοί δημιουργούν μεγαλύτερο κείμενο."
-fontTypeTooltip = "Οικογένεια γραμματοσειράς για τους αριθμούς σελίδων. Επιλέξτε σύμφωνα με το στυλ του εγγράφου σας."
 green = "Πράσινο"
 help = "Βοήθεια"
 incorrectPasswordMessage = "Ο τρέχων κωδικός είναι λανθασμένος."
@@ -249,9 +250,7 @@ image = "Μεταφόρτωση"
 text = "Κείμενο"
 
 [addImage.step]
-createDesc = "Ανεβάστε την εικόνα που θέλετε να προσθέσετε"
 place = "Τοποθέτηση εικόνας"
-placeDesc = "Κάντε κλικ στο PDF για να προσθέσετε την εικόνα σας"
 
 [addImage.steps]
 configure = "Ρύθμιση εικόνας"
@@ -276,7 +275,7 @@ fontName = "Όνομα γραμματοσειράς"
 fontSize = "Μέγεθος γραμματοσειράς"
 numberPagesDesc = "π.χ. 1,3,5-8 ή αφήστε κενό για όλες τις σελίδες"
 pagePreviewAlt = "Προεπισκόπηση σελίδας"
-pagesAndStarting = "Σελίδες & Αρχικός αριθμός"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Θέση & Σελίδες"
 preview = "Επιλογή θέσης"
 previewDisclaimer = "Η προεπισκόπηση είναι κατά προσέγγιση. Το τελικό αποτέλεσμα μπορεί να διαφέρει λόγω των μετρικών γραμματοσειράς του PDF."
@@ -300,6 +299,7 @@ title = "Αποτελέσματα αρίθμησης σελίδων"
 
 [addPassword]
 desc = "Κρυπτογραφήστε το έγγραφο PDF με κωδικό πρόσβασης."
+submit = "Add Password"
 tags = "κρυπτογράφηση,κωδικός πρόσβασης,κλείδωμα,ασφαλές,προστασία,ασφάλεια,κρυπτογράφηση,διασφάλιση,εμπιστευτικό,ιδιωτικό,περιορισμός πρόσβασης"
 title = "Προσθήκη κωδικού"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Προεπισκόπηση σφραγίδας"
 tags = "σφραγίδα,σήμανση,σφράγιση,εγκεκριμένο,απορρίφθηκε,εμπιστευτικό,εργαλείο σφραγίδας,λαστιχένια σφραγίδα,σφραγίδα ημερομηνίας,σφραγίδα έγκρισης,λήφθηκε,άκυρο,αντίγραφο,πρωτότυπο"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Αλφάβητο"
-clickToExpand = "Κάντε κλικ για επέκταση"
 customColor = "Προσαρμοσμένο χρώμα κειμένου"
 customDateDesc = "Προσαρμοσμένη μορφή"
 customPosition = "Σύρετε τη σφραγίδα στη θέση που επιθυμείτε στο παράθυρο προεπισκόπησης."
 dateDesc = "Τρέχουσα ημερομηνία"
 datetimeDesc = "Ημερομηνία και ώρα μαζί"
 dateTimeVars = "Ημερομηνία & ώρα"
-dynamicVariables = "Δυναμικές μεταβλητές"
 examples = "Παραδείγματα"
 filenameDesc = "Όνομα αρχείου χωρίς επέκταση"
 filenameFullDesc = "Όνομα αρχείου με επέκταση"
@@ -365,6 +364,8 @@ noStampSelected = "Δεν έχει επιλεγεί σφραγίδα. Επιστ
 opacity = "Διαφάνεια"
 otherVars = "Άλλα"
 pageNumberDesc = "Τρέχων αριθμός σελίδας"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Πληροφορίες σελίδας"
 position = "Θέση"
 positionAndFormatting = "Θέση & μορφοποίηση"
@@ -378,9 +379,10 @@ quickPosition = "Επιλέξτε μια θέση στη σελίδα για τ�
 rotation = "Περιστροφή"
 selectedImageAlt = "Επιλεγμένη εικόνα σφραγίδας"
 selectTemplate = "Επιλέξτε πρότυπο..."
+size = "Size"
 stampSetup = "Ρύθμιση σφραγίδας"
 stampText = "Κείμενο σφραγίδας"
-stampTextDescription = "Χρησιμοποιήστε τις παρακάτω δυναμικές μεταβλητές. Χρησιμοποιήστε @@ για κυριολεκτικό @. Χρησιμοποιήστε \\n για νέες γραμμές."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Τύπος σφραγίδας"
 submit = "Προσθήκη σφραγίδας"
 tags = "σφραγίδα,προσθήκη εικόνας,κεντράρισμα εικόνας,υδατογράφημα,PDF,ενσωμάτωση,προσαρμογή"
@@ -389,7 +391,6 @@ title = "Σφράγισμα PDF"
 totalPagesDesc = "Συνολικός αριθμός σελίδων"
 useTemplate = "Χρήση προτύπου"
 uuidDesc = "Σύντομο μοναδικό αναγνωριστικό (8 χαρακτήρες)"
-variablesHelp = "Κάντε κλικ σε οποιαδήποτε μεταβλητή για να την εισαγάγετε στο κείμενο της σφραγίδας σας. Χρησιμοποιήστε @@ για κυριολεκτικό @."
 yearMonthDayDesc = "Μεμονωμένα μέρη ημερομηνίας"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Παρουσιάστηκε σφάλμα κατά την προσθήκ
 
 [AddStampRequest.results]
 title = "Αποτελέσματα σφράγισης"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Προσαρμοσμένο"
@@ -410,6 +417,11 @@ legal-footer = "Νομικό υποσέλιδο"
 page-numbers = "Αριθμοί σελίδων"
 pageNumberFooter = "Υποσέλιδο αριθμού σελίδας"
 timestamp = "Χρονική σήμανση"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Εφαρμογή κειμένου"
@@ -462,9 +474,7 @@ image = "Μεταφόρτωση"
 text = "Κείμενο"
 
 [addText.step]
-createDesc = "Εισαγάγετε το κείμενο που θέλετε να προσθέσετε"
 place = "Τοποθέτηση κειμένου"
-placeDesc = "Κάντε κλικ στο PDF για να προσθέσετε το κείμενό σας"
 
 [addText.steps]
 configure = "Ρύθμιση κειμένου"
@@ -1233,6 +1243,18 @@ label = "Επαναδημιουργία κατά την εκκίνηση"
 description = "Αριθμός ημερών που θα ισχύει το πιστοποιητικό"
 label = "Ισχύς πιστοποιητικού (ημέρες)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Κατάλογοι από τους οποίους οι πηγές φακέλων και οι έξοδοι φακέλων επιτρέπεται να διαβάζουν και στους οποίους επιτρέπεται να γράφουν. Αυτό είναι όριο ασφαλείας: οι αυτοματισμοί δεν μπορούν ποτέ να δείχνουν σε διαδρομή server εκτός αυτής της λίστας."
 securityNote = "Αφήστε το κενό για να απενεργοποιήσετε πλήρως τις πηγές φακέλων και τις εξόδους. Ο κατάλογος διαμόρφωσης του Stirling είναι πάντα εκτός ορίων."
@@ -1456,7 +1478,9 @@ label = "Όνομα χρήστη SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Οι clients στέλνουν ένα Stirling API key στην κεφαλίδα X-API-KEY (ή Authorization: Bearer <key>). Το κλειδί αντιστοιχίζεται στον κάτοχο χρήστη Stirling - πρόσβαση έχουν μόνο οι προβλεπόμενοι λογαριασμοί και οι ενέργειες ελέγχονται ως αυτός ο χρήστης. Διαχειριστείτε τα κλειδιά από Λογαριασμός > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Εκθέστε τα εργαλεία PDF και τους AI agents του Stirling σε MCP clients μέσω endpoint προστατευμένου με OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Επιτρεπόμενα εργαλεία"
 description = "Operation ids που θα κρυφτούν από το MCP (χωρισμένα με κόμμα ή κενό), π.χ. add-password remove-password. Αφήστε κενό για να εκτεθούν όλα τα ενεργοποιημένα εργαλεία."
 label = "Αποκλεισμένα εργαλεία"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Όταν είναι απενεργοποιημένο (προεπιλογή), δεν φορτώνονται /mcp endpoint, metadata ή MCP beans."
 label = "Ενεργοποίηση MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Εισαγάγετε παραπάνω τον OAuth issuer + resource ID, αποθηκεύστε και κάντε επανεκκίνηση."
 step1ApiKey = "Δημιουργήστε ένα API key από Λογαριασμός > API Keys (κάθε χρήστης χρησιμοποιεί το δικό του)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Στον MCP client σας προσθέστε έναν"
 step2b = "server που δείχνει στο:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Ο client ανακαλύπτει αυτόματα το OAuth από:"
 step3ApiKey = "Στείλτε το κλειδί σε μια"
 step3ApiKeyb = "κεφαλίδα (ή Authorization: Bearer <key>). Δεν χρησιμοποιείται OAuth ή ανακάλυψη metadata."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Εγκρίνετε τη σύνδεση· ο client δοκιμάζει ξανά με token. Τα εργαλεία εμφανίζονται ομαδοποιημένα: convert, pages, misc, security, ai."
 step4ApiKey = "Τα εργαλεία εμφανίζονται ομαδοποιημένα: convert, pages, misc, security, ai - και κάθε κλήση ελέγχεται ως ο κάτοχος του κλειδιού."
 tip = "Συμβουλή: καταχωρίστε το resource ID ως επιτρεπόμενο audience στο IdP σας. Δοκιμασμένο με MCP Inspector και Claude Desktop."
 tipApiKey = "Συμβουλή: η λειτουργία API-key δεν χρειάζεται εξωτερικό IdP - η απλούστερη για self-host. Το κλειδί αντιστοιχίζεται στον κάτοχο χρήστη Stirling."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Σύνδεση MCP client"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Αυτόματη ανακάλυψη από issuer"
 
 [admin.settings.mcp.mode]
 apikey = "Κλειδί API (κλειδί Stirling ανά χρήστη)"
+builtin = "Built-in OAuth 2.1"
 description = "Το OAuth χρειάζεται εξωτερικό IdP. Το API key χρησιμοποιεί ένα Stirling API key ανά χρήστη (X-API-KEY) - η απλούστερη επιλογή για self-host."
 label = "Λειτουργία ελέγχου ταυτότητας"
 oauth = "OAuth 2.1 (εξωτερικό IdP)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "Απαιτείται mcp.tools.read για λειτουργίες ανάγνωσης και mcp.tools.write για λειτουργίες εγγραφής/AI."
 label = "Επιβολή OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim που αντιστοιχίζεται με όνομα χρήστη Stirling (π.χ. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Θέλετε να βοηθήσετε να κάνουμε το Stirling 
 tags = "σχολιασμός,επισήμανση,σχεδίαση,markup,σχόλιο,σημειώσεις,ανασκόπηση,redline,ανατροφοδότηση,εργαλεία markup,sticky notes,σχήματα,βέλη,πλαίσιο κειμένου,ελεύθερο χέρι"
 
 [annotation]
-alignCenter = "Στοίχιση στο κέντρο"
-alignLeft = "Στοίχιση αριστερά"
-alignRight = "Στοίχιση δεξιά"
 annotationStyle = "Στυλ επισήμανσης"
 backgroundColor = "Χρώμα φόντου"
 borderOff = "Περίγραμμα: Ανενεργό"
@@ -2016,18 +2073,61 @@ underline = "Υπογράμμιση"
 undoDelete = "Αναίρεση"
 width = "Πλάτος"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Ένας δωρεάν, ιδιωτικός PDF editor που μπορείτε να εκτελέσετε σε οποιαδήποτε υποδομή."
 
 [appBanner]
 dismiss = "Απόρριψη"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Προσθήκη συνημμένων..."
 convertToPdfA3b = "Μετατροπή σε PDF/A-3b"
 convertToPdfA3bTooltip = "Το PDF/A-3b είναι αρχειακή μορφή που εξασφαλίζει μακροχρόνια διατήρηση. Επιτρέπει την ενσωμάτωση οποιωνδήποτε μορφών αρχείων ως συνημμένα. Η μετατροπή απαιτεί το Ghostscript και μπορεί να διαρκέσει περισσότερο για μεγάλα αρχεία."
-convertToPdfA3bTooltipHeader = "Σχετικά με τη μετατροπή σε PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Τι κάνει"
 discardChanges = "Απόρριψη"
 downloadSingle = "Λήψη συνημμένου"
 duplicateName = "Υπάρχει ήδη συνημμένο με όνομα '{{name}}'."
@@ -2208,7 +2308,6 @@ guest = "Επισκέπτης"
 user = "Χρήστης"
 
 [auto-rename]
-description = "Εντοπίζει αυτόματα τον τίτλο από το περιεχόμενο του PDF και τον χρησιμοποιεί ως όνομα αρχείου."
 submit = "Αυτόματη μετονομασία"
 tags = "αυτόματη-ανίχνευση,βάσει-κεφαλίδας,οργάνωση,επανετικέτα"
 title = "Αυτόματη μετονομασία"
@@ -2218,21 +2317,6 @@ failed = "Παρουσιάστηκε σφάλμα κατά την αυτόματ
 
 [auto-rename.results]
 title = "Αποτελέσματα αυτόματης μετονομασίας"
-
-[auto-rename.settings]
-title = "Σχετικά"
-
-[auto-rename.tooltip.description]
-title = "Τι κάνει"
-
-[auto-rename.tooltip.header]
-title = "Πώς λειτουργεί η αυτόματη μετονομασία"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Αναζητά κείμενο που φαίνεται να είναι τίτλος ή επικεφαλίδα"
-bullet2 = "Δημιουργεί καθαρό, έγκυρο όνομα αρχείου από τον εντοπισμένο τίτλο"
-bullet3 = "Διατηρεί το αρχικό όνομα αν δεν βρεθεί κατάλληλος τίτλος"
-title = "Έξυπνη μετονομασία"
 
 [autoFormDetection]
 loading = "Ανίχνευση πεδίων φόρμας..."
@@ -2327,6 +2411,9 @@ remove = "Κατάργηση εργαλείου"
 selected = "Επιλεγμένα εργαλεία"
 selectTool = "Επιλέξτε εργαλείο..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Άκυρο"
 confirm = "Επιστροφή"
@@ -2360,6 +2447,10 @@ title = "Εκτέλεση αυτοματοποίησης"
 [automate.selection]
 title = "Επιλογή αυτοματοποίησης"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Δημιουργία νέας αυτοματοποίησης"
 
@@ -2371,6 +2462,7 @@ title = "Προτεινόμενες"
 
 [automate.sequence]
 finish = "Τέλος"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Εκτέλεση αυτοματοποίησης"
 running = "Εκτελείται αυτοματοποίηση..."
 signInToRun = "Συνδεθείτε για να εκτελέσετε αυτοματισμούς."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Ροή Ασφαλείας"
 secureWorkflowDesc = "Ασφαλίζει έγγραφα PDF αφαιρώντας ενδεχομένως κακόβουλο περιεχόμενο όπως JavaScript και ενσωματωμένα αρχεία και στη συνέχεια προσθέτει προστασία με κωδικό για την αποτροπή μη εξουσιοδοτημένης πρόσβασης. Ο κωδικός ορίζεται σε 'password' από προεπιλογή."
 
 [autoRename]
-description = "Αυτό το εργαλείο θα μετονομάζει αυτόματα αρχεία PDF με βάση το περιεχόμενό τους. Αναλύει το έγγραφο για να βρει τον καταλληλότερο τίτλο από το κείμενο."
 tags = "αυτόματη ανίχνευση,βάσει κεφαλίδας,οργάνωση,επανασήμανση,αυτόματη μετονομασία,αυτόματη μετονομασία,έξυπνη μετονομασία,μετονομασία βάσει περιεχομένου,όνομα αρχείου,ονομασία αρχείων,ανίχνευση τίτλου"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,διαχωρισμός,έγγραφο,οργάνωση"
 [autoSplitPDF]
 dividerDownload2 = "Λήψη 'Αυτόματος διαχωριστής (με οδηγίες).pdf'"
 duplexMode = "Λειτουργία διπλής όψης (Σάρωση μπρος και πίσω)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-based,διαχωρισμός,σάρωση-τμήματος,οργάνωση"
 title = "Αυτόματος διαχωρισμός PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Προσθέτει περιγράμματα γύρω από κάθε 
 [bookletImposition.addGutter]
 label = "Προσθήκη εσωτερικού περιθωρίου"
 tooltip = "Προσθέτει εσωτερικό περιθώριο για το δέσιμο"
-
-[bookletImposition.advanced]
-toggle = "Σύνθετες επιλογές"
 
 [bookletImposition.doubleSided]
 label = "Εκτύπωση διπλής όψης"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Επιλέξτε αρχείο JKS"
 chooseP12File = "Επιλέξτε αρχείο PKCS12"
 choosePfxFile = "Επιλέξτε αρχείο PFX"
 choosePrivateKey = "Επιλέξτε αρχείο ιδιωτικού κλειδιού"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Απορρίφθηκε"
 fetchFailed = "Αποτυχία φόρτωσης δεδομένων υπογραφής"
 finalized = "Οριστικοποιήθηκε"
 location = "Τοποθεσία"
-logoTitle = "Λογότυπο"
-name = "Όνομα"
-noLogo = "Χωρίς λογότυπο"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Αριθμός σελίδας"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Κωδικός πρόσβασης πιστοποιητικού"
 passwordOptional = "Αφήστε κενό αν δεν υπάρχει κωδικός πρόσβασης"
 pemCertificateLabel = "Πιστοποιητικό (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Ιδιωτικό κλειδί (.pem / .key)"
 pending = "Σε εκκρεμότητα"
 readyToFinalize = "Έτοιμο για οριστικοποίηση"
 reason = "Αιτία"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Χρήση πιστοποιητικού διακομιστή - δεν απαιτούνται αρχεία ή κωδικός πρόσβασης"
-showLogo = "Εμφάνιση λογότυπου"
 signatureProgress = "{{signedCount}}/{{totalCount}} υπογραφές"
 tags = "έλεγχος ταυτότητας,PEM,P12,επίσημο,κρυπτογράφηση,υπογραφή,πιστοποιητικό,PKCS12,JKS,server,χειροκίνητο,αυτόματο"
 title = "Υπογραφή με πιστοποιητικό"
@@ -2738,12 +2828,45 @@ viewed = "Προβλήθηκε"
 
 [certSign.appearance]
 invisible = "Αόρατη"
+showOnPage = "Show signature on page"
 stepTitle = "Εμφάνιση υπογραφής"
 visibility = "Ορατότητα"
 visible = "Ορατή"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Λεπτομέρειες υπογραφής"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Σχετικά με την εμφάνιση υπογραφής"
@@ -2762,9 +2885,6 @@ bullet3 = "Επιλέξτε σε ποια σελίδα θα τοποθετηθε
 bullet4 = "Μπορεί να συμπεριληφθεί προαιρετικό λογότυπο"
 text = "Εμφανίζει ένα πλαίσιο υπογραφής στο PDF με το όνομά σας, την ημερομηνία και προαιρετικές λεπτομέρειες. Χρήσιμο όταν θέλετε οι αναγνώστες να βλέπουν ξεκάθαρα ότι το έγγραφο είναι υπογεγραμμένο."
 title = "Ορατές υπογραφές"
-
-[certSign.certFiles]
-stepTitle = "Αρχεία πιστοποιητικού"
 
 [certSign.certType.tooltip.convert]
 text = "Μετατρέψτε το αρχείο σας σε αποθήκη κλειδιών Java (.jks) με το keytool, και έπειτα επιλέξτε JKS."
@@ -2786,6 +2906,7 @@ text = "Επιλέξτε τη μορφή που ταιριάζει με το α�
 title = "Ποια επιλογή να χρησιμοποιήσω;"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Μορφή πιστοποιητικού"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Αυτή η συσκευή"
 [certSign.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την επεξεργασία υπογραφών."
 
-[certSign.format]
-pkcs11 = "USB Token"
-windowsStore = "Αποθήκη πιστοποιητικών των Windows"
-
 [certSign.hardware]
-certificate = "Πιστοποιητικό"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Προσαρμοσμένη διαδρομή προγράμματος οδήγησης…"
+digitalId = "Digital ID"
 driver = "Πρόγραμμα οδήγησης PKCS#11"
 driverPath = "Διαδρομή βιβλιοθήκης προγράμματος οδήγησης"
 driverPathPlaceholder = "Πλήρης διαδρομή του προγράμματος οδήγησης PKCS#11 σας (.dll, .so ή .dylib)"
-expired = "έληξε"
-expires = "λήγει"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Προβολή πιστοποιητικών"
-loading = "Ανάγνωση πιστοποιητικών…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Δεν βρέθηκαν πιστοποιητικά υπογραφής"
 noDriver = "Δεν εντοπίστηκε πρόγραμμα οδήγησης PKCS#11. Εγκαταστήστε το πρόγραμμα οδήγησης του token σας (π.χ. OpenSC), έπειτα ανοίξτε ξανά αυτό - ή εισαγάγετε χειροκίνητα παρακάτω τη διαδρομή του προγράμματος οδήγησης."
-notYetValid = "δεν είναι ακόμη έγκυρο"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN του token"
 pkcs11Hint = "Επιλέξτε το πρόγραμμα οδήγησης PKCS#11 του token σας, εισαγάγετε το PIN και έπειτα εμφανίστε τα πιστοποιητικά στο token."
 pkcs11LoadError = "Δεν ήταν δυνατή η ανάγνωση πιστοποιητικών από το token. Ελέγξτε το PIN και το πρόγραμμα οδήγησης."
-refresh = "Ανανέωση"
-selectCert = "Επιλογή πιστοποιητικού"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Επιλογή προγράμματος οδήγησης"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Υποδοχή (προαιρετικό)"
-windowsHint = "Επιλέξτε ένα πιστοποιητικό από την αποθήκη πιστοποιητικών των Windows. Η υπογραφή χρησιμοποιεί το κλειδί στην κάρτα/token σας - τα Windows θα ζητήσουν το PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Δεν ήταν δυνατή η ανάγνωση της αποθήκης πιστοποιητικών των Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Κανόνας εμπειρίας"
 device = "Αυτή η συσκευή"
 noOtherSources = "Δεν υπάρχουν άλλες διαθέσιμες πηγές πιστοποιητικών."
 server = "Διακομιστής"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Πηγή πιστοποιητικού"
 upload = "Μεταφόρτωση"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Ενημερώστε το όνομα χρήστη σας. Θα αποσυνδεθείτε μετά την ενημέρωση."
@@ -3069,7 +3205,6 @@ placeholder = "Δημιουργός εγγράφου"
 
 [changeMetadata.customFields]
 add = "Προσθήκη πεδίου"
-description = "Προσθέστε προσαρμοσμένα πεδία μεταδεδομένων στο έγγραφο"
 key = "Κλειδί"
 keyPlaceholder = "Προσαρμοσμένο κλειδί"
 remove = "Κατάργηση"
@@ -3135,10 +3270,6 @@ bullet1 = "Ημερομηνία δημιουργίας: Πότε δημιουρ�
 bullet2 = "Ημερομηνία τροποποίησης: Πότε άλλαξε τελευταία"
 text = "Πότε δημιουργήθηκε και τροποποιήθηκε το έγγραφο."
 title = "Πεδία ημερομηνίας"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Πλήρης διαγραφή μεταδεδομένων για διασφάλιση ιδιωτικότητας."
-title = "Κατάργηση υπαρχόντων μεταδεδομένων"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Τίτλος: Όνομα ή επικεφαλίδα εγγράφου"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Έχετε φτάσει το όριο χρήσης σας
 
 [checkAccessibility]
 aboutRow = "Σχετικά με το {{label}}"
-checking = "Γίνεται έλεγχος..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Λήψη αναφοράς προσβασιμότητας"
 fileFailed = "απέτυχε"
+noFiles = "Select a PDF to check it."
 pickFile = "Εμφάνιση αποτελεσμάτων για"
-submit = "Έλεγχος προσβασιμότητας"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Εναλλακτικό κείμενο"
@@ -3286,10 +3417,17 @@ structure = "Οι ετικέτες λένε στους αναγνώστες οθ
 [checkAccessibility.checks]
 label = "Πέρασαν {{passed}} από {{total}} ελέγχους"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Η αναφορά προσβασιμότητας δεν μπόρεσε να δημιουργηθεί. Δοκιμάστε ξανά."
 fileTitle = "Αυτό το αρχείο δεν μπόρεσε να ελεγχθεί"
 partial = "Ορισμένα αρχεία δεν μπόρεσαν να ελεγχθούν."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Δηλώνει PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Το αρχείο έχει τίτλο στα μεταδεδομένα �
 [checkAccessibility.figures]
 summary_one = "Απαιτείται περιγραφή για {{count}} εικόνα (σελίδα {{pages}})"
 summary_other = "Απαιτείται περιγραφή για {{count}} εικόνες (σελίδες {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Ισχύει για"
@@ -3465,19 +3618,7 @@ checking = "Έλεγχος {{current}} από {{total}}..."
 complete = "Ο έλεγχος ολοκληρώθηκε"
 
 [checkAccessibility.steps]
-results = "Αποτελέσματα"
 standard = "Πρότυπο"
-
-[checkAccessibility.tooltip.header]
-title = "Ποιο πρότυπο να ελεγχθεί"
-
-[checkAccessibility.tooltip.ua1]
-text = "Η πρώτη έκδοση του PDF/UA, δημοσιευμένη το 2012 ως ISO 14289-1, για αρχεία PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Η νεότερη έκδοση, δημοσιευμένη το 2024 ως ISO 14289-2, για αρχεία PDF 2.0. Ένα αρχείο PDF 1.7 που ελέγχεται βάσει αυτής αποτυγχάνει στους κανόνες που ισχύουν μόνο για το PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Σημείωση {{n}}"
@@ -3868,6 +4009,7 @@ title = "Επιλέξτε χρώμα"
 transparent = "Διαφανές"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Ενέργειες"
 back = "Πίσω"
 cancel = "Άκυρο"
@@ -4206,7 +4348,9 @@ title = "Ανανέωση κλειδιών API"
 warning = "⚠️ Προειδοποίηση: Αυτή η ενέργεια θα δημιουργήσει νέα κλειδιά API και θα καταστήσει τα προηγούμενα άκυρα."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Το Model Context Protocol (MCP) επιτρέπει σε AI assistants όπως το Claude να χρησιμοποιούν απευθείας τα εργαλεία Stirling PDF σας. Συνδέστε έναν client μία φορά και ο βοηθός σας μπορεί να μετατρέπει, να επεξεργάζεται, να ασφαλίζει και να επεξεργάζεται έγγραφα εκ μέρους σας."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Οι επισκέπτες χρήστες δεν μπορούν να συνδέσουν MCP clients. Δημιουργήστε λογαριασμό για να χρησιμοποιήσετε τον MCP server και να επιτρέψετε στον AI assistant σας να εκτελεί εργαλεία Stirling PDF εκ μέρους σας."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Αντιγραφή {{label}}"
 tooltipCopied = "Το {{label}} αντιγράφηκε"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Το MCP endpoint σας"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Προσθήκη σε"
 hint = "Επιλέξτε τον client σας, επικολλήστε το snippet στο αρχείο που εμφανίζεται και έπειτα επανεκκινήστε τον. Θα συνδεθείτε με τον λογαριασμό Stirling σας στην πρώτη χρήση - δεν χρειάζεται να αντιγράψετε κλειδιά."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Συνδέστε τον AI assistant σας"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Διατήρηση αναλογιών"
 maxAttachmentSize = "Μέγιστο μέγεθος συνημμένου (MB)"
 multiple = "Πολλαπλό"
 optimizeForEbook = "Βελτιστοποίηση PDF για συσκευές ανάγνωσης ebook (χρησιμοποιεί Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Έξοδος"
-outputFormat = "Μορφή εξόδου"
-pdfaAccessibleFormat = "{{format}} (προσβάσιμο)"
-pdfaDigitalSignatureWarning = "Το PDF περιέχει ψηφιακή υπογραφή. Αυτή θα αφαιρεθεί στο επόμενο βήμα."
-pdfaNote = "Το PDF/A-1b είναι πιο συμβατό, το PDF/A-2b υποστηρίζει περισσότερες δυνατότητες, το PDF/A-3b υποστηρίζει ενσωματωμένα αρχεία."
-pdfaOptions = "Επιλογές PDF/A"
 pdfOptions = "Επιλογές PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Ρυθμίσεις"
 signInToUse = "Συνδεθείτε για να χρησιμοποιήσετε"
 single = "Μονό"
 sourceFormatPlaceholder = "Μορφή προέλευσης"
-strictMode = "Αυστηρή λειτουργία"
-strictModeDesc = "Σφάλμα αν η μετατροπή δεν είναι τέλεια (χρησιμοποιεί επαλήθευση VeraPDF)"
 svgPdfOptions = "Επιλογές SVG σε PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Τα αρχεία SVG αποδίδονται ως διανυσματικά γραφικά για καθαρό αποτέλεσμα σε οποιαδήποτε ανάλυση. Οι διαστάσεις από το SVG καθορίζουν το μέγεθος σελίδας PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Επίπεδο ζουμ"
 
 [convert.ebookOptions]
 includePageNumbers = "Συμπερίληψη αριθμών σελίδων"
-includePageNumbersDesc = "Προσθέστε αριθμούς σελίδων στο παραγόμενο PDF"
 includeTableOfContents = "Συμπερίληψη πίνακα περιεχομένων"
-includeTableOfContentsDesc = "Προσθήκη δημιουργημένου πίνακα περιεχομένων στο τελικό PDF"
 optimizeForEbookPdf = "Βελτιστοποίηση για συσκευές ανάγνωσης eBook"
 optimizeForEbookPdfDesc = "Βελτιστοποιήστε το PDF για ανάγνωση eBook (μικρότερο μέγεθος, καλύτερη απόδοση σε συσκευές eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Εντοπισμός κεφαλαίων"
 detectChaptersDesc = "Εντοπίστε επικεφαλίδες που μοιάζουν με κεφάλαια και εισαγάγετε αλλαγές σελίδας EPUB"
 kindleEink = "Kindle e-Ink (βελτιστοποιημένο για κείμενο)"
 outputFormat = "Μορφή εξόδου"
-outputFormatDesc = "Επιλέξτε τη μορφή εξόδου για το eBook"
 tabletPhone = "Tablet/Τηλέφωνο (με εικόνες)"
 targetDevice = "Συσκευή προορισμού"
 targetDeviceDesc = "Επιλέξτε προφίλ εξόδου βελτιστοποιημένο για τη συσκευή ανάγνωσης"
@@ -4469,8 +4619,24 @@ description = "Αυτά τα cookies είναι απαραίτητα για τη
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Τίτλος εξωφύλλου"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "Κάθε επιλεγμένο αρχείο διατηρείται ολόκληρο μέσα στο νέο PDF, όποιος κι αν είναι ο τύπος του. Οι αναγνώστες που δεν υποστηρίζουν portfolio εμφανίζουν μια σελίδα εξωφύλλου με τα αρχεία συνημμένα."
 goToFileEditor = "Μετάβαση στον επεξεργαστή αρχείων"
@@ -4488,6 +4654,9 @@ title = "Τι κάνει"
 
 [createPortfolio.tooltip.header]
 title = "Σχετικά με τα PDF Portfolios"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Αυτόματη περικοπή κενού"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Η πρόσβαση στο πρόχειρο δεν εί�
 export = "Εξαγωγή σελιδοδεικτών"
 exportClipboard = "Αντιγραφή JSON στο πρόχειρο"
 exportJson = "Λήψη JSON"
+exportMenu = "Export"
 importClipboard = "Επικόλληση JSON από το πρόχειρο"
 importJson = "Εισαγωγή JSON"
+importMenu = "Import"
 loadFromPdf = "Φόρτωση από το επιλεγμένο PDF"
 noFile = "Επιλέξτε ένα PDF για εξαγωγή υπαρχόντων σελιδοδεικτών."
 selectedFile = "Φορτώθηκε από {{file}}"
-source = "Φόρτωση σελιδοδεικτών"
 
 [editTableOfContents.editor]
 addTopLevel = "Προσθήκη σελιδοδείκτη κορυφαίου επιπέδου"
@@ -4740,6 +4910,9 @@ replaceExisting = "Αντικατάσταση υπαρχόντων σελιδο�
 replaceExistingHint = "Όταν είναι απενεργοποιημένο, η νέα διάρθρωση προστίθεται μετά τους τρέχοντες σελιδοδείκτες."
 title = "Σελιδοδείκτες & διάρθρωση"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Αλλαγή PDF"
 filePrompt = "Επιλέξτε ένα PDF από τη βιβλιοθήκη σας ή ανεβάστε νέο για να ξεκινήσετε."
@@ -4753,7 +4926,6 @@ title = "Ανοίξτε το εργαλείο για να ξεκινήσετε �
 [encryptedPdfUnlock]
 actionIgnored = "Ο περιορισμός {{action}} αγνοήθηκε"
 actionUnlocked = "Το {{action}} ξεκλειδώθηκε για αυτήν την περίοδο λειτουργίας"
-advanced = "Σύνθετες επιλογές"
 allowed = "Επιτρέπεται"
 annotations = "Σχολιασμοί"
 authoriseAction = "Αυτό το PDF απαιτεί άδεια για τη χρήση του {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Περιορισμένο"
 restrictedActions = "περιορισμένες ενέργειες"
 restrictedOperation = "Αυτή η ενέργεια απαιτεί τον κωδικό πρόσβασης δικαιωμάτων."
 retainOwnerVerification = "Επαληθεύστε τον κωδικό πρόσβασης δικαιωμάτων για να τον διατηρήσετε αμετάβλητο κατά την αφαίρεση του κωδικού πρόσβασης ανοίγματος. Αυτό δεν θα τον αφαιρέσει."
-saveProtection = "Αποθήκευση προστασίας"
 securityChangeFailed = "Δεν είναι δυνατή η αλλαγή προστασίας. Ελέγξτε τον κωδικό πρόσβασης δικαιωμάτων και τις νέες ρυθμίσεις ασφαλείας."
 sessionDetails = "Ανοιχτό για αυτήν την περίοδο λειτουργίας. Το PDF παραμένει προστατευμένο."
 sessionDetailsLabel = "Σχετικά με το ξεκλείδωμα περιόδου λειτουργίας"
@@ -4871,7 +5042,6 @@ title = "Κάτι πήγε στραβά"
 tryAgain = "Δοκιμάστε ξανά"
 
 [extractImages]
-allowDuplicates = "Αποθήκευση διπλότυπων εικόνων"
 selectText = "Επιλέξτε μορφή εικόνας για μετατροπή των εξαγόμενων εικόνων"
 submit = "Εξαγωγή"
 tags = "εικόνα,φωτογραφία,αποθήκευση,αρχείο,zip,σύλληψη,λήψη"
@@ -4927,12 +5097,15 @@ closeFile = "Κλείσιμο αρχείου"
 
 [fileEditor]
 closedFile = "Έκλεισε το {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Το αρχείο αναδιατάχθηκε"
 filesReordered_other = "{{count}} αρχεία αναδιατάχθηκαν"
 loadedFromStorage_one = "Φορτώθηκε {{count}} αρχείο από τον χώρο αποθήκευσης"
 loadedFromStorage_other = "Φορτώθηκαν {{count}} αρχεία από τον χώρο αποθήκευσης"
 loadFromStorageFailed = "Αποτυχία φόρτωσης ορισμένων αρχείων από τον χώρο αποθήκευσης"
 pinnedFile = "Καρφιτσώθηκε το {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Αποθηκεύτηκε και έκλεισε το {{name}}"
 saveFailed = "Η αποθήκευση απέτυχε"
 unpinnedFile = "Ξεκαρφιτσώθηκε το {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Κλειδωμένο"
 previewOf = "Προεπισκόπηση του {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Προσθήκη αρχείων"
 created = "Δημιουργήθηκε"
 notIncludedInToolRun = "Δεν περιλαμβάνεται σε αυτήν την εκτέλεση εργαλείου"
 size = "Μέγεθος αρχείου"
 title = "Αρχεία"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Δεν υπάρχουν διαθέσιμα αρχεία"
@@ -5104,6 +5286,7 @@ subtitle = "Εμφάνιση ή απόκρυψη κατηγοριών στην �
 title = "Κατηγορίες πλαϊνής γραμμής"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Ακύρωση"
 error = "Δεν ήταν δυνατή η μετονομασία του αρχείου."
 illegalCharacters = "Ένα όνομα αρχείου δεν μπορεί να περιέχει \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Αφαίρεση πεδίου"
 
 [formFill.editor]
 action = "Ενέργεια κουμπιού"
-actionHelp = "Τι κάνει το κουμπί όταν πατηθεί."
 actionNone = "Καμία"
 actionPrint = "Εκτύπωση"
 actionReset = "Επαναφορά φόρμας"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Περιορίζει πόσοι χαρακτήρες χωρού
 multiline = "Πολλαπλών γραμμών"
 multilineHelp = "Επιτρέπει περισσότερες από μία γραμμές κειμένου και αναδίπλωση στην άκρη του πεδίου."
 multiSelect = "Να επιτρέπεται πολλαπλή επιλογή"
-multiSelectHelp = "Επιτρέπει την επιλογή περισσότερων από μία επιλογών ταυτόχρονα."
 name = "Όνομα πεδίου"
 nameHelp = "Το εσωτερικό όνομα του πεδίου. Χρησιμοποιείται κατά την εξαγωγή δεδομένων ή τη συμπλήρωση της φόρμας από άλλο σύστημα, οπότε κρατήστε το μοναδικό και χωρίς κενά."
 optionGap = "Απόσταση επιλογών"
@@ -5902,6 +6083,11 @@ title = "Προσαρμογή χρωμάτων/αντίθεσης"
 desc = "Επισημάνετε, σχεδιάστε, προσθέστε σημειώσεις και σχήματα στον προβολέα"
 tags = "σχολιασμός,επισήμανση,σχεδίαση,σήμανση,σχόλιο,σημειώσεις,έλεγχος,redline,ανατροφοδότηση,εργαλεία σήμανσης,αυτοκόλλητες σημειώσεις,σχήματα,βέλη,πλαίσιο κειμένου,ελεύθερο χέρι"
 title = "Σχολιασμός"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Αυτόματος εντοπισμός πεδίων φόρμας με AI και μετατροπή του PDF σας σε συμπληρώσιμο."
@@ -6405,6 +6591,9 @@ sort = "Ταξινόμηση"
 [merge.sortFiles]
 title = "Ταξινόμηση αρχείων"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Επισκόπηση ρυθμίσεων συγχώνευσης"
 
@@ -6548,6 +6737,9 @@ title = "Αποτυχία ελέγχου ταυτότητας"
 message = "Μπορείτε να κλείσετε αυτό το παράθυρο και να επιστρέψετε στο Stirling PDF."
 title = "Επιτυχής έλεγχος ταυτότητας"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Να επιτραπεί η πρόσβαση"
 approving = "Επιτρέπεται..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Επιστροφή στην εφαρμογή..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "Το {{app}} θέλει να αποκτήσει πρόσβαση στον λογαριασμό σας στο Stirling PDF"
 scopesIntro = "Αυτό θα επιτρέψει στο {{app}} να:"
 signedInAs = "Συνδεδεμένος ως {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Συνδεθείτε για να συνεχίσετε"
 signInPrompt = "Συνδεθείτε στον λογαριασμό σας στο Stirling PDF για να συνεχίσετε τη σύνδεση της εφαρμογής."
 title = "Authorise access"
 unknownApp = "Εφαρμογή τρίτου μέρους"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Ενεργεί ως εσείς - ό,τι κάνει το {{app}} εκτελείται με τον λογαριασμό σας και προσμετράται στη χρήση σας"
@@ -6572,9 +6767,12 @@ tools = "Χρησιμοποιεί τα εργαλεία Stirling PDF εκ μέρ
 
 [oauthConsent.scope]
 email = "Προβολή της διεύθυνσης email σας"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Επιβεβαίωση της ταυτότητάς σας"
 phone = "Προβολή του αριθμού τηλεφώνου σας"
 profile = "Προβολή των βασικών πληροφοριών προφίλ σας"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Καθαρισμός σαρώσεων και ανίχνευση κειμένου από εικόνες μέσα σε PDF και επαναπροσθήκη ως κείμενο."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Θα γίνετε μέλος ομάδας και θα χάσ�
 [pageEdit]
 deselectAll = "Κανένα"
 selectAll = "Επιλογή όλων"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Εξαγωγή σελίδων"
@@ -7577,6 +7779,8 @@ stamp = "Σχόλιο σφραγίδας - δεν είναι κείμενο σε
 widget = "Πεδίο φόρμας - δεν είναι κείμενο σελίδας, επομένως δεν μπορεί να επεξεργαστεί εδώ"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Επεξεργασία"
 markTagged = "Σήμανση ως πλήρως επισημασμένο"
 matchScanFont = "Ταίριασμα σαρωμένου κειμένου με {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Αυτόματη σήμανση σελίδας"
 typeInto = "Πληκτρολόγηση στο {{run}}"
 ungroupParagraph = "Κατάργηση ομαδοποίησης παραγράφου {{run}}"
 unmarkTagged = "Σήμανση ως μη πλήρως επισημασμένο"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Αναδίπλωση {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Απόρριψη μη αποθηκευμένων αλλαγών;"
 
 [pdfTextEditor.error]
 decodeImage = "Δεν ήταν δυνατή η αποκωδικοποίηση της επιλεγμένης εικόνας."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Δεν είναι δυνατή η δημιουργία αντιγράφου αυτού του κειμένου: καμία διαθέσιμη γραμματοσειρά δεν αποδίδει όλα τα γράμματά του."
 formLiftChangesDrawing = "Δεν είναι δυνατή η επεξεργασία: έχει σχεδιαστεί ως μέρος ομάδας της οποίας τις ρυθμίσεις αποκοπής ή γραφικών ο επεξεργαστής δεν μπορεί να διατηρήσει όταν τροποποιηθεί."
 insertImage = "Δεν ήταν δυνατή η εισαγωγή της επιλεγμένης εικόνας."
 needsShaping = "Ο επεξεργαστής δεν μπορεί ακόμη να αποδώσει σωστά τα ενωμένα γράμματα και τα σημάδια φωνηέντων αυτής της γραφής, επομένως η αλλαγή δεν έγινε."
+reopenLost = "Open again"
 replaceClippedImage = "Δεν είναι δυνατή η αντικατάσταση αυτής της εικόνας: είναι περικομμένη και η αντικατάσταση θα εμφάνιζε τα τμήματα που κρύβει η περικοπή."
 scanOffInk = "Δεν είναι δυνατή η επεξεργασία αυτού του κειμένου: οι αναγνωρισμένες λέξεις του δεν ευθυγραμμίζονται με τη σάρωση. Εκτελέστε ξανά OCR."
 unsafeRtlEdit = "Δεν είναι δυνατή αυτή η επεξεργασία: ο επεξεργαστής δεν μπορεί να ανασχεδιάσει το κείμενο αυτής της γραμμής δεξιά-προς-αριστερά χωρίς να το αλλάξει."
@@ -7616,6 +7823,7 @@ pngFileType = "Εικόνα PNG"
 close = "Κλείσιμο γραμμής εύρεσης"
 count = "{{current}} από {{total}}"
 findPlaceholder = "Εύρεση"
+hideReplace = "Hide replace"
 ignoreAccents = "Παράβλεψη τόνων"
 matchCase = "Ταίριασμα πεζών/κεφαλαίων"
 next = "Επόμενη αντιστοίχιση"
@@ -7625,6 +7833,7 @@ replace = "Αντικατάσταση"
 replaceAll = "Αντικατάσταση όλων"
 replaced = "Αντικαταστάθηκαν {{count}}"
 replacePlaceholder = "Αντικατάσταση με"
+showReplace = "Show replace"
 wholeWord = "Ολόκληρη λέξη"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Αυτός ο σύνδεσμος δεν μπορεί να ση�
 cannotTagPage = "Το περιεχόμενο αυτής της σελίδας δεν μπορεί να σημανθεί."
 contentGroup = "Περιεχόμενο"
 customTag = "{{role}} (προσαρμοσμένη ετικέτα)"
-decorativeInfo = "Οι αναγνώστες οθόνης παραλείπουν τις διακοσμητικές εικόνες. Χρησιμοποιήστε το για περιγράμματα, φόντα και άλλες εικόνες που δεν μεταφέρουν πληροφορίες."
-decorativeLabel = "Διακοσμητική εικόνα"
-description = "Περιγραφή εικόνας"
-descriptionInfo = "Οι αναγνώστες οθόνης διαβάζουν αυτό αντί για την εικόνα."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Δεν είναι δυνατή η επεξεργασία ετικετών σε κρυπτογραφημένο αρχείο"
 figureDescription = "Περιγραφή σχήματος"
 figureDescriptionInfo = "Οι αναγνώστες οθόνης το διαβάζουν αντί για το σχήμα."
-formFieldDescription = "Περιγραφή πεδίου"
 formulaDescription = "Περιγραφή τύπου"
 formulaDescriptionInfo = "Οι αναγνώστες οθόνης το διαβάζουν αντί για τον τύπο. Πείτε το όπως θα το λέγατε προφορικά, όπως \"x στο τετράγωνο συν ένα\"."
 heading = "Προσβασιμότητα"
@@ -7813,7 +8019,6 @@ markedTagged = "Το έγγραφο είναι πλήρως επισημασμέ
 markedTaggedHint = "Ενημερώνει τους αναγνώστες PDF να χρησιμοποιούν τις ετικέτες προσβασιμότητας. Τσεκάρετέ το όταν όλα έχουν σημανθεί."
 markedWithUntagged = "Κάποιο περιεχόμενο δεν έχει ετικέτες, οπότε οι αναγνώστες οθόνης μπορεί να το παραλείψουν."
 missingDescriptions = "Λείπουν περιγραφές"
-mixedContent = "Το σχήμα περιλαμβάνει άλλο περιεχόμενο"
 mixedTags = "Μικτό"
 needsDescriptionBadge = "Χωρίς περιγραφή"
 nextToReview = "Επόμενο προς έλεγχο"
@@ -7821,12 +8026,10 @@ notFigure = "Με ετικέτα ως μέρος του κειμένου"
 removeTag = "Αφαίρεση ετικέτας"
 saveFailed = "Δεν ήταν δυνατή η αποθήκευση των αλλαγών προσβασιμότητας, επομένως το αρχείο δεν αποθηκεύτηκε. Αναιρέστε τις και δοκιμάστε ξανά."
 selectedText = "Επιλεγμένο κείμενο"
-tagFormField = "Επισήμανση πεδίου φόρμας"
 tagging = "Σήμανση σελίδων"
 tagLabel = "Ετικέτα"
 tagLinks_one = "Σήμανση συνδέσμου"
 tagLinks_other = "Σήμανση {{count}} συνδέσμων"
-tagUntagged = "Αυτόματη σήμανση εγγράφου"
 tagUntaggedHint = "Προσθέτει αυτόματα ετικέτες προσβασιμότητας σε όλο το έγγραφο. Το αποτέλεσμα είναι πρόχειρο: ελέγξτε έπειτα τις επικεφαλίδες, τις λίστες και τη σειρά ανάγνωσης."
 unknownTag = "Δεν μπορεί να διαβαστεί εδώ"
 unmarkedWithTags = "Ορισμένοι προβολείς PDF θα χρησιμοποιήσουν ούτως ή άλλως τις ετικέτες και ίσως παραλείψουν περιεχόμενο που δεν τις έχει."
@@ -7851,7 +8054,7 @@ heading = "Επικεφαλίδες"
 mixedNumbering = "Αναμειγνύει αριθμημένες και μη αριθμημένες επικεφαλίδες"
 none = "Δεν υπάρχουν επικεφαλίδες"
 onPage = "Επικεφαλίδα στη σελίδα {{page}}"
-problems = "Προβλήματα επικεφαλίδων"
+problemCount = "{{count}} to fix"
 skippedLevel = "Παραλείπει ένα επίπεδο μετά την Επικεφαλίδα {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Τίτλος"
 allLanguages = "Όλες οι γλώσσες"
 cannotSetDocument = "Η γλώσσα αυτού του εγγράφου δεν μπορεί να αλλάξει."
 cannotSetText = "Η γλώσσα αυτού του κειμένου δεν μπορεί να αλλάξει."
-documentHint = "Η γλώσσα που θα χρησιμοποιούν οι αναγνώστες οθόνης εκτός αν μέρος του κειμένου ορίζει δική του."
 documentLabel = "Γλώσσα"
 documentLocked = "Η γλώσσα κρυπτογραφημένου εγγράφου δεν μπορεί να αλλάξει εδώ."
 inDocument = "Σε αυτό το έγγραφο"
 innerLabel = "Γλώσσα ετικέτας {{number}}"
 label = "Γλώσσα"
-missing = "Δεν έχει οριστεί γλώσσα. Οι αναγνώστες οθόνης θα μαντέψουν, και μπορεί να διαβάσουν όλο το έγγραφο με λάθος φωνή."
 mixed = "Μικτό"
 noMatch = "Καμία αντιστοιχία γλώσσας. Πληκτρολογήστε τον κωδικό της, όπως mt ή en-IE."
 placeholder = "Επιλέξτε γλώσσα"
@@ -7943,6 +8144,52 @@ renderFailed = "Αποτυχία απόδοσης σελίδας"
 [pdfTextEditor.password]
 incorrect = "Λανθασμένος κωδικός πρόσβασης - δοκιμάστε ξανά."
 label = "Κωδικός πρόσβασης"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Οδηγός ευθυγράμμισης στο {{value}} {{unit}} - σύρετε επάνω σε έναν χάρακα για αφαίρεση"
@@ -8124,6 +8371,10 @@ title = "Διαφορές προεπισκόπησης"
 [pdfTextEditor.tooltip.textFocus]
 text = "Ο χώρος εργασίας εστιάζει στην επεξεργασία κειμένου και την ανατοποθέτηση ενσωματωμένων εικόνων. Πολύπλοκα γραφικά σελίδας, στοιχεία φορμών και πολυεπίπεδα γραφικά διατηρούνται για εξαγωγή αλλά δεν είναι πλήρως επεξεργάσιμα εδώ."
 title = "Εστίαση σε κείμενο και εικόνα"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF σε CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Απόκρυψη κατηγορίας"
 labelCount = "ετικέτες"
 sharedNote = "Αυτές οι ετικέτες είναι ενσωματωμένες και κοινές σε όλη την ομάδα σας."
 showCategory = "Εμφάνιση κατηγορίας"
-
-[policies.pii]
-account = "Αριθμοί λογαριασμών (με ετικέτα)"
-card = "Πιστωτικές / χρεωστικές κάρτες"
-email = "Διευθύνσεις email"
-fieldLabel = "PII για απαλοιφή"
-iban = "IBAN"
-phone = "Αριθμοί τηλεφώνου"
-placeholder = "Επιλέξτε τύπους PII"
-routing = "Αριθμοί δρομολόγησης ΗΠΑ (ABA)"
-ssn = "Αριθμοί κοινωνικής ασφάλισης"
 
 [policy]
 badgeEnforcing = "{{name}} σε επιβολή..."
@@ -10317,6 +10557,10 @@ title = "Ροές εργασίας"
 [portal.pipelines.actions]
 newCustomPipeline = "Νέα προσαρμοσμένη ροή εργασίας"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Όλες οι ροές εργασίας"
 
@@ -12047,7 +12291,6 @@ label = "Εργαλεία ανάγνωσης"
 readAloud = "Ανάγνωση φωναχτά"
 rotateLeft = "Περιστροφή αριστερά"
 rotateRight = "Περιστροφή δεξιά"
-search = "Εύρεση στο έγγραφο"
 switchDocument = "Αλλαγή εγγράφου"
 thumbnails = "Σελίδες"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Χρώμα πλαισίου"
 convertPDFToImageLabel = "Μετατροπή PDF σε PDF-Image"
 customPaddingLabel = "Προσαρμοσμένο επιπλέον περιθώριο"
 useRegexLabel = "Χρήση Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Αναζήτηση ολόκληρης λέξης"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Ρυθμίσεις απόκρυψης"
 
 [redact.auto.wordsToRedact]
 add = "Προσθήκη"
-examples = "Παραδείγματα: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Εισαγάγετε μια λέξη"
 title = "Λέξεις προς απόκρυψη"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Επιλέξτε αρχεία στη διαχείρ�
 manual = "Χειροκίνητη"
 mode = "Λειτουργία"
 title = "Μέθοδος απόκρυψης"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Αντιστοιχίστε μόνο κείμενο με την ίδια χρήση πεζών-κεφαλαίων. Το 'Secret' δεν θα ταιριάζει με το 'SECRET' όταν είναι ενεργοποιημένο, και το [A-Z] σε regex ταιριάζει μόνο με κεφαλαία."
@@ -12147,19 +12401,6 @@ title = "Μέθοδος απόκρυψης"
 text = "Κάντε κλικ και σύρετε για να επιλέξετε χειροκίνητα συγκεκριμένες περιοχές προς απόκρυψη. Σας δίνει ακριβή έλεγχο στο τι αποκρύπτεται. (Σύντομα διαθέσιμο)"
 title = "Χειροκίνητη απόκρυψη"
 
-[redact.tooltip.words]
-bullet1 = "Προσθέστε μία λέξη τη φορά"
-bullet2 = "Πατήστε Enter ή κάντε κλικ στο 'Προσθήκη άλλης' για προσθήκη"
-bullet3 = "Κάντε κλικ στο × για να αφαιρέσετε λέξεις"
-
-[redact.tooltip.words.description]
-text = "Εισαγάγετε λέξεις ή φράσεις για αναζήτηση και απόκρυψη στο έγγραφό σας. Κάθε λέξη θα αναζητηθεί ξεχωριστά."
-title = "Ταίριασμα κειμένου"
-
-[redact.tooltip.words.examples]
-text = "Τυπικές λέξεις προς απόκρυψη περιλαμβάνουν: τραπεζικά στοιχεία, διευθύνσεις email ή συγκεκριμένα ονόματα."
-title = "Συνηθισμένα παραδείγματα"
-
 [redact.tooltip.words.header]
 title = "Λέξεις προς απόκρυψη"
 
@@ -12176,15 +12417,6 @@ failed = "Παρουσιάστηκε σφάλμα κατά την αφαίρεσ
 
 [removeAnnotations.info]
 description = "Αυτό το εργαλείο θα αφαιρέσει όλους τους σχολιασμούς (σχόλια, επισημάνσεις, σημειώσεις, κ.λπ.) από τα έγγραφα PDF σας."
-
-[removeAnnotations.settings]
-title = "Ρυθμίσεις"
-
-[removeAnnotations.tooltip.description]
-title = "Τι κάνει"
-
-[removeAnnotations.tooltip.header]
-title = "Σχετικά με το Remove Annotations"
 
 [removeBlanks]
 submit = "Αφαίρεση κενών σελίδων"
@@ -12325,6 +12557,9 @@ tags = "αναδιάταξη,αλλαγή σειράς,οργάνωση,αναδ
 [reorganizePages.error]
 failed = "Αποτυχία αναδιοργάνωσης σελίδων"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Οι σελίδες αναδιοργανώθηκαν"
 
@@ -12406,6 +12641,7 @@ title = "Αντιστροφή όλων των χρωμάτων"
 rotateLeft = "Περιστροφή αριστερόστροφα"
 rotateRight = "Περιστροφή δεξιόστροφα"
 selectRotation = "Επιλέξτε γωνία περιστροφής (δεξιόστροφα)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Εφαρμογή περιστροφής"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Περιστροφή PDF"
@@ -12516,8 +12752,7 @@ title = "Καθαρισμός"
 failed = "Παρουσιάστηκε σφάλμα κατά τον καθαρισμό του PDF."
 
 [sanitize.options]
-note = "Επιλέξτε τα στοιχεία που θέλετε να αφαιρέσετε από το PDF. Πρέπει να επιλεγεί τουλάχιστον μία επιλογή."
-title = "Επιλογές καθαρισμού"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Αφαίρεση τυχόν αρχείων ενσωματωμένων στο PDF"
@@ -12649,6 +12884,7 @@ title = "Αναζήτηση στο PDF"
 hideTools = "Απόκρυψη μη διαθέσιμων εργαλείων ▴"
 messageNoFallback = "Τα εργαλεία δεν θα είναι διαθέσιμα μέχρι να επανέλθει ο διακομιστής σας."
 messageWithFallback = "Ορισμένα εργαλεία απαιτούν σύνδεση με διακομιστή."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Προβολή μη διαθέσιμων εργαλείων ▾"
 title = "Ο διακομιστής σας Stirling-PDF δεν είναι προσβάσιμος"
 toolNotAvailableLocally = "Ο διακομιστής σας Stirling-PDF είναι εκτός σύνδεσης και το \"{{endpoint}}\" δεν είναι διαθέσιμο στο τοπικό backend."
@@ -13034,6 +13270,12 @@ title = "Συντομεύσεις πληκτρολογίου"
 mac = "Συμπεριλάβετε το ⌘ (Command), ⌥ (Option), ή άλλο τροποποιητή στη συντόμευσή σας."
 windows = "Συμπεριλάβετε το Ctrl, Alt, ή άλλο τροποποιητή στη συντόμευσή σας."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Όροι, πολιτική απορρήτου και οι προτιμήσεις cookie σας."
 label = "Νομικά"
@@ -13418,9 +13660,7 @@ image = "Ανέβασμα"
 text = "Κείμενο"
 
 [sign.step]
-createDesc = "Επιλέξτε πώς θέλετε να δημιουργήσετε την υπογραφή"
 place = "Τοποθέτηση & αποθήκευση"
-placeDesc = "Τοποθετήστε την υπογραφή στο PDF σας"
 
 [sign.steps]
 configure = "Διαμόρφωση υπογραφής"
@@ -13597,6 +13837,10 @@ rotateLeft = "Περιστροφή αριστερά"
 rotateRight = "Περιστροφή δεξιά"
 trim = "Περικοπή στην υπογραφή"
 trimHint = "Περικόπτει τον κενό χώρο γύρω της"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Ρυθμίσεις εμφάνισης υπογραφής"
@@ -13959,7 +14203,6 @@ placeholder = "Εισάγετε αριθμό οριζόντιων διαιρέσ
 
 [split-by-sections.splitMode]
 custom = "Προσαρμοσμένες σελίδες"
-description = "Επιλέξτε πώς να διαχωρίσετε τις σελίδες"
 label = "Λειτουργία διαχωρισμού"
 splitAll = "Διαχωρισμός όλων των σελίδων"
 splitAllExceptFirst = "Διαχωρισμός όλων εκτός της πρώτης"
@@ -14210,10 +14453,8 @@ failed = "Παρουσιάστηκε σφάλμα κατά τη χρονική �
 
 [timestampPdf.options]
 note = "Μόνο ένα αποτύπωμα SHA-256 του εγγράφου σας αποστέλλεται στον διακομιστή TSA· το ίδιο το αρχείο PDF δεν αποστέλλεται ποτέ στον διακομιστή TSA."
-title = "Διακομιστής χρονικής σήμανσης (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Επιλέξτε μια αξιόπιστη Αρχή Χρονικής Σήμανσης"
 label = "Επιλέξτε διακομιστή TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Δεν υπάρχουν διαθέσιμα εργαλεία"
 
 [tooltip]
 close = "Κλείσιμο συμβουλής"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Αυτό το εργαλείο θα αφαιρέσει τους περιορισμούς μόνο για ανάγνωση από τα πεδία φόρμας του PDF, καθιστώντας τα επεξεργάσιμα και συμπληρώσιμα."
@@ -14706,6 +14961,9 @@ signatureDate = "Ημερομηνία υπογραφής"
 
 [validateSignature.settings]
 certHint = "Μεταφορτώστε ένα αξιόπιστο πιστοποιητικό X.509 για επικύρωση έναντι προσαρμοσμένης πηγής εμπιστοσύνης."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Ρυθμίσεις επικύρωσης"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Δεν είναι δυνατή η προεπισκόπησ�
 copyRestricted = "Η αντιγραφή είναι απενεργοποιημένη από τα δικαιώματα αυτού του PDF."
 copyText = "Αντιγραφή"
 coverPageView = "Εμφάνιση εξωφύλλου ξεχωριστά"
-disableColorFilter = "Απενεργοποίηση φίλτρου χρώματος"
 documentUpdated = "Το έγγραφο ενημερώθηκε"
 dualPageView = "Προβολή διπλής σελίδας"
 editText = "Επεξεργασία κειμένου"
-enableDarkFilter = "Ενεργοποίηση σκοτεινού φίλτρου"
-enableSepiaFilter = "Ενεργοποίηση φίλτρου σέπια"
 engineLoadError = "Αποτυχία αρχικοποίησης της μηχανής προβολής PDF"
 engineSlowWarning = "Η αρχικοποίηση της μηχανής PDF διαρκεί περισσότερο από το αναμενόμενο. Ελέγξτε τις ρυθμίσεις WebAssembly και Worker του προγράμματος περιήγησής σας ή επαναφορτώστε τη σελίδα."
 firstPage = "Πρώτη σελίδα"
@@ -14736,20 +14991,27 @@ fitPage = "Προσαρμογή στη σελίδα"
 fitWidth = "Προσαρμογή στο πλάτος"
 lastPage = "Τελευταία σελίδα"
 loadingEngine = "Φόρτωση μηχανής PDF..."
+menuSelected = "Selected"
 moreOptions = "Περισσότερα"
 nextPage = "Επόμενη σελίδα"
 noPdfProvided = "Δεν δόθηκε PDF"
 onlyPdfSupported = "Αυτή η μορφή αρχείου δεν υποστηρίζεται για προεπισκόπηση."
 pageNavigation = "Πλοήγηση σελίδων"
+pageNumber = "Page number"
 previousPage = "Προηγούμενη σελίδα"
 readAloudFromHere = "Ανάγνωση δυνατά από εδώ"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Δεν ήταν δυνατή η αποθήκευση του εγγράφου. Δοκιμάστε ξανά."
 saveChangesErrorTitle = "Δεν ήταν δυνατή η αποθήκευση των αλλαγών"
 singlePageView = "Προβολή μίας σελίδας"
+tools = "Tools"
 unknownFile = "Άγνωστο αρχείο"
-view = "Προβολή"
 zoom = "Ζουμ"
 zoomIn = "Μεγέθυνση"
+zoomLevel = "Zoom level"
 zoomOut = "Σμίκρυνση"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Προεπισκόπηση υπογραφής"
 
 [viewer.signatureField]
 badge = "Υπογραφή"
+clickToSign = "Click to sign here"
 fieldTitle = "Πεδίο υπογραφής: {{name}}"
 signed = "Υπογράφηκε"
 signedWithReason = "Υπογράφηκε: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Μη υπογεγραμμένο πεδίο υπογραφής: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Επαναφέρθηκαν {{restored}} από {{total}} αρχεία
 
 [workbenchBar]
 activeFiles = "Ενεργά αρχεία"
-annotations = "Σχολιασμοί"
+annotate = "Annotate"
 applyRedactionsFirst = "Εφαρμόστε πρώτα τις αποκρύψεις"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Κλείσιμο όλων των αρχείων"
 closePdf = "Κλείσιμο PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Αναίρεση επιλογής όλων"
 downloadAll = "Λήψη όλων"
 editText = "Επεξεργασία κειμένου"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Έξοδος από τη λειτουργία σχολιασ�
 exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
 findReplace = "Εύρεση & αντικατάσταση"
 formFill = "Επεξεργαστής φορμών"
-hideToolbar = "Απόκρυψη toolbar"
+layers = "Layers"
 moreActions = "Περισσότερες ενέργειες"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Επεξεργαστής σελίδων"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Λειτουργία μετακίνησης"
 print = "Εκτύπωση PDF"
 readAloud = "Ανάγνωση δυνατά"
 readAloudLanguage = "Γλώσσα"
 readAloudSpeed = "Ταχύτητα"
 redact = "Απόκρυψη"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Περιστροφή αριστερά"
 rotateRight = "Περιστροφή δεξιά"
 ruler = "Χάρακας / Μέτρηση"
+rulerScaleUnset = "Not set"
 rulerSettings = "Ρυθμίσεις κλίμακας"
 save = "Αποθήκευση"
 saveAll = "Αποθήκευση όλων"
@@ -15123,14 +15398,23 @@ selectLanguage = "Επιλέξτε γλώσσα"
 share = "Κοινή χρήση"
 showAllTools = "Εμφάνιση όλων των εργαλείων"
 showFewerTools = "Σύμπτυξη γραμμής εργαλείων"
-showToolbar = "Εμφάνιση toolbar"
+thumbnails = "Pages"
 toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
-toggleAttachments = "Εναλλαγή συνημμένων"
-toggleBookmarks = "Σελιδοδείκτες (Πίνακας περιεχομένων)"
 toggleComments = "Σχόλια"
-toggleLayers = "Εναλλαγή επιπέδων"
-toggleSidebar = "Εναλλαγή πλευρικής στήλης"
 viewer = "Προβολή"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Η πρόσβασή σας σε αυτό το έγγραφο έχει λήξει."

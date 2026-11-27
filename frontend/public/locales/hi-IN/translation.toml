@@ -12,9 +12,11 @@ comingSoon = "जल्द आ रहा है"
 confirm = "पुष्टि करें"
 confirmClose = "बंद करने की पुष्टि करें"
 confirmCloseCancel = "रद्द करें"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "फ़ाइल बंद करें"
 confirmCloseDiscard = "परिवर्तन त्यागें और बंद करें"
 confirmCloseMessage = "क्या आप वाकई इस फ़ाइल को बंद करना चाहते हैं?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "सहेजें और बंद करें"
 confirmCloseSaveFailed_one = "त्रुटियों के साथ सहेजा गया। {{count}} फ़ाइल सहेजी नहीं जा सकीं।"
 confirmCloseSaveFailed_other = "त्रुटियों के साथ सहेजा गया। {{count}} फाइलें सहेजी नहीं जा सकीं।"
@@ -44,7 +46,6 @@ fileSavedToDisk = "फ़ाइल डिस्क पर सहेजी गई
 filesSelected = "{{count}} फ़ाइलें"
 font = "फ़ॉन्ट"
 fontSizeTooltip = "पॉइंट्स में पृष्ठ संख्या के टेक्स्ट का आकार। बड़ी संख्या बड़ा टेक्स्ट बनाती है।"
-fontTypeTooltip = "पृष्ठ संख्याओं के लिए फ़ॉन्ट परिवार। अपने दस्तावेज़ शैली के आधार पर चुनें।"
 green = "हरा"
 help = "सहायता"
 incorrectPasswordMessage = "वर्तमान पासवर्ड गलत है।"
@@ -249,9 +250,7 @@ image = "अपलोड"
 text = "टेक्स्ट"
 
 [addImage.step]
-createDesc = "वह इमेज अपलोड करें जिसे आप जोड़ना चाहते हैं"
 place = "इमेज रखें"
-placeDesc = "अपनी इमेज जोड़ने के लिए PDF पर कहीं भी क्लिक करें"
 
 [addImage.steps]
 configure = "इमेज कॉन्फ़िगर करें"
@@ -276,7 +275,7 @@ fontName = "फ़ॉन्ट नाम"
 fontSize = "फ़ॉन्ट आकार"
 numberPagesDesc = "उदा., 1,3,5-8 या सभी पृष्ठों के लिए खाली छोड़ें"
 pagePreviewAlt = "पृष्ठ पूर्वावलोकन"
-pagesAndStarting = "पृष्ठ और आरंभिक संख्या"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "स्थिति और पृष्ठ"
 preview = "स्थिति चयन"
 previewDisclaimer = "पूर्वावलोकन अनुमानित है। अंतिम आउटपुट PDF फ़ॉन्ट मेट्रिक्स के कारण भिन्न हो सकता है।"
@@ -300,6 +299,7 @@ title = "पृष्ठ क्रमांक परिणाम"
 
 [addPassword]
 desc = "अपने PDF दस्तावेज़ को पासवर्ड से एन्क्रिप्ट करें।"
+submit = "Add Password"
 tags = "एन्क्रिप्ट,पासवर्ड,लॉक,सुरक्षित,सुरक्षा,एन्क्रिप्शन,सुरक्षित रखना,गोपनीय,निजी,एक्सेस सीमित करें"
 title = "पासवर्ड जोड़ें"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "स्टैम्प पूर्वावलोकन"
 tags = "स्टैम्प,चिह्न,सील,स्वीकृत,अस्वीकृत,गोपनीय,स्टैम्प टूल,रबर स्टैम्प,तारीख स्टैम्प,अनुमोदन स्टैम्प,प्राप्त,अमान्य,कॉपी,मूल"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "वर्णमाला"
-clickToExpand = "विस्तार करने के लिए क्लिक करें"
 customColor = "कस्टम टेक्स्ट रंग"
 customDateDesc = "कस्टम फॉर्मेट"
 customPosition = "पूर्वावलोकन विंडो में मुहर को इच्छित स्थान पर खींचें।"
 dateDesc = "वर्तमान तारीख"
 datetimeDesc = "तारीख और समय संयुक्त"
 dateTimeVars = "तारीख और समय"
-dynamicVariables = "डायनामिक Variables"
 examples = "उदाहरण"
 filenameDesc = "एक्सटेंशन के बिना फाइलनाम"
 filenameFullDesc = "एक्सटेंशन के साथ फाइलनाम"
@@ -365,6 +364,8 @@ noStampSelected = "कोई मुहर चयनित नहीं। चर
 opacity = "अपारदर्शिता"
 otherVars = "अन्य"
 pageNumberDesc = "वर्तमान पृष्ठ संख्या"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "पृष्ठ जानकारी"
 position = "स्थिति"
 positionAndFormatting = "स्थिति और फ़ॉर्मैटिंग"
@@ -378,9 +379,10 @@ quickPosition = "मुहर रखने के लिए पृष्ठ प�
 rotation = "घुमाव"
 selectedImageAlt = "चयनित स्टैम्प छवि"
 selectTemplate = "एक टेम्पलेट चुनें..."
+size = "Size"
 stampSetup = "मुहर सेटअप"
 stampText = "स्टैम्प टेक्स्ट"
-stampTextDescription = "नीचे दिए गए डायनामिक variables का उपयोग करें। literal @ के लिए @@ का उपयोग करें। नई पंक्तियों के लिए \\n का उपयोग करें।"
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "स्टैम्प प्रकार"
 submit = "Stamp जोड़ें"
 tags = "स्टैम्प, छवि जोड़ें, केंद्र छवि, वॉटरमार्क, PDF, एम्बेड, अनुकूलित"
@@ -389,7 +391,6 @@ title = "PDF स्टैम्प करें"
 totalPagesDesc = "कुल पृष्ठों की संख्या"
 useTemplate = "टेम्पलेट उपयोग करें"
 uuidDesc = "छोटा विशिष्ट पहचानकर्ता (8 अक्षर)"
-variablesHelp = "किसी भी variable को अपने stamp टेक्स्ट में डालने के लिए उस पर क्लिक करें। literal @ के लिए @@ का उपयोग करें।"
 yearMonthDayDesc = "अलग-अलग तारीख भाग"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "PDF में मुहर जोड़ते समय त्रु�
 
 [AddStampRequest.results]
 title = "मुहर के परिणाम"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "कस्टम"
@@ -410,6 +417,11 @@ legal-footer = "कानूनी Footer"
 page-numbers = "पृष्ठ संख्याएँ"
 pageNumberFooter = "पृष्ठ संख्या Footer"
 timestamp = "टाइमस्टैम्प"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "टेक्स्ट लागू करें"
@@ -462,9 +474,7 @@ image = "अपलोड"
 text = "टेक्स्ट"
 
 [addText.step]
-createDesc = "जो टेक्स्ट आप जोड़ना चाहते हैं, दर्ज करें"
 place = "टेक्स्ट रखें"
-placeDesc = "अपना टेक्स्ट जोड़ने के लिए PDF पर क्लिक करें"
 
 [addText.steps]
 configure = "टेक्स्ट कॉन्फ़िगर करें"
@@ -1233,6 +1243,18 @@ label = "स्टार्टअप पर पुनः जेनरेट क�
 description = "सर्टिफ़िकेट वैध रहने के दिनों की संख्या"
 label = "सर्टिफ़िकेट वैधता (दिन)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "वे directories जिनसे folder sources और folder outputs को पढ़ने और लिखने की अनुमति है। यह एक security boundary है: automations को इस list के बाहर किसी server path पर कभी point नहीं किया जा सकता।"
 securityNote = "folder sources और outputs को पूरी तरह अक्षम करने के लिए इसे खाली छोड़ें। Stirling की अपनी configuration directory हमेशा प्रतिबंधित रहती है।"
@@ -1456,7 +1478,9 @@ label = "SMTP उपयोगकर्ता नाम"
 
 [admin.settings.mcp]
 apikeyNote = "Clients X-API-KEY header (या Authorization: Bearer <key>) में Stirling API key भेजते हैं। key अपने मालिक Stirling user से map होती है - केवल provisioned accounts को access मिलता है, और actions उसी user के रूप में audit किए जाते हैं। Account > API Keys के अंतर्गत keys प्रबंधित करें।"
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Stirling के PDF tools और AI agents को OAuth-protected endpoint पर MCP clients के लिए उपलब्ध कराएँ।"
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "अनुमत tools"
 description = "MCP से छिपाने के लिए operation ids (comma या space separated), उदा. add-password remove-password। सभी enabled tools expose करने के लिए खाली छोड़ें।"
 label = "अवरुद्ध टूल्स"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "जब बंद हो (default), कोई /mcp endpoint, metadata, या MCP beans load नहीं होते।"
 label = "MCP Server सक्षम करें"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "अपना OAuth issuer + resource ID ऊपर दर्ज करें, Save करें, और restart करें।"
 step1ApiKey = "Account > API Keys के अंतर्गत API key बनाएँ (हर user अपनी key उपयोग करता है)।"
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "अपने MCP client में एक जोड़ें"
 step2b = "server जो इस पर point करता हो:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Client OAuth को यहाँ से auto-discover करता है:"
 step3ApiKey = "key को एक में भेजें"
 step3ApiKeyb = "header (या Authorization: Bearer <key>)। कोई OAuth या metadata discovery उपयोग नहीं होती।"
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "sign-in approve करें; client token के साथ retry करता है। Tools grouped दिखाई देते हैं: convert, pages, misc, security, ai।"
 step4ApiKey = "Tools grouped दिखाई देते हैं: convert, pages, misc, security, ai - और हर call key के owner के रूप में audit होती है।"
 tip = "Tip: resource ID को अपने IdP में allowed audience के रूप में register करें। MCP Inspector और Claude Desktop के साथ tested।"
 tipApiKey = "Tip: API-key mode को external IdP की जरूरत नहीं - self-host के लिए सबसे सरल। key अपने मालिक Stirling user से map होती है।"
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "MCP client कनेक्ट करें"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "issuer से auto-discovered"
 
 [admin.settings.mcp.mode]
 apikey = "API कुंजी (Stirling प्रति-उपयोगकर्ता कुंजी)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth को external IdP चाहिए। API key प्रति-user Stirling API key (X-API-KEY) उपयोग करती है - self-host के लिए सबसे सरल।"
 label = "प्रमाणीकरण मोड"
 oauth = "OAuth 2.1 (बाहरी IdP)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "read ops के लिए mcp.tools.read और write/AI ops के लिए mcp.tools.write आवश्यक करें।"
 label = "OAuth scopes लागू करें"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim जो Stirling username से match किया जाता है (उदा. sub, email, preferred_username)।"
@@ -1943,9 +2003,6 @@ title = "क्या आप Stirling PDF को बेहतर बनाने
 tags = "एनोटेट,हाइलाइट,ड्रॉ,मार्कअप,टिप्पणी,नोट्स,समीक्षा,रेडलाइन,फ़ीडबैक,मार्कअप टूल्स,स्टिकी नोट्स,आकृतियाँ,तीर,टेक्स्ट बॉक्स,फ्रीहैंड"
 
 [annotation]
-alignCenter = "बीच में संरेखित करें"
-alignLeft = "बाएँ संरेखित करें"
-alignRight = "दाएँ संरेखित करें"
 annotationStyle = "एनोटेशन शैली"
 backgroundColor = "पृष्ठभूमि रंग"
 borderOff = "बॉर्डर: बंद"
@@ -2016,18 +2073,61 @@ underline = "रेखांकित"
 undoDelete = "पूर्ववत करें"
 width = "चौड़ाई"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "एक मुफ्त, निजी PDF editor जिसे आप किसी भी infrastructure पर चला सकते हैं।"
 
 [appBanner]
 dismiss = "खारिज करें"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "अटैचमेंट जोड़ें..."
 convertToPdfA3b = "PDF/A-3b में बदलें"
 convertToPdfA3bTooltip = "PDF/A-3b एक आर्काइवल फ़ॉर्मेट है जो दीर्घकालिक संरक्षण सुनिश्चित करता है। यह मनमाने फ़ाइल फ़ॉर्मेट्स को अटैचमेंट के रूप में एम्बेड करने की अनुमति देता है। कन्वर्ज़न के लिए Ghostscript आवश्यक है और बड़े फ़ाइलों में अधिक समय लग सकता है।"
-convertToPdfA3bTooltipHeader = "PDF/A-3b कन्वर्ज़न के बारे में"
-convertToPdfA3bTooltipTitle = "यह क्या करता है"
 discardChanges = "त्यागें"
 downloadSingle = "अटैचमेंट डाउनलोड करें"
 duplicateName = "{{name}} नाम का अटैचमेंट पहले से मौजूद है।"
@@ -2208,7 +2308,6 @@ guest = "अतिथि"
 user = "उपयोगकर्ता"
 
 [auto-rename]
-description = "आपके PDF सामग्री से स्वतः शीर्षक ढूँढता है और उसे फ़ाइलनाम के रूप में उपयोग करता है।"
 submit = "स्वतः नाम बदलें"
 tags = "स्वतः-पहचान,हेडर-आधारित,व्यवस्थित,पुनर्नामांकन"
 title = "स्वतः नाम बदलें"
@@ -2218,21 +2317,6 @@ failed = "PDF का स्वतः नाम बदलते समय त्�
 
 [auto-rename.results]
 title = "स्वतः नामकरण के परिणाम"
-
-[auto-rename.settings]
-title = "के बारे में"
-
-[auto-rename.tooltip.description]
-title = "यह क्या करता है"
-
-[auto-rename.tooltip.header]
-title = "स्वतः नामकरण कैसे काम करता है"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "ऐसा पाठ ढूँढता है जो शीर्षक या हेडिंग जैसा लगता है"
-bullet2 = "पता चले शीर्षक से एक साफ़, वैध फ़ाइलनाम बनाता है"
-bullet3 = "यदि उपयुक्त शीर्षक न मिले तो मूल नाम रखता है"
-title = "स्मार्ट नामकरण"
 
 [autoFormDetection]
 loading = "फ़ॉर्म फ़ील्ड का पता लगाया जा रहा है..."
@@ -2327,6 +2411,9 @@ remove = "टूल हटाएँ"
 selected = "चयनित टूल्स"
 selectTool = "एक टूल चुनें..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "रद्द करें"
 confirm = "वापस जाएँ"
@@ -2360,6 +2447,10 @@ title = "स्वचालन चलाएँ"
 [automate.selection]
 title = "स्वचालन चयन"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "नया स्वचालन बनाएँ"
 
@@ -2371,6 +2462,7 @@ title = "सुझावित"
 
 [automate.sequence]
 finish = "समाप्त करें"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "स्वचालन चलाएँ"
 running = "स्वचालन चल रहा है..."
 signInToRun = "ऑटोमेशन चलाने के लिए साइन इन करें।"
@@ -2391,7 +2483,6 @@ secureWorkflow = "सुरक्षा वर्कफ़्लो"
 secureWorkflowDesc = "JavaScript और एम्बेडेड फ़ाइलों जैसे संभावित हानिकारक कंटेंट को हटाकर PDF दस्तावेज़ों को सुरक्षित करता है, फिर अनधिकृत एक्सेस रोकने के लिए पासवर्ड सुरक्षा जोड़ता है। डिफ़ॉल्ट रूप से पासवर्ड 'password' सेट है।"
 
 [autoRename]
-description = "यह टूल सामग्री के आधार पर PDF फ़ाइलों का नाम स्वतः बदल देगा। यह दस्तावेज़ का विश्लेषण कर पाठ से सबसे उपयुक्त शीर्षक खोजता है।"
 tags = "ऑटो-डिटेक्ट,हेडर-आधारित,व्यवस्थित करें,फिर से लेबल करें,ऑटो रीनेम,स्वचालित नाम बदलना,स्मार्ट रीनेम,सामग्री के आधार पर नाम बदलें,फ़ाइलनाम,फ़ाइल नामकरण,शीर्षक पहचानें"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,विभाजन,दस्तावेज़,व्यवस्थ
 [autoSplitPDF]
 dividerDownload2 = "'स्वतः विभाजक (निर्देशों के साथ).pdf' डाउनलोड करें"
 duplexMode = "डुप्लेक्स मोड (सामने और पीछे स्कैनिंग)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-आधारित,अलग करें,स्कैन-खंड,व्यवस्थित करें"
 title = "स्वतः PDF विभाजित करें"
 
@@ -2528,9 +2620,6 @@ tooltip = "कटिंग और संरेखण में मदद हे�
 [bookletImposition.addGutter]
 label = "गटर मार्जिन जोड़ें"
 tooltip = "बाइंडिंग के लिए अंदरूनी मार्जिन स्थान जोड़ता है"
-
-[bookletImposition.advanced]
-toggle = "उन्नत विकल्प"
 
 [bookletImposition.doubleSided]
 label = "दो-पक्षीय प्रिंटिंग"
@@ -2714,14 +2803,15 @@ chooseJksFile = "JKS फ़ाइल चुनें"
 chooseP12File = "PKCS12 फ़ाइल चुनें"
 choosePfxFile = "PFX फ़ाइल चुनें"
 choosePrivateKey = "प्राइवेट की फ़ाइल चुनें"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "अस्वीकृत"
 fetchFailed = "हस्ताक्षर डेटा लोड करने में विफल"
 finalized = "अंतिम रूप दिया गया"
 location = "स्थान"
-logoTitle = "लोगो"
-name = "नाम"
-noLogo = "कोई लोगो नहीं"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "पृष्ठ संख्या"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "प्रमाणपत्र पासवर्ड"
 passwordOptional = "पासवर्ड न हो तो खाली छोड़ें"
 pemCertificateLabel = "प्रमाणपत्र (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "निजी कुंजी (.pem / .key)"
 pending = "लंबित"
 readyToFinalize = "अंतिम रूप देने के लिए तैयार"
 reason = "कारण"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "सर्वर प्रमाणपत्र का उपयोग हो रहा है - कोई फ़ाइल या पासवर्ड आवश्यक नहीं"
-showLogo = "लोगो दिखाएं"
 signatureProgress = "{{signedCount}}/{{totalCount}} हस्ताक्षर"
 tags = "प्रमाणित करें,PEM,P12,आधिकारिक,एन्क्रिप्ट,हस्ताक्षर,प्रमाणपत्र,PKCS12,JKS,सर्वर,मैनुअल,ऑटो"
 title = "प्रमाणपत्र हस्ताक्षर"
@@ -2738,12 +2828,45 @@ viewed = "देखा गया"
 
 [certSign.appearance]
 invisible = "अदृश्य"
+showOnPage = "Show signature on page"
 stepTitle = "हस्ताक्षर का रूप"
 visibility = "दृश्यता"
 visible = "दृश्यमान"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "हस्ताक्षर विवरण"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "हस्ताक्षर की दिखावट के बारे में"
@@ -2762,9 +2885,6 @@ bullet3 = "किस पृष्ठ पर हस्ताक्षर रख�
 bullet4 = "वैकल्पिक लोगो शामिल किया जा सकता है"
 text = "PDF पर एक हस्ताक्षर ब्लॉक दिखाता है जिसमें आपका नाम, तिथि, और वैकल्पिक विवरण होते हैं। उपयोगी जब आप चाहते हैं कि पाठक स्पष्ट रूप से देखें कि दस्तावेज़ साइन किया गया है।"
 title = "दृश्यमान हस्ताक्षर"
-
-[certSign.certFiles]
-stepTitle = "प्रमाणपत्र फ़ाइलें"
 
 [certSign.certType.tooltip.convert]
 text = "keytool से अपनी फ़ाइल को Java keystore (.jks) में कन्वर्ट करें, फिर JKS चुनें।"
@@ -2786,6 +2906,7 @@ text = "वह फ़ॉर्मैट चुनें जो आपके प�
 title = "मुझे कौन सा विकल्प उपयोग करना चाहिए?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "प्रमाणपत्र फ़ॉर्मेट"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "यह डिवाइस"
 [certSign.error]
 failed = "हस्ताक्षर प्रोसेस करते समय एक त्रुटि हुई।"
 
-[certSign.format]
-pkcs11 = "USB टोकन"
-windowsStore = "Windows प्रमाणपत्र स्टोर"
-
 [certSign.hardware]
-certificate = "प्रमाणपत्र"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "कस्टम ड्राइवर पथ…"
+digitalId = "Digital ID"
 driver = "PKCS#11 ड्राइवर"
 driverPath = "ड्राइवर लाइब्रेरी पथ"
 driverPathPlaceholder = "अपने PKCS#11 ड्राइवर का पूरा पथ (.dll, .so या .dylib)"
-expired = "अवधि समाप्त"
-expires = "समाप्ति"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "प्रमाणपत्रों की सूची दिखाएँ"
-loading = "प्रमाणपत्र पढ़े जा रहे हैं…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "हस्ताक्षर हेतु कोई प्रमाणपत्र नहीं मिला"
 noDriver = "कोई PKCS#11 ड्राइवर नहीं मिला। अपने टोकन का ड्राइवर (जैसे OpenSC) इंस्टॉल करें, फिर इसे दोबारा खोलें — या नीचे ड्राइवर पथ मैन्युअल रूप से दर्ज करें।"
-notYetValid = "अभी तक मान्य नहीं"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "टोकन PIN"
 pkcs11Hint = "अपने टोकन का PKCS#11 ड्राइवर चुनें, PIN दर्ज करें, फिर टोकन पर मौजूद प्रमाणपत्रों की सूची बनाएं।"
 pkcs11LoadError = "टोकन से प्रमाणपत्र पढ़े नहीं जा सके। PIN और ड्राइवर जांचें।"
-refresh = "ताज़ा करें"
-selectCert = "प्रमाणपत्र चुनें"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "ड्राइवर चुनें"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "স्लॉट (वैकल्पिक)"
-windowsHint = "अपने Windows प्रमाणपत्र स्टोर से एक प्रमाणपत्र चुनें। हस्ताक्षर के लिए आपके कार्ड/टोकन पर मौजूद कुंजी का उपयोग होगा — Windows आपसे PIN पूछेगा।"
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Windows प्रमाणपत्र स्टोर पढ़ा नहीं जा सका"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "सामान्य नियम"
 device = "यह डिवाइस"
 noOtherSources = "कोई अन्य प्रमाणपत्र स्रोत उपलब्ध नहीं हैं।"
 server = "सर्वर"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "प्रमाणपत्र स्रोत"
 upload = "अपलोड"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "अपना उपयोगकर्ता नाम अपडेट करें। अपडेट के बाद आप लॉगआउट हो जाएँगे।"
@@ -3069,7 +3205,6 @@ placeholder = "दस्तावेज़ निर्माता"
 
 [changeMetadata.customFields]
 add = "फ़ील्ड जोड़ें"
-description = "दस्तावेज़ में कस्टम मेटाडेटा फ़ील्ड जोड़ें"
 key = "कुंजी"
 keyPlaceholder = "कस्टम कुंजी"
 remove = "हटाएं"
@@ -3135,10 +3270,6 @@ bullet1 = "निर्माण तिथि: मूल दस्तावे�
 bullet2 = "संशोधन तिथि: आखिरी बार कब बदला गया"
 text = "दस्तावेज़ कब बनाया और संशोधित किया गया।"
 title = "दिनांक फ़ील्ड"
-
-[changeMetadata.tooltip.deleteAll]
-text = "गोपनीयता सुनिश्चित करने के लिए पूर्ण मेटाडेटा हटाना।"
-title = "मौजूदा मेटाडेटा हटाएं"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "शीर्षक: दस्तावेज़ का नाम या हेडिंग"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "आप अपनी usage limit तक पहुँच �
 
 [checkAccessibility]
 aboutRow = "{{label}} के बारे में"
-checking = "जांच हो रही है..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "एक्सेसिबिलिटी रिपोर्ट डाउनलोड करें"
 fileFailed = "असफल"
+noFiles = "Select a PDF to check it."
 pickFile = "इसके लिए परिणाम दिखाएं"
-submit = "एक्सेसिबिलिटी जांचें"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "वैकल्पिक टेक्स्ट"
@@ -3286,10 +3417,17 @@ structure = "टैग स्क्रीन रीडर्स को बता
 [checkAccessibility.checks]
 label = "{{total}} में से {{passed}} जांचें पास"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "एक्सेसिबिलिटी रिपोर्ट नहीं बन सकी। फिर से प्रयास करें।"
 fileTitle = "इस फ़ाइल की जांच नहीं हो सकी"
 partial = "कुछ फ़ाइलों की जांच नहीं हो सकी।"
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA घोषित करता है"
@@ -3312,6 +3450,21 @@ title = "फ़ाइल के मेटाडेटा में शीर्�
 [checkAccessibility.figures]
 summary_one = "{{count}} छवि को विवरण चाहिए (पृष्ठ {{pages}})"
 summary_other = "{{count}} छवियों को विवरण चाहिए (पृष्ठ {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "लागू होता है"
@@ -3465,19 +3618,7 @@ checking = "जांच {{total}} में से {{current}}..."
 complete = "जांच पूरी"
 
 [checkAccessibility.steps]
-results = "परिणाम"
 standard = "मानक"
-
-[checkAccessibility.tooltip.header]
-title = "किस मानक पर जांचें"
-
-[checkAccessibility.tooltip.ua1]
-text = "PDF/UA का पहला संस्करण, 2012 में ISO 14289-1 के रूप में प्रकाशित, PDF 1.7 फ़ाइलों के लिए।"
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "नया संस्करण, 2024 में ISO 14289-2 के रूप में प्रकाशित, PDF 2.0 फ़ाइलों के लिए। किसी PDF 1.7 फ़ाइल को इसके विरुद्ध जांचने पर वे नियम विफल होंगे जो केवल PDF 2.0 पर लागू होते हैं।"
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "एनोटेशन {{n}}"
@@ -3868,6 +4009,7 @@ title = "रंग चुनें"
 transparent = "पारदर्शी"
 
 [common]
+aboutField = "About {{field}}"
 actions = "कार्रवाइयाँ"
 back = "वापस"
 cancel = "रद्द करें"
@@ -4206,7 +4348,9 @@ title = "API कुंजियाँ रीफ़्रेश करें"
 warning = "⚠️ चेतावनी: यह क्रिया नई API कुंजियाँ जनरेट करेगी और आपकी पुरानी कुंजियों को अमान्य कर देगी।"
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) Claude जैसे AI assistants को आपके Stirling PDF tools सीधे उपयोग करने देता है। एक बार client connect करें और आपका assistant आपकी ओर से documents convert, edit, secure और process कर सकता है।"
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Guest users MCP clients connect नहीं कर सकते। MCP server उपयोग करने के लिए account बनाएँ और अपने AI assistant को आपकी ओर से Stirling PDF tools चलाने दें।"
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "{{label}} copy करें"
 tooltipCopied = "{{label}} कॉपी किया गया"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "आपका MCP endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "इसमें जोड़ें"
 hint = "अपना client चुनें, snippet को दिखाई गई file में paste करें, फिर उसे restart करें। पहली बार उपयोग पर आप अपने Stirling account से sign in करेंगे - copy करने के लिए कोई keys नहीं।"
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "अपना AI assistant connect करें"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "आस्पेक्ट रेशियो बनाए 
 maxAttachmentSize = "अटैचमेंट का अधिकतम आकार (MB)"
 multiple = "एकाधिक"
 optimizeForEbook = "ईबुक रीडर्स के लिए PDF ऑप्टिमाइज़ करें (Ghostscript का उपयोग करता है)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "आउटपुट"
-outputFormat = "आउटपुट फ़ॉर्मेट"
-pdfaAccessibleFormat = "{{format}} (सुलभ)"
-pdfaDigitalSignatureWarning = "PDF में एक डिजिटल हस्ताक्षर है। यह अगले चरण में हटा दिया जाएगा।"
-pdfaNote = "PDF/A-1b अधिक compatible है, PDF/A-2b अधिक features support करता है, PDF/A-3b embedded files support करता है।"
-pdfaOptions = "PDF/A विकल्प"
 pdfOptions = "PDF विकल्प"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "सेटिंग्स"
 signInToUse = "उपयोग करने के लिए साइन इन करें"
 single = "एकल"
 sourceFormatPlaceholder = "स्रोत फ़ॉर्मेट"
-strictMode = "सख्त मोड"
-strictModeDesc = "यदि conversion perfect नहीं है तो error (VeraPDF verification का उपयोग करता है)"
 svgPdfOptions = "SVG से PDF विकल्प"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files को किसी भी resolution पर crisp output के लिए vector graphics के रूप में render किया जाता है। SVG के dimensions PDF page size निर्धारित करते हैं।"
@@ -4396,9 +4549,7 @@ zoomLevel = "ज़ूम स्तर"
 
 [convert.ebookOptions]
 includePageNumbers = "पेज नंबर शामिल करें"
-includePageNumbersDesc = "जनरेट की गई PDF में पेज नंबर जोड़ें"
 includeTableOfContents = "विषयसूची शामिल करें"
-includeTableOfContentsDesc = "तैयार PDF में निर्मित विषयसूची जोड़ें"
 optimizeForEbookPdf = "ईबुक रीडर्स के लिए अनुकूलित करें"
 optimizeForEbookPdfDesc = "eBook पढ़ने के लिए PDF को अनुकूलित करें (छोटा फ़ाइल आकार, eInk डिवाइस पर बेहतर रेंडरिंग)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "अध्याय पहचानें"
 detectChaptersDesc = "अध्याय जैसे दिखने वाले शीर्षकों का पता लगाएँ और EPUB पेज ब्रेक जोड़ें"
 kindleEink = "Kindle e-Ink (पाठ के लिए अनुकूलित)"
 outputFormat = "आउटपुट फ़ॉर्मेट"
-outputFormatDesc = "ईबुक के लिए आउटपुट फ़ॉर्मेट चुनें"
 tabletPhone = "टैबलेट/फ़ोन (चित्र सहित)"
 targetDevice = "लक्षित डिवाइस"
 targetDeviceDesc = "रीडर डिवाइस के लिए अनुकूलित आउटपुट प्रोफाइल चुनें"
@@ -4469,8 +4619,24 @@ description = "ये cookies website के ठीक से काम कर�
 posthog = "PostHog एनालिटिक्स"
 scarf = "Scarf पिक्सेल"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "कवर पेज शीर्षक"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "हर चयनित फ़ाइल नई PDF के अंदर पूरी रखी जाती है, चाहे उसका प्रकार कुछ भी हो। जो readers portfolios का समर्थन नहीं करते, वे संलग्न फ़ाइलों के साथ एक कवर पेज दिखाते हैं।"
 goToFileEditor = "फ़ाइल एडिटर पर जाएं"
@@ -4488,6 +4654,9 @@ title = "यह क्या करता है"
 
 [createPortfolio.tooltip.header]
 title = "PDF Portfolios के बारे में"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "खाली स्थान स्वतः क्रॉप करें"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "इस ब्राउज़र में क्लि�
 export = "बुकमार्क्स एक्सपोर्ट करें"
 exportClipboard = "JSON क्लिपबोर्ड पर कॉपी करें"
 exportJson = "JSON डाउनलोड करें"
+exportMenu = "Export"
 importClipboard = "क्लिपबोर्ड से JSON पेस्ट करें"
 importJson = "JSON इम्पोर्ट करें"
+importMenu = "Import"
 loadFromPdf = "चयनित PDF से लोड करें"
 noFile = "मौजूदा बुकमार्क्स निकालने के लिए एक PDF चुनें।"
 selectedFile = "{{file}} से लोड किया गया"
-source = "बुकमार्क्स लोड करें"
 
 [editTableOfContents.editor]
 addTopLevel = "टॉप-लेवल बुकमार्क जोड़ें"
@@ -4740,6 +4910,9 @@ replaceExisting = "मौजूदा बुकमार्क्स बदल�
 replaceExistingHint = "अक्षम होने पर, नई आउटलाइन वर्तमान बुकमार्क्स के बाद जोड़ी जाएगी।"
 title = "बुकमार्क्स और आउटलाइन"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "PDF बदलें"
 filePrompt = "शुरू करने के लिए अपनी लाइब्रेरी से एक PDF चुनें या नया अपलोड करें।"
@@ -4753,7 +4926,6 @@ title = "संपादन शुरू करने के लिए टूल
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} प्रतिबंध अनदेखा किया गया"
 actionUnlocked = "इस सत्र के लिए {{action}} अनलॉक किया गया"
-advanced = "उन्नत"
 allowed = "अनुमत"
 annotations = "एनोटेशन"
 authoriseAction = "इस PDF में {{action}} का उपयोग करने के लिए अनुमति आवश्यक है।"
@@ -4801,7 +4973,6 @@ restricted = "प्रतिबंधित"
 restrictedActions = "प्रतिबंधित क्रियाएँ"
 restrictedOperation = "इस क्रिया के लिए अनुमति पासवर्ड आवश्यक है।"
 retainOwnerVerification = "खोलने का पासवर्ड हटाते समय अनुमति पासवर्ड को अपरिवर्तित रखने के लिए उसे सत्यापित करें। इससे यह हटेगा नहीं।"
-saveProtection = "सुरक्षा सेव करें"
 securityChangeFailed = "सुरक्षा बदलने में असमर्थ। अनुमति पासवर्ड और नई security settings जाँचें।"
 sessionDetails = "इस सत्र के लिए खुला है। PDF सुरक्षित रहता है।"
 sessionDetailsLabel = "सत्र अनलॉकिंग के बारे में"
@@ -4871,7 +5042,6 @@ title = "कुछ गलत हो गया"
 tryAgain = "फिर प्रयास करें"
 
 [extractImages]
-allowDuplicates = "डुप्लिकेट छवियां सहेजें"
 selectText = "निकाली गई छवियों को बदलने के लिए छवि प्रारूप चुनें"
 submit = "निकालें"
 tags = "चित्र,फोटो,सहेजें,संग्रह,ज़िप,कैप्चर,ग्रैब"
@@ -4927,12 +5097,15 @@ closeFile = "फ़ाइल बंद करें"
 
 [fileEditor]
 closedFile = "{{name}} बंद किया गया"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "फ़ाइल का क्रम बदला गया"
 filesReordered_other = "{{count}} फ़ाइलों का क्रम बदला गया"
 loadedFromStorage_one = "स्टोरेज से {{count}} फ़ाइल लोड की गई"
 loadedFromStorage_other = "स्टोरेज से {{count}} फ़ाइलें लोड की गईं"
 loadFromStorageFailed = "स्टोरेज से कुछ फ़ाइलें लोड करने में विफल"
 pinnedFile = "{{name}} पिन किया गया"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} सहेजा और बंद किया गया"
 saveFailed = "सहेजना विफल"
 unpinnedFile = "{{name}} अनपिन किया गया"
@@ -5019,11 +5192,20 @@ locked = "लॉक किया गया"
 previewOf = "{{name}} का पूर्वावलोकन"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "फ़ाइलें जोड़ें"
 created = "निर्मित"
 notIncludedInToolRun = "इस टूल रन में शामिल नहीं"
 size = "फ़ाइल आकार"
 title = "फ़ाइलें"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "कोई फ़ाइल उपलब्ध नहीं"
@@ -5104,6 +5286,7 @@ subtitle = "Files sidebar में categories दिखाएँ या छि�
 title = "Sidebar श्रेणियाँ"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "रद्द करें"
 error = "File का नाम बदला नहीं जा सका।"
 illegalCharacters = "File name में \\ / : * ? \" < > | नहीं हो सकते"
@@ -5607,7 +5790,6 @@ removeField = "फ़ील्ड हटाएँ"
 
 [formFill.editor]
 action = "बटन कार्रवाई"
-actionHelp = "क्लिक करने पर बटन क्या करता है।"
 actionNone = "कोई नहीं"
 actionPrint = "प्रिंट"
 actionReset = "फ़ॉर्म रीसेट करें"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "फिट होने वाले वर्णों की �
 multiline = "मल्टी-लाइन"
 multilineHelp = "एक से अधिक पंक्ति के पाठ की अनुमति देता है और फ़ील्ड के किनारे पर रैप करता है।"
 multiSelect = "एकाधिक चयन की अनुमति दें"
-multiSelectHelp = "एक साथ एक से अधिक विकल्प चुने जाने देता है।"
 name = "फ़ील्ड नाम"
 nameHelp = "फ़ील्ड का आंतरिक नाम। डेटा निर्यात करते समय या किसी अन्य सिस्टम से फ़ॉर्म भरते समय उपयोग होता है, इसलिए इसे अद्वितीय और स्पेस से मुक्त रखें।"
 optionGap = "विकल्प अंतराल"
@@ -5902,6 +6083,11 @@ title = "रंग/कंट्रास्ट समायोजित कर�
 desc = "व्यूअर में हाइलाइट करें, ड्रॉ करें, नोट्स और आकार जोड़ें"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "टिप्पणी करें"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "AI के साथ फ़ॉर्म फ़ील्ड अपने-आप पहचानें और अपने PDF को भरने योग्य बनाएँ।"
@@ -6405,6 +6591,9 @@ sort = "छाँटें"
 [merge.sortFiles]
 title = "फ़ाइलें क्रमबद्ध करें"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "मर्ज सेटिंग्स का अवलोकन"
 
@@ -6548,6 +6737,9 @@ title = "प्रमाणीकरण विफल"
 message = "आप यह विंडो बंद कर Stirling PDF पर लौट सकते हैं।"
 title = "प्रमाणीकरण सफल"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Access की अनुमति दें"
 approving = "अनुमति दी जा रही है..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "आपको app पर वापस भेजा जा रहा है..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} आपके Stirling PDF खाते तक access चाहता है"
 scopesIntro = "यह {{app}} को यह करने देगा:"
 signedInAs = "{{name}} के रूप में signed in"
@@ -6565,6 +6758,8 @@ signInButton = "जारी रखने के लिए sign in करें"
 signInPrompt = "App को connect करना जारी रखने के लिए अपने Stirling PDF खाते में sign in करें।"
 title = "Authorise access"
 unknownApp = "एक third-party application"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "आपकी तरह कार्य करें - {{app}} जो भी करता है वह आपके खाते के अंतर्गत चलता है और आपके usage में गिना जाता है"
@@ -6572,9 +6767,12 @@ tools = "आपकी ओर से आपके Stirling PDF tools का उ�
 
 [oauthConsent.scope]
 email = "आपका email address देखें"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "आपकी पहचान की पुष्टि करें"
 phone = "आपका phone number देखें"
 profile = "आपकी basic profile जानकारी देखें"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "स्कैन को साफ करें और PDF के अंदर छवियों से टेक्स्ट का पता लगाएं और उसे टेक्स्ट के रूप में फिर से जोड़ें।"
@@ -6956,6 +7154,10 @@ yourCloudAccess = "आप टीम सदस्य बन जाएँगे �
 [pageEdit]
 deselectAll = "कोई नहीं"
 selectAll = "सभी चेक करें"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "पृष्ठ निकालें"
@@ -7577,6 +7779,8 @@ stamp = "स्टैम्प एनोटेशन - पेज टेक्स
 widget = "फ़ॉर्म फ़ील्ड - पेज टेक्स्ट नहीं, इसलिए इसे यहाँ संपादित नहीं किया जा सकता"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "एडिट"
 markTagged = "पूर्णतः टैग्ड के रूप में चिह्नित करें"
 matchScanFont = "स्कैन किए गए टेक्स्ट को {{face}} से मिलाएँ"
@@ -7590,6 +7794,7 @@ tagPageContent = "पृष्ठ ऑटो-टैग करें"
 typeInto = "{{run}} में type करें"
 ungroupParagraph = "Paragraph {{run}} ungroup करें"
 unmarkTagged = "पूर्णतः टैग्ड नहीं के रूप में चिह्नित करें"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "{{run}} wrap करें"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "असहेजे बदलाव त्यागें?"
 
 [pdfTextEditor.error]
 decodeImage = "चुनी गई छवि डिकोड नहीं की जा सकी।"
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "यह टेक्स्ट डुप्लिकेट नहीं कर सकते: उपलब्ध कोई भी फ़ॉन्ट इसके सभी अक्षर नहीं दिखा पाता।"
 formLiftChangesDrawing = "इसे संपादित नहीं किया जा सकता: यह एक समूह का हिस्सा है जिसकी क्लिपिंग या ग्राफिक्स सेटिंग्स को बदलते समय संपादक बनाए नहीं रख सकता।"
 insertImage = "चुनी गई छवि डाली नहीं जा सकी।"
 needsShaping = "संपादक अभी इस लिपि के संयुक्त अक्षर और मात्राएँ सही तरह से नहीं बना सकता, इसलिए यह बदलाव नहीं किया गया।"
+reopenLost = "Open again"
 replaceClippedImage = "यह छवि बदली नहीं जा सकती: यह क्रॉप की गई है, और प्रतिस्थापन में वे हिस्से दिखेंगे जिन्हें क्रॉप छुपा रहा है।"
 scanOffInk = "यह टेक्स्ट संपादित नहीं हो सकता: इसके पहचाने गए शब्द स्कैन से मेल नहीं खाते। फिर से OCR चलाएँ।"
 unsafeRtlEdit = "यह संपादन नहीं किया जा सकता: संपादक इस पंक्ति के दाएँ-से-बाएँ टेक्स्ट को बदले बिना दोबारा नहीं बना सकता।"
@@ -7616,6 +7823,7 @@ pngFileType = "PNG image"
 close = "find बार बंद करें"
 count = "{{total}} में से {{current}}"
 findPlaceholder = "ढूँढें"
+hideReplace = "Hide replace"
 ignoreAccents = "accents अनदेखा करें"
 matchCase = "केस मिलाएँ"
 next = "अगला मिलान"
@@ -7625,6 +7833,7 @@ replace = "बदलें"
 replaceAll = "सभी बदलें"
 replaced = "{{count}} बदले गए"
 replacePlaceholder = "इससे बदलें"
+showReplace = "Show replace"
 wholeWord = "पूरा शब्द"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "यह लिंक टैग नहीं किया जा 
 cannotTagPage = "इस पृष्ठ की सामग्री टैग नहीं की जा सकती।"
 contentGroup = "सामग्री"
 customTag = "{{role}} (कस्टम टैग)"
-decorativeInfo = "स्क्रीन रीडर सजावटी छवियों को छोड़ देते हैं। इसे बॉर्डर, बैकग्राउंड और अन्य ऐसी छवियों के लिए उपयोग करें जिनमें कोई जानकारी नहीं होती।"
-decorativeLabel = "सजावटी छवि"
-description = "छवि का विवरण"
-descriptionInfo = "स्क्रीन रीडर छवि की जगह इसे पढ़ते हैं।"
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "एन्क्रिप्टेड फ़ाइल में टैग संपादित नहीं किए जा सकते"
 figureDescription = "चित्र विवरण"
 figureDescriptionInfo = "स्क्रीन रीडर इसे चित्र के स्थान पर पढ़ते हैं।"
-formFieldDescription = "फ़ील्ड विवरण"
 formulaDescription = "सूत्र विवरण"
 formulaDescriptionInfo = "स्क्रीन रीडर इसे सूत्र के स्थान पर पढ़ते हैं। इसे वैसे ही कहें जैसे आप ज़ोर से कहेंगे, जैसे \"x squared plus one\"."
 heading = "सुलभता"
@@ -7813,7 +8019,6 @@ markedTagged = "दस्तावेज़ पूर्णतः टैग्�
 markedTaggedHint = "PDF रीडर्स को एक्सेसिबिलिटी टैग उपयोग करने को बताता है। इसे तभी चुनें जब सब कुछ टैग हो।"
 markedWithUntagged = "कुछ सामग्री पर टैग नहीं हैं, इसलिए स्क्रीन रीडर्स उसे छोड़ सकते हैं।"
 missingDescriptions = "विवरण अनुपस्थित हैं"
-mixedContent = "चित्र में अन्य सामग्री शामिल है"
 mixedTags = "मिश्रित"
 needsDescriptionBadge = "कोई विवरण नहीं"
 nextToReview = "समीक्षा के लिए अगला"
@@ -7821,12 +8026,10 @@ notFigure = "टेक्स्ट के भाग के रूप में �
 removeTag = "टैग हटाएँ"
 saveFailed = "आपके सुलभता बदलाव सहेजे नहीं जा सके, इसलिए फ़ाइल सहेजी नहीं गई। उन्हें पूर्ववत करें और फिर से प्रयास करें।"
 selectedText = "चयनित टेक्स्ट"
-tagFormField = "फ़ॉर्म फ़ील्ड टैग करें"
 tagging = "पृष्ठ टैग करना"
 tagLabel = "टैग"
 tagLinks_one = "लिंक टैग करें"
 tagLinks_other = "{{count}} लिंक टैग करें"
-tagUntagged = "दस्तावेज़ ऑटो-टैग करें"
 tagUntaggedHint = "पूरे दस्तावेज़ में स्वतः एक्सेसिबिलिटी टैग जोड़ता है। परिणाम मोटा होता है: बाद में हेडिंग, सूचियाँ और पढ़ने का क्रम जाँचें।"
 unknownTag = "यहाँ पढ़ा नहीं जा सकता"
 unmarkedWithTags = "कुछ PDF व्यूअर्स टैग वैसे भी उपयोग करेंगे और बिना टैग की सामग्री छोड़ सकते हैं।"
@@ -7851,7 +8054,7 @@ heading = "शीर्षक"
 mixedNumbering = "क्रमांकित और बिना क्रमांक वाले शीर्षकों को मिलाता है"
 none = "कोई शीर्षक नहीं"
 onPage = "पृष्ठ {{page}} पर शीर्षक"
-problems = "शीर्षक संबंधी समस्याएँ"
+problemCount = "{{count}} to fix"
 skippedLevel = "शीर्षक {{previous}} के बाद एक स्तर छोड़ता है"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "शीर्षक"
 allLanguages = "सभी भाषाएँ"
 cannotSetDocument = "इस दस्तावेज़ की भाषा बदली नहीं जा सकती।"
 cannotSetText = "इस टेक्स्ट की भाषा बदली नहीं जा सकती।"
-documentHint = "वह भाषा जिसे स्क्रीन रीडर्स उपयोग करते हैं, जब तक टेक्स्ट का कोई भाग अपनी भाषा न सेट करे।"
 documentLabel = "भाषा"
 documentLocked = "एन्क्रिप्टेड दस्तावेज़ की भाषा यहाँ नहीं बदली जा सकती।"
 inDocument = "इस दस्तावेज़ में"
 innerLabel = "टैग {{number}} की भाषा"
 label = "भाषा"
-missing = "कोई भाषा सेट नहीं है। स्क्रीन रीडर्स अनुमान लगाएँगे और संभव है पूरे दस्तावेज़ को गलत आवाज़ में पढ़ें।"
 mixed = "मिश्रित"
 noMatch = "कोई मेल खाती भाषा नहीं। इसके कोड टाइप करें, जैसे mt या en-IE।"
 placeholder = "भाषा चुनें"
@@ -7943,6 +8144,52 @@ renderFailed = "पृष्ठ रेंडर करने में विफ
 [pdfTextEditor.password]
 incorrect = "गलत पासवर्ड - फिर प्रयास करें।"
 label = "पासवर्ड"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} पर alignment guide - हटाने के लिए ruler पर खींचें"
@@ -8124,6 +8371,10 @@ title = "पूर्वावलोकन अंतर"
 [pdfTextEditor.tooltip.textFocus]
 text = "यह कार्यक्षेत्र टेक्स्ट संपादन और एम्बेडेड छवियों को पुनर्स्थापित करने पर केंद्रित है। जटिल पेज आर्टवर्क, फ़ॉर्म विजेट और लेयर्ड ग्राफ़िक्स निर्यात के लिए सुरक्षित रहते हैं, लेकिन यहाँ पूरी तरह संपादन योग्य नहीं हैं।"
 title = "टेक्स्ट और छवि फोकस"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF से CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "category छिपाएँ"
 labelCount = "लेबल"
 sharedNote = "ये labels built in हैं और आपकी पूरी team में shared हैं।"
 showCategory = "category दिखाएँ"
-
-[policies.pii]
-account = "खाता संख्याएँ (लेबल युक्त)"
-card = "क्रेडिट/डेबिट कार्ड"
-email = "ईमेल पते"
-fieldLabel = "Redact करने के लिए PII"
-iban = "IBANs"
-phone = "फोन नंबर"
-placeholder = "PII types चुनें"
-routing = "US रूटिंग नंबर (ABA)"
-ssn = "सोशल सिक्योरिटी नंबर"
 
 [policy]
 badgeEnforcing = "{{name}} लागू हो रही है..."
@@ -10317,6 +10557,10 @@ title = "पाइपलाइन्स"
 [portal.pipelines.actions]
 newCustomPipeline = "नई custom pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "सभी पाइपलाइन"
 
@@ -12047,7 +12291,6 @@ label = "पढ़ने के टूल्स"
 readAloud = "ज़ोर से पढ़ें"
 rotateLeft = "बाएँ घुमाएँ"
 rotateRight = "दाएँ घुमाएँ"
-search = "दस्तावेज़ में खोजें"
 switchDocument = "दस्तावेज़ बदलें"
 thumbnails = "पृष्ठ"
 
@@ -12062,6 +12305,7 @@ colorLabel = "बॉक्स का रंग"
 convertPDFToImageLabel = "PDF को PDF-Image में बदलें"
 customPaddingLabel = "कस्टम अतिरिक्त पैडिंग"
 useRegexLabel = "Regex का उपयोग करें"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "पूरा शब्द खोज"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "रिडैक्शन सेटिंग्स"
 
 [redact.auto.wordsToRedact]
 add = "जोड़ें"
-examples = "उदाहरण: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "एक शब्द दर्ज करें"
 title = "रिडैक्ट करने के शब्द"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "एक साथ कई फ़ाइलों पर
 manual = "मैनुअल"
 mode = "मोड"
 title = "रिडैक्शन विधि"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "केवल उसी केस में टेक्स्ट का मिलान करें। सक्षम होने पर 'Secret' का मिलान 'SECRET' से नहीं होगा, और regex में [A-Z] केवल बड़े अक्षरों से मेल खाता है।"
@@ -12147,19 +12401,6 @@ title = "रिडैक्शन विधि"
 text = "हाथ से विशिष्ट क्षेत्रों का चयन करके रिडैक्ट करने हेतु क्लिक और ड्रैग करें। यह आपको नियंत्रित करता है कि क्या रिडैक्ट होगा। (जल्द आ रहा है)"
 title = "मैनुअल रिडैक्शन"
 
-[redact.tooltip.words]
-bullet1 = "एक समय में एक शब्द जोड़ें"
-bullet2 = "जोड़ने के लिए Enter दबाएँ या 'Add Another' पर क्लिक करें"
-bullet3 = "शब्द हटाने के लिए × पर क्लिक करें"
-
-[redact.tooltip.words.description]
-text = "अपने दस्तावेज़ में खोजकर रिडैक्ट करने हेतु शब्द या वाक्यांश दर्ज करें। प्रत्येक शब्द अलग-अलग खोजा जाएगा।"
-title = "टेक्स्ट मैचिंग"
-
-[redact.tooltip.words.examples]
-text = "आम तौर पर रिडैक्ट किए जाने वाले शब्द: बैंक विवरण, ईमेल पते, या विशिष्ट नाम।"
-title = "सामान्य उदाहरण"
-
 [redact.tooltip.words.header]
 title = "रिडैक्ट करने के शब्द"
 
@@ -12176,15 +12417,6 @@ failed = "PDF से एनोटेशन हटाते समय एक त�
 
 [removeAnnotations.info]
 description = "यह टूल आपके PDF दस्तावेज़ों से सभी एनोटेशन (टिप्पणियां, हाइलाइट, नोट्स, आदि) हटाएगा।"
-
-[removeAnnotations.settings]
-title = "सेटिंग्स"
-
-[removeAnnotations.tooltip.description]
-title = "यह क्या करता है"
-
-[removeAnnotations.tooltip.header]
-title = "Remove Annotations के बारे में"
 
 [removeBlanks]
 submit = "खाली पृष्ठ हटाएँ"
@@ -12325,6 +12557,9 @@ tags = "फिर से व्यवस्थित करें,क्रम �
 [reorganizePages.error]
 failed = "पृष्ठों का पुनर्गठन विफल रहा"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "पृष्ठ पुनर्गठित"
 
@@ -12406,6 +12641,7 @@ title = "सभी रंग उलटें"
 rotateLeft = "घड़ी की विपरीत दिशा में घुमाएँ"
 rotateRight = "घड़ी की दिशा में घुमाएँ"
 selectRotation = "रोटेशन कोण चुनें (घड़ी की दिशा में)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "घुमाव लागू करें"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "PDF घुमाएं"
@@ -12516,8 +12752,7 @@ title = "सैनिटाइज़"
 failed = "PDF को सैनिटाइज़ करते समय एक त्रुटि हुई।"
 
 [sanitize.options]
-note = "वे तत्व चुनें जिन्हें आप PDF से हटाना चाहते हैं। कम से कम एक विकल्प आवश्यक है।"
-title = "सैनिटाइज़ेशन विकल्प"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "PDF में एम्बेड की गई किसी भी फ़ाइल को हटाएँ"
@@ -12649,6 +12884,7 @@ title = "PDF खोजें"
 hideTools = "उपलब्ध न होने वाले टूल्स छिपाएँ ▴"
 messageNoFallback = "जब तक आपका सर्वर वापस ऑनलाइन नहीं होता, टूल्स उपलब्ध नहीं हैं।"
 messageWithFallback = "कुछ टूल्स के लिए सर्वर कनेक्शन आवश्यक है।"
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "उपलब्ध न होने वाले टूल्स देखें ▾"
 title = "आपका Stirling-PDF सर्वर अप्राप्य है"
 toolNotAvailableLocally = "आपका Stirling-PDF सर्वर ऑफ़लाइन है और \"{{endpoint}}\" लोकल बैकएंड पर उपलब्ध नहीं है।"
@@ -13034,6 +13270,12 @@ title = "कीबोर्ड शॉर्टकट्स"
 mac = "अपने शॉर्टकट में ⌘ (Command), ⌥ (Option), या कोई अन्य मॉडिफ़ायर शामिल करें।"
 windows = "अपने शॉर्टकट में Ctrl, Alt, या कोई अन्य मॉडिफ़ायर शामिल करें।"
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Terms, privacy policy और आपकी cookie preferences।"
 label = "कानूनी"
@@ -13418,9 +13660,7 @@ image = "अपलोड"
 text = "टेक्स्ट"
 
 [sign.step]
-createDesc = "आप हस्ताक्षर कैसे बनाना चाहते हैं चुनें"
 place = "रखें और सहेजें"
-placeDesc = "अपने PDF पर हस्ताक्षर की पोज़िशन करें"
 
 [sign.steps]
 configure = "हस्ताक्षर कॉन्फ़िगर करें"
@@ -13597,6 +13837,10 @@ rotateLeft = "बाएँ घुमाएँ"
 rotateRight = "दाएँ घुमाएँ"
 trim = "हस्ताक्षर तक trim करें"
 trimHint = "इसके आसपास की खाली जगह crop करता है"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "हस्ताक्षर रूप सेटिंग्स"
@@ -13959,7 +14203,6 @@ placeholder = "क्षैतिज विभाजनों की संख�
 
 [split-by-sections.splitMode]
 custom = "कस्टम पृष्ठ"
-description = "पृष्ठों को कैसे विभाजित करना है, चुनें"
 label = "विभाजन मोड"
 splitAll = "सभी पृष्ठ विभाजित करें"
 splitAllExceptFirst = "पहले को छोड़कर सभी विभाजित करें"
@@ -14210,10 +14453,8 @@ failed = "PDF का टाइमस्टैम्प करते समय �
 
 [timestampPdf.options]
 note = "केवल आपके दस्तावेज़ का SHA-256 हैश ही TSA सर्वर को भेजा जाता है; स्वयं PDF फ़ाइल कभी भी TSA सर्वर को नहीं भेजी जाती।"
-title = "टाइमस्टैम्प सर्वर (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "किसी ट्रस्टेड Time Stamp Authority को चुनें"
 label = "TSA सर्वर चुनें"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "कोई टूल उपलब्ध नहीं"
 
 [tooltip]
 close = "टूलटिप बंद करें"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "यह टूल PDF फॉर्म फ़ील्ड से Read-Only प्रतिबंध हटाएगा, जिससे वे संपादन योग्य और भरने योग्य बनेंगे।"
@@ -14706,6 +14961,9 @@ signatureDate = "हस्ताक्षर तिथि"
 
 [validateSignature.settings]
 certHint = "कस्टम ट्रस्ट स्रोत के विरुद्ध सत्यापन के लिए एक विश्वसनीय X.509 प्रमाणपत्र अपलोड करें।"
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "सत्यापन सेटिंग्स"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "फ़ाइल का पूर्वावलोकन �
 copyRestricted = "इस PDF की permissions के कारण कॉपी करना अक्षम है।"
 copyText = "कॉपी करें"
 coverPageView = "कवर पेज अलग से दिखाएँ"
-disableColorFilter = "रंग फ़िल्टर अक्षम करें"
 documentUpdated = "दस्तावेज़ updated"
 dualPageView = "दोहरा पृष्ठ दृश्य"
 editText = "टेक्स्ट संपादित करें"
-enableDarkFilter = "डार्क फ़िल्टर सक्षम करें"
-enableSepiaFilter = "सेपिया फ़िल्टर सक्षम करें"
 engineLoadError = "PDF viewer engine initialize करने में विफल"
 engineSlowWarning = "PDF engine initialization अपेक्षा से अधिक समय ले रहा है। कृपया अपने browser WebAssembly और Worker settings check करें, या page reload करें।"
 firstPage = "पहला पृष्ठ"
@@ -14736,20 +14991,27 @@ fitPage = "पृष्ठ पर फिट करें"
 fitWidth = "चौड़ाई के अनुसार फिट करें"
 lastPage = "अंतिम पृष्ठ"
 loadingEngine = "PDF Engine load हो रहा है..."
+menuSelected = "Selected"
 moreOptions = "अधिक"
 nextPage = "अगला पृष्ठ"
 noPdfProvided = "कोई PDF प्रदान नहीं किया गया"
 onlyPdfSupported = "यह फ़ाइल फ़ॉर्मैट पूर्वावलोकन के लिए समर्थित नहीं है।"
 pageNavigation = "पृष्ठ नेविगेशन"
+pageNumber = "Page number"
 previousPage = "पिछला पृष्ठ"
 readAloudFromHere = "यहाँ से ज़ोर से पढ़ें"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "दस्तावेज़ सहेजा नहीं जा सका। पुनः प्रयास करें।"
 saveChangesErrorTitle = "बदलाव सहेजे नहीं जा सके"
 singlePageView = "एकल पृष्ठ दृश्य"
+tools = "Tools"
 unknownFile = "अज्ञात फ़ाइल"
-view = "दृश्य"
 zoom = "ज़ूम"
 zoomIn = "ज़ूम इन"
+zoomLevel = "Zoom level"
 zoomOut = "ज़ूम आउट"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "हस्ताक्षर पूर्वावलोकन"
 
 [viewer.signatureField]
 badge = "हस्ताक्षर"
+clickToSign = "Click to sign here"
 fieldTitle = "हस्ताक्षर फ़ील्ड: {{name}}"
 signed = "हस्ताक्षरित"
 signedWithReason = "हस्ताक्षरित: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "अहस्ताक्षरित हस्ताक्षर फ़ील्ड: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{total}} में से {{restored}} फ़ाइलें restore
 
 [workbenchBar]
 activeFiles = "सक्रिय फ़ाइलें"
-annotations = "एनोटेशन"
+annotate = "Annotate"
 applyRedactionsFirst = "पहले रिडैक्शन लागू करें"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "सभी फ़ाइलें बंद करें"
 closePdf = "PDF बंद करें"
+defaultZoom = "Default zoom"
 deselectAll = "सभी चयन हटाएँ"
 downloadAll = "सभी डाउनलोड करें"
 editText = "टेक्स्ट संपादित करें"
@@ -15100,18 +15367,26 @@ exitAnnotations = "एनोटेशन मोड से बाहर निक
 exitRedaction = "रिडैक्शन मोड से बाहर निकलें"
 findReplace = "खोजें और बदलें"
 formFill = "फ़ॉर्म एडिटर"
-hideToolbar = "टूलबार छिपाएँ"
+layers = "Layers"
 moreActions = "अधिक कार्रवाइयाँ"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "पेज एडिटर"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "पैन मोड"
 print = "PDF प्रिंट करें"
 readAloud = "जोर से पढ़ें"
 readAloudLanguage = "भाषा"
 readAloudSpeed = "गति"
 redact = "रिडैक्ट"
+reviewAccessibility = "Accessibility"
 rotateLeft = "बाएँ घुमाएँ"
 rotateRight = "दाएँ घुमाएँ"
 ruler = "रूलर / माप"
+rulerScaleUnset = "Not set"
 rulerSettings = "पैमाना सेटिंग्स"
 save = "सहेजें"
 saveAll = "सभी सहेजें"
@@ -15123,14 +15398,23 @@ selectLanguage = "भाषा चुनें"
 share = "साझा करें"
 showAllTools = "सभी टूल दिखाएँ"
 showFewerTools = "टूलबार संक्षिप्त करें"
-showToolbar = "टूलबार दिखाएँ"
+thumbnails = "Pages"
 toggleAnnotations = "एनोटेशन की दृश्यता टॉगल करें"
-toggleAttachments = "संलग्नक टॉगल करें"
-toggleBookmarks = "बुकमार्क (विषय-सूची)"
 toggleComments = "टिप्पणियाँ"
-toggleLayers = "लेयर्स टॉगल करें"
-toggleSidebar = "साइडबार टॉगल करें"
 viewer = "व्यूअर"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "आपकी इस दस्तावेज़ तक पहुँच समाप्त हो गई है।"

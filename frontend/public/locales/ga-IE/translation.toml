@@ -12,9 +12,11 @@ comingSoon = "Ag teacht go luath"
 confirm = "Deimhnigh"
 confirmClose = "Deimhnigh Dúnadh"
 confirmCloseCancel = "Cealaigh"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Dún an Comhad"
 confirmCloseDiscard = "Cuir na hathruithe ar ceal agus dún"
 confirmCloseMessage = "An bhfuil tú cinnte gur mian leat an comhad seo a dhúnadh?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Sábháil agus dún"
 confirmCloseSaveFailed_one = "Sábháilte le hearráidí. Níorbh fhéidir {{count}} comhad a shábháil."
 confirmCloseSaveFailed_other = "Sábháladh le hearráidí. Níorbh fhéidir {{count}} comhad a shábháil."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Comhad sábháilte ar an diosca"
 filesSelected = "{{count}} comhad"
 font = "Cló"
 fontSizeTooltip = "Méid téacs na huimhreach leathanaigh i bpointí. Cruthaíonn méideanna níos mó téacs níos mó."
-fontTypeTooltip = "Clannchló don uimhriú leathanaigh. Roghnaigh bunaithe ar stíl do cháipéis."
 green = "Glas"
 help = "Cabhrú"
 incorrectPasswordMessage = "Tá an pasfhocal reatha mícheart."
@@ -249,9 +250,7 @@ image = "Uaslódáil"
 text = "Téacs"
 
 [addImage.step]
-createDesc = "Uaslódáil an íomhá is mian leat a chur leis"
 place = "Cuir íomhá"
-placeDesc = "Cliceáil ar an PDF chun d’íomhá a chur leis"
 
 [addImage.steps]
 configure = "Cumraigh Íomhá"
@@ -276,7 +275,7 @@ fontName = "Ainm Cló"
 fontSize = "Méid an Chló"
 numberPagesDesc = "m.sh., 1,3,5-8 nó fág bán é le haghaidh gach leathanach"
 pagePreviewAlt = "Réamhamharc leathanaigh"
-pagesAndStarting = "Leathanaigh & Uimhir Tosaigh"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Suíomh & Leathanaigh"
 preview = "Roghnú Suímh"
 previewDisclaimer = "Is garbh an réamhamharc. D'fhéadfadh an toradh deiridh a bheith éagsúil de bharr méadrachtaí cló PDF."
@@ -300,6 +299,7 @@ title = "Torthaí Uimhreacha Leathanach"
 
 [addPassword]
 desc = "Criptigh do dhoiciméad PDF le focal faire."
+submit = "Add Password"
 tags = "criptigh,pasfhocal,glasáil,slán,cosain,slándáil,criptiú,cosaint,rúnda,príobháideach,srian rochtain"
 title = "Cuir Pasfhocal leis"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Réamhamharc stampa"
 tags = "stampa,marc,séala,ceadaithe,diúltaithe,rúnda,uirlis stampa,stampa rubair,stampa dáta,stampa ceadaithe,faighte,neamhbhailí,cóip,bunleagan"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Aibítir"
-clickToExpand = "Cliceáil chun leathnú"
 customColor = "Dath Téacs Saincheaptha"
 customDateDesc = "Formáid shaincheaptha"
 customPosition = "Tarraing an stampa go dtí an suíomh atá uait sa fhuinneog réamhamhairc."
 dateDesc = "Dáta reatha"
 datetimeDesc = "Dáta agus am le chéile"
 dateTimeVars = "Dáta & Am"
-dynamicVariables = "Athróga Dinimiciúla"
 examples = "Samplaí"
 filenameDesc = "Ainm comhaid gan iarmhír"
 filenameFullDesc = "Ainm comhaid le hiarmhír"
@@ -365,6 +364,8 @@ noStampSelected = "Níl stampa roghnaithe. Fill ar Chéim 1."
 opacity = "Teimhneacht"
 otherVars = "Eile"
 pageNumberDesc = "Uimhir an leathanaigh reatha"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Eolas Leathanaigh"
 position = "Post"
 positionAndFormatting = "Suíomh & Formáidiú"
@@ -378,9 +379,10 @@ quickPosition = "Roghnaigh suíomh ar an leathanach le stampa a chur."
 rotation = "Rothlú"
 selectedImageAlt = "Íomhá stampa roghnaithe"
 selectTemplate = "Roghnaigh teimpléad..."
+size = "Size"
 stampSetup = "Socrú Stampa"
 stampText = "Téacs Stampa"
-stampTextDescription = "Úsáid na hathróga dinimiciúla thíos. Úsáid @@ le haghaidh @ litriúil. Úsáid \\n le haghaidh línte nua."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Cineál Stampa"
 submit = "Cuir Stampa Leis"
 tags = "Stampa, Cuir íomhá, íomhá lár, Uisce, PDF, Leabú, Saincheap"
@@ -389,7 +391,6 @@ title = "Stampa PDF"
 totalPagesDesc = "Líon iomlán na leathanach"
 useTemplate = "Úsáid Teimpléad"
 uuidDesc = "Aitheantóir gearr uathúil (8 gcarachtar)"
-variablesHelp = "Cliceáil ar aon athróg chun í a chur isteach i dtéacs do stampa. Úsáid @@ le haghaidh @ litriúil."
 yearMonthDayDesc = "Páirteanna dáta aonair"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Tharla earráid agus stampa á chur leis an PDF."
 
 [AddStampRequest.results]
 title = "Torthaí Stampa"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Saincheaptha"
@@ -410,6 +417,11 @@ legal-footer = "Buntásc Dlíthiúil"
 page-numbers = "Uimhreacha Leathanaigh"
 pageNumberFooter = "Buntásc Uimhir Leathanaigh"
 timestamp = "Stampa ama"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Cuir Téacs i bhFeidhm"
@@ -462,9 +474,7 @@ image = "Uaslódáil"
 text = "Téacs"
 
 [addText.step]
-createDesc = "Iontráil an téacs is mian leat a chur leis"
 place = "Cuir téacs"
-placeDesc = "Cliceáil ar an PDF chun do théacs a chur leis"
 
 [addText.steps]
 configure = "Cumraigh Téacs"
@@ -1233,6 +1243,18 @@ label = "Athghin ar Thosach"
 description = "Líon na laethanta a bheidh an deimhniú bailí"
 label = "Bailíocht an Deimhnithe (laethanta)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Comhadlanna a bhfuil cead ag foinsí fillteáin agus aschuir fillteáin léamh uathu agus scríobh chucu. Is teorainn slándála í seo: ní féidir uathoibrithe a dhíriú riamh ar chonair freastalaí lasmuigh den liosta seo."
 securityNote = "Fág folamh é seo chun foinsí agus aschuir fillteáin a dhíchumasú go hiomlán. Bíonn comhadlann chumraíochta Stirling féin i gcónaí as teorainn."
@@ -1456,7 +1478,9 @@ label = "Ainm Úsáideora SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Seolann cliaint eochair Stirling API sa cheanntásc X-API-KEY (nó Authorization: Bearer <key>). Meaitseálann an eochair lena húsáideoir Stirling úinéireachta - ní ligtear isteach ach cuntais soláthraithe, agus déantar gníomhartha a iniúchadh mar an t-úsáideoir sin. Bainistigh eochracha faoi Cuntas > Eochracha API."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Nocht uirlisí PDF agus gníomhairí AI Stirling do chliaint MCP thar chríochphointe cosanta ag OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "Freastalaí MCP"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Uirlisí ceadaithe"
 description = "Ids oibríochta le cur i bhfolach ó MCP (scartha le camóg nó spás), m.sh. add-password remove-password. Fág bán chun gach uirlis chumasaithe a nochtadh."
 label = "Uirlisí blocáilte"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Nuair atá sé as (réamhshocrú), ní luchtófar aon chríochphointe /mcp, meiteashonraí, ná MCP beans."
 label = "Cumasaigh Freastalaí MCP"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Iontráil d'eisitheoir OAuth + resource ID thuas, Sábháil, agus atosaigh."
 step1ApiKey = "Cruthaigh eochair API faoi Cuntas > Eochracha API (úsáideann gach úsáideoir a cheann féin)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "I do chliant MCP cuir"
 step2b = "freastalaí leis atá dírithe ar:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Aimsíonn an cliant OAuth go huathoibríoch ó:"
 step3ApiKey = "Seol an eochair i gceannteideal"
 step3ApiKeyb = "(nó Authorization: Bearer <key>). Ní úsáidtear OAuth ná aimsiú meiteashonraí."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Ceadaigh an síniú isteach; déanann an cliant athiarracht le comhartha. Beidh uirlisí grúpáilte le feiceáil: convert, pages, misc, security, ai."
 step4ApiKey = "Beidh uirlisí grúpáilte le feiceáil: convert, pages, misc, security, ai - agus déantar gach glao a iniúchadh mar úinéir na heochrach."
 tip = "Leid: cláraigh an resource ID mar lucht féachana ceadaithe i do IdP. Tástáilte le MCP Inspector agus Claude Desktop."
 tipApiKey = "Leid: ní theastaíonn IdP seachtrach ó mhód eochrach API - an ceann is simplí do self-host. Meaitseálann an eochair lena húsáideoir Stirling úinéireachta."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Ceangail cliant MCP"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Aimsithe go huathoibríoch ón eisitheoir"
 
 [admin.settings.mcp.mode]
 apikey = "API key (eochair in aghaidh an úsáideora Stirling)"
+builtin = "Built-in OAuth 2.1"
 description = "Teastaíonn IdP seachtrach ó OAuth. Úsáideann eochair API eochair Stirling API in aghaidh an úsáideora (X-API-KEY) - an ceann is simplí do self-host."
 label = "Mód fíordheimhnithe"
 oauth = "OAuth 2.1 (IdP seachtrach)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "Éiligh mcp.tools.read le haghaidh oibríochtaí léite agus mcp.tools.write le haghaidh oibríochtaí scríofa/AI."
 label = "Cuir scopes OAuth i bhfeidhm"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "Éileamh JWT a mheaitseáiltear le hainm úsáideora Stirling (m.sh. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Ar mhaith leat cabhrú le Stirling PDF a dhéanamh níos fearr?"
 tags = "anótáil,aibhsigh,tarraing,marcáil,nóta tráchta,nótaí,athbhreithniú,redline,aiseolas,uirlisí marcála,nótaí greamaitheacha,cruthanna,saigheada,bosca téacs,lámhshaor"
 
 [annotation]
-alignCenter = "Ailínigh sa lár"
-alignLeft = "Ailínigh ar chlé"
-alignRight = "Ailínigh ar dheis"
 annotationStyle = "Stíl anótála"
 backgroundColor = "Dath an chúlra"
 borderOff = "Teorainn: As"
@@ -2016,18 +2073,61 @@ underline = "Folínigh"
 undoDelete = "Cealaigh"
 width = "Leithead"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Eagarthóir PDF saor in aisce, príobháideach is féidir leat a rith ar aon bhonneagar."
 
 [appBanner]
 dismiss = "Dún"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Cuir ceangaltáin leis..."
 convertToPdfA3b = "Tiontaigh go PDF/A-3b"
 convertToPdfA3bTooltip = "Is formáid chartlainne í PDF/A-3b a chinntíonn caomhnú fadtéarmach. Ceadaíonn sí formáidí comhaid treallacha a leabú mar cheangaltáin. Éilíonn an comhshó Ghostscript agus d’fhéadfadh sé go dtógfadh sé níos faide i gcás comhad mór."
-convertToPdfA3bTooltipHeader = "Maidir le Comhshó PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Cad a dhéanann sé"
 discardChanges = "Caith amach"
 downloadSingle = "Íoslódáil ceangaltán"
 duplicateName = "Tá ceangaltán darb ainm '{{name}}' ann cheana."
@@ -2208,7 +2308,6 @@ guest = "Aoi"
 user = "Úsáideoir"
 
 [auto-rename]
-description = "Aimsíonn sé an teideal ó ábhar do PDF go huathoibríoch agus úsáideann sé é mar ainm an chomhaid."
 submit = "Athainmnigh Uathainm"
 tags = "auto-bhrath, ceanntásc-bhunaithe, a eagrú, a athlipéadú"
 title = "Athainmnigh Uathainm"
@@ -2218,21 +2317,6 @@ failed = "Tharla earráid agus an PDF á athainmniú go huathoibríoch."
 
 [auto-rename.results]
 title = "Torthaí Athainmnithe Uathoibrí"
-
-[auto-rename.settings]
-title = "Maidir leis"
-
-[auto-rename.tooltip.description]
-title = "Cad a dhéanann sé"
-
-[auto-rename.tooltip.header]
-title = "Conas a Oibríonn Athainmnú Uathoibríoch"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Lorgaíonn sé téacs a bhfuil cuma theidil nó ceannteidil air"
-bullet2 = "Cruthaíonn sé ainm comhaid glan, bailí ón teideal aimsithe"
-bullet3 = "Coinníonn sé an t-ainm bunaidh mura bhfaightear teideal oiriúnach"
-title = "Athainmniú Cliste"
 
 [autoFormDetection]
 loading = "Réimsí foirme á mbrath..."
@@ -2327,6 +2411,9 @@ remove = "Bain uirlis"
 selected = "Uirlisí Roghnaithe"
 selectTool = "Roghnaigh uirlis..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Cealaigh"
 confirm = "Téigh Ar Ais"
@@ -2360,6 +2447,10 @@ title = "Rith an tUathoibriú"
 [automate.selection]
 title = "Roghnú Uathoibrithe"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Cruthaigh Uathoibriú Nua"
 
@@ -2371,6 +2462,7 @@ title = "Molta"
 
 [automate.sequence]
 finish = "Críochnaigh"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Rith an tUathoibriú"
 running = "Uathoibriú á Rith..."
 signInToRun = "Sínigh isteach chun uathoibrithe a rith."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Sreabhadh Oibre Slándála"
 secureWorkflowDesc = "Slánaíonn sé doiciméid PDF trí ábhar dainséarach féideartha mar JavaScript agus comhaid leabaithe a bhaint, ansin cuireann sé cosaint le focal faire chun rochtain neamhdhleathach a chosc. Socraítear an focal faire mar 'password' de réir réamhshocraithe."
 
 [autoRename]
-description = "Athainmneoidh an uirlis seo comhaid PDF go huathoibríoch bunaithe ar a n-ábhar. Déanann sí an doiciméad a anailísiú chun an teideal is oiriúnaí ón téacs a aimsiú."
 tags = "braith go huathoibríoch,bunaithe ar cheanntásc,eagraigh,athlipéadaigh,athainmniú uathoibríoch,athainmniú cliste,athainmnigh de réir ábhair,ainm comhaid,ainmniú comhaid,braith teideal"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf, scoilt, doiciméad, eagraíocht"
 [autoSplitPDF]
 dividerDownload2 = "Íoslódáil 'Auto Splitter Divider (le treoracha).pdf'"
 duplexMode = "Mód Duplex (scanadh tosaigh agus cúil)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-bhunaithe, ar leith, scanadh-deighleog, eagrú"
 title = "Auto Scoilt PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Cuireann teorainneacha timpeall ar gach cuid leathanaigh chun cabhrú
 [bookletImposition.addGutter]
 label = "Cuir imeall ceangail leis"
 tooltip = "Cuireann sé spás inmheánach leis don cheangal"
-
-[bookletImposition.advanced]
-toggle = "Ardroghanna"
 
 [bookletImposition.doubleSided]
 label = "Priontáil dhá thaobh"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Roghnaigh Comhad JKS"
 chooseP12File = "Roghnaigh Comhad PKCS12"
 choosePfxFile = "Roghnaigh Comhad PFX"
 choosePrivateKey = "Roghnaigh Comhad Eochrach Príobháideach"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Diúltaithe"
 fetchFailed = "Theip ar shonraí sínithe a lódáil"
 finalized = "Críochnaithe"
 location = "Suíomh"
-logoTitle = "Lógó"
-name = "Ainm"
-noLogo = "Gan Lógó"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Uimhir Leathanaigh"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Pasfhocal Teastais"
 passwordOptional = "Fág folamh mura bhfuil focal faire ann"
 pemCertificateLabel = "Teastas (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Eochair phríobháideach (.pem / .key)"
 pending = "Ar feitheamh"
 readyToFinalize = "Réidh le críochnú"
 reason = "Cúis"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Teastas an fhreastalaí in úsáid - níl comhaid ná focal faire de dhíth"
-showLogo = "Taispeáin Lógó"
 signatureProgress = "{{signedCount}}/{{totalCount}} sínithe"
 tags = "fíordheimhnigh,PEM,P12,oifigiúil,criptigh,sínigh,teastas,PKCS12,JKS,freastalaí,láimhe,uathoibríoch"
 title = "Síniú Teastais"
@@ -2738,12 +2828,45 @@ viewed = "Feicthe"
 
 [certSign.appearance]
 invisible = "Dofheicthe"
+showOnPage = "Show signature on page"
 stepTitle = "Cuma Sínithe"
 visibility = "Infheictheacht"
 visible = "Infheicthe"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Sonraí Sínithe"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Maidir le Cuma Sínithe"
@@ -2762,9 +2885,6 @@ bullet3 = "Roghnaigh cén leathanach a gcuirfear an síniú"
 bullet4 = "Is féidir lógó roghnach a áireamh"
 text = "Taispeánann sé bloic shínithe ar an PDF le d’ainm, dáta, agus sonraí roghnacha. Úsáideach nuair is mian leat go bhfeicfeadh léitheoirí go soiléir go bhfuil an doiciméad sínithe."
 title = "Síntithe Infheicthe"
-
-[certSign.certFiles]
-stepTitle = "Comhaid Teastais"
 
 [certSign.certType.tooltip.convert]
 text = "Tiontaigh do chomhad go stór-eochrach Java (.jks) le keytool, ansin roghnaigh JKS."
@@ -2786,6 +2906,7 @@ text = "Roghnaigh an fhormáid a mheaitseálann do chomhad teastais:"
 title = "Cén rogha ba chóir dom a úsáid?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Formáid Teastais"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "An gléas seo"
 [certSign.error]
 failed = "Tharla earráid agus sínithe á bpróiseáil."
 
-[certSign.format]
-pkcs11 = "Tócan USB"
-windowsStore = "Stór teastas Windows"
-
 [certSign.hardware]
-certificate = "Teastas"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Conair shaincheaptha an tiománaí…"
+digitalId = "Digital ID"
 driver = "Tiománaí PKCS#11"
 driverPath = "Conair leabharlainne an tiománaí"
 driverPathPlaceholder = "An chonair iomlán chuig do thiománaí PKCS#11 (.dll, .so nó .dylib)"
-expired = "imithe in éag"
-expires = "téann in éag"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Liostaigh teastais"
-loading = "Teastais á léamh…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Níor aimsíodh teastais sínithe"
 noDriver = "Níor braitheadh aon tiománaí PKCS#11. Suiteáil tiománaí do thócain (m.sh. OpenSC), ansin oscail é seo arís – nó cuir isteach conair an tiománaí de láimh thíos."
-notYetValid = "ní bailí fós"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN an tócan"
 pkcs11Hint = "Roghnaigh tiománaí PKCS#11 don tócan, cuir isteach an PIN, ansin liostaigh na teastais ar an tócan."
 pkcs11LoadError = "Níorbh fhéidir teastais a léamh ón tócan. Seiceáil an PIN agus an tiománaí."
-refresh = "Athnuaigh"
-selectCert = "Roghnaigh teastas"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Roghnaigh tiománaí"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Sliotán (roghnach)"
-windowsHint = "Roghnaigh teastas ó do stór teastas Windows. Úsáideann an síniú an eochair ar do chárta/tócan – iarrfaidh Windows an PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Níorbh fhéidir stór teastas Windows a léamh"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Riail ghinearálta"
 device = "An gléas seo"
 noOtherSources = "Níl aon fhoinsí teastais eile ar fáil."
 server = "Freastalaí"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Foinse an teastais"
 upload = "Uaslódáil"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Nuashonraigh d'ainm úsáideora. Logálfar amach thú tar éis an nuashonraithe."
@@ -3069,7 +3205,6 @@ placeholder = "Cruthaitheoir an doiciméid"
 
 [changeMetadata.customFields]
 add = "Cuir Réimse Leis"
-description = "Cuir réimsí meiteashonraí saincheaptha leis an doiciméad"
 key = "Eochair"
 keyPlaceholder = "Eochair shaincheaptha"
 remove = "Bain"
@@ -3135,10 +3270,6 @@ bullet1 = "Dáta Cruthaithe: Cathain a rinneadh an doiciméad bunaidh"
 bullet2 = "Dáta Mionathraithe: Cathain a athraíodh go deireanach é"
 text = "Cathain a cruthaíodh agus a mionathraíodh an doiciméad."
 title = "Réimsí Dáta"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Scriosadh iomlán meiteashonraí chun príobháideachas a chinntiú."
-title = "Bain Meiteashonraí atá Ann"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Teideal: Ainm nó ceannteideal an doiciméid"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Tá do theorainn úsáide sroichte agat. Seiceáil do rog
 
 [checkAccessibility]
 aboutRow = "Maidir le {{label}}"
-checking = "Á sheiceáil..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Íosluchtaigh tuairisc inrochtaineachta"
 fileFailed = "teipthe"
+noFiles = "Select a PDF to check it."
 pickFile = "Taispeáin torthaí do"
-submit = "Seiceáil inrochtaineacht"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Téacs malartach"
@@ -3286,10 +3417,17 @@ structure = "Insíonn clibeanna do léitheoirí scáileáin cad é gach cuid de 
 [checkAccessibility.checks]
 label = "{{passed}} as {{total}} seiceálacha rite"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Níorbh fhéidir an tuairisc inrochtaineachta a chruthú. Déan iarracht arís."
 fileTitle = "Níorbh fhéidir an comhad seo a sheiceáil"
 partial = "Níorbh fhéidir roinnt comhad a sheiceáil."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Deir PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Tá teideal i meiteashonraí an chomhaid."
 [checkAccessibility.figures]
 summary_one = "Tá cur síos ag teastáil ó {{count}} íomhá (leathanach {{pages}})"
 summary_other = "Tá cur síos ag teastáil ó {{count}} íomhánna (leathanaigh {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Baineann le"
@@ -3465,19 +3618,7 @@ checking = "Á sheiceáil {{current}} as {{total}}..."
 complete = "Seiceáil críochnaithe"
 
 [checkAccessibility.steps]
-results = "Torthaí"
 standard = "Caighdeán"
-
-[checkAccessibility.tooltip.header]
-title = "Cén caighdeán le seiceáil"
-
-[checkAccessibility.tooltip.ua1]
-text = "An chéad leagan de PDF/UA, foilsithe in 2012 mar ISO 14289-1, do chomhaid PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "An leagan níos nuaí, foilsithe in 2024 mar ISO 14289-2, do chomhaid PDF 2.0. Má sheiceálfar comhad PDF 1.7 ina choinne teipfidh sé ar na rialacha a bhaineann le PDF 2.0 amháin."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Anótáil {{n}}"
@@ -3868,6 +4009,7 @@ title = "Roghnaigh dath"
 transparent = "Trédhearcach"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Gníomhartha"
 back = "Siar"
 cancel = "Cealaigh"
@@ -4206,7 +4348,9 @@ title = "Athnuaigh Eochracha API"
 warning = "⚠️ Rabhadh: Ginfidh an gníomh seo eochracha API nua agus déanfaidh sé do chuid eochracha roimhe seo neamhbhailí."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Ligeann Model Context Protocol (MCP) do chúntóirí AI cosúil le Claude do chuid uirlisí Stirling PDF a úsáid go díreach. Ceangail cliant uair amháin agus is féidir le do chúntóir doiciméid a thiontú, a chur in eagar, a dhaingniú agus a phróiseáil thar do cheann."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Ní féidir le haíonna cliaint MCP a cheangal. Cruthaigh cuntas chun an freastalaí MCP a úsáid agus lig do do chúntóir AI uirlisí Stirling PDF a rith thar do cheann."
 navLabel = "Freastalaí MCP"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Cóipeáil {{label}}"
 tooltipCopied = "Cóipeáladh {{label}}"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Do chríochphointe MCP"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Cuir le"
 hint = "Roghnaigh do chliant, greamaigh an sliocht isteach sa chomhad a thaispeántar, ansin atosaigh é. Sínfidh tú isteach le do chuntas Stirling ar an gcéad úsáid - níl aon eochracha le cóipeáil."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Ceangail do chúntóir AI"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Coinnigh Cóimheas Comhréire"
 maxAttachmentSize = "Uasmhéid iatáin (MB)"
 multiple = "Il"
 optimizeForEbook = "Optamaigh PDF do léitheoirí ríomhleabhar (úsáideann Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Aschur"
-outputFormat = "Formáid Aschuir"
-pdfaAccessibleFormat = "{{format}} (inrochtana)"
-pdfaDigitalSignatureWarning = "Tá síniú digiteach ar an PDF. Bainfear é seo sa chéad chéim eile."
-pdfaNote = "Tá PDF/A-1b níos comhoiriúnaí, tacaíonn PDF/A-2b le níos mó gnéithe, tacaíonn PDF/A-3b le comhaid leabaithe."
-pdfaOptions = "Roghanna PDF/A"
 pdfOptions = "Roghanna PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Socruithe"
 signInToUse = "Logáil isteach chun é a úsáid"
 single = "Aonair"
 sourceFormatPlaceholder = "Formáid fhoinseach"
-strictMode = "Mód Docht"
-strictModeDesc = "Earráid mura bhfuil an tiontú foirfe (úsáideann sé fíorú VeraPDF)"
 svgPdfOptions = "Roghanna SVG go PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Déantar comhaid SVG a rindreáil mar ghrafaicí veicteora le haghaidh aschur géar ag aon taifeach. Cinneann toisí ón SVG méid leathanaigh an PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Leibhéal Zúmála"
 
 [convert.ebookOptions]
 includePageNumbers = "Cuir uimhreacha leathanach san áireamh"
-includePageNumbersDesc = "Cuir uimhreacha leathanach leis an PDF ginte"
 includeTableOfContents = "Cuir clár ábhair san áireamh"
-includeTableOfContentsDesc = "Cuir clár ábhair ginte leis an PDF a eascraíonn as"
 optimizeForEbookPdf = "Optamaigh do léitheoirí ríomhleabhar"
 optimizeForEbookPdfDesc = "An PDF a bharrfheabhsú le haghaidh léamh ríomhleabhar (méid comhaid níos lú, rindreáil níos fearr ar ghléasanna eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Braith caibidlí"
 detectChaptersDesc = "Braith ceannteidil a bhreathnaíonn cosúil le caibidlí agus cuir sosanna leathanaigh EPUB isteach"
 kindleEink = "Kindle e-Ink (téacs optamaithe)"
 outputFormat = "Formáid aschuir"
-outputFormatDesc = "Roghnaigh an fhormáid aschuir don ebook"
 tabletPhone = "Táibléad/Fón (le híomhánna)"
 targetDevice = "Gléas sprice"
 targetDeviceDesc = "Roghnaigh próifíl aschuir optamaithe don ghléas léitheoireachta"
@@ -4469,8 +4619,24 @@ description = "Tá na cookies seo riachtanach chun go bhfeidhmeoidh an suíomh g
 posthog = "Anailísíocht PostHog"
 scarf = "Scairf Picteilín"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Teideal an leathanaigh chlúdaigh"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "Punann PDF"
 description = "Coinnítear gach comhad roghnaithe ina iomláine laistigh den PDF nua, is cuma cén cineál é. Taispeánann léitheoirí nach dtacaíonn le punanna leathanach clúdaigh leis na comhaid ceangailte."
 goToFileEditor = "Téigh chuig eagarthóir comhad"
@@ -4488,6 +4654,9 @@ title = "Cad a dhéanann sé"
 
 [createPortfolio.tooltip.header]
 title = "Maidir le Punanna PDF"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Spás bán a bhearradh go huathoibríoch"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Níl rochtain ar an ngearrthaisce ar fáil sa bhrabhsál
 export = "Easpórtáil leabharmharcanna"
 exportClipboard = "Cóipeáil JSON go dtí an gearrthaisce"
 exportJson = "Íoslódáil JSON"
+exportMenu = "Export"
 importClipboard = "Greamaigh JSON ón gearrthaisce"
 importJson = "Iompórtáil JSON"
+importMenu = "Import"
 loadFromPdf = "Luchtaigh ón PDF roghnaithe"
 noFile = "Roghnaigh PDF chun leabharmharcanna atá ann a bhaint."
 selectedFile = "Luchtaithe ó {{file}}"
-source = "Luchtaigh leabharmharcanna"
 
 [editTableOfContents.editor]
 addTopLevel = "Cuir leabharmharc barrleibhéil leis"
@@ -4740,6 +4910,9 @@ replaceExisting = "Cuir na leabharmharcanna reatha in ionad (bain an tic chun cu
 replaceExistingHint = "Nuair atá sé díchumasaithe, cuirfear an imlíne nua leis i ndiaidh na leabharmharcanna reatha."
 title = "Leabharmharcanna & imlíne"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Athraigh PDF"
 filePrompt = "Roghnaigh PDF ó do leabharlann nó uaslódáil ceann nua chun tosú."
@@ -4753,7 +4926,6 @@ title = "Oscail an uirlis chun eagarthóireacht a thosú"
 [encryptedPdfUnlock]
 actionIgnored = "Neamhaird déanta de shrian {{action}}"
 actionUnlocked = "Díghlasáladh {{action}} don seisiún seo"
-advanced = "Ardroghanna"
 allowed = "Ceadaithe"
 annotations = "Nótaí"
 authoriseAction = "Teastaíonn cead ón PDF seo chun {{action}} a úsáid."
@@ -4801,7 +4973,6 @@ restricted = "Srianta"
 restrictedActions = "gníomhartha srianta"
 restrictedOperation = "Teastaíonn an pasfhocal ceadanna don ghníomh seo."
 retainOwnerVerification = "Fíoraigh an pasfhocal ceadanna chun é a choinneáil gan athrú agus an pasfhocal le hoscailt á bhaint. Ní bhainfear é."
-saveProtection = "Sábháil cosaint"
 securityChangeFailed = "Ní féidir cosaint a athrú. Seiceáil an pasfhocal ceadanna agus na socruithe slándála nua."
 sessionDetails = "Oscailte don seisiún seo. Fanann an PDF cosanta."
 sessionDetailsLabel = "Maidir le díghlasáil seisiúin"
@@ -4871,7 +5042,6 @@ title = "Chuaigh rud éigin mícheart"
 tryAgain = "Bain Triail Arís"
 
 [extractImages]
-allowDuplicates = "Sábháil íomhánna dúblacha"
 selectText = "Roghnaigh formáid íomhá chun íomhánna bainte a thiontú go"
 submit = "Sliocht"
 tags = "pictiúr, grianghraf, shábháil, cartlann, zip, gabháil, grab"
@@ -4927,12 +5097,15 @@ closeFile = "Dún comhad"
 
 [fileEditor]
 closedFile = "Dúnadh {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Athordaíodh comhad"
 filesReordered_other = "Athordaíodh {{count}} chomhad"
 loadedFromStorage_one = "Luchtaíodh {{count}} chomhad ón stóráil"
 loadedFromStorage_other = "Luchtaíodh {{count}} chomhad ón stóráil"
 loadFromStorageFailed = "Theip ar roinnt comhad a luchtú ón stóráil"
 pinnedFile = "Pionnáladh {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Sábháladh agus dúnadh {{name}}"
 saveFailed = "Theip ar shábháil"
 unpinnedFile = "Díphionnáladh {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Faoi ghlas"
 previewOf = "Réamhamharc ar {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Cuir comhaid leis"
 created = "Cruthaithe"
 notIncludedInToolRun = "Gan a bheith san áireamh sa rith uirlise seo"
 size = "Méid Comhaid"
 title = "Comhaid"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Níl aon chomhaid ar fáil"
@@ -5104,6 +5286,7 @@ subtitle = "Taispeáin nó folaigh catagóirí sa bharra taoibh comhad."
 title = "Catagóirí an bharra taoibh"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Cealaigh"
 error = "Níorbh fhéidir an comhad a athainmniú."
 illegalCharacters = "Ní féidir le hainm comhaid \\ / : * ? \" < > | a bheith ann"
@@ -5607,7 +5790,6 @@ removeField = "Bain réimse"
 
 [formFill.editor]
 action = "Gníomh an chnaipe"
-actionHelp = "An rud a dhéanann an cnaipe nuair a chliceáiltear air."
 actionNone = "Níl aon cheann"
 actionPrint = "Priontáil"
 actionReset = "Athshocraigh an fhoirm"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Cuireann sé teorainn leis an líon carachtar a oireann, arna t
 multiline = "Illíneach"
 multilineHelp = "Ceadaíonn sé níos mó ná líne amháin téacs agus fillteann sé ag imeall an réimse."
 multiSelect = "Ceadaigh ilroghnú"
-multiSelectHelp = "Ligeann sé níos mó ná rogha amháin a roghnú ag an am céanna."
 name = "Ainm an réimse"
 nameHelp = "Ainm inmheánach an réimse. Úsáidtear é agus sonraí á n-easpórtáil nó agus an fhoirm á líonadh ó chóras eile, mar sin coinnigh uathúil é agus gan spásanna."
 optionGap = "Spásáil roghanna"
@@ -5902,6 +6083,11 @@ title = "Coigeartaigh Dathanna/Codarsnacht"
 desc = "Cuireann síniú le PDF trí líníocht, téacs nó íomhá"
 tags = "anótáil,aibhsigh,tarraing,marcáil,trácht,nótaí,athbhreithniú,redline,aiseolas,uirlisí marcála,nótaí greamaitheacha,cruthanna,saigheada,bosca téacs,saorlámh"
 title = "Comhartha"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Braith réimsí foirme go huathoibríoch le AI agus déan do PDF inlíonta."
@@ -6405,6 +6591,9 @@ sort = "Sórtáil"
 [merge.sortFiles]
 title = "Sórtáil Comhaid"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Forbhreathnú ar Shocruithe Cumaisc"
 
@@ -6548,6 +6737,9 @@ title = "Theip ar an bhfíordheimhniú"
 message = "Is féidir leat an fhuinneog seo a dhúnadh agus filleadh ar Stirling PDF."
 title = "Fíordheimhniú Rathúil"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Ceadaigh rochtain"
 approving = "Á cheadú..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Á dtabhairt ar ais chuig an app..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "Tá {{app}} ag iarraidh rochtain ar do chuntas Stirling PDF"
 scopesIntro = "Ceadóidh sé seo do {{app}}:"
 signedInAs = "Sínithe isteach mar {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Sínigh isteach chun leanúint ar aghaidh"
 signInPrompt = "Sínigh isteach i do chuntas Stirling PDF chun leanúint den app a nascadh."
 title = "Authorise access"
 unknownApp = "Feidhmchlár tríú páirtí"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Gníomhú mar tusa - rithfidh gach rud a dhéanann {{app}} faoi do chuntas agus comhaireamh sé i d’úsáid"
@@ -6572,9 +6767,12 @@ tools = "Úsáid do chuid uirlisí Stirling PDF ar do shon - tiontaigh, cuir in 
 
 [oauthConsent.scope]
 email = "Féach do sheoladh email"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Deimhnigh d’aitheantas"
 phone = "Féach d’uimhir ghutháin"
 profile = "Féach do bhuneolas próifíle"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Scanann glantachán agus aimsíonn sé téacs ó íomhánna laistigh de PDF agus cuireann sé isteach arís é mar théacs."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Beidh tú i do bhall foirne agus caillfidh tú rochtain úin�
 [pageEdit]
 deselectAll = "Dada"
 selectAll = "Roghnaigh Gach Rud"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Leathanaigh Sliocht"
@@ -7577,6 +7779,8 @@ stamp = "Anótáil stampa - ní téacs leathanaigh é, mar sin ní féidir é a 
 widget = "Réimse foirme - ní téacs leathanaigh é, mar sin ní féidir é a chur in eagar anseo"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Eagar"
 markTagged = "Marcáil mar chlibeáilte go hiomlán"
 matchScanFont = "Meaitseáil téacs scanáilte le {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Uath-chlibeáil an leathanach"
 typeInto = "Clóscríobh isteach i {{run}}"
 ungroupParagraph = "Díghrúpáil mír {{run}}"
 unmarkTagged = "Marcáil mar nach bhfuil go hiomlán clibeáilte"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Timfhill {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Caith amach athruithe gan sábháil?"
 
 [pdfTextEditor.error]
 decodeImage = "Níorbh fhéidir an íomhá roghnaithe a dhíchódú."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Ní féidir an téacs seo a dhúbláil: níl aon chló ar fáil a rindreálann a litreacha uile."
 formLiftChangesDrawing = "Ní féidir é seo a chur in eagar: tá sé rindreáilte mar chuid de ghrúpa nach féidir leis an eagarthóir a shocruithe gearrtha nó grafaice a chaomhnú nuair a athraítear é."
 insertImage = "Níorbh fhéidir an íomhá roghnaithe a chur isteach."
 needsShaping = "Ní féidir leis an eagarthóir litreacha ceangailte agus comharthaí gutaí an aibítre seo a rindreáil i gceart fós, mar sin níor cuireadh an t-athrú seo i bhfeidhm."
+reopenLost = "Open again"
 replaceClippedImage = "Ní féidir an íomhá seo a chur in ionad: tá sí bearrtha, agus thaispeánfadh an ionadú na codanna a cheileann an bearradh."
 scanOffInk = "Ní féidir an téacs seo a chur in eagar: ní ailíníonn a chuid focal aitheanta leis an scanadh. Rith OCR arís."
 unsafeRtlEdit = "Ní féidir an t-eagar seo a dhéanamh: ní féidir leis an eagarthóir téacs na líne seo ó dheis go clé a athrindreáil gan é a athrú."
@@ -7616,6 +7823,7 @@ pngFileType = "Íomhá PNG"
 close = "Dún barra cuardaigh"
 count = "{{current}} as {{total}}"
 findPlaceholder = "Aimsigh"
+hideReplace = "Hide replace"
 ignoreAccents = "Déan neamhaird d'aiceann"
 matchCase = "Meaitseáil cás"
 next = "An chéad mheaitseáil eile"
@@ -7625,6 +7833,7 @@ replace = "Ionadaigh"
 replaceAll = "Ionadaigh gach ceann"
 replaced = "{{count}} ionadaithe"
 replacePlaceholder = "Ionadaigh le"
+showReplace = "Show replace"
 wholeWord = "Focal iomlán"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Ní féidir an nasc seo a chlibeáil."
 cannotTagPage = "Ní féidir ábhar an leathanaigh seo a chlibeáil."
 contentGroup = "Ábhar"
 customTag = "{{role}} (clib shaincheaptha)"
-decorativeInfo = "Scipeálann léitheoirí scáileáin íomhánna maisiúla. Úsáid í le haghaidh teorainneacha, cúlraí agus íomhánna eile nach n-iompraíonn aon fhaisnéis."
-decorativeLabel = "Íomhá mhaisiúil"
-description = "Cur síos ar íomhá"
-descriptionInfo = "Léann léitheoirí scáileáin é seo amach in ionad na híomhá."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Ní féidir clibeanna a chur in eagar i gcomhad criptithe"
 figureDescription = "Cur síos ar an bhfigiúr"
 figureDescriptionInfo = "Léann léitheoirí scáileáin é seo amach in ionad an fhigiúir."
-formFieldDescription = "Cur síos ar an réimse"
 formulaDescription = "Cur síos ar an bhfoirmle"
 formulaDescriptionInfo = "Léann léitheoirí scáileáin é seo amach in ionad na foirmle. Abair mar a déarfá os ard é, mar shampla \"x sa chearn móide a haon\"."
 heading = "Inrochtaineacht"
@@ -7813,7 +8019,6 @@ markedTagged = "Tá an doiciméad clibeáilte go hiomlán"
 markedTaggedHint = "Deirtear le léitheoirí PDF na clibeanna inrochtaineachta a úsáid. Cuir tic leis nuair atá gach rud clibeáilte."
 markedWithUntagged = "Níl clibeanna ag cuid den ábhar, mar sin d'fhéadfadh léitheoirí scáileáin é a scipeáil."
 missingDescriptions = "Cur síos ar iarraidh"
-mixedContent = "Tá ábhar eile san fhíor"
 mixedTags = "Measctha"
 needsDescriptionBadge = "Gan cur síos"
 nextToReview = "An chéad cheann eile le hathbhreithniú"
@@ -7821,12 +8026,10 @@ notFigure = "Clibáilte mar chuid den téacs"
 removeTag = "Bain clib"
 saveFailed = "Níorbh fhéidir do chuid athruithe inrochtaineachta a shábháil, mar sin níor sábháladh an comhad. Cealaigh iad agus bain triail eile as."
 selectedText = "Téacs roghnaithe"
-tagFormField = "Clibeáil réimse foirme"
 tagging = "Clibeáil leathanaigh"
 tagLabel = "Clib"
 tagLinks_one = "Clibeáil nasc"
 tagLinks_other = "Clibeáil {{count}} nasc"
-tagUntagged = "Uath-chlibeáil doiciméad"
 tagUntaggedHint = "Cuireann sé clibeanna inrochtaineachta leis an doiciméad go huathoibríoch. Tá an toradh garbh: seiceáil ceannteidil, liostaí agus ord léitheoireachta ina dhiaidh."
 unknownTag = "Ní féidir é a léamh anseo"
 unmarkedWithTags = "Úsáidfidh roinnt amharcán PDF na clibeanna ar aon chaoi agus d'fhéadfadh siad ábhar gan chlib a scipeáil."
@@ -7851,7 +8054,7 @@ heading = "Ceannteidil"
 mixedNumbering = "Meascann sé ceannteidil uimhrithe agus neamh-uimhrithe"
 none = "Gan cheannteidil"
 onPage = "Ceannteideal ar leathanach {{page}}"
-problems = "Fadhbanna le ceannteidil"
+problemCount = "{{count}} to fix"
 skippedLevel = "Scipeálann sé leibhéal i ndiaidh Cheannteideal {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Teideal"
 allLanguages = "Gach teanga"
 cannotSetDocument = "Ní féidir teanga an doiciméid a athrú."
 cannotSetText = "Ní féidir teanga an téacs seo a athrú."
-documentHint = "An teanga a úsáideann léitheoirí scáileáin mura leagann cuid den téacs a teanga féin."
 documentLabel = "Teanga"
 documentLocked = "Ní féidir teanga doiciméid chriptithe a athrú anseo."
 inDocument = "Sa doiciméad seo"
 innerLabel = "Teanga clibe {{number}}"
 label = "Teanga"
-missing = "Níl teanga socraithe. Déanfaidh léitheoirí scáileáin buille faoi thuairim, agus seans go léifidh siad an doiciméad ar fad sa ghlór mícheart."
 mixed = "Measctha"
 noMatch = "Níl aon teanga comhoiriúnach. Clóscríobh a cód ina ionad sin, m.sh. mt nó en-IE."
 placeholder = "Roghnaigh teanga"
@@ -7943,6 +8144,52 @@ renderFailed = "Theip ar leathanach a rindreáil"
 [pdfTextEditor.password]
 incorrect = "Pasfhocal mícheart - bain triail eile as."
 label = "Pasfhocal"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Treoir ailínithe ag {{value}} {{unit}} - tarraing ar rialóir chun í a bhaint"
@@ -8124,6 +8371,10 @@ title = "Réamhamharc ar an Éagsúlacht"
 [pdfTextEditor.tooltip.textFocus]
 text = "Díríonn an spás oibre seo ar théacs a chur in eagar agus íomhánna leabaithe a athshuíomh. Coinnítear saothar ealaíne leathanaigh casta, giuirléidí foirmeacha, agus grafaicí srathacha le haghaidh onnmhairithe ach ní féidir iad a chur in eagar go hiomlán anseo."
 title = "Fócas Téacs agus Íomhá"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "Ó CSV go PDF"
@@ -8383,17 +8634,6 @@ hideCategory = "Folaigh catagóir"
 labelCount = "lipéid"
 sharedNote = "Tá na lipéid seo ionsuite agus comhroinnte ar fud d'fhoirne ar fad."
 showCategory = "Taispeáin catagóir"
-
-[policies.pii]
-account = "Uimhreacha cuntais (lipéadaithe)"
-card = "Cártaí creidmheasa / dochair"
-email = "Seoltaí ríomhphoist"
-fieldLabel = "PII le rúndú"
-iban = "IBANanna"
-phone = "Uimhreacha gutháin"
-placeholder = "Roghnaigh cineálacha PII"
-routing = "Uimhreacha ródaithe SAM (ABA)"
-ssn = "Uimhreacha Slándála Sóisialta"
 
 [policy]
 badgeEnforcing = "{{name}} á chur i bhfeidhm..."
@@ -10317,6 +10557,10 @@ title = "Píblínte"
 [portal.pipelines.actions]
 newCustomPipeline = "Píblíne saincheaptha nua"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Gach píblíne"
 
@@ -12047,7 +12291,6 @@ label = "Uirlisí léitheoireachta"
 readAloud = "Léigh os ard"
 rotateLeft = "Rothlaigh ar chlé"
 rotateRight = "Rothlaigh ar dheis"
-search = "Aimsigh sa doiciméad"
 switchDocument = "Athraigh doiciméad"
 thumbnails = "Leathanaigh"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Dath an Bhosca"
 convertPDFToImageLabel = "Tiontaigh PDF go PDF-Image"
 customPaddingLabel = "Stuáil Bhreise Chustaim"
 useRegexLabel = "Úsáid Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Cuardach Focal Iomlán"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Socruithe Ceilte"
 
 [redact.auto.wordsToRedact]
 add = "Cuir"
-examples = "Samplaí: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Cuir focal isteach"
 title = "Focail le Ceilt"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Roghnaigh comhaid sa bhainisteoir comhad chun comhai
 manual = "Láimhe"
 mode = "Mód"
 title = "Modh Ceilte"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Ná meaitseáil ach téacs sa chás céanna. Ní mheaitseálfaidh 'Secret' le 'SECRET' nuair atá sé cumasaithe, agus ní mheaitseálann [A-Z] in regex ach ceannlitreacha."
@@ -12147,19 +12401,6 @@ title = "Modh Ceilte"
 text = "Cliceáil agus tarraing chun limistéir shonracha a roghnú le ceilt de láimh. Tugann sé smacht cruinn duit ar a gceiltear. (Ag teacht go luath)"
 title = "Ceilt Láimhe"
 
-[redact.tooltip.words]
-bullet1 = "Cuir focal amháin leis ag an am"
-bullet2 = "Brúigh Enter nó cliceáil 'Cuir Eile leis' chun cur leis"
-bullet3 = "Cliceáil × chun focail a bhaint"
-
-[redact.tooltip.words.description]
-text = "Cuir isteach focail nó frásaí le fáil agus le ceilt i do dhoiciméad. Déanfar cuardach ar gach focal ar leithligh."
-title = "Meaitseáil Téacs"
-
-[redact.tooltip.words.examples]
-text = "I measc focail thipiciúla le ceilt tá: sonraí bainc, seoltaí ríomhphoist, nó ainmneacha ar leith."
-title = "Samplaí Coitianta"
-
 [redact.tooltip.words.header]
 title = "Focail le Ceilt"
 
@@ -12176,15 +12417,6 @@ failed = "Tharla earráid agus anótálacha á mbaint as an PDF."
 
 [removeAnnotations.info]
 description = "Bainfidh an uirlis seo gach anótáil (tráchtanna, aibhsithe, nótaí, srl.) ó do dhoiciméid PDF."
-
-[removeAnnotations.settings]
-title = "Socruithe"
-
-[removeAnnotations.tooltip.description]
-title = "Cad a dhéanann sé"
-
-[removeAnnotations.tooltip.header]
-title = "Maidir le Bain Anótálacha"
 
 [removeBlanks]
 submit = "Bain leathanaigh bhána"
@@ -12325,6 +12557,9 @@ tags = "atheagraigh,athordaigh,eagraigh,atheagrú,bog leathanaigh,ord leathanaig
 [reorganizePages.error]
 failed = "Theip ar atheagrú na leathanach"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Ath-eagraíodh Leathanaigh"
 
@@ -12406,6 +12641,7 @@ title = "Inbhéartaigh Gach Dath"
 rotateLeft = "Rothlaigh tuathalach"
 rotateRight = "Rothlaigh deiseal"
 selectRotation = "Roghnaigh Uillinn Rothlaithe (deiseal)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Cuir Rothlú i bhFeidhm"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rothlaigh PDF"
@@ -12516,8 +12752,7 @@ title = "Sláintigh"
 failed = "Tharla earráid agus an PDF á shláintiú."
 
 [sanitize.options]
-note = "Roghnaigh na heilimintí is mian leat a bhaint den PDF. Ní mór rogha amháin ar a laghad a roghnú."
-title = "Roghanna Sláintiúcháin"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Bain aon chomhaid leabaithe laistigh den PDF"
@@ -12649,6 +12884,7 @@ title = "Cuardaigh PDF"
 hideTools = "Folaigh uirlisí nach bhfuil ar fáil ▴"
 messageNoFallback = "Ní bheidh uirlisí ar fáil go dtí go mbeidh do fhreastalaí ar líne arís."
 messageWithFallback = "Teastaíonn ceangal le freastalaí ó chuid d’uirlisí."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Féach uirlisí nach bhfuil ar fáil ▾"
 title = "Ní féidir do fhreastalaí Stirling-PDF a bhaint amach"
 toolNotAvailableLocally = "Tá do fhreastalaí Stirling-PDF as líne agus níl \"{{endpoint}}\" ar fáil ar an gcúlcheann áitiúil."
@@ -13034,6 +13270,12 @@ title = "Aicearraí Méarchláir"
 mac = "Cuir ⌘ (Command), ⌥ (Option), nó modhnóir eile i do aicearra."
 windows = "Cuir Ctrl, Alt, nó modhnóir eile i do aicearra."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Téarmaí, polasaí príobháideachais agus do roghanna fianán."
 label = "Dlíthiúil"
@@ -13418,9 +13660,7 @@ image = "Uaslódáil"
 text = "Téacs"
 
 [sign.step]
-createDesc = "Roghnaigh conas is mian leat an síniú a chruthú"
 place = "Cuir & sábháil"
-placeDesc = "Cuir an síniú ar do PDF"
 
 [sign.steps]
 configure = "Cumraigh Síniú"
@@ -13597,6 +13837,10 @@ rotateLeft = "Rothlaigh ar chlé"
 rotateRight = "Rothlaigh ar dheis"
 trim = "Bearr go dtí an síniú"
 trimHint = "Gearrann sé an spás folamh timpeall air"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Socruithe Cuma Sínithe"
@@ -13959,7 +14203,6 @@ placeholder = "Cuir isteach líon na rannán cothrománach"
 
 [split-by-sections.splitMode]
 custom = "Leathanaigh saincheaptha"
-description = "Roghnaigh conas na leathanaigh a roinnt"
 label = "Mód Scoilte"
 splitAll = "Scoilt na leathanaigh uile"
 splitAllExceptFirst = "Roinn gach rud seachas an chéad cheann"
@@ -14210,10 +14453,8 @@ failed = "Tharla earráid agus stampa ama á chur leis an PDF."
 
 [timestampPdf.options]
 note = "Ní sheoltar ach SHA-256 hash de do dhoiciméad chuig an bhfreastalaí TSA; ní sheoltar an comhad PDF féin riamh chuig an bhfreastalaí TSA."
-title = "Freastalaí Stampa Ama (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Roghnaigh Time Stamp Authority iontaofa"
 label = "Roghnaigh freastalaí TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Níl aon uirlisí ar fáil"
 
 [tooltip]
 close = "Dún an leid"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Bainfidh an uirlis seo srianta léamh-amáin ó réimsí foirme PDF, rud a fhágann go mbeidh siad in-eagarthóireachta agus inlíonta."
@@ -14706,6 +14961,9 @@ signatureDate = "Dáta Sínithe"
 
 [validateSignature.settings]
 certHint = "Uaslódáil teastas X.509 iontaofa le bailíochtú i gcoinne foinse iontaoibhe shaincheaptha."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Socruithe Bailíochtaithe"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Ní féidir an comhad a réamhamharc."
 copyRestricted = "Tá cóipeáil díchumasaithe ag ceadanna an PDF seo."
 copyText = "Cóipeáil"
 coverPageView = "Taispeáin Leathanach Clúdaigh ar Leith"
-disableColorFilter = "Díchumasaigh Scagaire Datha"
 documentUpdated = "Nuashonraíodh an doiciméad"
 dualPageView = "Amharc Dhá Leathanach"
 editText = "Cuir téacs in eagar"
-enableDarkFilter = "Cumasaigh Scagaire Dorcha"
-enableSepiaFilter = "Cumasaigh Scagaire Sepia"
 engineLoadError = "Theip ar inneall amharcóra PDF a thúsú"
 engineSlowWarning = "Tá túsú inneall PDF ag glacadh níos faide ná mar a bhíothas ag súil. Seiceáil socruithe WebAssembly agus Worker do bhrabhsálaí, nó athluchtaigh an leathanach."
 firstPage = "An Chéad Leathanach"
@@ -14736,20 +14991,27 @@ fitPage = "Oiriúnaigh don leathanach"
 fitWidth = "Oiriúnaigh don leithead"
 lastPage = "An Leathanach Deireanach"
 loadingEngine = "Inneall PDF á luchtú..."
+menuSelected = "Selected"
 moreOptions = "Tuilleadh"
 nextPage = "Leathanach Ar Aghaidh"
 noPdfProvided = "Níor soláthraíodh PDF"
 onlyPdfSupported = "Ní thacaítear leis an bhformáid comhaid seo le haghaidh réamhamhairc."
 pageNavigation = "Nascleanúint leathanaigh"
+pageNumber = "Page number"
 previousPage = "Leathanach Roimhe Seo"
 readAloudFromHere = "Léigh os ard as seo"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Níorbh fhéidir an doiciméad a shábháil. Déan iarracht arís."
 saveChangesErrorTitle = "Níorbh fhéidir na hathruithe a shábháil"
 singlePageView = "Amharc Leathanach Aonair"
+tools = "Tools"
 unknownFile = "Comhad anaithnid"
-view = "Amharc"
 zoom = "Súmáil"
 zoomIn = "Súmáil Isteach"
+zoomLevel = "Zoom level"
 zoomOut = "Súmáil Amach"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Réamhamharc sínithe"
 
 [viewer.signatureField]
 badge = "Síniú"
+clickToSign = "Click to sign here"
 fieldTitle = "Réimse sínithe: {{name}}"
 signed = "Sínithe"
 signedWithReason = "Sínithe: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Réimse sínithe gan síniú: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Athchóiríodh {{restored}} as {{total}} chomhad. Níl an chuid eile 
 
 [workbenchBar]
 activeFiles = "Comhaid ghníomhacha"
-annotations = "Anótálacha"
+annotate = "Annotate"
 applyRedactionsFirst = "Cuir na ceiltí i bhfeidhm ar dtús"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Dún gach comhad"
 closePdf = "Dún PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Díroghnaigh uile"
 downloadAll = "Íoslódáil gach comhad"
 editText = "Cuir Téacs in Eagar"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Scoir den mhód anótála"
 exitRedaction = "Scoir de mhód ceilte"
 findReplace = "Aimsigh & cuir in ionad"
 formFill = "Eagarthóir Foirmeacha"
-hideToolbar = "Folaigh barra uirlisí"
+layers = "Layers"
 moreActions = "Tuilleadh gníomhartha"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Eagarthóir Leathanach"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Mód pánála"
 print = "Priontáil PDF"
 readAloud = "Léigh os ard"
 readAloudLanguage = "Teanga"
 readAloudSpeed = "Luas"
 redact = "Ceil"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Rothlaigh go clé"
 rotateRight = "Rothlaigh go deas"
 ruler = "Rialóir / Tomhas"
+rulerScaleUnset = "Not set"
 rulerSettings = "Socruithe Scála"
 save = "Sábháil"
 saveAll = "Sábháil gach comhad"
@@ -15123,14 +15398,23 @@ selectLanguage = "Roghnaigh teanga"
 share = "Roinn"
 showAllTools = "Taispeáin gach uirlis"
 showFewerTools = "Laghdaigh an barra uirlisí"
-showToolbar = "Taispeáin barra uirlisí"
+thumbnails = "Pages"
 toggleAnnotations = "Scoránaigh infheictheacht na n-anótálacha"
-toggleAttachments = "Scoránaigh iatáin"
-toggleBookmarks = "Leabharmharcanna (Clár Ábhar)"
 toggleComments = "Tráchtanna"
-toggleLayers = "Scoránaigh sraitheanna"
-toggleSidebar = "Scoránaigh an barra taoibh"
 viewer = "Breathnóir"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Tá d’rochtain ar an doiciméad seo imithe in éag."

@@ -12,9 +12,11 @@ comingSoon = "Laster"
 confirm = "Berretsi"
 confirmClose = "Itxiera berretsi"
 confirmCloseCancel = "Utzi"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Itxi fitxategia"
 confirmCloseDiscard = "Baztertu aldaketak eta itxi"
 confirmCloseMessage = "Ziur zaude fitxategi hau ixtea nahi duzula?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Gorde eta itxi"
 confirmCloseSaveFailed_one = "Akats batzuekin gorde da. {{count}} fitxategi ezin izan dira gorde."
 confirmCloseSaveFailed_other = "Erroreekin gorde da. {{count}} fitxategi ezin izan dira gorde."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Fitxategia diskoan gorde da"
 filesSelected = "{{count}} fitxategi"
 font = "Letra-tipoa"
 fontSizeTooltip = "Orri-zenbakiaren testuaren tamaina puntutan. Zenbaki handiagoek testu handiagoa sortzen dute."
-fontTypeTooltip = "Orri-zenbakientzako letra-familia. Aukeratu zure dokumentuaren estiloaren arabera."
 green = "Berdea"
 help = "Laguntza"
 incorrectPasswordMessage = "Uneko pasahitza ez da zuzena."
@@ -249,9 +250,7 @@ image = "Kargatzea"
 text = "Testua"
 
 [addImage.step]
-createDesc = "Gehitu nahi duzun irudia igo"
 place = "Irudia kokatu"
-placeDesc = "Egin klik PDFan zure irudia gehitzeko"
 
 [addImage.steps]
 configure = "Irudia konfiguratu"
@@ -276,7 +275,7 @@ fontName = "Letra-tipoaren izena"
 fontSize = "Letra-tamaina"
 numberPagesDesc = "adib., 1,3,5-8 edo utzi hutsik orri guztietarako"
 pagePreviewAlt = "Orriaren aurrebista"
-pagesAndStarting = "Orrialdeak eta hasierako zenbakia"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Kokalekua eta orrialdeak"
 preview = "Kokalekuaren hautaketa"
 previewDisclaimer = "Aurrebista orientagarria da. Azken emaitza aldatu daiteke PDFaren letra-metriken arabera."
@@ -300,6 +299,7 @@ title = "Orri-zenbakien emaitzak"
 
 [addPassword]
 desc = "Zifratu zure PDF dokumentua pasahitz batekin."
+submit = "Add Password"
 tags = "enkriptatu,pasahitza,blokeatu,seguru,babestu,segurtasuna,enkriptatzea,babesa,konfidentziala,pribatua,sarbidea mugatu"
 title = "Gehitu pasahitza"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Zigiluaren aurrebista"
 tags = "zigilua,marka,zigilatu,onartua,baztertua,konfidentziala,zigilu-tresna,kautxuzko zigilua,data-zigilua,onartze-zigilua,jasota,baliogabea,kopia,jatorrizkoa"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabetoa"
-clickToExpand = "Egin klik zabaltzeko"
 customColor = "Testu-kolore pertsonalizatua"
 customDateDesc = "Formatu pertsonalizatua"
 customPosition = "Arrastatu zigiloa aurrebistako leihoan nahi duzun kokalekura."
 dateDesc = "Uneko data"
 datetimeDesc = "Data eta ordua konbinatuta"
 dateTimeVars = "Data eta ordua"
-dynamicVariables = "Aldagai dinamikoak"
 examples = "Adibideak"
 filenameDesc = "Fitxategi-izena luzapenik gabe"
 filenameFullDesc = "Fitxategi-izena luzapenarekin"
@@ -365,6 +364,8 @@ noStampSelected = "Ez da zigilorik hautatu. Itzuli 1. urratsera."
 opacity = "Opakutasuna"
 otherVars = "Besteak"
 pageNumberDesc = "Uneko orri-zenbakia"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Orriaren informazioa"
 position = "Posizioa"
 positionAndFormatting = "Kokapena eta formatua"
@@ -378,9 +379,10 @@ quickPosition = "Hautatu orrian zigiloa kokatzeko posizio bat."
 rotation = "Biraketa"
 selectedImageAlt = "Hautatutako zigilu-irudia"
 selectTemplate = "Hautatu txantiloi bat..."
+size = "Size"
 stampSetup = "Zigiluaren konfigurazioa"
 stampText = "Zigilu testua"
-stampTextDescription = "Erabili beheko aldagai dinamikoak. Erabili @@ @ literal baterako. Erabili \\n lerro berrietarako."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Zigilu mota"
 submit = "Gehitu zigilua"
 tags = "Zigilua, Gehitu irudia, erdiratu irudia, Ur-marka, PDF, Kapsulatu, Pertsonalizatu"
@@ -389,7 +391,6 @@ title = "Zigilatu PDFa"
 totalPagesDesc = "Orrien guztizko kopurua"
 useTemplate = "Erabili txantiloia"
 uuidDesc = "Identifikatzaile bakar laburra (8 karaktere)"
-variablesHelp = "Egin klik edozein aldagaitan zure zigilu-testuan txertatzeko. Erabili @@ @ literal baterako."
 yearMonthDayDesc = "Dataren atal indibidualak"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Errore bat gertatu da zigilua PDFari gehitzean."
 
 [AddStampRequest.results]
 title = "Zigiluaren emaitzak"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Pertsonalizatua"
@@ -410,6 +417,11 @@ legal-footer = "Legezko orri-oina"
 page-numbers = "Orri-zenbakiak"
 pageNumberFooter = "Orri-zenbakiaren orri-oina"
 timestamp = "Denbora-zigilua"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Testua aplikatu"
@@ -462,9 +474,7 @@ image = "Kargatzea"
 text = "Testua"
 
 [addText.step]
-createDesc = "Sartu gehitu nahi duzun testua"
 place = "Testua kokatu"
-placeDesc = "Egin klik PDFan zure testua gehitzeko"
 
 [addText.steps]
 configure = "Testua konfiguratu"
@@ -1233,6 +1243,18 @@ label = "Abiokoan birsortu"
 description = "Ziurtagiria balioz egongo den egun kopurua"
 label = "Ziurtagiriaren balio-epea (egunak)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Karpeta-iturriek eta karpeta-irteerek irakurri eta idatz ditzaketen direktorioak. Hau segurtasun-muga bat da: automatizazioak ezin dira inoiz zerrenda honetatik kanpoko zerbitzari-bide batera zuzendu."
 securityNote = "Utzi hau hutsik karpeta-iturriak eta irteerak erabat desgaitzeko. Stirling-en konfigurazio-direktorioa beti dago mugaz kanpo."
@@ -1456,7 +1478,9 @@ label = "SMTP erabiltzaile-izena"
 
 [admin.settings.mcp]
 apikeyNote = "Bezeroek Stirling API gako bat bidaltzen dute X-API-KEY goiburuan (edo Authorization: Bearer <key>). Gakoa dagokion Stirling erabiltzailearekin lotzen da: hornitutako kontuak bakarrik sartzen dira, eta ekintzak erabiltzaile horren izenean ikuskatzen dira. Kudeatu gakoak Kontua > API gakoak atalean."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Jarri Stirling-en PDF tresnak eta AI agenteak MCP bezeroen eskura, OAuth bidez babestutako endpoint baten bidez."
+endpointUrl = "MCP endpoint URL"
 title = "MCP zerbitzaria"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Baimendutako tresnak"
 description = "MCP-tik ezkutatu beharreko eragiketa-idak (komaz edo zuriunez bereizita), adib. add-password remove-password. Utzi hutsik gaitutako tresna guztiak erakusteko."
 label = "Blokeatutako tresnak"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Desaktibatuta dagoenean (lehenetsia), ez da /mcp endpointik, metadaturik edo MCP bean-ik kargatzen."
 label = "Gaitu MCP zerbitzaria"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Sartu goian zure OAuth jaulkitzailea + resource ID, gorde eta berrabiarazi."
 step1ApiKey = "Sortu API gako bat Kontua > API gakoak atalean (erabiltzaile bakoitzak berea erabiltzen du)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Zure MCP bezeroan gehitu"
 step2b = "honetara seinalatzen duen zerbitzaria:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Bezeroak automatikoki aurkitzen du OAuth hemendik:"
 step3ApiKey = "Bidali gakoa"
 step3ApiKeyb = "goiburu batean (edo Authorization: Bearer <key>). Ez da OAuth edo metadatu-aurkikuntzarik erabiltzen."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Onartu saio-hasiera; bezeroak token batekin berriro saiatuko da. Tresnak taldekatuta agertuko dira: convert, pages, misc, security, ai."
 step4ApiKey = "Tresnak taldekatuta agertuko dira: convert, pages, misc, security, ai - eta dei bakoitza gakoaren jabearen izenean ikuskatuko da."
 tip = "Aholkua: erregistratu resource ID zure IdP-n baimendutako audience gisa. MCP Inspector eta Claude Desktop-ekin probatua."
 tipApiKey = "Aholkua: API-key moduak ez du kanpoko IdP-rik behar - errazena self-host-erako. Gakoa dagokion Stirling erabiltzailearekin lotzen da."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Konektatu MCP bezero bat"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Jaulkitzailetik automatikoki aurkitua"
 
 [admin.settings.mcp.mode]
 apikey = "API gakoa (Stirling erabiltzaile bakoitzeko gakoa)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth-ek kanpoko IdP bat behar du. API gakoak Stirling-en erabiltzaile bakoitzeko API gako bat erabiltzen du (X-API-KEY) - errazena self-host-erako."
 label = "Autentifikazio modua"
 oauth = "OAuth 2.1 (kanpoko IdP)"
@@ -1515,6 +1563,18 @@ label = "Baliabidearen ID"
 [admin.settings.mcp.scopes]
 description = "Eskatu mcp.tools.read irakurketa-eragiketetarako eta mcp.tools.write idazketa/AI eragiketetarako."
 label = "Betearazi OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "Stirling erabiltzaile-izen batekin parekatutako JWT claim-a (adib. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Stirling PDF hobetzen lagundu nahi duzu?"
 tags = "oharrak gehitu,nabarmendu,marraztu,markatu,iruzkina,oharrak,berrikusi,redline,feedback,markatze-tresnak,ohar itsaskorrak,formak,geziak,testu-koadroa,esku hutsez"
 
 [annotation]
-alignCenter = "Lerrokatu erdian"
-alignLeft = "Lerrokatu ezkerrera"
-alignRight = "Lerrokatu eskuinera"
 annotationStyle = "Anotazioaren estiloa"
 backgroundColor = "Atzeko planoaren kolorea"
 borderOff = "Ertza: desaktibo"
@@ -2016,18 +2073,61 @@ underline = "Azpimarra"
 undoDelete = "Desegin"
 width = "Zabalera"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Doako PDF editore pribatua, edozein azpiegituratan exekuta dezakezuna."
 
 [appBanner]
 dismiss = "Baztertu"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Gehitu eranskinak..."
 convertToPdfA3b = "Bihurtu PDF/A-3b formatura"
 convertToPdfA3bTooltip = "PDF/A-3b artxibo-formatua da, epe luzerako kontserbazioa bermatzen duena. Edozein motatako fitxategiak eranskin gisa txertatzea onartzen du. Bihurketak Ghostscript behar du eta fitxategi handietan denbora gehiago har dezake."
-convertToPdfA3bTooltipHeader = "PDF/A-3b bihurketari buruz"
-convertToPdfA3bTooltipTitle = "Zer egiten duen"
 discardChanges = "Baztertu"
 downloadSingle = "Deskargatu eranskina"
 duplicateName = "Dagoeneko badago '{{name}}' izeneko eranskin bat."
@@ -2208,7 +2308,6 @@ guest = "Gonbidatua"
 user = "Erabiltzailea"
 
 [auto-rename]
-description = "Automatikoki aurkitzen du zure PDF edukitik titulua eta fitxategi-izen gisa erabiltzen du."
 submit = "Aldatu izena"
 tags = "auto-detektatu,goiburukoan oinarritua,antolatu,berriz-etiketatu"
 title = "Aldatu izena"
@@ -2218,21 +2317,6 @@ failed = "Errore bat gertatu da PDFa automatikoki berriz izendatzean."
 
 [auto-rename.results]
 title = "Berriz-izendatze automatikoaren emaitzak"
-
-[auto-rename.settings]
-title = "Honi buruz"
-
-[auto-rename.tooltip.description]
-title = "Zer egiten duen"
-
-[auto-rename.tooltip.header]
-title = "Nola funtzionatzen duen Berriz-izendatze automatikoak"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Titulu edo goiburu dirudien testua bilatzen du"
-bullet2 = "Detektatutako tituluarekin fitxategi-izen garbi eta balioduna sortzen du"
-bullet3 = "Izen egokirik aurkitzen ez bada, jatorrizkoa mantentzen du"
-title = "Berriz-izendatze adimenduna"
 
 [autoFormDetection]
 loading = "Inprimaki-eremuak detektatzen..."
@@ -2327,6 +2411,9 @@ remove = "Kendu tresna"
 selected = "Hautatutako tresnak"
 selectTool = "Hautatu tresna bat..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Utzi"
 confirm = "Itzuli atzera"
@@ -2360,6 +2447,10 @@ title = "Automatizazioa exekutatu"
 [automate.selection]
 title = "Automatizazioaren hautapena"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Sortu automatizazio berria"
 
@@ -2371,6 +2462,7 @@ title = "Gomendatuak"
 
 [automate.sequence]
 finish = "Amaitu"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Automatizazioa exekutatu"
 running = "Automatizazioa exekutatzen..."
 signInToRun = "Hasi saioa automatizazioak exekutatzeko."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Segurtasun lan-fluxua"
 secureWorkflowDesc = "PDF dokumentuak seguru bihurtzen ditu eduki gaizto potentziala kentzen (JavaScript eta txertatutako fitxategiak, adibidez), eta ondoren pasahitz-babesa gehitzen du baimenik gabeko sarbidea saihesteko. Lehenespenez pasahitza 'password' da."
 
 [autoRename]
-description = "Tresna honek PDF fitxategiak automatikoki birizendatuko ditu haien edukian oinarrituta. Dokumentua aztertzen du testutik titulu egokiena aurkitzeko."
 tags = "auto-detect,goiburuan oinarritua,antolatu,berretiketatu,auto rename,berrizendatze automatikoa,berrizendatze adimenduna,edukiaren arabera berrizendatu,fitxategi-izena,fitxategien izendapena,izenburua detektatu"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,banatu,dokumentua,antolaketa"
 [autoSplitPDF]
 dividerDownload2 = "Deskargatu 'Auto Splitter Divider (with instructions).pdf'"
 duplexMode = "Duplex Mode (Front and back scanning)Duplex modua (aurreko eta atzeko azterketa)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-based,banatu,eskaneaketa-zatia,antolatu"
 title = "Auto Zatitu PDFa"
 
@@ -2528,9 +2620,6 @@ tooltip = "Ertzak gehitzen ditu mozketa eta lerrokatzean laguntzeko"
 [bookletImposition.addGutter]
 label = "Gehitu barren-marjina"
 tooltip = "Barruko marjina espazioa gehitzen du loturarako"
-
-[bookletImposition.advanced]
-toggle = "Aukera aurreratuak"
 
 [bookletImposition.doubleSided]
 label = "Aurpegi bikoitzeko inprimaketa"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Aukeratu JKS fitxategia"
 chooseP12File = "Aukeratu PKCS12 fitxategia"
 choosePfxFile = "Aukeratu PFX fitxategia"
 choosePrivateKey = "Aukeratu gako pribatuko fitxategia"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Ukatua"
 fetchFailed = "Ezin izan da sinadura-datuak kargatu"
 finalized = "Amaituta"
 location = "Kokalekua"
-logoTitle = "Logoa"
-name = "Izena"
-noLogo = "Logorik ez"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Orri zenbakia"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Ziurtagiriaren pasahitza"
 passwordOptional = "Utzi hutsik pasahitzik ez badago"
 pemCertificateLabel = "Ziurtagiria (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Gako pribatua (.pem / .key)"
 pending = "Zain"
 readyToFinalize = "Amaitzeko prest"
 reason = "Arrazoia"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Zerbitzariaren ziurtagiria erabiltzen - ez da fitxategirik edo pasahitzik behar"
-showLogo = "Erakutsi logoa"
 signatureProgress = "{{signedCount}}/{{totalCount}} sinadura"
 tags = "autentifikatu,PEM,P12,ofiziala,enkriptatu,sinatu,ziurtagiria,PKCS12,JKS,zerbitzaria,eskuzkoa,automatikoa"
 title = "Ziurtagiriaren sinadura"
@@ -2738,12 +2828,45 @@ viewed = "Ikusita"
 
 [certSign.appearance]
 invisible = "Ikusezina"
+showOnPage = "Show signature on page"
 stepTitle = "Sinaduraren itxura"
 visibility = "Ikusgaitasuna"
 visible = "Ikusgai"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Sinaduraren xehetasunak"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Sinaduraren itxurari buruz"
@@ -2762,9 +2885,6 @@ bullet3 = "Aukeratu zein orritan jarri sinadura"
 bullet4 = "Aukerazko logotipoa gehi daiteke"
 text = "Sinadura-bloke bat erakusten du PDFan zure izenarekin, datarekin eta aukerazko xehetasunekin. Erabilgarria irakurleek argi ikustea nahi duzunean dokumentua sinatuta dagoela."
 title = "Sinadura ikusgaiak"
-
-[certSign.certFiles]
-stepTitle = "Ziurtagiri-fitxategiak"
 
 [certSign.certType.tooltip.convert]
 text = "Bihurtu zure fitxategia Java keystore (.jks) batera keytool-ekin, eta ondoren aukeratu JKS."
@@ -2786,6 +2906,7 @@ text = "Aukeratu zure ziurtagiri-fitxategiarekin bat datorren formatua:"
 title = "Zein aukera erabili behar dut?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Ziurtagiriaren formatua"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Gailu hau"
 [certSign.error]
 failed = "Errore bat gertatu da sinadurak prozesatzean."
 
-[certSign.format]
-pkcs11 = "USB tokena"
-windowsStore = "Windows ziurtagiri-biltegia"
-
 [certSign.hardware]
-certificate = "Ziurtagiria"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Kontrolatzaile pertsonalizatuaren bidea…"
+digitalId = "Digital ID"
 driver = "PKCS#11 kontrolatzailea"
 driverPath = "Kontrolatzaile-liburutegiaren bidea"
 driverPathPlaceholder = "Zure PKCS#11 kontrolatzailearen bide osoa (.dll, .so edo .dylib)"
-expired = "iraungita"
-expires = "iraungitzen da"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Ziurtagiriak zerrendatu"
-loading = "Ziurtagiriak irakurtzen…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Ez da sinatzeko ziurtagiririk aurkitu"
 noDriver = "Ez da PKCS#11 kontrolatzailerik detektatu. Instalatu zure tokenaren kontrolatzailea (adib. OpenSC), gero ireki hau berriro - edo idatzi behean kontrolatzailearen bidea eskuz."
-notYetValid = "oraindik ez da baliozkoa"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "Tokenaren PINa"
 pkcs11Hint = "Hautatu zure tokenaren PKCS#11 kontrolatzailea, sartu PINa, eta ondoren zerrendatu tokeneko ziurtagiriak."
 pkcs11LoadError = "Ezin izan dira tokeneko ziurtagiriak irakurri. Egiaztatu PINa eta kontrolatzailea."
-refresh = "Freskatu"
-selectCert = "Hautatu ziurtagiria"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Hautatu kontrolatzailea"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (aukerakoa)"
-windowsHint = "Hautatu ziurtagiri bat zure Windows ziurtagiri-biltegian. Sinatzeak zure txartel/tokeneko gakoa erabiltzen du; Windows-ek PINa eskatuko du."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Ezin izan da Windows ziurtagiri-biltegia irakurri"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Arau orokorra"
 device = "Gailu hau"
 noOtherSources = "Ez dago beste ziurtagiri-iturririk erabilgarri."
 server = "Zerbitzaria"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Ziurtagiriaren iturburua"
 upload = "Igo"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Eguneratu zure erabiltzaile-izena. Eguneratu ondoren saioa itxiko da."
@@ -3069,7 +3205,6 @@ placeholder = "Dokumentuaren sortzailea"
 
 [changeMetadata.customFields]
 add = "Gehitu eremua"
-description = "Gehitu metadatu eremu pertsonalizatuak dokumentuari"
 key = "Gakoa"
 keyPlaceholder = "Gako pertsonalizatua"
 remove = "Kendu"
@@ -3135,10 +3270,6 @@ bullet1 = "Sortze data: Jatorrizko dokumentua noiz sortu zen"
 bullet2 = "Aldaketa data: Azken aldaketa noiz egin zen"
 text = "Dokumentua noiz sortu eta noiz aldatu den."
 title = "Data eremuak"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Metadatuak osorik ezabatzea pribatutasuna bermatzeko."
-title = "Kendu dauden metadatuak"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Titulua: Dokumentuaren izena edo goiburua"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Zure erabilera-mugara iritsi zara. Begiratu zure plan-auk
 
 [checkAccessibility]
 aboutRow = "Honi buruz: {{label}}"
-checking = "Egiaztatzen..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Deskargatu irisgarritasun txostena"
 fileFailed = "huts egin du"
+noFiles = "Select a PDF to check it."
 pickFile = "Erakutsi emaitzak honentzat"
-submit = "Egiaztatu irisgarritasuna"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Testu alternatiboa"
@@ -3286,10 +3417,17 @@ structure = "Etiketek pantaila-irakurleei orri bateko zati bakoitza zer den esat
 [checkAccessibility.checks]
 label = "{{total}} egiaztapenetatik, {{passed}} gaindituta"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Ezin izan da irisgarritasun txostena sortu. Saiatu berriro."
 fileTitle = "Fitxategi hau ezin izan da egiaztatu"
 partial = "Ezin izan dira fitxategi batzuk egiaztatu."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA adierazten du"
@@ -3312,6 +3450,21 @@ title = "Fitxategiak titulua du metadatuetan."
 [checkAccessibility.figures]
 summary_one = "{{count}} irudik deskribapena behar du ({{pages}} orria)"
 summary_other = "{{count}} irudik deskribapena behar dute ({{pages}} orriak)"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Aplikatzen zaio"
@@ -3465,19 +3618,7 @@ checking = "Egiaztatzen {{current}} / {{total}}..."
 complete = "Egiaztapena osatuta"
 
 [checkAccessibility.steps]
-results = "Emaitzak"
 standard = "Estandarra"
-
-[checkAccessibility.tooltip.header]
-title = "Zein estandar egiaztatu"
-
-[checkAccessibility.tooltip.ua1]
-text = "PDF/UAren lehen bertsioa, 2012an argitaratua ISO 14289-1 gisa, PDF 1.7 fitxategientzat."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Bertsio berriena, 2024an argitaratua ISO 14289-2 gisa, PDF 2.0 fitxategientzat. PDF 1.7 fitxategi bat haren aurka egiaztatzeak PDF 2.0ri soilik aplikatzen zaizkion arauak ez gainditzea eragingo du."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "{{n}} anotazioa"
@@ -3868,6 +4009,7 @@ title = "Aukeratu kolorea"
 transparent = "Gardena"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Ekintzak"
 back = "Atzera"
 cancel = "Utzi"
@@ -4206,7 +4348,9 @@ title = "API gakoak berritu"
 warning = "⚠️ Abisua: Ekintza honek API gako berriak sortuko ditu eta aurreko gakoak baliogabe utziko ditu."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP)-ek Claude bezalako AI laguntzaileei zure Stirling PDF tresnak zuzenean erabiltzeko aukera ematen die. Konektatu bezero bat behin, eta zure laguntzaileak dokumentuak bihurtu, editatu, babestu eta prozesatu ahal izango ditu zure izenean."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Gonbidatuek ezin dituzte MCP bezeroak konektatu. Sortu kontu bat MCP zerbitzaria erabiltzeko eta zure AI laguntzaileari Stirling PDF tresnak zure izenean exekutatzen uzteko."
 navLabel = "MCP zerbitzaria"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Kopiatu {{label}}"
 tooltipCopied = "{{label}} kopiatuta"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Zure MCP endpoint-a"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Gehitu hona"
 hint = "Aukeratu zure bezeroa, itsatsi zatia erakutsitako fitxategian, eta berrabiarazi. Lehen erabileran zure Stirling kontuarekin hasiko duzu saioa - ez dago kopiatzeko gakorik."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Konektatu zure AI laguntzailea"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Eutsi aspektu-erlazioari"
 maxAttachmentSize = "Eranskinaren gehieneko tamaina (MB)"
 multiple = "Hainbat"
 optimizeForEbook = "Optimizatu PDF e-book irakurgailuetarako (Ghostscript erabiltzen du)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Irteera"
-outputFormat = "Irteerako formatua"
-pdfaAccessibleFormat = "{{format}} (irisgarria)"
-pdfaDigitalSignatureWarning = "PDFak sinadura digitala dauka. Hurrengo urratsean kenduko da."
-pdfaNote = "PDF/A-1b bateragarriagoa da, PDF/A-2b-k eginbide gehiago onartzen ditu, PDF/A-3b-k kapsulatutako fitxategiak onartzen ditu."
-pdfaOptions = "PDF/A aukerak"
 pdfOptions = "PDF aukerak"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Ezarpenak"
 signInToUse = "Erabiltzeko hasi saioa"
 single = "Bakarra"
 sourceFormatPlaceholder = "Iturburu formatua"
-strictMode = "Modu zorrotza"
-strictModeDesc = "Errorea bihurketa perfektua ez bada (VeraPDF egiaztapena erabiltzen du)"
 svgPdfOptions = "SVGtik PDFra aukerak"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG fitxategiak grafiko bektorial gisa errendatzen dira edozein bereizmenetan emaitza zorrotza lortzeko. SVGko dimentsioek PDF orriaren tamaina zehazten dute."
@@ -4396,9 +4549,7 @@ zoomLevel = "Zoom maila"
 
 [convert.ebookOptions]
 includePageNumbers = "Sartu orrialde-zenbakiak"
-includePageNumbersDesc = "Gehitu orrialde-zenbakiak sortutako PDFari"
 includeTableOfContents = "Sartu aurkibidea"
-includeTableOfContentsDesc = "Gehitu sortutako aurkibidea lortutako PDFari"
 optimizeForEbookPdf = "Optimizatu eBook irakurleetarako"
 optimizeForEbookPdfDesc = "Optimizatu PDFa eBook irakurketarako (fitxategi-tamaina txikiagoa, errendatze hobea eInk gailuetan)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Atalak detektatu"
 detectChaptersDesc = "Kapitulutako antza duten goiburuak detektatu eta EPUB orri-jauziak txertatu"
 kindleEink = "Kindle e-Ink (testurako optimizatua)"
 outputFormat = "Irteera-formatua"
-outputFormatDesc = "Aukeratu eBookaren irteera-formatua"
 tabletPhone = "Tableta/Mugikorra (irudiekin)"
 targetDevice = "Helburu gailua"
 targetDeviceDesc = "Aukeratu irakurgailurako optimizatutako irteera-profila"
@@ -4469,8 +4619,24 @@ description = "Cookie hauek ezinbestekoak dira webguneak behar bezala funtzionat
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Azaleko orriaren izenburua"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF portfolioa"
 description = "Hautatutako fitxategi bakoitza osorik mantentzen da PDF berrian, edozein motatakoa dela ere. Portfolioak onartzen ez dituzten irakurgailuek azaleko orri bat erakusten dute fitxategiak erantsita."
 goToFileEditor = "Joan fitxategi-editorera"
@@ -4488,6 +4654,9 @@ title = "Zer egiten duen"
 
 [createPortfolio.tooltip.header]
 title = "PDF Portfolioei buruz"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Moztu automatikoki zuriuneak"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Arbelerako sarbidea ez dago eskuragarri nabigatzaile hon
 export = "Esportatu laster-markak"
 exportClipboard = "Kopiatu JSONa arbelean"
 exportJson = "JSON deskargatu"
+exportMenu = "Export"
 importClipboard = "Itsatsi JSONa arbeletik"
 importJson = "JSON inportatu"
+importMenu = "Import"
 loadFromPdf = "Kargatu hautatutako PDFtik"
 noFile = "Aukeratu PDF bat dauden laster-markak erauzteko."
 selectedFile = "Hemendik kargatuta: {{file}}"
-source = "Kargatu laster-markak"
 
 [editTableOfContents.editor]
 addTopLevel = "Gehitu goi-mailako laster-marka"
@@ -4740,6 +4910,9 @@ replaceExisting = "Dauden laster-markak ordeztu (kenduta gehitzeko)"
 replaceExistingHint = "Desgaituta dagoenean, eskema berria uneko laster-marken ondoren gehituko da."
 title = "Laster-markak eta eskema"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Aldatu PDFa"
 filePrompt = "Hautatu zure liburutegiko PDF bat edo igo berri bat hasteko."
@@ -4753,7 +4926,6 @@ title = "Ireki tresna editatzen hasteko"
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} murrizketa ezikusi da"
 actionUnlocked = "{{action}} desblokeatuta saio honetarako"
-advanced = "Aurreratua"
 allowed = "Baimenduta"
 annotations = "Oharrak"
 authoriseAction = "PDF honek {{action}} erabiltzeko baimena behar du."
@@ -4801,7 +4973,6 @@ restricted = "Murriztuta"
 restrictedActions = "murriztutako ekintzak"
 restrictedOperation = "Ekintza honek baimenen pasahitza behar du."
 retainOwnerVerification = "Egiaztatu baimenen pasahitza irekitzeko pasahitza kentzean aldatu gabe mantentzeko. Horrek ez du kenduko."
-saveProtection = "Gorde babesa"
 securityChangeFailed = "Ezin izan da babesa aldatu. Egiaztatu baimenen pasahitza eta segurtasun-ezarpen berriak."
 sessionDetails = "Irekita saio honetarako. PDFak babestuta jarraitzen du."
 sessionDetailsLabel = "Saio honetako desblokeatzeari buruz"
@@ -4871,7 +5042,6 @@ title = "Zerbait gaizki atera da"
 tryAgain = "Saiatu berriro"
 
 [extractImages]
-allowDuplicates = "Gorde bikoiztutako irudiak"
 selectText = "Hautatu irudi-formatua ateratako irudiak bihurtzeko"
 submit = "Atera"
 tags = "irudi,argazki,gorde,artxibatu,zip,harrapatu,eskuratu"
@@ -4927,12 +5097,15 @@ closeFile = "Itxi fitxategia"
 
 [fileEditor]
 closedFile = "{{name}} itxita"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Fitxategia berrordenatu da"
 filesReordered_other = "{{count}} fitxategi berrordenatu dira"
 loadedFromStorage_one = "Fitxategi {{count}} biltegiratzetik kargatu da"
 loadedFromStorage_other = "{{count}} fitxategi biltegiratzetik kargatu dira"
 loadFromStorageFailed = "Ezin izan dira fitxategi batzuk biltegiratzetik kargatu"
 pinnedFile = "{{name}} ainguratu da"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} gorde eta itxi da"
 saveFailed = "Gordetzeak huts egin du"
 unpinnedFile = "{{name}} ainguratzetik kendu da"
@@ -5019,11 +5192,20 @@ locked = "Blokeatuta"
 previewOf = "{{name}}-ren aurrebista"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Gehitu fitxategiak"
 created = "Sortua"
 notIncludedInToolRun = "Ez dago tresna-exekuzio honetan sartuta"
 size = "Fitxategi-tamaina"
 title = "Fitxategiak"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Ez dago fitxategirik erabilgarri"
@@ -5104,6 +5286,7 @@ subtitle = "Erakutsi edo ezkutatu kategoriak fitxategien alboko barran."
 title = "Alboko barrako kategoriak"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Utzi"
 error = "Ezin izan da fitxategia berrizendatu."
 illegalCharacters = "Fitxategi-izen batek ezin du \\ / : * ? \" < > | izan"
@@ -5607,7 +5790,6 @@ removeField = "Kendu eremua"
 
 [formFill.editor]
 action = "Botoiaren ekintza"
-actionHelp = "Botoiak klik egitean zer egiten duen."
 actionNone = "Bat ere ez"
 actionPrint = "Inprimatu"
 actionReset = "Berrezarri formularioa"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Zenbat karaktere sar daitezkeen mugatzen du, tarte berdineko la
 multiline = "Lerro anitzekoa"
 multilineHelp = "Testu-lerro bat baino gehiago onartzen ditu eta eremuaren ertzean doitzen du."
 multiSelect = "Baimendu hautapen anitza"
-multiSelectHelp = "Aldi berean aukera bat baino gehiago hautatzeko aukera ematen du."
 name = "Eremuaren izena"
 nameHelp = "Eremuaren barne-izena. Datuak esportatzean edo formularioa beste sistema batetik betetzean erabiltzen da; beraz, mantendu bakarra eta zuriunerik gabea."
 optionGap = "Aukeren arteko tartea"
@@ -5902,6 +6083,11 @@ title = "Koloreak/kontrastea doitu"
 desc = "Nabarmendu, marraztu, oharrak eta formak gehitu ikuslean"
 tags = "oharrak jarri,nabarmendu,marraztu,markaketa,iruzkina,oharrak,berrikusi,zuzenketa,feedbacka,markaketa-tresnak,ohar itsaskorrak,formak,geziak,testu-koadroa,esku hutsez"
 title = "Oharrak"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Detektatu automatikoki inprimaki-eremuak AI-rekin eta egin zure PDFa betegarri."
@@ -6405,6 +6591,9 @@ sort = "Ordenatu"
 [merge.sortFiles]
 title = "Ordenatu fitxategiak"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Bateratze ezarpenen ikuspegi orokorra"
 
@@ -6548,6 +6737,9 @@ title = "Autentifikazioak huts egin du"
 message = "Leiho hau itxi eta Stirling PDF-era itzul zaitezke."
 title = "Autentifikazioa ongi burutu da"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Baimendu sarbidea"
 approving = "Baimena ematen..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Aplikaziora itzultzen..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} aplikazioak zure Stirling PDF kontura sartu nahi du"
 scopesIntro = "Honek {{app}} aplikazioari hau egiteko aukera emango dio:"
 signedInAs = "{{name}} gisa saioa hasita"
@@ -6565,6 +6758,8 @@ signInButton = "Hasi saioa jarraitzeko"
 signInPrompt = "Hasi saioa zure Stirling PDF kontuan aplikazioa konektatzen jarraitzeko."
 title = "Authorise access"
 unknownApp = "Hirugarrenen aplikazio bat"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Zure izenean jardun - {{app}} aplikazioak egiten duen guztia zure kontuaren pean exekutatzen da eta zure erabileran zenbatzen da"
@@ -6572,9 +6767,12 @@ tools = "Erabili zure Stirling PDF tresnak zure izenean - bihurtu, editatu, sina
 
 [oauthConsent.scope]
 email = "Ikusi zure email helbidea"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Berretsi zure identitatea"
 phone = "Ikusi zure telefono-zenbakia"
 profile = "Ikusi zure oinarrizko profilaren informazioa"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Garbiketa-eskaneatzeak eta irudi-testuak detektatu PDF baten barruan eta berriz ere gehitu testu gisa"
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Taldeko kide bihurtuko zara eta jabe-sarbidea galduko duzu."
 [pageEdit]
 deselectAll = "Bat ere ez"
 selectAll = "Markatu dena"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Atera orriak"
@@ -7577,6 +7779,8 @@ stamp = "Zigilu-oharra - ez da orri-testua, beraz ezin da hemen editatu"
 widget = "Inprimaki-eremua - ez da orri-testua, beraz ezin da hemen editatu"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Editatu"
 markTagged = "Markatu erabat etiketatuta bezala"
 matchScanFont = "Parekatu eskaner bidezko testua {{face}}(r)ekin"
@@ -7590,6 +7794,7 @@ tagPageContent = "Auto-etiketatu orria"
 typeInto = "Idatzi {{run}}-n"
 ungroupParagraph = "Desmultzokatu {{run}} paragrafoa"
 unmarkTagged = "Markatu ez erabat etiketatuta bezala"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Egokitu {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Baztertu gorde gabeko aldaketak?"
 
 [pdfTextEditor.error]
 decodeImage = "Ezin izan da hautatutako irudia deskodetu."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Ezin da testu hau bikoiztu: ez dago hizki guztiak marrazten dituen letra-tipo erabilgarririk."
 formLiftChangesDrawing = "Ezin da hau editatu: talde baten parte gisa marraztuta dago, eta bere mozketa edo grafika ezarpenak editoreak ezin ditu mantendu aldatzean."
 insertImage = "Ezin izan da hautatutako irudia txertatu."
 needsShaping = "Editoreak oraindik ezin ditu idazkera honetako elkartutako hizkiak eta bokal-markak behar bezala marraztu; beraz, aldaketa hau ez da egin."
+reopenLost = "Open again"
 replaceClippedImage = "Ezin da irudi hau ordezkatu: moztuta dago, eta ordezkoak mozketa ezkutatzen dituen zatiak erakutsiko lituzke."
 scanOffInk = "Ezin da testu hau editatu: aitortutako hitzak ez datoz bat eskanerrarekin. Exekutatu berriro OCR."
 unsafeRtlEdit = "Ezin da edizio hau egin: editoreak ezin du lerro honetako eskuinetik ezkerrera doan testua berriro marraztu hura aldatu gabe."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG irudia"
 close = "Itxi bilaketa-barra"
 count = "{{current}} / {{total}}"
 findPlaceholder = "Bilatu"
+hideReplace = "Hide replace"
 ignoreAccents = "Ez ikusi azentuak"
 matchCase = "Bereizi maiuskulak/minuskulak"
 next = "Hurrengo bat etortzea"
@@ -7625,6 +7833,7 @@ replace = "Ordeztu"
 replaceAll = "Ordeztu denak"
 replaced = "{{count}} ordeztuta"
 replacePlaceholder = "Ordeztu honekin"
+showReplace = "Show replace"
 wholeWord = "Hitz osoa"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Esteka hau ezin da etiketatu."
 cannotTagPage = "Orri honen edukia ezin da etiketatu."
 contentGroup = "Edukia"
 customTag = "{{role}} (etiketa pertsonalizatua)"
-decorativeInfo = "Pantaila-irakurgailuek irudi apaingarriak saltatzen dituzte. Erabili ertzetarako, atzeko planoetarako eta informaziorik ematen ez duten beste irudietarako."
-decorativeLabel = "Irudi apaingarria"
-description = "Irudiaren deskribapena"
-descriptionInfo = "Pantaila-irakurgailuek hau irakurtzen dute irudiaren ordez."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Etiketak ezin dira editatu fitxategi zifratu batean"
 figureDescription = "Irudiaren deskribapena"
 figureDescriptionInfo = "Pantaila-irakurgailuek hau ozen irakurtzen dute irudiaren ordez."
-formFieldDescription = "Eremuaren deskribapena"
 formulaDescription = "Formularen deskribapena"
 formulaDescriptionInfo = "Pantaila-irakurgailuek hau ozen irakurtzen dute formulen ordez. Ahoz esango zenukeen bezala idatzi, adibidez, \"x karratu gehi bat\"."
 heading = "Irisgarritasuna"
@@ -7813,7 +8019,6 @@ markedTagged = "Dokumentua erabat etiketatuta dago"
 markedTaggedHint = "PDF irakurleei irisgarritasun etiketak erabiltzeko esaten die. Markatu dena etiketatuta dagoenean."
 markedWithUntagged = "Zenbait edukik ez dute etiketarik; beraz, pantaila-irakurleek baliteke saltatzea."
 missingDescriptions = "Deskribapenak falta dira"
-mixedContent = "Irudiak beste eduki bat dauka"
 mixedTags = "Nahasia"
 needsDescriptionBadge = "Deskribapenik gabe"
 nextToReview = "Berrikusteko hurrengoa"
@@ -7821,12 +8026,10 @@ notFigure = "Testuaren zati gisa etiketatuta"
 removeTag = "Kendu etiketa"
 saveFailed = "Zure irisgarritasun-aldaketak ezin izan dira gorde; beraz, fitxategia ez da gorde. Desegin aldaketak eta saiatu berriro."
 selectedText = "Hautatutako testua"
-tagFormField = "Etiketatu inprimaki-eremua"
 tagging = "Orrialdeak etiketatzen"
 tagLabel = "Etiketa"
 tagLinks_one = "Etiketatu esteka"
 tagLinks_other = "Etiketatu {{count}} esteka"
-tagUntagged = "Auto-etiketatu dokumentua"
 tagUntaggedHint = "Automatikoki gehitzen ditu irisgarritasun etiketak dokumentu osoan. Emaitza gordina da: egiaztatu ondoren izenburuak, zerrendak eta irakurketa-ordena."
 unknownTag = "Ezin da hemen irakurri"
 unmarkedWithTags = "Zenbait PDF ikuslek etiketak hala ere erabiliko dituzte eta etiketarik gabeko edukia salto dezakete."
@@ -7851,7 +8054,7 @@ heading = "Izenburuak"
 mixedNumbering = "Zenbakitutako eta zenbakitu gabeko izenburuak nahasten ditu"
 none = "Izenbururik ez"
 onPage = "Izenburua {{page}} orrian"
-problems = "Izenburuen arazoak"
+problemCount = "{{count}} to fix"
 skippedLevel = "Maila bat saltatzen du {{previous}} izenburuaren ondoren"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Titulua"
 allLanguages = "Hizkuntza guztiak"
 cannotSetDocument = "Dokumentu honen hizkuntza ezin da aldatu."
 cannotSetText = "Testu honen hizkuntza ezin da aldatu."
-documentHint = "Pantaila-irakurleek erabiliko duten hizkuntza, testu-zati batek berea ezartzen ez badu."
 documentLabel = "Hizkuntza"
 documentLocked = "Zifratutako dokumentu baten hizkuntza ezin da hemen aldatu."
 inDocument = "Dokumentu honetan"
 innerLabel = "{{number}} etiketaren hizkuntza"
 label = "Hizkuntza"
-missing = "Ez da hizkuntzarik ezarri. Pantaila-irakurleek asmatuko dute, eta baliteke dokumentu osoa ahots okerrean irakurtzea."
 mixed = "Nahasia"
 noMatch = "Ez dago bat datorren hizkuntzarik. Idatzi bere kodea, adibidez mt edo en-IE."
 placeholder = "Hautatu hizkuntza"
@@ -7943,6 +8144,52 @@ renderFailed = "Ezin izan da orria errendatu"
 [pdfTextEditor.password]
 incorrect = "Pasahitz okerra - saiatu berriro."
 label = "Pasahitza"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Lerrokatze-gida {{value}} {{unit}} kokapenean - arrastatu erregela batera kentzeko"
@@ -8124,6 +8371,10 @@ title = "Aurrebistaren aldakortasuna"
 [pdfTextEditor.tooltip.textFocus]
 text = "Lan-eremu honek testua editatzean eta txertatutako irudiak berrantolatzean jartzen du fokua. Orrialdeko arte lan konplexuak, inprimaki-trepetak eta geruzadun grafikoak esportaziorako mantentzen dira, baina hemen ez dira guztiz editagarriak."
 title = "Testu eta irudien fokua"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF a CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Ezkutatu kategoria"
 labelCount = "etiketak"
 sharedNote = "Etiketa hauek barnean datoz eta zure talde osoan partekatzen dira."
 showCategory = "Erakutsi kategoria"
-
-[policies.pii]
-account = "Kontu-zenbakiak (etiketatuak)"
-card = "Kreditu / debitu txartelak"
-email = "Posta elektronikoko helbideak"
-fieldLabel = "Ezkutatu beharreko PII"
-iban = "IBANak"
-phone = "Telefono-zenbakiak"
-placeholder = "Hautatu PII motak"
-routing = "AEBetako bideratze-zenbakiak (ABA)"
-ssn = "Gizarte Segurantzako zenbakiak"
 
 [policy]
 badgeEnforcing = "{{name}} betearazten..."
@@ -10317,6 +10557,10 @@ title = "Pipelineak"
 [portal.pipelines.actions]
 newCustomPipeline = "Pipeline pertsonalizatu berria"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Pipeline guztiak"
 
@@ -12047,7 +12291,6 @@ label = "Irakurketa-tresnak"
 readAloud = "Irakurri ozen"
 rotateLeft = "Biratu ezkerrera"
 rotateRight = "Biratu eskuinera"
-search = "Bilatu dokumentuan"
 switchDocument = "Aldatu dokumentua"
 thumbnails = "Orriak"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Koadroaren kolorea"
 convertPDFToImageLabel = "Bihurtu PDFa PDF-Irudira"
 customPaddingLabel = "Pertsonalizatutako tarte gehigarria"
 useRegexLabel = "Erabili Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Hitz osoaren bilaketa"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Zentsuraren ezarpenak"
 
 [redact.auto.wordsToRedact]
 add = "Gehitu"
-examples = "Adibideak: Konfidentziala, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Sartu hitz bat"
 title = "Zentsuratzeko hitzak"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Hautatu fitxategiak fitxategi-kudeatzailean aldi ber
 manual = "Eskuzkoa"
 mode = "Modua"
 title = "Zentsura metodoa"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Maiuskula/minuskula berbereko testua bakarrik bat etorriko da. Gaituta dagoenean, 'Secret' ez da bat etorriko 'SECRET' testuarekin, eta regex bateko [A-Z] maiuskulekin bakarrik bat etorriko da."
@@ -12147,19 +12401,6 @@ title = "Zentsura metodoa"
 text = "Klik egin eta arrastatu eskuz area zehatzak zentsuratzeko. Zehaztasun osoz kontrolatzen duzu zer zentsuratzen den. (Laster)"
 title = "Zentsura eskuz"
 
-[redact.tooltip.words]
-bullet1 = "Gehitu hitz bat aldiro"
-bullet2 = "Sakatu Enter edo 'Gehitu beste bat' klikatu gehitzeko"
-bullet3 = "Egin klik × hitzak kentzeko"
-
-[redact.tooltip.words.description]
-text = "Sartu zure dokumentuan aurkitu eta zentsuratu nahi dituzun hitzak edo esaldiak. Hitz bakoitza bereiz bilatuko da."
-title = "Testuaren bat etortzea"
-
-[redact.tooltip.words.examples]
-text = "Ohiko zentsuratzeko hitzak hauek dira: banku-datuak, helbide elektronikoak edo izen zehatzak."
-title = "Ohiko adibideak"
-
 [redact.tooltip.words.header]
 title = "Zentsuratzeko hitzak"
 
@@ -12176,15 +12417,6 @@ failed = "Errore bat gertatu da anotazioak PDFtik kentzean."
 
 [removeAnnotations.info]
 description = "Tresna honek anotazio guztiak (iruzkinak, nabarmentzeak, oharrak, etab.) kenduko ditu zure PDF dokumentuetatik."
-
-[removeAnnotations.settings]
-title = "Ezarpenak"
-
-[removeAnnotations.tooltip.description]
-title = "Zer egiten duen"
-
-[removeAnnotations.tooltip.header]
-title = "Oharpenak kentzeari buruz"
 
 [removeBlanks]
 submit = "Kendu orri hutsak"
@@ -12325,6 +12557,9 @@ tags = "berrantolatu,berrordenatu,antolatu,berrantolatu,mugitu orriak,orri-orden
 [reorganizePages.error]
 failed = "Ezin izan dira orriak berrantolatu"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Orriak berrantolatu dira"
 
@@ -12406,6 +12641,7 @@ title = "Kolore guztiak alderantzikatu"
 rotateLeft = "Biratu erlojuaren aurkako noranzkoan"
 rotateRight = "Biratu erlojuaren noranzkoan"
 selectRotation = "Hautatu biraketa angelua (erlojuaren noranzkoan)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Aplikatu biraketa"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Biratu PDFa"
@@ -12516,8 +12752,7 @@ title = "Saneatu"
 failed = "Errorea gertatu da PDFa saneatzean."
 
 [sanitize.options]
-note = "Hautatu PDFtik kendu nahi dituzun elementuak. Gutxienez aukera bat hautatu behar da."
-title = "Saneatze aukerak"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Kendu PDF barruan txertatutako edozein fitxategi"
@@ -12649,6 +12884,7 @@ title = "Bilatu PDF"
 hideTools = "Ezkutatu erabilgarri ez dauden tresnak ▴"
 messageNoFallback = "Tresnak ez daude erabilgarri zure zerbitzaria linean egon arte."
 messageWithFallback = "Zenbait tresnek zerbitzariarekiko konexioa behar dute."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Ikusi erabilgarri ez dauden tresnak ▾"
 title = "Ezin da atzitu zure Stirling-PDF zerbitzaria"
 toolNotAvailableLocally = "Zure Stirling-PDF zerbitzaria lineaz kanpo dago eta \"{{endpoint}}\" ez dago erabilgarri tokiko backend-ean."
@@ -13034,6 +13270,12 @@ title = "Laster-teklak"
 mac = "Sartu ⌘ (Command), ⌥ (Option) edo beste aldatzaile bat zure laster-teklean."
 windows = "Sartu Ctrl, Alt edo beste aldatzaile bat zure laster-teklean."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Baldintzak, pribatutasun-politika eta zure cookie hobespenak."
 label = "Legezkoa"
@@ -13418,9 +13660,7 @@ image = "Igo"
 text = "Testua"
 
 [sign.step]
-createDesc = "Aukeratu nola sortu nahi duzun sinadura"
 place = "Kokatu eta gorde"
-placeDesc = "Kokatu sinadura zure PDFan"
 
 [sign.steps]
 configure = "Konfiguratu sinadura"
@@ -13597,6 +13837,10 @@ rotateLeft = "Biratu ezkerrera"
 rotateRight = "Biratu eskuinera"
 trim = "Moztu sinadurara"
 trimHint = "Inguruko espazio hutsa mozten du"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Sinaduraren itxuraren ezarpenak"
@@ -13959,7 +14203,6 @@ placeholder = "Sartu zatiketa horizontal kopurua"
 
 [split-by-sections.splitMode]
 custom = "Orri pertsonalizatuak"
-description = "Aukeratu orriak nola zatitu"
 label = "Zatiketa modua"
 splitAll = "Zatitu orri guztiak"
 splitAllExceptFirst = "Zatitu guztiak, lehena izan ezik"
@@ -14210,10 +14453,8 @@ failed = "Errore bat gertatu da PDFa denbora-zigilatzean."
 
 [timestampPdf.options]
 note = "Zure dokumentuaren SHA-256 hash-a bakarrik bidaltzen da TSA zerbitzarira; PDF fitxategia bera ez da inoiz TSA zerbitzarira bidaltzen."
-title = "Denbora-zigiluen zerbitzaria (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Aukeratu Denbora-zigiluen Agintaritza fidagarria"
 label = "Hautatu TSA zerbitzari bat"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Ez dago tresnarik eskuragarri"
 
 [tooltip]
 close = "Itxi argibidea"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Tresna honek PDF inprimakietako irakurtzeko‑soilik murrizketak kenduko ditu, editagarri eta bete daitezkeen bihurtuz."
@@ -14706,6 +14961,9 @@ signatureDate = "Sinaduraren data"
 
 [validateSignature.settings]
 certHint = "Igo X.509 ziurtagiri fidagarri bat konfiantza-iturburu pertsonalizatu baten aurka balidatzeko."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Balidazioaren ezarpenak"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Ezin da fitxategia aurreikusi"
 copyRestricted = "Kopiatzea desgaituta dago PDF honen baimenengatik."
 copyText = "Kopiatu"
 coverPageView = "Erakutsi azala bereizita"
-disableColorFilter = "Desgaitu kolore-iragazkia"
 documentUpdated = "Dokumentua eguneratu da"
 dualPageView = "Orri biko ikuspegia"
 editText = "Editatu testua"
-enableDarkFilter = "Gaitu iragazki iluna"
-enableSepiaFilter = "Gaitu sepia iragazkia"
 engineLoadError = "Ezin izan da PDF ikustailearen motorra hasieratu"
 engineSlowWarning = "PDF motorraren hasieratzeak espero baino gehiago irauten ari da. Egiaztatu zure nabigatzailearen WebAssembly eta Worker ezarpenak, edo kargatu berriro orria."
 firstPage = "Lehen orria"
@@ -14736,20 +14991,27 @@ fitPage = "Orrialdera egokitu"
 fitWidth = "Zabalerara egokitu"
 lastPage = "Azken orria"
 loadingEngine = "PDF motorra kargatzen..."
+menuSelected = "Selected"
 moreOptions = "Gehiago"
 nextPage = "Hurrengo orria"
 noPdfProvided = "Ez da PDF-rik eman"
 onlyPdfSupported = "Fitxategi-formatu hau ez da onartzen aurrebistarako."
 pageNavigation = "Orrialde-nabigazioa"
+pageNumber = "Page number"
 previousPage = "Aurreko orria"
 readAloudFromHere = "Irakurri ozen hemendik aurrera"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Ezin izan da dokumentua gorde. Saiatu berriro."
 saveChangesErrorTitle = "Ezin izan dira aldaketak gorde"
 singlePageView = "Orri bakarreko ikuspegia"
+tools = "Tools"
 unknownFile = "Fitxategi ezezaguna"
-view = "Ikusi"
 zoom = "Zoom"
 zoomIn = "Zoom handitu"
+zoomLevel = "Zoom level"
 zoomOut = "Zoom txikitu"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Sinaduraren aurrebista"
 
 [viewer.signatureField]
 badge = "Sinadura"
+clickToSign = "Click to sign here"
 fieldTitle = "Sinadura-eremua: {{name}}"
 signed = "Sinatuta"
 signedWithReason = "Sinatuta: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Sinatu gabeko sinadura-eremua: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{total}} fitxategitik {{restored}} leheneratu dira. Gainerakoak ez d
 
 [workbenchBar]
 activeFiles = "Fitxategi aktiboak"
-annotations = "Anotazioak"
+annotate = "Annotate"
 applyRedactionsFirst = "Aplikatu zentsurak lehenik"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Itxi fitxategi guztiak"
 closePdf = "Itxi PDFa"
+defaultZoom = "Default zoom"
 deselectAll = "Kendu hautaketa guztia"
 downloadAll = "Deskargatu dena"
 editText = "Editatu testua"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Irten anotazio modutik"
 exitRedaction = "Irten zentsura modutik"
 findReplace = "Bilatu eta ordezkatu"
 formFill = "Inprimaki-editorea"
-hideToolbar = "Ezkutatu tresna-barra"
+layers = "Layers"
 moreActions = "Ekintza gehiago"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Orrien editorea"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Pan modua"
 print = "Inprimatu PDFa"
 readAloud = "Ozen irakurri"
 readAloudLanguage = "Hizkuntza"
 readAloudSpeed = "Abiadura"
 redact = "Zentsuratu"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Biratu ezkerrera"
 rotateRight = "Biratu eskuinera"
 ruler = "Erregela / Neurtu"
+rulerScaleUnset = "Not set"
 rulerSettings = "Eskala-ezarpenak"
 save = "Gorde"
 saveAll = "Gorde dena"
@@ -15123,14 +15398,23 @@ selectLanguage = "Hautatu hizkuntza"
 share = "Partekatu"
 showAllTools = "Erakutsi tresna guztiak"
 showFewerTools = "Tolestu tresna-barra"
-showToolbar = "Erakutsi tresna-barra"
+thumbnails = "Pages"
 toggleAnnotations = "Txandakatu anotazioen ikusgarritasuna"
-toggleAttachments = "Txandakatu eranskinak"
-toggleBookmarks = "Laster-markak (Edukien taula)"
 toggleComments = "Iruzkinak"
-toggleLayers = "Txandakatu geruzak"
-toggleSidebar = "Txandakatu alboko barra"
 viewer = "Ikustailea"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Dokumentu honetarako zure sarbidea iraungi da."

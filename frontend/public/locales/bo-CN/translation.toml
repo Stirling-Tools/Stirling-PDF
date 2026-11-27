@@ -12,9 +12,11 @@ comingSoon = "འབྱོར་ལ་ཉེ"
 confirm = "གཏན་འཁེལ"
 confirmClose = "སྒོ་བརྒྱབ་པ་ངེས་གཏན་བཟོ་བ།"
 confirmCloseCancel = "འདོར་བ"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "སྒོ་རྒྱག་པ།"
 confirmCloseDiscard = "བཟོ་བཅོས་བཏོན་བཀོག་ནས་ཁ་བསྡམས"
 confirmCloseMessage = "ཁྱེད་རང་གིས་ཡིག་ཆ་འདི་ཁ་རྒྱག་འདོད་ཡོད་དམ།"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "སྲུངས་ནས་ཁ་བསྡམས"
 confirmCloseSaveFailed_one = "ནོར་འཁྲུལ་ཡོད་པར་ཉར་ཟིན། {{count}} file སྲུངས་མ་ཐུབ།"
 confirmCloseSaveFailed_other = "ནོར་འཁྲུལ་དང་བཅས་ཉར་ཚགས་བྱས་ཟིན། ཡིག་ཆ་ {{count}} ཉར་ཚགས་བྱེད་མ་ཐུབ།"
@@ -44,7 +46,6 @@ fileSavedToDisk = "ཡིག་ཆ་དེ་སྣོད་སྡེར་ན�
 filesSelected = "ཡིག་ཆ་ {{count}}"
 font = "ཡིག་གཟུགས་པ།"
 fontSizeTooltip = "ཤོག་ངོས་ཨང་གྲངས་ཀྱི་ཚིག་ཡིག་གི་ཚད་གཞི། ཨང་གྲངས་ཆེ་བ་དེས་ཡིག་ཆ་ཆེ་བ་བཟོས།"
-fontTypeTooltip = "ཤོག་ངོས་ཨང་གྲངས་ལ་ཁྱིམ་ཚང་། ཁྱེད་རང་གི་ཡིག་ཆའི་རྣམ་པ་ལ་བརྟེན་ནས་འདེམས།"
 green = "ལྗང་ཁུ"
 help = "རོགས་རམ"
 incorrectPasswordMessage = "ད་ལྟའི་གསང་གྲངས་ནོར་འཁྲུལ་རེད།"
@@ -249,9 +250,7 @@ image = "ཡར་འཇུག"
 text = "ཡི་གེ"
 
 [addImage.step]
-createDesc = "ཁྱོད་ཀྱིས་ཁ་སྣོན་བྱེད་འདོད་པའི་པར་རིས་དེ་བླངས།"
 place = "པར་རིས་འཇོག་པ།"
-placeDesc = "ཁྱེད་རང་གི་པར་རིས་ཁ་སྣོན་བྱེད་པར་PDFལ་སྣུན་རོགས།"
 
 [addImage.steps]
 configure = "པར་རིས་སྒྲིག་བཀོད་བྱེད་པ།"
@@ -276,7 +275,7 @@ fontName = "ཡིག་གཟུགས་མིང་།"
 fontSize = "ཡིག་གཟུགས་ཚད་གཞི།"
 numberPagesDesc = "དཔེར་ན། ༡,༣,༥-༨ ཡང་ན་ཤོག་ངོས་ཚང་མར་སྟོང་པར་བཞག་ཡོད།"
 pagePreviewAlt = "ཤོག་ངོས་སྔོན་ལྟ།"
-pagesAndStarting = "ཤོག་ངོས་དང་འགོ་འཛུགས་ཨང་གྲངས།"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "གནས་བབ་དང་ཤོག་ངོས།"
 preview = "ལས་གནས་འདེམས་པ།"
 previewDisclaimer = "སྔོན་ལྟ་ནི་ཚོད་དཔག་ཡིན། མཐའ་མའི་ཐོན་འབྲས་དེ་PDFཡིག་གཟུགས་ཚད་གཞིའི་རྐྱེན་གྱིས་མི་འདྲ་བ་ཆགས་སྲིད།"
@@ -300,6 +299,7 @@ title = "ཤོག་གྲངས་ཨང་གྲངས།"
 
 [addPassword]
 desc = "ཁྱེད་རང་གི་PDFཡིག་ཆ་དེ་གསང་ཚིག་གིས་གསང་བཟོ་བྱེད་དགོས།"
+submit = "Add Password"
 tags = "གསང་སྡོམ,གསང་ཨང,ཟྭ,བདེ་འཇགས,སྲུང་སྐྱོབ,བདེ་འཇགས་རང་བཞིན,གསང་སྡོམ་བྱེད,སྲུང་བ,གསང་བ,སྒེར་གྱི,འཛུལ་སྤྱོད་ཚད་བཀག"
 title = "གསང་གྲངས་ཁ་སྣོན་བྱེད།"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "ཐམ་ག་སྔོན་ལྟ།"
 tags = "ཐམ་ག,རྟགས,ཐམ,ཆོག་མཆན,དང་ལེན་མ་བྱས,གསང་བ,ཐམ་གའི་ལག་ཆ,འགྱིག་ཐམ,ཚེས་གྲངས་ཐམ,ཆོག་མཆན་ཐམ,འབྱོར་ཟིན,རྩིས་མེད,འདྲ་བཤུས,མ་ཡིག"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "ཡི་གེ།"
-clickToExpand = "རྒྱ་སྐྱེད་ཆེད་མནན།"
 customColor = "ལུགས་སྲོལ་གྱི་ཡིག་འབྲུའི་ཁ་དོག།"
 customDateDesc = "སྲོལ་སྒྲིག་རྣམ་གཞག"
 customPosition = "སྔོན་ལྟའི་སྒེའུ་ཁུང་ནང་དུ་འདོད་པའི་གནས་ཡུལ་ལ་མཚོན་རྟགས་དེ་འདྲུད་དགོས།"
 dateDesc = "ད་ལྟའི་ཚེས་གྲངས།"
 datetimeDesc = "ཚེས་གྲངས་དང་དུས་ཚོད་མཉམ་སྦྱར།"
 dateTimeVars = "ཚེས་གྲངས་དང་དུས་ཚོད།"
-dynamicVariables = "འགྱུར་ལྡན་ཚབ་ཚིག"
 examples = "དཔེ་མཚོན།"
 filenameDesc = "རྒྱ་སྐྱེད་མིང་མེད་པའི་ཡིག་ཆའི་མིང་།"
 filenameFullDesc = "རྒྱ་སྐྱེད་མིང་དང་བཅས་པའི་ཡིག་ཆའི་མིང་།"
@@ -365,6 +364,8 @@ noStampSelected = "རྟགས་མ་འདེམས་པ། གོམ་པ
 opacity = "མངོན་གསལ་དོད་པ།"
 otherVars = "གཞན།"
 pageNumberDesc = "ད་ལྟའི་ཤོག་ཨང་།"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "ཤོག་ངོས་ཆ་འཕྲིན།"
 position = "གནས"
 positionAndFormatting = "ལས་གནས་དང་རྩ་སྒྲིག།"
@@ -378,9 +379,10 @@ quickPosition = "ཤོག་ངོས་སྟེང་དུ་གནས་ཡ
 rotation = "འཁོར་སྐྱོད།"
 selectedImageAlt = "བདམས་པའི་ཐམ་ག་པར་རིས།"
 selectTemplate = "མ་དཔེ་ཞིག་འདེམས..."
+size = "Size"
 stampSetup = "མཚོན་རྟགས་སྒྲིག་སྟངས།"
 stampText = "མཚོན་རྟགས་ཡིག་གཟུགས།"
-stampTextDescription = "འོག་གི་འགྱུར་ལྡན་ཚབ་ཚིག་སྤྱོད། དོན་ངོ་མའི @ ལ @@ སྤྱོད། ཕྲེང་གསར་ལ \\n སྤྱོད།"
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "མཚོན་རྟགས་རིགས།"
 submit = "ཐམ་ག་ཁ་སྣོན།"
 tags = "རྟགས་མཚན། པར་རིས། དཀྱིལ་གྱི་པར་རིས། ཆུ་རྟགས། PDF, Embed, རང་སྒྲིག་བྱེད་པ།"
@@ -389,7 +391,6 @@ title = "མཚོན་རྟགས་PDF"
 totalPagesDesc = "ཤོག་ངོས་ཁྱོན་གྲངས།"
 useTemplate = "མ་དཔེ་སྤྱོད།"
 uuidDesc = "ཐུང་ངུའི་ཁྱད་འཕགས་ངོས་འཛིན (ཡིག་འབྲུ་ 8)"
-variablesHelp = "འགྱུར་ལྡན་ཚབ་ཚིག་གང་རུང་མནན་ནས་ཁྱེད་ཀྱི་ཐམ་གའི་ཡི་གེར་འཇུག དོན་ངོ་མའི @ ལ @@ སྤྱོད།"
 yearMonthDayDesc = "ཚེས་གྲངས་ཀྱི་ཆ་ཤས་སོ་སོ།"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "PDF ལ་མཚོན་རྟགས་ཁ་སྣོན་བྱེ
 
 [AddStampRequest.results]
 title = "མཚོན་རྟགས་གྲུབ་འབྲས།"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "སྲོལ་སྒྲིག"
@@ -410,6 +417,11 @@ legal-footer = "ཁྲིམས་ཡིག་ཞབས་ཡིག"
 page-numbers = "ཤོག་ཨང་།"
 pageNumberFooter = "ཤོག་ཨང་ཞབས་ཡིག"
 timestamp = "དུས་ཐམ།"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "ཡིག་འབྲུ་འཇུག་པ།"
@@ -462,9 +474,7 @@ image = "ཡར་འཇུག"
 text = "ཡི་གེ"
 
 [addText.step]
-createDesc = "ཁྱོད་ཀྱིས་ཁ་སྣོན་བྱེད་འདོད་པའི་ཚིག་ཡིག་དེ་བླུགས།"
 place = "ཡི་གེ་འཇོག་པ།"
-placeDesc = "ཁྱེད་རང་གི་ཡིག་ཆ་ཁ་སྣོན་བྱེད་པར་PDFལ་སྣུན་རོགས།"
 
 [addText.steps]
 configure = "ཡིག་ཚགས་སྒྲིག་བཀོད་བྱེད་པ།"
@@ -1233,6 +1243,18 @@ label = "འགོ་འཛུགས་སྐབས་བསྐྱར་གས�
 description = "ཉིན་གྲངས་ཀྱི་གྲངས་འབོར། ལག་འཁྱེར་དེ་ནུས་ལྡན་ཡིན།"
 label = "ལག་འཁྱེར་ནུས་ལྡན་(ཉིན་མོ།)།"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "folder sources དང folder outputs ཀྱིས་ཀློག་པ་དང་འབྲི་བ་ཆོག་པའི་དཀར་ཆག འདི་ནི་བདེ་འཇགས་མཚམས་ཤིག་ཡིན: automations ནམ་ཡང་ཐོ་གཞུང་འདིའི་ཕྱི་ཡི server path ལ་སྟོན་མི་ཐུབ།"
 securityNote = "folder sources དང outputs རྣམས་ཡོངས་སུ་སྒོ་རྒྱག་དགོས་ན་འདི་སྟོང་པར་བཞག Stirling རང་གི་སྒྲིག་འགོད་དཀར་ཆག་ནམ་ཡང་འགྲོ་མི་ཆོག་པ་ཡིན།"
@@ -1456,7 +1478,9 @@ label = "SMTP བེད་སྤྱོད་མིང་།"
 
 [admin.settings.mcp]
 apikeyNote = "Clients གིས X-API-KEY header ནང Stirling API key སྐུར (ཡང་ན Authorization: Bearer <key>)། key དེ་དབང་ཡོད Stirling སྤྱོད་མཁན་ལ་སྦྱོར - སྔོན་ནས་སྒྲིག་པའི་རྩིས་ཁྲ་ཁོ་ན་འཛུལ་ཐུབ། བྱ་སྤྱོད་རྣམས་སྤྱོད་མཁན་དེའི་མིང་ཐོག་ཞིབ་བཤེར་ཐོ་འགོད་བྱེད། key དོ་དམ་ནི Account > API Keys འོག་ཡོད།"
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Stirling གི PDF ལག་ཆ་དང AI agents རྣམས OAuth སྲུང་སྐྱོབ་ཡོད་པའི endpoint བརྒྱུད MCP clients ལ་འདོན།"
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "ཆོག་པའི་ལག་ཆ།"
 description = "MCP ནས་སྦས་དགོས་པའི Operation ids (comma ཡང་ན་བར་སྟོང་གིས་བགོས), དཔེར་ན add-password remove-password། སྤྱོད་ཡོད་ལག་ཆ་ཚང་མ་མངོན་དགོས་ན་སྟོང་བཞག"
 label = "བཀག་པའི་ལག་ཆ།"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "ཁ་བརྒྱབ་སྐབས (སྔོན་སྒྲིག) /mcp endpoint, metadata, ཡང་ན MCP beans གང་ཡང་བླུགས་མི་བྱེད།"
 label = "MCP Server སྤྱོད་འགོ་འཛུགས།"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "གོང་དུ་ཁྱེད་ཀྱི OAuth issuer + resource ID ནང་འཇུག་བྱས། ཉར་ཚགས་དང་བསྐྱར་འགོ་འཛུགས།"
 step1ApiKey = "Account > API Keys འོག API key ཞིག་བསྐྲུན (སྤྱོད་མཁན་རེས་རང་གི་སྤྱོད)།"
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "ཁྱེད་ཀྱི MCP client ནང་ཁ་སྣོན།"
 step2b = "server འདི་ལ་དམིགས།:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "client གིས OAuth འདི་ནས་རང་འགུལ་ངོས་འཛིན་བྱེད།:"
 step3ApiKey = "key དེ"
 step3ApiKeyb = "header ནང་སྐུར (ཡང་ན Authorization: Bearer <key>)། OAuth ཡང་ན metadata discovery མི་སྤྱོད།"
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "ཐོ་འཇུག་ལ་ཆོག་མཆན་སྤྲོད། client གིས token དང་བཅས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱེད། ལག་ཆ་རྣམས་སྡེ་ཚན་དུ་མངོན། convert, pages, misc, security, ai།"
 step4ApiKey = "ལག་ཆ་རྣམས་སྡེ་ཚན་དུ་མངོན། convert, pages, misc, security, ai - དང་འབོད་ཐེངས་རེ་རེ key བདག་པོའི་མིང་ཐོག་ཞིབ་བཤེར་ཐོ་འགོད་བྱེད།"
 tip = "གསལ་འདེབས། resource ID དེ IdP ནང་ཆོག་པའི audience ལ་ཐོ་འགོད་བྱོས། MCP Inspector དང Claude Desktop སྤྱད་ནས་ཚོད་ལྟ་ཟིན།"
 tipApiKey = "གསལ་འདེབས། API-key རྣམ་པར་ཕྱིའི IdP མི་དགོས - self-host ལ་ཆེས་སླ། key དེ་དབང་ཡོད Stirling སྤྱོད་མཁན་ལ་སྦྱོར།"
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "MCP client ཞིག་མཐུད།"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "issuer ནས་རང་འགུལ་རྙེད།"
 
 [admin.settings.mcp.mode]
 apikey = "API ལྡེ་མིག (Stirling སྤྱོད་མཁན་རེ་རེའི་ལྡེ་མིག)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth ལ་ཕྱིའི IdP དགོས། API key ཡིས Stirling per-user API key (X-API-KEY) སྤྱོད - self-host ལ་ཆེས་སླ།"
 label = "ཐོབ་ཐང་ར་སྤྲོད་རྣམ་པ"
 oauth = "OAuth 2.1 (ཕྱིའི IdP)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "read ops ལ mcp.tools.read དང write/AI ops ལ mcp.tools.write དགོས་པར་བྱེད།"
 label = "OAuth scopes བཙན་སྒྲུབ།"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "Stirling username དང་མཐུན་སྦྱོར་བྱེད་པའི JWT claim (དཔེར་ན sub, email, preferred_username)།"
@@ -1943,9 +2003,6 @@ title = "ཁྱེད་རང་གིས་སི་ཊར་ལིང་PDF�
 tags = "མཆན་འགོད,མངོན་གསལ,འབྲི,རྟགས་འགོད,མཆན,ཟིན་ཐོ,ཞིབ་སྐྱོར,redline,ཚུར་ལན,རྟགས་འགོད་ལག་ཆ,sticky notes,དབྱིབས,མདའ,ཡིག་སྒྲོམ,freehand"
 
 [annotation]
-alignCenter = "དཀྱིལ་སྒྲིག"
-alignLeft = "གཡོན་སྒྲིག"
-alignRight = "གཡས་སྒྲིག"
 annotationStyle = "མཆན་བཟོ་སྒྲིག"
 backgroundColor = "རྒྱབ་ལྗོངས་ཁ་དོག།"
 borderOff = "ས་མཚམས། ཁ་བརྒྱབ་པ།"
@@ -2016,18 +2073,61 @@ underline = "འོག་ཏུ།"
 undoDelete = "ཕྱིར་ལོག"
 width = "ཞེང་ཚད"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "རྨང་གཞི་གང་རུང་སྟེང་འགྲོ་སྐྱོད་ཐུབ་པའི་རིན་མེད་སྒེར་སྲུང PDF རྩོམ་སྒྲིག་ཆས།"
 
 [appBanner]
 dismiss = "སྤོང་།"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "ཟུར་སྣོན་ཁ་སྣོན..."
 convertToPdfA3b = "PDF/A-3b ལ་སྒྱུར་བ།"
 convertToPdfA3bTooltip = "PDF/A-3b ནི་ཡིག་ཚགས་ཀྱི་རྩ་སྒྲིག་ཅིག་ཡིན་ཞིང་། དེས་ཡིག་ཆའི་རྣམ་གཞག་མཉམ་སྦྲེལ་ལྟར་འཇུག་ཐུབ། བསྒྱུར་བཅོས་ལ་གྷོ་སི་ཊི་ཁི་རིབ་དགོས་པ་དང་། ཡིག་ཆ་ཆེན་པོ་ལ་དུས་ཚོད་མང་པོ་འགོར་སྲིད།"
-convertToPdfA3bTooltipHeader = "PDF/A-3b སྒྱུར་བཅོས།"
-convertToPdfA3bTooltipTitle = "དེས་ཅི་ཞིག་བྱེད།"
 discardChanges = "དོར་བ།"
 downloadSingle = "ཟུར་སྣོན་ཕབ་ལེན།"
 duplicateName = "'{{name}}' ཞེས་པའི་ཟུར་སྣོན་ཞིག་སྔོན་ནས་ཡོད།"
@@ -2208,7 +2308,6 @@ guest = "མགྲོན་པོ"
 user = "སྤྱོད་མཁན"
 
 [auto-rename]
-description = "རང་འགུལ་གྱིས་ཁྱེད་ཀྱི་PDFནང་དོན་ནས་མིང་དེ་འཚོལ་ནས་ཡིག་ཆའི་མིང་ལྟར་བེད་སྤྱོད་བྱེད་ཀྱི་ཡོད།"
 submit = "རང་འགུལ་མིང་བཏགས།"
 tags = "རང་འགུལ་ཤེས་རྟོགས། མགོ་བརྗོད་ལ་གཞི་བཅོལ་བ། གོ་སྒྲིག་བྱེད་པ། རེ་ལེ་བེལ།"
 title = "རང་འགུལ་མིང་བཏགས།"
@@ -2218,21 +2317,6 @@ failed = "རང་འགུལ་གྱིས་PDFལ་མིང་བསྒ�
 
 [auto-rename.results]
 title = "རང་འགུལ་གྱིས་མིང་བསྒྱུར་བའི་གྲུབ་འབྲས།"
-
-[auto-rename.settings]
-title = "ཉེ་སྐོར་དུ"
-
-[auto-rename.tooltip.description]
-title = "དེས་ཅི་ཞིག་བྱེད།"
-
-[auto-rename.tooltip.header]
-title = "རང་འགུལ་གྱིས་མིང་བསྒྱུར་གྱི་ལས་ཀ་ཇི་ལྟར་བྱེད་སྟངས།"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "མིང་བྱང་དང་མགོ་བརྗོད་ལྟ་བུ་ཡིན་པའི་ཡིག་ཆ་འཚོལ་བ།"
-bullet2 = "བརྟག་དཔྱད་བྱས་པའི་མིང་ནས་ཡིག་ཆའི་མིང་གཙང་མ་ཞིག་བཟོས།"
-bullet3 = "གལ་ཏེ་འོས་འཚམ་གྱི་མིང་མ་རྙེད་ན་མིང་ངོ་མ་དེ་ཉར་དགོས།"
-title = "མིང་འདོགས་བཟང་པོ།"
 
 [autoFormDetection]
 loading = "རེའུ་མིག་ས་སྒོ་ངོས་འཛིན་བྱེད་བཞིན..."
@@ -2327,6 +2411,9 @@ remove = "ལག་ཆ་མེད་པར་བཟོ་བ།"
 selected = "འདེམས་སྒྲུག་བྱས་པའི་ལག་ཆ།"
 selectTool = "ལག་ཆ་ཞིག་འདེམས།"
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "འདོར་བ"
 confirm = "ཕྱིར་འགྲོ།"
@@ -2360,6 +2447,10 @@ title = "རང་འགུལ་ཅན་འཛིན།"
 [automate.selection]
 title = "རང་འགུལ་གྱིས་འདེམས་པ།"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "རང་འགུལ་ཅན་གསར་པ་བསྐྲུན་པ།"
 
@@ -2371,6 +2462,7 @@ title = "བསམ་འཆར་བཏོན་ཡོད།"
 
 [automate.sequence]
 finish = "མཐའ་མ"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "རང་འགུལ་ཅན་འཛིན།"
 running = "རང་འགུལ་ཅན་དུ་བསྒྱུར་བ།..."
 signInToRun = "automations འགྲོ་སྐྱོད་ཆེད་ཐོ་འཇུག་བྱོས།"
@@ -2391,7 +2483,6 @@ secureWorkflow = "བདེ་འཇགས་ལས་ཀའི་འགྲོ�
 secureWorkflowDesc = "ཇ་ཝ་སི་ཁི་རིཔ་ཊི་དང་བཙུགས་པའི་ཡིག་ཆ་ལྟ་བུའི་གནོད་འཚེ་ཅན་གྱི་ནང་དོན་མེད་པར་བཟོས་ནས་PDFཡིག་ཆ་བརྟན་པོ་བཟོས་རྗེས་ཆོག་མཆན་མེད་པར་འཛུལ་ཞུགས་བྱེད་པར་གསང་ཚིག་སྲུང་སྐྱོབ་ཁ་སྣོན་བྱེད། གསང་ཚིག་ནི་སྔོན་སྒྲིག་ལྟར་ 'password' ལ་སྒྲིག་ཡོད།"
 
 [autoRename]
-description = "ལག་ཆ་འདིས་རང་འགུལ་གྱིས་PDFཡིག་ཆ་དེ་ཚོའི་ནང་དོན་ལ་གཞི་བཅོལ་ནས་མིང་བསྒྱུར་བྱེད། དེས་ཡིག་ཆ་དེ་དབྱེ་ཞིབ་བྱས་ནས་ཡིག་ཆ་ལས་འཚམ་ཤོས་ཀྱི་མིང་འཚོལ་ཐུབ།"
 tags = "རང་འགུལ་ངོས་འཛིན,མགོ་ཡིག་གཞིར་བྱས,སྒྲིག་འཛུགས,ཡང་བསྐྱར་མཚོན་བྱང,རང་འགུལ་མིང་བསྒྱུར,རང་འགུལ་མིང་བསྒྱུར,སྤྱང་པོའི་མིང་བསྒྱུར,ནང་དོན་ལྟར་མིང་བསྒྱུར,ཡིག་ཆའི་མིང,ཡིག་ཆ་མིང་འདོགས,ཁ་བྱང་ངོས་འཛིན"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,split, ཡིག་ཆ། སྒྲིག་འཛུགས།"
 [autoSplitPDF]
 dividerDownload2 = "རང་དབང་གི་ཁ་ཕྲལ་བགོད་ཆས་ཕབ་ལེན་བྱེད་མཁན། (བཀའ་སློབ་དང་མཉམ་དུ།) pdf'"
 duplexMode = "གཉིས་ལྡན་ཐབས་ལམ་(ཕྲོནཊ་དང་རྒྱབ་ཀྱི་པར་བཤུས་)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR ལ་གཞི་བཅོལ་བ། སོ་སོར་དབྱེ་བ། པར་སྐྲུན།"
 title = "རང་འགུལ་ཆ་སྒྲིག་PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "ཤོག་བུ་རེ་རེའི་མཐའ་འཁོར
 [bookletImposition.addGutter]
 label = "རྐུན་མའི་ཁེ་སྤོགས་སྣོན་པ།"
 tooltip = "འབྲེལ་མཐུད་ཀྱི་ཆེད་དུ་ནང་ཁུལ་གྱི་མཐའ་མཚམས་བར་སྟོང་ཁ་སྣོན་བྱེད།"
-
-[bookletImposition.advanced]
-toggle = "སྔོན་ཐོན་གདམ་ག།"
 
 [bookletImposition.doubleSided]
 label = "ཕྱོགས་གཉིས་ཅན་གྱི་པར་ཤུས།"
@@ -2714,14 +2803,15 @@ chooseJksFile = "JKSཡིག་ཆ་འདེམས།"
 chooseP12File = "PKCS12ཡིག་ཆ་འདེམས།"
 choosePfxFile = "PFXཡིག་ཆ་འདེམས།"
 choosePrivateKey = "སྒེར་གྱི་ལྡེ་མིག་འདེམས་པ།"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "ཁས་ལེན་མ་བྱས"
 fetchFailed = "མཛུབ་འགན་གནས་ཚུལ་འཇུག་མ་ཐུབ"
 finalized = "མཇུག་བསྡུས"
 location = "གནས་ཡུལ"
-logoTitle = "རྟགས་རྟགས།"
-name = "མིང"
-noLogo = "No རྟགས་མཚན་མེད།"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "ཤོག་ངོས་ཨང་གྲངས།"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "ལག་འཁྱེར་གསང་གྲངས་།"
 passwordOptional = "གལ་ཏེ་གསང་གྲངས་མེད་ན་སྟོང་པར་བཞག་དགོས།"
 pemCertificateLabel = "ལག་ཁྱེར (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "སྒེར་གྱི་ལྡེ་མིག (.pem / .
 pending = "བསྒུག་བཞིན"
 readyToFinalize = "མཇུག་བསྡུ་བཅས"
 reason = "རྒྱུ་མཚན"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "སར་བར་ལག་འཁྱེར་བེད་སྤྱད་ནས་ཡིག་ཆ་དང་གསང་ཚིག་དགོས་མིན།"
-showLogo = "རྟགས་མཚན་སྟོན་པ།"
 signatureProgress = "{{signedCount}}/{{totalCount}} མཛུབ་འགན"
 tags = "བདེན་དཔང་། PEM,P12, དཔོན་རིག རྩ་ཁྲིམས། ལག་ཁྱེར། ལག་ཁྱེར། PKCS12,JKS,server, ལག་དེབ་ཅན།"
 title = "ལག་འཁྱེར་མིང་རྟགས་བཀོད་པ།"
@@ -2738,12 +2828,45 @@ viewed = "ལྟ་ཞིབ་བྱས"
 
 [certSign.appearance]
 invisible = "མི་མངོན་པ།"
+showOnPage = "Show signature on page"
 stepTitle = "མཚན་རྟགས་ཐོན་སྐྱེལ།"
 visibility = "མཐོང་རུང་གནས"
 visible = "མངོན་ཤེས།"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "མཚན་རྟགས་ཞིབ་ཕྲ།"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "མཚན་རྟགས་མངོན་པའི་སྐོར།"
@@ -2762,9 +2885,6 @@ bullet3 = "མིང་རྟགས་བཀོད་དགོས་མིན་
 bullet4 = "གདམ་གའི་མཚོན་རྟགས་བཅས་ཚུད་ཐུབ།"
 text = "ཁྱེད་ཀྱི་མིང་དང་། ཚེས་གྲངས། གདམ་ཁའི་ཞིབ་ཕྲའི་གནས་ཚུལ་ཡོད་པའི་PDFཐོག་ལ་མཚན་རྟགས་བཀག་ཆ་ཞིག་སྟོན་གྱི་ཡོད། ཁྱེད་ཀྱིས་ཀློག་མཁན་ཚོས་ཡིག་ཆ་དེ་ལ་མིང་རྟགས་བཀོད་ཡོད་པ་གསལ་པོ་མཐོང་དགོས་ན་ཕན་ཐོགས་ཡོད།"
 title = "མཐོང་ཐུབ་པའི་མཚན་རྟགས་ཅན།"
-
-[certSign.certFiles]
-stepTitle = "ལག་འཁྱེར་ཡིག་ཆ།"
 
 [certSign.certType.tooltip.convert]
 text = "ཁྱེད་ཀྱི་ཡིག་ཆ་དེ་ལྡེ་མིག་ལག་ཆ་ཡོད་པའི་ཇ་བ་ལྡེ་མིག་ཚོང་ཁང་(.jks)ལ་སྒྱུར་ནས་JKSའདེམས་དགོས།"
@@ -2786,6 +2906,7 @@ text = "ཁྱེད་རང་གི་ལག་འཁྱེར་ཡིག་
 title = "ངས་གདམ་ག་གང་བེད་སྤྱོད་གཏོང་དགོས་སམ།"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "ལག་འཁྱེར་གཞི་རྩ།"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "ཐབས་འཕྲུལ་འདི"
 [certSign.error]
 failed = "མིང་རྟགས་ལས་སྣོན་བྱེད་སྐབས་ནོར་འཁྲུལ་བྱུང་ཡོད།"
 
-[certSign.format]
-pkcs11 = "USB Token"
-windowsStore = "Windows དཔང་ཡིག་མཛོད"
-
 [certSign.hardware]
-certificate = "དཔང་ཡིག"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "རང་གཞིའི driver འགྲོ་ལམ…"
+digitalId = "Digital ID"
 driver = "PKCS#11 driver"
 driverPath = "driver དཔེ་མཛོད་འགྲོ་ལམ"
 driverPathPlaceholder = "ཁྱེད་ཀྱི PKCS#11 driver གྱི་འགྲོ་ལམ་ཆ་ཚང (.dll, .so ཡང་ན .dylib)"
-expired = "དུས་ཚོད་འདས"
-expires = "དུས་ཚོད་མཇུག"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "དཔང་ཡིག་ཐོ་བཀོད"
-loading = "དཔང་ཡིག་ཀློག་བཞིན…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "མིང་རྟགས་བྱེད་པའི་དཔང་ཡིག་མ་རྙེད"
 noDriver = "PKCS#11 driver མ་ཚོར། ཁྱེད་ཀྱི token གྱི driver (དཔེར་ན OpenSC) བཙུགས་རྗེས འདི་ཡང་བསྐྱར་ཁ་ཕྱེ - ཡང་ན་འོག་ཏུ driver འགྲོ་ལམ་ལག་ཐོག་ཏུ་འཇུག"
-notYetValid = "ད་དུང་ཆོག་མིན"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "Token PIN"
 pkcs11Hint = "ཁྱེད་ཀྱི token གྱི PKCS#11 driver འདེམས་ནས PIN འཇུག་པ། དེའི་རྗེས token ནང་གི་དཔང་ཡིག་ཐོ་བཀོད།"
 pkcs11LoadError = "token ནས་དཔང་ཡིག་ཀློག་མ་ཐུབ། PIN དང driver ཞིབ་བཤེར་བྱེད།"
-refresh = "གསར་སྒྱུར"
-selectCert = "དཔང་ཡིག་འདེམས"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "driver འདེམས"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (འདེམས་རུང་)"
-windowsHint = "Windows དཔང་ཡིག་མཛོད་ནས དཔང་ཡིག་ཞིག་འདེམས། མིང་རྟགས་ནི ཁྱེད་ཀྱི card/token ཡི་ལྡེ་མིག་སྤྱོད་པས་བྱེད - Windows ནས PIN འཇུག་བསྐུར་བྱེད།"
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Windows དཔང་ཡིག་མཛོད་ཀློག་མ་ཐུབ"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "མཐེ་བོང་གི་སྒྲིག་གཞི།"
 device = "ཐབས་འཕྲུལ་འདི"
 noOtherSources = "ལག་ཁྱེར་འབྱུང་ཁུངས་གཞན་མེད།"
 server = "སར་བར"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "དཔང་ཡིག་ཁུངས"
 upload = "ཡར་འཇུག"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "ཁྱེད་རང་གི་སྤྱོད་མཁན་གྱི་མིང་གསར་བརྗེ། ཁྱེད་རང་གསར་བརྗེ་བྱས་རྗེས་ཕྱིར་ཐོན་འགྲོ་གི་རེད།"
@@ -3069,7 +3205,6 @@ placeholder = "ཡིག་ཆ་གསར་གཏོད།"
 
 [changeMetadata.customFields]
 add = "ཁ་སྣོན་ས་ཁུལ།"
-description = "ཡིག་ཆ་ལ་རང་མོས་ཀྱི་མེ་ཊ་གཞི་གྲངས་ས་ཁོངས་ཁ་སྣོན་བྱེད།"
 key = "ལྡེ་མིག"
 keyPlaceholder = "དམིགས་བསལ་གྱི་ལྡེ་མིག"
 remove = "སེལ་བ"
@@ -3135,10 +3270,6 @@ bullet1 = "གསར་སྐྲུན་ཚེས་གྲངས། ཡིག�
 bullet2 = "བསྒྱུར་བཅོས་ཚེས་གྲངས། མཐའ་མ་དེ་བསྒྱུར་སྐབས།"
 text = "ཡིག་ཆ་དེ་གསར་བཟོ་དང་བསྒྱུར་བཅོས་བྱེད་སྐབས།"
 title = "ཚེས་གྲངས་ས་ཁུལ།"
-
-[changeMetadata.tooltip.deleteAll]
-text = "སྒེར་གྱི་གནས་ཚུལ་ལ་འགན་ལེན་བྱེད་ཆེད་དུ་མཐོ་རིམ་གྲངས་ཐོའི་བསུབས་ཆ་ཚང་།"
-title = "ད་ལྟའི་མེ་ཊ་ཌ་ཊ་མེད་པར་བཟོས།"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "མཚན་ཐོ། ཡིག་ཆའི་མིང་ཡང་ན་མགོ་འཐོབ།"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "ཁྱེད་སྤྱོད་ཚད་ལ་སླེ
 
 [checkAccessibility]
 aboutRow = "{{label}} སྐོར།"
-checking = "ཞིབ་བཤེར་བཞིན་..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "འཇུག་སྤྱོད་སླ་བའི་སྙན་ཞུ་ཕབ་ལེན"
 fileFailed = "ཕམ་པ"
+noFiles = "Select a PDF to check it."
 pickFile = "མཇུག་འབྲས་མངོན་པ"
-submit = "འཇུག་སྤྱོད་སླ་བ་ཞིབ་བཤེར"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "ཚབ་ཡིག"
@@ -3286,10 +3417,17 @@ structure = "ངོ་རྟགས་ནི་ཤོག་ངོས་ཀྱི�
 [checkAccessibility.checks]
 label = "ཞིབ་བཤེར {{total}} ནས་ {{passed}} འགྲུབ་ཟིན"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "འཇུག་སྤྱོད་སླ་བའི་སྙན་ཞུ་བཟོ་མ་ཐུབ། ཡང་བསྐྱར་ཚོད་ལྟ།"
 fileTitle = "ཡིག་ཆ་འདི་ཞིབ་བཤེར་མ་ཐུབ།"
 partial = "ཡིག་ཆ་ཁ་ཤས་ཞིབ་བཤེར་མ་ཐུབ།"
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA གསལ་བཀོད་ཡོད"
@@ -3312,6 +3450,21 @@ title = "མེ་ཊ་གནས་བརྡ་ནང་ཁ་བྱང་ཡ�
 [checkAccessibility.figures]
 summary_one = "པར་རིས {{count}} ལ་འགྲེལ་བཤད་དགོས (ཤོག་ངོས {{pages}})"
 summary_other = "པར་རིས {{count}} ལ་འགྲེལ་བཤད་དགོས (ཤོག་ངོས {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "ག་ལ་འཇུག"
@@ -3465,19 +3618,7 @@ checking = "{{total}} ནས་ {{current}} ཞིབ་བཤེར་བཞི
 complete = "ཞིབ་བཤེར་ཚར་བ"
 
 [checkAccessibility.steps]
-results = "མཇུག་འབྲས"
 standard = "ཚད་ལྡན"
-
-[checkAccessibility.tooltip.header]
-title = "ཞིབ་བཤེར་བྱ་རྒྱུའི་ཚད་ལྡན"
-
-[checkAccessibility.tooltip.ua1]
-text = "2012 ལོར་སྤེལ་བའི་ཐོན་རིམ་ ISO 14289-1 ཡི PDF/UA ཐོན་རིམ་དང་ PDF 1.7 ཡིག་ཆ་ལ་དོན་ལྡན།"
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "2024 ལོར་སྤེལ་བའི་ཐོན་རིམ་ ISO 14289-2 ཡི PDF/UA གསར་པ། PDF 2.0 ཡིག་ཆ་ལ་དོན་ལྡན། PDF 1.7 ཡིག་ཆ་ལ་ཞིབ་བཤེར་བྱས་ན་ PDF 2.0 ལ་མཉམ་མེད་ཀྱི་ཁྲིམས་ལ་ཕམ།"
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "མཆན་འགྲེལ {{n}}"
@@ -3868,6 +4009,7 @@ title = "ཁ་དོག་འདེམས།"
 transparent = "དྭངས་གསལ།"
 
 [common]
+aboutField = "About {{field}}"
 actions = "བྱ་སྤྱོད"
 back = "རྒྱབ་ངོས"
 cancel = "འདོར་བ"
@@ -4206,7 +4348,9 @@ title = "གསར་བརྗེའི་APIལྡེ་མིག"
 warning = "⚠️ ཉེན་བརྡ། བྱ་སྤྱོད་འདིས་API ལྡེ་མིག་གསར་པ་བཟོས་ནས་ཁྱེད་ཀྱི་སྔོན་གྱི་ལྡེ་མིག་དེ་ནུས་མེད་བཟོ་ཐུབ།"
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) གིས Claude ལྟ་བུའི AI ལས་རོགས་ལ་ཁྱེད་ཀྱི Stirling PDF ལག་ཆ་ཐད་ཀར་སྤྱོད་དུ་འཇུག ཐེངས་གཅིག client མཐུད་ནས་ཁྱེད་ཀྱི་ཚབ་ཏུ་ཡིག་ཆ་སྒྱུར་བ། རྩོམ་སྒྲིག བདེ་འཇགས་དང་སྒྲིག་སྦྱོར་བྱེད་དུ་འཇུག"
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "མགྲོན་པོའི་སྤྱོད་མཁན་གྱིས MCP clients མཐུད་མི་ཐུབ། MCP server སྤྱོད་པར་རྩིས་ཐོ་ཞིག་གསར་བཟོ་བྱས་ནས AI ལས་རོགས་ལ་ཁྱེད་ཀྱི་ཚབ་ཏུ Stirling PDF ལག་ཆ་འཁོར་སྤྱོད་བྱེད་དུ་འཇུག"
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "{{label}} འདྲ་བཤུས"
 tooltipCopied = "{{label}} འདྲ་བཤུས་ཟིན"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "ཁྱེད་ཀྱི MCP endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "ནང་སྣོན"
 hint = "ཁྱེད་ཀྱི client འདེམས། snippet དེ་སྟོན་པའི་ཡིག་ཆའི་ནང་སྦྱར། དེ་ནས་བསྐྱར་འགོ་འཛུགས། ཐོག་མར་སྤྱོད་སྐབས་ཁྱེད་ཀྱི Stirling རྩིས་ཐོས་ནང་འཛུལ་བྱེད། keys འདྲ་བཤུས་དགོས་མེད།"
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "ཁྱེད་ཀྱི AI ལས་རོགས་མཐུད"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "ཤེས་བྱའི་ཆ་སྙོམས་རྒ
 maxAttachmentSize = "ཆེས་མཐོ་བའི་མཉམ་སྦྲེལ་གྱི་ཚད་(MB)།"
 multiple = "སྣ་མང་།"
 optimizeForEbook = "གློག་དེབ་ཀློག་མཁན་གྱི་ཆེད་དུ་PDFལེགས་བཅོས་བྱས།"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "ཐོན་འབྲས།"
-outputFormat = "ཐོན་འབྲས་རྣམ་གྲངས།"
-pdfaAccessibleFormat = "{{format}} (འཇུག་ཐུབ་པ)"
-pdfaDigitalSignatureWarning = "PDF ནང་ཨང་གྲངས་ཀྱི་མཚན་རྟགས་ཡོད། འདི་གོམ་པ་རྗེས་མར་མེད་པར་བཟོ་རྒྱུ་རེད།"
-pdfaNote = "PDF/A-1b མཐུན་སྒྲིལ་ཆེ་བ་དང་། PDF/A-2b ཡིས་ཁྱད་ཆོས་མང་བ་ལ་རྒྱབ་སྐྱོར་བྱེད་ཀྱི་ཡོད། PDF/A-3b ཡིས་བཙུགས་པའི་ཡིག་ཆ་ལ་རྒྱབ་སྐྱོར་བྱེད་ཀྱི་ཡོད།"
-pdfaOptions = "PDF/A གདམ་ག།"
 pdfOptions = "PDF གདམ་ག།"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "སྒྲིག་སྟངས།"
 signInToUse = "ལག་ལེན་བྱེད་པར་ནང་འཛུལ།"
 single = "ཁེར་ཧྲེང"
 sourceFormatPlaceholder = "འབྱུང་ཁུངས་རྣམ་གྲངས།"
-strictMode = "ནན་མོའི་རྣམ་པ"
-strictModeDesc = "སྒྱུར་བ་འཐུས་ཚང་མིན་ན་ནོར་འཁྲུལ་སྟོན (VeraPDF verification སྤྱོད)"
 svgPdfOptions = "SVG to PDF གདམ་ག"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG ཡིག་ཆ་ནི་གསལ་བའི་ཕྱིར་ཚད་གང་ལ་ཡང vector graphics ལྟར་འབྲི། SVG ནས་ཡོང་བའི་ཆེ་ཆུང་གིས PDF ཤོག་ངོས་ཆེ་ཆུང་ཐག་གཅོད།"
@@ -4396,9 +4549,7 @@ zoomLevel = "ཟོམ་རིམ་པ།"
 
 [convert.ebookOptions]
 includePageNumbers = "ཤོག་ངོས་ཨང་རྟགས་བཀོད་པ།"
-includePageNumbersDesc = "ཐོན་པའི་PDFལ་ཤོག་ངོས་ཨང་གྲངས་ཁ་སྣོན་བྱེད།"
 includeTableOfContents = "ནང་དོན་གྱི་རེའུ་མིག་ཚུད་པ།"
-includeTableOfContentsDesc = "ཐོན་པའི་PDFལ་བཟོས་པའི་ནང་དོན་གྱི་ཐིག་ཁྲམ་ཞིག་ཁ་སྣོན་བྱེད།"
 optimizeForEbookPdf = "གློག་དེབ་ཀློག་མཁན་ལ་ལེགས་སྒྲིག་བྱེད་པ།"
 optimizeForEbookPdfDesc = "གློག་རྡུལ་དེབ་ཀྱི་ཀློག་ཆེད་དུ་PDFལེགས་བཅོས་བྱེད།"
 
@@ -4407,7 +4558,6 @@ detectChapters = "ལེའུ་འཚོལ་འཐེན"
 detectChaptersDesc = "ལེའུ་དང་འདྲ་བའི་མགོ་འདེམས་འཚོལ་ཞིབ་བྱས་ནས EPUB ཤོག་ངོས་བར་མཚམས་འཇོག"
 kindleEink = "Kindle e-Ink (ཡིག་གནས་ལྡན)"
 outputFormat = "ཕྱིར་འདོན་རྣམ་གཞག"
-outputFormatDesc = "eBook ཡི་ཕྱིར་འདོན་རྣམ་གཞག་འདེམས།"
 tabletPhone = "Tablet/Phone (པར་རིས་ཡོད)"
 targetDevice = "དམིགས་བསལ་ཐབས་འཕྲུལ"
 targetDeviceDesc = "ཀློག་ཆས་ཐབས་འཕྲུལ་ལ་མཐུན་པའི་ཕྱིར་འདོན་པའི་profile འདེམས།"
@@ -4469,8 +4619,24 @@ description = "Cookies འདི་དག་དྲ་ཚིགས་ཡང་ད
 posthog = "རྗེས་ཀྱི་ཧོག་དབྱེ་ཞིབ།"
 scarf = "སི་ཀར་ཕི་པིག་སེལ།"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "ཁ་ཤོག་ཁ་བྱང"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "འདེམས་ཟིན་པའི་ཡིག་ཆ་རེ་རེ་རིགས་གང་ཡིན་རུང་ PDF གསར་པའི་ནང་ཆ་ཚང་ཉར་ཚགས་བྱེད། portfolios ལ་རྒྱབ་སྐྱོར་མེད་པའི་ཀློག་ཆས་ཀྱིས་ཟུར་སྦྱར་ཡིག་ཆ་དང་བཅས་པའི་ཁ་ཤོག་སྟོན།"
 goToFileEditor = "ཡིག་ཆ་རྩོམ་སྒྲིག་ཆས་ལ་སྐྱོད"
@@ -4488,6 +4654,9 @@ title = "དེས་ཅི་བྱེད"
 
 [createPortfolio.tooltip.header]
 title = "PDF Portfolios སྐོར"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "རང་འགུལ་གྱིས་ས་ཞིང་དཀར་པོའི་བར་སྟོང་།"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "དྲ་ངོས་འདིའི་ནང་ལ་Cl
 export = "ཕྱིར་འཚོང་དེབ་རྟགས།"
 exportClipboard = "JSON བཤུས་པར་བཤུས།"
 exportJson = "JSON ཕབ་ལེན།"
+exportMenu = "Export"
 importClipboard = "བརྙན་ཐུང་ནས་JSON སྦྱར་བ།"
 importJson = "ཇེ་སོན་ནང་འདྲེན་བྱས།"
+importMenu = "Import"
 loadFromPdf = "འདེམས་སྒྲུག་བྱས་པའི་PDFལས་བཤུས།"
 noFile = "ད་ཡོད་ཀྱི་དེབ་མཚོན་འདོན་ཆེད་དུ་PDFའདེམས་དགོས།"
 selectedFile = "{{file}} ནས་བླུགས་པ།"
-source = "དེབ་ཐེར།"
 
 [editTableOfContents.editor]
 addTopLevel = "མཐོ་རིམ་གྱི་དེབ་མཚོན་ཁ་སྣོན་བྱེད་པ།"
@@ -4740,6 +4910,9 @@ replaceExisting = "ད་ཡོད་ཀྱི་དེབ་མཚོན་བ�
 replaceExistingHint = "དབང་པོ་སྐྱོན་ཅན་གྱི་སྐབས་ཕྱི་ཐིག་གསར་པ་དེ་ད་ལྟའི་དེབ་ཐེར་གྱི་རྗེས་སུ་མཉམ་དུ་བསྡོམས་ཡོད།"
 title = "དེབ་རྟགས་དང་ཕྱི་ཤུགས།"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "PDF བསྒྱུར་བ།"
 filePrompt = "ཁྱེད་རང་གི་དཔེ་མཛོད་ནས་PDFའདེམས་པའམ་ཡང་ན་འགོ་འཛུགས་ཆེད་དུ་གསར་པ་བླུགས་དགོས།"
@@ -4753,7 +4926,6 @@ title = "སྒྲིག་ཆས་ཁ་ཕྱེས་ནས་རྩོམ�
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} ཚད་བཀག་སྣང་མེད་བྱས།"
 actionUnlocked = "{{action}} ཐེངས་འདིར་སྒོ་ཕྱེ་ཟིན།"
-advanced = "སྔོན་ཐོན།"
 allowed = "ཆོག"
 annotations = "མཆན་འགྲེལ།"
 authoriseAction = "PDF འདིས {{action}} སྤྱོད་པར་ཆོག་མཆན་དགོས།"
@@ -4801,7 +4973,6 @@ restricted = "ཚད་བཀག་ཡོད།"
 restrictedActions = "ཚད་བཀག་བྱ་སྤྱོད།"
 restrictedOperation = "བྱ་སྤྱོད་འདིར་ཆོག་མཆན་གསང་ཨང་དགོས།"
 retainOwnerVerification = "ཁ་འབྱེད་གསང་ཨང་འདོར་སྐབས་ཆོག་མཆན་གསང་ཨང་འགྱུར་མེད་དུ་ཉར་བར་དེ་ར་སྤྲོད་བྱོས། འདིས་དེ་འདོར་མི་བྱེད།"
-saveProtection = "སྲུང་སྐྱོབ་ཉར་ཚགས།"
 securityChangeFailed = "སྲུང་སྐྱོབ་བསྒྱུར་མ་ཐུབ། ཆོག་མཆན་གསང་ཨང་དང་བདེ་འཇགས་སྒྲིག་འགོད་གསར་པ་ཞིབ་བཤེར་བྱོས།"
 sessionDetails = "ཐེངས་འདིར་ཁ་ཕྱེ་ཡོད། PDF དེ་སྲུང་སྐྱོབ་ཡོད་པར་གནས།"
 sessionDetailsLabel = "ཐེངས་འདིའི་སྒོ་འབྱེད་སྐོར།"
@@ -4871,7 +5042,6 @@ title = "གནད་དོན་ཞིག་བྱུང་།"
 tryAgain = "ཡང་བསྐྱར་ཚོད་ལྟ"
 
 [extractImages]
-allowDuplicates = "འདྲ་པར་འདྲ་བཤུས་སྲུང་བ།"
 selectText = "པར་རིས་ཀྱི་རྩ་སྒྲིག་འདེམས་ནས་འཐེན་པའི་པར་རིས་ལ་སྒྱུར་བ་ལ།"
 submit = "སྙིང་བཅུད"
 tags = "པར་རིས། པར་རིས། གསོག་འཇོག ཡིག་ཚགས་ཁང་།"
@@ -4927,12 +5097,15 @@ closeFile = "ཡིག་ཆ་ཁ་རྒྱག"
 
 [fileEditor]
 closedFile = "{{name}} སྒོ་བརྒྱབ་ཟིན"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "ཡིག་ཆའི་གོ་རིམ་བསྐྱར་སྒྲིག་བྱས"
 filesReordered_other = "ཡིག་ཆ {{count}} ཡི་གོ་རིམ་བསྐྱར་སྒྲིག་བྱས"
 loadedFromStorage_one = "ཉར་སྣོད་ནས་ཡིག་ཆ {{count}} བླངས"
 loadedFromStorage_other = "ཉར་སྣོད་ནས་ཡིག་ཆ {{count}} བླངས"
 loadFromStorageFailed = "ཉར་སྣོད་ནས་ཡིག་ཆ་ཁ་ཤས་འཇུག་མ་ཐུབ"
 pinnedFile = "{{name}} གཏན་འཇགས་བྱས"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} ཉར་ནས་ཁ་བརྒྱབ"
 saveFailed = "ཉར་མ་ཐུབ"
 unpinnedFile = "{{name}} གཏན་འཇགས་ལས་བཏོན"
@@ -5019,11 +5192,20 @@ locked = "ཟྭ་བརྒྱབ་ཡོད"
 previewOf = "{{name}} སྔོན་ལྟ"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "ཡིག་ཆ་ཁ་སྣོན།"
 created = "བསྐྲུན།"
 notIncludedInToolRun = "ལག་ཆས་འདི་སྤྱོད་སྐབས་ཚུད་མེད"
 size = "ཡིག་ཆའི་ཆེ་ཆུང་།"
 title = "ཡིག་ཆ།"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "ཡིག་ཆ་མེད"
@@ -5104,6 +5286,7 @@ subtitle = "ཡིག་ཆའི་ཟུར་སྟོན་ནང་གི�
 title = "ཟུར་སྟོན་རིགས་དབྱེ"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "དོར"
 error = "ཡིག་ཆའི་མིང་བསྐྱར་འདོགས་མ་ཐུབ།"
 illegalCharacters = "ཡིག་ཆའི་མིང་ནང་ \\ / : * ? \" < > | འདུས་མི་ཆོག"
@@ -5607,7 +5790,6 @@ removeField = "ཡིག་ཚན་སུབ།"
 
 [formFill.editor]
 action = "མཐེབ་གནོན་བྱ་སྤྱོད།"
-actionHelp = "མཐེབ་གནོན་ལ་གནོན་སྐབས་ཅི་བྱེད་པ།"
 actionNone = "མེད།"
 actionPrint = "པར་འདེབས།"
 actionReset = "འགེངས་ཤོག་སླར་སྒྲིག"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "ཡིག་འབྲུ་ག་ཚོད་ཤོང་བ་
 multiline = "ཐིག་ཕྲེང་མང་པོ།"
 multilineHelp = "ཡིག་ཕྲེང་གཅིག་ལས་མང་བའི་ཡི་གེ་འཇུག་ཆོག་པ་དང་། ཡིག་ཚན་གྱི་མཐའ་ལ་སླེབས་ན་ཕྲེང་བརྗེ་བྱེད།"
 multiSelect = "གདམ་གསེས་མང་པོ་འདེམས་ཆོག"
-multiSelectHelp = "གདམ་གསེས་གཅིག་ལས་མང་བ་དུས་གཅིག་ཏུ་འདེམས་ཆོག"
 name = "ཡིག་ཚན་མིང་།"
 nameHelp = "ཡིག་ཚན་གྱི་ནང་ཁུལ་མིང་། གཞི་གྲངས་ཕྱིར་འདོན་ནམ་མ་ལག་གཞན་ནས་འགེངས་ཤོག་འགེངས་སྐབས་སྤྱོད་པས། དེ་ཁྱད་འཕགས་དང་བར་སྟོང་མེད་པར་ཉར།"
 optionGap = "གདམ་གསེས་བར་སྟོང་།"
@@ -5902,6 +6083,11 @@ title = "ཁ་དོག་སྙོམ་སྒྲིག་དང་ངོ་�
 desc = "མིག་ལ་གཞོལ་བ། རི་མོ་འབྲི་བ། ལྟ་མཁན་གྱི་ནང་དུ་དྲན་ཐོ་དང་བཟོ་ལྟ་ཁ་སྣོན་བྱེད་པ།"
 tags = "annotate,highlight,draw,markup,མཆན,མཆན་ཐུང,བསྐྱར་ཞིབ,redline,ལན་འདེབས,markup tools,sticky notes,དབྱིབས,མདའ་རྟགས,text box,freehand"
 title = "མཆན་འགྲེམ་པ།"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "AI ཡིས་འགེངས་ཤོག་ཞིང་ཁམས་རང་འགུལ་ངོས་འཛིན་བྱས་ནས PDF བཀང་ཆོག་པར་བཟོ།"
@@ -6405,6 +6591,9 @@ sort = "རིགས"
 [merge.sortFiles]
 title = "ཡིག་ཆ་རིམ་སྒྲིག"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "མཉམ་སྡེབ་སྒྲིག་སྟངས་སྤྱི་བསྡོམས།"
 
@@ -6548,6 +6737,9 @@ title = "བདེན་དཔང་མ་ཐུབ་པ།"
 message = "ཁྱེད་ཀྱིས་སྒེའུ་ཁུང་འདི་ཁ་རྒྱག་ནས་སི་ཊར་ལིང་PDFལ་ལོག་ཐུབ།"
 title = "བདེན་དཔང་ལམ་ལྷོང་།"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "འཛུལ་སྤྱོད་ཆོག"
 approving = "ཆོག་མཆན་སྤྲོད་བཞིན..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "app ལ་ཁྱེད་ཕྱིར་སྐྱེལ་བཞིན..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} ཡིས་ཁྱེད་ཀྱི Stirling PDF རྩིས་ཐོ་ལ་འཛུལ་སྤྱོད་འདོད"
 scopesIntro = "འདིས {{app}} ལ་འདི་དག་བྱ་ཆོག་པར་བྱེད།"
 signedInAs = "{{name}} ལྟར་ནང་འཛུལ"
@@ -6565,6 +6758,8 @@ signInButton = "མུ་མཐུད་པར་ནང་འཛུལ"
 signInPrompt = "app མཐུད་པ་མུ་མཐུད་པར་ཁྱེད་ཀྱི Stirling PDF རྩིས་ཐོ་ལ་ནང་འཛུལ་གནང་།"
 title = "Authorise access"
 unknownApp = "ཕྱི་རོལ་གྱི application ཞིག"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "ཁྱེད་ལྟར་བྱེད - {{app}} ཡིས་བྱས་པ་ཚང་མ་ཁྱེད་ཀྱི་རྩིས་ཐོ་འོག་འགྲོ་ཞིང་ཁྱེད་ཀྱི་སྤྱོད་ཚད་ལ་རྩིས་འཇུག་བྱེད"
@@ -6572,9 +6767,12 @@ tools = "ཁྱེད་ཀྱི་ཚབ་ཏུ Stirling PDF ལག་ཆས
 
 [oauthConsent.scope]
 email = "ཁྱེད་ཀྱི email ཁ་བྱང་ལྟ"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "ཁྱེད་ཀྱི་ངོ་བོ་གཏན་འཁེལ"
 phone = "ཁྱེད་ཀྱི་ཁ་པར་ཨང་གྲངས་ལྟ"
 profile = "ཁྱེད་ཀྱི་གཞི་རྩའི་གསལ་སྡུད་ཆ་འཕྲིན་ལྟ"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "གཙང་བཟོའི་བརྟག་དཔྱད་དང་PDFནང་དུ་པར་རིས་ནས་ཡིག་ཆ་ཤེས་རྟོགས་བྱེད་པ་དང་ཡིག་ཆ་ལྟར་ཡང་བསྐྱར་ཁ་སྣོན་བྱེད།"
@@ -6956,6 +7154,10 @@ yourCloudAccess = "ཁྱེད་ཚོགས་ཆུང་ཚོགས་མ�
 [pageEdit]
 deselectAll = "མེད"
 selectAll = "ཚང་མ་འདེམས"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "ཤོག་ངོས།"
@@ -7577,6 +7779,8 @@ stamp = "stamp མཆན་འགྲེལ - ཤོག་ངོས་ཡི་�
 widget = "རེའུ་མིག་ས་ཁོངས - ཤོག་ངོས་ཡི་གེ་མིན་པས་འདིར་རྩོམ་སྒྲིག་མི་ཐུབ"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "རྩོམ་སྒྲིག"
 markTagged = "ཡོངས་རྫོགས་ངོ་རྟགས་བཀོད་ཟིན་དུ་རྟགས"
 matchScanFont = "སྔོན་བཤར་ཡིག་ཚིག {{face}} ལ་མཐུན"
@@ -7590,6 +7794,7 @@ tagPageContent = "ཤོག་ངོས་རང་འགུལ་ངོ་ར�
 typeInto = "{{run}} ནང་ཡི་གེ་རྒྱག"
 ungroupParagraph = "དུམ་མཚམས་ {{run}} ཚོགས་དབྱེ"
 unmarkTagged = "ཡོངས་རྫོགས་ངོ་རྟགས་མ་ཡིན་དུ་རྟགས"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "{{run}} ཕྲེང་བསྐྱར་སྒྲིག"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "ཉར་མེད་པའི་འགྱུར་བ་དོར་�
 
 [pdfTextEditor.error]
 decodeImage = "བདམས་པའི་པར་རིས decode བྱེད་མ་ཐུབ།"
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "ཡིག་ཚིག་འདི་གསར་འཛུགས་མི་ཚུལ། ཡིག་འབྲུ་ཚང་མ་བྲིས་ཐུབ་པའི་ཡིག་གཟུགས་མེད།"
 formLiftChangesDrawing = "འདི་ཞུན་དག་མི་ཐུབ། འདི་ནི་སྡེ་ཚན་ཞིག་གི་རིས་འགོད་ཁོངས་ནས་བྲིས་པ་ཡིན་པས་ བཅོས་སྒྱུར་སྐབས་སྒྲ་རྟགས་སྒྲིག་འགོད་དེ་ཉར་མི་ཐུབ།"
 insertImage = "བདམས་པའི་པར་རིས་འཇུག་མ་ཐུབ།"
 needsShaping = "ཞུན་དག་ཆས་ཀྱིས་ཡིག་རྟགས་མཐུན་པའི་སྐད་ཡིག་གི་འབྲུ་སྦྲེལ་དང་སྒྲ་རྟགས་ཡིག་རྟགས་ཀྱི་འབྲེལ་སྒྲིག་ད་དུང་ཡག་པོ་བྲིས་མི་ཐུབ། དེས་བཅོས་སྒྱུར་བྱས་མེད།"
+reopenLost = "Open again"
 replaceClippedImage = "པར་རིས་འདི་བརྗེ་མི་ཐུབ། དེ་ནི་དྲས་གཏུབས་ཡོད་པས་ བརྗེས་ཚེ་དྲས་གཏུབས་ཀྱིས་སྦས་པ་མངོན་སྲིད།"
 scanOffInk = "ཡིག་ཚིག་འདི་ཞུན་དག་མི་ཐུབ། ངོས་འཛིན་གྲུབ་པའི་མིང་ཚིག་དྲས་བརྙན་དང་མཐུན་མི་འདུག ཡང་བསྐྱར OCR བཀོལ།"
 unsafeRtlEdit = "ཞུན་དག་འདི་མི་ཐུབ། ཞུན་དག་ཆས་ཀྱིས་འལོག་གཡས་ནས་གཡོན་ལ་ཡིག་ཚིག་ཕྲེང་འདི་བསྐྲུན་སེམས་བསྒྱུར་མི་ཐུབ།"
@@ -7616,6 +7823,7 @@ pngFileType = "PNG image"
 close = "འཚོལ་བའི་སྒྲོམ་ཁ་རྒྱག"
 count = "{{current}} / {{total}}"
 findPlaceholder = "འཚོལ"
+hideReplace = "Hide replace"
 ignoreAccents = "accents སྣང་མེད"
 matchCase = "ཡིག་ཆེན/ཆུང་མཐུན་པ"
 next = "མཐུན་པ་རྗེས་མ"
@@ -7625,6 +7833,7 @@ replace = "ཚབ་བརྗེ"
 replaceAll = "ཚང་མ་ཚབ་བརྗེ"
 replaced = "{{count}} ཚབ་བརྗེས་ཟིན"
 replacePlaceholder = "འདིས་ཚབ་བརྗེ"
+showReplace = "Show replace"
 wholeWord = "ཚིག་ཆ་ཚང"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "འབྲེལ་མཐུད་འདི་ངོ་རྟག
 cannotTagPage = "ཤོག་ངོས་འདིའི་ནང་དོན་ངོ་རྟགས་མི་ཐུབ།"
 contentGroup = "ནང་དོན"
 customTag = "{{role}} (རང་བཟོས་མཚོན་རྟགས)"
-decorativeInfo = "བརྙན་ཡོལ་ཀློག་ཆས་ཀྱིས་མཛེས་བཟོའི་པར་རིས་མཆོངས་འགྲོ། མཐའ་སྒྲོམ། རྒྱབ་ལྗོངས། ཆ་འཕྲིན་མེད་པའི་པར་རིས་གཞན་ལ་སྤྱོད།"
-decorativeLabel = "མཛེས་བཟོའི་པར་རིས"
-description = "པར་རིས་འགྲེལ་བཤད"
-descriptionInfo = "བརྙན་ཡོལ་ཀློག་ཆས་ཀྱིས་འདི་པར་རིས་ཀྱི་ཚབ་ཏུ་ཀློག"
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "གསང་སྡོམ་བྱས་པའི་ཡིག་ཆའི་ནང་མཚོན་རྟགས་རྩོམ་སྒྲིག་མི་ཐུབ"
 figureDescription = "དཔེ་རིས་ཀྱི་འགྲེལ་བཤད"
 figureDescriptionInfo = "Screen reader ཡིས་དཔེ་རིས་ཀྱི་ཚབ་ཏུ་འདི་སྐད་ཀྱིས་ཀློག་དོ།"
-formFieldDescription = "ཡིག་སྒམ་འགྲེལ་བཤད"
 formulaDescription = "Formula འགྲེལ་བཤད"
 formulaDescriptionInfo = "Screen reader ཡིས་ formula གི་ཚབ་ཏུ་འདི་སྐད་ཀྱིས་ཀློག་དོ། ཁྲོད་སྐད་དུ་ལྟར་བཤད་དགོས་པས། དཔེར་ན \"x squared plus one\" ལྟ་བུ།"
 heading = "འཛུལ་སྤྱོད་སྟབས་བདེ"
@@ -7813,7 +8019,6 @@ markedTagged = "ཡིག་ཆ་ཡོངས་རྫོགས་ངོ་ར�
 markedTaggedHint = "PDF ཀློག་ཆས་ལ་འཇུག་སྤྱོད་སླ་བའི་ངོ་རྟགས་སྤྱོད་ཟེར་བརྡ་ཐུབ། ཡོངས་རྫོགས་ངོ་རྟགས་བཀོད་ཚར་རྗེས་རྟགས་བཀལ།"
 markedWithUntagged = "ནང་དོན་ཁ་ཤས་ལ་ངོ་རྟགས་མེད་པས་ screen reader ཚོས་མཆོངས་སྲིད།"
 missingDescriptions = "འགྲེལ་བཤད་ཆད་པ"
-mixedContent = "པར་རིས་ནང་ནང་དོན་གཞན་འདུས་ཡོད"
 mixedTags = "མཉམ་སྦྲེལ"
 needsDescriptionBadge = "འགྲེལ་བཤད་མེད"
 nextToReview = "རྗེས་མ་བསྐྱར་ཞིབ"
@@ -7821,12 +8026,10 @@ notFigure = "ཡི་གེའི་ཆ་ཤས་སུ་མཚོན་ར�
 removeTag = "མཚོན་རྟགས་སུབ"
 saveFailed = "ཁྱེད་ཀྱི་འཛུལ་སྤྱོད་སྟབས་བདེའི་བཟོ་བཅོས་ཉར་ཚགས་མ་ཐུབ་པས། ཡིག་ཆ་ཉར་ཚགས་མ་བྱས། དེ་དག་ཕྱིར་བཤོལ་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
 selectedText = "བདམས་པའི་ཡི་གེ"
-tagFormField = "དེབ་གཏུབ་ཡིག་སྒམ་ངོ་རྟགས"
 tagging = "ཤོག་ངོས་ངོ་རྟགས་བཀོལ་བཞིན་"
 tagLabel = "མཚོན་རྟགས"
 tagLinks_one = "འབྲེལ་མཐུད་ངོ་རྟགས"
 tagLinks_other = "འབྲེལ་མཐུད {{count}} ངོ་རྟགས"
-tagUntagged = "ཡིག་ཆ་རང་འགུལ་ངོ་རྟགས"
 tagUntaggedHint = "ཡིག་ཆ་ཧྲིལ་བོར་འཇུག་སྤྱོད་སླ་བའི་ངོ་རྟགས་རང་འགུལ་ངང་ཁ་སྣོན། མཐའ་འཁྱོལ་འདི་ཕྲ་མོ་ཡིན་པས་ ཁ་བྱང་། རེའུ་མིག དང་ཀློག་གོ་རིམ་ལ་བསྐྱར་ཞིབ་བྱོས།"
 unknownTag = "འདིར་ཀློག་མི་ཐུབ"
 unmarkedWithTags = "PDF ཀློག་ཆས་ཁ་ཤས་ལ་ངོ་རྟགས་སྤྱོད་པར་སྲིད་པས་ ངོ་རྟགས་མེད་པའི་ནང་དོན་མཆོངས་སྲིད།"
@@ -7851,7 +8054,7 @@ heading = "ཁ་བྱང"
 mixedNumbering = "ཨང་རྟགས་ཡོད་པ་དང་མེད་པའི་ཁ་བྱང་འདྲེས་ཡོད"
 none = "ཁ་བྱང་མེད"
 onPage = "ཤོག་ངོས་ {{page}} ཋང་གི་ཁ་བྱང"
-problems = "ཁ་བྱང་གི་གནད་དོན"
+problemCount = "{{count}} to fix"
 skippedLevel = "ཁ་བྱང་ {{previous}} རྗེས་རིམ་པ་གཅིག་མཆོངས་ཡོད"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "མཚན་བྱང"
 allLanguages = "སྐད་ཡིག་ཚང་མ"
 cannotSetDocument = "ཡིག་ཆ་འདིའི་སྐད་ཡིག་བསྒྱུར་མི་ཐུབ།"
 cannotSetText = "ཡིག་ཚིག་འདིའི་སྐད་ཡིག་བསྒྱུར་མི་ཐུབ།"
-documentHint = "ཡིག་ཆའི་སྐད་ཡིག — དེར་མེད་ན་ཡིག་ཚིག་ཁ་ཤས་རང་ཉིད་ཀྱི་སྐད་ཡིག་སྒྲིག་པ་ཡིན།"
 documentLabel = "སྐད་ཡིག"
 documentLocked = "གསང་སྡོམ་ཡོད་པའི་ཡིག་ཆའི་སྐད་ཡིག་ནཱ་ལ་བསྒྱུར་མི་ཐུབ།"
 inDocument = "ཡིག་ཆ་འདིར"
 innerLabel = "ངོ་རྟགས {{number}} སྐད་ཡིག"
 label = "སྐད་ཡིག"
-missing = "སྐད་ཡིག་མེད། screen reader ཚོས་ཚོར་བསླུངས་ནས་ ཡིག་ཆ་ཧྲིལ་བོ་སྐད་ཡིག་ཕྱི་རོལ་གྱིས་ཀློག་སྲིད།"
 mixed = "མཉམ་སྦྲེལ"
 noMatch = "མཐུན་སྐད་མེད། དེའི་ཚོད་རྟགས་ཨང་འཇུག — དཔེ་མཚོན mt ཡང་ན་ en-IE བཟུམ།"
 placeholder = "སྐད་ཡིག་འདེམས"
@@ -7943,6 +8144,52 @@ renderFailed = "ཤོག་ངོས render བྱེད་ཕམ"
 [pdfTextEditor.password]
 incorrect = "གསང་ཚིག་ནོར་འདུག - ཡང་བསྐྱར་ཚོད་ལྟ།"
 label = "གསང་ཚིག"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} ལ་སྙོམས་སྒྲིག་སྟོན་ཐིག - སུབ་པར ruler ཐོག་འདྲུད"
@@ -8124,6 +8371,10 @@ title = "སྔོན་ལྟ། འགྱུར་བ།"
 [pdfTextEditor.tooltip.textFocus]
 text = "ལས་ཀའི་ས་ཁོངས་འདིས་ཡིག་ཆ་རྩོམ་སྒྲིག་དང་བཙུགས་པའི་པར་རིས་བརྗེ་སྒྱུར་བྱེད་པར་གཙོ་བོར་བལྟས་ཡོད། ཤོག་ངོས་སྒྱུ་རྩལ་གྱི་ལས་ཀ་སྣ་ཚོགས་དང་། འབྲི་ཤོག་གི་ཝི་ཇེཊ། དེ་བཞིན་བང་རིམ་ཅན་གྱི་རི་མོ་བཅས་ཕྱིར་གཏོང་ཆེད་དུ་ཉར་ཚགས་བྱས་ཡོད་ཀྱང་། འདིར་ཆ་ཚང་རྩོམ་སྒྲིག་བྱེད་ཐུབ་ཀྱི་མེད།"
 title = "ཡིག་ཆ་དང་པར་རིས་དམིགས་ཡུལ།"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF ནས་ CSV བར།"
@@ -8383,17 +8634,6 @@ hideCategory = "རིགས་དབྱེ་སྦས"
 labelCount = "ཤོ་བྱང"
 sharedNote = "ཤོ་བྱང་འདི་དག་ནང་སྒྲིག་ཡིན་ཞིང་ཁྱེད་ཀྱི་ཚོགས་ཆུང་ཡོངས་དང་མཉམ་སྤྱོད་བྱས་ཡོད།"
 showCategory = "རིགས་དབྱེ་སྟོན"
-
-[policies.pii]
-account = "རྩིས་ཐོའི་ཨང་ (མཚོན་བྱེད་ཡོད་པ)"
-card = "Credit / debit དངུལ་ཤོག"
-email = "གློག་ཡིག་ཁ་བྱང་"
-fieldLabel = "ནག་འབྲི་བྱ་རྒྱུའི PII"
-iban = "IBAN"
-phone = "ཁ་པར་ཨང་"
-placeholder = "PII རིགས་འདེམས་པ"
-routing = "US routing numbers (ABA)"
-ssn = "Social Security ཨང་"
 
 [policy]
 badgeEnforcing = "{{name}} ལག་བསྟར་བཞིན..."
@@ -10317,6 +10557,10 @@ title = "ལས་རིམ་རྒྱུན"
 [portal.pipelines.actions]
 newCustomPipeline = "Custom pipeline གསར་པ"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Pipeline ཚང་མ"
 
@@ -12047,7 +12291,6 @@ label = "ཀློག་ཆས"
 readAloud = "སྒྲ་གསལ་ཀློག"
 rotateLeft = "གཡོན་དུ་འཁོར"
 rotateRight = "གཡས་སུ་འཁོར"
-search = "ཡིག་ཆ་ནང་འཚོལ"
 switchDocument = "ཡིག་ཆ་བརྗེ"
 thumbnails = "ཤོག་ངོས"
 
@@ -12062,6 +12305,7 @@ colorLabel = "སྒམ་གྱི་ཁ་དོག།"
 convertPDFToImageLabel = "PDF PDF-Image ལ་སྒྱུར་བ།"
 customPaddingLabel = "སྔར་སྲོལ་གྱི་བང་རིམ་འཕར་མ།"
 useRegexLabel = "རེ་སི་བེད་སྤྱོད་བྱེད་པ།"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "ཚིག་ཆ་ཚང་འཚོལ་བ།"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "བསྐྱར་བཟོ་སྒྲིག་སྟངས།"
 
 [redact.auto.wordsToRedact]
 add = "སྣོན་པ"
-examples = "དཔེ་མཚོན། གསང་བ། གསང་བ། གསང་བ། གསང་བ།"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "ཚིག་གཅིག་བླུགས།"
 title = "རྡོག་རྡོག་བར་གྱི་ཚིག་།"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "ཡིག་ཆ་དོ་དམ་ཆས་ནང�
 manual = "ལག་བཟོས"
 mode = "ཐབས་ལམ།"
 title = "དཔེ་བཟོ་ཐབས་ལམ།"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "ཡིག་ཆེན་ཡིག་ཆུང་གཅིག་པའི་ཡིག་ཚིགས་ཁོ་ན་མཐུན་པར་བྱེད། འདི་སྤེལ་ནས་ཡོད་ཚེ 'Secret' དང 'SECRET' མི་མཐུན། regex ནང་གི [A-Z] ནི་ཡིག་ཆེན་ཁོ་ན་དང་མཐུན།"
@@ -12147,19 +12401,6 @@ title = "དཔེ་བཟོ་ཐབས་ལམ།"
 text = "ལག་ཐོག་ནས་དམིགས་བསལ་གྱི་ས་ཁུལ་འདེམས་པར་སྣུན་ནས་འདྲུད་ནས་བསྐྱར་བཟོ་བྱེད་དགོས། ཁྱེད་ལ་གང་གིས་བསྒྱུར་བཅོས་བྱས་པ་དེ་ལ་སྟངས་འཛིན་གཏན་གཏན་བྱེད། (འབྱོར་ལ་ཉེ)"
 title = "ལག་དེབ་བསྐྱར་བཟོ།"
 
-[redact.tooltip.words]
-bullet1 = "དུས་གཅིག་ལ་ཚིག་གཅིག་ཁ་སྣོན་བྱེད།"
-bullet2 = "Enter ལ་མནན་ནས་ཡང་ན་ 'གཞན་ཞིག་ཁ་སྣོན་' ལ་སྣུན་ནས་ཁ་སྣོན་བྱེད།"
-bullet3 = "× ཚིག་སེལ་ཆེད་ × ལ་སྣུན་དགོས།"
-
-[redact.tooltip.words.description]
-text = "ཁྱེད་རང་གི་ཡིག་ཆ་འཚོལ་བ་དང་བསྐྱར་བཟོ་བྱེད་པར་ཚིག་གམ་ཚིག་གྲུབ་བླུགས་དགོས། མིང་ཚིག་རེ་རེ་ལ་སོ་སོར་འཚོལ་ཞིབ་བྱ་རྒྱུ་རེད།"
-title = "ཚིག་ཡིག་མཐུན་སྒྲིལ།"
-
-[redact.tooltip.words.examples]
-text = "བསྐྱར་བཟོ་བྱེད་པའི་ཚིག་རིགས་ནི། དངུལ་ཁང་གི་གནས་ཚུལ་དང་། གློག་འཕྲིན་ཁ་བྱང་། ཡང་ན་མིང་དམིགས་བསལ་བཅས་ཡིན།"
-title = "ཐུན་མོང་གི་དཔེ་མཚོན།"
-
 [redact.tooltip.words.header]
 title = "རྡོག་རྡོག་བར་གྱི་ཚིག་།"
 
@@ -12176,15 +12417,6 @@ failed = "PDF ནས་མཆན་འགྲེལ་མེད་པར་བཟ
 
 [removeAnnotations.info]
 description = "ལག་ཆ་འདིས་ཁྱེད་ཀྱི་PDFཡིག་ཆ་ནས་མཆན་འགྲེལ་ཚང་མ་མེད་པར་བཟོ་ཐུབ།"
-
-[removeAnnotations.settings]
-title = "སྒྲིག་སྟངས།"
-
-[removeAnnotations.tooltip.description]
-title = "དེས་ཅི་ཞིག་བྱེད།"
-
-[removeAnnotations.tooltip.header]
-title = "མཆན་འགྲེལ་སེལ་བའི་སྐོར།"
 
 [removeBlanks]
 submit = "ཤོག་ངོས་སྟོང་པ་ཕྱིར་འཐེན་བྱེད་པ།"
@@ -12325,6 +12557,9 @@ tags = "བསྐྱར་སྒྲིག,རིམ་པ་བསྐྱར་�
 [reorganizePages.error]
 failed = "ཤོག་ལྷེ་བསྐྱར་སྒྲིག་མ་ཐུབ་པ།"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "ཤོག་ངོས།"
 
@@ -12406,6 +12641,7 @@ title = "ཁ་དོག་ཚང་མ་བསྒྱུར་བ།"
 rotateLeft = "ཟུར་འཛིན།"
 rotateRight = "ཆུ་ཚོད་འཁོར་ལོའི་འཁོར་ལོ།"
 selectRotation = "འཁོར་སྐྱོད་ཟུར་མ་འདེམས། (ཆུ་ཚོད་འཁོར་ལོ།)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "འཁོར་སྐྱོད་བཀོལ་བ།"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "PDF འཁོར་བ།"
@@ -12516,8 +12752,7 @@ title = "གཙང་སྦྲ་བྱེད་པ།"
 failed = "PDF གཙང་བཟོ་བྱེད་སྐབས་ནོར་འཁྲུལ་བྱུང་ཡོད།"
 
 [sanitize.options]
-note = "ཁྱེད་ཀྱིས་PDFནས་མེད་པར་བཟོ་འདོད་པའི་ཆ་ཤས་འདེམས། ཉུང་མཐར་ཡང་གདམ་ག་གཅིག་འདེམས་དགོས།"
-title = "གཙང་སྦྲའི་གདམ་ག།"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "PDF ནང་དུ་བཙུགས་པའི་ཡིག་ཆ་གང་རུང་ཞིག་མེད་པར་བཟོས།"
@@ -12649,6 +12884,7 @@ title = "འཚོལ་ཞིབ་PDF"
 hideTools = "མི་འཐོབ་ལག་ཆ་སྦེད་ ▴"
 messageNoFallback = "ཁྱེད་ཀྱི་ཞབས་ཞུ་དྲྭ་ཐོག་ལ་ཕྱིར་འབྱོར་མ་བྱས་བར་ལག་ཆ་མི་འཐོབ།"
 messageWithFallback = "ལག་ཆ་ཁ་ཤས་ལ་ཞབས་ཞུ་མཐུད་དགོས།"
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "མི་འཐོབ་ལག་ཆ་ལྟ་ ▾"
 title = "ཁྱེད་ཀྱི Stirling-PDF ཞབས་ཞུ་ལ་མཐུད་མི་ཐུབ"
 toolNotAvailableLocally = "ཁྱེད་ཀྱི Stirling-PDF ཞབས་ཞུ་ཨོླཕ་ལ་ཡིན་པས \"{{endpoint}}\" རང་གནས་རྒྱབ་སྟེགས་ནང་མི་འཐོབ།"
@@ -13034,6 +13270,12 @@ title = "མཐེབ་གཞོང་ཐུང་ངུ།"
 mac = "⌘ (བཀའ་བཀོད་) ⌥ (གདམ་ཁ་) ཡང་ན་ཁྱེད་ཀྱི་མགྱོགས་ལམ་ནང་བསྒྱུར་བཅོས་བྱེད་མཁན་གཞན་ཞིག་ཚུད་ཡོད།"
 windows = "ཁྱེད་རང་གི་མགྱོགས་ལམ་ནང་ལ་Ctrl, Alt, ཡང་ན་བསྒྱུར་བཅོས་བྱེད་མཁན་གཞན་ཞིག་ཚུད་ཡོད།"
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Terms, privacy policy དང་ཁྱེད་ཀྱི cookie preferences།"
 label = "ཁྲིམས་མཐུན"
@@ -13418,9 +13660,7 @@ image = "Upན།"
 text = "ཡིག་གཞི"
 
 [sign.step]
-createDesc = "མིང་རྟགས་དེ་ཇི་ལྟར་བཟོ་དགོས་མིན་འདེམས།"
 place = "ས་ཆ་དང་གསོག་འཇོག་།"
-placeDesc = "ཁྱེད་རང་གི་PDFཐོག་མིང་རྟགས་བཀོད་དགོས།"
 
 [sign.steps]
 configure = "མཚན་རྟགས་རིམ་སྒྲིག་བྱེད་པ།"
@@ -13597,6 +13837,10 @@ rotateLeft = "གཡོན་དུ་འཁོར"
 rotateRight = "གཡས་སུ་འཁོར"
 trim = "མིང་རྟགས་ལ་བཅད་སྒྲིག"
 trimHint = "མཐའ་འཁོར་གྱི་སྟོང་ཆ་གཅོད"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "མཛུབ་འགན་མངོན་སྟོན་སྒྲིག"
@@ -13959,7 +14203,6 @@ placeholder = "འཕྲེད་ཐིག་བགོད་གྲངས་ཀ�
 
 [split-by-sections.splitMode]
 custom = "སྒེར་གྱི་ཤོག་ངོས།"
-description = "ཤོག་བུ་ཁ་ཕྲལ་གཏོང་སྟངས་འདེམས།"
 label = "ཁ་ཕྲལ་ཐབས་ལམ།"
 splitAll = "ཤོག་ལྷེ་ཚང་མ་བགོས་པ།"
 splitAllExceptFirst = "དང་པོ་མ་གཏོགས་ཚང་མ་བགོས་པ།"
@@ -14210,10 +14453,8 @@ failed = "PDF དུས་ཚོད་རྟགས་བཀོད་སྐབས
 
 [timestampPdf.options]
 note = "ཁྱེད་ཀྱི་ཡིག་ཆའི SHA-256 hash ཙམ་གཙོ་བོས་ TSA ཞབས་ཞུ་ལ་གཏོང་བཞིན། PDF ཡིག་ཆ་ཡིན་ནའང་ TSA ཞབས་ཞུ་ལ་མི་གཏོང་།"
-title = "དུས་ཚོད་རྟགས་ཞབས་ཞུ (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "ཡིད་ཆེས་བྱས་པའི Time Stamp Authority ཞིག་འདེམས་"
 label = "TSA ཞབས་ཞུ་ཞིག་འདེམས་"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "ལག་ཆ་མེད་པ།"
 
 [tooltip]
 close = "མལ་བྱེད་ཁ་རྒྱག"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "ལག་ཆ་འདིས་PDFཡིག་ཆའི་ས་ཁོངས་ནས་ཀློག་ཐུབ་པའི་ཚད་བཀག་མེད་པར་བཟོས་པས་དེ་དག་རྩོམ་སྒྲིག་བྱེད་ཐུབ་པ་དང་བཀང་ཐུབ་པ་རེད།"
@@ -14706,6 +14961,9 @@ signatureDate = "མཚན་རྟགས་ཚེས་གྲངས།"
 
 [validateSignature.settings]
 certHint = "བློ་གཏད་ཆོག་པའི་X.509ལག་འཁྱེར་དེ་སྒེར་གྱི་ཡིད་ཆེས་ཐོན་ཁུངས་ལ་ཁུངས་གཏུག་བྱེད་པར་བདེན་དཔང་བྱེད་དགོས།"
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "བདེན་དཔང་སྒྲིག་སྟངས།"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "སྔོན་ལྟའི་ཡིག་འབྲུའ�
 copyRestricted = "PDF འདིའི་དབང་ཚད་ཀྱིས་འདྲ་བཤུས་སྤྱོད་མི་ཆོག"
 copyText = "འདྲ་བཤུས།"
 coverPageView = "ཁ་ཤོག་ལོགས་སུ་སྟོན"
-disableColorFilter = "ཁ་དོག་འཚག་བཟོ་བར་བཀག"
 documentUpdated = "ཡིག་ཆ་གསར་སྒྱུར་བྱས་ཟིན།"
 dualPageView = "ཤོག་ངོས་གཉིས་ལྡན་གྱི་མཐོང་སྣང་།"
 editText = "ཡིག་རྐྱང་ཞུན་དག"
-enableDarkFilter = "མུན་མཐོང་འཚག་བཟོ་ལྕོགས་འགུལ"
-enableSepiaFilter = "Sepia འཚག་བཟོ་ལྕོགས་འགུལ"
 engineLoadError = "PDF viewer engine འགོ་སྒྲིག་བྱེད་མ་ཐུབ།"
 engineSlowWarning = "PDF engine འགོ་སྒྲིག་དུས་ཡུན་སྔོན་དཔག་ལས་རིང་བ་འགོར་བཞིན་འདུག ཁྱེད་ཀྱི browser WebAssembly དང Worker སྒྲིག་འགོད་ལ་ཞིབ་བཤེར་བྱོས། ཡང་ན་ཤོག་ངོས་བསྐྱར་འཇུག་བྱོས།"
 firstPage = "ཤོག་ངོས་དང་པོ།"
@@ -14736,20 +14991,27 @@ fitPage = "ཤོག་ངོས་ལ་འཚམས་སྒྲིག"
 fitWidth = "ཞེང་ཚད་ལ་འཚམས་སྒྲིག"
 lastPage = "ཤོག་ངོས་མཐའ་མ།"
 loadingEngine = "PDF Engine འགེལ་བཞིན་པ..."
+menuSelected = "Selected"
 moreOptions = "གདམ་གསེས་མང་བ"
 nextPage = "ཤོག་ངོས་རྗེས་མ།"
 noPdfProvided = "PDF མཁོ་འདོན་བྱས་མེད།"
 onlyPdfSupported = "ཡིག་ཆའི་རྣམ་གཞག་འདི་སྔོན་ལྟར་རྒྱབ་སྐྱོར་མེད།"
 pageNavigation = "ཤོག་ངོས་འགྲུལ་སྟངས"
+pageNumber = "Page number"
 previousPage = "ཤོག་ངོས་སྔོན་མ།"
 readAloudFromHere = "འདི་ནས་སྐད་ཆེན་པོས་ཀློག"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "ཡིག་ཆ་ཉར་ཚགས་མི་ཐུབ། སྐྱར་ཚོད་ལྟ་བྱེད།"
 saveChangesErrorTitle = "བསྒྱུར་བ་ཉར་ཚགས་མི་ཐུབ"
 singlePageView = "ཤོག་ངོས་གཅིག་པའི་མཐོང་སྣང་།"
+tools = "Tools"
 unknownFile = "མ་ཤེས་པའི་ཡིག་ཆ།"
-view = "ལྟ"
 zoom = "རྒྱས/བསྡུས"
 zoomIn = "Zoom in"
+zoomLevel = "Zoom level"
 zoomOut = "ཆུང་དུ་བཟོ།"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "མིང་རྟགས་སྔོན་ལྟ།"
 
 [viewer.signatureField]
 badge = "མིང་རྟགས།"
+clickToSign = "Click to sign here"
 fieldTitle = "མིང་རྟགས་སྡེ་ཚན། {{name}}"
 signed = "མིང་རྟགས་བཀོད་ཟིན།"
 signedWithReason = "མིང་རྟགས་བཀོད་ཟིན། {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "མིང་རྟགས་མ་བཀོད་པའི་སྡེ་ཚན། {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "ཡིག་ཆ་ {{total}} ནས་ {{restored}} སླར་ག�
 
 [workbenchBar]
 activeFiles = "སྐྱོད་བཞིན་པའི་ཡིག་ཆ"
-annotations = "མཆན་བཀོད"
+annotate = "Annotate"
 applyRedactionsFirst = "དང་པོར སྦ་བཅོས་སྤྱོད"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "ཡིག་ཆ་ཚང་མ་ཁ་བསྡམས"
 closePdf = "PDF ཁ་བསྡམས"
+defaultZoom = "Default zoom"
 deselectAll = "ཚང་མ་འདེམས་པ་བཤོལ"
 downloadAll = "ཚང་མ་ཕབ་ལེན"
 editText = "ཡིག་རྐྱང་ཞུན་དག"
@@ -15100,18 +15367,26 @@ exitAnnotations = "མཆན་འགྲེལ་རྣམ་པ་ནས་ཕ�
 exitRedaction = "སྦ་བཅོས་ཐབས་ལམ་ནས་ཕྱིར་ཐོན"
 findReplace = "འཚོལ་ནས་བརྗེ"
 formFill = "འགེངས་ཤོག་རྩོམ་སྒྲིག་ཆས།"
-hideToolbar = "ལག་ཆའི་སྒྲོམ་སྦས།"
+layers = "Layers"
 moreActions = "བྱ་སྤྱོད་མང་བ།"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "ཤོག་ངོས་རྩོམ་སྒྲིག"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "སྤོ་བཤུད་ཐབས་ལམ"
 print = "PDF དཔར་བསྐྲུན"
 readAloud = "སྒྲ་སྐད་ཀློག"
 readAloudLanguage = "སྐད་ཡིག"
 readAloudSpeed = "མགྱོགས་ཚད"
 redact = "སྦ་བཅོས"
+reviewAccessibility = "Accessibility"
 rotateLeft = "གཡོན་སྐོར"
 rotateRight = "གཡས་སྐོར"
 ruler = "འཇལ་ཆས / ཚད་འཇལ"
+rulerScaleUnset = "Not set"
 rulerSettings = "བསྡུར་ཚད་སྒྲིག་འགོད"
 save = "སྲུངས"
 saveAll = "ཚང་མ་སྲུངས"
@@ -15123,14 +15398,23 @@ selectLanguage = "སྐད་ཡིག་འདེམས"
 share = "མཉམ་སྤྱོད"
 showAllTools = "ལག་ཆ་ཚང་མ་སྟོན།"
 showFewerTools = "ལག་ཆ་ཚང་བརྡར་འགྲིལ།"
-showToolbar = "ལག་ཆའི་སྒྲོམ་སྟོན།"
+thumbnails = "Pages"
 toggleAnnotations = "མཆན་བཀོད་མཐོང་རུང་བ་བསྒྱུར"
-toggleAttachments = "ཟུང་འདྲེན་བསྒྱུར"
-toggleBookmarks = "དེབ་རྟགས། (དཀར་ཆག)"
 toggleComments = "མཆན"
-toggleLayers = "བང་རིམ་བསྒྱུར"
-toggleSidebar = "ཟུར་པང་བསྒྱུར"
 viewer = "ལྟ་ཆས"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "ཁྱེད་ཀྱི་པར་ཡིག་འདི་ལ་བཅར་འཇུག་དུས་ཚོད་ཚར་བ།"

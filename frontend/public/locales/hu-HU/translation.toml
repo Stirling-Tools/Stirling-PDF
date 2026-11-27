@@ -12,9 +12,11 @@ comingSoon = "Hamarosan"
 confirm = "Megerősítés"
 confirmClose = "Bezárás megerősítése"
 confirmCloseCancel = "Mégse"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Fájl bezárása"
 confirmCloseDiscard = "Módosítások elvetése és bezárás"
 confirmCloseMessage = "Biztosan be akarja zárni ezt a fájlt?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Mentés és bezárás"
 confirmCloseSaveFailed_one = "Hibákkal mentve. {{count}} file mentése nem sikerült."
 confirmCloseSaveFailed_other = "Hibákkal mentve. {{count}} fájlt nem sikerült menteni."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Fájl mentve a lemezre"
 filesSelected = "{{count}} fájl"
 font = "Betűtípus"
 fontSizeTooltip = "A lapszám szövegének mérete pontban. A nagyobb szám nagyobb szöveget eredményez."
-fontTypeTooltip = "A lapszámok betűcsaládja. Válassza a dokumentum stílusához illően."
 green = "Zöld"
 help = "Súgó"
 incorrectPasswordMessage = "A jelenlegi jelszó helytelen."
@@ -249,9 +250,7 @@ image = "Feltöltés"
 text = "Szöveg"
 
 [addImage.step]
-createDesc = "Töltse fel a hozzáadni kívánt képet"
 place = "Kép elhelyezése"
-placeDesc = "Kattintson a PDF-re a kép hozzáadásához"
 
 [addImage.steps]
 configure = "Kép beállítása"
@@ -276,7 +275,7 @@ fontName = "Betűtípus"
 fontSize = "Betűméret"
 numberPagesDesc = "pl. 1,3,5-8, vagy hagyja üresen az összes oldalhoz"
 pagePreviewAlt = "Oldal előnézete"
-pagesAndStarting = "Oldalak és kezdő sorszám"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Pozíció és oldalak"
 preview = "Pozíció kiválasztása"
 previewDisclaimer = "Az előnézet hozzávetőleges. A végső kimenet eltérhet a PDF betűkészlet-metrikái miatt."
@@ -300,6 +299,7 @@ title = "Lapszámozás eredménye"
 
 [addPassword]
 desc = "PDF dokumentum titkosítása jelszóval."
+submit = "Add Password"
 tags = "titkosítás,jelszó,zárolás,biztonságossá tétel,védelem,biztonság,titkosítás,óvintézkedés,bizalmas,privát,hozzáférés korlátozása"
 title = "Jelszó hozzáadása"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Bélyegző előnézete"
 tags = "bélyegző,jelölés,pecsét,jóváhagyva,elutasítva,bizalmas,bélyegző eszköz,gumibélyegző,dátumbélyegző,jóváhagyási bélyegző,beérkezett,érvénytelen,másolat,eredeti"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Ábécé"
-clickToExpand = "Kattintson a kibontáshoz"
 customColor = "Egyedi szövegszín"
 customDateDesc = "Egyéni formátum"
 customPosition = "Húzza a bélyeget a kívánt helyre az előnézeti ablakban."
 dateDesc = "Aktuális dátum"
 datetimeDesc = "Dátum és idő együtt"
 dateTimeVars = "Dátum és idő"
-dynamicVariables = "Dinamikus változók"
 examples = "Példák"
 filenameDesc = "Fájlnév kiterjesztés nélkül"
 filenameFullDesc = "Fájlnév kiterjesztéssel"
@@ -365,6 +364,8 @@ noStampSelected = "Nincs kiválasztott bélyeg. Térjen vissza az 1. lépéshez.
 opacity = "Átlátszóság"
 otherVars = "Egyéb"
 pageNumberDesc = "Aktuális oldalszám"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Oldalinformációk"
 position = "Pozíció"
 positionAndFormatting = "Pozíció és formázás"
@@ -378,9 +379,10 @@ quickPosition = "Válasszon pozíciót az oldalon a bélyeg elhelyezéséhez."
 rotation = "Forgatás"
 selectedImageAlt = "Kiválasztott bélyegzőkép"
 selectTemplate = "Válasszon sablont..."
+size = "Size"
 stampSetup = "Bélyeg beállítása"
 stampText = "Pecsét szövege"
-stampTextDescription = "Használja az alábbi dinamikus változókat. Literális @ karakterhez használja: @@. Új sorokhoz használja: \\n."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Pecsét típusa"
 submit = "Bélyegző hozzáadása"
 tags = "Pecsét,Kép hozzáadása,középre igazítás,Vízjel,PDF,Beágyazás,Testreszabás"
@@ -389,7 +391,6 @@ title = "PDF pecsételése"
 totalPagesDesc = "Oldalak teljes száma"
 useTemplate = "Sablon használata"
 uuidDesc = "Rövid egyedi azonosító (8 karakter)"
-variablesHelp = "Kattintson bármely változóra a bélyegzőszövegbe való beszúrásához. Literális @ karakterhez használja: @@."
 yearMonthDayDesc = "Egyedi dátumrészek"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Hiba történt a bélyeg hozzáadása közben a PDF-hez."
 
 [AddStampRequest.results]
 title = "Bélyegzés eredményei"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Egyéni"
@@ -410,6 +417,11 @@ legal-footer = "Jogi lábléc"
 page-numbers = "Oldalszámok"
 pageNumberFooter = "Oldalszám lábléc"
 timestamp = "Időbélyeg"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Szöveg alkalmazása"
@@ -462,9 +474,7 @@ image = "Feltöltés"
 text = "Szöveg"
 
 [addText.step]
-createDesc = "Adja meg a hozzáadni kívánt szöveget"
 place = "Szöveg elhelyezése"
-placeDesc = "Kattintson a PDF-re a szöveg hozzáadásához"
 
 [addText.steps]
 configure = "Szöveg beállítása"
@@ -1233,6 +1243,18 @@ label = "Újragenerálás indításkor"
 description = "A tanúsítvány érvényességének napokban megadott száma"
 label = "Tanúsítvány érvényessége (nap)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Könyvtárak, amelyekből a mappaforrások és mappakimenetek olvashatnak, illetve amelyekbe írhatnak. Ez biztonsági határ: az automatizálások soha nem mutathatnak a listán kívüli szerverútvonalra."
 securityNote = "Hagyja üresen a mappaforrások és -kimenetek teljes letiltásához. A Stirling saját konfigurációs könyvtára mindig tiltott."
@@ -1456,7 +1478,9 @@ label = "SMTP felhasználónév"
 
 [admin.settings.mcp]
 apikeyNote = "Az ügyfelek egy Stirling API key-t küldenek az X-API-KEY fejlécben (vagy Authorization: Bearer <key>). A kulcs a tulajdonos Stirling felhasználójához van rendelve – csak előre létrehozott fiókok kapnak hozzáférést, és a műveletek az adott felhasználóként kerülnek naplózásra. A kulcsok kezelése: Fiók > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Tegye elérhetővé a Stirling PDF-eszközeit és AI-ügynökeit MCP kliensek számára egy OAuth-védett végponton keresztül."
+endpointUrl = "MCP endpoint URL"
 title = "MCP szerver"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Engedélyezett eszközök"
 description = "Az MCP elől elrejtendő műveletazonosítók (vesszővel vagy szóközzel elválasztva), pl. add-password remove-password. Hagyja üresen az összes engedélyezett eszköz elérhetővé tételéhez."
 label = "Blokkolt eszközök"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Ha ki van kapcsolva (alapértelmezett), nem töltődik be /mcp végpont, metadata vagy MCP bean."
 label = "MCP Server engedélyezése"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Adja meg fent az OAuth kibocsátót + Resource ID-t, mentse, majd indítsa újra."
 step1ApiKey = "Hozzon létre API key-t a Fiók > API Keys alatt (minden felhasználó a sajátját használja)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Az MCP kliensben adjon hozzá egy"
 step2b = "szervert, amely ide mutat:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "A kliens automatikusan felfedezi az OAuth beállításokat innen:"
 step3ApiKey = "Küldje a kulcsot egy"
 step3ApiKeyb = "fejlécben (vagy Authorization: Bearer <key>). OAuth vagy metadata-felderítés nincs használatban."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Hagyja jóvá a bejelentkezést; a kliens tokennel újrapróbálkozik. Az eszközök csoportosítva jelennek meg: convert, pages, misc, security, ai."
 step4ApiKey = "Az eszközök csoportosítva jelennek meg: convert, pages, misc, security, ai – és minden hívás a kulcs tulajdonosaként kerül naplózásra."
 tip = "Tipp: regisztrálja a Resource ID-t engedélyezett audience-ként az IdP-ben. MCP Inspectorral és Claude Desktop-pal tesztelve."
 tipApiKey = "Tipp: az API-key módhoz nincs szükség külső IdP-re – ez a legegyszerűbb saját üzemeltetéshez. A kulcs a tulajdonos Stirling felhasználójához van rendelve."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "MCP kliens csatlakoztatása"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Automatikusan felderítve a kibocsátótól"
 
 [admin.settings.mcp.mode]
 apikey = "API key (Stirling felhasználónkénti kulcs)"
+builtin = "Built-in OAuth 2.1"
 description = "Az OAuth külső IdP-t igényel. Az API key egy felhasználónkénti Stirling API key-t használ (X-API-KEY) – ez a legegyszerűbb saját üzemeltetéshez."
 label = "Hitelesítési mód"
 oauth = "OAuth 2.1 (külső IdP)"
@@ -1515,6 +1563,18 @@ label = "Erőforrás-azonosító"
 [admin.settings.mcp.scopes]
 description = "mcp.tools.read megkövetelése olvasási műveletekhez, és mcp.tools.write írási/AI műveletekhez."
 label = "OAuth scope-ok kikényszerítése"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim, amelyet egy Stirling felhasználónévhez illeszt (pl. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Szeretne segíteni a Stirling PDF fejlesztésében?"
 tags = "jegyzetelés,kiemelés,rajzolás,jelölés,megjegyzés,jegyzetek,áttekintés,korrektúra,visszajelzés,jelölő eszközök,öntapadós jegyzetek,alakzatok,nyilak,szövegdoboz,szabadkézi"
 
 [annotation]
-alignCenter = "Középre igazítás"
-alignLeft = "Balra igazítás"
-alignRight = "Jobbra igazítás"
 annotationStyle = "Jelölés stílusa"
 backgroundColor = "Háttérszín"
 borderOff = "Szegély: ki"
@@ -2016,18 +2073,61 @@ underline = "Aláhúzás"
 undoDelete = "Visszavonás"
 width = "Szélesség"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Ingyenes, privát PDF-szerkesztő, amelyet bármilyen infrastruktúrán futtathat."
 
 [appBanner]
 dismiss = "Elvetés"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Mellékletek hozzáadása..."
 convertToPdfA3b = "Átalakítás PDF/A-3b formátumba"
 convertToPdfA3bTooltip = "A PDF/A-3b egy archiválási formátum, amely biztosítja a hosszú távú megőrzést. Lehetővé teszi tetszőleges fájlformátumok mellékletként történő beágyazását. Az átalakításhoz Ghostscript szükséges, és nagy fájloknál hosszabb ideig tarthat."
-convertToPdfA3bTooltipHeader = "A PDF/A-3b átalakításról"
-convertToPdfA3bTooltipTitle = "Mit csinál"
 discardChanges = "Elvetés"
 downloadSingle = "Melléklet letöltése"
 duplicateName = "Már létezik '{{name}}' nevű melléklet."
@@ -2208,7 +2308,6 @@ guest = "Vendég"
 user = "Felhasználó"
 
 [auto-rename]
-description = "Automatikusan megkeresi a PDF tartalmából a címet, és azt használja fájlnévként."
 submit = "Automatikus átnevezés"
 tags = "automatikus felismerés,fejléc alapú,rendszerezés,újracímkézés"
 title = "Automatikus átnevezés"
@@ -2218,21 +2317,6 @@ failed = "Hiba történt a PDF automatikus átnevezése közben."
 
 [auto-rename.results]
 title = "Automatikus átnevezés eredményei"
-
-[auto-rename.settings]
-title = "Leírás"
-
-[auto-rename.tooltip.description]
-title = "Mit csinál"
-
-[auto-rename.tooltip.header]
-title = "Hogyan működik az automatikus átnevezés"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Olyan szöveget keres, amely címnek vagy fejlécként tűnik fel"
-bullet2 = "Tiszta, érvényes fájlnevet hoz létre a felismert címből"
-bullet3 = "Megőrzi az eredeti nevet, ha nem talál megfelelő címet"
-title = "Intelligens átnevezés"
 
 [autoFormDetection]
 loading = "Űrlapmezők felismerése..."
@@ -2327,6 +2411,9 @@ remove = "Eszköz eltávolítása"
 selected = "Kiválasztott eszközök"
 selectTool = "Válasszon egy eszközt..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Mégse"
 confirm = "Visszalépés"
@@ -2360,6 +2447,10 @@ title = "Automatizálás futtatása"
 [automate.selection]
 title = "Automatizálás kiválasztása"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Új automatizálás létrehozása"
 
@@ -2371,6 +2462,7 @@ title = "Javasolt"
 
 [automate.sequence]
 finish = "Befejezés"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Automatizálás futtatása"
 running = "Automatizálás futtatása..."
 signInToRun = "Jelentkezzen be az automatizálások futtatásához."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Biztonsági munkafolyamat"
 secureWorkflowDesc = "Biztonságossá teszi a PDF-eket a potenciálisan rosszindulatú tartalmak (például JavaScript és beágyazott fájlok) eltávolításával, majd jelszóvédelmet ad a jogosulatlan hozzáférés megakadályozására. Alapértelmezett jelszó: 'password'."
 
 [autoRename]
-description = "Ez az eszköz automatikusan átnevezi a PDF-fájlokat a tartalmuk alapján. Elemzi a dokumentumot, hogy a szövegből a legalkalmasabb címet találja meg."
 tags = "automatikus felismerés,fejlécalapú,rendezés,újracímezés,automatikus átnevezés,okos átnevezés,átnevezés tartalom alapján,fájlnév,fájlelnevezés,cím felismerése"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,felosztás,dokumentum,rendszerezés"
 [autoSplitPDF]
 dividerDownload2 = "'Automatikus elválasztó (utasításokkal).pdf' letöltése"
 duplexMode = "Duplex mód (Elő- és hátoldali szkennelés)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-alapú,szétválasztás,szkennelt szekció,rendszerezés"
 title = "Automatikus PDF felosztás"
 
@@ -2528,9 +2620,6 @@ tooltip = "Szegélyek hozzáadása minden oldalszakasz köré a vágás és igaz
 [bookletImposition.addGutter]
 label = "Kötőmargó hozzáadása"
 tooltip = "Belső margóterület hozzáadása a kötéshez"
-
-[bookletImposition.advanced]
-toggle = "Speciális beállítások"
 
 [bookletImposition.doubleSided]
 label = "Kétoldalas nyomtatás"
@@ -2714,14 +2803,15 @@ chooseJksFile = "JKS fájl kiválasztása"
 chooseP12File = "PKCS12 fájl kiválasztása"
 choosePfxFile = "PFX fájl kiválasztása"
 choosePrivateKey = "Privát kulcsfájl kiválasztása"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Elutasítva"
 fetchFailed = "Az aláírási adatok betöltése sikertelen"
 finalized = "Véglegesítve"
 location = "Hely"
-logoTitle = "Logó"
-name = "Név"
-noLogo = "Nincs logó"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Oldalszám"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Tanúsítvány jelszava"
 passwordOptional = "Hagyja üresen, ha nincs jelszó"
 pemCertificateLabel = "Tanúsítvány (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Privát kulcs (.pem / .key)"
 pending = "Függőben"
 readyToFinalize = "Készen áll a véglegesítésre"
 reason = "Ok"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Kiszolgálói tanúsítvány használata - nincs szükség fájlokra vagy jelszóra"
-showLogo = "Logó megjelenítése"
 signatureProgress = "{{signedCount}}/{{totalCount}} aláírás"
 tags = "hitelesítés,PEM,P12,hivatalos,titkosítás,aláírás,tanúsítvány,PKCS12,JKS,szerver,kézi,automatikus"
 title = "Tanúsítvánnyal aláírás"
@@ -2738,12 +2828,45 @@ viewed = "Megtekintve"
 
 [certSign.appearance]
 invisible = "Láthatatlan"
+showOnPage = "Show signature on page"
 stepTitle = "Aláírás megjelenése"
 visibility = "Láthatóság"
 visible = "Látható"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Aláírás részletei"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Az aláírás megjelenéséről"
@@ -2762,9 +2885,6 @@ bullet3 = "Kiválaszthatja, melyik oldalra kerüljön az aláírás"
 bullet4 = "Opcionális logó is hozzáadható"
 text = "Aláírásblokkot jelenít meg a PDF-en az Ön nevével, dátummal és opcionális részletekkel. Hasznos, ha azt szeretné, hogy az olvasók egyértelműen lássák, hogy a dokumentum alá van írva."
 title = "Látható aláírások"
-
-[certSign.certFiles]
-stepTitle = "Tanúsítványfájlok"
 
 [certSign.certType.tooltip.convert]
 text = "Konvertálja a fájlt Java kulcstárrá (.jks) a keytool eszközzel, majd válassza a JKS-t."
@@ -2786,6 +2906,7 @@ text = "Válassza ki az opciót, amely megfelel a tanúsítványfájljának form
 title = "Melyik opciót válasszam?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Tanúsítvány formátuma"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Ez az eszköz"
 [certSign.error]
 failed = "Hiba történt az aláírások feldolgozása közben."
 
-[certSign.format]
-pkcs11 = "USB token"
-windowsStore = "Windows tanúsítványtár"
-
 [certSign.hardware]
-certificate = "Tanúsítvány"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Egyéni illesztőprogram elérési útja…"
+digitalId = "Digital ID"
 driver = "PKCS#11 illesztőprogram"
 driverPath = "Illesztőprogram könyvtárának elérési útja"
 driverPathPlaceholder = "A PKCS#11 illesztőprogram teljes elérési útja (.dll, .so vagy .dylib)"
-expired = "lejárt"
-expires = "lejár"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Tanúsítványok listázása"
-loading = "Tanúsítványok beolvasása…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Nem található aláíró tanúsítvány"
 noDriver = "Nem észleltünk PKCS#11 illesztőprogramot. Telepítse a token illesztőprogramját (pl. OpenSC), majd nyissa meg újra ezt – vagy adja meg alább kézzel az illesztőprogram útvonalát."
-notYetValid = "még nem érvényes"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "Token PIN-kód"
 pkcs11Hint = "Válassza ki a token PKCS#11 illesztőprogramját, adja meg a PIN-kódot, majd listázza a tokenen lévő tanúsítványokat."
 pkcs11LoadError = "Nem sikerült beolvasni a tanúsítványokat a tokenről. Ellenőrizze a PIN-kódot és az illesztőprogramot."
-refresh = "Frissítés"
-selectCert = "Tanúsítvány kiválasztása"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Illesztőprogram kiválasztása"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Foglalat (opcionális)"
-windowsHint = "Válasszon tanúsítványt a Windows tanúsítványtárból. Az aláírás a kártyán/tokenen lévő kulcsot használja – a Windows bekéri a PIN-kódot."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Nem sikerült beolvasni a Windows tanúsítványtárat"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Ökölszabály"
 device = "Ez az eszköz"
 noOtherSources = "Nem érhetők el más tanúsítványforrások."
 server = "Szerver"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Tanúsítvány forrása"
 upload = "Feltöltés"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Felhasználónév frissítése. A frissítés után ki lesz jelentkeztetve."
@@ -3069,7 +3205,6 @@ placeholder = "Dokumentum létrehozója"
 
 [changeMetadata.customFields]
 add = "Mező hozzáadása"
-description = "Egyéni metaadatmezők hozzáadása a dokumentumhoz"
 key = "Kulcs"
 keyPlaceholder = "Egyéni kulcs"
 remove = "Eltávolítás"
@@ -3135,10 +3270,6 @@ bullet1 = "Létrehozás dátuma: Amikor az eredeti dokumentum készült"
 bullet2 = "Módosítás dátuma: Amikor utoljára változott"
 text = "Mikor készült és mikor módosították a dokumentumot."
 title = "Dátummezők"
-
-[changeMetadata.tooltip.deleteAll]
-text = "A teljes metaadat törlése az adatvédelem érdekében."
-title = "Meglévő metaadatok eltávolítása"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Cím: Dokumentum neve vagy címsora"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Elérte a használati korlátot. Tekintse meg csomaglehet
 
 [checkAccessibility]
 aboutRow = "A(z) {{label}} névjegye"
-checking = "Ellenőrzés…"
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Akadálymentességi jelentés letöltése"
 fileFailed = "sikertelen"
+noFiles = "Select a PDF to check it."
 pickFile = "Eredmények megjelenítése ehhez"
-submit = "Akadálymentesség ellenőrzése"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Alternatív szöveg"
@@ -3286,10 +3417,17 @@ structure = "A címkék megmondják a képernyőolvasóknak, hogy az oldal melyi
 [checkAccessibility.checks]
 label = "{{passed}} / {{total}} ellenőrzés sikeres"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Az akadálymentességi jelentést nem sikerült létrehozni. Próbálja újra."
 fileTitle = "Ezt a fájlt nem sikerült ellenőrizni"
 partial = "Néhány fájlt nem sikerült ellenőrizni."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA-t deklarál"
@@ -3312,6 +3450,21 @@ title = "A fájl metaadatai között szerepel a cím."
 [checkAccessibility.figures]
 summary_one = "{{count}} képhez szükséges leírás ({{pages}}. oldal)"
 summary_other = "{{count}} képhez szükséges leírás (oldalak {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Érintett"
@@ -3465,19 +3618,7 @@ checking = "{{current}} / {{total}} ellenőrzése…"
 complete = "Ellenőrzés kész"
 
 [checkAccessibility.steps]
-results = "Eredmények"
 standard = "Szabvány"
-
-[checkAccessibility.tooltip.header]
-title = "Melyik szabvány ellenőrzése"
-
-[checkAccessibility.tooltip.ua1]
-text = "A PDF/UA első verziója, 2012-ben jelent meg ISO 14289-1-ként, PDF 1.7 fájlokhoz."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Az újabb verzió, 2024-ben jelent meg ISO 14289-2-ként, PDF 2.0 fájlokhoz. Egy PDF 1.7 fájl elleneőrzésekor elbukja azokat a szabályokat, amelyek csak PDF 2.0-ra vonatkoznak."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "{{n}}. annotáció"
@@ -3868,6 +4009,7 @@ title = "Szín kiválasztása"
 transparent = "Átlátszó"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Műveletek"
 back = "Vissza"
 cancel = "Mégse"
@@ -4206,7 +4348,9 @@ title = "API-kulcsok frissítése"
 warning = "⚠️ Figyelmeztetés: Ez a művelet új API-kulcsokat hoz létre, és a korábbi kulcsokat érvényteleníti."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "A Model Context Protocol (MCP) lehetővé teszi, hogy az olyan AI asszisztensek, mint a Claude, közvetlenül használják a Stirling PDF eszközeit. Csatlakoztasson egyszer egy klienst, és az asszisztense az Ön nevében konvertálhat, szerkeszthet, biztosíthat és feldolgozhat dokumentumokat."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "A vendégfelhasználók nem csatlakoztathatnak MCP klienseket. Hozzon létre fiókot az MCP szerver használatához, és engedje, hogy AI asszisztense az Ön nevében futtassa a Stirling PDF eszközeit."
 navLabel = "MCP szerver"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "{{label}} másolása"
 tooltipCopied = "{{label}} másolva"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Az Ön MCP végpontja"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Hozzáadás ehhez:"
 hint = "Válassza ki a kliensét, illessze be a részletet a megadott fájlba, majd indítsa újra. Az első használatkor Stirling fiókjával jelentkezik be – nincs másolandó kulcs."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "AI asszisztens csatlakoztatása"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Képarány megtartása"
 maxAttachmentSize = "Maximális mellékméret (MB)"
 multiple = "Több"
 optimizeForEbook = "PDF optimalizálása e-könyv olvasókhoz (Ghostscript használatával)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Kimenet"
-outputFormat = "Kimeneti formátum"
-pdfaAccessibleFormat = "{{format}} (akadálymentes)"
-pdfaDigitalSignatureWarning = "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
-pdfaNote = "A PDF/A-1b kompatibilisebb, a PDF/A-2b több funkciót támogat, a PDF/A-3b pedig beágyazott fájlokat is támogat."
-pdfaOptions = "PDF/A beállítások"
 pdfOptions = "PDF beállítások"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Beállítások"
 signInToUse = "Jelentkezz be a használathoz"
 single = "Egyetlen"
 sourceFormatPlaceholder = "Forrásformátum"
-strictMode = "Szigorú mód"
-strictModeDesc = "Hiba, ha a konverzió nem tökéletes (VeraPDF ellenőrzést használ)"
 svgPdfOptions = "SVG PDF-be beállítások"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Az SVG fájlok vektorgrafikaként kerülnek renderelésre, így bármilyen felbontáson éles kimenetet adnak. Az SVG méretei határozzák meg a PDF-oldal méretét."
@@ -4396,9 +4549,7 @@ zoomLevel = "Nagyítási szint"
 
 [convert.ebookOptions]
 includePageNumbers = "Oldalszámok hozzáadása"
-includePageNumbersDesc = "Oldalszámok hozzáadása a létrehozott PDF-hez"
 includeTableOfContents = "Tartalomjegyzék hozzáadása"
-includeTableOfContentsDesc = "Létrehozott tartalomjegyzék hozzáadása a kész PDF-hez"
 optimizeForEbookPdf = "Optimalizálás e-könyv olvasókhoz"
 optimizeForEbookPdfDesc = "A PDF optimalizálása e-könyv olvasáshoz (kisebb fájlméret, jobb megjelenítés e-ink eszközökön)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Fejezetek felismerése"
 detectChaptersDesc = "A fejezeteknek tűnő címsorok felismerése és EPUB oldaltörések beszúrása"
 kindleEink = "Kindle e-Ink (szöveghez optimalizált)"
 outputFormat = "Kimeneti formátum"
-outputFormatDesc = "Válassza ki az e-könyv kimeneti formátumát"
 tabletPhone = "Tablet/Telefon (képekkel)"
 targetDevice = "Cél eszköz"
 targetDeviceDesc = "A felhasználói eszközhöz optimalizált kimeneti profil kiválasztása"
@@ -4469,8 +4619,24 @@ description = "Ezek a cookie-k elengedhetetlenek a webhely megfelelő működés
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Borítólap címe"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF portfólió"
 description = "Minden kiválasztott fájl teljes egészében megmarad az új PDF-ben, típustól függetlenül. Azok az olvasók, amelyek nem támogatják a portfóliókat, borítólapot jelenítenek meg a csatolt fájlokkal."
 goToFileEditor = "Ugrás a fájlszerkesztőhöz"
@@ -4488,6 +4654,9 @@ title = "Mit csinál"
 
 [createPortfolio.tooltip.header]
 title = "A PDF portfóliókról"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Üres terület automatikus levágása"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "A vágólap-hozzáférés nem érhető el ebben a böng�
 export = "Könyvjelzők exportálása"
 exportClipboard = "JSON másolása a vágólapra"
 exportJson = "JSON letöltése"
+exportMenu = "Export"
 importClipboard = "JSON beillesztése a vágólapról"
 importJson = "JSON importálása"
+importMenu = "Import"
 loadFromPdf = "Betöltés a kiválasztott PDF-ből"
 noFile = "Válasszon egy PDF-et a meglévő könyvjelzők kinyeréséhez."
 selectedFile = "Betöltve innen: {{file}}"
-source = "Könyvjelzők betöltése"
 
 [editTableOfContents.editor]
 addTopLevel = "Felső szintű könyvjelző hozzáadása"
@@ -4740,6 +4910,9 @@ replaceExisting = "Meglévő könyvjelzők cseréje (kikapcsolva hozzáfűz)"
 replaceExistingHint = "Kikapcsolva az új vázlat a meglévő könyvjelzők után kerül hozzáfűzésre."
 title = "Könyvjelzők és vázlat"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "PDF cseréje"
 filePrompt = "Válasszon PDF-et a könyvtárából vagy töltsön fel egy újat a kezdéshez."
@@ -4753,7 +4926,6 @@ title = "Nyissa meg az eszközt a szerkesztéshez"
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} korlátozása figyelmen kívül hagyva"
 actionUnlocked = "{{action}} feloldva erre a munkamenetre"
-advanced = "Speciális"
 allowed = "Engedélyezett"
 annotations = "Annotációk"
 authoriseAction = "Ez a PDF engedélyt igényel a(z) {{action}} használatához."
@@ -4801,7 +4973,6 @@ restricted = "Korlátozott"
 restrictedActions = "korlátozott műveletek"
 restrictedOperation = "Ehhez a művelethez a jogosultsági jelszó szükséges."
 retainOwnerVerification = "Ellenőrizze a jogosultsági jelszót, hogy változatlanul megtartsa a megnyitási jelszó eltávolítása közben. Ezzel nem távolítja el."
-saveProtection = "Védelem mentése"
 securityChangeFailed = "Nem sikerült módosítani a védelmet. Ellenőrizze a jogosultsági jelszót és az új biztonsági beállításokat."
 sessionDetails = "Megnyitva erre a munkamenetre. A PDF védett marad."
 sessionDetailsLabel = "A munkamenetre szóló feloldásról"
@@ -4871,7 +5042,6 @@ title = "Valami hiba történt"
 tryAgain = "Próbálja újra"
 
 [extractImages]
-allowDuplicates = "Ismétlődő képek mentése"
 selectText = "Válassza ki a kinyert képek konvertálási formátumát"
 submit = "Kinyerés"
 tags = "kép,fotó,mentés,archívum,tömörítés,kinyerés,gyűjtés"
@@ -4927,12 +5097,15 @@ closeFile = "Fájl bezárása"
 
 [fileEditor]
 closedFile = "{{name}} bezárva"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Fájl átrendezve"
 filesReordered_other = "{{count}} fájl átrendezve"
 loadedFromStorage_one = "{{count}} fájl betöltve a tárhelyről"
 loadedFromStorage_other = "{{count}} fájl betöltve a tárhelyről"
 loadFromStorageFailed = "Nem sikerült néhány fájlt betölteni a tárhelyről"
 pinnedFile = "{{name}} rögzítve"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} mentve és bezárva"
 saveFailed = "A mentés sikertelen"
 unpinnedFile = "{{name}} rögzítése feloldva"
@@ -5019,11 +5192,20 @@ locked = "Zárolva"
 previewOf = "{{name}} előnézete"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Fájlok hozzáadása"
 created = "Létrehozva"
 notIncludedInToolRun = "Nem szerepel ebben az eszközfuttatásban"
 size = "Fájlméret"
 title = "Fájlok"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Nincsenek elérhető fájlok"
@@ -5104,6 +5286,7 @@ subtitle = "Kategóriák megjelenítése vagy elrejtése a fájl oldalsávban."
 title = "Oldalsáv kategóriái"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Mégse"
 error = "Nem sikerült átnevezni a fájlt."
 illegalCharacters = "A fájlnév nem tartalmazhatja ezeket: \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Mező eltávolítása"
 
 [formFill.editor]
 action = "Gombművelet"
-actionHelp = "Mit tegyen a gomb kattintáskor."
 actionNone = "Nincs"
 actionPrint = "Nyomtatás"
 actionReset = "Űrlap visszaállítása"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Korlátozza a beírható karakterek számát, egyenletesen elos
 multiline = "Többsoros"
 multilineHelp = "Több sornyi szöveget engedélyez, és a mező szélénél sort tör."
 multiSelect = "Többszörös kiválasztás engedélyezése"
-multiSelectHelp = "Egyszerre több opció kiválasztását teszi lehetővé."
 name = "Mező neve"
 nameHelp = "A mező belső neve. Adatok exportálásakor vagy az űrlap másik rendszerből történő kitöltésekor használatos, ezért legyen egyedi és szóközmentes."
 optionGap = "Opciók térköze"
@@ -5902,6 +6083,11 @@ title = "Színek/kontraszt beállítása"
 desc = "Kiemelés, rajzolás, jegyzetek és alakzatok hozzáadása a megjelenítőben"
 tags = "jegyzetelés,kiemelés,rajzolás,jelölés,megjegyzés,jegyzetek,ellenőrzés,korrektúra,visszajelzés,jelölő eszközök,öntapadós jegyzetek,alakzatok,nyilak,szövegdoboz,szabadkézi"
 title = "Jegyzetelés"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Űrlapmezők automatikus felismerése AI segítségével, és a PDF kitölthetővé tétele."
@@ -6405,6 +6591,9 @@ sort = "Rendez"
 [merge.sortFiles]
 title = "Fájlok rendezése"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Összefűzési beállítások áttekintése"
 
@@ -6548,6 +6737,9 @@ title = "Sikertelen hitelesítés"
 message = "Bezárhatja ezt az ablakot, és visszatérhet a Stirling PDF-hez."
 title = "Sikeres hitelesítés"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Hozzáférés engedélyezése"
 approving = "Engedélyezés..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Visszairányítunk az alkalmazásba..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} hozzá szeretne férni a Stirling PDF-fiókodhoz"
 scopesIntro = "Ez lehetővé teszi {{app}} számára, hogy:"
 signedInAs = "Bejelentkezve mint {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Jelentkezz be a folytatáshoz"
 signInPrompt = "Jelentkezz be a Stirling PDF-fiókodba az alkalmazás csatlakoztatásának folytatásához."
 title = "Authorise access"
 unknownApp = "Egy harmadik féltől származó alkalmazás"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "A nevedben járjon el – minden, amit {{app}} tesz, a fiókod alatt fut, és beleszámít a használatodba"
@@ -6572,9 +6767,12 @@ tools = "A nevedben használja a Stirling PDF-eszközeidet – dokumentumaid kon
 
 [oauthConsent.scope]
 email = "Megtekintse az email-címedet"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Megerősítse az azonosságodat"
 phone = "Megtekintse a telefonszámodat"
 profile = "Megtekintse az alapvető profiladataidat"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Szkennelt dokumentumok tisztítása és szövegfelismerés képekből, majd visszaadása szerkeszthető szövegként"
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Csapattaggá válik, és elveszíti a tulajdonosi hozzáfér�
 [pageEdit]
 deselectAll = "Nincs"
 selectAll = "Összes kijelölése"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Oldalak kinyerése"
@@ -7577,6 +7779,8 @@ stamp = "Bélyegző megjegyzés – nem oldalszöveg, ezért itt nem szerkeszthe
 widget = "Űrlapmező – nem oldalszöveg, ezért itt nem szerkeszthető"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Szerkesztés"
 markTagged = "Megjelölés teljesen címkézettként"
 matchScanFont = "A beolvasott szöveg illesztése ehhez: {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Oldal automatikus címkézése"
 typeInto = "Gépelés ide: {{run}}"
 ungroupParagraph = "{{run}} bekezdés csoportbontása"
 unmarkTagged = "Megjelölés nem teljesen címkézettként"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Sortörés alkalmazása ezen: {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Elveted a mentetlen módosításokat?"
 
 [pdfTextEditor.error]
 decodeImage = "Nem sikerült dekódolni a kiválasztott képet."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Nem lehet duplikálni ezt a szöveget: nincs elérhető betűtípus, amely az összes betűjét megjeleníti."
 formLiftChangesDrawing = "Nem szerkeszthető: egy olyan csoport részeként van megrajzolva, amelynek vágási vagy grafikai beállításait a szerkesztő nem tudja megőrizni a módosításkor."
 insertImage = "Nem sikerült beszúrni a kiválasztott képet."
 needsShaping = "A szerkesztő még nem tudja helyesen megjeleníteni ennek az írásrendszernek az összekapcsolt betűit és magánhangzójeleit, ezért ez a módosítás nem történt meg."
+reopenLost = "Open again"
 replaceClippedImage = "Nem cserélhető ez a kép: le van vágva, és a csere láthatóvá tenné a kivágás által eltakart részeket."
 scanOffInk = "Ez a szöveg nem szerkeszthető: a felismert szavak nem esnek egybe a szkenneléssel. Futtassa újra az OCR-t."
 unsafeRtlEdit = "Ez a szerkesztés nem végezhető el: a szerkesztő nem tudja újrarajzolni ennek a sornak a jobbról balra írt szövegét anélkül, hogy megváltoztatná."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG-kép"
 close = "Keresősáv bezárása"
 count = "{{current}} / {{total}}"
 findPlaceholder = "Keresés"
+hideReplace = "Hide replace"
 ignoreAccents = "Ékezetek figyelmen kívül hagyása"
 matchCase = "Kis- és nagybetűk egyeztetése"
 next = "Következő találat"
@@ -7625,6 +7833,7 @@ replace = "Csere"
 replaceAll = "Összes cseréje"
 replaced = "{{count}} kicserélve"
 replacePlaceholder = "Csere erre"
+showReplace = "Show replace"
 wholeWord = "Teljes szó"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Ez a hivatkozás nem címkézhető."
 cannotTagPage = "Ennek az oldalnak a tartalma nem címkézhető."
 contentGroup = "Tartalom"
 customTag = "{{role}} (egyéni címke)"
-decorativeInfo = "A képernyőolvasók kihagyják a dekoratív képeket. Használja szegélyekhez, hátterekhez és más, információt nem hordozó képekhez."
-decorativeLabel = "Dekoratív kép"
-description = "Kép leírása"
-descriptionInfo = "A képernyőolvasók ezt olvassák fel a kép helyett."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "A címkék nem szerkeszthetők titkosított fájlban"
 figureDescription = "Ábra leírása"
 figureDescriptionInfo = "A képernyőolvasók ezt olvassák fel az ábra helyett."
-formFieldDescription = "Mezőleírás"
 formulaDescription = "Képlet leírása"
 formulaDescriptionInfo = "A képernyőolvasók ezt olvassák fel a képlet helyett. Úgy fogalmazd meg, ahogy kimondanád, például: \"x négyzet plusz egy\"."
 heading = "Akadálymentesség"
@@ -7813,7 +8019,6 @@ markedTagged = "A dokumentum teljesen címkézett"
 markedTaggedHint = "Azt jelzi a PDF-olvasóknak, hogy használják az akadálymentességi címkéket. Akkor pipálja be, ha mindent címkézett."
 markedWithUntagged = "Egyes tartalmaknak nincs címkéje, ezért a képernyőolvasók kihagyhatják."
 missingDescriptions = "Hiányzó leírások"
-mixedContent = "Az ábra más tartalmat is tartalmaz"
 mixedTags = "Vegyes"
 needsDescriptionBadge = "Nincs leírás"
 nextToReview = "Következő ellenőrizendő"
@@ -7821,12 +8026,10 @@ notFigure = "A szöveg részeként címkézve"
 removeTag = "Címke eltávolítása"
 saveFailed = "Az akadálymentességi módosításokat nem sikerült menteni, ezért a fájl nem lett mentve. Vonja vissza őket, és próbálja újra."
 selectedText = "Kijelölt szöveg"
-tagFormField = "Űrlapmező címkézése"
 tagging = "Oldalak címkézése"
 tagLabel = "Címke"
 tagLinks_one = "Hivatkozás címkézése"
 tagLinks_other = "{{count}} hivatkozás címkézése"
-tagUntagged = "Dokumentum automatikus címkézése"
 tagUntaggedHint = "Automatikusan hozzáadja az akadálymentességi címkéket a dokumentumban. Az eredmény nyers: utána ellenőrizze a címsorokat, listákat és az olvasási sorrendet."
 unknownTag = "Itt nem olvasható"
 unmarkedWithTags = "Egyes PDF-megjelenítők akkor is használják a címkéket, és kihagyhatják a címke nélküli tartalmakat."
@@ -7851,7 +8054,7 @@ heading = "Címsorok"
 mixedNumbering = "Számozott és számozatlan címsorokat kever"
 none = "Nincsenek címsorok"
 onPage = "Címsor a(z) {{page}}. oldalon"
-problems = "Címsorproblémák"
+problemCount = "{{count}} to fix"
 skippedLevel = "Kihagy egy szintet a Címsor {{previous}} után"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Cím"
 allLanguages = "Minden nyelv"
 cannotSetDocument = "Ennek a dokumentumnak a nyelve nem módosítható."
 cannotSetText = "Ennek a szövegnek a nyelve nem módosítható."
-documentHint = "A nyelv, amit a képernyőolvasók használnak, hacsak a szöveg egy része másikat nem ad meg."
 documentLabel = "Nyelv"
 documentLocked = "Titkosított dokumentum nyelve itt nem módosítható."
 inDocument = "Ebben a dokumentumban"
 innerLabel = "{{number}}. címke nyelve"
 label = "Nyelv"
-missing = "Nincs nyelv beállítva. A képernyőolvasók találgatni fognak, és lehet, hogy az egészet rossz hangon olvassák."
 mixed = "Vegyes"
 noMatch = "Nincs egyező nyelv. Írja be a kódját, pl. mt vagy en-IE."
 placeholder = "Nyelv kiválasztása"
@@ -7943,6 +8144,52 @@ renderFailed = "Nem sikerült renderelni az oldalt"
 [pdfTextEditor.password]
 incorrect = "Helytelen jelszó – próbáld újra."
 label = "Jelszó"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Igazítási segédvonal itt: {{value}} {{unit}} – eltávolításhoz húzd egy vonalzóra"
@@ -8124,6 +8371,10 @@ title = "Előnézet eltérései"
 [pdfTextEditor.tooltip.textFocus]
 text = "Ez a munkaterület a szöveg szerkesztésére és a beágyazott képek áthelyezésére fókuszál. Az összetett oldalgrafika, űrlapelemek és rétegelt grafikák exportáláskor megmaradnak, de itt nem minden szerkeszthető teljes körűen."
 title = "Szöveg és képek fókusza"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF konvertálása CSV-be"
@@ -8383,17 +8634,6 @@ hideCategory = "Kategória elrejtése"
 labelCount = "címke"
 sharedNote = "Ezek a címkék beépítettek, és az egész csapatával meg vannak osztva."
 showCategory = "Kategória megjelenítése"
-
-[policies.pii]
-account = "Számlaszámok (címkézett)"
-card = "Hitel-/betéti kártyák"
-email = "E-mail-címek"
-fieldLabel = "Kitakarandó PII"
-iban = "IBAN-ok"
-phone = "Telefonszámok"
-placeholder = "PII-típusok kiválasztása"
-routing = "US routing számok (ABA)"
-ssn = "Társadalombiztosítási számok"
 
 [policy]
 badgeEnforcing = "{{name}} érvényesítése..."
@@ -10317,6 +10557,10 @@ title = "Pipeline-ok"
 [portal.pipelines.actions]
 newCustomPipeline = "Új egyéni folyamat"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Összes folyamat"
 
@@ -12047,7 +12291,6 @@ label = "Olvasási eszközök"
 readAloud = "Felolvasás"
 rotateLeft = "Forgatás balra"
 rotateRight = "Forgatás jobbra"
-search = "Keresés a dokumentumban"
 switchDocument = "Dokumentumváltás"
 thumbnails = "Oldalak"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Doboz színe"
 convertPDFToImageLabel = "PDF konvertálása PDF-Image formátumra"
 customPaddingLabel = "Egyéni extra margó"
 useRegexLabel = "Regex használata"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Teljes szó egyezés"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Kitakarási beállítások"
 
 [redact.auto.wordsToRedact]
 add = "Hozzáadás"
-examples = "Példák: Bizalmas, Szigorúan titkos"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Adjon meg egy szót"
 title = "Kitakarandó szavak"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Válasszon fájlokat a fájlkezelőben több fájl e
 manual = "Kézi"
 mode = "Mód"
 title = "Kitakarási mód"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Csak azonos kis- és nagybetűhasználatú szövegre illeszkedjen. Ha engedélyezve van, a 'Secret' nem fog egyezni a 'SECRET' szöveggel, és a [A-Z] egy regexben csak a nagybetűkre illeszkedik."
@@ -12147,19 +12401,6 @@ title = "Kitakarási mód"
 text = "Kattintson és húzással jelölje ki kézzel a kitakarni kívánt területeket. Pontos irányítást ad a kitakarás felett. (Hamarosan)"
 title = "Kézi kitakarás"
 
-[redact.tooltip.words]
-bullet1 = "Egyszerre egy szót adjon hozzá"
-bullet2 = "Nyomja meg az Entert vagy kattintson az „Új hozzáadása” gombra a hozzáadáshoz"
-bullet3 = "Kattintson az × jelre a szavak eltávolításához"
-
-[redact.tooltip.words.description]
-text = "Adjon meg szavakat vagy kifejezéseket, amelyeket a dokumentumban meg kell találni és ki kell takarni. Minden szó külön-külön kerül keresésre."
-title = "Szövegillesztés"
-
-[redact.tooltip.words.examples]
-text = "Tipikusan kitakarandó szavak: banki adatok, e-mail-címek vagy konkrét nevek."
-title = "Gyakori példák"
-
 [redact.tooltip.words.header]
 title = "Kitakarandó szavak"
 
@@ -12176,15 +12417,6 @@ failed = "Hiba történt a megjegyzések eltávolítása közben."
 
 [removeAnnotations.info]
 description = "Ez az eszköz eltávolítja az összes megjegyzést (kommentek, kiemelések, jegyzetek stb.) a PDF-dokumentumokból."
-
-[removeAnnotations.settings]
-title = "Beállítások"
-
-[removeAnnotations.tooltip.description]
-title = "Mit csinál"
-
-[removeAnnotations.tooltip.header]
-title = "A Megjegyzések eltávolítása funkcióról"
 
 [removeBlanks]
 submit = "Üres oldalak eltávolítása"
@@ -12325,6 +12557,9 @@ tags = "átrendezés,újrarendezés,rendezés,átszervezés,oldalak mozgatása,o
 [reorganizePages.error]
 failed = "Az oldalak átrendezése sikertelen"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Oldalak átrendezve"
 
@@ -12406,6 +12641,7 @@ title = "Minden szín invertálása"
 rotateLeft = "Forgatás az óramutató járásával ellentétesen"
 rotateRight = "Forgatás az óramutató járásával megegyezően"
 selectRotation = "Válassza ki az elforgatási szöget (óramutató járásával megegyezően)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Forgatás alkalmazása"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "PDF forgatása"
@@ -12516,8 +12752,7 @@ title = "Tisztítás"
 failed = "Hiba történt a PDF tisztítása közben."
 
 [sanitize.options]
-note = "Válassza ki, mely elemeket szeretné eltávolítani a PDF-ből. Legalább egy opciót ki kell választani."
-title = "Tisztítási beállítások"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "A PDF-be beágyazott fájlok eltávolítása"
@@ -12649,6 +12884,7 @@ title = "PDF keresése"
 hideTools = "Nem elérhető eszközök elrejtése ▴"
 messageNoFallback = "Az eszközök csak akkor lesznek elérhetők, ha a szervere újra online."
 messageWithFallback = "Néhány eszközhöz szerverkapcsolat szükséges."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Nem elérhető eszközök megtekintése ▾"
 title = "A Stirling-PDF szervere nem érhető el"
 toolNotAvailableLocally = "A Stirling-PDF szervere offline, és a(z) \"{{endpoint}}\" nem érhető el a helyi backenden."
@@ -13034,6 +13270,12 @@ title = "Billentyűparancsok"
 mac = "A billentyűparancs tartalmazzon ⌘ (Command), ⌥ (Option) vagy más módosítóbillentyűt."
 windows = "A billentyűparancs tartalmazzon Ctrl, Alt vagy más módosítóbillentyűt."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Feltételek, adatvédelmi szabályzat és cookie-beállítások."
 label = "Jogi"
@@ -13418,9 +13660,7 @@ image = "Feltöltés"
 text = "Szöveg"
 
 [sign.step]
-createDesc = "Válassza ki, hogyan szeretné létrehozni az aláírást"
 place = "Elhelyezés és mentés"
-placeDesc = "Helyezze el az aláírást a PDF-en"
 
 [sign.steps]
 configure = "Aláírás beállítása"
@@ -13597,6 +13837,10 @@ rotateLeft = "Forgatás balra"
 rotateRight = "Forgatás jobbra"
 trim = "Vágás az aláíráshoz"
 trimHint = "Levágja a körülötte lévő üres helyet"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Aláírás megjelenésének beállításai"
@@ -13959,7 +14203,6 @@ placeholder = "Adja meg a vízszintes felosztások számát"
 
 [split-by-sections.splitMode]
 custom = "Egyéni oldalak"
-description = "Válassza ki, hogyan ossza fel az oldalakat"
 label = "Felosztási mód"
 splitAll = "Összes oldal felosztása"
 splitAllExceptFirst = "Összes oldal felosztása az első kivételével"
@@ -14210,10 +14453,8 @@ failed = "Hiba történt a PDF időbélyegzése közben."
 
 [timestampPdf.options]
 note = "A dokumentumából csak a SHA-256 kivonat kerül elküldésre a TSA szervernek; magát a PDF fájlt soha nem küldjük el a TSA szerverre."
-title = "Időbélyeg-szerver (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Válasszon megbízható időbélyeg-szolgáltatót"
 label = "Válasszon TSA szervert"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Nem állnak rendelkezésre eszközök"
 
 [tooltip]
 close = "Eszköztipp bezárása"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Ez az eszköz eltávolítja az írásvédelmet a PDF űrlapmezőkről, így azok szerkeszthetővé és kitölthetővé válnak."
@@ -14706,6 +14961,9 @@ signatureDate = "Aláírás dátuma"
 
 [validateSignature.settings]
 certHint = "Töltsön fel egy megbízható X.509 tanúsítványt egyéni megbízhatósági forrásként való ellenőrzéshez."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Ellenőrzési beállítások"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "A fájl előnézete nem lehetséges"
 copyRestricted = "A másolást a PDF jogosultságai letiltják."
 copyText = "Másolás"
 coverPageView = "Borítólap megjelenítése külön"
-disableColorFilter = "Színszűrő kikapcsolása"
 documentUpdated = "Dokumentum frissítve"
 dualPageView = "Kétoldalas nézet"
 editText = "Szöveg szerkesztése"
-enableDarkFilter = "Sötét szűrő engedélyezése"
-enableSepiaFilter = "Szépia szűrő engedélyezése"
 engineLoadError = "Nem sikerült inicializálni a PDF-megjelenítő motort"
 engineSlowWarning = "A PDF motor inicializálása a vártnál tovább tart. Ellenőrizze a böngésző WebAssembly- és Worker-beállításait, vagy töltse be újra az oldalt."
 firstPage = "Első oldal"
@@ -14736,20 +14991,27 @@ fitPage = "Oldalhoz igazítás"
 fitWidth = "Szélességhez igazítás"
 lastPage = "Utolsó oldal"
 loadingEngine = "PDF Engine betöltése..."
+menuSelected = "Selected"
 moreOptions = "Továbbiak"
 nextPage = "Következő oldal"
 noPdfProvided = "Nincs megadva PDF"
 onlyPdfSupported = "Ez a fájlformátum nem támogatott előnézethez."
 pageNavigation = "Oldalnavigáció"
+pageNumber = "Page number"
 previousPage = "Előző oldal"
 readAloudFromHere = "Felolvasás innen"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "A dokumentumot nem sikerült menteni. Próbálja újra."
 saveChangesErrorTitle = "Nem sikerült menteni a módosításokat"
 singlePageView = "Egyoldalas nézet"
+tools = "Tools"
 unknownFile = "Ismeretlen fájl"
-view = "Nézet"
 zoom = "Nagyítás"
 zoomIn = "Nagyítás"
+zoomLevel = "Zoom level"
 zoomOut = "Kicsinyítés"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Aláírás előnézete"
 
 [viewer.signatureField]
 badge = "Aláírás"
+clickToSign = "Click to sign here"
 fieldTitle = "Aláírásmező: {{name}}"
 signed = "Aláírva"
 signedWithReason = "Aláírva: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Aláíratlan aláírásmező: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{restored}} / {{total}} fájl visszaállítva. A többi már nincs t
 
 [workbenchBar]
 activeFiles = "Aktív fájlok"
-annotations = "Annotációk"
+annotate = "Annotate"
 applyRedactionsFirst = "Először alkalmazza a kitakarásokat"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Összes fájl bezárása"
 closePdf = "PDF bezárása"
+defaultZoom = "Default zoom"
 deselectAll = "Összes kijelölés megszüntetése"
 downloadAll = "Összes letöltése"
 editText = "Szöveg szerkesztése"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Kilépés az annotációs módból"
 exitRedaction = "Kilépés a kitakarási módból"
 findReplace = "Keresés és csere"
 formFill = "Űrlapszerkesztő"
-hideToolbar = "Eszköztár elrejtése"
+layers = "Layers"
 moreActions = "További műveletek"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Oldalszerkesztő"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Mozgatás mód"
 print = "PDF nyomtatása"
 readAloud = "Felolvasás"
 readAloudLanguage = "Nyelv"
 readAloudSpeed = "Sebesség"
 redact = "Kitakarás"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Forgatás balra"
 rotateRight = "Forgatás jobbra"
 ruler = "Vonalzó / Mérés"
+rulerScaleUnset = "Not set"
 rulerSettings = "Méretarány beállításai"
 save = "Mentés"
 saveAll = "Összes mentése"
@@ -15123,14 +15398,23 @@ selectLanguage = "Nyelv kiválasztása"
 share = "Megosztás"
 showAllTools = "Összes eszköz megjelenítése"
 showFewerTools = "Eszköztár összecsukása"
-showToolbar = "Eszköztár megjelenítése"
+thumbnails = "Pages"
 toggleAnnotations = "Annotációk láthatóságának be-/kikapcsolása"
-toggleAttachments = "Mellékletek be-/kikapcsolása"
-toggleBookmarks = "Könyvjelzők (tartalomjegyzék)"
 toggleComments = "Megjegyzések"
-toggleLayers = "Rétegek be-/kikapcsolása"
-toggleSidebar = "Oldalsáv be-/kikapcsolása"
 viewer = "Megjelenítő"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "A dokumentumhoz való hozzáférése lejárt."

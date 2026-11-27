@@ -12,9 +12,11 @@ comingSoon = "即将推出"
 confirm = "确认"
 confirmClose = "确认关闭"
 confirmCloseCancel = "取消"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "关闭文件"
 confirmCloseDiscard = "放弃更改并关闭"
 confirmCloseMessage = "确定要关闭此文件吗？"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "保存并关闭"
 confirmCloseSaveFailed_one = "已保存，但存在错误。{{count}} 个文件 未能保存。"
 confirmCloseSaveFailed_other = "已保存但有错误。{{count}} 个文件无法保存。"
@@ -44,7 +46,6 @@ fileSavedToDisk = "文件已保存到磁盘"
 filesSelected = "{{count}} 个文件"
 font = "ཡིག་གཟུགས་ཌྷ"
 fontSizeTooltip = "页码文本的磅值大小。数值越大文本越大。"
-fontTypeTooltip = "页码的字体族。可根据文档风格选择。"
 green = "ལྗང་ཁུ།"
 help = "རོགས་རམ།"
 incorrectPasswordMessage = "ད་ལྟའི་གསང་ཚིག་ནོར་འདུག"
@@ -249,9 +250,7 @@ image = "上传"
 text = "文本"
 
 [addImage.step]
-createDesc = "上传要添加的图像"
 place = "放置图像"
-placeDesc = "在 PDF 上点击以添加图像"
 
 [addImage.steps]
 configure = "配置图像"
@@ -276,7 +275,7 @@ fontName = "ཡིག་གཟུགས་མིང་"
 fontSize = "ཡིག་གཟུགས་ཆེ་ཆུང་"
 numberPagesDesc = "例如 1,3,5-8，或留空表示所有页面"
 pagePreviewAlt = "页面预览"
-pagesAndStarting = "页面与起始编号"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "位置与页面"
 preview = "位置选择"
 previewDisclaimer = "预览为近似效果。由于 PDF 字体度量，最终输出可能有所不同。"
@@ -300,6 +299,7 @@ title = "页码结果"
 
 [addPassword]
 desc = "使用密码加密您的 PDF 文档。"
+submit = "Add Password"
 tags = "加密,密码,锁定,安全,保护,安全性,加密,防护,机密,私密,限制访问"
 title = "གསང་ཚིག་སྣོན་པ།"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "印章预览"
 tags = "印章,标记,印鉴,已批准,已拒绝,机密,印章工具,橡皮章,日期章,批准章,已收到,作废,副本,原件"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "ཡི་གེའི་གཟུགས།"
-clickToExpand = "点击展开"
 customColor = "ཡི་གེའི་ཚོས་མདོག་རང་སྒྲིག"
 customDateDesc = "自定义格式"
 customPosition = "在预览窗口中拖动印章到所需位置。"
 dateDesc = "当前日期"
 datetimeDesc = "日期和时间组合"
 dateTimeVars = "日期和时间"
-dynamicVariables = "动态变量"
 examples = "示例"
 filenameDesc = "不含扩展名的文件名"
 filenameFullDesc = "含扩展名的文件名"
@@ -365,6 +364,8 @@ noStampSelected = "未选择印章。返回步骤 1。"
 opacity = "གསལ་ཚད།"
 otherVars = "其他"
 pageNumberDesc = "当前页码"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "页面信息"
 position = "གནས་ས།"
 positionAndFormatting = "位置与格式"
@@ -378,9 +379,10 @@ quickPosition = "选择页面上的位置以放置印章。"
 rotation = "འཁོར་སྐྱོད།"
 selectedImageAlt = "已选印章图像"
 selectTemplate = "选择模板..."
+size = "Size"
 stampSetup = "印章设置"
 stampText = "ཐེལ་ཙེའི་ཡི་གེ"
-stampTextDescription = "使用下面的动态变量。使用 @@ 表示字面量 @。使用 \\n 表示换行。"
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "ཐེལ་ཙེའི་རིགས།"
 submit = "添加印章"
 tags = "ཐེལ་ཙེ།,པར་རིས་སྣོན་པ།,དཀྱིལ་སྒྲིག་པར་རིས།,ཆུ་རྟགས།,PDF,ནང་འཇུག,རང་སྒྲིག,སྒྲིག་སྦྱོར།"
@@ -389,7 +391,6 @@ title = "PDF ལ་ཐེལ་ཙེ་རྒྱག་པ།"
 totalPagesDesc = "总页数"
 useTemplate = "使用模板"
 uuidDesc = "短唯一标识符（8 个字符）"
-variablesHelp = "点击任意变量可将其插入印章文本。使用 @@ 表示字面量 @。"
 yearMonthDayDesc = "单独的日期部分"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "将印章添加到 PDF 时发生错误。"
 
 [AddStampRequest.results]
 title = "印章结果"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "自定义"
@@ -410,6 +417,11 @@ legal-footer = "法律页脚"
 page-numbers = "页码"
 pageNumberFooter = "页码页脚"
 timestamp = "时间戳"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "应用文本"
@@ -462,9 +474,7 @@ image = "上传"
 text = "文本"
 
 [addText.step]
-createDesc = "输入要添加的文本"
 place = "放置文本"
-placeDesc = "在 PDF 上点击以添加文本"
 
 [addText.steps]
 configure = "配置文本"
@@ -1233,6 +1243,18 @@ label = "启动时重新生成"
 description = "证书有效的天数"
 label = "证书有效期（天）"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "允许文件夹源和文件夹输出读取和写入的目录。这是安全边界：自动化永远不能指向此列表之外的服务器路径。"
 securityNote = "留空可完全禁用文件夹源和输出。Stirling 自身的配置目录始终禁止访问。"
@@ -1456,7 +1478,9 @@ label = "SMTP 用户名"
 
 [admin.settings.mcp]
 apikeyNote = "客户端在 X-API-KEY header 中发送 Stirling API key（或 Authorization: Bearer <key>）。该 key 映射到其所属的 Stirling 用户——只有已配置的账户可进入，操作会以该用户身份进行审计。在账户 > API Keys 下管理 key。"
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "通过受 OAuth 保护的端点，将 Stirling 的 PDF 工具和 AI agent 暴露给 MCP 客户端。"
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "允许的工具"
 description = "要从 MCP 隐藏的 operation id（用逗号或空格分隔），例如 add-password remove-password。留空则公开所有已启用工具。"
 label = "被阻止的工具"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "关闭时（默认），不会加载 /mcp 端点、元数据或 MCP beans。"
 label = "启用 MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "在上方输入 OAuth issuer + resource ID，保存并重启。"
 step1ApiKey = "在账户 > API Keys 下创建 API key（每个用户使用自己的）。"
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "在您的 MCP 客户端中添加一个"
 step2b = "指向以下地址的 server："
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "客户端会从以下位置自动发现 OAuth："
 step3ApiKey = "在以下位置发送 key："
 step3ApiKeyb = "header（或 Authorization: Bearer <key>）。不会使用 OAuth 或元数据发现。"
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "批准登录；客户端会使用 token 重试。工具会按组显示：convert、pages、misc、security、ai。"
 step4ApiKey = "工具会按组显示：convert、pages、misc、security、ai——每次调用都会以 key 所有者的身份进行审计。"
 tip = "提示：将 resource ID 注册为 IdP 中允许的 audience。已使用 MCP Inspector 和 Claude Desktop 测试。"
 tipApiKey = "提示：API-key 模式不需要外部 IdP——最适合自托管。该 key 会映射到其所属的 Stirling 用户。"
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "连接 MCP 客户端"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "从 issuer 自动发现"
 
 [admin.settings.mcp.mode]
 apikey = "API key（Stirling 每用户密钥）"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth 需要外部 IdP。API key 使用 Stirling 的每用户 API key（X-API-KEY）——最适合自托管。"
 label = "身份验证模式"
 oauth = "OAuth 2.1（外部 IdP）"
@@ -1515,6 +1563,18 @@ label = "资源 ID"
 [admin.settings.mcp.scopes]
 description = "读取操作要求 mcp.tools.read，写入/AI 操作要求 mcp.tools.write。"
 label = "强制 OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "与 Stirling 用户名匹配的 JWT claim（例如 sub、email、preferred_username）。"
@@ -1943,9 +2003,6 @@ title = "您愿意帮助让 Stirling PDF 变得更好吗？"
 tags = "批注,高亮,绘制,标记,评论,注释,审阅,红线,反馈,标记工具,便签,形状,箭头,文本框,手绘"
 
 [annotation]
-alignCenter = "居中对齐"
-alignLeft = "左对齐"
-alignRight = "右对齐"
 annotationStyle = "批注样式"
 backgroundColor = "背景颜色"
 borderOff = "边框：关"
@@ -2016,18 +2073,61 @@ underline = "下划线"
 undoDelete = "撤销"
 width = "宽度"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "一个免费、私密的 PDF 编辑器，可在任何基础设施上运行。"
 
 [appBanner]
 dismiss = "关闭"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "添加附件..."
 convertToPdfA3b = "转换为 PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b 是一种确保长期保存的归档格式。它允许将任意文件格式作为附件嵌入。转换需要 Ghostscript，对于大文件可能耗时更长。"
-convertToPdfA3bTooltipHeader = "关于 PDF/A-3b 转换"
-convertToPdfA3bTooltipTitle = "功能说明"
 discardChanges = "放弃"
 downloadSingle = "下载附件"
 duplicateName = "名为 '{{name}}' 的附件已存在。"
@@ -2208,7 +2308,6 @@ guest = "访客"
 user = "用户"
 
 [auto-rename]
-description = "自动从您的 PDF 内容中提取标题并将其用作文件名。"
 submit = "རང་འགུལ་མིང་བསྐྱར་འདོགས།"
 tags = "རང་འགུལ་ངོས་འཛིན།,འགོ་བརྗོད་གཞིར་བཟུང་།,གོ་སྒྲིག,མིང་བསྐྱར་འདོགས།"
 title = "རང་འགུལ་མིང་བསྐྱར་འདོགས།"
@@ -2218,21 +2317,6 @@ failed = "自动重命名 PDF 时发生错误。"
 
 [auto-rename.results]
 title = "自动重命名结果"
-
-[auto-rename.settings]
-title = "关于"
-
-[auto-rename.tooltip.description]
-title = "功能说明"
-
-[auto-rename.tooltip.header]
-title = "自动重命名的工作原理"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "查找看起来像标题或标题级文本"
-bullet2 = "根据检测到的标题创建干净、有效的文件名"
-bullet3 = "如果未找到合适的标题，则保留原文件名"
-title = "智能重命名"
 
 [autoFormDetection]
 loading = "正在检测表单字段..."
@@ -2327,6 +2411,9 @@ remove = "移除工具"
 selected = "已选工具"
 selectTool = "选择工具..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "取消"
 confirm = "返回"
@@ -2360,6 +2447,10 @@ title = "运行自动化"
 [automate.selection]
 title = "自动化选择"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "创建新自动化"
 
@@ -2371,6 +2462,7 @@ title = "推荐"
 
 [automate.sequence]
 finish = "完成"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "运行自动化"
 running = "正在运行自动化..."
 signInToRun = "登录以运行自动化。"
@@ -2391,7 +2483,6 @@ secureWorkflow = "安全工作流"
 secureWorkflowDesc = "通过移除可能的恶意内容（如 JavaScript 和嵌入文件）来保护 PDF 文档，然后添加密码保护以防止未授权访问。密码默认为 'password'。"
 
 [autoRename]
-description = "此工具将根据内容自动重命名 PDF 文件。它会分析文档以从文本中找到最合适的标题。"
 tags = "自动检测,基于标题,整理,重新标记,自动重命名,智能重命名,按内容重命名,文件名,文件命名,检测标题"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,ཁ་གྱེས།,ཡིག་ཆ།,གོ་སྒྲིག"
 [autoSplitPDF]
 dividerDownload2 = "'རང་འགུལ་ཁ་གྱེས་བར་མཚམས། (བཀོལ་སྤྱོད་ལམ་སྟོན་དང་བཅས་པ།).pdf' ཕབ་ལེན།"
 duplexMode = "ཕྱོགས་གཉིས་ཀྱི་རྣམ་པ། (མདུན་རྒྱབ་བཤེར་འབེབས།)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR གཞིར་བཟུང་།,ཁ་གྱེས།,བཤེར་དུམ།,གོ་སྒྲིག"
 title = "PDF རང་འགུལ་ཁ་གྱེས།"
 
@@ -2528,9 +2620,6 @@ tooltip = "在每个页面区块周围添加边框以便裁切和对齐"
 [bookletImposition.addGutter]
 label = "添加装订边距"
 tooltip = "为装订添加内侧边距空间"
-
-[bookletImposition.advanced]
-toggle = "高级选项"
 
 [bookletImposition.doubleSided]
 label = "双面打印"
@@ -2714,14 +2803,15 @@ chooseJksFile = "选择 JKS 文件"
 chooseP12File = "选择 PKCS12 文件"
 choosePfxFile = "选择 PFX 文件"
 choosePrivateKey = "选择私钥文件"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "已拒绝"
 fetchFailed = "加载签署数据失败"
 finalized = "已定稿"
 location = "ས་གནས།"
-logoTitle = "徽标"
-name = "མིང་།"
-noLogo = "无徽标"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "页码"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "证书密码"
 passwordOptional = "若无密码则留空"
 pemCertificateLabel = "证书 (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "私钥 (.pem / .key)"
 pending = "待处理"
 readyToFinalize = "可最终定稿"
 reason = "རྒྱུ་མཚན།"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "正在使用服务器证书 - 无需文件或密码"
-showLogo = "མཚོན་རྟགས་སྟོན།"
 signatureProgress = "{{signedCount}}/{{totalCount}} 个签名"
 tags = "身份验证,PEM,P12,官方,加密,签名,证书,PKCS12,JKS,服务器,手动,自动"
 title = "ལག་ཁྱེར་མིང་རྟགས།"
@@ -2738,12 +2828,45 @@ viewed = "已查看"
 
 [certSign.appearance]
 invisible = "不可见"
+showOnPage = "Show signature on page"
 stepTitle = "签名外观"
 visibility = "可见性"
 visible = "可见"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "签名详情"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "关于签名外观"
@@ -2762,9 +2885,6 @@ bullet3 = "可选择放置签名的页面"
 bullet4 = "可选地包含徽标"
 text = "在 PDF 上显示包含您的姓名、日期和可选信息的签名区块。当您希望读者清楚看到文档已签名时很有用。"
 title = "可见签名"
-
-[certSign.certFiles]
-stepTitle = "证书文件"
 
 [certSign.certType.tooltip.convert]
 text = "使用 keytool 将您的文件转换为 Java 密钥库 (.jks)，然后选择 JKS。"
@@ -2786,6 +2906,7 @@ text = "选择与您的证书文件匹配的格式："
 title = "我该使用哪个选项？"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "证书格式"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "此设备"
 [certSign.error]
 failed = "处理签名时发生错误。"
 
-[certSign.format]
-pkcs11 = "USB 令牌"
-windowsStore = "Windows 证书存储"
-
 [certSign.hardware]
-certificate = "证书"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "自定义驱动程序路径…"
+digitalId = "Digital ID"
 driver = "PKCS#11 驱动程序"
 driverPath = "驱动程序库路径"
 driverPathPlaceholder = "您的 PKCS#11 驱动程序的完整路径（.dll、.so 或 .dylib）"
-expired = "已过期"
-expires = "有效期至"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "列出证书"
-loading = "正在读取证书…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "未找到签名证书"
 noDriver = "未检测到 PKCS#11 驱动程序。请安装您令牌的驱动程序（例如 OpenSC），然后重新打开此界面，或在下方手动输入驱动程序路径。"
-notYetValid = "尚未生效"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "令牌 PIN"
 pkcs11Hint = "选择您令牌的 PKCS#11 驱动程序，输入 PIN，然后列出令牌上的证书。"
 pkcs11LoadError = "无法从该令牌读取证书。请检查 PIN 和驱动程序。"
-refresh = "刷新"
-selectCert = "选择证书"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "选择驱动程序"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "插槽（可选）"
-windowsHint = "从 Windows 证书存储中选择一个证书。签名将使用您卡片/令牌上的密钥——Windows 将提示输入 PIN。"
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "无法读取 Windows 证书存储"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "经验法则"
 device = "此设备"
 noOtherSources = "没有其他可用的证书来源。"
 server = "服务器"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "证书来源"
 upload = "上传"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "更新您的用户名。更新后您将被登出。"
@@ -3069,7 +3205,6 @@ placeholder = "文档创建者"
 
 [changeMetadata.customFields]
 add = "添加字段"
-description = "向文档添加自定义元数据字段"
 key = "键"
 keyPlaceholder = "自定义键"
 remove = "移除"
@@ -3135,10 +3270,6 @@ bullet1 = "创建日期：原始文档的制作时间"
 bullet2 = "修改日期：上次更改时间"
 text = "文档的创建和修改时间。"
 title = "日期字段"
-
-[changeMetadata.tooltip.deleteAll]
-text = "完全删除元数据以确保隐私。"
-title = "移除现有元数据"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "标题：文档名称或标题"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "您已达到使用限制。请查看您的方案选项以
 
 [checkAccessibility]
 aboutRow = "关于 {{label}}"
-checking = "正在检查..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "下载无障碍报告"
 fileFailed = "失败"
+noFiles = "Select a PDF to check it."
 pickFile = "显示以下文件的结果"
-submit = "检查无障碍"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "替代文本"
@@ -3286,10 +3417,17 @@ structure = "标签告诉屏幕阅读器页面各部分的类型（如标题、�
 [checkAccessibility.checks]
 label = "{{passed}} / {{total}} 项检查已通过"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "无法创建无障碍报告。请重试。"
 fileTitle = "无法检查此文件"
 partial = "某些文件无法检查。"
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "声明了 PDF/UA"
@@ -3312,6 +3450,21 @@ title = "文件在元数据中包含标题。"
 [checkAccessibility.figures]
 summary_one = "{{count}} 个图像需要描述（第 {{pages}} 页）"
 summary_other = "{{count}} 个图像需要描述（第 {{pages}} 页）"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "适用于"
@@ -3465,19 +3618,7 @@ checking = "正在检查第 {{current}} / {{total}} 个..."
 complete = "检查完成"
 
 [checkAccessibility.steps]
-results = "结果"
 standard = "标准"
-
-[checkAccessibility.tooltip.header]
-title = "检查哪个标准"
-
-[checkAccessibility.tooltip.ua1]
-text = "PDF/UA 的第一个版本，于 2012 年发布为 ISO 14289-1，适用于 PDF 1.7 文件。"
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "更新版本，于 2024 年发布为 ISO 14289-2，适用于 PDF 2.0 文件。对照它检查的 PDF 1.7 文件会在仅适用于 PDF 2.0 的规则上失败。"
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "注释 {{n}}"
@@ -3868,6 +4009,7 @@ title = "选择颜色"
 transparent = "透明"
 
 [common]
+aboutField = "About {{field}}"
 actions = "操作"
 back = "返回"
 cancel = "取消"
@@ -4206,7 +4348,9 @@ title = "刷新 API 密钥"
 warning = "⚠️ 警告：此操作将生成新的 API 密钥，并使之前的密钥失效。"
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) 让 Claude 等 AI 助手可以直接使用您的 Stirling PDF 工具。连接一次客户端后，您的助手即可代表您转换、编辑、保护和处理文档。"
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "访客用户无法连接 MCP 客户端。创建账户即可使用 MCP server，并让您的 AI 助手代表您运行 Stirling PDF 工具。"
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "复制 {{label}}"
 tooltipCopied = "已复制 {{label}}"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "您的 MCP endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "添加到"
 hint = "选择您的客户端，将片段粘贴到显示的文件中，然后重启它。首次使用时，您将使用 Stirling 账户登录——无需复制 key。"
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "连接您的 AI 助手"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "保持纵横比"
 maxAttachmentSize = "最大附件大小（MB）"
 multiple = "多个"
 optimizeForEbook = "为电子书阅读器优化 PDF（使用 Ghostscript）"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "输出"
-outputFormat = "输出格式"
-pdfaAccessibleFormat = "{{format}}（可访问）"
-pdfaDigitalSignatureWarning = "该 PDF 包含数字签名。下一步将移除它。"
-pdfaNote = "PDF/A-1b 兼容性更好，PDF/A-2b 支持更多功能，PDF/A-3b 支持嵌入文件。"
-pdfaOptions = "PDF/A 选项"
 pdfOptions = "PDF 选项"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "设置"
 signInToUse = "登录以使用"
 single = "单个"
 sourceFormatPlaceholder = "源格式"
-strictMode = "严格模式"
-strictModeDesc = "如果转换不完美则报错（使用 VeraPDF 验证）"
 svgPdfOptions = "SVG 转 PDF 选项"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG 文件会渲染为矢量图形，在任何分辨率下都能清晰输出。SVG 中的尺寸决定 PDF 页面大小。"
@@ -4396,9 +4549,7 @@ zoomLevel = "缩放级别"
 
 [convert.ebookOptions]
 includePageNumbers = "包含页码"
-includePageNumbersDesc = "为生成的 PDF 添加页码"
 includeTableOfContents = "包含目录"
-includeTableOfContentsDesc = "为生成的 PDF 添加生成的目录"
 optimizeForEbookPdf = "为电子书阅读器优化"
 optimizeForEbookPdfDesc = "为电子书阅读优化 PDF（文件更小，在电子墨水设备上渲染更佳）"
 
@@ -4407,7 +4558,6 @@ detectChapters = "检测章节"
 detectChaptersDesc = "检测看起来像章节的标题并插入 EPUB 分页符"
 kindleEink = "Kindle 电子墨水（文本优化）"
 outputFormat = "输出格式"
-outputFormatDesc = "选择电子书的输出格式"
 tabletPhone = "平板/手机（带图像）"
 targetDevice = "目标设备"
 targetDeviceDesc = "选择为阅读设备优化的输出配置"
@@ -4469,8 +4619,24 @@ description = "这些 cookies 对网站正常运行至关重要。它们启用�
 posthog = "PostHog 分析"
 scarf = "Scarf 像素"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "封面页标题"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF 作品集"
 description = "每个选定文件都会完整保留在新的 PDF 内，无论其类型如何。不支持 portfolios 的阅读器会显示一个带有附件文件的封面页。"
 goToFileEditor = "转到文件编辑器"
@@ -4488,6 +4654,9 @@ title = "它的作用"
 
 [createPortfolio.tooltip.header]
 title = "关于 PDF Portfolios"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "自动裁剪空白"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "此浏览器不支持剪贴板访问。"
 export = "导出书签"
 exportClipboard = "复制 JSON 到剪贴板"
 exportJson = "下载 JSON"
+exportMenu = "Export"
 importClipboard = "从剪贴板粘贴 JSON"
 importJson = "导入 JSON"
+importMenu = "Import"
 loadFromPdf = "从所选 PDF 加载"
 noFile = "选择一个 PDF 以提取现有书签。"
 selectedFile = "已从 {{file}} 加载"
-source = "加载书签"
 
 [editTableOfContents.editor]
 addTopLevel = "添加顶级书签"
@@ -4740,6 +4910,9 @@ replaceExisting = "替换现有书签（取消勾选为追加）"
 replaceExistingHint = "禁用时，新大纲会追加在当前书签之后。"
 title = "书签与大纲"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "更换 PDF"
 filePrompt = "从库中选择 PDF 或上传新文件开始。"
@@ -4753,7 +4926,6 @@ title = "打开工具开始编辑"
 [encryptedPdfUnlock]
 actionIgnored = "已忽略 {{action}} 限制"
 actionUnlocked = "已为此会话解锁 {{action}}"
-advanced = "高级"
 allowed = "允许"
 annotations = "批注"
 authoriseAction = "此 PDF 需要权限才能使用 {{action}}。"
@@ -4801,7 +4973,6 @@ restricted = "受限"
 restrictedActions = "受限操作"
 restrictedOperation = "此操作需要权限密码。"
 retainOwnerVerification = "验证权限密码，以便在移除打开密码时保持其不变。这不会移除它。"
-saveProtection = "保存保护"
 securityChangeFailed = "无法更改保护。请检查权限密码和新的安全设置。"
 sessionDetails = "为此会话打开。PDF 保持受保护。"
 sessionDetailsLabel = "关于会话解锁"
@@ -4871,7 +5042,6 @@ title = "出现问题"
 tryAgain = "重试"
 
 [extractImages]
-allowDuplicates = "བསྐྱར་ཟློས་པར་རིས་ཉར་ཚགས།"
 selectText = "ཕྱིར་བཏོན་པའི་པར་རིས་རྣམས་བསྒྱུར་རྒྱུའི་པར་རིས་རྣམ་གཞག་འདེམས་པ།"
 submit = "ཕྱིར་འདོན།"
 tags = "པར།,འདྲ་པར།,ཉར་ཚགས།,ཡིག་མཛོད།,zip,འཛིན་པ།,ལེན་པ།"
@@ -4927,12 +5097,15 @@ closeFile = "关闭文件"
 
 [fileEditor]
 closedFile = "已关闭 {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "文件已重新排序"
 filesReordered_other = "{{count}} 个文件已重新排序"
 loadedFromStorage_one = "已从存储加载 {{count}} 个文件"
 loadedFromStorage_other = "已从存储加载 {{count}} 个文件"
 loadFromStorageFailed = "从存储加载部分文件失败"
 pinnedFile = "已固定 {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "已保存并关闭 {{name}}"
 saveFailed = "保存失败"
 unpinnedFile = "已取消固定 {{name}}"
@@ -5019,11 +5192,20 @@ locked = "已锁定"
 previewOf = "{{name}} 的预览"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "添加文件"
 created = "创建时间"
 notIncludedInToolRun = "未包含在本次工具运行中"
 size = "文件大小"
 title = "文件"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "没有可用文件"
@@ -5104,6 +5286,7 @@ subtitle = "显示或隐藏文件侧边栏中的类别。"
 title = "侧边栏类别"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "取消"
 error = "无法重命名文件。"
 illegalCharacters = "文件名不能包含 \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "移除字段"
 
 [formFill.editor]
 action = "按钮操作"
-actionHelp = "点击按钮时执行的操作。"
 actionNone = "无"
 actionPrint = "打印"
 actionReset = "重置表单"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "限制可容纳的字符数，并绘制为等距方框。"
 multiline = "多行"
 multilineHelp = "允许多于一行文本，并在字段边缘自动换行。"
 multiSelect = "允许多选"
-multiSelectHelp = "允许一次选择多个选项。"
 name = "字段名称"
 nameHelp = "字段的内部名称。导出数据或从其他系统填写表单时使用，因此请保持唯一且不含空格。"
 optionGap = "选项间距"
@@ -5902,6 +6083,11 @@ title = "ཚོས་གཞི སྒྲིག"
 desc = "在查看器中高亮、绘制、添加笔记和形状"
 tags = "注释,高亮,绘制,标注,评论,备注,审阅,红线,反馈,标注工具,便签,形状,箭头,文本框,手绘"
 title = "注释"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "使用 AI 自动检测表单字段，并使您的 PDF 可填写。"
@@ -6405,6 +6591,9 @@ sort = "排序"
 [merge.sortFiles]
 title = "排序文件"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "合并设置概览"
 
@@ -6548,6 +6737,9 @@ title = "认证失败"
 message = "您可以关闭此窗口并返回 Stirling PDF。"
 title = "认证成功"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "允许访问"
 approving = "正在允许..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "正在返回应用..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} 想要访问您的 Stirling PDF 账户"
 scopesIntro = "这将允许 {{app}}："
 signedInAs = "已以 {{name}} 身份登录"
@@ -6565,6 +6758,8 @@ signInButton = "登录以继续"
 signInPrompt = "登录您的 Stirling PDF 账户以继续连接应用。"
 title = "Authorise access"
 unknownApp = "第三方应用程序"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "以您的身份操作 - {{app}} 执行的所有操作都在您的账户下运行，并计入您的使用量"
@@ -6572,9 +6767,12 @@ tools = "代表您使用 Stirling PDF 工具 - 转换、编辑、签名、保护
 
 [oauthConsent.scope]
 email = "查看您的 Email 地址"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "确认您的身份"
 phone = "查看您的电话号码"
 profile = "查看您的基本个人资料信息"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "清理扫描并检测 PDF 中图像里的文本，然后以文本形式重新加入。"
@@ -6956,6 +7154,10 @@ yourCloudAccess = "您将成为团队成员并失去所有者访问权限。"
 [pageEdit]
 deselectAll = "无"
 selectAll = "全部勾选"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "ཤོག་ངོས་ཕྱིར་འདོན།"
@@ -7577,6 +7779,8 @@ stamp = "图章注释 - 不是页面文本，因此无法在此处编辑"
 widget = "表单字段 - 不是页面文本，因此无法在此处编辑"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "编辑"
 markTagged = "标记为已完全加标签"
 matchScanFont = "将扫描文本匹配到 {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "自动为页面加标签"
 typeInto = "输入到 {{run}}"
 ungroupParagraph = "取消组合段落 {{run}}"
 unmarkTagged = "标记为未完全加标签"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "换行 {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "放弃未保存的更改？"
 
 [pdfTextEditor.error]
 decodeImage = "无法解码所选图片。"
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "无法复制此文本：没有可用字体能绘制其所有字母。"
 formLiftChangesDrawing = "无法编辑此内容：它作为组的一部分被绘制，该组的裁剪或图形设置在更改时编辑器无法保留。"
 insertImage = "无法插入所选图片。"
 needsShaping = "编辑器尚不能正确绘制此书写系统的连写字母和元音符号，因此未进行此更改。"
+reopenLost = "Open again"
 replaceClippedImage = "无法替换此图像：它已被裁剪，替换后会显示被裁剪隐藏的部分。"
 scanOffInk = "无法编辑此文本：其识别的词与扫描不对齐。请重新运行 OCR。"
 unsafeRtlEdit = "无法进行此编辑：编辑器在不改变内容的情况下无法重绘此行的从右到左文本。"
@@ -7616,6 +7823,7 @@ pngFileType = "PNG 图像"
 close = "关闭查找栏"
 count = "{{current}} / {{total}}"
 findPlaceholder = "查找"
+hideReplace = "Hide replace"
 ignoreAccents = "忽略重音符号"
 matchCase = "区分大小写"
 next = "下一个匹配项"
@@ -7625,6 +7833,7 @@ replace = "替换"
 replaceAll = "全部替换"
 replaced = "已替换 {{count}} 处"
 replacePlaceholder = "替换为"
+showReplace = "Show replace"
 wholeWord = "全字匹配"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "此链接无法加标签。"
 cannotTagPage = "此页面的内容无法加标签。"
 contentGroup = "内容"
 customTag = "{{role}}（自定义标签）"
-decorativeInfo = "屏幕阅读器会跳过装饰性图片。可用于边框、背景和其他不包含信息的图片。"
-decorativeLabel = "装饰性图片"
-description = "图片描述"
-descriptionInfo = "屏幕阅读器会朗读此内容来替代图片。"
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "加密文件中的标签无法编辑"
 figureDescription = "图像描述"
 figureDescriptionInfo = "屏幕阅读器会用此内容代替图像进行朗读。"
-formFieldDescription = "字段描述"
 formulaDescription = "公式描述"
 formulaDescriptionInfo = "屏幕阅读器会用此内容代替公式朗读。按口语表达，例如“x 的平方加一”。"
 heading = "无障碍"
@@ -7813,7 +8019,6 @@ markedTagged = "文档已完全加标签"
 markedTaggedHint = "告知 PDF 阅读器使用无障碍标签。仅当全部加好标签后再勾选。"
 markedWithUntagged = "部分内容没有标签，屏幕阅读器可能会跳过。"
 missingDescriptions = "缺少描述"
-mixedContent = "图形包含其他内容"
 mixedTags = "混合"
 needsDescriptionBadge = "无描述"
 nextToReview = "下一个待审阅"
@@ -7821,12 +8026,10 @@ notFigure = "标记为文本的一部分"
 removeTag = "移除标签"
 saveFailed = "无法保存您的无障碍更改，因此文件未保存。请撤销这些更改并重试。"
 selectedText = "已选文本"
-tagFormField = "标记表单字段"
 tagging = "正在为页面加标签"
 tagLabel = "标签"
 tagLinks_one = "为链接加标签"
 tagLinks_other = "为 {{count}} 个链接加标签"
-tagUntagged = "自动为文档加标签"
 tagUntaggedHint = "在整个文档中自动添加无障碍标签。结果较为粗略：之后请检查标题、列表和阅读顺序。"
 unknownTag = "此处无法读取"
 unmarkedWithTags = "部分 PDF 查看器仍会使用标签，并可能跳过没有标签的内容。"
@@ -7851,7 +8054,7 @@ heading = "标题"
 mixedNumbering = "混用了编号和未编号的标题"
 none = "无标题"
 onPage = "第 {{page}} 页上的标题"
-problems = "标题问题"
+problemCount = "{{count}} to fix"
 skippedLevel = "在标题 {{previous}} 后跳过了一个级别"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "题名"
 allLanguages = "所有语言"
 cannotSetDocument = "无法更改此文档的语言。"
 cannotSetText = "无法更改此文本的语言。"
-documentHint = "除非某段文本自行设置，否则屏幕阅读器使用的语言。"
 documentLabel = "语言"
 documentLocked = "加密文档的语言无法在此处更改。"
 inDocument = "在此文档中"
 innerLabel = "标签 {{number}} 的语言"
 label = "语言"
-missing = "未设置语言。屏幕阅读器将猜测，可能会用错误的发声读完整个文档。"
 mixed = "混合"
 noMatch = "无匹配语言。请改为输入其代码，例如 mt 或 en-IE。"
 placeholder = "选择语言"
@@ -7943,6 +8144,52 @@ renderFailed = "渲染页面失败"
 [pdfTextEditor.password]
 incorrect = "密码不正确 - 请重试。"
 label = "密码"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} 处的对齐参考线 - 拖到标尺上可移除"
@@ -8124,6 +8371,10 @@ title = "预览差异"
 [pdfTextEditor.tooltip.textFocus]
 text = "此工作区侧重于编辑文本和重新定位嵌入图像。复杂的页面图形、表单控件和分层图形会在导出时保留，但在此处不可完全编辑。"
 title = "文本与图像重点"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF ནས་ CSV ལ།"
@@ -8383,17 +8634,6 @@ hideCategory = "隐藏类别"
 labelCount = "标签"
 sharedNote = "这些标签是内置的，并在整个团队中共享。"
 showCategory = "显示类别"
-
-[policies.pii]
-account = "已标注的账户号码"
-card = "信用卡/借记卡"
-email = "电子邮件地址"
-fieldLabel = "要遮盖的 PII"
-iban = "IBAN 号码"
-phone = "电话号码"
-placeholder = "选择 PII 类型"
-routing = "美国银行路由号码（ABA）"
-ssn = "社会安全号码"
 
 [policy]
 badgeEnforcing = "{{name}} 正在执行..."
@@ -10317,6 +10557,10 @@ title = "管道"
 [portal.pipelines.actions]
 newCustomPipeline = "新建自定义流水线"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "所有流水线"
 
@@ -12047,7 +12291,6 @@ label = "阅读工具"
 readAloud = "朗读"
 rotateLeft = "向左旋转"
 rotateRight = "向右旋转"
-search = "在文档中查找"
 switchDocument = "切换文档"
 thumbnails = "页面"
 
@@ -12062,6 +12305,7 @@ colorLabel = "框颜色"
 convertPDFToImageLabel = "将 PDF 转为 PDF-Image"
 customPaddingLabel = "自定义额外内边距"
 useRegexLabel = "使用正则表达式"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "全词匹配"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "遮盖设置"
 
 [redact.auto.wordsToRedact]
 add = "添加"
-examples = "示例：Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "输入一个词"
 title = "要遮盖的词语"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "在文件管理器中选择文件以一次性对多�
 manual = "手动"
 mode = "模式"
 title = "遮盖方式"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "仅匹配大小写相同的文本。启用后，'Secret' 不会匹配 'SECRET'，并且 regex 中的 [A-Z] 仅匹配大写字母。"
@@ -12147,19 +12401,6 @@ title = "遮盖方式"
 text = "点击并拖动以手动选择要遮盖的特定区域。让您精确控制遮盖内容。（即将推出）"
 title = "手动遮盖"
 
-[redact.tooltip.words]
-bullet1 = "一次添加一个单词"
-bullet2 = "按 Enter 或点击“添加另一个”以添加"
-bullet3 = "点击 × 移除单词"
-
-[redact.tooltip.words.description]
-text = "输入要在文档中查找并遮盖的单词或短语。每个单词将单独搜索。"
-title = "文本匹配"
-
-[redact.tooltip.words.examples]
-text = "典型的遮盖词语包括：银行信息、电子邮件地址或特定姓名。"
-title = "常见示例"
-
 [redact.tooltip.words.header]
 title = "要遮盖的词语"
 
@@ -12176,15 +12417,6 @@ failed = "移除 PDF 注释时发生错误。"
 
 [removeAnnotations.info]
 description = "此工具会从 PDF 文档中移除所有注释（评论、高亮、便笺等）。"
-
-[removeAnnotations.settings]
-title = "设置"
-
-[removeAnnotations.tooltip.description]
-title = "功能说明"
-
-[removeAnnotations.tooltip.header]
-title = "关于移除注释"
 
 [removeBlanks]
 submit = "移除空白页"
@@ -12325,6 +12557,9 @@ tags = "重新排列,重新排序,整理,重组,移动页面,页面顺序,排序
 [reorganizePages.error]
 failed = "重新整理页面失败"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "页面已重新整理"
 
@@ -12406,6 +12641,7 @@ title = "反转所有颜色"
 rotateLeft = "逆时针旋转"
 rotateRight = "顺时针旋转"
 selectRotation = "选择旋转角度（顺时针）"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "应用旋转"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "旋转 PDF"
@@ -12516,8 +12752,7 @@ title = "净化"
 failed = "净化 PDF 时发生错误。"
 
 [sanitize.options]
-note = "选择要从 PDF 中移除的元素。至少需要选择一个选项。"
-title = "净化选项"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "移除 PDF 内嵌的任何文件"
@@ -12649,6 +12884,7 @@ title = "搜索 PDF"
 hideTools = "隐藏不可用工具 ▴"
 messageNoFallback = "在您的服务器重新联机之前，这些工具不可用。"
 messageWithFallback = "部分工具需要服务器连接。"
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "查看不可用工具 ▾"
 title = "您的 Stirling-PDF 服务器不可达"
 toolNotAvailableLocally = "您的 Stirling-PDF 服务器已离线，且本地后端不提供 \"{{endpoint}}\"。"
@@ -13034,6 +13270,12 @@ title = "键盘快捷键"
 mac = "快捷键需包含 ⌘（Command）、⌥（Option）或其他修饰键。"
 windows = "快捷键需包含 Ctrl、Alt 或其他修饰键。"
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "条款、隐私政策和你的 cookie 偏好设置。"
 label = "法律"
@@ -13418,9 +13660,7 @@ image = "上传"
 text = "文本"
 
 [sign.step]
-createDesc = "选择签名的创建方式"
 place = "放置并保存"
-placeDesc = "在 PDF 上放置签名"
 
 [sign.steps]
 configure = "配置签名"
@@ -13597,6 +13837,10 @@ rotateLeft = "向左旋转"
 rotateRight = "向右旋转"
 trim = "裁剪到签名"
 trimHint = "裁剪周围的空白区域"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "签名外观设置"
@@ -13959,7 +14203,6 @@ placeholder = "གཞུང་ཕྱོགས་བགོ་བཤའི་ག�
 
 [split-by-sections.splitMode]
 custom = "自定义页面"
-description = "选择如何拆分页面"
 label = "拆分模式"
 splitAll = "拆分所有页面"
 splitAllExceptFirst = "除第一页外全部拆分"
@@ -14210,10 +14453,8 @@ failed = "为 PDF 添加时间戳时出错。"
 
 [timestampPdf.options]
 note = "仅会将您文档的 SHA-256 哈希发送至 TSA 服务器；PDF 文件本身不会被发送到 TSA 服务器。"
-title = "时间戳服务器（TSA）"
 
 [timestampPdf.options.tsaUrl]
-desc = "选择可信的时间戳机构"
 label = "选择 TSA 服务器"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "没有可用的工具"
 
 [tooltip]
 close = "关闭提示"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "此工具将移除 PDF 表单字段的只读限制，使其可编辑和可填写。"
@@ -14706,6 +14961,9 @@ signatureDate = "签署日期"
 
 [validateSignature.settings]
 certHint = "上传受信任的 X.509 证书以针对自定义信任源进行验证。"
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "验证设置"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "无法预览文件"
 copyRestricted = "此 PDF 的权限已禁用复制。"
 copyText = "复制"
 coverPageView = "单独显示封面页"
-disableColorFilter = "禁用颜色滤镜"
 documentUpdated = "文档已更新"
 dualPageView = "双页视图"
 editText = "编辑文本"
-enableDarkFilter = "启用深色滤镜"
-enableSepiaFilter = "启用棕褐色滤镜"
 engineLoadError = "无法初始化 PDF 查看器引擎"
 engineSlowWarning = "PDF 引擎初始化耗时超过预期。请检查你的浏览器 WebAssembly 和 Worker 设置，或重新加载页面。"
 firstPage = "第一页"
@@ -14736,20 +14991,27 @@ fitPage = "适合页面"
 fitWidth = "适合宽度"
 lastPage = "最后一页"
 loadingEngine = "正在加载 PDF 引擎..."
+menuSelected = "Selected"
 moreOptions = "更多"
 nextPage = "下一页"
 noPdfProvided = "未提供 PDF"
 onlyPdfSupported = "此文件格式不支持预览。"
 pageNavigation = "页面导航"
+pageNumber = "Page number"
 previousPage = "上一页"
 readAloudFromHere = "从此处开始朗读"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "无法保存该文档。请重试。"
 saveChangesErrorTitle = "无法保存更改"
 singlePageView = "单页视图"
+tools = "Tools"
 unknownFile = "未知文件"
-view = "视图"
 zoom = "缩放"
 zoomIn = "放大"
+zoomLevel = "Zoom level"
 zoomOut = "缩小"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "签名预览"
 
 [viewer.signatureField]
 badge = "签名"
+clickToSign = "Click to sign here"
 fieldTitle = "签名字段：{{name}}"
 signed = "已签名"
 signedWithReason = "已签名：{{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "未签名的签名字段：{{name}}"
 withTime = "{{label}}（{{time}}）"
 
@@ -15089,10 +15353,13 @@ partial = "已恢复 {{total}} 个文件中的 {{restored}} 个。其余文件�
 
 [workbenchBar]
 activeFiles = "活动文件"
-annotations = "注释"
+annotate = "Annotate"
 applyRedactionsFirst = "请先应用涂黑处理"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "关闭所有文件"
 closePdf = "关闭 PDF"
+defaultZoom = "Default zoom"
 deselectAll = "取消全选"
 downloadAll = "全部下载"
 editText = "编辑文本"
@@ -15100,18 +15367,26 @@ exitAnnotations = "退出批注模式"
 exitRedaction = "退出涂黑模式"
 findReplace = "查找并替换"
 formFill = "表单编辑器"
-hideToolbar = "隐藏工具栏"
+layers = "Layers"
 moreActions = "更多操作"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "页面编辑器"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "平移模式"
 print = "打印 PDF"
 readAloud = "朗读"
 readAloudLanguage = "语言"
 readAloudSpeed = "速度"
 redact = "涂黑"
+reviewAccessibility = "Accessibility"
 rotateLeft = "向左旋转"
 rotateRight = "向右旋转"
 ruler = "标尺 / 测量"
+rulerScaleUnset = "Not set"
 rulerSettings = "比例设置"
 save = "保存"
 saveAll = "全部保存"
@@ -15123,14 +15398,23 @@ selectLanguage = "选择语言"
 share = "共享"
 showAllTools = "显示所有工具"
 showFewerTools = "折叠工具栏"
-showToolbar = "显示工具栏"
+thumbnails = "Pages"
 toggleAnnotations = "切换注释可见性"
-toggleAttachments = "切换附件"
-toggleBookmarks = "书签（目录）"
 toggleComments = "评论"
-toggleLayers = "切换图层"
-toggleSidebar = "切换侧边栏"
 viewer = "查看器"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "你对该文档的访问已过期。"
