@@ -73,6 +73,22 @@ public final class ImageMemoryLimit {
         }
     }
 
+    /**
+     * Rejects a page whose render at {@code dpi} would exceed the limit. For renderers that size
+     * their raster from points directly (JPDFium) rather than a {@link PDPage} crop box.
+     */
+    public static void requirePointSizeFits(
+            float widthPoints, float heightPoints, int pageNumber, int dpi)
+            throws OutOfMemoryDpiException {
+        float scale = dpi / 72f;
+        long pixels = renderedSide(widthPoints, scale) * renderedSide(heightPoints, scale);
+        long limit = maxPixels();
+        if (pixels > limit) {
+            throw ExceptionUtils.createPageImageTooLargeException(
+                    pageNumber, dpi, megapixels(pixels), megapixels(limit));
+        }
+    }
+
     /** Rejects a canvas the caller allocates itself to join several pages. */
     public static void requireCombinedImageFits(long width, long height)
             throws OutOfMemoryDpiException {
