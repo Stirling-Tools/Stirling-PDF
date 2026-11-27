@@ -14,24 +14,33 @@ function keepingSourceVersion(
   getSourceFile: () => Blob | undefined,
 ): ExportAPIWrapper {
   return {
-    saveAsCopy: () => ({
-      toPromise: async () => {
-        const output = await exportApi.saveAsCopy().toPromise();
-        const sourceFile = getSourceFile();
-        if (!sourceFile) return output;
-        try {
-          const head = await sourceFile.slice(0, 1024).arrayBuffer();
-          return keepSourcePdfVersion(
-            output,
-            readPdfHeaderVersion(new Uint8Array(head)),
-          );
-        } catch {
-          // An unreadable source must not block the save.
-          return output;
-        }
-      },
-    }),
+    saveAsCopy: () => {
+      const task = exportApi.saveAsCopy();
+      const sourceVersion = readSourceVersion(getSourceFile());
+      return {
+        toPromise: async () => {
+          const [output, version] = await Promise.all([
+            task.toPromise(),
+            sourceVersion,
+          ]);
+          return keepSourcePdfVersion(output, version);
+        },
+      };
+    },
   };
+}
+
+async function readSourceVersion(
+  sourceFile: Blob | undefined,
+): Promise<string | null> {
+  if (!sourceFile) return null;
+  try {
+    const head = await sourceFile.slice(0, 1024).arrayBuffer();
+    return readPdfHeaderVersion(new Uint8Array(head));
+  } catch {
+    // An unreadable source must not block the save.
+    return null;
+  }
 }
 
 /** Supply originalFile for read-only documents whose bytes must survive export: native export can remove encryption and invalidates signatures. */

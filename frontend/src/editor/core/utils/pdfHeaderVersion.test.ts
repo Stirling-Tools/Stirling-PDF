@@ -27,6 +27,14 @@ describe("readPdfHeaderVersion", () => {
   it("returns null without a header", () => {
     expect(readPdfHeaderVersion(encoder.encode("not a pdf"))).toBeNull();
   });
+
+  it("rejects a header followed by a long run of digits", () => {
+    const bytes = encoder.encode(`%PDF-1.${"7".repeat(2_000_000)}\n`);
+    expect(readPdfHeaderVersion(bytes)).toBeNull();
+    const output = pdf("%PDF-1.0");
+    keepSourcePdfVersion(output, readPdfHeaderVersion(bytes));
+    expect(readPdfHeaderVersion(output)).toBe("1.0");
+  });
 });
 
 describe("keepSourcePdfVersion", () => {

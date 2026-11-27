@@ -1361,7 +1361,13 @@ export async function createEmptyDocument(): Promise<ArrayBuffer> {
 export async function getRawDocumentVersion(
   docPtr: number,
 ): Promise<string | null> {
-  const m = await getPdfiumModule();
+  return readDocumentVersion(await getPdfiumModule(), docPtr);
+}
+
+export function readDocumentVersion(
+  m: WrappedPdfiumModule,
+  docPtr: number,
+): string | null {
   const versionPtr = m.pdfium.wasmExports.malloc(4);
   try {
     if (!m.FPDF_GetFileVersion(docPtr, versionPtr)) return null;

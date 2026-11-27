@@ -1,6 +1,7 @@
 const HEADER_PREFIX = "%PDF-";
 // ISO 32000-2, 7.5.2: readers accept the header anywhere in the first 1024 bytes.
 const HEADER_SEARCH_LIMIT = 1024;
+const MAX_VERSION_LENGTH = 8;
 
 interface PdfHeaderVersion {
   version: string;
@@ -23,8 +24,10 @@ function findHeader(bytes: Uint8Array): PdfHeaderVersion | null {
     }
     if (!match) continue;
     const offset = i + HEADER_PREFIX.length;
+    const scanLimit = Math.min(bytes.length, offset + MAX_VERSION_LENGTH + 1);
     let end = offset;
-    while (end < bytes.length && isVersionByte(bytes[end])) end++;
+    while (end < scanLimit && isVersionByte(bytes[end])) end++;
+    if (end - offset > MAX_VERSION_LENGTH) return null;
     const version = String.fromCharCode(...bytes.subarray(offset, end));
     return /^\d+\.\d+$/.test(version) ? { version, offset } : null;
   }

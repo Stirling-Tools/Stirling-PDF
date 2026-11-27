@@ -1,9 +1,7 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { assertSavedPdf } from "@editor/tools/pdfTextEditor/util/savedBytes";
-import {
-  keepSourcePdfVersion,
-  readPdfHeaderVersion,
-} from "@editor/utils/pdfHeaderVersion";
+import { keepSourcePdfVersion } from "@editor/utils/pdfHeaderVersion";
+import { readDocumentVersion } from "@editor/services/pdfiumService";
 
 /** `FPDF_SaveAsCopy` flags. */
 const FPDF_INCREMENTAL = 1;
@@ -56,6 +54,7 @@ export class PdfiumSave {
       );
     }
 
+    const sourceVersion = readDocumentVersion(m, doc.docPtr);
     const writerPtr = m.PDFiumExt_OpenFileWriter();
     try {
       const ok =
@@ -81,10 +80,7 @@ export class PdfiumSave {
         );
         view.set(heap);
         assertSavedPdf(view);
-        return keepSourcePdfVersion(
-          view,
-          readPdfHeaderVersion(doc.openedBytes),
-        );
+        return keepSourcePdfVersion(view, sourceVersion);
       } finally {
         m.pdfium.wasmExports.free(outBuf);
       }
