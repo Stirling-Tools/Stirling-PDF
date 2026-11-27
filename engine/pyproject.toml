@@ -28,7 +28,7 @@ engine = [
 ]
 # Type checking, testing, model generation, and formatting tools for the engine.
 engine-dev = [
-    "anyio>=4.14.2",
+    "anyio>=4.16.0",
     "datamodel-code-generator[ruff]==0.97.0",
     "pyrefly==1.4.1",
     "pytest>=9.1.1",
