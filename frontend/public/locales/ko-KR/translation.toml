@@ -7785,16 +7785,16 @@ styleSkipped = "선택한 텍스트 중 일부는 해당 스타일의 폰트 버
 styleUnavailable = "선택한 텍스트에는 해당 스타일의 폰트 버전이 없어 변경되지 않았습니다."
 useDeviceFonts = "장치 글꼴 사용"
 weight = "폰트 굵기"
-weightBlack = "검정"
+weightBlack = "가장 굵게"
 weightBold = "굵게"
-weightExtraBold = "Extra Bold"
-weightExtraLight = "Extra Light"
-weightLight = "라이트"
+weightExtraBold = "매우 굵게"
+weightExtraLight = "매우 가늘게"
+weightLight = "가늘게"
 weightMedium = "중간"
 weightNumber = "굵기 {{weight}}"
 weightRegular = "보통"
 weightSemibold = "약간 굵게"
-weightThin = "가늘게"
+weightThin = "가장 가늘게"
 
 [pdfTextEditor.fonts]
 allPresent = "모든 문자 및 숫자 있음"
@@ -8102,7 +8102,7 @@ todo = "확인 필요"
 
 [pdfTextEditor.review.closePrompt]
 body = "태그가 아직 워크스페이스에 저장되지 않았습니다. 저장하지 않고 접근성 설정을 닫으면 태그가 사라집니다."
-discard = "폐기"
+discard = "버리기"
 keep = "계속 태그 지정"
 save = "저장하고 닫기"
 title = "태그를 저장할까요?"
@@ -9559,7 +9559,7 @@ label = "도메인"
 
 [portal.connections.types.smb.fields.share]
 label = "공유"
-placeholder = "문서"
+placeholder = "documents"
 
 [portal.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
@@ -10077,7 +10077,7 @@ tagline = "컨테이너에서 서버 실행"
 title = "Docker"
 variantFat = "Fat"
 variantLite = "Ultra-Lite"
-variantStandard = "표준"
+variantStandard = "Standard"
 
 [portal.home.download.kubernetes]
 detailBody = "공식 Helm chart를 설치합니다."
@@ -15302,7 +15302,7 @@ pageColourNormal = "보통"
 pageColours = "페이지 색상"
 pageColourSepia = "세피아"
 pageEditor = "페이지 편집기"
-pageLayout = "레이아웃 설정"
+pageLayout = "레이아웃"
 pageView = "보기"
 panMode = "이동 모드"
 print = "PDF 인쇄"
