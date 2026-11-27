@@ -45,7 +45,6 @@ function fakeDoc(opts: FakeOptions = {}) {
   const doc = {
     module,
     docPtr: 42,
-    openedBytes: bytes,
     loadedPages: () => [],
   } as unknown as EditorDocument;
   return { doc, saveAsCopy, flagged };

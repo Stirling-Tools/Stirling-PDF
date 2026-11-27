@@ -19,10 +19,6 @@ import {
   pdfiumWasmUrl,
 } from "@editor/services/wasmPrecompiler";
 import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
-import {
-  keepSourcePdfVersion,
-  pdfiumFileVersionToHeader,
-} from "@editor/utils/pdfHeaderVersion";
 import i18n from "i18next";
 import type {
   FormField,
@@ -1357,30 +1353,11 @@ export async function createEmptyDocument(): Promise<ArrayBuffer> {
   return result;
 }
 
-/** The header version PDFium parsed for an opened document, or null for a new one. */
-export async function getRawDocumentVersion(
-  docPtr: number,
-): Promise<string | null> {
-  const m = await getPdfiumModule();
-  const versionPtr = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDF_GetFileVersion(docPtr, versionPtr)) return null;
-    return pdfiumFileVersionToHeader(m.pdfium.getValue(versionPtr, "i32"));
-  } finally {
-    m.pdfium.wasmExports.free(versionPtr);
-  }
-}
-
 /**
- * Save a raw document pointer to an ArrayBuffer. New documents have no version
- * of their own, so callers that import pages pass the highest source version.
+ * Save a raw document pointer to an ArrayBuffer.
  */
-export async function saveRawDocument(
-  docPtr: number,
-  sourceVersion?: string | null,
-): Promise<ArrayBuffer> {
+export async function saveRawDocument(docPtr: number): Promise<ArrayBuffer> {
   const m = await getPdfiumModule();
-  const version = sourceVersion ?? (await getRawDocumentVersion(docPtr));
   const writerPtr = m.PDFiumExt_OpenFileWriter();
   m.PDFiumExt_SaveAsCopy(docPtr, writerPtr);
   const size = m.PDFiumExt_GetFileWriterSize(writerPtr);
@@ -1393,7 +1370,7 @@ export async function saveRawDocument(
   }
   m.pdfium.wasmExports.free(outBuf);
   m.PDFiumExt_CloseFileWriter(writerPtr);
-  return keepSourcePdfVersion(result, version);
+  return result;
 }
 
 /**
