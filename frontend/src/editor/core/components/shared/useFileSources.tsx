@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { IconName } from "@editor/icons/icons";
 import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useAllFiles } from "@editor/contexts/FileContext";
 import { useFileManager } from "@editor/hooks/useFileManager";
 import { useIsPhone } from "@editor/hooks/useIsMobile";
@@ -27,6 +28,7 @@ export function useFileSources(onPickComputer?: () => void) {
   const { t } = useTranslation();
   const { openFilesModal, onFileUpload } = useFilesModalContext();
   const { config } = useAppConfig();
+  const { selectedTool } = useToolWorkflow();
   const isPhone = useIsPhone();
   const { files: workbenchFiles } = useAllFiles();
   const { loadRecentFiles } = useFileManager();
@@ -55,6 +57,12 @@ export function useFileSources(onPickComputer?: () => void) {
     });
     if (files.length > 0) void onFileUpload(files);
   };
+
+  // Matches the files modal: the open tool's own inputs, or PDFs otherwise.
+  const accept =
+    selectedTool?.supportedFormats
+      ?.map((format) => `.${format.replace(/^\./, "")}`)
+      .join(",") ?? ".pdf,application/pdf";
 
   const handleFallbackSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
@@ -105,7 +113,7 @@ export function useFileSources(onPickComputer?: () => void) {
         ref={fileInputRef}
         type="file"
         multiple
-        accept=".pdf,application/pdf"
+        accept={accept}
         onChange={handleFallbackSelect}
         style={{ display: "none" }}
       />

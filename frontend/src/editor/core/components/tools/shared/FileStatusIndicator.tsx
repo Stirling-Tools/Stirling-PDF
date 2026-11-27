@@ -79,6 +79,13 @@ const FileStatusIndicator = ({
           )}
         </Text>
       )}
+      {needsFiles && minFiles > 1 && (
+        <Text size="sm" c="dimmed">
+          {t("files.addAtLeast", "Add at least {{count}} files", {
+            count: minFiles,
+          })}
+        </Text>
+      )}
       <ProtectedPdfToolNotice files={unavailableFiles} />
       {needsFiles && <FileSourceTiles />}
     </Stack>

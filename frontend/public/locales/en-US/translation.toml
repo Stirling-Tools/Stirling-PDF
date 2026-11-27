@@ -5123,6 +5123,7 @@ locked = "Locked"
 previewOf = "Preview of {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Add files"
 created = "Created"
 notIncludedInToolRun = "Not included in this tool run"
