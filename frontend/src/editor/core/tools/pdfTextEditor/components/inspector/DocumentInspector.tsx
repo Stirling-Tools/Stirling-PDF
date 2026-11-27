@@ -151,23 +151,15 @@ function ChangeButton({
       accent="neutral"
       onClick={onClick}
       data-testid={testId}
-      style={{ flexShrink: 0 }}
+      style={{ flexShrink: 0, alignSelf: "flex-start" }}
     >
       {children}
     </Button>
   );
 }
 
-/** Fixed widths for the count and button, so the heading and rows line up. */
-const FONT_TABLE_COLUMNS = {
-  display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) 2.5rem 5.5rem",
-  columnGap: "var(--mantine-spacing-sm)",
-  alignItems: "center",
-} as const;
-
-/** About six fonts; more scroll inside the table. */
-const FONT_TABLE_MAX_HEIGHT = "17rem";
+/** About four fonts; more scroll inside the list, so the panel itself never has to. */
+const FONT_LIST_MAX_HEIGHT = "12rem";
 
 /** A font whose swap is being picked: one of the document's, or with no name, all of them. */
 interface FontTarget {
@@ -175,7 +167,11 @@ interface FontTarget {
   label: string;
 }
 
-/** Every font in use, as a table, each row with a way to swap it out everywhere. */
+/**
+ * Every font in use, each with a way to swap it out everywhere. Closed by
+ * default behind one row: a long list would otherwise push the panel past
+ * its height.
+ */
 function FontsBlock({
   pages,
   onChange,
@@ -184,6 +180,7 @@ function FontsBlock({
   onChange: ChangeFontEverywhere;
 }) {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<FontTarget | null>(null);
   // Pure: the font list AND coverage both come from snapshot data + the cmap
   // cache the loader primed during its serialized read.
@@ -191,46 +188,61 @@ function FontsBlock({
   const runs = pages.flatMap((p) => p.runs);
   if (fonts.length === 0) return null;
   return (
-    <Stack gap="xs" mb="md" data-testid="pdf-editor-fonts-panel">
-      <BlockHeading
-        extra={<CoveragePill fonts={fonts} />}
-        action={
-          <ChangeButton
-            onClick={() =>
-              setTarget({
-                fontName: null,
-                label: t("pdfTextEditor.document.allText", "All text"),
-              })
-            }
-            testId="pdf-editor-all-fonts"
-          >
-            {t("pdfTextEditor.document.changeAll", "Change all")}
-          </ChangeButton>
-        }
+    <Stack gap="xs" data-testid="pdf-editor-fonts-panel">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        data-testid="pdf-editor-fonts-toggle"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--mantine-spacing-xs)",
+          width: "100%",
+          minWidth: 0,
+          padding: 0,
+          border: "none",
+          background: "none",
+          color: "inherit",
+          font: "inherit",
+          cursor: "pointer",
+        }}
       >
-        {t("pdfTextEditor.fonts.title", "Fonts")}
-      </BlockHeading>
-      <div role="table">
-        <div role="rowgroup">
-          <div role="row" style={FONT_TABLE_COLUMNS}>
-            <Text role="columnheader" size="xs" c="dimmed">
-              {t("pdfTextEditor.document.fontColumn", "Font")}
-            </Text>
-            <Text role="columnheader" size="xs" c="dimmed" ta="right">
-              {t("pdfTextEditor.document.usesColumn", "Uses")}
-            </Text>
-            <span role="columnheader" />
-          </div>
-        </div>
-        {/* A long font list scrolls on its own, keeping the colours and
-            settings below it in reach; the heading stays put. */}
+        <Icon
+          name="chevron-right"
+          size={16}
+          style={{
+            flexShrink: 0,
+            color: "var(--c-text-muted)",
+            transform: open ? "rotate(90deg)" : undefined,
+            transition: "transform 150ms ease",
+          }}
+        />
+        <Text size="sm" fw={500} style={{ whiteSpace: "nowrap" }}>
+          {t("pdfTextEditor.fonts.title", "Fonts")} · {fonts.length}
+        </Text>
+        <CoveragePill fonts={fonts} />
+      </button>
+      {open && (
+        <ChangeButton
+          onClick={() =>
+            setTarget({
+              fontName: null,
+              label: t("pdfTextEditor.document.allText", "All text"),
+            })
+          }
+          testId="pdf-editor-all-fonts"
+        >
+          {t("pdfTextEditor.document.changeAllFonts", "Change all fonts")}
+        </ChangeButton>
+      )}
+      {open && (
         <ScrollArea.Autosize
-          mah={FONT_TABLE_MAX_HEIGHT}
+          mah={FONT_LIST_MAX_HEIGHT}
           type="auto"
           offsetScrollbars
-          mt={4}
         >
-          <Stack role="rowgroup" gap="xs">
+          <Stack role="list" gap="sm">
             {fonts.map((font) => (
               <FontRow
                 key={font.key}
@@ -241,7 +253,7 @@ function FontsBlock({
             ))}
           </Stack>
         </ScrollArea.Autosize>
-      </div>
+      )}
       <FontChangeModal
         target={target}
         onClose={() => setTarget(null)}
@@ -347,20 +359,30 @@ function FontRow({
       ? t("pdfTextEditor.document.unnamedFont", "Embedded font")
       : font.name;
   return (
-    <div role="row" style={FONT_TABLE_COLUMNS}>
-      <Stack role="cell" gap={0} style={{ minWidth: 0 }}>
-        <Text
-          size="sm"
-          title={font.name}
-          style={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {name}
-        </Text>
-        <FontStatusTag font={font} name={name} />
+    <Group role="listitem" justify="space-between" wrap="nowrap" gap="sm">
+      <Stack gap={2} style={{ minWidth: 0 }}>
+        <Tooltip label={name} withArrow position="top-start">
+          <Text
+            size="sm"
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {name}
+          </Text>
+        </Tooltip>
+        <Group gap={6} wrap="nowrap">
+          <FontStatusTag font={font} name={name} />
+          <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+            {t("pdfTextEditor.document.usedTimes", {
+              defaultValue_one: "Used once",
+              defaultValue_other: "Used {{count}} times",
+              count: uses,
+            })}
+          </Text>
+        </Group>
         {known && missing.length > 0 && (
           <Text size="xs" c="yellow.8" data-testid="pdf-editor-font-missing">
             {t("pdfTextEditor.fonts.missing", "Missing: {{glyphs}}", {
@@ -369,18 +391,13 @@ function FontRow({
           </Text>
         )}
       </Stack>
-      <Text role="cell" size="sm" ta="right">
-        {uses}
-      </Text>
-      <div role="cell" style={{ display: "flex", justifyContent: "flex-end" }}>
-        <ChangeButton
-          onClick={() => onReplace(name)}
-          testId={`pdf-editor-replace-font-${font.key}`}
-        >
-          {t("pdfTextEditor.document.replace", "Replace")}
-        </ChangeButton>
-      </div>
-    </div>
+      <ChangeButton
+        onClick={() => onReplace(name)}
+        testId={`pdf-editor-replace-font-${font.key}`}
+      >
+        {t("pdfTextEditor.document.replace", "Replace")}
+      </ChangeButton>
+    </Group>
   );
 }
 
@@ -421,7 +438,7 @@ function FontStatusTag({ font, name }: { font: PageFont; name: string }) {
         size="xs"
         color={status.color}
         variant="light"
-        style={{ cursor: "help", alignSelf: "flex-start" }}
+        style={{ cursor: "help", flexShrink: 0 }}
         data-testid={`pdf-editor-font-${font.status}`}
       >
         {t(`pdfTextEditor.fonts.status.${font.status}.label`, status.label)}

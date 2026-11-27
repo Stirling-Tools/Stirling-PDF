@@ -32,7 +32,7 @@ async function makeAnEdit(page: Page): Promise<void> {
     selection.addRange(range);
     document.execCommand("insertText", false, "Z");
   });
-  await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible({
+  await expect(page.getByTestId("pdf-editor-save")).toBeEnabled({
     timeout: 15_000,
   });
 }

@@ -3596,11 +3596,11 @@ test.describe("PDF text editor - workbench tab UX", () => {
 });
 
 test.describe("PDF text editor - dirty state", () => {
-  test("top bar marks the file dirty after an edit", async ({ page }) => {
+  test("Save comes alive after an edit", async ({ page }) => {
     await gotoEditor(page);
     await loadSamplePdf(page);
 
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0);
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled();
 
     const firstRunTestId = await page
       .locator('[data-testid^="pdf-editor-run-p0-"]')
@@ -3608,7 +3608,7 @@ test.describe("PDF text editor - dirty state", () => {
       .getAttribute("data-testid");
     await typeIntoRun(page, firstRunTestId!, "X");
 
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
   });
 });
 

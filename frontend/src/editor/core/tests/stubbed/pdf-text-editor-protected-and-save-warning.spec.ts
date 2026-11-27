@@ -68,7 +68,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
       selection.addRange(range);
       document.execCommand("insertText", false, " Test");
     });
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
     await page.getByTestId("pdf-editor-download").click();
     await expect(page.getByTestId("pdf-editor-save-risk-modal")).toContainText(
       /encryption/i,
@@ -91,7 +91,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
       readPdfProtection(await readFile(savedPath), "wrong-password"),
     ).rejects.toThrow("PDF open failed");
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden();
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled();
   });
 
   test("keeps an unlocked signed PDF out of the text editor", async ({

@@ -84,20 +84,11 @@ export const EditorPanelActions = memo(function EditorPanelActions({
           <Button
             size="sm"
             onClick={onSave}
+            // Live only once there is something to save, which is itself the
+            // sign of unsaved edits.
+            disabled={!dirty}
             data-testid="pdf-editor-save"
             style={{ flex: 1, minWidth: 0 }}
-            // Phones show the unsaved dot by the file name instead.
-            rightSection={
-              dirty && !compact ? (
-                <span
-                  className="pdf-editor-topbar__dirty"
-                  data-testid="pdf-editor-dirty-dot"
-                  role="status"
-                  aria-label={t("pdfTextEditor.unsaved", "(unsaved)")}
-                  title={t("pdfTextEditor.unsaved", "(unsaved)")}
-                />
-              ) : undefined
-            }
           >
             {t("pdfTextEditor.save", "Save PDF")}
           </Button>
