@@ -423,7 +423,22 @@ function EditableTable({
   const { t } = useTranslation();
   const box = rectToCss(table.bounds, transform, scale, page.height);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [selectedRow, setSelectedRow] = useState(() =>
+    table.rows > 1 ? table.rows - 1 : 0,
+  );
+  const [selectedCol, setSelectedCol] = useState(() =>
+    table.cols > 1 ? table.cols - 1 : 0,
+  );
   const origin = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    setSelectedRow((row) =>
+      table.rows > 1 ? Math.min(Math.max(1, row), table.rows - 1) : 0,
+    );
+    setSelectedCol((col) =>
+      table.cols > 1 ? Math.min(Math.max(1, col), table.cols - 1) : 0,
+    );
+  }, [table.rows, table.cols]);
 
   // Client-space pointer delta -> raw-PDF delta. invert() is affine, so the
   // translation cancels and the handler needs no container origin.
@@ -508,12 +523,21 @@ function EditableTable({
       op === "add-row"
         ? table.rows
         : op === "delete-row"
-          ? table.rows - 1
+          ? selectedRow
           : op === "add-col"
             ? table.cols
-            : table.cols - 1;
+            : selectedCol;
     if ((op === "delete-row" || op === "delete-col") && index < 1) return;
     mutate(new ModifyTableCommand({ tableId: table.id, op, index }));
+    if (op === "delete-row") {
+      setSelectedRow((row) => Math.min(Math.max(1, row), table.rows - 2));
+    } else if (op === "add-row") {
+      setSelectedRow(table.rows);
+    } else if (op === "delete-col") {
+      setSelectedCol((col) => Math.min(Math.max(1, col), table.cols - 2));
+    } else if (op === "add-col") {
+      setSelectedCol(table.cols);
+    }
   };
 
   const emptyCells = table.cells.filter((c) => c.runIds.length === 0);
@@ -641,10 +665,16 @@ function EditableTable({
                 "pdfTextEditor.table.resizeColumn",
                 "Drag to resize this column (Alt: share with the next)",
               )}
+              selectionLabel={t("pdfTextEditor.table.selectColumn", {
+                defaultValue: "Select column {{number}} for deletion",
+                number: Math.max(1, i - 1) + 1,
+              })}
               cursor="col-resize"
               orientation="vertical"
               offset={d.active && drag ? drag.dx : 0}
               guide={box.height}
+              onSelect={() => setSelectedCol(Math.max(1, i - 1))}
+              selected={selectedCol === Math.max(1, i - 1)}
               style={{
                 left: fx * box.width - GRAB / 2,
                 top: box.height,
@@ -668,10 +698,16 @@ function EditableTable({
                 "pdfTextEditor.table.resizeRow",
                 "Drag to resize this row (Alt: share with the next)",
               )}
+              selectionLabel={t("pdfTextEditor.table.selectRow", {
+                defaultValue: "Select row {{number}} for deletion",
+                number: Math.max(1, i - 1) + 1,
+              })}
               cursor="row-resize"
               orientation="horizontal"
               offset={d.active && drag ? drag.dy : 0}
               guide={box.width}
+              onSelect={() => setSelectedRow(Math.max(1, i - 1))}
+              selected={selectedRow === Math.max(1, i - 1)}
               style={{
                 top: fy * box.height - GRAB / 2,
                 left: -MARGIN,
@@ -870,6 +906,7 @@ interface DragState {
 function DragArea({
   testid,
   label,
+  selectionLabel,
   cursor,
   guide,
   content,
@@ -877,12 +914,15 @@ function DragArea({
   offset,
   style,
   active,
+  onSelect,
+  selected = false,
   onStart,
   onMove,
   onEnd,
 }: {
   testid: string;
   label: string;
+  selectionLabel?: string;
   cursor: string;
   /** Length of the alignment guide drawn back across the grid while active. */
   guide: number;
@@ -892,12 +932,16 @@ function DragArea({
   offset: number;
   style: React.CSSProperties;
   active: boolean;
+  onSelect?: () => void;
+  /** Keep the selected track visibly marked after pointer hover ends. */
+  selected?: boolean;
   onStart: (x: number, y: number, alt: boolean) => void;
   onMove: (x: number, y: number) => void;
   onEnd: () => void;
 }) {
   const [hover, setHover] = useState(false);
-  const lit = hover || active;
+  const [keyboardFocus, setKeyboardFocus] = useState(false);
+  const lit = hover || active || selected;
   const shift =
     orientation === "vertical"
       ? `translateX(${offset}px)`
@@ -906,11 +950,28 @@ function DragArea({
     <div
       data-testid={testid}
       title={label}
-      aria-label={label}
+      aria-label={selectionLabel ?? label}
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      aria-pressed={onSelect ? selected : undefined}
+      data-selected={onSelect ? selected : undefined}
+      onKeyDown={(e) => {
+        if (!onSelect || (e.key !== "Enter" && e.key !== " ")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect();
+      }}
+      // Assistive technology may dispatch click without pointer or keyboard events.
+      // Keep click activation in sync with the pointer and keyboard selection paths.
+      onClick={() => onSelect?.()}
+      onFocus={() => setKeyboardFocus(true)}
+      onBlur={() => setKeyboardFocus(false)}
       onPointerDown={(e) => {
+        setKeyboardFocus(false);
         e.preventDefault();
         // The stage clears the selection on any press that reaches it.
         e.stopPropagation();
+        onSelect?.();
         e.currentTarget.setPointerCapture(e.pointerId);
         onStart(e.clientX, e.clientY, e.altKey);
       }}
@@ -931,6 +992,13 @@ function DragArea({
         zIndex: 30,
         cursor,
         touchAction: "none",
+        outline: selected ? `2px solid ${ACCENT}` : undefined,
+        outlineOffset: 1,
+        // Keep keyboard focus visually distinct without hiding the selected
+        // track outline shown after the pointer leaves the handle.
+        boxShadow: keyboardFocus
+          ? "0 0 0 3px color-mix(in srgb, var(--c-accent-fg) 45%, transparent)"
+          : undefined,
         ...style,
       }}
     >
