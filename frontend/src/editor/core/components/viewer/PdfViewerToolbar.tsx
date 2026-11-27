@@ -86,6 +86,7 @@ function ZoomPercentInput({
       aria-label={label}
       inputMode="decimal"
       size="xs"
+      className="pdf-viewer-toolbar__zoom-input"
       data-testid="viewer-zoom-input"
       styles={{
         input: {

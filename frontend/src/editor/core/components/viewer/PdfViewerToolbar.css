@@ -22,6 +22,14 @@
   }
 }
 
+/* Narrower still, the typed zoom goes too (the buttons remain), keeping the
+   bar to one row so nothing docked beside it is overlapped. */
+@container (max-width: 30rem) {
+  .pdf-viewer-toolbar__zoom-input {
+    display: none;
+  }
+}
+
 @keyframes pdf-viewer-toolbar-in {
   from {
     /* The bar's own height plus its gutter, so it starts fully off-screen
