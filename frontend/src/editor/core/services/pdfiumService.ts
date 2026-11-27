@@ -39,6 +39,8 @@ interface PdfiumModuleOverrides extends Partial<PdfiumModule> {
       module: WebAssembly.Module,
     ) => void,
   ) => void;
+  /** Emscripten calls it inside abort(), before the throw. */
+  onAbort?: (what: unknown) => void;
 }
 
 // PDF form field type constants (matching PDFium C API FPDF_FORMFIELD_* values)
@@ -88,7 +90,13 @@ async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
   // Ensure eager compilation has started if PDF service is requested before idle timeout
   startEagerWasmCompilation();
 
-  const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
+  let instance: WrappedPdfiumModule | null = null;
+  const overrides: PdfiumModuleOverrides = {
+    locateFile: () => wasmUrl(),
+    onAbort: () => {
+      if (instance) moduleAborted(instance);
+    },
+  };
   // The glue is imported here, not at the top: this service is reached from
   // app-root contexts, and a static import would put the whole embedpdf chunk on
   // the initial load. It downloads alongside the WASM rather than after it.
@@ -122,6 +130,7 @@ async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
     init(overrides as Partial<PdfiumModule>),
     instantiateFailed,
   ]);
+  instance = m;
   // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
   try {
     m.PDFiumExt_Init();
@@ -143,6 +152,36 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
     });
   }
   return _initPromise;
+}
+
+const abortedModules = new WeakSet<WrappedPdfiumModule>();
+const abortListeners = new Set<(module: WrappedPdfiumModule) => void>();
+
+/**
+ * Calls `listener` once for each module whose PDFium aborts (out of memory, an
+ * internal check), from inside the failing call. The shared module has already
+ * been reset by then, so getPdfiumModule() gives a fresh one; documents opened
+ * on the aborted module are lost and must not be called into again.
+ */
+export function onPdfiumAbort(
+  listener: (module: WrappedPdfiumModule) => void,
+): () => void {
+  abortListeners.add(listener);
+  return () => abortListeners.delete(listener);
+}
+
+function moduleAborted(module: WrappedPdfiumModule): void {
+  // Every later call into the module can abort again.
+  if (abortedModules.has(module)) return;
+  abortedModules.add(module);
+  if (_module === module) resetPdfiumModule();
+  for (const listener of [...abortListeners]) {
+    try {
+      listener(module);
+    } catch {
+      /* one owner failing to let go must not stop the rest */
+    }
+  }
 }
 
 /**

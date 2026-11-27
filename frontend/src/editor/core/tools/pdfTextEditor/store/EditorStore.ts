@@ -1,3 +1,5 @@
+import i18n from "i18next";
+import { onPdfiumAbort } from "@editor/services/pdfiumService";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   HistoryStack,
@@ -98,6 +100,11 @@ export interface EditorViewState {
   /** Detailed progress for the loading state. */
   progress: LoadProgress | null;
   error: string | null;
+  /**
+   * The document was dropped because its PDFium aborted. `error` says so until
+   * the next load, which runs on a fresh engine.
+   */
+  documentLost: boolean;
   // Set when a load hit a password-protected PDF and the UI should prompt.
   // `retry` is true after a wrong password so the prompt can say so.
   passwordPrompt: { fileName: string; retry: boolean } | null;
@@ -135,6 +142,7 @@ const INITIAL: EditorViewState = {
   firstPageRendered: false,
   progress: null,
   error: null,
+  documentLost: false,
   passwordPrompt: null,
   mode: "select",
   groupingMode: "auto",
@@ -176,6 +184,7 @@ export class EditorStore {
   private _pendingPasswordFile: File | null = null;
   private nearViewportPages = new Set<number>();
   private nearViewportListeners = new Set<() => void>();
+  private readonly stopWatchingAborts: () => void;
 
   constructor() {
     this.history = new HistoryStack();
@@ -183,6 +192,9 @@ export class EditorStore {
     this.doc = null;
     this.state = INITIAL;
     this.listeners = new Set();
+    this.stopWatchingAborts = onPdfiumAbort((module) => {
+      if (this.doc?.module === module) this.dropLostDocument();
+    });
   }
 
   get document(): EditorDocument | null {
@@ -201,7 +213,7 @@ export class EditorStore {
   setLoading(loading: boolean): void {
     // Starting a load clears any stale error.
     if (loading) {
-      this.patch({ loading: true, error: null });
+      this.patch({ loading: true, error: null, documentLost: false });
     } else {
       this.patch({ loading: false, progress: null });
     }
@@ -217,6 +229,9 @@ export class EditorStore {
   }
 
   setError(error: string | null): void {
+    // The operation the abort interrupted fails too as it unwinds, and its
+    // message would hide why the document closed.
+    if (this.state.documentLost && error !== null) return;
     this.patch({ error, loading: false });
   }
 
@@ -371,6 +386,7 @@ export class EditorStore {
       loading: false,
       firstPageRendered: false,
       error: null,
+      documentLost: false,
       passwordPrompt: null,
     });
   }
@@ -385,6 +401,30 @@ export class EditorStore {
     this.selection.clear();
     this._pendingPasswordFile = null;
     this.state = INITIAL;
+    this.notify();
+  }
+
+  /**
+   * Drops a document whose PDFium aborted. Not disposed: any call into an
+   * aborted module can abort again or write over freed memory.
+   */
+  private dropLostDocument(): void {
+    this.loadToken++;
+    this.doc = null;
+    resetCharcodeCaches();
+    this.history.clear();
+    this.savedTop = null;
+    this.bakedDirty = false;
+    this.selection.clear();
+    this._pendingPasswordFile = null;
+    this.state = {
+      ...INITIAL,
+      documentLost: true,
+      error: i18n.t(
+        "pdfTextEditor.error.documentLost",
+        "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this.",
+      ),
+    };
     this.notify();
   }
 
@@ -773,6 +813,7 @@ export class EditorStore {
     this.loadToken++;
     this.disposeDocumentIfAny();
     this.listeners.clear();
+    this.stopWatchingAborts();
   }
 }
 

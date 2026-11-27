@@ -1,4 +1,5 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import { validCodePoint } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import {
   SCRATCH,
   scratchPtr,
@@ -27,7 +28,8 @@ const SPACE = 0x20;
  * The text of every text object on a text page, keyed by object pointer, or
  * null when this build cannot say which object a character belongs to.
  *
- * Each entry is what `FPDFTextObj_GetText` returns for that object. That call
+ * Each entry is what `FPDFTextObj_GetText` returns for that object, except that
+ * a character with no code point reads as U+FFFD (validCodePoint). That call
  * walks every character on the page for one object, so reading a page object
  * by object costs objects times characters: seconds on a page of a few thousand
  * labels. This walks the characters once, following the same rules: a space
@@ -73,7 +75,7 @@ export function readObjectTexts(
       owner.y = y;
       if (owner.text) owner.text += "\r\n";
     }
-    if (unicode) owner.text += String.fromCodePoint(unicode);
+    if (unicode) owner.text += String.fromCodePoint(validCodePoint(unicode));
     owner.seen = nonSpaces;
     open = owner;
   }

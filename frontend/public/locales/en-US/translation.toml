@@ -7819,10 +7819,12 @@ title = "Discard unsaved changes?"
 
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Can't duplicate this text: no available font draws all of its letters."
 formLiftChangesDrawing = "Can't edit this: it is drawn as part of a group whose clipping or graphics settings the editor can't keep when it is changed."
 insertImage = "Could not insert the selected image."
 needsShaping = "The editor can't yet draw this script's joined letters and vowel signs correctly, so this change was not made."
+reopenLost = "Open again"
 replaceClippedImage = "Can't replace this image: it is cropped, and the replacement would show the parts the crop hides."
 scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."
 unsafeRtlEdit = "Can't make this edit: the editor can't redraw this line's right-to-left text without changing it."

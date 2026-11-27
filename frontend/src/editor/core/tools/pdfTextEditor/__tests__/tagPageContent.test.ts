@@ -29,6 +29,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { setTextTagCommand } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { matchingRuns } from "@editor/tools/pdfTextEditor/util/pageFurniture";
@@ -952,6 +953,31 @@ describe("content sharing one marked-content sequence, tagged from the card", ()
     );
     const tagged = doc.page(0).runs[0].tagMarks[0];
     expect(image.mcid).toBe(tagged.mcid);
+  });
+
+  test("lets the image be tagged once the text it shared a sequence with is deleted, until undo", async () => {
+    const doc = await open(
+      pagePdf(
+        "/P <</MCID 3>> BDC BT /F1 12 Tf 72 700 Td (Caption text) Tj ET " +
+          "q 50 0 0 50 72 600 cm /Im1 Do Q EMC\n",
+      ),
+    );
+    const image = () => doc.page(0).images[0].snapshot();
+    expect(imageAccessibility(doc, image()).kind).toBe("blocked");
+
+    const history = new HistoryStack();
+    const caption = doc.page(0).runs[0];
+    history.execute(
+      new DeleteObjectCommand({ pageIndex: 0, runId: caption.id }),
+      doc,
+    );
+    expect(imageAccessibility(doc, image())).toMatchObject({
+      kind: "describable",
+      type: null,
+    });
+
+    history.undo(doc);
+    expect(imageAccessibility(doc, image()).kind).toBe("blocked");
   });
 });
 

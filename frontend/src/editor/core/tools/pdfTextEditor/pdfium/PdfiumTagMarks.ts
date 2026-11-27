@@ -85,21 +85,22 @@ export function markListKey(
   return count > 0 ? m.FPDFPageObj_GetMark(objPtr, count - 1) || null : null;
 }
 
-/** True when another object the page draws directly shares `objPtr`'s mark list. */
-export function sharesMarkList(
+/** The mark lists (markListKey) that more than one object the page draws directly holds. */
+export function sharedMarkLists(
   m: WrappedPdfiumModule,
   pagePtr: number,
-  objPtr: number,
-): boolean {
-  const key = markListKey(m, objPtr);
-  if (key === null) return false;
-  for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++) {
-    const other = m.FPDFPage_GetObject(pagePtr, i);
-    if (other && other !== objPtr && markListKey(m, other) === key) {
-      return true;
-    }
+): Set<number> {
+  const seen = new Set<number>();
+  const shared = new Set<number>();
+  const count = m.FPDFPage_CountObjects(pagePtr);
+  for (let i = 0; i < count; i++) {
+    const objPtr = m.FPDFPage_GetObject(pagePtr, i);
+    const key = objPtr ? markListKey(m, objPtr) : null;
+    if (key === null) continue;
+    if (seen.has(key)) shared.add(key);
+    seen.add(key);
   }
-  return false;
+  return shared;
 }
 
 /** The MCID of the innermost tag that has one: the content's own. */

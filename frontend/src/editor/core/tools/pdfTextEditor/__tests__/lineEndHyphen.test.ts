@@ -16,4 +16,10 @@ describe("PDFium line-end hyphen marker", () => {
     expect(drawnCodePoint(0x41)).toBe(0x41);
     expect(drawnCodePoint(0x2d)).toBe(0x2d);
   });
+
+  it("reads a value that is no code point as U+FFFD", () => {
+    expect(drawnCodePoint(0xe0e0e0)).toBe(0xfffd);
+    expect(drawnCodePoint(-257382528)).toBe(0xfffd);
+    expect(drawnCodePoint(0x10ffff)).toBe(0x10ffff);
+  });
 });

@@ -150,3 +150,54 @@ test("a page of ten thousand labels loads in about the time its size suggests", 
     doc.dispose();
   }
 }, 60000);
+
+test("reads a character a font's encoding gives no code point for as U+FFFD", async () => {
+  const cmap =
+    "/CIDInit /ProcSet findresource begin 12 dict begin begincmap\n" +
+    "/CMapName /UniJIS-UTF8-H def /CMapType 1 def\n" +
+    "/CIDSystemInfo << /Registry (Adobe) /Ordering (Japan1) /Supplement 6 >> def\n" +
+    "2 begincodespacerange <00> <7f> <e08080> <efbfbf> endcodespacerange\n" +
+    "2 begincidrange <20> <7e> 1 <e08080> <efbfbf> 200 endcidrange\n" +
+    "endcmap CMapName currentdict /CMap defineresource pop end end\n";
+  const doc = await EditorDocument.open(
+    buildClassicPdf(
+      [
+        { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body:
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> >>",
+        },
+        {
+          num: 4,
+          body: streamBody("", "BT /F1 12 Tf 72 700 Td <41e0e0e042> Tj ET\n"),
+        },
+        {
+          num: 5,
+          body:
+            "<< /Type /Font /Subtype /Type0 /BaseFont /MSGothic-UniJIS-UTF8-H " +
+            "/Encoding 7 0 R /DescendantFonts [6 0 R] >>",
+        },
+        {
+          num: 6,
+          body:
+            "<< /Type /Font /Subtype /CIDFontType2 /BaseFont /MSGothic " +
+            "/CIDSystemInfo << /Registry (Adobe) /Ordering (Japan1) /Supplement 6 >> >>",
+        },
+        {
+          num: 7,
+          body: streamBody("/Type /CMap /CMapName /UniJIS-UTF8-H", cmap),
+        },
+      ],
+      1,
+    ),
+  );
+  try {
+    PdfiumTextReader.populate(doc, doc.page(0));
+    expect(doc.page(0).runs.map((run) => run.text)).toEqual(["A\uFFFDB"]);
+  } finally {
+    doc.dispose();
+  }
+});
