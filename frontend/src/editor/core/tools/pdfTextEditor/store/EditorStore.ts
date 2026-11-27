@@ -220,6 +220,10 @@ export class EditorStore {
     this.patch({ error, loading: false });
   }
 
+  reportError(error: string): void {
+    this.patch({ error });
+  }
+
   /** A load needs a password. */
   setPasswordRequired(file: File, retry: boolean): void {
     this._pendingPasswordFile = file;
@@ -706,9 +710,11 @@ export class EditorStore {
       this.patch({ conformanceClaim });
     }
     let changed = false;
+    // A page never opened has not changed; opening it here would parse every page of a long document.
+    const opened = new Map(doc.loadedPages().map((page) => [page.index, page]));
     const pages: PageSnapshot[] = this.state.pages.map((p) => {
-      const live = doc.page(p.pageIndex);
-      if (live.revision === p.revision) return p;
+      const live = opened.get(p.pageIndex);
+      if (!live || live.revision === p.revision) return p;
       changed = true;
       return {
         ...p,
