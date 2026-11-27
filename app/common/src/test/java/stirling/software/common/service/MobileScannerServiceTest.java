@@ -67,6 +67,16 @@ class MobileScannerServiceTest {
         }
 
         @Test
+        @DisplayName("hasLiveSessions tracks unexpired sessions only")
+        void hasLiveSessionsIgnoresExpired() {
+            assertFalse(service.hasLiveSessions());
+            service.createSession("live");
+            assertTrue(service.hasLiveSessions());
+            forceCreatedAt("live", System.currentTimeMillis() - (20 * 60 * 1000L));
+            assertFalse(service.hasLiveSessions());
+        }
+
+        @Test
         @DisplayName("session is retrievable via validateSession after creation")
         void createdSessionIsValid() {
             service.createSession("sess1");
