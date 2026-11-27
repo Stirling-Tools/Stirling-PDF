@@ -95,7 +95,7 @@ function isBlank(page: Page): boolean {
 }
 
 function topMargin(page: Page): number {
-  const top = page.display.cropBottom + page.display.cropHeight;
+  const top = page.display.cropTop;
   const highest = Math.max(
     ...page.runs.map((run) => run.bounds.y + run.bounds.height),
     top - MIN_MARGIN_PT,
