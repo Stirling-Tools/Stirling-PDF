@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Box, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
-import { Icon } from "@editor/ui/Icon";
 /** Shared layout atoms for the editor's properties inspector. */
 
 /** Section heading, optionally with an info affordance beside it and a trailing control. */
@@ -94,59 +93,6 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
         {value}
       </Text>
     </Group>
-  );
-}
-
-/** A row that shows or hides the content under it. */
-export function DisclosureRow({
-  label,
-  open,
-  onToggle,
-  extra,
-  testId,
-}: {
-  label: ReactNode;
-  open: boolean;
-  onToggle: () => void;
-  /** Shown beside the label, e.g. a status badge. */
-  extra?: ReactNode;
-  testId?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={open}
-      data-testid={testId}
-      style={{
-        display: "block",
-        width: "100%",
-        padding: 0,
-        border: "none",
-        background: "none",
-        color: "inherit",
-        font: "inherit",
-        textAlign: "start",
-        cursor: "pointer",
-      }}
-    >
-      <Group justify="space-between" wrap="nowrap" gap="xs">
-        <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-          {label}
-          {extra}
-        </Group>
-        <Icon
-          name="chevron-right"
-          size={16}
-          style={{
-            color: "var(--c-text-muted)",
-            flexShrink: 0,
-            transform: open ? "rotate(90deg)" : undefined,
-            transition: "transform 150ms ease",
-          }}
-        />
-      </Group>
-    </button>
   );
 }
 

@@ -590,6 +590,7 @@ export function useToolbarController(
     onChangeFill: sel.changeFill,
     onChangeOutline: sel.changeOutline,
     onChangeFontFamily: sel.changeFontFamily,
+    onChangeFontFamilyEverywhere: sel.changeFontFamilyEverywhere,
     onToggleBold: sel.toggleBold,
     onToggleItalic: sel.toggleItalic,
     onChangeFontWeight: sel.changeFontWeight,

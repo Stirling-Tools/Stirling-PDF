@@ -255,14 +255,12 @@ test.describe("PDF text editor - inspector layout", () => {
     await open(page, 0);
     const panel = page.getByTestId("pdf-editor-fonts-panel");
     await expect(panel).toBeVisible();
-    // Collapsed by default: one headline row carrying an honest tone
-    // (ok / info / warn), never a blanket "no issues" for embedded fonts.
+    // A headline pill carrying an honest tone (ok / info / warn), never a
+    // blanket "no issues" for embedded fonts, above each font's own status.
     const compat = panel.getByTestId("pdf-editor-font-compat");
     await expect(compat).toBeVisible();
     const tone = await compat.getAttribute("data-compat");
     expect(["ok", "info", "warn"]).toContain(tone);
-    // The per-font detail is one click away.
-    await panel.getByTestId("pdf-editor-fonts-toggle").click();
     const badges = panel.locator('[data-testid^="pdf-editor-font-"]');
     expect(await badges.count()).toBeGreaterThan(0);
   });

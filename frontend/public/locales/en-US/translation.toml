@@ -7743,6 +7743,20 @@ confirm = "Discard and open"
 hint = "Cancel, then Save PDF to keep them in your workspace first."
 title = "Discard unsaved changes?"
 
+[pdfTextEditor.document]
+allFontsTo = "Set all text in"
+changeAll = "Change all"
+colourUses_one = "{{hex}} · {{count}} text box"
+colourUses_other = "{{hex}} · {{count}} text boxes"
+colours = "Text colours"
+locked = "{{count}} locked"
+replace = "Replace"
+replaceWith = "Replace everywhere with"
+unlockAll = "Unlock all"
+unnamedFont = "Embedded font"
+uses_one = "{{count}} text box"
+uses_other = "{{count}} text boxes"
+
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
 duplicateDropsLetters = "Can't duplicate this text: no available font draws all of its letters."

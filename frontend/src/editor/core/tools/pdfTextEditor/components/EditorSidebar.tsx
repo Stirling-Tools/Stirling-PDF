@@ -137,7 +137,9 @@ export const EditorSidebar = memo(function EditorSidebar({
           />
         )}
         <DocumentInspector
+          store={store}
           pages={state.pages}
+          onChangeFontEverywhere={controller.onChangeFontFamilyEverywhere}
           groupingMode={state.groupingMode}
           widthMode={state.widthMode}
           showRulers={state.showRulers}
