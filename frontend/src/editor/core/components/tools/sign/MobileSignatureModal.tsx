@@ -49,10 +49,6 @@ export default function MobileSignatureModal({
       onFileReceived={handleFileReceived}
       qrSize={220}
       title={t("sign.mobile.title", "Draw on your phone")}
-      description={t(
-        "sign.mobile.description",
-        "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically.",
-      )}
       instructions={t(
         "sign.mobile.instructions",
         "Open the camera app on your phone and scan this code. Keep this window open while you draw.",
