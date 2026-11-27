@@ -31,6 +31,7 @@ import {
   NO_SHRINK,
   selectionBarMenuProps,
   toggleLook,
+  ToolbarSeparator,
   type Controller,
 } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
@@ -486,7 +487,6 @@ export function FormatGroup({
     const swatch = fillPending ?? fillHex;
     return (
       <>
-        <TextStyleMenu {...paragraphProps} position={menuPosition} />
         <Popover position={dropdownPosition} withinPortal shadow="md" trapFocus>
           <Tooltip
             label={
@@ -596,6 +596,8 @@ export function FormatGroup({
           </Popover.Dropdown>
         </Popover>
         {toggles}
+        <ToolbarSeparator />
+        <TextStyleMenu {...paragraphProps} position={menuPosition} />
         <ParagraphPopover
           controller={controller}
           disabled={selectionTextReadOnly}

@@ -31,6 +31,7 @@ import {
   type ToolbarMenuPosition,
 } from "@editor/tools/pdfTextEditor/components/toolbar/ToolbarMenu";
 import "@editor/tools/pdfTextEditor/components/toolbar/PageMenu.css";
+import { localPaperSize, orderPaperSizeOptions } from "@editor/utils/paperSize";
 
 const PAGE_SIZES: PageSizeName[] = ["A4", "LETTER", "LEGAL", "A5", "A3"];
 
@@ -153,7 +154,9 @@ function PageSetupPanel({
   const session = useEditorSession();
   const [initial] = useState(() => {
     const current = session?.pageSize(pageIndex);
-    const named = current ? namedSize(current.width, current.height) : "A4";
+    const named = current
+      ? namedSize(current.width, current.height)
+      : localPaperSize<PageSizeName>("A4", "LETTER");
     const orientation: PageOrientation =
       current && current.width > current.height ? "landscape" : "portrait";
     return {
@@ -201,10 +204,12 @@ function PageSetupPanel({
       <div className="pdf-editor-page-setup">
         <Choice
           label={t("pdfTextEditor.pages.size", "Page size")}
-          options={[
-            ...(initial.ownSizeNamed ? [] : (["current"] as const)),
-            ...PAGE_SIZES,
-          ].map((value) => ({ value, label: sizeNames[value] }))}
+          options={orderPaperSizeOptions(
+            [
+              ...(initial.ownSizeNamed ? [] : (["current"] as const)),
+              ...PAGE_SIZES,
+            ].map((value) => ({ value, label: sizeNames[value] })),
+          )}
           value={size}
           onChange={setSize}
         />
