@@ -92,6 +92,30 @@ class RotationControllerTest {
     }
 
     @Test
+    @DisplayName("streams the upload to disk instead of buffering it on the heap")
+    void testRotatePDFDoesNotCallGetBytes() throws IOException {
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "large.pdf", "application/pdf", pdfBytes(0, 0)) {
+                    @Override
+                    public byte[] getBytes() {
+                        throw new AssertionError("rotate must not buffer the whole upload");
+                    }
+                };
+        RotatePDFRequest request = new RotatePDFRequest();
+        request.setFileInput(file);
+        request.setAngle(90);
+
+        ResponseEntity<Resource> response = rotationController.rotatePDF(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        try (PDDocument rotated =
+                Loader.loadPDF(response.getBody().getInputStream().readAllBytes())) {
+            assertThat(rotated.getPage(0).getRotation()).isEqualTo(90);
+        }
+    }
+
+    @Test
     @DisplayName("rejects an angle that is not a multiple of 90")
     void testRotatePDFInvalidAngle() throws IOException {
         RotatePDFRequest request = request(pdfWithPageRotations(0), 45);
@@ -106,6 +130,19 @@ class RotationControllerTest {
         request.setFileInput(file);
         request.setAngle(angle);
         return request;
+    }
+
+    private static byte[] pdfBytes(int... rotations) throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            for (int rotation : rotations) {
+                PDPage page = new PDPage(PDRectangle.LETTER);
+                page.setRotation(rotation);
+                document.addPage(page);
+            }
+            document.save(output);
+            return output.toByteArray();
+        }
     }
 
     private static MockMultipartFile pdfWithPageRotations(int... rotations) throws IOException {
