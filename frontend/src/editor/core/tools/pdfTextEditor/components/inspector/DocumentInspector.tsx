@@ -33,9 +33,10 @@ import {
   type PageFont,
 } from "@editor/tools/pdfTextEditor/util/pageFonts";
 import {
-  AdvancedSettings,
-  ViewSettings,
+  ReadingSettings,
+  RulersSetting,
 } from "@editor/tools/pdfTextEditor/components/inspector/DocumentSettings";
+import { Collapsible } from "@editor/ui/Collapsible";
 import type {
   GroupingMode,
   PageSnapshot,
@@ -74,11 +75,12 @@ export function DocumentInspector({
   onChangeFontEverywhere,
   onSetGroupingMode,
   onSetWidthMode,
-  ...view
+  showRulers,
+  onSetShowRulers,
 }: Props) {
   const { t } = useTranslation();
   const [documentOpen, setDocumentOpen] = useState(true);
-  const [viewOpen, setViewOpen] = useState(true);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const actions = useDocumentActions(store);
   return (
     <Box
@@ -97,33 +99,40 @@ export function DocumentInspector({
         onCollapsedClick={() => setDocumentOpen((v) => !v)}
         headerTestId="pdf-editor-document-toggle"
       >
-        <FontsBlock
-          store={store}
-          pages={pages}
-          onChange={onChangeFontEverywhere}
-        />
-        <ColoursBlock
-          store={store}
-          pages={pages}
-          onRecolour={actions.recolour}
+        <RulersSetting
+          showRulers={showRulers}
+          onSetShowRulers={onSetShowRulers}
         />
         <LockedRow pages={pages} onUnlockAll={actions.unlockAll} />
+        {/* Changes that sweep the whole document, and how it is read: rarely
+            needed, so they wait behind one disclosure. */}
+        <div data-testid="pdf-editor-advanced-settings">
+          <Collapsible
+            open={advancedOpen}
+            onToggle={() => setAdvancedOpen((v) => !v)}
+            header={t("pdfTextEditor.settings.advanced", "Advanced")}
+          >
+            <Stack gap="md" pt="xs">
+              <FontsBlock
+                store={store}
+                pages={pages}
+                onChange={onChangeFontEverywhere}
+              />
+              <ColoursBlock
+                store={store}
+                pages={pages}
+                onRecolour={actions.recolour}
+              />
+              <ReadingSettings
+                groupingMode={groupingMode}
+                widthMode={widthMode}
+                onSetGroupingMode={onSetGroupingMode}
+                onSetWidthMode={onSetWidthMode}
+              />
+            </Stack>
+          </Collapsible>
+        </div>
       </ToolStep>
-      <ToolStep
-        title={t("pdfTextEditor.settings.view", "View")}
-        showNumber={false}
-        isCollapsed={!viewOpen}
-        onCollapsedClick={() => setViewOpen((v) => !v)}
-        headerTestId="pdf-editor-view-toggle"
-      >
-        <ViewSettings {...view} />
-      </ToolStep>
-      <AdvancedSettings
-        groupingMode={groupingMode}
-        widthMode={widthMode}
-        onSetGroupingMode={onSetGroupingMode}
-        onSetWidthMode={onSetWidthMode}
-      />
     </Box>
   );
 }
@@ -211,7 +220,6 @@ function FontsBlock({
   onChange: ChangeFontEverywhere;
 }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<FontTarget | null>(null);
   // Pure: the font list AND coverage both come from snapshot data + the cmap
   // cache the loader primed during its serialized read.
@@ -227,40 +235,12 @@ function FontsBlock({
         // from the list as soon as its text previews in another font.
         anchor={
           <Group justify="space-between" wrap="nowrap" gap="sm">
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-expanded={open}
-              data-testid="pdf-editor-fonts-toggle"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--mantine-spacing-xs)",
-                width: "100%",
-                minWidth: 0,
-                padding: 0,
-                border: "none",
-                background: "none",
-                color: "inherit",
-                font: "inherit",
-                cursor: "pointer",
-              }}
-            >
-              <Icon
-                name="chevron-right"
-                size={16}
-                style={{
-                  flexShrink: 0,
-                  color: "var(--c-text-muted)",
-                  transform: open ? "rotate(90deg)" : undefined,
-                  transition: "transform 150ms ease",
-                }}
-              />
+            <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
               <Text size="sm" fw={500} style={{ whiteSpace: "nowrap" }}>
                 {t("pdfTextEditor.fonts.title", "Fonts")} · {fonts.length}
               </Text>
               <CoveragePill fonts={fonts} />
-            </button>
+            </Group>
             <ChangeButton
               label={t(
                 "pdfTextEditor.document.changeAllFonts",
@@ -286,7 +266,7 @@ function FontsBlock({
           />
         )}
       </ChangePopover>
-      {open && (
+      {
         <ScrollArea.Autosize
           mah={FONT_LIST_MAX_HEIGHT}
           type="auto"
@@ -311,7 +291,7 @@ function FontsBlock({
             ))}
           </Stack>
         </ScrollArea.Autosize>
-      )}
+      }
     </Stack>
   );
 }
@@ -453,7 +433,11 @@ function FontRow({
           </Text>
         </Group>
         {known && missing.length > 0 && (
-          <Text size="xs" c="yellow.8" data-testid="pdf-editor-font-missing">
+          <Text
+            size="xs"
+            c="var(--c-warning-text)"
+            data-testid="pdf-editor-font-missing"
+          >
             {t("pdfTextEditor.fonts.missing", "Missing: {{glyphs}}", {
               glyphs: formatMissing(missing),
             })}

@@ -138,23 +138,6 @@ test("find offers the new matching options", async ({
   await page.screenshot({ path: path.join(SHOTS, "04-find.png") });
 });
 
-test("the sidebar exposes the spellcheck control", async ({
-  page,
-}: {
-  page: Page;
-}) => {
-  test.setTimeout(140_000);
-  await openEditor(page);
-  const control = page.getByTestId("pdf-editor-spellcheck");
-  await expect(control).toBeVisible();
-  // The dictionary picker only shows while spellcheck is on.
-  await page.getByText("Check spelling as you type", { exact: true }).click();
-  await expect(
-    page.getByTestId("pdf-editor-spellcheck-language"),
-  ).toBeVisible();
-  await page.screenshot({ path: path.join(SHOTS, "05-sidebar.png") });
-});
-
 test("a save still produces a readable PDF after the new passes run", async ({
   page,
 }: {

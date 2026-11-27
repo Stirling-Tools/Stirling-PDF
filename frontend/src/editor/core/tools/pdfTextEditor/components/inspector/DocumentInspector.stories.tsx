@@ -122,20 +122,27 @@ const meta: Meta<typeof DocumentPanelDemo> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Fonts fold behind one row; colours sit on one row of swatches. */
+/** Rulers in plain sight; fonts, colours and how text is read behind Advanced. */
 export const Default: Story = {};
 
-/** Each font with its status tag, how often it is used, and a Replace. */
-export const FontsOpen: Story = {
+/** Advanced: each font with its tag, its use and a Replace, then colours. */
+export const AdvancedOpen: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.click(
-      within(canvasElement).getByTestId("pdf-editor-fonts-toggle"),
+      within(canvasElement).getByRole("button", { name: "Advanced" }),
     );
   },
 };
 
 /** Past six colours the rest go behind a "+N" chip, keeping one row. */
-export const ManyColours: Story = { args: { colours: 20 } };
+export const ManyColours: Story = {
+  args: { colours: 20 },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "Advanced" }),
+    );
+  },
+};
 
 /** A count of locked items, and a way to unlock them all. */
 export const LockedItems: Story = { args: { locked: 3 } };
@@ -143,6 +150,9 @@ export const LockedItems: Story = { args: { locked: 3 } };
 /** Change all fonts: the pick previews on the page; Done keeps it. */
 export const ChangeFont: Story = {
   play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "Advanced" }),
+    );
     await userEvent.click(
       within(canvasElement).getByTestId("pdf-editor-all-fonts"),
     );
@@ -152,6 +162,9 @@ export const ChangeFont: Story = {
 /** Change all colours, previewed on the page the same way. */
 export const ChangeColour: Story = {
   play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "Advanced" }),
+    );
     await userEvent.click(
       within(canvasElement).getByTestId("pdf-editor-all-colours"),
     );

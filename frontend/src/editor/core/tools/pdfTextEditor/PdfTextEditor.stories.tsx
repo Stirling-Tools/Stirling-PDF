@@ -9,7 +9,6 @@ import {
 import {
   bodyOf,
   choose,
-  openSelect,
   openTooltip,
   panelOf,
   type PlayContext,
@@ -19,10 +18,6 @@ import {
   waitForPanelText,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 import { __resetEditorStoreForTests } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
-import {
-  SPELLCHECK_AUTO,
-  setSpellcheckPreference,
-} from "@editor/tools/pdfTextEditor/util/spellcheck";
 import type { FixtureName } from "@editor/components/tools/toolPanelStory/fixtures";
 
 const meta = {
@@ -30,11 +25,8 @@ const meta = {
   ...toolPanelMeta("pdfTextEditor"),
   // The editor keeps its document for a grace period after unmounting, so
   // without a fresh store each story would open on the previous story's file.
-  // The spell-check preference is kept in browser storage, so a story that
-  // turns it off would otherwise open every later story with it off.
   beforeEach: () => {
     __resetEditorStoreForTests();
-    setSpellcheckPreference({ enabled: true, lang: SPELLCHECK_AUTO });
   },
   play: async (context: PlayContext) => {
     await waitForDocument(context);
@@ -113,8 +105,7 @@ function selectOnPage(...picks: { testId: string; extend?: boolean }[]) {
 
 /** Opens the document's font list from its row. */
 async function openFonts(context: PlayContext) {
-  const panel = await waitForDocument(context);
-  await userEvent.click(await panel.findByTestId("pdf-editor-fonts-toggle"));
+  const panel = await openAdvancedSettings(context);
   await panel.findAllByTestId(
     "pdf-editor-font-missing",
     undefined,
@@ -123,9 +114,10 @@ async function openFonts(context: PlayContext) {
   return panel;
 }
 
+/** Opens Advanced, which holds the fonts, colours and how text is read. */
 async function openAdvancedSettings(context: PlayContext) {
   const panel = await waitForDocument(context);
-  await userEvent.click(await panel.findByTestId("pdf-editor-advanced-toggle"));
+  await userEvent.click(await panel.findByRole("button", { name: "Advanced" }));
   await panel.findByText("Text grouping", undefined, STAGE_TIMEOUT);
   return panel;
 }
@@ -218,8 +210,6 @@ export const NoFile: Story = {
 };
 
 export const FontList: Story = {
-  // The list's "Missing:" font text fails contrast.
-  parameters: knownA11yIssues("color-contrast"),
   play: async (context) => {
     const panel = await openFonts(context);
     await expect(
@@ -245,7 +235,7 @@ export const FontStatusTooltip: Story = {
 export const ChangeAllFonts: Story = {
   ...onCanvas(),
   play: async (context) => {
-    const panel = await waitForDocument(context);
+    const panel = await openAdvancedSettings(context);
     await userEvent.click(
       panel.getByRole("button", { name: "Change all fonts" }),
     );
@@ -261,7 +251,7 @@ export const ChangeAllFonts: Story = {
 export const ChangeColour: Story = {
   ...onCanvas(),
   play: async (context) => {
-    const panel = await waitForDocument(context);
+    const panel = await openAdvancedSettings(context);
     const [swatch] = await panel.findAllByTestId(/^pdf-editor-colour-/);
     await userEvent.click(swatch);
     await bodyOf(context).findByTestId(
@@ -278,34 +268,6 @@ export const RulersOn: Story = {
     const rulers = panel.getByRole("checkbox", { name: "Rulers and guides" });
     await userEvent.click(rulers);
     await waitFor(() => expect(rulers).toBeChecked());
-  },
-};
-
-export const SpellcheckOff: Story = {
-  play: async (context) => {
-    const panel = await waitForDocument(context);
-    const spellcheck = panel.getByRole("checkbox", {
-      name: "Check spelling as you type",
-    });
-    await expect(spellcheck).toBeChecked();
-    await userEvent.click(spellcheck);
-    await waitFor(() => expect(spellcheck).not.toBeChecked());
-    // The dictionary picker only shows while spelling is checked.
-    await expect(
-      panel.queryByRole("textbox", { name: "Dictionary language" }),
-    ).toBeNull();
-  },
-};
-
-export const DictionaryLanguages: Story = {
-  // The language listbox scrolls but cannot take keyboard focus.
-  parameters: knownA11yIssues("scrollable-region-focusable"),
-  play: async (context) => {
-    const panel = await waitForDocument(context);
-    await expect(
-      panel.getByRole("textbox", { name: "Dictionary language" }),
-    ).toHaveValue("Automatic");
-    await openSelect(context, "Dictionary language");
   },
 };
 

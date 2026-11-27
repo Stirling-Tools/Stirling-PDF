@@ -8201,7 +8201,6 @@ outline = "Outline"
 [pdfTextEditor.settings]
 advanced = "Advanced"
 find = "Find in document"
-view = "View"
 
 [pdfTextEditor.shape]
 groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
@@ -8234,12 +8233,6 @@ ungroupTooltipDisabled = "Select a multi-line paragraph to ungroup"
 widthGrow = "Grow"
 widthGrowHint = "Grow widens a box as you type until it reaches the page edge, then flows onto new lines; Wrap keeps its width and flows onto new lines."
 widthWrap = "Wrap"
-
-[pdfTextEditor.spellcheck]
-auto = "Automatic"
-enable = "Check spelling as you type"
-language = "Dictionary language"
-languageShort = "Language"
 
 [pdfTextEditor.table]
 addColumn = "Add column"

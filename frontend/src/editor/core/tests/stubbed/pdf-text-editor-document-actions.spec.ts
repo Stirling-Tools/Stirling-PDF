@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openAdvancedSettings,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -60,6 +63,8 @@ async function open(page: Page): Promise<void> {
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });
+  // Fonts and colours are changed from the panel's Advanced section.
+  await openAdvancedSettings(page);
 }
 
 async function pickFont(page: Page, name: RegExp): Promise<void> {

@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openInTextEditor,
+  openAdvancedSettings,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -59,7 +62,9 @@ async function selectOne(page: Page, id: string): Promise<void> {
 
 /** Wait for the document-level preferences in the sidebar. */
 async function openSettings(page: Page): Promise<void> {
-  await expect(page.getByTestId("pdf-editor-view-settings")).toBeVisible();
+  await expect(
+    page.getByText("Rulers and guides", { exact: true }),
+  ).toBeVisible();
 }
 
 test.describe("PDF text editor - inspector layout", () => {
@@ -220,17 +225,15 @@ test.describe("PDF text editor - inspector layout", () => {
     await expect(
       page.getByText("Rulers and guides", { exact: true }),
     ).toBeVisible();
-    await expect(page.getByTestId("pdf-editor-spellcheck")).toBeVisible();
 
     // The two options that change how the document was PARSED start folded,
     // because switching grouping re-reads it and drops undo history.
     await expect(
-      page.getByTestId("pdf-editor-grouping-mode-control"),
-    ).toBeHidden();
-    await expect(
-      page.getByTestId("pdf-editor-width-mode-control"),
-    ).toBeHidden();
-    await page.getByTestId("pdf-editor-advanced-toggle").click();
+      page
+        .getByTestId("pdf-editor-advanced-settings")
+        .getByRole("button", { name: "Advanced" }),
+    ).toHaveAttribute("aria-expanded", "false");
+    await openAdvancedSettings(page);
     await expect(
       page.getByTestId("pdf-editor-grouping-mode-control"),
     ).toBeVisible();
@@ -259,6 +262,7 @@ test.describe("PDF text editor - inspector layout", () => {
     page,
   }) => {
     await open(page, 0);
+    await openAdvancedSettings(page);
     const panel = page.getByTestId("pdf-editor-fonts-panel");
     await expect(panel).toBeVisible();
     // A headline pill carrying an honest tone (ok / info / warn), never a
@@ -267,7 +271,6 @@ test.describe("PDF text editor - inspector layout", () => {
     await expect(compat).toBeVisible();
     const tone = await compat.getAttribute("data-compat");
     expect(["ok", "info", "warn"]).toContain(tone);
-    await panel.getByTestId("pdf-editor-fonts-toggle").click();
     const badges = panel.locator('[data-testid^="pdf-editor-font-"]');
     expect(await badges.count()).toBeGreaterThan(0);
   });
