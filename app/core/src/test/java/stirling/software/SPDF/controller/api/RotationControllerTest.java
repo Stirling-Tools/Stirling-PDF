@@ -95,8 +95,7 @@ class RotationControllerTest {
     @DisplayName("streams the upload to disk instead of buffering it on the heap")
     void testRotatePDFDoesNotCallGetBytes() throws IOException {
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "large.pdf", "application/pdf", pdfBytes(0, 0)) {
+                new MockMultipartFile("fileInput", "large.pdf", "application/pdf", pdfBytes(0, 0)) {
                     @Override
                     public byte[] getBytes() {
                         throw new AssertionError("rotate must not buffer the whole upload");
