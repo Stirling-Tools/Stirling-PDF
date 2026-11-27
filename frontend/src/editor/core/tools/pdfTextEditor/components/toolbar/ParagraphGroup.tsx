@@ -51,7 +51,7 @@ interface ParagraphGroupProps {
   disabled: boolean;
 }
 
-function cannotFormat(t: TFunction): string {
+export function cannotFormat(t: TFunction): string {
   return t(
     "pdfTextEditor.toolbar.cannotFormat",
     "Not available for rotated or locked text",

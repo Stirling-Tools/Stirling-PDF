@@ -23,6 +23,7 @@ import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
 import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
 import {
+  cannotFormat,
   ParagraphControls,
   ParagraphPopover,
   TextStyleMenu,
@@ -409,10 +410,7 @@ export function FormatGroup({
           readOnlyNote ??
           (controller.paragraph.canFormat
             ? t("pdfTextEditor.toolbar.underline", "Underline")
-            : t(
-                "pdfTextEditor.toolbar.cannotFormat",
-                "Not available for rotated or locked text",
-              ))
+            : cannotFormat(t))
         }
       >
         <Button

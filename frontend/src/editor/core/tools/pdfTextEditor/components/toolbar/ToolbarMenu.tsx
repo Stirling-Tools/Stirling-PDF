@@ -73,14 +73,12 @@ export function ToolbarMenu({
 export function MenuChoice({
   checked,
   icon,
-  iconFilled = false,
   onClick,
   testId,
   children,
 }: {
   checked: boolean;
   icon?: IconName;
-  iconFilled?: boolean;
   onClick: () => void;
   testId: string;
   children: ReactNode;
@@ -89,16 +87,7 @@ export function MenuChoice({
     <Menu.Item
       role="menuitemradio"
       aria-checked={checked}
-      leftSection={
-        icon ? (
-          <Icon
-            name={icon}
-            size={18}
-            filled={iconFilled}
-            style={iconFilled ? { color: "var(--c-text-subtle)" } : undefined}
-          />
-        ) : undefined
-      }
+      leftSection={icon ? <Icon name={icon} size={18} /> : undefined}
       rightSection={checked ? <Icon name="check" size={16} /> : undefined}
       onClick={onClick}
       data-testid={testId}
