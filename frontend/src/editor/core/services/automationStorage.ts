@@ -6,6 +6,8 @@ export interface AutomationConfig {
   id: string;
   name: string;
   description?: string;
+  /** An iconMap key, e.g. "SettingsIcon". */
+  icon?: string;
   operations: Array<{
     operation: string;
     parameters: Record<string, unknown>;

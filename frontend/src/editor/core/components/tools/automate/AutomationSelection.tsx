@@ -1,8 +1,12 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Title, Stack, Divider } from "@mantine/core";
+import { VisuallyHidden } from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
+import AutomatePanelHeader from "@editor/components/tools/automate/AutomatePanelHeader";
 import AutomationImportModal from "@editor/components/tools/automate/AutomationImportModal";
+import type { AutomationAction } from "@editor/components/tools/automate/AutomationActionsMenu";
 import { useSuggestedAutomations } from "@editor/hooks/tools/automate/useSuggestedAutomations";
 import { useActivityAutomations } from "@editor/hooks/tools/automate/useActivityAutomations";
 import { useActivityChainText } from "@editor/hooks/useToolWorkflowSuggestions";
@@ -14,27 +18,18 @@ import { iconMap } from "@editor/components/tools/automate/iconMap";
 import { iconKeyForSuggestedAutomation } from "@editor/components/tools/automate/suggestedAutomationIcon";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ActivityChain } from "@editor/utils/activityChains";
-import {
-  downloadAutomationConfig,
-  downloadFolderScanningConfig,
-} from "@editor/utils/automationConverter";
 import type { ImportableAutomation } from "@editor/hooks/tools/automate/useSavedAutomations";
-
-const SECTION_TITLE_STYLE: CSSProperties = {
-  fontSize: "0.75rem",
-  fontWeight: 600,
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-  color: "var(--c-text-subtle)",
-};
+import classes from "@editor/components/tools/automate/Automate.module.css";
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
   onCreateNew: () => void;
-  onRun: (automation: AutomationConfig) => void;
-  onEdit: (automation: AutomationConfig) => void;
-  onDelete: (automation: AutomationConfig) => void;
-  onCopyFromSuggested: (automation: SuggestedAutomation) => void;
+  onOpenSaved: (automation: AutomationConfig) => void;
+  onOpenSuggested: (automation: AutomationConfig) => void;
+  /** Row-menu actions for a saved automation. */
+  savedActions: (automation: AutomationConfig) => AutomationAction[];
+  /** Row-menu actions for a suggestion. */
+  suggestedActions: (automation: AutomationConfig) => AutomationAction[];
   onCreateFromActivity: (automation: AutomationConfig) => void;
   onImportAutomation: (
     automation: ImportableAutomation,
@@ -44,13 +39,18 @@ interface AutomationSelectionProps {
   toolRegistry: Partial<ToolRegistry>;
 }
 
+/** Suggested automations carry an icon name; the run and save paths store an iconMap key. */
+function suggestedAsConfig(automation: SuggestedAutomation): AutomationConfig {
+  return { ...automation, icon: iconKeyForSuggestedAutomation(automation.id) };
+}
+
 export default function AutomationSelection({
   savedAutomations,
   onCreateNew,
-  onRun,
-  onEdit,
-  onDelete,
-  onCopyFromSuggested,
+  onOpenSaved,
+  onOpenSuggested,
+  savedActions,
+  suggestedActions,
   onCreateFromActivity,
   onImportAutomation,
   onImportError,
@@ -76,7 +76,6 @@ export default function AutomationSelection({
   const {
     name: activityChainName,
     ranBy,
-    ranByShort,
     draftName,
   } = useActivityChainText(toolRegistry);
 
@@ -131,111 +130,105 @@ export default function AutomationSelection({
   };
 
   return (
-    <div>
-      <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
-        {t("automate.selection.saved.title", "Saved")}
-      </Title>
+    <>
+      <AutomatePanelHeader
+        title={t("automate.library.title", "Automations")}
+        fixedTitle
+        actions={
+          <>
+            <Button
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
+              px="xs"
+              leftSection={<Icon name="file-up" size={14} />}
+              onClick={() => setImportModalOpen(true)}
+            >
+              {t("automate.import", "Import")}
+            </Button>
+            <Button
+              size="sm"
+              px="sm"
+              leftSection={<Icon name="plus" size={14} />}
+              onClick={onCreateNew}
+            >
+              {t("automate.library.new", "New")}
+            </Button>
+          </>
+        }
+      />
 
-      <Stack gap="xs">
-        <AutomationEntry
-          title={t(
-            "automate.selection.createNew.title",
-            "Create New Automation",
-          )}
-          badgeIcon="circle-plus"
-          operations={[]}
-          onClick={onCreateNew}
-          keepIconColor={true}
-          showMenu={true}
-          onImport={() => setImportModalOpen(true)}
-          toolRegistry={toolRegistry}
-        />
-        {/* Saved Automations */}
-        {savedAutomations.map((automation) => {
-          const badge = automation.icon
-            ? iconMap[automation.icon]
-            : iconMap.SettingsIcon;
+      {savedAutomations.length > 0 && (
+        <section className={classes.section}>
+          <h3 className={classes.sectionLabel}>
+            {t("automate.selection.saved.title", "Saved")}
+            <VisuallyHidden>, </VisuallyHidden>
+            <span className={classes.sectionCount}>
+              {savedAutomations.length}
+            </span>
+          </h3>
+          {savedAutomations.map((automation) => (
+            <AutomationEntry
+              key={automation.id}
+              title={automation.name}
+              badgeIcon={
+                (automation.icon && iconMap[automation.icon]) ||
+                iconMap.SettingsIcon
+              }
+              onClick={() => onOpenSaved(automation)}
+              actions={savedActions(automation)}
+              description={automation.description}
+              operations={automation.operations.map((op) =>
+                typeof op === "string" ? op : op.operation,
+              )}
+              toolRegistry={toolRegistry}
+            />
+          ))}
+        </section>
+      )}
+
+      {activityChains.length > 0 && (
+        <section className={classes.section}>
+          <h3 className={classes.sectionLabel}>
+            {t("automate.selection.activity.title", "Frequent workflows")}
+          </h3>
+          {activityChains.map((chain) => (
+            <AutomationEntry
+              key={chain.operations.join("-")}
+              title={activityChainName(chain)}
+              badgeIcon="activity"
+              onClick={() => onCreateFromActivity(activityChainConfig(chain))}
+              description={`${ranBy(chain)} ${t(
+                "automate.selection.activity.description",
+                "Save it as an automation and run it with one click.",
+              )}`}
+              operations={chain.operations}
+              toolRegistry={toolRegistry}
+            />
+          ))}
+        </section>
+      )}
+
+      <section className={classes.section}>
+        <h3 className={classes.sectionLabel}>
+          {t("automate.selection.suggested.title", "Suggested")}
+        </h3>
+        {suggestedAutomations.map((automation) => {
+          const config = suggestedAsConfig(automation);
           return (
             <AutomationEntry
               key={automation.id}
               title={automation.name}
-              description={automation.description}
-              badgeIcon={badge ?? iconMap.SettingsIcon}
-              operations={automation.operations.map((op) =>
-                typeof op === "string" ? op : op.operation,
-              )}
-              onClick={() => onRun(automation)}
-              showMenu={true}
-              onEdit={() => onEdit(automation)}
-              onExportAutomation={() => downloadAutomationConfig(automation)}
-              onExportFolderScan={() =>
-                downloadFolderScanningConfig(automation, toolRegistry)
-              }
-              onDelete={() => onDelete(automation)}
+              badgeIcon={automation.icon}
+              onClick={() => onOpenSuggested(config)}
+              actions={suggestedActions(config)}
+              description={config.description}
+              operations={automation.operations.map((op) => op.operation)}
               toolRegistry={toolRegistry}
             />
           );
         })}
-        <Divider pb="sm" />
-
-        {activityChains.length > 0 && (
-          <div>
-            <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
-              {t("automate.selection.activity.title", "Frequent workflows")}
-            </Title>
-            <Stack gap="xs">
-              {activityChains.map((chain) => (
-                <AutomationEntry
-                  key={chain.operations.join("-")}
-                  title={activityChainName(chain)}
-                  subtitle={ranByShort(chain)}
-                  description={`${ranBy(chain)} ${t(
-                    "automate.selection.activity.description",
-                    "Save it as an automation and run it with one click.",
-                  )}`}
-                  badgeIcon="activity"
-                  operations={chain.operations}
-                  onClick={() =>
-                    onCreateFromActivity(activityChainConfig(chain))
-                  }
-                  toolRegistry={toolRegistry}
-                />
-              ))}
-            </Stack>
-            <Divider pb="sm" mt="xs" />
-          </div>
-        )}
-
-        {/* Suggested Automations */}
-        <div>
-          <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
-            {t("automate.selection.suggested.title", "Suggested")}
-          </Title>
-          <Stack gap="xs">
-            {suggestedAutomations.map((automation) => (
-              <AutomationEntry
-                key={automation.id}
-                title={automation.name}
-                description={automation.description}
-                badgeIcon={automation.icon}
-                operations={automation.operations.map((op) => op.operation)}
-                // Suggested automations carry a component icon for display; the
-                // run path is typed for saved configs, which store an icon by
-                // name, so convert it to keep the icon if the run is saved.
-                onClick={() =>
-                  onRun({
-                    ...automation,
-                    icon: iconKeyForSuggestedAutomation(automation.id),
-                  })
-                }
-                showMenu={true}
-                onCopy={() => onCopyFromSuggested(automation)}
-                toolRegistry={toolRegistry}
-              />
-            ))}
-          </Stack>
-        </div>
-      </Stack>
+      </section>
 
       <AutomationImportModal
         opened={importModalOpen}
@@ -243,6 +236,6 @@ export default function AutomationSelection({
         onCancel={() => setImportModalOpen(false)}
         onImport={handleImportSubmit}
       />
-    </div>
+    </>
   );
 }

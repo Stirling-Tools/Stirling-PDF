@@ -12,6 +12,7 @@ import {
 import { zipFileService } from "@editor/services/zipFileService";
 import { processResponse } from "@editor/utils/toolResponseProcessor";
 import { resolveToolErrorMessage } from "@editor/utils/toolErrorHandler";
+import { serverErrorReason } from "@editor/services/errorUtils";
 import { type AutomationConfig } from "@editor/types/automation";
 import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
 
@@ -224,6 +225,18 @@ export const executeToolOperationWithPrefix = async (
 };
 
 /**
+ * What a failed step tells the user: the server's own reason when the response
+ * carries one (the wrapped request error is the `cause`), else the error text.
+ */
+async function stepErrorMessage(error: unknown): Promise<string> {
+  const cause = error instanceof Error ? error.cause : undefined;
+  const reason =
+    (await serverErrorReason(cause)) ?? (await serverErrorReason(error));
+  if (reason) return reason;
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
  * Execute an entire automation sequence
  */
 export const executeAutomationSequence = async (
@@ -269,7 +282,7 @@ export const executeAutomationSequence = async (
       onStepComplete?.(i, resultFiles);
     } catch (error) {
       console.error(`❌ Step ${i + 1} failed:`, error);
-      onStepError?.(i, error instanceof Error ? error.message : String(error));
+      onStepError?.(i, await stepErrorMessage(error));
       throw error;
     }
   }

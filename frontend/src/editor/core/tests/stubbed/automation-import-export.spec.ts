@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 /**
  * Stubbed coverage for the Automate tool's import / export flows.
  *
- * Imports go through a single "Import" entry on the Create New kebab that
+ * Imports go through the "Import" button in the library header, which
  * opens a modal. The modal accepts either a dropped JSON file or pasted
  * text, auto-detects the format (Automate vs Folder Scanning), and only
  * enables the Import button once the input parses cleanly.
@@ -12,7 +12,7 @@ import type { Page } from "@playwright/test";
  * Exports come in two flavours:
  *   - Per-automation kebab: "Export" (native Automate) + "Export for
  *     Folder Scanning" (backend pipeline shape).
- *   - Builder buttons: same two options, side by side.
+ *   - Builder: the same two formats, under an Export menu in its header.
  */
 
 async function clearAutomationStorage(page: Page): Promise<void> {
@@ -32,13 +32,12 @@ async function gotoAutomate(page: Page): Promise<void> {
 }
 
 async function ensureOnSelection(page: Page): Promise<void> {
-  const savedHeader = page.getByText("Saved").first();
-  if (!(await savedHeader.isVisible({ timeout: 2_000 }).catch(() => false))) {
-    await page
-      .getByText(/Automation Selection/i)
-      .first()
-      .click();
-    await expect(savedHeader).toBeVisible({ timeout: 5_000 });
+  const newButton = page.getByRole("button", { name: /^New$/ });
+  const back = page.getByRole("button", { name: /Back to automations/i });
+  await expect(newButton.or(back).first()).toBeVisible({ timeout: 20_000 });
+  if (!(await newButton.isVisible())) {
+    await back.click();
+    await expect(newButton).toBeVisible({ timeout: 5_000 });
   }
 }
 
@@ -105,12 +104,11 @@ function makeFolderScanJson(name: string): string {
   });
 }
 
-/**
- * Open the import modal from the "Create New Automation" kebab.
- */
 async function openImportModal(page: Page): Promise<void> {
-  await openEntryMenu(page, /Create New Automation/i);
-  await page.getByRole("menuitem", { name: /^Import$/ }).click();
+  await page
+    .getByRole("button", { name: /^Import$/ })
+    .first()
+    .click();
   await expect(
     page.getByRole("dialog", { name: /Import automation/i }),
   ).toBeVisible({ timeout: 5_000 });
@@ -122,25 +120,22 @@ test.describe("12. Automation Page — Import / Export", () => {
     await ensureOnSelection(page);
   });
 
-  test.describe("12.1 Create New kebab — single Import option", () => {
-    test("kebab on Create New entry exposes a single Import option", async ({
+  test.describe("12.1 Library header — Import beside New", () => {
+    test("Import is a visible header action, not hidden in a row menu", async ({
       page,
     }) => {
-      await openEntryMenu(page, /Create New Automation/i);
+      await expect(page.getByRole("button", { name: /^Import$/ })).toBeVisible({
+        timeout: 5_000,
+      });
+      await expect(page.getByRole("button", { name: /^New$/ })).toBeVisible();
 
-      await expect(
-        page.getByRole("menuitem", { name: /^Import$/ }),
-      ).toBeVisible({ timeout: 5_000 });
-
-      // Saved-only options should not appear on Create New.
+      await openImportModal(page);
+      // Saved-only options belong to saved rows, not to the import entry.
       await expect(
         page.getByRole("menuitem", { name: /^Edit$/ }),
       ).not.toBeVisible();
       await expect(
         page.getByRole("menuitem", { name: /^Delete$/ }),
-      ).not.toBeVisible();
-      await expect(
-        page.getByRole("menuitem", { name: /^Export$/ }),
       ).not.toBeVisible();
     });
   });

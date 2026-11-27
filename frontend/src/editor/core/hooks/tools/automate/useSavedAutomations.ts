@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { AutomationConfig } from "@editor/services/automationStorage";
-import { SuggestedAutomation } from "@editor/types/automation";
-import { iconKeyForSuggestedAutomation } from "@editor/components/tools/automate/suggestedAutomationIcon";
 
 export interface SavedAutomation extends AutomationConfig {}
 
@@ -54,23 +52,22 @@ export function useSavedAutomations() {
     [refreshAutomations],
   );
 
+  /** Saves a copy of a suggestion; expects the icon already as an iconMap key. */
   const copyFromSuggested = useCallback(
-    async (suggestedAutomation: SuggestedAutomation) => {
+    async (
+      suggestedAutomation: AutomationConfig,
+    ): Promise<AutomationConfig> => {
       try {
         const { automationStorage } =
           await import("@editor/services/automationStorage");
-
-        // Convert suggested automation to saved automation format
-        const savedAutomation = {
+        const saved = await automationStorage.saveAutomation({
           name: suggestedAutomation.name,
           description: suggestedAutomation.description,
-          icon: iconKeyForSuggestedAutomation(suggestedAutomation.id),
+          icon: suggestedAutomation.icon,
           operations: suggestedAutomation.operations,
-        };
-
-        await automationStorage.saveAutomation(savedAutomation);
-        // Refresh the list after saving
+        });
         refreshAutomations();
+        return saved;
       } catch (err) {
         console.error("Error copying suggested automation:", err);
         throw err;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Text,
@@ -6,302 +6,340 @@ import {
   Group,
   TextInput,
   Textarea,
-  Divider,
   Modal,
+  Menu,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
 import { Icon } from "@editor/ui/Icon";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
-import ToolConfigurationModal from "@editor/components/tools/automate/ToolConfigurationModal";
+import type { ToolId } from "@editor/types/toolId";
 import ToolList from "@editor/components/tools/automate/ToolList";
 import IconSelector from "@editor/components/tools/automate/IconSelector";
+import AutomatePanelHeader from "@editor/components/tools/automate/AutomatePanelHeader";
+import { AutomationConfig, AutomationMode } from "@editor/types/automation";
 import {
-  AutomationConfig,
-  AutomationMode,
-  AutomationTool,
-} from "@editor/types/automation";
-import { useAutomationForm } from "@editor/hooks/tools/automate/useAutomationForm";
+  useAutomationForm,
+  type SaveBlocker,
+} from "@editor/hooks/tools/automate/useAutomationForm";
 import {
   downloadAutomationConfig,
   downloadFolderScanningConfig,
 } from "@editor/utils/automationConverter";
+import classes from "@editor/components/tools/automate/Automate.module.css";
 
 interface AutomationCreationProps {
   mode: AutomationMode;
   existingAutomation?: AutomationConfig;
+  /** Leaves the builder without saving; called only once unsaved changes are confirmed lost. */
   onBack: () => void;
+  /** Names where the back arrow goes, when that is not the library. */
+  backLabel?: string;
   onComplete: (automation: AutomationConfig) => void;
   toolRegistry: Partial<ToolRegistry>;
+  /** Opens this step's settings on arrival, e.g. from a failed run's "Edit step". */
+  focusStepIndex?: number;
 }
 
 export default function AutomationCreation({
   mode,
   existingAutomation,
   onBack,
+  backLabel,
   onComplete,
   toolRegistry,
+  focusStepIndex,
 }: AutomationCreationProps) {
   const { t } = useTranslation();
 
-  const {
-    automationName,
-    setAutomationName,
-    automationDescription,
-    setAutomationDescription,
-    automationIcon,
-    setAutomationIcon,
-    selectedTools,
-    removeTool,
-    updateTool,
-    canSaveAutomation,
-    isToolConfigured,
-    getToolName,
-    getToolDefaultParameters,
-  } = useAutomationForm({ mode, existingAutomation, toolRegistry });
+  const form = useAutomationForm({ mode, existingAutomation, toolRegistry });
+  const { steps, saveBlocker } = form;
+  const saveBlockerId = useId();
 
-  const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [configuraingToolIndex, setConfiguringToolIndex] = useState(-1);
+  const [focusStepId] = useState<string | null>(() =>
+    focusStepIndex !== undefined ? (steps[focusStepIndex]?.id ?? null) : null,
+  );
+  const [expandedStepId, setExpandedStepId] = useState<string | null>(
+    focusStepId,
+  );
+  const [pickerStepId, setPickerStepId] = useState<string | null>(null);
   const [unsavedWarningOpen, setUnsavedWarningOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const configureTool = (index: number) => {
-    setConfiguringToolIndex(index);
-    setConfigModalOpen(true);
-  };
-
-  const handleToolConfigSave = (parameters: Record<string, unknown>) => {
-    if (configuraingToolIndex >= 0) {
-      updateTool(configuraingToolIndex, { parameters });
+  const requestLeave = () => {
+    if (form.isDirty) {
+      setUnsavedWarningOpen(true);
+    } else {
+      onBack();
     }
-    setConfigModalOpen(false);
-    setConfiguringToolIndex(-1);
   };
 
-  const handleToolConfigCancel = () => {
-    setConfigModalOpen(false);
-    setConfiguringToolIndex(-1);
+  const toggleSettings = (stepId: string) =>
+    setExpandedStepId((current) => (current === stepId ? null : stepId));
+
+  const handleAddStep = () => {
+    setPickerStepId(form.addStep());
+    setExpandedStepId(null);
   };
 
-  const handleToolAdd = () => {
-    const newTool: AutomationTool = {
-      id: `tool-${Date.now()}`,
-      operation: "",
-      name: t("automate.creation.tools.selectTool", "Select a tool..."),
-      parameters: {},
-    };
-    updateTool(selectedTools.length, newTool);
-  };
-
-  const handleConfirmBack = () => {
-    setUnsavedWarningOpen(false);
-    onBack();
-  };
-
-  const handleCancelBack = () => {
-    setUnsavedWarningOpen(false);
+  const handleSelectTool = (index: number, operation: string) => {
+    form.setStepTool(index, operation);
+    const hasSettings = Boolean(
+      toolRegistry[operation as ToolId]?.automationSettings,
+    );
+    setExpandedStepId(hasSettings ? steps[index].id : null);
   };
 
   const saveAutomation = async () => {
-    if (!canSaveAutomation()) return;
-
-    const automationData = {
-      name: automationName.trim(),
-      description: automationDescription.trim(),
-      icon: automationIcon,
-      operations: selectedTools.map((tool) => ({
-        operation: tool.operation,
-        parameters: tool.parameters || {},
-      })),
-    };
-
+    if (saveBlocker) return;
+    const automationData = form.buildAutomationData();
+    setSaving(true);
+    setSaveError(null);
     try {
       const { automationStorage } =
         await import("@editor/services/automationStorage");
-      let savedAutomation;
-
-      if (mode === AutomationMode.EDIT && existingAutomation) {
-        // For edit mode, check if name has changed
-        const nameChanged = automationName.trim() !== existingAutomation.name;
-
-        if (nameChanged) {
-          // Name changed - create new automation
-          savedAutomation =
-            await automationStorage.saveAutomation(automationData);
-        } else {
-          // Name unchanged - update existing automation
-          const updatedAutomation = {
-            ...existingAutomation,
-            ...automationData,
-            id: existingAutomation.id,
-            createdAt: existingAutomation.createdAt,
-          };
-          savedAutomation =
-            await automationStorage.updateAutomation(updatedAutomation);
-        }
-      } else {
-        // Create mode - always create new automation
-        savedAutomation =
-          await automationStorage.saveAutomation(automationData);
-      }
-
-      onComplete(savedAutomation);
+      const saved =
+        mode === AutomationMode.EDIT && existingAutomation
+          ? await automationStorage.updateAutomation({
+              ...existingAutomation,
+              ...automationData,
+            })
+          : await automationStorage.saveAutomation(automationData);
+      onComplete(saved);
     } catch (error) {
       console.error("Error saving automation:", error);
+      setSaveError(
+        t("automate.creation.saveFailed", "Couldn't save this automation."),
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
-  const currentConfigTool =
-    configuraingToolIndex >= 0 ? selectedTools[configuraingToolIndex] : null;
-
   /**
-   * Build a temporary AutomationConfig from in-progress form state so the
-   * export buttons can run without requiring the user to save first. The
-   * `id` and timestamps are placeholders — the export utilities strip them.
+   * A temporary AutomationConfig from in-progress form state, so export works
+   * without saving first. The export utilities strip `id` and the timestamps.
    */
   const buildExportableAutomation = (): AutomationConfig => ({
     id: existingAutomation?.id || "temp",
-    name: automationName.trim(),
-    description: automationDescription.trim(),
-    icon: automationIcon,
-    operations: selectedTools.map((tool) => ({
-      operation: tool.operation,
-      parameters: tool.parameters || {},
-    })),
+    ...form.buildAutomationData(),
     createdAt: existingAutomation?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
 
+  const blockerText = (blocker: SaveBlocker): string => {
+    switch (blocker.kind) {
+      case "name":
+        return t(
+          "automate.creation.blocker.name",
+          "Name the automation to save it.",
+        );
+      case "noSteps":
+        return t("automate.creation.blocker.noSteps", "Add a step to save.");
+      case "stepNoTool":
+        return t(
+          "automate.creation.blocker.stepNoTool",
+          "Choose a tool for step {{n}}, or remove it.",
+          { n: blocker.index + 1 },
+        );
+      case "stepNeedsConfiguration":
+        return t(
+          "automate.creation.blocker.stepNeedsConfiguration",
+          "Step {{n}} needs configuration before you can save.",
+          {
+            n: blocker.index + 1,
+          },
+        );
+    }
+  };
+
+  const title =
+    mode === AutomationMode.EDIT
+      ? t("automate.creation.editTitle", "Edit automation")
+      : t("automate.creation.createTitle", "New automation");
+
   return (
-    <div>
-      <Stack gap="md">
-        <Group gap="xs" align="flex-end">
-          <Stack gap="xs" style={{ flex: 1 }}>
-            <TextInput
-              placeholder={t(
-                "automate.creation.name.placeholder",
-                "My Automation",
-              )}
-              value={automationName}
-              withAsterisk
-              label={t("automate.creation.name.label", "Automation Name")}
-              onChange={(e) => setAutomationName(e.currentTarget.value)}
-              size="sm"
-            />
-          </Stack>
+    <>
+      <AutomatePanelHeader
+        title={title}
+        onBack={saving ? undefined : requestLeave}
+        backLabel={backLabel}
+        actions={
+          <Menu position="bottom-end" withinPortal>
+            <Menu.Target>
+              <Button
+                variant="tertiary"
+                accent="neutral"
+                size="sm"
+                disabled={saveBlocker !== null}
+                rightSection={<Icon name="chevron-down" size={14} />}
+              >
+                {t("automate.creation.export", "Export")}
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<Icon name="download" size={16} />}
+                onClick={() =>
+                  downloadAutomationConfig(buildExportableAutomation())
+                }
+              >
+                {t("automate.creation.exportAutomate", "Automate JSON")}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<Icon name="download" size={16} />}
+                onClick={() =>
+                  downloadFolderScanningConfig(
+                    buildExportableAutomation(),
+                    toolRegistry,
+                  )
+                }
+              >
+                {t(
+                  "automate.creation.exportFolderScanning",
+                  "Folder Scanning JSON",
+                )}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        }
+      />
 
-          <IconSelector
-            value={automationIcon || "SettingsIcon"}
-            onChange={setAutomationIcon}
-            size="sm"
-          />
-        </Group>
-
-        <Textarea
-          placeholder={t(
-            "automate.creation.description.placeholder",
-            "Describe what this automation does...",
-          )}
-          value={automationDescription}
-          label={t("automate.creation.description.label", "Description")}
-          onChange={(e) => setAutomationDescription(e.currentTarget.value)}
+      <div className={classes.nameRow}>
+        <IconSelector
+          value={form.automationIcon || "SettingsIcon"}
+          onChange={form.setAutomationIcon}
+          size="md"
+        />
+        <TextInput
+          label={t("automate.creation.name.label", "Name")}
+          placeholder={t("automate.creation.name.placeholder", "My automation")}
+          value={form.automationName}
+          withAsterisk
+          onChange={(e) => form.setAutomationName(e.currentTarget.value)}
           size="sm"
-          rows={3}
+          style={{ flex: 1 }}
         />
+      </div>
 
-        {/* Selected Tools List */}
-        {selectedTools.length > 0 && (
-          <ToolList
-            tools={selectedTools}
-            toolRegistry={toolRegistry}
-            onToolUpdate={updateTool}
-            onToolRemove={removeTool}
-            onToolConfigure={configureTool}
-            onToolAdd={handleToolAdd}
-            getToolName={getToolName}
-            getToolDefaultParameters={getToolDefaultParameters}
-            isToolConfigured={isToolConfigured}
-          />
+      <Textarea
+        label={t(
+          "automate.creation.description.label",
+          "Description (optional)",
         )}
+        placeholder={t(
+          "automate.creation.description.placeholder",
+          "What does this automation do?",
+        )}
+        value={form.automationDescription}
+        onChange={(e) => form.setAutomationDescription(e.currentTarget.value)}
+        size="sm"
+        autosize
+        minRows={2}
+        maxRows={5}
+      />
 
-        <Divider />
+      <ToolList
+        initialFocusStepId={focusStepId}
+        steps={steps}
+        toolRegistry={toolRegistry}
+        expandedStepId={expandedStepId}
+        pickerStepId={pickerStepId}
+        isStepReady={form.stepReady}
+        onToggleSettings={toggleSettings}
+        onConfirmSettings={form.markStepConfigured}
+        onSelectTool={handleSelectTool}
+        onParameterChange={form.setStepParameter}
+        onChangeTool={(index) => {
+          form.clearStepTool(index);
+          setPickerStepId(steps[index].id);
+        }}
+        onRemove={form.removeStep}
+        onMove={form.moveStep}
+        onAdd={handleAddStep}
+      />
 
-        <Stack gap="sm">
-          <Button
-            leftSection={<Icon name="check" />}
-            onClick={saveAutomation}
-            disabled={!canSaveAutomation()}
-            fullWidth
-          >
-            {t("automate.creation.save", "Save Automation")}
-          </Button>
-
-          <Group gap="sm" grow>
-            <Button
-              variant="secondary"
-              leftSection={<Icon name="download" />}
-              onClick={() => {
-                downloadAutomationConfig(buildExportableAutomation());
-              }}
-              disabled={!canSaveAutomation()}
+      <div className={classes.footer}>
+        {/* What blocks Save now outranks an earlier failed save. */}
+        {saveError && !saveBlocker ? (
+          <Text size="xs" role="alert" c="var(--c-danger)">
+            {saveError}
+          </Text>
+        ) : (
+          saveBlocker && (
+            <p
+              id={saveBlockerId}
+              className={classes.hint}
+              data-testid="automation-save-blocker"
             >
-              {t("automate.creation.export", "Export")}
-            </Button>
-            <Button
-              variant="secondary"
-              leftSection={<Icon name="download" />}
-              onClick={() => {
-                downloadFolderScanningConfig(
-                  buildExportableAutomation(),
-                  toolRegistry,
-                );
-              }}
-              disabled={!canSaveAutomation()}
-            >
-              {t(
-                "automate.creation.exportForFolderScanning",
-                "Export for Folder Scanning",
+              {saveBlocker.kind === "stepNeedsConfiguration" ? (
+                <button
+                  type="button"
+                  className={classes.inlineLink}
+                  onClick={() => setExpandedStepId(steps[saveBlocker.index].id)}
+                >
+                  {blockerText(saveBlocker)}
+                </button>
+              ) : (
+                blockerText(saveBlocker)
               )}
-            </Button>
-          </Group>
-        </Stack>
-      </Stack>
+            </p>
+          )
+        )}
+        <div className={classes.footerButtons}>
+          <Button
+            variant="secondary"
+            accent="neutral"
+            onClick={requestLeave}
+            disabled={saving}
+          >
+            {t("automate.creation.cancel", "Cancel")}
+          </Button>
+          <Button
+            onClick={saveAutomation}
+            disabled={saveBlocker !== null}
+            aria-describedby={saveBlocker ? saveBlockerId : undefined}
+            loading={saving}
+          >
+            {t("automate.creation.save", "Save")}
+          </Button>
+        </div>
+      </div>
 
-      {/* Tool Configuration Modal */}
-      {currentConfigTool && (
-        <ToolConfigurationModal
-          opened={configModalOpen}
-          tool={currentConfigTool}
-          onSave={handleToolConfigSave}
-          onCancel={handleToolConfigCancel}
-          toolRegistry={toolRegistry}
-        />
-      )}
-
-      {/* Unsaved Changes Warning Modal */}
       <Modal
         opened={unsavedWarningOpen}
-        onClose={handleCancelBack}
-        title={t("automate.creation.unsavedChanges.title", "Unsaved Changes")}
+        onClose={() => setUnsavedWarningOpen(false)}
+        title={t("automate.creation.unsavedChanges.title", "Discard changes?")}
         centered
         zIndex={Z_INDEX_AUTOMATE_MODAL}
       >
         <Stack gap="md">
-          <Text>
+          <Text size="sm">
             {t(
               "automate.creation.unsavedChanges.message",
-              "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
+              "Your changes to this automation haven't been saved.",
             )}
           </Text>
-          <Group gap="md" justify="flex-end">
-            <Button variant="secondary" onClick={handleCancelBack}>
-              {t("automate.creation.unsavedChanges.cancel", "Cancel")}
+          <Group gap="sm" justify="flex-end">
+            <Button
+              variant="secondary"
+              onClick={() => setUnsavedWarningOpen(false)}
+            >
+              {t("automate.creation.unsavedChanges.cancel", "Keep editing")}
             </Button>
-            <Button accent="danger" onClick={handleConfirmBack}>
-              {t("automate.creation.unsavedChanges.confirm", "Go Back")}
+            <Button
+              accent="danger"
+              onClick={() => {
+                setUnsavedWarningOpen(false);
+                onBack();
+              }}
+            >
+              {t("automate.creation.unsavedChanges.confirm", "Discard")}
             </Button>
           </Group>
         </Stack>
       </Modal>
-    </div>
+    </>
   );
 }

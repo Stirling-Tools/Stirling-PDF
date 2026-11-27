@@ -1,0 +1,639 @@
+/* One visual language for the three Automate modes (library, workspace,
+   builder): the same header, the same row, the same step card. Everything is
+   single-column and truncates rather than wraps, so it holds at any panel width. */
+
+.surface {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: var(--mantine-spacing-sm);
+  min-height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  padding: 0 0 0.5rem 0.5rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+/* With a back arrow the arrow's own hit area supplies the inset. */
+.header:has(> button:first-child) {
+  padding-left: 0.125rem;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.headerTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.headerInfo {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0.125rem;
+  border: 0;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: var(--c-text-subtle);
+  cursor: help;
+}
+
+.headerInfo:hover {
+  color: var(--c-text);
+}
+
+.headerInfo:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+
+.headerTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Focused only by script, to keep a screen reader's place after a move; it is
+   not a control, so it draws no focus ring. */
+.headerTitle:focus {
+  outline: none;
+}
+
+.headerSubtitle {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A short fixed title (the library's) keeps its full width; the actions wrap
+   under it before it would truncate. */
+.header[data-fixed-title] {
+  flex-wrap: wrap;
+  row-gap: 0.375rem;
+}
+
+.header[data-fixed-title] .headerText {
+  flex: 1 0 auto;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.sectionLabel {
+  margin: 0 0 0.25rem;
+  padding-inline: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+
+.sectionLabel[data-flush] {
+  padding-inline: 0;
+}
+
+.row {
+  position: relative;
+}
+
+.rowButton {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.375rem 2.25rem 0.375rem 0.5rem;
+  border: 0;
+  border-radius: var(--mantine-radius-md);
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowButton:hover,
+.row:focus-within .rowButton,
+.row[data-menu-open] .rowButton {
+  background: var(--c-hover);
+}
+
+.rowButton:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
+}
+
+.iconTile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--mantine-radius-md);
+  background: var(--c-input-bg);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-muted);
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowTooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rowTooltipText {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.rowTooltipChain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.rowTooltipStep {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.rowTooltipArrow {
+  color: var(--c-text-muted);
+}
+
+.rowTooltipChip {
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg, var(--c-primary));
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Chevron at rest says "opens"; on hover or focus the same slot becomes the
+   menu. The slot sits over the row button, so only the menu takes clicks. A
+   touch screen cannot hover, so there the menu is always shown in place of the
+   chevron and a tap never lands on a control it cannot see. */
+.rowTrailing {
+  position: absolute;
+  top: 50%;
+  right: 0.25rem;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.rowTrailing > * {
+  grid-area: 1 / 1;
+}
+
+/* Kept on their own layers: a fade that promotes a layer under an open row
+   menu re-layers the menu, which redraws it at a new subpixel offset and makes
+   its icons shimmer while other rows are hovered. */
+.rowChevron {
+  color: var(--c-text-subtle);
+  transition: opacity 120ms ease;
+  will-change: opacity;
+}
+
+.rowMenu {
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  will-change: opacity;
+}
+
+.row:hover .rowMenu,
+.row:focus-within .rowMenu,
+.row[data-menu-open] .rowMenu {
+  opacity: 1;
+}
+
+.row:hover .rowChevron,
+.row:focus-within .rowChevron,
+.row[data-menu-open] .rowChevron {
+  opacity: 0;
+}
+
+@media (hover: none) {
+  .rowMenu {
+    opacity: 1;
+  }
+
+  .rowChevron {
+    opacity: 0;
+  }
+}
+
+.stepList {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A step scrolled into view stops this far above the bottom edge, so the
+   sticky footer never sits over its remove button with Cancel underneath. */
+.stepList > *,
+.stepPicker,
+.addStep {
+  scroll-margin-bottom: 7rem;
+}
+
+.stepConnector {
+  width: 1px;
+  height: 0.5rem;
+  margin-left: calc(0.625rem + 0.6875rem);
+  background: var(--c-border);
+}
+
+.stepCard {
+  border: 1px solid var(--c-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--c-input-bg);
+}
+
+.stepCard[data-expanded] {
+  border-color: var(--c-border-strong);
+}
+
+.stepCard[data-status="error"] {
+  border-color: var(--c-danger);
+}
+
+.stepCard[data-needs-settings]:not([data-expanded]) {
+  border-color: var(--c-warning);
+}
+
+.stepCard[data-needs-settings] .stepIndex {
+  border-color: var(--c-warning);
+  color: var(--c-warning-text);
+}
+
+.stepCard[data-clickable] .stepHead {
+  cursor: pointer;
+}
+
+.stepCard[data-clickable]:has(.stepHead:hover) {
+  border-color: var(--c-primary);
+}
+
+.stepHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.375rem 0.25rem 0.375rem 0.625rem;
+}
+
+.stepIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  border: 1px solid var(--c-border-strong);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  background: var(--c-input-bg);
+}
+
+.stepIndex[data-status="running"] {
+  border-color: var(--c-primary);
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.stepIndex[data-status="completed"] {
+  border-color: var(--c-success);
+  background: var(--c-success-subtle);
+  color: var(--c-success);
+}
+
+.stepIndex[data-status="error"] {
+  border-color: var(--c-danger);
+  background: var(--c-danger-subtle);
+  color: var(--c-danger);
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.stepTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepMeta {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepActions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* The first step cannot move up nor the last down: fade the glyph rather than
+   paint a disabled grey block. */
+.stepMove:disabled,
+.stepMove[data-disabled] {
+  background: transparent;
+  opacity: 0.4;
+}
+
+/* Reordering is occasional, so the arrows wait until the pointer or keyboard
+   focus reaches the step and leave the summary its full width until then.
+   Removed, not transparent, so nothing invisible sits there to be clicked.
+   Touch screens cannot hover and always show them. */
+@media (hover: hover) {
+  .stepCard:not(:hover, :focus-within, [data-revealing]) .stepMove {
+    display: none;
+  }
+}
+
+.stepPicker {
+  padding: 0 0.5rem 0.5rem;
+  position: relative;
+}
+
+.stepSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.stepError {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem 0.625rem;
+  border-top: 1px solid var(--c-border-subtle);
+  background: var(--c-danger-subtle);
+  border-radius: 0 0 var(--mantine-radius-md) var(--mantine-radius-md);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+.needsConfiguration {
+  color: var(--c-warning-text);
+  font-weight: 500;
+}
+
+.addStep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  min-height: 2.5rem;
+  margin-top: 0.5rem;
+  border: 1px dashed var(--c-border-strong);
+  border-radius: var(--mantine-radius-md);
+  background: transparent;
+  color: var(--c-text-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.addStep:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.addStep:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.fieldLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--c-text);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--c-text-muted);
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--mantine-radius-md);
+  background: var(--c-success-subtle);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--c-text);
+}
+
+.nameRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.inlineLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.inlineLink:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Pinned like the shared tool flow's execute footer: a long step list must not
+   push Save below the fold. Bleeds across the surface padding so content cannot
+   scroll through the gutters beside the buttons. */
+.footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: auto;
+  margin-inline: calc(var(--mantine-spacing-sm) * -1);
+  padding: 0.625rem var(--mantine-spacing-sm);
+  border-top: 1px solid var(--c-border-subtle);
+  background: var(--c-surface, var(--mantine-color-body));
+  box-shadow: 0 var(--mantine-spacing-sm) 0 0
+    var(--c-surface, var(--mantine-color-body));
+}
+
+.footerButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.footerButtons > * {
+  flex: 1;
+}
+
+.summaryActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.runOnFolder {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.runOnFolder:hover {
+  background: var(--c-surface-raised);
+  border-color: var(--c-border-strong);
+}
+
+.runOnFolder:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.runOnFolderText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.runOnFolderTitle {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.runOnFolderHint {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+
+.stepsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+}
+
+.stepErrorActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.needsFiles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--c-border);
+  border-radius: var(--mantine-radius-md);
+}
+
+.needsFilesTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--c-text);
+}
+
+.sectionCount {
+  margin-inline-start: 0.375rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+}

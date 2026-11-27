@@ -2363,62 +2363,63 @@ title_one = "{{count}} fillable field added"
 title_other = "{{count}} fillable fields added"
 
 [automate]
-copyToSaved = "Copy to Saved"
+about = "About this automation"
+back = "Back to automations"
+backTo = "Back to {{name}}"
+copyName = "{{name}} (copy)"
+customize = "Customize"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+duplicate = "Duplicate"
 export = "Export"
 exportForFolderScanning = "Export for Folder Scanning"
 import = "Import"
 importPartialSuccess_one = "Imported with {{count}} unmapped operation: {{ops}}"
 importPartialSuccess_other = "Imported with {{count}} unmapped operations: {{ops}}"
 importSuccess = "Imported automation: {{name}}"
-invalidStep = "Invalid step"
-reviewTitle = "Automation Results"
 tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automate"
 
-[automate.config]
-cancel = "Cancel"
-description = "Configure the settings for this tool. These settings will be applied when the automation runs."
-noSettings = "This tool does not have configurable settings."
-save = "Save Configuration"
-title = "Configure {{toolName}}"
-
 [automate.creation]
-createTitle = "Create Automation"
-editTitle = "Edit Automation"
+cancel = "Cancel"
+createTitle = "New automation"
+editTitle = "Edit automation"
 export = "Export"
-exportForFolderScanning = "Export for Folder Scanning"
-intro = "Automations run tools sequentially. To get started, add tools in the order you want them to run."
-save = "Save Automation"
+exportAutomate = "Automate JSON"
+exportFolderScanning = "Folder Scanning JSON"
+save = "Save"
+saveFailed = "Couldn't save this automation."
+
+[automate.creation.blocker]
+name = "Name the automation to save it."
+noSteps = "Add a step to save."
+stepNeedsConfiguration = "Step {{n}} needs configuration before you can save."
+stepNoTool = "Choose a tool for step {{n}}, or remove it."
 
 [automate.creation.description]
-label = "Description"
-placeholder = "Describe what this automation does..."
+label = "Description (optional)"
+placeholder = "What does this automation do?"
 
 [automate.creation.icon]
-label = "Icon"
+choose = "Choose icon"
 
 [automate.creation.name]
-label = "Automation Name"
-placeholder = "My Automation"
+label = "Name"
+placeholder = "My automation"
 
 [automate.creation.tools]
 add = "Add a tool..."
-addTool = "Add Tool"
-configure = "Configure tool"
-notConfigured = "! Not Configured"
-remove = "Remove tool"
-selected = "Selected Tools"
-selectTool = "Select a tool..."
-
-[automate.creation.tooltip.header]
-title = "About Automations"
 
 [automate.creation.unsavedChanges]
+cancel = "Keep editing"
+confirm = "Discard"
+message = "Your changes to this automation haven't been saved."
+title = "Discard changes?"
+
+[automate.delete]
 cancel = "Cancel"
-confirm = "Go Back"
-message = "You have unsaved changes. Are you sure you want to go back? All changes will be lost."
-title = "Unsaved Changes"
+confirm = "Delete"
+message = "“{{name}}” will be removed from your saved automations. This can't be undone."
+title = "Delete automation?"
 
 [automate.entryMenu]
 label = "Open menu for {{title}}"
@@ -2440,19 +2441,32 @@ pastePlaceholder = "Paste your automation JSON here…"
 title = "Import automation"
 unresolved = "Unmapped: {{ops}}"
 
-[automate.run]
-progress = "Progress: {{current}}/{{total}}"
-title = "Run Automation"
+[automate.library]
+new = "New"
+title = "Automations"
 
-[automate.selection]
-title = "Automation Selection"
+[automate.run]
+allDone_one = "{{count}} step done"
+allDone_other = "All {{count}} steps done"
+done = "Done"
+editStep = "Edit step"
+needsFile = "Add a PDF to run this"
+progress = "Running step {{current}} of {{total}}…"
+progressStep = "Running step {{current}} of {{total}}: {{tool}}"
+results = "Results"
+retry = "Retry"
+runAgain = "Run again"
+runOn_one = "Run on {{count}} file"
+runOn_other = "Run on {{count}} files"
+runOnFolderHint = "Make it a pipeline in the PDF Processor"
+runOnFolderTitle = "Run this on every new file"
+starting = "Starting…"
+stepDone = "Step {{current}} of {{total}} done: {{tool}}"
+upload = "Upload"
 
 [automate.selection.activity]
 description = "Save it as an automation and run it with one click."
 title = "Frequent workflows"
-
-[automate.selection.createNew]
-title = "Create New Automation"
 
 [automate.selection.saved]
 title = "Saved"
@@ -2461,14 +2475,33 @@ title = "Saved"
 title = "Suggested"
 
 [automate.sequence]
-finish = "Finish"
 needsConfiguring = "Edit this automation to finish configuring its steps."
-run = "Run Automation"
-running = "Running Automation..."
+run = "Run automation"
 signInToRun = "Sign in to run automations."
 steps_one = "{{count}} step"
 steps_other = "{{count}} steps"
-unnamed = "Unnamed Automation"
+unnamed = "Unnamed automation"
+
+[automate.steps]
+add = "Add step"
+changeTool = "Change tool"
+chooseTool = "Choose a tool"
+configured = "Configured"
+done = "Done"
+label = "Steps"
+menu = "More for step {{n}}"
+moveDown = "Move down"
+moveUp = "Move up"
+needsConfiguration = "Needs configuration"
+position = "Step {{n}}:"
+remove = "Remove step"
+searchTools = "Search tools…"
+settings = "Step settings"
+
+[automate.steps.status]
+completed = "Done"
+error = "Failed"
+running = "Running"
 
 [automation.suggested]
 emailPreparation = "Email Preparation"

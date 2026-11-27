@@ -3,10 +3,6 @@
  */
 
 export const AUTOMATION_CONSTANTS = {
-  // Default values
-  DEFAULT_TOOL_COUNT: 2,
-  MIN_TOOL_COUNT: 2,
-
   // File prefixes
   FILE_PREFIX: "automated_",
   RESPONSE_ZIP_PREFIX: "response_",

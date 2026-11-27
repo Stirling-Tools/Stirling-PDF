@@ -1,352 +1,118 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Group, Text, Menu, Box } from "@mantine/core";
-import { Button as SharedButton } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
-import { ToolIcon } from "@editor/components/shared/ToolIcon";
-import { ToolRegistry } from "@editor/data/toolsTaxonomy";
-import { ToolId } from "@editor/types/toolId";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { toolDisplayName } from "@editor/components/tools/automate/stepSummary";
+import AutomationActionsMenu, {
+  type AutomationAction,
+} from "@editor/components/tools/automate/AutomationActionsMenu";
+import classes from "@editor/components/tools/automate/Automate.module.css";
 
 interface AutomationEntryProps {
-  /** Optional title for the automation (usually for custom ones) */
-  title?: string;
-  /** Optional description for tooltip */
-  description?: string;
-  subtitle?: string;
-  /** MUI Icon component for the badge */
+  title: string;
   badgeIcon?: IconName;
-  /** Array of tool operation names in the workflow */
-  operations: string[];
-  /** Click handler */
   onClick: () => void;
-  /** Whether to keep the icon at normal color (for special cases like "Add New") */
-  keepIconColor?: boolean;
-  /** Show menu for saved/suggested automations */
-  showMenu?: boolean;
-  /** Edit handler */
-  onEdit?: () => void;
-  /** Delete handler */
-  onDelete?: () => void;
-  /** Copy handler (for suggested automations) */
-  onCopy?: () => void;
-  /** Export handler — folder scanning JSON */
-  onExportFolderScan?: () => void;
-  /** Export handler — native Automate JSON (renders as just "Export") */
-  onExportAutomation?: () => void;
-  /** Import handler — opens the import modal (used on "Create New" entry) */
-  onImport?: () => void;
-  /** Tool registry to resolve operation names */
+  actions?: AutomationAction[];
+  /** Shown with the steps in the hover tooltip. */
+  description?: string;
+  /** Operation ids, drawn as the step chain in the hover tooltip. */
+  operations?: string[];
   toolRegistry?: Partial<ToolRegistry>;
 }
 
+/**
+ * A library row: icon and name, with the description and step chain in a
+ * tooltip to the left on hover. The trailing chevron becomes the actions menu
+ * on hover or focus.
+ */
 export default function AutomationEntry({
   title,
-  description,
-  subtitle,
-  badgeIcon,
-  operations,
+  badgeIcon = "settings",
   onClick,
-  keepIconColor = false,
-  showMenu = false,
-  onEdit,
-  onDelete,
-  onCopy,
-  onExportFolderScan,
-  onExportAutomation,
-  onImport,
-  toolRegistry,
+  actions = [],
+  description,
+  operations = [],
+  toolRegistry = {},
 }: AutomationEntryProps) {
   const { t } = useTranslation();
-  const [isHovered, setIsHovered] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const shouldShowMenu = isHovered || isMenuOpen;
-
-  // Helper function to resolve tool display names
-  const getToolDisplayName = (operation: string): string => {
-    const entry = toolRegistry?.[operation as ToolId];
-    if (entry?.name) {
-      return entry.name;
-    }
-    // Fallback to translation or operation key
-    return t(`${operation}.title`, operation);
-  };
-
-  // Create tooltip content with description and tool chain
-  const createTooltipContent = () => {
-    // Show tooltip if there's a description OR if there are operations to show in the chain
-    if (!description && operations.length === 0) return null;
-
-    const toolChain = operations.map((op, index) => (
-      <span
-        key={`${op}-${index}`}
-        data-testid="automation-chain-step"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "4px",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {index > 0 && (
-          <Text component="span" size="sm" mx={4}>
-            →
-          </Text>
-        )}
-        <Text
-          component="span"
-          size="sm"
-          fw={600}
-          style={{
-            color: "var(--mantine-primary-color-filled)",
-            background: "var(--mantine-primary-color-light)",
-            padding: "2px 6px",
-            borderRadius: "4px",
-            fontSize: "0.75rem",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {getToolDisplayName(op)}
-        </Text>
+  const rowButton = (
+    <button type="button" className={classes.rowButton} onClick={onClick}>
+      <span className={classes.iconTile} aria-hidden>
+        <Icon name={badgeIcon} size={16} />
       </span>
-    ));
+      <span className={classes.rowText}>
+        <span className={classes.rowTitle}>{title}</span>
+      </span>
+    </button>
+  );
 
-    return (
-      <div>
-        {description && (
-          <Text
-            size="sm"
-            mb={8}
-            style={{ whiteSpace: "normal", wordWrap: "break-word" }}
-          >
-            {description}
-          </Text>
-        )}
-        {operations.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "4px",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {toolChain}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const hasTooltip = Boolean(description) || operations.length > 0;
 
-  const buttonContent = (
-    <>
-      {badgeIcon && (
-        <ToolIcon
-          icon={<Icon name={badgeIcon} />}
-          {...(keepIconColor && {
-            color: "var(--mantine-primary-color-filled)",
+  return (
+    <div className={classes.row} data-menu-open={menuOpen || undefined}>
+      {hasTooltip && !menuOpen ? (
+        <Tooltip
+          content={
+            <div className={classes.rowTooltip}>
+              {description && (
+                <p className={classes.rowTooltipText}>{description}</p>
+              )}
+              {operations.length > 0 && (
+                <div className={classes.rowTooltipChain}>
+                  {operations.map((op, index) => (
+                    <span
+                      key={`${op}-${index}`}
+                      className={classes.rowTooltipStep}
+                      data-testid="automation-chain-step"
+                    >
+                      {index > 0 && (
+                        <Icon
+                          name="arrow-right"
+                          size={14}
+                          className={classes.rowTooltipArrow}
+                        />
+                      )}
+                      <span className={classes.rowTooltipChip}>
+                        {toolDisplayName(t, toolRegistry, op)}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          }
+          position="left"
+          sidebarTooltip={false}
+          arrow
+          delay={500}
+          maxWidth={440}
+        >
+          {rowButton}
+        </Tooltip>
+      ) : (
+        rowButton
+      )}
+      <span className={classes.rowTrailing}>
+        <Icon
+          name="chevron-right"
+          size={16}
+          className={actions.length > 0 ? classes.rowChevron : undefined}
+          style={
+            actions.length > 0 ? undefined : { color: "var(--c-text-subtle)" }
+          }
+        />
+        <AutomationActionsMenu
+          actions={actions}
+          className={classes.rowMenu}
+          onOpenChange={setMenuOpen}
+          label={t("automate.entryMenu.label", "Open menu for {{title}}", {
+            title,
           })}
         />
-      )}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          flex: 1,
-          minWidth: 0,
-          overflow: subtitle ? "hidden" : "visible",
-        }}
-      >
-        {title && subtitle ? (
-          <>
-            <Text
-              fz="inherit"
-              lineClamp={2}
-              w="100%"
-              style={{ textAlign: "left" }}
-            >
-              {title}
-            </Text>
-            <Text
-              fz="0.72rem"
-              c="dimmed"
-              truncate="end"
-              w="100%"
-              style={{ textAlign: "left" }}
-            >
-              {subtitle}
-            </Text>
-          </>
-        ) : title ? (
-          // Custom automation with title
-          <Text fz="inherit" style={{ textAlign: "left" }}>
-            {title}
-          </Text>
-        ) : (
-          // Suggested automation showing tool chain
-          <Group gap="xs" justify="flex-start" style={{ flex: 1 }}>
-            {operations.map((op, index) => (
-              <React.Fragment key={`${op}-${index}`}>
-                <Text size="sm">{getToolDisplayName(op)}</Text>
-                {index < operations.length - 1 && (
-                  <Text size="sm" c="dimmed">
-                    →
-                  </Text>
-                )}
-              </React.Fragment>
-            ))}
-          </Group>
-        )}
-      </div>
-    </>
-  );
-
-  const wrapperContent = (
-    <Box
-      style={{ position: "relative", width: "100%" }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <SharedButton
-        variant="tertiary"
-        onClick={onClick}
-        size="sm"
-        fullWidth
-        justify="start"
-        className="tool-button"
-        style={{
-          borderRadius: 0,
-          color: "var(--c-text)",
-          overflow: "visible",
-          backgroundColor: shouldShowMenu ? "var(--c-hover)" : undefined,
-        }}
-      >
-        {buttonContent}
-      </SharedButton>
-      {showMenu && (
-        <Menu
-          position="bottom-end"
-          withinPortal
-          onOpen={() => setIsMenuOpen(true)}
-          onClose={() => setIsMenuOpen(false)}
-        >
-          <Menu.Target>
-            <SharedButton
-              leftSection={<Icon name="ellipsis-vertical" size={20} />}
-              variant="tertiary"
-              accent="neutral"
-              size="md"
-              aria-label={t(
-                "automate.entryMenu.label",
-                "Open menu for {{title}}",
-                { title: title || operations.join(" → ") },
-              )}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: "absolute",
-                right: "0.5rem",
-                top: "50%",
-                transform: "translateY(-50%)",
-                zIndex: 1,
-                opacity: shouldShowMenu ? 1 : 0,
-                transition: "opacity 0.2s ease",
-                pointerEvents: shouldShowMenu ? "auto" : "none",
-              }}
-            />
-          </Menu.Target>
-
-          <Menu.Dropdown>
-            {onImport && (
-              <Menu.Item
-                leftSection={<Icon name="file-up" size={16} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onImport();
-                }}
-              >
-                {t("automate.import", "Import")}
-              </Menu.Item>
-            )}
-            {onCopy && (
-              <Menu.Item
-                leftSection={<Icon name="copy" size={16} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCopy();
-                }}
-              >
-                {t("automate.copyToSaved", "Copy to Saved")}
-              </Menu.Item>
-            )}
-            {onEdit && (
-              <Menu.Item
-                leftSection={<Icon name="pencil" size={16} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit();
-                }}
-              >
-                {t("edit", "Edit")}
-              </Menu.Item>
-            )}
-            {onExportAutomation && (
-              <Menu.Item
-                leftSection={<Icon name="download" size={16} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onExportAutomation();
-                }}
-              >
-                {t("automate.export", "Export")}
-              </Menu.Item>
-            )}
-            {onExportFolderScan && (
-              <Menu.Item
-                leftSection={<Icon name="download" size={16} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onExportFolderScan();
-                }}
-              >
-                {t(
-                  "automate.exportForFolderScanning",
-                  "Export for Folder Scanning",
-                )}
-              </Menu.Item>
-            )}
-            {onDelete && (
-              <Menu.Item
-                leftSection={<Icon name="trash" size={16} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-              >
-                {t("delete", "Delete")}
-              </Menu.Item>
-            )}
-          </Menu.Dropdown>
-        </Menu>
-      )}
-    </Box>
-  );
-
-  // Show tooltip if there's a description OR operations to display
-  const shouldShowTooltip = description || operations.length > 0;
-
-  return shouldShowTooltip ? (
-    <Tooltip
-      content={createTooltipContent()}
-      position="left"
-      arrow={true}
-      delay={500}
-    >
-      {wrapperContent}
-    </Tooltip>
-  ) : (
-    wrapperContent
+      </span>
+    </div>
   );
 }

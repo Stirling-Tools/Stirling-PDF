@@ -1,12 +1,13 @@
 import { useEffect, useSyncExternalStore } from "react";
 
-export type ToolPanelSize = "sm" | "md" | "lg";
+export type ToolPanelSize = "sm" | "md" | "lg" | "xl";
 
-/** md and lg are sm grown by 25% and 50%, rounded to whole rems. */
+/** md, lg and xl are sm grown by 25%, 50% and 75%, rounded to whole rems. */
 export const TOOL_PANEL_WIDTHS: Record<ToolPanelSize, string> = {
   sm: "18.5rem",
   md: "23rem",
   lg: "28rem",
+  xl: "32rem",
 };
 
 let currentSize: ToolPanelSize = "sm";

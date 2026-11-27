@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Text, Stack, SimpleGrid, Tooltip, Popover } from "@mantine/core";
+import { Box, Stack, SimpleGrid, Tooltip, Popover } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import {
@@ -8,6 +8,13 @@ import {
   iconOptions,
 } from "@editor/components/tools/automate/iconMap";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+
+// Sits beside the name input, so it takes a field's surface and border rather than the button's.
+const FIELD_LOOK = {
+  "--ai-bg": "var(--c-input-bg)",
+  "--ai-hover": "var(--c-hover)",
+  "--ai-bd": "1px solid var(--c-border)",
+} as CSSProperties;
 
 interface IconSelectorProps {
   value?: string;
@@ -33,106 +40,88 @@ export default function IconSelector({
   const iconSize = size === "sm" ? 16 : size === "md" ? 18 : 20;
 
   return (
-    <Stack gap="1px">
-      <Text
-        size="sm"
-        fw={600}
-        style={{ color: "var(--mantine-color-primary)" }}
-      >
-        {t("automate.creation.icon.label", "Icon")}
-      </Text>
+    <Popover
+      opened={isDropdownOpen}
+      onClose={() => setIsDropdownOpen(false)}
+      onDismiss={() => setIsDropdownOpen(false)}
+      position="bottom-start"
+      withArrow
+      trapFocus
+      returnFocus
+      withinPortal
+      zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
+    >
+      <Popover.Target>
+        <ActionIcon
+          variant="secondary"
+          accent="neutral"
+          size={size}
+          aria-label={t("automate.creation.icon.choose", "Choose icon")}
+          title={t("automate.creation.icon.choose", "Choose icon")}
+          aria-haspopup="dialog"
+          aria-expanded={isDropdownOpen}
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          style={FIELD_LOOK}
+        >
+          <Icon name={selectedIcon} size={iconSize} />
+        </ActionIcon>
+      </Popover.Target>
 
-      <Popover
-        opened={isDropdownOpen}
-        onClose={() => setIsDropdownOpen(false)}
-        onDismiss={() => setIsDropdownOpen(false)}
-        position="bottom-start"
-        withArrow
-        trapFocus
-        withinPortal
-        zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
-      >
-        <Popover.Target>
-          <ActionIcon
-            variant="secondary"
-            size={size}
-            aria-label={t("automate.creation.icon.label", "Icon")}
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            style={{
-              width: size === "sm" ? "2.5rem" : "3rem",
-              position: "relative",
-              display: "flex",
-              justifyContent: "flex-start",
-              paddingLeft: "0.5rem",
-              borderColor: "var(--mantine-color-gray-3)",
-              color: "var(--mantine-color-text)",
-            }}
-          >
-            <Icon name={selectedIcon} size={iconSize} />
-            <Icon
-              name="chevron-down"
-              size={iconSize * 0.8}
-              style={{
-                position: "absolute",
-                right: "0.25rem",
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            />
-          </ActionIcon>
-        </Popover.Target>
+      <Popover.Dropdown>
+        <Stack gap="xs">
+          <SimpleGrid cols={4} spacing="xs">
+            {iconOptions.map((option) => {
+              const optionIcon = iconMap[option.value];
+              const isSelected = value === option.value;
 
-        <Popover.Dropdown>
-          <Stack gap="xs">
-            <SimpleGrid cols={4} spacing="xs">
-              {iconOptions.map((option) => {
-                const optionIcon = iconMap[option.value];
-                const isSelected = value === option.value;
-
-                return (
-                  <Tooltip key={option.value} label={option.label}>
-                    <Box
-                      onClick={() => handleIconSelect(option.value)}
+              return (
+                <Tooltip key={option.value} label={option.label}>
+                  <Box
+                    component="button"
+                    type="button"
+                    aria-label={option.label}
+                    aria-pressed={isSelected}
+                    onClick={() => handleIconSelect(option.value)}
+                    style={{
+                      border: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "0.5rem",
+                      borderRadius: "0.25rem",
+                      cursor: "pointer",
+                      backgroundColor: isSelected
+                        ? "var(--c-active)"
+                        : "transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor =
+                          "var(--c-hover)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }
+                    }}
+                  >
+                    <Icon
+                      name={optionIcon}
+                      size={iconSize}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "0.5rem",
-                        borderRadius: "0.25rem",
-                        cursor: "pointer",
-                        backgroundColor: isSelected
-                          ? "var(--mantine-color-gray-1)"
-                          : "transparent",
+                        color: isSelected
+                          ? "var(--c-text)"
+                          : "var(--c-text-muted)",
                       }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.backgroundColor =
-                            "var(--mantine-color-gray-0)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }
-                      }}
-                    >
-                      <Icon
-                        name={optionIcon}
-                        size={iconSize}
-                        style={{
-                          color: isSelected
-                            ? "var(--mantine-color-gray-9)"
-                            : "var(--mantine-color-gray-7)",
-                        }}
-                      />
-                    </Box>
-                  </Tooltip>
-                );
-              })}
-            </SimpleGrid>
-          </Stack>
-        </Popover.Dropdown>
-      </Popover>
-    </Stack>
+                    />
+                  </Box>
+                </Tooltip>
+              );
+            })}
+          </SimpleGrid>
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
   );
 }
