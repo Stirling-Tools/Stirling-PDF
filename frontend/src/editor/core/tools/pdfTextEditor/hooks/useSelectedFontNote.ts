@@ -26,6 +26,8 @@ export function useSelectedFontNote(
   return useMemo(() => {
     const note = selectedFontNote(state.pages, selection.runIds);
     if (!note) return null;
+    // Only what will go wrong: a note on every selection that is fine
+    // crowds out the controls it sits above.
     switch (note.kind) {
       case "scanned":
         if (scanNote === "misaligned")
@@ -43,39 +45,15 @@ export function useSelectedFontNote(
               "pdfTextEditor.inspector.scannedTextNoFont",
               "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works.",
             )
-          : t(
-              "pdfTextEditor.inspector.scannedText",
-              "Scanned text · changed words are covered and redrawn in a matching font.",
-            );
-      case "embeddedUnknown":
-        return t(
-          "pdfTextEditor.inspector.fontEmbedded",
-          "Embedded font · a character it lacks falls back to Helvetica.",
-        );
-      case "deviceUnknown":
-        return t(
-          "pdfTextEditor.inspector.fontUnknownCoverage",
-          "{{name}} · a character it lacks falls back to {{fallback}}.",
-          { name: note.name, fallback: note.fallback },
-        );
-      case "completed":
-        return note.source === "original"
-          ? t(
-              "pdfTextEditor.inspector.fontCompletedOriginal",
-              "Embedded font · characters it lacks are drawn in {{name}}, the same font.",
-              { name: note.name },
-            )
-          : t(
-              "pdfTextEditor.inspector.fontCompletedClosest",
-              "Embedded font · characters it lacks are drawn in {{name}}, the closest match available.",
-              { name: note.name },
-            );
+          : null;
       case "gap":
         return t(
           "pdfTextEditor.inspector.fontGap",
           "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}.",
           { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
         );
+      default:
+        return null;
     }
   }, [
     state.pages,

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Box, Group, Stack, Text } from "@mantine/core";
+import { Box, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { CreateNewPdfButton } from "@editor/components/createPdf/CreateNewPdfButton";
@@ -49,6 +49,9 @@ export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   /** Desktop: the panel's head shows the insert tools, and the selection bar carries the image tools. */
   desktop?: boolean;
 }
+
+/** The position and size fields' height: a heading and two rows of inputs. */
+const NOTHING_SELECTED_HEIGHT = "5.77rem";
 
 export const EditorSidebar = memo(function EditorSidebar({
   store,
@@ -152,25 +155,36 @@ export const EditorSidebar = memo(function EditorSidebar({
 function NothingSelected(props: ScanHintProps) {
   const { t } = useTranslation();
   return (
-    <Box px="md" py="sm" data-testid="pdf-editor-nothing-selected">
-      <Group gap="sm" wrap="nowrap" align="flex-start">
+    <Box px="md" py="md" data-testid="pdf-editor-nothing-selected">
+      {/* As tall as the position and size fields a selection brings, so
+          picking something does not shift the settings below. */}
+      <Stack
+        align="center"
+        justify="center"
+        gap={4}
+        px="md"
+        style={{
+          height: NOTHING_SELECTED_HEIGHT,
+          border: "1px dashed var(--c-border)",
+          borderRadius: "var(--mantine-radius-md)",
+          textAlign: "center",
+        }}
+      >
         <Icon
           name="square-dashed"
           size={18}
-          style={{ color: "var(--c-text-muted)", flexShrink: 0, marginTop: 1 }}
+          style={{ color: "var(--c-text-muted)" }}
         />
-        <Stack gap={2}>
-          <Text size="sm" fw={600}>
-            {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
-          </Text>
-          <Text size="xs" c="dimmed">
-            {t(
-              "pdfTextEditor.inspector.nothingSelectedHint",
-              "Click any text, image or shape on the page to edit it, or add something new with Insert above.",
-            )}
-          </Text>
-        </Stack>
-      </Group>
+        <Text size="sm" fw={500}>
+          {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t(
+            "pdfTextEditor.inspector.nothingSelectedHint",
+            "Click any text, image or shape on the page to edit it.",
+          )}
+        </Text>
+      </Stack>
       <ScanHint {...props} />
     </Box>
   );

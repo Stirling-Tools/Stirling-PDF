@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { SectionLabel } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import type {
   EditorStore,
   EditorViewState,
@@ -45,7 +46,10 @@ export function EditorPanelTools({ store, state }: Props) {
   );
 
   return (
-    <Box px="md" py="xs" data-testid="pdf-editor-panel-tools">
+    <Box px="md" pt="sm" pb="sm" data-testid="pdf-editor-panel-tools">
+      <SectionLabel>
+        {t("pdfTextEditor.sidebar.addToPage", "Add to page")}
+      </SectionLabel>
       <Group gap={6} wrap="nowrap">
         {insertButton(
           t("pdfTextEditor.sidebar.text", "Text"),

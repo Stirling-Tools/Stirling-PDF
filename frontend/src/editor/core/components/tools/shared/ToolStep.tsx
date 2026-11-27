@@ -33,6 +33,8 @@ export interface ToolStepProps {
   _noPadding?: boolean; // Internal prop to exclude from default left padding
   alwaysShowTooltip?: boolean; // Force tooltip to show even when collapsed
   tooltip?: SidebarTooltipContent;
+  /** Test id for the clickable header row. */
+  headerTestId?: string;
 }
 
 const renderTooltipTitle = (
@@ -82,6 +84,7 @@ const ToolStep = ({
   _noPadding,
   alwaysShowTooltip = false,
   tooltip,
+  headerTestId,
 }: ToolStepProps) => {
   const parent = useContext(ToolStepContext);
 
@@ -113,6 +116,7 @@ const ToolStep = ({
             cursor: onCollapsedClick ? "pointer" : "default",
           }}
           onClick={onCollapsedClick}
+          data-testid={headerTestId}
         >
           <Flex align="center" gap="sm">
             {shouldShowNumber && (

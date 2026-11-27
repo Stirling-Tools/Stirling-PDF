@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Badge, Collapse, Group, Stack, Text, Tooltip } from "@mantine/core";
-import { useTranslation } from "react-i18next";
 import {
-  DisclosureRow,
-  Section,
-  SectionLabel,
-} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+  Badge,
+  Box,
+  Collapse,
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import ToolStep from "@editor/components/tools/shared/ToolStep";
+import { DisclosureRow } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import {
   analyzePageFonts,
   type PageFont,
@@ -30,7 +35,10 @@ interface Props {
   onSetShowRulers: (show: boolean) => void;
 }
 
-/** The open document's fonts and settings. Nothing here acts on a selection. */
+/**
+ * The open document's fonts and settings. Nothing here acts on a selection.
+ * Laid out as the collapsible steps every other tool's settings use.
+ */
 export function DocumentInspector({
   pages,
   groupingMode,
@@ -40,32 +48,34 @@ export function DocumentInspector({
   ...view
 }: Props) {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(true);
   return (
-    <Stack gap={0} data-testid="pdf-editor-document-panel">
-      <Section>
-        <SectionLabel
-          right={
-            <Text size="xs" c="dimmed" data-testid="pdf-editor-page-count">
-              {t("pdfTextEditor.inspector.pageCount", "{{count}} pages", {
-                count: pages.length,
-              })}
-            </Text>
-          }
-        >
-          {t("pdfTextEditor.inspector.document", "Document")}
-        </SectionLabel>
-        <Stack gap="sm">
-          <FontsRow pages={pages} />
-          <ViewSettings {...view} />
-        </Stack>
-      </Section>
+    <Box
+      pt="xs"
+      data-testid="pdf-editor-document-panel"
+      style={{
+        // With the step's own 0.5rem, headings line up with the sections above.
+        paddingInline: "0.5rem",
+        borderTop: "1px solid var(--mantine-color-default-border)",
+      }}
+    >
+      <ToolStep
+        title={t("pdfTextEditor.inspector.document", "Document")}
+        showNumber={false}
+        isCollapsed={!open}
+        onCollapsedClick={() => setOpen((v) => !v)}
+        headerTestId="pdf-editor-document-toggle"
+      >
+        <FontsRow pages={pages} />
+        <ViewSettings {...view} />
+      </ToolStep>
       <AdvancedSettings
         groupingMode={groupingMode}
         widthMode={widthMode}
         onSetGroupingMode={onSetGroupingMode}
         onSetWidthMode={onSetWidthMode}
       />
-    </Stack>
+    </Box>
   );
 }
 
@@ -133,7 +143,7 @@ function FontsRow({ pages }: { pages: PageSnapshot[] }) {
         onToggle={() => setOpen((v) => !v)}
         testId="pdf-editor-fonts-toggle"
         label={
-          <Text size="xs">
+          <Text size="sm">
             {t("pdfTextEditor.fonts.title", "Fonts")} · {fonts.length}
           </Text>
         }

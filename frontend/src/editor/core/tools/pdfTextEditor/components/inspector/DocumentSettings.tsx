@@ -1,14 +1,11 @@
 import { useState } from "react";
-import { Box, Collapse, Group, Stack, Text } from "@mantine/core";
+import { Box, Group, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 import { SpellcheckControl } from "@editor/tools/pdfTextEditor/components/SpellcheckControl";
-import {
-  DisclosureRow,
-  Field,
-  Section,
-} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import ToolStep from "@editor/components/tools/shared/ToolStep";
+import { Field } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import type {
   GroupingMode,
   WidthMode,
@@ -37,7 +34,7 @@ export function ViewSettings({
       <Group justify="space-between" wrap="nowrap" gap="sm">
         {/* The row's own text names the switch; passing `label` too would
             print it twice, once either side of the control. */}
-        <Text size="xs" id="pdf-editor-rulers-label">
+        <Text size="sm" id="pdf-editor-rulers-label">
           {t("pdfTextEditor.sidebar.rulers", "Rulers and guides")}
         </Text>
         <ToggleSwitch
@@ -69,19 +66,15 @@ export function AdvancedSettings({
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   return (
-    <Section testId="pdf-editor-advanced-settings">
-      <DisclosureRow
-        open={advancedOpen}
-        onToggle={() => setAdvancedOpen((v) => !v)}
-        testId="pdf-editor-advanced-toggle"
-        label={
-          <Text size="sm" fw={600}>
-            {t("pdfTextEditor.settings.advanced", "Advanced")}
-          </Text>
-        }
-      />
-      <Collapse in={advancedOpen}>
-        <Stack gap="md" mt="sm">
+    <div data-testid="pdf-editor-advanced-settings">
+      <ToolStep
+        title={t("pdfTextEditor.settings.advanced", "Advanced")}
+        showNumber={false}
+        isCollapsed={!advancedOpen}
+        onCollapsedClick={() => setAdvancedOpen((v) => !v)}
+        headerTestId="pdf-editor-advanced-toggle"
+      >
+        <Stack gap="md">
           <Field
             label={t("pdfTextEditor.sidebar.textGrouping", "Text grouping")}
             hint={t(
@@ -140,7 +133,7 @@ export function AdvancedSettings({
             </Box>
           </Field>
         </Stack>
-      </Collapse>
-    </Section>
+      </ToolStep>
+    </div>
   );
 }

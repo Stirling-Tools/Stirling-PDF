@@ -3912,25 +3912,6 @@ test.describe("PDF text editor - help overlay", () => {
   });
 });
 
-test.describe("PDF text editor - selection count panel", () => {
-  test("sidebar shows N runs selected after multi-select", async ({ page }) => {
-    await gotoEditor(page);
-    await loadSamplePdf(page);
-
-    const ids = await page
-      .locator('[data-testid^="pdf-editor-run-p0-"]')
-      .evaluateAll((els) => els.map((el) => el.getAttribute("data-testid")!));
-    expect(ids.length).toBeGreaterThan(1);
-
-    await page.getByTestId(ids[0]).click();
-    await page.getByTestId(ids[1]).click({ modifiers: ["Shift"] });
-
-    const countNode = page.getByTestId("pdf-editor-selection-count");
-    await expect(countNode).toBeVisible();
-    await expect(countNode).toContainText(/2 boxes/);
-  });
-});
-
 test.describe("PDF text editor - PageDown navigation", () => {
   test("PageDown scrolls to the next page", async ({ page }) => {
     await gotoEditor(page);

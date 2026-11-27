@@ -22,7 +22,7 @@ interface Props {
   controller: InspectorController;
   selection: SelectionState;
   geometry: SelectionGeometry;
-  /** Font status for the selected runs, e.g. "Embedded · full alphabet". */
+  /** Why typing into the selected text will not come out as expected, if it won't. */
   fontNote: string | null;
   scanFontMatch?: ScanFontMatch | null;
   canGroup: boolean;
@@ -55,21 +55,20 @@ export function SelectionInspector({
 }: Props) {
   const runCount = selection.runIds.length;
   const imageCount = selection.imageIds.length;
-  const shapeCount = selection.shapeIds.length;
   const { hasRunSelection, hasImageSelection } = controller;
+  const note = hasRunSelection ? fontNote : null;
+  const showScanFont = !!scanFontMatch?.canShow;
 
   return (
     <Stack gap={0} data-testid="pdf-editor-selection-inspector">
-      <SelectionHeader
-        runCount={runCount}
-        imageCount={imageCount}
-        shapeCount={shapeCount}
-        formField={selection.formFieldId !== null}
-        fontNote={hasRunSelection ? fontNote : null}
-      />
-      {scanFontMatch?.canShow && <ScanFontMatchRow match={scanFontMatch} />}
+      {note && <FontWarning note={note} />}
+      {showScanFont && <ScanFontMatchRow match={scanFontMatch} />}
       {runCount + imageCount > 0 && (
-        <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+        <GeometrySection
+          geometry={geometry}
+          isImage={!hasRunSelection}
+          first={!note && !showScanFont}
+        />
       )}
       {hasRunSelection && (
         <ParagraphSection
@@ -86,67 +85,18 @@ export function SelectionInspector({
   );
 }
 
-/** Names what is selected, and how its font will treat new characters. */
-function SelectionHeader({
-  runCount,
-  imageCount,
-  shapeCount,
-  formField,
-  fontNote,
-}: {
-  runCount: number;
-  imageCount: number;
-  shapeCount: number;
-  /** A form field is only ever selected alone. */
-  formField: boolean;
-  fontNote: string | null;
-}) {
-  const { t } = useTranslation();
-  const kinds = [runCount, imageCount, shapeCount].filter((n) => n > 0).length;
-  let title: string;
-  if (formField) {
-    title = t("pdfTextEditor.inspector.formField", "Form field");
-  } else if (kinds > 1) {
-    title = t("pdfTextEditor.inspector.mixed", "{{count}} objects", {
-      count: runCount + imageCount + shapeCount,
-    });
-  } else if (shapeCount > 0) {
-    title =
-      shapeCount === 1
-        ? t("pdfTextEditor.inspector.oneShape", "Shape")
-        : t("pdfTextEditor.inspector.manyShapes", "{{count}} shapes", {
-            count: shapeCount,
-          });
-  } else if (runCount > 0) {
-    title =
-      runCount === 1
-        ? t("pdfTextEditor.inspector.oneText", "Text")
-        : t("pdfTextEditor.inspector.manyText", "Text · {{count}} boxes", {
-            count: runCount,
-          });
-  } else {
-    title =
-      imageCount === 1
-        ? t("pdfTextEditor.inspector.oneImage", "Image")
-        : t("pdfTextEditor.inspector.manyImages", "{{count}} images", {
-            count: imageCount,
-          });
-  }
+/** Shown only when typing into the selection will not come out as expected. */
+function FontWarning({ note }: { note: string }) {
   return (
-    <Section first>
-      <Text size="sm" fw={600} data-testid="pdf-editor-selection-count">
-        {title}
-      </Text>
-      {fontNote && (
-        <Text
-          size="xs"
-          c="dimmed"
-          mt={4}
-          data-testid="pdf-editor-inspector-font-note"
-        >
-          {fontNote}
-        </Text>
-      )}
+    <Section first testId="pdf-editor-inspector-font-note">
+      <Group gap={6} wrap="nowrap" align="flex-start">
+        <Icon
+          name="circle-alert"
+          size={16}
+          style={{ flexShrink: 0, marginTop: 1, color: "var(--c-warning)" }}
+        />
+        <Text size="xs">{note}</Text>
+      </Group>
     </Section>
   );
 }
@@ -230,14 +180,16 @@ function ParagraphSection({
 function GeometrySection({
   geometry,
   isImage,
+  first,
 }: {
   geometry: SelectionGeometry;
   isImage: boolean;
+  first: boolean;
 }) {
   const { t } = useTranslation();
   if (!geometry.single) {
     return (
-      <Section>
+      <Section first={first}>
         <SectionLabel>
           {t("pdfTextEditor.inspector.geometry", "Position & size")}
         </SectionLabel>
@@ -252,7 +204,7 @@ function GeometrySection({
   }
   const { bounds, setX, setY, setWidth, setHeight } = geometry.single;
   return (
-    <Section testId="pdf-editor-geometry-section">
+    <Section testId="pdf-editor-geometry-section" first={first}>
       <SectionLabel>
         {t("pdfTextEditor.inspector.geometry", "Position & size")}
       </SectionLabel>

@@ -17,7 +17,7 @@ export function SectionLabel({
   return (
     <Group justify="space-between" wrap="nowrap" gap={4} mb={8}>
       <Group gap={6} wrap="nowrap">
-        <Text size="sm" fw={600}>
+        <Text size="sm" fw={500}>
           {children}
         </Text>
         {info}
