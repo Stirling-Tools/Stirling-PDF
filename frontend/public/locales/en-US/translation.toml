@@ -7842,21 +7842,21 @@ ok = "You can type any letter or number in these fonts."
 warnOther = "Some fonts are missing letters. Those will look slightly different when typed."
 
 [pdfTextEditor.fonts.pill]
-info = "Mostly ready"
-ok = "Ready"
-warn = "Missing letters"
+info = "Embedded"
+ok = "All glyphs"
+warn = "{{count}} with gaps"
 
 [pdfTextEditor.fonts.status.embedded]
 hint = "Included in this PDF. Anything you type will match."
-label = "Included"
+label = "Embedded"
 
 [pdfTextEditor.fonts.status.standard]
 hint = "A common font. Anything you type will match."
-label = "Common"
+label = "Standard"
 
 [pdfTextEditor.fonts.status.subset]
 hint = "Only part of this font is included. Some letters you type may look different."
-label = "Partial"
+label = "Subset"
 
 [pdfTextEditor.help]
 ariaLabel = "Keyboard shortcuts"

@@ -276,7 +276,7 @@ function CoveragePill({ fonts }: { fonts: PageFont[] }) {
   const summary = {
     ok: {
       color: "green",
-      label: t("pdfTextEditor.fonts.pill.ok", "Ready"),
+      label: t("pdfTextEditor.fonts.pill.ok", "All glyphs"),
       hint: t(
         "pdfTextEditor.fonts.compat.ok",
         "You can type any letter or number in these fonts.",
@@ -284,7 +284,7 @@ function CoveragePill({ fonts }: { fonts: PageFont[] }) {
     },
     info: {
       color: "blue",
-      label: t("pdfTextEditor.fonts.pill.info", "Mostly ready"),
+      label: t("pdfTextEditor.fonts.pill.info", "Embedded"),
       hint: t(
         "pdfTextEditor.fonts.compat.info",
         "New letters you type may look slightly different.",
@@ -292,7 +292,9 @@ function CoveragePill({ fonts }: { fonts: PageFont[] }) {
     },
     warn: {
       color: "yellow",
-      label: t("pdfTextEditor.fonts.pill.warn", "Missing letters"),
+      label: t("pdfTextEditor.fonts.pill.warn", "{{count}} with gaps", {
+        count: withGaps.length,
+      }),
       hint: t(
         "pdfTextEditor.fonts.compat.warnOther",
         "Some fonts are missing letters. Those will look slightly different when typed.",
@@ -320,17 +322,17 @@ const FONT_STATUS: Record<
   { label: string; hint: string; color: string }
 > = {
   standard: {
-    label: "Common",
+    label: "Standard",
     hint: "A common font. Anything you type will match.",
     color: "green",
   },
   embedded: {
-    label: "Included",
+    label: "Embedded",
     hint: "Included in this PDF. Anything you type will match.",
     color: "blue",
   },
   subset: {
-    label: "Partial",
+    label: "Subset",
     hint: "Only part of this font is included. Some letters you type may look different.",
     color: "yellow",
   },
