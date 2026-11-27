@@ -39,6 +39,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.xml.XmpParsingException;
@@ -62,6 +63,7 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.PdfTextStrings;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.XmpUtils;
@@ -99,7 +101,7 @@ public class GetInfoOnPDF {
         }
 
         ObjectNode outlineNode = objectMapper.createObjectNode();
-        outlineNode.put("Title", outline.getTitle());
+        outlineNode.put("Title", PdfTextStrings.decode(outline.getCOSObject(), COSName.TITLE));
         arrayNode.add(outlineNode);
 
         for (PDOutlineItem child : outline.children()) {
@@ -267,7 +269,7 @@ public class GetInfoOnPDF {
 
         for (Object item : structureElement.getKids()) {
             if (item instanceof COSString cosString) {
-                contentBuilder.append(cosString.getString());
+                contentBuilder.append(PdfTextStrings.decode(cosString));
             } else if (item instanceof PDStructureElement pdstructureelement) {
                 contentBuilder.append(getContent(pdstructureelement, visited));
             }
@@ -327,12 +329,12 @@ public class GetInfoOnPDF {
         try {
             PDDocumentInformation info = document.getDocumentInformation();
             if (info != null) {
-                if (info.getTitle() != null) metadata.put("Title", info.getTitle());
-                if (info.getAuthor() != null) metadata.put("Author", info.getAuthor());
-                if (info.getSubject() != null) metadata.put("Subject", info.getSubject());
-                if (info.getKeywords() != null) metadata.put("Keywords", info.getKeywords());
-                if (info.getProducer() != null) metadata.put("Producer", info.getProducer());
-                if (info.getCreator() != null) metadata.put("Creator", info.getCreator());
+                COSDictionary infoDict = info.getCOSObject();
+                for (String key :
+                        List.of("Title", "Author", "Subject", "Keywords", "Producer", "Creator")) {
+                    String value = PdfTextStrings.decode(infoDict, COSName.getPDFName(key));
+                    if (value != null) metadata.put(key, value);
+                }
 
                 String creationDate =
                         formatDate(
@@ -358,7 +360,8 @@ public class GetInfoOnPDF {
                     if (STANDARD_INFO_KEYS.contains(key)) {
                         continue;
                     }
-                    String value = info.getCustomMetadataValue(key);
+                    String value =
+                            PdfTextStrings.decode(info.getCOSObject(), COSName.getPDFName(key));
                     if (value != null && !value.isBlank()) {
                         metadata.put(key, value);
                     }
@@ -560,7 +563,14 @@ public class GetInfoOnPDF {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
             if (acroForm != null) {
                 for (PDField field : acroForm.getFieldTree()) {
-                    formFieldsNode.put(field.getFullyQualifiedName(), field.getValueAsString());
+                    // Choice fields format their value as a list, so only text fields decode /V.
+                    String value =
+                            field instanceof PDTextField
+                                    ? PdfTextStrings.decode(field.getCOSObject(), COSName.V)
+                                    : null;
+                    formFieldsNode.put(
+                            field.getFullyQualifiedName(),
+                            value != null ? value : field.getValueAsString());
                 }
             }
         } catch (Exception e) {
@@ -684,7 +694,10 @@ public class GetInfoOnPDF {
                     if (annotation instanceof PDAnnotationFileAttachment fileAttachmentAnnotation) {
                         ObjectNode attachmentNode = objectMapper.createObjectNode();
                         attachmentNode.put("Name", fileAttachmentAnnotation.getAttachmentName());
-                        attachmentNode.put("Description", fileAttachmentAnnotation.getContents());
+                        attachmentNode.put(
+                                "Description",
+                                PdfTextStrings.decode(
+                                        fileAttachmentAnnotation.getCOSObject(), COSName.CONTENTS));
 
                         // Try to get file size
                         try {
@@ -1069,7 +1082,9 @@ public class GetInfoOnPDF {
             if ("RichMedia".equals(annotation.getSubtype())) {
                 ObjectNode multimediaNode = objectMapper.createObjectNode();
                 multimediaNode.put("Subtype", annotation.getSubtype());
-                multimediaNode.put("Contents", annotation.getContents());
+                multimediaNode.put(
+                        "Contents",
+                        PdfTextStrings.decode(annotation.getCOSObject(), COSName.CONTENTS));
                 multimediaArray.add(multimediaNode);
             }
         }

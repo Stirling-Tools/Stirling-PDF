@@ -84,8 +84,9 @@ public class FlattenController {
                 pdfRenderer.setSubsamplingAllowed(
                         true); // Enable subsampling to reduce memory usage
 
+                // A rasterised copy carries no attachments, as before.
                 try (PDDocument newDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document, false)) {
 
                     ApplicationProperties properties =
                             ApplicationContextProvider.getBean(ApplicationProperties.class);

@@ -199,6 +199,8 @@ public class SanitizeController {
         if (names != null) {
             names.setEmbeddedFiles(null);
         }
+        // Associated files keep embedded streams reachable after the name tree is cleared.
+        catalog.getCOSObject().removeItem(COSName.AF);
 
         for (PDPage page : document.getPages()) {
             List<PDAnnotation> annotations = page.getAnnotations();

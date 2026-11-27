@@ -14,6 +14,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -400,6 +403,44 @@ class SanitizeControllerTest {
 
             ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should remove associated files when removing embedded files")
+        void testRemoveEmbeddedFilesClearsAssociatedFiles() throws Exception {
+            byte[] withAssociatedFiles;
+            try (PDDocument doc = new PDDocument();
+                    ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                doc.addPage(new PDPage());
+                var spec = new COSDictionary();
+                var associatedFiles = new COSArray();
+                associatedFiles.add(spec);
+                doc.getDocumentCatalog().getCOSObject().setItem(COSName.AF, associatedFiles);
+                doc.save(out);
+                withAssociatedFiles = out.toByteArray();
+            }
+            SanitizePdfRequest request = new SanitizePdfRequest();
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput",
+                            "test.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            withAssociatedFiles));
+            request.setRemoveJavaScript(false);
+            request.setRemoveEmbeddedFiles(true);
+            request.setRemoveXMPMetadata(false);
+            request.setRemoveMetadata(false);
+            request.setRemoveLinks(false);
+            request.setRemoveFonts(false);
+            when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
+                    .thenAnswer(inv -> Loader.loadPDF(withAssociatedFiles));
+
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
+            try (PDDocument result =
+                    Loader.loadPDF(response.getBody().getInputStream().readAllBytes())) {
+                assertNull(
+                        result.getDocumentCatalog().getCOSObject().getDictionaryObject(COSName.AF));
+            }
         }
 
         @Test
