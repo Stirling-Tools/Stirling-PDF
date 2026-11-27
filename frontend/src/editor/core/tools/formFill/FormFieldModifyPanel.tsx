@@ -29,6 +29,8 @@ import {
 } from "@editor/tools/formFill/FormFieldPropertyEditor";
 import { isTextEntryTarget } from "@editor/tools/formFill/usePageScale";
 import { PendingFields } from "@editor/tools/formFill/PendingFields";
+import { DuplicateFieldMenu } from "@editor/tools/formFill/DuplicateFieldMenu";
+import { templateFromField } from "@editor/tools/formFill/fieldDuplication";
 import { SkippedEditsAlert } from "@editor/tools/formFill/SkippedEditsAlert";
 import styles from "@editor/tools/formFill/FormFill.module.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
@@ -309,8 +311,12 @@ interface FieldRowProps {
 }
 
 function FieldRow({ field, pageIdx, selectedRowRef }: FieldRowProps) {
-  const { selectedFieldName, setSelectedField, deletedFieldNames } =
-    useFormFill();
+  const {
+    selectedFieldName,
+    setSelectedField,
+    deletedFieldNames,
+    modifiedFields,
+  } = useFormFill();
   const selected = selectedFieldName === field.name;
   const deleted = deletedFieldNames.includes(field.name);
   const editing = selected && !deleted;
@@ -347,7 +353,17 @@ function FieldRow({ field, pageIdx, selectedRowRef }: FieldRowProps) {
             {field.label || field.name}
           </Text>
         </Group>
-        <DeleteToggleButton fieldName={field.name} deleted={deleted} />
+        <Group gap={2} wrap="nowrap">
+          {!deleted && field.widgets?.[0]?.cropBoxHeight != null && (
+            <DuplicateFieldMenu
+              getSource={() =>
+                templateFromField(field, modifiedFields[field.name])
+              }
+              testId={`form-modify-duplicate-${field.name}`}
+            />
+          )}
+          <DeleteToggleButton fieldName={field.name} deleted={deleted} />
+        </Group>
       </Group>
 
       <Collapse in={editing}>
