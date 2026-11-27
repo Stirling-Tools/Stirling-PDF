@@ -23,7 +23,11 @@ test.describe("9. Add Password Tool", () => {
       await expect(saveButton).toBeVisible();
       await expect(saveButton).toBeDisabled();
 
-      await expect(page.getByText(/upload/i).first()).toBeVisible();
+      await expect(
+        page
+          .getByTestId("tool-file-list")
+          .getByRole("button", { name: "Computer", exact: true }),
+      ).toBeVisible();
     });
   });
 });

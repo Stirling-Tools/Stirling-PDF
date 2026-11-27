@@ -72,7 +72,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const { actions: navActions } = useNavigationActions();
   const { workbench: currentWorkbench } = useNavigationState();
   // The page editor lays out every open file, so an added file belongs there.
-  const staysOnAdd = currentWorkbench === "pageEditor";
+  // A tool that pinned its own workbench surface owns it, so switching to the
+  // viewer would strand the files outside the tool being used.
+  const staysOnAdd =
+    currentWorkbench === "pageEditor" || currentWorkbench.startsWith("custom:");
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();

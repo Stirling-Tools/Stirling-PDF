@@ -333,6 +333,17 @@ describe("file picker caller contract", () => {
     expect(state.setWorkbench).not.toHaveBeenCalled();
   });
 
+  it("stays on a tool's own workbench surface", async () => {
+    state.workbench = "custom:compareWorkbenchView";
+    const upload = new File(["upload"], "Upload.pdf");
+    const { result } = renderHook(useFilesModalContext, {
+      wrapper: FilesModalProvider,
+    });
+    await act(() => result.current.onFileUpload([upload]));
+    expect(state.addFiles).toHaveBeenCalledWith([upload]);
+    expect(state.setWorkbench).not.toHaveBeenCalled();
+  });
+
   it("does not close a reopened picker when a previous import finishes", async () => {
     let finishImport!: () => void;
     state.addFiles.mockReturnValueOnce(

@@ -114,6 +114,7 @@ vi.mock("@editor/contexts/NavigationContext", () => ({
 }));
 vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflowActions: () => ({ handleToolSelect }),
+  useToolWorkflow: () => ({ selectedTool: null }),
 }));
 vi.mock("@editor/contexts/PreferencesContext", () => ({
   usePreferences: () => ({ preferences: {} }),
@@ -224,9 +225,6 @@ describe("tool file selection", () => {
       const fileList = await screen.findByTestId("tool-file-list");
       expect(fileList).toContainElement(screen.getByRole("listitem"));
       expect(screen.getByRole("listitem")).toHaveTextContent("report.pdf");
-      expect(
-        screen.queryByText(/Add files to the workbench/),
-      ).not.toBeInTheDocument();
       expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
       act(() =>
         screen
@@ -343,8 +341,9 @@ describe("tool file selection", () => {
       </MantineProvider>
     );
     const view = render(renderMerge());
+    expect(await screen.findByText("Add at least 2 files")).toBeInTheDocument();
     expect(
-      await screen.findByText(/Add at least 2 files to the workbench/),
+      screen.getByRole("button", { name: "Computer" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Merge PDFs/ })).toBeDisabled();
     expect(

@@ -95,6 +95,9 @@ vi.mock("@editor/components/filesPage/DeleteFilesDialog", () => ({
 vi.mock("@editor/components/shared/RenameFileDialog", () => ({
   RenameFileDialog: () => null,
 }));
+vi.mock("@editor/components/shared/useFileSources", () => ({
+  useFileSources: () => ({ sources: [], pickers: null }),
+}));
 vi.mock("@editor/components/shared/SidebarChecklistSlot", () => ({
   SidebarChecklistSlot: () => null,
 }));

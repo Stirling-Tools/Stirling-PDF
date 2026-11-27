@@ -21,6 +21,7 @@ import {
 } from "@editor/components/tools/FullscreenToolPanel";
 import { useToolPanelGeometry } from "@editor/hooks/tools/useToolPanelGeometry";
 import { useToolPanelWidth } from "@editor/hooks/useToolPanelSize";
+import { useWorkbenchFileDrop } from "@editor/components/layout/useWorkbenchFileDrop";
 import "@editor/components/tools/ToolPanel.css";
 
 /**
@@ -107,6 +108,11 @@ export default function RightSidebar() {
 
   const expandedWidth = useToolPanelWidth();
 
+  // Shares the workbench's drop target, as the file sidebar does, so files
+  // dropped on the panel open too. Off while the fullscreen tool picker covers
+  // the workbench, as the drop overlay the workbench draws would be hidden.
+  const dropHandlers = useWorkbenchFileDrop(!fullscreenExpanded);
+
   return (
     <div
       ref={toolPanelRef}
@@ -117,6 +123,7 @@ export default function RightSidebar() {
         width: isMobile ? "100%" : expandedWidth,
         padding: "0",
       }}
+      {...dropHandlers}
     >
       {!fullscreenExpanded && (
         <div
